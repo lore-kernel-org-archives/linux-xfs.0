@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47CECC5DF60
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 18:25:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB74CC5DF60
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 18:25:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 23D18206DF
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 18:25:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9130E206DF
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 18:25:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HqnxI28C"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="oY7Rcuv+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727063AbfKGSZa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Nov 2019 13:25:30 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:44198 "EHLO
+        id S1728734AbfKGSZd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Nov 2019 13:25:33 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:44204 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725991AbfKGSZa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 13:25:30 -0500
+        with ESMTP id S1725991AbfKGSZd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 13:25:33 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
         Reply-To:Cc:Content-Type:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=LKV1/lUs02aHlM0WRuYbg3qhg1XSEnY07wo/6eGjhfY=; b=HqnxI28CDuFfh+4NqIHIKSckX
-        lh3GUnyJAHXG+BcI79fiwltgSrEA0T4yd8Z3c0W/fWiy4ivcmk1I+gpu67WkyXRhMNuIQrNM7pv1N
-        9OqSyIfTrpxV2XF720wKnZiJdqjKysEYZfA8xO0udoHdDiU/Kgo6cFXFUYKe5Tl4+zkoafAPx/TEP
-        vxFdkbNtxYLRz6fKHk3VkQwPqbWe3HQnRPAMvQnpsc4PWgmCSF9B8gqbTUzbq8Z4jWL5C2Ww/cI3n
-        8k3nWc7XPOsFvqndekZPhhobHMnrmh0d63uE710P0y3G1mu11QBoulNjDonlECvGzNsTXQtv8QZ8p
-        63O793Ifw==;
+         bh=b7RABoVBnES0Jx+F7q3+rPqCyYyWZbwW112ckBws6bc=; b=oY7Rcuv+tf10ZUE7HCSfY/25K
+        be+MO5wGjHJ9zj0jd/ZBDVUn9qa33jSmXr844hFrkkYfaIBvpiqxvN2SwwXyxWu4/ItEVP36Gn0e9
+        7AaLheICD10DXru6SgW49BakREBtFO6HxiJlxgcsfbRYpIxkzEOQl8G7MpmjTrJqRWGS5+Ybx8LQQ
+        9CXQpaUqDaxDqFFkds/i/z6TmyY6sIeINTOeZIG1LETPL3QB6k50l06zSKyCKi0v0/ZZfH2WLu1UJ
+        96TBh2SJ3Ulu0Mnl450o+rEQ0X2VWcCyVFgzSaI8q1XpoHFKZIyio6SPFyePkDl3NE/ywAJvvq8fO
+        UHn3h8wZA==;
 Received: from [2001:4bb8:184:e48:c70:4a89:bc61:2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iSmTJ-0004P2-V2
-        for linux-xfs@vger.kernel.org; Thu, 07 Nov 2019 18:25:30 +0000
+        id 1iSmTM-0004PT-Fy
+        for linux-xfs@vger.kernel.org; Thu, 07 Nov 2019 18:25:32 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 29/46] xfs: cleanup xfs_dir2_block_getdents
-Date:   Thu,  7 Nov 2019 19:23:53 +0100
-Message-Id: <20191107182410.12660-30-hch@lst.de>
+Subject: [PATCH 30/46] xfs: cleanup xfs_dir2_leaf_getdents
+Date:   Thu,  7 Nov 2019 19:23:54 +0100
+Message-Id: <20191107182410.12660-31-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191107182410.12660-1-hch@lst.de>
 References: <20191107182410.12660-1-hch@lst.de>
@@ -58,88 +58,118 @@ arithmetics to find the data/unused entries.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_dir2_readdir.c | 32 ++++++++++++--------------------
- 1 file changed, 12 insertions(+), 20 deletions(-)
+ fs/xfs/xfs_dir2_readdir.c | 34 +++++++++++++++++-----------------
+ 1 file changed, 17 insertions(+), 17 deletions(-)
 
 diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-index 187bb51875c2..0d234b649d65 100644
+index 0d234b649d65..c4314e9e3dd8 100644
 --- a/fs/xfs/xfs_dir2_readdir.c
 +++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -142,17 +142,14 @@ xfs_dir2_block_getdents(
- 	struct dir_context	*ctx)
- {
- 	struct xfs_inode	*dp = args->dp;	/* incore directory inode */
--	xfs_dir2_data_hdr_t	*hdr;		/* block header */
- 	struct xfs_buf		*bp;		/* buffer for block */
--	xfs_dir2_data_entry_t	*dep;		/* block data entry */
--	xfs_dir2_data_unused_t	*dup;		/* block unused entry */
--	char			*endptr;	/* end of the data entries */
- 	int			error;		/* error return value */
--	char			*ptr;		/* current data entry */
- 	int			wantoff;	/* starting block offset */
- 	xfs_off_t		cook;
+@@ -351,13 +351,13 @@ xfs_dir2_leaf_getdents(
+ 	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
+ 	xfs_dir2_data_entry_t	*dep;		/* data entry */
+ 	xfs_dir2_data_unused_t	*dup;		/* unused entry */
+-	char			*ptr = NULL;	/* pointer to current data */
  	struct xfs_da_geometry	*geo = args->geo;
+ 	xfs_dablk_t		rablk = 0;	/* current readahead block */
+ 	xfs_dir2_off_t		curoff;		/* current overall offset */
+ 	int			length;		/* temporary length value */
+ 	int			byteoff;	/* offset in current block */
  	int			lock_mode;
-+	unsigned int		offset;
-+	unsigned int		end;
++	unsigned int		offset = 0;
+ 	int			error = 0;	/* error return value */
  
  	/*
- 	 * If the block number in the offset is out of range, we're done.
-@@ -171,44 +168,39 @@ xfs_dir2_block_getdents(
- 	 * We'll skip entries before this.
- 	 */
- 	wantoff = xfs_dir2_dataptr_to_off(geo, ctx->pos);
--	hdr = bp->b_addr;
- 	xfs_dir3_data_check(dp, bp);
--	/*
--	 * Set up values for the loop.
--	 */
--	ptr = (char *)dp->d_ops->data_entry_p(hdr);
--	endptr = xfs_dir3_data_endp(geo, hdr);
+@@ -384,7 +384,7 @@ xfs_dir2_leaf_getdents(
+ 		 * If we have no buffer, or we're off the end of the
+ 		 * current buffer, need to get another one.
+ 		 */
+-		if (!bp || ptr >= (char *)bp->b_addr + geo->blksize) {
++		if (!bp || offset + geo->blksize) {
+ 			if (bp) {
+ 				xfs_trans_brelse(args->trans, bp);
+ 				bp = NULL;
+@@ -402,7 +402,7 @@ xfs_dir2_leaf_getdents(
+ 			/*
+ 			 * Find our position in the block.
+ 			 */
+-			ptr = (char *)dp->d_ops->data_entry_p(hdr);
++			offset = dp->d_ops->data_entry_offset;
+ 			byteoff = xfs_dir2_byte_to_off(geo, curoff);
+ 			/*
+ 			 * Skip past the header.
+@@ -413,20 +413,20 @@ xfs_dir2_leaf_getdents(
+ 			 * Skip past entries until we reach our offset.
+ 			 */
+ 			else {
+-				while ((char *)ptr - (char *)hdr < byteoff) {
+-					dup = (xfs_dir2_data_unused_t *)ptr;
++				while (offset < byteoff) {
++					dup = bp->b_addr + offset;
  
- 	/*
- 	 * Loop over the data portion of the block.
- 	 * Each object is a real entry (dep) or an unused one (dup).
- 	 */
--	while (ptr < endptr) {
-+	offset = dp->d_ops->data_entry_offset;
-+	end = xfs_dir3_data_endp(geo, bp->b_addr) - bp->b_addr;
-+	while (offset < end) {
-+		struct xfs_dir2_data_unused	*dup = bp->b_addr + offset;
-+		struct xfs_dir2_data_entry	*dep = bp->b_addr + offset;
- 		uint8_t filetype;
+ 					if (be16_to_cpu(dup->freetag)
+ 						  == XFS_DIR2_DATA_FREE_TAG) {
  
--		dup = (xfs_dir2_data_unused_t *)ptr;
+ 						length = be16_to_cpu(dup->length);
+-						ptr += length;
++						offset += length;
+ 						continue;
+ 					}
+-					dep = (xfs_dir2_data_entry_t *)ptr;
++					dep = bp->b_addr + offset;
+ 					length =
+ 					   dp->d_ops->data_entsize(dep->namelen);
+-					ptr += length;
++					offset += length;
+ 				}
+ 				/*
+ 				 * Now set our real offset.
+@@ -434,28 +434,28 @@ xfs_dir2_leaf_getdents(
+ 				curoff =
+ 					xfs_dir2_db_off_to_byte(geo,
+ 					    xfs_dir2_byte_to_db(geo, curoff),
+-					    (char *)ptr - (char *)hdr);
+-				if (ptr >= (char *)hdr + geo->blksize) {
++					    offset);
++				if (offset >= geo->blksize)
+ 					continue;
+-				}
+ 			}
+ 		}
++
  		/*
- 		 * Unused, skip it.
+-		 * We have a pointer to an entry.
+-		 * Is it a live one?
++		 * We have a pointer to an entry.  Is it a live one?
+ 		 */
+-		dup = (xfs_dir2_data_unused_t *)ptr;
++		dup = bp->b_addr + offset;
++
+ 		/*
+ 		 * No, it's unused, skip over it.
  		 */
  		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
--			ptr += be16_to_cpu(dup->length);
-+			offset += be16_to_cpu(dup->length);
+ 			length = be16_to_cpu(dup->length);
+-			ptr += length;
++			offset += length;
+ 			curoff += length;
  			continue;
  		}
  
 -		dep = (xfs_dir2_data_entry_t *)ptr;
--
- 		/*
- 		 * Bump pointer for the next iteration.
- 		 */
--		ptr += dp->d_ops->data_entsize(dep->namelen);
-+		offset += dp->d_ops->data_entsize(dep->namelen);
-+
- 		/*
- 		 * The entry is before the desired starting point, skip it.
- 		 */
--		if ((char *)dep - (char *)hdr < wantoff)
-+		if (offset < wantoff)
- 			continue;
- 
--		cook = xfs_dir2_db_off_to_dataptr(geo, geo->datablk,
--					    (char *)dep - (char *)hdr);
-+		cook = xfs_dir2_db_off_to_dataptr(geo, geo->datablk, offset);
- 
- 		ctx->pos = cook & 0x7fffffff;
++		dep = bp->b_addr + offset;
+ 		length = dp->d_ops->data_entsize(dep->namelen);
  		filetype = dp->d_ops->data_get_ftype(dep);
+ 
+@@ -474,7 +474,7 @@ xfs_dir2_leaf_getdents(
+ 		/*
+ 		 * Advance to next entry in the block.
+ 		 */
+-		ptr += length;
++		offset += length;
+ 		curoff += length;
+ 		/* bufsize may have just been a guess; don't go negative */
+ 		bufsize = bufsize > length ? bufsize - length : 0;
 -- 
 2.20.1
 
