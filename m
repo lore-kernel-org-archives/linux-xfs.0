@@ -2,91 +2,96 @@ Return-Path: <SRS0=aC/G=Y7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FC84C43331
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 20:29:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9A02C43331
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 20:42:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BA53220869
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 20:29:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A55C7206A3
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 20:42:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iSFS97m5"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="R3PrJaJL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725844AbfKGU3o (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Nov 2019 15:29:44 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:34929 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725823AbfKGU3o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 15:29:44 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1573158582;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=dBLDnViySKdLik0O4Q6w1Nfndk1AGn/fm7boLOIDXmo=;
-        b=iSFS97m5n8Oj7ESebui7vYoSgQjqBjhpXnyY+tt4tFc3z2VDPl3DeHUKodwyZUlo8lKSwg
-        q2HXVvWhE9lyhsvCS4mcshLHo6E0J+31sdPZgMNjERfZs4JmHHPhRbRusmiqWVG/OI+2yL
-        fGtTSzS4DbOjB6L1LMAiGgAjpmRbVL0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-112-gDbhqPWXNeC802pzl7_M2w-1; Thu, 07 Nov 2019 15:29:41 -0500
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5F8B58017E0;
-        Thu,  7 Nov 2019 20:29:40 +0000 (UTC)
-Received: from redhat.com (ovpn-123-234.rdu2.redhat.com [10.10.123.234])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id C9D345C578;
-        Thu,  7 Nov 2019 20:29:36 +0000 (UTC)
-Date:   Thu, 7 Nov 2019 14:29:35 -0600
-From:   Bill O'Donnell <billodo@redhat.com>
-To:     Eric Sandeen <sandeen@redhat.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
-        Eric Biggers <ebiggers@google.com>
-Subject: Re: [PATCH] xfs_io: fix memory leak in add_enckey
-Message-ID: <20191107202935.GA609511@redhat.com>
-References: <4eb1073f-91fb-a4bc-aae8-d54dc5a6b8aa@redhat.com>
+        id S1725818AbfKGUmF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Nov 2019 15:42:05 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:59296 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725497AbfKGUmE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 15:42:04 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA7Kdn7l183760;
+        Thu, 7 Nov 2019 20:41:52 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=omJ2X88pyWxFvOGZdrmUDDv0VsiNmhxdueOiuGgReZI=;
+ b=R3PrJaJLEhuHDLq82kN5ky+48stv8GMdzahChZcZ3+9NKXKOjGDbz3Zgc7PWzDIp2wdY
+ 2lugmDtijP3K0HWTgPUHrTRQ0kG69qkbrekTAOMpIwoYFPgAJoAD3dsvTu+6TEpA2qH4
+ sHxVLC3+eT/5T15OjLiNYgiIXNhy1cljv68PSdaBhjYgeRfdgNZunZ5+NZUm6Yuqeugn
+ D9jmvz9Id0P7XH0z+9Xi8T9uBr1jhkTmnzsb+ofvXxlPOOOHE1Q3x8N9xmpV6qrfk2h9
+ Gh90LQPkmXkjJZJlK9aau5cI1pJTtMqhlZnp4nmTBexRPmuDlYFzKs/PgpXcbYOyal7f Jw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2w41w18xhc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 07 Nov 2019 20:41:52 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA7KYFAB114759;
+        Thu, 7 Nov 2019 20:41:52 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2w41wj4uf4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 07 Nov 2019 20:41:52 +0000
+Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xA7Kfpwu011794;
+        Thu, 7 Nov 2019 20:41:51 GMT
+Received: from localhost (/10.145.179.16)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 07 Nov 2019 12:41:51 -0800
+Date:   Thu, 7 Nov 2019 12:41:49 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/6] xfs: actually check xfs_btree_check_block return in
+ xfs_btree_islastblock
+Message-ID: <20191107204149.GD6219@magnolia>
+References: <157309573874.46520.18107298984141751739.stgit@magnolia>
+ <157309576284.46520.16933998796526579184.stgit@magnolia>
+ <20191107083450.GC6729@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <4eb1073f-91fb-a4bc-aae8-d54dc5a6b8aa@redhat.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
-X-MC-Unique: gDbhqPWXNeC802pzl7_M2w-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20191107083450.GC6729@infradead.org>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9434 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1910280000 definitions=main-1911070193
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9434 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
+ definitions=main-1911070194
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 07, 2019 at 10:50:59AM -0600, Eric Sandeen wrote:
-> Invalid arguments to add_enckey will leak the "arg" allocation,
-> so fix that.
->=20
-> Fixes: ba71de04 ("xfs_io/encrypt: add 'add_enckey' command")
-> Fixes-coverity-id: 1454644
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+On Thu, Nov 07, 2019 at 12:34:50AM -0800, Christoph Hellwig wrote:
+> > -	while (xfs_btree_islastblock(acur.cnt, 0)) {
+> > +	error = xfs_btree_islastblock(acur.cnt, 0, &is_last);
+> > +	if (error)
+> > +		goto out;
+> > +	while (is_last) {
+> 
+> This transformation looks actually ok, but is highly non-obvious.
+> I think you want a prep patch just killing the pointless while first.
 
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+Yeah, killing the while was a little more involved than I thought it
+would be, but it's done.
 
-> ---
->=20
-> diff --git a/io/encrypt.c b/io/encrypt.c
-> index 17d61cfb..c6a4e190 100644
-> --- a/io/encrypt.c
-> +++ b/io/encrypt.c
-> @@ -696,6 +696,7 @@ add_enckey_f(int argc, char **argv)
->  =09=09=09=09goto out;
->  =09=09=09break;
->  =09=09default:
-> +=09=09=09free(arg);
->  =09=09=09return command_usage(&add_enckey_cmd);
->  =09=09}
->  =09}
->=20
-
+--D
