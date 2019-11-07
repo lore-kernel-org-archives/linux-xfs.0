@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C591FC43331
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 18:26:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DAF3C43331
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 18:26:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9634C206DF
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 18:26:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 451B6206DF
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 18:26:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="IJZ5TStH"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="X/kCOHE7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726594AbfKGS0G (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Nov 2019 13:26:06 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:44302 "EHLO
+        id S1728889AbfKGS0J (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Nov 2019 13:26:09 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:44314 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728384AbfKGS0G (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 13:26:06 -0500
+        with ESMTP id S1727569AbfKGS0I (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 13:26:08 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=iEtN+MYjLFhQfqwzp9qCDY9aE3E4/WpUavhxgRYFudc=; b=IJZ5TStHPJzUFDEv0Fi2XVTiD2
-        PHY8yOsZa1HeBiVxgZaMEVeM6NeSYDGutp9/BfCOwnSsa10CjL6iTbyFrO5WYWhYIjRtMe1ofJbxh
-        dhMcBp03EUPIAyxiD1nbOCMRU6pysK85eh+JehFGmu5Vfw9mqIVmOo7JeT+CaWViZl9oTXiZh6MZJ
-        s7mGB2eaHnqE1Q8ZaqVCIW42791r20ibdldH9KSzEH/K+7/Whz66wYC6o8Lz4CV2+7e6LrmEKrfJt
-        KuIhKt8qjctfzAuyI8ZwFKYFkuGmwBnCuqpL1BWcz/g7wz/jP6TkPfygJUWIV12ucGYu3oCbl91nt
-        LiBhDtzA==;
+        bh=qJUOno0KkWRjRFF3tK7w8TzeWeKbWmvu5memB9ckY5s=; b=X/kCOHE7N0mDbGnFOMt4CRF1vM
+        o2znrABuiUX3gSwty+motcywyFyZkKLocNB+a3+PHoUTRntkq6asIfcDHlxp+AOaG89TG5YVrXUqO
+        UDVW6ffVa/N7ihwkshKL8mqfutgRyQo581Cx5Xmup/Cxf75UHi/YYYAMUVH86+pRVE6o6VzSnVkJJ
+        D1PNoOCK4w8qltoS6+iM3MZi4aZlKYb6CSWZPrgYPc61a+pFVI57skyfBTqrOIdFRc3lT2mRAnezZ
+        s8AjXRBfWivvZD+6YdNMJNXyc+DPcJxhypVoveoPH1SBs8tW20DaV7nn/+79bIn7NW5tqgrrD9ZsX
+        Cs97UHDQ==;
 Received: from [2001:4bb8:184:e48:c70:4a89:bc61:2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iSmTt-0004V4-Hm; Thu, 07 Nov 2019 18:26:05 +0000
+        id 1iSmTw-0004VN-4N; Thu, 07 Nov 2019 18:26:08 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
 Cc:     "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 43/46] xfs: devirtualize ->data_get_ftype and ->data_put_ftype
-Date:   Thu,  7 Nov 2019 19:24:07 +0100
-Message-Id: <20191107182410.12660-44-hch@lst.de>
+Subject: [PATCH 44/46] xfs: remove the now unused dir ops infrastructure
+Date:   Thu,  7 Nov 2019 19:24:08 +0100
+Message-Id: <20191107182410.12660-45-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191107182410.12660-1-hch@lst.de>
 References: <20191107182410.12660-1-hch@lst.de>
@@ -53,347 +53,175 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Replace the ->data_get_ftype and ->data_put_ftype dir ops methods with
-directly called xfs_dir2_data_get_ftype and xfs_dir2_data_put_ftype
-helpers that takes care of the differences between the directory format
-with and without the file type field.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_da_format.c  | 47 ----------------------------------
- fs/xfs/libxfs/xfs_dir2.h       |  3 ---
- fs/xfs/libxfs/xfs_dir2_block.c | 13 +++++-----
- fs/xfs/libxfs/xfs_dir2_data.c  | 43 ++++++++++++++++++++++---------
- fs/xfs/libxfs/xfs_dir2_leaf.c  |  6 ++---
- fs/xfs/libxfs/xfs_dir2_node.c  |  6 ++---
- fs/xfs/libxfs/xfs_dir2_priv.h  |  4 +++
- fs/xfs/libxfs/xfs_dir2_sf.c    |  2 +-
- fs/xfs/xfs_dir2_readdir.c      |  4 +--
- 9 files changed, 51 insertions(+), 77 deletions(-)
+ fs/xfs/Makefile               |  1 -
+ fs/xfs/libxfs/xfs_da_btree.h  |  1 -
+ fs/xfs/libxfs/xfs_da_format.c | 46 -----------------------------------
+ fs/xfs/libxfs/xfs_dir2.c      |  2 --
+ fs/xfs/libxfs/xfs_dir2.h      |  9 -------
+ fs/xfs/xfs_inode.h            |  3 ---
+ fs/xfs/xfs_iops.c             |  1 -
+ fs/xfs/xfs_mount.h            |  2 --
+ 8 files changed, 65 deletions(-)
+ delete mode 100644 fs/xfs/libxfs/xfs_da_format.c
 
-diff --git a/fs/xfs/libxfs/xfs_da_format.c b/fs/xfs/libxfs/xfs_da_format.c
-index b9f9fbf7eee2..498363ac193d 100644
---- a/fs/xfs/libxfs/xfs_da_format.c
-+++ b/fs/xfs/libxfs/xfs_da_format.c
-@@ -15,60 +15,13 @@
- #include "xfs_dir2.h"
- #include "xfs_dir2_priv.h"
- 
--/*
-- * Directory data block operations
-- */
--
--static uint8_t
--xfs_dir2_data_get_ftype(
--	struct xfs_dir2_data_entry *dep)
--{
--	return XFS_DIR3_FT_UNKNOWN;
--}
--
--static void
--xfs_dir2_data_put_ftype(
--	struct xfs_dir2_data_entry *dep,
--	uint8_t			ftype)
--{
--	ASSERT(ftype < XFS_DIR3_FT_MAX);
--}
--
--static uint8_t
--xfs_dir3_data_get_ftype(
--	struct xfs_dir2_data_entry *dep)
--{
--	uint8_t		ftype = dep->name[dep->namelen];
--
--	if (ftype >= XFS_DIR3_FT_MAX)
--		return XFS_DIR3_FT_UNKNOWN;
--	return ftype;
--}
--
--static void
--xfs_dir3_data_put_ftype(
--	struct xfs_dir2_data_entry *dep,
--	uint8_t			type)
--{
--	ASSERT(type < XFS_DIR3_FT_MAX);
--	ASSERT(dep->namelen != 0);
--
--	dep->name[dep->namelen] = type;
--}
--
- static const struct xfs_dir_ops xfs_dir2_ops = {
--	.data_get_ftype = xfs_dir2_data_get_ftype,
--	.data_put_ftype = xfs_dir2_data_put_ftype,
- };
- 
- static const struct xfs_dir_ops xfs_dir2_ftype_ops = {
--	.data_get_ftype = xfs_dir3_data_get_ftype,
--	.data_put_ftype = xfs_dir3_data_put_ftype,
- };
- 
- static const struct xfs_dir_ops xfs_dir3_ops = {
--	.data_get_ftype = xfs_dir3_data_get_ftype,
--	.data_put_ftype = xfs_dir3_data_put_ftype,
- };
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 06b68b6115bc..aceca2f9a3db 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -27,7 +27,6 @@ xfs-y				+= $(addprefix libxfs/, \
+ 				   xfs_bmap_btree.o \
+ 				   xfs_btree.o \
+ 				   xfs_da_btree.o \
+-				   xfs_da_format.o \
+ 				   xfs_defer.o \
+ 				   xfs_dir2.o \
+ 				   xfs_dir2_block.o \
+diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
+index 4ac2cc87c28f..5af4df71e92b 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.h
++++ b/fs/xfs/libxfs/xfs_da_btree.h
+@@ -10,7 +10,6 @@
+ struct xfs_inode;
+ struct xfs_trans;
+ struct zone;
+-struct xfs_dir_ops;
  
  /*
+  * Directory/attribute geometry information. There will be one of these for each
+diff --git a/fs/xfs/libxfs/xfs_da_format.c b/fs/xfs/libxfs/xfs_da_format.c
+deleted file mode 100644
+index 498363ac193d..000000000000
+--- a/fs/xfs/libxfs/xfs_da_format.c
++++ /dev/null
+@@ -1,46 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0
+-/*
+- * Copyright (c) 2000,2002,2005 Silicon Graphics, Inc.
+- * Copyright (c) 2013 Red Hat, Inc.
+- * All Rights Reserved.
+- */
+-#include "xfs.h"
+-#include "xfs_fs.h"
+-#include "xfs_shared.h"
+-#include "xfs_format.h"
+-#include "xfs_log_format.h"
+-#include "xfs_trans_resv.h"
+-#include "xfs_mount.h"
+-#include "xfs_inode.h"
+-#include "xfs_dir2.h"
+-#include "xfs_dir2_priv.h"
+-
+-static const struct xfs_dir_ops xfs_dir2_ops = {
+-};
+-
+-static const struct xfs_dir_ops xfs_dir2_ftype_ops = {
+-};
+-
+-static const struct xfs_dir_ops xfs_dir3_ops = {
+-};
+-
+-/*
+- * Return the ops structure according to the current config.  If we are passed
+- * an inode, then that overrides the default config we use which is based on
+- * feature bits.
+- */
+-const struct xfs_dir_ops *
+-xfs_dir_get_ops(
+-	struct xfs_mount	*mp,
+-	struct xfs_inode	*dp)
+-{
+-	if (dp)
+-		return dp->d_ops;
+-	if (mp->m_dir_inode_ops)
+-		return mp->m_dir_inode_ops;
+-	if (xfs_sb_version_hascrc(&mp->m_sb))
+-		return &xfs_dir3_ops;
+-	if (xfs_sb_version_hasftype(&mp->m_sb))
+-		return &xfs_dir2_ftype_ops;
+-	return &xfs_dir2_ops;
+-}
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index eccffe7a5ae0..624c05e77ab4 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -104,8 +104,6 @@ xfs_da_mount(
+ 	ASSERT(mp->m_sb.sb_versionnum & XFS_SB_VERSION_DIRV2BIT);
+ 	ASSERT(xfs_dir2_dirblock_bytes(&mp->m_sb) <= XFS_MAX_BLOCKSIZE);
+ 
+-	mp->m_dir_inode_ops = xfs_dir_get_ops(mp, NULL);
+-
+ 	mp->m_dir_geo = kmem_zalloc(sizeof(struct xfs_da_geometry),
+ 				    KM_MAYFAIL);
+ 	mp->m_attr_geo = kmem_zalloc(sizeof(struct xfs_da_geometry),
 diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-index b50273b2d970..b44c64a20f67 100644
+index b44c64a20f67..a0cd423c79dd 100644
 --- a/fs/xfs/libxfs/xfs_dir2.h
 +++ b/fs/xfs/libxfs/xfs_dir2.h
-@@ -32,9 +32,6 @@ extern unsigned char xfs_mode_to_ftype(int mode);
-  * directory operations vector for encode/decode routines
+@@ -28,15 +28,6 @@ extern struct xfs_name	xfs_name_dotdot;
   */
- struct xfs_dir_ops {
--	uint8_t (*data_get_ftype)(struct xfs_dir2_data_entry *dep);
--	void	(*data_put_ftype)(struct xfs_dir2_data_entry *dep,
--				uint8_t ftype);
- };
+ extern unsigned char xfs_mode_to_ftype(int mode);
  
- extern const struct xfs_dir_ops *
-diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-index 62b3adb01210..0c481e55c981 100644
---- a/fs/xfs/libxfs/xfs_dir2_block.c
-+++ b/fs/xfs/libxfs/xfs_dir2_block.c
-@@ -541,7 +541,7 @@ xfs_dir2_block_addname(
- 	dep->inumber = cpu_to_be64(args->inumber);
- 	dep->namelen = args->namelen;
- 	memcpy(dep->name, args->name, args->namelen);
--	dp->d_ops->data_put_ftype(dep, args->filetype);
-+	xfs_dir2_data_put_ftype(dp->i_mount, dep, args->filetype);
- 	tagp = xfs_dir2_data_entry_tag_p(dp->i_mount, dep);
- 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
- 	/*
-@@ -633,7 +633,7 @@ xfs_dir2_block_lookup(
- 	 * Fill in inode number, CI name if appropriate, release the block.
- 	 */
- 	args->inumber = be64_to_cpu(dep->inumber);
--	args->filetype = dp->d_ops->data_get_ftype(dep);
-+	args->filetype = xfs_dir2_data_get_ftype(dp->i_mount, dep);
- 	error = xfs_dir_cilookup_result(args, dep->name, dep->namelen);
- 	xfs_trans_brelse(args->trans, bp);
- 	return error;
-@@ -865,7 +865,7 @@ xfs_dir2_block_replace(
- 	 * Change the inode number to the new value.
- 	 */
- 	dep->inumber = cpu_to_be64(args->inumber);
--	dp->d_ops->data_put_ftype(dep, args->filetype);
-+	xfs_dir2_data_put_ftype(dp->i_mount, dep, args->filetype);
- 	xfs_dir2_data_log_entry(args, bp, dep);
- 	xfs_dir3_data_check(dp, bp);
- 	return 0;
-@@ -1145,7 +1145,7 @@ xfs_dir2_sf_to_block(
- 	dep->inumber = cpu_to_be64(dp->i_ino);
- 	dep->namelen = 1;
- 	dep->name[0] = '.';
--	dp->d_ops->data_put_ftype(dep, XFS_DIR3_FT_DIR);
-+	xfs_dir2_data_put_ftype(mp, dep, XFS_DIR3_FT_DIR);
- 	tagp = xfs_dir2_data_entry_tag_p(mp, dep);
- 	*tagp = cpu_to_be16(offset);
- 	xfs_dir2_data_log_entry(args, bp, dep);
-@@ -1160,7 +1160,7 @@ xfs_dir2_sf_to_block(
- 	dep->inumber = cpu_to_be64(xfs_dir2_sf_get_parent_ino(sfp));
- 	dep->namelen = 2;
- 	dep->name[0] = dep->name[1] = '.';
--	dp->d_ops->data_put_ftype(dep, XFS_DIR3_FT_DIR);
-+	xfs_dir2_data_put_ftype(mp, dep, XFS_DIR3_FT_DIR);
- 	tagp = xfs_dir2_data_entry_tag_p(mp, dep);
- 	*tagp = cpu_to_be16(offset);
- 	xfs_dir2_data_log_entry(args, bp, dep);
-@@ -1210,7 +1210,8 @@ xfs_dir2_sf_to_block(
- 		dep = bp->b_addr + newoffset;
- 		dep->inumber = cpu_to_be64(xfs_dir2_sf_get_ino(mp, sfp, sfep));
- 		dep->namelen = sfep->namelen;
--		dp->d_ops->data_put_ftype(dep, xfs_dir2_sf_get_ftype(mp, sfep));
-+		xfs_dir2_data_put_ftype(mp, dep,
-+				xfs_dir2_sf_get_ftype(mp, sfep));
- 		memcpy(dep->name, sfep->name, dep->namelen);
- 		tagp = xfs_dir2_data_entry_tag_p(mp, dep);
- 		*tagp = cpu_to_be16(newoffset);
-diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
-index 6ed9396225e3..0aa1d165c964 100644
---- a/fs/xfs/libxfs/xfs_dir2_data.c
-+++ b/fs/xfs/libxfs/xfs_dir2_data.c
-@@ -47,6 +47,34 @@ xfs_dir2_data_entry_tag_p(
- 		xfs_dir2_data_entsize(mp, dep->namelen) - sizeof(__be16));
- }
- 
-+uint8_t
-+xfs_dir2_data_get_ftype(
-+	struct xfs_mount		*mp,
-+	struct xfs_dir2_data_entry	*dep)
-+{
-+	if (xfs_sb_version_hasftype(&mp->m_sb)) {
-+		uint8_t			ftype = dep->name[dep->namelen];
-+
-+		if (likely(ftype < XFS_DIR3_FT_MAX))
-+			return ftype;
-+	}
-+
-+	return XFS_DIR3_FT_UNKNOWN;
-+}
-+
-+void
-+xfs_dir2_data_put_ftype(
-+	struct xfs_mount		*mp,
-+	struct xfs_dir2_data_entry	*dep,
-+	uint8_t				ftype)
-+{
-+	ASSERT(ftype < XFS_DIR3_FT_MAX);
-+	ASSERT(dep->namelen != 0);
-+
-+	if (xfs_sb_version_hasftype(&mp->m_sb))
-+		dep->name[dep->namelen] = ftype;
-+}
-+
- /*
-  * The number of leaf entries is limited by the size of the block and the amount
-  * of space used by the data entries.  We don't know how much space is used by
-@@ -88,21 +116,12 @@ __xfs_dir3_data_check(
- 	struct xfs_name		name;
- 	unsigned int		offset;
- 	unsigned int		end;
--	const struct xfs_dir_ops *ops;
- 	struct xfs_da_geometry	*geo = mp->m_dir_geo;
- 
- 	/*
--	 * We can be passed a null dp here from a verifier, so we need to go the
--	 * hard way to get them.
--	 */
--	ops = xfs_dir_get_ops(mp, dp);
+-/*
+- * directory operations vector for encode/decode routines
+- */
+-struct xfs_dir_ops {
+-};
 -
--	/*
--	 * If this isn't a directory, or we don't get handed the dir ops,
--	 * something is seriously wrong.  Bail out.
-+	 * If this isn't a directory, something is seriously wrong.  Bail out.
- 	 */
--	if ((dp && !S_ISDIR(VFS_I(dp)->i_mode)) ||
--	    ops != xfs_dir_get_ops(mp, NULL))
-+	if (dp && !S_ISDIR(VFS_I(dp)->i_mode))
- 		return __this_address;
+-extern const struct xfs_dir_ops *
+-	xfs_dir_get_ops(struct xfs_mount *mp, struct xfs_inode *dp);
+-
+ /*
+  * Generic directory interface routines
+  */
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index bcfb35a9c5ca..6516dd1fc86a 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -37,9 +37,6 @@ typedef struct xfs_inode {
+ 	struct xfs_ifork	*i_cowfp;	/* copy on write extents */
+ 	struct xfs_ifork	i_df;		/* data fork */
  
- 	hdr = bp->b_addr;
-@@ -206,7 +225,7 @@ __xfs_dir3_data_check(
- 			return __this_address;
- 		if (be16_to_cpu(*xfs_dir2_data_entry_tag_p(mp, dep)) != offset)
- 			return __this_address;
--		if (ops->data_get_ftype(dep) >= XFS_DIR3_FT_MAX)
-+		if (xfs_dir2_data_get_ftype(mp, dep) >= XFS_DIR3_FT_MAX)
- 			return __this_address;
- 		count++;
- 		lastfree = 0;
-diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-index 7fa485cd0158..bc301c973450 100644
---- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-@@ -865,7 +865,7 @@ xfs_dir2_leaf_addname(
- 	dep->inumber = cpu_to_be64(args->inumber);
- 	dep->namelen = args->namelen;
- 	memcpy(dep->name, args->name, dep->namelen);
--	dp->d_ops->data_put_ftype(dep, args->filetype);
-+	xfs_dir2_data_put_ftype(dp->i_mount, dep, args->filetype);
- 	tagp = xfs_dir2_data_entry_tag_p(dp->i_mount, dep);
- 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
- 	/*
-@@ -1195,7 +1195,7 @@ xfs_dir2_leaf_lookup(
- 	 * Return the found inode number & CI name if appropriate
- 	 */
- 	args->inumber = be64_to_cpu(dep->inumber);
--	args->filetype = dp->d_ops->data_get_ftype(dep);
-+	args->filetype = xfs_dir2_data_get_ftype(dp->i_mount, dep);
- 	error = xfs_dir_cilookup_result(args, dep->name, dep->namelen);
- 	xfs_trans_brelse(tp, dbp);
- 	xfs_trans_brelse(tp, lbp);
-@@ -1526,7 +1526,7 @@ xfs_dir2_leaf_replace(
- 	 * Put the new inode number in, log it.
- 	 */
- 	dep->inumber = cpu_to_be64(args->inumber);
--	dp->d_ops->data_put_ftype(dep, args->filetype);
-+	xfs_dir2_data_put_ftype(dp->i_mount, dep, args->filetype);
- 	tp = args->trans;
- 	xfs_dir2_data_log_entry(args, dbp, dep);
- 	xfs_dir3_leaf_check(dp, lbp);
-diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-index c97217e57a27..5551be7c29df 100644
---- a/fs/xfs/libxfs/xfs_dir2_node.c
-+++ b/fs/xfs/libxfs/xfs_dir2_node.c
-@@ -884,7 +884,7 @@ xfs_dir2_leafn_lookup_for_entry(
- 				xfs_trans_brelse(tp, state->extrablk.bp);
- 			args->cmpresult = cmp;
- 			args->inumber = be64_to_cpu(dep->inumber);
--			args->filetype = dp->d_ops->data_get_ftype(dep);
-+			args->filetype = xfs_dir2_data_get_ftype(mp, dep);
- 			*indexp = index;
- 			state->extravalid = 1;
- 			state->extrablk.bp = curbp;
-@@ -1969,7 +1969,7 @@ xfs_dir2_node_addname_int(
- 	dep->inumber = cpu_to_be64(args->inumber);
- 	dep->namelen = args->namelen;
- 	memcpy(dep->name, args->name, dep->namelen);
--	dp->d_ops->data_put_ftype(dep, args->filetype);
-+	xfs_dir2_data_put_ftype(dp->i_mount, dep, args->filetype);
- 	tagp = xfs_dir2_data_entry_tag_p(dp->i_mount, dep);
- 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
- 	xfs_dir2_data_log_entry(args, dbp, dep);
-@@ -2253,7 +2253,7 @@ xfs_dir2_node_replace(
- 		 * Fill in the new inode number and log the entry.
- 		 */
- 		dep->inumber = cpu_to_be64(inum);
--		args->dp->d_ops->data_put_ftype(dep, ftype);
-+		xfs_dir2_data_put_ftype(state->mp, dep, ftype);
- 		xfs_dir2_data_log_entry(args, state->extrablk.bp, dep);
- 		rval = 0;
+-	/* operations vectors */
+-	const struct xfs_dir_ops *d_ops;		/* directory ops vector */
+-
+ 	/* Transaction and locking information. */
+ 	struct xfs_inode_log_item *i_itemp;	/* logging information */
+ 	mrlock_t		i_lock;		/* inode lock */
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 21e6d08e3e18..57e6e44123a9 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1321,7 +1321,6 @@ xfs_setup_inode(
+ 		lockdep_set_class(&inode->i_rwsem,
+ 				  &inode->i_sb->s_type->i_mutex_dir_key);
+ 		lockdep_set_class(&ip->i_lock.mr_lock, &xfs_dir_ilock_class);
+-		ip->d_ops = ip->i_mount->m_dir_inode_ops;
+ 	} else {
+ 		lockdep_set_class(&ip->i_lock.mr_lock, &xfs_nondir_ilock_class);
  	}
-diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
-index 99cdc31eb8c9..82764aa2a6f6 100644
---- a/fs/xfs/libxfs/xfs_dir2_priv.h
-+++ b/fs/xfs/libxfs/xfs_dir2_priv.h
-@@ -61,6 +61,10 @@ struct xfs_dir2_data_free *xfs_dir2_data_bestfree_p(struct xfs_mount *mp,
- 		struct xfs_dir2_data_hdr *hdr);
- __be16 *xfs_dir2_data_entry_tag_p(struct xfs_mount *mp,
- 		struct xfs_dir2_data_entry *dep);
-+uint8_t xfs_dir2_data_get_ftype(struct xfs_mount *mp,
-+		struct xfs_dir2_data_entry *dep);
-+void xfs_dir2_data_put_ftype(struct xfs_mount *mp,
-+		struct xfs_dir2_data_entry *dep, uint8_t ftype);
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 9719f2aa8be3..2dceb446e651 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -12,7 +12,6 @@ struct xfs_mru_cache;
+ struct xfs_nameops;
+ struct xfs_ail;
+ struct xfs_quotainfo;
+-struct xfs_dir_ops;
+ struct xfs_da_geometry;
  
- #ifdef DEBUG
- extern void xfs_dir3_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
-diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-index b5ac27442f9a..db1a82972d9e 100644
---- a/fs/xfs/libxfs/xfs_dir2_sf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-@@ -319,7 +319,7 @@ xfs_dir2_block_to_sf(
- 			xfs_dir2_sf_put_ino(mp, sfp, sfep,
- 					      be64_to_cpu(dep->inumber));
- 			xfs_dir2_sf_put_ftype(mp, sfep,
--					dp->d_ops->data_get_ftype(dep));
-+					xfs_dir2_data_get_ftype(mp, dep));
- 
- 			sfep = xfs_dir2_sf_nextentry(mp, sfp, sfep);
- 		}
-diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-index 5d945219a735..9540ac7f2dfe 100644
---- a/fs/xfs/xfs_dir2_readdir.c
-+++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -203,7 +203,7 @@ xfs_dir2_block_getdents(
- 		cook = xfs_dir2_db_off_to_dataptr(geo, geo->datablk, offset);
- 
- 		ctx->pos = cook & 0x7fffffff;
--		filetype = dp->d_ops->data_get_ftype(dep);
-+		filetype = xfs_dir2_data_get_ftype(dp->i_mount, dep);
- 		/*
- 		 * If it didn't fit, set the final offset to here & return.
- 		 */
-@@ -458,7 +458,7 @@ xfs_dir2_leaf_getdents(
- 
- 		dep = bp->b_addr + offset;
- 		length = xfs_dir2_data_entsize(mp, dep->namelen);
--		filetype = dp->d_ops->data_get_ftype(dep);
-+		filetype = xfs_dir2_data_get_ftype(mp, dep);
- 
- 		ctx->pos = xfs_dir2_byte_to_dataptr(curoff) & 0x7fffffff;
- 		if (!xfs_dir2_namecheck(dep->name, dep->namelen)) {
+ /* dynamic preallocation free space thresholds, 5% down to 1% */
+@@ -156,7 +155,6 @@ typedef struct xfs_mount {
+ 	int			m_swidth;	/* stripe width */
+ 	uint8_t			m_sectbb_log;	/* sectlog - BBSHIFT */
+ 	const struct xfs_nameops *m_dirnameops;	/* vector of dir name ops */
+-	const struct xfs_dir_ops *m_dir_inode_ops; /* vector of dir inode ops */
+ 	uint			m_chsize;	/* size of next field */
+ 	atomic_t		m_active_trans;	/* number trans frozen */
+ 	struct xfs_mru_cache	*m_filestream;  /* per-mount filestream data */
 -- 
 2.20.1
 
