@@ -2,227 +2,114 @@ Return-Path: <SRS0=aC/G=Y7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9F8CC5DF60
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 06:08:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC46AC5DF61
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 06:44:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9376D21D6C
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 06:08:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E187218AE
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 06:44:21 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="KZsXsO0P"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725893AbfKGGIN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Nov 2019 01:08:13 -0500
-Received: from smtprelay0211.hostedemail.com ([216.40.44.211]:58411 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725763AbfKGGIM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 01:08:12 -0500
-X-Greylist: delayed 402 seconds by postgrey-1.27 at vger.kernel.org; Thu, 07 Nov 2019 01:08:11 EST
-Received: from smtprelay.hostedemail.com (10.5.19.251.rfc1918.com [10.5.19.251])
-        by smtpgrave07.hostedemail.com (Postfix) with ESMTP id 7288D1802E617
-        for <linux-xfs@vger.kernel.org>; Thu,  7 Nov 2019 06:01:30 +0000 (UTC)
-Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay08.hostedemail.com (Postfix) with ESMTP id EDACC182CED28;
-        Thu,  7 Nov 2019 06:01:28 +0000 (UTC)
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-HE-Tag: oven08_470620914dc0d
-X-Filterd-Recvd-Size: 7435
-Received: from XPS-9350.home (unknown [47.151.135.224])
-        (Authenticated sender: joe@perches.com)
-        by omf05.hostedemail.com (Postfix) with ESMTPA;
-        Thu,  7 Nov 2019 06:01:27 +0000 (UTC)
-Message-ID: <0ceb6a89da4424a4500789610fae4d05ba45ba86.camel@perches.com>
-Subject: [PATCH] xfs: Correct comment tyops -> typos
-From:   Joe Perches <joe@perches.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Date:   Wed, 06 Nov 2019 22:01:15 -0800
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.34.1-2 
+        id S1727083AbfKGGoS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Nov 2019 01:44:18 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:59676 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726925AbfKGGoS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 01:44:18 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA76hurQ192453;
+        Thu, 7 Nov 2019 06:44:13 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=0rpg1HEjwlssesUt/BwllmUuPcZcgM6B4yGQ7s6Gc3U=;
+ b=KZsXsO0P9TNx2Zr63cEODUxYO2XDKxi3Ss32yNKlEYh6DEPWDtj/S/KD5boEYCo3i0CW
+ YYPmldxYKl21iwi7I2xIOsg3JlDZzubtSb6nh7Mb5vdCymDva9beeKWGCwpGBXoskP0m
+ ACcHsr0vPvtxpMXvbHZpIwTn5etoHTnXquE6aVR0uKovykPTqMoYGyqchHKh9XgkjD1y
+ AUhdVnPnjV28WgeYZIfwvRQ/D9Dp8AMiklwTS5J847hXa1Tu3XTL6blAbIZx+aLmZJ+W
+ Of142e4lNM/Y8/4uDDaj0Bw0mgdDMC5965YI+2oN7cY7/Z02upbPrrpxkXfKM4/bDETx /g== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2w41w0uvgk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 07 Nov 2019 06:44:13 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA76hqWk191719;
+        Thu, 7 Nov 2019 06:44:13 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2w41wgd3kn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 07 Nov 2019 06:44:13 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xA76iBWE000681;
+        Thu, 7 Nov 2019 06:44:12 GMT
+Received: from kadam (/41.57.98.10)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 06 Nov 2019 22:44:11 -0800
+Date:   Thu, 7 Nov 2019 09:44:04 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     Colin Ian King <colin.king@canonical.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH][next] xfs: remove redundant assignment to variable error
+Message-ID: <20191107064404.GL10409@kadam>
+References: <20191106155248.266489-1-colin.king@canonical.com>
+ <20191106155631.GJ4153244@magnolia>
+ <cbb99652-c6b2-c81c-128d-6d85be04fddc@canonical.com>
+ <a77fff95-0591-bcca-2541-3fd68c0da908@sandeen.net>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a77fff95-0591-bcca-2541-3fd68c0da908@sandeen.net>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9433 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1910280000 definitions=main-1911070068
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9433 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
+ definitions=main-1911070068
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Just fix the typos checkpatch notices...
+On Wed, Nov 06, 2019 at 10:19:18AM -0600, Eric Sandeen wrote:
+> 
+> 
+> On 11/6/19 9:59 AM, Colin Ian King wrote:
+> > On 06/11/2019 15:56, Darrick J. Wong wrote:
+> >> On Wed, Nov 06, 2019 at 03:52:48PM +0000, Colin King wrote:
+> >>> From: Colin Ian King <colin.king@canonical.com>
+> >>>
+> >>> Variable error is being initialized with a value that is never read
+> >>> and is being re-assigned a couple of statements later on. The
+> >>> assignment is redundant and hence can be removed.
+> >>>
+> >>> Addresses-Coverity: ("Unused value")
+> >>
+> >> Er... is there a coverity id that goes with this?
+> > 
+> > Unfortunately it is a private one, so it does not make sense to use it.
+> 
+> If it's not in the upstream coverity scan (and AFAICT it's not),
+> it makes no sense to reference coverity in the commit log.
+> It's not useful to anyone IMHO.
+> 
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- fs/xfs/kmem.c                  | 2 +-
- fs/xfs/libxfs/xfs_alloc.c      | 2 +-
- fs/xfs/libxfs/xfs_attr_leaf.c  | 2 +-
- fs/xfs/libxfs/xfs_da_format.h  | 2 +-
- fs/xfs/libxfs/xfs_fs.h         | 2 +-
- fs/xfs/libxfs/xfs_log_format.h | 4 ++--
- fs/xfs/xfs_buf.c               | 2 +-
- fs/xfs/xfs_log_cil.c           | 4 ++--
- fs/xfs/xfs_symlink.h           | 2 +-
- fs/xfs/xfs_trans_ail.c         | 8 ++++----
- 10 files changed, 15 insertions(+), 15 deletions(-)
+It's sort of useful if want to see how the bug was found or if you want
+to count how many bugs coverity finds...  I'm pretty sure I remember
+someone complaining that it wasn't mentioned in the commit.
 
-diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-index da031b9..1da942 100644
---- a/fs/xfs/kmem.c
-+++ b/fs/xfs/kmem.c
-@@ -32,7 +32,7 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
- 
- 
- /*
-- * __vmalloc() will allocate data pages and auxillary structures (e.g.
-+ * __vmalloc() will allocate data pages and auxiliary structures (e.g.
-  * pagetables) with GFP_KERNEL, yet we may be under GFP_NOFS context here. Hence
-  * we need to tell memory reclaim that we are in such a context via
-  * PF_MEMALLOC_NOFS to prevent memory reclaim re-entering the filesystem here
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index f7a4b5..b39bd8 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -1488,7 +1488,7 @@ xfs_alloc_ag_vextent_near(
- 	dofirst = prandom_u32() & 1;
- #endif
- 
--	/* handle unitialized agbno range so caller doesn't have to */
-+	/* handle uninitialized agbno range so caller doesn't have to */
- 	if (!args->min_agbno && !args->max_agbno)
- 		args->max_agbno = args->mp->m_sb.sb_agblocks - 1;
- 	ASSERT(args->min_agbno <= args->max_agbno);
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index dca884..8ba3ae8 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -829,7 +829,7 @@ xfs_attr_shortform_lookup(xfs_da_args_t *args)
- }
- 
- /*
-- * Retreive the attribute value and length.
-+ * Retrieve the attribute value and length.
-  *
-  * If ATTR_KERNOVAL is specified, only the length needs to be returned.
-  * Unlike a lookup, we only return an error if the attribute does not
-diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index ae654e0..6702a08 100644
---- a/fs/xfs/libxfs/xfs_da_format.h
-+++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -482,7 +482,7 @@ xfs_dir2_leaf_bests_p(struct xfs_dir2_leaf_tail *ltp)
- }
- 
- /*
-- * Free space block defintions for the node format.
-+ * Free space block definitions for the node format.
-  */
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index e9371a..038a16a 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -416,7 +416,7 @@ struct xfs_bulkstat {
- 
- /*
-  * Project quota id helpers (previously projid was 16bit only
-- * and using two 16bit values to hold new 32bit projid was choosen
-+ * and using two 16bit values to hold new 32bit projid was chosen
-  * to retain compatibility with "old" filesystems).
-  */
- static inline uint32_t
-diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-index e5f97c6..8ef31d7 100644
---- a/fs/xfs/libxfs/xfs_log_format.h
-+++ b/fs/xfs/libxfs/xfs_log_format.h
-@@ -432,9 +432,9 @@ static inline uint xfs_log_dinode_size(int version)
- }
- 
- /*
-- * Buffer Log Format defintions
-+ * Buffer Log Format definitions
-  *
-- * These are the physical dirty bitmap defintions for the log format structure.
-+ * These are the physical dirty bitmap definitions for the log format structure.
-  */
- #define	XFS_BLF_CHUNK		128
- #define	XFS_BLF_SHIFT		7
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 1e63dd3..2ed3c65 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -461,7 +461,7 @@ _xfs_buf_map_pages(
- 		unsigned nofs_flag;
- 
- 		/*
--		 * vm_map_ram() will allocate auxillary structures (e.g.
-+		 * vm_map_ram() will allocate auxiliary structures (e.g.
- 		 * pagetables) with GFP_KERNEL, yet we are likely to be under
- 		 * GFP_NOFS context here. Hence we need to tell memory reclaim
- 		 * that we are in such a context via PF_MEMALLOC_NOFS to prevent
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index a120442..48435c 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -179,7 +179,7 @@ xlog_cil_alloc_shadow_bufs(
- 
- 			/*
- 			 * We free and allocate here as a realloc would copy
--			 * unecessary data. We don't use kmem_zalloc() for the
-+			 * unnecessary data. We don't use kmem_zalloc() for the
- 			 * same reason - we don't need to zero the data area in
- 			 * the buffer, only the log vector header and the iovec
- 			 * storage.
-@@ -682,7 +682,7 @@ xlog_cil_push(
- 	}
- 
- 
--	/* check for a previously pushed seqeunce */
-+	/* check for a previously pushed sequence */
- 	if (push_seq < cil->xc_ctx->sequence) {
- 		spin_unlock(&cil->xc_push_lock);
- 		goto out_skip;
-diff --git a/fs/xfs/xfs_symlink.h b/fs/xfs/xfs_symlink.h
-index 9743d8c..b1fa09 100644
---- a/fs/xfs/xfs_symlink.h
-+++ b/fs/xfs/xfs_symlink.h
-@@ -5,7 +5,7 @@
- #ifndef __XFS_SYMLINK_H
- #define __XFS_SYMLINK_H 1
- 
--/* Kernel only symlink defintions */
-+/* Kernel only symlink definitions */
- 
- int xfs_symlink(struct xfs_inode *dp, struct xfs_name *link_name,
- 		const char *target_path, umode_t mode, struct xfs_inode **ipp);
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index aea71e..00cc5b 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -427,15 +427,15 @@ xfsaild_push(
- 
- 		case XFS_ITEM_FLUSHING:
- 			/*
--			 * The item or its backing buffer is already beeing
-+			 * The item or its backing buffer is already being
- 			 * flushed.  The typical reason for that is that an
- 			 * inode buffer is locked because we already pushed the
- 			 * updates to it as part of inode clustering.
- 			 *
- 			 * We do not want to to stop flushing just because lots
--			 * of items are already beeing flushed, but we need to
-+			 * of items are already being flushed, but we need to
- 			 * re-try the flushing relatively soon if most of the
--			 * AIL is beeing flushed.
-+			 * AIL is being flushed.
- 			 */
- 			XFS_STATS_INC(mp, xs_push_ail_flushing);
- 			trace_xfs_ail_flushing(lip);
-@@ -612,7 +612,7 @@ xfsaild(
-  * The push is run asynchronously in a workqueue, which means the caller needs
-  * to handle waiting on the async flush for space to become available.
-  * We don't want to interrupt any push that is in progress, hence we only queue
-- * work if we set the pushing bit approriately.
-+ * work if we set the pushing bit appropriately.
-  *
-  * We do this unlocked - we only need to know whether there is anything in the
-  * AIL at the time we are called. We don't need to access the contents of
-
-
+regards,
+dan carpenter
