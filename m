@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22D0BC43331
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 18:25:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EB8AC43331
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 18:25:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DA39F214D8
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 18:25:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D112206DF
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 18:25:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pBq7SbKv"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mO4TskjK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727507AbfKGSZK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Nov 2019 13:25:10 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:44126 "EHLO
+        id S1727659AbfKGSZN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Nov 2019 13:25:13 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:44136 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725991AbfKGSZK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 13:25:10 -0500
+        with ESMTP id S1725991AbfKGSZM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 13:25:12 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
-        :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=ua1/ZelQZu32BOcDwuCCB4csR0vzujeJ7ktQqqyLNhg=; b=pBq7SbKvJUs31T2PAsMcAFbHx+
-        vShHyNmNlVXiSCc93dBcowaXVm95mARU5u+ENSznrFGjDvS1T5pueSDTN7/C9FE+tDCYbLuq9Qi6n
-        GVcdTZGO+7x8+nMVZt3cv+78VZtx1OfZl9Jevbt41qEHHRtn8flBsEJ6w1FPpZtGfUxR+tUJ6nY0B
-        NqvrWopRh1MkYkwbKNr2Q4WycEcVlwEbZjgGfMxx/dv7GIPhn0IiJwE/BeQzGoNJPQtVr0NjJdHd+
-        r1bWcdpqnzVRQG6Jcp6bGLVyCEayUtwWN3fCQOgKXmp+uQuBDHZ30jrPCAnd/Qnrkom38qLQc7LRV
-        61iWuvJQ==;
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
+        Reply-To:Cc:Content-Type:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=TksbDRPSXEeg4K1gv6AMQn825QQogQP3XUcakczh6Oo=; b=mO4TskjKJENP34fR4Rvrlc4GC
+        Vi/nkeOKVLl8P0qeGMabgVVJNAUNwPZGQux3YkzBxbGAq80cFMHXSGBLPXSVf67iiomk4hNNcWsVO
+        V9osEZNMrmJXJzcqy+9Mlg5CqvMdlnXuG0aka38pWnuRYiotsuN/2vA7IMymRLv7+vW1G/6GHFd6Z
+        pYvwmbiHMgqQ1Bbg29gAEmxBbVMSKbZBgG6NoTSi96Znn+UsgmUnAccMVetI9XDkgy2hJ4QlQcYAA
+        8hybzZrV9hVNg9xAk4MbfF2l1GkVno06tubjShwhIzCc5+Zv6NkIZjY1hj29fCggRZagiD+0fSVzN
+        GrL8mbFrQ==;
 Received: from [2001:4bb8:184:e48:c70:4a89:bc61:2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iSmSz-00041R-Kh; Thu, 07 Nov 2019 18:25:10 +0000
+        id 1iSmT2-0004Lv-6o
+        for linux-xfs@vger.kernel.org; Thu, 07 Nov 2019 18:25:12 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
-Cc:     "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 21/46] xfs: devirtualize ->sf_entsize and ->sf_nextentry
-Date:   Thu,  7 Nov 2019 19:23:45 +0100
-Message-Id: <20191107182410.12660-22-hch@lst.de>
+Subject: [PATCH 22/46] xfs: devirtualize ->sf_get_ino and ->sf_put_ino
+Date:   Thu,  7 Nov 2019 19:23:46 +0100
+Message-Id: <20191107182410.12660-23-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191107182410.12660-1-hch@lst.de>
 References: <20191107182410.12660-1-hch@lst.de>
@@ -53,489 +53,378 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Just check for file-type enabled directories directly.
+Replace the ->sf_get_ino and ->sf_put_ino dir ops methods with directly
+called xfs_dir2_sf_get_ino and xfs_dir2_sf_put_ino helpers that take care
+of the difference between the directory format with and without the file
+type field.  Also move xfs_dir2_sf_get_parent_ino and
+xfs_dir2_sf_put_parent_ino to xfs_dir2_sf.c with the rest of the
+low-level short form entry handling and use XFS_MAXINUMBER istead of
+opencoded constants.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_da_format.c  | 48 -----------------
- fs/xfs/libxfs/xfs_dir2.h       |  4 --
+ fs/xfs/libxfs/xfs_da_format.c  | 94 ----------------------------------
+ fs/xfs/libxfs/xfs_dir2.h       |  5 --
  fs/xfs/libxfs/xfs_dir2_block.c |  2 +-
  fs/xfs/libxfs/xfs_dir2_priv.h  |  2 +
- fs/xfs/libxfs/xfs_dir2_sf.c    | 96 ++++++++++++++++++++--------------
- fs/xfs/xfs_dir2_readdir.c      |  7 +--
- 6 files changed, 64 insertions(+), 95 deletions(-)
+ fs/xfs/libxfs/xfs_dir2_sf.c    | 91 +++++++++++++++++++++++++++-----
+ fs/xfs/xfs_dir2_readdir.c      |  2 +-
+ 6 files changed, 82 insertions(+), 114 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_da_format.c b/fs/xfs/libxfs/xfs_da_format.c
-index 7858469c09e4..f80495a38a76 100644
+index f80495a38a76..f427f141d001 100644
 --- a/fs/xfs/libxfs/xfs_da_format.c
 +++ b/fs/xfs/libxfs/xfs_da_format.c
-@@ -15,48 +15,6 @@
- #include "xfs_dir2.h"
- #include "xfs_dir2_priv.h"
+@@ -58,94 +58,6 @@ xfs_dir3_sfe_put_ftype(
+ 	sfep->name[sfep->namelen] = ftype;
+ }
  
 -/*
-- * Shortform directory ops
+- * Inode numbers in short-form directories can come in two versions,
+- * either 4 bytes or 8 bytes wide.  These helpers deal with the
+- * two forms transparently by looking at the headers i8count field.
+- *
+- * For 64-bit inode number the most significant byte must be zero.
 - */
--static int
--xfs_dir2_sf_entsize(
+-static xfs_ino_t
+-xfs_dir2_sf_get_ino(
 -	struct xfs_dir2_sf_hdr	*hdr,
--	int			len)
+-	uint8_t			*from)
 -{
--	int count = sizeof(struct xfs_dir2_sf_entry);	/* namelen + offset */
--
--	count += len;					/* name */
--	count += hdr->i8count ? XFS_INO64_SIZE : XFS_INO32_SIZE; /* ino # */
--	return count;
+-	if (hdr->i8count)
+-		return get_unaligned_be64(from) & 0x00ffffffffffffffULL;
+-	else
+-		return get_unaligned_be32(from);
 -}
 -
--static int
--xfs_dir3_sf_entsize(
+-static void
+-xfs_dir2_sf_put_ino(
 -	struct xfs_dir2_sf_hdr	*hdr,
--	int			len)
+-	uint8_t			*to,
+-	xfs_ino_t		ino)
 -{
--	return xfs_dir2_sf_entsize(hdr, len) + sizeof(uint8_t);
+-	ASSERT((ino & 0xff00000000000000ULL) == 0);
+-
+-	if (hdr->i8count)
+-		put_unaligned_be64(ino, to);
+-	else
+-		put_unaligned_be32(ino, to);
 -}
 -
--static struct xfs_dir2_sf_entry *
--xfs_dir2_sf_nextentry(
+-xfs_ino_t
+-xfs_dir2_sf_get_parent_ino(
+-	struct xfs_dir2_sf_hdr	*hdr)
+-{
+-	return xfs_dir2_sf_get_ino(hdr, hdr->parent);
+-}
+-
+-void
+-xfs_dir2_sf_put_parent_ino(
+-	struct xfs_dir2_sf_hdr	*hdr,
+-	xfs_ino_t		ino)
+-{
+-	xfs_dir2_sf_put_ino(hdr, hdr->parent, ino);
+-}
+-
+-/*
+- * In short-form directory entries the inode numbers are stored at variable
+- * offset behind the entry name. If the entry stores a filetype value, then it
+- * sits between the name and the inode number. Hence the inode numbers may only
+- * be accessed through the helpers below.
+- */
+-static xfs_ino_t
+-xfs_dir2_sfe_get_ino(
 -	struct xfs_dir2_sf_hdr	*hdr,
 -	struct xfs_dir2_sf_entry *sfep)
 -{
--	return (struct xfs_dir2_sf_entry *)
--		((char *)sfep + xfs_dir2_sf_entsize(hdr, sfep->namelen));
+-	return xfs_dir2_sf_get_ino(hdr, &sfep->name[sfep->namelen]);
 -}
 -
--static struct xfs_dir2_sf_entry *
--xfs_dir3_sf_nextentry(
+-static void
+-xfs_dir2_sfe_put_ino(
+-	struct xfs_dir2_sf_hdr	*hdr,
+-	struct xfs_dir2_sf_entry *sfep,
+-	xfs_ino_t		ino)
+-{
+-	xfs_dir2_sf_put_ino(hdr, &sfep->name[sfep->namelen], ino);
+-}
+-
+-static xfs_ino_t
+-xfs_dir3_sfe_get_ino(
 -	struct xfs_dir2_sf_hdr	*hdr,
 -	struct xfs_dir2_sf_entry *sfep)
 -{
--	return (struct xfs_dir2_sf_entry *)
--		((char *)sfep + xfs_dir3_sf_entsize(hdr, sfep->namelen));
+-	return xfs_dir2_sf_get_ino(hdr, &sfep->name[sfep->namelen + 1]);
+-}
+-
+-static void
+-xfs_dir3_sfe_put_ino(
+-	struct xfs_dir2_sf_hdr	*hdr,
+-	struct xfs_dir2_sf_entry *sfep,
+-	xfs_ino_t		ino)
+-{
+-	xfs_dir2_sf_put_ino(hdr, &sfep->name[sfep->namelen + 1], ino);
 -}
 -
 -
  /*
-  * For filetype enabled shortform directories, the file type field is stored at
-  * the end of the name.  Because it's only a single byte, endian conversion is
-@@ -401,8 +359,6 @@ xfs_dir3_data_unused_p(struct xfs_dir2_data_hdr *hdr)
- }
- 
+  * Directory data block operations
+  */
+@@ -361,8 +273,6 @@ xfs_dir3_data_unused_p(struct xfs_dir2_data_hdr *hdr)
  static const struct xfs_dir_ops xfs_dir2_ops = {
--	.sf_entsize = xfs_dir2_sf_entsize,
--	.sf_nextentry = xfs_dir2_sf_nextentry,
  	.sf_get_ftype = xfs_dir2_sfe_get_ftype,
  	.sf_put_ftype = xfs_dir2_sfe_put_ftype,
- 	.sf_get_ino = xfs_dir2_sfe_get_ino,
-@@ -430,8 +386,6 @@ static const struct xfs_dir_ops xfs_dir2_ops = {
- };
+-	.sf_get_ino = xfs_dir2_sfe_get_ino,
+-	.sf_put_ino = xfs_dir2_sfe_put_ino,
  
+ 	.data_entsize = xfs_dir2_data_entsize,
+ 	.data_get_ftype = xfs_dir2_data_get_ftype,
+@@ -388,8 +298,6 @@ static const struct xfs_dir_ops xfs_dir2_ops = {
  static const struct xfs_dir_ops xfs_dir2_ftype_ops = {
--	.sf_entsize = xfs_dir3_sf_entsize,
--	.sf_nextentry = xfs_dir3_sf_nextentry,
  	.sf_get_ftype = xfs_dir3_sfe_get_ftype,
  	.sf_put_ftype = xfs_dir3_sfe_put_ftype,
- 	.sf_get_ino = xfs_dir3_sfe_get_ino,
-@@ -459,8 +413,6 @@ static const struct xfs_dir_ops xfs_dir2_ftype_ops = {
- };
+-	.sf_get_ino = xfs_dir3_sfe_get_ino,
+-	.sf_put_ino = xfs_dir3_sfe_put_ino,
  
+ 	.data_entsize = xfs_dir3_data_entsize,
+ 	.data_get_ftype = xfs_dir3_data_get_ftype,
+@@ -415,8 +323,6 @@ static const struct xfs_dir_ops xfs_dir2_ftype_ops = {
  static const struct xfs_dir_ops xfs_dir3_ops = {
--	.sf_entsize = xfs_dir3_sf_entsize,
--	.sf_nextentry = xfs_dir3_sf_nextentry,
  	.sf_get_ftype = xfs_dir3_sfe_get_ftype,
  	.sf_put_ftype = xfs_dir3_sfe_put_ftype,
- 	.sf_get_ino = xfs_dir3_sfe_get_ino,
+-	.sf_get_ino = xfs_dir3_sfe_get_ino,
+-	.sf_put_ino = xfs_dir3_sfe_put_ino,
+ 
+ 	.data_entsize = xfs_dir3_data_entsize,
+ 	.data_get_ftype = xfs_dir3_data_get_ftype,
 diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-index d3a0b8daab5f..c99f0ad6607a 100644
+index c99f0ad6607a..049d844d6a18 100644
 --- a/fs/xfs/libxfs/xfs_dir2.h
 +++ b/fs/xfs/libxfs/xfs_dir2.h
-@@ -32,10 +32,6 @@ extern unsigned char xfs_mode_to_ftype(int mode);
-  * directory operations vector for encode/decode routines
-  */
- struct xfs_dir_ops {
--	int	(*sf_entsize)(struct xfs_dir2_sf_hdr *hdr, int len);
--	struct xfs_dir2_sf_entry *
--		(*sf_nextentry)(struct xfs_dir2_sf_hdr *hdr,
--				struct xfs_dir2_sf_entry *sfep);
+@@ -35,11 +35,6 @@ struct xfs_dir_ops {
  	uint8_t (*sf_get_ftype)(struct xfs_dir2_sf_entry *sfep);
  	void	(*sf_put_ftype)(struct xfs_dir2_sf_entry *sfep,
  				uint8_t ftype);
+-	xfs_ino_t (*sf_get_ino)(struct xfs_dir2_sf_hdr *hdr,
+-				struct xfs_dir2_sf_entry *sfep);
+-	void	(*sf_put_ino)(struct xfs_dir2_sf_hdr *hdr,
+-			      struct xfs_dir2_sf_entry *sfep,
+-			      xfs_ino_t ino);
+ 
+ 	int	(*data_entsize)(int len);
+ 	uint8_t (*data_get_ftype)(struct xfs_dir2_data_entry *dep);
 diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-index bc47113b78e5..a6decb4c079a 100644
+index a6decb4c079a..02b0344508e0 100644
 --- a/fs/xfs/libxfs/xfs_dir2_block.c
 +++ b/fs/xfs/libxfs/xfs_dir2_block.c
-@@ -1225,7 +1225,7 @@ xfs_dir2_sf_to_block(
- 		if (++i == sfp->count)
- 			sfep = NULL;
- 		else
--			sfep = dp->d_ops->sf_nextentry(sfp, sfep);
-+			sfep = xfs_dir2_sf_nextentry(mp, sfp, sfep);
- 	}
- 	/* Done with the temporary buffer */
- 	kmem_free(sfp);
+@@ -1208,7 +1208,7 @@ xfs_dir2_sf_to_block(
+ 		 * Copy a real entry.
+ 		 */
+ 		dep = (xfs_dir2_data_entry_t *)((char *)hdr + newoffset);
+-		dep->inumber = cpu_to_be64(dp->d_ops->sf_get_ino(sfp, sfep));
++		dep->inumber = cpu_to_be64(xfs_dir2_sf_get_ino(mp, sfp, sfep));
+ 		dep->namelen = sfep->namelen;
+ 		dp->d_ops->data_put_ftype(dep, dp->d_ops->sf_get_ftype(sfep));
+ 		memcpy(dep->name, sfep->name, dep->namelen);
 diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
-index bb50853d0988..357b388a5be0 100644
+index 357b388a5be0..a194a7b57277 100644
 --- a/fs/xfs/libxfs/xfs_dir2_priv.h
 +++ b/fs/xfs/libxfs/xfs_dir2_priv.h
-@@ -147,6 +147,8 @@ extern int xfs_dir2_free_read(struct xfs_trans *tp, struct xfs_inode *dp,
+@@ -145,6 +145,8 @@ extern int xfs_dir2_free_read(struct xfs_trans *tp, struct xfs_inode *dp,
+ 		xfs_dablk_t fbno, struct xfs_buf **bpp);
+ 
  /* xfs_dir2_sf.c */
++xfs_ino_t xfs_dir2_sf_get_ino(struct xfs_mount *mp, struct xfs_dir2_sf_hdr *hdr,
++		struct xfs_dir2_sf_entry *sfep);
  xfs_ino_t xfs_dir2_sf_get_parent_ino(struct xfs_dir2_sf_hdr *hdr);
  void xfs_dir2_sf_put_parent_ino(struct xfs_dir2_sf_hdr *hdr, xfs_ino_t ino);
-+struct xfs_dir2_sf_entry *xfs_dir2_sf_nextentry(struct xfs_mount *mp,
-+		struct xfs_dir2_sf_hdr *hdr, struct xfs_dir2_sf_entry *sfep);
- extern int xfs_dir2_block_sfsize(struct xfs_inode *dp,
- 		struct xfs_dir2_data_hdr *block, struct xfs_dir2_sf_hdr *sfhp);
- extern int xfs_dir2_block_to_sf(struct xfs_da_args *args, struct xfs_buf *bp,
+ struct xfs_dir2_sf_entry *xfs_dir2_sf_nextentry(struct xfs_mount *mp,
 diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-index c7ca25acdb18..36d79ec57d55 100644
+index 36d79ec57d55..f63fb044bd15 100644
 --- a/fs/xfs/libxfs/xfs_dir2_sf.c
 +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-@@ -37,6 +37,31 @@ static void xfs_dir2_sf_check(xfs_da_args_t *args);
- static void xfs_dir2_sf_toino4(xfs_da_args_t *args);
- static void xfs_dir2_sf_toino8(xfs_da_args_t *args);
+@@ -62,6 +62,70 @@ xfs_dir2_sf_nextentry(
+ 	return (void *)sfep + xfs_dir2_sf_entsize(mp, hdr, sfep->namelen);
+ }
  
-+static int
-+xfs_dir2_sf_entsize(
-+	struct xfs_mount	*mp,
-+	struct xfs_dir2_sf_hdr	*hdr,
-+	int			len)
++/*
++ * In short-form directory entries the inode numbers are stored at variable
++ * offset behind the entry name. If the entry stores a filetype value, then it
++ * sits between the name and the inode number.  The actual inode numbers can
++ * come in two formats as well, either 4 bytes or 8 bytes wide.
++ */
++xfs_ino_t
++xfs_dir2_sf_get_ino(
++	struct xfs_mount		*mp,
++	struct xfs_dir2_sf_hdr		*hdr,
++	struct xfs_dir2_sf_entry	*sfep)
 +{
-+	int			count = len;
-+
-+	count += sizeof(struct xfs_dir2_sf_entry);	/* namelen + offset */
-+	count += hdr->i8count ? XFS_INO64_SIZE : XFS_INO32_SIZE; /* ino # */
++	uint8_t				*from = sfep->name + sfep->namelen;
 +
 +	if (xfs_sb_version_hasftype(&mp->m_sb))
-+		count += sizeof(uint8_t);
-+	return count;
++		from++;
++
++	if (!hdr->i8count)
++		return get_unaligned_be32(from);
++	return get_unaligned_be64(from) & XFS_MAXINUMBER;
 +}
 +
-+struct xfs_dir2_sf_entry *
-+xfs_dir2_sf_nextentry(
-+	struct xfs_mount	*mp,
-+	struct xfs_dir2_sf_hdr	*hdr,
-+	struct xfs_dir2_sf_entry *sfep)
++static void
++xfs_dir2_sf_put_ino(
++	struct xfs_mount		*mp,
++	struct xfs_dir2_sf_hdr		*hdr,
++	struct xfs_dir2_sf_entry	*sfep,
++	xfs_ino_t			ino)
 +{
-+	return (void *)sfep + xfs_dir2_sf_entsize(mp, hdr, sfep->namelen);
++	uint8_t				*to = sfep->name + sfep->namelen;
++
++	ASSERT(ino <= XFS_MAXINUMBER);
++
++	if (xfs_sb_version_hasftype(&mp->m_sb))
++		to++;
++
++	if (hdr->i8count)
++		put_unaligned_be64(ino, to);
++	else
++		put_unaligned_be32(ino, to);
++}
++
++xfs_ino_t
++xfs_dir2_sf_get_parent_ino(
++	struct xfs_dir2_sf_hdr	*hdr)
++{
++	if (!hdr->i8count)
++		return get_unaligned_be32(hdr->parent);
++	return get_unaligned_be64(hdr->parent) & XFS_MAXINUMBER;
++}
++
++void
++xfs_dir2_sf_put_parent_ino(
++	struct xfs_dir2_sf_hdr		*hdr,
++	xfs_ino_t			ino)
++{
++	ASSERT(ino <= XFS_MAXINUMBER);
++
++	if (hdr->i8count)
++		put_unaligned_be64(ino, hdr->parent);
++	else
++		put_unaligned_be32(ino, hdr->parent);
 +}
 +
  /*
   * Given a block directory (dp/block), calculate its size as a shortform (sf)
   * directory and a header for the sf directory, if it will fit it the
-@@ -219,7 +244,7 @@ xfs_dir2_block_to_sf(
+@@ -239,7 +303,7 @@ xfs_dir2_block_to_sf(
+ 				(xfs_dir2_data_aoff_t)
+ 				((char *)dep - (char *)hdr));
+ 			memcpy(sfep->name, dep->name, dep->namelen);
+-			dp->d_ops->sf_put_ino(sfp, sfep,
++			xfs_dir2_sf_put_ino(mp, sfp, sfep,
+ 					      be64_to_cpu(dep->inumber));
  			dp->d_ops->sf_put_ftype(sfep,
  					dp->d_ops->data_get_ftype(dep));
- 
--			sfep = dp->d_ops->sf_nextentry(sfp, sfep);
-+			sfep = xfs_dir2_sf_nextentry(mp, sfp, sfep);
- 		}
- 		ptr += dp->d_ops->data_entsize(dep->namelen);
- 	}
-@@ -285,7 +310,7 @@ xfs_dir2_sf_addname(
- 	/*
- 	 * Compute entry (and change in) size.
- 	 */
--	incr_isize = dp->d_ops->sf_entsize(sfp, args->namelen);
-+	incr_isize = xfs_dir2_sf_entsize(dp->i_mount, sfp, args->namelen);
- 	objchange = 0;
+@@ -406,7 +470,7 @@ xfs_dir2_sf_addname_easy(
+ 	sfep->namelen = args->namelen;
+ 	xfs_dir2_sf_put_offset(sfep, offset);
+ 	memcpy(sfep->name, args->name, sfep->namelen);
+-	dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
++	xfs_dir2_sf_put_ino(mp, sfp, sfep, args->inumber);
+ 	dp->d_ops->sf_put_ftype(sfep, args->filetype);
  
  	/*
-@@ -358,18 +383,17 @@ xfs_dir2_sf_addname_easy(
- 	xfs_dir2_data_aoff_t	offset,		/* offset to use for new ent */
- 	int			new_isize)	/* new directory size */
- {
-+	struct xfs_inode	*dp = args->dp;
-+	struct xfs_mount	*mp = dp->i_mount;
- 	int			byteoff;	/* byte offset in sf dir */
--	xfs_inode_t		*dp;		/* incore directory inode */
- 	xfs_dir2_sf_hdr_t	*sfp;		/* shortform structure */
- 
--	dp = args->dp;
--
- 	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
- 	byteoff = (int)((char *)sfep - (char *)sfp);
- 	/*
- 	 * Grow the in-inode space.
- 	 */
--	xfs_idata_realloc(dp, dp->d_ops->sf_entsize(sfp, args->namelen),
-+	xfs_idata_realloc(dp, xfs_dir2_sf_entsize(mp, sfp, args->namelen),
- 			  XFS_DATA_FORK);
- 	/*
- 	 * Need to set up again due to realloc of the inode data.
-@@ -410,9 +434,10 @@ xfs_dir2_sf_addname_hard(
- 	int			objchange,	/* changing inode number size */
- 	int			new_isize)	/* new directory size */
- {
-+	struct xfs_inode	*dp = args->dp;
-+	struct xfs_mount	*mp = dp->i_mount;
- 	int			add_datasize;	/* data size need for new ent */
- 	char			*buf;		/* buffer for old */
--	xfs_inode_t		*dp;		/* incore directory inode */
- 	int			eof;		/* reached end of old dir */
- 	int			nbytes;		/* temp for byte copies */
- 	xfs_dir2_data_aoff_t	new_offset;	/* next offset value */
-@@ -426,8 +451,6 @@ xfs_dir2_sf_addname_hard(
- 	/*
- 	 * Copy the old directory to the stack buffer.
- 	 */
--	dp = args->dp;
--
- 	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
- 	old_isize = (int)dp->i_d.di_size;
- 	buf = kmem_alloc(old_isize, 0);
-@@ -444,7 +467,7 @@ xfs_dir2_sf_addname_hard(
- 	      eof = (char *)oldsfep == &buf[old_isize];
- 	     !eof;
- 	     offset = new_offset + dp->d_ops->data_entsize(oldsfep->namelen),
--	      oldsfep = dp->d_ops->sf_nextentry(oldsfp, oldsfep),
-+	      oldsfep = xfs_dir2_sf_nextentry(mp, oldsfp, oldsfep),
- 	      eof = (char *)oldsfep == &buf[old_isize]) {
- 		new_offset = xfs_dir2_sf_get_offset(oldsfep);
- 		if (offset + add_datasize <= new_offset)
-@@ -482,7 +505,7 @@ xfs_dir2_sf_addname_hard(
- 	 * If there's more left to copy, do that.
- 	 */
- 	if (!eof) {
--		sfep = dp->d_ops->sf_nextentry(sfp, sfep);
-+		sfep = xfs_dir2_sf_nextentry(mp, sfp, sfep);
- 		memcpy(sfep, oldsfep, old_isize - nbytes);
- 	}
- 	kmem_free(buf);
-@@ -504,7 +527,8 @@ xfs_dir2_sf_addname_pick(
- 	xfs_dir2_sf_entry_t	**sfepp,	/* out(1): new entry ptr */
- 	xfs_dir2_data_aoff_t	*offsetp)	/* out(1): new offset */
- {
--	xfs_inode_t		*dp;		/* incore directory inode */
-+	struct xfs_inode	*dp = args->dp;
-+	struct xfs_mount	*mp = dp->i_mount;
- 	int			holefit;	/* found hole it will fit in */
- 	int			i;		/* entry number */
- 	xfs_dir2_data_aoff_t	offset;		/* data block offset */
-@@ -513,8 +537,6 @@ xfs_dir2_sf_addname_pick(
- 	int			size;		/* entry's data size */
- 	int			used;		/* data bytes used */
- 
--	dp = args->dp;
--
- 	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
- 	size = dp->d_ops->data_entsize(args->namelen);
- 	offset = dp->d_ops->data_first_offset;
-@@ -530,7 +552,7 @@ xfs_dir2_sf_addname_pick(
- 			holefit = offset + size <= xfs_dir2_sf_get_offset(sfep);
- 		offset = xfs_dir2_sf_get_offset(sfep) +
- 			 dp->d_ops->data_entsize(sfep->namelen);
--		sfep = dp->d_ops->sf_nextentry(sfp, sfep);
-+		sfep = xfs_dir2_sf_nextentry(mp, sfp, sfep);
- 	}
- 	/*
- 	 * Calculate data bytes used excluding the new entry, if this
-@@ -589,7 +611,7 @@ xfs_dir2_sf_check(
- 
- 	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp);
+@@ -496,7 +560,7 @@ xfs_dir2_sf_addname_hard(
+ 	sfep->namelen = args->namelen;
+ 	xfs_dir2_sf_put_offset(sfep, offset);
+ 	memcpy(sfep->name, args->name, sfep->namelen);
+-	dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
++	xfs_dir2_sf_put_ino(mp, sfp, sfep, args->inumber);
+ 	dp->d_ops->sf_put_ftype(sfep, args->filetype);
+ 	sfp->count++;
+ 	if (args->inumber > XFS_DIR2_MAX_SHORT_INUM && !objchange)
+@@ -613,7 +677,7 @@ xfs_dir2_sf_check(
  	     i < sfp->count;
--	     i++, sfep = dp->d_ops->sf_nextentry(sfp, sfep)) {
-+	     i++, sfep = xfs_dir2_sf_nextentry(dp->i_mount, sfp, sfep)) {
+ 	     i++, sfep = xfs_dir2_sf_nextentry(dp->i_mount, sfp, sfep)) {
  		ASSERT(xfs_dir2_sf_get_offset(sfep) >= offset);
- 		ino = dp->d_ops->sf_get_ino(sfp, sfep);
+-		ino = dp->d_ops->sf_get_ino(sfp, sfep);
++		ino = xfs_dir2_sf_get_ino(dp->i_mount, sfp, sfep);
  		i8count += ino > XFS_DIR2_MAX_SHORT_INUM;
-@@ -674,7 +696,7 @@ xfs_dir2_sf_verify(
- 		 * within the data buffer.  The next entry starts after the
- 		 * name component, so nextentry is an acceptable test.
- 		 */
--		next_sfep = dops->sf_nextentry(sfp, sfep);
-+		next_sfep = xfs_dir2_sf_nextentry(mp, sfp, sfep);
- 		if (endp < (char *)next_sfep)
+ 		offset =
+ 			xfs_dir2_sf_get_offset(sfep) +
+@@ -705,7 +769,7 @@ xfs_dir2_sf_verify(
  			return __this_address;
  
-@@ -773,7 +795,8 @@ int						/* error */
- xfs_dir2_sf_lookup(
- 	xfs_da_args_t		*args)		/* operation arguments */
- {
--	xfs_inode_t		*dp;		/* incore directory inode */
-+	struct xfs_inode	*dp = args->dp;
-+	struct xfs_mount	*mp = dp->i_mount;
- 	int			i;		/* entry index */
- 	int			error;
- 	xfs_dir2_sf_entry_t	*sfep;		/* shortform directory entry */
-@@ -784,7 +807,6 @@ xfs_dir2_sf_lookup(
- 	trace_xfs_dir2_sf_lookup(args);
- 
- 	xfs_dir2_sf_check(args);
--	dp = args->dp;
- 
- 	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
- 	ASSERT(dp->i_d.di_size >= offsetof(struct xfs_dir2_sf_hdr, parent));
-@@ -816,7 +838,7 @@ xfs_dir2_sf_lookup(
- 	 */
- 	ci_sfep = NULL;
- 	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp); i < sfp->count;
--	     i++, sfep = dp->d_ops->sf_nextentry(sfp, sfep)) {
-+	     i++, sfep = xfs_dir2_sf_nextentry(mp, sfp, sfep)) {
- 		/*
- 		 * Compare name and if it's an exact match, return the inode
- 		 * number. If it's the first case-insensitive match, store the
-@@ -852,8 +874,9 @@ int						/* error */
- xfs_dir2_sf_removename(
- 	xfs_da_args_t		*args)
- {
-+	struct xfs_inode	*dp = args->dp;
-+	struct xfs_mount	*mp = dp->i_mount;
- 	int			byteoff;	/* offset of removed entry */
--	xfs_inode_t		*dp;		/* incore directory inode */
- 	int			entsize;	/* this entry's size */
- 	int			i;		/* shortform entry index */
- 	int			newsize;	/* new inode size */
-@@ -863,8 +886,6 @@ xfs_dir2_sf_removename(
- 
- 	trace_xfs_dir2_sf_removename(args);
- 
--	dp = args->dp;
--
- 	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
- 	oldsize = (int)dp->i_d.di_size;
- 	ASSERT(oldsize >= offsetof(struct xfs_dir2_sf_hdr, parent));
-@@ -877,7 +898,7 @@ xfs_dir2_sf_removename(
- 	 * Find the one we're deleting.
- 	 */
- 	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp); i < sfp->count;
--	     i++, sfep = dp->d_ops->sf_nextentry(sfp, sfep)) {
-+	     i++, sfep = xfs_dir2_sf_nextentry(mp, sfp, sfep)) {
+ 		/* Check the inode number. */
+-		ino = dops->sf_get_ino(sfp, sfep);
++		ino = xfs_dir2_sf_get_ino(mp, sfp, sfep);
+ 		i8count += ino > XFS_DIR2_MAX_SHORT_INUM;
+ 		error = xfs_dir_ino_validate(mp, ino);
+ 		if (error)
+@@ -848,7 +912,7 @@ xfs_dir2_sf_lookup(
+ 								sfep->namelen);
+ 		if (cmp != XFS_CMP_DIFFERENT && cmp != args->cmpresult) {
+ 			args->cmpresult = cmp;
+-			args->inumber = dp->d_ops->sf_get_ino(sfp, sfep);
++			args->inumber = xfs_dir2_sf_get_ino(mp, sfp, sfep);
+ 			args->filetype = dp->d_ops->sf_get_ftype(sfep);
+ 			if (cmp == XFS_CMP_EXACT)
+ 				return -EEXIST;
+@@ -901,7 +965,7 @@ xfs_dir2_sf_removename(
+ 	     i++, sfep = xfs_dir2_sf_nextentry(mp, sfp, sfep)) {
  		if (xfs_da_compname(args, sfep->name, sfep->namelen) ==
  								XFS_CMP_EXACT) {
- 			ASSERT(dp->d_ops->sf_get_ino(sfp, sfep) ==
-@@ -894,7 +915,7 @@ xfs_dir2_sf_removename(
- 	 * Calculate sizes.
- 	 */
- 	byteoff = (int)((char *)sfep - (char *)sfp);
--	entsize = dp->d_ops->sf_entsize(sfp, args->namelen);
-+	entsize = xfs_dir2_sf_entsize(mp, sfp, args->namelen);
- 	newsize = oldsize - entsize;
- 	/*
- 	 * Copy the part if any after the removed entry, sliding it down.
-@@ -933,7 +954,8 @@ int						/* error */
- xfs_dir2_sf_replace(
- 	xfs_da_args_t		*args)		/* operation arguments */
- {
--	xfs_inode_t		*dp;		/* incore directory inode */
-+	struct xfs_inode	*dp = args->dp;
-+	struct xfs_mount	*mp = dp->i_mount;
- 	int			i;		/* entry index */
- 	xfs_ino_t		ino=0;		/* entry old inode number */
- 	int			i8elevated;	/* sf_toino8 set i8count=1 */
-@@ -942,8 +964,6 @@ xfs_dir2_sf_replace(
- 
- 	trace_xfs_dir2_sf_replace(args);
- 
--	dp = args->dp;
--
- 	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
- 	ASSERT(dp->i_d.di_size >= offsetof(struct xfs_dir2_sf_hdr, parent));
- 	ASSERT(dp->i_df.if_bytes == dp->i_d.di_size);
-@@ -993,7 +1013,7 @@ xfs_dir2_sf_replace(
- 	 */
- 	else {
- 		for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp); i < sfp->count;
--		     i++, sfep = dp->d_ops->sf_nextentry(sfp, sfep)) {
-+		     i++, sfep = xfs_dir2_sf_nextentry(mp, sfp, sfep)) {
+-			ASSERT(dp->d_ops->sf_get_ino(sfp, sfep) ==
++			ASSERT(xfs_dir2_sf_get_ino(mp, sfp, sfep) ==
+ 			       args->inumber);
+ 			break;
+ 		}
+@@ -1016,9 +1080,10 @@ xfs_dir2_sf_replace(
+ 		     i++, sfep = xfs_dir2_sf_nextentry(mp, sfp, sfep)) {
  			if (xfs_da_compname(args, sfep->name, sfep->namelen) ==
  								XFS_CMP_EXACT) {
- 				ino = dp->d_ops->sf_get_ino(sfp, sfep);
-@@ -1052,8 +1072,9 @@ static void
- xfs_dir2_sf_toino4(
- 	xfs_da_args_t		*args)		/* operation arguments */
- {
-+	struct xfs_inode	*dp = args->dp;
-+	struct xfs_mount	*mp = dp->i_mount;
- 	char			*buf;		/* old dir's buffer */
--	xfs_inode_t		*dp;		/* incore directory inode */
- 	int			i;		/* entry index */
- 	int			newsize;	/* new inode size */
- 	xfs_dir2_sf_entry_t	*oldsfep;	/* old sf entry */
-@@ -1064,8 +1085,6 @@ xfs_dir2_sf_toino4(
- 
- 	trace_xfs_dir2_sf_toino4(args);
- 
--	dp = args->dp;
--
- 	/*
- 	 * Copy the old directory to the buffer.
- 	 * Then nuke it from the inode, and add the new buffer to the inode.
-@@ -1099,8 +1118,8 @@ xfs_dir2_sf_toino4(
- 	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp),
- 		    oldsfep = xfs_dir2_sf_firstentry(oldsfp);
- 	     i < sfp->count;
--	     i++, sfep = dp->d_ops->sf_nextentry(sfp, sfep),
--		  oldsfep = dp->d_ops->sf_nextentry(oldsfp, oldsfep)) {
-+	     i++, sfep = xfs_dir2_sf_nextentry(mp, sfp, sfep),
-+		  oldsfep = xfs_dir2_sf_nextentry(mp, oldsfp, oldsfep)) {
+-				ino = dp->d_ops->sf_get_ino(sfp, sfep);
++				ino = xfs_dir2_sf_get_ino(mp, sfp, sfep);
+ 				ASSERT(args->inumber != ino);
+-				dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
++				xfs_dir2_sf_put_ino(mp, sfp, sfep,
++						args->inumber);
+ 				dp->d_ops->sf_put_ftype(sfep, args->filetype);
+ 				break;
+ 			}
+@@ -1123,8 +1188,8 @@ xfs_dir2_sf_toino4(
  		sfep->namelen = oldsfep->namelen;
  		memcpy(sfep->offset, oldsfep->offset, sizeof(sfep->offset));
  		memcpy(sfep->name, oldsfep->name, sfep->namelen);
-@@ -1125,8 +1144,9 @@ static void
- xfs_dir2_sf_toino8(
- 	xfs_da_args_t		*args)		/* operation arguments */
- {
-+	struct xfs_inode	*dp = args->dp;
-+	struct xfs_mount	*mp = dp->i_mount;
- 	char			*buf;		/* old dir's buffer */
--	xfs_inode_t		*dp;		/* incore directory inode */
- 	int			i;		/* entry index */
- 	int			newsize;	/* new inode size */
- 	xfs_dir2_sf_entry_t	*oldsfep;	/* old sf entry */
-@@ -1137,8 +1157,6 @@ xfs_dir2_sf_toino8(
- 
- 	trace_xfs_dir2_sf_toino8(args);
- 
--	dp = args->dp;
--
+-		dp->d_ops->sf_put_ino(sfp, sfep,
+-				      dp->d_ops->sf_get_ino(oldsfp, oldsfep));
++		xfs_dir2_sf_put_ino(mp, sfp, sfep,
++				xfs_dir2_sf_get_ino(mp, oldsfp, oldsfep));
+ 		dp->d_ops->sf_put_ftype(sfep, dp->d_ops->sf_get_ftype(oldsfep));
+ 	}
  	/*
- 	 * Copy the old directory to the buffer.
- 	 * Then nuke it from the inode, and add the new buffer to the inode.
-@@ -1172,8 +1190,8 @@ xfs_dir2_sf_toino8(
- 	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp),
- 		    oldsfep = xfs_dir2_sf_firstentry(oldsfp);
- 	     i < sfp->count;
--	     i++, sfep = dp->d_ops->sf_nextentry(sfp, sfep),
--		  oldsfep = dp->d_ops->sf_nextentry(oldsfp, oldsfep)) {
-+	     i++, sfep = xfs_dir2_sf_nextentry(mp, sfp, sfep),
-+		  oldsfep = xfs_dir2_sf_nextentry(mp, oldsfp, oldsfep)) {
+@@ -1195,8 +1260,8 @@ xfs_dir2_sf_toino8(
  		sfep->namelen = oldsfep->namelen;
  		memcpy(sfep->offset, oldsfep->offset, sizeof(sfep->offset));
  		memcpy(sfep->name, oldsfep->name, sfep->namelen);
+-		dp->d_ops->sf_put_ino(sfp, sfep,
+-				      dp->d_ops->sf_get_ino(oldsfp, oldsfep));
++		xfs_dir2_sf_put_ino(mp, sfp, sfep,
++				xfs_dir2_sf_get_ino(mp, oldsfp, oldsfep));
+ 		dp->d_ops->sf_put_ftype(sfep, dp->d_ops->sf_get_ftype(oldsfep));
+ 	}
+ 	/*
 diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-index 6f94d2a45174..7d150e914d00 100644
+index 7d150e914d00..9d318f091a73 100644
 --- a/fs/xfs/xfs_dir2_readdir.c
 +++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -48,6 +48,7 @@ xfs_dir2_sf_getdents(
- {
- 	int			i;		/* shortform entry number */
- 	struct xfs_inode	*dp = args->dp;	/* incore directory inode */
-+	struct xfs_mount	*mp = dp->i_mount;
- 	xfs_dir2_dataptr_t	off;		/* current entry's offset */
- 	xfs_dir2_sf_entry_t	*sfep;		/* shortform directory entry */
- 	xfs_dir2_sf_hdr_t	*sfp;		/* shortform structure */
-@@ -109,7 +110,7 @@ xfs_dir2_sf_getdents(
- 				xfs_dir2_sf_get_offset(sfep));
- 
- 		if (ctx->pos > off) {
--			sfep = dp->d_ops->sf_nextentry(sfp, sfep);
-+			sfep = xfs_dir2_sf_nextentry(mp, sfp, sfep);
+@@ -114,7 +114,7 @@ xfs_dir2_sf_getdents(
  			continue;
  		}
  
-@@ -122,9 +123,9 @@ xfs_dir2_sf_getdents(
- 			return -EFSCORRUPTED;
- 		}
- 		if (!dir_emit(ctx, (char *)sfep->name, sfep->namelen, ino,
--			    xfs_dir3_get_dtype(dp->i_mount, filetype)))
-+			    xfs_dir3_get_dtype(mp, filetype)))
- 			return 0;
--		sfep = dp->d_ops->sf_nextentry(sfp, sfep);
-+		sfep = xfs_dir2_sf_nextentry(mp, sfp, sfep);
- 	}
- 
- 	ctx->pos = xfs_dir2_db_off_to_dataptr(geo, geo->datablk + 1, 0) &
+-		ino = dp->d_ops->sf_get_ino(sfp, sfep);
++		ino = xfs_dir2_sf_get_ino(mp, sfp, sfep);
+ 		filetype = dp->d_ops->sf_get_ftype(sfep);
+ 		ctx->pos = off & 0x7fffffff;
+ 		if (!xfs_dir2_namecheck(sfep->name, sfep->namelen)) {
 -- 
 2.20.1
 
