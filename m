@@ -2,119 +2,143 @@ Return-Path: <SRS0=aC/G=Y7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-12.6 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1,USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E23AC43331
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 21:31:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9045C43331
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 21:46:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4EE7A21D7F
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 21:31:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7865206A3
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 21:46:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="S117aSEn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726101AbfKGVbz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Nov 2019 16:31:55 -0500
-Received: from sandeen.net ([63.231.237.45]:37414 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725870AbfKGVby (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Nov 2019 16:31:54 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 43FBA1911C;
-        Thu,  7 Nov 2019 15:30:44 -0600 (CST)
-Subject: Re: [PATCH] xfs_scrub: fix complaint about uninitialized ret
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Eric Sandeen <sandeen@redhat.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-References: <20191107213047.GG6219@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <88615eac-6f99-63d9-e82c-28a98a010c38@sandeen.net>
-Date:   Thu, 7 Nov 2019 15:31:52 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.2.1
+        id S1725912AbfKGVqN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Nov 2019 16:46:13 -0500
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:46575 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725882AbfKGVqN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 16:46:13 -0500
+Received: by mail-pl1-f196.google.com with SMTP id l4so2482810plt.13
+        for <linux-xfs@vger.kernel.org>; Thu, 07 Nov 2019 13:46:12 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:mail-followup-to:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=mGtlQ5WzMwSVAPKL3beecikHaKz3Uhi6vfP2HQGtuGs=;
+        b=S117aSEn1uuRv+7kLtKq6HK+vWNqjOEmAUbW4rc9Wg260VkRNX+V9gpTYIxKclj7Ce
+         IT8BHfMau4J3Y9VBCKjpDxnQ4XU3bJ0luW4jUiJTY2yzoxThK+2zXMHUeGt2U7r4uuNP
+         NDHJZS0nxxpJ9LB4mkK/e/M7vqucPsRwZicbPxqoXTJHUBzU3KZNLsDukGBPCsrcZj1y
+         HNT7N0d1t+k+w7KS9OE9FGVyB4RnHswDU8hfS6XOk4Y/tRj+U/LrJGRER7Ad2HkDKpnD
+         9fxwojnzO8WVH6yTGTvy4WuJOv+tPv7rLx3TCfLT5JAzQlpcL7PEg20WxrHlkWlKRzka
+         HuMQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to:user-agent;
+        bh=mGtlQ5WzMwSVAPKL3beecikHaKz3Uhi6vfP2HQGtuGs=;
+        b=Vj3XfPRqSL/75gSiPF6qR3AtK4fUXR5RrUhKabseveycSt6rkfMMkBaJPRFAEmCLn5
+         rK5nT8+n3hY3GUYahemYALdOqzW2gd3keW0oqHhSbq5wvm2cANpjX1mqa4yTWRgW9QA3
+         MZoQqJu/Cvip1Grr6TKqAzAlp8zDBDc7vi0gPevMhhn83ZlzKOPyRf1MBnJCkhu4rJCB
+         un2J8uLBUMHKM6fdtV4Hlj87dB2iCZAaE0IELgPQs0frkC3gaeJ+3R9jEOr3Bvv87CrK
+         Lz1/CIc8nJW38lp+TN7c2ex59Nm7p6N9pCtwTGrfWQ+5o+bJw3+YfSOgDbtULamJ6RTg
+         nx+w==
+X-Gm-Message-State: APjAAAXV/yfFxkAyIU6r4e4pvM1bv9Z/f6ROUF147w+LSyzCwf7IB85t
+        bA1sYCSzxhN3Zm+I8dI+Uoxz/qClJdQ=
+X-Google-Smtp-Source: APXvYqwGY8X1gfGflS2+wOJqfWRCuLhkutccV5+Co708RwxzYg8lK70VWEP4ox1Nk+/mS7aPOnV5SQ==
+X-Received: by 2002:a17:902:b612:: with SMTP id b18mr6194352pls.309.1573163171910;
+        Thu, 07 Nov 2019 13:46:11 -0800 (PST)
+Received: from google.com ([2620:15c:201:2:765b:31cb:30c4:166])
+        by smtp.gmail.com with ESMTPSA id k190sm4984717pga.12.2019.11.07.13.46.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 07 Nov 2019 13:46:11 -0800 (PST)
+Date:   Thu, 7 Nov 2019 13:46:06 -0800
+From:   Eric Biggers <ebiggers@google.com>
+To:     Eric Sandeen <sandeen@redhat.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs_io: fix memory leak in add_enckey
+Message-ID: <20191107214606.GA1160@google.com>
+Mail-Followup-To: Eric Sandeen <sandeen@redhat.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+References: <4eb1073f-91fb-a4bc-aae8-d54dc5a6b8aa@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20191107213047.GG6219@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4eb1073f-91fb-a4bc-aae8-d54dc5a6b8aa@redhat.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 11/7/19 3:30 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Nov 07, 2019 at 10:50:59AM -0600, Eric Sandeen wrote:
+> Invalid arguments to add_enckey will leak the "arg" allocation,
+> so fix that.
 > 
-> Coverity complained about the uninitialized ret in run_scrub_phases.
-> It's not sophisticated enough to realize that phase 1 and 7 are both
-> marked mustrun and are never the repair or datascan dummies and that
-> therefore ret is always initialized by the end of the for loop, but
-> OTOH there's no reason not to fix a trivial logic bomb if that ever
-> changes.
-> 
-> Coverity-id: 1455255
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
+> Fixes: ba71de04 ("xfs_io/encrypt: add 'add_enckey' command")
+> Fixes-coverity-id: 1454644
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
->  scrub/xfs_scrub.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-> index a792768c..014c54dd 100644
-> --- a/scrub/xfs_scrub.c
-> +++ b/scrub/xfs_scrub.c
-> @@ -422,7 +422,7 @@ run_scrub_phases(
->  	unsigned int		debug_phase = 0;
->  	unsigned int		phase;
->  	int			rshift;
-> -	int			ret;
-> +	int			ret = 0;
->  
->  	if (debug_tweak_on("XFS_SCRUB_PHASE"))
->  		debug_phase = atoi(getenv("XFS_SCRUB_PHASE"));
+> diff --git a/io/encrypt.c b/io/encrypt.c
+> index 17d61cfb..c6a4e190 100644
+> --- a/io/encrypt.c
+> +++ b/io/encrypt.c
+> @@ -696,6 +696,7 @@ add_enckey_f(int argc, char **argv)
+>  				goto out;
+>  			break;
+>  		default:
+> +			free(arg);
+>  			return command_usage(&add_enckey_cmd);
+>  		}
+>  	}
 > 
+
+The same leak happens later in the function too.  How about this instead:
+
+diff --git a/io/encrypt.c b/io/encrypt.c
+index 17d61cfb..de48c50c 100644
+--- a/io/encrypt.c
++++ b/io/encrypt.c
+@@ -678,6 +678,7 @@ add_enckey_f(int argc, char **argv)
+ 	int c;
+ 	struct fscrypt_add_key_arg *arg;
+ 	ssize_t raw_size;
++	int retval = 0;
+ 
+ 	arg = calloc(1, sizeof(*arg) + FSCRYPT_MAX_KEY_SIZE + 1);
+ 	if (!arg) {
+@@ -696,14 +697,17 @@ add_enckey_f(int argc, char **argv)
+ 				goto out;
+ 			break;
+ 		default:
+-			return command_usage(&add_enckey_cmd);
++			retval = command_usage(&add_enckey_cmd);
++			goto out;
+ 		}
+ 	}
+ 	argc -= optind;
+ 	argv += optind;
+ 
+-	if (argc != 0)
+-		return command_usage(&add_enckey_cmd);
++	if (argc != 0) {
++		retval = command_usage(&add_enckey_cmd);
++		goto out;
++	}
+ 
+ 	raw_size = read_until_limit_or_eof(STDIN_FILENO, arg->raw,
+ 					   FSCRYPT_MAX_KEY_SIZE + 1);
+@@ -732,7 +736,7 @@ add_enckey_f(int argc, char **argv)
+ out:
+ 	memset(arg->raw, 0, FSCRYPT_MAX_KEY_SIZE + 1);
+ 	free(arg);
+-	return 0;
++	return retval;
+ }
+ 
+ static int
