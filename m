@@ -2,122 +2,91 @@ Return-Path: <SRS0=aC/G=Y7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CF9BC5DF60
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 18:26:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FC84C43331
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 20:29:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 412E8206DF
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 18:26:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BA53220869
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 20:29:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FOjqqD2Y"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iSFS97m5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727569AbfKGS0N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Nov 2019 13:26:13 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:44336 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728943AbfKGS0N (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 13:26:13 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
-        :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=zek/dV/aOsCjcprX0/ib9gEwYwJOAXwBlQ9TIyJ8Kiw=; b=FOjqqD2YxoeZne0qBbkTkFCALU
-        RYclw5NvtB3rmjDjRPN3eRnTHQeL13ckxyckIbSh9+wlnDP55GedJ2lylS5x1KerwWk2MfZOi2CQX
-        FczUWBUBSA5xir2Z4eiiWoOgDNbghE6EhFj936aoSFhZB2PJyPYXMuC2sjcynaOrKYZ9/FxoqXRLr
-        agNOL6RJFAWZWH4RR6qizlKX7+T+6+rG8jhg+hUzjm6KuU84opKxKUtsx5CE7XIyqryPl9tiEt9DX
-        dw7oJTG9EFt+BnpPV7GGziPj9G/OP9kCLg58iIuhpFTvJz94+TL9bAw6p84QGQiOh6LpqAxxdC3sE
-        yzh+47Hw==;
-Received: from [2001:4bb8:184:e48:c70:4a89:bc61:2] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iSmU1-0004WB-5d; Thu, 07 Nov 2019 18:26:13 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     linux-xfs@vger.kernel.org
-Cc:     "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 46/46] xfs: always pass a valid hdr to xfs_dir3_leaf_check_int
-Date:   Thu,  7 Nov 2019 19:24:10 +0100
-Message-Id: <20191107182410.12660-47-hch@lst.de>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191107182410.12660-1-hch@lst.de>
-References: <20191107182410.12660-1-hch@lst.de>
+        id S1725844AbfKGU3o (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Nov 2019 15:29:44 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:34929 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725823AbfKGU3o (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 15:29:44 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1573158582;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=dBLDnViySKdLik0O4Q6w1Nfndk1AGn/fm7boLOIDXmo=;
+        b=iSFS97m5n8Oj7ESebui7vYoSgQjqBjhpXnyY+tt4tFc3z2VDPl3DeHUKodwyZUlo8lKSwg
+        q2HXVvWhE9lyhsvCS4mcshLHo6E0J+31sdPZgMNjERfZs4JmHHPhRbRusmiqWVG/OI+2yL
+        fGtTSzS4DbOjB6L1LMAiGgAjpmRbVL0=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-112-gDbhqPWXNeC802pzl7_M2w-1; Thu, 07 Nov 2019 15:29:41 -0500
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5F8B58017E0;
+        Thu,  7 Nov 2019 20:29:40 +0000 (UTC)
+Received: from redhat.com (ovpn-123-234.rdu2.redhat.com [10.10.123.234])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id C9D345C578;
+        Thu,  7 Nov 2019 20:29:36 +0000 (UTC)
+Date:   Thu, 7 Nov 2019 14:29:35 -0600
+From:   Bill O'Donnell <billodo@redhat.com>
+To:     Eric Sandeen <sandeen@redhat.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
+        Eric Biggers <ebiggers@google.com>
+Subject: Re: [PATCH] xfs_io: fix memory leak in add_enckey
+Message-ID: <20191107202935.GA609511@redhat.com>
+References: <4eb1073f-91fb-a4bc-aae8-d54dc5a6b8aa@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <4eb1073f-91fb-a4bc-aae8-d54dc5a6b8aa@redhat.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+X-MC-Unique: gDbhqPWXNeC802pzl7_M2w-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Move the code for extracting the incore header to the only caller that
-didn't already do that.
+On Thu, Nov 07, 2019 at 10:50:59AM -0600, Eric Sandeen wrote:
+> Invalid arguments to add_enckey will leak the "arg" allocation,
+> so fix that.
+>=20
+> Fixes: ba71de04 ("xfs_io/encrypt: add 'add_enckey' command")
+> Fixes-coverity-id: 1454644
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_dir2_leaf.c | 31 +++++++++++++------------------
- 1 file changed, 13 insertions(+), 18 deletions(-)
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 
-diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-index 2c67a9e24bd0..e2e4b2c6d6c2 100644
---- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-@@ -137,20 +137,14 @@ xfs_dir3_leaf_check(
- 
- xfs_failaddr_t
- xfs_dir3_leaf_check_int(
--	struct xfs_mount	*mp,
--	struct xfs_dir3_icleaf_hdr *hdr,
--	struct xfs_dir2_leaf	*leaf)
-+	struct xfs_mount		*mp,
-+	struct xfs_dir3_icleaf_hdr	*hdr,
-+	struct xfs_dir2_leaf		*leaf)
- {
--	xfs_dir2_leaf_tail_t	*ltp;
--	int			stale;
--	int			i;
--	struct xfs_dir3_icleaf_hdr leafhdr;
--	struct xfs_da_geometry	*geo = mp->m_dir_geo;
--
--	if (!hdr) {
--		xfs_dir2_leaf_hdr_from_disk(mp, &leafhdr, leaf);
--		hdr = &leafhdr;
--	}
-+	struct xfs_da_geometry		*geo = mp->m_dir_geo;
-+	xfs_dir2_leaf_tail_t		*ltp;
-+	int				stale;
-+	int				i;
- 
- 	ltp = xfs_dir2_leaf_tail_p(geo, leaf);
- 
-@@ -190,17 +184,18 @@ xfs_dir3_leaf_check_int(
-  */
- static xfs_failaddr_t
- xfs_dir3_leaf_verify(
--	struct xfs_buf		*bp)
-+	struct xfs_buf			*bp)
- {
--	struct xfs_mount	*mp = bp->b_mount;
--	struct xfs_dir2_leaf	*leaf = bp->b_addr;
--	xfs_failaddr_t		fa;
-+	struct xfs_mount		*mp = bp->b_mount;
-+	struct xfs_dir3_icleaf_hdr	leafhdr;
-+	xfs_failaddr_t			fa;
- 
- 	fa = xfs_da3_blkinfo_verify(bp, bp->b_addr);
- 	if (fa)
- 		return fa;
- 
--	return xfs_dir3_leaf_check_int(mp, NULL, leaf);
-+	xfs_dir2_leaf_hdr_from_disk(mp, &leafhdr, bp->b_addr);
-+	return xfs_dir3_leaf_check_int(mp, &leafhdr, bp->b_addr);
- }
- 
- static void
--- 
-2.20.1
+> ---
+>=20
+> diff --git a/io/encrypt.c b/io/encrypt.c
+> index 17d61cfb..c6a4e190 100644
+> --- a/io/encrypt.c
+> +++ b/io/encrypt.c
+> @@ -696,6 +696,7 @@ add_enckey_f(int argc, char **argv)
+>  =09=09=09=09goto out;
+>  =09=09=09break;
+>  =09=09default:
+> +=09=09=09free(arg);
+>  =09=09=09return command_usage(&add_enckey_cmd);
+>  =09=09}
+>  =09}
+>=20
 
