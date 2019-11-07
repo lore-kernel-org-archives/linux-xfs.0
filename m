@@ -2,94 +2,67 @@ Return-Path: <SRS0=aC/G=Y7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48C47C43331
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 17:55:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A19CBC43331
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 18:16:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1FAFB2166E
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 17:55:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6996F214D8
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 18:16:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SlVm1Ndh"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jW3SRZhP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731013AbfKGRzC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Nov 2019 12:55:02 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:35368 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730510AbfKGRzC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 12:55:02 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1573149301;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=OcNFikfjq1BX5+nPgo4efKiLi5+1HMQMe6Ro0KRZSBk=;
-        b=SlVm1NdhEguG68WRZqQkrjZ4GyvkeA+ORUYnyidxOY21VBU54fs8KCqGrVQPwwd/skHGJb
-        AQpp/4/Fw5Oon0wjzuW4KdLZqRBHVMfIesLE262FJkBtUHdX0gTvrIL5VPCRFmrgT1x5/G
-        6Uosl2jY2uTUO1bVEkPFuGRQETDnuG8=
-Received: from mail-ot1-f70.google.com (mail-ot1-f70.google.com
- [209.85.210.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-402-X6Gj3d0BNMOq4yK6jbYHaA-1; Thu, 07 Nov 2019 12:54:57 -0500
-Received: by mail-ot1-f70.google.com with SMTP id j16so2607300otl.9
-        for <linux-xfs@vger.kernel.org>; Thu, 07 Nov 2019 09:54:57 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=PTyEtIAxeTb5uCPTzRm1VfghpAdZyRKOiXCNpposzoM=;
-        b=nymutbEMyVe4eOoA5jFS6E4TEFzcZFhdbu1fqgczV5imZ8fka9nYyPcDf0wGLuqTmW
-         BvgJyUUU3dSfQf0plsHjL50YfVrJ/cV4QoRJGee+SE4uM6Dtd4zfx8nQ/jjbw0nBFqgS
-         uzW/jItagy61EMcb3PxVslZJrxqLryMM6PZcmO2MiMPRjwDjjtTAqOyCVSG7fdfPo0Cc
-         syWjEq4wyrIus3Cq5NqrOEfXI2xsPjcJFsmhRXG5yzpUkucg7j+9pPJ/KrQTkQVKKJDP
-         PahYjuYmuHMVpeA9yRaFsMlqSK9tgTq1YdhPI/sApqxFoQxoeGEfa8+djPjmgwbXHocI
-         xGyA==
-X-Gm-Message-State: APjAAAXsm9WpYpLCACwzn6AfEqk16gSWegEw6o80kz12YVYM32xcz3Zm
-        YQ9CNHM28Lx3Q3dtx2LKZGdFMOYr+I6aFrTx2uKDzFwtSlIkkhjQEsLtUbg5+7LuHgfGw0SQo23
-        Yks88HG4pDv9/gl2ktAVGqtB6+qWscx0jQYdY
-X-Received: by 2002:a05:6808:a93:: with SMTP id q19mr4586985oij.178.1573149297222;
-        Thu, 07 Nov 2019 09:54:57 -0800 (PST)
-X-Google-Smtp-Source: APXvYqw0A2DoTN7Dd2YoA7wNZdzvb4Bs3F8W8ZXlYA+sAvpG9vN1il3FFfXJ85lmrnNflzjHOBC3OdkylYKZdk7tGrA=
-X-Received: by 2002:a05:6808:a93:: with SMTP id q19mr4586966oij.178.1573149297020;
- Thu, 07 Nov 2019 09:54:57 -0800 (PST)
-MIME-Version: 1.0
-References: <20191106190400.20969-1-agruenba@redhat.com> <20191106191656.GC15212@magnolia>
- <CAHc6FU4BXZ7fiLa_tVhZWZmqoXNCJWQwUvb7UPzGrWt_ZBBvxQ@mail.gmail.com> <20191107153732.GA6211@magnolia>
-In-Reply-To: <20191107153732.GA6211@magnolia>
-From:   Andreas Gruenbacher <agruenba@redhat.com>
-Date:   Thu, 7 Nov 2019 18:54:45 +0100
-Message-ID: <CAHc6FU4MbJ5T+W_ku2gQzoquvMeh3Wbvus-c+tjOc6ZrOwTRiQ@mail.gmail.com>
-Subject: Re: [PATCH] iomap: Fix overflow in iomap_page_mkwrite
+        id S1726231AbfKGSQH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Nov 2019 13:16:07 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:42316 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725777AbfKGSQG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 13:16:06 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=gigk+8q1pK59HcU4WOshUtg8qAglWxfLi67IF8PNwdY=; b=jW3SRZhPSdPAEqLnTBDc7QpA4
+        AxtV/vXh0tmetxXWRfFQ16fb1R6AvIztrwAXwv9INysodY6rZyEWuY8Z1PiuzllOWybRlUPnKVGkm
+        ABGFOXZl2XD4eJckwbJxytGiy75CTKAAhg+fYRZv5ElEyAwv7fwDr1/RsUNBDVLwoiXpVVX0wkKf/
+        m560nQcWO8PXDeWzvr5Eh/buVTE39cXGm24PbOsFrqhgUStOk8441HrPP2lrTzXwUFilU5TVUoK6p
+        m3sRbjfEHKkoykylxDlCXSKpRKDPC+SG8usdZARKROlm8K4t8GdT2ma5jHSwAJ3bCR1qZGTiJWHgQ
+        mQmQMBtiw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1iSmKE-0000km-N0; Thu, 07 Nov 2019 18:16:06 +0000
+Date:   Thu, 7 Nov 2019 10:16:06 -0800
+From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>
-X-MC-Unique: X6Gj3d0BNMOq4yK6jbYHaA-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
+Subject: Re: [PATCH 1/4] xfs: add a XFS_IS_CORRUPT macro
+Message-ID: <20191107181606.GA2682@infradead.org>
+References: <157309570855.45542.14663613458519550414.stgit@magnolia>
+ <157309571493.45542.17191993682067205278.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <157309571493.45542.17191993682067205278.stgit@magnolia>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 7, 2019 at 4:37 PM Darrick J. Wong <darrick.wong@oracle.com> wr=
-ote:
-> I'll fix it on commit.
+On Wed, Nov 06, 2019 at 07:01:54PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Add a new macro, XFS_IS_CORRUPT, which we will use to integrate some
+> corruption reporting when the corruption test expression is true.  This
+> will be used in the next patch to remove the ugly XFS_WANT_CORRUPT*
+> macros.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Thanks.
+Looks good,
 
-So now the one remaining issue I have with those two functions is why
-we check for (offset > size) instead of (offset >=3D size) in
-
-  if (page->mapping !=3D inode->i_mapping || offset > size)
-
-When (offset =3D=3D size), we're clearly outside the page, and so we should=
- fail?
-
-Thanks,
-Andreas
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
