@@ -2,73 +2,86 @@ Return-Path: <SRS0=OQuR=ZA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2736FA372C
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 06:56:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8CB9C5DF60
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 07:04:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AD083214DA
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 06:56:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BAB982087E
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 07:04:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="uGEn1Ou/"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PfyIn2Mf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727573AbfKHG42 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 Nov 2019 01:56:28 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:47320 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725802AbfKHG42 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Nov 2019 01:56:28 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Transfer-Encoding
-        :Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-        Sender:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=1URJEcaBlXd5cNpZBUiN2riAv3gZOOZ20KmFrtMTWqY=; b=uGEn1Ou/os5DG4DycEDOWt2bJp
-        E5/0wD4uGWmwGNqCWmUcsNQ7LLrLD74i/+ElBuQVl9u0icq4gDfM/LNd/0nAfWifiA44XYJcVA98l
-        Ce3tL9PFvKBMXVz5M01Air3Y/4yrYl+xTZBg1ewvHOVHhdYp8MdIOPwK/UPzo+P38/sU+lypNq/Vy
-        vdzIhrci1gwVgJl6ie2HzM/iJtE6wDdIHNd0UziUGE2zdL2JxjxlkVO4SLh+wbziSOpVHc9is5GTQ
-        nGZYZ/lOVb2pn/6XlPdPJ+UC3VcZaJNDCgcnRjyCmOSEMTqE7kIPd0IqqldKlR73EPWDjne7+90Rw
-        7dCsWkIw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iSyC3-0004jF-7O; Fri, 08 Nov 2019 06:56:27 +0000
-Date:   Thu, 7 Nov 2019 22:56:27 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <a.miskiewicz@gmail.com>
+        id S1725975AbfKHHEu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Nov 2019 02:04:50 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:54950 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725802AbfKHHEu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Nov 2019 02:04:50 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA873uor070626
+        for <linux-xfs@vger.kernel.org>; Fri, 8 Nov 2019 07:04:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=corp-2019-08-05;
+ bh=UtxkbNfGfGPrCcQvONBgwerbpCFnCz2Qp251ch7dZlI=;
+ b=PfyIn2Mf+dp9u9rivDsqLHu3UHdnYrVJMkk2LFu75k+t0uDxEDZcpjQ+x7K1B9oSoIQc
+ X6+GQPH8j0GjW0kDq6Ht+UdH7tyH+J931u9Jthjg7aSNqSVBQKBpTulBIEhxaJr6SIdf
+ h3GS257bql90HCLl9ohp+R8cm4dUjODQCOgsToNtmvSbaLJnYYFWSSHlR0fJOTFLUOYG
+ VcKAdsAK5IWMW+WIoL8SKQ9yIvxjgCDCh6ixKTczC3gCTIpHxw7f5/W56PYx2PuHbXQL
+ 73xM3TckYLk7FuQ1pu1XDjiC0STdgMdg8X4l2A2/aHCFjG6fOBi5vB6OQwGdiwM6+wYP Sg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2w41w1bd4g-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 08 Nov 2019 07:04:48 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA87377X059477
+        for <linux-xfs@vger.kernel.org>; Fri, 8 Nov 2019 07:04:47 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 2w4k30h5dj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 08 Nov 2019 07:04:47 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xA874kOl019682
+        for <linux-xfs@vger.kernel.org>; Fri, 8 Nov 2019 07:04:46 GMT
+Received: from localhost (/10.159.155.116)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 07 Nov 2019 23:04:46 -0800
+Subject: [PATCH v2 0/3] xfs: various coverity fixes
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: WARNING: CPU: 5 PID: 25802 at fs/xfs/libxfs/xfs_bmap.c:4530
- xfs_bmapi_convert_delalloc+0x434/0x4a0 [xfs]
-Message-ID: <20191108065627.GA6260@infradead.org>
-References: <3c58ebc4-ff95-b443-b08d-81f5169d3d01@gmail.com>
+Date:   Thu, 07 Nov 2019 23:04:45 -0800
+Message-ID: <157319668531.834585.6920821852974178.stgit@magnolia>
+User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <3c58ebc4-ff95-b443-b08d-81f5169d3d01@gmail.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9434 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=562
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1910280000 definitions=main-1911080069
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9434 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=645 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
+ definitions=main-1911080069
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Nov 08, 2019 at 07:01:15AM +0100, Arkadiusz Miśkiewicz wrote:
-> 
-> Hello.
-> 
-> I have two servers:
-> 
-> backup4 - one with Adaptec ASR8885Q (that's the one which breaks so
-> often but this time adaptes works)
-> 
-> backup3 - other with software raid only
-> 
-> Both are now running 5.3.8 kernels and both end up like this log below.
-> It takes ~ up to day to reproduce.
+Hi all,
 
-The WARN_ON means that conversion of delalloc blocks failed to find
-free space.  Something that should not be possible due to the delalloc
-reservations.  What as the last kernel where you did not see something
-like this?
+This series fixes a few things that Coverity has complained about for
+years.
+
+This has been lightly tested with fstests.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
