@@ -2,206 +2,245 @@ Return-Path: <SRS0=OQuR=ZA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F259EFA372C
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 05:59:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57D2CC5DF60
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 06:01:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C3EBF21882
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 05:59:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 09E9A21D6C
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 06:01:20 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MxklUmbM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725877AbfKHF7I (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 Nov 2019 00:59:08 -0500
-Received: from szxga07-in.huawei.com ([45.249.212.35]:53948 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725802AbfKHF7I (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 8 Nov 2019 00:59:08 -0500
-Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id C563EAA6D4AE8711D4F0;
-        Fri,  8 Nov 2019 13:59:05 +0800 (CST)
-Received: from [127.0.0.1] (10.74.221.148) by DGGEMS414-HUB.china.huawei.com
- (10.3.19.214) with Microsoft SMTP Server id 14.3.439.0; Fri, 8 Nov 2019
- 13:58:56 +0800
-Subject: Re: [PATCH] xfs: optimise xfs_mod_icount/ifree when delta < 0
-To:     Dave Chinner <david@fromorbit.com>
-References: <1572866980-13001-1-git-send-email-zhangshaokun@hisilicon.com>
- <20191104204909.GB4614@dread.disaster.area>
- <dc7456d6-616d-78c5-0ac6-c5ffaf721e41@hisilicon.com>
- <20191105040325.GC4614@dread.disaster.area>
- <675693c2-8600-1cbd-ce50-5696c45c6cd9@hisilicon.com>
- <20191106212041.GF4614@dread.disaster.area>
-CC:     <linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Yang Guo <guoyang2@huawei.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>
-From:   Shaokun Zhang <zhangshaokun@hisilicon.com>
-Message-ID: <d627883a-850c-1ec4-e057-cf9e9b47c50e@hisilicon.com>
-Date:   Fri, 8 Nov 2019 13:58:56 +0800
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.1.1
+        id S1725886AbfKHGBU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Nov 2019 01:01:20 -0500
+Received: from mail-lf1-f67.google.com ([209.85.167.67]:45643 "EHLO
+        mail-lf1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725802AbfKHGBU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Nov 2019 01:01:20 -0500
+Received: by mail-lf1-f67.google.com with SMTP id v8so3473632lfa.12
+        for <linux-xfs@vger.kernel.org>; Thu, 07 Nov 2019 22:01:18 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:subject:to:message-id:date:user-agent:mime-version
+         :content-language:content-transfer-encoding;
+        bh=uBO5TTbkAyoVlX41h565uGceYgXANlsFYOg1ULH8K/A=;
+        b=MxklUmbMZUjcTLcwXNCSBvJkLHY/eVaOKfH3E1Hhx/5flZwOeGEumlbTDDfrg3P2XV
+         l4F0jEaOwFWnp8irtYh/Z5Sh8Nsqg26GwoW/F7IVASyv3IpqJ3SAdc7CnwJMgpm6cKol
+         gcffx6dQzbyY9XIAfasMpwqyX/6xph0pCQ5PFVy5ElRpjtt7Mo5ppns98bPSVuKO4Pg+
+         KIlYvJ3trSwqdbECx2ZXgEKnDRNfzKJW3Ru48jsXcvyzqXknSeUjWSZqPzHePl23gVmU
+         0MCWq9ZNBX6VGr7uKPelKrEG8BDz5KZzQurM65/w6vG2FYFp2TBhRwvkOD8+9nPwBNLk
+         0XWQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:subject:to:message-id:date:user-agent
+         :mime-version:content-language:content-transfer-encoding;
+        bh=uBO5TTbkAyoVlX41h565uGceYgXANlsFYOg1ULH8K/A=;
+        b=EvgN3RPeOEfYv7bA6hfUZone4TjxZDyRQi0SjC1XrMHYABZaBWhVo6drZ/BA6rRKxV
+         +slSIN/qdVWqYhRYyIOe4yjZGkWDaUfAEkhomW8w+ojPnmMPzw3QaGrqHsFHlkXc3EYN
+         4xM8f/PfUDBB1pOUvVKzMl7UvMptpvXV1V2Jo4H8y/mjl/fjqVVBnC2k9TQ8Q4qGfSY3
+         DKo4u8tq1VoF3edYvoJQHWRvMd2B1yLXybFU1c9SYTs7GYMEJmMqZpHFg5kLOVE9OoV9
+         vA2amHrwXk+CPKTwe4b3xgm1cD3+/KWBEmEBWXyurO+2lYRpcn9pJs+yw9pXaYNFTO4i
+         vrTA==
+X-Gm-Message-State: APjAAAUBgoiDckYYTkS62LJXkNYunvBiG+H8z49rGt++YtrVIQlaswhJ
+        ruyfy6tjH2/YJFBRbRQaYlztUW6v
+X-Google-Smtp-Source: APXvYqwvF7qRPHc54GWzaoxXeCg/QBlx5rZbxhJx9SCYp9KPzdGqZ8jhlt5B+XT3FwuTm9m3r33VcQ==
+X-Received: by 2002:ac2:46e5:: with SMTP id q5mr5420799lfo.148.1573192876933;
+        Thu, 07 Nov 2019 22:01:16 -0800 (PST)
+Received: from amb.local (31-179-17-47.dynamic.chello.pl. [31.179.17.47])
+        by smtp.gmail.com with ESMTPSA id o26sm1957994lfi.57.2019.11.07.22.01.15
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 07 Nov 2019 22:01:15 -0800 (PST)
+From:   =?UTF-8?Q?Arkadiusz_Mi=c5=9bkiewicz?= <a.miskiewicz@gmail.com>
+Subject: WARNING: CPU: 5 PID: 25802 at fs/xfs/libxfs/xfs_bmap.c:4530
+ xfs_bmapi_convert_delalloc+0x434/0x4a0 [xfs]
+To:     linux-xfs@vger.kernel.org
+Message-ID: <3c58ebc4-ff95-b443-b08d-81f5169d3d01@gmail.com>
+Date:   Fri, 8 Nov 2019 07:01:15 +0100
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.2.2
 MIME-Version: 1.0
-In-Reply-To: <20191106212041.GF4614@dread.disaster.area>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.74.221.148]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: base64
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Dave,
-
-On 2019/11/7 5:20, Dave Chinner wrote:
-> On Wed, Nov 06, 2019 at 02:00:58PM +0800, Shaokun Zhang wrote:
->> Hi Dave,
->>
->> On 2019/11/5 12:03, Dave Chinner wrote:
->>> On Tue, Nov 05, 2019 at 11:26:32AM +0800, Shaokun Zhang wrote:
->>>> Hi Dave,
->>>>
->>>> On 2019/11/5 4:49, Dave Chinner wrote:
->>>>> On Mon, Nov 04, 2019 at 07:29:40PM +0800, Shaokun Zhang wrote:
->>>>>> From: Yang Guo <guoyang2@huawei.com>
->>>>>>
->>>>>> percpu_counter_compare will be called by xfs_mod_icount/ifree to check
->>>>>> whether the counter less than 0 and it is a expensive function.
->>>>>> let's check it only when delta < 0, it will be good for xfs's performance.
->>>>>
->>>>> Hmmm. I don't recall this as being expensive.
->>>>>
->>>>
->>>> Sorry about the misunderstanding information in commit message.
->>>>
->>>>> How did you find this? Can you please always document how you found
->>>>
->>>> If user creates million of files and the delete them, We found that the
->>>> __percpu_counter_compare costed 5.78% CPU usage, you are right that itself
->>>> is not expensive, but it calls __percpu_counter_sum which will use
->>>> spin_lock and read other cpu's count. perf record -g is used to profile it:
->>>>
->>>> - 5.88%     0.02%  rm  [kernel.vmlinux]  [k] xfs_mod_ifree
->>>>    - 5.86% xfs_mod_ifree
->>>>       - 5.78% __percpu_counter_compare
->>>>            5.61% __percpu_counter_sum
->>>
->>> Interesting. Your workload is hitting the slow path, which I most
->>> certainly do no see when creating lots of files. What's your
->>> workload?
->>>
->>
->> The hardware has 128 cpu cores, and the xfs filesystem format config is default,
->> while the test is a single thread, as follow:
->> ./mdtest -I 10  -z 6 -b 8 -d /mnt/ -t -c 2
-> 
-> What version and where do I get it?
-
-You can get the mdtest from github: https://github.com/LLNL/mdtest.
-
-> 
-> Hmmm - isn't mdtest a MPI benchmark intended for highly concurrent
-> metadata workload testing? How representative is it of your actual
-> production workload? Is that single threaded?
-> 
-
-We just use mdtest to test the performance of a file system, it can't representative
-the actual workload and it's single threaded. But we also find that it goes to slow
-path when we remove a dir with many files. The cmd is below:
-rm -rf xxx.
-
->> xfs info:
->> meta-data=/dev/bcache2           isize=512    agcount=4, agsize=244188661 blks
-> 
-> only 4 AGs, which explains the lack of free inodes - there isn't
-> enough concurrency in the filesystem layout to push the free inode
-> count in all AGs beyond the batchsize * num_online_cpus().
-> 
-> i.e. single threaded workloads typically drain the free inode count
-> all the way down to zero before new inodes are allocated. Workloads
-> that are highly concurrent allocate from lots of AGs at once,
-> leaving free inodes in every AG that is not current being actively
-> allocated out of.
-> 
-> As a test, can you remake that test filesystem with "-d agcount=32"
-> and see if the overhead you are seeing disappears?
-> 
-
-We try to remake the filesystem with "-d agcount=32" and it also enters slow path
-mostly. Print the batch * num_online_cpus() and find that it's 32768.
-Because percpu_counter_batch was initialized to 256 when there are 128 cpu cores.
-Then we change the agcount=1024, and it also goes to slow path frequently because
-mostly there are no 32768 free inodes.
-
->>> files and you have lots of idle CPU and hence the inode allocation
->>> is not clearing the fast path batch threshold on the ifree counter.
->>> And because you have lots of CPUs, the cost of a sum is very
->>> expensive compared to running single threaded creates. That's my
->>> current hypothesis based what I see on my workloads that
->>> xfs_mod_ifree overhead goes down as concurrency goes up....
->>>
->>
->> Agree, we add some debug info in xfs_mod_ifree and found most times
->> m_ifree.count < batch * num_online_cpus(),  because we have 128 online
->> cpus and m_ifree.count around 999.
-> 
-> Ok, the threshold is 32 * 128 = ~4000 to get out of the slow
-> path. 32 AGs may well push the count over this threshold, so it's
-> definitely worth trying....
-> 
-
-Yes, we tried it and found that threshold was 32768, because percpu_counter_batch
-was initialized to 2 * num_online_cpus().
-
->>> FWIW, the profiles I took came from running this on 16 and 32p
->>> machines:
->>>
->>> --
->>> dirs=""
->>> for i in `seq 1 $THREADS`; do
->>>         dirs="$dirs -d /mnt/scratch/$i"
->>> done
->>>
->>> cycles=$((512 / $THREADS))
->>>
->>> time ./fs_mark $XATTR -D 10000 -S0 -n $NFILES -s 0 -L $cycles $dirs
->>> --
->>>
->>> With THREADS=16 or 32 and NFILES=100000 on a big sparse filesystem
->>> image:
->>>
->>> meta-data=/dev/vdc               isize=512    agcount=500, agsize=268435455 blks
->>>          =                       sectsz=512   attr=2, projid32bit=1
->>>          =                       crc=1        finobt=1, sparse=1, rmapbt=0
->>>          =                       reflink=1
->>> data     =                       bsize=4096   blocks=134217727500, imaxpct=1
->>>          =                       sunit=0      swidth=0 blks
->>> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
->>> log      =internal log           bsize=4096   blocks=521728, version=2
->>>          =                       sectsz=512   sunit=0 blks, lazy-count=1
->>> realtime =none                   extsz=4096   blocks=0, rtextents=0
->>>
->>> That's allocating enough inodes to keep the free inode counter
->>> entirely out of the slow path...
->>
->> percpu_counter_read that reads the count will cause cache synchronization
->> cost if other cpu changes the count, Maybe it's better not to call
->> percpu_counter_compare if possible.
-> 
-> Depends.  Sometimes we trade off ultimate single threaded
-> performance and efficiency for substantially better scalability.
-> i.e. if we lose 5% on single threaded performance but gain 10x on
-> concurrent workloads, then that is a good tradeoff to make.
-> 
-
-Agree, I mean that when delta > 0, there is no need to call percpu_counter_compare in
-xfs_mod_ifree/icount.
-
-Thanks,
-Shaokun
-
-> Cheers,
-> 
-> Dave.
-> 
-
+DQpIZWxsby4NCg0KSSBoYXZlIHR3byBzZXJ2ZXJzOg0KDQpiYWNrdXA0IC0gb25lIHdpdGgg
+QWRhcHRlYyBBU1I4ODg1USAodGhhdCdzIHRoZSBvbmUgd2hpY2ggYnJlYWtzIHNvDQpvZnRl
+biBidXQgdGhpcyB0aW1lIGFkYXB0ZXMgd29ya3MpDQoNCmJhY2t1cDMgLSBvdGhlciB3aXRo
+IHNvZnR3YXJlIHJhaWQgb25seQ0KDQpCb3RoIGFyZSBub3cgcnVubmluZyA1LjMuOCBrZXJu
+ZWxzIGFuZCBib3RoIGVuZCB1cCBsaWtlIHRoaXMgbG9nIGJlbG93Lg0KSXQgdGFrZXMgfiB1
+cCB0byBkYXkgdG8gcmVwcm9kdWNlLg0KDQpIZXJlIGFyZSBtb3JlIGNvbXBsZXRlIGxvZ3Mg
+YW5kIGtlcm5lbCBjb25maWdzOg0KDQpodHRwczovL2l4aW9uLnBsZC1saW51eC5vcmcvfmFy
+ZWttL3AyL3hmcy8NCg0KQW55IGlkZWFzIHdoYXQgaXMgaGFwcGVuaW5nIGFuZCB3aGF0IGNh
+biBJIGRvIHRvIGhlbHAgZGVidWcgdGhlIHByb2JsZW0/DQoNCj4gTm92ICA4IDAwOjU1OjE5
+IGJhY2t1cDQga2VybmVsOiBXQVJOSU5HOiBDUFU6IDUgUElEOiAyNTgwMiBhdCBmcy94ZnMv
+bGlieGZzL3hmc19ibWFwLmM6NDUzMCB4ZnNfYm1hcGlfY29udmVydF9kZWxhbGxvYysweDQz
+NC8weDRhMCBbeGZzXQ0KPiBOb3YgIDggMDA6NTU6MTkgYmFja3VwNCBrZXJuZWw6IE1vZHVs
+ZXMgbGlua2VkIGluOiBuZnNkIGF1dGhfcnBjZ3NzIG5mc19hY2wgbG9ja2QgZ3JhY2Ugc3Vu
+cnBjIHNjaF9zZnEgbmZuZXRsaW5rX2xvZyBuZm5ldGxpbmsgeHRfTkZMT0cgeHRfY29tbWVu
+dCB4dF90Y3B1ZHAgeHRfY29ubnRyYWNrIG5mX2Nvbm50cmFjayBuZl9kZWZyYWdfaXB2NiBu
+Zl9kZWZyYWdfaXB2NCBpcHRhYmxlX2ZpbHRlciBpcF90YWJsZXMgeF90YWJsZXMgYnBmaWx0
+ZXIgeGZzIG1seDRfaWIgaWJfdXZlcmJzIGliX2NvcmUgbWx4NF9lbiBzZXMgZW5jbG9zdXJl
+IHNjc2lfdHJhbnNwb3J0X3NhcyBqb3lkZXYgaW5wdXRfbGVkcyBoaWRfZ2VuZXJpYyB1c2Jo
+aWQgaGlkIGNvcmV0ZW1wIGludGVsX3JhcGxfbXNyIGludGVsX3JhcGxfY29tbW9uIHNiX2Vk
+YWMgeDg2X3BrZ190ZW1wX3RoZXJtYWwgaW50ZWxfcG93ZXJjbGFtcCBrdm1faW50ZWwga3Zt
+IGlUQ09fd2R0IGlUQ09fdmVuZG9yX3N1cHBvcnQgbXhtX3dtaSBpcG1pX3NzaWYgaXJxYnlw
+YXNzIGNyY3QxMGRpZl9wY2xtdWwgY3JjMzJfcGNsbXVsIGdoYXNoX2NsbXVsbmlfaW50ZWwg
+YWVzbmlfaW50ZWwgYWVzX3g4Nl82NCBjcnlwdG9fc2ltZCBjcnlwdGQgZ2x1ZV9oZWxwZXIg
+eGhjaV9wY2kgbWx4NF9jb3JlIGludGVsX2NzdGF0ZSB4aGNpX2hjZCBpbnRlbF91bmNvcmUg
+ZWhjaV9wY2kgZWhjaV9oY2QgaWdiIGludGVsX3JhcGxfcGVyZiBwY3Nwa3IgaXBtaV9zaSB1
+c2Jjb3JlIGkyY19pODAxIG1laV9tZSBpb2F0ZG1hIGFjcGlfcG93ZXJfbWV0ZXIgYWFjcmFp
+ZCBpMmNfYWxnb19iaXQgaXBtaV9kZXZpbnRmIG1laSBkY2EgbHBjX2ljaCBpMmNfY29yZSBl
+dmRldiBpcG1pX21zZ2hhbmRsZXIgd21pIGh3bW9uIGFjcGlfcGFkIGJ1dHRvbiBzY2hfZnFf
+Y29kZWwgZXh0NCBsaWJjcmMzMmMgY3JjMzJjX2dlbmVyaWMgY3JjMzJjX2ludGVsIGNyYzE2
+IG1iY2FjaGUgamJkMiBzZF9tb2QgcmFpZDEgbWRfbW9kIGFoY2kgbGliYWhjaSBsaWJhdGEN
+Cj4gTm92ICA4IDAwOjU1OjE5IGJhY2t1cDQga2VybmVsOiAgc2NzaV9tb2QNCj4gTm92ICA4
+IDAwOjU1OjE5IGJhY2t1cDQga2VybmVsOiBDUFU6IDUgUElEOiAyNTgwMiBDb21tOiBrd29y
+a2VyL3U2NTozIFRhaW50ZWQ6IEcgICAgICAgICAgICAgICAgVCA1LjMuOC0xICMxDQo+IE5v
+diAgOCAwMDo1NToxOSBiYWNrdXA0IGtlcm5lbDogSGFyZHdhcmUgbmFtZTogU3VwZXJtaWNy
+byBYMTBEUmkvWDEwRFJpLCBCSU9TIDMuMGEgMDIvMDYvMjAxOA0KPiBOb3YgIDggMDA6NTU6
+MTkgYmFja3VwNCBrZXJuZWw6IFdvcmtxdWV1ZTogd3JpdGViYWNrIHdiX3dvcmtmbiAoZmx1
+c2gtODo0OCkNCj4gTm92ICA4IDAwOjU1OjE5IGJhY2t1cDQga2VybmVsOiBSSVA6IDAwMTA6
+eGZzX2JtYXBpX2NvbnZlcnRfZGVsYWxsb2MrMHg0MzQvMHg0YTAgW3hmc10NCj4gTm92ICA4
+IDAwOjU1OjE5IGJhY2t1cDQga2VybmVsOiBDb2RlOiBiNyBjMCA4MyBjMCAwMSBlOSA5YyBm
+ZCBmZiBmZiA0MSA4MCBiYyAyNCBlOSAwMCAwMCAwMCAwMyA0OSA4ZCA0NCAyNCA0OCA3NCBk
+OSBjNyA4NCAyNCBjMCAwMCAwMCAwMCAwMSAwMCAwMCAwMCBlOSA5NCBmZCBmZiBmZiA8MGY+
+IDBiIDQxIGJlIGU0IGZmIGZmIGZmIDQ4IDhkIDdjIDI0IDMwIDQ0IDg5IGYyIDQ0IDg5IGVl
+IGU4IDg0IDZmDQo+IE5vdiAgOCAwMDo1NToxOSBiYWNrdXA0IGtlcm5lbDogUlNQOiAwMDE4
+OmZmZmZhYzYzNDZhNWI4MzggRUZMQUdTOiAwMDAxMDI0Ng0KPiBOb3YgIDggMDA6NTU6MTkg
+YmFja3VwNCBrZXJuZWw6IFJBWDogMDAwMDAwMDAwMDAwMDAwMCBSQlg6IGZmZmY5NWM4Zjk3
+MmEwMDAgUkNYOiAwMDAwMDAwMDAwMDAwMDIyDQo+IE5vdiAgOCAwMDo1NToxOSBiYWNrdXA0
+IGtlcm5lbDogUkRYOiAwMDAwMDAwMDAwMDAxZmRhIFJTSTogZmZmZmZmZmZmZmZmZmZmZiBS
+REk6IGZmZmY5NWM4ZjkzYjA2MDANCj4gTm92ICA4IDAwOjU1OjE5IGJhY2t1cDQga2VybmVs
+OiBSQlA6IGZmZmZhYzYzNDZhNWI5MzggUjA4OiAwMDAwMDAwMDAwMDAwMDAwIFIwOTogMDAw
+MDAwMDAwMDAwMDAwMQ0KPiBOb3YgIDggMDA6NTU6MTkgYmFja3VwNCBrZXJuZWw6IFIxMDog
+ZmZmZjk1YzMzZTZmNDFkOCBSMTE6IDAwMDAwMDAwMDAwMDAwMjYgUjEyOiBmZmZmOTViZTM3
+NTEyYTgwDQo+IE5vdiAgOCAwMDo1NToxOSBiYWNrdXA0IGtlcm5lbDogUjEzOiAwMDAwMDAw
+MDAwMDAwMDAwIFIxNDogMDAwMDAwMDAwMDAwMDAwMCBSMTU6IGZmZmY5NWJlMzc1MTJhYzgN
+Cj4gTm92ICA4IDAwOjU1OjE5IGJhY2t1cDQga2VybmVsOiBGUzogIDAwMDAwMDAwMDAwMDAw
+MDAoMDAwMCkgR1M6ZmZmZjk1YzhmZjk0MDAwMCgwMDAwKSBrbmxHUzowMDAwMDAwMDAwMDAw
+MDAwDQo+IE5vdiAgOCAwMDo1NToxOSBiYWNrdXA0IGtlcm5lbDogQ1M6ICAwMDEwIERTOiAw
+MDAwIEVTOiAwMDAwIENSMDogMDAwMDAwMDA4MDA1MDAzMw0KPiBOb3YgIDggMDA6NTU6MTkg
+YmFja3VwNCBrZXJuZWw6IENSMjogMDAwMDdmZjkzODM4OTAwMCBDUjM6IDAwMDAwMDA0ODcy
+MGEwMDEgQ1I0OiAwMDAwMDAwMDAwMzYwNmUwDQo+IE5vdiAgOCAwMDo1NToxOSBiYWNrdXA0
+IGtlcm5lbDogRFIwOiAwMDAwMDAwMDAwMDAwMDAwIERSMTogMDAwMDAwMDAwMDAwMDAwMCBE
+UjI6IDAwMDAwMDAwMDAwMDAwMDANCj4gTm92ICA4IDAwOjU1OjE5IGJhY2t1cDQga2VybmVs
+OiBEUjM6IDAwMDAwMDAwMDAwMDAwMDAgRFI2OiAwMDAwMDAwMGZmZmUwZmYwIERSNzogMDAw
+MDAwMDAwMDAwMDQwMA0KPiBOb3YgIDggMDA6NTU6MTkgYmFja3VwNCBrZXJuZWw6IENhbGwg
+VHJhY2U6DQo+IE5vdiAgOCAwMDo1NToxOSBiYWNrdXA0IGtlcm5lbDogIHhmc19tYXBfYmxv
+Y2tzKzB4MThlLzB4NDIwIFt4ZnNdDQo+IE5vdiAgOCAwMDo1NToxOSBiYWNrdXA0IGtlcm5l
+bDogIHhmc19kb193cml0ZXBhZ2UrMHgxMWMvMHg0NDAgW3hmc10NCj4gTm92ICA4IDAwOjU1
+OjE5IGJhY2t1cDQga2VybmVsOiAgd3JpdGVfY2FjaGVfcGFnZXMrMHgxODUvMHg0MzANCj4g
+Tm92ICA4IDAwOjU1OjE5IGJhY2t1cDQga2VybmVsOiAgPyB4ZnNfdm1fd3JpdGVwYWdlcysw
+eDkwLzB4OTAgW3hmc10NCj4gTm92ICA4IDAwOjU1OjE5IGJhY2t1cDQga2VybmVsOiAgeGZz
+X3ZtX3dyaXRlcGFnZXMrMHg1ZS8weDkwIFt4ZnNdDQo+IE5vdiAgOCAwMDo1NToxOSBiYWNr
+dXA0IGtlcm5lbDogIGRvX3dyaXRlcGFnZXMrMHgxYy8weDYwDQo+IE5vdiAgOCAwMDo1NTox
+OSBiYWNrdXA0IGtlcm5lbDogIF9fd3JpdGViYWNrX3NpbmdsZV9pbm9kZSsweDQxLzB4MzYw
+DQo+IE5vdiAgOCAwMDo1NToxOSBiYWNrdXA0IGtlcm5lbDogIHdyaXRlYmFja19zYl9pbm9k
+ZXMrMHgyMGMvMHg0OTANCj4gTm92ICA4IDAwOjU1OjE5IGJhY2t1cDQga2VybmVsOiAgd2Jf
+d3JpdGViYWNrKzB4MTJhLzB4MzIwDQo+IE5vdiAgOCAwMDo1NToxOSBiYWNrdXA0IGtlcm5l
+bDogIHdiX3dvcmtmbisweGRkLzB4NGEwDQo+IE5vdiAgOCAwMDo1NToxOSBiYWNrdXA0IGtl
+cm5lbDogIHByb2Nlc3Nfb25lX3dvcmsrMHgxZDUvMHgzNzANCj4gTm92ICA4IDAwOjU1OjE5
+IGJhY2t1cDQga2VybmVsOiAgd29ya2VyX3RocmVhZCsweDRkLzB4M2QwDQo+IE5vdiAgOCAw
+MDo1NToxOSBiYWNrdXA0IGtlcm5lbDogIGt0aHJlYWQrMHhmYi8weDE0MA0KPiBOb3YgIDgg
+MDA6NTU6MTkgYmFja3VwNCBrZXJuZWw6ICA/IHByb2Nlc3Nfb25lX3dvcmsrMHgzNzAvMHgz
+NzANCj4gTm92ICA4IDAwOjU1OjE5IGJhY2t1cDQga2VybmVsOiAgPyBrdGhyZWFkX3Bhcmsr
+MHg4MC8weDgwDQo+IE5vdiAgOCAwMDo1NToxOSBiYWNrdXA0IGtlcm5lbDogIHJldF9mcm9t
+X2ZvcmsrMHgzNS8weDQwDQo+IE5vdiAgOCAwMDo1NToxOSBiYWNrdXA0IGtlcm5lbDogLS0t
+WyBlbmQgdHJhY2UgYTA4ZGUwYzhjMjg1MTkzNiBdLS0tDQo+IE5vdiAgOCAwMDo1NToxOSBi
+YWNrdXA0IGtlcm5lbDogWEZTIChzZGQxKTogcGFnZSBkaXNjYXJkIG9uIHBhZ2UgMDAwMDAw
+MDBlNTZlMDYyMSwgaW5vZGUgMHg3YTE3ZjQyMDYsIG9mZnNldCAxMDM1NDY4OC4NCj4gTm92
+ICA4IDAwOjU1OjE5IGJhY2t1cDQga2VybmVsOiBYRlMgKHNkZDEpOiBwYWdlIGRpc2NhcmQg
+b24gcGFnZSAwMDAwMDAwMDRlZGMxNzUzLCBpbm9kZSAweDdhMTdmNDIwNiwgb2Zmc2V0IDEw
+MzU4Nzg0Lg0KPiBOb3YgIDggMDA6NTU6MTkgYmFja3VwNCBrZXJuZWw6IFhGUyAoc2RkMSk6
+IHBhZ2UgZGlzY2FyZCBvbiBwYWdlIDAwMDAwMDAwOTJlNjEyNzYsIGlub2RlIDB4N2ExN2Y0
+MjA2LCBvZmZzZXQgMTAzNjI4ODAuDQo+IFsuLi5dDQo+IE5vdiAgOCAwMDo1NToyNCBiYWNr
+dXA0IGtlcm5lbDogWEZTIChzZGQxKTogcGFnZSBkaXNjYXJkIG9uIHBhZ2UgMDAwMDAwMDA4
+OGFmMWFiZCwgaW5vZGUgMHg0OGMzZjUyZTAsIG9mZnNldCA2OTIyMjQuDQo+IE5vdiAgOCAw
+MDo1NToyNCBiYWNrdXA0IGtlcm5lbDogWEZTIChzZGQxKTogcGFnZSBkaXNjYXJkIG9uIHBh
+Z2UgMDAwMDAwMDA2OGFlYTI3YywgaW5vZGUgMHg0OGMzZjUyZTAsIG9mZnNldCA2OTYzMjAu
+DQo+IE5vdiAgOCAwMDo1NToyNCBiYWNrdXA0IGtlcm5lbDogWEZTIChzZGQxKTogSW50ZXJu
+YWwgZXJyb3IgeGZzX3RyYW5zX2NhbmNlbCBhdCBsaW5lIDEwNDggb2YgZmlsZSBmcy94ZnMv
+eGZzX3RyYW5zLmMuICBDYWxsZXIgeGZzX2NyZWF0ZSsweDU2OC8weDVkMCBbeGZzXQ0KPiBO
+b3YgIDggMDA6NTU6MjQgYmFja3VwNCBrZXJuZWw6IFhGUyAoc2RkMSk6IHBhZ2UgZGlzY2Fy
+ZCBvbiBwYWdlIDAwMDAwMDAwYTM2ODdjNjYsIGlub2RlIDB4NDhjM2Y1MmUwLCBvZmZzZXQg
+NzAwNDE2Lg0KPiBOb3YgIDggMDA6NTU6MjQgYmFja3VwNCBrZXJuZWw6IENQVTogMyBQSUQ6
+IDE3NzYxIENvbW06IGNwIFRhaW50ZWQ6IEcgICAgICAgIFcgICAgICAgVCA1LjMuOC0xICMx
+DQo+IE5vdiAgOCAwMDo1NToyNCBiYWNrdXA0IGtlcm5lbDogSGFyZHdhcmUgbmFtZTogU3Vw
+ZXJtaWNybyBYMTBEUmkvWDEwRFJpLCBCSU9TIDMuMGEgMDIvMDYvMjAxOA0KPiBOb3YgIDgg
+MDA6NTU6MjQgYmFja3VwNCBrZXJuZWw6IENhbGwgVHJhY2U6DQo+IE5vdiAgOCAwMDo1NToy
+NCBiYWNrdXA0IGtlcm5lbDogIGR1bXBfc3RhY2srMHg1Yy8weDc4DQo+IE5vdiAgOCAwMDo1
+NToyNCBiYWNrdXA0IGtlcm5lbDogIHhmc190cmFuc19jYW5jZWwrMHgxMmUvMHgxNTAgW3hm
+c10NCj4gTm92ICA4IDAwOjU1OjI0IGJhY2t1cDQga2VybmVsOiBYRlMgKHNkZDEpOiBwYWdl
+IGRpc2NhcmQgb24gcGFnZSAwMDAwMDAwMDA1ZmRmYzdhLCBpbm9kZSAweDQ4YzNmNTJlMCwg
+b2Zmc2V0IDcwNDUxMi4NCj4gTm92ICA4IDAwOjU1OjI0IGJhY2t1cDQga2VybmVsOiAgeGZz
+X2NyZWF0ZSsweDU2OC8weDVkMCBbeGZzXQ0KPiBOb3YgIDggMDA6NTU6MjQgYmFja3VwNCBr
+ZXJuZWw6IFhGUyAoc2RkMSk6IHBhZ2UgZGlzY2FyZCBvbiBwYWdlIDAwMDAwMDAwZDZmMjUx
+NjMsIGlub2RlIDB4NDhjM2Y1MmUwLCBvZmZzZXQgNzA4NjA4Lg0KPiBOb3YgIDggMDA6NTU6
+MjQgYmFja3VwNCBrZXJuZWw6ICB4ZnNfZ2VuZXJpY19jcmVhdGUrMHgyNjIvMHgzMDAgW3hm
+c10NCj4gTm92ICA4IDAwOjU1OjI0IGJhY2t1cDQga2VybmVsOiBYRlMgKHNkZDEpOiBwYWdl
+IGRpc2NhcmQgb24gcGFnZSAwMDAwMDAwMDA3ODU2YzQzLCBpbm9kZSAweDQ4YzNmNTJlMCwg
+b2Zmc2V0IDcxMjcwNC4NCj4gTm92ICA4IDAwOjU1OjI0IGJhY2t1cDQga2VybmVsOiAgdmZz
+X21rZGlyKzB4MTE1LzB4MWIwDQo+IE5vdiAgOCAwMDo1NToyNCBiYWNrdXA0IGtlcm5lbDog
+IGRvX21rZGlyYXQrMHgxMDIvMHgxMzANCj4gTm92ICA4IDAwOjU1OjI0IGJhY2t1cDQga2Vy
+bmVsOiAgZG9fc3lzY2FsbF82NCsweDViLzB4MTIwDQo+IE5vdiAgOCAwMDo1NToyNCBiYWNr
+dXA0IGtlcm5lbDogIGVudHJ5X1NZU0NBTExfNjRfYWZ0ZXJfaHdmcmFtZSsweDQ0LzB4YTkN
+Cj4gTm92ICA4IDAwOjU1OjI0IGJhY2t1cDQga2VybmVsOiBSSVA6IDAwMzM6MHg3ZjM4MjFh
+NjMyOGINCj4gTm92ICA4IDAwOjU1OjI0IGJhY2t1cDQga2VybmVsOiBYRlMgKHNkZDEpOiBw
+YWdlIGRpc2NhcmQgb24gcGFnZSAwMDAwMDAwMDExZGY3NDg0LCBpbm9kZSAweDQ4YzNmNTJl
+MCwgb2Zmc2V0IDcxNjgwMC4NCj4gTm92ICA4IDAwOjU1OjI0IGJhY2t1cDQga2VybmVsOiBD
+b2RlOiA0OCA4YiAwNSBmOCAxYiAwZCAwMCBjNyAwNCAwMiA1ZiAwMCAwMCAwMCBiOCBmZiBm
+ZiBmZiBmZiBjMyA2NiAyZSAwZiAxZiA4NCAwMCAwMCAwMCAwMCAwMCA5MCBmMyAwZiAxZSBm
+YSBiOCA1MyAwMCAwMCAwMCAwZiAwNSA8NDg+IDNkIDAxIGYwIGZmIGZmIDczIDAxIGMzIDQ4
+IDhiIDBkIGM1IDFiIDBkIDAwIGY3IGQ4IDY0IDg5IDAxIDQ4DQo+IE5vdiAgOCAwMDo1NToy
+NCBiYWNrdXA0IGtlcm5lbDogUlNQOiAwMDJiOjAwMDA3ZmZlZmJjMTE0ZTggRUZMQUdTOiAw
+MDAwMDIwNiBPUklHX1JBWDogMDAwMDAwMDAwMDAwMDA1Mw0KPiBOb3YgIDggMDA6NTU6MjQg
+YmFja3VwNCBrZXJuZWw6IFJBWDogZmZmZmZmZmZmZmZmZmZkYSBSQlg6IDAwMDA3ZmZlZmJj
+MTFhMTAgUkNYOiAwMDAwN2YzODIxYTYzMjhiDQo+IE5vdiAgOCAwMDo1NToyNCBiYWNrdXA0
+IGtlcm5lbDogUkRYOiAwMDAwMDAxMTlkZjQ4ODI3IFJTSTogMDAwMDAwMDAwMDAwMDVjMCBS
+REk6IDAwMDAwMDAwMDIzZDVjZDANCj4gTm92ICA4IDAwOjU1OjI0IGJhY2t1cDQga2VybmVs
+OiBSQlA6IDAwMDA3ZmZlZmJjMTE4ZTAgUjA4OiAwMDAwN2ZmZWZiYzExYTEwIFIwOTogMDAw
+MDdmZmVmYmMxMWExMA0KPiBOb3YgIDggMDA6NTU6MjQgYmFja3VwNCBrZXJuZWw6IFIxMDog
+MDAwMDdmZmVmYmMxMTY2MCBSMTE6IDAwMDAwMDAwMDAwMDAyMDYgUjEyOiAwMDAwMDAwMDAw
+MDAwNWMwDQo+IE5vdiAgOCAwMDo1NToyNCBiYWNrdXA0IGtlcm5lbDogUjEzOiAwMDAwMDAw
+MDAwMDAwMDAwIFIxNDogMDAwMDAwMDAwMDAwNDAwMCBSMTU6IDAwMDAwMDAwMDAwMDAwMDAN
+Cj4gTm92ICA4IDAwOjU1OjI0IGJhY2t1cDQga2VybmVsOiBYRlMgKHNkZDEpOiBwYWdlIGRp
+c2NhcmQgb24gcGFnZSAwMDAwMDAwMDQ5NGVlMmNiLCBpbm9kZSAweDQ4YzNmNTJlMCwgb2Zm
+c2V0IDcyMDg5Ni4NCj4gTm92ICA4IDAwOjU1OjI0IGJhY2t1cDQga2VybmVsOiBYRlMgKHNk
+ZDEpOiBwYWdlIGRpc2NhcmQgb24gcGFnZSAwMDAwMDAwMDk2MTZlZWQ0LCBpbm9kZSAweDQ4
+YzNmNTJlMCwgb2Zmc2V0IDcyNDk5Mi4NCj4gTm92ICA4IDAwOjU1OjI0IGJhY2t1cDQga2Vy
+bmVsOiBYRlMgKHNkZDEpOiBwYWdlIGRpc2NhcmQgb24gcGFnZSAwMDAwMDAwMGNlM2I2Yzgx
+LCBpbm9kZSAweDQ4YzNmNTJlMCwgb2Zmc2V0IDcyOTA4OC4NCj4gTm92ICA4IDAwOjU1OjI0
+IGJhY2t1cDQga2VybmVsOiBYRlMgKHNkZDEpOiBwYWdlIGRpc2NhcmQgb24gcGFnZSAwMDAw
+MDAwMDI3NjhlZDljLCBpbm9kZSAweDQ4YzNmNTJlMCwgb2Zmc2V0IDczMzE4NC4NCj4gTm92
+ICA4IDAwOjU1OjI0IGJhY2t1cDQga2VybmVsOiBYRlMgKHNkZDEpOiBwYWdlIGRpc2NhcmQg
+b24gcGFnZSAwMDAwMDAwMGExMzZmZTk4LCBpbm9kZSAweDQ4YzNmNTJlMCwgb2Zmc2V0IDcz
+NzI4MC4NCj4gTm92ICA4IDAwOjU1OjI0IGJhY2t1cDQga2VybmVsOiBYRlMgKHNkZDEpOiBw
+YWdlIGRpc2NhcmQgb24gcGFnZSAwMDAwMDAwMDUwN2MxZmQxLCBpbm9kZSAweDQ4YzNmNTJl
+MCwgb2Zmc2V0IDc0MTM3Ni4NCj4gTm92ICA4IDAwOjU1OjI0IGJhY2t1cDQga2VybmVsOiBY
+RlMgKHNkZDEpOiBwYWdlIGRpc2NhcmQgb24gcGFnZSAwMDAwMDAwMDFkZGVjNTVhLCBpbm9k
+ZSAweDQ4YzNmNTJlMCwgb2Zmc2V0IDc0NTQ3Mi4NCj4gTm92ICA4IDAwOjU1OjI0IGJhY2t1
+cDQga2VybmVsOiBYRlMgKHNkZDEpOiBwYWdlIGRpc2NhcmQgb24gcGFnZSAwMDAwMDAwMDMx
+Y2IxNThkLCBpbm9kZSAweDQ4YzNmNTJlMCwgb2Zmc2V0IDc0OTU2OC4NCj4gTm92ICA4IDAw
+OjU1OjI0IGJhY2t1cDQga2VybmVsOiBYRlMgKHNkZDEpOiBwYWdlIGRpc2NhcmQgb24gcGFn
+ZSAwMDAwMDAwMDRiZjJjM2IxLCBpbm9kZSAweDQ4YzNmNTJlMCwgb2Zmc2V0IDc1MzY2NC4N
+Cj4gTm92ICA4IDAwOjU1OjI0IGJhY2t1cDQga2VybmVsOiBYRlMgKHNkZDEpOiBwYWdlIGRp
+c2NhcmQgb24gcGFnZSAwMDAwMDAwMDVhZDViNWUzLCBpbm9kZSAweDQ4YzNmNTJlMCwgb2Zm
+c2V0IDc1Nzc2MC4NCj4gTm92ICA4IDAwOjU1OjI0IGJhY2t1cDQga2VybmVsOiBYRlMgKHNk
+ZDEpOiB4ZnNfZG9fZm9yY2Vfc2h1dGRvd24oMHg4KSBjYWxsZWQgZnJvbSBsaW5lIDEwNDkg
+b2YgZmlsZSBmcy94ZnMveGZzX3RyYW5zLmMuIFJldHVybiBhZGRyZXNzID0gMDAwMDAwMDBk
+OWIyOTAxMA0KPiBOb3YgIDggMDA6NTU6MjQgYmFja3VwNCBrZXJuZWw6IFhGUyAoc2RkMSk6
+IENvcnJ1cHRpb24gb2YgaW4tbWVtb3J5IGRhdGEgZGV0ZWN0ZWQuICBTaHV0dGluZyBkb3du
+IGZpbGVzeXN0ZW0NCj4gTm92ICA4IDAwOjU1OjI0IGJhY2t1cDQga2VybmVsOiBYRlMgKHNk
+ZDEpOiBQbGVhc2UgdW5tb3VudCB0aGUgZmlsZXN5c3RlbSBhbmQgcmVjdGlmeSB0aGUgcHJv
+YmxlbShzKQ0KDQoNCg0KDQotLSANCkFya2FkaXVzeiBNacWba2lld2ljeiwgYXJla20gLyAo
+IG1hdmVuLnBsIHwgcGxkLWxpbnV4Lm9yZyApDQoNCi0tIA0KQXJrYWRpdXN6IE1pxZtraWV3
+aWN6LCBhcmVrbSAvICggbWF2ZW4ucGwgfCBwbGQtbGludXgub3JnICkNCg==
