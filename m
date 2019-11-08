@@ -2,99 +2,66 @@ Return-Path: <SRS0=OQuR=ZA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46D15C5DF60
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 07:20:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5716FC5DF60
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 07:21:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 11DBA2178F
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 07:20:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B69C2085B
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 07:21:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="KzIS6FAp"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Xh/8O5bc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727421AbfKHHUN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 Nov 2019 02:20:13 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:44168 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725802AbfKHHUN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Nov 2019 02:20:13 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA87JPo6083606;
-        Fri, 8 Nov 2019 07:20:07 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=0HFbGwtq1+MNAUA0ZZW7HPhWQWDEm705CqZVugF/kmk=;
- b=KzIS6FApoYsjz3dhtzCvIV6iROnmvN9Rk22rQBiefzyO+JrVUGvWQQeoYmK/daMmaN44
- MFYqD41YXBAHU+NYoMuLWXIaVCnQ7BYZrup2UOUUcpk1FAdq8EdA/6kS6+2hWKi0aanQ
- c3lvmHBu8RUavDRFCpC2KmAEFAaO20FLR3ptLXQdgvF9b3i+UjyMdObnQMzKy6ACAYwQ
- ISB0QKUNL11t8HEDD4ebLbyaUD10unDQIFBblDWQekwDpu9xbWLWzc4uA3N4hWr9wxLz
- pDyhqBCdl9H2j5QhI7ih4uj4O/vl6TTl5OGq0YzEUGZ10w0gR0MoMcEBBwXloWfK47tq ng== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2w41w1bfn4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 08 Nov 2019 07:20:07 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA87J7ZV023005;
-        Fri, 8 Nov 2019 07:20:07 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 2w41wh1bqb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 08 Nov 2019 07:20:06 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xA87K4On022707;
-        Fri, 8 Nov 2019 07:20:05 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 07 Nov 2019 23:20:04 -0800
-Date:   Thu, 7 Nov 2019 23:20:02 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: clean up weird while loop in
- xfs_alloc_ag_vextent_near
-Message-ID: <20191108072002.GO6219@magnolia>
-References: <157319668531.834585.6920821852974178.stgit@magnolia>
- <157319669798.834585.10287243947050889974.stgit@magnolia>
- <20191108071151.GA31526@infradead.org>
+        id S1725900AbfKHHVj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Nov 2019 02:21:39 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:52912 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725802AbfKHHVj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Nov 2019 02:21:39 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=+yMYA1/l8V2Q5BK0lKDpi8pvaZVQY4hzJ8zIzzyl7vk=; b=Xh/8O5bcwkfIoEtd+X3ZCSCPF
+        2vg/EkxwbuclsXZCntgEauymr3p+QuvwCFk71V/WRJDqGURALF6vTiVo4oOJVk55X80vJch2zBxDQ
+        Y4gNdl3tO+UgerAHt9ddR3HlNLy0WbgEbfr6cMntbUIIMmbtP9lvzd11E71QF+4LuqpYgdvI/bdWZ
+        40fQ0gPRbdkvPYZGSUMaFfH9JPySGhGG6vGXo+uz7wdCP+sX8KiimWmsUzpfcYqygmNAubtpMygiE
+        hDk7QHfnl6FQNWQvWMqkBO22ihNamGI87uq6MsaR0IE6LP03+FBu7pVVSMJxvT2f2nqtTGOhc2PXu
+        1aJhS4NAA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1iSyaR-00058G-3U; Fri, 08 Nov 2019 07:21:39 +0000
+Date:   Thu, 7 Nov 2019 23:21:39 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
+Subject: Re: [PATCH 2/2] xfs: convert open coded corruption check to use
+ XFS_IS_CORRUPT
+Message-ID: <20191108072139.GA14546@infradead.org>
+References: <157319670850.834699.10430897268214054248.stgit@magnolia>
+ <157319672136.834699.13051359836285578031.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191108071151.GA31526@infradead.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9434 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1910280000 definitions=main-1911080072
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9434 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
- definitions=main-1911080072
+In-Reply-To: <157319672136.834699.13051359836285578031.stgit@magnolia>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 07, 2019 at 11:11:51PM -0800, Christoph Hellwig wrote:
-> What tree is this supposed to apply to?  It fails against
+On Thu, Nov 07, 2019 at 11:05:21PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Convert the last of the open coded corruption check and report idioms to
+> use the XFS_IS_CORRUPT macro.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Sorry, I've been reworking these patches against a branch that I hadn't
-yet pushed to xfs-linux.git (and won't until I can take one more look
-tomorrow with a fresh brain).
+Looks good,
 
-In the meantime, you can see my development branch on my personal git
-repo:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=xfs-5.5-dev
-
-> xfs/for-next here.  Otherwise this looks fine to me.
-
-Fine enough for an RVB provided the above? :D
-
---D
+Reviewed-by: Christoph Hellwig <hch@lst.de>
