@@ -2,148 +2,240 @@ Return-Path: <SRS0=OQuR=ZA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5451BFA372C
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 19:35:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53EECFC6196
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 19:36:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 26F32206A3
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 19:35:35 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="riJR58gz"
+	by mail.kernel.org (Postfix) with ESMTP id 36068207FA
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 19:36:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732203AbfKHTfe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 Nov 2019 14:35:34 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:58590 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727233AbfKHTfe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Nov 2019 14:35:34 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA8JYRO8102807
-        for <linux-xfs@vger.kernel.org>; Fri, 8 Nov 2019 19:35:33 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=WZkK+BJ3VHvWj67CCsPxoBx6W2twosVByzJAPvM1Sus=;
- b=riJR58gz7rVN8QWPzT4uC6+0NGGzuwWQNAh8NQFvUq6VkWEgMcdWI+22qs3HDpDj1gyR
- POhIcFECaH9EdqgLpHluynJm/TIidWE5N++7ayr6qIHE2cGcmsBex+pols0T76ua20Ql
- wnBr4phs788sSfK6esMGyvzN2Tphdna34tsbYYOaGyLqoQk808jlfzGTQtY6K+AbJZ9X
- tm52bie65e6ofeZCDw7DV7/Og2SflmLQlygN6HnbCBwt9I8tzwNf3dOYjfKMmLO+9bfA
- cjJYkdhg9dbsYEEkw0X/aPDMY6e3RfK2CGuvMnbFUzhSsUhielwsaZW4MMnVLA9VmjMq Jg== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2w41w179pp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 08 Nov 2019 19:35:32 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA8JYPEe015361
-        for <linux-xfs@vger.kernel.org>; Fri, 8 Nov 2019 19:35:32 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2w50m62m6p-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 08 Nov 2019 19:35:31 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xA8JZVmH023183
-        for <linux-xfs@vger.kernel.org>; Fri, 8 Nov 2019 19:35:31 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 08 Nov 2019 19:35:15 +0000
-Date:   Fri, 8 Nov 2019 11:35:15 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Allison Collins <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4 07/17] xfs: Factor up trans handling in
- xfs_attr3_leaf_flipflags
-Message-ID: <20191108193515.GY6219@magnolia>
-References: <20191107012801.22863-1-allison.henderson@oracle.com>
- <20191107012801.22863-8-allison.henderson@oracle.com>
+        id S1732263AbfKHTgP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Nov 2019 14:36:15 -0500
+Received: from mga09.intel.com ([134.134.136.24]:54222 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727233AbfKHTgP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 8 Nov 2019 14:36:15 -0500
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 08 Nov 2019 11:36:14 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.68,283,1569308400"; 
+   d="scan'208";a="196999801"
+Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
+  by orsmga008.jf.intel.com with ESMTP; 08 Nov 2019 11:36:13 -0800
+Date:   Fri, 8 Nov 2019 11:36:13 -0800
+From:   Ira Weiny <ira.weiny@intel.com>
+To:     Jan Kara <jack@suse.cz>
+Cc:     Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 5/5] fs/xfs: Allow toggle of physical DAX flag
+Message-ID: <20191108193612.GA4800@iweiny-DESK2.sc.intel.com>
+References: <20191020155935.12297-1-ira.weiny@intel.com>
+ <20191020155935.12297-6-ira.weiny@intel.com>
+ <20191021004536.GD8015@dread.disaster.area>
+ <20191021224931.GA25526@iweiny-DESK2.sc.intel.com>
+ <20191108131238.GK20863@quack2.suse.cz>
+ <20191108134606.GL20863@quack2.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191107012801.22863-8-allison.henderson@oracle.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9435 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1910280000 definitions=main-1911080190
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9435 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
- definitions=main-1911080190
+In-Reply-To: <20191108134606.GL20863@quack2.suse.cz>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 06, 2019 at 06:27:51PM -0700, Allison Collins wrote:
-> Since delayed operations cannot roll transactions, factor
-> up the transaction handling into the calling function
+On Fri, Nov 08, 2019 at 02:46:06PM +0100, Jan Kara wrote:
+> On Fri 08-11-19 14:12:38, Jan Kara wrote:
+> > On Mon 21-10-19 15:49:31, Ira Weiny wrote:
+> > > On Mon, Oct 21, 2019 at 11:45:36AM +1100, Dave Chinner wrote:
+> > > > On Sun, Oct 20, 2019 at 08:59:35AM -0700, ira.weiny@intel.com wrote:
+> > > > That, fundamentally, is the issue here - it's not setting/clearing
+> > > > the DAX flag that is the issue, it's doing a swap of the
+> > > > mapping->a_ops while there may be other code using that ops
+> > > > structure.
+> > > > 
+> > > > IOWs, if there is any code anywhere in the kernel that
+> > > > calls an address space op without holding one of the three locks we
+> > > > hold here (i_rwsem, MMAPLOCK, ILOCK) then it can race with the swap
+> > > > of the address space operations.
+> > > > 
+> > > > By limiting the address space swap to file sizes of zero, we rule
+> > > > out the page fault path (mmap of a zero length file segv's with an
+> > > > access beyond EOF on the first read/write page fault, right?).
+> > > 
+> > > Yes I checked that and thought we were safe here...
+> > > 
+> > > > However, other aops callers that might run unlocked and do the wrong
+> > > > thing if the aops pointer is swapped between check of the aop method
+> > > > existing and actually calling it even if the file size is zero?
+> > > > 
+> > > > A quick look shows that FIBMAP (ioctl_fibmap())) looks susceptible
+> > > > to such a race condition with the current definitions of the XFS DAX
+> > > > aops. I'm guessing there will be others, but I haven't looked
+> > > > further than this...
+> > > 
+> > > I'll check for others and think on what to do about this.  ext4 will have the
+> > > same problem I think.  :-(
+> > 
+> > Just as a datapoint, ext4 is bold and sets inode->i_mapping->a_ops on
+> > existing inodes when switching journal data flag and so far it has not
+> > blown up. What we did to deal with issues Dave describes is that we
+> > introduced percpu rw-semaphore guarding switching of aops and then inside
+> > problematic functions redirect callbacks in the right direction under this
+> > semaphore. Somewhat ugly but it seems to work.
+
+Ah I am glad you brought this up.  I had not seen this before.
+
+Is that s_journal_flag_rwsem?
+
+In the general case I don't think that correctly protects against:
+
+	if (a_ops->call)
+		a_ops->call();
+
+Because not all operations are defined in both ext4_aops and
+ext4_journalled_aops.  Specifically migratepage.
+
+move_to_new_page() specifically follows the pattern above with migratepage.  So
+is there a bug here?
+
 > 
-> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> ---
->  fs/xfs/libxfs/xfs_attr.c      | 14 ++++++++++++++
->  fs/xfs/libxfs/xfs_attr_leaf.c |  5 -----
->  2 files changed, 14 insertions(+), 5 deletions(-)
+> Thinking about this some more, perhaps this scheme could be actually
+> transformed in something workable. We could have a global (or maybe per-sb
+> but I'm not sure it's worth it) percpu rwsem and we could transform aops
+> calls into:
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index c8a3273..212995f 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -721,6 +721,13 @@ xfs_attr_leaf_addname(
->  		error = xfs_attr3_leaf_flipflags(args);
->  		if (error)
->  			return error;
-> +		/*
-> +		 * Commit the flag value change and start the next trans in
-> +		 * series.
-> +		 */
-> +		error = xfs_trans_roll_inode(&args->trans, args->dp);
-> +		if (error)
-> +			return error;
->  
->  		/*
->  		 * Dismantle the "old" attribute/value pair by removing
-> @@ -1057,6 +1064,13 @@ xfs_attr_node_addname(
->  		error = xfs_attr3_leaf_flipflags(args);
->  		if (error)
->  			goto out;
-> +		/*
-> +		 * Commit the flag value change and start the next trans in
-> +		 * series
-> +		 */
-> +		error = xfs_trans_roll_inode(&args->trans, args->dp);
-> +		if (error)
-> +			goto out;
->  
->  		/*
->  		 * Dismantle the "old" attribute/value pair by removing
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index d06cfd6..134eb00 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -2973,10 +2973,5 @@ xfs_attr3_leaf_flipflags(
->  			 XFS_DA_LOGRANGE(leaf2, name_rmt, sizeof(*name_rmt)));
->  	}
->  
-> -	/*
-> -	 * Commit the flag value change and start the next trans in series.
-> -	 */
-> -	error = xfs_trans_roll_inode(&args->trans, args->dp);
-> -
->  	return error;
->  }
+> percpu_down_read(aops_rwsem);
+> do_call();
+> percpu_up_read(aops_rwsem);
+> 
+> With some macro magic it needn't be even that ugly.
+
+I think this is safer.  And what I have been investigating/coding up.  Because
+that also would protect against the above with:
+
+percpu_down_read(aops_rwsem);
+	if (a_ops->call)
+		a_ops->call();
+percpu_up_read(aops_rwsem);
+
+However I have been looking at SRCU because we also have patterns like:
+
+
+	generic_file_buffered_read
+		if (a_ops->is_partially_uptodate)
+			a_ops->is_partially_uptodate()
+		page_cache_sync_readahead
+			force_page_cache_readahead
+				if (!a_ops->readpage && !a_ops->readpages)
+					return;
+				__do_page_cache_readahead
+					read_pages
+						if (a_ops->readpages)
+							a_ops->readpages()
+						a_ops->readpage
+
+
+So we would have to pass the a_ops through to use a rwsem.  Where SRCU I think
+would be fine to just take the SRCU read lock multiple times.  Am I wrong?
+
+
+We also have a 3rd (2nd?) issue.  There are callers who check for the presence
+of an operation to be used later.  For example do_dentry_open():
+
+do_dentry_open()
+{
+...
+	if (<flags> & O_DIRECT)
+		if (!<a_ops> || !<a_ops>->direct_IO)
+			return -EINVAL;
+...
+}
+
+After this open direct_IO better be there AFAICT so changing the a_ops later
+would not be good.  For ext4 direct_IO is defined for all the a_ops...  so I
+guess that is not a big deal.  However, is the user really getting the behavior
+they expect in this case?
+
+I'm afraid of requiring FSs to have to follow rules in defining their a_ops.
+Because I'm afraid maintaining those rules would be hard and would eventually
+lead to crashes when someone did it wrong.
+
+:-/
+
+So for this 3rd (2nd) case I think we should simply take a reference to the
+a_ops and fail changing the mode.  For the DAX case that means the user is best
+served by taking a write lease on the file to ensure there are no other opens
+which could cause issues.
+
+Would that work for changing the journaling mode?
+
+And I _think_ this is the only issue we have with this right now. But if other
+callers of a_ops needed the pattern of using the a_ops at a time across context
+changes they would need to ensure this reference was taken.
+
+What I have come up with thus far is an interface like:
+
+/*
+ * as_get_a_ops() -- safely get the a_ops from the address_space specified
+ *
+ * @as: address space to get a_ops from
+ * @ref: used to indicate if a reference is required on this a_ops
+ * @tok: srcu token to be returned in as_put_a_ops()
+ *
+ * The a_ops returned is protected from changing until as_put_a_ops().
+ *
+ * If ref is specified then ref must also be specified in as_put_a_ops() to
+ * release this reference.  In this case a reference is taken on the a_ops
+ * which will prevent it from changing until the reference is released.
+ *
+ * References should _ONLY_ be taken when the a_ops needs to be constant
+ * across a user context switch because doing so will block changing the a_ops
+ * until that reference is released.
+ *
+ * Examples of using a reference are checks for specific a_ops pointers which
+ * are expected to support functionality at a later date (example direct_IO)
+ */
+static inline const struct address_space_operations *
+as_get_a_ops(struct address_space *as, bool ref, int *tok)
+{
+	...
+}
+
+static inline void
+as_assign_a_ops(struct address_space *as,
+                const struct address_space_operations *a_ops)
+{
+	...
+}
+
+static inline void as_put_a_ops(struct address_space *as, int tok, bool ref)
+{
+	...
+}
+
+
+I'm still working out the details of using SRCU and a ref count.  I have made
+at least 1 complete pass of all the a_ops users and I think this would cover
+them all.
+
+Thoughts?
+Ira
+
+> 
+> 								Honza
 > -- 
-> 2.7.4
-> 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
