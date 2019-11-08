@@ -2,66 +2,249 @@ Return-Path: <SRS0=OQuR=ZA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8665BC5DF60
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 07:05:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D747FA372C
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 07:06:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5032C2087E
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 07:05:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 421812178F
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 07:06:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="SL0TPcIb"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="krdz9nCG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727573AbfKHHFw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 Nov 2019 02:05:52 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:47514 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725372AbfKHHFv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Nov 2019 02:05:51 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=udWYGBLVX0fhGj7+Efyj8xFvyIaVfq6wrlZL5jfeKcE=; b=SL0TPcIbcIJwiUy3ssz1XZxB7
-        cm7ZmUJ/N59omRw8ZtjcqLngEWc7Bo7rIDTNbsyyAzf8iGUq3WDsF6IzlKnktupxbfoomWQT61MTE
-        evZ+tlDj0B0JRXmfnhRY3r6KCLirbDV1URZmCez46PgT3UuNIZQ2ui68ru0Wy/U8e6XWWQx7fZrd/
-        t5GNPuhUyRHJBhNSrJPRirNLieDeHIjKA3KNa5NKN9MUh8t5zBsKe3DXzESO5OPKFql8gvIdQ9IRz
-        PypMhB7B0CzshxnZgzKmTE2fWAs0Ugt36L1lOVYR5Qr6azLfXbVdwlY4WymsQTtJsgSVnWz+/JZEU
-        s/wQmxhYg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iSyL9-0007ge-Jf; Fri, 08 Nov 2019 07:05:51 +0000
-Date:   Thu, 7 Nov 2019 23:05:51 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+        id S1725886AbfKHHGO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Nov 2019 02:06:14 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:56206 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725372AbfKHHGO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Nov 2019 02:06:14 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA873Y5u069667
+        for <linux-xfs@vger.kernel.org>; Fri, 8 Nov 2019 07:06:13 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2019-08-05;
+ bh=g0TtpK/mAo8ialJHCyZTGurrBWemTbpISaESBFdXTeU=;
+ b=krdz9nCGMNk+yCkinL4axvjSYCR7htNlFmSYVUpsKXcx9ARFlment4HeWTFzM8Q+i/e2
+ jEzLQE4/cj5AXHetuDwKD2R8oblhNsAxeTa4+bHrsAFwpxOEqRbE9emPWWIsMUp3e2Gw
+ CgmNlnnpIAgfYQ4RiPdctecA8ttfDGIp5QDBgli+NNwoyx+bdfFxNCAFV+1iVpQQS+Ep
+ LX3wH/3CmJWgF7OV5ZjC/fWtjYf8KGpT0wjIBgrvI/pk1RZwgHApei5l199OJWaR/wZJ
+ N07g8S+lOJJd5jWrHskX4F+gsM8l79sBZgCH+mbrUncgR94/i5S37kHbaLtOH0iZRpDr yw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 2w41w1bd9u-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 08 Nov 2019 07:06:13 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA873Wev061141
+        for <linux-xfs@vger.kernel.org>; Fri, 8 Nov 2019 07:06:13 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 2w41wbxjr5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 08 Nov 2019 07:06:13 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xA876CAs027244
+        for <linux-xfs@vger.kernel.org>; Fri, 8 Nov 2019 07:06:12 GMT
+Received: from localhost (/10.159.155.116)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 07 Nov 2019 23:06:12 -0800
+Subject: [PATCH 07/10] xfs: report inode corruption errors to the health
+ system
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs: annotate functions that trip static checker
- locking checks
-Message-ID: <20191108070551.GA29369@infradead.org>
-References: <157319668531.834585.6920821852974178.stgit@magnolia>
- <157319669162.834585.14162759688911694187.stgit@magnolia>
+Date:   Thu, 07 Nov 2019 23:06:11 -0800
+Message-ID: <157319677130.834783.8622108959889506227.stgit@magnolia>
+In-Reply-To: <157319672612.834783.1318671695966912922.stgit@magnolia>
+References: <157319672612.834783.1318671695966912922.stgit@magnolia>
+User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <157319669162.834585.14162759688911694187.stgit@magnolia>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9434 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=3 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1910280000 definitions=main-1911080069
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9434 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=3 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
+ definitions=main-1911080069
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 07, 2019 at 11:04:51PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Add some lock annotations to helper functions that seem to have
-> unbalanced locking that confuses the static analyzers.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Looks good,
+Whenever we encounter corrupt inode records, we should report that to
+the health monitoring system for later reporting.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_inode_buf.c  |    5 +++++
+ fs/xfs/libxfs/xfs_inode_fork.c |    8 ++++++++
+ fs/xfs/xfs_icache.c            |    4 ++++
+ fs/xfs/xfs_inode.c             |    2 ++
+ 4 files changed, 19 insertions(+)
+
+
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 28ab3c5255e1..d4f0c4948750 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -17,6 +17,7 @@
+ #include "xfs_trans.h"
+ #include "xfs_ialloc.h"
+ #include "xfs_dir2.h"
++#include "xfs_health.h"
+ 
+ #include <linux/iversion.h>
+ 
+@@ -182,6 +183,9 @@ xfs_imap_to_bp(
+ 	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, imap->im_blkno,
+ 				   (int)imap->im_len, buf_flags, &bp,
+ 				   &xfs_inode_buf_ops);
++	if (xfs_metadata_is_sick(error))
++		xfs_agno_mark_sick(mp, xfs_daddr_to_agno(mp, imap->im_blkno),
++				XFS_SICK_AG_INOBT);
+ 	if (error) {
+ 		if (error == -EAGAIN) {
+ 			ASSERT(buf_flags & XBF_TRYLOCK);
+@@ -651,6 +655,7 @@ xfs_iread(
+ 	if (fa) {
+ 		xfs_inode_verifier_error(ip, -EFSCORRUPTED, "dinode", dip,
+ 				sizeof(*dip), fa);
++		xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
+ 		error = -EFSCORRUPTED;
+ 		goto out_brelse;
+ 	}
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 15d6f947620f..6698161b581b 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -23,6 +23,7 @@
+ #include "xfs_da_btree.h"
+ #include "xfs_dir2_priv.h"
+ #include "xfs_attr_leaf.h"
++#include "xfs_health.h"
+ 
+ kmem_zone_t *xfs_ifork_zone;
+ 
+@@ -77,6 +78,7 @@ xfs_iformat_fork(
+ 		default:
+ 			xfs_inode_verifier_error(ip, -EFSCORRUPTED, __func__,
+ 					dip, sizeof(*dip), __this_address);
++			xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
+ 			return -EFSCORRUPTED;
+ 		}
+ 		break;
+@@ -84,6 +86,7 @@ xfs_iformat_fork(
+ 	default:
+ 		xfs_inode_verifier_error(ip, -EFSCORRUPTED, __func__, dip,
+ 				sizeof(*dip), __this_address);
++		xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
+ 		return -EFSCORRUPTED;
+ 	}
+ 	if (error)
+@@ -116,6 +119,7 @@ xfs_iformat_fork(
+ 	default:
+ 		xfs_inode_verifier_error(ip, error, __func__, dip,
+ 				sizeof(*dip), __this_address);
++		xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
+ 		error = -EFSCORRUPTED;
+ 		break;
+ 	}
+@@ -189,6 +193,7 @@ xfs_iformat_local(
+ 		xfs_inode_verifier_error(ip, -EFSCORRUPTED,
+ 				"xfs_iformat_local", dip, sizeof(*dip),
+ 				__this_address);
++		xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
+ 		return -EFSCORRUPTED;
+ 	}
+ 
+@@ -226,6 +231,7 @@ xfs_iformat_extents(
+ 		xfs_inode_verifier_error(ip, -EFSCORRUPTED,
+ 				"xfs_iformat_extents(1)", dip, sizeof(*dip),
+ 				__this_address);
++		xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
+ 		return -EFSCORRUPTED;
+ 	}
+ 
+@@ -245,6 +251,7 @@ xfs_iformat_extents(
+ 				xfs_inode_verifier_error(ip, -EFSCORRUPTED,
+ 						"xfs_iformat_extents(2)",
+ 						dp, sizeof(*dp), fa);
++				xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
+ 				return -EFSCORRUPTED;
+ 			}
+ 
+@@ -304,6 +311,7 @@ xfs_iformat_btree(
+ 		xfs_inode_verifier_error(ip, -EFSCORRUPTED,
+ 				"xfs_iformat_btree", dfp, size,
+ 				__this_address);
++		xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
+ 		return -EFSCORRUPTED;
+ 	}
+ 
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 944add5ff8e0..655d587f3980 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -22,6 +22,7 @@
+ #include "xfs_dquot_item.h"
+ #include "xfs_dquot.h"
+ #include "xfs_reflink.h"
++#include "xfs_health.h"
+ 
+ #include <linux/iversion.h>
+ 
+@@ -321,6 +322,7 @@ xfs_iget_check_free_state(
+ 			xfs_warn(ip->i_mount,
+ "Corruption detected! Free inode 0x%llx not marked free! (mode 0x%x)",
+ 				ip->i_ino, VFS_I(ip)->i_mode);
++			xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
+ 			return -EFSCORRUPTED;
+ 		}
+ 
+@@ -328,6 +330,7 @@ xfs_iget_check_free_state(
+ 			xfs_warn(ip->i_mount,
+ "Corruption detected! Free inode 0x%llx has blocks allocated!",
+ 				ip->i_ino);
++			xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
+ 			return -EFSCORRUPTED;
+ 		}
+ 		return 0;
+@@ -511,6 +514,7 @@ xfs_iget_cache_miss(
+ 		goto out_destroy;
+ 
+ 	if (!xfs_inode_verify_forks(ip)) {
++		xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
+ 		error = -EFSCORRUPTED;
+ 		goto out_destroy;
+ 	}
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index d02246e2fb21..5167b8ceb219 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3637,6 +3637,7 @@ xfs_iflush_cluster(
+ 	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+ 
+ 	/* abort the corrupt inode, as it was not attached to the buffer */
++	xfs_inode_mark_sick(cip, XFS_SICK_INO_CORE);
+ 	xfs_iflush_abort(cip, false);
+ 	kmem_free(cilist);
+ 	xfs_perag_put(pag);
+@@ -3934,6 +3935,7 @@ xfs_iflush_int(
+ 	return 0;
+ 
+ corrupt_out:
++	xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
+ 	return -EFSCORRUPTED;
+ }
+ 
+
