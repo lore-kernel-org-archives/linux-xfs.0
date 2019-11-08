@@ -2,111 +2,82 @@ Return-Path: <SRS0=OQuR=ZA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 806D3FA372C
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 03:11:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 883CBC5DF60
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 03:30:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5C5B121882
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 03:11:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5A890206C3
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 03:30:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="FRfas5SP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726219AbfKHDLR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Nov 2019 22:11:17 -0500
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:6644 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725930AbfKHDLQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 22:11:16 -0500
-X-IronPort-AV: E=Sophos;i="5.68,280,1569254400"; 
-   d="scan'208";a="78040346"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 08 Nov 2019 11:10:57 +0800
-Received: from G08CNEXCHPEKD01.g08.fujitsu.local (unknown [10.167.33.80])
-        by cn.fujitsu.com (Postfix) with ESMTP id A9B984B6AE15;
-        Fri,  8 Nov 2019 11:02:52 +0800 (CST)
-Received: from [10.167.225.140] (10.167.225.140) by
- G08CNEXCHPEKD01.g08.fujitsu.local (10.167.33.89) with Microsoft SMTP Server
- (TLS) id 14.3.439.0; Fri, 8 Nov 2019 11:11:05 +0800
-Subject: Re: [RFC PATCH v2 0/7] xfs: reflink & dedupe for fsdax (read/write
- path).
-To:     <linux-xfs@vger.kernel.org>, <linux-nvdimm@lists.01.org>,
-        <darrick.wong@oracle.com>, <rgoldwyn@suse.de>, <hch@infradead.org>,
-        <david@fromorbit.com>
-CC:     <linux-kernel@vger.kernel.org>, <gujx@cn.fujitsu.com>,
-        <qi.fuli@fujitsu.com>, <caoj.fnst@cn.fujitsu.com>
-References: <20191030041358.14450-1-ruansy.fnst@cn.fujitsu.com>
-From:   Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-Message-ID: <e33532a2-a9e5-1578-bdd8-a83d4710a151@cn.fujitsu.com>
-Date:   Fri, 8 Nov 2019 11:10:56 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.2.1
+        id S1728096AbfKHDao (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Nov 2019 22:30:44 -0500
+Received: from mail-oi1-f195.google.com ([209.85.167.195]:34286 "EHLO
+        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725930AbfKHDao (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 22:30:44 -0500
+Received: by mail-oi1-f195.google.com with SMTP id l202so4067190oig.1
+        for <linux-xfs@vger.kernel.org>; Thu, 07 Nov 2019 19:30:43 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=NtB37+Q8xvWyEYnhovPvzQrhxqS2lBLxSLUijnwj9JI=;
+        b=FRfas5SPxBMSC4DVisx8MORabFwIgq5lwySDwgKd1CXjN2fmnInTfTzfd/12Zf4kwd
+         7s723mPTXcsbd4eONjrHEs1ExgPXRwpD2so5jW/aA0M1j/Mdd21FWzvKz0NNmR8g45UJ
+         TSQvt/gLwuJ6jvkLvIFFG99T33Yk9Cuk+48m9VmhXMIrFyIZ5Bs2VqKW3s5qR18L4Zss
+         vtb2BBZfNNSJTS8qKcpJnHqR4TdOcX/rVLqIsKfr3LD0e2zcHemW+nGkBXnGKpTnunJz
+         GhcE+cPH7t8F31zni88ZgcGawamvuyZxMQMOgqg9KFlYwMrlRm/u/3PmtnsGgfNQZAV+
+         TqKw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=NtB37+Q8xvWyEYnhovPvzQrhxqS2lBLxSLUijnwj9JI=;
+        b=VQ5yUXZMi0Ym5miSAhU/AESnReyOF/eZofTRlGGbnrpNzR+mMxQqdpCS3qKusT9azM
+         S/i4BTH/UgRxacUVAUn/2pq2Az1HFNlekQ3ZSJkPgPu22MVLNEu08Wkm7Ide+MwAVheA
+         JKAqHjXIdfvwEPaoP1LRRjeH4HbD+fza8SrUMxUXm4w4Q8vaVWpGYDkhJxPXPYQ9wnJO
+         ANT5fp3FzN6hYjv4s5kgHSRc6rH9PR0sVyiXjAs8EPBUmTk/i5UjcOUjJXxTLS5tVlbo
+         kyN2ZkYiO7wnl6o1Hii00dyyYXF9IjZ0OqEsUpvQw3JlGWcqHE1uQsr2kx88c/PDRdmk
+         uLrw==
+X-Gm-Message-State: APjAAAWfgHzkuTLbl73q+Yu/yXAus8Jx+y8/S2folRlH8czcE1YG48ZM
+        vECLeYhkHc6tt01TU4UNPV6iyQJKkdXz85T6n8+RJg==
+X-Google-Smtp-Source: APXvYqzkdkYe4VeO2i7N7ZYvtM3Hm00GKsbQ7o4949RHdq20XH0TD40W5eXI5rdUew808QiCN7vktLt6WHrVYh8m+0A=
+X-Received: by 2002:aca:3d84:: with SMTP id k126mr6733699oia.70.1573183843511;
+ Thu, 07 Nov 2019 19:30:43 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20191030041358.14450-1-ruansy.fnst@cn.fujitsu.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.167.225.140]
-X-yoursite-MailScanner-ID: A9B984B6AE15.AC5F9
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
+References: <20191030041358.14450-1-ruansy.fnst@cn.fujitsu.com> <e33532a2-a9e5-1578-bdd8-a83d4710a151@cn.fujitsu.com>
+In-Reply-To: <e33532a2-a9e5-1578-bdd8-a83d4710a151@cn.fujitsu.com>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Thu, 7 Nov 2019 19:30:32 -0800
+Message-ID: <CAPcyv4ivOgMNdvWTtpXw2aaR0o7MEQZ=cDiy=_P9qhVb3QVWdQ@mail.gmail.com>
+Subject: Re: [RFC PATCH v2 0/7] xfs: reflink & dedupe for fsdax (read/write path).
+To:     Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Goldwyn Rodrigues <rgoldwyn@suse.de>,
+        Christoph Hellwig <hch@infradead.org>,
+        david <david@fromorbit.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        gujx@cn.fujitsu.com, qi.fuli@fujitsu.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Darrick, Dave,
+On Thu, Nov 7, 2019 at 7:11 PM Shiyang Ruan <ruansy.fnst@cn.fujitsu.com> wrote:
+>
+> Hi Darrick, Dave,
+>
+> Do you have any comment on this?
 
-Do you have any comment on this?
-
-On 10/30/19 12:13 PM, Shiyang Ruan wrote:
-> This patchset aims to take care of this issue to make reflink and dedupe
-> work correctly (actually in read/write path, there still has some problems,
-> such as the page->mapping and page->index issue, in mmap path) in XFS under
-> fsdax mode.
-> 
-> It is based on Goldwyn's patchsets: "v4 Btrfs dax support" and the latest
-> iomap.  I borrowed some patches related and made a few fix to make it
-> basically works fine.
-> 
-> For dax framework:
->    1. adapt to the latest change in iomap (two iomaps).
-> 
-> For XFS:
->    1. distinguish dax write/zero from normal write/zero.
->    2. remap extents after COW.
->    3. add file contents comparison function based on dax framework.
->    4. use xfs_break_layouts() instead of break_layout to support dax.
-> 
-> 
-> Goldwyn Rodrigues (3):
->    dax: replace mmap entry in case of CoW
->    fs: dedup file range to use a compare function
->    dax: memcpy before zeroing range
-> 
-> Shiyang Ruan (4):
->    dax: Introduce dax_copy_edges() for COW.
->    dax: copy data before write.
->    xfs: handle copy-on-write in fsdax write() path.
->    xfs: support dedupe for fsdax.
-> 
->   fs/btrfs/ioctl.c       |   3 +-
->   fs/dax.c               | 211 +++++++++++++++++++++++++++++++++++++----
->   fs/iomap/buffered-io.c |   8 +-
->   fs/ocfs2/file.c        |   2 +-
->   fs/read_write.c        |  11 ++-
->   fs/xfs/xfs_bmap_util.c |   6 +-
->   fs/xfs/xfs_file.c      |  10 +-
->   fs/xfs/xfs_iomap.c     |   3 +-
->   fs/xfs/xfs_iops.c      |  11 ++-
->   fs/xfs/xfs_reflink.c   |  79 ++++++++-------
->   include/linux/dax.h    |  16 ++--
->   include/linux/fs.h     |   9 +-
->   12 files changed, 291 insertions(+), 78 deletions(-)
-> 
-
--- 
-Thanks,
-Shiyang Ruan.
-
-
+Christoph pointed out at ALPSS that this problem has significant
+overlap with the shared page-cache for reflink problem. So I think we
+need to solve that first and then circle back to dax reflink support.
+I'm starting to take a look at that.
