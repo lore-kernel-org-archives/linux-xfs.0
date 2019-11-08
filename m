@@ -7,61 +7,61 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20C3AC43331
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 00:57:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 798EAC43331
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 00:59:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DA55E2178F
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 00:57:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43FA82178F
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 00:59:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Gf1ey5Sa"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LbQ9liya"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727779AbfKHA5z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Nov 2019 19:57:55 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:35510 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726094AbfKHA5z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 19:57:55 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA80sMvm170081;
-        Fri, 8 Nov 2019 00:57:51 GMT
+        id S1726320AbfKHA7I (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Nov 2019 19:59:08 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:43670 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726094AbfKHA7I (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 19:59:08 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA80wmGw187237;
+        Fri, 8 Nov 2019 00:59:02 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=WIq0UN3tnap2glNUQu860XpHEFjUq3+d8zgX9K6pE1k=;
- b=Gf1ey5Sa9w+fzTEX+zASI70w2v0jX+9hOfNy24mzjh0fy8wxs5ExxSq8JJQ/UjGBhw00
- bxa186708olHcl7d3rn4Ve69NXFWSyoiO6XZMh0kT9cqJJXcCaJRYGteIJkXdwqTnhIY
- OPVePXEdvVGcyd6RVIDI1CIfgnKjbFqZLlo5HXuBfGl7V7U9DVRd/5d1Lg8sDo1SnjIj
- LwjYuU4dW2ZmQWHttUHN5keEXsTm9v61LAY7JdSiZCtrrnYyeIKOHfI7j2hwoIwM+bqq
- m+tc57zNibdtsQ7K8SKaPlZSJe/xhGdXaivLddAqz/uQXur0yIepgq4MSvGtr5M4dQVo Pg== 
+ bh=kYgLSPrMIYwGIWgpVkjXJjj+XRU3pjcF5+yERQNMcC8=;
+ b=LbQ9liyaUCZYJSWP7ZFGorNYjeD6oBHKreWiX0ZJe6O04rtDsv7vDtSPE+3WuPfmmqU7
+ hqmae1McovgkH5Jrs4GOFMzblG6Q/j5MqLzcM80jDsQQHd8DTFafOUMHEGUdisq6FJEW
+ Q0MSrJz++Aw9i/6Oe9W294+Yo99gQxa9y7piSThyAweRvRfiurU7fQM2MkNv21qIbv62
+ 26HeNcD1wfZ01heym38rlvZXWJyQac7R9BR4JJZmscnJ8Tz0CVi54gXW54ubwuaDk+Fm
+ pj1SaBlG+rYbyO2ImuGgGaLZln9mpLrKPuwam9K7xSMJhUw35cS6bsxapn4jJzI/BPMc Wg== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2w41w11xdt-1
+        by userp2130.oracle.com with ESMTP id 2w41w19ysn-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 08 Nov 2019 00:57:50 +0000
+        Fri, 08 Nov 2019 00:59:02 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA80rsHn163431;
-        Fri, 8 Nov 2019 00:57:50 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2w41wjn21s-1
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA80rsJA163353;
+        Fri, 8 Nov 2019 00:57:01 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2w41wjmxwx-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 08 Nov 2019 00:57:50 +0000
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xA80vnYe003330;
-        Fri, 8 Nov 2019 00:57:49 GMT
+        Fri, 08 Nov 2019 00:57:01 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xA80v0Nx010764;
+        Fri, 8 Nov 2019 00:57:00 GMT
 Received: from localhost (/10.145.179.16)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 07 Nov 2019 16:57:49 -0800
-Date:   Thu, 7 Nov 2019 16:57:49 -0800
+        with ESMTP ; Thu, 07 Nov 2019 16:57:00 -0800
+Date:   Thu, 7 Nov 2019 16:57:00 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 32/46] xfs: cleanup xchk_directory_data_bestfree
-Message-ID: <20191108005749.GC6219@magnolia>
+Subject: Re: [PATCH 31/46] xfs: cleanup xchk_dir_rec
+Message-ID: <20191108005700.GB6219@magnolia>
 References: <20191107182410.12660-1-hch@lst.de>
- <20191107182410.12660-33-hch@lst.de>
+ <20191107182410.12660-32-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191107182410.12660-33-hch@lst.de>
+In-Reply-To: <20191107182410.12660-32-hch@lst.de>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9434 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
@@ -73,120 +73,89 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=150
  suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
- definitions=main-1911080006
+ definitions=main-1911080007
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 07, 2019 at 07:23:56PM +0100, Christoph Hellwig wrote:
+On Thu, Nov 07, 2019 at 07:23:55PM +0100, Christoph Hellwig wrote:
 > Use an offset as the main means for iteration, and only do pointer
 > arithmetics to find the data/unused entries.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/scrub/dir.c | 28 ++++++++++++++--------------
+>  1 file changed, 14 insertions(+), 14 deletions(-)
+> 
+> diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
+> index bb08a1cbe523..501d60c9b09a 100644
+> --- a/fs/xfs/scrub/dir.c
+> +++ b/fs/xfs/scrub/dir.c
+> @@ -187,7 +187,8 @@ xchk_dir_rec(
+>  	struct xfs_dir2_data_entry	*dent;
+>  	struct xfs_buf			*bp;
+>  	struct xfs_dir2_leaf_entry	*ent;
+> -	char				*p, *endp;
+> +	void				*endp;
+> +	unsigned int			offset;
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Can this be named iter_off or something?  There's already an @off variable
+which is the offset-within-block that wa calculated from the entry pointer.
+
+>  	xfs_ino_t			ino;
+>  	xfs_dablk_t			rec_bno;
+>  	xfs_dir2_db_t			db;
+> @@ -237,32 +238,31 @@ xchk_dir_rec(
+>  	if (ds->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+>  		goto out_relse;
+>  
+> -	dent = (struct xfs_dir2_data_entry *)(((char *)bp->b_addr) + off);
+> +	dent = bp->b_addr + off;
+>  
+>  	/* Make sure we got a real directory entry. */
+> -	p = (char *)mp->m_dir_inode_ops->data_entry_p(bp->b_addr);
+> +	offset = mp->m_dir_inode_ops->data_entry_offset;
+>  	endp = xfs_dir3_data_endp(mp->m_dir_geo, bp->b_addr);
+>  	if (!endp) {
+>  		xchk_fblock_set_corrupt(ds->sc, XFS_DATA_FORK, rec_bno);
+>  		goto out_relse;
+>  	}
+> -	while (p < endp) {
+> -		struct xfs_dir2_data_entry	*dep;
+> -		struct xfs_dir2_data_unused	*dup;
+> +	for (;;) {
+> +		struct xfs_dir2_data_entry	*dep = bp->b_addr + offset;
+> +		struct xfs_dir2_data_unused	*dup = bp->b_addr + offset;
+> +	
+
+Extra whitespace.
 
 --D
 
-> ---
->  fs/xfs/scrub/dir.c | 31 +++++++++++++++----------------
->  1 file changed, 15 insertions(+), 16 deletions(-)
-> 
-> diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-> index 501d60c9b09a..4cef21b9d336 100644
-> --- a/fs/xfs/scrub/dir.c
-> +++ b/fs/xfs/scrub/dir.c
-> @@ -327,14 +327,13 @@ xchk_directory_data_bestfree(
->  	struct xfs_dir2_data_free	*bf;
->  	struct xfs_mount		*mp = sc->mp;
->  	const struct xfs_dir_ops	*d_ops;
-> -	char				*ptr;
-> -	char				*endptr;
->  	u16				tag;
->  	unsigned int			nr_bestfrees = 0;
->  	unsigned int			nr_frees = 0;
->  	unsigned int			smallest_bestfree;
->  	int				newlen;
-> -	int				offset;
-> +	unsigned int			offset;
-> +	unsigned int			end;
->  	int				error;
+> +		if (offset >= endp - bp->b_addr) {
+> +			xchk_fblock_set_corrupt(ds->sc, XFS_DATA_FORK, rec_bno);
+> +			goto out_relse;
+> +		}
 >  
->  	d_ops = sc->ip->d_ops;
-> @@ -368,13 +367,13 @@ xchk_directory_data_bestfree(
->  			xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
->  			goto out_buf;
->  		}
-> -		dup = (struct xfs_dir2_data_unused *)(bp->b_addr + offset);
-> +		dup = bp->b_addr + offset;
->  		tag = be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup));
->  
->  		/* bestfree doesn't match the entry it points at? */
->  		if (dup->freetag != cpu_to_be16(XFS_DIR2_DATA_FREE_TAG) ||
->  		    be16_to_cpu(dup->length) != be16_to_cpu(dfp->length) ||
-> -		    tag != ((char *)dup - (char *)bp->b_addr)) {
-> +		    tag != offset) {
->  			xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
->  			goto out_buf;
->  		}
-> @@ -390,30 +389,30 @@ xchk_directory_data_bestfree(
->  	}
->  
->  	/* Make sure the bestfrees are actually the best free spaces. */
-> -	ptr = (char *)d_ops->data_entry_p(bp->b_addr);
-> -	endptr = xfs_dir3_data_endp(mp->m_dir_geo, bp->b_addr);
-> +	offset = d_ops->data_entry_offset;
-> +	end = xfs_dir3_data_endp(mp->m_dir_geo, bp->b_addr) - bp->b_addr;
->  
->  	/* Iterate the entries, stopping when we hit or go past the end. */
-> -	while (ptr < endptr) {
-> -		dup = (struct xfs_dir2_data_unused *)ptr;
-> +	while (offset < end) {
-> +		dup = bp->b_addr + offset;
-> +
->  		/* Skip real entries */
->  		if (dup->freetag != cpu_to_be16(XFS_DIR2_DATA_FREE_TAG)) {
-> -			struct xfs_dir2_data_entry	*dep;
-> +			struct xfs_dir2_data_entry *dep = bp->b_addr + offset;
->  
-> -			dep = (struct xfs_dir2_data_entry *)ptr;
->  			newlen = d_ops->data_entsize(dep->namelen);
->  			if (newlen <= 0) {
->  				xchk_fblock_set_corrupt(sc, XFS_DATA_FORK,
->  						lblk);
->  				goto out_buf;
->  			}
-> -			ptr += newlen;
-> +			offset += newlen;
+> -		dup = (struct xfs_dir2_data_unused *)p;
+>  		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
+> -			p += be16_to_cpu(dup->length);
+> +			offset += be16_to_cpu(dup->length);
 >  			continue;
 >  		}
->  
->  		/* Spot check this free entry */
->  		tag = be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup));
-> -		if (tag != ((char *)dup - (char *)bp->b_addr)) {
-> +		if (tag != offset) {
->  			xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
->  			goto out_buf;
->  		}
-> @@ -432,13 +431,13 @@ xchk_directory_data_bestfree(
->  			xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
->  			goto out_buf;
->  		}
-> -		ptr += newlen;
-> -		if (ptr <= endptr)
-> +		offset += newlen;
-> +		if (offset <= end)
->  			nr_frees++;
+> -		dep = (struct xfs_dir2_data_entry *)p;
+>  		if (dep == dent)
+>  			break;
+> -		p += mp->m_dir_inode_ops->data_entsize(dep->namelen);
+> -	}
+> -	if (p >= endp) {
+> -		xchk_fblock_set_corrupt(ds->sc, XFS_DATA_FORK, rec_bno);
+> -		goto out_relse;
+> +		offset += mp->m_dir_inode_ops->data_entsize(dep->namelen);
 >  	}
 >  
->  	/* We're required to fill all the space. */
-> -	if (ptr != endptr)
-> +	if (offset != end)
->  		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
->  
->  	/* Did we see at least as many free slots as there are bestfrees? */
+>  	/* Retrieve the entry, sanity check it, and compare hashes. */
 > -- 
 > 2.20.1
 > 
