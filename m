@@ -7,414 +7,557 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEE21C5DF60
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 19:19:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB598C5DF60
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 19:33:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7264A2067B
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 19:19:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 88FF8206A3
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 19:33:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bFQ82gOo"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Cdlchey0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732181AbfKHTTe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 Nov 2019 14:19:34 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:52868 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731335AbfKHTTd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Nov 2019 14:19:33 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA8JDlNV069904
-        for <linux-xfs@vger.kernel.org>; Fri, 8 Nov 2019 19:19:32 GMT
+        id S2387870AbfKHTdL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Nov 2019 14:33:11 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:55800 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387798AbfKHTdK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Nov 2019 14:33:10 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA8JT75m098061
+        for <linux-xfs@vger.kernel.org>; Fri, 8 Nov 2019 19:33:07 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=27ni0NyG8LDscnc8lo2d7D0MhLzPPTlkAWZRaljBYKs=;
- b=bFQ82gOo8dxRPFsF5UNy3duDLsDb+Kf3fy9lnf2GI9Qr58EY57C2WHe1Ml30dIxN5Qmv
- 5vIRg0iuOYqCIZMlVZi6po7IugBzI3CdfCQEwnnpqdP6/VOB8g929FeHK7jodmCZXGlE
- sOEX1ws4srPQRkrzj8O4AHbmMhVeHqtkOX7opVeSqnEZYRtQ/JlQ5W9vMCaLLkRQ1Brv
- t8FU3w1VCDTaSNrbgwFu3dsKT7spuvXUZOot44TXMKUaYAHsqpSclOzTT7yXV45z9/Za
- Itf8MY0hGT/n8nE4+5fS4aERTz+G1uz2jcI+DXRfEOzaZpmSzBBJ3mgFp2L6hGgXgNrV zA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2w41w17721-1
+ bh=jGj8IUYi7/CkvGGHk1RKPHCb6LCyNLTt4pFHPB0hsDQ=;
+ b=Cdlchey064tfPKktLpUr+erG5ORwBlQeFGcFcTD/zKEm8oqg24g7355DHqMIE3qwjJ1c
+ GUFgtPexZfiBz4sa5AfJPAe2VX1+12HGqgVqJ1KYqCz3gv/02eptKSZufg39OE05N93g
+ V6TdPK6O4mwVmCDA6eBewqtrXbQVduH9DkAzcrS4cA0KkedVftnqd9M+3XXhK+7DvdTu
+ fvFCn9sX5mKXEsBNklDDCN/yhQZ5JnRIF4Vpz2+WcWffee2RcgH59NDT2qss/Xtb6ejd
+ RjyHdYFjyD8QF8hjxO8lVJPTPJZuML1WBKPgJJkzMT/BXDKf88DyaYU55KI829b1o/6f bA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 2w41w179cv-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 08 Nov 2019 19:19:32 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA8JD3Jm038130
-        for <linux-xfs@vger.kernel.org>; Fri, 8 Nov 2019 19:19:31 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 2w5cxk7ddc-1
+        for <linux-xfs@vger.kernel.org>; Fri, 08 Nov 2019 19:33:06 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA8JSoqZ142715
+        for <linux-xfs@vger.kernel.org>; Fri, 8 Nov 2019 19:33:06 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 2w5bmq780m-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 08 Nov 2019 19:19:31 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xA8JJUXR010307
-        for <linux-xfs@vger.kernel.org>; Fri, 8 Nov 2019 19:19:30 GMT
+        for <linux-xfs@vger.kernel.org>; Fri, 08 Nov 2019 19:33:05 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xA8JX4ju025129
+        for <linux-xfs@vger.kernel.org>; Fri, 8 Nov 2019 19:33:05 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 08 Nov 2019 11:19:29 -0800
-Date:   Fri, 8 Nov 2019 11:19:28 -0800
+        with ESMTP ; Fri, 08 Nov 2019 11:32:47 -0800
+Date:   Fri, 8 Nov 2019 11:32:46 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Allison Collins <allison.henderson@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4 04/17] xfs: Add xfs_dabuf defines
-Message-ID: <20191108191928.GU6219@magnolia>
+Subject: Re: [PATCH v4 05/17] xfs: Add xfs_has_attr and subroutines
+Message-ID: <20191108193246.GW6219@magnolia>
 References: <20191107012801.22863-1-allison.henderson@oracle.com>
- <20191107012801.22863-5-allison.henderson@oracle.com>
+ <20191107012801.22863-6-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191107012801.22863-5-allison.henderson@oracle.com>
+In-Reply-To: <20191107012801.22863-6-allison.henderson@oracle.com>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9435 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1910280000 definitions=main-1911080188
+ engine=8.0.1-1910280000 definitions=main-1911080189
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9435 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
- definitions=main-1911080188
+ definitions=main-1911080189
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 06, 2019 at 06:27:48PM -0700, Allison Collins wrote:
-> This patch adds two new defines XFS_DABUF_MAP_NOMAPPING and
-> XFS_DABUF_MAP_HOLE_OK.  This helps to clean up hard numbers and
-> makes the code easier to read
+On Wed, Nov 06, 2019 at 06:27:49PM -0700, Allison Collins wrote:
+> From: Allison Henderson <allison.henderson@oracle.com>
+> 
+> This patch adds a new functions to check for the existence of
+> an attribute.  Subroutines are also added to handle the cases
+> of leaf blocks, nodes or shortform.  Common code that appears
+> in existing attr add and remove functions have been factored
+> out to help reduce the appearence of duplicated code.  We will
+> need these routines later for delayed attributes since delayed
+> operations cannot return error codes.
 > 
 > Signed-off-by: Allison Collins <allison.henderson@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_attr.c       | 14 +++++++-----
->  fs/xfs/libxfs/xfs_attr_leaf.c  | 23 +++++++++++--------
->  fs/xfs/libxfs/xfs_attr_leaf.h  |  3 +++
->  fs/xfs/libxfs/xfs_da_btree.c   | 50 ++++++++++++++++++++++++++++--------------
->  fs/xfs/libxfs/xfs_dir2_block.c |  6 +++--
->  fs/xfs/libxfs/xfs_dir2_data.c  |  3 ++-
->  fs/xfs/libxfs/xfs_dir2_leaf.c  |  9 +++++---
->  fs/xfs/libxfs/xfs_dir2_node.c  | 10 +++++----
->  fs/xfs/scrub/dabtree.c         |  6 ++---
->  fs/xfs/scrub/dir.c             |  4 +++-
->  fs/xfs/xfs_attr_inactive.c     |  6 +++--
->  fs/xfs/xfs_attr_list.c         | 16 +++++++++-----
->  12 files changed, 97 insertions(+), 53 deletions(-)
-
-<snip>
-
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
-> index bb08800..017480e 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.h
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.h
-> @@ -16,6 +16,9 @@ struct xfs_da_state_blk;
->  struct xfs_inode;
->  struct xfs_trans;
+>  fs/xfs/libxfs/xfs_attr.c      | 154 +++++++++++++++++++++++++++---------------
+>  fs/xfs/libxfs/xfs_attr.h      |   1 +
+>  fs/xfs/libxfs/xfs_attr_leaf.c | 107 ++++++++++++++++++-----------
+>  fs/xfs/libxfs/xfs_attr_leaf.h |   2 +
+>  4 files changed, 171 insertions(+), 93 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 5cb83a8..c8a3273 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -46,6 +46,7 @@ STATIC int xfs_attr_shortform_addname(xfs_da_args_t *args);
+>  STATIC int xfs_attr_leaf_get(xfs_da_args_t *args);
+>  STATIC int xfs_attr_leaf_addname(xfs_da_args_t *args);
+>  STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args);
+> +STATIC int xfs_attr_leaf_hasname(struct xfs_da_args *args, struct xfs_buf **bp);
 >  
-> +#define XFS_DABUF_MAP_NOMAPPING	(-1) /* Caller doesn't have a mapping. */
-> +#define XFS_DABUF_MAP_HOLE_OK	(-2) /* don't complain if we land in a hole. */
+>  /*
+>   * Internal routines when attribute list is more than one block.
+> @@ -53,6 +54,8 @@ STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args);
+>  STATIC int xfs_attr_node_get(xfs_da_args_t *args);
+>  STATIC int xfs_attr_node_addname(xfs_da_args_t *args);
+>  STATIC int xfs_attr_node_removename(xfs_da_args_t *args);
+> +STATIC int xfs_attr_node_hasname(xfs_da_args_t *args,
+> +				 struct xfs_da_state **state);
+>  STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
+>  STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
+>  
+> @@ -310,6 +313,34 @@ xfs_attr_set_args(
+>  }
+>  
+>  /*
+> + * Return EEXIST if attr is found, or ENOATTR if not
+> + */
+> +int
+> +xfs_has_attr(
+> +	struct xfs_da_args      *args)
 
-These are parameters to xfs_da_{get,read,reada}_buf, please put them
-next to the declarations for those functions.
+I was really hoping for a "replace ENOATTR/EEXIST with a boolean"
+cleanup at the end of this series, though as a straight hoisting and
+refactoring, this patch is ok for leaving the existing error code
+overloading. :)
 
-Also they probably ought to be explicitly cast to xfs_daddr_t, e.g.
-
-/* Force a fresh lookup for the dir/attr mapping. */
-#define XFS_DABUF_MAP_NOMAPPING	((xfs_daddr_t)-1)
-
-/* Don't complain if we land in a hole. */
-#define XFS_DABUF_MAP_HOLE_OK	((xfs_daddr_t)-2)
-
+> +{
+> +	struct xfs_inode        *dp = args->dp;
+> +	struct xfs_buf		*bp;
+> +	int                     error;
 > +
->  /*
->   * Used to keep a list of "remote value" extents when unlinking an inode.
+> +	if (!xfs_inode_hasattr(dp)) {
+> +		error = -ENOATTR;
+> +	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
+> +		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
+> +		error = xfs_attr_shortform_hasname(args, NULL, NULL);
+> +	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
+> +		error = xfs_attr_leaf_hasname(args, &bp);
+> +		if (error != -ENOATTR && error != -EEXIST)
+> +			goto out;
+> +		xfs_trans_brelse(args->trans, bp);
+> +	} else {
+> +		error = xfs_attr_node_hasname(args, NULL);
+> +	}
+> +out:
+> +	return error;
+> +}
+> +
+> +/*
+>   * Remove the attribute specified in @args.
 >   */
-
-<snip>
-
-> diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-> index 8dedc30..6bc7651 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_block.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_block.c
-> @@ -20,6 +20,7 @@
->  #include "xfs_error.h"
->  #include "xfs_trace.h"
->  #include "xfs_log.h"
-> +#include "xfs_attr_leaf.h"
->  
->  /*
->   * Local function prototypes.
-> @@ -123,8 +124,9 @@ xfs_dir3_block_read(
->  	struct xfs_mount	*mp = dp->i_mount;
->  	int			err;
->  
-> -	err = xfs_da_read_buf(tp, dp, mp->m_dir_geo->datablk, -1, bpp,
-> -				XFS_DATA_FORK, &xfs_dir3_block_buf_ops);
-> +	err = xfs_da_read_buf(tp, dp, mp->m_dir_geo->datablk,
-> +			      XFS_DABUF_MAP_NOMAPPING, bpp, XFS_DATA_FORK,
-> +			      &xfs_dir3_block_buf_ops);
->  	if (!err && tp && *bpp)
->  		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_DIR_BLOCK_BUF);
->  	return err;
-
-I think this misses the xfs_dir3_data_read call in
-xfs_dir2_leaf_to_block?
-
-> diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
-> index 2c79be4..a4188de 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_data.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_data.c
-> @@ -17,6 +17,7 @@
->  #include "xfs_trans.h"
->  #include "xfs_buf_item.h"
->  #include "xfs_log.h"
-> +#include "xfs_attr_leaf.h"
->  
->  static xfs_failaddr_t xfs_dir2_data_freefind_verify(
->  		struct xfs_dir2_data_hdr *hdr, struct xfs_dir2_data_free *bf,
-> @@ -653,7 +654,7 @@ xfs_dir3_data_init(
->  	 * Get the buffer set up for the block.
->  	 */
->  	error = xfs_da_get_buf(tp, dp, xfs_dir2_db_to_da(args->geo, blkno),
-> -			       -1, &bp, XFS_DATA_FORK);
-> +			       XFS_DABUF_MAP_NOMAPPING, &bp, XFS_DATA_FORK);
->  	if (error)
->  		return error;
->  	bp->b_ops = &xfs_dir3_data_buf_ops;
-> diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> index b7046e2..a2cba6bd 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> @@ -19,6 +19,7 @@
->  #include "xfs_trace.h"
->  #include "xfs_trans.h"
->  #include "xfs_buf_item.h"
-> +#include "xfs_attr_leaf.h"
->  
->  /*
->   * Local function declarations.
-> @@ -311,7 +312,7 @@ xfs_dir3_leaf_get_buf(
->  	       bno < xfs_dir2_byte_to_db(args->geo, XFS_DIR2_FREE_OFFSET));
->  
->  	error = xfs_da_get_buf(tp, dp, xfs_dir2_db_to_da(args->geo, bno),
-> -			       -1, &bp, XFS_DATA_FORK);
-> +			       XFS_DABUF_MAP_NOMAPPING, &bp, XFS_DATA_FORK);
->  	if (error)
->  		return error;
->  
-> @@ -594,7 +595,8 @@ xfs_dir2_leaf_addname(
->  
->  	trace_xfs_dir2_leaf_addname(args);
->  
-> -	error = xfs_dir3_leaf_read(tp, dp, args->geo->leafblk, -1, &lbp);
-> +	error = xfs_dir3_leaf_read(tp, dp, args->geo->leafblk,
-> +				   XFS_DABUF_MAP_NOMAPPING, &lbp);
->  	if (error)
->  		return error;
->  
-
-I think there are some missing conversions for xfs_dir3_data_read calls
-in xfs_dir2_leaf_addname...
-
-> @@ -1189,7 +1191,8 @@ xfs_dir2_leaf_lookup_int(
->  	tp = args->trans;
->  	mp = dp->i_mount;
->  
-> -	error = xfs_dir3_leaf_read(tp, dp, args->geo->leafblk, -1, &lbp);
-> +	error = xfs_dir3_leaf_read(tp, dp, args->geo->leafblk,
-> +				   XFS_DABUF_MAP_NOMAPPING, &lbp);
->  	if (error)
->  		return error;
->  
-
-...and two more dir3_leaf_read calls further down in this function...
-
-...and one more in xfs_dir2_leaf_trim_data...
-
-> diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-> index 8bbd742..0a803e4 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_node.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_node.c
-> @@ -20,6 +20,7 @@
->  #include "xfs_trans.h"
->  #include "xfs_buf_item.h"
->  #include "xfs_log.h"
-> +#include "xfs_attr_leaf.h"
->  
->  /*
->   * Function declarations.
-> @@ -227,7 +228,7 @@ xfs_dir2_free_read(
->  	xfs_dablk_t		fbno,
->  	struct xfs_buf		**bpp)
->  {
-> -	return __xfs_dir3_free_read(tp, dp, fbno, -1, bpp);
-> +	return __xfs_dir3_free_read(tp, dp, fbno, XFS_DABUF_MAP_NOMAPPING, bpp);
->  }
->  
->  static int
-> @@ -237,7 +238,7 @@ xfs_dir2_free_try_read(
->  	xfs_dablk_t		fbno,
->  	struct xfs_buf		**bpp)
->  {
-> -	return __xfs_dir3_free_read(tp, dp, fbno, -2, bpp);
-> +	return __xfs_dir3_free_read(tp, dp, fbno, XFS_DABUF_MAP_HOLE_OK, bpp);
->  }
->  
->  static int
-> @@ -254,7 +255,7 @@ xfs_dir3_free_get_buf(
->  	struct xfs_dir3_icfree_hdr hdr;
->  
->  	error = xfs_da_get_buf(tp, dp, xfs_dir2_db_to_da(args->geo, fbno),
-> -				   -1, &bp, XFS_DATA_FORK);
-> +				   XFS_DABUF_MAP_NOMAPPING, &bp, XFS_DATA_FORK);
->  	if (error)
->  		return error;
->  
-
-...there's also a missing call in xfs_dir2_leafn_lookup_for_entry...
-
-> @@ -1495,7 +1496,8 @@ xfs_dir2_leafn_toosmall(
->  		 * Read the sibling leaf block.
->  		 */
->  		error = xfs_dir3_leafn_read(state->args->trans, dp,
-> -					    blkno, -1, &bp);
-> +					    blkno, XFS_DABUF_MAP_NOMAPPING,
-> +					    &bp);
->  		if (error)
->  			return error;
->  
-
-...and another one in xfs_dir2_node_addname_int.
-
-> diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
-> index 77ff9f9..353455c 100644
-> --- a/fs/xfs/scrub/dabtree.c
-> +++ b/fs/xfs/scrub/dabtree.c
-> @@ -355,9 +355,9 @@ xchk_da_btree_block(
->  		goto out_nobuf;
->  
->  	/* Read the buffer. */
-> -	error = xfs_da_read_buf(dargs->trans, dargs->dp, blk->blkno, -2,
-> -			&blk->bp, dargs->whichfork,
-> -			&xchk_da_btree_buf_ops);
-> +	error = xfs_da_read_buf(dargs->trans, dargs->dp, blk->blkno,
-> +				XFS_DABUF_MAP_HOLE_OK, &blk->bp,
-> +				dargs->whichfork, &xchk_da_btree_buf_ops);
->  	if (!xchk_da_process_error(ds, level, &error))
->  		goto out_nobuf;
->  	if (blk->bp)
-> diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-> index 1e2e117..eb0fa0f 100644
-> --- a/fs/xfs/scrub/dir.c
-> +++ b/fs/xfs/scrub/dir.c
-> @@ -18,6 +18,7 @@
->  #include "scrub/scrub.h"
->  #include "scrub/common.h"
->  #include "scrub/dabtree.h"
-> +#include "xfs_attr_leaf.h"
->  
->  /* Set us up to scrub directories. */
 >  int
-
-I also noticed missing conversions for xfs_dir3_data_read in
-xchk_dir_rec, xchk_directory_data_bestfree,
-xchk_directory_leaf1_bestfree, and xchk_directory_free_bestfree.
-
-> @@ -492,7 +493,8 @@ xchk_directory_leaf1_bestfree(
->  	int				error;
+> @@ -580,27 +611,20 @@ STATIC int
+>  xfs_attr_leaf_addname(
+>  	struct xfs_da_args	*args)
+>  {
+> -	struct xfs_inode	*dp;
+>  	struct xfs_buf		*bp;
+>  	int			retval, error, forkoff;
+> +	struct xfs_inode	*dp = args->dp;
 >  
->  	/* Read the free space block. */
-> -	error = xfs_dir3_leaf_read(sc->tp, sc->ip, lblk, -1, &bp);
-> +	error = xfs_dir3_leaf_read(sc->tp, sc->ip, lblk,
-> +				   XFS_DABUF_MAP_NOMAPPING, &bp);
->  	if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, lblk, &error))
+>  	trace_xfs_attr_leaf_addname(args);
+>  
+>  	/*
+> -	 * Read the (only) block in the attribute list in.
+> -	 */
+> -	dp = args->dp;
+> -	args->blkno = 0;
+> -	error = xfs_attr3_leaf_read(args->trans, args->dp, args->blkno,
+> -				    XFS_DABUF_MAP_NOMAPPING, &bp);
+> -	if (error)
+> -		return error;
+> -
+> -	/*
+>  	 * Look up the given attribute in the leaf block.  Figure out if
+>  	 * the given flags produce an error or call for an atomic rename.
+>  	 */
+> -	retval = xfs_attr3_leaf_lookup_int(bp, args);
+> +	retval = xfs_attr_leaf_hasname(args, &bp);
+> +	if (retval != -ENOATTR && retval != -EEXIST)
+> +		return retval;
+> +
+>  	if ((args->name.type & ATTR_REPLACE) && (retval == -ENOATTR)) {
+>  		xfs_trans_brelse(args->trans, bp);
+>  		return retval;
+> @@ -752,6 +776,24 @@ xfs_attr_leaf_addname(
+>  }
+>  
+>  /*
+> + * Return EEXIST if attr is found, or ENOATTR if not
+> + */
+> +STATIC int
+> +xfs_attr_leaf_hasname(
+> +	struct xfs_da_args      *args,
+> +	struct xfs_buf		**bp)
+> +{
+> +	int                     error = 0;
+> +
+> +	error = xfs_attr3_leaf_read(args->trans, args->dp, 0,
+> +				    XFS_DABUF_MAP_NOMAPPING, bp);
+> +	if (error)
+> +		return error;
+> +
+> +	return xfs_attr3_leaf_lookup_int(*bp, args);
+> +}
+> +
+> +/*
+>   * Remove a name from the leaf attribute list structure
+>   *
+>   * This leaf block cannot have a "remote" value, we only call this routine
+> @@ -771,13 +813,11 @@ xfs_attr_leaf_removename(
+>  	 * Remove the attribute.
+>  	 */
+>  	dp = args->dp;
+> -	args->blkno = 0;
+> -	error = xfs_attr3_leaf_read(args->trans, args->dp, args->blkno,
+> -				    XFS_DABUF_MAP_NOMAPPING, &bp);
+> -	if (error)
+> +
+> +	error = xfs_attr_leaf_hasname(args, &bp);
+> +	if (error != -ENOATTR && error != -EEXIST)
+>  		return error;
+>  
+> -	error = xfs_attr3_leaf_lookup_int(bp, args);
+>  	if (error == -ENOATTR) {
+>  		xfs_trans_brelse(args->trans, bp);
+>  		return error;
+> @@ -816,13 +856,10 @@ xfs_attr_leaf_get(xfs_da_args_t *args)
+>  
+>  	trace_xfs_attr_leaf_get(args);
+>  
+> -	args->blkno = 0;
+> -	error = xfs_attr3_leaf_read(args->trans, args->dp, args->blkno,
+> -				    XFS_DABUF_MAP_NOMAPPING, &bp);
+> -	if (error)
+> +	error = xfs_attr_leaf_hasname(args, &bp);
+> +	if (error != -ENOATTR && error != -EEXIST)
+>  		return error;
+>  
+> -	error = xfs_attr3_leaf_lookup_int(bp, args);
+>  	if (error != -EEXIST)  {
+>  		xfs_trans_brelse(args->trans, bp);
+>  		return error;
+> @@ -832,6 +869,38 @@ xfs_attr_leaf_get(xfs_da_args_t *args)
+>  	return error;
+>  }
+>  
+> +/*
+> + * Return EEXIST if attr is found, or ENOATTR if not
+> + * statep: If not null is set to point at the found state.  Caller will
+> + * 	   be responsible for freeing the state in this case.
+> + */
+> +STATIC int
+> +xfs_attr_node_hasname(
+> +	struct xfs_da_args	*args,
+> +	struct xfs_da_state	**statep)
+> +{
+> +	struct xfs_da_state	*state;
+> +	int			retval, error;
+> +
+> +	state = xfs_da_state_alloc();
+> +	state->args = args;
+> +	state->mp = args->dp->i_mount;
+> +
+> +	/*
+> +	 * Search to see if name exists, and get back a pointer to it.
+> +	 */
+> +	error = xfs_da3_node_lookup_int(state, &retval);
+> +	if (error == 0)
+> +		error = retval;
+> +
+> +	if (statep != NULL)
+> +		*statep = state;
+> +	else
+> +		xfs_da_state_free(state);
+> +
+> +	return error;
+> +}
+> +
+>  /*========================================================================
+>   * External routines when attribute list size > geo->blksize
+>   *========================================================================*/
+> @@ -864,20 +933,17 @@ xfs_attr_node_addname(
+>  	dp = args->dp;
+>  	mp = dp->i_mount;
+>  restart:
+> -	state = xfs_da_state_alloc();
+> -	state->args = args;
+> -	state->mp = mp;
+> -
+>  	/*
+>  	 * Search to see if name already exists, and get back a pointer
+>  	 * to where it should go.
+>  	 */
+> -	error = xfs_da3_node_lookup_int(state, &retval);
+> -	if (error)
+> +	retval = xfs_attr_node_hasname(args, &state);
+> +	if (retval != -ENOATTR)
 >  		goto out;
->  	xchk_buffer_recheck(sc, bp);
-
-There's also a missing xfs_dir3_data_readahead conversion in
-xchk_parent_count_parent_dentries in fs/xfs/scrub/parent.c.
-
-> diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
-> index f83f11d..9c22915 100644
-> --- a/fs/xfs/xfs_attr_inactive.c
-> +++ b/fs/xfs/xfs_attr_inactive.c
-> @@ -235,7 +235,8 @@ xfs_attr3_node_inactive(
->  		 * traversal of the tree so we may deal with many blocks
->  		 * before we come back to this one.
->  		 */
-> -		error = xfs_da3_node_read(*trans, dp, child_fsb, -1, &child_bp,
-> +		error = xfs_da3_node_read(*trans, dp, child_fsb,
-> +					  XFS_DABUF_MAP_NOMAPPING, &child_bp,
->  					  XFS_ATTR_FORK);
->  		if (error)
->  			return error;
-> @@ -321,7 +322,8 @@ xfs_attr3_root_inactive(
->  	 * the extents in reverse order the extent containing
->  	 * block 0 must still be there.
+> +
+>  	blk = &state->path.blk[ state->path.active-1 ];
+>  	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
+> -	if ((args->name.type & ATTR_REPLACE) && (retval == -ENOATTR)) {
+> +	if (args->name.type & ATTR_REPLACE) {
+>  		goto out;
+>  	} else if (retval == -EEXIST) {
+>  		if (args->name.type & ATTR_CREATE)
+> @@ -1079,29 +1145,15 @@ xfs_attr_node_removename(
+>  {
+>  	struct xfs_da_state	*state;
+>  	struct xfs_da_state_blk	*blk;
+> -	struct xfs_inode	*dp;
+>  	struct xfs_buf		*bp;
+>  	int			retval, error, forkoff;
+> +	struct xfs_inode	*dp = args->dp;
+>  
+>  	trace_xfs_attr_node_removename(args);
+>  
+> -	/*
+> -	 * Tie a string around our finger to remind us where we are.
+> -	 */
+> -	dp = args->dp;
+> -	state = xfs_da_state_alloc();
+> -	state->args = args;
+> -	state->mp = dp->i_mount;
+> -
+> -	/*
+> -	 * Search to see if name exists, and get back a pointer to it.
+> -	 */
+> -	error = xfs_da3_node_lookup_int(state, &retval);
+> -	if (error || (retval != -EEXIST)) {
+> -		if (error == 0)
+> -			error = retval;
+> +	error = xfs_attr_node_hasname(args, &state);
+> +	if (error != -EEXIST)
+>  		goto out;
+> -	}
+>  
+>  	/*
+>  	 * If there is an out-of-line value, de-allocate the blocks.
+> @@ -1324,20 +1376,14 @@ xfs_attr_node_get(xfs_da_args_t *args)
+>  
+>  	trace_xfs_attr_node_get(args);
+>  
+> -	state = xfs_da_state_alloc();
+> -	state->args = args;
+> -	state->mp = args->dp->i_mount;
+> -
+>  	/*
+>  	 * Search to see if name exists, and get back a pointer to it.
 >  	 */
-> -	error = xfs_da3_node_read(*trans, dp, 0, -1, &bp, XFS_ATTR_FORK);
-> +	error = xfs_da3_node_read(*trans, dp, 0, XFS_DABUF_MAP_NOMAPPING, &bp,
-> +				  XFS_ATTR_FORK);
->  	if (error)
->  		return error;
->  	blkno = bp->b_bn;
-> diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-> index c02f22d..fab416c 100644
-> --- a/fs/xfs/xfs_attr_list.c
-> +++ b/fs/xfs/xfs_attr_list.c
-> @@ -224,8 +224,9 @@ xfs_attr_node_list_lookup(
->  	ASSERT(*pbp == NULL);
->  	cursor->blkno = 0;
->  	for (;;) {
-> -		error = xfs_da3_node_read(tp, dp, cursor->blkno, -1, &bp,
-> -				XFS_ATTR_FORK);
-> +		error = xfs_da3_node_read(tp, dp, cursor->blkno,
-> +					  XFS_DABUF_MAP_NOMAPPING, &bp,
-> +					  XFS_ATTR_FORK);
->  		if (error)
->  			return error;
->  		node = bp->b_addr;
-> @@ -309,8 +310,9 @@ xfs_attr_node_list(
->  	 */
->  	bp = NULL;
->  	if (cursor->blkno > 0) {
-> -		error = xfs_da3_node_read(context->tp, dp, cursor->blkno, -1,
-> -					      &bp, XFS_ATTR_FORK);
-> +		error = xfs_da3_node_read(context->tp, dp, cursor->blkno,
-> +					  XFS_DABUF_MAP_NOMAPPING, &bp,
-> +					  XFS_ATTR_FORK);
->  		if ((error != 0) && (error != -EFSCORRUPTED))
->  			return error;
->  		if (bp) {
-> @@ -377,7 +379,8 @@ xfs_attr_node_list(
->  			break;
->  		cursor->blkno = leafhdr.forw;
->  		xfs_trans_brelse(context->tp, bp);
-> -		error = xfs_attr3_leaf_read(context->tp, dp, cursor->blkno, -1, &bp);
-> +		error = xfs_attr3_leaf_read(context->tp, dp, cursor->blkno,
-> +					    XFS_DABUF_MAP_NOMAPPING, &bp);
->  		if (error)
->  			return error;
+> -	error = xfs_da3_node_lookup_int(state, &retval);
+> -	if (error) {
+> +	error = xfs_attr_node_hasname(args, &state);
+> +	if (error != -EEXIST) {
+>  		retval = error;
+>  		goto out_release;
 >  	}
-> @@ -497,7 +500,8 @@ xfs_attr_leaf_list(xfs_attr_list_context_t *context)
->  	trace_xfs_attr_leaf_list(context);
+> -	if (retval != -EEXIST)
+> -		goto out_release;
 >  
->  	context->cursor->blkno = 0;
-> -	error = xfs_attr3_leaf_read(context->tp, context->dp, 0, -1, &bp);
-> +	error = xfs_attr3_leaf_read(context->tp, context->dp, 0,
-> +				    XFS_DABUF_MAP_NOMAPPING, &bp);
->  	if (error)
->  		return error;
+>  	/*
+>  	 * Get the value, local or "remote"
+> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+> index 44dd07a..3b5dad4 100644
+> --- a/fs/xfs/libxfs/xfs_attr.h
+> +++ b/fs/xfs/libxfs/xfs_attr.h
+> @@ -150,6 +150,7 @@ int xfs_attr_set(struct xfs_inode *dp, struct xfs_name *name,
+>  		 unsigned char *value, int valuelen, int flags);
+>  int xfs_attr_set_args(struct xfs_da_args *args);
+>  int xfs_attr_remove(struct xfs_inode *dp, struct xfs_name *name, int flags);
+> +int xfs_has_attr(struct xfs_da_args *args);
+>  int xfs_attr_remove_args(struct xfs_da_args *args);
+>  int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+>  		  int flags, struct attrlist_cursor_kern *cursor);
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index 93c3496..d06cfd6 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -655,18 +655,67 @@ xfs_attr_shortform_create(xfs_da_args_t *args)
+>  }
 >  
+>  /*
+> + * Return -EEXIST if attr is found, or -ENOATTR if not
+> + * args:  args containing attribute name and namelen
+> + * sfep:  If not null, pointer will be set to the last attr entry found on
+> +	  -EEXIST.  On -ENOATTR pointer is left at the last entry in the list
+> + * basep: If not null, pointer is set to the byte offset of the entry in the
+> + *	  list on -EEXIST.  On -ENOATTR, pointer is left at the byte offset of
+> + *	  the last entry in the list
+> + */
+> +int
+> +xfs_attr_shortform_hasname(
+> +	struct xfs_da_args	 *args,
+> +	struct xfs_attr_sf_entry **sfep,
+> +	int			 *basep)
 
-...more missing conversions of xfs_dir3_data_read in
-xfs_dir2_leaf_readbuf; and of xfs_dir3_data_readahead in
-xfs_dir2_leaf_readbuf...
+Byte offsets can't be negative, so this should be unsigned int.
 
-...and a missing conversion of xfs_dir3_data_readahead in xfs_dir_open
-in fs/xfs/xfs_file.c.
+Seeing as we also return the location of the sf entry and byte offset,
+maybe this ought to be called xfs_attr_sf_findname ?
+
+> +{
+> +	struct xfs_attr_shortform *sf;
+> +	struct xfs_attr_sf_entry *sfe;
+> +	int			base = sizeof(struct xfs_attr_sf_hdr);
+> +	int			size = 0;
+> +	int			end;
+> +	int			i;
+> +
+> +	base = sizeof(struct xfs_attr_sf_hdr);
+> +	sf = (struct xfs_attr_shortform *)args->dp->i_afp->if_u1.if_data;
+> +	sfe = &sf->list[0];
+> +	end = sf->hdr.count;
+> +	for (i = 0; i < end; sfe = XFS_ATTR_SF_NEXTENTRY(sfe),
+> +			base += size, i++) {
+> +		size = XFS_ATTR_SF_ENTSIZE(sfe);
+> +		if (sfe->namelen != args->name.len)
+> +			continue;
+> +		if (memcmp(sfe->nameval, args->name.name, args->name.len) != 0)
+> +			continue;
+> +		if (!xfs_attr_namesp_match(args->name.type, sfe->flags))
+> +			continue;
+> +		break;
+> +	}
+> +
+> +	if (sfep != NULL)
+> +		*sfep = sfe;
+> +
+> +	if (basep != NULL)
+> +		*basep = base;
+> +
+> +	if (i == end)
+> +		return -ENOATTR;
+> +	return -EEXIST;
+> +}
+> +
+> +/*
+>   * Add a name/value pair to the shortform attribute list.
+>   * Overflow from the inode has already been checked for.
+>   */
+>  void
+>  xfs_attr_shortform_add(xfs_da_args_t *args, int forkoff)
+>  {
+> -	xfs_attr_shortform_t *sf;
+> -	xfs_attr_sf_entry_t *sfe;
+> -	int i, offset, size;
+> -	xfs_mount_t *mp;
+> -	xfs_inode_t *dp;
+> -	struct xfs_ifork *ifp;
+> +	struct xfs_attr_shortform	*sf;
+> +	struct xfs_attr_sf_entry	*sfe;
+> +	int				offset, size, error;
+> +	struct xfs_mount		*mp;
+> +	struct xfs_inode		*dp;
+> +	struct xfs_ifork		*ifp;
+>  
+>  	trace_xfs_attr_sf_add(args);
+>  
+> @@ -677,18 +726,8 @@ xfs_attr_shortform_add(xfs_da_args_t *args, int forkoff)
+>  	ifp = dp->i_afp;
+>  	ASSERT(ifp->if_flags & XFS_IFINLINE);
+>  	sf = (xfs_attr_shortform_t *)ifp->if_u1.if_data;
+> -	sfe = &sf->list[0];
+> -	for (i = 0; i < sf->hdr.count; sfe = XFS_ATTR_SF_NEXTENTRY(sfe), i++) {
+> -#ifdef DEBUG
+> -		if (sfe->namelen != args->name.len)
+> -			continue;
+> -		if (memcmp(args->name.name, sfe->nameval, args->name.len) != 0)
+> -			continue;
+> -		if (!xfs_attr_namesp_match(args->name.type, sfe->flags))
+> -			continue;
+> -		ASSERT(0);
+> -#endif
+> -	}
+> +	error = xfs_attr_shortform_hasname(args, &sfe, NULL);
+> +	ASSERT(error != -EEXIST);
+
+If this assertion triggers, the fs is corrupt and we need to log
+something and bail out.  5.5 for-next will soon have a new
+XFS_IS_CORRUPT macro that takes care of this, so you can do:
+
+	error = xfs_attr_shortform_hasname(args, &sfe, NULL);
+	if (XFS_IS_CORRUPT(mp, error != -EEXIST))
+		return -EFSCORRUPTED;
 
 --D
 
+
+>  
+>  	offset = (char *)sfe - (char *)sf;
+>  	size = XFS_ATTR_SF_ENTSIZE_BYNAME(args->name.len, args->valuelen);
+> @@ -733,33 +772,23 @@ xfs_attr_fork_remove(
+>  int
+>  xfs_attr_shortform_remove(xfs_da_args_t *args)
+>  {
+> -	xfs_attr_shortform_t *sf;
+> -	xfs_attr_sf_entry_t *sfe;
+> -	int base, size=0, end, totsize, i;
+> -	xfs_mount_t *mp;
+> -	xfs_inode_t *dp;
+> +	struct xfs_attr_shortform	*sf;
+> +	struct xfs_attr_sf_entry	*sfe;
+> +	int				base, size = 0, end, totsize;
+> +	struct xfs_mount		*mp;
+> +	struct xfs_inode		*dp;
+> +	int				error;
+>  
+>  	trace_xfs_attr_sf_remove(args);
+>  
+>  	dp = args->dp;
+>  	mp = dp->i_mount;
+> -	base = sizeof(xfs_attr_sf_hdr_t);
+>  	sf = (xfs_attr_shortform_t *)dp->i_afp->if_u1.if_data;
+> -	sfe = &sf->list[0];
+> -	end = sf->hdr.count;
+> -	for (i = 0; i < end; sfe = XFS_ATTR_SF_NEXTENTRY(sfe),
+> -					base += size, i++) {
+> -		size = XFS_ATTR_SF_ENTSIZE(sfe);
+> -		if (sfe->namelen != args->name.len)
+> -			continue;
+> -		if (memcmp(sfe->nameval, args->name.name, args->name.len) != 0)
+> -			continue;
+> -		if (!xfs_attr_namesp_match(args->name.type, sfe->flags))
+> -			continue;
+> -		break;
+> -	}
+> -	if (i == end)
+> -		return -ENOATTR;
+> +
+> +	error = xfs_attr_shortform_hasname(args, &sfe, &base);
+> +	if (error != -EEXIST)
+> +		return error;
+> +	size = XFS_ATTR_SF_ENTSIZE(sfe);
+>  
+>  	/*
+>  	 * Fix up the attribute fork data, covering the hole
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+> index 017480e..e108b37 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.h
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+> @@ -42,6 +42,8 @@ int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
+>  int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
+>  			struct xfs_buf **leaf_bp);
+>  int	xfs_attr_shortform_remove(struct xfs_da_args *args);
+> +int	xfs_attr_shortform_hasname(struct xfs_da_args *args,
+> +			       struct xfs_attr_sf_entry **sfep, int *basep);
+>  int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
+>  int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
+>  xfs_failaddr_t xfs_attr_shortform_verify(struct xfs_inode *ip);
 > -- 
 > 2.7.4
 > 
