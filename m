@@ -7,61 +7,61 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 817F4C43331
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 01:00:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FCC2C43331
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 01:01:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 45D442178F
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 01:00:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 13ECB20673
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 01:01:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kNQ/n1Da"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kSrB4c6P"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726054AbfKHBAx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Nov 2019 20:00:53 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:45446 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725946AbfKHBAx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 20:00:53 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA80wlAD187200;
-        Fri, 8 Nov 2019 01:00:49 GMT
+        id S1726094AbfKHBBo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Nov 2019 20:01:44 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:54948 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725928AbfKHBBo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 20:01:44 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA80woN8160871;
+        Fri, 8 Nov 2019 01:01:41 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=Tsbyuk1Oa5Vv9yPa1wPU6l2JCYYlSAT73vQ+VyCjD2A=;
- b=kNQ/n1DaTft5hgOnUjoH5nkZnY7CQHG9Q5o0Cv2uXIar3MfpvhZmTYKiJFV6BfPUusYq
- zzhwP/Ag3epcF5dCxRyfr81dt4I/w/zdq6v3Z40fBgV0bcU8M6CJOtErMACgUsRSgtge
- Y2gg8Ibjb8WwUopEJq86RIn00+nA5zyfTD28F5Y4K8OQQcL9RgOkX1kXxNiM/q6U17ss
- edNJBbM0eIcT25ppjods1pzGPBFtxOyClUovxj3gBUFB/jgRxmDwEInWnMa3W8kDS0wq
- YJEV32B3spEM+ee6rXGLfHVxwBL7F0VtDPz2QSM8j44B/ozgdZzRn13ln9Vr+IxSsA/C cQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2w41w19yyx-1
+ bh=DFm1zBGKjSafqQIF38fVbjIZxpuORrdjrZsRL33oAKg=;
+ b=kSrB4c6PynkWh4B+eyQkL2R2E2JvlVUSn2hf7PcpbQDkRpT0n+1VHE6POpekq6D7O4L6
+ atAc+S84ioauNyYHrVQI4fOpoa18Js7aW8g0lvE4jGw2dNZQkfisVcdYCUlpwzzGdrPC
+ YyAvk5GDPdfHk2NUyXecVPYHTtZVB0JaNUfD9J2q6MRr0oqegAOkfuC9wh54IEHdbnfi
+ OgKiY9cFwllyhLIuIMtAHqtUyXBWuXQSCyHbBcGN1cC9WFbfdEgeptZIRU/pce8fWPQn
+ 5/pEK7ZCbkYwlW2Edt0rV4pznx+gt3GbdccmPhC5qWi5H/1yyA83J78dBeIT/RFuC+ky SQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 2w41w12037-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 08 Nov 2019 01:00:49 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA80rrnk163313;
-        Fri, 8 Nov 2019 01:00:48 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2w41wjn8kq-1
+        Fri, 08 Nov 2019 01:01:40 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA80s7UU033593;
+        Fri, 8 Nov 2019 01:01:40 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 2w4k2xyccg-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 08 Nov 2019 01:00:48 +0000
-Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xA810msJ005337;
-        Fri, 8 Nov 2019 01:00:48 GMT
+        Fri, 08 Nov 2019 01:01:39 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xA811dmc022871;
+        Fri, 8 Nov 2019 01:01:39 GMT
 Received: from localhost (/10.145.179.16)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 07 Nov 2019 17:00:47 -0800
-Date:   Thu, 7 Nov 2019 17:00:47 -0800
+        with ESMTP ; Thu, 07 Nov 2019 17:01:39 -0800
+Date:   Thu, 7 Nov 2019 17:01:39 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 34/46] xfs: cleanup xfs_dir2_data_freescan_int
-Message-ID: <20191108010047.GE6219@magnolia>
+Subject: Re: [PATCH 35/46] xfs: cleanup __xfs_dir3_data_check
+Message-ID: <20191108010139.GF6219@magnolia>
 References: <20191107182410.12660-1-hch@lst.de>
- <20191107182410.12660-35-hch@lst.de>
+ <20191107182410.12660-36-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191107182410.12660-35-hch@lst.de>
+In-Reply-To: <20191107182410.12660-36-hch@lst.de>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9434 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
@@ -79,7 +79,7 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 07, 2019 at 07:23:58PM +0100, Christoph Hellwig wrote:
+On Thu, Nov 07, 2019 at 07:23:59PM +0100, Christoph Hellwig wrote:
 > Use an offset as the main means for iteration, and only do pointer
 > arithmetics to find the data/unused entries.
 > 
@@ -91,88 +91,160 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_dir2_data.c | 48 +++++++++++++++--------------------
->  1 file changed, 20 insertions(+), 28 deletions(-)
+>  fs/xfs/libxfs/xfs_dir2_data.c | 59 ++++++++++++++++++++---------------
+>  1 file changed, 33 insertions(+), 26 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
-> index 3ecec8e1c5f6..50e3fa092ff9 100644
+> index 50e3fa092ff9..8c729270f9f1 100644
 > --- a/fs/xfs/libxfs/xfs_dir2_data.c
 > +++ b/fs/xfs/libxfs/xfs_dir2_data.c
-> @@ -562,16 +562,15 @@ xfs_dir2_data_freeremove(
->   */
->  void
->  xfs_dir2_data_freescan_int(
-> -	struct xfs_da_geometry	*geo,
-> -	const struct xfs_dir_ops *ops,
-> -	struct xfs_dir2_data_hdr *hdr,
-> -	int			*loghead)
-> +	struct xfs_da_geometry		*geo,
-> +	const struct xfs_dir_ops	*ops,
-> +	struct xfs_dir2_data_hdr	*hdr,
-> +	int				*loghead)
->  {
-> -	xfs_dir2_data_entry_t	*dep;		/* active data entry */
-> -	xfs_dir2_data_unused_t	*dup;		/* unused data entry */
-> -	struct xfs_dir2_data_free *bf;
-> -	char			*endp;		/* end of block's data */
-> -	char			*p;		/* current entry pointer */
-> +	struct xfs_dir2_data_free	*bf = ops->data_bestfree_p(hdr);
-> +	void				*addr = hdr;
-> +	unsigned int			offset = ops->data_entry_offset;
-> +	unsigned int			end;
+> @@ -23,6 +23,22 @@ static xfs_failaddr_t xfs_dir2_data_freefind_verify(
+>  		struct xfs_dir2_data_unused *dup,
+>  		struct xfs_dir2_data_free **bf_ent);
 >  
->  	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
->  	       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
-> @@ -581,37 +580,30 @@ xfs_dir2_data_freescan_int(
+> +/*
+> + * The number of leaf entries is limited by the size of the block and the amount
+> + * of space used by the data entries.  We don't know how much space is used by
+> + * the data entries yet, so just ensure that the count falls somewhere inside
+> + * the block right now.
+> + */
+> +static inline unsigned int
+> +xfs_dir2_data_max_leaf_entries(
+> +	const struct xfs_dir_ops	*ops,
+> +	struct xfs_da_geometry		*geo)
+> +{
+> +	return (geo->blksize - sizeof(struct xfs_dir2_block_tail) -
+> +		ops->data_entry_offset) /
+> +			sizeof(struct xfs_dir2_leaf_entry);
+> +}
+> +
+>  /*
+>   * Check the consistency of the data block.
+>   * The input can also be a block-format directory.
+> @@ -38,23 +54,20 @@ __xfs_dir3_data_check(
+>  	xfs_dir2_block_tail_t	*btp=NULL;	/* block tail */
+>  	int			count;		/* count of entries found */
+>  	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
+> -	xfs_dir2_data_entry_t	*dep;		/* data entry */
+>  	xfs_dir2_data_free_t	*dfp;		/* bestfree entry */
+> -	xfs_dir2_data_unused_t	*dup;		/* unused entry */
+> -	char			*endp;		/* end of useful data */
+> +	void			*endp;		/* end of useful data */
+>  	int			freeseen;	/* mask of bestfrees seen */
+>  	xfs_dahash_t		hash;		/* hash of current name */
+>  	int			i;		/* leaf index */
+>  	int			lastfree;	/* last entry was unused */
+>  	xfs_dir2_leaf_entry_t	*lep=NULL;	/* block leaf entries */
+>  	struct xfs_mount	*mp = bp->b_mount;
+> -	char			*p;		/* current data position */
+>  	int			stale;		/* count of stale leaves */
+>  	struct xfs_name		name;
+> +	unsigned int		offset;
+> +	unsigned int		end;
+>  	const struct xfs_dir_ops *ops;
+> -	struct xfs_da_geometry	*geo;
+> -
+> -	geo = mp->m_dir_geo;
+> +	struct xfs_da_geometry	*geo = mp->m_dir_geo;
+>  
 >  	/*
->  	 * Start by clearing the table.
->  	 */
-> -	bf = ops->data_bestfree_p(hdr);
->  	memset(bf, 0, sizeof(*bf) * XFS_DIR2_DATA_FD_COUNT);
->  	*loghead = 1;
-> -	/*
-> -	 * Set up pointers.
-> -	 */
+>  	 * We can be passed a null dp here from a verifier, so we need to go the
+> @@ -71,7 +84,7 @@ __xfs_dir3_data_check(
+>  		return __this_address;
+>  
+>  	hdr = bp->b_addr;
 > -	p = (char *)ops->data_entry_p(hdr);
-> -	endp = xfs_dir3_data_endp(geo, hdr);
-> -	/*
-> -	 * Loop over the block's entries.
-> -	 */
+> +	offset = ops->data_entry_offset;
+>  
+>  	switch (hdr->magic) {
+>  	case cpu_to_be32(XFS_DIR3_BLOCK_MAGIC):
+> @@ -79,15 +92,8 @@ __xfs_dir3_data_check(
+>  		btp = xfs_dir2_block_tail_p(geo, hdr);
+>  		lep = xfs_dir2_block_leaf_p(btp);
+>  
+> -		/*
+> -		 * The number of leaf entries is limited by the size of the
+> -		 * block and the amount of space used by the data entries.
+> -		 * We don't know how much space is used by the data entries yet,
+> -		 * so just ensure that the count falls somewhere inside the
+> -		 * block right now.
+> -		 */
+>  		if (be32_to_cpu(btp->count) >=
+> -		    ((char *)btp - p) / sizeof(struct xfs_dir2_leaf_entry))
+> +		    xfs_dir2_data_max_leaf_entries(ops, geo))
+>  			return __this_address;
+>  		break;
+>  	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
+> @@ -99,6 +105,7 @@ __xfs_dir3_data_check(
+>  	endp = xfs_dir3_data_endp(geo, hdr);
+>  	if (!endp)
+>  		return __this_address;
+> +	end = endp - bp->b_addr;
+>  
+>  	/*
+>  	 * Account for zero bestfree entries.
+> @@ -128,8 +135,10 @@ __xfs_dir3_data_check(
+>  	/*
+>  	 * Loop over the data/unused entries.
+>  	 */
 > -	while (p < endp) {
 > -		dup = (xfs_dir2_data_unused_t *)p;
-> +
-> +	end = xfs_dir3_data_endp(geo, addr) - addr;
 > +	while (offset < end) {
-> +		struct xfs_dir2_data_unused	*dup = addr + offset;
-> +		struct xfs_dir2_data_entry	*dep = addr + offset;
+> +		struct xfs_dir2_data_unused	*dup = bp->b_addr + offset;
+> +		struct xfs_dir2_data_entry	*dep = bp->b_addr + offset;
 > +
 >  		/*
->  		 * If it's a free entry, insert it.
->  		 */
->  		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
-> -			ASSERT((char *)dup - (char *)hdr ==
-> +			ASSERT(offset ==
->  			       be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)));
->  			xfs_dir2_data_freeinsert(hdr, bf, dup, loghead);
+>  		 * If it's unused, look for the space in the bestfree table.
+>  		 * If we find it, account for that, else make sure it
+> @@ -140,10 +149,10 @@ __xfs_dir3_data_check(
+>  
+>  			if (lastfree != 0)
+>  				return __this_address;
+> -			if (endp < p + be16_to_cpu(dup->length))
+> +			if (offset + be16_to_cpu(dup->length) > end)
+>  				return __this_address;
+>  			if (be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) !=
+> -			    (char *)dup - (char *)hdr)
+> +			    offset)
+>  				return __this_address;
+>  			fa = xfs_dir2_data_freefind_verify(hdr, bf, dup, &dfp);
+>  			if (fa)
+> @@ -158,7 +167,7 @@ __xfs_dir3_data_check(
+>  				    be16_to_cpu(bf[2].length))
+>  					return __this_address;
+>  			}
 > -			p += be16_to_cpu(dup->length);
 > +			offset += be16_to_cpu(dup->length);
-> +			continue;
+>  			lastfree = 1;
+>  			continue;
 >  		}
-> +
->  		/*
->  		 * For active entries, check their tags and skip them.
+> @@ -168,15 +177,13 @@ __xfs_dir3_data_check(
+>  		 * in the leaf section of the block.
+>  		 * The linear search is crude but this is DEBUG code.
 >  		 */
-> -		else {
-> -			dep = (xfs_dir2_data_entry_t *)p;
-> -			ASSERT((char *)dep - (char *)hdr ==
-> -			       be16_to_cpu(*ops->data_entry_tag_p(dep)));
-> -			p += ops->data_entsize(dep->namelen);
-> -		}
-> +		ASSERT(offset == be16_to_cpu(*ops->data_entry_tag_p(dep)));
+> -		dep = (xfs_dir2_data_entry_t *)p;
+>  		if (dep->namelen == 0)
+>  			return __this_address;
+>  		if (xfs_dir_ino_validate(mp, be64_to_cpu(dep->inumber)))
+>  			return __this_address;
+> -		if (endp < p + ops->data_entsize(dep->namelen))
+> +		if (offset + ops->data_entsize(dep->namelen) > end)
+>  			return __this_address;
+> -		if (be16_to_cpu(*ops->data_entry_tag_p(dep)) !=
+> -		    (char *)dep - (char *)hdr)
+> +		if (be16_to_cpu(*ops->data_entry_tag_p(dep)) != offset)
+>  			return __this_address;
+>  		if (ops->data_get_ftype(dep) >= XFS_DIR3_FT_MAX)
+>  			return __this_address;
+> @@ -198,7 +205,7 @@ __xfs_dir3_data_check(
+>  			if (i >= be32_to_cpu(btp->count))
+>  				return __this_address;
+>  		}
+> -		p += ops->data_entsize(dep->namelen);
 > +		offset += ops->data_entsize(dep->namelen);
 >  	}
->  }
->  
+>  	/*
+>  	 * Need to have seen all the entries and all the bestfree slots.
 > -- 
 > 2.20.1
 > 
