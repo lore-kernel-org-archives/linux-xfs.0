@@ -1,4 +1,4 @@
-Return-Path: <SRS0=OQuR=ZA=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=uP9V=ZB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
@@ -7,63 +7,62 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72311C17441
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 23:13:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94707C17441
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 Nov 2019 00:09:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3EDF6215EA
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Nov 2019 23:13:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4AA9C215EA
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 Nov 2019 00:09:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="N1RqVuBd"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="hZiHHBeT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726349AbfKHXNY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 Nov 2019 18:13:24 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:46938 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726231AbfKHXNY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Nov 2019 18:13:24 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA8N957N052066
-        for <linux-xfs@vger.kernel.org>; Fri, 8 Nov 2019 23:13:23 GMT
+        id S1726641AbfKIAJe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Nov 2019 19:09:34 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:53274 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726227AbfKIAJe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Nov 2019 19:09:34 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA909LG6104674
+        for <linux-xfs@vger.kernel.org>; Sat, 9 Nov 2019 00:09:32 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
  references : from : message-id : date : mime-version : in-reply-to :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=5cynv8FGcUHT3zc0nw4SBGHSAjT38Faj6SMr6gi0kzQ=;
- b=N1RqVuBdSRvzqg/9wpNi/yLXn+Nx3Te38+sHp+DIVhu1loODNXMkmbui585C3RabHepO
- Gz9mkzmzH1PGFuJTzspYPrHvDcgloBEVeyAXo6F34fHFjklShc2vOhPKRmk4slenJqK3
- I6v6PELhPonXwzCe0DP0n5RooEvj7kyNur/W8hcM1+0/u/hfV5TQifDwi87J5Ae2XR20
- dUwa8xhkJSZt1ec7j2qVl0rYziO+MLHGis4BhqH/qaRwshFeAuV56WklkWi9gB7xu7sc
- Za+1+sTC0COj4y5dznt2xywB1ieNgLX/kmACuu3+MyMZ+eHhE2k3JF8nnTKF1urWnhOo Tg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2w5hgv81uq-1
+ bh=vRMC3g9b8SoUXJqXS3MYsbfR5xSm8A4J98E7DLJ/Ncc=;
+ b=hZiHHBeTITzHNDlixgXF1svlWOVZtpPpL8OcIhWR1z9Y2T7nKQfyqkxPRb+Sz8kG+mvb
+ 79or0ecEGD6iY18U9svf0XTgQsTn0ipu1poq13Dc2xLEDHOL3JoT47Xa76XQB8YAbwMd
+ WHghKc4XiRqZkpaKiA+vLg8DIc+Xoy5RlYGPNy61OOWJv4WYxLgx9tzVhh9y0HUJWWhU
+ TTsJfDdF/y8vY1QXosBacLZW8ey4KgzFMnFrnvVbSAcZMGEJo1npLuU9VqvVbhwSEXAQ
+ LbI5espkBoGGCsKaHAQNjxqkDeFuiG2+RW7stQ0LAm6XTsqgHw5w+jdXNpUFw6sfLzMb Dg== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 2w5hgwr5n7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 08 Nov 2019 23:13:22 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA8N800K043499
-        for <linux-xfs@vger.kernel.org>; Fri, 8 Nov 2019 23:13:22 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 2w5hh3tuub-1
+        for <linux-xfs@vger.kernel.org>; Sat, 09 Nov 2019 00:09:32 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA909JcZ057217
+        for <linux-xfs@vger.kernel.org>; Sat, 9 Nov 2019 00:09:32 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 2w5hgxvpu1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 08 Nov 2019 23:13:22 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xA8NDLFe024776
-        for <linux-xfs@vger.kernel.org>; Fri, 8 Nov 2019 23:13:21 GMT
+        for <linux-xfs@vger.kernel.org>; Sat, 09 Nov 2019 00:09:32 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xA909VsZ020695
+        for <linux-xfs@vger.kernel.org>; Sat, 9 Nov 2019 00:09:31 GMT
 Received: from [192.168.1.9] (/67.1.205.161)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 08 Nov 2019 15:13:21 -0800
-Subject: Re: [PATCH v4 09/17] xfs: Factor up commit from
- xfs_attr_try_sf_addname
+        with ESMTP ; Fri, 08 Nov 2019 16:09:31 -0800
+Subject: Re: [PATCH v4 11/17] xfs: Add xfs_attr3_leaf helper functions
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <20191107012801.22863-1-allison.henderson@oracle.com>
- <20191107012801.22863-10-allison.henderson@oracle.com>
- <20191108210439.GA6219@magnolia>
+ <20191107012801.22863-12-allison.henderson@oracle.com>
+ <20191108211721.GB6219@magnolia>
 From:   Allison Collins <allison.henderson@oracle.com>
-Message-ID: <fed8fd63-a0bd-4275-4440-6e3f978a3a69@oracle.com>
-Date:   Fri, 8 Nov 2019 16:13:20 -0700
+Message-ID: <0e0c4bc7-5da6-ffd0-97ca-836777504e29@oracle.com>
+Date:   Fri, 8 Nov 2019 17:09:29 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20191108210439.GA6219@magnolia>
+In-Reply-To: <20191108211721.GB6219@magnolia>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -71,13 +70,13 @@ X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9435 signatures=6
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1910280000 definitions=main-1911080223
+ engine=8.0.1-1910280000 definitions=main-1911090000
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9435 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
- definitions=main-1911080223
+ definitions=main-1911090000
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -85,106 +84,202 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 
 
-On 11/8/19 2:04 PM, Darrick J. Wong wrote:
-> On Wed, Nov 06, 2019 at 06:27:53PM -0700, Allison Collins wrote:
->> New delayed attribute routines cannot handle transactions,
->> so factor this up to the calling function.
+On 11/8/19 2:17 PM, Darrick J. Wong wrote:
+> On Wed, Nov 06, 2019 at 06:27:55PM -0700, Allison Collins wrote:
+>> And new helper functions xfs_attr3_leaf_flag_is_set and
+>> xfs_attr3_leaf_flagsflipped.  These routines check to see
+>> if xfs_attr3_leaf_setflag or xfs_attr3_leaf_flipflags have
+>> already been run.  We will need this later for delayed
+>> attributes since routines may be recalled several times
+>> when -EAGAIN is returned.
 >>
 >> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
 >> ---
->>   fs/xfs/libxfs/xfs_attr.c | 23 ++++++++++++-----------
->>   1 file changed, 12 insertions(+), 11 deletions(-)
+>>   fs/xfs/libxfs/xfs_attr_leaf.c | 94 +++++++++++++++++++++++++++++++++++++++++++
+>>   fs/xfs/libxfs/xfs_attr_leaf.h |  2 +
+>>   2 files changed, 96 insertions(+)
 >>
->> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
->> index dda2eba..e0a38a2 100644
->> --- a/fs/xfs/libxfs/xfs_attr.c
->> +++ b/fs/xfs/libxfs/xfs_attr.c
->> @@ -227,8 +227,7 @@ xfs_attr_try_sf_addname(
->>   	struct xfs_da_args	*args)
->>   {
->>   
->> -	struct xfs_mount	*mp = dp->i_mount;
->> -	int			error, error2;
->> +	int			error;
->>   
->>   	error = xfs_attr_shortform_addname(args);
->>   	if (error == -ENOSPC)
->> @@ -241,12 +240,7 @@ xfs_attr_try_sf_addname(
->>   	if (!error && (args->name.type & ATTR_KERNOTIME) == 0)
->>   		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
-> 
-> What if you moved this part (the conditional ichgtime) into
-> xfs_attr_shortform_addname?  Then this function can just go away.
-Sure, I may do that in a separate patch though just to make it easier to 
-review.
-
-> 
->>   
->> -	if (mp->m_flags & XFS_MOUNT_WSYNC)
->> -		xfs_trans_set_sync(args->trans);
->> -
->> -	error2 = xfs_trans_commit(args->trans);
->> -	args->trans = NULL;
->> -	return error ? error : error2;
->> +	return error;
+>> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+>> index 42c037e..023c616 100644
+>> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+>> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+>> @@ -2809,6 +2809,40 @@ xfs_attr3_leaf_clearflag(
 >>   }
 >>   
 >>   /*
->> @@ -258,7 +252,7 @@ xfs_attr_set_args(
->>   {
->>   	struct xfs_inode	*dp = args->dp;
->>   	struct xfs_buf          *leaf_bp = NULL;
->> -	int			error;
->> +	int			error, error2 = 0;;
->>   
->>   	/*
->>   	 * If the attribute list is non-existent or a shortform list,
->> @@ -278,8 +272,15 @@ xfs_attr_set_args(
->>   		 * Try to add the attr to the attribute list in the inode.
->>   		 */
->>   		error = xfs_attr_try_sf_addname(dp, args);
->> -		if (error != -ENOSPC)
->> -			return error;
->> +		if (error != -ENOSPC) {
->> +			if (dp->i_mount->m_flags & XFS_MOUNT_WSYNC)
->> +				xfs_trans_set_sync(args->trans);
+>> + * Check if the INCOMPLETE flag on an entry in a leaf block is set.  This
+>> + * function can be used to check if xfs_attr3_leaf_setflag has already been
+>> + * called.  The INCOMPLETE flag is used during attr rename operations to mark
+>> + * entries that are being renamed. Since renames should be atomic, only one of
+> 
+> It's also used when creating an xattr with a value stored in a remote
+> block so that we can commit the name entry to the log (with INCOMPLETE
+> set), allocate/write the remote value with ordered buffers, and then
+> commit a second transaction clearing the INCOMPLETE flag.
+> 
+> Now that I think about it ... this predicate is for non-rename setting
+> of attrs with remote values, and the "flagsflipped" predicate is for
+> rename operations, aren't they?\
+
+Yes, but I'm realizing now, that we may not need these helpers if we 
+continue to move forward with the state machine.  With the state 
+machine, we can simply flip the flag, set the next state, and move on 
+since that region of code will not execute again.  The state switch will 
+jump us forward to where we were without having to check if we already 
+did it.
+
+> 
+>> + * them should appear as a completed attribute.
+>> + *
+>> + * isset is set to true if the flag is set or false otherwise
+>> + */
+>> +int
+>> +xfs_attr3_leaf_flag_is_set(
+>> +	struct xfs_da_args		*args,
+>> +	bool				*isset)
+>> +{
+>> +	struct xfs_attr_leafblock	*leaf;
+>> +	struct xfs_attr_leaf_entry	*entry;
+>> +	struct xfs_buf			*bp;
+>> +	struct xfs_inode		*dp = args->dp;
+>> +	int				error = 0;
 >> +
->> +			error2 = xfs_trans_commit(args->trans);
->> +			args->trans = NULL;
->> +			return error ? error : error2;
+>> +	error = xfs_attr3_leaf_read(args->trans, dp, args->blkno,
+>> +				    XFS_DABUF_MAP_NOMAPPING, &bp);
+>> +	if (error)
+>> +		return error;
+>> +
+>> +	leaf = bp->b_addr;
+>> +	entry = &xfs_attr3_leaf_entryp(leaf)[args->index];
+>> +
+>> +	*isset = ((entry->flags & XFS_ATTR_INCOMPLETE) != 0);
+>> +	xfs_trans_brelse(args->trans, bp);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +/*
+>>    * Set the INCOMPLETE flag on an entry in a leaf block.
+>>    */
+>>   int
+>> @@ -2972,3 +3006,63 @@ xfs_attr3_leaf_flipflags(
+>>   
+>>   	return error;
+>>   }
+>> +
+>> +/*
+>> + * On a leaf entry, check to see if the INCOMPLETE flag is cleared
+>> + * in args->blkno/index and set in args->blkno2/index2.
 > 
-> Can error be something other than 0 or EEXIST?  If so, does it make
-> sense to commit even in those cases?  (Have I asked this before...?)
-Yeah, this came up once before:
-https://patchwork.kernel.org/patch/11087647/
+> Might be worth mentioning here that args->blkno is the old entry and
+> args->blkno2 is the new entry.  This predicate will be used (by the
+> deferred attr item recovery code) to decide if we have to finish that
+> part of a rename operation, right?
+No, it was used in the previous series xfs_attr_set_later where I was 
+aiming to rely more on the state of the fork rather than the state 
+machine.  But with the new state machine in this series, I may be able 
+to just drop this patch.
 
-So I simplified it, but then I think people were more comfortable with a 
-straight refactor with no function change:
-https://patchwork.kernel.org/patch/11134023/
-
-So I put it back. :-)
-
-  It
-> looks odd to me that we'd commit the transaction even if something
-> handed back EFSCORRUPTED.
 > 
-> Hm, it's a local attr fork so I guess the only possible error is ENOSPC?
-> If that's true then please add a comment/ASSERT to that effect.
+>>   Note that they could be
+>> + * in different blocks, or in the same block.  This function can be used to
+>> + * check if xfs_attr3_leaf_flipflags has already been called.  The INCOMPLETE
+>> + * flag is used during attr rename operations to mark entries that are being
+>> + * renamed. Since renames should be atomic, only one of them should appear as a
+>> + * completed attribute.
+>> + *
+>> + * isflipped is set to true if flags are flipped or false otherwise
+>> + */
+>> +int
+>> +xfs_attr3_leaf_flagsflipped(
+> 
+> I don't like "flagsflipped" because it's not clear to me what "flipped"
+> means.
+> 
+> xfs_attr3_leaf_rename_is_incomplete() ?
+> 
+Sure, if I keep this patch in the set I will update it.  Things are 
+still pretty wiggly, so i may still find a use for it, but hopefully I 
+can let it go.
 
-Ok, how about a comment.  Something like
-/* Should only be 0, EEXIST or ENOSPC */
+>> +	struct xfs_da_args		*args,
+>> +	bool				*isflipped)
+>> +{
+>> +	struct xfs_attr_leafblock	*leaf1;
+>> +	struct xfs_attr_leafblock	*leaf2;
+>> +	struct xfs_attr_leaf_entry	*entry1;
+>> +	struct xfs_attr_leaf_entry	*entry2;
+>> +	struct xfs_buf			*bp1;
+>> +	struct xfs_buf			*bp2;
+>> +	struct xfs_inode		*dp = args->dp;
+>> +	int				error = 0;
+>> +
+>> +	/*
+>> +	 * Read the block containing the "old" attr
+>> +	 */
+>> +	error = xfs_attr3_leaf_read(args->trans, dp, args->blkno,
+>> +				    XFS_DABUF_MAP_NOMAPPING, &bp1);
+>> +	if (error)
+>> +		return error;
+>> +
+>> +	/*
+>> +	 * Read the block containing the "new" attr, if it is different
+>> +	 */
+>> +	if (args->blkno2 != args->blkno) {
+>> +		error = xfs_attr3_leaf_read(args->trans, args->dp, args->blkno2,
+>> +					   -1, &bp2);
+>> +		if (error)
+> 
+> bp1 leaks here, I think.
+ok, will make a note.
 
-Sound good?
+> 
+>> +			return error;
+>> +	} else {
+>> +		bp2 = bp1;
+>> +	}
+>> +
+>> +	leaf1 = bp1->b_addr;
+>> +	entry1 = &xfs_attr3_leaf_entryp(leaf1)[args->index];
+>> +
+>> +	leaf2 = bp2->b_addr;
+>> +	entry2 = &xfs_attr3_leaf_entryp(leaf2)[args->index2];
+>> +
+>> +	*isflipped = (((entry1->flags & XFS_ATTR_INCOMPLETE) == 0) &&
+> 
+> Nit: ((entry1->flags & XFS_ATTR_INCOMPLETE) == 0) could be written as
+> !(entry1->flags & XFS_ATTR_INCOMPLETE)
+> 
+>> +		      (entry2->flags & XFS_ATTR_INCOMPLETE));
+>> +
+>> +	xfs_trans_brelse(args->trans, bp1);
+>> +	xfs_trans_brelse(args->trans, bp2);
+> 
+> This double-frees bp2 if bp1 == bp2.
+Ok, will fix if needed.  Thanks for the review!  Sorry for the stray patch!
+
 Allison
-
 > 
 > --D
 > 
->> +		}
+> 
 >> +
+>> +	return 0;
+>> +}
+>> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+>> index e108b37..12283cf 100644
+>> --- a/fs/xfs/libxfs/xfs_attr_leaf.h
+>> +++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+>> @@ -57,7 +57,9 @@ int	xfs_attr3_leaf_to_shortform(struct xfs_buf *bp,
+>>   				   struct xfs_da_args *args, int forkoff);
+>>   int	xfs_attr3_leaf_clearflag(struct xfs_da_args *args);
+>>   int	xfs_attr3_leaf_setflag(struct xfs_da_args *args);
+>> +int	xfs_attr3_leaf_flag_is_set(struct xfs_da_args *args, bool *isset);
+>>   int	xfs_attr3_leaf_flipflags(struct xfs_da_args *args);
+>> +int	xfs_attr3_leaf_flagsflipped(struct xfs_da_args *args, bool *isflipped);
 >>   
->>   		/*
->>   		 * It won't fit in the shortform, transform to a leaf block.
+>>   /*
+>>    * Routines used for growing the Btree.
 >> -- 
 >> 2.7.4
 >>
