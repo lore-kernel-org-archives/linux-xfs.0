@@ -7,69 +7,69 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 014AEC17443
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6B28C43331
 	for <linux-xfs@archiver.kernel.org>; Sun, 10 Nov 2019 06:24:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C5F4421848
+	by mail.kernel.org (Postfix) with ESMTP id 9147C21655
 	for <linux-xfs@archiver.kernel.org>; Sun, 10 Nov 2019 06:24:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="T1TR1Qot"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Mm34aqJ1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726616AbfKJGYX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1726622AbfKJGYX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Sun, 10 Nov 2019 01:24:23 -0500
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:27005 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726617AbfKJGYX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Nov 2019 01:24:23 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:34279 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726616AbfKJGYW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Nov 2019 01:24:22 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1573367062;
+        s=mimecast20190719; t=1573367061;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=RWbmGbS9+L9MjJOsSSpsRIfy/5WQewkESQU5Z4L2qxc=;
-        b=T1TR1Qotk+5LQHUBliuNBA+NK6tBirqxHnHaTTyyAx2WkeQAo+Z1WKqcAlgO6R/hLgW0hx
-        e1FYO5/aHtNhasOmn28JPE+rNh/woURNYMrRL0zqpP45Q//FJ+EmLuhsxx9QqxznSBo7yh
-        ChPurtjoiAD5uVjU64mNyL7FtUmJr/0=
-Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
- [209.85.221.69]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-124-RoecO8JIND6vkdwIUPhIHg-1; Sun, 10 Nov 2019 01:24:20 -0500
-Received: by mail-wr1-f69.google.com with SMTP id e10so4785630wrt.16
-        for <linux-xfs@vger.kernel.org>; Sat, 09 Nov 2019 22:24:20 -0800 (PST)
+        bh=6VZSvOOMeACPPyjdru8X5drSpAuZ1Mb2eJoydr9RjoM=;
+        b=Mm34aqJ1+v/VHGDr32hJuP9Jb+DYtUVzU9avOrwBfa08WZDE1vR690DZwRT0sVMZhCwVe+
+        6C9b5KbsoxpF3AIrcuVX/aekcUrIc6VUAktXIqTXrqPkvYlUsrQSm2vyjzDyvUPrIalMqa
+        S6CtT+r/UmaDRZbAQafYVaAsHj9QHj0=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-140-5ubTX9NkPXu_LaYawjMn8A-1; Sun, 10 Nov 2019 01:24:19 -0500
+Received: by mail-wr1-f72.google.com with SMTP id u2so7266068wrm.7
+        for <linux-xfs@vger.kernel.org>; Sat, 09 Nov 2019 22:24:19 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=qbomU26J/l3Zq8vd0tq9t+kpOvSH4i4HPdC7YqZtjn8=;
-        b=OSSz7ztGK3ZZazRBQSyw37rtqOq+d4+TjgL/oXpmAgjy1wvueTGfwQhHVyzqwMcAkw
-         GTZlmtcQSCYKUul7nKAbdX1/KCXRK5ZXrHViMCY3Xa/MCKXSTfnP8ccCpTQAO3GyWLoF
-         vuaminXDOxbZ2Yyw0yMrLWfWBjZhmDUerMGS3Zss1INZsqYJha1nahVlS/NTk96gbxle
-         dWj0pRo4GFkBTnIbY9iPv+PEZ6N6gG6yvhdOGdB8F9oxTxuL5w2SU+64TkEzTDWBhkhu
-         DqdVBEClBXQlZ0CbFe1REkngw2EOVt3frGcaqIP/EKTg8p5hTTVPPVN6xIqbYejUudTM
-         UtNw==
-X-Gm-Message-State: APjAAAUwX5x+kw55+QIb6hgzipMEnrW+ZdUaa4fL4clXyOqmBzF6Q8t0
-        4iPIhvg60D7wYnNLc2rpthOIfTg8C/koI+jXD1eQ8fjIRX+JSQ5SEGbjlAhnjJn5wrDTSAsdvWn
-        DzTK275QU4p4DXBOcLUZB
-X-Received: by 2002:a1c:a78b:: with SMTP id q133mr15104128wme.115.1573367059470;
-        Sat, 09 Nov 2019 22:24:19 -0800 (PST)
-X-Google-Smtp-Source: APXvYqwWFAz35U5bmfxr871Qsr3fS7rJ5bLQ3p1VbZUwOClZLk1NmYfXr6g5C0cF1Tgxx4WA2d14Sg==
-X-Received: by 2002:a1c:a78b:: with SMTP id q133mr15104119wme.115.1573367059306;
-        Sat, 09 Nov 2019 22:24:19 -0800 (PST)
-Received: from localhost.localdomain (243.206.broadband12.iol.cz. [90.179.206.243])
-        by smtp.gmail.com with ESMTPSA id b196sm16261618wmd.24.2019.11.09.22.24.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        bh=NVm+ENmku/F7kCvOdjvNMQb+oNsvB2wPkCvIHURHY/0=;
+        b=nQw7bIUs3zEVlL6EvkBWnYbSrNjiPJ7k0k3481rdgH/Esjf6XCcRgneQkMlGavtSQZ
+         jxhL3B2gNvfy+YI+3Hwmjket5aRRYLk7/w/Zl2N5hK91w/IbMPfNkzQbxTOxDiUTqaEd
+         sEbcEp3Apiu1vD1AcuBp1yyfXNXOs4C/mdT5gYv0/iPIwTM0byvYOWW4azO5+Ub09A+T
+         gC7U9I9SKyHxiWCAUDBHUzUUQcispiZ4xm8CeNi2qOIJrdhls6ovfB4YQ5kLh+25U4wj
+         7fdh+XDhrNDm6VhreBKIjg0gu0H8J4rn11J+pxbLG6FtSbj98OHzt6h/1p5F/51gpgsJ
+         qRxw==
+X-Gm-Message-State: APjAAAUYzf4+fisAvIWOjVx0WDQNhJlnwqbLyNMFetsr4vS2ZWXwM/AG
+        PE/Z7Q3Hczlj3vvBORGHg4+rJ/QFvOdd7V88p0dmE/eomBg/+FOVzDX4X6lHJCsjqlG4h2lNsOi
+        sKt+Jnf2NRLSGM4u01mkz
+X-Received: by 2002:a1c:2b82:: with SMTP id r124mr15383454wmr.112.1573367058606;
         Sat, 09 Nov 2019 22:24:18 -0800 (PST)
+X-Google-Smtp-Source: APXvYqzNvhGJ9BWe9ayPAoob773NTB0kv9/SKRyTF1U2VSt921UeeV5ZqVrgabUw2djuABBnRd6b/w==
+X-Received: by 2002:a1c:2b82:: with SMTP id r124mr15383442wmr.112.1573367058410;
+        Sat, 09 Nov 2019 22:24:18 -0800 (PST)
+Received: from localhost.localdomain (243.206.broadband12.iol.cz. [90.179.206.243])
+        by smtp.gmail.com with ESMTPSA id b196sm16261618wmd.24.2019.11.09.22.24.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 09 Nov 2019 22:24:17 -0800 (PST)
 From:   Pavel Reichl <preichl@redhat.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     Pavel Reichl <preichl@redhat.com>
-Subject: [PATCH v3 3/4] xfs: remove the xfs_dq_logitem_t typedef
-Date:   Sun, 10 Nov 2019 07:24:03 +0100
-Message-Id: <20191110062404.948433-4-preichl@redhat.com>
+Subject: [PATCH v3 2/4] xfs: remove the xfs_quotainfo_t typedef
+Date:   Sun, 10 Nov 2019 07:24:02 +0100
+Message-Id: <20191110062404.948433-3-preichl@redhat.com>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191110062404.948433-1-preichl@redhat.com>
 References: <20191110062404.948433-1-preichl@redhat.com>
 MIME-Version: 1.0
-X-MC-Unique: RoecO8JIND6vkdwIUPhIHg-1
+X-MC-Unique: 5ubTX9NkPXu_LaYawjMn8A-1
 X-Mimecast-Spam-Score: 0
 Content-Type: text/plain; charset=WINDOWS-1252
 Content-Transfer-Encoding: quoted-printable
@@ -80,58 +80,110 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 Signed-off-by: Pavel Reichl <preichl@redhat.com>
 ---
- fs/xfs/xfs_dquot.c      |  2 +-
- fs/xfs/xfs_dquot.h      |  2 +-
- fs/xfs/xfs_dquot_item.h | 10 +++++-----
- 3 files changed, 7 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_qm.c          | 20 ++++++++++----------
+ fs/xfs/xfs_qm.h          |  6 +++---
+ fs/xfs/xfs_trans_dquot.c |  2 +-
+ 3 files changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 5b089afd7087..4df8ffb9906f 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -1018,7 +1018,7 @@ xfs_qm_dqflush_done(
- =09struct xfs_buf=09=09*bp,
- =09struct xfs_log_item=09*lip)
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 035930a4f0dd..64a944296fda 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -30,10 +30,10 @@
+  * quota functionality, including maintaining the freelist and hash
+  * tables of dquots.
+  */
+-STATIC int=09xfs_qm_init_quotainos(xfs_mount_t *);
+-STATIC int=09xfs_qm_init_quotainfo(xfs_mount_t *);
++STATIC int=09xfs_qm_init_quotainos(struct xfs_mount *mp);
++STATIC int=09xfs_qm_init_quotainfo(struct xfs_mount *mp);
+=20
+-STATIC void=09xfs_qm_destroy_quotainos(xfs_quotainfo_t *qi);
++STATIC void=09xfs_qm_destroy_quotainos(struct xfs_quotainfo *qi);
+ STATIC void=09xfs_qm_dqfree_one(struct xfs_dquot *dqp);
+ /*
+  * We use the batch lookup interface to iterate over the dquots as it
+@@ -540,9 +540,9 @@ xfs_qm_shrink_count(
+=20
+ STATIC void
+ xfs_qm_set_defquota(
+-=09xfs_mount_t=09*mp,
+-=09uint=09=09type,
+-=09xfs_quotainfo_t=09*qinf)
++=09struct xfs_mount=09*mp,
++=09uint=09=09=09type,
++=09struct xfs_quotainfo=09*qinf)
  {
--=09xfs_dq_logitem_t=09*qip =3D (struct xfs_dq_logitem *)lip;
-+=09struct xfs_dq_logitem=09*qip =3D (struct xfs_dq_logitem *)lip;
- =09struct xfs_dquot=09*dqp =3D qip->qli_dquot;
- =09struct xfs_ail=09=09*ailp =3D lip->li_ailp;
+ =09struct xfs_dquot=09*dqp;
+ =09struct xfs_def_quota=09*defq;
+@@ -643,7 +643,7 @@ xfs_qm_init_quotainfo(
 =20
-diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
-index f1614d7c72f8..5743987f6c92 100644
---- a/fs/xfs/xfs_dquot.h
-+++ b/fs/xfs/xfs_dquot.h
-@@ -49,7 +49,7 @@ struct xfs_dquot {
- =09/* actual usage & quotas */
- =09struct xfs_disk_dquot=09q_core;
- =09/* dquot log item */
--=09xfs_dq_logitem_t=09q_logitem;
-+=09struct xfs_dq_logitem=09q_logitem;
- =09/* total regular nblks used+reserved */
- =09xfs_qcnt_t=09=09q_res_bcount;
- =09/* total inos allocd+reserved */
-diff --git a/fs/xfs/xfs_dquot_item.h b/fs/xfs/xfs_dquot_item.h
-index 1aed34ccdabc..3a64a7fd3b8a 100644
---- a/fs/xfs/xfs_dquot_item.h
-+++ b/fs/xfs/xfs_dquot_item.h
-@@ -11,11 +11,11 @@ struct xfs_trans;
- struct xfs_mount;
- struct xfs_qoff_logitem;
+ =09ASSERT(XFS_IS_QUOTA_RUNNING(mp));
 =20
--typedef struct xfs_dq_logitem {
--=09struct xfs_log_item=09 qli_item;=09   /* common portion */
--=09struct xfs_dquot=09*qli_dquot;=09   /* dquot ptr */
--=09xfs_lsn_t=09=09 qli_flush_lsn;=09   /* lsn at last flush */
--} xfs_dq_logitem_t;
-+struct xfs_dq_logitem {
-+=09struct xfs_log_item=09 qli_item;=09/* common portion */
-+=09struct xfs_dquot=09*qli_dquot;=09/* dquot ptr */
-+=09xfs_lsn_t=09=09 qli_flush_lsn;=09/* lsn at last flush */
+-=09qinf =3D mp->m_quotainfo =3D kmem_zalloc(sizeof(xfs_quotainfo_t), 0);
++=09qinf =3D mp->m_quotainfo =3D kmem_zalloc(sizeof(struct xfs_quotainfo), =
+0);
+=20
+ =09error =3D list_lru_init(&qinf->qi_lru);
+ =09if (error)
+@@ -710,9 +710,9 @@ xfs_qm_init_quotainfo(
+  */
+ void
+ xfs_qm_destroy_quotainfo(
+-=09xfs_mount_t=09*mp)
++=09struct xfs_mount=09*mp)
+ {
+-=09xfs_quotainfo_t *qi;
++=09struct xfs_quotainfo=09*qi;
+=20
+ =09qi =3D mp->m_quotainfo;
+ =09ASSERT(qi !=3D NULL);
+@@ -1568,7 +1568,7 @@ xfs_qm_init_quotainos(
+=20
+ STATIC void
+ xfs_qm_destroy_quotainos(
+-=09xfs_quotainfo_t=09*qi)
++=09struct xfs_quotainfo=09*qi)
+ {
+ =09if (qi->qi_uquotaip) {
+ =09=09xfs_irele(qi->qi_uquotaip);
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index b41b75089548..7823af39008b 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -54,7 +54,7 @@ struct xfs_def_quota {
+  * Various quota information for individual filesystems.
+  * The mount structure keeps a pointer to this.
+  */
+-typedef struct xfs_quotainfo {
++struct xfs_quotainfo {
+ =09struct radix_tree_root qi_uquota_tree;
+ =09struct radix_tree_root qi_gquota_tree;
+ =09struct radix_tree_root qi_pquota_tree;
+@@ -76,8 +76,8 @@ typedef struct xfs_quotainfo {
+ =09struct xfs_def_quota=09qi_usr_default;
+ =09struct xfs_def_quota=09qi_grp_default;
+ =09struct xfs_def_quota=09qi_prj_default;
+-=09struct shrinker  qi_shrinker;
+-} xfs_quotainfo_t;
++=09struct shrinker=09qi_shrinker;
 +};
 =20
- typedef struct xfs_qoff_logitem {
- =09struct xfs_log_item=09 qql_item;=09/* common portion */
+ static inline struct radix_tree_root *
+ xfs_dquot_tree(
+diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+index 0b7f6f228662..d319347093d6 100644
+--- a/fs/xfs/xfs_trans_dquot.c
++++ b/fs/xfs/xfs_trans_dquot.c
+@@ -585,7 +585,7 @@ xfs_trans_dqresv(
+ =09xfs_qwarncnt_t=09=09warnlimit;
+ =09xfs_qcnt_t=09=09total_count;
+ =09xfs_qcnt_t=09=09*resbcountp;
+-=09xfs_quotainfo_t=09=09*q =3D mp->m_quotainfo;
++=09struct xfs_quotainfo=09*q =3D mp->m_quotainfo;
+ =09struct xfs_def_quota=09*defq;
+=20
+=20
 --=20
 2.23.0
 
