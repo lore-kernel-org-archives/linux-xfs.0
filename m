@@ -2,162 +2,107 @@ Return-Path: <SRS0=wiGc=ZD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69945C43331
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Nov 2019 16:37:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FBBBC43331
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Nov 2019 17:27:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 44F0F20679
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Nov 2019 16:37:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 721842173B
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Nov 2019 17:27:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1573493261;
+	bh=P2LkTSuFNlz7ftbVPIs9n1cLmNLd5du1j4yvz0vZ/HM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=RSgO5iDmHCGzP5WYKLTSlnt2MpA9WMMPGlHMxq56f9HS7Eh3A62HSNpk+h/ygevHT
+	 wQwgLVoMt1Fl5zkJimY/MKD2Foye6g4W75XQQPbejFkg3smkzqbajHY1Ztue8xmNEz
+	 CJk50vWe1pevOY3Oq5Q/O0MOtchnnn/BOl0zTTN8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726910AbfKKQhI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Nov 2019 11:37:08 -0500
-Received: from sandeen.net ([63.231.237.45]:35058 "EHLO sandeen.net"
+        id S1727016AbfKKR1k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Nov 2019 12:27:40 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33786 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726902AbfKKQhI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 11 Nov 2019 11:37:08 -0500
-Received: from Liberator-6.local (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1726763AbfKKR1k (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 11 Nov 2019 12:27:40 -0500
+Received: from gmail.com (unknown [104.132.1.77])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 890595A0B3
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Nov 2019 10:35:53 -0600 (CST)
-To:     linux-xfs <linux-xfs@vger.kernel.org>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs master updated to 0f6bd6e / v5.3.0-rc2
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <dc61cf74-24e6-38d2-b099-4c78e19da0c2@sandeen.net>
-Date:   Mon, 11 Nov 2019 10:37:06 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.2.2
+        by mail.kernel.org (Postfix) with ESMTPSA id BABE520856;
+        Mon, 11 Nov 2019 17:27:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1573493259;
+        bh=P2LkTSuFNlz7ftbVPIs9n1cLmNLd5du1j4yvz0vZ/HM=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Xoj2pc9uwTRoJlmd0UubipQHS2r+pGYfIBanY++BkZunv2uzszVcA3Q1hGU2TsCrD
+         +JgRwpD2MI+apIgSBuxC1YsIX3K2LOPE9pRm5rPp+NlMby7mWdC4Le0yV3zoKuz+3B
+         5eAvn1vWW1grEwboYZj/bJk2HHNOusbZnPuuGLDQ=
+Date:   Mon, 11 Nov 2019 09:27:38 -0800
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     Eric Sandeen <sandeen@redhat.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs_io: fix memory leak in add_enckey
+Message-ID: <20191111172737.GB56300@gmail.com>
+Mail-Followup-To: Eric Sandeen <sandeen@sandeen.net>,
+        Eric Sandeen <sandeen@redhat.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+References: <4eb1073f-91fb-a4bc-aae8-d54dc5a6b8aa@redhat.com>
+ <20191107214606.GA1160@google.com>
+ <2b089dfc-8961-742d-2bab-9b5b471dc26f@sandeen.net>
+ <a142f525-c45f-c245-58ad-879f94a636cb@sandeen.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="eA8kXL8ciT7FK0NZkVhum1whhqMCiRk1T"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a142f525-c45f-c245-58ad-879f94a636cb@sandeen.net>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---eA8kXL8ciT7FK0NZkVhum1whhqMCiRk1T
-Content-Type: multipart/mixed; boundary="QSP4aEBfcA3VCbMS9rLC8sdUXROWAta1g"
+On Mon, Nov 11, 2019 at 09:13:45AM -0600, Eric Sandeen wrote:
+> On 11/7/19 3:58 PM, Eric Sandeen wrote:
+> > On 11/7/19 3:46 PM, Eric Biggers wrote:
+> >> On Thu, Nov 07, 2019 at 10:50:59AM -0600, Eric Sandeen wrote:
+> >>> Invalid arguments to add_enckey will leak the "arg" allocation,
+> >>> so fix that.
+> >>>
+> >>> Fixes: ba71de04 ("xfs_io/encrypt: add 'add_enckey' command")
+> >>> Fixes-coverity-id: 1454644
+> >>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> >>> ---
+> >>>
+> >>> diff --git a/io/encrypt.c b/io/encrypt.c
+> >>> index 17d61cfb..c6a4e190 100644
+> >>> --- a/io/encrypt.c
+> >>> +++ b/io/encrypt.c
+> >>> @@ -696,6 +696,7 @@ add_enckey_f(int argc, char **argv)
+> >>>  				goto out;
+> >>>  			break;
+> >>>  		default:
+> >>> +			free(arg);
+> >>>  			return command_usage(&add_enckey_cmd);
+> >>>  		}
+> >>>  	}
+> >>>
+> >>
+> >> The same leak happens later in the function too.  How about this instead:
+> > 
+> > whoops yes it does.  I kind of hate "retval = command_usage" but seeing the
+> > memset of the key on the way out it's probably prudent to have one common
+> > exit point after the function gets started.
+> > 
+> > Care to send this as a formal patch?
+> 
+> <interprets silence as a "no"> ;)
+> 
+> I'll just incorporate your fixes as an addendum to my patch, then.
+> 
+> -Eric
 
---QSP4aEBfcA3VCbMS9rLC8sdUXROWAta1g
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+Sorry, I didn't receive this because I was dropped from Cc, and I'm not
+currently subscribed to linux-xfs.  The patch you committed looks fine, thanks.
 
-Hi folks,
-
-The xfsprogs repository at:
-
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-The new head of the master branch is commit:
-
-0f6bd6e xfsprogs: Release v5.3.0-rc2
-
-If the stars align, this will be release v5.3.0 at long last.
-If you have anything missing & semi-urgent, or spot any new problems,
-please let me know by the end of this week.
-
-Thanks,
--Eric
-
-New Commits:
-
-Darrick J. Wong (1):
-      [c3387fb] xfs_scrub: fix complaint about uninitialized ret
-
-Eric Sandeen (2):
-      [4aaa3af] xfs_io: fix memory leak in add_enckey
-      [0f6bd6e] xfsprogs: Release v5.3.0-rc2
-
-
-Code Diffstat:
-
- VERSION           |  2 +-
- configure.ac      |  2 +-
- debian/changelog  |  6 ++++++
- doc/CHANGES       | 17 ++++++++++++++++-
- io/encrypt.c      | 12 ++++++++----
- scrub/xfs_scrub.c |  2 +-
- 6 files changed, 33 insertions(+), 8 deletions(-)
-
-
---QSP4aEBfcA3VCbMS9rLC8sdUXROWAta1g--
-
---eA8kXL8ciT7FK0NZkVhum1whhqMCiRk1T
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl3JjjMACgkQIK4WkuE9
-3uChNw/7B76zuvaiIWNmtOvlkFIYbn/JYioHzDjDBJnC0eLudBi5SC9xOjTuNb9c
-p2u80gVfPzZ9roLYPKZscsGzK7rfwUZc6EPfRP865KCICjrL35b+k45F1n7lMAbg
-wPvXxSziGXiIWGuktSi7kpFs0RiPCcvUjCRTYXAA6Vh+oVnEhgyh6OhB6jtbxI2A
-MLR9jyzlWAVs8qazilLzVgSCzgfkID9vAB207w7Zu+WSc1LE/iy+UX5F1GTBeld+
-YKkJ6kXuHvddpewqWdl34pPMXQUHkBWM7tmbQrTgXdUJjeITENzcHV/pcb9NVoEn
-QMVbKJ0Zb2QZI7UM6yYWo/YDFOtWuU2Xc2BohYA47ScF3QNzlGRtFPVO3pOX8cMk
-+cpBlls0iCyFMbNHKD7YLgVznrUgMs9t4BtYaeTEfLPBP8zvCMoO2erAm6uZZaGm
-7T96qzILHoIROfq9PYINJZCyQYDNpeo1q3eiWlS8Cx2Zyq0DwGqZrg2qGcNP2Yo9
-ZkIDi3W0Ncbz5BVFpnbd/SIrvyd/1NLf7Hr6PgDgh1ImXqdh91PXJ/PoxzSLwieq
-lgxuGqFRnbDyK564kKPYnETvN6Mvtmui2cSD+nsnVcCJNDxmYjHmhPA4sne4tRS5
-aqLacFg5sBGNntazAKTeh4oe2Q/Jo34NfKVv0thoPVbjlsyn4ls=
-=GqKr
------END PGP SIGNATURE-----
-
---eA8kXL8ciT7FK0NZkVhum1whhqMCiRk1T--
+- Eric
