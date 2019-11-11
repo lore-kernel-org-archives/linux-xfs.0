@@ -2,75 +2,73 @@ Return-Path: <SRS0=wiGc=ZD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 441B1C43331
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Nov 2019 01:18:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DD94C43331
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Nov 2019 01:18:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 18D3B206DF
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Nov 2019 01:18:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E2C2E206DF
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Nov 2019 01:18:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="gifH3lhU"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="aoUYpey7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726734AbfKKBSv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 10 Nov 2019 20:18:51 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:45434 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726275AbfKKBSv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Nov 2019 20:18:51 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAB1IeUJ117231;
-        Mon, 11 Nov 2019 01:18:40 GMT
+        id S1726742AbfKKBSx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 10 Nov 2019 20:18:53 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:59360 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726733AbfKKBSx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Nov 2019 20:18:53 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAB1Ic85103122;
+        Mon, 11 Nov 2019 01:18:41 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=JvOGjkHvnZHGZd3uwCy5qN+1lypDHLePCE8ExBJ9cG8=;
- b=gifH3lhUfx/cRWB23JNw5xb5EwGEExbCtvJWSsLAWMLHy3dxAzNdsKN2b9sEom6zBACZ
- +uzg/DV5HSz7+MJ82uD2vMMxoFN3KeSpm3DQvV81ThRTgwG0qIsgQVw3TcdeCtgewHko
- g5ZsOeMHrhcwt0qkD9Wm1As0XtnELtSk2jUEli7RV603M8T0FTB5B6N14e+gYTr/Ithf
- yi/E6jqQeAJy13URM9UUd6BiEddMq8Z3JEu7TY0KUbCdWw8JBk7mO5l5gDqPRuoNlbp6
- b9Sfo4SwYZk807/rkVAO6e8vYojN4MRh9EdzoNe+APUEI31U5G+sqizDTDEFl6PxlHrd ww== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2w5mvtc66m-1
+ cc : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=corp-2019-08-05;
+ bh=vGtoWxXd0KYZ89mZHOD7iLqzkOQPS7tCOHO6tGgOOzY=;
+ b=aoUYpey7aQi3iuZbUmNqruu1fB1yi6sNAuQiE4IB+53mPlSqSn35qIwgGJ8iFf+Glc/s
+ 8PR+URX1TiLKRLT7yZiyV0LxeecIX9aRVLNroEuvRlC2Mpf9wqwm8RLPuycAY9NmrPyM
+ BWo2IGvJ32ePdDG0F/AmFwMQ0LFiN4rbkB9j/QXSfwaGzwAj2/oLG0UJVkf0JgUcVOZc
+ P9oe2GILOZzAnpFJfhhw0Cwz5FE98/aeaFrb/Ly3RKwMZ9CSnewi0mri4TcfjB1HCPnZ
+ fOfywg0DSmjO71oHF8RKIJpCtQDCN19Inqsfv5MtlCYO2ciJVXMhcETEvLC6v0MgxMKh Jg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 2w5ndpv4kb-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 11 Nov 2019 01:18:40 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAB1IbAO091617;
-        Mon, 11 Nov 2019 01:18:39 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 2w66ytmft6-1
+        Mon, 11 Nov 2019 01:18:41 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAB1IdQ3014901;
+        Mon, 11 Nov 2019 01:18:40 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 2w66wjehgw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 11 Nov 2019 01:18:38 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xAB1IZYG021854;
-        Mon, 11 Nov 2019 01:18:35 GMT
+        Mon, 11 Nov 2019 01:18:39 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xAB1HrPI029126;
+        Mon, 11 Nov 2019 01:17:53 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sun, 10 Nov 2019 17:18:35 -0800
-Subject: [PATCH 3/3] xfs: attach dquots before performing xfs_swap_extents
+        with ESMTP ; Sun, 10 Nov 2019 17:17:53 -0800
+Subject: [PATCH v4 0/3] xfs: refactor corruption returns
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
-Date:   Sun, 10 Nov 2019 17:18:34 -0800
-Message-ID: <157343511427.1948946.2692071497822316839.stgit@magnolia>
-In-Reply-To: <157343509505.1948946.5379830250503479422.stgit@magnolia>
-References: <157343509505.1948946.5379830250503479422.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, hch@infradead.org, david@fromorbit.org
+Date:   Sun, 10 Nov 2019 17:17:51 -0800
+Message-ID: <157343507145.1945685.2940312466469213044.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9437 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=844
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=600
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1910280000 definitions=main-1911110009
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9437 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=915 adultscore=0
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=691 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
  definitions=main-1911110009
 Sender: linux-xfs-owner@vger.kernel.org
@@ -78,36 +76,23 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi all,
 
-Make sure we attach dquots to both inodes before swapping their extents.
-This was found via manual code inspection by looking for places where we
-could call xfs_trans_mod_dquot without dquots attached to inodes, and
-confirmed by instrumenting the kernel and running xfs/328.
+This series refactors the code that XFS uses to determine that it is
+dealing with corrupt metadata and report that to userspace.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_bmap_util.c |    8 ++++++++
- 1 file changed, 8 insertions(+)
+The first patch defines some a couple of new macros to handle testing
+and reporting corruption errors.
 
+The next patch replaces the XFS_WANT_CORRUPT* macros with open-coded
+versions because it's a little strange that a thing that looks like a
+simple function call actually has series effects on code flow.
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 9d731b71e84f..2efd78a9719e 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1569,6 +1569,14 @@ xfs_swap_extents(
- 		goto out_unlock;
- 	}
- 
-+	error = xfs_qm_dqattach(ip);
-+	if (error)
-+		goto out_unlock;
-+
-+	error = xfs_qm_dqattach(tip);
-+	if (error)
-+		goto out_unlock;
-+
- 	error = xfs_swap_extent_flush(ip);
- 	if (error)
- 		goto out_unlock;
+The third patch cleans up all the "if (bad) { XFS_ERROR_REPORT..." code
+by combining that into a single XFS_IS_CORRUPT macro that does all that
+logging.  This cleans up the error handling code blocks some more.
 
+This has been lightly tested with fstests.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
