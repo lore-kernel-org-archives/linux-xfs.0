@@ -7,58 +7,58 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9CDCC17443
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Nov 2019 01:18:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60D9AC17442
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Nov 2019 01:18:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BEB002080F
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Nov 2019 01:18:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 340FE206DF
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Nov 2019 01:18:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ie+WnWyB"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="HO6R+fYN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726749AbfKKBSz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1726733AbfKKBSz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Sun, 10 Nov 2019 20:18:55 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:59400 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:59410 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726733AbfKKBSz (ORCPT
+        with ESMTP id S1726754AbfKKBSz (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Nov 2019 20:18:55 -0500
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAB1IfUS103186;
-        Mon, 11 Nov 2019 01:18:41 GMT
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAB1IiEm103226;
+        Mon, 11 Nov 2019 01:18:44 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=g68DiiaT8O1lk4xUYpV3oDNMtp6Zx6+SjwS6WBflA5Q=;
- b=ie+WnWyBqtBBhhu28/CORuDZ10xNoMYvspQFGsk00414BVtBHz3nftTjbA1JDHKMeYJH
- 2bCWH1twSwW0OK6bY5lr/k+9ZeoHBfmKVCpEH4iv84yEC6JPCLgcxdEsyFBXkWxuFt5G
- ADl7vsMNc+BcwpzlQO3Y343WrcXMuRmFLXuLwTAEnq4SLgO6metxL94ozKBozRu8x5AU
- H4n4K7tvFIEC1AZG8SZliH8QqCLzSo0izDXao53rNAZRSHQu/Iq2tfXLPmB4mDnrkDI3
- kN1nGihcWRDi1zA0LNu3kGAdcDe6n1l3zAT7iEyn//MoN4yOcD9x9JyMqHCDUV+hXUC5 kA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2w5ndpv4k9-1
+ bh=fBujiqu+jwuO9yexsQFo3y7VVEXDIVXsWhYM4m4kdQM=;
+ b=HO6R+fYNPDfjTOQIk05B0lqeAIw1hpYOxyp+yZExasecpg+8gCNmZHXJfybjU5h2OyBo
+ 3tlA5B2OL2R64PWaekZqP1jYkEFW2SDzDkirXcmkYPj0367usxWrWEB1ywnY/ZDvdRUC
+ h5rhqbHSUbbWgEghEWIzWH/Lxkc3GiTm3DwZaCwZD+pabZYJvzO39D9aPdB2votB99Ld
+ L0kLbjCPUBrTfeABLKdd5GRxbUH0cgPbhlqxZ8RV+nR9U0HN6IHWiC3UxJSPDNf+pU6M
+ zSBlMdP/DeQjCcAN/dRAxFiGNAaqpuMK43dqafz0IRNQwFqgUVuvXqZLmoiqHUwnpzV6 MA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2w5ndpv4kr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 11 Nov 2019 01:18:44 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAB1IcxO111929;
+        Mon, 11 Nov 2019 01:18:43 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 2w67kjbvb4-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
         Mon, 11 Nov 2019 01:18:41 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAB1IdKV014910;
-        Mon, 11 Nov 2019 01:18:40 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2w66wjehmb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 11 Nov 2019 01:18:40 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xAB1IMGe017557;
-        Mon, 11 Nov 2019 01:18:23 GMT
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xAB1HxCf017447;
+        Mon, 11 Nov 2019 01:18:00 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sun, 10 Nov 2019 17:18:22 -0800
-Subject: [PATCH 1/3] xfs: actually check xfs_btree_check_block return in
- xfs_btree_islastblock
+        with ESMTP ; Mon, 11 Nov 2019 01:17:59 +0000
+Subject: [PATCH 1/3] xfs: add a if_xfs_meta_bad macro for testing and
+ logging bad metadata
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
-Date:   Sun, 10 Nov 2019 17:18:21 -0800
-Message-ID: <157343510150.1948946.270237649955385275.stgit@magnolia>
-In-Reply-To: <157343509505.1948946.5379830250503479422.stgit@magnolia>
-References: <157343509505.1948946.5379830250503479422.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, hch@infradead.org, david@fromorbit.org
+Date:   Sun, 10 Nov 2019 17:17:58 -0800
+Message-ID: <157343507829.1945685.13191379852906635565.stgit@magnolia>
+In-Reply-To: <157343507145.1945685.2940312466469213044.stgit@magnolia>
+References: <157343507145.1945685.2940312466469213044.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -81,92 +81,55 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Coverity points out that xfs_btree_islastblock doesn't check the return
-value of xfs_btree_check_block.  Since the question "Does the cursor
-point to the last block in this level?" only makes sense if the caller
-previously performed a lookup or seek operation, the block should
-already have been checked.
+Add a new macro, if_xfs_meta_bad, which we will use to integrate some
+corruption reporting when the corruption test expression is true.  This
+will be used in the next patch to remove the ugly XFS_WANT_CORRUPT*
+macros.
 
-Therefore, check the return value in an ASSERT and turn the whole thing
-into a static inline predicate.
-
-Coverity-id: 114069
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_btree.c |   19 -------------------
- fs/xfs/libxfs/xfs_btree.h |   25 +++++++++++++++++--------
- 2 files changed, 17 insertions(+), 27 deletions(-)
+ fs/xfs/xfs_linux.h |   16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index feab5b307c45..3d48878ab298 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -714,25 +714,6 @@ xfs_btree_get_bufs(
- 	return xfs_trans_get_buf(tp, mp->m_ddev_targp, d, mp->m_bsize, 0);
- }
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 2271db4e8d66..d0fb1e612c42 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -229,6 +229,10 @@ int xfs_rw_bdev(struct block_device *bdev, sector_t sector, unsigned int count,
+ #define ASSERT(expr)	\
+ 	(likely(expr) ? (void)0 : assfail(NULL, #expr, __FILE__, __LINE__))
  
--/*
-- * Check for the cursor referring to the last block at the given level.
-- */
--int					/* 1=is last block, 0=not last block */
--xfs_btree_islastblock(
--	xfs_btree_cur_t		*cur,	/* btree cursor */
--	int			level)	/* level to check */
--{
--	struct xfs_btree_block	*block;	/* generic btree block pointer */
--	xfs_buf_t		*bp;	/* buffer containing block */
--
--	block = xfs_btree_get_block(cur, level, &bp);
--	xfs_btree_check_block(cur, block, level, bp);
--	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
--		return block->bb_u.l.bb_rightsib == cpu_to_be64(NULLFSBLOCK);
--	else
--		return block->bb_u.s.bb_rightsib == cpu_to_be32(NULLAGBLOCK);
--}
--
- /*
-  * Change the cursor to point to the first record at the given level.
-  * Other levels are unaffected.
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index 6670120cd690..fb9b2121c628 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -317,14 +317,6 @@ xfs_btree_get_bufs(
- 	xfs_agnumber_t		agno,	/* allocation group number */
- 	xfs_agblock_t		agbno);	/* allocation group block number */
++#define xfs_meta_bad(mp, expr)	\
++	(unlikely(expr) ? assfail((mp), #expr, __FILE__, __LINE__), \
++			  true : false)
++
+ #else	/* !DEBUG */
  
--/*
-- * Check for the cursor referring to the last block at the given level.
-- */
--int					/* 1=is last block, 0=not last block */
--xfs_btree_islastblock(
--	xfs_btree_cur_t		*cur,	/* btree cursor */
--	int			level);	/* level to check */
--
- /*
-  * Compute first and last byte offsets for the fields given.
-  * Interprets the offsets table, which contains struct field offsets.
-@@ -524,4 +516,21 @@ int xfs_btree_has_record(struct xfs_btree_cur *cur, union xfs_btree_irec *low,
- 		union xfs_btree_irec *high, bool *exists);
- bool xfs_btree_has_more_records(struct xfs_btree_cur *cur);
+ #ifdef XFS_WARN
+@@ -236,13 +240,23 @@ int xfs_rw_bdev(struct block_device *bdev, sector_t sector, unsigned int count,
+ #define ASSERT(expr)	\
+ 	(likely(expr) ? (void)0 : asswarn(NULL, #expr, __FILE__, __LINE__))
  
-+/* Does this cursor point to the last block in the given level? */
-+static inline bool
-+xfs_btree_islastblock(
-+	xfs_btree_cur_t		*cur,
-+	int			level)
-+{
-+	struct xfs_btree_block	*block;
-+	struct xfs_buf		*bp;
++#define xfs_meta_bad(mp, expr)	\
++	(unlikely(expr) ? asswarn((mp), #expr, __FILE__, __LINE__), \
++			  true : false)
 +
-+	block = xfs_btree_get_block(cur, level, &bp);
-+	ASSERT(block && xfs_btree_check_block(cur, block, level, bp) == 0);
+ #else	/* !DEBUG && !XFS_WARN */
+ 
+-#define ASSERT(expr)	((void)0)
++#define ASSERT(expr)		((void)0)
 +
-+	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
-+		return block->bb_u.l.bb_rightsib == cpu_to_be64(NULLFSBLOCK);
-+	return block->bb_u.s.bb_rightsib == cpu_to_be32(NULLAGBLOCK);
-+}
++#define xfs_meta_bad(mp, expr)	\
++	(unlikely(expr) ? XFS_ERROR_REPORT(#expr, XFS_ERRLEVEL_LOW, (mp)), \
++			  true : false)
+ 
+ #endif /* XFS_WARN */
+ #endif /* DEBUG */
+ 
++#define if_xfs_meta_bad(mp, expr)	if (xfs_meta_bad((mp), (expr)))
 +
- #endif	/* __XFS_BTREE_H__ */
+ #define STATIC static noinline
+ 
+ #ifdef CONFIG_XFS_RT
 
