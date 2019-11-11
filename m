@@ -4,660 +4,409 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CF4AC43331
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Nov 2019 22:35:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68F07C43331
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Nov 2019 23:34:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E270420659
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Nov 2019 22:35:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E35521925
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Nov 2019 23:34:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="f5NFMCrM"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="iz6U7L2S"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726877AbfKKWfQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Nov 2019 17:35:16 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:49952 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726845AbfKKWfQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Nov 2019 17:35:16 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xABMJtd3054378;
-        Mon, 11 Nov 2019 22:35:12 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=N50Il/acSP9YmpLuSWEJmpXkc9+yGwM15xelMos58Ug=;
- b=f5NFMCrMncaqNiiX9Q/Hdzg2Tsteu+iZIDMG9x5W456aWJAVPS/hVLIOq6PnrOgZjfQB
- BvRwUto28k6bcOBMcrXgFhZySCAPg2y3/mJ0mjLyixuG7tReRo9HeJlfCgGq+0TkX+ww
- glV2tSjxdOaaHuxhSnkdGNzn9PJMiRAmLzW0UKH7ZBCrEeOTwlMbM8uWlgh5jYSUArHV
- i4iGUmlb75Ec8KHBkSz5k7tld/f2fmqKSWvLtIfQXLba0+h3I6EeWPUFSqYWoEKj2/88
- 5Q/PriIyW7ow4zd+n4zkiwh41WafgLoz/YWGlOa1O0b1skqigOVO6gqsnO51mQuxZhCB bg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2w5p3qh1rn-1
+        id S1727050AbfKKXel (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Nov 2019 18:34:41 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:58548 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726845AbfKKXel (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Nov 2019 18:34:41 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xABNIwkh110707;
+        Mon, 11 Nov 2019 23:34:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2019-08-05;
+ bh=/rnEbTzbzcFJ5ojCtqqsoY62Byus9XH8XXUVvmX31wA=;
+ b=iz6U7L2ScFBfCvkrlSCzsTOU5aWIywbpTfBicCJ39o8uhpyyFGY3K4kkrZvqLEhRPkA+
+ POyxd0AgpYgFoa4xssHuYXMNdqQ93xCtm6lyG0OdHzzkH4RrccQUWeelPvzBZCWTevJ6
+ j9vmVTb2eVxfB/poCY6/uedFr4Reg2xu1zoskUV15wWpHrhX1YA+imNpdty3gvyGY8lr
+ 6CTnW46jvQal7LtcmDaIySFfRT5uH7zlTZStAAscd5RXWa1oGSazFjnbe8cB5bAmRMTn
+ Yg+tLjC/sGWbbxHujUihYlZCbWy6iuAH4vaNYKmr0T4m4wFt2yRpYHzo3SV9UBJdruPH Hg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2w5ndq1969-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 11 Nov 2019 22:35:11 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xABMI1Pl081959;
-        Mon, 11 Nov 2019 22:35:11 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 2w6r8k7d42-1
+        Mon, 11 Nov 2019 23:34:38 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xABNIjHx100456;
+        Mon, 11 Nov 2019 23:34:37 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 2w67011mbm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 11 Nov 2019 22:35:11 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xABMZ9Qb003784;
-        Mon, 11 Nov 2019 22:35:10 GMT
-Received: from localhost (/67.169.218.210)
+        Mon, 11 Nov 2019 23:34:37 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xABNYaIY003901;
+        Mon, 11 Nov 2019 23:34:36 GMT
+Received: from [192.168.1.9] (/67.1.205.161)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 11 Nov 2019 14:35:09 -0800
-Date:   Mon, 11 Nov 2019 14:35:08 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Amir Goldstein <amir73il@gmail.com>
+        with ESMTP ; Mon, 11 Nov 2019 15:34:35 -0800
+Subject: Re: [PATCH v4 05/17] xfs: Add xfs_has_attr and subroutines
+To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [RFC][PATCH] xfs: extended timestamp range
-Message-ID: <20191111223508.GS6219@magnolia>
-References: <20191111213630.14680-1-amir73il@gmail.com>
+References: <20191107012801.22863-1-allison.henderson@oracle.com>
+ <20191107012801.22863-6-allison.henderson@oracle.com>
+ <20191111174050.GC46312@bfoster>
+From:   Allison Collins <allison.henderson@oracle.com>
+Message-ID: <088c755a-23bd-f683-813f-d72ff99b64f4@oracle.com>
+Date:   Mon, 11 Nov 2019 16:34:34 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191111213630.14680-1-amir73il@gmail.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <20191111174050.GC46312@bfoster>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9438 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1910280000 definitions=main-1911110191
+ engine=8.0.1-1910280000 definitions=main-1911110199
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9438 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
- definitions=main-1911110191
+ definitions=main-1911110199
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 11, 2019 at 11:36:30PM +0200, Amir Goldstein wrote:
-> Use similar on-disk encoding for timestamps as ext4 to push back
-> the y2038 deadline to 2446.
-> 
-> The encoding uses the 2 free MSB in 32bit nsec field to extend the
-> seconds field storage size to 34bit.
-> 
-> Those 2 bits should be zero on existing xfs inodes, so the extended
-> timestamp range feature is declared read-only compatible with old
-> on-disk format.
 
-What do you think about making the timestamp field a uint64_t counting
-nanoseconds since Dec 14 09:15:53 UTC 1901 (a.k.a. the minimum datetime
-we support with the existing encoding scheme)?  Instead of using the
-upper 2 bits of the nsec field for an epoch encoding, which ext4 screwed
-up years ago and has not fully fixed?
 
-Also, please change struct xfs_inode.i_crtime to a timespec64 to match
-the other three timestamps in struct inode...
+On 11/11/19 10:40 AM, Brian Foster wrote:
+> On Wed, Nov 06, 2019 at 06:27:49PM -0700, Allison Collins wrote:
+>> From: Allison Henderson <allison.henderson@oracle.com>
+>>
+>> This patch adds a new functions to check for the existence of
+>> an attribute.  Subroutines are also added to handle the cases
+>> of leaf blocks, nodes or shortform.  Common code that appears
+>> in existing attr add and remove functions have been factored
+>> out to help reduce the appearence of duplicated code.  We will
+>> need these routines later for delayed attributes since delayed
+>> operations cannot return error codes.
+>>
+>> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+>> ---
+> 
+> This mostly looks good to me. Just some small nits..
+> 
+>>   fs/xfs/libxfs/xfs_attr.c      | 154 +++++++++++++++++++++++++++---------------
+>>   fs/xfs/libxfs/xfs_attr.h      |   1 +
+>>   fs/xfs/libxfs/xfs_attr_leaf.c | 107 ++++++++++++++++++-----------
+>>   fs/xfs/libxfs/xfs_attr_leaf.h |   2 +
+>>   4 files changed, 171 insertions(+), 93 deletions(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+>> index 5cb83a8..c8a3273 100644
+>> --- a/fs/xfs/libxfs/xfs_attr.c
+>> +++ b/fs/xfs/libxfs/xfs_attr.c
+> ...
+>> @@ -310,6 +313,34 @@ xfs_attr_set_args(
+>>   }
+>>   
+>>   /*
+>> + * Return EEXIST if attr is found, or ENOATTR if not
+>> + */
+>> +int
+>> +xfs_has_attr(
+>> +	struct xfs_da_args      *args)
+>> +{
+>> +	struct xfs_inode        *dp = args->dp;
+>> +	struct xfs_buf		*bp;
+>> +	int                     error;
+>> +
+>> +	if (!xfs_inode_hasattr(dp)) {
+>> +		error = -ENOATTR;
+>> +	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
+>> +		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
+>> +		error = xfs_attr_shortform_hasname(args, NULL, NULL);
+>> +	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
+>> +		error = xfs_attr_leaf_hasname(args, &bp);
+>> +		if (error != -ENOATTR && error != -EEXIST)
+>> +			goto out;
+> 
+> Hmm.. is this basically an indirect check for whether bp is set? If so,
+> I think doing bp = NULL above and:
+> 
+> 		if (bp)
+> 			xfs_trans_brelse(args->trans, bp);
+> 
+> ... is more straightforward.
+> 
+>> +		xfs_trans_brelse(args->trans, bp);
+>> +	} else {
+>> +		error = xfs_attr_node_hasname(args, NULL);
+>> +	}
+>> +out:
+>> +	return error;
+>> +}
+>> +
+>> +/*
+>>    * Remove the attribute specified in @args.
+>>    */
+>>   int
+> ...
+>> @@ -832,6 +869,38 @@ xfs_attr_leaf_get(xfs_da_args_t *args)
+>>   	return error;
+>>   }
+>>   
+>> +/*
+>> + * Return EEXIST if attr is found, or ENOATTR if not
+>> + * statep: If not null is set to point at the found state.  Caller will
+>> + * 	   be responsible for freeing the state in this case.
+>> + */
+>> +STATIC int
+>> +xfs_attr_node_hasname(
+>> +	struct xfs_da_args	*args,
+>> +	struct xfs_da_state	**statep)
+>> +{
+>> +	struct xfs_da_state	*state;
+>> +	int			retval, error;
+>> +
+>> +	state = xfs_da_state_alloc();
+>> +	state->args = args;
+>> +	state->mp = args->dp->i_mount;
+>> +
+>> +	/*
+>> +	 * Search to see if name exists, and get back a pointer to it.
+>> +	 */
+>> +	error = xfs_da3_node_lookup_int(state, &retval);
+>> +	if (error == 0)
+>> +		error = retval;
+>> +
+>> +	if (statep != NULL)
+>> +		*statep = state;
+>> +	else
+>> +		xfs_da_state_free(state);
+>> +
+>> +	return error;
+>> +}
+> 
+> The state allocation handling is a little wonky here in the error
+> scenario. I think precedent is that if we're returning an unexpected
+> error, we should probably just free state directly rather than rely on
+> the caller to do so. If the function returns "success" (meaning -EEXIST
+> or -ENOATTR), then the caller owns the state memory. It might also make
+> sense to NULL init the pointer either at the top of this helper or the
+> caller.
+> 
+>> +
+>>   /*========================================================================
+>>    * External routines when attribute list size > geo->blksize
+>>    *========================================================================*/
+> ...
+>> @@ -1324,20 +1376,14 @@ xfs_attr_node_get(xfs_da_args_t *args)
+>>   
+>>   	trace_xfs_attr_node_get(args);
+>>   
+>> -	state = xfs_da_state_alloc();
+>> -	state->args = args;
+>> -	state->mp = args->dp->i_mount;
+>> -
+>>   	/*
+>>   	 * Search to see if name exists, and get back a pointer to it.
+>>   	 */
+>> -	error = xfs_da3_node_lookup_int(state, &retval);
+>> -	if (error) {
+>> +	error = xfs_attr_node_hasname(args, &state);
+>> +	if (error != -EEXIST) {
+>>   		retval = error;
+> 
+> Can we kill retval in this function now? The only use is to assign error
+> to it.
+> 
+>>   		goto out_release;
+>>   	}
+>> -	if (retval != -EEXIST)
+>> -		goto out_release;
+>>   
+>>   	/*
+>>   	 * Get the value, local or "remote"
+> ...
+>> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+>> index 93c3496..d06cfd6 100644
+>> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+>> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+>> @@ -655,18 +655,67 @@ xfs_attr_shortform_create(xfs_da_args_t *args)
+>>   }
+>>   
+>>   /*
+>> + * Return -EEXIST if attr is found, or -ENOATTR if not
+>> + * args:  args containing attribute name and namelen
+>> + * sfep:  If not null, pointer will be set to the last attr entry found on
+>> +	  -EEXIST.  On -ENOATTR pointer is left at the last entry in the list
+>> + * basep: If not null, pointer is set to the byte offset of the entry in the
+>> + *	  list on -EEXIST.  On -ENOATTR, pointer is left at the byte offset of
+>> + *	  the last entry in the list
+>> + */
+>> +int
+>> +xfs_attr_shortform_hasname(
+>> +	struct xfs_da_args	 *args,
+>> +	struct xfs_attr_sf_entry **sfep,
+>> +	int			 *basep)
+>> +{
+>> +	struct xfs_attr_shortform *sf;
+>> +	struct xfs_attr_sf_entry *sfe;
+>> +	int			base = sizeof(struct xfs_attr_sf_hdr);
+>> +	int			size = 0;
+>> +	int			end;
+>> +	int			i;
+>> +
+>> +	base = sizeof(struct xfs_attr_sf_hdr);
+> 
+> Double init.
+> 
+>> +	sf = (struct xfs_attr_shortform *)args->dp->i_afp->if_u1.if_data;
+>> +	sfe = &sf->list[0];
+>> +	end = sf->hdr.count;
+>> +	for (i = 0; i < end; sfe = XFS_ATTR_SF_NEXTENTRY(sfe),
+>> +			base += size, i++) {
+>> +		size = XFS_ATTR_SF_ENTSIZE(sfe);
+>> +		if (sfe->namelen != args->name.len)
+>> +			continue;
+>> +		if (memcmp(sfe->nameval, args->name.name, args->name.len) != 0)
+>> +			continue;
+>> +		if (!xfs_attr_namesp_match(args->name.type, sfe->flags))
+>> +			continue;
+>> +		break;
+>> +	}
+>> +
+>> +	if (sfep != NULL)
+>> +		*sfep = sfe;
+>> +
+>> +	if (basep != NULL)
+>> +		*basep = base;
+>> +
+>> +	if (i == end)
+>> +		return -ENOATTR;
+>> +	return -EEXIST;
+>> +}
+>> +
+>> +/*
+>>    * Add a name/value pair to the shortform attribute list.
+>>    * Overflow from the inode has already been checked for.
+>>    */
+>>   void
+>>   xfs_attr_shortform_add(xfs_da_args_t *args, int forkoff)
+>>   {
+>> -	xfs_attr_shortform_t *sf;
+>> -	xfs_attr_sf_entry_t *sfe;
+>> -	int i, offset, size;
+>> -	xfs_mount_t *mp;
+>> -	xfs_inode_t *dp;
+>> -	struct xfs_ifork *ifp;
+>> +	struct xfs_attr_shortform	*sf;
+>> +	struct xfs_attr_sf_entry	*sfe;
+>> +	int				offset, size, error;
+>> +	struct xfs_mount		*mp;
+>> +	struct xfs_inode		*dp;
+>> +	struct xfs_ifork		*ifp;
+> 
+> Might as well fix up the typedef in the function signature (here and
+> below) as well.
+> 
+> Brian
 
-...and following the usual xfs indenting style for all the new functions.
+Sure, all the nits sound reasonable I will update them in the next 
+version.  Thanks for the review!
 
---D
+Allison
 
-> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> ---
 > 
-> Hi,
-> 
-> This is a very lightly tested RFC patch.
-> Naming and splitting to patches aside, I'd like to know what folks think
-> about this direction for fixing y2038 xfs support.
-> 
-> With XFS_TIMESTAMP_DEBUG defined, it provides correct output for test
-> generic/402 (timestamp range test), when matching xfs expected timestamp
-> ranges to those of ext4 (_filesystem_timestamp_range).
-> And then the test (naturally) fails on corrupted fs check.
-> 
-> If this direction is acceptable, I will proceed with patching xfsprogs.
-> 
-> I'd also like to hear your thoughts about migration process.
-> Should the new feature be ro_compat as I defined it or incompat?
-> In pricipal, all user would need to do is set the feature flag, but
-> I am not aware of any precedent of a similar format upgrade in xfs.
-> 
-> Thanks,
-> Amir.
-> 
->  fs/xfs/libxfs/xfs_format.h      |  14 ++-
->  fs/xfs/libxfs/xfs_inode_buf.c   |  36 ++++----
->  fs/xfs/libxfs/xfs_log_format.h  |   4 +-
->  fs/xfs/libxfs/xfs_timestamp.h   | 151 ++++++++++++++++++++++++++++++++
->  fs/xfs/libxfs/xfs_trans_inode.c |   7 +-
->  fs/xfs/scrub/inode.c            |  11 ++-
->  fs/xfs/xfs_inode.c              |   4 +-
->  fs/xfs/xfs_inode_item.c         |  13 ++-
->  fs/xfs/xfs_iops.c               |   5 +-
->  fs/xfs/xfs_itable.c             |   3 +-
->  fs/xfs/xfs_super.c              |   5 +-
->  11 files changed, 208 insertions(+), 45 deletions(-)
->  create mode 100644 fs/xfs/libxfs/xfs_timestamp.h
-> 
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index c968b60cee15..227a775a9889 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -449,10 +449,12 @@ xfs_sb_has_compat_feature(
->  #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
->  #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
->  #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
-> +#define XFS_SB_FEAT_RO_COMPAT_EXTTIME  (1 << 3)		/* extended time_max */
->  #define XFS_SB_FEAT_RO_COMPAT_ALL \
->  		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
->  		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
-> -		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
-> +		 XFS_SB_FEAT_RO_COMPAT_REFLINK | \
-> +		 XFS_SB_FEAT_RO_COMPAT_EXTTIME)
->  #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
->  static inline bool
->  xfs_sb_has_ro_compat_feature(
-> @@ -546,6 +548,12 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
->  		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
->  }
->  
-> +static inline bool xfs_sb_version_hasexttime(struct xfs_sb *sbp)
-> +{
-> +	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
-> +		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_EXTTIME);
-> +}
-> +
->  /*
->   * end of superblock version macros
->   */
-> @@ -824,8 +832,8 @@ typedef struct xfs_agfl {
->  		   xfs_daddr_to_agno(mp, (d) + (len) - 1)))
->  
->  typedef struct xfs_timestamp {
-> -	__be32		t_sec;		/* timestamp seconds */
-> -	__be32		t_nsec;		/* timestamp nanoseconds */
-> +	__be32	t_sec;		/* timestamp seconds */
-> +	__be32	t_nsec_epoch;	/* timestamp nanoseconds | extra epoch */
->  } xfs_timestamp_t;
->  
->  /*
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index 28ab3c5255e1..aaf411da6263 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -17,6 +17,7 @@
->  #include "xfs_trans.h"
->  #include "xfs_ialloc.h"
->  #include "xfs_dir2.h"
-> +#include "xfs_timestamp.h"
->  
->  #include <linux/iversion.h>
->  
-> @@ -204,6 +205,7 @@ xfs_inode_from_disk(
->  {
->  	struct xfs_icdinode	*to = &ip->i_d;
->  	struct inode		*inode = VFS_I(ip);
-> +	struct xfs_sb		*sbp = &ip->i_mount->m_sb;
->  
->  
->  	/*
-> @@ -233,12 +235,9 @@ xfs_inode_from_disk(
->  	 * a time before epoch is converted to a time long after epoch
->  	 * on 64 bit systems.
->  	 */
-> -	inode->i_atime.tv_sec = (int)be32_to_cpu(from->di_atime.t_sec);
-> -	inode->i_atime.tv_nsec = (int)be32_to_cpu(from->di_atime.t_nsec);
-> -	inode->i_mtime.tv_sec = (int)be32_to_cpu(from->di_mtime.t_sec);
-> -	inode->i_mtime.tv_nsec = (int)be32_to_cpu(from->di_mtime.t_nsec);
-> -	inode->i_ctime.tv_sec = (int)be32_to_cpu(from->di_ctime.t_sec);
-> -	inode->i_ctime.tv_nsec = (int)be32_to_cpu(from->di_ctime.t_nsec);
-> +	xfs_timestamp_di_decode(sbp, &inode->i_atime, &from->di_atime);
-> +	xfs_timestamp_di_decode(sbp, &inode->i_mtime, &from->di_mtime);
-> +	xfs_timestamp_di_decode(sbp, &inode->i_ctime, &from->di_ctime);
->  	inode->i_generation = be32_to_cpu(from->di_gen);
->  	inode->i_mode = be16_to_cpu(from->di_mode);
->  
-> @@ -257,7 +256,8 @@ xfs_inode_from_disk(
->  		inode_set_iversion_queried(inode,
->  					   be64_to_cpu(from->di_changecount));
->  		to->di_crtime.t_sec = be32_to_cpu(from->di_crtime.t_sec);
-> -		to->di_crtime.t_nsec = be32_to_cpu(from->di_crtime.t_nsec);
-> +		to->di_crtime.t_nsec_epoch =
-> +			be32_to_cpu(from->di_crtime.t_nsec_epoch);
->  		to->di_flags2 = be64_to_cpu(from->di_flags2);
->  		to->di_cowextsize = be32_to_cpu(from->di_cowextsize);
->  	}
-> @@ -271,6 +271,7 @@ xfs_inode_to_disk(
->  {
->  	struct xfs_icdinode	*from = &ip->i_d;
->  	struct inode		*inode = VFS_I(ip);
-> +	struct xfs_sb		*sbp = &ip->i_mount->m_sb;
->  
->  	to->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
->  	to->di_onlink = 0;
-> @@ -283,12 +284,9 @@ xfs_inode_to_disk(
->  	to->di_projid_hi = cpu_to_be16(from->di_projid_hi);
->  
->  	memset(to->di_pad, 0, sizeof(to->di_pad));
-> -	to->di_atime.t_sec = cpu_to_be32(inode->i_atime.tv_sec);
-> -	to->di_atime.t_nsec = cpu_to_be32(inode->i_atime.tv_nsec);
-> -	to->di_mtime.t_sec = cpu_to_be32(inode->i_mtime.tv_sec);
-> -	to->di_mtime.t_nsec = cpu_to_be32(inode->i_mtime.tv_nsec);
-> -	to->di_ctime.t_sec = cpu_to_be32(inode->i_ctime.tv_sec);
-> -	to->di_ctime.t_nsec = cpu_to_be32(inode->i_ctime.tv_nsec);
-> +	xfs_timestamp_di_encode(sbp, &inode->i_atime, &to->di_atime);
-> +	xfs_timestamp_di_encode(sbp, &inode->i_mtime, &to->di_mtime);
-> +	xfs_timestamp_di_encode(sbp, &inode->i_ctime, &to->di_ctime);
->  	to->di_nlink = cpu_to_be32(inode->i_nlink);
->  	to->di_gen = cpu_to_be32(inode->i_generation);
->  	to->di_mode = cpu_to_be16(inode->i_mode);
-> @@ -307,7 +305,8 @@ xfs_inode_to_disk(
->  	if (from->di_version == 3) {
->  		to->di_changecount = cpu_to_be64(inode_peek_iversion(inode));
->  		to->di_crtime.t_sec = cpu_to_be32(from->di_crtime.t_sec);
-> -		to->di_crtime.t_nsec = cpu_to_be32(from->di_crtime.t_nsec);
-> +		to->di_crtime.t_nsec_epoch =
-> +			cpu_to_be32(from->di_crtime.t_nsec_epoch);
->  		to->di_flags2 = cpu_to_be64(from->di_flags2);
->  		to->di_cowextsize = cpu_to_be32(from->di_cowextsize);
->  		to->di_ino = cpu_to_be64(ip->i_ino);
-> @@ -338,11 +337,11 @@ xfs_log_dinode_to_disk(
->  	memcpy(to->di_pad, from->di_pad, sizeof(to->di_pad));
->  
->  	to->di_atime.t_sec = cpu_to_be32(from->di_atime.t_sec);
-> -	to->di_atime.t_nsec = cpu_to_be32(from->di_atime.t_nsec);
-> +	to->di_atime.t_nsec_epoch = cpu_to_be32(from->di_atime.t_nsec_epoch);
->  	to->di_mtime.t_sec = cpu_to_be32(from->di_mtime.t_sec);
-> -	to->di_mtime.t_nsec = cpu_to_be32(from->di_mtime.t_nsec);
-> +	to->di_mtime.t_nsec_epoch = cpu_to_be32(from->di_mtime.t_nsec_epoch);
->  	to->di_ctime.t_sec = cpu_to_be32(from->di_ctime.t_sec);
-> -	to->di_ctime.t_nsec = cpu_to_be32(from->di_ctime.t_nsec);
-> +	to->di_ctime.t_nsec_epoch = cpu_to_be32(from->di_ctime.t_nsec_epoch);
->  
->  	to->di_size = cpu_to_be64(from->di_size);
->  	to->di_nblocks = cpu_to_be64(from->di_nblocks);
-> @@ -359,7 +358,8 @@ xfs_log_dinode_to_disk(
->  	if (from->di_version == 3) {
->  		to->di_changecount = cpu_to_be64(from->di_changecount);
->  		to->di_crtime.t_sec = cpu_to_be32(from->di_crtime.t_sec);
-> -		to->di_crtime.t_nsec = cpu_to_be32(from->di_crtime.t_nsec);
-> +		to->di_crtime.t_nsec_epoch =
-> +			cpu_to_be32(from->di_crtime.t_nsec_epoch);
->  		to->di_flags2 = cpu_to_be64(from->di_flags2);
->  		to->di_cowextsize = cpu_to_be32(from->di_cowextsize);
->  		to->di_ino = cpu_to_be64(from->di_ino);
-> diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-> index e5f97c69b320..08f9d119e0d5 100644
-> --- a/fs/xfs/libxfs/xfs_log_format.h
-> +++ b/fs/xfs/libxfs/xfs_log_format.h
-> @@ -369,8 +369,8 @@ static inline int xfs_ilog_fdata(int w)
->   * information.
->   */
->  typedef struct xfs_ictimestamp {
-> -	int32_t		t_sec;		/* timestamp seconds */
-> -	int32_t		t_nsec;		/* timestamp nanoseconds */
-> +	int32_t t_sec;		/* timestamp seconds */
-> +	uint32_t t_nsec_epoch;	/* timestamp nanoseconds | extra epoch */
->  } xfs_ictimestamp_t;
->  
->  /*
-> diff --git a/fs/xfs/libxfs/xfs_timestamp.h b/fs/xfs/libxfs/xfs_timestamp.h
-> new file mode 100644
-> index 000000000000..b514a9f40704
-> --- /dev/null
-> +++ b/fs/xfs/libxfs/xfs_timestamp.h
-> @@ -0,0 +1,151 @@
-> +/* SPDX-License-Identifier: GPL-2.0 */
-> +/*
-> + * Copyright (C) 2019 CTERA Networks.
-> + * All Rights Reserved.
-> + */
-> +#ifndef __XFS_TIMESTAMP_H__
-> +#define __XFS_TIMESTAMP_H__
-> +
-> +//#define XFS_TIMESTAMP_DEBUG
-> +
-> +#ifdef XFS_TIMESTAMP_DEBUG
-> +#define XFS_TIMESTAMP_EXTENDED(sbp) 1
-> +#else
-> +#define XFS_TIMESTAMP_EXTENDED(sbp) xfs_sb_version_hasexttime(sbp)
-> +#endif
-> +
-> +/*
-> + * We use 2 unused msb of 32bit t_nsec to encode time ranges beyond y2038.
-> + *
-> + * We use an encoding that preserves the times for extra epoch "00":
-> + *
-> + * extra  msb of                         adjust for signed
-> + * epoch  32-bit                         32-bit tv_sec to
-> + * bits   time    decoded 64-bit tv_sec  64-bit tv_sec      valid time range
-> + * 0 0    1    -0x80000000..-0x00000001  0x000000000 1901-12-13..1969-12-31
-> + * 0 0    0    0x000000000..0x07fffffff  0x000000000 1970-01-01..2038-01-19
-> + * 0 1    1    0x080000000..0x0ffffffff  0x100000000 2038-01-19..2106-02-07
-> + * 0 1    0    0x100000000..0x17fffffff  0x100000000 2106-02-07..2174-02-25
-> + * 1 0    1    0x180000000..0x1ffffffff  0x200000000 2174-02-25..2242-03-16
-> + * 1 0    0    0x200000000..0x27fffffff  0x200000000 2242-03-16..2310-04-04
-> + * 1 1    1    0x280000000..0x2ffffffff  0x300000000 2310-04-04..2378-04-22
-> + * 1 1    0    0x300000000..0x37fffffff  0x300000000 2378-04-22..2446-05-10
-> + */
-> +
-> +#define XFS_TIMESTAMP_NSEC_BITS		30
-> +#define XFS_TIMESTAMP_NSEC_MASK		((1U << XFS_TIMESTAMP_NSEC_BITS) - 1)
-> +#define XFS_TIMESTAMP_NSEC(nsec_epoch)	((nsec_epoch) & XFS_TIMESTAMP_NSEC_MASK)
-> +#define XFS_TIMESTAMP_EPOCH_SHIFT	XFS_TIMESTAMP_NSEC_BITS
-> +#define XFS_TIMESTAMP_EPOCH_BITS	(32 - XFS_TIMESTAMP_NSEC_BITS)
-> +#define XFS_TIMESTAMP_EPOCH_MASK	(((1U << XFS_TIMESTAMP_EPOCH_BITS) \
-> +					  - 1) << XFS_TIMESTAMP_EPOCH_SHIFT)
-> +#define XFS_TIMESTAMP_SEC_BITS		(32 + XFS_TIMESTAMP_EPOCH_BITS)
-> +
-> +#define XFS_TIMESTAMP_SEC_MIN		S32_MIN
-> +#define XFS_TIMESTAMP_SEC32_MAX		S32_MAX
-> +#define XFS_TIMESTAMP_SEC64_MAX		((1LL << XFS_TIMESTAMP_SEC_BITS) \
-> +					 - 1  + S32_MIN)
-> +#define XFS_TIMESTAMP_SEC_MAX(sbp) \
-> +	(XFS_TIMESTAMP_EXTENDED(sbp) ? XFS_TIMESTAMP_SEC64_MAX : \
-> +					XFS_TIMESTAMP_SEC32_MAX)
-> +
-> +
-> +static inline int64_t xfs_timestamp_decode_sec64(int32_t sec32,
-> +						 uint32_t nsec_epoch)
-> +{
-> +	int64_t sec64 = sec32;
-> +
-> +	if (unlikely(nsec_epoch & XFS_TIMESTAMP_EPOCH_MASK)) {
-> +		sec64 += ((int64_t)(nsec_epoch & XFS_TIMESTAMP_EPOCH_MASK)) <<
-> +			XFS_TIMESTAMP_EPOCH_BITS;
-> +#ifdef XFS_TIMESTAMP_DEBUG
-> +		pr_info("%s: %lld.%d epoch=%x sec32=%d", __func__, sec64,
-> +			XFS_TIMESTAMP_NSEC(nsec_epoch),
-> +			(nsec_epoch & XFS_TIMESTAMP_EPOCH_MASK), sec32);
-> +#endif
-> +	}
-> +	return sec64;
-> +}
-> +
-> +static inline int64_t xfs_timestamp_sec64(struct xfs_sb *sbp, int32_t sec32,
-> +					  uint32_t nsec_epoch)
-> +{
-> +	return XFS_TIMESTAMP_EXTENDED(sbp) ?
-> +		xfs_timestamp_decode_sec64(sec32, nsec_epoch) : sec32;
-> +}
-> +
-> +static inline bool xfs_timestamp_nsec_is_valid(struct xfs_sb *sbp,
-> +					       uint32_t nsec_epoch)
-> +{
-> +	if (!XFS_TIMESTAMP_EXTENDED(sbp) &&
-> +	    (nsec_epoch & XFS_TIMESTAMP_EPOCH_MASK))
-> +		return false;
-> +
-> +	return XFS_TIMESTAMP_NSEC(nsec_epoch) < NSEC_PER_SEC;
-> +}
-> +
-> +static inline bool xfs_timestamp_is_valid(struct xfs_sb *sbp,
-> +					  xfs_timestamp_t *dtsp)
-> +{
-> +	return xfs_timestamp_nsec_is_valid(sbp,
-> +				be32_to_cpu(dtsp->t_nsec_epoch));
-> +}
-> +
-> +static inline void xfs_timestamp_ic_decode(struct xfs_sb *sbp,
-> +					   struct timespec64 *time,
-> +					   xfs_ictimestamp_t *itsp)
-> +{
-> +	time->tv_sec = xfs_timestamp_sec64(sbp, itsp->t_sec,
-> +					   itsp->t_nsec_epoch);
-> +	time->tv_nsec = XFS_TIMESTAMP_NSEC(itsp->t_nsec_epoch);
-> +}
-> +
-> +static inline void xfs_timestamp_di_decode(struct xfs_sb *sbp,
-> +					   struct timespec64 *time,
-> +					   xfs_timestamp_t *dtsp)
-> +{
-> +	time->tv_sec = xfs_timestamp_sec64(sbp, be32_to_cpu(dtsp->t_sec),
-> +					   be32_to_cpu(dtsp->t_nsec_epoch));
-> +	time->tv_nsec = XFS_TIMESTAMP_NSEC(be32_to_cpu(dtsp->t_nsec_epoch));
-> +}
-> +
-> +static inline int32_t xfs_timestamp_encode_nsec_epoch(int64_t sec64,
-> +						      int32_t nsec)
-> +{
-> +	int32_t epoch = ((sec64 - (int32_t)sec64) >> XFS_TIMESTAMP_EPOCH_BITS) &
-> +			XFS_TIMESTAMP_EPOCH_MASK;
-> +
-> +#ifdef XFS_TIMESTAMP_DEBUG
-> +	if (epoch)
-> +		pr_info("%s: %lld.%d epoch=%x sec32=%d", __func__, sec64, nsec,
-> +			epoch, (int32_t)sec64);
-> +#endif
-> +	return (nsec & XFS_TIMESTAMP_NSEC_MASK) | epoch;
-> +}
-> +
-> +static inline int32_t xfs_timestamp_nsec_epoch(struct xfs_sb *sbp,
-> +					       int64_t sec64, int32_t nsec)
-> +{
-> +	return XFS_TIMESTAMP_EXTENDED(sbp) ?
-> +		xfs_timestamp_encode_nsec_epoch(sec64, nsec) : nsec;
-> +}
-> +
-> +static inline void xfs_timestamp_ic_encode(struct xfs_sb *sbp,
-> +					   struct timespec64 *time,
-> +					   xfs_ictimestamp_t *itsp)
-> +{
-> +	itsp->t_sec = (int32_t)time->tv_sec;
-> +	itsp->t_nsec_epoch = xfs_timestamp_nsec_epoch(sbp, time->tv_sec,
-> +						      time->tv_nsec);
-> +}
-> +
-> +static inline void xfs_timestamp_di_encode(struct xfs_sb *sbp,
-> +					   struct timespec64 *time,
-> +					   xfs_timestamp_t *dtsp)
-> +{
-> +	dtsp->t_sec = cpu_to_be32(time->tv_sec);
-> +	dtsp->t_nsec_epoch = cpu_to_be32(xfs_timestamp_nsec_epoch(sbp,
-> +						time->tv_sec, time->tv_nsec));
-> +}
-> +
-> +#endif /* __XFS_TIMESTAMP_H__ */
-> diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
-> index a9ad90926b87..48c9c9e3654d 100644
-> --- a/fs/xfs/libxfs/xfs_trans_inode.c
-> +++ b/fs/xfs/libxfs/xfs_trans_inode.c
-> @@ -8,10 +8,13 @@
->  #include "xfs_shared.h"
->  #include "xfs_format.h"
->  #include "xfs_log_format.h"
-> +#include "xfs_trans_resv.h"
-> +#include "xfs_mount.h"
->  #include "xfs_inode.h"
->  #include "xfs_trans.h"
->  #include "xfs_trans_priv.h"
->  #include "xfs_inode_item.h"
-> +#include "xfs_timestamp.h"
->  
->  #include <linux/iversion.h>
->  
-> @@ -67,8 +70,8 @@ xfs_trans_ichgtime(
->  	if (flags & XFS_ICHGTIME_CHG)
->  		inode->i_ctime = tv;
->  	if (flags & XFS_ICHGTIME_CREATE) {
-> -		ip->i_d.di_crtime.t_sec = (int32_t)tv.tv_sec;
-> -		ip->i_d.di_crtime.t_nsec = (int32_t)tv.tv_nsec;
-> +		xfs_timestamp_ic_encode(&ip->i_mount->m_sb, &tv,
-> +					&ip->i_d.di_crtime);
->  	}
->  }
->  
-> diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-> index 6d483ab29e63..981f86387dc3 100644
-> --- a/fs/xfs/scrub/inode.c
-> +++ b/fs/xfs/scrub/inode.c
-> @@ -17,6 +17,7 @@
->  #include "xfs_reflink.h"
->  #include "xfs_rmap.h"
->  #include "xfs_bmap_util.h"
-> +#include "xfs_timestamp.h"
->  #include "scrub/scrub.h"
->  #include "scrub/common.h"
->  #include "scrub/btree.h"
-> @@ -293,11 +294,9 @@ xchk_dinode(
->  	}
->  
->  	/* di_[amc]time.nsec */
-> -	if (be32_to_cpu(dip->di_atime.t_nsec) >= NSEC_PER_SEC)
-> -		xchk_ino_set_corrupt(sc, ino);
-> -	if (be32_to_cpu(dip->di_mtime.t_nsec) >= NSEC_PER_SEC)
-> -		xchk_ino_set_corrupt(sc, ino);
-> -	if (be32_to_cpu(dip->di_ctime.t_nsec) >= NSEC_PER_SEC)
-> +	if (!xfs_timestamp_is_valid(&mp->m_sb, &dip->di_atime) ||
-> +	    !xfs_timestamp_is_valid(&mp->m_sb, &dip->di_mtime) ||
-> +	    !xfs_timestamp_is_valid(&mp->m_sb, &dip->di_ctime))
->  		xchk_ino_set_corrupt(sc, ino);
->  
->  	/*
-> @@ -403,7 +402,7 @@ xchk_dinode(
->  	}
->  
->  	if (dip->di_version >= 3) {
-> -		if (be32_to_cpu(dip->di_crtime.t_nsec) >= NSEC_PER_SEC)
-> +		if (!xfs_timestamp_is_valid(&mp->m_sb, &dip->di_crtime))
->  			xchk_ino_set_corrupt(sc, ino);
->  		xchk_inode_flags2(sc, dip, ino, mode, flags, flags2);
->  		xchk_inode_cowextsize(sc, dip, ino, mode, flags,
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index a92d4521748d..ca1538b31170 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -35,6 +35,7 @@
->  #include "xfs_log.h"
->  #include "xfs_bmap_btree.h"
->  #include "xfs_reflink.h"
-> +#include "xfs_timestamp.h"
->  
->  kmem_zone_t *xfs_inode_zone;
->  
-> @@ -851,8 +852,7 @@ xfs_ialloc(
->  		inode_set_iversion(inode, 1);
->  		ip->i_d.di_flags2 = 0;
->  		ip->i_d.di_cowextsize = 0;
-> -		ip->i_d.di_crtime.t_sec = (int32_t)tv.tv_sec;
-> -		ip->i_d.di_crtime.t_nsec = (int32_t)tv.tv_nsec;
-> +		xfs_timestamp_ic_encode(&mp->m_sb, &tv, &ip->i_d.di_crtime);
->  	}
->  
->  
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index 726aa3bfd6e8..2b5db9af6a9d 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -18,6 +18,7 @@
->  #include "xfs_buf_item.h"
->  #include "xfs_log.h"
->  #include "xfs_error.h"
-> +#include "xfs_timestamp.h"
->  
->  #include <linux/iversion.h>
->  
-> @@ -303,6 +304,7 @@ xfs_inode_to_log_dinode(
->  {
->  	struct xfs_icdinode	*from = &ip->i_d;
->  	struct inode		*inode = VFS_I(ip);
-> +	struct xfs_sb		*sbp = &ip->i_mount->m_sb;
->  
->  	to->di_magic = XFS_DINODE_MAGIC;
->  
-> @@ -315,12 +317,9 @@ xfs_inode_to_log_dinode(
->  
->  	memset(to->di_pad, 0, sizeof(to->di_pad));
->  	memset(to->di_pad3, 0, sizeof(to->di_pad3));
-> -	to->di_atime.t_sec = inode->i_atime.tv_sec;
-> -	to->di_atime.t_nsec = inode->i_atime.tv_nsec;
-> -	to->di_mtime.t_sec = inode->i_mtime.tv_sec;
-> -	to->di_mtime.t_nsec = inode->i_mtime.tv_nsec;
-> -	to->di_ctime.t_sec = inode->i_ctime.tv_sec;
-> -	to->di_ctime.t_nsec = inode->i_ctime.tv_nsec;
-> +	xfs_timestamp_ic_encode(sbp, &inode->i_atime, &to->di_atime);
-> +	xfs_timestamp_ic_encode(sbp, &inode->i_mtime, &to->di_mtime);
-> +	xfs_timestamp_ic_encode(sbp, &inode->i_ctime, &to->di_ctime);
->  	to->di_nlink = inode->i_nlink;
->  	to->di_gen = inode->i_generation;
->  	to->di_mode = inode->i_mode;
-> @@ -342,7 +341,7 @@ xfs_inode_to_log_dinode(
->  	if (from->di_version == 3) {
->  		to->di_changecount = inode_peek_iversion(inode);
->  		to->di_crtime.t_sec = from->di_crtime.t_sec;
-> -		to->di_crtime.t_nsec = from->di_crtime.t_nsec;
-> +		to->di_crtime.t_nsec_epoch = from->di_crtime.t_nsec_epoch;
->  		to->di_flags2 = from->di_flags2;
->  		to->di_cowextsize = from->di_cowextsize;
->  		to->di_ino = ip->i_ino;
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 4c7962ccb0c4..aa294597d16f 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -21,6 +21,7 @@
->  #include "xfs_dir2.h"
->  #include "xfs_iomap.h"
->  #include "xfs_error.h"
-> +#include "xfs_timestamp.h"
->  
->  #include <linux/xattr.h>
->  #include <linux/posix_acl.h>
-> @@ -556,8 +557,8 @@ xfs_vn_getattr(
->  	if (ip->i_d.di_version == 3) {
->  		if (request_mask & STATX_BTIME) {
->  			stat->result_mask |= STATX_BTIME;
-> -			stat->btime.tv_sec = ip->i_d.di_crtime.t_sec;
-> -			stat->btime.tv_nsec = ip->i_d.di_crtime.t_nsec;
-> +			xfs_timestamp_ic_decode(&mp->m_sb, &stat->btime,
-> +						&ip->i_d.di_crtime);
->  		}
->  	}
->  
-> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-> index 884950adbd16..3e55cf029414 100644
-> --- a/fs/xfs/xfs_itable.c
-> +++ b/fs/xfs/xfs_itable.c
-> @@ -19,6 +19,7 @@
->  #include "xfs_error.h"
->  #include "xfs_icache.h"
->  #include "xfs_health.h"
-> +#include "xfs_timestamp.h"
->  
->  /*
->   * Bulk Stat
-> @@ -98,7 +99,7 @@ xfs_bulkstat_one_int(
->  	buf->bs_ctime = inode->i_ctime.tv_sec;
->  	buf->bs_ctime_nsec = inode->i_ctime.tv_nsec;
->  	buf->bs_btime = dic->di_crtime.t_sec;
-> -	buf->bs_btime_nsec = dic->di_crtime.t_nsec;
-> +	buf->bs_btime_nsec = XFS_TIMESTAMP_NSEC(dic->di_crtime.t_nsec_epoch);
->  	buf->bs_gen = inode->i_generation;
->  	buf->bs_mode = inode->i_mode;
->  
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index b3188ea49413..b940ce6dac07 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -35,6 +35,7 @@
->  #include "xfs_refcount_item.h"
->  #include "xfs_bmap_item.h"
->  #include "xfs_reflink.h"
-> +#include "xfs_timestamp.h"
->  
->  #include <linux/magic.h>
->  #include <linux/fs_context.h>
-> @@ -1438,8 +1439,8 @@ xfs_fc_fill_super(
->  	sb->s_maxbytes = xfs_max_file_offset(sb->s_blocksize_bits);
->  	sb->s_max_links = XFS_MAXLINK;
->  	sb->s_time_gran = 1;
-> -	sb->s_time_min = S32_MIN;
-> -	sb->s_time_max = S32_MAX;
-> +	sb->s_time_min = XFS_TIMESTAMP_SEC_MIN;
-> +	sb->s_time_max = XFS_TIMESTAMP_SEC_MAX(&mp->m_sb);
->  	sb->s_iflags |= SB_I_CGROUPWB;
->  
->  	set_posix_acl_flag(sb);
-> -- 
-> 2.17.1
+>>   
+>>   	trace_xfs_attr_sf_add(args);
+>>   
+>> @@ -677,18 +726,8 @@ xfs_attr_shortform_add(xfs_da_args_t *args, int forkoff)
+>>   	ifp = dp->i_afp;
+>>   	ASSERT(ifp->if_flags & XFS_IFINLINE);
+>>   	sf = (xfs_attr_shortform_t *)ifp->if_u1.if_data;
+>> -	sfe = &sf->list[0];
+>> -	for (i = 0; i < sf->hdr.count; sfe = XFS_ATTR_SF_NEXTENTRY(sfe), i++) {
+>> -#ifdef DEBUG
+>> -		if (sfe->namelen != args->name.len)
+>> -			continue;
+>> -		if (memcmp(args->name.name, sfe->nameval, args->name.len) != 0)
+>> -			continue;
+>> -		if (!xfs_attr_namesp_match(args->name.type, sfe->flags))
+>> -			continue;
+>> -		ASSERT(0);
+>> -#endif
+>> -	}
+>> +	error = xfs_attr_shortform_hasname(args, &sfe, NULL);
+>> +	ASSERT(error != -EEXIST);
+>>   
+>>   	offset = (char *)sfe - (char *)sf;
+>>   	size = XFS_ATTR_SF_ENTSIZE_BYNAME(args->name.len, args->valuelen);
+>> @@ -733,33 +772,23 @@ xfs_attr_fork_remove(
+>>   int
+>>   xfs_attr_shortform_remove(xfs_da_args_t *args)
+>>   {
+>> -	xfs_attr_shortform_t *sf;
+>> -	xfs_attr_sf_entry_t *sfe;
+>> -	int base, size=0, end, totsize, i;
+>> -	xfs_mount_t *mp;
+>> -	xfs_inode_t *dp;
+>> +	struct xfs_attr_shortform	*sf;
+>> +	struct xfs_attr_sf_entry	*sfe;
+>> +	int				base, size = 0, end, totsize;
+>> +	struct xfs_mount		*mp;
+>> +	struct xfs_inode		*dp;
+>> +	int				error;
+>>   
+>>   	trace_xfs_attr_sf_remove(args);
+>>   
+>>   	dp = args->dp;
+>>   	mp = dp->i_mount;
+>> -	base = sizeof(xfs_attr_sf_hdr_t);
+>>   	sf = (xfs_attr_shortform_t *)dp->i_afp->if_u1.if_data;
+>> -	sfe = &sf->list[0];
+>> -	end = sf->hdr.count;
+>> -	for (i = 0; i < end; sfe = XFS_ATTR_SF_NEXTENTRY(sfe),
+>> -					base += size, i++) {
+>> -		size = XFS_ATTR_SF_ENTSIZE(sfe);
+>> -		if (sfe->namelen != args->name.len)
+>> -			continue;
+>> -		if (memcmp(sfe->nameval, args->name.name, args->name.len) != 0)
+>> -			continue;
+>> -		if (!xfs_attr_namesp_match(args->name.type, sfe->flags))
+>> -			continue;
+>> -		break;
+>> -	}
+>> -	if (i == end)
+>> -		return -ENOATTR;
+>> +
+>> +	error = xfs_attr_shortform_hasname(args, &sfe, &base);
+>> +	if (error != -EEXIST)
+>> +		return error;
+>> +	size = XFS_ATTR_SF_ENTSIZE(sfe);
+>>   
+>>   	/*
+>>   	 * Fix up the attribute fork data, covering the hole
+>> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+>> index 017480e..e108b37 100644
+>> --- a/fs/xfs/libxfs/xfs_attr_leaf.h
+>> +++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+>> @@ -42,6 +42,8 @@ int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
+>>   int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
+>>   			struct xfs_buf **leaf_bp);
+>>   int	xfs_attr_shortform_remove(struct xfs_da_args *args);
+>> +int	xfs_attr_shortform_hasname(struct xfs_da_args *args,
+>> +			       struct xfs_attr_sf_entry **sfep, int *basep);
+>>   int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
+>>   int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
+>>   xfs_failaddr_t xfs_attr_shortform_verify(struct xfs_inode *ip);
+>> -- 
+>> 2.7.4
+>>
 > 
