@@ -2,210 +2,111 @@ Return-Path: <SRS0=wiGc=ZD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09E4DC43331
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Nov 2019 18:24:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FCB6C43331
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Nov 2019 20:08:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D1E31214E0
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Nov 2019 18:24:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 22112206BA
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Nov 2019 20:08:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XyD9dzpd"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BU304/6/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726910AbfKKSYy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Nov 2019 13:24:54 -0500
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:36918 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726821AbfKKSYy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Nov 2019 13:24:54 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1573496692;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=DHaO1Ml3l39m2oFo2QkgFCAEyxWCSbKNXqddvfY7LgU=;
-        b=XyD9dzpdVRbZSjGK6lzM74lQWEyTIk05XjL63XwTmjWPLwWnUkPXM8xeJUHEJvUNZUJSEQ
-        oZkkcPZDGwNp7ix1ed4l4+lwjHYTk+Taj5giwyk54aY1kwWPErA8qqt9L+Shi80OOiBZXg
-        KTzEJeEOv6+QkKLmSRILZJfc95Fpr7g=
-Received: from mail-ua1-f70.google.com (mail-ua1-f70.google.com
- [209.85.222.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-248-Fg8NkvLzNAimzXtp9cd_0w-1; Mon, 11 Nov 2019 13:24:48 -0500
-Received: by mail-ua1-f70.google.com with SMTP id d8so5074717uan.4
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Nov 2019 10:24:48 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=AMmEewPGjArjbxBIQ0lMmWxiUlLlCze1moyA3CuB4lc=;
-        b=PGsIzxyLGtqcNEiPKhQlno1JrVD2Dwj9/hDzOlBcjcSL9RU9Z/11bCldh64x8WkGFA
-         hFxbvKdbIiJ18Kru2JDyJ/bYigjqOz7nZpcs0QqhISjm89w960M51WBdrwpNwoyyrMU7
-         w3OwAJvGO6w/s4jUtAFfTQxG3Z7HEI/ptIIF3BhJJNps2WU3zGTYZOtBZktMbwH279YT
-         lryphAXCQQ6CVsI2kUNZnk4HrNh1yYJ2ACBfvNrZWekOrVScsetZqz98uvRSWZyQUaQx
-         pr43QI5fZUv0qYNeM8VLcd0oioepxqN52OMIeWd4fZsFQOZSdXSnNYyE5YWfzvuSl+G1
-         15Uw==
-X-Gm-Message-State: APjAAAV6RQTzehxY9HyOXDO6PmzAWTGkm9NGMN+r0kKCr4aOmbvD3B0S
-        nCsEs1i5dmIhN3tPERcr803dhOaVYmbZMjjcGIIRu8IpdbV5vJtuJk/i6t3KosGNru4lQMGQ8vw
-        Cr1wEAuVvdQiHvJ+FY73inFs40YL+/15auAst
-X-Received: by 2002:a05:6102:752:: with SMTP id v18mr20060818vsg.3.1573496687822;
-        Mon, 11 Nov 2019 10:24:47 -0800 (PST)
-X-Google-Smtp-Source: APXvYqyYxppWQ8ZYlrbqtuWnv0Ef05OfEbb+Za40CwGuJwqRnjSrFKn+8sADt9bq5IvzHDRZU+VdqRHcConTmjHJIQQ=
-X-Received: by 2002:a05:6102:752:: with SMTP id v18mr20060800vsg.3.1573496687441;
- Mon, 11 Nov 2019 10:24:47 -0800 (PST)
+        id S1727442AbfKKUIL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Nov 2019 15:08:11 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:44652 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726845AbfKKUIL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Nov 2019 15:08:11 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xABJsEh1183289;
+        Mon, 11 Nov 2019 20:07:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2019-08-05;
+ bh=cxhvAeZQUDvgqDBaGxQYkMH7iPZOsBdGAXCtGjgUchQ=;
+ b=BU304/6/eduFfUJKURE2L7Q+IMCNDI26jNBBBC7bJJcWm4N3rAiGbuzj/XpASak/9yLA
+ zBg88B1gluOEU1fcP5loG8o73RaUV/WS9xtfcDtvoxH6b5gCrHst6qli2fg960HUyEqh
+ mA8y6rlS7fKQakE+CHnkqZt1enVvZwwEhbkDnZGfBHO8g8yKu2N45ewZlkv9dYeqW7UJ
+ 4aY1A2s5Az9NV0Lomv+gGIJBvuRaBMXaKIxn7U4688fQeecTBxKad12Hzls47Ej1EDbd
+ gxwgGQmpOiAeuZbAsv6Gabz+rx7mNcdxKcUCkuiQzwFTQNV86qgswTOVy6A0CRDxDVsT iw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 2w5mvtgs2v-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 11 Nov 2019 20:07:52 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xABJs3Ye159608;
+        Mon, 11 Nov 2019 20:07:52 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 2w66wmnh14-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 11 Nov 2019 20:07:52 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xABK7nlV024708;
+        Mon, 11 Nov 2019 20:07:50 GMT
+Received: from [192.168.1.9] (/67.1.205.161)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 11 Nov 2019 12:07:49 -0800
+Subject: Re: [PATCH v4 02/17] xfs: Replace attribute parameters with struct
+ xfs_name
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+References: <20191107012801.22863-1-allison.henderson@oracle.com>
+ <20191107012801.22863-3-allison.henderson@oracle.com>
+ <20191111174924.GB28708@infradead.org>
+From:   Allison Collins <allison.henderson@oracle.com>
+Message-ID: <c2571406-6a30-e4ea-496a-71572199f906@oracle.com>
+Date:   Mon, 11 Nov 2019 13:07:48 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-References: <20191108210612.423439-1-preichl@redhat.com> <20191108210612.423439-3-preichl@redhat.com>
- <20191108221617.GL6219@magnolia>
-In-Reply-To: <20191108221617.GL6219@magnolia>
-From:   Pavel Reichl <preichl@redhat.com>
-Date:   Mon, 11 Nov 2019 19:24:36 +0100
-Message-ID: <CAJc7PzW0fV-DRojU1A1HPUygUdxXRscij=ZhXs5O_u3K97zJmQ@mail.gmail.com>
-Subject: Re: [PATCH v2 2/4] xfs: remove the xfs_quotainfo_t typedef
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-X-MC-Unique: Fg8NkvLzNAimzXtp9cd_0w-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20191111174924.GB28708@infradead.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9438 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1910280000 definitions=main-1911110175
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9438 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
+ definitions=main-1911110175
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello Darrick,
-
-thanks for your patience with this patchset and for catching these issues.
-
-I'm in the process of improving my vimrc so these little embarrassment
-will soon disappear from my patches completely...hopefully :-)
-
-Bye.
-
-Pavel
 
 
-On Fri, Nov 8, 2019 at 11:18 PM Darrick J. Wong <darrick.wong@oracle.com> w=
-rote:
->
-> On Fri, Nov 08, 2019 at 10:06:10PM +0100, Pavel Reichl wrote:
-> > Signed-off-by: Pavel Reichl <preichl@redhat.com>
-> > ---
-> >  fs/xfs/xfs_qm.c          | 20 ++++++++++----------
-> >  fs/xfs/xfs_qm.h          |  4 ++--
-> >  fs/xfs/xfs_trans_dquot.c |  2 +-
-> >  3 files changed, 13 insertions(+), 13 deletions(-)
-> >
-> > diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> > index c11b3b1af8e9..92d8756b628e 100644
-> > --- a/fs/xfs/xfs_qm.c
-> > +++ b/fs/xfs/xfs_qm.c
-> > @@ -30,10 +30,10 @@
-> >   * quota functionality, including maintaining the freelist and hash
-> >   * tables of dquots.
-> >   */
-> > -STATIC int   xfs_qm_init_quotainos(xfs_mount_t *);
-> > -STATIC int   xfs_qm_init_quotainfo(xfs_mount_t *);
-> > +STATIC int   xfs_qm_init_quotainos(struct xfs_mount *mp);
-> > +STATIC int   xfs_qm_init_quotainfo(struct xfs_mount *mp);
-> >
-> > -STATIC void  xfs_qm_destroy_quotainos(xfs_quotainfo_t *qi);
-> > +STATIC void  xfs_qm_destroy_quotainos(struct xfs_quotainfo *qi);
-> >  STATIC void  xfs_qm_dqfree_one(struct xfs_dquot *dqp);
-> >  /*
-> >   * We use the batch lookup interface to iterate over the dquots as it
-> > @@ -540,9 +540,9 @@ xfs_qm_shrink_count(
-> >
-> >  STATIC void
-> >  xfs_qm_set_defquota(
-> > -     xfs_mount_t     *mp,
-> > -     uint            type,
-> > -     xfs_quotainfo_t *qinf)
-> > +     struct xfs_mount        *mp,
-> > +     uint                    type,
-> > +     struct xfs_quotainfo    *qinf)
-> >  {
-> >       struct xfs_dquot        *dqp;
-> >       struct xfs_def_quota    *defq;
-> > @@ -643,7 +643,7 @@ xfs_qm_init_quotainfo(
-> >
-> >       ASSERT(XFS_IS_QUOTA_RUNNING(mp));
-> >
-> > -     qinf =3D mp->m_quotainfo =3D kmem_zalloc(sizeof(xfs_quotainfo_t),=
- 0);
-> > +     qinf =3D mp->m_quotainfo =3D kmem_zalloc(sizeof(struct xfs_quotai=
-nfo), 0);
-> >
-> >       error =3D list_lru_init(&qinf->qi_lru);
-> >       if (error)
-> > @@ -710,9 +710,9 @@ xfs_qm_init_quotainfo(
-> >   */
-> >  void
-> >  xfs_qm_destroy_quotainfo(
-> > -     xfs_mount_t     *mp)
-> > +     struct xfs_mount     *mp)
->
-> This indentation here   ^^^^^ should be tabs, not spaces.
->
-> >  {
-> > -     xfs_quotainfo_t *qi;
-> > +     struct xfs_quotainfo *qi;
->
-> Please fix this space here  ^ to be a tab too.
->
-> (FYI, the 'list' option in vim will show you tabs vs. spaces to make
-> your life easier...)
->
-> --D
-> >
-> >       qi =3D mp->m_quotainfo;
-> >       ASSERT(qi !=3D NULL);
-> > @@ -1568,7 +1568,7 @@ xfs_qm_init_quotainos(
-> >
-> >  STATIC void
-> >  xfs_qm_destroy_quotainos(
-> > -     xfs_quotainfo_t *qi)
-> > +     struct xfs_quotainfo    *qi)
-> >  {
-> >       if (qi->qi_uquotaip) {
-> >               xfs_irele(qi->qi_uquotaip);
-> > diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
-> > index b41b75089548..185c9d89a5cd 100644
-> > --- a/fs/xfs/xfs_qm.h
-> > +++ b/fs/xfs/xfs_qm.h
-> > @@ -54,7 +54,7 @@ struct xfs_def_quota {
-> >   * Various quota information for individual filesystems.
-> >   * The mount structure keeps a pointer to this.
-> >   */
-> > -typedef struct xfs_quotainfo {
-> > +struct xfs_quotainfo {
-> >       struct radix_tree_root qi_uquota_tree;
-> >       struct radix_tree_root qi_gquota_tree;
-> >       struct radix_tree_root qi_pquota_tree;
-> > @@ -77,7 +77,7 @@ typedef struct xfs_quotainfo {
-> >       struct xfs_def_quota    qi_grp_default;
-> >       struct xfs_def_quota    qi_prj_default;
-> >       struct shrinker  qi_shrinker;
-> > -} xfs_quotainfo_t;
-> > +};
-> >
-> >  static inline struct radix_tree_root *
-> >  xfs_dquot_tree(
-> > diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-> > index ceb25d1cfdb1..4789f7e11f53 100644
-> > --- a/fs/xfs/xfs_trans_dquot.c
-> > +++ b/fs/xfs/xfs_trans_dquot.c
-> > @@ -585,7 +585,7 @@ xfs_trans_dqresv(
-> >       xfs_qwarncnt_t          warnlimit;
-> >       xfs_qcnt_t              total_count;
-> >       xfs_qcnt_t              *resbcountp;
-> > -     xfs_quotainfo_t         *q =3D mp->m_quotainfo;
-> > +     struct xfs_quotainfo    *q =3D mp->m_quotainfo;
-> >       struct xfs_def_quota    *defq;
-> >
-> >
-> > --
-> > 2.23.0
-> >
+On 11/11/19 10:49 AM, Christoph Hellwig wrote:
+> On Wed, Nov 06, 2019 at 06:27:46PM -0700, Allison Collins wrote:
+>> This patch replaces the attribute name and length parameters with a
+>> single struct xfs_name parameter.  This helps to clean up the numbers of
+>> parameters being passed around and pre-simplifies the code some.
+> 
+> Does it?  As-is the patch doesn't look too bad, although it adds more
+> lines than it removes.  But together with the next patch that embedds
+> an xfs_name into the xfs_da_args structure and the now added memcpys
+> it doesn't really look very helpful to me.
+> 
+It has evolved a bit since its initial proposition.  Maybe it would help 
+to raise the question of: is patch 2 or 3 alone more helpful than the 
+combination of them?  I think initially Dave had suggested the clean up 
+in one of the earlier reviews a while ago, so he may have an opinion here.
 
+Personally I'm not super opinionated about it if people have strong 
+feelings toward keeping or pitching it.  I will say after having worked 
+with it as it is, I'm not sure I'm particularly fond of having a name 
+struct in the param, and another in the args.  I think eventually 
+someones going to forget that args supersedes the param after the init 
+routine.  People will probably figure it out pretty quick if they get 
+bit I suppose, but I do think it's a sort of wart to consider.
+
+Allison
