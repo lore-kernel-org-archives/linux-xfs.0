@@ -2,107 +2,93 @@ Return-Path: <SRS0=Awhw=ZE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C23DC17440
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 15:30:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99542C43331
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 16:09:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1B75921A49
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 15:30:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6CE0B214E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 16:09:28 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="pRtm6PMq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727128AbfKLPaG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Nov 2019 10:30:06 -0500
-Received: from mout.kundenserver.de ([217.72.192.74]:38875 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726376AbfKLPaG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 10:30:06 -0500
-Received: from mail-lj1-f179.google.com ([209.85.208.179]) by
- mrelayeu.kundenserver.de (mreue107 [212.227.15.145]) with ESMTPSA (Nemesis)
- id 1N7RDn-1hpxPE0HRl-017qBy; Tue, 12 Nov 2019 16:30:05 +0100
-Received: by mail-lj1-f179.google.com with SMTP id g3so18244427ljl.11;
-        Tue, 12 Nov 2019 07:30:04 -0800 (PST)
-X-Gm-Message-State: APjAAAVdsqIY1uT0WeXeuZYFISWR7xHi8/ogOUPvLcGZ2cOXbPGsTHV+
-        CR7kNA/EKuaS0uwgcAqtYAhsjMxNZQlzbWmwUio=
-X-Google-Smtp-Source: APXvYqxF3PFVRjx7d8z6JD1uyBoBGahddwSS0JsvdpugsENVg017FKwBGm4eRZiC3uggP8kYZCahBE3pDkbOr0/JkPk=
-X-Received: by 2002:a2e:90b:: with SMTP id 11mr20162193ljj.233.1573572604507;
- Tue, 12 Nov 2019 07:30:04 -0800 (PST)
+        id S1726912AbfKLQJ1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Nov 2019 11:09:27 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:41788 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726718AbfKLQJ1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 11:09:27 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xACG4KBm110698;
+        Tue, 12 Nov 2019 16:09:18 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=2yv+/sIJLa+/SHoiilLrOjsmIGrpt8lokyxjMLzn5u4=;
+ b=pRtm6PMqre+d1ZOl6am9rcbi1QzZwUhmzdfHpEB1y6VLwAMXl4ukGaktg/C+oAMQOrXy
+ 8DMpCcfzCaBTCGlilwUQK6fI3qF5JHML6yuQsoRfK1mLBzchuzM+oP4+S4emgOXPlZJv
+ R5YMwC58NwNYkk2c56t4IyGSoTjP/z2LeRoAbuSAusZJjzfp7/mfEIA25gByEbTasACf
+ J38ziYKVL+h0OmYrxJ/+sLyb2Qz0sXJIwscw1dhCYMiiDpVTpFe4Cn4IoGXttwIBJW5d
+ DY2OW1+vvKO6XtxpjT7KRZ2cw89+IAYJ3JmB5XosLhpKeAqm/vSIYwfxOOTtjUhUi3b4 gQ== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 2w5p3qnshq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 12 Nov 2019 16:09:18 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xACG4niX161153;
+        Tue, 12 Nov 2019 16:09:18 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 2w7khkj08w-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 12 Nov 2019 16:09:17 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xACG9Eko029289;
+        Tue, 12 Nov 2019 16:09:14 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 12 Nov 2019 08:09:14 -0800
+Date:   Tue, 12 Nov 2019 08:09:13 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Amir Goldstein <amir73il@gmail.com>, linux-xfs@vger.kernel.org
+Subject: Re: [RFC][PATCH] xfs: extended timestamp range
+Message-ID: <20191112160913.GW6219@magnolia>
+References: <20191111213630.14680-1-amir73il@gmail.com>
+ <20191111223508.GS6219@magnolia>
+ <20191112082524.GA18779@infradead.org>
 MIME-Version: 1.0
-References: <20191112120910.1977003-1-arnd@arndb.de> <20191112120910.1977003-5-arnd@arndb.de>
- <20191112141657.GC10922@lst.de> <CAOQ4uxiGsydjS-hh4ANXz45n3x_LU_uXGtP1-paeT6cS-PWbCA@mail.gmail.com>
-In-Reply-To: <CAOQ4uxiGsydjS-hh4ANXz45n3x_LU_uXGtP1-paeT6cS-PWbCA@mail.gmail.com>
-From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Tue, 12 Nov 2019 16:29:48 +0100
-X-Gmail-Original-Message-ID: <CAK8P3a1n4nOKQLuK5J-0f4F-mjCuzY2LMQL1YO4=vqQuk2uVEg@mail.gmail.com>
-Message-ID: <CAK8P3a1n4nOKQLuK5J-0f4F-mjCuzY2LMQL1YO4=vqQuk2uVEg@mail.gmail.com>
-Subject: Re: [Y2038] [RFC 4/5] xfs: extend inode format for 40-bit timestamps
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        y2038 Mailman List <y2038@lists.linaro.org>,
-        Brian Foster <bfoster@redhat.com>,
-        Dave Chinner <david@fromorbit.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Deepa Dinamani <deepa.kernel@gmail.com>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Allison Collins <allison.henderson@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Provags-ID: V03:K1:syIQtJhbRxjHyzJ7AFRq/aNlcT723WFLll4tjU/BNGLt9KzK5D1
- ncO1YtTfx5FGAODTgyrKQGJykVVjDjz6ut8vTKPUVP2tHWKOdofYuMZIV8G7kDfmdkgv3A3
- 4BRuRVlMn7XPQPGBeWSMkL9dE7P0zQBKTtKsMMT8b/Jxvm6567No7pGcrTiq6lIBhp3+Sua
- A3dfaF5/Qsa7s3EWCVYbA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:FFLP4NPgxyY=:RUlG7eotG1R+a9GUMIZ3+y
- eefDhyo2zjpbsyCJS+ZFEA46AnDF3pIRKAlEE8ixQRRHfGks2mDs0qFYZ36Bz2fvN0G2AL1q0
- cbvv1nhX5fe99hMkOWiSgC/5c1bhFrWqJNlaun8NSuiJYhJgnDl/7YtaifqzijxlSrLKwsC8Z
- ctFH+0ASl/9huSzMAR1JSqduKQeyZ0VLoeJuI96ONHCpD+khXQM5Nq9tQM0wyup66/vQBdxkz
- DQlikOExalppo7cMHrhIXuDhkHYjGOExkKxPjraNs3ov+o37kFETjF5Cse981AkU+VIuQSXmh
- uW9122u7ypU+6dzUmvSBafOAZpa6XSMstLXiYiGefv0QMFyrdKJxVx/auBC6Rwgwq2iZL6qFf
- kFVUfIuzr2a5+g9rWAThgNCXR+VmRDEDVdP95MRpS5t1/G7l/VqNYZ8/0In0ZzY6XyQvpAqsZ
- wz7HPnw0U9zEsDcpPv2ldA86BSL0wdtxDN44POVvXv0PkddV4Rd4dOm1b2NgNNxMPz4T98231
- a6j6/xP25VPgBhlmP+b5Ym+KXQkH4wmlEiVqlvQa5Nfzgmq2vlGEfV7xDztmwNMVbzR4HfUf/
- QgMoI/ccr9gZ+2VF10p1VfzyTpYVWfTJPjyef+CEOwIUvQARQOpXhlEbSdmdGZ2VFlnRnQOi7
- RaZptTr7HS73zJgz+fhy0DLErkcw6pZEp9J/q5U+YcsB3hR2ZCxMS9Qa0XgdH43xSLAJB+p3t
- TFYbpjZYePdZ2B6NKKaxR24+ynOGd+5McygoWwIrElaaOhpp5+yqC983EuCBDQSrozJzMxXvu
- c8ZsGxF5+V34Urbin6TwwOLZw3c3rfrIvVySn58tKoSikZEk4nEu3d8ub9P4PZDqlqril8L5f
- ObPN0werWyRIvrei/Vhg==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191112082524.GA18779@infradead.org>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9438 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=995
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1910280000 definitions=main-1911120136
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9438 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
+ definitions=main-1911120136
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 12, 2019 at 4:02 PM Amir Goldstein <amir73il@gmail.com> wrote:
->
-> On Tue, Nov 12, 2019 at 4:16 PM Christoph Hellwig <hch@lst.de> wrote:
-> >
-> > Amir just send another patch dealing with the time stamps.  I'd suggest
-> > you chime into the discussion in that thread.
->
-> That's right I just posted the ext4 style extend to 34bits yesterday [1],
-> but I like your version so much better, so I will withdraw mine.
+On Tue, Nov 12, 2019 at 12:25:24AM -0800, Christoph Hellwig wrote:
+> On Mon, Nov 11, 2019 at 02:35:08PM -0800, Darrick J. Wong wrote:
+> > Also, please change struct xfs_inode.i_crtime to a timespec64 to match
+> > the other three timestamps in struct inode...
+> 
+> Or you could just merge my outstanding patch to do just that..
 
-Thanks! I guess we probably want part of both in the end. I considered
-adding wrappers for encoding and decoding the timestamp like yours
-but in the end went with open-coding that part. The difference is pretty
-minimal, should we leave it with the open-coded addition?
+I must've missed it, got a link?
 
-One part that I was missing (as described in my changelog) is any
-versioning or feature flag, including the dynamically set sb->s_time_max
-value. From looking at your patch, I guess this is something we want.
+/me digs...
 
-> Sorry I did not CC you nor Deepa nor y2038 list.
-> I did not think you were going to actually deal with specific filesystems.
-
-I was not going to, but in the process of cleaning up the remaining ioctls
-I came to xfs last week and thought it would be silly to extend the uapi
-but not the file system ;-)
-
-> I'd also like to hear people's thoughts about migration process.
-> Should the new feature be ro_compat as I defined it or incompat?
->
-> If all agree that Arnd's format change is preferred, I can assist with
-> xfsprogs patches, tests or whatnot.
-
-Awesome, that would be great indeed!
-
-      Arnd
+--D
