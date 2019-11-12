@@ -6,24 +6,24 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFE96C43331
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 22:59:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74AC0C43331
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 23:01:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A912621783
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 22:59:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52F9320674
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 23:01:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726932AbfKLW7d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Nov 2019 17:59:33 -0500
-Received: from sandeen.net ([63.231.237.45]:35500 "EHLO sandeen.net"
+        id S1726994AbfKLXBo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Nov 2019 18:01:44 -0500
+Received: from sandeen.net ([63.231.237.45]:35620 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726912AbfKLW7d (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 12 Nov 2019 17:59:33 -0500
+        id S1726932AbfKLXBo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 12 Nov 2019 18:01:44 -0500
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id A1DBF7BB4
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2019 16:58:15 -0600 (CST)
-Subject: [PATCH 1/2] xfs: removed unused typedef definitions
+        by sandeen.net (Postfix) with ESMTPSA id 94CDC7BB4
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2019 17:00:27 -0600 (CST)
+Subject: [PATCH 2/2] xfs: remove unused structure members & simple typedefs
 From:   Eric Sandeen <sandeen@sandeen.net>
 To:     linux-xfs <linux-xfs@vger.kernel.org>
 References: <321019c7-574e-e7e1-0eb6-e60776ad7948@sandeen.net>
@@ -69,8 +69,8 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <3e3ddc13-4417-a0b1-85d1-a03a37a46461@sandeen.net>
-Date:   Tue, 12 Nov 2019 16:59:31 -0600
+Message-ID: <9b291c94-2961-3c11-22e4-556220758a9c@sandeen.net>
+Date:   Tue, 12 Nov 2019 17:01:43 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.2.2
 MIME-Version: 1.0
@@ -83,74 +83,56 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Remove some typdefs for type_t's that are no longer referred to
-by their typedef'd types.
+Remove some unused typedef'd simple types, and some unused 
+structure members.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index c968b60cee15..8f6b485a3119 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -920,13 +920,13 @@ static inline uint xfs_dinode_size(int version)
-  * This enum is used in string mapping in xfs_trace.h; please keep the
-  * TRACE_DEFINE_ENUMs for it up to date.
-  */
--typedef enum xfs_dinode_fmt {
-+enum xfs_dinode_fmt {
- 	XFS_DINODE_FMT_DEV,		/* xfs_dev_t */
- 	XFS_DINODE_FMT_LOCAL,		/* bulk data */
- 	XFS_DINODE_FMT_EXTENTS,		/* struct xfs_bmbt_rec */
- 	XFS_DINODE_FMT_BTREE,		/* struct xfs_bmdr_block */
- 	XFS_DINODE_FMT_UUID		/* added long ago, but never used */
--} xfs_dinode_fmt_t;
-+};
+diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+index 300b3e91ca3a..397d94775440 100644
+--- a/fs/xfs/libxfs/xfs_types.h
++++ b/fs/xfs/libxfs/xfs_types.h
+@@ -21,7 +21,6 @@ typedef int32_t		xfs_suminfo_t;	/* type of bitmap summary info */
+ typedef uint32_t	xfs_rtword_t;	/* word type for bitmap manipulations */
  
- #define XFS_INODE_FORMAT_STR \
- 	{ XFS_DINODE_FMT_DEV,		"dev" }, \
-diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
-index f3d18eaecebb..3bf671637a91 100644
---- a/fs/xfs/libxfs/xfs_log_recover.h
-+++ b/fs/xfs/libxfs/xfs_log_recover.h
-@@ -30,14 +30,14 @@ typedef struct xlog_recover_item {
- 	xfs_log_iovec_t		*ri_buf;	/* ptr to regions buffer */
- } xlog_recover_item_t;
+ typedef int64_t		xfs_lsn_t;	/* log sequence number */
+-typedef int32_t		xfs_tid_t;	/* transaction identifier */
  
--typedef struct xlog_recover {
-+struct xlog_recover {
- 	struct hlist_node	r_list;
- 	xlog_tid_t		r_log_tid;	/* log's transaction id */
- 	xfs_trans_header_t	r_theader;	/* trans header for partial */
- 	int			r_state;	/* not needed */
- 	xfs_lsn_t		r_lsn;		/* xact lsn */
- 	struct list_head	r_itemq;	/* q for items */
--} xlog_recover_t;
-+};
+ typedef uint32_t	xfs_dablk_t;	/* dir/attr block number (in file) */
+ typedef uint32_t	xfs_dahash_t;	/* dir/attr hash value */
+@@ -33,7 +32,6 @@ typedef uint64_t	xfs_fileoff_t;	/* block number in a file */
+ typedef uint64_t	xfs_filblks_t;	/* number of blocks in a file */
  
- #define ITEM_TYPE(i)	(*(unsigned short *)(i)->ri_buf[0].i_addr)
+ typedef int64_t		xfs_srtblock_t;	/* signed version of xfs_rtblock_t */
+-typedef int64_t		xfs_sfiloff_t;	/* signed block number in a file */
  
-diff --git a/fs/xfs/xfs_ioctl32.h b/fs/xfs/xfs_ioctl32.h
-index 7985344d3aa6..13b1d4b967bb 100644
---- a/fs/xfs/xfs_ioctl32.h
-+++ b/fs/xfs/xfs_ioctl32.h
-@@ -99,7 +99,7 @@ typedef struct compat_xfs_fsop_handlereq {
- 	_IOWR('X', 108, struct compat_xfs_fsop_handlereq)
+ /*
+  * New verifiers will return the instruction address of the failing check.
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index b880c23cb6e4..ca0f0de5feb9 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -399,8 +399,6 @@ struct xlog {
+ 	/* The following field are used for debugging; need to hold icloglock */
+ #ifdef DEBUG
+ 	void			*l_iclog_bak[XLOG_MAX_ICLOGS];
+-	/* log record crc error injection factor */
+-	uint32_t		l_badcrc_factor;
+ #endif
+ 	/* log recovery lsn tracking (for buffer submission */
+ 	xfs_lsn_t		l_recovery_lsn;
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index fdb60e09a9c5..ebba9a61f804 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -59,7 +59,6 @@ struct xfs_error_cfg {
  
- /* The bstat field in the swapext struct needs translation */
--typedef struct compat_xfs_swapext {
-+struct compat_xfs_swapext {
- 	int64_t			sx_version;	/* version */
- 	int64_t			sx_fdtarget;	/* fd of target file */
- 	int64_t			sx_fdtmp;	/* fd of tmp file */
-@@ -107,7 +107,7 @@ typedef struct compat_xfs_swapext {
- 	xfs_off_t		sx_length;	/* leng from offset */
- 	char			sx_pad[16];	/* pad space, unused */
- 	struct compat_xfs_bstat	sx_stat;	/* stat of target b4 copy */
--} __compat_packed compat_xfs_swapext_t;
-+} __compat_packed;
+ typedef struct xfs_mount {
+ 	struct super_block	*m_super;
+-	xfs_tid_t		m_tid;		/* next unused tid for fs */
  
- #define XFS_IOC_SWAPEXT_32	_IOWR('X', 109, struct compat_xfs_swapext)
- 
+ 	/*
+ 	 * Bitsets of per-fs metadata that have been checked and/or are sick.
 
 
