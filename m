@@ -2,107 +2,135 @@ Return-Path: <SRS0=Awhw=ZE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D62AEC43331
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 01:38:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45D32C17441
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 02:41:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A4C182184C
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 01:38:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1898B21872
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 02:41:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="fhUSPF+4"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="lcs63yK7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726952AbfKLBiU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Nov 2019 20:38:20 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:51768 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726908AbfKLBiT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Nov 2019 20:38:19 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAC1JOeq007235;
-        Tue, 12 Nov 2019 01:38:14 GMT
+        id S1726983AbfKLClv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Nov 2019 21:41:51 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:60834 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726928AbfKLClv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Nov 2019 21:41:51 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAC2cxWm056567;
+        Tue, 12 Nov 2019 02:41:33 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=aBn60Y147AK1Tj6+e/DJUUJAG0KTNi1ql0wNo3pfjh8=;
- b=fhUSPF+4id8boKJjq79zSZVQvUfmg2eJAcePmQFYltGTG9IiIm5cxOwYsQilB/tzAc1M
- M85Rsz/ACwflgHu/lMNMjjoQuD2pxKXkfpoJh6cEbcXDS1xTh2n5ZMuDal1pZY6NEQ4R
- rBFtL0a5Ph7JaZH3HADPZNOxm4pOqKHWk3pgZZhnH1htofYbKHjPcEDGkzPebybSJAFm
- vOILlvEiZ6WWOa7TGKSf83Kn8mBfcMldgSKxcDYaAv2Rns5D2CbL6W6+8lLILUGM7UsM
- zDTs83avXeLAcA1+KuLXdKJwjR+wrw2CHPAsbPDs2pat3JYwayYKmI5JWuCBGG1ZtRJN gw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2w5mvthny3-1
+ bh=yAG7acMsZQBRuoFmvUxTJV5rQ0fEVFZnQXbKjy8cNYE=;
+ b=lcs63yK7dvGmCHzzY+ZszlhOZikgJ+g0JJ+Ft7mOY8z36c6dcwO4o1s+jfPVfAXN5IBj
+ hMDXh6YPOd3QSK1UJhJYlgWz/zihqGdAx6G7OgR0DbGi0Sr5TEge7AHwvg12npwcqP2O
+ KO4qmRMiXXmVuXs9q4WsbckeDXAzFb+vzbkDuKgtC3K3A1QKMjE/obCLXNkFp96JhcLx
+ qC2kiCvYpInVWVBEgVmVovg4rdZEN7Bf+wZeeRrWtbMKdPeCCGXnNG0UMsl0tuZHGzvP
+ OQycRtMg/c0SblRj3CUfwKZ0TAsbVhwE3Yfn4UJkTz47swQtqTeS7mrb1TQ0Wf4ZtMnS dw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2w5ndq1w2p-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 12 Nov 2019 01:38:14 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAC1IPcZ113603;
-        Tue, 12 Nov 2019 01:38:13 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2w66wmyep6-1
+        Tue, 12 Nov 2019 02:41:33 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAC2bxEC143093;
+        Tue, 12 Nov 2019 02:41:32 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2w67kmwsay-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 12 Nov 2019 01:38:13 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xAC1cBFZ008378;
-        Tue, 12 Nov 2019 01:38:11 GMT
+        Tue, 12 Nov 2019 02:41:32 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xAC2fVB1019173;
+        Tue, 12 Nov 2019 02:41:31 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 11 Nov 2019 17:38:11 -0800
-Date:   Mon, 11 Nov 2019 17:38:10 -0800
+        with ESMTP ; Mon, 11 Nov 2019 18:41:31 -0800
+Date:   Mon, 11 Nov 2019 18:41:30 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: remove the unused m_chsize field
-Message-ID: <20191112013810.GV6219@magnolia>
-References: <20191111180957.23443-1-hch@lst.de>
+To:     coverity-bot <keescook@chromium.org>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        linux-next@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: Coverity: xlog_write_iclog(): Memory - corruptions
+Message-ID: <20191112024130.GA6212@magnolia>
+References: <201911111734.4D8A1DB3DF@keescook>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191111180957.23443-1-hch@lst.de>
+In-Reply-To: <201911111734.4D8A1DB3DF@keescook>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9438 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=853
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1910280000 definitions=main-1911120009
+ engine=8.0.1-1910280000 definitions=main-1911120020
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9438 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
- definitions=main-1911120009
+ definitions=main-1911120020
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 11, 2019 at 07:09:57PM +0100, Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+[Might as well add the XFS list]
 
-Heh, what was that even used for?
+On Mon, Nov 11, 2019 at 05:34:25PM -0800, coverity-bot wrote:
+> Hello!
+> 
+> This is an experimental automated report about issues detected by Coverity
+> from a scan of next-20191108 as part of the linux-next weekly scan project:
+> https://scan.coverity.com/projects/linux-next-weekly-scan
+> 
+> You're getting this email because you were associated with the identified
+> lines of code (noted below) that were touched by recent commits:
+> 
+> 79b54d9bfcdc ("xfs: use bios directly to write log buffers")
+> 
+> Coverity reported the following:
+> 
+> *** CID 1487853:  Memory - corruptions  (BAD_FREE)
+> /fs/xfs/xfs_log.c: 1819 in xlog_write_iclog()
+> 1813     		submit_bio(split);
+> 1814
+> 1815     		/* restart at logical offset zero for the remainder */
+> 1816     		iclog->ic_bio.bi_iter.bi_sector = log->l_logBBstart;
+> 1817     	}
+> 1818
+> vvv     CID 1487853:  Memory - corruptions  (BAD_FREE)
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Isn't this a duplicate of 1451989 in the main kernel coverity scan?
+Which, AFAICT 145989 is a false positive since iclog->ic_bio does not
+itself become the target of a bio_chain.
 
 --D
 
-> ---
->  fs/xfs/xfs_mount.h | 1 -
->  1 file changed, 1 deletion(-)
+> vvv     "submit_bio" frees address of "iclog->ic_bio".
+> 1819     	submit_bio(&iclog->ic_bio);
+> 1820     }
+> 1821
+> 1822     /*
+> 1823      * We need to bump cycle number for the part of the iclog that is
+> 1824      * written to the start of the log. Watch out for the header magic
 > 
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 2dceb446e651..43145a4ab690 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -155,7 +155,6 @@ typedef struct xfs_mount {
->  	int			m_swidth;	/* stripe width */
->  	uint8_t			m_sectbb_log;	/* sectlog - BBSHIFT */
->  	const struct xfs_nameops *m_dirnameops;	/* vector of dir name ops */
-> -	uint			m_chsize;	/* size of next field */
->  	atomic_t		m_active_trans;	/* number trans frozen */
->  	struct xfs_mru_cache	*m_filestream;  /* per-mount filestream data */
->  	struct delayed_work	m_reclaim_work;	/* background inode reclaim */
+> If this is a false positive, please let us know so we can mark it as
+> such, or teach the Coverity rules to be smarter. If not, please make
+> sure fixes get into linux-next. :) For patches fixing this, please
+> include these lines (but double-check the "Fixes" first):
+> 
+> Reported-by: coverity-bot <keescook+coverity-bot@chromium.org>
+> Addresses-Coverity-ID: 1487853 ("Memory - corruptions")
+> Fixes: 79b54d9bfcdc ("xfs: use bios directly to write log buffers")
+> 
+> 
+> Thanks for your attention!
+> 
 > -- 
-> 2.20.1
-> 
+> Coverity-bot
