@@ -2,255 +2,93 @@ Return-Path: <SRS0=Awhw=ZE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05A99C43331
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 21:49:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C266DC43331
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 22:14:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C361120818
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 21:49:36 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Oh3sw3hR"
+	by mail.kernel.org (Postfix) with ESMTP id 91F4421783
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 22:14:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726981AbfKLVtg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Nov 2019 16:49:36 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:46166 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726376AbfKLVtg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 16:49:36 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1573595374;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=4RgUc/wUZ0Z86j69TFuriv8FyuurWY+g6FXQnXvpBCU=;
-        b=Oh3sw3hR9aig1SUTzmwGK9wl5NSsFAiXuVdL28VmBtCbXwc4EB89Gt2avXz9H6/itm8c2r
-        i7reUWO4WKHv0YSy8i/lM1WzE/dpQyUUSExBmJb3GozckFrFQBPgsroc8nQMPb+w30wG+t
-        pxphhzdacNbFubCkPUrM6FuqkoIWJFM=
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
- [209.85.128.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-98-QvBCrweMPiOT9aNJe_BJGA-1; Tue, 12 Nov 2019 16:49:34 -0500
-Received: by mail-wm1-f72.google.com with SMTP id f14so9450wmc.0
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2019 13:49:33 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=le4A4w+942pq2hNxXmdj+7Qlh1NZfiCTUvwEzPMJKcM=;
-        b=g7O1k4YrXVuM6SaJjdbLHFKOs4KdErmi8048St9zNvOUKp+bmmdj/6VO/JLHiNNXtb
-         Culuw3cGbwiWqvIyoH0+skoomVGeHQoR+0j8FhCAZpCf1hmiGhMN2gi9C0C7ecTNPjjP
-         wHaHpv91Jz2XRO3MmPbwExJpjZkTZ4wmEvY6y2g1U6+XzhnduNmtmiEcjSdnM15RtEKW
-         sITxtLoQdGHJ5oZDRjSk9HXXH4U6SRbfQzCIH/GpInW1iShmzuWXx8ptuvkfb9R9z67J
-         4eVhDyW+dZpj2lEqWOMj5Xs02Sw8FfhQN/zjAmd6k4BFsXEQvvIVmIh5FEUpZdNmkgmx
-         sxvA==
-X-Gm-Message-State: APjAAAXggt8BknvBmbjJXjBiF7d8V0sn42fnXKZjT1MtMxPyF+59ODwB
-        fiZCtpAwomT2G/lF++BN65iU52Ydy72YbwQYSIP/ARDTZ0odngP2jL0tn/9+fpTW96cSTp7h6Ou
-        JlFPtrJ4n+RRVfudZhQs/
-X-Received: by 2002:a5d:570a:: with SMTP id a10mr21710546wrv.107.1573595372529;
-        Tue, 12 Nov 2019 13:49:32 -0800 (PST)
-X-Google-Smtp-Source: APXvYqzs+E1PNJbAeT3IzsIk++KBwWJMhaE5HQCQGyTlbMNGNdzhHisz96tfHRvfLt+abC+99YaLFw==
-X-Received: by 2002:a5d:570a:: with SMTP id a10mr21710542wrv.107.1573595372340;
-        Tue, 12 Nov 2019 13:49:32 -0800 (PST)
-Received: from preichl.redhat.com (243.206.broadband12.iol.cz. [90.179.206.243])
-        by smtp.gmail.com with ESMTPSA id x6sm252681wrw.34.2019.11.12.13.49.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Nov 2019 13:49:31 -0800 (PST)
-From:   Pavel Reichl <preichl@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     Pavel Reichl <preichl@redhat.com>
-Subject: [PATCH v4 5/5] Replace function declartion by actual definition
-Date:   Tue, 12 Nov 2019 22:33:10 +0100
-Message-Id: <20191112213310.212925-6-preichl@redhat.com>
-X-Mailer: git-send-email 2.23.0
-In-Reply-To: <20191112213310.212925-1-preichl@redhat.com>
-References: <20191112213310.212925-1-preichl@redhat.com>
+        id S1726910AbfKLWOy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Nov 2019 17:14:54 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:44781 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726896AbfKLWOy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 17:14:54 -0500
+Received: from dread.disaster.area (pa49-180-67-183.pa.nsw.optusnet.com.au [49.180.67.183])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 10D1D7E8EF6;
+        Wed, 13 Nov 2019 09:14:50 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1iUeQy-0007UG-Hj; Wed, 13 Nov 2019 09:14:48 +1100
+Date:   Wed, 13 Nov 2019 09:14:48 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/3] xfs: attach dquots before performing xfs_swap_extents
+Message-ID: <20191112221448.GQ4614@dread.disaster.area>
+References: <157343509505.1948946.5379830250503479422.stgit@magnolia>
+ <157343511427.1948946.2692071497822316839.stgit@magnolia>
+ <20191111080503.GC4548@infradead.org>
 MIME-Version: 1.0
-X-MC-Unique: QvBCrweMPiOT9aNJe_BJGA-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191111080503.GC4548@infradead.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=G6BsK5s5 c=1 sm=1 tr=0
+        a=3wLbm4YUAFX2xaPZIabsgw==:117 a=3wLbm4YUAFX2xaPZIabsgw==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=MeAgGD-zjQ4A:10
+        a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8 a=y1OQ-_KH7HdE_a4HnVoA:9
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Signed-off-by: Pavel Reichl <preichl@redhat.com>
----
- fs/xfs/xfs_qm_syscalls.c | 140 ++++++++++++++++++---------------------
- 1 file changed, 66 insertions(+), 74 deletions(-)
+On Mon, Nov 11, 2019 at 12:05:03AM -0800, Christoph Hellwig wrote:
+> On Sun, Nov 10, 2019 at 05:18:34PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Make sure we attach dquots to both inodes before swapping their extents.
+> > This was found via manual code inspection by looking for places where we
+> > could call xfs_trans_mod_dquot without dquots attached to inodes, and
+> > confirmed by instrumenting the kernel and running xfs/328.
+> 
+> Looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> Btw, for  while I've been wondering if we could just get rid of the
+> concepts of attached dquots.  With the radix-tree/xarray looks up
+> are be fairly cheap, and could be done lockless using RCU.  So we could
+> try to just kill the concept of attaching the dquot to the inode and
+> just look it up once per operation, where operation preferally is
+> something high-level like the actual file/inode operation and not a
+> low-level thing inside xfs.
 
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index e685b9ae90b9..1ea82764bf89 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -19,12 +19,72 @@
- #include "xfs_qm.h"
- #include "xfs_icache.h"
-=20
--STATIC int xfs_qm_log_quotaoff(struct xfs_mount *mp,
--=09=09=09=09=09struct xfs_qoff_logitem **qoffstartp,
--=09=09=09=09=09uint flags);
--STATIC int xfs_qm_log_quotaoff_end(struct xfs_mount *mp,
--=09=09=09=09=09struct xfs_qoff_logitem *startqoff,
--=09=09=09=09=09uint flags);
-+STATIC int
-+xfs_qm_log_quotaoff(
-+=09struct xfs_mount=09*mp,
-+=09struct xfs_qoff_logitem=09**qoffstartp,
-+=09uint=09=09=09flags)
-+{
-+=09struct xfs_trans=09*tp;
-+=09int=09=09=09error;
-+=09struct xfs_qoff_logitem=09*qoffi;
-+
-+=09*qoffstartp =3D NULL;
-+
-+=09error =3D xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_quotaoff, 0, 0, 0, &tp)=
-;
-+=09if (error)
-+=09=09goto out;
-+
-+=09qoffi =3D xfs_trans_get_qoff_item(tp, NULL, flags & XFS_ALL_QUOTA_ACCT)=
-;
-+=09xfs_trans_log_quotaoff_item(tp, qoffi);
-+
-+=09spin_lock(&mp->m_sb_lock);
-+=09mp->m_sb.sb_qflags =3D (mp->m_qflags & ~(flags)) & XFS_MOUNT_QUOTA_ALL;
-+=09spin_unlock(&mp->m_sb_lock);
-+
-+=09xfs_log_sb(tp);
-+
-+=09/*
-+=09 * We have to make sure that the transaction is secure on disk before w=
-e
-+=09 * return and actually stop quota accounting. So, make it synchronous.
-+=09 * We don't care about quotoff's performance.
-+=09 */
-+=09xfs_trans_set_sync(tp);
-+=09error =3D xfs_trans_commit(tp);
-+=09if (error)
-+=09=09goto out;
-+
-+=09*qoffstartp =3D qoffi;
-+out:
-+=09return error;
-+}
-+
-+STATIC int
-+xfs_qm_log_quotaoff_end(
-+=09struct xfs_mount=09*mp,
-+=09struct xfs_qoff_logitem=09*startqoff,
-+=09uint=09=09=09flags)
-+{
-+=09struct xfs_trans=09*tp;
-+=09int=09=09=09error;
-+=09struct xfs_qoff_logitem=09*qoffi;
-+
-+=09error =3D xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_equotaoff, 0, 0, 0, &tp=
-);
-+=09if (error)
-+=09=09return error;
-+
-+=09qoffi =3D xfs_trans_get_qoff_item(tp, startqoff,
-+=09=09=09=09=09flags & XFS_ALL_QUOTA_ACCT);
-+=09xfs_trans_log_quotaoff_item(tp, qoffi);
-+
-+=09/*
-+=09 * We have to make sure that the transaction is secure on disk before w=
-e
-+=09 * return and actually stop quota accounting. So, make it synchronous.
-+=09 * We don't care about quotoff's performance.
-+=09 */
-+=09xfs_trans_set_sync(tp);
-+=09return xfs_trans_commit(tp);
-+}
-=20
- /*
-  * Turn off quota accounting and/or enforcement for all udquots and/or
-@@ -541,74 +601,6 @@ xfs_qm_scall_setqlim(
- =09return error;
- }
-=20
--STATIC int
--xfs_qm_log_quotaoff_end(
--=09struct xfs_mount=09*mp,
--=09struct xfs_qoff_logitem=09*startqoff,
--=09uint=09=09=09flags)
--{
--=09struct xfs_trans=09*tp;
--=09int=09=09=09error;
--=09struct xfs_qoff_logitem=09*qoffi;
--
--=09error =3D xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_equotaoff, 0, 0, 0, &tp=
-);
--=09if (error)
--=09=09return error;
--
--=09qoffi =3D xfs_trans_get_qoff_item(tp, startqoff,
--=09=09=09=09=09flags & XFS_ALL_QUOTA_ACCT);
--=09xfs_trans_log_quotaoff_item(tp, qoffi);
--
--=09/*
--=09 * We have to make sure that the transaction is secure on disk before w=
-e
--=09 * return and actually stop quota accounting. So, make it synchronous.
--=09 * We don't care about quotoff's performance.
--=09 */
--=09xfs_trans_set_sync(tp);
--=09return xfs_trans_commit(tp);
--}
--
--
--STATIC int
--xfs_qm_log_quotaoff(
--=09struct xfs_mount=09*mp,
--=09struct xfs_qoff_logitem=09**qoffstartp,
--=09uint=09=09=09flags)
--{
--=09struct xfs_trans=09*tp;
--=09int=09=09=09error;
--=09struct xfs_qoff_logitem=09*qoffi;
--
--=09*qoffstartp =3D NULL;
--
--=09error =3D xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_quotaoff, 0, 0, 0, &tp)=
-;
--=09if (error)
--=09=09goto out;
--
--=09qoffi =3D xfs_trans_get_qoff_item(tp, NULL, flags & XFS_ALL_QUOTA_ACCT)=
-;
--=09xfs_trans_log_quotaoff_item(tp, qoffi);
--
--=09spin_lock(&mp->m_sb_lock);
--=09mp->m_sb.sb_qflags =3D (mp->m_qflags & ~(flags)) & XFS_MOUNT_QUOTA_ALL;
--=09spin_unlock(&mp->m_sb_lock);
--
--=09xfs_log_sb(tp);
--
--=09/*
--=09 * We have to make sure that the transaction is secure on disk before w=
-e
--=09 * return and actually stop quota accounting. So, make it synchronous.
--=09 * We don't care about quotoff's performance.
--=09 */
--=09xfs_trans_set_sync(tp);
--=09error =3D xfs_trans_commit(tp);
--=09if (error)
--=09=09goto out;
--
--=09*qoffstartp =3D qoffi;
--out:
--=09return error;
--}
--
- /* Fill out the quota context. */
- static void
- xfs_qm_scall_getquota_fill_qc(
---=20
-2.23.0
+If the dquots are not attached to the inode, how would you pass the
+3 dquots per inode down the stack to where they are actually used
+inside the filesystem? I mean, we have to get the dquots attached to
+the transaction so we can update them in xfs_trans_commit ->
+xfs_trans_apply_dquot_deltas(), so somehow we'd have to get them
+from the high level file/inode operations down to the XFS
+transaction context. And things like writeback need dquots attached
+for delayed allocation, so various aops would need to do dquot
+lookups, too...
 
+I can see the advantage of doing rcu dquot cache lookups in the xfs
+context where we are attaching the dquots to the transaction rather
+than attaching them to the inode, but I can't see how the "do it at
+a high level" aspect of this would work....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
