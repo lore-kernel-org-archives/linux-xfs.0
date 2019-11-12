@@ -2,210 +2,194 @@ Return-Path: <SRS0=Awhw=ZE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CBF6C17441
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 21:22:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 476F3C43331
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 21:23:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DE88220659
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 21:22:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 10EFE214E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 21:23:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="ZfNUt0qS"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="abAKSw8d"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727151AbfKLVV5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Nov 2019 16:21:57 -0500
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:43390 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727281AbfKLVV5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 16:21:57 -0500
-Received: by mail-pg1-f196.google.com with SMTP id l24so12668827pgh.10
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2019 13:21:56 -0800 (PST)
+        id S1726957AbfKLVXE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Nov 2019 16:23:04 -0500
+Received: from mail-lf1-f66.google.com ([209.85.167.66]:34657 "EHLO
+        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726896AbfKLVXE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 16:23:04 -0500
+Received: by mail-lf1-f66.google.com with SMTP id y186so76609lfa.1
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2019 13:23:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=56RmInZgI7Bh5RV3HY6BrZUpnFAVvdE9v++wifdVVbQ=;
-        b=ZfNUt0qSlG/eNpBtAZ0VTYWsyYp45EI1kg059Eym4v5QX0Rd4eJhUdGDHMn6QKbyy7
-         rAEVCINxRbPGFWvH2zmErPehM9LKyDLyBoDAInAHNKT4/quKkG/EtZO/FhCOkM/nDfkP
-         OwUp5RB5f4lGpDiCQlYFyWhQBMqbf0YFKIWuU=
+        d=gmail.com; s=20161025;
+        h=from:subject:to:cc:references:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=t6iP7D9bWlPSZGkKnCn/LYDOkeQOlldAJRYNzXWpxCo=;
+        b=abAKSw8d8j1BKSFpWRb3Qo88cJAJGeW7Wf97XTdtHjlEp1pbZuJh2vzxSBQVaLHTP3
+         6LxZmXE67wn+OIgneYoFKAyrawlE6jozM3izMeNCVL7eE9RQFol4vFVTY5fGH5UMHiii
+         4eGyysxIkGO4X4MqSOLzofrwmgNk1V4I86RtEyTvLNUm5yfJryA+V991BGhJuX4wridz
+         63aca4bGS8vH+yRZqsLB6l2+NQFu6wX235+fc5iElkhzX6JsfwMemHrWcP/IZpqb6odZ
+         LS36y/HGMx7z53/fArXCUnlcGyf+Lok+PDrWUv6fFTXKt5fRcpcA+1S/h1+l0pQ0b6jr
+         8G5A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=56RmInZgI7Bh5RV3HY6BrZUpnFAVvdE9v++wifdVVbQ=;
-        b=M7E+uILsdtAVtIxmPttTtaZC0+1pbEfwvXoBVQEJaq1SVytFdFLgnWrplJ3kPVz4Sm
-         wlo4IoU8ut3aF7x8BwwgMe1BLASdQOlTs6fLD7Pvsp42MPIqeQLLvsJKtzLBaeCgWRrg
-         8H3O3WzdB+ivdLcVXBbMBofpqgQVIkptK5AlG0LQ+XA5mTiPhx9hKrqEpKq2w4+YYCC5
-         vFd7zcs6JheIwo2OuXXpQIhtTh0YfdlhSZqDXWWE7+A7dCYA/bv9yrIcZzEujqjYy2Yt
-         PbjaieDEL0WzkquS+cOiJoWd6sqQW7CMyy3shZD0N4cT6yxkI6WUMymzlYkqc4aF/iWI
-         n72A==
-X-Gm-Message-State: APjAAAV9r3QuusI1vm4thFxcuL3Jz9bvOqnbUFejSjEDWGt/AGlNPKho
-        yBcwDxbLuU3MCl7TmcOCJV9f9A==
-X-Google-Smtp-Source: APXvYqzdFzu4zPPFnJ9ABSyKsWziEZi4Dk2O2pVHeNcsXTcPeB3CKkazqUJ/8FJ/XZkexPEBBAMb2g==
-X-Received: by 2002:aa7:8d8b:: with SMTP id i11mr11186741pfr.45.1573593716214;
-        Tue, 12 Nov 2019 13:21:56 -0800 (PST)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id c21sm19635349pgh.25.2019.11.12.13.21.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Nov 2019 13:21:55 -0800 (PST)
-Date:   Tue, 12 Nov 2019 13:21:54 -0800
-From:   Kees Cook <keescook@chromium.org>
-To:     Jiri Slaby <jslaby@suse.cz>,
-        Alexander Viro <viro@zeniv.linux.org.uk>
-Cc:     linux-kernel@vger.kernel.org, David Windsor <dave@nullcore.net>,
-        Pekka Enberg <penberg@kernel.org>,
-        David Rientjes <rientjes@google.com>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Andy Lutomirski <luto@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Christoph Lameter <cl@linux.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Laura Abbott <labbott@redhat.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        Christoffer Dall <christoffer.dall@linaro.org>,
-        Dave Kleikamp <dave.kleikamp@oracle.com>,
-        Jan Kara <jack@suse.cz>,
-        Luis de Bethencourt <luisbg@kernel.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Rik van Riel <riel@redhat.com>,
-        Matthew Garrett <mjg59@google.com>,
-        linux-fsdevel@vger.kernel.org, linux-arch@vger.kernel.org,
-        netdev@vger.kernel.org, kernel-hardening@lists.openwall.com,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Michal Kubecek <mkubecek@suse.cz>
-Subject: Re: [kernel-hardening] [PATCH 09/38] usercopy: Mark kmalloc caches
- as usercopy caches
-Message-ID: <201911121313.1097D6EE@keescook>
-References: <1515636190-24061-1-git-send-email-keescook@chromium.org>
- <1515636190-24061-10-git-send-email-keescook@chromium.org>
- <9519edb7-456a-a2fa-659e-3e5a1ff89466@suse.cz>
+        h=x-gm-message-state:from:subject:to:cc:references:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=t6iP7D9bWlPSZGkKnCn/LYDOkeQOlldAJRYNzXWpxCo=;
+        b=fo0sYbV/CTYX9RZGXhjvdyZq5TEVh2HvEppFTv1+P5wNEHVc7cDQYFh/aN1W/bYSC+
+         E60ar3FpivNX1M46sRiVMK0jUa9jJ7fTyEvc9yMuxZrO55otSj5G1ph8rNfw8qbPpUql
+         HrDL63K6I/ON+gLy0dklS7tHcyQvx69MKRc9FExICbIvSCKj20aF7r6twpuRbAzUT2bh
+         sWBKIYa0HFCljgMqxUg2dA8xsLeo+Oior2P8CnA+I0zIYQ34jPh0FZdFm62iQuaR5wpG
+         DOsp+bZkxNwMeeV1LEjzJn0JQZ+peCyw9iHYxNorB5ZsVQ8YFYMW5FduUkFCrlJuUl2O
+         flNA==
+X-Gm-Message-State: APjAAAX1yYWbkSE7/qaCw4cIpsWoWnlTUxmJvhbw1bflq9gjynOCbDMi
+        nx05PzZl7ZZ+MOtrXgsgU5WV9NP/
+X-Google-Smtp-Source: APXvYqxOxo30DYBwNktfM4RHrf+z7BaW4GLhhhwyWvcvPByKr8NJ2+m5OiGrbZdIdpzJpZH13W5QNA==
+X-Received: by 2002:a19:90f:: with SMTP id 15mr15103488lfj.81.1573593781336;
+        Tue, 12 Nov 2019 13:23:01 -0800 (PST)
+Received: from amb.local (31-179-17-47.dynamic.chello.pl. [31.179.17.47])
+        by smtp.gmail.com with ESMTPSA id r4sm8509722ljn.64.2019.11.12.13.22.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 12 Nov 2019 13:22:58 -0800 (PST)
+From:   =?UTF-8?Q?Arkadiusz_Mi=c5=9bkiewicz?= <a.miskiewicz@gmail.com>
+Subject: Re: WARNING: CPU: 5 PID: 25802 at fs/xfs/libxfs/xfs_bmap.c:4530
+ xfs_bmapi_convert_delalloc+0x434/0x4a0 [xfs]
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <3c58ebc4-ff95-b443-b08d-81f5169d3d01@gmail.com>
+ <20191109223835.GI4614@dread.disaster.area>
+Message-ID: <db4c2a5d-caa8-9772-e58f-763509d4c113@gmail.com>
+Date:   Tue, 12 Nov 2019 22:22:57 +0100
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.2.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <9519edb7-456a-a2fa-659e-3e5a1ff89466@suse.cz>
+In-Reply-To: <20191109223835.GI4614@dread.disaster.area>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: base64
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 12, 2019 at 08:17:57AM +0100, Jiri Slaby wrote:
-> On 11. 01. 18, 3:02, Kees Cook wrote:
-> > From: David Windsor <dave@nullcore.net>
-> > 
-> > Mark the kmalloc slab caches as entirely whitelisted. These caches
-> > are frequently used to fulfill kernel allocations that contain data
-> > to be copied to/from userspace. Internal-only uses are also common,
-> > but are scattered in the kernel. For now, mark all the kmalloc caches
-> > as whitelisted.
-> > 
-> > This patch is modified from Brad Spengler/PaX Team's PAX_USERCOPY
-> > whitelisting code in the last public patch of grsecurity/PaX based on my
-> > understanding of the code. Changes or omissions from the original code are
-> > mine and don't reflect the original grsecurity/PaX code.
-> > 
-> > Signed-off-by: David Windsor <dave@nullcore.net>
-> > [kees: merged in moved kmalloc hunks, adjust commit log]
-> > Cc: Pekka Enberg <penberg@kernel.org>
-> > Cc: David Rientjes <rientjes@google.com>
-> > Cc: Joonsoo Kim <iamjoonsoo.kim@lge.com>
-> > Cc: Andrew Morton <akpm@linux-foundation.org>
-> > Cc: linux-mm@kvack.org
-> > Cc: linux-xfs@vger.kernel.org
-> > Signed-off-by: Kees Cook <keescook@chromium.org>
-> > Acked-by: Christoph Lameter <cl@linux.com>
-> > ---
-> >  mm/slab.c        |  3 ++-
-> >  mm/slab.h        |  3 ++-
-> >  mm/slab_common.c | 10 ++++++----
-> >  3 files changed, 10 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/mm/slab.c b/mm/slab.c
-> > index b9b0df620bb9..dd367fe17a4e 100644
-> > --- a/mm/slab.c
-> > +++ b/mm/slab.c
-> ...
-> > @@ -1098,7 +1099,8 @@ void __init setup_kmalloc_cache_index_table(void)
-> >  static void __init new_kmalloc_cache(int idx, slab_flags_t flags)
-> >  {
-> >  	kmalloc_caches[idx] = create_kmalloc_cache(kmalloc_info[idx].name,
-> > -					kmalloc_info[idx].size, flags);
-> > +					kmalloc_info[idx].size, flags, 0,
-> > +					kmalloc_info[idx].size);
-> >  }
-> >  
-> >  /*
-> > @@ -1139,7 +1141,7 @@ void __init create_kmalloc_caches(slab_flags_t flags)
-> >  
-> >  			BUG_ON(!n);
-> >  			kmalloc_dma_caches[i] = create_kmalloc_cache(n,
-> > -				size, SLAB_CACHE_DMA | flags);
-> > +				size, SLAB_CACHE_DMA | flags, 0, 0);
-> 
-> Hi,
-> 
-> was there any (undocumented) reason NOT to mark DMA caches as usercopy?
-> 
-> We are seeing this on s390x:
-> 
-> > usercopy: Kernel memory overwrite attempt detected to SLUB object
-> 'dma-kmalloc-1k' (offset 0, size 11)!
-> > ------------[ cut here ]------------
-> > kernel BUG at mm/usercopy.c:99!
-
-Interesting! I believe the rationale was that if the region is used for
-DMA, allowing direct access to it from userspace could be prone to
-races.
-
-> See:
-> https://bugzilla.suse.com/show_bug.cgi?id=1156053
-
-For context from the bug, the trace is:
-
-(<0000000000386c5a> usercopy_abort+0xa2/0xa8) 
- <000000000036097a> __check_heap_object+0x11a/0x120  
- <0000000000386b3a> __check_object_size+0x18a/0x208  
- <000000000079b4ba> skb_copy_datagram_from_iter+0x62/0x240  
- <000003ff804edd5c> iucv_sock_sendmsg+0x1fc/0x858 Ýaf_iucv¨  
- <0000000000785894> sock_sendmsg+0x54/0x90  
- <0000000000785944> sock_write_iter+0x74/0xa0  
- <000000000038a3f0> new_sync_write+0x110/0x180  
- <000000000038d42e> vfs_write+0xa6/0x1d0  
- <000000000038d748> ksys_write+0x60/0xe8  
- <000000000096a660> system_call+0xdc/0x2e0  
-
-I know Al worked on fixing up usercopy checking for iters. I wonder if
-there is redundant checking happening here? i.e. haven't iters already
-done object size verifications, so they're not needed during iter copy
-helpers?
-
-> This indeed fixes it:
-> --- a/mm/slab_common.c
-> +++ b/mm/slab_common.c
-> @@ -1290,7 +1290,8 @@ void __init create_kmalloc_caches(slab_flags_t flags)
->                         kmalloc_caches[KMALLOC_DMA][i] =
-> create_kmalloc_cache(
->                                 kmalloc_info[i].name[KMALLOC_DMA],
->                                 kmalloc_info[i].size,
-> -                               SLAB_CACHE_DMA | flags, 0, 0);
-> +                               SLAB_CACHE_DMA | flags, 0,
-> +                               kmalloc_info[i].size);
->                 }
->         }
->  #endif
-
-How is iucv the only network protocol that has run into this? Do others
-use a bounce buffer?
-
--- 
-Kees Cook
+T24gMDkvMTEvMjAxOSAyMzozOCwgRGF2ZSBDaGlubmVyIHdyb3RlOg0KPiBPbiBGcmksIE5v
+diAwOCwgMjAxOSBhdCAwNzowMToxNUFNICswMTAwLCBBcmthZGl1c3ogTWnFm2tpZXdpY3og
+d3JvdGU6DQo+Pg0KPj4gSGVsbG8uDQo+Pg0KPj4gSSBoYXZlIHR3byBzZXJ2ZXJzOg0KPj4N
+Cj4+IGJhY2t1cDQgLSBvbmUgd2l0aCBBZGFwdGVjIEFTUjg4ODVRICh0aGF0J3MgdGhlIG9u
+ZSB3aGljaCBicmVha3Mgc28NCj4+IG9mdGVuIGJ1dCB0aGlzIHRpbWUgYWRhcHRlcyB3b3Jr
+cykNCj4+DQo+PiBiYWNrdXAzIC0gb3RoZXIgd2l0aCBzb2Z0d2FyZSByYWlkIG9ubHkNCj4+
+DQo+PiBCb3RoIGFyZSBub3cgcnVubmluZyA1LjMuOCBrZXJuZWxzIGFuZCBib3RoIGVuZCB1
+cCBsaWtlIHRoaXMgbG9nIGJlbG93Lg0KPj4gSXQgdGFrZXMgfiB1cCB0byBkYXkgdG8gcmVw
+cm9kdWNlLg0KPj4NCj4+IEhlcmUgYXJlIG1vcmUgY29tcGxldGUgbG9ncyBhbmQga2VybmVs
+IGNvbmZpZ3M6DQo+Pg0KPj4gaHR0cHM6Ly9peGlvbi5wbGQtbGludXgub3JnL35hcmVrbS9w
+Mi94ZnMvDQo+Pg0KPj4gQW55IGlkZWFzIHdoYXQgaXMgaGFwcGVuaW5nIGFuZCB3aGF0IGNh
+biBJIGRvIHRvIGhlbHAgZGVidWcgdGhlIHByb2JsZW0/DQo+Pg0KPj4+IE5vdiAgOCAwMDo1
+NToxOSBiYWNrdXA0IGtlcm5lbDogV0FSTklORzogQ1BVOiA1IFBJRDogMjU4MDIgYXQgZnMv
+eGZzL2xpYnhmcy94ZnNfYm1hcC5jOjQ1MzAgeGZzX2JtYXBpX2NvbnZlcnRfZGVsYWxsb2Mr
+MHg0MzQvMHg0YTAgW3hmc10NCj4+PiBOb3YgIDggMDA6NTU6MTkgYmFja3VwNCBrZXJuZWw6
+IE1vZHVsZXMgbGlua2VkIGluOiBuZnNkIGF1dGhfcnBjZ3NzIG5mc19hY2wgbG9ja2QgZ3Jh
+Y2Ugc3VucnBjIHNjaF9zZnEgbmZuZXRsaW5rX2xvZyBuZm5ldGxpbmsgeHRfTkZMT0cgeHRf
+Y29tbWVudCB4dF90Y3B1ZHAgeHRfY29ubnRyYWNrIG5mX2Nvbm50cmFjayBuZl9kZWZyYWdf
+aXB2NiBuZl9kZWZyYWdfaXB2NCBpcHRhYmxlX2ZpbHRlciBpcF90YWJsZXMgeF90YWJsZXMg
+YnBmaWx0ZXIgeGZzIG1seDRfaWIgaWJfdXZlcmJzIGliX2NvcmUgbWx4NF9lbiBzZXMgZW5j
+bG9zdXJlIHNjc2lfdHJhbnNwb3J0X3NhcyBqb3lkZXYgaW5wdXRfbGVkcyBoaWRfZ2VuZXJp
+YyB1c2JoaWQgaGlkIGNvcmV0ZW1wIGludGVsX3JhcGxfbXNyIGludGVsX3JhcGxfY29tbW9u
+IHNiX2VkYWMgeDg2X3BrZ190ZW1wX3RoZXJtYWwgaW50ZWxfcG93ZXJjbGFtcCBrdm1faW50
+ZWwga3ZtIGlUQ09fd2R0IGlUQ09fdmVuZG9yX3N1cHBvcnQgbXhtX3dtaSBpcG1pX3NzaWYg
+aXJxYnlwYXNzIGNyY3QxMGRpZl9wY2xtdWwgY3JjMzJfcGNsbXVsIGdoYXNoX2NsbXVsbmlf
+aW50ZWwgYWVzbmlfaW50ZWwgYWVzX3g4Nl82NCBjcnlwdG9fc2ltZCBjcnlwdGQgZ2x1ZV9o
+ZWxwZXIgeGhjaV9wY2kgbWx4NF9jb3JlIGludGVsX2NzdGF0ZSB4aGNpX2hjZCBpbnRlbF91
+bmNvcmUgZWhjaV9wY2kgZWhjaV9oY2QgaWdiIGludGVsX3JhcGxfcGVyZiBwY3Nwa3IgaXBt
+aV9zaSB1c2Jjb3JlIGkyY19pODAxIG1laV9tZSBpb2F0ZG1hIGFjcGlfcG93ZXJfbWV0ZXIg
+YWFjcmFpZCBpMmNfYWxnb19iaXQgaXBtaV9kZXZpbnRmIG1laSBkY2EgbHBjX2ljaCBpMmNf
+Y29yZSBldmRldiBpcG1pX21zZ2hhbmRsZXIgd21pIGh3bW9uIGFjcGlfcGFkIGJ1dHRvbiBz
+Y2hfZnFfY29kZWwgZXh0NCBsaWJjcmMzMmMgY3JjMzJjX2dlbmVyaWMgY3JjMzJjX2ludGVs
+IGNyYzE2IG1iY2FjaGUgamJkMiBzZF9tb2QgcmFpZDEgbWRfbW9kIGFoY2kgbGliYWhjaSBs
+aWJhdGENCj4+PiBOb3YgIDggMDA6NTU6MTkgYmFja3VwNCBrZXJuZWw6ICBzY3NpX21vZA0K
+Pj4+IE5vdiAgOCAwMDo1NToxOSBiYWNrdXA0IGtlcm5lbDogQ1BVOiA1IFBJRDogMjU4MDIg
+Q29tbToga3dvcmtlci91NjU6MyBUYWludGVkOiBHICAgICAgICAgICAgICAgIFQgNS4zLjgt
+MSAjMQ0KPj4+IE5vdiAgOCAwMDo1NToxOSBiYWNrdXA0IGtlcm5lbDogSGFyZHdhcmUgbmFt
+ZTogU3VwZXJtaWNybyBYMTBEUmkvWDEwRFJpLCBCSU9TIDMuMGEgMDIvMDYvMjAxOA0KPj4+
+IE5vdiAgOCAwMDo1NToxOSBiYWNrdXA0IGtlcm5lbDogV29ya3F1ZXVlOiB3cml0ZWJhY2sg
+d2Jfd29ya2ZuIChmbHVzaC04OjQ4KQ0KPj4+IE5vdiAgOCAwMDo1NToxOSBiYWNrdXA0IGtl
+cm5lbDogUklQOiAwMDEwOnhmc19ibWFwaV9jb252ZXJ0X2RlbGFsbG9jKzB4NDM0LzB4NGEw
+IFt4ZnNdDQo+Pj4gTm92ICA4IDAwOjU1OjE5IGJhY2t1cDQga2VybmVsOiBDb2RlOiBiNyBj
+MCA4MyBjMCAwMSBlOSA5YyBmZCBmZiBmZiA0MSA4MCBiYyAyNCBlOSAwMCAwMCAwMCAwMyA0
+OSA4ZCA0NCAyNCA0OCA3NCBkOSBjNyA4NCAyNCBjMCAwMCAwMCAwMCAwMSAwMCAwMCAwMCBl
+OSA5NCBmZCBmZiBmZiA8MGY+IDBiIDQxIGJlIGU0IGZmIGZmIGZmIDQ4IDhkIDdjIDI0IDMw
+IDQ0IDg5IGYyIDQ0IDg5IGVlIGU4IDg0IDZmDQo+Pj4gTm92ICA4IDAwOjU1OjE5IGJhY2t1
+cDQga2VybmVsOiBSU1A6IDAwMTg6ZmZmZmFjNjM0NmE1YjgzOCBFRkxBR1M6IDAwMDEwMjQ2
+DQo+Pj4gTm92ICA4IDAwOjU1OjE5IGJhY2t1cDQga2VybmVsOiBSQVg6IDAwMDAwMDAwMDAw
+MDAwMDAgUkJYOiBmZmZmOTVjOGY5NzJhMDAwIFJDWDogMDAwMDAwMDAwMDAwMDAyMg0KPj4+
+IE5vdiAgOCAwMDo1NToxOSBiYWNrdXA0IGtlcm5lbDogUkRYOiAwMDAwMDAwMDAwMDAxZmRh
+IFJTSTogZmZmZmZmZmZmZmZmZmZmZiBSREk6IGZmZmY5NWM4ZjkzYjA2MDANCj4+PiBOb3Yg
+IDggMDA6NTU6MTkgYmFja3VwNCBrZXJuZWw6IFJCUDogZmZmZmFjNjM0NmE1YjkzOCBSMDg6
+IDAwMDAwMDAwMDAwMDAwMDAgUjA5OiAwMDAwMDAwMDAwMDAwMDAxDQo+Pj4gTm92ICA4IDAw
+OjU1OjE5IGJhY2t1cDQga2VybmVsOiBSMTA6IGZmZmY5NWMzM2U2ZjQxZDggUjExOiAwMDAw
+MDAwMDAwMDAwMDI2IFIxMjogZmZmZjk1YmUzNzUxMmE4MA0KPj4+IE5vdiAgOCAwMDo1NTox
+OSBiYWNrdXA0IGtlcm5lbDogUjEzOiAwMDAwMDAwMDAwMDAwMDAwIFIxNDogMDAwMDAwMDAw
+MDAwMDAwMCBSMTU6IGZmZmY5NWJlMzc1MTJhYzgNCj4+PiBOb3YgIDggMDA6NTU6MTkgYmFj
+a3VwNCBrZXJuZWw6IEZTOiAgMDAwMDAwMDAwMDAwMDAwMCgwMDAwKSBHUzpmZmZmOTVjOGZm
+OTQwMDAwKDAwMDApIGtubEdTOjAwMDAwMDAwMDAwMDAwMDANCj4+PiBOb3YgIDggMDA6NTU6
+MTkgYmFja3VwNCBrZXJuZWw6IENTOiAgMDAxMCBEUzogMDAwMCBFUzogMDAwMCBDUjA6IDAw
+MDAwMDAwODAwNTAwMzMNCj4+PiBOb3YgIDggMDA6NTU6MTkgYmFja3VwNCBrZXJuZWw6IENS
+MjogMDAwMDdmZjkzODM4OTAwMCBDUjM6IDAwMDAwMDA0ODcyMGEwMDEgQ1I0OiAwMDAwMDAw
+MDAwMzYwNmUwDQo+Pj4gTm92ICA4IDAwOjU1OjE5IGJhY2t1cDQga2VybmVsOiBEUjA6IDAw
+MDAwMDAwMDAwMDAwMDAgRFIxOiAwMDAwMDAwMDAwMDAwMDAwIERSMjogMDAwMDAwMDAwMDAw
+MDAwMA0KPj4+IE5vdiAgOCAwMDo1NToxOSBiYWNrdXA0IGtlcm5lbDogRFIzOiAwMDAwMDAw
+MDAwMDAwMDAwIERSNjogMDAwMDAwMDBmZmZlMGZmMCBEUjc6IDAwMDAwMDAwMDAwMDA0MDAN
+Cj4+PiBOb3YgIDggMDA6NTU6MTkgYmFja3VwNCBrZXJuZWw6IENhbGwgVHJhY2U6DQo+Pj4g
+Tm92ICA4IDAwOjU1OjE5IGJhY2t1cDQga2VybmVsOiAgeGZzX21hcF9ibG9ja3MrMHgxOGUv
+MHg0MjAgW3hmc10NCj4+PiBOb3YgIDggMDA6NTU6MTkgYmFja3VwNCBrZXJuZWw6ICB4ZnNf
+ZG9fd3JpdGVwYWdlKzB4MTFjLzB4NDQwIFt4ZnNdDQo+Pj4gTm92ICA4IDAwOjU1OjE5IGJh
+Y2t1cDQga2VybmVsOiAgd3JpdGVfY2FjaGVfcGFnZXMrMHgxODUvMHg0MzANCj4+PiBOb3Yg
+IDggMDA6NTU6MTkgYmFja3VwNCBrZXJuZWw6ICA/IHhmc192bV93cml0ZXBhZ2VzKzB4OTAv
+MHg5MCBbeGZzXQ0KPj4+IE5vdiAgOCAwMDo1NToxOSBiYWNrdXA0IGtlcm5lbDogIHhmc192
+bV93cml0ZXBhZ2VzKzB4NWUvMHg5MCBbeGZzXQ0KPj4+IE5vdiAgOCAwMDo1NToxOSBiYWNr
+dXA0IGtlcm5lbDogIGRvX3dyaXRlcGFnZXMrMHgxYy8weDYwDQo+Pj4gTm92ICA4IDAwOjU1
+OjE5IGJhY2t1cDQga2VybmVsOiAgX193cml0ZWJhY2tfc2luZ2xlX2lub2RlKzB4NDEvMHgz
+NjANCj4+PiBOb3YgIDggMDA6NTU6MTkgYmFja3VwNCBrZXJuZWw6ICB3cml0ZWJhY2tfc2Jf
+aW5vZGVzKzB4MjBjLzB4NDkwDQo+Pj4gTm92ICA4IDAwOjU1OjE5IGJhY2t1cDQga2VybmVs
+OiAgd2Jfd3JpdGViYWNrKzB4MTJhLzB4MzIwDQo+Pj4gTm92ICA4IDAwOjU1OjE5IGJhY2t1
+cDQga2VybmVsOiAgd2Jfd29ya2ZuKzB4ZGQvMHg0YTANCj4+PiBOb3YgIDggMDA6NTU6MTkg
+YmFja3VwNCBrZXJuZWw6ICBwcm9jZXNzX29uZV93b3JrKzB4MWQ1LzB4MzcwDQo+Pj4gTm92
+ICA4IDAwOjU1OjE5IGJhY2t1cDQga2VybmVsOiAgd29ya2VyX3RocmVhZCsweDRkLzB4M2Qw
+DQo+Pj4gTm92ICA4IDAwOjU1OjE5IGJhY2t1cDQga2VybmVsOiAga3RocmVhZCsweGZiLzB4
+MTQwDQo+Pj4gTm92ICA4IDAwOjU1OjE5IGJhY2t1cDQga2VybmVsOiAgPyBwcm9jZXNzX29u
+ZV93b3JrKzB4MzcwLzB4MzcwDQo+Pj4gTm92ICA4IDAwOjU1OjE5IGJhY2t1cDQga2VybmVs
+OiAgPyBrdGhyZWFkX3BhcmsrMHg4MC8weDgwDQo+Pj4gTm92ICA4IDAwOjU1OjE5IGJhY2t1
+cDQga2VybmVsOiAgcmV0X2Zyb21fZm9yaysweDM1LzB4NDANCj4+PiBOb3YgIDggMDA6NTU6
+MTkgYmFja3VwNCBrZXJuZWw6IC0tLVsgZW5kIHRyYWNlIGEwOGRlMGM4YzI4NTE5MzYgXS0t
+LQ0KPj4+IE5vdiAgOCAwMDo1NToxOSBiYWNrdXA0IGtlcm5lbDogWEZTIChzZGQxKTogcGFn
+ZSBkaXNjYXJkIG9uIHBhZ2UgMDAwMDAwMDBlNTZlMDYyMSwgaW5vZGUgMHg3YTE3ZjQyMDYs
+IG9mZnNldCAxMDM1NDY4OC4NCj4gDQo+IFRoaXMgZ29lcyB3aXRoIHdoYXQgeW91IHJlcG9y
+dGVkIG9uICN4ZnM6DQo+IA0KPiBbOS8xMS8xOSAwODowNF0gPGFyZWttPiBbICAgNTQuNzc3
+NzE1XSBGaWxlc3lzdGVtICJzZGQxIjogcmVzZXJ2ZSBibG9ja3MgZGVwbGV0ZWQhIENvbnNp
+ZGVyIGluY3JlYXNpbmcgcmVzZXJ2ZSBwb29sIHNpemUuDQo+IA0KPiBBbmQ6DQo+IA0KPiBb
+OS8xMS8xOSAwODoxNl0gPGFyZWttPiBhaCwgeWVzIFsgICA1NC43Nzc3MjBdIFhGUyAoc2Rk
+MSk6IFBlci1BRyByZXNlcnZhdGlvbiBmb3IgQUcgMzggZmFpbGVkLiAgRmlsZXN5c3RlbSBt
+YXkgcnVuIG91dCBvZiBzcGFjZQ0KDQpBIG5vdGUgLSBJIGdvdCB0aGVzZSBtZXNzYWdlcyBv
+bmx5IG9uY2Ugb24gYmFja3VwNC4gRGlkbid0IGZpbmQgc3VjaA0KbWVzc2FnZXMgaW4gb2xk
+IGxvZ3MgKG9uIGJvdGggbWFjaGluZXMpLg0KDQo+IHdoaWNoIGltcGxpZXMgdGhhdCB3ZSBh
+cmUgcmVndWxhcmx5IHVuZGVyLWVzdGltYXRpbmcgZGVsYXllZA0KPiBhbGxvY2F0aW9uIG1l
+dGFkYXRhIHJlc2VydmF0aW9ucywgb3IgYSBsYXJnZSBkZWxhbGxvYyBleHRlbnQgaXMNCj4g
+YmVpbmcgc3BsaXQgcmVwZWF0ZWRseSBvbiB3cml0ZWJhY2suIGUuZy4gc2V2ZXJlIGZpbGUg
+ZnJhZ21lbnRhdGlvbg0KPiBkdWUgdG8gb3BlcmF0aW5nIGF0L25lYXIgRU5PU1BDIHJlc3Vs
+dGluZyBpbiBhIDEwME1CIGRlbGFsbG9jIGV4dGVudA0KPiBiZWluZyBzcGxpdCBpbnRvIGlu
+ZGl2aWR1YWwgc2luZ2xlIGJsb2NrIGFsbG9jYXRpb25zLg0KPiANCj4gRXZlbnR1YWxseSB0
+aGlzIHdpbGwgZGVwbGV0ZSB0aGUgcmVzZXJ2ZSBwb29sIGFuZCB0cmlnZ2VyIEVOT1NQQywN
+Cj4gd2hpY2ggd2lsbCBldmVudHVhbGx5IHJlc3VsdCBpbiBhIGRpcnR5IGFsbG9jYXRpb24g
+dHJhbnNhY3Rpb24gYmVpbmcNCj4gY2FuY2VsbGVkIGFuZCBzaHV0ZG93biBvY2N1cnJpbmcu
+DQoNCkRpZCBhbnl0aGluZyBpbXBvcnRhbnQgaW4gdGhhdCBhcmVhIGNoYW5nZSBiZXR3ZWVu
+IDQuMjAgKHdoZXJlIEkgaGFkIG5vDQpwcm9ibGVtcykgYW5kIDUuMSAoZmlyc3Qgb2NjdXJy
+ZW5jZSBvZiBhc3NlcnQgaGl0IG9uIGJvdGggbWFjaGluZXMpID8gSQ0Kc2VlIHhmc19ibWFw
+aV9jb252ZXJ0X2RlbGFsbG9jIHJlbGF0ZWQgY2hhbmdlcyBpbiBnaXQgbG9nIGJhY2sgdGhl
+bi4NCg0KQ3VycmVudGx5IEknbSBiYWNrIG9uIDQuMTkuODIgb24gYm90aCBtYWNoaW5lcyBm
+b3IgNCBkYXlzIChvbiA1LjMueCAxDQpkYXkgd2FzIGVub3VnaCB0byBlbmQgdXAgd2l0aCBm
+cyBzaHV0ZG93bikgYW5kIG5vIGFzc2VydCBoaXRzLg0KDQpbcmVzZW5kIGR1ZSB0byBiYWQg
+dmdlciBwb3N0bWFzdGVyc10NCi0tIA0KQXJrYWRpdXN6IE1pxZtraWV3aWN6LCBhcmVrbSAv
+ICggbWF2ZW4ucGwgfCBwbGQtbGludXgub3JnICkNCg==
