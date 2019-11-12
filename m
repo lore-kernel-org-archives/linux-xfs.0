@@ -2,97 +2,102 @@ Return-Path: <SRS0=Awhw=ZE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9224AC43331
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 21:32:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB27AC43331
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 21:49:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6F03C2196E
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 21:32:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A72A20818
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 21:49:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EqOzAILD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726912AbfKLVcU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Nov 2019 16:32:20 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:59348 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726906AbfKLVcT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 16:32:19 -0500
-Received: from dread.disaster.area (pa49-180-67-183.pa.nsw.optusnet.com.au [49.180.67.183])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 11F763A0B50;
-        Wed, 13 Nov 2019 08:32:16 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1iUdlm-0007J1-JO; Wed, 13 Nov 2019 08:32:14 +1100
-Date:   Wed, 13 Nov 2019 08:32:14 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Arnd Bergmann <arnd@arndb.de>
-Cc:     "Darrick J . Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, y2038@lists.linaro.org,
-        Deepa Dinamani <deepa.kernel@gmail.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Brian Foster <bfoster@redhat.com>,
-        Allison Collins <allison.henderson@oracle.com>,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [RFC 4/5] xfs: extend inode format for 40-bit timestamps
-Message-ID: <20191112213214.GP4614@dread.disaster.area>
-References: <20191112120910.1977003-1-arnd@arndb.de>
- <20191112120910.1977003-5-arnd@arndb.de>
+        id S1726799AbfKLVt3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Nov 2019 16:49:29 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:24883 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726376AbfKLVt3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 16:49:29 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1573595367;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=foJoTS5qBF3pwbN2BIPtPzJVfv27PYxv8/rwXo4aVSg=;
+        b=EqOzAILDzmKeAgfZlMnjd5/97sjp+3n7+qqLD5F4UZXOM688DXTM07Vc3K92VsCmh7DKMX
+        ZzBouaq8Xnf6k/8y9sh9D3zp++V60Dl1GWJ+sl+A8XLe/N2edkcV0vmmJyy9oNS2t1cPkN
+        C94LdWEE2Bmo4dFMVsO19LV1JgS/X/w=
+Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
+ [209.85.221.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-242-uJukUmMHPpGSrGfIzYi91g-1; Tue, 12 Nov 2019 16:49:26 -0500
+Received: by mail-wr1-f70.google.com with SMTP id p6so86005wrs.5
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2019 13:49:26 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Me1RoLr60bwLApAi7Tz6D08XYXwc+YMAZIpf/QB6g8s=;
+        b=qfAdsollq52//kVG/rKoEjz3R4prlu7lQjPTfSdyHMvwNK9k/M/kyV/ujnZRmDwL7/
+         STty17TDEb+9rxuQenoPRpmi2sTD+VXCDF+kj20YOT6sZuPM+ngDjGT/dQrH1VbUbfx0
+         w+OSIftW3PdP7HrVUXl9/aKxDQuYKyiMOaFLAwwRpiFgZNtzOYiZ8oM3mFj1Tq+u1o4B
+         MmEDTwTIcEVH7y4U1zQfxRgySFO3gTEIeHOuJ3xj57kpYS7nLg9WembGtA3MD7YKgIMi
+         uZGxWp7lIfBqE/Bj4u481WdoNuEPGzuwv/RBAg7r1SZ3QNU12S+IjgL21QpULNXUW6FL
+         HfJw==
+X-Gm-Message-State: APjAAAV2RNnho9ROZF61GXyC3o5Bo3T867hh+AtBt+6rDT4Gs326Iddj
+        Zds9jNGDHxl9iMovAe7Q9aNT8RLBkF8HGvqUjJWuPtolpqCU2vl+5Z+2GHV+QwHFjNAEl7z1pOX
+        rQR/jsxp5ay6+43cLC7pM
+X-Received: by 2002:a05:6000:1083:: with SMTP id y3mr26378423wrw.290.1573595365303;
+        Tue, 12 Nov 2019 13:49:25 -0800 (PST)
+X-Google-Smtp-Source: APXvYqxYICP7aEnhhLqAdP8nhrQCqyCBcqYPV8pumDyeB8T3I3htve0ToTVzTxaLJPtKonTJuBqxCA==
+X-Received: by 2002:a05:6000:1083:: with SMTP id y3mr26378417wrw.290.1573595365162;
+        Tue, 12 Nov 2019 13:49:25 -0800 (PST)
+Received: from preichl.redhat.com (243.206.broadband12.iol.cz. [90.179.206.243])
+        by smtp.gmail.com with ESMTPSA id x6sm252681wrw.34.2019.11.12.13.49.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 12 Nov 2019 13:49:24 -0800 (PST)
+From:   Pavel Reichl <preichl@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Pavel Reichl <preichl@redhat.com>
+Subject: [PATCH v4 0/5] xfs: remove several typedefs in quota code
+Date:   Tue, 12 Nov 2019 22:33:05 +0100
+Message-Id: <20191112213310.212925-1-preichl@redhat.com>
+X-Mailer: git-send-email 2.23.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191112120910.1977003-5-arnd@arndb.de>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
-        a=3wLbm4YUAFX2xaPZIabsgw==:117 a=3wLbm4YUAFX2xaPZIabsgw==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=MeAgGD-zjQ4A:10
-        a=VwQbUJbxAAAA:8 a=JfrnYn6hAAAA:8 a=7-415B0cAAAA:8 a=R9Rnn_goW3qbCYCF-O0A:9
-        a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=1CNFftbPRP8L7MoqJWF3:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+X-MC-Unique: uJukUmMHPpGSrGfIzYi91g-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 12, 2019 at 01:09:09PM +0100, Arnd Bergmann wrote:
-> XFS is the only major file system that lacks timestamps beyond year 2038,
-> and is already being deployed in systems that may have to be supported
-> beyond that time.
-> 
-> Fortunately, the inode format still has a few reserved bits that can be
-> used to extend the current format. There are two bits in the nanosecond
-> portion that could be used in the same way that ext4 does, extending
-> the timestamps until year 2378, as well as 12 unused bytes after the
-> already allocated fields.
-> 
-> There are four timestamps that need to be extended, so using four
-> bytes out of the reserved space gets us all the way until year 36676,
-> by extending the current 1902-2036 with another 255 epochs, which
-> seems to be a reasonable range.
-> 
-> I am not sure whether this change to the inode format requires a
-> new version for the inode. All existing file system images remain
-> compatible, while mounting a file systems with extended timestamps
-> beyond 2038 would report that timestamp incorrectly in the 1902
-> through 2038 range, matching the traditional Linux behavior of
-> wrapping timestamps.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Eliminate some typedefs.
 
-This is basically what I proposed ~5 years or so ago and posted a
-patch to implement it in an early y2038 discussion with you. I jsut
-mentioned that very patch in my reposnse to Amir's timestamp
-extension patchset, pointing out that this isn't the way we want
-to proceed with >y2038 on-disk support.
 
-https://lore.kernel.org/linux-xfs/20191112161242.GA19334@infradead.org/T/#maf6b2719ed561cc2865cc5e7eb82df206b971261
+Pavel Reichl (5):
+  xfs: remove the xfs_disk_dquot_t and xfs_dquot_t
+  xfs: remove the xfs_quotainfo_t typedef
+  xfs: remove the xfs_dq_logitem_t typedef
+  xfs: remove the xfs_qoff_logitem_t typedef
+  Replace function declartion by actual definition
 
-I'd suggest taking the discussion there....
+ fs/xfs/libxfs/xfs_dquot_buf.c  |   8 +-
+ fs/xfs/libxfs/xfs_format.h     |  10 +--
+ fs/xfs/libxfs/xfs_trans_resv.c |   6 +-
+ fs/xfs/xfs_dquot.c             |  20 ++---
+ fs/xfs/xfs_dquot.h             |  98 +++++++++++------------
+ fs/xfs/xfs_dquot_item.h        |  34 ++++----
+ fs/xfs/xfs_log_recover.c       |   5 +-
+ fs/xfs/xfs_qm.c                |  50 ++++++------
+ fs/xfs/xfs_qm.h                |   6 +-
+ fs/xfs/xfs_qm_bhv.c            |   6 +-
+ fs/xfs/xfs_qm_syscalls.c       | 139 ++++++++++++++++-----------------
+ fs/xfs/xfs_trans_dquot.c       |  54 ++++++-------
+ 12 files changed, 217 insertions(+), 219 deletions(-)
 
-Cheers,
+--=20
+2.23.0
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
