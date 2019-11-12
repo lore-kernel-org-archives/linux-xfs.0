@@ -2,93 +2,139 @@ Return-Path: <SRS0=Awhw=ZE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C266DC43331
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 22:14:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70E12C17441
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 22:44:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 91F4421783
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 22:14:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 482D621872
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 22:44:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="P36dtm1c"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726910AbfKLWOy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Nov 2019 17:14:54 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:44781 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726896AbfKLWOy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 17:14:54 -0500
-Received: from dread.disaster.area (pa49-180-67-183.pa.nsw.optusnet.com.au [49.180.67.183])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 10D1D7E8EF6;
-        Wed, 13 Nov 2019 09:14:50 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1iUeQy-0007UG-Hj; Wed, 13 Nov 2019 09:14:48 +1100
-Date:   Wed, 13 Nov 2019 09:14:48 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: attach dquots before performing xfs_swap_extents
-Message-ID: <20191112221448.GQ4614@dread.disaster.area>
-References: <157343509505.1948946.5379830250503479422.stgit@magnolia>
- <157343511427.1948946.2692071497822316839.stgit@magnolia>
- <20191111080503.GC4548@infradead.org>
+        id S1726936AbfKLWok (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Nov 2019 17:44:40 -0500
+Received: from mail-pf1-f170.google.com ([209.85.210.170]:34401 "EHLO
+        mail-pf1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726906AbfKLWok (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 17:44:40 -0500
+Received: by mail-pf1-f170.google.com with SMTP id n13so144798pff.1
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2019 14:44:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=C1muovplrNaPPT7QT8Z1yA2NWOBfnlBH2QBr7j8z4Q8=;
+        b=P36dtm1ccvcCzqqsjkP1PV040I5IwewwSlq/C6nOzw4XRAF9CsE5CXJrk8Q4XoSPdt
+         NINThNlafqMuUB6kM/dvFPYexVRvxHa9pBKnUl6ngf9xyp1SyLW3AEeifXg7PbAW3ihT
+         e0gb3VwyDSPuNRyFrjiTmIQO/TITrKsFR/Ve0=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=C1muovplrNaPPT7QT8Z1yA2NWOBfnlBH2QBr7j8z4Q8=;
+        b=dT4stNUIaW5oGk78mOEbpdLTj/2U0Xna1JupGVCycs+aGMb8VpY+uhi3RIPHILh0Km
+         CgWZoGs+P+wkkahhO821Y5L3o5h/YsaR8VmSGn3G7xJSypweguz8CcuIVbXy1XOz5hFO
+         NTzbNaiaTOv8YorXNyw1olIWkE5UICENU5gLQmAZicid4jcrCEr+fKqEngTG68gFmN1H
+         /lTYexzXgNlh+eysHhQEyvWY2jp/WpUjAjmHwbWS0pHxqtlSIMQAtiLUtS1HcEbUs6HR
+         DsjwXyl4AJX0KiIoDZSUj8YfFVK9VmWr4uDz//gKtL7GrxiicFA4laEe3taWtnti7qRu
+         AXYw==
+X-Gm-Message-State: APjAAAU7iTTj5FflLGXq8Yb3bRoL3nQ8MBEvA1sWE71ZCPiLG+kE9hBt
+        ZVjtchqHQO2G78jtbOkieZBgkg==
+X-Google-Smtp-Source: APXvYqxHFNLovY74mEz0ds/DGcQVG5m96Feh5UG/V0JZniuuQ/2IZ78EPp3GXTrjfeiatGSvbakfSw==
+X-Received: by 2002:a63:1065:: with SMTP id 37mr37532828pgq.31.1573598678304;
+        Tue, 12 Nov 2019 14:44:38 -0800 (PST)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id s69sm24033pgs.65.2019.11.12.14.44.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 12 Nov 2019 14:44:37 -0800 (PST)
+Date:   Tue, 12 Nov 2019 14:44:36 -0800
+From:   Kees Cook <keescook@chromium.org>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        linux-next@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: Coverity: xlog_write_iclog(): Memory - corruptions
+Message-ID: <201911121439.BFB4B66C@keescook>
+References: <201911111734.4D8A1DB3DF@keescook>
+ <20191112024130.GA6212@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191111080503.GC4548@infradead.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=G6BsK5s5 c=1 sm=1 tr=0
-        a=3wLbm4YUAFX2xaPZIabsgw==:117 a=3wLbm4YUAFX2xaPZIabsgw==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=MeAgGD-zjQ4A:10
-        a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8 a=y1OQ-_KH7HdE_a4HnVoA:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20191112024130.GA6212@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 11, 2019 at 12:05:03AM -0800, Christoph Hellwig wrote:
-> On Sun, Nov 10, 2019 at 05:18:34PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Nov 11, 2019 at 06:41:30PM -0800, Darrick J. Wong wrote:
+> [Might as well add the XFS list]
+> 
+> On Mon, Nov 11, 2019 at 05:34:25PM -0800, coverity-bot wrote:
+> > Hello!
 > > 
-> > Make sure we attach dquots to both inodes before swapping their extents.
-> > This was found via manual code inspection by looking for places where we
-> > could call xfs_trans_mod_dquot without dquots attached to inodes, and
-> > confirmed by instrumenting the kernel and running xfs/328.
+> > This is an experimental automated report about issues detected by Coverity
+> > from a scan of next-20191108 as part of the linux-next weekly scan project:
+> > https://scan.coverity.com/projects/linux-next-weekly-scan
+> > 
+> > You're getting this email because you were associated with the identified
+> > lines of code (noted below) that were touched by recent commits:
+> > 
+> > 79b54d9bfcdc ("xfs: use bios directly to write log buffers")
+> > 
+> > Coverity reported the following:
+> > 
+> > *** CID 1487853:  Memory - corruptions  (BAD_FREE)
+> > /fs/xfs/xfs_log.c: 1819 in xlog_write_iclog()
+> > 1813     		submit_bio(split);
+> > 1814
+> > 1815     		/* restart at logical offset zero for the remainder */
+> > 1816     		iclog->ic_bio.bi_iter.bi_sector = log->l_logBBstart;
+> > 1817     	}
+> > 1818
+> > vvv     CID 1487853:  Memory - corruptions  (BAD_FREE)
 > 
-> Looks good:
+> Isn't this a duplicate of 1451989 in the main kernel coverity scan?
+> Which, AFAICT 145989 is a false positive since iclog->ic_bio does not
+> itself become the target of a bio_chain.
+
+It might be, yes. The two projects are not correlated within Coverity,
+and I've been trying to focus on "newly added" issues in linux-next.
+
+I'm still trying to figure out where Coverity sees a "free" happening...
+
+Thanks for looking at this!
+
+-Kees
+
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> --D
 > 
-> Btw, for  while I've been wondering if we could just get rid of the
-> concepts of attached dquots.  With the radix-tree/xarray looks up
-> are be fairly cheap, and could be done lockless using RCU.  So we could
-> try to just kill the concept of attaching the dquot to the inode and
-> just look it up once per operation, where operation preferally is
-> something high-level like the actual file/inode operation and not a
-> low-level thing inside xfs.
+> > vvv     "submit_bio" frees address of "iclog->ic_bio".
+> > 1819     	submit_bio(&iclog->ic_bio);
+> > 1820     }
+> > 1821
+> > 1822     /*
+> > 1823      * We need to bump cycle number for the part of the iclog that is
+> > 1824      * written to the start of the log. Watch out for the header magic
+> > 
+> > If this is a false positive, please let us know so we can mark it as
+> > such, or teach the Coverity rules to be smarter. If not, please make
+> > sure fixes get into linux-next. :) For patches fixing this, please
+> > include these lines (but double-check the "Fixes" first):
+> > 
+> > Reported-by: coverity-bot <keescook+coverity-bot@chromium.org>
+> > Addresses-Coverity-ID: 1487853 ("Memory - corruptions")
+> > Fixes: 79b54d9bfcdc ("xfs: use bios directly to write log buffers")
+> > 
+> > 
+> > Thanks for your attention!
+> > 
+> > -- 
+> > Coverity-bot
 
-If the dquots are not attached to the inode, how would you pass the
-3 dquots per inode down the stack to where they are actually used
-inside the filesystem? I mean, we have to get the dquots attached to
-the transaction so we can update them in xfs_trans_commit ->
-xfs_trans_apply_dquot_deltas(), so somehow we'd have to get them
-from the high level file/inode operations down to the XFS
-transaction context. And things like writeback need dquots attached
-for delayed allocation, so various aops would need to do dquot
-lookups, too...
-
-I can see the advantage of doing rcu dquot cache lookups in the xfs
-context where we are attaching the dquots to the transaction rather
-than attaching them to the inode, but I can't see how the "do it at
-a high level" aspect of this would work....
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Kees Cook
