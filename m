@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DAF37C43331
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 12:09:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A613BC43331
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 12:09:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BED0221925
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 12:09:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F4A521925
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 12:09:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726991AbfKLMJn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Nov 2019 07:09:43 -0500
-Received: from mout.kundenserver.de ([212.227.126.130]:41717 "EHLO
+        id S1726988AbfKLMJp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Nov 2019 07:09:45 -0500
+Received: from mout.kundenserver.de ([212.227.126.130]:59147 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727109AbfKLMJn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 07:09:43 -0500
+        with ESMTP id S1727229AbfKLMJo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 07:09:44 -0500
 Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
  (mreue011 [212.227.15.129]) with ESMTPA (Nemesis) id
- 1MPGBR-1iGZfR3EkP-00Pc3s; Tue, 12 Nov 2019 13:09:12 +0100
+ 1M1q8m-1iSJ7Z1b68-002Jt7; Tue, 12 Nov 2019 13:09:13 +0100
 From:   Arnd Bergmann <arnd@arndb.de>
 To:     "Darrick J . Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org, y2038@lists.linaro.org, arnd@arndb.de,
@@ -30,104 +30,270 @@ Cc:     linux-xfs@vger.kernel.org, y2038@lists.linaro.org, arnd@arndb.de,
         Brian Foster <bfoster@redhat.com>,
         Allison Collins <allison.henderson@oracle.com>,
         linux-fsdevel@vger.kernel.org
-Subject: [RFC 1/5] xfs: [variant A] avoid time_t in user api
-Date:   Tue, 12 Nov 2019 13:09:06 +0100
-Message-Id: <20191112120910.1977003-2-arnd@arndb.de>
+Subject: [RFC 3/5] xfs: [variant C] avoid i386-misaligned xfs_bstat
+Date:   Tue, 12 Nov 2019 13:09:08 +0100
+Message-Id: <20191112120910.1977003-4-arnd@arndb.de>
 X-Mailer: git-send-email 2.20.0
 In-Reply-To: <20191112120910.1977003-1-arnd@arndb.de>
 References: <20191112120910.1977003-1-arnd@arndb.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:yoWqlCGd5hANpKL2cJs5nTBCZnQpBg6+YbJwERE06XjTio3694h
- uATgw0SZFZwox/ws5O0zLOOHT+Te1wler12Q02ESAvsmIXInzh0m/mqohRtgzvkpJv0Phuc
- SVsISjm1MnvKXQpKHti6TOynFdhMd8ICdYLtu3M6kabdOcxpzZmvbuXA4qKbr/cYv1t20ZF
- IGZWLSMTPpdjrWoMw9NHQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:VtIwy/yEKfU=:BEZ2Sp4BbtjQMSHsEQdbwU
- Owe0kfW9VqrGYzFieA8SZ0mrU8cdeOQxAJ/6Z+y+bp0Rj3DCwMbcbsJdSWUXrk11jZXumcKS3
- Vc9kLkOSm4xyFgBRf3kJuwmXzzeliNmjsBRhZUcozep2podV+UQeZEF3inRZINjGMPmNmoSf7
- isWfsuPNJmr9kWFSNm9XakALnrbx/7WbKRC65HY7r8df5E2c17JAHEuF6hzL4GrzKyyvGFLwM
- 7FSceAQ15TkzGdZq5QgZ8zj2OxOwLaASzw8FCVrg3j0QvmV/bfpIdXy56dQ1Gz52DAfQPI/i0
- x/LPPhS2EGqqw9+dkFCzyaKH7VDBDyGu3p7p2J1vWszYn/IC/t6Gp1KBVJzjGAU6ww0rs2vNl
- uDiA1FZmMLnByR1SugpDcMlyh+4QXIYV0u7Z5bZCKHaiEyZk0aqdHEKYr224Q9GSEufWL1y8g
- 1Xu9Zo1QiWpjDGpEYaMYyAo9Lsb7aiytyeiY1+G7QpT9EytVFR5T3dzQAjA4WPQbQpkWwdmVJ
- jrb8enQ6hhd+a0VmuyTulbBRByPYO9wGRZS2ziNh/yD1BUraA+wx2x2PBvW0i9spzweJrekKw
- 15+5NiXeBIVn1A7u7NTT6dyOdIVj//inlAHomkhxacXb4ZY9fAl/h0OMLqTzSLeIC1nF4kM7V
- HV3KR7wKGj5kL8i1UXLAt8PQLL7KNEI0tTsmcC75dihL+iR/tJ440WwerGRCgena7YqHRD4Yn
- NGYUp3HFAeXHoGs2QMCeMKU6dA6Pvwo2tPOmldoJuhd9FfGCdp7N+JPwqVTggjyu7EvGho8UE
- GvBaSG4cA5eab7wjc26Vsn4dH/N8j/TIW3me7YivRybPfo+U1iTwbbjbMusp+Wc+n6ErCqsBC
- bOPkSHagoM2RiFLVegXA==
+X-Provags-ID: V03:K1:M+DgUTQXXx55xjkTyjjlvP9lY+UVcKlCUHKoHtQanp2/9dL6H0p
+ XeQ7k781eMoZzf+XqiChKJwG+Vplb3OcxIILAU5pFGBj9NOLKtyeg8ayyp6/3YKzr/jjufZ
+ /qoMUYwuQeqpTeXq+9EprMh5mMzR1AlrX/t7wUdLL8C5oWX+ALLbmwz6C8g1pb/aoHNdwgq
+ gKKGRaLX0fOyQZdlb7n4Q==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:iu+uetCjnLs=:YSMg1vD//WT15pOicFSLp8
+ zZDvEpBPwGxVkQaI6UF6tFJFzQdpXTUFBb3Ef+LDouRoQs3rwqgYY76ltjdVVyblu4LvSzkK4
+ v/WwXrBPr/zRFAH9XEta//UfH2nm3nspH4W6Xw58vv/fSDbKjttwZu/QXJReHBnq+GnPm5RbH
+ 3f8K0U3Jw/1U91ZrdSLgfdt/bw1WKOl4K+s8kTo7DgiQlOjwKzwAgd0lan+ZAfHqurB9aAdwU
+ jjExKNx23P9e5u+CLDnTEXz/D/dXga2XyZ2wnKF7GZBNKgCVa/IqCdIVQKHmTvz94tjRShH/Q
+ B/ghS65ktkNyaE8vsTUP7lkuD43d8Wu7Oywga8vAH/iGMP5K7y14CWdiQmRArbWd1Gg56e0vc
+ VS/aWX2Aywde0r6CWPAu1sFrbMNxKcJFZhQr1vbJzCYmScedJglZ5jtJGYOlawwStlZNrY5g7
+ nXTsm7fLRqHjCtlV49cagVEZ5EXISkhGJDdFidpAJ6Hs/z5c/2N9IQHhrI/Qi2WLnXjJxE9Bm
+ Ey2GdbDD5quT5lNLQbb2ldN8AjJt7aQXXlNX3r0CKoRHrJ0mjyHtgRzvXk5R1pzNhg0bqn+4R
+ bmV5D19dvBBf/hd4d2jtC5IYBrLpiRMjXJyZ+DADRNx9v0D4bCxt1yuC+wFeW5vsIxzirK02T
+ bhPT0WKpodqHR/7FjOEr+5SoXyU0c/f0hj/msHGYxmubQBw1u7xvvcH2ZLqtEhrsy3pNVByml
+ ucGlQCuVecI4zNC2NEw/aMjQZEy96qi2nOx3GIzUkUAwpmMXr70HDkC97sbmlw3tI8w3hN24+
+ kAbGWXefpLkdAqvuIXtfDT7t/3u7LoJcwBejEeYiibH2bJUw5VEkD4xbDfnTnogxKvxQ29Nhw
+ o4aerJSDZXJQUaP0AxqQ==
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The ioctl definitions for XFS_IOC_SWAPEXT, XFS_IOC_FSBULKSTAT and
-XFS_IOC_FSBULKSTAT_SINGLE are part of libxfs and based on time_t.
+The change to the ioctl commands requires updating the header file. If
+we do that, the alignment problem on i386 could be solved for the new
+format by explictly aligning all 64-bit members to time_t. This complicates
+the header file definition, but saves the code to deal with a third format.
 
-The definition for time_t differs between current kernels and coming
-32-bit libc variants that define it as 64-bit. For most ioctls, that
-means the kernel has to be able to handle two different command codes
-based on the different structure sizes.
+The native ioctl simply deals with both the time32 and the time64 version,
+and the latter is the same across all 64-bit architectures and all 32-bit
+user space with 32-bit time_t including i386 and x32.
 
-The same solution could be applied for XFS_IOC_SWAPEXT, but it would
-not work for XFS_IOC_FSBULKSTAT and XFS_IOC_FSBULKSTAT_SINGLE because
-the structure with the time_t is passed through an indirect pointer,
-and the command number itself is based on struct xfs_fsop_bulkreq,
-which does not differ based on time_t.
-
-This means any solution that can be applied requires a change of the
-ABI definition in the xfs_fs.h header file, as well as doing the same
-change in any user application that contains a copy of this header.
-
-The usual solution would be to define a replacement structure and
-use conditional compilation for the ioctl command codes to use
-one or the other, such as
-
- #define XFS_IOC_FSBULKSTAT_OLD _IOWR('X', 101, struct xfs_fsop_bulkreq)
- #define XFS_IOC_FSBULKSTAT_NEW _IOWR('X', 129, struct xfs_fsop_bulkreq)
- #define XFS_IOC_FSBULKSTAT ((sizeof(time_t) == sizeof(__kernel_long_t)) ? \
-			     XFS_IOC_FSBULKSTAT_OLD : XFS_IOC_FSBULKSTAT_NEW)
-
-After this, the kernel would be able to implement both
-XFS_IOC_FSBULKSTAT_OLD and XFS_IOC_FSBULKSTAT_NEW handlers on
-32-bit architectures with the correct ABI for either definition
-of time_t.
-
-However, as long as two observations are true, a much simpler solution
-can be used:
-
-1. xfsprogs is the only user space project that has a copy of this header
-2. xfsprogs already has a replacement for all three affected ioctl commands,
-   based on the xfs_bulkstat structure to pass 64-bit timestamps
-   regardless of the architecture
-
-Based on those assumptions, changing xfs_bstime to use __kernel_long_t
-instead of time_t in both the kernel and in xfsprogs preserves the current
-ABI for any libc definition of time_t and solves the problem of passing
-64-bit timestamps to 32-bit user space.
-
-If either of the two assumptions is invalid, more discussion is needed
-for coming up with a way to fix as much of the affected user space
-code as possible.
+If we decide to do this, this change should be folded into "xfs: [variant B]
+add time64 version of xfs_bstat".
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- fs/xfs/libxfs/xfs_fs.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_fs.h |  20 +++++--
+ fs/xfs/xfs_ioctl32.c   | 120 +----------------------------------------
+ 2 files changed, 18 insertions(+), 122 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index e9371a8e0e26..4c4330f6e653 100644
+index 9310576a45e5..e95807d223ad 100644
 --- a/fs/xfs/libxfs/xfs_fs.h
 +++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -324,7 +324,7 @@ typedef struct xfs_growfs_rt {
+@@ -319,6 +319,17 @@ typedef struct xfs_growfs_rt {
+ 	__u32		extsize;	/* new realtime extent size, fsblocks */
+ } xfs_growfs_rt_t;
+ 
++/*
++ * on i386, u64 has 32-bit alignment, which makes the traditional xfs_bstat
++ * different from other architectures. Aligning all 64-bit members to
++ * sizeof(time_t) means that the new version with 64-bit time_t is padded
++ * the same as on all other architectures.
++ */
++#ifdef __i386__
++#define __TIME_ALIGN __attribute__((aligned(sizeof(time_t))))
++#else
++#define __TIME_ALIGN
++#endif
+ 
+ /*
   * Structures returned from ioctl XFS_IOC_FSBULKSTAT & XFS_IOC_FSBULKSTAT_SINGLE
-  */
- typedef struct xfs_bstime {
--	time_t		tv_sec;		/* seconds		*/
-+	__kernel_long_t tv_sec;		/* seconds		*/
+@@ -328,24 +339,24 @@ typedef struct xfs_bstime {
+ 	__s64		tv_sec;		/* seconds		*/
  	__s32		tv_nsec;	/* and nanoseconds	*/
+ #else
+-	time_t		tv_sec;		/* seconds		*/
++	time_t		tv_sec __TIME_ALIGN; /* seconds		*/
+ 	__s32		tv_nsec;	/* and nanoseconds	*/
+ #endif
  } xfs_bstime_t;
  
+ struct xfs_bstat {
+-	__u64		bs_ino;		/* inode number			*/
++	__u64		bs_ino __TIME_ALIGN; /* inode number		*/
+ 	__u16		bs_mode;	/* type and mode		*/
+ 	__u16		bs_nlink;	/* number of links		*/
+ 	__u32		bs_uid;		/* user id			*/
+ 	__u32		bs_gid;		/* group id			*/
+ 	__u32		bs_rdev;	/* device value			*/
+ 	__s32		bs_blksize;	/* block size			*/
+-	__s64		bs_size;	/* file size			*/
++	__s64		bs_size __TIME_ALIGN;	/* file size		*/
+ 	xfs_bstime_t	bs_atime;	/* access time			*/
+ 	xfs_bstime_t	bs_mtime;	/* modify time			*/
+ 	xfs_bstime_t	bs_ctime;	/* inode change time		*/
+-	int64_t		bs_blocks;	/* number of blocks		*/
++	int64_t		bs_blocks __TIME_ALIGN;	/* number of blocks	*/
+ 	__u32		bs_xflags;	/* extended flags		*/
+ 	__s32		bs_extsize;	/* extent size			*/
+ 	__s32		bs_extents;	/* number of extents		*/
+@@ -362,6 +373,7 @@ struct xfs_bstat {
+ 	__u16		bs_dmstate;	/* DMIG state info		*/
+ 	__u16		bs_aextents;	/* attribute number of extents	*/
+ };
++#undef __TIME_ALIGN
+ 
+ /* New bulkstat structure that reports v5 features and fixes padding issues */
+ struct xfs_bulkstat {
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index 2ea7d3e12b4b..8059cdc2d5ca 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -98,101 +98,6 @@ xfs_fsinumbers_fmt_compat(
+ 	return xfs_ibulk_advance(breq, sizeof(struct compat_xfs_inogrp));
+ }
+ 
+-/* struct xfs_bstat has differing alignment on intel */
+-STATIC int
+-xfs_ioctl32_bstime_copyin(
+-	xfs_bstime_t		*bstime,
+-	compat_xfs_bstime_t	__user *bstime32)
+-{
+-	if (get_user(bstime->tv_sec,	&bstime32->tv_sec)	||
+-	    get_user(bstime->tv_nsec,	&bstime32->tv_nsec))
+-		return -EFAULT;
+-	return 0;
+-}
+-
+-STATIC int
+-xfs_ioctl32_bstat_copyin(
+-	struct xfs_bstat		*bstat,
+-	struct compat_xfs_bstat	__user	*bstat32)
+-{
+-	if (get_user(bstat->bs_ino,	&bstat32->bs_ino)	||
+-	    get_user(bstat->bs_mode,	&bstat32->bs_mode)	||
+-	    get_user(bstat->bs_nlink,	&bstat32->bs_nlink)	||
+-	    get_user(bstat->bs_uid,	&bstat32->bs_uid)	||
+-	    get_user(bstat->bs_gid,	&bstat32->bs_gid)	||
+-	    get_user(bstat->bs_rdev,	&bstat32->bs_rdev)	||
+-	    get_user(bstat->bs_blksize,	&bstat32->bs_blksize)	||
+-	    get_user(bstat->bs_size,	&bstat32->bs_size)	||
+-	    xfs_ioctl32_bstime_copyin(&bstat->bs_atime, &bstat32->bs_atime) ||
+-	    xfs_ioctl32_bstime_copyin(&bstat->bs_mtime, &bstat32->bs_mtime) ||
+-	    xfs_ioctl32_bstime_copyin(&bstat->bs_ctime, &bstat32->bs_ctime) ||
+-	    get_user(bstat->bs_blocks,	&bstat32->bs_size)	||
+-	    get_user(bstat->bs_xflags,	&bstat32->bs_size)	||
+-	    get_user(bstat->bs_extsize,	&bstat32->bs_extsize)	||
+-	    get_user(bstat->bs_extents,	&bstat32->bs_extents)	||
+-	    get_user(bstat->bs_gen,	&bstat32->bs_gen)	||
+-	    get_user(bstat->bs_projid_lo, &bstat32->bs_projid_lo) ||
+-	    get_user(bstat->bs_projid_hi, &bstat32->bs_projid_hi) ||
+-	    get_user(bstat->bs_forkoff,	&bstat32->bs_forkoff)	||
+-	    get_user(bstat->bs_dmevmask, &bstat32->bs_dmevmask)	||
+-	    get_user(bstat->bs_dmstate,	&bstat32->bs_dmstate)	||
+-	    get_user(bstat->bs_aextents, &bstat32->bs_aextents))
+-		return -EFAULT;
+-	return 0;
+-}
+-
+-/* XFS_IOC_FSBULKSTAT and friends */
+-
+-STATIC int
+-xfs_bstime_store_compat(
+-	compat_xfs_bstime_t	__user *p32,
+-	const xfs_bstime_t	*p)
+-{
+-	if (put_user(p->tv_sec, &p32->tv_sec) ||
+-	    put_user(p->tv_nsec, &p32->tv_nsec))
+-		return -EFAULT;
+-	return 0;
+-}
+-
+-/* Return 0 on success or positive error (to xfs_bulkstat()) */
+-STATIC int
+-xfs_fsbulkstat_one_fmt_compat(
+-	struct xfs_ibulk		*breq,
+-	const struct xfs_bulkstat	*bstat)
+-{
+-	struct compat_xfs_bstat	__user	*p32 = breq->ubuffer;
+-	struct xfs_bstat		bs1;
+-	struct xfs_bstat		*buffer = &bs1;
+-
+-	xfs_bulkstat_to_bstat(breq->mp, &bs1, bstat);
+-
+-	if (put_user(buffer->bs_ino,	  &p32->bs_ino)		||
+-	    put_user(buffer->bs_mode,	  &p32->bs_mode)	||
+-	    put_user(buffer->bs_nlink,	  &p32->bs_nlink)	||
+-	    put_user(buffer->bs_uid,	  &p32->bs_uid)		||
+-	    put_user(buffer->bs_gid,	  &p32->bs_gid)		||
+-	    put_user(buffer->bs_rdev,	  &p32->bs_rdev)	||
+-	    put_user(buffer->bs_blksize,  &p32->bs_blksize)	||
+-	    put_user(buffer->bs_size,	  &p32->bs_size)	||
+-	    xfs_bstime_store_compat(&p32->bs_atime, &buffer->bs_atime) ||
+-	    xfs_bstime_store_compat(&p32->bs_mtime, &buffer->bs_mtime) ||
+-	    xfs_bstime_store_compat(&p32->bs_ctime, &buffer->bs_ctime) ||
+-	    put_user(buffer->bs_blocks,	  &p32->bs_blocks)	||
+-	    put_user(buffer->bs_xflags,	  &p32->bs_xflags)	||
+-	    put_user(buffer->bs_extsize,  &p32->bs_extsize)	||
+-	    put_user(buffer->bs_extents,  &p32->bs_extents)	||
+-	    put_user(buffer->bs_gen,	  &p32->bs_gen)		||
+-	    put_user(buffer->bs_projid,	  &p32->bs_projid)	||
+-	    put_user(buffer->bs_projid_hi,	&p32->bs_projid_hi)	||
+-	    put_user(buffer->bs_forkoff,  &p32->bs_forkoff)	||
+-	    put_user(buffer->bs_dmevmask, &p32->bs_dmevmask)	||
+-	    put_user(buffer->bs_dmstate,  &p32->bs_dmstate)	||
+-	    put_user(buffer->bs_aextents, &p32->bs_aextents))
+-		return -EFAULT;
+-
+-	return xfs_ibulk_advance(breq, sizeof(struct compat_xfs_bstat));
+-}
+-
+ #else
+ #define xfs_fsinumbers_fmt_compat xfs_fsinumbers_fmt
+ #endif	/* BROKEN_X86_ALIGNMENT */
+@@ -221,11 +126,6 @@ xfs_compat_ioc_fsbulkstat(
+ 	 */
+ 	inumbers_fmt_pf		inumbers_func = xfs_fsinumbers_fmt_compat;
+ 	bulkstat_one_fmt_pf	bs_one_func_old = xfs_fsbulkstat_time32_one_fmt;
+-	bulkstat_one_fmt_pf	bs_one_func_new = xfs_fsbulkstat_one_fmt;
+-
+-#ifdef BROKEN_X86_ALIGNMENT
+-	bs_one_func_new = xfs_fsbulkstat_one_fmt_compat;
+-#endif
+ 
+ #ifdef CONFIG_X86_X32
+ 	if (in_x32_syscall()) {
+@@ -305,12 +205,12 @@ xfs_compat_ioc_fsbulkstat(
+ 	case XFS_IOC_FSBULKSTAT_SINGLE_NEW32:
+ 		breq.startino = lastino;
+ 		breq.icount = 1;
+-		error = xfs_bulkstat_one(&breq, bs_one_func_new);
++		error = xfs_bulkstat_one(&breq, xfs_fsbulkstat_one_fmt);
+ 		lastino = breq.startino;
+ 		break;
+ 	case XFS_IOC_FSBULKSTAT_NEW32:
+ 		breq.startino = lastino ? lastino + 1 : 0;
+-		error = xfs_bulkstat(&breq, bs_one_func_new);
++		error = xfs_bulkstat(&breq, xfs_fsbulkstat_one_fmt);
+ 		lastino = breq.startino - 1;
+ 		break;
+ 	default:
+@@ -610,22 +510,6 @@ xfs_file_compat_ioctl(
+ 		mnt_drop_write_file(filp);
+ 		return error;
+ 	}
+-	case XFS_IOC_SWAPEXT_32: {
+-		struct xfs_swapext	  sxp;
+-		struct compat_xfs_swapext __user *sxu = arg;
+-
+-		/* Bulk copy in up to the sx_stat field, then copy bstat */
+-		if (copy_from_user(&sxp, sxu,
+-				   offsetof(struct xfs_swapext, sx_stat)) ||
+-		    xfs_ioctl32_bstat_copyin(&sxp.sx_stat, &sxu->sx_stat))
+-			return -EFAULT;
+-		error = mnt_want_write_file(filp);
+-		if (error)
+-			return error;
+-		error = xfs_ioc_swapext(&sxp);
+-		mnt_drop_write_file(filp);
+-		return error;
+-	}
+ #endif
+ 	/* long changes size, but xfs only copiese out 32 bits */
+ 	case XFS_IOC_GETXFLAGS_32:
 -- 
 2.20.0
 
