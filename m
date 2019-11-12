@@ -2,34 +2,46 @@ Return-Path: <SRS0=Awhw=ZE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEB89C17449
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 00:35:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F14DC17447
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 00:43:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8391D2196E
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 00:35:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 595E82196E
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 00:43:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1573519407;
+	bh=2ydOdcJmPK7SfwcXHI6Om5OCHngakPJ/DYZhOTWW10o=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
+	b=s74tsMiRHBCoLu8qZQ0NvNpJSPCo1A+doxu8pwxBJpBx6vCpuVHiv7Tq8VZqLibmw
+	 A25jLqLhaG89L+HMKgS5DPKLmOsCV1APROzC8OElCro7xeSvdqd/Bgq/mzW7HJsCqX
+	 qz04EA4I769fvPn2yn8fxajCquePCtE3NKF1792k=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727050AbfKLAe6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Nov 2019 19:34:58 -0500
-Received: from mga07.intel.com ([134.134.136.100]:45567 "EHLO mga07.intel.com"
+        id S1726932AbfKLAnW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Nov 2019 19:43:22 -0500
+Received: from mail.kernel.org ([198.145.29.99]:53244 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726953AbfKLAe6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 11 Nov 2019 19:34:58 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 11 Nov 2019 16:34:57 -0800
-X-IronPort-AV: E=Sophos;i="5.68,294,1569308400"; 
-   d="scan'208";a="229127871"
-Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.157])
-  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 11 Nov 2019 16:34:56 -0800
-From:   ira.weiny@intel.com
-To:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Andrew Morton <akpm@linux-foundation.org>
-Cc:     Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        id S1726877AbfKLAnW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 11 Nov 2019 19:43:22 -0500
+Received: from akpm3.svl.corp.google.com (unknown [104.133.8.65])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id D337121872;
+        Tue, 12 Nov 2019 00:43:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1573519401;
+        bh=2ydOdcJmPK7SfwcXHI6Om5OCHngakPJ/DYZhOTWW10o=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=SOzp8l2jF+hnRTMM8q4NciR40xpr2wA8IEZXzXLtzty1uJCCAHC48frwRoMrmhIgj
+         /7KlrVHe8GSSQzkgLciyKV6Wjc2QrBzyUz7KSoNvmSZmxLcVP9FF5gG3lBZZ8iYeIs
+         16TeSWpaFSFmQYkdL5nMvM/M08VwG7jCggvpqX5s=
+Date:   Mon, 11 Nov 2019 16:43:20 -0800
+From:   Andrew Morton <akpm@linux-foundation.org>
+To:     ira.weiny@intel.com
+Cc:     Alexander Viro <viro@zeniv.linux.org.uk>, Chris Mason <clm@fb.com>,
+        Josef Bacik <josef@toxicpanda.com>,
         David Sterba <dsterba@suse.com>,
         Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
@@ -37,42 +49,54 @@ Cc:     Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
         Anna Schumaker <anna.schumaker@netapp.com>,
         linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-f2fs-devel@lists.sourceforge.net, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org, Ira Weiny <ira.weiny@intel.com>
-Subject: [PATCH 0/2] Move swap functions out of address space operations
-Date:   Mon, 11 Nov 2019 16:34:50 -0800
-Message-Id: <20191112003452.4756-1-ira.weiny@intel.com>
-X-Mailer: git-send-email 2.20.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        linux-mm@kvack.org, Dave Chinner <david@fromorbit.com>,
+        Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 2/2] fs: Move swap_[de]activate to file_operations
+Message-Id: <20191111164320.80f814161469055b14f27045@linux-foundation.org>
+In-Reply-To: <20191112003452.4756-3-ira.weiny@intel.com>
+References: <20191112003452.4756-1-ira.weiny@intel.com>
+        <20191112003452.4756-3-ira.weiny@intel.com>
+X-Mailer: Sylpheed 3.7.0 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Ira Weiny <ira.weiny@intel.com>
+On Mon, 11 Nov 2019 16:34:52 -0800 ira.weiny@intel.com wrote:
 
-As suggested by Jan Kara, move swap_[de]activate to file_operations to simplify
-address space operations for coming changes.
+> From: Ira Weiny <ira.weiny@intel.com>
+> 
+> swap_activate() and swap_deactivate() have nothing to do with
+> address spaces.  We want to eventually make the address space operations
+> dynamic to switch inode flags on the fly.
 
-I'm not sure if this should go through Al Viro or Andrew Morton so I'm sending
-it to both of you.  Sorry if this is a problem.  Let me know if there is
-something else I should do.
+What does this mean?
 
-Ira Weiny (2):
-  fs: Clean up mapping variable
-  fs: Move swap_[de]activate to file_operations
+>  So to simplify this code as
+> well as properly track these operations we move these functions to the
+> file_operations vector.
+> 
+> This has been tested with XFS but not NFS, f2fs, or btrfs.
+> 
+> Also note f2fs and xfs have simple moves of their functions to
+> facilitate compilation.  No functional changes are contained within
+> those functions.
+>
+> ...
+>
+> --- a/fs/btrfs/inode.c
+> +++ b/fs/btrfs/inode.c
+> @@ -11002,6 +11002,8 @@ static const struct file_operations btrfs_dir_file_operations = {
+>  #endif
+>  	.release        = btrfs_release_file,
+>  	.fsync		= btrfs_sync_file,
+> +	.swap_activate	= btrfs_swap_activate,
+> +	.swap_deactivate = btrfs_swap_deactivate,
+>  };
 
- fs/btrfs/inode.c    |   4 +-
- fs/f2fs/data.c      | 123 --------------------------------------------
- fs/f2fs/file.c      | 122 +++++++++++++++++++++++++++++++++++++++++++
- fs/iomap/swapfile.c |   3 +-
- fs/nfs/file.c       |   4 +-
- fs/xfs/xfs_aops.c   |  13 -----
- fs/xfs/xfs_file.c   |  12 +++++
- include/linux/fs.h  |  10 ++--
- mm/swapfile.c       |  12 ++---
- 9 files changed, 149 insertions(+), 154 deletions(-)
+Shouldn't this be btrfs_file_operations?
 
--- 
-2.20.1
 
