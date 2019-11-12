@@ -2,139 +2,89 @@ Return-Path: <SRS0=Awhw=ZE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,PDS_TONAME_EQ_TOLOCAL_SHORT,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70E12C17441
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 22:44:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D779C43331
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 22:57:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 482D621872
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 22:44:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="P36dtm1c"
+	by mail.kernel.org (Postfix) with ESMTP id 0C65F21925
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 22:57:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726936AbfKLWok (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Nov 2019 17:44:40 -0500
-Received: from mail-pf1-f170.google.com ([209.85.210.170]:34401 "EHLO
-        mail-pf1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726906AbfKLWok (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 17:44:40 -0500
-Received: by mail-pf1-f170.google.com with SMTP id n13so144798pff.1
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2019 14:44:39 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=C1muovplrNaPPT7QT8Z1yA2NWOBfnlBH2QBr7j8z4Q8=;
-        b=P36dtm1ccvcCzqqsjkP1PV040I5IwewwSlq/C6nOzw4XRAF9CsE5CXJrk8Q4XoSPdt
-         NINThNlafqMuUB6kM/dvFPYexVRvxHa9pBKnUl6ngf9xyp1SyLW3AEeifXg7PbAW3ihT
-         e0gb3VwyDSPuNRyFrjiTmIQO/TITrKsFR/Ve0=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=C1muovplrNaPPT7QT8Z1yA2NWOBfnlBH2QBr7j8z4Q8=;
-        b=dT4stNUIaW5oGk78mOEbpdLTj/2U0Xna1JupGVCycs+aGMb8VpY+uhi3RIPHILh0Km
-         CgWZoGs+P+wkkahhO821Y5L3o5h/YsaR8VmSGn3G7xJSypweguz8CcuIVbXy1XOz5hFO
-         NTzbNaiaTOv8YorXNyw1olIWkE5UICENU5gLQmAZicid4jcrCEr+fKqEngTG68gFmN1H
-         /lTYexzXgNlh+eysHhQEyvWY2jp/WpUjAjmHwbWS0pHxqtlSIMQAtiLUtS1HcEbUs6HR
-         DsjwXyl4AJX0KiIoDZSUj8YfFVK9VmWr4uDz//gKtL7GrxiicFA4laEe3taWtnti7qRu
-         AXYw==
-X-Gm-Message-State: APjAAAU7iTTj5FflLGXq8Yb3bRoL3nQ8MBEvA1sWE71ZCPiLG+kE9hBt
-        ZVjtchqHQO2G78jtbOkieZBgkg==
-X-Google-Smtp-Source: APXvYqxHFNLovY74mEz0ds/DGcQVG5m96Feh5UG/V0JZniuuQ/2IZ78EPp3GXTrjfeiatGSvbakfSw==
-X-Received: by 2002:a63:1065:: with SMTP id 37mr37532828pgq.31.1573598678304;
-        Tue, 12 Nov 2019 14:44:38 -0800 (PST)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id s69sm24033pgs.65.2019.11.12.14.44.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Nov 2019 14:44:37 -0800 (PST)
-Date:   Tue, 12 Nov 2019 14:44:36 -0800
-From:   Kees Cook <keescook@chromium.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        linux-next@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: Coverity: xlog_write_iclog(): Memory - corruptions
-Message-ID: <201911121439.BFB4B66C@keescook>
-References: <201911111734.4D8A1DB3DF@keescook>
- <20191112024130.GA6212@magnolia>
+        id S1726936AbfKLW5p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Nov 2019 17:57:45 -0500
+Received: from sandeen.net ([63.231.237.45]:35390 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726910AbfKLW5p (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 12 Nov 2019 17:57:45 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 3495E7BB4
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2019 16:56:28 -0600 (CST)
+To:     linux-xfs <linux-xfs@vger.kernel.org>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: [PATCH 0/2] xfs: removed unused typedef definitions and symbols
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <321019c7-574e-e7e1-0eb6-e60776ad7948@sandeen.net>
+Date:   Tue, 12 Nov 2019 16:57:43 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.2.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191112024130.GA6212@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 11, 2019 at 06:41:30PM -0800, Darrick J. Wong wrote:
-> [Might as well add the XFS list]
-> 
-> On Mon, Nov 11, 2019 at 05:34:25PM -0800, coverity-bot wrote:
-> > Hello!
-> > 
-> > This is an experimental automated report about issues detected by Coverity
-> > from a scan of next-20191108 as part of the linux-next weekly scan project:
-> > https://scan.coverity.com/projects/linux-next-weekly-scan
-> > 
-> > You're getting this email because you were associated with the identified
-> > lines of code (noted below) that were touched by recent commits:
-> > 
-> > 79b54d9bfcdc ("xfs: use bios directly to write log buffers")
-> > 
-> > Coverity reported the following:
-> > 
-> > *** CID 1487853:  Memory - corruptions  (BAD_FREE)
-> > /fs/xfs/xfs_log.c: 1819 in xlog_write_iclog()
-> > 1813     		submit_bio(split);
-> > 1814
-> > 1815     		/* restart at logical offset zero for the remainder */
-> > 1816     		iclog->ic_bio.bi_iter.bi_sector = log->l_logBBstart;
-> > 1817     	}
-> > 1818
-> > vvv     CID 1487853:  Memory - corruptions  (BAD_FREE)
-> 
-> Isn't this a duplicate of 1451989 in the main kernel coverity scan?
-> Which, AFAICT 145989 is a false positive since iclog->ic_bio does not
-> itself become the target of a bio_chain.
+After seeing Christoph's m_chsize removal I figured I'd go look
+for more.  ;)
 
-It might be, yes. The two projects are not correlated within Coverity,
-and I've been trying to focus on "newly added" issues in linux-next.
+patch1 removes some typedef'd structure types that are no longer referred
+to by the typedefs
 
-I'm still trying to figure out where Coverity sees a "free" happening...
-
-Thanks for looking at this!
-
--Kees
-
-> 
-> --D
-> 
-> > vvv     "submit_bio" frees address of "iclog->ic_bio".
-> > 1819     	submit_bio(&iclog->ic_bio);
-> > 1820     }
-> > 1821
-> > 1822     /*
-> > 1823      * We need to bump cycle number for the part of the iclog that is
-> > 1824      * written to the start of the log. Watch out for the header magic
-> > 
-> > If this is a false positive, please let us know so we can mark it as
-> > such, or teach the Coverity rules to be smarter. If not, please make
-> > sure fixes get into linux-next. :) For patches fixing this, please
-> > include these lines (but double-check the "Fixes" first):
-> > 
-> > Reported-by: coverity-bot <keescook+coverity-bot@chromium.org>
-> > Addresses-Coverity-ID: 1487853 ("Memory - corruptions")
-> > Fixes: 79b54d9bfcdc ("xfs: use bios directly to write log buffers")
-> > 
-> > 
-> > Thanks for your attention!
-> > 
-> > -- 
-> > Coverity-bot
-
--- 
-Kees Cook
+patch2 removes some more unused symbols
