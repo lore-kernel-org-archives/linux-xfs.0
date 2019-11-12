@@ -2,103 +2,75 @@ Return-Path: <SRS0=Awhw=ZE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A022BC43331
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 23:08:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEC72C43331
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 23:09:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 78F2021925
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 23:08:19 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="aD2Bi9aD"
+	by mail.kernel.org (Postfix) with ESMTP id 8D58F21A49
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 23:09:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726978AbfKLXIS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Nov 2019 18:08:18 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:45950 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727200AbfKLXIR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 18:08:17 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xACN4iM3104249;
-        Tue, 12 Nov 2019 23:08:10 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=T2fnG6Hb2pr+1ENmkGZTphTB38Rls0niggevjdB5oIs=;
- b=aD2Bi9aDtqJbckI6d+wqHmOLVSvHlrd3mLwBamm90jKVaC2y5Iafz9nJ9Nyr/6ZwZooN
- VdUVVZesw8zhFMkRLgl1CNQVwXtVTSA/SxbT7x/kz9L3CeYVGMX+A71ntCpD2TvvgFv9
- 8WUkw883LngI5zXli+ZW0vF41CR+4Kzr1C9RAsvizFwK6Obw+Kf7svBfmxRqA+XxJLsS
- MF/DgOUTgr8iL5HdamClXUe8hvxxBuloIwHc69IRaseCAA7ly8iiLG1otdQMlSw5GfI6
- Pkx+VqynvaPKTqgO/oCDF1DKBNAsHox7+RoFl3w05r0eTKNiyrlMsv87BxZMQwIKaBZT Ow== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2w5ndq8642-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 12 Nov 2019 23:08:10 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xACN4NVC029603;
-        Tue, 12 Nov 2019 23:08:09 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 2w7vbbqrrq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 12 Nov 2019 23:08:09 +0000
-Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xACN88Zt004944;
-        Tue, 12 Nov 2019 23:08:08 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 12 Nov 2019 15:08:08 -0800
-Date:   Tue, 12 Nov 2019 15:08:06 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.org
-Subject: Re: [PATCH 2/3] xfs: kill the XFS_WANT_CORRUPT_* macros
-Message-ID: <20191112230806.GB6219@magnolia>
-References: <157343507145.1945685.2940312466469213044.stgit@magnolia>
- <157343508488.1945685.9867882880040545380.stgit@magnolia>
- <20191111085117.GA5729@infradead.org>
+        id S1726980AbfKLXJY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Nov 2019 18:09:24 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:48115 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726973AbfKLXJX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 18:09:23 -0500
+Received: from dread.disaster.area (pa49-180-67-183.pa.nsw.optusnet.com.au [49.180.67.183])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id A72097E9F3D;
+        Wed, 13 Nov 2019 10:09:20 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1iUfHj-0007q7-N7; Wed, 13 Nov 2019 10:09:19 +1100
+Date:   Wed, 13 Nov 2019 10:09:19 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: remove the unused m_chsize field
+Message-ID: <20191112230919.GR4614@dread.disaster.area>
+References: <20191111180957.23443-1-hch@lst.de>
+ <20191112013810.GV6219@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191111085117.GA5729@infradead.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9439 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=960
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1910280000 definitions=main-1911120199
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9439 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
- definitions=main-1911120199
+In-Reply-To: <20191112013810.GV6219@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=G6BsK5s5 c=1 sm=1 tr=0
+        a=3wLbm4YUAFX2xaPZIabsgw==:117 a=3wLbm4YUAFX2xaPZIabsgw==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=MeAgGD-zjQ4A:10
+        a=7-415B0cAAAA:8 a=JuDxSlhT3OO6blO4plAA:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 11, 2019 at 12:51:17AM -0800, Christoph Hellwig wrote:
-> I have to say I really hate the macro that includes the actual
-> if statement. 
-
-Agreed, especially because it breaks coccinelle and other tools that
-don't deal well with random identifiers that "inexplicably" have
-statement blocks coming after them.
-
-> On Sun, Nov 10, 2019 at 05:18:05PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > The XFS_WANT_CORRUPT_* macros conceal subtle side effects such as the
-> > creation of local variables and redirections of the code flow.  This is
-> > pretty ugly, so replace them with explicit if_xfs_meta_bad() tests that
-> > remove both of those ugly points.  First we use Cocinelle to expand the
-> > macros into an if test and braces with the following coccinelle script:
+On Mon, Nov 11, 2019 at 05:38:10PM -0800, Darrick J. Wong wrote:
+> On Mon, Nov 11, 2019 at 07:09:57PM +0100, Christoph Hellwig wrote:
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> Also all this seems to be out of date.
+> Heh, what was that even used for?
 
-Yeah.
+> > -	uint			m_chsize;	/* size of next field */
 
---D
+Inode cluster hash size.
+
+We used to keep a linked list of all the inodes in a cluster in a
+separate structure, so that we could easily iterate them when needed
+(writeback/cluster freeing). They were kept in a separate hash table
+so that they could be used as a quick reference inode cluster buffer
+cache as well (IIRC it was to speed up things like xfs_imap_to_bp())
+without having the overhead of a full buffer cache lookup...
+
+The need for all this went away with the radix tree indexing and
+gang lookups - I guess I missed removing this last fragment.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
