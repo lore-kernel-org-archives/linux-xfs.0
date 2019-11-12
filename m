@@ -2,179 +2,195 @@ Return-Path: <SRS0=Awhw=ZE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34EF2C17440
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 08:40:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7A8CC43331
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 11:13:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 01DB821E6F
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 08:40:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E5292084E
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 11:13:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=themaw.net header.i=@themaw.net header.b="jLrpEgHM";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="aRzBUiI/"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="p8b8gjLr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725775AbfKLIkp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Nov 2019 03:40:45 -0500
-Received: from wout4-smtp.messagingengine.com ([64.147.123.20]:42639 "EHLO
-        wout4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727065AbfKLIkp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 03:40:45 -0500
-Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
-        by mailout.west.internal (Postfix) with ESMTP id ADE29583;
-        Tue, 12 Nov 2019 03:40:43 -0500 (EST)
-Received: from mailfrontend2 ([10.202.2.163])
-  by compute1.internal (MEProxy); Tue, 12 Nov 2019 03:40:44 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=themaw.net; h=
-        message-id:subject:from:to:cc:date:in-reply-to:references
-        :content-type:mime-version:content-transfer-encoding; s=fm1; bh=
-        0sw6NGVNSkMgugQB3SyMJOPI1XuB+MQ57NtIWRdvmh0=; b=jLrpEgHMQDJmqgEO
-        Iw7m1guQw8IEJ/GXEaJwspOhlyGN75yT8mZ2wc5X1spVZVpbEP7HcmqbZgMghO6a
-        OVOe58dj2oql5KphHK0/xOJmpN5uzsjkEUc7m6C3OvhILzxmwmI8uL/h/Vrm7fvi
-        gC75BYrNEQ3iZMA8e061LulRMHHgxl9rxYvdQzBqoMsXFSvOlnPlcWmZTHbJtDDj
-        lVKE7VlFBcrNFSgknOVlhe1GCe0w3tqEIgaCg+rvx6rBPBtSjwFZewrjSO0WdKzt
-        mdTBtK0kO5TtMgaZimq8hidz4tpoMSglYKj2GHK7qqSA1zheiun9Hu3TUVL65zR1
-        bSOJWQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-transfer-encoding:content-type
-        :date:from:in-reply-to:message-id:mime-version:references
-        :subject:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm1; bh=0sw6NGVNSkMgugQB3SyMJOPI1XuB+MQ57NtIWRdvm
-        h0=; b=aRzBUiI/tA+Qob4M+kxeus2lVPy6N/ryKIpMx00lID4e+taSOAOQoPrac
-        xn/7pFvWcASA85EFLczzaTQeQKzXbDz4NXVX9uWWATex9o/bB2zGCqYeT1+GiLYS
-        BoFx61gdI0iGRak8oQd5n+1pXGaoHmu/Jg6nn+fWclEqxDYKtNDuztM4JTL66Jno
-        qudNJyjEQE2WvPPptVzuLmmzGgMkldfaSRjUBnNTpIPQ6ElDbcxNo6ybt+VDIrlk
-        2/jWWsrYrUpE7VoAuPG/TzqqNgaQrwZz5VsHkbIVoBWGweo81gMfK42CUzLcDwBw
-        o9c9XPpPTPcS0vdYIBpnGVtZ8KU5g==
-X-ME-Sender: <xms:CnDKXSYeIN7i1IY1Y0BJ_NhoVfKam5B-K57Rq1iugTuvfTCmZaf5YA>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedufedruddvkedgieejucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    goufhushhpvggtthffohhmrghinhculdegledmnecujfgurhepkffuhffvffgjfhgtofgg
-    gfesthejredtredtjeenucfhrhhomhepkfgrnhcumfgvnhhtuceorhgrvhgvnhesthhhvg
-    hmrgifrdhnvghtqeenucffohhmrghinhepkhgvrhhnvghlrdhorhhgpdhkmhhsghdruggv
-    vhdpghhithhhuhgsrdhiohdpghhithhhuhgsrdgtohhmnecukfhppeduudekrddvtdekrd
-    dukeelrddukeenucfrrghrrghmpehmrghilhhfrhhomheprhgrvhgvnhesthhhvghmrgif
-    rdhnvghtnecuvehluhhsthgvrhfuihiivgeptd
-X-ME-Proxy: <xmx:CnDKXdkKPfBB0yCkvuNMSEN1DLWCUC6QCs4PSiHkXfU6viJ7JJwAWQ>
-    <xmx:CnDKXYhWQ9mkK7bS2Pe00lhpYDXwvmfj6-hBy5XsFkGZw90vwuqgzg>
-    <xmx:CnDKXfSNQhm0bPpYs63wUqtCos0shJKXE3TscG3vcMkNBVFKwwhI_Q>
-    <xmx:C3DKXZx7_RTRm5-j87zoNsbMfdh04H4HH6S3sA3Byzcrqau1LK_rdQ>
-Received: from centos8 (unknown [118.208.189.18])
-        by mail.messagingengine.com (Postfix) with ESMTPA id 65ECF3060060;
-        Tue, 12 Nov 2019 03:40:39 -0500 (EST)
-Message-ID: <3fb8b1b04dd7808b45caf5262ee629c09c71e0b6.camel@themaw.net>
-Subject: Re: [xfs] 73e5fff98b: kmsg.dev/zero:Can't_open_blockdev
-From:   Ian Kent <raven@themaw.net>
-To:     kernel test robot <rong.a.chen@intel.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        LKML <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org,
-        lkp@lists.01.org, ltp@lists.linux.it
-Date:   Tue, 12 Nov 2019 16:39:50 +0800
-In-Reply-To: <20191111010022.GH29418@shao2-debian>
-References: <20191111010022.GH29418@shao2-debian>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-6.el8) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S1725997AbfKLLNj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Nov 2019 06:13:39 -0500
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:40460 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725834AbfKLLNi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 06:13:38 -0500
+Received: by mail-pg1-f194.google.com with SMTP id 15so11622806pgt.7
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2019 03:13:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=zWNSQcCFmuSOKDvATRK9v7sUJmCdp0M5XvTIycyYjdM=;
+        b=p8b8gjLrp42Uwp4TXCL564zC4zpfoHBsXLiTWTMLHVLOqZK8CPwy2URbEAAhk69uQ7
+         t1VBGPmbbZE7VwMOO3OGTNoJp3cH3msd3nrgeBaE/HV9pCdXXDL15t8o3kYyzTrTF1P9
+         ly96cS0pXRTPbtDR6fgvU2FXIrR+gKstBnS7/3WEIhJdOlfgWWpd7vPDcWYwn33bRbI3
+         yjtr0IDZv7xiv30U6S1DcwrtecVkaBjXJvGBZhA+DzWAznqeL8hpTMYrjIWdXFfG2iLq
+         aSt/h9HbWXVTiBXAasc4FUpW+Ekn7aBIUgglwmW4/BJUyR/grM+Ih4Wd+9Nk7PyZ2egq
+         EVDg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=zWNSQcCFmuSOKDvATRK9v7sUJmCdp0M5XvTIycyYjdM=;
+        b=hzSMXtmT8tu58Lqy0pc6vlJfS3RpwmuE8PqqmgN7254Ym0sEY5REKt+8SR6tUDb87C
+         D5LMsR+v5Y5wihB3S7szoZi9+Cb8G178cHvNp+hWrbhs/NnswfxDAZUZ+g+XkjEqoW9O
+         IKj3ktOK9YIakjdyQyAtQhh3YjcFxRr70zZ1LyKBeypYqj+vMAdAIxylwQumKufjKpVt
+         DRDg3h/EIDe5G799UlKjGgig5RLAu5ce+Fp73OLafZfgccq8TCqInIoX95TliyXxseky
+         qpwBYBhueFUG8alJtsO9/zimmscOOmdCs5fjTASYfdpJn6GO5zzapGw63GgiyXlv1raN
+         muKA==
+X-Gm-Message-State: APjAAAXvNu5DKBzRnSjG8zJ4Ms6UNkWDpEOmWgDJyomA5dyFVJip8bvi
+        SJKO01DVvLwOcsFbjt8iMMjzIPo=
+X-Google-Smtp-Source: APXvYqyIm+ABGubqJKWAKwzVHdIZ/Vh0dMb3cNKL7b8fd9AaITNIEEIGaXHfFuLza8dR4b+DZQu1VQ==
+X-Received: by 2002:a63:535a:: with SMTP id t26mr35265941pgl.215.1573557217456;
+        Tue, 12 Nov 2019 03:13:37 -0800 (PST)
+Received: from he-cluster.localdomain ([67.216.221.250])
+        by smtp.gmail.com with ESMTPSA id x25sm17920856pfq.73.2019.11.12.03.13.36
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 12 Nov 2019 03:13:36 -0800 (PST)
+From:   kaixuxia <xiakaixu1987@gmail.com>
+X-Google-Original-From: kaixuxia <kaixuxia@tencent.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     darrick.wong@oracle.com, bfoster@redhat.com, newtongao@tencent.com,
+        jasperwang@tencent.com
+Subject: [PATCH v4] xfs: Fix deadlock between AGI and AGF when target_ip exists in xfs_rename()
+Date:   Tue, 12 Nov 2019 19:13:30 +0800
+Message-Id: <1573557210-6241-1-git-send-email-kaixuxia@tencent.com>
+X-Mailer: git-send-email 1.8.3.1
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, 2019-11-11 at 09:00 +0800, kernel test robot wrote:
-> FYI, we noticed the following commit (built with gcc-7):
-> 
-> commit: 73e5fff98b6446de1490a8d7809121b0108d49f4 ("xfs: switch to use
-> the new mount-api")
-> https://git.kernel.org/cgit/fs/xfs/xfs-linux.git xfs-5.5-merge
-> 
-> in testcase: ltp
-> with following parameters:
-> 
-> 	disk: 1HDD
-> 	fs: xfs
-> 	test: fs-03
-> 
-> test-description: The LTP testsuite contains a collection of tools
-> for testing the Linux kernel and related features.
-> test-url: http://linux-test-project.github.io/
-> 
-> 
-> on test machine: qemu-system-x86_64 -enable-kvm -cpu SandyBridge -smp
-> 2 -m 8G
-> 
-> caused below changes (please refer to attached dmesg/kmsg for entire
-> log/backtrace):
-> 
-> 
-> 
-> 
-> If you fix the issue, kindly add following tag
-> Reported-by: kernel test robot <rong.a.chen@intel.com>
-> 
-> [  135.976643] LTP: starting fs_fill
-> [  135.993912] /dev/zero: Can't open blockdev
+When target_ip exists in xfs_rename(), the xfs_dir_replace() call may
+need to hold the AGF lock to allocate more blocks, and then invoking
+the xfs_droplink() call to hold AGI lock to drop target_ip onto the
+unlinked list, so we get the lock order AGF->AGI. This would break the
+ordering constraint on AGI and AGF locking - inode allocation locks
+the AGI, then can allocate a new extent for new inodes, locking the
+AGF after the AGI.
 
-I've looked at the github source but I don't see how to find out what
-command was used when this error occurred so I don't know even how to
-start to work out what might have caused this.
+In this patch we check whether the replace operation need more
+blocks firstly. If so, acquire the agi lock firstly to preserve
+locking order(AGI/AGF). Actually, the locking order problem only
+occurs when we are locking the AGI/AGF of the same AG. For multiple
+AGs the AGI lock will be released after the transaction committed.
 
-Can you help me to find the test script source please.
+Signed-off-by: kaixuxia <kaixuxia@tencent.com>
+---
+Changes in v4:
+ -Remove the typedef usages.
+ -Invoke xfs_dir2_sf_replace_needblock() in
+  xfs_dir2_sf_replace() directly.
 
-> [  136.020327] raid6: sse2x4   gen() 14769 MB/s
-> [  136.037281] raid6: sse2x4   xor()  8927 MB/s
-> [  136.054236] raid6: sse2x2   gen() 12445 MB/s
-> [  136.071397] raid6: sse2x2   xor()  7441 MB/s
-> [  136.089313] raid6: sse2x1   gen() 10089 MB/s
-> [  136.107334] raid6: sse2x1   xor()  7201 MB/s
-> [  136.108198] raid6: using algorithm sse2x4 gen() 14769 MB/s
-> [  136.109320] raid6: .... xor() 8927 MB/s, rmw enabled
-> [  136.111966] raid6: using ssse3x2 recovery algorithm
-> [  136.122740] xor: automatically using best checksumming
-> function   avx       
-> [  136.187956] Btrfs loaded, crc32c=crc32c-intel
-> [  136.216946] fuse: init (API version 7.31)
-> [  136.327654] EXT4-fs (loop0): mounting ext2 file system using the
-> ext4 subsystem
-> [  136.334974] EXT4-fs (loop0): mounted filesystem without journal.
-> Opts: (null)
-> [  136.338933] Mounted ext2 file system at /tmp/ltp-
-> bl4kncm4Ti/g2oJfj/mntpoint supports timestamps until 2038
-> (0x7fffffff)
-> [  137.897422] EXT4-fs (loop0): mounting ext3 file system using the
-> ext4 subsystem
-> [  137.908242] EXT4-fs (loop0): mounted filesystem with ordered data
-> mode. Opts: (null)
-> [  137.910111] Mounted ext3 file system at /tmp/ltp-
-> bl4kncm4Ti/g2oJfj/mntpoint supports timestamps until 2038
-> (0x7fffffff)
-> 
-> 
-> To reproduce:
-> 
->         # build kernel
-> 	cd linux
-> 	cp config-5.4.0-rc3-00117-g73e5fff98b644 .config
-> 	make HOSTCC=gcc-7 CC=gcc-7 ARCH=x86_64 olddefconfig prepare
-> modules_prepare bzImage modules
-> 	make HOSTCC=gcc-7 CC=gcc-7 ARCH=x86_64 INSTALL_MOD_PATH=<mod-
-> install-dir> modules_install
-> 	cd <mod-install-dir>
-> 	find lib/ | cpio -o -H newc --quiet | gzip > modules.cgz
-> 
-> 
->         git clone https://github.com/intel/lkp-tests.git
->         cd lkp-tests
->         bin/lkp qemu -k <bzImage> -m modules.cgz job-script # job-
-> script is attached in this email
-> 
-> 
-> 
-> Thanks,
-> Rong Chen
-> 
+ fs/xfs/libxfs/xfs_dir2.h    |  2 ++
+ fs/xfs/libxfs/xfs_dir2_sf.c | 28 +++++++++++++++++++++++-----
+ fs/xfs/xfs_inode.c          | 15 +++++++++++++++
+ 3 files changed, 40 insertions(+), 5 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+index f542447..01b1722 100644
+--- a/fs/xfs/libxfs/xfs_dir2.h
++++ b/fs/xfs/libxfs/xfs_dir2.h
+@@ -124,6 +124,8 @@ extern int xfs_dir_lookup(struct xfs_trans *tp, struct xfs_inode *dp,
+ extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
+ 				struct xfs_name *name, xfs_ino_t ino,
+ 				xfs_extlen_t tot);
++extern bool xfs_dir2_sf_replace_needblock(struct xfs_inode *dp,
++				xfs_ino_t inum);
+ extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
+ 				struct xfs_name *name, xfs_ino_t inum,
+ 				xfs_extlen_t tot);
+diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+index 85f14fc..0e112e1 100644
+--- a/fs/xfs/libxfs/xfs_dir2_sf.c
++++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+@@ -945,6 +945,27 @@ static int xfs_dir2_sf_addname_pick(xfs_da_args_t *args, int objchange,
+ }
+ 
+ /*
++ * Check whether the sf dir replace operation need more blocks.
++ */
++bool
++xfs_dir2_sf_replace_needblock(
++	struct xfs_inode	*dp,
++	xfs_ino_t		inum)
++{
++	int			newsize;
++	struct xfs_dir2_sf_hdr	*sfp;
++
++	if (dp->i_d.di_format != XFS_DINODE_FMT_LOCAL)
++		return false;
++
++	sfp = (struct xfs_dir2_sf_hdr *)dp->i_df.if_u1.if_data;
++	newsize = dp->i_df.if_bytes + (sfp->count + 1) * XFS_INO64_DIFF;
++
++	return inum > XFS_DIR2_MAX_SHORT_INUM &&
++	       sfp->i8count == 0 && newsize > XFS_IFORK_DSIZE(dp);
++}
++
++/*
+  * Replace the inode number of an entry in a shortform directory.
+  */
+ int						/* error */
+@@ -980,17 +1001,14 @@ static int xfs_dir2_sf_addname_pick(xfs_da_args_t *args, int objchange,
+ 	 */
+ 	if (args->inumber > XFS_DIR2_MAX_SHORT_INUM && sfp->i8count == 0) {
+ 		int	error;			/* error return value */
+-		int	newsize;		/* new inode size */
+ 
+-		newsize = dp->i_df.if_bytes + (sfp->count + 1) * XFS_INO64_DIFF;
+ 		/*
+ 		 * Won't fit as shortform, convert to block then do replace.
+ 		 */
+-		if (newsize > XFS_IFORK_DSIZE(dp)) {
++		if (xfs_dir2_sf_replace_needblock(dp, args->inumber)) {
+ 			error = xfs_dir2_sf_to_block(args);
+-			if (error) {
++			if (error)
+ 				return error;
+-			}
+ 			return xfs_dir2_block_replace(args);
+ 		}
+ 		/*
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 18f4b26..5dc3796 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3196,6 +3196,7 @@ struct xfs_iunlink {
+ 	struct xfs_trans	*tp;
+ 	struct xfs_inode	*wip = NULL;		/* whiteout inode */
+ 	struct xfs_inode	*inodes[__XFS_SORT_INODES];
++	struct xfs_buf		*agibp;
+ 	int			num_inodes = __XFS_SORT_INODES;
+ 	bool			new_parent = (src_dp != target_dp);
+ 	bool			src_is_directory = S_ISDIR(VFS_I(src_ip)->i_mode);
+@@ -3361,6 +3362,20 @@ struct xfs_iunlink {
+ 		 * In case there is already an entry with the same
+ 		 * name at the destination directory, remove it first.
+ 		 */
++
++		/*
++		 * Check whether the replace operation need more blocks.
++		 * If so, acquire the agi lock firstly to preserve locking
++		 * order (AGI/AGF). Only convert the shortform directory to
++		 * block form maybe need more blocks.
++		 */
++		if (xfs_dir2_sf_replace_needblock(target_dp, src_ip->i_ino)) {
++			error = xfs_read_agi(mp, tp,
++				XFS_INO_TO_AGNO(mp, target_ip->i_ino), &agibp);
++			if (error)
++				goto out_trans_cancel;
++		}
++
+ 		error = xfs_dir_replace(tp, target_dp, target_name,
+ 					src_ip->i_ino, spaceres);
+ 		if (error)
+-- 
+1.8.3.1
 
