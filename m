@@ -3,74 +3,82 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEC72C43331
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 23:09:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A62D9C43331
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 23:52:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8D58F21A49
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 23:09:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F40E20578
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 23:52:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726980AbfKLXJY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Nov 2019 18:09:24 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:48115 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726973AbfKLXJX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 18:09:23 -0500
-Received: from dread.disaster.area (pa49-180-67-183.pa.nsw.optusnet.com.au [49.180.67.183])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id A72097E9F3D;
-        Wed, 13 Nov 2019 10:09:20 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1iUfHj-0007q7-N7; Wed, 13 Nov 2019 10:09:19 +1100
-Date:   Wed, 13 Nov 2019 10:09:19 +1100
-From:   Dave Chinner <david@fromorbit.com>
+        id S1727468AbfKLXwn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Nov 2019 18:52:43 -0500
+Received: from mga14.intel.com ([192.55.52.115]:1529 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726936AbfKLXwm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 12 Nov 2019 18:52:42 -0500
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Nov 2019 15:52:41 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.68,298,1569308400"; 
+   d="scan'208";a="235064254"
+Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
+  by fmsmga002.fm.intel.com with ESMTP; 12 Nov 2019 15:52:41 -0800
+Date:   Tue, 12 Nov 2019 15:52:41 -0800
+From:   Ira Weiny <ira.weiny@intel.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: remove the unused m_chsize field
-Message-ID: <20191112230919.GR4614@dread.disaster.area>
-References: <20191111180957.23443-1-hch@lst.de>
- <20191112013810.GV6219@magnolia>
+Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna.schumaker@netapp.com>,
+        linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-nfs@vger.kernel.org,
+        linux-mm@kvack.org, Dave Chinner <david@fromorbit.com>,
+        Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 2/2] fs: Move swap_[de]activate to file_operations
+Message-ID: <20191112235240.GB5792@iweiny-DESK2.sc.intel.com>
+References: <20191112003452.4756-1-ira.weiny@intel.com>
+ <20191112003452.4756-3-ira.weiny@intel.com>
+ <20191112012017.GT6219@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191112013810.GV6219@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=G6BsK5s5 c=1 sm=1 tr=0
-        a=3wLbm4YUAFX2xaPZIabsgw==:117 a=3wLbm4YUAFX2xaPZIabsgw==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=MeAgGD-zjQ4A:10
-        a=7-415B0cAAAA:8 a=JuDxSlhT3OO6blO4plAA:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20191112012017.GT6219@magnolia>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 11, 2019 at 05:38:10PM -0800, Darrick J. Wong wrote:
-> On Mon, Nov 11, 2019 at 07:09:57PM +0100, Christoph Hellwig wrote:
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Mon, Nov 11, 2019 at 05:20:17PM -0800, Darrick J. Wong wrote:
+> On Mon, Nov 11, 2019 at 04:34:52PM -0800, ira.weiny@intel.com wrote:
+> > From: Ira Weiny <ira.weiny@intel.com>
+> > 
+> >  };
+> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > index 865543e41fb4..3d2e89ac72ed 100644
+> > --- a/fs/xfs/xfs_file.c
+> > +++ b/fs/xfs/xfs_file.c
+> > @@ -1294,6 +1294,17 @@ xfs_file_mmap(
+> >  	return 0;
+> >  }
+> >  
+> > +static int
+> > +xfs_iomap_swapfile_activate(
 > 
-> Heh, what was that even used for?
+> Might as well rename this xfs_file_swap_activate().
 
-> > -	uint			m_chsize;	/* size of next field */
+Done.
 
-Inode cluster hash size.
+V1 with fixed btrfs, to be out shortly.
 
-We used to keep a linked list of all the inodes in a cluster in a
-separate structure, so that we could easily iterate them when needed
-(writeback/cluster freeing). They were kept in a separate hash table
-so that they could be used as a quick reference inode cluster buffer
-cache as well (IIRC it was to speed up things like xfs_imap_to_bp())
-without having the overhead of a full buffer cache lookup...
+Ira
 
-The need for all this went away with the radix tree indexing and
-gang lookups - I guess I missed removing this last fragment.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
