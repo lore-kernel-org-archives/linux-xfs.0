@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A613BC43331
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 12:09:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE16EC43331
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 12:14:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7F4A521925
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 12:09:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8BF33206A3
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 12:14:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726988AbfKLMJp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Nov 2019 07:09:45 -0500
-Received: from mout.kundenserver.de ([212.227.126.130]:59147 "EHLO
+        id S1725954AbfKLMO0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Nov 2019 07:14:26 -0500
+Received: from mout.kundenserver.de ([212.227.126.187]:47811 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727229AbfKLMJo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 07:09:44 -0500
+        with ESMTP id S1726979AbfKLMOZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 07:14:25 -0500
 Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
  (mreue011 [212.227.15.129]) with ESMTPA (Nemesis) id
- 1M1q8m-1iSJ7Z1b68-002Jt7; Tue, 12 Nov 2019 13:09:13 +0100
+ 1MC2k1-1icS7r06bV-00CSuG; Tue, 12 Nov 2019 13:09:14 +0100
 From:   Arnd Bergmann <arnd@arndb.de>
 To:     "Darrick J . Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org, y2038@lists.linaro.org, arnd@arndb.de,
@@ -30,270 +30,379 @@ Cc:     linux-xfs@vger.kernel.org, y2038@lists.linaro.org, arnd@arndb.de,
         Brian Foster <bfoster@redhat.com>,
         Allison Collins <allison.henderson@oracle.com>,
         linux-fsdevel@vger.kernel.org
-Subject: [RFC 3/5] xfs: [variant C] avoid i386-misaligned xfs_bstat
-Date:   Tue, 12 Nov 2019 13:09:08 +0100
-Message-Id: <20191112120910.1977003-4-arnd@arndb.de>
+Subject: [RFC 5/5] xfs: use 40-bit quota time limits
+Date:   Tue, 12 Nov 2019 13:09:10 +0100
+Message-Id: <20191112120910.1977003-6-arnd@arndb.de>
 X-Mailer: git-send-email 2.20.0
 In-Reply-To: <20191112120910.1977003-1-arnd@arndb.de>
 References: <20191112120910.1977003-1-arnd@arndb.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:M+DgUTQXXx55xjkTyjjlvP9lY+UVcKlCUHKoHtQanp2/9dL6H0p
- XeQ7k781eMoZzf+XqiChKJwG+Vplb3OcxIILAU5pFGBj9NOLKtyeg8ayyp6/3YKzr/jjufZ
- /qoMUYwuQeqpTeXq+9EprMh5mMzR1AlrX/t7wUdLL8C5oWX+ALLbmwz6C8g1pb/aoHNdwgq
- gKKGRaLX0fOyQZdlb7n4Q==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:iu+uetCjnLs=:YSMg1vD//WT15pOicFSLp8
- zZDvEpBPwGxVkQaI6UF6tFJFzQdpXTUFBb3Ef+LDouRoQs3rwqgYY76ltjdVVyblu4LvSzkK4
- v/WwXrBPr/zRFAH9XEta//UfH2nm3nspH4W6Xw58vv/fSDbKjttwZu/QXJReHBnq+GnPm5RbH
- 3f8K0U3Jw/1U91ZrdSLgfdt/bw1WKOl4K+s8kTo7DgiQlOjwKzwAgd0lan+ZAfHqurB9aAdwU
- jjExKNx23P9e5u+CLDnTEXz/D/dXga2XyZ2wnKF7GZBNKgCVa/IqCdIVQKHmTvz94tjRShH/Q
- B/ghS65ktkNyaE8vsTUP7lkuD43d8Wu7Oywga8vAH/iGMP5K7y14CWdiQmRArbWd1Gg56e0vc
- VS/aWX2Aywde0r6CWPAu1sFrbMNxKcJFZhQr1vbJzCYmScedJglZ5jtJGYOlawwStlZNrY5g7
- nXTsm7fLRqHjCtlV49cagVEZ5EXISkhGJDdFidpAJ6Hs/z5c/2N9IQHhrI/Qi2WLnXjJxE9Bm
- Ey2GdbDD5quT5lNLQbb2ldN8AjJt7aQXXlNX3r0CKoRHrJ0mjyHtgRzvXk5R1pzNhg0bqn+4R
- bmV5D19dvBBf/hd4d2jtC5IYBrLpiRMjXJyZ+DADRNx9v0D4bCxt1yuC+wFeW5vsIxzirK02T
- bhPT0WKpodqHR/7FjOEr+5SoXyU0c/f0hj/msHGYxmubQBw1u7xvvcH2ZLqtEhrsy3pNVByml
- ucGlQCuVecI4zNC2NEw/aMjQZEy96qi2nOx3GIzUkUAwpmMXr70HDkC97sbmlw3tI8w3hN24+
- kAbGWXefpLkdAqvuIXtfDT7t/3u7LoJcwBejEeYiibH2bJUw5VEkD4xbDfnTnogxKvxQ29Nhw
- o4aerJSDZXJQUaP0AxqQ==
+X-Provags-ID: V03:K1:hu0HrsjmYlfJ6EP6ptEvp1wV1xTOhYiKly+Dc17guK11m5kYtyu
+ xcv/ANpysFvUepXwpu416Pz+/3IGIrwYEQsyEuvM14Dkzg8orjSI0OigYK+4aY78cUH6fXm
+ nld9QiO2TT94SBvu0MbVTPhaC24l2M/lJzohYWB94/qaQ0uKJt4Dql/mG1l57gll/2bHGux
+ QXKsKgNMIwgxm1mcHsCxw==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:SS0vxOeiBd0=:sdmopsX+oksDbAwhFelJj9
+ r3LwlGFBUlPpSqsyEROlJWXBiU5hp6Olt7ZaXQ0EzjOhiTLqYZSGNdNFR6AKTp9bzr9zkgQeU
+ EbZ8Ph773jYpKIgq6pI1HPAdPAMPWNcfBYLezig8IGUps6SzKZo64MvGI/KCYs8gCj10cvVkX
+ UTN0QLtatMArvoMbSo+k+D2DSa0u4tw6ptM91RBRirX4WdL0T3RU4FWnOfwxJkb6KBUCBONbv
+ zBgCrjRz3Rnz8JBzx5rCuyx93oUWAf0mZz6ZvQe2noj8VMHaLKJyUkjsKJymuBAPmTKWrPC47
+ W3w4noWuEvXJxYUE9dt97Zwa6QAL6qyQRlPwq8V33l+bFmTdZ/W6d5T3CL40339ht4ODrFJTV
+ P5RyWlL1TVXzlm/MA0o62BGsAfE+2jmMpe3K9OzNf7u46sXQb/8JbJktLdbCrWubk3ZpXLeKc
+ OJ7a0WxPRwdcL9K+mOsHXX3A+w5OyhTreBNK0RlbOhjQM6Tw3nZM5V0OTWl3icW3DBQCA7hmE
+ NvcbwjnbzIveUkmHtmLhJZU/pBh8A1xlYcbGBlj6W4evYLpZvn8xEv8/wherAc3RAAubwuefD
+ MsrBnzT00KVq3y4lZdZM+xyyPKyJ1aBwQVvKR7CxHiH/8THuc+Bfv5FT0AscLwymChwLTgag9
+ +X+oVVlJnyU8EWK3Qkwdm+jqoyPAhbqJAGnxdF3ZAtRvRaz6xDGuRF0DVik+p9H9HKNvk1Sls
+ KUhmSZJs6KxD9tjc9MW6yfC9Fl9f/ic0t8gE5kTE6phz5+AgNk4hQEFCAugLLH8Eg1EvQjshE
+ uDdbV5jjpuyzrkAinDggqeRpirUIuh6L9f5rOFNr1DoYEbhA0gHOpt6LEJnMhuLeliCd7oIoW
+ sy/Nd5eDNCG8SEjtIKkA==
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The change to the ioctl commands requires updating the header file. If
-we do that, the alignment problem on i386 could be solved for the new
-format by explictly aligning all 64-bit members to time_t. This complicates
-the header file definition, but saves the code to deal with a third format.
+The quota handling in xfs is based around an in-memory representation
+of time_t, which overflows in year 2038 on 32-bit architectures, and an
+on-disk representation of __be32, which overflows in year 2106 based
+on interpreting the values as unsigned.
 
-The native ioctl simply deals with both the time32 and the time64 version,
-and the latter is the same across all 64-bit architectures and all 32-bit
-user space with 32-bit time_t including i386 and x32.
+Extend both to allow for much longer times: the in-memory representation
+should just use time64_t and the on-disk representation has to live with
+the spare bits in struct xfs_disk_dquot. As there is an unused 32-bit
+field, and three time limits in it, allocating 8 bits per timeout
+seems appropriate.
 
-If we decide to do this, this change should be folded into "xfs: [variant B]
-add time64 version of xfs_bstat".
+Note: the quotactl() syscall is not affected by this, it has its
+own struct fs_disk_quota that may need a similar conversion.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- fs/xfs/libxfs/xfs_fs.h |  20 +++++--
- fs/xfs/xfs_ioctl32.c   | 120 +----------------------------------------
- 2 files changed, 18 insertions(+), 122 deletions(-)
+ fs/xfs/libxfs/xfs_dquot_buf.c |  6 +++---
+ fs/xfs/libxfs/xfs_format.h    |  5 ++++-
+ fs/xfs/xfs_dquot.c            | 29 ++++++++++++++++++++---------
+ fs/xfs/xfs_qm.c               | 18 ++++++++++++------
+ fs/xfs/xfs_qm.h               |  6 +++---
+ fs/xfs/xfs_qm_syscalls.c      | 16 +++++++++++-----
+ fs/xfs/xfs_quotaops.c         |  6 +++---
+ fs/xfs/xfs_trans_dquot.c      | 17 +++++++++++------
+ 8 files changed, 67 insertions(+), 36 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 9310576a45e5..e95807d223ad 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -319,6 +319,17 @@ typedef struct xfs_growfs_rt {
- 	__u32		extsize;	/* new realtime extent size, fsblocks */
- } xfs_growfs_rt_t;
+diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
+index e8bd688a4073..ee59c539f9ab 100644
+--- a/fs/xfs/libxfs/xfs_dquot_buf.c
++++ b/fs/xfs/libxfs/xfs_dquot_buf.c
+@@ -75,17 +75,17 @@ xfs_dquot_verify(
  
-+/*
-+ * on i386, u64 has 32-bit alignment, which makes the traditional xfs_bstat
-+ * different from other architectures. Aligning all 64-bit members to
-+ * sizeof(time_t) means that the new version with 64-bit time_t is padded
-+ * the same as on all other architectures.
-+ */
-+#ifdef __i386__
-+#define __TIME_ALIGN __attribute__((aligned(sizeof(time_t))))
-+#else
-+#define __TIME_ALIGN
-+#endif
+ 	if (ddq->d_blk_softlimit &&
+ 	    be64_to_cpu(ddq->d_bcount) > be64_to_cpu(ddq->d_blk_softlimit) &&
+-	    !ddq->d_btimer)
++	    !ddq->d_btimer && !ddq->d_btimer_high)
+ 		return __this_address;
  
- /*
-  * Structures returned from ioctl XFS_IOC_FSBULKSTAT & XFS_IOC_FSBULKSTAT_SINGLE
-@@ -328,24 +339,24 @@ typedef struct xfs_bstime {
- 	__s64		tv_sec;		/* seconds		*/
- 	__s32		tv_nsec;	/* and nanoseconds	*/
- #else
--	time_t		tv_sec;		/* seconds		*/
-+	time_t		tv_sec __TIME_ALIGN; /* seconds		*/
- 	__s32		tv_nsec;	/* and nanoseconds	*/
+ 	if (ddq->d_ino_softlimit &&
+ 	    be64_to_cpu(ddq->d_icount) > be64_to_cpu(ddq->d_ino_softlimit) &&
+-	    !ddq->d_itimer)
++	    !ddq->d_itimer && !ddq->d_itimer_high)
+ 		return __this_address;
+ 
+ 	if (ddq->d_rtb_softlimit &&
+ 	    be64_to_cpu(ddq->d_rtbcount) > be64_to_cpu(ddq->d_rtb_softlimit) &&
+-	    !ddq->d_rtbtimer)
++	    !ddq->d_rtbtimer && !ddq->d_rtbtimer_high)
+ 		return __this_address;
+ 
+ 	return NULL;
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index dc8d160775fb..83bd5166c0ee 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -1168,7 +1168,10 @@ typedef struct	xfs_disk_dquot {
+ 	__be32		d_btimer;	/* similar to above; for disk blocks */
+ 	__be16		d_iwarns;	/* warnings issued wrt num inodes */
+ 	__be16		d_bwarns;	/* warnings issued wrt disk blocks */
+-	__be32		d_pad0;		/* 64 bit align */
++	__u8		d_itimer_high;	/* upper bits of d_itimer */
++	__u8		d_btimer_high;	/* upper bits of d_btimer */
++	__u8		d_rtbtimer_high;/* upper bits of d_rtbtimer */
++	__u8		d_pad0;		/* 64 bit align */
+ 	__be64		d_rtb_hardlimit;/* absolute limit on realtime blks */
+ 	__be64		d_rtb_softlimit;/* preferred limit on RT disk blks */
+ 	__be64		d_rtbcount;	/* realtime blocks owned */
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index aeb95e7391c1..15b5a339f6df 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -116,6 +116,8 @@ xfs_qm_adjust_dqtimers(
+ 	xfs_mount_t		*mp,
+ 	xfs_disk_dquot_t	*d)
+ {
++	time64_t timer;
++
+ 	ASSERT(d->d_id);
+ 
+ #ifdef DEBUG
+@@ -130,15 +132,17 @@ xfs_qm_adjust_dqtimers(
+ 		       be64_to_cpu(d->d_rtb_hardlimit));
  #endif
- } xfs_bstime_t;
  
- struct xfs_bstat {
--	__u64		bs_ino;		/* inode number			*/
-+	__u64		bs_ino __TIME_ALIGN; /* inode number		*/
- 	__u16		bs_mode;	/* type and mode		*/
- 	__u16		bs_nlink;	/* number of links		*/
- 	__u32		bs_uid;		/* user id			*/
- 	__u32		bs_gid;		/* group id			*/
- 	__u32		bs_rdev;	/* device value			*/
- 	__s32		bs_blksize;	/* block size			*/
--	__s64		bs_size;	/* file size			*/
-+	__s64		bs_size __TIME_ALIGN;	/* file size		*/
- 	xfs_bstime_t	bs_atime;	/* access time			*/
- 	xfs_bstime_t	bs_mtime;	/* modify time			*/
- 	xfs_bstime_t	bs_ctime;	/* inode change time		*/
--	int64_t		bs_blocks;	/* number of blocks		*/
-+	int64_t		bs_blocks __TIME_ALIGN;	/* number of blocks	*/
- 	__u32		bs_xflags;	/* extended flags		*/
- 	__s32		bs_extsize;	/* extent size			*/
- 	__s32		bs_extents;	/* number of extents		*/
-@@ -362,6 +373,7 @@ struct xfs_bstat {
- 	__u16		bs_dmstate;	/* DMIG state info		*/
- 	__u16		bs_aextents;	/* attribute number of extents	*/
- };
-+#undef __TIME_ALIGN
- 
- /* New bulkstat structure that reports v5 features and fixes padding issues */
- struct xfs_bulkstat {
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index 2ea7d3e12b4b..8059cdc2d5ca 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -98,101 +98,6 @@ xfs_fsinumbers_fmt_compat(
- 	return xfs_ibulk_advance(breq, sizeof(struct compat_xfs_inogrp));
- }
- 
--/* struct xfs_bstat has differing alignment on intel */
--STATIC int
--xfs_ioctl32_bstime_copyin(
--	xfs_bstime_t		*bstime,
--	compat_xfs_bstime_t	__user *bstime32)
--{
--	if (get_user(bstime->tv_sec,	&bstime32->tv_sec)	||
--	    get_user(bstime->tv_nsec,	&bstime32->tv_nsec))
--		return -EFAULT;
--	return 0;
--}
--
--STATIC int
--xfs_ioctl32_bstat_copyin(
--	struct xfs_bstat		*bstat,
--	struct compat_xfs_bstat	__user	*bstat32)
--{
--	if (get_user(bstat->bs_ino,	&bstat32->bs_ino)	||
--	    get_user(bstat->bs_mode,	&bstat32->bs_mode)	||
--	    get_user(bstat->bs_nlink,	&bstat32->bs_nlink)	||
--	    get_user(bstat->bs_uid,	&bstat32->bs_uid)	||
--	    get_user(bstat->bs_gid,	&bstat32->bs_gid)	||
--	    get_user(bstat->bs_rdev,	&bstat32->bs_rdev)	||
--	    get_user(bstat->bs_blksize,	&bstat32->bs_blksize)	||
--	    get_user(bstat->bs_size,	&bstat32->bs_size)	||
--	    xfs_ioctl32_bstime_copyin(&bstat->bs_atime, &bstat32->bs_atime) ||
--	    xfs_ioctl32_bstime_copyin(&bstat->bs_mtime, &bstat32->bs_mtime) ||
--	    xfs_ioctl32_bstime_copyin(&bstat->bs_ctime, &bstat32->bs_ctime) ||
--	    get_user(bstat->bs_blocks,	&bstat32->bs_size)	||
--	    get_user(bstat->bs_xflags,	&bstat32->bs_size)	||
--	    get_user(bstat->bs_extsize,	&bstat32->bs_extsize)	||
--	    get_user(bstat->bs_extents,	&bstat32->bs_extents)	||
--	    get_user(bstat->bs_gen,	&bstat32->bs_gen)	||
--	    get_user(bstat->bs_projid_lo, &bstat32->bs_projid_lo) ||
--	    get_user(bstat->bs_projid_hi, &bstat32->bs_projid_hi) ||
--	    get_user(bstat->bs_forkoff,	&bstat32->bs_forkoff)	||
--	    get_user(bstat->bs_dmevmask, &bstat32->bs_dmevmask)	||
--	    get_user(bstat->bs_dmstate,	&bstat32->bs_dmstate)	||
--	    get_user(bstat->bs_aextents, &bstat32->bs_aextents))
--		return -EFAULT;
--	return 0;
--}
--
--/* XFS_IOC_FSBULKSTAT and friends */
--
--STATIC int
--xfs_bstime_store_compat(
--	compat_xfs_bstime_t	__user *p32,
--	const xfs_bstime_t	*p)
--{
--	if (put_user(p->tv_sec, &p32->tv_sec) ||
--	    put_user(p->tv_nsec, &p32->tv_nsec))
--		return -EFAULT;
--	return 0;
--}
--
--/* Return 0 on success or positive error (to xfs_bulkstat()) */
--STATIC int
--xfs_fsbulkstat_one_fmt_compat(
--	struct xfs_ibulk		*breq,
--	const struct xfs_bulkstat	*bstat)
--{
--	struct compat_xfs_bstat	__user	*p32 = breq->ubuffer;
--	struct xfs_bstat		bs1;
--	struct xfs_bstat		*buffer = &bs1;
--
--	xfs_bulkstat_to_bstat(breq->mp, &bs1, bstat);
--
--	if (put_user(buffer->bs_ino,	  &p32->bs_ino)		||
--	    put_user(buffer->bs_mode,	  &p32->bs_mode)	||
--	    put_user(buffer->bs_nlink,	  &p32->bs_nlink)	||
--	    put_user(buffer->bs_uid,	  &p32->bs_uid)		||
--	    put_user(buffer->bs_gid,	  &p32->bs_gid)		||
--	    put_user(buffer->bs_rdev,	  &p32->bs_rdev)	||
--	    put_user(buffer->bs_blksize,  &p32->bs_blksize)	||
--	    put_user(buffer->bs_size,	  &p32->bs_size)	||
--	    xfs_bstime_store_compat(&p32->bs_atime, &buffer->bs_atime) ||
--	    xfs_bstime_store_compat(&p32->bs_mtime, &buffer->bs_mtime) ||
--	    xfs_bstime_store_compat(&p32->bs_ctime, &buffer->bs_ctime) ||
--	    put_user(buffer->bs_blocks,	  &p32->bs_blocks)	||
--	    put_user(buffer->bs_xflags,	  &p32->bs_xflags)	||
--	    put_user(buffer->bs_extsize,  &p32->bs_extsize)	||
--	    put_user(buffer->bs_extents,  &p32->bs_extents)	||
--	    put_user(buffer->bs_gen,	  &p32->bs_gen)		||
--	    put_user(buffer->bs_projid,	  &p32->bs_projid)	||
--	    put_user(buffer->bs_projid_hi,	&p32->bs_projid_hi)	||
--	    put_user(buffer->bs_forkoff,  &p32->bs_forkoff)	||
--	    put_user(buffer->bs_dmevmask, &p32->bs_dmevmask)	||
--	    put_user(buffer->bs_dmstate,  &p32->bs_dmstate)	||
--	    put_user(buffer->bs_aextents, &p32->bs_aextents))
--		return -EFAULT;
--
--	return xfs_ibulk_advance(breq, sizeof(struct compat_xfs_bstat));
--}
--
- #else
- #define xfs_fsinumbers_fmt_compat xfs_fsinumbers_fmt
- #endif	/* BROKEN_X86_ALIGNMENT */
-@@ -221,11 +126,6 @@ xfs_compat_ioc_fsbulkstat(
- 	 */
- 	inumbers_fmt_pf		inumbers_func = xfs_fsinumbers_fmt_compat;
- 	bulkstat_one_fmt_pf	bs_one_func_old = xfs_fsbulkstat_time32_one_fmt;
--	bulkstat_one_fmt_pf	bs_one_func_new = xfs_fsbulkstat_one_fmt;
--
--#ifdef BROKEN_X86_ALIGNMENT
--	bs_one_func_new = xfs_fsbulkstat_one_fmt_compat;
--#endif
- 
- #ifdef CONFIG_X86_X32
- 	if (in_x32_syscall()) {
-@@ -305,12 +205,12 @@ xfs_compat_ioc_fsbulkstat(
- 	case XFS_IOC_FSBULKSTAT_SINGLE_NEW32:
- 		breq.startino = lastino;
- 		breq.icount = 1;
--		error = xfs_bulkstat_one(&breq, bs_one_func_new);
-+		error = xfs_bulkstat_one(&breq, xfs_fsbulkstat_one_fmt);
- 		lastino = breq.startino;
- 		break;
- 	case XFS_IOC_FSBULKSTAT_NEW32:
- 		breq.startino = lastino ? lastino + 1 : 0;
--		error = xfs_bulkstat(&breq, bs_one_func_new);
-+		error = xfs_bulkstat(&breq, xfs_fsbulkstat_one_fmt);
- 		lastino = breq.startino - 1;
- 		break;
- 	default:
-@@ -610,22 +510,6 @@ xfs_file_compat_ioctl(
- 		mnt_drop_write_file(filp);
- 		return error;
+-	if (!d->d_btimer) {
++	if (!d->d_btimer && !d->d_btimer_high) {
+ 		if ((d->d_blk_softlimit &&
+ 		     (be64_to_cpu(d->d_bcount) >
+ 		      be64_to_cpu(d->d_blk_softlimit))) ||
+ 		    (d->d_blk_hardlimit &&
+ 		     (be64_to_cpu(d->d_bcount) >
+ 		      be64_to_cpu(d->d_blk_hardlimit)))) {
+-			d->d_btimer = cpu_to_be32(get_seconds() +
+-					mp->m_quotainfo->qi_btimelimit);
++			timer = ktime_get_real_seconds() +
++				mp->m_quotainfo->qi_btimelimit;
++			d->d_btimer = cpu_to_be32(lower_32_bits(timer));
++			d->d_btimer_high = (u8)upper_32_bits(timer);
+ 		} else {
+ 			d->d_bwarns = 0;
+ 		}
+@@ -150,18 +154,21 @@ xfs_qm_adjust_dqtimers(
+ 		    (be64_to_cpu(d->d_bcount) <=
+ 		     be64_to_cpu(d->d_blk_hardlimit)))) {
+ 			d->d_btimer = 0;
++			d->d_btimer_high = 0;
+ 		}
  	}
--	case XFS_IOC_SWAPEXT_32: {
--		struct xfs_swapext	  sxp;
--		struct compat_xfs_swapext __user *sxu = arg;
--
--		/* Bulk copy in up to the sx_stat field, then copy bstat */
--		if (copy_from_user(&sxp, sxu,
--				   offsetof(struct xfs_swapext, sx_stat)) ||
--		    xfs_ioctl32_bstat_copyin(&sxp.sx_stat, &sxu->sx_stat))
--			return -EFAULT;
--		error = mnt_want_write_file(filp);
--		if (error)
--			return error;
--		error = xfs_ioc_swapext(&sxp);
--		mnt_drop_write_file(filp);
--		return error;
--	}
- #endif
- 	/* long changes size, but xfs only copiese out 32 bits */
- 	case XFS_IOC_GETXFLAGS_32:
+ 
+-	if (!d->d_itimer) {
++	if (!d->d_itimer && !d->d_itimer_high) {
+ 		if ((d->d_ino_softlimit &&
+ 		     (be64_to_cpu(d->d_icount) >
+ 		      be64_to_cpu(d->d_ino_softlimit))) ||
+ 		    (d->d_ino_hardlimit &&
+ 		     (be64_to_cpu(d->d_icount) >
+ 		      be64_to_cpu(d->d_ino_hardlimit)))) {
+-			d->d_itimer = cpu_to_be32(get_seconds() +
+-					mp->m_quotainfo->qi_itimelimit);
++			timer = ktime_get_real_seconds() +
++				mp->m_quotainfo->qi_itimelimit;
++			d->d_itimer = cpu_to_be32(lower_32_bits(timer));
++			d->d_itimer_high = (u8)upper_32_bits(timer);
+ 		} else {
+ 			d->d_iwarns = 0;
+ 		}
+@@ -173,18 +180,21 @@ xfs_qm_adjust_dqtimers(
+ 		     (be64_to_cpu(d->d_icount) <=
+ 		      be64_to_cpu(d->d_ino_hardlimit)))) {
+ 			d->d_itimer = 0;
++			d->d_itimer_high = 0;
+ 		}
+ 	}
+ 
+-	if (!d->d_rtbtimer) {
++	if (!d->d_rtbtimer && !d->d_rtbtimer_high) {
+ 		if ((d->d_rtb_softlimit &&
+ 		     (be64_to_cpu(d->d_rtbcount) >
+ 		      be64_to_cpu(d->d_rtb_softlimit))) ||
+ 		    (d->d_rtb_hardlimit &&
+ 		     (be64_to_cpu(d->d_rtbcount) >
+ 		      be64_to_cpu(d->d_rtb_hardlimit)))) {
+-			d->d_rtbtimer = cpu_to_be32(get_seconds() +
+-					mp->m_quotainfo->qi_rtbtimelimit);
++			timer = ktime_get_real_seconds() +
++				mp->m_quotainfo->qi_rtbtimelimit;
++			d->d_rtbtimer = cpu_to_be32(lower_32_bits(timer));
++			d->d_rtbtimer_high = (u8)upper_32_bits(timer);
+ 		} else {
+ 			d->d_rtbwarns = 0;
+ 		}
+@@ -196,6 +206,7 @@ xfs_qm_adjust_dqtimers(
+ 		     (be64_to_cpu(d->d_rtbcount) <=
+ 		      be64_to_cpu(d->d_rtb_hardlimit)))) {
+ 			d->d_rtbtimer = 0;
++			d->d_rtbtimer_high = 0;
+ 		}
+ 	}
+ }
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index ecd8ce152ab1..afd0384850f9 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -613,12 +613,15 @@ xfs_qm_init_timelimits(
+ 	 * a user or group before he or she can not perform any
+ 	 * more writing. If it is zero, a default is used.
+ 	 */
+-	if (ddqp->d_btimer)
+-		qinf->qi_btimelimit = be32_to_cpu(ddqp->d_btimer);
+-	if (ddqp->d_itimer)
+-		qinf->qi_itimelimit = be32_to_cpu(ddqp->d_itimer);
+-	if (ddqp->d_rtbtimer)
+-		qinf->qi_rtbtimelimit = be32_to_cpu(ddqp->d_rtbtimer);
++	if (ddqp->d_btimer || ddqp->d_btimer_high)
++		qinf->qi_btimelimit = be32_to_cpu(ddqp->d_btimer) +
++					((u64)ddqp->d_btimer_high << 32);
++	if (ddqp->d_itimer || ddqp->d_itimer_high)
++		qinf->qi_itimelimit = be32_to_cpu(ddqp->d_itimer) +
++					((u64)ddqp->d_itimer_high << 32);
++	if (ddqp->d_rtbtimer || ddqp->d_rtbtimer_high)
++		qinf->qi_rtbtimelimit = be32_to_cpu(ddqp->d_rtbtimer) +
++					((u64)ddqp->d_rtbtimer_high << 32);
+ 	if (ddqp->d_bwarns)
+ 		qinf->qi_bwarnlimit = be16_to_cpu(ddqp->d_bwarns);
+ 	if (ddqp->d_iwarns)
+@@ -867,8 +870,11 @@ xfs_qm_reset_dqcounts(
+ 		ddq->d_icount = 0;
+ 		ddq->d_rtbcount = 0;
+ 		ddq->d_btimer = 0;
++		ddq->d_btimer_high = 0;
+ 		ddq->d_itimer = 0;
++		ddq->d_itimer_high = 0;
+ 		ddq->d_rtbtimer = 0;
++		ddq->d_rtbtimer_high = 0;
+ 		ddq->d_bwarns = 0;
+ 		ddq->d_iwarns = 0;
+ 		ddq->d_rtbwarns = 0;
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index b41b75089548..4742686d522e 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -64,9 +64,9 @@ typedef struct xfs_quotainfo {
+ 	struct xfs_inode	*qi_pquotaip;	/* project quota inode */
+ 	struct list_lru	 qi_lru;
+ 	int		 qi_dquots;
+-	time_t		 qi_btimelimit;	 /* limit for blks timer */
+-	time_t		 qi_itimelimit;	 /* limit for inodes timer */
+-	time_t		 qi_rtbtimelimit;/* limit for rt blks timer */
++	time64_t	 qi_btimelimit;	 /* limit for blks timer */
++	time64_t	 qi_itimelimit;	 /* limit for inodes timer */
++	time64_t	 qi_rtbtimelimit;/* limit for rt blks timer */
+ 	xfs_qwarncnt_t	 qi_bwarnlimit;	 /* limit for blks warnings */
+ 	xfs_qwarncnt_t	 qi_iwarnlimit;	 /* limit for inodes warnings */
+ 	xfs_qwarncnt_t	 qi_rtbwarnlimit;/* limit for rt blks warnings */
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index da7ad0383037..8d7d075d7779 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -500,15 +500,18 @@ xfs_qm_scall_setqlim(
+ 		 */
+ 		if (newlim->d_fieldmask & QC_SPC_TIMER) {
+ 			q->qi_btimelimit = newlim->d_spc_timer;
+-			ddq->d_btimer = cpu_to_be32(newlim->d_spc_timer);
++			ddq->d_btimer = cpu_to_be32(lower_32_bits(newlim->d_spc_timer));
++			ddq->d_btimer_high = (u8)upper_32_bits(newlim->d_spc_timer);
+ 		}
+ 		if (newlim->d_fieldmask & QC_INO_TIMER) {
+ 			q->qi_itimelimit = newlim->d_ino_timer;
+-			ddq->d_itimer = cpu_to_be32(newlim->d_ino_timer);
++			ddq->d_itimer = cpu_to_be32(lower_32_bits(newlim->d_ino_timer));
++			ddq->d_itimer_high = (u8)upper_32_bits(newlim->d_ino_timer);
+ 		}
+ 		if (newlim->d_fieldmask & QC_RT_SPC_TIMER) {
+ 			q->qi_rtbtimelimit = newlim->d_rt_spc_timer;
+ 			ddq->d_rtbtimer = cpu_to_be32(newlim->d_rt_spc_timer);
++			ddq->d_rtbtimer_high = (u8)upper_32_bits(newlim->d_rt_spc_timer);
+ 		}
+ 		if (newlim->d_fieldmask & QC_SPC_WARNS)
+ 			q->qi_bwarnlimit = newlim->d_spc_warns;
+@@ -623,8 +626,10 @@ xfs_qm_scall_getquota_fill_qc(
+ 	dst->d_ino_softlimit = be64_to_cpu(dqp->q_core.d_ino_softlimit);
+ 	dst->d_space = XFS_FSB_TO_B(mp, dqp->q_res_bcount);
+ 	dst->d_ino_count = dqp->q_res_icount;
+-	dst->d_spc_timer = be32_to_cpu(dqp->q_core.d_btimer);
+-	dst->d_ino_timer = be32_to_cpu(dqp->q_core.d_itimer);
++	dst->d_spc_timer = be32_to_cpu(dqp->q_core.d_btimer) +
++			   ((u64)dqp->q_core.d_btimer_high << 32);
++	dst->d_ino_timer = be32_to_cpu(dqp->q_core.d_itimer) +
++			   ((u64)dqp->q_core.d_itimer_high << 32);
+ 	dst->d_ino_warns = be16_to_cpu(dqp->q_core.d_iwarns);
+ 	dst->d_spc_warns = be16_to_cpu(dqp->q_core.d_bwarns);
+ 	dst->d_rt_spc_hardlimit =
+@@ -632,7 +637,8 @@ xfs_qm_scall_getquota_fill_qc(
+ 	dst->d_rt_spc_softlimit =
+ 		XFS_FSB_TO_B(mp, be64_to_cpu(dqp->q_core.d_rtb_softlimit));
+ 	dst->d_rt_space = XFS_FSB_TO_B(mp, dqp->q_res_rtbcount);
+-	dst->d_rt_spc_timer = be32_to_cpu(dqp->q_core.d_rtbtimer);
++	dst->d_rt_spc_timer = be32_to_cpu(dqp->q_core.d_rtbtimer) +
++			   ((u64)dqp->q_core.d_rtbtimer_high << 32);
+ 	dst->d_rt_spc_warns = be16_to_cpu(dqp->q_core.d_rtbwarns);
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
+index cd6c7210a373..96c3818b27ad 100644
+--- a/fs/xfs/xfs_quotaops.c
++++ b/fs/xfs/xfs_quotaops.c
+@@ -37,9 +37,9 @@ xfs_qm_fill_state(
+ 	tstate->flags |= QCI_SYSFILE;
+ 	tstate->blocks = ip->i_d.di_nblocks;
+ 	tstate->nextents = ip->i_d.di_nextents;
+-	tstate->spc_timelimit = q->qi_btimelimit;
+-	tstate->ino_timelimit = q->qi_itimelimit;
+-	tstate->rt_spc_timelimit = q->qi_rtbtimelimit;
++	tstate->spc_timelimit = (u32)q->qi_btimelimit;
++	tstate->ino_timelimit = (u32)q->qi_itimelimit;
++	tstate->rt_spc_timelimit = (u32)q->qi_rtbtimelimit;
+ 	tstate->spc_warnlimit = q->qi_bwarnlimit;
+ 	tstate->ino_warnlimit = q->qi_iwarnlimit;
+ 	tstate->rt_spc_warnlimit = q->qi_rtbwarnlimit;
+diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+index 16457465833b..6efca54e0edb 100644
+--- a/fs/xfs/xfs_trans_dquot.c
++++ b/fs/xfs/xfs_trans_dquot.c
+@@ -580,7 +580,7 @@ xfs_trans_dqresv(
+ {
+ 	xfs_qcnt_t	hardlimit;
+ 	xfs_qcnt_t	softlimit;
+-	time_t		timer;
++	time64_t	timer;
+ 	xfs_qwarncnt_t	warns;
+ 	xfs_qwarncnt_t	warnlimit;
+ 	xfs_qcnt_t	total_count;
+@@ -600,7 +600,8 @@ xfs_trans_dqresv(
+ 		softlimit = be64_to_cpu(dqp->q_core.d_blk_softlimit);
+ 		if (!softlimit)
+ 			softlimit = defq->bsoftlimit;
+-		timer = be32_to_cpu(dqp->q_core.d_btimer);
++		timer = be32_to_cpu(dqp->q_core.d_btimer) +
++			((u64)dqp->q_core.d_btimer_high << 32);
+ 		warns = be16_to_cpu(dqp->q_core.d_bwarns);
+ 		warnlimit = dqp->q_mount->m_quotainfo->qi_bwarnlimit;
+ 		resbcountp = &dqp->q_res_bcount;
+@@ -612,7 +613,8 @@ xfs_trans_dqresv(
+ 		softlimit = be64_to_cpu(dqp->q_core.d_rtb_softlimit);
+ 		if (!softlimit)
+ 			softlimit = defq->rtbsoftlimit;
+-		timer = be32_to_cpu(dqp->q_core.d_rtbtimer);
++		timer = be32_to_cpu(dqp->q_core.d_rtbtimer) +
++			((u64)dqp->q_core.d_rtbtimer_high << 32);
+ 		warns = be16_to_cpu(dqp->q_core.d_rtbwarns);
+ 		warnlimit = dqp->q_mount->m_quotainfo->qi_rtbwarnlimit;
+ 		resbcountp = &dqp->q_res_rtbcount;
+@@ -635,7 +637,8 @@ xfs_trans_dqresv(
+ 				goto error_return;
+ 			}
+ 			if (softlimit && total_count > softlimit) {
+-				if ((timer != 0 && get_seconds() > timer) ||
++				if ((timer != 0 &&
++				     ktime_get_real_seconds() > timer) ||
+ 				    (warns != 0 && warns >= warnlimit)) {
+ 					xfs_quota_warn(mp, dqp,
+ 						       QUOTA_NL_BSOFTLONGWARN);
+@@ -647,7 +650,8 @@ xfs_trans_dqresv(
+ 		}
+ 		if (ninos > 0) {
+ 			total_count = be64_to_cpu(dqp->q_core.d_icount) + ninos;
+-			timer = be32_to_cpu(dqp->q_core.d_itimer);
++			timer = be32_to_cpu(dqp->q_core.d_itimer) +
++				((u64)dqp->q_core.d_itimer_high << 32);
+ 			warns = be16_to_cpu(dqp->q_core.d_iwarns);
+ 			warnlimit = dqp->q_mount->m_quotainfo->qi_iwarnlimit;
+ 			hardlimit = be64_to_cpu(dqp->q_core.d_ino_hardlimit);
+@@ -662,7 +666,8 @@ xfs_trans_dqresv(
+ 				goto error_return;
+ 			}
+ 			if (softlimit && total_count > softlimit) {
+-				if  ((timer != 0 && get_seconds() > timer) ||
++				if  ((timer != 0 &&
++				      ktime_get_real_seconds() > timer) ||
+ 				     (warns != 0 && warns >= warnlimit)) {
+ 					xfs_quota_warn(mp, dqp,
+ 						       QUOTA_NL_ISOFTLONGWARN);
 -- 
 2.20.0
 
