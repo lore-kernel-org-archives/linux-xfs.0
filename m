@@ -2,30 +2,31 @@ Return-Path: <SRS0=Awhw=ZE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,PDS_TONAME_EQ_TOLOCAL_SHORT,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D779C43331
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 22:57:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFE96C43331
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 22:59:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0C65F21925
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 22:57:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A912621783
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 22:59:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726936AbfKLW5p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Nov 2019 17:57:45 -0500
-Received: from sandeen.net ([63.231.237.45]:35390 "EHLO sandeen.net"
+        id S1726932AbfKLW7d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Nov 2019 17:59:33 -0500
+Received: from sandeen.net ([63.231.237.45]:35500 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726910AbfKLW5p (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 12 Nov 2019 17:57:45 -0500
+        id S1726912AbfKLW7d (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 12 Nov 2019 17:59:33 -0500
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 3495E7BB4
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2019 16:56:28 -0600 (CST)
-To:     linux-xfs <linux-xfs@vger.kernel.org>
+        by sandeen.net (Postfix) with ESMTPSA id A1DBF7BB4
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Nov 2019 16:58:15 -0600 (CST)
+Subject: [PATCH 1/2] xfs: removed unused typedef definitions
 From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: [PATCH 0/2] xfs: removed unused typedef definitions and symbols
+To:     linux-xfs <linux-xfs@vger.kernel.org>
+References: <321019c7-574e-e7e1-0eb6-e60776ad7948@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
  nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
@@ -68,11 +69,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <321019c7-574e-e7e1-0eb6-e60776ad7948@sandeen.net>
-Date:   Tue, 12 Nov 2019 16:57:43 -0600
+Message-ID: <3e3ddc13-4417-a0b1-85d1-a03a37a46461@sandeen.net>
+Date:   Tue, 12 Nov 2019 16:59:31 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.2.2
 MIME-Version: 1.0
+In-Reply-To: <321019c7-574e-e7e1-0eb6-e60776ad7948@sandeen.net>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -81,10 +83,74 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-After seeing Christoph's m_chsize removal I figured I'd go look
-for more.  ;)
+Remove some typdefs for type_t's that are no longer referred to
+by their typedef'd types.
 
-patch1 removes some typedef'd structure types that are no longer referred
-to by the typedefs
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-patch2 removes some more unused symbols
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index c968b60cee15..8f6b485a3119 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -920,13 +920,13 @@ static inline uint xfs_dinode_size(int version)
+  * This enum is used in string mapping in xfs_trace.h; please keep the
+  * TRACE_DEFINE_ENUMs for it up to date.
+  */
+-typedef enum xfs_dinode_fmt {
++enum xfs_dinode_fmt {
+ 	XFS_DINODE_FMT_DEV,		/* xfs_dev_t */
+ 	XFS_DINODE_FMT_LOCAL,		/* bulk data */
+ 	XFS_DINODE_FMT_EXTENTS,		/* struct xfs_bmbt_rec */
+ 	XFS_DINODE_FMT_BTREE,		/* struct xfs_bmdr_block */
+ 	XFS_DINODE_FMT_UUID		/* added long ago, but never used */
+-} xfs_dinode_fmt_t;
++};
+ 
+ #define XFS_INODE_FORMAT_STR \
+ 	{ XFS_DINODE_FMT_DEV,		"dev" }, \
+diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
+index f3d18eaecebb..3bf671637a91 100644
+--- a/fs/xfs/libxfs/xfs_log_recover.h
++++ b/fs/xfs/libxfs/xfs_log_recover.h
+@@ -30,14 +30,14 @@ typedef struct xlog_recover_item {
+ 	xfs_log_iovec_t		*ri_buf;	/* ptr to regions buffer */
+ } xlog_recover_item_t;
+ 
+-typedef struct xlog_recover {
++struct xlog_recover {
+ 	struct hlist_node	r_list;
+ 	xlog_tid_t		r_log_tid;	/* log's transaction id */
+ 	xfs_trans_header_t	r_theader;	/* trans header for partial */
+ 	int			r_state;	/* not needed */
+ 	xfs_lsn_t		r_lsn;		/* xact lsn */
+ 	struct list_head	r_itemq;	/* q for items */
+-} xlog_recover_t;
++};
+ 
+ #define ITEM_TYPE(i)	(*(unsigned short *)(i)->ri_buf[0].i_addr)
+ 
+diff --git a/fs/xfs/xfs_ioctl32.h b/fs/xfs/xfs_ioctl32.h
+index 7985344d3aa6..13b1d4b967bb 100644
+--- a/fs/xfs/xfs_ioctl32.h
++++ b/fs/xfs/xfs_ioctl32.h
+@@ -99,7 +99,7 @@ typedef struct compat_xfs_fsop_handlereq {
+ 	_IOWR('X', 108, struct compat_xfs_fsop_handlereq)
+ 
+ /* The bstat field in the swapext struct needs translation */
+-typedef struct compat_xfs_swapext {
++struct compat_xfs_swapext {
+ 	int64_t			sx_version;	/* version */
+ 	int64_t			sx_fdtarget;	/* fd of target file */
+ 	int64_t			sx_fdtmp;	/* fd of tmp file */
+@@ -107,7 +107,7 @@ typedef struct compat_xfs_swapext {
+ 	xfs_off_t		sx_length;	/* leng from offset */
+ 	char			sx_pad[16];	/* pad space, unused */
+ 	struct compat_xfs_bstat	sx_stat;	/* stat of target b4 copy */
+-} __compat_packed compat_xfs_swapext_t;
++} __compat_packed;
+ 
+ #define XFS_IOC_SWAPEXT_32	_IOWR('X', 109, struct compat_xfs_swapext)
+ 
+
+
