@@ -2,93 +2,72 @@ Return-Path: <SRS0=Awhw=ZE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99542C43331
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 16:09:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5174AC43331
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 16:12:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6CE0B214E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 16:09:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C97C21D7F
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Nov 2019 16:12:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="pRtm6PMq"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rByDII6b"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726912AbfKLQJ1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Nov 2019 11:09:27 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:41788 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726718AbfKLQJ1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 11:09:27 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xACG4KBm110698;
-        Tue, 12 Nov 2019 16:09:18 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=2yv+/sIJLa+/SHoiilLrOjsmIGrpt8lokyxjMLzn5u4=;
- b=pRtm6PMqre+d1ZOl6am9rcbi1QzZwUhmzdfHpEB1y6VLwAMXl4ukGaktg/C+oAMQOrXy
- 8DMpCcfzCaBTCGlilwUQK6fI3qF5JHML6yuQsoRfK1mLBzchuzM+oP4+S4emgOXPlZJv
- R5YMwC58NwNYkk2c56t4IyGSoTjP/z2LeRoAbuSAusZJjzfp7/mfEIA25gByEbTasACf
- J38ziYKVL+h0OmYrxJ/+sLyb2Qz0sXJIwscw1dhCYMiiDpVTpFe4Cn4IoGXttwIBJW5d
- DY2OW1+vvKO6XtxpjT7KRZ2cw89+IAYJ3JmB5XosLhpKeAqm/vSIYwfxOOTtjUhUi3b4 gQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2w5p3qnshq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 12 Nov 2019 16:09:18 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xACG4niX161153;
-        Tue, 12 Nov 2019 16:09:18 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 2w7khkj08w-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 12 Nov 2019 16:09:17 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xACG9Eko029289;
-        Tue, 12 Nov 2019 16:09:14 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 12 Nov 2019 08:09:14 -0800
-Date:   Tue, 12 Nov 2019 08:09:13 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Amir Goldstein <amir73il@gmail.com>, linux-xfs@vger.kernel.org
+        id S1726952AbfKLQMn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Nov 2019 11:12:43 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:36740 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726388AbfKLQMn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 11:12:43 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=ZvNS8BWhIj104MaXdjljrjdItYyM9+MlwJuyPts81D8=; b=rByDII6bVfsmvj2NB7BAIEYwu
+        yL6OvpbSlwWXMnl5vpeiw3jl2d22B85J72cyit+YYvPP5yvuRLM5TlfKcxtOl+u7ZInNU7IpDkvat
+        9+NYV8AC8Um0V8YoJh4ScMIcxP7CD7tYtyJhmBOJAzAurwZGUddE+gZPdoaceiY4X/4UiG0aNoEW8
+        c8wiJ4hZMj1BqQer/vbwWcnkSFzNdiOWWs9Od7GxbQMDz1hLlqvwtGohw/V9NHxV6QS5Zng2U2jzC
+        uTcHyb5Iqg1Aym2wTkbZugB9GQfZ7oCQkCIeLD5iS84lWvBgXbPItIDreS5dhVxCHxhOu8EFcbOdY
+        Al4Kt96Jg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1iUYmY-000588-NO; Tue, 12 Nov 2019 16:12:42 +0000
+Date:   Tue, 12 Nov 2019 08:12:42 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Amir Goldstein <amir73il@gmail.com>, linux-xfs@vger.kernel.org
 Subject: Re: [RFC][PATCH] xfs: extended timestamp range
-Message-ID: <20191112160913.GW6219@magnolia>
+Message-ID: <20191112161242.GA19334@infradead.org>
 References: <20191111213630.14680-1-amir73il@gmail.com>
  <20191111223508.GS6219@magnolia>
  <20191112082524.GA18779@infradead.org>
+ <20191112160913.GW6219@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191112082524.GA18779@infradead.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9438 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=995
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1910280000 definitions=main-1911120136
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9438 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
- definitions=main-1911120136
+In-Reply-To: <20191112160913.GW6219@magnolia>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 12, 2019 at 12:25:24AM -0800, Christoph Hellwig wrote:
-> On Mon, Nov 11, 2019 at 02:35:08PM -0800, Darrick J. Wong wrote:
-> > Also, please change struct xfs_inode.i_crtime to a timespec64 to match
-> > the other three timestamps in struct inode...
+On Tue, Nov 12, 2019 at 08:09:13AM -0800, Darrick J. Wong wrote:
+> On Tue, Nov 12, 2019 at 12:25:24AM -0800, Christoph Hellwig wrote:
+> > On Mon, Nov 11, 2019 at 02:35:08PM -0800, Darrick J. Wong wrote:
+> > > Also, please change struct xfs_inode.i_crtime to a timespec64 to match
+> > > the other three timestamps in struct inode...
+> > 
+> > Or you could just merge my outstanding patch to do just that..
 > 
-> Or you could just merge my outstanding patch to do just that..
+> I must've missed it, got a link?
 
-I must've missed it, got a link?
+The series is at:
 
-/me digs...
+https://www.spinics.net/lists/linux-xfs/msg32997.html
 
---D
+Dave didn't like the last patch, but the first three should be fine.
