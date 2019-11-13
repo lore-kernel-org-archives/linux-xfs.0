@@ -2,177 +2,170 @@ Return-Path: <SRS0=J5MO=ZF=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A93FC43331
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Nov 2019 13:42:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2B7FC43331
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Nov 2019 14:23:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F3DBA2245B
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Nov 2019 13:42:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 74F27222C9
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Nov 2019 14:23:48 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OLYT+n9G"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727473AbfKMNmp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Nov 2019 08:42:45 -0500
-Received: from mout.kundenserver.de ([212.227.17.10]:54461 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726434AbfKMNmp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Nov 2019 08:42:45 -0500
-Received: from mail-qt1-f175.google.com ([209.85.160.175]) by
- mrelayeu.kundenserver.de (mreue109 [212.227.15.145]) with ESMTPSA (Nemesis)
- id 1MIxBc-1iBhLH3Iba-00KMQj; Wed, 13 Nov 2019 14:42:41 +0100
-Received: by mail-qt1-f175.google.com with SMTP id y10so2610389qto.3;
-        Wed, 13 Nov 2019 05:42:41 -0800 (PST)
-X-Gm-Message-State: APjAAAWQfW+/OR1mX8XKbygHgLaXVnsWKIBBG3NlQf9qUO9Lq2DX4lJI
-        NbzfWXaQV06IOxssWHC5f9kWzpMYvIck6i68t4Y=
-X-Google-Smtp-Source: APXvYqwOZDETUFXSsZp6Un2T3zj3dpR0fAaTW5TdtNU31TMtfaB+p1In9+F0IJtERqbLq/GvCvC4PG3JRR93oU8tr6M=
-X-Received: by 2002:ac8:18eb:: with SMTP id o40mr2661414qtk.304.1573652560627;
- Wed, 13 Nov 2019 05:42:40 -0800 (PST)
+        id S1727493AbfKMOXs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Nov 2019 09:23:48 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:31539 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727481AbfKMOXr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Nov 2019 09:23:47 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1573655026;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=Dmcw4k6bVlwzvnndn7mvEug+CdckybSb9XEgOaPfs30=;
+        b=OLYT+n9GxLKhdbU+qgJj7hWUWNSm1oW5gMX9/h5tb23GBsHP3p/dI4ZVOZfQphbDr+MwG6
+        GvIu962DJRUSg/NdlyEWZockBFAyI7MazAXiRwL3QDNnyB8+Uox3iEJoNqN4ejnObY8fh+
+        WWYQlzl2MkPausY1JATyFsHwKoVaqM4=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-287-wg1dpZqRPnWjNBSeJSv6lw-1; Wed, 13 Nov 2019 09:23:45 -0500
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8A03010C092E
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Nov 2019 14:23:44 +0000 (UTC)
+Received: from orion.redhat.com (ovpn-204-203.brq.redhat.com [10.40.204.203])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id E0F984D9E1
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Nov 2019 14:23:43 +0000 (UTC)
+From:   Carlos Maiolino <cmaiolino@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 00/11] Use generic memory API instead of a custom one
+Date:   Wed, 13 Nov 2019 15:23:24 +0100
+Message-Id: <20191113142335.1045631-1-cmaiolino@redhat.com>
 MIME-Version: 1.0
-References: <20191112120910.1977003-1-arnd@arndb.de> <20191112120910.1977003-2-arnd@arndb.de>
- <20191112141600.GB10922@lst.de> <20191113050628.GS6219@magnolia>
-In-Reply-To: <20191113050628.GS6219@magnolia>
-From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Wed, 13 Nov 2019 14:42:24 +0100
-X-Gmail-Original-Message-ID: <CAK8P3a3c3kCXAPU-sJQvAvDQdAwVnQRiterdmqXufWkFdSSZ+g@mail.gmail.com>
-Message-ID: <CAK8P3a3c3kCXAPU-sJQvAvDQdAwVnQRiterdmqXufWkFdSSZ+g@mail.gmail.com>
-Subject: Re: [RFC 1/5] xfs: [variant A] avoid time_t in user api
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        y2038 Mailman List <y2038@lists.linaro.org>,
-        Deepa Dinamani <deepa.kernel@gmail.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Brian Foster <bfoster@redhat.com>,
-        Allison Collins <allison.henderson@oracle.com>,
-        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Provags-ID: V03:K1:tQcCN+uPu60Chpg0Wv8TNBpWv602TgBstegrTL+9Ccvv1FneFuM
- VMBLc3R0ZqxjrhfQp8Y4aw0bivR54GAWXJpr5VLK2dOXyyS1PqTf6rNARXIRgHqMAFMR+DX
- ebO7vr7i/bgqEJ0lMQaJnOAoZbJ8MvoSrCDwJf2vvNl7gYkrlUr1CBsHpmYrHYRisNZ2dIF
- q8blwWzVXP8LBe+o2+Sdw==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:97AvqYcQEtc=:Xx8tNEMfXJRcPmyab+spi0
- ovcMw6zlKD7c371/iLXmnG/20MKzx44mPr9vC5KO+8IKwkZxHuhBeFAS3irtWfr9HnpKpxOsv
- 5HyA/urWsjz8GA8CukWaMDQeZRbM9lEzb7E9y1VxCoP1nkriBB5wjcfkJrS8pWvqx6GYBrtAR
- JmhGicMY7R+PkmZbrAuVH+AUf7TYn7C82gFGcD0f0mgtKQBcbfQW3pZ8+RCy6CV6uyac7sRSI
- gxOfDwB1X7YGLEJ4G1jcsE8LSdijSg5Ik6PHfHIbfAhxwpk+IAf3vnL0b324RSbadviKn7kWi
- 5OSp476EuI7RuJwSOA+SgSQLHPxBQVJrDv6oRvL44LwGIGl8cSaw2wjYAN7dsw0TDC0+nQdNo
- kqb5evu8vIxoRu31Stf9SiNob5g3RFLCbdnCxjBzl4jNGe6jgMKNY3v8qEIhirvIil/6pXHRf
- 1ub7bO3ZSJftaCFhDW3haAJlwBPsfaU/NU8T5c1dgTQVTdK71oXHWIlQeu0OSkKLStw4DnRzt
- n14HcnUbyBsuIlYa24y97DOrnMAuW7rkrXyf8B/rniubcAZX3L3DwsayqhJSP2v4o8mqux4wo
- tkEu/sJXK85eqjT8jD3uXlcZhce+Fbm7jco8JE/nbo+SbIgmEbnLlzZoBV+ZFG60oSPsKNirs
- MMNcr2SGMthTUB5aWW4zcudEfTQg4pw/9NZ5/iBRYIi6KbF5AxGmLbTVQHQ0Oo5R4ETXFZkAa
- gEyogRlia0de6q5++Hl+On+zvOeWQCRULeyos3UVgO6lnkrWcVZ+C8Ikv1B40uYY0xZCjtwwk
- d4ZwBhhExqBn8neB8ERUbLSuLB4dc3J0IFpmZPoTHsa82q5uUTMCwBBoivmrqdeMee978Cu/U
- hnhRlwhhDYl9IJCFVT3w==
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+X-MC-Unique: wg1dpZqRPnWjNBSeJSv6lw-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 13, 2019 at 6:08 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> On Tue, Nov 12, 2019 at 03:16:00PM +0100, Christoph Hellwig wrote:
-> > On Tue, Nov 12, 2019 at 01:09:06PM +0100, Arnd Bergmann wrote:
-> > > However, as long as two observations are true, a much simpler solution
-> > > can be used:
-> > >
-> > > 1. xfsprogs is the only user space project that has a copy of this header
-> >
-> > We can't guarantee that.
-> >
-> > > 2. xfsprogs already has a replacement for all three affected ioctl commands,
-> > >    based on the xfs_bulkstat structure to pass 64-bit timestamps
-> > >    regardless of the architecture
-> >
-> > XFS_IOC_BULKSTAT replaces XFS_IOC_FSBULKSTAT directly, and can replace
-> > XFS_IOC_FSBULKSTAT_SINGLE indirectly, so that is easy.  Most users
-> > actually use the new one now through libfrog, although I found a user
-> > of the direct ioctl in the xfs_io tool, which could easily be fixed as
-> > well.
->
-> Agreed, XFS_IOC_BULKSTAT is the replacement for the two FSBULKSTAT
-> variants.  The only question in my mind for the old ioctls is whether we
-> should return EOVERFLOW if the timestamp would overflow?  Or just
-> truncate the results?
+Hi.
 
-I think neither of these would be particularly helpful, the result is that users
-see no change in behavior until it's actually too late and the timestamps have
-overrun.
+This patchset aims to remove most of XFS custom memory allocation mechanism=
+ and
+replace it with generic memory interfaces. This includes:
 
-If we take variant A and just fix the ABI to 32-bit time_t, it is important
-that all user space stop using these ioctls and moves to the v5 interfaces
-instead (including SWAPEXT I guess).
+- removing KM_* flags
+- removing most of the kmem_* API, with the exception of 2 helpers (see the=
+ last
+  two patches).
 
-Something along the lines of this change would work:
+All mem alloc requests using KM_* flags, were replaced following these rule=
+s:
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index d50135760622..87318486c96e 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -830,6 +830,23 @@ xfs_fsinumbers_fmt(
-        return xfs_ibulk_advance(breq, sizeof(struct xfs_inogrp));
- }
+- KM_ZONE_* flags were directly replaced by their SLAB_* relative
 
-+/* disallow y2038-unsafe ioctls with CONFIG_COMPAT_32BIT_TIME=n */
-+static bool xfs_have_compat_bstat_time32(unsigned int cmd)
-+{
-+       if (IS_ENABLED(CONFIG_COMPAT_32BIT_TIME))
-+               return true;
-+
-+       if (IS_ENABLED(CONFIG_64BIT) && !in_compat_syscall())
-+               return true;
-+
-+       if (cmd == XFS_IOC_FSBULKSTAT_SINGLE ||
-+           cmd == XFS_IOC_FSBULKSTAT ||
-+           cmd == XFS_IOC_SWAPEXT)
-+               return false;
-+
-+       return true;
-+}
-+
- STATIC int
- xfs_ioc_fsbulkstat(
-        xfs_mount_t             *mp,
-@@ -850,6 +867,9 @@ xfs_ioc_fsbulkstat(
-        if (!capable(CAP_SYS_ADMIN))
-                return -EPERM;
+- KM_NOFS: Replaced by GFP_NOFS
+- KM_MAYFAIL: Replaced by __GFP_RETRY_MAYFAIL
 
-+       if (!xfs_have_compat_bstat_time32())
-+               return -EINVAL;
-+
-        if (XFS_FORCED_SHUTDOWN(mp))
-                return -EIO;
+- All memalloc requests made with no KM_* flags, like:
+=09kmem_alloc(item, 0);
 
-@@ -2051,6 +2071,11 @@ xfs_ioc_swapext(
-        struct fd       f, tmp;
-        int             error = 0;
+  Have been replaced by GFP_KERNEL.
 
-+       if (xfs_have_compat_bstat_time32(XFS_IOC_SWAPEXT)) {
-+               error = -EINVAL
-+               got out;
-+       }
-+
-        /* Pull information for the target fd */
-        f = fdget((int)sxp->sx_fdtarget);
-        if (!f.file) {
+- Every memalloc request without KM_MAYFAIL have been replaced by __GFP_NOF=
+AIL
+  and the other flags OR'ed together.
 
-This way, at least users that intentionally turn off CONFIG_COMPAT_32BIT_TIME
-run into the broken application right away, which forces them to upgrade or fix
-the code to use the v5 ioctl.
+These patches passed a few xfstests runs without issues.
+Cheers
 
-> > > Based on those assumptions, changing xfs_bstime to use __kernel_long_t
-> > > instead of time_t in both the kernel and in xfsprogs preserves the current
-> > > ABI for any libc definition of time_t and solves the problem of passing
-> > > 64-bit timestamps to 32-bit user space.
-> >
-> > As said above their are not entirely true, but I still think this patch
-> > is the right thing to do, if only to get the time_t out of the ABI..
-> >
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
->
-> Seconded,
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Thanks!
+Carlos Maiolino (11):
+  xfs: Remove slab init wrappers
+  xfs: Remove kmem_zone_destroy() wrapper
+  xfs: Remove kmem_zone_free() wrapper
+  xfs: remove kmem_zone_zalloc()
+  xfs: Remove kmem_zone_alloc() wrapper
+  xfs: remove kmem_zalloc() wrapper
+  xfs: Remove kmem_realloc
+  xfs: Convert kmem_alloc() users
+  xfs: rework kmem_alloc_{io,large} to use GFP_* flags
+  xfs: Remove KM_* flags
+  xfs: Remove kmem_alloc_{io, large} and kmem_zalloc_large
 
-     Arnd
+ fs/xfs/kmem.c                      | 134 +++-------------------
+ fs/xfs/kmem.h                      |  93 +---------------
+ fs/xfs/libxfs/xfs_alloc.c          |   3 +-
+ fs/xfs/libxfs/xfs_alloc_btree.c    |   2 +-
+ fs/xfs/libxfs/xfs_attr_leaf.c      |  11 +-
+ fs/xfs/libxfs/xfs_bmap.c           |   8 +-
+ fs/xfs/libxfs/xfs_bmap_btree.c     |   2 +-
+ fs/xfs/libxfs/xfs_btree.c          |   2 +-
+ fs/xfs/libxfs/xfs_da_btree.c       |  18 +--
+ fs/xfs/libxfs/xfs_defer.c          |   4 +-
+ fs/xfs/libxfs/xfs_dir2.c           |  20 ++--
+ fs/xfs/libxfs/xfs_dir2_block.c     |   2 +-
+ fs/xfs/libxfs/xfs_dir2_sf.c        |   8 +-
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |   2 +-
+ fs/xfs/libxfs/xfs_iext_tree.c      |  14 ++-
+ fs/xfs/libxfs/xfs_inode_fork.c     |  32 +++---
+ fs/xfs/libxfs/xfs_refcount.c       |   9 +-
+ fs/xfs/libxfs/xfs_refcount_btree.c |   2 +-
+ fs/xfs/libxfs/xfs_rmap.c           |   2 +-
+ fs/xfs/libxfs/xfs_rmap_btree.c     |   2 +-
+ fs/xfs/scrub/agheader.c            |   4 +-
+ fs/xfs/scrub/attr.c                |  10 +-
+ fs/xfs/scrub/attr.h                |   3 +-
+ fs/xfs/scrub/bitmap.c              |   7 +-
+ fs/xfs/scrub/btree.c               |   4 +-
+ fs/xfs/scrub/fscounters.c          |   3 +-
+ fs/xfs/scrub/refcount.c            |   4 +-
+ fs/xfs/scrub/symlink.c             |   3 +-
+ fs/xfs/xfs_acl.c                   |   3 +-
+ fs/xfs/xfs_attr_inactive.c         |   2 +-
+ fs/xfs/xfs_attr_list.c             |   2 +-
+ fs/xfs/xfs_bmap_item.c             |   8 +-
+ fs/xfs/xfs_buf.c                   |  35 +++---
+ fs/xfs/xfs_buf_item.c              |  10 +-
+ fs/xfs/xfs_dquot.c                 |  20 ++--
+ fs/xfs/xfs_dquot_item.c            |   3 +-
+ fs/xfs/xfs_error.c                 |   4 +-
+ fs/xfs/xfs_extent_busy.c           |   3 +-
+ fs/xfs/xfs_extfree_item.c          |  16 +--
+ fs/xfs/xfs_filestream.c            |   2 +-
+ fs/xfs/xfs_icache.c                |   6 +-
+ fs/xfs/xfs_icreate_item.c          |   4 +-
+ fs/xfs/xfs_inode.c                 |   4 +-
+ fs/xfs/xfs_inode_item.c            |   5 +-
+ fs/xfs/xfs_ioctl.c                 |   8 +-
+ fs/xfs/xfs_ioctl32.c               |   3 +-
+ fs/xfs/xfs_itable.c                |   8 +-
+ fs/xfs/xfs_iwalk.c                 |   5 +-
+ fs/xfs/xfs_log.c                   |  19 ++--
+ fs/xfs/xfs_log_cil.c               |  10 +-
+ fs/xfs/xfs_log_priv.h              |   2 +-
+ fs/xfs/xfs_log_recover.c           |  24 ++--
+ fs/xfs/xfs_mount.c                 |   7 +-
+ fs/xfs/xfs_mru_cache.c             |   5 +-
+ fs/xfs/xfs_qm.c                    |   6 +-
+ fs/xfs/xfs_refcount_item.c         |  12 +-
+ fs/xfs/xfs_rmap_item.c             |  12 +-
+ fs/xfs/xfs_rtalloc.c               |   5 +-
+ fs/xfs/xfs_super.c                 | 171 ++++++++++++++++-------------
+ fs/xfs/xfs_trace.h                 |   1 -
+ fs/xfs/xfs_trans.c                 |   6 +-
+ fs/xfs/xfs_trans_ail.c             |   3 +-
+ fs/xfs/xfs_trans_dquot.c           |   5 +-
+ 63 files changed, 353 insertions(+), 494 deletions(-)
+
+--=20
+2.23.0
+
