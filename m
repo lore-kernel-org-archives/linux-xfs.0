@@ -2,116 +2,111 @@ Return-Path: <SRS0=J5MO=ZF=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3C6CC43331
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Nov 2019 04:08:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B59AC43331
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Nov 2019 04:10:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9334F222CF
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Nov 2019 04:08:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59FEA222C1
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Nov 2019 04:10:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="daVY+UHC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727368AbfKMEIS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Nov 2019 23:08:18 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:37560 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727032AbfKMEIR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 23:08:17 -0500
-Received: from dread.disaster.area (pa49-180-67-183.pa.nsw.optusnet.com.au [49.180.67.183])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id B10193A1E69;
-        Wed, 13 Nov 2019 15:08:12 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1iUjwx-0001D1-LJ; Wed, 13 Nov 2019 15:08:11 +1100
-Date:   Wed, 13 Nov 2019 15:08:11 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Amir Goldstein <amir73il@gmail.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [RFC][PATCH] xfs: extended timestamp range
-Message-ID: <20191113040811.GS4614@dread.disaster.area>
-References: <20191111213630.14680-1-amir73il@gmail.com>
- <20191111223508.GS6219@magnolia>
- <CAOQ4uxgC8Gz+uyCaV_Prw=uUVNtwv0j7US8sbkfoTphC4Z6b6A@mail.gmail.com>
- <20191112211153.GO4614@dread.disaster.area>
- <20191113035611.GE6219@magnolia>
+        id S1727032AbfKMEKo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Nov 2019 23:10:44 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:44566 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726995AbfKMEKo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 23:10:44 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAD4414f151917;
+        Wed, 13 Nov 2019 04:10:30 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=ZNdKFjm9UOk20HQLFuUdDzwYJHobBEWdrbmahikMcMQ=;
+ b=daVY+UHCh2uLSiwykHfg7PrxW1NSc992UpsT6+ShzRR6q6ARyNCYPdMa0mOLU8DcL0k/
+ fAtl4FDPOH67w8qYBm526qDnsqmA9Mztd2hCAm7nL2vuP1FMg0Ib5LzU7J+5D84BqalD
+ sdPREAniLiswQ55S9hRjiRBjdsOreUhkOjbkjehFao9jIN0+OCQGaFrmNCWEYDvLt1KW
+ TnnnxirEs3yiDH8/PtNL1jKWs8e21FiVqeK7JWOnOcLbeVJ7BtqMhlcnzVwqT7j4vfUW
+ 64tjz6IB5BioWw77tkHkxL80g15uwj4lNKJo7MYzn5S7jrpSwC3LOE01T6Xhs3Td+TLQ gA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 2w5mvtsgcu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 13 Nov 2019 04:10:30 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAD48tYG024715;
+        Wed, 13 Nov 2019 04:10:30 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 2w7khmk2er-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 13 Nov 2019 04:10:29 +0000
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xAD4ASts014206;
+        Wed, 13 Nov 2019 04:10:28 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 12 Nov 2019 20:10:27 -0800
+Date:   Tue, 12 Nov 2019 20:10:26 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     YueHaibing <yuehaibing@huawei.com>
+Cc:     Eric Sandeen <sandeen@sandeen.net>,
+        Brian Foster <bfoster@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH -next] xfs: remove duplicated include from xfs_dir2_data.c
+Message-ID: <20191113041026.GF6219@magnolia>
+References: <20191113022501.55816-1-yuehaibing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191113035611.GE6219@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
-        a=3wLbm4YUAFX2xaPZIabsgw==:117 a=3wLbm4YUAFX2xaPZIabsgw==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=MeAgGD-zjQ4A:10
-        a=7-415B0cAAAA:8 a=Q3LfPZcm-AddFAA5BcUA:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20191113022501.55816-1-yuehaibing@huawei.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9439 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1910280000 definitions=main-1911130034
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9439 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
+ definitions=main-1911130034
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 12, 2019 at 07:56:11PM -0800, Darrick J. Wong wrote:
-> On Wed, Nov 13, 2019 at 08:11:53AM +1100, Dave Chinner wrote:
-> > Backwards comaptible in-place upgrades are largely a myth: we don't
-> > allow changes to the on-disk format without feature bits that limit
-> > what old kernels can do with new formats. In this case it requires
-> > an incompat bit because the moment an upper bit in the ns field is
-> > set then the timestamps go bad on old kernels. Hence it's not a
-> > compatible change and filesytems with this format cannot be mounted
-> > on kernels that don't support it.
-> > 
-> > So, an in-place upgrade process is a one-way operation - once you
-> > start converting and have >2038 dates, there is no going back
-> > without an offline admin operation. That means there's no real need
-> > to try to retain the old format at all. IOWs, for in-place upgrade,
-> > all we need is an inode flag to indicate what format the timestamp
-> > is in once the superblock incompat flag is set. Eventually the SB
-> > flag becomes the mkfs default, and then eventually it becomes the
-> > only supported format. This is what we've done before for things
-> > like NLINK, ATTR2, etc.
+On Wed, Nov 13, 2019 at 02:25:01AM +0000, YueHaibing wrote:
+> Remove duplicated include.
 > 
-> /me is confused, are you advocating for an upgrade path that is: (1)
-> admin sets incompat feature; (2) as people try to store dates beyond
-> 2038 we set an inode flag and write the timestamp in the new format?
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 
-If we decide that we want to allow in-place upgrade, then this is
-the way we've done it in the past. remember how long we supported
-reading v1 inodes but only supported writing v2 inodes? i.e. we
-converted old 16 bit nlink inodes to 32 bit nlink inodes silently
-and automatically when they were dirtied.
+Heh, oops.  Thanks for the patch!
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-i.e. once the superblock feature bit is set, we can convert inode
-the timestamp format on inode writeback.
+--D
 
-> I guess we could do that.  I'd kinda thought that we'd just set an
-> incompat flag and users simply have to backup, reformat, and reinstall.
-> OTOH it's a fairly minor update so maybe we can support one way upgrade.
-
-Sure, we can do that, too, but the kernel code still has to support
-reading and write both formats. Given that, on-the fly conversion is
-a trivial addition to the code...
-
-> > > One thing I wasn't certain about is that it seems that xfs (and xfs_repair)
-> > > allows for negative nsec value. Not sure if that is intentional and why.
-> > > I suppose it is an oversight? That is something that xfs_repair would
-> > > need to check and fix before upgrade if we do go with the epoch bits.
-> > 
-> > It's not an oversight - it's somethign the on-disk format allowed.
-> > Who knows if it ever got used (or how it got used), but it's
-> > somethign we can only fix by changing the on-disk format (as you can
-> > see from the discussion above).
+> ---
+>  fs/xfs/libxfs/xfs_dir2_data.c | 1 -
+>  1 file changed, 1 deletion(-)
 > 
-> The disk format allows it; scrub warns about it, and the kernel at least
-> in theory clamps the nsec value to 0...1e9.
-
-Yup, but those are relatively recent things when compared to when
-the XFS on-disk format was defined... :P
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
+> index 9e471a28b6c6..30293a1d03f6 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_data.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_data.c
+> @@ -18,7 +18,6 @@
+>  #include "xfs_trans.h"
+>  #include "xfs_buf_item.h"
+>  #include "xfs_log.h"
+> -#include "xfs_dir2_priv.h"
+>  
+>  static xfs_failaddr_t xfs_dir2_data_freefind_verify(
+>  		struct xfs_dir2_data_hdr *hdr, struct xfs_dir2_data_free *bf,
+> 
+> 
+> 
