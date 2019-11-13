@@ -2,113 +2,124 @@ Return-Path: <SRS0=J5MO=ZF=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8F91C43331
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Nov 2019 15:25:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DFDEC432C3
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Nov 2019 16:27:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8A182222C9
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Nov 2019 15:25:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 408AA24079
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Nov 2019 16:27:17 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="XaEmzHT9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728030AbfKMPZY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Nov 2019 10:25:24 -0500
-Received: from mx2.suse.de ([195.135.220.15]:53214 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727721AbfKMPZY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 13 Nov 2019 10:25:24 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 8A799B483;
-        Wed, 13 Nov 2019 15:25:21 +0000 (UTC)
-Received: by ds.suse.cz (Postfix, from userid 10065)
-        id 966E7DA7E8; Wed, 13 Nov 2019 16:25:22 +0100 (CET)
-Date:   Wed, 13 Nov 2019 16:25:22 +0100
-From:   David Sterba <dsterba@suse.cz>
-To:     ira.weiny@intel.com
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna.schumaker@netapp.com>,
-        linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org, Dave Chinner <david@fromorbit.com>,
-        Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH V2 2/2] fs: Move swap_[de]activate to file_operations
-Message-ID: <20191113152522.GF3001@twin.jikos.cz>
-Reply-To: dsterba@suse.cz
-Mail-Followup-To: dsterba@suse.cz, ira.weiny@intel.com,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Andrew Morton <akpm@linux-foundation.org>, Chris Mason <clm@fb.com>,
-        Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna.schumaker@netapp.com>,
-        linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org, Dave Chinner <david@fromorbit.com>,
-        Jan Kara <jack@suse.cz>
-References: <20191113004244.9981-1-ira.weiny@intel.com>
- <20191113004244.9981-3-ira.weiny@intel.com>
+        id S1727180AbfKMQ1Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Nov 2019 11:27:16 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:42160 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727196AbfKMQ1Q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Nov 2019 11:27:16 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xADGOIgD005215;
+        Wed, 13 Nov 2019 16:27:11 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=fNsEVpcVL4Sagl4jhHnluI14mtALInzEbVQCLzmmqEk=;
+ b=XaEmzHT9D2MOdGloJYHWIN9qWwsI6JVGemxq3O+y9Rp7U5/MVinZV0S1HVyEyFFmZB26
+ WREcHD4tPXh5Sa4zLODOG5d2bl+AudsiZKJJ5Va8s2oTP0sz05UWzHlR5FeFqaXdb83x
+ pHvWs5Xzq0sHJXrLB4/dxJYSJNXsSwqTDWQcMUaZMWikQGyaW6fO/FLn/OYptkd28Ibr
+ 1o/6vaPxONDy/Be8wRLZHmgKAKoGBP7Fv2b+HPAs3FiZ8DufGj2TPLX1AYWtldbxYoOM
+ e8v7oS6AweJXRy9Rp/L1nxVYx3r3oeYsJBBQaH8efVv/JwNuEGoOxg03Hbq289FsTEPM Og== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 2w5ndqdn2m-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 13 Nov 2019 16:27:11 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xADGQZFt186057;
+        Wed, 13 Nov 2019 16:27:11 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 2w7vpphtdv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 13 Nov 2019 16:27:10 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xADGR8lb009954;
+        Wed, 13 Nov 2019 16:27:08 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 13 Nov 2019 08:27:08 -0800
+Date:   Wed, 13 Nov 2019 08:27:06 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: devirtualize ->m_dirnameops
+Message-ID: <20191113162706.GV6219@magnolia>
+References: <20191111180415.22975-1-hch@lst.de>
+ <20191113042247.GH6219@magnolia>
+ <20191113065918.GA2606@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191113004244.9981-3-ira.weiny@intel.com>
-User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
+In-Reply-To: <20191113065918.GA2606@lst.de>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9440 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=977
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1910280000 definitions=main-1911130146
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9440 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
+ definitions=main-1911130146
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 12, 2019 at 04:42:44PM -0800, ira.weiny@intel.com wrote:
-> From: Ira Weiny <ira.weiny@intel.com>
+On Wed, Nov 13, 2019 at 07:59:18AM +0100, Christoph Hellwig wrote:
+> On Tue, Nov 12, 2019 at 08:22:47PM -0800, Darrick J. Wong wrote:
+> > > @@ -718,7 +718,7 @@ xfs_dir2_block_lookup_int(
+> > >  		 * and buffer. If it's the first case-insensitive match, store
+> > >  		 * the index and buffer and continue looking for an exact match.
+> > >  		 */
+> > > -		cmp = mp->m_dirnameops->compname(args, dep->name, dep->namelen);
+> > > +		cmp = xfs_dir2_compname(args, dep->name, dep->namelen);
+> > 
+> > gcc complains about the unused @mp variable here.  With that fixed the
+> > rest looks ok, so:
 > 
-> swap_activate() and swap_deactivate() have nothing to do with address
-> spaces.  We want to be able to change the address space operations on
-> the fly to allow changing inode flags dynamically.
-> 
-> Switching address space operations can be difficult to do reliably.[1]
-> Therefore, to simplify switching address space operations we reduce the
-> number of functions in those operations by moving swap_activate() and
-> swap_deactivate() out of the address space operations.
-> 
-> No functionality is changed with this patch.
-> 
-> This has been tested with XFS but not NFS, f2fs, or btrfs.
-> 
-> Also note we move some functions to facilitate compilation.  But there
-> are no functional changes are contained within those diffs.
-> 
-> [1] https://lkml.org/lkml/2019/11/11/572
-> 
-> Cc: Dave Chinner <david@fromorbit.com>
-> Cc: linux-fsdevel@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Suggested-by: Jan Kara <jack@suse.cz>
-> Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-> 
-> ---
-> Changes from V0:
-> 	Update cover letter.
-> 	fix btrfs as per Andrew's comments
-> 	change xfs_iomap_swapfile_activate() to xfs_file_swap_activate()
-> 
-> Changes from V1:
-> 	Update recipients list
-> 
-> 
->  fs/btrfs/file.c    | 341 +++++++++++++++++++++++++++++++++++++++++++++
->  fs/btrfs/inode.c   | 340 --------------------------------------------
+> What gcc version do you use?  I see a consistent pattern lately that
+> yours (correctly) find initialized but unused variable, but neither my
+> local one nor the build bot does..
 
-For the btrfs part
+$ gcc --version
+gcc (Ubuntu 8.3.0-6ubuntu1~18.04.1) 8.3.0
 
-Acked-by: David Sterba <dsterba@suse.com>
+AHA, I remember now that I kludged up the xfs and iomap makefiles to
+include the following, which turns on more warnings and debuginfo:
 
-There's going to be a minor conflict with current 5.5 queue, the
-resolution is simple rename of btrfs_block_group_cache to btrfs_block_group.
+	ccflags-$(CONFIG_KASAN) += -Wno-error
+	ccflags-y += -g \
+	-Werror \
+	-femit-struct-debug-detailed=any \
+	-Wunused-but-set-variable \
+	-Wuninitialized \
+	-Wno-pointer-sign \
+	-Wall \
+	-Wextra \
+	-Wno-unused-parameter \
+	-fstack-usage \
+	-Wno-sign-compare \
+	-Wno-ignored-qualifiers \
+	-Wno-error=unused-but-set-variable \
+	-Wno-error=format=
+
+	UBSAN_SANITIZE := y
+
+At this point I suspect -Wall -Wextra cover a lot of these.
+
+--D
