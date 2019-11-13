@@ -2,132 +2,177 @@ Return-Path: <SRS0=J5MO=ZF=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEAD5C43331
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Nov 2019 13:21:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A93FC43331
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Nov 2019 13:42:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AAEF4222CD
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Nov 2019 13:21:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F3DBA2245B
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Nov 2019 13:42:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726410AbfKMNVF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Nov 2019 08:21:05 -0500
-Received: from mout.kundenserver.de ([212.227.126.135]:35401 "EHLO
+        id S1727473AbfKMNmp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Nov 2019 08:42:45 -0500
+Received: from mout.kundenserver.de ([212.227.17.10]:54461 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726190AbfKMNVF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Nov 2019 08:21:05 -0500
-Received: from mail-qt1-f179.google.com ([209.85.160.179]) by
- mrelayeu.kundenserver.de (mreue010 [212.227.15.129]) with ESMTPSA (Nemesis)
- id 1MFsIZ-1iffGb1cJL-00HOuH for <linux-xfs@vger.kernel.org>; Wed, 13 Nov 2019
- 14:21:02 +0100
-Received: by mail-qt1-f179.google.com with SMTP id o11so2483089qtr.11
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Nov 2019 05:21:02 -0800 (PST)
-X-Gm-Message-State: APjAAAUicUSbFMsSAg0yr2aoDV6Wn1EZODU3l1DVUQgzOZ8QWUbIBpH+
-        V2xhOlT+D5ePnpX4HtHyyzge9c391QLxRDab6zg=
-X-Google-Smtp-Source: APXvYqxEKlww0R6Ri4Y/Br4gvwUIX2r6HuEgGLwHEeOKrB/Kayumup48ooNKqWt5AARWcdeYf7oGEmkchxsuFdfl/HM=
-X-Received: by 2002:ac8:2e57:: with SMTP id s23mr2514337qta.204.1573651261282;
- Wed, 13 Nov 2019 05:21:01 -0800 (PST)
+        with ESMTP id S1726434AbfKMNmp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Nov 2019 08:42:45 -0500
+Received: from mail-qt1-f175.google.com ([209.85.160.175]) by
+ mrelayeu.kundenserver.de (mreue109 [212.227.15.145]) with ESMTPSA (Nemesis)
+ id 1MIxBc-1iBhLH3Iba-00KMQj; Wed, 13 Nov 2019 14:42:41 +0100
+Received: by mail-qt1-f175.google.com with SMTP id y10so2610389qto.3;
+        Wed, 13 Nov 2019 05:42:41 -0800 (PST)
+X-Gm-Message-State: APjAAAWQfW+/OR1mX8XKbygHgLaXVnsWKIBBG3NlQf9qUO9Lq2DX4lJI
+        NbzfWXaQV06IOxssWHC5f9kWzpMYvIck6i68t4Y=
+X-Google-Smtp-Source: APXvYqwOZDETUFXSsZp6Un2T3zj3dpR0fAaTW5TdtNU31TMtfaB+p1In9+F0IJtERqbLq/GvCvC4PG3JRR93oU8tr6M=
+X-Received: by 2002:ac8:18eb:: with SMTP id o40mr2661414qtk.304.1573652560627;
+ Wed, 13 Nov 2019 05:42:40 -0800 (PST)
 MIME-Version: 1.0
-References: <20191111213630.14680-1-amir73il@gmail.com> <20191111223508.GS6219@magnolia>
- <CAOQ4uxgC8Gz+uyCaV_Prw=uUVNtwv0j7US8sbkfoTphC4Z6b6A@mail.gmail.com>
- <20191112211153.GO4614@dread.disaster.area> <20191113035611.GE6219@magnolia>
- <CAOQ4uxi9vzR4c3T0B4N=bM6DxCwj_TbqiOxyOQLrurknnyw+oA@mail.gmail.com> <20191113045840.GR6219@magnolia>
-In-Reply-To: <20191113045840.GR6219@magnolia>
+References: <20191112120910.1977003-1-arnd@arndb.de> <20191112120910.1977003-2-arnd@arndb.de>
+ <20191112141600.GB10922@lst.de> <20191113050628.GS6219@magnolia>
+In-Reply-To: <20191113050628.GS6219@magnolia>
 From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Wed, 13 Nov 2019 14:20:44 +0100
-X-Gmail-Original-Message-ID: <CAK8P3a2+AhLj+eAJVmKZ_V82Xgdb87vv8o01CzYQ=MCNA5bU-A@mail.gmail.com>
-Message-ID: <CAK8P3a2+AhLj+eAJVmKZ_V82Xgdb87vv8o01CzYQ=MCNA5bU-A@mail.gmail.com>
-Subject: Re: [RFC][PATCH] xfs: extended timestamp range
+Date:   Wed, 13 Nov 2019 14:42:24 +0100
+X-Gmail-Original-Message-ID: <CAK8P3a3c3kCXAPU-sJQvAvDQdAwVnQRiterdmqXufWkFdSSZ+g@mail.gmail.com>
+Message-ID: <CAK8P3a3c3kCXAPU-sJQvAvDQdAwVnQRiterdmqXufWkFdSSZ+g@mail.gmail.com>
+Subject: Re: [RFC 1/5] xfs: [variant A] avoid time_t in user api
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Amir Goldstein <amir73il@gmail.com>,
-        Dave Chinner <david@fromorbit.com>,
+Cc:     Christoph Hellwig <hch@lst.de>,
         linux-xfs <linux-xfs@vger.kernel.org>,
-        Deepa Dinamani <deepa.kernel@gmail.com>
+        y2038 Mailman List <y2038@lists.linaro.org>,
+        Deepa Dinamani <deepa.kernel@gmail.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Allison Collins <allison.henderson@oracle.com>,
+        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-X-Provags-ID: V03:K1:bPXxwu7J7lv+dT8DSBuyZxesDUO+CvShZ6cxCC7hpYOW2CeA/Gx
- vP5yMNDz4pa3T9vinEhWWs15onseptZm6AoG2Bop98EC4OtarXSLuMFnTWlpRCEAR5MZOhd
- O78h+U9ugdZluv0ygzW93ZB9O6zVcGzzclk7/eWxEwWShmqM5E0blKHi1glCTd/ETGyNp7b
- R50hkEaUkRbVl0uzrEHPw==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:URpbtdpYFqA=:ZKh3zCa3iZgEApOeCVEAVH
- mL6nNwz1Y3XWmTEQ+zth6awjDto2uxHynWQLf9Z8/Np6cnvTlUJV8u8NkL7aGXJH3RJt55jFe
- L8Q4TDTM4vVrMrYZTAKelvlygUes7VMbqvtWXRKrnkJjCCTlhIgvGqRNIk4slVf4Aeu1rZ5lO
- oeY63bgUMKp0FxP9aUr24S30g71srQBCr2s0ctKa5fa+ThdwRBDuryPfIpG2/vEZzwnk/9RCy
- k0l3/6VjRqGGw5cHKHOVpofJk2ejXGiGxiSfqOMj8X1JZpzFzanSI1hUM6eWwV41G69UKSnDP
- OvxP4z9zjLLNgAeENtE57nWY7HaCMbgBqIde+HMJhqZiExN49VGd/CIzapixXaJWWGsYk+vFi
- YKhqqtLnF9tMlkFwmQ+U1MdYT7f/tbjaP7dDjIfEfbUGKZMbVDwA4cdPPAulDqIjp3pSCSWuS
- UFWtG/eqTVjPU1HQeMy2ij8kow7Wpt0BrpHzQdjWbJIatHEHQP0xYKKLVgbE8566/g9HU2ld2
- Gs3BkbpYnoBzBLoGwDXdoqxLwNKzIQV06OBn/kxHPRt1l7EC8Ust6XjEhYaAs1/jYOJw6Yy5Q
- nPDEWoM4TV5Xbs8BwXBA9JtbhFdMkYG+RGS59L/onnNG6rsan+UTwhfAmx6szLZl0jF3xARGx
- Cn/W34p91VdrkPjgQ5EjJp7nroYGwayhasz8229+LjOEu4YaiF2a9nLmK+1aPPLysyWj2ugH/
- 4Ldk5m2nMTe/RfJxVYeAd1VY5vrdiedY6w7YgA9ciUqG8uQF6EkPGpSzOAq1WCzGEVoruGRys
- OkW2U4IcRhdx7kKLqMn2VmNh41fYL5b5TGliuxe0FiGg1u+H6W+LiWrlYr6gVsw54baytAebJ
- xh/6J1MoZVzwpTmMFkNg==
+X-Provags-ID: V03:K1:tQcCN+uPu60Chpg0Wv8TNBpWv602TgBstegrTL+9Ccvv1FneFuM
+ VMBLc3R0ZqxjrhfQp8Y4aw0bivR54GAWXJpr5VLK2dOXyyS1PqTf6rNARXIRgHqMAFMR+DX
+ ebO7vr7i/bgqEJ0lMQaJnOAoZbJ8MvoSrCDwJf2vvNl7gYkrlUr1CBsHpmYrHYRisNZ2dIF
+ q8blwWzVXP8LBe+o2+Sdw==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:97AvqYcQEtc=:Xx8tNEMfXJRcPmyab+spi0
+ ovcMw6zlKD7c371/iLXmnG/20MKzx44mPr9vC5KO+8IKwkZxHuhBeFAS3irtWfr9HnpKpxOsv
+ 5HyA/urWsjz8GA8CukWaMDQeZRbM9lEzb7E9y1VxCoP1nkriBB5wjcfkJrS8pWvqx6GYBrtAR
+ JmhGicMY7R+PkmZbrAuVH+AUf7TYn7C82gFGcD0f0mgtKQBcbfQW3pZ8+RCy6CV6uyac7sRSI
+ gxOfDwB1X7YGLEJ4G1jcsE8LSdijSg5Ik6PHfHIbfAhxwpk+IAf3vnL0b324RSbadviKn7kWi
+ 5OSp476EuI7RuJwSOA+SgSQLHPxBQVJrDv6oRvL44LwGIGl8cSaw2wjYAN7dsw0TDC0+nQdNo
+ kqb5evu8vIxoRu31Stf9SiNob5g3RFLCbdnCxjBzl4jNGe6jgMKNY3v8qEIhirvIil/6pXHRf
+ 1ub7bO3ZSJftaCFhDW3haAJlwBPsfaU/NU8T5c1dgTQVTdK71oXHWIlQeu0OSkKLStw4DnRzt
+ n14HcnUbyBsuIlYa24y97DOrnMAuW7rkrXyf8B/rniubcAZX3L3DwsayqhJSP2v4o8mqux4wo
+ tkEu/sJXK85eqjT8jD3uXlcZhce+Fbm7jco8JE/nbo+SbIgmEbnLlzZoBV+ZFG60oSPsKNirs
+ MMNcr2SGMthTUB5aWW4zcudEfTQg4pw/9NZ5/iBRYIi6KbF5AxGmLbTVQHQ0Oo5R4ETXFZkAa
+ gEyogRlia0de6q5++Hl+On+zvOeWQCRULeyos3UVgO6lnkrWcVZ+C8Ikv1B40uYY0xZCjtwwk
+ d4ZwBhhExqBn8neB8ERUbLSuLB4dc3J0IFpmZPoTHsa82q5uUTMCwBBoivmrqdeMee978Cu/U
+ hnhRlwhhDYl9IJCFVT3w==
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 13, 2019 at 5:59 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> On Wed, Nov 13, 2019 at 06:42:09AM +0200, Amir Goldstein wrote:
-> > [CC:Arnd,Deepa]
-> > On Wed, Nov 13, 2019 at 5:56 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+On Wed, Nov 13, 2019 at 6:08 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> On Tue, Nov 12, 2019 at 03:16:00PM +0100, Christoph Hellwig wrote:
+> > On Tue, Nov 12, 2019 at 01:09:06PM +0100, Arnd Bergmann wrote:
+> > > However, as long as two observations are true, a much simpler solution
+> > > can be used:
 > > >
-> > > On Wed, Nov 13, 2019 at 08:11:53AM +1100, Dave Chinner wrote:
-> > > > On Tue, Nov 12, 2019 at 06:00:19AM +0200, Amir Goldstein wrote:
-> > > > > On Tue, Nov 12, 2019 at 12:35 AM Darrick J. Wong
-> > > > > <darrick.wong@oracle.com> wrote:
-> > >
+> > > 1. xfsprogs is the only user space project that has a copy of this header
 > >
-> > I didn't get why you dropped the di_pad idea (Arnd's and Dave's patches).
-> > Is it to save the pad for another rainy day?
->
-> Something like that.  Someone /else/ can worry about the y2486 problem.
->
-> <duck>
->
-> Practically speaking I'd almost rather drop the precision in order to
-> extend the seconds range, since timestamp updates are only precise to
-> HZ anyway.
-
-I think there would be noticeable overhead from anything that requires
-a 64-bit division to update a timestamp, or to read it into an in-memory
-inode, especially on 32-bit architectures.
-
-I think the reason why separate seconds/nanoseconds are easy is that
-this is what both the in-kernel and user space interface are based around.
-We clearly don't use the precision, but anything else is more expensive
-at runtime.
-
-> > > > IOWs, we pretty much decided on a new 64 bit encoding format using a
-> > > > epoch of 1900 and a unsigned 64bit nanosecond counter to get us a
-> > > > range of almost 600 years from year 1900-2500. It's simple, easy to
-> > > > encode/decode, and very easy to validate. It's also trivially easy
-> > > > to do in-place upgrades with an inode flag....
-> > > >
+> > We can't guarantee that.
 > >
-> > All right, so how do we proceed?
-> > Arnd, do you want to re-work your series according to this scheme?
->
-> Lemme read them over again. :)
->
-> > Is there any core xfs developer that was going to tackle this?
+> > > 2. xfsprogs already has a replacement for all three affected ioctl commands,
+> > >    based on the xfs_bulkstat structure to pass 64-bit timestamps
+> > >    regardless of the architecture
 > >
-> > I'm here, so if you need my help moving things forward let me know.
+> > XFS_IOC_BULKSTAT replaces XFS_IOC_FSBULKSTAT directly, and can replace
+> > XFS_IOC_FSBULKSTAT_SINGLE indirectly, so that is easy.  Most users
+> > actually use the new one now through libfrog, although I found a user
+> > of the direct ioctl in the xfs_io tool, which could easily be fixed as
+> > well.
 >
-> I wrote a trivial garbage version this afternoon, will have something
-> more polished tomorrow.  None of this is 5.6 material, we have time.
+> Agreed, XFS_IOC_BULKSTAT is the replacement for the two FSBULKSTAT
+> variants.  The only question in my mind for the old ioctls is whether we
+> should return EOVERFLOW if the timestamp would overflow?  Or just
+> truncate the results?
 
-I think from a user perspective, it would be the nicest to just add the
-extra high bits (however many, I don't care) and treat it as an ro-compatible
-extension, possibly even as completely compatible both ways.
+I think neither of these would be particularly helpful, the result is that users
+see no change in behavior until it's actually too late and the timestamps have
+overrun.
 
-Note that for any released kernel (5.4 changes this), this matches
-the existing behavior: setting a timestamp after 2038 using utimensat()
-silently wraps the seconds back to the regular epoch. With the
-extension patch, you get the correct results as long as the inode was
-both written and read on a new enough kernel, while all pre-5.4
-kernels produce the same incorrect data that they always have.
+If we take variant A and just fix the ABI to 32-bit time_t, it is important
+that all user space stop using these ioctls and moves to the v5 interfaces
+instead (including SWAPEXT I guess).
 
-       Arnd
+Something along the lines of this change would work:
+
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index d50135760622..87318486c96e 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -830,6 +830,23 @@ xfs_fsinumbers_fmt(
+        return xfs_ibulk_advance(breq, sizeof(struct xfs_inogrp));
+ }
+
++/* disallow y2038-unsafe ioctls with CONFIG_COMPAT_32BIT_TIME=n */
++static bool xfs_have_compat_bstat_time32(unsigned int cmd)
++{
++       if (IS_ENABLED(CONFIG_COMPAT_32BIT_TIME))
++               return true;
++
++       if (IS_ENABLED(CONFIG_64BIT) && !in_compat_syscall())
++               return true;
++
++       if (cmd == XFS_IOC_FSBULKSTAT_SINGLE ||
++           cmd == XFS_IOC_FSBULKSTAT ||
++           cmd == XFS_IOC_SWAPEXT)
++               return false;
++
++       return true;
++}
++
+ STATIC int
+ xfs_ioc_fsbulkstat(
+        xfs_mount_t             *mp,
+@@ -850,6 +867,9 @@ xfs_ioc_fsbulkstat(
+        if (!capable(CAP_SYS_ADMIN))
+                return -EPERM;
+
++       if (!xfs_have_compat_bstat_time32())
++               return -EINVAL;
++
+        if (XFS_FORCED_SHUTDOWN(mp))
+                return -EIO;
+
+@@ -2051,6 +2071,11 @@ xfs_ioc_swapext(
+        struct fd       f, tmp;
+        int             error = 0;
+
++       if (xfs_have_compat_bstat_time32(XFS_IOC_SWAPEXT)) {
++               error = -EINVAL
++               got out;
++       }
++
+        /* Pull information for the target fd */
+        f = fdget((int)sxp->sx_fdtarget);
+        if (!f.file) {
+
+This way, at least users that intentionally turn off CONFIG_COMPAT_32BIT_TIME
+run into the broken application right away, which forces them to upgrade or fix
+the code to use the v5 ioctl.
+
+> > > Based on those assumptions, changing xfs_bstime to use __kernel_long_t
+> > > instead of time_t in both the kernel and in xfsprogs preserves the current
+> > > ABI for any libc definition of time_t and solves the problem of passing
+> > > 64-bit timestamps to 32-bit user space.
+> >
+> > As said above their are not entirely true, but I still think this patch
+> > is the right thing to do, if only to get the time_t out of the ABI..
+> >
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+>
+> Seconded,
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+Thanks!
+
+     Arnd
