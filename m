@@ -7,61 +7,61 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95EDCC43331
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Nov 2019 04:44:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA711C43331
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Nov 2019 04:44:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 66A61222D3
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Nov 2019 04:44:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AE26C2245A
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Nov 2019 04:44:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="CEvmx79w"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="QcOR5BA5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727151AbfKMEoc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Nov 2019 23:44:32 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:54460 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727069AbfKMEob (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 23:44:31 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAD4iBbq183217;
-        Wed, 13 Nov 2019 04:44:28 GMT
+        id S1727069AbfKMEoy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Nov 2019 23:44:54 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:49014 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727001AbfKMEoy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 23:44:54 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAD4i4sO173750;
+        Wed, 13 Nov 2019 04:44:51 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=2ceE59qXxhnXPvlo8nPa0hXdHmR7lMbX2r+MhO6nGPw=;
- b=CEvmx79wWZYd+5ROGcQormi78YnAq/86HEm5Wsrfou4kxAH8T7eAd6ccRmUEjygfI4M5
- eSquiglUI+i8BB3e6vUhU1A4ZGbkd5vCXo7799xfsKaizqzUn0/dYQcb/Oqi7TtKfLad
- 1+Hjhoo3em+d+PL1FVhA+8xnLcay07UhLAhRY0OjgfugUGsBgAlWaKwQAWOkvUdLmDuN
- ZTI+DYC/tSTj2mlMjMqLidxC18+OtbvREAdrvEt4ekb/qMf4JDA55mkdx/4kTV4w4Vp2
- Q/EtRSyZfmpFLIOxnSjTKJdEuOtyQRyZeQOCjQkdiimnGt4Mge+jd/zONIdzl9zk5s5s bQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2w5mvtsmkf-1
+ bh=d9sT1GLpJG6ebymAqMPtqKLI+IP/NYrUrsNcOjnhgBo=;
+ b=QcOR5BA5Elh6MvDAnKqHumc7fYcIb9yctiHbbFVOL102D/YhuUdWI4pJCrZYCXt0RVJK
+ lQr9GXNH31llAjxqeqmnILNd63CP2b2VNYpscwRVu8PES7Moex2Tsrza3StTJVCZ5b1/
+ +PW2d24ihBMiDpHUcKRA4dwmhdOwajyYpT805d8ERoRqk6C5JRHIJD0pHBJU57Gv6s2T
+ rySAEPo2ZP/CKKxV4XUi/HzEfDaJcPOcFknHcUFlfO+z9uG8UMRrIBmToLCdIhwWFQD6
+ RD3yDLIiXP4St9oBv8r6lJBNZLZvkzJe/Fn11WvVBVFemLyCOmm81UBJjhF43hcFqVK6 IQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2w5ndq9kmw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 13 Nov 2019 04:44:28 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAD4i2tn096146;
-        Wed, 13 Nov 2019 04:44:27 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2w7khmm998-1
+        Wed, 13 Nov 2019 04:44:50 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAD4h0Ch073437;
+        Wed, 13 Nov 2019 04:44:50 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 2w7j04ysd3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 13 Nov 2019 04:44:27 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xAD4iRsQ021989;
-        Wed, 13 Nov 2019 04:44:27 GMT
+        Wed, 13 Nov 2019 04:44:50 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xAD4iniS011103;
+        Wed, 13 Nov 2019 04:44:49 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 12 Nov 2019 20:44:27 -0800
-Date:   Tue, 12 Nov 2019 20:44:25 -0800
+        with ESMTP ; Tue, 12 Nov 2019 20:44:49 -0800
+Date:   Tue, 12 Nov 2019 20:44:48 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Pavel Reichl <preichl@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4 3/5] xfs: remove the xfs_dq_logitem_t typedef
-Message-ID: <20191113044425.GN6219@magnolia>
+Cc:     linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+Subject: Re: [PATCH v4 2/5] xfs: remove the xfs_quotainfo_t typedef
+Message-ID: <20191113044448.GO6219@magnolia>
 References: <20191112213310.212925-1-preichl@redhat.com>
- <20191112213310.212925-4-preichl@redhat.com>
+ <20191112213310.212925-3-preichl@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191112213310.212925-4-preichl@redhat.com>
+In-Reply-To: <20191112213310.212925-3-preichl@redhat.com>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9439 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
@@ -79,67 +79,119 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 12, 2019 at 10:33:08PM +0100, Pavel Reichl wrote:
+On Tue, Nov 12, 2019 at 10:33:07PM +0100, Pavel Reichl wrote:
 > Signed-off-by: Pavel Reichl <preichl@redhat.com>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Looks good to me,
+Looks fine,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
 > ---
->  fs/xfs/xfs_dquot.c      |  2 +-
->  fs/xfs/xfs_dquot.h      |  2 +-
->  fs/xfs/xfs_dquot_item.h | 10 +++++-----
->  3 files changed, 7 insertions(+), 7 deletions(-)
+>  fs/xfs/xfs_qm.c          | 20 ++++++++++----------
+>  fs/xfs/xfs_qm.h          |  6 +++---
+>  fs/xfs/xfs_trans_dquot.c |  2 +-
+>  3 files changed, 14 insertions(+), 14 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index 5b089afd7087..4df8ffb9906f 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -1018,7 +1018,7 @@ xfs_qm_dqflush_done(
->  	struct xfs_buf		*bp,
->  	struct xfs_log_item	*lip)
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index 035930a4f0dd..64a944296fda 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -30,10 +30,10 @@
+>   * quota functionality, including maintaining the freelist and hash
+>   * tables of dquots.
+>   */
+> -STATIC int	xfs_qm_init_quotainos(xfs_mount_t *);
+> -STATIC int	xfs_qm_init_quotainfo(xfs_mount_t *);
+> +STATIC int	xfs_qm_init_quotainos(struct xfs_mount *mp);
+> +STATIC int	xfs_qm_init_quotainfo(struct xfs_mount *mp);
+>  
+> -STATIC void	xfs_qm_destroy_quotainos(xfs_quotainfo_t *qi);
+> +STATIC void	xfs_qm_destroy_quotainos(struct xfs_quotainfo *qi);
+>  STATIC void	xfs_qm_dqfree_one(struct xfs_dquot *dqp);
+>  /*
+>   * We use the batch lookup interface to iterate over the dquots as it
+> @@ -540,9 +540,9 @@ xfs_qm_shrink_count(
+>  
+>  STATIC void
+>  xfs_qm_set_defquota(
+> -	xfs_mount_t	*mp,
+> -	uint		type,
+> -	xfs_quotainfo_t	*qinf)
+> +	struct xfs_mount	*mp,
+> +	uint			type,
+> +	struct xfs_quotainfo	*qinf)
 >  {
-> -	xfs_dq_logitem_t	*qip = (struct xfs_dq_logitem *)lip;
-> +	struct xfs_dq_logitem	*qip = (struct xfs_dq_logitem *)lip;
->  	struct xfs_dquot	*dqp = qip->qli_dquot;
->  	struct xfs_ail		*ailp = lip->li_ailp;
+>  	struct xfs_dquot	*dqp;
+>  	struct xfs_def_quota	*defq;
+> @@ -643,7 +643,7 @@ xfs_qm_init_quotainfo(
 >  
-> diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
-> index 831e4270cf65..fe3e46df604b 100644
-> --- a/fs/xfs/xfs_dquot.h
-> +++ b/fs/xfs/xfs_dquot.h
-> @@ -40,7 +40,7 @@ struct xfs_dquot {
->  	xfs_fileoff_t		q_fileoffset;
+>  	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
 >  
->  	struct xfs_disk_dquot	q_core;
-> -	xfs_dq_logitem_t	q_logitem;
-> +	struct xfs_dq_logitem	q_logitem;
->  	/* total regular nblks used+reserved */
->  	xfs_qcnt_t		q_res_bcount;
->  	/* total inos allocd+reserved */
-> diff --git a/fs/xfs/xfs_dquot_item.h b/fs/xfs/xfs_dquot_item.h
-> index 1aed34ccdabc..3a64a7fd3b8a 100644
-> --- a/fs/xfs/xfs_dquot_item.h
-> +++ b/fs/xfs/xfs_dquot_item.h
-> @@ -11,11 +11,11 @@ struct xfs_trans;
->  struct xfs_mount;
->  struct xfs_qoff_logitem;
+> -	qinf = mp->m_quotainfo = kmem_zalloc(sizeof(xfs_quotainfo_t), 0);
+> +	qinf = mp->m_quotainfo = kmem_zalloc(sizeof(struct xfs_quotainfo), 0);
 >  
-> -typedef struct xfs_dq_logitem {
-> -	struct xfs_log_item	 qli_item;	   /* common portion */
-> -	struct xfs_dquot	*qli_dquot;	   /* dquot ptr */
-> -	xfs_lsn_t		 qli_flush_lsn;	   /* lsn at last flush */
-> -} xfs_dq_logitem_t;
-> +struct xfs_dq_logitem {
-> +	struct xfs_log_item	 qli_item;	/* common portion */
-> +	struct xfs_dquot	*qli_dquot;	/* dquot ptr */
-> +	xfs_lsn_t		 qli_flush_lsn;	/* lsn at last flush */
+>  	error = list_lru_init(&qinf->qi_lru);
+>  	if (error)
+> @@ -710,9 +710,9 @@ xfs_qm_init_quotainfo(
+>   */
+>  void
+>  xfs_qm_destroy_quotainfo(
+> -	xfs_mount_t	*mp)
+> +	struct xfs_mount	*mp)
+>  {
+> -	xfs_quotainfo_t *qi;
+> +	struct xfs_quotainfo	*qi;
+>  
+>  	qi = mp->m_quotainfo;
+>  	ASSERT(qi != NULL);
+> @@ -1568,7 +1568,7 @@ xfs_qm_init_quotainos(
+>  
+>  STATIC void
+>  xfs_qm_destroy_quotainos(
+> -	xfs_quotainfo_t	*qi)
+> +	struct xfs_quotainfo	*qi)
+>  {
+>  	if (qi->qi_uquotaip) {
+>  		xfs_irele(qi->qi_uquotaip);
+> diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+> index b41b75089548..7823af39008b 100644
+> --- a/fs/xfs/xfs_qm.h
+> +++ b/fs/xfs/xfs_qm.h
+> @@ -54,7 +54,7 @@ struct xfs_def_quota {
+>   * Various quota information for individual filesystems.
+>   * The mount structure keeps a pointer to this.
+>   */
+> -typedef struct xfs_quotainfo {
+> +struct xfs_quotainfo {
+>  	struct radix_tree_root qi_uquota_tree;
+>  	struct radix_tree_root qi_gquota_tree;
+>  	struct radix_tree_root qi_pquota_tree;
+> @@ -76,8 +76,8 @@ typedef struct xfs_quotainfo {
+>  	struct xfs_def_quota	qi_usr_default;
+>  	struct xfs_def_quota	qi_grp_default;
+>  	struct xfs_def_quota	qi_prj_default;
+> -	struct shrinker  qi_shrinker;
+> -} xfs_quotainfo_t;
+> +	struct shrinker	qi_shrinker;
 > +};
 >  
->  typedef struct xfs_qoff_logitem {
->  	struct xfs_log_item	 qql_item;	/* common portion */
+>  static inline struct radix_tree_root *
+>  xfs_dquot_tree(
+> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+> index 0b7f6f228662..d319347093d6 100644
+> --- a/fs/xfs/xfs_trans_dquot.c
+> +++ b/fs/xfs/xfs_trans_dquot.c
+> @@ -585,7 +585,7 @@ xfs_trans_dqresv(
+>  	xfs_qwarncnt_t		warnlimit;
+>  	xfs_qcnt_t		total_count;
+>  	xfs_qcnt_t		*resbcountp;
+> -	xfs_quotainfo_t		*q = mp->m_quotainfo;
+> +	struct xfs_quotainfo	*q = mp->m_quotainfo;
+>  	struct xfs_def_quota	*defq;
+>  
+>  
 > -- 
 > 2.23.0
 > 
