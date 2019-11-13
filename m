@@ -4,576 +4,728 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 602F1C43331
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Nov 2019 04:47:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B545FC43331
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Nov 2019 04:59:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 18C4D2245A
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Nov 2019 04:47:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A1182245B
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Nov 2019 04:59:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="d/owopmr"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="k+Oq9fvh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727481AbfKMErZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Nov 2019 23:47:25 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:59822 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727196AbfKMErZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 23:47:25 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAD4hecC152671;
-        Wed, 13 Nov 2019 04:47:19 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=2J2YsPuAL8VgnIDhBGfW2hzRiTVaaMKKuvMuKNQemoo=;
- b=d/owopmrc15X33a57Yuqs96LcBlW0oFr3BUUKXm9Edz3Z0XxGPl6kpgJtmP7stoNKinS
- 0q3cn/o9JaOteBQ8qnZrWC7lo1XzMc1SV87gDRItJ5cE0gwolAaA/gol3GdVTboCuw3Y
- Khv7xB130aUeqgEl+Po3po8GUX13Pv7cxGaOUs2d3QG5af0KbBVzDNcc5V/un/JpJm8K
- g8dBW2AtgoT53odDuEMMaWDm95NSylB8jOKLqRAw587vV40jAGSw0TXgsXcWNkLKEPxI
- ej1+Ht1OCruO/IptKcPgkJJsAXOjQgWr9eJ4+RCJHTcU3q6kyqUvGOLaNbLOFaK7oKea ag== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2w5p3qsg5g-1
+        id S1727064AbfKME7E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Nov 2019 23:59:04 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:37058 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726979AbfKME7D (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Nov 2019 23:59:03 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAD4rxRr180872;
+        Wed, 13 Nov 2019 04:58:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2019-08-05;
+ bh=BkdT0WjDyjwiLhnMWPGOcjpehKW29XTjVg4lYqPwLb4=;
+ b=k+Oq9fvh3GcVSYvbF2Q1i+tEMqUNVZoWsXAanlevOcejFtHXaxp342hV+BMXNjbfhfIK
+ Ab0Bp89Z3qJXNuH7i5amhzXAP+wx50Mzh0eKlvdfMUIsE2yQrkKd6bkbZlGE/YFFPUNS
+ V1HFBJqaRTDnX5LBJRTUhCDKGnH3t+IeFo8qTwhCgYMMeV5efbf05e9SFRlzQXxgdUgJ
+ D2ihik7a6OJ1whPvCYyMBucu4uaRlBxyWAJPURowYCHMQ9/qYUVSSjAfskC06qsCLJEu
+ PXu1gkI4I5fR3SOfTcmNcLjUYDWyifeI/aVIB3ltUg4C5hdbci5b2TiWOIpSUqep+X5D Eg== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 2w5ndq9n97-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 13 Nov 2019 04:47:19 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAD4hh3j188139;
-        Wed, 13 Nov 2019 04:45:19 GMT
+        Wed, 13 Nov 2019 04:58:58 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAD4wthh003887;
+        Wed, 13 Nov 2019 04:58:58 GMT
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2w7vbc59fp-1
+        by aserp3030.oracle.com with ESMTP id 2w7vpnkhvq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 13 Nov 2019 04:45:18 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xAD4jIkH022447;
-        Wed, 13 Nov 2019 04:45:18 GMT
-Received: from localhost (/67.169.218.210)
+        Wed, 13 Nov 2019 04:58:57 +0000
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xAD4wGfc030862;
+        Wed, 13 Nov 2019 04:58:24 GMT
+Received: from [192.168.1.9] (/67.1.205.161)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 12 Nov 2019 20:45:17 -0800
-Date:   Tue, 12 Nov 2019 20:45:16 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Pavel Reichl <preichl@redhat.com>
+        with ESMTP ; Tue, 12 Nov 2019 20:58:09 -0800
+Subject: Re: [PATCH v4 17/17] xfs: Add delay ready attr set routines
+To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4 1/5] xfs: remove the xfs_disk_dquot_t and xfs_dquot_t
-Message-ID: <20191113044516.GP6219@magnolia>
-References: <20191112213310.212925-1-preichl@redhat.com>
- <20191112213310.212925-2-preichl@redhat.com>
+References: <20191107012801.22863-1-allison.henderson@oracle.com>
+ <20191107012801.22863-18-allison.henderson@oracle.com>
+ <20191112133730.GB46980@bfoster>
+From:   Allison Collins <allison.henderson@oracle.com>
+Message-ID: <ebc9bdf3-981b-41a3-a6ae-ebacd338f4a7@oracle.com>
+Date:   Tue, 12 Nov 2019 21:57:44 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191112213310.212925-2-preichl@redhat.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <20191112133730.GB46980@bfoster>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9439 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1910280000 definitions=main-1911130041
+ engine=8.0.1-1910280000 definitions=main-1911130043
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9439 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
- definitions=main-1911130041
+ definitions=main-1911130043
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 12, 2019 at 10:33:06PM +0100, Pavel Reichl wrote:
-> Signed-off-by: Pavel Reichl <preichl@redhat.com>
 
-Woot!  Will test, etc.
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> ---
->  fs/xfs/libxfs/xfs_dquot_buf.c  |  8 +--
->  fs/xfs/libxfs/xfs_format.h     | 10 ++--
->  fs/xfs/libxfs/xfs_trans_resv.c |  1 -
->  fs/xfs/xfs_dquot.c             | 18 +++----
->  fs/xfs/xfs_dquot.h             | 98 +++++++++++++++++-----------------
->  fs/xfs/xfs_log_recover.c       |  5 +-
->  fs/xfs/xfs_qm.c                | 30 +++++------
->  fs/xfs/xfs_qm_bhv.c            |  6 +--
->  fs/xfs/xfs_trans_dquot.c       | 42 +++++++--------
->  9 files changed, 110 insertions(+), 108 deletions(-)
+On 11/12/19 6:37 AM, Brian Foster wrote:
+> On Wed, Nov 06, 2019 at 06:28:01PM -0700, Allison Collins wrote:
+>> This patch modifies the attr set routines to be delay ready.
+>> This means they no longer roll or commit transactions, but instead
+>> return -EAGAIN to have the calling routine roll and refresh the
+>> transaction.  In this series, xfs_attr_set_args has become
+>> xfs_attr_set_later, which uses a state machine to keep track
+>> of where it was when EAGAIN was returned.  Part of
+>> xfs_attr_leaf_addname has been factored out into a new helper
+>> function xfs_attr_leaf_try_add to allow transaction cycling between
+>> the two routines, and the flipflags logic has been removed since we
+>> can simply cancel the transaction upon error.  xfs_attr_set_args
+>> consists of a simple loop to refresh the transaction until the
+>> operation is completed.
+>>
+>> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+>> ---
 > 
-> diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
-> index e8bd688a4073..bedc1e752b60 100644
-> --- a/fs/xfs/libxfs/xfs_dquot_buf.c
-> +++ b/fs/xfs/libxfs/xfs_dquot_buf.c
-> @@ -35,10 +35,10 @@ xfs_calc_dquots_per_chunk(
->  
->  xfs_failaddr_t
->  xfs_dquot_verify(
-> -	struct xfs_mount *mp,
-> -	xfs_disk_dquot_t *ddq,
-> -	xfs_dqid_t	 id,
-> -	uint		 type)	  /* used only during quotacheck */
-> +	struct xfs_mount	*mp,
-> +	struct xfs_disk_dquot	*ddq,
-> +	xfs_dqid_t		id,
-> +	uint			type)	/* used only during quotacheck */
->  {
->  	/*
->  	 * We can encounter an uninitialized dquot buffer for 2 reasons:
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index c968b60cee15..4cae17f35e94 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -1144,11 +1144,11 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
->  
->  /*
->   * This is the main portion of the on-disk representation of quota
-> - * information for a user. This is the q_core of the xfs_dquot_t that
-> + * information for a user. This is the q_core of the struct xfs_dquot that
->   * is kept in kernel memory. We pad this with some more expansion room
->   * to construct the on disk structure.
->   */
-> -typedef struct	xfs_disk_dquot {
-> +struct xfs_disk_dquot {
->  	__be16		d_magic;	/* dquot magic = XFS_DQUOT_MAGIC */
->  	__u8		d_version;	/* dquot version */
->  	__u8		d_flags;	/* XFS_DQ_USER/PROJ/GROUP */
-> @@ -1171,15 +1171,15 @@ typedef struct	xfs_disk_dquot {
->  	__be32		d_rtbtimer;	/* similar to above; for RT disk blocks */
->  	__be16		d_rtbwarns;	/* warnings issued wrt RT disk blocks */
->  	__be16		d_pad;
-> -} xfs_disk_dquot_t;
-> +};
->  
->  /*
->   * This is what goes on disk. This is separated from the xfs_disk_dquot because
->   * carrying the unnecessary padding would be a waste of memory.
->   */
->  typedef struct xfs_dqblk {
-> -	xfs_disk_dquot_t  dd_diskdq;	/* portion that lives incore as well */
-> -	char		  dd_fill[4];	/* filling for posterity */
-> +	struct xfs_disk_dquot	dd_diskdq; /* portion living incore as well */
-> +	char			dd_fill[4];/* filling for posterity */
->  
->  	/*
->  	 * These two are only present on filesystems with the CRC bits set.
-> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-> index d12bbd526e7c..271cca13565b 100644
-> --- a/fs/xfs/libxfs/xfs_trans_resv.c
-> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
-> @@ -718,7 +718,6 @@ xfs_calc_clear_agi_bucket_reservation(
->  
->  /*
->   * Adjusting quota limits.
-> - *    the xfs_disk_dquot_t: sizeof(struct xfs_disk_dquot)
->   */
->  STATIC uint
->  xfs_calc_qm_setqlim_reservation(void)
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index bcd4247b5014..5b089afd7087 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -48,7 +48,7 @@ static struct lock_class_key xfs_dquot_project_class;
->   */
->  void
->  xfs_qm_dqdestroy(
-> -	xfs_dquot_t	*dqp)
-> +	struct xfs_dquot	*dqp)
->  {
->  	ASSERT(list_empty(&dqp->q_lru));
->  
-> @@ -113,8 +113,8 @@ xfs_qm_adjust_dqlimits(
->   */
->  void
->  xfs_qm_adjust_dqtimers(
-> -	xfs_mount_t		*mp,
-> -	xfs_disk_dquot_t	*d)
-> +	struct xfs_mount	*mp,
-> +	struct xfs_disk_dquot	*d)
->  {
->  	ASSERT(d->d_id);
->  
-> @@ -497,7 +497,7 @@ xfs_dquot_from_disk(
->  	struct xfs_disk_dquot	*ddqp = bp->b_addr + dqp->q_bufoffset;
->  
->  	/* copy everything from disk dquot to the incore dquot */
-> -	memcpy(&dqp->q_core, ddqp, sizeof(xfs_disk_dquot_t));
-> +	memcpy(&dqp->q_core, ddqp, sizeof(struct xfs_disk_dquot));
->  
->  	/*
->  	 * Reservation counters are defined as reservation plus current usage
-> @@ -989,7 +989,7 @@ xfs_qm_dqput(
->   */
->  void
->  xfs_qm_dqrele(
-> -	xfs_dquot_t	*dqp)
-> +	struct xfs_dquot	*dqp)
->  {
->  	if (!dqp)
->  		return;
-> @@ -1019,7 +1019,7 @@ xfs_qm_dqflush_done(
->  	struct xfs_log_item	*lip)
->  {
->  	xfs_dq_logitem_t	*qip = (struct xfs_dq_logitem *)lip;
-> -	xfs_dquot_t		*dqp = qip->qli_dquot;
-> +	struct xfs_dquot	*dqp = qip->qli_dquot;
->  	struct xfs_ail		*ailp = lip->li_ailp;
->  
->  	/*
-> @@ -1130,7 +1130,7 @@ xfs_qm_dqflush(
->  	}
->  
->  	/* This is the only portion of data that needs to persist */
-> -	memcpy(ddqp, &dqp->q_core, sizeof(xfs_disk_dquot_t));
-> +	memcpy(ddqp, &dqp->q_core, sizeof(struct xfs_disk_dquot));
->  
->  	/*
->  	 * Clear the dirty field and remember the flush lsn for later use.
-> @@ -1188,8 +1188,8 @@ xfs_qm_dqflush(
->   */
->  void
->  xfs_dqlock2(
-> -	xfs_dquot_t	*d1,
-> -	xfs_dquot_t	*d2)
-> +	struct xfs_dquot	*d1,
-> +	struct xfs_dquot	*d2)
->  {
->  	if (d1 && d2) {
->  		ASSERT(d1 != d2);
-> diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
-> index 4fe85709d55d..831e4270cf65 100644
-> --- a/fs/xfs/xfs_dquot.h
-> +++ b/fs/xfs/xfs_dquot.h
-> @@ -30,33 +30,36 @@ enum {
->  /*
->   * The incore dquot structure
->   */
-> -typedef struct xfs_dquot {
-> -	uint		 dq_flags;	/* various flags (XFS_DQ_*) */
-> -	struct list_head q_lru;		/* global free list of dquots */
-> -	struct xfs_mount*q_mount;	/* filesystem this relates to */
-> -	uint		 q_nrefs;	/* # active refs from inodes */
-> -	xfs_daddr_t	 q_blkno;	/* blkno of dquot buffer */
-> -	int		 q_bufoffset;	/* off of dq in buffer (# dquots) */
-> -	xfs_fileoff_t	 q_fileoffset;	/* offset in quotas file */
-> -
-> -	xfs_disk_dquot_t q_core;	/* actual usage & quotas */
-> -	xfs_dq_logitem_t q_logitem;	/* dquot log item */
-> -	xfs_qcnt_t	 q_res_bcount;	/* total regular nblks used+reserved */
-> -	xfs_qcnt_t	 q_res_icount;	/* total inos allocd+reserved */
-> -	xfs_qcnt_t	 q_res_rtbcount;/* total realtime blks used+reserved */
-> -	xfs_qcnt_t	 q_prealloc_lo_wmark;/* prealloc throttle wmark */
-> -	xfs_qcnt_t	 q_prealloc_hi_wmark;/* prealloc disabled wmark */
-> -	int64_t		 q_low_space[XFS_QLOWSP_MAX];
-> -	struct mutex	 q_qlock;	/* quota lock */
-> -	struct completion q_flush;	/* flush completion queue */
-> -	atomic_t          q_pincount;	/* dquot pin count */
-> -	wait_queue_head_t q_pinwait;	/* dquot pinning wait queue */
-> -} xfs_dquot_t;
-> +struct xfs_dquot {
-> +	uint			dq_flags;
-> +	struct list_head	q_lru;
-> +	struct xfs_mount	*q_mount;
-> +	uint			q_nrefs;
-> +	xfs_daddr_t		q_blkno;
-> +	int			q_bufoffset;
-> +	xfs_fileoff_t		q_fileoffset;
-> +
-> +	struct xfs_disk_dquot	q_core;
-> +	xfs_dq_logitem_t	q_logitem;
-> +	/* total regular nblks used+reserved */
-> +	xfs_qcnt_t		q_res_bcount;
-> +	/* total inos allocd+reserved */
-> +	xfs_qcnt_t		q_res_icount;
-> +	/* total realtime blks used+reserved */
-> +	xfs_qcnt_t		q_res_rtbcount;
-> +	xfs_qcnt_t		q_prealloc_lo_wmark;
-> +	xfs_qcnt_t		q_prealloc_hi_wmark;
-> +	int64_t			q_low_space[XFS_QLOWSP_MAX];
-> +	struct mutex		q_qlock;
-> +	struct completion	q_flush;
-> +	atomic_t		q_pincount;
-> +	struct wait_queue_head	q_pinwait;
-> +};
->  
->  /*
->   * Lock hierarchy for q_qlock:
->   *	XFS_QLOCK_NORMAL is the implicit default,
-> - * 	XFS_QLOCK_NESTED is the dquot with the higher id in xfs_dqlock2
-> + *	XFS_QLOCK_NESTED is the dquot with the higher id in xfs_dqlock2
->   */
->  enum {
->  	XFS_QLOCK_NORMAL = 0,
-> @@ -64,21 +67,21 @@ enum {
->  };
->  
->  /*
-> - * Manage the q_flush completion queue embedded in the dquot.  This completion
-> + * Manage the q_flush completion queue embedded in the dquot. This completion
->   * queue synchronizes processes attempting to flush the in-core dquot back to
->   * disk.
->   */
-> -static inline void xfs_dqflock(xfs_dquot_t *dqp)
-> +static inline void xfs_dqflock(struct xfs_dquot *dqp)
->  {
->  	wait_for_completion(&dqp->q_flush);
->  }
->  
-> -static inline bool xfs_dqflock_nowait(xfs_dquot_t *dqp)
-> +static inline bool xfs_dqflock_nowait(struct xfs_dquot *dqp)
->  {
->  	return try_wait_for_completion(&dqp->q_flush);
->  }
->  
-> -static inline void xfs_dqfunlock(xfs_dquot_t *dqp)
-> +static inline void xfs_dqfunlock(struct xfs_dquot *dqp)
->  {
->  	complete(&dqp->q_flush);
->  }
-> @@ -112,7 +115,7 @@ static inline int xfs_this_quota_on(struct xfs_mount *mp, int type)
->  	}
->  }
->  
-> -static inline xfs_dquot_t *xfs_inode_dquot(struct xfs_inode *ip, int type)
-> +static inline struct xfs_dquot *xfs_inode_dquot(struct xfs_inode *ip, int type)
->  {
->  	switch (type & XFS_DQ_ALLTYPES) {
->  	case XFS_DQ_USER:
-> @@ -147,31 +150,30 @@ static inline bool xfs_dquot_lowsp(struct xfs_dquot *dqp)
->  #define XFS_QM_ISPDQ(dqp)	((dqp)->dq_flags & XFS_DQ_PROJ)
->  #define XFS_QM_ISGDQ(dqp)	((dqp)->dq_flags & XFS_DQ_GROUP)
->  
-> -extern void		xfs_qm_dqdestroy(xfs_dquot_t *);
-> -extern int		xfs_qm_dqflush(struct xfs_dquot *, struct xfs_buf **);
-> -extern void		xfs_qm_dqunpin_wait(xfs_dquot_t *);
-> -extern void		xfs_qm_adjust_dqtimers(xfs_mount_t *,
-> -					xfs_disk_dquot_t *);
-> -extern void		xfs_qm_adjust_dqlimits(struct xfs_mount *,
-> -					       struct xfs_dquot *);
-> -extern xfs_dqid_t	xfs_qm_id_for_quotatype(struct xfs_inode *ip,
-> -					uint type);
-> -extern int		xfs_qm_dqget(struct xfs_mount *mp, xfs_dqid_t id,
-> +void		xfs_qm_dqdestroy(struct xfs_dquot *dqp);
-> +int		xfs_qm_dqflush(struct xfs_dquot *dqp, struct xfs_buf **bpp);
-> +void		xfs_qm_dqunpin_wait(struct xfs_dquot *dqp);
-> +void		xfs_qm_adjust_dqtimers(struct xfs_mount *mp,
-> +						struct xfs_disk_dquot *d);
-> +void		xfs_qm_adjust_dqlimits(struct xfs_mount *mp,
-> +						struct xfs_dquot *d);
-> +xfs_dqid_t	xfs_qm_id_for_quotatype(struct xfs_inode *ip, uint type);
-> +int		xfs_qm_dqget(struct xfs_mount *mp, xfs_dqid_t id,
->  					uint type, bool can_alloc,
->  					struct xfs_dquot **dqpp);
-> -extern int		xfs_qm_dqget_inode(struct xfs_inode *ip, uint type,
-> -					bool can_alloc,
-> -					struct xfs_dquot **dqpp);
-> -extern int		xfs_qm_dqget_next(struct xfs_mount *mp, xfs_dqid_t id,
-> +int		xfs_qm_dqget_inode(struct xfs_inode *ip, uint type,
-> +						bool can_alloc,
-> +						struct xfs_dquot **dqpp);
-> +int		xfs_qm_dqget_next(struct xfs_mount *mp, xfs_dqid_t id,
->  					uint type, struct xfs_dquot **dqpp);
-> -extern int		xfs_qm_dqget_uncached(struct xfs_mount *mp,
-> -					xfs_dqid_t id, uint type,
-> -					struct xfs_dquot **dqpp);
-> -extern void		xfs_qm_dqput(xfs_dquot_t *);
-> +int		xfs_qm_dqget_uncached(struct xfs_mount *mp,
-> +						xfs_dqid_t id, uint type,
-> +						struct xfs_dquot **dqpp);
-> +void		xfs_qm_dqput(struct xfs_dquot *dqp);
->  
-> -extern void		xfs_dqlock2(struct xfs_dquot *, struct xfs_dquot *);
-> +void		xfs_dqlock2(struct xfs_dquot *, struct xfs_dquot *);
->  
-> -extern void		xfs_dquot_set_prealloc_limits(struct xfs_dquot *);
-> +void		xfs_dquot_set_prealloc_limits(struct xfs_dquot *);
->  
->  static inline struct xfs_dquot *xfs_qm_dqhold(struct xfs_dquot *dqp)
->  {
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 02f2147952b3..ecea4a1c31bd 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -2576,6 +2576,7 @@ xlog_recover_do_reg_buffer(
->  	int			bit;
->  	int			nbits;
->  	xfs_failaddr_t		fa;
-> +	const size_t		size_disk_dquot = sizeof(struct xfs_disk_dquot);
->  
->  	trace_xfs_log_recover_buf_reg_buf(mp->m_log, buf_f);
->  
-> @@ -2618,7 +2619,7 @@ xlog_recover_do_reg_buffer(
->  					"XFS: NULL dquot in %s.", __func__);
->  				goto next;
->  			}
-> -			if (item->ri_buf[i].i_len < sizeof(xfs_disk_dquot_t)) {
-> +			if (item->ri_buf[i].i_len < size_disk_dquot) {
->  				xfs_alert(mp,
->  					"XFS: dquot too small (%d) in %s.",
->  					item->ri_buf[i].i_len, __func__);
-> @@ -3249,7 +3250,7 @@ xlog_recover_dquot_pass2(
->  		xfs_alert(log->l_mp, "NULL dquot in %s.", __func__);
->  		return -EFSCORRUPTED;
->  	}
-> -	if (item->ri_buf[1].i_len < sizeof(xfs_disk_dquot_t)) {
-> +	if (item->ri_buf[1].i_len < sizeof(struct xfs_disk_dquot)) {
->  		xfs_alert(log->l_mp, "dquot too small (%d) in %s.",
->  			item->ri_buf[1].i_len, __func__);
->  		return -EFSCORRUPTED;
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index 66ea8e4fca86..035930a4f0dd 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -244,14 +244,14 @@ xfs_qm_unmount_quotas(
->  
->  STATIC int
->  xfs_qm_dqattach_one(
-> -	xfs_inode_t	*ip,
-> -	xfs_dqid_t	id,
-> -	uint		type,
-> -	bool		doalloc,
-> -	xfs_dquot_t	**IO_idqpp)
-> +	struct xfs_inode	*ip,
-> +	xfs_dqid_t		id,
-> +	uint			type,
-> +	bool			doalloc,
-> +	struct xfs_dquot	**IO_idqpp)
->  {
-> -	xfs_dquot_t	*dqp;
-> -	int		error;
-> +	struct xfs_dquot	*dqp;
-> +	int			error;
->  
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
->  	error = 0;
-> @@ -544,8 +544,8 @@ xfs_qm_set_defquota(
->  	uint		type,
->  	xfs_quotainfo_t	*qinf)
->  {
-> -	xfs_dquot_t		*dqp;
-> -	struct xfs_def_quota    *defq;
-> +	struct xfs_dquot	*dqp;
-> +	struct xfs_def_quota	*defq;
->  	struct xfs_disk_dquot	*ddqp;
->  	int			error;
->  
-> @@ -1746,14 +1746,14 @@ xfs_qm_vop_dqalloc(
->   * Actually transfer ownership, and do dquot modifications.
->   * These were already reserved.
->   */
-> -xfs_dquot_t *
-> +struct xfs_dquot *
->  xfs_qm_vop_chown(
-> -	xfs_trans_t	*tp,
-> -	xfs_inode_t	*ip,
-> -	xfs_dquot_t	**IO_olddq,
-> -	xfs_dquot_t	*newdq)
-> +	struct xfs_trans	*tp,
-> +	struct xfs_inode	*ip,
-> +	struct xfs_dquot	**IO_olddq,
-> +	struct xfs_dquot	*newdq)
->  {
-> -	xfs_dquot_t	*prevdq;
-> +	struct xfs_dquot	*prevdq;
->  	uint		bfield = XFS_IS_REALTIME_INODE(ip) ?
->  				 XFS_TRANS_DQ_RTBCOUNT : XFS_TRANS_DQ_BCOUNT;
->  
-> diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
-> index 5d72e88598b4..b784a3751fe2 100644
-> --- a/fs/xfs/xfs_qm_bhv.c
-> +++ b/fs/xfs/xfs_qm_bhv.c
-> @@ -54,11 +54,11 @@ xfs_fill_statvfs_from_dquot(
->   */
->  void
->  xfs_qm_statvfs(
-> -	xfs_inode_t		*ip,
-> +	struct xfs_inode	*ip,
->  	struct kstatfs		*statp)
->  {
-> -	xfs_mount_t		*mp = ip->i_mount;
-> -	xfs_dquot_t		*dqp;
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	struct xfs_dquot	*dqp;
->  
->  	if (!xfs_qm_dqget(mp, xfs_get_projid(ip), XFS_DQ_PROJ, false, &dqp)) {
->  		xfs_fill_statvfs_from_dquot(statp, dqp);
-> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-> index 16457465833b..0b7f6f228662 100644
-> --- a/fs/xfs/xfs_trans_dquot.c
-> +++ b/fs/xfs/xfs_trans_dquot.c
-> @@ -25,8 +25,8 @@ STATIC void	xfs_trans_alloc_dqinfo(xfs_trans_t *);
->   */
->  void
->  xfs_trans_dqjoin(
-> -	xfs_trans_t	*tp,
-> -	xfs_dquot_t	*dqp)
-> +	struct xfs_trans	*tp,
-> +	struct xfs_dquot	*dqp)
->  {
->  	ASSERT(XFS_DQ_IS_LOCKED(dqp));
->  	ASSERT(dqp->q_logitem.qli_dquot == dqp);
-> @@ -49,8 +49,8 @@ xfs_trans_dqjoin(
->   */
->  void
->  xfs_trans_log_dquot(
-> -	xfs_trans_t	*tp,
-> -	xfs_dquot_t	*dqp)
-> +	struct xfs_trans	*tp,
-> +	struct xfs_dquot	*dqp)
->  {
->  	ASSERT(XFS_DQ_IS_LOCKED(dqp));
->  
-> @@ -486,12 +486,12 @@ xfs_trans_apply_dquot_deltas(
->   */
->  void
->  xfs_trans_unreserve_and_mod_dquots(
-> -	xfs_trans_t		*tp)
-> +	struct xfs_trans	*tp)
->  {
->  	int			i, j;
-> -	xfs_dquot_t		*dqp;
-> +	struct xfs_dquot	*dqp;
->  	struct xfs_dqtrx	*qtrx, *qa;
-> -	bool                    locked;
-> +	bool			locked;
->  
->  	if (!tp->t_dqinfo || !(tp->t_flags & XFS_TRANS_DQ_DIRTY))
->  		return;
-> @@ -571,21 +571,21 @@ xfs_quota_warn(
->   */
->  STATIC int
->  xfs_trans_dqresv(
-> -	xfs_trans_t	*tp,
-> -	xfs_mount_t	*mp,
-> -	xfs_dquot_t	*dqp,
-> -	int64_t		nblks,
-> -	long		ninos,
-> -	uint		flags)
-> +	struct xfs_trans	*tp,
-> +	struct xfs_mount	*mp,
-> +	struct xfs_dquot	*dqp,
-> +	int64_t			nblks,
-> +	long			ninos,
-> +	uint			flags)
->  {
-> -	xfs_qcnt_t	hardlimit;
-> -	xfs_qcnt_t	softlimit;
-> -	time_t		timer;
-> -	xfs_qwarncnt_t	warns;
-> -	xfs_qwarncnt_t	warnlimit;
-> -	xfs_qcnt_t	total_count;
-> -	xfs_qcnt_t	*resbcountp;
-> -	xfs_quotainfo_t	*q = mp->m_quotainfo;
-> +	xfs_qcnt_t		hardlimit;
-> +	xfs_qcnt_t		softlimit;
-> +	time_t			timer;
-> +	xfs_qwarncnt_t		warns;
-> +	xfs_qwarncnt_t		warnlimit;
-> +	xfs_qcnt_t		total_count;
-> +	xfs_qcnt_t		*resbcountp;
-> +	xfs_quotainfo_t		*q = mp->m_quotainfo;
->  	struct xfs_def_quota	*defq;
->  
->  
-> -- 
-> 2.23.0
+> Pretty much the same fundamental comments here as for the remove patch.
+> Can we break things down further to avoid much of the jumping into if
+> branch behavior and such? I also wonder if it might be possible to split
+> this one up into smaller patches to fix up the leaf/node paths
+> separately, but additional prep refactoring might simplify things enough
+> on its own to make that unnecessary..
+> 
+> Brian
+
+Sure, I'll see if I can get the branching out of the if statements. 
+Maybe I can break this up into smaller patches too.  Thanks again for 
+the reviews!
+
+Allison
+
+> 
+>>   fs/xfs/libxfs/xfs_attr.c | 435 +++++++++++++++++++++++------------------------
+>>   fs/xfs/libxfs/xfs_attr.h |   1 +
+>>   2 files changed, 211 insertions(+), 225 deletions(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+>> index 38d5c5c..97e5ae0 100644
+>> --- a/fs/xfs/libxfs/xfs_attr.c
+>> +++ b/fs/xfs/libxfs/xfs_attr.c
+>> @@ -58,6 +58,7 @@ STATIC int xfs_attr_node_hasname(xfs_da_args_t *args,
+>>   				 struct xfs_da_state **state);
+>>   STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
+>>   STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
+>> +STATIC int xfs_attr_leaf_try_add(struct xfs_da_args *args, struct xfs_buf *bp);
+>>   
+>>   
+>>   STATIC int
+>> @@ -250,9 +251,79 @@ int
+>>   xfs_attr_set_args(
+>>   	struct xfs_da_args	*args)
+>>   {
+>> +	int			error = 0;
+>> +	int			err2 = 0;
+>> +	struct xfs_buf		*leaf_bp = NULL;
+>> +
+>> +	do {
+>> +		error = xfs_attr_set_later(args, &leaf_bp);
+>> +		if (error && error != -EAGAIN)
+>> +			goto out;
+>> +
+>> +		xfs_trans_log_inode(args->trans, args->dp,
+>> +				    XFS_ILOG_CORE | XFS_ILOG_ADATA);
+>> +
+>> +		err2 = xfs_trans_roll(&args->trans);
+>> +		if (err2) {
+>> +			error = err2;
+>> +			goto out;
+>> +		}
+>> +
+>> +		/* Rejoin inode and leaf if needed */
+>> +		xfs_trans_ijoin(args->trans, args->dp, 0);
+>> +		if (leaf_bp) {
+>> +			xfs_trans_bjoin(args->trans, leaf_bp);
+>> +			xfs_trans_bhold(args->trans, leaf_bp);
+>> +		}
+>> +
+>> +	} while (error == -EAGAIN);
+>> +
+>> +out:
+>> +	return error;
+>> +}
+>> +
+>> +/*
+>> + * Set the attribute specified in @args.
+>> + * This routine is meant to function as a delayed operation, and may return
+>> + * -EAGAIN when the transaction needs to be rolled.  Calling functions will need
+>> + * to handle this, and recall the function until a successful error code is
+>> + * returned.
+>> + */
+>> +int
+>> +xfs_attr_set_later(
+>> +	struct xfs_da_args	*args,
+>> +	struct xfs_buf          **leaf_bp)
+>> +{
+>>   	struct xfs_inode	*dp = args->dp;
+>> -	struct xfs_buf          *leaf_bp = NULL;
+>> -	int			error, error2 = 0;;
+>> +	int			error = 0;
+>> +	int			sf_size;
+>> +
+>> +	/* State machine switch */
+>> +	switch (args->dc.dc_state) {
+>> +	case XFS_DC_SF_TO_LEAF:
+>> +		goto sf_to_leaf;
+>> +	case XFS_DC_ALLOC_LEAF:
+>> +	case XFS_DC_FOUND_LBLK:
+>> +		goto leaf;
+>> +	case XFS_DC_FOUND_NBLK:
+>> +	case XFS_DC_ALLOC_NODE:
+>> +	case XFS_DC_LEAF_TO_NODE:
+>> +		goto node;
+>> +	default:
+>> +		break;
+>> +	}
+>> +
+>> +	/*
+>> +	 * New inodes may not have an attribute fork yet. So set the attribute
+>> +	 * fork appropriately
+>> +	 */
+>> +	if (XFS_IFORK_Q((args->dp)) == 0) {
+>> +		sf_size = sizeof(struct xfs_attr_sf_hdr) +
+>> +		     XFS_ATTR_SF_ENTSIZE_BYNAME(args->name.len, args->valuelen);
+>> +		xfs_bmap_set_attrforkoff(args->dp, sf_size, NULL);
+>> +		args->dp->i_afp = kmem_zone_zalloc(xfs_ifork_zone, 0);
+>> +		args->dp->i_afp->if_flags = XFS_IFEXTENTS;
+>> +	}
+>>   
+>>   	/*
+>>   	 * If the attribute list is non-existent or a shortform list,
+>> @@ -272,21 +343,14 @@ xfs_attr_set_args(
+>>   		 * Try to add the attr to the attribute list in the inode.
+>>   		 */
+>>   		error = xfs_attr_try_sf_addname(dp, args);
+>> -		if (error != -ENOSPC) {
+>> -			if (dp->i_mount->m_flags & XFS_MOUNT_WSYNC)
+>> -				xfs_trans_set_sync(args->trans);
+>> -
+>> -			error2 = xfs_trans_commit(args->trans);
+>> -			args->trans = NULL;
+>> -			return error ? error : error2;
+>> -		}
+>> -
+>> +		if (error != -ENOSPC)
+>> +			return error;
+>>   
+>>   		/*
+>>   		 * It won't fit in the shortform, transform to a leaf block.
+>>   		 * GROT: another possible req'mt for a double-split btree op.
+>>   		 */
+>> -		error = xfs_attr_shortform_to_leaf(args, &leaf_bp);
+>> +		error = xfs_attr_shortform_to_leaf(args, leaf_bp);
+>>   		if (error)
+>>   			return error;
+>>   
+>> @@ -294,43 +358,42 @@ xfs_attr_set_args(
+>>   		 * Prevent the leaf buffer from being unlocked so that a
+>>   		 * concurrent AIL push cannot grab the half-baked leaf
+>>   		 * buffer and run into problems with the write verifier.
+>> -		 * Once we're done rolling the transaction we can release
+>> -		 * the hold and add the attr to the leaf.
+>>   		 */
+>> -		xfs_trans_bhold(args->trans, leaf_bp);
+>> -		error = xfs_defer_finish(&args->trans);
+>> -		xfs_trans_bhold_release(args->trans, leaf_bp);
+>> -		if (error) {
+>> -			xfs_trans_brelse(args->trans, leaf_bp);
+>> -			return error;
+>> -		}
+>> +
+>> +		xfs_trans_bhold(args->trans, *leaf_bp);
+>> +		args->dc.dc_state = XFS_DC_SF_TO_LEAF;
+>> +		return -EAGAIN;
+>> +	}
+>> +sf_to_leaf:
+>> +
+>> +	/*
+>> +	 * After a shortform to leaf conversion, we need to hold the leaf and
+>> +	 * cylce out the transaction.  When we get back, we need to release
+>> +	 * the leaf.
+>> +	 */
+>> +	if (*leaf_bp != NULL) {
+>> +		xfs_trans_brelse(args->trans, *leaf_bp);
+>> +		*leaf_bp = NULL;
+>>   	}
+>>   
+>>   	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
+>> +		error = xfs_attr_leaf_try_add(args, *leaf_bp);
+>> +		if (error == -ENOSPC)
+>> +			args->dc.dc_state = XFS_DC_LEAF_TO_NODE;
+>> +		else if (error)
+>> +			return error;
+>> +		else
+>> +			args->dc.dc_state = XFS_DC_FOUND_LBLK;
+>> +		return -EAGAIN;
+>> +leaf:
+>>   		error = xfs_attr_leaf_addname(args);
+>>   		if (error == -ENOSPC) {
+>> -			/*
+>> -			 * Commit that transaction so that the node_addname()
+>> -			 * call can manage its own transactions.
+>> -			 */
+>> -			error = xfs_defer_finish(&args->trans);
+>> -			if (error)
+>> -				return error;
+>> -
+>> -			/*
+>> -			 * Commit the current trans (including the inode) and
+>> -			 * start a new one.
+>> -			 */
+>> -			error = xfs_trans_roll_inode(&args->trans, dp);
+>> -			if (error)
+>> -				return error;
+>> -
+>> -			/*
+>> -			 * Fob the rest of the problem off on the Btree code.
+>> -			 */
+>> -			error = xfs_attr_node_addname(args);
+>> +			args->dc.dc_state = XFS_DC_LEAF_TO_NODE;
+>> +			return -EAGAIN;
+>>   		}
+>>   	} else {
+>> +		args->dc.dc_state = XFS_DC_LEAF_TO_NODE;
+>> +node:
+>>   		error = xfs_attr_node_addname(args);
+>>   	}
+>>   	return error;
+>> @@ -764,27 +827,26 @@ xfs_attr_leaf_try_add(
+>>    *
+>>    * This leaf block cannot have a "remote" value, we only call this routine
+>>    * if bmap_one_block() says there is only one block (ie: no remote blks).
+>> + *
+>> + * This routine is meant to function as a delayed operation, and may return
+>> + * -EAGAIN when the transaction needs to be rolled.  Calling functions will need
+>> + * to handle this, and recall the function until a successful error code is
+>> + * returned.
+>>    */
+>>   STATIC int
+>>   xfs_attr_leaf_addname(struct xfs_da_args	*args)
+>>   {
+>> -	int			error, forkoff;
+>> -	struct xfs_buf		*bp = NULL;
+>> +	int			error, nmap;
+>>   	struct xfs_inode	*dp = args->dp;
+>> +	struct xfs_bmbt_irec	*map = &args->dc.map;
+>>   
+>> -	trace_xfs_attr_leaf_addname(args);
+>> -
+>> -	error = xfs_attr_leaf_try_add(args, bp);
+>> -	if (error)
+>> -		return error;
+>> -
+>> -	/*
+>> -	 * Commit the transaction that added the attr name so that
+>> -	 * later routines can manage their own transactions.
+>> -	 */
+>> -	error = xfs_trans_roll_inode(&args->trans, dp);
+>> -	if (error)
+>> -		return error;
+>> +	/* State machine switch */
+>> +	switch (args->dc.dc_state) {
+>> +	case XFS_DC_ALLOC_LEAF:
+>> +		goto alloc_leaf;
+>> +	default:
+>> +		break;
+>> +	}
+>>   
+>>   	/*
+>>   	 * If there was an out-of-line value, allocate the blocks we
+>> @@ -793,90 +855,58 @@ xfs_attr_leaf_addname(struct xfs_da_args	*args)
+>>   	 * maximum size of a transaction and/or hit a deadlock.
+>>   	 */
+>>   	if (args->rmtblkno > 0) {
+>> -		error = xfs_attr_rmtval_set(args);
+>> -		if (error)
+>> -			return error;
+>> -	}
+>>   
+>> -	/*
+>> -	 * If this is an atomic rename operation, we must "flip" the
+>> -	 * incomplete flags on the "new" and "old" attribute/value pairs
+>> -	 * so that one disappears and one appears atomically.  Then we
+>> -	 * must remove the "old" attribute/value pair.
+>> -	 */
+>> -	if (args->op_flags & XFS_DA_OP_RENAME) {
+>> -		/*
+>> -		 * In a separate transaction, set the incomplete flag on the
+>> -		 * "old" attr and clear the incomplete flag on the "new" attr.
+>> -		 */
+>> -		error = xfs_attr3_leaf_flipflags(args);
+>> -		if (error)
+>> -			return error;
+>> -		/*
+>> -		 * Commit the flag value change and start the next trans in
+>> -		 * series.
+>> -		 */
+>> -		error = xfs_trans_roll_inode(&args->trans, args->dp);
+>> -		if (error)
+>> -			return error;
+>> +		/* Open coded xfs_attr_rmtval_set without trans handling */
+>>   
+>> -		/*
+>> -		 * Dismantle the "old" attribute/value pair by removing
+>> -		 * a "remote" value (if it exists).
+>> -		 */
+>> -		args->index = args->index2;
+>> -		args->blkno = args->blkno2;
+>> -		args->rmtblkno = args->rmtblkno2;
+>> -		args->rmtblkcnt = args->rmtblkcnt2;
+>> -		args->rmtvaluelen = args->rmtvaluelen2;
+>> -		if (args->rmtblkno) {
+>> -			error = xfs_attr_rmtval_remove(args);
+>> -			if (error)
+>> -				return error;
+>> -		}
+>> +		args->dc.lfileoff = 0;
+>> +		args->dc.lblkno = 0;
+>> +		args->dc.blkcnt = 0;
+>> +		args->rmtblkcnt = 0;
+>> +		args->rmtblkno = 0;
+>> +		memset(map, 0, sizeof(struct xfs_bmbt_irec));
+>>   
+>> -		/*
+>> -		 * Read in the block containing the "old" attr, then
+>> -		 * remove the "old" attr from that block (neat, huh!)
+>> -		 */
+>> -		error = xfs_attr3_leaf_read(args->trans, args->dp, args->blkno,
+>> -					   XFS_DABUF_MAP_NOMAPPING, &bp);
+>> +		error = xfs_attr_rmt_find_hole(args);
+>>   		if (error)
+>>   			return error;
+>>   
+>> -		xfs_attr3_leaf_remove(bp, args);
+>> +		args->dc.blkcnt = args->rmtblkcnt;
+>> +		args->dc.lblkno = args->rmtblkno;
+>>   
+>>   		/*
+>> -		 * If the result is small enough, shrink it all into the inode.
+>> +		 * Roll through the "value", allocating blocks on disk as
+>> +		 * required.
+>>   		 */
+>> -		if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
+>> -			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
+>> -			/* bp is gone due to xfs_da_shrink_inode */
+>> -			if (error)
+>> -				return error;
+>> -			error = xfs_defer_finish(&args->trans);
+>> +alloc_leaf:
+>> +		while (args->dc.blkcnt > 0) {
+>> +			nmap = 1;
+>> +			error = xfs_bmapi_write(args->trans, dp,
+>> +				  (xfs_fileoff_t)args->dc.lblkno,
+>> +				  args->dc.blkcnt, XFS_BMAPI_ATTRFORK,
+>> +				  args->total, map, &nmap);
+>>   			if (error)
+>>   				return error;
+>> -		}
+>> +			ASSERT(nmap == 1);
+>> +			ASSERT((map->br_startblock != DELAYSTARTBLOCK) &&
+>> +			       (map->br_startblock != HOLESTARTBLOCK));
+>>   
+>> -		/*
+>> -		 * Commit the remove and start the next trans in series.
+>> -		 */
+>> -		error = xfs_trans_roll_inode(&args->trans, dp);
+>> +			/* roll attribute extent map forwards */
+>> +			args->dc.lblkno += map->br_blockcount;
+>> +			args->dc.blkcnt -= map->br_blockcount;
+>>   
+>> -	} else if (args->rmtblkno > 0) {
+>> -		/*
+>> -		 * Added a "remote" value, just clear the incomplete flag.
+>> -		 */
+>> -		error = xfs_attr3_leaf_clearflag(args);
+>> +			args->dc.dc_state = XFS_DC_ALLOC_LEAF;
+>> +			return -EAGAIN;
+>> +		}
+>> +
+>> +		error = xfs_attr_rmtval_set_value(args);
+>>   		if (error)
+>>   			return error;
+>> +	}
+>>   
+>> +	if (args->rmtblkno > 0) {
+>>   		/*
+>> -		 * Commit the flag value change and start the next trans in
+>> -		 * series.
+>> +		 * Added a "remote" value, just clear the incomplete flag.
+>>   		 */
+>> -		error = xfs_trans_roll_inode(&args->trans, args->dp);
+>> +		error = xfs_attr3_leaf_clearflag(args);
+>>   	}
+>>   	return error;
+>>   }
+>> @@ -1017,16 +1047,23 @@ xfs_attr_node_hasname(
+>>    *
+>>    * "Remote" attribute values confuse the issue and atomic rename operations
+>>    * add a whole extra layer of confusion on top of that.
+>> + *
+>> + * This routine is meant to function as a delayed operation, and may return
+>> + * -EAGAIN when the transaction needs to be rolled.  Calling functions will need
+>> + * to handle this, and recall the function until a successful error code is
+>> + *returned.
+>>    */
+>>   STATIC int
+>>   xfs_attr_node_addname(
+>>   	struct xfs_da_args	*args)
+>>   {
+>> -	struct xfs_da_state	*state;
+>> +	struct xfs_da_state	*state = NULL;
+>>   	struct xfs_da_state_blk	*blk;
+>>   	struct xfs_inode	*dp;
+>> -	struct xfs_mount	*mp;
+>> -	int			retval, error;
+>> +	int			retval = 0;
+>> +	int			error = 0;
+>> +	int			nmap;
+>> +	struct xfs_bmbt_irec    *map = &args->dc.map;
+>>   
+>>   	trace_xfs_attr_node_addname(args);
+>>   
+>> @@ -1034,8 +1071,17 @@ xfs_attr_node_addname(
+>>   	 * Fill in bucket of arguments/results/context to carry around.
+>>   	 */
+>>   	dp = args->dp;
+>> -	mp = dp->i_mount;
+>> -restart:
+>> +
+>> +	/* State machine switch */
+>> +	switch (args->dc.dc_state) {
+>> +	case XFS_DC_FOUND_NBLK:
+>> +		goto found_nblk;
+>> +	case XFS_DC_ALLOC_NODE:
+>> +		goto alloc_node;
+>> +	default:
+>> +		break;
+>> +	}
+>> +
+>>   	/*
+>>   	 * Search to see if name already exists, and get back a pointer
+>>   	 * to where it should go.
+>> @@ -1085,19 +1131,12 @@ xfs_attr_node_addname(
+>>   			error = xfs_attr3_leaf_to_node(args);
+>>   			if (error)
+>>   				goto out;
+>> -			error = xfs_defer_finish(&args->trans);
+>> -			if (error)
+>> -				goto out;
+>>   
+>>   			/*
+>> -			 * Commit the node conversion and start the next
+>> -			 * trans in the chain.
+>> +			 * Restart routine from the top.  No need to set  the
+>> +			 * state
+>>   			 */
+>> -			error = xfs_trans_roll_inode(&args->trans, dp);
+>> -			if (error)
+>> -				goto out;
+>> -
+>> -			goto restart;
+>> +			return -EAGAIN;
+>>   		}
+>>   
+>>   		/*
+>> @@ -1109,9 +1148,6 @@ xfs_attr_node_addname(
+>>   		error = xfs_da3_split(state);
+>>   		if (error)
+>>   			goto out;
+>> -		error = xfs_defer_finish(&args->trans);
+>> -		if (error)
+>> -			goto out;
+>>   	} else {
+>>   		/*
+>>   		 * Addition succeeded, update Btree hashvals.
+>> @@ -1126,13 +1162,9 @@ xfs_attr_node_addname(
+>>   	xfs_da_state_free(state);
+>>   	state = NULL;
+>>   
+>> -	/*
+>> -	 * Commit the leaf addition or btree split and start the next
+>> -	 * trans in the chain.
+>> -	 */
+>> -	error = xfs_trans_roll_inode(&args->trans, dp);
+>> -	if (error)
+>> -		goto out;
+>> +	args->dc.dc_state = XFS_DC_FOUND_NBLK;
+>> +	return -EAGAIN;
+>> +found_nblk:
+>>   
+>>   	/*
+>>   	 * If there was an out-of-line value, allocate the blocks we
+>> @@ -1141,104 +1173,57 @@ xfs_attr_node_addname(
+>>   	 * maximum size of a transaction and/or hit a deadlock.
+>>   	 */
+>>   	if (args->rmtblkno > 0) {
+>> -		error = xfs_attr_rmtval_set(args);
+>> -		if (error)
+>> -			return error;
+>> -	}
+>> +		/* Open coded xfs_attr_rmtval_set without trans handling */
+>> +		args->dc.lblkno = 0;
+>> +		args->dc.lfileoff = 0;
+>> +		args->dc.blkcnt = 0;
+>> +		args->rmtblkcnt = 0;
+>> +		args->rmtblkno = 0;
+>> +		memset(map, 0, sizeof(struct xfs_bmbt_irec));
+>>   
+>> -	/*
+>> -	 * If this is an atomic rename operation, we must "flip" the
+>> -	 * incomplete flags on the "new" and "old" attribute/value pairs
+>> -	 * so that one disappears and one appears atomically.  Then we
+>> -	 * must remove the "old" attribute/value pair.
+>> -	 */
+>> -	if (args->op_flags & XFS_DA_OP_RENAME) {
+>> -		/*
+>> -		 * In a separate transaction, set the incomplete flag on the
+>> -		 * "old" attr and clear the incomplete flag on the "new" attr.
+>> -		 */
+>> -		error = xfs_attr3_leaf_flipflags(args);
+>> -		if (error)
+>> -			goto out;
+>> -		/*
+>> -		 * Commit the flag value change and start the next trans in
+>> -		 * series
+>> -		 */
+>> -		error = xfs_trans_roll_inode(&args->trans, args->dp);
+>> +		error = xfs_attr_rmt_find_hole(args);
+>>   		if (error)
+>> -			goto out;
+>> +			return error;
+>>   
+>> +		args->dc.blkcnt = args->rmtblkcnt;
+>> +		args->dc.lblkno = args->rmtblkno;
+>>   		/*
+>> -		 * Dismantle the "old" attribute/value pair by removing
+>> -		 * a "remote" value (if it exists).
+>> +		 * Roll through the "value", allocating blocks on disk as
+>> +		 * required.
+>>   		 */
+>> -		args->index = args->index2;
+>> -		args->blkno = args->blkno2;
+>> -		args->rmtblkno = args->rmtblkno2;
+>> -		args->rmtblkcnt = args->rmtblkcnt2;
+>> -		args->rmtvaluelen = args->rmtvaluelen2;
+>> -		if (args->rmtblkno) {
+>> -			error = xfs_attr_rmtval_remove(args);
+>> +alloc_node:
+>> +		while (args->dc.blkcnt > 0) {
+>> +			nmap = 1;
+>> +			error = xfs_bmapi_write(args->trans, dp,
+>> +				(xfs_fileoff_t)args->dc.lblkno, args->dc.blkcnt,
+>> +				XFS_BMAPI_ATTRFORK, args->total, map, &nmap);
+>>   			if (error)
+>>   				return error;
+>> -		}
+>>   
+>> -		/*
+>> -		 * Re-find the "old" attribute entry after any split ops.
+>> -		 * The INCOMPLETE flag means that we will find the "old"
+>> -		 * attr, not the "new" one.
+>> -		 */
+>> -		args->name.type |= XFS_ATTR_INCOMPLETE;
+>> -		state = xfs_da_state_alloc();
+>> -		state->args = args;
+>> -		state->mp = mp;
+>> -		state->inleaf = 0;
+>> -		error = xfs_da3_node_lookup_int(state, &retval);
+>> -		if (error)
+>> -			goto out;
+>> +			ASSERT(nmap == 1);
+>> +			ASSERT((map->br_startblock != DELAYSTARTBLOCK) &&
+>> +			       (map->br_startblock != HOLESTARTBLOCK));
+>>   
+>> -		/*
+>> -		 * Remove the name and update the hashvals in the tree.
+>> -		 */
+>> -		blk = &state->path.blk[ state->path.active-1 ];
+>> -		ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
+>> -		error = xfs_attr3_leaf_remove(blk->bp, args);
+>> -		xfs_da3_fixhashpath(state, &state->path);
+>> +			/* roll attribute extent map forwards */
+>> +			args->dc.lblkno += map->br_blockcount;
+>> +			args->dc.blkcnt -= map->br_blockcount;
+>>   
+>> -		/*
+>> -		 * Check to see if the tree needs to be collapsed.
+>> -		 */
+>> -		if (retval && (state->path.active > 1)) {
+>> -			error = xfs_da3_join(state);
+>> -			if (error)
+>> -				goto out;
+>> -			error = xfs_defer_finish(&args->trans);
+>> -			if (error)
+>> -				goto out;
+>> +			args->dc.dc_state = XFS_DC_ALLOC_NODE;
+>> +			return -EAGAIN;
+>>   		}
+>>   
+>> -		/*
+>> -		 * Commit and start the next trans in the chain.
+>> -		 */
+>> -		error = xfs_trans_roll_inode(&args->trans, dp);
+>> +		error = xfs_attr_rmtval_set_value(args);
+>>   		if (error)
+>> -			goto out;
+>> +			return error;
+>> +	}
+>>   
+>> -	} else if (args->rmtblkno > 0) {
+>> +	if (args->rmtblkno > 0) {
+>>   		/*
+>>   		 * Added a "remote" value, just clear the incomplete flag.
+>>   		 */
+>>   		error = xfs_attr3_leaf_clearflag(args);
+>>   		if (error)
+>>   			goto out;
+>> -
+>> -		 /*
+>> -		  * Commit the flag value change and start the next trans in
+>> -		  * series.
+>> -		  */
+>> -		error = xfs_trans_roll_inode(&args->trans, args->dp);
+>> -		if (error)
+>> -			goto out;
+>>   	}
+>>   	retval = error = 0;
+>>   
+>> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+>> index fb8bf5b..c710387 100644
+>> --- a/fs/xfs/libxfs/xfs_attr.h
+>> +++ b/fs/xfs/libxfs/xfs_attr.h
+>> @@ -149,6 +149,7 @@ int xfs_attr_get(struct xfs_inode *ip, struct xfs_name *name,
+>>   int xfs_attr_set(struct xfs_inode *dp, struct xfs_name *name,
+>>   		 unsigned char *value, int valuelen, int flags);
+>>   int xfs_attr_set_args(struct xfs_da_args *args);
+>> +int xfs_attr_set_later(struct xfs_da_args *args, struct xfs_buf **leaf_bp);
+>>   int xfs_attr_remove(struct xfs_inode *dp, struct xfs_name *name, int flags);
+>>   int xfs_has_attr(struct xfs_da_args *args);
+>>   int xfs_attr_remove_args(struct xfs_da_args *args);
+>> -- 
+>> 2.7.4
+>>
 > 
