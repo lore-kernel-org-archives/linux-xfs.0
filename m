@@ -3,91 +3,63 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72375C43215
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Nov 2019 00:44:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF8C9C432C3
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Nov 2019 01:28:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7FEDB20643
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Nov 2019 00:44:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D609206D7
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Nov 2019 01:28:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726592AbfKNAoY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Nov 2019 19:44:24 -0500
-Received: from mga02.intel.com ([134.134.136.20]:34916 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726363AbfKNAoY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 13 Nov 2019 19:44:24 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga101.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 Nov 2019 16:44:23 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.68,302,1569308400"; 
-   d="scan'208";a="229942902"
-Received: from shao2-debian.sh.intel.com (HELO [10.239.13.6]) ([10.239.13.6])
-  by fmsmga004.fm.intel.com with ESMTP; 13 Nov 2019 16:44:20 -0800
-Subject: Re: [LTP] [xfs] 73e5fff98b: kmsg.dev/zero:Can't_open_blockdev
-To:     Jan Stancek <jstancek@redhat.com>, Ian Kent <raven@themaw.net>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        LKML <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org,
-        lkp@lists.01.org, ltp@lists.linux.it,
-        DavidHowells <dhowells@redhat.com>,
-        AlViro <viro@ZenIV.linux.org.uk>
-References: <20191111010022.GH29418@shao2-debian>
- <3fb8b1b04dd7808b45caf5262ee629c09c71e0b6.camel@themaw.net>
- <1108442397.11662343.1573560143066.JavaMail.zimbra@redhat.com>
- <20191112120818.GA8858@lst.de>
- <5f758be455bb8f761d028ea078b3e2a618dfd4b1.camel@themaw.net>
- <e38bc7a8505571bbb750fc0198ec85c892ac7b3a.camel@themaw.net>
- <975334005.11814790.1573625805426.JavaMail.zimbra@redhat.com>
-From:   Rong Chen <rong.a.chen@intel.com>
-Message-ID: <d0db75cc-440d-6de8-f6d2-ddf399a3bdb7@intel.com>
-Date:   Thu, 14 Nov 2019 08:44:01 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
+        id S1726190AbfKNB2P (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Nov 2019 20:28:15 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:38815 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726120AbfKNB2P (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Nov 2019 20:28:15 -0500
+Received: from dread.disaster.area (pa49-180-67-183.pa.nsw.optusnet.com.au [49.180.67.183])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id DDCD87E99C2;
+        Thu, 14 Nov 2019 12:28:12 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1iV3vf-0000Ut-Ai; Thu, 14 Nov 2019 12:28:11 +1100
+Date:   Thu, 14 Nov 2019 12:28:11 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Pavel Reichl <preichl@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v4 0/5] xfs: remove several typedefs in quota code
+Message-ID: <20191114012811.GW4614@dread.disaster.area>
+References: <20191112213310.212925-1-preichl@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <975334005.11814790.1573625805426.JavaMail.zimbra@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191112213310.212925-1-preichl@redhat.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=G6BsK5s5 c=1 sm=1 tr=0
+        a=3wLbm4YUAFX2xaPZIabsgw==:117 a=3wLbm4YUAFX2xaPZIabsgw==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=MeAgGD-zjQ4A:10
+        a=7-415B0cAAAA:8 a=JuDxSlhT3OO6blO4plAA:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Tue, Nov 12, 2019 at 10:33:05PM +0100, Pavel Reichl wrote:
+> Eliminate some typedefs.
 
+Hi Pavel,
 
-On 11/13/19 2:16 PM, Jan Stancek wrote:
->
-> ----- Original Message -----
->>>>> # mount -t xfs /dev/zero /mnt/xfs
->>> Assuming that is what is being done ...
->> Arrrh, of course, a difference between get_tree_bdev() and
->> mount_bdev() is that get_tree_bdev() prints this message when
->> blkdev_get_by_path() fails whereas mount_bdev() doesn't.
->>
->> Both however do return an error in this case so the behaviour
->> is the same.
->>
->> So I'm calling this not a problem with the subject patch.
->>
->> What needs to be done to resolve this in ltp I don't know?
-> I think that's question for kernel test robot, which has this extra
-> check built on top. ltp itself doesn't treat this extra message as FAIL.
->
-> Jan
->
+Can you keep a change log in the series description so that we know
+what has changed between versions? it makes it much easier for
+reviewers to re-review the series if they know what has changed
+since last time they looked at it.
 
-Hi all,
+Cheers,
 
-Thanks for your help, kernel test robot bisected automatically for new 
-error:
-
-    kern  :err   : [  135.993912] /dev/zero: Can't open blockdev
-
-Please ignore the report if it's not a problem.
-
-Best Regards,
-Rong Chen
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
