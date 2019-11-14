@@ -2,83 +2,113 @@ Return-Path: <SRS0=4PMG=ZG=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B50DC432C3
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Nov 2019 21:09:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6241C432C3
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Nov 2019 21:11:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 112822071B
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Nov 2019 21:09:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573765775;
-	bh=oIO406Twc3m5BIxEir0m1cNXIzYnyo683FesNyVYicI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=lVC3IAwX/ppQzwoJP6mY1SC+l1FbKFjup5+nto1ULoZTyRfv7y6gp8VFpLGvcmhBm
-	 tbue8+PB7sc9x/aYFvH+dyoTO/NrohE39kdg8L8Ya3kG+a6BqPKdh9o3Bkj5C/9lyV
-	 W3r98INQuvHoER2JSR4cMcQVQ73maRW+fEYTEZ7c=
+	by mail.kernel.org (Postfix) with ESMTP id 7D2A620724
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Nov 2019 21:11:16 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Q859HHFt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726597AbfKNVJe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Nov 2019 16:09:34 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33916 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726592AbfKNVJe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Nov 2019 16:09:34 -0500
-Received: from gmail.com (unknown [104.132.1.77])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E1E9D206E1;
-        Thu, 14 Nov 2019 21:09:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573765774;
-        bh=oIO406Twc3m5BIxEir0m1cNXIzYnyo683FesNyVYicI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RHfNy12QtQyWlefOUupe1Ha0MLPawk3H6Xih3liaZ0sDTPEJh0w6lKwHz9zVIY/5a
-         vVVlo+zVXLM+65jm8ONDGDzEruj7MTQJ+qY+7L34Wu3lTT1FJfDS1V37JUac8MqxTH
-         Nr8ETBWzd3Ra/WdzLjoXvXBhW55uxM8SjVhX6ePs=
-Date:   Thu, 14 Nov 2019 13:09:32 -0800
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     Eric Sandeen <sandeen@redhat.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs_io: fix memory leak in add_enckey
-Message-ID: <20191114210931.GA214524@gmail.com>
-References: <4eb1073f-91fb-a4bc-aae8-d54dc5a6b8aa@redhat.com>
- <20191107214606.GA1160@google.com>
- <2b089dfc-8961-742d-2bab-9b5b471dc26f@sandeen.net>
- <a142f525-c45f-c245-58ad-879f94a636cb@sandeen.net>
- <20191111172737.GB56300@gmail.com>
- <b2e750d0-7342-0e75-7c6a-a374c1181f53@sandeen.net>
+        id S1726901AbfKNVLP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Nov 2019 16:11:15 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:44624 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726592AbfKNVLP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Nov 2019 16:11:15 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAEKxEiG029823
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2019 21:11:14 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : mime-version : content-type; s=corp-2019-08-05;
+ bh=MvxFJ5RpmYgLbNhkZ46uUI56jV0yAzCQNMKpASb51Dw=;
+ b=Q859HHFt4kcNytMOL4wkd6yjpjM6Tgd7n4KNQ704510KFef6UhjMMT3iQHxDDuPCuxiO
+ Q0+YwZ/WVgbvMBp1qDVk0oRojcQW67MPc2ENPJLcBnWUHikOHOdNDuHZY39eeM42m0aj
+ Ykcn2IqjSug03+ccK8KPiBrbmAvlngkYUQDu/4JPga/FV3034S+sFsx7/RdSVIDVAAnz
+ IcvyQ8LX7rosrelzuvgw27Ghxo+ickqF/mJoIVGowa71eSaGkH71VZN9KO6SXPUz2r4t
+ Ar8vwSAkTeW5KQN7vfz9LcfL2GLhG1W6QUfJrsKtV+P9zS+SsRUA0QUXhupzBO7ktdmq +A== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2w5ndqnuja-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2019 21:11:14 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAEL4Ra9013333
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2019 21:11:13 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 2w8ngay892-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2019 21:11:13 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xAELBBWf032118
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2019 21:11:11 GMT
+Received: from localhost (/10.145.178.64)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 14 Nov 2019 13:11:11 -0800
+Date:   Thu, 14 Nov 2019 13:11:10 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] xfs: fix some memory leaks in log recovery
+Message-ID: <20191114211110.GM6219@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <b2e750d0-7342-0e75-7c6a-a374c1181f53@sandeen.net>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9441 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1910280000 definitions=main-1911140174
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9441 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
+ definitions=main-1911140174
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 11, 2019 at 12:07:27PM -0600, Eric Sandeen wrote:
-> > 
-> > Sorry, I didn't receive this because I was dropped from Cc, and I'm not
-> > currently subscribed to linux-xfs.  The patch you committed looks fine, thanks.
-> 
-> Oh, I'm sorry about that, my mistake.
-> 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-And it happened again :-)
+Fix a few places where we xlog_alloc_buffer a buffer, hit an error, and
+then bail out without freeing the buffer.
 
-For the record, this seems to have been my fault.  My .muttrc was missing
-	
-	set followup_to = no
-	
-and at some point I had added mailing list declarations including:
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_log_recover.c |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-	subscribe .*@vger.kernel.org
-	
-so Mutt was generating a Mail-Followup-To header excluding me.  I hadn't noticed
-this problem earlier because I'm normally subscribed to one of the lists anyway.
-
-- Eric
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index f64614c3c13e..165f5181d02d 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1342,10 +1342,11 @@ xlog_find_tail(
+ 	error = xlog_rseek_logrec_hdr(log, *head_blk, *head_blk, 1, buffer,
+ 				      &rhead_blk, &rhead, &wrapped);
+ 	if (error < 0)
+-		return error;
++		goto done;
+ 	if (!error) {
+ 		xfs_warn(log->l_mp, "%s: couldn't find sync record", __func__);
+-		return -EFSCORRUPTED;
++		error = -EFSCORRUPTED;
++		goto done;
+ 	}
+ 	*tail_blk = BLOCK_LSN(be64_to_cpu(rhead->h_tail_lsn));
+ 
+@@ -5300,7 +5301,8 @@ xlog_do_recovery_pass(
+ 			} else {
+ 				XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
+ 						log->l_mp);
+-				return -EFSCORRUPTED;
++				error = -EFSCORRUPTED;
++				goto bread_err1;
+ 			}
+ 		}
+ 
