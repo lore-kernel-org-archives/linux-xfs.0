@@ -2,81 +2,61 @@ Return-Path: <SRS0=4PMG=ZG=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9C20C432C3
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Nov 2019 10:31:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 832FAC432C3
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Nov 2019 11:32:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 82E3720409
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Nov 2019 10:31:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B87F206DC
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Nov 2019 11:32:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZkFChjMI"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FF70Oc4h"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726491AbfKNKb0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Nov 2019 05:31:26 -0500
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:57958 "EHLO
+        id S1726767AbfKNLcY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Nov 2019 06:32:24 -0500
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:45314 "EHLO
         us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726202AbfKNKbZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Nov 2019 05:31:25 -0500
+        by vger.kernel.org with ESMTP id S1726786AbfKNLcY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Nov 2019 06:32:24 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1573727484;
+        s=mimecast20190719; t=1573731143;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=pKIR3UmL9ta/2e3N4QgxJYvIQj7Sdgixpx5l4Ms7M0Q=;
-        b=ZkFChjMI9NPs2F0W9R1Q6i492g5fI9OoJve2wlVNaKAeuVmgweu80D1qClcF7bhYxkiAB9
-        kD5P790th/TrPvBqBHUyClxLPpWkEfhYRRyV771/VexyDRBLKeaghLxMRkToYOervmkBg1
-        YYCPadBsSns1+4ZVi5HsBonyxfw0/uo=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-200-ti5_8zA_NEKDwP-ojmS5vg-1; Thu, 14 Nov 2019 05:31:23 -0500
-Received: by mail-wr1-f71.google.com with SMTP id m17so4105195wrb.20
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2019 02:31:22 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:subject:message-id:mail-followup-to
-         :references:mime-version:content-disposition:in-reply-to;
-        bh=JWCxLpv/UjLrjB7zShi6a454QE9sIot7OJ3CKF77vug=;
-        b=o474xMmeTM2XWbZd6ROkvMrvNgKWX79DWwiYmEajmhy/a4+ulgTf5dUl9dbCqJTrSJ
-         g2oiIFH6E6Uxzap74eBuKq1gBON6iCEb5WJPltg+kIb7TIh37E7avefuXwd5899Ufupz
-         VV0QAybN1B8IWWRQaz40r+mwBIgG3bgrblE22Z1/K3t8RbT4DAW2x4oarsdl0zXkr+r1
-         /cm5U08XLYnfzylLmDQKG0hefssNdJx3fb8K4tf3t9uQhYibGk8juASsFJEE81L+X7fU
-         ppuuL62XS6NeTnicI7DBRtd8uPQ7pHWkN/ywvjLPa3qM1FvQHcxYD/mjLCQe2pkF0M+2
-         u5VA==
-X-Gm-Message-State: APjAAAWKbnwpph/49kkzf34IkmJIOUCSEUXpVMRJa15IIAyuTigCZag2
-        L+tA5M3BUM4rkSrEoUhl4pRFRLYDHOIM13Q8TODK6ogS28pcu9K0Lfh4yQ5x5J60hhZtWKrx5JP
-        B9XQ+j1Ottzi0v7Q+ww2f
-X-Received: by 2002:adf:cf0c:: with SMTP id o12mr7266620wrj.102.1573727481609;
-        Thu, 14 Nov 2019 02:31:21 -0800 (PST)
-X-Google-Smtp-Source: APXvYqwCB6yZUzrSC3NneONeIFWJ2fXTfBPbBveCNsh+u0Ybk0/qNgqZAfPQrZrLQcMG//m1yB0RXA==
-X-Received: by 2002:adf:cf0c:: with SMTP id o12mr7266598wrj.102.1573727481426;
-        Thu, 14 Nov 2019 02:31:21 -0800 (PST)
-Received: from orion (ip-89-103-126-188.net.upcbroadband.cz. [89.103.126.188])
-        by smtp.gmail.com with ESMTPSA id j7sm7405752wro.54.2019.11.14.02.31.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 Nov 2019 02:31:20 -0800 (PST)
-Date:   Thu, 14 Nov 2019 11:31:17 +0100
-From:   Carlos Maiolino <cmaiolino@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 09/11] xfs: rework kmem_alloc_{io,large} to use GFP_*
- flags
-Message-ID: <20191114103117.pb6cpyqgnuug3epm@orion>
-Mail-Followup-To: Dave Chinner <david@fromorbit.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org
-References: <20191113142335.1045631-1-cmaiolino@redhat.com>
- <20191113142335.1045631-10-cmaiolino@redhat.com>
- <20191113180850.GK6235@magnolia>
- <20191113195653.GT4614@dread.disaster.area>
- <20191114094022.u267tdwiistd6blb@orion>
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=ydfF/6rph5aw0S+dXQ7vAdmn1cldyijsWjA+3qHaIds=;
+        b=FF70Oc4hEF3xKikQlCqbWTTmntnVPs6Ioez5mPEqLUOoh5XFzvEmMr/tlhpfaqnZQ/9l1C
+        sqrL2nAaVBOl6aDJeywoAqvsualCyOK+O2cr5ED//6obRXVsEKXz+yqd9DHqeZH86cwE02
+        XQ410Qhxj2RY8u3uF7+Jk8sNhqw7OoU=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-432-SvsZNX8EO-qCTEECn5opRQ-1; Thu, 14 Nov 2019 06:32:20 -0500
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 929F0190743E;
+        Thu, 14 Nov 2019 11:32:18 +0000 (UTC)
+Received: from ming.t460p (ovpn-8-24.pek2.redhat.com [10.72.8.24])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id EBDAA77645;
+        Thu, 14 Nov 2019 11:31:57 +0000 (UTC)
+Date:   Thu, 14 Nov 2019 19:31:53 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Jeff Moyer <jmoyer@redhat.com>, Dave Chinner <dchinner@redhat.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Ingo Molnar <mingo@redhat.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Tejun Heo <tj@kernel.org>
+Subject: single aio thread is migrated crazily by scheduler
+Message-ID: <20191114113153.GB4213@ming.t460p>
 MIME-Version: 1.0
-In-Reply-To: <20191114094022.u267tdwiistd6blb@orion>
-X-MC-Unique: ti5_8zA_NEKDwP-ojmS5vg-1
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-MC-Unique: SvsZNX8EO-qCTEECn5opRQ-1
 X-Mimecast-Spam-Score: 0
 Content-Type: text/plain; charset=WINDOWS-1252
 Content-Transfer-Encoding: quoted-printable
@@ -86,52 +66,125 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> Ok, I'll leave it as-is (with converted flags).
->=20
-> > > TBH this series would be better sequenced as (1) get rid of pointless
-> > > wrappers, (2) convert kmem* callers to use GFP flags, and (3) save
-> > > whatever logic changes for the end.  If nothing else I could pull the
-> > > first two parts and leave the third for later.
-> >=20
->=20
-> I need to fix the line >80 characters and some other nit picks on the pat=
-ches,
-> so I can split this into this 3-series guideline and submit everything ag=
-ain, no
-> worries.
->=20
-> I do believe though the kmem_zone_alloc() removal falls into the 1st seri=
-es here
-> right? Giving the fact it removes the loop but doesn't really alter the l=
-ogic at
-> all, since __GFP_NOFAIL now implies the 'infinite loop' and the
-> congestion_wait()?
+Hi Guys,
 
-NVM, it should be on set (2), not one...
+It is found that single AIO thread is migrated crazely by scheduler, and
+the migrate period can be < 10ms. Follows the test a):
 
-/me goes grab more coffee.
+=09- run single job fio[1] for 30 seconds:
+=09./xfs_complete 512
+=09
+=09- observe fio io thread migration via bcc trace[2], and the migration
+=09times can reach 5k ~ 10K in above test. In this test, CPU utilization
+=09is 30~40% on the CPU running fio IO thread.
+=09
+=09- after applying the debug patch[3] to queue XFS completion work on
+=09other CPU(not current CPU), the above crazy fio IO thread migration
+=09can't be observed.
+
+And the similar result can be observed in the following test b) too:
+
+=09- set sched parameters:
+=09=09sysctl kernel.sched_min_granularity_ns=3D10000000
+=09=09sysctl kernel.sched_wakeup_granularity_ns=3D15000000
+=09
+=09=09which is usually done by 'tuned-adm profile network-throughput'
+=09
+=09- run single job fio aio[1] for 30 seconds:
+=09  ./xfs_complete 4k=20
+=09
+=09- observe fio io thread migration[2], and similar crazy migration
+=09can be observed too. In this test, CPU utilization is close to 100%
+=09on the CPU for running fio IO thread
+=09
+=09- the debug patch[3] still makes a big difference on this test wrt.
+=09fio IO thread migration.
+
+For test b), I thought that load balance may be triggered when
+single fio IO thread takes the CPU by ~100%, meantime XFS's queue_work()
+schedules WQ worker thread on the current CPU, since all other CPUs
+are idle. When the fio IO thread is migrated to new CPU, the same steps
+can be repeated again.
+
+But for test a), I have no idea why fio IO thread is still migrated so
+frequently since the CPU isn't saturated at all.
+
+IMO, it is normal for user to saturate aio thread, since this way may
+save context switch.
+
+Guys, any idea on the crazy aio thread migration?
+
+BTW, the tests are run on latest linus tree(5.4-rc7) in KVM guest, and the
+fio test is created for simulating one real performance report which is
+proved to be caused by frequent aio submission thread migration.
 
 
->=20
-> >=20
-> > > >  static inline void *
-> > > > -kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
-> > > > +kmem_zalloc_large(size_t size, gfp_t flags)
-> > > >  {
-> > > > -=09return kmem_alloc_large(size, flags | KM_ZERO);
-> > > > +=09return kmem_alloc_large(size, flags | __GFP_ZERO);
-> > > >  }
-> >=20
-> > I'd also kill these zalloc wrappers and just pass __GFP_ZERO
-> > directly.
->=20
-> Thanks for the review guys.
->=20
-> Cheers
->=20
-> --=20
-> Carlos
+[1] xfs_complete: one fio script for running single job overwrite aio on XF=
+S
+#!/bin/bash
 
---=20
-Carlos
+BS=3D$1
+NJOBS=3D1
+QD=3D128
+DIR=3D/mnt/xfs
+BATCH=3D1
+VERIFY=3D"sha3-512"
+
+sysctl kernel.sched_wakeup_granularity_ns
+sysctl kernel.sched_min_granularity_ns
+
+rmmod scsi_debug;modprobe scsi_debug dev_size_mb=3D6144 ndelay=3D41000 dix=
+=3D1 dif=3D2
+DEV=3D`ls -d /sys/bus/pseudo/drivers/scsi_debug/adapter*/host*/target*/*/bl=
+ock/* | head -1 | xargs basename`
+DEV=3D"/dev/"$DEV
+
+mkfs.xfs -f $DEV
+[ ! -d $DIR ] && mkdir -p $DIR
+mount $DEV $DIR
+
+fio --readwrite=3Drandwrite --filesize=3D5g \
+    --overwrite=3D1 \
+    --filename=3D$DIR/fiofile \
+    --runtime=3D30s --time_based \
+    --ioengine=3Dlibaio --direct=3D1 --bs=3D4k --iodepth=3D$QD \
+    --iodepth_batch_submit=3D$BATCH \
+    --iodepth_batch_complete_min=3D$BATCH \
+    --numjobs=3D$NJOBS \
+    --verify=3D$VERIFY \
+    --name=3D/hana/fsperf/foo
+
+umount $DEV
+rmmod scsi_debug
+
+
+[2] observe fio migration via bcc trace:
+/usr/share/bcc/tools/trace -C -t  't:sched:sched_migrate_task "%s/%d cpu %d=
+->%d", args->comm,args->pid,args->orig_cpu,args->dest_cpu' | grep fio=20
+
+[3] test patch for queuing xfs completetion on other CPU
+
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index 1fc28c2da279..bdc007a57706 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -158,9 +158,14 @@ static void iomap_dio_bio_end_io(struct bio *bio)
+ =09=09=09blk_wake_io_task(waiter);
+ =09=09} else if (dio->flags & IOMAP_DIO_WRITE) {
+ =09=09=09struct inode *inode =3D file_inode(dio->iocb->ki_filp);
++=09=09=09unsigned cpu =3D cpumask_next(smp_processor_id(),
++=09=09=09=09=09cpu_online_mask);
++
++=09=09=09if (cpu >=3D nr_cpu_ids)
++=09=09=09=09cpu =3D 0;
+=20
+ =09=09=09INIT_WORK(&dio->aio.work, iomap_dio_complete_work);
+-=09=09=09queue_work(inode->i_sb->s_dio_done_wq, &dio->aio.work);
++=09=09=09queue_work_on(cpu, inode->i_sb->s_dio_done_wq, &dio->aio.work);
+ =09=09} else {
+ =09=09=09iomap_dio_complete_work(&dio->aio.work);
+ =09=09}
+
+Thanks,
+Ming
 
