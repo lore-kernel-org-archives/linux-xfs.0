@@ -2,122 +2,107 @@ Return-Path: <SRS0=4PMG=ZG=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0426C432C3
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Nov 2019 04:02:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0514C432C3
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Nov 2019 05:26:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A781E206D7
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Nov 2019 04:02:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CBBD220723
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Nov 2019 05:26:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IiA3c/fj"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SuC8AwQd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726505AbfKNECl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Nov 2019 23:02:41 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:56430 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726491AbfKNECk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Nov 2019 23:02:40 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAE3xAWd165147;
-        Thu, 14 Nov 2019 04:02:36 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=Iw7U+HGuNRgfljDzRmZDsmFdgXcqY3Wy7F4xshoKmVc=;
- b=IiA3c/fjJEWwvCDUpeDgSnbcPgCz+DWKeNrMh/oMIdL3pCT2qUh5fQVMlR2CrUimVnn6
- kJ/07R0IKyPUJ3zyLW34h79LnUW5DxPpHWR5gQl6TEevvaWXrBM+Kiacs6KU8bO+tUyM
- r0Bx/xpVUVeK0KKbdIBVoQk1upvf+Q+ZXHaOZLLEP8OFmsKQdMrSGKBcr0FmIjVCmgD3
- fp3NT6oq5gNc7q0C1P8c7CAWOCE3hcYmKJCKrqpXR4bUst/XR3TgVHIynej2FQMQ2KI/
- v5ByIKE2tAm94AAUOAQPEAv/l4HFoXEJpuR198hF4CAMcfzqUd06MEG5aH0zO0FfgoUE 7A== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2w5mvu0myt-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 14 Nov 2019 04:02:36 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAE3sGL2018369;
-        Thu, 14 Nov 2019 04:02:35 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 2w8v2fy9jb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 14 Nov 2019 04:02:35 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xAE42XsY015113;
-        Thu, 14 Nov 2019 04:02:33 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 13 Nov 2019 20:02:33 -0800
-Date:   Wed, 13 Nov 2019 20:02:32 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Pavel Reichl <preichl@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4 4/5] xfs: remove the xfs_qoff_logitem_t typedef
-Message-ID: <20191114040232.GI6219@magnolia>
-References: <20191112213310.212925-1-preichl@redhat.com>
- <20191112213310.212925-5-preichl@redhat.com>
- <20191114013843.GZ4614@dread.disaster.area>
+        id S1725920AbfKNF0N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Nov 2019 00:26:13 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:33309 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725601AbfKNF0N (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Nov 2019 00:26:13 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1573709170;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=J1VgPYGe072zeFg1eUMJL939fGIeIs+XCxKq9YuhKJU=;
+        b=SuC8AwQdtLICZh4sSvBDoOHqnQvqB0fC9/6hKsg/ocpKrUH0u8YsGCSIQ69qn04WMthQRX
+        olWWLEDsD/wO6U3++3fwRwaaD0bZ0Rh0Z5P3pVn+IxStqFygnoqoF087TYAdJ9Ym2n2sU/
+        LHaC/MDu6+qQN9vC4h3MpQ1Azd6DEZo=
+Received: from mail-ua1-f70.google.com (mail-ua1-f70.google.com
+ [209.85.222.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-384-ZsPV7NiXOFCw3gZwqMGoAw-1; Thu, 14 Nov 2019 00:26:09 -0500
+Received: by mail-ua1-f70.google.com with SMTP id l2so1161773uan.22
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Nov 2019 21:26:09 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=J1VgPYGe072zeFg1eUMJL939fGIeIs+XCxKq9YuhKJU=;
+        b=poDXaohiZtIsGz5xpsbIW2/DAFZYknrZNQCWhNAOmGvCyErGTHQVagyskGVsZkhbTa
+         +1t0NMpJ1ygEvLmQosXETAiLeG8ImV7Y4YhWGlfNNcocFChUSvci7HPMxnYfW5ohSx5P
+         RYuax9lHYtisZcTdJzsisswokjRl771N4T8aQGTOeXkxwvFzCrZPqG2L6Jq7ph83wpzm
+         /otZ0EeUuXnDRHbDGsOd8ftwCoKR6ho90CLTwn5hxquudt7+H8KP1E1v6tQ2nIqPoqg0
+         +V3kHF+RyFfd14Ojcki45VlfDUcvD1dggzno43mzt7e5NTDsFX6rdIm+yGBVQUjm7IUP
+         Xogg==
+X-Gm-Message-State: APjAAAWgOAEQZq46ePhnIBa0d0sHgvkfuux/svr3W91Zqw/xQI/Uwkcp
+        UVvf55waUHNfw5Kkle7WzqxQbetIzDav1RifEvCpAotaD5gSIaT5OfOg5LMlRmKLR95SRnINaiu
+        VVT9lUg9MDEYTbdMw5OZmOCPqRkWR5wDALSyd
+X-Received: by 2002:a1f:944a:: with SMTP id w71mr4185939vkd.60.1573709168635;
+        Wed, 13 Nov 2019 21:26:08 -0800 (PST)
+X-Google-Smtp-Source: APXvYqxDKUfBAMjZK+fW1+QytruPQC8E3PGKohrnFNGEimR0keKu6sr+U68jXM7UaS5l6dtHLU5/DZLVp1jm1xHRto0=
+X-Received: by 2002:a1f:944a:: with SMTP id w71mr4185928vkd.60.1573709168405;
+ Wed, 13 Nov 2019 21:26:08 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191114013843.GZ4614@dread.disaster.area>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9440 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1910280000 definitions=main-1911140034
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9440 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
- definitions=main-1911140035
+References: <20191112213310.212925-1-preichl@redhat.com> <20191114012811.GW4614@dread.disaster.area>
+In-Reply-To: <20191114012811.GW4614@dread.disaster.area>
+From:   Pavel Reichl <preichl@redhat.com>
+Date:   Thu, 14 Nov 2019 06:25:57 +0100
+Message-ID: <CAJc7PzXuXkA33FuBSoMBxOV9k0jWVKP9LtNC+oFYwp8SvZxm8g@mail.gmail.com>
+Subject: Re: [PATCH v4 0/5] xfs: remove several typedefs in quota code
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+X-MC-Unique: ZsPV7NiXOFCw3gZwqMGoAw-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 14, 2019 at 12:38:43PM +1100, Dave Chinner wrote:
-> On Tue, Nov 12, 2019 at 10:33:09PM +0100, Pavel Reichl wrote:
-> > Signed-off-by: Pavel Reichl <preichl@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_trans_resv.c |  5 ++---
-> >  fs/xfs/xfs_dquot_item.h        | 28 +++++++++++++++-------------
-> >  fs/xfs/xfs_qm_syscalls.c       | 29 ++++++++++++++++-------------
-> >  fs/xfs/xfs_trans_dquot.c       | 12 ++++++------
-> >  4 files changed, 39 insertions(+), 35 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-> > index 271cca13565b..da6642488177 100644
-> > --- a/fs/xfs/libxfs/xfs_trans_resv.c
-> > +++ b/fs/xfs/libxfs/xfs_trans_resv.c
-> > @@ -741,8 +741,7 @@ xfs_calc_qm_dqalloc_reservation(
-> >  
-> >  /*
-> >   * Turning off quotas.
-> > - *    the xfs_qoff_logitem_t: sizeof(struct xfs_qoff_logitem) * 2
-> > - *    the superblock for the quota flags: sector size
-> > + * the quota off logitems: sizeof(struct xfs_qoff_logitem) * 2
-> 
-> Still needs the comment about the superblock. i.e. the initial
-> quota-off transaction modifies the quota flags in the superblock, so
-> it has to reserve space for that as well. Essentially the text of
-> the comment is iterating all the items that get modified in the
-> transaction and are accounted for in the function.
-> 
-> Everything else looks fine, though. :)
+Hi Dave,
 
-Well I /was/ about to stage the whole series for reals, so ... I'll just
-fix the comments on the way in.
+sure, I'll do whatever you guys suggests me to do.
 
---D
+I believe that by change log you mean just a textual description of
+code changes which should be part of the cover letter, right?
 
+I didn't do change log so far because I was just following the points
+you gave me during the review process, but I understand that since
+there were 2 reviewers I probably should have done some change
+summary.
+
+Thanks!
+
+On Thu, Nov 14, 2019 at 2:28 AM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Tue, Nov 12, 2019 at 10:33:05PM +0100, Pavel Reichl wrote:
+> > Eliminate some typedefs.
+>
+> Hi Pavel,
+>
+> Can you keep a change log in the series description so that we know
+> what has changed between versions? it makes it much easier for
+> reviewers to re-review the series if they know what has changed
+> since last time they looked at it.
+>
 > Cheers,
-> 
+>
 > Dave.
-> -- 
+> --
 > Dave Chinner
 > david@fromorbit.com
+>
+
