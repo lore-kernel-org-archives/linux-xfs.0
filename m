@@ -7,51 +7,51 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5F02C432C3
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Nov 2019 20:10:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47264C432C3
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Nov 2019 20:10:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7896E20679
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Nov 2019 20:10:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1985020679
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Nov 2019 20:10:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SanCEQ6V"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hsIDgB6O"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726598AbfKNUKE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Nov 2019 15:10:04 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:31349 "EHLO
+        id S1726599AbfKNUKG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Nov 2019 15:10:06 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:48387 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726444AbfKNUKD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Nov 2019 15:10:03 -0500
+        with ESMTP id S1726592AbfKNUKG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Nov 2019 15:10:06 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1573762201;
+        s=mimecast20190719; t=1573762204;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=rpR+VyAww3uplHbVHv9VbdvQjEOqgwBImLWli104X9Y=;
-        b=SanCEQ6VrLGmyLMYqB4wg4loE/pIwVLjwQy3q65uoi2XkQkb8qKhrnGSBfP9h8vg9p2kYr
-        xDkERrcqcR3PbU4h0LlDYUdlLEgSZxrlL1+Rc1dL4KMvmRoiihDTeudDwX7srcFt8mZXDW
-        vI3ziar8KweLsRFwb8AWezI9GQQ5VxY=
+        bh=gfb6iHsSwLgVaf6gvyGNkMmNqr/lBoXlbgnXylj8ts0=;
+        b=hsIDgB6Op5xaFYqcF3Jgw7qZAm9vnsjhJRSiBcoXIElmgPTUPKT1IHvVmgIJx0L0YwgnQK
+        Vaeh21DSALHM9znFnImiL7C8a2K0pYvzEMLfi+QwGN9MmsK1daM/dCb3UtyDEzkdcl7wJu
+        BQBOSdy6/z/dhwYqci/4EwBhuWPobIo=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-254-yrwm2fIVN1uzFjO5kWJwcQ-1; Thu, 14 Nov 2019 15:10:00 -0500
+ us-mta-291-5FVLO0kBMgyt6Cmqk87_WQ-1; Thu, 14 Nov 2019 15:10:02 -0500
 Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 88FA1805A60
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2019 20:09:59 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C59D41080F18
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2019 20:10:01 +0000 (UTC)
 Received: from orion.redhat.com (ovpn-204-203.brq.redhat.com [10.40.204.203])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 471EC17F22
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2019 20:09:58 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 25CF017F22
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2019 20:10:00 +0000 (UTC)
 From:   Carlos Maiolino <cmaiolino@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 1/4] xfs: Remove slab init wrappers
-Date:   Thu, 14 Nov 2019 21:09:52 +0100
-Message-Id: <20191114200955.1365926-2-cmaiolino@redhat.com>
+Subject: [PATCH 3/4] xfs: Remove kmem_zone_free() wrapper
+Date:   Thu, 14 Nov 2019 21:09:54 +0100
+Message-Id: <20191114200955.1365926-4-cmaiolino@redhat.com>
 In-Reply-To: <20191114200955.1365926-1-cmaiolino@redhat.com>
 References: <20191114200955.1365926-1-cmaiolino@redhat.com>
 MIME-Version: 1.0
 X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-MC-Unique: yrwm2fIVN1uzFjO5kWJwcQ-1
+X-MC-Unique: 5FVLO0kBMgyt6Cmqk87_WQ-1
 X-Mimecast-Spam-Score: 0
 Content-Type: text/plain; charset=WINDOWS-1252
 Content-Transfer-Encoding: quoted-printable
@@ -60,260 +60,346 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Remove kmem_zone_init() and kmem_zone_init_flags() together with their
-specific KM_* to SLAB_* flag wrappers.
+We can remove it now, without needing to rework the KM_ flags.
 
-Use kmem_cache_create() directly.
+Use kmem_cache_free() directly.
 
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- fs/xfs/kmem.h      | 18 ---------
- fs/xfs/xfs_buf.c   |  5 ++-
- fs/xfs/xfs_dquot.c | 10 +++--
- fs/xfs/xfs_super.c | 99 +++++++++++++++++++++++++++-------------------
- 4 files changed, 68 insertions(+), 64 deletions(-)
+ fs/xfs/kmem.h                  | 6 ------
+ fs/xfs/libxfs/xfs_btree.c      | 2 +-
+ fs/xfs/libxfs/xfs_da_btree.c   | 2 +-
+ fs/xfs/libxfs/xfs_inode_fork.c | 8 ++++----
+ fs/xfs/xfs_bmap_item.c         | 4 ++--
+ fs/xfs/xfs_buf.c               | 6 +++---
+ fs/xfs/xfs_buf_item.c          | 4 ++--
+ fs/xfs/xfs_dquot.c             | 2 +-
+ fs/xfs/xfs_extfree_item.c      | 4 ++--
+ fs/xfs/xfs_icache.c            | 4 ++--
+ fs/xfs/xfs_icreate_item.c      | 2 +-
+ fs/xfs/xfs_inode_item.c        | 2 +-
+ fs/xfs/xfs_log.c               | 2 +-
+ fs/xfs/xfs_refcount_item.c     | 4 ++--
+ fs/xfs/xfs_rmap_item.c         | 4 ++--
+ fs/xfs/xfs_trans.c             | 2 +-
+ fs/xfs/xfs_trans_dquot.c       | 2 +-
+ 17 files changed, 27 insertions(+), 33 deletions(-)
 
 diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-index 8170d95cf930..15c5800128b3 100644
+index 70ed74c7f37e..6143117770e9 100644
 --- a/fs/xfs/kmem.h
 +++ b/fs/xfs/kmem.h
-@@ -78,27 +78,9 @@ kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
-  * Zone interfaces
-  */
-=20
--#define KM_ZONE_HWALIGN=09SLAB_HWCACHE_ALIGN
--#define KM_ZONE_RECLAIM=09SLAB_RECLAIM_ACCOUNT
--#define KM_ZONE_SPREAD=09SLAB_MEM_SPREAD
--#define KM_ZONE_ACCOUNT=09SLAB_ACCOUNT
--
+@@ -81,12 +81,6 @@ kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
  #define kmem_zone=09kmem_cache
  #define kmem_zone_t=09struct kmem_cache
 =20
--static inline kmem_zone_t *
--kmem_zone_init(int size, char *zone_name)
+-static inline void
+-kmem_zone_free(kmem_zone_t *zone, void *ptr)
 -{
--=09return kmem_cache_create(zone_name, size, 0, 0, NULL);
+-=09kmem_cache_free(zone, ptr);
 -}
 -
--static inline kmem_zone_t *
--kmem_zone_init_flags(int size, char *zone_name, slab_flags_t flags,
--=09=09     void (*construct)(void *))
--{
--=09return kmem_cache_create(zone_name, size, 0, flags, construct);
--}
--
- static inline void
- kmem_zone_free(kmem_zone_t *zone, void *ptr)
+ extern void *kmem_zone_alloc(kmem_zone_t *, xfs_km_flags_t);
+=20
+ static inline void *
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 98843f1258b8..ac0b78ea417b 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -384,7 +384,7 @@ xfs_btree_del_cursor(
+ =09/*
+ =09 * Free the cursor.
+ =09 */
+-=09kmem_zone_free(xfs_btree_cur_zone, cur);
++=09kmem_cache_free(xfs_btree_cur_zone, cur);
+ }
+=20
+ /*
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index 46b1c3fb305c..c5c0b73febae 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -107,7 +107,7 @@ xfs_da_state_free(xfs_da_state_t *state)
+ #ifdef DEBUG
+ =09memset((char *)state, 0, sizeof(*state));
+ #endif /* DEBUG */
+-=09kmem_zone_free(xfs_da_state_zone, state);
++=09kmem_cache_free(xfs_da_state_zone, state);
+ }
+=20
+ void
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.=
+c
+index 15d6f947620f..ad2b9c313fd2 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -120,10 +120,10 @@ xfs_iformat_fork(
+ =09=09break;
+ =09}
+ =09if (error) {
+-=09=09kmem_zone_free(xfs_ifork_zone, ip->i_afp);
++=09=09kmem_cache_free(xfs_ifork_zone, ip->i_afp);
+ =09=09ip->i_afp =3D NULL;
+ =09=09if (ip->i_cowfp)
+-=09=09=09kmem_zone_free(xfs_ifork_zone, ip->i_cowfp);
++=09=09=09kmem_cache_free(xfs_ifork_zone, ip->i_cowfp);
+ =09=09ip->i_cowfp =3D NULL;
+ =09=09xfs_idestroy_fork(ip, XFS_DATA_FORK);
+ =09}
+@@ -531,10 +531,10 @@ xfs_idestroy_fork(
+ =09}
+=20
+ =09if (whichfork =3D=3D XFS_ATTR_FORK) {
+-=09=09kmem_zone_free(xfs_ifork_zone, ip->i_afp);
++=09=09kmem_cache_free(xfs_ifork_zone, ip->i_afp);
+ =09=09ip->i_afp =3D NULL;
+ =09} else if (whichfork =3D=3D XFS_COW_FORK) {
+-=09=09kmem_zone_free(xfs_ifork_zone, ip->i_cowfp);
++=09=09kmem_cache_free(xfs_ifork_zone, ip->i_cowfp);
+ =09=09ip->i_cowfp =3D NULL;
+ =09}
+ }
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index 243e5e0f82a3..ee6f4229cebc 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -35,7 +35,7 @@ void
+ xfs_bui_item_free(
+ =09struct xfs_bui_log_item=09*buip)
  {
+-=09kmem_zone_free(xfs_bui_zone, buip);
++=09kmem_cache_free(xfs_bui_zone, buip);
+ }
+=20
+ /*
+@@ -201,7 +201,7 @@ xfs_bud_item_release(
+ =09struct xfs_bud_log_item=09*budp =3D BUD_ITEM(lip);
+=20
+ =09xfs_bui_release(budp->bud_buip);
+-=09kmem_zone_free(xfs_bud_zone, budp);
++=09kmem_cache_free(xfs_bud_zone, budp);
+ }
+=20
+ static const struct xfs_item_ops xfs_bud_item_ops =3D {
 diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 2ed3c65c602f..3741f5b369de 100644
+index ccccfb792ff8..a0229c368e78 100644
 --- a/fs/xfs/xfs_buf.c
 +++ b/fs/xfs/xfs_buf.c
-@@ -2060,8 +2060,9 @@ xfs_buf_delwri_pushbuf(
- int __init
- xfs_buf_init(void)
- {
--=09xfs_buf_zone =3D kmem_zone_init_flags(sizeof(xfs_buf_t), "xfs_buf",
--=09=09=09=09=09=09KM_ZONE_HWALIGN, NULL);
-+=09xfs_buf_zone =3D kmem_cache_create("xfs_buf",
-+=09=09=09=09=09 sizeof(struct xfs_buf), 0,
-+=09=09=09=09=09 SLAB_HWCACHE_ALIGN, NULL);
- =09if (!xfs_buf_zone)
- =09=09goto out;
+@@ -238,7 +238,7 @@ _xfs_buf_alloc(
+ =09 */
+ =09error =3D xfs_buf_get_maps(bp, nmaps);
+ =09if (error)  {
+-=09=09kmem_zone_free(xfs_buf_zone, bp);
++=09=09kmem_cache_free(xfs_buf_zone, bp);
+ =09=09return NULL;
+ =09}
 =20
+@@ -328,7 +328,7 @@ xfs_buf_free(
+ =09=09kmem_free(bp->b_addr);
+ =09_xfs_buf_free_pages(bp);
+ =09xfs_buf_free_maps(bp);
+-=09kmem_zone_free(xfs_buf_zone, bp);
++=09kmem_cache_free(xfs_buf_zone, bp);
+ }
+=20
+ /*
+@@ -949,7 +949,7 @@ xfs_buf_get_uncached(
+ =09_xfs_buf_free_pages(bp);
+  fail_free_buf:
+ =09xfs_buf_free_maps(bp);
+-=09kmem_zone_free(xfs_buf_zone, bp);
++=09kmem_cache_free(xfs_buf_zone, bp);
+  fail:
+ =09return NULL;
+ }
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 6b69e6137b2b..3458a1264a3f 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -763,7 +763,7 @@ xfs_buf_item_init(
+ =09error =3D xfs_buf_item_get_format(bip, bp->b_map_count);
+ =09ASSERT(error =3D=3D 0);
+ =09if (error) {=09/* to stop gcc throwing set-but-unused warnings */
+-=09=09kmem_zone_free(xfs_buf_item_zone, bip);
++=09=09kmem_cache_free(xfs_buf_item_zone, bip);
+ =09=09return error;
+ =09}
+=20
+@@ -939,7 +939,7 @@ xfs_buf_item_free(
+ {
+ =09xfs_buf_item_free_format(bip);
+ =09kmem_free(bip->bli_item.li_lv_shadow);
+-=09kmem_zone_free(xfs_buf_item_zone, bip);
++=09kmem_cache_free(xfs_buf_item_zone, bip);
+ }
+=20
+ /*
 diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index bcd4247b5014..90dd1623de5a 100644
+index 4f969d94fb74..153815bf18fc 100644
 --- a/fs/xfs/xfs_dquot.c
 +++ b/fs/xfs/xfs_dquot.c
-@@ -1211,13 +1211,15 @@ xfs_dqlock2(
- int __init
- xfs_qm_init(void)
+@@ -56,7 +56,7 @@ xfs_qm_dqdestroy(
+ =09mutex_destroy(&dqp->q_qlock);
+=20
+ =09XFS_STATS_DEC(dqp->q_mount, xs_qm_dquot);
+-=09kmem_zone_free(xfs_qm_dqzone, dqp);
++=09kmem_cache_free(xfs_qm_dqzone, dqp);
+ }
+=20
+ /*
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index a05a1074e8f8..6ea847f6e298 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -39,7 +39,7 @@ xfs_efi_item_free(
+ =09if (efip->efi_format.efi_nextents > XFS_EFI_MAX_FAST_EXTENTS)
+ =09=09kmem_free(efip);
+ =09else
+-=09=09kmem_zone_free(xfs_efi_zone, efip);
++=09=09kmem_cache_free(xfs_efi_zone, efip);
+ }
+=20
+ /*
+@@ -244,7 +244,7 @@ xfs_efd_item_free(struct xfs_efd_log_item *efdp)
+ =09if (efdp->efd_format.efd_nextents > XFS_EFD_MAX_FAST_EXTENTS)
+ =09=09kmem_free(efdp);
+ =09else
+-=09=09kmem_zone_free(xfs_efd_zone, efdp);
++=09=09kmem_cache_free(xfs_efd_zone, efdp);
+ }
+=20
+ /*
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 944add5ff8e0..950e8a51ec66 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -44,7 +44,7 @@ xfs_inode_alloc(
+ =09if (!ip)
+ =09=09return NULL;
+ =09if (inode_init_always(mp->m_super, VFS_I(ip))) {
+-=09=09kmem_zone_free(xfs_inode_zone, ip);
++=09=09kmem_cache_free(xfs_inode_zone, ip);
+ =09=09return NULL;
+ =09}
+=20
+@@ -104,7 +104,7 @@ xfs_inode_free_callback(
+ =09=09ip->i_itemp =3D NULL;
+ =09}
+=20
+-=09kmem_zone_free(xfs_inode_zone, ip);
++=09kmem_cache_free(xfs_inode_zone, ip);
+ }
+=20
+ static void
+diff --git a/fs/xfs/xfs_icreate_item.c b/fs/xfs/xfs_icreate_item.c
+index 3ebd1b7f49d8..490fee22b878 100644
+--- a/fs/xfs/xfs_icreate_item.c
++++ b/fs/xfs/xfs_icreate_item.c
+@@ -55,7 +55,7 @@ STATIC void
+ xfs_icreate_item_release(
+ =09struct xfs_log_item=09*lip)
  {
--=09xfs_qm_dqzone =3D
--=09=09kmem_zone_init(sizeof(struct xfs_dquot), "xfs_dquot");
-+=09xfs_qm_dqzone =3D kmem_cache_create("xfs_dquot",
-+=09=09=09=09=09  sizeof(struct xfs_dquot),
-+=09=09=09=09=09  0, 0, NULL);
- =09if (!xfs_qm_dqzone)
- =09=09goto out;
+-=09kmem_zone_free(xfs_icreate_zone, ICR_ITEM(lip));
++=09kmem_cache_free(xfs_icreate_zone, ICR_ITEM(lip));
+ }
 =20
--=09xfs_qm_dqtrxzone =3D
--=09=09kmem_zone_init(sizeof(struct xfs_dquot_acct), "xfs_dqtrx");
-+=09xfs_qm_dqtrxzone =3D kmem_cache_create("xfs_dqtrx",
-+=09=09=09=09=09     sizeof(struct xfs_dquot_acct),
-+=09=09=09=09=09     0, 0, NULL);
- =09if (!xfs_qm_dqtrxzone)
- =09=09goto out_free_dqzone;
-=20
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 7f1fc76376f5..d3c3f7b5bdcf 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1797,32 +1797,39 @@ MODULE_ALIAS_FS("xfs");
- STATIC int __init
- xfs_init_zones(void)
+ static const struct xfs_item_ops xfs_icreate_item_ops =3D {
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 726aa3bfd6e8..3a62976291a1 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -667,7 +667,7 @@ xfs_inode_item_destroy(
+ =09xfs_inode_t=09*ip)
  {
--=09xfs_log_ticket_zone =3D kmem_zone_init(sizeof(xlog_ticket_t),
--=09=09=09=09=09=09"xfs_log_ticket");
-+=09xfs_log_ticket_zone =3D kmem_cache_create("xfs_log_ticket",
-+=09=09=09=09=09=09sizeof(struct xlog_ticket),
-+=09=09=09=09=09=090, 0, NULL);
- =09if (!xfs_log_ticket_zone)
- =09=09goto out;
+ =09kmem_free(ip->i_itemp->ili_item.li_lv_shadow);
+-=09kmem_zone_free(xfs_ili_zone, ip->i_itemp);
++=09kmem_cache_free(xfs_ili_zone, ip->i_itemp);
+ }
 =20
--=09xfs_bmap_free_item_zone =3D kmem_zone_init(
--=09=09=09sizeof(struct xfs_extent_free_item),
--=09=09=09"xfs_bmap_free_item");
-+=09xfs_bmap_free_item_zone =3D kmem_cache_create("xfs_bmap_free_item",
-+=09=09=09=09=09sizeof(struct xfs_extent_free_item),
-+=09=09=09=09=090, 0, NULL);
- =09if (!xfs_bmap_free_item_zone)
- =09=09goto out_destroy_log_ticket_zone;
 =20
--=09xfs_btree_cur_zone =3D kmem_zone_init(sizeof(xfs_btree_cur_t),
--=09=09=09=09=09=09"xfs_btree_cur");
-+=09xfs_btree_cur_zone =3D kmem_cache_create("xfs_btree_cur",
-+=09=09=09=09=09       sizeof(struct xfs_btree_cur),
-+=09=09=09=09=09       0, 0, NULL);
- =09if (!xfs_btree_cur_zone)
- =09=09goto out_destroy_bmap_free_item_zone;
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 3806674090ed..6a147c63a8a6 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -3468,7 +3468,7 @@ xfs_log_ticket_put(
+ {
+ =09ASSERT(atomic_read(&ticket->t_ref) > 0);
+ =09if (atomic_dec_and_test(&ticket->t_ref))
+-=09=09kmem_zone_free(xfs_log_ticket_zone, ticket);
++=09=09kmem_cache_free(xfs_log_ticket_zone, ticket);
+ }
 =20
--=09xfs_da_state_zone =3D kmem_zone_init(sizeof(xfs_da_state_t),
--=09=09=09=09=09=09"xfs_da_state");
-+=09xfs_da_state_zone =3D kmem_cache_create("xfs_da_state",
-+=09=09=09=09=09      sizeof(struct xfs_da_state),
-+=09=09=09=09=09      0, 0, NULL);
- =09if (!xfs_da_state_zone)
- =09=09goto out_destroy_btree_cur_zone;
+ xlog_ticket_t *
+diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
+index d5708d40ad87..8eeed73928cd 100644
+--- a/fs/xfs/xfs_refcount_item.c
++++ b/fs/xfs/xfs_refcount_item.c
+@@ -34,7 +34,7 @@ xfs_cui_item_free(
+ =09if (cuip->cui_format.cui_nextents > XFS_CUI_MAX_FAST_EXTENTS)
+ =09=09kmem_free(cuip);
+ =09else
+-=09=09kmem_zone_free(xfs_cui_zone, cuip);
++=09=09kmem_cache_free(xfs_cui_zone, cuip);
+ }
 =20
--=09xfs_ifork_zone =3D kmem_zone_init(sizeof(struct xfs_ifork), "xfs_ifork"=
-);
-+=09xfs_ifork_zone =3D kmem_cache_create("xfs_ifork",
-+=09=09=09=09=09   sizeof(struct xfs_ifork),
-+=09=09=09=09=09   0, 0, NULL);
- =09if (!xfs_ifork_zone)
- =09=09goto out_destroy_da_state_zone;
+ /*
+@@ -206,7 +206,7 @@ xfs_cud_item_release(
+ =09struct xfs_cud_log_item=09*cudp =3D CUD_ITEM(lip);
 =20
--=09xfs_trans_zone =3D kmem_zone_init(sizeof(xfs_trans_t), "xfs_trans");
-+=09xfs_trans_zone =3D kmem_cache_create("xf_trans",
-+=09=09=09=09=09   sizeof(struct xfs_trans),
-+=09=09=09=09=09   0, 0, NULL);
- =09if (!xfs_trans_zone)
- =09=09goto out_destroy_ifork_zone;
+ =09xfs_cui_release(cudp->cud_cuip);
+-=09kmem_zone_free(xfs_cud_zone, cudp);
++=09kmem_cache_free(xfs_cud_zone, cudp);
+ }
 =20
-@@ -1832,70 +1839,82 @@ xfs_init_zones(void)
- =09 * size possible under XFS.  This wastes a little bit of memory,
- =09 * but it is much faster.
- =09 */
--=09xfs_buf_item_zone =3D kmem_zone_init(sizeof(struct xfs_buf_log_item),
--=09=09=09=09=09   "xfs_buf_item");
-+=09xfs_buf_item_zone =3D kmem_cache_create("xfs_buf_item",
-+=09=09=09=09=09      sizeof(struct xfs_buf_log_item),
-+=09=09=09=09=09      0, 0, NULL);
- =09if (!xfs_buf_item_zone)
- =09=09goto out_destroy_trans_zone;
+ static const struct xfs_item_ops xfs_cud_item_ops =3D {
+diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
+index 02f84d9a511c..4911b68f95dd 100644
+--- a/fs/xfs/xfs_rmap_item.c
++++ b/fs/xfs/xfs_rmap_item.c
+@@ -34,7 +34,7 @@ xfs_rui_item_free(
+ =09if (ruip->rui_format.rui_nextents > XFS_RUI_MAX_FAST_EXTENTS)
+ =09=09kmem_free(ruip);
+ =09else
+-=09=09kmem_zone_free(xfs_rui_zone, ruip);
++=09=09kmem_cache_free(xfs_rui_zone, ruip);
+ }
 =20
--=09xfs_efd_zone =3D kmem_zone_init((sizeof(xfs_efd_log_item_t) +
--=09=09=09((XFS_EFD_MAX_FAST_EXTENTS - 1) *
--=09=09=09=09 sizeof(xfs_extent_t))), "xfs_efd_item");
-+=09xfs_efd_zone =3D kmem_cache_create("xfs_efd_item",
-+=09=09=09=09=09(sizeof(struct xfs_efd_log_item) +
-+=09=09=09=09=09(XFS_EFD_MAX_FAST_EXTENTS - 1) *
-+=09=09=09=09=09sizeof(struct xfs_extent)),
-+=09=09=09=09=090, 0, NULL);
- =09if (!xfs_efd_zone)
- =09=09goto out_destroy_buf_item_zone;
+ /*
+@@ -229,7 +229,7 @@ xfs_rud_item_release(
+ =09struct xfs_rud_log_item=09*rudp =3D RUD_ITEM(lip);
 =20
--=09xfs_efi_zone =3D kmem_zone_init((sizeof(xfs_efi_log_item_t) +
--=09=09=09((XFS_EFI_MAX_FAST_EXTENTS - 1) *
--=09=09=09=09sizeof(xfs_extent_t))), "xfs_efi_item");
-+=09xfs_efi_zone =3D kmem_cache_create("xfs_efi_item",
-+=09=09=09=09=09 (sizeof(struct xfs_efi_log_item) +
-+=09=09=09=09=09 (XFS_EFI_MAX_FAST_EXTENTS - 1) *
-+=09=09=09=09=09 sizeof(struct xfs_extent)),
-+=09=09=09=09=09 0, 0, NULL);
- =09if (!xfs_efi_zone)
- =09=09goto out_destroy_efd_zone;
+ =09xfs_rui_release(rudp->rud_ruip);
+-=09kmem_zone_free(xfs_rud_zone, rudp);
++=09kmem_cache_free(xfs_rud_zone, rudp);
+ }
 =20
--=09xfs_inode_zone =3D
--=09=09kmem_zone_init_flags(sizeof(xfs_inode_t), "xfs_inode",
--=09=09=09KM_ZONE_HWALIGN | KM_ZONE_RECLAIM | KM_ZONE_SPREAD |
--=09=09=09KM_ZONE_ACCOUNT, xfs_fs_inode_init_once);
-+=09xfs_inode_zone =3D kmem_cache_create("xfs_inode",
-+=09=09=09=09=09   sizeof(struct xfs_inode), 0,
-+=09=09=09=09=09   (SLAB_HWCACHE_ALIGN |
-+=09=09=09=09=09    SLAB_RECLAIM_ACCOUNT |
-+=09=09=09=09=09    SLAB_MEM_SPREAD | SLAB_ACCOUNT),
-+=09=09=09=09=09   xfs_fs_inode_init_once);
- =09if (!xfs_inode_zone)
- =09=09goto out_destroy_efi_zone;
+ static const struct xfs_item_ops xfs_rud_item_ops =3D {
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index f4795fdb7389..3b208f9a865c 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -71,7 +71,7 @@ xfs_trans_free(
+ =09if (!(tp->t_flags & XFS_TRANS_NO_WRITECOUNT))
+ =09=09sb_end_intwrite(tp->t_mountp->m_super);
+ =09xfs_trans_free_dqinfo(tp);
+-=09kmem_zone_free(xfs_trans_zone, tp);
++=09kmem_cache_free(xfs_trans_zone, tp);
+ }
 =20
--=09xfs_ili_zone =3D
--=09=09kmem_zone_init_flags(sizeof(xfs_inode_log_item_t), "xfs_ili",
--=09=09=09=09=09KM_ZONE_SPREAD, NULL);
-+=09xfs_ili_zone =3D kmem_cache_create("xfs_ili",
-+=09=09=09=09=09 sizeof(struct xfs_inode_log_item), 0,
-+=09=09=09=09=09 SLAB_MEM_SPREAD, NULL);
- =09if (!xfs_ili_zone)
- =09=09goto out_destroy_inode_zone;
--=09xfs_icreate_zone =3D kmem_zone_init(sizeof(struct xfs_icreate_item),
--=09=09=09=09=09"xfs_icr");
-+
-+=09xfs_icreate_zone =3D kmem_cache_create("xfs_icr",
-+=09=09=09=09=09     sizeof(struct xfs_icreate_item),
-+=09=09=09=09=09     0, 0, NULL);
- =09if (!xfs_icreate_zone)
- =09=09goto out_destroy_ili_zone;
-=20
--=09xfs_rud_zone =3D kmem_zone_init(sizeof(struct xfs_rud_log_item),
--=09=09=09"xfs_rud_item");
-+=09xfs_rud_zone =3D kmem_cache_create("xfs_rud_item",
-+=09=09=09=09=09 sizeof(struct xfs_rud_log_item),
-+=09=09=09=09=09 0, 0, NULL);
- =09if (!xfs_rud_zone)
- =09=09goto out_destroy_icreate_zone;
-=20
--=09xfs_rui_zone =3D kmem_zone_init(
-+=09xfs_rui_zone =3D kmem_cache_create("xfs_rui_item",
- =09=09=09xfs_rui_log_item_sizeof(XFS_RUI_MAX_FAST_EXTENTS),
--=09=09=09"xfs_rui_item");
-+=09=09=090, 0, NULL);
- =09if (!xfs_rui_zone)
- =09=09goto out_destroy_rud_zone;
-=20
--=09xfs_cud_zone =3D kmem_zone_init(sizeof(struct xfs_cud_log_item),
--=09=09=09"xfs_cud_item");
-+=09xfs_cud_zone =3D kmem_cache_create("xfs_cud_item",
-+=09=09=09=09=09 sizeof(struct xfs_cud_log_item),
-+=09=09=09=09=09 0, 0, NULL);
- =09if (!xfs_cud_zone)
- =09=09goto out_destroy_rui_zone;
-=20
--=09xfs_cui_zone =3D kmem_zone_init(
-+=09xfs_cui_zone =3D kmem_cache_create("xfs_cui_item",
- =09=09=09xfs_cui_log_item_sizeof(XFS_CUI_MAX_FAST_EXTENTS),
--=09=09=09"xfs_cui_item");
-+=09=09=090, 0, NULL);
- =09if (!xfs_cui_zone)
- =09=09goto out_destroy_cud_zone;
-=20
--=09xfs_bud_zone =3D kmem_zone_init(sizeof(struct xfs_bud_log_item),
--=09=09=09"xfs_bud_item");
-+=09xfs_bud_zone =3D kmem_cache_create("xfs_bud_item",
-+=09=09=09=09=09 sizeof(struct xfs_bud_log_item),
-+=09=09=09=09=09 0, 0, NULL);
- =09if (!xfs_bud_zone)
- =09=09goto out_destroy_cui_zone;
-=20
--=09xfs_bui_zone =3D kmem_zone_init(
-+=09xfs_bui_zone =3D kmem_cache_create("xfs_bui_item",
- =09=09=09xfs_bui_log_item_sizeof(XFS_BUI_MAX_FAST_EXTENTS),
--=09=09=09"xfs_bui_item");
-+=09=09=090, 0, NULL);
- =09if (!xfs_bui_zone)
- =09=09goto out_destroy_bud_zone;
-=20
+ /*
+diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+index 16457465833b..ff1c326826d3 100644
+--- a/fs/xfs/xfs_trans_dquot.c
++++ b/fs/xfs/xfs_trans_dquot.c
+@@ -872,6 +872,6 @@ xfs_trans_free_dqinfo(
+ {
+ =09if (!tp->t_dqinfo)
+ =09=09return;
+-=09kmem_zone_free(xfs_qm_dqtrxzone, tp->t_dqinfo);
++=09kmem_cache_free(xfs_qm_dqtrxzone, tp->t_dqinfo);
+ =09tp->t_dqinfo =3D NULL;
+ }
 --=20
 2.23.0
 
