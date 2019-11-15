@@ -2,137 +2,113 @@ Return-Path: <SRS0=3CCN=ZH=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 803C1C432C3
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Nov 2019 19:38:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D14A0C432C3
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Nov 2019 19:53:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4AE6820732
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Nov 2019 19:38:20 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Bzg0ZrGY"
+	by mail.kernel.org (Postfix) with ESMTP id B4C9A2073A
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Nov 2019 19:53:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726505AbfKOTiT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Nov 2019 14:38:19 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:46748 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726466AbfKOTiT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Nov 2019 14:38:19 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAFJY806118406;
-        Fri, 15 Nov 2019 19:38:16 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=QyTanHk/SVJ0Oe4j2oYFOA8Zo3H8Yl/i7gusfJRHeTY=;
- b=Bzg0ZrGY70og8mPVx6/RIV3bKbKaE5Lp38XBA1lCMKuXWKlp5stP+J9aCQyYB539ZNvl
- Wa4kfo3ftbm34veUexl7WEnSwfj8VNjyBUnSF47yhyqrXSjgQc48V9QnJdjFe6Wtokox
- hLA8/SuuKqawQCEXOlx4njy8N2Irukhsfe5enBdIJ/ghhBC1Sb1qOEWsxBOaPNTM6xH6
- lR2CQBa7IvMeBvc1kz8I+eJtGzX4cobxNtSKPki0JsNyWmJnHK/Eaqoto/MBw5NTc/MA
- 0HICtiIuy8xEWwN895xOE4028ml0doDV01S4m0kJyxXktM7dbLtsXNYoxj9WBPH/hGng Ow== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2w9gxpn7y2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 15 Nov 2019 19:38:16 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAFJc2XK136261;
-        Fri, 15 Nov 2019 19:38:15 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 2w9h0ntb4m-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 15 Nov 2019 19:38:15 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xAFJcEHV012080;
-        Fri, 15 Nov 2019 19:38:14 GMT
-Received: from localhost (/10.159.141.118)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 15 Nov 2019 11:38:13 -0800
-Date:   Fri, 15 Nov 2019 11:38:13 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@redhat.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfsprogs: remove stray libxfs whitespace
-Message-ID: <20191115193813.GQ6219@magnolia>
-References: <57d4cc5d-6ec5-6977-1903-17a285202d79@redhat.com>
+        id S1726995AbfKOTxA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Nov 2019 14:53:00 -0500
+Received: from sandeen.net ([63.231.237.45]:59244 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726991AbfKOTw7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 15 Nov 2019 14:52:59 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 8075DF8BFD;
+        Fri, 15 Nov 2019 13:51:38 -0600 (CST)
+Subject: Re: Fwd: XFS Memory allocation deadlock in kmem_alloc
+To:     Andrew Carr <andrewlanecarr@gmail.com>, linux-xfs@vger.kernel.org
+References: <CAKQeeLMxJR-ToX5HG9Q-z0-AL9vZG-OMjHyM+rnEEBP6k6nxHw@mail.gmail.com>
+ <CAKQeeLNewDe6hu92Tu19=Opx_ao7F_fbpxOsEHaUH9e2NmLWaQ@mail.gmail.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <e6222784-03a5-6902-0f2e-10303962749c@sandeen.net>
+Date:   Fri, 15 Nov 2019 13:52:57 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.2.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <57d4cc5d-6ec5-6977-1903-17a285202d79@redhat.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9442 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1911150173
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9442 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1911150172
+In-Reply-To: <CAKQeeLNewDe6hu92Tu19=Opx_ao7F_fbpxOsEHaUH9e2NmLWaQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Nov 15, 2019 at 01:35:31PM -0600, Eric Sandeen wrote:
-> Not quite sure how these crept in but now's as good a time as any
-> to remove stray newline deltas vs. the kernel code.
+On 11/15/19 1:11 PM, Andrew Carr wrote:
+> Hello,
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> ---
+> This list has recommended enabling stack traces to determine the root
+> cause of issues with XFS deadlocks occurring in Centos 7.7
+> (3.10.0-1062).
 > 
-> diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-> index 5dba5fbc..6ca43c73 100644
-> --- a/libxfs/xfs_fs.h
-> +++ b/libxfs/xfs_fs.h
-> @@ -755,6 +755,7 @@ struct xfs_scrub_metadata {
->  #  define XFS_XATTR_LIST_MAX 65536
->  #endif
->  
-> +
->  /*
->   * ioctl commands that are used by Linux filesystems
->   */
-> @@ -825,7 +826,6 @@ struct xfs_scrub_metadata {
->  #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 126, struct xfs_fsop_geom)
->  #define XFS_IOC_BULKSTAT	     _IOR ('X', 127, struct xfs_bulkstat_req)
->  #define XFS_IOC_INUMBERS	     _IOR ('X', 128, struct xfs_inumbers_req)
-> -
->  /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
->  
->  /* reflink ioctls; these MUST match the btrfs ioctl definitions */
-> diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
-> index fbdce4d6..4859b739 100644
-> --- a/libxfs/xfs_inode_buf.c
-> +++ b/libxfs/xfs_inode_buf.c
-> @@ -15,6 +15,7 @@
->  #include "xfs_ialloc.h"
->  #include "xfs_dir2.h"
->  
-> +
->  /*
->   * Check that none of the inode's in the buffer have a next
->   * unlinked field of 0.
-> diff --git a/libxfs/xfs_trans_inode.c b/libxfs/xfs_trans_inode.c
-> index 3a09ee76..7fa0c184 100644
-> --- a/libxfs/xfs_trans_inode.c
-> +++ b/libxfs/xfs_trans_inode.c
-> @@ -11,6 +11,7 @@
->  #include "xfs_inode.h"
->  #include "xfs_trans.h"
->  
-> +
->  /*
->   * Add a locked inode to the transaction.
->   *
+> Based on what was recommended by Eric Sandeen, we have tried updating
+> the following files to generate XFS stack traces:
 > 
+> # echo 11 > /proc/sys/fs/xfs/error_level
+> 
+> And
+> 
+> # echo 3 > /proc/sys/fs/xfs/error_level
+> 
+> But no stack traces are printed to dmesg.  I was thinking of
+> re-compiling the kernel with debug flags enabled.  Do you think this
+> is necessary?
+> 
+> Thanks so much for your time and keep up the good work!
+
+I've looked over the way xfs_err() gets defined, and I cannot see how
+we can call xfs_err with error_level == 11 and not get a stack trace.
+
+Maybe other eyes can spot something...
+
+-Eric
