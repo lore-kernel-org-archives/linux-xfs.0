@@ -2,108 +2,332 @@ Return-Path: <SRS0=3CCN=ZH=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=0.3 required=3.0 tests=DATE_IN_PAST_06_12,
-	DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6E9BC432C3
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Nov 2019 05:30:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B52A7C432C3
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Nov 2019 07:09:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9E3E120729
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Nov 2019 05:30:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E7BB2073B
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Nov 2019 07:09:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="atnC2AMF"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OwwFQPwo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727041AbfKOFaU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Nov 2019 00:30:20 -0500
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:36346 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727032AbfKOF3m (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Nov 2019 00:29:42 -0500
-Received: by mail-pf1-f196.google.com with SMTP id b19so5875654pfd.3
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Nov 2019 21:29:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=qwWwUvjngD0vGITVGJw2bNFQc6m1rEqC7TEDYhp2gbo=;
-        b=atnC2AMFzcg/i0Mp01bQtIoCfLx+HHbTWM8nHw4lKY3bvK8sTjwuuQEAzd/5lBqjg8
-         S2gVzJA/HwmQYtqs72pyRN1J6FXkXvof9go4CmLgmO38QZr4HfrNVAzeJS6EmIVf0Xon
-         frtfStys716GXGZIcxrtKpwu1jAmCujAqb+64=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=qwWwUvjngD0vGITVGJw2bNFQc6m1rEqC7TEDYhp2gbo=;
-        b=SrPi9qZNSWZefW7dLmV5Xf7vhwQsYw9HLvUgJYXyeHhO7IHP7XXnCw1hTsDj0Datev
-         ux82Xiz8zhUbWvdChlF5apqtjrjfAzVl1VkJnnd9gPGeMN0njKlab7dY4tOw3y2/vwuQ
-         dIJ8D0vR4X11ixGbqJ11w89J86Mednk2FSukdJVuJRTnE70XGKbNJZO3e878wEbxX+BN
-         VNXz0/TXvAefDJbPmRwVE+v8eYIg+IAJmkC/3V70B9bErm5NuiaS0zVsL5KUsTXT6W/r
-         ubqrJGGKAXzJZDCGYqTa2QCXBYUfqkD3Gmui47rm4kMszC+Rmkdd2YhP2E55/nFZ2QvP
-         BYSw==
-X-Gm-Message-State: APjAAAWzmWdo6G4NyJjGiKKjShgbzU2M125bx2A936ue1UmFNozt+5mC
-        l1oUTy6L5o1DkwgQdX8HXiY2rA==
-X-Google-Smtp-Source: APXvYqwt4zb0Je/V6IpxbO3fLLPDi96nB5JTyVu+Y5Gk5ifcWF6G9mnVci2ds1rUWNSyZ5xoFyc++Q==
-X-Received: by 2002:a62:7c52:: with SMTP id x79mr15159448pfc.18.1573795780005;
-        Thu, 14 Nov 2019 21:29:40 -0800 (PST)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id 12sm9010639pjm.11.2019.11.14.21.29.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 Nov 2019 21:29:38 -0800 (PST)
-Date:   Thu, 14 Nov 2019 13:27:48 -0800
-From:   Kees Cook <keescook@chromium.org>
-To:     Jiri Slaby <jslaby@suse.cz>,
-        Alexander Viro <viro@zeniv.linux.org.uk>
-Cc:     linux-kernel@vger.kernel.org, David Windsor <dave@nullcore.net>,
-        Pekka Enberg <penberg@kernel.org>,
-        David Rientjes <rientjes@google.com>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Andy Lutomirski <luto@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Christoph Lameter <cl@linux.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Laura Abbott <labbott@redhat.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        Christoffer Dall <christoffer.dall@linaro.org>,
-        Dave Kleikamp <dave.kleikamp@oracle.com>,
-        Jan Kara <jack@suse.cz>,
-        Luis de Bethencourt <luisbg@kernel.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Rik van Riel <riel@redhat.com>,
-        Matthew Garrett <mjg59@google.com>,
-        linux-fsdevel@vger.kernel.org, linux-arch@vger.kernel.org,
-        netdev@vger.kernel.org, kernel-hardening@lists.openwall.com,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Michal Kubecek <mkubecek@suse.cz>
-Subject: Re: [kernel-hardening] [PATCH 09/38] usercopy: Mark kmalloc caches
- as usercopy caches
-Message-ID: <201911141327.4DE6510@keescook>
-References: <1515636190-24061-1-git-send-email-keescook@chromium.org>
- <1515636190-24061-10-git-send-email-keescook@chromium.org>
- <9519edb7-456a-a2fa-659e-3e5a1ff89466@suse.cz>
- <201911121313.1097D6EE@keescook>
+        id S1726182AbfKOHJG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Nov 2019 02:09:06 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:29112 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726890AbfKOHJG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Nov 2019 02:09:06 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1573801745;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=0heYp1A4SIHfSmO0saLgLXMa8wFv5TYVrqbH9eYhTI0=;
+        b=OwwFQPwoSD2NUnWafQ/eRN8EvrUjVE6Us5qvn5lhSjgi53+HIL9+TWKO374AIpcoSpTCaK
+        fWXbXpLEBx/BMI/RFUU7SQCZa+mYtejBGkH2qJDjxmPlFE4RFvWV0ULEQnhn3VgT0WHeMb
+        OWpkIRAYMYuUxqOqAi+0xMGQm2/qvxw=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-345-LSrVJqZuOCmcXzlqPoqnow-1; Fri, 15 Nov 2019 02:09:01 -0500
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4E3C0477;
+        Fri, 15 Nov 2019 07:08:59 +0000 (UTC)
+Received: from ming.t460p (ovpn-8-27.pek2.redhat.com [10.72.8.27])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 9441F67E59;
+        Fri, 15 Nov 2019 07:08:47 +0000 (UTC)
+Date:   Fri, 15 Nov 2019 15:08:43 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jeff Moyer <jmoyer@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Ingo Molnar <mingo@redhat.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Tejun Heo <tj@kernel.org>
+Subject: Re: single aio thread is migrated crazily by scheduler
+Message-ID: <20191115070843.GA24246@ming.t460p>
+References: <20191114113153.GB4213@ming.t460p>
+ <20191114235415.GL4614@dread.disaster.area>
+ <20191115010824.GC4847@ming.t460p>
+ <20191115045634.GN4614@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20191115045634.GN4614@dread.disaster.area>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-MC-Unique: LSrVJqZuOCmcXzlqPoqnow-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
 Content-Disposition: inline
-In-Reply-To: <201911121313.1097D6EE@keescook>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 12, 2019 at 01:21:54PM -0800, Kees Cook wrote:
-> How is iucv the only network protocol that has run into this? Do others
-> use a bounce buffer?
+On Fri, Nov 15, 2019 at 03:56:34PM +1100, Dave Chinner wrote:
+> On Fri, Nov 15, 2019 at 09:08:24AM +0800, Ming Lei wrote:
+> > Hi Dave,
+> >=20
+> > On Fri, Nov 15, 2019 at 10:54:15AM +1100, Dave Chinner wrote:
+> > > On Thu, Nov 14, 2019 at 07:31:53PM +0800, Ming Lei wrote:
+> > > > Hi Guys,
+> > > >=20
+> > > > It is found that single AIO thread is migrated crazely by scheduler=
+, and
+> > > > the migrate period can be < 10ms. Follows the test a):
+> > > >=20
+> > > > =09- run single job fio[1] for 30 seconds:
+> > > > =09./xfs_complete 512
+> > > > =09
+> > > > =09- observe fio io thread migration via bcc trace[2], and the migr=
+ation
+> > > > =09times can reach 5k ~ 10K in above test. In this test, CPU utiliz=
+ation
+> > > > =09is 30~40% on the CPU running fio IO thread.
+> > >=20
+> > > Using the default scheduler tunings:
+> > >=20
+> > > kernel.sched_wakeup_granularity_ns =3D 4000000
+> > > kernel.sched_min_granularity_ns =3D 3000000
+> > >=20
+> > > I'm not seeing any migrations at all on a 16p x86-64 box. Even with
+> > > the tunings you suggest:
+> > >=20
+> > > =09sysctl kernel.sched_min_granularity_ns=3D10000000
+> > > =09sysctl kernel.sched_wakeup_granularity_ns=3D15000000
+> > >=20
+> > > There are no migrations at all.
+> >=20
+> > Looks I forget to pass $BS to the fio command line in the script posted=
+,
+> > please try the following script again and run './xfs_complete 512' firs=
+t.
+>=20
+> So I ran 4kB IOs instead of 512 byte IOs. Shouldn't make any
+> difference, really - it'll still be CPU bound...
 
-Another solution would be to use a dedicated kmem cache (instead of the
-shared kmalloc dma one)?
+In 512 block size test, the CPU utilization of fio IO thread is reduced to
+40%, which is more like IO bound.
 
--- 
-Kees Cook
+>=20
+> <snip script>
+>=20
+> > In my test just done, the migration count is 12K in 30s fio running.
+> > Sometimes the number can be quite less, but most of times, the number
+> > is very big(> 5k).
+>=20
+> With my iomap-dio-overwrite patch and 512 byte IOs:
+>=20
+> $ sudo trace-cmd show |grep sched_migrate_task |wc -l
+> 112
+> $ sudo trace-cmd show |grep sched_migrate_task |grep fio |wc -l
+> 22
+>=20
+> Without the iomap-dio-overwrite patch:
+>=20
+> $ sudo trace-cmd show |grep sched_migrate_task |wc -l
+> 99
+> $ sudo trace-cmd show |grep sched_migrate_task |grep fio |wc -l
+> 9
+> $
+>=20
+> There are -less- migrations when using the workqueue for everything.
+> But it's so low in either case that it's just noise.
+>=20
+> Performance is identical for the two patches...
+
+I can reproduce the issue with 4k block size on another RH system, and
+the login info of that system has been shared to you in RH BZ.
+
+1)
+sysctl kernel.sched_min_granularity_ns=3D10000000
+sysctl kernel.sched_wakeup_granularity_ns=3D15000000
+
+2)
+./xfs_complete 4k
+
+Then you should see 1k~1.5k fio io thread migration in above test,
+either v5.4-rc7(build with rhel8 config) or RHEL 4.18 kernel.
+
+Not reproduced the issue with 512 block size on the RH system yet,
+maybe it is related with my kernel config.
+
+>=20
+> > > > BTW, the tests are run on latest linus tree(5.4-rc7) in KVM guest, =
+and the
+> > > > fio test is created for simulating one real performance report whic=
+h is
+> > > > proved to be caused by frequent aio submission thread migration.
+> > >=20
+> > > What is the underlying hardware? I'm running in a 16p KVM guest on a
+> > > 16p/32t x86-64 using 5.4-rc7, and I don't observe any significant
+> > > CPU migration occurring at all from your test workload.
+> >=20
+> > It is a KVM guest, which is running on my Lenova T460p Fedora 29 laptop=
+,
+> > and the host kernel is 5.2.18-100.fc29.x86_64, follows the guest info:
+>=20
+> Ok, so what are all the custom distro kernel tunings that userspace
+> does for the kernel?
+
+It is standard Fedora 29.
+
+>=20
+> > [root@ktest-01 ~]# lscpu
+> > Architecture:        x86_64
+> > CPU op-mode(s):      32-bit, 64-bit
+> > Byte Order:          Little Endian
+> > CPU(s):              8
+> > On-line CPU(s) list: 0-7
+> > Thread(s) per core:  1
+> > Core(s) per socket:  4
+> > Socket(s):           2
+> > NUMA node(s):        2
+>=20
+> Curious. You've configured it as two CPU sockets. If you make it a
+> single socket, do your delay problems go away?  The snippet of trace
+> output you showed indicated it bouncing around CPUs on a single node
+> (cpus 0-3), so maybe it has something to do with way the scheduler
+> is interacting with non-zero NUMA distances...
+
+I don't see that is a problem wrt. this issue, given the issue can
+be reproduced on other system too.
+
+>=20
+> > Vendor ID:           GenuineIntel
+> > CPU family:          6
+> > Model:               94
+> > Model name:          Intel(R) Core(TM) i7-6820HQ CPU @ 2.70GHz
+> > Stepping:            3
+> > CPU MHz:             2712.000
+> > BogoMIPS:            5424.00
+> > Virtualization:      VT-x
+> > Hypervisor vendor:   KVM
+> > Virtualization type: full
+> > L1d cache:           32K
+> > L1i cache:           32K
+> > L2 cache:            4096K
+> > L3 cache:            16384K
+> > NUMA node0 CPU(s):   0-3
+> > NUMA node1 CPU(s):   4-7
+> > Flags:               fpu vme de pse tsc msr pae mce cx8 apic sep mtrr p=
+ge mca cmov pat pse36 clflush mmxp
+>=20
+> That seems like a very minimal set of CPU flags - looks like you are
+> not actually passing the actual host CPU capabilities through to the
+> guest. That means it will be doing the slowest, most generic
+> spectre/meltdown mitigations, right?
+
+The above line is just trunated by the console terminal.
+
+>=20
+> Also, shouldn't lscpu be telling us all the CPU bug mitigations in
+> place?
+>=20
+> From my test system:
+>=20
+> Architecture:                    x86_64
+> CPU op-mode(s):                  32-bit, 64-bit
+> Byte Order:                      Little Endian
+> Address sizes:                   40 bits physical, 48 bits virtual
+> CPU(s):                          16
+> On-line CPU(s) list:             0-15
+> Thread(s) per core:              1
+> Core(s) per socket:              1
+> Socket(s):                       16
+> NUMA node(s):                    1
+> Vendor ID:                       GenuineIntel
+> CPU family:                      6
+> Model:                           45
+> Model name:                      Intel(R) Xeon(R) CPU E5-4620 0 @ 2.20GHz
+> Stepping:                        7
+> CPU MHz:                         2199.998
+> BogoMIPS:                        4399.99
+> Virtualization:                  VT-x
+> Hypervisor vendor:               KVM
+> Virtualization type:             full
+> L1d cache:                       512 KiB
+> L1i cache:                       512 KiB
+> L2 cache:                        64 MiB
+> L3 cache:                        256 MiB
+> NUMA node0 CPU(s):               0-15
+> Vulnerability L1tf:              Mitigation; PTE Inversion; VMX flush not=
+ necessary, SMT disabled
+> Vulnerability Mds:               Mitigation; Clear CPU buffers; SMT Host =
+state unknown
+> Vulnerability Meltdown:          Vulnerable
+> Vulnerability Spec store bypass: Mitigation; Speculative Store Bypass dis=
+abled via prctl and seccomp
+> Vulnerability Spectre v1:        Mitigation; usercopy/swapgs barriers and=
+ __user pointer sanitization
+> Vulnerability Spectre v2:        Vulnerable, IBPB: disabled, STIBP: disab=
+led
+> Flags:                           fpu vme de pse tsc msr pae mce cx8 apic =
+sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss syscall nx pdp=
+e1gb rdtscp l
+>                                  m constant_tsc arch_perfmon rep_good nop=
+l xtopology cpuid tsc_known_freq pni pclmulqdq vmx ssse3 cx16 pcid sse4_1 s=
+se4_2 x2apic=20
+>                                  popcnt tsc_deadline_timer aes xsave avx =
+hypervisor lahf_lm cpuid_fault ssbd ibrs ibpb stibp tpr_shadow vnmi flexpri=
+ority ept vpi
+>                                  d tsc_adjust xsaveopt arat umip md_clear=
+ arch_capabilities
+>=20
+> So, to rule out that it has something to do with kernel config,
+> I just ran up a kernel built with your config.gz, and the problem
+> does not manifest. The only difference was a few drivers I needed to
+> boot my test VMs, and I was previously not using paravirt spinlocks.
+>=20
+> So, I still can't reproduce the problem. Indeed, the workload gets
+> nowhere near single CPU bound with your config - it's using half the
+> CPU for the same performance:
+>=20
+> %Cpu2  : 19.8 us, 28.2 sy,  0.0 ni,  0.0 id, 52.0 wa,  0.0 hi,  0.0 %si, =
+ 0.0 st
+>=20
+> Basically, it's spending half it's time waiting on IO. If I wind the
+> delay down to 1000ns:
+>=20
+> %Cpu1  : 42.2 us, 42.2 sy,  0.0 ni,  0.0 id,  0.0 wa,  0.0 hi, 15.6 %si, =
+ 0.0 st
+>=20
+> it spends an awful lot of time in soft-interrupt, but is back to
+> being CPU bound.
+>=20
+> Despite this, I still don't see any significant amount of task
+> migration. In fact, I see a lot less with your kernel config that I
+> do with my original kernel config, because the CPU load was far
+> lower.
+>=20
+> > Just run a quick test several times after applying the above patch, and=
+ looks it
+> > does make a big difference in test './xfs_complete 512' wrt. fio io thr=
+ead migration.
+>=20
+> There's something very different about your system, and it doesn't
+> appear to be a result of the kernel code itself. I think you're
+> going to have to do all the testing at the moment, Ming, because
+> it's clear that my test systems do not show up the problems even
+> when using the same kernel config as you do...
+>=20
+> If you reconfig you kvm setup to pass all the native host side cpu
+> flags through to the guest, does the problem go away? I think adding
+> "-cpu host" to your qemu command line will do that...
+
+Please login to the RH system I shared to you, and you will see the
+issue.
+
+
+Thanks,
+Ming
+
