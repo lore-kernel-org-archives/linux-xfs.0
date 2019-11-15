@@ -2,105 +2,77 @@ Return-Path: <SRS0=3CCN=ZH=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7969C432C3
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Nov 2019 11:41:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FD10C432C3
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Nov 2019 13:13:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9162120732
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Nov 2019 11:41:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D9E7F2073B
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Nov 2019 13:13:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ey0nSfPx"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="t6Z61JPh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727183AbfKOLls (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Nov 2019 06:41:48 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:35638 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726983AbfKOLls (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Nov 2019 06:41:48 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1573818106;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=B4369xy8Ncbw0ZxOPsAK59ZUJx3GH2jT1TyjUhPy+oc=;
-        b=ey0nSfPxirNFvwlpIhbdE10Naozj+BL19fsuD+6bBPFBj6pee4p9b+oukyr/K3pUFVqcld
-        bmg7BSpcAKY2Z7WhH8yr8/GYDGwiKjDeZvXT/xPGrif8/iQ10gpB7oBZh1BgWBZb6USEr/
-        nNa69g/eDK5q+fyGFQDgcBViAs3eorI=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-390-mK9XUKeCOcOjCqfAf7KdQw-1; Fri, 15 Nov 2019 06:41:39 -0500
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 80F4C107ACC6
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Nov 2019 11:41:38 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 3EB381019624
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Nov 2019 11:41:38 +0000 (UTC)
-From:   Brian Foster <bfoster@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: fix attr leaf header freemap.size underflow
-Date:   Fri, 15 Nov 2019 06:41:37 -0500
-Message-Id: <20191115114137.55415-1-bfoster@redhat.com>
+        id S1727355AbfKONNM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Nov 2019 08:13:12 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:42328 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727223AbfKONNM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Nov 2019 08:13:12 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=5qrBznl1kz5QJqxp+sQGpXhaRVzPWa1p4hJJNJZ0Jd0=; b=t6Z61JPhK9IXU/lJ4yGh3OOzK
+        gyhHKgZVsCGkNkSL6aEOaoVabBnVMo90ps+rq/SckVJEPwL+MMqAMJxsqlR4buTwGoTixGUM9whnw
+        uyZkcjTmBkgmylU2/4MUiCpK+9RQv5aTNTsPqlhjMhmKZPvuJa8zSapEmOlIGr+xt7/9EnaDU8udX
+        x43/eka0xB3lwd5bjaASiexgzw0Sr/j28On2VEk5oSWsAA0Vohci6bBvlHXlD32ST+Gjd2B+vJmJ6
+        LeVa+Ud/9AzZ5T/ErB5f2NK4pUbiA+j4sbQ1zHroKy0Qu6fNDZTFWLwTOyjdZvKjMO4OV1YNmM/I+
+        ZfIyFqKMA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1iVbPS-0006G2-P6; Fri, 15 Nov 2019 13:13:10 +0000
+Date:   Fri, 15 Nov 2019 05:13:10 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 28/28] xfs: rework unreferenced inode lookups
+Message-ID: <20191115131310.GA18378@infradead.org>
+References: <20191031234618.15403-1-david@fromorbit.com>
+ <20191031234618.15403-29-david@fromorbit.com>
+ <20191106221846.GE37080@bfoster>
+ <20191114221602.GJ4614@dread.disaster.area>
 MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-MC-Unique: mK9XUKeCOcOjCqfAf7KdQw-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191114221602.GJ4614@dread.disaster.area>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The leaf format xattr addition helper xfs_attr3_leaf_add_work()
-adjusts the block freemap in a couple places. The first update drops
-the size of the freemap that the caller had already selected to
-place the xattr name/value data. Before the function returns, it
-also checks whether the entries array has encroached on a freemap
-range by virtue of the new entry addition. This is necessary because
-the entries array grows from the start of the block (but end of the
-block header) towards the end of the block while the name/value data
-grows from the end of the block in the opposite direction. If the
-associated freemap is already empty, however, size is zero and the
-subtraction underflows the field and causes corruption.
+On Fri, Nov 15, 2019 at 09:16:02AM +1100, Dave Chinner wrote:
+> > Can we tie these into the proper locking interface using flags? For
+> > example, something like xfs_ilock(ip, XFS_ILOCK_EXCL|XFS_ILOCK_NONOWNER)
+> > or xfs_ilock(ip, XFS_ILOCK_EXCL_NONOWNER) perhaps?
+> 
+> I'd prefer not to make this part of the common locking interface -
+> it's a one off special use case, not something we want to progate
+> elsewhere into the code.
+> 
+> Now that I think over it, I probably should have tagged this with
+> patch with [RFC]. I think we should just get rid of the mrlock
+> wrappers rather than add more, and that would simplify this a lot.
 
-This is reproduced rarely by generic/070. The observed behavior is
-that a smaller sized freemap is aligned to the end of the entries
-list, several subsequent xattr additions land in larger freemaps and
-the entries list expands into the smaller freemap until it is fully
-consumed and then underflows. Note that it is not otherwise a
-corruption for the entries array to consume an empty freemap because
-the nameval list (i.e. the firstused pointer in the xattr header)
-starts beyond the end of the corrupted freemap.
-
-Update the freemap size modification to account for the fact that
-the freemap entry can be empty and thus stale.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_attr_leaf.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index 85ec5945d29f..86155260d8b9 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -1510,7 +1510,9 @@ xfs_attr3_leaf_add_work(
- =09for (i =3D 0; i < XFS_ATTR_LEAF_MAPSIZE; i++) {
- =09=09if (ichdr->freemap[i].base =3D=3D tmp) {
- =09=09=09ichdr->freemap[i].base +=3D sizeof(xfs_attr_leaf_entry_t);
--=09=09=09ichdr->freemap[i].size -=3D sizeof(xfs_attr_leaf_entry_t);
-+=09=09=09ichdr->freemap[i].size -=3D
-+=09=09=09=09min_t(uint16_t, ichdr->freemap[i].size,
-+=09=09=09=09=09=09sizeof(xfs_attr_leaf_entry_t));
- =09=09}
- =09}
- =09ichdr->usedbytes +=3D xfs_attr_leaf_entsize(leaf, args->index);
---=20
-2.20.1
-
+Yes, killing off the mrlock wrappers would be very helpful.  The only
+thing we use them for is asserts on the locking state.  We could either
+switch to lockdep_assert_held*, or just open code the write locked bit.
+While it is a little more ugly I'd tend towards the latter given that
+the locking asserts are too useful to require lockdep builds with their
+performance impact.
