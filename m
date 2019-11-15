@@ -2,87 +2,76 @@ Return-Path: <SRS0=3CCN=ZH=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C66BDC43215
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Nov 2019 00:09:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F07CC432C3
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Nov 2019 00:21:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9220920729
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Nov 2019 00:09:51 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IwJYqkwH"
+	by mail.kernel.org (Postfix) with ESMTP id 03696206D9
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Nov 2019 00:21:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726997AbfKOAJr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Nov 2019 19:09:47 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:55994 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726912AbfKOAJr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Nov 2019 19:09:47 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1573776586;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=3cHPeeFk62cfhiin+++uryp8ZtcZOe3SLmduzYZNfWM=;
-        b=IwJYqkwH/eC82LmcvGmP1/1Xj0B2FwV5AM6HIV5MX5ZmPZOVm/9lQFbSDcQJ/FhmpWVCe0
-        UYbUkM7Irfz5xW/+zQhS7IDZYWIeetPxP5dYmhzOnEB1SfbRp70D1f/aD5v4GSN8aTApnn
-        nx6NChHjiBTgoPDfYMuM2jFCNCyalsk=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-301-zxLGyfdnOxSeWj7D5R9B-A-1; Thu, 14 Nov 2019 19:09:43 -0500
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 356F78048E5;
-        Fri, 15 Nov 2019 00:09:41 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-17.pek2.redhat.com [10.72.8.17])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 56B3260CD0;
-        Fri, 15 Nov 2019 00:09:29 +0000 (UTC)
-Date:   Fri, 15 Nov 2019 08:09:25 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Peter Zijlstra <peterz@infradead.org>
-Cc:     linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jeff Moyer <jmoyer@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Eric Sandeen <sandeen@redhat.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>
-Subject: Re: single aio thread is migrated crazily by scheduler
-Message-ID: <20191115000925.GB4847@ming.t460p>
-References: <20191114113153.GB4213@ming.t460p>
- <20191114131434.GQ4114@hirez.programming.kicks-ass.net>
+        id S1726962AbfKOAVv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Nov 2019 19:21:51 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:50283 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726956AbfKOAVv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Nov 2019 19:21:51 -0500
+Received: from dread.disaster.area (pa49-181-255-80.pa.nsw.optusnet.com.au [49.181.255.80])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 744207EA0EC;
+        Fri, 15 Nov 2019 11:21:45 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1iVPMu-0004p1-Kn; Fri, 15 Nov 2019 11:21:44 +1100
+Date:   Fri, 15 Nov 2019 11:21:44 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Pavel Reichl <preichl@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v4 0/5] xfs: remove several typedefs in quota code
+Message-ID: <20191115002144.GM4614@dread.disaster.area>
+References: <20191112213310.212925-1-preichl@redhat.com>
+ <20191114012811.GW4614@dread.disaster.area>
+ <CAJc7PzXuXkA33FuBSoMBxOV9k0jWVKP9LtNC+oFYwp8SvZxm8g@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20191114131434.GQ4114@hirez.programming.kicks-ass.net>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
-X-MC-Unique: zxLGyfdnOxSeWj7D5R9B-A-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <CAJc7PzXuXkA33FuBSoMBxOV9k0jWVKP9LtNC+oFYwp8SvZxm8g@mail.gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
+        a=XqaD5fcB6dAc7xyKljs8OA==:117 a=XqaD5fcB6dAc7xyKljs8OA==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=MeAgGD-zjQ4A:10
+        a=7-415B0cAAAA:8 a=psAvrT4Wh6loqHFR7XQA:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 14, 2019 at 02:14:34PM +0100, Peter Zijlstra wrote:
-> On Thu, Nov 14, 2019 at 07:31:53PM +0800, Ming Lei wrote:
-> > Hi Guys,
-> >=20
-> > It is found that single AIO thread is migrated crazely by scheduler, an=
-d
-> > the migrate period can be < 10ms. Follows the test a):
->=20
-> What does crazy mean? Does it cycle through the L3 mask?
->=20
+On Thu, Nov 14, 2019 at 06:25:57AM +0100, Pavel Reichl wrote:
+> Hi Dave,
+> 
+> sure, I'll do whatever you guys suggests me to do.
+> 
+> I believe that by change log you mean just a textual description of
+> code changes which should be part of the cover letter, right?
 
-The single thread AIO thread is migrated in several milliseconds once.
+Yeah, the patch 0/X of the series you post.
 
+> I didn't do change log so far because I was just following the points
+> you gave me during the review process, but I understand that since
+> there were 2 reviewers I probably should have done some change
+> summary.
 
-Thanks,
-Ming
+FWIW, even if there is only one reviewer, they might be looking at
+lots of different code and it may be a couple of days between them
+looking at it. So the changelog still helps a single reviewer focus
+on what they need to really look closely at this time around.
 
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
