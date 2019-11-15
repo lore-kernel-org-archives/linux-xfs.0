@@ -2,113 +2,138 @@ Return-Path: <SRS0=3CCN=ZH=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D14A0C432C3
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Nov 2019 19:53:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29ACBC43215
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Nov 2019 20:26:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B4C9A2073A
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Nov 2019 19:53:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0234020732
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Nov 2019 20:26:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JyPzatW/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726995AbfKOTxA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Nov 2019 14:53:00 -0500
-Received: from sandeen.net ([63.231.237.45]:59244 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726991AbfKOTw7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 15 Nov 2019 14:52:59 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1726956AbfKOU0M (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Nov 2019 15:26:12 -0500
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:39107 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726323AbfKOU0L (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Nov 2019 15:26:11 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1573849570;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=bYyZAMiEfGQqfQDWxBcObl5DnDYfiFtCAqpH216cVZ0=;
+        b=JyPzatW/pVsOu4Md6RnZq2BemL3his7q3FFMrJrmgXOa1XfLFc1JMRS5ZiIA2ryWKjHEC+
+        kTBFyIch86RAeIYhWWkfX72QGNb7ZNDpZtXbOTq60EN2CVSF3F73RAw4Hs/KxG49+dF8RX
+        FqUK4CY6S6MzsnQcS6USz4fGf7FliJs=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-57-Dvs50AKpNF6P88B6yucy0A-1; Fri, 15 Nov 2019 15:26:07 -0500
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 8075DF8BFD;
-        Fri, 15 Nov 2019 13:51:38 -0600 (CST)
-Subject: Re: Fwd: XFS Memory allocation deadlock in kmem_alloc
-To:     Andrew Carr <andrewlanecarr@gmail.com>, linux-xfs@vger.kernel.org
-References: <CAKQeeLMxJR-ToX5HG9Q-z0-AL9vZG-OMjHyM+rnEEBP6k6nxHw@mail.gmail.com>
- <CAKQeeLNewDe6hu92Tu19=Opx_ao7F_fbpxOsEHaUH9e2NmLWaQ@mail.gmail.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <e6222784-03a5-6902-0f2e-10303962749c@sandeen.net>
-Date:   Fri, 15 Nov 2019 13:52:57 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.2.2
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 44C52802682;
+        Fri, 15 Nov 2019 20:26:06 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id E401966093;
+        Fri, 15 Nov 2019 20:26:05 +0000 (UTC)
+Date:   Fri, 15 Nov 2019 15:26:04 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix attr leaf header freemap.size underflow
+Message-ID: <20191115202604.GD55854@bfoster>
+References: <20191115114137.55415-1-bfoster@redhat.com>
+ <20191115185955.GP6219@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <CAKQeeLNewDe6hu92Tu19=Opx_ao7F_fbpxOsEHaUH9e2NmLWaQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20191115185955.GP6219@magnolia>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-MC-Unique: Dvs50AKpNF6P88B6yucy0A-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 11/15/19 1:11 PM, Andrew Carr wrote:
-> Hello,
-> 
-> This list has recommended enabling stack traces to determine the root
-> cause of issues with XFS deadlocks occurring in Centos 7.7
-> (3.10.0-1062).
-> 
-> Based on what was recommended by Eric Sandeen, we have tried updating
-> the following files to generate XFS stack traces:
-> 
-> # echo 11 > /proc/sys/fs/xfs/error_level
-> 
-> And
-> 
-> # echo 3 > /proc/sys/fs/xfs/error_level
-> 
-> But no stack traces are printed to dmesg.  I was thinking of
-> re-compiling the kernel with debug flags enabled.  Do you think this
-> is necessary?
-> 
-> Thanks so much for your time and keep up the good work!
+On Fri, Nov 15, 2019 at 10:59:55AM -0800, Darrick J. Wong wrote:
+> On Fri, Nov 15, 2019 at 06:41:37AM -0500, Brian Foster wrote:
+> > The leaf format xattr addition helper xfs_attr3_leaf_add_work()
+> > adjusts the block freemap in a couple places. The first update drops
+> > the size of the freemap that the caller had already selected to
+> > place the xattr name/value data. Before the function returns, it
+> > also checks whether the entries array has encroached on a freemap
+> > range by virtue of the new entry addition. This is necessary because
+> > the entries array grows from the start of the block (but end of the
+> > block header) towards the end of the block while the name/value data
+> > grows from the end of the block in the opposite direction. If the
+> > associated freemap is already empty, however, size is zero and the
+> > subtraction underflows the field and causes corruption.
+> >=20
+> > This is reproduced rarely by generic/070. The observed behavior is
+> > that a smaller sized freemap is aligned to the end of the entries
+> > list, several subsequent xattr additions land in larger freemaps and
+> > the entries list expands into the smaller freemap until it is fully
+> > consumed and then underflows. Note that it is not otherwise a
+> > corruption for the entries array to consume an empty freemap because
+> > the nameval list (i.e. the firstused pointer in the xattr header)
+> > starts beyond the end of the corrupted freemap.
+> >=20
+> > Update the freemap size modification to account for the fact that
+> > the freemap entry can be empty and thus stale.
+> >=20
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+>=20
+> Hm.  freemap.size =3D=3D 0 means the freemap entry is stale and therefore
+> anything looking for free space in the leaf will ignore the entry, right?
+>=20
 
-I've looked over the way xfs_err() gets defined, and I cannot see how
-we can call xfs_err with error_level == 11 and not get a stack trace.
+Yep, at least that's my understanding from the code in the caller that
+explicitly checks for and skips freemaps where size =3D=3D 0.
 
-Maybe other eyes can spot something...
+> If so,
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+>=20
 
--Eric
+Thanks!
+
+Brian
+
+> (Urk, there are still a lot of ASSERT-on-metadata in the dir/attr
+> code...)
+>=20
+> --D
+>=20
+> > ---
+> >  fs/xfs/libxfs/xfs_attr_leaf.c | 4 +++-
+> >  1 file changed, 3 insertions(+), 1 deletion(-)
+> >=20
+> > diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_lea=
+f.c
+> > index 85ec5945d29f..86155260d8b9 100644
+> > --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> > +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> > @@ -1510,7 +1510,9 @@ xfs_attr3_leaf_add_work(
+> >  =09for (i =3D 0; i < XFS_ATTR_LEAF_MAPSIZE; i++) {
+> >  =09=09if (ichdr->freemap[i].base =3D=3D tmp) {
+> >  =09=09=09ichdr->freemap[i].base +=3D sizeof(xfs_attr_leaf_entry_t);
+> > -=09=09=09ichdr->freemap[i].size -=3D sizeof(xfs_attr_leaf_entry_t);
+> > +=09=09=09ichdr->freemap[i].size -=3D
+> > +=09=09=09=09min_t(uint16_t, ichdr->freemap[i].size,
+> > +=09=09=09=09=09=09sizeof(xfs_attr_leaf_entry_t));
+> >  =09=09}
+> >  =09}
+> >  =09ichdr->usedbytes +=3D xfs_attr_leaf_entsize(leaf, args->index);
+> > --=20
+> > 2.20.1
+> >=20
+>=20
+
