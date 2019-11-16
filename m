@@ -2,55 +2,118 @@ Return-Path: <SRS0=QPje=ZI=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A5F3C432C3
-	for <linux-xfs@archiver.kernel.org>; Sat, 16 Nov 2019 07:02:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F58AC43141
+	for <linux-xfs@archiver.kernel.org>; Sat, 16 Nov 2019 16:19:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6023C20700
-	for <linux-xfs@archiver.kernel.org>; Sat, 16 Nov 2019 07:02:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EBD9F214DE
+	for <linux-xfs@archiver.kernel.org>; Sat, 16 Nov 2019 16:19:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KwpAGjBb"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qOsMbstT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726034AbfKPHCg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 16 Nov 2019 02:02:36 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:39164 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725971AbfKPHCg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 16 Nov 2019 02:02:36 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=S+YmFZQQ1ZAuPWnQWLCTfvm5cWsVH5WY6TA7arkxGRc=; b=KwpAGjBbezUfepIzlPuf0YspC
-        8MGojThcriOpL86j585zU9OHJWxcGXKyIzSyOlkCWhL5qG0IS22/a/2XQKjjv4NhK3cDm5AFt2dIv
-        1NqPrz5DMGmiVspowl3Ix8jy+3jkDkM/NN1b6fJ2I1KWTincwYgAkyw8u/p4J59002NSsQPyqUAiO
-        MGTqlfcN8zM50QoFXPnAQgczBHrZOOIFPt3TgkMNpdT7KW2glbcz5k3RckfVzLFhCoL2OCln16em0
-        fIE41rYU7otrnMoeCxYPo5d6bz5HvcUF/K4MnZGyiARHL8GZxrKWZDYpCny6M6LWXV5hAE6X4QkPK
-        JOP4IF2jg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iVs6O-0000t0-6U; Sat, 16 Nov 2019 07:02:36 +0000
-Date:   Fri, 15 Nov 2019 23:02:36 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [ANNOUNCE] xfs-linux: for-next updated to f368b29ba917
-Message-ID: <20191116070236.GA30357@infradead.org>
-References: <20191114181654.GG6211@magnolia>
+        id S1729998AbfKPQTi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 16 Nov 2019 11:19:38 -0500
+Received: from mail-lf1-f67.google.com ([209.85.167.67]:42220 "EHLO
+        mail-lf1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729306AbfKPQTh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 16 Nov 2019 11:19:37 -0500
+Received: by mail-lf1-f67.google.com with SMTP id z12so10365474lfj.9
+        for <linux-xfs@vger.kernel.org>; Sat, 16 Nov 2019 08:19:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=/PnjqmIIlIHhXzdop+zDlbZL76CmLM1wbNePGOXOi8o=;
+        b=qOsMbstTL/yjHDwu8+8uGA+TBymVR/0cP0UYnx0+B+Dw6W/vS3T3WzYYp3raGcvmC3
+         6awQuAST4Kc01dzN18hw55AZVA/yEBPxYX38LRLCXT8TBSV0lT5pEMasXCsrw8niuVPV
+         7Y9zF2Z9UQBWYFEGzUGLNlqX7+P+QNQGSaIv0R3mXaDTV6wk12BhYPcuRbxavzYWVOb+
+         YX7MbXFmi212f80pEtANDKrxH1HyZO98IQRYrkDVyXiLhbNO8HJhCAAc6DVvl8Bh9iuM
+         rApsV8HDI9DAJ/ma9XoArumjGuu9FVdAs3zf4KCKbyZQpCVopldqwjeEQ6pZDnLWU+Ml
+         510w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=/PnjqmIIlIHhXzdop+zDlbZL76CmLM1wbNePGOXOi8o=;
+        b=gJJcFgma9ebcji5Xlsfa//R77CV+Z1PAPE7cZyLjwGM2ZLqejnK+f0lpKzio5fthek
+         q5sGIUwcsUjCdHZJGPi3E2LcZYLNcVfTeIX+Rz4HH+p5BwnnMFkWL0qhs5YLriekChKf
+         RZRAow+Ikx9H9u9QNh1dgIxM+rKxXQJwrLGfq8dCU5b40svFDGy8jrrYj7D6DtWG+7vI
+         LHXlBP4DGm19GkU2oCARqCvnf3TfwE3vAzjd97+TEj3BdvjIuaFsTijw4d/WVjJW0Dzs
+         79Qj6ZKHQqJ/GbVgXFqGQnTsByhdY1safUZEyactMM2fa7UzfzgDXCNQlUfANpLEf1Ho
+         jFzQ==
+X-Gm-Message-State: APjAAAUOrtTKiZtb3JwiNkjvvZpfGKati2aPCmTbvt9HRg/uNsE1kfCp
+        kJh7ICc07CXL6k3S/H5jE/ymbfSblU3ZbJJrW84=
+X-Google-Smtp-Source: APXvYqxeOEszu8pr2B+bGc1fQZp7rWmg2ZIG7TxIVyS3lkRhUohjykGZX9RBo+leXIV3t0zz3MQC5esES9VsTrIMfEA=
+X-Received: by 2002:a19:cc1:: with SMTP id 184mr459248lfm.3.1573921174721;
+ Sat, 16 Nov 2019 08:19:34 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191114181654.GG6211@magnolia>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <CAKQeeLMxJR-ToX5HG9Q-z0-AL9vZG-OMjHyM+rnEEBP6k6nxHw@mail.gmail.com>
+ <CAKQeeLNewDe6hu92Tu19=Opx_ao7F_fbpxOsEHaUH9e2NmLWaQ@mail.gmail.com>
+ <e6222784-03a5-6902-0f2e-10303962749c@sandeen.net> <20191115234333.GP4614@dread.disaster.area>
+In-Reply-To: <20191115234333.GP4614@dread.disaster.area>
+From:   Andrew Carr <andrewlanecarr@gmail.com>
+Date:   Sat, 16 Nov 2019 11:19:23 -0500
+Message-ID: <CAKQeeLNm51r0g=hyH7xpe811nMTS7SP_AwAtAZMCZ0t3Fz4=4Q@mail.gmail.com>
+Subject: Re: Fwd: XFS Memory allocation deadlock in kmem_alloc
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-FYI, this crash for me in xfs/348 with unfortunately a completely
-garbled dmesg.  The xfs-5.5-merge-11 is fine.
+Thanks Dave,
+Checking now.
+
+On Fri, Nov 15, 2019 at 6:43 PM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Fri, Nov 15, 2019 at 01:52:57PM -0600, Eric Sandeen wrote:
+> > On 11/15/19 1:11 PM, Andrew Carr wrote:
+> > > Hello,
+> > >
+> > > This list has recommended enabling stack traces to determine the root
+> > > cause of issues with XFS deadlocks occurring in Centos 7.7
+> > > (3.10.0-1062).
+> > >
+> > > Based on what was recommended by Eric Sandeen, we have tried updating
+> > > the following files to generate XFS stack traces:
+> > >
+> > > # echo 11 > /proc/sys/fs/xfs/error_level
+> > >
+> > > And
+> > >
+> > > # echo 3 > /proc/sys/fs/xfs/error_level
+> > >
+> > > But no stack traces are printed to dmesg.  I was thinking of
+> > > re-compiling the kernel with debug flags enabled.  Do you think this
+> > > is necessary?
+>
+> dmesg -n 7 will remove all filters on the console/dmesg output - if
+> you've utrned this down in the past you may not be seeing messages
+> of the error level XFS is using...
+>
+> Did you check syslog - that should have all the unfiltered messages
+> in it...
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+
+
+
+-- 
+With Regards,
+Andrew Carr
+
+e. andrewlanecarr@gmail.com
+w. andrew.carr@openlogic.com
+c. 4239489206
+a. P.O. Box 1231, Greeneville, TN, 37744
