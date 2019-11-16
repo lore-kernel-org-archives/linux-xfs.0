@@ -2,106 +2,112 @@ Return-Path: <SRS0=QPje=ZI=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54CB9C432C3
-	for <linux-xfs@archiver.kernel.org>; Sat, 16 Nov 2019 05:51:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C4F9C43215
+	for <linux-xfs@archiver.kernel.org>; Sat, 16 Nov 2019 06:31:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1A515206DB
-	for <linux-xfs@archiver.kernel.org>; Sat, 16 Nov 2019 05:51:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 25EA6206E6
+	for <linux-xfs@archiver.kernel.org>; Sat, 16 Nov 2019 06:31:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=rynhart-co-nz.20150623.gappssmtp.com header.i=@rynhart-co-nz.20150623.gappssmtp.com header.b="XizjtYp6"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IkSXVvRE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725830AbfKPFvz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 16 Nov 2019 00:51:55 -0500
-Received: from mail-lj1-f194.google.com ([209.85.208.194]:36843 "EHLO
-        mail-lj1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725776AbfKPFvz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 16 Nov 2019 00:51:55 -0500
-Received: by mail-lj1-f194.google.com with SMTP id k15so12929810lja.3
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Nov 2019 21:51:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=rynhart-co-nz.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=21FxouQjGxBARaM5eHm2+SBpfijABQRd5VoXvEG7NWg=;
-        b=XizjtYp6SrkGehidnIclqPvMJt/KT2fxoTBY7JW8iJowC7H1+7sIAT+du5MjpqHceA
-         EHb+Pd1F+AMQl8TEP0KLcpTYiSK1Ik0Ka6H3D7yRGb1xag2Xkw8FZ4swJOvQ5DjopiGT
-         eUs3jZIKkKIOlFmMabWEaJ3B1sRIEYiIYRCcnBm2Inubl8KurpXssTkgs9eu4eAOjbgu
-         M0EJR2uQ5aLRA4zpralXPuBlsCAm97Xmy6kzSi5YjegB2kbJ6XjC//F9wtria/Y6ohM7
-         QnwJ8WKFJvMo3OXSiVy0FlW/z5XuvKL0OuifeYN53uReDebSjFGpxefeEGnMizh+u+nY
-         j25w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=21FxouQjGxBARaM5eHm2+SBpfijABQRd5VoXvEG7NWg=;
-        b=oH9KL4+liWYlSrEkPhTJfMp9AM5y8DHTloTQFsGDd8LnETTvVL89uI3wfBO4pq/KEj
-         /vuzorHNC56pr2sh//csMVtWuK7FflPZlHBM0ucDJrgKCxutFJdIWFmdUCxpARL58s13
-         0bD0dbJWR2urGCGzymtQpUn4wmICTJxlM+XPXCNmvCBYupgJkQ7vcCL1zsmHX3RqeJea
-         IXblcCXNwlpyAXCZg0zU2QEXj+xQnnHnh4dxmNrwDs2LQiGuoGANUtjfH8jGSfGGmXub
-         nF5WR7VlMIHuVMIsldnGxRUThXpkG8GTbwMDoBgCt93k4BXRa3SotDBiOTGyzx+IMVfA
-         9m3w==
-X-Gm-Message-State: APjAAAUrY5I2j3ofwiHbFrEd984ALxImk7bKBGA/xkf03xqMwdYwhXAN
-        PEsLE8xCqp5iWLrwomkwnjkVjkfRiV6FlLZEE8VSLQ==
-X-Google-Smtp-Source: APXvYqzWoGsRAzC2EqjX1jIfwbChzt15SGmBv9KtlUbAaNsjtewrBwyCwgNoK27vkn6Bwc7IOWDJmkqJqDN1DY2K748=
-X-Received: by 2002:a2e:7204:: with SMTP id n4mr12968578ljc.139.1573883513261;
- Fri, 15 Nov 2019 21:51:53 -0800 (PST)
+        id S1726416AbfKPGbi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 16 Nov 2019 01:31:38 -0500
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:39484 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726401AbfKPGbf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 16 Nov 2019 01:31:35 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1573885894;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=URLGBy0jbWCpZ5Oji1iU0vanCkzWQRPQdGmQYj3K+G0=;
+        b=IkSXVvRErlHQv1Nqo0YfjsDaqUZdgQGIYHtWBuE5t80W7feSii9UYOiBGapizv4rF6MfFv
+        d1SI8YMSm6R1QD63ThJNnAEjwgqUjH2U01mmdcKSGITOEuQ3wdG5gBjbt3VdsxeQr1yHQu
+        TUDM9xrOC9BHsiuV4TNf2kGwvtu8Vb8=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-92-oMPLbFuQNrWyZmNUOJNcOA-1; Sat, 16 Nov 2019 01:31:31 -0500
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B82011005500;
+        Sat, 16 Nov 2019 06:31:29 +0000 (UTC)
+Received: from ming.t460p (ovpn-8-16.pek2.redhat.com [10.72.8.16])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6AF54608D8;
+        Sat, 16 Nov 2019 06:31:12 +0000 (UTC)
+Date:   Sat, 16 Nov 2019 14:31:06 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jeff Moyer <jmoyer@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Ingo Molnar <mingo@redhat.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Tejun Heo <tj@kernel.org>
+Subject: Re: single aio thread is migrated crazily by scheduler
+Message-ID: <20191116063106.GA18194@ming.t460p>
+References: <20191114113153.GB4213@ming.t460p>
+ <20191114235415.GL4614@dread.disaster.area>
+ <20191115010824.GC4847@ming.t460p>
+ <20191115045634.GN4614@dread.disaster.area>
+ <20191115070843.GA24246@ming.t460p>
+ <20191115234005.GO4614@dread.disaster.area>
 MIME-Version: 1.0
-References: <CAMbe+5D9cSEpR2YTWTmigi77caw93p6qR-iAYf-X_3_OJQMROw@mail.gmail.com>
- <80429a04-4b19-ec4a-1255-67b15c7b01f5@sandeen.net>
-In-Reply-To: <80429a04-4b19-ec4a-1255-67b15c7b01f5@sandeen.net>
-From:   Patrick Rynhart <patrick@rynhart.co.nz>
-Date:   Sat, 16 Nov 2019 18:51:41 +1300
-Message-ID: <CAMbe+5A9OtVodSeiDo10ufAAT4Wn50yH0FjgdO_5_ax3dLvyCw@mail.gmail.com>
-Subject: Re: Inflight Corruption of XFS filesystem on CentOS 7.7 VMs
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20191115234005.GO4614@dread.disaster.area>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-MC-Unique: oMPLbFuQNrWyZmNUOJNcOA-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, 16 Nov 2019 at 18:29, Eric Sandeen <sandeen@sandeen.net> wrote:
->
-> On 11/15/19 9:33 PM, Patrick Rynhart wrote:
-> > Hi all,
-> >
-> > A small number of our CentOS VMs (about 4 out of a fleet of 200) are
-> > experiencing ongoing, regular XFS corruption - and I'm not sure how to
-> > troubleshoot the problem.  They are all CentOS 7.7 VMs are are using
-> > VMWare Paravirtual SCSI.  The version of xfsprogs being used is
-> > 4.5.0-20.el7.x86_64, and the kernel is 3.10.0-1062.1.2.el7.x86_64.
-> > The VMWare version is ESXi, 6.5.0, 14320405.
-> >
-> > When the fault happens - the VMs will go into single user mode with
-> > the following text displayed on the console:
-> >
-> > sd 0:0:0:0: [sda] Assuming drive cache: write through
-> > XFS (dm-0): Internal error XFS_WANT_CORRUPTED_GOTO at line 1664 of
-> > file fs/xfs/libxfs
-> > /xfs_alloc.c. Caller xfs_free_extent+0xaa/0x140 [xfs]
-> > XFS (dm-0): Internal error xfs_trans_cancel at line 984 of file
-> > fs/xfs/xfs_trans.c.
-> > Caller xfs_efi_recover+0x17d/0x1a0 [xfs]
-> > XFS (dm-0): Corruption of in-memory data detected. Shutting down filesystem
-> > XFS (dm-0): Please umount the filesystem and rectify the problem(s)
-> > XFS (dm-0): Failed to recover intents
->
-> Seems like this is not the whole relevant log; "Failed to recover intents"
-> indicates it was in log replay but we don't see that starting.  Did you
-> cut out other interesting bits?
+On Sat, Nov 16, 2019 at 10:40:05AM +1100, Dave Chinner wrote:
+> On Fri, Nov 15, 2019 at 03:08:43PM +0800, Ming Lei wrote:
+> > On Fri, Nov 15, 2019 at 03:56:34PM +1100, Dave Chinner wrote:
+> > > On Fri, Nov 15, 2019 at 09:08:24AM +0800, Ming Lei wrote:
+> > I can reproduce the issue with 4k block size on another RH system, and
+> > the login info of that system has been shared to you in RH BZ.
+> >=20
+> > 1)
+> > sysctl kernel.sched_min_granularity_ns=3D10000000
+> > sysctl kernel.sched_wakeup_granularity_ns=3D15000000
+>=20
+> So, these settings definitely influence behaviour.
+>=20
+> If these are set to kernel defaults (4ms and 3ms each):
+>=20
+> sysctl kernel.sched_min_granularity_ns=3D4000000
+> sysctl kernel.sched_wakeup_granularity_ns=3D3000000
+>=20
+> The migration problem largely goes away - the fio task migration
+> event count goes from ~2,000 a run down to 200/run.
+>=20
+> That indicates that the migration trigger is likely load/timing
+> based. The analysis below is based on the 10/15ms numbers above,
+> because it makes it so much easier to reproduce.
 
-Thank you for the reply.  When the problem happens the system ends up
-in the EL7 dracut emergency shell.  Here's a picture of what the
-console looks like right now (I haven't rebooted yet):
+On another machine, './xfs_complete 512' may be migrated 11~12K/sec,
+which don't need to change the above two kernel sched defaults, however
+the fio io thread only takes 40% CPU.=20
 
-https://pasteboard.co/IGUpPiN.png
+'./xfs_complete 4k' on this machine, the fio IO CPU utilization is >=3D 98%=
+.
 
-How can I get some debug information re the (attempted ?) log replay
-for debug / analysis ?
 
-> -Eric
+Thanks,
+Ming
+
