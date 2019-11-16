@@ -2,112 +2,55 @@ Return-Path: <SRS0=QPje=ZI=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C4F9C43215
-	for <linux-xfs@archiver.kernel.org>; Sat, 16 Nov 2019 06:31:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A5F3C432C3
+	for <linux-xfs@archiver.kernel.org>; Sat, 16 Nov 2019 07:02:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 25EA6206E6
-	for <linux-xfs@archiver.kernel.org>; Sat, 16 Nov 2019 06:31:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6023C20700
+	for <linux-xfs@archiver.kernel.org>; Sat, 16 Nov 2019 07:02:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IkSXVvRE"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KwpAGjBb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726416AbfKPGbi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 16 Nov 2019 01:31:38 -0500
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:39484 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726401AbfKPGbf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 16 Nov 2019 01:31:35 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1573885894;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=URLGBy0jbWCpZ5Oji1iU0vanCkzWQRPQdGmQYj3K+G0=;
-        b=IkSXVvRErlHQv1Nqo0YfjsDaqUZdgQGIYHtWBuE5t80W7feSii9UYOiBGapizv4rF6MfFv
-        d1SI8YMSm6R1QD63ThJNnAEjwgqUjH2U01mmdcKSGITOEuQ3wdG5gBjbt3VdsxeQr1yHQu
-        TUDM9xrOC9BHsiuV4TNf2kGwvtu8Vb8=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-92-oMPLbFuQNrWyZmNUOJNcOA-1; Sat, 16 Nov 2019 01:31:31 -0500
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B82011005500;
-        Sat, 16 Nov 2019 06:31:29 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-16.pek2.redhat.com [10.72.8.16])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6AF54608D8;
-        Sat, 16 Nov 2019 06:31:12 +0000 (UTC)
-Date:   Sat, 16 Nov 2019 14:31:06 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jeff Moyer <jmoyer@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Eric Sandeen <sandeen@redhat.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Ingo Molnar <mingo@redhat.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Tejun Heo <tj@kernel.org>
-Subject: Re: single aio thread is migrated crazily by scheduler
-Message-ID: <20191116063106.GA18194@ming.t460p>
-References: <20191114113153.GB4213@ming.t460p>
- <20191114235415.GL4614@dread.disaster.area>
- <20191115010824.GC4847@ming.t460p>
- <20191115045634.GN4614@dread.disaster.area>
- <20191115070843.GA24246@ming.t460p>
- <20191115234005.GO4614@dread.disaster.area>
+        id S1726034AbfKPHCg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 16 Nov 2019 02:02:36 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:39164 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725971AbfKPHCg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 16 Nov 2019 02:02:36 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=S+YmFZQQ1ZAuPWnQWLCTfvm5cWsVH5WY6TA7arkxGRc=; b=KwpAGjBbezUfepIzlPuf0YspC
+        8MGojThcriOpL86j585zU9OHJWxcGXKyIzSyOlkCWhL5qG0IS22/a/2XQKjjv4NhK3cDm5AFt2dIv
+        1NqPrz5DMGmiVspowl3Ix8jy+3jkDkM/NN1b6fJ2I1KWTincwYgAkyw8u/p4J59002NSsQPyqUAiO
+        MGTqlfcN8zM50QoFXPnAQgczBHrZOOIFPt3TgkMNpdT7KW2glbcz5k3RckfVzLFhCoL2OCln16em0
+        fIE41rYU7otrnMoeCxYPo5d6bz5HvcUF/K4MnZGyiARHL8GZxrKWZDYpCny6M6LWXV5hAE6X4QkPK
+        JOP4IF2jg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1iVs6O-0000t0-6U; Sat, 16 Nov 2019 07:02:36 +0000
+Date:   Fri, 15 Nov 2019 23:02:36 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [ANNOUNCE] xfs-linux: for-next updated to f368b29ba917
+Message-ID: <20191116070236.GA30357@infradead.org>
+References: <20191114181654.GG6211@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20191115234005.GO4614@dread.disaster.area>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-MC-Unique: oMPLbFuQNrWyZmNUOJNcOA-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20191114181654.GG6211@magnolia>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Nov 16, 2019 at 10:40:05AM +1100, Dave Chinner wrote:
-> On Fri, Nov 15, 2019 at 03:08:43PM +0800, Ming Lei wrote:
-> > On Fri, Nov 15, 2019 at 03:56:34PM +1100, Dave Chinner wrote:
-> > > On Fri, Nov 15, 2019 at 09:08:24AM +0800, Ming Lei wrote:
-> > I can reproduce the issue with 4k block size on another RH system, and
-> > the login info of that system has been shared to you in RH BZ.
-> >=20
-> > 1)
-> > sysctl kernel.sched_min_granularity_ns=3D10000000
-> > sysctl kernel.sched_wakeup_granularity_ns=3D15000000
->=20
-> So, these settings definitely influence behaviour.
->=20
-> If these are set to kernel defaults (4ms and 3ms each):
->=20
-> sysctl kernel.sched_min_granularity_ns=3D4000000
-> sysctl kernel.sched_wakeup_granularity_ns=3D3000000
->=20
-> The migration problem largely goes away - the fio task migration
-> event count goes from ~2,000 a run down to 200/run.
->=20
-> That indicates that the migration trigger is likely load/timing
-> based. The analysis below is based on the 10/15ms numbers above,
-> because it makes it so much easier to reproduce.
-
-On another machine, './xfs_complete 512' may be migrated 11~12K/sec,
-which don't need to change the above two kernel sched defaults, however
-the fio io thread only takes 40% CPU.=20
-
-'./xfs_complete 4k' on this machine, the fio IO CPU utilization is >=3D 98%=
-.
-
-
-Thanks,
-Ming
-
+FYI, this crash for me in xfs/348 with unfortunately a completely
+garbled dmesg.  The xfs-5.5-merge-11 is fine.
