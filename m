@@ -2,96 +2,189 @@ Return-Path: <SRS0=QPje=ZI=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 369C1C432C3
-	for <linux-xfs@archiver.kernel.org>; Sat, 16 Nov 2019 20:02:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CCD0C43215
+	for <linux-xfs@archiver.kernel.org>; Sat, 16 Nov 2019 21:54:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0813C206F4
-	for <linux-xfs@archiver.kernel.org>; Sat, 16 Nov 2019 20:02:33 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="XI6FnRRx"
+	by mail.kernel.org (Postfix) with ESMTP id 0D2C520740
+	for <linux-xfs@archiver.kernel.org>; Sat, 16 Nov 2019 21:54:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727529AbfKPUCd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 16 Nov 2019 15:02:33 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:60410 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727420AbfKPUCd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 16 Nov 2019 15:02:33 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAGJpWJE063490;
-        Sat, 16 Nov 2019 20:02:26 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=+iqkzrse/eQnJZG3RzIhIonRQ4ZEQW1IXRG5T14TC04=;
- b=XI6FnRRxLgAzQ/RQSH94odBzxGvWeTgBc3VW6Yhyv+7kuWwnCbraQL+Ca+uIaK4RNLqd
- Iw4kBuK8YXHnwu3kMw2+H8eVc56G0KubWuoxu100+yEjHDk/ObFIj7REaG92ullskxNE
- pPW9Kwi8m/5RzOCINewZ+uNz0D/CVzsfnFHFGE53/ayftIS1E9kYBuow4hpDoaIrL9iW
- WxOEt8nHOyftIXlQVysMGQiDAh31G+YVOZnH0shCLxtZ4LsRI6LBKNd0h7XHTLOcxyMy
- ir6XyNZR0mmIMe82QYCJKe8skqhmHu5K5CEibYyLB3mDusJWy/a+sUmIDwFERWmFvo+X Rw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2wa8ht9sdd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 16 Nov 2019 20:02:26 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAGK1w6W153999;
-        Sat, 16 Nov 2019 20:02:25 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2wa8xk4v3k-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 16 Nov 2019 20:02:25 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xAGK2NPP027547;
-        Sat, 16 Nov 2019 20:02:24 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sat, 16 Nov 2019 12:02:23 -0800
-Date:   Sat, 16 Nov 2019 12:02:22 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [ANNOUNCE] xfs-linux: for-next updated to f368b29ba917
-Message-ID: <20191116200222.GS6219@magnolia>
-References: <20191114181654.GG6211@magnolia>
- <20191116070236.GA30357@infradead.org>
- <20191116181505.GA15462@infradead.org>
+        id S1727561AbfKPVy3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 16 Nov 2019 16:54:29 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:33598 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727273AbfKPVy3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 16 Nov 2019 16:54:29 -0500
+Received: from dread.disaster.area (pa49-181-255-80.pa.nsw.optusnet.com.au [49.181.255.80])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 79B2543FC79;
+        Sun, 17 Nov 2019 08:54:25 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1iW61Q-0000T8-03; Sun, 17 Nov 2019 08:54:24 +1100
+Date:   Sun, 17 Nov 2019 08:54:23 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Sasha Levin <sashal@kernel.org>
+Cc:     linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+        Dave Chinner <dchinner@redhat.com>,
+        Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH AUTOSEL 4.19 069/237] xfs: fix use-after-free race in
+ xfs_buf_rele
+Message-ID: <20191116215423.GG25427@dread.disaster.area>
+References: <20191116154113.7417-1-sashal@kernel.org>
+ <20191116154113.7417-69-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191116181505.GA15462@infradead.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9443 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1911160186
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9443 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1911160185
+In-Reply-To: <20191116154113.7417-69-sashal@kernel.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
+        a=XqaD5fcB6dAc7xyKljs8OA==:117 a=XqaD5fcB6dAc7xyKljs8OA==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=MeAgGD-zjQ4A:10
+        a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=4S77rzMOW_O4qRUW8bwA:9
+        a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Nov 16, 2019 at 10:15:05AM -0800, Christoph Hellwig wrote:
-> On Fri, Nov 15, 2019 at 11:02:36PM -0800, Christoph Hellwig wrote:
-> > FYI, this crash for me in xfs/348 with unfortunately a completely
-> > garbled dmesg.  The xfs-5.5-merge-11 is fine.
-> 
-> git-bisect points to:
-> 
-> xfs: convert open coded corruption check to use XFS_IS_CORRUPT
+[cc linux-xfs@vger.kernel.org]
 
-Also, can you send me the dmesg output, however garbled it is?
-I ran x/348 with kasan enabled, didn't see anything obviously weird.
-Though I'm starting to reconsider my decision to embed a full ASSERT
-output when the XFS_IS_CORRUPT condition triggers...
+Hi Sasha,
 
---D
+Any reason these these autosel patches are not being cc'd to the XFS
+list for XFS maintainer visibility and review?
+
+Cheers,
+
+Dave.
+
+On Sat, Nov 16, 2019 at 10:38:24AM -0500, Sasha Levin wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> [ Upstream commit 37fd1678245f7a5898c1b05128bc481fb403c290 ]
+> 
+> When looking at a 4.18 based KASAN use after free report, I noticed
+> that racing xfs_buf_rele() may race on dropping the last reference
+> to the buffer and taking the buffer lock. This was the symptom
+> displayed by the KASAN report, but the actual issue that was
+> reported had already been fixed in 4.19-rc1 by commit e339dd8d8b04
+> ("xfs: use sync buffer I/O for sync delwri queue submission").
+> 
+> Despite this, I think there is still an issue with xfs_buf_rele()
+> in this code:
+> 
+>         release = atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock);
+>         spin_lock(&bp->b_lock);
+>         if (!release) {
+> .....
+> 
+> If two threads race on the b_lock after both dropping a reference
+> and one getting dropping the last reference so release = true, we
+> end up with:
+> 
+> CPU 0				CPU 1
+> atomic_dec_and_lock()
+> 				atomic_dec_and_lock()
+> 				spin_lock(&bp->b_lock)
+> spin_lock(&bp->b_lock)
+> <spins>
+> 				<release = true bp->b_lru_ref = 0>
+> 				<remove from lists>
+> 				freebuf = true
+> 				spin_unlock(&bp->b_lock)
+> 				xfs_buf_free(bp)
+> <gets lock, reading and writing freed memory>
+> <accesses freed memory>
+> spin_unlock(&bp->b_lock) <reads/writes freed memory>
+> 
+> IOWs, we can't safely take bp->b_lock after dropping the hold
+> reference because the buffer may go away at any time after we
+> drop that reference. However, this can be fixed simply by taking the
+> bp->b_lock before we drop the reference.
+> 
+> It is safe to nest the pag_buf_lock inside bp->b_lock as the
+> pag_buf_lock is only used to serialise against lookup in
+> xfs_buf_find() and no other locks are held over or under the
+> pag_buf_lock there. Make this clear by documenting the buffer lock
+> orders at the top of the file.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> Signed-off-by: Sasha Levin <sashal@kernel.org>
+
+> ---
+>  fs/xfs/xfs_buf.c | 38 +++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 37 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index e839907e8492f..f4a89c94c931b 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -37,6 +37,32 @@ static kmem_zone_t *xfs_buf_zone;
+>  #define xb_to_gfp(flags) \
+>  	((((flags) & XBF_READ_AHEAD) ? __GFP_NORETRY : GFP_NOFS) | __GFP_NOWARN)
+>  
+> +/*
+> + * Locking orders
+> + *
+> + * xfs_buf_ioacct_inc:
+> + * xfs_buf_ioacct_dec:
+> + *	b_sema (caller holds)
+> + *	  b_lock
+> + *
+> + * xfs_buf_stale:
+> + *	b_sema (caller holds)
+> + *	  b_lock
+> + *	    lru_lock
+> + *
+> + * xfs_buf_rele:
+> + *	b_lock
+> + *	  pag_buf_lock
+> + *	    lru_lock
+> + *
+> + * xfs_buftarg_wait_rele
+> + *	lru_lock
+> + *	  b_lock (trylock due to inversion)
+> + *
+> + * xfs_buftarg_isolate
+> + *	lru_lock
+> + *	  b_lock (trylock due to inversion)
+> + */
+>  
+>  static inline int
+>  xfs_buf_is_vmapped(
+> @@ -1006,8 +1032,18 @@ xfs_buf_rele(
+>  
+>  	ASSERT(atomic_read(&bp->b_hold) > 0);
+>  
+> -	release = atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock);
+> +	/*
+> +	 * We grab the b_lock here first to serialise racing xfs_buf_rele()
+> +	 * calls. The pag_buf_lock being taken on the last reference only
+> +	 * serialises against racing lookups in xfs_buf_find(). IOWs, the second
+> +	 * to last reference we drop here is not serialised against the last
+> +	 * reference until we take bp->b_lock. Hence if we don't grab b_lock
+> +	 * first, the last "release" reference can win the race to the lock and
+> +	 * free the buffer before the second-to-last reference is processed,
+> +	 * leading to a use-after-free scenario.
+> +	 */
+>  	spin_lock(&bp->b_lock);
+> +	release = atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock);
+>  	if (!release) {
+>  		/*
+>  		 * Drop the in-flight state if the buffer is already on the LRU
+> -- 
+> 2.20.1
+> 
+> 
+
+-- 
+Dave Chinner
+david@fromorbit.com
