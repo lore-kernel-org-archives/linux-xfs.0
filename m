@@ -7,53 +7,50 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4C53C432C0
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Nov 2019 05:26:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A979C43215
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Nov 2019 05:26:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BABC520727
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Nov 2019 05:26:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D27EE20727
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Nov 2019 05:26:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mykernel.net header.i=cgxu519@mykernel.net header.b="Jz7cAV9v"
+	dkim=pass (1024-bit key) header.d=mykernel.net header.i=cgxu519@mykernel.net header.b="Hd4TEPjE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725934AbfKRF0U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Nov 2019 00:26:20 -0500
-Received: from sender3-of-o52.zoho.com.cn ([124.251.121.247]:21970 "EHLO
+        id S1726264AbfKRF0W (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Nov 2019 00:26:22 -0500
+Received: from sender3-of-o52.zoho.com.cn ([124.251.121.247]:21971 "EHLO
         sender2.zoho.com.cn" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725208AbfKRF0T (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Nov 2019 00:26:19 -0500
-X-Greylist: delayed 914 seconds by postgrey-1.27 at vger.kernel.org; Mon, 18 Nov 2019 00:26:18 EST
-ARC-Seal: i=1; a=rsa-sha256; t=1574053818; cv=none; 
+        with ESMTP id S1725208AbfKRF0W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Nov 2019 00:26:22 -0500
+ARC-Seal: i=1; a=rsa-sha256; t=1574053816; cv=none; 
         d=zoho.com.cn; s=zohoarc; 
-        b=CFiTydxXmqD9bMG7v780o3N8ddqWN6K3FCgyTdlTsez+ICLl9SEtemLlO1rFmwdlnFVn0KaMzc1ve2S2pA//ZQDSMywCMchSASZ55qhlGgITwNozY47/lo2c/INkLP4RSjDGEAEdUnzyuSWpR2MhhKkB3r8PeWHkAF6uLKrdeQw=
+        b=nOqkrGkbDhtS3JDMvQRPuCCRI17CD3aKZSTRZtWSBRtIjONCrKc6v+eLP7IuCi+Tkb0VZoRzf+u9HRwRyoZxjpE3o/LBCY/xtjVY9lmLKSyHDBAtPBSmHY/MkEagt4xEyqco26PSMXg93wv5ol1WfKIHQt+zoEOWThlUcRAGN+8=
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zoho.com.cn; s=zohoarc; 
-        t=1574053818; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=W+4d37NiUZrTVp/T//URhJAtULIpMWsOCTG3JUgcQbA=; 
-        b=SfZrHruFtbvLbpQPjNc72IC+JSlnZfJ+XGA4IFDCxatxJXqhBCbg8JNLUagIec/KDcUIuQTVBtngdQoSW3hkUMbcgLGEpH8Fm+eXwz7ARt58nKunz86ZgaxuRX//6Mv41ix92didw44LkKsvKlQgBBZdKpmg9s6dWyjCHjCQdl8=
+        t=1574053816; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:MIME-Version:Message-ID:Subject:To; 
+        bh=BsgB+uLSbI/A7RpGrDvhjCegyC49pCxyhfWI2lOuUfk=; 
+        b=PTPwfFgv2WlRWueS8Em/r/X8tv6FghRBaJJqvDQHrdYADltuXdTTk+PPpD9x7DXGGxiajBFuHx+ywgo4prEMy5XC3vRT4LdJwBbfwIffx2ETasq8EpSMJaSyDqKAEK4aliVEMaWCccd8f334fuTtopvX2yodxA6oYCsKxH3LQIs=
 ARC-Authentication-Results: i=1; mx.zoho.com.cn;
         dkim=pass  header.i=mykernel.net;
         spf=pass  smtp.mailfrom=cgxu519@mykernel.net;
         dmarc=pass header.from=<cgxu519@mykernel.net> header.from=<cgxu519@mykernel.net>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1574053818;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1574053816;
         s=zohomail; d=mykernel.net; i=cgxu519@mykernel.net;
-        h=From:To:Cc:Message-ID:Subject:Date:In-Reply-To:References:MIME-Version:Content-Type:Content-Transfer-Encoding;
-        l=1801; bh=W+4d37NiUZrTVp/T//URhJAtULIpMWsOCTG3JUgcQbA=;
-        b=Jz7cAV9vUe3W4KyujDLRcYQXLcQV6tl7gVqHx1v+Ljon9oHqojtRod0Rc50n5YC5
-        ZkEOZtA8Vu7ezLL5/F5sGKbob4KLpIxLDCTIwMJBQFp3pj5hakvhUeJmc/iSvEmO7Gl
-        mbdedSI3usWavsqw8+/jaZGYDbtDrn2dLYPcKTdA=
+        h=From:To:Cc:Message-ID:Subject:Date:MIME-Version:Content-Type:Content-Transfer-Encoding;
+        l=1765; bh=BsgB+uLSbI/A7RpGrDvhjCegyC49pCxyhfWI2lOuUfk=;
+        b=Hd4TEPjE8y+eT9uAecADUdrpdpM8idvHMa1WowClTYYDjvX+VFqMB/ZTpEKHKjQi
+        efzGVbutkWe2JrkyEhT91eL6JxU5nE58/YJUeOzq8cRZoz3qf/lUNAW3IQPj19sZVxj
+        2ViUFwDHjLT3p5JQPt2yg7VxII6IbzbJfqaDVpmA=
 Received: from localhost.localdomain (218.18.229.179 [218.18.229.179]) by mx.zoho.com.cn
-        with SMTPS id 157405381681740.021350625482796; Mon, 18 Nov 2019 13:10:16 +0800 (CST)
+        with SMTPS id 1574053813058511.6204774440098; Mon, 18 Nov 2019 13:10:13 +0800 (CST)
 From:   Chengguang Xu <cgxu519@mykernel.net>
 To:     linux-ext4@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org
 Cc:     darrick.wong@oracle.com, jaegeuk@kernel.org, chao@kernel.org,
         tytso@mit.edu, adilger.kernel@dilger.ca,
         Chengguang Xu <cgxu519@mykernel.net>
-Message-ID: <20191118050949.15629-2-cgxu519@mykernel.net>
-Subject: [RFC PATCH 2/3] f2fs: show prjquota info on statfs for a file
-Date:   Mon, 18 Nov 2019 13:09:48 +0800
+Message-ID: <20191118050949.15629-1-cgxu519@mykernel.net>
+Subject: [RFC PATCH 1/3] ext4: show prjquota info on statfs for a file
+Date:   Mon, 18 Nov 2019 13:09:47 +0800
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191118050949.15629-1-cgxu519@mykernel.net>
-References: <20191118050949.15629-1-cgxu519@mykernel.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
@@ -93,25 +90,23 @@ kataShared=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 1.5T=C2=A0 778M=C2=A0 1.5T=C2=A0=
 
 Signed-off-by: Chengguang Xu <cgxu519@mykernel.net>
 ---
- fs/f2fs/super.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ fs/ext4/super.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c
-index 1443cee15863..c5b9a92d606b 100644
---- a/fs/f2fs/super.c
-+++ b/fs/f2fs/super.c
-@@ -1287,8 +1287,9 @@ static int f2fs_statfs(struct dentry *dentry, struct =
+diff --git a/fs/ext4/super.c b/fs/ext4/super.c
+index dd654e53ba3d..3fba22b54f5c 100644
+--- a/fs/ext4/super.c
++++ b/fs/ext4/super.c
+@@ -5607,7 +5607,8 @@ static int ext4_statfs(struct dentry *dentry, struct =
 kstatfs *buf)
- =09buf->f_fsid.val[1] =3D (u32)(id >> 32);
+ =09buf->f_fsid.val[1] =3D (fsid >> 32) & 0xFFFFFFFFUL;
 =20
  #ifdef CONFIG_QUOTA
--=09if (is_inode_flag_set(dentry->d_inode, FI_PROJ_INHERIT) &&
--=09=09=09sb_has_quota_limits_enabled(sb, PRJQUOTA)) {
-+=09if ((is_inode_flag_set(dentry->d_inode, FI_PROJ_INHERIT) ||
+-=09if (ext4_test_inode_flag(dentry->d_inode, EXT4_INODE_PROJINHERIT) &&
++=09if ((ext4_test_inode_flag(dentry->d_inode, EXT4_INODE_PROJINHERIT) ||
 +=09     !S_ISDIR(dentry->d_inode->i_mode)) &&
-+=09    sb_has_quota_limits_enabled(sb, PRJQUOTA)) {
- =09=09f2fs_statfs_project(sb, F2FS_I(dentry->d_inode)->i_projid, buf);
- =09}
+ =09    sb_has_quota_limits_enabled(sb, PRJQUOTA))
+ =09=09ext4_statfs_project(sb, EXT4_I(dentry->d_inode)->i_projid, buf);
  #endif
 --=20
 2.20.1
