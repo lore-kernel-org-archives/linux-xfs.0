@@ -2,174 +2,117 @@ Return-Path: <SRS0=mMHn=ZK=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C703DC432C3
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Nov 2019 16:26:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6A0DC432C0
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Nov 2019 20:41:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A3FC420885
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Nov 2019 16:26:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CAF6B22315
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Nov 2019 20:41:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726423AbfKRQ0r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Nov 2019 11:26:47 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:27354 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726322AbfKRQ0q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Nov 2019 11:26:46 -0500
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id xAIGCWxN096075
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Nov 2019 11:26:44 -0500
-Received: from e06smtp05.uk.ibm.com (e06smtp05.uk.ibm.com [195.75.94.101])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2way67fqp5-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Nov 2019 11:26:44 -0500
-Received: from localhost
-        by e06smtp05.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <srikar@linux.vnet.ibm.com>;
-        Mon, 18 Nov 2019 16:26:42 -0000
-Received: from b06cxnps4075.portsmouth.uk.ibm.com (9.149.109.197)
-        by e06smtp05.uk.ibm.com (192.168.101.135) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
-        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Mon, 18 Nov 2019 16:26:37 -0000
-Received: from d06av24.portsmouth.uk.ibm.com (d06av24.portsmouth.uk.ibm.com [9.149.105.60])
-        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id xAIGQaH854001892
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 18 Nov 2019 16:26:36 GMT
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 55DFD4203F;
-        Mon, 18 Nov 2019 16:26:36 +0000 (GMT)
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id E5A2442049;
-        Mon, 18 Nov 2019 16:26:33 +0000 (GMT)
-Received: from linux.vnet.ibm.com (unknown [9.126.150.29])
-        by d06av24.portsmouth.uk.ibm.com (Postfix) with SMTP;
-        Mon, 18 Nov 2019 16:26:33 +0000 (GMT)
-Date:   Mon, 18 Nov 2019 21:56:33 +0530
-From:   Srikar Dronamraju <srikar@linux.vnet.ibm.com>
-To:     Dave Chinner <david@fromorbit.com>
+        id S1726748AbfKRUlG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Nov 2019 15:41:06 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:57664 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726536AbfKRUlG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Nov 2019 15:41:06 -0500
+Received: from dread.disaster.area (pa49-181-255-80.pa.nsw.optusnet.com.au [49.181.255.80])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 262253A1D17;
+        Tue, 19 Nov 2019 07:40:57 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1iWnpO-00050x-Nx; Tue, 19 Nov 2019 07:40:54 +1100
+Date:   Tue, 19 Nov 2019 07:40:54 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Peter Zijlstra <peterz@infradead.org>
 Cc:     Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-kernel@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>,
         Dave Chinner <dchinner@redhat.com>,
         Eric Sandeen <sandeen@redhat.com>,
         Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Ingo Molnar <mingo@redhat.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Tejun Heo <tj@kernel.org>
+        Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+        Vincent Guittot <vincent.guittot@linaro.org>
 Subject: Re: single aio thread is migrated crazily by scheduler
-Reply-To: Srikar Dronamraju <srikar@linux.vnet.ibm.com>
+Message-ID: <20191118204054.GV4614@dread.disaster.area>
 References: <20191114113153.GB4213@ming.t460p>
  <20191114235415.GL4614@dread.disaster.area>
  <20191115010824.GC4847@ming.t460p>
  <20191115045634.GN4614@dread.disaster.area>
  <20191115070843.GA24246@ming.t460p>
  <20191115234005.GO4614@dread.disaster.area>
+ <20191118092121.GV4131@hirez.programming.kicks-ass.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191115234005.GO4614@dread.disaster.area>
+In-Reply-To: <20191118092121.GV4131@hirez.programming.kicks-ass.net>
 User-Agent: Mutt/1.10.1 (2018-07-13)
-X-TM-AS-GCONF: 00
-x-cbid: 19111816-0020-0000-0000-0000038982B7
-X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 19111816-0021-0000-0000-000021DFAA93
-Message-Id: <20191118162633.GC32306@linux.vnet.ibm.com>
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.95,18.0.572
- definitions=2019-11-18_04:2019-11-15,2019-11-18 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
- malwarescore=0 adultscore=0 spamscore=0 phishscore=0 mlxlogscore=999
- bulkscore=0 mlxscore=0 priorityscore=1501 suspectscore=0
- lowpriorityscore=0 clxscore=1011 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-1910280000 definitions=main-1911180147
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=G6BsK5s5 c=1 sm=1 tr=0
+        a=XqaD5fcB6dAc7xyKljs8OA==:117 a=XqaD5fcB6dAc7xyKljs8OA==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=MeAgGD-zjQ4A:10
+        a=7-415B0cAAAA:8 a=yVoF5iLBKTpoLJ-sB64A:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-* Dave Chinner <david@fromorbit.com> [2019-11-16 10:40:05]:
-
-> On Fri, Nov 15, 2019 at 03:08:43PM +0800, Ming Lei wrote:
-> > On Fri, Nov 15, 2019 at 03:56:34PM +1100, Dave Chinner wrote:
-> > > On Fri, Nov 15, 2019 at 09:08:24AM +0800, Ming Lei wrote:
-> > I can reproduce the issue with 4k block size on another RH system, and
-> > the login info of that system has been shared to you in RH BZ.
+On Mon, Nov 18, 2019 at 10:21:21AM +0100, Peter Zijlstra wrote:
+> On Sat, Nov 16, 2019 at 10:40:05AM +1100, Dave Chinner wrote:
+> > On Fri, Nov 15, 2019 at 03:08:43PM +0800, Ming Lei wrote:
+> > And fio is now running on CPU 5 - it only ran on CPU 12 for about
+> > 15ms. Hmmm:
 > > 
-> > 1)
+> > $ grep fio-3185 ~/tmp/sched.out | awk 'BEGIN {totcpu = 0.0; switches = 0.0; prev_waket = 0.0 }/sched_waking/ { cpu = $2; split($3, t, ":"); waket = t[1]; if (cpu != prev_cpu) { t_on_cpu = waket - prev_waket; if (prev_waket) { print "time on CPU", cpu, "was", t_on_cpu; totcpu += t_on_cpu; switches++ } prev_waket = waket; prev_cpu = cpu; } } END { print "switches", switches, "time on cpu", totcpu, "aver time on cpu", (totcpu / switches) } ' | stats --trim-outliers
+> > switches 2211 time on cpu 30.0994 aver time on cpu 0.0136135
+> > time on CPU [0-23(8.8823+/-6.2)] was 0.000331-0.330772(0.0134759+/-0.012)
+> > 
+> > Yeah, the fio task averages 13.4ms on any given CPU before being
+> > switched to another CPU. Mind you, the stddev is 12ms, so the range
+> > of how long it spends on any one CPU is pretty wide (330us to
+> > 330ms).
+> > 
+> > IOWs, this doesn't look like a workqueue problem at all - this looks
+> > like the scheduler is repeatedly making the wrong load balancing
+> > decisions when mixing a very short runtime task (queued work) with a
+> > long runtime task on the same CPU....
+> > 
+> > This is not my area of expertise, so I have no idea why this might
+> > be happening. Scheduler experts: is this expected behaviour? What
+> > tunables directly influence the active load balancer (and/or CONFIG
+> > options) to change how aggressive it's behaviour is?
 > 
-> Almost all the fio task migrations are coming from migration/X
-> kernel threads. i.e it's the scheduler active balancing that is
-> causing the fio thread to bounce around.
+> We typically only fall back to the active balancer when there is
+> (persistent) imbalance and we fail to migrate anything else (of
+> substance).
 > 
+> The tuning mentioned has the effect of less frequent scheduling, IOW,
+> leaving (short) tasks on the runqueue longer. This obviously means the
+> load-balancer will have a bigger chance of seeing them.
+> 
+> Now; it's been a while since I looked at the workqueue code but one
+> possible explanation would be if the kworker that picks up the work item
+> is pinned. That would make it runnable but not migratable, the exact
+> situation in which we'll end up shooting the current task with active
+> balance.
 
-Can we try with the below patch.
+Yes, that's precisely the problem - work is queued, by default, on a
+specific CPU and it will wait for a kworker that is pinned to that
+specific CPU to dispatch it. We've already tested that queuing on a
+different CPU (via queue_work_on()) makes the problem largely go
+away as the work is not longer queued behind the long running fio
+task.
 
+This, however, is not at viable solution to the problem. The pattern
+of a long running process queuing small pieces of individual work
+for processing in a separate context is pretty common...
+
+Cheers,
+
+Dave.
 -- 
-Thanks and Regards
-Srikar Dronamraju
-
---->8-----------------------------8<----------------------------------
-From 9687c1447532558aa564bd2e471b7987d6bda70f Mon Sep 17 00:00:00 2001
-From: Srikar Dronamraju <srikar@linux.vnet.ibm.com>
-Date: Tue, 2 Jul 2019 16:38:29 -0500
-Subject: [PATCH] sched/fair: Avoid active balance on small load imbalance
-
-Skip active load balance when destination CPU is busy and the imbalance
-is small and fix_small_imabalance is unable to calculate minor
-imbalance. Its observed that active load balances can lead to ping-pong
-of tasks between two CPUs.
-
-Signed-off-by: Srikar Dronamraju <srikar@linux.vnet.ibm.com>
----
- kernel/sched/fair.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
-
-diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 3599bdcab395..0db380c8eb6c 100644
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -7094,6 +7094,7 @@ enum group_type {
- #define LBF_SOME_PINNED	0x08
- #define LBF_NOHZ_STATS	0x10
- #define LBF_NOHZ_AGAIN	0x20
-+#define LBF_SMALL_IMBL	0x40
- 
- struct lb_env {
- 	struct sched_domain	*sd;
-@@ -8386,6 +8387,8 @@ void fix_small_imbalance(struct lb_env *env, struct sd_lb_stats *sds)
- 	/* Move if we gain throughput */
- 	if (capa_move > capa_now)
- 		env->imbalance = busiest->load_per_task;
-+	else if (env->idle == CPU_NOT_IDLE)
-+		env->flags |= LBF_SMALL_IMBL;
- }
- 
- /**
-@@ -8466,7 +8469,7 @@ static inline void calculate_imbalance(struct lb_env *env, struct sd_lb_stats *s
- 	 * moved
- 	 */
- 	if (env->imbalance < busiest->load_per_task)
--		return fix_small_imbalance(env, sds);
-+		fix_small_imbalance(env, sds);
- }
- 
- /******* find_busiest_group() helpers end here *********************/
-@@ -8732,6 +8735,13 @@ static int need_active_balance(struct lb_env *env)
- 	if (voluntary_active_balance(env))
- 		return 1;
- 
-+	/*
-+	 * Destination CPU is not idle and fix_small_imbalance is unable
-+	 * to calculate even minor imbalances, skip active balance.
-+	 */
-+	if (env->flags & LBF_SMALL_IMBL)
-+		return 0;
-+
- 	return unlikely(sd->nr_balance_failed > sd->cache_nice_tries+2);
- }
- 
--- 
-2.18.1
-
-
+Dave Chinner
+david@fromorbit.com
