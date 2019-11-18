@@ -2,317 +2,174 @@ Return-Path: <SRS0=mMHn=ZK=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A30F4C432C0
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Nov 2019 14:54:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C703DC432C3
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Nov 2019 16:26:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6883520855
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Nov 2019 14:54:48 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="h2j6tqai"
+	by mail.kernel.org (Postfix) with ESMTP id A3FC420885
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Nov 2019 16:26:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727010AbfKROyo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Nov 2019 09:54:44 -0500
-Received: from mail-lj1-f193.google.com ([209.85.208.193]:35045 "EHLO
-        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726761AbfKROyo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Nov 2019 09:54:44 -0500
-Received: by mail-lj1-f193.google.com with SMTP id r7so19298092ljg.2
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Nov 2019 06:54:41 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=zySh92AsK17Tbfa2bO3mDBDQTkurxauurJzGmieX1zs=;
-        b=h2j6tqaiwTD58j6xKeiLmpsyqxn9H7QgTdX/gJAVKCPB4ozMITrwaQ8Ff4agmxwgXX
-         IiB8iXemiu0FPZYRulT5S5QQQOlyiQm8QCQfaQsDyhagLebQ6f12A1pn5DE9edTPT3J9
-         oc+4MnSOywLmz+F6A1tieTf76LEv+fVl0tPj7hDiDw+IzfZfnypeAL2YQtw7HMWWRHaQ
-         F6ZYkTMQ9mYH6oyH9BdNRyXcEPz3oD6f9gHlF+Mbq82rGM3Et6vtyshoMFQ+vD6WFVOE
-         qwm3weM2kzTvZdum57+QJKrRAC1gQCzH3hsfd+P5p1JOYKmdq7ByYT/NxDmjyrWiF3hL
-         NdKw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=zySh92AsK17Tbfa2bO3mDBDQTkurxauurJzGmieX1zs=;
-        b=AxsiH0kzbWgtz9Fa80QiMJov0rN2pO+DLSE3tHcXrk76LmNEE+1nOCQONImXfwFJHm
-         4rPZw/NT93Z8sgetXDtb6UAm/Xhq9uBlRzR6chOXSk/C2wwimmzzGOL+ZECJs1Ufn6MR
-         AwHXKFxGU6dqIjL9zo5RxW6l7+sYIcjJoRieeN9hd+9v0DIbShaNzBDKKwXkffdamnyw
-         xF4YyuUSLxwGBgjlL9pgKMlbVYbQuQLhZh18Dk0+xQKpEdYDhV6pXYV4sMe/QvXIkCdV
-         flV+G+BULEX+2K0o/oVGw7m2HYLs9O4uTao+B1oyUXiQiQis08w+i+ystUMaUeqCdZhf
-         +GWA==
-X-Gm-Message-State: APjAAAU7U6eNYr1b5PAORvXyRq68H/QBoDOvan+8Q3l+02I9lZpyA+JS
-        CCTwl5sbcN1LUhiSbUsduMvTnPDPeNpRNs6Vy6hSOQ==
-X-Google-Smtp-Source: APXvYqzAa4eOEtBi2PdWPRFasQw3qOejtWoCw4teL8OM4bu4/kQLhg1QGg/F0xq0ntys8ajedqjSn9oBlvaTTpR3HZg=
-X-Received: by 2002:a2e:982:: with SMTP id 124mr22194019ljj.48.1574088880847;
- Mon, 18 Nov 2019 06:54:40 -0800 (PST)
-MIME-Version: 1.0
-References: <20191114113153.GB4213@ming.t460p> <20191114235415.GL4614@dread.disaster.area>
- <20191115010824.GC4847@ming.t460p> <20191115045634.GN4614@dread.disaster.area>
- <20191115070843.GA24246@ming.t460p> <20191115234005.GO4614@dread.disaster.area>
- <20191118092121.GV4131@hirez.programming.kicks-ass.net>
-In-Reply-To: <20191118092121.GV4131@hirez.programming.kicks-ass.net>
-From:   Vincent Guittot <vincent.guittot@linaro.org>
-Date:   Mon, 18 Nov 2019 15:54:29 +0100
-Message-ID: <CAKfTPtBz3E9i6eTDG=RZArSCBBDepf8kK7Uogi8kQX9UQeck1Q@mail.gmail.com>
-Subject: Re: single aio thread is migrated crazily by scheduler
-To:     Peter Zijlstra <peterz@infradead.org>
-Cc:     Dave Chinner <david@fromorbit.com>, Ming Lei <ming.lei@redhat.com>,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Jeff Moyer <jmoyer@redhat.com>,
+        id S1726423AbfKRQ0r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Nov 2019 11:26:47 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:27354 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726322AbfKRQ0q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Nov 2019 11:26:46 -0500
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id xAIGCWxN096075
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Nov 2019 11:26:44 -0500
+Received: from e06smtp05.uk.ibm.com (e06smtp05.uk.ibm.com [195.75.94.101])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2way67fqp5-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Nov 2019 11:26:44 -0500
+Received: from localhost
+        by e06smtp05.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <srikar@linux.vnet.ibm.com>;
+        Mon, 18 Nov 2019 16:26:42 -0000
+Received: from b06cxnps4075.portsmouth.uk.ibm.com (9.149.109.197)
+        by e06smtp05.uk.ibm.com (192.168.101.135) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
+        Mon, 18 Nov 2019 16:26:37 -0000
+Received: from d06av24.portsmouth.uk.ibm.com (d06av24.portsmouth.uk.ibm.com [9.149.105.60])
+        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id xAIGQaH854001892
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 18 Nov 2019 16:26:36 GMT
+Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 55DFD4203F;
+        Mon, 18 Nov 2019 16:26:36 +0000 (GMT)
+Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id E5A2442049;
+        Mon, 18 Nov 2019 16:26:33 +0000 (GMT)
+Received: from linux.vnet.ibm.com (unknown [9.126.150.29])
+        by d06av24.portsmouth.uk.ibm.com (Postfix) with SMTP;
+        Mon, 18 Nov 2019 16:26:33 +0000 (GMT)
+Date:   Mon, 18 Nov 2019 21:56:33 +0530
+From:   Srikar Dronamraju <srikar@linux.vnet.ibm.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>,
         Dave Chinner <dchinner@redhat.com>,
         Eric Sandeen <sandeen@redhat.com>,
         Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        Ingo Molnar <mingo@redhat.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Tejun Heo <tj@kernel.org>
+Subject: Re: single aio thread is migrated crazily by scheduler
+Reply-To: Srikar Dronamraju <srikar@linux.vnet.ibm.com>
+References: <20191114113153.GB4213@ming.t460p>
+ <20191114235415.GL4614@dread.disaster.area>
+ <20191115010824.GC4847@ming.t460p>
+ <20191115045634.GN4614@dread.disaster.area>
+ <20191115070843.GA24246@ming.t460p>
+ <20191115234005.GO4614@dread.disaster.area>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+In-Reply-To: <20191115234005.GO4614@dread.disaster.area>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-TM-AS-GCONF: 00
+x-cbid: 19111816-0020-0000-0000-0000038982B7
+X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
+x-cbparentid: 19111816-0021-0000-0000-000021DFAA93
+Message-Id: <20191118162633.GC32306@linux.vnet.ibm.com>
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.95,18.0.572
+ definitions=2019-11-18_04:2019-11-15,2019-11-18 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
+ malwarescore=0 adultscore=0 spamscore=0 phishscore=0 mlxlogscore=999
+ bulkscore=0 mlxscore=0 priorityscore=1501 suspectscore=0
+ lowpriorityscore=0 clxscore=1011 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-1910280000 definitions=main-1911180147
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, 18 Nov 2019 at 10:21, Peter Zijlstra <peterz@infradead.org> wrote:
->
->
-> +Vincent
->
-> On Sat, Nov 16, 2019 at 10:40:05AM +1100, Dave Chinner wrote:
-> > On Fri, Nov 15, 2019 at 03:08:43PM +0800, Ming Lei wrote:
-> > > On Fri, Nov 15, 2019 at 03:56:34PM +1100, Dave Chinner wrote:
-> > > > On Fri, Nov 15, 2019 at 09:08:24AM +0800, Ming Lei wrote:
-> > > I can reproduce the issue with 4k block size on another RH system, an=
-d
-> > > the login info of that system has been shared to you in RH BZ.
-> > >
-> > > 1)
-> > > sysctl kernel.sched_min_granularity_ns=3D10000000
-> > > sysctl kernel.sched_wakeup_granularity_ns=3D15000000
-> >
-> > So, these settings definitely influence behaviour.
-> >
-> > If these are set to kernel defaults (4ms and 3ms each):
-> >
-> > sysctl kernel.sched_min_granularity_ns=3D4000000
-> > sysctl kernel.sched_wakeup_granularity_ns=3D3000000
-> >
-> > The migration problem largely goes away - the fio task migration
-> > event count goes from ~2,000 a run down to 200/run.
-> >
-> > That indicates that the migration trigger is likely load/timing
-> > based. The analysis below is based on the 10/15ms numbers above,
-> > because it makes it so much easier to reproduce.
-> >
-> > > 2)
-> > > ./xfs_complete 4k
-> > >
-> > > Then you should see 1k~1.5k fio io thread migration in above test,
-> > > either v5.4-rc7(build with rhel8 config) or RHEL 4.18 kernel.
-> >
-> > Almost all the fio task migrations are coming from migration/X
-> > kernel threads. i.e it's the scheduler active balancing that is
-> > causing the fio thread to bounce around.
-> >
-> > This is typical a typical trace, trimmed to remove extraneous noise.
-> > The fio process is running on CPU 10:
-> >
-> >              fio-3185  [010] 50419.285954: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D1004014 [ns] vruntime=3D27067882290 [ns]
-> >              fio-3185  [010] 50419.286953: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D979458 [ns] vruntime=3D27068861748 [ns]
-> >              fio-3185  [010] 50419.287998: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D1028471 [ns] vruntime=3D27069890219 [ns]
-> >              fio-3185  [010] 50419.289973: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D989989 [ns] vruntime=3D27071836208 [ns]
-> >              fio-3185  [010] 50419.290958: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D963914 [ns] vruntime=3D27072800122 [ns]
-> >              fio-3185  [010] 50419.291952: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D972532 [ns] vruntime=3D27073772654 [ns]
-> >
-> > fio consumes CPU for several milliseconds, then:
-> >
-> >              fio-3185  [010] 50419.292935: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D966032 [ns] vruntime=3D27074738686 [ns]
-> >              fio-3185  [010] 50419.292941: sched_switch:         fio:31=
-85 [120] S =3D=3D> kworker/10:0:2763 [120]
-> >     kworker/10:0-2763  [010] 50419.292954: sched_stat_runtime:   comm=
-=3Dkworker/10:0 pid=3D2763 runtime=3D13423 [ns] vruntime=3D27052479694 [ns]
-> >     kworker/10:0-2763  [010] 50419.292956: sched_switch:         kworke=
-r/10:0:2763 [120] R =3D=3D> fio:3185 [120]
-> >              fio-3185  [010] 50419.293115: sched_waking:         comm=
-=3Dkworker/10:0 pid=3D2763 prio=3D120 target_cpu=3D010
-> >              fio-3185  [010] 50419.293116: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D160370 [ns] vruntime=3D27074899056 [ns]
-> >              fio-3185  [010] 50419.293118: sched_wakeup:         kworke=
-r/10:0:2763 [120] success=3D1 CPU:010
-> >
-> > A context switch out to a kworker, then 13us later we immediately
-> > switch back to the fio process, and go on running. No doubt
-> > somewhere in what the fio process is doing, we queue up more work to
-> > be run on the cpu, but the fio task keeps running
-> > (due to CONFIG_PREEMPT=3Dn).
-> >
-> >              fio-3185  [010] 50419.293934: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D803135 [ns] vruntime=3D27075702191 [ns]
-> >              fio-3185  [010] 50419.294936: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D988478 [ns] vruntime=3D27076690669 [ns]
-> >              fio-3185  [010] 50419.295934: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D982219 [ns] vruntime=3D27077672888 [ns]
-> >              fio-3185  [010] 50419.296935: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D984781 [ns] vruntime=3D27078657669 [ns]
-> >              fio-3185  [010] 50419.297934: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D981703 [ns] vruntime=3D27079639372 [ns]
-> >              fio-3185  [010] 50419.298937: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D990057 [ns] vruntime=3D27080629429 [ns]
-> >              fio-3185  [010] 50419.299935: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D977554 [ns] vruntime=3D27081606983 [ns]
-> >
-> > About 6ms later, CPU 0 kicks the active load balancer on CPU 10...
-> >
-> >           <idle>-0     [000] 50419.300014: sched_waking:         comm=
-=3Dmigration/10 pid=3D70 prio=3D0 target_cpu=3D010
-> >              fio-3185  [010] 50419.300024: sched_wakeup:         migrat=
-ion/10:70 [0] success=3D1 CPU:010
-> >              fio-3185  [010] 50419.300026: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D79291 [ns] vruntime=3D27081686274 [ns]
-> >              fio-3185  [010] 50419.300027: sched_switch:         fio:31=
-85 [120] S =3D=3D> migration/10:70 [0]
-> >     migration/10-70    [010] 50419.300032: sched_migrate_task:   comm=
-=3Dfio pid=3D3185 prio=3D120 orig_cpu=3D10 dest_cpu=3D12
-> >     migration/10-70    [010] 50419.300040: sched_switch:         migrat=
-ion/10:70 [0] D =3D=3D> kworker/10:0:2763 [120]
-> >
-> > And 10us later the fio process is switched away, the active load
-> > balancer work is run and migrates the fio process to CPU 12. Then...
-> >
-> >     kworker/10:0-2763  [010] 50419.300048: sched_stat_runtime:   comm=
-=3Dkworker/10:0 pid=3D2763 runtime=3D9252 [ns] vruntime=3D27062908308 [ns]
-> >     kworker/10:0-2763  [010] 50419.300062: sched_switch:         kworke=
-r/10:0:2763 [120] R =3D=3D> swapper/10:0 [120]
-> >           <idle>-0     [010] 50419.300067: sched_waking:         comm=
-=3Dkworker/10:0 pid=3D2763 prio=3D120 target_cpu=3D010
-> >           <idle>-0     [010] 50419.300069: sched_wakeup:         kworke=
-r/10:0:2763 [120] success=3D1 CPU:010
-> >           <idle>-0     [010] 50419.300071: sched_switch:         swappe=
-r/10:0 [120] S =3D=3D> kworker/10:0:2763 [120]
-> >     kworker/10:0-2763  [010] 50419.300073: sched_switch:         kworke=
-r/10:0:2763 [120] R =3D=3D> swapper/10:0 [120]
-> >
-> > The kworker runs for another 10us and the CPU goes idle. Shortly
-> > after this, CPU 12 is woken:
-> >
-> >           <idle>-0     [012] 50419.300113: sched_switch:         swappe=
-r/12:0 [120] S =3D=3D> fio:3185 [120]
-> >              fio-3185  [012] 50419.300596: sched_waking:         comm=
-=3Dkworker/12:1 pid=3D227 prio=3D120 target_cpu=3D012
-> >              fio-3185  [012] 50419.300598: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D561137 [ns] vruntime=3D20361153275 [ns]
-> >              fio-3185  [012] 50419.300936: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D326187 [ns] vruntime=3D20361479462 [ns]
-> >              fio-3185  [012] 50419.301935: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D981201 [ns] vruntime=3D20362460663 [ns]
-> >              fio-3185  [012] 50419.302935: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D983160 [ns] vruntime=3D20363443823 [ns]
-> >              fio-3185  [012] 50419.303934: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D983855 [ns] vruntime=3D20364427678 [ns]
-> >              fio-3185  [012] 50419.304934: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D977757 [ns] vruntime=3D20365405435 [ns]
-> >              fio-3185  [012] 50419.305948: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D999563 [ns] vruntime=3D20366404998 [ns]
-> >
-> >
-> > and fio goes on running there. The pattern repeats very soon afterwards=
-:
-> >
-> >           <idle>-0     [000] 50419.314982: sched_waking:         comm=
-=3Dmigration/12 pid=3D82 prio=3D0 target_cpu=3D012
-> >              fio-3185  [012] 50419.314988: sched_wakeup:         migrat=
-ion/12:82 [0] success=3D1 CPU:012
-> >              fio-3185  [012] 50419.314990: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D46342 [ns] vruntime=3D20375268656 [ns]
-> >              fio-3185  [012] 50419.314991: sched_switch:         fio:31=
-85 [120] S =3D=3D> migration/12:82 [0]
-> >     migration/12-82    [012] 50419.314995: sched_migrate_task:   comm=
-=3Dfio pid=3D3185 prio=3D120 orig_cpu=3D12 dest_cpu=3D5
-> >     migration/12-82    [012] 50419.315001: sched_switch:         migrat=
-ion/12:82 [0] D =3D=3D> kworker/12:1:227 [120]
-> >     kworker/12:1-227   [012] 50419.315022: sched_stat_runtime:   comm=
-=3Dkworker/12:1 pid=3D227 runtime=3D21453 [ns] vruntime=3D20359477889 [ns]
-> >     kworker/12:1-227   [012] 50419.315028: sched_switch:         kworke=
-r/12:1:227 [120] R =3D=3D> swapper/12:0 [120]
-> >           <idle>-0     [005] 50419.315053: sched_switch:         swappe=
-r/5:0 [120] S =3D=3D> fio:3185 [120]
-> >              fio-3185  [005] 50419.315286: sched_waking:         comm=
-=3Dkworker/5:0 pid=3D2646 prio=3D120 target_cpu=3D005
-> >              fio-3185  [005] 50419.315288: sched_stat_runtime:   comm=
-=3Dfio pid=3D3185 runtime=3D287737 [ns] vruntime=3D33779011507 [ns]
-> >
-> > And fio is now running on CPU 5 - it only ran on CPU 12 for about
-> > 15ms. Hmmm:
-> >
-> > $ grep fio-3185 ~/tmp/sched.out | awk 'BEGIN {totcpu =3D 0.0; switches =
-=3D 0.0; prev_waket =3D 0.0 }/sched_waking/ { cpu =3D $2; split($3, t, ":")=
-; waket =3D t[1]; if (cpu !=3D prev_cpu) { t_on_cpu =3D waket - prev_waket;=
- if (prev_waket) { print "time on CPU", cpu, "was", t_on_cpu; totcpu +=3D t=
-_on_cpu; switches++ } prev_waket =3D waket; prev_cpu =3D cpu; } } END { pri=
-nt "switches", switches, "time on cpu", totcpu, "aver time on cpu", (totcpu=
- / switches) } ' | stats --trim-outliers
-> > switches 2211 time on cpu 30.0994 aver time on cpu 0.0136135
-> > time on CPU [0-23(8.8823+/-6.2)] was 0.000331-0.330772(0.0134759+/-0.01=
-2)
-> >
-> > Yeah, the fio task averages 13.4ms on any given CPU before being
-> > switched to another CPU. Mind you, the stddev is 12ms, so the range
-> > of how long it spends on any one CPU is pretty wide (330us to
-> > 330ms).
-> >
-> > IOWs, this doesn't look like a workqueue problem at all - this looks
-> > like the scheduler is repeatedly making the wrong load balancing
-> > decisions when mixing a very short runtime task (queued work) with a
-> > long runtime task on the same CPU....
-> >
-> > This is not my area of expertise, so I have no idea why this might
-> > be happening. Scheduler experts: is this expected behaviour? What
-> > tunables directly influence the active load balancer (and/or CONFIG
-> > options) to change how aggressive it's behaviour is?
->
-> We typically only fall back to the active balancer when there is
-> (persistent) imbalance and we fail to migrate anything else (of
-> substance).
->
-> The tuning mentioned has the effect of less frequent scheduling, IOW,
-> leaving (short) tasks on the runqueue longer. This obviously means the
-> load-balancer will have a bigger chance of seeing them.
->
-> Now; it's been a while since I looked at the workqueue code but one
-> possible explanation would be if the kworker that picks up the work item
-> is pinned. That would make it runnable but not migratable, the exact
-> situation in which we'll end up shooting the current task with active
-> balance.
+* Dave Chinner <david@fromorbit.com> [2019-11-16 10:40:05]:
 
-I agree with your explanation above
+> On Fri, Nov 15, 2019 at 03:08:43PM +0800, Ming Lei wrote:
+> > On Fri, Nov 15, 2019 at 03:56:34PM +1100, Dave Chinner wrote:
+> > > On Fri, Nov 15, 2019 at 09:08:24AM +0800, Ming Lei wrote:
+> > I can reproduce the issue with 4k block size on another RH system, and
+> > the login info of that system has been shared to you in RH BZ.
+> > 
+> > 1)
+> 
+> Almost all the fio task migrations are coming from migration/X
+> kernel threads. i.e it's the scheduler active balancing that is
+> causing the fio thread to bounce around.
+> 
 
-Although queue_work uses queue_work_on(WORK_CPU_UNBOUND,... At the
-end, it uses a bounded workqueue and tries to queue the work on the
-local cpu 1st even if the latter is already busy
+Can we try with the below patch.
 
->
-> I'll go see if I can reproduce and stare at the workqueue code a bit.
->
-> >
-> > > Not reproduced the issue with 512 block size on the RH system yet,
-> > > maybe it is related with my kernel config.
-> >
-> > I doubt it - this looks like a load specific corner case in the
-> > scheduling algorithm....
-> >
-> > Cheers,
-> >
-> > Dave.
-> > --
-> > Dave Chinner
-> > david@fromorbit.com
+-- 
+Thanks and Regards
+Srikar Dronamraju
+
+--->8-----------------------------8<----------------------------------
+From 9687c1447532558aa564bd2e471b7987d6bda70f Mon Sep 17 00:00:00 2001
+From: Srikar Dronamraju <srikar@linux.vnet.ibm.com>
+Date: Tue, 2 Jul 2019 16:38:29 -0500
+Subject: [PATCH] sched/fair: Avoid active balance on small load imbalance
+
+Skip active load balance when destination CPU is busy and the imbalance
+is small and fix_small_imabalance is unable to calculate minor
+imbalance. Its observed that active load balances can lead to ping-pong
+of tasks between two CPUs.
+
+Signed-off-by: Srikar Dronamraju <srikar@linux.vnet.ibm.com>
+---
+ kernel/sched/fair.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 3599bdcab395..0db380c8eb6c 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -7094,6 +7094,7 @@ enum group_type {
+ #define LBF_SOME_PINNED	0x08
+ #define LBF_NOHZ_STATS	0x10
+ #define LBF_NOHZ_AGAIN	0x20
++#define LBF_SMALL_IMBL	0x40
+ 
+ struct lb_env {
+ 	struct sched_domain	*sd;
+@@ -8386,6 +8387,8 @@ void fix_small_imbalance(struct lb_env *env, struct sd_lb_stats *sds)
+ 	/* Move if we gain throughput */
+ 	if (capa_move > capa_now)
+ 		env->imbalance = busiest->load_per_task;
++	else if (env->idle == CPU_NOT_IDLE)
++		env->flags |= LBF_SMALL_IMBL;
+ }
+ 
+ /**
+@@ -8466,7 +8469,7 @@ static inline void calculate_imbalance(struct lb_env *env, struct sd_lb_stats *s
+ 	 * moved
+ 	 */
+ 	if (env->imbalance < busiest->load_per_task)
+-		return fix_small_imbalance(env, sds);
++		fix_small_imbalance(env, sds);
+ }
+ 
+ /******* find_busiest_group() helpers end here *********************/
+@@ -8732,6 +8735,13 @@ static int need_active_balance(struct lb_env *env)
+ 	if (voluntary_active_balance(env))
+ 		return 1;
+ 
++	/*
++	 * Destination CPU is not idle and fix_small_imbalance is unable
++	 * to calculate even minor imbalances, skip active balance.
++	 */
++	if (env->flags & LBF_SMALL_IMBL)
++		return 0;
++
+ 	return unlikely(sd->nr_balance_failed > sd->cache_nice_tries+2);
+ }
+ 
+-- 
+2.18.1
+
+
