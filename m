@@ -2,242 +2,135 @@ Return-Path: <SRS0=mMHn=ZK=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AC3CC432C0
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Nov 2019 09:21:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BC3EC432C0
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Nov 2019 09:31:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4D6A120727
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Nov 2019 09:21:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B7FA2073A
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Nov 2019 09:31:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="wvaeAPLh"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YIV3hUUW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726631AbfKRJVi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Nov 2019 04:21:38 -0500
-Received: from merlin.infradead.org ([205.233.59.134]:50380 "EHLO
-        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726460AbfKRJVh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Nov 2019 04:21:37 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=sd7nq16De6ptdHypqKQoFekBhLA60N0d22SJOOnQSVk=; b=wvaeAPLhrvbCwv+sZGIe1KhZx
-        VdGqbiO92ugbOx4LowyHaW7zjuca+QwchS8nko/VFb78EfkuF34fr+8MmZ2K13xieNH584BbwSQ/0
-        Fijz21IGhaDvGgBcPM0VZ0n/P0BFa2EXZcahwzxt7Gcj9rDZJwELPxmokuVA2RCTf8P3jNpXTQ//W
-        A3zjL22Zc7SvpkTACVaIi2HYDu0mTDmjYXgq3V/6uNT4j+PVMu0g7TCOZ12KXMvoebHTij6rGYgyj
-        Mmd/ITQd0RE+Qy6HdfYP0WQdloK15DFixbd8D8YxkCzMQYsOBH64Oe4VdwlminfZL6zZ7Y3WHo7En
-        Col0nGMmA==;
-Received: from j217100.upc-j.chello.nl ([24.132.217.100] helo=noisy.programming.kicks-ass.net)
-        by merlin.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iWdDn-0007bU-LH; Mon, 18 Nov 2019 09:21:24 +0000
-Received: from hirez.programming.kicks-ass.net (hirez.programming.kicks-ass.net [192.168.1.225])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client did not present a certificate)
-        by noisy.programming.kicks-ass.net (Postfix) with ESMTPS id 3A8B13011EC;
-        Mon, 18 Nov 2019 10:20:12 +0100 (CET)
-Received: by hirez.programming.kicks-ass.net (Postfix, from userid 1000)
-        id 9EF292B133324; Mon, 18 Nov 2019 10:21:21 +0100 (CET)
-Date:   Mon, 18 Nov 2019 10:21:21 +0100
-From:   Peter Zijlstra <peterz@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Eric Sandeen <sandeen@redhat.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-        Vincent Guittot <vincent.guittot@linaro.org>
-Subject: Re: single aio thread is migrated crazily by scheduler
-Message-ID: <20191118092121.GV4131@hirez.programming.kicks-ass.net>
-References: <20191114113153.GB4213@ming.t460p>
- <20191114235415.GL4614@dread.disaster.area>
- <20191115010824.GC4847@ming.t460p>
- <20191115045634.GN4614@dread.disaster.area>
- <20191115070843.GA24246@ming.t460p>
- <20191115234005.GO4614@dread.disaster.area>
+        id S1726472AbfKRJbK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Nov 2019 04:31:10 -0500
+Received: from mail-yw1-f68.google.com ([209.85.161.68]:42341 "EHLO
+        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726464AbfKRJbK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Nov 2019 04:31:10 -0500
+Received: by mail-yw1-f68.google.com with SMTP id z67so5623549ywb.9
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Nov 2019 01:31:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Nnn2NMQoclXxuw5BOgdR3Z7Ii8phbpZZ5SBihkJZmJs=;
+        b=YIV3hUUWNI6sSvIH1rfU9zahvscuFYJSJxXScY07NXLYK9ydPkBLM9LJHFzHbCtxXU
+         EnBY88iOFAIivRyY0BkK8MNvcfG1vpSFcwVYO6BKRHu1KMqugI5g7oxinGVjHUPpmWL1
+         b2kaHZj8kv3hWYGMRT+5MBiOWTJHsp/fTMXvlwqTejQY/FNL94AC1ws1Qr1e8+3OZiqK
+         wTQK1Sr6zESKYcYpz/dP4RzSsDmjUt8BeznpGd44ZdGR6y2hgdhqU6Hb+udgzVQYkJ+C
+         BvPULimsgeNZYiovpZ6tfNdoYeR26zsEEaAqRBKQuZg6zUwGHD0FbxgJhS/LysdKEedX
+         Oh8g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Nnn2NMQoclXxuw5BOgdR3Z7Ii8phbpZZ5SBihkJZmJs=;
+        b=nRXzTvaEkuxdvtk3U3WjeBMPvgwfUJ/aavFTALV1C34pmpqttHqC55IUD0I9wfaEOc
+         fUULtsSp4YkojSsgwvhMjUpKplhX695ULmVqwVcs/O6eYaICUsWrY7D+MrgxsWqCiZv+
+         ceoixje+X4FkGTkXKrYgnefcN2/VKWEkGEl+ZHniArqMWJdQJnPPYALvJ43Qg+TPeFjc
+         LkXKNVnY2H5NcKFHeudft3sVVBTdr5vk7YvhwxZTggQDmkz8wcnQY/b0x1ucGZzxaNM+
+         vuRodPMd761Vkfn8fFNG1xOMURs9cV1nwy7rkwYssf7Vr85vOtEucFfE2q4Fp41oyeZc
+         Anvg==
+X-Gm-Message-State: APjAAAWA0PVvK2+7o4Z/YnkyyrUKUc96C3y2pGlntm6WdWzFJFTj04JE
+        5PTRr6GIXz/goT+KRxNZ4xmPgNW/xPn+HjwyNZ4=
+X-Google-Smtp-Source: APXvYqwP3qZtGx0TdoZfdeMdbsn7WsKVzo0L1lHegtcDUPXz4lPEL/saNxrXl1UwSF5OWJ9dVsfifV00Pn8lonjrDvY=
+X-Received: by 2002:a81:1cd5:: with SMTP id c204mr18678509ywc.379.1574069469427;
+ Mon, 18 Nov 2019 01:31:09 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191115234005.GO4614@dread.disaster.area>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+References: <20191111213630.14680-1-amir73il@gmail.com> <20191111223508.GS6219@magnolia>
+ <CAOQ4uxgC8Gz+uyCaV_Prw=uUVNtwv0j7US8sbkfoTphC4Z6b6A@mail.gmail.com>
+ <20191112211153.GO4614@dread.disaster.area> <20191113035611.GE6219@magnolia>
+ <CAOQ4uxi9vzR4c3T0B4N=bM6DxCwj_TbqiOxyOQLrurknnyw+oA@mail.gmail.com>
+ <20191113045840.GR6219@magnolia> <CAOQ4uxh0T-cddZ9gwPcY6O=Eg=2g855jYbjic=VwihYPz2ZeBw@mail.gmail.com>
+ <20191113052032.GU6219@magnolia> <CAOQ4uxiTRWkeM6i6tyMe5dzSN8nsR=1XZEMEwwwVJAcJNVimGA@mail.gmail.com>
+ <20191118082216.GU4614@dread.disaster.area>
+In-Reply-To: <20191118082216.GU4614@dread.disaster.area>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Mon, 18 Nov 2019 11:30:58 +0200
+Message-ID: <CAOQ4uxgyf7gWy0TpE8+i1cw37yH+NKsBa=ffP0rw5uLW55LwLw@mail.gmail.com>
+Subject: Re: [RFC][PATCH] xfs: extended timestamp range
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Deepa Dinamani <deepa.kernel@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Mon, Nov 18, 2019 at 10:22 AM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Mon, Nov 18, 2019 at 06:52:39AM +0200, Amir Goldstein wrote:
+> > > >
+> > > > I wonder if your version has struct xfs_dinode_v3 or it could avoid it.
+> > > > There is a benefit in terms of code complexity and test coverage
+> > > > to keep the only difference between inode versions in the on-disk
+> > > > parsers, while reading into the same struct, the same way as
+> > > > old inode versions are read into struct xfs_dinode.
+> > > >
+> > > > Oh well, I can wait for tomorrow to see the polished version :-)
+> > >
+> > > Well now we noticed that Arnd also changed the disk quota structure
+> > > format too, so that'll slow things down as we try to figure out how to
+> > > reconcile 34-bit inode seconds vs. 40-bit quota timer seconds.
+> > >
+> > > (Or whatever happens with that)
+> > >
+> >
+> > Sigh. FWIW, I liked Arnd's 40-bit inode time patch because it
+> > keeps the patch LoC for this conversion minimal.
+>
+> We can extend the quota warning range without changing the on-disk
+> structures, and with much less code than changing the on-disk
+> structures.
+>
+> We only need a ~500 year range for the warning expiry timestamp, and
+> we don't really care about fine grained resolution of the timer
+> expiry.
+>
+> We've already got a 70 year range with the signed second counter. So
+> let's just redefine the timeout value on disk to use units of 10s
+> instead of 1s when the bigtime superblock feature bit is set. ANd
+> now we have our >500 year range requirement.
+>
+> That shouldn't need much more than 5-10 lines of new code
+> translating the units when we read/write them from/to disk....
+>
 
-+Vincent
+Sounds good.
 
-On Sat, Nov 16, 2019 at 10:40:05AM +1100, Dave Chinner wrote:
-> On Fri, Nov 15, 2019 at 03:08:43PM +0800, Ming Lei wrote:
-> > On Fri, Nov 15, 2019 at 03:56:34PM +1100, Dave Chinner wrote:
-> > > On Fri, Nov 15, 2019 at 09:08:24AM +0800, Ming Lei wrote:
-> > I can reproduce the issue with 4k block size on another RH system, and
-> > the login info of that system has been shared to you in RH BZ.
-> > 
-> > 1)
-> > sysctl kernel.sched_min_granularity_ns=10000000
-> > sysctl kernel.sched_wakeup_granularity_ns=15000000
-> 
-> So, these settings definitely influence behaviour.
-> 
-> If these are set to kernel defaults (4ms and 3ms each):
-> 
-> sysctl kernel.sched_min_granularity_ns=4000000
-> sysctl kernel.sched_wakeup_granularity_ns=3000000
-> 
-> The migration problem largely goes away - the fio task migration
-> event count goes from ~2,000 a run down to 200/run.
-> 
-> That indicates that the migration trigger is likely load/timing
-> based. The analysis below is based on the 10/15ms numbers above,
-> because it makes it so much easier to reproduce.
-> 
-> > 2)
-> > ./xfs_complete 4k
-> > 
-> > Then you should see 1k~1.5k fio io thread migration in above test,
-> > either v5.4-rc7(build with rhel8 config) or RHEL 4.18 kernel.
-> 
-> Almost all the fio task migrations are coming from migration/X
-> kernel threads. i.e it's the scheduler active balancing that is
-> causing the fio thread to bounce around.
-> 
-> This is typical a typical trace, trimmed to remove extraneous noise.
-> The fio process is running on CPU 10:
-> 
->              fio-3185  [010] 50419.285954: sched_stat_runtime:   comm=fio pid=3185 runtime=1004014 [ns] vruntime=27067882290 [ns]
->              fio-3185  [010] 50419.286953: sched_stat_runtime:   comm=fio pid=3185 runtime=979458 [ns] vruntime=27068861748 [ns]
->              fio-3185  [010] 50419.287998: sched_stat_runtime:   comm=fio pid=3185 runtime=1028471 [ns] vruntime=27069890219 [ns]
->              fio-3185  [010] 50419.289973: sched_stat_runtime:   comm=fio pid=3185 runtime=989989 [ns] vruntime=27071836208 [ns]
->              fio-3185  [010] 50419.290958: sched_stat_runtime:   comm=fio pid=3185 runtime=963914 [ns] vruntime=27072800122 [ns]
->              fio-3185  [010] 50419.291952: sched_stat_runtime:   comm=fio pid=3185 runtime=972532 [ns] vruntime=27073772654 [ns]
-> 
-> fio consumes CPU for several milliseconds, then:
-> 
->              fio-3185  [010] 50419.292935: sched_stat_runtime:   comm=fio pid=3185 runtime=966032 [ns] vruntime=27074738686 [ns]
->              fio-3185  [010] 50419.292941: sched_switch:         fio:3185 [120] S ==> kworker/10:0:2763 [120]
->     kworker/10:0-2763  [010] 50419.292954: sched_stat_runtime:   comm=kworker/10:0 pid=2763 runtime=13423 [ns] vruntime=27052479694 [ns]
->     kworker/10:0-2763  [010] 50419.292956: sched_switch:         kworker/10:0:2763 [120] R ==> fio:3185 [120]
->              fio-3185  [010] 50419.293115: sched_waking:         comm=kworker/10:0 pid=2763 prio=120 target_cpu=010
->              fio-3185  [010] 50419.293116: sched_stat_runtime:   comm=fio pid=3185 runtime=160370 [ns] vruntime=27074899056 [ns]
->              fio-3185  [010] 50419.293118: sched_wakeup:         kworker/10:0:2763 [120] success=1 CPU:010
-> 
-> A context switch out to a kworker, then 13us later we immediately
-> switch back to the fio process, and go on running. No doubt
-> somewhere in what the fio process is doing, we queue up more work to
-> be run on the cpu, but the fio task keeps running
-> (due to CONFIG_PREEMPT=n).
-> 
->              fio-3185  [010] 50419.293934: sched_stat_runtime:   comm=fio pid=3185 runtime=803135 [ns] vruntime=27075702191 [ns]
->              fio-3185  [010] 50419.294936: sched_stat_runtime:   comm=fio pid=3185 runtime=988478 [ns] vruntime=27076690669 [ns]
->              fio-3185  [010] 50419.295934: sched_stat_runtime:   comm=fio pid=3185 runtime=982219 [ns] vruntime=27077672888 [ns]
->              fio-3185  [010] 50419.296935: sched_stat_runtime:   comm=fio pid=3185 runtime=984781 [ns] vruntime=27078657669 [ns]
->              fio-3185  [010] 50419.297934: sched_stat_runtime:   comm=fio pid=3185 runtime=981703 [ns] vruntime=27079639372 [ns]
->              fio-3185  [010] 50419.298937: sched_stat_runtime:   comm=fio pid=3185 runtime=990057 [ns] vruntime=27080629429 [ns]
->              fio-3185  [010] 50419.299935: sched_stat_runtime:   comm=fio pid=3185 runtime=977554 [ns] vruntime=27081606983 [ns]
-> 
-> About 6ms later, CPU 0 kicks the active load balancer on CPU 10...
-> 
->           <idle>-0     [000] 50419.300014: sched_waking:         comm=migration/10 pid=70 prio=0 target_cpu=010
->              fio-3185  [010] 50419.300024: sched_wakeup:         migration/10:70 [0] success=1 CPU:010
->              fio-3185  [010] 50419.300026: sched_stat_runtime:   comm=fio pid=3185 runtime=79291 [ns] vruntime=27081686274 [ns]
->              fio-3185  [010] 50419.300027: sched_switch:         fio:3185 [120] S ==> migration/10:70 [0]
->     migration/10-70    [010] 50419.300032: sched_migrate_task:   comm=fio pid=3185 prio=120 orig_cpu=10 dest_cpu=12
->     migration/10-70    [010] 50419.300040: sched_switch:         migration/10:70 [0] D ==> kworker/10:0:2763 [120]
-> 
-> And 10us later the fio process is switched away, the active load
-> balancer work is run and migrates the fio process to CPU 12. Then...
-> 
->     kworker/10:0-2763  [010] 50419.300048: sched_stat_runtime:   comm=kworker/10:0 pid=2763 runtime=9252 [ns] vruntime=27062908308 [ns]
->     kworker/10:0-2763  [010] 50419.300062: sched_switch:         kworker/10:0:2763 [120] R ==> swapper/10:0 [120]
->           <idle>-0     [010] 50419.300067: sched_waking:         comm=kworker/10:0 pid=2763 prio=120 target_cpu=010
->           <idle>-0     [010] 50419.300069: sched_wakeup:         kworker/10:0:2763 [120] success=1 CPU:010
->           <idle>-0     [010] 50419.300071: sched_switch:         swapper/10:0 [120] S ==> kworker/10:0:2763 [120]
->     kworker/10:0-2763  [010] 50419.300073: sched_switch:         kworker/10:0:2763 [120] R ==> swapper/10:0 [120]
-> 
-> The kworker runs for another 10us and the CPU goes idle. Shortly
-> after this, CPU 12 is woken:
-> 
->           <idle>-0     [012] 50419.300113: sched_switch:         swapper/12:0 [120] S ==> fio:3185 [120]
->              fio-3185  [012] 50419.300596: sched_waking:         comm=kworker/12:1 pid=227 prio=120 target_cpu=012
->              fio-3185  [012] 50419.300598: sched_stat_runtime:   comm=fio pid=3185 runtime=561137 [ns] vruntime=20361153275 [ns]
->              fio-3185  [012] 50419.300936: sched_stat_runtime:   comm=fio pid=3185 runtime=326187 [ns] vruntime=20361479462 [ns]
->              fio-3185  [012] 50419.301935: sched_stat_runtime:   comm=fio pid=3185 runtime=981201 [ns] vruntime=20362460663 [ns]
->              fio-3185  [012] 50419.302935: sched_stat_runtime:   comm=fio pid=3185 runtime=983160 [ns] vruntime=20363443823 [ns]
->              fio-3185  [012] 50419.303934: sched_stat_runtime:   comm=fio pid=3185 runtime=983855 [ns] vruntime=20364427678 [ns]
->              fio-3185  [012] 50419.304934: sched_stat_runtime:   comm=fio pid=3185 runtime=977757 [ns] vruntime=20365405435 [ns]
->              fio-3185  [012] 50419.305948: sched_stat_runtime:   comm=fio pid=3185 runtime=999563 [ns] vruntime=20366404998 [ns]
-> 
-> 
-> and fio goes on running there. The pattern repeats very soon afterwards:
-> 
->           <idle>-0     [000] 50419.314982: sched_waking:         comm=migration/12 pid=82 prio=0 target_cpu=012
->              fio-3185  [012] 50419.314988: sched_wakeup:         migration/12:82 [0] success=1 CPU:012
->              fio-3185  [012] 50419.314990: sched_stat_runtime:   comm=fio pid=3185 runtime=46342 [ns] vruntime=20375268656 [ns]
->              fio-3185  [012] 50419.314991: sched_switch:         fio:3185 [120] S ==> migration/12:82 [0]
->     migration/12-82    [012] 50419.314995: sched_migrate_task:   comm=fio pid=3185 prio=120 orig_cpu=12 dest_cpu=5
->     migration/12-82    [012] 50419.315001: sched_switch:         migration/12:82 [0] D ==> kworker/12:1:227 [120]
->     kworker/12:1-227   [012] 50419.315022: sched_stat_runtime:   comm=kworker/12:1 pid=227 runtime=21453 [ns] vruntime=20359477889 [ns]
->     kworker/12:1-227   [012] 50419.315028: sched_switch:         kworker/12:1:227 [120] R ==> swapper/12:0 [120]
->           <idle>-0     [005] 50419.315053: sched_switch:         swapper/5:0 [120] S ==> fio:3185 [120]
->              fio-3185  [005] 50419.315286: sched_waking:         comm=kworker/5:0 pid=2646 prio=120 target_cpu=005
->              fio-3185  [005] 50419.315288: sched_stat_runtime:   comm=fio pid=3185 runtime=287737 [ns] vruntime=33779011507 [ns]
-> 
-> And fio is now running on CPU 5 - it only ran on CPU 12 for about
-> 15ms. Hmmm:
-> 
-> $ grep fio-3185 ~/tmp/sched.out | awk 'BEGIN {totcpu = 0.0; switches = 0.0; prev_waket = 0.0 }/sched_waking/ { cpu = $2; split($3, t, ":"); waket = t[1]; if (cpu != prev_cpu) { t_on_cpu = waket - prev_waket; if (prev_waket) { print "time on CPU", cpu, "was", t_on_cpu; totcpu += t_on_cpu; switches++ } prev_waket = waket; prev_cpu = cpu; } } END { print "switches", switches, "time on cpu", totcpu, "aver time on cpu", (totcpu / switches) } ' | stats --trim-outliers
-> switches 2211 time on cpu 30.0994 aver time on cpu 0.0136135
-> time on CPU [0-23(8.8823+/-6.2)] was 0.000331-0.330772(0.0134759+/-0.012)
-> 
-> Yeah, the fio task averages 13.4ms on any given CPU before being
-> switched to another CPU. Mind you, the stddev is 12ms, so the range
-> of how long it spends on any one CPU is pretty wide (330us to
-> 330ms).
-> 
-> IOWs, this doesn't look like a workqueue problem at all - this looks
-> like the scheduler is repeatedly making the wrong load balancing
-> decisions when mixing a very short runtime task (queued work) with a
-> long runtime task on the same CPU....
-> 
-> This is not my area of expertise, so I have no idea why this might
-> be happening. Scheduler experts: is this expected behaviour? What
-> tunables directly influence the active load balancer (and/or CONFIG
-> options) to change how aggressive it's behaviour is?
+What is your take on the issue of keeping struct xfs_dinode
+and struct xfs_log_dinode common to v3..v4?
 
-We typically only fall back to the active balancer when there is
-(persistent) imbalance and we fail to migrate anything else (of
-substance).
+If we make struct xfs_timestamp_t/xfs_ictimestamp_t a union
+of {{t_sec32;t_nsec32}, {t_nsec64}} then xfs_log_dinode_to_disk()
+conversion code is conditional to di_version.
+If we store v4 on-disk as {t_nsec32_hi;t_nsec32_lo} then the
+conversion code from disk to log is unconditional to di_version.
 
-The tuning mentioned has the effect of less frequent scheduling, IOW,
-leaving (short) tasks on the runqueue longer. This obviously means the
-load-balancer will have a bigger chance of seeing them.
+Am I overthinking this?
 
-Now; it's been a while since I looked at the workqueue code but one
-possible explanation would be if the kworker that picks up the work item
-is pinned. That would make it runnable but not migratable, the exact
-situation in which we'll end up shooting the current task with active
-balance.
+Darrick,
 
-I'll go see if I can reproduce and stare at the workqueue code a bit.
+I am assuming you are working on the patch.
+If you would like me to re-post my patch with the decided
+on-disk formats for inode and a quota patch let me know.
 
-> 
-> > Not reproduced the issue with 512 block size on the RH system yet,
-> > maybe it is related with my kernel config.
-> 
-> I doubt it - this looks like a load specific corner case in the
-> scheduling algorithm....
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Thanks,
+Amir.
