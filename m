@@ -2,135 +2,119 @@ Return-Path: <SRS0=mMHn=ZK=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BC3EC432C0
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Nov 2019 09:31:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BEA2C432C0
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Nov 2019 10:59:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6B7FA2073A
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Nov 2019 09:31:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E4F7C2073A
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Nov 2019 10:59:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YIV3hUUW"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QZ8+hRo+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726472AbfKRJbK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Nov 2019 04:31:10 -0500
-Received: from mail-yw1-f68.google.com ([209.85.161.68]:42341 "EHLO
-        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726464AbfKRJbK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Nov 2019 04:31:10 -0500
-Received: by mail-yw1-f68.google.com with SMTP id z67so5623549ywb.9
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Nov 2019 01:31:10 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Nnn2NMQoclXxuw5BOgdR3Z7Ii8phbpZZ5SBihkJZmJs=;
-        b=YIV3hUUWNI6sSvIH1rfU9zahvscuFYJSJxXScY07NXLYK9ydPkBLM9LJHFzHbCtxXU
-         EnBY88iOFAIivRyY0BkK8MNvcfG1vpSFcwVYO6BKRHu1KMqugI5g7oxinGVjHUPpmWL1
-         b2kaHZj8kv3hWYGMRT+5MBiOWTJHsp/fTMXvlwqTejQY/FNL94AC1ws1Qr1e8+3OZiqK
-         wTQK1Sr6zESKYcYpz/dP4RzSsDmjUt8BeznpGd44ZdGR6y2hgdhqU6Hb+udgzVQYkJ+C
-         BvPULimsgeNZYiovpZ6tfNdoYeR26zsEEaAqRBKQuZg6zUwGHD0FbxgJhS/LysdKEedX
-         Oh8g==
+        id S1726539AbfKRK7p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Nov 2019 05:59:45 -0500
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:43141 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726490AbfKRK7p (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Nov 2019 05:59:45 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1574074783;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=XZLLjNZz7PGc6ccOCNMERiPvfDcvusW6kIdO0GUv4AY=;
+        b=QZ8+hRo+lWyW4JAJCIrIUP28nwFq47iVZqZ9JN28R8mpkCJcwuPGIyrmPBV/WvvSDxEfyI
+        dDF4SZptsc86XZlqmMT/l0OHxfc75eo37uukmhBvVJJ2toBW2xKOusUC0S6lBH8pSwB/xy
+        XhiShEoRIu42PjYxrUIUHa/32xGidy8=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-32-ELopIZA1MUWGU3HG1QnciA-1; Mon, 18 Nov 2019 05:59:42 -0500
+Received: by mail-wr1-f72.google.com with SMTP id n11so2795850wrq.5
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Nov 2019 02:59:42 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Nnn2NMQoclXxuw5BOgdR3Z7Ii8phbpZZ5SBihkJZmJs=;
-        b=nRXzTvaEkuxdvtk3U3WjeBMPvgwfUJ/aavFTALV1C34pmpqttHqC55IUD0I9wfaEOc
-         fUULtsSp4YkojSsgwvhMjUpKplhX695ULmVqwVcs/O6eYaICUsWrY7D+MrgxsWqCiZv+
-         ceoixje+X4FkGTkXKrYgnefcN2/VKWEkGEl+ZHniArqMWJdQJnPPYALvJ43Qg+TPeFjc
-         LkXKNVnY2H5NcKFHeudft3sVVBTdr5vk7YvhwxZTggQDmkz8wcnQY/b0x1ucGZzxaNM+
-         vuRodPMd761Vkfn8fFNG1xOMURs9cV1nwy7rkwYssf7Vr85vOtEucFfE2q4Fp41oyeZc
-         Anvg==
-X-Gm-Message-State: APjAAAWA0PVvK2+7o4Z/YnkyyrUKUc96C3y2pGlntm6WdWzFJFTj04JE
-        5PTRr6GIXz/goT+KRxNZ4xmPgNW/xPn+HjwyNZ4=
-X-Google-Smtp-Source: APXvYqwP3qZtGx0TdoZfdeMdbsn7WsKVzo0L1lHegtcDUPXz4lPEL/saNxrXl1UwSF5OWJ9dVsfifV00Pn8lonjrDvY=
-X-Received: by 2002:a81:1cd5:: with SMTP id c204mr18678509ywc.379.1574069469427;
- Mon, 18 Nov 2019 01:31:09 -0800 (PST)
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to;
+        bh=wTaFxpVMQmckpiNciv/a2kW+3/dAiqXImRU+NIg7Ob4=;
+        b=WbYwPt5ZbCTtDeDSNtwRXvyU8pVb1pdgkiDOrcpCd+vQxJHshiEjAYuq6uBhk/VYHA
+         o52Gg8+aQAkb6VJve9stJg23pyzPNqa2nF48Qm/qu/dlVWWX8T0//h1hWNQAMfEv43L6
+         esfR7QjWI1r66mB2TbsC0NhmT0ciGG093zMSwcqvvltZBX646iqeL80uRaAK9gaV4zk5
+         JrbTcu/Q39TvYnoM4ry54LpbcHWxOmDUZAiccB2nsTW3MMCkeo3Za3FKoJDFrM5uu+Gz
+         Pzymd58F6jefy9J4ugvYanEFt7BnpJQe0F/K57Ld5ocSTuB14ms9SbrLZcEMpGDjoHnZ
+         4i7Q==
+X-Gm-Message-State: APjAAAVcgFYxC30SnKg7ndSG8PZpEGxiOT5qeM/IZlHToWxdJNC6j2xt
+        4v7KybPZaAKn6DKHrk2p49ZrDbeKO4BiaKBrcwb95PoRSNUNPuAqorSiiZVTTNKez6iNjbuQGMa
+        5x8tkfeberNazunQ4mHF0
+X-Received: by 2002:adf:f489:: with SMTP id l9mr27582493wro.337.1574074781329;
+        Mon, 18 Nov 2019 02:59:41 -0800 (PST)
+X-Google-Smtp-Source: APXvYqx1nShLA1c9N+buNGwVDaZzD4BI+AffzBLIyYahWab8v2IUICuF6uMxNxl9asRhNvR1K5gDDg==
+X-Received: by 2002:adf:f489:: with SMTP id l9mr27582477wro.337.1574074781128;
+        Mon, 18 Nov 2019 02:59:41 -0800 (PST)
+Received: from orion (ip-89-103-126-188.net.upcbroadband.cz. [89.103.126.188])
+        by smtp.gmail.com with ESMTPSA id a15sm22360392wrw.10.2019.11.18.02.59.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 18 Nov 2019 02:59:40 -0800 (PST)
+Date:   Mon, 18 Nov 2019 11:59:38 +0100
+From:   Carlos Maiolino <cmaiolino@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/3] xfs: actually check xfs_btree_check_block return in
+ xfs_btree_islastblock
+Message-ID: <20191118105938.qjltq52nibcmqvp7@orion>
+Mail-Followup-To: "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+References: <157319668531.834585.6920821852974178.stgit@magnolia>
+ <157319670439.834585.6578359830660435523.stgit@magnolia>
+ <20191108074724.GR6219@magnolia>
 MIME-Version: 1.0
-References: <20191111213630.14680-1-amir73il@gmail.com> <20191111223508.GS6219@magnolia>
- <CAOQ4uxgC8Gz+uyCaV_Prw=uUVNtwv0j7US8sbkfoTphC4Z6b6A@mail.gmail.com>
- <20191112211153.GO4614@dread.disaster.area> <20191113035611.GE6219@magnolia>
- <CAOQ4uxi9vzR4c3T0B4N=bM6DxCwj_TbqiOxyOQLrurknnyw+oA@mail.gmail.com>
- <20191113045840.GR6219@magnolia> <CAOQ4uxh0T-cddZ9gwPcY6O=Eg=2g855jYbjic=VwihYPz2ZeBw@mail.gmail.com>
- <20191113052032.GU6219@magnolia> <CAOQ4uxiTRWkeM6i6tyMe5dzSN8nsR=1XZEMEwwwVJAcJNVimGA@mail.gmail.com>
- <20191118082216.GU4614@dread.disaster.area>
-In-Reply-To: <20191118082216.GU4614@dread.disaster.area>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Mon, 18 Nov 2019 11:30:58 +0200
-Message-ID: <CAOQ4uxgyf7gWy0TpE8+i1cw37yH+NKsBa=ffP0rw5uLW55LwLw@mail.gmail.com>
-Subject: Re: [RFC][PATCH] xfs: extended timestamp range
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Deepa Dinamani <deepa.kernel@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20191108074724.GR6219@magnolia>
+X-MC-Unique: ELopIZA1MUWGU3HG1QnciA-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 18, 2019 at 10:22 AM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Mon, Nov 18, 2019 at 06:52:39AM +0200, Amir Goldstein wrote:
-> > > >
-> > > > I wonder if your version has struct xfs_dinode_v3 or it could avoid it.
-> > > > There is a benefit in terms of code complexity and test coverage
-> > > > to keep the only difference between inode versions in the on-disk
-> > > > parsers, while reading into the same struct, the same way as
-> > > > old inode versions are read into struct xfs_dinode.
-> > > >
-> > > > Oh well, I can wait for tomorrow to see the polished version :-)
-> > >
-> > > Well now we noticed that Arnd also changed the disk quota structure
-> > > format too, so that'll slow things down as we try to figure out how to
-> > > reconcile 34-bit inode seconds vs. 40-bit quota timer seconds.
-> > >
-> > > (Or whatever happens with that)
-> > >
-> >
-> > Sigh. FWIW, I liked Arnd's 40-bit inode time patch because it
-> > keeps the patch LoC for this conversion minimal.
->
-> We can extend the quota warning range without changing the on-disk
-> structures, and with much less code than changing the on-disk
-> structures.
->
-> We only need a ~500 year range for the warning expiry timestamp, and
-> we don't really care about fine grained resolution of the timer
-> expiry.
->
-> We've already got a 70 year range with the signed second counter. So
-> let's just redefine the timeout value on disk to use units of 10s
-> instead of 1s when the bigtime superblock feature bit is set. ANd
-> now we have our >500 year range requirement.
->
-> That shouldn't need much more than 5-10 lines of new code
-> translating the units when we read/write them from/to disk....
->
+> +/* Does this cursor point to the last block in the given level? */
 
-Sounds good.
+I think this comment is unnecessary tbh, the function's definition looks pr=
+etty
+clear to me already.
 
-What is your take on the issue of keeping struct xfs_dinode
-and struct xfs_log_dinode common to v3..v4?
+> +static inline bool
+> +xfs_btree_islastblock(
+> +=09xfs_btree_cur_t=09=09*cur,
+> +=09int=09=09=09level)
+> +{
+> +=09struct xfs_btree_block=09*block;
+> +=09struct xfs_buf=09=09*bp;
+> +
+> +=09block =3D xfs_btree_get_block(cur, level, &bp);
 
-If we make struct xfs_timestamp_t/xfs_ictimestamp_t a union
-of {{t_sec32;t_nsec32}, {t_nsec64}} then xfs_log_dinode_to_disk()
-conversion code is conditional to di_version.
-If we store v4 on-disk as {t_nsec32_hi;t_nsec32_lo} then the
-conversion code from disk to log is unconditional to di_version.
+And here it might be useful for the future, to remind us why do we check it
+inside an assertion, something like:
 
-Am I overthinking this?
+=09/* Caller is already supposed to have done a lookup/seek op */
+> +=09ASSERT(block && xfs_btree_check_block(cur, block, level, bp) =3D=3D 0=
+);
+> +
 
-Darrick,
+But, these are just nitpicks, and since I didn't see any review on this pat=
+ch
+yet, you can add with or without the suggestions above:
 
-I am assuming you are working on the patch.
-If you would like me to re-post my patch with the decided
-on-disk formats for inode and a quota patch let me know.
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-Thanks,
-Amir.
+Cheers.
+
+--=20
+Carlos
+
