@@ -7,63 +7,63 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F412C432C0
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Nov 2019 21:23:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BF6FC432C0
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Nov 2019 21:23:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 349EE222DD
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Nov 2019 21:23:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A373222DD
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Nov 2019 21:23:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="aZzlWzsp"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="HlbIHVzc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726748AbfKRVXi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Nov 2019 16:23:38 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:45762 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726664AbfKRVXi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Nov 2019 16:23:38 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAILDtdF151467;
-        Mon, 18 Nov 2019 21:23:34 GMT
+        id S1726690AbfKRVX4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Nov 2019 16:23:56 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:33606 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726664AbfKRVXz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Nov 2019 16:23:55 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAILDtFK177718;
+        Mon, 18 Nov 2019 21:23:52 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=/BpDGEzAqEWJLJIjppyjE4OoKmT86ygsE8cjKlNugn0=;
- b=aZzlWzspqD+qf9ndty4x367Us/9kqV6kGcwJzHTf2zV4w02KcSFHrS40U+8p0RaADKll
- hlIuds/HFh578DhuNiQ+1//u55JCBpaRYiSP4RaSE2cUy4X8AtSwIsnVmrPbmaNpst1A
- 81m1T0VSQTDxbad/z1RRowYXUh6PwmDoCEdvvW3bBgx86yizGQv1ooaBzxXiIGW3RobG
- LRjdzM0pD/Su1mRWQtMapyGF1pjyGLLolskuvLUotnhWDMwWWdZ7xr2qqjkr3rpoWurT
- HoYsBeaW1hhq2cWBIqd+S450EzLtbIV0NLhGplo9i00fXADV/FM6DUCUlnW0kFR/yMnc GA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2wa9rqawdd-1
+ bh=wqWZg474qEgQnJJ2bOH1BWXiHRK8JgsPD4m+Vunf/xA=;
+ b=HlbIHVzcRCoSr9+AtYgp63PqfjXT9sGjFWKbwjEK2PKf56o0KK6/9JK/EIXb2fdTQlWU
+ 9dGE95f7JdywfytUYu/atvFRI33hZcgXXaJh8bc8CoaFAeYge+Bzs7XbBbz9qij8ASVP
+ jsb7tiUEwY6/kRnCxPhA6okiuhILN50fTdblXuhKbVoWDB0tDAC5sGGqjx7ljkLrwF7s
+ jcR3gxZ5B3f05S6ELAgY0kZ8ZvOhK6/3hxTs3LBm/whjvRZAz4PoPC1r9VYYYdfEFM+6
+ t48ZcTv2gOsGgpkW8yd68GCwPqncmiuOm62NOr4hZctfPPEet9mcIsF96IlObtzYbsm5 dg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 2wa8htk1rc-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 18 Nov 2019 21:23:34 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAILDeLg135477;
-        Mon, 18 Nov 2019 21:23:34 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2wc09w84px-1
+        Mon, 18 Nov 2019 21:23:52 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAILE2f2162765;
+        Mon, 18 Nov 2019 21:23:52 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 2wc0af81y7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 18 Nov 2019 21:23:34 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xAILNXmJ026244;
-        Mon, 18 Nov 2019 21:23:33 GMT
+        Mon, 18 Nov 2019 21:23:51 +0000
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xAILNnFJ005237;
+        Mon, 18 Nov 2019 21:23:49 GMT
 Received: from localhost (/10.145.178.64)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 18 Nov 2019 13:23:33 -0800
-Date:   Mon, 18 Nov 2019 13:23:32 -0800
+        with ESMTP ; Mon, 18 Nov 2019 13:23:49 -0800
+Date:   Mon, 18 Nov 2019 13:23:48 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org,
         Allison Collins <allison.henderson@oracle.com>
-Subject: Re: [PATCH 5/9] xfs: remove the mappedbno argument to
- xfs_dir3_leaf_read
-Message-ID: <20191118212332.GA6219@magnolia>
+Subject: Re: [PATCH 6/9] xfs: remove the mappedbno argument to
+ xfs_dir3_leafn_read
+Message-ID: <20191118212348.GB6219@magnolia>
 References: <20191116182214.23711-1-hch@lst.de>
- <20191116182214.23711-6-hch@lst.de>
+ <20191116182214.23711-7-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191116182214.23711-6-hch@lst.de>
+In-Reply-To: <20191116182214.23711-7-hch@lst.de>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9445 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
@@ -81,7 +81,7 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Nov 16, 2019 at 07:22:10PM +0100, Christoph Hellwig wrote:
+On Sat, Nov 16, 2019 at 07:22:11PM +0100, Christoph Hellwig wrote:
 > This argument is always hard coded to -1, so remove it.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
@@ -92,16 +92,16 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_dir2_leaf.c | 9 ++++-----
+>  fs/xfs/libxfs/xfs_dir2_leaf.c | 5 ++---
+>  fs/xfs/libxfs/xfs_dir2_node.c | 3 +--
 >  fs/xfs/libxfs/xfs_dir2_priv.h | 4 ++--
->  fs/xfs/scrub/dir.c            | 2 +-
->  3 files changed, 7 insertions(+), 8 deletions(-)
+>  3 files changed, 5 insertions(+), 7 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> index e2e4b2c6d6c2..2eee4e299e19 100644
+> index 2eee4e299e19..a1fe45db61c3 100644
 > --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
 > +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> @@ -262,13 +262,12 @@ xfs_dir3_leaf_read(
+> @@ -278,13 +278,12 @@ xfs_dir3_leafn_read(
 >  	struct xfs_trans	*tp,
 >  	struct xfs_inode	*dp,
 >  	xfs_dablk_t		fbno,
@@ -111,58 +111,41 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 >  	int			err;
 >  
 > -	err = xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
-> -				XFS_DATA_FORK, &xfs_dir3_leaf1_buf_ops);
+> -				XFS_DATA_FORK, &xfs_dir3_leafn_buf_ops);
 > +	err = xfs_da_read_buf(tp, dp, fbno, -1, bpp, XFS_DATA_FORK,
-> +			&xfs_dir3_leaf1_buf_ops);
+> +			&xfs_dir3_leafn_buf_ops);
 >  	if (!err && tp && *bpp)
->  		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_DIR_LEAF1_BUF);
+>  		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_DIR_LEAFN_BUF);
 >  	return err;
-> @@ -639,7 +638,7 @@ xfs_dir2_leaf_addname(
->  
->  	trace_xfs_dir2_leaf_addname(args);
->  
-> -	error = xfs_dir3_leaf_read(tp, dp, args->geo->leafblk, -1, &lbp);
-> +	error = xfs_dir3_leaf_read(tp, dp, args->geo->leafblk, &lbp);
->  	if (error)
->  		return error;
->  
-> @@ -1230,7 +1229,7 @@ xfs_dir2_leaf_lookup_int(
->  	tp = args->trans;
->  	mp = dp->i_mount;
->  
-> -	error = xfs_dir3_leaf_read(tp, dp, args->geo->leafblk, -1, &lbp);
-> +	error = xfs_dir3_leaf_read(tp, dp, args->geo->leafblk, &lbp);
->  	if (error)
->  		return error;
+> diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+> index 5f30a1953a52..a5450229a7ef 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_node.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_node.c
+> @@ -1554,8 +1554,7 @@ xfs_dir2_leafn_toosmall(
+>  		/*
+>  		 * Read the sibling leaf block.
+>  		 */
+> -		error = xfs_dir3_leafn_read(state->args->trans, dp,
+> -					    blkno, -1, &bp);
+> +		error = xfs_dir3_leafn_read(state->args->trans, dp, blkno, &bp);
+>  		if (error)
+>  			return error;
 >  
 > diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
-> index a730c5223c64..ade41556901a 100644
+> index ade41556901a..3001cf82baa6 100644
 > --- a/fs/xfs/libxfs/xfs_dir2_priv.h
 > +++ b/fs/xfs/libxfs/xfs_dir2_priv.h
-> @@ -91,8 +91,8 @@ void xfs_dir2_leaf_hdr_from_disk(struct xfs_mount *mp,
->  		struct xfs_dir3_icleaf_hdr *to, struct xfs_dir2_leaf *from);
->  void xfs_dir2_leaf_hdr_to_disk(struct xfs_mount *mp, struct xfs_dir2_leaf *to,
+> @@ -93,8 +93,8 @@ void xfs_dir2_leaf_hdr_to_disk(struct xfs_mount *mp, struct xfs_dir2_leaf *to,
 >  		struct xfs_dir3_icleaf_hdr *from);
-> -extern int xfs_dir3_leaf_read(struct xfs_trans *tp, struct xfs_inode *dp,
+>  int xfs_dir3_leaf_read(struct xfs_trans *tp, struct xfs_inode *dp,
+>  		xfs_dablk_t fbno, struct xfs_buf **bpp);
+> -extern int xfs_dir3_leafn_read(struct xfs_trans *tp, struct xfs_inode *dp,
 > -		xfs_dablk_t fbno, xfs_daddr_t mappedbno, struct xfs_buf **bpp);
-> +int xfs_dir3_leaf_read(struct xfs_trans *tp, struct xfs_inode *dp,
+> +int xfs_dir3_leafn_read(struct xfs_trans *tp, struct xfs_inode *dp,
 > +		xfs_dablk_t fbno, struct xfs_buf **bpp);
->  extern int xfs_dir3_leafn_read(struct xfs_trans *tp, struct xfs_inode *dp,
->  		xfs_dablk_t fbno, xfs_daddr_t mappedbno, struct xfs_buf **bpp);
 >  extern int xfs_dir2_block_to_leaf(struct xfs_da_args *args,
-> diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-> index 7983ea40668a..910e0bf85bd7 100644
-> --- a/fs/xfs/scrub/dir.c
-> +++ b/fs/xfs/scrub/dir.c
-> @@ -497,7 +497,7 @@ xchk_directory_leaf1_bestfree(
->  	int				error;
->  
->  	/* Read the free space block. */
-> -	error = xfs_dir3_leaf_read(sc->tp, sc->ip, lblk, -1, &bp);
-> +	error = xfs_dir3_leaf_read(sc->tp, sc->ip, lblk, &bp);
->  	if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, lblk, &error))
->  		goto out;
->  	xchk_buffer_recheck(sc, bp);
+>  		struct xfs_buf *dbp);
+>  extern int xfs_dir2_leaf_addname(struct xfs_da_args *args);
 > -- 
 > 2.20.1
 > 
