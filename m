@@ -2,60 +2,64 @@ Return-Path: <SRS0=NxuP=ZL=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1563C432C0
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Nov 2019 13:55:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3235DC432C0
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Nov 2019 15:12:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 84EA9222DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Nov 2019 13:55:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F387B2235E
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Nov 2019 15:12:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dK8GcTpZ"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VfC4qS/8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726185AbfKSNzC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Nov 2019 08:55:02 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:25429 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725904AbfKSNzB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Nov 2019 08:55:01 -0500
+        id S1728287AbfKSPMM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Nov 2019 10:12:12 -0500
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:49146 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728278AbfKSPMM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Nov 2019 10:12:12 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1574171700;
+        s=mimecast20190719; t=1574176331;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=xMZrU4Iyr3pDepWLu58bcmyclyUr4D2AccbVWerNr/4=;
-        b=dK8GcTpZH/ciEXz55kJM/bvsdB9Qph4CTiXzciLjklkSKYP5Vq9u9amZs6dtiMemSo7fep
-        DAGvY9I73AsjlqJCCnq+Kq/swH6bcrsNWxiLT8Q4TWHYQTczd6ucpuLXzGz9z6b/RHIKH6
-        v4s0egQfvhCVqm8Dsj+T+wR76CNRN1Q=
+        bh=U+AbGmVZAsgxtR8p0w2JArVCN5cmZvl+zRYfNpnj3bk=;
+        b=VfC4qS/8GwGy4wTmWpQTHHrqy1X1qNuK1NKyhuoRrBvHHgWbO8np/SYjjw9yWCZBY/ZJUf
+        Qzn6U7L74S9Wv48o0nsjkBwA0FCdTiC6rt27wCnVLmL+oQdZeTs0ughyRSndRqce9581ll
+        uRSajzoUkNv3OmeuIGhjNMbmshR/3Gk=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-66-adaEmDNmPiShltajBCj4BQ-1; Tue, 19 Nov 2019 08:54:57 -0500
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+ us-mta-109-kBsFmQBxMi6_viXdcY9EYQ-1; Tue, 19 Nov 2019 10:12:07 -0500
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 3ED1E800686;
-        Tue, 19 Nov 2019 13:54:56 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 093B5DBC8;
+        Tue, 19 Nov 2019 15:12:06 +0000 (UTC)
 Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id B9E2910375CE;
-        Tue, 19 Nov 2019 13:54:55 +0000 (UTC)
-Date:   Tue, 19 Nov 2019 08:54:55 -0500
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 69B2046E78;
+        Tue, 19 Nov 2019 15:12:05 +0000 (UTC)
+Date:   Tue, 19 Nov 2019 10:12:05 -0500
 From:   Brian Foster <bfoster@redhat.com>
-To:     Patrick Rynhart <patrick@rynhart.co.nz>
-Cc:     Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
-Subject: Re: Inflight Corruption of XFS filesystem on CentOS 7.7 VMs
-Message-ID: <20191119135455.GB10763@bfoster>
-References: <CAMbe+5D9cSEpR2YTWTmigi77caw93p6qR-iAYf-X_3_OJQMROw@mail.gmail.com>
- <80429a04-4b19-ec4a-1255-67b15c7b01f5@sandeen.net>
- <CAMbe+5A9OtVodSeiDo10ufAAT4Wn50yH0FjgdO_5_ax3dLvyCw@mail.gmail.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 09/28] mm: directed shrinker work deferral
+Message-ID: <20191119151205.GC10763@bfoster>
+References: <20191031234618.15403-1-david@fromorbit.com>
+ <20191031234618.15403-10-david@fromorbit.com>
+ <20191104152525.GA10665@bfoster>
+ <20191114204926.GC4614@dread.disaster.area>
+ <20191115172140.GA55854@bfoster>
+ <20191118004956.GR4614@dread.disaster.area>
 MIME-Version: 1.0
-In-Reply-To: <CAMbe+5A9OtVodSeiDo10ufAAT4Wn50yH0FjgdO_5_ax3dLvyCw@mail.gmail.com>
+In-Reply-To: <20191118004956.GR4614@dread.disaster.area>
 User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-MC-Unique: adaEmDNmPiShltajBCj4BQ-1
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-MC-Unique: kBsFmQBxMi6_viXdcY9EYQ-1
 X-Mimecast-Spam-Score: 0
 Content-Type: text/plain; charset=WINDOWS-1252
 Content-Transfer-Encoding: quoted-printable
@@ -65,76 +69,164 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Nov 16, 2019 at 06:51:41PM +1300, Patrick Rynhart wrote:
-> On Sat, 16 Nov 2019 at 18:29, Eric Sandeen <sandeen@sandeen.net> wrote:
-> >
-> > On 11/15/19 9:33 PM, Patrick Rynhart wrote:
-> > > Hi all,
-> > >
-> > > A small number of our CentOS VMs (about 4 out of a fleet of 200) are
-> > > experiencing ongoing, regular XFS corruption - and I'm not sure how t=
-o
-> > > troubleshoot the problem.  They are all CentOS 7.7 VMs are are using
-> > > VMWare Paravirtual SCSI.  The version of xfsprogs being used is
-> > > 4.5.0-20.el7.x86_64, and the kernel is 3.10.0-1062.1.2.el7.x86_64.
-> > > The VMWare version is ESXi, 6.5.0, 14320405.
-> > >
-> > > When the fault happens - the VMs will go into single user mode with
-> > > the following text displayed on the console:
-> > >
-> > > sd 0:0:0:0: [sda] Assuming drive cache: write through
-> > > XFS (dm-0): Internal error XFS_WANT_CORRUPTED_GOTO at line 1664 of
-> > > file fs/xfs/libxfs
-> > > /xfs_alloc.c. Caller xfs_free_extent+0xaa/0x140 [xfs]
-> > > XFS (dm-0): Internal error xfs_trans_cancel at line 984 of file
-> > > fs/xfs/xfs_trans.c.
-> > > Caller xfs_efi_recover+0x17d/0x1a0 [xfs]
-> > > XFS (dm-0): Corruption of in-memory data detected. Shutting down file=
-system
-> > > XFS (dm-0): Please umount the filesystem and rectify the problem(s)
-> > > XFS (dm-0): Failed to recover intents
-> >
-> > Seems like this is not the whole relevant log; "Failed to recover inten=
-ts"
-> > indicates it was in log replay but we don't see that starting.  Did you
-> > cut out other interesting bits?
+On Mon, Nov 18, 2019 at 11:49:56AM +1100, Dave Chinner wrote:
+> On Fri, Nov 15, 2019 at 12:21:40PM -0500, Brian Foster wrote:
+> > On Fri, Nov 15, 2019 at 07:49:26AM +1100, Dave Chinner wrote:
+> > > On Mon, Nov 04, 2019 at 10:25:25AM -0500, Brian Foster wrote:
+> > > > On Fri, Nov 01, 2019 at 10:45:59AM +1100, Dave Chinner wrote:
+> > > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > >=20
+> > > > > Introduce a mechanism for ->count_objects() to indicate to the
+> > > > > shrinker infrastructure that the reclaim context will not allow
+> > > > > scanning work to be done and so the work it decides is necessary
+> > > > > needs to be deferred.
+> > > > >=20
+> > > > > This simplifies the code by separating out the accounting of
+> > > > > deferred work from the actual doing of the work, and allows bette=
+r
+> > > > > decisions to be made by the shrinekr control logic on what action=
+ it
+> > > > > can take.
+> > > > >=20
+> > > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > > > ---
+> > > >=20
+> > > > My understanding from the previous discussion(s) is that this is no=
+t
+> > > > tied directly to the gfp mask because that is not the only intended=
+ use.
+> > > > While it is currently a boolean tied to the the entire shrinker cal=
+l,
+> > > > the longer term objective is per-object granularity.
+> > >=20
+> > > Longer term, yes, but right now such things are not possible as the
+> > > shrinker needs more context to be able to make sane per-object
+> > > decisions. shrinker policy decisions that affect the entire run
+> > > scope should be handled by the ->count operation - it's the one that
+> > > says whether the scan loop should run or not, and right now GFP_NOFS
+> > > for all filesystem shrinkers is a pure boolean policy
+> > > implementation.
+> > >=20
+> > > The next future step is to provide a superblock context with
+> > > GFP_NOFS to indicate which filesystem we cannot recurse into. That
+> > > is also a shrinker instance wide check, so again it's something that
+> > > ->count should be deciding.
+> > >=20
+> > > i.e. ->count determines what is to be done, ->scan iterates the work
+> > > that has to be done until we are done.
+> > >=20
+> >=20
+> > Sure, makes sense in general.
+> >=20
+> > > > I find the argument reasonable enough, but if the above is true, wh=
+y do
+> > > > we move these checks from ->scan_objects() to ->count_objects() (in=
+ the
+> > > > next patch) when per-object decisions will ultimately need to be ma=
+de by
+> > > > the former?
+> > >=20
+> > > Because run/no-run policy belongs in one place, and things like
+> > > GFP_NOFS do no change across calls to the ->scan loop. i.e. after
+> > > the first ->scan call in a loop that calls it hundreds to thousands
+> > > of times, the GFP_NOFS run/no-run check is completely redundant.
+> > >=20
+> >=20
+> > What loop is currently called hundreds to thousands of times that this
+> > change prevents? AFAICT the current nofs checks in the ->scan calls
+> > explicitly terminate the scan loop.
 >=20
-> Thank you for the reply.  When the problem happens the system ends up
-> in the EL7 dracut emergency shell.  Here's a picture of what the
-> console looks like right now (I haven't rebooted yet):
+> Right, but when we are in GFP_KERNEL context, every call to ->scan()
+> checks it and says "ok". If we are scanning tens of thousands of
+> objects in a scan, and we are using a befault batch size of 128
+> objects per scan, then we have hundreds of calls in a single scan
+> loop that check the GFP context and say "ok"....
 >=20
-> https://pasteboard.co/IGUpPiN.png
+> > So we're effectively saving a
+> > function call by doing this earlier in the count ->call. (Nothing wrong
+> > with that, I'm just not following the numbers used in this reasoning..)=
+.
 >=20
-> How can I get some debug information re the (attempted ?) log replay
-> for debug / analysis ?
+> It's the don't terminate case. :)
 >=20
 
-At this point I'm not sure there's a ton to gain from recovery analysis.
-The filesystem shows free space corruption where on log recovery, it is
-attempting to free some space that is already marked free. The
-corruption occurred some time in the past and recovery is just the first
-place we detect it and can fail. What we really want to find out is how
-this corruption is introduced in the first place. That may not be
-trivial, but it might be possible with instrumentation or custom debug
-code if you can reproduce this reliably enough and are willing to go
-that route. When you say 4 out of 200 VMs show this problem, is it
-consistently the same set of VMs or is that just the rate of failure of
-random guests out of the 200?
+Oh, I see. You're talking about the number of executions of the gfp
+check itself. That makes sense, though my understanding is that we'll
+ultimately have a similar check anyways if we want per-object
+granularity based on the allocation constraints of the current context.
+OTOH, the check would still occur only once with an alloc flags field in
+the shrinker structure too, FWIW.
 
-Logistical questions aside, I think the first technical question to
-answer is why are you in recovery in the first place? We'd want to know
-that because that could rule out a logging/recovery problem vs. a
-runtime bug introducing the corruption. Recovery should only be required
-after a crash or unclean shutdown. Do you know what kind of event caused
-the unclean shutdown? Did you see a runtime crash and filesystem
-shutdown with a similar corruption report as shown here, or was it an
-unrelated event? Please post system log output if you happen to have a
-record of an instance of the former. If there is such a corruption
-report, an xfs_metadump of the filesystem might also be useful to look
-at before you run xfs_repair.
+> > > Once we introduce a new policy that allows the fs shrinker to do
+> > > careful reclaim in GFP_NOFS conditions, we need to do substantial
+> > > rework the shrinker scan loop and how it accounts the work that is
+> > > done - we now have at least 3 or 4 different return counters
+> > > (skipped because locked, skipped because referenced,
+> > > reclaimed, deferred reclaim because couldn't lock/recursion) and
+> > > the accounting and decisions to be made are a lot more complex.
+> > >=20
+> >=20
+> > Yeah, that's generally what I expected from your previous description.
+> >=20
+> > > In that case, the ->count function will drop the GFP_NOFS check, but
+> > > still do all the other things is needs to do. The GFP_NOFS check
+> > > will go deep in the guts of the shrinker scan implementation where
+> > > the per-object recursion problem exists. But for most shrinkers,
+> > > it's still going to be a global boolean check...
+> > >=20
+> >=20
+> > So once the nofs checks are lifted out of the ->count callback and into
+> > the core shrinker, is there still a use case to defer an entire ->count
+> > instance from the callback?
+>=20
+> Not right now. There may be in future, but I don't want to make
+> things more complex than they need to be by trying to support
+> functionality that isn't used.
+>=20
+
+Ok, but do note that the reason I ask is to touch on simply whether it's
+worth putting this in the ->scan callback at all. It's not like _not_
+doing that is some big complexity adjustment. ;)
+
+> > > If people want to call avoiding repeated, unnecessary evaluation of
+> > > the same condition hundreds of times instead of once "unnecessary
+> > > churn", then I'll drop it.
+> > >=20
+> >=20
+> > I'm not referring to the functional change as churn. What I was
+> > referring to is that we're shuffling around the boilerplate gfp checkin=
+g
+> > code between the different shrinker callbacks, knowing that it's
+> > eventually going to be lifted out, when we could potentially just lift
+> > that code up a level now.
+>=20
+> I don't think that lifting it up will save much code at all, once we
+> add all the gfp mask intialisation to all the shrinkers, etc. It's
+> just means we can't look at the shrinker implementation and know
+> that it can't run in GFP_NOFS context - we have to go look up
+> where it is instantiated instead to see if there are gfp context
+> constraints.
+>=20
+> I think it's better where it is, documenting the constraints the
+> shrinker implementation runs under in the implementation itself...
+>=20
+
+Fair enough.. I don't necessarily agree that this is the best approach,
+but the implementation is reasonable enough that I certainly don't
+object to it (provided the fragility nits are addressed) and I don't
+feel particularly tied to the suggested alternative. At the end of the
+day this isn't a lot of code and it's not difficult to change (which it
+probably will). I just wanted to make sure the alternative was fairly
+considered and to test the reasoning for the approach a bit. I'll
+move along from this topic on review of the next version...
 
 Brian
 
-> > -Eric
+> Cheers,
+>=20
+> Dave.
+> --=20
+> Dave Chinner
+> david@fromorbit.com
 >=20
 
