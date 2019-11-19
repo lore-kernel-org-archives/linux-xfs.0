@@ -2,170 +2,94 @@ Return-Path: <SRS0=NxuP=ZL=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E32BC432C0
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Nov 2019 15:13:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 848B7C432C0
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Nov 2019 15:45:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 108A42082F
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Nov 2019 15:13:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 49D99222A2
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Nov 2019 15:45:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ABq3X73Z"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="P3hn9NRN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728316AbfKSPNv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Nov 2019 10:13:51 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:36813 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728315AbfKSPNu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Nov 2019 10:13:50 -0500
+        id S1727909AbfKSPo7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Nov 2019 10:44:59 -0500
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:55955 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727509AbfKSPo7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Nov 2019 10:44:59 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1574176429;
+        s=mimecast20190719; t=1574178298;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=widBx/i0o0g15mXBzX0xlHem4iGp/JqjGpNTCuPpt7c=;
-        b=ABq3X73Zes9y7CgUZ4aeX+FRdiBFnsPfGtgt/cRLbCYhB34wtU9mquRgeMnZEZlSoqN4Tt
-        C3OaMrNEjX4PDIgnpTLUnwMxKUPg18yaXumVB3H0Zc3faR0l6NPyvhRcwSrMuGRFUHgcsx
-        HwLS34TF8fP+NTfTTiD+02yan+SUyQg=
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=A4XpqoC4CyS8LgUnCj7NfdK5hSsUYfsmOzuXIuzMY0k=;
+        b=P3hn9NRNM7dHfAW1y2s4mC7aW9JjvPdSZ4i0oiCUFxX5iniwQnnBgMFzVYXUKWAqHSe9ir
+        PY1lJ9KrwcBD/SzbjcIWixRefi4bE/vUWu2X/7FecPA393tJhmxArMD2T986hN4gTdD0LB
+        G3RqNQ7tHFz5/ABINb0IDmX0AJVfq/A=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-31-ACVK68odNwylutUVZPDcFw-1; Tue, 19 Nov 2019 10:13:45 -0500
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+ us-mta-147-UqziwvNTPauDXv1EssTwtQ-1; Tue, 19 Nov 2019 10:44:57 -0500
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7449818C35B6;
-        Tue, 19 Nov 2019 15:13:44 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id D7A7150FCB;
-        Tue, 19 Nov 2019 15:13:43 +0000 (UTC)
-Date:   Tue, 19 Nov 2019 10:13:44 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 28/28] xfs: rework unreferenced inode lookups
-Message-ID: <20191119151344.GD10763@bfoster>
-References: <20191031234618.15403-1-david@fromorbit.com>
- <20191031234618.15403-29-david@fromorbit.com>
- <20191106221846.GE37080@bfoster>
- <20191114221602.GJ4614@dread.disaster.area>
- <20191115172600.GC55854@bfoster>
- <20191118010047.GS4614@dread.disaster.area>
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5E00664A7D
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Nov 2019 15:44:56 +0000 (UTC)
+Received: from orion.redhat.com (ovpn-204-164.brq.redhat.com [10.40.204.164])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id B5DEC19C4F
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Nov 2019 15:44:55 +0000 (UTC)
+From:   Carlos Maiolino <cmaiolino@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: Forbid FIEMAP on RT devices
+Date:   Tue, 19 Nov 2019 16:44:53 +0100
+Message-Id: <20191119154453.312400-1-cmaiolino@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20191118010047.GS4614@dread.disaster.area>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-MC-Unique: ACVK68odNwylutUVZPDcFw-1
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-MC-Unique: UqziwvNTPauDXv1EssTwtQ-1
 X-Mimecast-Spam-Score: 0
 Content-Type: text/plain; charset=WINDOWS-1252
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 18, 2019 at 12:00:47PM +1100, Dave Chinner wrote:
-> On Fri, Nov 15, 2019 at 12:26:00PM -0500, Brian Foster wrote:
-> > On Fri, Nov 15, 2019 at 09:16:02AM +1100, Dave Chinner wrote:
-> > > On Wed, Nov 06, 2019 at 05:18:46PM -0500, Brian Foster wrote:
-> > > If so, most of this patch will go away....
-> > >=20
-> > > > > +=09 * attached to the buffer so we don't need to do anything mor=
-e here.
-> > > > >  =09 */
-> > > > > -=09if (ip !=3D free_ip) {
-> > > > > -=09=09if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
-> > > > > -=09=09=09rcu_read_unlock();
-> > > > > -=09=09=09delay(1);
-> > > > > -=09=09=09goto retry;
-> > > > > -=09=09}
-> > > > > -
-> > > > > -=09=09/*
-> > > > > -=09=09 * Check the inode number again in case we're racing with
-> > > > > -=09=09 * freeing in xfs_reclaim_inode().  See the comments in th=
-at
-> > > > > -=09=09 * function for more information as to why the initial che=
-ck is
-> > > > > -=09=09 * not sufficient.
-> > > > > -=09=09 */
-> > > > > -=09=09if (ip->i_ino !=3D inum) {
-> > > > > +=09if (__xfs_iflags_test(ip, XFS_ISTALE)) {
-> > > >=20
-> > > > Is there a correctness reason for why we move the stale check to un=
-der
-> > > > ilock (in both iflush/ifree)?
-> > >=20
-> > > It's under the i_flags_lock, and so I moved it up under the lookup
-> > > hold of the i_flags_lock so we don't need to cycle it again.
-> > >=20
-> >=20
-> > Yeah, but in both cases it looks like it moved to under the ilock as
-> > well, which comes after i_flags_lock. IOW, why grab ilock for stale
-> > inodes when we're just going to skip them?
->=20
-> Because I was worrying about serialising against reclaim before
-> changing the state of the inode. i.e. if the inode has already been
-> isolated by not yet disposed of, we shouldn't touch the inode state
-> at all. Serialisation against reclaim in this patch is via the
-> ILOCK, hence we need to do that before setting ISTALE....
->=20
+By now, FIEMAP users have no way to identify which device contains the
+mapping being reported by the ioctl, so, let's forbid FIEMAP on RT
+devices/files until FIEMAP can properly report the device containing the
+returned mappings.
 
-Yeah, I think my question still isn't clear... I'm not talking about
-setting ISTALE. The code I referenced above is where we test for it and
-skip the inode if it is already set. For example, the code referenced
-above in xfs_ifree_get_one_inode() currently does the following with
-respect to i_flags_lock, ILOCK and XFS_ISTALE:
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
 
-=09...
-=09spin_lock(i_flags_lock)
-=09xfs_ilock_nowait(XFS_ILOCK_EXCL)
-=09if !XFS_ISTALE
-=09=09skip
-=09set XFS_ISTALE
-=09...
+Hi folks, this change has been previously suggested by Christoph while the
+fibmap->fiemap work was being discussed on the last version [1] of that set=
+.
+And after some thought I do think RT devices shouldn't allow fiemap calls
+either, giving the file blocks will actually be on a different device than =
+that
+displayed on /proc/mounts which can lead to erroneous assumptions.
 
-The reclaim isolate code does this, however:
+ fs/xfs/xfs_iops.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-=09spin_trylock(i_flags_lock)
-=09if !XFS_ISTALE
-=09=09skip
-=09xfs_ilock(XFS_ILOCK_EXCL)
-=09...=09
-
-So my question is why not do something like the following in the
-_get_one_inode() case?
-
-=09...
-=09spin_lock(i_flags_lock)
-=09if !XFS_ISTALE
-=09=09skip
-=09xfs_ilock_nowait(XFS_ILOCK_EXCL)
-=09set XFS_ISTALE
-=09...
-
-IOW, what is the need, if any, to acquire ilock in the iflush/ifree
-paths before testing for XFS_ISTALE? Is there some specific intermediate
-state I'm missing or is this just unintentional? The reason I ask is
-ilock failure triggers that ugly delay(1) and retry thing, so it seems
-slightly weird to allow that for a stale inode we're ultimately going to
-skip (regardless of whether that would actually ever occur).
-
-Brian
-
-> IOWs, ISTALE is not protected by ILOCK, we just can't modify the
-> inode state until after we've gained the ILOCK to protect against
-> reclaim....
->=20
-> Cheers,
->=20
-> Dave.
-> --=20
-> Dave Chinner
-> david@fromorbit.com
->=20
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index e532db27d0dc..ec7749cbd3ca 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1138,6 +1138,9 @@ xfs_vn_fiemap(
+ {
+ =09int=09=09=09error;
+=20
++=09if (XFS_IS_REALTIME_INODE(XFS_I(inode)))
++=09=09return -EOPNOTSUPP;
++
+ =09xfs_ilock(XFS_I(inode), XFS_IOLOCK_SHARED);
+ =09if (fieinfo->fi_flags & FIEMAP_FLAG_XATTR) {
+ =09=09fieinfo->fi_flags &=3D ~FIEMAP_FLAG_XATTR;
+--=20
+2.23.0
 
