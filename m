@@ -2,163 +2,332 @@ Return-Path: <SRS0=NxuP=ZL=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86C65C432C3
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Nov 2019 21:18:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DE45C43215
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Nov 2019 22:35:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5E397222B0
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Nov 2019 21:18:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 40F1A2245D
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Nov 2019 22:35:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1574202945;
+	bh=LlKJsgsUeADvLLy81A2dvgQYKFYUOtvPPmXnIL6rDRs=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=I9Op6/ZF4ZZLDXJoxKfplPlLSFgKro/fWb/vra7MWwbxq7qxpli+X3WMIKZrC45OJ
+	 bYI5UoJEoYHnwr7sxd/EURtkbTYKx9fQ5PIFY3E1LJMHVFqZG5YeXRkZZfSnOL0cAS
+	 cGQAZMiu8P8P5WpgXxgxwG/wJJQjP+M/PmVWa790=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727164AbfKSVSm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Nov 2019 16:18:42 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:56796 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726711AbfKSVSl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Nov 2019 16:18:41 -0500
-Received: from dread.disaster.area (pa49-181-255-80.pa.nsw.optusnet.com.au [49.181.255.80])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 836237E9C39;
-        Wed, 20 Nov 2019 08:18:37 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1iXAtO-0007v2-C9; Wed, 20 Nov 2019 08:18:34 +1100
-Date:   Wed, 20 Nov 2019 08:18:34 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 28/28] xfs: rework unreferenced inode lookups
-Message-ID: <20191119211834.GA4614@dread.disaster.area>
-References: <20191031234618.15403-1-david@fromorbit.com>
- <20191031234618.15403-29-david@fromorbit.com>
- <20191106221846.GE37080@bfoster>
- <20191114221602.GJ4614@dread.disaster.area>
- <20191115172600.GC55854@bfoster>
- <20191118010047.GS4614@dread.disaster.area>
- <20191119151344.GD10763@bfoster>
+        id S1726874AbfKSWfo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Nov 2019 17:35:44 -0500
+Received: from mail.kernel.org ([198.145.29.99]:43524 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726025AbfKSWfo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 19 Nov 2019 17:35:44 -0500
+Received: from ebiggers-linuxstation.mtv.corp.google.com (unknown [104.132.1.77])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9F98122449;
+        Tue, 19 Nov 2019 22:35:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1574202942;
+        bh=LlKJsgsUeADvLLy81A2dvgQYKFYUOtvPPmXnIL6rDRs=;
+        h=From:To:Cc:Subject:Date:From;
+        b=gzOhm2d/vblWOzB4huynAQAmCVKXsM3NUR61KCuFYxuAnowA6PJXlorCcTgu29fHL
+         epVTCFDnwKRoq+5FlFU0L61rrVXTDTet1oAy+oocF2u7GQqXd+2og48vBv1w4BZCNf
+         1Nr71zTbfK/OXQxDBUWhq+lYLbyuwK2g3NfM5b+I=
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     linux-xfs@vger.kernel.org
+Cc:     fstests@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+        keyrings@vger.kernel.org,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>
+Subject: [xfsprogs RFC PATCH] xfs_io/encrypt: support passing a keyring key to add_enckey
+Date:   Tue, 19 Nov 2019 14:34:56 -0800
+Message-Id: <20191119223456.230696-1-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.24.0.432.g9d3f5f5b63-goog
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191119151344.GD10763@bfoster>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
-        a=XqaD5fcB6dAc7xyKljs8OA==:117 a=XqaD5fcB6dAc7xyKljs8OA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=MeAgGD-zjQ4A:10
-        a=7-415B0cAAAA:8 a=6g2m8KwY7f5AaauT50oA:9 a=kN7pVA4lhFw_-KmI:21
-        a=bRrQUF9rowBlmQs9:21 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 19, 2019 at 10:13:44AM -0500, Brian Foster wrote:
-> On Mon, Nov 18, 2019 at 12:00:47PM +1100, Dave Chinner wrote:
-> > On Fri, Nov 15, 2019 at 12:26:00PM -0500, Brian Foster wrote:
-> > > On Fri, Nov 15, 2019 at 09:16:02AM +1100, Dave Chinner wrote:
-> > > > On Wed, Nov 06, 2019 at 05:18:46PM -0500, Brian Foster wrote:
-> > > > If so, most of this patch will go away....
-> > > > 
-> > > > > > +	 * attached to the buffer so we don't need to do anything more here.
-> > > > > >  	 */
-> > > > > > -	if (ip != free_ip) {
-> > > > > > -		if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
-> > > > > > -			rcu_read_unlock();
-> > > > > > -			delay(1);
-> > > > > > -			goto retry;
-> > > > > > -		}
-> > > > > > -
-> > > > > > -		/*
-> > > > > > -		 * Check the inode number again in case we're racing with
-> > > > > > -		 * freeing in xfs_reclaim_inode().  See the comments in that
-> > > > > > -		 * function for more information as to why the initial check is
-> > > > > > -		 * not sufficient.
-> > > > > > -		 */
-> > > > > > -		if (ip->i_ino != inum) {
-> > > > > > +	if (__xfs_iflags_test(ip, XFS_ISTALE)) {
-> > > > > 
-> > > > > Is there a correctness reason for why we move the stale check to under
-> > > > > ilock (in both iflush/ifree)?
-> > > > 
-> > > > It's under the i_flags_lock, and so I moved it up under the lookup
-> > > > hold of the i_flags_lock so we don't need to cycle it again.
-> > > > 
-> > > 
-> > > Yeah, but in both cases it looks like it moved to under the ilock as
-> > > well, which comes after i_flags_lock. IOW, why grab ilock for stale
-> > > inodes when we're just going to skip them?
-> > 
-> > Because I was worrying about serialising against reclaim before
-> > changing the state of the inode. i.e. if the inode has already been
-> > isolated by not yet disposed of, we shouldn't touch the inode state
-> > at all. Serialisation against reclaim in this patch is via the
-> > ILOCK, hence we need to do that before setting ISTALE....
-> > 
-> 
-> Yeah, I think my question still isn't clear... I'm not talking about
-> setting ISTALE. The code I referenced above is where we test for it and
-> skip the inode if it is already set. For example, the code referenced
-> above in xfs_ifree_get_one_inode() currently does the following with
-> respect to i_flags_lock, ILOCK and XFS_ISTALE:
-> 
-> 	...
-> 	spin_lock(i_flags_lock)
-> 	xfs_ilock_nowait(XFS_ILOCK_EXCL)
-> 	if !XFS_ISTALE
-> 		skip
-> 	set XFS_ISTALE
-> 	...
+From: Eric Biggers <ebiggers@google.com>
 
-There is another place in xfs_ifree_cluster that sets ISTALE without
-the ILOCK held, so the ILOCK is being used here for a different
-purpose...
+Add a '-k' option to the 'add_enckey' xfs_io command to allow exercising
+the key_id field that is being added to struct fscrypt_add_key_arg.
 
-> The reclaim isolate code does this, however:
-> 
-> 	spin_trylock(i_flags_lock)
-> 	if !XFS_ISTALE
-> 		skip
-> 	xfs_ilock(XFS_ILOCK_EXCL)
-> 	...	
+This is needed for the corresponding test in xfstests.
 
-Which is fine, because we're not trying to avoid racing with reclaim
-here. :) i.e. all we need is the i_flags lock to check the ISTALE
-flag safely.
+For more details, see the corresponding xfstests and kernel patches.
 
-> So my question is why not do something like the following in the
-> _get_one_inode() case?
-> 
-> 	...
-> 	spin_lock(i_flags_lock)
-> 	if !XFS_ISTALE
-> 		skip
-> 	xfs_ilock_nowait(XFS_ILOCK_EXCL)
-> 	set XFS_ISTALE
-> 	...
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
 
-Because, like I said, I focussed on the lookup racing with reclaim
-first. The above code could be used, but it puts object internal
-state checks before we really know whether the object is safe to
-access and whether we can trust it.
+I'm sending this out for comment now, but it shouldn't be merged until
+the corresponding kernel patch has reached mainline.
 
-I'm just following a basic RCU/lockless lookup principle here:
-don't try to use object state before you've fully validated that the
-object is live and guaranteed that it can be safely referenced.
+ configure.ac          |  1 +
+ include/builddefs.in  |  4 ++
+ io/encrypt.c          | 90 +++++++++++++++++++++++++++++++------------
+ m4/package_libcdev.m4 | 21 ++++++++++
+ man/man8/xfs_io.8     | 10 +++--
+ 5 files changed, 98 insertions(+), 28 deletions(-)
 
-> IOW, what is the need, if any, to acquire ilock in the iflush/ifree
-> paths before testing for XFS_ISTALE? Is there some specific intermediate
-> state I'm missing or is this just unintentional?
-
-It's entirely intentional - validate and claim the object we've
-found in the lockless lookup, then run the code that checks/changes
-the object state. Smashing state checks and lockless lookup
-validation together is a nasty landmine to leave behind...
-
-Cheers,
-
-Dave.
+diff --git a/configure.ac b/configure.ac
+index 30b1213b..3323181c 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -176,6 +176,7 @@ AC_HAVE_READDIR
+ AC_HAVE_FSETXATTR
+ AC_HAVE_MREMAP
+ AC_NEED_INTERNAL_FSXATTR
++AC_NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG
+ AC_HAVE_GETFSMAP
+ AC_HAVE_STATFS_FLAGS
+ AC_HAVE_MAP_SYNC
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 4700b527..3b6b1c1b 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -102,6 +102,7 @@ HAVE_FLS = @have_fls@
+ HAVE_FSETXATTR = @have_fsetxattr@
+ HAVE_MREMAP = @have_mremap@
+ NEED_INTERNAL_FSXATTR = @need_internal_fsxattr@
++NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG = @need_internal_fscrypt_add_key_arg@
+ HAVE_GETFSMAP = @have_getfsmap@
+ HAVE_STATFS_FLAGS = @have_statfs_flags@
+ HAVE_MAP_SYNC = @have_map_sync@
+@@ -141,6 +142,9 @@ endif
+ ifeq ($(NEED_INTERNAL_FSXATTR),yes)
+ PCFLAGS+= -DOVERRIDE_SYSTEM_FSXATTR
+ endif
++ifeq ($(NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG),yes)
++PCFLAGS+= -DOVERRIDE_SYSTEM_FSCRYPT_ADD_KEY_ARG
++endif
+ ifeq ($(HAVE_GETFSMAP),yes)
+ PCFLAGS+= -DHAVE_GETFSMAP
+ endif
+diff --git a/io/encrypt.c b/io/encrypt.c
+index de48c50c..01b7e0df 100644
+--- a/io/encrypt.c
++++ b/io/encrypt.c
+@@ -4,6 +4,9 @@
+  * Author: Eric Biggers <ebiggers@google.com>
+  */
+ 
++#ifdef OVERRIDE_SYSTEM_FSCRYPT_ADD_KEY_ARG
++#  define fscrypt_add_key_arg sys_fscrypt_add_key_arg
++#endif
+ #include "platform_defs.h"
+ #include "command.h"
+ #include "init.h"
+@@ -99,13 +102,7 @@ struct fscrypt_key_specifier {
+ 	} u;
+ };
+ 
+-#define FS_IOC_ADD_ENCRYPTION_KEY		_IOWR('f', 23, struct fscrypt_add_key_arg)
+-struct fscrypt_add_key_arg {
+-	struct fscrypt_key_specifier key_spec;
+-	__u32 raw_size;
+-	__u32 __reserved[9];
+-	__u8 raw[];
+-};
++/* FS_IOC_ADD_ENCRYPTION_KEY is defined later */
+ 
+ #define FS_IOC_REMOVE_ENCRYPTION_KEY		_IOWR('f', 24, struct fscrypt_remove_key_arg)
+ #define FS_IOC_REMOVE_ENCRYPTION_KEY_ALL_USERS	_IOWR('f', 25, struct fscrypt_remove_key_arg)
+@@ -136,6 +133,26 @@ struct fscrypt_get_key_status_arg {
+ 
+ #endif /* !FS_IOC_GET_ENCRYPTION_POLICY_EX */
+ 
++/*
++ * Since the key_id field was added later than struct fscrypt_add_key_arg
++ * itself, we may need to override the system definition to get that field.
++ */
++#if !defined(FS_IOC_ADD_ENCRYPTION_KEY) || \
++	defined(OVERRIDE_SYSTEM_FSCRYPT_ADD_KEY_ARG)
++#undef fscrypt_add_key_arg
++struct fscrypt_add_key_arg {
++	struct fscrypt_key_specifier key_spec;
++	__u32 raw_size;
++	__u32 key_id;
++	__u32 __reserved[8];
++	__u8 raw[];
++};
++#endif
++
++#ifndef FS_IOC_ADD_ENCRYPTION_KEY
++#  define FS_IOC_ADD_ENCRYPTION_KEY		_IOWR('f', 23, struct fscrypt_add_key_arg)
++#endif
++
+ static const struct {
+ 	__u8 mode;
+ 	const char *name;
+@@ -217,8 +234,9 @@ add_enckey_help(void)
+ " 'add_enckey' - add key for v2 policies\n"
+ " 'add_enckey -d 0000111122223333' - add key for v1 policies w/ given descriptor\n"
+ "\n"
+-"The key in binary is read from standard input.\n"
++"Unless -k is given, the key in binary is read from standard input.\n"
+ " -d DESCRIPTOR -- master_key_descriptor\n"
++" -k KEY_ID -- ID of fscrypt-provisioning key containing the raw key\n"
+ "\n"));
+ }
+ 
+@@ -431,6 +449,21 @@ str2keyspec(const char *str, int policy_version,
+ 	return policy_version;
+ }
+ 
++static int
++parse_key_id(const char *arg)
++{
++	long value;
++	char *tmp;
++
++	value = strtol(arg, &tmp, 0);
++	if (value <= 0 || value > INT_MAX || tmp == arg || *tmp != '\0') {
++		fprintf(stderr, _("invalid key ID: %s\n"), arg);
++		/* 0 is never a valid Linux key ID. */
++		return 0;
++	}
++	return value;
++}
++
+ static void
+ test_for_v2_policy_support(void)
+ {
+@@ -689,13 +722,18 @@ add_enckey_f(int argc, char **argv)
+ 
+ 	arg->key_spec.type = FSCRYPT_KEY_SPEC_TYPE_IDENTIFIER;
+ 
+-	while ((c = getopt(argc, argv, "d:")) != EOF) {
++	while ((c = getopt(argc, argv, "d:k:")) != EOF) {
+ 		switch (c) {
+ 		case 'd':
+ 			arg->key_spec.type = FSCRYPT_KEY_SPEC_TYPE_DESCRIPTOR;
+ 			if (!str2keydesc(optarg, arg->key_spec.u.descriptor))
+ 				goto out;
+ 			break;
++		case 'k':
++			arg->key_id = parse_key_id(optarg);
++			if (arg->key_id == 0)
++				goto out;
++			break;
+ 		default:
+ 			retval = command_usage(&add_enckey_cmd);
+ 			goto out;
+@@ -709,21 +747,23 @@ add_enckey_f(int argc, char **argv)
+ 		goto out;
+ 	}
+ 
+-	raw_size = read_until_limit_or_eof(STDIN_FILENO, arg->raw,
+-					   FSCRYPT_MAX_KEY_SIZE + 1);
+-	if (raw_size < 0) {
+-		fprintf(stderr, _("Error reading key from stdin: %s\n"),
+-			strerror(errno));
+-		exitcode = 1;
+-		goto out;
+-	}
+-	if (raw_size > FSCRYPT_MAX_KEY_SIZE) {
+-		fprintf(stderr,
+-			_("Invalid key; got > FSCRYPT_MAX_KEY_SIZE (%d) bytes on stdin!\n"),
+-			FSCRYPT_MAX_KEY_SIZE);
+-		goto out;
+-	}
+-	arg->raw_size = raw_size;
++	if (arg->key_id == 0) {
++		raw_size = read_until_limit_or_eof(STDIN_FILENO, arg->raw,
++						   FSCRYPT_MAX_KEY_SIZE + 1);
++		if (raw_size < 0) {
++			fprintf(stderr, _("Error reading key from stdin: %s\n"),
++				strerror(errno));
++			exitcode = 1;
++			goto out;
++		}
++		if (raw_size > FSCRYPT_MAX_KEY_SIZE) {
++			fprintf(stderr,
++				_("Invalid key; got > FSCRYPT_MAX_KEY_SIZE (%d) bytes on stdin!\n"),
++				FSCRYPT_MAX_KEY_SIZE);
++			goto out;
++		}
++		arg->raw_size = raw_size;
++	} /* else, raw key is given via key with ID 'key_id' */
+ 
+ 	if (ioctl(file->fd, FS_IOC_ADD_ENCRYPTION_KEY, arg) != 0) {
+ 		fprintf(stderr, _("Error adding encryption key: %s\n"),
+@@ -859,7 +899,7 @@ encrypt_init(void)
+ 
+ 	add_enckey_cmd.name = "add_enckey";
+ 	add_enckey_cmd.cfunc = add_enckey_f;
+-	add_enckey_cmd.args = _("[-d descriptor]");
++	add_enckey_cmd.args = _("[-d descriptor] [-k key_id]");
+ 	add_enckey_cmd.argmin = 0;
+ 	add_enckey_cmd.argmax = -1;
+ 	add_enckey_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index 2c0c72ce..adab9bb9 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -278,6 +278,27 @@ AC_DEFUN([AC_NEED_INTERNAL_FSXATTR],
+     AC_SUBST(need_internal_fsxattr)
+   ])
+ 
++#
++# Check if we need to override the system struct fscrypt_add_key_arg
++# with the internal definition.  This /only/ happens if the system
++# actually defines struct fscrypt_add_key_arg /and/ the system
++# definition is missing certain fields.
++#
++AC_DEFUN([AC_NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG],
++  [
++    AC_CHECK_TYPE(struct fscrypt_add_key_arg,
++      [
++        AC_CHECK_MEMBER(struct fscrypt_add_key_arg.key_id,
++          ,
++          need_internal_fscrypt_add_key_arg=yes,
++          [#include <linux/fs.h>]
++        )
++      ],,
++      [#include <linux/fs.h>]
++    )
++    AC_SUBST(need_internal_fscrypt_add_key_arg)
++  ])
++
+ #
+ # Check if we have a FS_IOC_GETFSMAP ioctl (Linux)
+ #
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index c69b295d..0afe3e7f 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -749,10 +749,10 @@ Test whether v2 encryption policies are supported.  Prints "supported",
+ .RE
+ .PD
+ .TP
+-.BI "add_enckey [ \-d " descriptor " ]"
++.BI "add_enckey [ \-d " descriptor " ] [ \-k " key_id " ]"
+ On filesystems that support encryption, add an encryption key to the filesystem
+-containing the currently open file.  The key in binary (typically 64 bytes long)
+-is read from standard input.
++containing the currently open file.  By default, the raw key in binary
++(typically 64 bytes long) is read from standard input.
+ .RS 1.0i
+ .PD 0
+ .TP 0.4i
+@@ -761,6 +761,10 @@ key descriptor, as a 16-character hex string (8 bytes).  If given, the key will
+ be available for use by v1 encryption policies that use this descriptor.
+ Otherwise, the key is added as a v2 policy key, and on success the resulting
+ "key identifier" will be printed.
++.TP
++.BI \-k " key_id"
++ID of kernel keyring key of type "fscrypt-provisioning".  If given, the raw key
++will be taken from here rather than from standard input.
+ .RE
+ .PD
+ .TP
 -- 
-Dave Chinner
-david@fromorbit.com
+2.24.0.432.g9d3f5f5b63-goog
+
