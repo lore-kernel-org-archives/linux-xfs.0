@@ -2,244 +2,199 @@ Return-Path: <SRS0=ArDI=ZM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C861C432C0
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Nov 2019 21:41:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E616C432C0
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Nov 2019 22:03:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2605E20855
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Nov 2019 21:41:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DBF9620672
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Nov 2019 22:03:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="P9GKyN24"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DmZUR+Qy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726380AbfKTVlx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Nov 2019 16:41:53 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:47720 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725819AbfKTVlx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Nov 2019 16:41:53 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAKLdsqO163449;
-        Wed, 20 Nov 2019 21:41:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=W7eQoHiKOrpdSzyMVjAM/ZH6vEBdJHORl1QJuiF87b4=;
- b=P9GKyN24D1WJNDtSrmYj8C8QaUhgwdg+IdJ/1w2ncHp1bnr4DgTrrKtvaXGITbTE5vcF
- I04KBEGUc+inmrJVSdIvKzVhoDDpvR8NENWv3BikZJnQlfsap2MfgMaORFSOfEYShqsk
- Y+QAGOD3FwJ0LiQ1Q2q9xv0mnfJGVFpRiqjgRLSnBh/opd20T7pu6aovM165/REY0Dwz
- alJhb9NLi24AU5vwxWKeF4a8q2XICNHyvyHC1n/PVGUx+U7xaFABmkKq+NeQukHeJt5I
- HA3TBVHOEEZNc8i7A0uATXklFRgAxEibYmZCD7Cealzs5f9IcoZV2k2n4cEJGCxE4A36 5g== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2wa8hu0brq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 20 Nov 2019 21:41:49 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAKLc1ZU196089;
-        Wed, 20 Nov 2019 21:41:49 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2wd46x4j1r-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 20 Nov 2019 21:41:49 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xAKLfkeN021574;
-        Wed, 20 Nov 2019 21:41:46 GMT
-Received: from localhost (/10.159.246.236)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 20 Nov 2019 13:41:46 -0800
-Date:   Wed, 20 Nov 2019 13:41:45 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Carlos Maiolino <cmaiolino@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/5] xfs: remove kmem_zalloc() wrapper
-Message-ID: <20191120214145.GT6219@magnolia>
-References: <20191120104425.407213-1-cmaiolino@redhat.com>
- <20191120104425.407213-4-cmaiolino@redhat.com>
- <20191120212401.GC4614@dread.disaster.area>
+        id S1726346AbfKTWD3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Nov 2019 17:03:29 -0500
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:26342 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725936AbfKTWD3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Nov 2019 17:03:29 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1574287407;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=f6C29Osq+JMxMyTsFEFeFdTV5O5zf4w1ZtFWoHQvhHQ=;
+        b=DmZUR+QysllpJRKa5v9RQt+0hHAZS694g22Fyq3YITnsYaa7NKQrcq7NmE8E53JVGdGmI+
+        gt/WLnmr7I0s7+wn2N77hLnnV38My6aWkLuIaFJLzylH73QBhxRVWfVmFTU9EXp/dXm+hJ
+        SEssoLyoZ45TKcd9neTk6y9+EgLX+aY=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-318-cttqolrQN5ynM6c2_mDL9Q-1; Wed, 20 Nov 2019 17:03:24 -0500
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 56DCE801E5D;
+        Wed, 20 Nov 2019 22:03:22 +0000 (UTC)
+Received: from pauld.bos.csb (dhcp-17-51.bos.redhat.com [10.18.17.51])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 544F853C20;
+        Wed, 20 Nov 2019 22:03:15 +0000 (UTC)
+Date:   Wed, 20 Nov 2019 17:03:13 -0500
+From:   Phil Auld <pauld@redhat.com>
+To:     Peter Zijlstra <peterz@infradead.org>
+Cc:     Dave Chinner <david@fromorbit.com>, Ming Lei <ming.lei@redhat.com>,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jeff Moyer <jmoyer@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+        Vincent Guittot <vincent.guittot@linaro.org>
+Subject: Re: single aio thread is migrated crazily by scheduler
+Message-ID: <20191120220313.GC18056@pauld.bos.csb>
+References: <20191114113153.GB4213@ming.t460p>
+ <20191114235415.GL4614@dread.disaster.area>
+ <20191115010824.GC4847@ming.t460p>
+ <20191115045634.GN4614@dread.disaster.area>
+ <20191115070843.GA24246@ming.t460p>
+ <20191115234005.GO4614@dread.disaster.area>
+ <20191118092121.GV4131@hirez.programming.kicks-ass.net>
+ <20191118204054.GV4614@dread.disaster.area>
+ <20191120191636.GI4097@hirez.programming.kicks-ass.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20191120191636.GI4097@hirez.programming.kicks-ass.net>
+User-Agent: Mutt/1.5.21 (2010-09-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-MC-Unique: cttqolrQN5ynM6c2_mDL9Q-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
 Content-Disposition: inline
-In-Reply-To: <20191120212401.GC4614@dread.disaster.area>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9447 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1911200182
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9447 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1911200182
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 21, 2019 at 08:24:01AM +1100, Dave Chinner wrote:
-> On Wed, Nov 20, 2019 at 11:44:23AM +0100, Carlos Maiolino wrote:
-> > Use kzalloc() directly
-> > 
-> > Special attention goes to function xfs_buf_map_from_irec(). Giving the
-> > fact we are not allowed to fail there, I removed the 'if (!map)'
-> > conditional from there, I'd just like somebody to double check if it's
-> > fine as I believe it is
-> > 
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> 
-> It looks good as a 1:1 translation, but I've noticed a few places we
-> actually have the context wrong and have been saved by the fact tehy
-> are called in transaction context (hence GFP_NOFS is enforced by
-> task flags).
-> 
-> This can be fixed in a separate patch, I've noted the ones I think
-> need changing below.
-> 
-> > diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> > index 795b9b21b64d..67de68584224 100644
-> > --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> > +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> > @@ -2253,7 +2253,8 @@ xfs_attr3_leaf_unbalance(
-> >  		struct xfs_attr_leafblock *tmp_leaf;
-> >  		struct xfs_attr3_icleaf_hdr tmphdr;
-> >  
-> > -		tmp_leaf = kmem_zalloc(state->args->geo->blksize, 0);
-> > +		tmp_leaf = kzalloc(state->args->geo->blksize,
-> > +				   GFP_KERNEL | __GFP_NOFAIL);
-> 
-> In a transaction, GFP_NOFS.
+Hi Peter,
 
-As we're discussing on IRC, this is probably correct, but let's do a
-straight KM_ -> GFP_ conversion here, warts and all; and then do a
-separate series to sort out incorrect flag usage.
+On Wed, Nov 20, 2019 at 08:16:36PM +0100 Peter Zijlstra wrote:
+> On Tue, Nov 19, 2019 at 07:40:54AM +1100, Dave Chinner wrote:
+> > On Mon, Nov 18, 2019 at 10:21:21AM +0100, Peter Zijlstra wrote:
+>=20
+> > > We typically only fall back to the active balancer when there is
+> > > (persistent) imbalance and we fail to migrate anything else (of
+> > > substance).
+> > >=20
+> > > The tuning mentioned has the effect of less frequent scheduling, IOW,
+> > > leaving (short) tasks on the runqueue longer. This obviously means th=
+e
+> > > load-balancer will have a bigger chance of seeing them.
+> > >=20
+> > > Now; it's been a while since I looked at the workqueue code but one
+> > > possible explanation would be if the kworker that picks up the work i=
+tem
+> > > is pinned. That would make it runnable but not migratable, the exact
+> > > situation in which we'll end up shooting the current task with active
+> > > balance.
+> >=20
+> > Yes, that's precisely the problem - work is queued, by default, on a
+> > specific CPU and it will wait for a kworker that is pinned to that
+>=20
+> I'm thinking the problem is that it doesn't wait. If it went and waited
+> for it, active balance wouldn't be needed, that only works on active
+> tasks.
 
---D
+Since this is AIO I wonder if it should queue_work on a nearby cpu by=20
+default instead of unbound. =20
 
-> > diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> > index dc39b2d1b351..4fea8e5e70fb 100644
-> > --- a/fs/xfs/xfs_buf_item.c
-> > +++ b/fs/xfs/xfs_buf_item.c
-> > @@ -701,8 +701,8 @@ xfs_buf_item_get_format(
-> >  		return 0;
-> >  	}
-> >  
-> > -	bip->bli_formats = kmem_zalloc(count * sizeof(struct xfs_buf_log_format),
-> > -				0);
-> > +	bip->bli_formats = kzalloc(count * sizeof(struct xfs_buf_log_format),
-> > +				   GFP_KERNEL | __GFP_NOFAIL);
-> >  	if (!bip->bli_formats)
-> >  		return -ENOMEM;
-> >  	return 0;
-> 
-> In a transaction, GFP_NOFS.
-> 
-> > diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
-> > index 1b5e68ccef60..91bd47e8b832 100644
-> > --- a/fs/xfs/xfs_dquot_item.c
-> > +++ b/fs/xfs/xfs_dquot_item.c
-> > @@ -347,7 +347,8 @@ xfs_qm_qoff_logitem_init(
-> >  {
-> >  	struct xfs_qoff_logitem	*qf;
-> >  
-> > -	qf = kmem_zalloc(sizeof(struct xfs_qoff_logitem), 0);
-> > +	qf = kzalloc(sizeof(struct xfs_qoff_logitem),
-> > +		     GFP_KERNEL | __GFP_NOFAIL);
-> 
-> In a transaction, GFP_NOFS.
-> 
-> > diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-> > index 9f0b99c7b34a..0ce50b47fc28 100644
-> > --- a/fs/xfs/xfs_extent_busy.c
-> > +++ b/fs/xfs/xfs_extent_busy.c
-> > @@ -33,7 +33,8 @@ xfs_extent_busy_insert(
-> >  	struct rb_node		**rbp;
-> >  	struct rb_node		*parent = NULL;
-> >  
-> > -	new = kmem_zalloc(sizeof(struct xfs_extent_busy), 0);
-> > +	new = kzalloc(sizeof(struct xfs_extent_busy),
-> > +		      GFP_KERNEL | __GFP_NOFAIL);
-> 
-> transaction, GFP_NOFS.
-> 
-> >  	new->agno = agno;
-> >  	new->bno = bno;
-> >  	new->length = len;
-> > diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-> > index c3b8804aa396..872312029957 100644
-> > --- a/fs/xfs/xfs_extfree_item.c
-> > +++ b/fs/xfs/xfs_extfree_item.c
-> > @@ -163,7 +163,7 @@ xfs_efi_init(
-> >  	if (nextents > XFS_EFI_MAX_FAST_EXTENTS) {
-> >  		size = (uint)(sizeof(xfs_efi_log_item_t) +
-> >  			((nextents - 1) * sizeof(xfs_extent_t)));
-> > -		efip = kmem_zalloc(size, 0);
-> > +		efip = kzalloc(size, GFP_KERNEL | __GFP_NOFAIL);
-> >  	} else {
-> >  		efip = kmem_cache_zalloc(xfs_efi_zone,
-> >  					 GFP_KERNEL | __GFP_NOFAIL);
-> 
-> Both of these GFP_NOFS.
-> 
-> > @@ -333,9 +333,9 @@ xfs_trans_get_efd(
-> >  	ASSERT(nextents > 0);
-> >  
-> >  	if (nextents > XFS_EFD_MAX_FAST_EXTENTS) {
-> > -		efdp = kmem_zalloc(sizeof(struct xfs_efd_log_item) +
-> > +		efdp = kzalloc(sizeof(struct xfs_efd_log_item) +
-> >  				(nextents - 1) * sizeof(struct xfs_extent),
-> > -				0);
-> > +				GFP_KERNEL | __GFP_NOFAIL);
-> >  	} else {
-> >  		efdp = kmem_cache_zalloc(xfs_efd_zone,
-> >  					 GFP_KERNEL | __GFP_NOFAIL);
-> 
-> Same here.
-> 
-> Hmmm. I guess I better go look at the kmem_cache_[z]alloc() patches,
-> too.
-> 
-> > diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-> > index 76b39f2a0260..7ec70a5f1cb0 100644
-> > --- a/fs/xfs/xfs_refcount_item.c
-> > +++ b/fs/xfs/xfs_refcount_item.c
-> > @@ -143,8 +143,8 @@ xfs_cui_init(
-> >  
-> >  	ASSERT(nextents > 0);
-> >  	if (nextents > XFS_CUI_MAX_FAST_EXTENTS)
-> > -		cuip = kmem_zalloc(xfs_cui_log_item_sizeof(nextents),
-> > -				0);
-> > +		cuip = kzalloc(xfs_cui_log_item_sizeof(nextents),
-> > +			       GFP_KERNEL | __GFP_NOFAIL);
-> >  	else
-> >  		cuip = kmem_cache_zalloc(xfs_cui_zone,
-> >  					 GFP_KERNEL | __GFP_NOFAIL);
-> 
-> Both GFP_NOFS.
-> 
-> > diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-> > index 6aeb6745d007..82d822885996 100644
-> > --- a/fs/xfs/xfs_rmap_item.c
-> > +++ b/fs/xfs/xfs_rmap_item.c
-> > @@ -142,7 +142,8 @@ xfs_rui_init(
-> >  
-> >  	ASSERT(nextents > 0);
-> >  	if (nextents > XFS_RUI_MAX_FAST_EXTENTS)
-> > -		ruip = kmem_zalloc(xfs_rui_log_item_sizeof(nextents), 0);
-> > +		ruip = kzalloc(xfs_rui_log_item_sizeof(nextents),
-> > +			       GFP_KERNEL | __GFP_NOFAIL);
-> >  	else
-> >  		ruip = kmem_cache_zalloc(xfs_rui_zone,
-> >  					 GFP_KERNEL | __GFP_NOFAIL);
-> 
-> Both GFP_NOFS.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+>=20
+> > specific CPU to dispatch it. We've already tested that queuing on a
+> > different CPU (via queue_work_on()) makes the problem largely go
+> > away as the work is not longer queued behind the long running fio
+> > task.
+> >=20
+> > This, however, is not at viable solution to the problem. The pattern
+> > of a long running process queuing small pieces of individual work
+> > for processing in a separate context is pretty common...
+>=20
+> Right, but you're putting the scheduler in a bind. By overloading the
+> CPU and only allowing the one task to migrate, it pretty much has no
+> choice left.
+>=20
+> Anyway, I'm still going to have try and reproduce -- I got side-tracked
+> into a crashing bug, I'll hopefully get back to this tomorrow. Lastly,
+> one other thing to try is -next. Vincent reworked the load-balancer
+> quite a bit.
+>=20
+
+I've tried it with the lb patch series. I get basically the same results.
+With the high granularity settings I get 3700 migrations for the 30=20
+second run at 4k. Of those about 3200 are active balance on stock 5.4-rc7.
+With the lb patches it's 3500 and 3000, a slight drop.=20
+
+Using the default granularity settings 50 and 22 for stock and 250 and 25.
+So a few more total migrations with the lb patches but about the same activ=
+e.
+
+
+On this system I'm getting 100k migrations using 512 byte blocksize. Almost
+all not active. I haven't looked into that closely yet but it's like 3000
+per second looking like this:
+
+...
+64.19641 386     386     kworker/15:1    sched_migrate_task fio/2784 cpu 15=
+->19=20
+64.19694 386     386     kworker/15:1    sched_migrate_task fio/2784 cpu 15=
+->19=20
+64.19746 386     386     kworker/15:1    sched_migrate_task fio/2784 cpu 15=
+->19=20
+64.19665 389     389     kworker/19:1    sched_migrate_task fio/2784 cpu 19=
+->15=20
+64.19718 389     389     kworker/19:1    sched_migrate_task fio/2784 cpu 19=
+->15=20
+64.19772 389     389     kworker/19:1    sched_migrate_task fio/2784 cpu 19=
+->15=20
+64.19800 386     386     kworker/15:1    sched_migrate_task fio/2784 cpu 15=
+->19=20
+64.19828 389     389     kworker/19:1    sched_migrate_task fio/2784 cpu 19=
+->15=20
+64.19856 386     386     kworker/15:1    sched_migrate_task fio/2784 cpu 15=
+->19=20
+64.19882 389     389     kworker/19:1    sched_migrate_task fio/2784 cpu 19=
+->15=20
+64.19909 386     386     kworker/15:1    sched_migrate_task fio/2784 cpu 15=
+->19=20
+64.19937 389     389     kworker/19:1    sched_migrate_task fio/2784 cpu 19=
+->15=20
+64.19967 386     386     kworker/15:1    sched_migrate_task fio/2784 cpu 15=
+->19=20
+64.19995 389     389     kworker/19:1    sched_migrate_task fio/2784 cpu 19=
+->15=20
+64.20023 386     386     kworker/15:1    sched_migrate_task fio/2784 cpu 15=
+->19=20
+64.20053 389     389     kworker/19:1    sched_migrate_task fio/2784 cpu 19=
+->15=20
+64.20079 386     386     kworker/15:1    sched_migrate_task fio/2784 cpu 15=
+->19=20
+64.20107 389     389     kworker/19:1    sched_migrate_task fio/2784 cpu 19=
+->15=20
+64.20135 386     386     kworker/15:1    sched_migrate_task fio/2784 cpu 15=
+->19=20
+64.20163 389     389     kworker/19:1    sched_migrate_task fio/2784 cpu 19=
+->15=20
+64.20192 386     386     kworker/15:1    sched_migrate_task fio/2784 cpu 15=
+->19=20
+64.20221 389     389     kworker/19:1    sched_migrate_task fio/2784 cpu 19=
+->15=20
+...
+
+Which is roughly equal to the number if iops it's doing.=20
+
+Cheers,
+Phil
+
+--=20
+
