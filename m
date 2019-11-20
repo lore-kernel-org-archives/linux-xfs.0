@@ -7,42 +7,41 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88919C432C0
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Nov 2019 11:17:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2177C432C0
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Nov 2019 11:17:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6087822445
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Nov 2019 11:17:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 89C54223D8
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Nov 2019 11:17:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LXzsGZjx"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jGYaUs4M"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727915AbfKTLRb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Nov 2019 06:17:31 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:47674 "EHLO
+        id S1728048AbfKTLRd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Nov 2019 06:17:33 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:47686 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726771AbfKTLRa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Nov 2019 06:17:30 -0500
+        with ESMTP id S1726771AbfKTLRd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Nov 2019 06:17:33 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=TTsLp+GjHb/eSx2psCwiXZi8+xaioaAXY7R+vSlb24g=; b=LXzsGZjxwjwtb+VqMIl9my0/mQ
-        HybrWQR3PjLwmCpCHapWcVwrkpw3iKL20YMCCbuQ6xRkVNmwCkTpgxqazvW3N7T5tX3eqW+zBsbly
-        hkhgA/7PUPsg1CzCIaf5dHt+65qNi2Jz//mjUSZByVYhnx8hL2Wl6VyBfsOvZkCokXVVRzddlfuAn
-        is2MQIwew5djKzre3BuMzOdHJhoij4PdWzPMSXpzf4C8WbannHgPXTOQhEvDKO5VkOxbQDX0WnifA
-        1SzEqWB/LXrG0fQBpLcRzhY3GQ1djuq0Fv95hr1UPHkq80dUeeOByyZnZluptpsfK9mgj48ezjanC
-        orsUcWQQ==;
+        bh=fz65BA+hPi5unEPpPTisklpi5N2cAvviyf/1SS2E3Z0=; b=jGYaUs4MPYlhZlRH5uqaSK39EN
+        5bqr0p9I8P2/oo2KbspxKbedQICOIGVCMQOhydECiZbFotNJkvsD0kR0ODXEzwgGmlu2b2JvYioZ6
+        OiCGe+dF7wAomYk17NKoSpE0c7qt5jJ4jvrcquwURzxtQ9RMvjQMoZrRv6mPXUdqwc6HPrDtA4Vcb
+        SfkVsh59JkiXcl2phR4suxutgL86FKSgDCY30FEzWJE/885g5FWp3g6xdmbB2Mt09d1oW0zm96wcS
+        +1P1yFWt7Mcs3nE2XaVcIKVM4WtlWwG39dE8pwEmUbW9gHNUhgLhX25eCxm0PlpHDzQa4eJB3JBoK
+        0aRkfBVA==;
 Received: from clnet-p19-102.ikbnet.co.at ([83.175.77.102] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iXNzG-0001Q8-Aa; Wed, 20 Nov 2019 11:17:30 +0000
+        id 1iXNzI-0001QS-Gt; Wed, 20 Nov 2019 11:17:32 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
-Cc:     Allison Collins <allison.henderson@oracle.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 01/10] xfs: simplify mappedbno handling in xfs_da_{get,read}_buf
-Date:   Wed, 20 Nov 2019 12:17:18 +0100
-Message-Id: <20191120111727.16119-2-hch@lst.de>
+Cc:     Allison Collins <allison.henderson@oracle.com>
+Subject: [PATCH 02/10] xfs: refactor xfs_dabuf_map
+Date:   Wed, 20 Nov 2019 12:17:19 +0100
+Message-Id: <20191120111727.16119-3-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191120111727.16119-1-hch@lst.de>
 References: <20191120111727.16119-1-hch@lst.de>
@@ -54,205 +53,206 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Shortcut the creation of xfs_bmbt_irec and xfs_buf_map for the case
-where the callers passed an already mapped xfs_daddr_t.  This is in
-preparation for splitting these cases out entirely later.  Also reject
-the mappedbno case for xfs_da_reada_buf as no callers currently uses
-it and it will be removed soon.
+Merge xfs_buf_map_from_irec and xfs_da_map_covers_blocks into a single
+loop in the caller.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_da_btree.c | 103 +++++++++++++++++------------------
- 1 file changed, 51 insertions(+), 52 deletions(-)
+ fs/xfs/libxfs/xfs_da_btree.c | 156 ++++++++++++-----------------------
+ 1 file changed, 54 insertions(+), 102 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index 272db30947e5..f3087f061a48 100644
+index f3087f061a48..e078817fc26c 100644
 --- a/fs/xfs/libxfs/xfs_da_btree.c
 +++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -110,6 +110,13 @@ xfs_da_state_free(xfs_da_state_t *state)
- 	kmem_cache_free(xfs_da_state_zone, state);
+@@ -2460,74 +2460,6 @@ xfs_da_shrink_inode(
+ 	return error;
  }
  
-+static inline int xfs_dabuf_nfsb(struct xfs_mount *mp, int whichfork)
-+{
-+	if (whichfork == XFS_DATA_FORK)
-+		return mp->m_dir_geo->fsbcount;
-+	return mp->m_attr_geo->fsbcount;
-+}
-+
- void
- xfs_da3_node_hdr_from_disk(
- 	struct xfs_mount		*mp,
-@@ -2539,7 +2546,7 @@ xfs_dabuf_map(
+-/*
+- * See if the mapping(s) for this btree block are valid, i.e.
+- * don't contain holes, are logically contiguous, and cover the whole range.
+- */
+-STATIC int
+-xfs_da_map_covers_blocks(
+-	int		nmap,
+-	xfs_bmbt_irec_t	*mapp,
+-	xfs_dablk_t	bno,
+-	int		count)
+-{
+-	int		i;
+-	xfs_fileoff_t	off;
+-
+-	for (i = 0, off = bno; i < nmap; i++) {
+-		if (mapp[i].br_startblock == HOLESTARTBLOCK ||
+-		    mapp[i].br_startblock == DELAYSTARTBLOCK) {
+-			return 0;
+-		}
+-		if (off != mapp[i].br_startoff) {
+-			return 0;
+-		}
+-		off += mapp[i].br_blockcount;
+-	}
+-	return off == bno + count;
+-}
+-
+-/*
+- * Convert a struct xfs_bmbt_irec to a struct xfs_buf_map.
+- *
+- * For the single map case, it is assumed that the caller has provided a pointer
+- * to a valid xfs_buf_map.  For the multiple map case, this function will
+- * allocate the xfs_buf_map to hold all the maps and replace the caller's single
+- * map pointer with the allocated map.
+- */
+-static int
+-xfs_buf_map_from_irec(
+-	struct xfs_mount	*mp,
+-	struct xfs_buf_map	**mapp,
+-	int			*nmaps,
+-	struct xfs_bmbt_irec	*irecs,
+-	int			nirecs)
+-{
+-	struct xfs_buf_map	*map;
+-	int			i;
+-
+-	ASSERT(*nmaps == 1);
+-	ASSERT(nirecs >= 1);
+-
+-	if (nirecs > 1) {
+-		map = kmem_zalloc(nirecs * sizeof(struct xfs_buf_map),
+-				  KM_NOFS);
+-		if (!map)
+-			return -ENOMEM;
+-		*mapp = map;
+-	}
+-
+-	*nmaps = nirecs;
+-	map = *mapp;
+-	for (i = 0; i < *nmaps; i++) {
+-		ASSERT(irecs[i].br_startblock != DELAYSTARTBLOCK &&
+-		       irecs[i].br_startblock != HOLESTARTBLOCK);
+-		map[i].bm_bn = XFS_FSB_TO_DADDR(mp, irecs[i].br_startblock);
+-		map[i].bm_len = XFS_FSB_TO_BB(mp, irecs[i].br_blockcount);
+-	}
+-	return 0;
+-}
+-
+ /*
+  * Map the block we are given ready for reading. There are three possible return
+  * values:
+@@ -2542,58 +2474,78 @@ xfs_dabuf_map(
+ 	xfs_dablk_t		bno,
+ 	xfs_daddr_t		mappedbno,
+ 	int			whichfork,
+-	struct xfs_buf_map	**map,
++	struct xfs_buf_map	**mapp,
  	int			*nmaps)
  {
  	struct xfs_mount	*mp = dp->i_mount;
--	int			nfsb;
-+	int			nfsb = xfs_dabuf_nfsb(mp, whichfork);
- 	int			error = 0;
- 	struct xfs_bmbt_irec	irec;
- 	struct xfs_bmbt_irec	*irecs = &irec;
-@@ -2548,35 +2555,13 @@ xfs_dabuf_map(
- 	ASSERT(map && *map);
- 	ASSERT(*nmaps == 1);
- 
--	if (whichfork == XFS_DATA_FORK)
--		nfsb = mp->m_dir_geo->fsbcount;
--	else
--		nfsb = mp->m_attr_geo->fsbcount;
+ 	int			nfsb = xfs_dabuf_nfsb(mp, whichfork);
+-	int			error = 0;
+-	struct xfs_bmbt_irec	irec;
+-	struct xfs_bmbt_irec	*irecs = &irec;
+-	int			nirecs;
 -
--	/*
--	 * Caller doesn't have a mapping.  -2 means don't complain
--	 * if we land in a hole.
--	 */
--	if (mappedbno == -1 || mappedbno == -2) {
--		/*
--		 * Optimize the one-block case.
--		 */
--		if (nfsb != 1)
--			irecs = kmem_zalloc(sizeof(irec) * nfsb,
--					    KM_NOFS);
--
--		nirecs = nfsb;
--		error = xfs_bmapi_read(dp, (xfs_fileoff_t)bno, nfsb, irecs,
--				       &nirecs, xfs_bmapi_aflag(whichfork));
--		if (error)
--			goto out;
--	} else {
--		irecs->br_startblock = XFS_DADDR_TO_FSB(mp, mappedbno);
--		irecs->br_startoff = (xfs_fileoff_t)bno;
--		irecs->br_blockcount = nfsb;
--		irecs->br_state = 0;
--		nirecs = 1;
--	}
-+	if (nfsb != 1)
-+		irecs = kmem_zalloc(sizeof(irec) * nfsb, KM_NOFS);
-+	nirecs = nfsb;
-+	error = xfs_bmapi_read(dp, (xfs_fileoff_t)bno, nfsb, irecs,
-+			       &nirecs, xfs_bmapi_aflag(whichfork));
-+	if (error)
-+		goto out;
+-	ASSERT(map && *map);
+-	ASSERT(*nmaps == 1);
++	struct xfs_bmbt_irec	irec, *irecs = &irec;
++	struct xfs_buf_map	*map = *mapp;
++	xfs_fileoff_t		off = bno;
++	int			error = 0, nirecs, i;
  
- 	if (!xfs_da_map_covers_blocks(nirecs, irecs, bno, nfsb)) {
- 		/* Caller ok with no mapping. */
-@@ -2616,24 +2601,29 @@ xfs_dabuf_map(
-  */
- int
- xfs_da_get_buf(
--	struct xfs_trans	*trans,
-+	struct xfs_trans	*tp,
- 	struct xfs_inode	*dp,
- 	xfs_dablk_t		bno,
- 	xfs_daddr_t		mappedbno,
- 	struct xfs_buf		**bpp,
- 	int			whichfork)
- {
-+	struct xfs_mount	*mp = dp->i_mount;
- 	struct xfs_buf		*bp;
--	struct xfs_buf_map	map;
--	struct xfs_buf_map	*mapp;
--	int			nmap;
-+	struct xfs_buf_map	map, *mapp = &map;
-+	int			nmap = 1;
- 	int			error;
- 
- 	*bpp = NULL;
--	mapp = &map;
--	nmap = 1;
--	error = xfs_dabuf_map(dp, bno, mappedbno, whichfork,
--				&mapp, &nmap);
+-	if (nfsb != 1)
++	if (nfsb > 1)
+ 		irecs = kmem_zalloc(sizeof(irec) * nfsb, KM_NOFS);
 +
-+	if (mappedbno >= 0) {
-+		bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, mappedbno,
-+				XFS_FSB_TO_BB(mp,
-+					xfs_dabuf_nfsb(mp, whichfork)), 0);
-+		goto done;
-+	}
-+
-+	error = xfs_dabuf_map(dp, bno, mappedbno, whichfork, &mapp, &nmap);
- 	if (error) {
- 		/* mapping a hole is not an error, but we don't continue */
- 		if (error == -1)
-@@ -2641,12 +2631,12 @@ xfs_da_get_buf(
- 		goto out_free;
- 	}
- 
--	bp = xfs_trans_get_buf_map(trans, dp->i_mount->m_ddev_targp,
--				    mapp, nmap, 0);
-+	bp = xfs_trans_get_buf_map(tp, mp->m_ddev_targp, mapp, nmap, 0);
-+done:
- 	error = bp ? bp->b_error : -EIO;
- 	if (error) {
- 		if (bp)
--			xfs_trans_brelse(trans, bp);
-+			xfs_trans_brelse(tp, bp);
- 		goto out_free;
- 	}
- 
-@@ -2664,7 +2654,7 @@ xfs_da_get_buf(
-  */
- int
- xfs_da_read_buf(
--	struct xfs_trans	*trans,
-+	struct xfs_trans	*tp,
- 	struct xfs_inode	*dp,
- 	xfs_dablk_t		bno,
- 	xfs_daddr_t		mappedbno,
-@@ -2672,17 +2662,23 @@ xfs_da_read_buf(
- 	int			whichfork,
- 	const struct xfs_buf_ops *ops)
- {
-+	struct xfs_mount	*mp = dp->i_mount;
- 	struct xfs_buf		*bp;
--	struct xfs_buf_map	map;
--	struct xfs_buf_map	*mapp;
--	int			nmap;
-+	struct xfs_buf_map	map, *mapp = &map;
-+	int			nmap = 1;
- 	int			error;
- 
- 	*bpp = NULL;
--	mapp = &map;
--	nmap = 1;
--	error = xfs_dabuf_map(dp, bno, mappedbno, whichfork,
--				&mapp, &nmap);
-+
-+	if (mappedbno >= 0) {
-+		error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
-+				mappedbno, XFS_FSB_TO_BB(mp,
-+					xfs_dabuf_nfsb(mp, whichfork)),
-+				0, &bp, ops);
-+		goto done;
-+	}
-+
-+	error = xfs_dabuf_map(dp, bno, mappedbno, whichfork, &mapp, &nmap);
- 	if (error) {
- 		/* mapping a hole is not an error, but we don't continue */
- 		if (error == -1)
-@@ -2690,9 +2686,9 @@ xfs_da_read_buf(
- 		goto out_free;
- 	}
- 
--	error = xfs_trans_read_buf_map(dp->i_mount, trans,
--					dp->i_mount->m_ddev_targp,
--					mapp, nmap, 0, &bp, ops);
-+	error = xfs_trans_read_buf_map(mp, tp, mp->m_ddev_targp, mapp, nmap, 0,
-+			&bp, ops);
-+done:
+ 	nirecs = nfsb;
+-	error = xfs_bmapi_read(dp, (xfs_fileoff_t)bno, nfsb, irecs,
+-			       &nirecs, xfs_bmapi_aflag(whichfork));
++	error = xfs_bmapi_read(dp, bno, nfsb, irecs, &nirecs,
++			xfs_bmapi_aflag(whichfork));
  	if (error)
- 		goto out_free;
+-		goto out;
++		goto out_free_irecs;
  
-@@ -2724,6 +2720,9 @@ xfs_da_reada_buf(
- 	int			nmap;
- 	int			error;
+-	if (!xfs_da_map_covers_blocks(nirecs, irecs, bno, nfsb)) {
+-		/* Caller ok with no mapping. */
+-		if (!XFS_IS_CORRUPT(mp, mappedbno != -2)) {
+-			error = -1;
+-			goto out;
+-		}
++	/*
++	 * Use the caller provided map for the single map case, else allocate a
++	 * larger one that needs to be free by the caller.
++	 */
++	if (nirecs > 1) {
++		map = kmem_zalloc(nirecs * sizeof(struct xfs_buf_map), KM_NOFS);
++		if (!map)
++			goto out_free_irecs;
++		*mapp = map;
++	}
  
-+	if (mappedbno >= 0)
-+		return -EINVAL;
+-		/* Caller expected a mapping, so abort. */
++	for (i = 0; i < nirecs; i++) {
++		if (irecs[i].br_startblock == HOLESTARTBLOCK ||
++		    irecs[i].br_startblock == DELAYSTARTBLOCK)
++			goto invalid_mapping;
++		if (off != irecs[i].br_startoff)
++			goto invalid_mapping;
 +
- 	mapp = &map;
- 	nmap = 1;
- 	error = xfs_dabuf_map(dp, bno, mappedbno, whichfork,
++		map[i].bm_bn = XFS_FSB_TO_DADDR(mp, irecs[i].br_startblock);
++		map[i].bm_len = XFS_FSB_TO_BB(mp, irecs[i].br_blockcount);
++		off += irecs[i].br_blockcount;
++	}
++
++	if (off != bno + nfsb)
++		goto invalid_mapping;
++
++	*nmaps = nirecs;
++out_free_irecs:
++	if (irecs != &irec)
++		kmem_free(irecs);
++	return error;
++
++invalid_mapping:
++	/* Caller ok with no mapping. */
++	if (XFS_IS_CORRUPT(mp, mappedbno != -2)) {
++		error = -EFSCORRUPTED;
+ 		if (xfs_error_level >= XFS_ERRLEVEL_LOW) {
+-			int i;
++			xfs_alert(mp, "%s: bno %u inode %llu",
++					__func__, bno, dp->i_ino);
+ 
+-			xfs_alert(mp, "%s: bno %lld dir: inode %lld", __func__,
+-					(long long)bno, (long long)dp->i_ino);
+-			for (i = 0; i < *nmaps; i++) {
++			for (i = 0; i < nirecs; i++) {
+ 				xfs_alert(mp,
+ "[%02d] br_startoff %lld br_startblock %lld br_blockcount %lld br_state %d",
+-					i,
+-					(long long)irecs[i].br_startoff,
+-					(long long)irecs[i].br_startblock,
+-					(long long)irecs[i].br_blockcount,
++					i, irecs[i].br_startoff,
++					irecs[i].br_startblock,
++					irecs[i].br_blockcount,
+ 					irecs[i].br_state);
+ 			}
+ 		}
+-		error = -EFSCORRUPTED;
+-		goto out;
++	} else {
++		*nmaps = 0;
+ 	}
+-	error = xfs_buf_map_from_irec(mp, map, nmaps, irecs, nirecs);
+-out:
+-	if (irecs != &irec)
+-		kmem_free(irecs);
+-	return error;
++	goto out_free_irecs;
+ }
+ 
+ /*
 -- 
 2.20.1
 
