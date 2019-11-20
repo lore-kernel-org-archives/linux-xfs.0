@@ -2,224 +2,115 @@ Return-Path: <SRS0=ArDI=ZM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D82C1C432C0
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Nov 2019 19:02:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DF11C43215
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Nov 2019 19:16:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A6CD621823
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Nov 2019 19:02:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 55A2D20855
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Nov 2019 19:16:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bK1fdwKZ"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="BqmvakRC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726333AbfKTTCl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Nov 2019 14:02:41 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:42950 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726523AbfKTTCl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Nov 2019 14:02:41 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAKIxQ1k030935;
-        Wed, 20 Nov 2019 19:02:37 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=YWgW2KvhelyhP8PQZNYtTtP4zVd0W7tF5rTEZJVTf8g=;
- b=bK1fdwKZ6l7An7mX5W1JZK308mfEx2+FNYCw98IhMveCZqYKNF6TxU/ljDvHcCXatOj0
- iKyIczcMhRB47FNppjUT4y/yC72nXnyXKbXgZ4mL0jOMAVP68ANh2pXfodBcJujk84oU
- KkJsFfzE6yWYvRp5ZEg9sgd8Uehg2Zgi9gmUsATmTmmZzbD4lewqEi6N2cNBjGwlZaXI
- 2k4riI5VBMVLH6mb1yl4mfHFrV904pIEuorVjQRrGdJmTmFSbjTkPqrGfSyXufNBdbmK
- CLkyJEowCbuENrDbLGt2dwFGn//AaVzJYWhiBTX2k56qdvoxQ6cwWXhemn5Y33O9iGyz 7w== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2wa8htykd2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 20 Nov 2019 19:02:37 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAKIxD73131215;
-        Wed, 20 Nov 2019 19:00:36 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 2wcemhb00x-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 20 Nov 2019 19:00:36 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xAKJ0Yln020999;
-        Wed, 20 Nov 2019 19:00:34 GMT
-Received: from localhost (/10.159.246.236)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 20 Nov 2019 11:00:34 -0800
-Date:   Wed, 20 Nov 2019 11:00:33 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Carlos Maiolino <cmaiolino@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/5] xfs: Remove kmem_realloc
-Message-ID: <20191120190033.GQ6219@magnolia>
-References: <20191120104425.407213-1-cmaiolino@redhat.com>
- <20191120104425.407213-5-cmaiolino@redhat.com>
+        id S1727270AbfKTTQn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Nov 2019 14:16:43 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:44620 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726236AbfKTTQn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Nov 2019 14:16:43 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=+uiX8Y1FAOVx63BgGhdqk6UFOCjK1eb99TNr3TVgrIU=; b=BqmvakRCAIVKzYcDLg/Qch27X
+        35mFslRqqVAYqgbmgTvsmMp3M12VvLOROf5bcDJwZF/FJYUNy8Yk9NmXULSy5g8/pblUsDD2TDfpK
+        BniKwfa3nTylt+8dPT8sl3zfVEBzm0Sl8fe1gz+cvuGMeUX8ufazZqcpvN1pVjjUuPqUHyxXv+7J6
+        sRiuyR6E3hhc1T98sqjCzwFtFe5OXhKGngAlV1NO+c17X7ylg7mqaw2s6RKcSLWq/Xzz+4BUaIOc3
+        +Z7vjEmi3ttpbQKmB6yvBrmSPLbqfCfpJezR9+Ap2Uv2irNXBGTv2NOa/+d+zjFFsGU+S4d10iCDI
+        fTH6oSPeA==;
+Received: from j217100.upc-j.chello.nl ([24.132.217.100] helo=noisy.programming.kicks-ass.net)
+        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1iXVSw-0005wN-CY; Wed, 20 Nov 2019 19:16:38 +0000
+Received: from hirez.programming.kicks-ass.net (hirez.programming.kicks-ass.net [192.168.1.225])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (Client did not present a certificate)
+        by noisy.programming.kicks-ass.net (Postfix) with ESMTPS id 9B0D130068E;
+        Wed, 20 Nov 2019 20:15:25 +0100 (CET)
+Received: by hirez.programming.kicks-ass.net (Postfix, from userid 1000)
+        id 200F42B25DAAD; Wed, 20 Nov 2019 20:16:36 +0100 (CET)
+Date:   Wed, 20 Nov 2019 20:16:36 +0100
+From:   Peter Zijlstra <peterz@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+        Vincent Guittot <vincent.guittot@linaro.org>
+Subject: Re: single aio thread is migrated crazily by scheduler
+Message-ID: <20191120191636.GI4097@hirez.programming.kicks-ass.net>
+References: <20191114113153.GB4213@ming.t460p>
+ <20191114235415.GL4614@dread.disaster.area>
+ <20191115010824.GC4847@ming.t460p>
+ <20191115045634.GN4614@dread.disaster.area>
+ <20191115070843.GA24246@ming.t460p>
+ <20191115234005.GO4614@dread.disaster.area>
+ <20191118092121.GV4131@hirez.programming.kicks-ass.net>
+ <20191118204054.GV4614@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191120104425.407213-5-cmaiolino@redhat.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9447 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1911200157
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9447 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1911200157
+In-Reply-To: <20191118204054.GV4614@dread.disaster.area>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 20, 2019 at 11:44:24AM +0100, Carlos Maiolino wrote:
-> We can use krealloc() with __GFP_NOFAIL directly
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+On Tue, Nov 19, 2019 at 07:40:54AM +1100, Dave Chinner wrote:
+> On Mon, Nov 18, 2019 at 10:21:21AM +0100, Peter Zijlstra wrote:
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > We typically only fall back to the active balancer when there is
+> > (persistent) imbalance and we fail to migrate anything else (of
+> > substance).
+> > 
+> > The tuning mentioned has the effect of less frequent scheduling, IOW,
+> > leaving (short) tasks on the runqueue longer. This obviously means the
+> > load-balancer will have a bigger chance of seeing them.
+> > 
+> > Now; it's been a while since I looked at the workqueue code but one
+> > possible explanation would be if the kworker that picks up the work item
+> > is pinned. That would make it runnable but not migratable, the exact
+> > situation in which we'll end up shooting the current task with active
+> > balance.
+> 
+> Yes, that's precisely the problem - work is queued, by default, on a
+> specific CPU and it will wait for a kworker that is pinned to that
 
---D
+I'm thinking the problem is that it doesn't wait. If it went and waited
+for it, active balance wouldn't be needed, that only works on active
+tasks.
 
-> ---
-> V2:
-> 	- Fix small conflict in kmem.h due removal of kmem_free()
-> 	- Small comment update on xfs_iroot_realloc()
+> specific CPU to dispatch it. We've already tested that queuing on a
+> different CPU (via queue_work_on()) makes the problem largely go
+> away as the work is not longer queued behind the long running fio
+> task.
 > 
->  fs/xfs/kmem.c                  | 22 ----------------------
->  fs/xfs/kmem.h                  |  1 -
->  fs/xfs/libxfs/xfs_iext_tree.c  |  2 +-
->  fs/xfs/libxfs/xfs_inode_fork.c | 10 +++++-----
->  fs/xfs/xfs_log_recover.c       |  2 +-
->  fs/xfs/xfs_mount.c             |  4 ++--
->  6 files changed, 9 insertions(+), 32 deletions(-)
-> 
-> diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-> index 2644fdaa0549..6e10e565632c 100644
-> --- a/fs/xfs/kmem.c
-> +++ b/fs/xfs/kmem.c
-> @@ -93,25 +93,3 @@ kmem_alloc_large(size_t size, xfs_km_flags_t flags)
->  		return ptr;
->  	return __kmem_vmalloc(size, flags);
->  }
-> -
-> -void *
-> -kmem_realloc(const void *old, size_t newsize, xfs_km_flags_t flags)
-> -{
-> -	int	retries = 0;
-> -	gfp_t	lflags = kmem_flags_convert(flags);
-> -	void	*ptr;
-> -
-> -	trace_kmem_realloc(newsize, flags, _RET_IP_);
-> -
-> -	do {
-> -		ptr = krealloc(old, newsize, lflags);
-> -		if (ptr || (flags & KM_MAYFAIL))
-> -			return ptr;
-> -		if (!(++retries % 100))
-> -			xfs_err(NULL,
-> -	"%s(%u) possible memory allocation deadlock size %zu in %s (mode:0x%x)",
-> -				current->comm, current->pid,
-> -				newsize, __func__, lflags);
-> -		congestion_wait(BLK_RW_ASYNC, HZ/50);
-> -	} while (1);
-> -}
-> diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-> index b9ee67fa747b..a18c27c99721 100644
-> --- a/fs/xfs/kmem.h
-> +++ b/fs/xfs/kmem.h
-> @@ -55,7 +55,6 @@ kmem_flags_convert(xfs_km_flags_t flags)
->  extern void *kmem_alloc(size_t, xfs_km_flags_t);
->  extern void *kmem_alloc_io(size_t size, int align_mask, xfs_km_flags_t flags);
->  extern void *kmem_alloc_large(size_t size, xfs_km_flags_t);
-> -extern void *kmem_realloc(const void *, size_t, xfs_km_flags_t);
->  
->  static inline void *
->  kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
-> diff --git a/fs/xfs/libxfs/xfs_iext_tree.c b/fs/xfs/libxfs/xfs_iext_tree.c
-> index e75e7c021187..78c9f6c7a36a 100644
-> --- a/fs/xfs/libxfs/xfs_iext_tree.c
-> +++ b/fs/xfs/libxfs/xfs_iext_tree.c
-> @@ -607,7 +607,7 @@ xfs_iext_realloc_root(
->  	if (new_size / sizeof(struct xfs_iext_rec) == RECS_PER_LEAF)
->  		new_size = NODE_SIZE;
->  
-> -	new = kmem_realloc(ifp->if_u1.if_root, new_size, KM_NOFS);
-> +	new = krealloc(ifp->if_u1.if_root, new_size, GFP_NOFS | __GFP_NOFAIL);
->  	memset(new + ifp->if_bytes, 0, new_size - ifp->if_bytes);
->  	ifp->if_u1.if_root = new;
->  	cur->leaf = new;
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> index ceb322c7105e..82799dddf97d 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> @@ -380,15 +380,15 @@ xfs_iroot_realloc(
->  
->  		/*
->  		 * If there is already an existing if_broot, then we need
-> -		 * to realloc() it and shift the pointers to their new
-> +		 * to krealloc() it and shift the pointers to their new
->  		 * location.  The records don't change location because
->  		 * they are kept butted up against the btree block header.
->  		 */
->  		cur_max = xfs_bmbt_maxrecs(mp, ifp->if_broot_bytes, 0);
->  		new_max = cur_max + rec_diff;
->  		new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, new_max);
-> -		ifp->if_broot = kmem_realloc(ifp->if_broot, new_size,
-> -				KM_NOFS);
-> +		ifp->if_broot = krealloc(ifp->if_broot, new_size,
-> +				GFP_NOFS | __GFP_NOFAIL);
->  		op = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
->  						     ifp->if_broot_bytes);
->  		np = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
-> @@ -497,8 +497,8 @@ xfs_idata_realloc(
->  	 * in size so that it can be logged and stay on word boundaries.
->  	 * We enforce that here.
->  	 */
-> -	ifp->if_u1.if_data = kmem_realloc(ifp->if_u1.if_data,
-> -			roundup(new_size, 4), KM_NOFS);
-> +	ifp->if_u1.if_data = krealloc(ifp->if_u1.if_data, roundup(new_size, 4),
-> +				      GFP_NOFS | __GFP_NOFAIL);
->  	ifp->if_bytes = new_size;
->  }
->  
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index cb02deb5dedc..5423171e0b7d 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -4211,7 +4211,7 @@ xlog_recover_add_to_cont_trans(
->  	old_ptr = item->ri_buf[item->ri_cnt-1].i_addr;
->  	old_len = item->ri_buf[item->ri_cnt-1].i_len;
->  
-> -	ptr = kmem_realloc(old_ptr, len + old_len, 0);
-> +	ptr = krealloc(old_ptr, len + old_len, GFP_KERNEL | __GFP_NOFAIL);
->  	memcpy(&ptr[old_len], dp, len);
->  	item->ri_buf[item->ri_cnt-1].i_len += len;
->  	item->ri_buf[item->ri_cnt-1].i_addr = ptr;
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index c352567c8ef5..12a1cdf8e292 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -80,9 +80,9 @@ xfs_uuid_mount(
->  	}
->  
->  	if (hole < 0) {
-> -		xfs_uuid_table = kmem_realloc(xfs_uuid_table,
-> +		xfs_uuid_table = krealloc(xfs_uuid_table,
->  			(xfs_uuid_table_size + 1) * sizeof(*xfs_uuid_table),
-> -			0);
-> +			GFP_KERNEL | __GFP_NOFAIL);
->  		hole = xfs_uuid_table_size++;
->  	}
->  	xfs_uuid_table[hole] = *uuid;
-> -- 
-> 2.23.0
-> 
+> This, however, is not at viable solution to the problem. The pattern
+> of a long running process queuing small pieces of individual work
+> for processing in a separate context is pretty common...
+
+Right, but you're putting the scheduler in a bind. By overloading the
+CPU and only allowing the one task to migrate, it pretty much has no
+choice left.
+
+Anyway, I'm still going to have try and reproduce -- I got side-tracked
+into a crashing bug, I'll hopefully get back to this tomorrow. Lastly,
+one other thing to try is -next. Vincent reworked the load-balancer
+quite a bit.
