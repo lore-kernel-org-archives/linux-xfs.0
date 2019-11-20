@@ -7,51 +7,51 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58784C43215
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Nov 2019 10:44:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C0B9C432C0
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Nov 2019 10:44:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1EF0722429
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Nov 2019 10:44:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 589522243F
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Nov 2019 10:44:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Yfqam18w"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QByEqevH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728813AbfKTKol (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Nov 2019 05:44:41 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:40786 "EHLO
+        id S1728825AbfKTKon (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Nov 2019 05:44:43 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:21357 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728777AbfKTKol (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Nov 2019 05:44:41 -0500
+        with ESMTP id S1728814AbfKTKon (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Nov 2019 05:44:43 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1574246679;
+        s=mimecast20190719; t=1574246682;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=h8wMbOFB5ZbapsTjjWuyDsJmlc6PdIhkpPHE1ahPzho=;
-        b=Yfqam18wdfPJAkOqsW6y/XfbkohelDEeTsYIwTxJx6KvyMWbxWOYohbStn66vFXganopBN
-        LZkd+MrrfgeAvf15s8/pAHqXRG7R0ldr+CmUVt37knWc8ZqWcpYn2J+Ml6ZAT5dxSwkGEn
-        ebSHmoVQrqg80dIlPiJTqu8CU1rjqFo=
+        bh=L43qmWla62ILzrXStHDPiDXJXk9+b4yJyEh1qq21v3w=;
+        b=QByEqevHD+qcI8/LRMZNq4oJSMyEc18Pg5RbikRDrkw1aPxn7jYl9NoolutTjm4KHAucEN
+        RWU0QzVPJusz1hsgvZgJGKUCYwgteO2TNag2RafQnmqAX/Ig7mx7rPRC1yk2l4hsor2OCO
+        o5gUn3095c4mQ8594yuhMKIyXXdcKd0=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-299-3WIatpnEMiqSataU-9Z8tw-1; Wed, 20 Nov 2019 05:44:37 -0500
+ us-mta-300-YUUMeAX8PnyGOcjxNRytfA-1; Wed, 20 Nov 2019 05:44:40 -0500
 Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 441F8801FA1
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Nov 2019 10:44:36 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B9ED01883522
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Nov 2019 10:44:39 +0000 (UTC)
 Received: from orion.redhat.com (ovpn-204-164.brq.redhat.com [10.40.204.164])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 6AACD66D4D
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Nov 2019 10:44:35 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id DECAF66D4D
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Nov 2019 10:44:38 +0000 (UTC)
 From:   Carlos Maiolino <cmaiolino@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 3/5] xfs: remove kmem_zalloc() wrapper
-Date:   Wed, 20 Nov 2019 11:44:23 +0100
-Message-Id: <20191120104425.407213-4-cmaiolino@redhat.com>
+Subject: [PATCH 5/5] xfs: Convert kmem_alloc() users
+Date:   Wed, 20 Nov 2019 11:44:25 +0100
+Message-Id: <20191120104425.407213-6-cmaiolino@redhat.com>
 In-Reply-To: <20191120104425.407213-1-cmaiolino@redhat.com>
 References: <20191120104425.407213-1-cmaiolino@redhat.com>
 MIME-Version: 1.0
 X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
-X-MC-Unique: 3WIatpnEMiqSataU-9Z8tw-1
+X-MC-Unique: YUUMeAX8PnyGOcjxNRytfA-1
 X-Mimecast-Spam-Score: 0
 Content-Type: text/plain; charset=WINDOWS-1252
 Content-Transfer-Encoding: quoted-printable
@@ -60,601 +60,539 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Use kzalloc() directly
+Use kmalloc() directly.
 
-Special attention goes to function xfs_buf_map_from_irec(). Giving the
-fact we are not allowed to fail there, I removed the 'if (!map)'
-conditional from there, I'd just like somebody to double check if it's
-fine as I believe it is
+There is no logic change on kmem_alloc() since it's being removed soon, but=
+ for
+now, kmem_alloc_io() and kmem_alloc_large() still have use for kmem_alloc()=
+ due
+their fallback to vmalloc() and also the alignment check, so we can't compl=
+etely
+remove it here.
+But, there is no need to export kmem_alloc() to the whole XFS driver anymor=
+e, so,
+convert kmem_alloc() into a static, local function __kmem_alloc().
 
 Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
 V2:
-=09- Fix comment on xfs_dir_lookup()
+=09- Rephrase commit log
 
- fs/xfs/kmem.h                 |  6 ------
- fs/xfs/libxfs/xfs_attr_leaf.c |  3 ++-
- fs/xfs/libxfs/xfs_da_btree.c  | 10 ++++------
- fs/xfs/libxfs/xfs_dir2.c      | 27 +++++++++++++--------------
- fs/xfs/libxfs/xfs_iext_tree.c | 12 ++++++++----
- fs/xfs/scrub/agheader.c       |  4 ++--
- fs/xfs/scrub/fscounters.c     |  3 ++-
- fs/xfs/xfs_buf.c              |  6 +++---
- fs/xfs/xfs_buf_item.c         |  4 ++--
- fs/xfs/xfs_dquot_item.c       |  3 ++-
- fs/xfs/xfs_error.c            |  4 ++--
- fs/xfs/xfs_extent_busy.c      |  3 ++-
- fs/xfs/xfs_extfree_item.c     |  6 +++---
- fs/xfs/xfs_inode.c            |  2 +-
- fs/xfs/xfs_itable.c           |  8 ++++----
- fs/xfs/xfs_iwalk.c            |  3 ++-
- fs/xfs/xfs_log.c              |  5 +++--
- fs/xfs/xfs_log_cil.c          |  6 +++---
- fs/xfs/xfs_log_recover.c      | 12 ++++++------
- fs/xfs/xfs_mount.c            |  3 ++-
- fs/xfs/xfs_mru_cache.c        |  5 +++--
- fs/xfs/xfs_qm.c               |  3 ++-
- fs/xfs/xfs_refcount_item.c    |  4 ++--
- fs/xfs/xfs_rmap_item.c        |  3 ++-
- fs/xfs/xfs_trans_ail.c        |  3 ++-
- 25 files changed, 77 insertions(+), 71 deletions(-)
+ fs/xfs/kmem.c                  |  8 ++++----
+ fs/xfs/kmem.h                  |  1 -
+ fs/xfs/libxfs/xfs_attr_leaf.c  |  6 +++---
+ fs/xfs/libxfs/xfs_bmap.c       |  2 +-
+ fs/xfs/libxfs/xfs_da_btree.c   |  4 +++-
+ fs/xfs/libxfs/xfs_defer.c      |  4 ++--
+ fs/xfs/libxfs/xfs_dir2.c       |  2 +-
+ fs/xfs/libxfs/xfs_dir2_block.c |  2 +-
+ fs/xfs/libxfs/xfs_dir2_sf.c    |  8 ++++----
+ fs/xfs/libxfs/xfs_inode_fork.c | 10 ++++++----
+ fs/xfs/libxfs/xfs_refcount.c   |  9 +++++----
+ fs/xfs/libxfs/xfs_rmap.c       |  2 +-
+ fs/xfs/scrub/bitmap.c          |  7 ++++---
+ fs/xfs/scrub/btree.c           |  4 ++--
+ fs/xfs/scrub/refcount.c        |  4 ++--
+ fs/xfs/xfs_attr_inactive.c     |  2 +-
+ fs/xfs/xfs_attr_list.c         |  2 +-
+ fs/xfs/xfs_buf.c               |  5 +++--
+ fs/xfs/xfs_filestream.c        |  2 +-
+ fs/xfs/xfs_inode.c             |  2 +-
+ fs/xfs/xfs_iwalk.c             |  2 +-
+ fs/xfs/xfs_log_recover.c       |  7 ++++---
+ fs/xfs/xfs_qm.c                |  3 ++-
+ fs/xfs/xfs_rtalloc.c           |  2 +-
+ fs/xfs/xfs_super.c             |  2 +-
+ 25 files changed, 55 insertions(+), 47 deletions(-)
 
+diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+index 6e10e565632c..79467813d810 100644
+--- a/fs/xfs/kmem.c
++++ b/fs/xfs/kmem.c
+@@ -8,8 +8,8 @@
+ #include "xfs_message.h"
+ #include "xfs_trace.h"
+=20
+-void *
+-kmem_alloc(size_t size, xfs_km_flags_t flags)
++static void *
++__kmem_alloc(size_t size, xfs_km_flags_t flags)
+ {
+ =09int=09retries =3D 0;
+ =09gfp_t=09lflags =3D kmem_flags_convert(flags);
+@@ -72,7 +72,7 @@ kmem_alloc_io(size_t size, int align_mask, xfs_km_flags_t=
+ flags)
+ =09if (WARN_ON_ONCE(align_mask >=3D PAGE_SIZE))
+ =09=09align_mask =3D PAGE_SIZE - 1;
+=20
+-=09ptr =3D kmem_alloc(size, flags | KM_MAYFAIL);
++=09ptr =3D __kmem_alloc(size, flags | KM_MAYFAIL);
+ =09if (ptr) {
+ =09=09if (!((uintptr_t)ptr & align_mask))
+ =09=09=09return ptr;
+@@ -88,7 +88,7 @@ kmem_alloc_large(size_t size, xfs_km_flags_t flags)
+=20
+ =09trace_kmem_alloc_large(size, flags, _RET_IP_);
+=20
+-=09ptr =3D kmem_alloc(size, flags | KM_MAYFAIL);
++=09ptr =3D __kmem_alloc(size, flags | KM_MAYFAIL);
+ =09if (ptr)
+ =09=09return ptr;
+ =09return __kmem_vmalloc(size, flags);
 diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-index 7e4ad73771ce..b9ee67fa747b 100644
+index a18c27c99721..78a54839430a 100644
 --- a/fs/xfs/kmem.h
 +++ b/fs/xfs/kmem.h
-@@ -57,12 +57,6 @@ extern void *kmem_alloc_io(size_t size, int align_mask, =
-xfs_km_flags_t flags);
- extern void *kmem_alloc_large(size_t size, xfs_km_flags_t);
- extern void *kmem_realloc(const void *, size_t, xfs_km_flags_t);
+@@ -52,7 +52,6 @@ kmem_flags_convert(xfs_km_flags_t flags)
+ =09return lflags;
+ }
 =20
--static inline void *
--kmem_zalloc(size_t size, xfs_km_flags_t flags)
--{
--=09return kmem_alloc(size, flags | KM_ZERO);
--}
--
- static inline void *
- kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
- {
+-extern void *kmem_alloc(size_t, xfs_km_flags_t);
+ extern void *kmem_alloc_io(size_t size, int align_mask, xfs_km_flags_t fla=
+gs);
+ extern void *kmem_alloc_large(size_t size, xfs_km_flags_t);
+=20
 diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index 795b9b21b64d..67de68584224 100644
+index 67de68584224..807950eca17a 100644
 --- a/fs/xfs/libxfs/xfs_attr_leaf.c
 +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -2253,7 +2253,8 @@ xfs_attr3_leaf_unbalance(
- =09=09struct xfs_attr_leafblock *tmp_leaf;
- =09=09struct xfs_attr3_icleaf_hdr tmphdr;
+@@ -885,7 +885,7 @@ xfs_attr_shortform_to_leaf(
+ =09ifp =3D dp->i_afp;
+ =09sf =3D (xfs_attr_shortform_t *)ifp->if_u1.if_data;
+ =09size =3D be16_to_cpu(sf->hdr.totsize);
+-=09tmpbuffer =3D kmem_alloc(size, 0);
++=09tmpbuffer =3D kmalloc(size, GFP_KERNEL | __GFP_NOFAIL);
+ =09ASSERT(tmpbuffer !=3D NULL);
+ =09memcpy(tmpbuffer, ifp->if_u1.if_data, size);
+ =09sf =3D (xfs_attr_shortform_t *)tmpbuffer;
+@@ -1073,7 +1073,7 @@ xfs_attr3_leaf_to_shortform(
 =20
--=09=09tmp_leaf =3D kmem_zalloc(state->args->geo->blksize, 0);
-+=09=09tmp_leaf =3D kzalloc(state->args->geo->blksize,
-+=09=09=09=09   GFP_KERNEL | __GFP_NOFAIL);
+ =09trace_xfs_attr_leaf_to_sf(args);
 =20
- =09=09/*
- =09=09 * Copy the header into the temp leaf so that all the stuff
+-=09tmpbuffer =3D kmem_alloc(args->geo->blksize, 0);
++=09tmpbuffer =3D kmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
+ =09if (!tmpbuffer)
+ =09=09return -ENOMEM;
+=20
+@@ -1534,7 +1534,7 @@ xfs_attr3_leaf_compact(
+=20
+ =09trace_xfs_attr_leaf_compact(args);
+=20
+-=09tmpbuffer =3D kmem_alloc(args->geo->blksize, 0);
++=09tmpbuffer =3D kmalloc(args->geo->blksize, GFP_KERNEL | __GFP_NOFAIL);
+ =09memcpy(tmpbuffer, bp->b_addr, args->geo->blksize);
+ =09memset(bp->b_addr, 0, args->geo->blksize);
+ =09leaf_src =3D (xfs_attr_leafblock_t *)tmpbuffer;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 37596e49b92e..fc5bed95bd44 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -6045,7 +6045,7 @@ __xfs_bmap_add(
+ =09=09=09bmap->br_blockcount,
+ =09=09=09bmap->br_state);
+=20
+-=09bi =3D kmem_alloc(sizeof(struct xfs_bmap_intent), KM_NOFS);
++=09bi =3D kmalloc(sizeof(struct xfs_bmap_intent), GFP_NOFS | __GFP_NOFAIL)=
+;
+ =09INIT_LIST_HEAD(&bi->bi_list);
+ =09bi->bi_type =3D type;
+ =09bi->bi_owner =3D ip;
 diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index 10a96e64b2ec..29c25d1b3b76 100644
+index 29c25d1b3b76..efe84c636bd3 100644
 --- a/fs/xfs/libxfs/xfs_da_btree.c
 +++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -2534,10 +2534,8 @@ xfs_buf_map_from_irec(
- =09ASSERT(nirecs >=3D 1);
-=20
- =09if (nirecs > 1) {
--=09=09map =3D kmem_zalloc(nirecs * sizeof(struct xfs_buf_map),
--=09=09=09=09  KM_NOFS);
--=09=09if (!map)
--=09=09=09return -ENOMEM;
-+=09=09map =3D kzalloc(nirecs * sizeof(struct xfs_buf_map),
-+=09=09=09      GFP_NOFS | __GFP_NOFAIL);
- =09=09*mapp =3D map;
- =09}
-=20
-@@ -2593,8 +2591,8 @@ xfs_dabuf_map(
- =09=09 * Optimize the one-block case.
+@@ -2152,7 +2152,9 @@ xfs_da_grow_inode_int(
+ =09=09 * If we didn't get it and the block might work if fragmented,
+ =09=09 * try without the CONTIG flag.  Loop until we get it all.
  =09=09 */
- =09=09if (nfsb !=3D 1)
--=09=09=09irecs =3D kmem_zalloc(sizeof(irec) * nfsb,
--=09=09=09=09=09    KM_NOFS);
-+=09=09=09irecs =3D kzalloc(sizeof(irec) * nfsb,
-+=09=09=09=09=09GFP_NOFS | __GFP_NOFAIL);
-=20
- =09=09nirecs =3D nfsb;
- =09=09error =3D xfs_bmapi_read(dp, (xfs_fileoff_t)bno, nfsb, irecs,
+-=09=09mapp =3D kmem_alloc(sizeof(*mapp) * count, 0);
++=09=09mapp =3D kmalloc(sizeof(*mapp) * count,
++=09=09=09       GFP_KERNEL | __GFP_NOFAIL);
++
+ =09=09for (b =3D *bno, mapi =3D 0; b < *bno + count; ) {
+ =09=09=09nmap =3D min(XFS_BMAP_MAX_NMAP, count);
+ =09=09=09c =3D (int)(*bno + count - b);
+diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+index 27c3d150068a..7dd16f208b82 100644
+--- a/fs/xfs/libxfs/xfs_defer.c
++++ b/fs/xfs/libxfs/xfs_defer.c
+@@ -516,8 +516,8 @@ xfs_defer_add(
+ =09=09=09dfp =3D NULL;
+ =09}
+ =09if (!dfp) {
+-=09=09dfp =3D kmem_alloc(sizeof(struct xfs_defer_pending),
+-=09=09=09=09KM_NOFS);
++=09=09dfp =3D kmalloc(sizeof(struct xfs_defer_pending),
++=09=09=09      GFP_NOFS | __GFP_NOFAIL);
+ =09=09dfp->dfp_type =3D type;
+ =09=09dfp->dfp_intent =3D NULL;
+ =09=09dfp->dfp_done =3D NULL;
 diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index efd7cec65259..c2deda036271 100644
+index c2deda036271..4777356b4f83 100644
 --- a/fs/xfs/libxfs/xfs_dir2.c
 +++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -104,10 +104,10 @@ xfs_da_mount(
- =09ASSERT(mp->m_sb.sb_versionnum & XFS_SB_VERSION_DIRV2BIT);
- =09ASSERT(xfs_dir2_dirblock_bytes(&mp->m_sb) <=3D XFS_MAX_BLOCKSIZE);
+@@ -331,7 +331,7 @@ xfs_dir_cilookup_result(
+ =09=09=09=09=09!(args->op_flags & XFS_DA_OP_CILOOKUP))
+ =09=09return -EEXIST;
 =20
--=09mp->m_dir_geo =3D kmem_zalloc(sizeof(struct xfs_da_geometry),
--=09=09=09=09    KM_MAYFAIL);
--=09mp->m_attr_geo =3D kmem_zalloc(sizeof(struct xfs_da_geometry),
--=09=09=09=09     KM_MAYFAIL);
-+=09mp->m_dir_geo =3D kzalloc(sizeof(struct xfs_da_geometry),
-+=09=09=09=09GFP_KERNEL | __GFP_RETRY_MAYFAIL);
-+=09mp->m_attr_geo =3D kzalloc(sizeof(struct xfs_da_geometry),
-+=09=09=09=09 GFP_KERNEL | __GFP_RETRY_MAYFAIL);
- =09if (!mp->m_dir_geo || !mp->m_attr_geo) {
- =09=09kfree(mp->m_dir_geo);
- =09=09kfree(mp->m_attr_geo);
-@@ -234,7 +234,7 @@ xfs_dir_init(
- =09if (error)
- =09=09return error;
-=20
--=09args =3D kmem_zalloc(sizeof(*args), KM_NOFS);
-+=09args =3D kzalloc(sizeof(*args), GFP_NOFS | __GFP_NOFAIL);
- =09if (!args)
+-=09args->value =3D kmem_alloc(len, KM_NOFS | KM_MAYFAIL);
++=09args->value =3D kmalloc(len, GFP_NOFS | __GFP_RETRY_MAYFAIL);
+ =09if (!args->value)
  =09=09return -ENOMEM;
 =20
-@@ -271,7 +271,7 @@ xfs_dir_createname(
- =09=09XFS_STATS_INC(dp->i_mount, xs_dir_create);
- =09}
+diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.=
+c
+index 766f282b706a..54ae07a432e4 100644
+--- a/fs/xfs/libxfs/xfs_dir2_block.c
++++ b/fs/xfs/libxfs/xfs_dir2_block.c
+@@ -1083,7 +1083,7 @@ xfs_dir2_sf_to_block(
+ =09 * Copy the directory into a temporary buffer.
+ =09 * Then pitch the incore inode data so we can make extents.
+ =09 */
+-=09sfp =3D kmem_alloc(ifp->if_bytes, 0);
++=09sfp =3D kmalloc(ifp->if_bytes, GFP_KERNEL | __GFP_NOFAIL);
+ =09memcpy(sfp, oldsfp, ifp->if_bytes);
 =20
--=09args =3D kmem_zalloc(sizeof(*args), KM_NOFS);
-+=09args =3D kzalloc(sizeof(*args), GFP_NOFS | __GFP_NOFAIL);
- =09if (!args)
- =09=09return -ENOMEM;
-=20
-@@ -363,14 +363,13 @@ xfs_dir_lookup(
- =09XFS_STATS_INC(dp->i_mount, xs_dir_lookup);
+ =09xfs_idata_realloc(dp, -ifp->if_bytes, XFS_DATA_FORK);
+diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+index f4de4e7b10ef..43d72aebb9cf 100644
+--- a/fs/xfs/libxfs/xfs_dir2_sf.c
++++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+@@ -276,7 +276,7 @@ xfs_dir2_block_to_sf(
+ =09 * format the data into.  Once we have formatted the data, we can free
+ =09 * the block and copy the formatted data into the inode literal area.
+ =09 */
+-=09sfp =3D kmem_alloc(mp->m_sb.sb_inodesize, 0);
++=09sfp =3D kmalloc(mp->m_sb.sb_inodesize, GFP_KERNEL | __GFP_NOFAIL);
+ =09memcpy(sfp, sfhp, xfs_dir2_sf_hdr_size(sfhp->i8count));
 =20
  =09/*
--=09 * We need to use KM_NOFS here so that lockdep will not throw false
-+=09 * We need to use GFP_NOFS here so that lockdep will not throw false
- =09 * positive deadlock warnings on a non-transactional lookup path. It is
--=09 * safe to recurse into inode recalim in that case, but lockdep can't
--=09 * easily be taught about it. Hence KM_NOFS avoids having to add more
--=09 * lockdep Doing this avoids having to add a bunch of lockdep class
--=09 * annotations into the reclaim path for the ilock.
-+=09 * safe to recurse into inode reclaim in that case, but lockdep can't
-+=09 * easily be taught about it. Hence GFP_NOFS avoids having to add more
-+=09 * lockdep class annotations into the reclaim path for the ilock.
+@@ -530,7 +530,7 @@ xfs_dir2_sf_addname_hard(
  =09 */
--=09args =3D kmem_zalloc(sizeof(*args), KM_NOFS);
-+=09args =3D kzalloc(sizeof(*args), GFP_NOFS | __GFP_NOFAIL);
- =09args->geo =3D dp->i_mount->m_dir_geo;
- =09args->name =3D name->name;
- =09args->namelen =3D name->len;
-@@ -439,7 +438,7 @@ xfs_dir_removename(
- =09ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
- =09XFS_STATS_INC(dp->i_mount, xs_dir_remove);
+ =09sfp =3D (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
+ =09old_isize =3D (int)dp->i_d.di_size;
+-=09buf =3D kmem_alloc(old_isize, 0);
++=09buf =3D kmalloc(old_isize, GFP_KERNEL | __GFP_NOFAIL);
+ =09oldsfp =3D (xfs_dir2_sf_hdr_t *)buf;
+ =09memcpy(oldsfp, sfp, old_isize);
+ =09/*
+@@ -1162,7 +1162,7 @@ xfs_dir2_sf_toino4(
+ =09 * Don't want xfs_idata_realloc copying the data here.
+ =09 */
+ =09oldsize =3D dp->i_df.if_bytes;
+-=09buf =3D kmem_alloc(oldsize, 0);
++=09buf =3D kmalloc(oldsize, GFP_KERNEL | __GFP_NOFAIL);
+ =09oldsfp =3D (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
+ =09ASSERT(oldsfp->i8count =3D=3D 1);
+ =09memcpy(buf, oldsfp, oldsize);
+@@ -1235,7 +1235,7 @@ xfs_dir2_sf_toino8(
+ =09 * Don't want xfs_idata_realloc copying the data here.
+ =09 */
+ =09oldsize =3D dp->i_df.if_bytes;
+-=09buf =3D kmem_alloc(oldsize, 0);
++=09buf =3D kmalloc(oldsize, GFP_KERNEL | __GFP_NOFAIL);
+ =09oldsfp =3D (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
+ =09ASSERT(oldsfp->i8count =3D=3D 0);
+ =09memcpy(buf, oldsfp, oldsize);
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.=
+c
+index 82799dddf97d..62c305654657 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -153,7 +153,8 @@ xfs_init_local_fork(
 =20
--=09args =3D kmem_zalloc(sizeof(*args), KM_NOFS);
-+=09args =3D kzalloc(sizeof(*args), GFP_NOFS | __GFP_NOFAIL);
- =09if (!args)
- =09=09return -ENOMEM;
+ =09if (size) {
+ =09=09real_size =3D roundup(mem_size, 4);
+-=09=09ifp->if_u1.if_data =3D kmem_alloc(real_size, KM_NOFS);
++=09=09ifp->if_u1.if_data =3D kmalloc(real_size,
++=09=09=09=09=09     GFP_NOFS | __GFP_NOFAIL);
+ =09=09memcpy(ifp->if_u1.if_data, data, size);
+ =09=09if (zero_terminate)
+ =09=09=09ifp->if_u1.if_data[size] =3D '\0';
+@@ -308,7 +309,7 @@ xfs_iformat_btree(
+ =09}
 =20
-@@ -500,7 +499,7 @@ xfs_dir_replace(
- =09if (rval)
- =09=09return rval;
-=20
--=09args =3D kmem_zalloc(sizeof(*args), KM_NOFS);
-+=09args =3D kzalloc(sizeof(*args), GFP_NOFS | __GFP_NOFAIL);
- =09if (!args)
- =09=09return -ENOMEM;
-=20
-diff --git a/fs/xfs/libxfs/xfs_iext_tree.c b/fs/xfs/libxfs/xfs_iext_tree.c
-index a7ba30cd81da..e75e7c021187 100644
---- a/fs/xfs/libxfs/xfs_iext_tree.c
-+++ b/fs/xfs/libxfs/xfs_iext_tree.c
-@@ -398,7 +398,8 @@ static void
- xfs_iext_grow(
- =09struct xfs_ifork=09*ifp)
- {
--=09struct xfs_iext_node=09*node =3D kmem_zalloc(NODE_SIZE, KM_NOFS);
-+=09struct xfs_iext_node=09*node =3D kzalloc(NODE_SIZE,
+ =09ifp->if_broot_bytes =3D size;
+-=09ifp->if_broot =3D kmem_alloc(size, KM_NOFS);
++=09ifp->if_broot =3D kmalloc(size, GFP_NOFS | __GFP_NOFAIL);
+ =09ASSERT(ifp->if_broot !=3D NULL);
+ =09/*
+ =09 * Copy and convert from the on-disk structure
+@@ -373,7 +374,8 @@ xfs_iroot_realloc(
+ =09=09 */
+ =09=09if (ifp->if_broot_bytes =3D=3D 0) {
+ =09=09=09new_size =3D XFS_BMAP_BROOT_SPACE_CALC(mp, rec_diff);
+-=09=09=09ifp->if_broot =3D kmem_alloc(new_size, KM_NOFS);
++=09=09=09ifp->if_broot =3D kmalloc(new_size,
 +=09=09=09=09=09=09GFP_NOFS | __GFP_NOFAIL);
- =09int=09=09=09i;
+ =09=09=09ifp->if_broot_bytes =3D (int)new_size;
+ =09=09=09return;
+ =09=09}
+@@ -414,7 +416,7 @@ xfs_iroot_realloc(
+ =09else
+ =09=09new_size =3D 0;
+ =09if (new_size > 0) {
+-=09=09new_broot =3D kmem_alloc(new_size, KM_NOFS);
++=09=09new_broot =3D kmalloc(new_size, GFP_NOFS | __GFP_NOFAIL);
+ =09=09/*
+ =09=09 * First copy over the btree block header.
+ =09=09 */
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index 07894c53e753..6a89443da50a 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -1188,8 +1188,8 @@ __xfs_refcount_add(
+ =09=09=09type, XFS_FSB_TO_AGBNO(tp->t_mountp, startblock),
+ =09=09=09blockcount);
 =20
- =09if (ifp->if_height =3D=3D 1) {
-@@ -454,7 +455,8 @@ xfs_iext_split_node(
- =09int=09=09=09*nr_entries)
+-=09ri =3D kmem_alloc(sizeof(struct xfs_refcount_intent),
+-=09=09=09KM_NOFS);
++=09ri =3D kmalloc(sizeof(struct xfs_refcount_intent),
++=09=09     GFP_NOFS | __GFP_NOFAIL);
+ =09INIT_LIST_HEAD(&ri->ri_list);
+ =09ri->ri_type =3D type;
+ =09ri->ri_startblock =3D startblock;
+@@ -1584,7 +1584,7 @@ struct xfs_refcount_recovery {
+ /* Stuff an extent on the recovery list. */
+ STATIC int
+ xfs_refcount_recover_extent(
+-=09struct xfs_btree_cur =09=09*cur,
++=09struct xfs_btree_cur=09=09*cur,
+ =09union xfs_btree_rec=09=09*rec,
+ =09void=09=09=09=09*priv)
  {
- =09struct xfs_iext_node=09*node =3D *nodep;
--=09struct xfs_iext_node=09*new =3D kmem_zalloc(NODE_SIZE, KM_NOFS);
-+=09struct xfs_iext_node=09*new =3D kzalloc(NODE_SIZE,
-+=09=09=09=09=09       GFP_NOFS | __GFP_NOFAIL);
- =09const int=09=09nr_move =3D KEYS_PER_NODE / 2;
- =09int=09=09=09nr_keep =3D nr_move + (KEYS_PER_NODE & 1);
- =09int=09=09=09i =3D 0;
-@@ -542,7 +544,8 @@ xfs_iext_split_leaf(
- =09int=09=09=09*nr_entries)
+@@ -1596,7 +1596,8 @@ xfs_refcount_recover_extent(
+ =09=09return -EFSCORRUPTED;
+ =09}
+=20
+-=09rr =3D kmem_alloc(sizeof(struct xfs_refcount_recovery), 0);
++=09rr =3D kmalloc(sizeof(struct xfs_refcount_recovery),
++=09=09     GFP_KERNEL | __GFP_NOFAIL);
+ =09xfs_refcount_btrec_to_irec(rec, &rr->rr_rrec);
+ =09list_add_tail(&rr->rr_list, debris);
+=20
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index 38e9414878b3..0e1e8cbb8862 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -2286,7 +2286,7 @@ __xfs_rmap_add(
+ =09=09=09bmap->br_blockcount,
+ =09=09=09bmap->br_state);
+=20
+-=09ri =3D kmem_alloc(sizeof(struct xfs_rmap_intent), KM_NOFS);
++=09ri =3D kmalloc(sizeof(struct xfs_rmap_intent), GFP_NOFS | __GFP_NOFAIL)=
+;
+ =09INIT_LIST_HEAD(&ri->ri_list);
+ =09ri->ri_type =3D type;
+ =09ri->ri_owner =3D owner;
+diff --git a/fs/xfs/scrub/bitmap.c b/fs/xfs/scrub/bitmap.c
+index cabde1c4c235..5787d4f74e71 100644
+--- a/fs/xfs/scrub/bitmap.c
++++ b/fs/xfs/scrub/bitmap.c
+@@ -25,7 +25,8 @@ xfs_bitmap_set(
  {
- =09struct xfs_iext_leaf=09*leaf =3D cur->leaf;
--=09struct xfs_iext_leaf=09*new =3D kmem_zalloc(NODE_SIZE, KM_NOFS);
-+=09struct xfs_iext_leaf=09*new =3D kzalloc(NODE_SIZE,
-+=09=09=09=09=09       GFP_NOFS | __GFP_NOFAIL);
- =09const int=09=09nr_move =3D RECS_PER_LEAF / 2;
- =09int=09=09=09nr_keep =3D nr_move + (RECS_PER_LEAF & 1);
- =09int=09=09=09i;
-@@ -583,7 +586,8 @@ xfs_iext_alloc_root(
- {
- =09ASSERT(ifp->if_bytes =3D=3D 0);
+ =09struct xfs_bitmap_range=09*bmr;
 =20
--=09ifp->if_u1.if_root =3D kmem_zalloc(sizeof(struct xfs_iext_rec), KM_NOFS=
-);
-+=09ifp->if_u1.if_root =3D kzalloc(sizeof(struct xfs_iext_rec),
-+=09=09=09=09     GFP_NOFS | __GFP_NOFAIL);
- =09ifp->if_height =3D 1;
-=20
- =09/* now that we have a node step into it */
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index 6f7126f6d25c..5533c0d38333 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -720,8 +720,8 @@ xchk_agfl(
- =09memset(&sai, 0, sizeof(sai));
- =09sai.sc =3D sc;
- =09sai.sz_entries =3D agflcount;
--=09sai.entries =3D kmem_zalloc(sizeof(xfs_agblock_t) * agflcount,
--=09=09=09KM_MAYFAIL);
-+=09sai.entries =3D kzalloc(sizeof(xfs_agblock_t) * agflcount,
-+=09=09=09      GFP_KERNEL | __GFP_RETRY_MAYFAIL);
- =09if (!sai.entries) {
- =09=09error =3D -ENOMEM;
- =09=09goto out;
-diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
-index 7251c66a82c9..bb036c5a6f21 100644
---- a/fs/xfs/scrub/fscounters.c
-+++ b/fs/xfs/scrub/fscounters.c
-@@ -125,7 +125,8 @@ xchk_setup_fscounters(
- =09struct xchk_fscounters=09*fsc;
- =09int=09=09=09error;
-=20
--=09sc->buf =3D kmem_zalloc(sizeof(struct xchk_fscounters), 0);
-+=09sc->buf =3D kzalloc(sizeof(struct xchk_fscounters),
-+=09=09=09  GFP_KERNEL | __GFP_NOFAIL);
- =09if (!sc->buf)
+-=09bmr =3D kmem_alloc(sizeof(struct xfs_bitmap_range), KM_MAYFAIL);
++=09bmr =3D kmalloc(sizeof(struct xfs_bitmap_range),
++=09=09      GFP_KERNEL | __GFP_RETRY_MAYFAIL);
+ =09if (!bmr)
  =09=09return -ENOMEM;
- =09fsc =3D sc->buf;
+=20
+@@ -181,8 +182,8 @@ xfs_bitmap_disunion(
+ =09=09=09 * Deleting from the middle: add the new right extent
+ =09=09=09 * and then shrink the left extent.
+ =09=09=09 */
+-=09=09=09new_br =3D kmem_alloc(sizeof(struct xfs_bitmap_range),
+-=09=09=09=09=09KM_MAYFAIL);
++=09=09=09new_br =3D kmalloc(sizeof(struct xfs_bitmap_range),
++=09=09=09=09=09 GFP_KERNEL | __GFP_RETRY_MAYFAIL);
+ =09=09=09if (!new_br) {
+ =09=09=09=09error =3D -ENOMEM;
+ =09=09=09=09goto out;
+diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+index bed40b605076..857f813681ed 100644
+--- a/fs/xfs/scrub/btree.c
++++ b/fs/xfs/scrub/btree.c
+@@ -429,8 +429,8 @@ xchk_btree_check_owner(
+ =09 * later scanning.
+ =09 */
+ =09if (cur->bc_btnum =3D=3D XFS_BTNUM_BNO || cur->bc_btnum =3D=3D XFS_BTNU=
+M_RMAP) {
+-=09=09co =3D kmem_alloc(sizeof(struct check_owner),
+-=09=09=09=09KM_MAYFAIL);
++=09=09co =3D kmalloc(sizeof(struct check_owner),
++=09=09=09     GFP_KERNEL | __GFP_RETRY_MAYFAIL);
+ =09=09if (!co)
+ =09=09=09return -ENOMEM;
+ =09=09co->level =3D level;
+diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
+index 985724e81ebf..f5c2e320e416 100644
+--- a/fs/xfs/scrub/refcount.c
++++ b/fs/xfs/scrub/refcount.c
+@@ -125,8 +125,8 @@ xchk_refcountbt_rmap_check(
+ =09=09 * is healthy each rmap_irec we see will be in agbno order
+ =09=09 * so we don't need insertion sort here.
+ =09=09 */
+-=09=09frag =3D kmem_alloc(sizeof(struct xchk_refcnt_frag),
+-=09=09=09=09KM_MAYFAIL);
++=09=09frag =3D kmalloc(sizeof(struct xchk_refcnt_frag),
++=09=09=09       GFP_KERNEL | __GFP_RETRY_MAYFAIL);
+ =09=09if (!frag)
+ =09=09=09return -ENOMEM;
+ =09=09memcpy(&frag->rm, rec, sizeof(frag->rm));
+diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+index 8351b3b611ac..42d7d8cbdb6e 100644
+--- a/fs/xfs/xfs_attr_inactive.c
++++ b/fs/xfs/xfs_attr_inactive.c
+@@ -148,7 +148,7 @@ xfs_attr3_leaf_inactive(
+ =09 * Allocate storage for a list of all the "remote" value extents.
+ =09 */
+ =09size =3D count * sizeof(xfs_attr_inactive_list_t);
+-=09list =3D kmem_alloc(size, 0);
++=09list =3D kmalloc(size, GFP_KERNEL | __GFP_NOFAIL);
+=20
+ =09/*
+ =09 * Identify each of the "remote" value extents.
+diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+index e1d1c4eb9e69..2a475ca6e353 100644
+--- a/fs/xfs/xfs_attr_list.c
++++ b/fs/xfs/xfs_attr_list.c
+@@ -116,7 +116,7 @@ xfs_attr_shortform_list(
+ =09 * It didn't all fit, so we have to sort everything on hashval.
+ =09 */
+ =09sbsize =3D sf->hdr.count * sizeof(*sbuf);
+-=09sbp =3D sbuf =3D kmem_alloc(sbsize, KM_NOFS);
++=09sbp =3D sbuf =3D kmalloc(sbsize, GFP_NOFS | __GFP_NOFAIL);
+=20
+ =09/*
+ =09 * Scan the attribute list for the rest of the entries, storing
 diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 0d2c41c6639d..c70122fbc2a8 100644
+index c70122fbc2a8..7428fe6a322c 100644
 --- a/fs/xfs/xfs_buf.c
 +++ b/fs/xfs/xfs_buf.c
-@@ -178,8 +178,8 @@ xfs_buf_get_maps(
+@@ -274,8 +274,9 @@ _xfs_buf_get_pages(
+ =09=09if (page_count <=3D XB_PAGES) {
+ =09=09=09bp->b_pages =3D bp->b_page_array;
+ =09=09} else {
+-=09=09=09bp->b_pages =3D kmem_alloc(sizeof(struct page *) *
+-=09=09=09=09=09=09 page_count, KM_NOFS);
++=09=09=09bp->b_pages =3D kmalloc(sizeof(struct page *) *
++=09=09=09=09=09      page_count,
++=09=09=09=09=09      GFP_NOFS | __GFP_NOFAIL);
+ =09=09=09if (bp->b_pages =3D=3D NULL)
+ =09=09=09=09return -ENOMEM;
+ =09=09}
+diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
+index 9778e4e69e07..38b634cef1ed 100644
+--- a/fs/xfs/xfs_filestream.c
++++ b/fs/xfs/xfs_filestream.c
+@@ -247,7 +247,7 @@ xfs_filestream_pick_ag(
  =09=09return 0;
- =09}
 =20
--=09bp->b_maps =3D kmem_zalloc(map_count * sizeof(struct xfs_buf_map),
--=09=09=09=09KM_NOFS);
-+=09bp->b_maps =3D kzalloc(map_count * sizeof(struct xfs_buf_map),
-+=09=09=09     GFP_NOFS | __GFP_NOFAIL);
- =09if (!bp->b_maps)
- =09=09return -ENOMEM;
- =09return 0;
-@@ -1749,7 +1749,7 @@ xfs_alloc_buftarg(
- {
- =09xfs_buftarg_t=09=09*btp;
+ =09err =3D -ENOMEM;
+-=09item =3D kmem_alloc(sizeof(*item), KM_MAYFAIL);
++=09item =3D kmalloc(sizeof(*item), GFP_KERNEL | __GFP_RETRY_MAYFAIL);
+ =09if (!item)
+ =09=09goto out_put_ag;
 =20
--=09btp =3D kmem_zalloc(sizeof(*btp), KM_NOFS);
-+=09btp =3D kzalloc(sizeof(*btp), GFP_NOFS | __GFP_NOFAIL);
-=20
- =09btp->bt_mount =3D mp;
- =09btp->bt_dev =3D  bdev->bd_dev;
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index dc39b2d1b351..4fea8e5e70fb 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -701,8 +701,8 @@ xfs_buf_item_get_format(
- =09=09return 0;
- =09}
-=20
--=09bip->bli_formats =3D kmem_zalloc(count * sizeof(struct xfs_buf_log_form=
-at),
--=09=09=09=090);
-+=09bip->bli_formats =3D kzalloc(count * sizeof(struct xfs_buf_log_format),
-+=09=09=09=09   GFP_KERNEL | __GFP_NOFAIL);
- =09if (!bip->bli_formats)
- =09=09return -ENOMEM;
- =09return 0;
-diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
-index 1b5e68ccef60..91bd47e8b832 100644
---- a/fs/xfs/xfs_dquot_item.c
-+++ b/fs/xfs/xfs_dquot_item.c
-@@ -347,7 +347,8 @@ xfs_qm_qoff_logitem_init(
- {
- =09struct xfs_qoff_logitem=09*qf;
-=20
--=09qf =3D kmem_zalloc(sizeof(struct xfs_qoff_logitem), 0);
-+=09qf =3D kzalloc(sizeof(struct xfs_qoff_logitem),
-+=09=09     GFP_KERNEL | __GFP_NOFAIL);
-=20
- =09xfs_log_item_init(mp, &qf->qql_item, XFS_LI_QUOTAOFF, start ?
- =09=09=09&xfs_qm_qoffend_logitem_ops : &xfs_qm_qoff_logitem_ops);
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index 4c0883380d7c..0e0ef2e15e2e 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -212,8 +212,8 @@ int
- xfs_errortag_init(
- =09struct xfs_mount=09*mp)
- {
--=09mp->m_errortag =3D kmem_zalloc(sizeof(unsigned int) * XFS_ERRTAG_MAX,
--=09=09=09KM_MAYFAIL);
-+=09mp->m_errortag =3D kzalloc(sizeof(unsigned int) * XFS_ERRTAG_MAX,
-+=09=09=09=09 GFP_KERNEL | __GFP_RETRY_MAYFAIL);
- =09if (!mp->m_errortag)
- =09=09return -ENOMEM;
-=20
-diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-index 9f0b99c7b34a..0ce50b47fc28 100644
---- a/fs/xfs/xfs_extent_busy.c
-+++ b/fs/xfs/xfs_extent_busy.c
-@@ -33,7 +33,8 @@ xfs_extent_busy_insert(
- =09struct rb_node=09=09**rbp;
- =09struct rb_node=09=09*parent =3D NULL;
-=20
--=09new =3D kmem_zalloc(sizeof(struct xfs_extent_busy), 0);
-+=09new =3D kzalloc(sizeof(struct xfs_extent_busy),
-+=09=09      GFP_KERNEL | __GFP_NOFAIL);
- =09new->agno =3D agno;
- =09new->bno =3D bno;
- =09new->length =3D len;
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index c3b8804aa396..872312029957 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -163,7 +163,7 @@ xfs_efi_init(
- =09if (nextents > XFS_EFI_MAX_FAST_EXTENTS) {
- =09=09size =3D (uint)(sizeof(xfs_efi_log_item_t) +
- =09=09=09((nextents - 1) * sizeof(xfs_extent_t)));
--=09=09efip =3D kmem_zalloc(size, 0);
-+=09=09efip =3D kzalloc(size, GFP_KERNEL | __GFP_NOFAIL);
- =09} else {
- =09=09efip =3D kmem_cache_zalloc(xfs_efi_zone,
- =09=09=09=09=09 GFP_KERNEL | __GFP_NOFAIL);
-@@ -333,9 +333,9 @@ xfs_trans_get_efd(
- =09ASSERT(nextents > 0);
-=20
- =09if (nextents > XFS_EFD_MAX_FAST_EXTENTS) {
--=09=09efdp =3D kmem_zalloc(sizeof(struct xfs_efd_log_item) +
-+=09=09efdp =3D kzalloc(sizeof(struct xfs_efd_log_item) +
- =09=09=09=09(nextents - 1) * sizeof(struct xfs_extent),
--=09=09=09=090);
-+=09=09=09=09GFP_KERNEL | __GFP_NOFAIL);
- =09} else {
- =09=09efdp =3D kmem_cache_zalloc(xfs_efd_zone,
- =09=09=09=09=09 GFP_KERNEL | __GFP_NOFAIL);
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index e1121ed7cbb5..297b2a73f285 100644
+index 297b2a73f285..1d1fe67ad237 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -2024,7 +2024,7 @@ xfs_iunlink_add_backref(
- =09if (XFS_TEST_ERROR(false, pag->pag_mount, XFS_ERRTAG_IUNLINK_FALLBACK))
- =09=09return 0;
+@@ -3493,7 +3493,7 @@ xfs_iflush_cluster(
+ =09pag =3D xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
 =20
--=09iu =3D kmem_zalloc(sizeof(*iu), KM_NOFS);
-+=09iu =3D kzalloc(sizeof(*iu), GFP_NOFS | __GFP_NOFAIL);
- =09iu->iu_agino =3D prev_agino;
- =09iu->iu_next_unlinked =3D this_agino;
-=20
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 36bf47f11117..ec5d590469fc 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -168,8 +168,8 @@ xfs_bulkstat_one(
-=20
- =09ASSERT(breq->icount =3D=3D 1);
-=20
--=09bc.buf =3D kmem_zalloc(sizeof(struct xfs_bulkstat),
--=09=09=09KM_MAYFAIL);
-+=09bc.buf =3D kzalloc(sizeof(struct xfs_bulkstat),
-+=09=09=09 GFP_KERNEL | __GFP_RETRY_MAYFAIL);
- =09if (!bc.buf)
- =09=09return -ENOMEM;
-=20
-@@ -242,8 +242,8 @@ xfs_bulkstat(
- =09if (xfs_bulkstat_already_done(breq->mp, breq->startino))
- =09=09return 0;
-=20
--=09bc.buf =3D kmem_zalloc(sizeof(struct xfs_bulkstat),
--=09=09=09KM_MAYFAIL);
-+=09bc.buf =3D kzalloc(sizeof(struct xfs_bulkstat),
-+=09=09=09 GFP_KERNEL | __GFP_RETRY_MAYFAIL);
- =09if (!bc.buf)
- =09=09return -ENOMEM;
+ =09cilist_size =3D igeo->inodes_per_cluster * sizeof(struct xfs_inode *);
+-=09cilist =3D kmem_alloc(cilist_size, KM_MAYFAIL|KM_NOFS);
++=09cilist =3D kmalloc(cilist_size, GFP_NOFS | __GFP_RETRY_MAYFAIL);
+ =09if (!cilist)
+ =09=09goto out_put;
 =20
 diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
-index 67e98f9023d2..e6006423e140 100644
+index e6006423e140..aa6bc0555d21 100644
 --- a/fs/xfs/xfs_iwalk.c
 +++ b/fs/xfs/xfs_iwalk.c
-@@ -616,7 +616,8 @@ xfs_iwalk_threaded(
- =09=09if (xfs_pwork_ctl_want_abort(&pctl))
- =09=09=09break;
+@@ -152,7 +152,7 @@ xfs_iwalk_alloc(
 =20
--=09=09iwag =3D kmem_zalloc(sizeof(struct xfs_iwalk_ag), 0);
-+=09=09iwag =3D kzalloc(sizeof(struct xfs_iwalk_ag),
-+=09=09=09       GFP_KERNEL | __GFP_NOFAIL);
- =09=09iwag->mp =3D mp;
- =09=09iwag->iwalk_fn =3D iwalk_fn;
- =09=09iwag->data =3D data;
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 9ed7869d879f..152c87865241 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1412,7 +1412,7 @@ xlog_alloc_log(
- =09int=09=09=09error =3D -ENOMEM;
- =09uint=09=09=09log2_size =3D 0;
-=20
--=09log =3D kmem_zalloc(sizeof(struct xlog), KM_MAYFAIL);
-+=09log =3D kzalloc(sizeof(struct xlog), GFP_KERNEL | __GFP_RETRY_MAYFAIL);
- =09if (!log) {
- =09=09xfs_warn(mp, "Log allocation failed: No memory!");
- =09=09goto out;
-@@ -1482,7 +1482,8 @@ xlog_alloc_log(
- =09=09size_t bvec_size =3D howmany(log->l_iclog_size, PAGE_SIZE) *
- =09=09=09=09sizeof(struct bio_vec);
-=20
--=09=09iclog =3D kmem_zalloc(sizeof(*iclog) + bvec_size, KM_MAYFAIL);
-+=09=09iclog =3D kzalloc(sizeof(*iclog) + bvec_size,
-+=09=09=09=09GFP_KERNEL | __GFP_RETRY_MAYFAIL);
- =09=09if (!iclog)
- =09=09=09goto out_free_iclog;
-=20
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 9953f2f040ab..de5c892c72b0 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -660,7 +660,7 @@ xlog_cil_push(
- =09if (!cil)
- =09=09return 0;
-=20
--=09new_ctx =3D kmem_zalloc(sizeof(*new_ctx), KM_NOFS);
-+=09new_ctx =3D kzalloc(sizeof(*new_ctx), GFP_NOFS | __GFP_NOFAIL);
- =09new_ctx->ticket =3D xlog_cil_ticket_alloc(log);
-=20
- =09down_write(&cil->xc_ctx_lock);
-@@ -1179,11 +1179,11 @@ xlog_cil_init(
- =09struct xfs_cil=09*cil;
- =09struct xfs_cil_ctx *ctx;
-=20
--=09cil =3D kmem_zalloc(sizeof(*cil), KM_MAYFAIL);
-+=09cil =3D kzalloc(sizeof(*cil), GFP_KERNEL | __GFP_RETRY_MAYFAIL);
- =09if (!cil)
+ =09/* Allocate a prefetch buffer for inobt records. */
+ =09size =3D iwag->sz_recs * sizeof(struct xfs_inobt_rec_incore);
+-=09iwag->recs =3D kmem_alloc(size, KM_MAYFAIL);
++=09iwag->recs =3D kmalloc(size, GFP_KERNEL | __GFP_RETRY_MAYFAIL);
+ =09if (iwag->recs =3D=3D NULL)
  =09=09return -ENOMEM;
 =20
--=09ctx =3D kmem_zalloc(sizeof(*ctx), KM_MAYFAIL);
-+=09ctx =3D kzalloc(sizeof(*ctx), GFP_KERNEL | __GFP_RETRY_MAYFAIL);
- =09if (!ctx) {
- =09=09kfree(cil);
- =09=09return -ENOMEM;
 diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 4167e1326f62..cb02deb5dedc 100644
+index 5423171e0b7d..7bb53fbf32f6 100644
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -4171,7 +4171,7 @@ xlog_recover_add_item(
- {
- =09xlog_recover_item_t=09*item;
-=20
--=09item =3D kmem_zalloc(sizeof(xlog_recover_item_t), 0);
-+=09item =3D kzalloc(sizeof(xlog_recover_item_t), GFP_KERNEL | __GFP_NOFAIL=
-);
- =09INIT_LIST_HEAD(&item->ri_list);
- =09list_add_tail(&item->ri_list, head);
- }
-@@ -4298,8 +4298,8 @@ xlog_recover_add_to_trans(
-=20
- =09=09item->ri_total =3D in_f->ilf_size;
- =09=09item->ri_buf =3D
--=09=09=09kmem_zalloc(item->ri_total * sizeof(xfs_log_iovec_t),
--=09=09=09=09    0);
-+=09=09=09kzalloc(item->ri_total * sizeof(xfs_log_iovec_t),
-+=09=09=09=09GFP_KERNEL | __GFP_NOFAIL);
+@@ -1962,7 +1962,7 @@ xlog_recover_buffer_pass1(
+ =09=09}
  =09}
 =20
- =09if (item->ri_total <=3D item->ri_cnt) {
-@@ -4442,7 +4442,7 @@ xlog_recover_ophdr_to_trans(
- =09 * This is a new transaction so allocate a new recovery container to
- =09 * hold the recovery ops that will follow.
- =09 */
--=09trans =3D kmem_zalloc(sizeof(struct xlog_recover), 0);
-+=09trans =3D kzalloc(sizeof(struct xlog_recover), GFP_KERNEL | __GFP_NOFAI=
+-=09bcp =3D kmem_alloc(sizeof(struct xfs_buf_cancel), 0);
++=09bcp =3D kmalloc(sizeof(struct xfs_buf_cancel), GFP_KERNEL | __GFP_NOFAI=
 L);
- =09trans->r_log_tid =3D tid;
- =09trans->r_lsn =3D be64_to_cpu(rhead->h_lsn);
- =09INIT_LIST_HEAD(&trans->r_itemq);
-@@ -5561,9 +5561,9 @@ xlog_do_log_recovery(
- =09 * First do a pass to find all of the cancelled buf log items.
- =09 * Store them in the buf_cancel_table for use in the second pass.
- =09 */
--=09log->l_buf_cancel_table =3D kmem_zalloc(XLOG_BC_TABLE_SIZE *
-+=09log->l_buf_cancel_table =3D kzalloc(XLOG_BC_TABLE_SIZE *
- =09=09=09=09=09=09 sizeof(struct list_head),
--=09=09=09=09=09=09 0);
-+=09=09=09=09=09=09 GFP_KERNEL | __GFP_NOFAIL);
- =09for (i =3D 0; i < XLOG_BC_TABLE_SIZE; i++)
- =09=09INIT_LIST_HEAD(&log->l_buf_cancel_table[i]);
+ =09bcp->bc_blkno =3D buf_f->blf_blkno;
+ =09bcp->bc_len =3D buf_f->blf_len;
+ =09bcp->bc_refcount =3D 1;
+@@ -2932,7 +2932,8 @@ xlog_recover_inode_pass2(
+ =09if (item->ri_buf[0].i_len =3D=3D sizeof(struct xfs_inode_log_format)) {
+ =09=09in_f =3D item->ri_buf[0].i_addr;
+ =09} else {
+-=09=09in_f =3D kmem_alloc(sizeof(struct xfs_inode_log_format), 0);
++=09=09in_f =3D kmalloc(sizeof(struct xfs_inode_log_format),
++=09=09=09       GFP_KERNEL | __GFP_NOFAIL);
+ =09=09need_free =3D 1;
+ =09=09error =3D xfs_inode_item_format_convert(&item->ri_buf[0], in_f);
+ =09=09if (error)
+@@ -4271,7 +4272,7 @@ xlog_recover_add_to_trans(
+ =09=09return 0;
+ =09}
 =20
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 53ddb058b11a..c352567c8ef5 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -194,7 +194,8 @@ xfs_initialize_perag(
- =09=09=09continue;
- =09=09}
+-=09ptr =3D kmem_alloc(len, 0);
++=09ptr =3D kmalloc(len, GFP_KERNEL | __GFP_NOFAIL);
+ =09memcpy(ptr, dp, len);
+ =09in_f =3D (struct xfs_inode_log_format *)ptr;
 =20
--=09=09pag =3D kmem_zalloc(sizeof(*pag), KM_MAYFAIL);
-+=09=09pag =3D kzalloc(sizeof(*pag),
-+=09=09=09      GFP_KERNEL | __GFP_RETRY_MAYFAIL);
- =09=09if (!pag)
- =09=09=09goto out_unwind_new_pags;
- =09=09pag->pag_agno =3D index;
-diff --git a/fs/xfs/xfs_mru_cache.c b/fs/xfs/xfs_mru_cache.c
-index 6ef0a71d7681..f24014759c57 100644
---- a/fs/xfs/xfs_mru_cache.c
-+++ b/fs/xfs/xfs_mru_cache.c
-@@ -333,12 +333,13 @@ xfs_mru_cache_create(
- =09if (!(grp_time =3D msecs_to_jiffies(lifetime_ms) / grp_count))
- =09=09return -EINVAL;
-=20
--=09if (!(mru =3D kmem_zalloc(sizeof(*mru), 0)))
-+=09if (!(mru =3D kzalloc(sizeof(*mru), GFP_KERNEL | __GFP_NOFAIL)))
- =09=09return -ENOMEM;
-=20
- =09/* An extra list is needed to avoid reaping up to a grp_time early. */
- =09mru->grp_count =3D grp_count + 1;
--=09mru->lists =3D kmem_zalloc(mru->grp_count * sizeof(*mru->lists), 0);
-+=09mru->lists =3D kzalloc(mru->grp_count * sizeof(*mru->lists),
-+=09=09=09     GFP_KERNEL | __GFP_NOFAIL);
-=20
- =09if (!mru->lists) {
- =09=09err =3D -ENOMEM;
 diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 06c92dc61a03..a2664afa10c3 100644
+index a2664afa10c3..2993af4a9935 100644
 --- a/fs/xfs/xfs_qm.c
 +++ b/fs/xfs/xfs_qm.c
-@@ -643,7 +643,8 @@ xfs_qm_init_quotainfo(
+@@ -988,7 +988,8 @@ xfs_qm_reset_dqcounts_buf(
+ =09if (qip->i_d.di_nblocks =3D=3D 0)
+ =09=09return 0;
 =20
- =09ASSERT(XFS_IS_QUOTA_RUNNING(mp));
+-=09map =3D kmem_alloc(XFS_DQITER_MAP_SIZE * sizeof(*map), 0);
++=09map =3D kmalloc(XFS_DQITER_MAP_SIZE * sizeof(*map),
++=09=09      GFP_KERNEL | __GFP_NOFAIL);
 =20
--=09qinf =3D mp->m_quotainfo =3D kmem_zalloc(sizeof(xfs_quotainfo_t), 0);
-+=09qinf =3D mp->m_quotainfo =3D kzalloc(sizeof(xfs_quotainfo_t),
-+=09=09=09=09=09 GFP_KERNEL | __GFP_NOFAIL);
-=20
- =09error =3D list_lru_init(&qinf->qi_lru);
- =09if (error)
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index 76b39f2a0260..7ec70a5f1cb0 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -143,8 +143,8 @@ xfs_cui_init(
-=20
- =09ASSERT(nextents > 0);
- =09if (nextents > XFS_CUI_MAX_FAST_EXTENTS)
--=09=09cuip =3D kmem_zalloc(xfs_cui_log_item_sizeof(nextents),
--=09=09=09=090);
-+=09=09cuip =3D kzalloc(xfs_cui_log_item_sizeof(nextents),
-+=09=09=09       GFP_KERNEL | __GFP_NOFAIL);
- =09else
- =09=09cuip =3D kmem_cache_zalloc(xfs_cui_zone,
- =09=09=09=09=09 GFP_KERNEL | __GFP_NOFAIL);
-diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-index 6aeb6745d007..82d822885996 100644
---- a/fs/xfs/xfs_rmap_item.c
-+++ b/fs/xfs/xfs_rmap_item.c
-@@ -142,7 +142,8 @@ xfs_rui_init(
-=20
- =09ASSERT(nextents > 0);
- =09if (nextents > XFS_RUI_MAX_FAST_EXTENTS)
--=09=09ruip =3D kmem_zalloc(xfs_rui_log_item_sizeof(nextents), 0);
-+=09=09ruip =3D kzalloc(xfs_rui_log_item_sizeof(nextents),
-+=09=09=09       GFP_KERNEL | __GFP_NOFAIL);
- =09else
- =09=09ruip =3D kmem_cache_zalloc(xfs_rui_zone,
- =09=09=09=09=09 GFP_KERNEL | __GFP_NOFAIL);
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 589918d11041..2e3515df1bb5 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -824,7 +824,8 @@ xfs_trans_ail_init(
+ =09lblkno =3D 0;
+ =09maxlblkcnt =3D XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 7f03b4ab3452..dfd419d402ea 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -962,7 +962,7 @@ xfs_growfs_rt(
+ =09/*
+ =09 * Allocate a new (fake) mount/sb.
+ =09 */
+-=09nmp =3D kmem_alloc(sizeof(*nmp), 0);
++=09nmp =3D kmalloc(sizeof(*nmp), GFP_KERNEL | __GFP_NOFAIL);
+ =09/*
+ =09 * Loop over the bitmap blocks.
+ =09 * We will do everything one bitmap block at a time.
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index cc1933dc652f..eee831681e9c 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1739,7 +1739,7 @@ static int xfs_init_fs_context(
  {
- =09struct xfs_ail=09*ailp;
+ =09struct xfs_mount=09*mp;
 =20
--=09ailp =3D kmem_zalloc(sizeof(struct xfs_ail), KM_MAYFAIL);
-+=09ailp =3D kzalloc(sizeof(struct xfs_ail),
-+=09=09       GFP_KERNEL | __GFP_RETRY_MAYFAIL);
- =09if (!ailp)
+-=09mp =3D kmem_alloc(sizeof(struct xfs_mount), KM_ZERO);
++=09mp =3D kzalloc(sizeof(struct xfs_mount), GFP_KERNEL | __GFP_NOFAIL);
+ =09if (!mp)
  =09=09return -ENOMEM;
 =20
 --=20
