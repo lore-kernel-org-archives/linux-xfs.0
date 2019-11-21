@@ -2,404 +2,99 @@ Return-Path: <SRS0=udUw=ZN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6917AC43141
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 19:15:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01BE0C432C0
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 21:44:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 40E0D2068E
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 19:15:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C2EB1206CC
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 21:44:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="dZyvyipS"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hnTS0gdf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726714AbfKUTPB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Nov 2019 14:15:01 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:48082 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726541AbfKUTPB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Nov 2019 14:15:01 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xALJE8is022807;
-        Thu, 21 Nov 2019 19:14:57 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- content-transfer-encoding : in-reply-to; s=corp-2019-08-05;
- bh=nH/gk6ZJ4ZG4cGze7Hmp7DFNJ+h12yx+iBlmHBVu3WU=;
- b=dZyvyipSNSQ4XSpF9xq6txAFeBaHglaSQSF50hnd2b2r5BHSkW8VPEUIoPe5CKktUqrU
- CkpN7fpOX2sh58ddzW9QNq3wPJBBzj4sKlcsyAToQQv6e5/paHkUoJldSjdyV4KFy1Gk
- M5xWKrcSriQs+xYpZy1KQ3yGRWTMN/lQ8Kvla7b7hQBP6B0vGcDbleynwyjhnHtvvSHA
- MoUbiEFo7FQ166KdmtMgavzD5793KoLdE2QEWGulNOivnXy8C4FtKr8RtuHRJXCwxYZ3
- phMb+0MF1oUM2OV+r39KYGZLl45i6y2B0/IQNfZ9ZS8qP0gTXWgznP/JUEAm6grtRzkl oA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 2wa92q6cm6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 21 Nov 2019 19:14:57 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xALJEElN089945;
-        Thu, 21 Nov 2019 19:14:57 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 2wd47xgxtv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 21 Nov 2019 19:14:57 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xALJEuef023060;
-        Thu, 21 Nov 2019 19:14:56 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 21 Nov 2019 11:14:56 -0800
-Date:   Thu, 21 Nov 2019 11:14:53 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Andreas =?iso-8859-1?Q?Gr=FCnbacher?= 
-        <andreas.gruenbacher@gmail.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>
-Subject: Re: [RFC PATCH] generic: test splice() with pipes
-Message-ID: <20191121191453.GN6211@magnolia>
-References: <20190829161155.GA5360@magnolia>
- <20190830004407.GA5340@magnolia>
- <20191121170107.GM6211@magnolia>
- <CAHpGcMJYRVeNNjhMP8GEVD9Wr5g-7_sXkR=qxQTCqrwyskuDBw@mail.gmail.com>
+        id S1726762AbfKUVox (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Nov 2019 16:44:53 -0500
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:40001 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726510AbfKUVox (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Nov 2019 16:44:53 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1574372692;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=LSuP/o79GihgjEwbHgr2Zgmsm896ue11TtiGPnFCvN0=;
+        b=hnTS0gdfJyuTjYsKgZTAa7i9TRTHmyFH7IN+qF4FK5TBt7P0iwj5oPAjXMWKuC5LUtt5SM
+        T+xMfo5yRYN7D2FIQr/v8SJWMbvoFiGLoMSFy8vVNgD3o4FHbnl6YRLZ/G1B9kkxnDGz8G
+        774sALy3ULyWfbgt/PBvhTjAm2Y3GCM=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-373-Ta2fx1ssPoS-3ZQS0XraUw-1; Thu, 21 Nov 2019 16:44:51 -0500
+Received: by mail-wm1-f72.google.com with SMTP id x16so2478248wmk.2
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Nov 2019 13:44:50 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=v3So6ie+qQARWASZdX2fug2FzNOxdIwY3M610tEblDk=;
+        b=R1+J7sAkuRuHuYXNAM3otIwhWBCPyq/sGRXXRrQyAgEAHPiF+6CU3KaB+HO070WN3x
+         /wvEWOjV4WU61V0sTCrirWdbB9D4BNbAJaxoVa084Gx1MpEw6Inavsf/d9yAZ1KNZLBq
+         TgIttL5v5ORdCDlQ2u7AxE5FhzgWNCH0KuOqKgbUNV2nrHankJSVekCqJl9RNN0j5vcc
+         Ii6m46QBvHlLAgBlEvt5pwkxgDTSqJkveSgk3DA1ZDniSlw7N8FhHr7qYwhBkGgtKsir
+         mDz+l98wkMqxVkgojuiyVDeGkZBSXKEJiHYw3jtYNv/xhhr+3e+bT/LwPeShkm82deEg
+         AHWQ==
+X-Gm-Message-State: APjAAAWniFfVrBqTzoNL1lpvcIxQOZw7NisJsg5z5Iq4OvWm19pM+cQ1
+        aE4uJzWOYU2ETBXeA3zYMmkN53NTLaMUG+buILQ52J5fY7f+C54YpfbcRKOWnM2y5TR1h80tPI7
+        3iNeHjfdpUvNqBz9qfH0s
+X-Received: by 2002:a5d:6746:: with SMTP id l6mr9314662wrw.349.1574372689846;
+        Thu, 21 Nov 2019 13:44:49 -0800 (PST)
+X-Google-Smtp-Source: APXvYqyilatXB9XmBK/9KkzMwM7lBJpJ081HHo28ukJrrHP9QNryN9arY3uwgx+Sqo8r9xnX74WMEw==
+X-Received: by 2002:a5d:6746:: with SMTP id l6mr9314638wrw.349.1574372689575;
+        Thu, 21 Nov 2019 13:44:49 -0800 (PST)
+Received: from preichl.redhat.com (243.206.broadband12.iol.cz. [90.179.206.243])
+        by smtp.gmail.com with ESMTPSA id d18sm5093617wrm.85.2019.11.21.13.44.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 21 Nov 2019 13:44:49 -0800 (PST)
+From:   Pavel Reichl <preichl@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Pavel Reichl <preichl@redhat.com>
+Subject: [PATCH 0/2] mkfs: inform during block discarding
+Date:   Thu, 21 Nov 2019 22:44:43 +0100
+Message-Id: <20191121214445.282160-1-preichl@redhat.com>
+X-Mailer: git-send-email 2.23.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAHpGcMJYRVeNNjhMP8GEVD9Wr5g-7_sXkR=qxQTCqrwyskuDBw@mail.gmail.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9448 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1911210160
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9448 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1911210160
+X-MC-Unique: Ta2fx1ssPoS-3ZQS0XraUw-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 21, 2019 at 07:48:54PM +0100, Andreas Grünbacher wrote:
-> Am Do., 21. Nov. 2019 um 18:01 Uhr schrieb Darrick J. Wong
-> <darrick.wong@oracle.com>:
-> > On Thu, Aug 29, 2019 at 05:44:07PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > >
-> > > Andreas Grünbacher reports that on the two filesystems that support
-> > > iomap directio, it's possible for splice() to return -EAGAIN (instead of
-> > > a short splice) if the pipe being written to has less space available in
-> > > its pipe buffers than the length supplied by the calling process.
-> > >
-> > > This is a regression test to check for correct operation.
-> > >
-> > > XXX Andreas: Since you wrote the C reproducer, can you send me the
-> > > proper copyright and author attribution statement for the C program?
-> >
-> > Ping?  Andreas, can I get the above info so I can get this moving again?
-> 
-> Oops, sure, this is:
-> 
-> Copyright (c) 2019 RedHat Inc.  All Rights Reserved.
-> Author: Andreas Gruenbacher <agruenba@redhat.com>
+1st patch breaks discarding into smaller chunks and thus make interruption =
+and
+logging possible.
 
-Ok thanks.  It's appropriate to tag it as GPL v2 licensed, correct?
+2nd patch writes messages about discarding process into stderr. Sample outp=
+ut
+looks like this:
+Discarding:  0% done
+Discarding: 20% done
+Discarding: 40% done
+Discarding: 60% done
+Discarding: 80% done
+Discarding is done.
 
---D
+Pavel Reichl (2):
+  mkfs: Break block discard into chunks of 2 GB
+  mkfs: Show progress during block discard
 
-> > --D
-> >
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  .gitignore            |    1
-> > >  src/Makefile          |    2 -
-> > >  src/splice-test.c     |  173 +++++++++++++++++++++++++++++++++++++++++++++++++
-> > >  tests/generic/720     |   41 ++++++++++++
-> > >  tests/generic/720.out |    7 ++
-> > >  tests/generic/group   |    1
-> > >  6 files changed, 224 insertions(+), 1 deletion(-)
-> > >  create mode 100644 src/splice-test.c
-> > >  create mode 100755 tests/generic/720
-> > >  create mode 100644 tests/generic/720.out
-> > >
-> > > diff --git a/.gitignore b/.gitignore
-> > > index c8c815f9..26d4da11 100644
-> > > --- a/.gitignore
-> > > +++ b/.gitignore
-> > > @@ -112,6 +112,7 @@
-> > >  /src/runas
-> > >  /src/seek_copy_test
-> > >  /src/seek_sanity_test
-> > > +/src/splice-test
-> > >  /src/stale_handle
-> > >  /src/stat_test
-> > >  /src/swapon
-> > > diff --git a/src/Makefile b/src/Makefile
-> > > index c4fcf370..2920dfb1 100644
-> > > --- a/src/Makefile
-> > > +++ b/src/Makefile
-> > > @@ -28,7 +28,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
-> > >       attr-list-by-handle-cursor-test listxattr dio-interleaved t_dir_type \
-> > >       dio-invalidate-cache stat_test t_encrypted_d_revalidate \
-> > >       attr_replace_test swapon mkswap t_attr_corruption t_open_tmpfiles \
-> > > -     fscrypt-crypt-util bulkstat_null_ocount
-> > > +     fscrypt-crypt-util bulkstat_null_ocount splice-test
-> > >
-> > >  SUBDIRS = log-writes perf
-> > >
-> > > diff --git a/src/splice-test.c b/src/splice-test.c
-> > > new file mode 100644
-> > > index 00000000..d3c12075
-> > > --- /dev/null
-> > > +++ b/src/splice-test.c
-> > > @@ -0,0 +1,173 @@
-> > > +// SPDX-License-Identifier: GPL-2.0-or-later
-> > > +/*
-> > > + * Copyright (C) 2019 ????????????????????????????
-> > > + * Author:
-> > > + *
-> > > + * Make sure that reading and writing to a pipe via splice.
-> > > + */
-> > > +#include <sys/types.h>
-> > > +#include <sys/stat.h>
-> > > +#include <sys/wait.h>
-> > > +#include <unistd.h>
-> > > +#include <fcntl.h>
-> > > +#include <err.h>
-> > > +
-> > > +#include <stdlib.h>
-> > > +#include <stdio.h>
-> > > +#include <stdbool.h>
-> > > +#include <string.h>
-> > > +#include <errno.h>
-> > > +
-> > > +#define SECTOR_SIZE 512
-> > > +#define BUFFER_SIZE (150 * SECTOR_SIZE)
-> > > +
-> > > +void read_from_pipe(int fd, const char *filename, size_t size)
-> > > +{
-> > > +     char buffer[SECTOR_SIZE];
-> > > +     size_t sz;
-> > > +     ssize_t ret;
-> > > +
-> > > +     while (size) {
-> > > +             sz = size;
-> > > +             if (sz > sizeof buffer)
-> > > +                     sz = sizeof buffer;
-> > > +             ret = read(fd, buffer, sz);
-> > > +             if (ret < 0)
-> > > +                     err(1, "read: %s", filename);
-> > > +             if (ret == 0) {
-> > > +                     fprintf(stderr, "read: %s: unexpected EOF\n", filename);
-> > > +                     exit(1);
-> > > +             }
-> > > +             size -= sz;
-> > > +     }
-> > > +}
-> > > +
-> > > +void do_splice1(int fd, const char *filename, size_t size)
-> > > +{
-> > > +     bool retried = false;
-> > > +     int pipefd[2];
-> > > +
-> > > +     if (pipe(pipefd) == -1)
-> > > +             err(1, "pipe");
-> > > +     while (size) {
-> > > +             ssize_t spliced;
-> > > +
-> > > +             spliced = splice(fd, NULL, pipefd[1], NULL, size, SPLICE_F_MOVE);
-> > > +             if (spliced == -1) {
-> > > +                     if (errno == EAGAIN && !retried) {
-> > > +                             retried = true;
-> > > +                             fprintf(stderr, "retrying splice\n");
-> > > +                             sleep(1);
-> > > +                             continue;
-> > > +                     }
-> > > +                     err(1, "splice");
-> > > +             }
-> > > +             read_from_pipe(pipefd[0], filename, spliced);
-> > > +             size -= spliced;
-> > > +     }
-> > > +     close(pipefd[0]);
-> > > +     close(pipefd[1]);
-> > > +}
-> > > +
-> > > +void do_splice2(int fd, const char *filename, size_t size)
-> > > +{
-> > > +     bool retried = false;
-> > > +     int pipefd[2];
-> > > +     int pid;
-> > > +
-> > > +     if (pipe(pipefd) == -1)
-> > > +             err(1, "pipe");
-> > > +
-> > > +     pid = fork();
-> > > +     if (pid == 0) {
-> > > +             close(pipefd[1]);
-> > > +             read_from_pipe(pipefd[0], filename, size);
-> > > +             exit(0);
-> > > +     } else {
-> > > +             close(pipefd[0]);
-> > > +             while (size) {
-> > > +                     ssize_t spliced;
-> > > +
-> > > +                     spliced = splice(fd, NULL, pipefd[1], NULL, size, SPLICE_F_MOVE);
-> > > +                     if (spliced == -1) {
-> > > +                             if (errno == EAGAIN && !retried) {
-> > > +                                     retried = true;
-> > > +                                     fprintf(stderr, "retrying splice\n");
-> > > +                                     sleep(1);
-> > > +                                     continue;
-> > > +                             }
-> > > +                             err(1, "splice");
-> > > +                     }
-> > > +                     size -= spliced;
-> > > +             }
-> > > +             close(pipefd[1]);
-> > > +             waitpid(pid, NULL, 0);
-> > > +     }
-> > > +}
-> > > +
-> > > +void usage(const char *argv0)
-> > > +{
-> > > +     fprintf(stderr, "USAGE: %s [-rd] {filename}\n", basename(argv0));
-> > > +     exit(2);
-> > > +}
-> > > +
-> > > +int main(int argc, char *argv[])
-> > > +{
-> > > +     void (*do_splice)(int fd, const char *filename, size_t size);
-> > > +     const char *filename;
-> > > +     char *buffer;
-> > > +     int opt, open_flags, fd;
-> > > +     ssize_t ret;
-> > > +
-> > > +     do_splice = do_splice1;
-> > > +     open_flags = O_CREAT | O_TRUNC | O_RDWR | O_DIRECT;
-> > > +
-> > > +     while ((opt = getopt(argc, argv, "rd")) != -1) {
-> > > +             switch(opt) {
-> > > +             case 'r':
-> > > +                     do_splice = do_splice2;
-> > > +                     break;
-> > > +             case 'd':
-> > > +                     open_flags &= ~O_DIRECT;
-> > > +                     break;
-> > > +             default:  /* '?' */
-> > > +                     usage(argv[0]);
-> > > +             }
-> > > +     }
-> > > +
-> > > +     if (optind >= argc)
-> > > +             usage(argv[0]);
-> > > +     filename = argv[optind];
-> > > +
-> > > +     printf("%s reader %s O_DIRECT\n",
-> > > +                do_splice == do_splice1 ? "sequential" : "concurrent",
-> > > +                (open_flags & O_DIRECT) ? "with" : "without");
-> > > +
-> > > +     buffer = aligned_alloc(SECTOR_SIZE, BUFFER_SIZE);
-> > > +     if (buffer == NULL)
-> > > +             err(1, "aligned_alloc");
-> > > +
-> > > +     fd = open(filename, open_flags, 0666);
-> > > +     if (fd == -1)
-> > > +             err(1, "open: %s", filename);
-> > > +
-> > > +     memset(buffer, 'x', BUFFER_SIZE);
-> > > +     ret = write(fd, buffer, BUFFER_SIZE);
-> > > +     if (ret < 0)
-> > > +             err(1, "write: %s", filename);
-> > > +     if (ret != BUFFER_SIZE) {
-> > > +             fprintf(stderr, "%s: short write\n", filename);
-> > > +             exit(1);
-> > > +     }
-> > > +
-> > > +     ret = lseek(fd, 0, SEEK_SET);
-> > > +     if (ret != 0)
-> > > +             err(1, "lseek: %s", filename);
-> > > +
-> > > +     do_splice(fd, filename, BUFFER_SIZE);
-> > > +
-> > > +     if (unlink(filename) == -1)
-> > > +             err(1, "unlink: %s", filename);
-> > > +
-> > > +     return 0;
-> > > +}
-> > > diff --git a/tests/generic/720 b/tests/generic/720
-> > > new file mode 100755
-> > > index 00000000..b7f09c40
-> > > --- /dev/null
-> > > +++ b/tests/generic/720
-> > > @@ -0,0 +1,41 @@
-> > > +#! /bin/bash
-> > > +# SPDX-License-Identifier: GPL-2.0-or-later
-> > > +# Copyright (c) 2019, Oracle and/or its affiliates.  All Rights Reserved.
-> > > +#
-> > > +# FS QA Test No. 720
-> > > +#
-> > > +# Test using splice() to read from pipes.
-> > > +
-> > > +seq=`basename $0`
-> > > +seqres=$RESULT_DIR/$seq
-> > > +echo "QA output created by $seq"
-> > > +
-> > > +here=`pwd`
-> > > +tmp=/tmp/$$
-> > > +status=1    # failure is the default!
-> > > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > > +
-> > > +_cleanup()
-> > > +{
-> > > +     cd /
-> > > +     rm -f $TEST_DIR/a
-> > > +}
-> > > +
-> > > +# get standard environment, filters and checks
-> > > +. ./common/rc
-> > > +
-> > > +# real QA test starts here
-> > > +_supported_os Linux
-> > > +_supported_fs generic
-> > > +_require_test
-> > > +
-> > > +rm -f $seqres.full
-> > > +
-> > > +src/splice-test -r $TEST_DIR/a
-> > > +src/splice-test -rd $TEST_DIR/a
-> > > +src/splice-test $TEST_DIR/a
-> > > +src/splice-test -d $TEST_DIR/a
-> > > +
-> > > +# success, all done
-> > > +status=0
-> > > +exit
-> > > diff --git a/tests/generic/720.out b/tests/generic/720.out
-> > > new file mode 100644
-> > > index 00000000..b0fc9935
-> > > --- /dev/null
-> > > +++ b/tests/generic/720.out
-> > > @@ -0,0 +1,7 @@
-> > > +QA output created by 720
-> > > +concurrent reader with O_DIRECT
-> > > +concurrent reader with O_DIRECT
-> > > +concurrent reader without O_DIRECT
-> > > +concurrent reader without O_DIRECT
-> > > +sequential reader with O_DIRECT
-> > > +sequential reader without O_DIRECT
-> > > diff --git a/tests/generic/group b/tests/generic/group
-> > > index cd418106..f75d4e60 100644
-> > > --- a/tests/generic/group
-> > > +++ b/tests/generic/group
-> > > @@ -569,3 +569,4 @@
-> > >  564 auto quick copy_range
-> > >  565 auto quick copy_range
-> > >  719 auto quick quota metadata
-> > > +720 auto quick rw pipe splice
-> 
-> Thanks,
-> Andreas
+ mkfs/xfs_mkfs.c | 40 +++++++++++++++++++++++++++++++++-------
+ 1 file changed, 33 insertions(+), 7 deletions(-)
+
+--=20
+2.23.0
+
