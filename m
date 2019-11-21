@@ -2,198 +2,395 @@ Return-Path: <SRS0=udUw=ZN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B560EC432C0
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 18:09:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79534C43215
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 18:49:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 85C1D206CC
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 18:09:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52F8020708
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 18:49:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=zadara-com.20150623.gappssmtp.com header.i=@zadara-com.20150623.gappssmtp.com header.b="MKuEv4pg"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PTq0Ry8C"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726563AbfKUSJd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Nov 2019 13:09:33 -0500
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:39330 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726279AbfKUSJc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Nov 2019 13:09:32 -0500
-Received: by mail-wr1-f67.google.com with SMTP id y11so2487299wrt.6
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Nov 2019 10:09:30 -0800 (PST)
+        id S1726774AbfKUStH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Nov 2019 13:49:07 -0500
+Received: from mail-io1-f66.google.com ([209.85.166.66]:46582 "EHLO
+        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726563AbfKUStH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Nov 2019 13:49:07 -0500
+Received: by mail-io1-f66.google.com with SMTP id i11so4631037iol.13;
+        Thu, 21 Nov 2019 10:49:06 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=zadara-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id;
-        bh=xgEE1qnniZ8FuT8t/VG4m6M/AWTtNbgGzTczlefVNOU=;
-        b=MKuEv4pgk89VcfNKB4IQ3+jJ+CoDNxm8lv9kMQdxlgOcX/L/jbU5vh4w2trqp1SNzm
-         pFBYB/tzKU3EaoHfsNWiV3u6aN3mCBqq1hxKOh/0Q/a/GGCwW5sj0VkJEy+YKORqvowB
-         Nlg71FdnBrYlYzsFiyt+odBM+7zRC9r/i+tXDi8sirJRQkVz6XQkHer4iHjOJ9sLOFrp
-         kcZuYq6FPLLW50xj/xwgxO8uBJQrAn2nZVADp1ZELRBPDfRP0afaU0/BQERC9q763YEp
-         w51Wyemj0z714efI99FX9PvXcxP4DGCIMheaOtVK274xQhGXI12brzPbSOEyMED8Z3uL
-         1h2Q==
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=K1u7X0Gy/yHf/V/sx8Gua1oticYhDDZwganOyh5Ba4k=;
+        b=PTq0Ry8C5f5cJT/UP9S+s6swbW3MN1ARuASq3rjKVqAkCfrdcbj/+8tE2vsl1noKxu
+         BRUrJEsx71pmPjpEl9tSS9RAfNueoHzkMpIy4rCxkv1yl3bvhmplLxfWeICJVf9yjJt6
+         hzZTjba4tRlffSjb2exYS06id+qwAcklNa1XWSPzznyJadOT6z0MXk7le25wMVdkHx3X
+         0jG/br59cClkJ64gSYSH9QouPQjIwg4yxLAdy3x135xOYkXhjCCBBGRbSpZ1rkdG3ygv
+         XTdMFzuc+qd81OkGtLgDQsPawFk2I5qfgF7wNDQS5UaZASe2uMRQVfd/MxFw0dh3Zj9n
+         oM6Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=xgEE1qnniZ8FuT8t/VG4m6M/AWTtNbgGzTczlefVNOU=;
-        b=sJL1TJ0v4+xdEBGFSDD61hnmq/ssCkBJ+kniynfgDqK3U/5TFHmWczTTbh4XA+LHOo
-         dme+4vj/LHDHCxZPMuNqkPw+tK/YPaD9Gn5lNf7s+c5O0MPdkCoP5OPQVpcx1+21NZRm
-         eqGZ6Mxc2fw2zaSoc9pvYt103pcKm7vL7kgZHOBf5dWcF6kZ0zL3W1DzcB5Xtp62FtIp
-         86dcNeRM6+hgWyiqPZpJItEf3cx1+zAOf3IPdjc7o0EM/LAmYtmug0hO/Et5yxhG6EG0
-         RTG8hFTogfGSAWuh1IBqGXiJzB5rSMzetdDimQgGbi6uC2fQeDuuTS9tBZc+5xCFzwEf
-         lWrQ==
-X-Gm-Message-State: APjAAAVuTG+d6DYqJSDa8TIzTGJMUb4UWADEQfRlGUrQBJQja8FFpn45
-        +Gm/aLTL5oBtgfaLZX24ifW+Tkl92J0=
-X-Google-Smtp-Source: APXvYqyoK/gMSX59mZu2n8XyCyn7aJDftQFEsyvOaaQtqhnBy4QHyVB3cVzYAeXEqBO/cn3n2KOz2Q==
-X-Received: by 2002:adf:ea8d:: with SMTP id s13mr12468494wrm.366.1574359769383;
-        Thu, 21 Nov 2019 10:09:29 -0800 (PST)
-Received: from localhost.localdomain ([82.166.81.77])
-        by smtp.gmail.com with ESMTPSA id r15sm4414598wrc.5.2019.11.21.10.09.27
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Thu, 21 Nov 2019 10:09:28 -0800 (PST)
-From:   Alex Lyakas <alex@zadara.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     david@fromorbit.com, alex@zadara.com, bfoster@redhat.com
-Subject: [RFC-PATCH] xfs: do not update sunit/swidth in the superblock to match those provided during mount
-Date:   Thu, 21 Nov 2019 20:08:19 +0200
-Message-Id: <1574359699-10191-1-git-send-email-alex@zadara.com>
-X-Mailer: git-send-email 1.9.1
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=K1u7X0Gy/yHf/V/sx8Gua1oticYhDDZwganOyh5Ba4k=;
+        b=H8Dgd2Ykp1HBUboXszHZFaT7LmiMeoDXNFj5H9hGOQwWB2w643V3wTRZXrOiMofi/G
+         rgwaAT+AEH1u1cV0zpoSv7aVgvj3dkA2MD0JztfZshlDjn4QlOxoV07fsdshr5+vL+bZ
+         MmnI8eST7dOWrC7XbdwE6mCUSxwVR9wBJY1E0sX/rmMEBOyIhJ3wkhyfGXH6oZ42zmfh
+         pYIVltKFvzVw2Lsmr6OfyJ6iVibSfrntLLTEe19nRaZTC5ZmEE9wxE0BxoONmndEAOb6
+         lhXI2Q/h1u90tJlDs0oZGFdqUyvD6Jgo4WlAcgBkSv9q9I5MM34DIYbqBEeYIIYVKgGZ
+         GT9g==
+X-Gm-Message-State: APjAAAVb3dLK8Po+UE5ABkTU+oajJrr43vesUymCfOw/plo9cz9HEvNd
+        ZFjPabIKnGndFHmIFPjao6nadHHRY7R+JGiiqFI=
+X-Google-Smtp-Source: APXvYqyitBxzDbCejIUCoWCE31e2WAP/hl9zblY4Y+8sEt1EUbdwsqweCwIrCe78lGjfHuVIM/CuGKP7npfyY805T8E=
+X-Received: by 2002:a6b:c389:: with SMTP id t131mr9172369iof.50.1574362145646;
+ Thu, 21 Nov 2019 10:49:05 -0800 (PST)
+MIME-Version: 1.0
+References: <20190829161155.GA5360@magnolia> <20190830004407.GA5340@magnolia> <20191121170107.GM6211@magnolia>
+In-Reply-To: <20191121170107.GM6211@magnolia>
+From:   =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
+Date:   Thu, 21 Nov 2019 19:48:54 +0100
+Message-ID: <CAHpGcMJYRVeNNjhMP8GEVD9Wr5g-7_sXkR=qxQTCqrwyskuDBw@mail.gmail.com>
+Subject: Re: [RFC PATCH] generic: test splice() with pipes
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-We are hitting the following issue: if XFS is mounted with sunit/swidth different from those
-specified during mkfs, then xfs_repair reports false corruption and eventually segfaults.
+Am Do., 21. Nov. 2019 um 18:01 Uhr schrieb Darrick J. Wong
+<darrick.wong@oracle.com>:
+> On Thu, Aug 29, 2019 at 05:44:07PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> >
+> > Andreas Gr=C3=BCnbacher reports that on the two filesystems that suppor=
+t
+> > iomap directio, it's possible for splice() to return -EAGAIN (instead o=
+f
+> > a short splice) if the pipe being written to has less space available i=
+n
+> > its pipe buffers than the length supplied by the calling process.
+> >
+> > This is a regression test to check for correct operation.
+> >
+> > XXX Andreas: Since you wrote the C reproducer, can you send me the
+> > proper copyright and author attribution statement for the C program?
+>
+> Ping?  Andreas, can I get the above info so I can get this moving again?
 
-Example:
+Oops, sure, this is:
 
-# mkfs
-mkfs.xfs -f -K -p /etc/zadara/xfs.protofile -d sunit=64,swidth=64 -l sunit=32 /dev/vda
+Copyright (c) 2019 RedHat Inc.  All Rights Reserved.
+Author: Andreas Gruenbacher <agruenba@redhat.com>
 
-#mount with a different sunit/swidth:
-mount -onoatime,sync,nouuid,sunit=32,swidth=32 /dev/vda /mnt/xfs
+> --D
+>
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  .gitignore            |    1
+> >  src/Makefile          |    2 -
+> >  src/splice-test.c     |  173 +++++++++++++++++++++++++++++++++++++++++=
+++++++++
+> >  tests/generic/720     |   41 ++++++++++++
+> >  tests/generic/720.out |    7 ++
+> >  tests/generic/group   |    1
+> >  6 files changed, 224 insertions(+), 1 deletion(-)
+> >  create mode 100644 src/splice-test.c
+> >  create mode 100755 tests/generic/720
+> >  create mode 100644 tests/generic/720.out
+> >
+> > diff --git a/.gitignore b/.gitignore
+> > index c8c815f9..26d4da11 100644
+> > --- a/.gitignore
+> > +++ b/.gitignore
+> > @@ -112,6 +112,7 @@
+> >  /src/runas
+> >  /src/seek_copy_test
+> >  /src/seek_sanity_test
+> > +/src/splice-test
+> >  /src/stale_handle
+> >  /src/stat_test
+> >  /src/swapon
+> > diff --git a/src/Makefile b/src/Makefile
+> > index c4fcf370..2920dfb1 100644
+> > --- a/src/Makefile
+> > +++ b/src/Makefile
+> > @@ -28,7 +28,7 @@ LINUX_TARGETS =3D xfsctl bstat t_mtab getdevicesize p=
+reallo_rw_pattern_reader \
+> >       attr-list-by-handle-cursor-test listxattr dio-interleaved t_dir_t=
+ype \
+> >       dio-invalidate-cache stat_test t_encrypted_d_revalidate \
+> >       attr_replace_test swapon mkswap t_attr_corruption t_open_tmpfiles=
+ \
+> > -     fscrypt-crypt-util bulkstat_null_ocount
+> > +     fscrypt-crypt-util bulkstat_null_ocount splice-test
+> >
+> >  SUBDIRS =3D log-writes perf
+> >
+> > diff --git a/src/splice-test.c b/src/splice-test.c
+> > new file mode 100644
+> > index 00000000..d3c12075
+> > --- /dev/null
+> > +++ b/src/splice-test.c
+> > @@ -0,0 +1,173 @@
+> > +// SPDX-License-Identifier: GPL-2.0-or-later
+> > +/*
+> > + * Copyright (C) 2019 ????????????????????????????
+> > + * Author:
+> > + *
+> > + * Make sure that reading and writing to a pipe via splice.
+> > + */
+> > +#include <sys/types.h>
+> > +#include <sys/stat.h>
+> > +#include <sys/wait.h>
+> > +#include <unistd.h>
+> > +#include <fcntl.h>
+> > +#include <err.h>
+> > +
+> > +#include <stdlib.h>
+> > +#include <stdio.h>
+> > +#include <stdbool.h>
+> > +#include <string.h>
+> > +#include <errno.h>
+> > +
+> > +#define SECTOR_SIZE 512
+> > +#define BUFFER_SIZE (150 * SECTOR_SIZE)
+> > +
+> > +void read_from_pipe(int fd, const char *filename, size_t size)
+> > +{
+> > +     char buffer[SECTOR_SIZE];
+> > +     size_t sz;
+> > +     ssize_t ret;
+> > +
+> > +     while (size) {
+> > +             sz =3D size;
+> > +             if (sz > sizeof buffer)
+> > +                     sz =3D sizeof buffer;
+> > +             ret =3D read(fd, buffer, sz);
+> > +             if (ret < 0)
+> > +                     err(1, "read: %s", filename);
+> > +             if (ret =3D=3D 0) {
+> > +                     fprintf(stderr, "read: %s: unexpected EOF\n", fil=
+ename);
+> > +                     exit(1);
+> > +             }
+> > +             size -=3D sz;
+> > +     }
+> > +}
+> > +
+> > +void do_splice1(int fd, const char *filename, size_t size)
+> > +{
+> > +     bool retried =3D false;
+> > +     int pipefd[2];
+> > +
+> > +     if (pipe(pipefd) =3D=3D -1)
+> > +             err(1, "pipe");
+> > +     while (size) {
+> > +             ssize_t spliced;
+> > +
+> > +             spliced =3D splice(fd, NULL, pipefd[1], NULL, size, SPLIC=
+E_F_MOVE);
+> > +             if (spliced =3D=3D -1) {
+> > +                     if (errno =3D=3D EAGAIN && !retried) {
+> > +                             retried =3D true;
+> > +                             fprintf(stderr, "retrying splice\n");
+> > +                             sleep(1);
+> > +                             continue;
+> > +                     }
+> > +                     err(1, "splice");
+> > +             }
+> > +             read_from_pipe(pipefd[0], filename, spliced);
+> > +             size -=3D spliced;
+> > +     }
+> > +     close(pipefd[0]);
+> > +     close(pipefd[1]);
+> > +}
+> > +
+> > +void do_splice2(int fd, const char *filename, size_t size)
+> > +{
+> > +     bool retried =3D false;
+> > +     int pipefd[2];
+> > +     int pid;
+> > +
+> > +     if (pipe(pipefd) =3D=3D -1)
+> > +             err(1, "pipe");
+> > +
+> > +     pid =3D fork();
+> > +     if (pid =3D=3D 0) {
+> > +             close(pipefd[1]);
+> > +             read_from_pipe(pipefd[0], filename, size);
+> > +             exit(0);
+> > +     } else {
+> > +             close(pipefd[0]);
+> > +             while (size) {
+> > +                     ssize_t spliced;
+> > +
+> > +                     spliced =3D splice(fd, NULL, pipefd[1], NULL, siz=
+e, SPLICE_F_MOVE);
+> > +                     if (spliced =3D=3D -1) {
+> > +                             if (errno =3D=3D EAGAIN && !retried) {
+> > +                                     retried =3D true;
+> > +                                     fprintf(stderr, "retrying splice\=
+n");
+> > +                                     sleep(1);
+> > +                                     continue;
+> > +                             }
+> > +                             err(1, "splice");
+> > +                     }
+> > +                     size -=3D spliced;
+> > +             }
+> > +             close(pipefd[1]);
+> > +             waitpid(pid, NULL, 0);
+> > +     }
+> > +}
+> > +
+> > +void usage(const char *argv0)
+> > +{
+> > +     fprintf(stderr, "USAGE: %s [-rd] {filename}\n", basename(argv0));
+> > +     exit(2);
+> > +}
+> > +
+> > +int main(int argc, char *argv[])
+> > +{
+> > +     void (*do_splice)(int fd, const char *filename, size_t size);
+> > +     const char *filename;
+> > +     char *buffer;
+> > +     int opt, open_flags, fd;
+> > +     ssize_t ret;
+> > +
+> > +     do_splice =3D do_splice1;
+> > +     open_flags =3D O_CREAT | O_TRUNC | O_RDWR | O_DIRECT;
+> > +
+> > +     while ((opt =3D getopt(argc, argv, "rd")) !=3D -1) {
+> > +             switch(opt) {
+> > +             case 'r':
+> > +                     do_splice =3D do_splice2;
+> > +                     break;
+> > +             case 'd':
+> > +                     open_flags &=3D ~O_DIRECT;
+> > +                     break;
+> > +             default:  /* '?' */
+> > +                     usage(argv[0]);
+> > +             }
+> > +     }
+> > +
+> > +     if (optind >=3D argc)
+> > +             usage(argv[0]);
+> > +     filename =3D argv[optind];
+> > +
+> > +     printf("%s reader %s O_DIRECT\n",
+> > +                do_splice =3D=3D do_splice1 ? "sequential" : "concurre=
+nt",
+> > +                (open_flags & O_DIRECT) ? "with" : "without");
+> > +
+> > +     buffer =3D aligned_alloc(SECTOR_SIZE, BUFFER_SIZE);
+> > +     if (buffer =3D=3D NULL)
+> > +             err(1, "aligned_alloc");
+> > +
+> > +     fd =3D open(filename, open_flags, 0666);
+> > +     if (fd =3D=3D -1)
+> > +             err(1, "open: %s", filename);
+> > +
+> > +     memset(buffer, 'x', BUFFER_SIZE);
+> > +     ret =3D write(fd, buffer, BUFFER_SIZE);
+> > +     if (ret < 0)
+> > +             err(1, "write: %s", filename);
+> > +     if (ret !=3D BUFFER_SIZE) {
+> > +             fprintf(stderr, "%s: short write\n", filename);
+> > +             exit(1);
+> > +     }
+> > +
+> > +     ret =3D lseek(fd, 0, SEEK_SET);
+> > +     if (ret !=3D 0)
+> > +             err(1, "lseek: %s", filename);
+> > +
+> > +     do_splice(fd, filename, BUFFER_SIZE);
+> > +
+> > +     if (unlink(filename) =3D=3D -1)
+> > +             err(1, "unlink: %s", filename);
+> > +
+> > +     return 0;
+> > +}
+> > diff --git a/tests/generic/720 b/tests/generic/720
+> > new file mode 100755
+> > index 00000000..b7f09c40
+> > --- /dev/null
+> > +++ b/tests/generic/720
+> > @@ -0,0 +1,41 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0-or-later
+> > +# Copyright (c) 2019, Oracle and/or its affiliates.  All Rights Reserv=
+ed.
+> > +#
+> > +# FS QA Test No. 720
+> > +#
+> > +# Test using splice() to read from pipes.
+> > +
+> > +seq=3D`basename $0`
+> > +seqres=3D$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +here=3D`pwd`
+> > +tmp=3D/tmp/$$
+> > +status=3D1    # failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > +
+> > +_cleanup()
+> > +{
+> > +     cd /
+> > +     rm -f $TEST_DIR/a
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +
+> > +# real QA test starts here
+> > +_supported_os Linux
+> > +_supported_fs generic
+> > +_require_test
+> > +
+> > +rm -f $seqres.full
+> > +
+> > +src/splice-test -r $TEST_DIR/a
+> > +src/splice-test -rd $TEST_DIR/a
+> > +src/splice-test $TEST_DIR/a
+> > +src/splice-test -d $TEST_DIR/a
+> > +
+> > +# success, all done
+> > +status=3D0
+> > +exit
+> > diff --git a/tests/generic/720.out b/tests/generic/720.out
+> > new file mode 100644
+> > index 00000000..b0fc9935
+> > --- /dev/null
+> > +++ b/tests/generic/720.out
+> > @@ -0,0 +1,7 @@
+> > +QA output created by 720
+> > +concurrent reader with O_DIRECT
+> > +concurrent reader with O_DIRECT
+> > +concurrent reader without O_DIRECT
+> > +concurrent reader without O_DIRECT
+> > +sequential reader with O_DIRECT
+> > +sequential reader without O_DIRECT
+> > diff --git a/tests/generic/group b/tests/generic/group
+> > index cd418106..f75d4e60 100644
+> > --- a/tests/generic/group
+> > +++ b/tests/generic/group
+> > @@ -569,3 +569,4 @@
+> >  564 auto quick copy_range
+> >  565 auto quick copy_range
+> >  719 auto quick quota metadata
+> > +720 auto quick rw pipe splice
 
-#umount
-umount /mnt/xfs
-
-#xfs_repair
-xfs_repair -n /dev/vda
-# reports false corruption and eventually segfaults[1]
-
-The root cause seems to be that repair/xfs_repair.c::calc_mkfs() calculates the location of first inode chunk based on the current superblock sunit:
-	/*
-	 * ditto the location of the first inode chunks in the fs ('/')
-	 */
-	if (xfs_sb_version_hasdalign(&mp->m_sb) && do_inoalign)  {
-		first_prealloc_ino = XFS_OFFBNO_TO_AGINO(mp, roundup(fino_bno,
-					mp->m_sb.sb_unit), 0);
-...
-
-and then compares to the value in the superblock:
-
-	/*
-	 * now the first 3 inodes in the system
-	 */
-	if (mp->m_sb.sb_rootino != first_prealloc_ino)  {
-		do_warn(
-_("sb root inode value %" PRIu64 " %sinconsistent with calculated value %u\n"),
-			mp->m_sb.sb_rootino,
-			(mp->m_sb.sb_rootino == NULLFSINO ? "(NULLFSINO) ":""),
-			first_prealloc_ino);
-
-		if (!no_modify)
-			do_warn(
-		_("resetting superblock root inode pointer to %u\n"),
-				first_prealloc_ino);
-		else
-			do_warn(
-		_("would reset superblock root inode pointer to %u\n"),
-				first_prealloc_ino);
-
-		/*
-		 * just set the value -- safe since the superblock
-		 * doesn't get flushed out if no_modify is set
-		 */
-		mp->m_sb.sb_rootino = first_prealloc_ino;
-	}
-
-and sets the "correct" value into mp->m_sb.sb_rootino.
-
-And from there xfs_repair uses the wrong value, leading to false corruption reports.
-
-Looking at the kernel code of XFS, there seems to be no need to update the superblock sunit/swidth if the mount-provided sunit/swidth are different.
-The superblock values are not used during runtime.
-
-With the suggested patch, xfs repair is working properly also when mount-provided sunit/swidth are different.
-
-However, I am not sure whether this is the proper approach. Otherwise, should we not allow specifying different sunit/swidth during mount?
-
-[1]
-Phase 1 - find and verify superblock...
-        - reporting progress in intervals of 15 minutes
-sb root inode value 128 inconsistent with calculated value 96
-would reset superblock root inode pointer to 96
-sb realtime bitmap inode 129 inconsistent with calculated value 97
-would reset superblock realtime bitmap ino pointer to 97
-sb realtime summary inode 130 inconsistent with calculated value 98
-would reset superblock realtime summary ino pointer to 98
-Phase 2 - using internal log
-        - zero log...
-        - scan filesystem freespace and inode maps...
-        - 16:09:57: scanning filesystem freespace - 16 of 16 allocation groups done
-root inode chunk not found
-avl_insert: Warning! duplicate range [96,160]
-add_inode - duplicate inode range
-Phase 3 - for each AG...
-        - scan (but don't clear) agi unlinked lists...
-        - 16:09:57: scanning agi unlinked lists - 16 of 16 allocation groups done
-        - process known inodes and perform inode discovery...
-        - agno = 15
-        - agno = 0
-inode 129 not rt bitmap
-bad .. entry in directory inode 128, points to self, would clear inode number
-inode 129 not rt bitmap
-would fix bad flags.
-...
-Segmentation fault (core dumped)
-
-Signed-off-by: Alex Lyakas <alex@zadara.com>
----
- fs/xfs/xfs_mount.c | 18 ++++++------------
- 1 file changed, 6 insertions(+), 12 deletions(-)
-
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index ba5b6f3..e8263b4 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -399,19 +399,13 @@
- 		}
- 
- 		/*
--		 * Update superblock with new values
--		 * and log changes
-+		 * If sunit/swidth specified during mount do not match
-+		 * those in the superblock, use the mount-specified values,
-+		 * but do not update the superblock.
-+		 * Otherwise, xfs_repair reports false corruption.
-+		 * Here, only verify that superblock supports data alignment.
- 		 */
--		if (xfs_sb_version_hasdalign(sbp)) {
--			if (sbp->sb_unit != mp->m_dalign) {
--				sbp->sb_unit = mp->m_dalign;
--				mp->m_update_sb = true;
--			}
--			if (sbp->sb_width != mp->m_swidth) {
--				sbp->sb_width = mp->m_swidth;
--				mp->m_update_sb = true;
--			}
--		} else {
-+		if (!xfs_sb_version_hasdalign(sbp)) {
- 			xfs_warn(mp,
- 	"cannot change alignment: superblock does not support data alignment");
- 			return -EINVAL;
--- 
-1.9.1
-
+Thanks,
+Andreas
