@@ -2,50 +2,50 @@ Return-Path: <SRS0=udUw=ZN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEAF6C432C0
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 13:29:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39108C432C0
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 14:12:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A6A1F20708
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 13:29:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D48820714
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 14:12:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="sk5rWxxK"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VrWSc8k2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727329AbfKUN3q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Nov 2019 08:29:46 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:59802 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726634AbfKUN3p (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Nov 2019 08:29:45 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=jfdDcg8Rb9EyvSu2eIxHgWj5A4eCWm0Rpkl8ERU2Ehs=; b=sk5rWxxKId6Hjdan020hfjeX1
-        UNhZmhPKm6rVbvQaCrkk7BX2MmOYRpT8hAw1F9TJbLpuDUTjba0XqdFrlBqdGCigUbwAbvlQrY8np
-        OeYOFQmlp9OGquvo9OeJYV0YGRYEp0guO+rfcpB70MV5g8UQvIU9C5xpwth0HGIjSxR2xTf5y1+rG
-        4Tm4IjBYErkjeQjv3Za/e0HLyi2xBxZ1voeNZs1lfY+/lVHyvj+chZSnDtr9pBJdAk2cQ2AOPnF3H
-        obukZ3/rB5w6h8glw8SNfm/zklTSpzamhSUJJddjG0v44lLG2Kfscj1T7F6cDC3JD5YZeX0OZA61D
-        CmVk4S5Og==;
-Received: from j217100.upc-j.chello.nl ([24.132.217.100] helo=noisy.programming.kicks-ass.net)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iXmWh-0008QU-Dz; Thu, 21 Nov 2019 13:29:39 +0000
-Received: from hirez.programming.kicks-ass.net (hirez.programming.kicks-ass.net [192.168.1.225])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client did not present a certificate)
-        by noisy.programming.kicks-ass.net (Postfix) with ESMTPS id CECCA3056C8;
-        Thu, 21 Nov 2019 14:28:26 +0100 (CET)
-Received: by hirez.programming.kicks-ass.net (Postfix, from userid 1000)
-        id B1981201DD6AF; Thu, 21 Nov 2019 14:29:37 +0100 (CET)
-Date:   Thu, 21 Nov 2019 14:29:37 +0100
-From:   Peter Zijlstra <peterz@infradead.org>
-To:     Phil Auld <pauld@redhat.com>
-Cc:     Dave Chinner <david@fromorbit.com>, Ming Lei <ming.lei@redhat.com>,
+        id S1726922AbfKUOMZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Nov 2019 09:12:25 -0500
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:50584 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726293AbfKUOMZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Nov 2019 09:12:25 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1574345544;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=zDwJ/jJ372BrVR0P0VcF5vd7qMAwSsydtsAUBf3ZVoA=;
+        b=VrWSc8k28eCOgWWWs+58Mf3i4ZaHJRPTCgRm9jOCur/VBZrMEGmNi1LFa2FvJB78WJDl4/
+        DnTwweEGKr62w4k6Q+ALo4nAKNuHzAGhAcVqD4CRZkP4pvMghb3/NTjPgEFlMogcJ1SXQl
+        tt7klSeG0dJ4g58Cp0BuzFn7L9WaP38=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-264-d5XFD52QP8eoROOPRCjHSQ-1; Thu, 21 Nov 2019 09:12:20 -0500
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5B26518B9FC2;
+        Thu, 21 Nov 2019 14:12:18 +0000 (UTC)
+Received: from pauld.bos.csb (dhcp-17-51.bos.redhat.com [10.18.17.51])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5E6D2537B8;
+        Thu, 21 Nov 2019 14:12:09 +0000 (UTC)
+Date:   Thu, 21 Nov 2019 09:12:07 -0500
+From:   Phil Auld <pauld@redhat.com>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Peter Zijlstra <peterz@infradead.org>,
+        Dave Chinner <david@fromorbit.com>,
         linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
         Jeff Moyer <jmoyer@redhat.com>,
@@ -55,9 +55,8 @@ Cc:     Dave Chinner <david@fromorbit.com>, Ming Lei <ming.lei@redhat.com>,
         Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
         Vincent Guittot <vincent.guittot@linaro.org>
 Subject: Re: single aio thread is migrated crazily by scheduler
-Message-ID: <20191121132937.GW4114@hirez.programming.kicks-ass.net>
-References: <20191114113153.GB4213@ming.t460p>
- <20191114235415.GL4614@dread.disaster.area>
+Message-ID: <20191121141207.GA18443@pauld.bos.csb>
+References: <20191114235415.GL4614@dread.disaster.area>
  <20191115010824.GC4847@ming.t460p>
  <20191115045634.GN4614@dread.disaster.area>
  <20191115070843.GA24246@ming.t460p>
@@ -66,62 +65,98 @@ References: <20191114113153.GB4213@ming.t460p>
  <20191118204054.GV4614@dread.disaster.area>
  <20191120191636.GI4097@hirez.programming.kicks-ass.net>
  <20191120220313.GC18056@pauld.bos.csb>
+ <20191121041218.GK24548@ming.t460p>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20191121041218.GK24548@ming.t460p>
+User-Agent: Mutt/1.5.21 (2010-09-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-MC-Unique: d5XFD52QP8eoROOPRCjHSQ-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
 Content-Disposition: inline
-In-Reply-To: <20191120220313.GC18056@pauld.bos.csb>
-User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 20, 2019 at 05:03:13PM -0500, Phil Auld wrote:
-> On Wed, Nov 20, 2019 at 08:16:36PM +0100 Peter Zijlstra wrote:
-> > On Tue, Nov 19, 2019 at 07:40:54AM +1100, Dave Chinner wrote:
+On Thu, Nov 21, 2019 at 12:12:18PM +0800 Ming Lei wrote:
+> On Wed, Nov 20, 2019 at 05:03:13PM -0500, Phil Auld wrote:
+> > Hi Peter,
+> >=20
+> > On Wed, Nov 20, 2019 at 08:16:36PM +0100 Peter Zijlstra wrote:
+> > > On Tue, Nov 19, 2019 at 07:40:54AM +1100, Dave Chinner wrote:
+> > > > On Mon, Nov 18, 2019 at 10:21:21AM +0100, Peter Zijlstra wrote:
+> > >=20
+> > > > > We typically only fall back to the active balancer when there is
+> > > > > (persistent) imbalance and we fail to migrate anything else (of
+> > > > > substance).
+> > > > >=20
+> > > > > The tuning mentioned has the effect of less frequent scheduling, =
+IOW,
+> > > > > leaving (short) tasks on the runqueue longer. This obviously mean=
+s the
+> > > > > load-balancer will have a bigger chance of seeing them.
+> > > > >=20
+> > > > > Now; it's been a while since I looked at the workqueue code but o=
+ne
+> > > > > possible explanation would be if the kworker that picks up the wo=
+rk item
+> > > > > is pinned. That would make it runnable but not migratable, the ex=
+act
+> > > > > situation in which we'll end up shooting the current task with ac=
+tive
+> > > > > balance.
+> > > >=20
+> > > > Yes, that's precisely the problem - work is queued, by default, on =
+a
+> > > > specific CPU and it will wait for a kworker that is pinned to that
+> > >=20
+> > > I'm thinking the problem is that it doesn't wait. If it went and wait=
+ed
+> > > for it, active balance wouldn't be needed, that only works on active
+> > > tasks.
+> >=20
+> > Since this is AIO I wonder if it should queue_work on a nearby cpu by=
+=20
+> > default instead of unbound. =20
+>=20
+> When the current CPU isn't busy enough, there is still cost for completin=
+g
+> request remotely.
+>=20
+> Or could we change queue_work() in the following way?
+>=20
+>  * We try to queue the work to the CPU on which it was submitted, but if =
+the
+>  * CPU dies or is saturated enough it can be processed by another CPU.
+>=20
+> Can we decide in a simple or efficient way if the current CPU is saturate=
+d
+> enough?
+>=20
 
-> > > Yes, that's precisely the problem - work is queued, by default, on a
-> > > specific CPU and it will wait for a kworker that is pinned to that
-> > 
-> > I'm thinking the problem is that it doesn't wait. If it went and waited
-> > for it, active balance wouldn't be needed, that only works on active
-> > tasks.
-> 
-> Since this is AIO I wonder if it should queue_work on a nearby cpu by 
-> default instead of unbound.  
+The scheduler doesn't know if the queued_work submitter is going to go to s=
+leep.
+That's why I was singling out AIO. My understanding of it is that you submi=
+t the IO
+and then keep going. So in that case it might be better to pick a node-loca=
+l nearby
+cpu instead. But this is a user of work queue issue not a scheduler issue.=
+=20
 
-The thing seems to be that 'unbound' is in fact 'bound'. Maybe we should
-fix that. If the load-balancer were allowed to move the kworker around
-when it didn't get time to run, that would probably be a better
-solution.
+Interestingly in our fio case the 4k one does not sleep and we get the acti=
+ve balance
+case where it moves the actually running thread.  The 512 byte case seems t=
+o be=20
+sleeping since the migrations are all at wakeup time I believe.=20
 
-Picking another 'bound' cpu by random might create the same sort of
-problems in more complicated scenarios.
+Cheers,
+Phil
 
-TJ, ISTR there used to be actually unbound kworkers, what happened to
-those? or am I misremembering things.
 
-> > Lastly,
-> > one other thing to try is -next. Vincent reworked the load-balancer
-> > quite a bit.
-> > 
-> 
-> I've tried it with the lb patch series. I get basically the same results.
-> With the high granularity settings I get 3700 migrations for the 30 
-> second run at 4k. Of those about 3200 are active balance on stock 5.4-rc7.
-> With the lb patches it's 3500 and 3000, a slight drop. 
+> Thanks,
+> Ming
 
-Thanks for testing that. I didn't expect miracles, but it is good to
-verify.
-
-> Using the default granularity settings 50 and 22 for stock and 250 and 25.
-> So a few more total migrations with the lb patches but about the same active.
-
-Right, so the granularity thing interacts with the load-balance period.
-By pushing it up, as some people appear to do, makes it so that what
-might be a temporal imablance is perceived as a persitent imbalance.
-
-Tying the load-balance period to the gramularity is something we could
-consider, but then I'm sure, we'll get other people complaining the
-doesn't balance quick enough anymore.
+--=20
 
