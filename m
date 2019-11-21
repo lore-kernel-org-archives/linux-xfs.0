@@ -2,133 +2,386 @@ Return-Path: <SRS0=udUw=ZN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 979ADC432C0
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 16:19:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABAEAC43215
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 17:01:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6FC8320672
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 16:19:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6FDB6206F4
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 17:01:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="13PRjt8K"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="RP671506"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726293AbfKUQTe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Nov 2019 11:19:34 -0500
-Received: from mail-il1-f196.google.com ([209.85.166.196]:46273 "EHLO
-        mail-il1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726563AbfKUQTd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Nov 2019 11:19:33 -0500
-Received: by mail-il1-f196.google.com with SMTP id q1so3788783ile.13
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Nov 2019 08:19:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=Kvj1OGlYWXQ7ytbrKDsR/TZrdswK2tP2241AuGz5/5c=;
-        b=13PRjt8K4a2KOy8p0LkwxnTJWoXSCik2jil6eEf+nKpRFAw/WneYao35gDdiKIYb8a
-         /xbKq7CVsVyzhDgT+qYN/CXr3mCN2tfs+V0MqYVdrCI2Jb32I4Ml32hjse8GLaNlaycf
-         hYaBMSvPkL+QfF3Lvq/i3o6MjQtTDBiQupjgl92he/XUE3u4BgZxrZD9tAbZinpSEUYU
-         2lSCSv9xThV5eLe3YZDmcM97/cNnOWZV98EnnXiUAMBXRqNCvJZBU5vH+6PmZW8aIykE
-         9DEJv2ax5uyrJda8ehDfb4X3GDoJCPgbX91gZGQy8X+YmKVFC3yiYvNgQw+HOQ+Sveg+
-         m5CQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=Kvj1OGlYWXQ7ytbrKDsR/TZrdswK2tP2241AuGz5/5c=;
-        b=boDRw1PU7/o9KpPgY3KX8ZJmm0An1ynI+ekoT+3P8z/CcpJj1H4Q1NvtmSonQBS+0P
-         czr/B8KAbqig29mkhnbNGXt9aGK3gYVvM+L+uJaD2kqniZ0puw9mj8/fkGtEvR1aP/QO
-         HwoYfdnLXZnj7+rOsRjqp9YvCqIfaz2itR1Jd7wBw1GqCD7/p+SuhfgVn4acm87eWe9P
-         dA0YIh3OUyk9KKa685dabF5xMdrYrPV3d9W+tpu765/sPTcHn35s57tMdm+jlycZ7Zcq
-         TOfO4+XUPp2WQdPKRYVYNnaWqatKNulaY47D75QilU2afJOgIek0qxB+caJzFEhWGfGC
-         HZsw==
-X-Gm-Message-State: APjAAAXQzywvhHOdfof9WD4gbbeeRpr8Q4kViJAWRnMTjrgRJdal4MAz
-        s0W+qvwtAfHaMPZewNW9ByFaZA==
-X-Google-Smtp-Source: APXvYqzH3122XVz+Xjvvs3/f2ovlox5AqFaHNu3z266z0L1JjdEWxY4sgwdfmFDwsQc2XOJwI0yKSQ==
-X-Received: by 2002:a05:6e02:8e7:: with SMTP id n7mr10886315ilt.302.1574353172148;
-        Thu, 21 Nov 2019 08:19:32 -0800 (PST)
-Received: from [192.168.1.159] ([65.144.74.34])
-        by smtp.gmail.com with ESMTPSA id b21sm1392809ilg.88.2019.11.21.08.19.30
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 21 Nov 2019 08:19:31 -0800 (PST)
-Subject: Re: single aio thread is migrated crazily by scheduler
-To:     Boaz Harrosh <boaz@plexistor.com>, Phil Auld <pauld@redhat.com>,
-        Ming Lei <ming.lei@redhat.com>
-Cc:     Peter Zijlstra <peterz@infradead.org>,
-        Dave Chinner <david@fromorbit.com>,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jeff Moyer <jmoyer@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Eric Sandeen <sandeen@redhat.com>,
-        Christoph Hellwig <hch@lst.de>, Ingo Molnar <mingo@redhat.com>,
-        Tejun Heo <tj@kernel.org>,
-        Vincent Guittot <vincent.guittot@linaro.org>
-References: <20191114235415.GL4614@dread.disaster.area>
- <20191115010824.GC4847@ming.t460p>
- <20191115045634.GN4614@dread.disaster.area>
- <20191115070843.GA24246@ming.t460p>
- <20191115234005.GO4614@dread.disaster.area>
- <20191118092121.GV4131@hirez.programming.kicks-ass.net>
- <20191118204054.GV4614@dread.disaster.area>
- <20191120191636.GI4097@hirez.programming.kicks-ass.net>
- <20191120220313.GC18056@pauld.bos.csb> <20191121041218.GK24548@ming.t460p>
- <20191121141207.GA18443@pauld.bos.csb>
- <93de0f75-3664-c71e-9947-5b37ae935ddc@plexistor.com>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <8c02ab43-3880-68db-f293-9958510fb29e@kernel.dk>
-Date:   Thu, 21 Nov 2019 09:19:29 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        id S1726546AbfKURBR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Nov 2019 12:01:17 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:38812 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726293AbfKURBQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Nov 2019 12:01:16 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xALGx9lI115164;
+        Thu, 21 Nov 2019 17:01:14 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ content-transfer-encoding : in-reply-to; s=corp-2019-08-05;
+ bh=smb47EpitmLlTtC+OH/ts2qiMK7UOBlf21eck/qRXMI=;
+ b=RP671506JhO+tBWaMtppuirKwKGmuxP0rCG/loc5G4SBqwEOCONFfHgM6G+x5Z0/INtu
+ PSdoh+KLNuhOE8s29ygtWao3zXDvAsgXehJiyU+g+lwPVHGx80defi65lCZuB2Y2xNIp
+ v4d5doluGopkm+7g3xL4DjuASqW3MX8huVc9M4A5UmolUhvzA/2evPMJ4tMVc9wAw8e7
+ VDLCyV/nHxOg4NqhNFqT4hGiW8+kC1KTbPtp+na6BF7Te/LveX2uouiGaek6pHdpSmPb
+ zuYt/4F6ykAB0S5CaiDwOJsEP8Dky2GY8n0JvfsFvWPiVvWdL+WtlotaFNhRpefnAT8K lQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2wa8hu5p91-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 21 Nov 2019 17:01:11 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xALGx91u057259;
+        Thu, 21 Nov 2019 17:01:11 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 2wd47xa5ga-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 21 Nov 2019 17:01:10 +0000
+Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xALH18ir024843;
+        Thu, 21 Nov 2019 17:01:08 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 21 Nov 2019 09:01:08 -0800
+Date:   Thu, 21 Nov 2019 09:01:07 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     andreas.gruenbacher@gmail.com
+Cc:     xfs <linux-xfs@vger.kernel.org>, viro@zeniv.linux.org.uk,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>
+Subject: Re: [RFC PATCH] generic: test splice() with pipes
+Message-ID: <20191121170107.GM6211@magnolia>
+References: <20190829161155.GA5360@magnolia>
+ <20190830004407.GA5340@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <93de0f75-3664-c71e-9947-5b37ae935ddc@plexistor.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190830004407.GA5340@magnolia>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9447 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-1911210148
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9447 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-1911210148
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 11/21/19 8:02 AM, Boaz Harrosh wrote:
-> On 21/11/2019 16:12, Phil Auld wrote:
-> <>
->>
->> The scheduler doesn't know if the queued_work submitter is going to go to sleep.
->> That's why I was singling out AIO. My understanding of it is that you submit the IO
->> and then keep going. So in that case it might be better to pick a node-local nearby
->> cpu instead. But this is a user of work queue issue not a scheduler issue.
->>
+On Thu, Aug 29, 2019 at 05:44:07PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> We have a very similar long standing problem in our system (zufs), that we had to do
-> hacks to fix.
+> Andreas Grünbacher reports that on the two filesystems that support
+> iomap directio, it's possible for splice() to return -EAGAIN (instead of
+> a short splice) if the pipe being written to has less space available in
+> its pipe buffers than the length supplied by the calling process.
 > 
-> We have seen these CPU bouncing exacly as above in fio and more
-> benchmarks, Our final analysis was:
->
-> One thread is in wait_event() if the wake_up() is on the same CPU as
-> the waiter, on some systems usually real HW and not VMs, would bounce
-> to a different CPU.  Now our system has an array of worker-threads
-> bound to each CPU. an incoming thread chooses a corresponding cpu
-> worker-thread, let it run, waiting for a reply, then when the
-> worker-thread is done it will do a wake_up(). Usually its fine and the
-> wait_event() stays on the same CPU. But on some systems it will wakeup
-> in a different CPU.
+> This is a regression test to check for correct operation.
 > 
-> Now this is a great pity because in our case and the work_queue case
-> and high % of places the thread calling wake_up() will then
-> immediately go to sleep on something.  (Work done lets wait for new
-> work)
-> 
-> I wish there was a flag to wake_up() or to the event object that says
-> to relinquish the remaning of the time-slice to the waiter on same
-> CPU, since I will be soon sleeping.
+> XXX Andreas: Since you wrote the C reproducer, can you send me the
+> proper copyright and author attribution statement for the C program?
 
-Isn't that basically what wake_up_sync() is?
+Ping?  Andreas, can I get the above info so I can get this moving again?
 
--- 
-Jens Axboe
+--D
 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  .gitignore            |    1 
+>  src/Makefile          |    2 -
+>  src/splice-test.c     |  173 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/720     |   41 ++++++++++++
+>  tests/generic/720.out |    7 ++
+>  tests/generic/group   |    1 
+>  6 files changed, 224 insertions(+), 1 deletion(-)
+>  create mode 100644 src/splice-test.c
+>  create mode 100755 tests/generic/720
+>  create mode 100644 tests/generic/720.out
+> 
+> diff --git a/.gitignore b/.gitignore
+> index c8c815f9..26d4da11 100644
+> --- a/.gitignore
+> +++ b/.gitignore
+> @@ -112,6 +112,7 @@
+>  /src/runas
+>  /src/seek_copy_test
+>  /src/seek_sanity_test
+> +/src/splice-test
+>  /src/stale_handle
+>  /src/stat_test
+>  /src/swapon
+> diff --git a/src/Makefile b/src/Makefile
+> index c4fcf370..2920dfb1 100644
+> --- a/src/Makefile
+> +++ b/src/Makefile
+> @@ -28,7 +28,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+>  	attr-list-by-handle-cursor-test listxattr dio-interleaved t_dir_type \
+>  	dio-invalidate-cache stat_test t_encrypted_d_revalidate \
+>  	attr_replace_test swapon mkswap t_attr_corruption t_open_tmpfiles \
+> -	fscrypt-crypt-util bulkstat_null_ocount
+> +	fscrypt-crypt-util bulkstat_null_ocount splice-test
+>  
+>  SUBDIRS = log-writes perf
+>  
+> diff --git a/src/splice-test.c b/src/splice-test.c
+> new file mode 100644
+> index 00000000..d3c12075
+> --- /dev/null
+> +++ b/src/splice-test.c
+> @@ -0,0 +1,173 @@
+> +// SPDX-License-Identifier: GPL-2.0-or-later
+> +/*
+> + * Copyright (C) 2019 ?????????????????????????????
+> + * Author: 
+> + *
+> + * Make sure that reading and writing to a pipe via splice.
+> + */
+> +#include <sys/types.h>
+> +#include <sys/stat.h>
+> +#include <sys/wait.h>
+> +#include <unistd.h>
+> +#include <fcntl.h>
+> +#include <err.h>
+> +
+> +#include <stdlib.h>
+> +#include <stdio.h>
+> +#include <stdbool.h>
+> +#include <string.h>
+> +#include <errno.h>
+> +
+> +#define SECTOR_SIZE 512
+> +#define BUFFER_SIZE (150 * SECTOR_SIZE)
+> +
+> +void read_from_pipe(int fd, const char *filename, size_t size)
+> +{
+> +	char buffer[SECTOR_SIZE];
+> +	size_t sz;
+> +	ssize_t ret;
+> +
+> +	while (size) {
+> +		sz = size;
+> +		if (sz > sizeof buffer)
+> +			sz = sizeof buffer;
+> +		ret = read(fd, buffer, sz);
+> +		if (ret < 0)
+> +			err(1, "read: %s", filename);
+> +		if (ret == 0) {
+> +			fprintf(stderr, "read: %s: unexpected EOF\n", filename);
+> +			exit(1);
+> +		}
+> +		size -= sz;
+> +	}
+> +}
+> +
+> +void do_splice1(int fd, const char *filename, size_t size)
+> +{
+> +	bool retried = false;
+> +	int pipefd[2];
+> +
+> +	if (pipe(pipefd) == -1)
+> +		err(1, "pipe");
+> +	while (size) {
+> +		ssize_t spliced;
+> +
+> +		spliced = splice(fd, NULL, pipefd[1], NULL, size, SPLICE_F_MOVE);
+> +		if (spliced == -1) {
+> +			if (errno == EAGAIN && !retried) {
+> +				retried = true;
+> +				fprintf(stderr, "retrying splice\n");
+> +				sleep(1);
+> +				continue;
+> +			}
+> +			err(1, "splice");
+> +		}
+> +		read_from_pipe(pipefd[0], filename, spliced);
+> +		size -= spliced;
+> +	}
+> +	close(pipefd[0]);
+> +	close(pipefd[1]);
+> +}
+> +
+> +void do_splice2(int fd, const char *filename, size_t size)
+> +{
+> +	bool retried = false;
+> +	int pipefd[2];
+> +	int pid;
+> +
+> +	if (pipe(pipefd) == -1)
+> +		err(1, "pipe");
+> +
+> +	pid = fork();
+> +	if (pid == 0) {
+> +		close(pipefd[1]);
+> +		read_from_pipe(pipefd[0], filename, size);
+> +		exit(0);
+> +	} else {
+> +		close(pipefd[0]);
+> +		while (size) {
+> +			ssize_t spliced;
+> +
+> +			spliced = splice(fd, NULL, pipefd[1], NULL, size, SPLICE_F_MOVE);
+> +			if (spliced == -1) {
+> +				if (errno == EAGAIN && !retried) {
+> +					retried = true;
+> +					fprintf(stderr, "retrying splice\n");
+> +					sleep(1);
+> +					continue;
+> +				}
+> +				err(1, "splice");
+> +			}
+> +			size -= spliced;
+> +		}
+> +		close(pipefd[1]);
+> +		waitpid(pid, NULL, 0);
+> +	}
+> +}
+> +
+> +void usage(const char *argv0)
+> +{
+> +	fprintf(stderr, "USAGE: %s [-rd] {filename}\n", basename(argv0));
+> +	exit(2);
+> +}
+> +
+> +int main(int argc, char *argv[])
+> +{
+> +	void (*do_splice)(int fd, const char *filename, size_t size);
+> +	const char *filename;
+> +	char *buffer;
+> +	int opt, open_flags, fd;
+> +	ssize_t ret;
+> +
+> +	do_splice = do_splice1;
+> +	open_flags = O_CREAT | O_TRUNC | O_RDWR | O_DIRECT;
+> +
+> +	while ((opt = getopt(argc, argv, "rd")) != -1) {
+> +		switch(opt) {
+> +		case 'r':
+> +			do_splice = do_splice2;
+> +			break;
+> +		case 'd':
+> +			open_flags &= ~O_DIRECT;
+> +			break;
+> +		default:  /* '?' */
+> +			usage(argv[0]);
+> +		}
+> +	}
+> +
+> +	if (optind >= argc)
+> +		usage(argv[0]);
+> +	filename = argv[optind];
+> +
+> +	printf("%s reader %s O_DIRECT\n",
+> +		   do_splice == do_splice1 ? "sequential" : "concurrent",
+> +		   (open_flags & O_DIRECT) ? "with" : "without");
+> +
+> +	buffer = aligned_alloc(SECTOR_SIZE, BUFFER_SIZE);
+> +	if (buffer == NULL)
+> +		err(1, "aligned_alloc");
+> +
+> +	fd = open(filename, open_flags, 0666);
+> +	if (fd == -1)
+> +		err(1, "open: %s", filename);
+> +
+> +	memset(buffer, 'x', BUFFER_SIZE);
+> +	ret = write(fd, buffer, BUFFER_SIZE);
+> +	if (ret < 0)
+> +		err(1, "write: %s", filename);
+> +	if (ret != BUFFER_SIZE) {
+> +		fprintf(stderr, "%s: short write\n", filename);
+> +		exit(1);
+> +	}
+> +
+> +	ret = lseek(fd, 0, SEEK_SET);
+> +	if (ret != 0)
+> +		err(1, "lseek: %s", filename);
+> +
+> +	do_splice(fd, filename, BUFFER_SIZE);
+> +
+> +	if (unlink(filename) == -1)
+> +		err(1, "unlink: %s", filename);
+> +
+> +	return 0;
+> +}
+> diff --git a/tests/generic/720 b/tests/generic/720
+> new file mode 100755
+> index 00000000..b7f09c40
+> --- /dev/null
+> +++ b/tests/generic/720
+> @@ -0,0 +1,41 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0-or-later
+> +# Copyright (c) 2019, Oracle and/or its affiliates.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 720
+> +#
+> +# Test using splice() to read from pipes.
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1    # failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $TEST_DIR/a
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +
+> +# real QA test starts here
+> +_supported_os Linux
+> +_supported_fs generic
+> +_require_test
+> +
+> +rm -f $seqres.full
+> +
+> +src/splice-test -r $TEST_DIR/a
+> +src/splice-test -rd $TEST_DIR/a
+> +src/splice-test $TEST_DIR/a
+> +src/splice-test -d $TEST_DIR/a
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/generic/720.out b/tests/generic/720.out
+> new file mode 100644
+> index 00000000..b0fc9935
+> --- /dev/null
+> +++ b/tests/generic/720.out
+> @@ -0,0 +1,7 @@
+> +QA output created by 720
+> +concurrent reader with O_DIRECT
+> +concurrent reader with O_DIRECT
+> +concurrent reader without O_DIRECT
+> +concurrent reader without O_DIRECT
+> +sequential reader with O_DIRECT
+> +sequential reader without O_DIRECT
+> diff --git a/tests/generic/group b/tests/generic/group
+> index cd418106..f75d4e60 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -569,3 +569,4 @@
+>  564 auto quick copy_range
+>  565 auto quick copy_range
+>  719 auto quick quota metadata
+> +720 auto quick rw pipe splice
