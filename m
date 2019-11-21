@@ -2,428 +2,447 @@ Return-Path: <SRS0=udUw=ZN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3F31C432C3
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 07:47:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5DCCC432C3
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 13:26:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A60182088F
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 07:47:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A6B6120898
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 13:26:11 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IhX4S1Mq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726716AbfKUHrU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Nov 2019 02:47:20 -0500
-Received: from szxga07-in.huawei.com ([45.249.212.35]:33298 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726437AbfKUHrU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 21 Nov 2019 02:47:20 -0500
-Received: from DGGEMS401-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id E3440DD1A53B0BFC846E;
-        Thu, 21 Nov 2019 15:47:15 +0800 (CST)
-Received: from [127.0.0.1] (10.74.221.148) by DGGEMS401-HUB.china.huawei.com
- (10.3.19.201) with Microsoft SMTP Server id 14.3.439.0; Thu, 21 Nov 2019
- 15:47:09 +0800
-Subject: Re: [PATCH] xfs: gut error handling in
- xfs_trans_unreserve_and_mod_sb()
-To:     Dave Chinner <david@fromorbit.com>, <linux-xfs@vger.kernel.org>,
-        "guoyang (C)" <guoyang2@huawei.com>
-References: <20191121004437.9633-1-david@fromorbit.com>
-From:   Shaokun Zhang <zhangshaokun@hisilicon.com>
-Message-ID: <73eb7efe-2c15-ff10-c0ad-111173ba1886@hisilicon.com>
-Date:   Thu, 21 Nov 2019 15:47:09 +0800
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.1.1
+        id S1726502AbfKUN0L (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Nov 2019 08:26:11 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:37956 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726593AbfKUN0L (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Nov 2019 08:26:11 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1574342768;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=fCGztwl1JgaT8vV8ZKnyLwu8SjSX3pT/1hT5YcWkqpY=;
+        b=IhX4S1MqsLhXK09lV/mMJtJnqrav8traKhNHG3udw0p3FuMy1ttVb4QeJz6wEHCBQJXn8q
+        tCTyMacl+8UV81BwzsNhulwigTofSBtxigIwtSsOLdmhRr9gN0vROJM9TaTLRw4/24x8NB
+        jBa6KW9NhyXQDNCtgqvJzHvKctylBbA=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-302-D0Z2g1E0NpuYDP9mpNtc5w-1; Thu, 21 Nov 2019 08:26:05 -0500
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 757FD18B6409;
+        Thu, 21 Nov 2019 13:26:04 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id E12A469308;
+        Thu, 21 Nov 2019 13:26:03 +0000 (UTC)
+Date:   Thu, 21 Nov 2019 08:26:03 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/9] xfs: report ag header corruption errors to the
+ health tracking system
+Message-ID: <20191121132603.GA20602@bfoster>
+References: <157375555426.3692735.1357467392517392169.stgit@magnolia>
+ <157375556683.3692735.8136460417251028810.stgit@magnolia>
+ <20191120142047.GC15542@bfoster>
+ <20191120164323.GJ6219@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20191121004437.9633-1-david@fromorbit.com>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.74.221.148]
-X-CFilter-Loop: Reflected
+In-Reply-To: <20191120164323.GJ6219@magnolia>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+X-MC-Unique: D0Z2g1E0NpuYDP9mpNtc5w-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Dave,
+On Wed, Nov 20, 2019 at 08:43:23AM -0800, Darrick J. Wong wrote:
+> On Wed, Nov 20, 2019 at 09:20:47AM -0500, Brian Foster wrote:
+> > On Thu, Nov 14, 2019 at 10:19:26AM -0800, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > >=20
+> > > Whenever we encounter a corrupt AG header, we should report that to t=
+he
+> > > health monitoring system for later reporting.
+> > >=20
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  fs/xfs/libxfs/xfs_alloc.c    |    6 ++++++
+> > >  fs/xfs/libxfs/xfs_health.h   |    6 ++++++
+> > >  fs/xfs/libxfs/xfs_ialloc.c   |    3 +++
+> > >  fs/xfs/libxfs/xfs_refcount.c |    5 ++++-
+> > >  fs/xfs/libxfs/xfs_rmap.c     |    5 ++++-
+> > >  fs/xfs/libxfs/xfs_sb.c       |    2 ++
+> > >  fs/xfs/xfs_health.c          |   17 +++++++++++++++++
+> > >  fs/xfs/xfs_inode.c           |    9 +++++++++
+> > >  8 files changed, 51 insertions(+), 2 deletions(-)
+> > >=20
+> > >=20
+> > > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> > > index c284e10af491..e75e3ae6c912 100644
+> > > --- a/fs/xfs/libxfs/xfs_alloc.c
+> > > +++ b/fs/xfs/libxfs/xfs_alloc.c
+> > > @@ -26,6 +26,7 @@
+> > >  #include "xfs_log.h"
+> > >  #include "xfs_ag_resv.h"
+> > >  #include "xfs_bmap.h"
+> > > +#include "xfs_health.h"
+> > > =20
+> > >  extern kmem_zone_t=09*xfs_bmap_free_item_zone;
+> > > =20
+> > > @@ -699,6 +700,8 @@ xfs_alloc_read_agfl(
+> > >  =09=09=09mp, tp, mp->m_ddev_targp,
+> > >  =09=09=09XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
+> > >  =09=09=09XFS_FSS_TO_BB(mp, 1), 0, &bp, &xfs_agfl_buf_ops);
+> > > +=09if (xfs_metadata_is_sick(error))
+> > > +=09=09xfs_agno_mark_sick(mp, agno, XFS_SICK_AG_AGFL);
+> >=20
+> > Any reason we couldn't do some of these in verifiers? I'm assuming we'd
+> > still need calls in various external corruption checks, but at least we
+> > wouldn't add a requirement to check all future buffer reads, etc.
+>=20
+> I thought about that.  It would be wonderful if C had a syntactically
+> slick method to package a function + execution scope and pass that
+> through other functions to be called later. :)
+>=20
+> For the per-AG stuff it wouldn't be hard to make the verifier functions
+> derive the AG number and call xfs_agno_mark_sick directly in the
+> verifier.  For per-inode metadata, we'd have to find a way to pass the
+> struct xfs_inode pointer to the verifier, which means that we'd have to
+> add that to struct xfs_buf.
+>=20
+> xfs_buf is ~384 bytes so maybe adding another pointer for read context
+> wouldn't be terrible?  That would add a fair amount of ugly special
+> casing in the btree code to decide if we have an inode to pass through,
+> though it would solve the problem of the bmbt verifier not being able to
+> check the owner field in the btree block header.
+>=20
+> OTOH that's 8 bytes of overhead that we can never get rid of even though
+> we only really need it the first time the buffer gets read in from disk.
+>=20
+> Thoughts?
+>=20
 
-It has been tested on my 128 cores server and the performance is good.
-the cpu usage of __percpu_counter_sum down from 7.74% to 0% andthe directory
-creation and directory removal performance increase 10%+, file creation and
-removal also increase about 5%, the result as follows:
+That doesn't seem too unreasonable, but I guess I'd have to think about
+it some more. Maybe it's worth defining a private pointer in the buffer
+that callers can use to pass specific context to verifiers for health
+processing. I suppose such a field could also be conditionally defined
+on scrub enabled kernels (at least initially), so the overhead would be
+opt-in.
 
-Without the patch:
-Command line used: ./mdtest -b 8 -z 5 -d /mnt/sdk -I 10
-SUMMARY: (of 1 iterations)
-   Operation                      Max            Min           Mean        Std Dev
-   ---------                      ---            ---           ----        -------
-   Directory creation:      68968.919      68968.919      68968.919          0.000
-   Directory stat    :     310098.612     310098.612     310098.612          0.000
-   Directory removal :      65191.902      65191.902      65191.902          0.000
-   File creation     :      26131.119      26131.119      26131.119          0.000
-   File stat         :     317181.998     317181.998     317181.998          0.000
-   File read         :     232764.829     232764.829     232764.829          0.000
-   File removal      :      74074.210      74074.210      74074.210          0.000
-   Tree creation     :      80398.466      80398.466      80398.466          0.000
-   Tree removal      :      33374.964      33374.964      33374.964          0.000
+Anyways, I think for this series it might be reasonable to push things
+down into verifiers opportunistically where we can do so without any
+core mechanism changes. We can follow up with changes to do the rest if
+we can come up with something elegant.
 
-With the patch:
-Command line used: ./mdtest -b 8 -z 5 -d /mnt/sdk -I 10
-SUMMARY: (of 1 iterations)
-   Operation                      Max            Min           Mean        Std Dev
-   ---------                      ---            ---           ----        -------
-   Directory creation:      81117.635      81117.635      81117.635          0.000
-   Directory stat    :     319936.438     319936.438     319936.438          0.000
-   Directory removal :      73507.535      73507.535      73507.535          0.000
-   File creation     :      27834.931      27834.931      27834.931          0.000
-   File stat         :     316691.113     316691.113     316691.113          0.000
-   File read         :     231572.548     231572.548     231572.548          0.000
-   File removal      :      79854.002      79854.002      79854.002          0.000
-   Tree creation     :      93915.849      93915.849      93915.849          0.000
-   Tree removal      :      38178.068      38178.068      38178.068          0.000
+> > >  =09if (error)
+> > >  =09=09return error;
+> > >  =09xfs_buf_set_ref(bp, XFS_AGFL_REF);
+> > > @@ -722,6 +725,7 @@ xfs_alloc_update_counters(
+> > >  =09if (unlikely(be32_to_cpu(agf->agf_freeblks) >
+> > >  =09=09     be32_to_cpu(agf->agf_length))) {
+> > >  =09=09xfs_buf_corruption_error(agbp);
+> > > +=09=09xfs_ag_mark_sick(pag, XFS_SICK_AG_AGF);
+> > >  =09=09return -EFSCORRUPTED;
+> > >  =09}
+> > > =20
+> > > @@ -2952,6 +2956,8 @@ xfs_read_agf(
+> > >  =09=09=09mp, tp, mp->m_ddev_targp,
+> > >  =09=09=09XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
+> > >  =09=09=09XFS_FSS_TO_BB(mp, 1), flags, bpp, &xfs_agf_buf_ops);
+> > > +=09if (xfs_metadata_is_sick(error))
+> > > +=09=09xfs_agno_mark_sick(mp, agno, XFS_SICK_AG_AGF);
+> > >  =09if (error)
+> > >  =09=09return error;
+> > >  =09if (!*bpp)
+> > > diff --git a/fs/xfs/libxfs/xfs_health.h b/fs/xfs/libxfs/xfs_health.h
+> > > index 3657a9cb8490..ce8954a10c66 100644
+> > > --- a/fs/xfs/libxfs/xfs_health.h
+> > > +++ b/fs/xfs/libxfs/xfs_health.h
+> > > @@ -123,6 +123,8 @@ void xfs_rt_mark_healthy(struct xfs_mount *mp, un=
+signed int mask);
+> > >  void xfs_rt_measure_sickness(struct xfs_mount *mp, unsigned int *sic=
+k,
+> > >  =09=09unsigned int *checked);
+> > > =20
+> > > +void xfs_agno_mark_sick(struct xfs_mount *mp, xfs_agnumber_t agno,
+> > > +=09=09unsigned int mask);
+> > >  void xfs_ag_mark_sick(struct xfs_perag *pag, unsigned int mask);
+> > >  void xfs_ag_mark_checked(struct xfs_perag *pag, unsigned int mask);
+> > >  void xfs_ag_mark_healthy(struct xfs_perag *pag, unsigned int mask);
+> > > @@ -203,4 +205,8 @@ void xfs_fsop_geom_health(struct xfs_mount *mp, s=
+truct xfs_fsop_geom *geo);
+> > >  void xfs_ag_geom_health(struct xfs_perag *pag, struct xfs_ag_geometr=
+y *ageo);
+> > >  void xfs_bulkstat_health(struct xfs_inode *ip, struct xfs_bulkstat *=
+bs);
+> > > =20
+> > > +#define xfs_metadata_is_sick(error) \
+> > > +=09(unlikely((error) =3D=3D -EFSCORRUPTED || (error) =3D=3D -EIO || =
+\
+> > > +=09=09  (error) =3D=3D -EFSBADCRC))
+> >=20
+> > Why is -EIO considered sick? My understanding is that once something is
+> > marked sick, scrub is the only way to clear that state. -EIO can be
+> > transient, so afaict that means we could mark a persistent in-core stat=
+e
+> > based on a transient/resolved issue.
+>=20
+> I think it sounds reasonable that if the fs hits a metadata IO error
+> then the administrator should scrub that data structure to make sure
+> it's ok, and if so, clear the sick state.
+>=20
 
-Thanks,
-Shaokun
+I'm not totally convinced... I thought we had configurations where I/O
+errors can be reasonably expected and recovered from. For example,
+consider the thin provisioning + infinite metadata writeback error retry
+mechanism. IIRC, the whole purpose of that was to facilitate the use
+case where the thin pool runs out of space, but the admin wants some
+window of time to expand and keep the filesystem alive.
 
-On 2019/11/21 8:44, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Shaokun Zhang reported that XFs was using substantial CPU time in
-> percpu_count_sum() when running a single threaded benchmark on
-> a high CPU count (128p) machine from xfs_mod_ifree(). The issue
-> is that the filesystem is empty when the benchmark runs, so inode
-> allocation is running with a very low inode free count.
-> 
-> With the percpu counter batching, this means comparisons when the
-> counter is less that 128 * 256 = 32768 use the slow path of adding
-> up all the counters across the CPUs, and this is expensive on high
-> CPU count machines.
-> 
-> The summing in xfs_mod_ifree() is only used to fire an assert if an
-> underrun occurs. The error is ignored by the higher level code.
-> Hence this is really just debug code. Hence we don't need to run it
-> on production kernels, nor do we need such debug checks to return
-> error values just to trigger an assert.
-> 
-> Further, the error handling in xfs_trans_unreserve_and_mod_sb() is
-> largely incorrect - Rolling back the changes in the transaction if
-> only one counter underruns makes all the other counters
-> incorrect. We still allow the change to proceed and committing
-> the transaction, except now we have multiple incorrect counters
-> instead of a single underflow. Hence we should remove all this
-> counter unwinding, too.
-> 
-> Finally, xfs_mod_icount/xfs_mod_ifree are only called from
-> xfs_trans_unreserve_and_mod_sb(), so get rid of them and just
-> directly call the percpu_counter_add/percpu_counter_compare
-> functions. The compare functions are now run only on debug builds as
-> they are internal to ASSERT() checks and so only compiled in when
-> ASSERTs are active (CONFIG_XFS_DEBUG=y or CONFIG_XFS_WARN=y).
-> 
-> Difference in binary size for a production kernel:
-> 
-> Before:
->    text    data     bss     dec     hex filename
->    9486     184       8    9678    25ce fs/xfs/xfs_trans.o
->   10858      89      12   10959    2acf fs/xfs/xfs_mount.o
-> 
-> After:
->    text    data     bss     dec     hex filename
->    8462     184       8    8654    21ce fs/xfs/xfs_trans.o
->   10510      89      12   10611    2973 fs/xfs/xfs_mount.o
-> 
-> So not only does this cleanup chop out a lot of source code, it also
-> results in a binary size reduction of ~1.3kB in a very frequently
-> used fast path of the filesystem.
-> 
-> Reported-by: Shaokun Zhang <zhangshaokun@hisilicon.com>
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_mount.c |  33 ----------
->  fs/xfs/xfs_mount.h |   2 -
->  fs/xfs/xfs_trans.c | 153 +++++++++++----------------------------------
->  3 files changed, 37 insertions(+), 151 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index fca65109cf24..205a83f33abc 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -1125,39 +1125,6 @@ xfs_log_sbcount(xfs_mount_t *mp)
->  	return xfs_sync_sb(mp, true);
->  }
->  
-> -/*
-> - * Deltas for the inode count are +/-64, hence we use a large batch size
-> - * of 128 so we don't need to take the counter lock on every update.
-> - */
-> -#define XFS_ICOUNT_BATCH	128
-> -int
-> -xfs_mod_icount(
-> -	struct xfs_mount	*mp,
-> -	int64_t			delta)
-> -{
-> -	percpu_counter_add_batch(&mp->m_icount, delta, XFS_ICOUNT_BATCH);
-> -	if (__percpu_counter_compare(&mp->m_icount, 0, XFS_ICOUNT_BATCH) < 0) {
-> -		ASSERT(0);
-> -		percpu_counter_add(&mp->m_icount, -delta);
-> -		return -EINVAL;
-> -	}
-> -	return 0;
-> -}
-> -
-> -int
-> -xfs_mod_ifree(
-> -	struct xfs_mount	*mp,
-> -	int64_t			delta)
-> -{
-> -	percpu_counter_add(&mp->m_ifree, delta);
-> -	if (percpu_counter_compare(&mp->m_ifree, 0) < 0) {
-> -		ASSERT(0);
-> -		percpu_counter_add(&mp->m_ifree, -delta);
-> -		return -EINVAL;
-> -	}
-> -	return 0;
-> -}
-> -
->  /*
->   * Deltas for the block count can vary from 1 to very large, but lock contention
->   * only occurs on frequent small block count updates such as in the delayed
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 88ab09ed29e7..0c9524660100 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -389,8 +389,6 @@ extern int	xfs_initialize_perag(xfs_mount_t *mp, xfs_agnumber_t agcount,
->  				     xfs_agnumber_t *maxagi);
->  extern void	xfs_unmountfs(xfs_mount_t *);
->  
-> -extern int	xfs_mod_icount(struct xfs_mount *mp, int64_t delta);
-> -extern int	xfs_mod_ifree(struct xfs_mount *mp, int64_t delta);
->  extern int	xfs_mod_fdblocks(struct xfs_mount *mp, int64_t delta,
->  				 bool reserved);
->  extern int	xfs_mod_frextents(struct xfs_mount *mp, int64_t delta);
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index 3b208f9a865c..93e9a5154cdb 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -527,57 +527,51 @@ xfs_trans_apply_sb_deltas(
->  				  sizeof(sbp->sb_frextents) - 1);
->  }
->  
-> -STATIC int
-> +static void
->  xfs_sb_mod8(
->  	uint8_t			*field,
->  	int8_t			delta)
->  {
->  	int8_t			counter = *field;
->  
-> +	if (!delta)
-> +		return;
->  	counter += delta;
-> -	if (counter < 0) {
-> -		ASSERT(0);
-> -		return -EINVAL;
-> -	}
-> +	ASSERT(counter >= 0);
->  	*field = counter;
-> -	return 0;
->  }
->  
-> -STATIC int
-> +static void
->  xfs_sb_mod32(
->  	uint32_t		*field,
->  	int32_t			delta)
->  {
->  	int32_t			counter = *field;
->  
-> +	if (!delta)
-> +		return;
->  	counter += delta;
-> -	if (counter < 0) {
-> -		ASSERT(0);
-> -		return -EINVAL;
-> -	}
-> +	ASSERT(counter >= 0);
->  	*field = counter;
-> -	return 0;
->  }
->  
-> -STATIC int
-> +static void
->  xfs_sb_mod64(
->  	uint64_t		*field,
->  	int64_t			delta)
->  {
->  	int64_t			counter = *field;
->  
-> +	if (!delta)
-> +		return;
->  	counter += delta;
-> -	if (counter < 0) {
-> -		ASSERT(0);
-> -		return -EINVAL;
-> -	}
-> +	ASSERT(counter >= 0);
->  	*field = counter;
-> -	return 0;
->  }
->  
->  /*
-> - * xfs_trans_unreserve_and_mod_sb() is called to release unused reservations
-> - * and apply superblock counter changes to the in-core superblock.  The
-> + * xfs_trans_unreserve_and_mod_sb() is called to release unused reservations and
-> + * apply superblock counter changes to the in-core superblock.  The
->   * t_res_fdblocks_delta and t_res_frextents_delta fields are explicitly NOT
->   * applied to the in-core superblock.  The idea is that that has already been
->   * done.
-> @@ -586,7 +580,12 @@ xfs_sb_mod64(
->   * used block counts are not updated in the on disk superblock. In this case,
->   * XFS_TRANS_SB_DIRTY will not be set when the transaction is updated but we
->   * still need to update the incore superblock with the changes.
-> + *
-> + * Deltas for the inode count are +/-64, hence we use a large batch size of 128
-> + * so we don't need to take the counter lock on every update.
->   */
-> +#define XFS_ICOUNT_BATCH	128
-> +
->  void
->  xfs_trans_unreserve_and_mod_sb(
->  	struct xfs_trans	*tp)
-> @@ -622,20 +621,21 @@ xfs_trans_unreserve_and_mod_sb(
->  	/* apply the per-cpu counters */
->  	if (blkdelta) {
->  		error = xfs_mod_fdblocks(mp, blkdelta, rsvd);
-> -		if (error)
-> -			goto out;
-> +		ASSERT(!error);
->  	}
->  
->  	if (idelta) {
-> -		error = xfs_mod_icount(mp, idelta);
-> -		if (error)
-> -			goto out_undo_fdblocks;
-> +		percpu_counter_add_batch(&mp->m_icount, idelta,
-> +					 XFS_ICOUNT_BATCH);
-> +		if (idelta < 0)
-> +			ASSERT(__percpu_counter_compare(&mp->m_icount, 0,
-> +							XFS_ICOUNT_BATCH) >= 0);
->  	}
->  
->  	if (ifreedelta) {
-> -		error = xfs_mod_ifree(mp, ifreedelta);
-> -		if (error)
-> -			goto out_undo_icount;
-> +		percpu_counter_add(&mp->m_ifree, ifreedelta);
-> +		if (ifreedelta < 0)
-> +			ASSERT(percpu_counter_compare(&mp->m_ifree, 0) >= 0);
->  	}
->  
->  	if (rtxdelta == 0 && !(tp->t_flags & XFS_TRANS_SB_DIRTY))
-> @@ -643,95 +643,16 @@ xfs_trans_unreserve_and_mod_sb(
->  
->  	/* apply remaining deltas */
->  	spin_lock(&mp->m_sb_lock);
-> -	if (rtxdelta) {
-> -		error = xfs_sb_mod64(&mp->m_sb.sb_frextents, rtxdelta);
-> -		if (error)
-> -			goto out_undo_ifree;
-> -	}
-> -
-> -	if (tp->t_dblocks_delta != 0) {
-> -		error = xfs_sb_mod64(&mp->m_sb.sb_dblocks, tp->t_dblocks_delta);
-> -		if (error)
-> -			goto out_undo_frextents;
-> -	}
-> -	if (tp->t_agcount_delta != 0) {
-> -		error = xfs_sb_mod32(&mp->m_sb.sb_agcount, tp->t_agcount_delta);
-> -		if (error)
-> -			goto out_undo_dblocks;
-> -	}
-> -	if (tp->t_imaxpct_delta != 0) {
-> -		error = xfs_sb_mod8(&mp->m_sb.sb_imax_pct, tp->t_imaxpct_delta);
-> -		if (error)
-> -			goto out_undo_agcount;
-> -	}
-> -	if (tp->t_rextsize_delta != 0) {
-> -		error = xfs_sb_mod32(&mp->m_sb.sb_rextsize,
-> -				     tp->t_rextsize_delta);
-> -		if (error)
-> -			goto out_undo_imaxpct;
-> -	}
-> -	if (tp->t_rbmblocks_delta != 0) {
-> -		error = xfs_sb_mod32(&mp->m_sb.sb_rbmblocks,
-> -				     tp->t_rbmblocks_delta);
-> -		if (error)
-> -			goto out_undo_rextsize;
-> -	}
-> -	if (tp->t_rblocks_delta != 0) {
-> -		error = xfs_sb_mod64(&mp->m_sb.sb_rblocks, tp->t_rblocks_delta);
-> -		if (error)
-> -			goto out_undo_rbmblocks;
-> -	}
-> -	if (tp->t_rextents_delta != 0) {
-> -		error = xfs_sb_mod64(&mp->m_sb.sb_rextents,
-> -				     tp->t_rextents_delta);
-> -		if (error)
-> -			goto out_undo_rblocks;
-> -	}
-> -	if (tp->t_rextslog_delta != 0) {
-> -		error = xfs_sb_mod8(&mp->m_sb.sb_rextslog,
-> -				     tp->t_rextslog_delta);
-> -		if (error)
-> -			goto out_undo_rextents;
-> -	}
-> -	spin_unlock(&mp->m_sb_lock);
-> -	return;
-> -
-> -out_undo_rextents:
-> -	if (tp->t_rextents_delta)
-> -		xfs_sb_mod64(&mp->m_sb.sb_rextents, -tp->t_rextents_delta);
-> -out_undo_rblocks:
-> -	if (tp->t_rblocks_delta)
-> -		xfs_sb_mod64(&mp->m_sb.sb_rblocks, -tp->t_rblocks_delta);
-> -out_undo_rbmblocks:
-> -	if (tp->t_rbmblocks_delta)
-> -		xfs_sb_mod32(&mp->m_sb.sb_rbmblocks, -tp->t_rbmblocks_delta);
-> -out_undo_rextsize:
-> -	if (tp->t_rextsize_delta)
-> -		xfs_sb_mod32(&mp->m_sb.sb_rextsize, -tp->t_rextsize_delta);
-> -out_undo_imaxpct:
-> -	if (tp->t_rextsize_delta)
-> -		xfs_sb_mod8(&mp->m_sb.sb_imax_pct, -tp->t_imaxpct_delta);
-> -out_undo_agcount:
-> -	if (tp->t_agcount_delta)
-> -		xfs_sb_mod32(&mp->m_sb.sb_agcount, -tp->t_agcount_delta);
-> -out_undo_dblocks:
-> -	if (tp->t_dblocks_delta)
-> -		xfs_sb_mod64(&mp->m_sb.sb_dblocks, -tp->t_dblocks_delta);
-> -out_undo_frextents:
-> -	if (rtxdelta)
-> -		xfs_sb_mod64(&mp->m_sb.sb_frextents, -rtxdelta);
-> -out_undo_ifree:
-> +	xfs_sb_mod64(&mp->m_sb.sb_frextents, rtxdelta);
-> +	xfs_sb_mod64(&mp->m_sb.sb_dblocks, tp->t_dblocks_delta);
-> +	xfs_sb_mod32(&mp->m_sb.sb_agcount, tp->t_agcount_delta);
-> +	xfs_sb_mod8(&mp->m_sb.sb_imax_pct, tp->t_imaxpct_delta);
-> +	xfs_sb_mod32(&mp->m_sb.sb_rextsize, tp->t_rextsize_delta);
-> +	xfs_sb_mod32(&mp->m_sb.sb_rbmblocks, tp->t_rbmblocks_delta);
-> +	xfs_sb_mod64(&mp->m_sb.sb_rblocks, tp->t_rblocks_delta);
-> +	xfs_sb_mod64(&mp->m_sb.sb_rextents, tp->t_rextents_delta);
-> +	xfs_sb_mod8(&mp->m_sb.sb_rextslog, tp->t_rextslog_delta);
->  	spin_unlock(&mp->m_sb_lock);
-> -	if (ifreedelta)
-> -		xfs_mod_ifree(mp, -ifreedelta);
-> -out_undo_icount:
-> -	if (idelta)
-> -		xfs_mod_icount(mp, -idelta);
-> -out_undo_fdblocks:
-> -	if (blkdelta)
-> -		xfs_mod_fdblocks(mp, -blkdelta, rsvd);
-> -out:
-> -	ASSERT(error == 0);
->  	return;
->  }
->  
-> 
+I don't necessarily think it's a bad thing to suggest a scrub any time
+errors have occurred, but for something like the above where an
+environment may have been thoroughly tested and verified through that
+particular error->expand sequence, it seems that flagging bits as sick
+might be unnecessarily ominous.
+
+> Though I realized just now that if scrub isn't enabled then it's an
+> unfixable dead end so the EIO check should be gated on
+> CONFIG_XFS_ONLINE_SCRUB=3Dy.
+>=20
+
+Yeah, that was my initial concern..
+
+> > Along similar lines, what's the expected behavior in the event of any o=
+f
+> > these errors for a kernel that might not support
+> > CONFIG_XFS_ONLINE_[SCRUB|REPAIR]? Just set the states that are never
+> > used for anything? If so, that seems Ok I suppose.. but it's a little
+> > awkward if we'd see the tracepoints and such associated with the state
+> > changes.
+>=20
+> Even if scrub is disabled, the kernel will still set the sick state, and
+> later the administrator can query the filesystem with xfs_spaceman to
+> observe that sick state.
+>=20
+
+Ok, so it's intended to be a valid health state independent of scrub.
+That seems reasonable in principle and can always be used to indicate
+offline repair is necessary too.
+
+> In the future, I will also use the per-AG sick states to steer
+> allocations away from known problematic AGs to try to avoid
+> unexpected shutdown in the middle of a transaction.
+>=20
+
+Hmm.. I'm a little curious about how much we should steer away from
+traditional behavior on kernels that might not support scrub. I suppose
+I could see arguments for going either way, but this is getting a bit
+ahead of this patch anyways. ;)
+
+Brian
+
+> --D
+>=20
+> >=20
+> > Brian
+> >=20
+> > > +
+> > >  #endif=09/* __XFS_HEALTH_H__ */
+> > > diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> > > index 988cde7744e6..c401512a4350 100644
+> > > --- a/fs/xfs/libxfs/xfs_ialloc.c
+> > > +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> > > @@ -27,6 +27,7 @@
+> > >  #include "xfs_trace.h"
+> > >  #include "xfs_log.h"
+> > >  #include "xfs_rmap.h"
+> > > +#include "xfs_health.h"
+> > > =20
+> > >  /*
+> > >   * Lookup a record by ino in the btree given by cur.
+> > > @@ -2635,6 +2636,8 @@ xfs_read_agi(
+> > >  =09error =3D xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
+> > >  =09=09=09XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
+> > >  =09=09=09XFS_FSS_TO_BB(mp, 1), 0, bpp, &xfs_agi_buf_ops);
+> > > +=09if (xfs_metadata_is_sick(error))
+> > > +=09=09xfs_agno_mark_sick(mp, agno, XFS_SICK_AG_AGI);
+> > >  =09if (error)
+> > >  =09=09return error;
+> > >  =09if (tp)
+> > > diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcoun=
+t.c
+> > > index d7d702ee4d1a..25c87834e42a 100644
+> > > --- a/fs/xfs/libxfs/xfs_refcount.c
+> > > +++ b/fs/xfs/libxfs/xfs_refcount.c
+> > > @@ -22,6 +22,7 @@
+> > >  #include "xfs_bit.h"
+> > >  #include "xfs_refcount.h"
+> > >  #include "xfs_rmap.h"
+> > > +#include "xfs_health.h"
+> > > =20
+> > >  /* Allowable refcount adjustment amounts. */
+> > >  enum xfs_refc_adjust_op {
+> > > @@ -1177,8 +1178,10 @@ xfs_refcount_finish_one(
+> > >  =09=09=09=09XFS_ALLOC_FLAG_FREEING, &agbp);
+> > >  =09=09if (error)
+> > >  =09=09=09return error;
+> > > -=09=09if (XFS_IS_CORRUPT(tp->t_mountp, !agbp))
+> > > +=09=09if (XFS_IS_CORRUPT(tp->t_mountp, !agbp)) {
+> > > +=09=09=09xfs_agno_mark_sick(tp->t_mountp, agno, XFS_SICK_AG_AGF);
+> > >  =09=09=09return -EFSCORRUPTED;
+> > > +=09=09}
+> > > =20
+> > >  =09=09rcur =3D xfs_refcountbt_init_cursor(mp, tp, agbp, agno);
+> > >  =09=09if (!rcur) {
+> > > diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+> > > index ff9412f113c4..a54a3c129cce 100644
+> > > --- a/fs/xfs/libxfs/xfs_rmap.c
+> > > +++ b/fs/xfs/libxfs/xfs_rmap.c
+> > > @@ -21,6 +21,7 @@
+> > >  #include "xfs_errortag.h"
+> > >  #include "xfs_error.h"
+> > >  #include "xfs_inode.h"
+> > > +#include "xfs_health.h"
+> > > =20
+> > >  /*
+> > >   * Lookup the first record less than or equal to [bno, len, owner, o=
+ffset]
+> > > @@ -2400,8 +2401,10 @@ xfs_rmap_finish_one(
+> > >  =09=09error =3D xfs_free_extent_fix_freelist(tp, agno, &agbp);
+> > >  =09=09if (error)
+> > >  =09=09=09return error;
+> > > -=09=09if (XFS_IS_CORRUPT(tp->t_mountp, !agbp))
+> > > +=09=09if (XFS_IS_CORRUPT(tp->t_mountp, !agbp)) {
+> > > +=09=09=09xfs_agno_mark_sick(tp->t_mountp, agno, XFS_SICK_AG_AGF);
+> > >  =09=09=09return -EFSCORRUPTED;
+> > > +=09=09}
+> > > =20
+> > >  =09=09rcur =3D xfs_rmapbt_init_cursor(mp, tp, agbp, agno);
+> > >  =09=09if (!rcur) {
+> > > diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> > > index 0ac69751fe85..4a923545465d 100644
+> > > --- a/fs/xfs/libxfs/xfs_sb.c
+> > > +++ b/fs/xfs/libxfs/xfs_sb.c
+> > > @@ -1169,6 +1169,8 @@ xfs_sb_read_secondary(
+> > >  =09error =3D xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
+> > >  =09=09=09XFS_AG_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
+> > >  =09=09=09XFS_FSS_TO_BB(mp, 1), 0, &bp, &xfs_sb_buf_ops);
+> > > +=09if (xfs_metadata_is_sick(error))
+> > > +=09=09xfs_agno_mark_sick(mp, agno, XFS_SICK_AG_SB);
+> > >  =09if (error)
+> > >  =09=09return error;
+> > >  =09xfs_buf_set_ref(bp, XFS_SSB_REF);
+> > > diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
+> > > index 860dc70c99e7..36c32b108b39 100644
+> > > --- a/fs/xfs/xfs_health.c
+> > > +++ b/fs/xfs/xfs_health.c
+> > > @@ -200,6 +200,23 @@ xfs_rt_measure_sickness(
+> > >  =09spin_unlock(&mp->m_sb_lock);
+> > >  }
+> > > =20
+> > > +/* Mark unhealthy per-ag metadata given a raw AG number. */
+> > > +void
+> > > +xfs_agno_mark_sick(
+> > > +=09struct xfs_mount=09*mp,
+> > > +=09xfs_agnumber_t=09=09agno,
+> > > +=09unsigned int=09=09mask)
+> > > +{
+> > > +=09struct xfs_perag=09*pag =3D xfs_perag_get(mp, agno);
+> > > +
+> > > +=09/* per-ag structure not set up yet? */
+> > > +=09if (!pag)
+> > > +=09=09return;
+> > > +
+> > > +=09xfs_ag_mark_sick(pag, mask);
+> > > +=09xfs_perag_put(pag);
+> > > +}
+> > > +
+> > >  /* Mark unhealthy per-ag metadata. */
+> > >  void
+> > >  xfs_ag_mark_sick(
+> > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > > index 401da197f012..a2812cea748d 100644
+> > > --- a/fs/xfs/xfs_inode.c
+> > > +++ b/fs/xfs/xfs_inode.c
+> > > @@ -35,6 +35,7 @@
+> > >  #include "xfs_log.h"
+> > >  #include "xfs_bmap_btree.h"
+> > >  #include "xfs_reflink.h"
+> > > +#include "xfs_health.h"
+> > > =20
+> > >  kmem_zone_t *xfs_inode_zone;
+> > > =20
+> > > @@ -787,6 +788,8 @@ xfs_ialloc(
+> > >  =09 */
+> > >  =09if ((pip && ino =3D=3D pip->i_ino) || !xfs_verify_dir_ino(mp, ino=
+)) {
+> > >  =09=09xfs_alert(mp, "Allocated a known in-use inode 0x%llx!", ino);
+> > > +=09=09xfs_agno_mark_sick(mp, XFS_INO_TO_AGNO(mp, ino),
+> > > +=09=09=09=09XFS_SICK_AG_INOBT);
+> > >  =09=09return -EFSCORRUPTED;
+> > >  =09}
+> > > =20
+> > > @@ -2137,6 +2140,7 @@ xfs_iunlink_update_bucket(
+> > >  =09 */
+> > >  =09if (old_value =3D=3D new_agino) {
+> > >  =09=09xfs_buf_corruption_error(agibp);
+> > > +=09=09xfs_agno_mark_sick(tp->t_mountp, agno, XFS_SICK_AG_AGI);
+> > >  =09=09return -EFSCORRUPTED;
+> > >  =09}
+> > > =20
+> > > @@ -2203,6 +2207,7 @@ xfs_iunlink_update_inode(
+> > >  =09if (!xfs_verify_agino_or_null(mp, agno, old_value)) {
+> > >  =09=09xfs_inode_verifier_error(ip, -EFSCORRUPTED, __func__, dip,
+> > >  =09=09=09=09sizeof(*dip), __this_address);
+> > > +=09=09xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
+> > >  =09=09error =3D -EFSCORRUPTED;
+> > >  =09=09goto out;
+> > >  =09}
+> > > @@ -2217,6 +2222,7 @@ xfs_iunlink_update_inode(
+> > >  =09=09if (next_agino !=3D NULLAGINO) {
+> > >  =09=09=09xfs_inode_verifier_error(ip, -EFSCORRUPTED, __func__,
+> > >  =09=09=09=09=09dip, sizeof(*dip), __this_address);
+> > > +=09=09=09xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
+> > >  =09=09=09error =3D -EFSCORRUPTED;
+> > >  =09=09}
+> > >  =09=09goto out;
+> > > @@ -2271,6 +2277,7 @@ xfs_iunlink(
+> > >  =09if (next_agino =3D=3D agino ||
+> > >  =09    !xfs_verify_agino_or_null(mp, agno, next_agino)) {
+> > >  =09=09xfs_buf_corruption_error(agibp);
+> > > +=09=09xfs_agno_mark_sick(mp, agno, XFS_SICK_AG_AGI);
+> > >  =09=09return -EFSCORRUPTED;
+> > >  =09}
+> > > =20
+> > > @@ -2408,6 +2415,7 @@ xfs_iunlink_map_prev(
+> > >  =09=09=09XFS_CORRUPTION_ERROR(__func__,
+> > >  =09=09=09=09=09XFS_ERRLEVEL_LOW, mp,
+> > >  =09=09=09=09=09*dipp, sizeof(**dipp));
+> > > +=09=09=09xfs_ag_mark_sick(pag, XFS_SICK_AG_AGI);
+> > >  =09=09=09error =3D -EFSCORRUPTED;
+> > >  =09=09=09return error;
+> > >  =09=09}
+> > > @@ -2454,6 +2462,7 @@ xfs_iunlink_remove(
+> > >  =09if (!xfs_verify_agino(mp, agno, head_agino)) {
+> > >  =09=09XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
+> > >  =09=09=09=09agi, sizeof(*agi));
+> > > +=09=09xfs_agno_mark_sick(mp, agno, XFS_SICK_AG_AGI);
+> > >  =09=09return -EFSCORRUPTED;
+> > >  =09}
+> > > =20
+> > >=20
+> >=20
+>=20
 
