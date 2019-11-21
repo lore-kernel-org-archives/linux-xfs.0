@@ -2,49 +2,62 @@ Return-Path: <SRS0=udUw=ZN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45366C43215
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 14:21:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D065C432C3
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 15:02:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1CC642068E
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 14:21:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E577B206EC
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 15:02:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="E18bbnSa"
+	dkim=pass (2048-bit key) header.d=plexistor-com.20150623.gappssmtp.com header.i=@plexistor-com.20150623.gappssmtp.com header.b="NJJ7sFm/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726881AbfKUOVw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Nov 2019 09:21:52 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:46767 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726500AbfKUOVw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Nov 2019 09:21:52 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1574346111;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=BVraE8b3QU2la9dCpFpQy7WueZ49onoOqEPjcrKNVmw=;
-        b=E18bbnSaVpf6rPnHVZ2m4/ZRkYN5VLcTEnb63VYzxEgmHSHCPObqbD+l86i2PB5HECDxTx
-        8kyy+QC0OuTUeUXPNJMkYva7C7OrmuINCfcabLgzvDWBZ+ATJr2DYT5+sR5+hBR0/jRGy4
-        P7fCWfDxPvO/jIBA6rPvaxPQ4lwl/Tw=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-324-P5I-E9HINPSIa9NDAMN7WA-1; Thu, 21 Nov 2019 09:21:48 -0500
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id ADE14801E7E;
-        Thu, 21 Nov 2019 14:21:46 +0000 (UTC)
-Received: from pauld.bos.csb (dhcp-17-51.bos.redhat.com [10.18.17.51])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 9F82C194B2;
-        Thu, 21 Nov 2019 14:21:38 +0000 (UTC)
-Date:   Thu, 21 Nov 2019 09:21:36 -0500
-From:   Phil Auld <pauld@redhat.com>
-To:     Peter Zijlstra <peterz@infradead.org>
-Cc:     Dave Chinner <david@fromorbit.com>, Ming Lei <ming.lei@redhat.com>,
+        id S1727071AbfKUPCs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Nov 2019 10:02:48 -0500
+Received: from mail-ed1-f53.google.com ([209.85.208.53]:36033 "EHLO
+        mail-ed1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726757AbfKUPCs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Nov 2019 10:02:48 -0500
+Received: by mail-ed1-f53.google.com with SMTP id f7so3070275edq.3
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Nov 2019 07:02:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=plexistor-com.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=E392Bey6gyqrThPXx8YcFlOe0YHcNWFPSVbftT0swoA=;
+        b=NJJ7sFm/XhnCvz3aQIsC8DV3UH1stbe9RQHbzgpl5sHNyXkOsGrQVGp+Qs6j8qo5zj
+         fg9/oaME/zYfyRDk17NyDNMWP9yJe2lqstRCyUdcUkpysCuHhCYYbVzooMPmvFArvyUO
+         G4yExiKQS8gB+rnJw26mfMfAUFVidpcp/Rczl8pzrWaSkJmVU+BM7Di4dbXb5MjW5hzY
+         1uMQRlDaEFKAjrijZfq4e6YthfzIdWro930ACoCpJb/lPL4kt2/UfOO1HCujzb2nOg4y
+         POCRUYTWxs5amOzBkMhhN1eSh45LoPHrmo/hM7ojgkivTGLuPUCBIGA8PACefyRTsYTF
+         P54Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=E392Bey6gyqrThPXx8YcFlOe0YHcNWFPSVbftT0swoA=;
+        b=EGjDra1hWK2DAafTeBS84ALPy0zlKswektdhrp+/nj0BE7qFDmrIoTcFT6JARhdTre
+         M22Coh0JvOygK6KpQ03RqKWrr2YJ2uC5XReFJL5dJ/m1pkaKtkYm2XoHHzRWh3Lcefm1
+         uovkUZN73C2QchL0dxo/L+2sQc4H3wS7y6fwS3D7L7lqK/9M1EDh5Xaz5H7kdQXWuiqG
+         ANyGhiKL2etpo19eksLJImJSm4CZtkdRcol1ItxS02Y06bBj1CZDpUx7hf6s7D+nzVRb
+         ThGOlnYMLwOQgRBJbK2kRTNass9Q0S1IITZWY+824g+U9b+P/HQCvs4AFwqp/dUM2gCV
+         1PSQ==
+X-Gm-Message-State: APjAAAUAQUsj5Gc5y9vXec7KcIzjZOR6upMtc//UWqCKPKlmkZ/kmHt/
+        2zdeC0ZudFeCipuAMallHgxiNg==
+X-Google-Smtp-Source: APXvYqxyVsfWB8PAdeR3T5PNAaNZIDSuV0GxjDC7qwGEKfB7nsdRVF4BkBx3a/r6kSrG+4kav45Mtg==
+X-Received: by 2002:a17:906:1da1:: with SMTP id u1mr14708052ejh.275.1574348566101;
+        Thu, 21 Nov 2019 07:02:46 -0800 (PST)
+Received: from [10.68.217.182] ([217.70.210.43])
+        by smtp.googlemail.com with ESMTPSA id br8sm20496ejb.80.2019.11.21.07.02.43
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 21 Nov 2019 07:02:45 -0800 (PST)
+Subject: Re: single aio thread is migrated crazily by scheduler
+To:     Phil Auld <pauld@redhat.com>, Ming Lei <ming.lei@redhat.com>
+Cc:     Peter Zijlstra <peterz@infradead.org>,
+        Dave Chinner <david@fromorbit.com>,
         linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
         Jeff Moyer <jmoyer@redhat.com>,
@@ -53,8 +66,6 @@ Cc:     Dave Chinner <david@fromorbit.com>, Ming Lei <ming.lei@redhat.com>,
         Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
         Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
         Vincent Guittot <vincent.guittot@linaro.org>
-Subject: Re: single aio thread is migrated crazily by scheduler
-Message-ID: <20191121142136.GB18443@pauld.bos.csb>
 References: <20191114235415.GL4614@dread.disaster.area>
  <20191115010824.GC4847@ming.t460p>
  <20191115045634.GN4614@dread.disaster.area>
@@ -63,87 +74,70 @@ References: <20191114235415.GL4614@dread.disaster.area>
  <20191118092121.GV4131@hirez.programming.kicks-ass.net>
  <20191118204054.GV4614@dread.disaster.area>
  <20191120191636.GI4097@hirez.programming.kicks-ass.net>
- <20191120220313.GC18056@pauld.bos.csb>
- <20191121132937.GW4114@hirez.programming.kicks-ass.net>
+ <20191120220313.GC18056@pauld.bos.csb> <20191121041218.GK24548@ming.t460p>
+ <20191121141207.GA18443@pauld.bos.csb>
+From:   Boaz Harrosh <boaz@plexistor.com>
+Message-ID: <93de0f75-3664-c71e-9947-5b37ae935ddc@plexistor.com>
+Date:   Thu, 21 Nov 2019 17:02:42 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.1
 MIME-Version: 1.0
-In-Reply-To: <20191121132937.GW4114@hirez.programming.kicks-ass.net>
-User-Agent: Mutt/1.5.21 (2010-09-15)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
-X-MC-Unique: P5I-E9HINPSIa9NDAMN7WA-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+In-Reply-To: <20191121141207.GA18443@pauld.bos.csb>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 21, 2019 at 02:29:37PM +0100 Peter Zijlstra wrote:
-> On Wed, Nov 20, 2019 at 05:03:13PM -0500, Phil Auld wrote:
-> > On Wed, Nov 20, 2019 at 08:16:36PM +0100 Peter Zijlstra wrote:
-> > > On Tue, Nov 19, 2019 at 07:40:54AM +1100, Dave Chinner wrote:
->=20
-> > > > Yes, that's precisely the problem - work is queued, by default, on =
-a
-> > > > specific CPU and it will wait for a kworker that is pinned to that
-> > >=20
-> > > I'm thinking the problem is that it doesn't wait. If it went and wait=
-ed
-> > > for it, active balance wouldn't be needed, that only works on active
-> > > tasks.
-> >=20
-> > Since this is AIO I wonder if it should queue_work on a nearby cpu by=
-=20
-> > default instead of unbound. =20
->=20
-> The thing seems to be that 'unbound' is in fact 'bound'. Maybe we should
-> fix that. If the load-balancer were allowed to move the kworker around
-> when it didn't get time to run, that would probably be a better
-> solution.
->=20
+On 21/11/2019 16:12, Phil Auld wrote:
+<>
+> 
+> The scheduler doesn't know if the queued_work submitter is going to go to sleep.
+> That's why I was singling out AIO. My understanding of it is that you submit the IO
+> and then keep going. So in that case it might be better to pick a node-local nearby
+> cpu instead. But this is a user of work queue issue not a scheduler issue. 
+> 
 
-Yeah, I'm not convinced this is actually a scheduler issue.
+We have a very similar long standing problem in our system (zufs), that we had to do
+hacks to fix.
 
+We have seen these CPU bouncing exacly as above in fio and more benchmarks, Our final
+analysis was: 
+ One thread is in wait_event() if the wake_up() is on the same CPU as the
+waiter, on some systems usually real HW and not VMs, would bounce to a different CPU.
+Now our system has an array of worker-threads bound to each CPU. an incoming thread chooses
+a corresponding cpu worker-thread, let it run, waiting for a reply, then when the
+worker-thread is done it will do a wake_up(). Usually its fine and the wait_event() stays
+on the same CPU. But on some systems it will wakeup in a different CPU.
 
-> Picking another 'bound' cpu by random might create the same sort of
-> problems in more complicated scenarios.
->=20
-> TJ, ISTR there used to be actually unbound kworkers, what happened to
-> those? or am I misremembering things.
->=20
-> > > Lastly,
-> > > one other thing to try is -next. Vincent reworked the load-balancer
-> > > quite a bit.
-> > >=20
-> >=20
-> > I've tried it with the lb patch series. I get basically the same result=
-s.
-> > With the high granularity settings I get 3700 migrations for the 30=20
-> > second run at 4k. Of those about 3200 are active balance on stock 5.4-r=
-c7.
-> > With the lb patches it's 3500 and 3000, a slight drop.=20
->=20
-> Thanks for testing that. I didn't expect miracles, but it is good to
-> verify.
->=20
-> > Using the default granularity settings 50 and 22 for stock and 250 and =
-25.
-> > So a few more total migrations with the lb patches but about the same a=
-ctive.
->=20
-> Right, so the granularity thing interacts with the load-balance period.
-> By pushing it up, as some people appear to do, makes it so that what
-> might be a temporal imablance is perceived as a persitent imbalance.
->=20
-> Tying the load-balance period to the gramularity is something we could
-> consider, but then I'm sure, we'll get other people complaining the
-> doesn't balance quick enough anymore.
->=20
+Now this is a great pity because in our case and the work_queue case and high % of places 
+the thread calling wake_up() will then immediately go to sleep on something.
+(Work done lets wait for new work)
 
-Thanks. These are old tuned settings that have been carried along. They may
-not be right for newer kernels anyway.=20
+I wish there was a flag to wake_up() or to the event object that says to relinquish
+the remaning of the time-slice to the waiter on same CPU, since I will be soon sleeping.
 
+Then scheduler need not guess if the wake_up() caller is going to soon sleep or if its
+going to continue. Let the coder give an hint about that?
 
---=20
+(The hack was to set the waiter CPU mask to the incoming CPU and restore afer wakeup)
 
+> Interestingly in our fio case the 4k one does not sleep and we get the active balance
+> case where it moves the actually running thread.  The 512 byte case seems to be 
+> sleeping since the migrations are all at wakeup time I believe. 
+> 
+
+Yes this is the same thing we saw in our system. (And it happens only sometimes)
+
+> Cheers,
+> Phil
+> 
+> 
+>> Thanks,
+>> Ming
+> 
+
+Very thanks
+Boaz
