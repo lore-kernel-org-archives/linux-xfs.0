@@ -2,386 +2,198 @@ Return-Path: <SRS0=udUw=ZN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABAEAC43215
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 17:01:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B560EC432C0
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 18:09:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6FDB6206F4
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 17:01:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 85C1D206CC
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Nov 2019 18:09:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="RP671506"
+	dkim=pass (2048-bit key) header.d=zadara-com.20150623.gappssmtp.com header.i=@zadara-com.20150623.gappssmtp.com header.b="MKuEv4pg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726546AbfKURBR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Nov 2019 12:01:17 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:38812 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726293AbfKURBQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Nov 2019 12:01:16 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xALGx9lI115164;
-        Thu, 21 Nov 2019 17:01:14 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- content-transfer-encoding : in-reply-to; s=corp-2019-08-05;
- bh=smb47EpitmLlTtC+OH/ts2qiMK7UOBlf21eck/qRXMI=;
- b=RP671506JhO+tBWaMtppuirKwKGmuxP0rCG/loc5G4SBqwEOCONFfHgM6G+x5Z0/INtu
- PSdoh+KLNuhOE8s29ygtWao3zXDvAsgXehJiyU+g+lwPVHGx80defi65lCZuB2Y2xNIp
- v4d5doluGopkm+7g3xL4DjuASqW3MX8huVc9M4A5UmolUhvzA/2evPMJ4tMVc9wAw8e7
- VDLCyV/nHxOg4NqhNFqT4hGiW8+kC1KTbPtp+na6BF7Te/LveX2uouiGaek6pHdpSmPb
- zuYt/4F6ykAB0S5CaiDwOJsEP8Dky2GY8n0JvfsFvWPiVvWdL+WtlotaFNhRpefnAT8K lQ== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2wa8hu5p91-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 21 Nov 2019 17:01:11 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xALGx91u057259;
-        Thu, 21 Nov 2019 17:01:11 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 2wd47xa5ga-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 21 Nov 2019 17:01:10 +0000
-Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xALH18ir024843;
-        Thu, 21 Nov 2019 17:01:08 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 21 Nov 2019 09:01:08 -0800
-Date:   Thu, 21 Nov 2019 09:01:07 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     andreas.gruenbacher@gmail.com
-Cc:     xfs <linux-xfs@vger.kernel.org>, viro@zeniv.linux.org.uk,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>
-Subject: Re: [RFC PATCH] generic: test splice() with pipes
-Message-ID: <20191121170107.GM6211@magnolia>
-References: <20190829161155.GA5360@magnolia>
- <20190830004407.GA5340@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20190830004407.GA5340@magnolia>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9447 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1911210148
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9447 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1911210148
+        id S1726563AbfKUSJd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Nov 2019 13:09:33 -0500
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:39330 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726279AbfKUSJc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Nov 2019 13:09:32 -0500
+Received: by mail-wr1-f67.google.com with SMTP id y11so2487299wrt.6
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Nov 2019 10:09:30 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=zadara-com.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id;
+        bh=xgEE1qnniZ8FuT8t/VG4m6M/AWTtNbgGzTczlefVNOU=;
+        b=MKuEv4pgk89VcfNKB4IQ3+jJ+CoDNxm8lv9kMQdxlgOcX/L/jbU5vh4w2trqp1SNzm
+         pFBYB/tzKU3EaoHfsNWiV3u6aN3mCBqq1hxKOh/0Q/a/GGCwW5sj0VkJEy+YKORqvowB
+         Nlg71FdnBrYlYzsFiyt+odBM+7zRC9r/i+tXDi8sirJRQkVz6XQkHer4iHjOJ9sLOFrp
+         kcZuYq6FPLLW50xj/xwgxO8uBJQrAn2nZVADp1ZELRBPDfRP0afaU0/BQERC9q763YEp
+         w51Wyemj0z714efI99FX9PvXcxP4DGCIMheaOtVK274xQhGXI12brzPbSOEyMED8Z3uL
+         1h2Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=xgEE1qnniZ8FuT8t/VG4m6M/AWTtNbgGzTczlefVNOU=;
+        b=sJL1TJ0v4+xdEBGFSDD61hnmq/ssCkBJ+kniynfgDqK3U/5TFHmWczTTbh4XA+LHOo
+         dme+4vj/LHDHCxZPMuNqkPw+tK/YPaD9Gn5lNf7s+c5O0MPdkCoP5OPQVpcx1+21NZRm
+         eqGZ6Mxc2fw2zaSoc9pvYt103pcKm7vL7kgZHOBf5dWcF6kZ0zL3W1DzcB5Xtp62FtIp
+         86dcNeRM6+hgWyiqPZpJItEf3cx1+zAOf3IPdjc7o0EM/LAmYtmug0hO/Et5yxhG6EG0
+         RTG8hFTogfGSAWuh1IBqGXiJzB5rSMzetdDimQgGbi6uC2fQeDuuTS9tBZc+5xCFzwEf
+         lWrQ==
+X-Gm-Message-State: APjAAAVuTG+d6DYqJSDa8TIzTGJMUb4UWADEQfRlGUrQBJQja8FFpn45
+        +Gm/aLTL5oBtgfaLZX24ifW+Tkl92J0=
+X-Google-Smtp-Source: APXvYqyoK/gMSX59mZu2n8XyCyn7aJDftQFEsyvOaaQtqhnBy4QHyVB3cVzYAeXEqBO/cn3n2KOz2Q==
+X-Received: by 2002:adf:ea8d:: with SMTP id s13mr12468494wrm.366.1574359769383;
+        Thu, 21 Nov 2019 10:09:29 -0800 (PST)
+Received: from localhost.localdomain ([82.166.81.77])
+        by smtp.gmail.com with ESMTPSA id r15sm4414598wrc.5.2019.11.21.10.09.27
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Thu, 21 Nov 2019 10:09:28 -0800 (PST)
+From:   Alex Lyakas <alex@zadara.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     david@fromorbit.com, alex@zadara.com, bfoster@redhat.com
+Subject: [RFC-PATCH] xfs: do not update sunit/swidth in the superblock to match those provided during mount
+Date:   Thu, 21 Nov 2019 20:08:19 +0200
+Message-Id: <1574359699-10191-1-git-send-email-alex@zadara.com>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 29, 2019 at 05:44:07PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Andreas Grünbacher reports that on the two filesystems that support
-> iomap directio, it's possible for splice() to return -EAGAIN (instead of
-> a short splice) if the pipe being written to has less space available in
-> its pipe buffers than the length supplied by the calling process.
-> 
-> This is a regression test to check for correct operation.
-> 
-> XXX Andreas: Since you wrote the C reproducer, can you send me the
-> proper copyright and author attribution statement for the C program?
+We are hitting the following issue: if XFS is mounted with sunit/swidth different from those
+specified during mkfs, then xfs_repair reports false corruption and eventually segfaults.
 
-Ping?  Andreas, can I get the above info so I can get this moving again?
+Example:
 
---D
+# mkfs
+mkfs.xfs -f -K -p /etc/zadara/xfs.protofile -d sunit=64,swidth=64 -l sunit=32 /dev/vda
 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  .gitignore            |    1 
->  src/Makefile          |    2 -
->  src/splice-test.c     |  173 +++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/720     |   41 ++++++++++++
->  tests/generic/720.out |    7 ++
->  tests/generic/group   |    1 
->  6 files changed, 224 insertions(+), 1 deletion(-)
->  create mode 100644 src/splice-test.c
->  create mode 100755 tests/generic/720
->  create mode 100644 tests/generic/720.out
-> 
-> diff --git a/.gitignore b/.gitignore
-> index c8c815f9..26d4da11 100644
-> --- a/.gitignore
-> +++ b/.gitignore
-> @@ -112,6 +112,7 @@
->  /src/runas
->  /src/seek_copy_test
->  /src/seek_sanity_test
-> +/src/splice-test
->  /src/stale_handle
->  /src/stat_test
->  /src/swapon
-> diff --git a/src/Makefile b/src/Makefile
-> index c4fcf370..2920dfb1 100644
-> --- a/src/Makefile
-> +++ b/src/Makefile
-> @@ -28,7 +28,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
->  	attr-list-by-handle-cursor-test listxattr dio-interleaved t_dir_type \
->  	dio-invalidate-cache stat_test t_encrypted_d_revalidate \
->  	attr_replace_test swapon mkswap t_attr_corruption t_open_tmpfiles \
-> -	fscrypt-crypt-util bulkstat_null_ocount
-> +	fscrypt-crypt-util bulkstat_null_ocount splice-test
->  
->  SUBDIRS = log-writes perf
->  
-> diff --git a/src/splice-test.c b/src/splice-test.c
-> new file mode 100644
-> index 00000000..d3c12075
-> --- /dev/null
-> +++ b/src/splice-test.c
-> @@ -0,0 +1,173 @@
-> +// SPDX-License-Identifier: GPL-2.0-or-later
-> +/*
-> + * Copyright (C) 2019 ?????????????????????????????
-> + * Author: 
-> + *
-> + * Make sure that reading and writing to a pipe via splice.
-> + */
-> +#include <sys/types.h>
-> +#include <sys/stat.h>
-> +#include <sys/wait.h>
-> +#include <unistd.h>
-> +#include <fcntl.h>
-> +#include <err.h>
-> +
-> +#include <stdlib.h>
-> +#include <stdio.h>
-> +#include <stdbool.h>
-> +#include <string.h>
-> +#include <errno.h>
-> +
-> +#define SECTOR_SIZE 512
-> +#define BUFFER_SIZE (150 * SECTOR_SIZE)
-> +
-> +void read_from_pipe(int fd, const char *filename, size_t size)
-> +{
-> +	char buffer[SECTOR_SIZE];
-> +	size_t sz;
-> +	ssize_t ret;
-> +
-> +	while (size) {
-> +		sz = size;
-> +		if (sz > sizeof buffer)
-> +			sz = sizeof buffer;
-> +		ret = read(fd, buffer, sz);
-> +		if (ret < 0)
-> +			err(1, "read: %s", filename);
-> +		if (ret == 0) {
-> +			fprintf(stderr, "read: %s: unexpected EOF\n", filename);
-> +			exit(1);
-> +		}
-> +		size -= sz;
-> +	}
-> +}
-> +
-> +void do_splice1(int fd, const char *filename, size_t size)
-> +{
-> +	bool retried = false;
-> +	int pipefd[2];
-> +
-> +	if (pipe(pipefd) == -1)
-> +		err(1, "pipe");
-> +	while (size) {
-> +		ssize_t spliced;
-> +
-> +		spliced = splice(fd, NULL, pipefd[1], NULL, size, SPLICE_F_MOVE);
-> +		if (spliced == -1) {
-> +			if (errno == EAGAIN && !retried) {
-> +				retried = true;
-> +				fprintf(stderr, "retrying splice\n");
-> +				sleep(1);
-> +				continue;
-> +			}
-> +			err(1, "splice");
-> +		}
-> +		read_from_pipe(pipefd[0], filename, spliced);
-> +		size -= spliced;
-> +	}
-> +	close(pipefd[0]);
-> +	close(pipefd[1]);
-> +}
-> +
-> +void do_splice2(int fd, const char *filename, size_t size)
-> +{
-> +	bool retried = false;
-> +	int pipefd[2];
-> +	int pid;
-> +
-> +	if (pipe(pipefd) == -1)
-> +		err(1, "pipe");
-> +
-> +	pid = fork();
-> +	if (pid == 0) {
-> +		close(pipefd[1]);
-> +		read_from_pipe(pipefd[0], filename, size);
-> +		exit(0);
-> +	} else {
-> +		close(pipefd[0]);
-> +		while (size) {
-> +			ssize_t spliced;
-> +
-> +			spliced = splice(fd, NULL, pipefd[1], NULL, size, SPLICE_F_MOVE);
-> +			if (spliced == -1) {
-> +				if (errno == EAGAIN && !retried) {
-> +					retried = true;
-> +					fprintf(stderr, "retrying splice\n");
-> +					sleep(1);
-> +					continue;
-> +				}
-> +				err(1, "splice");
-> +			}
-> +			size -= spliced;
-> +		}
-> +		close(pipefd[1]);
-> +		waitpid(pid, NULL, 0);
-> +	}
-> +}
-> +
-> +void usage(const char *argv0)
-> +{
-> +	fprintf(stderr, "USAGE: %s [-rd] {filename}\n", basename(argv0));
-> +	exit(2);
-> +}
-> +
-> +int main(int argc, char *argv[])
-> +{
-> +	void (*do_splice)(int fd, const char *filename, size_t size);
-> +	const char *filename;
-> +	char *buffer;
-> +	int opt, open_flags, fd;
-> +	ssize_t ret;
-> +
-> +	do_splice = do_splice1;
-> +	open_flags = O_CREAT | O_TRUNC | O_RDWR | O_DIRECT;
-> +
-> +	while ((opt = getopt(argc, argv, "rd")) != -1) {
-> +		switch(opt) {
-> +		case 'r':
-> +			do_splice = do_splice2;
-> +			break;
-> +		case 'd':
-> +			open_flags &= ~O_DIRECT;
-> +			break;
-> +		default:  /* '?' */
-> +			usage(argv[0]);
-> +		}
-> +	}
-> +
-> +	if (optind >= argc)
-> +		usage(argv[0]);
-> +	filename = argv[optind];
-> +
-> +	printf("%s reader %s O_DIRECT\n",
-> +		   do_splice == do_splice1 ? "sequential" : "concurrent",
-> +		   (open_flags & O_DIRECT) ? "with" : "without");
-> +
-> +	buffer = aligned_alloc(SECTOR_SIZE, BUFFER_SIZE);
-> +	if (buffer == NULL)
-> +		err(1, "aligned_alloc");
-> +
-> +	fd = open(filename, open_flags, 0666);
-> +	if (fd == -1)
-> +		err(1, "open: %s", filename);
-> +
-> +	memset(buffer, 'x', BUFFER_SIZE);
-> +	ret = write(fd, buffer, BUFFER_SIZE);
-> +	if (ret < 0)
-> +		err(1, "write: %s", filename);
-> +	if (ret != BUFFER_SIZE) {
-> +		fprintf(stderr, "%s: short write\n", filename);
-> +		exit(1);
-> +	}
-> +
-> +	ret = lseek(fd, 0, SEEK_SET);
-> +	if (ret != 0)
-> +		err(1, "lseek: %s", filename);
-> +
-> +	do_splice(fd, filename, BUFFER_SIZE);
-> +
-> +	if (unlink(filename) == -1)
-> +		err(1, "unlink: %s", filename);
-> +
-> +	return 0;
-> +}
-> diff --git a/tests/generic/720 b/tests/generic/720
-> new file mode 100755
-> index 00000000..b7f09c40
-> --- /dev/null
-> +++ b/tests/generic/720
-> @@ -0,0 +1,41 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0-or-later
-> +# Copyright (c) 2019, Oracle and/or its affiliates.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 720
-> +#
-> +# Test using splice() to read from pipes.
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1    # failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $TEST_DIR/a
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +
-> +# real QA test starts here
-> +_supported_os Linux
-> +_supported_fs generic
-> +_require_test
-> +
-> +rm -f $seqres.full
-> +
-> +src/splice-test -r $TEST_DIR/a
-> +src/splice-test -rd $TEST_DIR/a
-> +src/splice-test $TEST_DIR/a
-> +src/splice-test -d $TEST_DIR/a
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/720.out b/tests/generic/720.out
-> new file mode 100644
-> index 00000000..b0fc9935
-> --- /dev/null
-> +++ b/tests/generic/720.out
-> @@ -0,0 +1,7 @@
-> +QA output created by 720
-> +concurrent reader with O_DIRECT
-> +concurrent reader with O_DIRECT
-> +concurrent reader without O_DIRECT
-> +concurrent reader without O_DIRECT
-> +sequential reader with O_DIRECT
-> +sequential reader without O_DIRECT
-> diff --git a/tests/generic/group b/tests/generic/group
-> index cd418106..f75d4e60 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -569,3 +569,4 @@
->  564 auto quick copy_range
->  565 auto quick copy_range
->  719 auto quick quota metadata
-> +720 auto quick rw pipe splice
+#mount with a different sunit/swidth:
+mount -onoatime,sync,nouuid,sunit=32,swidth=32 /dev/vda /mnt/xfs
+
+#umount
+umount /mnt/xfs
+
+#xfs_repair
+xfs_repair -n /dev/vda
+# reports false corruption and eventually segfaults[1]
+
+The root cause seems to be that repair/xfs_repair.c::calc_mkfs() calculates the location of first inode chunk based on the current superblock sunit:
+	/*
+	 * ditto the location of the first inode chunks in the fs ('/')
+	 */
+	if (xfs_sb_version_hasdalign(&mp->m_sb) && do_inoalign)  {
+		first_prealloc_ino = XFS_OFFBNO_TO_AGINO(mp, roundup(fino_bno,
+					mp->m_sb.sb_unit), 0);
+...
+
+and then compares to the value in the superblock:
+
+	/*
+	 * now the first 3 inodes in the system
+	 */
+	if (mp->m_sb.sb_rootino != first_prealloc_ino)  {
+		do_warn(
+_("sb root inode value %" PRIu64 " %sinconsistent with calculated value %u\n"),
+			mp->m_sb.sb_rootino,
+			(mp->m_sb.sb_rootino == NULLFSINO ? "(NULLFSINO) ":""),
+			first_prealloc_ino);
+
+		if (!no_modify)
+			do_warn(
+		_("resetting superblock root inode pointer to %u\n"),
+				first_prealloc_ino);
+		else
+			do_warn(
+		_("would reset superblock root inode pointer to %u\n"),
+				first_prealloc_ino);
+
+		/*
+		 * just set the value -- safe since the superblock
+		 * doesn't get flushed out if no_modify is set
+		 */
+		mp->m_sb.sb_rootino = first_prealloc_ino;
+	}
+
+and sets the "correct" value into mp->m_sb.sb_rootino.
+
+And from there xfs_repair uses the wrong value, leading to false corruption reports.
+
+Looking at the kernel code of XFS, there seems to be no need to update the superblock sunit/swidth if the mount-provided sunit/swidth are different.
+The superblock values are not used during runtime.
+
+With the suggested patch, xfs repair is working properly also when mount-provided sunit/swidth are different.
+
+However, I am not sure whether this is the proper approach. Otherwise, should we not allow specifying different sunit/swidth during mount?
+
+[1]
+Phase 1 - find and verify superblock...
+        - reporting progress in intervals of 15 minutes
+sb root inode value 128 inconsistent with calculated value 96
+would reset superblock root inode pointer to 96
+sb realtime bitmap inode 129 inconsistent with calculated value 97
+would reset superblock realtime bitmap ino pointer to 97
+sb realtime summary inode 130 inconsistent with calculated value 98
+would reset superblock realtime summary ino pointer to 98
+Phase 2 - using internal log
+        - zero log...
+        - scan filesystem freespace and inode maps...
+        - 16:09:57: scanning filesystem freespace - 16 of 16 allocation groups done
+root inode chunk not found
+avl_insert: Warning! duplicate range [96,160]
+add_inode - duplicate inode range
+Phase 3 - for each AG...
+        - scan (but don't clear) agi unlinked lists...
+        - 16:09:57: scanning agi unlinked lists - 16 of 16 allocation groups done
+        - process known inodes and perform inode discovery...
+        - agno = 15
+        - agno = 0
+inode 129 not rt bitmap
+bad .. entry in directory inode 128, points to self, would clear inode number
+inode 129 not rt bitmap
+would fix bad flags.
+...
+Segmentation fault (core dumped)
+
+Signed-off-by: Alex Lyakas <alex@zadara.com>
+---
+ fs/xfs/xfs_mount.c | 18 ++++++------------
+ 1 file changed, 6 insertions(+), 12 deletions(-)
+
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index ba5b6f3..e8263b4 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -399,19 +399,13 @@
+ 		}
+ 
+ 		/*
+-		 * Update superblock with new values
+-		 * and log changes
++		 * If sunit/swidth specified during mount do not match
++		 * those in the superblock, use the mount-specified values,
++		 * but do not update the superblock.
++		 * Otherwise, xfs_repair reports false corruption.
++		 * Here, only verify that superblock supports data alignment.
+ 		 */
+-		if (xfs_sb_version_hasdalign(sbp)) {
+-			if (sbp->sb_unit != mp->m_dalign) {
+-				sbp->sb_unit = mp->m_dalign;
+-				mp->m_update_sb = true;
+-			}
+-			if (sbp->sb_width != mp->m_swidth) {
+-				sbp->sb_width = mp->m_swidth;
+-				mp->m_update_sb = true;
+-			}
+-		} else {
++		if (!xfs_sb_version_hasdalign(sbp)) {
+ 			xfs_warn(mp,
+ 	"cannot change alignment: superblock does not support data alignment");
+ 			return -EINVAL;
+-- 
+1.9.1
+
