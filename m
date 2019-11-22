@@ -2,36 +2,36 @@ Return-Path: <SRS0=QtPe=ZO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58112C432C0
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 21:19:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95764C432C0
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 21:31:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2FC6720708
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 21:19:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 70A642071F
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 21:31:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726526AbfKVVTS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 22 Nov 2019 16:19:18 -0500
-Received: from sandeen.net ([63.231.237.45]:51142 "EHLO sandeen.net"
+        id S1726526AbfKVVbB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 Nov 2019 16:31:01 -0500
+Received: from sandeen.net ([63.231.237.45]:51752 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726089AbfKVVTS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 22 Nov 2019 16:19:18 -0500
+        id S1726089AbfKVVbB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 22 Nov 2019 16:31:01 -0500
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 3E4987BB4;
-        Fri, 22 Nov 2019 15:17:47 -0600 (CST)
-Subject: Re: [PATCH 2/2] mkfs: Show progress during block discard
-To:     Pavel Reichl <preichl@redhat.com>,
-        Dave Chinner <david@fromorbit.com>
+        by sandeen.net (Postfix) with ESMTPSA id 60DEE17DCC;
+        Fri, 22 Nov 2019 15:29:30 -0600 (CST)
+Subject: Re: [PATCH 1/2] mkfs: Break block discard into chunks of 2 GB
+From:   Eric Sandeen <sandeen@sandeen.net>
+To:     Dave Chinner <david@fromorbit.com>,
+        Pavel Reichl <preichl@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <20191121214445.282160-1-preichl@redhat.com>
- <20191121214445.282160-3-preichl@redhat.com>
- <20191121234159.GI4614@dread.disaster.area>
- <CAJc7PzVBcjXc5uBgyT_XiX1ffaoRTe8jkWmSq-F8pZqezpEnGA@mail.gmail.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
+ <20191121214445.282160-2-preichl@redhat.com>
+ <20191121231838.GH4614@dread.disaster.area>
+ <b2bc2dea-575b-959a-0025-d5d20d733a55@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
  nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
@@ -74,12 +74,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <0f541515-cb1f-985a-f352-0c3af78a0388@sandeen.net>
-Date:   Fri, 22 Nov 2019 15:19:15 -0600
+Message-ID: <65693048-54db-3605-2c13-85e06420ba69@sandeen.net>
+Date:   Fri, 22 Nov 2019 15:30:59 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.2.2
 MIME-Version: 1.0
-In-Reply-To: <CAJc7PzVBcjXc5uBgyT_XiX1ffaoRTe8jkWmSq-F8pZqezpEnGA@mail.gmail.com>
+In-Reply-To: <b2bc2dea-575b-959a-0025-d5d20d733a55@sandeen.net>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -88,51 +88,50 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 11/22/19 10:43 AM, Pavel Reichl wrote:
-> On Fri, Nov 22, 2019 at 12:42 AM Dave Chinner <david@fromorbit.com> wrote:
+On 11/22/19 3:10 PM, Eric Sandeen wrote:
+> On 11/21/19 5:18 PM, Dave Chinner wrote:
+>> On Thu, Nov 21, 2019 at 10:44:44PM +0100, Pavel Reichl wrote:
+>>> Signed-off-by: Pavel Reichl <preichl@redhat.com>
+>>> ---
 >>
->> On Thu, Nov 21, 2019 at 10:44:45PM +0100, Pavel Reichl wrote:
-...
-
+>> This is mixing an explanation about why the change is being made
+>> and what was considered when making decisions about the change.
 >>
->> I also suspect that it breaks a few fstests, too, as a some of them
->> capture and filter mkfs output. They'll need filters to drop these
->> new messages.
+>> e.g. my first questions on looking at the patch were:
 >>
->> FWIW, a 100 lines of extra mkfs output is going to cause workflow
->> issues. I know it will cause me problems, because I often mkfs 500TB
->> filesystems tens of times a day on a discard enabled device. This
->> extra output will scroll all the context of the previous test run
->> I'm about to compare against off my terminal screen and so now I
->> will have to scroll the terminal to look at the results of
->> back-to-back runs. IOWs, I'm going to immediately want to turn this
->> output off and have it stay off permanently.
->>
->> Hence I think that, by default, just outputting a single "Discard in
->> progress" line before starting the discard would be sufficient
+>> 	- why do we need to break up the discards into 2GB chunks?
+>> 	- why 2GB?
+>> 	- why not use libblkid to query the maximum discard size
+>> 	  and use that as the step size instead?
+> 
+> Just wondering, can we trust that to be reasonably performant?
+> (the whole motivation here is for hardware that takes inordinately
+> long to do discard, I wonder if we can count on such hardware to
+> properly fill out this info....)
 
-e2fsprogs simply does:
+Looking at the docs in kernel/Documentation/block/queue-sysfs.rst:
 
-Discarding device blocks: done                            
+discard_max_hw_bytes (RO)
+-------------------------
+Devices that support discard functionality may have internal limits on
+the number of bytes that can be trimmed or unmapped in a single operation.
+The discard_max_bytes parameter is set by the device driver to the maximum
+number of bytes that can be discarded in a single operation. Discard
+requests issued to the device must not exceed this limit. A discard_max_bytes
+value of 0 means that the device does not support discard functionality.
 
-("done" isn't printed until it's ... done)
+discard_max_bytes (RW)
+----------------------
+While discard_max_hw_bytes is the hardware limit for the device, this
+setting is the software limit. Some devices exhibit large latencies when
+large discards are issued, setting this value lower will make Linux issue
+smaller discards and potentially help reduce latencies induced by large
+discard operations.
 
-so that might be a good convention to follow?  Though I'd probably do
-
-printf("Discarding blocks... ");
-....
-printf("Done.\n");
-
-because the ellipses tend to indicate waiting.  :)
-
-Even the one line might require filtering-out in xfstests, but luckily we have
-standard filters and it should be trivial to add.
-
-> OK, maybe just one line "Discard in progress" is actually what users
-> need. The computing of % done was probably just overkill from my side.
-> Sorry about that.
-
-No worries, that's why we discuss stuff.  :)
-Thanks for taking this on,
+it seems like a strong suggestion that the discard_max_hw_bytes value may
+still be problematic, and discard_max_bytes can be hand-tuned to something
+smaller if it's a problem.  To me that indicates that discard_max_hw_bytes
+probably can't be trusted to be performant, and presumably discard_max_bytes
+won't be either in that case unless it's been hand-tuned by the admin?
 
 -Eric
