@@ -2,123 +2,136 @@ Return-Path: <SRS0=QtPe=ZO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5F0FC432C0
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 16:09:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2B4AC432C0
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 16:11:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AB12B2071C
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 16:09:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 84C6C20721
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 16:11:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cYD6BkmH"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="h9dx3NBX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726721AbfKVQJU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 22 Nov 2019 11:09:20 -0500
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:27547 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726546AbfKVQJU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Nov 2019 11:09:20 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1574438959;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Jy620vCimj+8qUOQT+zyt69C4IgT/k6hKZHQqbWRbYk=;
-        b=cYD6BkmHDmaPsDPtVQr3cW8Nww7HpVQM+VKVG/fL++edtVFIpxmqMCMV/xoBAfU+OC+Lzg
-        4cYWf8XrIVbNXqxeUJj4AYYmS1+FmdYHrAdfrH2fZRnMO4Ohhd0ObIfGApX4yqGhtsEc6W
-        0WvsvmMKbf/UWtdqLyjt/mKKu8j8gMI=
-Received: from mail-vk1-f198.google.com (mail-vk1-f198.google.com
- [209.85.221.198]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-333-qQz3ArojPQaCNLPHXONKzQ-1; Fri, 22 Nov 2019 11:09:15 -0500
-Received: by mail-vk1-f198.google.com with SMTP id f73so3086376vka.4
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Nov 2019 08:09:15 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Jy620vCimj+8qUOQT+zyt69C4IgT/k6hKZHQqbWRbYk=;
-        b=fN0M2u2IY846+8Cp0faLAj6KTS6HAOspR2iDBZCKgHIVGAzVCxgqW0owh1I6ZL7V2l
-         bIjHgpjXEY81VVmqpCjJ6S/w1a9xgxyuzWXVajVprGtKtU7M28soOLZpjgURriHwFvdw
-         giydbmqxirDiyGCbZkzb43dvr0/Vai0LPPyEnu/C5r/9RAMrpeA90CJZVZ4QtlPayP8u
-         dBvcSdgHs+2evTXSBhIjqInBXxt0lGY/O8rOk081xC9t1SMt8ILsRNYxRiVPYnGf3CCy
-         Mt3RB7nXNOddZ6HTITSi2nzZQcBhE2HrjSSOn385tKRmaABoBNdBBf8QV6VXrfDuW6/c
-         0l7Q==
-X-Gm-Message-State: APjAAAVp7YzaKAV1tbhGEAG9JtfI82VugE8zFEQacOV7hnCuuXWm50IM
-        SfP1GYqndU+njo2nuWgn8hqvIaZWmG1ytxV/J5bIC9/aqyXaZ7WPL0Y+XbyU5g15JpaUu1zy2um
-        WWXJSGA777sVMIevFzShqilMT9nn2nubLBR7M
-X-Received: by 2002:ab0:2ead:: with SMTP id y13mr9886755uay.84.1574438954919;
-        Fri, 22 Nov 2019 08:09:14 -0800 (PST)
-X-Google-Smtp-Source: APXvYqz7n2fHeegELZm5I9lrVDOlK/sQ3/zAZM1bvCneWABCrIT5otoBUQeDDHR0CIUBkk45aWy+8AKDsA5X0vVFzZk=
-X-Received: by 2002:ab0:2ead:: with SMTP id y13mr9886728uay.84.1574438954534;
- Fri, 22 Nov 2019 08:09:14 -0800 (PST)
+        id S1726765AbfKVQLR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 Nov 2019 11:11:17 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:39436 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726705AbfKVQLR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Nov 2019 11:11:17 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAMG4MJZ001531;
+        Fri, 22 Nov 2019 16:11:13 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=1fOD86jxsrF5BrezisDsSvfd2EGC9eeWf+2Tqmc/5HI=;
+ b=h9dx3NBX4mooDs1nNHGV86b4f1AOZXU2yNKX46y25TAnTwDoeLBYCBiQPPrPmu7+oct4
+ I8xbmPINHPn9AmD0qknFkcEsv9JHl+6VR01CzKjFRLaWFDxdXP8DIfnYHLGgWEqYZ6tI
+ YdBYWQzf5/fYKNaKf7Qw85e5ZD5rR74LzVSRx3efS6yGe2M/VI9wmty5Mu7DDIpDJet5
+ geusqYhLl2YmqeU+mo/s5mOlujPotlBUQFn8khriUILiM3EWVrEL88otgtwW0t25ZZ5D
+ ksiTf2KJ4fkHDh/afYxlGz15w5Yp73WPo66n81WfQIho9H6c6vI22LwOftIK0HivsQan +w== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2wa92qbhju-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 22 Nov 2019 16:11:13 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAMG4863018613;
+        Fri, 22 Nov 2019 16:11:13 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 2wegqrfy2y-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 22 Nov 2019 16:11:13 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xAMGBC03024437;
+        Fri, 22 Nov 2019 16:11:12 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 22 Nov 2019 08:11:12 -0800
+Date:   Fri, 22 Nov 2019 08:11:11 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     linux-xfs@vger.kernel.org, dchinner@redhat.com
+Subject: Re: [PATCH 4/4] xfs: Remove kmem_free()
+Message-ID: <20191122161111.GF6219@magnolia>
+References: <20191114200955.1365926-1-cmaiolino@redhat.com>
+ <20191114200955.1365926-5-cmaiolino@redhat.com>
+ <20191114210000.GL6219@magnolia>
+ <20191115142055.asqudktld7eblfea@orion>
+ <20191115172322.GO6219@magnolia>
+ <20191118083008.ttbikkwmrjy4k322@orion>
+ <20191121054352.GW6219@magnolia>
+ <20191122085033.nluuuvomf64pu3qx@orion>
 MIME-Version: 1.0
-References: <20191121214445.282160-1-preichl@redhat.com> <20191121214445.282160-2-preichl@redhat.com>
- <20191121231838.GH4614@dread.disaster.area>
-In-Reply-To: <20191121231838.GH4614@dread.disaster.area>
-From:   Pavel Reichl <preichl@redhat.com>
-Date:   Fri, 22 Nov 2019 17:09:03 +0100
-Message-ID: <CAJc7PzVR0fjmWRZEazx42UpSDMiPjoSre4S0SLPxJjD3zJ2spQ@mail.gmail.com>
-Subject: Re: [PATCH 1/2] mkfs: Break block discard into chunks of 2 GB
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-X-MC-Unique: qQz3ArojPQaCNLPHXONKzQ-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191122085033.nluuuvomf64pu3qx@orion>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9448 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-1911220138
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9448 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-1911220138
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Nov 22, 2019 at 12:18 AM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Thu, Nov 21, 2019 at 10:44:44PM +0100, Pavel Reichl wrote:
-> > Signed-off-by: Pavel Reichl <preichl@redhat.com>
-> > ---
->
-> This is mixing an explanation about why the change is being made
-> and what was considered when making decisions about the change.
+On Fri, Nov 22, 2019 at 09:50:33AM +0100, Carlos Maiolino wrote:
+> Hi Darrick.
+> 
+> 
+> > > > 
+> > > > Sure, but I'll believe that when I see it.  And given that Christoph
+> > > > Lameter seems totally opposed to the idea, I think we should keep our
+> > > > silly wrapper for a while to see if they don't accidentally revert it or
+> > > > something.
+> > > > 
+> > > 
+> > > Sure, I don't have any plans to do it now in this series or in a very near
+> > > future, I just used the email to share the idea :P
+> > 
+> > Eh, well, FWIW I took a second look at all the kvfree/kfree and decided
+> > that the usage was correct.  For future reference, please do the
+> > straight change as one patch and straighten out the usages as a separate
+> > patch.
+> > 
+> 
+> I'm not sure what you meant by 'straight change' and 'straighten out'.
+> 
+> Do you mean to do send a single patch with only the changes made by the
+> 'find&replace' command, followed up by a kfree() -> kvfree() where appropriate?
 
-Thanks, I'll try to improve that.
->
-> e.g. my first questions on looking at the patch were:
->
->         - why do we need to break up the discards into 2GB chunks?
->         - why 2GB?
->         - why not use libblkid to query the maximum discard size
->           and use that as the step size instead?
+Er, the opposite in this case -- Patch 1 replaces all the kmem_free
+calls with kvfree calls (because that's what kmem_free did).  Patch 2
+then changes the kvfree calls to kfree calls, but only for the cases
+where we kmalloc'd the memory.
 
-This is new for me, please let me learn more about that.
+--D
 
-
->         - is there any performance impact from breaking up large
->           discards that might be optimised by the kernel into many
->           overlapping async operations into small, synchronous
->           discards?
-
-Honestly, I don't have an answer for that ATM - it's quite possible.
-It certainly needs more investigating. On the other hand - current
-lack of feedback causes user discomfort. So I'd like to know your
-opinion - should the change proposed by this patch be default
-behaviour (as it may be more user friendly) and should we add an
-option that would 'revert' to current behaviour (that would be for
-informed user).
-
->
-> i.e. the reviewer can read what the patch does, but that deosn't
-> explain why the patch does this. Hence it's a good idea to explain
-> the problem being solved or the feature requirements that have lead
-> to the changes in the patch....
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
->
-
+> Cheers.
+> 
+> > In any case it seemed to test ok over the weekend (and still seems ok
+> > with your series from today), so...
+> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> 
+> > --D
+> > 
+> > > Thanks for the review.
+> > > 
+> > > -- 
+> > > Carlos
+> > > 
+> > 
+> 
+> -- 
+> Carlos
+> 
