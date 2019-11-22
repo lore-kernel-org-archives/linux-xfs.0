@@ -2,189 +2,158 @@ Return-Path: <SRS0=QtPe=ZO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCA1BC432C3
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 16:12:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61921C432C0
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 16:27:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 939712071C
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 16:12:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 374022071F
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 16:27:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="l9WCd2sv"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gMkpBJVU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726655AbfKVQMe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 22 Nov 2019 11:12:34 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:39190 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726546AbfKVQMe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Nov 2019 11:12:34 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAMG4bpE012753;
-        Fri, 22 Nov 2019 16:12:29 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- content-transfer-encoding : in-reply-to; s=corp-2019-08-05;
- bh=W/UlRI2FhmOIhBuZwF0nQpI/K1vBEWjO799bMuwFbgQ=;
- b=l9WCd2svr2gMd/QTebAeLXowH8Bu6Qzw8Okf64R45lkdu1wKuBSRHnp9tkR5fdUaJMcD
- BaMBrwSjkInCXEnaRjBIVK6wTi8qAhCuFOB46weRFEA5BBctqfwMZBIQrUaNN1TFudK5
- x/cE0EXbT8OkYu94detxkymgy3uQFRhzb450MDffshqiVDq1RQh1fg4MnpzEVf/8+RLW
- vHgjCBssQxrQjyf5pj0VLgMTsFGx9WqnxdfiApYPyZPA1wtPnnlple56yxwVeSy0Enyx
- s7BSHRepBKxcf+G+z2F0JZtUuZBk7GwstCkD52XbNnCFtImg4CwLSOQVD+MowAjf5rhP yA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2wa8hubk01-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 22 Nov 2019 16:12:28 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAMG47wl018585;
-        Fri, 22 Nov 2019 16:12:28 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 2wegqrg1x0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 22 Nov 2019 16:12:27 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xAMGCOKT020446;
-        Fri, 22 Nov 2019 16:12:26 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 22 Nov 2019 08:12:23 -0800
-Date:   Fri, 22 Nov 2019 08:12:22 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Andrew Carr <andrewlanecarr@gmail.com>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
-Subject: Re: Fwd: XFS Memory allocation deadlock in kmem_alloc
-Message-ID: <20191122161222.GG6219@magnolia>
-References: <CAKQeeLMxJR-ToX5HG9Q-z0-AL9vZG-OMjHyM+rnEEBP6k6nxHw@mail.gmail.com>
- <CAKQeeLNewDe6hu92Tu19=Opx_ao7F_fbpxOsEHaUH9e2NmLWaQ@mail.gmail.com>
- <e6222784-03a5-6902-0f2e-10303962749c@sandeen.net>
- <20191115234333.GP4614@dread.disaster.area>
- <CAKQeeLNm51r0g=hyH7xpe811nMTS7SP_AwAtAZMCZ0t3Fz4=4Q@mail.gmail.com>
- <CAKQeeLPzked5nptbF6HKdt=u_LkOU-RqOQ8V0r1f7PBS1xWejQ@mail.gmail.com>
- <20191119202038.GX4614@dread.disaster.area>
- <CAKQeeLMnkvx94ssht-nt0S8eU1uCFqVL4w2yxwY4M5X59RSROA@mail.gmail.com>
- <CAKQeeLMLj-inQ4sxCLBomuthjNWbd_85VRwAVWk4TvVhLMVC6A@mail.gmail.com>
+        id S1726895AbfKVQ15 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 Nov 2019 11:27:57 -0500
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:49968 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726546AbfKVQ15 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Nov 2019 11:27:57 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1574440076;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=cChLqfsW2klcb26T9YvZQJuM5m0KkRklRSHQ2KcdB4k=;
+        b=gMkpBJVU5a073CbsDP9RXrWRQhYkBEhRLz/9/ugpcP01z3+SLEWyJcx1EtVoj/qRIMQnQ6
+        PT/SCoNpEUvhHuxO/Y7SuFEt/VnNyfdB+aHCAzM5VTLh1wELh5PBMU9V3Mw6cegKzuMGxU
+        /zBm5TbRjOLYYTfO/n7XOFHe5QO/dM8=
+Received: from mail-vk1-f199.google.com (mail-vk1-f199.google.com
+ [209.85.221.199]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-168-4atNe6GjPuS4cVXGKq9r5Q-1; Fri, 22 Nov 2019 11:27:54 -0500
+Received: by mail-vk1-f199.google.com with SMTP id f73so3108832vka.4
+        for <linux-xfs@vger.kernel.org>; Fri, 22 Nov 2019 08:27:54 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=7n3Ilt7RsiqmF09Rk5o812EuPWZToBn3tPTB8g3a1c0=;
+        b=lYmikVBuDZjrOp9dABCnlPEVxd3YrpZHxbko9wAg504jmQ3Cg3YQJ7DUlyUhX3Cl2z
+         7JTGMC/pwquLbiyRN4cSIC5xj8SZf2jZuEzCZ5AHUIopEhfiKE7BkeX+1J90QRGGWVcd
+         3kguEU6Nmjaa+kdQkWzpwTB9ho+2AFCoS+vI8EkDY/VNTXNmEhDCevqnv/Kd1UTu3n7M
+         3rILi+CHpHWPSlnpWuDXcLV6feFp2v9vdZNSE7DSBjW0XOOb4yy9jdDrHUjGI/Oab2zS
+         cZsW7Ft9DGczBaIRqGJ6O7rCwwqV0cmOaodXcCOLnarDIvCyrbvg91+mkury+eYiZWuR
+         5Atg==
+X-Gm-Message-State: APjAAAVBEWey3N0CgxHyezmV8Ba7gyGVVIJsOyW102QxwBzrLv1P/phM
+        zR8KRWwG8VT0LYWueeYIgyIyTuFVbVHfqwVs5Xz6HlOOtF4JhdVT9/stAuAGNlc59CQlrfGacUi
+        yAlf21Q8rLvoSgFBagUtbsgXpSDOQWDrY3jQG
+X-Received: by 2002:a05:6102:5c7:: with SMTP id v7mr10414190vsf.85.1574440074008;
+        Fri, 22 Nov 2019 08:27:54 -0800 (PST)
+X-Google-Smtp-Source: APXvYqyr+NXEN/+4FZRYHPwqMzEM/JIcl2TPqvS4rt1T0IG9nE6qI+UYM+Ne1mJg26any6qehlSz6cMjxNiSA8ylQTw=
+X-Received: by 2002:a05:6102:5c7:: with SMTP id v7mr10414165vsf.85.1574440073682;
+ Fri, 22 Nov 2019 08:27:53 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAKQeeLMLj-inQ4sxCLBomuthjNWbd_85VRwAVWk4TvVhLMVC6A@mail.gmail.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9448 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1911220138
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9448 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1911220138
+References: <20191121214445.282160-1-preichl@redhat.com> <20191121214445.282160-3-preichl@redhat.com>
+ <20191121215917.GA6219@magnolia>
+In-Reply-To: <20191121215917.GA6219@magnolia>
+From:   Pavel Reichl <preichl@redhat.com>
+Date:   Fri, 22 Nov 2019 17:27:42 +0100
+Message-ID: <CAJc7PzXhL0moF8bCkNNnSWrA7R6EUi6Anz3An-nuFSP5yD=PmA@mail.gmail.com>
+Subject: Re: [PATCH 2/2] mkfs: Show progress during block discard
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+X-MC-Unique: 4atNe6GjPuS4cVXGKq9r5Q-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Nov 22, 2019 at 09:08:26AM -0500, Andrew Carr wrote:
-> Hi Dave  / Others,
-> 
-> It appears upgrading to 4.17+ has indeed fixed the deadlock issue, or
-> at least no deadlocks are occurring now.
-> 
-> There are segfaults in xfs_db appearing now though.  I am attempting
-> to get the full syslog, here is an example.... thoughts?
-> 
-> [Thu Nov 21 10:43:20 2019] xfs_db[13076]: segfault at 12ff6001 ip
-> 0000000000407922 sp 00007ffe1a27b2e0 error 4 in xfs_db[400000+8a000]
-> [Thu Nov 21 10:43:20 2019] Code: 89 cc 55 48 89 d5 53 48 89 f3 48 83
-> ec 48 0f b6 57 01 44 0f b6 4f 02 64 48 8b 04 25 28 00 00 00 48 89 44
-> 24 38 31 c0 0f b6 07 <44> 0f b6 57 0d 48 8d 74 24 10 c1 e2 10 41 c1 e1
-> 08 c1 e0 18 41 c1
+On Thu, Nov 21, 2019 at 10:59 PM Darrick J. Wong
+<darrick.wong@oracle.com> wrote:
+>
+> On Thu, Nov 21, 2019 at 10:44:45PM +0100, Pavel Reichl wrote:
+> > Signed-off-by: Pavel Reichl <preichl@redhat.com>
+> > ---
+> >  mkfs/xfs_mkfs.c | 8 ++++++++
+> >  1 file changed, 8 insertions(+)
+> >
+> > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> > index a02d6f66..07b8bd78 100644
+> > --- a/mkfs/xfs_mkfs.c
+> > +++ b/mkfs/xfs_mkfs.c
+> > @@ -1248,6 +1248,7 @@ discard_blocks(dev_t dev, uint64_t nsectors)
+> >       const uint64_t  step            =3D (uint64_t)2<<30;
+> >       /* Sector size is 512 bytes */
+> >       const uint64_t  count           =3D nsectors << 9;
+> > +     uint64_t        prev_done       =3D (uint64_t) ~0;
+> >
+> >       fd =3D libxfs_device_to_fd(dev);
+> >       if (fd <=3D 0)
+> > @@ -1255,6 +1256,7 @@ discard_blocks(dev_t dev, uint64_t nsectors)
+> >
+> >       while (offset < count) {
+> >               uint64_t        tmp_step =3D step;
+> > +             uint64_t        done =3D offset * 100 / count;
+> >
+> >               if ((offset + step) > count)
+> >                       tmp_step =3D count - offset;
+> > @@ -1268,7 +1270,13 @@ discard_blocks(dev_t dev, uint64_t nsectors)
+> >                       return;
+> >
+> >               offset +=3D tmp_step;
+> > +
+> > +             if (prev_done !=3D done) {
+>
+> Hmm... so this prints the status message every increase percentage
+> point, right?
 
-Actual coredumps of the crashed xfs_db would help.
+Not at all, the 'least change' it prints is one percent but that's the
+maximum granularity i.e. I tested with 10 GB file and the output was:
 
---D
+Discarding:  0% done
+Discarding: 20% done
+Discarding: 40% done
+Discarding: 60% done
+Discarding: 80% done
+Discarding is done.
 
-> Thanks so much in advance!
-> Andrew
-> 
-> On Wed, Nov 20, 2019 at 10:43 AM Andrew Carr <andrewlanecarr@gmail.com> wrote:
+So ATM there could be up to 102 lines - please propose a different idea.
+
+
+>
+> > +                     prev_done =3D done;
+> > +                     fprintf(stderr, _("Discarding: %2lu%% done\n"), d=
+one);
+>
+> This isn't an error, so why output to stderr?
+My bad, sorry.
+
+>
+> FWIW if it's a tty you might consider ending that string with \r so the
+> status messages don't scroll off the screen.  Or possibly only reporting
+> status if stdout is a tty?
+
+Do I get it right that you propose to not flow the terminal with
+dozens of lines which just update the percentage but instead keep
+updating the same line? If so, I do like that.
+
+>
+> --D
+>
+> > +             }
+> >       }
+> > +     fprintf(stderr, _("Discarding is done.\n"));
+> >  }
 > >
-> > Genius Dave, Thanks so much!
-> >
-> > On Tue, Nov 19, 2019 at 3:21 PM Dave Chinner <david@fromorbit.com> wrote:
-> > >
-> > > On Tue, Nov 19, 2019 at 10:49:56AM -0500, Andrew Carr wrote:
-> > > > Dave / Eric / Others,
-> > > >
-> > > > Syslog: https://pastebin.com/QYQYpPFY
-> > > >
-> > > > Dmesg: https://pastebin.com/MdBCPmp9
-> > >
-> > > which shows no stack traces, again.
-> > >
-> > >
-> > >
-> > > Anyway, you've twiddled mkfs knobs on these filesystems, and that
-> > > is the likely cause of the issue: the filesystem is using 64k
-> > > directory blocks - the allocation size is larger than 64kB:
-> > >
-> > > [Sun Nov 17 21:40:05 2019] XFS: nginx(31293) possible memory allocation deadlock size 65728 in kmem_alloc (mode:0x250)
-> > >
-> > > Upstream fixed this some time ago:
-> > >
-> > > $ ▶ gl -n 1 -p cb0a8d23024e
-> > > commit cb0a8d23024e7bd234dea4d0fc5c4902a8dda766
-> > > Author: Dave Chinner <dchinner@redhat.com>
-> > > Date:   Tue Mar 6 17:03:28 2018 -0800
-> > >
-> > >     xfs: fall back to vmalloc when allocation log vector buffers
-> > >
-> > >     When using large directory blocks, we regularly see memory
-> > >     allocations of >64k being made for the shadow log vector buffer.
-> > >     When we are under memory pressure, kmalloc() may not be able to find
-> > >     contiguous memory chunks large enough to satisfy these allocations
-> > >     easily, and if memory is fragmented we can potentially stall here.
-> > >
-> > >     TO avoid this problem, switch the log vector buffer allocation to
-> > >     use kmem_alloc_large(). This will allow failed allocations to fall
-> > >     back to vmalloc and so remove the dependency on large contiguous
-> > >     regions of memory being available. This should prevent slowdowns
-> > >     and potential stalls when memory is low and/or fragmented.
-> > >
-> > >     Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> > >     Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > >     Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > >
-> > >
-> > > Cheers,
-> > >
-> > > Dave.
-> > > --
-> > > Dave Chinner
-> > > david@fromorbit.com
-> >
-> >
-> >
+> >  static __attribute__((noreturn)) void
 > > --
-> > With Regards,
-> > Andrew Carr
+> > 2.23.0
 > >
-> > e. andrewlanecarr@gmail.com
-> > w. andrew.carr@openlogic.com
-> > c. 4239489206
-> > a. P.O. Box 1231, Greeneville, TN, 37744
-> 
-> 
-> 
-> -- 
-> With Regards,
-> Andrew Carr
-> 
-> e. andrewlanecarr@gmail.com
-> w. andrew.carr@openlogic.com
-> c. 4239489206
-> a. P.O. Box 1231, Greeneville, TN, 37744
+>
+
