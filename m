@@ -2,127 +2,164 @@ Return-Path: <SRS0=QtPe=ZO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8FB4C432C0
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 15:38:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54D2DC432C0
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 15:43:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7BEA720706
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 15:38:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 235682071F
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 15:43:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="NSxifaB1"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="In4UQkiQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726100AbfKVPiS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 22 Nov 2019 10:38:18 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:48330 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726046AbfKVPiS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Nov 2019 10:38:18 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAMFTJOi175271;
-        Fri, 22 Nov 2019 15:38:12 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=nkEWNlgdMACSWA46AmgCdKLu2/5XmogYQEyDhR6pKDo=;
- b=NSxifaB1Tx0KRLJyqOzsWP3rWgz0ECtFWnmiYBeJiF/EMR/+QpLkSOm3kg1aQmdW4YRk
- eGXO7mtLdlh0gA7BIFrNIpfu49D5s5GwVFfIYukPwBAO12uespVkDOLakPhQiZtmRSqN
- 6xLxRcnGR270ZnAcT2ufUsQOQJiUhnqcSjygh/8cr1jiH706gMkglVt21b1gNytJ94eQ
- Wv0kMmKZFIIXoTaR3WCIvRLkEq1KztHPsCkf7bsrNbO/vBMEAf1gCRxjTXwMOU6zMQ0G
- d8xviXfTJtV2wvr8NwdQWkaeKX3la/K1XRw70qzXNC82gSXbxQIpnckUdwyswmq7WiM9 SA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2wa8hubc4n-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 22 Nov 2019 15:38:12 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAMFT5Qn148023;
-        Fri, 22 Nov 2019 15:38:12 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 2we8yg1y8c-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 22 Nov 2019 15:38:11 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xAMFcBvN026504;
-        Fri, 22 Nov 2019 15:38:11 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 22 Nov 2019 07:38:11 -0800
-Date:   Fri, 22 Nov 2019 07:38:07 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Pavel Reichl <preichl@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] mkfs: Break block discard into chunks of 2 GB
-Message-ID: <20191122153807.GD6219@magnolia>
-References: <20191121214445.282160-1-preichl@redhat.com>
- <20191121214445.282160-2-preichl@redhat.com>
- <20191121231838.GH4614@dread.disaster.area>
+        id S1726852AbfKVPnU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 Nov 2019 10:43:20 -0500
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:40795 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726846AbfKVPnU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Nov 2019 10:43:20 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1574437399;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=gCOkzMQBCndWiBceq+qHqW5tjY7w7QwZ7hMW1iarnZ0=;
+        b=In4UQkiQ6PwpvzKPb+P3k1uotJ8qqkRsLkKN67YGTp3YpjDKyOwm9o++VKJpOPNzyZLvXM
+        5zYGZlmtJBHyJolDZDI2f9/g969hR3ErnOtkrvL9rpzZApqtvZTe3+QPum3Q+ssiNhmSmp
+        nSSBd3/Z/jpPJKtWWFjC1XNmKsuU3yo=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-3-sgnz8uBUPImXF1SOD0y1ww-1; Fri, 22 Nov 2019 10:43:15 -0500
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 960471883545;
+        Fri, 22 Nov 2019 15:43:14 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 38BBF63772;
+        Fri, 22 Nov 2019 15:43:14 +0000 (UTC)
+Date:   Fri, 22 Nov 2019 10:43:14 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Alex Lyakas <alex@zadara.com>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [RFC-PATCH] xfs: do not update sunit/swidth in the superblock to
+ match those provided during mount
+Message-ID: <20191122154314.GA31076@bfoster>
+References: <1574359699-10191-1-git-send-email-alex@zadara.com>
 MIME-Version: 1.0
+In-Reply-To: <1574359699-10191-1-git-send-email-alex@zadara.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+X-MC-Unique: sgnz8uBUPImXF1SOD0y1ww-1
+X-Mimecast-Spam-Score: 0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
 Content-Disposition: inline
-In-Reply-To: <20191121231838.GH4614@dread.disaster.area>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9448 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1911220135
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9448 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1911220135
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Nov 22, 2019 at 10:18:38AM +1100, Dave Chinner wrote:
-> On Thu, Nov 21, 2019 at 10:44:44PM +0100, Pavel Reichl wrote:
-> > Signed-off-by: Pavel Reichl <preichl@redhat.com>
-> > ---
-> 
-> This is mixing an explanation about why the change is being made
-> and what was considered when making decisions about the change.
-> 
-> e.g. my first questions on looking at the patch were:
-> 
-> 	- why do we need to break up the discards into 2GB chunks?
-> 	- why 2GB?
+On Thu, Nov 21, 2019 at 08:08:19PM +0200, Alex Lyakas wrote:
+> We are hitting the following issue: if XFS is mounted with sunit/swidth d=
+ifferent from those
+> specified during mkfs, then xfs_repair reports false corruption and event=
+ually segfaults.
+>=20
+> Example:
+>=20
+> # mkfs
+> mkfs.xfs -f -K -p /etc/zadara/xfs.protofile -d sunit=3D64,swidth=3D64 -l =
+sunit=3D32 /dev/vda
+>=20
+> #mount with a different sunit/swidth:
+> mount -onoatime,sync,nouuid,sunit=3D32,swidth=3D32 /dev/vda /mnt/xfs
+>=20
 
-Yeah, I'm wondering that too.
+FYI, I couldn't reproduce this at first because sparse inodes is enabled
+by default and that introduces more strict inode alignment requirements.
+I'm assuming that sparse inodes is disabled in your example, but it
+would be more helpful if you included the exact configuration and mkfs
+output in such reports.
 
-> 	- why not use libblkid to query the maximum discard size
-> 	  and use that as the step size instead?
+> #umount
+> umount /mnt/xfs
+>=20
+...
+>=20
+> Looking at the kernel code of XFS, there seems to be no need to update th=
+e superblock sunit/swidth if the mount-provided sunit/swidth are different.
+> The superblock values are not used during runtime.
+>=20
 
-FWIW my SATA SSDs the discard-max is 2G whereas on the NVME it's 2T.  I
-guess firmwares have gotten 1000x better in the past few years, possibly
-because of the hundred or so 10x programmers that they've all been hiring.
+I'm not really sure what the right answer is here. On one hand, this
+patch seems fundamentally reasonable to me. I find it kind of odd for
+mount options to override and persist configuration set in the
+superblock like this. OTOH, this changes a historical behavior which may
+(or may not) cause disruption for users. I also think it's somewhat
+unfortunate to change kernel mount option behavior to accommodate
+repair, but I think the mount option behavior being odd argument stands
+on its own regardless.
 
-> 	- is there any performance impact from breaking up large
-> 	  discards that might be optimised by the kernel into many
-> 	  overlapping async operations into small, synchronous
-> 	  discards?
+What is your actual use case for changing the stripe unit/width at mount
+time like this?
 
-Also:
-What is the end goal that you have in mind?  Is the progress reporting
-the ultimate goal?  Or is it to break up the BLKDISCARD calls so that
-someone can ^C a mkfs operation and not have it just sit there
-continuing to run?
+> With the suggested patch, xfs repair is working properly also when mount-=
+provided sunit/swidth are different.
+>=20
+> However, I am not sure whether this is the proper approach. Otherwise, sh=
+ould we not allow specifying different sunit/swidth during mount?
+>=20
+...
+>=20
+> Signed-off-by: Alex Lyakas <alex@zadara.com>
+> ---
+>  fs/xfs/xfs_mount.c | 18 ++++++------------
+>  1 file changed, 6 insertions(+), 12 deletions(-)
+>=20
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index ba5b6f3..e8263b4 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -399,19 +399,13 @@
+>  =09=09}
+> =20
+>  =09=09/*
+> -=09=09 * Update superblock with new values
+> -=09=09 * and log changes
+> +=09=09 * If sunit/swidth specified during mount do not match
+> +=09=09 * those in the superblock, use the mount-specified values,
+> +=09=09 * but do not update the superblock.
+> +=09=09 * Otherwise, xfs_repair reports false corruption.
+> +=09=09 * Here, only verify that superblock supports data alignment.
+>  =09=09 */
+> -=09=09if (xfs_sb_version_hasdalign(sbp)) {
+> -=09=09=09if (sbp->sb_unit !=3D mp->m_dalign) {
+> -=09=09=09=09sbp->sb_unit =3D mp->m_dalign;
+> -=09=09=09=09mp->m_update_sb =3D true;
+> -=09=09=09}
+> -=09=09=09if (sbp->sb_width !=3D mp->m_swidth) {
+> -=09=09=09=09sbp->sb_width =3D mp->m_swidth;
+> -=09=09=09=09mp->m_update_sb =3D true;
+> -=09=09=09}
+> -=09=09} else {
+> +=09=09if (!xfs_sb_version_hasdalign(sbp)) {
 
---D
+Would this change xfs_info behavior on a filesystem mounted with
+different runtime fields from the superblock? I haven't tested it, but
+it looks like we pull the fields from the superblock.
 
-> i.e. the reviewer can read what the patch does, but that deosn't
-> explain why the patch does this. Hence it's a good idea to explain
-> the problem being solved or the feature requirements that have lead
-> to the changes in the patch....
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Brian
+
+>  =09=09=09xfs_warn(mp,
+>  =09"cannot change alignment: superblock does not support data alignment"=
+);
+>  =09=09=09return -EINVAL;
+> --=20
+> 1.9.1
+>=20
+
