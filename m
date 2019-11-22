@@ -2,33 +2,34 @@ Return-Path: <SRS0=QtPe=ZO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 507E5C432C0
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 21:07:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FAABC432C0
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 21:10:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2136020708
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 21:07:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 365AD20708
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 21:10:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726655AbfKVVHa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 22 Nov 2019 16:07:30 -0500
-Received: from sandeen.net ([63.231.237.45]:50600 "EHLO sandeen.net"
+        id S1726526AbfKVVK2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 Nov 2019 16:10:28 -0500
+Received: from sandeen.net ([63.231.237.45]:50748 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726089AbfKVVHa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 22 Nov 2019 16:07:30 -0500
+        id S1726089AbfKVVK2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 22 Nov 2019 16:10:28 -0500
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id C5A397BB4;
-        Fri, 22 Nov 2019 15:05:58 -0600 (CST)
+        by sandeen.net (Postfix) with ESMTPSA id E625C1911D;
+        Fri, 22 Nov 2019 15:08:56 -0600 (CST)
 Subject: Re: [PATCH 1/2] mkfs: Break block discard into chunks of 2 GB
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+To:     Dave Chinner <david@fromorbit.com>,
         Pavel Reichl <preichl@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <20191121214445.282160-1-preichl@redhat.com>
- <20191121214445.282160-2-preichl@redhat.com> <20191121215501.GZ6219@magnolia>
+ <20191121214445.282160-2-preichl@redhat.com>
+ <20191121231838.GH4614@dread.disaster.area>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -72,12 +73,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <d3699236-5860-c3e7-3a1d-d6ddafa6e15f@sandeen.net>
-Date:   Fri, 22 Nov 2019 15:07:28 -0600
+Message-ID: <b2bc2dea-575b-959a-0025-d5d20d733a55@sandeen.net>
+Date:   Fri, 22 Nov 2019 15:10:26 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.2.2
 MIME-Version: 1.0
-In-Reply-To: <20191121215501.GZ6219@magnolia>
+In-Reply-To: <20191121231838.GH4614@dread.disaster.area>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -86,43 +87,44 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 11/21/19 3:55 PM, Darrick J. Wong wrote:
+On 11/21/19 5:18 PM, Dave Chinner wrote:
 > On Thu, Nov 21, 2019 at 10:44:44PM +0100, Pavel Reichl wrote:
-
-concur w/ others that a reason for the change (and a reason for the
-size selection) would be appropriate to have in the changelog.
-
 >> Signed-off-by: Pavel Reichl <preichl@redhat.com>
 >> ---
->>  mkfs/xfs_mkfs.c | 32 +++++++++++++++++++++++++-------
->>  1 file changed, 25 insertions(+), 7 deletions(-)
->>
->> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
->> index 18338a61..a02d6f66 100644
->> --- a/mkfs/xfs_mkfs.c
->> +++ b/mkfs/xfs_mkfs.c
->> @@ -1242,15 +1242,33 @@ done:
->>  static void
->>  discard_blocks(dev_t dev, uint64_t nsectors)
->>  {
->> -	int fd;
->> +	int		fd;
->> +	uint64_t	offset		= 0;
->> +	/* Maximal chunk of bytes to discard is 2GB */
->> +	const uint64_t	step		= (uint64_t)2<<30;
 > 
-> You don't need the tabs after the variable name, e.g.
+> This is mixing an explanation about why the change is being made
+> and what was considered when making decisions about the change.
 > 
-> 	/* Maximal chunk of bytes to discard is 2GB */
-> 	const uint64_t	step = 2ULL << 30;
+> e.g. my first questions on looking at the patch were:
 > 
->> +	/* Sector size is 512 bytes */
->> +	const uint64_t	count		= nsectors << 9;
-> 
-> count = BBTOB(nsectors)?
+> 	- why do we need to break up the discards into 2GB chunks?
+> 	- why 2GB?
+> 	- why not use libblkid to query the maximum discard size
+> 	  and use that as the step size instead?
 
-FYI this is a macro that xfs developers have learned about. ;)  It stands for
-"Basic Block TO Byte" where "basic block" pretty much means "512-byte sector."
+Just wondering, can we trust that to be reasonably performant?
+(the whole motivation here is for hardware that takes inordinately
+long to do discard, I wonder if we can count on such hardware to
+properly fill out this info....)
 
+> 	- is there any performance impact from breaking up large
+> 	  discards that might be optimised by the kernel into many
+> 	  overlapping async operations into small, synchronous
+> 	  discards?
+
+FWIW, I had simply suggested to Pavel that he follow e2fsprogs' lead
+here - afaik they haven't had issues/complaints with their 2g iteration,
+and at one point Lukas did some investigation into the size selection...
+
+Thanks,
 -Eric
-
+ 
+> i.e. the reviewer can read what the patch does, but that deosn't
+> explain why the patch does this. Hence it's a good idea to explain
+> the problem being solved or the feature requirements that have lead
+> to the changes in the patch....
+> 
+> Cheers,
+> 
+> Dave.
+> 
