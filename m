@@ -4,49 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1CF0C432C0
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 06:20:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3804C432C0
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 06:25:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CA99A2070E
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 06:20:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A00B320674
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 06:25:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1574403628;
-	bh=bU8lHFm9OBXC+O3oT+aSOg/7u1TW8GHVR7WkQspLb68=;
+	s=default; t=1574403929;
+	bh=n5Vt1p9Nt6F39gITxhiMCrYn3e5qmSvtYiyUgcZWeAs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=U2Rq/cLU6sfOx0RjUBO54EZM48NvE5ySUcjKY7W+KYiVnmPa5+obienU1iBisj8mW
-	 L058OXgwVv/uG1h1aZQkzU/CzLyHdIwJCNSZFdQ3UJDuA+VMuT1Tht+fq1TVwg20IF
-	 GA76iAWrGzqpfN0ztiVfFZJe/jS0NrjvyOt9NhQg=
+	b=cwCAasRgCU/v3M0jGKPz6FRfrWvRx/iMV0rBtPOVd3yUiBt2ccTmceMriQrIhflC/
+	 qzaTt6hybZdF7lJyhGa3OMHeWlJOF3GtymYwYYQmwZ3na+PGcpf+CBOnGpTMFFj4rg
+	 fz1Aimfvm1TtEExZ74DuwXKOZ+9bG+VEJAZRa1ns=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727130AbfKVGUY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 22 Nov 2019 01:20:24 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58536 "EHLO mail.kernel.org"
+        id S1727992AbfKVFvH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 Nov 2019 00:51:07 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56042 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728652AbfKVFwn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 22 Nov 2019 00:52:43 -0500
+        id S1727986AbfKVFvG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 22 Nov 2019 00:51:06 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 505282071F;
-        Fri, 22 Nov 2019 05:52:41 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A66BE2071F;
+        Fri, 22 Nov 2019 05:51:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1574401962;
-        bh=bU8lHFm9OBXC+O3oT+aSOg/7u1TW8GHVR7WkQspLb68=;
+        s=default; t=1574401865;
+        bh=n5Vt1p9Nt6F39gITxhiMCrYn3e5qmSvtYiyUgcZWeAs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Frk+KZg/YVcmIOjD7VsUhvCFtWFBx0p9zPrE454kmijE5cRDVe73lQRU1NUXxUP05
-         XTyx1fb3Y1rsWJzIs1ehLUR/jOxdIhkbIvlUYlAwRdXk56RBL2omhoU6zoEq+FI6di
-         kUrnnlXlTfeOE7D+lrEChw9mvpbzVinRz4Uk4FkI=
+        b=l2c0Nk+x2dOKnsGyCqcEK7ajOZ/HITqMwSVwaHEUbVJdKWNbbQyAwZY4isVot8HAK
+         iGJgUH8QHxASDepGgROtqEfg4rlBE2OVsTB5BK6Rixoy2GLZtUii/TvClM5j6Cm0Us
+         POSwQ5SLl3oedyg44IrYJCXfLTo6voCBbLCz1E7o=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Brian Foster <bfoster@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
+Cc:     Nick Bowler <nbowler@draconx.ca>,
         "Darrick J . Wong" <darrick.wong@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 183/219] xfs: end sync buffer I/O properly on shutdown error
-Date:   Fri, 22 Nov 2019 00:48:35 -0500
-Message-Id: <20191122054911.1750-176-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 101/219] xfs: Align compat attrlist_by_handle with native implementation.
+Date:   Fri, 22 Nov 2019 00:47:13 -0500
+Message-Id: <20191122054911.1750-94-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191122054911.1750-1-sashal@kernel.org>
 References: <20191122054911.1750-1-sashal@kernel.org>
@@ -59,47 +58,53 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Brian Foster <bfoster@redhat.com>
+From: Nick Bowler <nbowler@draconx.ca>
 
-[ Upstream commit 465fa17f4a303d9fdff9eac4d45f91ece92e96ca ]
+[ Upstream commit c456d64449efe37da50832b63d91652a85ea1d20 ]
 
-As of commit e339dd8d8b ("xfs: use sync buffer I/O for sync delwri
-queue submission"), the delwri submission code uses sync buffer I/O
-for sync delwri I/O. Instead of waiting on async I/O to unlock the
-buffer, it uses the underlying sync I/O completion mechanism.
+While inspecting the ioctl implementations, I noticed that the compat
+implementation of XFS_IOC_ATTRLIST_BY_HANDLE does not do exactly the
+same thing as the native implementation.  Specifically, the "cursor"
+does not appear to be written out to userspace on the compat path,
+like it is on the native path.
 
-If delwri buffer submission fails due to a shutdown scenario, an
-error is set on the buffer and buffer completion never occurs. This
-can cause xfs_buf_delwri_submit() to deadlock waiting on a
-completion event.
+This adjusts the compat implementation to copy out the cursor just
+like the native implementation does.  The attrlist cursor does not
+require any special compat handling.  This fixes xfstests xfs/269
+on both IA-32 and x32 userspace, when running on an amd64 kernel.
 
-We could check the error state before waiting on such buffers, but
-that doesn't serialize against the case of an error set via a racing
-I/O completion. Instead, invoke I/O completion in the shutdown case
-regardless of buffer I/O type.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Nick Bowler <nbowler@draconx.ca>
+Fixes: 0facef7fb053b ("xfs: in _attrlist_by_handle, copy the cursor back to userspace")
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- fs/xfs/xfs_buf.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ fs/xfs/xfs_ioctl32.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index e839907e8492f..78173870502ce 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1470,8 +1470,7 @@ __xfs_buf_submit(
- 		xfs_buf_ioerror(bp, -EIO);
- 		bp->b_flags &= ~XBF_DONE;
- 		xfs_buf_stale(bp);
--		if (bp->b_flags & XBF_ASYNC)
--			xfs_buf_ioend(bp);
-+		xfs_buf_ioend(bp);
- 		return -EIO;
- 	}
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index fba115f4103ac..4c34efcbf7e80 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -336,6 +336,7 @@ xfs_compat_attrlist_by_handle(
+ {
+ 	int			error;
+ 	attrlist_cursor_kern_t	*cursor;
++	compat_xfs_fsop_attrlist_handlereq_t __user *p = arg;
+ 	compat_xfs_fsop_attrlist_handlereq_t al_hreq;
+ 	struct dentry		*dentry;
+ 	char			*kbuf;
+@@ -370,6 +371,11 @@ xfs_compat_attrlist_by_handle(
+ 	if (error)
+ 		goto out_kfree;
+ 
++	if (copy_to_user(&p->pos, cursor, sizeof(attrlist_cursor_kern_t))) {
++		error = -EFAULT;
++		goto out_kfree;
++	}
++
+ 	if (copy_to_user(compat_ptr(al_hreq.buffer), kbuf, al_hreq.buflen))
+ 		error = -EFAULT;
  
 -- 
 2.20.1
