@@ -7,51 +7,51 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E76CFC33C9A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8274EC43215
 	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 18:19:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B90AB2071C
+	by mail.kernel.org (Postfix) with ESMTP id 5BC772067D
 	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 18:19:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="J7Yv5q7I"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LTYKZJJk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726705AbfKVSTb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1726774AbfKVSTb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Fri, 22 Nov 2019 13:19:31 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:36728 "EHLO
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:29517 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726695AbfKVSTb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Nov 2019 13:19:31 -0500
+        with ESMTP id S1726705AbfKVSTa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Nov 2019 13:19:30 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1574446769;
+        s=mimecast20190719; t=1574446770;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=VdLKScOTN1R8UT4rsr3UdZGuQTd0bmL7sNW935swoQM=;
-        b=J7Yv5q7IPFrente9OScy88jOChdCiKZ/enclyObNK6xGjOpmKVYIel/s0nhmmS6CTEZqlW
-        67L746jVh67XlqNOlKBwr2aAJC/BJLCn4nTT6f9mTefUs2wAFfG8G7clhlHfEU0WgMEQ3j
-        uEMBnq1BHBdC0sPdKxEi+/kdY6ErhtQ=
+        bh=qPo0z2c6uL+IP0iWk/Dew8QgM3QDOBAiOKjiMQpyKXo=;
+        b=LTYKZJJkchRQKY+RoogYGzMc2onNgwxysbMs/OkmhYcOyOomr77rnTw9lEhmj6QvXbr1Up
+        GiwFinGvtksPe9P9pMCXmWmXmlS7alPh/iFQ9tLfvyoKNVyTpgzRASMF018EAPVJ6LhfTW
+        jBp/07Ky1kC90LT41QT0ObywL595/M4=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-53-WEr5Y64pPvKELIUexlu5mA-1; Fri, 22 Nov 2019 13:19:28 -0500
+ us-mta-185-7zNHOT4BPc-beI8cBROSpQ-1; Fri, 22 Nov 2019 13:19:28 -0500
 Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5F99F8024C8
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CCC031883522
         for <linux-xfs@vger.kernel.org>; Fri, 22 Nov 2019 18:19:27 +0000 (UTC)
 Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 1637E9F47
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Nov 2019 18:19:26 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 84A4A6E71F
+        for <linux-xfs@vger.kernel.org>; Fri, 22 Nov 2019 18:19:27 +0000 (UTC)
 From:   Brian Foster <bfoster@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [RFC v2 PATCH 2/3] xfs: prototype automatic intent relogging mechanism
-Date:   Fri, 22 Nov 2019 13:19:26 -0500
-Message-Id: <20191122181927.32870-3-bfoster@redhat.com>
+Subject: [RFC v2 PATCH 3/3] xfs: automatically relog quotaoff start intent
+Date:   Fri, 22 Nov 2019 13:19:27 -0500
+Message-Id: <20191122181927.32870-4-bfoster@redhat.com>
 In-Reply-To: <20191122181927.32870-1-bfoster@redhat.com>
 References: <20191122181927.32870-1-bfoster@redhat.com>
 MIME-Version: 1.0
 X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
-X-MC-Unique: WEr5Y64pPvKELIUexlu5mA-1
+X-MC-Unique: 7zNHOT4BPc-beI8cBROSpQ-1
 X-Mimecast-Spam-Score: 0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
@@ -62,263 +62,94 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/Makefile          |   1 +
- fs/xfs/xfs_log.c         |   9 +++
- fs/xfs/xfs_log_priv.h    |   1 +
- fs/xfs/xfs_trans.c       |   2 +-
- fs/xfs/xfs_trans.h       |  13 ++++
- fs/xfs/xfs_trans_relog.c | 130 +++++++++++++++++++++++++++++++++++++++
- 6 files changed, 155 insertions(+), 1 deletion(-)
- create mode 100644 fs/xfs/xfs_trans_relog.c
+ fs/xfs/libxfs/xfs_trans_resv.c |  3 ++-
+ fs/xfs/xfs_dquot_item.c        | 13 +++++++++++++
+ fs/xfs/xfs_qm_syscalls.c       |  9 ++++++++-
+ 3 files changed, 23 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index aceca2f9a3db..c4664a972e50 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -92,6 +92,7 @@ xfs-y=09=09=09=09+=3D xfs_aops.o \
- =09=09=09=09   xfs_symlink.o \
- =09=09=09=09   xfs_sysfs.o \
- =09=09=09=09   xfs_trans.o \
-+=09=09=09=09   xfs_trans_relog.o \
- =09=09=09=09   xfs_xattr.o \
- =09=09=09=09   kmem.o
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.=
+c
+index c55cd9a3dec9..88e222d0947a 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.c
++++ b/fs/xfs/libxfs/xfs_trans_resv.c
+@@ -866,7 +866,8 @@ xfs_trans_resv_calc(
+ =09resp->tr_qm_setqlim.tr_logcount =3D XFS_DEFAULT_LOG_COUNT;
 =20
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 0c0c035c5be0..4f4c6b38621a 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1531,12 +1531,20 @@ xlog_alloc_log(
- =09if (!log->l_ioend_workqueue)
- =09=09goto out_free_iclog;
+ =09resp->tr_qm_quotaoff.tr_logres =3D xfs_calc_qm_quotaoff_reservation(mp)=
+;
+-=09resp->tr_qm_quotaoff.tr_logcount =3D XFS_DEFAULT_LOG_COUNT;
++=09resp->tr_qm_quotaoff.tr_logcount =3D XFS_DEFAULT_PERM_LOG_COUNT;
++=09resp->tr_qm_quotaoff.tr_logflags |=3D XFS_TRANS_PERM_LOG_RES;
 =20
-+=09log->l_relog_workqueue =3D alloc_workqueue("xfs-relog/%s",
-+=09=09=09WQ_MEM_RECLAIM | WQ_FREEZABLE | WQ_HIGHPRI, 0,
-+=09=09=09mp->m_super->s_id);
-+=09if (!log->l_relog_workqueue)
-+=09=09goto out_destroy_workqueue;
+ =09resp->tr_qm_equotaoff.tr_logres =3D
+ =09=09xfs_calc_qm_quotaoff_end_reservation();
+diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+index d60647d7197b..57b7c9b731b1 100644
+--- a/fs/xfs/xfs_dquot_item.c
++++ b/fs/xfs/xfs_dquot_item.c
+@@ -288,6 +288,18 @@ xfs_qm_qoff_logitem_format(
+ =09xlog_finish_iovec(lv, vecp, sizeof(struct xfs_qoff_logitem));
+ }
+=20
++/*
++ * XXX: simulate relog callback with hardcoded ->iop_committed() callback
++ */
++static xfs_lsn_t
++xfs_qm_qoff_logitem_committed(
++=09struct xfs_log_item=09*lip,
++=09xfs_lsn_t=09=09lsn)
++{
++=09xfs_trans_relog_queue(lip);
++=09return lsn;
++}
 +
- =09error =3D xlog_cil_init(log);
- =09if (error)
- =09=09goto out_destroy_workqueue;
- =09return log;
-=20
- out_destroy_workqueue:
-+=09if (log->l_relog_workqueue)
-+=09=09destroy_workqueue(log->l_relog_workqueue);
- =09destroy_workqueue(log->l_ioend_workqueue);
- out_free_iclog:
- =09for (iclog =3D log->l_iclog; iclog; iclog =3D prev_iclog) {
-@@ -2008,6 +2016,7 @@ xlog_dealloc_log(
- =09}
-=20
- =09log->l_mp->m_log =3D NULL;
-+=09destroy_workqueue(log->l_relog_workqueue);
- =09destroy_workqueue(log->l_ioend_workqueue);
- =09kmem_free(log);
- }=09/* xlog_dealloc_log */
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index b192c5a9f9fd..4d557a82eb73 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -349,6 +349,7 @@ struct xlog {
- =09struct xfs_cil=09=09*l_cilp;=09/* CIL log is working with */
- =09struct xfs_buftarg=09*l_targ;        /* buftarg of log */
- =09struct workqueue_struct=09*l_ioend_workqueue; /* for I/O completions */
-+=09struct workqueue_struct=09*l_relog_workqueue; /* for auto relog */
- =09struct delayed_work=09l_work;=09=09/* background flush work */
- =09uint=09=09=09l_flags;
- =09uint=09=09=09l_quotaoffs_flag; /* XFS_DQ_*, for QUOTAOFFs */
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 3b208f9a865c..37011fc803fc 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -923,7 +923,7 @@ xfs_trans_committed_bulk(
-  * have already been unlocked as if the commit had succeeded.
-  * Do not reference the transaction structure after this call.
-  */
--static int
-+int
- __xfs_trans_commit(
- =09struct xfs_trans=09*tp,
- =09bool=09=09=09regrant)
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 64d7f171ebd3..066d4aca8416 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -48,6 +48,7 @@ struct xfs_log_item {
- =09struct xfs_log_vec=09=09*li_lv;=09=09/* active log vector */
- =09struct xfs_log_vec=09=09*li_lv_shadow;=09/* standby vector */
- =09xfs_lsn_t=09=09=09li_seq;=09=09/* CIL commit seq */
-+=09void=09=09=09=09*li_priv;
+ /*
+  * There isn't much you can do to push a quotaoff item.  It is simply
+  * stuck waiting for the log to be flushed to disk.
+@@ -333,6 +345,7 @@ static const struct xfs_item_ops xfs_qm_qoffend_logitem=
+_ops =3D {
+ static const struct xfs_item_ops xfs_qm_qoff_logitem_ops =3D {
+ =09.iop_size=09=3D xfs_qm_qoff_logitem_size,
+ =09.iop_format=09=3D xfs_qm_qoff_logitem_format,
++=09.iop_committed=09=3D xfs_qm_qoff_logitem_committed,
+ =09.iop_push=09=3D xfs_qm_qoff_logitem_push,
  };
 =20
- /*
-@@ -143,6 +144,14 @@ typedef struct xfs_trans {
- =09unsigned long=09=09t_pflags;=09/* saved process flags state */
- } xfs_trans_t;
-=20
-+struct xfs_trans_relog {
-+=09struct work_struct=09tr_work;
-+=09unsigned int=09=09tr_log_res;
-+=09unsigned int=09=09tr_log_count;
-+=09struct xlog_ticket=09*tr_tic;
-+=09struct xfs_log_item=09*tr_lip;
-+};
-+
- /*
-  * XFS transaction mechanism exported interfaces that are
-  * actually macros.
-@@ -231,7 +240,11 @@ bool=09=09xfs_trans_buf_is_dirty(struct xfs_buf *bp);
- void=09=09xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
-=20
- int=09=09xfs_trans_commit(struct xfs_trans *);
-+int=09=09__xfs_trans_commit(struct xfs_trans *, bool);
- int=09=09xfs_trans_roll(struct xfs_trans **);
-+int=09=09xfs_trans_relog(struct xfs_trans *, struct xfs_log_item *);
-+void=09=09xfs_trans_relog_cancel(struct xfs_log_item *);
-+void=09=09xfs_trans_relog_queue(struct xfs_log_item *);
- int=09=09xfs_trans_roll_inode(struct xfs_trans **, struct xfs_inode *);
- void=09=09xfs_trans_cancel(xfs_trans_t *);
- int=09=09xfs_trans_ail_init(struct xfs_mount *);
-diff --git a/fs/xfs/xfs_trans_relog.c b/fs/xfs/xfs_trans_relog.c
-new file mode 100644
-index 000000000000..af139aa501f6
---- /dev/null
-+++ b/fs/xfs/xfs_trans_relog.c
-@@ -0,0 +1,130 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (C) 2019 Red Hat, Inc.
-+ * All Rights Reserved.
-+ */
-+#include "xfs.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_trans_priv.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_mount.h"
-+#include "xfs_log_priv.h"
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index 1ea82764bf89..3f15f8576027 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -18,6 +18,7 @@
+ #include "xfs_quota.h"
+ #include "xfs_qm.h"
+ #include "xfs_icache.h"
 +#include "xfs_log.h"
-+
-+/*
-+ * Helper to commit and regrant the log ticket as if the transaction is be=
-ing
-+ * rolled. The ticket is expected to be held by the caller and can be reus=
-ed in
-+ * a subsequent transaction.
-+ */
-+static int
-+xfs_trans_commit_regrant(
-+=09struct xfs_trans=09*tp)
-+{
-+=09struct xfs_mount=09*mp =3D tp->t_mountp;
-+=09struct xlog_ticket=09*tic =3D tp->t_ticket;
-+=09int=09=09=09error;
-+
-+=09ASSERT(atomic_read(&tic->t_ref) > 1);
-+=09error =3D __xfs_trans_commit(tp, true);
-+=09if (!error)
-+=09=09error =3D xfs_log_regrant(mp, tic);
-+=09return error;
-+}
-+
-+static void
-+xfs_relog_worker(
-+=09struct work_struct=09*work)
-+{
-+=09struct xfs_trans_relog=09*trp =3D container_of(work,
-+=09=09=09=09=09struct xfs_trans_relog, tr_work);
-+=09struct xfs_log_item=09*lip =3D trp->tr_lip;
-+=09struct xfs_mount=09*mp =3D lip->li_mountp;
-+=09struct xfs_trans_res=09resv =3D {};
-+=09struct xfs_trans=09*tp;
-+=09int=09=09=09error;
-+
-+=09error =3D xfs_trans_alloc(mp, &resv, 0, 0, 0, &tp);
-+=09if (error)
-+=09=09return;
-+
-+=09/* associate the caller ticket with our empty transaction */
-+=09tp->t_log_res =3D trp->tr_log_res;
-+=09tp->t_log_count =3D trp->tr_log_count;
-+=09tp->t_flags |=3D XFS_TRANS_PERM_LOG_RES;
-+=09tp->t_ticket =3D xfs_log_ticket_get(trp->tr_tic);
-+
-+=09xfs_trans_add_item(tp, lip);
-+=09tp->t_flags |=3D XFS_TRANS_DIRTY;
-+=09set_bit(XFS_LI_DIRTY, &lip->li_flags);
-+
-+=09/* commit the transaction and regrant the ticket for the next time */
-+=09error =3D xfs_trans_commit_regrant(tp);
-+=09ASSERT(!error);
-+}
-+
-+void
-+xfs_trans_relog_queue(
-+=09struct xfs_log_item=09*lip)
-+{
-+=09struct xfs_mount=09*mp =3D lip->li_mountp;
-+=09struct xfs_trans_relog=09*trp =3D lip->li_priv;
-+
-+=09if (!trp)
-+=09=09return;
-+
-+=09queue_work(mp->m_log->l_relog_workqueue, &trp->tr_work);
-+}
-+
-+/*
-+ * Commit the caller transaction, regrant the ticket and use it for automa=
-tic
-+ * relogging of the provided log item.
-+ */
-+int
-+xfs_trans_relog(
-+=09struct xfs_trans=09*tp,
-+=09struct xfs_log_item=09*lip)
-+{
-+=09struct xfs_trans_relog=09*trp;
-+=09int=09=09=09error;
-+
-+=09trp =3D kmem_zalloc(sizeof(struct xfs_trans_relog), KM_MAYFAIL);
-+=09if (!trp) {
-+=09=09xfs_trans_cancel(tp);
-+=09=09return -ENOMEM;
-+=09}
-+
-+=09INIT_WORK(&trp->tr_work, xfs_relog_worker);
-+=09trp->tr_lip =3D lip;
-+=09trp->tr_tic =3D xfs_log_ticket_get(tp->t_ticket);
-+=09trp->tr_log_res =3D tp->t_log_res;
-+=09trp->tr_log_count =3D tp->t_log_count;
-+=09lip->li_priv =3D trp;
-+
-+=09error =3D xfs_trans_commit_regrant(tp);
-+=09if (error) {
-+=09=09xfs_log_ticket_put(trp->tr_tic);
-+=09=09kmem_free(trp);
-+=09}
-+
-+=09return error;
-+}
-+
-+void
-+xfs_trans_relog_cancel(
-+=09struct xfs_log_item=09*lip)
-+{
-+=09struct xfs_trans_relog=09*trp =3D lip->li_priv;
-+=09struct xfs_mount=09*mp =3D lip->li_mountp;
-+
-+=09/* cancel queued relog task */
-+=09cancel_work_sync(&trp->tr_work);
-+=09lip->li_priv =3D NULL;
-+
-+=09/* release log reservation and free ticket */
-+=09ASSERT(atomic_read(&trp->tr_tic->t_ref) =3D=3D 1);
-+=09xfs_log_done(mp, trp->tr_tic, NULL, false);
-+=09kmem_free(trp);
-+}
+=20
+ STATIC int
+ xfs_qm_log_quotaoff(
+@@ -50,7 +51,7 @@ xfs_qm_log_quotaoff(
+ =09 * We don't care about quotoff's performance.
+ =09 */
+ =09xfs_trans_set_sync(tp);
+-=09error =3D xfs_trans_commit(tp);
++=09error =3D xfs_trans_relog(tp, &qoffi->qql_item);
+ =09if (error)
+ =09=09goto out;
+=20
+@@ -227,7 +228,13 @@ xfs_qm_scall_quotaoff(
+ =09 *
+ =09 * So, we have QUOTAOFF start and end logitems; the start
+ =09 * logitem won't get overwritten until the end logitem appears...
++=09 *
++=09 * XXX: qoffend expects qoffstart in the AIL but not in the CIL. Force
++=09 * the log after cancelling relogging to prevent item reinsert...
+ =09 */
++=09//ssleep(3);
++=09xfs_trans_relog_cancel(&qoffstart->qql_item);
++=09xfs_log_force(mp, XFS_LOG_SYNC);
+ =09error =3D xfs_qm_log_quotaoff_end(mp, qoffstart, flags);
+ =09if (error) {
+ =09=09/* We're screwed now. Shutdown is the only option. */
 --=20
 2.20.1
 
