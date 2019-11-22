@@ -2,241 +2,148 @@ Return-Path: <SRS0=QtPe=ZO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92D5CC432C0
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 01:46:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84C5BC432C3
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 06:07:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5D21D2068F
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 01:46:15 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="i55wGTcg"
+	by mail.kernel.org (Postfix) with ESMTP id 56C412068F
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Nov 2019 06:07:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1574402829;
+	bh=NvrQw7QKrw6deC5tWLOAh/fQD/q5N773PT0/67Lg21w=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=PhoUIncGp7bZFCheellcuXER2YC3UaHfQy/Ne0UsUgYmSERSRjEIAKSROYyTVSHeL
+	 62djG1oS+x/Uqkc505ncZZhOA/LuTV2QXhuCAsYhyxucwa6MmH4cZcwaaCLj1Vclmj
+	 370+IMM8rI5IZKQbebFquy+n8+Hi3EHzy6KYMSrI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726329AbfKVBqO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Nov 2019 20:46:14 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:38654 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726265AbfKVBqO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Nov 2019 20:46:14 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAM1iJoV114927;
-        Fri, 22 Nov 2019 01:46:05 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
- bh=OwY+D9qGKI49K3+/ouo1AvQdPJnLK/yuze3zbUyDGv8=;
- b=i55wGTcgYS/KkN4KPy/IXeuZbpI+0Key3N8rQoWVcF+sYcYLHq3XPSpCCB6FSsBjMJBK
- Ye8/PRTpj16M66Kc0jwcCVVmeizXoFuWOfz0UJ+7M1FFrY/NMFOAwQEyR/EqF37bATtg
- e2cXuQbyNSthYtuXV1f2IopTMG0nZKVT3pDAWK6oiAD7gswUoFNhPtYFHZgqgs18APSE
- 9j5iLt6m6E/dS3PeOM6G+oCgR3wwzJsgnTym3f5A41HQkLQ6oVH5yYxegUrEeJbH39bj
- BJgTZQZjWJGBFEUW0SfBUrZeTCsV5HtVmpIH/8WvGEffcWRfRybbELtajIk/LPZktq1X Lg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2wa92q7ta2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 22 Nov 2019 01:46:05 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAM1hvTb003474;
-        Fri, 22 Nov 2019 01:46:04 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2wda072689-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 22 Nov 2019 01:46:04 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xAM1k2nT003105;
-        Fri, 22 Nov 2019 01:46:02 GMT
-Received: from localhost (/10.145.178.64)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 21 Nov 2019 17:46:02 -0800
-Date:   Thu, 21 Nov 2019 17:46:01 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: [PATCH] iomap: trace iomap_appply results
-Message-ID: <20191122014601.GQ6211@magnolia>
+        id S1729514AbfKVGCI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 Nov 2019 01:02:08 -0500
+Received: from mail.kernel.org ([198.145.29.99]:40598 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729570AbfKVGCI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 22 Nov 2019 01:02:08 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id B781520659;
+        Fri, 22 Nov 2019 06:02:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1574402527;
+        bh=NvrQw7QKrw6deC5tWLOAh/fQD/q5N773PT0/67Lg21w=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=ZqjBStfXj0pZRplexfA5hc9k2IdhDmNPFs42t21SqnlK/B0iYCdYksAy99MmG1Odq
+         B6acKcRw1a5azbNzc3O6WnRRFJwJ0C7qPxd5bWKEJ+RbZjhPVVYzZzexsa0zpfRaN1
+         3vqAvm24FSNwF5mvusIwXPCpQhHUEAFoOU4H3hng=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Nick Bowler <nbowler@draconx.ca>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.9 35/91] xfs: Fix bulkstat compat ioctls on x32 userspace.
+Date:   Fri, 22 Nov 2019 01:00:33 -0500
+Message-Id: <20191122060129.4239-34-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191122060129.4239-1-sashal@kernel.org>
+References: <20191122060129.4239-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9448 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=959
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1911220013
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9448 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1911220013
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is basically a debugging patch that I've been using to monitor what
-exactly xfs is sending back to iomap, and thought I ought to pitch it to
-the mailing list universe to see what reaction I get.
+From: Nick Bowler <nbowler@draconx.ca>
 
---D
+[ Upstream commit 7ca860e3c1a74ad6bd8949364073ef1044cad758 ]
 
----
-From: Darrick J. Wong <darrick.wong@oracle.com>
+The bulkstat family of ioctls are problematic on x32, because there is
+a mixup of native 32-bit and 64-bit conventions.  The xfs_fsop_bulkreq
+struct contains pointers and 32-bit integers so that matches the native
+32-bit layout, and that means the ioctl implementation goes into the
+regular compat path on x32.
 
-Add some tracepoints so that we can more easily debug what the
-filesystem is returning from ->iomap_begin.
+However, the 'ubuffer' member of that struct in turn refers to either
+struct xfs_inogrp or xfs_bstat (or an array of these).  On x32, those
+structures match the native 64-bit layout.  The compat implementation
+writes out the 32-bit version of these structures.  This is not the
+expected format for x32 userspace, causing problems.
 
+Fortunately the functions which actually output these xfs_inogrp and
+xfs_bstat structures have an easy way to select which output format
+is required, so we just need a little tweak to select the right format
+on x32.
+
+Signed-off-by: Nick Bowler <nbowler@draconx.ca>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- fs/iomap/apply.c |    7 ++++
- fs/iomap/trace.h |  103 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 110 insertions(+)
+ fs/xfs/xfs_ioctl32.c | 34 ++++++++++++++++++++++++++++++----
+ 1 file changed, 30 insertions(+), 4 deletions(-)
 
-diff --git a/fs/iomap/apply.c b/fs/iomap/apply.c
-index 484dd8eda861..76925b40b5fd 100644
---- a/fs/iomap/apply.c
-+++ b/fs/iomap/apply.c
-@@ -7,6 +7,7 @@
- #include <linux/compiler.h>
- #include <linux/fs.h>
- #include <linux/iomap.h>
-+#include "trace.h"
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index 8f18756ee405e..6b7ed221726db 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -251,6 +251,32 @@ xfs_compat_ioc_bulkstat(
+ 	int			done;
+ 	int			error;
  
- /*
-  * Execute a iomap write on a segment of the mapping that spans a
-@@ -28,6 +29,8 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
- 	loff_t written = 0, ret;
- 	u64 end;
++	/*
++	 * Output structure handling functions.  Depending on the command,
++	 * either the xfs_bstat and xfs_inogrp structures are written out
++	 * to userpace memory via bulkreq.ubuffer.  Normally the compat
++	 * functions and structure size are the correct ones to use ...
++	 */
++	inumbers_fmt_pf inumbers_func = xfs_inumbers_fmt_compat;
++	bulkstat_one_pf	bs_one_func = xfs_bulkstat_one_compat;
++	size_t bs_one_size = sizeof(struct compat_xfs_bstat);
++
++#ifdef CONFIG_X86_X32
++	if (in_x32_syscall()) {
++		/*
++		 * ... but on x32 the input xfs_fsop_bulkreq has pointers
++		 * which must be handled in the "compat" (32-bit) way, while
++		 * the xfs_bstat and xfs_inogrp structures follow native 64-
++		 * bit layout convention.  So adjust accordingly, otherwise
++		 * the data written out in compat layout will not match what
++		 * x32 userspace expects.
++		 */
++		inumbers_func = xfs_inumbers_fmt;
++		bs_one_func = xfs_bulkstat_one;
++		bs_one_size = sizeof(struct xfs_bstat);
++	}
++#endif
++
+ 	/* done = 1 if there are more stats to get and if bulkstat */
+ 	/* should be called again (unused here, but used in dmapi) */
  
-+	trace_iomap_apply(inode, pos, length, flags, ops, actor, _RET_IP_);
-+
- 	/*
- 	 * Need to map a range from start position for length bytes. This can
- 	 * span multiple pages - it is only guaranteed to return a range of a
-@@ -48,6 +51,10 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
- 	if (WARN_ON(iomap.length == 0))
- 		return -EIO;
+@@ -282,15 +308,15 @@ xfs_compat_ioc_bulkstat(
  
-+	trace_iomap_apply_dstmap(inode, &iomap);
-+	if (srcmap.type != IOMAP_HOLE)
-+		trace_iomap_apply_srcmap(inode, &srcmap);
-+
- 	/*
- 	 * Cut down the length to the one actually provided by the filesystem,
- 	 * as it might not be able to give us the whole size that we requested.
-diff --git a/fs/iomap/trace.h b/fs/iomap/trace.h
-index 4ca1aa2f3f6e..6dc227b8c47e 100644
---- a/fs/iomap/trace.h
-+++ b/fs/iomap/trace.h
-@@ -80,6 +80,109 @@ DEFINE_PAGE_EVENT(iomap_writepage);
- DEFINE_PAGE_EVENT(iomap_releasepage);
- DEFINE_PAGE_EVENT(iomap_invalidatepage);
+ 	if (cmd == XFS_IOC_FSINUMBERS_32) {
+ 		error = xfs_inumbers(mp, &inlast, &count,
+-				bulkreq.ubuffer, xfs_inumbers_fmt_compat);
++				bulkreq.ubuffer, inumbers_func);
+ 	} else if (cmd == XFS_IOC_FSBULKSTAT_SINGLE_32) {
+ 		int res;
  
-+#define IOMAP_TYPE_STRINGS \
-+	{ IOMAP_HOLE,		"HOLE" }, \
-+	{ IOMAP_DELALLOC,	"DELALLOC" }, \
-+	{ IOMAP_MAPPED,		"MAPPED" }, \
-+	{ IOMAP_UNWRITTEN,	"UNWRITTEN" }, \
-+	{ IOMAP_INLINE,		"INLINE" }
-+
-+#define IOMAP_FLAGS_STRINGS \
-+	{ IOMAP_WRITE,		"WRITE" }, \
-+	{ IOMAP_ZERO,		"ZERO" }, \
-+	{ IOMAP_REPORT,		"REPORT" }, \
-+	{ IOMAP_FAULT,		"FAULT" }, \
-+	{ IOMAP_DIRECT,		"DIRECT" }, \
-+	{ IOMAP_NOWAIT,		"NOWAIT" }
-+
-+#define IOMAP_F_FLAGS_STRINGS \
-+	{ IOMAP_F_NEW,		"NEW" }, \
-+	{ IOMAP_F_DIRTY,	"DIRTY" }, \
-+	{ IOMAP_F_SHARED,	"SHARED" }, \
-+	{ IOMAP_F_MERGED,	"MERGED" }, \
-+	{ IOMAP_F_BUFFER_HEAD,	"BH" }, \
-+	{ IOMAP_F_SIZE_CHANGED,	"SIZE_CHANGED" }
-+
-+DECLARE_EVENT_CLASS(iomap_class,
-+	TP_PROTO(struct inode *inode, struct iomap *iomap),
-+	TP_ARGS(inode, iomap),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(u64, ino)
-+		__field(u64, addr)
-+		__field(loff_t, offset)
-+		__field(u64, length)
-+		__field(u16, type)
-+		__field(u16, flags)
-+		__field(dev_t, bdev)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = inode->i_sb->s_dev;
-+		__entry->ino = inode->i_ino;
-+		__entry->addr = iomap->addr;
-+		__entry->offset = iomap->offset;
-+		__entry->length = iomap->length;
-+		__entry->type = iomap->type;
-+		__entry->flags = iomap->flags;
-+		__entry->bdev = iomap->bdev ? iomap->bdev->bd_dev : 0;
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx bdev %d:%d addr %lld offset %lld "
-+		  "length %llu type %s flags %s",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  MAJOR(__entry->bdev), MINOR(__entry->bdev),
-+		  __entry->addr,
-+		  __entry->offset,
-+		  __entry->length,
-+		  __print_symbolic(__entry->type, IOMAP_TYPE_STRINGS),
-+		  __print_flags(__entry->flags, "|", IOMAP_F_FLAGS_STRINGS))
-+)
-+
-+#define DEFINE_IOMAP_EVENT(name)		\
-+DEFINE_EVENT(iomap_class, name,	\
-+	TP_PROTO(struct inode *inode, struct iomap *iomap), \
-+	TP_ARGS(inode, iomap))
-+DEFINE_IOMAP_EVENT(iomap_apply_dstmap);
-+DEFINE_IOMAP_EVENT(iomap_apply_srcmap);
-+
-+TRACE_EVENT(iomap_apply,
-+	TP_PROTO(struct inode *inode, loff_t pos, loff_t length,
-+		unsigned int flags, const void *ops, void *actor,
-+		unsigned long caller),
-+	TP_ARGS(inode, pos, length, flags, ops, actor, caller),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(u64, ino)
-+		__field(loff_t, pos)
-+		__field(loff_t, length)
-+		__field(unsigned int, flags)
-+		__field(const void *, ops)
-+		__field(void *, actor)
-+		__field(unsigned long, caller)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = inode->i_sb->s_dev;
-+		__entry->ino = inode->i_ino;
-+		__entry->pos = pos;
-+		__entry->length = length;
-+		__entry->flags = flags;
-+		__entry->ops = ops;
-+		__entry->actor = actor;
-+		__entry->caller = caller;
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx pos %lld length %lld flags %s (0x%x) "
-+		  "ops %ps caller %pS actor %ps",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		   __entry->ino,
-+		   __entry->pos,
-+		   __entry->length,
-+		   __print_flags(__entry->flags, "|", IOMAP_FLAGS_STRINGS),
-+		   __entry->flags,
-+		   __entry->ops,
-+		   (void *)__entry->caller,
-+		   __entry->actor)
-+);
-+
- #endif /* _IOMAP_TRACE_H */
- 
- #undef TRACE_INCLUDE_PATH
+-		error = xfs_bulkstat_one_compat(mp, inlast, bulkreq.ubuffer,
+-				sizeof(compat_xfs_bstat_t), NULL, &res);
++		error = bs_one_func(mp, inlast, bulkreq.ubuffer,
++				bs_one_size, NULL, &res);
+ 	} else if (cmd == XFS_IOC_FSBULKSTAT_32) {
+ 		error = xfs_bulkstat(mp, &inlast, &count,
+-			xfs_bulkstat_one_compat, sizeof(compat_xfs_bstat_t),
++			bs_one_func, bs_one_size,
+ 			bulkreq.ubuffer, &done);
+ 	} else
+ 		error = -EINVAL;
+-- 
+2.20.1
+
