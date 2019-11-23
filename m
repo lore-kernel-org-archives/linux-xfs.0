@@ -2,164 +2,169 @@ Return-Path: <SRS0=qbJ3=ZP=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60680C432C0
-	for <linux-xfs@archiver.kernel.org>; Sat, 23 Nov 2019 18:12:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A302C432C3
+	for <linux-xfs@archiver.kernel.org>; Sat, 23 Nov 2019 18:26:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 350AB2067D
-	for <linux-xfs@archiver.kernel.org>; Sat, 23 Nov 2019 18:12:26 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mqrJ0NRm"
+	by mail.kernel.org (Postfix) with ESMTP id 66EF92068D
+	for <linux-xfs@archiver.kernel.org>; Sat, 23 Nov 2019 18:26:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726518AbfKWSMZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 23 Nov 2019 13:12:25 -0500
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:41485 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726494AbfKWSMZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 23 Nov 2019 13:12:25 -0500
-Received: by mail-pg1-f195.google.com with SMTP id 207so5025480pge.8
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Nov 2019 10:12:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=to:cc:references:from:openpgp:autocrypt:subject:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=fsMFIiqX55DoBmpazW+9ohix9+cT6hcqtIMlCRaFEuc=;
-        b=mqrJ0NRmaqCSvKsyvpUPRDxLhxwlC7otA8XRawynQQA2QZQl1TPkuUCJ1nIyCs61om
-         2L3/OOFOJYefA0OVy3rUdw4eUlNoyfxdJRz7SNUNrvlAPkTbT0qnftjLJkW7DqnSgQf3
-         XA0tV3KafXgae0G7FzKDUNtD3ZJtOA/w7U5d8uvm+c0GFZ24xrjeDa+75Go/MZMac6xY
-         v1nWx2KOdkeIm/J2rX0kuc5Y5NB/jLol6nsWdeqMBpwvZ2NjOUY9LlubLJwbqudZS87H
-         fY8/e3EWEK22wbPkT9Mfwu7J5OPeKDqHJyIRNYHpxWAL4XAEw9QrwAw5iivSITJO7QsH
-         /wvA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:references:from:openpgp:autocrypt:subject
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=fsMFIiqX55DoBmpazW+9ohix9+cT6hcqtIMlCRaFEuc=;
-        b=HomCokM0e3iiOzFz2yoLvzZkb+73g7aVQCb/BIxwqDRVYqNQZ1XaNGXVMKvLI8H16Y
-         sZzUTL7ybSybKCLUVq7OFyXzdb1YoQ4m6MBiCNgD6fv1PdjsLquSu5ozxCe9xU8oHP8d
-         RnMEwuUQ0FE+/7a+TGa+7XMYefZmXszCrQdNq69YXa5jHedHqtr0DydMSJOYPbBjG0Ej
-         XmrnHW0I40UlIyXAXodmKhFw/Cy7fdpwXY2bdPEHg0JLMjcWYAZuJqDhn3c1/S8t1Gz2
-         Gt6uObS+3aOHXjI8rRy4oxLZb4mvWHUUQuAipVhw2hXwZoC+3twPo5GA1Iy3LOAcE0RC
-         m0Dw==
-X-Gm-Message-State: APjAAAVvJtsmqzqoYkGIlocVJ382DViEIBStsGh8SBhXaDVNYQhwAekY
-        1uTwdPRkd2EKhJchyS0URgwmHfIW
-X-Google-Smtp-Source: APXvYqzPJ6U0uhWT0fdDrjN3eSvTWFsRQPfNafec8nJakXmfDiyooHkf/ApcRWxXsBDBsWifcDT25A==
-X-Received: by 2002:a63:d854:: with SMTP id k20mr23343258pgj.305.1574532742337;
-        Sat, 23 Nov 2019 10:12:22 -0800 (PST)
-Received: from [192.168.1.74] (cm-58-10-155-5.revip7.asianet.co.th. [58.10.155.5])
-        by smtp.gmail.com with ESMTPSA id a23sm2792985pjv.26.2019.11.23.10.12.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 23 Nov 2019 10:12:21 -0800 (PST)
-To:     Chris Murphy <lists@colorremedies.com>
-Cc:     xfs list <linux-xfs@vger.kernel.org>
-References: <a3ab6c1b-1a69-5926-706f-1976b20d38a8@gmail.com>
- <CAJCQCtSXhX8VFYwp9j7RXD3_CHPMC83D6W-mCS80byxmor1PCg@mail.gmail.com>
-From:   Pedro Ribeiro <pedrib@gmail.com>
-Openpgp: preference=signencrypt
-Autocrypt: addr=pedrib@gmail.com; prefer-encrypt=mutual; keydata=
- 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
+        id S1726638AbfKWS0b (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 23 Nov 2019 13:26:31 -0500
+Received: from sandeen.net ([63.231.237.45]:56482 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726634AbfKWS0b (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 23 Nov 2019 13:26:31 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 78FEE2AD0;
+        Sat, 23 Nov 2019 12:24:59 -0600 (CST)
 Subject: Re: Bug when mounting XFS with external SATA drives in USB enclosures
-Message-ID: <192321f0-f79d-8b2d-4bfc-9316ae6fa2e6@gmail.com>
-Date:   Sun, 24 Nov 2019 01:12:18 +0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+To:     Pedro Ribeiro <pedrib@gmail.com>, linux-xfs@vger.kernel.org
+References: <a3ab6c1b-1a69-5926-706f-1976b20d38a8@gmail.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
+ nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
+ WL05ODFQ2cemDhx5uLghHEeOxuGj+1AI+kh/FCzMedHc6k87Yu2ZuaWF+Gh1W2ix6hikRJmQ
+ vj5BEeAx7xKkyBhzdbNIbbjV/iGi9b26B/dNcyd5w2My2gxMtxaiP7q5b6GM2rsQklHP8FtW
+ ZiYO7jsg/qIppR1C6Zr5jK1GQlMUIclYFeBbKggJ9mSwXJH7MIftilGQ8KDvNuV5AbkronGC
+ sEEHj2khs7GfVv4pmUUHf1MRIvV0x3WJkpmhuZaYg8AdJlyGKgp+TQ7B+wCjNTdVqMI1vDk2
+ BS6Rg851ay7AypbCPx2w4d8jIkQEgNjACHVDU89PNKAjScK1aTnW+HNUqg9BliCvuX5g4z2j
+ gJBs57loTWAGe2Ve3cMy3VoQ40Wt3yKK0Eno8jfgzgb48wyycINZgnseMRhxc2c8hd51tftK
+ LKhPj4c7uqjnBjrgOVaVBupGUmvLiePlnW56zJZ51BR5igWnILeOJ1ZIcf7KsaHyE6B1mG+X
+ dmYtjDhjf3NAcoBWJuj8euxMB6TcQN2MrSXy5wSKaw40evooGwARAQABtCVFcmljIFIuIFNh
+ bmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+iQI7BBMBAgAlAhsDBgsJCAcDAgYVCAIJCgsE
+ FgIDAQIeAQIXgAUCUzMzbAIZAQAKCRAgrhaS4T3e4Fr7D/wO+fenqVvHjq21SCjDCrt8HdVj
+ aJ28B1SqSU2toxyg5I160GllAxEHpLFGdbFAhQfBtnmlY9eMjwmJb0sCIrkrB6XNPSPA/B2B
+ UPISh0z2odJv35/euJF71qIFgWzp2czJHkHWwVZaZpMWWNvsLIroXoR+uA9c2V1hQFVAJZyk
+ EE4xzfm1+oVtjIC12B9tTCuS00pY3AUy21yzNowT6SSk7HAzmtG/PJ/uSB5wEkwldB6jVs2A
+ sjOg1wMwVvh/JHilsQg4HSmDfObmZj1d0RWlMWcUE7csRnCE0ZWBMp/ttTn+oosioGa09HAS
+ 9jAnauznmYg43oQ5Akd8iQRxz5I58F/+JsdKvWiyrPDfYZtFS+UIgWD7x+mHBZ53Qjazszox
+ gjwO9ehZpwUQxBm4I0lPDAKw3HJA+GwwiubTSlq5PS3P7QoCjaV8llH1bNFZMz2o8wPANiDx
+ 5FHgpRVgwLHakoCU1Gc+LXHXBzDXt7Cj02WYHdFzMm2hXaslRdhNGowLo1SXZFXa41KGTlNe
+ 4di53y9CK5ynV0z+YUa+5LR6RdHrHtgywdKnjeWdqhoVpsWIeORtwWGX8evNOiKJ7j0RsHha
+ WrePTubr5nuYTDsQqgc2r4aBIOpeSRR2brlT/UE3wGgy9LY78L4EwPR0MzzecfE1Ws60iSqw
+ Pu3vhb7h3bkCDQROsffUARAA0DrUifTrXQzqxO8aiQOC5p9Tz25Np/Tfpv1rofOwL8VPBMvJ
+ X4P5l1V2yd70MZRUVgjmCydEyxLJ6G2YyHO2IZTEajUY0Up+b3ErOpLpZwhvgWatjifpj6bB
+ SKuDXeThqFdkphF5kAmgfVAIkan5SxWK3+S0V2F/oxstIViBhMhDwI6XsRlnVBoLLYcEilxA
+ 2FlRUS7MOZGmRJkRtdGD5koVZSM6xVZQSmfEBaYQ/WJBGJQdPy94nnlAVn3lH3+N7pXvNUuC
+ GV+t4YUt3tLcRuIpYBCOWlc7bpgeCps5Xa0dIZgJ8Louu6OBJ5vVXjPxTlkFdT0S0/uerCG5
+ 1u8p6sGRLnUeAUGkQfIUqGUjW2rHaXgWNvzOV6i3tf9YaiXKl3avFaNW1kKBs0T5M1cnlWZU
+ Utl6k04lz5OjoNY9J/bGyV3DSlkblXRMK87iLYQSrcV6cFz9PRl4vW1LGff3xRQHngeN5fPx
+ ze8X5NE3hb+SSwyMSEqJxhVTXJVfQWWW0dQxP7HNwqmOWYF/6m+1gK/Y2gY3jAQnsWTru4RV
+ TZGnKwEPmOCpSUvsTRXsVHgsWJ70qd0yOSjWuiv4b8vmD3+QFgyvCBxPMdP3xsxN5etheLMO
+ gRwWpLn6yNFq/xtgs+ECgG+gR78yXQyA7iCs5tFs2OrMqV5juSMGmn0kxJUAEQEAAYkCHwQY
+ AQIACQUCTrH31AIbDAAKCRAgrhaS4T3e4BKwD/0ZOOmUNOZCSOLAMjZx3mtYtjYgfUNKi0ki
+ YPveGoRWTqbis8UitPtNrG4XxgzLOijSdOEzQwkdOIp/QnZhGNssMejCnsluK0GQd+RkFVWN
+ mcQT78hBeGcnEMAXZKq7bkIKzvc06GFmkMbX/gAl6DiNGv0UNAX+5FYh+ucCJZSyAp3sA+9/
+ LKjxnTedX0aygXA6rkpX0Y0FvN/9dfm47+LGq7WAqBOyYTU3E6/+Z72bZoG/cG7ANLxcPool
+ LOrU43oqFnD8QwcN56y4VfFj3/jDF2MX3xu4v2OjglVjMEYHTCxP3mpxesGHuqOit/FR+mF0
+ MP9JGfj6x+bj/9JMBtCW1bY/aPeMdPGTJvXjGtOVYblGZrSjXRn5++Uuy36CvkcrjuziSDG+
+ JEexGxczWwN4mrOQWhMT5Jyb+18CO+CWxJfHaYXiLEW7dI1AynL4jjn4W0MSiXpWDUw+fsBO
+ Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
+ m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
+ fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
+Message-ID: <2543ac40-63ba-7a33-8ec5-2ef0797c6cc6@sandeen.net>
+Date:   Sat, 23 Nov 2019 12:26:29 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.2.2
 MIME-Version: 1.0
-In-Reply-To: <CAJCQCtSXhX8VFYwp9j7RXD3_CHPMC83D6W-mCS80byxmor1PCg@mail.gmail.com>
+In-Reply-To: <a3ab6c1b-1a69-5926-706f-1976b20d38a8@gmail.com>
 Content-Type: text/plain; charset=utf-8
-Content-Language: en-GB
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-On 23/11/2019 23:56, Chris Murphy wrote:
+On 11/22/19 9:21 PM, Pedro Ribeiro wrote:
+> Hi,
 > 
-> What about checking for differences in kernel messages between the
-> stripped down and stocked kernel, during device discovery. That is
-> connect no drives, boot the stripped kernel with the problem, connect
-> one of the problem USB devices, record the kernel messages that
-> result. Repeat that with the stock Debian kernel that doesn't exhibit
-> the bug.
-
-I'm not sure if you received it in the first email, but I have a zipfile
-with the dmesg output of both the Debian config and my own config, as
-well as the configs themselves.
-
-If for some reason the mailing list didn't process the attachment, you
-can download it from here:
-https://gofile.io/?c=6TaB3p
-
-Not sure if there a way to enable more verbose output?
-
+> I have been trying to find out the cause of a bug that's affecting all
+> my external hard drive backups.
 > 
-> My guess is this is some obscure USB related bug. There are a ton of
-> bugs with USB enclosure firmware, controllers, and drivers.
+> I have three external drives, in different USB enclosures, with the same
+> configuration and the same problem.
 > 
+> Drive A: 2TB HDD, USB3 Seagate self enclosed drive
+> Drive B: 4TB HDD, USB3 Toshiba self enclosed drive
+> Drive C: 512MB SSD, Crucial MX500 with USB-C third party enclosure
+> 
+> All of the drives have a dm-crypt / LUKS on top, with a XFS partition
+> inside. Drive A is a few months old, Drive B is about 3 years old, drive
+> C about 1.5 years old. They are seldomly used (they're backup drives) so
+> they are all fine mechanically.
+> 
+> The problem is when I attach any of the drives, enter the LUKS password
+> and then try to mount, this happens:
+> [   66.039772] XFS (dm-0): Mounting V5 Filesystem
+> [   66.060934] XFS (dm-0): log recovery read I/O error at daddr 0x0 len
+> 8 error -5
+> [   66.060939] XFS (dm-0): empty log check failed
+> [   66.060940] XFS (dm-0): log mount/recovery failed: error -5
+> [   66.061064] XFS (dm-0): log mount failed
 
-Possibly, although it affects 3 different enclosures, so it should not
-be something enclosure specific, but affect a common layer.
+I assume that it used to work, right?  When did it stop working?
+<reads further, sees 5.3>
 
+> No matter what I do, using all the recovery tools, etc, it's impossible
+> to mount...
+> 
+> The thing is that is there is NOTHING wrong with these drives. The above
+> happens when running my specific, stripped and locked down kernel config.
+> 
+> If I take Debian's 4.19 kernel config, put it on a 5.3.11 tree, run make
+> oldconfig and just answer the defaults on all prompts, all of the drives
+> above mount fine:
+> [   46.184068] XFS (dm-0): Mounting V5 Filesystem
+> [   46.412566] XFS (dm-0): Ending clean mount
 
-> Also, is this USB enclosure directly connected to the computer? Or to
-> a powered hub? I have inordinate problems with USB enclosures directly
-> connected to an Intel NUC, but when connected to a Dyconn USB hub with
-> external power source, the problems all go away. And my understanding
-> is the hub doesn't just act like a repeater. It pretty much rewrites
-> the entire stream. So there's something screwy going on either with
-> the Intel controller I have, or the USB-SATA bridge chip, that causes
-> confusing that the hub eliminates.
+> I hit this problem recently when I moved from kernel 4.18.20, which I
+> was using for a long time, to 5.3.X. In kernel 4.18.20, I did not have
+> any problems with my specific stripped down config.
 
-All connected directly to the computer, two via USB-3, one via USB-C,
-same errors.
+Could be related to memory alignment.  Commit:
 
+commit f8f9ee479439c1be9e33c4404912a2a112c46200
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Mon Aug 26 12:08:39 2019 -0700
 
+    xfs: add kmem_alloc_io()
+    
+    Memory we use to submit for IO needs strict alignment to the
+    underlying driver contraints. Worst case, this is 512 bytes. Given
+    that all allocations for IO are always a power of 2 multiple of 512
+    bytes, the kernel heap provides natural alignment for objects of
+    these sizes and that suffices.
+
+went into kernel 5.4, and doesn't look like it's in the 5.3.x stable
+stream.
+
+I haven't looked very closely at your config deltas for what might change
+alignment but it'd be worth giving:
+
+f8f9ee479439 xfs: add kmem_alloc_io()
+d916275aa4dd xfs: get allocation alignment from the buftarg
+0ad95687c3ad xfs: add kmem allocation trace points
+
+a try.
+
+-Eric
+
+> I have asked for help in IRC at #xfs, and one of the guys there (ailiop)
+> was very helpful in trying to track down the problem, but we ultimately
+> failed, hence why I'm asking for help here.
+> 
+> I'm attaching the kernel configs and the dmesg outputs. There is nothing
+> obvious in the kernel config diff that should make this happen... it's a
+> very weird bug.
+> 
+> Regards,
+> Pedro
 > 
