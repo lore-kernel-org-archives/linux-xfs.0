@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E45FC432C0
-	for <linux-xfs@archiver.kernel.org>; Sat, 23 Nov 2019 15:47:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23D76C432C0
+	for <linux-xfs@archiver.kernel.org>; Sat, 23 Nov 2019 15:55:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 421DB20679
-	for <linux-xfs@archiver.kernel.org>; Sat, 23 Nov 2019 15:47:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E414C2070E
+	for <linux-xfs@archiver.kernel.org>; Sat, 23 Nov 2019 15:55:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YZqDPwYq"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Grm8qWiE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726802AbfKWPrY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 23 Nov 2019 10:47:24 -0500
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:47970 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726880AbfKWPrY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 23 Nov 2019 10:47:24 -0500
+        id S1726813AbfKWPzP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 23 Nov 2019 10:55:15 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:51438 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726638AbfKWPzP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 23 Nov 2019 10:55:15 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1574524043;
+        s=mimecast20190719; t=1574524514;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding;
         bh=clONc5ffeJpCqgFX0EMI3i14IdrW9eg7+/UJx5M4OOI=;
-        b=YZqDPwYqomX7nTA5GUKqM9QnhbeIrNSf5hiY+YvlfrrB5BPi7ZpIKxoy9PSJewrOIwLzTV
-        UpKR/hxBSvjBImS4z92coJweIyH7Rc/02Pa5uYRakg8AteN+VtMf4g7j5qU1Z3+PXX2UFk
-        GexCd+vU8IonvBeSwnNpds3YA8t8Oes=
+        b=Grm8qWiESf4eUkdY9ep+GG7JtNvIAlLwbOsWaYFS2mJ0AIQHkzrIawRTuDoKKP7F1S7A51
+        Z92Fg1wpRtqVa9/YtddmtR3UHezpI9+KysJ05TP1OQfnFwQBNYpfeF6V/ODAluZDqSOoNe
+        BdjAyo1R80eVtKVmW05zO3IFM1ayBio=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-421-bd8fT8nSM_WzuJnzdGp8_Q-1; Sat, 23 Nov 2019 10:47:22 -0500
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+ us-mta-289-Rlbx8jWOOkKO11IhruMYEg-1; Sat, 23 Nov 2019 10:55:12 -0500
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 387C5477
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Nov 2019 15:47:21 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C1AF6107B26F
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Nov 2019 15:55:11 +0000 (UTC)
 Received: from localhost.localdomain.com (ovpn-120-110.rdu2.redhat.com [10.10.120.110])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id B8CF310013A1;
-        Sat, 23 Nov 2019 15:47:20 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 4BE5E60850;
+        Sat, 23 Nov 2019 15:55:11 +0000 (UTC)
 From:   John Pittman <jpittman@redhat.com>
 To:     esandeen@redhat.com
 Cc:     preichl@redhat.com, linux-xfs@vger.kernel.org,
         John Pittman <jpittman@redhat.com>
-Subject: [PATCH v2] xfsprogs: add missing carriage returns in libxfs/rdwr.c
-Date:   Sat, 23 Nov 2019 10:47:16 -0500
-Message-Id: <20191123154716.15257-1-jpittman@redhat.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-MC-Unique: bd8fT8nSM_WzuJnzdGp8_Q-1
+Subject: [PATCH v3] xfsprogs: add missing line feeds in libxfs/rdwr.c
+Date:   Sat, 23 Nov 2019 10:55:08 -0500
+Message-Id: <20191123155508.15769-1-jpittman@redhat.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-MC-Unique: Rlbx8jWOOkKO11IhruMYEg-1
 X-Mimecast-Spam-Score: 0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
