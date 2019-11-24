@@ -2,139 +2,268 @@ Return-Path: <SRS0=28RO=ZQ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBAE6C432C0
-	for <linux-xfs@archiver.kernel.org>; Sun, 24 Nov 2019 19:16:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F474C432C0
+	for <linux-xfs@archiver.kernel.org>; Sun, 24 Nov 2019 22:03:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D223C2075E
-	for <linux-xfs@archiver.kernel.org>; Sun, 24 Nov 2019 19:16:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4A0812071A
+	for <linux-xfs@archiver.kernel.org>; Sun, 24 Nov 2019 22:03:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="h8hdUGsH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726869AbfKXTQL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 24 Nov 2019 14:16:11 -0500
-Received: from sandeen.net ([63.231.237.45]:43746 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726840AbfKXTQL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 24 Nov 2019 14:16:11 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 89D502AD0;
-        Sun, 24 Nov 2019 13:14:37 -0600 (CST)
-Subject: Re: Bug when mounting XFS with external SATA drives in USB enclosures
-To:     Pedro Ribeiro <pedrib@gmail.com>, linux-xfs@vger.kernel.org
-References: <a3ab6c1b-1a69-5926-706f-1976b20d38a8@gmail.com>
- <2543ac40-63ba-7a33-8ec5-2ef0797c6cc6@sandeen.net>
- <4728bdc7-3f6e-9abf-34a5-712156c40db3@gmail.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <9ee09a97-b3a1-7bf9-43f2-ed2b47e35dc5@sandeen.net>
-Date:   Sun, 24 Nov 2019 13:16:06 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.2.2
+        id S1726855AbfKXWDG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 24 Nov 2019 17:03:06 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:52864 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726842AbfKXWDG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 Nov 2019 17:03:06 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAOLs9F2048540;
+        Sun, 24 Nov 2019 22:03:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=HW0InOUfQ+NshO1hw9+/dAV6oij4KrxXK2bC5AezXoE=;
+ b=h8hdUGsHkIE/u9524LpNmvlVSYTfC+eWT3t4M69CnhT2iDvaszWfzVG+tK3rG1r7Mh6x
+ KpZQmrBnLcySO+C8Ba5iu0vjMP5R2a6MvBdhycn8n120sSbLiyDs2JcIBaiUO+TCzi87
+ 7HLOhrwhjicUjQCjWqveAXSjOgC51F32FN/FIkU1i7AmqaDE4VByChbb/D6nnCosi+Yb
+ MCsVkbrR9wQdZk1QcRE+Hmrv6QegxIUYS3jcQRpHMARC/KggnVin+ERwKcaM0zILUMIg
+ HuVKcTJmT60Eud1xWDTjDALmOohuwMktWxDZqIG6XAJ7YXCNF9cU0rE+ZtISQl15Z92a sg== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2wev6tux65-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 24 Nov 2019 22:03:02 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAOM2v2F109036;
+        Sun, 24 Nov 2019 22:03:01 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 2wfex5ag6m-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 24 Nov 2019 22:03:01 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xAOM30jV016956;
+        Sun, 24 Nov 2019 22:03:00 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sun, 24 Nov 2019 14:02:58 -0800
+Date:   Sun, 24 Nov 2019 14:02:56 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Carlos Maiolino <cmaiolino@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 5/5] xfs: Convert kmem_alloc() users
+Message-ID: <20191124220256.GM6219@magnolia>
+References: <20191120104425.407213-1-cmaiolino@redhat.com>
+ <20191120104425.407213-6-cmaiolino@redhat.com>
+ <20191122155756.GE6219@magnolia>
+ <20191122223048.GK6219@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <4728bdc7-3f6e-9abf-34a5-712156c40db3@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191122223048.GK6219@magnolia>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9451 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-1911240212
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9451 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-1911240211
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 11/24/19 12:49 AM, Pedro Ribeiro wrote:
+On Fri, Nov 22, 2019 at 02:30:48PM -0800, Darrick J. Wong wrote:
+> On Fri, Nov 22, 2019 at 07:57:56AM -0800, Darrick J. Wong wrote:
+> > On Wed, Nov 20, 2019 at 11:44:25AM +0100, Carlos Maiolino wrote:
+> > > Use kmalloc() directly.
 > 
+> <snip all this>
 > 
-> On 24/11/2019 01:26, Eric Sandeen wrote:
+> > > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> > > index 5423171e0b7d..7bb53fbf32f6 100644
+> > > --- a/fs/xfs/xfs_log_recover.c
+> > > +++ b/fs/xfs/xfs_log_recover.c
+> > > @@ -1962,7 +1962,7 @@ xlog_recover_buffer_pass1(
+> > >  		}
+> > >  	}
+> > >  
+> > > -	bcp = kmem_alloc(sizeof(struct xfs_buf_cancel), 0);
+> > > +	bcp = kmalloc(sizeof(struct xfs_buf_cancel), GFP_KERNEL | __GFP_NOFAIL);
+> > >  	bcp->bc_blkno = buf_f->blf_blkno;
+> > >  	bcp->bc_len = buf_f->blf_len;
+> > >  	bcp->bc_refcount = 1;
+> > > @@ -2932,7 +2932,8 @@ xlog_recover_inode_pass2(
+> > >  	if (item->ri_buf[0].i_len == sizeof(struct xfs_inode_log_format)) {
+> > >  		in_f = item->ri_buf[0].i_addr;
+> > >  	} else {
+> > > -		in_f = kmem_alloc(sizeof(struct xfs_inode_log_format), 0);
+> > > +		in_f = kmalloc(sizeof(struct xfs_inode_log_format),
+> > > +			       GFP_KERNEL | __GFP_NOFAIL);
+> > >  		need_free = 1;
+> > >  		error = xfs_inode_item_format_convert(&item->ri_buf[0], in_f);
+> > >  		if (error)
+> > > @@ -4271,7 +4272,7 @@ xlog_recover_add_to_trans(
+> > >  		return 0;
+> > >  	}
+> > >  
+> > > -	ptr = kmem_alloc(len, 0);
+> > > +	ptr = kmalloc(len, GFP_KERNEL | __GFP_NOFAIL);
+> > >  	memcpy(ptr, dp, len);
+> > >  	in_f = (struct xfs_inode_log_format *)ptr;
+> > 
+> > I noticed that kmalloc is generating warnings with generic/049 when 16k
+> > directories (-n size=16k) are enabled.  I /think/ this is because it's
+> > quite possible to write out an xlog_op_header with a length of more than
+> > a single page; log recovery will then try to allocate a huge memory
+> > buffer to recover the transaction; and so we try to do a huge NOFAIL
+> > allocation, which makes the mm unhappy.
+> > 
+> > The one thing I've noticed with this conversion series is that the flags
+> > translation isn't 100% 1-to-1.  Before, kmem_flags_convert didn't
+> > explicitly set __GFP_NOFAIL anywhere; we simply took the default
+> > behavior.  IIRC that means that small allocations actually /are/
+> > guaranteed to succeed, but multipage allocations certainly aren't.
+> > This seems to be one place where we could have asked for a lot of
+> > memory, failed to get it, and crashed.
+> > 
+> > Now that we explicitly set NOFAIL in all the places where we don't also
+> > check for a null return, I think we're just uncovering latent bugs
+> > lurking in the code base.  The kernel does actually fulfill the
+> > allocation request, but it's clearly not happy.
 > 
->> I haven't looked very closely at your config deltas for what might change
->> alignment but it'd be worth giving:
->>
->> f8f9ee479439 xfs: add kmem_alloc_io()
->> d916275aa4dd xfs: get allocation alignment from the buftarg
->> 0ad95687c3ad xfs: add kmem allocation trace points
->>
->> a try.
->>
->> -Eric
-> 
-> Hi Eric,
-> 
-> That did the trick. Took me some time to resolve the rejects, but now
-> 5.3.11 and 5.3.12 work like a charm.
-> 
-> While trying to track down the patches, I found your reply here:
-> https://bugzilla.redhat.com/show_bug.cgi?id=1762596
-> 
-> I ended up applying:
-> f8f9ee479439 xfs: add kmem_alloc_io()
-> d916275aa4dd xfs: get allocation alignment from the buftarg
-> 0ad95687c3ad xfs: add kmem allocation trace points
-> 
-> And I don't know why at the time (I was sleepy), I ended up applying
-> this one too:
-> xfs: assure zeroed memory buffers for certain kmem allocations
+> FWIW I ran with various dirsizes and options and it looks like this is
+> the only place where we screw this up... patches soon.
 
-that one's not needed for this problem.
+I rescind that statement -- there's enough places in this series where I
+can't 100% tell that a k{mzre}alloc call asks for a small enough amount
+of memory to qualify for __GFP_NOFAIL.
 
-> I had to remove the second argument to kmem_alloc_io when applying this
-> last one, as kmem_alloc_io had two arguments in the 5.3.12 tree + those
-> 3 patches above, instead of three arguments in the actual patch:
+I really want this cleanup to start with a straightforward removal of
+the kmem.c wrappers without any behavior changes.  Only after that's
+done should we move on to things like adding __GFP_NOFAIL to allocations
+or deciding if/where we can substitute kfree for kvfree.
 
-Hm that doesn't make sense; f8f9ee479439 introduces kmem_alloc_io
-with 3 arguments.  2 arguments to kmem_alloc_io, missing the alignment
-mask, would be a problem.
+Munging them together means I can't easily tell if something is
+seriously broken here (but the WARN_ONs suggest this) and I'd forgotten
+that the merge window is opening the week of a major US holiday, so I
+choose to defer this series to 5.6.
 
-> return kmem_alloc_io(BBTOB(nbblks), align_mask, KM_MAYFAIL | KM_ZERO);
-> return kmem_alloc_io(BBTOB(nbblks), KM_MAYFAIL | KM_ZERO);
+--D
+
+> --D
 > 
-> Do you think it's safe to keep these 4 patches on top of the 5.3.12
-> tree? So far it all looks fine, filesystems mount and work fine.
-
-Yes, but ... they should probably be applied correctly.  A quick test here
-seems to show the three I suggested apply to 5.3.12 cleanly.
-
--Eric
+> > --D
+> > 
+> > Relevant snippet of dmesg; everything else was normal:
+> > 
+> >  XFS (sdd): Mounting V5 Filesystem
+> >  XFS (sdd): Starting recovery (logdev: internal)
+> >  ------------[ cut here ]------------
+> >  WARNING: CPU: 1 PID: 459342 at mm/page_alloc.c:3275 get_page_from_freelist+0x434/0x1660
+> >  Modules linked in: dm_thin_pool dm_persistent_data dm_bio_prison dm_snapshot dm_bufio dm_flakey xfs libcrc32c ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 ip_set_hash_ip ip_set_hash_net xt_tcpudp xt_set ip_set_hash_mac bfq ip_set nfnetlink ip6table_filter ip6_tables iptable_filter sch_fq_codel ip_tables x_tables nfsv4 af_packet [last unloaded: scsi_debug]
+> >  CPU: 1 PID: 459342 Comm: mount Not tainted 5.4.0-rc3-djw #rc3
+> >  Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.10.2-1ubuntu1 04/01/2014
+> >  RIP: 0010:get_page_from_freelist+0x434/0x1660
+> >  Code: e6 00 00 00 00 48 89 84 24 a0 00 00 00 0f 84 08 fd ff ff f7 84 24 c0 00 00 00 00 80 00 00 74 0c 83 bc 24 84 00 00 00 01 76 02 <0f> 0b 49 8d 87 10 05 00 00 48 89 c7 48 89 84 24 88 00 00 00 e8 03
+> >  RSP: 0018:ffffc900035d3918 EFLAGS: 00010202
+> >  RAX: ffff88803fffb680 RBX: 0000000000002968 RCX: ffffea0000c8e108
+> >  RDX: ffff88803fffbba8 RSI: ffff88803fffb870 RDI: 0000000000000000
+> >  RBP: 0000000000000002 R08: 0000000000000201 R09: 000000000002ff81
+> >  R10: 0000000000000001 R11: 0000000000000000 R12: 0000000000000000
+> >  R13: 0000000000048cc0 R14: 0000000000000001 R15: ffff88803fffb680
+> >  FS:  00007fcfdf89a080(0000) GS:ffff88803ea00000(0000) knlGS:0000000000000000
+> >  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> >  CR2: 000055b202ec48c8 CR3: 000000003bfdc005 CR4: 00000000001606a0
+> >  Call Trace:
+> >   ? kvm_clock_read+0x14/0x30
+> >   __alloc_pages_nodemask+0x172/0x3a0
+> >   kmalloc_order+0x18/0x80
+> >   kmalloc_order_trace+0x1d/0x130
+> >   xlog_recover_add_to_trans+0x4b/0x340 [xfs]
+> >   xlog_recovery_process_trans+0xe9/0xf0 [xfs]
+> >   xlog_recover_process_data+0x9e/0x1f0 [xfs]
+> >   xlog_do_recovery_pass+0x3a9/0x7c0 [xfs]
+> >   xlog_do_log_recovery+0x72/0x150 [xfs]
+> >   xlog_do_recover+0x43/0x2a0 [xfs]
+> >   xlog_recover+0xdf/0x170 [xfs]
+> >   xfs_log_mount+0x2e3/0x300 [xfs]
+> >   xfs_mountfs+0x4e7/0x9f0 [xfs]
+> >   xfs_fc_fill_super+0x2f8/0x520 [xfs]
+> >   ? xfs_fs_destroy_inode+0x4f0/0x4f0 [xfs]
+> >   get_tree_bdev+0x198/0x270
+> >   vfs_get_tree+0x23/0xb0
+> >   do_mount+0x87e/0xa20
+> >   ksys_mount+0xb6/0xd0
+> >   __x64_sys_mount+0x21/0x30
+> >   do_syscall_64+0x50/0x180
+> >   entry_SYSCALL_64_after_hwframe+0x49/0xbe
+> >  RIP: 0033:0x7fcfdf15d3ca
+> >  Code: 48 8b 0d c1 8a 2c 00 f7 d8 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 8e 8a 2c 00 f7 d8 64 89 01 48
+> >  RSP: 002b:00007fff0af10a58 EFLAGS: 00000202 ORIG_RAX: 00000000000000a5
+> >  RAX: ffffffffffffffda RBX: 000055b202ec1970 RCX: 00007fcfdf15d3ca
+> >  RDX: 000055b202ec1be0 RSI: 000055b202ec1c20 RDI: 000055b202ec1c00
+> >  RBP: 0000000000000000 R08: 000055b202ec1b80 R09: 0000000000000000
+> >  R10: 00000000c0ed0000 R11: 0000000000000202 R12: 000055b202ec1c00
+> >  R13: 000055b202ec1be0 R14: 0000000000000000 R15: 00007fcfdf67e8a4
+> >  irq event stamp: 18398
+> >  hardirqs last  enabled at (18397): [<ffffffff8123738f>] __slab_alloc.isra.83+0x6f/0x80
+> >  hardirqs last disabled at (18398): [<ffffffff81001d8a>] trace_hardirqs_off_thunk+0x1a/0x20
+> >  softirqs last  enabled at (18158): [<ffffffff81a003af>] __do_softirq+0x3af/0x4a4
+> >  softirqs last disabled at (18149): [<ffffffff8106528c>] irq_exit+0xbc/0xe0
+> >  ---[ end trace 3669c914fa8ccac6 ]---
+> > 
+> > AFAICT this is because inode buffers are 32K on this system
+> > 
+> > >  
+> > > diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> > > index a2664afa10c3..2993af4a9935 100644
+> > > --- a/fs/xfs/xfs_qm.c
+> > > +++ b/fs/xfs/xfs_qm.c
+> > > @@ -988,7 +988,8 @@ xfs_qm_reset_dqcounts_buf(
+> > >  	if (qip->i_d.di_nblocks == 0)
+> > >  		return 0;
+> > >  
+> > > -	map = kmem_alloc(XFS_DQITER_MAP_SIZE * sizeof(*map), 0);
+> > > +	map = kmalloc(XFS_DQITER_MAP_SIZE * sizeof(*map),
+> > > +		      GFP_KERNEL | __GFP_NOFAIL);
+> > >  
+> > >  	lblkno = 0;
+> > >  	maxlblkcnt = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
+> > > diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+> > > index 7f03b4ab3452..dfd419d402ea 100644
+> > > --- a/fs/xfs/xfs_rtalloc.c
+> > > +++ b/fs/xfs/xfs_rtalloc.c
+> > > @@ -962,7 +962,7 @@ xfs_growfs_rt(
+> > >  	/*
+> > >  	 * Allocate a new (fake) mount/sb.
+> > >  	 */
+> > > -	nmp = kmem_alloc(sizeof(*nmp), 0);
+> > > +	nmp = kmalloc(sizeof(*nmp), GFP_KERNEL | __GFP_NOFAIL);
+> > >  	/*
+> > >  	 * Loop over the bitmap blocks.
+> > >  	 * We will do everything one bitmap block at a time.
+> > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > > index cc1933dc652f..eee831681e9c 100644
+> > > --- a/fs/xfs/xfs_super.c
+> > > +++ b/fs/xfs/xfs_super.c
+> > > @@ -1739,7 +1739,7 @@ static int xfs_init_fs_context(
+> > >  {
+> > >  	struct xfs_mount	*mp;
+> > >  
+> > > -	mp = kmem_alloc(sizeof(struct xfs_mount), KM_ZERO);
+> > > +	mp = kzalloc(sizeof(struct xfs_mount), GFP_KERNEL | __GFP_NOFAIL);
+> > >  	if (!mp)
+> > >  		return -ENOMEM;
+> > >  
+> > > -- 
+> > > 2.23.0
+> > > 
