@@ -2,179 +2,163 @@ Return-Path: <SRS0=28RO=ZQ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12014C43215
-	for <linux-xfs@archiver.kernel.org>; Sun, 24 Nov 2019 06:01:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EEF5C432C0
+	for <linux-xfs@archiver.kernel.org>; Sun, 24 Nov 2019 06:50:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DA19B20815
-	for <linux-xfs@archiver.kernel.org>; Sun, 24 Nov 2019 06:01:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C24402071A
+	for <linux-xfs@archiver.kernel.org>; Sun, 24 Nov 2019 06:49:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IHgsSdbu"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UL0KLda/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726673AbfKXGBA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 24 Nov 2019 01:01:00 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:60804 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725809AbfKXGBA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 Nov 2019 01:01:00 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAO5x6k6064908;
-        Sun, 24 Nov 2019 06:00:37 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
- bh=ZkamOZQ+Uz1NRb2a/cQ1TYEMM/mSJKsU4StkuuA8WXg=;
- b=IHgsSdbut73O86DT0/UOuvhOkF7g5Opee0mD7Lfy4El3YUMD8LwVnRLSvTTdP9KZ1kwI
- Q1mQ0Am8fyDdvHSTNiRvq4t1fXD891s1wle+nxG+zwnqONFmbZRtRY6bGPdJ1dk96PYY
- zlqMF7VUJax1ZXPag9DfvRCSUaLvyzpBxT3aC0/x8tVdAzzjV23CMKa2PzAHw9AL3XLU
- LCWL7QrlyZNwCEq2QOnY92AKNtE7rYyN2lCf/ibdXGBXB3bABvuReL5co1pGTwKND0FX
- Ak1aitbnZzNJwvzyrneLX5UHVmr5g661ROQGu++9gGdupw0ab71uAIAZnZkImX/377B5 rQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2wev6ttbu5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 24 Nov 2019 06:00:37 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAO5woCf086453;
-        Sun, 24 Nov 2019 06:00:36 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2wfe96ntus-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 24 Nov 2019 06:00:36 +0000
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xAO60W4x002331;
-        Sun, 24 Nov 2019 06:00:33 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sat, 23 Nov 2019 22:00:32 -0800
-Date:   Sat, 23 Nov 2019 22:00:31 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Jan Kara <jack@suse.cz>, mbobrowski@mbobrowski.org,
-        riteshh@linux.ibm.com
-Subject: [ANNOUNCE] xfs-linux: iomap-5.5-merge updated to 419e9c38aa07
-Message-ID: <20191124060031.GR6211@magnolia>
+        id S1725913AbfKXGt7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 24 Nov 2019 01:49:59 -0500
+Received: from mail-pg1-f172.google.com ([209.85.215.172]:44903 "EHLO
+        mail-pg1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725813AbfKXGt7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 Nov 2019 01:49:59 -0500
+Received: by mail-pg1-f172.google.com with SMTP id e6so5473522pgi.11
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Nov 2019 22:49:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=to:references:from:openpgp:autocrypt:subject:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=bLezfcCa0O26vAzYpJk/l1NJtBapIaymODi4MyOkfFU=;
+        b=UL0KLda/5nxBzhVFUiawKDDpLwTyJmVcE6xV8DNx4DLMqE9kvPNQsjZYEHzQMIZx2A
+         8pB6d+KQZrUzp65vaoNxV9w3IYQx+c+XJRwXO43NtpQzVe+c+nlDgs5f4PLPbYHmKuLf
+         WiqVG+B2odTheJJ8GP6kBpnAips69esUIVywjoTZadJz56MNSEl+Fyln4HFvfOpxuoEK
+         b5YdaLLyLILTwJ7HNtz6/fZ3ED0CFnRrP8PXBNUCf84OvNJTMU+gpTCI0u3mOxfqocRk
+         mq2ZHI+AC7X9pDTQIBKFLJqwjjTgJMWJZi/9z4VVwxkOePPEwnJh7SQaQ+IquDuPOc3F
+         f+bA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:references:from:openpgp:autocrypt:subject
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=bLezfcCa0O26vAzYpJk/l1NJtBapIaymODi4MyOkfFU=;
+        b=sXyY4KnuRwDT19DCeKITP5ZcjjTJM7028BQm63zXZZVzompRFT32IvCGuRiv7Zwl/C
+         x43P/rqfNlyyjqDQ0hKguolsZmNSZAZaIY0CoymxjyawBQ3+Ml7YWurpTLbkRhCp6C8n
+         Cybn1XXLj3rM4KLTEQWXBl2x6vawVngz68gCG+XkrIUbxhFNTpGilL2pPHZugzXLYSXU
+         uQemoqsYwtPHEuuMuVpCGcvXZXLk5XrFsiXiNJYCmEKrw3jzaBuRU+azsabZxCm1Z9sm
+         RTYMhlQjqE+NpyjGaCsExtk5wkQoJnTPtEALgtALw3rf8tvcUYL2hHM7d4nf0NVYoVha
+         zj9Q==
+X-Gm-Message-State: APjAAAWagGDWIHZjEAudHWWbahvEDezPF9/vTBLwDfXoY/PjZHxjQud0
+        ABgbUBjbaqUZ7GD7k09Wayj9T8aw
+X-Google-Smtp-Source: APXvYqwP8UWtaP56YxXH/Xgp6QmmNRQ/7UdDuBKnlpEPT3lVm3k/5RjObWK2t4giKMO9cEmb6ct4+A==
+X-Received: by 2002:a62:b60c:: with SMTP id j12mr5973342pff.8.1574578197388;
+        Sat, 23 Nov 2019 22:49:57 -0800 (PST)
+Received: from [192.168.1.74] (cm-58-10-155-5.revip7.asianet.co.th. [58.10.155.5])
+        by smtp.gmail.com with ESMTPSA id hi2sm3559613pjb.22.2019.11.23.22.49.55
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 23 Nov 2019 22:49:56 -0800 (PST)
+To:     Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+References: <a3ab6c1b-1a69-5926-706f-1976b20d38a8@gmail.com>
+ <2543ac40-63ba-7a33-8ec5-2ef0797c6cc6@sandeen.net>
+From:   Pedro Ribeiro <pedrib@gmail.com>
+Openpgp: preference=signencrypt
+Autocrypt: addr=pedrib@gmail.com; prefer-encrypt=mutual; keydata=
+ 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
+Subject: Re: Bug when mounting XFS with external SATA drives in USB enclosures
+Message-ID: <4728bdc7-3f6e-9abf-34a5-712156c40db3@gmail.com>
+Date:   Sun, 24 Nov 2019 13:49:53 +0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9450 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1911240059
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9450 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1911240060
+In-Reply-To: <2543ac40-63ba-7a33-8ec5-2ef0797c6cc6@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-GB
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
-
-The iomap-5.5-merge branch of the xfs-linux repository at:
-
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the iomap-5.5-merge branch is commit:
-
-419e9c38aa07 iomap: Fix pipe page leakage during splicing
-
-New Commits:
-
-Andreas Gruenbacher (1):
-      [add66fcbd3fb] iomap: Fix overflow in iomap_page_mkwrite
-
-Christoph Hellwig (20):
-      [2492a606b3d2] xfs: initialize iomap->flags in xfs_bmbt_to_iomap
-      [05b30949f1aa] xfs: set IOMAP_F_NEW more carefully
-      [4e087a3b313c] xfs: use a struct iomap in xfs_writepage_ctx
-      [433dad94ec5d] xfs: refactor the ioend merging code
-      [5653017bc44e] xfs: turn io_append_trans into an io_private void pointer
-      [760fea8bfb7f] xfs: remove the fork fields in the writepage_ctx and ioend
-      [009d8d849d3f] iomap: zero newly allocated mapped blocks
-      [9e91c5728cab] iomap: lift common tracing code from xfs to iomap
-      [598ecfbaa742] iomap: lift the xfs writeback code to iomap
-      [3e19e6f3eeea] iomap: warn on inline maps in iomap_writepage_map
-      [ab08b01ec0a2] iomap: move struct iomap_page out of iomap.h
-      [b3d423ec898a] iomap: cleanup iomap_ioend_compare
-      [48d64cd18b33] iomap: pass a struct page to iomap_finish_page_writeback
-      [65a60e8687c1] iomap: better document the IOMAP_F_* flags
-      [c12d6fa88d09] iomap: remove the unused iomap argument to __iomap_write_end
-      [dcd6158d15c7] iomap: always use AOP_FLAG_NOFS in iomap_write_begin
-      [3590c4d8979b] iomap: ignore non-shared or non-data blocks in xfs_file_dirty
-      [d3b404396977] iomap: move the zeroing case out of iomap_read_page_sync
-      [32a38a499104] iomap: use write_begin to read pages to unshare
-      [eb81cf9d0e18] iomap: renumber IOMAP_HOLE to 0
-
-Darrick J. Wong (3):
-      [9cd0ed63ca51] iomap: enhance writeback error message
-      [2b91b28e29f6] iomap: iomap_bmap should check iomap_apply return value
-      [6334b91e502c] iomap: trace iomap_appply results
-
-Dave Chinner (1):
-      [7684e2c4384d] iomap: iomap that extends beyond EOF should be marked dirty
-
-Goldwyn Rodrigues (1):
-      [c039b9979272] iomap: use a srcmap for a read-modify-write I/O
-
-Jan Kara (3):
-      [13ef954445df] iomap: Allow forcing of waiting for running DIO in iomap_dio_rw()
-      [906753befc4d] xfs: Use iomap_dio_rw to wait for unaligned direct IO
-      [419e9c38aa07] iomap: Fix pipe page leakage during splicing
-
-Jan Stancek (1):
-      [e9f930ac88a8] iomap: fix return value of iomap_dio_bio_actor on 32bit systems
-
-Joseph Qi (1):
-      [a90100421499] fs/iomap: remove redundant check in iomap_dio_rw()
 
 
-Code Diffstat:
+On 24/11/2019 01:26, Eric Sandeen wrote:
 
- fs/dax.c                 |  13 +-
- fs/ext2/inode.c          |   2 +-
- fs/ext4/inode.c          |   2 +-
- fs/gfs2/bmap.c           |   3 +-
- fs/gfs2/file.c           |   6 +-
- fs/iomap/Makefile        |  16 +-
- fs/iomap/apply.c         |  32 +-
- fs/iomap/buffered-io.c   | 756 +++++++++++++++++++++++++++++++++++++++++------
- fs/iomap/direct-io.c     |  24 +-
- fs/iomap/fiemap.c        |  10 +-
- fs/iomap/seek.c          |   4 +-
- fs/iomap/swapfile.c      |   3 +-
- fs/iomap/trace.c         |  12 +
- fs/iomap/trace.h         | 191 ++++++++++++
- fs/xfs/libxfs/xfs_bmap.c |  14 +-
- fs/xfs/libxfs/xfs_bmap.h |   3 +-
- fs/xfs/xfs_aops.c        | 754 ++++++++--------------------------------------
- fs/xfs/xfs_aops.h        |  17 --
- fs/xfs/xfs_file.c        |  13 +-
- fs/xfs/xfs_iomap.c       |  51 +++-
- fs/xfs/xfs_iomap.h       |   2 +-
- fs/xfs/xfs_pnfs.c        |   2 +-
- fs/xfs/xfs_reflink.c     |   2 +-
- fs/xfs/xfs_super.c       |  11 +-
- fs/xfs/xfs_trace.h       |  65 ----
- include/linux/iomap.h    | 129 +++++---
- 26 files changed, 1215 insertions(+), 922 deletions(-)
- create mode 100644 fs/iomap/trace.c
- create mode 100644 fs/iomap/trace.h
+> I haven't looked very closely at your config deltas for what might change
+> alignment but it'd be worth giving:
+> 
+> f8f9ee479439 xfs: add kmem_alloc_io()
+> d916275aa4dd xfs: get allocation alignment from the buftarg
+> 0ad95687c3ad xfs: add kmem allocation trace points
+> 
+> a try.
+> 
+> -Eric
+
+Hi Eric,
+
+That did the trick. Took me some time to resolve the rejects, but now
+5.3.11 and 5.3.12 work like a charm.
+
+While trying to track down the patches, I found your reply here:
+https://bugzilla.redhat.com/show_bug.cgi?id=1762596
+
+I ended up applying:
+f8f9ee479439 xfs: add kmem_alloc_io()
+d916275aa4dd xfs: get allocation alignment from the buftarg
+0ad95687c3ad xfs: add kmem allocation trace points
+
+And I don't know why at the time (I was sleepy), I ended up applying
+this one too:
+xfs: assure zeroed memory buffers for certain kmem allocations
+
+I had to remove the second argument to kmem_alloc_io when applying this
+last one, as kmem_alloc_io had two arguments in the 5.3.12 tree + those
+3 patches above, instead of three arguments in the actual patch:
+return kmem_alloc_io(BBTOB(nbblks), align_mask, KM_MAYFAIL | KM_ZERO);
+return kmem_alloc_io(BBTOB(nbblks), KM_MAYFAIL | KM_ZERO);
+
+Do you think it's safe to keep these 4 patches on top of the 5.3.12
+tree? So far it all looks fine, filesystems mount and work fine.
+
+Regards,
+Pedro
