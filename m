@@ -6,33 +6,28 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B78D1C432C3
-	for <linux-xfs@archiver.kernel.org>; Sun, 24 Nov 2019 17:38:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBAE6C432C0
+	for <linux-xfs@archiver.kernel.org>; Sun, 24 Nov 2019 19:16:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 97A39207DD
-	for <linux-xfs@archiver.kernel.org>; Sun, 24 Nov 2019 17:38:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D223C2075E
+	for <linux-xfs@archiver.kernel.org>; Sun, 24 Nov 2019 19:16:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726802AbfKXRi5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 24 Nov 2019 12:38:57 -0500
-Received: from sandeen.net ([63.231.237.45]:39022 "EHLO sandeen.net"
+        id S1726869AbfKXTQL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 24 Nov 2019 14:16:11 -0500
+Received: from sandeen.net ([63.231.237.45]:43746 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726792AbfKXRi4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 24 Nov 2019 12:38:56 -0500
+        id S1726840AbfKXTQL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 24 Nov 2019 14:16:11 -0500
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 5E6582AD0;
-        Sun, 24 Nov 2019 11:37:22 -0600 (CST)
-Subject: Re: [RFC-PATCH] xfs: do not update sunit/swidth in the superblock to
- match those provided during mount
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Alex Lyakas <alex@zadara.com>
-Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
-        Dave Chinner <david@fromorbit.com>
-References: <1574359699-10191-1-git-send-email-alex@zadara.com>
- <20191122154314.GA31076@bfoster>
- <CAOcd+r3_gKYBv4vtM7nfPEPvkVp-FgHKvgQQx-_zMDt+QZ9z+g@mail.gmail.com>
- <20191124164012.GL6219@magnolia>
+        by sandeen.net (Postfix) with ESMTPSA id 89D502AD0;
+        Sun, 24 Nov 2019 13:14:37 -0600 (CST)
+Subject: Re: Bug when mounting XFS with external SATA drives in USB enclosures
+To:     Pedro Ribeiro <pedrib@gmail.com>, linux-xfs@vger.kernel.org
+References: <a3ab6c1b-1a69-5926-706f-1976b20d38a8@gmail.com>
+ <2543ac40-63ba-7a33-8ec5-2ef0797c6cc6@sandeen.net>
+ <4728bdc7-3f6e-9abf-34a5-712156c40db3@gmail.com>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -76,12 +71,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <c807e9fb-3ad9-7110-fd5d-29b07a3d1c66@sandeen.net>
-Date:   Sun, 24 Nov 2019 11:38:53 -0600
+Message-ID: <9ee09a97-b3a1-7bf9-43f2-ed2b47e35dc5@sandeen.net>
+Date:   Sun, 24 Nov 2019 13:16:06 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.2.2
 MIME-Version: 1.0
-In-Reply-To: <20191124164012.GL6219@magnolia>
+In-Reply-To: <4728bdc7-3f6e-9abf-34a5-712156c40db3@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -90,32 +85,56 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 11/24/19 10:40 AM, Darrick J. Wong wrote:
-> On Sun, Nov 24, 2019 at 11:13:09AM +0200, Alex Lyakas wrote:
-
-...
-
->>>> With the suggested patch, xfs repair is working properly also when mount-provided sunit/swidth are different.
->>>>
->>>> However, I am not sure whether this is the proper approach.
->>>> Otherwise, should we not allow specifying different sunit/swidth
->>>> during mount?
+On 11/24/19 12:49 AM, Pedro Ribeiro wrote:
 > 
-> I propose a (somewhat) different solution to this problem:
 > 
-> Port to libxfs the code that determines where mkfs/repair expect the
-> root inode.  Whenever we want to update the geometry information in the
-> superblock from mount options, we can test the new ones to see if that
-> would cause sb_rootino to change.  If there's no change, we update
-> everything like we do now.  If it would change, either we run with those
-> parameters incore only (which I think is possible for su/sw?) or refuse
-> them (because corruption is bad).
+> On 24/11/2019 01:26, Eric Sandeen wrote:
 > 
-> This way we don't lose the su/sw updating behavior we have now, and we
-> also gain the ability to shut down an entire class of accidental sb
-> geometry corruptions.
+>> I haven't looked very closely at your config deltas for what might change
+>> alignment but it'd be worth giving:
+>>
+>> f8f9ee479439 xfs: add kmem_alloc_io()
+>> d916275aa4dd xfs: get allocation alignment from the buftarg
+>> 0ad95687c3ad xfs: add kmem allocation trace points
+>>
+>> a try.
+>>
+>> -Eric
+> 
+> Hi Eric,
+> 
+> That did the trick. Took me some time to resolve the rejects, but now
+> 5.3.11 and 5.3.12 work like a charm.
+> 
+> While trying to track down the patches, I found your reply here:
+> https://bugzilla.redhat.com/show_bug.cgi?id=1762596
+> 
+> I ended up applying:
+> f8f9ee479439 xfs: add kmem_alloc_io()
+> d916275aa4dd xfs: get allocation alignment from the buftarg
+> 0ad95687c3ad xfs: add kmem allocation trace points
+> 
+> And I don't know why at the time (I was sleepy), I ended up applying
+> this one too:
+> xfs: assure zeroed memory buffers for certain kmem allocations
 
-I also wonder if we should be putting so much weight on the root inode
-location in repair, or if we could get away with other consistency checks
-to be sure it's legit, since we've always been able to move the
-"expected" Location.
+that one's not needed for this problem.
+
+> I had to remove the second argument to kmem_alloc_io when applying this
+> last one, as kmem_alloc_io had two arguments in the 5.3.12 tree + those
+> 3 patches above, instead of three arguments in the actual patch:
+
+Hm that doesn't make sense; f8f9ee479439 introduces kmem_alloc_io
+with 3 arguments.  2 arguments to kmem_alloc_io, missing the alignment
+mask, would be a problem.
+
+> return kmem_alloc_io(BBTOB(nbblks), align_mask, KM_MAYFAIL | KM_ZERO);
+> return kmem_alloc_io(BBTOB(nbblks), KM_MAYFAIL | KM_ZERO);
+> 
+> Do you think it's safe to keep these 4 patches on top of the 5.3.12
+> tree? So far it all looks fine, filesystems mount and work fine.
+
+Yes, but ... they should probably be applied correctly.  A quick test here
+seems to show the three I suggested apply to 5.3.12 cleanly.
+
+-Eric
