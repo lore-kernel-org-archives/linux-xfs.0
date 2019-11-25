@@ -2,148 +2,461 @@ Return-Path: <SRS0=T9vs=ZR=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A687DC432C0
-	for <linux-xfs@archiver.kernel.org>; Mon, 25 Nov 2019 02:30:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3F93C432C0
+	for <linux-xfs@archiver.kernel.org>; Mon, 25 Nov 2019 05:24:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6B53E20718
-	for <linux-xfs@archiver.kernel.org>; Mon, 25 Nov 2019 02:30:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 64F1E20748
+	for <linux-xfs@archiver.kernel.org>; Mon, 25 Nov 2019 05:24:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mXRjf4Vh"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LEghOYw/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726891AbfKYCaM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 24 Nov 2019 21:30:12 -0500
-Received: from mail-pj1-f47.google.com ([209.85.216.47]:40051 "EHLO
-        mail-pj1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726880AbfKYCaM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 Nov 2019 21:30:12 -0500
-Received: by mail-pj1-f47.google.com with SMTP id ep1so5873970pjb.7
-        for <linux-xfs@vger.kernel.org>; Sun, 24 Nov 2019 18:30:12 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:references:from:openpgp:autocrypt:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=IHsrrCP/dDoSic9xBGsHmnD9rTd6Vi0ZL/G6rRnZUdk=;
-        b=mXRjf4VhT8lz5FFXYLzosMNOomkFcnBq3Ap7/FXf9dHvXJpjE0Sy693FP0SDeIRM97
-         Qqz97cB8hV52z0WmNL7E+1yIQ9gn2d3pNVHg27r1l8kBfxGvFOjPAZRaNbvIFkW5lR9v
-         FIxAyRBoC+Q1zMXPO6Ck9S3e2It7aB5oDP76NOWTsfzO/wZqsekodzzE9O8/ynZLkhG+
-         9JTucKOwKh26V2UWah2UQq/kE47LaEtj0lLaecNo2lBFDxDMKgiHpix3NKw4ZjY4dpoe
-         wylz9FwDO1Fpy4IDxo7b2MYtOgFqlW12ntAP2F0KMyNYmgoA2tCCc+Nicb04T6ks/+0c
-         NfYw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:from:openpgp:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=IHsrrCP/dDoSic9xBGsHmnD9rTd6Vi0ZL/G6rRnZUdk=;
-        b=mQTEnngL1SLIyfwi6pThQNefITntBdpMICyYTKIDeKmDUlPrTkwtvMVzvRWnlgyAGM
-         6QtbmkXAsiUvvFcwqS+q8mRnOgVIcz6q9G2xvzax8RXUpSXwVupav8qTnz7xJ8oLmmVO
-         iD4B51bqJfMc3uIHLGfpUfXiWRGYON0MIQFxY1d4pVH7vnoC+/OGjygDX+JDhbXRLT0f
-         UpH8F2UOgGoYen0sFyMQLHfueUqeeck9JlPiifhigIqWOWjPYRMtsUShwb4M1uDHpd4d
-         9HZeH05GhE1P7tVO9PBIZ0AenoB1hou9OsvY4l4ZDhsq0ZMSl+OHE2kuHP+QQ0En0Fti
-         fg0A==
-X-Gm-Message-State: APjAAAUISq9dC1OTFHpdB9qm4GVgEk3v1FTJBG1azwr/DTNyrsdgKdIP
-        laLVmNg1pNC4wlK3zPCGKF6FCQe9
-X-Google-Smtp-Source: APXvYqzKbis7kOrp0jzSr3WUU7MjN7Ifs9YAO07X5/yuPEFyL2plc9ajL1Xn6yuzTIrCB1nQt+jn+g==
-X-Received: by 2002:a17:90a:1424:: with SMTP id j33mr36662959pja.2.1574649011073;
-        Sun, 24 Nov 2019 18:30:11 -0800 (PST)
-Received: from [192.168.1.74] (cm-58-10-155-5.revip7.asianet.co.th. [58.10.155.5])
-        by smtp.gmail.com with ESMTPSA id o23sm6069290pgj.90.2019.11.24.18.30.09
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 24 Nov 2019 18:30:10 -0800 (PST)
-Subject: Re: Bug when mounting XFS with external SATA drives in USB enclosures
-To:     Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
-References: <a3ab6c1b-1a69-5926-706f-1976b20d38a8@gmail.com>
- <2543ac40-63ba-7a33-8ec5-2ef0797c6cc6@sandeen.net>
- <4728bdc7-3f6e-9abf-34a5-712156c40db3@gmail.com>
- <9ee09a97-b3a1-7bf9-43f2-ed2b47e35dc5@sandeen.net>
-From:   Pedro Ribeiro <pedrib@gmail.com>
-Openpgp: preference=signencrypt
-Autocrypt: addr=pedrib@gmail.com; prefer-encrypt=mutual; keydata=
- mQINBFwm1BoBEADn2jWmdJ/bfYt68oCakbE96zbB+zLzNcEH9JtYvArsgiKEnC+vre1RUzxb
- XEk6YwVLK/sYpvW73pibLcxPrmwPcxeDPvgWBE+CrEq+1CwMUFaTo3oZDp7XJIusvpRhLgNZ
- T1XCNKL76QsdSn9ePXgxCt+yUdYmc2p5hhppCOxFaRVLXfPTsZfsRF7bG8CFXYMZddXzhKNl
- X0VsLx31TT8NTcxhg9rS+AvHpt4WVmPn8N/HnIcxbXimMpJJbY1BSzlWIHo08ZH03g2ksR63
- 9LBkGkRGmw43x0FWTAokH3CUtXoEue1DAIepZKQBF/wz3HZ5Qmh22i7rqOjTfYYOcb4IXejg
- 92h5HiRoAPqPjfaxj8ftjnxbb9T29YYi2U26VjEuWHEl/eBq9si14r+qMstQnldLtS9YSML2
- 0pP4aW9BVTqnlYlXu7TjzIiFOucZ4uOmnR27Hz14RPrEPB9/WLV+FNDamlhlLutSh/HZGjul
- lO0mNR2vOjNdh1pSR+61qH3hrxQBruXY9d0Jz4glTabmxDUxlqu3IsXUh5zrbiyHZobsZl9D
- B6qxofIOBps2YBZ0EkLemeIrVJTZqisEzdt2V/ueSCxpPX2ojYWbWlEcX0mNMiQeio+G9JvK
- AQHiLMm+kT1H15B0lMAO5I7qZkVjwKl/KX2gcFuliDRsEfQLbwARAQABtCBQZWRybyBSaWJl
- aXJvIDxwZWRyaWJAZ21haWwuY29tPokCVAQTAQoAPhYhBEzoWj0TPXi7vANnHDw5SWaHDpZs
- BQJcJtQaAhsDBQkFo5qABQsJCAcCBhUKCQgLAgQWAgMBAh4BAheAAAoJEDw5SWaHDpZs8uoP
- /2PVfdo/un+dAFD+KGc/bFs5QjFTYQDftVzyrjRAo9KHfmTKUvx1tkDOEtRbolUhShV1jojQ
- cT3NY4oOdWq4O7/Zn27yhh8A9/Kz8w8LJw2ANMJOwdaI6tXzmMH9+cHu3cfMyYDXmI7R7WN8
- 2bgE0E7LANlprjIrUSsztSoEoWkxYJveseg1ZKDf6xiCqgbRZw5gbdGC92hXLL92bWWi7Vjb
- M2I6Uhm46x1Kx5nlAcjbgmrlzYFgpjunwomafTHGASp5dlxOsG1NH4dO9EUU0gWVkpI6cpo0
- IOK3htG60Q8Vh9L0GfsUILiTUVbW5Oh1nWJ4Mm6VVa5KtzvgMqi5JvRhjjVQYc4kw6FpFT5V
- luNsNfJnQLLRbQWFDqDwQQnsaUOLI0eMPCW+HFedL+Bjovu45YsAhBtsrCUfDCvnf8IQdYJ0
- x4Sgn+w2conapi1ZppO1PH5Clv/FtgQlYfqHktWT7Bnqm5SmVvHByUHZjQ2NXikzMviJUwln
- YEgd9KVMkBqPT4xQ64pL+snUUkBZeyeBREEdj/ldIvzM7SvX20xcszKqox2dgxmcxxCluerS
- k5ag6YbPnlxyTmrRqJwXEtRlAHIqPKpP/Hs3qaRuISmu9TXI+imlGeGH9WLgOGGG8Mpg/O7g
- jo2axpqUfDjo01/JmHZJHt89xGCaNtDR6/BHuQINBFwm1BoBEACyXKaqrXe8VGJnlMahZimW
- T3S5cpykPzNrIVCLNlVbIHzflC3HAvPPwHINDw2z7MoKCQMFQKhcvMTjhx2Uz8J2ZQ8qps+N
- KhtBwtFXeKKEukeClQgTYB5lZAIO3n1gtQ344ROPrVjbiUsfOf/DnVLLsT3ZhqaZxF8UzRgo
- DzumAeNmpQ9QIYiMIPRBeuzHcLRYxMSi0wLoK4dZvFvO1AuLQAz1yJJf0+JfyFZ+bdF3xIVy
- nJOXIloLXKK3Y0KVAENVT1BM0SMdrKTNQ/sppKmoiytO7XZioVNgn9BGek1xI2xmY2VDnDOJ
- WjcQmqUYl+cVN0roCEpCO8kEF8YPVeV647qRTE2BIZ8gEMrtsk3ar6v17mfu8shu66xh+a7Y
- i5l9/RjY8RtCW3vlTgkBO3GXAb87mc9yMGu2T8bQYi+DinuzyEHXGy8UPKbOKpVqX2SpfpJ/
- /OiqeschzjLPEw7eN3nJ/CbhxJ9YkjVSdkYeV91SbudV1Ou7w8lntdDE0dpQn0u9zWzMkJpL
- 9yYBRWXHZanqzFqEAOtWVFW8QKoJ+NNUeuQZFPDjJ888Z/2Mh59+MSTVjU0t/EbnioxVxVZ1
- By21wI8nO9PTIsIH5SUjYFRIQII8+r4NCXDsUGUN4lgCFe2c/xhvZ4IFoSQ9fnKH4ZnJep5E
- haBh1+cndWSC6QARAQABiQI8BBgBCgAmFiEETOhaPRM9eLu8A2ccPDlJZocOlmwFAlwm1BoC
- GwwFCQWjmoAACgkQPDlJZocOlmw6Sg//TzuEBdfFd/lC1HmDcXNZZe9DEUMAfzVhzMvc/dU0
- pQlmk5T68Pq0p3y+TAjIbpEU3q7BCgbiY9If3AuPXcpLx+v9rXKlZEWZrHWOzKvLeF2e39HT
- 6PqLwK4WmvT7SXzBR2ST5P9MvUNJ4nlnV4ehvVq0beW3fLM/eEZLCK4PxohmZuNZK9kRCGPT
- mU9hFGqLV98UsqulKq0MK/pfURxZ+8xXMI9B6J4kDEQ0HqVuHcOewxX3kzv+ZzeUPrfm2NrB
- 1TnuazCupR1KbdmK+lMe6bLf56HnhuoXmJ6ZZP9OAPSy+ZZVbes193dPEB1LeWCvc9ACdg1N
- kVM0GTYa7a/XBJXRXWoDA3FrLk1UKEMOOai5G0bXI9ePVTeSgeWNbFTDf6G3qgpv+BTzAvE8
- CEPj/ywAtwBLlqzO0wX/siIrL5ocHVNvFKgTl/74gQPv6PPJ6Sk9hn1AOdAatgC1ahYfXj2x
- CgmPMOMIien+j9+HzIHhQDE/J9bbzeOCKeCwZHoMAWXhQz7R8MsI3Ate1tmtLUueg2I42daj
- v1eazw0NJx8s56YD8RxQtDNwtfAfvC0Z0alVzAVjbNBClXdT/F2XL8u9nmymzh8f2j1/8LUk
- 11kPI7eNvJGmVpYbBuON/aHSWv/HL/d4+FzKY0iIbkjM8OQ2NKtWp5yPViey0RnAVW8=
-Message-ID: <ba5d4b63-84f7-c818-460d-44a421039526@gmail.com>
-Date:   Mon, 25 Nov 2019 09:30:05 +0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        id S1725747AbfKYFY3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 25 Nov 2019 00:24:29 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:35928 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725497AbfKYFY3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Nov 2019 00:24:29 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAP5ONHj156203
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Nov 2019 05:24:24 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : mime-version : content-type; s=corp-2019-08-05;
+ bh=rXqyFcdeO7jQchhb8xezrvPFnX8KSVMda/ZC0virCyk=;
+ b=LEghOYw/FmD1sVMZ6N59PGMCkPdkZeTAG+I0ZQOpeKZfYr3Zw+sI54p9ZAupXMVDTQv/
+ 5NsmC63DsGMeyq6ukAqWReDuY4HHOvlWWQfbTy0/0UOlimOMgAvqyFU21x5uYs/HIeQh
+ eerKdU37C6ZOYhUPxLHtFjgCiGRvvc/bzR7GEhDMtR9vvOAx52Q52dx65XuGEtubpneh
+ a5UNNi+gFGQmLIZH1Ef3Hmrf+GlMXdKMNMKO+EHrExDeU0VMEsYmUT0jwSnqwYF2lJ/p
+ 34T7NYGvcPIf711xVNIKAGAuTcf0F5zpz1lfAUAZKAB2nKmg/YeLHy6FytTSVKUGeX0j eg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2wev6tw64h-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Nov 2019 05:24:23 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAP5OLK4031668
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Nov 2019 05:24:23 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 2wfe9d7hv6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Nov 2019 05:24:21 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xAP5NLcR026101
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Nov 2019 05:23:21 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sun, 24 Nov 2019 21:23:20 -0800
+Date:   Sun, 24 Nov 2019 21:23:18 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 2911edb653b9
+Message-ID: <20191125052318.GE6212@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <9ee09a97-b3a1-7bf9-43f2-ed2b47e35dc5@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-GB
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9451 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-1911250049
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9451 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-1911250049
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+Hi folks,
+
+The for-next branch of the xfs-linux repository at:
+
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+2911edb653b9 xfs: remove the mappedbno argument to xfs_da_get_buf
+
+New Commits:
+
+Arnd Bergmann (1):
+      [e8777b27ca8a] xfs: avoid time_t in user api
+
+Ben Dooks (Codethink) (1):
+      [1aa6300638e7] xfs: add mising include of xfs_pnfs.h for missing declarations
+
+Brian Foster (13):
+      [f6b428a46d60] xfs: track active state of allocation btree cursors
+      [f5e7dbea1e3e] xfs: introduce allocation cursor data structure
+      [d6d3aff20377] xfs: track allocation busy state in allocation cursor
+      [c62321a2a0ea] xfs: track best extent from cntbt lastblock scan in alloc cursor
+      [396bbf3c657e] xfs: refactor cntbt lastblock scan best extent logic into helper
+      [fec0afdaf498] xfs: reuse best extent tracking logic for bnobt scan
+      [4a65b7c2c72c] xfs: refactor allocation tree fixup code
+      [78d7aabdeea3] xfs: refactor and reuse best extent scanning logic
+      [0e26d5ca4a40] xfs: refactor near mode alloc bnobt scan into separate function
+      [d29688257fd4] xfs: factor out tree fixup logic into helper
+      [dc8e69bd7218] xfs: optimize near mode bnobt scans with concurrent cntbt lookups
+      [da781e64b28c] xfs: don't set bmapi total block req where minleft is
+      [2a2b5932db67] xfs: fix attr leaf header freemap.size underflow
+
+Carlos Maiolino (3):
+      [b1231760e443] xfs: Remove slab init wrappers
+      [aaf54eb8bc15] xfs: Remove kmem_zone_destroy() wrapper
+      [377bcd5f3b7f] xfs: Remove kmem_zone_free() wrapper
+
+Christoph Hellwig (112):
+      [bdb2ed2dbdc2] xfs: ignore extent size hints for always COW inodes
+      [cd95cb962b7d] xfs: pass the correct flag to xlog_write_iclog
+      [2c68a1dfbd8e] xfs: remove the unused ic_io_size field from xlog_in_core
+      [390aab0a1640] xfs: move the locking from xlog_state_finish_copy to the callers
+      [df732b29c807] xfs: call xlog_state_release_iclog with l_icloglock held
+      [032cc34ed517] xfs: remove dead ifdef XFSERRORDEBUG code
+      [fe9c0e77acc5] xfs: remove the unused XLOG_STATE_ALL and XLOG_STATE_UNUSED flags
+      [1858bb0bec61] xfs: turn ic_state into an enum
+      [4b29ab04ab0d] xfs: remove the XLOG_STATE_DO_CALLBACK state
+      [0d45e3a20822] xfs: also call xfs_file_iomap_end_delalloc for zeroing operations
+      [dd26b84640cc] xfs: remove xfs_reflink_dirty_extents
+      [ffb375a8cf20] xfs: pass two imaps to xfs_reflink_allocate_cow
+      [ae36b53c6c60] xfs: refactor xfs_file_iomap_begin_delay
+      [36adcbace24e] xfs: fill out the srcmap in iomap_begin
+      [43568226a4a3] xfs: factor out a helper to calculate the end_fsb
+      [690c2a38878e] xfs: split out a new set of read-only iomap ops
+      [a526c85c2236] xfs: move xfs_file_iomap_begin_delay around
+      [f150b4234397] xfs: split the iomap ops for buffered vs direct writes
+      [12dfb58af61d] xfs: rename the whichfork variable in xfs_buffered_write_iomap_begin
+      [5c5b6f7585d2] xfs: cleanup xfs_direct_write_iomap_begin
+      [1e190f8e8098] xfs: improve the IOMAP_NOWAIT check for COW inodes
+      [25a409572b5f] xfs: mark xfs_buf_free static
+      [30fa529e3b2e] xfs: add a xfs_inode_buftarg helper
+      [f9acc19c8cbe] xfs: use xfs_inode_buftarg in xfs_file_dio_aio_write
+      [c7d68318c9ae] xfs: use xfs_inode_buftarg in xfs_file_ioctl
+      [9afe1d5c14e0] xfs: don't implement XFS_IOC_RESVSP / XFS_IOC_RESVSP64
+      [837a6e7f5cdb] fs: add generic UNRESVSP and ZERO_RANGE ioctl handlers
+      [7a42c70ea0dd] xfs: disable xfs_ioc_space for always COW inodes
+      [360c09c01c5a] xfs: consolidate preallocation in xfs_file_fallocate
+      [2123ef851083] xfs: simplify setting bio flags
+      [69e8575dee42] xfs: remove the dsunit and dswidth variables in
+      [dd2d535e3fb2] xfs: cleanup calculating the stat optimal I/O size
+      [b5ad616c3edf] xfs: don't use a different allocsice for -o wsync
+      [3cd1d18b0d40] xfs: remove the m_readio_* fields in struct xfs_mount
+      [5da8a07c79e8] xfs: rename the m_writeio_* fields in struct xfs_mount
+      [2fcddee8cd8f] xfs: simplify parsing of allocsize mount option
+      [3274d0080100] xfs: rename the XFS_MOUNT_DFLT_IOSIZE option to
+      [7c6b94b1b526] xfs: reverse the polarity of XFS_MOUNT_COMPAT_IOSIZE
+      [aa58d4455a11] xfs: clean up printing the allocsize option in
+      [1775c506a31e] xfs: clean up printing inode32/64 in xfs_showargs
+      [21f55993eb7a] xfs: merge xfs_showargs into xfs_fs_show_options
+      [ae7e403fa5bb] xfs: simplify xfs_iomap_eof_align_last_fsb
+      [49bbf8c76156] xfs: mark xfs_eof_alignment static
+      [57c49444d7cc] xfs: remove the extsize argument to xfs_eof_alignment
+      [88cdb7147b21] xfs: slightly tweak an assert in xfs_fs_map_blocks
+      [307cdb54b80e] xfs: don't log the inode in xfs_fs_map_blocks if it
+      [e696663a97e8] xfs: simplify the xfs_iomap_write_direct calling
+      [be6cacbeea8c] xfs: refactor xfs_bmapi_allocate
+      [fd638f1de1f3] xfs: move extent zeroing to xfs_bmapi_allocate
+      [c34d570d1586] xfs: cleanup use of the XFS_ALLOC_ flags
+      [a39f089a25e7] xfs: move incore structures out of xfs_da_format.h
+      [b16be561876e] xfs: use unsigned int for all size values in struct xfs_da_geometry
+      [649d9d98c60e] xfs: refactor btree node scrubbing
+      [f475dc4dc7cc] xfs: devirtualize ->node_hdr_from_disk
+      [e1c8af1e02c7] xfs: devirtualize ->node_hdr_to_disk
+      [51908ca75feb] xfs: add a btree entries pointer to struct xfs_da3_icnode_hdr
+      [3b34441309f3] xfs: move the node header size to struct xfs_da_geometry
+      [518425560a8b] xfs: devirtualize ->leaf_hdr_from_disk
+      [163fbbb3568b] xfs: devirtualize ->leaf_hdr_to_disk
+      [787b0893ad1e] xfs: add an entries pointer to struct xfs_dir3_icleaf_hdr
+      [545910bcc875] xfs: move the dir2 leaf header size to struct xfs_da_geometry
+      [478c7835cb8e] xfs: move the max dir2 leaf entries count to struct xfs_da_geometry
+      [5ba30919a6fc] xfs: devirtualize ->free_hdr_from_disk
+      [200dada70008] xfs: devirtualize ->free_hdr_to_disk
+      [195b0a44ab73] xfs: make the xfs_dir3_icfree_hdr available to xfs_dir2_node_addname_int
+      [a84f3d5cb04f] xfs: add a bests pointer to struct xfs_dir3_icfree_hdr
+      [ed1d612fbe6b] xfs: move the dir2 free header size to struct xfs_da_geometry
+      [5893e4feb0ea] xfs: move the max dir2 free bests count to struct xfs_da_geometry
+      [3d92c93b7065] xfs: devirtualize ->db_to_fdb and ->db_to_fdindex
+      [84915e1bdddf] xfs: devirtualize ->sf_get_parent_ino and ->sf_put_parent_ino
+      [50f6bb6b7aea] xfs: devirtualize ->sf_entsize and ->sf_nextentry
+      [93b1e96a4200] xfs: devirtualize ->sf_get_ino and ->sf_put_ino
+      [4501ed2a3a86] xfs: devirtualize ->sf_get_ftype and ->sf_put_ftype
+      [c81484e2b97f] xfs: remove the unused ->data_first_entry_p method
+      [1682310474b2] xfs: remove the data_dot_offset field in struct xfs_dir_ops
+      [2eb68a5d3619] xfs: remove the data_dotdot_offset field in struct xfs_dir_ops
+      [da3ca0df8bd1] xfs: remove the ->data_dot_entry_p and ->data_dotdot_entry_p methods
+      [ee641d5af5e6] xfs: remove the ->data_unused_p method
+      [263dde869bd0] xfs: cleanup xfs_dir2_block_getdents
+      [2f4369a862b6] xfs: cleanup xfs_dir2_leaf_getdents
+      [4c037dd5fd32] xfs: cleanup xchk_dir_rec
+      [4a1a8b2f5f78] xfs: cleanup xchk_directory_data_bestfree
+      [8073af5153ce] xfs: cleanup xfs_dir2_block_to_sf
+      [62479f573459] xfs: cleanup xfs_dir2_data_freescan_int
+      [48a71399e747] xfs: cleanup __xfs_dir3_data_check
+      [9eedae10899a] xfs: remove the now unused ->data_entry_p method
+      [5c072127d31d] xfs: replace xfs_dir3_data_endp with xfs_dir3_data_end_offset
+      [fdbb8c5b805c] xfs: devirtualize ->data_entsize
+      [7e8ae7bd1c5d] xfs: devirtualize ->data_entry_tag_p
+      [d73e1cee8add] xfs: move the dir2 data block fixed offsets to struct xfs_da_geometry
+      [711c7dbf5fda] xfs: cleanup xfs_dir2_data_entsize
+      [1848b607a9ad] xfs: devirtualize ->data_bestfree_p
+      [59b8b465058e] xfs: devirtualize ->data_get_ftype and ->data_put_ftype
+      [957ee13e204a] xfs: remove the now unused dir ops infrastructure
+      [ae42976de7f1] xfs: merge xfs_dir2_data_freescan and xfs_dir2_data_freescan_int
+      [23220fe260c4] xfs: always pass a valid hdr to xfs_dir3_leaf_check_int
+      [537dabcfdbc1] xfs: remove the unused m_chsize field
+      [d8d11fc703a2] xfs: devirtualize ->m_dirnameops
+      [8d2d878db897] xfs: use a struct timespec64 for the in-core crtime
+      [de7a866fd41b] xfs: merge the projid fields in struct xfs_icdinode
+      [048a35d2f0b4] xfs: don't reset the "inode core" in xfs_iread
+      [8234532fd400] xfs: remove XFS_IOC_FSSETDM and XFS_IOC_FSSETDM_BY_HANDLE
+      [fa0d44ec7faa] xfs: simplify mappedbno handling in xfs_da_{get,read}_buf
+      [45feef8f50b9] xfs: refactor xfs_dabuf_map
+      [199e9ba4e4a9] xfs: improve the xfs_dabuf_map calling conventions
+      [06566fda428e] xfs: remove the mappedbno argument to xfs_da_reada_buf
+      [dfb8759408a9] xfs: remove the mappedbno argument to xfs_attr3_leaf_read
+      [c943c0b2e5c3] xfs: remove the mappedbno argument to xfs_dir3_leaf_read
+      [f3fcb314d16c] xfs: remove the mappedbno argument to xfs_dir3_leafn_read
+      [02c57f0a8b07] xfs: split xfs_da3_node_read
+      [cd2c9f1b544b] xfs: remove the mappedbno argument to xfs_da_read_buf
+      [2911edb653b9] xfs: remove the mappedbno argument to xfs_da_get_buf
+
+Colin Ian King (1):
+      [0279c71fe0d1] xfs: remove redundant assignment to variable error
+
+Dan Carpenter (1):
+      [7f6bcf7c2941] xfs: remove a stray tab in xfs_remount_rw()
+
+Darrick J. Wong (31):
+      [c84760659dcf] xfs: check attribute leaf block structure
+      [16c6e92c7e98] xfs: namecheck attribute names before listing them
+      [04df34ac6494] xfs: namecheck directory entry names before listing them
+      [c2414ad6e66a] xfs: replace -EIO with -EFSCORRUPTED for corrupt metadata
+      [fec40e220ffc] xfs: refactor xfs_bmap_count_blocks using newer btree helpers
+      [e992ae8afded] xfs: refactor xfs_iread_extents to use xfs_btree_visit_blocks
+      [e91ec882af21] xfs: relax shortform directory size checks
+      [d243b89a611e] xfs: constify the buffer pointer arguments to error functions
+      [a5155b870d68] xfs: always log corruption errors
+      [ee4fb16cbec9] xfs: decrease indenting problems in xfs_dabuf_map
+      [110f09cb705a] xfs: add missing assert in xfs_fsmap_owner_from_rmap
+      [9842b56cd406] xfs: make the assertion message functions take a mount parameter
+      [8ef34723eff0] xfs: add missing early termination checks to record scrubbing functions
+      [5d1116d4c6af] xfs: periodically yield scrub threads to the scheduler
+      [5f213ddbcbe8] xfs: fix missing header includes
+      [f5be08446ee7] xfs: null out bma->prev if no previous extent
+      [120254608f04] xfs: "optimize" buffer item log segment bitmap setting
+      [d6abecb82573] xfs: range check ri_cnt when recovering log items
+      [f755979355d4] xfs: annotate functions that trip static checker locking checks
+      [5113f8ec3753] xfs: clean up weird while loop in xfs_alloc_ag_vextent_near
+      [2fe4f92834c4] xfs: refactor "does this fork map blocks" predicate
+      [895e196fb6f8] xfs: convert EIO to EFSCORRUPTED when log contents are invalid
+      [27d9ee577dcc] xfs: actually check xfs_btree_check_block return in xfs_btree_islastblock
+      [2815a16d7ff6] xfs: attach dquots and reserve quota blocks during unwritten conversion
+      [2713fefa5dd5] xfs: attach dquots before performing xfs_swap_extents
+      [1ec28615d248] xfs: add a XFS_IS_CORRUPT macro
+      [f9e0370648b9] xfs: kill the XFS_WANT_CORRUPT_* macros
+      [a71895c5dad1] xfs: convert open coded corruption check to use XFS_IS_CORRUPT
+      [f368b29ba917] xfs: fix another missing include
+      [050552cbe06a] xfs: fix some memory leaks in log recovery
+      [6519f708cc35] xfs: report corruption only as a regular error
+
+Dave Chinner (3):
+      [3f8a4f1d876d] xfs: fix inode fork extent count overflow
+      [1c743574de8b] xfs: cap longest free extent to maximum allocatable
+      [249bd9087a52] xfs: properly serialise fallocate against AIO+DIO
+
+Eric Sandeen (2):
+      [35dab307c8e9] xfs: remove unused typedef definitions
+      [a55cefccaaa8] xfs: remove unused structure members & simple typedefs
+
+Ian Kent (18):
+      [8da57c5c000c] xfs: remove the biosize mount option
+      [f676c7508667] xfs: remove unused struct xfs_mount field m_fsname_len
+      [e1d3d2188546] xfs: use super s_id instead of struct xfs_mount m_fsname
+      [3d9d60d9addf] xfs: dont use XFS_IS_QUOTA_RUNNING() for option check
+      [7b77b46a6137] xfs: use kmem functions for struct xfs_mount
+      [a943f372c22b] xfs: merge freeing of mp names and mp
+      [82332b6da226] xfs: add xfs_remount_rw() helper
+      [2c6eba31775b] xfs: add xfs_remount_ro() helper
+      [c0a6791667f8] xfs: refactor suffix_kstrtoint()
+      [846410ccd104] xfs: avoid redundant checks when options is empty
+      [48a06e1b5773] xfs: refactor xfs_parseags()
+      [9a861816a026] xfs: move xfs_parseargs() validation to a helper
+      [7c89fcb2783d] xfs: dont set sb in xfs_mount_alloc()
+      [73e5fff98b64] xfs: switch to use the new mount-api
+      [63cd1e9b026e] xfs: move xfs_fc_reconfigure() above xfs_fc_free()
+      [2f8d66b3cd79] xfs: move xfs_fc_get_tree() above xfs_fc_reconfigure()
+      [8757c38f2cf6] xfs: move xfs_fc_parse_param() above xfs_fc_get_tree()
+      [50f8300904b1] xfs: fold xfs_mount-alloc() into xfs_init_fs_context()
+
+Jan Kara (1):
+      [3dd4d40b4208] xfs: Sanity check flags of Q_XQUOTARM call
+
+Joe Perches (1):
+      [cf085a1b5d22] xfs: Correct comment tyops -> typos
+
+Pavel Reichl (5):
+      [aefe69a45d84] xfs: remove the xfs_disk_dquot_t and xfs_dquot_t
+      [c072fbefe48e] xfs: remove the xfs_quotainfo_t typedef
+      [fd8b81dbbb23] xfs: remove the xfs_dq_logitem_t typedef
+      [d0bdfb106907] xfs: remove the xfs_qoff_logitem_t typedef
+      [1cc95e6f0d7c] xfs: Replace function declaration by actual definition
+
+YueHaibing (1):
+      [eb0d21637f89] xfs: remove duplicated include from xfs_dir2_data.c
+
+kaixuxia (2):
+      [3fb21fc8cc04] xfs: remove the duplicated inode log fieldmask set
+      [93597ae8dac0] xfs: Fix deadlock between AGI and AGF when target_ip exists in xfs_rename()
+
+yu kuai (1):
+      [e5e634041bc1] xfs: include QUOTA, FATAL ASSERT build options in XFS_BUILD_OPTIONS
 
 
-On 25/11/2019 02:16, Eric Sandeen wrote:
+Code Diffstat:
 
-> Hm that doesn't make sense; f8f9ee479439 introduces kmem_alloc_io
-> with 3 arguments.  2 arguments to kmem_alloc_io, missing the alignment
-> mask, would be a problem.
-> 
->> return kmem_alloc_io(BBTOB(nbblks), align_mask, KM_MAYFAIL | KM_ZERO);
->> return kmem_alloc_io(BBTOB(nbblks), KM_MAYFAIL | KM_ZERO);
->>
->> Do you think it's safe to keep these 4 patches on top of the 5.3.12
->> tree? So far it all looks fine, filesystems mount and work fine.
-> 
-> Yes, but ... they should probably be applied correctly.  A quick test here
-> seems to show the three I suggested apply to 5.3.12 cleanly.
-> 
-> -Eric
-> 
-
-You're right, my bad, I applied them in order and now they work fine. I
-guess there's no point in fixing this in stable since 5.3 is not a long
-term kernel and the fix is already in 5.4?
-
-Regards,
-Pedro
+ fs/compat_ioctl.c               |   31 +-
+ fs/ioctl.c                      |   12 +-
+ fs/iomap/apply.c                |    7 -
+ fs/iomap/buffered-io.c          |    7 +-
+ fs/iomap/direct-io.c            |   15 +-
+ fs/iomap/fiemap.c               |    6 +-
+ fs/iomap/trace.h                |  103 ---
+ fs/xfs/Makefile                 |    1 -
+ fs/xfs/kmem.c                   |    2 +-
+ fs/xfs/kmem.h                   |   30 -
+ fs/xfs/libxfs/xfs_ag_resv.c     |    2 +
+ fs/xfs/libxfs/xfs_alloc.c       | 1236 ++++++++++++++++++++-------------
+ fs/xfs/libxfs/xfs_alloc.h       |   16 +-
+ fs/xfs/libxfs/xfs_alloc_btree.c |    1 +
+ fs/xfs/libxfs/xfs_attr.c        |   24 +-
+ fs/xfs/libxfs/xfs_attr_leaf.c   |  134 +++-
+ fs/xfs/libxfs/xfs_attr_leaf.h   |   30 +-
+ fs/xfs/libxfs/xfs_attr_remote.c |    1 +
+ fs/xfs/libxfs/xfs_bit.c         |    1 +
+ fs/xfs/libxfs/xfs_bmap.c        |  686 ++++++++++--------
+ fs/xfs/libxfs/xfs_btree.c       |   97 +--
+ fs/xfs/libxfs/xfs_btree.h       |   37 +-
+ fs/xfs/libxfs/xfs_da_btree.c    |  668 +++++++++---------
+ fs/xfs/libxfs/xfs_da_btree.h    |   73 +-
+ fs/xfs/libxfs/xfs_da_format.c   |  888 ------------------------
+ fs/xfs/libxfs/xfs_da_format.h   |   59 +-
+ fs/xfs/libxfs/xfs_dir2.c        |   72 +-
+ fs/xfs/libxfs/xfs_dir2.h        |   90 +--
+ fs/xfs/libxfs/xfs_dir2_block.c  |  131 ++--
+ fs/xfs/libxfs/xfs_dir2_data.c   |  282 ++++----
+ fs/xfs/libxfs/xfs_dir2_leaf.c   |  307 ++++----
+ fs/xfs/libxfs/xfs_dir2_node.c   |  431 ++++++------
+ fs/xfs/libxfs/xfs_dir2_priv.h   |  114 ++-
+ fs/xfs/libxfs/xfs_dir2_sf.c     |  424 ++++++-----
+ fs/xfs/libxfs/xfs_dquot_buf.c   |    8 +-
+ fs/xfs/libxfs/xfs_format.h      |   14 +-
+ fs/xfs/libxfs/xfs_fs.h          |    4 +-
+ fs/xfs/libxfs/xfs_ialloc.c      |  117 +++-
+ fs/xfs/libxfs/xfs_iext_tree.c   |    2 +-
+ fs/xfs/libxfs/xfs_inode_buf.c   |   21 +-
+ fs/xfs/libxfs/xfs_inode_buf.h   |    5 +-
+ fs/xfs/libxfs/xfs_inode_fork.c  |   22 +-
+ fs/xfs/libxfs/xfs_inode_fork.h  |   18 +-
+ fs/xfs/libxfs/xfs_log_format.h  |    4 +-
+ fs/xfs/libxfs/xfs_log_recover.h |    4 +-
+ fs/xfs/libxfs/xfs_refcount.c    |  174 +++--
+ fs/xfs/libxfs/xfs_rmap.c        |  377 +++++++---
+ fs/xfs/libxfs/xfs_rtbitmap.c    |    4 +-
+ fs/xfs/libxfs/xfs_sb.c          |    1 +
+ fs/xfs/libxfs/xfs_trans_inode.c |    8 +-
+ fs/xfs/libxfs/xfs_trans_resv.c  |    6 +-
+ fs/xfs/libxfs/xfs_types.h       |    2 -
+ fs/xfs/scrub/attr.c             |   11 +-
+ fs/xfs/scrub/bitmap.c           |    3 +-
+ fs/xfs/scrub/common.h           |    9 +-
+ fs/xfs/scrub/dabtree.c          |   62 +-
+ fs/xfs/scrub/dabtree.h          |    3 +-
+ fs/xfs/scrub/dir.c              |  132 ++--
+ fs/xfs/scrub/fscounters.c       |    8 +-
+ fs/xfs/scrub/health.c           |    1 +
+ fs/xfs/scrub/parent.c           |    2 +-
+ fs/xfs/scrub/quota.c            |    7 +
+ fs/xfs/scrub/scrub.c            |    1 +
+ fs/xfs/xfs_acl.c                |   18 +-
+ fs/xfs/xfs_aops.c               |   43 +-
+ fs/xfs/xfs_aops.h               |    3 -
+ fs/xfs/xfs_attr_inactive.c      |   76 +-
+ fs/xfs/xfs_attr_list.c          |   75 +-
+ fs/xfs/xfs_bmap_item.c          |   11 +-
+ fs/xfs/xfs_bmap_util.c          |  255 ++-----
+ fs/xfs/xfs_bmap_util.h          |    4 -
+ fs/xfs/xfs_buf.c                |   32 +-
+ fs/xfs/xfs_buf.h                |    1 -
+ fs/xfs/xfs_buf_item.c           |    6 +-
+ fs/xfs/xfs_dir2_readdir.c       |  137 ++--
+ fs/xfs/xfs_discard.c            |    6 +-
+ fs/xfs/xfs_dquot.c              |   46 +-
+ fs/xfs/xfs_dquot.h              |   98 +--
+ fs/xfs/xfs_dquot_item.h         |   34 +-
+ fs/xfs/xfs_error.c              |   31 +-
+ fs/xfs/xfs_error.h              |   33 +-
+ fs/xfs/xfs_extent_busy.c        |    2 +-
+ fs/xfs/xfs_extfree_item.c       |    9 +-
+ fs/xfs/xfs_file.c               |  104 ++-
+ fs/xfs/xfs_filestream.c         |    3 +-
+ fs/xfs/xfs_fsmap.c              |    1 +
+ fs/xfs/xfs_icache.c             |    8 +-
+ fs/xfs/xfs_icreate_item.c       |    2 +-
+ fs/xfs/xfs_inode.c              |   48 +-
+ fs/xfs/xfs_inode.h              |   31 +-
+ fs/xfs/xfs_inode_item.c         |   15 +-
+ fs/xfs/xfs_ioctl.c              |  203 +-----
+ fs/xfs/xfs_ioctl.h              |    7 -
+ fs/xfs/xfs_ioctl32.c            |   49 +-
+ fs/xfs/xfs_ioctl32.h            |   13 +-
+ fs/xfs/xfs_iomap.c              |  862 ++++++++++++-----------
+ fs/xfs/xfs_iomap.h              |   11 +-
+ fs/xfs/xfs_iops.c               |   70 +-
+ fs/xfs/xfs_itable.c             |    6 +-
+ fs/xfs/xfs_iwalk.c              |    3 +-
+ fs/xfs/xfs_linux.h              |   14 +-
+ fs/xfs/xfs_log.c                |  434 +++++-------
+ fs/xfs/xfs_log_cil.c            |    6 +-
+ fs/xfs/xfs_log_priv.h           |   33 +-
+ fs/xfs/xfs_log_recover.c        |  148 ++--
+ fs/xfs/xfs_message.c            |   22 +-
+ fs/xfs/xfs_message.h            |    6 +-
+ fs/xfs/xfs_mount.c              |   58 +-
+ fs/xfs/xfs_mount.h              |   57 +-
+ fs/xfs/xfs_pnfs.c               |   56 +-
+ fs/xfs/xfs_qm.c                 |   67 +-
+ fs/xfs/xfs_qm.h                 |    6 +-
+ fs/xfs/xfs_qm_bhv.c             |    8 +-
+ fs/xfs/xfs_qm_syscalls.c        |  139 ++--
+ fs/xfs/xfs_quotaops.c           |    3 +
+ fs/xfs/xfs_refcount_item.c      |    9 +-
+ fs/xfs/xfs_reflink.c            |  138 +---
+ fs/xfs/xfs_reflink.h            |    4 +-
+ fs/xfs/xfs_rmap_item.c          |   13 +-
+ fs/xfs/xfs_rtalloc.c            |    3 +-
+ fs/xfs/xfs_super.c              | 1466 +++++++++++++++++++--------------------
+ fs/xfs/xfs_super.h              |   10 +
+ fs/xfs/xfs_symlink.c            |    1 +
+ fs/xfs/xfs_symlink.h            |    2 +-
+ fs/xfs/xfs_trace.h              |   35 +-
+ fs/xfs/xfs_trans.c              |    2 +-
+ fs/xfs/xfs_trans_ail.c          |   10 +-
+ fs/xfs/xfs_trans_dquot.c        |   56 +-
+ fs/xfs/xfs_xattr.c              |    1 +
+ include/linux/falloc.h          |    3 +
+ include/linux/fs.h              |    2 +-
+ 131 files changed, 5821 insertions(+), 6395 deletions(-)
+ delete mode 100644 fs/xfs/libxfs/xfs_da_format.c
