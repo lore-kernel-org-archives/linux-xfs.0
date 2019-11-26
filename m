@@ -7,62 +7,60 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B682C432C0
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Nov 2019 20:13:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE4F2C432C0
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Nov 2019 20:14:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1E8522080F
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Nov 2019 20:13:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD1FA20659
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Nov 2019 20:14:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=osandov-com.20150623.gappssmtp.com header.i=@osandov-com.20150623.gappssmtp.com header.b="ZwGIxL3b"
+	dkim=pass (2048-bit key) header.d=osandov-com.20150623.gappssmtp.com header.i=@osandov-com.20150623.gappssmtp.com header.b="u7qpL5xm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726926AbfKZUNl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Nov 2019 15:13:41 -0500
-Received: from mail-pj1-f65.google.com ([209.85.216.65]:39578 "EHLO
-        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726033AbfKZUNl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Nov 2019 15:13:41 -0500
-Received: by mail-pj1-f65.google.com with SMTP id v93so5535453pjb.6
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Nov 2019 12:13:41 -0800 (PST)
+        id S1726975AbfKZUOC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Nov 2019 15:14:02 -0500
+Received: from mail-pg1-f182.google.com ([209.85.215.182]:46774 "EHLO
+        mail-pg1-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726947AbfKZUOC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Nov 2019 15:14:02 -0500
+Received: by mail-pg1-f182.google.com with SMTP id k1so1181489pga.13
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Nov 2019 12:14:01 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=osandov-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=iITRKF6mdM/SFMaDj+1Y9g7RFPYvZLoFeM/RhyNhdpQ=;
-        b=ZwGIxL3bmNijWt5vPnQTAvuKA3wvYbig94+YDQbmnaE5v2MlZihcrrxZ7EP5LhqHgb
-         58W4ECpKZw8BPziE+X07lHMst546+/zVsb3YoEZkIBiqP7Kj9Ho9X3ZxRj+02UkKqLOI
-         FtJSh4T68BRdr5wImQVbRajc77K5zCvHv0CpZ6wfj3X6XEgdEfWep2JYKbEC13Qz99iI
-         UFLYPEeTerjKTrj5wNG99GlajOWSpRj5scrPubMVFGNlngSfaEgjou4ClmpYDgIKxhMs
-         pMwiPb+/LFKr+e5H/CF1gMHw7x+Df9lFqfC5p0Hmx7P7jniiwu9bDQvJ2H9dwhe16HSw
-         RdYg==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=AdIfv/gG/cyTm1vwo5Jnsq53fCU8S/nWSYqzaryjPWE=;
+        b=u7qpL5xmLaIISn5dDiDPG4EL49Db0mwOmDThauBpmoj6n9bojhEk+iO0QDnKuGH4Q2
+         LlrUfzUsySO4c2BL4KBr3JmiIRw5vCiqG0AkdDEbAgITv6+/LoDWApIQGXrG6yb0phzB
+         yUMZbyvQ2TUQUaublA5I3fi8wG9IgY8YE7GutLqv/riW0WRR5xQ9i+lXn/aMPN7EMuMr
+         9DvhFPlDExeg2jVJ0Zm7rHKYXRP5kWLoLKRnOGvELPrgD1BgKlQkHLabT97w+VtH4vfB
+         Ge0+gzCX9r9LlRqCJ9AFwRlwDn7JfKvSxN4BxRxhoQuLP6TadlNuKjvFQrZZb4ffyAf7
+         140A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=iITRKF6mdM/SFMaDj+1Y9g7RFPYvZLoFeM/RhyNhdpQ=;
-        b=uOQ7hvUQenz8jwbZpx3G1AjdRyEW/W6eFaxeBLptdcUl4CKYlS8juG+Gf5hwXcfcB2
-         FLBDmJs2daHND7cDyjHSy1SmiuWx8e7fv5NFv01qqiPh6UFFFQodabKMRRR7eqO3VDg0
-         YM4O2iZm7c09doa5YMzGeavzAjoMi0Nkc/9yuygniSJCRbNSZWfk9NTNtquZ9UeqNmwP
-         G6XksY+GtKO6gH8mpWDk9jGz0K1xyIkWNFhpXwR7u9s/EByLJeBo/l5M/KWype4a0/Mh
-         CIpA8kvVDUlJw9Cjfal2mqxTmSnyTdqalawEic8VwLMsHMebIP6FWcBq2Cw2Ddn+BDs2
-         tEHA==
-X-Gm-Message-State: APjAAAUJD6RxARf/cuupj/AIo29Ds+OMUJhtlAaXsza0znqUlbdjNclr
-        YRQrqZrl4pCro09dkmK1UuaWpMtlb8pIAg==
-X-Google-Smtp-Source: APXvYqwV0UVvBBwQ75ohF8bExIwfd2mmP+8uxBj8dRnMJQ57oALgpvi6HbpbqDB8tzO7JqkT1326ug==
-X-Received: by 2002:a17:90a:cc18:: with SMTP id b24mr1062728pju.141.1574799220132;
-        Tue, 26 Nov 2019 12:13:40 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=AdIfv/gG/cyTm1vwo5Jnsq53fCU8S/nWSYqzaryjPWE=;
+        b=juhX84feffhZoSwT1p7pKtNK8vEyqaMmhvMHdSCL/12ZQOx6M4ZSzukdG/6L5h0Lcx
+         R4Dx10Y4luyzvaXGmBOF7Y2uY34YikvHk9IV7RfbeASWItie5dWbJrv5ftitYEC+np5y
+         n5aXnn8ynXmJ7LCQAePL149omP67IeSYixhsS9KLRkqeKPTGili7tRVB1Ys9idj2F4TW
+         a7HzsXVyql5/PnEI3YadcZZrYrssj5fbX7JPVDDSXC6SnZcdZ+Iyx/5rnkxH4304p3a2
+         wrjoEZFGyEeTlWiNwkVjAxtlCeObZHT673O6B0RneOlSu9s5htfGeKUO4czk55CtK0z7
+         ciyg==
+X-Gm-Message-State: APjAAAUaUwK5CaTjDnwqI3IosJ0vTEWHunlX+YBztHCKHuGlPAHS0Rbo
+        Fod9xwlNeKJ1nedLYj9fIkwBfg==
+X-Google-Smtp-Source: APXvYqwmRz0jMTyCJguOvW0w8ZdHdr98caBMX8R9UWkDjTJVlvLYC92VvtLf6onGk+FKTDoqoKm5pg==
+X-Received: by 2002:a63:6742:: with SMTP id b63mr397721pgc.24.1574799241221;
+        Tue, 26 Nov 2019 12:14:01 -0800 (PST)
 Received: from vader.thefacebook.com ([2620:10d:c090:180::30de])
-        by smtp.gmail.com with ESMTPSA id p123sm13802327pfg.30.2019.11.26.12.13.39
+        by smtp.gmail.com with ESMTPSA id a6sm4507013pja.30.2019.11.26.12.14.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 26 Nov 2019 12:13:39 -0800 (PST)
+        Tue, 26 Nov 2019 12:14:00 -0800 (PST)
 From:   Omar Sandoval <osandov@osandov.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     kernel-team@fb.com
-Subject: [PATCH 2/2] xfs: don't check for AG deadlock for realtime files in bunmapi
-Date:   Tue, 26 Nov 2019 12:13:29 -0800
-Message-Id: <89ad24852d1d14fcf834a9551fec503c24d31b44.1574799066.git.osandov@fb.com>
+To:     fstests@vger.kernel.org
+Cc:     kernel-team@fb.com, linux-xfs@vger.kernel.org
+Subject: [PATCH] generic: test truncating mixed written/unwritten XFS realtime extent
+Date:   Tue, 26 Nov 2019 12:13:56 -0800
+Message-Id: <2512a38027e5286eae01d4aa36726f49a94e523d.1574799173.git.osandov@fb.com>
 X-Mailer: git-send-email 2.24.0
-In-Reply-To: <cover.1574799066.git.osandov@fb.com>
-References: <cover.1574799066.git.osandov@fb.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
@@ -72,35 +70,101 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Omar Sandoval <osandov@fb.com>
 
-Commit 5b094d6dac04 ("xfs: fix multi-AG deadlock in xfs_bunmapi") added
-a check in __xfs_bunmapi() to stop early if we would touch multiple AGs
-in the wrong order. However, this check isn't applicable for realtime
-files. In most cases, it just makes us do unnecessary commits. However,
-without the fix from the previous commit ("xfs: fix realtime file data
-space leak"), if the last and second-to-last extents also happen to have
-different "AG numbers", then the break actually causes __xfs_bunmapi()
-to return without making any progress, which sends
-xfs_itruncate_extents_flags() into an infinite loop.
+The only XFS-specific part of this test is the setup, so we can make the
+rest a generic test. It's slow, though, as it needs to write 8GB to
+convert a big unwritten extent to written.
 
-Fixes: 5b094d6dac04 ("xfs: fix multi-AG deadlock in xfs_bunmapi")
 Signed-off-by: Omar Sandoval <osandov@fb.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ tests/generic/586     | 59 +++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/586.out |  2 ++
+ tests/generic/group   |  1 +
+ 3 files changed, 62 insertions(+)
+ create mode 100755 tests/generic/586
+ create mode 100644 tests/generic/586.out
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 6f8791a1e460..a11b6e7cb35f 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5300,7 +5300,7 @@ __xfs_bunmapi(
- 		 * Make sure we don't touch multiple AGF headers out of order
- 		 * in a single transaction, as that could cause AB-BA deadlocks.
- 		 */
--		if (!wasdel) {
-+		if (!wasdel && !isrt) {
- 			agno = XFS_FSB_TO_AGNO(mp, del.br_startblock);
- 			if (prev_agno != NULLAGNUMBER && prev_agno > agno)
- 				break;
+diff --git a/tests/generic/586 b/tests/generic/586
+new file mode 100755
+index 00000000..5bcad68b
+--- /dev/null
++++ b/tests/generic/586
+@@ -0,0 +1,59 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2019 Facebook.  All Rights Reserved.
++#
++# FS QA Test 586
++#
++# Test "xfs: fix realtime file data space leak" and "xfs: don't check for AG
++# deadlock for realtime files in bunmapi". On XFS without the fix, rm will hang
++# forever. On other filesystems, this just tests writing into big fallocates.
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++. ./common/rc
++. ./common/filter
++
++rm -f $seqres.full
++
++_supported_fs generic
++_supported_os Linux
++_require_scratch
++
++maxextlen=$((0x1fffff))
++bs=4096
++rextsize=4
++
++extra_options=""
++if [[ $FSTYP = xfs && $USE_EXTERNAL = yes && -n $SCRATCH_RTDEV ]]; then
++	extra_options="$extra_options -bsize=$bs"
++	extra_options="$extra_options -r extsize=$((bs * rextsize))"
++	extra_options="$extra_options -d agsize=$(((maxextlen + 1) * bs / 2)),rtinherit=1"
++fi
++_scratch_mkfs $extra_options >>$seqres.full 2>&1
++_scratch_mount
++_require_fs_space "$SCRATCH_MNT" "$(((maxextlen + 1) * bs / 1024))"
++
++fallocate -l $(((maxextlen + 1 - rextsize) * bs)) "$SCRATCH_MNT/file"
++sync
++fallocate -o $(((maxextlen + 1 - rextsize) * bs)) -l $((rextsize * bs)) "$SCRATCH_MNT/file"
++sync
++dd if=/dev/zero of="$SCRATCH_MNT/file" bs=$bs count=$((maxextlen + 2 - rextsize)) conv=notrunc status=none
++sync
++rm "$SCRATCH_MNT/file"
++
++echo "Silence is golden"
++status=0
++exit
+diff --git a/tests/generic/586.out b/tests/generic/586.out
+new file mode 100644
+index 00000000..3d36442d
+--- /dev/null
++++ b/tests/generic/586.out
+@@ -0,0 +1,2 @@
++QA output created by 586
++Silence is golden
+diff --git a/tests/generic/group b/tests/generic/group
+index e5d0c1da..6ddaf640 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -588,3 +588,4 @@
+ 583 auto quick encrypt
+ 584 auto quick encrypt
+ 585 auto rename
++586 auto prealloc preallocrw dangerous
 -- 
 2.24.0
 
