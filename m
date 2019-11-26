@@ -2,39 +2,38 @@ Return-Path: <SRS0=SRpQ=ZS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A901C432C0
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Nov 2019 16:53:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D35EC432C0
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Nov 2019 19:40:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5A68D2073F
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Nov 2019 16:53:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D0F18207DD
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Nov 2019 19:40:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727796AbfKZQxx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Nov 2019 11:53:53 -0500
-Received: from sandeen.net ([63.231.237.45]:35856 "EHLO sandeen.net"
+        id S1726103AbfKZTkU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Nov 2019 14:40:20 -0500
+Received: from sandeen.net ([63.231.237.45]:44012 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727756AbfKZQxw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 26 Nov 2019 11:53:52 -0500
+        id S1726072AbfKZTkU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 26 Nov 2019 14:40:20 -0500
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 63C0D323C1A;
-        Tue, 26 Nov 2019 10:52:16 -0600 (CST)
-Subject: Re: [RFC-PATCH] xfs: do not update sunit/swidth in the superblock to
- match those provided during mount
-To:     Alex Lyakas <alex@zadara.com>, Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
-References: <1574359699-10191-1-git-send-email-alex@zadara.com>
- <20191122154314.GA31076@bfoster>
- <CAOcd+r3_gKYBv4vtM7nfPEPvkVp-FgHKvgQQx-_zMDt+QZ9z+g@mail.gmail.com>
- <20191125130744.GA44777@bfoster>
- <CAOcd+r2wMaX02acHffbNKXX4tZ1fXo-y1-OAW-dVGTq63qJcaw@mail.gmail.com>
- <20191126115415.GA50477@bfoster>
- <CAOcd+r3h=0umb-wdY058rQ=kPHpksMOwSh=Jc-did_tLkaioFw@mail.gmail.com>
+        by sandeen.net (Postfix) with ESMTPSA id 144B3323C16;
+        Tue, 26 Nov 2019 13:38:42 -0600 (CST)
+Subject: Re: [PATCH 1/2] mkfs: Break block discard into chunks of 2 GB
 From:   Eric Sandeen <sandeen@sandeen.net>
+To:     Dave Chinner <david@fromorbit.com>,
+        Pavel Reichl <preichl@redhat.com>
+Cc:     linux-xfs@vger.kernel.org,
+        =?UTF-8?B?THVrw6HFoSBDemVybmVy?= <lczerner@redhat.com>
+References: <20191121214445.282160-1-preichl@redhat.com>
+ <20191121214445.282160-2-preichl@redhat.com>
+ <20191121231838.GH4614@dread.disaster.area>
+ <b2bc2dea-575b-959a-0025-d5d20d733a55@sandeen.net>
+ <65693048-54db-3605-2c13-85e06420ba69@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
  nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
@@ -77,12 +76,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <0a1f2372-5c5b-85c7-07b8-c4a958eaec47@sandeen.net>
-Date:   Tue, 26 Nov 2019 10:53:50 -0600
+Message-ID: <5a5903bc-a237-5fa1-0afb-af9565c44ae2@sandeen.net>
+Date:   Tue, 26 Nov 2019 13:40:16 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.2.2
 MIME-Version: 1.0
-In-Reply-To: <CAOcd+r3h=0umb-wdY058rQ=kPHpksMOwSh=Jc-did_tLkaioFw@mail.gmail.com>
+In-Reply-To: <65693048-54db-3605-2c13-85e06420ba69@sandeen.net>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -91,44 +90,56 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 11/26/19 7:37 AM, Alex Lyakas wrote:
-> Hi Brian,
+On 11/22/19 3:30 PM, Eric Sandeen wrote:
+> On 11/22/19 3:10 PM, Eric Sandeen wrote:
+>> On 11/21/19 5:18 PM, Dave Chinner wrote:
+>>> On Thu, Nov 21, 2019 at 10:44:44PM +0100, Pavel Reichl wrote:
+>>>> Signed-off-by: Pavel Reichl <preichl@redhat.com>
+>>>> ---
+>>>
+>>> This is mixing an explanation about why the change is being made
+>>> and what was considered when making decisions about the change.
+>>>
+>>> e.g. my first questions on looking at the patch were:
+>>>
+>>> 	- why do we need to break up the discards into 2GB chunks?
+>>> 	- why 2GB?
+>>> 	- why not use libblkid to query the maximum discard size
+>>> 	  and use that as the step size instead?
+>>
+>> Just wondering, can we trust that to be reasonably performant?
+>> (the whole motivation here is for hardware that takes inordinately
+>> long to do discard, I wonder if we can count on such hardware to
+>> properly fill out this info....)
 > 
-> Thank you for your response.
+> Looking at the docs in kernel/Documentation/block/queue-sysfs.rst:
 > 
-> On Tue, Nov 26, 2019 at 1:54 PM Brian Foster <bfoster@redhat.com> wrote:
-
-...
-
-> Fascinating!
+> discard_max_hw_bytes (RO)
+> -------------------------
+> Devices that support discard functionality may have internal limits on
+> the number of bytes that can be trimmed or unmapped in a single operation.
+> The discard_max_bytes parameter is set by the device driver to the maximum
+> number of bytes that can be discarded in a single operation. Discard
+> requests issued to the device must not exceed this limit. A discard_max_bytes
+> value of 0 means that the device does not support discard functionality.
 > 
-> From our perspective, when the underlying storage alignment changes,
-> we are ok for all already-allocated extents to keep their existing
-> alignment. We only want the newly-allocated extents to use the
-> newly-specified sunit/swidth. My understanding is that such filesystem
-> is not "broken bits", as everything is consistent, except different
-> extents may have different alignments.
+> discard_max_bytes (RW)
+> ----------------------
+> While discard_max_hw_bytes is the hardware limit for the device, this
+> setting is the software limit. Some devices exhibit large latencies when
+> large discards are issued, setting this value lower will make Linux issue
+> smaller discards and potentially help reduce latencies induced by large
+> discard operations.
 > 
->> My takeaway from that is the behavior of updating the superblock from
->> the mount options could probably be nuked off (as your patch does), but
->> I'd suggest to get feedback from Eric and Darrick to see whether they
->> agree or would prefer to maintain existing behavior with proper
->> validation...
-> 
-> Let's wait for their additional feedback, then.
+> it seems like a strong suggestion that the discard_max_hw_bytes value may
+> still be problematic, and discard_max_bytes can be hand-tuned to something
+> smaller if it's a problem.  To me that indicates that discard_max_hw_bytes
+> probably can't be trusted to be performant, and presumably discard_max_bytes
+> won't be either in that case unless it's been hand-tuned by the admin?
 
-What I'm trying to figure out is whether stripe geometry changes which alter
-the expected root inode location are inherently problematic, and should be
-rejected during mount processing, or if the only issue is that xfs_repair
-assumes the geometry used in calculating root inode location will never change.
+Lukas, Jeff Moyer reminded me that you did a lot of investigation into this
+behavior a while back.  Can you shed light on this, particularly how you
+chose 2G as the discard granularity for mke2fs?
 
-If the former, then we'd reject the mounts you're trying to do which have
-"broken" xfs_repair's operation.
-
-If the latter, then we could try to teach xfs_repair a different algorithm
-for validating that the root inode in the superblock is correctly set.
-
+Thanks,
 -Eric
-
-> Thanks,
-> Alex.
