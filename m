@@ -2,209 +2,207 @@ Return-Path: <SRS0=zxI9=ZT=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01850C43215
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Nov 2019 15:52:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F101C432C0
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Nov 2019 16:25:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C56AF2071E
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Nov 2019 15:52:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3FD16206E0
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Nov 2019 16:25:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Kg0k/vAl"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="F3BuR1Rd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727141AbfK0Pwy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 Nov 2019 10:52:54 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:38300 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726514AbfK0Pwx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Nov 2019 10:52:53 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xARFi6ak075759;
-        Wed, 27 Nov 2019 15:52:06 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=H+/wgbi6zpbbhzBcnf3ZgXVMUMhhbOupxJKtToXxUKY=;
- b=Kg0k/vAlSe8xFiAPHV3p230uhEAIhD+RfNy3L2xMgLeJjWzANRMgYHEoE0Ep3N7qUiEj
- vcF15VBYr8vifEfZfiVr6t7u8ViSjjCg7FNvuwZfLuggXSVyPGlhSN6JUTfYB83peZvJ
- 2Uo59BKL0j0vX1rUEJqlR/o/pNlsdkvaPc0SHw+2iWbYlZWmF6wiaTespaEP5ykBV9AG
- ImLwc8stIz9ZL95hlZuIpbBT4NAPPaz+UgI3qRiVr/uxeOf58bY1exPNLO2+wgw9Fc9C
- Rl8vZBiL+t0XTNoRZlRlrnqJqMZNYYPP0oHZxwuNG+rB9l114hLMSs0+hA/EVvczaecf TQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2wewdrecda-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 27 Nov 2019 15:52:06 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xARFdTWt031310;
-        Wed, 27 Nov 2019 15:50:06 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 2wgvhccg37-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 27 Nov 2019 15:50:05 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xARFnumk003050;
-        Wed, 27 Nov 2019 15:49:56 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 27 Nov 2019 07:49:56 -0800
-Date:   Wed, 27 Nov 2019 07:49:54 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Andreas Gruenbacher <agruenba@redhat.com>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-kernel@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Jeff Layton <jlayton@kernel.org>, Sage Weil <sage@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        "Theodore Ts'o" <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Richard Weinberger <richard@nod.at>,
-        Artem Bityutskiy <dedekind1@gmail.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        linux-mtd@lists.infradead.org
-Subject: Re: [PATCH] fs: Fix page_mkwrite off-by-one errors
-Message-ID: <20191127154954.GT6219@magnolia>
-References: <20191127151811.9229-1-agruenba@redhat.com>
+        id S1726909AbfK0QZ0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 Nov 2019 11:25:26 -0500
+Received: from mail-lj1-f193.google.com ([209.85.208.193]:43855 "EHLO
+        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726514AbfK0QZ0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Nov 2019 11:25:26 -0500
+Received: by mail-lj1-f193.google.com with SMTP id a13so1980956ljm.10
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Nov 2019 08:25:23 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=AdPloTNJbWHQk/2A/2n8PKWfWf8hk7e1ZBXMWHC8peE=;
+        b=F3BuR1RdQij16bNItZztYW7Qlg+KvzmacZ+HGhq4bivUSL/gTqq+/84mwvROfFyl2q
+         K07js/0gHpGX3WfY3uaWYtnQ9sIN5EscEw1sCBRG7lMfRTUjQ1eSLNblZbxOZ8b+jSEB
+         4jMFwX+EAuKs850c/x/YQLvOweN06EXuwpCTiYCX/T1ZCrsWprPV8JwMmlzFsgEY2FEE
+         VfXjIIpqOaYs5SlhJ/NL2WyWIXthxjJOcdAGnyutr46Q+mxTXEtOoC0IzVUq1eq8f4iO
+         Bgz16eoLqunL8nFIoJjnTXc8KTiErjx7x6JjOghdkUD4+TWzfVhbxTQ26fDbuT9WtPg5
+         djzg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=AdPloTNJbWHQk/2A/2n8PKWfWf8hk7e1ZBXMWHC8peE=;
+        b=YkUED0U6XpL5urRy42c9MzslA9uxQ5s5KxF2mch40FTMlssUyJN7byBMPV2TSuPGFX
+         FW6PJ8IFVqj7RILfPLnEe4JdD62grajHHdaSQcNsVz8kePnzSSIf+rqvjU3beAt1Mhyx
+         ZGN549RUi5br9TrX8YYfyakZ0cdxtKt2USPKH/K9NDErJYx2/Yui/QuFnTxiWYLO14b8
+         5Wzn9A9JGqCibu9Tz6X1ZaeDITuUMZBeVzCBmSy9W2pM1tbwub9z9YUWyrPLkrdIqqq6
+         UtJh1nGgkuAByPb/XRpPdbXHuql2HKKZ/qOImvAtdPq+UBalYtswUaHp/q1lCdoQ6ocu
+         6rvQ==
+X-Gm-Message-State: APjAAAVlldw4xY7bPZaSmZlwDGDyvF/EjGKC3pTl0xsBGEvodpnBMl3g
+        stWj6hsOct8jhvM0PwUhedMEFlkP
+X-Google-Smtp-Source: APXvYqwAMOZy/hflXySMgSxsOfz5v1DTxHsQA+jl/yekGp06ddmLkrSnEs7NsWvSnL88q3+YuTKnzQ==
+X-Received: by 2002:a2e:8658:: with SMTP id i24mr30692412ljj.163.1574871922759;
+        Wed, 27 Nov 2019 08:25:22 -0800 (PST)
+Received: from amb.local (31-179-17-47.dynamic.chello.pl. [31.179.17.47])
+        by smtp.gmail.com with ESMTPSA id 15sm7358056ljq.62.2019.11.27.08.25.21
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 27 Nov 2019 08:25:21 -0800 (PST)
+Subject: Re: WARNING: CPU: 5 PID: 25802 at fs/xfs/libxfs/xfs_bmap.c:4530
+ xfs_bmapi_convert_delalloc+0x434/0x4a0 [xfs]
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org
+References: <3c58ebc4-ff95-b443-b08d-81f5169d3d01@gmail.com>
+ <20191108065627.GA6260@infradead.org>
+ <c52e2515-272f-476e-7cfa-a2ef23c66b56@gmail.com>
+ <20191127154353.GA9847@infradead.org>
+From:   =?UTF-8?Q?Arkadiusz_Mi=c5=9bkiewicz?= <a.miskiewicz@gmail.com>
+Message-ID: <7b5db9fd-7f40-bf43-e494-d6d95839c0f1@gmail.com>
+Date:   Wed, 27 Nov 2019 17:25:20 +0100
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.2.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191127151811.9229-1-agruenba@redhat.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9454 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1911270137
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9454 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1911270137
+In-Reply-To: <20191127154353.GA9847@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: base64
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 27, 2019 at 04:18:11PM +0100, Andreas Gruenbacher wrote:
-> Fix a check in block_page_mkwrite meant to determine whether an offset
-> is within the inode size.  This error has spread to several filesystems
-> and to iomap_page_mkwrite, so fix those instances as well.
-
-Seeing how this has gotten screwed up at least six times in the kernel,
-maybe we need a static inline helper to do this for us?
-
-> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-
-The iomap part looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-(I might just extract the iomap part and put it in the iomap tree if
-someone doesn't merge this one before I get to it...)
-
---D
-
-> 
-> ---
-> 
-> This patch has a trivial conflict with commit "iomap: Fix overflow in
-> iomap_page_mkwrite" in Darrick's iomap pull request for 5.5:
-> 
->   https://lore.kernel.org/lkml/20191125190907.GN6219@magnolia/
-> ---
->  fs/buffer.c            | 2 +-
->  fs/ceph/addr.c         | 2 +-
->  fs/ext4/inode.c        | 2 +-
->  fs/f2fs/file.c         | 2 +-
->  fs/iomap/buffered-io.c | 2 +-
->  fs/ubifs/file.c        | 2 +-
->  6 files changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/buffer.c b/fs/buffer.c
-> index 86a38b979323..152d391858d4 100644
-> --- a/fs/buffer.c
-> +++ b/fs/buffer.c
-> @@ -2465,7 +2465,7 @@ int block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
->  	lock_page(page);
->  	size = i_size_read(inode);
->  	if ((page->mapping != inode->i_mapping) ||
-> -	    (page_offset(page) > size)) {
-> +	    (page_offset(page) >= size)) {
->  		/* We overload EFAULT to mean page got truncated */
->  		ret = -EFAULT;
->  		goto out_unlock;
-> diff --git a/fs/ceph/addr.c b/fs/ceph/addr.c
-> index 7ab616601141..9fa0729ece41 100644
-> --- a/fs/ceph/addr.c
-> +++ b/fs/ceph/addr.c
-> @@ -1575,7 +1575,7 @@ static vm_fault_t ceph_page_mkwrite(struct vm_fault *vmf)
->  	do {
->  		lock_page(page);
->  
-> -		if ((off > size) || (page->mapping != inode->i_mapping)) {
-> +		if ((off >= size) || (page->mapping != inode->i_mapping)) {
->  			unlock_page(page);
->  			ret = VM_FAULT_NOPAGE;
->  			break;
-> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-> index 516faa280ced..6dd4efe2fb63 100644
-> --- a/fs/ext4/inode.c
-> +++ b/fs/ext4/inode.c
-> @@ -6224,7 +6224,7 @@ vm_fault_t ext4_page_mkwrite(struct vm_fault *vmf)
->  	lock_page(page);
->  	size = i_size_read(inode);
->  	/* Page got truncated from under us? */
-> -	if (page->mapping != mapping || page_offset(page) > size) {
-> +	if (page->mapping != mapping || page_offset(page) >= size) {
->  		unlock_page(page);
->  		ret = VM_FAULT_NOPAGE;
->  		goto out;
-> diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
-> index 29bc0a542759..3436be01af45 100644
-> --- a/fs/f2fs/file.c
-> +++ b/fs/f2fs/file.c
-> @@ -71,7 +71,7 @@ static vm_fault_t f2fs_vm_page_mkwrite(struct vm_fault *vmf)
->  	down_read(&F2FS_I(inode)->i_mmap_sem);
->  	lock_page(page);
->  	if (unlikely(page->mapping != inode->i_mapping ||
-> -			page_offset(page) > i_size_read(inode) ||
-> +			page_offset(page) >= i_size_read(inode) ||
->  			!PageUptodate(page))) {
->  		unlock_page(page);
->  		err = -EFAULT;
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index e25901ae3ff4..d454dbab5133 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -1041,7 +1041,7 @@ vm_fault_t iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops)
->  	lock_page(page);
->  	size = i_size_read(inode);
->  	if ((page->mapping != inode->i_mapping) ||
-> -	    (page_offset(page) > size)) {
-> +	    (page_offset(page) >= size)) {
->  		/* We overload EFAULT to mean page got truncated */
->  		ret = -EFAULT;
->  		goto out_unlock;
-> diff --git a/fs/ubifs/file.c b/fs/ubifs/file.c
-> index cd52585c8f4f..ca0148ec77e6 100644
-> --- a/fs/ubifs/file.c
-> +++ b/fs/ubifs/file.c
-> @@ -1564,7 +1564,7 @@ static vm_fault_t ubifs_vm_page_mkwrite(struct vm_fault *vmf)
->  
->  	lock_page(page);
->  	if (unlikely(page->mapping != inode->i_mapping ||
-> -		     page_offset(page) > i_size_read(inode))) {
-> +		     page_offset(page) >= i_size_read(inode))) {
->  		/* Page got truncated out from underneath us */
->  		goto sigbus;
->  	}
-> -- 
-> 2.20.1
-> 
+T24gMjcvMTEvMjAxOSAxNjo0MywgQ2hyaXN0b3BoIEhlbGx3aWcgd3JvdGU6DQo+IE9uIEZy
+aSwgTm92IDA4LCAyMDE5IGF0IDA4OjM2OjMxQU0gKzAxMDAsIEFya2FkaXVzeiBNacWba2ll
+d2ljeiB3cm90ZToNCj4+PiBUaGUgV0FSTl9PTiBtZWFucyB0aGF0IGNvbnZlcnNpb24gb2Yg
+ZGVsYWxsb2MgYmxvY2tzIGZhaWxlZCB0byBmaW5kDQo+Pj4gZnJlZSBzcGFjZS4gIFNvbWV0
+aGluZyB0aGF0IHNob3VsZCBub3QgYmUgcG9zc2libGUgZHVlIHRvIHRoZSBkZWxhbGxvYw0K
+Pj4+IHJlc2VydmF0aW9ucy4gIFdoYXQgYXMgdGhlIGxhc3Qga2VybmVsIHdoZXJlIHlvdSBk
+aWQgbm90IHNlZSBzb21ldGhpbmcNCj4+PiBsaWtlIHRoaXM/DQo+Pj4NCj4+DQo+PiA0LjIw
+LjEzIGxvb2tzIG9rDQo+PiA1LjEuMTUgYmFkICh0aGF0IHdhcm5fb24gdHJpZ2dlcmVkKQ0K
+Pj4NCj4+IG9uIGJvdGggbWFjaGluZXMgYWNjb3JkaW5nIHRvIG15IG9sZCBsb2dzDQo+IA0K
+PiBTb3JyeSBmb3IgZHJvcHBpbmcgdGhlIGJhbGwuICBXZSBoYXZlIHNvbWUgcHJldHR5IHNp
+Z25pZmljYW50IGNoYW5nZXMNCj4gYmV0d2VlbiB0aG9zZSB2ZXJzaW9uIGFzIDUuMyBoYXMg
+YSBwcmV0dHkgYmlnIHJld3JpdGUgb2YgdGhlIGhpZ2ggbGV2ZWwNCj4gd3JpdGViYWNrIGNv
+ZGUsIGFuZCB0aGlzIGhhcHBlbnMgaW4gY29kZSBjYWxsZWQgZnJvbSB0aGF0LiANCg0KSG0s
+IDUuMyBidXQgSSBzYXcgdGhpcyBvbiA1LjEuMTUsIHRvby4gU2VlIGJlbG93LiAob3IgZGlk
+IHlvdSBtZWFuIDUuMQ0Kd2FzIHdpdGggYmlnIGNoYW5nZXM/KQ0KDQpGb3Igbm93IEknbSBv
+biA0LjE5LlhYIGZvciBvdmVyIDIgd2Vla3Mgd2l0aG91dCB0aGlzIGlzc3VlLCBvbiBib3Ro
+IHNlcnZlcnMuDQoNCj4gT2N0IDI5IDE5OjA0OjQ3IGJhY2t1cDMga2VybmVsOiBbMTU3MzQz
+NS43MTg1MDZdWyBUNjMzMl0gV0FSTklORzogQ1BVOiAyIFBJRDogNjMzMiBhdCBmcy94ZnMv
+bGlieGZzL3hmc19ibWFwLmM6NDUxMyB4ZnNfYm1hcGlfY29udmVydF9kZWxhbGxvYysweDQ0
+ZC8weDRiMCBbeGZzXQ0KPiBPY3QgMjkgMTk6MDQ6NDcgYmFja3VwMyBrZXJuZWw6IFsxNTcz
+NDM1LjcxODUwN11bIFQ2MzMyXSBNb2R1bGVzIGxpbmtlZCBpbjogbmZzZCBhdXRoX3JwY2dz
+cyBuZnNfYWNsIGxvY2tkIGdyYWNlIHN1bnJwYyBzY2hfc2ZxIGJvbmRpbmcgbmZfbG9nX2lw
+djQgbmZfbG9nX2NvbW1vbiB4dF9MT0cgeHRfY29tbWVudCB4dF90Y3B1ZHAgeHRfY29ubnRy
+YWNrIG5mX2Nvbm50cmFjayBuZl9kZWZyYWdfaXB2NiBuZl9kZWZyYWdfaXB2NCBpcHRhYmxl
+X2ZpbHRlciBpcF90YWJsZXMgeF90YWJsZXMgYnBmaWx0ZXIgZXh0NCBjcmMxNiBtYmNhY2hl
+IGpiZDIgaW5wdXRfbGVkcyBqb3lkZXYgaGlkX2dlbmVyaWMgdXNiaGlkIGhpZCBjb3JldGVt
+cCBpbnRlbF9yYXBsIHg4Nl9wa2dfdGVtcF90aGVybWFsIGludGVsX3Bvd2VyY2xhbXAga3Zt
+X2ludGVsIHJhaWQ0NTYga3ZtIGFzeW5jX3JhaWQ2X3JlY292IGlycWJ5cGFzcyBhc3luY19t
+ZW1jcHkgaWdiIGFzeW5jX3BxIGFzeW5jX3hvciBhc3luY190eCB4b3IgY21kbGluZXBhcnQg
+aW50ZWxfc3BpX3BsYXRmb3JtIGludGVsX3NwaSBzcGlfbm9yIG10ZCBpVENPX3dkdCBpVENP
+X3ZlbmRvcl9zdXBwb3J0IGV2ZGV2IGNyY3QxMGRpZl9wY2xtdWwgY3JjMzJfcGNsbXVsIGdo
+YXNoX2NsbXVsbmlfaW50ZWwgcmFpZDEgYWVzbmlfaW50ZWwgYWVzX3g4Nl82NCBjcnlwdG9f
+c2ltZCBjcnlwdGQgcmFpZDZfcHEgZ2x1ZV9oZWxwZXIgaHdtb24gZGNhIGludGVsX2NzdGF0
+ZSBwY3Nwa3IgaTJjX2FsZ29fYml0IGludGVsX3VuY29yZSBpMmNfaTgwMSBpbnRlbF9wY2hf
+dGhlcm1hbCBpbnRlbF9yYXBsX3BlcmYgbHBjX2ljaCBpcG1pX3NzaWYgaTJjX2NvcmUgeGhj
+aV9wY2kgeGhjaV9oY2Qgc2VzIGVuY2xvc3VyZSBlaGNpX3BjaSBlaGNpX2hjZCB1c2Jjb3Jl
+IGlwbWlfc2kgaXBtaV9kZXZpbnRmIGlwbWlfbXNnaGFuZGxlciBmYW4gdGhlcm1hbCBidXR0
+b24gdmlkZW8gaWUzMTIwMF9lZGFjIHBjY19jcHVmcmVxIHNjaF9mcV9jb2RlbCB4ZnMgbGli
+Y3JjMzJjIGNyYzMyY19nZW5lcmljDQo+IE9jdCAyOSAxOTowNDo0NyBiYWNrdXAzIGtlcm5l
+bDogWzE1NzM0MzUuNzE4NTMwXVsgVDYzMzJdICBjcmMzMmNfaW50ZWwgc2RfbW9kIG1wdDNz
+YXMgcmFpZF9jbGFzcyBzY3NpX3RyYW5zcG9ydF9zYXMgcmFpZDEwIG1kX21vZCBhaGNpIGxp
+YmFoY2kgbGliYXRhIHNjc2lfbW9kDQo+IE9jdCAyOSAxOTowNDo0NyBiYWNrdXAzIGtlcm5l
+bDogWzE1NzM0MzUuNzE4NTM2XVsgVDYzMzJdIENQVTogMiBQSUQ6IDYzMzIgQ29tbToga3dv
+cmtlci91ODo5IFRhaW50ZWQ6IEcgICAgICAgICAgICAgICAgVCA1LjEuMTUtMSAjMQ0KPiBP
+Y3QgMjkgMTk6MDQ6NDcgYmFja3VwMyBrZXJuZWw6IFsxNTczNDM1LjcxODUzN11bIFQ2MzMy
+XSBIYXJkd2FyZSBuYW1lOiBTdXBlcm1pY3JvIFgxMFNMNy1GL1gxMFNMNy1GLCBCSU9TIDIu
+MDAgMDQvMjQvMjAxNA0KPiBPY3QgMjkgMTk6MDQ6NDcgYmFja3VwMyBrZXJuZWw6IFsxNTcz
+NDM1LjcxODU0MF1bIFQ2MzMyXSBXb3JrcXVldWU6IHdyaXRlYmFjayB3Yl93b3JrZm4gKGZs
+dXNoLTk6NSkNCj4gT2N0IDI5IDE5OjA0OjQ3IGJhY2t1cDMga2VybmVsOiBbMTU3MzQzNS43
+MTg1NTVdWyBUNjMzMl0gUklQOiAwMDEwOnhmc19ibWFwaV9jb252ZXJ0X2RlbGFsbG9jKzB4
+NDRkLzB4NGIwIFt4ZnNdDQo+IE9jdCAyOSAxOTowNDo0NyBiYWNrdXAzIGtlcm5lbDogWzE1
+NzM0MzUuNzE4NTU2XVsgVDYzMzJdIENvZGU6IDhiIDQzIDM4IDQ4IDg5IDQ0IDI0IDEwIGU5
+IDNlIGZjIGZmIGZmIDgwIGJiIGUxIDAwIDAwIDAwIDAzIDQ4IDhkIDQzIDQ4IDc0IGNlIGM3
+IDg0IDI0IGM4IDAwIDAwIDAwIDAxIDAwIDAwIDAwIGU5IDg1IGZkIGZmIGZmIDwwZj4gMGIg
+NDEgYmYgZTQgZmYgZmYgZmYgNGMgODkgZTcgNDQgODkgZmEgNDQgODkgZjYgZTggMmQgNzEg
+ZmYgZmYNCj4gT2N0IDI5IDE5OjA0OjQ3IGJhY2t1cDMga2VybmVsOiBbMTU3MzQzNS43MTg1
+NTZdWyBUNjMzMl0gUlNQOiAwMDE4OmZmZmZiOGViNDM4NGI4NTggRUZMQUdTOiAwMDAxMDI0
+Ng0KPiBPY3QgMjkgMTk6MDQ6NDcgYmFja3VwMyBrZXJuZWw6IFsxNTczNDM1LjcxODU1N11b
+IFQ2MzMyXSBSQVg6IDAwMDAwMDAwMDAwMDAwMDAgUkJYOiBmZmZmOGQ4MWZhOTI2MWMwIFJD
+WDogMDAwMDAwMDAwMDAwMDAwMA0KPiBPY3QgMjkgMTk6MDQ6NDcgYmFja3VwMyBrZXJuZWw6
+IFsxNTczNDM1LjcxODU1OF1bIFQ2MzMyXSBSRFg6IDAwMDAwMDAwMDAwMDFmOGUgUlNJOiBm
+ZmZmZmZmZmZmZmZmZmZmIFJESTogZmZmZjhkODNlOGQ2NjYwMA0KPiBPY3QgMjkgMTk6MDQ6
+NDcgYmFja3VwMyBrZXJuZWw6IFsxNTczNDM1LjcxODU1OF1bIFQ2MzMyXSBSQlA6IGZmZmZi
+OGViNDM4NGI5NjAgUjA4OiAwMDAwMDAwMDAwMDAwMDAwIFIwOTogMDAwMDAwMDAwMDAxYmQw
+Ng0KPiBPY3QgMjkgMTk6MDQ6NDcgYmFja3VwMyBrZXJuZWw6IFsxNTczNDM1LjcxODU1OF1b
+IFQ2MzMyXSBSMTA6IGZmZmY4ZDdmNWZhZmFhYTggUjExOiAwMDAwMDAwMDAwMDAwMDAxIFIx
+MjogZmZmZmI4ZWI0Mzg0Yjg5MA0KPiBPY3QgMjkgMTk6MDQ6NDcgYmFja3VwMyBrZXJuZWw6
+IFsxNTczNDM1LjcxODU1OV1bIFQ2MzMyXSBSMTM6IGZmZmY4ZDgzZGZlOGUwMDAgUjE0OiAw
+MDAwMDAwMDAwMDAwMDAwIFIxNTogMDAwMDAwMDAwMDAwMDAwMA0KPiBPY3QgMjkgMTk6MDQ6
+NDcgYmFja3VwMyBrZXJuZWw6IFsxNTczNDM1LjcxODU2MF1bIFQ2MzMyXSBGUzogIDAwMDAw
+MDAwMDAwMDAwMDAoMDAwMCkgR1M6ZmZmZjhkODQxZmQwMDAwMCgwMDAwKSBrbmxHUzowMDAw
+MDAwMDAwMDAwMDAwDQo+IE9jdCAyOSAxOTowNDo0NyBiYWNrdXAzIGtlcm5lbDogWzE1NzM0
+MzUuNzE4NTYwXVsgVDYzMzJdIENTOiAgMDAxMCBEUzogMDAwMCBFUzogMDAwMCBDUjA6IDAw
+MDAwMDAwODAwNTAwMzMNCj4gT2N0IDI5IDE5OjA0OjQ3IGJhY2t1cDMga2VybmVsOiBbMTU3
+MzQzNS43MTg1NjFdWyBUNjMzMl0gQ1IyOiAwMDAwMDAwMDAyMWIzZmMwIENSMzogMDAwMDAw
+MDYxMDIwZTAwNSBDUjQ6IDAwMDAwMDAwMDAxNjA2ZTANCj4gT2N0IDI5IDE5OjA0OjQ3IGJh
+Y2t1cDMga2VybmVsOiBbMTU3MzQzNS43MTg1NjFdWyBUNjMzMl0gRFIwOiAwMDAwMDAwMDAw
+MDAwMDAwIERSMTogMDAwMDAwMDAwMDAwMDAwMCBEUjI6IDAwMDAwMDAwMDAwMDAwMDANCj4g
+T2N0IDI5IDE5OjA0OjQ3IGJhY2t1cDMga2VybmVsOiBbMTU3MzQzNS43MTg1NjJdWyBUNjMz
+Ml0gRFIzOiAwMDAwMDAwMDAwMDAwMDAwIERSNjogMDAwMDAwMDBmZmZlMGZmMCBEUjc6IDAw
+MDAwMDAwMDAwMDA0MDANCj4gT2N0IDI5IDE5OjA0OjQ3IGJhY2t1cDMga2VybmVsOiBbMTU3
+MzQzNS43MTg1NjJdWyBUNjMzMl0gQ2FsbCBUcmFjZToNCj4gT2N0IDI5IDE5OjA0OjQ3IGJh
+Y2t1cDMga2VybmVsOiBbMTU3MzQzNS43MTg1ODJdWyBUNjMzMl0gIHhmc19tYXBfYmxvY2tz
+KzB4MWFlLzB4NDUwIFt4ZnNdDQo+IE9jdCAyOSAxOTowNDo0NyBiYWNrdXAzIGtlcm5lbDog
+WzE1NzM0MzUuNzE4NTk5XVsgVDYzMzJdICB4ZnNfZG9fd3JpdGVwYWdlKzB4MTE0LzB4NDIw
+IFt4ZnNdDQo+IE9jdCAyOSAxOTowNDo0NyBiYWNrdXAzIGtlcm5lbDogWzE1NzM0MzUuNzE4
+NjAzXVsgVDYzMzJdICB3cml0ZV9jYWNoZV9wYWdlcysweDFiZC8weDQ2MA0KPiBPY3QgMjkg
+MTk6MDQ6NDcgYmFja3VwMyBrZXJuZWw6IFsxNTczNDM1LjcxODYyMF1bIFQ2MzMyXSAgPyB4
+ZnNfdm1fd3JpdGVwYWdlcysweDkwLzB4OTAgW3hmc10NCj4gT2N0IDI5IDE5OjA0OjQ3IGJh
+Y2t1cDMga2VybmVsOiBbMTU3MzQzNS43MTg2MzddWyBUNjMzMl0gIHhmc192bV93cml0ZXBh
+Z2VzKzB4NWIvMHg5MCBbeGZzXQ0KPiBPY3QgMjkgMTk6MDQ6NDcgYmFja3VwMyBrZXJuZWw6
+IFsxNTczNDM1LjcxODYzOV1bIFQ2MzMyXSAgZG9fd3JpdGVwYWdlcysweDFjLzB4NjANCj4g
+T2N0IDI5IDE5OjA0OjQ3IGJhY2t1cDMga2VybmVsOiBbMTU3MzQzNS43MTg2NDFdWyBUNjMz
+Ml0gIF9fd3JpdGViYWNrX3NpbmdsZV9pbm9kZSsweDQxLzB4MzQwDQo+IE9jdCAyOSAxOTow
+NDo0NyBiYWNrdXAzIGtlcm5lbDogWzE1NzM0MzUuNzE4NjQ0XVsgVDYzMzJdICA/IF9fd2Fr
+ZV91cF9jb21tb25fbG9jaysweDg4LzB4YzANCj4gT2N0IDI5IDE5OjA0OjQ3IGJhY2t1cDMg
+a2VybmVsOiBbMTU3MzQzNS43MTg2NDVdWyBUNjMzMl0gIHdyaXRlYmFja19zYl9pbm9kZXMr
+MHgxZGQvMHg0NjANCj4gT2N0IDI5IDE5OjA0OjQ3IGJhY2t1cDMga2VybmVsOiBbMTU3MzQz
+NS43MTg2NDZdWyBUNjMzMl0gIHdiX3dyaXRlYmFjaysweDEyYS8weDMxMA0KPiBPY3QgMjkg
+MTk6MDQ6NDcgYmFja3VwMyBrZXJuZWw6IFsxNTczNDM1LjcxODY0OF1bIFQ2MzMyXSAgd2Jf
+d29ya2ZuKzB4ZGUvMHg0NjANCj4gT2N0IDI5IDE5OjA0OjQ3IGJhY2t1cDMga2VybmVsOiBb
+MTU3MzQzNS43MTg2NTBdWyBUNjMzMl0gIHByb2Nlc3Nfb25lX3dvcmsrMHgxZmIvMHgzZjAN
+Cj4gT2N0IDI5IDE5OjA0OjQ3IGJhY2t1cDMga2VybmVsOiBbMTU3MzQzNS43MTg2NTFdWyBU
+NjMzMl0gIHdvcmtlcl90aHJlYWQrMHgyNDYvMHgzZDANCj4gT2N0IDI5IDE5OjA0OjQ3IGJh
+Y2t1cDMga2VybmVsOiBbMTU3MzQzNS43MTg2NTJdWyBUNjMzMl0gID8gcHJvY2Vzc19vbmVf
+d29yaysweDNmMC8weDNmMA0KPiBPY3QgMjkgMTk6MDQ6NDcgYmFja3VwMyBrZXJuZWw6IFsx
+NTczNDM1LjcxODY1NF1bIFQ2MzMyXSAga3RocmVhZCsweDExMy8weDEzMA0KPiBPY3QgMjkg
+MTk6MDQ6NDcgYmFja3VwMyBrZXJuZWw6IFsxNTczNDM1LjcxODY1NV1bIFQ2MzMyXSAgPyBr
+dGhyZWFkX3BhcmsrMHg4MC8weDgwDQo+IE9jdCAyOSAxOTowNDo0NyBiYWNrdXAzIGtlcm5l
+bDogWzE1NzM0MzUuNzE4NjU4XVsgVDYzMzJdICByZXRfZnJvbV9mb3JrKzB4MzUvMHg0MA0K
+PiBPY3QgMjkgMTk6MDQ6NDcgYmFja3VwMyBrZXJuZWw6IFsxNTczNDM1LjcxODY1OV1bIFQ2
+MzMyXSAtLS1bIGVuZCB0cmFjZSAzN2NiZDg4Y2FlMjYzYWZhIF0tLS0NCj4gT2N0IDI5IDE5
+OjA0OjQ3IGJhY2t1cDMga2VybmVsOiBbMTU3MzQzNS43MTg2NjNdWyBUNjMzMl0gWEZTICht
+ZDUpOiBwYWdlIGRpc2NhcmQgb24gcGFnZSAwMDAwMDAwMDdiY2I1OWZhLCBpbm9kZSAweDEw
+MWYzMDQxZiwgb2Zmc2V0IDIzNDgxOTU4NC4NCj4gT2N0IDI5IDE5OjA0OjQ3IGJhY2t1cDMg
+a2VybmVsOiBbMTU3MzQzNS43MTg2ODVdWyBUNjMzMl0gWEZTIChtZDUpOiBwYWdlIGRpc2Nh
+cmQgb24gcGFnZSAwMDAwMDAwMGIxYjZmZWUxLCBpbm9kZSAweDEwMWYzMDQxZiwgb2Zmc2V0
+IDIzNDgyMzY4MC4NCj4gT2N0IDI5IDE5OjA0OjQ3IGJhY2t1cDMga2VybmVsOiBbMTU3MzQz
+NS43MTg3MDNdWyBUNjMzMl0gWEZTIChtZDUpOiBwYWdlIGRpc2NhcmQgb24gcGFnZSAwMDAw
+MDAwMGY3NTI1NTUwLCBpbm9kZSAweDEwMWYzMDQxZiwgb2Zmc2V0IDIzNDgyNzc3Ni4NCg0K
+DQo+IEJ1dCBpdA0KPiBkb2Vzbid0IGFjdHVhbGx5IGNoYW5nZSAob3Igc2hvdWxkIGNoYW5n
+ZSkgaG93IHdlIHVzZSB0aGUgcmVzZXJ2YXRpb25zLA0KPiB3aGljaCBsZWF2ZXMgbWUgYSBs
+aXR0bGUgcHV6emxlZC4gIElmIEkgZ2F2ZSB5b3UgYW4gaW5zdHJ1bWVudGVkIGtlcm5lbA0K
+PiB3aXRoIG5ldyB0cmFjZSBwb2ludHMsIGNvdWxkIHlvdSBwcm92aWRlIHRyYWNlcyBiYXNl
+ZCBvbiB0aGF0Pw0KDQpQcm9iYWJseSBpdCB3aWxsIGJlIGVhc2llciB0byBqdXN0IGJpc2Vj
+dCBhbmQgSSBwbGFuIHRvIGRvIHRoYXQgYWZ0ZXINCmJhY2t1cCBjYXRjaGVzIHVwIHdpdGgg
+bWlzc2luZyBkYXRhIChhbmQgaXQgdGFrZXMgZGF5cykuDQoNCg0KLS0gDQpBcmthZGl1c3og
+TWnFm2tpZXdpY3osIGFyZWttIC8gKCBtYXZlbi5wbCB8IHBsZC1saW51eC5vcmcgKQ0K
