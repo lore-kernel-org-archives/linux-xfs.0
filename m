@@ -2,152 +2,181 @@ Return-Path: <SRS0=zxI9=ZT=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADF66C43215
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Nov 2019 16:35:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7543DC432C3
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Nov 2019 21:23:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 85A39206F0
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Nov 2019 16:35:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4AF382064B
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Nov 2019 21:23:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="lFEl6RCL"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gqyaSapy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726970AbfK0QfF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 Nov 2019 11:35:05 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:33748 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726937AbfK0QfE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Nov 2019 11:35:04 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xARGYDWi138365;
-        Wed, 27 Nov 2019 16:35:00 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
- bh=oJMxGL1cPMD1dBv26thcZ/DQrrQ3vEEcC0vYN7F8HoQ=;
- b=lFEl6RCLCTzv7yVhGQAYFpSAPKZ0/wtQR0x8BZPFVdHCCCmwyPCV8IDeOOUQqzZRWnO5
- 3sC2YrJSHCnb3MoQ7yvKkiriG0TT8hkTdapCcNEe7SmRbPUgO4ylSvRG1bi7u1e3nuT6
- B38Gk7Un6WMpx+3KVtuzBCSiXrUQocqvlwvOrGT/Uy0Owt3C5oPwZSR/CMLKCkS+owDU
- sUNZZFu5Uoq0Ud5tZYLpQuEVGIkDQU6RA4PQoHvkc85OdXFnP2BNJ3na+1hRG5ekEWlb
- teAL/et4TnkcgxTeip+W5PDmiVUqIoAGbChb+wxbUVFm4E7rO7IPds6/W2yL+HCkRsHO XQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2wev6ueqk3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 27 Nov 2019 16:35:00 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xARGY9Df185485;
-        Wed, 27 Nov 2019 16:35:00 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 2whrkrnqau-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 27 Nov 2019 16:34:59 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xARGYw2g003250;
-        Wed, 27 Nov 2019 16:34:58 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 27 Nov 2019 08:34:58 -0800
-Date:   Wed, 27 Nov 2019 08:34:57 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eryu Guan <guaneryu@gmail.com>
-Cc:     fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>,
-        Jan Kara <jack@suse.cz>
-Subject: [PATCH v2] generic/050: fix xfsquota configuration failures
-Message-ID: <20191127163457.GL6212@magnolia>
+        id S1728475AbfK0VXo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 Nov 2019 16:23:44 -0500
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:46244 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1732123AbfK0VXn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Nov 2019 16:23:43 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1574889821;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=C+UrTFLEnpVw4U4uln54jZCp9fZwwpqvF5uRYadAcGs=;
+        b=gqyaSapyEpO3U919lR6UcASdpzt2MtVNFugiVLS2vLg/py7x68XEdpACXIeRmjA5Gw7bsG
+        zM1EtwAn36L4EsBzednw4qANf/wFlDmBXa6SpRCZuEA95YhrnNcuLlx7jGM8JSO2vWAr/t
+        ICfLLO0rnNO5Avm2GAQxe0p1fmGtMbc=
+Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
+ [209.85.128.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-222-ER4OrVYKP8yVaMt5yX8-Gg-1; Wed, 27 Nov 2019 16:23:40 -0500
+Received: by mail-wm1-f70.google.com with SMTP id f191so3034794wme.1
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Nov 2019 13:23:40 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=c8jvHnMMY82NxsQfU3ObPnkFVGRfsFwK5JBV/oAcPvA=;
+        b=IvhQ+d5PZ8QqItqg6yorl6BLyVhggMggDcxErmg2T+Wp/e5fTltZQUuAOv1KZGCZhR
+         zsmRFYA/+Y+CwshDaKY1sVkKdZk2UNS7kZtxhIM8TuslV+1G+JAwZIjz5I1HJ7nKsX91
+         wuXCRg9n0UxVhWm6ZoetdYxNH5WjrcKYdOB2DKDfvzji8c7HFqfeBB8yt3OAuDEqoi2N
+         jbXGYqB7vQ63Db+/ah3xWaEecTj9JDa8FJgqqkt/+5pO+9YTFcJ3eV0aIXOdbCjCnZk/
+         iYEnfaLsQ33PTZ4id8hPCNL2rK4CpIZZVRa3jkQf797xH3TIxMckfeCApoSC5Ao5y5vH
+         096w==
+X-Gm-Message-State: APjAAAUZnaHROU5gFx4YQF3X9+MnopTT+lQll5OfiRyiVIRSbctW3j+e
+        znynmDuX0c+e7GldMYdOnHwrXkwR3VWX3RaEogtgvQ5/PEzTBaLNi17G6ou03/2Jnpwh1s2N243
+        K9tBK62Xv8XKw79KJmDBG
+X-Received: by 2002:a1c:8153:: with SMTP id c80mr6469159wmd.58.1574889818885;
+        Wed, 27 Nov 2019 13:23:38 -0800 (PST)
+X-Google-Smtp-Source: APXvYqwJ2IC/x5NNXcw4UaDtlxjkrB5hR+eC/IsoanHPvn9DnXlBBDnwP/UFFAVpvpZH0IGRp79GNg==
+X-Received: by 2002:a1c:8153:: with SMTP id c80mr6469145wmd.58.1574889818644;
+        Wed, 27 Nov 2019 13:23:38 -0800 (PST)
+Received: from preichl.redhat.com (243.206.broadband12.iol.cz. [90.179.206.243])
+        by smtp.gmail.com with ESMTPSA id z4sm8656755wmf.36.2019.11.27.13.23.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 27 Nov 2019 13:23:38 -0800 (PST)
+From:   Pavel Reichl <preichl@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Pavel Reichl <preichl@redhat.com>
+Subject: [PATCH v2 1/1] mkfs: Break block discard into chunks of 2 GB
+Date:   Wed, 27 Nov 2019 22:21:52 +0100
+Message-Id: <20191127212152.69780-1-preichl@redhat.com>
+X-Mailer: git-send-email 2.23.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9454 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1911270140
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9454 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1911270140
+X-MC-Unique: ER4OrVYKP8yVaMt5yX8-Gg-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Some users are not happy about the BLKDISCARD taking too long and at the sa=
+me
+time not being informed about that - so they think that the command actuall=
+y
+hung.
 
-The new 'xfsquota' configuration for generic/050 doesn't filter out
-SCRATCH_MNT properly and seems to be missing an error message in the
-golden output.  Fix both of these problems.
+This commit changes code so that progress reporting is possible and also ty=
+ping
+the ^C will cancel the ongoing BLKDISCARD.
 
-Fixes: e088479871 ("generic/050: Handle xfs quota special case with different output")
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Pavel Reichl <preichl@redhat.com>
 ---
-v2: don't try the touch if the mount fails
----
- tests/generic/050              |   12 +++++++-----
- tests/generic/050.out.xfsquota |    5 ++---
- 2 files changed, 9 insertions(+), 8 deletions(-)
+ mkfs/xfs_mkfs.c | 50 ++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 37 insertions(+), 13 deletions(-)
 
-diff --git a/tests/generic/050 b/tests/generic/050
-index cf2b9381..7eabc7a7 100755
---- a/tests/generic/050
-+++ b/tests/generic/050
-@@ -58,9 +58,11 @@ blockdev --setro $SCRATCH_DEV
- # Mount it, and make sure we can't write to it, and we can unmount it again
- #
- echo "mounting read-only block device:"
--_try_scratch_mount 2>&1 | _filter_ro_mount
--echo "touching file on read-only filesystem (should fail)"
--touch $SCRATCH_MNT/foo 2>&1 | _filter_scratch
-+_try_scratch_mount 2>&1 | _filter_ro_mount | _filter_scratch
-+if [ "${PIPESTATUS[0]}" -eq 0 ]; then
-+	echo "touching file on read-only filesystem (should fail)"
-+	touch $SCRATCH_MNT/foo 2>&1 | _filter_scratch
-+fi
- 
- #
- # Apparently this used to be broken at some point:
-@@ -92,7 +94,7 @@ blockdev --setro $SCRATCH_DEV
- # -o norecovery is used.
- #
- echo "mounting filesystem that needs recovery on a read-only device:"
--_try_scratch_mount 2>&1 | _filter_ro_mount
-+_try_scratch_mount 2>&1 | _filter_ro_mount | _filter_scratch
- 
- echo "unmounting read-only filesystem"
- _scratch_unmount 2>&1 | _filter_scratch | _filter_ending_dot
-@@ -103,7 +105,7 @@ _scratch_unmount 2>&1 | _filter_scratch | _filter_ending_dot
- # data recovery hack.
- #
- echo "mounting filesystem with -o norecovery on a read-only device:"
--_try_scratch_mount -o norecovery 2>&1 | _filter_ro_mount
-+_try_scratch_mount -o norecovery 2>&1 | _filter_ro_mount | _filter_scratch
- echo "unmounting read-only filesystem"
- _scratch_unmount 2>&1 | _filter_scratch | _filter_ending_dot
- 
-diff --git a/tests/generic/050.out.xfsquota b/tests/generic/050.out.xfsquota
-index f204bd2f..35d7bd68 100644
---- a/tests/generic/050.out.xfsquota
-+++ b/tests/generic/050.out.xfsquota
-@@ -1,8 +1,7 @@
- QA output created by 050
- setting device read-only
- mounting read-only block device:
--mount: /mnt-scratch: permission denied
--touching file on read-only filesystem (should fail)
-+mount: SCRATCH_MNT: permission denied
- unmounting read-only filesystem
- umount: SCRATCH_DEV: not mounted
- setting device read-write
-@@ -17,7 +16,7 @@ mount: cannot mount device read-only
- unmounting read-only filesystem
- umount: SCRATCH_DEV: not mounted
- mounting filesystem with -o norecovery on a read-only device:
--mount: /mnt-scratch: permission denied
-+mount: SCRATCH_MNT: permission denied
- unmounting read-only filesystem
- umount: SCRATCH_DEV: not mounted
- setting device read-write
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 18338a61..7fa4af0e 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -1240,17 +1240,40 @@ done:
+ }
+=20
+ static void
+-discard_blocks(dev_t dev, uint64_t nsectors)
++discard_blocks(dev_t dev, uint64_t nsectors, int quiet)
+ {
+-=09int fd;
++=09int=09=09fd;
++=09uint64_t=09offset =3D 0;
++=09/* Discard the device 2G at a time */
++=09const uint64_t=09step =3D 2ULL << 30;
++=09const uint64_t=09count =3D BBTOB(nsectors);
+=20
+-=09/*
+-=09 * We intentionally ignore errors from the discard ioctl.  It is
+-=09 * not necessary for the mkfs functionality but just an optimization.
+-=09 */
+ =09fd =3D libxfs_device_to_fd(dev);
+-=09if (fd > 0)
+-=09=09platform_discard_blocks(fd, 0, nsectors << 9);
++=09if (fd <=3D 0)
++=09=09return;
++=09if (!quiet) {
++=09=09printf("Discarding blocks...");
++=09=09printf("...");
++=09}
++
++=09/* The block discarding happens in smaller batches so it can be
++=09 * interrupted prematurely
++=09 */
++=09while (offset < count) {
++=09=09uint64_t=09tmp_step =3D min(step, count - offset);
++
++=09=09/*
++=09=09 * We intentionally ignore errors from the discard ioctl. It is
++=09=09 * not necessary for the mkfs functionality but just an
++=09=09 * optimization. However we should stop on error.
++=09=09 */
++=09=09if (platform_discard_blocks(fd, offset, tmp_step))
++=09=09=09return;
++
++=09=09offset +=3D tmp_step;
++=09}
++=09if (!quiet)
++=09=09printf("Done.\n");
+ }
+=20
+ static __attribute__((noreturn)) void
+@@ -2507,18 +2530,19 @@ open_devices(
+=20
+ static void
+ discard_devices(
+-=09struct libxfs_xinit=09*xi)
++=09struct libxfs_xinit=09*xi,
++=09int=09=09=09quiet)
+ {
+ =09/*
+ =09 *=C2=A0This function has to be called after libxfs has been initialize=
+d.
+ =09 */
+=20
+ =09if (!xi->disfile)
+-=09=09discard_blocks(xi->ddev, xi->dsize);
++=09=09discard_blocks(xi->ddev, xi->dsize, quiet);
+ =09if (xi->rtdev && !xi->risfile)
+-=09=09discard_blocks(xi->rtdev, xi->rtsize);
++=09=09discard_blocks(xi->rtdev, xi->rtsize, quiet);
+ =09if (xi->logdev && xi->logdev !=3D xi->ddev && !xi->lisfile)
+-=09=09discard_blocks(xi->logdev, xi->logBBsize);
++=09=09discard_blocks(xi->logdev, xi->logBBsize, quiet);
+ }
+=20
+ static void
+@@ -3749,7 +3773,7 @@ main(
+ =09 * All values have been validated, discard the old device layout.
+ =09 */
+ =09if (discard && !dry_run)
+-=09=09discard_devices(&xi);
++=09=09discard_devices(&xi, quiet);
+=20
+ =09/*
+ =09 * we need the libxfs buffer cache from here on in.
+--=20
+2.23.0
+
