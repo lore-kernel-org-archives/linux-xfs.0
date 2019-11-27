@@ -2,182 +2,103 @@ Return-Path: <SRS0=zxI9=ZT=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10CFBC432C0
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Nov 2019 15:18:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EC5AC432C0
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Nov 2019 15:19:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D40E420722
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Nov 2019 15:18:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 520822053B
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Nov 2019 15:19:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MTwMRqNu"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PSyxNkOk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727166AbfK0PSc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 Nov 2019 10:18:32 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:20796 "EHLO
+        id S1726975AbfK0PTq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 Nov 2019 10:19:46 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:46194 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726747AbfK0PSc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Nov 2019 10:18:32 -0500
+        with ESMTP id S1726603AbfK0PTp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Nov 2019 10:19:45 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1574867910;
+        s=mimecast20190719; t=1574867984;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=MKRMqYZcMSPOI1ZGGK/kSwrsQZTCaWDdryNtYrwk8A4=;
-        b=MTwMRqNu+MeR4QaIT5ScdTi3FY3q4TIbuScZCw7D1Q/tdgkXeTHJIgVCon5MbH5HY3Smfk
-        kwpurQunGpQ/srUNR5GqysQLb5Cd1g5u2UjmQ4/O/Ads1THgydWuoyLyKy2gV5YnApSEIr
-        nAjbrGSucYE0aWx0G5+mXCDgafrGAco=
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=STuFSyhJ2w7w2bGNFK+MJnxHROHB6ZDp1MJmzhVOfGc=;
+        b=PSyxNkOkWxw0DdozLImmPzkCUpMMzMLxV1Lcv5b7vsGqdSzRSGY9aICKEtkAv06qscwSTd
+        9fTjltfsQulyx+YfYIK4G5RWDfbnE1mLq/tSM9UGBaUMoMieFyHQUe+L1zxlqgBnKbSFyg
+        8y+xmC1Or0uBD7kcG7Njf2rxjMVvaus=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-147-GM3JGt2IPoeXL76p6qeU6w-1; Wed, 27 Nov 2019 10:18:26 -0500
+ us-mta-240-Ksx8_jtuOo60VlDmyY5TLQ-1; Wed, 27 Nov 2019 10:19:41 -0500
 Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id EA8C11007271;
-        Wed, 27 Nov 2019 15:18:22 +0000 (UTC)
-Received: from max.com (ovpn-204-21.brq.redhat.com [10.40.204.21])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 477BF1001DE1;
-        Wed, 27 Nov 2019 15:18:14 +0000 (UTC)
-From:   Andreas Gruenbacher <agruenba@redhat.com>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     Andreas Gruenbacher <agruenba@redhat.com>,
-        linux-kernel@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Jeff Layton <jlayton@kernel.org>, Sage Weil <sage@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        "Theodore Ts'o" <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Richard Weinberger <richard@nod.at>,
-        Artem Bityutskiy <dedekind1@gmail.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        linux-mtd@lists.infradead.org
-Subject: [PATCH] fs: Fix page_mkwrite off-by-one errors
-Date:   Wed, 27 Nov 2019 16:18:11 +0100
-Message-Id: <20191127151811.9229-1-agruenba@redhat.com>
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 009B280183C;
+        Wed, 27 Nov 2019 15:19:40 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 50FA61001DE1;
+        Wed, 27 Nov 2019 15:19:39 +0000 (UTC)
+Date:   Wed, 27 Nov 2019 10:19:39 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Eric Sandeen <sandeen@sandeen.net>, Alex Lyakas <alex@zadara.com>,
+        linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC-PATCH] xfs: do not update sunit/swidth in the superblock to
+ match those provided during mount
+Message-ID: <20191127151939.GC56266@bfoster>
+References: <1574359699-10191-1-git-send-email-alex@zadara.com>
+ <20191122154314.GA31076@bfoster>
+ <CAOcd+r3_gKYBv4vtM7nfPEPvkVp-FgHKvgQQx-_zMDt+QZ9z+g@mail.gmail.com>
+ <20191125130744.GA44777@bfoster>
+ <CAOcd+r2wMaX02acHffbNKXX4tZ1fXo-y1-OAW-dVGTq63qJcaw@mail.gmail.com>
+ <20191126115415.GA50477@bfoster>
+ <CAOcd+r3h=0umb-wdY058rQ=kPHpksMOwSh=Jc-did_tLkaioFw@mail.gmail.com>
+ <0a1f2372-5c5b-85c7-07b8-c4a958eaec47@sandeen.net>
+ <20191127141929.GA20585@infradead.org>
 MIME-Version: 1.0
+In-Reply-To: <20191127141929.GA20585@infradead.org>
+User-Agent: Mutt/1.12.1 (2019-06-15)
 X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-MC-Unique: GM3JGt2IPoeXL76p6qeU6w-1
+X-MC-Unique: Ksx8_jtuOo60VlDmyY5TLQ-1
 X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Fix a check in block_page_mkwrite meant to determine whether an offset
-is within the inode size.  This error has spread to several filesystems
-and to iomap_page_mkwrite, so fix those instances as well.
+On Wed, Nov 27, 2019 at 06:19:29AM -0800, Christoph Hellwig wrote:
+> Can we all take a little step back and think about the implications
+> of the original patch from Alex?  Because I think there is very little.
+> And updated sunit/swidth is just a little performance optimization,
+> and anyone who really cares about changing that after the fact can
+> trivially add those to fstab.
+>=20
+> So I think something like his original patch plus a message during
+> mount that the new values are not persisted should be perfectly fine.
+>=20
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+I agree, FWIW. I've no issues with the original patch provided we fix up
+the xfs_info behavior. I think the "historical behavior" argument is
+reasonable, but at the same time how many people rely on the historical
+behavior of updating the superblock? It's not like this changes the
+mount api or anything. A user would just have to continue using the same
+mount options to persist behavior.
 
----
+Eric pointed out offline that we do refer to using the mount options to
+"reset" su/sw in at least one place (repair?), but I don't see why we
+couldn't rephrase that and/or provide a repair/admin script that updates
+on-disk values. Still just my .02. :)
 
-This patch has a trivial conflict with commit "iomap: Fix overflow in
-iomap_page_mkwrite" in Darrick's iomap pull request for 5.5:
+Brian
 
-  https://lore.kernel.org/lkml/20191125190907.GN6219@magnolia/
----
- fs/buffer.c            | 2 +-
- fs/ceph/addr.c         | 2 +-
- fs/ext4/inode.c        | 2 +-
- fs/f2fs/file.c         | 2 +-
- fs/iomap/buffered-io.c | 2 +-
- fs/ubifs/file.c        | 2 +-
- 6 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/fs/buffer.c b/fs/buffer.c
-index 86a38b979323..152d391858d4 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -2465,7 +2465,7 @@ int block_page_mkwrite(struct vm_area_struct *vma, st=
-ruct vm_fault *vmf,
- =09lock_page(page);
- =09size =3D i_size_read(inode);
- =09if ((page->mapping !=3D inode->i_mapping) ||
--=09    (page_offset(page) > size)) {
-+=09    (page_offset(page) >=3D size)) {
- =09=09/* We overload EFAULT to mean page got truncated */
- =09=09ret =3D -EFAULT;
- =09=09goto out_unlock;
-diff --git a/fs/ceph/addr.c b/fs/ceph/addr.c
-index 7ab616601141..9fa0729ece41 100644
---- a/fs/ceph/addr.c
-+++ b/fs/ceph/addr.c
-@@ -1575,7 +1575,7 @@ static vm_fault_t ceph_page_mkwrite(struct vm_fault *=
-vmf)
- =09do {
- =09=09lock_page(page);
-=20
--=09=09if ((off > size) || (page->mapping !=3D inode->i_mapping)) {
-+=09=09if ((off >=3D size) || (page->mapping !=3D inode->i_mapping)) {
- =09=09=09unlock_page(page);
- =09=09=09ret =3D VM_FAULT_NOPAGE;
- =09=09=09break;
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 516faa280ced..6dd4efe2fb63 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -6224,7 +6224,7 @@ vm_fault_t ext4_page_mkwrite(struct vm_fault *vmf)
- =09lock_page(page);
- =09size =3D i_size_read(inode);
- =09/* Page got truncated from under us? */
--=09if (page->mapping !=3D mapping || page_offset(page) > size) {
-+=09if (page->mapping !=3D mapping || page_offset(page) >=3D size) {
- =09=09unlock_page(page);
- =09=09ret =3D VM_FAULT_NOPAGE;
- =09=09goto out;
-diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
-index 29bc0a542759..3436be01af45 100644
---- a/fs/f2fs/file.c
-+++ b/fs/f2fs/file.c
-@@ -71,7 +71,7 @@ static vm_fault_t f2fs_vm_page_mkwrite(struct vm_fault *v=
-mf)
- =09down_read(&F2FS_I(inode)->i_mmap_sem);
- =09lock_page(page);
- =09if (unlikely(page->mapping !=3D inode->i_mapping ||
--=09=09=09page_offset(page) > i_size_read(inode) ||
-+=09=09=09page_offset(page) >=3D i_size_read(inode) ||
- =09=09=09!PageUptodate(page))) {
- =09=09unlock_page(page);
- =09=09err =3D -EFAULT;
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index e25901ae3ff4..d454dbab5133 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1041,7 +1041,7 @@ vm_fault_t iomap_page_mkwrite(struct vm_fault *vmf, c=
-onst struct iomap_ops *ops)
- =09lock_page(page);
- =09size =3D i_size_read(inode);
- =09if ((page->mapping !=3D inode->i_mapping) ||
--=09    (page_offset(page) > size)) {
-+=09    (page_offset(page) >=3D size)) {
- =09=09/* We overload EFAULT to mean page got truncated */
- =09=09ret =3D -EFAULT;
- =09=09goto out_unlock;
-diff --git a/fs/ubifs/file.c b/fs/ubifs/file.c
-index cd52585c8f4f..ca0148ec77e6 100644
---- a/fs/ubifs/file.c
-+++ b/fs/ubifs/file.c
-@@ -1564,7 +1564,7 @@ static vm_fault_t ubifs_vm_page_mkwrite(struct vm_fau=
-lt *vmf)
-=20
- =09lock_page(page);
- =09if (unlikely(page->mapping !=3D inode->i_mapping ||
--=09=09     page_offset(page) > i_size_read(inode))) {
-+=09=09     page_offset(page) >=3D i_size_read(inode))) {
- =09=09/* Page got truncated out from underneath us */
- =09=09goto sigbus;
- =09}
---=20
-2.20.1
+> We can still make xfs_repair smarter about guessing the root inode
+> of course.
+>=20
 
