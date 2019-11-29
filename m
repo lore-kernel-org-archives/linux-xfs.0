@@ -5,26 +5,26 @@ X-Spam-Level:
 X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF2B5C432C0
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Nov 2019 11:36:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D45EAC43215
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Nov 2019 11:47:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8F284208E4
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Nov 2019 11:36:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A11B621774
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Nov 2019 11:47:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726791AbfK2Lgx convert rfc822-to-8bit (ORCPT
+        id S1726793AbfK2LrX convert rfc822-to-8bit (ORCPT
         <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 29 Nov 2019 06:36:53 -0500
-Received: from mail.kernel.org ([198.145.29.99]:44940 "EHLO mail.kernel.org"
+        Fri, 29 Nov 2019 06:47:23 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47810 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726608AbfK2Lgw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 29 Nov 2019 06:36:52 -0500
+        id S1726791AbfK2LrW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 29 Nov 2019 06:47:22 -0500
 From:   bugzilla-daemon@bugzilla.kernel.org
 To:     linux-xfs@vger.kernel.org
-Subject: [Bug 205465] [xfstests generic/475]: general protection fault: 0000
- [#1] SMP KASAN PTI,  RIP: 0010:iter_file_splice_write+0x63f/0xa90
-Date:   Fri, 29 Nov 2019 11:36:51 +0000
+Subject: [Bug 205703] New: [xfstests generic/461]: BUG: KASAN: use-after-free
+ in iomap_finish_ioend+0x58c/0x5c0
+Date:   Fri, 29 Nov 2019 11:47:21 +0000
 X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
+X-Bugzilla-Type: new
 X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
 X-Bugzilla-Product: File System
 X-Bugzilla-Component: XFS
@@ -37,10 +37,10 @@ X-Bugzilla-Resolution:
 X-Bugzilla-Priority: P1
 X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
 X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-205465-201763-xkiC6ZQvNs@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-205465-201763@https.bugzilla.kernel.org/>
-References: <bug-205465-201763@https.bugzilla.kernel.org/>
+X-Bugzilla-Changed-Fields: bug_id short_desc product version
+ cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
+ priority component assigned_to reporter cf_regression
+Message-ID: <bug-205703-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8BIT
 X-Bugzilla-URL: https://bugzilla.kernel.org/
@@ -51,100 +51,173 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=205465
+https://bugzilla.kernel.org/show_bug.cgi?id=205703
 
---- Comment #1 from Zorro Lang (zlang@redhat.com) ---
-Hit this panic again on mainline linux v5.4 (HEAD=c2da5bdc66a3) with
-xfs-linux(xfs-5.5-merge-15 + iomap-5.5-merge-11 + vfs-5.5-merge-1):
+            Bug ID: 205703
+           Summary: [xfstests generic/461]: BUG: KASAN: use-after-free in
+                    iomap_finish_ioend+0x58c/0x5c0
+           Product: File System
+           Version: 2.5
+    Kernel Version: linux 5.4+ with xfs-5.5-merge-15 and
+                    iomap-5.5-merge-11
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: XFS
+          Assignee: filesystem_xfs@kernel-bugs.kernel.org
+          Reporter: zlang@redhat.com
+        Regression: No
 
-[14842.571874] kasan: CONFIG_KASAN_INLINE enabled 
-[14842.576866] kasan: GPF could be caused by NULL-ptr deref or user memory
-access 
-[14842.584962] general protection fault: 0000 [#1] SMP KASAN PTI 
-[14842.591387] CPU: 30 PID: 12775 Comm: fsstress Tainted: G    B            
-5.4.0+ #1 
-[14842.599938] Hardware name: Dell Inc. PowerEdge R730/0599V5, BIOS 2.8.0
-005/17/2018 
-[14842.608403] RIP: 0010:iter_file_splice_write+0x63f/0xa90 
-[14842.614341] Code: 00 00 48 89 f8 48 c1 e8 03 80 3c 18 00 0f 85 61 03 00 00
-48 8b 46 10 48 c7 46 10 00 00 00 00 48 8d 78 08 48 89 fa 48 c1 ea 03 <80> 3c 1a
-00 0f 85 52 03 00 00 48 8b 40 08 48 89 ef e8 5b 2e 7d 01 
-[14842.635305] RSP: 0018:ffff888b9935fc68 EFLAGS: 00010202 
-[14842.641142] RAX: 0000000000000000 RBX: dffffc0000000000 RCX:
-0000000000000010 
-[14842.649110] RDX: 0000000000000001 RSI: ffff888bb0d53208 RDI:
-0000000000000008 
-[14842.657069] RBP: ffff888b713fb400 R08: fffff94005b3058f R09:
-fffff94005b3058f 
-[14842.665038] R10: fffff94005b3058e R11: ffffea002d982c77 R12:
-ffffed116e27f6a7 
-[14842.673005] R13: ffffed116e27f69f R14: 000000000002ff84 R15:
-ffff888b713fb4fc 
-[14842.680969] FS:  00007fcaa5972b80(0000) GS:ffff888115c00000(0000)
-knlGS:0000000000000000 
-[14842.690006] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033 
-[14842.696424] CR2: 000055a30542b000 CR3: 0000000b9fc8e005 CR4:
-00000000001606e0 
-[14842.704393] Call Trace: 
-[14842.707147]  ? __x64_sys_tee+0x220/0x220 
-[14842.711535]  ? lock_acquire+0x15a/0x3d0 
-[14842.715820]  ? do_splice+0xb37/0x1110 
-[14842.719919]  ? __sb_start_write+0x191/0x310 
-[14842.724592]  ? __sb_start_write+0x1c4/0x310 
-[14842.729273]  do_splice+0xa12/0x1110 
-[14842.733175]  ? opipe_prep+0x300/0x300 
-[14842.737267]  ? syscall_slow_exit_work+0x540/0x540 
-[14842.742523]  ? __audit_syscall_exit+0x796/0xab0 
-[14842.747592]  __x64_sys_splice+0x247/0x2d0 
-[14842.752080]  do_syscall_64+0x9f/0x4f0 
-[14842.756177]  entry_SYSCALL_64_after_hwframe+0x49/0xbe 
-[14842.761817] RIP: 0033:0x7fcaa4e6b39b 
-[14842.765810] Code: c7 c0 ff ff ff ff eb b6 0f 1f 80 00 00 00 00 f3 0f 1e fa
-48 8d 05 c5 52 2c 00 49 89 ca 8b 00 85 c0 75 14 b8 13 01 00 00 0f 05 <48> 3d 00
-f0 ff ff 77 75 c3 0f 1f 40 00 41 57 4d 89 c7 41 56 49 89 
-[14842.786771] RSP: 002b:00007fffbae7c5f8 EFLAGS: 00000246 ORIG_RAX:
-0000000000000113 
-[14842.795227] RAX: ffffffffffffffda RBX: 0000000000000004 RCX:
-00007fcaa4e6b39b 
-[14842.803196] RDX: 0000000000000004 RSI: 0000000000000000 RDI:
-0000000000000005 
-[14842.811162] RBP: 00007fffbae7c648 R08: 000000000000cb23 R09:
-0000000000000000 
-[14842.819133] R10: 00007fffbae7c648 R11: 0000000000000246 R12:
-000000000000cb23 
-[14842.827104] R13: 000000000000cb23 R14: 000000000000cb23 R15:
-0000000000000003 
-[14842.835082] Modules linked in: dm_mod intel_rapl_msr iTCO_wdt
-iTCO_vendor_support dcdbas intel_rapl_common sb_edac x86_pkg_temp_thermal
-intel_powerclamp coretemp kvm_intel kvm irqbypass crct10dif_pclmul crc32_pclmul
-ghash_clmulni_intel intel_cstate intel_uncore intel_rapl_perf pcspkr
-dax_pmem_compat device_dax nd_pmem dax_pmem_core mxm_wmi cdc_ether lpc_ich
-usbnet mii mei_me mei ipmi_ssif sg ioatdma dca ipmi_si ipmi_devintf
-ipmi_msghandler acpi_power_meter sunrpc vfat fat ip_tables xfs sr_mod cdrom
-sd_mod mgag200 drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops
-i2c_algo_bit drm_vram_helper ttm drm ahci bnx2x libahci libata mdio
-megaraid_sas libcrc32c tg3 crc32c_intel wmi 
-[14842.902703] ---[ end trace dfcbf13626b906e6 ]--- 
-[14843.053619] RIP: 0010:iter_file_splice_write+0x63f/0xa90 
-[14843.059564] Code: 00 00 48 89 f8 48 c1 e8 03 80 3c 18 00 0f 85 61 03 00 00
-48 8b 46 10 48 c7 46 10 00 00 00 00 48 8d 78 08 48 89 fa 48 c1 ea 03 <80> 3c 1a
-00 0f 85 52 03 00 00 48 8b 40 08 48 89 ef e8 5b 2e 7d 01 
-[14843.080528] RSP: 0018:ffff888b9935fc68 EFLAGS: 00010202 
-[14843.086372] RAX: 0000000000000000 RBX: dffffc0000000000 RCX:
-0000000000000010 
-[14843.094348] RDX: 0000000000000001 RSI: ffff888bb0d53208 RDI:
-0000000000000008 
-[14843.102322] RBP: ffff888b713fb400 R08: fffff94005b3058f R09:
-fffff94005b3058f 
-[14843.110297] R10: fffff94005b3058e R11: ffffea002d982c77 R12:
-ffffed116e27f6a7 
-[14843.118262] R13: ffffed116e27f69f R14: 000000000002ff84 R15:
-ffff888b713fb4fc 
-[14843.126237] FS:  00007fcaa5972b80(0000) GS:ffff888115c00000(0000)
-knlGS:0000000000000000 
-[14843.135270] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033 
-[14843.141693] CR2: 000055a30542b000 CR3: 0000000b9fc8e005 CR4:
-00000000001606e0
+generic/461 hit a KASAN BUG on latest upstream mainline kernel with
+xfs-5.5-merge-15 and iomap-5.5-merge-11, as below:
+
+FSTYP         -- xfs (non-debug)
+PLATFORM      -- Linux/aarch64 hpe-apollo-cn99xx-19 5.4.0+ #1 SMP Wed Nov 27
+00:00:45 EST 2019
+MKFS_OPTIONS  -- -f -bsize=4096 /dev/sda5
+MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/sda5
+/mnt/xfstests/mnt2
+
+generic/461 24s ... _check_dmesg: something found in dmesg (see
+/var/lib/xfstests/results//generic/461.dmesg)
+
+Ran: generic/461
+Failures: generic/461
+Failed 1 of 1 tests
+
+# cat generic/461.full
+meta-data=/dev/sda5              isize=512    agcount=4, agsize=983040 blks
+         =                       sectsz=4096  attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=1
+data     =                       bsize=4096   blocks=3932160, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=2560, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+# cat generic/461.dmesg
+[20546.220860] run fstests generic/461 at 2019-11-27 06:02:10
+[20547.342821] XFS (sda5): Mounting V5 Filesystem
+[20547.380750] XFS (sda5): Ending clean mount
+[20547.389760] xfs filesystem being mounted at /mnt/xfstests/mnt2 supports
+timestamps until 2038 (0x7fffffff)
+[20547.407045] XFS (sda5): User initiated shutdown received. Shutting down
+filesystem
+[20547.424167] XFS (sda5): Unmounting Filesystem
+[20548.307193] XFS (sda5): Mounting V5 Filesystem
+[20548.355535] XFS (sda5): Ending clean mount
+[20548.365016] xfs filesystem being mounted at /mnt/xfstests/mnt2 supports
+timestamps until 2038 (0x7fffffff)
+[20563.616817] XFS (sda5): User initiated shutdown received. Shutting down
+filesystem
+[20563.620286]
+==================================================================
+[20563.631624] BUG: KASAN: use-after-free in iomap_finish_ioend+0x58c/0x5c0
+[20563.638319] Read of size 8 at addr fffffc0c54a36928 by task
+kworker/123:2/22184
+
+[20563.647107] CPU: 123 PID: 22184 Comm: kworker/123:2 Not tainted 5.4.0+ #1
+[20563.653887] Hardware name: HPE Apollo 70             /C01_APACHE_MB        
+, BIOS L50_5.13_1.11 06/18/2019
+[20563.664499] Workqueue: xfs-conv/sda5 xfs_end_io [xfs]
+[20563.669547] Call trace:
+[20563.671993]  dump_backtrace+0x0/0x370
+[20563.675648]  show_stack+0x1c/0x28
+[20563.678958]  dump_stack+0x138/0x1b0
+[20563.682455]  print_address_description.isra.9+0x60/0x378
+[20563.687759]  __kasan_report+0x1a4/0x2a8
+[20563.691587]  kasan_report+0xc/0x18
+[20563.694985]  __asan_report_load8_noabort+0x18/0x20
+[20563.699769]  iomap_finish_ioend+0x58c/0x5c0
+[20563.703944]  iomap_finish_ioends+0x110/0x270
+[20563.708396]  xfs_end_ioend+0x168/0x598 [xfs]
+[20563.712823]  xfs_end_io+0x1e0/0x2d0 [xfs]
+[20563.716834]  process_one_work+0x7f0/0x1ac8
+[20563.720922]  worker_thread+0x334/0xae0
+[20563.724664]  kthread+0x2c4/0x348
+[20563.727889]  ret_from_fork+0x10/0x18
+
+[20563.732941] Allocated by task 83403:
+[20563.736512]  save_stack+0x24/0xb0
+[20563.739820]  __kasan_kmalloc.isra.9+0xc4/0xe0
+[20563.744169]  kasan_slab_alloc+0x14/0x20
+[20563.747998]  slab_post_alloc_hook+0x50/0xa8
+[20563.752173]  kmem_cache_alloc+0x154/0x330
+[20563.756185]  mempool_alloc_slab+0x20/0x28
+[20563.760186]  mempool_alloc+0xf4/0x2a8
+[20563.763845]  bio_alloc_bioset+0x2d0/0x448
+[20563.767849]  iomap_writepage_map+0x4b8/0x1740
+[20563.772198]  iomap_do_writepage+0x200/0x8d0
+[20563.776380]  write_cache_pages+0x8a4/0xed8
+[20563.780469]  iomap_writepages+0x4c/0xb0
+[20563.784463]  xfs_vm_writepages+0xf8/0x148 [xfs]
+[20563.788989]  do_writepages+0xc8/0x218
+[20563.792658]  __writeback_single_inode+0x168/0x18f8
+[20563.797441]  writeback_sb_inodes+0x370/0xd30
+[20563.801703]  wb_writeback+0x2d4/0x1270
+[20563.805446]  wb_workfn+0x344/0x1178
+[20563.808928]  process_one_work+0x7f0/0x1ac8
+[20563.813016]  worker_thread+0x334/0xae0
+[20563.816757]  kthread+0x2c4/0x348
+[20563.819979]  ret_from_fork+0x10/0x18
+
+[20563.825028] Freed by task 22184:
+[20563.828251]  save_stack+0x24/0xb0
+[20563.831559]  __kasan_slab_free+0x10c/0x180
+[20563.835648]  kasan_slab_free+0x10/0x18
+[20563.839389]  slab_free_freelist_hook+0xb4/0x1c0
+[20563.843912]  kmem_cache_free+0x8c/0x3e8
+[20563.847745]  mempool_free_slab+0x20/0x28
+[20563.851660]  mempool_free+0xd4/0x2f8
+[20563.855231]  bio_free+0x33c/0x518
+[20563.858537]  bio_put+0xb8/0x100
+[20563.861672]  iomap_finish_ioend+0x168/0x5c0
+[20563.865847]  iomap_finish_ioends+0x110/0x270
+[20563.870328]  xfs_end_ioend+0x168/0x598 [xfs]
+[20563.874751]  xfs_end_io+0x1e0/0x2d0 [xfs]
+[20563.878755]  process_one_work+0x7f0/0x1ac8
+[20563.882844]  worker_thread+0x334/0xae0
+[20563.886584]  kthread+0x2c4/0x348
+[20563.889804]  ret_from_fork+0x10/0x18
+
+[20563.894855] The buggy address belongs to the object at fffffc0c54a36900
+                which belongs to the cache bio-1 of size 248
+[20563.906844] The buggy address is located 40 bytes inside of
+                248-byte region [fffffc0c54a36900, fffffc0c54a369f8)
+[20563.918485] The buggy address belongs to the page:
+[20563.923269] page:ffffffff82f528c0 refcount:1 mapcount:0
+mapping:fffffc8e4ba31900 index:0xfffffc0c54a33300
+[20563.932832] raw: 17ffff8000000200 ffffffffa3060100 0000000700000007
+fffffc8e4ba31900
+[20563.940567] raw: fffffc0c54a33300 0000000080aa0042 00000001ffffffff
+0000000000000000
+[20563.948300] page dumped because: kasan: bad access detected
+
+[20563.955345] Memory state around the buggy address:
+[20563.960129]  fffffc0c54a36800: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+fc
+[20563.967342]  fffffc0c54a36880: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+fc
+[20563.974554] >fffffc0c54a36900: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+fb
+[20563.981766]                                   ^
+[20563.986288]  fffffc0c54a36980: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+fc
+[20563.993501]  fffffc0c54a36a00: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+fc
+[20564.000713]
+==================================================================
+[20564.008173] sda5: writeback error on inode 16819694, offset 6569984, sector
+117547992
+[20564.008272] sda5: writeback error on inode 27891, offset 60567552, sector
+101805992
+[20569.967881] XFS (sda5): Unmounting Filesystem
+[20570.481702] XFS (sda4): Unmounting Filesystem
 
 -- 
 You are receiving this mail because:
