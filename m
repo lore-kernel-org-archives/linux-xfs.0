@@ -3,81 +3,101 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C51CC432C3
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Nov 2019 16:33:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE276C432C3
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Nov 2019 16:36:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D5CD721736
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Nov 2019 16:33:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD927217BC
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Nov 2019 16:36:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727171AbfK2QdG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 29 Nov 2019 11:33:06 -0500
-Received: from mga05.intel.com ([192.55.52.43]:43095 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726970AbfK2QdG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 29 Nov 2019 11:33:06 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 29 Nov 2019 08:33:06 -0800
-X-IronPort-AV: E=Sophos;i="5.69,257,1571727600"; 
-   d="scan'208";a="234751020"
-Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.157])
-  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 29 Nov 2019 08:33:05 -0800
-From:   ira.weiny@intel.com
-To:     Andrew Morton <akpm@linux-foundation.org>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>, Chris Mason <clm@fb.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
+        id S1727073AbfK2QgB convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 29 Nov 2019 11:36:01 -0500
+Received: from lithops.sigma-star.at ([195.201.40.130]:44102 "EHLO
+        lithops.sigma-star.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726608AbfK2QgA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Nov 2019 11:36:00 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by lithops.sigma-star.at (Postfix) with ESMTP id A3CB6607BDB2;
+        Fri, 29 Nov 2019 17:35:56 +0100 (CET)
+Received: from lithops.sigma-star.at ([127.0.0.1])
+        by localhost (lithops.sigma-star.at [127.0.0.1]) (amavisd-new, port 10032)
+        with ESMTP id kOcQPONK-3hk; Fri, 29 Nov 2019 17:35:54 +0100 (CET)
+Received: from localhost (localhost [127.0.0.1])
+        by lithops.sigma-star.at (Postfix) with ESMTP id D5E1B6083139;
+        Fri, 29 Nov 2019 17:35:53 +0100 (CET)
+Received: from lithops.sigma-star.at ([127.0.0.1])
+        by localhost (lithops.sigma-star.at [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id Au7ORLC9cK4z; Fri, 29 Nov 2019 17:35:53 +0100 (CET)
+Received: from lithops.sigma-star.at (lithops.sigma-star.at [195.201.40.130])
+        by lithops.sigma-star.at (Postfix) with ESMTP id 8329F607BDB2;
+        Fri, 29 Nov 2019 17:35:53 +0100 (CET)
+Date:   Fri, 29 Nov 2019 17:35:53 +0100 (CET)
+From:   Richard Weinberger <richard@nod.at>
+To:     Andreas Gruenbacher <agruenba@redhat.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Darrick <darrick.wong@oracle.com>,
+        torvalds <torvalds@linux-foundation.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Jeff Layton <jlayton@kernel.org>, Sage Weil <sage@redhat.com>,
+        Ilya Dryomov <idryomov@gmail.com>, tytso <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
         Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna.schumaker@netapp.com>,
-        linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org, Ira Weiny <ira.weiny@intel.com>
-Subject: [PATCH V3 0/3] Move swap functions out of address space operations
-Date:   Fri, 29 Nov 2019 08:32:57 -0800
-Message-Id: <20191129163300.14749-1-ira.weiny@intel.com>
-X-Mailer: git-send-email 2.21.0
+        linux-xfs@vger.kernel.org,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Artem Bityutskiy <dedekind1@gmail.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-mtd <linux-mtd@lists.infradead.org>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        linux-btrfs <linux-btrfs@vger.kernel.org>
+Message-ID: <51833696.101442.1575045353332.JavaMail.zimbra@nod.at>
+In-Reply-To: <20191129142045.7215-1-agruenba@redhat.com>
+References: <20191129142045.7215-1-agruenba@redhat.com>
+Subject: Re: [PATCH v2] fs: Fix page_mkwrite off-by-one errors
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
+X-Originating-IP: [195.201.40.130]
+X-Mailer: Zimbra 8.8.12_GA_3807 (ZimbraWebClient - FF68 (Linux)/8.8.12_GA_3809)
+Thread-Topic: Fix page_mkwrite off-by-one errors
+Thread-Index: OwUcLuBZ37Awg+4d3rXFBEMLhx0YIg==
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Ira Weiny <ira.weiny@intel.com>
+----- Ursprüngliche Mail -----
+> Von: "Andreas Gruenbacher" <agruenba@redhat.com>
+> An: "Christoph Hellwig" <hch@infradead.org>, "Darrick" <darrick.wong@oracle.com>
+> CC: "Andreas Gruenbacher" <agruenba@redhat.com>, "torvalds" <torvalds@linux-foundation.org>, "linux-kernel"
+> <linux-kernel@vger.kernel.org>, "Al Viro" <viro@zeniv.linux.org.uk>, "Jeff Layton" <jlayton@kernel.org>, "Sage Weil"
+> <sage@redhat.com>, "Ilya Dryomov" <idryomov@gmail.com>, "tytso" <tytso@mit.edu>, "Andreas Dilger"
+> <adilger.kernel@dilger.ca>, "Jaegeuk Kim" <jaegeuk@kernel.org>, "Chao Yu" <chao@kernel.org>, linux-xfs@vger.kernel.org,
+> "linux-fsdevel" <linux-fsdevel@vger.kernel.org>, "richard" <richard@nod.at>, "Artem Bityutskiy" <dedekind1@gmail.com>,
+> "Adrian Hunter" <adrian.hunter@intel.com>, ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
+> linux-f2fs-devel@lists.sourceforge.net, "linux-mtd" <linux-mtd@lists.infradead.org>, "Chris Mason" <clm@fb.com>, "Josef
+> Bacik" <josef@toxicpanda.com>, "David Sterba" <dsterba@suse.com>, "linux-btrfs" <linux-btrfs@vger.kernel.org>
+> Gesendet: Freitag, 29. November 2019 15:20:45
+> Betreff: [PATCH v2] fs: Fix page_mkwrite off-by-one errors
 
-As suggested by Jan Kara, move swap_[de]activate to file_operations to simplify
-address space operations for coming changes.
+> The check in block_page_mkwrite meant to determine whether an offset is
+> within the inode size is off by one.  This bug has spread to
+> iomap_page_mkwrite and to several filesystems (ubifs, ext4, f2fs, ceph).
+> To fix that, introduce a new page_mkwrite_check_truncate helper that
+> checks for truncate and computes the bytes in the page up to EOF, and
+> use that helper in the above mentioned filesystems and in btrfs.
+> 
+> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 
-For this version (V3):
-	1) updated to the latest linux-next
-	2) added documentation patch to the series
-	3) add reviews/acks
-	4) fixed up a slight conflict in btrfs pointed out by David
+Thank you for fixing UBIFS!
 
-Ira Weiny (3):
-  fs: Clean up mapping variable
-  fs: Move swap_[de]activate to file_operations
-  Documentation/fs: Move swap_[de]activate() to file_operations
+Acked-by: Richard Weinberger <richard@nod.at>
 
- Documentation/filesystems/vfs.rst |  24 +--
- fs/btrfs/file.c                   | 341 ++++++++++++++++++++++++++++++
- fs/btrfs/inode.c                  | 340 -----------------------------
- fs/f2fs/data.c                    | 123 -----------
- fs/f2fs/file.c                    | 122 +++++++++++
- fs/iomap/swapfile.c               |   3 +-
- fs/nfs/file.c                     |   4 +-
- fs/xfs/xfs_aops.c                 |  13 --
- fs/xfs/xfs_file.c                 |  12 ++
- include/linux/fs.h                |  10 +-
- mm/swapfile.c                     |  12 +-
- 11 files changed, 500 insertions(+), 504 deletions(-)
-
--- 
-2.21.0
-
+Thanks,
+//richard
