@@ -2,362 +2,331 @@ Return-Path: <SRS0=kniB=ZV=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BD7DC432C0
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Nov 2019 14:21:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 492F8C432C0
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Nov 2019 15:15:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 11341215A5
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Nov 2019 14:21:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0654721736
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Nov 2019 15:15:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cuMz57ni"
+	dkim=pass (2048-bit key) header.d=lca.pw header.i=@lca.pw header.b="G2Z/aSJp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726608AbfK2OVD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 29 Nov 2019 09:21:03 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:55027 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726970AbfK2OVD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Nov 2019 09:21:03 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1575037261;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=VP6e4fS82ZVWbpnJBKYprOYp5qn0BT0NQcR/ZfMdaJk=;
-        b=cuMz57nipn5hctiIwFXgt+6Ih4qLKpXBpXNvIRwuErHjfyuVqwREkVzPQ0sl9cctHhNt7v
-        21jdeHoSBPrIoYjekV4WikcPxmIJ0/3IAtL1rxpgIJ+EFh4tdU72zwfmfBOBaGqiRpWD92
-        20MDfvdcms4ZlL9biXBZALKunlpup1k=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-265-LJWOf1WKPIOJgC45aX2Gvw-1; Fri, 29 Nov 2019 09:21:00 -0500
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5D44C8017CC;
-        Fri, 29 Nov 2019 14:20:56 +0000 (UTC)
-Received: from max.com (ovpn-204-19.brq.redhat.com [10.40.204.19])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 2885110013A1;
-        Fri, 29 Nov 2019 14:20:47 +0000 (UTC)
-From:   Andreas Gruenbacher <agruenba@redhat.com>
-To:     Christoph Hellwig <hch@infradead.org>,
+        id S1727086AbfK2PP3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 29 Nov 2019 10:15:29 -0500
+Received: from mail-qt1-f193.google.com ([209.85.160.193]:42747 "EHLO
+        mail-qt1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726608AbfK2PP3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Nov 2019 10:15:29 -0500
+Received: by mail-qt1-f193.google.com with SMTP id j5so7637334qtq.9
+        for <linux-xfs@vger.kernel.org>; Fri, 29 Nov 2019 07:15:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=lca.pw; s=google;
+        h=mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=yJShtf3/esmyNyieK8L5Aqur+hkWJ6a+EPrMUvaw//k=;
+        b=G2Z/aSJpJRJKTNVenVUhNEvCb3nhExdQshAgLJ2eWzIirKKglpxxMOeYnSCaq4BTjo
+         yY4NPuafUnedj7ic2Filghg1z4PN2xo3H/jqM+AbDJKes4gV/kiAb6f/JnBekwHoiv+F
+         mD8LEZWMA02oDuKSE/8U9lyxmOtgmagwtlbjUyOFa7RwqReZM+CeGdWaVOxDBlOD33gO
+         98sSYVlykcS2fleGdqNGVLvcrIhmJ+XTNJhtqy5j/VKoMvM7zja8AK3Mj9X3VjO0OqLO
+         An2zNZY+nzlOCJkEhUWah5UN0/wu/elHwlkLeFsa6d1qWPVGI6tAF+UzJAiNG4IpN5Yc
+         ElZg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=yJShtf3/esmyNyieK8L5Aqur+hkWJ6a+EPrMUvaw//k=;
+        b=J7LiCmZ2rZLDONE1HUSZaBaduvzZALojvSG8arFoS1rlKdcxeRRzXrdpR+JSxzpfly
+         qBsjXKFbSjC1VrfRRBBhAswr+9ojTZP2/Nwz3nK57/JhZ6iwbW5bdRMyufG2bNJmTmLH
+         GxvRts9mpetpmX7FdJHJXO92walYjZrsDP3k4aMfhGWPY+nVlnv8Yv2vEnew6WkHKLIM
+         E5nQZ20EGBk+sGuUu7pzu4ZLkl35gXxaKHOc5u4FTU/tvZf6jlXCs8jD5Km3z5phKDNj
+         uSq3ao9sFaaq79p2PvhBlJpNYQoUHHluQNcukNY4pa5c5DVIJmSRx5IZFgGf8rnTLp5Y
+         wspw==
+X-Gm-Message-State: APjAAAUk0biJkYMwW6yEk7Vdsfzk1d4iz0OLJ3dcnTaZChOfrVWAuhZy
+        M2SGdk8yqdjYSsU6dzx1GTNQsg==
+X-Google-Smtp-Source: APXvYqzZqsXz8JSh+1J+5yygH2mHsSViide1q9d5GY78xz14tyMU5/YnFL0uiJlfRdQCGMFf2si6rQ==
+X-Received: by 2002:ac8:1115:: with SMTP id c21mr38478911qtj.188.1575040527681;
+        Fri, 29 Nov 2019 07:15:27 -0800 (PST)
+Received: from [192.168.1.153] (pool-71-184-117-43.bstnma.fios.verizon.net. [71.184.117.43])
+        by smtp.gmail.com with ESMTPSA id r8sm11478938qti.6.2019.11.29.07.15.26
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 29 Nov 2019 07:15:27 -0800 (PST)
+Content-Type: text/plain;
+        charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 13.0 \(3601.0.10\))
+Subject: XFS check crash (WAS Re: [PATCH v11 1/4] kasan: support backing
+ vmalloc space with real shadow memory)
+From:   Qian Cai <cai@lca.pw>
+In-Reply-To: <871rtqg91q.fsf@dja-thinkpad.axtens.net>
+Date:   Fri, 29 Nov 2019 10:15:25 -0500
+Cc:     Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        kasan-dev <kasan-dev@googlegroups.com>,
+        Linux-MM <linux-mm@kvack.org>,
+        the arch/x86 maintainers <x86@kernel.org>,
+        Alexander Potapenko <glider@google.com>,
+        Andy Lutomirski <luto@kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Christophe Leroy <christophe.leroy@c-s.fr>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        Vasily Gorbik <gor@linux.ibm.com>, linux-xfs@vger.kernel.org,
         "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Andreas Gruenbacher <agruenba@redhat.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-kernel@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Jeff Layton <jlayton@kernel.org>, Sage Weil <sage@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        "Theodore Ts'o" <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Richard Weinberger <richard@nod.at>,
-        Artem Bityutskiy <dedekind1@gmail.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        linux-mtd@lists.infradead.org, Chris Mason <clm@fb.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org
-Subject: [PATCH v2] fs: Fix page_mkwrite off-by-one errors
-Date:   Fri, 29 Nov 2019 15:20:45 +0100
-Message-Id: <20191129142045.7215-1-agruenba@redhat.com>
-MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-MC-Unique: LJWOf1WKPIOJgC45aX2Gvw-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
+Message-Id: <27B18BF6-757C-4CA3-A852-1EE20D4D10A9@lca.pw>
+References: <20191031093909.9228-1-dja@axtens.net>
+ <20191031093909.9228-2-dja@axtens.net> <1573835765.5937.130.camel@lca.pw>
+ <871ru5hnfh.fsf@dja-thinkpad.axtens.net>
+ <952ec26a-9492-6f71-bab1-c1def887e528@virtuozzo.com>
+ <CACT4Y+ZGO8b88fUyFe-WtV3Ubr11ChLY2mqk8YKWN9o0meNtXA@mail.gmail.com>
+ <CACT4Y+Z+VhfVpkfg-WFq_kFMY=DE+9b_DCi-mCSPK-udaf_Arg@mail.gmail.com>
+ <CACT4Y+Yog=PHF1SsLuoehr2rcbmfvLUW+dv7Vo+1RfdTOx7AUA@mail.gmail.com>
+ <2297c356-0863-69ce-85b6-8608081295ed@virtuozzo.com>
+ <CACT4Y+ZNAfkrE0M=eCHcmy2LhPG_kKbg4mOh54YN6Bgb4b3F5w@mail.gmail.com>
+ <56cf8aab-c61b-156c-f681-d2354aed22bb@virtuozzo.com>
+ <871rtqg91q.fsf@dja-thinkpad.axtens.net>
+To:     Daniel Axtens <dja@axtens.net>
+X-Mailer: Apple Mail (2.3601.0.10)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The check in block_page_mkwrite meant to determine whether an offset is
-within the inode size is off by one.  This bug has spread to
-iomap_page_mkwrite and to several filesystems (ubifs, ext4, f2fs, ceph).
-To fix that, introduce a new page_mkwrite_check_truncate helper that
-checks for truncate and computes the bytes in the page up to EOF, and
-use that helper in the above mentioned filesystems and in btrfs.
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 
----
+> On Nov 29, 2019, at 7:29 AM, Daniel Axtens <dja@axtens.net> wrote:
+>=20
+>>>>=20
+>>>> Nope, it's vm_map_ram() not being handled
+>>>=20
+>>>=20
+>>> Another suspicious one. Related to kasan/vmalloc?
+>>=20
+>> Very likely the same as with ion:
+>>=20
+>> # git grep vm_map_ram|grep xfs
+>> fs/xfs/xfs_buf.c:                * vm_map_ram() will allocate =
+auxiliary structures (e.g.
+>> fs/xfs/xfs_buf.c:                       bp->b_addr =3D =
+vm_map_ram(bp->b_pages, bp->b_page_count,
+>=20
+> Aaargh, that's an embarassing miss.
+>=20
+> It's a bit intricate because kasan_vmalloc_populate function is
+> currently set up to take a vm_struct not a vmap_area, but I'll see if =
+I
+> can get something simple out this evening - I'm away for the first =
+part
+> of next week.
+>=20
+> Do you have to do anything interesting to get it to explode with xfs? =
+Is
+> it as simple as mounting a drive and doing some I/O? Or do you need to
+> do something more involved?
 
-This patch has a trivial conflict with commit "iomap: Fix overflow in
-iomap_page_mkwrite" in Darrick's iomap pull request for 5.5:
 
-  https://lore.kernel.org/lkml/20191125190907.GN6219@magnolia/
----
- fs/btrfs/inode.c        | 15 ++++-----------
- fs/buffer.c             | 16 +++-------------
- fs/ceph/addr.c          |  2 +-
- fs/ext4/inode.c         | 14 ++++----------
- fs/f2fs/file.c          | 19 +++++++------------
- fs/iomap/buffered-io.c  | 17 ++++-------------
- fs/ubifs/file.c         |  3 +--
- include/linux/pagemap.h | 24 ++++++++++++++++++++++++
- 8 files changed, 48 insertions(+), 62 deletions(-)
+I instead trigger something a bit different by manually triggering a =
+crash first to make the XFS
+partition uncleanly shutdown.
 
-diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-index 015910079e73..019948101bc2 100644
---- a/fs/btrfs/inode.c
-+++ b/fs/btrfs/inode.c
-@@ -8990,13 +8990,11 @@ vm_fault_t btrfs_page_mkwrite(struct vm_fault *vmf)
- =09ret =3D VM_FAULT_NOPAGE; /* make the VM retry the fault */
- again:
- =09lock_page(page);
--=09size =3D i_size_read(inode);
-=20
--=09if ((page->mapping !=3D inode->i_mapping) ||
--=09    (page_start >=3D size)) {
--=09=09/* page got truncated out from underneath us */
-+=09ret2 =3D page_mkwrite_check_truncate(page, inode);
-+=09if (ret2 < 0)
- =09=09goto out_unlock;
--=09}
-+=09zero_start =3D ret2;
- =09wait_on_page_writeback(page);
-=20
- =09lock_extent_bits(io_tree, page_start, page_end, &cached_state);
-@@ -9017,6 +9015,7 @@ vm_fault_t btrfs_page_mkwrite(struct vm_fault *vmf)
- =09=09goto again;
- =09}
-=20
-+=09size =3D i_size_read(inode);
- =09if (page->index =3D=3D ((size - 1) >> PAGE_SHIFT)) {
- =09=09reserved_space =3D round_up(size - page_start,
- =09=09=09=09=09  fs_info->sectorsize);
-@@ -9049,12 +9048,6 @@ vm_fault_t btrfs_page_mkwrite(struct vm_fault *vmf)
- =09}
- =09ret2 =3D 0;
-=20
--=09/* page is wholly or partially inside EOF */
--=09if (page_start + PAGE_SIZE > size)
--=09=09zero_start =3D offset_in_page(size);
--=09else
--=09=09zero_start =3D PAGE_SIZE;
--
- =09if (zero_start !=3D PAGE_SIZE) {
- =09=09kaddr =3D kmap(page);
- =09=09memset(kaddr + zero_start, 0, PAGE_SIZE - zero_start);
-diff --git a/fs/buffer.c b/fs/buffer.c
-index 86a38b979323..b162ec65910e 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -2459,23 +2459,13 @@ int block_page_mkwrite(struct vm_area_struct *vma, =
-struct vm_fault *vmf,
- =09struct page *page =3D vmf->page;
- =09struct inode *inode =3D file_inode(vma->vm_file);
- =09unsigned long end;
--=09loff_t size;
- =09int ret;
-=20
- =09lock_page(page);
--=09size =3D i_size_read(inode);
--=09if ((page->mapping !=3D inode->i_mapping) ||
--=09    (page_offset(page) > size)) {
--=09=09/* We overload EFAULT to mean page got truncated */
--=09=09ret =3D -EFAULT;
-+=09ret =3D page_mkwrite_check_truncate(page, inode);
-+=09if (ret < 0)
- =09=09goto out_unlock;
--=09}
--
--=09/* page is wholly or partially inside EOF */
--=09if (((page->index + 1) << PAGE_SHIFT) > size)
--=09=09end =3D size & ~PAGE_MASK;
--=09else
--=09=09end =3D PAGE_SIZE;
-+=09end =3D ret;
-=20
- =09ret =3D __block_write_begin(page, 0, end, get_block);
- =09if (!ret)
-diff --git a/fs/ceph/addr.c b/fs/ceph/addr.c
-index 7ab616601141..ef958aa4adb4 100644
---- a/fs/ceph/addr.c
-+++ b/fs/ceph/addr.c
-@@ -1575,7 +1575,7 @@ static vm_fault_t ceph_page_mkwrite(struct vm_fault *=
-vmf)
- =09do {
- =09=09lock_page(page);
-=20
--=09=09if ((off > size) || (page->mapping !=3D inode->i_mapping)) {
-+=09=09if (page_mkwrite_check_truncate(page, inode) < 0) {
- =09=09=09unlock_page(page);
- =09=09=09ret =3D VM_FAULT_NOPAGE;
- =09=09=09break;
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 516faa280ced..23bf095e0b29 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -6186,7 +6186,6 @@ vm_fault_t ext4_page_mkwrite(struct vm_fault *vmf)
- {
- =09struct vm_area_struct *vma =3D vmf->vma;
- =09struct page *page =3D vmf->page;
--=09loff_t size;
- =09unsigned long len;
- =09int err;
- =09vm_fault_t ret;
-@@ -6222,18 +6221,13 @@ vm_fault_t ext4_page_mkwrite(struct vm_fault *vmf)
- =09}
-=20
- =09lock_page(page);
--=09size =3D i_size_read(inode);
--=09/* Page got truncated from under us? */
--=09if (page->mapping !=3D mapping || page_offset(page) > size) {
-+=09err =3D page_mkwrite_check_truncate(page, inode);
-+=09if (err < 0) {
- =09=09unlock_page(page);
--=09=09ret =3D VM_FAULT_NOPAGE;
--=09=09goto out;
-+=09=09goto out_ret;
- =09}
-+=09len =3D err;
-=20
--=09if (page->index =3D=3D size >> PAGE_SHIFT)
--=09=09len =3D size & ~PAGE_MASK;
--=09else
--=09=09len =3D PAGE_SIZE;
- =09/*
- =09 * Return if we have all the buffers mapped. This avoids the need to do
- =09 * journal_start/journal_stop which can block and take a long time
-diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
-index 29bc0a542759..973f731e7af4 100644
---- a/fs/f2fs/file.c
-+++ b/fs/f2fs/file.c
-@@ -51,7 +51,7 @@ static vm_fault_t f2fs_vm_page_mkwrite(struct vm_fault *v=
-mf)
- =09struct inode *inode =3D file_inode(vmf->vma->vm_file);
- =09struct f2fs_sb_info *sbi =3D F2FS_I_SB(inode);
- =09struct dnode_of_data dn =3D { .node_changed =3D false };
--=09int err;
-+=09int offset, err;
-=20
- =09if (unlikely(f2fs_cp_error(sbi))) {
- =09=09err =3D -EIO;
-@@ -70,13 +70,14 @@ static vm_fault_t f2fs_vm_page_mkwrite(struct vm_fault =
-*vmf)
- =09file_update_time(vmf->vma->vm_file);
- =09down_read(&F2FS_I(inode)->i_mmap_sem);
- =09lock_page(page);
--=09if (unlikely(page->mapping !=3D inode->i_mapping ||
--=09=09=09page_offset(page) > i_size_read(inode) ||
--=09=09=09!PageUptodate(page))) {
-+=09err =3D -EFAULT;
-+=09if (likely(PageUptodate(page)))
-+=09=09err =3D page_mkwrite_check_truncate(page, inode);
-+=09if (unlikely(err < 0)) {
- =09=09unlock_page(page);
--=09=09err =3D -EFAULT;
- =09=09goto out_sem;
- =09}
-+=09offset =3D err;
-=20
- =09/* block allocation */
- =09__do_map_lock(sbi, F2FS_GET_BLOCK_PRE_AIO, true);
-@@ -101,14 +102,8 @@ static vm_fault_t f2fs_vm_page_mkwrite(struct vm_fault=
- *vmf)
- =09if (PageMappedToDisk(page))
- =09=09goto out_sem;
-=20
--=09/* page is wholly or partially inside EOF */
--=09if (((loff_t)(page->index + 1) << PAGE_SHIFT) >
--=09=09=09=09=09=09i_size_read(inode)) {
--=09=09loff_t offset;
--
--=09=09offset =3D i_size_read(inode) & ~PAGE_MASK;
-+=09if (offset !=3D PAGE_SIZE)
- =09=09zero_user_segment(page, offset, PAGE_SIZE);
--=09}
- =09set_page_dirty(page);
- =09if (!PageUptodate(page))
- =09=09SetPageUptodate(page);
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index e25901ae3ff4..663b5071b154 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1035,23 +1035,14 @@ vm_fault_t iomap_page_mkwrite(struct vm_fault *vmf,=
- const struct iomap_ops *ops)
- =09struct page *page =3D vmf->page;
- =09struct inode *inode =3D file_inode(vmf->vma->vm_file);
- =09unsigned long length;
--=09loff_t offset, size;
-+=09loff_t offset;
- =09ssize_t ret;
-=20
- =09lock_page(page);
--=09size =3D i_size_read(inode);
--=09if ((page->mapping !=3D inode->i_mapping) ||
--=09    (page_offset(page) > size)) {
--=09=09/* We overload EFAULT to mean page got truncated */
--=09=09ret =3D -EFAULT;
-+=09ret =3D page_mkwrite_check_truncate(page, inode);
-+=09if (ret < 0)
- =09=09goto out_unlock;
--=09}
--
--=09/* page is wholly or partially inside EOF */
--=09if (((page->index + 1) << PAGE_SHIFT) > size)
--=09=09length =3D offset_in_page(size);
--=09else
--=09=09length =3D PAGE_SIZE;
-+=09length =3D ret;
-=20
- =09offset =3D page_offset(page);
- =09while (length > 0) {
-diff --git a/fs/ubifs/file.c b/fs/ubifs/file.c
-index cd52585c8f4f..91f7a1f2db0d 100644
---- a/fs/ubifs/file.c
-+++ b/fs/ubifs/file.c
-@@ -1563,8 +1563,7 @@ static vm_fault_t ubifs_vm_page_mkwrite(struct vm_fau=
-lt *vmf)
- =09}
-=20
- =09lock_page(page);
--=09if (unlikely(page->mapping !=3D inode->i_mapping ||
--=09=09     page_offset(page) > i_size_read(inode))) {
-+=09if (unlikely(page_mkwrite_check_truncate(page, inode) < 0)) {
- =09=09/* Page got truncated out from underneath us */
- =09=09goto sigbus;
- =09}
-diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-index 37a4d9e32cd3..5a3f860470ad 100644
---- a/include/linux/pagemap.h
-+++ b/include/linux/pagemap.h
-@@ -636,4 +636,28 @@ static inline unsigned long dir_pages(struct inode *in=
-ode)
- =09=09=09       PAGE_SHIFT;
- }
-=20
-+/**
-+ * page_mkwrite_check_truncate - check if page was truncated
-+ * @page: the page to check
-+ * @inode: the inode to check the page against
-+ *
-+ * Returns the number of bytes in the page up to EOF,
-+ * or -EFAULT if the page was truncated.
-+ */
-+static inline int page_mkwrite_check_truncate(struct page *page,
-+=09=09=09=09=09      struct inode *inode)
-+{
-+=09loff_t size =3D i_size_read(inode);
-+=09pgoff_t end_index =3D (size + PAGE_SIZE - 1) >> PAGE_SHIFT;
-+
-+=09if (page->mapping !=3D inode->i_mapping ||
-+=09    page->index >=3D end_index)
-+=09=09return -EFAULT;
-+=09if (page->index !=3D size >> PAGE_SHIFT) {
-+=09=09/* page is wholly inside EOF */
-+=09=09return PAGE_SIZE;
-+=09}
-+=09return offset_in_page(size);
-+}
-+
- #endif /* _LINUX_PAGEMAP_H */
---=20
-2.20.1
+# echo c >/proc/sysrq-trigger
+
+and then reboot the same kernel where it will crash while checking the =
+XFS. This can be workaround
+by rebooting to an older kernel (v4.18) first where xfs_repair will be =
+successfully there, and then rebooting
+to the new linux-next kernel will be fine.
+
+[  OK  ] Started File System Check on =
+/dev/mapper/rhel_hpe--sy680gen9--01-root.
+         Mounting /sysroot...
+[  141.177726][ T1730] SGI XFS with security attributes, no debug =
+enabled
+[  141.432382][ T1720] XFS (dm-0): Mounting V5 Filesystem
+[**    ] A start job is running for /sysroot (39s / 1min 51s)[  =
+158.738816][ T1720] XFS (dm-0): Starting recovery (logdev: internal)
+[  158.792010][  T844] BUG: unable to handle page fault for address: =
+fffff52001f0000c
+[  158.830913][  T844] #PF: supervisor read access in kernel mode
+[  158.859680][  T844] #PF: error_code(0x0000) - not-present page
+[  158.886057][  T844] PGD 207ffe3067 P4D 207ffe3067 PUD 2071f2067 PMD =
+f68e08067 PTE 0
+[  158.922065][  T844] Oops: 0000 [#1] SMP DEBUG_PAGEALLOC KASAN PTI
+[  158.949620][  T844] CPU: 112 PID: 844 Comm: kworker/112:1 Not tainted =
+5.4.0-next-20191127+ #3
+[  158.988759][  T844] Hardware name: HP Synergy 680 Gen9/Synergy 680 =
+Gen9 Compute Module, BIOS I40 05/23/2018
+[  159.033380][  T844] Workqueue: xfs-buf/dm-0 xfs_buf_ioend_work [xfs]
+[  159.061935][  T844] RIP: 0010:__asan_load4+0x3a/0xa0
+[  159.061941][  T844] Code: 00 00 00 00 00 00 ff 48 39 f8 77 6d 48 8d =
+47 03 48 89 c2 83 e2 07 48 83 fa 02 76 30 48 be 00 00 00 00 00 fc ff df =
+48 c1 e8 03 <0f> b6 04 30 84 c0 75 3e 5d c3 48 b8 00 00 00 00 00 80 ff =
+ff eb c7
+[  159.061944][  T844] RSP: 0018:ffffc9000a4b7cb0 EFLAGS: 00010a06
+[  159.061949][  T844] RAX: 1ffff92001f0000c RBX: ffffc9000f800000 RCX: =
+ffffffffc06d10ae
+[  159.061952][  T844] RDX: 0000000000000003 RSI: dffffc0000000000 RDI: =
+ffffc9000f800060
+[  159.061955][  T844] RBP: ffffc9000a4b7cb0 R08: ffffed130bee89e5 R09: =
+0000000000000001
+[  159.061958][  T844] R10: ffffed130bee89e4 R11: ffff88985f744f23 R12: =
+0000000000000000
+[  159.061961][  T844] R13: ffff889724be0040 R14: ffff88836c8e5000 R15: =
+00000000000c8000
+[  159.061965][  T844] FS:  0000000000000000(0000) =
+GS:ffff88985f700000(0000) knlGS:0000000000000000
+[  159.061968][  T844] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  159.061971][  T844] CR2: fffff52001f0000c CR3: 0000001f615b8004 CR4: =
+00000000003606e0
+[  159.061974][  T844] DR0: 0000000000000000 DR1: 0000000000000000 DR2: =
+0000000000000000
+[  159.061976][  T844] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: =
+0000000000000400
+[  159.061978][  T844] Call Trace:
+[  159.062118][  T844]  xfs_inode_buf_verify+0x13e/0x230 [xfs]
+[  159.062264][  T844]  xfs_inode_buf_readahead_verify+0x13/0x20 [xfs]
+[  159.634441][  T844]  xfs_buf_ioend+0x153/0x6b0 [xfs]
+[  159.634455][  T844]  ? trace_hardirqs_on+0x3a/0x160
+[  159.679087][  T844]  xfs_buf_ioend_work+0x15/0x20 [xfs]
+[  159.702689][  T844]  process_one_work+0x579/0xb90
+[  159.723898][  T844]  ? pwq_dec_nr_in_flight+0x170/0x170
+[  159.747499][  T844]  worker_thread+0x63/0x5b0
+[  159.767531][  T844]  ? process_one_work+0xb90/0xb90
+[  159.789549][  T844]  kthread+0x1e6/0x210
+[  159.807166][  T844]  ? kthread_create_worker_on_cpu+0xc0/0xc0
+[  159.833064][  T844]  ret_from_fork+0x3a/0x50
+[  159.852200][  T844] Modules linked in: xfs sd_mod bnx2x mdio =
+firmware_class hpsa scsi_transport_sas dm_mirror dm_region_hash dm_log =
+dm_mod
+[  159.915273][  T844] CR2: fffff52001f0000c
+[  159.934029][  T844] ---[ end trace 3f3b30f5fc34bbf1 ]---
+[  159.957937][  T844] RIP: 0010:__asan_load4+0x3a/0xa0
+[  159.980316][  T844] Code: 00 00 00 00 00 00 ff 48 39 f8 77 6d 48 8d =
+47 03 48 89 c2 83 e2 07 48 83 fa 02 76 30 48 be 00 00 00 00 00 fc ff df =
+48 c1 e8 03 <0f> b6 04 30 84 c0 75 3e 5d c3 48 b8 00 00 00 00 00 80 ff =
+ff eb c7
+[  160.068386][  T844] RSP: 0018:ffffc9000a4b7cb0 EFLAGS: 00010a06
+[  160.068389][  T844] RAX: 1ffff92001f0000c RBX: ffffc9000f800000 RCX: =
+ffffffffc06d10ae
+[  160.068391][  T844] RDX: 0000000000000003 RSI: dffffc0000000000 RDI: =
+ffffc9000f800060
+[  160.068393][  T844] RBP: ffffc9000a4b7cb0 R08: ffffed130bee89e5 R09: =
+0000000000000001
+[  160.068395][  T844] R10: ffffed130bee89e4 R11: ffff88985f744f23 R12: =
+0000000000000000
+[  160.068397][  T844] R13: ffff889724be0040 R14: ffff88836c8e5000 R15: =
+00000000000c8000
+[  160.068399][  T844] FS:  0000000000000000(0000) =
+GS:ffff88985f700000(0000) knlGS:0000000000000000
+[  160.068401][  T844] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  160.068404][  T844] CR2: fffff52001f0000c CR3: 0000001f615b8004 CR4: =
+00000000003606e0
+[  160.068405][  T844] DR0: 0000000000000000 DR1: 0000000000000000 DR2: =
+0000000000000000
+[  160.068407][  T844] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: =
+0000000000000400
+[  160.068410][  T844] Kernel panic - not syncing: Fatal exception
+[  160.095178][  T844] Kernel Offset: 0x21c00000 from 0xffffffff81000000 =
+(relocation range: 0xffffffff80000000-0xffffffffbfffffff)
+[  160.541027][  T844] ---[ end Kernel panic - not syncing: Fatal =
+exception ]---
+
+>=20
+> Regards,
+> Daniel
+>=20
+>>=20
+>>>=20
+>>> BUG: unable to handle page fault for address: fffff52005b80000
+>>> #PF: supervisor read access in kernel mode
+>>> #PF: error_code(0x0000) - not-present page
+>>> PGD 7ffcd067 P4D 7ffcd067 PUD 2cd10067 PMD 66d76067 PTE 0
+>>> Oops: 0000 [#1] PREEMPT SMP KASAN
+>>> CPU: 2 PID: 9211 Comm: syz-executor.2 Not tainted =
+5.4.0-next-20191129+ #6
+>>> Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS
+>>> rel-1.12.0-59-gc9ba5276e321-prebuilt.qemu.org 04/01/2014
+>>> RIP: 0010:xfs_sb_read_verify+0xe9/0x540 fs/xfs/libxfs/xfs_sb.c:691
+>>> Code: fc ff df 48 c1 ea 03 80 3c 02 00 0f 85 1e 04 00 00 4d 8b ac 24
+>>> 30 01 00 00 48 b8 00 00 00 00 00 fc ff df 4c 89 ea 48 c1 ea 03 <0f> =
+b6
+>>> 04 02 84 c0 74 08 3c 03 0f 8e ad 03 00 00 41 8b 45 00 bf 58
+>>> RSP: 0018:ffffc9000a58f8d0 EFLAGS: 00010a06
+>>> RAX: dffffc0000000000 RBX: 1ffff920014b1f1d RCX: ffffc9000af42000
+>>> RDX: 1ffff92005b80000 RSI: ffffffff82914404 RDI: ffff88805cdb1460
+>>> RBP: ffffc9000a58fab0 R08: ffff8880610cd380 R09: ffffed1005a87045
+>>> R10: ffffed1005a87044 R11: ffff88802d438223 R12: ffff88805cdb1340
+>>> R13: ffffc9002dc00000 R14: ffffc9000a58fa88 R15: ffff888061b5c000
+>>> FS:  00007fb49bda9700(0000) GS:ffff88802d400000(0000) =
+knlGS:0000000000000000
+>>> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+>>> CR2: fffff52005b80000 CR3: 0000000060769006 CR4: 0000000000760ee0
+>>> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+>>> DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+>>> PKRU: 55555554
+>>> Call Trace:
+>>> xfs_buf_ioend+0x228/0xdc0 fs/xfs/xfs_buf.c:1162
+>>> __xfs_buf_submit+0x38b/0xe50 fs/xfs/xfs_buf.c:1485
+>>> xfs_buf_submit fs/xfs/xfs_buf.h:268 [inline]
+>>> xfs_buf_read_uncached+0x15c/0x560 fs/xfs/xfs_buf.c:897
+>>> xfs_readsb+0x2d0/0x540 fs/xfs/xfs_mount.c:298
+>>> xfs_fc_fill_super+0x3e6/0x11f0 fs/xfs/xfs_super.c:1415
+>>> get_tree_bdev+0x444/0x620 fs/super.c:1340
+>>> xfs_fc_get_tree+0x1c/0x20 fs/xfs/xfs_super.c:1550
+>>> vfs_get_tree+0x8e/0x300 fs/super.c:1545
+>>> do_new_mount fs/namespace.c:2822 [inline]
+>>> do_mount+0x152d/0x1b50 fs/namespace.c:3142
+>>> ksys_mount+0x114/0x130 fs/namespace.c:3351
+>>> __do_sys_mount fs/namespace.c:3365 [inline]
+>>> __se_sys_mount fs/namespace.c:3362 [inline]
+>>> __x64_sys_mount+0xbe/0x150 fs/namespace.c:3362
+>>> do_syscall_64+0xfa/0x780 arch/x86/entry/common.c:294
+>>> entry_SYSCALL_64_after_hwframe+0x49/0xbe
+>>> RIP: 0033:0x46736a
+>>> Code: 48 c7 c1 bc ff ff ff f7 d8 64 89 01 48 83 c8 ff c3 66 2e 0f 1f
+>>> 84 00 00 00 00 00 0f 1f 44 00 00 49 89 ca b8 a5 00 00 00 0f 05 <48> =
+3d
+>>> 01 f0 ff ff 73 01 c3 48 c7 c1 bc ff ff ff f7 d8 64 89 01 48
+>>> RSP: 002b:00007fb49bda8a78 EFLAGS: 00000202 ORIG_RAX: =
+00000000000000a5
+>>> RAX: ffffffffffffffda RBX: 00007fb49bda8af0 RCX: 000000000046736a
+>>> RDX: 00007fb49bda8ad0 RSI: 0000000020000140 RDI: 00007fb49bda8af0
+>>> RBP: 00007fb49bda8ad0 R08: 00007fb49bda8b30 R09: 00007fb49bda8ad0
+>>> R10: 0000000000000000 R11: 0000000000000202 R12: 00007fb49bda8b30
+>>> R13: 00000000004b1c60 R14: 00000000004b006d R15: 00007fb49bda96bc
+>>> Modules linked in:
+>>> Dumping ftrace buffer:
+>>>   (ftrace buffer empty)
+>>> CR2: fffff52005b80000
+>>> ---[ end trace eddd8949d4c898df ]---
+>>> RIP: 0010:xfs_sb_read_verify+0xe9/0x540 fs/xfs/libxfs/xfs_sb.c:691
+>>> Code: fc ff df 48 c1 ea 03 80 3c 02 00 0f 85 1e 04 00 00 4d 8b ac 24
+>>> 30 01 00 00 48 b8 00 00 00 00 00 fc ff df 4c 89 ea 48 c1 ea 03 <0f> =
+b6
+>>> 04 02 84 c0 74 08 3c 03 0f 8e ad 03 00 00 41 8b 45 00 bf 58
+>>> RSP: 0018:ffffc9000a58f8d0 EFLAGS: 00010a06
+>>> RAX: dffffc0000000000 RBX: 1ffff920014b1f1d RCX: ffffc9000af42000
+>>> RDX: 1ffff92005b80000 RSI: ffffffff82914404 RDI: ffff88805cdb1460
+>>> RBP: ffffc9000a58fab0 R08: ffff8880610cd380 R09: ffffed1005a87045
+>>> R10: ffffed1005a87044 R11: ffff88802d438223 R12: ffff88805cdb1340
+>>> R13: ffffc9002dc00000 R14: ffffc9000a58fa88 R15: ffff888061b5c000
+>>> FS:  00007fb49bda9700(0000) GS:ffff88802d400000(0000) =
+knlGS:0000000000000000
+>>> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+>>> CR2: fffff52005b80000 CR3: 0000000060769006 CR4: 0000000000760ee0
+>>> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+>>> DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+>>> PKRU: 55555554
+>>>=20
+>>=20
+>> --=20
+>> You received this message because you are subscribed to the Google =
+Groups "kasan-dev" group.
+>> To unsubscribe from this group and stop receiving emails from it, =
+send an email to kasan-dev+unsubscribe@googlegroups.com.
+>> To view this discussion on the web visit =
+https://groups.google.com/d/msgid/kasan-dev/56cf8aab-c61b-156c-f681-d2354a=
+ed22bb%40virtuozzo.com.
 
