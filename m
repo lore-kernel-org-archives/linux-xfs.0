@@ -1,98 +1,91 @@
-Return-Path: <SRS0=tu3U=ZU=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=kniB=ZV=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E1BEC432C0
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Nov 2019 15:45:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B21E8C432C0
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Nov 2019 07:51:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3DE67217BC
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Nov 2019 15:45:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 81AC2216F4
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Nov 2019 07:51:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lYn5QAbb"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="F1sUJA6C"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726610AbfK1PpX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 28 Nov 2019 10:45:23 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:57104 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726569AbfK1PpX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Nov 2019 10:45:23 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=1Ua9kzhqWdT/XmuB+JkZPQ/zR7CbGzhbDxmS9/PUHRg=; b=lYn5QAbbuOgCVzO0wK72zGcGg
-        mQTVtUtKdl4KYiJHp4I5I3FXK/6FWZhfra4tUuTFV7QC78oDUm8NKzHIrgasl+8sbPlrCdG0T67u3
-        kgAQ57kaMp3R3h1Z+mwXZn4SMTDknO5FcjPcWJhT6kEGYu4yyJ+8h7G98UfdWJKrqUQljjAF2xpQv
-        RhfjlbJLk4dNosXzbNYjYOLiCEP2PZWfBnLjpu5EMP/cgJOBC3HTYk0zTcErIw08z7ffMbdnD/r09
-        tSSlveUJqScNNE8ME81M1Rd4A954YOsGafxeRRIk7ktZ64V53SmN+UKMgMG5kfHDds764Ihn7lkwx
-        SsNl980Fw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iaLym-0005vg-OI; Thu, 28 Nov 2019 15:45:16 +0000
-Date:   Thu, 28 Nov 2019 07:45:16 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Andreas Gruenbacher <agruenba@redhat.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-kernel@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Jeff Layton <jlayton@kernel.org>, Sage Weil <sage@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Richard Weinberger <richard@nod.at>,
-        Artem Bityutskiy <dedekind1@gmail.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        linux-mtd@lists.infradead.org
-Subject: Re: [PATCH] fs: Fix page_mkwrite off-by-one errors
-Message-ID: <20191128154516.GA17166@infradead.org>
-References: <20191127151811.9229-1-agruenba@redhat.com>
- <20191127154954.GT6219@magnolia>
+        id S1726791AbfK2HvC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 29 Nov 2019 02:51:02 -0500
+Received: from mail-lj1-f180.google.com ([209.85.208.180]:43042 "EHLO
+        mail-lj1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726360AbfK2HvC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Nov 2019 02:51:02 -0500
+Received: by mail-lj1-f180.google.com with SMTP id a13so7765913ljm.10;
+        Thu, 28 Nov 2019 23:50:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=G7htS148MLHne5gcdg1L2MpYQYz/l/iKEwv8PYFcG2E=;
+        b=F1sUJA6CQo0FU6YJTe8zF3XS9wn1GdYIGYKKW0FkH1WZjpFUNLduWY7619x4knvYuL
+         II29bxpBYNCe1WTppKZPD3gWAjLNZvPN8OYY+bRDbydx8UvRceDBEacyqW7eHUDwYexn
+         TeX/cu4QgfvFSzOQo2tyqLXKl6WzzWLcts+u+DBj+apKQ0DLv2jyN1R6JN4TwG89ZHNM
+         yuCv43rlcM8ImNJ/JymVpNIGiWmBNW8ivSjHfB+WQ3C8K+rDH6OoA1h1H+YcuX6fiPn1
+         8ODbdSJiZdXp3rJ/vf1zqTG3Tv7a/o7gxl+QC/JTulZCeDkOil1FNdS/SAYXzfr5txH9
+         wiYg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=G7htS148MLHne5gcdg1L2MpYQYz/l/iKEwv8PYFcG2E=;
+        b=WERmLLP1De0aqa6XNds/ch61d1gpqSQQNwVWrJGYNYCWOu1JlPyyJBH91vY1Hwz0rp
+         NMClHvRIS1g6vAi1YgkRQDeQmrQIWV3LY6Pw6kWGJppulS+LBuF8gkstqbG/qBoGu6kU
+         FcyIWpkg/FuTCfTNaPd/EiE8bWpvevtx3WV698FuTXhLtmeDU5+GAfp8kPcxRivTs6w3
+         U8gkul+4SHcnwVAYsA6QBXZQTkJQqHwmKNXTMZ2Dt3zl1cSbybqSYZFGW+unM+fOsZ6x
+         Ak67SX3VGMD4N6tdCndXDU5xKBu894V648qE05TlyvQSvupjwHFrCY8OUF0h6ueWyMnF
+         ranw==
+X-Gm-Message-State: APjAAAUSY7cg+zu+RC7eR0R9ZY1yYwn49HTcSGUQrlkwr/ldhyM+FuRB
+        DOMlkrueBErC0sUeEZINRgWYGM6rYBZTIVIMdCc3pujz
+X-Google-Smtp-Source: APXvYqzTIyrUoGUmL075z/BU7X+QXiOWAeMrU+mvmklSZUzJDlwkcaucXHnotp5Tm7JwlrZBFFBcw/VvT1SXB0VSACM=
+X-Received: by 2002:a2e:984f:: with SMTP id e15mr36803147ljj.109.1575013858719;
+ Thu, 28 Nov 2019 23:50:58 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191127154954.GT6219@magnolia>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+From:   Jason Xing <kerneljasonxing@gmail.com>
+Date:   Fri, 29 Nov 2019 15:50:22 +0800
+Message-ID: <CAL+tcoD8o5A4vgLHHp8dyFV5PmJVL5tu0h-XQavLOiAexmVLRQ@mail.gmail.com>
+Subject: About whether we should support the alignment in the
+ generic_file_splice_read() ?
+To:     viro@zeniv.linux.org.uk
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 27, 2019 at 07:49:54AM -0800, Darrick J. Wong wrote:
-> On Wed, Nov 27, 2019 at 04:18:11PM +0100, Andreas Gruenbacher wrote:
-> > Fix a check in block_page_mkwrite meant to determine whether an offset
-> > is within the inode size.  This error has spread to several filesystems
-> > and to iomap_page_mkwrite, so fix those instances as well.
-> 
-> Seeing how this has gotten screwed up at least six times in the kernel,
-> maybe we need a static inline helper to do this for us?
+Hi all,
 
-Yes.  I think we really want a little helper that checks the mapping
-and the offset.  That also gives us the opportunity to document the
-semantics.
+Sorry to send this email to you all. I recently noticed there're some
+incompatibilities existing in the generic_file_splice_read() function
+between 3.X and 4.X kernel. The result will goes wrong if we're using
+sendfile() with unaligned offset in 4.X/5.X kernel. But if we do the
+same in 3.X kernel, it will surely return success.
 
-> 
-> > Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-> 
-> The iomap part looks ok,
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> (I might just extract the iomap part and put it in the iomap tree if
-> someone doesn't merge this one before I get to it...)
+Here is the call trace:
+1. Using sendfile() with unaligned offset
+2. Then it runs into the kernel:
+sendfile64()->do_sendfile()->do_splice_direct()->splice_direct_to_actor()->do_splice_to()->splice_read()
+3. splice_read() calls the __generic_file_splice_read() in 3.X kernel,
+generic_file_splice_read() in 4.X kernel.
 
-I think we should just pull in the helper and conversions through
-some tree after all iomap bits are merged.  It might as well be
-the iomap tree as that seems to the place for file system read/write
-infrastructure these days.
+In 3.X kernel, this function handles the alignment by using the
+PAGE_SHIFT and PAGE_MASK. However, after applying this
+commit(82c156f853840645604acd7c2cebcb75ed1b6652) the 4.X no longer
+supports the unaligned data.
+
+I'm wondering should we add the alignment process code back again?
+Does anyone have idea about why this part got removed? Any information
+and suggestions are welcome:-)
+
+Thanks,
+Jason
