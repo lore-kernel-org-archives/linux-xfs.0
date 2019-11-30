@@ -2,49 +2,50 @@ Return-Path: <SRS0=J6xf=ZW=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=FROM_LOCAL_HEX,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.4 required=3.0 tests=FROM_LOCAL_HEX,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EB0EC432C3
-	for <linux-xfs@archiver.kernel.org>; Sat, 30 Nov 2019 07:19:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7222DC43215
+	for <linux-xfs@archiver.kernel.org>; Sat, 30 Nov 2019 07:57:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1453F2072C
-	for <linux-xfs@archiver.kernel.org>; Sat, 30 Nov 2019 07:19:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5136A20833
+	for <linux-xfs@archiver.kernel.org>; Sat, 30 Nov 2019 07:57:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725821AbfK3HTJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 30 Nov 2019 02:19:09 -0500
-Received: from mail-io1-f72.google.com ([209.85.166.72]:39445 "EHLO
-        mail-io1-f72.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725298AbfK3HTJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 30 Nov 2019 02:19:09 -0500
-Received: by mail-io1-f72.google.com with SMTP id u13so19416335iol.6
-        for <linux-xfs@vger.kernel.org>; Fri, 29 Nov 2019 23:19:08 -0800 (PST)
+        id S1726799AbfK3H5J (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 30 Nov 2019 02:57:09 -0500
+Received: from mail-io1-f69.google.com ([209.85.166.69]:38342 "EHLO
+        mail-io1-f69.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725835AbfK3H5J (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 30 Nov 2019 02:57:09 -0500
+Received: by mail-io1-f69.google.com with SMTP id q4so21882052ion.5
+        for <linux-xfs@vger.kernel.org>; Fri, 29 Nov 2019 23:57:07 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:date:message-id:subject:from:to;
-        bh=Iszxj3xslkgFiHBpTht8Zqpoj8q3iHoILKi1CRIqeFo=;
-        b=sW0wOnfLKT64fWmyxvUFh+pVtq7Fs4XkN6+MmemCtCD9kfuClJqPoV+PcdF4GSzCAx
-         Djr8MX0CvBqkLlsucJCetDhKhm5S1R0tXv1ZwGLM95LcQmDqOcxVVub8/oIKKHPIS2kw
-         UOPJykZ+i6AGXc0Du+32B9hnhLygyaqfAci0KfrY6oOwNyhD+BN0IlwGdBWxKKoPadgz
-         F9zKsMDCPFgzx1FHC80uOLR2OOSXxgQO0PtDPpc46VH4Clr/dJA+b3T1hYAf0daVO1ch
-         eQG60HLBFxa7u8f3UTQ09w5og5IukxNssGPMsRUFLhJDT6CyK/WZjUe4SGTyiMIUBT/X
-         Gqig==
-X-Gm-Message-State: APjAAAV60z8g05fnrFe+D00YRxiRKbMfNHGDw7KMgP8FB+Uvqtqx/ibX
-        RGZ9hQF2bripHF/4KCiZuVmx2fENBIXNFG2d1WRZtE7yGkta
-X-Google-Smtp-Source: APXvYqxMt060BD8gSa++k51h6Fp7squipmwrA4vm7Riv4aIzuKEn/9cvlou91jaqXCGEVS2ftXaKCqBjw7WzXdD6/yYNsXYosfFh
+        bh=vizerLb0/B8eHiqw35KBdL2R/eL8WfeHEsZlco7wsrE=;
+        b=N6eMoTdOp98PkbiZCm8YcCn7mj/+3rz3ZKfA1HxghW+L56zIQquNlf6rfQygt5dI2V
+         Z66HwFe4D2wJ5pwLM351l0FAx0AW5yRBWcUEPLy96Om0fPgY4fwRNik5GnnN43tKSXB0
+         6Bdu8kcsLCmT3T9Bzro9dbXdjbxkbr+K23gBbpkNdSfIaYdR38/+8zbd1Zf8y0U/ZcU2
+         TfDP13W5V+RLEiE9LsAzmR/JRtPnUsltVQmQKMOwbu1qLTKfT9xQPadipPQVwslwU8a/
+         MU3k5RnoW4ncw1NwmiyL1+ET8hx1f0BxObnYq0cuQv0ZA+0+KpoJXin9koByPkse/8wK
+         yusg==
+X-Gm-Message-State: APjAAAWXbfJikmqNImc8ZTY/2TvRec+jlGqyrVHG8wVjwrukRATMDboL
+        vhHFJ5/CPk+Ib/wPE2DOhAWwFtHr43Rra4kFhdxbMzhRUj2V
+X-Google-Smtp-Source: APXvYqz/idIT/WJw5XhCMK++RXKuxDrgBlMTqJ8w63nNOjBrl8xu1dhlPRuzHBxCAOpTyV2XviI6BovEucq/ExQasyIki0oF3N9p
 MIME-Version: 1.0
-X-Received: by 2002:a6b:9302:: with SMTP id v2mr36196070iod.12.1575098348190;
- Fri, 29 Nov 2019 23:19:08 -0800 (PST)
-Date:   Fri, 29 Nov 2019 23:19:08 -0800
+X-Received: by 2002:a92:50c:: with SMTP id q12mr58576238ile.234.1575100627234;
+ Fri, 29 Nov 2019 23:57:07 -0800 (PST)
+Date:   Fri, 29 Nov 2019 23:57:07 -0800
 X-Google-Appengine-App-Id: s~syzkaller
 X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <00000000000087c51905988b297b@google.com>
-Subject: KASAN: use-after-free Read in xlog_alloc_log (2)
-From:   syzbot <syzbot+c732f8644185de340492@syzkaller.appspotmail.com>
-To:     darrick.wong@oracle.com, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Message-ID: <0000000000005f386305988bb15f@google.com>
+Subject: BUG: unable to handle kernel paging request in xfs_sb_read_verify
+From:   syzbot <syzbot+6be2cbddaad2e32b47a0@syzkaller.appspotmail.com>
+To:     allison.henderson@oracle.com, bfoster@redhat.com,
+        darrick.wong@oracle.com, dchinner@redhat.com,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        sandeen@redhat.com, syzkaller-bugs@googlegroups.com
 Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
@@ -55,134 +56,68 @@ Hello,
 
 syzbot found the following crash on:
 
-HEAD commit:    81b6b964 Merge branch 'master' of git://git.kernel.org/pub..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=13b27696e00000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=773597fe8d7cb41a
-dashboard link: https://syzkaller.appspot.com/bug?extid=c732f8644185de340492
+HEAD commit:    419593da Add linux-next specific files for 20191129
+git tree:       linux-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=10cecb36e00000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=7c04b0959e75c206
+dashboard link: https://syzkaller.appspot.com/bug?extid=6be2cbddaad2e32b47a0
 compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
 
 Unfortunately, I don't have any reproducer for this crash yet.
 
 IMPORTANT: if you fix the bug, please add the following tag to the commit:
-Reported-by: syzbot+c732f8644185de340492@syzkaller.appspotmail.com
+Reported-by: syzbot+6be2cbddaad2e32b47a0@syzkaller.appspotmail.com
 
-==================================================================
-BUG: KASAN: use-after-free in xlog_alloc_log+0x1398/0x14b0  
-fs/xfs/xfs_log.c:1495
-Read of size 8 at addr ffff888068139890 by task syz-executor.3/32544
-
-CPU: 0 PID: 32544 Comm: syz-executor.3 Not tainted 5.4.0-syzkaller #0
+BUG: unable to handle page fault for address: fffff52002e00000
+#PF: supervisor read access in kernel mode
+#PF: error_code(0x0000) - not-present page
+PGD 21ffee067 P4D 21ffee067 PUD aa11c067 PMD 0
+Oops: 0000 [#1] PREEMPT SMP KASAN
+CPU: 0 PID: 2938 Comm: kworker/0:2 Not tainted  
+5.4.0-next-20191129-syzkaller #0
 Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS  
 Google 01/01/2011
+Workqueue: xfs-buf/loop3 xfs_buf_ioend_work
+RIP: 0010:xfs_sb_read_verify+0xf0/0x540 fs/xfs/libxfs/xfs_sb.c:691
+Code: fc ff df 48 c1 ea 03 80 3c 02 00 0f 85 18 04 00 00 4d 8b ac 24 30 01  
+00 00 48 b8 00 00 00 00 00 fc ff df 4c 89 ea 48 c1 ea 03 <0f> b6 04 02 84  
+c0 74 08 3c 03 0f 8e a7 03 00 00 41 8b 75 00 bf 58
+RSP: 0018:ffffc90007e5faf0 EFLAGS: 00010a06
+RAX: dffffc0000000000 RBX: 1ffff92000fcbf61 RCX: ffffffff82acb516
+RDX: 1ffff92002e00000 RSI: ffffffff82a97e3b RDI: ffff888091bada60
+RBP: ffffc90007e5fcd0 R08: ffff88809f3c2040 R09: ffffed1015cc7045
+R10: ffffed1015cc7044 R11: ffff8880ae638223 R12: ffff888091bad940
+R13: ffffc90017000000 R14: ffffc90007e5fca8 R15: ffff88809feb8000
+FS:  0000000000000000(0000) GS:ffff8880ae600000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: fffff52002e00000 CR3: 0000000069ceb000 CR4: 00000000001406f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
 Call Trace:
-  __dump_stack lib/dump_stack.c:77 [inline]
-  dump_stack+0x197/0x210 lib/dump_stack.c:118
-  print_address_description.constprop.0.cold+0xd4/0x30b mm/kasan/report.c:374
-  __kasan_report.cold+0x1b/0x41 mm/kasan/report.c:506
-  kasan_report+0x12/0x20 mm/kasan/common.c:634
-  __asan_report_load8_noabort+0x14/0x20 mm/kasan/generic_report.c:132
-  xlog_alloc_log+0x1398/0x14b0 fs/xfs/xfs_log.c:1495
-  xfs_log_mount+0xdc/0x780 fs/xfs/xfs_log.c:599
-  xfs_mountfs+0xdb9/0x1be0 fs/xfs/xfs_mount.c:811
-  xfs_fs_fill_super+0xd24/0x1750 fs/xfs/xfs_super.c:1732
-  mount_bdev+0x304/0x3c0 fs/super.c:1415
-  xfs_fs_mount+0x35/0x40 fs/xfs/xfs_super.c:1806
-  legacy_get_tree+0x108/0x220 fs/fs_context.c:647
-  vfs_get_tree+0x8e/0x300 fs/super.c:1545
-  do_new_mount fs/namespace.c:2822 [inline]
-  do_mount+0x135a/0x1b50 fs/namespace.c:3142
-  ksys_mount+0xdb/0x150 fs/namespace.c:3351
-  __do_sys_mount fs/namespace.c:3365 [inline]
-  __se_sys_mount fs/namespace.c:3362 [inline]
-  __x64_sys_mount+0xbe/0x150 fs/namespace.c:3362
-  do_syscall_64+0xfa/0x790 arch/x86/entry/common.c:294
-  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-RIP: 0033:0x45d0ca
-Code: b8 a6 00 00 00 0f 05 48 3d 01 f0 ff ff 0f 83 4d 8c fb ff c3 66 2e 0f  
-1f 84 00 00 00 00 00 66 90 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff  
-ff 0f 83 2a 8c fb ff c3 66 0f 1f 84 00 00 00 00 00
-RSP: 002b:00007f525b430a88 EFLAGS: 00000206 ORIG_RAX: 00000000000000a5
-RAX: ffffffffffffffda RBX: 00007f525b430b40 RCX: 000000000045d0ca
-RDX: 00007f525b430ae0 RSI: 0000000020000100 RDI: 00007f525b430b00
-RBP: 0000000000000001 R08: 00007f525b430b40 R09: 00007f525b430ae0
-R10: 0000000000000000 R11: 0000000000000206 R12: 0000000000000004
-R13: 00000000004ca258 R14: 00000000004e2870 R15: 00000000ffffffff
-
-Allocated by task 32544:
-  save_stack+0x23/0x90 mm/kasan/common.c:69
-  set_track mm/kasan/common.c:77 [inline]
-  __kasan_kmalloc mm/kasan/common.c:510 [inline]
-  __kasan_kmalloc.constprop.0+0xcf/0xe0 mm/kasan/common.c:483
-  kasan_kmalloc+0x9/0x10 mm/kasan/common.c:524
-  __do_kmalloc mm/slab.c:3655 [inline]
-  __kmalloc+0x163/0x770 mm/slab.c:3664
-  kmalloc include/linux/slab.h:561 [inline]
-  kmem_alloc+0x15b/0x4d0 fs/xfs/kmem.c:21
-  kmem_zalloc fs/xfs/kmem.h:68 [inline]
-  xlog_alloc_log+0xcce/0x14b0 fs/xfs/xfs_log.c:1437
-  xfs_log_mount+0xdc/0x780 fs/xfs/xfs_log.c:599
-  xfs_mountfs+0xdb9/0x1be0 fs/xfs/xfs_mount.c:811
-  xfs_fs_fill_super+0xd24/0x1750 fs/xfs/xfs_super.c:1732
-  mount_bdev+0x304/0x3c0 fs/super.c:1415
-  xfs_fs_mount+0x35/0x40 fs/xfs/xfs_super.c:1806
-  legacy_get_tree+0x108/0x220 fs/fs_context.c:647
-  vfs_get_tree+0x8e/0x300 fs/super.c:1545
-  do_new_mount fs/namespace.c:2822 [inline]
-  do_mount+0x135a/0x1b50 fs/namespace.c:3142
-  ksys_mount+0xdb/0x150 fs/namespace.c:3351
-  __do_sys_mount fs/namespace.c:3365 [inline]
-  __se_sys_mount fs/namespace.c:3362 [inline]
-  __x64_sys_mount+0xbe/0x150 fs/namespace.c:3362
-  do_syscall_64+0xfa/0x790 arch/x86/entry/common.c:294
-  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-
-Freed by task 32544:
-  save_stack+0x23/0x90 mm/kasan/common.c:69
-  set_track mm/kasan/common.c:77 [inline]
-  kasan_set_free_info mm/kasan/common.c:332 [inline]
-  __kasan_slab_free+0x102/0x150 mm/kasan/common.c:471
-  kasan_slab_free+0xe/0x10 mm/kasan/common.c:480
-  __cache_free mm/slab.c:3425 [inline]
-  kfree+0x10a/0x2c0 mm/slab.c:3756
-  kvfree+0x61/0x70 mm/util.c:593
-  kmem_free fs/xfs/kmem.h:61 [inline]
-  xlog_alloc_log+0xeb5/0x14b0 fs/xfs/xfs_log.c:1497
-  xfs_log_mount+0xdc/0x780 fs/xfs/xfs_log.c:599
-  xfs_mountfs+0xdb9/0x1be0 fs/xfs/xfs_mount.c:811
-  xfs_fs_fill_super+0xd24/0x1750 fs/xfs/xfs_super.c:1732
-  mount_bdev+0x304/0x3c0 fs/super.c:1415
-  xfs_fs_mount+0x35/0x40 fs/xfs/xfs_super.c:1806
-  legacy_get_tree+0x108/0x220 fs/fs_context.c:647
-  vfs_get_tree+0x8e/0x300 fs/super.c:1545
-  do_new_mount fs/namespace.c:2822 [inline]
-  do_mount+0x135a/0x1b50 fs/namespace.c:3142
-  ksys_mount+0xdb/0x150 fs/namespace.c:3351
-  __do_sys_mount fs/namespace.c:3365 [inline]
-  __se_sys_mount fs/namespace.c:3362 [inline]
-  __x64_sys_mount+0xbe/0x150 fs/namespace.c:3362
-  do_syscall_64+0xfa/0x790 arch/x86/entry/common.c:294
-  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-
-The buggy address belongs to the object at ffff888068139800
-  which belongs to the cache kmalloc-1k of size 1024
-The buggy address is located 144 bytes inside of
-  1024-byte region [ffff888068139800, ffff888068139c00)
-The buggy address belongs to the page:
-page:ffffea0001a04e40 refcount:1 mapcount:0 mapping:ffff8880aa400c40  
-index:0x0
-raw: 00fffe0000000200 ffffea0002728148 ffffea00015604c8 ffff8880aa400c40
-raw: 0000000000000000 ffff888068139000 0000000100000002 0000000000000000
-page dumped because: kasan: bad access detected
-
-Memory state around the buggy address:
-  ffff888068139780: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
-  ffff888068139800: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-> ffff888068139880: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-                          ^
-  ffff888068139900: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-  ffff888068139980: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-==================================================================
+  xfs_buf_ioend+0x3f9/0xde0 fs/xfs/xfs_buf.c:1162
+  xfs_buf_ioend_work+0x19/0x20 fs/xfs/xfs_buf.c:1183
+  process_one_work+0x9af/0x1740 kernel/workqueue.c:2264
+  worker_thread+0x98/0xe40 kernel/workqueue.c:2410
+  kthread+0x361/0x430 kernel/kthread.c:255
+  ret_from_fork+0x24/0x30 arch/x86/entry/entry_64.S:352
+Modules linked in:
+CR2: fffff52002e00000
+---[ end trace aef83d995322cc4a ]---
+RIP: 0010:xfs_sb_read_verify+0xf0/0x540 fs/xfs/libxfs/xfs_sb.c:691
+Code: fc ff df 48 c1 ea 03 80 3c 02 00 0f 85 18 04 00 00 4d 8b ac 24 30 01  
+00 00 48 b8 00 00 00 00 00 fc ff df 4c 89 ea 48 c1 ea 03 <0f> b6 04 02 84  
+c0 74 08 3c 03 0f 8e a7 03 00 00 41 8b 75 00 bf 58
+RSP: 0018:ffffc90007e5faf0 EFLAGS: 00010a06
+RAX: dffffc0000000000 RBX: 1ffff92000fcbf61 RCX: ffffffff82acb516
+RDX: 1ffff92002e00000 RSI: ffffffff82a97e3b RDI: ffff888091bada60
+RBP: ffffc90007e5fcd0 R08: ffff88809f3c2040 R09: ffffed1015cc7045
+R10: ffffed1015cc7044 R11: ffff8880ae638223 R12: ffff888091bad940
+R13: ffffc90017000000 R14: ffffc90007e5fca8 R15: ffff88809feb8000
+FS:  0000000000000000(0000) GS:ffff8880ae600000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: fffff52002e00000 CR3: 0000000069ceb000 CR4: 00000000001406f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
 
 
 ---
