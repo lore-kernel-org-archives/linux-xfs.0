@@ -2,151 +2,391 @@ Return-Path: <SRS0=WxS8=ZX=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5318DC432C0
-	for <linux-xfs@archiver.kernel.org>; Sun,  1 Dec 2019 09:00:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8831DC43141
+	for <linux-xfs@archiver.kernel.org>; Sun,  1 Dec 2019 14:28:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0ADC42073C
-	for <linux-xfs@archiver.kernel.org>; Sun,  1 Dec 2019 09:00:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5A5CC2146E
+	for <linux-xfs@archiver.kernel.org>; Sun,  1 Dec 2019 14:28:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=zadara-com.20150623.gappssmtp.com header.i=@zadara-com.20150623.gappssmtp.com header.b="nYUadp9b"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Kt3Osl4o"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725987AbfLAJAq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 1 Dec 2019 04:00:46 -0500
-Received: from mail-io1-f67.google.com ([209.85.166.67]:43210 "EHLO
-        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725847AbfLAJAq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 1 Dec 2019 04:00:46 -0500
-Received: by mail-io1-f67.google.com with SMTP id s2so1305039iog.10
-        for <linux-xfs@vger.kernel.org>; Sun, 01 Dec 2019 01:00:44 -0800 (PST)
+        id S1727059AbfLAO2r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 1 Dec 2019 09:28:47 -0500
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:33919 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726489AbfLAO2q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 1 Dec 2019 09:28:46 -0500
+Received: by mail-pl1-f194.google.com with SMTP id h13so15095403plr.1;
+        Sun, 01 Dec 2019 06:28:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=zadara-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=1cTT5jzYo3sBnCkymXWbf8E8p09cj/hZ5wODHFfmYaQ=;
-        b=nYUadp9b9wb1HkZkVyPIEZOLcvvb2qz9AJYhvLAay2+YJsx8Pi+Cw7M4gn1i1TkJwf
-         XQIMvyYUQm9MuHhZhmEZz6p5cwBOO+wmZ4o8L0GOsGoZjZIh/ijhg86tP8NJL2m/VeZp
-         RD7sy0I37+yYnuq+JQoRO8v2kan2D8eMTe9Lo5HMFuHQdH/6MkZt9s6O9VCdh+iX/33t
-         ceUAnqPDzn3FergYAcELeeFwCLBfyC/djkbpRP0e6xClCeowdhsCN13rjwIuTLUAj7c0
-         8GEJaZw7WLtr1+5OApf1Zz+9PNzu4ariLJf8kjsowEtH2U7xXR3X8MqyRrDMBpOnYQN+
-         phdg==
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=DMj83np5g2+v6kgUgDxubAg3d0vlBwqpjy1VMyVGu7A=;
+        b=Kt3Osl4o0wIyskQZ9a7hBTeSc/xYqxa76T90kLT8oj/lLOh02qdvzs4SqyZolE8ZDL
+         A9uAk8dRKPVQZDKxwnnvWN5fU6+9JJRL+/+rAEt76jycG+FPIMrmUeA1OgKcldeXcaVY
+         zgujFtV3Kj+3gnEtyo/gAj/xpZ/actfj6N4dg7keRYw7P63DzkrwmbbjRhgFvwiH5WHq
+         ih31GPYvxkxplyWZ7E/ThRoSF6CKUmWsVrlwCp/7Lcej0m3rpfCG0SxNCUqHxauAu+5s
+         x7unfXtYZ32Ejk7A0+hNS+nuuEDvMcvMifN6qjllMCrAKJDyJlsN++Y91mnKuu6J3N6g
+         IS9Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=1cTT5jzYo3sBnCkymXWbf8E8p09cj/hZ5wODHFfmYaQ=;
-        b=SVpUFzJeT58hoAxo2GbH8z5xGKSEe8VERyxBVMYpriKx7KmZNshFg7RxXuHZsuZYS1
-         IMyH08o2h50EYqQYec+twEVFpiLWSgHtswNenpE5QfKI957wkZU//vIi+ggdNl1BshIr
-         8TW3NB4p5XzEHKCuJeK3HczenntIOcUBpzp1HhK0FAqHTEhbOoGvQS9Ws3PiPL/S5WRe
-         l+AHHsi6qbWkFR/5n9o6R+6WIzCQVF6bhobskv90clHgxBZ/aRDA1HBsSWPqVpeiXrnB
-         apFBvBaLnELYrKfprDjOJxX2w3pHuYSE4xXPSYeFg8A9gyTUFnxzVBD3B4jWPwN9HVLn
-         H6EA==
-X-Gm-Message-State: APjAAAXjyCBF09IIy1/eMsUQCveUOZfuPpL4OYScYMnGOzyIiELF0POu
-        vB8YPfJ15gz2yNv+CRzIxmetQbSMIE+CuWHH/2ebodCH
-X-Google-Smtp-Source: APXvYqyGWZs1SGsm5cyk3+Ljp9uZ7z83DtWqqdvBSElHsK6jPwwKbAuup1yA8/Y7DSBOL3/Hw/QIgQwffrbGGmyKbnI=
-X-Received: by 2002:a6b:b802:: with SMTP id i2mr21224144iof.20.1575190843770;
- Sun, 01 Dec 2019 01:00:43 -0800 (PST)
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=DMj83np5g2+v6kgUgDxubAg3d0vlBwqpjy1VMyVGu7A=;
+        b=f3eCpAz8/KxDv8VCyqECvZgpWIsaYe19mnsezuTqPVBk1EncLhRvbXIgVY/EOnLWV+
+         S7Nzz4Vf17sYce/dk7nH2XbB9aHpGM02HOiYIg60r2Jvq+VH/qdYSCC3b+4/bQjiqtST
+         JKa2svTsqu6wj4qEiRyF8Dk1aeD1O9KASfJyYgbK1+swSUPc1zsyMTyJSoQO3GzJ3xRQ
+         m8C5BlSpqkuqjA7vH/4ghh+rLDB7uvh4mpZN2epfhx373bPJXZ6HaGndYl8Kxlgn0uHv
+         UO1j9PQ0BSi/cvmLPaIYEWCuixn59Hga4Xyj//aaAHnmZNfjbKIBKOICEvyT6QZmDV5h
+         fkpA==
+X-Gm-Message-State: APjAAAW6zN2N8TlFERPtDSkunza/J0d2nwr7FsfkDhnTXtHinHZNECN+
+        Eqw8cN/7Tau/d1hc4JrThtgBL+uz
+X-Google-Smtp-Source: APXvYqyKJ5AhlBkjVMLQrTzsbFJ+EZ5KUVeGDWQ8zrE4g3flZ68iKbcShms6KvJmPMPrVpKsrKQfuw==
+X-Received: by 2002:a17:90a:23a9:: with SMTP id g38mr30637473pje.128.1575210525852;
+        Sun, 01 Dec 2019 06:28:45 -0800 (PST)
+Received: from localhost ([178.128.102.47])
+        by smtp.gmail.com with ESMTPSA id r10sm28681493pgn.68.2019.12.01.06.28.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 01 Dec 2019 06:28:44 -0800 (PST)
+Date:   Sun, 1 Dec 2019 22:28:39 +0800
+From:   Eryu Guan <guaneryu@gmail.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     fstests@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] generic: test race between appending AIO DIO and
+ fallocate
+Message-ID: <20191201142824.GI8664@desktop>
+References: <20191113024416.GH6235@magnolia>
 MIME-Version: 1.0
-References: <1574359699-10191-1-git-send-email-alex@zadara.com>
- <20191122154314.GA31076@bfoster> <CAOcd+r3_gKYBv4vtM7nfPEPvkVp-FgHKvgQQx-_zMDt+QZ9z+g@mail.gmail.com>
- <20191125130744.GA44777@bfoster> <CAOcd+r2wMaX02acHffbNKXX4tZ1fXo-y1-OAW-dVGTq63qJcaw@mail.gmail.com>
- <20191126115415.GA50477@bfoster> <CAOcd+r3h=0umb-wdY058rQ=kPHpksMOwSh=Jc-did_tLkaioFw@mail.gmail.com>
- <0a1f2372-5c5b-85c7-07b8-c4a958eaec47@sandeen.net> <20191127141929.GA20585@infradead.org>
- <20191130202853.GA2695@dread.disaster.area>
-In-Reply-To: <20191130202853.GA2695@dread.disaster.area>
-From:   Alex Lyakas <alex@zadara.com>
-Date:   Sun, 1 Dec 2019 11:00:32 +0200
-Message-ID: <CAOcd+r21Ur=jxvJgUdXs+dQj37EnC=ZWP8F45sLesQFJ_GCejg@mail.gmail.com>
-Subject: Re: [RFC-PATCH] xfs: do not update sunit/swidth in the superblock to
- match those provided during mount
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191113024416.GH6235@magnolia>
+User-Agent: Mutt/1.12.1 (2019-06-15)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Dave,
+On Tue, Nov 12, 2019 at 06:44:16PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Dave Chinner reports[1] that an appending AIO DIO write to the second
+> block of a zero-length file and an fallocate request to the first block
+> of the same file can race to set isize, with the user-visible end result
+> that the file size is set incorrectly to one block long.  Write a small
+> test to reproduce the results.
+> 
+> [1] https://lore.kernel.org/linux-xfs/20191029100342.GA41131@bfoster/T/
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  .../aio-dio-append-write-fallocate-race.c          |  212 ++++++++++++++++++++
 
-Thank you for your response.
+I added an entry in .gitignore for it.
 
-On Sat, Nov 30, 2019 at 10:28 PM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Wed, Nov 27, 2019 at 06:19:29AM -0800, Christoph Hellwig wrote:
-> > Can we all take a little step back and think about the implications
-> > of the original patch from Alex?  Because I think there is very little.
-> > And updated sunit/swidth is just a little performance optimization,
-> > and anyone who really cares about changing that after the fact can
-> > trivially add those to fstab.
-> >
-> > So I think something like his original patch plus a message during
-> > mount that the new values are not persisted should be perfectly fine.
->
-> Well, the original purpose of the mount options was to persist a new
-> sunit/swidth to the superblock...
->
-> Let's ignore the fact that it was a result of a CXFS client mount
-> bug trashing the existing sunit/swidth values, and instead focus on
-> the fact we've been telling people for years that you "only need to
-> set these once after a RAID reshape" and so we have a lot of users
-> out there expecting it to persist the new values...
->
-> I don't think we can just redefine the documented and expected
-> behaviour of a mount option like this.
->
-> With that in mind, the xfs(5) man page explicitly states this:
->
->         The sunit and swidth parameters specified must be compatible
->         with the existing filesystem alignment characteristics.  In
->         general,  that  means  the  only  valid changes to sunit are
->         increasing it by a power-of-2 multiple. Valid swidth values
->         are any integer multiple of a valid sunit value.
->
-> Note the comment about changes to sunit? What is being done here -
-> halving the sunit from 64 to 32 blocks is invalid, documented as
-> invalid, but the kernel does not enforce this. We should fix the
-> kernel code to enforce the alignment rules that the mount option
-> is documented to require.
->
-> If we want to change the alignment characteristics after mkfs, then
-> use su=1,sw=1 as the initial values, then the first mount can use
-> the options to change it to whatever is present after mkfs has run.
+>  tests/generic/722                                  |   43 ++++
+>  tests/generic/722.out                              |    2 
+>  tests/generic/group                                |    1 
+>  4 files changed, 258 insertions(+)
+>  create mode 100644 src/aio-dio-regress/aio-dio-append-write-fallocate-race.c
+>  create mode 100755 tests/generic/722
+>  create mode 100644 tests/generic/722.out
+> 
+> diff --git a/src/aio-dio-regress/aio-dio-append-write-fallocate-race.c b/src/aio-dio-regress/aio-dio-append-write-fallocate-race.c
+> new file mode 100644
+> index 00000000..091b047d
+> --- /dev/null
+> +++ b/src/aio-dio-regress/aio-dio-append-write-fallocate-race.c
+> @@ -0,0 +1,212 @@
+> +// SPDX-License-Identifier: GPL-2.0-or-newer
+> +/*
+> + * Copyright (c) 2019 Oracle.
+> + * All Rights Reserved.
+> + *
+> + * Race appending aio dio and fallocate to make sure we get the correct file
+> + * size afterwards.
+> + */
+> +#include <stdio.h>
+> +#include <pthread.h>
+> +#include <sys/types.h>
+> +#include <sys/stat.h>
+> +#include <fcntl.h>
+> +#include <unistd.h>
+> +#include <string.h>
+> +#include <errno.h>
+> +#include <libaio.h>
+> +#include <stdlib.h>
+> +#include <stdbool.h>
+> +#include <limits.h>
+> +
+> +static int fd;
+> +static int blocksize;
+> +
+> +static void *
+> +falloc_thread(
+> +	void		*p)
+> +{
+> +	int		ret;
+> +
+> +	ret = fallocate(fd, 0, 0, blocksize);
+> +	if (ret)
+> +		perror("falloc");
+> +
+> +	return NULL;
+> +}
+> +
+> +static int
+> +test(
+> +	const char	*fname,
+> +	unsigned int	iteration,
+> +	unsigned int	*passed)
+> +{
+> +	struct stat	sbuf;
+> +	pthread_t	thread;
+> +	io_context_t	ioctx = 0;
+> +	struct iocb	iocb;
+> +	struct iocb	*iocbp = &iocb;
+> +	struct io_event	event;
+> +	char		*buf;
+> +	bool		wait_thread = false;
+> +	int		ret;
+> +
+> +	/* Truncate file, allocate resources for doing IO. */
+> +	fd = open(fname, O_DIRECT | O_RDWR | O_TRUNC | O_CREAT, 0644);
+> +	if (fd < 0) {
+> +		perror(fname);
+> +		return -1;
+> +	}
+> +
+> +	ret = fstat(fd, &sbuf);
+> +	if (ret) {
+> +		perror(fname);
+> +		goto out;
+> +	}
+> +	blocksize = sbuf.st_blksize;
+> +
+> +	ret = posix_memalign((void **)&buf, blocksize, blocksize);
+> +	if (ret) {
+> +		errno = ret;
+> +		perror("buffer");
+> +		goto out;
+> +	}
+> +	memset(buf, 'X', blocksize);
+> +	memset(&event, 0, sizeof(event));
+> +
+> +	ret = io_queue_init(1, &ioctx);
+> +	if (ret) {
+> +		errno = -ret;
+> +		perror("io_queue_init");
+> +		goto out_buf;
+> +	}
+> +
+> +	/*
+> +	 * Set ourselves up to race fallocate(0..blocksize) with aio dio
+> +	 * pwrite(blocksize..blocksize * 2).  This /should/ give us a file
+> +	 * with length (2 * blocksize).
+> +	 */
+> +	io_prep_pwrite(&iocb, fd, buf, blocksize, blocksize);
+> +
+> +	ret = pthread_create(&thread, NULL, falloc_thread, NULL);
+> +	if (ret) {
+> +		errno = ret;
+> +		perror("pthread");
+> +		goto out_io;
+> +	}
+> +	wait_thread = true;
+> +
+> +	ret = io_submit(ioctx, 1, &iocbp);
+> +	if (ret != 1) {
+> +		errno = -ret;
+> +		perror("io_submit");
+> +		goto out_join;
+> +	}
+> +
+> +	ret = io_getevents(ioctx, 1, 1, &event, NULL);
+> +	if (ret != 1) {
+> +		errno = -ret;
+> +		perror("io_getevents");
+> +		goto out_join;
+> +	}
+> +
+> +	if (event.res < 0) {
+> +		errno = -event.res;
+> +		perror("io_event.res");
+> +		goto out_join;
+> +	}
+> +
+> +	if (event.res2 < 0) {
+> +		errno = -event.res2;
+> +		perror("io_event.res2");
+> +		goto out_join;
+> +	}
+> +
+> +	wait_thread = false;
+> +	ret = pthread_join(thread, NULL);
+> +	if (ret) {
+> +		errno = ret;
+> +		perror("join");
+> +		goto out_io;
+> +	}
+> +
+> +	/* Make sure we actually got a file of size (2 * blocksize). */
+> +	ret = fstat(fd, &sbuf);
+> +	if (ret) {
+> +		perror(fname);
+> +		goto out_buf;
+> +	}
+> +
+> +	if (sbuf.st_size != 2 * blocksize) {
+> +		fprintf(stderr, "[%u]: sbuf.st_size=%llu, expected %llu.\n",
+> +				iteration,
+> +				(unsigned long long)sbuf.st_size,
+> +				(unsigned long long)2 * blocksize);
+> +	} else {
+> +		printf("[%u]: passed.\n", iteration);
+> +		(*passed)++;
+> +	}
+> +
+> +out_join:
+> +	if (wait_thread) {
+> +		ret = pthread_join(thread, NULL);
+> +		if (ret) {
+> +			errno = ret;
+> +			perror("join");
+> +			goto out_io;
+> +		}
+> +	}
+> +out_io:
+> +	ret = io_queue_release(ioctx);
+> +	if (ret) {
+> +		errno = -ret;
+> +		perror("io_queue_release");
+> +	}
+> +
+> +out_buf:
+> +	free(buf);
+> +out:
+> +	ret = close(fd);
+> +	fd = -1;
+> +	if (ret) {
+> +		perror("close");
+> +		return -1;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +int main(int argc, char *argv[])
+> +{
+> +	int		ret;
+> +	long		l;
+> +	unsigned int	i;
+> +	unsigned int	passed = 0;
+> +
+> +	if (argc != 3) {
+> +		printf("Usage: %s filename iterations\n", argv[0]);
+> +		return 1;
+> +	}
+> +
+> +	errno = 0;
+> +	l = strtol(argv[2], NULL, 0);
+> +	if (errno) {
+> +		perror(argv[2]);
+> +		return 1;
+> +	}
+> +	if (l < 1 || l > UINT_MAX) {
+> +		fprintf(stderr, "%ld: must be between 1 and %u.\n",
+> +				l, UINT_MAX);
+> +		return 1;
+> +	}
+> +
+> +	for (i = 0; i < l; i++) {
+> +		ret = test(argv[1], i, &passed);
+> +		if (ret)
+> +			return 1;
+> +	}
+> +
+> +	printf("pass rate: %u/%u (%.2f%%)\n", passed, i, 100.0 * passed / i);
+> +
+> +	return 0;
+> +}
+> diff --git a/tests/generic/722 b/tests/generic/722
+> new file mode 100755
+> index 00000000..937abf36
+> --- /dev/null
+> +++ b/tests/generic/722
+> @@ -0,0 +1,43 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0-or-later
+> +# Copyright (c) 2019, Oracle and/or its affiliates.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 722
+> +#
+> +# Race an appending aio dio write to the second block of a file while
+> +# simultaneously fallocating to the first block.  Make sure that we end up
+> +# with a two-block file.
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1    # failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.* $testfile
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +
+> +# real QA test starts here
+> +_supported_os Linux
+> +_supported_fs generic
+> +_require_aiodio "aio-dio-append-write-fallocate-race"
+> +_require_test
 
-If I understand your response correctly:
-- some sunit/swidth changes during mount are legal and some aren't
-- the legal changes should be persisted in the superblock
+Also added
 
-What about the repair? Even if user performs a legal change, it still
-breaks the repairability of the file system.
-
-For now, we made a local change to not persist sunit/swidth updates in
-the superblock. Because we must have a working repair, and our kernel
-(4.14 stable) allows any sunit/swidth changes.
-
-We can definitely adhere to the recommended behavior of setting
-sunit/swidth=1 during mkfs, provided the repair still works after
-mounting with different sunit/swidth.
+_require_xfs_io_command "falloc"
 
 Thanks,
-Alex.
+Eryu
 
-
-
-
->
-> Filesystems on storage that has dynamically changeable geometry
-> probably shouldn't be using fixed physical alignment in the first
-> place, though...
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+> +
+> +rm -f $seqres.full
+> +
+> +testfile=$TEST_DIR/test-$seq
+> +$AIO_TEST $testfile 100 >> $seqres.full
+> +
+> +echo Silence is golden.
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/generic/722.out b/tests/generic/722.out
+> new file mode 100644
+> index 00000000..8621a87d
+> --- /dev/null
+> +++ b/tests/generic/722.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 722
+> +Silence is golden.
+> diff --git a/tests/generic/group b/tests/generic/group
+> index e5d0c1da..308f86f2 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -588,3 +588,4 @@
+>  583 auto quick encrypt
+>  584 auto quick encrypt
+>  585 auto rename
+> +722 auto quick rw falloc
