@@ -2,129 +2,177 @@ Return-Path: <SRS0=7G1E=ZY=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C6DDC432C0
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 19:32:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75008C432C0
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 21:10:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0D77C20661
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 19:32:21 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=osandov-com.20150623.gappssmtp.com header.i=@osandov-com.20150623.gappssmtp.com header.b="LUSWbRWf"
+	by mail.kernel.org (Postfix) with ESMTP id 42B12207DD
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 21:10:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728045AbfLBTcU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Dec 2019 14:32:20 -0500
-Received: from mail-pg1-f178.google.com ([209.85.215.178]:43429 "EHLO
-        mail-pg1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728039AbfLBTcU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Dec 2019 14:32:20 -0500
-Received: by mail-pg1-f178.google.com with SMTP id b1so145969pgq.10
-        for <linux-xfs@vger.kernel.org>; Mon, 02 Dec 2019 11:32:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=osandov-com.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=MlsPcMei+XU5vtSeEQJddD3dOAUs3WU4+gESuYo3Vc0=;
-        b=LUSWbRWfawto6Owi36yxRRE3olHednqlxnd0JtDZdxd8J4qnbrjwnXrlKeI+NphgKZ
-         xNpW2+oCfdYjRf9RsRebj3u4QfHrGl/Y8YlQ0MO5050pHdSEUZZaM5+3g+mP1LwryA2v
-         jEbl7T6lEQ+JsI3HXNVt0j/HDCN5TvOsFnDJY49HdUnjNOu9Xw95Hy8u0+D8cb3UBXBY
-         bns+k54FO5ClmgjCUvFS2m3WuB9lkkkbl+hJTO69VHGBhfZNJ3ukZ8QXoetXRKy08hrj
-         /tz42qAXv3cju13/EaKD+PidwrUZIi/uS1DY/E4cw4XdL3zh1oh44h8X/M22lY+15cXT
-         vWEw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=MlsPcMei+XU5vtSeEQJddD3dOAUs3WU4+gESuYo3Vc0=;
-        b=s+Kyl/AD9JSJ+vLOg+oAWimw7VH9j8gGAzwYmtK5a5dpnLz1QxNWNnYzFnYWb49+fm
-         6dqkSPDxk/YbfgUPXyUGFZd9rXXp5hQYe+n/6uwOJg0zqm6sd3HIGce/6TA2/GNGQRS4
-         6vJDcnTRUrxIMcZeAjyKC+iVDo3/NZ5JOPeSRAkI5rl3sWybAo6CFF1N73RG4UXSpMot
-         +lP+zGhLuIusMISiiOjSGCwpva7py1lme924YtJ49elzpEbosTYOyC7VHy1On3UtlegG
-         LY0ObmwTck68xi0956RnxnZ/+IP3YvOp/dx7GUqQYzUCurPaEw8u09ms+V90bVXp2UCN
-         dBag==
-X-Gm-Message-State: APjAAAWZ3vCXwhITj9R1k9JvLQKf0SViWasWcnOfpgFLWu7Z16td52r0
-        nC4m1Tn9oi9rhK2LU6BlAGqZvw==
-X-Google-Smtp-Source: APXvYqxO0NsXW06gh2npuH10XOAhHluVA8Ucip5ZFaRZ7u9FUhdFnEE4ppuKZORa7U5PA+/hKqg8Ew==
-X-Received: by 2002:a62:1a09:: with SMTP id a9mr328423pfa.64.1575315139582;
-        Mon, 02 Dec 2019 11:32:19 -0800 (PST)
-Received: from vader ([2620:10d:c090:200::3:4fcf])
-        by smtp.gmail.com with ESMTPSA id b7sm167021pjo.3.2019.12.02.11.32.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Dec 2019 11:32:19 -0800 (PST)
-Date:   Mon, 2 Dec 2019 11:32:18 -0800
-From:   Omar Sandoval <osandov@osandov.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: Transaction log reservation overrun when fallocating realtime
- file
-Message-ID: <20191202193218.GB809204@vader>
-References: <20191126202714.GA667580@vader>
- <20191127003426.GP6219@magnolia>
+        id S1725954AbfLBVKo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 Dec 2019 16:10:44 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:54587 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725834AbfLBVKo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Dec 2019 16:10:44 -0500
+Received: from dread.disaster.area (pa49-179-150-192.pa.nsw.optusnet.com.au [49.179.150.192])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 0327A7E9FD1;
+        Tue,  3 Dec 2019 08:10:38 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1ibsxp-00062Y-1P; Tue, 03 Dec 2019 08:10:37 +1100
+Date:   Tue, 3 Dec 2019 08:10:37 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     syzbot <syzbot+bea68382bae9490e7dd6@syzkaller.appspotmail.com>
+Cc:     darrick.wong@oracle.com, hch@infradead.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com,
+        linux-ext4@vger.kernel.org
+Subject: Re: KASAN: use-after-free Read in iov_iter_alignment
+Message-ID: <20191202211037.GF2695@dread.disaster.area>
+References: <000000000000ad9f910598bbb867@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191127003426.GP6219@magnolia>
-User-Agent: Mutt/1.12.2 (2019-09-21)
+In-Reply-To: <000000000000ad9f910598bbb867@google.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
+        a=ZXpxJgW8/q3NVgupyyvOCQ==:117 a=ZXpxJgW8/q3NVgupyyvOCQ==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=pxVhFHJ0LMsA:10
+        a=VwQbUJbxAAAA:8 a=edf1wS77AAAA:8 a=hSkVLCK3AAAA:8 a=7-415B0cAAAA:8
+        a=GgU9mlvPnS_d5YxFlCIA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=DcSpbTIhAlouE1Uv7lRv:22 a=cQPPKAXgyycSBL8etih5:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 26, 2019 at 04:34:26PM -0800, Darrick J. Wong wrote:
-> On Tue, Nov 26, 2019 at 12:27:14PM -0800, Omar Sandoval wrote:
-> > Hello,
-> > 
-> > The following reproducer results in a transaction log overrun warning
-> > for me:
-> > 
-> >   mkfs.xfs -f -r rtdev=/dev/vdc -d rtinherit=1 -m reflink=0 /dev/vdb
-> >   mount -o rtdev=/dev/vdc /dev/vdb /mnt
-> >   fallocate -l 4G /mnt/foo
-> > 
-> > I've attached the full dmesg output. My guess at the problem is that the
-> > tr_write reservation used by xfs_alloc_file_space is not taking the realtime
-> > bitmap and realtime summary inodes into account (inode numbers 129 and 130 on
-> > this filesystem, which I do see in some of the log items). However, I'm not
-> > familiar enough with the XFS transaction guts to confidently fix this. Can
-> > someone please help me out?
-> 
-> Hmm...
-> 
-> /*
->  * In a write transaction we can allocate a maximum of 2
->  * extents.  This gives:
->  *    the inode getting the new extents: inode size
->  *    the inode's bmap btree: max depth * block size
->  *    the agfs of the ags from which the extents are allocated: 2 * sector
->  *    the superblock free block counter: sector size
->  *    the allocation btrees: 2 exts * 2 trees * (2 * max depth - 1) * block size
->  * And the bmap_finish transaction can free bmap blocks in a join:
->  *    the agfs of the ags containing the blocks: 2 * sector size
->  *    the agfls of the ags containing the blocks: 2 * sector size
->  *    the super block free block counter: sector size
->  *    the allocation btrees: 2 exts * 2 trees * (2 * max depth - 1) * block size
->  */
-> STATIC uint
-> xfs_calc_write_reservation(...);
-> 
-> So this means that the rt allocator can burn through at most ...
-> 1 ext * 2 trees * (2 * maxdepth - 1) * blocksize
-> ... worth of log reservation as part of setting bits in the rtbitmap and
-> fiddling with the rtsummary information.
-> 
-> Instead, 4GB of 4k rt extents == 1 million rtexts to mark in use, which
-> is 131072 bytes of rtbitmap to log, and *kaboom* there goes the 109K log
-> reservation.
-> 
-> So I think you're right, and the fix is probably? to cap ralen further
-> in xfs_bmap_rtalloc().  Does the following patch fix it?
-> 
-> --D
+[cc linux-ext4@vger.kernel.org - this is reported from the new ext4
+dio->iomap code]
 
-Yup, that seems to fix it.
+On Mon, Dec 02, 2019 at 09:15:08AM -0800, syzbot wrote:
+> Hello,
+> 
+> syzbot found the following crash on:
+> 
+> HEAD commit:    b94ae8ad Merge tag 'seccomp-v5.5-rc1' of git://git.kernel...
+> git tree:       upstream
+> console output: https://syzkaller.appspot.com/x/log.txt?x=135a8d7ae00000
+> kernel config:  https://syzkaller.appspot.com/x/.config?x=c2e464ae414aee8c
+> dashboard link: https://syzkaller.appspot.com/bug?extid=bea68382bae9490e7dd6
+> compiler:       clang version 9.0.0 (/home/glider/llvm/clang
+> 80fee25776c2fb61e74c1ecb1a523375c2500b69)
+> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1135cb36e00000
+> C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=14e90abce00000
+> 
+> IMPORTANT: if you fix the bug, please add the following tag to the commit:
+> Reported-by: syzbot+bea68382bae9490e7dd6@syzkaller.appspotmail.com
+> 
+> ==================================================================
+> BUG: KASAN: use-after-free in iov_iter_alignment+0x6a1/0x7b0
+> lib/iov_iter.c:1225
+> Read of size 4 at addr ffff888098d40f54 by task loop0/8203
+> 
+> CPU: 0 PID: 8203 Comm: loop0 Not tainted 5.4.0-syzkaller #0
+> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS
+> Google 01/01/2011
+> Call Trace:
+>  __dump_stack lib/dump_stack.c:77 [inline]
+>  dump_stack+0x1fb/0x318 lib/dump_stack.c:118
+>  print_address_description+0x75/0x5c0 mm/kasan/report.c:374
+>  __kasan_report+0x14b/0x1c0 mm/kasan/report.c:506
+>  kasan_report+0x26/0x50 mm/kasan/common.c:634
+>  __asan_report_load4_noabort+0x14/0x20 mm/kasan/generic_report.c:131
+>  iov_iter_alignment+0x6a1/0x7b0 lib/iov_iter.c:1225
+>  iomap_dio_bio_actor+0x1a7/0x11e0 fs/iomap/direct-io.c:203
+>  iomap_dio_actor+0x2b4/0x4a0 fs/iomap/direct-io.c:375
+>  iomap_apply+0x370/0x490 fs/iomap/apply.c:80
+>  iomap_dio_rw+0x8ad/0x1010 fs/iomap/direct-io.c:493
+>  ext4_dio_read_iter fs/ext4/file.c:77 [inline]
+>  ext4_file_read_iter+0x834/0xc20 fs/ext4/file.c:128
+>  lo_rw_aio+0xcbb/0xea0 include/linux/fs.h:1889
 
-Reported-and-tested-by: Omar Sandoval <osandov@fb.com>
+loopback -> ext4 direct IO, bad access on iov passed to iomap DIO
+code.
 
-Thanks, Darrick!
+>  do_req_filebacked drivers/block/loop.c:616 [inline]
+>  loop_handle_cmd drivers/block/loop.c:1952 [inline]
+>  loop_queue_work+0x13ab/0x2590 drivers/block/loop.c:1966
+>  kthread_worker_fn+0x449/0x700 kernel/kthread.c:671
+>  loop_kthread_worker_fn+0x40/0x60 drivers/block/loop.c:901
+>  kthread+0x332/0x350 kernel/kthread.c:255
+>  ret_from_fork+0x24/0x30 arch/x86/entry/entry_64.S:352
+> 
+> Allocated by task 4198:
+>  save_stack mm/kasan/common.c:69 [inline]
+>  set_track mm/kasan/common.c:77 [inline]
+>  __kasan_kmalloc+0x11c/0x1b0 mm/kasan/common.c:510
+>  kasan_slab_alloc+0xf/0x20 mm/kasan/common.c:518
+>  slab_post_alloc_hook mm/slab.h:584 [inline]
+>  slab_alloc mm/slab.c:3319 [inline]
+>  kmem_cache_alloc+0x1f5/0x2e0 mm/slab.c:3483
+>  mempool_alloc_slab+0x4d/0x70 mm/mempool.c:513
+>  mempool_alloc+0x104/0x5e0 mm/mempool.c:393
+>  bio_alloc_bioset+0x1b0/0x5f0 block/bio.c:477
+>  bio_alloc include/linux/bio.h:400 [inline]
+>  mpage_alloc fs/mpage.c:79 [inline]
+>  do_mpage_readpage+0x1685/0x1d10 fs/mpage.c:306
+>  mpage_readpages+0x2a9/0x440 fs/mpage.c:404
+>  blkdev_readpages+0x2c/0x40 fs/block_dev.c:620
+>  read_pages+0xad/0x4d0 mm/readahead.c:126
+>  __do_page_cache_readahead+0x480/0x530 mm/readahead.c:212
+>  force_page_cache_readahead mm/readahead.c:243 [inline]
+>  page_cache_sync_readahead+0x329/0x3b0 mm/readahead.c:522
+>  generic_file_buffered_read+0x41d/0x2570 mm/filemap.c:2051
+>  generic_file_read_iter+0xa9/0x450 mm/filemap.c:2324
+>  blkdev_read_iter+0x12e/0x140 fs/block_dev.c:2039
+>  call_read_iter include/linux/fs.h:1889 [inline]
+>  new_sync_read fs/read_write.c:414 [inline]
+>  __vfs_read+0x59e/0x730 fs/read_write.c:427
+>  vfs_read+0x1dd/0x420 fs/read_write.c:461
+>  ksys_read+0x117/0x220 fs/read_write.c:587
+>  __do_sys_read fs/read_write.c:597 [inline]
+>  __se_sys_read fs/read_write.c:595 [inline]
+>  __x64_sys_read+0x7b/0x90 fs/read_write.c:595
+>  do_syscall_64+0xf7/0x1c0 arch/x86/entry/common.c:294
+>  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+> 
+> Freed by task 4205:
+>  save_stack mm/kasan/common.c:69 [inline]
+>  set_track mm/kasan/common.c:77 [inline]
+>  kasan_set_free_info mm/kasan/common.c:332 [inline]
+>  __kasan_slab_free+0x12a/0x1e0 mm/kasan/common.c:471
+>  kasan_slab_free+0xe/0x10 mm/kasan/common.c:480
+>  __cache_free mm/slab.c:3425 [inline]
+>  kmem_cache_free+0x81/0xf0 mm/slab.c:3693
+>  mempool_free_slab+0x1d/0x30 mm/mempool.c:520
+>  mempool_free+0xd5/0x350 mm/mempool.c:502
+>  bio_put+0x38b/0x460 block/bio.c:255
+>  mpage_end_io+0x2f5/0x330 fs/mpage.c:58
+>  bio_endio+0x4ff/0x570 block/bio.c:1818
+>  req_bio_endio block/blk-core.c:245 [inline]
+>  blk_update_request+0x438/0x10d0 block/blk-core.c:1464
+>  scsi_end_request+0x8c/0xa20 drivers/scsi/scsi_lib.c:579
+>  scsi_io_completion+0x17c/0x1b80 drivers/scsi/scsi_lib.c:963
+>  scsi_finish_command+0x3b3/0x560 drivers/scsi/scsi.c:228
+>  scsi_softirq_done+0x289/0x310 drivers/scsi/scsi_lib.c:1477
+>  blk_done_softirq+0x312/0x370 block/blk-softirq.c:37
+>  __do_softirq+0x333/0x7c4 arch/x86/include/asm/paravirt.h:762
+
+Looks like buffered read IO on a loopback device on an ext4 image
+file, and something is being tripped over in the new ext4 direct IO
+path.  Might be an iomap issue, might be an ext4 issue, but it looks
+like the buffered read bio completion is running while the iov is
+still being submitted...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
