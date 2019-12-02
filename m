@@ -2,159 +2,147 @@ Return-Path: <SRS0=7G1E=ZY=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BEB3C432C0
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 17:38:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DCEEC432C0
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 17:41:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 468BC20640
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 17:38:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="F6Xv45h9"
+	by mail.kernel.org (Postfix) with ESMTP id 2B34920715
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 17:41:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727628AbfLBRia (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Dec 2019 12:38:30 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:60992 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727453AbfLBRia (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Dec 2019 12:38:30 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB2HZFXw043007;
-        Mon, 2 Dec 2019 17:38:28 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=yTqZQ1GWCwDgLpkxADLhONC6RSHkpvSLRDSrHLBePfk=;
- b=F6Xv45h9Q9yT4Dn/KYg/UD0cXqdC2IjgwCm4PSjIH+6XN8VjbIc1HiFrSN0dj2vjiBgm
- Irz5neN9mevNzVxWHpZEz+hy3LKxsRbQHVt49IoQZrRlU6hZDSzd6kHuGnD//z870gJB
- a7XaEb/44zUdYA6GJZf2fABkiYT19yz6pvZkv9igN0kY64MRxys+sXpLHZ1bYCQEdwQ9
- BgxeDlGM1tIRX8M5BV4fEeJ0Qlqpfu0z5mXNx7IV7ckE3zFlO3wKYL+KPgVzWsNJS04g
- p2FaP7NR/SfFIC/+qobyb1qRReYQWmumpuR1VgTLp2Py58w8/Man4kl58TgfhoeE3Ne1 vw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 2wkgcq1mm4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 02 Dec 2019 17:38:28 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB2HYRX5169774;
-        Mon, 2 Dec 2019 17:36:27 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 2wm1xp7543-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 02 Dec 2019 17:36:27 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xB2HaQIJ012372;
-        Mon, 2 Dec 2019 17:36:27 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 02 Dec 2019 09:36:26 -0800
-Subject: [PATCH 4/4] xfs_repair: check plausiblitiy of root dir pointer
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     sandeen@sandeen.net, darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, alex@zadara.com
-Date:   Mon, 02 Dec 2019 09:36:25 -0800
-Message-ID: <157530818573.126767.13434243816626977089.stgit@magnolia>
-In-Reply-To: <157530815855.126767.7523979488668040754.stgit@magnolia>
-References: <157530815855.126767.7523979488668040754.stgit@magnolia>
-User-Agent: StGit/0.17.1-dirty
+        id S1727612AbfLBRlO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 Dec 2019 12:41:14 -0500
+Received: from sandeen.net ([63.231.237.45]:48592 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726673AbfLBRlO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 2 Dec 2019 12:41:14 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id D2AF0324E4E;
+        Mon,  2 Dec 2019 11:39:29 -0600 (CST)
+Subject: Re: [PATCH 1/2] xfs_admin: support external log devices
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <157530823239.128859.15834274920423410063.stgit@magnolia>
+ <157530823862.128859.3517412709152067366.stgit@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
+ nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
+ WL05ODFQ2cemDhx5uLghHEeOxuGj+1AI+kh/FCzMedHc6k87Yu2ZuaWF+Gh1W2ix6hikRJmQ
+ vj5BEeAx7xKkyBhzdbNIbbjV/iGi9b26B/dNcyd5w2My2gxMtxaiP7q5b6GM2rsQklHP8FtW
+ ZiYO7jsg/qIppR1C6Zr5jK1GQlMUIclYFeBbKggJ9mSwXJH7MIftilGQ8KDvNuV5AbkronGC
+ sEEHj2khs7GfVv4pmUUHf1MRIvV0x3WJkpmhuZaYg8AdJlyGKgp+TQ7B+wCjNTdVqMI1vDk2
+ BS6Rg851ay7AypbCPx2w4d8jIkQEgNjACHVDU89PNKAjScK1aTnW+HNUqg9BliCvuX5g4z2j
+ gJBs57loTWAGe2Ve3cMy3VoQ40Wt3yKK0Eno8jfgzgb48wyycINZgnseMRhxc2c8hd51tftK
+ LKhPj4c7uqjnBjrgOVaVBupGUmvLiePlnW56zJZ51BR5igWnILeOJ1ZIcf7KsaHyE6B1mG+X
+ dmYtjDhjf3NAcoBWJuj8euxMB6TcQN2MrSXy5wSKaw40evooGwARAQABtCVFcmljIFIuIFNh
+ bmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+iQI7BBMBAgAlAhsDBgsJCAcDAgYVCAIJCgsE
+ FgIDAQIeAQIXgAUCUzMzbAIZAQAKCRAgrhaS4T3e4Fr7D/wO+fenqVvHjq21SCjDCrt8HdVj
+ aJ28B1SqSU2toxyg5I160GllAxEHpLFGdbFAhQfBtnmlY9eMjwmJb0sCIrkrB6XNPSPA/B2B
+ UPISh0z2odJv35/euJF71qIFgWzp2czJHkHWwVZaZpMWWNvsLIroXoR+uA9c2V1hQFVAJZyk
+ EE4xzfm1+oVtjIC12B9tTCuS00pY3AUy21yzNowT6SSk7HAzmtG/PJ/uSB5wEkwldB6jVs2A
+ sjOg1wMwVvh/JHilsQg4HSmDfObmZj1d0RWlMWcUE7csRnCE0ZWBMp/ttTn+oosioGa09HAS
+ 9jAnauznmYg43oQ5Akd8iQRxz5I58F/+JsdKvWiyrPDfYZtFS+UIgWD7x+mHBZ53Qjazszox
+ gjwO9ehZpwUQxBm4I0lPDAKw3HJA+GwwiubTSlq5PS3P7QoCjaV8llH1bNFZMz2o8wPANiDx
+ 5FHgpRVgwLHakoCU1Gc+LXHXBzDXt7Cj02WYHdFzMm2hXaslRdhNGowLo1SXZFXa41KGTlNe
+ 4di53y9CK5ynV0z+YUa+5LR6RdHrHtgywdKnjeWdqhoVpsWIeORtwWGX8evNOiKJ7j0RsHha
+ WrePTubr5nuYTDsQqgc2r4aBIOpeSRR2brlT/UE3wGgy9LY78L4EwPR0MzzecfE1Ws60iSqw
+ Pu3vhb7h3bkCDQROsffUARAA0DrUifTrXQzqxO8aiQOC5p9Tz25Np/Tfpv1rofOwL8VPBMvJ
+ X4P5l1V2yd70MZRUVgjmCydEyxLJ6G2YyHO2IZTEajUY0Up+b3ErOpLpZwhvgWatjifpj6bB
+ SKuDXeThqFdkphF5kAmgfVAIkan5SxWK3+S0V2F/oxstIViBhMhDwI6XsRlnVBoLLYcEilxA
+ 2FlRUS7MOZGmRJkRtdGD5koVZSM6xVZQSmfEBaYQ/WJBGJQdPy94nnlAVn3lH3+N7pXvNUuC
+ GV+t4YUt3tLcRuIpYBCOWlc7bpgeCps5Xa0dIZgJ8Louu6OBJ5vVXjPxTlkFdT0S0/uerCG5
+ 1u8p6sGRLnUeAUGkQfIUqGUjW2rHaXgWNvzOV6i3tf9YaiXKl3avFaNW1kKBs0T5M1cnlWZU
+ Utl6k04lz5OjoNY9J/bGyV3DSlkblXRMK87iLYQSrcV6cFz9PRl4vW1LGff3xRQHngeN5fPx
+ ze8X5NE3hb+SSwyMSEqJxhVTXJVfQWWW0dQxP7HNwqmOWYF/6m+1gK/Y2gY3jAQnsWTru4RV
+ TZGnKwEPmOCpSUvsTRXsVHgsWJ70qd0yOSjWuiv4b8vmD3+QFgyvCBxPMdP3xsxN5etheLMO
+ gRwWpLn6yNFq/xtgs+ECgG+gR78yXQyA7iCs5tFs2OrMqV5juSMGmn0kxJUAEQEAAYkCHwQY
+ AQIACQUCTrH31AIbDAAKCRAgrhaS4T3e4BKwD/0ZOOmUNOZCSOLAMjZx3mtYtjYgfUNKi0ki
+ YPveGoRWTqbis8UitPtNrG4XxgzLOijSdOEzQwkdOIp/QnZhGNssMejCnsluK0GQd+RkFVWN
+ mcQT78hBeGcnEMAXZKq7bkIKzvc06GFmkMbX/gAl6DiNGv0UNAX+5FYh+ucCJZSyAp3sA+9/
+ LKjxnTedX0aygXA6rkpX0Y0FvN/9dfm47+LGq7WAqBOyYTU3E6/+Z72bZoG/cG7ANLxcPool
+ LOrU43oqFnD8QwcN56y4VfFj3/jDF2MX3xu4v2OjglVjMEYHTCxP3mpxesGHuqOit/FR+mF0
+ MP9JGfj6x+bj/9JMBtCW1bY/aPeMdPGTJvXjGtOVYblGZrSjXRn5++Uuy36CvkcrjuziSDG+
+ JEexGxczWwN4mrOQWhMT5Jyb+18CO+CWxJfHaYXiLEW7dI1AynL4jjn4W0MSiXpWDUw+fsBO
+ Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
+ m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
+ fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
+Message-ID: <3c0b341f-cd36-10b4-b0eb-29a45867de01@sandeen.net>
+Date:   Mon, 2 Dec 2019 11:41:13 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.2.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9459 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1912020148
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9459 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1912020149
+In-Reply-To: <157530823862.128859.3517412709152067366.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
-
-If sb_rootino doesn't point to where we think mkfs was supposed to have
-preallocated an inode chunk, check to see if the alleged root directory
-actually looks like a root directory.  If so, we'll let it go because
-someone could have changed sunit since formatting time.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- repair/xfs_repair.c |   50 +++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 49 insertions(+), 1 deletion(-)
 
 
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 6798b88c..f6134cca 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -395,12 +395,60 @@ do_log(char const *msg, ...)
- 	va_end(args);
- }
- 
-+/*
-+ * If sb_rootino points to a different inode than we were expecting, try
-+ * loading the alleged root inode to see if it's a plausibly a root directory.
-+ * If so, we'll readjust the computations.
-+ */
-+static void
-+check_misaligned_root(
-+	struct xfs_mount	*mp)
-+{
-+	struct xfs_inode	*ip;
-+	xfs_ino_t		ino;
-+	int			error;
-+
-+	error = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &ip,
-+			&xfs_default_ifork_ops);
-+	if (error)
-+		return;
-+	if (!S_ISDIR(VFS_I(ip)->i_mode))
-+		goto out_rele;
-+
-+	error = -libxfs_dir_lookup(NULL, ip, &xfs_name_dotdot, &ino, NULL);
-+	if (error)
-+		goto out_rele;
-+
-+	if (ino == mp->m_sb.sb_rootino) {
-+		do_warn(
-+_("sb root inode value %" PRIu64 " inconsistent with calculated value %u but looks like a root directory\n"),
-+			mp->m_sb.sb_rootino, first_prealloc_ino);
-+		last_prealloc_ino += (int)ino - first_prealloc_ino;
-+		first_prealloc_ino = ino;
-+	}
-+
-+out_rele:
-+	libxfs_irele(ip);
-+}
-+
- static void
--calc_mkfs(xfs_mount_t *mp)
-+calc_mkfs(
-+	struct xfs_mount	*mp)
- {
- 	libxfs_ialloc_find_prealloc(mp, &first_prealloc_ino,
- 			&last_prealloc_ino);
- 
-+	/*
-+	 * If the root inode isn't where we think it is, check its plausibility
-+	 * as a root directory.  It's possible that somebody changed sunit since
-+	 * the filesystem was created, which can change the value of the above
-+	 * computation.  Try to avoid blowing up the filesystem if this is the
-+	 * case.
-+	 */
-+	if (mp->m_sb.sb_rootino != NULLFSINO &&
-+	    mp->m_sb.sb_rootino != first_prealloc_ino)
-+		check_misaligned_root(mp);
-+
- 	/*
- 	 * now the first 3 inodes in the system
- 	 */
+On 12/2/19 11:37 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Add to xfs_admin the ability to pass external log devices to xfs_db.
+> This is necessary to make changes on such filesystems.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  db/xfs_admin.sh      |   12 ++++++++++--
+>  man/man8/xfs_admin.8 |    3 +++
+>  2 files changed, 13 insertions(+), 2 deletions(-)
+> 
+> 
+> diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh
+> index 305ef2b7..bd325da2 100755
+> --- a/db/xfs_admin.sh
+> +++ b/db/xfs_admin.sh
+> @@ -7,7 +7,7 @@
+>  status=0
+>  DB_OPTS=""
+>  REPAIR_OPTS=""
+> -USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-U uuid] device"
+> +USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-U uuid] device [logdev]"
+>  
+>  while getopts "efjlpuc:L:U:V" c
+>  do
+> @@ -33,7 +33,15 @@ done
+>  set -- extra $@
+>  shift $OPTIND
+>  case $# in
+> -	1)	if [ -n "$DB_OPTS" ]
+> +	1|2)
+> +		# Pick up the log device, if present
+> +		if [ -n "$2" ]; then
+> +			DB_OPTS=$DB_OPTS" -l '$2'"
+> +			test -n "$REPAIR_OPTS" && \
+> +				REPAIR_OPTS=$REPAIR_OPTS" -l '$2'"
+> +		fi
+> +
+> +		if [ -n "$DB_OPTS" ]
+>  		then
+>  			eval xfs_db -x -p xfs_admin $DB_OPTS $1
+>  			status=$?
+> diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
+> index 20a114f5..d7942418 100644
+> --- a/man/man8/xfs_admin.8
+> +++ b/man/man8/xfs_admin.8
+> @@ -15,6 +15,9 @@ xfs_admin \- change parameters of an XFS filesystem
+>  .I uuid
+>  ]
+>  .I device
+> +[
+> +.I logdev
+> +]
 
+logdev should be marked as optional, right?  [logdev] ?
+And documented as to when this arg should (or should not be) used?
+
+-Eric
