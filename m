@@ -2,236 +2,200 @@ Return-Path: <SRS0=7G1E=ZY=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D38BC432C0
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 08:07:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC65CC33C99
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 13:46:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2416721774
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 08:07:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A17422053B
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 13:46:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=zadara-com.20150623.gappssmtp.com header.i=@zadara-com.20150623.gappssmtp.com header.b="1il5N/XV"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="weHqKqK6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726628AbfLBIH5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Dec 2019 03:07:57 -0500
-Received: from mail-il1-f195.google.com ([209.85.166.195]:42794 "EHLO
-        mail-il1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726106AbfLBIH5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Dec 2019 03:07:57 -0500
-Received: by mail-il1-f195.google.com with SMTP id f6so28568329ilh.9
-        for <linux-xfs@vger.kernel.org>; Mon, 02 Dec 2019 00:07:55 -0800 (PST)
+        id S1727501AbfLBNp5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 Dec 2019 08:45:57 -0500
+Received: from mail-lj1-f196.google.com ([209.85.208.196]:45813 "EHLO
+        mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727362AbfLBNp5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Dec 2019 08:45:57 -0500
+Received: by mail-lj1-f196.google.com with SMTP id d20so10383766ljc.12
+        for <linux-xfs@vger.kernel.org>; Mon, 02 Dec 2019 05:45:55 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=zadara-com.20150623.gappssmtp.com; s=20150623;
+        d=linaro.org; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=aTHpAcpxaL0fLhVh4ifBiC4bBd+zFXHbvQGf8Va51KE=;
-        b=1il5N/XVPNbH4zOykB4Ai8OXT6IUXCHEsMGQWyXPC+kbhxYEk/tnqzKczWwG/F1wDz
-         T6weWgNm42ZPvEqX5QliRtkzh5uyl9TyArWFRT4MAyNan5lbQqIiQ2eMWdM1Z1coTSpq
-         5PStmQgDZhi1oZO/xAIsJXil/XJr0ExxVcuNsFGS8eZsA99Q98h+27ZBW1eypEhwzjHf
-         V2O8PN2H+JIeiodegk8K9XPWSdzo4GquzSXBc5oPFMdCUhG23raZoN5N6vj2mx1S0STP
-         HoT2/1IDOyik+6U64haK64TXky6k3KDwG/H3sxOWnGRuLJhzyBsVlnauJYS7+FMSFp66
-         54PQ==
+        bh=49jYbZVycOXFspdxl9CDUTh2W/4I3gjVIzO2kAHOhfU=;
+        b=weHqKqK6CpbCFt1jkDcyAM9l4ZlRl5wkEuDFLBbazMmIojfqabp5oSo6tLXuCIzaWu
+         MuYMSoa0ONVmpFuwjEWhox/dhcv86Z+wsg/9kFtV+cGU8yOL6I56QuWgtyseIhjPdthi
+         I4+IK8zSzhPx9UAPZQ1g80GtClIcJh08T7JdA38TQ8PMmNgRAMPhKG+oIUfRP8h/P0hE
+         Ax9lEnmLM6EUctVOZmfwlpRgge80/NhgGBajWxHstwa7SYJzz95fdPGiB0sr3VHSmSSy
+         AHtD+4qLHIo/GXk0NdOm9nCKaAktJHtGSveoJV3FECVT+9pI49wRBla4o7CRBlyZVmDK
+         dsBw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=aTHpAcpxaL0fLhVh4ifBiC4bBd+zFXHbvQGf8Va51KE=;
-        b=r50tXgaDz0wm8ppVGwlMWayTQSM8JJH2zZ8PH1TTyG0mrBMi4I8eRBMrmRzE6B5HQg
-         e33UaE8LoEZsREWO2WU/qDkDfQTNoD4OUg/MYIYy1z7spiDVPBcfS+0bkHOoKeAbZsN8
-         Wt6lTmNJ7So7Ron5qjNHDN18nfPcx7ziix9bvsp4nSINdiqcBbvKoOrSG391bOlkGCSP
-         FlkUBWUQrSjcFAGKY77zIpNXXHPiRwTB+l1dBkQKN6T2DHMWePVQAoPW8YIPZjnkqa76
-         g4Q9TV/1Yb6Ju+FpLR0zxhU9FlF/NLkBT5J2S1Sg9qLVul3zXrXN8J/fq/pJdD4yguA9
-         a3gw==
-X-Gm-Message-State: APjAAAV3c2hm5x7MgD3qcjy3BtDtoo9ykFtN57cVM8XO8jqQZ8dV5Lvi
-        lb7UD98zeOuMaFplUBPCBwV8ZsamohRkXrZfBjYwdVeu2ZU=
-X-Google-Smtp-Source: APXvYqzcd1u5djLRoP5594H8wgyIBFVS7zvE/vtPhyVQiFFKMQkgTfY11ObVbBY7/1Fl0SKN1oqMWpH7NPzY+u6ckXE=
-X-Received: by 2002:a92:ce92:: with SMTP id r18mr16838121ilo.135.1575274074964;
- Mon, 02 Dec 2019 00:07:54 -0800 (PST)
+        bh=49jYbZVycOXFspdxl9CDUTh2W/4I3gjVIzO2kAHOhfU=;
+        b=P5GGYrKUeWP4kXBorFJ6fdozK0uuD5r0Bcnh7OBLz1Sbb1v0fChAf2jmefV7izcKh5
+         lxubmKNVQN/xWsJauFbBoU3tiVlSIRX6FVOp0yw3Pkc2XQyEGmeoQaDAxyVQxKbhReE2
+         uGm3DWYG3+IcEAEXVlCxll7XVigbtfYvrP8a36zXsTAdWAhbTvohnURZ85m2mnH2uTuG
+         95oWdCTJwH8lV16PwbmHsD1S9DYV6NU2ZjTwxLVEcSqWEqefchEVYvLdgLTNRjZuOO0V
+         /rRBykU4xAfaBMg8em15oFuL2SDYrJgUmzBSFQ91zLdhfH43d4SdM1GUZe+C8jOB4fJ0
+         6G0w==
+X-Gm-Message-State: APjAAAU6E9g/GNpx3W7MCQjyto6lypauVYCife+OKvOunr6iz5X6epp+
+        CrTSDDHS/BeS6DI/MMCX7Qcyjwgh5fv/k43CiYaKqw==
+X-Google-Smtp-Source: APXvYqxeByd/GwXPla7qySqPY0k0YYlASUzuqjZNj/U6zFcUOWxtXgVlcft9G28tw4AAwHLj66dc1hiGkBjfOJNyWxY=
+X-Received: by 2002:a2e:9a04:: with SMTP id o4mr14412076lji.214.1575294354710;
+ Mon, 02 Dec 2019 05:45:54 -0800 (PST)
 MIME-Version: 1.0
-References: <20191122154314.GA31076@bfoster> <CAOcd+r3_gKYBv4vtM7nfPEPvkVp-FgHKvgQQx-_zMDt+QZ9z+g@mail.gmail.com>
- <20191125130744.GA44777@bfoster> <CAOcd+r2wMaX02acHffbNKXX4tZ1fXo-y1-OAW-dVGTq63qJcaw@mail.gmail.com>
- <20191126115415.GA50477@bfoster> <CAOcd+r3h=0umb-wdY058rQ=kPHpksMOwSh=Jc-did_tLkaioFw@mail.gmail.com>
- <0a1f2372-5c5b-85c7-07b8-c4a958eaec47@sandeen.net> <20191127141929.GA20585@infradead.org>
- <20191130202853.GA2695@dread.disaster.area> <CAOcd+r21Ur=jxvJgUdXs+dQj37EnC=ZWP8F45sLesQFJ_GCejg@mail.gmail.com>
- <20191201215732.GB2695@dread.disaster.area>
-In-Reply-To: <20191201215732.GB2695@dread.disaster.area>
-From:   Alex Lyakas <alex@zadara.com>
-Date:   Mon, 2 Dec 2019 10:07:42 +0200
-Message-ID: <CAOcd+r2gaoZz4=xWAh+d=-TNTOtBDvbEezN9OH3oks2p1TNhBg@mail.gmail.com>
-Subject: Re: [RFC-PATCH] xfs: do not update sunit/swidth in the superblock to
- match those provided during mount
+References: <20191114113153.GB4213@ming.t460p> <20191114235415.GL4614@dread.disaster.area>
+ <20191115010824.GC4847@ming.t460p> <20191115045634.GN4614@dread.disaster.area>
+ <20191115070843.GA24246@ming.t460p> <20191128094003.752-1-hdanton@sina.com>
+ <CAKfTPtA23ErKGCEJVmg6vk-QoufkiUM3NbXd31mZmKnuwbTkFw@mail.gmail.com>
+ <20191202024625.GD24512@ming.t460p> <20191202040256.GE2695@dread.disaster.area>
+In-Reply-To: <20191202040256.GE2695@dread.disaster.area>
+From:   Vincent Guittot <vincent.guittot@linaro.org>
+Date:   Mon, 2 Dec 2019 14:45:42 +0100
+Message-ID: <CAKfTPtD8Q97qJ_+hdCXQRt=gy7k96XrhnFmGYP1G88YSFW0vNA@mail.gmail.com>
+Subject: Re: single aio thread is migrated crazily by scheduler
 To:     Dave Chinner <david@fromorbit.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+Cc:     Ming Lei <ming.lei@redhat.com>, Hillf Danton <hdanton@sina.com>,
+        linux-block <linux-block@vger.kernel.org>,
+        linux-fs <linux-fsdevel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Rong Chen <rong.a.chen@intel.com>, Tejun Heo <tj@kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Dave,
-
-On Sun, Dec 1, 2019 at 11:57 PM Dave Chinner <david@fromorbit.com> wrote:
+On Mon, 2 Dec 2019 at 05:02, Dave Chinner <david@fromorbit.com> wrote:
 >
-> On Sun, Dec 01, 2019 at 11:00:32AM +0200, Alex Lyakas wrote:
-> > Hi Dave,
+> On Mon, Dec 02, 2019 at 10:46:25AM +0800, Ming Lei wrote:
+> > On Thu, Nov 28, 2019 at 10:53:33AM +0100, Vincent Guittot wrote:
+> > > On Thu, 28 Nov 2019 at 10:40, Hillf Danton <hdanton@sina.com> wrote:
+> > > > --- a/fs/iomap/direct-io.c
+> > > > +++ b/fs/iomap/direct-io.c
+> > > > @@ -157,10 +157,8 @@ static void iomap_dio_bio_end_io(struct
+> > > >                         WRITE_ONCE(dio->submit.waiter, NULL);
+> > > >                         blk_wake_io_task(waiter);
+> > > >                 } else if (dio->flags & IOMAP_DIO_WRITE) {
+> > > > -                       struct inode *inode = file_inode(dio->iocb->ki_filp);
+> > > > -
+> > > >                         INIT_WORK(&dio->aio.work, iomap_dio_complete_work);
+> > > > -                       queue_work(inode->i_sb->s_dio_done_wq, &dio->aio.work);
+> > > > +                       schedule_work(&dio->aio.work);
+> > >
+> > > I'm not sure that this will make a real difference because it ends up
+> > > to call queue_work(system_wq, ...) and system_wq is bounded as well so
+> > > the work will still be pinned to a CPU
+> > > Using system_unbound_wq should make a difference because it doesn't
+> > > pin the work on a CPU
+> > >  +                       queue_work(system_unbound_wq, &dio->aio.work);
 > >
-> > Thank you for your response.
+> > Indeed, just run a quick test on my KVM guest, looks the following patch
+> > makes a difference:
 > >
-> > On Sat, Nov 30, 2019 at 10:28 PM Dave Chinner <david@fromorbit.com> wrote:
-> > >
-> > > On Wed, Nov 27, 2019 at 06:19:29AM -0800, Christoph Hellwig wrote:
-> > > > Can we all take a little step back and think about the implications
-> > > > of the original patch from Alex?  Because I think there is very little.
-> > > > And updated sunit/swidth is just a little performance optimization,
-> > > > and anyone who really cares about changing that after the fact can
-> > > > trivially add those to fstab.
-> > > >
-> > > > So I think something like his original patch plus a message during
-> > > > mount that the new values are not persisted should be perfectly fine.
-> > >
-> > > Well, the original purpose of the mount options was to persist a new
-> > > sunit/swidth to the superblock...
-> > >
-> > > Let's ignore the fact that it was a result of a CXFS client mount
-> > > bug trashing the existing sunit/swidth values, and instead focus on
-> > > the fact we've been telling people for years that you "only need to
-> > > set these once after a RAID reshape" and so we have a lot of users
-> > > out there expecting it to persist the new values...
-> > >
-> > > I don't think we can just redefine the documented and expected
-> > > behaviour of a mount option like this.
-> > >
-> > > With that in mind, the xfs(5) man page explicitly states this:
-> > >
-> > >         The sunit and swidth parameters specified must be compatible
-> > >         with the existing filesystem alignment characteristics.  In
-> > >         general,  that  means  the  only  valid changes to sunit are
-> > >         increasing it by a power-of-2 multiple. Valid swidth values
-> > >         are any integer multiple of a valid sunit value.
-> > >
-> > > Note the comment about changes to sunit? What is being done here -
-> > > halving the sunit from 64 to 32 blocks is invalid, documented as
-> > > invalid, but the kernel does not enforce this. We should fix the
-> > > kernel code to enforce the alignment rules that the mount option
-> > > is documented to require.
-> > >
-> > > If we want to change the alignment characteristics after mkfs, then
-> > > use su=1,sw=1 as the initial values, then the first mount can use
-> > > the options to change it to whatever is present after mkfs has run.
-> >
-> > If I understand your response correctly:
-> > - some sunit/swidth changes during mount are legal and some aren't
-> > - the legal changes should be persisted in the superblock
+> > diff --git a/fs/direct-io.c b/fs/direct-io.c
+> > index 9329ced91f1d..2f4488b0ecec 100644
+> > --- a/fs/direct-io.c
+> > +++ b/fs/direct-io.c
+> > @@ -613,7 +613,8 @@ int sb_init_dio_done_wq(struct super_block *sb)
+> >  {
+> >         struct workqueue_struct *old;
+> >         struct workqueue_struct *wq = alloc_workqueue("dio/%s",
+> > -                                                     WQ_MEM_RECLAIM, 0,
+> > +                                                     WQ_MEM_RECLAIM |
+> > +                                                     WQ_UNBOUND, 0,
+> >                                                       sb->s_id);
 >
-> Yup.
+> That's not an answer to the user task migration issue.
 >
-> > What about the repair? Even if user performs a legal change, it still
-> > breaks the repairability of the file system.
+> That is, all this patch does is trade user task migration when the
+> CPU is busy for migrating all the queued work off the CPU so the
+> user task does not get migrated. IOWs, this forces all the queued
+> work to be migrated rather than the user task. IOWs, it does not
+> address the issue we've exposed in the scheduler between tasks with
+> competing CPU affinity scheduling requirements - it just hides the
+> symptom.
 >
-> It is not a legal ichange if it moves the root inode to a new
-> location. IOWs, if the alignment mods will result in the root inode
-> changing location, then it should be rejected by the kernel.
->
-> Anyway, we need more details about your test environment, because
-> the example you gave:
->
-> | # mkfs
-> | mkfs.xfs -f -K -p /etc/zadara/xfs.protofile -d sunit=64,swidth=64 -l sunit=32 /dev/vda
-> |
-> | #mount with a different sunit/swidth:
-> | mount -onoatime,sync,nouuid,sunit=32,swidth=32 /dev/vda /mnt/xfs
-> |
-> | #umount
-> | umount /mnt/xfs
-> |
-> | #xfs_repair
-> | xfs_repair -n /dev/vda
-> | # reports false corruption and eventually segfaults[1]
->
-> Does not reproduce the reported failure on my workstation running
-> v5.3.0 kernel and a v5.0.0 xfsprogs:
->
-> $ sudo mkfs.xfs -f -d file,name=1t.img,size=1t,sunit=64,swidth=64 -l sunit=32
-> meta-data=1t.img                 isize=512    agcount=32, agsize=8388608 blks
->          =                       sectsz=512   attr=2, projid32bit=1
->          =                       crc=1        finobt=1, sparse=1, rmapbt=0
->          =                       reflink=0
-> data     =                       bsize=4096   blocks=268435456, imaxpct=5
->          =                       sunit=8      swidth=8 blks
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-> log      =internal log           bsize=4096   blocks=131072, version=2
->          =                       sectsz=512   sunit=4 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> Maintaining CPU affinity across dispatch and completion work has
+> been proven to be a significant performance win. Right throughout
+> the IO stack we try to keep this submitter/completion affinity,
+> and that's the whole point of using a bound wq in the first place:
+> efficient delayed batch processing of work on the local CPU.
 
-I believe in one of earlier emails in this thread, Brian mentioned
-that this is related to "sparse inodes" being enabled:
+Do you really want to target the same CPU ? looks like what you really
+want to target the same cache instead
 
-"I couldn't reproduce this at first because sparse inodes is enabled
-by default and that introduces more strict inode alignment requirements."
+>
+> Spewing deferred completion work across every idle CPU in the
+> machine because the local cpu is temporarily busy is a bad choice,
+> both from a performance perspective (dirty cacheline bouncing) and
+> from a power efficiency point of view as it causes CPUs to be taken
+> out of idle state much more frequently[*].
+>
+> The fact that the scheduler migrates the user task we use workqueues
+> for deferred work as they were intended doesn't make this a
+> workqueue problem. If the answer to this problem is "make all IO
+> workqueues WQ_UNBOUND" then we are effectively saying "the scheduler
+> has unfixable problems when mixing bound and unbound work on the
+> same run queue".
+>
+> And, besides, what happens when every other CPU is also completely
+> busy and can't run the work in a timely fashion? We've just moved
+> the work to some random CPU where we wait to be scheduled instead of
+> just sitting on the local CPU and waiting....
+>
+> So, yes, we can work around the -symptoms- we see (frequent user
+> task migration) by changing the work queue configuration or
+> bypassing the workqueue for this specific workload. But these only
+> address the visible symptom and don't take into account the wider
+> goals of retaining CPU affinity in the IO stack, and they will have
+> variable scheduling latency and perofrmance and as the overall
+> system load changes.
+>
+> So, we can fiddle with workqueues, but it doesn't address the
+> underlying issue that the scheduler appears to be migrating
+> non-bound tasks off a busy CPU too easily....
 
-Can you please try mkfs'ing with spare inodes disabled?
+The root cause of the problem is that the sched_wakeup_granularity_ns
+is in the same range or higher than load balance period. As Peter
+explained, This make the kworker waiting for the CPU for several load
+period and a transient unbalanced state becomes a stable one that the
+scheduler to fix. With default value, the scheduler doesn't try to
+migrate any task.
 
-Thanks,
-Alex.
+Then, I agree that having an ack close to the request makes sense but
+forcing it on the exact same CPU is too restrictive IMO. Being able to
+use another CPU on the same core should not harm the performance and
+may even improve it. And that may still be the case while CPUs share
+their cache.
 
-
-> $ sudo mount -o loop -o sunit=32,swidth=32 1t.img /mnt/1t
-> $ sudo xfs_info /mnt/1t
-> ....
-> data     =                       bsize=4096   blocks=268435456, imaxpct=5
->          =                       sunit=4      swidth=4 blks
-> ....
-> $ sudo umount /mnt/1t
-> $ sudo xfs_repair -f 1t.img
-> Phase 1 - find and verify superblock...
->         - reporting progress in intervals of 15 minutes
-> Phase 2 - using internal log
->         - zero log...
->         - scan filesystem freespace and inode maps...
->         - 08:42:14: scanning filesystem freespace - 32 of 32 allocation groups done
->         - found root inode chunk
-> Phase 3 - for each AG...
->         - scan and clear agi unlinked lists...
-> ....
-> Phase 7 - verify and correct link counts...
->         - 08:42:18: verify and correct link counts - 32 of 32 allocation groups done
-> done
-> $ echo $?
-> 0
-> $ sudo mount -o loop 1t.img /mnt/1t
-> $ sudo xfs_info /mnt/1t
-> ....
-> data     =                       bsize=4096   blocks=268435456, imaxpct=5
->          =                       sunit=4      swidth=4 blks
-> ....
-> $
 >
-> So reducing the sunit doesn't necessarily change the root inode
-> location, and so in some cases reducing the sunit doesn't change
-> the root inode location, either.
+> -Dave.
 >
-> > For now, we made a local change to not persist sunit/swidth updates in
-> > the superblock. Because we must have a working repair, and our kernel
-> > (4.14 stable) allows any sunit/swidth changes.
+> [*] Pay attention to the WQ_POWER_EFFICIENT definition for a work
+> queue: it's designed for interrupt routines that defer work via work
+> queues to avoid doing work on otherwise idle CPUs. It does this by
+> turning the per-cpu wq into an unbound wq so that work gets
+> scheduled on a non-idle CPUs in preference to the local idle CPU
+> which can then remain in low power states.
 >
-> From the above, it's not clear where the problem lies - it may be
-> that there's a bug in repair we've fixed since whatever version you
-> are using....
+> That's the exact opposite of what using WQ_UNBOUND ends up doing in
+> this IO completion context: it pushes the work out over idle CPUs
+> rather than keeping them confined on the already busy CPUs where CPU
+> affinity allows the work to be done quickly. So while WQ_UNBOUND
+> avoids the user task being migrated frequently, it results in the
+> work being spread around many more CPUs and we burn more power to do
+> the same work.
 >
-> > We can definitely adhere to the recommended behavior of setting
-> > sunit/swidth=1 during mkfs, provided the repair still works after
-> > mounting with different sunit/swidth.
->
-> ... hence I'd suggest that more investigation needs to be done
-> before you do anything permanent...
->
-> Cheers,
->
-> Dave.
 > --
 > Dave Chinner
 > david@fromorbit.com
