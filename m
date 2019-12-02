@@ -2,164 +2,165 @@ Return-Path: <SRS0=7G1E=ZY=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CA57C432C0
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 21:51:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E5AAC432C0
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 23:06:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 23BA32071F
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 21:51:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E0282070A
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 23:06:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726139AbfLBVvT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Dec 2019 16:51:19 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:55381 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726105AbfLBVvT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Dec 2019 16:51:19 -0500
+        id S1725874AbfLBXG0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 Dec 2019 18:06:26 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:44607 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725834AbfLBXG0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Dec 2019 18:06:26 -0500
 Received: from dread.disaster.area (pa49-179-150-192.pa.nsw.optusnet.com.au [49.179.150.192])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 45E7E7EB461;
-        Tue,  3 Dec 2019 08:51:15 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 861A83A30BB;
+        Tue,  3 Dec 2019 10:06:18 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1ibtb7-0006FA-DY; Tue, 03 Dec 2019 08:51:13 +1100
-Date:   Tue, 3 Dec 2019 08:51:13 +1100
+        id 1ibulm-0006jy-5F; Tue, 03 Dec 2019 10:06:18 +1100
+Date:   Tue, 3 Dec 2019 10:06:18 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Omar Sandoval <osandov@osandov.com>, linux-xfs@vger.kernel.org
-Subject: Re: Transaction log reservation overrun when fallocating realtime
- file
-Message-ID: <20191202215113.GH2695@dread.disaster.area>
-References: <20191126202714.GA667580@vader>
- <20191127003426.GP6219@magnolia>
+To:     Hillf Danton <hdanton@sina.com>
+Cc:     Ming Lei <ming.lei@redhat.com>,
+        linux-block <linux-block@vger.kernel.org>,
+        linux-fs <linux-fsdevel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Vincent Guittot <vincent.guittot@linaro.org>,
+        Rong Chen <rong.a.chen@intel.com>, Tejun Heo <tj@kernel.org>
+Subject: Re: single aio thread is migrated crazily by scheduler
+Message-ID: <20191202230618.GI2695@dread.disaster.area>
+References: <20191114113153.GB4213@ming.t460p>
+ <20191114235415.GL4614@dread.disaster.area>
+ <20191115010824.GC4847@ming.t460p>
+ <20191115045634.GN4614@dread.disaster.area>
+ <20191115070843.GA24246@ming.t460p>
+ <20191128094003.752-1-hdanton@sina.com>
+ <20191202090158.15016-1-hdanton@sina.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191127003426.GP6219@magnolia>
+In-Reply-To: <20191202090158.15016-1-hdanton@sina.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
         a=ZXpxJgW8/q3NVgupyyvOCQ==:117 a=ZXpxJgW8/q3NVgupyyvOCQ==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=pxVhFHJ0LMsA:10
-        a=yPCof4ZbAAAA:8 a=-uoBkjAQAAAA:8 a=7-415B0cAAAA:8 a=vsmucVbB2X2MFuJy6fQA:9
-        a=hq3SDExIU25eL7r0:21 a=PcRFrYjCTpupJN_V:21 a=CjuIK1q_8ugA:10
-        a=y0wLjPFBLyexm0soFTcm:22 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=7-415B0cAAAA:8 a=vHaZCrEJwQDmUnyvPvAA:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 26, 2019 at 04:34:26PM -0800, Darrick J. Wong wrote:
-> On Tue, Nov 26, 2019 at 12:27:14PM -0800, Omar Sandoval wrote:
-> > Hello,
+On Mon, Dec 02, 2019 at 05:01:58PM +0800, Hillf Danton wrote:
+> 
+> On Mon, 2 Dec 2019 14:08:44 +1100 Dave Chinner wrote:
+> > On Thu, Nov 28, 2019 at 05:40:03PM +0800, Hillf Danton wrote:
+> > > On Sat, 16 Nov 2019 10:40:05 Dave Chinner wrote:
+> > > > Yeah, the fio task averages 13.4ms on any given CPU before being
+> > > > switched to another CPU. Mind you, the stddev is 12ms, so the range
+> > > > of how long it spends on any one CPU is pretty wide (330us to
+> > > > 330ms).
+> > > > 
+> > > Hey Dave
+> > > 
+> > > > IOWs, this doesn't look like a workqueue problem at all - this looks
+> > > 
+> > > Surprised to see you're so sure it has little to do with wq,
 > > 
-> > The following reproducer results in a transaction log overrun warning
-> > for me:
+> > Because I understand how the workqueue is used here.
 > > 
-> >   mkfs.xfs -f -r rtdev=/dev/vdc -d rtinherit=1 -m reflink=0 /dev/vdb
-> >   mount -o rtdev=/dev/vdc /dev/vdb /mnt
-> >   fallocate -l 4G /mnt/foo
+> > Essentially, the workqueue is not necessary for a -pure- overwrite
+> > where no metadata updates or end-of-io filesystem work is required.
 > > 
-> > I've attached the full dmesg output. My guess at the problem is that the
-> > tr_write reservation used by xfs_alloc_file_space is not taking the realtime
-> > bitmap and realtime summary inodes into account (inode numbers 129 and 130 on
-> > this filesystem, which I do see in some of the log items). However, I'm not
-> > familiar enough with the XFS transaction guts to confidently fix this. Can
-> > someone please help me out?
-> 
-> Hmm...
-> 
-> /*
->  * In a write transaction we can allocate a maximum of 2
->  * extents.  This gives:
->  *    the inode getting the new extents: inode size
->  *    the inode's bmap btree: max depth * block size
->  *    the agfs of the ags from which the extents are allocated: 2 * sector
->  *    the superblock free block counter: sector size
->  *    the allocation btrees: 2 exts * 2 trees * (2 * max depth - 1) * block size
->  * And the bmap_finish transaction can free bmap blocks in a join:
->  *    the agfs of the ags containing the blocks: 2 * sector size
->  *    the agfls of the ags containing the blocks: 2 * sector size
->  *    the super block free block counter: sector size
->  *    the allocation btrees: 2 exts * 2 trees * (2 * max depth - 1) * block size
->  */
-> STATIC uint
-> xfs_calc_write_reservation(...);
-> 
-> So this means that the rt allocator can burn through at most ...
-> 1 ext * 2 trees * (2 * maxdepth - 1) * blocksize
-> ... worth of log reservation as part of setting bits in the rtbitmap and
-> fiddling with the rtsummary information.
-> 
-> Instead, 4GB of 4k rt extents == 1 million rtexts to mark in use, which
-> is 131072 bytes of rtbitmap to log, and *kaboom* there goes the 109K log
-> reservation.
+> > However, change the workload just slightly, such as allocating the
+> > space, writing into preallocated space (unwritten extents), using
+> > AIO writes to extend the file, using O_DSYNC, etc, and we *must*
+> > use a workqueue as we have to take blocking locks and/or run
+> > transactions.
+> > 
+> > These may still be very short (e.g. updating inode size) and in most
+> > cases will not block, but if they do, then if we don't move the work
+> > out of the block layer completion context (i.e. softirq running the
+> > block bh) then we risk deadlocking the code.
+> > 
+> > Not to mention none of the filesytem inode locks are irq safe.
+> > 
+> > IOWs, we can remove the workqueue for this -one specific instance-
+> > but it does not remove the requirement for using a workqueue for all
+> > the other types of write IO that pass through this code.
+> > 
+> So it's not true that it doesn't has anything to do with workqueue.
 
-Ok, if that's the case, we still need to be able to allocate MAXEXTLEN in
-a single transaction. That's 2^21 filesystem blocks, which at most
-is 2^21 rtexts.
+You misunderstood what I was saying. I meant that this adverse
+schdeuler behaviour is not *unique to this specific workqueue
+instance* or workload. There are another 5+ workqueues in XFS alone
+that are based around the same "do all the deferred work on the same
+CPU" queuing behaviour. Several of them are IO completion
+processing workqueues, and it is designed this way to avoid running
+completion work that access common structures across all the CPUs in
+the system.
 
-Hence I think we probably should have a separate rt-write
-reservation that handles this case, and we use that for allocation
-on rt devices rather than the bt-based allocation reservation.
+And, FWIW, we've had this "per-cpu delayed work" processing
+mechanism in XFS since ~2002 when per-cpu work queues were
+introduced in ~2.5.40. What we are doing with workqueues here is not
+new or novel, and it's worked just fine for most of this time...
 
+> > >  			INIT_WORK(&dio->aio.work, iomap_dio_complete_work);
+> > > -			queue_work(inode->i_sb->s_dio_done_wq, &dio->aio.work);
+> > > +			schedule_work(&dio->aio.work);
+> > 
+> > This does nothing but change the workqueue from a per-sb wq to the
+> > system wq. The work is still bound to the same CPU it is queued on,
+> > so nothing will change.
+> > 
+> The system wq is enough here to make some visible difference as CFS will
+> be looking to make new lb decision in particular when submitter and
+> completion are running on different CPUs.
 
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> xfs: cap realtime allocation length to something we can log
-> 
-> Omar Sandoval reported that a 4G fallocate on the realtime device causes
-> filesystem shutdowns due to a log reservation overflow that happens when
-> we log the rtbitmap updates.
-> 
-> The tr_write transaction reserves enough log reservation to handle a
-> full splits of both free space btrees, so cap the rt allocation at that
-> number of bits.
-> 
-> "The following reproducer results in a transaction log overrun warning
-> for me:
-> 
->     mkfs.xfs -f -r rtdev=/dev/vdc -d rtinherit=1 -m reflink=0 /dev/vdb
->     mount -o rtdev=/dev/vdc /dev/vdb /mnt
->     fallocate -l 4G /mnt/foo
-> 
-> Reported-by: Omar Sandoval <osandov@osandov.com>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_bmap_util.c |   23 +++++++++++++++++++++++
->  1 file changed, 23 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 49d7b530c8f7..15c4e2790de3 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -69,6 +69,26 @@ xfs_zero_extent(
->  }
->  
->  #ifdef CONFIG_XFS_RT
-> +/*
-> + * tr_write allows for one full split in the bnobt and cntbt to record the
-> + * allocation, and that's how many bits of rtbitmap we can log to the
-> + * transaction.  We leave one full block's worth of log space to handle the
-> + * rtsummary update, though that's probably overkill.
-> + */
-> +static inline uint64_t
-> +xfs_bmap_rtalloc_max(
-> +	struct xfs_mount	*mp)
-> +{
-> +	uint64_t		max_rtbitmap;
-> +
-> +	max_rtbitmap = xfs_allocfree_log_count(mp, 1) - 1;
-> +	max_rtbitmap *= XFS_FSB_TO_B(mp, 1);
-> +	max_rtbitmap *= NBBY;
-> +	max_rtbitmap *= mp->m_sb.sb_rextsize;
+That's noise caused by slightly different loading of the system
+workqueue vs a private work queue. It's likely just enough to move
+the scheduler out of the window where it makes incorrect decisions.
+i.e. Add a bit more user load or load onto other CPUs, and the
+problem will reappear.
 
-I can see how this works, but it strikes me as a bit of a hack. We
-calculate the worst case reservations up front to avoid having to
-play games like this in the code. Hence I think the correct thing to
-do is fix the reservation to ensure we can do MAXEXTLEN allocations
-without overruns...
+As I said, this is *not* a fix for the problem - it just moves it
+around so that you can't see it for this specific workload instance.
+
+> It's claimed that "Maintaining CPU affinity across dispatch and completion
+> work has been proven to be a significant performance win." If completion
+> is running in the softirq context then it would take some time to sort
+> out why irq (not CPU) affinity is making difference across CPUs.
+
+We use irq steering to provide CPU affinity for the structures being
+used by completion because they are the same ones used by
+submission. If completion happens quickly enough, those structures
+are still hot in the cache of the submission CPU, and so we don't
+drag bio and filesystem structures out of the CPU cache they sit in
+by steering the completion to the submission CPU.
+
+Most of the modern high perofrmance storage hardware has hardware
+interrupt steering so the block layer doesn't have to do this. See
+__blk_mq_complete_request() and __blk_complete_request(). If the
+device has multiple hardware queues, they are already delivering CPU
+affine completions. Otherwise __blk_complete_request() uses IPIs
+to steer the completion to a CPU that shares a cache with the
+submission CPU....
+
+IOWs, we are trying to ensure that we run the data IO completion on
+the CPU with that has that data hot in cache. When we are running
+millions of IOs every second, this matters -a lot-. IRQ steering is
+just a mechansim that is used to ensure completion processing hits
+hot caches.
 
 Cheers,
 
