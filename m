@@ -2,405 +2,236 @@ Return-Path: <SRS0=7G1E=ZY=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93CD1C432C0
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 07:39:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D38BC432C0
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 08:07:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 574442231B
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 07:39:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2416721774
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 08:07:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="If0iohkU"
+	dkim=pass (2048-bit key) header.d=zadara-com.20150623.gappssmtp.com header.i=@zadara-com.20150623.gappssmtp.com header.b="1il5N/XV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726142AbfLBHjy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Dec 2019 02:39:54 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:32406 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726030AbfLBHjy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Dec 2019 02:39:54 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1575272392;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=uDwPxIthRhzqqxIn8nRFrTMx6Oq9FZoOrVRMoJGDac8=;
-        b=If0iohkUwwwMFvoYpWHpZ0Wg63RQDah3iIcUjuwVKR0sl09sTLbddMOiTc0kIraWqM8ZIK
-        Hopz48lnkhT0vE4EJoy0xndAtamqFgHm9xLYACsvdMgTKFlQj4l7vs5+hV3yRy08l42U48
-        JKzjA79VRtb2ZayTVXoFuLyLnTlwpRQ=
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
- [209.85.128.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-40-YpAYt1J0OeeQ61aqQg9nVQ-1; Mon, 02 Dec 2019 02:39:50 -0500
-Received: by mail-wm1-f72.google.com with SMTP id s25so4908706wmj.3
-        for <linux-xfs@vger.kernel.org>; Sun, 01 Dec 2019 23:39:49 -0800 (PST)
+        id S1726628AbfLBIH5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 Dec 2019 03:07:57 -0500
+Received: from mail-il1-f195.google.com ([209.85.166.195]:42794 "EHLO
+        mail-il1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726106AbfLBIH5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Dec 2019 03:07:57 -0500
+Received: by mail-il1-f195.google.com with SMTP id f6so28568329ilh.9
+        for <linux-xfs@vger.kernel.org>; Mon, 02 Dec 2019 00:07:55 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=zadara-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=aTHpAcpxaL0fLhVh4ifBiC4bBd+zFXHbvQGf8Va51KE=;
+        b=1il5N/XVPNbH4zOykB4Ai8OXT6IUXCHEsMGQWyXPC+kbhxYEk/tnqzKczWwG/F1wDz
+         T6weWgNm42ZPvEqX5QliRtkzh5uyl9TyArWFRT4MAyNan5lbQqIiQ2eMWdM1Z1coTSpq
+         5PStmQgDZhi1oZO/xAIsJXil/XJr0ExxVcuNsFGS8eZsA99Q98h+27ZBW1eypEhwzjHf
+         V2O8PN2H+JIeiodegk8K9XPWSdzo4GquzSXBc5oPFMdCUhG23raZoN5N6vj2mx1S0STP
+         HoT2/1IDOyik+6U64haK64TXky6k3KDwG/H3sxOWnGRuLJhzyBsVlnauJYS7+FMSFp66
+         54PQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=h07fKCxz6cysE/fgl9fYUVPm0w40qHJZvUYbahblgw0=;
-        b=IpGviLNhJ2ojJD2gZ3IzFSjc9DBXNKJe97waLAaaP4bRzRWdjodvvNBxQxZJLs6li8
-         EHtSA771EaLtlSsoHaAPHM3Yh1nMNHrkdM5wa3iek68nfDlr917At9IZq06hDpFtAqGQ
-         RgFLxdJ0Jiqqhbms23Afvkw8e5VGzPyarQKSeaG38mQqx5MR4IQV0z3ZbYnDAJyLAalr
-         LL4lVdxX60HoEP0AWYGEJVgc2ThbDI4ny56oz4bo50ulPpEtC8sO3iPKODxeXAyoTHP4
-         gIv/X0kliB0XDlR6xiUApC2s4EMOomIHXG3tvi0gOb4AKyXGIdxLZ0fHvUgp8MdVm00c
-         0+UA==
-X-Gm-Message-State: APjAAAVV30R9d9ETUpsl8YaXusA6OBcA0BEQOo2dc14s/LCHTuzpXtKn
-        eFdOoVLzXYcuQH1nzB8/ajrVoNVWUZ9EoODxBx5sPvQyYOdlMY/7ELd9/QgKAyJj6JjouLE1Rc4
-        rTfufySBQVAoNOTk2M8BK
-X-Received: by 2002:a5d:5452:: with SMTP id w18mr18045496wrv.333.1575272388542;
-        Sun, 01 Dec 2019 23:39:48 -0800 (PST)
-X-Google-Smtp-Source: APXvYqx5BaUxQShBg6QgaaYASIoOuGOQzaZT45JG9xEGMspcb0TOWdi31u/XmEO1ZsyTdUs0mdL5lA==
-X-Received: by 2002:a5d:5452:: with SMTP id w18mr18045465wrv.333.1575272388079;
-        Sun, 01 Dec 2019 23:39:48 -0800 (PST)
-Received: from localhost.localdomain ([151.29.19.49])
-        by smtp.gmail.com with ESMTPSA id u22sm21199872wru.30.2019.12.01.23.39.46
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Sun, 01 Dec 2019 23:39:46 -0800 (PST)
-Date:   Mon, 2 Dec 2019 08:39:44 +0100
-From:   Juri Lelli <juri.lelli@redhat.com>
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Vincent Guittot <vincent.guittot@linaro.org>,
-        Hillf Danton <hdanton@sina.com>,
-        Dave Chinner <david@fromorbit.com>,
-        linux-block <linux-block@vger.kernel.org>,
-        linux-fs <linux-fsdevel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Rong Chen <rong.a.chen@intel.com>, Tejun Heo <tj@kernel.org>
-Subject: Re: single aio thread is migrated crazily by scheduler
-Message-ID: <20191202073944.GQ23227@localhost.localdomain>
-References: <20191114113153.GB4213@ming.t460p>
- <20191114235415.GL4614@dread.disaster.area>
- <20191115010824.GC4847@ming.t460p>
- <20191115045634.GN4614@dread.disaster.area>
- <20191115070843.GA24246@ming.t460p>
- <20191128094003.752-1-hdanton@sina.com>
- <CAKfTPtA23ErKGCEJVmg6vk-QoufkiUM3NbXd31mZmKnuwbTkFw@mail.gmail.com>
- <20191202024625.GD24512@ming.t460p>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=aTHpAcpxaL0fLhVh4ifBiC4bBd+zFXHbvQGf8Va51KE=;
+        b=r50tXgaDz0wm8ppVGwlMWayTQSM8JJH2zZ8PH1TTyG0mrBMi4I8eRBMrmRzE6B5HQg
+         e33UaE8LoEZsREWO2WU/qDkDfQTNoD4OUg/MYIYy1z7spiDVPBcfS+0bkHOoKeAbZsN8
+         Wt6lTmNJ7So7Ron5qjNHDN18nfPcx7ziix9bvsp4nSINdiqcBbvKoOrSG391bOlkGCSP
+         FlkUBWUQrSjcFAGKY77zIpNXXHPiRwTB+l1dBkQKN6T2DHMWePVQAoPW8YIPZjnkqa76
+         g4Q9TV/1Yb6Ju+FpLR0zxhU9FlF/NLkBT5J2S1Sg9qLVul3zXrXN8J/fq/pJdD4yguA9
+         a3gw==
+X-Gm-Message-State: APjAAAV3c2hm5x7MgD3qcjy3BtDtoo9ykFtN57cVM8XO8jqQZ8dV5Lvi
+        lb7UD98zeOuMaFplUBPCBwV8ZsamohRkXrZfBjYwdVeu2ZU=
+X-Google-Smtp-Source: APXvYqzcd1u5djLRoP5594H8wgyIBFVS7zvE/vtPhyVQiFFKMQkgTfY11ObVbBY7/1Fl0SKN1oqMWpH7NPzY+u6ckXE=
+X-Received: by 2002:a92:ce92:: with SMTP id r18mr16838121ilo.135.1575274074964;
+ Mon, 02 Dec 2019 00:07:54 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20191202024625.GD24512@ming.t460p>
-User-Agent: Mutt/1.11.3 (2019-02-01)
-X-MC-Unique: YpAYt1J0OeeQ61aqQg9nVQ-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+References: <20191122154314.GA31076@bfoster> <CAOcd+r3_gKYBv4vtM7nfPEPvkVp-FgHKvgQQx-_zMDt+QZ9z+g@mail.gmail.com>
+ <20191125130744.GA44777@bfoster> <CAOcd+r2wMaX02acHffbNKXX4tZ1fXo-y1-OAW-dVGTq63qJcaw@mail.gmail.com>
+ <20191126115415.GA50477@bfoster> <CAOcd+r3h=0umb-wdY058rQ=kPHpksMOwSh=Jc-did_tLkaioFw@mail.gmail.com>
+ <0a1f2372-5c5b-85c7-07b8-c4a958eaec47@sandeen.net> <20191127141929.GA20585@infradead.org>
+ <20191130202853.GA2695@dread.disaster.area> <CAOcd+r21Ur=jxvJgUdXs+dQj37EnC=ZWP8F45sLesQFJ_GCejg@mail.gmail.com>
+ <20191201215732.GB2695@dread.disaster.area>
+In-Reply-To: <20191201215732.GB2695@dread.disaster.area>
+From:   Alex Lyakas <alex@zadara.com>
+Date:   Mon, 2 Dec 2019 10:07:42 +0200
+Message-ID: <CAOcd+r2gaoZz4=xWAh+d=-TNTOtBDvbEezN9OH3oks2p1TNhBg@mail.gmail.com>
+Subject: Re: [RFC-PATCH] xfs: do not update sunit/swidth in the superblock to
+ match those provided during mount
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
+Hi Dave,
 
-On 02/12/19 10:46, Ming Lei wrote:
-> On Thu, Nov 28, 2019 at 10:53:33AM +0100, Vincent Guittot wrote:
-> > On Thu, 28 Nov 2019 at 10:40, Hillf Danton <hdanton@sina.com> wrote:
+On Sun, Dec 1, 2019 at 11:57 PM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Sun, Dec 01, 2019 at 11:00:32AM +0200, Alex Lyakas wrote:
+> > Hi Dave,
+> >
+> > Thank you for your response.
+> >
+> > On Sat, Nov 30, 2019 at 10:28 PM Dave Chinner <david@fromorbit.com> wrote:
 > > >
+> > > On Wed, Nov 27, 2019 at 06:19:29AM -0800, Christoph Hellwig wrote:
+> > > > Can we all take a little step back and think about the implications
+> > > > of the original patch from Alex?  Because I think there is very little.
+> > > > And updated sunit/swidth is just a little performance optimization,
+> > > > and anyone who really cares about changing that after the fact can
+> > > > trivially add those to fstab.
+> > > >
+> > > > So I think something like his original patch plus a message during
+> > > > mount that the new values are not persisted should be perfectly fine.
 > > >
-> > > On Sat, 16 Nov 2019 10:40:05 Dave Chinner wrote:
-> > > > On Fri, Nov 15, 2019 at 03:08:43PM +0800, Ming Lei wrote:
-> > > > > On Fri, Nov 15, 2019 at 03:56:34PM +1100, Dave Chinner wrote:
-> > > > > > On Fri, Nov 15, 2019 at 09:08:24AM +0800, Ming Lei wrote:
-> > > > > I can reproduce the issue with 4k block size on another RH system=
-, and
-> > > > > the login info of that system has been shared to you in RH BZ.
-> > > > >
-> > > > > 1)
-> > > > > sysctl kernel.sched_min_granularity_ns=3D10000000
-> > > > > sysctl kernel.sched_wakeup_granularity_ns=3D15000000
-> > > >
-> > > > So, these settings definitely influence behaviour.
-> > > >
-> > > > If these are set to kernel defaults (4ms and 3ms each):
-> > > >
-> > > > sysctl kernel.sched_min_granularity_ns=3D4000000
-> > > > sysctl kernel.sched_wakeup_granularity_ns=3D3000000
-> > > >
-> > > > The migration problem largely goes away - the fio task migration
-> > > > event count goes from ~2,000 a run down to 200/run.
-> > > >
-> > > > That indicates that the migration trigger is likely load/timing
-> > > > based. The analysis below is based on the 10/15ms numbers above,
-> > > > because it makes it so much easier to reproduce.
-> > > >
-> > > > > 2)
-> > > > > ./xfs_complete 4k
-> > > > >
-> > > > > Then you should see 1k~1.5k fio io thread migration in above test=
-,
-> > > > > either v5.4-rc7(build with rhel8 config) or RHEL 4.18 kernel.
-> > > >
-> > > > Almost all the fio task migrations are coming from migration/X
-> > > > kernel threads. i.e it's the scheduler active balancing that is
-> > > > causing the fio thread to bounce around.
-> > > >
-> > > > This is typical a typical trace, trimmed to remove extraneous noise=
-.
-> > > > The fio process is running on CPU 10:
-> > > >
-> > > >              fio-3185  [010] 50419.285954: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D1004014 [ns] vruntime=3D27067882290 [ns]
-> > > >              fio-3185  [010] 50419.286953: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D979458 [ns] vruntime=3D27068861748 [ns]
-> > > >              fio-3185  [010] 50419.287998: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D1028471 [ns] vruntime=3D27069890219 [ns]
-> > > >              fio-3185  [010] 50419.289973: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D989989 [ns] vruntime=3D27071836208 [ns]
-> > > >              fio-3185  [010] 50419.290958: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D963914 [ns] vruntime=3D27072800122 [ns]
-> > > >              fio-3185  [010] 50419.291952: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D972532 [ns] vruntime=3D27073772654 [ns]
-> > > >
-> > > > fio consumes CPU for several milliseconds, then:
-> > > >
-> > > >              fio-3185  [010] 50419.292935: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D966032 [ns] vruntime=3D27074738686 [ns]
-> > > >              fio-3185  [010] 50419.292941: sched_switch:         fi=
-o:3185 [120] S =3D=3D> kworker/10:0:2763 [120]
-> > > >     kworker/10:0-2763  [010] 50419.292954: sched_stat_runtime:   co=
-mm=3Dkworker/10:0 pid=3D2763 runtime=3D13423 [ns] vruntime=3D27052479694 [n=
-s]
-> > > >     kworker/10:0-2763  [010] 50419.292956: sched_switch:         kw=
-orker/10:0:2763 [120] R =3D=3D> fio:3185 [120]
-> > > >              fio-3185  [010] 50419.293115: sched_waking:         co=
-mm=3Dkworker/10:0 pid=3D2763 prio=3D120 target_cpu=3D010
-> > > >              fio-3185  [010] 50419.293116: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D160370 [ns] vruntime=3D27074899056 [ns]
-> > > >              fio-3185  [010] 50419.293118: sched_wakeup:         kw=
-orker/10:0:2763 [120] success=3D1 CPU:010
-> > > >
-> > > > A context switch out to a kworker, then 13us later we immediately
-> > > > switch back to the fio process, and go on running. No doubt
-> > > > somewhere in what the fio process is doing, we queue up more work t=
-o
-> > > > be run on the cpu, but the fio task keeps running
-> > > > (due to CONFIG_PREEMPT=3Dn).
-> > > >
-> > > >              fio-3185  [010] 50419.293934: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D803135 [ns] vruntime=3D27075702191 [ns]
-> > > >              fio-3185  [010] 50419.294936: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D988478 [ns] vruntime=3D27076690669 [ns]
-> > > >              fio-3185  [010] 50419.295934: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D982219 [ns] vruntime=3D27077672888 [ns]
-> > > >              fio-3185  [010] 50419.296935: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D984781 [ns] vruntime=3D27078657669 [ns]
-> > > >              fio-3185  [010] 50419.297934: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D981703 [ns] vruntime=3D27079639372 [ns]
-> > > >              fio-3185  [010] 50419.298937: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D990057 [ns] vruntime=3D27080629429 [ns]
-> > > >              fio-3185  [010] 50419.299935: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D977554 [ns] vruntime=3D27081606983 [ns]
-> > > >
-> > > > About 6ms later, CPU 0 kicks the active load balancer on CPU 10...
-> > > >
-> > > >           <idle>-0     [000] 50419.300014: sched_waking:         co=
-mm=3Dmigration/10 pid=3D70 prio=3D0 target_cpu=3D010
-> > > >              fio-3185  [010] 50419.300024: sched_wakeup:         mi=
-gration/10:70 [0] success=3D1 CPU:010
-> > > >              fio-3185  [010] 50419.300026: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D79291 [ns] vruntime=3D27081686274 [ns]
-> > > >              fio-3185  [010] 50419.300027: sched_switch:         fi=
-o:3185 [120] S =3D=3D> migration/10:70 [0]
-> > > >     migration/10-70    [010] 50419.300032: sched_migrate_task:   co=
-mm=3Dfio pid=3D3185 prio=3D120 orig_cpu=3D10 dest_cpu=3D12
-> > > >     migration/10-70    [010] 50419.300040: sched_switch:         mi=
-gration/10:70 [0] D =3D=3D> kworker/10:0:2763 [120]
-> > > >
-> > > > And 10us later the fio process is switched away, the active load
-> > > > balancer work is run and migrates the fio process to CPU 12. Then..=
-.
-> > > >
-> > > >     kworker/10:0-2763  [010] 50419.300048: sched_stat_runtime:   co=
-mm=3Dkworker/10:0 pid=3D2763 runtime=3D9252 [ns] vruntime=3D27062908308 [ns=
-]
-> > > >     kworker/10:0-2763  [010] 50419.300062: sched_switch:         kw=
-orker/10:0:2763 [120] R =3D=3D> swapper/10:0 [120]
-> > > >           <idle>-0     [010] 50419.300067: sched_waking:         co=
-mm=3Dkworker/10:0 pid=3D2763 prio=3D120 target_cpu=3D010
-> > > >           <idle>-0     [010] 50419.300069: sched_wakeup:         kw=
-orker/10:0:2763 [120] success=3D1 CPU:010
-> > > >           <idle>-0     [010] 50419.300071: sched_switch:         sw=
-apper/10:0 [120] S =3D=3D> kworker/10:0:2763 [120]
-> > > >     kworker/10:0-2763  [010] 50419.300073: sched_switch:         kw=
-orker/10:0:2763 [120] R =3D=3D> swapper/10:0 [120]
-> > > >
-> > > > The kworker runs for another 10us and the CPU goes idle. Shortly
-> > > > after this, CPU 12 is woken:
-> > > >
-> > > >           <idle>-0     [012] 50419.300113: sched_switch:         sw=
-apper/12:0 [120] S =3D=3D> fio:3185 [120]
-> > > >              fio-3185  [012] 50419.300596: sched_waking:         co=
-mm=3Dkworker/12:1 pid=3D227 prio=3D120 target_cpu=3D012
-> > > >              fio-3185  [012] 50419.300598: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D561137 [ns] vruntime=3D20361153275 [ns]
-> > > >              fio-3185  [012] 50419.300936: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D326187 [ns] vruntime=3D20361479462 [ns]
-> > > >              fio-3185  [012] 50419.301935: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D981201 [ns] vruntime=3D20362460663 [ns]
-> > > >              fio-3185  [012] 50419.302935: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D983160 [ns] vruntime=3D20363443823 [ns]
-> > > >              fio-3185  [012] 50419.303934: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D983855 [ns] vruntime=3D20364427678 [ns]
-> > > >              fio-3185  [012] 50419.304934: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D977757 [ns] vruntime=3D20365405435 [ns]
-> > > >              fio-3185  [012] 50419.305948: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D999563 [ns] vruntime=3D20366404998 [ns]
-> > > >
-> > > >
-> > > > and fio goes on running there. The pattern repeats very soon afterw=
-ards:
-> > > >
-> > > >           <idle>-0     [000] 50419.314982: sched_waking:         co=
-mm=3Dmigration/12 pid=3D82 prio=3D0 target_cpu=3D012
-> > > >              fio-3185  [012] 50419.314988: sched_wakeup:         mi=
-gration/12:82 [0] success=3D1 CPU:012
-> > > >              fio-3185  [012] 50419.314990: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D46342 [ns] vruntime=3D20375268656 [ns]
-> > > >              fio-3185  [012] 50419.314991: sched_switch:         fi=
-o:3185 [120] S =3D=3D> migration/12:82 [0]
-> > > >     migration/12-82    [012] 50419.314995: sched_migrate_task:   co=
-mm=3Dfio pid=3D3185 prio=3D120 orig_cpu=3D12 dest_cpu=3D5
-> > > >     migration/12-82    [012] 50419.315001: sched_switch:         mi=
-gration/12:82 [0] D =3D=3D> kworker/12:1:227 [120]
-> > > >     kworker/12:1-227   [012] 50419.315022: sched_stat_runtime:   co=
-mm=3Dkworker/12:1 pid=3D227 runtime=3D21453 [ns] vruntime=3D20359477889 [ns=
-]
-> > > >     kworker/12:1-227   [012] 50419.315028: sched_switch:         kw=
-orker/12:1:227 [120] R =3D=3D> swapper/12:0 [120]
-> > > >           <idle>-0     [005] 50419.315053: sched_switch:         sw=
-apper/5:0 [120] S =3D=3D> fio:3185 [120]
-> > > >              fio-3185  [005] 50419.315286: sched_waking:         co=
-mm=3Dkworker/5:0 pid=3D2646 prio=3D120 target_cpu=3D005
-> > > >              fio-3185  [005] 50419.315288: sched_stat_runtime:   co=
-mm=3Dfio pid=3D3185 runtime=3D287737 [ns] vruntime=3D33779011507 [ns]
-> > > >
-> > > > And fio is now running on CPU 5 - it only ran on CPU 12 for about
-> > > > 15ms. Hmmm:
-> > > >
-> > > > $ grep fio-3185 ~/tmp/sched.out | awk 'BEGIN {totcpu =3D 0.0; switc=
-hes =3D 0.0; prev_waket =3D 0.0 }/sched_waking/ { cpu =3D $2; split($3, t, =
-":"); waket =3D t[1]; if (cpu !=3D prev_cpu) { t_on_cpu =3D waket - prev_wa=
-ket; if (prev_waket) { print "time on CPU", cpu, "was", t_on_cpu; totcpu +=
-=3D t_on_cpu; switches++ } prev_waket =3D waket; prev_cpu =3D cpu; } } END =
-{ print "switches", switches, "time on cpu", totcpu, "aver time on cpu", (t=
-otcpu / switches) } ' | stats --trim-outliers
-> > > > switches 2211 time on cpu 30.0994 aver time on cpu 0.0136135
-> > > > time on CPU [0-23(8.8823+/-6.2)] was 0.000331-0.330772(0.0134759+/-=
-0.012)
-> > > >
-> > > > Yeah, the fio task averages 13.4ms on any given CPU before being
-> > > > switched to another CPU. Mind you, the stddev is 12ms, so the range
-> > > > of how long it spends on any one CPU is pretty wide (330us to
-> > > > 330ms).
-> > > >
-> > > Hey Dave
+> > > Well, the original purpose of the mount options was to persist a new
+> > > sunit/swidth to the superblock...
 > > >
-> > > > IOWs, this doesn't look like a workqueue problem at all - this look=
-s
+> > > Let's ignore the fact that it was a result of a CXFS client mount
+> > > bug trashing the existing sunit/swidth values, and instead focus on
+> > > the fact we've been telling people for years that you "only need to
+> > > set these once after a RAID reshape" and so we have a lot of users
+> > > out there expecting it to persist the new values...
 > > >
-> > > Surprised to see you're so sure it has little to do with wq,
+> > > I don't think we can just redefine the documented and expected
+> > > behaviour of a mount option like this.
 > > >
-> > > > like the scheduler is repeatedly making the wrong load balancing
-> > > > decisions when mixing a very short runtime task (queued work) with =
-a
-> > > > long runtime task on the same CPU....
-> > > >
-> > > and it helps more to know what is driving lb to make decisions like
-> > > this. Because for 70+ per cent of communters in cities like London it
-> > > is supposed tube is better than cab on work days, the end_io cb is
-> > > tweaked to be a lookalike of execute_in_process_context() in the diff
-> > > with the devoted s_dio_done_wq taken out of account. It's interesting
-> > > to see what difference lb will make in the tube environment.
+> > > With that in mind, the xfs(5) man page explicitly states this:
 > > >
-> > > Hillf
+> > >         The sunit and swidth parameters specified must be compatible
+> > >         with the existing filesystem alignment characteristics.  In
+> > >         general,  that  means  the  only  valid changes to sunit are
+> > >         increasing it by a power-of-2 multiple. Valid swidth values
+> > >         are any integer multiple of a valid sunit value.
 > > >
-> > > > This is not my area of expertise, so I have no idea why this might
-> > > > be happening. Scheduler experts: is this expected behaviour? What
-> > > > tunables directly influence the active load balancer (and/or CONFIG
-> > > > options) to change how aggressive it's behaviour is?
-> > > >
-> > > > > Not reproduced the issue with 512 block size on the RH system yet=
-,
-> > > > > maybe it is related with my kernel config.
-> > > >
-> > > > I doubt it - this looks like a load specific corner case in the
-> > > > scheduling algorithm....
-> > > >
-> > > > Cheers,
-> > > >
-> > > > Dave.
-> > > > --
-> > > > Dave Chinner
-> > > > david@fromorbit.com
+> > > Note the comment about changes to sunit? What is being done here -
+> > > halving the sunit from 64 to 32 blocks is invalid, documented as
+> > > invalid, but the kernel does not enforce this. We should fix the
+> > > kernel code to enforce the alignment rules that the mount option
+> > > is documented to require.
 > > >
-> > > --- a/fs/iomap/direct-io.c
-> > > +++ b/fs/iomap/direct-io.c
-> > > @@ -157,10 +157,8 @@ static void iomap_dio_bio_end_io(struct
-> > >                         WRITE_ONCE(dio->submit.waiter, NULL);
-> > >                         blk_wake_io_task(waiter);
-> > >                 } else if (dio->flags & IOMAP_DIO_WRITE) {
-> > > -                       struct inode *inode =3D file_inode(dio->iocb-=
->ki_filp);
-> > > -
-> > >                         INIT_WORK(&dio->aio.work, iomap_dio_complete_=
-work);
-> > > -                       queue_work(inode->i_sb->s_dio_done_wq, &dio->=
-aio.work);
-> > > +                       schedule_work(&dio->aio.work);
-> >=20
-> > I'm not sure that this will make a real difference because it ends up
-> > to call queue_work(system_wq, ...) and system_wq is bounded as well so
-> > the work will still be pinned to a CPU
-> > Using system_unbound_wq should make a difference because it doesn't
-> > pin the work on a CPU
-> >  +                       queue_work(system_unbound_wq, &dio->aio.work);
->=20
-> Indeed, just run a quick test on my KVM guest, looks the following patch
-> makes a difference:
->=20
-> diff --git a/fs/direct-io.c b/fs/direct-io.c
-> index 9329ced91f1d..2f4488b0ecec 100644
-> --- a/fs/direct-io.c
-> +++ b/fs/direct-io.c
-> @@ -613,7 +613,8 @@ int sb_init_dio_done_wq(struct super_block *sb)
->  {
->         struct workqueue_struct *old;
->         struct workqueue_struct *wq =3D alloc_workqueue("dio/%s",
-> -                                                     WQ_MEM_RECLAIM, 0,
-> +                                                     WQ_MEM_RECLAIM |
-> +                                                     WQ_UNBOUND, 0,
->                                                       sb->s_id);
+> > > If we want to change the alignment characteristics after mkfs, then
+> > > use su=1,sw=1 as the initial values, then the first mount can use
+> > > the options to change it to whatever is present after mkfs has run.
+> >
+> > If I understand your response correctly:
+> > - some sunit/swidth changes during mount are legal and some aren't
+> > - the legal changes should be persisted in the superblock
+>
+> Yup.
+>
+> > What about the repair? Even if user performs a legal change, it still
+> > breaks the repairability of the file system.
+>
+> It is not a legal ichange if it moves the root inode to a new
+> location. IOWs, if the alignment mods will result in the root inode
+> changing location, then it should be rejected by the kernel.
+>
+> Anyway, we need more details about your test environment, because
+> the example you gave:
+>
+> | # mkfs
+> | mkfs.xfs -f -K -p /etc/zadara/xfs.protofile -d sunit=64,swidth=64 -l sunit=32 /dev/vda
+> |
+> | #mount with a different sunit/swidth:
+> | mount -onoatime,sync,nouuid,sunit=32,swidth=32 /dev/vda /mnt/xfs
+> |
+> | #umount
+> | umount /mnt/xfs
+> |
+> | #xfs_repair
+> | xfs_repair -n /dev/vda
+> | # reports false corruption and eventually segfaults[1]
+>
+> Does not reproduce the reported failure on my workstation running
+> v5.3.0 kernel and a v5.0.0 xfsprogs:
+>
+> $ sudo mkfs.xfs -f -d file,name=1t.img,size=1t,sunit=64,swidth=64 -l sunit=32
+> meta-data=1t.img                 isize=512    agcount=32, agsize=8388608 blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=1, rmapbt=0
+>          =                       reflink=0
+> data     =                       bsize=4096   blocks=268435456, imaxpct=5
+>          =                       sunit=8      swidth=8 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+> log      =internal log           bsize=4096   blocks=131072, version=2
+>          =                       sectsz=512   sunit=4 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-Chiming in to report that, after Vincent suggested to try the very same
-change out on a private IRC conversation, I saw the very same positive
-effects. E.g.,
+I believe in one of earlier emails in this thread, Brian mentioned
+that this is related to "sparse inodes" being enabled:
 
-Baseline is using 'slow' sched parameters (10ms/15ms), baseline 3/4 is
-same kernel just with default 'fast' sched params and dio unbound 10/15
-is a kernel patched with the above patch and using 'slow' sched params.
+"I couldn't reproduce this at first because sparse inodes is enabled
+by default and that introduces more strict inode alignment requirements."
 
-fsperf-4k-5G                            baseline 3/4    dio unbound 10/15=
-=09
-                                        improv.=09        improv.
-sequential initial write throughput=09-0.12=09        -0.87
-                         latency=091.15=09        2.87
-           overwrite     throughput=091186.32=09        1232.74
-                         latency=0911.35           11.26
-           read          throughput     0.80            -2.38
-                         latency        2.79            3.03
-random     initial write throughput     84.73           105.34
-                         latency        0.00            1.14
-           overwrite     throughput     254.27          273.17
-                         latency        1.23            7.37
-           read=09         throughput=0940.05           3.24
-                         latency        8.03            7.36
+Can you please try mkfs'ing with spare inodes disabled?
 
-Best,
+Thanks,
+Alex.
 
-Juri
 
+> $ sudo mount -o loop -o sunit=32,swidth=32 1t.img /mnt/1t
+> $ sudo xfs_info /mnt/1t
+> ....
+> data     =                       bsize=4096   blocks=268435456, imaxpct=5
+>          =                       sunit=4      swidth=4 blks
+> ....
+> $ sudo umount /mnt/1t
+> $ sudo xfs_repair -f 1t.img
+> Phase 1 - find and verify superblock...
+>         - reporting progress in intervals of 15 minutes
+> Phase 2 - using internal log
+>         - zero log...
+>         - scan filesystem freespace and inode maps...
+>         - 08:42:14: scanning filesystem freespace - 32 of 32 allocation groups done
+>         - found root inode chunk
+> Phase 3 - for each AG...
+>         - scan and clear agi unlinked lists...
+> ....
+> Phase 7 - verify and correct link counts...
+>         - 08:42:18: verify and correct link counts - 32 of 32 allocation groups done
+> done
+> $ echo $?
+> 0
+> $ sudo mount -o loop 1t.img /mnt/1t
+> $ sudo xfs_info /mnt/1t
+> ....
+> data     =                       bsize=4096   blocks=268435456, imaxpct=5
+>          =                       sunit=4      swidth=4 blks
+> ....
+> $
+>
+> So reducing the sunit doesn't necessarily change the root inode
+> location, and so in some cases reducing the sunit doesn't change
+> the root inode location, either.
+>
+> > For now, we made a local change to not persist sunit/swidth updates in
+> > the superblock. Because we must have a working repair, and our kernel
+> > (4.14 stable) allows any sunit/swidth changes.
+>
+> From the above, it's not clear where the problem lies - it may be
+> that there's a bug in repair we've fixed since whatever version you
+> are using....
+>
+> > We can definitely adhere to the recommended behavior of setting
+> > sunit/swidth=1 during mkfs, provided the repair still works after
+> > mounting with different sunit/swidth.
+>
+> ... hence I'd suggest that more investigation needs to be done
+> before you do anything permanent...
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
