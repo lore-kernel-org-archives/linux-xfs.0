@@ -2,276 +2,151 @@ Return-Path: <SRS0=7G1E=ZY=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA6E2C432C3
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 21:21:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FC14C432C0
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 21:22:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AB0A22070B
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 21:21:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0F49D206ED
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 21:22:22 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MaNUiHwj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725853AbfLBVVq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Dec 2019 16:21:46 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:57299 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725834AbfLBVVq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Dec 2019 16:21:46 -0500
-Received: from dread.disaster.area (pa49-179-150-192.pa.nsw.optusnet.com.au [49.179.150.192])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 6375C7EADAB;
-        Tue,  3 Dec 2019 08:21:42 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1ibt8W-000639-Q2; Tue, 03 Dec 2019 08:21:40 +1100
-Date:   Tue, 3 Dec 2019 08:21:40 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>, Alex Lyakas <alex@zadara.com>
-Subject: Re: [RFC PATCH] xfs: don't commit sunit/swidth updates to disk if
- that would cause repair failures
-Message-ID: <20191202212140.GG2695@dread.disaster.area>
-References: <20191202173538.GD7335@magnolia>
+        id S1725997AbfLBVWV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 Dec 2019 16:22:21 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:58353 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725944AbfLBVWV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Dec 2019 16:22:21 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1575321740;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=GNy5mzrbFUfF+VYedCZNaTyj28AJmYDxC867Fp4tmD4=;
+        b=MaNUiHwjSfyvj0/YdTuNSf4Jcybr1VFBnTE7FATZ4IblM4CtQaeQInhmw1r056mhbHdvL0
+        HFzvrcmv7tKpiGr7V/djoi+MF4+R75De/fJ/KGMJm0CNmbkSO2GPiTNbMvT9m7CiJuDvug
+        tkI+EEe3fAXy5qq3Ivfw7Cv3iFlKFoM=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-89-uh2s1mFnOQ66DD7AEEL6HA-1; Mon, 02 Dec 2019 16:22:17 -0500
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C1FE11005502;
+        Mon,  2 Dec 2019 21:22:15 +0000 (UTC)
+Received: from lorien.usersys.redhat.com (ovpn-117-37.phx2.redhat.com [10.3.117.37])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2C41C5D6A7;
+        Mon,  2 Dec 2019 21:22:12 +0000 (UTC)
+Date:   Mon, 2 Dec 2019 16:22:10 -0500
+From:   Phil Auld <pauld@redhat.com>
+To:     Vincent Guittot <vincent.guittot@linaro.org>
+Cc:     Dave Chinner <david@fromorbit.com>, Ming Lei <ming.lei@redhat.com>,
+        Hillf Danton <hdanton@sina.com>,
+        linux-block <linux-block@vger.kernel.org>,
+        linux-fs <linux-fsdevel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Rong Chen <rong.a.chen@intel.com>, Tejun Heo <tj@kernel.org>
+Subject: Re: single aio thread is migrated crazily by scheduler
+Message-ID: <20191202212210.GA32767@lorien.usersys.redhat.com>
+References: <20191114113153.GB4213@ming.t460p>
+ <20191114235415.GL4614@dread.disaster.area>
+ <20191115010824.GC4847@ming.t460p>
+ <20191115045634.GN4614@dread.disaster.area>
+ <20191115070843.GA24246@ming.t460p>
+ <20191128094003.752-1-hdanton@sina.com>
+ <CAKfTPtA23ErKGCEJVmg6vk-QoufkiUM3NbXd31mZmKnuwbTkFw@mail.gmail.com>
+ <20191202024625.GD24512@ming.t460p>
+ <20191202040256.GE2695@dread.disaster.area>
+ <CAKfTPtD8Q97qJ_+hdCXQRt=gy7k96XrhnFmGYP1G88YSFW0vNA@mail.gmail.com>
 MIME-Version: 1.0
+In-Reply-To: <CAKfTPtD8Q97qJ_+hdCXQRt=gy7k96XrhnFmGYP1G88YSFW0vNA@mail.gmail.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-MC-Unique: uh2s1mFnOQ66DD7AEEL6HA-1
+X-Mimecast-Spam-Score: 0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
 Content-Disposition: inline
-In-Reply-To: <20191202173538.GD7335@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
-        a=ZXpxJgW8/q3NVgupyyvOCQ==:117 a=ZXpxJgW8/q3NVgupyyvOCQ==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=pxVhFHJ0LMsA:10
-        a=yPCof4ZbAAAA:8 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8 a=9ED8cW1ioRrxSIyIPrUA:9
-        a=I6nLyeoXaS6t03Ck:21 a=yNK0vKr6wOKR08Js:21 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Dec 02, 2019 at 09:35:38AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Alex Lyakas reported[1] that mounting an xfs filesystem with new sunit
-> and swidth values could cause xfs_repair to fail loudly.  The problem
-> here is that repair calculates the where mkfs should have allocated the
-> root inode, based on the superblock geometry.  The allocation decisions
-> depend on sunit, which means that we really can't go updating sunit if
-> it would lead to a subsequent repair failure on an otherwise correct
-> filesystem.
-> 
-> Port the computation code from xfs_repair and teach mount to avoid the
-> ondisk update if it would cause problems for repair.  We allow the mount
-> to proceed (and new allocations will reflect this new geometry) because
-> we've never screened this kind of thing before.
-> 
-> [1] https://lore.kernel.org/linux-xfs/20191125130744.GA44777@bfoster/T/#m00f9594b511e076e2fcdd489d78bc30216d72a7d
-....
-> +/*
-> + * Compute the first and last inodes numbers of the inode chunk that was
-> + * preallocated for the root directory.
-> + */
-> +void
-> +xfs_ialloc_find_prealloc(
-> +	struct xfs_mount	*mp,
-> +	xfs_agino_t		*first_agino,
-> +	xfs_agino_t		*last_agino)
-> +{
-> +	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
-> +	xfs_agblock_t		first_bno;
-> +
-> +	/*
-> +	 * Pre-calculate the geometry of ag 0. We know what it looks like
-> +	 * because we know what mkfs does: 2 allocation btree roots (by block
-> +	 * and by size), the inode allocation btree root, the free inode
-> +	 * allocation btree root (if enabled) and some number of blocks to
-> +	 * prefill the agfl.
-> +	 *
-> +	 * Because the current shape of the btrees may differ from the current
-> +	 * shape, we open code the mkfs freelist block count here. mkfs creates
-> +	 * single level trees, so the calculation is pertty straight forward for
+Hi Vincent,
 
-pretty.
+On Mon, Dec 02, 2019 at 02:45:42PM +0100 Vincent Guittot wrote:
+> On Mon, 2 Dec 2019 at 05:02, Dave Chinner <david@fromorbit.com> wrote:
 
-> +	 * the trees that use the AGFL.
-> +	 */
-> +
-> +	/* free space by block btree root comes after the ag headers */
-> +	first_bno = howmany(4 * mp->m_sb.sb_sectsize, mp->m_sb.sb_blocksize);
-> +
-> +	/* free space by length btree root */
-> +	first_bno += 1;
-> +
-> +	/* inode btree root */
-> +	first_bno += 1;
-> +
-> +	/* agfl */
-> +	first_bno += (2 * min(2U, mp->m_ag_maxlevels)) + 1;
+...
 
-min_t(xfs_agblock_t, 2, mp->m_ag_maxlevels) ?
+> > So, we can fiddle with workqueues, but it doesn't address the
+> > underlying issue that the scheduler appears to be migrating
+> > non-bound tasks off a busy CPU too easily....
+>=20
+> The root cause of the problem is that the sched_wakeup_granularity_ns
+> is in the same range or higher than load balance period. As Peter
+> explained, This make the kworker waiting for the CPU for several load
+> period and a transient unbalanced state becomes a stable one that the
+> scheduler to fix. With default value, the scheduler doesn't try to
+> migrate any task.
 
-> +
-> +	if (xfs_sb_version_hasfinobt(&mp->m_sb))
-> +		first_bno++;
-> +
-> +	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-> +		first_bno += min(2U, mp->m_rmap_maxlevels); /* agfl blocks */
+There are actually two issues here.   With the high wakeup granularity
+we get the user task actively migrated. This causes the significant
+performance hit Ming was showing. With the fast wakeup_granularity
+(or smaller IOs - 512 instead of 4k) we get, instead, the user task
+migrated at wakeup to a new CPU for every IO completion.
 
-same.
+This is the 11k migrations per sec doing 11k iops.  In this test it
+is not by itself causing the measured performance issue. It generally
+flips back and forth between 2 cpus for large periods. I think it is
+crossing cache boundaries at times (but I have not looked closely
+at the traces compared to the topology, yet).
 
-> +		first_bno++;
-> +	}
-> +
-> +	if (xfs_sb_version_hasreflink(&mp->m_sb))
-> +		first_bno++;
-> +
-> +	/*
-> +	 * If the log is allocated in the first allocation group we need to
-> +	 * add the number of blocks used by the log to the above calculation.
-> +	 *
-> +	 * This can happens with filesystems that only have a single
-> +	 * allocation group, or very odd geometries created by old mkfs
-> +	 * versions on very small filesystems.
-> +	 */
-> +	if (mp->m_sb.sb_logstart &&
-> +	    XFS_FSB_TO_AGNO(mp, mp->m_sb.sb_logstart) == 0) {
-> +
-> +		/*
-> +		 * XXX(hch): verify that sb_logstart makes sense?
-> +		 */
-> +		 first_bno += mp->m_sb.sb_logblocks;
-> +	}
-> +
-> +	/*
-> +	 * ditto the location of the first inode chunks in the fs ('/')
-> +	 */
-> +	if (xfs_sb_version_hasdalign(&mp->m_sb) && igeo->ialloc_align > 0) {
-> +		*first_agino = XFS_AGB_TO_AGINO(mp,
-> +				roundup(first_bno, mp->m_sb.sb_unit));
-> +	} else if (xfs_sb_version_hasalign(&mp->m_sb) &&
-> +		   mp->m_sb.sb_inoalignmt > 1)  {
-> +		*first_agino = XFS_AGB_TO_AGINO(mp,
-> +				roundup(first_bno, mp->m_sb.sb_inoalignmt));
-> +	} else  {
-> +		*first_agino = XFS_AGB_TO_AGINO(mp, first_bno);
-> +	}
-> +
-> +	ASSERT(igeo->ialloc_blks > 0);
-> +
-> +	if (igeo->ialloc_blks > 1)
-> +		*last_agino = *first_agino + XFS_INODES_PER_CHUNK;
-> +	else
-> +		*last_agino = XFS_AGB_TO_AGINO(mp, first_bno + 1);
+The active balances are what really hurts in thie case but I agree
+that seems to be a tuning problem.
 
-Isn't last_agino of the first inode of the next chunk? i.e. this is
-an off-by-one...
-
-> +}
-> diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
-> index 323592d563d5..9d9fe7b488b8 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc.h
-> +++ b/fs/xfs/libxfs/xfs_ialloc.h
-> @@ -152,5 +152,7 @@ int xfs_inobt_insert_rec(struct xfs_btree_cur *cur, uint16_t holemask,
->  
->  int xfs_ialloc_cluster_alignment(struct xfs_mount *mp);
->  void xfs_ialloc_setup_geometry(struct xfs_mount *mp);
-> +void xfs_ialloc_find_prealloc(struct xfs_mount *mp, xfs_agino_t *first_agino,
-> +		xfs_agino_t *last_agino);
->  
->  #endif	/* __XFS_IALLOC_H__ */
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 7b35d62ede9f..d830a9e13817 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -891,6 +891,9 @@ xfs_ioc_fsgeometry(
->  
->  	xfs_fs_geometry(&mp->m_sb, &fsgeo, struct_version);
->  
-> +	fsgeo.sunit = mp->m_sb.sb_unit;
-> +	fsgeo.swidth = mp->m_sb.sb_width;
-
-Why?
-
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index fca65109cf24..0323a89256c7 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -368,6 +368,11 @@ xfs_update_alignment(xfs_mount_t *mp)
->  	xfs_sb_t	*sbp = &(mp->m_sb);
->  
->  	if (mp->m_dalign) {
-> +		uint32_t	old_su;
-> +		uint32_t	old_sw;
-> +		xfs_agino_t	first;
-> +		xfs_agino_t	last;
-> +
->  		/*
->  		 * If stripe unit and stripe width are not multiples
->  		 * of the fs blocksize turn off alignment.
-> @@ -398,24 +403,38 @@ xfs_update_alignment(xfs_mount_t *mp)
->  			}
->  		}
->  
-> -		/*
-> -		 * Update superblock with new values
-> -		 * and log changes
-> -		 */
-> -		if (xfs_sb_version_hasdalign(sbp)) {
-> -			if (sbp->sb_unit != mp->m_dalign) {
-> -				sbp->sb_unit = mp->m_dalign;
-> -				mp->m_update_sb = true;
-> -			}
-> -			if (sbp->sb_width != mp->m_swidth) {
-> -				sbp->sb_width = mp->m_swidth;
-> -				mp->m_update_sb = true;
-> -			}
-> -		} else {
-> +		/* Update superblock with new values and log changes. */
-> +		if (!xfs_sb_version_hasdalign(sbp)) {
->  			xfs_warn(mp,
->  	"cannot change alignment: superblock does not support data alignment");
->  			return -EINVAL;
->  		}
-> +
-> +		if (sbp->sb_unit == mp->m_dalign &&
-> +		    sbp->sb_width == mp->m_swidth)
-> +			return 0;
-> +
-> +		old_su = sbp->sb_unit;
-> +		old_sw = sbp->sb_width;
-> +		sbp->sb_unit = mp->m_dalign;
-> +		sbp->sb_width = mp->m_swidth;
-> +		xfs_ialloc_find_prealloc(mp, &first, &last);
-
-We just chuck last away? why calculate it then? And why not just
-pass mp->m_dalign/mp->m_swidth into the function rather than setting
-them in the sb and then having to undo the change? i.e.
-
-		rootino = xfs_ialloc_calc_rootino(mp, mp->m_dalign, mp->m_swidth);
-		if (sbp->sb_rootino != rootino) {
-			.....
-		}
-> +
-> +		/*
-> +		 * If the sunit/swidth change would move the precomputed root
-> +		 * inode value, we must reject the ondisk change because repair
-> +		 * will stumble over that.  However, we allow the mount to
-> +		 * proceed because we never rejected this combination before.
-> +		 */
-> +		if (sbp->sb_rootino != XFS_AGINO_TO_INO(mp, 0, first)) {
-> +			sbp->sb_unit = old_su;
-> +			sbp->sb_width = old_sw;
-> +			xfs_warn(mp,
-> +	"cannot change alignment: would require moving root inode");
-
-"cannot change stripe alignment: ..." ?
-
-Should this also return EINVAL, as per above when the DALIGN sb
-feature bit is not set?
 
 Cheers,
+Phil
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+>=20
+> Then, I agree that having an ack close to the request makes sense but
+> forcing it on the exact same CPU is too restrictive IMO. Being able to
+> use another CPU on the same core should not harm the performance and
+> may even improve it. And that may still be the case while CPUs share
+> their cache.
+>=20
+> >
+> > -Dave.
+> >
+> > [*] Pay attention to the WQ_POWER_EFFICIENT definition for a work
+> > queue: it's designed for interrupt routines that defer work via work
+> > queues to avoid doing work on otherwise idle CPUs. It does this by
+> > turning the per-cpu wq into an unbound wq so that work gets
+> > scheduled on a non-idle CPUs in preference to the local idle CPU
+> > which can then remain in low power states.
+> >
+> > That's the exact opposite of what using WQ_UNBOUND ends up doing in
+> > this IO completion context: it pushes the work out over idle CPUs
+> > rather than keeping them confined on the already busy CPUs where CPU
+> > affinity allows the work to be done quickly. So while WQ_UNBOUND
+> > avoids the user task being migrated frequently, it results in the
+> > work being spread around many more CPUs and we burn more power to do
+> > the same work.
+> >
+> > --
+> > Dave Chinner
+> > david@fromorbit.com
+>=20
+
+--=20
+
