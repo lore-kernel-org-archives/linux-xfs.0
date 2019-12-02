@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB447C432C3
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 17:37:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAC9EC432C0
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 17:37:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AE7A820640
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 17:37:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ADED020881
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Dec 2019 17:37:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Zhen6dnS"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="XnPXRHGA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727835AbfLBRhX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Dec 2019 12:37:23 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:59896 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727758AbfLBRhX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Dec 2019 12:37:23 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB2HZVkg043131;
-        Mon, 2 Dec 2019 17:37:20 GMT
+        id S1727845AbfLBRha (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 Dec 2019 12:37:30 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:48882 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727771AbfLBRh3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Dec 2019 12:37:29 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB2HZHbY044400;
+        Mon, 2 Dec 2019 17:37:27 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=l/v9V7NG+lIQBAv8b5i0GHTcKhrEVgPEPFrLz2AdPhs=;
- b=Zhen6dnSoD/IFvNduNPW6J9UmWAD8Fdqw0Z7ehbQ9Mtszxx8e410FfKwj0ze01Vcg48z
- vaIJjubKSctjyxvqQ4BnOD0qvT2/dZ53RAfr4rHAzRnv9XVbAxk6Rkbqk9QkNWYslvwS
- TtEQkcH/6JCpdkfZXxz8EWez9DOKIM94iVUPZJFYh1j5Ih6g5iGQGJvH15xdoLdMUb1U
- rA8yyMarhI6O8lJehpKkHPerMx4QLYglQi4aMd+XQh1MrZ8/SLlf2e2ukxA6MrifL72j
- 3wnsaP5nsFLENkt+Vja7xe1qx3PleCPK+q+dcxSMhvWVxZgqamErqPkOtmS1808EE7hc pw== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 2wkgcq1mdh-1
+ bh=/65uLMPkaUvDpDn7ql0L1V1u9b4Jm4NnSB3vIoBIuSg=;
+ b=XnPXRHGATFH4GSk+D8VLO125BYAT04nG/shY7utWzgz+XDasRQW2KL0ihojBlQWcgaRm
+ 7eTZVwFyVFwpIhQaq+CVeCN7ZhK7NWYUxlkQyp25xKzDciT5AgeLofukam8n+PMd4uuI
+ EP7LhfiMNksteo9sddpgA+X3GhrkbmEDXFTYBIAXAXe2GY4irbkAN8q33/eN0nOR6uON
+ Oavfsm5sjNooio5291jPlO3dkxeKuYFjU78RxGB/J9ApKPxTDEs+000Dya6puH3b/DQ/
+ 9I/a+fm8lOMj/JWF/ywegFfp5XHtXlxT+8REqcEIQas0bykrXtr1fio+g75fvyD7UA9b QQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2wkfuu1qsp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 02 Dec 2019 17:37:20 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB2HYRHZ102725;
-        Mon, 2 Dec 2019 17:37:20 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 2wm2jwa0vb-1
+        Mon, 02 Dec 2019 17:37:27 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB2HYJVk190803;
+        Mon, 2 Dec 2019 17:37:26 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2wn4qn2jey-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 02 Dec 2019 17:37:20 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xB2HbJiC011318;
-        Mon, 2 Dec 2019 17:37:19 GMT
+        Mon, 02 Dec 2019 17:37:26 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xB2HbQfH017274;
+        Mon, 2 Dec 2019 17:37:26 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 02 Dec 2019 09:37:19 -0800
-Subject: [PATCH 1/2] xfs_admin: support external log devices
+        with ESMTP ; Mon, 02 Dec 2019 09:37:25 -0800
+Subject: [PATCH 2/2] xfs_admin: enable online label getting and setting
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 02 Dec 2019 09:37:18 -0800
-Message-ID: <157530823862.128859.3517412709152067366.stgit@magnolia>
+Date:   Mon, 02 Dec 2019 09:37:24 -0800
+Message-ID: <157530824483.128859.9805424152601641362.stgit@magnolia>
 In-Reply-To: <157530823239.128859.15834274920423410063.stgit@magnolia>
 References: <157530823239.128859.15834274920423410063.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,58 +80,82 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Add to xfs_admin the ability to pass external log devices to xfs_db.
-This is necessary to make changes on such filesystems.
+Connect xfs_admin -L to the xfs_io label command so that we can get and
+set the label for a live filesystem.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- db/xfs_admin.sh      |   12 ++++++++++--
- man/man8/xfs_admin.8 |    3 +++
- 2 files changed, 13 insertions(+), 2 deletions(-)
+ db/xfs_admin.sh |   42 ++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 40 insertions(+), 2 deletions(-)
 
 
 diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh
-index 305ef2b7..bd325da2 100755
+index bd325da2..d18959bf 100755
 --- a/db/xfs_admin.sh
 +++ b/db/xfs_admin.sh
-@@ -7,7 +7,7 @@
+@@ -7,8 +7,30 @@
  status=0
  DB_OPTS=""
  REPAIR_OPTS=""
--USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-U uuid] device"
-+USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-U uuid] device [logdev]"
++IO_OPTS=""
+ USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-U uuid] device [logdev]"
  
++# Try to find a loop device associated with a file.  We only want to return
++# one loopdev (multiple loop devices can attach to a single file) so we grab
++# the last line and return it if it's actually a block device.
++try_find_loop_dev_for_file() {
++	local x="$(losetup -O NAME -j "$1" 2> /dev/null | tail -n 1)"
++	test -b "$x" && echo "$x"
++}
++
++# See if we can find a mount point for the argument.
++find_mntpt_for_arg() {
++	local arg="$1"
++
++	# See if we can map the arg to a loop device
++	local loopdev="$(try_find_loop_dev_for_file "${arg}")"
++	test -n "$loopdev" && arg="$loopdev"
++
++	# If we find a mountpoint for the device, do a live query;
++	# otherwise try reading the fs with xfs_db.
++	findmnt -t xfs -f -n -o TARGET "${arg}" 2> /dev/null
++}
++
  while getopts "efjlpuc:L:U:V" c
  do
-@@ -33,7 +33,15 @@ done
- set -- extra $@
- shift $OPTIND
- case $# in
--	1)	if [ -n "$DB_OPTS" ]
-+	1|2)
-+		# Pick up the log device, if present
-+		if [ -n "$2" ]; then
-+			DB_OPTS=$DB_OPTS" -l '$2'"
-+			test -n "$REPAIR_OPTS" && \
-+				REPAIR_OPTS=$REPAIR_OPTS" -l '$2'"
+ 	case $c in
+@@ -16,8 +38,16 @@ do
+ 	e)	DB_OPTS=$DB_OPTS" -c 'version extflg'";;
+ 	f)	DB_OPTS=$DB_OPTS" -f";;
+ 	j)	DB_OPTS=$DB_OPTS" -c 'version log2'";;
+-	l)	DB_OPTS=$DB_OPTS" -r -c label";;
+-	L)	DB_OPTS=$DB_OPTS" -c 'label "$OPTARG"'";;
++	l)	DB_OPTS=$DB_OPTS" -r -c label"
++		IO_OPTS=$IO_OPTS" -r -c label"
++		;;
++	L)	DB_OPTS=$DB_OPTS" -c 'label "$OPTARG"'"
++		if [ "$OPTARG" = "--" ]; then
++			IO_OPTS=$IO_OPTS" -c 'label -c'"
++		else
++			IO_OPTS=$IO_OPTS" -c 'label -s "$OPTARG"'"
++		fi
++		;;
+ 	p)	DB_OPTS=$DB_OPTS" -c 'version projid32bit'";;
+ 	u)	DB_OPTS=$DB_OPTS" -r -c uuid";;
+ 	U)	DB_OPTS=$DB_OPTS" -c 'uuid "$OPTARG"'";;
+@@ -41,6 +71,14 @@ case $# in
+ 				REPAIR_OPTS=$REPAIR_OPTS" -l '$2'"
+ 		fi
+ 
++		# Try making the changes online, if supported
++		if [ -n "$IO_OPTS" ] && mntpt="$(find_mntpt_for_arg "$1")"
++		then
++			eval xfs_io -x -p xfs_admin $IO_OPTS "$mntpt"
++			test "$?" -eq 0 && exit 0
 +		fi
 +
-+		if [ -n "$DB_OPTS" ]
++		# Otherwise try offline changing
+ 		if [ -n "$DB_OPTS" ]
  		then
  			eval xfs_db -x -p xfs_admin $DB_OPTS $1
- 			status=$?
-diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
-index 20a114f5..d7942418 100644
---- a/man/man8/xfs_admin.8
-+++ b/man/man8/xfs_admin.8
-@@ -15,6 +15,9 @@ xfs_admin \- change parameters of an XFS filesystem
- .I uuid
- ]
- .I device
-+[
-+.I logdev
-+]
- .br
- .B xfs_admin \-V
- .SH DESCRIPTION
 
