@@ -2,200 +2,103 @@ Return-Path: <SRS0=2geO=ZZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5EF1C432C0
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 01:56:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 903E6C432C0
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 02:23:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A794F20684
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 01:56:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 66C81206DC
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 02:23:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="lRur4rN4"
+	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="q9D3yRsJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725919AbfLCB4w (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Dec 2019 20:56:52 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:50582 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725899AbfLCB4w (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Dec 2019 20:56:52 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB31rv2t055321;
-        Tue, 3 Dec 2019 01:56:48 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=ssznkRxX+KJGRaOfrYECBQakxwCFZ/lyEyHbUA/GT3o=;
- b=lRur4rN4MsHwUBsF/cE1kE9nRQIhPuCQjqtI6sPd1FPPJrgzg4gFGpiB7BXX3hqllz6T
- HO7JkvrwVPSrKMixmOG1Vhau7p0Oo9+dQ1dbRQ9gcXSzbtGYYojybLJo7OdPFHy+khva
- a6CVLvnvSa+oUUTai6aRHdsJMZmNDYxmjG+BmE22QIo81m6YRyghc6OjcvQDFZjRGAc8
- kYo5XAOEQwBpT/4AJtj4ha7RAocS1aIW9pDL7l2E2YlPDQcXfDbePgvDm26M46NFWJW2
- oSk+3qSnixMRIFl3INmbpwaYqpDp/kRl8SLgYlmNIU8oM7efcvPvqnbczMU1GX6tPkNF FQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2wkfuu473g-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 Dec 2019 01:56:48 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB31mWj3095472;
-        Tue, 3 Dec 2019 01:56:48 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 2wn7pnvdvg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 Dec 2019 01:56:48 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xB31ukb5019748;
-        Tue, 3 Dec 2019 01:56:47 GMT
-Received: from localhost (/10.159.148.223)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 02 Dec 2019 17:56:46 -0800
-Date:   Mon, 2 Dec 2019 17:56:45 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Omar Sandoval <osandov@osandov.com>
-Cc:     linux-xfs@vger.kernel.org, kernel-team@fb.com
-Subject: Re: [PATCH 1/2] xfs: fix realtime file data space leak
-Message-ID: <20191203015645.GG7335@magnolia>
-References: <cover.1574799066.git.osandov@fb.com>
- <fe86a7464d77f770736404a9fbfcdfbb04b59826.1574799066.git.osandov@fb.com>
+        id S1726024AbfLCCXG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 Dec 2019 21:23:06 -0500
+Received: from ozlabs.org ([203.11.71.1]:54115 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725954AbfLCCXG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 2 Dec 2019 21:23:06 -0500
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 47Rm3n2LsCz9sNx;
+        Tue,  3 Dec 2019 13:23:01 +1100 (AEDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=canb.auug.org.au;
+        s=201702; t=1575339783;
+        bh=EL9ZyahnDGpSzzlhJ1wKUfVIQDAdvKJz012rP4TCPs0=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=q9D3yRsJL7riVhL8NHHJa2KtQWnAkF95p5pT6aNGmzgrs90EOg7VyCDP0Bu23v0/g
+         a/6gqy4VuNywJQ5sUPdmFRUDqVoormLWZoNSZE+esXLj7CsS/bEJB16HICU0m/zX+/
+         KpVi0pthEWNiTWwIE4xjwkX9nnkSeIHBdiCOLLJjuYovXN0KTkQapSMIoETSRtVdtI
+         zphvoNlcS5khjPSNDE1wVFdogx7Eb1R2nlQvTV/qdyRUfFhp53yggf0w6lG5QwvIdp
+         KvCRVQ1ok+PMtwiCMs/jOAL+C5APXlm2B3+1UJO28Bl6JpRTL44VEG5T032WqcM6ys
+         Rwb5s4vlWauGQ==
+Date:   Tue, 3 Dec 2019 13:23:00 +1100
+From:   Stephen Rothwell <sfr@canb.auug.org.au>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Linus <torvalds@linux-foundation.org>
+Subject: Re: linux-next: manual merge of the y2038 tree with the xfs tree
+Message-ID: <20191203132300.3186125c@canb.auug.org.au>
+In-Reply-To: <20191203002258.GE7339@magnolia>
+References: <20191030153046.01efae4a@canb.auug.org.au>
+        <20191203110039.2ec22a17@canb.auug.org.au>
+        <20191203002258.GE7339@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <fe86a7464d77f770736404a9fbfcdfbb04b59826.1574799066.git.osandov@fb.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9459 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1912030015
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9459 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1912030016
+Content-Type: multipart/signed; boundary="Sig_/G5fteeX4WpkVraxOJWz9wJm";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 26, 2019 at 12:13:28PM -0800, Omar Sandoval wrote:
-> From: Omar Sandoval <osandov@fb.com>
-> 
-> Realtime files in XFS allocate extents in rextsize units. However, the
-> written/unwritten state of those extents is still tracked in blocksize
-> units. Therefore, a realtime file can be split up into written and
-> unwritten extents that are not necessarily aligned to the realtime
-> extent size. __xfs_bunmapi() has some logic to handle these various
-> corner cases. Consider how it handles the following case:
-> 
-> 1. The last extent is unwritten.
-> 2. The last extent is smaller than the realtime extent size.
-> 3. startblock of the last extent is not aligned to the realtime extent
->    size, but startblock + blockcount is.
-> 
-> In this case, __xfs_bunmapi() calls xfs_bmap_add_extent_unwritten_real()
-> to set the second-to-last extent to unwritten. This should merge the
-> last and second-to-last extents, so __xfs_bunmapi() moves on to the
-> second-to-last extent.
-> 
-> However, if the size of the last and second-to-last extents combined is
-> greater than MAXEXTLEN, xfs_bmap_add_extent_unwritten_real() does not
-> merge the two extents. When that happens, __xfs_bunmapi() skips past the
-> last extent without unmapping it, thus leaking the space.
-> 
-> Fix it by only unwriting the minimum amount needed to align the last
-> extent to the realtime extent size, which is guaranteed to merge with
-> the last extent.
-> 
-> Signed-off-by: Omar Sandoval <osandov@fb.com>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 25 ++++++++++++++-----------
->  1 file changed, 14 insertions(+), 11 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 02469d59c787..6f8791a1e460 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -5376,16 +5376,17 @@ __xfs_bunmapi(
->  		}
->  		div_u64_rem(del.br_startblock, mp->m_sb.sb_rextsize, &mod);
->  		if (mod) {
-> +			xfs_extlen_t off = mp->m_sb.sb_rextsize - mod;
-> +
->  			/*
->  			 * Realtime extent is lined up at the end but not
->  			 * at the front.  We'll get rid of full extents if
->  			 * we can.
->  			 */
-> -			mod = mp->m_sb.sb_rextsize - mod;
-> -			if (del.br_blockcount > mod) {
-> -				del.br_blockcount -= mod;
-> -				del.br_startoff += mod;
-> -				del.br_startblock += mod;
-> +			if (del.br_blockcount > off) {
-> +				del.br_blockcount -= off;
-> +				del.br_startoff += off;
-> +				del.br_startblock += off;
+--Sig_/G5fteeX4WpkVraxOJWz9wJm
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Ok, so we make this change so that we no longer change @mod once it's
-set by the div64 operation...
+Hi Darrick,
 
->  			} else if (del.br_startoff == start &&
->  				   (del.br_state == XFS_EXT_UNWRITTEN ||
->  				    tp->t_blk_res == 0)) {
-> @@ -5403,6 +5404,7 @@ __xfs_bunmapi(
->  				continue;
->  			} else if (del.br_state == XFS_EXT_UNWRITTEN) {
->  				struct xfs_bmbt_irec	prev;
-> +				xfs_fileoff_t		unwrite_start;
->  
->  				/*
->  				 * This one is already unwritten.
-> @@ -5416,12 +5418,13 @@ __xfs_bunmapi(
->  				ASSERT(!isnullstartblock(prev.br_startblock));
->  				ASSERT(del.br_startblock ==
->  				       prev.br_startblock + prev.br_blockcount);
-> -				if (prev.br_startoff < start) {
-> -					mod = start - prev.br_startoff;
-> -					prev.br_blockcount -= mod;
-> -					prev.br_startblock += mod;
-> -					prev.br_startoff = start;
-> -				}
+On Mon, 2 Dec 2019 16:22:58 -0800 "Darrick J. Wong" <darrick.wong@oracle.co=
+m> wrote:
+>
+> On Tue, Dec 03, 2019 at 11:00:39AM +1100, Stephen Rothwell wrote:
+> > Hi all,
+> >=20
+> > This conflict is now between the xfs tree and Linus' tree (and the
+> > merge fix up patch below needs applying to that merge. =20
+>=20
+> There shouldn't be a conflict any more, since Linus just pulled the xfs
+> tree into master and resolved the conflict in the merge commit.
+> (Right?  Or am I missing something here post-turkeyweekend? 8))
 
-...and here, we have a @del extent that is unwritten and a @prev extent
-that is written.  We aim to trick xfs_bmap_add_extent_unwritten_real
-into extending @del towards startoff==0 and returning with @icur
-pointing at @del (not @prev) so that the next time we go around the loop
-we see an rtextsize-aligned @del and simply unmap it...
+Yeah, it should all be gone in tomorrow's linux-next.
 
-> +				unwrite_start = max3(start,
-> +						     del.br_startoff - mod,
-> +						     prev.br_startoff);
+--=20
+Cheers,
+Stephen Rothwell
 
-...however, if @prev is too long to convert+combine with @del, the
-conversion routine converts @prev to unwritten and returns with @icur
-pointing to @prev, not @del.  That's how we leak @del.
+--Sig_/G5fteeX4WpkVraxOJWz9wJm
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
 
-This patch fixes that by capping the conversion to the start of the
-rtext alignment, which means that we can always merge with @del and
-always return with @icur pointing at @del.  Ok, that's exactly what the
-commit message says.
+-----BEGIN PGP SIGNATURE-----
 
-It was /really/ helpful to be able to use the test case to walk through
-exactly what this patch is trying to fix.
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAl3lxwQACgkQAVBC80lX
+0Gz2Pgf/W+qtlGWltx8FwrLej5hHElz+9Qsxf9biRtTbhblZybgbQ4mICamyW0DR
+dhCUsa2GYCVwAZ/m+eMyFjvpu+Z86PA5sqNWY97ZV7hF9pnWYoxDRb4q/lJyXGLv
+z9QffiYs/l9J7CJNoT/KcCJvcLLz/DU79LB/nUQv4TK4+UOFpYKx+Deq8xK2G5WX
+w5romAXa2JCbGFfXy5Cysr2v2Tqpc4/9IbJ/qC83H2ZA2NK6ajG5pryydXBoTco2
+16rGnqQISq/+VZ8wr1G5OMxM8kueXJx9N566+OX4RqoEuIdsqa71pd7udRO1u78r
+j4VZj8d4hpWSwwJBLeQDh2pMC/5aAg==
+=074M
+-----END PGP SIGNATURE-----
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> +				mod = unwrite_start - prev.br_startoff;
-> +				prev.br_startoff = unwrite_start;
-> +				prev.br_startblock += mod;
-> +				prev.br_blockcount -= mod;
->  				prev.br_state = XFS_EXT_UNWRITTEN;
->  				error = xfs_bmap_add_extent_unwritten_real(tp,
->  						ip, whichfork, &icur, &cur,
-> -- 
-> 2.24.0
-> 
+--Sig_/G5fteeX4WpkVraxOJWz9wJm--
