@@ -2,122 +2,108 @@ Return-Path: <SRS0=2geO=ZZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9ADCC432C0
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 15:53:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F872C432C0
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 16:09:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BEB0B2070A
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 15:53:02 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="aFdo1JvB"
+	by mail.kernel.org (Postfix) with ESMTP id F232320848
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 16:09:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1575389351;
+	bh=II2Re7DbLEzmE5QGm8g7+xtzJhss5SFBy59u/YHHGbc=;
+	h=Date:From:To:Cc:Subject:List-ID:From;
+	b=FnRojNuAedgTEasOPqIOkMN5FIT1GmW5nxLg0o+ImI16EOTTmraZpYECfk34N3XJQ
+	 g2HYrneg+Mtvl6QgcUKaTVYIL4Y2KHUM8T7NMML0nJ71/WnbsERjn6IPWU7k8GET6O
+	 HiRYoifq0Www9MXo0CIXgIaEQULZwQjZ1PMgv5Kg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726075AbfLCPxC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Dec 2019 10:53:02 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:51848 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726024AbfLCPxB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Dec 2019 10:53:01 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB3Fi3an158418;
-        Tue, 3 Dec 2019 15:52:58 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=TK4k4PE84ofpkkHuFn7V1y5iUUyg9zU00SZ0mBJ9iGU=;
- b=aFdo1JvB26LRaFCB0pQXkZh9v49GKyZ7Pvffr7NEGgAnadLKUBlu9bTRpsVXfQD8BjY2
- bmJzG+90amILnLORjgSAxUQxs44IJ9SlWAqxf2sK5JTcWAFxorjvf1/xqTS7d2EwXpjM
- SihEONX6cihCl+vKJ8pZxjXadLJ13rnMWJfY90zeS9aMRFaAzQSQbwSgDJuyic8vJ4Jp
- NjXboOnGPKdkWHNYBLVAEEfFXa+t2OYOu9vHE1zoniDUWyle9IzAp6c+Im3QkqhGWUn7
- Cixt9RKQOfuWIjGKQ+YKJB9dmUHV3F5e1Sar3bihJOsumbLJkVylea8NKLlH0cJKG/jS HQ== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 2wkgcq8hu5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 Dec 2019 15:52:58 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB3FhsrO180101;
-        Tue, 3 Dec 2019 15:52:58 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 2wn8k2tdrr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 Dec 2019 15:52:58 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xB3FqvOL031056;
-        Tue, 3 Dec 2019 15:52:57 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 03 Dec 2019 07:52:56 -0800
-Date:   Tue, 3 Dec 2019 07:52:56 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix mount failure crash on invalid iclog memory
- access
-Message-ID: <20191203155256.GI7335@magnolia>
-References: <20191203140524.36043-1-bfoster@redhat.com>
+        id S1726534AbfLCQJC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Dec 2019 11:09:02 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56552 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726114AbfLCQJB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 3 Dec 2019 11:09:01 -0500
+Received: from localhost (c-67-169-218-210.hsd1.or.comcast.net [67.169.218.210])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1298720803;
+        Tue,  3 Dec 2019 16:08:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1575389341;
+        bh=II2Re7DbLEzmE5QGm8g7+xtzJhss5SFBy59u/YHHGbc=;
+        h=Date:From:To:Cc:Subject:From;
+        b=U6o2veH80qspdetmd7FL+MAWqRv1jcItsZq6pQ+y6CaccFHqW0ZQTThF3vv7/wIQV
+         MlFsXQLWTU/6iLL8SSIm1O9clf1JFoiTAibzkbCDXkCmpcsXuadjqlvyBf8dBRrhPR
+         yB2vpNhBXZ5lsXc7xFGUPSEHrJ/Drn/9RmGuJDY0=
+Date:   Tue, 3 Dec 2019 08:08:56 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, linux-kernel@vger.kernel.org,
+        sandeen@sandeen.net, hch@lst.de, agruenba@redhat.com,
+        rpeterso@redhat.com, cluster-devel@redhat.com,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>
+Subject: [GIT PULL] iomap: small cleanups for 5.5
+Message-ID: <20191203160856.GC7323@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191203140524.36043-1-bfoster@redhat.com>
 User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9460 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1912030120
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9460 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1912030120
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 03, 2019 at 09:05:24AM -0500, Brian Foster wrote:
-> syzbot (via KASAN) reports a use-after-free in the error path of
-> xlog_alloc_log(). Specifically, the iclog freeing loop doesn't
-> handle the case of a fully initialized ->l_iclog linked list.
-> Instead, it assumes that the list is partially constructed and NULL
-> terminated.
-> 
-> This bug manifested because there was no possible error scenario
-> after iclog list setup when the original code was added.  Subsequent
-> code and associated error conditions were added some time later,
-> while the original error handling code was never updated. Fix up the
-> error loop to terminate either on a NULL iclog or reaching the end
-> of the list.
-> 
-> Reported-by: syzbot+c732f8644185de340492@syzkaller.appspotmail.com
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+Hi Linus,
 
-Ahh, a proper S-o-B!  Thank you,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Please pull this series containing some more new iomap code for 5.5.
+There's not much this time -- just removing some local variables that
+don't need to exist in the iomap directio code.
+
+The branch merges cleanly against this morning's HEAD and survived a few
+days' worth of xfstests.  The merge was completely straightforward, so
+please let me know if you run into anything weird(er than my dorky tag
+message).
 
 --D
 
-> ---
->  fs/xfs/xfs_log.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 6a147c63a8a6..f6006d94a581 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -1542,6 +1542,8 @@ xlog_alloc_log(
->  		prev_iclog = iclog->ic_next;
->  		kmem_free(iclog->ic_data);
->  		kmem_free(iclog);
-> +		if (prev_iclog == log->l_iclog)
-> +			break;
->  	}
->  out_free_log:
->  	kmem_free(log);
-> -- 
-> 2.20.1
-> 
+The following changes since commit 419e9c38aa075ed0cd3c13d47e15954b686bcdb6:
+
+  iomap: Fix pipe page leakage during splicing (2019-11-22 08:36:02 -0800)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/iomap-5.5-merge-13
+
+for you to fetch changes up to 88cfd30e188fcf6fd8304586c936a6f22fb665e5:
+
+  iomap: remove unneeded variable in iomap_dio_rw() (2019-11-26 09:28:47 -0800)
+
+----------------------------------------------------------------
+New code for 5.5:
+- Make iomap_dio_rw callers explicitly tell us if they want us to wait
+- Port the xfs writeback code to iomap to complete the buffered io
+  library functions
+- Refactor the unshare code to share common pieces
+- Add support for performing copy on write with buffered writes
+- Other minor fixes
+- Fix unchecked return in iomap_bmap
+- Fix a type casting bug in a ternary statement in iomap_dio_bio_actor
+- Improve tracepoints for easier diagnostic ability
+- Fix pipe page leakage in directio reads
+- Clean up iter usage in directio paths
+
+----------------------------------------------------------------
+Jan Kara (1):
+      iomap: Do not create fake iter in iomap_dio_bio_actor()
+
+Johannes Thumshirn (1):
+      iomap: remove unneeded variable in iomap_dio_rw()
+
+ fs/iomap/direct-io.c | 39 ++++++++++++++++++++++-----------------
+ 1 file changed, 22 insertions(+), 17 deletions(-)
