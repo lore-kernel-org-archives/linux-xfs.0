@@ -7,54 +7,54 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 141DDC432C0
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 13:03:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7648DC432C3
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 13:03:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DB0CF206EC
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 13:03:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C390206EC
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 13:03:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LXrETamp"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="exWkBOqz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725957AbfLCNDA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Dec 2019 08:03:00 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:40354 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725954AbfLCNDA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Dec 2019 08:03:00 -0500
+        id S1726017AbfLCNDK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Dec 2019 08:03:10 -0500
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:20485 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725954AbfLCNDK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Dec 2019 08:03:10 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1575378179;
+        s=mimecast20190719; t=1575378189;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=ZSiM2GjgiJJhRswJloxpc8Z3eh0K183zTuKo0JytKCo=;
-        b=LXrETamp5G6J13hZEbNuBypX+OGe8vmsa1m5FxeIZ31QUUtQHWowLk5Y7EwQaxFvthg/8O
-        W+9DyvjHaZE5f0SWg9nqUzwgd0ToSFFjIt3HaBB1DpF4R3cK+O1nzzycdwcPfIa2FCE+gj
-        X7KnuT9PNwTrtRvNd5xlBe4lIidRZLA=
+        bh=/I10WIW6cAIwQwtNfIjmM2x5OVKJoRKklXQ6mpjIC3E=;
+        b=exWkBOqzyY6a20favEHSDXcch7jcxaGHJ8EwI6TEXFF0i3FHUl2EEEftZ9o5dIcqdRW1bk
+        gQQm4WM7R8VmBfKdE0pqvT7E+sHwR/1//CTW2BWjflgOqWYEDwsMrR4WRRQlJtaiuNBYLd
+        X5IdeZMZIC2aGwJ2uzKtK/WPh2I8hzg=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-351-2LpjP44lMwiIuzHO8hKXIA-1; Tue, 03 Dec 2019 08:02:56 -0500
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+ us-mta-197-asEA3fXKNXaAbAQq5hH8IA-1; Tue, 03 Dec 2019 08:03:08 -0500
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CE51E477;
-        Tue,  3 Dec 2019 13:02:53 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 49302477;
+        Tue,  3 Dec 2019 13:03:07 +0000 (UTC)
 Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3E3AB5C57E;
-        Tue,  3 Dec 2019 13:02:53 +0000 (UTC)
-Date:   Tue, 3 Dec 2019 08:02:53 -0500
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id C0D6D608E2;
+        Tue,  3 Dec 2019 13:03:06 +0000 (UTC)
+Date:   Tue, 3 Dec 2019 08:03:06 -0500
 From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org, alex@zadara.com
-Subject: Re: [PATCH 2/4] mkfs: check root inode location
-Message-ID: <20191203130253.GA18418@bfoster>
+Subject: Re: [PATCH 4/4] xfs_repair: check plausiblitiy of root dir pointer
+Message-ID: <20191203130306.GB18418@bfoster>
 References: <157530815855.126767.7523979488668040754.stgit@magnolia>
- <157530817131.126767.4542572453231190489.stgit@magnolia>
+ <157530818573.126767.13434243816626977089.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <157530817131.126767.4542572453231190489.stgit@magnolia>
+In-Reply-To: <157530818573.126767.13434243816626977089.stgit@magnolia>
 User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
-X-MC-Unique: 2LpjP44lMwiIuzHO8hKXIA-1
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-MC-Unique: asEA3fXKNXaAbAQq5hH8IA-1
 X-Mimecast-Spam-Score: 0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: quoted-printable
@@ -64,98 +64,109 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Dec 02, 2019 at 09:36:11AM -0800, Darrick J. Wong wrote:
+On Mon, Dec 02, 2019 at 09:36:25AM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 >=20
-> Make sure the root inode gets created where repair thinks it should be
-> created.
+> If sb_rootino doesn't point to where we think mkfs was supposed to have
+> preallocated an inode chunk, check to see if the alleged root directory
+> actually looks like a root directory.  If so, we'll let it go because
+> someone could have changed sunit since formatting time.
 >=20
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  libxfs/libxfs_api_defs.h |    1 +
->  mkfs/xfs_mkfs.c          |   29 +++++++++++++++++++++++------
->  2 files changed, 24 insertions(+), 6 deletions(-)
+>  repair/xfs_repair.c |   50 +++++++++++++++++++++++++++++++++++++++++++++=
+++++-
+>  1 file changed, 49 insertions(+), 1 deletion(-)
 >=20
 >=20
-> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-> index 645c9b1b..8f6b9fc2 100644
-> --- a/libxfs/libxfs_api_defs.h
-> +++ b/libxfs/libxfs_api_defs.h
-> @@ -156,5 +156,6 @@
-> =20
->  #define xfs_ag_init_headers=09=09libxfs_ag_init_headers
->  #define xfs_buf_delwri_submit=09=09libxfs_buf_delwri_submit
-> +#define xfs_ialloc_find_prealloc=09libxfs_ialloc_find_prealloc
-> =20
-
-Perhaps this should be in the previous patch..?
-
-
->  #endif /* __LIBXFS_API_DEFS_H__ */
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 18338a61..5143d9b4 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -3521,6 +3521,28 @@ rewrite_secondary_superblocks(
->  =09libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+> index 6798b88c..f6134cca 100644
+> --- a/repair/xfs_repair.c
+> +++ b/repair/xfs_repair.c
+> @@ -395,12 +395,60 @@ do_log(char const *msg, ...)
+>  =09va_end(args);
 >  }
 > =20
+> +/*
+> + * If sb_rootino points to a different inode than we were expecting, try
+> + * loading the alleged root inode to see if it's a plausibly a root dire=
+ctory.
+> + * If so, we'll readjust the computations.
+
+"... readjust the calculated inode chunk range such that the root inode
+is the first inode in the chunk."
+
+> + */
 > +static void
-> +check_root_ino(
+> +check_misaligned_root(
 > +=09struct xfs_mount=09*mp)
 > +{
-> +=09xfs_agino_t=09=09first, last;
+> +=09struct xfs_inode=09*ip;
+> +=09xfs_ino_t=09=09ino;
+> +=09int=09=09=09error;
 > +
-> +=09if (XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino) !=3D 0) {
-> +=09=09fprintf(stderr,
-> +=09=09=09_("%s: root inode created in AG %u, not AG 0\n"),
-> +=09=09=09progname, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino));
-> +=09=09exit(1);
-> +=09}
+> +=09error =3D -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &ip,
+> +=09=09=09&xfs_default_ifork_ops);
+> +=09if (error)
+> +=09=09return;
+> +=09if (!S_ISDIR(VFS_I(ip)->i_mode))
+> +=09=09goto out_rele;
 > +
-> +=09libxfs_ialloc_find_prealloc(mp, &first, &last);
-> +=09if (mp->m_sb.sb_rootino !=3D XFS_AGINO_TO_INO(mp, 0, first)) {
-> +=09=09fprintf(stderr,
-> +=09=09=09_("%s: root inode (%llu) not created in first chunk\n"),
-> +=09=09=09progname, (unsigned long long)mp->m_sb.sb_rootino);
+> +=09error =3D -libxfs_dir_lookup(NULL, ip, &xfs_name_dotdot, &ino, NULL);
+> +=09if (error)
+> +=09=09goto out_rele;
+> +
+> +=09if (ino =3D=3D mp->m_sb.sb_rootino) {
+> +=09=09do_warn(
+> +_("sb root inode value %" PRIu64 " inconsistent with calculated value %u=
+ but looks like a root directory\n"),
 
-If the root inode ended up somewhere in the middle of the first chunk,
-we'd fail (rightly), but with a misleading error message. Perhaps
-something like "root inode (..) not allocated in expected location"
-would be better? I'd also like to see a comment somewhere in here to
-explain why we have this check. For example:
+Just a nit, but I think the error would be more informative if it just
+said something like:
 
-"The superblock refers directly to the root inode, but repair makes
-hardcoded assumptions about its location based on filesystem geometry
-for an extra level of verification. If this assumption ever breaks, we
-should flag it immediately and fail the mkfs. Otherwise repair may
-consider the filesystem corrupt and toss the root inode."
+"sb root inode %" PRIu64 " inconsistent with alignment (expected rootino %u=
+)."
 
-Feel free to reword that however appropriate (given the behavior change
-in subsequent patches), of course..
+> +=09=09=09mp->m_sb.sb_rootino, first_prealloc_ino);
+> +=09=09last_prealloc_ino +=3D (int)ino - first_prealloc_ino;
+> +=09=09first_prealloc_ino =3D ino;
+
+Why assume ino > first_prealloc_ino? How about we just assign
+last_prealloc_ino as done in _find_prealloc()?
 
 Brian
 
-> +=09=09exit(1);
 > +=09}
+> +
+> +out_rele:
+> +=09libxfs_irele(ip);
 > +}
 > +
->  int
->  main(
->  =09int=09=09=09argc,
-> @@ -3807,12 +3829,7 @@ main(
->  =09/*
->  =09 * Protect ourselves against possible stupidity
->  =09 */
-> -=09if (XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino) !=3D 0) {
-> -=09=09fprintf(stderr,
-> -=09=09=09_("%s: root inode created in AG %u, not AG 0\n"),
-> -=09=09=09progname, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino));
-> -=09=09exit(1);
-> -=09}
-> +=09check_root_ino(mp);
+>  static void
+> -calc_mkfs(xfs_mount_t *mp)
+> +calc_mkfs(
+> +=09struct xfs_mount=09*mp)
+>  {
+>  =09libxfs_ialloc_find_prealloc(mp, &first_prealloc_ino,
+>  =09=09=09&last_prealloc_ino);
 > =20
+> +=09/*
+> +=09 * If the root inode isn't where we think it is, check its plausibili=
+ty
+> +=09 * as a root directory.  It's possible that somebody changed sunit si=
+nce
+> +=09 * the filesystem was created, which can change the value of the abov=
+e
+> +=09 * computation.  Try to avoid blowing up the filesystem if this is th=
+e
+> +=09 * case.
+> +=09 */
+> +=09if (mp->m_sb.sb_rootino !=3D NULLFSINO &&
+> +=09    mp->m_sb.sb_rootino !=3D first_prealloc_ino)
+> +=09=09check_misaligned_root(mp);
+> +
 >  =09/*
->  =09 * Re-write multiple secondary superblocks with rootinode field set
+>  =09 * now the first 3 inodes in the system
+>  =09 */
 >=20
 
