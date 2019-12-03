@@ -2,268 +2,144 @@ Return-Path: <SRS0=2geO=ZZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7BBCC432C3
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 00:24:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58A77C432C0
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 01:14:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7B5D020663
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 00:24:15 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="khxpuQC+"
+	by mail.kernel.org (Postfix) with ESMTP id 2CC7920684
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 01:14:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1575335647;
+	bh=pwx2zpy5m+hWbDJf2hRVzLvYGrk9YhD0g6iBdIxmiC8=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=1QN6coDL7Sbni9XSDbW0jl2gyqjyNg0NTAcpGrZ42Sh3UftaCal4CfBo1z3lzJ0wt
+	 eAIj2/C4AKbeppE1T7jiuauT/Y7Le4OKuei7vMpZGpoRp5R5qn4ARcY9Cx5x+393v6
+	 d5HAYj8eMNsIy07vSy47gOepaCQazu4QMrCozNxE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725903AbfLCAYN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Dec 2019 19:24:13 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:57066 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725775AbfLCAYM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Dec 2019 19:24:12 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB30NSsu181711;
-        Tue, 3 Dec 2019 00:23:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=83ZWSB/F4aobWrW35Kn2gtNTO8nhVBTzO1cE0YooDqs=;
- b=khxpuQC+mKprZAWa3fR2Tte68qeaEZRNaHIKcXwqkU5xeYqtSF6MRUrxS6nBEuslUPHs
- DPMC78GJA6cEOA+6Y0+e+IQR6NB0bRWp3sW0/conYbcjag+UwTEWO3TqjJ67KjF1AFBW
- I+6riZ1OHeutUW0P2WWxa9bTYu4TJCjsRZBhoxtoWyxgoBN8uZgyAHlXk1ryH/mUBVtK
- kCvP1aAS7sMaUmoUjAt2xcVTCz4pcR530iMSp7+kdN/YGw4FkhPNaMEt5xi9fAmyw6xq
- tKSwwYYD/8TmDQs6fYHPD76QJnjoEfJbL9WnWSsLTyeRzxeNyT5v6m91d6PVvDCG6h6i SQ== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2wkfuu3t82-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 Dec 2019 00:23:55 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB30Nobr072522;
-        Tue, 3 Dec 2019 00:23:54 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 2wn8k1cd5w-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 Dec 2019 00:23:54 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xB30Mxoo012861;
-        Tue, 3 Dec 2019 00:23:00 GMT
-Received: from localhost (/10.159.148.223)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 02 Dec 2019 16:22:59 -0800
-Date:   Mon, 2 Dec 2019 16:22:58 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Stephen Rothwell <sfr@canb.auug.org.au>
-Cc:     David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        Arnd Bergmann <arnd@arndb.de>,
-        Linux Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Linus <torvalds@linux-foundation.org>
-Subject: Re: linux-next: manual merge of the y2038 tree with the xfs tree
-Message-ID: <20191203002258.GE7339@magnolia>
-References: <20191030153046.01efae4a@canb.auug.org.au>
- <20191203110039.2ec22a17@canb.auug.org.au>
+        id S1726086AbfLCBOG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 Dec 2019 20:14:06 -0500
+Received: from mail-lf1-f65.google.com ([209.85.167.65]:44681 "EHLO
+        mail-lf1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725853AbfLCBOG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Dec 2019 20:14:06 -0500
+Received: by mail-lf1-f65.google.com with SMTP id v201so1419050lfa.11
+        for <linux-xfs@vger.kernel.org>; Mon, 02 Dec 2019 17:14:05 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=f16wPMX3Hv5+5LpFCWWiK7eqWkk4a1TMh+b2JYuh2L4=;
+        b=KquqAkqUVTyG83FELzXx6nZWqrQom0qPebBeM3l4nUnY0IjRxfw5jl9f4rhB4P0Ys1
+         yMMjUqHh9Atftq9/aMH7vPLqvTYv5hjkMQeepjJof4arWmddxk+x0kYqi0oEsm1gm01r
+         c0+/cFEMdOFDQe0735Al7ThhTziCMU1XmN/7g=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=f16wPMX3Hv5+5LpFCWWiK7eqWkk4a1TMh+b2JYuh2L4=;
+        b=LOfYdmKLFo00Nd7gUYJuxOmK+QP2DTszxAldUf4ykC5Q41Ctkae0Lh6hijmRnz/5hL
+         XGoheWEej1M6jtOKWB90AP/4WuYuyQCIXIEajjgt33h7wscW/abG+ROliU2f9cy/3eKw
+         dkZcbdJhoaFRWBqIMe+C8UgLcFFaxsiC9Dbt9r8iC03xRzGwdaor4cDUR7M9dWsQnmqy
+         cJC7LRuPwFEpdPy7as47WQ8d6XF98rdTYp3j8dvLru/F+uOW9PJb6iROkBDmNqYHy0M3
+         r8AY8AZ49YYHg0cDSiTgPeyiXll0KS3IrMKH8o4r6VoUcFhMzf4VplzL7X8hyYjlIjW8
+         IJXg==
+X-Gm-Message-State: APjAAAVABQdNMDJj1VLSvtZcf+lFAJ2XwZApIjh5eBOOGUxpgomZMbgA
+        xlt4AZs3qVV4HrpgvTvxAI/LzWJSboM=
+X-Google-Smtp-Source: APXvYqzRL8NZ1WhlKD1XvvpngzqXg38iSK2S0FU9VwDhjIPfzzv0EAUd+CT/bzIMSKg+wryeIFFMqg==
+X-Received: by 2002:a19:f514:: with SMTP id j20mr1009336lfb.31.1575335644405;
+        Mon, 02 Dec 2019 17:14:04 -0800 (PST)
+Received: from mail-lj1-f176.google.com (mail-lj1-f176.google.com. [209.85.208.176])
+        by smtp.gmail.com with ESMTPSA id u3sm355663lfb.68.2019.12.02.17.14.04
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 02 Dec 2019 17:14:04 -0800 (PST)
+Received: by mail-lj1-f176.google.com with SMTP id m6so1787226ljc.1
+        for <linux-xfs@vger.kernel.org>; Mon, 02 Dec 2019 17:14:04 -0800 (PST)
+X-Received: by 2002:a2e:86c4:: with SMTP id n4mr889870ljj.97.1575335193641;
+ Mon, 02 Dec 2019 17:06:33 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191203110039.2ec22a17@canb.auug.org.au>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9459 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1912030002
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9459 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1912030002
+References: <20191129142045.7215-1-agruenba@redhat.com>
+In-Reply-To: <20191129142045.7215-1-agruenba@redhat.com>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Mon, 2 Dec 2019 17:06:17 -0800
+X-Gmail-Original-Message-ID: <CAHk-=wj5caXKoukPyM7Zc6A0Q+E-pBGHSV64iZe8t98OerXR_w@mail.gmail.com>
+Message-ID: <CAHk-=wj5caXKoukPyM7Zc6A0Q+E-pBGHSV64iZe8t98OerXR_w@mail.gmail.com>
+Subject: Re: [PATCH v2] fs: Fix page_mkwrite off-by-one errors
+To:     Andreas Gruenbacher <agruenba@redhat.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Jeff Layton <jlayton@kernel.org>, Sage Weil <sage@redhat.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        "Theodore Ts'o" <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Richard Weinberger <richard@nod.at>,
+        Artem Bityutskiy <dedekind1@gmail.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        ceph-devel@vger.kernel.org,
+        Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-mtd@lists.infradead.org, Chris Mason <clm@fb.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 03, 2019 at 11:00:39AM +1100, Stephen Rothwell wrote:
-> Hi all,
-> 
-> This conflict is now between the xfs tree and Linus' tree (and the
-> merge fix up patch below needs applying to that merge.
+On Fri, Nov 29, 2019 at 6:21 AM Andreas Gruenbacher <agruenba@redhat.com> wrote:
+>
+> +/**
+> + * page_mkwrite_check_truncate - check if page was truncated
+> + * @page: the page to check
+> + * @inode: the inode to check the page against
+> + *
+> + * Returns the number of bytes in the page up to EOF,
+> + * or -EFAULT if the page was truncated.
+> + */
+> +static inline int page_mkwrite_check_truncate(struct page *page,
+> +                                             struct inode *inode)
+> +{
+> +       loff_t size = i_size_read(inode);
+> +       pgoff_t end_index = (size + PAGE_SIZE - 1) >> PAGE_SHIFT;
 
-There shouldn't be a conflict any more, since Linus just pulled the xfs
-tree into master and resolved the conflict in the merge commit.
-(Right?  Or am I missing something here post-turkeyweekend? 8))
+This special end_index calculation seems to be redundant.
 
---D
+You later want "size >> PAGE_SHIFT" for another test, and that's
+actually the important part.
 
-> On Wed, 30 Oct 2019 15:31:10 +1100 Stephen Rothwell <sfr@canb.auug.org.au> wrote:
-> >
-> > Today's linux-next merge of the y2038 tree got a conflict in:
-> > 
-> >   fs/compat_ioctl.c
-> > 
-> > between commit:
-> > 
-> >   837a6e7f5cdb ("fs: add generic UNRESVSP and ZERO_RANGE ioctl handlers")
-> > 
-> > from the xfs tree and commits:
-> >   011da44bc5b6 ("compat: move FS_IOC_RESVSP_32 handling to fs/ioctl.c")
-> >   37ecf8b20abd ("compat_sys_ioctl(): make parallel to do_vfs_ioctl()")
-> > 
-> > from the y2038 tree.
-> > 
-> > I fixed it up (see below and the added patch) and can carry the fix as
-> > necessary. This is now fixed as far as linux-next is concerned, but any
-> > non trivial conflicts should be mentioned to your upstream maintainer
-> > when your tree is submitted for merging.  You may also want to consider
-> > cooperating with the maintainer of the conflicting tree to minimise any
-> > particularly complex conflicts.
-> > 
-> > From af387ea192196ffd141234e7e45bcfbc2be1a4fc Mon Sep 17 00:00:00 2001
-> > From: Stephen Rothwell <sfr@canb.auug.org.au>
-> > Date: Wed, 30 Oct 2019 15:05:29 +1100
-> > Subject: [PATCH] fix up for "compat: move FS_IOC_RESVSP_32 handling to
-> >  fs/ioctl.c"
-> > 
-> > Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
-> > ---
-> >  fs/ioctl.c             | 4 ++--
-> >  include/linux/falloc.h | 7 +++++--
-> >  2 files changed, 7 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/fs/ioctl.c b/fs/ioctl.c
-> > index 455ad38c8610..2f5e4e5b97e1 100644
-> > --- a/fs/ioctl.c
-> > +++ b/fs/ioctl.c
-> > @@ -495,7 +495,7 @@ int ioctl_preallocate(struct file *filp, int mode, void __user *argp)
-> >  /* on ia32 l_start is on a 32-bit boundary */
-> >  #if defined CONFIG_COMPAT && defined(CONFIG_X86_64)
-> >  /* just account for different alignment */
-> > -int compat_ioctl_preallocate(struct file *file,
-> > +int compat_ioctl_preallocate(struct file *file, int mode,
-> >  				struct space_resv_32 __user *argp)
-> >  {
-> >  	struct inode *inode = file_inode(file);
-> > @@ -517,7 +517,7 @@ int compat_ioctl_preallocate(struct file *file,
-> >  		return -EINVAL;
-> >  	}
-> >  
-> > -	return vfs_fallocate(file, FALLOC_FL_KEEP_SIZE, sr.l_start, sr.l_len);
-> > +	return vfs_fallocate(file, mode | FALLOC_FL_KEEP_SIZE, sr.l_start, sr.l_len);
-> >  }
-> >  #endif
-> >  
-> > diff --git a/include/linux/falloc.h b/include/linux/falloc.h
-> > index 63c4f0d615bc..ab42b72424f0 100644
-> > --- a/include/linux/falloc.h
-> > +++ b/include/linux/falloc.h
-> > @@ -45,10 +45,13 @@ struct space_resv_32 {
-> >  	__s32		l_pad[4];	/* reserve area */
-> >  };
-> >  
-> > -#define FS_IOC_RESVSP_32		_IOW ('X', 40, struct space_resv_32)
-> > +#define FS_IOC_RESVSP_32	_IOW ('X', 40, struct space_resv_32)
-> > +#define FS_IOC_UNRESVSP_32	_IOW ('X', 41, struct space_resv_32)
-> >  #define FS_IOC_RESVSP64_32	_IOW ('X', 42, struct space_resv_32)
-> > +#define FS_IOC_UNRESVSP64_32	_IOW ('X', 43, struct space_resv_32)
-> > +#define FS_IOC_ZERO_RANGE_32	_IOW ('X', 57, struct space_resv_32)
-> >  
-> > -int compat_ioctl_preallocate(struct file *, struct space_resv_32 __user *);
-> > +int compat_ioctl_preallocate(struct file *, int mode, struct space_resv_32 __user *);
-> >  
-> >  #endif
-> >  
-> > -- 
-> > 2.23.0
-> > 
-> > -- 
-> > Cheers,
-> > Stephen Rothwell
-> > 
-> > diff --cc fs/compat_ioctl.c
-> > index 62e530814cef,9ae90d728c0f..000000000000
-> > --- a/fs/compat_ioctl.c
-> > +++ b/fs/compat_ioctl.c
-> > @@@ -1020,51 -165,38 +165,57 @@@ COMPAT_SYSCALL_DEFINE3(ioctl, unsigned 
-> >   	case FIONBIO:
-> >   	case FIOASYNC:
-> >   	case FIOQSIZE:
-> > - 		break;
-> > - 
-> > - #if defined(CONFIG_IA64) || defined(CONFIG_X86_64)
-> > + 	case FS_IOC_FIEMAP:
-> > + 	case FIGETBSZ:
-> > + 	case FICLONERANGE:
-> > + 	case FIDEDUPERANGE:
-> > + 		goto found_handler;
-> > + 	/*
-> > + 	 * The next group is the stuff handled inside file_ioctl().
-> > + 	 * For regular files these never reach ->ioctl(); for
-> > + 	 * devices, sockets, etc. they do and one (FIONREAD) is
-> > + 	 * even accepted in some cases.  In all those cases
-> > + 	 * argument has the same type, so we can handle these
-> > + 	 * here, shunting them towards do_vfs_ioctl().
-> > + 	 * ->compat_ioctl() will never see any of those.
-> > + 	 */
-> > + 	/* pointer argument, never actually handled by ->ioctl() */
-> > + 	case FIBMAP:
-> > + 		goto found_handler;
-> > + 	/* handled by some ->ioctl(); always a pointer to int */
-> > + 	case FIONREAD:
-> > + 		goto found_handler;
-> > + 	/* these two get messy on amd64 due to alignment differences */
-> > + #if defined(CONFIG_X86_64)
-> >   	case FS_IOC_RESVSP_32:
-> >   	case FS_IOC_RESVSP64_32:
-> >  -		error = compat_ioctl_preallocate(f.file, compat_ptr(arg));
-> >  +		error = compat_ioctl_preallocate(f.file, 0, compat_ptr(arg));
-> >  +		goto out_fput;
-> >  +	case FS_IOC_UNRESVSP_32:
-> >  +	case FS_IOC_UNRESVSP64_32:
-> >  +		error = compat_ioctl_preallocate(f.file, FALLOC_FL_PUNCH_HOLE,
-> >  +				compat_ptr(arg));
-> >  +		goto out_fput;
-> >  +	case FS_IOC_ZERO_RANGE_32:
-> >  +		error = compat_ioctl_preallocate(f.file, FALLOC_FL_ZERO_RANGE,
-> >  +				compat_ptr(arg));
-> >   		goto out_fput;
-> >   #else
-> >   	case FS_IOC_RESVSP:
-> >   	case FS_IOC_RESVSP64:
-> >  -		goto found_handler;
-> >  +		error = ioctl_preallocate(f.file, 0, compat_ptr(arg));
-> >  +		goto out_fput;
-> >  +	case FS_IOC_UNRESVSP:
-> >  +	case FS_IOC_UNRESVSP64:
-> >  +		error = ioctl_preallocate(f.file, FALLOC_FL_PUNCH_HOLE,
-> >  +				compat_ptr(arg));
-> >  +		goto out_fput;
-> >  +	case FS_IOC_ZERO_RANGE:
-> >  +		error = ioctl_preallocate(f.file, FALLOC_FL_ZERO_RANGE,
-> >  +				compat_ptr(arg));
-> >  +		goto out_fput;
-> >   #endif
-> >   
-> > - 	case FICLONE:
-> > - 	case FICLONERANGE:
-> > - 	case FIDEDUPERANGE:
-> > - 	case FS_IOC_FIEMAP:
-> > - 		goto do_ioctl;
-> > - 
-> > - 	case FIBMAP:
-> > - 	case FIGETBSZ:
-> > - 	case FIONREAD:
-> > - 		if (S_ISREG(file_inode(f.file)->i_mode))
-> > - 			break;
-> > - 		/*FALL THROUGH*/
-> > - 
-> >   	default:
-> >   		if (f.file->f_op->compat_ioctl) {
-> >   			error = f.file->f_op->compat_ioctl(f.file, cmd, arg);
-> 
-> -- 
-> Cheers,
-> Stephen Rothwell
+The "+ PAGE_SIZE - 1" case is purely to handle the "AT the page
+boundary is special" case, but since you have to calculate
+"offset_in_page(size)" anyway, that's entirely redundant - the answer
+is part of that.
 
+So I think it would be better to write the logic as
 
+        loff_t size = i_size_read(inode);
+        pgoff_t index = size >> PAGE_SHIFT;
+        int offset = offset_in_page(size);
+
+        if (page->mapping != inode->i_mapping)
+                return -EFAULT;
+
+        /* Page is wholly past the EOF page */
+        if (page->index > index)
+                return -EFAULT;
+        /* page is wholly inside EOF */
+        if (page->index < index)
+                return PAGE_SIZE;
+        /* bytes in a page? If 0, it's past EOF */
+        return offset ? offset : -PAGE_SIZE;
+
+instead. That avoids the unnecessary "round up" part, and simply uses
+the same EOF index for everything.
+
+              Linus
