@@ -2,212 +2,160 @@ Return-Path: <SRS0=2geO=ZZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DDE3C43215
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 12:50:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 141DDC432C0
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 13:03:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 381B020684
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 12:50:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB0CF206EC
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 13:03:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MqDtkLKX"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LXrETamp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726186AbfLCMuq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Dec 2019 07:50:46 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:47155 "EHLO
+        id S1725957AbfLCNDA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Dec 2019 08:03:00 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:40354 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725957AbfLCMuq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Dec 2019 07:50:46 -0500
+        with ESMTP id S1725954AbfLCNDA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Dec 2019 08:03:00 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1575377445;
+        s=mimecast20190719; t=1575378179;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=vUK+qbv4vcR++ilRAwdwA/Hrp9NPAPx99bcSEG1xv8w=;
-        b=MqDtkLKXV5FWiVTfwBWsuyDRDAUbVCn+lFGbDRVEbCyUmVUamgzFtLg7FQqqy43k18enwo
-        udmLBoWGKvvOVpsn3nBpYm9HhNnzxPSMZ9NuS1Mwx8Ug43/u+r3bDF6VehEy2jpIg02fxM
-        E/uMDEAu0FT6WLNCNVdLil5nVfR1pEw=
+        bh=ZSiM2GjgiJJhRswJloxpc8Z3eh0K183zTuKo0JytKCo=;
+        b=LXrETamp5G6J13hZEbNuBypX+OGe8vmsa1m5FxeIZ31QUUtQHWowLk5Y7EwQaxFvthg/8O
+        W+9DyvjHaZE5f0SWg9nqUzwgd0ToSFFjIt3HaBB1DpF4R3cK+O1nzzycdwcPfIa2FCE+gj
+        X7KnuT9PNwTrtRvNd5xlBe4lIidRZLA=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-329-twkIHNhdORWSSUH0wNu3iA-1; Tue, 03 Dec 2019 07:50:41 -0500
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+ us-mta-351-2LpjP44lMwiIuzHO8hKXIA-1; Tue, 03 Dec 2019 08:02:56 -0500
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0AABB18C35A4;
-        Tue,  3 Dec 2019 12:50:40 +0000 (UTC)
-Received: from colo-mx.corp.redhat.com (colo-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id D0F9A67E5D;
-        Tue,  3 Dec 2019 12:50:39 +0000 (UTC)
-Received: from zmail17.collab.prod.int.phx2.redhat.com (zmail17.collab.prod.int.phx2.redhat.com [10.5.83.19])
-        by colo-mx.corp.redhat.com (Postfix) with ESMTP id 4498918089C8;
-        Tue,  3 Dec 2019 12:50:39 +0000 (UTC)
-Date:   Tue, 3 Dec 2019 07:50:39 -0500 (EST)
-From:   Jan Stancek <jstancek@redhat.com>
-To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        hch@infradead.org, darrick.wong@oracle.com
-Cc:     linuxppc-dev@lists.ozlabs.org,
-        Memory Management <mm-qe@redhat.com>,
-        LTP Mailing List <ltp@lists.linux.it>,
-        Linux Stable maillist <stable@vger.kernel.org>,
-        CKI Project <cki-project@redhat.com>,
-        Michael Ellerman <mpe@ellerman.id.au>
-Message-ID: <1766807082.14812757.1575377439007.JavaMail.zimbra@redhat.com>
-In-Reply-To: <1420623640.14527843.1575289859701.JavaMail.zimbra@redhat.com>
-References: <cki.6C6A189643.3T2ZUWEMOI@redhat.com> <1738119916.14437244.1575151003345.JavaMail.zimbra@redhat.com> <8736e3ffen.fsf@mpe.ellerman.id.au> <1420623640.14527843.1575289859701.JavaMail.zimbra@redhat.com>
-Subject: [bug] userspace hitting sporadic SIGBUS on xfs (Power9, ppc64le),
- v4.19 and later
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CE51E477;
+        Tue,  3 Dec 2019 13:02:53 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3E3AB5C57E;
+        Tue,  3 Dec 2019 13:02:53 +0000 (UTC)
+Date:   Tue, 3 Dec 2019 08:02:53 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org, alex@zadara.com
+Subject: Re: [PATCH 2/4] mkfs: check root inode location
+Message-ID: <20191203130253.GA18418@bfoster>
+References: <157530815855.126767.7523979488668040754.stgit@magnolia>
+ <157530817131.126767.4542572453231190489.stgit@magnolia>
 MIME-Version: 1.0
-X-Originating-IP: [10.43.17.163, 10.4.195.10]
-Thread-Topic: =?utf-8?B?4p2MIEZBSUw6?= Test report for kernel
- 5.3.13-3b5f971.cki (stable-queue)
-Thread-Index: cteAZVs1buDEh+CFMxyFiJYhnT9cJLxMrbue
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-MC-Unique: twkIHNhdORWSSUH0wNu3iA-1
+In-Reply-To: <157530817131.126767.4542572453231190489.stgit@magnolia>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+X-MC-Unique: 2LpjP44lMwiIuzHO8hKXIA-1
 X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
+On Mon, Dec 02, 2019 at 09:36:11AM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>=20
+> Make sure the root inode gets created where repair thinks it should be
+> created.
+>=20
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  libxfs/libxfs_api_defs.h |    1 +
+>  mkfs/xfs_mkfs.c          |   29 +++++++++++++++++++++++------
+>  2 files changed, 24 insertions(+), 6 deletions(-)
+>=20
+>=20
+> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+> index 645c9b1b..8f6b9fc2 100644
+> --- a/libxfs/libxfs_api_defs.h
+> +++ b/libxfs/libxfs_api_defs.h
+> @@ -156,5 +156,6 @@
+> =20
+>  #define xfs_ag_init_headers=09=09libxfs_ag_init_headers
+>  #define xfs_buf_delwri_submit=09=09libxfs_buf_delwri_submit
+> +#define xfs_ialloc_find_prealloc=09libxfs_ialloc_find_prealloc
+> =20
 
-(This bug report is summary from thread [1] with some additions)
-
-User-space binaries on Power9 ppc64le (with 64k pages) on xfs
-filesystem are sporadically hitting SIGBUS:
-
----------- 8< ----------
-(gdb) r
-Starting program: /mnt/testarea/ltp/testcases/bin/genasin
-
-Program received signal SIGBUS, Bus error.
-dl_main (phdr=0x10000040, phnum=<optimized out>, user_entry=0x7fffffffe760, auxv=<optimized out>) at rtld.c:1362
-1362        switch (ph->p_type)
-
-(gdb) p ph
-$1 = (const Elf64_Phdr *) 0x10000040
-
-(gdb) p *ph
-Cannot access memory at address 0x10000040
-
-(gdb) info proc map
-process 1110670
-Mapped address spaces:
-
-          Start Addr           End Addr       Size     Offset objfile
-          0x10000000         0x10010000    0x10000        0x0 /mnt/testarea/ltp/testcases/bin/genasin
-          0x10010000         0x10030000    0x20000        0x0 /mnt/testarea/ltp/testcases/bin/genasin
-      0x7ffff7f90000     0x7ffff7fb0000    0x20000        0x0 [vdso]
-      0x7ffff7fb0000     0x7ffff7fe0000    0x30000        0x0 /usr/lib64/ld-2.30.so
-      0x7ffff7fe0000     0x7ffff8000000    0x20000    0x20000 /usr/lib64/ld-2.30.so
-      0x7ffffffd0000     0x800000000000    0x30000        0x0 [stack]
-
-(gdb) x/1x 0x10000040
-0x10000040:     Cannot access memory at address 0x10000040
----------- >8 ----------
-
-When this happens the binary continues to hit SIGBUS until page
-is released, for example by: echo 3 > /proc/sys/vm/drop_caches
-
-The issue goes back to at least v4.19.
-
-I can semi-reliably reproduce it with LTP is installed to /mnt/testarea/ltp by:
-while [ True ]; do
-        echo 3 > /proc/sys/vm/drop_caches
-        rm -f /mnt/testarea/ltp/results/RUNTEST.log /mnt/testarea/ltp/output/RUNTEST.run.log
-        ./runltp -p -d results -l RUNTEST.log -o RUNTEST.run.log -f math
-        grep FAIL /mnt/testarea/ltp/results/RUNTEST.log && exit 1
-done
-
-and some stress activity in other terminal (e.g. kernel build).
-Sometimes in minutes, sometimes in hours. It is not reliable
-enough to get meaningful bisect results.
-
-My theory is that there's a race in iomap. There appear to be
-interleaved calls to iomap_set_range_uptodate() for same page
-with varying offset and length. Each call sees bitmap as _not_
-entirely "uptodate" and hence doesn't call SetPageUptodate().
-Even though each bit in bitmap ends up uptodate by the time
-all calls finish.
-
-For example, with following traces:
-
-iomap_set_range_uptodate()
-...
-        if (uptodate && !PageError(page))
-                SetPageUptodate(page);
-+       
-+       if (mycheck(page)) {
-+               trace_printk("page: %px, iop: %px, uptodate: %d, !PageError(page): %d, flags: %lx\n", page, iop, uptodate, !PageError(page), page->flags);
-+               trace_printk("first: %u, last: %u, off: %u, len: %u, i: %u\n", first, last, off, len, i);
-+       }
-
-I get:
-         genacos-18471 [057] ....   162.465730: iomap_readpages: mapping: c000003f185a1ab0
-         genacos-18471 [057] ....   162.465732: iomap_page_create: iomap_page_create page: c00c00000fe26180, page->private: 0000000000000000, iop: c000003fc70a19c0, flags: 3ffff800000001
-         genacos-18471 [057] ....   162.465736: iomap_set_range_uptodate: page: c00c00000fe26180, iop: c000003fc70a19c0, uptodate: 0, !PageError(page): 1, flags: 3ffff800002001
-         genacos-18471 [057] ....   162.465736: iomap_set_range_uptodate: first: 1, last: 14, off: 4096, len: 57344, i: 16
-          <idle>-0     [060] ..s.   162.534862: iomap_set_range_uptodate: page: c00c00000fe26180, iop: c000003fc70a19c0, uptodate: 0, !PageError(page): 1, flags: 3ffff800002081
-          <idle>-0     [061] ..s.   162.534862: iomap_set_range_uptodate: page: c00c00000fe26180, iop: c000003fc70a19c0, uptodate: 0, !PageError(page): 1, flags: 3ffff800002081
-          <idle>-0     [060] ..s.   162.534864: iomap_set_range_uptodate: first: 0, last: 0, off: 0, len: 4096, i: 16
-          <idle>-0     [061] ..s.   162.534864: iomap_set_range_uptodate: first: 15, last: 15, off: 61440, len: 4096, i: 16
-
-This page doesn't have Uptodate flag set, which leads to filemap_fault()
-returning VM_FAULT_SIGBUS:
-
-crash> p/x ((struct page *) 0xc00c00000fe26180)->flags                                                                                                                                             
-$1 = 0x3ffff800002032
-
-crash> kmem -g 0x3ffff800002032
-FLAGS: 3ffff800002032
-  PAGE-FLAG       BIT  VALUE
-  PG_error          1  0000002
-  PG_dirty          4  0000010
-  PG_lru            5  0000020
-  PG_private_2     13  0002000
-  PG_fscache       13  0002000
-  PG_savepinned     4  0000010
-  PG_double_map    13  0002000
-
-But iomap_page->uptodate in page->private suggests all bits are uptodate:
-
-crash> p/x ((struct page *) 0xc00c00000fe26180)->private
-$2 = 0xc000003fc70a19c0
-
-crash> p/x ((struct iomap_page *) 0xc000003fc70a19c0)->uptodate                                                                                                                                    
-$3 = {0xffff, 0x0}
+Perhaps this should be in the previous patch..?
 
 
-It appears (after ~4 hours) that I can avoid the problem if I split
-the loop so that bits are checked only after all updates are made.
-Not sure if this correct approach, or just making it less reproducible:
+>  #endif /* __LIBXFS_API_DEFS_H__ */
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 18338a61..5143d9b4 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -3521,6 +3521,28 @@ rewrite_secondary_superblocks(
+>  =09libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+>  }
+> =20
+> +static void
+> +check_root_ino(
+> +=09struct xfs_mount=09*mp)
+> +{
+> +=09xfs_agino_t=09=09first, last;
+> +
+> +=09if (XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino) !=3D 0) {
+> +=09=09fprintf(stderr,
+> +=09=09=09_("%s: root inode created in AG %u, not AG 0\n"),
+> +=09=09=09progname, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino));
+> +=09=09exit(1);
+> +=09}
+> +
+> +=09libxfs_ialloc_find_prealloc(mp, &first, &last);
+> +=09if (mp->m_sb.sb_rootino !=3D XFS_AGINO_TO_INO(mp, 0, first)) {
+> +=09=09fprintf(stderr,
+> +=09=09=09_("%s: root inode (%llu) not created in first chunk\n"),
+> +=09=09=09progname, (unsigned long long)mp->m_sb.sb_rootino);
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index e25901ae3ff4..abe37031c93d 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -131,7 +131,11 @@ iomap_set_range_uptodate(struct page *page, unsigned off, unsigned len)
-                for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
-                        if (i >= first && i <= last)
-                                set_bit(i, iop->uptodate);
--                       else if (!test_bit(i, iop->uptodate))
-+               }
-+               for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
-+                       if (i >= first && i <= last)
-+                               continue;
-+                       if (!test_bit(i, iop->uptodate))
-                                uptodate = false;
-                }
-        }
+If the root inode ended up somewhere in the middle of the first chunk,
+we'd fail (rightly), but with a misleading error message. Perhaps
+something like "root inode (..) not allocated in expected location"
+would be better? I'd also like to see a comment somewhere in here to
+explain why we have this check. For example:
 
-Thanks,
-Jan
+"The superblock refers directly to the root inode, but repair makes
+hardcoded assumptions about its location based on filesystem geometry
+for an extra level of verification. If this assumption ever breaks, we
+should flag it immediately and fail the mkfs. Otherwise repair may
+consider the filesystem corrupt and toss the root inode."
 
-[1] https://lore.kernel.org/stable/1420623640.14527843.1575289859701.JavaMail.zimbra@redhat.com/T/#u
+Feel free to reword that however appropriate (given the behavior change
+in subsequent patches), of course..
+
+Brian
+
+> +=09=09exit(1);
+> +=09}
+> +}
+> +
+>  int
+>  main(
+>  =09int=09=09=09argc,
+> @@ -3807,12 +3829,7 @@ main(
+>  =09/*
+>  =09 * Protect ourselves against possible stupidity
+>  =09 */
+> -=09if (XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino) !=3D 0) {
+> -=09=09fprintf(stderr,
+> -=09=09=09_("%s: root inode created in AG %u, not AG 0\n"),
+> -=09=09=09progname, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino));
+> -=09=09exit(1);
+> -=09}
+> +=09check_root_ino(mp);
+> =20
+>  =09/*
+>  =09 * Re-write multiple secondary superblocks with rootinode field set
+>=20
 
