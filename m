@@ -2,198 +2,222 @@ Return-Path: <SRS0=2geO=ZZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A29ADC432C0
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 23:40:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 585DAC432C0
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 23:52:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 659D820656
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 23:40:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2458F20684
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 23:52:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bPbgMHRJ"
+	dkim=pass (2048-bit key) header.d=osandov-com.20150623.gappssmtp.com header.i=@osandov-com.20150623.gappssmtp.com header.b="I/KWmMOh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726224AbfLCXkR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Dec 2019 18:40:17 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:41324 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726195AbfLCXkQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Dec 2019 18:40:16 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB3NTLSj160277;
-        Tue, 3 Dec 2019 23:40:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=8QLix/xkBNtOEZCyw+aFE8CNOgl3xF0b83ynOPQJQwI=;
- b=bPbgMHRJGAB0aY4RbhzLHvlTIcumz3YWNgviXqRKJPIt2aoXO0XbjVi58qImI4gNpd05
- 5+Rc0ZJKPdOnB8vCEMTQ4lWocyF2YxAqK7cWETMbrOduYEWtknvarTY/QJZt6FReGCNP
- u5gx2UonxvO+KfyGZKKG84r27WKPGXI/6kvWjircFkpfAA3rSjWUNxvq0xT6YR1+4bPQ
- ovxrm0bNQbLlFHR+o3Uq9rJ3HjCa8X2Kh8NYHZGxUa+fcs9YDrQi9c0JlmtvJepSJbbH
- NFkFe573HSQR6hEG5StMJ6qPAQNk8vBXmxI4fTCh96Ybb6nCfZxlDo6bPmFbG7fspS+3 3A== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2wkgcqb19v-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 Dec 2019 23:40:11 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB3NStY1156250;
-        Tue, 3 Dec 2019 23:40:10 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2wp17c8r17-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 Dec 2019 23:40:10 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xB3Ne8SC014519;
-        Tue, 3 Dec 2019 23:40:08 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 03 Dec 2019 15:40:08 -0800
-Date:   Tue, 3 Dec 2019 15:40:07 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org, alex@zadara.com
-Subject: Re: [PATCH 2/4] mkfs: check root inode location
-Message-ID: <20191203234007.GL7335@magnolia>
-References: <157530815855.126767.7523979488668040754.stgit@magnolia>
- <157530817131.126767.4542572453231190489.stgit@magnolia>
- <20191203130253.GA18418@bfoster>
+        id S1726473AbfLCXwA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Dec 2019 18:52:00 -0500
+Received: from mail-pf1-f174.google.com ([209.85.210.174]:36496 "EHLO
+        mail-pf1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726060AbfLCXwA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Dec 2019 18:52:00 -0500
+Received: by mail-pf1-f174.google.com with SMTP id b19so2645648pfd.3
+        for <linux-xfs@vger.kernel.org>; Tue, 03 Dec 2019 15:51:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=osandov-com.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=lM/UWjr0BC+lsg5dho5+dCWtdfble0VAtzvxHuZus+Q=;
+        b=I/KWmMOh9F0OO3qvEjJjw3bbP6SMP8yizqrJJnSd7YVwsZRYj7fxI1qt90EkkmwPix
+         2OZ/lzfSeSu99MaZ43Vl/81ry2TtFVUmzWAILPH7jqKGgChA6Xmbx+m7rU/9ym1y0vDY
+         Uacou6RH8OEI7CgKlshHUF2HVd0wl/oBJV09qyPY5M0JlbmFd3pqx1s1uUnDrkxRyonR
+         krpQIgyPNobLCLp4hseA3vucqRYzB2Ox6KVSkEtkTwq6X0y8iMF2BGvqurLxsVDDzKzx
+         WEG4VsUwwXgeCi8sbH6qZa2idji3oY1owxUpDXEMxQ5FAABJkVeh8OoFmhrYZdY1pqng
+         77gQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=lM/UWjr0BC+lsg5dho5+dCWtdfble0VAtzvxHuZus+Q=;
+        b=R4GOGxbllNISqqlHWCvPe75SZjabuQtEte75saKOR3FMv/ETPOaexMEnbYok5uCMUm
+         0DqPI0NuZMkxBxjk7aYo8e7udnSUI0B/HHQ0xy0O7GiLcIrk3N70WsuuOaAmwQCoXfF+
+         MnUtpsAY3i88Gos5g3DK3ssV4iobVkAolPdtq/MOCRxOdO/jC80i2TIOczBmm8fznwCi
+         J6Rmjy6vE6gSEeCBz/jMu3QPksm1UWnNOQKVeSdOoFDhdRa0lfGAROESL6gqeJlbD0+s
+         utLgZfQsS0iE0IE1Gx1GzVDvmvXaXPC4jTQYja1Mqk5vvu2a86CFfS0tNJM0l2K2afXK
+         YPPw==
+X-Gm-Message-State: APjAAAXhNZjDia2OhE7BL+p5CcRri/LaFKr4zhz0ic6CxoAK3/VdKlyW
+        ZHAEVs8Zt9F/fS/M/IXWugudUg==
+X-Google-Smtp-Source: APXvYqwrnrgiHB7RdWtTbO0+9b33hJ9zPGaNMQXqIl+3W/PhGpD5gjrDhIIyE+N8g3InOmJqQsAnxw==
+X-Received: by 2002:a63:483:: with SMTP id 125mr307321pge.217.1575417119057;
+        Tue, 03 Dec 2019 15:51:59 -0800 (PST)
+Received: from vader.thefacebook.com ([2620:10d:c090:180::5623])
+        by smtp.gmail.com with ESMTPSA id p4sm4828359pfb.157.2019.12.03.15.51.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 03 Dec 2019 15:51:58 -0800 (PST)
+From:   Omar Sandoval <osandov@osandov.com>
+To:     fstests@vger.kernel.org
+Cc:     kernel-team@fb.com, linux-xfs@vger.kernel.org
+Subject: [PATCH v3] generic: test truncating mixed written/unwritten XFS realtime extent
+Date:   Tue,  3 Dec 2019 15:51:52 -0800
+Message-Id: <110dbf3ff8c8004e4eecef2cc2e84dfe2d3ddd9f.1575416911.git.osandov@fb.com>
+X-Mailer: git-send-email 2.24.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191203130253.GA18418@bfoster>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9460 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1912030171
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9460 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1912030171
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 03, 2019 at 08:02:53AM -0500, Brian Foster wrote:
-> On Mon, Dec 02, 2019 at 09:36:11AM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Make sure the root inode gets created where repair thinks it should be
-> > created.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  libxfs/libxfs_api_defs.h |    1 +
-> >  mkfs/xfs_mkfs.c          |   29 +++++++++++++++++++++++------
-> >  2 files changed, 24 insertions(+), 6 deletions(-)
-> > 
-> > 
-> > diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-> > index 645c9b1b..8f6b9fc2 100644
-> > --- a/libxfs/libxfs_api_defs.h
-> > +++ b/libxfs/libxfs_api_defs.h
-> > @@ -156,5 +156,6 @@
-> >  
-> >  #define xfs_ag_init_headers		libxfs_ag_init_headers
-> >  #define xfs_buf_delwri_submit		libxfs_buf_delwri_submit
-> > +#define xfs_ialloc_find_prealloc	libxfs_ialloc_find_prealloc
-> >  
-> 
-> Perhaps this should be in the previous patch..?
+From: Omar Sandoval <osandov@fb.com>
 
-<shrug> I think the libxfs wrapper macro things shouldn't be introduced
-until there's a caller outside of libxfs.
+The only XFS-specific part of this test is the setup, so we can make the
+rest a generic test. It's slow, though, as it needs to write 8GB to
+convert a big unwritten extent to written.
 
-> 
-> >  #endif /* __LIBXFS_API_DEFS_H__ */
-> > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> > index 18338a61..5143d9b4 100644
-> > --- a/mkfs/xfs_mkfs.c
-> > +++ b/mkfs/xfs_mkfs.c
-> > @@ -3521,6 +3521,28 @@ rewrite_secondary_superblocks(
-> >  	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
-> >  }
-> >  
-> > +static void
-> > +check_root_ino(
-> > +	struct xfs_mount	*mp)
-> > +{
-> > +	xfs_agino_t		first, last;
-> > +
-> > +	if (XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino) != 0) {
-> > +		fprintf(stderr,
-> > +			_("%s: root inode created in AG %u, not AG 0\n"),
-> > +			progname, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino));
-> > +		exit(1);
-> > +	}
-> > +
-> > +	libxfs_ialloc_find_prealloc(mp, &first, &last);
-> > +	if (mp->m_sb.sb_rootino != XFS_AGINO_TO_INO(mp, 0, first)) {
-> > +		fprintf(stderr,
-> > +			_("%s: root inode (%llu) not created in first chunk\n"),
-> > +			progname, (unsigned long long)mp->m_sb.sb_rootino);
-> 
-> If the root inode ended up somewhere in the middle of the first chunk,
-> we'd fail (rightly), but with a misleading error message. Perhaps
-> something like "root inode (..) not allocated in expected location"
+Signed-off-by: Omar Sandoval <osandov@fb.com>
+---
+Changes from v2 -> v3:
 
-Ok, fixed.
+- Use _create_loop_device and _destroy_loop_device instead of losetup
 
-> would be better? I'd also like to see a comment somewhere in here to
-> explain why we have this check. For example:
-> 
-> "The superblock refers directly to the root inode, but repair makes
-> hardcoded assumptions about its location based on filesystem geometry
-> for an extra level of verification. If this assumption ever breaks, we
-> should flag it immediately and fail the mkfs. Otherwise repair may
-> consider the filesystem corrupt and toss the root inode."
+Changes from v1 -> v2:
 
-How about:
+- If rtdev is not configured, fall back to loop device on test
+  filesystem
+- Use XFS_IO_PROG instead of fallocate/sync/dd
+- Use truncate instead of rm
+- Add comments explaining the steps
 
-/*
- * The superblock points to the root directory inode, but xfs_repair
- * expects to find the root inode in a very specific location computed
- * from the filesystem geometry for an extra level of verification.
- *
- * Fail the format immediately if those assumptions ever break, because
- * repair will toss the root directory.
- */
+ tests/generic/589     | 100 ++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/589.out |   2 +
+ tests/generic/group   |   1 +
+ 3 files changed, 103 insertions(+)
+ create mode 100755 tests/generic/589
+ create mode 100644 tests/generic/589.out
 
-> Feel free to reword that however appropriate (given the behavior change
-> in subsequent patches), of course..
+diff --git a/tests/generic/589 b/tests/generic/589
+new file mode 100755
+index 00000000..aab37bb4
+--- /dev/null
++++ b/tests/generic/589
+@@ -0,0 +1,100 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2019 Facebook.  All Rights Reserved.
++#
++# FS QA Test 589
++#
++# Test "xfs: fix realtime file data space leak" and "xfs: don't check for AG
++# deadlock for realtime files in bunmapi". On XFS without the fix, truncate
++# will hang forever. On other filesystems, this just tests writing into big
++# fallocates.
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++	test -n "$loop" && _destroy_loop_device "$loop"
++	rm -f "$TEST_DIR/$seq"
++}
++
++. ./common/rc
++. ./common/filter
++
++rm -f $seqres.full
++
++_supported_fs generic
++_supported_os Linux
++_require_scratch_nocheck
++
++maxextlen=$((0x1fffff))
++bs=4096
++rextsize=4
++filesz=$(((maxextlen + 1) * bs))
++
++extra_options=""
++# If we're testing XFS, set up the realtime device to reproduce the bug.
++if [[ $FSTYP = xfs ]]; then
++	# If we don't have a realtime device, set up a loop device on the test
++	# filesystem.
++	if [[ $USE_EXTERNAL != yes || -z $SCRATCH_RTDEV ]]; then
++		_require_test
++		loopsz="$((filesz + (1 << 26)))"
++		_require_fs_space "$TEST_DIR" $((loopsz / 1024))
++		$XFS_IO_PROG -c "truncate $loopsz" -f "$TEST_DIR/$seq"
++		loop="$(_create_loop_device "$TEST_DIR/$seq")"
++		USE_EXTERNAL=yes
++		SCRATCH_RTDEV="$loop"
++	fi
++	extra_options="$extra_options -bsize=$bs"
++	extra_options="$extra_options -r extsize=$((bs * rextsize))"
++	extra_options="$extra_options -d agsize=$(((maxextlen + 1) * bs / 2)),rtinherit=1"
++fi
++_scratch_mkfs $extra_options >>$seqres.full 2>&1
++_scratch_mount
++_require_fs_space "$SCRATCH_MNT" $((filesz / 1024))
++
++# Allocate maxextlen + 1 blocks. As long as the allocator does something sane,
++# we should end up with two extents that look something like:
++#
++# u3.bmx[0-1] = [startoff,startblock,blockcount,extentflag]
++# 0:[0,0,2097148,1]
++# 1:[2097148,2097148,4,1]
++#
++# Extent 0 has blockcount = ALIGN_DOWN(maxextlen, rextsize). Extent 1 is
++# adjacent and has blockcount = rextsize. Both are unwritten.
++$XFS_IO_PROG -c "falloc 0 $filesz" -c fsync -f "$SCRATCH_MNT/file"
++
++# Write extent 0 + one block of extent 1. Our extents should end up like so:
++#
++# u3.bmx[0-1] = [startoff,startblock,blockcount,extentflag]
++# 0:[0,0,2097149,0]
++# 1:[2097149,2097149,3,1]
++#
++# Extent 0 is written and has blockcount = ALIGN_DOWN(maxextlen, rextsize) + 1,
++# Extent 1 is adjacent, unwritten, and has blockcount = rextsize - 1 and
++# startblock % rextsize = 1.
++#
++# The -b is just to speed things up (doing GBs of I/O in 4k chunks kind of
++# sucks).
++$XFS_IO_PROG -c "pwrite -b 1M -W 0 $(((maxextlen + 2 - rextsize) * bs))" \
++	"$SCRATCH_MNT/file" >> "$seqres.full"
++
++# Truncate the extents.
++$XFS_IO_PROG -c "truncate 0" -c fsync "$SCRATCH_MNT/file"
++
++# We need to do this before the loop device gets torn down.
++_scratch_unmount
++_check_scratch_fs
++
++echo "Silence is golden"
++status=0
++exit
+diff --git a/tests/generic/589.out b/tests/generic/589.out
+new file mode 100644
+index 00000000..5ab6ab10
+--- /dev/null
++++ b/tests/generic/589.out
+@@ -0,0 +1,2 @@
++QA output created by 589
++Silence is golden
+diff --git a/tests/generic/group b/tests/generic/group
+index 87d7441c..be6f4a43 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -591,3 +591,4 @@
+ 586 auto quick rw prealloc
+ 587 auto quick rw prealloc
+ 588 auto quick log clone
++589 auto prealloc preallocrw dangerous
+-- 
+2.24.0
 
-Ok.
-
---D
-
-> Brian
-> 
-> > +		exit(1);
-> > +	}
-> > +}
-> > +
-> >  int
-> >  main(
-> >  	int			argc,
-> > @@ -3807,12 +3829,7 @@ main(
-> >  	/*
-> >  	 * Protect ourselves against possible stupidity
-> >  	 */
-> > -	if (XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino) != 0) {
-> > -		fprintf(stderr,
-> > -			_("%s: root inode created in AG %u, not AG 0\n"),
-> > -			progname, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino));
-> > -		exit(1);
-> > -	}
-> > +	check_root_ino(mp);
-> >  
-> >  	/*
-> >  	 * Re-write multiple secondary superblocks with rootinode field set
-> > 
-> 
