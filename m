@@ -2,92 +2,178 @@ Return-Path: <SRS0=2geO=ZZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E3F2C432C0
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 13:08:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 701A1C432C0
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 13:35:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 123832070A
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 13:08:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 39A9B2073F
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 13:35:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CUrXyLSf"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ncYaZ0A+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726086AbfLCNIB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Dec 2019 08:08:01 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:52300 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725954AbfLCNIB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Dec 2019 08:08:01 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=EcIcKJaf0Vzu8gfZz02oe7Gwnt0ERuFDFTLCCrtsorU=; b=CUrXyLSfM0j73HpzyXClUZ9ZB
-        Ya7bqqBtCIpv+OfHzcjkp8AY3lZyjlOwMWwBORH1exJBQlXKuRhyu6hN9mAkkBSWypIvRJzID6bH9
-        MEt5gGpJM9F/LG9UBnRGyO8JMV5Z+uNRSREp1xk9HOWxG+3rqxnTxffGV/PxbjCab2+0G2FF+0Gop
-        wJ/pNAa+v8fo1IVysoeY5Y6awX6A+pEspjRT1OxergIKgPLlAjskkMhIDebmlyQbgkHTxlCKkvB3r
-        dnHufob/L8HJlVtJiXPbEofyXbHdLMcke2iNXBFYorJeiP3N/wURx5wmHHpK8ocxtTYf31SN1trqZ
-        LtHuZlL1A==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1ic7uI-0000jv-0C; Tue, 03 Dec 2019 13:07:58 +0000
-Date:   Tue, 3 Dec 2019 05:07:57 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Jan Stancek <jstancek@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        hch@infradead.org, darrick.wong@oracle.com,
-        linuxppc-dev@lists.ozlabs.org,
-        Memory Management <mm-qe@redhat.com>,
-        LTP Mailing List <ltp@lists.linux.it>,
-        Linux Stable maillist <stable@vger.kernel.org>,
-        CKI Project <cki-project@redhat.com>,
-        Michael Ellerman <mpe@ellerman.id.au>
-Subject: Re: [bug] userspace hitting sporadic SIGBUS on xfs (Power9,
- ppc64le), v4.19 and later
-Message-ID: <20191203130757.GA2267@infradead.org>
-References: <cki.6C6A189643.3T2ZUWEMOI@redhat.com>
- <1738119916.14437244.1575151003345.JavaMail.zimbra@redhat.com>
- <8736e3ffen.fsf@mpe.ellerman.id.au>
- <1420623640.14527843.1575289859701.JavaMail.zimbra@redhat.com>
- <1766807082.14812757.1575377439007.JavaMail.zimbra@redhat.com>
+        id S1726224AbfLCNe7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Dec 2019 08:34:59 -0500
+Received: from mail-lj1-f196.google.com ([209.85.208.196]:36658 "EHLO
+        mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726087AbfLCNe5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Dec 2019 08:34:57 -0500
+Received: by mail-lj1-f196.google.com with SMTP id r19so3864426ljg.3
+        for <linux-xfs@vger.kernel.org>; Tue, 03 Dec 2019 05:34:55 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=kynqR1nbDFIkNKzP6Rkxf3MwtpXbGnrKe/XIiwd66B8=;
+        b=ncYaZ0A+JzkeM+ueWb7Kifpkxut0gtLLA1cbU1CdBhq8424ouIPeYcI8VrlUIZi2HK
+         ARuI9iS9mt9y1I2Wo0vzJ2wi8CrOnKV0UdWPOs1279yY+FtKokdBqoyts4c4cDI01F+i
+         hlxmeVO07Cs7w6gy5eVtSxPZQzb7yoeadp4A2qQ2Uv3F4W7Wy7CU7vOPY3A4jLu/XE+R
+         0re4qP/VHYbQ77R6oAx5r4E/U7/iTFiMyF/Muec79DsknnWcCLJ96uUmvv5gyjeC0Jdt
+         joEACFNe/3rxV3zC1kHfAv6q+0T0vnLD3bAXlJ/3mIBP1UbDBFTkWAQt0l7++SyIbWZA
+         G3uA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=kynqR1nbDFIkNKzP6Rkxf3MwtpXbGnrKe/XIiwd66B8=;
+        b=tLE6MPiuwbjMruTieYCBdSTfEPsnwIa8VPbUAR8L03nlLlaB0WBTunsZeIPxGm/kEu
+         CkGZJyqwazfv3UfnWEyYHm3o0cjkx9T0mntV+0pX+/2S5NykWWmnXqkbf/7eYbtRwi3O
+         o78HENsriMvxVmr3lycVz/jh/51WcIZ/Ok1XCSz454id91w4Tf6ghZB0xSM2gLtCOSL7
+         QwRytW010hREVoCkvcWqryEAggDVVA/SY+qyOT2sK0rK3PB/9OAxNgkZG0ZOnTDUSq/b
+         vxD0STjA92gXPphigBU9V2VFL7eqLMZsh7qBnoGmV8NgCJFFYxgTofIyGd3jk6OxHS+w
+         rHNw==
+X-Gm-Message-State: APjAAAUrQIeGQkboarT0gDO4egjulUmersPMgk3ILmGvv93eCaO+sozV
+        6WEONo02EP+mXGL4lJRXB5TDWJBz51n8gmTQscdjzg==
+X-Google-Smtp-Source: APXvYqyfksBIvduXxfZXQ1244/HfjibHAUIU18bKSJ12ttxuchYS0O2dIXjWalUWt92xwMvRluPOyqvnjHwrfiIu7y0=
+X-Received: by 2002:a2e:9a51:: with SMTP id k17mr1975431ljj.206.1575380094771;
+ Tue, 03 Dec 2019 05:34:54 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1766807082.14812757.1575377439007.JavaMail.zimbra@redhat.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <20191114113153.GB4213@ming.t460p> <20191114235415.GL4614@dread.disaster.area>
+ <20191115010824.GC4847@ming.t460p> <20191115045634.GN4614@dread.disaster.area>
+ <20191115070843.GA24246@ming.t460p> <20191128094003.752-1-hdanton@sina.com>
+ <CAKfTPtA23ErKGCEJVmg6vk-QoufkiUM3NbXd31mZmKnuwbTkFw@mail.gmail.com>
+ <20191202024625.GD24512@ming.t460p> <20191202040256.GE2695@dread.disaster.area>
+ <CAKfTPtD8Q97qJ_+hdCXQRt=gy7k96XrhnFmGYP1G88YSFW0vNA@mail.gmail.com> <20191202235321.GJ2695@dread.disaster.area>
+In-Reply-To: <20191202235321.GJ2695@dread.disaster.area>
+From:   Vincent Guittot <vincent.guittot@linaro.org>
+Date:   Tue, 3 Dec 2019 14:34:43 +0100
+Message-ID: <CAKfTPtCX39HS5Qsqq4rjq=M_u25Wnu6xscmSbW=aEaqA6U-wLw@mail.gmail.com>
+Subject: Re: single aio thread is migrated crazily by scheduler
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Ming Lei <ming.lei@redhat.com>, Hillf Danton <hdanton@sina.com>,
+        linux-block <linux-block@vger.kernel.org>,
+        linux-fs <linux-fsdevel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Rong Chen <rong.a.chen@intel.com>, Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 03, 2019 at 07:50:39AM -0500, Jan Stancek wrote:
-> My theory is that there's a race in iomap. There appear to be
-> interleaved calls to iomap_set_range_uptodate() for same page
-> with varying offset and length. Each call sees bitmap as _not_
-> entirely "uptodate" and hence doesn't call SetPageUptodate().
-> Even though each bit in bitmap ends up uptodate by the time
-> all calls finish.
+On Tue, 3 Dec 2019 at 00:53, Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Mon, Dec 02, 2019 at 02:45:42PM +0100, Vincent Guittot wrote:
+> > On Mon, 2 Dec 2019 at 05:02, Dave Chinner <david@fromorbit.com> wrote:
+> > >
+> > > On Mon, Dec 02, 2019 at 10:46:25AM +0800, Ming Lei wrote:
+> > > > On Thu, Nov 28, 2019 at 10:53:33AM +0100, Vincent Guittot wrote:
+> > > > > On Thu, 28 Nov 2019 at 10:40, Hillf Danton <hdanton@sina.com> wrote:
+> > > > > > --- a/fs/iomap/direct-io.c
+> > > > > > +++ b/fs/iomap/direct-io.c
+> > > > > > @@ -157,10 +157,8 @@ static void iomap_dio_bio_end_io(struct
+> > > > > >                         WRITE_ONCE(dio->submit.waiter, NULL);
+> > > > > >                         blk_wake_io_task(waiter);
+> > > > > >                 } else if (dio->flags & IOMAP_DIO_WRITE) {
+> > > > > > -                       struct inode *inode = file_inode(dio->iocb->ki_filp);
+> > > > > > -
+> > > > > >                         INIT_WORK(&dio->aio.work, iomap_dio_complete_work);
+> > > > > > -                       queue_work(inode->i_sb->s_dio_done_wq, &dio->aio.work);
+> > > > > > +                       schedule_work(&dio->aio.work);
+> > > > >
+> > > > > I'm not sure that this will make a real difference because it ends up
+> > > > > to call queue_work(system_wq, ...) and system_wq is bounded as well so
+> > > > > the work will still be pinned to a CPU
+> > > > > Using system_unbound_wq should make a difference because it doesn't
+> > > > > pin the work on a CPU
+> > > > >  +                       queue_work(system_unbound_wq, &dio->aio.work);
+> > > >
+> > > > Indeed, just run a quick test on my KVM guest, looks the following patch
+> > > > makes a difference:
+> > > >
+> > > > diff --git a/fs/direct-io.c b/fs/direct-io.c
+> > > > index 9329ced91f1d..2f4488b0ecec 100644
+> > > > --- a/fs/direct-io.c
+> > > > +++ b/fs/direct-io.c
+> > > > @@ -613,7 +613,8 @@ int sb_init_dio_done_wq(struct super_block *sb)
+> > > >  {
+> > > >         struct workqueue_struct *old;
+> > > >         struct workqueue_struct *wq = alloc_workqueue("dio/%s",
+> > > > -                                                     WQ_MEM_RECLAIM, 0,
+> > > > +                                                     WQ_MEM_RECLAIM |
+> > > > +                                                     WQ_UNBOUND, 0,
+> > > >                                                       sb->s_id);
+> > >
+> > > That's not an answer to the user task migration issue.
+> > >
+> > > That is, all this patch does is trade user task migration when the
+> > > CPU is busy for migrating all the queued work off the CPU so the
+> > > user task does not get migrated. IOWs, this forces all the queued
+> > > work to be migrated rather than the user task. IOWs, it does not
+> > > address the issue we've exposed in the scheduler between tasks with
+> > > competing CPU affinity scheduling requirements - it just hides the
+> > > symptom.
+> > >
+> > > Maintaining CPU affinity across dispatch and completion work has
+> > > been proven to be a significant performance win. Right throughout
+> > > the IO stack we try to keep this submitter/completion affinity,
+> > > and that's the whole point of using a bound wq in the first place:
+> > > efficient delayed batch processing of work on the local CPU.
+> >
+> > Do you really want to target the same CPU ? looks like what you really
+> > want to target the same cache instead
+>
+> Well, yes, ideally we want to target the same cache, but we can't do
+> that with workqueues.
 
-Weird.  That should be prevented by the page lock that all callers
-of iomap_set_range_uptodate.  But in case I miss something, does
-the patch below trigger?  If not it is not jut a race, but might
-be some weird ordering problem with the bitops, especially if it
-only triggers on ppc, which is very weakly ordered.
+Yes, this seems to be your main problem IMHO. You want to stay on the
+same cache and the only way to do so it to pin the work on one single
+CPU. But by doing so and increasing sched_wakeup_granularity_ns, the
+scheduler detects an imbalanced state because of pinned task that it
+wants to fix.
+Being able to set the work on a cpumask that covers the cache would be
+the solution so the scheduler would be able to select an idle CPU that
+share the cache instead of being pinned to a CPU
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index d33c7bc5ee92..25e942c71590 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -148,6 +148,8 @@ iomap_set_range_uptodate(struct page *page, unsigned off, unsigned len)
- 	unsigned int i;
- 	bool uptodate = true;
- 
-+	WARN_ON_ONCE(!PageLocked(page));
-+
- 	if (iop) {
- 		for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
- 			if (i >= first && i <= last)
+>
+> However, the block layer already does that same-cache steering for
+> it's directed completions (see __blk_mq_complete_request()), so we
+> are *already running in a "hot cache" CPU context* when we queue
+> work. When we queue to the same CPU, we are simply maintaining the
+> "cache-hot" context that we are already running in.
+>
+> Besides, selecting a specific "hot cache" CPU and bind the work to
+> that CPU (via queue_work_on()) doesn't fix the scheduler problem -
+> it just moves it to another CPU. If the destination CPU is loaded
+> like the local CPU, then it's jsut going to cause migrations on the
+> destination CPU instead of the local CPU.
+>
+> IOWs, this is -not a fix- for the scheduler making an incorrect
+> migration decisions when we are mixing bound and unbound tasks on
+> the local run queue. Yes, it will hide the problem from this
+> specific workload instance but it doesn't fix it. We'll just hit it
+> under heavier load, such as when production workloads start running
+> AIO submission from tens of CPUs at a time while burning near 100%
+> CPU in userspace.......
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
