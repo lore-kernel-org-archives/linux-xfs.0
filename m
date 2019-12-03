@@ -2,160 +2,212 @@ Return-Path: <SRS0=2geO=ZZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,PDS_BTC_ID,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E11A9C43215
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 09:45:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DDE3C43215
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 12:50:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B91642064B
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 09:45:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 381B020684
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 12:50:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="xTItXRhl"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MqDtkLKX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726008AbfLCJpx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Dec 2019 04:45:53 -0500
-Received: from mail-lj1-f170.google.com ([209.85.208.170]:37606 "EHLO
-        mail-lj1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725907AbfLCJpw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Dec 2019 04:45:52 -0500
-Received: by mail-lj1-f170.google.com with SMTP id u17so3027199lja.4
-        for <linux-xfs@vger.kernel.org>; Tue, 03 Dec 2019 01:45:51 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=neTWFwuJR4Jukr2kV185rqamwxRtM5mkOfSfynGkp0Q=;
-        b=xTItXRhlAS9cxWUEh9q8wXyZXw8qmon9lBOU+YKk3+jsr5zYrJpuOg82lsWCWE9x9X
-         5ADlxer0aiEW2iYzfNSLNiOj63PrR3F1nhK2PdD9hq2kxZiTHUou7Za4v3ekOJ7tCxNy
-         uRMpB5tImy3zbNIFsWsk4L7/gH0FrKa1N+yCJoJNBcz+PC4S+b23G+oB15oopcBSChz8
-         vw7VojQo7xfiSfrnHHarbkiSjhP5VOgbvWWWTzDRZWe8vebQavuihtriA4mlUGNONjmQ
-         +H1/t6RNLmdxVGu0iujLQM/DXgUOSvnjT5FObcWKUE4m/qL+FYOTUVsV0EepEalnzDnn
-         /Rnw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=neTWFwuJR4Jukr2kV185rqamwxRtM5mkOfSfynGkp0Q=;
-        b=qXic5JhHEc4VlzEWfoqUNrQ88MLjVpeHYBi3qxiZ1M4igRE1ceUvgP82ApMRJfwMac
-         4/4W6rT6tp9GVlV5mkc8nUwpIUW4vs2y/bgihi6l+pcbCQ/D7TH8AAvjMCNK2QNEn62r
-         ZN5zt7XFWLrNU8GInI+B9bkAYWuGYSQ48v2IVBVg/i39diBUtLlDOSUZikRB7GBgDZmQ
-         +JcD+X4pTgXTMfr0l8dUPVBRS5aTCIB6shemXg8T/JWyNQG18YblOUF7fWmPis87hTf3
-         u8dyuKi7uOX7az2wdeLStggYmtG0L06At83yY0Fce+kuYHzkLsmG2L1wvZQF5Q/kLAw4
-         zzow==
-X-Gm-Message-State: APjAAAU8ZaOJeNl8STpbbp1rDAyKEcsfqeShXivg/1QFuwW6Y4mlebD2
-        89IxtKcu/1yHMWhivOvdRo5969GKwrNpeB8AGoY7IStE
-X-Google-Smtp-Source: APXvYqxO6Zl+Be503YP0jAYAavrPaOI2DIRf25Dn1MebkTGcAo5eS2qEtOQyNDnZeVQ/ba9f3n7gueV/EICnAEhnbiU=
-X-Received: by 2002:a2e:9a51:: with SMTP id k17mr1372846ljj.206.1575366350405;
- Tue, 03 Dec 2019 01:45:50 -0800 (PST)
+        id S1726186AbfLCMuq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Dec 2019 07:50:46 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:47155 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725957AbfLCMuq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Dec 2019 07:50:46 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1575377445;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=vUK+qbv4vcR++ilRAwdwA/Hrp9NPAPx99bcSEG1xv8w=;
+        b=MqDtkLKXV5FWiVTfwBWsuyDRDAUbVCn+lFGbDRVEbCyUmVUamgzFtLg7FQqqy43k18enwo
+        udmLBoWGKvvOVpsn3nBpYm9HhNnzxPSMZ9NuS1Mwx8Ug43/u+r3bDF6VehEy2jpIg02fxM
+        E/uMDEAu0FT6WLNCNVdLil5nVfR1pEw=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-329-twkIHNhdORWSSUH0wNu3iA-1; Tue, 03 Dec 2019 07:50:41 -0500
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0AABB18C35A4;
+        Tue,  3 Dec 2019 12:50:40 +0000 (UTC)
+Received: from colo-mx.corp.redhat.com (colo-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id D0F9A67E5D;
+        Tue,  3 Dec 2019 12:50:39 +0000 (UTC)
+Received: from zmail17.collab.prod.int.phx2.redhat.com (zmail17.collab.prod.int.phx2.redhat.com [10.5.83.19])
+        by colo-mx.corp.redhat.com (Postfix) with ESMTP id 4498918089C8;
+        Tue,  3 Dec 2019 12:50:39 +0000 (UTC)
+Date:   Tue, 3 Dec 2019 07:50:39 -0500 (EST)
+From:   Jan Stancek <jstancek@redhat.com>
+To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        hch@infradead.org, darrick.wong@oracle.com
+Cc:     linuxppc-dev@lists.ozlabs.org,
+        Memory Management <mm-qe@redhat.com>,
+        LTP Mailing List <ltp@lists.linux.it>,
+        Linux Stable maillist <stable@vger.kernel.org>,
+        CKI Project <cki-project@redhat.com>,
+        Michael Ellerman <mpe@ellerman.id.au>
+Message-ID: <1766807082.14812757.1575377439007.JavaMail.zimbra@redhat.com>
+In-Reply-To: <1420623640.14527843.1575289859701.JavaMail.zimbra@redhat.com>
+References: <cki.6C6A189643.3T2ZUWEMOI@redhat.com> <1738119916.14437244.1575151003345.JavaMail.zimbra@redhat.com> <8736e3ffen.fsf@mpe.ellerman.id.au> <1420623640.14527843.1575289859701.JavaMail.zimbra@redhat.com>
+Subject: [bug] userspace hitting sporadic SIGBUS on xfs (Power9, ppc64le),
+ v4.19 and later
 MIME-Version: 1.0
-References: <20191114113153.GB4213@ming.t460p> <20191114235415.GL4614@dread.disaster.area>
- <20191115010824.GC4847@ming.t460p> <20191115045634.GN4614@dread.disaster.area>
- <20191115070843.GA24246@ming.t460p> <20191128094003.752-1-hdanton@sina.com>
- <CAKfTPtA23ErKGCEJVmg6vk-QoufkiUM3NbXd31mZmKnuwbTkFw@mail.gmail.com>
- <20191202024625.GD24512@ming.t460p> <20191202040256.GE2695@dread.disaster.area>
- <CAKfTPtD8Q97qJ_+hdCXQRt=gy7k96XrhnFmGYP1G88YSFW0vNA@mail.gmail.com> <20191202212210.GA32767@lorien.usersys.redhat.com>
-In-Reply-To: <20191202212210.GA32767@lorien.usersys.redhat.com>
-From:   Vincent Guittot <vincent.guittot@linaro.org>
-Date:   Tue, 3 Dec 2019 10:45:38 +0100
-Message-ID: <CAKfTPtC7uycC3b2ngOFUqOh9-Fcz7h-151aaYJbLJFXrNq-gkw@mail.gmail.com>
-Subject: Re: single aio thread is migrated crazily by scheduler
-To:     Phil Auld <pauld@redhat.com>
-Cc:     Dave Chinner <david@fromorbit.com>, Ming Lei <ming.lei@redhat.com>,
-        Hillf Danton <hdanton@sina.com>,
-        linux-block <linux-block@vger.kernel.org>,
-        linux-fs <linux-fsdevel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Rong Chen <rong.a.chen@intel.com>, Tejun Heo <tj@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+X-Originating-IP: [10.43.17.163, 10.4.195.10]
+Thread-Topic: =?utf-8?B?4p2MIEZBSUw6?= Test report for kernel
+ 5.3.13-3b5f971.cki (stable-queue)
+Thread-Index: cteAZVs1buDEh+CFMxyFiJYhnT9cJLxMrbue
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-MC-Unique: twkIHNhdORWSSUH0wNu3iA-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, 2 Dec 2019 at 22:22, Phil Auld <pauld@redhat.com> wrote:
->
-> Hi Vincent,
->
-> On Mon, Dec 02, 2019 at 02:45:42PM +0100 Vincent Guittot wrote:
-> > On Mon, 2 Dec 2019 at 05:02, Dave Chinner <david@fromorbit.com> wrote:
->
-> ...
->
-> > > So, we can fiddle with workqueues, but it doesn't address the
-> > > underlying issue that the scheduler appears to be migrating
-> > > non-bound tasks off a busy CPU too easily....
-> >
-> > The root cause of the problem is that the sched_wakeup_granularity_ns
-> > is in the same range or higher than load balance period. As Peter
-> > explained, This make the kworker waiting for the CPU for several load
-> > period and a transient unbalanced state becomes a stable one that the
-> > scheduler to fix. With default value, the scheduler doesn't try to
-> > migrate any task.
->
-> There are actually two issues here.   With the high wakeup granularity
-> we get the user task actively migrated. This causes the significant
-> performance hit Ming was showing. With the fast wakeup_granularity
-> (or smaller IOs - 512 instead of 4k) we get, instead, the user task
-> migrated at wakeup to a new CPU for every IO completion.
+Hi,
 
-Ok, I haven't noticed that this one was a problem too. Do we have perf
-regression ?
+(This bug report is summary from thread [1] with some additions)
 
->
-> This is the 11k migrations per sec doing 11k iops.  In this test it
-> is not by itself causing the measured performance issue. It generally
-> flips back and forth between 2 cpus for large periods. I think it is
-> crossing cache boundaries at times (but I have not looked closely
-> at the traces compared to the topology, yet).
+User-space binaries on Power9 ppc64le (with 64k pages) on xfs
+filesystem are sporadically hitting SIGBUS:
 
-At task wake up, scheduler compares local and previous CPU to decide
-where to place the task and will then try to find an idle one which
-shares cache so I don't expect that it will cross cache boundary as
-local and previous are in your case.
+---------- 8< ----------
+(gdb) r
+Starting program: /mnt/testarea/ltp/testcases/bin/genasin
 
->
-> The active balances are what really hurts in thie case but I agree
-> that seems to be a tuning problem.
->
->
-> Cheers,
-> Phil
->
->
-> >
-> > Then, I agree that having an ack close to the request makes sense but
-> > forcing it on the exact same CPU is too restrictive IMO. Being able to
-> > use another CPU on the same core should not harm the performance and
-> > may even improve it. And that may still be the case while CPUs share
-> > their cache.
-> >
-> > >
-> > > -Dave.
-> > >
-> > > [*] Pay attention to the WQ_POWER_EFFICIENT definition for a work
-> > > queue: it's designed for interrupt routines that defer work via work
-> > > queues to avoid doing work on otherwise idle CPUs. It does this by
-> > > turning the per-cpu wq into an unbound wq so that work gets
-> > > scheduled on a non-idle CPUs in preference to the local idle CPU
-> > > which can then remain in low power states.
-> > >
-> > > That's the exact opposite of what using WQ_UNBOUND ends up doing in
-> > > this IO completion context: it pushes the work out over idle CPUs
-> > > rather than keeping them confined on the already busy CPUs where CPU
-> > > affinity allows the work to be done quickly. So while WQ_UNBOUND
-> > > avoids the user task being migrated frequently, it results in the
-> > > work being spread around many more CPUs and we burn more power to do
-> > > the same work.
-> > >
-> > > --
-> > > Dave Chinner
-> > > david@fromorbit.com
-> >
->
-> --
->
+Program received signal SIGBUS, Bus error.
+dl_main (phdr=0x10000040, phnum=<optimized out>, user_entry=0x7fffffffe760, auxv=<optimized out>) at rtld.c:1362
+1362        switch (ph->p_type)
+
+(gdb) p ph
+$1 = (const Elf64_Phdr *) 0x10000040
+
+(gdb) p *ph
+Cannot access memory at address 0x10000040
+
+(gdb) info proc map
+process 1110670
+Mapped address spaces:
+
+          Start Addr           End Addr       Size     Offset objfile
+          0x10000000         0x10010000    0x10000        0x0 /mnt/testarea/ltp/testcases/bin/genasin
+          0x10010000         0x10030000    0x20000        0x0 /mnt/testarea/ltp/testcases/bin/genasin
+      0x7ffff7f90000     0x7ffff7fb0000    0x20000        0x0 [vdso]
+      0x7ffff7fb0000     0x7ffff7fe0000    0x30000        0x0 /usr/lib64/ld-2.30.so
+      0x7ffff7fe0000     0x7ffff8000000    0x20000    0x20000 /usr/lib64/ld-2.30.so
+      0x7ffffffd0000     0x800000000000    0x30000        0x0 [stack]
+
+(gdb) x/1x 0x10000040
+0x10000040:     Cannot access memory at address 0x10000040
+---------- >8 ----------
+
+When this happens the binary continues to hit SIGBUS until page
+is released, for example by: echo 3 > /proc/sys/vm/drop_caches
+
+The issue goes back to at least v4.19.
+
+I can semi-reliably reproduce it with LTP is installed to /mnt/testarea/ltp by:
+while [ True ]; do
+        echo 3 > /proc/sys/vm/drop_caches
+        rm -f /mnt/testarea/ltp/results/RUNTEST.log /mnt/testarea/ltp/output/RUNTEST.run.log
+        ./runltp -p -d results -l RUNTEST.log -o RUNTEST.run.log -f math
+        grep FAIL /mnt/testarea/ltp/results/RUNTEST.log && exit 1
+done
+
+and some stress activity in other terminal (e.g. kernel build).
+Sometimes in minutes, sometimes in hours. It is not reliable
+enough to get meaningful bisect results.
+
+My theory is that there's a race in iomap. There appear to be
+interleaved calls to iomap_set_range_uptodate() for same page
+with varying offset and length. Each call sees bitmap as _not_
+entirely "uptodate" and hence doesn't call SetPageUptodate().
+Even though each bit in bitmap ends up uptodate by the time
+all calls finish.
+
+For example, with following traces:
+
+iomap_set_range_uptodate()
+...
+        if (uptodate && !PageError(page))
+                SetPageUptodate(page);
++       
++       if (mycheck(page)) {
++               trace_printk("page: %px, iop: %px, uptodate: %d, !PageError(page): %d, flags: %lx\n", page, iop, uptodate, !PageError(page), page->flags);
++               trace_printk("first: %u, last: %u, off: %u, len: %u, i: %u\n", first, last, off, len, i);
++       }
+
+I get:
+         genacos-18471 [057] ....   162.465730: iomap_readpages: mapping: c000003f185a1ab0
+         genacos-18471 [057] ....   162.465732: iomap_page_create: iomap_page_create page: c00c00000fe26180, page->private: 0000000000000000, iop: c000003fc70a19c0, flags: 3ffff800000001
+         genacos-18471 [057] ....   162.465736: iomap_set_range_uptodate: page: c00c00000fe26180, iop: c000003fc70a19c0, uptodate: 0, !PageError(page): 1, flags: 3ffff800002001
+         genacos-18471 [057] ....   162.465736: iomap_set_range_uptodate: first: 1, last: 14, off: 4096, len: 57344, i: 16
+          <idle>-0     [060] ..s.   162.534862: iomap_set_range_uptodate: page: c00c00000fe26180, iop: c000003fc70a19c0, uptodate: 0, !PageError(page): 1, flags: 3ffff800002081
+          <idle>-0     [061] ..s.   162.534862: iomap_set_range_uptodate: page: c00c00000fe26180, iop: c000003fc70a19c0, uptodate: 0, !PageError(page): 1, flags: 3ffff800002081
+          <idle>-0     [060] ..s.   162.534864: iomap_set_range_uptodate: first: 0, last: 0, off: 0, len: 4096, i: 16
+          <idle>-0     [061] ..s.   162.534864: iomap_set_range_uptodate: first: 15, last: 15, off: 61440, len: 4096, i: 16
+
+This page doesn't have Uptodate flag set, which leads to filemap_fault()
+returning VM_FAULT_SIGBUS:
+
+crash> p/x ((struct page *) 0xc00c00000fe26180)->flags                                                                                                                                             
+$1 = 0x3ffff800002032
+
+crash> kmem -g 0x3ffff800002032
+FLAGS: 3ffff800002032
+  PAGE-FLAG       BIT  VALUE
+  PG_error          1  0000002
+  PG_dirty          4  0000010
+  PG_lru            5  0000020
+  PG_private_2     13  0002000
+  PG_fscache       13  0002000
+  PG_savepinned     4  0000010
+  PG_double_map    13  0002000
+
+But iomap_page->uptodate in page->private suggests all bits are uptodate:
+
+crash> p/x ((struct page *) 0xc00c00000fe26180)->private
+$2 = 0xc000003fc70a19c0
+
+crash> p/x ((struct iomap_page *) 0xc000003fc70a19c0)->uptodate                                                                                                                                    
+$3 = {0xffff, 0x0}
+
+
+It appears (after ~4 hours) that I can avoid the problem if I split
+the loop so that bits are checked only after all updates are made.
+Not sure if this correct approach, or just making it less reproducible:
+
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index e25901ae3ff4..abe37031c93d 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -131,7 +131,11 @@ iomap_set_range_uptodate(struct page *page, unsigned off, unsigned len)
+                for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
+                        if (i >= first && i <= last)
+                                set_bit(i, iop->uptodate);
+-                       else if (!test_bit(i, iop->uptodate))
++               }
++               for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
++                       if (i >= first && i <= last)
++                               continue;
++                       if (!test_bit(i, iop->uptodate))
+                                uptodate = false;
+                }
+        }
+
+Thanks,
+Jan
+
+[1] https://lore.kernel.org/stable/1420623640.14527843.1575289859701.JavaMail.zimbra@redhat.com/T/#u
+
