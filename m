@@ -2,137 +2,220 @@ Return-Path: <SRS0=2geO=ZZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57DCEC432C3
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 19:09:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52488C432C0
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 20:25:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2B0B2206DF
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 19:09:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C11B206DF
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 20:25:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CCSUVIoh"
+	dkim=pass (2048-bit key) header.d=osandov-com.20150623.gappssmtp.com header.i=@osandov-com.20150623.gappssmtp.com header.b="qXGmNuYt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727378AbfLCTJ1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Dec 2019 14:09:27 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:43514 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726075AbfLCTJ1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Dec 2019 14:09:27 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=py4BlJOG+aJY1t5dKR8XIt0EiXOF2BwKLJexNHJri1k=; b=CCSUVIohdJ+y56P3xd+6FuQGU
-        pJYOCKIHCMeXs7AEXlZL6jhxvHAl+0Lgy118AvAwu1hxc2FV5vGBpf8rZt6LFK4FJKxxYFA30S7Bh
-        KJ0LY7pWJ3PZAwiaVZggg4EVTZwgYy27V7jjcaRIRwvPQrHjVi22wX2Pzuqg5TkXtAGAkFpgxlgWD
-        YcKt33G2jpjmQMTuNJCApdFpefsW4WxBHjE48iux4CMjK64jcO495icX9To0oB233ho0UJWxLpJeZ
-        HavcCSh+2GXDTbHO6nABmvKZ0ENQel24dDe2TsBsZugZ+3E2226e6X6Qtl2lnKDGErDmdcNtk8o+d
-        aJmH63Ccg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1icDY5-0001tg-8N; Tue, 03 Dec 2019 19:09:25 +0000
-Date:   Tue, 3 Dec 2019 11:09:25 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Jan Stancek <jstancek@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        hch@infradead.org, darrick.wong@oracle.com,
-        linuxppc-dev@lists.ozlabs.org,
-        Memory Management <mm-qe@redhat.com>,
-        LTP Mailing List <ltp@lists.linux.it>,
-        Linux Stable maillist <stable@vger.kernel.org>,
-        CKI Project <cki-project@redhat.com>,
-        Michael Ellerman <mpe@ellerman.id.au>
-Subject: Re: [bug] userspace hitting sporadic SIGBUS on xfs (Power9,
- ppc64le), v4.19 and later
-Message-ID: <20191203190925.GA5150@infradead.org>
-References: <cki.6C6A189643.3T2ZUWEMOI@redhat.com>
- <1738119916.14437244.1575151003345.JavaMail.zimbra@redhat.com>
- <8736e3ffen.fsf@mpe.ellerman.id.au>
- <1420623640.14527843.1575289859701.JavaMail.zimbra@redhat.com>
- <1766807082.14812757.1575377439007.JavaMail.zimbra@redhat.com>
+        id S1726987AbfLCUZH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Dec 2019 15:25:07 -0500
+Received: from mail-pg1-f173.google.com ([209.85.215.173]:41952 "EHLO
+        mail-pg1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726079AbfLCUZH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Dec 2019 15:25:07 -0500
+Received: by mail-pg1-f173.google.com with SMTP id x8so2152661pgk.8
+        for <linux-xfs@vger.kernel.org>; Tue, 03 Dec 2019 12:25:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=osandov-com.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=zU0wZHKsx5ga7fOIBKacf823fT/CeCSavAF46XrTSxI=;
+        b=qXGmNuYtLmAXc/DPKNwsI3eCGPgOepnZ+hpZDSMxuLwSMyCurQ0VrZ7T4xSOVXaxhK
+         UP+IeF1M1psYKF6ODUPkYAs4ViUWjZGq9QzabpjdnPlOszt71bzNHOYehq5MVA6REDqC
+         09gpnrBCyqpv1F8gkmvO3XaDD3UQtkqii71ufow78C477R2ezMQkST5DXfP6vZ+CFpkN
+         rWbLWGXS5pyHW9bTdZ/+SUrrJikGsWvZpBK0/setPFkgVtJhAlKQTjw7FhhxGFTnWfBK
+         AQCrQqQpHrXFqS5kJqlyQzPnF9LKCK/Ms7Z56WHbDmCom5T1ME6fSA9Mcs3LmF+DansV
+         rYpQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=zU0wZHKsx5ga7fOIBKacf823fT/CeCSavAF46XrTSxI=;
+        b=X/WA92HmGLZoDtP9p0P+BZcnWPRGBpPjv/7RgOpDZL+Xcek+XJmWtI9fb2wS5OgEVN
+         /Yyklm/SYI/a1tViWesDMiNEWBvkLlzp79S1A6mPY1eyAa0lwDXigz+/lIC6ehXBmRob
+         FCq3OYSyXYvvNct6xCElNXUXGthDuWN0gkMDHQiPwtxy9zVq3aZFclQHQVXNEhAc8wCB
+         hKbc0FmsryRTukUibdzd8iKyjWcc0WZs4pwjQ+1QCaSIjRZShVigZdpumzBckgDZyPFd
+         GfsdrGTOSlzRtzF5A8IaW8DMy+DVUtm/cN326rqttD64q82Oc1rFbxT6apoF3M1gY0I0
+         Fa4Q==
+X-Gm-Message-State: APjAAAX506WskMhjCjhROJswisxUn5w0LV2NDWY3+DFQQrpMYb9eNoaM
+        5/KK7IwFuE2MWl2tZp8zeA3YsNGGnCvf8Q==
+X-Google-Smtp-Source: APXvYqyZCDtvQuSUqr4zpdT3o2iDpSQrsNe1iZQ13X9tTktoW1Dkeg4RsDdeeWaC5je/KAB4iPU44A==
+X-Received: by 2002:a62:4e03:: with SMTP id c3mr6877063pfb.114.1575404706040;
+        Tue, 03 Dec 2019 12:25:06 -0800 (PST)
+Received: from vader.thefacebook.com ([2620:10d:c090:200::3:c979])
+        by smtp.gmail.com with ESMTPSA id i9sm1091104pfd.166.2019.12.03.12.25.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 03 Dec 2019 12:25:05 -0800 (PST)
+From:   Omar Sandoval <osandov@osandov.com>
+To:     fstests@vger.kernel.org
+Cc:     kernel-team@fb.com, linux-xfs@vger.kernel.org
+Subject: [PATCH v2] generic: test truncating mixed written/unwritten XFS realtime extent
+Date:   Tue,  3 Dec 2019 12:25:01 -0800
+Message-Id: <d1c820e50399a16f968b5e0dd32b21234568b163.1575404627.git.osandov@fb.com>
+X-Mailer: git-send-email 2.24.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1766807082.14812757.1575377439007.JavaMail.zimbra@redhat.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Please try the patch below:
+From: Omar Sandoval <osandov@fb.com>
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 512856a88106..340c15400423 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -28,6 +28,7 @@
- struct iomap_page {
- 	atomic_t		read_count;
- 	atomic_t		write_count;
-+	spinlock_t		uptodate_lock;
- 	DECLARE_BITMAP(uptodate, PAGE_SIZE / 512);
- };
- 
-@@ -51,6 +52,7 @@ iomap_page_create(struct inode *inode, struct page *page)
- 	iop = kmalloc(sizeof(*iop), GFP_NOFS | __GFP_NOFAIL);
- 	atomic_set(&iop->read_count, 0);
- 	atomic_set(&iop->write_count, 0);
-+	spin_lock_init(&iop->uptodate_lock);
- 	bitmap_zero(iop->uptodate, PAGE_SIZE / SECTOR_SIZE);
- 
- 	/*
-@@ -139,25 +141,38 @@ iomap_adjust_read_range(struct inode *inode, struct iomap_page *iop,
- }
- 
- static void
--iomap_set_range_uptodate(struct page *page, unsigned off, unsigned len)
-+iomap_iop_set_range_uptodate(struct page *page, unsigned off, unsigned len)
- {
- 	struct iomap_page *iop = to_iomap_page(page);
- 	struct inode *inode = page->mapping->host;
- 	unsigned first = off >> inode->i_blkbits;
- 	unsigned last = (off + len - 1) >> inode->i_blkbits;
--	unsigned int i;
- 	bool uptodate = true;
-+	unsigned long flags;
-+	unsigned int i;
- 
--	if (iop) {
--		for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
--			if (i >= first && i <= last)
--				set_bit(i, iop->uptodate);
--			else if (!test_bit(i, iop->uptodate))
--				uptodate = false;
--		}
-+	spin_lock_irqsave(&iop->uptodate_lock, flags);
-+	for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
-+		if (i >= first && i <= last)
-+			set_bit(i, iop->uptodate);
-+		else if (!test_bit(i, iop->uptodate))
-+			uptodate = false;
- 	}
- 
--	if (uptodate && !PageError(page))
-+	if (uptodate)
-+		SetPageUptodate(page);
-+	spin_unlock_irqrestore(&iop->uptodate_lock, flags);
+The only XFS-specific part of this test is the setup, so we can make the
+rest a generic test. It's slow, though, as it needs to write 8GB to
+convert a big unwritten extent to written.
+
+Signed-off-by: Omar Sandoval <osandov@fb.com>
+---
+Changes from v1:
+
+- If rtdev is not configured, fall back to loop device on test
+  filesystem
+- Use XFS_IO_PROG instead of fallocate/sync/dd
+- Use truncate instead of rm
+- Add comments explaining the steps
+
+ tests/generic/589     | 102 ++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/589.out |   2 +
+ tests/generic/group   |   1 +
+ 3 files changed, 105 insertions(+)
+ create mode 100755 tests/generic/589
+ create mode 100644 tests/generic/589.out
+
+diff --git a/tests/generic/589 b/tests/generic/589
+new file mode 100755
+index 00000000..3ca1d100
+--- /dev/null
++++ b/tests/generic/589
+@@ -0,0 +1,102 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2019 Facebook.  All Rights Reserved.
++#
++# FS QA Test 589
++#
++# Test "xfs: fix realtime file data space leak" and "xfs: don't check for AG
++# deadlock for realtime files in bunmapi". On XFS without the fix, truncate
++# will hang forever. On other filesystems, this just tests writing into big
++# fallocates.
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++	if [[ -n $loop ]]; then
++		losetup -d "$loop" > /dev/null 2>&1
++	fi
++	rm -f "$TEST_DIR/$seq"
 +}
 +
-+static void
-+iomap_set_range_uptodate(struct page *page, unsigned off, unsigned len)
-+{
-+	if (PageError(page))
-+		return;
++. ./common/rc
++. ./common/filter
 +
-+	if (page_has_private(page))
-+		iomap_iop_set_range_uptodate(page, off, len);
-+	else
- 		SetPageUptodate(page);
- }
- 
++rm -f $seqres.full
++
++_supported_fs generic
++_supported_os Linux
++_require_scratch_nocheck
++
++maxextlen=$((0x1fffff))
++bs=4096
++rextsize=4
++filesz=$(((maxextlen + 1) * bs))
++
++extra_options=""
++# If we're testing XFS, set up the realtime device to reproduce the bug.
++if [[ $FSTYP = xfs ]]; then
++	# If we don't have a realtime device, set up a loop device on the test
++	# filesystem.
++	if [[ $USE_EXTERNAL != yes || -z $SCRATCH_RTDEV ]]; then
++		_require_test
++		loopsz="$((filesz + (1 << 26)))"
++		_require_fs_space "$TEST_DIR" $((loopsz / 1024))
++		$XFS_IO_PROG -c "truncate $loopsz" -f "$TEST_DIR/$seq"
++		loop="$(losetup -f --show "$TEST_DIR/$seq")"
++		USE_EXTERNAL=yes
++		SCRATCH_RTDEV="$loop"
++	fi
++	extra_options="$extra_options -bsize=$bs"
++	extra_options="$extra_options -r extsize=$((bs * rextsize))"
++	extra_options="$extra_options -d agsize=$(((maxextlen + 1) * bs / 2)),rtinherit=1"
++fi
++_scratch_mkfs $extra_options >>$seqres.full 2>&1
++_scratch_mount
++_require_fs_space "$SCRATCH_MNT" $((filesz / 1024))
++
++# Allocate maxextlen + 1 blocks. As long as the allocator does something sane,
++# we should end up with two extents that look something like:
++#
++# u3.bmx[0-1] = [startoff,startblock,blockcount,extentflag]
++# 0:[0,0,2097148,1]
++# 1:[2097148,2097148,4,1]
++#
++# Extent 0 has blockcount = ALIGN_DOWN(maxextlen, rextsize). Extent 1 is
++# adjacent and has blockcount = rextsize. Both are unwritten.
++$XFS_IO_PROG -c "falloc 0 $filesz" -c fsync -f "$SCRATCH_MNT/file"
++
++# Write extent 0 + one block of extent 1. Our extents should end up like so:
++#
++# u3.bmx[0-1] = [startoff,startblock,blockcount,extentflag]
++# 0:[0,0,2097149,0]
++# 1:[2097149,2097149,3,1]
++#
++# Extent 0 is written and has blockcount = ALIGN_DOWN(maxextlen, rextsize) + 1,
++# Extent 1 is adjacent, unwritten, and has blockcount = rextsize - 1 and
++# startblock % rextsize = 1.
++#
++# The -b is just to speed things up (doing GBs of I/O in 4k chunks kind of
++# sucks).
++$XFS_IO_PROG -c "pwrite -b 1M -W 0 $(((maxextlen + 2 - rextsize) * bs))" \
++	"$SCRATCH_MNT/file" >> "$seqres.full"
++
++# Truncate the extents.
++$XFS_IO_PROG -c "truncate 0" -c fsync "$SCRATCH_MNT/file"
++
++# We need to do this before the loop device gets torn down.
++_scratch_unmount
++_check_scratch_fs
++
++echo "Silence is golden"
++status=0
++exit
+diff --git a/tests/generic/589.out b/tests/generic/589.out
+new file mode 100644
+index 00000000..5ab6ab10
+--- /dev/null
++++ b/tests/generic/589.out
+@@ -0,0 +1,2 @@
++QA output created by 589
++Silence is golden
+diff --git a/tests/generic/group b/tests/generic/group
+index 87d7441c..be6f4a43 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -591,3 +591,4 @@
+ 586 auto quick rw prealloc
+ 587 auto quick rw prealloc
+ 588 auto quick log clone
++589 auto prealloc preallocrw dangerous
+-- 
+2.24.0
+
