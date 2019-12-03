@@ -2,260 +2,176 @@ Return-Path: <SRS0=2geO=ZZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFB4FC432C3
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 00:00:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9024C432C3
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 00:19:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7BCC2206E1
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 00:00:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8CFBC20656
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 00:19:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="a+4vUUM7"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="U/RDFWVT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725865AbfLCAAp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Dec 2019 19:00:45 -0500
-Received: from bilbo.ozlabs.org ([203.11.71.1]:51065 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725775AbfLCAAp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 2 Dec 2019 19:00:45 -0500
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        id S1725919AbfLCATH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 Dec 2019 19:19:07 -0500
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:25810 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725775AbfLCATE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Dec 2019 19:19:04 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1575332342;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=IGy9gNxFygdeVSOn26qERscsGS2TmpnSERzq58aUv+M=;
+        b=U/RDFWVTkHFvjhh8TR01NbvNHJaFhD6GeicAHPZoB1LGabPQqqQkfgZ/n72M/D3i45qC5U
+        f6LgMKgVTRgIvZ62vu+BWvg8uKVuRxtIqXE4Ikr0w3ZZ2ktPh4XAFwdeu3FvPWm6TVp8kD
+        5Cq/V39dxTs5up2mVSLhSPjDU+/xyJ0=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-414-JjZf2RbAMwWcrpXGTlnKsg-1; Mon, 02 Dec 2019 19:18:59 -0500
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 47RhvX1h2lz9sP3;
-        Tue,  3 Dec 2019 11:00:39 +1100 (AEDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=canb.auug.org.au;
-        s=201702; t=1575331241;
-        bh=ehUuKtq21c7JP3KxhQWOn6j7URCI+Jki4iw3Ti1zz6c=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=a+4vUUM7/0EjzX+2stCMoiovqMuVaN0/Pjbl7HBD8Rl+Lsw4Jz5qrj8/fuGSmzVuw
-         51i5Iv1y81jAXig8h+Ii7mZBFzmFijQmO+jdyHW6Tjf7h/QJjoU1+kzsHY1DgoSJk2
-         sCxwgIwxRHAXYhrg2twqVMIWvA7mDK/mzE5C24JnUp6l5bFhJBNHw8YE7Kexz/ZTC8
-         7drAN0FequacPH8xhiNfPWZgQY0gfQG43aOtpea1WrUhr498grCDTLVgjeoFVpEKNL
-         xi18fUs5qv1Vm2aNe5++GEp9XV13UjyBupKfjQgBT4n2PA7QZUUt9/AEpMKv5DofbZ
-         wK2PtkRyU7EgQ==
-Date:   Tue, 3 Dec 2019 11:00:39 +1100
-From:   Stephen Rothwell <sfr@canb.auug.org.au>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Cc:     Arnd Bergmann <arnd@arndb.de>,
-        Linux Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Linus <torvalds@linux-foundation.org>
-Subject: Re: linux-next: manual merge of the y2038 tree with the xfs tree
-Message-ID: <20191203110039.2ec22a17@canb.auug.org.au>
-In-Reply-To: <20191030153046.01efae4a@canb.auug.org.au>
-References: <20191030153046.01efae4a@canb.auug.org.au>
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 675A2CF989;
+        Tue,  3 Dec 2019 00:18:56 +0000 (UTC)
+Received: from ming.t460p (ovpn-8-19.pek2.redhat.com [10.72.8.19])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id CDED660BEC;
+        Tue,  3 Dec 2019 00:18:47 +0000 (UTC)
+Date:   Tue, 3 Dec 2019 08:18:43 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Vincent Guittot <vincent.guittot@linaro.org>,
+        Hillf Danton <hdanton@sina.com>,
+        linux-block <linux-block@vger.kernel.org>,
+        linux-fs <linux-fsdevel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Rong Chen <rong.a.chen@intel.com>, Tejun Heo <tj@kernel.org>
+Subject: Re: single aio thread is migrated crazily by scheduler
+Message-ID: <20191203001843.GA25002@ming.t460p>
+References: <20191114235415.GL4614@dread.disaster.area>
+ <20191115010824.GC4847@ming.t460p>
+ <20191115045634.GN4614@dread.disaster.area>
+ <20191115070843.GA24246@ming.t460p>
+ <20191128094003.752-1-hdanton@sina.com>
+ <CAKfTPtA23ErKGCEJVmg6vk-QoufkiUM3NbXd31mZmKnuwbTkFw@mail.gmail.com>
+ <20191202024625.GD24512@ming.t460p>
+ <20191202040256.GE2695@dread.disaster.area>
+ <CAKfTPtD8Q97qJ_+hdCXQRt=gy7k96XrhnFmGYP1G88YSFW0vNA@mail.gmail.com>
+ <20191202235321.GJ2695@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/5_edYof0YP+3JTXH5TkWab8";
- protocol="application/pgp-signature"; micalg=pgp-sha256
+In-Reply-To: <20191202235321.GJ2695@dread.disaster.area>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+X-MC-Unique: JjZf2RbAMwWcrpXGTlnKsg-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
---Sig_/5_edYof0YP+3JTXH5TkWab8
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Tue, Dec 03, 2019 at 10:53:21AM +1100, Dave Chinner wrote:
+> On Mon, Dec 02, 2019 at 02:45:42PM +0100, Vincent Guittot wrote:
+> > On Mon, 2 Dec 2019 at 05:02, Dave Chinner <david@fromorbit.com> wrote:
+> > >
+> > > On Mon, Dec 02, 2019 at 10:46:25AM +0800, Ming Lei wrote:
+> > > > On Thu, Nov 28, 2019 at 10:53:33AM +0100, Vincent Guittot wrote:
+> > > > > On Thu, 28 Nov 2019 at 10:40, Hillf Danton <hdanton@sina.com> wro=
+te:
+> > > > > > --- a/fs/iomap/direct-io.c
+> > > > > > +++ b/fs/iomap/direct-io.c
+> > > > > > @@ -157,10 +157,8 @@ static void iomap_dio_bio_end_io(struct
+> > > > > >                         WRITE_ONCE(dio->submit.waiter, NULL);
+> > > > > >                         blk_wake_io_task(waiter);
+> > > > > >                 } else if (dio->flags & IOMAP_DIO_WRITE) {
+> > > > > > -                       struct inode *inode =3D file_inode(dio-=
+>iocb->ki_filp);
+> > > > > > -
+> > > > > >                         INIT_WORK(&dio->aio.work, iomap_dio_com=
+plete_work);
+> > > > > > -                       queue_work(inode->i_sb->s_dio_done_wq, =
+&dio->aio.work);
+> > > > > > +                       schedule_work(&dio->aio.work);
+> > > > >
+> > > > > I'm not sure that this will make a real difference because it end=
+s up
+> > > > > to call queue_work(system_wq, ...) and system_wq is bounded as we=
+ll so
+> > > > > the work will still be pinned to a CPU
+> > > > > Using system_unbound_wq should make a difference because it doesn=
+'t
+> > > > > pin the work on a CPU
+> > > > >  +                       queue_work(system_unbound_wq, &dio->aio.=
+work);
+> > > >
+> > > > Indeed, just run a quick test on my KVM guest, looks the following =
+patch
+> > > > makes a difference:
+> > > >
+> > > > diff --git a/fs/direct-io.c b/fs/direct-io.c
+> > > > index 9329ced91f1d..2f4488b0ecec 100644
+> > > > --- a/fs/direct-io.c
+> > > > +++ b/fs/direct-io.c
+> > > > @@ -613,7 +613,8 @@ int sb_init_dio_done_wq(struct super_block *sb)
+> > > >  {
+> > > >         struct workqueue_struct *old;
+> > > >         struct workqueue_struct *wq =3D alloc_workqueue("dio/%s",
+> > > > -                                                     WQ_MEM_RECLAI=
+M, 0,
+> > > > +                                                     WQ_MEM_RECLAI=
+M |
+> > > > +                                                     WQ_UNBOUND, 0=
+,
+> > > >                                                       sb->s_id);
+> > >
+> > > That's not an answer to the user task migration issue.
+> > >
+> > > That is, all this patch does is trade user task migration when the
+> > > CPU is busy for migrating all the queued work off the CPU so the
+> > > user task does not get migrated. IOWs, this forces all the queued
+> > > work to be migrated rather than the user task. IOWs, it does not
+> > > address the issue we've exposed in the scheduler between tasks with
+> > > competing CPU affinity scheduling requirements - it just hides the
+> > > symptom.
+> > >
+> > > Maintaining CPU affinity across dispatch and completion work has
+> > > been proven to be a significant performance win. Right throughout
+> > > the IO stack we try to keep this submitter/completion affinity,
+> > > and that's the whole point of using a bound wq in the first place:
+> > > efficient delayed batch processing of work on the local CPU.
+> >=20
+> > Do you really want to target the same CPU ? looks like what you really
+> > want to target the same cache instead
+>=20
+> Well, yes, ideally we want to target the same cache, but we can't do
+> that with workqueues.
+>=20
+> However, the block layer already does that same-cache steering for
+> it's directed completions (see __blk_mq_complete_request()), so we
+> are *already running in a "hot cache" CPU context* when we queue
+> work. When we queue to the same CPU, we are simply maintaining the
+> "cache-hot" context that we are already running in.
 
-Hi all,
+__blk_mq_complete_request() doesn't always complete the request on
+the submission CPU, which is only done in case of 1:1 queue mapping
+and N:1 mapping when nr_hw_queues < nr_nodes. Also, the default
+completion flag is SAME_GROUP, which just requires the completion
+CPU to share cache with submission CPU:
 
-This conflict is now between the xfs tree and Linus' tree (and the
-merge fix up patch below needs applying to that merge.
+#define QUEUE_FLAG_SAME_COMP    4       /* complete on same CPU-group */
 
-On Wed, 30 Oct 2019 15:31:10 +1100 Stephen Rothwell <sfr@canb.auug.org.au> =
-wrote:
->
-> Today's linux-next merge of the y2038 tree got a conflict in:
->=20
->   fs/compat_ioctl.c
->=20
-> between commit:
->=20
->   837a6e7f5cdb ("fs: add generic UNRESVSP and ZERO_RANGE ioctl handlers")
->=20
-> from the xfs tree and commits:
->   011da44bc5b6 ("compat: move FS_IOC_RESVSP_32 handling to fs/ioctl.c")
->   37ecf8b20abd ("compat_sys_ioctl(): make parallel to do_vfs_ioctl()")
->=20
-> from the y2038 tree.
->=20
-> I fixed it up (see below and the added patch) and can carry the fix as
-> necessary. This is now fixed as far as linux-next is concerned, but any
-> non trivial conflicts should be mentioned to your upstream maintainer
-> when your tree is submitted for merging.  You may also want to consider
-> cooperating with the maintainer of the conflicting tree to minimise any
-> particularly complex conflicts.
->=20
-> From af387ea192196ffd141234e7e45bcfbc2be1a4fc Mon Sep 17 00:00:00 2001
-> From: Stephen Rothwell <sfr@canb.auug.org.au>
-> Date: Wed, 30 Oct 2019 15:05:29 +1100
-> Subject: [PATCH] fix up for "compat: move FS_IOC_RESVSP_32 handling to
->  fs/ioctl.c"
->=20
-> Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
-> ---
->  fs/ioctl.c             | 4 ++--
->  include/linux/falloc.h | 7 +++++--
->  2 files changed, 7 insertions(+), 4 deletions(-)
->=20
-> diff --git a/fs/ioctl.c b/fs/ioctl.c
-> index 455ad38c8610..2f5e4e5b97e1 100644
-> --- a/fs/ioctl.c
-> +++ b/fs/ioctl.c
-> @@ -495,7 +495,7 @@ int ioctl_preallocate(struct file *filp, int mode, vo=
-id __user *argp)
->  /* on ia32 l_start is on a 32-bit boundary */
->  #if defined CONFIG_COMPAT && defined(CONFIG_X86_64)
->  /* just account for different alignment */
-> -int compat_ioctl_preallocate(struct file *file,
-> +int compat_ioctl_preallocate(struct file *file, int mode,
->  				struct space_resv_32 __user *argp)
->  {
->  	struct inode *inode =3D file_inode(file);
-> @@ -517,7 +517,7 @@ int compat_ioctl_preallocate(struct file *file,
->  		return -EINVAL;
->  	}
-> =20
-> -	return vfs_fallocate(file, FALLOC_FL_KEEP_SIZE, sr.l_start, sr.l_len);
-> +	return vfs_fallocate(file, mode | FALLOC_FL_KEEP_SIZE, sr.l_start, sr.l=
-_len);
->  }
->  #endif
-> =20
-> diff --git a/include/linux/falloc.h b/include/linux/falloc.h
-> index 63c4f0d615bc..ab42b72424f0 100644
-> --- a/include/linux/falloc.h
-> +++ b/include/linux/falloc.h
-> @@ -45,10 +45,13 @@ struct space_resv_32 {
->  	__s32		l_pad[4];	/* reserve area */
->  };
-> =20
-> -#define FS_IOC_RESVSP_32		_IOW ('X', 40, struct space_resv_32)
-> +#define FS_IOC_RESVSP_32	_IOW ('X', 40, struct space_resv_32)
-> +#define FS_IOC_UNRESVSP_32	_IOW ('X', 41, struct space_resv_32)
->  #define FS_IOC_RESVSP64_32	_IOW ('X', 42, struct space_resv_32)
-> +#define FS_IOC_UNRESVSP64_32	_IOW ('X', 43, struct space_resv_32)
-> +#define FS_IOC_ZERO_RANGE_32	_IOW ('X', 57, struct space_resv_32)
-> =20
-> -int compat_ioctl_preallocate(struct file *, struct space_resv_32 __user =
-*);
-> +int compat_ioctl_preallocate(struct file *, int mode, struct space_resv_=
-32 __user *);
-> =20
->  #endif
-> =20
-> --=20
-> 2.23.0
->=20
-> --=20
-> Cheers,
-> Stephen Rothwell
->=20
-> diff --cc fs/compat_ioctl.c
-> index 62e530814cef,9ae90d728c0f..000000000000
-> --- a/fs/compat_ioctl.c
-> +++ b/fs/compat_ioctl.c
-> @@@ -1020,51 -165,38 +165,57 @@@ COMPAT_SYSCALL_DEFINE3(ioctl, unsigned=20
->   	case FIONBIO:
->   	case FIOASYNC:
->   	case FIOQSIZE:
-> - 		break;
-> -=20
-> - #if defined(CONFIG_IA64) || defined(CONFIG_X86_64)
-> + 	case FS_IOC_FIEMAP:
-> + 	case FIGETBSZ:
-> + 	case FICLONERANGE:
-> + 	case FIDEDUPERANGE:
-> + 		goto found_handler;
-> + 	/*
-> + 	 * The next group is the stuff handled inside file_ioctl().
-> + 	 * For regular files these never reach ->ioctl(); for
-> + 	 * devices, sockets, etc. they do and one (FIONREAD) is
-> + 	 * even accepted in some cases.  In all those cases
-> + 	 * argument has the same type, so we can handle these
-> + 	 * here, shunting them towards do_vfs_ioctl().
-> + 	 * ->compat_ioctl() will never see any of those.
-> + 	 */
-> + 	/* pointer argument, never actually handled by ->ioctl() */
-> + 	case FIBMAP:
-> + 		goto found_handler;
-> + 	/* handled by some ->ioctl(); always a pointer to int */
-> + 	case FIONREAD:
-> + 		goto found_handler;
-> + 	/* these two get messy on amd64 due to alignment differences */
-> + #if defined(CONFIG_X86_64)
->   	case FS_IOC_RESVSP_32:
->   	case FS_IOC_RESVSP64_32:
->  -		error =3D compat_ioctl_preallocate(f.file, compat_ptr(arg));
->  +		error =3D compat_ioctl_preallocate(f.file, 0, compat_ptr(arg));
->  +		goto out_fput;
->  +	case FS_IOC_UNRESVSP_32:
->  +	case FS_IOC_UNRESVSP64_32:
->  +		error =3D compat_ioctl_preallocate(f.file, FALLOC_FL_PUNCH_HOLE,
->  +				compat_ptr(arg));
->  +		goto out_fput;
->  +	case FS_IOC_ZERO_RANGE_32:
->  +		error =3D compat_ioctl_preallocate(f.file, FALLOC_FL_ZERO_RANGE,
->  +				compat_ptr(arg));
->   		goto out_fput;
->   #else
->   	case FS_IOC_RESVSP:
->   	case FS_IOC_RESVSP64:
->  -		goto found_handler;
->  +		error =3D ioctl_preallocate(f.file, 0, compat_ptr(arg));
->  +		goto out_fput;
->  +	case FS_IOC_UNRESVSP:
->  +	case FS_IOC_UNRESVSP64:
->  +		error =3D ioctl_preallocate(f.file, FALLOC_FL_PUNCH_HOLE,
->  +				compat_ptr(arg));
->  +		goto out_fput;
->  +	case FS_IOC_ZERO_RANGE:
->  +		error =3D ioctl_preallocate(f.file, FALLOC_FL_ZERO_RANGE,
->  +				compat_ptr(arg));
->  +		goto out_fput;
->   #endif
->  =20
-> - 	case FICLONE:
-> - 	case FICLONERANGE:
-> - 	case FIDEDUPERANGE:
-> - 	case FS_IOC_FIEMAP:
-> - 		goto do_ioctl;
-> -=20
-> - 	case FIBMAP:
-> - 	case FIGETBSZ:
-> - 	case FIONREAD:
-> - 		if (S_ISREG(file_inode(f.file)->i_mode))
-> - 			break;
-> - 		/*FALL THROUGH*/
-> -=20
->   	default:
->   		if (f.file->f_op->compat_ioctl) {
->   			error =3D f.file->f_op->compat_ioctl(f.file, cmd, arg);
 
---=20
-Cheers,
-Stephen Rothwell
 
---Sig_/5_edYof0YP+3JTXH5TkWab8
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+Thanks,=20
+Ming
 
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAl3lpacACgkQAVBC80lX
-0Gxefgf/eFC5Ja1WCb8ObxkHw12SrZfMlHLZ3b/7qM0WvkkgUXa4VD6Dxyg5bbzY
-/h2Qpm7WT2lcmEoKn3zujfXc4DHEJlkewLk2MZA4PS522C0mHaTG7joC5OUnNocr
-luluGD/DHU4H96lkrMg5r+q5JYbs6upiuVcFP+1sOA9xgeuqmcx7/IytlDTuBRCK
-dJZj1sm2BnBjZbml/9kdnCXxoD/ZAnX4+rFK4L9rMDPlkXOee+jn+o6xPuz5sl5/
-hY2t/oZ08f8bKnguN471ChdE8YwAiWHN/6oDUBO/6qusdFwZreJfId0H3dhZ8CUG
-Omg3ObpWTZXRZuz0eWieTWN+VA3M6w==
-=bZuD
------END PGP SIGNATURE-----
-
---Sig_/5_edYof0YP+3JTXH5TkWab8--
