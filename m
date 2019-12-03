@@ -2,342 +2,207 @@ Return-Path: <SRS0=2geO=ZZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E9B4C432C0
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 02:30:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D0AAC432C0
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 02:45:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E455F206DC
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 02:30:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA751206DC
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 02:45:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="sg4o39Xa"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GoyHYSR6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726057AbfLCCar (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Dec 2019 21:30:47 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:53454 "EHLO
+        id S1726214AbfLCCpd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 Dec 2019 21:45:33 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:37898 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725941AbfLCCar (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Dec 2019 21:30:47 -0500
+        with ESMTP id S1725941AbfLCCpd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Dec 2019 21:45:33 -0500
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB32NwtE064627;
-        Tue, 3 Dec 2019 02:30:44 GMT
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB32iKGT080027;
+        Tue, 3 Dec 2019 02:45:29 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=9SuIJMSBl8VUeeuPs3qIg6EDf0/i04ULRPlOkX42K3w=;
- b=sg4o39Xa6OfBGEcCZseaisAJXJvjdDUAwMRYaysPElRXJWR3xO+XcQn7i8LTZu/qgIs8
- QwXtjA0N75x2iIxjZL6K1Vm0mfUGk2TunfUgGduIXQ5qwXn1YphwHLN97ivHUuqK2Mmq
- v4Er6h4BXmGyNlaFKLQ+h1wmsxElA1Q/djHyEP72CKDN9HUeLS7lKgFITm4RoyFEEB/A
- ZPwWc4E1DJbKgoqAMj4P7RHdirwv3Ef6kkhBbs/rYiZL++mAkOToGGJ6jTFdWLv4S9gz
- kWuus+J4dL/+MZzRQRVCNoaDzNUqwkl5X97MIR742luWoDYTtZz0yESaCX89P3+EmOGN 8w== 
+ bh=sv5YfH98Izsf7QIsGZ/Q1dGEfGKCL3Z30OcJH0+B9SQ=;
+ b=GoyHYSR6XdizeXLNnx+ROGHk9+5oFC0Je0U56zGiJRLUtHPw0OT2q9djw52EB5ALr4VC
+ q+W7oEF2/MCdIpNWQ3qZTRAjnfDGMRBHwBmn1Wq7zWDM4GoiJTojs2HOc7i9xOfesFgp
+ Y18XwQmbeLiApBd7FH2N04KJaMoFcG7TK1mnAQAKkUUpX8GYwAA8IZpikw3WQpuTOqdX
+ b7KZVPuBN1spOqbaGhkDZguNnp0FnJS0Z1ZkQsKXV8NI7LKGti0f6CrVJe27x2u9DRvn
+ hEQDMPBfe+Vsv0mswFrWjIcsKkMRKs8dfW5L0pSXO1HISTDdCl2tVhshFfMSdx4mq/4Q 5g== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2wkh2r43hw-1
+        by userp2120.oracle.com with ESMTP id 2wkh2r45fw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 Dec 2019 02:30:44 +0000
+        Tue, 03 Dec 2019 02:45:29 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB32NDdJ062422;
-        Tue, 3 Dec 2019 02:30:43 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2wn4qntd05-1
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB32i3p6101229;
+        Tue, 3 Dec 2019 02:45:29 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2wn4qntuhv-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 Dec 2019 02:30:43 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xB32UgKs007923;
-        Tue, 3 Dec 2019 02:30:42 GMT
+        Tue, 03 Dec 2019 02:45:28 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xB32jRrD024255;
+        Tue, 3 Dec 2019 02:45:28 GMT
 Received: from localhost (/10.159.148.223)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 02 Dec 2019 18:30:42 -0800
-Date:   Mon, 2 Dec 2019 18:30:41 -0800
+        with ESMTP ; Mon, 02 Dec 2019 18:45:27 -0800
+Date:   Mon, 2 Dec 2019 18:45:26 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Dave Chinner <david@fromorbit.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>, Alex Lyakas <alex@zadara.com>
-Subject: Re: [RFC PATCH] xfs: don't commit sunit/swidth updates to disk if
- that would cause repair failures
-Message-ID: <20191203023041.GH7335@magnolia>
-References: <20191202173538.GD7335@magnolia>
- <20191202212140.GG2695@dread.disaster.area>
+Cc:     Omar Sandoval <osandov@osandov.com>, linux-xfs@vger.kernel.org
+Subject: Re: Transaction log reservation overrun when fallocating realtime
+ file
+Message-ID: <20191203024526.GF7339@magnolia>
+References: <20191126202714.GA667580@vader>
+ <20191127003426.GP6219@magnolia>
+ <20191202215113.GH2695@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191202212140.GG2695@dread.disaster.area>
+In-Reply-To: <20191202215113.GH2695@dread.disaster.area>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9459 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1912030021
+ engine=8.0.1-1911140001 definitions=main-1912030024
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9459 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1912030021
+ definitions=main-1912030024
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 03, 2019 at 08:21:40AM +1100, Dave Chinner wrote:
-> On Mon, Dec 02, 2019 at 09:35:38AM -0800, Darrick J. Wong wrote:
+On Tue, Dec 03, 2019 at 08:51:13AM +1100, Dave Chinner wrote:
+> On Tue, Nov 26, 2019 at 04:34:26PM -0800, Darrick J. Wong wrote:
+> > On Tue, Nov 26, 2019 at 12:27:14PM -0800, Omar Sandoval wrote:
+> > > Hello,
+> > > 
+> > > The following reproducer results in a transaction log overrun warning
+> > > for me:
+> > > 
+> > >   mkfs.xfs -f -r rtdev=/dev/vdc -d rtinherit=1 -m reflink=0 /dev/vdb
+> > >   mount -o rtdev=/dev/vdc /dev/vdb /mnt
+> > >   fallocate -l 4G /mnt/foo
+> > > 
+> > > I've attached the full dmesg output. My guess at the problem is that the
+> > > tr_write reservation used by xfs_alloc_file_space is not taking the realtime
+> > > bitmap and realtime summary inodes into account (inode numbers 129 and 130 on
+> > > this filesystem, which I do see in some of the log items). However, I'm not
+> > > familiar enough with the XFS transaction guts to confidently fix this. Can
+> > > someone please help me out?
+> > 
+> > Hmm...
+> > 
+> > /*
+> >  * In a write transaction we can allocate a maximum of 2
+> >  * extents.  This gives:
+> >  *    the inode getting the new extents: inode size
+> >  *    the inode's bmap btree: max depth * block size
+> >  *    the agfs of the ags from which the extents are allocated: 2 * sector
+> >  *    the superblock free block counter: sector size
+> >  *    the allocation btrees: 2 exts * 2 trees * (2 * max depth - 1) * block size
+> >  * And the bmap_finish transaction can free bmap blocks in a join:
+> >  *    the agfs of the ags containing the blocks: 2 * sector size
+> >  *    the agfls of the ags containing the blocks: 2 * sector size
+> >  *    the super block free block counter: sector size
+> >  *    the allocation btrees: 2 exts * 2 trees * (2 * max depth - 1) * block size
+> >  */
+> > STATIC uint
+> > xfs_calc_write_reservation(...);
+> > 
+> > So this means that the rt allocator can burn through at most ...
+> > 1 ext * 2 trees * (2 * maxdepth - 1) * blocksize
+> > ... worth of log reservation as part of setting bits in the rtbitmap and
+> > fiddling with the rtsummary information.
+> > 
+> > Instead, 4GB of 4k rt extents == 1 million rtexts to mark in use, which
+> > is 131072 bytes of rtbitmap to log, and *kaboom* there goes the 109K log
+> > reservation.
+> 
+> Ok, if that's the case, we still need to be able to allocate MAXEXTLEN in
+> a single transaction. That's 2^21 filesystem blocks, which at most
+> is 2^21 rtexts.
+> 
+> Hence I think we probably should have a separate rt-write
+> reservation that handles this case, and we use that for allocation
+> on rt devices rather than the bt-based allocation reservation.
+
+2^21 rtexts is ... 2^18 bytes worth of rtbitmap block, which implies a
+transaction reservation of around ... ~300K?  I guess I'll have to go
+play with xfs_db to see how small of a datadev you can make before that
+causes us to fail the minimum log size checks.
+
+As you said on IRC, it probably won't affect /most/ setups... but I
+don't want to run around increasing support calls either.  Even if most
+distributors don't turn on rt support.
+
+> 
 > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > Alex Lyakas reported[1] that mounting an xfs filesystem with new sunit
-> > and swidth values could cause xfs_repair to fail loudly.  The problem
-> > here is that repair calculates the where mkfs should have allocated the
-> > root inode, based on the superblock geometry.  The allocation decisions
-> > depend on sunit, which means that we really can't go updating sunit if
-> > it would lead to a subsequent repair failure on an otherwise correct
-> > filesystem.
+> > xfs: cap realtime allocation length to something we can log
 > > 
-> > Port the computation code from xfs_repair and teach mount to avoid the
-> > ondisk update if it would cause problems for repair.  We allow the mount
-> > to proceed (and new allocations will reflect this new geometry) because
-> > we've never screened this kind of thing before.
+> > Omar Sandoval reported that a 4G fallocate on the realtime device causes
+> > filesystem shutdowns due to a log reservation overflow that happens when
+> > we log the rtbitmap updates.
 > > 
-> > [1] https://lore.kernel.org/linux-xfs/20191125130744.GA44777@bfoster/T/#m00f9594b511e076e2fcdd489d78bc30216d72a7d
-> ....
+> > The tr_write transaction reserves enough log reservation to handle a
+> > full splits of both free space btrees, so cap the rt allocation at that
+> > number of bits.
+> > 
+> > "The following reproducer results in a transaction log overrun warning
+> > for me:
+> > 
+> >     mkfs.xfs -f -r rtdev=/dev/vdc -d rtinherit=1 -m reflink=0 /dev/vdb
+> >     mount -o rtdev=/dev/vdc /dev/vdb /mnt
+> >     fallocate -l 4G /mnt/foo
+> > 
+> > Reported-by: Omar Sandoval <osandov@osandov.com>
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/xfs_bmap_util.c |   23 +++++++++++++++++++++++
+> >  1 file changed, 23 insertions(+)
+> > 
+> > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> > index 49d7b530c8f7..15c4e2790de3 100644
+> > --- a/fs/xfs/xfs_bmap_util.c
+> > +++ b/fs/xfs/xfs_bmap_util.c
+> > @@ -69,6 +69,26 @@ xfs_zero_extent(
+> >  }
+> >  
+> >  #ifdef CONFIG_XFS_RT
 > > +/*
-> > + * Compute the first and last inodes numbers of the inode chunk that was
-> > + * preallocated for the root directory.
+> > + * tr_write allows for one full split in the bnobt and cntbt to record the
+> > + * allocation, and that's how many bits of rtbitmap we can log to the
+> > + * transaction.  We leave one full block's worth of log space to handle the
+> > + * rtsummary update, though that's probably overkill.
 > > + */
-> > +void
-> > +xfs_ialloc_find_prealloc(
-> > +	struct xfs_mount	*mp,
-> > +	xfs_agino_t		*first_agino,
-> > +	xfs_agino_t		*last_agino)
+> > +static inline uint64_t
+> > +xfs_bmap_rtalloc_max(
+> > +	struct xfs_mount	*mp)
 > > +{
-> > +	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
-> > +	xfs_agblock_t		first_bno;
+> > +	uint64_t		max_rtbitmap;
 > > +
-> > +	/*
-> > +	 * Pre-calculate the geometry of ag 0. We know what it looks like
-> > +	 * because we know what mkfs does: 2 allocation btree roots (by block
-> > +	 * and by size), the inode allocation btree root, the free inode
-> > +	 * allocation btree root (if enabled) and some number of blocks to
-> > +	 * prefill the agfl.
-> > +	 *
-> > +	 * Because the current shape of the btrees may differ from the current
-> > +	 * shape, we open code the mkfs freelist block count here. mkfs creates
-> > +	 * single level trees, so the calculation is pertty straight forward for
+> > +	max_rtbitmap = xfs_allocfree_log_count(mp, 1) - 1;
+> > +	max_rtbitmap *= XFS_FSB_TO_B(mp, 1);
+> > +	max_rtbitmap *= NBBY;
+> > +	max_rtbitmap *= mp->m_sb.sb_rextsize;
 > 
-> pretty.
-> 
-> > +	 * the trees that use the AGFL.
-> > +	 */
-> > +
-> > +	/* free space by block btree root comes after the ag headers */
-> > +	first_bno = howmany(4 * mp->m_sb.sb_sectsize, mp->m_sb.sb_blocksize);
-> > +
-> > +	/* free space by length btree root */
-> > +	first_bno += 1;
-> > +
-> > +	/* inode btree root */
-> > +	first_bno += 1;
-> > +
-> > +	/* agfl */
-> > +	first_bno += (2 * min(2U, mp->m_ag_maxlevels)) + 1;
-> 
-> min_t(xfs_agblock_t, 2, mp->m_ag_maxlevels) ?
-> 
-> > +
-> > +	if (xfs_sb_version_hasfinobt(&mp->m_sb))
-> > +		first_bno++;
-> > +
-> > +	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-> > +		first_bno += min(2U, mp->m_rmap_maxlevels); /* agfl blocks */
-> 
-> same.
+> I can see how this works, but it strikes me as a bit of a hack. We
+> calculate the worst case reservations up front to avoid having to
+> play games like this in the code. Hence I think the correct thing to
+> do is fix the reservation to ensure we can do MAXEXTLEN allocations
+> without overruns...
 
-Fixed all three.
-
-> > +		first_bno++;
-> > +	}
-> > +
-> > +	if (xfs_sb_version_hasreflink(&mp->m_sb))
-> > +		first_bno++;
-> > +
-> > +	/*
-> > +	 * If the log is allocated in the first allocation group we need to
-> > +	 * add the number of blocks used by the log to the above calculation.
-> > +	 *
-> > +	 * This can happens with filesystems that only have a single
-> > +	 * allocation group, or very odd geometries created by old mkfs
-> > +	 * versions on very small filesystems.
-> > +	 */
-> > +	if (mp->m_sb.sb_logstart &&
-> > +	    XFS_FSB_TO_AGNO(mp, mp->m_sb.sb_logstart) == 0) {
-> > +
-> > +		/*
-> > +		 * XXX(hch): verify that sb_logstart makes sense?
-> > +		 */
-> > +		 first_bno += mp->m_sb.sb_logblocks;
-> > +	}
-> > +
-> > +	/*
-> > +	 * ditto the location of the first inode chunks in the fs ('/')
-> > +	 */
-> > +	if (xfs_sb_version_hasdalign(&mp->m_sb) && igeo->ialloc_align > 0) {
-> > +		*first_agino = XFS_AGB_TO_AGINO(mp,
-> > +				roundup(first_bno, mp->m_sb.sb_unit));
-> > +	} else if (xfs_sb_version_hasalign(&mp->m_sb) &&
-> > +		   mp->m_sb.sb_inoalignmt > 1)  {
-> > +		*first_agino = XFS_AGB_TO_AGINO(mp,
-> > +				roundup(first_bno, mp->m_sb.sb_inoalignmt));
-> > +	} else  {
-> > +		*first_agino = XFS_AGB_TO_AGINO(mp, first_bno);
-> > +	}
-> > +
-> > +	ASSERT(igeo->ialloc_blks > 0);
-> > +
-> > +	if (igeo->ialloc_blks > 1)
-> > +		*last_agino = *first_agino + XFS_INODES_PER_CHUNK;
-> > +	else
-> > +		*last_agino = XFS_AGB_TO_AGINO(mp, first_bno + 1);
-> 
-> Isn't last_agino of the first inode of the next chunk? i.e. this is
-> an off-by-one...
-
-Yep.  It's also an off-by-one error in repair...
-
-> > +}
-> > diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
-> > index 323592d563d5..9d9fe7b488b8 100644
-> > --- a/fs/xfs/libxfs/xfs_ialloc.h
-> > +++ b/fs/xfs/libxfs/xfs_ialloc.h
-> > @@ -152,5 +152,7 @@ int xfs_inobt_insert_rec(struct xfs_btree_cur *cur, uint16_t holemask,
-> >  
-> >  int xfs_ialloc_cluster_alignment(struct xfs_mount *mp);
-> >  void xfs_ialloc_setup_geometry(struct xfs_mount *mp);
-> > +void xfs_ialloc_find_prealloc(struct xfs_mount *mp, xfs_agino_t *first_agino,
-> > +		xfs_agino_t *last_agino);
-> >  
-> >  #endif	/* __XFS_IALLOC_H__ */
-> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > index 7b35d62ede9f..d830a9e13817 100644
-> > --- a/fs/xfs/xfs_ioctl.c
-> > +++ b/fs/xfs/xfs_ioctl.c
-> > @@ -891,6 +891,9 @@ xfs_ioc_fsgeometry(
-> >  
-> >  	xfs_fs_geometry(&mp->m_sb, &fsgeo, struct_version);
-> >  
-> > +	fsgeo.sunit = mp->m_sb.sb_unit;
-> > +	fsgeo.swidth = mp->m_sb.sb_width;
-> 
-> Why?
-
-This was in keeping with Alex' suggestion to use the sunit values incore
-even if we don't update the superblock.
-
-> > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> > index fca65109cf24..0323a89256c7 100644
-> > --- a/fs/xfs/xfs_mount.c
-> > +++ b/fs/xfs/xfs_mount.c
-> > @@ -368,6 +368,11 @@ xfs_update_alignment(xfs_mount_t *mp)
-> >  	xfs_sb_t	*sbp = &(mp->m_sb);
-> >  
-> >  	if (mp->m_dalign) {
-> > +		uint32_t	old_su;
-> > +		uint32_t	old_sw;
-> > +		xfs_agino_t	first;
-> > +		xfs_agino_t	last;
-> > +
-> >  		/*
-> >  		 * If stripe unit and stripe width are not multiples
-> >  		 * of the fs blocksize turn off alignment.
-> > @@ -398,24 +403,38 @@ xfs_update_alignment(xfs_mount_t *mp)
-> >  			}
-> >  		}
-> >  
-> > -		/*
-> > -		 * Update superblock with new values
-> > -		 * and log changes
-> > -		 */
-> > -		if (xfs_sb_version_hasdalign(sbp)) {
-> > -			if (sbp->sb_unit != mp->m_dalign) {
-> > -				sbp->sb_unit = mp->m_dalign;
-> > -				mp->m_update_sb = true;
-> > -			}
-> > -			if (sbp->sb_width != mp->m_swidth) {
-> > -				sbp->sb_width = mp->m_swidth;
-> > -				mp->m_update_sb = true;
-> > -			}
-> > -		} else {
-> > +		/* Update superblock with new values and log changes. */
-> > +		if (!xfs_sb_version_hasdalign(sbp)) {
-> >  			xfs_warn(mp,
-> >  	"cannot change alignment: superblock does not support data alignment");
-> >  			return -EINVAL;
-> >  		}
-> > +
-> > +		if (sbp->sb_unit == mp->m_dalign &&
-> > +		    sbp->sb_width == mp->m_swidth)
-> > +			return 0;
-> > +
-> > +		old_su = sbp->sb_unit;
-> > +		old_sw = sbp->sb_width;
-> > +		sbp->sb_unit = mp->m_dalign;
-> > +		sbp->sb_width = mp->m_swidth;
-> > +		xfs_ialloc_find_prealloc(mp, &first, &last);
-> 
-> We just chuck last away? why calculate it then?
-
-Hmmm.  Repair uses it to silence the "inode chunk claims used block"
-error if an inobt record points to something owned by XR_E_INUSE_FS* if
-the inode points to something in that first chunk.  Not sure /why/ it
-does that; it seems to have done that since the creation of the git
-repo.
-
-Frankly, I'm not convinced that's the right behavior; the root inode
-chunk should never collide with something else, period.
-
-> And why not just
-> pass mp->m_dalign/mp->m_swidth into the function rather than setting
-> them in the sb and then having to undo the change? i.e.
-> 
-> 		rootino = xfs_ialloc_calc_rootino(mp, mp->m_dalign, mp->m_swidth);
-
-<shrug> The whole point was to create a function that computes where the
-first allocated inode chunk should be from an existing mountpoint and
-superblock, maybe the caller should make a copy, update the parameters,
-and then pass the copy into this function?
-
-> 		if (sbp->sb_rootino != rootino) {
-> 			.....
-> 		}
-> > +
-> > +		/*
-> > +		 * If the sunit/swidth change would move the precomputed root
-> > +		 * inode value, we must reject the ondisk change because repair
-> > +		 * will stumble over that.  However, we allow the mount to
-> > +		 * proceed because we never rejected this combination before.
-> > +		 */
-> > +		if (sbp->sb_rootino != XFS_AGINO_TO_INO(mp, 0, first)) {
-> > +			sbp->sb_unit = old_su;
-> > +			sbp->sb_width = old_sw;
-> > +			xfs_warn(mp,
-> > +	"cannot change alignment: would require moving root inode");
-> 
-> "cannot change stripe alignment: ..." ?
-
-Ok.
-
-> Should this also return EINVAL, as per above when the DALIGN sb
-> feature bit is not set?
-
-I dunno.  We've never rejected these mount options before, which makes
-me a little hesitant to break everybody's scripts, even if it /is/
-improper behavior that leads to repair failure.  We /do/ have the option
-that Alex suggested of modifying the incore values to change the
-allocator behavior without committing them to the superblock, which is
-what this patch does.
-
-OTOH the manual pages say that you're not supposed to do this, which
-might be a strong enough reason to start banning it.
-
-Thoughts?
+Yeah...
 
 --D
 
