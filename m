@@ -2,130 +2,122 @@ Return-Path: <SRS0=2geO=ZZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1BA0C432C3
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 14:35:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9ADCC432C0
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 15:53:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 88AA6206EC
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 14:35:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BEB0B2070A
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 15:53:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WEtSHrR4"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="aFdo1JvB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726138AbfLCOfg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Dec 2019 09:35:36 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:53990 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725848AbfLCOff (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Dec 2019 09:35:35 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1575383734;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=caPtWip/0Fp5+ectyuqp7DEQ7XYV0c3s4L4d01Olulc=;
-        b=WEtSHrR4TSDSof+iccORI8sudNhGB3DS/BfmEnjhBt2QkoZpIu7udxLXr5YTxk2xYF7DnV
-        IV9rbAppB2/3xcr3aGkCCM6CHcX0r2GTtmZhBUzEkvFMieixoKhiEP+vTidAPbXTlEqzR7
-        7sF24kpqY7cTh3n243+iGKTnzIHiGu8=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-153-nTjUyosROfSoxodUoDcwQA-1; Tue, 03 Dec 2019 09:35:30 -0500
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 3ED932F2E;
-        Tue,  3 Dec 2019 14:35:29 +0000 (UTC)
-Received: from colo-mx.corp.redhat.com (colo-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.21])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 123BB600CC;
-        Tue,  3 Dec 2019 14:35:28 +0000 (UTC)
-Received: from zmail17.collab.prod.int.phx2.redhat.com (zmail17.collab.prod.int.phx2.redhat.com [10.5.83.19])
-        by colo-mx.corp.redhat.com (Postfix) with ESMTP id 5EEB35BBFA;
-        Tue,  3 Dec 2019 14:35:28 +0000 (UTC)
-Date:   Tue, 3 Dec 2019 09:35:28 -0500 (EST)
-From:   Jan Stancek <jstancek@redhat.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        darrick wong <darrick.wong@oracle.com>,
-        linuxppc-dev@lists.ozlabs.org,
-        Memory Management <mm-qe@redhat.com>,
-        LTP Mailing List <ltp@lists.linux.it>,
-        Linux Stable maillist <stable@vger.kernel.org>,
-        CKI Project <cki-project@redhat.com>,
-        Michael Ellerman <mpe@ellerman.id.au>
-Message-ID: <433638211.14837331.1575383728189.JavaMail.zimbra@redhat.com>
-In-Reply-To: <20191203130757.GA2267@infradead.org>
-References: <cki.6C6A189643.3T2ZUWEMOI@redhat.com> <1738119916.14437244.1575151003345.JavaMail.zimbra@redhat.com> <8736e3ffen.fsf@mpe.ellerman.id.au> <1420623640.14527843.1575289859701.JavaMail.zimbra@redhat.com> <1766807082.14812757.1575377439007.JavaMail.zimbra@redhat.com> <20191203130757.GA2267@infradead.org>
-Subject: Re: [bug] userspace hitting sporadic SIGBUS on xfs (Power9,
- ppc64le), v4.19 and later
+        id S1726075AbfLCPxC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Dec 2019 10:53:02 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:51848 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726024AbfLCPxB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Dec 2019 10:53:01 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB3Fi3an158418;
+        Tue, 3 Dec 2019 15:52:58 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=TK4k4PE84ofpkkHuFn7V1y5iUUyg9zU00SZ0mBJ9iGU=;
+ b=aFdo1JvB26LRaFCB0pQXkZh9v49GKyZ7Pvffr7NEGgAnadLKUBlu9bTRpsVXfQD8BjY2
+ bmJzG+90amILnLORjgSAxUQxs44IJ9SlWAqxf2sK5JTcWAFxorjvf1/xqTS7d2EwXpjM
+ SihEONX6cihCl+vKJ8pZxjXadLJ13rnMWJfY90zeS9aMRFaAzQSQbwSgDJuyic8vJ4Jp
+ NjXboOnGPKdkWHNYBLVAEEfFXa+t2OYOu9vHE1zoniDUWyle9IzAp6c+Im3QkqhGWUn7
+ Cixt9RKQOfuWIjGKQ+YKJB9dmUHV3F5e1Sar3bihJOsumbLJkVylea8NKLlH0cJKG/jS HQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 2wkgcq8hu5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 03 Dec 2019 15:52:58 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB3FhsrO180101;
+        Tue, 3 Dec 2019 15:52:58 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 2wn8k2tdrr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 03 Dec 2019 15:52:58 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xB3FqvOL031056;
+        Tue, 3 Dec 2019 15:52:57 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 03 Dec 2019 07:52:56 -0800
+Date:   Tue, 3 Dec 2019 07:52:56 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix mount failure crash on invalid iclog memory
+ access
+Message-ID: <20191203155256.GI7335@magnolia>
+References: <20191203140524.36043-1-bfoster@redhat.com>
 MIME-Version: 1.0
-X-Originating-IP: [10.43.17.163, 10.4.195.10]
-Thread-Topic: userspace hitting sporadic SIGBUS on xfs (Power9, ppc64le), v4.19 and later
-Thread-Index: cD3CqeEaO/UMqfbg0OYzRaML88GplQ==
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-X-MC-Unique: nTjUyosROfSoxodUoDcwQA-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191203140524.36043-1-bfoster@redhat.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9460 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-1912030120
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9460 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-1912030120
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
------ Original Message -----
-> On Tue, Dec 03, 2019 at 07:50:39AM -0500, Jan Stancek wrote:
-> > My theory is that there's a race in iomap. There appear to be
-> > interleaved calls to iomap_set_range_uptodate() for same page
-> > with varying offset and length. Each call sees bitmap as _not_
-> > entirely "uptodate" and hence doesn't call SetPageUptodate().
-> > Even though each bit in bitmap ends up uptodate by the time
-> > all calls finish.
+On Tue, Dec 03, 2019 at 09:05:24AM -0500, Brian Foster wrote:
+> syzbot (via KASAN) reports a use-after-free in the error path of
+> xlog_alloc_log(). Specifically, the iclog freeing loop doesn't
+> handle the case of a fully initialized ->l_iclog linked list.
+> Instead, it assumes that the list is partially constructed and NULL
+> terminated.
 > 
-> Weird.  That should be prevented by the page lock that all callers
-> of iomap_set_range_uptodate.  But in case I miss something, does
-> the patch below trigger?  If not it is not jut a race, but might
-> be some weird ordering problem with the bitops, especially if it
-> only triggers on ppc, which is very weakly ordered.
+> This bug manifested because there was no possible error scenario
+> after iclog list setup when the original code was added.  Subsequent
+> code and associated error conditions were added some time later,
+> while the original error handling code was never updated. Fix up the
+> error loop to terminate either on a NULL iclog or reaching the end
+> of the list.
 > 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index d33c7bc5ee92..25e942c71590 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -148,6 +148,8 @@ iomap_set_range_uptodate(struct page *page, unsigned off,
-> unsigned len)
->  	unsigned int i;
->  	bool uptodate = true;
->  
-> +	WARN_ON_ONCE(!PageLocked(page));
-> +
->  	if (iop) {
->  		for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
->  			if (i >= first && i <= last)
+> Reported-by: syzbot+c732f8644185de340492@syzkaller.appspotmail.com
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+
+Ahh, a proper S-o-B!  Thank you,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
+>  fs/xfs/xfs_log.c | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-
-Hit it pretty quick this time:
-
-# uptime
- 09:27:42 up 22 min,  2 users,  load average: 0.09, 13.38, 26.18
-
-# /mnt/testarea/ltp/testcases/bin/genbessel                                                                                                                                     
-Bus error (core dumped)
-
-# dmesg | grep -i -e warn -e call                                                                                                                                               
-[    0.000000] dt-cpu-ftrs: not enabling: system-call-vectored (disabled or unsupported by kernel)
-[    0.000000] random: get_random_u64 called from cache_random_seq_create+0x98/0x1e0 with crng_init=0
-[    0.000000] rcu:     Offload RCU callbacks from CPUs: (none).
-[    5.312075] megaraid_sas 0031:01:00.0: megasas_disable_intr_fusion is called outbound_intr_mask:0x40000009
-[    5.357307] megaraid_sas 0031:01:00.0: megasas_disable_intr_fusion is called outbound_intr_mask:0x40000009
-[    5.485126] megaraid_sas 0031:01:00.0: megasas_enable_intr_fusion is called outbound_intr_mask:0x40000000
-
-So, extra WARN_ON_ONCE applied on top of v5.4-8836-g81b6b96475ac
-did not trigger.
-
-Is it possible for iomap code to submit multiple bio-s for same
-locked page and then receive callbacks in parallel?
-
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 6a147c63a8a6..f6006d94a581 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -1542,6 +1542,8 @@ xlog_alloc_log(
+>  		prev_iclog = iclog->ic_next;
+>  		kmem_free(iclog->ic_data);
+>  		kmem_free(iclog);
+> +		if (prev_iclog == log->l_iclog)
+> +			break;
+>  	}
+>  out_free_log:
+>  	kmem_free(log);
+> -- 
+> 2.20.1
+> 
