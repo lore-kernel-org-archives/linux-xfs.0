@@ -1,223 +1,188 @@
-Return-Path: <SRS0=2geO=ZZ=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=+YF0=Z2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 585DAC432C0
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 23:52:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 263BAC432C0
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 00:12:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2458F20684
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Dec 2019 23:52:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E23ED20675
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 00:12:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=osandov-com.20150623.gappssmtp.com header.i=@osandov-com.20150623.gappssmtp.com header.b="I/KWmMOh"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="eTAvIVaR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726473AbfLCXwA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Dec 2019 18:52:00 -0500
-Received: from mail-pf1-f174.google.com ([209.85.210.174]:36496 "EHLO
-        mail-pf1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726060AbfLCXwA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Dec 2019 18:52:00 -0500
-Received: by mail-pf1-f174.google.com with SMTP id b19so2645648pfd.3
-        for <linux-xfs@vger.kernel.org>; Tue, 03 Dec 2019 15:51:59 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=osandov-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=lM/UWjr0BC+lsg5dho5+dCWtdfble0VAtzvxHuZus+Q=;
-        b=I/KWmMOh9F0OO3qvEjJjw3bbP6SMP8yizqrJJnSd7YVwsZRYj7fxI1qt90EkkmwPix
-         2OZ/lzfSeSu99MaZ43Vl/81ry2TtFVUmzWAILPH7jqKGgChA6Xmbx+m7rU/9ym1y0vDY
-         Uacou6RH8OEI7CgKlshHUF2HVd0wl/oBJV09qyPY5M0JlbmFd3pqx1s1uUnDrkxRyonR
-         krpQIgyPNobLCLp4hseA3vucqRYzB2Ox6KVSkEtkTwq6X0y8iMF2BGvqurLxsVDDzKzx
-         WEG4VsUwwXgeCi8sbH6qZa2idji3oY1owxUpDXEMxQ5FAABJkVeh8OoFmhrYZdY1pqng
-         77gQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=lM/UWjr0BC+lsg5dho5+dCWtdfble0VAtzvxHuZus+Q=;
-        b=R4GOGxbllNISqqlHWCvPe75SZjabuQtEte75saKOR3FMv/ETPOaexMEnbYok5uCMUm
-         0DqPI0NuZMkxBxjk7aYo8e7udnSUI0B/HHQ0xy0O7GiLcIrk3N70WsuuOaAmwQCoXfF+
-         MnUtpsAY3i88Gos5g3DK3ssV4iobVkAolPdtq/MOCRxOdO/jC80i2TIOczBmm8fznwCi
-         J6Rmjy6vE6gSEeCBz/jMu3QPksm1UWnNOQKVeSdOoFDhdRa0lfGAROESL6gqeJlbD0+s
-         utLgZfQsS0iE0IE1Gx1GzVDvmvXaXPC4jTQYja1Mqk5vvu2a86CFfS0tNJM0l2K2afXK
-         YPPw==
-X-Gm-Message-State: APjAAAXhNZjDia2OhE7BL+p5CcRri/LaFKr4zhz0ic6CxoAK3/VdKlyW
-        ZHAEVs8Zt9F/fS/M/IXWugudUg==
-X-Google-Smtp-Source: APXvYqwrnrgiHB7RdWtTbO0+9b33hJ9zPGaNMQXqIl+3W/PhGpD5gjrDhIIyE+N8g3InOmJqQsAnxw==
-X-Received: by 2002:a63:483:: with SMTP id 125mr307321pge.217.1575417119057;
-        Tue, 03 Dec 2019 15:51:59 -0800 (PST)
-Received: from vader.thefacebook.com ([2620:10d:c090:180::5623])
-        by smtp.gmail.com with ESMTPSA id p4sm4828359pfb.157.2019.12.03.15.51.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Dec 2019 15:51:58 -0800 (PST)
-From:   Omar Sandoval <osandov@osandov.com>
-To:     fstests@vger.kernel.org
-Cc:     kernel-team@fb.com, linux-xfs@vger.kernel.org
-Subject: [PATCH v3] generic: test truncating mixed written/unwritten XFS realtime extent
-Date:   Tue,  3 Dec 2019 15:51:52 -0800
-Message-Id: <110dbf3ff8c8004e4eecef2cc2e84dfe2d3ddd9f.1575416911.git.osandov@fb.com>
-X-Mailer: git-send-email 2.24.0
+        id S1726115AbfLDAMG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Dec 2019 19:12:06 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:42836 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726079AbfLDAMG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Dec 2019 19:12:06 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB3NU2qA167229;
+        Wed, 4 Dec 2019 00:12:01 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=1rs+Cn7pLvm9Iyo9HoPo0/OaQhiJmVefVu3u8G34df4=;
+ b=eTAvIVaRtDmY8fEnUeykv9oQbY8veFbxa/M31/Z7jTwTkndvAl2BfDu0yAKNSTcS35Mf
+ NeFffC6oLnInyhN2bgVvawmLqVdF9Ogm8f9OYsFwk7Tm37YN41jPqfDwt1ZOJeS2nWJD
+ YsgbnR806Ri1EeXlxBOz1NpCy6v5qj0W7XvClS0AUwF7lhc/Q9jotA139q8vLii15mwK
+ hQWtT4kdmov2YFfI7SRfe85AjzUibH24JQyoAzYfXwiub2eUQaSBp5tumB3bnJVAXwuU
+ tooCacFjOItmYBO/9JY4oO2099h6Z47NBX/eqmZ3v7XNAN1qW1IpbEuonhFpM1zBHdPs iA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2wkfuub9sa-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 04 Dec 2019 00:12:01 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB3NTK3b007505;
+        Wed, 4 Dec 2019 00:12:00 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2wnvqx8vdn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 04 Dec 2019 00:12:00 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xB40BvLw029214;
+        Wed, 4 Dec 2019 00:11:57 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 03 Dec 2019 16:11:56 -0800
+Date:   Tue, 3 Dec 2019 16:11:56 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org, alex@zadara.com
+Subject: Re: [PATCH 4/4] xfs_repair: check plausiblitiy of root dir pointer
+Message-ID: <20191204001156.GM7335@magnolia>
+References: <157530815855.126767.7523979488668040754.stgit@magnolia>
+ <157530818573.126767.13434243816626977089.stgit@magnolia>
+ <20191203130306.GB18418@bfoster>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191203130306.GB18418@bfoster>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9460 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-1912030171
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9460 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-1912030171
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Omar Sandoval <osandov@fb.com>
+On Tue, Dec 03, 2019 at 08:03:06AM -0500, Brian Foster wrote:
+> On Mon, Dec 02, 2019 at 09:36:25AM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > If sb_rootino doesn't point to where we think mkfs was supposed to have
+> > preallocated an inode chunk, check to see if the alleged root directory
+> > actually looks like a root directory.  If so, we'll let it go because
+> > someone could have changed sunit since formatting time.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  repair/xfs_repair.c |   50 +++++++++++++++++++++++++++++++++++++++++++++++++-
+> >  1 file changed, 49 insertions(+), 1 deletion(-)
+> > 
+> > 
+> > diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+> > index 6798b88c..f6134cca 100644
+> > --- a/repair/xfs_repair.c
+> > +++ b/repair/xfs_repair.c
+> > @@ -395,12 +395,60 @@ do_log(char const *msg, ...)
+> >  	va_end(args);
+> >  }
+> >  
+> > +/*
+> > + * If sb_rootino points to a different inode than we were expecting, try
+> > + * loading the alleged root inode to see if it's a plausibly a root directory.
+> > + * If so, we'll readjust the computations.
+> 
+> "... readjust the calculated inode chunk range such that the root inode
+> is the first inode in the chunk."
+> 
+> > + */
+> > +static void
+> > +check_misaligned_root(
+> > +	struct xfs_mount	*mp)
+> > +{
+> > +	struct xfs_inode	*ip;
+> > +	xfs_ino_t		ino;
+> > +	int			error;
+> > +
+> > +	error = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &ip,
+> > +			&xfs_default_ifork_ops);
+> > +	if (error)
+> > +		return;
+> > +	if (!S_ISDIR(VFS_I(ip)->i_mode))
+> > +		goto out_rele;
+> > +
+> > +	error = -libxfs_dir_lookup(NULL, ip, &xfs_name_dotdot, &ino, NULL);
+> > +	if (error)
+> > +		goto out_rele;
+> > +
+> > +	if (ino == mp->m_sb.sb_rootino) {
+> > +		do_warn(
+> > +_("sb root inode value %" PRIu64 " inconsistent with calculated value %u but looks like a root directory\n"),
+> 
+> Just a nit, but I think the error would be more informative if it just
+> said something like:
+> 
+> "sb root inode %" PRIu64 " inconsistent with alignment (expected rootino %u)."
 
-The only XFS-specific part of this test is the setup, so we can make the
-rest a generic test. It's slow, though, as it needs to write 8GB to
-convert a big unwritten extent to written.
+Fixed.  Thanks for reviewing all this!
 
-Signed-off-by: Omar Sandoval <osandov@fb.com>
----
-Changes from v2 -> v3:
+> > +			mp->m_sb.sb_rootino, first_prealloc_ino);
+> > +		last_prealloc_ino += (int)ino - first_prealloc_ino;
+> > +		first_prealloc_ino = ino;
+> 
+> Why assume ino > first_prealloc_ino? How about we just assign
+> last_prealloc_ino as done in _find_prealloc()?
 
-- Use _create_loop_device and _destroy_loop_device instead of losetup
+I think I'll just blow all that away since the {last,first}_alloc_ino
+stuff seems incorrect anyway.
 
-Changes from v1 -> v2:
+--D
 
-- If rtdev is not configured, fall back to loop device on test
-  filesystem
-- Use XFS_IO_PROG instead of fallocate/sync/dd
-- Use truncate instead of rm
-- Add comments explaining the steps
-
- tests/generic/589     | 100 ++++++++++++++++++++++++++++++++++++++++++
- tests/generic/589.out |   2 +
- tests/generic/group   |   1 +
- 3 files changed, 103 insertions(+)
- create mode 100755 tests/generic/589
- create mode 100644 tests/generic/589.out
-
-diff --git a/tests/generic/589 b/tests/generic/589
-new file mode 100755
-index 00000000..aab37bb4
---- /dev/null
-+++ b/tests/generic/589
-@@ -0,0 +1,100 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2019 Facebook.  All Rights Reserved.
-+#
-+# FS QA Test 589
-+#
-+# Test "xfs: fix realtime file data space leak" and "xfs: don't check for AG
-+# deadlock for realtime files in bunmapi". On XFS without the fix, truncate
-+# will hang forever. On other filesystems, this just tests writing into big
-+# fallocates.
-+#
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+	test -n "$loop" && _destroy_loop_device "$loop"
-+	rm -f "$TEST_DIR/$seq"
-+}
-+
-+. ./common/rc
-+. ./common/filter
-+
-+rm -f $seqres.full
-+
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch_nocheck
-+
-+maxextlen=$((0x1fffff))
-+bs=4096
-+rextsize=4
-+filesz=$(((maxextlen + 1) * bs))
-+
-+extra_options=""
-+# If we're testing XFS, set up the realtime device to reproduce the bug.
-+if [[ $FSTYP = xfs ]]; then
-+	# If we don't have a realtime device, set up a loop device on the test
-+	# filesystem.
-+	if [[ $USE_EXTERNAL != yes || -z $SCRATCH_RTDEV ]]; then
-+		_require_test
-+		loopsz="$((filesz + (1 << 26)))"
-+		_require_fs_space "$TEST_DIR" $((loopsz / 1024))
-+		$XFS_IO_PROG -c "truncate $loopsz" -f "$TEST_DIR/$seq"
-+		loop="$(_create_loop_device "$TEST_DIR/$seq")"
-+		USE_EXTERNAL=yes
-+		SCRATCH_RTDEV="$loop"
-+	fi
-+	extra_options="$extra_options -bsize=$bs"
-+	extra_options="$extra_options -r extsize=$((bs * rextsize))"
-+	extra_options="$extra_options -d agsize=$(((maxextlen + 1) * bs / 2)),rtinherit=1"
-+fi
-+_scratch_mkfs $extra_options >>$seqres.full 2>&1
-+_scratch_mount
-+_require_fs_space "$SCRATCH_MNT" $((filesz / 1024))
-+
-+# Allocate maxextlen + 1 blocks. As long as the allocator does something sane,
-+# we should end up with two extents that look something like:
-+#
-+# u3.bmx[0-1] = [startoff,startblock,blockcount,extentflag]
-+# 0:[0,0,2097148,1]
-+# 1:[2097148,2097148,4,1]
-+#
-+# Extent 0 has blockcount = ALIGN_DOWN(maxextlen, rextsize). Extent 1 is
-+# adjacent and has blockcount = rextsize. Both are unwritten.
-+$XFS_IO_PROG -c "falloc 0 $filesz" -c fsync -f "$SCRATCH_MNT/file"
-+
-+# Write extent 0 + one block of extent 1. Our extents should end up like so:
-+#
-+# u3.bmx[0-1] = [startoff,startblock,blockcount,extentflag]
-+# 0:[0,0,2097149,0]
-+# 1:[2097149,2097149,3,1]
-+#
-+# Extent 0 is written and has blockcount = ALIGN_DOWN(maxextlen, rextsize) + 1,
-+# Extent 1 is adjacent, unwritten, and has blockcount = rextsize - 1 and
-+# startblock % rextsize = 1.
-+#
-+# The -b is just to speed things up (doing GBs of I/O in 4k chunks kind of
-+# sucks).
-+$XFS_IO_PROG -c "pwrite -b 1M -W 0 $(((maxextlen + 2 - rextsize) * bs))" \
-+	"$SCRATCH_MNT/file" >> "$seqres.full"
-+
-+# Truncate the extents.
-+$XFS_IO_PROG -c "truncate 0" -c fsync "$SCRATCH_MNT/file"
-+
-+# We need to do this before the loop device gets torn down.
-+_scratch_unmount
-+_check_scratch_fs
-+
-+echo "Silence is golden"
-+status=0
-+exit
-diff --git a/tests/generic/589.out b/tests/generic/589.out
-new file mode 100644
-index 00000000..5ab6ab10
---- /dev/null
-+++ b/tests/generic/589.out
-@@ -0,0 +1,2 @@
-+QA output created by 589
-+Silence is golden
-diff --git a/tests/generic/group b/tests/generic/group
-index 87d7441c..be6f4a43 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -591,3 +591,4 @@
- 586 auto quick rw prealloc
- 587 auto quick rw prealloc
- 588 auto quick log clone
-+589 auto prealloc preallocrw dangerous
--- 
-2.24.0
-
+> Brian
+> 
+> > +	}
+> > +
+> > +out_rele:
+> > +	libxfs_irele(ip);
+> > +}
+> > +
+> >  static void
+> > -calc_mkfs(xfs_mount_t *mp)
+> > +calc_mkfs(
+> > +	struct xfs_mount	*mp)
+> >  {
+> >  	libxfs_ialloc_find_prealloc(mp, &first_prealloc_ino,
+> >  			&last_prealloc_ino);
+> >  
+> > +	/*
+> > +	 * If the root inode isn't where we think it is, check its plausibility
+> > +	 * as a root directory.  It's possible that somebody changed sunit since
+> > +	 * the filesystem was created, which can change the value of the above
+> > +	 * computation.  Try to avoid blowing up the filesystem if this is the
+> > +	 * case.
+> > +	 */
+> > +	if (mp->m_sb.sb_rootino != NULLFSINO &&
+> > +	    mp->m_sb.sb_rootino != first_prealloc_ino)
+> > +		check_misaligned_root(mp);
+> > +
+> >  	/*
+> >  	 * now the first 3 inodes in the system
+> >  	 */
+> > 
+> 
