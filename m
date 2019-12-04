@@ -2,128 +2,115 @@ Return-Path: <SRS0=+YF0=Z2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70232C2BC73
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 13:50:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12D1AC43603
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 14:40:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 47F7220409
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 13:50:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OJ7sCRzp"
+	by mail.kernel.org (Postfix) with ESMTP id DA53E2073C
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 14:40:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727792AbfLDNuz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Dec 2019 08:50:55 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:59751 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727948AbfLDNux (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Dec 2019 08:50:53 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1575467452;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=VA9lOoBJgqCxzPUvXrp+l1oPS8XjH4P1e6jO6rnjjg8=;
-        b=OJ7sCRzpAFHmkmjvScZK+ZWJJayWKCrEtho6ALh87721wwgjnz93ZSucLusj5PU/zu65xb
-        EUCUbCg4gGZNkTGXbtaive6QysHfLVQSN2jy9eARPF37aozuoW5+jy9CyxCjHRnaGehoq/
-        UN/SeTipLbR6nVPB0fX20jIj4n9stdY=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-353-sTXKKfdVOFaPo2t4eAi-uw-1; Wed, 04 Dec 2019 08:50:49 -0500
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2144D91206;
-        Wed,  4 Dec 2019 13:50:47 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-23.pek2.redhat.com [10.72.8.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id C826E19C68;
-        Wed,  4 Dec 2019 13:50:32 +0000 (UTC)
-Date:   Wed, 4 Dec 2019 21:50:14 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Vincent Guittot <vincent.guittot@linaro.org>
-Cc:     Phil Auld <pauld@redhat.com>, Dave Chinner <david@fromorbit.com>,
-        Hillf Danton <hdanton@sina.com>,
-        linux-block <linux-block@vger.kernel.org>,
-        linux-fs <linux-fsdevel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Rong Chen <rong.a.chen@intel.com>, Tejun Heo <tj@kernel.org>
-Subject: Re: single aio thread is migrated crazily by scheduler
-Message-ID: <20191204135014.GA21449@ming.t460p>
-References: <20191115010824.GC4847@ming.t460p>
- <20191115045634.GN4614@dread.disaster.area>
- <20191115070843.GA24246@ming.t460p>
- <20191128094003.752-1-hdanton@sina.com>
- <CAKfTPtA23ErKGCEJVmg6vk-QoufkiUM3NbXd31mZmKnuwbTkFw@mail.gmail.com>
- <20191202024625.GD24512@ming.t460p>
- <20191202040256.GE2695@dread.disaster.area>
- <CAKfTPtD8Q97qJ_+hdCXQRt=gy7k96XrhnFmGYP1G88YSFW0vNA@mail.gmail.com>
- <20191202212210.GA32767@lorien.usersys.redhat.com>
- <CAKfTPtC7uycC3b2ngOFUqOh9-Fcz7h-151aaYJbLJFXrNq-gkw@mail.gmail.com>
+        id S1727911AbfLDOkl convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Dec 2019 09:40:41 -0500
+Received: from mail.kernel.org ([198.145.29.99]:34128 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727880AbfLDOkl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 4 Dec 2019 09:40:41 -0500
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 205703] [xfstests generic/461]: BUG: KASAN: use-after-free in
+ iomap_finish_ioend+0x58c/0x5c0
+Date:   Wed, 04 Dec 2019 14:40:40 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: zlang@redhat.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-205703-201763-KSWBapBIZR@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-205703-201763@https.bugzilla.kernel.org/>
+References: <bug-205703-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-In-Reply-To: <CAKfTPtC7uycC3b2ngOFUqOh9-Fcz7h-151aaYJbLJFXrNq-gkw@mail.gmail.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
-X-MC-Unique: sTXKKfdVOFaPo2t4eAi-uw-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 03, 2019 at 10:45:38AM +0100, Vincent Guittot wrote:
-> On Mon, 2 Dec 2019 at 22:22, Phil Auld <pauld@redhat.com> wrote:
-> >
-> > Hi Vincent,
-> >
-> > On Mon, Dec 02, 2019 at 02:45:42PM +0100 Vincent Guittot wrote:
-> > > On Mon, 2 Dec 2019 at 05:02, Dave Chinner <david@fromorbit.com> wrote=
-:
-> >
-> > ...
-> >
-> > > > So, we can fiddle with workqueues, but it doesn't address the
-> > > > underlying issue that the scheduler appears to be migrating
-> > > > non-bound tasks off a busy CPU too easily....
-> > >
-> > > The root cause of the problem is that the sched_wakeup_granularity_ns
-> > > is in the same range or higher than load balance period. As Peter
-> > > explained, This make the kworker waiting for the CPU for several load
-> > > period and a transient unbalanced state becomes a stable one that the
-> > > scheduler to fix. With default value, the scheduler doesn't try to
-> > > migrate any task.
-> >
-> > There are actually two issues here.   With the high wakeup granularity
-> > we get the user task actively migrated. This causes the significant
-> > performance hit Ming was showing. With the fast wakeup_granularity
-> > (or smaller IOs - 512 instead of 4k) we get, instead, the user task
-> > migrated at wakeup to a new CPU for every IO completion.
->=20
-> Ok, I haven't noticed that this one was a problem too. Do we have perf
-> regression ?
+https://bugzilla.kernel.org/show_bug.cgi?id=205703
 
-Follows the test result on one server(Dell, R630: Haswell-E):
+--- Comment #2 from Zorro Lang (zlang@redhat.com) ---
+(In reply to Darrick J. Wong from comment #1)
+> Could you please post the source line translations of the iomap functions? 
+> I don't have your kernel build.
 
-kernel.sched_wakeup_granularity_ns =3D 4000000
-kernel.sched_min_granularity_ns =3D 3000000
+I tryed to use the faddr2line tool, then it point to a printk_ratelimited()
+function. I'm sure I didn't change the kernel source code, the current kernel
+is installed from it. Is that something wrong?
 
----------------------------------------
-test              =09=09        | IOPS
----------------------------------------
-./xfs_complete 512      =09    | 7.8K=20
----------------------------------------
-taskset -c 8 ./xfs_complete 512 | 9.8K=20
----------------------------------------
+# ./scripts/faddr2line vmlinux iomap_finish_ioend+0x58c
+iomap_finish_ioend+0x58c/0x5c0:
+iomap_finish_ioend at
+/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/fs/iomap/buffered-io.c:1153
 
-Thanks,
-Ming
+# ./scripts/faddr2line vmlinux iomap_finish_ioend+0x168
+iomap_finish_ioend+0x168/0x5c0:
+iomap_finish_ioend at
+/mnt/tests/kernel/distribution/upstream-kernel/install/kernel/fs/iomap/buffered-io.c:1133
 
+   1124 static void
+   1125 iomap_finish_ioend(struct iomap_ioend *ioend, int error)
+   1126 {
+   1127         struct inode *inode = ioend->io_inode;
+   1128         struct bio *bio = &ioend->io_inline_bio;
+   1129         struct bio *last = ioend->io_bio, *next;
+   1130         u64 start = bio->bi_iter.bi_sector;
+   1131         bool quiet = bio_flagged(bio, BIO_QUIET);
+   1132 
+   1133         for (bio = &ioend->io_inline_bio; bio; bio = next) {
+   1134                 struct bio_vec *bv;
+   1135                 struct bvec_iter_all iter_all;
+   1136 
+   1137                 /*
+   1138                  * For the last bio, bi_private points to the ioend, so
+we
+   1139                  * need to explicitly end the iteration here.
+   1140                  */
+   1141                 if (bio == last)
+   1142                         next = NULL;
+   1143                 else
+   1144                         next = bio->bi_private;
+   1145 
+   1146                 /* walk each page on bio, ending page IO on them */
+   1147                 bio_for_each_segment_all(bv, bio, iter_all)
+   1148                         iomap_finish_page_writeback(inode, bv->bv_page,
+error);
+   1149                 bio_put(bio);
+   1150         }
+   1151 
+   1152         if (unlikely(error && !quiet)) {
+   1153                 printk_ratelimited(KERN_ERR
+   1154 "%s: writeback error on inode %lu, offset %lld, sector %llu",
+   1155                         inode->i_sb->s_id, inode->i_ino,
+ioend->io_offset,
+   1156                         start);
+   1157         }
+   1158 }
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
