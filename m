@@ -2,82 +2,124 @@ Return-Path: <SRS0=+YF0=Z2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DAFB2C2BD09
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 14:43:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03EA7C43603
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 15:37:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A7768205F4
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 14:43:14 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DBOhUV7Y"
+	by mail.kernel.org (Postfix) with ESMTP id CBEEC206DF
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 15:37:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727944AbfLDOnO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Dec 2019 09:43:14 -0500
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:52496 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727850AbfLDOnO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Dec 2019 09:43:14 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1575470593;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=g3VYZu2Msuo/GrqTGe5D8EVEkLes+Ylvr+P670WnJo0=;
-        b=DBOhUV7Ye1ODezRCtpMBZdxHd/vC/chLRPaY5FCiu1kMzdxME1h888c8UR/toN/lIQgRZe
-        GNR/zGpFLH5fhqikzKLrd50pGEDs/QAKW3Y6XiIdBTfq41iYJEY7H4rqQrINZNEDlqZ6ko
-        9n39X+RihZh93NgwxLoqCyiD00fPaho=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-61-JNulPZWVPeum3MOUKv5umw-1; Wed, 04 Dec 2019 09:43:09 -0500
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CB77818543A6;
-        Wed,  4 Dec 2019 14:43:07 +0000 (UTC)
-Received: from colo-mx.corp.redhat.com (colo-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.21])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 869F65D6AE;
-        Wed,  4 Dec 2019 14:43:07 +0000 (UTC)
-Received: from zmail17.collab.prod.int.phx2.redhat.com (zmail17.collab.prod.int.phx2.redhat.com [10.5.83.19])
-        by colo-mx.corp.redhat.com (Postfix) with ESMTP id E20315BC09;
-        Wed,  4 Dec 2019 14:43:04 +0000 (UTC)
-Date:   Wed, 4 Dec 2019 09:43:04 -0500 (EST)
-From:   Jan Stancek <jstancek@redhat.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        darrick wong <darrick.wong@oracle.com>,
-        linuxppc-dev@lists.ozlabs.org,
-        Memory Management <mm-qe@redhat.com>,
-        LTP Mailing List <ltp@lists.linux.it>,
-        Linux Stable maillist <stable@vger.kernel.org>,
-        CKI Project <cki-project@redhat.com>,
-        Michael Ellerman <mpe@ellerman.id.au>
-Message-ID: <385099805.15030947.1575470584839.JavaMail.zimbra@redhat.com>
-In-Reply-To: <20191203190925.GA5150@infradead.org>
-References: <cki.6C6A189643.3T2ZUWEMOI@redhat.com> <1738119916.14437244.1575151003345.JavaMail.zimbra@redhat.com> <8736e3ffen.fsf@mpe.ellerman.id.au> <1420623640.14527843.1575289859701.JavaMail.zimbra@redhat.com> <1766807082.14812757.1575377439007.JavaMail.zimbra@redhat.com> <20191203190925.GA5150@infradead.org>
-Subject: Re: [bug] userspace hitting sporadic SIGBUS on xfs (Power9,
- ppc64le), v4.19 and later
+        id S1728391AbfLDPh0 convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Dec 2019 10:37:26 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54282 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728293AbfLDPh0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 4 Dec 2019 10:37:26 -0500
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 205703] [xfstests generic/461]: BUG: KASAN: use-after-free in
+ iomap_finish_ioend+0x58c/0x5c0
+Date:   Wed, 04 Dec 2019 15:37:24 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: zlang@redhat.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-205703-201763-KsVb1jc664@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-205703-201763@https.bugzilla.kernel.org/>
+References: <bug-205703-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-X-Originating-IP: [10.43.17.163, 10.4.195.3]
-Thread-Topic: userspace hitting sporadic SIGBUS on xfs (Power9, ppc64le), v4.19 and later
-Thread-Index: bZFnIYc4/9CmmxXsANYOsGnjcI2iPQ==
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
-X-MC-Unique: JNulPZWVPeum3MOUKv5umw-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=205703
 
------ Original Message -----
-> Please try the patch below:
+--- Comment #3 from Zorro Lang (zlang@redhat.com) ---
+(In reply to Zorro Lang from comment #2)
+> (In reply to Darrick J. Wong from comment #1)
+> > Could you please post the source line translations of the iomap functions? 
+> > I don't have your kernel build.
+> 
+> I tryed to use the faddr2line tool, then it point to a printk_ratelimited()
+> function. I'm sure I didn't change the kernel source code, the current
+> kernel is installed from it. Is that something wrong?
+> 
+> # ./scripts/faddr2line vmlinux iomap_finish_ioend+0x58c
+> iomap_finish_ioend+0x58c/0x5c0:
+> iomap_finish_ioend at
+> /mnt/tests/kernel/distribution/upstream-kernel/install/kernel/fs/iomap/
+> buffered-io.c:1153
+> 
+> # ./scripts/faddr2line vmlinux iomap_finish_ioend+0x168
+> iomap_finish_ioend+0x168/0x5c0:
+> iomap_finish_ioend at
+> /mnt/tests/kernel/distribution/upstream-kernel/install/kernel/fs/iomap/
+> buffered-io.c:1133
+> 
+>    1124 static void
+>    1125 iomap_finish_ioend(struct iomap_ioend *ioend, int error)
+>    1126 {
+>    1127         struct inode *inode = ioend->io_inode;
+>    1128         struct bio *bio = &ioend->io_inline_bio;
+>    1129         struct bio *last = ioend->io_bio, *next;
+>    1130         u64 start = bio->bi_iter.bi_sector;
+>    1131         bool quiet = bio_flagged(bio, BIO_QUIET);
+>    1132 
+>    1133         for (bio = &ioend->io_inline_bio; bio; bio = next) {
+>    1134                 struct bio_vec *bv;
+>    1135                 struct bvec_iter_all iter_all;
+>    1136 
+>    1137                 /*
+>    1138                  * For the last bio, bi_private points to the ioend,
+> so we
+>    1139                  * need to explicitly end the iteration here.
+>    1140                  */
+>    1141                 if (bio == last)
+>    1142                         next = NULL;
+>    1143                 else
+>    1144                         next = bio->bi_private;
+>    1145 
+>    1146                 /* walk each page on bio, ending page IO on them */
+>    1147                 bio_for_each_segment_all(bv, bio, iter_all)
+>    1148                         iomap_finish_page_writeback(inode,
+> bv->bv_page, error);
+>    1149                 bio_put(bio);
+>    1150         }
+>    1151 
+>    1152         if (unlikely(error && !quiet)) {
+>    1153                 printk_ratelimited(KERN_ERR
+>    1154 "%s: writeback error on inode %lu, offset %lld, sector %llu",
+>    1155                         inode->i_sb->s_id, inode->i_ino,
+> ioend->io_offset,
 
-I ran reproducer for 18 hours on 2 systems were it previously reproduced,
-there were no crashes / SIGBUS.
+The bio_put(bio) might already free the bio. The ioend->io_offset is invalid.
+I'll test by saving the offset in a local var at first. If it's the issue, I'll
+try to send a patch.
 
+
+>    1156                         start);
+>    1157         }
+>    1158 }
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
