@@ -2,61 +2,75 @@ Return-Path: <SRS0=+YF0=Z2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A033C43603
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 11:51:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70232C2BC73
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 13:50:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D0979207DD
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 11:51:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 47F7220409
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 13:50:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eElZR9yc"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OJ7sCRzp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727472AbfLDLvV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Dec 2019 06:51:21 -0500
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:28916 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727445AbfLDLvV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Dec 2019 06:51:21 -0500
+        id S1727792AbfLDNuz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Dec 2019 08:50:55 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:59751 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727948AbfLDNux (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Dec 2019 08:50:53 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1575460280;
+        s=mimecast20190719; t=1575467452;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=lRyjjNazdrfVbtlRsb2Unisi/CQoxe8RBRDtaxpGzPY=;
-        b=eElZR9ycv7rDmyq810jiRmqfmITvefU9KBd3Seqoa5fLz+KQLcUZg8sxKm15V8k0PI6g22
-        1WY2OuByL7k56CUXqEj+pN/8XboSbXKbEazTbJ4vU0qLSZk/4SXEBE/4vbDlVvO3g8FSOi
-        b8n0d72SuK9vurfQD46ZVQkd9AO7xe0=
+        bh=VA9lOoBJgqCxzPUvXrp+l1oPS8XjH4P1e6jO6rnjjg8=;
+        b=OJ7sCRzpAFHmkmjvScZK+ZWJJayWKCrEtho6ALh87721wwgjnz93ZSucLusj5PU/zu65xb
+        EUCUbCg4gGZNkTGXbtaive6QysHfLVQSN2jy9eARPF37aozuoW5+jy9CyxCjHRnaGehoq/
+        UN/SeTipLbR6nVPB0fX20jIj4n9stdY=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-432-pv5VoQ4zOXGA2bqoAaqLdw-1; Wed, 04 Dec 2019 06:51:16 -0500
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+ us-mta-353-sTXKKfdVOFaPo2t4eAi-uw-1; Wed, 04 Dec 2019 08:50:49 -0500
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9238C10054E3;
-        Wed,  4 Dec 2019 11:51:15 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 02BD45D6B7;
-        Wed,  4 Dec 2019 11:51:14 +0000 (UTC)
-Date:   Wed, 4 Dec 2019 06:51:14 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org, alex@zadara.com
-Subject: Re: [PATCH 2/4] mkfs: check root inode location
-Message-ID: <20191204115114.GA40798@bfoster>
-References: <157530815855.126767.7523979488668040754.stgit@magnolia>
- <157530817131.126767.4542572453231190489.stgit@magnolia>
- <20191203130253.GA18418@bfoster>
- <20191203234007.GL7335@magnolia>
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2144D91206;
+        Wed,  4 Dec 2019 13:50:47 +0000 (UTC)
+Received: from ming.t460p (ovpn-8-23.pek2.redhat.com [10.72.8.23])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id C826E19C68;
+        Wed,  4 Dec 2019 13:50:32 +0000 (UTC)
+Date:   Wed, 4 Dec 2019 21:50:14 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Vincent Guittot <vincent.guittot@linaro.org>
+Cc:     Phil Auld <pauld@redhat.com>, Dave Chinner <david@fromorbit.com>,
+        Hillf Danton <hdanton@sina.com>,
+        linux-block <linux-block@vger.kernel.org>,
+        linux-fs <linux-fsdevel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Rong Chen <rong.a.chen@intel.com>, Tejun Heo <tj@kernel.org>
+Subject: Re: single aio thread is migrated crazily by scheduler
+Message-ID: <20191204135014.GA21449@ming.t460p>
+References: <20191115010824.GC4847@ming.t460p>
+ <20191115045634.GN4614@dread.disaster.area>
+ <20191115070843.GA24246@ming.t460p>
+ <20191128094003.752-1-hdanton@sina.com>
+ <CAKfTPtA23ErKGCEJVmg6vk-QoufkiUM3NbXd31mZmKnuwbTkFw@mail.gmail.com>
+ <20191202024625.GD24512@ming.t460p>
+ <20191202040256.GE2695@dread.disaster.area>
+ <CAKfTPtD8Q97qJ_+hdCXQRt=gy7k96XrhnFmGYP1G88YSFW0vNA@mail.gmail.com>
+ <20191202212210.GA32767@lorien.usersys.redhat.com>
+ <CAKfTPtC7uycC3b2ngOFUqOh9-Fcz7h-151aaYJbLJFXrNq-gkw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20191203234007.GL7335@magnolia>
+In-Reply-To: <CAKfTPtC7uycC3b2ngOFUqOh9-Fcz7h-151aaYJbLJFXrNq-gkw@mail.gmail.com>
 User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
-X-MC-Unique: pv5VoQ4zOXGA2bqoAaqLdw-1
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-MC-Unique: sTXKKfdVOFaPo2t4eAi-uw-1
 X-Mimecast-Spam-Score: 0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: quoted-printable
@@ -66,133 +80,50 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 03, 2019 at 03:40:07PM -0800, Darrick J. Wong wrote:
-> On Tue, Dec 03, 2019 at 08:02:53AM -0500, Brian Foster wrote:
-> > On Mon, Dec 02, 2019 at 09:36:11AM -0800, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > >=20
-> > > Make sure the root inode gets created where repair thinks it should b=
-e
-> > > created.
-> > >=20
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  libxfs/libxfs_api_defs.h |    1 +
-> > >  mkfs/xfs_mkfs.c          |   29 +++++++++++++++++++++++------
-> > >  2 files changed, 24 insertions(+), 6 deletions(-)
-> > >=20
-> > >=20
-> > > diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-> > > index 645c9b1b..8f6b9fc2 100644
-> > > --- a/libxfs/libxfs_api_defs.h
-> > > +++ b/libxfs/libxfs_api_defs.h
-> > > @@ -156,5 +156,6 @@
-> > > =20
-> > >  #define xfs_ag_init_headers=09=09libxfs_ag_init_headers
-> > >  #define xfs_buf_delwri_submit=09=09libxfs_buf_delwri_submit
-> > > +#define xfs_ialloc_find_prealloc=09libxfs_ialloc_find_prealloc
-> > > =20
-> >=20
-> > Perhaps this should be in the previous patch..?
+On Tue, Dec 03, 2019 at 10:45:38AM +0100, Vincent Guittot wrote:
+> On Mon, 2 Dec 2019 at 22:22, Phil Auld <pauld@redhat.com> wrote:
+> >
+> > Hi Vincent,
+> >
+> > On Mon, Dec 02, 2019 at 02:45:42PM +0100 Vincent Guittot wrote:
+> > > On Mon, 2 Dec 2019 at 05:02, Dave Chinner <david@fromorbit.com> wrote=
+:
+> >
+> > ...
+> >
+> > > > So, we can fiddle with workqueues, but it doesn't address the
+> > > > underlying issue that the scheduler appears to be migrating
+> > > > non-bound tasks off a busy CPU too easily....
+> > >
+> > > The root cause of the problem is that the sched_wakeup_granularity_ns
+> > > is in the same range or higher than load balance period. As Peter
+> > > explained, This make the kworker waiting for the CPU for several load
+> > > period and a transient unbalanced state becomes a stable one that the
+> > > scheduler to fix. With default value, the scheduler doesn't try to
+> > > migrate any task.
+> >
+> > There are actually two issues here.   With the high wakeup granularity
+> > we get the user task actively migrated. This causes the significant
+> > performance hit Ming was showing. With the fast wakeup_granularity
+> > (or smaller IOs - 512 instead of 4k) we get, instead, the user task
+> > migrated at wakeup to a new CPU for every IO completion.
 >=20
-> <shrug> I think the libxfs wrapper macro things shouldn't be introduced
-> until there's a caller outside of libxfs.
->=20
+> Ok, I haven't noticed that this one was a problem too. Do we have perf
+> regression ?
 
-Ok, fair enough..
+Follows the test result on one server(Dell, R630: Haswell-E):
 
-> >=20
-> > >  #endif /* __LIBXFS_API_DEFS_H__ */
-> > > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> > > index 18338a61..5143d9b4 100644
-> > > --- a/mkfs/xfs_mkfs.c
-> > > +++ b/mkfs/xfs_mkfs.c
-> > > @@ -3521,6 +3521,28 @@ rewrite_secondary_superblocks(
-> > >  =09libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
-> > >  }
-> > > =20
-> > > +static void
-> > > +check_root_ino(
-> > > +=09struct xfs_mount=09*mp)
-> > > +{
-> > > +=09xfs_agino_t=09=09first, last;
-> > > +
-> > > +=09if (XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino) !=3D 0) {
-> > > +=09=09fprintf(stderr,
-> > > +=09=09=09_("%s: root inode created in AG %u, not AG 0\n"),
-> > > +=09=09=09progname, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino));
-> > > +=09=09exit(1);
-> > > +=09}
-> > > +
-> > > +=09libxfs_ialloc_find_prealloc(mp, &first, &last);
-> > > +=09if (mp->m_sb.sb_rootino !=3D XFS_AGINO_TO_INO(mp, 0, first)) {
-> > > +=09=09fprintf(stderr,
-> > > +=09=09=09_("%s: root inode (%llu) not created in first chunk\n"),
-> > > +=09=09=09progname, (unsigned long long)mp->m_sb.sb_rootino);
-> >=20
-> > If the root inode ended up somewhere in the middle of the first chunk,
-> > we'd fail (rightly), but with a misleading error message. Perhaps
-> > something like "root inode (..) not allocated in expected location"
->=20
-> Ok, fixed.
->=20
-> > would be better? I'd also like to see a comment somewhere in here to
-> > explain why we have this check. For example:
-> >=20
-> > "The superblock refers directly to the root inode, but repair makes
-> > hardcoded assumptions about its location based on filesystem geometry
-> > for an extra level of verification. If this assumption ever breaks, we
-> > should flag it immediately and fail the mkfs. Otherwise repair may
-> > consider the filesystem corrupt and toss the root inode."
->=20
-> How about:
->=20
-> /*
->  * The superblock points to the root directory inode, but xfs_repair
->  * expects to find the root inode in a very specific location computed
->  * from the filesystem geometry for an extra level of verification.
->  *
->  * Fail the format immediately if those assumptions ever break, because
->  * repair will toss the root directory.
->  */
->=20
+kernel.sched_wakeup_granularity_ns =3D 4000000
+kernel.sched_min_granularity_ns =3D 3000000
 
-Sounds good, thanks!
+---------------------------------------
+test              =09=09        | IOPS
+---------------------------------------
+./xfs_complete 512      =09    | 7.8K=20
+---------------------------------------
+taskset -c 8 ./xfs_complete 512 | 9.8K=20
+---------------------------------------
 
-Brian
-
-> > Feel free to reword that however appropriate (given the behavior change
-> > in subsequent patches), of course..
->=20
-> Ok.
->=20
-> --D
->=20
-> > Brian
-> >=20
-> > > +=09=09exit(1);
-> > > +=09}
-> > > +}
-> > > +
-> > >  int
-> > >  main(
-> > >  =09int=09=09=09argc,
-> > > @@ -3807,12 +3829,7 @@ main(
-> > >  =09/*
-> > >  =09 * Protect ourselves against possible stupidity
-> > >  =09 */
-> > > -=09if (XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino) !=3D 0) {
-> > > -=09=09fprintf(stderr,
-> > > -=09=09=09_("%s: root inode created in AG %u, not AG 0\n"),
-> > > -=09=09=09progname, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino));
-> > > -=09=09exit(1);
-> > > -=09}
-> > > +=09check_root_ino(mp);
-> > > =20
-> > >  =09/*
-> > >  =09 * Re-write multiple secondary superblocks with rootinode field s=
-et
-> > >=20
-> >=20
->=20
+Thanks,
+Ming
 
