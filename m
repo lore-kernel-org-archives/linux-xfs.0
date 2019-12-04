@@ -2,169 +2,218 @@ Return-Path: <SRS0=+YF0=Z2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	UNWANTED_LANGUAGE_BODY,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A613C43603
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 21:57:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29918C43603
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 22:59:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5B3552073C
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 21:57:20 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Oij7wXFv"
+	by mail.kernel.org (Postfix) with ESMTP id F00A72073C
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 22:59:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728011AbfLDV5U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Dec 2019 16:57:20 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:46752 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727989AbfLDV5T (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Dec 2019 16:57:19 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB4LsMbh056715;
-        Wed, 4 Dec 2019 21:57:13 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=+p0QtgOU3PGQGqiTDp9VWVkmF3teT4O9Gq4nncbCvPA=;
- b=Oij7wXFvTpypy22mi+rPscEBX3WErolSPCU5WvTR2sD9t7SLE/1jAe6tX1+CMzVR8iKY
- Mitv7DeviqL3ZuyWbdCcgbmX1ncN0n740rhq2OLQo8dsFiCHIbaSJRbnOB0W/P0IPcRD
- 6gkYp/90wolGZJaMB3+MfK8EzhPAo4dlxHyNbR2dNuf1jrWCTRXekV+YMyXu0AAv3rrH
- AV+ffxjSOz05AZ7ZC8PNnInS3a/+l72ZVqZBl+OkY1IdYyQSRVEIdlMnF40ogCx1AWP8
- 2lIFCxSRBxDGsShzO9utQkfbswaJZTGimKr8is1MXd2JjAjg2c0IFt6YP9d0vBqWH0zO 4Q== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2wkfuuhd9r-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 04 Dec 2019 21:57:13 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB4LsLs2184382;
-        Wed, 4 Dec 2019 21:57:13 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2wnvr0vkkm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 04 Dec 2019 21:57:12 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xB4Lv8AB003863;
-        Wed, 4 Dec 2019 21:57:08 GMT
-Received: from localhost (/10.145.178.64)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 04 Dec 2019 21:57:08 +0000
-Date:   Wed, 4 Dec 2019 13:57:06 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org, jstancek@redhat.com
-Subject: Re: [PATCH] xfs: fix sub-page uptodate handling
-Message-ID: <20191204215706.GT7335@magnolia>
-References: <20191204172804.6589-1-hch@lst.de>
+        id S1728071AbfLDW7X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Dec 2019 17:59:23 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:41601 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728053AbfLDW7X (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Dec 2019 17:59:23 -0500
+Received: from dread.disaster.area (pa49-179-150-192.pa.nsw.optusnet.com.au [49.179.150.192])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 31B6E3A1476;
+        Thu,  5 Dec 2019 09:59:17 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1icdc3-0006dP-VE; Thu, 05 Dec 2019 09:59:15 +1100
+Date:   Thu, 5 Dec 2019 09:59:15 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Hillf Danton <hdanton@sina.com>
+Cc:     Ming Lei <ming.lei@redhat.com>,
+        linux-block <linux-block@vger.kernel.org>,
+        linux-fs <linux-fsdevel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Vincent Guittot <vincent.guittot@linaro.org>,
+        Rong Chen <rong.a.chen@intel.com>, Tejun Heo <tj@kernel.org>
+Subject: Re: single aio thread is migrated crazily by scheduler
+Message-ID: <20191204225915.GO2695@dread.disaster.area>
+References: <20191114113153.GB4213@ming.t460p>
+ <20191114235415.GL4614@dread.disaster.area>
+ <20191115010824.GC4847@ming.t460p>
+ <20191115045634.GN4614@dread.disaster.area>
+ <20191115070843.GA24246@ming.t460p>
+ <20191128094003.752-1-hdanton@sina.com>
+ <20191202090158.15016-1-hdanton@sina.com>
+ <20191203131514.5176-1-hdanton@sina.com>
+ <20191204102903.896-1-hdanton@sina.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191204172804.6589-1-hch@lst.de>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9461 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1912040181
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9461 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1912040181
+In-Reply-To: <20191204102903.896-1-hdanton@sina.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+        a=ZXpxJgW8/q3NVgupyyvOCQ==:117 a=ZXpxJgW8/q3NVgupyyvOCQ==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=pxVhFHJ0LMsA:10
+        a=7-415B0cAAAA:8 a=3OwV-sDklMwd061yJKAA:9 a=7Zwj6sZBwVKJAoWSPKxL6X1jA+E=:19
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Dec 04, 2019 at 06:28:04PM +0100, Christoph Hellwig wrote:
-> bio complentions can race when a page spans more than one file system
-> block.  Add a spinlock to synchronize marking the page uptodate.
+On Wed, Dec 04, 2019 at 06:29:03PM +0800, Hillf Danton wrote:
 > 
-> Fixes: 9dc55f1389f9 ("iomap: add support for sub-pagesize buffered I/O without buffer heads")
-> Reported-by: Jan Stancek <jstancek@redhat.com>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Looks good to me,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> ---
->  fs/iomap/buffered-io.c | 35 +++++++++++++++++++++++++----------
->  1 file changed, 25 insertions(+), 10 deletions(-)
+> On Wed, 4 Dec 2019 09:29:25 +1100 Dave Chinner wrote:
+> > 
+> > If we really want to hack around the load balancer problems in this
+> > way, then we need to add a new workqueue concurrency management type
+> > with behaviour that lies between the default of bound and WQ_UNBOUND.
+> > 
+> > WQ_UNBOUND limits scheduling to within a numa node - see
+> > wq_update_unbound_numa() for how it sets up the cpumask attributes
+> > it applies to it's workers - but we need the work to be bound to
+> > within the local cache domain rather than a numa node. IOWs, set up
+> > the kworker task pool management structure with the right attributes
+> > (e.g. cpu masks) to define the cache domains, add all the hotplug
+> > code to make it work with CPU hotplug, then simply apply those
+> > attributes to the kworker task that is selected to execute the work.
+> > 
+> > This allows the scheduler to migrate the kworker away from the local
+> > run queue without interrupting the currently scheduled task. The
+> > cpumask limits the task is configured with limit the scheduler to
+> > selecting the best CPU within the local cache domain, and we don't
+> > have to bind work to CPUs to get CPU cache friendly work scheduling.
+> > This also avoids overhead of per-queue_work_on() sibling CPU
+> > calculation, and all the code that wants to use this functionality
+> > needs to do is add a single flag at work queue init time (e.g.
+> > WQ_CACHEBOUND).
+> > 
+> > IOWs, if the task migration behaviour cannot be easily fixed and so
+> > we need work queue users to be more flexible about work placement,
+> > then the solution needed here is "cpu cache local work queue
+> > scheduling" implemented in the work queue infrastructure, not in
+> > every workqueue user.
 > 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 512856a88106..340c15400423 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -28,6 +28,7 @@
->  struct iomap_page {
->  	atomic_t		read_count;
->  	atomic_t		write_count;
-> +	spinlock_t		uptodate_lock;
->  	DECLARE_BITMAP(uptodate, PAGE_SIZE / 512);
->  };
->  
-> @@ -51,6 +52,7 @@ iomap_page_create(struct inode *inode, struct page *page)
->  	iop = kmalloc(sizeof(*iop), GFP_NOFS | __GFP_NOFAIL);
->  	atomic_set(&iop->read_count, 0);
->  	atomic_set(&iop->write_count, 0);
-> +	spin_lock_init(&iop->uptodate_lock);
->  	bitmap_zero(iop->uptodate, PAGE_SIZE / SECTOR_SIZE);
->  
->  	/*
-> @@ -139,25 +141,38 @@ iomap_adjust_read_range(struct inode *inode, struct iomap_page *iop,
+> Add WQ_CACHE_BOUND and a user of it and a helper to find cpus that
+> share cache.
+
+<sigh>
+
+If you are going to quote my suggestion in full, then please
+implement it in full. This patch does almost none of what you quoted
+above - it still has all the problems of the previous version that
+lead me to write the above.
+
+> --- a/kernel/workqueue.c
+> +++ b/kernel/workqueue.c
+> @@ -1358,16 +1358,42 @@ static bool is_chained_work(struct workq
+>  	return worker && worker->current_pwq->wq == wq;
 >  }
 >  
->  static void
-> -iomap_set_range_uptodate(struct page *page, unsigned off, unsigned len)
-> +iomap_iop_set_range_uptodate(struct page *page, unsigned off, unsigned len)
->  {
->  	struct iomap_page *iop = to_iomap_page(page);
->  	struct inode *inode = page->mapping->host;
->  	unsigned first = off >> inode->i_blkbits;
->  	unsigned last = (off + len - 1) >> inode->i_blkbits;
-> -	unsigned int i;
->  	bool uptodate = true;
-> +	unsigned long flags;
-> +	unsigned int i;
->  
-> -	if (iop) {
-> -		for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
-> -			if (i >= first && i <= last)
-> -				set_bit(i, iop->uptodate);
-> -			else if (!test_bit(i, iop->uptodate))
-> -				uptodate = false;
-> -		}
-> +	spin_lock_irqsave(&iop->uptodate_lock, flags);
-> +	for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
-> +		if (i >= first && i <= last)
-> +			set_bit(i, iop->uptodate);
-> +		else if (!test_bit(i, iop->uptodate))
-> +			uptodate = false;
->  	}
->  
-> -	if (uptodate && !PageError(page))
-> +	if (uptodate)
-> +		SetPageUptodate(page);
-> +	spin_unlock_irqrestore(&iop->uptodate_lock, flags);
-> +}
+> +static DEFINE_PER_CPU(int, wq_sel_cbc_cnt);
+> +static DEFINE_PER_CPU(int, wq_sel_cbc_cpu);
+> +#define WQ_SEL_CBC_BATCH 7
 > +
-> +static void
-> +iomap_set_range_uptodate(struct page *page, unsigned off, unsigned len)
+> +static int wq_select_cache_bound_cpu(int this_cpu)
 > +{
-> +	if (PageError(page))
-> +		return;
+> +	int *cntp, *cpup;
+> +	int cpu;
 > +
-> +	if (page_has_private(page))
-> +		iomap_iop_set_range_uptodate(page, off, len);
-> +	else
->  		SetPageUptodate(page);
->  }
+> +	cntp = get_cpu_ptr(&wq_sel_cbc_cnt);
+> +	cpup = this_cpu_ptr(&wq_sel_cbc_cpu);
+> +	cpu = *cpup;
+> +
+> +	if (!(*cntp & WQ_SEL_CBC_BATCH)) {
+> +		cpu = cpus_share_cache_next_cpu(this_cpu, cpu);
+> +		*cpup = cpu;
+> +	}
+> +	(*cntp)++;
+> +	put_cpu_ptr(&wq_sel_cbc_cnt);
+> +
+> +	return cpu;
+> +}
+
+This selects a specific CPU in the local cache domain at
+queue_work() time, just like the previous patch. It does not do what
+I suggested above in reponse to the scalability issues this approach
+has...
+
+>  /*
+>   * When queueing an unbound work item to a wq, prefer local CPU if allowed
+>   * by wq_unbound_cpumask.  Otherwise, round robin among the allowed ones to
+>   * avoid perturbing sensitive tasks.
+>   */
+> -static int wq_select_unbound_cpu(int cpu)
+> +static int wq_select_unbound_cpu(int cpu, bool cache_bound)
+>  {
+>  	static bool printed_dbg_warning;
+>  	int new_cpu;
 >  
-> -- 
-> 2.20.1
-> 
+> +	if (cache_bound)
+> +		return wq_select_cache_bound_cpu(cpu);
+> +
+>  	if (likely(!wq_debug_force_rr_cpu)) {
+>  		if (cpumask_test_cpu(cpu, wq_unbound_cpumask))
+>  			return cpu;
+> @@ -1417,7 +1443,8 @@ static void __queue_work(int cpu, struct
+>  	rcu_read_lock();
+>  retry:
+>  	if (req_cpu == WORK_CPU_UNBOUND)
+> -		cpu = wq_select_unbound_cpu(raw_smp_processor_id());
+> +		cpu = wq_select_unbound_cpu(raw_smp_processor_id(),
+> +					wq->flags & WQ_CACHE_BOUND);
+
+And the per-cpu  kworker pool selection after we've selected a CPU
+here binds it to that specific CPU or (if WQ_UNBOUND) the local
+node. IOWs, this is exactly the same functionality as the last
+patch, just moved inside the work queue infrastructure.
+
+IOWs, apart from the WQ_CACHE_BOUND flag, this patch doesn't
+implement any of what I suggested above. It does not solve the the
+problem of bound kworkers kicking running tasks off a CPU so the
+bound task can run, and it does not allow the scheduler to select
+the best CPU in the local cache scheduling domain for the kworker to
+run on. i.e. it still behaves like bound work rather than WQ_UNBOUND
+work.
+
+IMO, this adds the CPU selection to the -wrong function-.  We still
+want the local CPU selected when req_cpu == WORK_CPU_UNBOUND.  The
+following code selects where the kworker will be bound based on the
+task pool that the workqueue is configured to use:
+
+	/* pwq which will be used unless @work is executing elsewhere */
+	if (!(wq->flags & WQ_UNBOUND))
+		pwq = per_cpu_ptr(wq->cpu_pwqs, cpu);
+	else
+		pwq = unbound_pwq_by_node(wq, cpu_to_node(cpu));
+
+i.e. the local CPU is the key we need to look up the task pool for
+running tasks in the local cache domain - we do not use it as the
+CPU we want to run work on. IOWs, what we really want is this:
+
+	if (wq->flags & WQ_UNBOUND)
+		pwq = unbound_pwq_by_node(wq, cpu_to_node(cpu));
+	else if (wq->flags & WQ_CACHE_BOUND)
+		pwq = unbound_pwq_by_cache(wq, cpu);
+	else
+		pwq = per_cpu_ptr(wq->cpu_pwqs, cpu);
+
+And then unbound_pwq_by_cache() is implemented in a similar manner
+to unbound_pwq_by_node() where there is a separate worker pool per
+cache domain. THe scheduler domain attributes (cpumask) is held by
+the task pool, and they are applied to the kworker task when it's
+given the task to run. This, like WQ_UNBOUND, allows the scheduler
+to select the best CPU in the cpumask for the task to run on.
+
+Binding kworkers to a single CPU is exactly the problem we need to
+avoid here - we need to let the scheduler choose the best CPU in the
+local cache domain based on the current load. That means the
+implementation needs to behave like a WQ_UNBOUND workqueue, just
+with a more restrictive cpumask.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
