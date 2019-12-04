@@ -2,134 +2,116 @@ Return-Path: <SRS0=+YF0=Z2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8244CC43603
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 17:30:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CEDAC2BD09
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 17:32:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 55638207DD
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 17:30:21 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="p0ywopLY"
+	by mail.kernel.org (Postfix) with ESMTP id 5B25A20803
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 17:32:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728124AbfLDRaU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Dec 2019 12:30:20 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:44082 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726934AbfLDRaU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Dec 2019 12:30:20 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=o2u6ahUKk5YnlzAhhnIv03zPWih6TebFsPhg9/xixUE=; b=p0ywopLYTwPh2jnd/OYHrqJ7m
-        p7MAS+aczijoQ9LibMzIAj+NVtoy0LidtJEZ2SWz+7F1ELWIIZCMEuRoP3YuMbLbFflOsm4f3I3oS
-        Fov+KxPNIF9gRosWa/gel0MTc8EIqR+TA3/IKhQ2fD+sAZQzinWu71ZwQ6ZXiIwcfk0024wFgdK2A
-        H8QqDx0Dxf6SYBV+WLnv2iTd2sQZD4tyjRsRGRENZ0s/jgbg87QhQfv55dmDtcy/3NKYSeEwDPiEg
-        s0pb6iYVumUOwC9lyj/iOOEHNlTV9Zn+r/+2Xm8qfES3wrWx6u6zcSWEfcif0F9QXZoXPh+CPVejZ
-        Zaa+wrybg==;
-Received: from 213-225-4-219.nat.highway.a1.net ([213.225.4.219] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1icYTj-0000FP-W5; Wed, 04 Dec 2019 17:30:20 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     linux-xfs@vger.kernel.org
-Cc:     jstancek@redhat.com
-Subject: [PATCH] xfs: fix sub-page uptodate handling
-Date:   Wed,  4 Dec 2019 18:28:04 +0100
-Message-Id: <20191204172804.6589-1-hch@lst.de>
-X-Mailer: git-send-email 2.20.1
+        id S1728169AbfLDRcE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Dec 2019 12:32:04 -0500
+Received: from sandeen.net ([63.231.237.45]:39642 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726934AbfLDRcD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 4 Dec 2019 12:32:03 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 46C4A1726A;
+        Wed,  4 Dec 2019 11:30:16 -0600 (CST)
+Subject: Re: [PATCH v3] mkfs: Break block discard into chunks of 2 GB
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>,
+        Pavel Reichl <preichl@redhat.com>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+References: <20191128062139.93218-1-preichl@redhat.com>
+ <BYAPR04MB5749DD0BFA3B6928A87E54B086410@BYAPR04MB5749.namprd04.prod.outlook.com>
+ <1051488a-7f91-5506-9959-ff2812edc9e1@sandeen.net>
+ <20191204172652.GA27507@infradead.org>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <24b628fa-aa57-e01a-b1f4-cafa85b3b588@sandeen.net>
+Date:   Wed, 4 Dec 2019 11:32:02 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.2.2
 MIME-Version: 1.0
+In-Reply-To: <20191204172652.GA27507@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-bio complentions can race when a page spans more than one file system
-block.  Add a spinlock to synchronize marking the page uptodate.
+On 12/4/19 11:26 AM, Christoph Hellwig wrote:
+> On Wed, Dec 04, 2019 at 10:24:32AM -0600, Eric Sandeen wrote:
+>> It'd be great to fix this universally in the kernel but it seems like
+>> that patch is in discussion for now, and TBH I don't see any real
+>> drawbacks to looping in mkfs - it would also solve the problem on any
+>> old kernel w/o the block layer change.
+> 
+> The problem is that we throw out efficiency for no good reason.
 
-Fixes: 9dc55f1389f9 ("iomap: add support for sub-pagesize buffered I/O without buffer heads")
-Reported-by: Jan Stancek <jstancek@redhat.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/iomap/buffered-io.c | 35 +++++++++++++++++++++++++----------
- 1 file changed, 25 insertions(+), 10 deletions(-)
+The reason, as I stated earlier, is that up to this day, no kernel properly
+handles this, and people are hitting this problem today.
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 512856a88106..340c15400423 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -28,6 +28,7 @@
- struct iomap_page {
- 	atomic_t		read_count;
- 	atomic_t		write_count;
-+	spinlock_t		uptodate_lock;
- 	DECLARE_BITMAP(uptodate, PAGE_SIZE / 512);
- };
- 
-@@ -51,6 +52,7 @@ iomap_page_create(struct inode *inode, struct page *page)
- 	iop = kmalloc(sizeof(*iop), GFP_NOFS | __GFP_NOFAIL);
- 	atomic_set(&iop->read_count, 0);
- 	atomic_set(&iop->write_count, 0);
-+	spin_lock_init(&iop->uptodate_lock);
- 	bitmap_zero(iop->uptodate, PAGE_SIZE / SECTOR_SIZE);
- 
- 	/*
-@@ -139,25 +141,38 @@ iomap_adjust_read_range(struct inode *inode, struct iomap_page *iop,
- }
- 
- static void
--iomap_set_range_uptodate(struct page *page, unsigned off, unsigned len)
-+iomap_iop_set_range_uptodate(struct page *page, unsigned off, unsigned len)
- {
- 	struct iomap_page *iop = to_iomap_page(page);
- 	struct inode *inode = page->mapping->host;
- 	unsigned first = off >> inode->i_blkbits;
- 	unsigned last = (off + len - 1) >> inode->i_blkbits;
--	unsigned int i;
- 	bool uptodate = true;
-+	unsigned long flags;
-+	unsigned int i;
- 
--	if (iop) {
--		for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
--			if (i >= first && i <= last)
--				set_bit(i, iop->uptodate);
--			else if (!test_bit(i, iop->uptodate))
--				uptodate = false;
--		}
-+	spin_lock_irqsave(&iop->uptodate_lock, flags);
-+	for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
-+		if (i >= first && i <= last)
-+			set_bit(i, iop->uptodate);
-+		else if (!test_bit(i, iop->uptodate))
-+			uptodate = false;
- 	}
- 
--	if (uptodate && !PageError(page))
-+	if (uptodate)
-+		SetPageUptodate(page);
-+	spin_unlock_irqrestore(&iop->uptodate_lock, flags);
-+}
-+
-+static void
-+iomap_set_range_uptodate(struct page *page, unsigned off, unsigned len)
-+{
-+	if (PageError(page))
-+		return;
-+
-+	if (page_has_private(page))
-+		iomap_iop_set_range_uptodate(page, off, len);
-+	else
- 		SetPageUptodate(page);
- }
- 
--- 
-2.20.1
+And nobody has shown a significant efficiency loss.  (To be fair, nobody
+has shown that there isn't a loss either, but in my admittedly small
+test set I didn't see any meaningful overhead from the loop.)
 
+>> I'd propose that we go ahead w/ the mkfs change, and if/when the kernel
+>> handles this better, and it's reasonable to expect that we're running
+>> on a kernel where it can be interrupted, we could remove the mkfs loop
+>> at a later date if we wanted to.
+> 
+> I'd rather not touch mkfs if a trivial kernel patch handles the issue.
+
+I don't think a trivial kernel patch to handle the issue even exists yet...
+
+-Eric
