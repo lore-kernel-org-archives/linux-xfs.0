@@ -7,56 +7,55 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C63A7C43603
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 17:04:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AE9DC43603
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 17:04:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8D839205ED
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 17:04:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0A76420674
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Dec 2019 17:04:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="qKLNa48I"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="e1Pgfqsx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728735AbfLDREh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Dec 2019 12:04:37 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:35364 "EHLO
+        id S1728902AbfLDREm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Dec 2019 12:04:42 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:35466 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728883AbfLDREh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Dec 2019 12:04:37 -0500
+        with ESMTP id S1728883AbfLDREm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Dec 2019 12:04:42 -0500
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB4H4YeU195489;
-        Wed, 4 Dec 2019 17:04:34 GMT
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB4H4XL1195486;
+        Wed, 4 Dec 2019 17:04:40 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=S0gH1ndfdCFJCmTJpWO2fjjcXzwv/cbMPf6mnM+PQ/Y=;
- b=qKLNa48ILuzAXPrWfhJ6i+cp6TSE1AJFke5q+Bfo200Xe+szHTx07/zGgKfYATDL8zoo
- QKJVQpzO0YS2zRr2nrMOuVQnqNFbaLApBnTqQS/MuVwIb2YXkgW1f2agDOdSXVDcZE1I
- AjSP976FpqnYSvBkjyKP/1CsDoB7u9xXYC3uYjPFqon+2mRGIIEq8tMi840YxIsHnMIB
- pZ60tIO+dzK4ubp5siWwxDueMQkOi2fhtUgu1NSlp+HAdwvEQ8GWThcvEW57sVFW++03
- 2YoNdZwY5x+qBeVvN8wU0jrVY/thdpcCZD3o31k/5F35U2Gy8pHGdMYZyo+ItbuJg+V7 lg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2wkh2rfm1c-1
+ bh=6gt62kkPD3orwE60G7BPgXZBLdwbSZlpcjm6VJ7bNr4=;
+ b=e1Pgfqsx8Knxc2m9aetyd0MVgIBXqTGqVquijaD/1DlMD6wQSZfwvvPVzWD+mUc96YQ2
+ N7Zpokvfmkac3NLfbgpm34n35MssLTAnRHeWozBLR728/7z5LAVawg9XSdAkFiFxLUVJ
+ elTvfdKo5b/Rkyg/r4pCWNHNhzqnccJvUph62nGJ22e7c9D2X+6X/yNKNUhoWuRiMlwX
+ HmBdbTUDiRK1cJ8NYfSlshR9Hu95XclvpTjuh950rokFDLv34L+Wpy528Lqw4SbbzaHz
+ ndzkEXEo+5nXh1NmN3fS03UnfubuhqsxIwteQ4eSUDTqd28+ZxVZTF6c++YhMmFnJzxY mg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2wkh2rfm26-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 04 Dec 2019 17:04:34 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB4GwrIB167250;
-        Wed, 4 Dec 2019 17:04:32 GMT
+        Wed, 04 Dec 2019 17:04:40 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB4GwrqQ040584;
+        Wed, 4 Dec 2019 17:04:39 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 2wp20cpy7t-1
+        by userp3020.oracle.com with ESMTP id 2wnvr098w2-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 04 Dec 2019 17:04:31 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xB4H4US5004890;
-        Wed, 4 Dec 2019 17:04:30 GMT
+        Wed, 04 Dec 2019 17:04:39 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xB4H4ciE004941;
+        Wed, 4 Dec 2019 17:04:38 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 04 Dec 2019 09:04:30 -0800
-Subject: [PATCH 1/6] xfs: don't commit sunit/swidth updates to disk if that
- would cause repair failures
+        with ESMTP ; Wed, 04 Dec 2019 09:04:38 -0800
+Subject: [PATCH 2/6] mkfs: check root inode location
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org, alex@zadara.com
-Date:   Wed, 04 Dec 2019 09:04:29 -0800
-Message-ID: <157547906943.974712.12407327608486006790.stgit@magnolia>
+Date:   Wed, 04 Dec 2019 09:04:35 -0800
+Message-ID: <157547907575.974712.18261328888206083261.stgit@magnolia>
 In-Reply-To: <157547906289.974712.8933333382010386076.stgit@magnolia>
 References: <157547906289.974712.8933333382010386076.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -81,127 +80,82 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Alex Lyakas reported[1] that mounting an xfs filesystem with new sunit
-and swidth values could cause xfs_repair to fail loudly.  The problem
-here is that repair calculates the where mkfs should have allocated the
-root inode, based on the superblock geometry.  The allocation decisions
-depend on sunit, which means that we really can't go updating sunit if
-it would lead to a subsequent repair failure on an otherwise correct
-filesystem.
+Make sure the root inode gets created where repair thinks it should be
+created.
 
-Port the computation code from xfs_repair and teach mount to avoid the
-ondisk update if it would cause problems for repair.  We allow the mount
-to proceed (and new allocations will reflect this new geometry) because
-we've never screened this kind of thing before.
-
-[1] https://lore.kernel.org/linux-xfs/20191125130744.GA44777@bfoster/T/#m00f9594b511e076e2fcdd489d78bc30216d72a7d
-
-Reported-by: Alex Lyakas <alex@zadara.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_ialloc.c |   81 +++++++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/xfs_ialloc.h |    1 +
- 2 files changed, 82 insertions(+)
+ libxfs/libxfs_api_defs.h |    1 +
+ mkfs/xfs_mkfs.c          |   39 +++++++++++++++++++++++++++++++++------
+ 2 files changed, 34 insertions(+), 6 deletions(-)
 
 
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index f039b287..1d56d764 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -2848,3 +2848,84 @@ xfs_ialloc_setup_geometry(
- 	else
- 		igeo->ialloc_align = 0;
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 645c9b1b..f8e7d82d 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -156,5 +156,6 @@
+ 
+ #define xfs_ag_init_headers		libxfs_ag_init_headers
+ #define xfs_buf_delwri_submit		libxfs_buf_delwri_submit
++#define xfs_ialloc_calc_rootino		libxfs_ialloc_calc_rootino
+ 
+ #endif /* __LIBXFS_API_DEFS_H__ */
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 18338a61..71be033d 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -3521,6 +3521,38 @@ rewrite_secondary_superblocks(
+ 	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
  }
-+
-+/*
-+ * Compute the location of the root directory inode that is laid out by mkfs.
-+ * The @sunit parameter will be copied from the superblock if it is negative.
-+ */
-+xfs_ino_t
-+xfs_ialloc_calc_rootino(
-+	struct xfs_mount	*mp,
-+	int			sunit)
+ 
++static void
++check_root_ino(
++	struct xfs_mount	*mp)
 +{
-+	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
-+	xfs_agino_t		first_agino;
-+	xfs_agblock_t		first_bno;
++	xfs_ino_t		ino;
 +
-+	if (sunit < 0)
-+		sunit = mp->m_sb.sb_unit;
-+
-+	/*
-+	 * Pre-calculate the geometry of ag 0. We know what it looks like
-+	 * because we know what mkfs does: 2 allocation btree roots (by block
-+	 * and by size), the inode allocation btree root, the free inode
-+	 * allocation btree root (if enabled) and some number of blocks to
-+	 * prefill the agfl.
-+	 *
-+	 * Because the current shape of the btrees may differ from the current
-+	 * shape, we open code the mkfs freelist block count here. mkfs creates
-+	 * single level trees, so the calculation is pretty straight forward for
-+	 * the trees that use the AGFL.
-+	 */
-+
-+	/* free space by block btree root comes after the ag headers */
-+	first_bno = howmany(4 * mp->m_sb.sb_sectsize, mp->m_sb.sb_blocksize);
-+
-+	/* free space by length btree root */
-+	first_bno += 1;
-+
-+	/* inode btree root */
-+	first_bno += 1;
-+
-+	/* agfl */
-+	first_bno += (2 * min_t(xfs_agblock_t, 2, mp->m_ag_maxlevels)) + 1;
-+
-+	if (xfs_sb_version_hasfinobt(&mp->m_sb))
-+		first_bno++;
-+
-+	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-+		first_bno++;
-+		/* agfl blocks */
-+		first_bno += min_t(xfs_agblock_t, 2, mp->m_rmap_maxlevels);
++	if (XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino) != 0) {
++		fprintf(stderr,
++			_("%s: root inode created in AG %u, not AG 0\n"),
++			progname, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino));
++		exit(1);
 +	}
 +
-+	if (xfs_sb_version_hasreflink(&mp->m_sb))
-+		first_bno++;
-+
 +	/*
-+	 * If the log is allocated in the first allocation group we need to
-+	 * add the number of blocks used by the log to the above calculation.
++	 * The superblock points to the root directory inode, but xfs_repair
++	 * expects to find the root inode in a very specific location computed
++	 * from the filesystem geometry for an extra level of verification.
 +	 *
-+	 * This can happens with filesystems that only have a single
-+	 * allocation group, or very odd geometries created by old mkfs
-+	 * versions on very small filesystems.
++	 * Fail the format immediately if those assumptions ever break, because
++	 * repair will toss the root directory.
 +	 */
-+	if (mp->m_sb.sb_logstart &&
-+	    XFS_FSB_TO_AGNO(mp, mp->m_sb.sb_logstart) == 0)
-+		 first_bno += mp->m_sb.sb_logblocks;
-+
-+	/*
-+	 * ditto the location of the first inode chunks in the fs ('/')
-+	 */
-+	if (xfs_sb_version_hasdalign(&mp->m_sb) && igeo->ialloc_align > 0) {
-+		first_agino = XFS_AGB_TO_AGINO(mp, roundup(first_bno, sunit));
-+	} else if (xfs_sb_version_hasalign(&mp->m_sb) &&
-+		   mp->m_sb.sb_inoalignmt > 1)  {
-+		first_agino = XFS_AGB_TO_AGINO(mp,
-+				roundup(first_bno, mp->m_sb.sb_inoalignmt));
-+	} else  {
-+		first_agino = XFS_AGB_TO_AGINO(mp, first_bno);
++	ino = libxfs_ialloc_calc_rootino(mp, -1);
++	if (mp->m_sb.sb_rootino != ino) {
++		fprintf(stderr,
++	_("%s: root inode (%llu) not allocated in expected location (%llu)\n"),
++			progname,
++			(unsigned long long)mp->m_sb.sb_rootino,
++			(unsigned long long)ino);
++		exit(1);
 +	}
-+
-+	return XFS_AGINO_TO_INO(mp, 0, first_agino);
 +}
-diff --git a/libxfs/xfs_ialloc.h b/libxfs/xfs_ialloc.h
-index 323592d5..72b3468b 100644
---- a/libxfs/xfs_ialloc.h
-+++ b/libxfs/xfs_ialloc.h
-@@ -152,5 +152,6 @@ int xfs_inobt_insert_rec(struct xfs_btree_cur *cur, uint16_t holemask,
++
+ int
+ main(
+ 	int			argc,
+@@ -3807,12 +3839,7 @@ main(
+ 	/*
+ 	 * Protect ourselves against possible stupidity
+ 	 */
+-	if (XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino) != 0) {
+-		fprintf(stderr,
+-			_("%s: root inode created in AG %u, not AG 0\n"),
+-			progname, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino));
+-		exit(1);
+-	}
++	check_root_ino(mp);
  
- int xfs_ialloc_cluster_alignment(struct xfs_mount *mp);
- void xfs_ialloc_setup_geometry(struct xfs_mount *mp);
-+xfs_ino_t xfs_ialloc_calc_rootino(struct xfs_mount *mp, int sunit);
- 
- #endif	/* __XFS_IALLOC_H__ */
+ 	/*
+ 	 * Re-write multiple secondary superblocks with rootinode field set
 
