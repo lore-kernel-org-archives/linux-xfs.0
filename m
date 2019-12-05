@@ -2,317 +2,213 @@ Return-Path: <SRS0=6LQP=Z3=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8EFBC43603
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Dec 2019 06:44:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EA6CC2D0BF
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Dec 2019 06:51:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A036322525
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Dec 2019 06:44:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 484392077B
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Dec 2019 06:51:43 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IR17mIwM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726043AbfLEGo0 convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Dec 2019 01:44:26 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33686 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725953AbfLEGo0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 5 Dec 2019 01:44:26 -0500
-From:   bugzilla-daemon@bugzilla.kernel.org
+        id S1726207AbfLEGvm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Dec 2019 01:51:42 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:52474 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725867AbfLEGvm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Dec 2019 01:51:42 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1575528701;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=A2wCU3q7aPEeKTB2i19Sd64NJ+KqdP0LdeMApskNPGw=;
+        b=IR17mIwMD4EJjlb7OQ/ZU/dlXZWQq4J2ZgwOrS21OmPS4AT3Q5OLWBxm3HfBPUEEdY1xi0
+        xXVKEqDnSMItyrb+/2z2ispulCzi6VdiMEgI7XBwtZSiV6eaUSta2Kb9lBLaVCcotZiH2V
+        IGSqgIBDTakm2z3ladC6L2ojS7taWFU=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-346-6zP2buKBMLCmFtKAjJmdFg-1; Thu, 05 Dec 2019 01:51:37 -0500
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 007531005512;
+        Thu,  5 Dec 2019 06:51:37 +0000 (UTC)
+Received: from bogon.redhat.com (ovpn-13-0.pek2.redhat.com [10.72.13.0])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id DCC5816D20;
+        Thu,  5 Dec 2019 06:51:34 +0000 (UTC)
+From:   Zorro Lang <zlang@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [Bug 205465] [xfstests generic/475]: general protection fault: 0000
- [#1] SMP KASAN PTI,  RIP: 0010:iter_file_splice_write+0x63f/0xa90
-Date:   Thu, 05 Dec 2019 06:44:23 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: zlang@redhat.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-205465-201763-OPRtdxPxpq@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-205465-201763@https.bugzilla.kernel.org/>
-References: <bug-205465-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+Cc:     linux-fsdevel@vger.kernel.org
+Subject: [PATCH] iomap: stop using ioend after it's been freed in iomap_finish_ioend()
+Date:   Thu,  5 Dec 2019 14:51:32 +0800
+Message-Id: <20191205065132.21604-1-zlang@redhat.com>
 MIME-Version: 1.0
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-MC-Unique: 6zP2buKBMLCmFtKAjJmdFg-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=205465
+This patch fixes the following KASAN report. The @ioend has been
+freed by dio_put(), but the iomap_finish_ioend() still trys to access
+its data.
 
---- Comment #4 from Zorro Lang (zlang@redhat.com) ---
-(In reply to Zorro Lang from comment #3)
-> (In reply to Darrick J. Wong from comment #2)
-> > Could you please post the source line translations of the relevant
-> > functions?  I don't have your kernel build.
-> 
-> I already removed this testing kernel build, and merged lots of new patches.
-> But good news is I still can reproduce this issue[1] (by g/461 this time).
-> I'll build the new kernel and post the source line translations of the
-> relevant functions later.
-> 
-> 
-> [ 4693.175856] run fstests generic/461 at 2019-12-04 21:46:00 
-> [ 4693.694096] XFS (sda5): Mounting V5 Filesystem 
-> [ 4693.703963] XFS (sda5): Ending clean mount 
-> [ 4693.710992] xfs filesystem being mounted at /mnt/xfstests/mnt2 supports
-> timestamps until 2038 (0x7fffffff) 
-> [ 4693.726744] XFS (sda5): User initiated shutdown received. Shutting down
-> filesystem 
-> [ 4693.740549] XFS (sda5): Unmounting Filesystem 
-> [ 4693.895876] XFS (sda5): Mounting V5 Filesystem 
-> [ 4693.905492] XFS (sda5): Ending clean mount 
-> [ 4693.912655] xfs filesystem being mounted at /mnt/xfstests/mnt2 supports
-> timestamps until 2038 (0x7fffffff) 
-> [ 4702.015718] restraintd[1391]: *** Current Time: Wed Dec 04 21:46:11 2019
-> Localwatchdog at: Fri Dec 06 20:32:11 2019 
-> [ 4708.950866] XFS (sda5): User initiated shutdown received. Shutting down
-> filesystem 
-> [ 4708.972833] kasan: CONFIG_KASAN_INLINE enabled 
-> [ 4708.977801] kasan: GPF could be caused by NULL-ptr deref or user memory
-> access 
-> [ 4708.985889] general protection fault: 0000 [#1] SMP KASAN PTI 
-> [ 4708.992294] CPU: 0 PID: 19412 Comm: fsstress Not tainted 5.4.0+ #1 
-> [ 4708.999190] Hardware name: Dell Inc. PowerEdge R630/0CNCJW, BIOS 1.2.10
-> 03/09/2015 
-> [ 4709.007655] RIP: 0010:iter_file_splice_write+0x668/0xa00 
+[20563.631624] BUG: KASAN: use-after-free in iomap_finish_ioend+0x58c/0x5c0
+[20563.638319] Read of size 8 at addr fffffc0c54a36928 by task kworker/123:=
+2/22184
 
+[20563.647107] CPU: 123 PID: 22184 Comm: kworker/123:2 Not tainted 5.4.0+ #=
+1
+[20563.653887] Hardware name: HPE Apollo 70             /C01_APACHE_MB     =
+    , BIOS L50_5.13_1.11 06/18/2019
+[20563.664499] Workqueue: xfs-conv/sda5 xfs_end_io [xfs]
+[20563.669547] Call trace:
+[20563.671993]  dump_backtrace+0x0/0x370
+[20563.675648]  show_stack+0x1c/0x28
+[20563.678958]  dump_stack+0x138/0x1b0
+[20563.682455]  print_address_description.isra.9+0x60/0x378
+[20563.687759]  __kasan_report+0x1a4/0x2a8
+[20563.691587]  kasan_report+0xc/0x18
+[20563.694985]  __asan_report_load8_noabort+0x18/0x20
+[20563.699769]  iomap_finish_ioend+0x58c/0x5c0
+[20563.703944]  iomap_finish_ioends+0x110/0x270
+[20563.708396]  xfs_end_ioend+0x168/0x598 [xfs]
+[20563.712823]  xfs_end_io+0x1e0/0x2d0 [xfs]
+[20563.716834]  process_one_work+0x7f0/0x1ac8
+[20563.720922]  worker_thread+0x334/0xae0
+[20563.724664]  kthread+0x2c4/0x348
+[20563.727889]  ret_from_fork+0x10/0x18
 
-# ./scripts/faddr2line vmlinux iter_file_splice_write+0x668
-iter_file_splice_write+0x668/0xa00:
-pipe_buf_release at include/linux/pipe_fs_i.h:187
-(inlined by) iter_file_splice_write at fs/splice.c:773
+[20563.732941] Allocated by task 83403:
+[20563.736512]  save_stack+0x24/0xb0
+[20563.739820]  __kasan_kmalloc.isra.9+0xc4/0xe0
+[20563.744169]  kasan_slab_alloc+0x14/0x20
+[20563.747998]  slab_post_alloc_hook+0x50/0xa8
+[20563.752173]  kmem_cache_alloc+0x154/0x330
+[20563.756185]  mempool_alloc_slab+0x20/0x28
+[20563.760186]  mempool_alloc+0xf4/0x2a8
+[20563.763845]  bio_alloc_bioset+0x2d0/0x448
+[20563.767849]  iomap_writepage_map+0x4b8/0x1740
+[20563.772198]  iomap_do_writepage+0x200/0x8d0
+[20563.776380]  write_cache_pages+0x8a4/0xed8
+[20563.780469]  iomap_writepages+0x4c/0xb0
+[20563.784463]  xfs_vm_writepages+0xf8/0x148 [xfs]
+[20563.788989]  do_writepages+0xc8/0x218
+[20563.792658]  __writeback_single_inode+0x168/0x18f8
+[20563.797441]  writeback_sb_inodes+0x370/0xd30
+[20563.801703]  wb_writeback+0x2d4/0x1270
+[20563.805446]  wb_workfn+0x344/0x1178
+[20563.808928]  process_one_work+0x7f0/0x1ac8
+[20563.813016]  worker_thread+0x334/0xae0
+[20563.816757]  kthread+0x2c4/0x348
+[20563.819979]  ret_from_fork+0x10/0x18
 
-    691 ssize_t
-    692 iter_file_splice_write(struct pipe_inode_info *pipe, struct file *out,
-    693                           loff_t *ppos, size_t len, unsigned int flags)
-    694 {
-    695         struct splice_desc sd = {
-    696                 .total_len = len,
-    697                 .flags = flags,
-    698                 .pos = *ppos,
-    699                 .u.file = out,
-    700         };
-    701         int nbufs = pipe->max_usage;
-    702         struct bio_vec *array = kcalloc(nbufs, sizeof(struct bio_vec),
-    703                                         GFP_KERNEL);
-    704         ssize_t ret;
-    705 
-    706         if (unlikely(!array))
-    707                 return -ENOMEM;
-    708 
-    709         pipe_lock(pipe);
-    710 
-    711         splice_from_pipe_begin(&sd);
-    712         while (sd.total_len) {
-    713                 struct iov_iter from;
-    714                 unsigned int head = pipe->head;
-    715                 unsigned int tail = pipe->tail;
-    716                 unsigned int mask = pipe->ring_size - 1;
-    717                 size_t left;
-    718                 int n;
-    719 
-    720                 ret = splice_from_pipe_next(pipe, &sd);
-    721                 if (ret <= 0)
-    722                         break;
-    723 
-    724                 if (unlikely(nbufs < pipe->max_usage)) {
-    725                         kfree(array);
-    726                         nbufs = pipe->max_usage;
-    727                         array = kcalloc(nbufs, sizeof(struct bio_vec),
-    728                                         GFP_KERNEL);
-    729                         if (!array) {
-    730                                 ret = -ENOMEM;
-    731                                 break;
-    732                         }
-    733                 }
-    734 
-    735                 /* build the vector */
-    736                 left = sd.total_len;
-    737                 for (n = 0; !pipe_empty(head, tail) && left && n <
-nbufs; tail++, n++) {
-    738                         struct pipe_buffer *buf = &pipe->bufs[tail &
-mask];
-    739                         size_t this_len = buf->len;
-    740 
-    741                         if (this_len > left)
-    742                                 this_len = left;
-    743 
-    744                         ret = pipe_buf_confirm(pipe, buf);
-    745                         if (unlikely(ret)) {
-    746                                 if (ret == -ENODATA)
-    747                                         ret = 0;
-    748                                 goto done;
-    749                         }
-    750 
-    751                         array[n].bv_page = buf->page;
-    752                         array[n].bv_len = this_len;
-    753                         array[n].bv_offset = buf->offset;
-    754                         left -= this_len;
-    755                 }
-    756 
-    757                 iov_iter_bvec(&from, WRITE, array, n, sd.total_len -
-left);
-    758                 ret = vfs_iter_write(out, &from, &sd.pos, 0);
-    759                 if (ret <= 0)
-    760                         break;
-    761 
-    762                 sd.num_spliced += ret;
-    763                 sd.total_len -= ret;
-    764                 *ppos = sd.pos;
-    765 
-    766                 /* dismiss the fully eaten buffers, adjust the partial
-one */
-    767                 tail = pipe->tail;
-    768                 while (ret) {
-    769                         struct pipe_buffer *buf = &pipe->bufs[tail &
-mask];
-    770                         if (ret >= buf->len) {
-    771                                 ret -= buf->len;
-    772                                 buf->len = 0;
-    773                                 pipe_buf_release(pipe, buf);
-    774                                 tail++;
-    775                                 pipe->tail = tail;
-    776                                 if (pipe->files)
-    777                                         sd.need_wakeup = true;
-    778                         } else {
-    779                                 buf->offset += ret;
-    780                                 buf->len -= ret;
-    781                                 ret = 0;
-    782                         }
-    783                 }
-    784         }
-    785 done:
-    786         kfree(array);
-    787         splice_from_pipe_end(pipe, &sd);
-    788 
-    789         pipe_unlock(pipe);
-    790 
-    791         if (sd.num_spliced)
-    792                 ret = sd.num_spliced;
-    793 
-    794         return ret;
-    795 }
+[20563.825028] Freed by task 22184:
+[20563.828251]  save_stack+0x24/0xb0
+[20563.831559]  __kasan_slab_free+0x10c/0x180
+[20563.835648]  kasan_slab_free+0x10/0x18
+[20563.839389]  slab_free_freelist_hook+0xb4/0x1c0
+[20563.843912]  kmem_cache_free+0x8c/0x3e8
+[20563.847745]  mempool_free_slab+0x20/0x28
+[20563.851660]  mempool_free+0xd4/0x2f8
+[20563.855231]  bio_free+0x33c/0x518
+[20563.858537]  bio_put+0xb8/0x100
+[20563.861672]  iomap_finish_ioend+0x168/0x5c0
+[20563.865847]  iomap_finish_ioends+0x110/0x270
+[20563.870328]  xfs_end_ioend+0x168/0x598 [xfs]
+[20563.874751]  xfs_end_io+0x1e0/0x2d0 [xfs]
+[20563.878755]  process_one_work+0x7f0/0x1ac8
+[20563.882844]  worker_thread+0x334/0xae0
+[20563.886584]  kthread+0x2c4/0x348
+[20563.889804]  ret_from_fork+0x10/0x18
 
-And
+[20563.894855] The buggy address belongs to the object at fffffc0c54a36900
+                which belongs to the cache bio-1 of size 248
+[20563.906844] The buggy address is located 40 bytes inside of
+                248-byte region [fffffc0c54a36900, fffffc0c54a369f8)
+[20563.918485] The buggy address belongs to the page:
+[20563.923269] page:ffffffff82f528c0 refcount:1 mapcount:0 mapping:fffffc8e=
+4ba31900 index:0xfffffc0c54a33300
+[20563.932832] raw: 17ffff8000000200 ffffffffa3060100 0000000700000007 ffff=
+fc8e4ba31900
+[20563.940567] raw: fffffc0c54a33300 0000000080aa0042 00000001ffffffff 0000=
+000000000000
+[20563.948300] page dumped because: kasan: bad access detected
 
-    181 static inline void pipe_buf_release(struct pipe_inode_info *pipe,
-    182                                     struct pipe_buffer *buf)
-    183 {
-    184         const struct pipe_buf_operations *ops = buf->ops;
-    185 
-    186         buf->ops = NULL;
-    187         ops->release(pipe, buf);
-    188 }
+[20563.955345] Memory state around the buggy address:
+[20563.960129]  fffffc0c54a36800: fb fb fb fb fb fb fb fb fb fb fb fb fb fb=
+ fb fc
+[20563.967342]  fffffc0c54a36880: fc fc fc fc fc fc fc fc fc fc fc fc fc fc=
+ fc fc
+[20563.974554] >fffffc0c54a36900: fb fb fb fb fb fb fb fb fb fb fb fb fb fb=
+ fb fb
+[20563.981766]                                   ^
+[20563.986288]  fffffc0c54a36980: fb fb fb fb fb fb fb fb fb fb fb fb fb fb=
+ fb fc
+[20563.993501]  fffffc0c54a36a00: fc fc fc fc fc fc fc fc fc fc fc fc fc fc=
+ fc fc
+[20564.000713] =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
 
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=3D205703
+Signed-off-by: Zorro Lang <zlang@redhat.com>
+---
 
+Hi,
 
-> [ 4709.013584] Code: 00 00 48 89 fa 48 c1 ea 03 80 3c 1a 00 0f 85 97 02 00
-> 00 48 8b 56 10 48 c7 46 10 00 00 00 00 48 8d 7a 08 49 89 f8 49 c1 e8 03 <41>
-> 80 3c 18 00 0f 85 96 02 00 00 48 8b 52 08 4c 89 e7 41 83 c6 01 
-> [ 4709.034540] RSP: 0018:ffff8887ca8bf8d8 EFLAGS: 00010202 
-> [ 4709.040373] RAX: 0000000000000000 RBX: dffffc0000000000 RCX:
-> ffffffff93c2f280 
-> [ 4709.048336] RDX: 0000000000000000 RSI: ffff8887fcd05000 RDI:
-> 0000000000000008 
-> [ 4709.056299] RBP: ffffed1102ae1ca7 R08: 0000000000000001 R09:
-> fffff94000397e8f 
-> [ 4709.064262] R10: fffff94000397e8e R11: ffffea0001cbf477 R12:
-> ffff88881570e400 
-> [ 4709.072225] R13: 0000000000003000 R14: 0000000000000010 R15:
-> ffffed1102ae1c9f 
-> [ 4709.080188] FS:  00007f89493b6b80(0000) GS:ffff888827a00000(0000)
-> knlGS:0000000000000000 
-> [ 4709.089217] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033 
-> [ 4709.095628] CR2: 00007f89493b5000 CR3: 00000007ce162004 CR4:
-> 00000000001606f0 
-> [ 4709.103590] Call Trace: 
-> [ 4709.106327]  ? __x64_sys_tee+0x220/0x220 
-> [ 4709.110704]  ? generic_file_splice_read+0x4f5/0x6c0 
-> [ 4709.116148]  ? add_to_pipe+0x370/0x370 
-> [ 4709.120330]  ? _cond_resched+0x15/0x30 
-> [ 4709.124518]  direct_splice_actor+0x107/0x1d0 
-> [ 4709.129284]  splice_direct_to_actor+0x32d/0x8a0 
-> [ 4709.134342]  ? wakeup_pipe_readers+0x80/0x80 
-> [ 4709.139099]  ? do_splice_to+0x140/0x140 
-> [ 4709.143381]  ? security_file_permission+0x53/0x2b0 
-> [ 4709.148738]  do_splice_direct+0x158/0x250 
-> [ 4709.153212]  ? splice_direct_to_actor+0x8a0/0x8a0 
-> [ 4709.158464]  ? __sb_start_write+0x1c4/0x310 
-> [ 4709.163125]  vfs_copy_file_range+0x39c/0xa40 
-> [ 4709.167890]  ? __x64_sys_sendfile+0x1d0/0x1d0 
-> [ 4709.172753]  ? lockdep_hardirqs_on+0x590/0x590 
-> [ 4709.177706]  ? lock_downgrade+0x6d0/0x6d0 
-> [ 4709.182180]  ? lock_acquire+0x15a/0x3d0 
-> [ 4709.186459]  ? __might_fault+0xc4/0x1a0 
-> [ 4709.190754]  __x64_sys_copy_file_range+0x1e8/0x460 
-> [ 4709.196101]  ? __ia32_sys_copy_file_range+0x460/0x460 
-> [ 4709.201749]  ? __audit_syscall_exit+0x796/0xab0 
-> [ 4709.206810]  do_syscall_64+0x9f/0x4f0 
-> [ 4709.210897]  entry_SYSCALL_64_after_hwframe+0x49/0xbe 
-> [ 4709.216534] RIP: 0033:0x7f89488a96fd 
-> [ 4709.220523] Code: 00 c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa 48
-> 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48>
-> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 5b 57 2c 00 f7 d8 64 89 01 48 
-> [ 4709.241479] RSP: 002b:00007fff83524e98 EFLAGS: 00000246 ORIG_RAX:
-> 0000000000000146 
-> [ 4709.249928] RAX: ffffffffffffffda RBX: 00007fff83524ee8 RCX:
-> 00007f89488a96fd 
-> [ 4709.257891] RDX: 0000000000000004 RSI: 00007fff83524ee0 RDI:
-> 0000000000000003 
-> [ 4709.265854] RBP: 0000000000010fcc R08: 0000000000010fcc R09:
-> 0000000000000000 
-> [ 4709.273817] R10: 00007fff83524ee8 R11: 0000000000000246 R12:
-> 00007fff83524ee0 
-> [ 4709.281779] R13: 0000000000000003 R14: 0000000000000004 R15:
-> 0000000000214da7 
-> [ 4709.289746] Modules linked in: intel_rapl_msr intel_rapl_common iTCO_wdt
-> iTCO_vendor_support sb_edac x86_pkg_temp_thermal intel_powerclamp dcdbas
-> coretemp kvm_intel kvm irqbypass crct10dif_pclmul crc32_pclmul
-> ghash_clmulni_intel intel_cstate intel_uncore intel_rapl_perf
-> dax_pmem_compat device_dax nd_pmem dax_pmem_core pcspkr mei_me ipmi_ssif mei
-> lpc_ich sg ipmi_si ipmi_devintf ipmi_msghandler rfkill sunrpc
-> acpi_power_meter ip_tables xfs libcrc32c sd_mod mgag200 drm_kms_helper
-> syscopyarea sysfillrect sysimgblt fb_sys_fops drm_vram_helper lpfc
-> drm_ttm_helper ttm nvmet_fc nvmet drm nvme_fc crc32c_intel nvme_fabrics ahci
-> igb libahci nvme_core libata scsi_transport_fc megaraid_sas dca i2c_algo_bit
-> wmi 
-> [ 4709.358683] ---[ end trace 2d7c5824fba18cef ]--- 
-> [ 4709.432470] RIP: 0010:iter_file_splice_write+0x668/0xa00 
-> [ 4709.438415] Code: 00 00 48 89 fa 48 c1 ea 03 80 3c 1a 00 0f 85 97 02 00
-> 00 48 8b 56 10 48 c7 46 10 00 00 00 00 48 8d 7a 08 49 89 f8 49 c1 e8 03 <41>
-> 80 3c 18 00 0f 85 96 02 00 00 48 8b 52 08 4c 89 e7 41 83 c6 01 
-> [ 4709.459386] RSP: 0018:ffff8887ca8bf8d8 EFLAGS: 00010202 
-> [ 4709.465230] RAX: 0000000000000000 RBX: dffffc0000000000 RCX:
-> ffffffff93c2f280 
-> [ 4709.473196] RDX: 0000000000000000 RSI: ffff8887fcd05000 RDI:
-> 0000000000000008 
-> [ 4709.481161] RBP: ffffed1102ae1ca7 R08: 0000000000000001 R09:
-> fffff94000397e8f 
-> [ 4709.489138] R10: fffff94000397e8e R11: ffffea0001cbf477 R12:
-> ffff88881570e400 
-> [ 4709.497112] R13: 0000000000003000 R14: 0000000000000010 R15:
-> ffffed1102ae1c9f 
-> [ 4709.505079] FS:  00007f89493b6b80(0000) GS:ffff888827a00000(0000)
-> knlGS:0000000000000000 
-> [ 4709.514110] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033 
-> [ 4709.520534] CR2: 00007f89493b5000 CR3: 00000007ce162004 CR4:
-> 00000000001606f0 
-> [ 4715.584506] XFS (sda5): Unmounting Filesystem
+I can't reproduce this bug by running generic/461 on this patch. But then
+generic/461 started to hit below issue:
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D205465#c3
+
+Which I reported one month ago. At least it's not a regression from this pa=
+tch.
+
+Thanks,
+Zorro
+
+ fs/iomap/buffered-io.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index d33c7bc5ee92..dc25a2183ba9 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1128,6 +1128,7 @@ iomap_finish_ioend(struct iomap_ioend *ioend, int err=
+or)
+ =09struct bio *bio =3D &ioend->io_inline_bio;
+ =09struct bio *last =3D ioend->io_bio, *next;
+ =09u64 start =3D bio->bi_iter.bi_sector;
++=09loff_t offset =3D ioend->io_offset;
+ =09bool quiet =3D bio_flagged(bio, BIO_QUIET);
+=20
+ =09for (bio =3D &ioend->io_inline_bio; bio; bio =3D next) {
+@@ -1148,12 +1149,12 @@ iomap_finish_ioend(struct iomap_ioend *ioend, int e=
+rror)
+ =09=09=09iomap_finish_page_writeback(inode, bv->bv_page, error);
+ =09=09bio_put(bio);
+ =09}
++=09/* The ioend has been freed by bio_put() */
+=20
+ =09if (unlikely(error && !quiet)) {
+ =09=09printk_ratelimited(KERN_ERR
+ "%s: writeback error on inode %lu, offset %lld, sector %llu",
+-=09=09=09inode->i_sb->s_id, inode->i_ino, ioend->io_offset,
+-=09=09=09start);
++=09=09=09inode->i_sb->s_id, inode->i_ino, offset, start);
+ =09}
+ }
+=20
+--=20
+2.20.1
+
