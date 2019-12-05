@@ -2,111 +2,98 @@ Return-Path: <SRS0=6LQP=Z3=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-0.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	PDS_BTC_ID,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E389CC43603
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Dec 2019 17:18:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6329C43603
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Dec 2019 17:50:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B69E820801
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Dec 2019 17:18:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9DCEB21835
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Dec 2019 17:50:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VbSE0YH8"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dDmU7upn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729430AbfLERSP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Dec 2019 12:18:15 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:46878 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729396AbfLERSP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Dec 2019 12:18:15 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB5HE4rJ185659;
-        Thu, 5 Dec 2019 17:17:33 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
- bh=We7FFT52e+w7qubvoBOunnMVUcWvtvuprqhEIBuZLec=;
- b=VbSE0YH8tIG/EdO2b90mllIJATGNjYUh04GRZITvjzmd3FV+oGJh8MPVQOw+9y/gPl5i
- /upJBTN9ji/iU2y2a8RvvIM1JzkaROnnmObMGg5MJ8LcRFonO8Dq3eX/Rh58IoFhuEZf
- 29kjtdjqv8SG8IC9QmVMxEzsity0fTdI/RAh8EbJiuS7SfhINTQVYe2NEdqDf0C+VNX7
- F1IQq4ZkX1dnGpli3P0EuokogRYNb0eBDYkBhB/GPXByv1RbJWbIlMpd/9fVZKJrgJjf
- tOiNkcIOg+O6rqjspKH8asAGe4M+5Xmd/ErM4nkGsbB3zUTUqA6AfDHOcKjLYOjKny53 IA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2wkgcqpjhy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 05 Dec 2019 17:17:33 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xB5HECvo131642;
-        Thu, 5 Dec 2019 17:15:32 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2wpp8j7hef-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 05 Dec 2019 17:15:32 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xB5HFRg9023362;
-        Thu, 5 Dec 2019 17:15:29 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 05 Dec 2019 09:15:27 -0800
-Date:   Thu, 5 Dec 2019 09:15:25 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Jan Kara <jack@suse.cz>, mbobrowski@mbobrowski.org,
-        riteshh@linux.ibm.com
-Subject: [ANNOUNCE] xfs-linux: iomap-5.5-merge updated to c275779ff2dd
-Message-ID: <20191205171525.GA13249@magnolia>
+        id S1730205AbfLERuk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Dec 2019 12:50:40 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:39097 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1729396AbfLERuk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Dec 2019 12:50:40 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1575568239;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=HLNM7FhxFeR3AAR16zURlPkn52LfIqXBEqugNI9aYeg=;
+        b=dDmU7upnqIUCGEaPrRntmCTwNqUm5s9s0brAgfW8g+7FyAjj+OUoixJLAqFc/SKayOR+qi
+        SXgYUnCdPkIuXC9gna4QEwPwlFP/DzulncEe7Ufdl92iVaXIWt0PzPLlgKTDTYvBIkiLGV
+        A1um165fTMQxbycJjG7GraQZGYxaclM=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-341-XD3TUMdKNWyjuJkW-VSPLQ-1; Thu, 05 Dec 2019 12:50:37 -0500
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9DBAA107ACE8
+        for <linux-xfs@vger.kernel.org>; Thu,  5 Dec 2019 17:50:36 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 5D07410013D9
+        for <linux-xfs@vger.kernel.org>; Thu,  5 Dec 2019 17:50:36 +0000 (UTC)
+From:   Brian Foster <bfoster@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [RFC v4 0/2] xfs: automatic relogging experiment
+Date:   Thu,  5 Dec 2019 12:50:35 -0500
+Message-Id: <20191205175037.52529-1-bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9462 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=984
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1912050145
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9462 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1912050145
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-MC-Unique: XD3TUMdKNWyjuJkW-VSPLQ-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+Hi all,
 
-The iomap-5.5-merge branch of the xfs-linux repository at:
+Here's a v4 RFC for automatic relogging and probably the closest one IMO
+to a non-RFC worthy implementation. There's still a few kinks, but this
+might be the right combination of simplicity, effectiveness and
+flexibility for future enhancement. Patch 1 adds the mechanism and patch
+2 uses it for the quotaoff start intent. See the commit logs for further
+details.=20
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+Thoughts, reviews, flames appreciated.
 
-has just been updated.
+Brian
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
+rfcv4:
+- AIL based approach.
+rfcv3: https://lore.kernel.org/linux-xfs/20191125185523.47556-1-bfoster@red=
+hat.com/
+- CIL based approach.
+rfcv2: https://lore.kernel.org/linux-xfs/20191122181927.32870-1-bfoster@red=
+hat.com/
+- Different approach based on workqueue and transaction rolling.
+rfc: https://lore.kernel.org/linux-xfs/20191024172850.7698-1-bfoster@redhat=
+.com/
 
-The new head of the iomap-5.5-merge branch is commit:
+Brian Foster (2):
+  xfs: automatic log item relog mechanism
+  xfs: automatically relog the quotaoff start intent
 
-c275779ff2dd iomap: stop using ioend after it's been freed in iomap_finish_ioend()
+ fs/xfs/xfs_dquot_item.c  |  7 +++++
+ fs/xfs/xfs_qm_syscalls.c |  9 +++++++
+ fs/xfs/xfs_trace.h       |  1 +
+ fs/xfs/xfs_trans.c       | 30 +++++++++++++++++++++
+ fs/xfs/xfs_trans.h       |  7 ++++-
+ fs/xfs/xfs_trans_ail.c   | 56 ++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/xfs_trans_priv.h  |  5 ++++
+ 7 files changed, 112 insertions(+), 3 deletions(-)
 
-New Commits:
+--=20
+2.20.1
 
-Christoph Hellwig (1):
-      [1cea335d1db1] iomap: fix sub-page uptodate handling
-
-Zorro Lang (1):
-      [c275779ff2dd] iomap: stop using ioend after it's been freed in iomap_finish_ioend()
-
-
-Code Diffstat:
-
- fs/iomap/buffered-io.c | 40 ++++++++++++++++++++++++++++------------
- 1 file changed, 28 insertions(+), 12 deletions(-)
