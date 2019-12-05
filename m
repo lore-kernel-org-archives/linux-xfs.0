@@ -2,192 +2,309 @@ Return-Path: <SRS0=6LQP=Z3=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=FROM_LOCAL_HEX,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,PDS_BTC_ID,PDS_BTC_MSGID,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F354DC2BD09
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Dec 2019 14:05:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F28E6C43603
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Dec 2019 14:36:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C4D6F2464F
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Dec 2019 14:05:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BA58821835
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Dec 2019 14:36:26 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BR35VCPx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729649AbfLEOFK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Dec 2019 09:05:10 -0500
-Received: from mail-io1-f69.google.com ([209.85.166.69]:36511 "EHLO
-        mail-io1-f69.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729512AbfLEOFK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Dec 2019 09:05:10 -0500
-Received: by mail-io1-f69.google.com with SMTP id 202so2446643iou.3
-        for <linux-xfs@vger.kernel.org>; Thu, 05 Dec 2019 06:05:09 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:date:message-id:subject:from:to;
-        bh=ss9QHvh6bNQSlbXU02gGCYN6VqUC/dATBxQ+4sZH7oc=;
-        b=t8xtby8vJtIwbxBBt6FG2V1NPzGg/Uaxbldi2OGSp1k/2hT+lU54Of3MRQa1NuTtpY
-         OD7X3i7rol4qszBhpBTVWgM7i1GKcnx/1+7dxNE/QgAkwwVal76P4iMTCuOEW3agduQj
-         90otco5fQoZQ5BnoiInHOfkV5ax3b/BEoZHOoBHAP8RA4aepxzOOV8zEXFlHF7cJLkH+
-         oE/qvdVQvBtY8GWKID7iEKf6x0PpYwW1Merqnms8OwoGWw67JApobub8j4h2m4fdBhG8
-         lgdNS2gdKCBh+z0m+7M8RL23Sf0A8mGQ5Fl3LeA0Z1xbYKDuLVdW0qtDBcUh1Vg0H9FH
-         12Gg==
-X-Gm-Message-State: APjAAAXZO3MW5G+bBbKjwBXNgoJwi+EysxW30hHjm2WBFY31gQPVyvlc
-        3s97W4PTgqOCsW5IR3jxlxJpZ5eGFs8lCCTWfGtqFoX36BAZ
-X-Google-Smtp-Source: APXvYqzVaAAEEkwExztMrYcWCc1C1sJMjFL6MkBBIp2KgIrn26dGmAA5uVGtmZfxuWphL3t1GILMa+cLy3Zx30WuI8vDJAJvNYI3
+        id S1729402AbfLEOg0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Dec 2019 09:36:26 -0500
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:24303 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1729240AbfLEOg0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Dec 2019 09:36:26 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1575556584;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=yOnBKe22k34/IM5ykM4Es1FCKN4cc1+MKUWYN70ZEbc=;
+        b=BR35VCPxdoqUzprqgWbUTJyZKnswnFqiR+nmFF8Uq/u7ljjn8qLWhR3AITs7wRdkj2zSaC
+        AYH4qfLlRSuuFyGUzNaHLClATBz1qvBJvsKUrgKRz5XbPUvufuOXDp0VyrCfIt5aDnNoWt
+        dbowVzKRcE7lcnw7M/nRjlucYnhtawI=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-126-ebq4hARdN1KZfaQOreGSpA-1; Thu, 05 Dec 2019 09:36:20 -0500
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C2C01911E8;
+        Thu,  5 Dec 2019 14:36:19 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 225DC194B2;
+        Thu,  5 Dec 2019 14:36:19 +0000 (UTC)
+Date:   Thu, 5 Dec 2019 09:36:18 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>, Alex Lyakas <alex@zadara.com>,
+        Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: don't commit sunit/swidth updates to disk if that
+ would cause repair failures
+Message-ID: <20191205143618.GA48368@bfoster>
+References: <20191204170340.GR7335@magnolia>
 MIME-Version: 1.0
-X-Received: by 2002:a92:178f:: with SMTP id 15mr8567561ilx.219.1575554708963;
- Thu, 05 Dec 2019 06:05:08 -0800 (PST)
-Date:   Thu, 05 Dec 2019 06:05:08 -0800
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <000000000000c091a20598f56a5a@google.com>
-Subject: KASAN: slab-out-of-bounds Read in iov_iter_alignment
-From:   syzbot <syzbot+0d37f4d2070ce20b19a7@syzkaller.appspotmail.com>
-To:     darrick.wong@oracle.com, hch@infradead.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
+In-Reply-To: <20191204170340.GR7335@magnolia>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-MC-Unique: ebq4hARdN1KZfaQOreGSpA-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello,
+On Wed, Dec 04, 2019 at 09:03:40AM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>=20
+> Alex Lyakas reported[1] that mounting an xfs filesystem with new sunit
+> and swidth values could cause xfs_repair to fail loudly.  The problem
+> here is that repair calculates the where mkfs should have allocated the
+> root inode, based on the superblock geometry.  The allocation decisions
+> depend on sunit, which means that we really can't go updating sunit if
+> it would lead to a subsequent repair failure on an otherwise correct
+> filesystem.
+>=20
+> Port the computation code from xfs_repair and teach mount to avoid the
+> ondisk update if it would cause problems for repair.  We allow the mount
+> to proceed (and new allocations will reflect this new geometry) because
+> we've never screened this kind of thing before.
+>=20
+> [1] https://lore.kernel.org/linux-xfs/20191125130744.GA44777@bfoster/T/#m=
+00f9594b511e076e2fcdd489d78bc30216d72a7d
+>=20
+> Reported-by: Alex Lyakas <alex@zadara.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v2: compute the root inode location directly
+> ---
+>  fs/xfs/libxfs/xfs_ialloc.c |   81 ++++++++++++++++++++++++++++++++++++++=
+++++++
+>  fs/xfs/libxfs/xfs_ialloc.h |    1 +
+>  fs/xfs/xfs_mount.c         |   51 ++++++++++++++++++----------
+>  3 files changed, 115 insertions(+), 18 deletions(-)
+>=20
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index 988cde7744e6..6df9bcc96251 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -2909,3 +2909,84 @@ xfs_ialloc_setup_geometry(
+>  =09else
+>  =09=09igeo->ialloc_align =3D 0;
+>  }
+> +
+> +/*
+> + * Compute the location of the root directory inode that is laid out by =
+mkfs.
+> + * The @sunit parameter will be copied from the superblock if it is nega=
+tive.
+> + */
+> +xfs_ino_t
+> +xfs_ialloc_calc_rootino(
+> +=09struct xfs_mount=09*mp,
+> +=09int=09=09=09sunit)
+> +{
+> +=09struct xfs_ino_geometry=09*igeo =3D M_IGEO(mp);
+> +=09xfs_agino_t=09=09first_agino;
+> +=09xfs_agblock_t=09=09first_bno;
+> +
+> +=09if (sunit < 0)
+> +=09=09sunit =3D mp->m_sb.sb_unit;
+> +
+> +=09/*
+> +=09 * Pre-calculate the geometry of ag 0. We know what it looks like
+> +=09 * because we know what mkfs does: 2 allocation btree roots (by block
+> +=09 * and by size), the inode allocation btree root, the free inode
+> +=09 * allocation btree root (if enabled) and some number of blocks to
+> +=09 * prefill the agfl.
+> +=09 *
+> +=09 * Because the current shape of the btrees may differ from the curren=
+t
+> +=09 * shape, we open code the mkfs freelist block count here. mkfs creat=
+es
+> +=09 * single level trees, so the calculation is pretty straight forward =
+for
+> +=09 * the trees that use the AGFL.
+> +=09 */
+> +
 
-syzbot found the following crash on:
+I know this code is lifted from userspace, but.. "the current shape of
+the btrees may differ from the current shape, .." Eh?
 
-HEAD commit:    b94ae8ad Merge tag 'seccomp-v5.5-rc1' of git://git.kernel...
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=1604be0ee00000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=c2e464ae414aee8c
-dashboard link: https://syzkaller.appspot.com/bug?extid=0d37f4d2070ce20b19a7
-compiler:       clang version 9.0.0 (/home/glider/llvm/clang  
-80fee25776c2fb61e74c1ecb1a523375c2500b69)
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=16b4ce96e00000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=17310abce00000
+> +=09/* free space by block btree root comes after the ag headers */
+> +=09first_bno =3D howmany(4 * mp->m_sb.sb_sectsize, mp->m_sb.sb_blocksize=
+);
+> +
+> +=09/* free space by length btree root */
+> +=09first_bno +=3D 1;
+> +
+> +=09/* inode btree root */
+> +=09first_bno +=3D 1;
+> +
+> +=09/* agfl */
+> +=09first_bno +=3D (2 * min_t(xfs_agblock_t, 2, mp->m_ag_maxlevels)) + 1;
+> +
 
-IMPORTANT: if you fix the bug, please add the following tag to the commit:
-Reported-by: syzbot+0d37f4d2070ce20b19a7@syzkaller.appspotmail.com
+This is a little subtle from the userspace code. The extra +1 here is
+where we go from pointing at metadata blocks (i.e. bnobt root) to the
+first free block (i.e., past metadata blocks), right? If so, I wonder if
+this should be incorporated either at the beginning or end with a
+comment for explanation (i.e. "Start by pointing at the first block
+after the AG headers and increment by size of applicable metadata to
+locate the first free block ...").
 
-==================================================================
-BUG: KASAN: slab-out-of-bounds in iov_iter_alignment+0x6a1/0x7b0  
-lib/iov_iter.c:1225
-Read of size 4 at addr ffff8880a34b2f44 by task syz-executor324/8130
+I'm guessing this is a historical artifact of the userspace code as
+features were added. The fact that userspace uses different variables
+somewhat helps self-document in that context, and we lose that here.
 
-CPU: 0 PID: 8130 Comm: syz-executor324 Not tainted 5.4.0-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS  
-Google 01/01/2011
-Call Trace:
-  __dump_stack lib/dump_stack.c:77 [inline]
-  dump_stack+0x1fb/0x318 lib/dump_stack.c:118
-  print_address_description+0x75/0x5c0 mm/kasan/report.c:374
-  __kasan_report+0x14b/0x1c0 mm/kasan/report.c:506
-  kasan_report+0x26/0x50 mm/kasan/common.c:634
-  __asan_report_load4_noabort+0x14/0x20 mm/kasan/generic_report.c:131
-  iov_iter_alignment+0x6a1/0x7b0 lib/iov_iter.c:1225
-  iomap_dio_bio_actor+0x1a7/0x11e0 fs/iomap/direct-io.c:203
-  iomap_dio_actor+0x2b4/0x4a0 fs/iomap/direct-io.c:375
-  iomap_apply+0x370/0x490 fs/iomap/apply.c:80
-  iomap_dio_rw+0x8ad/0x1010 fs/iomap/direct-io.c:493
-  ext4_dio_write_iter fs/ext4/file.c:438 [inline]
-  ext4_file_write_iter+0x15a4/0x1f50 fs/ext4/file.c:545
-  do_iter_readv_writev+0x651/0x8e0 include/linux/fs.h:1889
-  do_iter_write+0x180/0x590 fs/read_write.c:970
-  vfs_iter_write+0x7c/0xa0 fs/read_write.c:983
-  iter_file_splice_write+0x703/0xe40 fs/splice.c:758
-  do_splice_from fs/splice.c:861 [inline]
-  direct_splice_actor+0xf7/0x130 fs/splice.c:1035
-  splice_direct_to_actor+0x4d2/0xb90 fs/splice.c:990
-  do_splice_direct+0x200/0x330 fs/splice.c:1078
-  do_sendfile+0x7e4/0xfd0 fs/read_write.c:1464
-  __do_sys_sendfile64 fs/read_write.c:1525 [inline]
-  __se_sys_sendfile64 fs/read_write.c:1511 [inline]
-  __x64_sys_sendfile64+0x176/0x1b0 fs/read_write.c:1511
-  do_syscall_64+0xf7/0x1c0 arch/x86/entry/common.c:294
-  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-RIP: 0033:0x4467a9
-Code: e8 5c b3 02 00 48 83 c4 18 c3 0f 1f 80 00 00 00 00 48 89 f8 48 89 f7  
-48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff  
-ff 0f 83 0b 08 fc ff c3 66 2e 0f 1f 84 00 00 00 00
-RSP: 002b:00007f2c47965da8 EFLAGS: 00000246 ORIG_RAX: 0000000000000028
-RAX: ffffffffffffffda RBX: 00000000006dbc58 RCX: 00000000004467a9
-RDX: 0000000000000000 RSI: 0000000000000005 RDI: 0000000000000006
-RBP: 00000000006dbc50 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000010000 R11: 0000000000000246 R12: 00000000006dbc5c
-R13: 0000000020000800 R14: 00000000004ae6c8 R15: 20c49ba5e353f7cf
+> +=09if (xfs_sb_version_hasfinobt(&mp->m_sb))
+> +=09=09first_bno++;
+> +
+> +=09if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+> +=09=09first_bno++;
+> +=09=09/* agfl blocks */
+> +=09=09first_bno +=3D min_t(xfs_agblock_t, 2, mp->m_rmap_maxlevels);
+> +=09}
+> +
+> +=09if (xfs_sb_version_hasreflink(&mp->m_sb))
+> +=09=09first_bno++;
+> +
+> +=09/*
+> +=09 * If the log is allocated in the first allocation group we need to
+> +=09 * add the number of blocks used by the log to the above calculation.
+> +=09 *
+> +=09 * This can happens with filesystems that only have a single
+> +=09 * allocation group, or very odd geometries created by old mkfs
+> +=09 * versions on very small filesystems.
+> +=09 */
+> +=09if (mp->m_sb.sb_logstart &&
+> +=09    XFS_FSB_TO_AGNO(mp, mp->m_sb.sb_logstart) =3D=3D 0)
+> +=09=09 first_bno +=3D mp->m_sb.sb_logblocks;
+> +
+> +=09/*
+> +=09 * ditto the location of the first inode chunks in the fs ('/')
+> +=09 */
+> +=09if (xfs_sb_version_hasdalign(&mp->m_sb) && igeo->ialloc_align > 0) {
+> +=09=09first_agino =3D XFS_AGB_TO_AGINO(mp, roundup(first_bno, sunit));
+> +=09} else if (xfs_sb_version_hasalign(&mp->m_sb) &&
+> +=09=09   mp->m_sb.sb_inoalignmt > 1)  {
+> +=09=09first_agino =3D XFS_AGB_TO_AGINO(mp,
+> +=09=09=09=09roundup(first_bno, mp->m_sb.sb_inoalignmt));
+> +=09} else  {
+> +=09=09first_agino =3D XFS_AGB_TO_AGINO(mp, first_bno);
+> +=09}
+> +
+> +=09return XFS_AGINO_TO_INO(mp, 0, first_agino);
+> +}
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
+> index 323592d563d5..72b3468b97b1 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.h
+> +++ b/fs/xfs/libxfs/xfs_ialloc.h
+> @@ -152,5 +152,6 @@ int xfs_inobt_insert_rec(struct xfs_btree_cur *cur, u=
+int16_t holemask,
+> =20
+>  int xfs_ialloc_cluster_alignment(struct xfs_mount *mp);
+>  void xfs_ialloc_setup_geometry(struct xfs_mount *mp);
+> +xfs_ino_t xfs_ialloc_calc_rootino(struct xfs_mount *mp, int sunit);
+> =20
+>  #endif=09/* __XFS_IALLOC_H__ */
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index fca65109cf24..a4eb3ae34a84 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -363,9 +363,10 @@ xfs_readsb(
+>   * Update alignment values based on mount options and sb values
+>   */
+>  STATIC int
+> -xfs_update_alignment(xfs_mount_t *mp)
+> +xfs_update_alignment(
+> +=09struct xfs_mount=09*mp)
+>  {
+> -=09xfs_sb_t=09*sbp =3D &(mp->m_sb);
+> +=09struct xfs_sb=09=09*sbp =3D &mp->m_sb;
+> =20
+>  =09if (mp->m_dalign) {
+>  =09=09/*
+> @@ -398,28 +399,42 @@ xfs_update_alignment(xfs_mount_t *mp)
+>  =09=09=09}
+>  =09=09}
+> =20
+> -=09=09/*
+> -=09=09 * Update superblock with new values
+> -=09=09 * and log changes
+> -=09=09 */
+> -=09=09if (xfs_sb_version_hasdalign(sbp)) {
+> -=09=09=09if (sbp->sb_unit !=3D mp->m_dalign) {
+> -=09=09=09=09sbp->sb_unit =3D mp->m_dalign;
+> -=09=09=09=09mp->m_update_sb =3D true;
+> -=09=09=09}
+> -=09=09=09if (sbp->sb_width !=3D mp->m_swidth) {
+> -=09=09=09=09sbp->sb_width =3D mp->m_swidth;
+> -=09=09=09=09mp->m_update_sb =3D true;
+> -=09=09=09}
+> -=09=09} else {
+> +=09=09/* Update superblock with new values and log changes. */
+> +=09=09if (!xfs_sb_version_hasdalign(sbp)) {
+>  =09=09=09xfs_warn(mp,
+>  =09"cannot change alignment: superblock does not support data alignment"=
+);
+>  =09=09=09return -EINVAL;
+>  =09=09}
+> +
+> +=09=09if (sbp->sb_unit =3D=3D mp->m_dalign &&
+> +=09=09    sbp->sb_width =3D=3D mp->m_swidth)
+> +=09=09=09return 0;
+> +
+> +=09=09/*
+> +=09=09 * If the sunit/swidth change would move the precomputed root
+> +=09=09 * inode value, we must reject the ondisk change because repair
+> +=09=09 * will stumble over that.  However, we allow the mount to
+> +=09=09 * proceed because we never rejected this combination before.
+> +=09=09 */
+> +=09=09if (sbp->sb_rootino !=3D
+> +=09=09    xfs_ialloc_calc_rootino(mp, mp->m_dalign)) {
+> +=09=09=09xfs_warn(mp,
+> +=09"cannot change stripe alignment: would require moving root inode");
+> +
 
-Allocated by task 8130:
-  save_stack mm/kasan/common.c:69 [inline]
-  set_track mm/kasan/common.c:77 [inline]
-  __kasan_kmalloc+0x11c/0x1b0 mm/kasan/common.c:510
-  kasan_kmalloc+0x9/0x10 mm/kasan/common.c:524
-  __do_kmalloc mm/slab.c:3655 [inline]
-  __kmalloc+0x254/0x340 mm/slab.c:3664
-  kmalloc_array+0x32/0x60 include/linux/slab.h:618
-  kcalloc include/linux/slab.h:629 [inline]
-  iter_file_splice_write+0x15f/0xe40 fs/splice.c:702
-  do_splice_from fs/splice.c:861 [inline]
-  direct_splice_actor+0xf7/0x130 fs/splice.c:1035
-  splice_direct_to_actor+0x4d2/0xb90 fs/splice.c:990
-  do_splice_direct+0x200/0x330 fs/splice.c:1078
-  do_sendfile+0x7e4/0xfd0 fs/read_write.c:1464
-  __do_sys_sendfile64 fs/read_write.c:1525 [inline]
-  __se_sys_sendfile64 fs/read_write.c:1511 [inline]
-  __x64_sys_sendfile64+0x176/0x1b0 fs/read_write.c:1511
-  do_syscall_64+0xf7/0x1c0 arch/x86/entry/common.c:294
-  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+FWIW, I read this error message as the mount option was ignored. I don't
+much care whether we ignore the mount option or simply the on-disk
+update, but the error could be a bit more clear in the latter case.
+Also, what is the expected behavior for xfs_info in the latter
+situation?
 
-Freed by task 4124:
-  save_stack mm/kasan/common.c:69 [inline]
-  set_track mm/kasan/common.c:77 [inline]
-  kasan_set_free_info mm/kasan/common.c:332 [inline]
-  __kasan_slab_free+0x12a/0x1e0 mm/kasan/common.c:471
-  kasan_slab_free+0xe/0x10 mm/kasan/common.c:480
-  __cache_free mm/slab.c:3425 [inline]
-  kfree+0x115/0x200 mm/slab.c:3756
-  smk_fetch security/smack/smack_lsm.c:302 [inline]
-  smack_d_instantiate+0x7bb/0xd70 security/smack/smack_lsm.c:3416
-  security_d_instantiate+0xa5/0x100 security/security.c:1874
-  d_instantiate+0x55/0x90 fs/dcache.c:1952
-  shmem_mknod+0x178/0x1c0 mm/shmem.c:2893
-  shmem_create+0x2b/0x40 mm/shmem.c:2939
-  lookup_open fs/namei.c:3228 [inline]
-  do_last fs/namei.c:3318 [inline]
-  path_openat+0x2236/0x44a0 fs/namei.c:3529
-  do_filp_open+0x192/0x3d0 fs/namei.c:3559
-  do_sys_open+0x29f/0x560 fs/open.c:1097
-  __do_sys_open fs/open.c:1115 [inline]
-  __se_sys_open fs/open.c:1110 [inline]
-  __x64_sys_open+0x87/0x90 fs/open.c:1110
-  do_syscall_64+0xf7/0x1c0 arch/x86/entry/common.c:294
-  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+Brian
 
-The buggy address belongs to the object at ffff8880a34b2e00
-  which belongs to the cache kmalloc-256 of size 256
-The buggy address is located 68 bytes to the right of
-  256-byte region [ffff8880a34b2e00, ffff8880a34b2f00)
-The buggy address belongs to the page:
-page:ffffea00028d2c80 refcount:1 mapcount:0 mapping:ffff8880aa4008c0  
-index:0x0
-raw: 00fffe0000000200 ffffea00028d2dc8 ffffea0002897dc8 ffff8880aa4008c0
-raw: 0000000000000000 ffff8880a34b2000 0000000100000008 0000000000000000
-page dumped because: kasan: bad access detected
+> +=09=09=09/*
+> +=09=09=09 * XXX: Next time we add a new incompat feature, this
+> +=09=09=09 * should start returning -EINVAL.
+> +=09=09=09 */
+> +=09=09=09return 0;
+> +=09=09}
+> +
+> +=09=09sbp->sb_unit =3D mp->m_dalign;
+> +=09=09sbp->sb_width =3D mp->m_swidth;
+> +=09=09mp->m_update_sb =3D true;
+>  =09} else if ((mp->m_flags & XFS_MOUNT_NOALIGN) !=3D XFS_MOUNT_NOALIGN &=
+&
+>  =09=09    xfs_sb_version_hasdalign(&mp->m_sb)) {
+> -=09=09=09mp->m_dalign =3D sbp->sb_unit;
+> -=09=09=09mp->m_swidth =3D sbp->sb_width;
+> +=09=09mp->m_dalign =3D sbp->sb_unit;
+> +=09=09mp->m_swidth =3D sbp->sb_width;
+>  =09}
+> =20
+>  =09return 0;
+>=20
 
-Memory state around the buggy address:
-  ffff8880a34b2e00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  ffff8880a34b2e80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> ffff8880a34b2f00: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
-                                            ^
-  ffff8880a34b2f80: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
-  ffff8880a34b3000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-==================================================================
-
-
----
-This bug is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this bug report. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-syzbot can test patches for this bug, for details see:
-https://goo.gl/tpsmEJ#testing-patches
