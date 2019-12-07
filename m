@@ -1,98 +1,203 @@
-Return-Path: <SRS0=r/Pz=Z4=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=kN6U=Z5=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+X-Spam-Status: No, score=-4.0 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
+	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,HK_RANDOM_FROM,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8134FC43603
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Dec 2019 20:01:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 114E0C43603
+	for <linux-xfs@archiver.kernel.org>; Sat,  7 Dec 2019 00:09:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 416E6206C3
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Dec 2019 20:01:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1575662463;
-	bh=79RvXak1dP5bCbsaEmGOMsdl02gOD69RYh+qUaJSG0E=;
-	h=Date:From:To:Cc:Subject:List-ID:From;
-	b=nctCY4WPXNZC2nGp7wQFw/vmt0W8CY0HJIxYoiMe2u2vx3gQLiYo2XIH6b07Hc3R2
-	 UNuFJCfqA98SnDhQMfSXWe8c4zoR1c6azpPN9OV5Hf3/EqtsRTKfFjMKP4MAbHgaay
-	 A/ooQ0YhImZUbNh95H/yZ60EgC7ntz7KVqreEqjo=
+	by mail.kernel.org (Postfix) with ESMTP id CE92E217BA
+	for <linux-xfs@archiver.kernel.org>; Sat,  7 Dec 2019 00:09:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726353AbfLFUBC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 Dec 2019 15:01:02 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33654 "EHLO mail.kernel.org"
+        id S1726388AbfLGAJh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 Dec 2019 19:09:37 -0500
+Received: from smtp3-g21.free.fr ([212.27.42.3]:7803 "EHLO smtp3-g21.free.fr"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726325AbfLFUBC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 6 Dec 2019 15:01:02 -0500
-Received: from localhost (c-67-169-218-210.hsd1.or.comcast.net [67.169.218.210])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0DDDF2245C;
-        Fri,  6 Dec 2019 19:51:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1575661903;
-        bh=79RvXak1dP5bCbsaEmGOMsdl02gOD69RYh+qUaJSG0E=;
-        h=Date:From:To:Cc:Subject:From;
-        b=X/cgc1ZvXOhYRyVK3HYtCz3uTC+DCt8OUyz1130hFD7loo0n/81SfY6qJnvvMhh25
-         VUPHjlK4WOn6EzAdIwAmtcYkMDddghKzHNVG5h0/IC5napYD2Rm2e9E61fUi1yduEt
-         +KqGUNV3H/SmK3gvQz+sIUtcl9VGinrEKDxlDJM4=
-Date:   Fri, 6 Dec 2019 11:51:42 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, linux-kernel@vger.kernel.org,
-        sandeen@sandeen.net, hch@lst.de
-Subject: [GIT PULL] xfs: fixes for 5.5-rc1
-Message-ID: <20191206195142.GA9464@magnolia>
+        id S1726377AbfLGAJh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 6 Dec 2019 19:09:37 -0500
+Received: from [IPv6:2a01:e0a:2a2:1590:3130:d4af:7a6d:562c] (unknown [IPv6:2a01:e0a:2a2:1590:3130:d4af:7a6d:562c])
+        by smtp3-g21.free.fr (Postfix) with ESMTP id 8FAC913F89C;
+        Sat,  7 Dec 2019 01:09:17 +0100 (CET)
+Subject: [bug] userspace hitting sporadic SIGBUS on xfs (Power9, ppc64le),
+ v4.19 and later
+References: <9c0af967-4916-4e8b-e77f-087515793d77@free.fr>
+To:     Jan Stancek <jstancek@redhat.com>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, hch@infradead.org,
+        darrick.wong@oracle.com, linuxppc-dev@lists.ozlabs.org,
+        Memory Management <mm-qe@redhat.com>,
+        LTP Mailing List <ltp@lists.linux.it>,
+        CKI Project <cki-project@redhat.com>,
+        Michael Ellerman <mpe@ellerman.id.au>
+From:   dftxbs3e <dftxbs3e@free.fr>
+X-Forwarded-Message-Id: <9c0af967-4916-4e8b-e77f-087515793d77@free.fr>
+Message-ID: <e9a171cc-6827-5c43-092a-9dcd8a997b5a@free.fr>
+Date:   Sat, 7 Dec 2019 01:09:17 +0100
+User-Agent: Mozilla/5.0 (X11; Linux ppc64le; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <9c0af967-4916-4e8b-e77f-087515793d77@free.fr>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
+Hello!
 
-Please pull these bug fixes for 5.5-rc1, which fix a couple of resource
-management errors and a hang.
+I am very happy that someone has found this issue.
 
-The branch has survived a couple of days of xfstests runs and merges
-cleanly with this morning's master.  Please let me know if anything
-strange happens.
+I have been suffering from rather random SIGBUS errors in similar
+conditions described by the author.
 
---D
+I don't have much troubleshooting information to provide, however, I hit
+the issue regularly so I could investigate during that.
 
-The following changes since commit 8feb4732ff9f2732354b44c4418569974e2f949c:
+How do you debug such an issue? I tried a debugger etc. but besides
+crashing with SIGBUS, I couldnt get any other meaningful information.
 
-  xfs: allow parent directory scans to be interrupted with fatal signals (2019-11-27 08:23:14 -0800)
+dftxbs3e
 
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.5-merge-17
-
-for you to fetch changes up to 798a9cada4694ca8d970259f216cec47e675bfd5:
-
-  xfs: fix mount failure crash on invalid iclog memory access (2019-12-03 14:53:07 -0800)
-
-----------------------------------------------------------------
-Fixes for 5.5-rc1:
-- Fix a crash in the log setup code when log mounting fails
-- Fix a hang when allocating space on the realtime device
-- Fix a block leak when freeing space on the realtime device
-
-----------------------------------------------------------------
-Brian Foster (1):
-      xfs: fix mount failure crash on invalid iclog memory access
-
-Omar Sandoval (2):
-      xfs: fix realtime file data space leak
-      xfs: don't check for AG deadlock for realtime files in bunmapi
-
- fs/xfs/libxfs/xfs_bmap.c | 27 +++++++++++++++------------
- fs/xfs/xfs_log.c         |  2 ++
- 2 files changed, 17 insertions(+), 12 deletions(-)
+On 12/3/19 1:50 PM, Jan Stancek wrote:
+> Hi,
+>
+> (This bug report is summary from thread [1] with some additions)
+>
+> User-space binaries on Power9 ppc64le (with 64k pages) on xfs
+> filesystem are sporadically hitting SIGBUS:
+>
+> ---------- 8< ----------
+> (gdb) r
+> Starting program: /mnt/testarea/ltp/testcases/bin/genasin
+>
+> Program received signal SIGBUS, Bus error.
+> dl_main (phdr=0x10000040, phnum=<optimized out>, user_entry=0x7fffffffe760, auxv=<optimized out>) at rtld.c:1362
+> 1362        switch (ph->p_type)
+>
+> (gdb) p ph
+> $1 = (const Elf64_Phdr *) 0x10000040
+>
+> (gdb) p *ph
+> Cannot access memory at address 0x10000040
+>
+> (gdb) info proc map
+> process 1110670
+> Mapped address spaces:
+>
+>             Start Addr           End Addr       Size     Offset objfile
+>             0x10000000         0x10010000    0x10000        0x0 /mnt/testarea/ltp/testcases/bin/genasin
+>             0x10010000         0x10030000    0x20000        0x0 /mnt/testarea/ltp/testcases/bin/genasin
+>         0x7ffff7f90000     0x7ffff7fb0000    0x20000        0x0 [vdso]
+>         0x7ffff7fb0000     0x7ffff7fe0000    0x30000        0x0 /usr/lib64/ld-2.30.so
+>         0x7ffff7fe0000     0x7ffff8000000    0x20000    0x20000 /usr/lib64/ld-2.30.so
+>         0x7ffffffd0000     0x800000000000    0x30000        0x0 [stack]
+>
+> (gdb) x/1x 0x10000040
+> 0x10000040:     Cannot access memory at address 0x10000040
+> ---------- >8 ----------
+>
+> When this happens the binary continues to hit SIGBUS until page
+> is released, for example by: echo 3 > /proc/sys/vm/drop_caches
+>
+> The issue goes back to at least v4.19.
+>
+> I can semi-reliably reproduce it with LTP is installed to /mnt/testarea/ltp by:
+> while [ True ]; do
+>           echo 3 > /proc/sys/vm/drop_caches
+>           rm -f /mnt/testarea/ltp/results/RUNTEST.log /mnt/testarea/ltp/output/RUNTEST.run.log
+>           ./runltp -p -d results -l RUNTEST.log -o RUNTEST.run.log -f math
+>           grep FAIL /mnt/testarea/ltp/results/RUNTEST.log && exit 1
+> done
+>
+> and some stress activity in other terminal (e.g. kernel build).
+> Sometimes in minutes, sometimes in hours. It is not reliable
+> enough to get meaningful bisect results.
+>
+> My theory is that there's a race in iomap. There appear to be
+> interleaved calls to iomap_set_range_uptodate() for same page
+> with varying offset and length. Each call sees bitmap as _not_
+> entirely "uptodate" and hence doesn't call SetPageUptodate().
+> Even though each bit in bitmap ends up uptodate by the time
+> all calls finish.
+>
+> For example, with following traces:
+>
+> iomap_set_range_uptodate()
+> ...
+>           if (uptodate && !PageError(page))
+>                   SetPageUptodate(page);
+> +
+> +       if (mycheck(page)) {
+> +               trace_printk("page: %px, iop: %px, uptodate: %d, !PageError(page): %d, flags: %lx\n", page, iop, uptodate, !PageError(page), page->flags);
+> +               trace_printk("first: %u, last: %u, off: %u, len: %u, i: %u\n", first, last, off, len, i);
+> +       }
+>
+> I get:
+>            genacos-18471 [057] ....   162.465730: iomap_readpages: mapping: c000003f185a1ab0
+>            genacos-18471 [057] ....   162.465732: iomap_page_create: iomap_page_create page: c00c00000fe26180, page->private: 0000000000000000, iop: c000003fc70a19c0, flags: 3ffff800000001
+>            genacos-18471 [057] ....   162.465736: iomap_set_range_uptodate: page: c00c00000fe26180, iop: c000003fc70a19c0, uptodate: 0, !PageError(page): 1, flags: 3ffff800002001
+>            genacos-18471 [057] ....   162.465736: iomap_set_range_uptodate: first: 1, last: 14, off: 4096, len: 57344, i: 16
+>             <idle>-0     [060] ..s.   162.534862: iomap_set_range_uptodate: page: c00c00000fe26180, iop: c000003fc70a19c0, uptodate: 0, !PageError(page): 1, flags: 3ffff800002081
+>             <idle>-0     [061] ..s.   162.534862: iomap_set_range_uptodate: page: c00c00000fe26180, iop: c000003fc70a19c0, uptodate: 0, !PageError(page): 1, flags: 3ffff800002081
+>             <idle>-0     [060] ..s.   162.534864: iomap_set_range_uptodate: first: 0, last: 0, off: 0, len: 4096, i: 16
+>             <idle>-0     [061] ..s.   162.534864: iomap_set_range_uptodate: first: 15, last: 15, off: 61440, len: 4096, i: 16
+>
+> This page doesn't have Uptodate flag set, which leads to filemap_fault()
+> returning VM_FAULT_SIGBUS:
+>
+> crash> p/x ((struct page *) 0xc00c00000fe26180)->flags
+> $1 = 0x3ffff800002032
+>
+> crash> kmem -g 0x3ffff800002032
+> FLAGS: 3ffff800002032
+>     PAGE-FLAG       BIT  VALUE
+>     PG_error          1  0000002
+>     PG_dirty          4  0000010
+>     PG_lru            5  0000020
+>     PG_private_2     13  0002000
+>     PG_fscache       13  0002000
+>     PG_savepinned     4  0000010
+>     PG_double_map    13  0002000
+>
+> But iomap_page->uptodate in page->private suggests all bits are uptodate:
+>
+> crash> p/x ((struct page *) 0xc00c00000fe26180)->private
+> $2 = 0xc000003fc70a19c0
+>
+> crash> p/x ((struct iomap_page *) 0xc000003fc70a19c0)->uptodate
+> $3 = {0xffff, 0x0}
+>
+>
+> It appears (after ~4 hours) that I can avoid the problem if I split
+> the loop so that bits are checked only after all updates are made.
+> Not sure if this correct approach, or just making it less reproducible:
+>
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index e25901ae3ff4..abe37031c93d 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -131,7 +131,11 @@ iomap_set_range_uptodate(struct page *page, unsigned off, unsigned len)
+>                   for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
+>                           if (i >= first && i <= last)
+>                                   set_bit(i, iop->uptodate);
+> -                       else if (!test_bit(i, iop->uptodate))
+> +               }
+> +               for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
+> +                       if (i >= first && i <= last)
+> +                               continue;
+> +                       if (!test_bit(i, iop->uptodate))
+>                                   uptodate = false;
+>                   }
+>           }
+>
+> Thanks,
+> Jan
+>
+> [1] https://lore.kernel.org/stable/1420623640.14527843.1575289859701.JavaMail.zimbra@redhat.com/T/#u
+>
+>
