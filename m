@@ -2,236 +2,113 @@ Return-Path: <SRS0=TLwU=Z6=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A307C2D0BF
-	for <linux-xfs@archiver.kernel.org>; Sun,  8 Dec 2019 17:04:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC954C43603
+	for <linux-xfs@archiver.kernel.org>; Sun,  8 Dec 2019 20:30:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F41D020709
-	for <linux-xfs@archiver.kernel.org>; Sun,  8 Dec 2019 17:04:37 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZGMTc30l"
+	by mail.kernel.org (Postfix) with ESMTP id A63DD20637
+	for <linux-xfs@archiver.kernel.org>; Sun,  8 Dec 2019 20:30:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726483AbfLHREh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 8 Dec 2019 12:04:37 -0500
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:46268 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726474AbfLHREh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Dec 2019 12:04:37 -0500
-Received: by mail-pg1-f196.google.com with SMTP id z124so5820197pgb.13;
-        Sun, 08 Dec 2019 09:04:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=UlHR1cLkK+qvjBqY37LG2uLeLSuSj/jaGCEhl3kRhik=;
-        b=ZGMTc30lCMQ9AQbkxneaYpU7Hmk4337+12ePFITP4H5flaIs/3opgBWdM+MvyrCoQb
-         kVg4qNpkVmxTRY2QH7uM9LtlKan9y10z8sPMBa5Sff2E/C4sSA6bMSJUCD4GNUKAL6S+
-         /YpHL5Smm1vwvOdmCNNClZPEc5M42FPbrZG/N1N/JxJPtN+k5OUefyV6lGx7qeuvcT2d
-         d24Ci+7YmcSYCc3gbbG1DhjW2+Om8swCOxePJqhre5/WLnMWWnugXTHUvFcZezY9gPf+
-         WTFth3mZEyBbwHETGRxB8n8zWmvqaWM3mQWw9A3Wv6/r3QlTpNZl77rGZGDkHQ2vTq6Z
-         ROXw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=UlHR1cLkK+qvjBqY37LG2uLeLSuSj/jaGCEhl3kRhik=;
-        b=TXwZBtkD5z+xm1FIfxUySoHPXV7tzeOZPDn8qs5Ig3Aze45JmKcrWOC2Dvvi2wDGyY
-         dzKhHqYVrkEobSgDd63uhsdT4Ye2jRoMaOoblB2zqQp1dtulpceVmCSnATD/Fa9OHSh+
-         YtanVXA8Ptg5RSvn3idyBUQ+t8OAZoiy2f9a7D7EUE1RmZ0/y/swREOtpJW1RBeloket
-         OzQ51QHQE8m9WSuRESgXdOSkdAkhhAXXJmUXXw3TSYI1KLSOEJF6yrSWrOSzNWxOSba3
-         2HOs0ok2V8I8y+HYsBmcudbvCL55iNPaqxK/yoHv4mzAiYUTZp34HzbNaRkeah3IBNrx
-         Dkbw==
-X-Gm-Message-State: APjAAAUQTKcNpVJGUGde9eAm3a38GRrJnGeFgSpqYBYmWTJpq2lia07A
-        yG5THBOx9VXNA/03x+yTZMbl77PM
-X-Google-Smtp-Source: APXvYqwKqAMxazO/icHYT2tnWovIIFgxV1LG0F4m7gjg0Z2grDwWIKWwnvrUxkT+lEX1qQnQB2/3fg==
-X-Received: by 2002:a62:ed16:: with SMTP id u22mr25849758pfh.28.1575824675799;
-        Sun, 08 Dec 2019 09:04:35 -0800 (PST)
-Received: from localhost ([178.128.102.47])
-        by smtp.gmail.com with ESMTPSA id 9sm24829312pfx.177.2019.12.08.09.04.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 08 Dec 2019 09:04:35 -0800 (PST)
-Date:   Mon, 9 Dec 2019 01:04:30 +0800
-From:   Eryu Guan <guaneryu@gmail.com>
-To:     Omar Sandoval <osandov@osandov.com>
-Cc:     fstests@vger.kernel.org, kernel-team@fb.com,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3] generic: test truncating mixed written/unwritten XFS
- realtime extent
-Message-ID: <20191208170430.GN8664@desktop>
-References: <110dbf3ff8c8004e4eecef2cc2e84dfe2d3ddd9f.1575416911.git.osandov@fb.com>
+        id S1726555AbfLHUaf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 8 Dec 2019 15:30:35 -0500
+Received: from sandeen.net ([63.231.237.45]:36308 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726551AbfLHUaf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 8 Dec 2019 15:30:35 -0500
+Received: from [10.0.0.4] (erlite [10.0.0.1])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 15E034A0;
+        Sun,  8 Dec 2019 14:30:34 -0600 (CST)
+Subject: Re: [bug] userspace hitting sporadic SIGBUS on xfs (Power9, ppc64le),
+ v4.19 and later
+To:     dftxbs3e <dftxbs3e@free.fr>, Jan Stancek <jstancek@redhat.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        hch@infradead.org, darrick.wong@oracle.com,
+        linuxppc-dev@lists.ozlabs.org,
+        Memory Management <mm-qe@redhat.com>,
+        LTP Mailing List <ltp@lists.linux.it>,
+        CKI Project <cki-project@redhat.com>,
+        Michael Ellerman <mpe@ellerman.id.au>
+References: <9c0af967-4916-4e8b-e77f-087515793d77@free.fr>
+ <e9a171cc-6827-5c43-092a-9dcd8a997b5a@free.fr>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <f874ea14-becc-9c4b-2f2f-351573e6a751@sandeen.net>
+Date:   Sun, 8 Dec 2019 14:30:33 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.3.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <110dbf3ff8c8004e4eecef2cc2e84dfe2d3ddd9f.1575416911.git.osandov@fb.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
+In-Reply-To: <e9a171cc-6827-5c43-092a-9dcd8a997b5a@free.fr>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 03, 2019 at 03:51:52PM -0800, Omar Sandoval wrote:
-> From: Omar Sandoval <osandov@fb.com>
-> 
-> The only XFS-specific part of this test is the setup, so we can make the
-> rest a generic test. It's slow, though, as it needs to write 8GB to
-> convert a big unwritten extent to written.
-> 
-> Signed-off-by: Omar Sandoval <osandov@fb.com>
-> ---
-> Changes from v2 -> v3:
-> 
-> - Use _create_loop_device and _destroy_loop_device instead of losetup
-> 
-> Changes from v1 -> v2:
-> 
-> - If rtdev is not configured, fall back to loop device on test
->   filesystem
-> - Use XFS_IO_PROG instead of fallocate/sync/dd
-> - Use truncate instead of rm
-> - Add comments explaining the steps
-> 
->  tests/generic/589     | 100 ++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/589.out |   2 +
->  tests/generic/group   |   1 +
->  3 files changed, 103 insertions(+)
->  create mode 100755 tests/generic/589
->  create mode 100644 tests/generic/589.out
-> 
-> diff --git a/tests/generic/589 b/tests/generic/589
-> new file mode 100755
-> index 00000000..aab37bb4
-> --- /dev/null
-> +++ b/tests/generic/589
-> @@ -0,0 +1,100 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2019 Facebook.  All Rights Reserved.
-> +#
-> +# FS QA Test 589
-> +#
-> +# Test "xfs: fix realtime file data space leak" and "xfs: don't check for AG
-> +# deadlock for realtime files in bunmapi". On XFS without the fix, truncate
-> +# will hang forever. On other filesystems, this just tests writing into big
-> +# fallocates.
-> +#
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +	test -n "$loop" && _destroy_loop_device "$loop"
-> +	rm -f "$TEST_DIR/$seq"
-> +}
-> +
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +rm -f $seqres.full
-> +
-> +_supported_fs generic
-> +_supported_os Linux
-> +_require_scratch_nocheck
-> +
-> +maxextlen=$((0x1fffff))
-> +bs=4096
-> +rextsize=4
-> +filesz=$(((maxextlen + 1) * bs))
-> +
-> +extra_options=""
-> +# If we're testing XFS, set up the realtime device to reproduce the bug.
-> +if [[ $FSTYP = xfs ]]; then
-> +	# If we don't have a realtime device, set up a loop device on the test
-> +	# filesystem.
-> +	if [[ $USE_EXTERNAL != yes || -z $SCRATCH_RTDEV ]]; then
-> +		_require_test
-> +		loopsz="$((filesz + (1 << 26)))"
-> +		_require_fs_space "$TEST_DIR" $((loopsz / 1024))
-> +		$XFS_IO_PROG -c "truncate $loopsz" -f "$TEST_DIR/$seq"
-> +		loop="$(_create_loop_device "$TEST_DIR/$seq")"
-> +		USE_EXTERNAL=yes
-> +		SCRATCH_RTDEV="$loop"
-> +	fi
-> +	extra_options="$extra_options -bsize=$bs"
-> +	extra_options="$extra_options -r extsize=$((bs * rextsize))"
-> +	extra_options="$extra_options -d agsize=$(((maxextlen + 1) * bs / 2)),rtinherit=1"
-> +fi
-> +_scratch_mkfs $extra_options >>$seqres.full 2>&1
-> +_scratch_mount
-> +_require_fs_space "$SCRATCH_MNT" $((filesz / 1024))
-> +
-> +# Allocate maxextlen + 1 blocks. As long as the allocator does something sane,
-> +# we should end up with two extents that look something like:
-> +#
-> +# u3.bmx[0-1] = [startoff,startblock,blockcount,extentflag]
-> +# 0:[0,0,2097148,1]
-> +# 1:[2097148,2097148,4,1]
-> +#
-> +# Extent 0 has blockcount = ALIGN_DOWN(maxextlen, rextsize). Extent 1 is
-> +# adjacent and has blockcount = rextsize. Both are unwritten.
-> +$XFS_IO_PROG -c "falloc 0 $filesz" -c fsync -f "$SCRATCH_MNT/file"
-> +
-> +# Write extent 0 + one block of extent 1. Our extents should end up like so:
-> +#
-> +# u3.bmx[0-1] = [startoff,startblock,blockcount,extentflag]
-> +# 0:[0,0,2097149,0]
-> +# 1:[2097149,2097149,3,1]
-> +#
-> +# Extent 0 is written and has blockcount = ALIGN_DOWN(maxextlen, rextsize) + 1,
-> +# Extent 1 is adjacent, unwritten, and has blockcount = rextsize - 1 and
-> +# startblock % rextsize = 1.
-> +#
-> +# The -b is just to speed things up (doing GBs of I/O in 4k chunks kind of
-> +# sucks).
-> +$XFS_IO_PROG -c "pwrite -b 1M -W 0 $(((maxextlen + 2 - rextsize) * bs))" \
-> +	"$SCRATCH_MNT/file" >> "$seqres.full"
-> +
-> +# Truncate the extents.
-> +$XFS_IO_PROG -c "truncate 0" -c fsync "$SCRATCH_MNT/file"
-> +
-> +# We need to do this before the loop device gets torn down.
-> +_scratch_unmount
-> +_check_scratch_fs
-> +
-> +echo "Silence is golden"
-> +status=0
-> +exit
-> diff --git a/tests/generic/589.out b/tests/generic/589.out
-> new file mode 100644
-> index 00000000..5ab6ab10
-> --- /dev/null
-> +++ b/tests/generic/589.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 589
-> +Silence is golden
-> diff --git a/tests/generic/group b/tests/generic/group
-> index 87d7441c..be6f4a43 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -591,3 +591,4 @@
->  586 auto quick rw prealloc
->  587 auto quick rw prealloc
->  588 auto quick log clone
-> +589 auto prealloc preallocrw dangerous
 
-Also, I noticed that the fixes are already in latest upstream kernel, so
-I removed dangerous group as well.
 
-Thanks,
-Eryu
-
-> -- 
-> 2.24.0
+On 12/6/19 6:09 PM, dftxbs3e wrote:
+> Hello!
 > 
+> I am very happy that someone has found this issue.
+> 
+> I have been suffering from rather random SIGBUS errors in similar
+> conditions described by the author.
+> 
+> I don't have much troubleshooting information to provide, however, I hit
+> the issue regularly so I could investigate during that.
+> 
+> How do you debug such an issue? I tried a debugger etc. but besides
+> crashing with SIGBUS, I couldnt get any other meaningful information.
+
+You may want to test the patch Christoph sent on the original thread for
+this issue.
+
+-Eric
