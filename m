@@ -2,104 +2,124 @@ Return-Path: <SRS0=aEZv=Z7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A15CDC43603
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Dec 2019 08:26:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAD0DC00454
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Dec 2019 14:50:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6D5432071E
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Dec 2019 08:26:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A01DE20828
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Dec 2019 14:50:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JhhP0HRp"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KZYSuTFf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726377AbfLII0u (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 Dec 2019 03:26:50 -0500
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:59424 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727044AbfLII0t (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Dec 2019 03:26:49 -0500
+        id S1726379AbfLIOuP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 Dec 2019 09:50:15 -0500
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:25581 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726354AbfLIOuO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Dec 2019 09:50:14 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1575880008;
+        s=mimecast20190719; t=1575903013;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=xuQftgKLhIdfbe43m9PaVlygiTsJJ2gGUjVhGbD1VTM=;
-        b=JhhP0HRpLHb/+ubPnNwToEoILbSOQ+xFAH3VHp0BZzz8f+Mup4pWRFDTFRczBreZ96g33y
-        OirWuUwBZoDDWtjRB3bOQ+cQ1Yj5x9roZTQBUz3eYm7PFy+cltdObbsA+Rh4S1kLw5VOy8
-        RPEfFPdLwkS4kEUHpLCGGgRNmphmnZM=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-20-LYEmGze7OVu4X7zepRIt7g-1; Mon, 09 Dec 2019 03:26:41 -0500
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A580C801E7A;
-        Mon,  9 Dec 2019 08:26:39 +0000 (UTC)
-Received: from colo-mx.corp.redhat.com (colo-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 69C1C60BE1;
-        Mon,  9 Dec 2019 08:26:39 +0000 (UTC)
-Received: from zmail17.collab.prod.int.phx2.redhat.com (zmail17.collab.prod.int.phx2.redhat.com [10.5.83.19])
-        by colo-mx.corp.redhat.com (Postfix) with ESMTP id BC9DA18089C8;
-        Mon,  9 Dec 2019 08:26:38 +0000 (UTC)
-Date:   Mon, 9 Dec 2019 03:26:38 -0500 (EST)
-From:   Jan Stancek <jstancek@redhat.com>
-To:     dftxbs3e <dftxbs3e@free.fr>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        hch@infradead.org, Eric Sandeen <sandeen@sandeen.net>,
-        darrick wong <darrick.wong@oracle.com>,
-        linuxppc-dev@lists.ozlabs.org,
-        Memory Management <mm-qe@redhat.com>,
-        LTP Mailing List <ltp@lists.linux.it>,
-        CKI Project <cki-project@redhat.com>,
-        Michael Ellerman <mpe@ellerman.id.au>
-Message-ID: <35957501.15762152.1575879998305.JavaMail.zimbra@redhat.com>
-In-Reply-To: <f874ea14-becc-9c4b-2f2f-351573e6a751@sandeen.net>
-References: <9c0af967-4916-4e8b-e77f-087515793d77@free.fr> <e9a171cc-6827-5c43-092a-9dcd8a997b5a@free.fr> <f874ea14-becc-9c4b-2f2f-351573e6a751@sandeen.net>
-Subject: Re: [bug] userspace hitting sporadic SIGBUS on xfs (Power9,
- ppc64le), v4.19 and later
+        bh=zmXv5r+jYXphY7BscO2smGv5aBXrs+fMMrRQn1IS66s=;
+        b=KZYSuTFfvO1SUMBac3WKVs3MjAQImVa0KmDCtycsOE/uTgjW/t9I5YrMVHptquZwzQWCwF
+        8cAkU0Pyb+fmYIlJL4xSNg/ahgWa4ulXmB/nFvzL45b8EtSBaY855YA6OPY9/IvdeATK52
+        8kvx5jbOijOd8PLjuPDsA3RgiLXJfho=
+Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
+ [209.85.128.69]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-104-JfcA_XDaNWW6qJqwF3QTWA-1; Mon, 09 Dec 2019 09:49:10 -0500
+Received: by mail-wm1-f69.google.com with SMTP id l11so23427wmi.0
+        for <linux-xfs@vger.kernel.org>; Mon, 09 Dec 2019 06:49:10 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to;
+        bh=LTG1mZGmZ9hcbwqZAQIUO+xcTEzvZOPY6N77kDf6jfs=;
+        b=i2ET7bUp5AQA25ZWRRI9zVcO+rQ2C89nj5iiULidyO0F5X4DFz1eamoBCkRuimZNi5
+         DttKfXVQfRDXlbQ1KvDgvxYBFDQP5/4lVl9vyDuUjmTipq25aJ8dJfgFVBe5N2QnWqOw
+         XRHLHxiIX2zrILhHKpBETE42FozC7QhRGe80hzfDPs1J1KoiH883Mh1GtW1H4wvhBIhQ
+         TBOA49Y90lSWm3Iw0CaqQEp58x0PYhew3aqmrX6lZrcNVBaSfVc23E3qFO7IOwRiTmoc
+         xdWbfFxvpAlCQjp47tSEq3SiFWSL4OUADM1++IT9w4YXbJF4tAd4ppNyQ0QTigD5jMp9
+         oB5g==
+X-Gm-Message-State: APjAAAUNgtbfFf9Fhk7Bw9HEKyAXLSBFLm929h01MKWP+G4ilvH8SRKt
+        5pHGQCGwXl3A4iwZCPy7bJ5UWU92Hafn3vAxpTKhXKoU/EwihIClwYyhXUOrW7OrTtgA90+0Lsy
+        r1KPOxCyqPnACbgRJfLwm
+X-Received: by 2002:adf:f108:: with SMTP id r8mr2640091wro.390.1575902948959;
+        Mon, 09 Dec 2019 06:49:08 -0800 (PST)
+X-Google-Smtp-Source: APXvYqzeyuo2wJ8z5YlI5WtkiEPJHJQh87qKQlY3/8QtSaJHx1DoZzLAqxIrGtET/Y+H06nEwDhd7A==
+X-Received: by 2002:adf:f108:: with SMTP id r8mr2640058wro.390.1575902948744;
+        Mon, 09 Dec 2019 06:49:08 -0800 (PST)
+Received: from orion (ip-89-103-126-188.net.upcbroadband.cz. [89.103.126.188])
+        by smtp.gmail.com with ESMTPSA id k4sm14506803wmk.26.2019.12.09.06.49.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 09 Dec 2019 06:49:08 -0800 (PST)
+Date:   Mon, 9 Dec 2019 15:49:06 +0100
+From:   Carlos Maiolino <cmaiolino@redhat.com>
+To:     Randy Dunlap <rdunlap@infradead.org>
+Cc:     Linux FS Devel <linux-fsdevel@vger.kernel.org>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
+Subject: Re: [PATCH] xfs: fix Sphinx documentation warning
+Message-ID: <20191209144906.u3hllhe5ekkqsvva@orion>
+Mail-Followup-To: Randy Dunlap <rdunlap@infradead.org>,
+        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
+References: <bd3c7d7e-2859-06b0-a209-7d19f7c2e79f@infradead.org>
 MIME-Version: 1.0
-X-Originating-IP: [10.43.17.163, 10.4.195.30]
-Thread-Topic: userspace hitting sporadic SIGBUS on xfs (Power9, ppc64le), v4.19 and later
-Thread-Index: Dxe2axPz7lr/TlY+65kmscNpeXn5Kw==
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
-X-MC-Unique: LYEmGze7OVu4X7zepRIt7g-1
+In-Reply-To: <bd3c7d7e-2859-06b0-a209-7d19f7c2e79f@infradead.org>
+X-MC-Unique: JfcA_XDaNWW6qJqwF3QTWA-1
 X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Sun, Dec 08, 2019 at 08:14:36PM -0800, Randy Dunlap wrote:
+> From: Randy Dunlap <rdunlap@infradead.org>
+>=20
+> Fix Sphinx documentation format warning by not indenting so much.
+>=20
+> Documentation/admin-guide/xfs.rst:257: WARNING: Block quote ends without =
+a blank line; unexpected unindent.
+>=20
+> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+> Cc: Darrick J. Wong <darrick.wong@oracle.com>
+> Cc: linux-xfs@vger.kernel.org
+> ---
+>  Documentation/admin-guide/xfs.rst |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
------ Original Message -----
-> 
-> 
-> On 12/6/19 6:09 PM, dftxbs3e wrote:
-> > Hello!
-> > 
-> > I am very happy that someone has found this issue.
-> > 
-> > I have been suffering from rather random SIGBUS errors in similar
-> > conditions described by the author.
-> > 
-> > I don't have much troubleshooting information to provide, however, I hit
-> > the issue regularly so I could investigate during that.
-> > 
-> > How do you debug such an issue? I tried a debugger etc. but besides
-> > crashing with SIGBUS, I couldnt get any other meaningful information.
+Looks good, you can add:
 
-If it's same issue, you could check if dropping caches helps.
-Figure out what page is it with crash or systemtap and look at page->flags
-and ((struct iomap_page *)page->private)->uptodate bitmap.
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-> 
-> You may want to test the patch Christoph sent on the original thread for
-> this issue.
+>=20
+> --- linux-next-20191209.orig/Documentation/admin-guide/xfs.rst
+> +++ linux-next-20191209/Documentation/admin-guide/xfs.rst
+> @@ -253,7 +253,7 @@ The following sysctls are available for
+>  =09pool.
+> =20
+>    fs.xfs.speculative_prealloc_lifetime
+> -=09=09(Units: seconds   Min: 1  Default: 300  Max: 86400)
+> +=09(Units: seconds   Min: 1  Default: 300  Max: 86400)
+>  =09The interval at which the background scanning for inodes
+>  =09with unused speculative preallocation runs. The scan
+>  =09removes unused preallocation from clean inodes and releases
+>=20
 
-Or v5.5-rc1, Christoph's patch has been merged:
-  1cea335d1db1 ("iomap: fix sub-page uptodate handling")
+--=20
+Carlos
 
