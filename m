@@ -6,34 +6,27 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4335EC43603
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 14:20:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E5E6C43603
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 14:24:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1B2AA207FF
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 14:20:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0A3392073B
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 14:24:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727061AbfLJOUo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Dec 2019 09:20:44 -0500
-Received: from sandeen.net ([63.231.237.45]:46508 "EHLO sandeen.net"
+        id S1727453AbfLJOYq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Dec 2019 09:24:46 -0500
+Received: from sandeen.net ([63.231.237.45]:46698 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727007AbfLJOUo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Dec 2019 09:20:44 -0500
+        id S1727320AbfLJOYq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Dec 2019 09:24:46 -0500
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id B2D282ABE;
-        Tue, 10 Dec 2019 08:20:40 -0600 (CST)
-Subject: Re: [PATCH v3] mkfs: Break block discard into chunks of 2 GB
-To:     Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     Pavel Reichl <preichl@redhat.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-References: <20191128062139.93218-1-preichl@redhat.com>
- <BYAPR04MB5749DD0BFA3B6928A87E54B086410@BYAPR04MB5749.namprd04.prod.outlook.com>
- <1051488a-7f91-5506-9959-ff2812edc9e1@sandeen.net>
- <20191204172652.GA27507@infradead.org> <20191204174216.GS7335@magnolia>
- <BYAPR04MB5749AF1A90B082FBD8662284865B0@BYAPR04MB5749.namprd04.prod.outlook.com>
+        by sandeen.net (Postfix) with ESMTPSA id 073ED2ABE;
+        Tue, 10 Dec 2019 08:24:42 -0600 (CST)
+Subject: Re: [PATCH v4] mkfs: Break block discard into chunks of 2 GB
+To:     Pavel Reichl <preichl@redhat.com>, linux-xfs@vger.kernel.org
+References: <20191210114807.161927-1-preichl@redhat.com>
+ <CAJc7PzUmJNNCcMXG3ywjfYvzO2+N3X8_2czjPU1vMKaV-F4Y3A@mail.gmail.com>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -77,52 +70,31 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <fc7184ca-dfbe-9bf8-e790-405766f37bd8@sandeen.net>
-Date:   Tue, 10 Dec 2019 08:20:42 -0600
+Message-ID: <9a42ec72-179f-d186-6e8a-15c949ae2cb5@sandeen.net>
+Date:   Tue, 10 Dec 2019 08:24:44 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.3.0
 MIME-Version: 1.0
-In-Reply-To: <BYAPR04MB5749AF1A90B082FBD8662284865B0@BYAPR04MB5749.namprd04.prod.outlook.com>
+In-Reply-To: <CAJc7PzUmJNNCcMXG3ywjfYvzO2+N3X8_2czjPU1vMKaV-F4Y3A@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 12/10/19 1:33 AM, Chaitanya Kulkarni wrote:
-> On 12/04/2019 09:42 AM, Darrick J. Wong wrote:
->> On Wed, Dec 04, 2019 at 09:26:52AM -0800, Christoph Hellwig wrote:
->>> On Wed, Dec 04, 2019 at 10:24:32AM -0600, Eric Sandeen wrote:
->>>> It'd be great to fix this universally in the kernel but it seems like
->>>> that patch is in discussion for now, and TBH I don't see any real
->>>> drawbacks to looping in mkfs - it would also solve the problem on any
->>>> old kernel w/o the block layer change.
->>>
->>> The problem is that we throw out efficiency for no good reason.
->>
->> True...
->>
->>>> I'd propose that we go ahead w/ the mkfs change, and if/when the kernel
->>>> handles this better, and it's reasonable to expect that we're running
->>
->> How do we detect that the kernel will handle it better?
+On 12/10/19 5:54 AM, Pavel Reichl wrote:
+> Hello,
 > 
->>
->>>> on a kernel where it can be interrupted, we could remove the mkfs loop
->>>> at a later date if we wanted to.
->>>
->>> I'd rather not touch mkfs if a trivial kernel patch handles the issue.
->>
->> Did some version of Tetsuo's patch even make it for 5.5?  It seemed to
->> call submit_bio_wait from within a blk_plug region, which seems way
->> worse.
->>
+> what do you think about the way 'quiet' var is passed? It doesn't look
+> as natural parameter to 'discard_devices()' and ' discard_blocks' to
+> me. What do you think about making 'quiet' a global variable?
+> Thanks for opinions.
 > 
-> It did not yet, I can ping on the series with reference to this discussion.
+> Bye.
 
-That's fine, though I'm going to merge this patch in any case; we need a solution
-for kernels that are not bleeding-edge new as well.
+That crossed my mind too, but it doesn't bother me much, I think
+it's ok - especially if we can avoid yet another patch version.  ;)
 
--eric
+-Eric
