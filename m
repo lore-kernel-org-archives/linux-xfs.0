@@ -2,147 +2,130 @@ Return-Path: <SRS0=hCPB=2A=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F96EC43603
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 00:49:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06805C3F68F
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 03:27:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 34EAF206E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 00:49:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D9C3220726
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 03:27:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727329AbfLJAtx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 Dec 2019 19:49:53 -0500
-Received: from sandeen.net ([63.231.237.45]:34656 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727304AbfLJAtx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 9 Dec 2019 19:49:53 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 1A7B12ABE;
-        Mon,  9 Dec 2019 18:49:51 -0600 (CST)
-Subject: Re: [PATCH v3] mkfs: Break block discard into chunks of 2 GB
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Pavel Reichl <preichl@redhat.com>, linux-xfs@vger.kernel.org
-References: <20191128062139.93218-1-preichl@redhat.com>
- <6ad2e204-aa5b-c487-e03e-4a75b01018fa@sandeen.net>
- <20191209233445.GC9464@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <4b722700-a516-ac61-c6d5-49c79d693ee7@sandeen.net>
-Date:   Mon, 9 Dec 2019 18:49:52 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.3.0
+        id S1726619AbfLJD1Z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 Dec 2019 22:27:25 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:23468 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726631AbfLJD1Z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Dec 2019 22:27:25 -0500
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id xBA3RJvW098935
+        for <linux-xfs@vger.kernel.org>; Mon, 9 Dec 2019 22:27:23 -0500
+Received: from e06smtp01.uk.ibm.com (e06smtp01.uk.ibm.com [195.75.94.97])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2wrt11rjd1-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Mon, 09 Dec 2019 22:27:23 -0500
+Received: from localhost
+        by e06smtp01.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <srikar@linux.vnet.ibm.com>;
+        Tue, 10 Dec 2019 03:27:21 -0000
+Received: from b06avi18878370.portsmouth.uk.ibm.com (9.149.26.194)
+        by e06smtp01.uk.ibm.com (192.168.101.131) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
+        Tue, 10 Dec 2019 03:27:16 -0000
+Received: from d06av21.portsmouth.uk.ibm.com (d06av21.portsmouth.uk.ibm.com [9.149.105.232])
+        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id xBA3RFfO44630442
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 10 Dec 2019 03:27:15 GMT
+Received: from d06av21.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 7358552051;
+        Tue, 10 Dec 2019 03:27:15 +0000 (GMT)
+Received: from linux.vnet.ibm.com (unknown [9.126.150.29])
+        by d06av21.portsmouth.uk.ibm.com (Postfix) with SMTP id BACC15204E;
+        Tue, 10 Dec 2019 03:27:12 +0000 (GMT)
+Date:   Tue, 10 Dec 2019 08:57:12 +0530
+From:   Srikar Dronamraju <srikar@linux.vnet.ibm.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Peter Zijlstra <peterz@infradead.org>,
+        Phil Auld <pauld@redhat.com>, Ming Lei <ming.lei@redhat.com>,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jeff Moyer <jmoyer@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+        Vincent Guittot <vincent.guittot@linaro.org>
+Subject: Re: single aio thread is migrated crazily by scheduler
+Reply-To: Srikar Dronamraju <srikar@linux.vnet.ibm.com>
+References: <20191115045634.GN4614@dread.disaster.area>
+ <20191115070843.GA24246@ming.t460p>
+ <20191115234005.GO4614@dread.disaster.area>
+ <20191118092121.GV4131@hirez.programming.kicks-ass.net>
+ <20191118204054.GV4614@dread.disaster.area>
+ <20191120191636.GI4097@hirez.programming.kicks-ass.net>
+ <20191120220313.GC18056@pauld.bos.csb>
+ <20191121132937.GW4114@hirez.programming.kicks-ass.net>
+ <20191209165122.GA27229@linux.vnet.ibm.com>
+ <20191209231743.GA19256@dread.disaster.area>
 MIME-Version: 1.0
-In-Reply-To: <20191209233445.GC9464@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+In-Reply-To: <20191209231743.GA19256@dread.disaster.area>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-TM-AS-GCONF: 00
+x-cbid: 19121003-4275-0000-0000-0000038D7597
+X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
+x-cbparentid: 19121003-4276-0000-0000-000038A124D9
+Message-Id: <20191210032712.GE27253@linux.vnet.ibm.com>
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.95,18.0.572
+ definitions=2019-12-09_05:2019-12-09,2019-12-09 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0
+ lowpriorityscore=0 suspectscore=0 impostorscore=0 mlxscore=0
+ mlxlogscore=964 adultscore=0 clxscore=1015 priorityscore=1501 bulkscore=0
+ spamscore=0 malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-1910280000 definitions=main-1912100030
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+* Dave Chinner <david@fromorbit.com> [2019-12-10 10:17:43]:
 
-
-On 12/9/19 5:34 PM, Darrick J. Wong wrote:
-> On Mon, Dec 09, 2019 at 04:00:17PM -0600, Eric Sandeen wrote:
->> On 11/28/19 12:21 AM, Pavel Reichl wrote:
->>> Some users are not happy about the BLKDISCARD taking too long and at the same
->>> time not being informed about that - so they think that the command actually
->>> hung.
->>>
->>> This commit changes code so that progress reporting is possible and also typing
->>> the ^C will cancel the ongoing BLKDISCARD.
->> Ok I'm going to nitpick this just a little bit more...
->>
->>> Signed-off-by: Pavel Reichl <preichl@redhat.com>
->>> ---
->>>  mkfs/xfs_mkfs.c | 50 ++++++++++++++++++++++++++++++++++++-------------
->>>  1 file changed, 37 insertions(+), 13 deletions(-)
->>>
->>> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
->>> index 18338a61..0defadb2 100644
->>> --- a/mkfs/xfs_mkfs.c
->>> +++ b/mkfs/xfs_mkfs.c
->>> @@ -1240,17 +1240,40 @@ done:
->>>  }
->>>  
->>>  static void
->>> -discard_blocks(dev_t dev, uint64_t nsectors)
->>> +discard_blocks(dev_t dev, uint64_t nsectors, int quiet)
->>>  {
->>> -	int fd;
->>> +	int		fd;
->>> +	uint64_t	offset = 0;
->>> +	/* Discard the device 2G at a time */
->>> +	const uint64_t	step = 2ULL << 30;
->>> +	const uint64_t	count = BBTOB(nsectors);
->>>  
->>> -	/*
->>> -	 * We intentionally ignore errors from the discard ioctl.  It is
->>> -	 * not necessary for the mkfs functionality but just an optimization.
->>> -	 */
->>>  	fd = libxfs_device_to_fd(dev);
->>> -	if (fd > 0)
->>> -		platform_discard_blocks(fd, 0, nsectors << 9);
->>> +	if (fd <= 0)
->>> +		return;
->>> +	if (!quiet) {
->>> +		printf("Discarding blocks...\n");
->>> +		printf("...\n");
->>> +	}
->> Let's change this output so that it prints only a single line, i.e.
->>
->> +	if (!quiet) {
->> +		printf("Discarding blocks... ");
-> This needs fflush(stdout); here to force the message out of stdio output
-> buffering.
+> On Mon, Dec 09, 2019 at 10:21:22PM +0530, Srikar Dronamraju wrote:
+> > diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+> > index 44123b4d14e8..efd740aafa17 100644
+> > --- a/kernel/sched/core.c
+> > +++ b/kernel/sched/core.c
+> > @@ -2664,7 +2664,12 @@ try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
+> >   */
+> >  int wake_up_process(struct task_struct *p)
+> >  {
+> > -	return try_to_wake_up(p, TASK_NORMAL, 0);
+> > +	int wake_flags = 0;
+> > +
+> > +	if (is_per_cpu_kthread(p))
+> > +		wake_flags = WF_KTHREAD;
+> > +
+> > +	return try_to_wake_up(p, TASK_NORMAL, WF_KTHREAD);
 > 
-> --D
+> This is buggy. It always sets WF_KTHREAD, even for non-kernel
+> processes. I think you meant:
+> 
+> 	return try_to_wake_up(p, TASK_NORMAL, wake_flags);
 
-I thought of that, then forgot.  ;)  Maybe we do need a formal v4 on the list.
+Yes, I meant the above. Thanks for catching.
+Will test with this and repost.
+
+> 
+> I suspect this bug invalidates the test results presented, too...
+> 
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+
+-- 
+Thanks and Regards
+Srikar Dronamraju
 
