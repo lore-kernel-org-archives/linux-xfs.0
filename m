@@ -2,99 +2,230 @@ Return-Path: <SRS0=hCPB=2A=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E5E6C43603
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 14:24:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3743C2D0BF
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 17:23:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0A3392073B
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 14:24:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A85B120836
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 17:23:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727453AbfLJOYq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Dec 2019 09:24:46 -0500
-Received: from sandeen.net ([63.231.237.45]:46698 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727320AbfLJOYq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Dec 2019 09:24:46 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 073ED2ABE;
-        Tue, 10 Dec 2019 08:24:42 -0600 (CST)
-Subject: Re: [PATCH v4] mkfs: Break block discard into chunks of 2 GB
-To:     Pavel Reichl <preichl@redhat.com>, linux-xfs@vger.kernel.org
-References: <20191210114807.161927-1-preichl@redhat.com>
- <CAJc7PzUmJNNCcMXG3ywjfYvzO2+N3X8_2czjPU1vMKaV-F4Y3A@mail.gmail.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <9a42ec72-179f-d186-6e8a-15c949ae2cb5@sandeen.net>
-Date:   Tue, 10 Dec 2019 08:24:44 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.3.0
+        id S1727730AbfLJRXV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Dec 2019 12:23:21 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:61780 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727594AbfLJRXV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Dec 2019 12:23:21 -0500
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id xBAHMIMH107054
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Dec 2019 12:23:20 -0500
+Received: from e06smtp03.uk.ibm.com (e06smtp03.uk.ibm.com [195.75.94.99])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2wsu3pqra0-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Dec 2019 12:23:20 -0500
+Received: from localhost
+        by e06smtp03.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <srikar@linux.vnet.ibm.com>;
+        Tue, 10 Dec 2019 17:23:17 -0000
+Received: from b06cxnps4074.portsmouth.uk.ibm.com (9.149.109.196)
+        by e06smtp03.uk.ibm.com (192.168.101.133) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
+        Tue, 10 Dec 2019 17:23:11 -0000
+Received: from b06wcsmtp001.portsmouth.uk.ibm.com (b06wcsmtp001.portsmouth.uk.ibm.com [9.149.105.160])
+        by b06cxnps4074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id xBAHNAdG43778142
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 10 Dec 2019 17:23:10 GMT
+Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id B0676A405F;
+        Tue, 10 Dec 2019 17:23:10 +0000 (GMT)
+Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 098C6A405B;
+        Tue, 10 Dec 2019 17:23:08 +0000 (GMT)
+Received: from linux.vnet.ibm.com (unknown [9.126.150.29])
+        by b06wcsmtp001.portsmouth.uk.ibm.com (Postfix) with SMTP;
+        Tue, 10 Dec 2019 17:23:07 +0000 (GMT)
+Date:   Tue, 10 Dec 2019 22:53:07 +0530
+From:   Srikar Dronamraju <srikar@linux.vnet.ibm.com>
+To:     Dave Chinner <david@fromorbit.com>,
+        Peter Zijlstra <peterz@infradead.org>
+Cc:     Phil Auld <pauld@redhat.com>, Ming Lei <ming.lei@redhat.com>,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jeff Moyer <jmoyer@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+        Vincent Guittot <vincent.guittot@linaro.org>
+Subject: [PATCH v3] sched/core: Preempt current task in favour of bound
+ kthread
+Reply-To: Srikar Dronamraju <srikar@linux.vnet.ibm.com>
+References: <20191115070843.GA24246@ming.t460p>
+ <20191115234005.GO4614@dread.disaster.area>
+ <20191118092121.GV4131@hirez.programming.kicks-ass.net>
+ <20191118204054.GV4614@dread.disaster.area>
+ <20191120191636.GI4097@hirez.programming.kicks-ass.net>
+ <20191120220313.GC18056@pauld.bos.csb>
+ <20191121132937.GW4114@hirez.programming.kicks-ass.net>
+ <20191209165122.GA27229@linux.vnet.ibm.com>
+ <20191209231743.GA19256@dread.disaster.area>
+ <20191210054330.GF27253@linux.vnet.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAJc7PzUmJNNCcMXG3ywjfYvzO2+N3X8_2czjPU1vMKaV-F4Y3A@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+In-Reply-To: <20191210054330.GF27253@linux.vnet.ibm.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-TM-AS-GCONF: 00
+x-cbid: 19121017-0012-0000-0000-000003739155
+X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
+x-cbparentid: 19121017-0013-0000-0000-000021AF64F3
+Message-Id: <20191210172307.GD9139@linux.vnet.ibm.com>
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.95,18.0.572
+ definitions=2019-12-10_05:2019-12-10,2019-12-10 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 clxscore=1015
+ bulkscore=0 spamscore=0 lowpriorityscore=0 adultscore=0 impostorscore=0
+ mlxlogscore=999 mlxscore=0 suspectscore=2 malwarescore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-1910280000 definitions=main-1912100149
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 12/10/19 5:54 AM, Pavel Reichl wrote:
-> Hello,
-> 
-> what do you think about the way 'quiet' var is passed? It doesn't look
-> as natural parameter to 'discard_devices()' and ' discard_blocks' to
-> me. What do you think about making 'quiet' a global variable?
-> Thanks for opinions.
-> 
-> Bye.
+A running task can wake-up a per CPU bound kthread on the same CPU.
+If the current running task doesn't yield the CPU before the next load
+balance operation, the scheduler would detect load imbalance and try to
+balance the load. However this load balance would fail as the waiting
+task is CPU bound, while the running task cannot be moved by the regular
+load balancer. Finally the active load balancer would kick in and move
+the task to a different CPU/Core. Moving the task to a different
+CPU/core can lead to loss in cache affinity leading to poor performance.
 
-That crossed my mind too, but it doesn't bother me much, I think
-it's ok - especially if we can avoid yet another patch version.  ;)
+This is more prone to happen if the current running task is CPU
+intensive and the sched_wake_up_granularity is set to larger value.
+When the sched_wake_up_granularity was relatively small, it was observed
+that the bound thread would complete before the load balancer would have
+chosen to move the cache hot task to a different CPU.
 
--Eric
+To deal with this situation, the current running task would yield to a
+per CPU bound kthread, provided kthread is not CPU intensive.
+
+/pboffline/hwcct_prg_old/lib/fsperf -t overwrite --noclean -f 5g -b 4k /pboffline
+
+(With sched_wake_up_granularity set to 15ms)
+
+Performance counter stats for 'system wide' (5 runs):
+event					    v5.4 				v5.4 + patch(v3)
+probe:active_load_balance_cpu_stop       1,919  ( +-  2.89% )                     4  ( +- 20.48% )
+sched:sched_waking                     441,535  ( +-  0.17% )               914,630  ( +-  0.18% )
+sched:sched_wakeup                     441,533  ( +-  0.17% )               914,630  ( +-  0.18% )
+sched:sched_wakeup_new                   2,436  ( +-  8.08% )                   545  ( +-  4.02% )
+sched:sched_switch                     797,007  ( +-  0.26% )             1,490,261  ( +-  0.10% )
+sched:sched_migrate_task                20,998  ( +-  1.04% )                 2,492  ( +- 11.56% )
+sched:sched_process_free                 2,436  ( +-  7.90% )                   526  ( +-  3.65% )
+sched:sched_process_exit                 2,451  ( +-  7.85% )                   546  ( +-  4.06% )
+sched:sched_wait_task                        7  ( +- 21.20% )                     1  ( +- 40.82% )
+sched:sched_process_wait                 3,951  ( +-  9.14% )                   854  ( +-  5.33% )
+sched:sched_process_fork                 2,435  ( +-  8.09% )                   545  ( +-  3.96% )
+sched:sched_process_exec                 1,023  ( +- 12.21% )                   205  ( +-  5.13% )
+sched:sched_wake_idle_without_ipi      187,794  ( +-  1.14% )               353,579  ( +-  0.42% )
+
+Elasped time in seconds          289.43 +- 1.42 ( +-  0.49% )      72.7318 +- 0.0545 ( +-  0.07% )
+
+Throughput results
+
+v5.4
+Trigger time:................... 0.842679 s   (Throughput:     6075.86 MB/s)
+Asynchronous submit time:.......   1.0184 s   (Throughput:     5027.49 MB/s)
+Synchronous submit time:........        0 s   (Throughput:           0 MB/s)
+I/O time:.......................   263.17 s   (Throughput:      19.455 MB/s)
+Ratio trigger time to I/O time:.0.00320202
+
+v5.4 + patch(v3)
+Trigger time:................... 0.852413 s   (Throughput:     6006.47 MB/s)
+Asynchronous submit time:....... 0.773043 s   (Throughput:     6623.17 MB/s)
+Synchronous submit time:........        0 s   (Throughput:           0 MB/s)
+I/O time:.......................   44.341 s   (Throughput:     115.468 MB/s)
+Ratio trigger time to I/O time:. 0.019224
+
+(With sched_wake_up_granularity set to 4ms)
+
+Performance counter stats for 'system wide' (5 runs):
+event					      v5.4 				    v5.4 + patch(v3)
+probe:active_load_balance_cpu_stop               6  ( +-  6.03% )                      5  ( +- 15.04% )
+sched:sched_waking                         899,880  ( +-  0.38% )                912,625  ( +-  0.41% )
+sched:sched_wakeup                         899,878  ( +-  0.38% )                912,624  ( +-  0.41% )
+sched:sched_wakeup_new                         622  ( +- 11.95% )                    550  ( +-  3.85% )
+sched:sched_switch                       1,458,214  ( +-  0.40% )              1,489,032  ( +-  0.41% )
+sched:sched_migrate_task                     3,120  ( +- 10.00% )                  2,524  ( +-  5.54% )
+sched:sched_process_free                       608  ( +- 12.18% )                    528  ( +-  3.89% )
+sched:sched_process_exit                       623  ( +- 11.91% )                    550  ( +-  3.79% )
+sched:sched_wait_task                            1  ( +- 31.18% )                      1  ( +- 66.67% )
+sched:sched_process_wait                       998  ( +- 13.22% )                    867  ( +-  4.41% )
+sched:sched_process_fork                       622  ( +- 11.95% )                    550  ( +-  3.88% )
+sched:sched_process_exec                       242  ( +- 13.81% )                    208  ( +-  4.57% )
+sched:sched_wake_idle_without_ipi          349,165  ( +-  0.35% )                352,443  ( +-  0.21% )
+
+Elasped time in seconds           72.8560 +- 0.0768 ( +-  0.11% )        72.5523 +- 0.0725 ( +-  0.10% )
+
+Signed-off-by: Srikar Dronamraju <srikar@linux.vnet.ibm.com>
+---
+Changelog:
+v1 : http://lore.kernel.org/lkml/20191209165122.GA27229@linux.vnet.ibm.com
+v2 : http://lore.kernel.org/lkml/20191210054330.GF27253@linux.vnet.ibm.com
+v1->v2: Pass the the right params to try_to_wake_up as correctly pointed out
+by Dave Chinner
+v2->v3: Suggestions from Peter Zijlstra including using vtime over
+context switch and detect per-cpu-kthread in try_to_wake_up
+
+ kernel/sched/core.c  | 3 +++
+ kernel/sched/fair.c  | 2 +-
+ kernel/sched/sched.h | 3 ++-
+ 3 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 44123b4d14e8..03e77e159c27 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -2542,6 +2542,9 @@ try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
+ 		goto out;
+ 	}
+ 
++	if (is_per_cpu_kthread(p))
++		wake_flags |= WF_KTHREAD;
++
+ 	/*
+ 	 * If we are going to wake up a thread waiting for CONDITION we
+ 	 * need to ensure that CONDITION=1 done by the caller can not be
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 69a81a5709ff..8fe40f83804d 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -6716,7 +6716,7 @@ static void check_preempt_wakeup(struct rq *rq, struct task_struct *p, int wake_
+ 	find_matching_se(&se, &pse);
+ 	update_curr(cfs_rq_of(se));
+ 	BUG_ON(!pse);
+-	if (wakeup_preempt_entity(se, pse) == 1) {
++	if (wakeup_preempt_entity(se, pse) >= !(wake_flags & WF_KTHREAD)) {
+ 		/*
+ 		 * Bias pick_next to pick the sched entity that is
+ 		 * triggering this preemption.
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index c8870c5bd7df..fcd1ed5af9a3 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -1643,7 +1643,8 @@ static inline int task_on_rq_migrating(struct task_struct *p)
+  */
+ #define WF_SYNC			0x01		/* Waker goes to sleep after wakeup */
+ #define WF_FORK			0x02		/* Child wakeup after fork */
+-#define WF_MIGRATED		0x4		/* Internal use, task got migrated */
++#define WF_MIGRATED		0x04		/* Internal use, task got migrated */
++#define WF_KTHREAD		0x08		/* Per CPU Kthread */
+ 
+ /*
+  * To aid in avoiding the subversion of "niceness" due to uneven distribution
+-- 
+2.18.1
+
