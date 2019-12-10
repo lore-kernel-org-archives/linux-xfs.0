@@ -2,141 +2,135 @@ Return-Path: <SRS0=hCPB=2A=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83514C2D0BF
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 10:29:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3E76C2D0C6
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 11:02:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 591852073B
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 10:29:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99FA02073B
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 11:02:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="V3T2OjrQ"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Mf3xlkOS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727505AbfLJK31 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Dec 2019 05:29:27 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:60793 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727039AbfLJK30 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Dec 2019 05:29:26 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1575973765;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=jMWFdNn7fGRj5bb8TeBaOUbpmWFLdAqVHKxYwniQW98=;
-        b=V3T2OjrQWePLI/8TwX3p8kUTFGhMMJDu1zjI10oYGPPohkA97ecXvkZIi6cpJxnX0PgoSz
-        YzK/JeVunGQdnER/6dp05ZCNvauNBN9RvrxSBR0Kwh/aCs6R+bLrfL0uH30gGU/kcbtuph
-        GDEcwcAKRV4NV/TSFsmXmW6mKW7yfjg=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-308-xB3QapzcOfqmzqUbwfKu9g-1; Tue, 10 Dec 2019 05:29:22 -0500
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id AC637183B72B;
-        Tue, 10 Dec 2019 10:29:21 +0000 (UTC)
-Received: from max.com (ovpn-205-78.brq.redhat.com [10.40.205.78])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id E385160568;
-        Tue, 10 Dec 2019 10:29:17 +0000 (UTC)
-From:   Andreas Gruenbacher <agruenba@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Andreas Gruenbacher <agruenba@redhat.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, cluster-devel@redhat.com
-Subject: [PATCH] iomap: Export iomap_page_create and iomap_set_range_uptodate
-Date:   Tue, 10 Dec 2019 11:29:16 +0100
-Message-Id: <20191210102916.842-1-agruenba@redhat.com>
+        id S1727149AbfLJLCY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Dec 2019 06:02:24 -0500
+Received: from mail-lj1-f196.google.com ([209.85.208.196]:42415 "EHLO
+        mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727053AbfLJLCY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Dec 2019 06:02:24 -0500
+Received: by mail-lj1-f196.google.com with SMTP id e28so19329348ljo.9
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Dec 2019 03:02:22 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=avT8djgaVLUaP/1BXJuTZBwRdJwwah+0AF+tp3FQZPs=;
+        b=Mf3xlkOSDEXkKBh/xlW95jq/ctKWC6+5W25pp6TESvMuNfvypSGAfYHsVnbPTF1cYg
+         RR0YLlmQ0tYBn9eVo9B5cXn5iQtVmIH73aTUt7+x6qyrXUIoBdS4hBRmUK0eZkDmLkAb
+         EGIAlfTwNBPpLzuweZ8Ri86B/UxW1T1ZRDG8hmX5tHJ5Y5Aildo02kJCV0NHR6AdkbLh
+         NBmHSZGnygxVFb9Yn3M+Ft/tELQKD1dHnNiv4mWLZc6mZCvBM+Tsyr0Wp7Sd2MG1aAHj
+         Tq/GviXZQEHaPzhya05BIy0b3HF1EnJFgiDF4nG2cr+QZRR8UVHE0LLUBd9LPIqUTqH1
+         6QoQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=avT8djgaVLUaP/1BXJuTZBwRdJwwah+0AF+tp3FQZPs=;
+        b=G8RFZdGqIeI0oR9cJbHbswdz5IFnilpvMPj8DdP6XfkC6dqZ9KLvONkQf4IoORwrUa
+         nGI53g9bG6d7W6oiAZdACdxoeJY0UzoYby5a1LD0gtwLISZ1ym19dopzcvvAdpjGOiSH
+         qFwZC+c1Zdm3f7cMK3im+5Zpy17i0jtexk0U3b/KzzEJwQVFBBFX85iwU20cqwwdkF6i
+         3r7dvfjkm71vAFC74LLNSRLBy/lK87np5TwnW4X8EAb4ezBFCtUjcN6LjeIztAbdIcyP
+         LAIwNW4E5n83hmLOJwrfFjbCO5aspMXefsn8cX2XYkD/KPRqbOnjpXYLeliGm9lHPRcT
+         OzWQ==
+X-Gm-Message-State: APjAAAWiX6RetZriewSTHNzmX5l9UG5sQ9T0q+88SRureC43ZoQXcPf3
+        ABqXcz2a7LlJ30L6D5S1Nns72WABaHx1bameJq2DfA==
+X-Google-Smtp-Source: APXvYqzdKySfdTeUTqDZf48QC6nKJjVrzelXQbA5XcMaY5YcawhwrWRM8Td38VBdqI6RgEEmwUiYHkXJsa2/pme7HDg=
+X-Received: by 2002:a2e:9a04:: with SMTP id o4mr21104651lji.214.1575975741445;
+ Tue, 10 Dec 2019 03:02:21 -0800 (PST)
 MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-X-MC-Unique: xB3QapzcOfqmzqUbwfKu9g-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+References: <20191115234005.GO4614@dread.disaster.area> <20191118092121.GV4131@hirez.programming.kicks-ass.net>
+ <20191118204054.GV4614@dread.disaster.area> <20191120191636.GI4097@hirez.programming.kicks-ass.net>
+ <20191120220313.GC18056@pauld.bos.csb> <20191121132937.GW4114@hirez.programming.kicks-ass.net>
+ <20191209165122.GA27229@linux.vnet.ibm.com> <20191209231743.GA19256@dread.disaster.area>
+ <20191210054330.GF27253@linux.vnet.ibm.com> <CAKfTPtCBxV+az30n8E9fRv_HweN_QPJn_ni961OsKp5xUWUD2A@mail.gmail.com>
+ <20191210101116.GA9139@linux.vnet.ibm.com>
+In-Reply-To: <20191210101116.GA9139@linux.vnet.ibm.com>
+From:   Vincent Guittot <vincent.guittot@linaro.org>
+Date:   Tue, 10 Dec 2019 12:02:09 +0100
+Message-ID: <CAKfTPtD1by06eQ=vJhh9SvfegRanSSwQrKPageLGo0OODu9bjg@mail.gmail.com>
+Subject: Re: [PATCH v2] sched/core: Preempt current task in favour of bound kthread
+To:     Srikar Dronamraju <srikar@linux.vnet.ibm.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Phil Auld <pauld@redhat.com>, Ming Lei <ming.lei@redhat.com>,
+        linux-block <linux-block@vger.kernel.org>,
+        linux-fs <linux-fsdevel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Jeff Moyer <jmoyer@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-These two functions are needed by filesystems for converting inline
-("stuffed") inodes into non-inline inodes.
+On Tue, 10 Dec 2019 at 11:11, Srikar Dronamraju
+<srikar@linux.vnet.ibm.com> wrote:
+>
+> * Vincent Guittot <vincent.guittot@linaro.org> [2019-12-10 10:43:46]:
+>
+> > On Tue, 10 Dec 2019 at 06:43, Srikar Dronamraju
+> > <srikar@linux.vnet.ibm.com> wrote:
+> > >
+> > > This is more prone to happen if the current running task is CPU
+> > > intensive and the sched_wake_up_granularity is set to larger value.
+> > > When the sched_wake_up_granularity was relatively small, it was observed
+> > > that the bound thread would complete before the load balancer would have
+> > > chosen to move the cache hot task to a different CPU.
+> > >
+> > > To deal with this situation, the current running task would yield to a
+> > > per CPU bound kthread, provided kthread is not CPU intensive.
+> > >
+> > > /pboffline/hwcct_prg_old/lib/fsperf -t overwrite --noclean -f 5g -b 4k /pboffline
+> > >
+> > > (With sched_wake_up_granularity set to 15ms)
+> >
+> > So you increase sched_wake_up_granularity to a high level to ensure
+> > that current is no preempted by waking thread but then you add a way
+> > to finally preempt it which is somewhat weird IMO
+> >
+>
+> Yes, setting to a smaller value will help mitigate/solve the problem.
+> There may be folks out who have traditionally set a high wake_up_granularity
+> (and have seen better performance with it), who may miss out that when using
+> blk-mq, such settings will cause more harm. And they may continue to see
+> some performance regressions when they move to a lower wake_up_granularity.
+>
+> > Have you tried to increase the priority of workqueue thread  (decrease
+> > nice priority) ? This is the right way to reduce the impact of the
+> > sched_wake_up_granularity on the wakeup of your specific kthread.
+> > Because what you want at the end is keeping a low wakeup granularity
+> > for these io workqueues
+> >
+>
+> Yes, people can tune the priority of workqueue threads and infact it may be
+> easier to set wake_up_granularity to a lower value. However the point is how
+> do we make everyone aware that they are running into a performance issue
+> with a higher wakeup_granularity?
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
----
- fs/iomap/buffered-io.c | 6 ++++--
- include/linux/iomap.h  | 5 +++++
- 2 files changed, 9 insertions(+), 2 deletions(-)
+I did the test on my local setup to change the nice priority of io
+workqueue and the active migrations are removed even with high
+wakeup_granularity because IO workqueue can still preempt normal task
+but let other workqueue behave normally.
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 828444e14d09..e8f6d7ba4e3c 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -41,7 +41,7 @@ static inline struct iomap_page *to_iomap_page(struct pag=
-e *page)
-=20
- static struct bio_set iomap_ioend_bioset;
-=20
--static struct iomap_page *
-+struct iomap_page *
- iomap_page_create(struct inode *inode, struct page *page)
- {
- =09struct iomap_page *iop =3D to_iomap_page(page);
-@@ -64,6 +64,7 @@ iomap_page_create(struct inode *inode, struct page *page)
- =09SetPagePrivate(page);
- =09return iop;
- }
-+EXPORT_SYMBOL(iomap_page_create);
-=20
- static void
- iomap_page_release(struct page *page)
-@@ -164,7 +165,7 @@ iomap_iop_set_range_uptodate(struct page *page, unsigne=
-d off, unsigned len)
- =09spin_unlock_irqrestore(&iop->uptodate_lock, flags);
- }
-=20
--static void
-+void
- iomap_set_range_uptodate(struct page *page, unsigned off, unsigned len)
- {
- =09if (PageError(page))
-@@ -175,6 +176,7 @@ iomap_set_range_uptodate(struct page *page, unsigned of=
-f, unsigned len)
- =09else
- =09=09SetPageUptodate(page);
- }
-+EXPORT_SYMBOL(iomap_set_range_uptodate);
-=20
- static void
- iomap_read_finish(struct iomap_page *iop, struct page *page)
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 8b09463dae0d..b00f9bc396b1 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -13,6 +13,7 @@
- struct address_space;
- struct fiemap_extent_info;
- struct inode;
-+struct iomap_page;
- struct iomap_writepage_ctx;
- struct iov_iter;
- struct kiocb;
-@@ -152,6 +153,10 @@ loff_t iomap_apply(struct inode *inode, loff_t pos, lo=
-ff_t length,
- =09=09unsigned flags, const struct iomap_ops *ops, void *data,
- =09=09iomap_actor_t actor);
-=20
-+struct iomap_page *iomap_page_create(struct inode *inode, struct page *pag=
-e);
-+void iomap_set_range_uptodate(struct page *page, unsigned off, unsigned le=
-n);
-+
-+
- ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *fro=
-m,
- =09=09const struct iomap_ops *ops);
- int iomap_readpage(struct page *page, const struct iomap_ops *ops);
---=20
-2.20.1
-
+>
+> --
+> Thanks and Regards
+> Srikar Dronamraju
+>
