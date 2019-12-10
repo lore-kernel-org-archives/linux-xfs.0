@@ -2,58 +2,56 @@ Return-Path: <SRS0=hCPB=2A=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E63FEC43603
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 10:19:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83514C2D0BF
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 10:29:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B87ED2073D
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 10:19:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 591852073B
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 10:29:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gJLm7tpO"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="V3T2OjrQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727127AbfLJKTu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Dec 2019 05:19:50 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:23013 "EHLO
+        id S1727505AbfLJK31 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Dec 2019 05:29:27 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:60793 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726574AbfLJKTu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Dec 2019 05:19:50 -0500
+        with ESMTP id S1727039AbfLJK30 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Dec 2019 05:29:26 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1575973189;
+        s=mimecast20190719; t=1575973765;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding;
-        bh=Y/w2qhmNAwfkY23Bzoz2XeeZ7eRtN89B7DbfBPq1VRk=;
-        b=gJLm7tpOmnYUWnK+phaCS+ZilSNAeqL6pAT1Z6ZOf9ZuIgNjHMkrWIz14Y2L5FEKqly+6+
-        fM1NsAC9RcTc2LVIePffYg67KRi+XHjfrZZjK4MI+WZzFIHTofQk3JwmLxW2lBIlt6Ads1
-        UGzs6f7x0dHTGH6g88rShpXH+Ev6DC8=
+        bh=jMWFdNn7fGRj5bb8TeBaOUbpmWFLdAqVHKxYwniQW98=;
+        b=V3T2OjrQWePLI/8TwX3p8kUTFGhMMJDu1zjI10oYGPPohkA97ecXvkZIi6cpJxnX0PgoSz
+        YzK/JeVunGQdnER/6dp05ZCNvauNBN9RvrxSBR0Kwh/aCs6R+bLrfL0uH30gGU/kcbtuph
+        GDEcwcAKRV4NV/TSFsmXmW6mKW7yfjg=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-280-MdVMg5dBOOa6bR0IITRhKA-1; Tue, 10 Dec 2019 05:19:48 -0500
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+ us-mta-308-xB3QapzcOfqmzqUbwfKu9g-1; Tue, 10 Dec 2019 05:29:22 -0500
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 60407800EC0;
-        Tue, 10 Dec 2019 10:19:45 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id AC637183B72B;
+        Tue, 10 Dec 2019 10:29:21 +0000 (UTC)
 Received: from max.com (ovpn-205-78.brq.redhat.com [10.40.205.78])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 6A0CA5D6D4;
-        Tue, 10 Dec 2019 10:19:41 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id E385160568;
+        Tue, 10 Dec 2019 10:29:17 +0000 (UTC)
 From:   Andreas Gruenbacher <agruenba@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     Andreas Gruenbacher <agruenba@redhat.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        cluster-devel <cluster-devel@redhat.com>
-Subject: Re: [PATCH 15/15] gfs2: use iomap for buffered I/O in ordered and writeback mode
-Date:   Tue, 10 Dec 2019 11:19:38 +0100
-Message-Id: <20191210101938.495-1-agruenba@redhat.com>
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, cluster-devel@redhat.com
+Subject: [PATCH] iomap: Export iomap_page_create and iomap_set_range_uptodate
+Date:   Tue, 10 Dec 2019 11:29:16 +0100
+Message-Id: <20191210102916.842-1-agruenba@redhat.com>
 MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
-X-MC-Unique: MdVMg5dBOOa6bR0IITRhKA-1
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+X-MC-Unique: xB3QapzcOfqmzqUbwfKu9g-1
 X-Mimecast-Spam-Score: 0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
@@ -62,83 +60,83 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Christoph,
+These two functions are needed by filesystems for converting inline
+("stuffed") inodes into non-inline inodes.
 
-On Mon, Sep 30, 2019 at 10:49 PM Andreas Gruenbacher <agruenba@redhat.com> =
-wrote:
-> On Tue, Aug 6, 2019 at 7:30 AM Christoph Hellwig <hch@lst.de> wrote:
-> > On Mon, Aug 05, 2019 at 02:27:21PM +0200, Andreas Gruenbacher wrote:
-> here are the changes we currently need on top of what you've posted on
-> July 1.  [...]
-
-again, thank you for this patch.  After fixing some related bugs around thi=
-s
-change, it seems I've finally got this to work properly.  Below are the min=
-or
-changes I needed to make on top of your version.
-
-This requires functions iomap_page_create and iomap_set_range_uptodate to b=
-e
-exported; i'll post a patch for that sepatately.
-
-The result can be found here:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/gfs2/linux-gfs2.git for-next.=
-iomap
-
-Thanks,
-Andreas
-
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 ---
- fs/gfs2/bmap.c | 6 ++++--
- fs/gfs2/file.c | 2 ++
- 2 files changed, 6 insertions(+), 2 deletions(-)
+ fs/iomap/buffered-io.c | 6 ++++--
+ include/linux/iomap.h  | 5 +++++
+ 2 files changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/fs/gfs2/bmap.c b/fs/gfs2/bmap.c
-index 168ac5147dd0..fcd2043fc466 100644
---- a/fs/gfs2/bmap.c
-+++ b/fs/gfs2/bmap.c
-@@ -75,13 +75,12 @@ static int gfs2_unstuffer_page(struct gfs2_inode *ip, s=
-truct buffer_head *dibh,
- =09=09memcpy(kaddr, dibh->b_data + sizeof(struct gfs2_dinode), dsize);
- =09=09memset(kaddr + dsize, 0, PAGE_SIZE - dsize);
- =09=09kunmap(page);
--
--=09=09SetPageUptodate(page);
- =09}
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 828444e14d09..e8f6d7ba4e3c 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -41,7 +41,7 @@ static inline struct iomap_page *to_iomap_page(struct pag=
+e *page)
 =20
- =09if (gfs2_is_jdata(ip)) {
- =09=09struct buffer_head *bh;
+ static struct bio_set iomap_ioend_bioset;
 =20
-+=09=09SetPageUptodate(page);
- =09=09if (!page_has_buffers(page))
- =09=09=09create_empty_buffers(page, BIT(inode->i_blkbits),
- =09=09=09=09=09     BIT(BH_Uptodate));
-@@ -93,6 +92,9 @@ static int gfs2_unstuffer_page(struct gfs2_inode *ip, str=
-uct buffer_head *dibh,
- =09=09set_buffer_uptodate(bh);
- =09=09gfs2_trans_add_data(ip->i_gl, bh);
- =09} else {
-+=09=09iomap_page_create(inode, page);
-+=09=09iomap_set_range_uptodate(page, 0, i_blocksize(inode));
-+=09=09set_page_dirty(page);
- =09=09gfs2_ordered_add_inode(ip);
- =09}
+-static struct iomap_page *
++struct iomap_page *
+ iomap_page_create(struct inode *inode, struct page *page)
+ {
+ =09struct iomap_page *iop =3D to_iomap_page(page);
+@@ -64,6 +64,7 @@ iomap_page_create(struct inode *inode, struct page *page)
+ =09SetPagePrivate(page);
+ =09return iop;
+ }
++EXPORT_SYMBOL(iomap_page_create);
 =20
-diff --git a/fs/gfs2/file.c b/fs/gfs2/file.c
-index 9d58295ccf7a..9af352ebc904 100644
---- a/fs/gfs2/file.c
-+++ b/fs/gfs2/file.c
-@@ -555,6 +555,8 @@ static vm_fault_t gfs2_page_mkwrite(struct vm_fault *vm=
-f)
- out_uninit:
- =09gfs2_holder_uninit(&gh);
- =09if (ret =3D=3D 0) {
-+=09=09if (!gfs2_is_jdata(ip))
-+=09=09=09iomap_page_create(inode, page);
- =09=09set_page_dirty(page);
- =09=09wait_for_stable_page(page);
- =09}
+ static void
+ iomap_page_release(struct page *page)
+@@ -164,7 +165,7 @@ iomap_iop_set_range_uptodate(struct page *page, unsigne=
+d off, unsigned len)
+ =09spin_unlock_irqrestore(&iop->uptodate_lock, flags);
+ }
+=20
+-static void
++void
+ iomap_set_range_uptodate(struct page *page, unsigned off, unsigned len)
+ {
+ =09if (PageError(page))
+@@ -175,6 +176,7 @@ iomap_set_range_uptodate(struct page *page, unsigned of=
+f, unsigned len)
+ =09else
+ =09=09SetPageUptodate(page);
+ }
++EXPORT_SYMBOL(iomap_set_range_uptodate);
+=20
+ static void
+ iomap_read_finish(struct iomap_page *iop, struct page *page)
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 8b09463dae0d..b00f9bc396b1 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -13,6 +13,7 @@
+ struct address_space;
+ struct fiemap_extent_info;
+ struct inode;
++struct iomap_page;
+ struct iomap_writepage_ctx;
+ struct iov_iter;
+ struct kiocb;
+@@ -152,6 +153,10 @@ loff_t iomap_apply(struct inode *inode, loff_t pos, lo=
+ff_t length,
+ =09=09unsigned flags, const struct iomap_ops *ops, void *data,
+ =09=09iomap_actor_t actor);
+=20
++struct iomap_page *iomap_page_create(struct inode *inode, struct page *pag=
+e);
++void iomap_set_range_uptodate(struct page *page, unsigned off, unsigned le=
+n);
++
++
+ ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *fro=
+m,
+ =09=09const struct iomap_ops *ops);
+ int iomap_readpage(struct page *page, const struct iomap_ops *ops);
 --=20
 2.20.1
 
