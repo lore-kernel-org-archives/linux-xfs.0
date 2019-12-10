@@ -2,120 +2,143 @@ Return-Path: <SRS0=hCPB=2A=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F00CC2D0BF
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 10:18:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E63FEC43603
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 10:19:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4BF2C2053B
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 10:18:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B87ED2073D
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 10:19:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gJLm7tpO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727387AbfLJKS6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Dec 2019 05:18:58 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:57498 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727177AbfLJKS6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Dec 2019 05:18:58 -0500
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id xBAAHf6F139016
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Dec 2019 05:18:57 -0500
-Received: from e06smtp02.uk.ibm.com (e06smtp02.uk.ibm.com [195.75.94.98])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2wrt9y2bj0-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Dec 2019 05:18:57 -0500
-Received: from localhost
-        by e06smtp02.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <srikar@linux.vnet.ibm.com>;
-        Tue, 10 Dec 2019 10:18:55 -0000
-Received: from b06avi18626390.portsmouth.uk.ibm.com (9.149.26.192)
-        by e06smtp02.uk.ibm.com (192.168.101.132) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
-        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Tue, 10 Dec 2019 10:18:51 -0000
-Received: from d06av24.portsmouth.uk.ibm.com (mk.ibm.com [9.149.105.60])
-        by b06avi18626390.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id xBAAI8Sh24052094
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 10 Dec 2019 10:18:08 GMT
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 2B8CB42045;
-        Tue, 10 Dec 2019 10:18:50 +0000 (GMT)
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 701234204D;
-        Tue, 10 Dec 2019 10:18:47 +0000 (GMT)
-Received: from linux.vnet.ibm.com (unknown [9.126.150.29])
-        by d06av24.portsmouth.uk.ibm.com (Postfix) with SMTP;
-        Tue, 10 Dec 2019 10:18:47 +0000 (GMT)
-Date:   Tue, 10 Dec 2019 15:48:46 +0530
-From:   Srikar Dronamraju <srikar@linux.vnet.ibm.com>
-To:     Peter Zijlstra <peterz@infradead.org>
-Cc:     Dave Chinner <david@fromorbit.com>, Phil Auld <pauld@redhat.com>,
-        Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Eric Sandeen <sandeen@redhat.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-        Vincent Guittot <vincent.guittot@linaro.org>
-Subject: Re: [PATCH v2] sched/core: Preempt current task in favour of bound
- kthread
-Reply-To: Srikar Dronamraju <srikar@linux.vnet.ibm.com>
-References: <20191118092121.GV4131@hirez.programming.kicks-ass.net>
- <20191118204054.GV4614@dread.disaster.area>
- <20191120191636.GI4097@hirez.programming.kicks-ass.net>
- <20191120220313.GC18056@pauld.bos.csb>
- <20191121132937.GW4114@hirez.programming.kicks-ass.net>
- <20191209165122.GA27229@linux.vnet.ibm.com>
- <20191209231743.GA19256@dread.disaster.area>
- <20191210054330.GF27253@linux.vnet.ibm.com>
- <20191210092601.GK2844@hirez.programming.kicks-ass.net>
- <20191210093338.GF2871@hirez.programming.kicks-ass.net>
+        id S1727127AbfLJKTu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Dec 2019 05:19:50 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:23013 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726574AbfLJKTu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Dec 2019 05:19:50 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1575973189;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=Y/w2qhmNAwfkY23Bzoz2XeeZ7eRtN89B7DbfBPq1VRk=;
+        b=gJLm7tpOmnYUWnK+phaCS+ZilSNAeqL6pAT1Z6ZOf9ZuIgNjHMkrWIz14Y2L5FEKqly+6+
+        fM1NsAC9RcTc2LVIePffYg67KRi+XHjfrZZjK4MI+WZzFIHTofQk3JwmLxW2lBIlt6Ads1
+        UGzs6f7x0dHTGH6g88rShpXH+Ev6DC8=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-280-MdVMg5dBOOa6bR0IITRhKA-1; Tue, 10 Dec 2019 05:19:48 -0500
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 60407800EC0;
+        Tue, 10 Dec 2019 10:19:45 +0000 (UTC)
+Received: from max.com (ovpn-205-78.brq.redhat.com [10.40.205.78])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 6A0CA5D6D4;
+        Tue, 10 Dec 2019 10:19:41 +0000 (UTC)
+From:   Andreas Gruenbacher <agruenba@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Andreas Gruenbacher <agruenba@redhat.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        cluster-devel <cluster-devel@redhat.com>
+Subject: Re: [PATCH 15/15] gfs2: use iomap for buffered I/O in ordered and writeback mode
+Date:   Tue, 10 Dec 2019 11:19:38 +0100
+Message-Id: <20191210101938.495-1-agruenba@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-In-Reply-To: <20191210093338.GF2871@hirez.programming.kicks-ass.net>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-TM-AS-GCONF: 00
-x-cbid: 19121010-0008-0000-0000-0000033F6A17
-X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 19121010-0009-0000-0000-00004A5E9A5F
-Message-Id: <20191210101846.GC9139@linux.vnet.ibm.com>
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.95,18.0.572
- definitions=2019-12-10_01:2019-12-10,2019-12-10 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 clxscore=1015
- suspectscore=0 mlxscore=0 spamscore=0 priorityscore=1501 malwarescore=0
- adultscore=0 phishscore=0 lowpriorityscore=0 impostorscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-1910280000 definitions=main-1912100091
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-MC-Unique: MdVMg5dBOOa6bR0IITRhKA-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-* Peter Zijlstra <peterz@infradead.org> [2019-12-10 10:33:38]:
+Hi Christoph,
 
-> On Tue, Dec 10, 2019 at 10:26:01AM +0100, Peter Zijlstra wrote:
-> 
-> > > @@ -6716,7 +6737,7 @@ static void check_preempt_wakeup(struct rq *rq, struct task_struct *p, int wake_
-> > >  	find_matching_se(&se, &pse);
-> > >  	update_curr(cfs_rq_of(se));
-> > >  	BUG_ON(!pse);
-> > > -	if (wakeup_preempt_entity(se, pse) == 1) {
-> > > +	if (wakeup_preempt_entity(se, pse) == 1 || kthread_wakeup_preempt(rq, p, wake_flags)) {
-> > >  		/*
-> > >  		 * Bias pick_next to pick the sched entity that is
-> > >  		 * triggering this preemption.
-> > 
-> > How about something like:
-> > 
-> 	if (wakeup_preempt_entity(se, pse) >= !(wake_flags & WF_KTHREAD))
->
-> That's a slightly less convoluted expression for the same value :-)	
+On Mon, Sep 30, 2019 at 10:49 PM Andreas Gruenbacher <agruenba@redhat.com> =
+wrote:
+> On Tue, Aug 6, 2019 at 7:30 AM Christoph Hellwig <hch@lst.de> wrote:
+> > On Mon, Aug 05, 2019 at 02:27:21PM +0200, Andreas Gruenbacher wrote:
+> here are the changes we currently need on top of what you've posted on
+> July 1.  [...]
 
-Yes, this should work, let me try and get back to you.
+again, thank you for this patch.  After fixing some related bugs around thi=
+s
+change, it seems I've finally got this to work properly.  Below are the min=
+or
+changes I needed to make on top of your version.
 
--- 
-Thanks and Regards
-Srikar Dronamraju
+This requires functions iomap_page_create and iomap_set_range_uptodate to b=
+e
+exported; i'll post a patch for that sepatately.
+
+The result can be found here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/gfs2/linux-gfs2.git for-next.=
+iomap
+
+Thanks,
+Andreas
+
+---
+ fs/gfs2/bmap.c | 6 ++++--
+ fs/gfs2/file.c | 2 ++
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/fs/gfs2/bmap.c b/fs/gfs2/bmap.c
+index 168ac5147dd0..fcd2043fc466 100644
+--- a/fs/gfs2/bmap.c
++++ b/fs/gfs2/bmap.c
+@@ -75,13 +75,12 @@ static int gfs2_unstuffer_page(struct gfs2_inode *ip, s=
+truct buffer_head *dibh,
+ =09=09memcpy(kaddr, dibh->b_data + sizeof(struct gfs2_dinode), dsize);
+ =09=09memset(kaddr + dsize, 0, PAGE_SIZE - dsize);
+ =09=09kunmap(page);
+-
+-=09=09SetPageUptodate(page);
+ =09}
+=20
+ =09if (gfs2_is_jdata(ip)) {
+ =09=09struct buffer_head *bh;
+=20
++=09=09SetPageUptodate(page);
+ =09=09if (!page_has_buffers(page))
+ =09=09=09create_empty_buffers(page, BIT(inode->i_blkbits),
+ =09=09=09=09=09     BIT(BH_Uptodate));
+@@ -93,6 +92,9 @@ static int gfs2_unstuffer_page(struct gfs2_inode *ip, str=
+uct buffer_head *dibh,
+ =09=09set_buffer_uptodate(bh);
+ =09=09gfs2_trans_add_data(ip->i_gl, bh);
+ =09} else {
++=09=09iomap_page_create(inode, page);
++=09=09iomap_set_range_uptodate(page, 0, i_blocksize(inode));
++=09=09set_page_dirty(page);
+ =09=09gfs2_ordered_add_inode(ip);
+ =09}
+=20
+diff --git a/fs/gfs2/file.c b/fs/gfs2/file.c
+index 9d58295ccf7a..9af352ebc904 100644
+--- a/fs/gfs2/file.c
++++ b/fs/gfs2/file.c
+@@ -555,6 +555,8 @@ static vm_fault_t gfs2_page_mkwrite(struct vm_fault *vm=
+f)
+ out_uninit:
+ =09gfs2_holder_uninit(&gh);
+ =09if (ret =3D=3D 0) {
++=09=09if (!gfs2_is_jdata(ip))
++=09=09=09iomap_page_create(inode, page);
+ =09=09set_page_dirty(page);
+ =09=09wait_for_stable_page(page);
+ =09}
+--=20
+2.20.1
 
