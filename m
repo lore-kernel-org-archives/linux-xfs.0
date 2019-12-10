@@ -2,87 +2,112 @@ Return-Path: <SRS0=hCPB=2A=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B75A5C43603
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 20:39:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85BCFC43603
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 21:26:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7D1612073B
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 20:39:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5A882205C9
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Dec 2019 21:26:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="S2u2O29j"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="qRuA9OX6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726595AbfLJUjo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Dec 2019 15:39:44 -0500
-Received: from mail-io1-f68.google.com ([209.85.166.68]:34296 "EHLO
-        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726500AbfLJUjn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Dec 2019 15:39:43 -0500
-Received: by mail-io1-f68.google.com with SMTP id z193so20262967iof.1;
-        Tue, 10 Dec 2019 12:39:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=bsqk4VJkWtF4RP8nPi1lbsDlBgE+mpnymQwD2RqlmNg=;
-        b=S2u2O29jLqFmq7SzoyWAWbFrMwPV8AOmdG39L67/zuYibMBPOBHNwuHUx1bg7biMgs
-         wU34ec6Dz6QUCNcnHXfWE3ohXarzmbiuycF6E7widu4Haaf0CqMv+m/ySf7pF+os+xC3
-         1Iu9BZc+jpykhDPK7/u2N19ptt1zY06OYxlHxp3hA5pB9pKZ0jSEUcw9BLgi4Rd03agz
-         yGjIWi0BY93LEUUc2cHYVOQTkddvE9Qoa1bw5iEHyaaQoqNKjnQKtHc8ZtPshmNWceFW
-         ZLYof7uva9iHuM/fy+G/M0QYKVRimSBguQu0gyyeSKVxfImdHBsAOkhCQLaH8ANvSwuj
-         oDFg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=bsqk4VJkWtF4RP8nPi1lbsDlBgE+mpnymQwD2RqlmNg=;
-        b=OE/MGqeUIY88QmUay6MT9cmeDixwTtKWEGSZRwCK3l23efkB5BneZ4ANiJvQKdrzm3
-         qoLC61zzNPGauYTJ6B/DYCkRlSoEpJ1lWJi0n0q/kDbBLEeU2wQ3/d+DutiltCohgoeY
-         ekP0zjfAE7dDhQrLxNUyylf3a5N5i4HSEKSW0YjsOLrSLa9zuUxw673/ujrGD1UAih4U
-         qlGHkugBsXiYfx7SngCbdkVsmf+r6PJZSy0Cb0G/5oNMbSISqsz/fQTdxi0ELwKYmX57
-         RsVrcQp/9GYpahfHpNLtRLyFhDjwv4LPrpPRdk+1cD4jVZKVbtHHSa9ZygYEZ2M2O2PV
-         VM8A==
-X-Gm-Message-State: APjAAAWijpUC5Sl5bUboZ3CS4EMLXvgN7PT7ZNW1Seg+SA1ulH1EaxaN
-        U4otL9dwx0L5E1CoWQM8LDSOLF25LLNH8VQM/g0mLw==
-X-Google-Smtp-Source: APXvYqyP0umcK6/NGlARwhAvGSO8AShQiGPMBbXCr9EH0GjTecu2zkLYdTh2RN9j3nmbWNpI/jb3aYR7yoLzCRpaAMM=
-X-Received: by 2002:a5e:c314:: with SMTP id a20mr27452642iok.300.1576010382879;
- Tue, 10 Dec 2019 12:39:42 -0800 (PST)
-MIME-Version: 1.0
-References: <20191210102916.842-1-agruenba@redhat.com> <20191210203252.GA99875@magnolia>
-In-Reply-To: <20191210203252.GA99875@magnolia>
-From:   =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
-Date:   Tue, 10 Dec 2019 21:39:31 +0100
-Message-ID: <CAHpGcMJMgttnXu48wHnP-WqdPkuXBaFd+COKV9XiRP6VrtRUVg@mail.gmail.com>
-Subject: Re: [PATCH] iomap: Export iomap_page_create and iomap_set_range_uptodate
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     Andreas Gruenbacher <agruenba@redhat.com>,
+        id S1728624AbfLJV0J (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Dec 2019 16:26:09 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:59326 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727686AbfLJV0I (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Dec 2019 16:26:08 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBALP42H085099;
+        Tue, 10 Dec 2019 21:25:54 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ content-transfer-encoding : in-reply-to; s=corp-2019-08-05;
+ bh=LRKUalzriL5ok3aXCwAsAQdRDswfuxXEmRoEL5R3TtY=;
+ b=qRuA9OX6Lqg8zmfw57L2wmzOrVMWgVD9OI0uuHugWGpz0CV8TJnGmoNqnr7/dGFNmQNu
+ D9HL4m90Vv46Ux8ckl6W/e6ofx9mnh4Bp+m1QJFkI0UeVRqGHxh+WgN1sGEm1ytHIy6x
+ JRbMFbaSmf/J5yNWFqMTuGH/TQT3/bAyWvgTJ4/CMqZNQVRo5bZqWTzXyUVIz7ALDB/u
+ kY1BHyD0m4u/K+ZR/VNJlt5lL96+BSeuP2ajYHmmDZnDETCDcCH+pmD2Vxk4I7KQpiAR
+ HaSbeRCCqkE8AdUzbW8kTLuHiUzPqtObUalrZZY3D8alSwPtjI1DXKtmGVsEnd8YOm0H MA== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2wr41q8w2a-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 10 Dec 2019 21:25:54 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBALLnFo141716;
+        Tue, 10 Dec 2019 21:25:54 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 2wt6bdwp09-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 10 Dec 2019 21:25:53 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xBALPrXC020312;
+        Tue, 10 Dec 2019 21:25:53 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 10 Dec 2019 13:25:53 -0800
+Date:   Tue, 10 Dec 2019 13:25:52 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Andreas =?iso-8859-1?Q?Gr=FCnbacher?= 
+        <andreas.gruenbacher@gmail.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
         linux-xfs <linux-xfs@vger.kernel.org>,
         Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         cluster-devel <cluster-devel@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [PATCH] iomap: Export iomap_page_create and
+ iomap_set_range_uptodate
+Message-ID: <20191210212552.GC99875@magnolia>
+References: <20191210102916.842-1-agruenba@redhat.com>
+ <20191210203252.GA99875@magnolia>
+ <CAHpGcMJMgttnXu48wHnP-WqdPkuXBaFd+COKV9XiRP6VrtRUVg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAHpGcMJMgttnXu48wHnP-WqdPkuXBaFd+COKV9XiRP6VrtRUVg@mail.gmail.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9467 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-1912100176
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9467 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-1912100177
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Am Di., 10. Dez. 2019 um 21:33 Uhr schrieb Darrick J. Wong
-<darrick.wong@oracle.com>:
-> On Tue, Dec 10, 2019 at 11:29:16AM +0100, Andreas Gruenbacher wrote:
-> > These two functions are needed by filesystems for converting inline
-> > ("stuffed") inodes into non-inline inodes.
+On Tue, Dec 10, 2019 at 09:39:31PM +0100, Andreas Grünbacher wrote:
+> Am Di., 10. Dez. 2019 um 21:33 Uhr schrieb Darrick J. Wong
+> <darrick.wong@oracle.com>:
+> > On Tue, Dec 10, 2019 at 11:29:16AM +0100, Andreas Gruenbacher wrote:
+> > > These two functions are needed by filesystems for converting inline
+> > > ("stuffed") inodes into non-inline inodes.
+> > >
+> > > Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 > >
-> > Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
->
-> Looks fine to me... this is a 5.6 change, correct?
+> > Looks fine to me... this is a 5.6 change, correct?
+> 
+> Yes, so there's still plenty of time to get things in place until
+> then. I'd like to hear from Christoph if he has any objections. In any
+> case, this patch isn't going to break anything.
 
-Yes, so there's still plenty of time to get things in place until
-then. I'd like to hear from Christoph if he has any objections. In any
-case, this patch isn't going to break anything.
+By the way, the other symbols in fs/iomap/ are all EXPORT_SYMBOL_GPL.
+Does gfs2/RH/anyone have a particular requirement for EXPORT_SYMBOL, or
+could we make the new exports _GPL to match the rest?
 
-Thanks,
-Andreas
+--D
+
+> Thanks,
+> Andreas
