@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AACDC04E30
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B333CC3F68F
 	for <linux-xfs@archiver.kernel.org>; Thu, 12 Dec 2019 04:15:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E3FB82464B
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Dec 2019 04:15:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B4402464B
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Dec 2019 04:15:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="SVid3ZDs"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="gJo8ZYFL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727795AbfLLEPb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Dec 2019 23:15:31 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:48448 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727541AbfLLEPb (ORCPT
+        id S1727507AbfLLEPc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Dec 2019 23:15:32 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:45878 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726413AbfLLEPb (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Dec 2019 23:15:31 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBC4EfBF144767
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Dec 2019 04:15:29 GMT
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBC4EMgq130936
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Dec 2019 04:15:31 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
  date : message-id : in-reply-to : references; s=corp-2019-08-05;
- bh=QHmyw6+1seDQsjsz+7LMb3t2gT8TS3nFWSCOq/e7sgE=;
- b=SVid3ZDsrgcg1T/cnqE2n1pJJzUmo2fpttUdxgbvQ8OD629dS/7DK63WI/YkO1/YThaP
- xsChoKeBuw2AVZ8K9lmZQTqswnl8PDwDvVyjnNkFUxrUCbd89UfPNoEEWamx6CNTKl/A
- Prf0Jp+83oY7oqlX/Etq2fqDnKxWSoOsWpIb3ZYvatczbOU0sDBmLHplp1jeUQSu6WJI
- ZirQXEP4SF3CfnJD8FJ444u+nosxilaZNP37mk2t1TDdHG+mBV8WHMQ/YrzkZfqgdMRA
- U/FkFcbR5acFMrnwi9KO724z7nmpPplpDl0jk8Cg0JyA4zFzoSglDPatYos+TVVJukRv vg== 
+ bh=VEoDFTH/HtYFG1uGYAIXiNF20YMMfMjTczDDfpPVuVE=;
+ b=gJo8ZYFLXh1TxVsEBsvaF96PUjqEYisR7rNoywuG+qrzysOr8ldJfTO7aK3I30bXewIh
+ /b3QsW3+UfGCvPpt0/QPCGOWbskAi7eNHE+OhQ1CvwUoR/c06oG9DOy3dR+PwYj07XKh
+ OI9ONb2xzWZQheyo0CsedrtoPpwoHZjbUbBa1bNGIHVYzCjRX8HZboN5M86Yt/GqOOw4
+ LZI+ladummCQKkfgk++eTLuM5tyogYOZtm8Cv/W4srfysFBKoOovUf15eOuMRYGKFEBR
+ NZ6+mPq9UQ66a7i/sSQ79msEYyBVw4B58Fw0dsj/wkWK0QCUtJU8/UbJUuBDziaVltjt oA== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2wrw4ndbe5-1
+        by aserp2120.oracle.com with ESMTP id 2wr41qggrs-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Dec 2019 04:15:29 +0000
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Dec 2019 04:15:30 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBC4E6hS128104
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Dec 2019 04:15:28 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 2wu5cs3db1-1
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBC4E7kS128168
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Dec 2019 04:15:30 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 2wu5cs3dbq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Dec 2019 04:15:28 +0000
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Dec 2019 04:15:30 +0000
 Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xBC4FSFl017135
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Dec 2019 04:15:28 GMT
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xBC4FTQ6003632
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Dec 2019 04:15:29 GMT
 Received: from localhost.localdomain (/67.1.205.161)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 11 Dec 2019 20:15:28 -0800
+        with ESMTP ; Wed, 11 Dec 2019 20:15:29 -0800
 From:   Allison Collins <allison.henderson@oracle.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v5 07/14] xfs: Factor out xfs_attr_leaf_addname helper
-Date:   Wed, 11 Dec 2019 21:15:06 -0700
-Message-Id: <20191212041513.13855-8-allison.henderson@oracle.com>
+Subject: [PATCH v5 10/14] xfs: Factor out xfs_attr_rmtval_invalidate
+Date:   Wed, 11 Dec 2019 21:15:09 -0700
+Message-Id: <20191212041513.13855-11-allison.henderson@oracle.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20191212041513.13855-1-allison.henderson@oracle.com>
 References: <20191212041513.13855-1-allison.henderson@oracle.com>
@@ -73,136 +73,93 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Factor out new helper function xfs_attr_leaf_try_add.
 Because new delayed attribute routines cannot roll
 transactions, we carve off the parts of
-xfs_attr_leaf_addname that we can use.  This will help
-to reduce repetitive code later when we introduce
-delayed attributes.
+xfs_attr_rmtval_remove that we can use.  This will help to
+reduce repetitive code later when we introduce delayed
+attributes.
 
 Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr.c | 83 ++++++++++++++++++++++++++++--------------------
- 1 file changed, 49 insertions(+), 34 deletions(-)
+ fs/xfs/libxfs/xfs_attr_remote.c | 30 +++++++++++++++++++++---------
+ fs/xfs/libxfs/xfs_attr_remote.h |  1 +
+ 2 files changed, 22 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index ee973d2..36f6a43 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -305,10 +305,30 @@ xfs_attr_set_args(
- 		}
- 	}
- 
--	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
-+	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
- 		error = xfs_attr_leaf_addname(args);
--	else
--		error = xfs_attr_node_addname(args);
-+		if (error == 0 || error != -ENOSPC)
-+			return 0;
-+
-+		/*
-+		 * Commit that transaction so that the node_addname()
-+		 * call can manage its own transactions.
-+		 */
-+		error = xfs_defer_finish(&args->trans);
-+		if (error)
-+			return error;
-+
-+		/*
-+		 * Commit the current trans (including the inode) and
-+		 * start a new one.
-+		 */
-+		error = xfs_trans_roll_inode(&args->trans, dp);
-+		if (error)
-+			return error;
-+
-+	}
-+
-+	error = xfs_attr_node_addname(args);
- 	return error;
+diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+index 21f0001..bde1484 100644
+--- a/fs/xfs/libxfs/xfs_attr_remote.c
++++ b/fs/xfs/libxfs/xfs_attr_remote.c
+@@ -589,21 +589,14 @@ xfs_attr_rmtval_set_value(
+ 	return 0;
  }
  
-@@ -606,21 +626,12 @@ xfs_attr_shortform_addname(xfs_da_args_t *args)
-  * External routines when attribute list is one block
-  *========================================================================*/
- 
 -/*
-- * Add a name to the leaf attribute list structure
-- *
-- * This leaf block cannot have a "remote" value, we only call this routine
-- * if bmap_one_block() says there is only one block (ie: no remote blks).
+- * Remove the value associated with an attribute by deleting the
+- * out-of-line buffer that it is stored on.
 - */
- STATIC int
--xfs_attr_leaf_addname(
--	struct xfs_da_args	*args)
-+xfs_attr_leaf_try_add(
-+	struct xfs_da_args	*args,
-+	struct xfs_buf		*bp)
+ int
+-xfs_attr_rmtval_remove(
++xfs_attr_rmtval_invalidate(
+ 	struct xfs_da_args	*args)
  {
--	struct xfs_buf		*bp;
--	int			retval, error, forkoff;
--	struct xfs_inode	*dp = args->dp;
+ 	struct xfs_mount	*mp = args->dp->i_mount;
+ 	xfs_dablk_t		lblkno;
+ 	int			blkcnt;
+ 	int			error;
+-	int			done;
 -
--	trace_xfs_attr_leaf_addname(args);
-+	int			retval, error;
+-	trace_xfs_attr_rmtval_remove(args);
  
  	/*
- 	 * Look up the given attribute in the leaf block.  Figure out if
-@@ -666,31 +677,35 @@ xfs_attr_leaf_addname(
- 	retval = xfs_attr3_leaf_add(bp, args);
- 	if (retval == -ENOSPC) {
- 		/*
--		 * Promote the attribute list to the Btree format, then
--		 * Commit that transaction so that the node_addname() call
--		 * can manage its own transactions.
-+		 * Promote the attribute list to the Btree format.
-+		 * Unless an error occurs, retain the -ENOSPC retval
- 		 */
- 		error = xfs_attr3_leaf_to_node(args);
- 		if (error)
- 			return error;
--		error = xfs_defer_finish(&args->trans);
--		if (error)
--			return error;
-+	}
-+	return retval;
+ 	 * Roll through the "value", invalidating the attribute value's blocks.
+@@ -645,13 +638,32 @@ xfs_attr_rmtval_remove(
+ 		lblkno += map.br_blockcount;
+ 		blkcnt -= map.br_blockcount;
+ 	}
++	return 0;
 +}
  
--		/*
--		 * Commit the current trans (including the inode) and start
--		 * a new one.
--		 */
--		error = xfs_trans_roll_inode(&args->trans, dp);
--		if (error)
--			return error;
- 
--		/*
--		 * Fob the whole rest of the problem off on the Btree code.
--		 */
--		error = xfs_attr_node_addname(args);
 +/*
-+ * Add a name to the leaf attribute list structure
-+ *
-+ * This leaf block cannot have a "remote" value, we only call this routine
-+ * if bmap_one_block() says there is only one block (ie: no remote blks).
++ * Remove the value associated with an attribute by deleting the
++ * out-of-line buffer that it is stored on.
 + */
-+STATIC int
-+xfs_attr_leaf_addname(struct xfs_da_args	*args)
++int
++xfs_attr_rmtval_remove(
++	struct xfs_da_args      *args)
 +{
-+	int			error, forkoff;
-+	struct xfs_buf		*bp = NULL;
-+	struct xfs_inode	*dp = args->dp;
++	xfs_dablk_t		lblkno;
++	int			blkcnt;
++	int			error = 0;
++	int			done = 0;
 +
-+	trace_xfs_attr_leaf_addname(args);
++	trace_xfs_attr_rmtval_remove(args);
 +
-+	error = xfs_attr_leaf_try_add(args, bp);
++	error = xfs_attr_rmtval_invalidate(args);
 +	if (error)
- 		return error;
--	}
- 
++		return error;
  	/*
- 	 * Commit the transaction that added the attr name so that
+ 	 * Keep de-allocating extents until the remote-value region is gone.
+ 	 */
+ 	lblkno = args->rmtblkno;
+ 	blkcnt = args->rmtblkcnt;
+-	done = 0;
+ 	while (!done) {
+ 		error = xfs_bunmapi(args->trans, args->dp, lblkno, blkcnt,
+ 				    XFS_BMAPI_ATTRFORK, 1, &done);
+diff --git a/fs/xfs/libxfs/xfs_attr_remote.h b/fs/xfs/libxfs/xfs_attr_remote.h
+index cd7670d..b6fd35a 100644
+--- a/fs/xfs/libxfs/xfs_attr_remote.h
++++ b/fs/xfs/libxfs/xfs_attr_remote.h
+@@ -11,6 +11,7 @@ int xfs_attr3_rmt_blocks(struct xfs_mount *mp, int attrlen);
+ int xfs_attr_rmtval_get(struct xfs_da_args *args);
+ int xfs_attr_rmtval_set(struct xfs_da_args *args);
+ int xfs_attr_rmtval_remove(struct xfs_da_args *args);
++int xfs_attr_rmtval_invalidate(struct xfs_da_args *args);
+ int xfs_attr_rmtval_set_value(struct xfs_da_args *args);
+ int xfs_attr_rmt_find_hole(struct xfs_da_args *args);
+ #endif /* __XFS_ATTR_REMOTE_H__ */
 -- 
 2.7.4
 
