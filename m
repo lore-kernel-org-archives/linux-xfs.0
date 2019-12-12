@@ -2,66 +2,49 @@ Return-Path: <SRS0=0MSb=2C=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A1F8C2D0C9
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Dec 2019 11:20:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC652C00454
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Dec 2019 13:13:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4CB2422527
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Dec 2019 11:20:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C3C922173E
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Dec 2019 13:13:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ejIqzn/R"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="S2gx1qRE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728959AbfLLLUP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Dec 2019 06:20:15 -0500
-Received: from mail-lj1-f194.google.com ([209.85.208.194]:36891 "EHLO
-        mail-lj1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728953AbfLLLUO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Dec 2019 06:20:14 -0500
-Received: by mail-lj1-f194.google.com with SMTP id u17so1855961lja.4
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Dec 2019 03:20:13 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=P1W0z4HqV64jzJwtaYcGadzOgRZCn2v4chbYC9m9FGs=;
-        b=ejIqzn/RWAjyKo7RBVFzhGkFkF2lSZiGd2eJMd8SI1r0ISOjFbygsYsgAQN8XmQzQk
-         0lLFXQhwKM1eITsy4avAQxAh9YW73FCSxA30SOO4ebLCpg54/FqhH1kVEkL7cqr550+3
-         I9a9nPQN0ywXQrPzcfOaggdXetKiYHLmJjI+1DZc9EUMx2O/iWPayKLBlkjZYv4V8NgJ
-         nan9YSgU3ufNHuyQvCbLyfmekHqbVqfxJNEwf9KzEqsovts3q/fPjhlFqhuzDFb1nWyW
-         xAcA0eUqzW/MADBAAmUvKLx8NNJDQc7mcfuqeaYrbAn5Geo/v9v5h5dAUr3AVBKVcV47
-         h5mw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=P1W0z4HqV64jzJwtaYcGadzOgRZCn2v4chbYC9m9FGs=;
-        b=MdV4igd1GigfNvpC4sDe0d0boAhml0sSKxd+WZcy6bxauGl/6kfXapUnW76WmK9E+k
-         kTazdO4BWTu8CCEAKRaOqLDsfakZCWMSzvaNlRT7VyvGepWdrW8kHlwwF9pX5fjkA5WN
-         AxpzrEJ35jXIzuKPQD4xz3pcTWKapuA8H/4p4uKAYSfWkdm/JBOUS6D1nTDLftRzYzI6
-         GM19GcUbsO4Pdpxa/aIJ89X0v7TLyKJn5m3tGDV1cP9S6MnFcQFWoXNhh1xv54/993aU
-         oiU36B6hsmdENuaGfStuVSYgbjkhRemCUiWZTu1vH81688KUv/NjEzjciPcHtSOYv6FK
-         hiFg==
-X-Gm-Message-State: APjAAAXTJrrPTYpPKVa20pOpTmlJwbpFv2WYjU5jayTfV56BZD+yflVL
-        RIWw4yyc7F8usqos8x0pcRgShoX2wp/9bm6BVX8/EbhBzek=
-X-Google-Smtp-Source: APXvYqwcNMZYiNwnTt8iXUn4bZLBe/VVIuZbWOxdaGwBRPCIZF6vo/z0Flel1o/NxhVXsNhFkAgOrX3kstFVUuexBm4=
-X-Received: by 2002:a2e:9a51:: with SMTP id k17mr5118022ljj.206.1576149612570;
- Thu, 12 Dec 2019 03:20:12 -0800 (PST)
-MIME-Version: 1.0
-References: <20191120220313.GC18056@pauld.bos.csb> <20191121132937.GW4114@hirez.programming.kicks-ass.net>
- <20191209165122.GA27229@linux.vnet.ibm.com> <20191209231743.GA19256@dread.disaster.area>
- <20191210054330.GF27253@linux.vnet.ibm.com> <20191210172307.GD9139@linux.vnet.ibm.com>
- <20191211173829.GB21797@linux.vnet.ibm.com> <20191211224617.GE19256@dread.disaster.area>
- <20191212101031.GV2827@hirez.programming.kicks-ass.net> <20191212101424.GH2871@hirez.programming.kicks-ass.net>
- <20191212102327.GI2871@hirez.programming.kicks-ass.net>
-In-Reply-To: <20191212102327.GI2871@hirez.programming.kicks-ass.net>
-From:   Vincent Guittot <vincent.guittot@linaro.org>
-Date:   Thu, 12 Dec 2019 12:20:01 +0100
-Message-ID: <CAKfTPtCUm5vuvNiWszJ5tWHxmcZ2v_KexOxnBHLUkBcqC-P3fw@mail.gmail.com>
-Subject: Re: [PATCH v4] sched/core: Preempt current task in favour of bound kthread
-To:     Peter Zijlstra <peterz@infradead.org>
+        id S1729331AbfLLNNG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Dec 2019 08:13:06 -0500
+Received: from merlin.infradead.org ([205.233.59.134]:39838 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728996AbfLLNNG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Dec 2019 08:13:06 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=Mi/YeA+WCgrkkaP3IUCQ5eXMERR2u2J8/KyXlUMxhsE=; b=S2gx1qRERPnBJWKB6odU0gfHJ
+        Io+0i7BKBcpoqwishvDmCIx3U83XeZEDzTtyk6o/vY4WNhGGpgMr33r5Xkz8KxPkZmbYkbtLZJdf6
+        2H6hG7zJ8uGDO1IquD+xfTW59+narXHB94w5Wz2UVpIVt2sYSUk9jQl/b4nolTM+jgLeg0EKj3f6y
+        DcPRlxcpeHAajXYpMtSHKKGRmWMf/vZIDRXY6u5NL14xRMK3JA0gTQvQeEAWDq1GlXYbTTJJUxmp7
+        cB3HVp7jTpLleY90VXPi2wTeWEZf5xARINmVaSAPeUXFONfryGgbC+Db61Pu2vV404tywa77Hws7M
+        h9/plfWpQ==;
+Received: from j217100.upc-j.chello.nl ([24.132.217.100] helo=noisy.programming.kicks-ass.net)
+        by merlin.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1ifOGw-0000yE-7k; Thu, 12 Dec 2019 13:12:50 +0000
+Received: from hirez.programming.kicks-ass.net (hirez.programming.kicks-ass.net [192.168.1.225])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (Client did not present a certificate)
+        by noisy.programming.kicks-ass.net (Postfix) with ESMTPS id C9107300F29;
+        Thu, 12 Dec 2019 14:11:26 +0100 (CET)
+Received: by hirez.programming.kicks-ass.net (Postfix, from userid 1000)
+        id 1D801203BF6F0; Thu, 12 Dec 2019 14:12:47 +0100 (CET)
+Date:   Thu, 12 Dec 2019 14:12:47 +0100
+From:   Peter Zijlstra <peterz@infradead.org>
+To:     Vincent Guittot <vincent.guittot@linaro.org>
 Cc:     Dave Chinner <david@fromorbit.com>,
         Srikar Dronamraju <srikar@linux.vnet.ibm.com>,
         Phil Auld <pauld@redhat.com>, Ming Lei <ming.lei@redhat.com>,
@@ -74,61 +57,62 @@ Cc:     Dave Chinner <david@fromorbit.com>,
         Eric Sandeen <sandeen@redhat.com>,
         Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
         Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [PATCH v4] sched/core: Preempt current task in favour of bound
+ kthread
+Message-ID: <20191212131247.GY2827@hirez.programming.kicks-ass.net>
+References: <20191209165122.GA27229@linux.vnet.ibm.com>
+ <20191209231743.GA19256@dread.disaster.area>
+ <20191210054330.GF27253@linux.vnet.ibm.com>
+ <20191210172307.GD9139@linux.vnet.ibm.com>
+ <20191211173829.GB21797@linux.vnet.ibm.com>
+ <20191211224617.GE19256@dread.disaster.area>
+ <20191212101031.GV2827@hirez.programming.kicks-ass.net>
+ <20191212101424.GH2871@hirez.programming.kicks-ass.net>
+ <20191212102327.GI2871@hirez.programming.kicks-ass.net>
+ <CAKfTPtCUm5vuvNiWszJ5tWHxmcZ2v_KexOxnBHLUkBcqC-P3fw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAKfTPtCUm5vuvNiWszJ5tWHxmcZ2v_KexOxnBHLUkBcqC-P3fw@mail.gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, 12 Dec 2019 at 11:23, Peter Zijlstra <peterz@infradead.org> wrote:
->
-> On Thu, Dec 12, 2019 at 11:14:24AM +0100, Peter Zijlstra wrote:
-> > On Thu, Dec 12, 2019 at 11:10:31AM +0100, Peter Zijlstra wrote:
-> > > @@ -4156,13 +4159,13 @@ check_preempt_tick(struct cfs_rq *cfs_rq, struct sched_entity *curr)
-> > >     if (delta_exec < sysctl_sched_min_granularity)
-> > >             return;
-> > >
-> > > -   se = __pick_first_entity(cfs_rq);
-> > > +   se = __pick_next_entity(cfs_rq, NULL);
-> > >     delta = curr->vruntime - se->vruntime;
-> > >
-> > >     if (delta < 0)
-> > >             return;
-> >
-> > What I mean with the below comment is, when this isn't enough, try
-> > something like:
-> >
-> >       if (se == cfs_rq->next)
-> >               ideal_runtime /= 2;
-> >
-> > to make it yield sooner to 'next' buddies. Sadly, due to the whole
-> > cgroup mess, we can't say what actual task is on the end of it (without
-> > doing a full hierarchy pick, which is more expensive still).
->
-> Just for giggles, that'd look something like:
->
->         while (!entity_is_task(se) {
->                 cfs_rq = group_cfs_rq(se);
->                 se = pick_next_entity(cfs_rq, cfs_rq->curr);
->         }
->         p = task_of(se);
->
->         if (is_per_cpu_kthread(p))
->                 ideal_runtime /= 2;
->
-> the core-scheduling patch set includes the right primitive for this I
-> think, pick_task_fair().
+On Thu, Dec 12, 2019 at 12:20:01PM +0100, Vincent Guittot wrote:
+> On Thu, 12 Dec 2019 at 11:23, Peter Zijlstra <peterz@infradead.org> wrote:
 
-why not only updating wan_gran() which is the only function which uses
-sysctl_sched_wakeup_granularity ?
+> > Just for giggles, that'd look something like:
+> >
+> >         while (!entity_is_task(se) {
+> >                 cfs_rq = group_cfs_rq(se);
+> >                 se = pick_next_entity(cfs_rq, cfs_rq->curr);
+> >         }
+> >         p = task_of(se);
+> >
+> >         if (is_per_cpu_kthread(p))
+> >                 ideal_runtime /= 2;
+> >
+> > the core-scheduling patch set includes the right primitive for this I
+> > think, pick_task_fair().
+> 
+> why not only updating wan_gran() which is the only function which uses
+> sysctl_sched_wakeup_granularity ?
 
-For per cpu kthread, we could set the gran to sched_min_granularity
-instead of scaling it with thread's priority so per cpu kthread can
-still preempt current ask even if sysctl_sched_wakeup_granularity is
-large
+I don't see how, it works on se, which need not be a task.
 
->
-> > > -   if (delta > ideal_runtime)
-> > > +   if (delta > ideal_runtime) // maybe frob this too ?
-> > >             resched_curr(rq_of(cfs_rq));
-> > >  }
+> For per cpu kthread, we could set the gran to sched_min_granularity
+> instead of scaling it with thread's priority so per cpu kthread can
+> still preempt current ask even if sysctl_sched_wakeup_granularity is
+> large
+
+Also, we're not poking at wakeup preemption anymore. That, as explained
+by Dave, is not the right thing to do. What we want instead is to make
+tick preemption a little more agressive.
+
+And tick based preemption currently purely looks at the leftmost entity
+for each runqueue we find while iterating current. IE, it might never
+even see the task we tagged with next.
+
+Also, did I say I hates cgroups :-)
