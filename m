@@ -7,54 +7,54 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 832A2C341B9
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 20:36:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0819C3435E
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 20:37:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AFA2B246A2
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 20:36:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3201E246AF
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 20:37:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ig9FJaYb"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="grYsLsE2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726851AbfLMMSs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 13 Dec 2019 07:18:48 -0500
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:24313 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726421AbfLMMSs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Dec 2019 07:18:48 -0500
+        id S1727238AbfLMNHV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 13 Dec 2019 08:07:21 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:46909 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727220AbfLMNHV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Dec 2019 08:07:21 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1576239526;
+        s=mimecast20190719; t=1576242439;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=BeHxcq8vgVrPG5H4U0PoCORmJH9h5plmqWxS0CUlUwA=;
-        b=Ig9FJaYbsBtnO/Hc/igFW6PfBTi0itiYA2sTZPMgVkB/wiP5iJajgJ8puXaUoSco/GsCN6
-        NRV369FnUJ5caFfe5SyQ9VwsedWXbrHwqvlUeqPlMUspuLl/mvdob8uh/f80sBPZU2EIrA
-        IcdfSMPryemH9aKIn5c7Aq0Cphb4YTI=
+        bh=vekp5VCEc6SdyvO4QyO7n2ppI8XC+3DxE9HLndjBnHM=;
+        b=grYsLsE2cE6IBLro6+Z4y2aCsVID7//800Ew4BL4U2kzXEW3tkmFIG8hQqYU7sYxJBQW6r
+        PzY8M180xAJ13Wd+eB0kjL2jvGN1tZXd4/FSLCBDd5cumO65FJ0454o6T5DT3+nUAZUhlC
+        KGnFhZiFDTXAPafDXuY1W41HLUNA/1E=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-360-kFkcj4k7NsSpioT5cSDZMw-1; Fri, 13 Dec 2019 07:18:42 -0500
-X-MC-Unique: kFkcj4k7NsSpioT5cSDZMw-1
+ us-mta-184-gE6PNWy4N1mwEEJf45N79Q-1; Fri, 13 Dec 2019 08:07:16 -0500
+X-MC-Unique: gE6PNWy4N1mwEEJf45N79Q-1
 Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B1D2B107ACC9;
-        Fri, 13 Dec 2019 12:18:41 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D4C0A1005512;
+        Fri, 13 Dec 2019 13:07:15 +0000 (UTC)
 Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 21A2C10013A1;
-        Fri, 13 Dec 2019 12:18:40 +0000 (UTC)
-Date:   Fri, 13 Dec 2019 07:18:40 -0500
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6914210013A1;
+        Fri, 13 Dec 2019 13:07:15 +0000 (UTC)
+Date:   Fri, 13 Dec 2019 08:07:14 -0500
 From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, Omar Sandoval <osandov@osandov.com>,
-        Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: fix log reservation overflows when allocating large
- rt extents
-Message-ID: <20191213121840.GA43376@bfoster>
-References: <20191204163809.GP7335@magnolia>
+To:     Allison Collins <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v5 02/14] xfs: Replace attribute parameters with struct
+ xfs_name
+Message-ID: <20191213130714.GB43376@bfoster>
+References: <20191212041513.13855-1-allison.henderson@oracle.com>
+ <20191212041513.13855-3-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191204163809.GP7335@magnolia>
+In-Reply-To: <20191212041513.13855-3-allison.henderson@oracle.com>
 User-Agent: Mutt/1.12.1 (2019-06-15)
 X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Sender: linux-xfs-owner@vger.kernel.org
@@ -62,180 +62,279 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Dec 04, 2019 at 08:38:09AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Dec 11, 2019 at 09:15:01PM -0700, Allison Collins wrote:
+> This patch replaces the attribute name and length parameters with a
+> single struct xfs_name parameter.  This helps to clean up the numbers of
+> parameters being passed around and pre-simplifies the code some.
 > 
-> Omar Sandoval reported that a 4G fallocate on the realtime device causes
-> filesystem shutdowns due to a log reservation overflow that happens when
-> we log the rtbitmap updates.  Factor rtbitmap/rtsummary updates into the
-> the tr_write and tr_itruncate log reservation calculation.
-> 
-> "The following reproducer results in a transaction log overrun warning
-> for me:
-> 
->     mkfs.xfs -f -r rtdev=/dev/vdc -d rtinherit=1 -m reflink=0 /dev/vdb
->     mount -o rtdev=/dev/vdc /dev/vdb /mnt
->     fallocate -l 4G /mnt/foo
-> 
-> Reported-by: Omar Sandoval <osandov@osandov.com>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
 > ---
-
-Looks reasonable enough given my limited knowledge on the rt bits. One
-question..
-
->  fs/xfs/libxfs/xfs_trans_resv.c |   96 ++++++++++++++++++++++++++++++++--------
->  1 file changed, 77 insertions(+), 19 deletions(-)
+>  fs/xfs/libxfs/xfs_attr.c  | 22 +++++++++-------------
+>  fs/xfs/libxfs/xfs_attr.h  | 12 +++++-------
+>  fs/xfs/libxfs/xfs_types.c | 10 ++++++++++
+>  fs/xfs/libxfs/xfs_types.h |  1 +
+>  fs/xfs/xfs_acl.c          | 27 +++++++++++++--------------
+>  fs/xfs/xfs_ioctl.c        | 23 +++++++++++++----------
+>  fs/xfs/xfs_iops.c         |  6 +++---
+>  fs/xfs/xfs_xattr.c        | 23 +++++++++++++----------
+>  8 files changed, 67 insertions(+), 57 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-> index c55cd9a3dec9..824073a839ac 100644
-> --- a/fs/xfs/libxfs/xfs_trans_resv.c
-> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
-> @@ -196,6 +196,24 @@ xfs_calc_inode_chunk_res(
->  	return res;
->  }
+...
+> diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
+> index 4f59554..c81a904 100644
+> --- a/fs/xfs/libxfs/xfs_types.c
+> +++ b/fs/xfs/libxfs/xfs_types.c
+> @@ -12,6 +12,16 @@
+>  #include "xfs_bit.h"
+>  #include "xfs_mount.h"
 >  
-> +/*
-> + * Per-extent log reservation for the btree changes involved in freeing or
-> + * allocating a realtime extent.  We have to be able to log as many rtbitmap
-> + * blocks as needed to mark inuse MAXEXTLEN blocks' worth of realtime extents,
-> + * as well as the realtime summary block.
-> + */
-> +unsigned int
-> +xfs_rtalloc_log_count(
-> +	struct xfs_mount	*mp,
-> +	unsigned int		num_ops)
+> +/* Initialize a struct xfs_name with a null terminated string name */
+> +void
+> +xfs_name_init(
+> +	struct xfs_name *xname,
+> +	const char *name)
 > +{
-> +	unsigned int		blksz = XFS_FSB_TO_B(mp, 1);
-> +	unsigned int		rtbmp_bytes;
-> +
-> +	rtbmp_bytes = (MAXEXTLEN / mp->m_sb.sb_rextsize) / NBBY;
-> +	return (howmany(rtbmp_bytes, blksz) + 1) * num_ops;
+> +	xname->name = name;
+> +	xname->len = (strlen(name));
+
+Are the extra braces necessary here? Also, perhaps we should initialize
+->type to zero or something so it doesn't carry garbage data.
+
 > +}
 > +
->  /*
->   * Various log reservation values.
->   *
-> @@ -218,13 +236,21 @@ xfs_calc_inode_chunk_res(
+>  /* Find the size of the AG, in blocks. */
+>  xfs_agblock_t
+>  xfs_ag_block_count(
+...
+> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+> index b58e18c..7b0e5b7 100644
+> --- a/fs/xfs/xfs_acl.c
+> +++ b/fs/xfs/xfs_acl.c
+> @@ -123,7 +123,7 @@ xfs_get_acl(struct inode *inode, int type)
+>  	struct xfs_inode *ip = XFS_I(inode);
+>  	struct posix_acl *acl = NULL;
+>  	struct xfs_acl *xfs_acl = NULL;
+> -	unsigned char *ea_name;
+> +	struct xfs_name name;
+>  	int error;
+>  	int len;
 >  
->  /*
->   * In a write transaction we can allocate a maximum of 2
-> - * extents.  This gives:
-> + * extents.  This gives (t1):
->   *    the inode getting the new extents: inode size
->   *    the inode's bmap btree: max depth * block size
->   *    the agfs of the ags from which the extents are allocated: 2 * sector
->   *    the superblock free block counter: sector size
->   *    the allocation btrees: 2 exts * 2 trees * (2 * max depth - 1) * block size
-> - * And the bmap_finish transaction can free bmap blocks in a join:
-> + * Or, if we're writing to a realtime file (t2):
-> + *    the inode getting the new extents: inode size
-> + *    the inode's bmap btree: max depth * block size
-> + *    the agfs of the ags from which the extents are allocated: 2 * sector
-> + *    the superblock free block counter: sector size
-> + *    the realtime bitmap: ((MAXEXTLEN / rtextsize) / NBBY) bytes
-> + *    the realtime summary: 1 block
-> + *    the allocation btrees: 2 trees * (2 * max depth - 1) * block size
+> @@ -131,10 +131,10 @@ xfs_get_acl(struct inode *inode, int type)
+>  
+>  	switch (type) {
+>  	case ACL_TYPE_ACCESS:
+> -		ea_name = SGI_ACL_FILE;
+> +		name.name = SGI_ACL_FILE;
+>  		break;
+>  	case ACL_TYPE_DEFAULT:
+> -		ea_name = SGI_ACL_DEFAULT;
+> +		name.name = SGI_ACL_DEFAULT;
+>  		break;
+>  	default:
+>  		BUG();
+> @@ -145,9 +145,9 @@ xfs_get_acl(struct inode *inode, int type)
+>  	 * go out to the disk.
+>  	 */
+>  	len = XFS_ACL_MAX_SIZE(ip->i_mount);
+> -	error = xfs_attr_get(ip, ea_name, strlen(ea_name), 
+> -				(unsigned char **)&xfs_acl, &len,
+> -				ATTR_ALLOC | ATTR_ROOT);
+> +	xfs_name_init(&name, name.name);
 
-Why do we include the allocation btrees in the rt reservations? I
-thought that we'd either allocate (or free) out of one pool or the
-other. Do we operate on both sets of structures in the same transaction?
+Could we call xfs_name_init() in the switch branches above to avoid this
+partial init weirdness? Same question applies below, otherwise looks Ok
+to me.
 
 Brian
 
-> + * And the bmap_finish transaction can free bmap blocks in a join (t3):
->   *    the agfs of the ags containing the blocks: 2 * sector size
->   *    the agfls of the ags containing the blocks: 2 * sector size
->   *    the super block free block counter: sector size
-> @@ -234,40 +260,72 @@ STATIC uint
->  xfs_calc_write_reservation(
->  	struct xfs_mount	*mp)
+> +	error = xfs_attr_get(ip, &name, (unsigned char **)&xfs_acl, &len,
+> +			     ATTR_ALLOC | ATTR_ROOT);
+>  	if (error) {
+>  		/*
+>  		 * If the attribute doesn't exist make sure we have a negative
+> @@ -167,17 +167,17 @@ int
+>  __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
 >  {
-> -	return XFS_DQUOT_LOGRES(mp) +
-> -		max((xfs_calc_inode_res(mp, 1) +
-> +	unsigned int		t1, t2, t3;
-> +	unsigned int		blksz = XFS_FSB_TO_B(mp, 1);
-> +
-> +	t1 = xfs_calc_inode_res(mp, 1) +
-> +	     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK), blksz) +
-> +	     xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
-> +	     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2), blksz);
-> +
-> +	if (xfs_sb_version_hasrealtime(&mp->m_sb)) {
-> +		t2 = xfs_calc_inode_res(mp, 1) +
->  		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK),
-> -				      XFS_FSB_TO_B(mp, 1)) +
-> +				      blksz) +
->  		     xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
-> -		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2),
-> -				      XFS_FSB_TO_B(mp, 1))),
-> -		    (xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
-> -		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2),
-> -				      XFS_FSB_TO_B(mp, 1))));
-> +		     xfs_calc_buf_res(xfs_rtalloc_log_count(mp, 1), blksz) +
-> +		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1), blksz);
-> +	} else {
-> +		t2 = 0;
-> +	}
-> +
-> +	t3 = xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
-> +	     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2), blksz);
-> +
-> +	return XFS_DQUOT_LOGRES(mp) + max3(t1, t2, t3);
->  }
+>  	struct xfs_inode *ip = XFS_I(inode);
+> -	unsigned char *ea_name;
+> +	struct xfs_name name;
+>  	int error;
 >  
->  /*
-> - * In truncating a file we free up to two extents at once.  We can modify:
-> + * In truncating a file we free up to two extents at once.  We can modify (t1):
->   *    the inode being truncated: inode size
->   *    the inode's bmap btree: (max depth + 1) * block size
-> - * And the bmap_finish transaction can free the blocks and bmap blocks:
-> + * And the bmap_finish transaction can free the blocks and bmap blocks (t2):
->   *    the agf for each of the ags: 4 * sector size
->   *    the agfl for each of the ags: 4 * sector size
->   *    the super block to reflect the freed blocks: sector size
->   *    worst case split in allocation btrees per extent assuming 4 extents:
->   *		4 exts * 2 trees * (2 * max depth - 1) * block size
-> + * Or, if it's a realtime file (t3):
-> + *    the agf for each of the ags: 2 * sector size
-> + *    the agfl for each of the ags: 2 * sector size
-> + *    the super block to reflect the freed blocks: sector size
-> + *    the realtime bitmap: 2 exts * ((MAXEXTLEN / rtextsize) / NBBY) bytes
-> + *    the realtime summary: 2 exts * 1 block
-> + *    worst case split in allocation btrees per extent assuming 2 extents:
-> + *		2 exts * 2 trees * (2 * max depth - 1) * block size
->   */
->  STATIC uint
->  xfs_calc_itruncate_reservation(
->  	struct xfs_mount	*mp)
+>  	switch (type) {
+>  	case ACL_TYPE_ACCESS:
+> -		ea_name = SGI_ACL_FILE;
+> +		name.name = SGI_ACL_FILE;
+>  		break;
+>  	case ACL_TYPE_DEFAULT:
+>  		if (!S_ISDIR(inode->i_mode))
+>  			return acl ? -EACCES : 0;
+> -		ea_name = SGI_ACL_DEFAULT;
+> +		name.name = SGI_ACL_DEFAULT;
+>  		break;
+>  	default:
+>  		return -EINVAL;
+> @@ -197,17 +197,16 @@ __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+>  		len -= sizeof(struct xfs_acl_entry) *
+>  			 (XFS_ACL_MAX_ENTRIES(ip->i_mount) - acl->a_count);
+>  
+> -		error = xfs_attr_set(ip, ea_name, strlen(ea_name),
+> -				     (unsigned char *)xfs_acl, len, ATTR_ROOT);
+> +		xfs_name_init(&name, name.name);
+> +		error = xfs_attr_set(ip, &name, (unsigned char *)xfs_acl, len,
+> +				     ATTR_ROOT);
+>  
+>  		kmem_free(xfs_acl);
+>  	} else {
+>  		/*
+>  		 * A NULL ACL argument means we want to remove the ACL.
+>  		 */
+> -		error = xfs_attr_remove(ip, ea_name,
+> -					strlen(ea_name),
+> -					ATTR_ROOT);
+> +		error = xfs_attr_remove(ip, &name, ATTR_ROOT);
+>  
+>  		/*
+>  		 * If the attribute didn't exist to start with that's fine.
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index f5a9bf9..4fc8698 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -357,7 +357,9 @@ xfs_attrmulti_attr_get(
 >  {
-> -	return XFS_DQUOT_LOGRES(mp) +
-> -		max((xfs_calc_inode_res(mp, 1) +
-> -		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) + 1,
-> -				      XFS_FSB_TO_B(mp, 1))),
-> -		    (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
-> -		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 4),
-> -				      XFS_FSB_TO_B(mp, 1))));
-> +	unsigned int		t1, t2, t3;
-> +	unsigned int		blksz = XFS_FSB_TO_B(mp, 1);
+>  	unsigned char		*kbuf;
+>  	int			error = -EFAULT;
+> -	size_t			namelen;
+> +	struct xfs_name		xname;
 > +
-> +	t1 = xfs_calc_inode_res(mp, 1) +
-> +	     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) + 1, blksz);
-> +
-> +	t2 = xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
-> +	     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 4), blksz);
-> +
-> +	if (xfs_sb_version_hasrealtime(&mp->m_sb)) {
-> +		t3 = xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
-> +		     xfs_calc_buf_res(xfs_rtalloc_log_count(mp, 2), blksz) +
-> +		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2), blksz);
-> +	} else {
-> +		t3 = 0;
-> +	}
-> +
-> +	return XFS_DQUOT_LOGRES(mp) + max3(t1, t2, t3);
->  }
+> +	xfs_name_init(&xname, name);
 >  
->  /*
+>  	if (*len > XFS_XATTR_SIZE_MAX)
+>  		return -EINVAL;
+> @@ -365,9 +367,7 @@ xfs_attrmulti_attr_get(
+>  	if (!kbuf)
+>  		return -ENOMEM;
+>  
+> -	namelen = strlen(name);
+> -	error = xfs_attr_get(XFS_I(inode), name, namelen, &kbuf, (int *)len,
+> -			     flags);
+> +	error = xfs_attr_get(XFS_I(inode), &xname, &kbuf, (int *)len, flags);
+>  	if (error)
+>  		goto out_kfree;
+>  
+> @@ -389,7 +389,9 @@ xfs_attrmulti_attr_set(
+>  {
+>  	unsigned char		*kbuf;
+>  	int			error;
+> -	size_t			namelen;
+> +	struct xfs_name		xname;
+> +
+> +	xfs_name_init(&xname, name);
+>  
+>  	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
+>  		return -EPERM;
+> @@ -400,8 +402,7 @@ xfs_attrmulti_attr_set(
+>  	if (IS_ERR(kbuf))
+>  		return PTR_ERR(kbuf);
+>  
+> -	namelen = strlen(name);
+> -	error = xfs_attr_set(XFS_I(inode), name, namelen, kbuf, len, flags);
+> +	error = xfs_attr_set(XFS_I(inode), &xname, kbuf, len, flags);
+>  	if (!error)
+>  		xfs_forget_acl(inode, name, flags);
+>  	kfree(kbuf);
+> @@ -415,12 +416,14 @@ xfs_attrmulti_attr_remove(
+>  	uint32_t		flags)
+>  {
+>  	int			error;
+> -	size_t			namelen;
+> +	struct xfs_name		xname;
+> +
+> +	xfs_name_init(&xname, name);
+>  
+>  	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
+>  		return -EPERM;
+> -	namelen = strlen(name);
+> -	error = xfs_attr_remove(XFS_I(inode), name, namelen, flags);
+> +
+> +	error = xfs_attr_remove(XFS_I(inode), &xname, flags);
+>  	if (!error)
+>  		xfs_forget_acl(inode, name, flags);
+>  	return error;
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 81f2f93..e85bbf5 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -48,11 +48,11 @@ xfs_initxattrs(
+>  	const struct xattr	*xattr;
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	int			error = 0;
+> +	struct xfs_name		name;
+>  
+>  	for (xattr = xattr_array; xattr->name != NULL; xattr++) {
+> -		error = xfs_attr_set(ip, xattr->name,
+> -				     strlen(xattr->name),
+> -				     xattr->value, xattr->value_len,
+> +		xfs_name_init(&name, xattr->name);
+> +		error = xfs_attr_set(ip, &name, xattr->value, xattr->value_len,
+>  				     ATTR_SECURE);
+>  		if (error < 0)
+>  			break;
+> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+> index 1f1601f..5623682 100644
+> --- a/fs/xfs/xfs_xattr.c
+> +++ b/fs/xfs/xfs_xattr.c
+> @@ -21,10 +21,12 @@ static int
+>  xfs_xattr_get(const struct xattr_handler *handler, struct dentry *unused,
+>  		struct inode *inode, const char *name, void *value, size_t size)
+>  {
+> -	int xflags = handler->flags;
+> -	struct xfs_inode *ip = XFS_I(inode);
+> -	int error, asize = size;
+> -	size_t namelen = strlen(name);
+> +	int			xflags = handler->flags;
+> +	struct xfs_inode	*ip = XFS_I(inode);
+> +	int			error, asize = size;
+> +	struct xfs_name		xname;
+> +
+> +	xfs_name_init(&xname, name);
+>  
+>  	/* Convert Linux syscall to XFS internal ATTR flags */
+>  	if (!size) {
+> @@ -32,8 +34,8 @@ xfs_xattr_get(const struct xattr_handler *handler, struct dentry *unused,
+>  		value = NULL;
+>  	}
+>  
+> -	error = xfs_attr_get(ip, name, namelen, (unsigned char **)&value,
+> -			     &asize, xflags);
+> +	error = xfs_attr_get(ip, &xname, (unsigned char **)&value, &asize,
+> +			     xflags);
+>  	if (error)
+>  		return error;
+>  	return asize;
+> @@ -69,7 +71,9 @@ xfs_xattr_set(const struct xattr_handler *handler, struct dentry *unused,
+>  	int			xflags = handler->flags;
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	int			error;
+> -	size_t			namelen = strlen(name);
+> +	struct xfs_name		xname;
+> +
+> +	xfs_name_init(&xname, name);
+>  
+>  	/* Convert Linux syscall to XFS internal ATTR flags */
+>  	if (flags & XATTR_CREATE)
+> @@ -78,9 +82,8 @@ xfs_xattr_set(const struct xattr_handler *handler, struct dentry *unused,
+>  		xflags |= ATTR_REPLACE;
+>  
+>  	if (!value)
+> -		return xfs_attr_remove(ip, name,
+> -				       namelen, xflags);
+> -	error = xfs_attr_set(ip, name, namelen, (void *)value, size, xflags);
+> +		return xfs_attr_remove(ip, &xname, xflags);
+> +	error = xfs_attr_set(ip, &xname, (void *)value, size, xflags);
+>  	if (!error)
+>  		xfs_forget_acl(inode, name, xflags);
+>  
+> -- 
+> 2.7.4
 > 
 
