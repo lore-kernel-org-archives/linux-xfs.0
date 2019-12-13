@@ -2,32 +2,30 @@ Return-Path: <SRS0=jVwY=2D=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D3D9C2D0CA
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 22:25:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79666C43603
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 23:07:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7148E22527
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 22:25:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5DA2024656
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 23:07:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726750AbfLMWZE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 13 Dec 2019 17:25:04 -0500
-Received: from sandeen.net ([63.231.237.45]:60036 "EHLO sandeen.net"
+        id S1726824AbfLMXHe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 13 Dec 2019 18:07:34 -0500
+Received: from sandeen.net ([63.231.237.45]:33896 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726345AbfLMWZE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 13 Dec 2019 17:25:04 -0500
+        id S1726828AbfLMXHe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 13 Dec 2019 18:07:34 -0500
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 9C32D2ABE;
-        Fri, 13 Dec 2019 16:24:55 -0600 (CST)
-Subject: Re: [PATCH] xfs_restore: Return on error when restoring file or
- symlink
-To:     Frank Sorenson <sorenson@redhat.com>, linux-xfs@vger.kernel.org
-References: <20191212233248.3428280-1-sorenson@redhat.com>
+        by sandeen.net (Postfix) with ESMTPSA id CB3502ABE
+        for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2019 17:07:25 -0600 (CST)
+To:     linux-xfs <linux-xfs@vger.kernel.org>
 From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs for-next updated to 7e8a6edb
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
  nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
@@ -70,121 +68,100 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <72626168-8207-7e05-bc55-f18074e4a5dc@sandeen.net>
-Date:   Fri, 13 Dec 2019 16:25:00 -0600
+Message-ID: <ce2d85c4-e989-7faa-2889-89dfc68098fb@sandeen.net>
+Date:   Fri, 13 Dec 2019 17:07:30 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.3.0
 MIME-Version: 1.0
-In-Reply-To: <20191212233248.3428280-1-sorenson@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="PaulfRBX8tFn49k0KK3RtCtkgOZ0u0xCa"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 12/12/19 5:32 PM, Frank Sorenson wrote:
-> If an error occurs while opening or truncating a regular
-> file, or while creating a symlink, during a restore, no error
-> is currently propagated back to the caller, so xfsrestore can
-> return SUCCESS on a failed restore.
-> 
-> Make restore_reg and restore_symlink return an error code
-> indicating the restore was incomplete.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--PaulfRBX8tFn49k0KK3RtCtkgOZ0u0xCa
+Content-Type: multipart/mixed; boundary="9DRihZESqtEm1patoNw8sxCdH3saBy1FY"
 
-Thanks for looking at this, some stuff below
+--9DRihZESqtEm1patoNw8sxCdH3saBy1FY
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-> Signed-off-by: Frank Sorenson <sorenson@redhat.com>
-> ---
->  restore/content.c | 17 +++++++++++------
->  1 file changed, 11 insertions(+), 6 deletions(-)
-> 
-> diff --git a/restore/content.c b/restore/content.c
-> index c267234..5e30f08 100644
-> --- a/restore/content.c
-> +++ b/restore/content.c
-> @@ -7429,7 +7429,7 @@ done:
->  
->  /* called to begin a regular file. if no path given, or if just toc,
->   * don't actually write, just read. also get into that situation if
-> - * cannot prepare destination. fd == -1 signifies no write. *statp
-> + * cannot prepare destination. fd == -1 signifies no write. *rvp
->   * is set to indicate drive errors. returns FALSE if should abort
->   * this iteration.
->   */
-> @@ -7486,12 +7486,13 @@ restore_reg(drive_t *drivep,
->  
->  	*fdp = open(path, oflags, S_IRUSR | S_IWUSR);
->  	if (*fdp < 0) {
-> -		mlog(MLOG_NORMAL | MLOG_WARNING,
-> +		mlog(MLOG_NORMAL | MLOG_ERROR,
->  		      _("open of %s failed: %s: discarding ino %llu\n"),
->  		      path,
->  		      strerror(errno),
->  		      bstatp->bs_ino);
-> -		return BOOL_TRUE;
-> +		*rvp = RV_INCOMPLETE;
-> +		return BOOL_FALSE;
->  	}
+Hi folks,
 
-I'm really not sure about original intent of the return values here and
-when "this iteration should abort"
+The for-next branch of the xfsprogs repository at:
 
-Before this patch, the function always returned BOOL_TRUE so there's
-not much guidance.  Presumably all the "log something and return true"
-considered these to be transient errors ...
-  
->  	rval = fstat64(*fdp, &stat);
-> @@ -7510,10 +7511,12 @@ restore_reg(drive_t *drivep,
->  
->  			rval = ftruncate64(*fdp, bstatp->bs_size);
->  			if (rval != 0) {
-> -				mlog(MLOG_VERBOSE | MLOG_WARNING,
-> +				mlog(MLOG_VERBOSE | MLOG_ERROR,
->  				      _("attempt to truncate %s failed: %s\n"),
->  				      path,
->  				      strerror(errno));
-> +				*rvp = RV_INCOMPLETE;
-> +				return BOOL_FALSE;
->  			}
->  		}
->  	}
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-so this aborts on an open or frtruncate failure, but continues on
-an fstat failure or a set_file_owner failure or an XFS_IOC_FSSETXATTR
-failure ... 
+has just been updated.  This included a rebase to fix typos in SOB:
+lines of the last libxfs-sync update.
 
-Was this motivated by ENOSPC, i.e. maybe the open couldn't even create
-a new inode?  I could see that possibly being a hard error to stop on,
-but given the prior behavior of trying to coninue as much as possible
-I'm unsure about the BOOL_FALSE's here.  Setting RV_INCOMPLETE would
-still make sense to me though, I think, for anything that caused the restore
-to actually be incomplete.
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
 
-(And this is all a little speculative as nobody really understands
-this code anymore....)
+The new head of the master branch is commit:
 
--Eric
+7e8a6edb (HEAD -> for-next, origin/for-next, korg/for-next) mkfs: Break b=
+lock discard into chunks of 2 GB
 
-> @@ -8021,7 +8024,8 @@ restore_symlink(drive_t *drivep,
->  			      bstatp->bs_ino,
->  			      path);
->  		}
-> -		return BOOL_TRUE;
-> +		*rvp = RV_INCOMPLETE;
-> +		return BOOL_FALSE;
->  	}
->  	scratchpath[nread] = 0;
->  	if (!tranp->t_toconlypr && path) {
-> @@ -8045,7 +8049,8 @@ restore_symlink(drive_t *drivep,
->  			      bstatp->bs_ino,
->  			      path,
->  			      strerror(errno));
-> -			return BOOL_TRUE;
-> +			*rvp = RV_INCOMPLETE;
-> +			return BOOL_FALSE;
->  		}
->  
->  		/* set the owner and group (if enabled)
-> 
+New Commits:
+
+Darrick J. Wong (2):
+      [8db10a9a] xfs_admin: support external log devices
+      [3f153e05] xfs_admin: enable online label getting and setting
+
+Eric Sandeen (1):
+      [998aed52] xfsprogs: remove stray libxfs whitespace
+
+John Pittman (1):
+      [2ab6ea6a] xfsprogs: add missing line feeds in libxfs/rdwr.c
+
+Pavel Reichl (1):
+      [7e8a6edb] mkfs: Break block discard into chunks of 2 GB
+
+
+Code Diffstat:
+
+ db/xfs_admin.sh          | 54 ++++++++++++++++++++++++++++++++++++++++++=
+++----
+ libxfs/rdwr.c            |  6 +++---
+ libxfs/xfs_fs.h          |  2 +-
+ libxfs/xfs_inode_buf.c   |  1 +
+ libxfs/xfs_trans_inode.c |  1 +
+ man/man8/xfs_admin.8     | 18 +++++++++++++++-
+ mkfs/xfs_mkfs.c          | 50 ++++++++++++++++++++++++++++++++----------=
+--
+ 7 files changed, 110 insertions(+), 22 deletions(-)
+
+
+--9DRihZESqtEm1patoNw8sxCdH3saBy1FY--
+
+--PaulfRBX8tFn49k0KK3RtCtkgOZ0u0xCa
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl30GbQACgkQIK4WkuE9
+3uDgZRAAsiikdzv88j9PMnNHwnTMmmebJgunOmIfV/df9sBGpMndo+bI0a4Pv7NE
+fcQtOKYDR7WAsdNbyuLrY8fU60HquwDbLUOWqjf569kVkXsghw6mJ362p7hyC4h9
+Oead5XwrtarvfCLKFSa9wNaCtVaho6IQ+eatzyW2l+eMcs6uOUHlZzVTltBaDC8L
+dDPUdU34U4f9mxY0trare2kzEj45PYH4mpIXu7ef/dcU/HC4HT2dFecy4zQNfHwQ
+Dt0LQo9GY2aQ+BXnigOw7BR2rv1kQOJnp8J9nHOb2dmmTJe7cpJBXg+Mbhop+16p
+ORAJ3Enpy/JyWfcgupPrWzFbqPDuyhX9CCRd6AuxQBL4KEgs8b2QbqgG+43u+jRv
+MSK+OzTyWzCaxMWouceo6HjbQZuDtMmiX4KOMak++yjyTK+1QE8Jk9VZRNUbPbb3
+uIPYPLCWFxMR7sgwb0OFr/614rZQ4m2ndlLgw/8rrXUMr4ELuY2Ea0kdrSw3MvOY
+iHLd3guxW2yLaTtrcYlqIdX3Jdh52TEE9pE80icvE0gAD4ZVPx+hF7lz/1Cvp1RE
+lJgVVqGNivl0fAhImN4VC8zCIIpfjYP4ZVl1ItrVF/iG/IZHqZKYroEaZN15v9Al
+l2V2sYbKVAC1cB5n68UhQC2Uwwi/xi6ogTaLU1tnzShXPeqd5rU=
+=5FuV
+-----END PGP SIGNATURE-----
+
+--PaulfRBX8tFn49k0KK3RtCtkgOZ0u0xCa--
