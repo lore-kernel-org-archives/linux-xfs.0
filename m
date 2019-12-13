@@ -2,252 +2,227 @@ Return-Path: <SRS0=jVwY=2D=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24C83C32765
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 20:47:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB4E3C341B8
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 20:51:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4EA0D2469B
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 20:47:24 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IvuurWCy"
+	by mail.kernel.org (Postfix) with ESMTP id 0A59B2469B
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 20:51:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725946AbfLMUrY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 13 Dec 2019 15:47:24 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:36980 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725945AbfLMUrY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Dec 2019 15:47:24 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBDKdRns096965;
-        Fri, 13 Dec 2019 20:47:19 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=f1z8i1bOsPvnv8fncGQMCeTZoh0rsFYALlp17JNX36o=;
- b=IvuurWCyo37It1oeHE2mzV2J7Ea4QwVk9DU0N69QDrpImbAPvKNhVENyY+FXq7tszkkK
- R4IrhVMMGYQe3xg5jFmOA5Oo4Nn0+GQqb4v78QCxdz0zsGvQwfRSyz4vUlByyeyf/57I
- wMwTHrCEA3RwDKKThHAz/0pu/kYSBhT47o4gtSy4asPx6LCzeagN/MEqVDgQVbZqnKE7
- YWW+PVMqiyb5jn5Fs/UiTvW1bDMvirisXY875dJe9DLR5juYQxuSLVlGCr07FwtVK4Wx
- ixtDuJAX+Tk/VACM0hpWkxzGv3VGX/z48O1iCd2Megi05HYk4Yth+57lu/6M1WArkDI7 wA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2wrw4nr56h-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 13 Dec 2019 20:47:19 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBDKiJLG046148;
-        Fri, 13 Dec 2019 20:47:18 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 2wvdtvcf5m-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 13 Dec 2019 20:47:18 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xBDKlHVb026893;
-        Fri, 13 Dec 2019 20:47:17 GMT
-Received: from localhost (/10.145.178.64)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 13 Dec 2019 12:47:16 -0800
-Date:   Fri, 13 Dec 2019 12:47:15 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>, Alex Lyakas <alex@zadara.com>,
-        Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfs: don't commit sunit/swidth updates to disk if
- that would cause repair failures
-Message-ID: <20191213204715.GJ99875@magnolia>
-References: <20191213161349.GH99875@magnolia>
- <20191213174526.GH43376@bfoster>
+        id S1726751AbfLMUvv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 13 Dec 2019 15:51:51 -0500
+Received: from mout.kundenserver.de ([217.72.192.74]:52823 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725747AbfLMUvv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Dec 2019 15:51:51 -0500
+Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
+ (mreue109 [212.227.15.145]) with ESMTPA (Nemesis) id
+ 1MvbO4-1hpQC52QtS-00scVY; Fri, 13 Dec 2019 21:50:19 +0100
+From:   Arnd Bergmann <arnd@arndb.de>
+To:     y2038@lists.linaro.org, linux-kernel@vger.kernel.org
+Cc:     Arnd Bergmann <arnd@arndb.de>, jdike@addtoit.com, richard@nod.at,
+        jcmvbkbc@gmail.com, stefanr@s5r6.in-berlin.de,
+        l.stach@pengutronix.de, linux+etnaviv@armlinux.org.uk,
+        christian.gmeiner@gmail.com, airlied@linux.ie, daniel@ffwll.ch,
+        robdclark@gmail.com, sean@poorly.run, valdis.kletnieks@vt.edu,
+        gregkh@linuxfoundation.org, ccaulfie@redhat.com,
+        teigland@redhat.com, hirofumi@mail.parknet.co.jp, jack@suse.com,
+        davem@davemloft.net, fw@strlen.de, viro@zeniv.linux.org.uk,
+        rfontana@redhat.com, tglx@linutronix.de,
+        linux-um@lists.infradead.org,
+        linux1394-devel@lists.sourceforge.net,
+        etnaviv@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        linux-arm-msm@vger.kernel.org, freedreno@lists.freedesktop.org,
+        devel@driverdev.osuosl.org, cluster-devel@redhat.com,
+        linux-fsdevel@vger.kernel.org, netdev@vger.kernel.org,
+        trond.myklebust@hammerspace.com, anna.schumaker@netapp.com,
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+        darrick.wong@oracle.com, sparclinux@vger.kernel.org
+Subject: [PATCH v2 00/24] drivers, fs: y2038 updates
+Date:   Fri, 13 Dec 2019 21:49:09 +0100
+Message-Id: <20191213204936.3643476-1-arnd@arndb.de>
+X-Mailer: git-send-email 2.20.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191213174526.GH43376@bfoster>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9470 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1912130152
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9470 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1912130152
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Provags-ID: V03:K1:uP+kiANpOGJCAXUng4IDyXrHx7+oq5wNuUSCR2Raiw5aTIDdJGg
+ 5j4AA9RZwtRFpSlQJZR8HotU54Xfp+erI4gckXGaucpRhzYx4dcdDnO9RE7chr7C+S6QsS1
+ hz8jSvfht0kOIuwI+U39is0hUz6MZ6pZnETpaFRYUgmMegCz9cluYoQw5GzMKND6Vlt+MoP
+ vuRLets3Xp1M/VHl6bYkg==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:kP6IKflIR3w=:FkB32fEkAgwus2sZyvbWHj
+ gR1XadNmIQfTKvjDx+NHX537KVRwu9adI8C1WG7Uvu2xqdyhi6NbGnzLLS3erKQVoi1q2bcZJ
+ fRUG1d36ibEvFjwqysbPbwC5u4DHiftBkUdZ02IxQaCgRmMake1padTMioHJ5VK44dQCw0Wgi
+ l9FfLjhcz0ZpYw+KmnFwnCxdaEQ4rrmqMmI9qQZLKGibtvLox0uwJBt2f1iziiy+EV55optWx
+ eHVAl6FcsIhDR1hGIagPTt0pygd3l5tg/E0N5N3r8mcI/qaniqvi6KMSXngpuISEjztZUFIKj
+ E4vl7qLyA/xxvBi57YzPutpomt5K21wonhWSM7aFqvVNnIjTmvlIhulMkCwyDac28R/Z4Dp0g
+ KMewi00ymEE1euw319FGcrDlXrYDszeK+FvG14u8GD9wvnlwoLF7R9G2nx97kdApqLxfkXQly
+ B+hANhQzcIaPqD3Mj4IbgJQGI17ypNCagD8+FwqTZDb0OBqInzQnwij7FBHUOWFHF3Qs/EI7o
+ 1nrINilaeyXksJoTUhiuzSirhvGWBkbMzW5k02tP0uTz7sxrCz/FxXHDE522PcCDuQTBlyv+I
+ QJ9z1iVT5Xg/jxkC7PWxkiiqjSgCEiTCIb6V84/lzwlgwaR4VDO+WH8ZX/gzqVNe9o9vQ3KSE
+ 8vilfRFPAZi1Or+AvWmTgxeRFkLvobJdMhGGlGJUFAh0XHUkVTF0t8WkeZWhW85ocAbJ5g94z
+ t07OthlwQEZNuwc5Z06FKMmP8bFmSpWpMf3TMpq6QCKO+gB6xZa0zdZgyTvgHlhAZckFpPNzt
+ SLryaKF3jS+MB5IeJX7dR8/nMWgS5LTwsezZchNIkyBiQLIxvP9ZVqFsGf6QbesMAbCjQWssu
+ Ok7QMsSa208ewWk2bxEw==
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Dec 13, 2019 at 12:45:26PM -0500, Brian Foster wrote:
-> On Fri, Dec 13, 2019 at 08:13:49AM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Alex Lyakas reported[1] that mounting an xfs filesystem with new sunit
-> > and swidth values could cause xfs_repair to fail loudly.  The problem
-> > here is that repair calculates the where mkfs should have allocated the
-> > root inode, based on the superblock geometry.  The allocation decisions
-> > depend on sunit, which means that we really can't go updating sunit if
-> > it would lead to a subsequent repair failure on an otherwise correct
-> > filesystem.
-> > 
-> > Port from xfs_repair some code that computes the location of the root
-> > inode and teach mount to skip the ondisk update if it would cause
-> > problems for repair.  Along the way we'll update the documentation,
-> > provide a function for computing the minimum AGFL size instead of
-> > open-coding it, and cut down some indenting in the mount code.
-> > 
-> > Note that we allow the mount to proceed (and new allocations will
-> > reflect this new geometry) because we've never screened this kind of
-> > thing before.  We'll have to wait for a new future incompat feature to
-> > enforce correct behavior, alas.
-> > 
-> > Note that the geometry reporting always uses the superblock values, not
-> > the incore ones, so that is what xfs_info and xfs_growfs will report.
-> > 
-> > [1] https://lore.kernel.org/linux-xfs/20191125130744.GA44777@bfoster/T/#m00f9594b511e076e2fcdd489d78bc30216d72a7d
-> > 
-> > Reported-by: Alex Lyakas <alex@zadara.com>
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> > v2: refactor the agfl length calculations, clarify the fsgeometry ioctl
-> > behavior, fix a bunch of the comments and make it clearer how we compute
-> > the rootino location
-> > ---
-> >  fs/xfs/libxfs/xfs_alloc.c  |   18 ++++++---
-> >  fs/xfs/libxfs/xfs_ialloc.c |   70 ++++++++++++++++++++++++++++++++++
-> >  fs/xfs/libxfs/xfs_ialloc.h |    1 
-> >  fs/xfs/xfs_mount.c         |   90 ++++++++++++++++++++++++++++++--------------
-> >  fs/xfs/xfs_trace.h         |   21 ++++++++++
-> >  5 files changed, 166 insertions(+), 34 deletions(-)
-> > 
-> ...
-> > diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
-> > index 323592d563d5..72b3468b97b1 100644
-> > --- a/fs/xfs/libxfs/xfs_ialloc.h
-> > +++ b/fs/xfs/libxfs/xfs_ialloc.h
-> ...
-> > @@ -398,28 +431,26 @@ xfs_update_alignment(xfs_mount_t *mp)
-> >  			}
-> >  		}
-> >  
-> > -		/*
-> > -		 * Update superblock with new values
-> > -		 * and log changes
-> > -		 */
-> > -		if (xfs_sb_version_hasdalign(sbp)) {
-> > -			if (sbp->sb_unit != mp->m_dalign) {
-> > -				sbp->sb_unit = mp->m_dalign;
-> > -				mp->m_update_sb = true;
-> > -			}
-> > -			if (sbp->sb_width != mp->m_swidth) {
-> > -				sbp->sb_width = mp->m_swidth;
-> > -				mp->m_update_sb = true;
-> > -			}
-> > -		} else {
-> > +		/* Update superblock with new values and log changes. */
-> > +		if (!xfs_sb_version_hasdalign(sbp)) {
-> >  			xfs_warn(mp,
-> >  	"cannot change alignment: superblock does not support data alignment");
-> >  			return -EINVAL;
-> >  		}
-> > +
-> > +		if (sbp->sb_unit == mp->m_dalign &&
-> > +		    sbp->sb_width == mp->m_swidth)
-> > +			return 0;
-> > +
-> > +		xfs_check_new_dalign(mp, mp->m_dalign);
-> > +
-> > +		sbp->sb_unit = mp->m_dalign;
-> > +		sbp->sb_width = mp->m_swidth;
-> > +		mp->m_update_sb = true;
-> 
-> Isn't this supposed to conditionally update the superblock based on the
-> rootino calculation?
+These are updates to devidce drivers and file systems that for some
+reason or another were not included in the kernel in the previous
+y2038 series.
 
-D'oh.  V3 it is then. :(
+I've gone through all users of time_t again to make sure the
+kernel is in a long-term maintainable state.
 
---D
+Posting these as a series for better organization, but each change
+here is applicable standalone.
 
-> Brian
-> 
-> >  	} else if ((mp->m_flags & XFS_MOUNT_NOALIGN) != XFS_MOUNT_NOALIGN &&
-> >  		    xfs_sb_version_hasdalign(&mp->m_sb)) {
-> > -			mp->m_dalign = sbp->sb_unit;
-> > -			mp->m_swidth = sbp->sb_width;
-> > +		mp->m_dalign = sbp->sb_unit;
-> > +		mp->m_swidth = sbp->sb_width;
-> >  	}
-> >  
-> >  	return 0;
-> > @@ -647,16 +678,6 @@ xfs_mountfs(
-> >  		mp->m_update_sb = true;
-> >  	}
-> >  
-> > -	/*
-> > -	 * Check if sb_agblocks is aligned at stripe boundary
-> > -	 * If sb_agblocks is NOT aligned turn off m_dalign since
-> > -	 * allocator alignment is within an ag, therefore ag has
-> > -	 * to be aligned at stripe boundary.
-> > -	 */
-> > -	error = xfs_update_alignment(mp);
-> > -	if (error)
-> > -		goto out;
-> > -
-> >  	xfs_alloc_compute_maxlevels(mp);
-> >  	xfs_bmap_compute_maxlevels(mp, XFS_DATA_FORK);
-> >  	xfs_bmap_compute_maxlevels(mp, XFS_ATTR_FORK);
-> > @@ -664,6 +685,17 @@ xfs_mountfs(
-> >  	xfs_rmapbt_compute_maxlevels(mp);
-> >  	xfs_refcountbt_compute_maxlevels(mp);
-> >  
-> > +	/*
-> > +	 * Check if sb_agblocks is aligned at stripe boundary.  If sb_agblocks
-> > +	 * is NOT aligned turn off m_dalign since allocator alignment is within
-> > +	 * an ag, therefore ag has to be aligned at stripe boundary.  Note that
-> > +	 * we must compute the free space and rmap btree geometry before doing
-> > +	 * this.
-> > +	 */
-> > +	error = xfs_update_alignment(mp);
-> > +	if (error)
-> > +		goto out;
-> > +
-> >  	/* enable fail_at_unmount as default */
-> >  	mp->m_fail_unmount = true;
-> >  
-> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > index c13bb3655e48..a86be7f807ee 100644
-> > --- a/fs/xfs/xfs_trace.h
-> > +++ b/fs/xfs/xfs_trace.h
-> > @@ -3573,6 +3573,27 @@ DEFINE_KMEM_EVENT(kmem_alloc_large);
-> >  DEFINE_KMEM_EVENT(kmem_realloc);
-> >  DEFINE_KMEM_EVENT(kmem_zone_alloc);
-> >  
-> > +TRACE_EVENT(xfs_check_new_dalign,
-> > +	TP_PROTO(struct xfs_mount *mp, int new_dalign, xfs_ino_t calc_rootino),
-> > +	TP_ARGS(mp, new_dalign, calc_rootino),
-> > +	TP_STRUCT__entry(
-> > +		__field(dev_t, dev)
-> > +		__field(int, new_dalign)
-> > +		__field(xfs_ino_t, sb_rootino)
-> > +		__field(xfs_ino_t, calc_rootino)
-> > +	),
-> > +	TP_fast_assign(
-> > +		__entry->dev = mp->m_super->s_dev;
-> > +		__entry->new_dalign = new_dalign;
-> > +		__entry->sb_rootino = mp->m_sb.sb_rootino;
-> > +		__entry->calc_rootino = calc_rootino;
-> > +	),
-> > +	TP_printk("dev %d:%d new_dalign %d sb_rootino %llu calc_rootino %llu",
-> > +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> > +		  __entry->new_dalign, __entry->sb_rootino,
-> > +		  __entry->calc_rootino)
-> > +)
-> > +
-> >  #endif /* _TRACE_XFS_H */
-> >  
-> >  #undef TRACE_INCLUDE_PATH
-> > 
-> 
+Please merge, review, ack/nack etc as you see fit. I will
+add these to my y2038 branch [1] for linux-next, but can keep
+rebasing for feedback and to remove any patches that get
+picked up by a maintainer.
+
+Changes since v1 [2]:
+
+- Add Acks I received
+- Rebase to v5.5-rc1, droping patches that got merged already
+- Add NFS, XFS and the final three patches from another series
+- Rewrite etnaviv patches
+
+      Arnd
+
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/arnd/playground.git/log/?h=y2038
+[2] https://lore.kernel.org/lkml/20191108213257.3097633-1-arnd@arndb.de/
+
+Arnd Bergmann (24):
+  Input: input_event: fix struct padding on sparc64
+  fat: use prandom_u32() for i_generation
+  dlm: use SO_SNDTIMEO_NEW instead of SO_SNDTIMEO_OLD
+  xtensa: ISS: avoid struct timeval
+  um: ubd: use 64-bit time_t where possible
+  acct: stop using get_seconds()
+  tsacct: add 64-bit btime field
+  packet: clarify timestamp overflow
+  quota: avoid time_t in v1_disk_dqblk definition
+  hostfs: pass 64-bit timestamps to/from user space
+  hfs/hfsplus: use 64-bit inode timestamps
+  drm/msm: avoid using 'timespec'
+  drm/etnaviv: reject timeouts with tv_nsec >= NSEC_PER_SEC
+  drm/etnaviv: avoid deprecated timespec
+  sunrpc: convert to time64_t for expiry
+  nfs: use time64_t internally
+  nfs: fix timstamp debug prints
+  nfs: fscache: use timespec64 in inode auxdata
+  xfs: rename compat_time_t to old_time32_t
+  xfs: disallow broken ioctls without compat-32-bit-time
+  xfs: quota: move to time64_t interfaces
+  y2038: remove obsolete jiffies conversion functions
+  y2038: rename itimerval to __kernel_old_itimerval
+  y2038: sparc: remove use of struct timex
+
+ arch/sparc/kernel/sys_sparc_64.c              | 29 +++++-----
+ arch/um/drivers/cow.h                         |  2 +-
+ arch/um/drivers/cow_user.c                    |  7 ++-
+ arch/um/drivers/ubd_kern.c                    | 10 ++--
+ arch/um/include/shared/os.h                   |  2 +-
+ arch/um/os-Linux/file.c                       |  2 +-
+ .../platforms/iss/include/platform/simcall.h  |  4 +-
+ drivers/gpu/drm/etnaviv/etnaviv_drv.c         | 20 ++++---
+ drivers/gpu/drm/etnaviv/etnaviv_drv.h         | 11 ++--
+ drivers/gpu/drm/etnaviv/etnaviv_gem.c         |  4 +-
+ drivers/gpu/drm/etnaviv/etnaviv_gem.h         |  2 +-
+ drivers/gpu/drm/etnaviv/etnaviv_gpu.c         |  5 +-
+ drivers/gpu/drm/etnaviv/etnaviv_gpu.h         |  5 +-
+ drivers/gpu/drm/msm/msm_drv.h                 |  3 +-
+ drivers/input/evdev.c                         | 14 ++---
+ drivers/input/misc/uinput.c                   | 14 +++--
+ fs/dlm/lowcomms.c                             |  6 +-
+ fs/fat/inode.c                                |  3 +-
+ fs/hfs/hfs_fs.h                               | 28 +++++++--
+ fs/hfs/inode.c                                |  4 +-
+ fs/hfsplus/hfsplus_fs.h                       | 28 +++++++--
+ fs/hfsplus/inode.c                            | 12 ++--
+ fs/hostfs/hostfs.h                            | 22 ++++---
+ fs/hostfs/hostfs_kern.c                       | 15 +++--
+ fs/nfs/fscache-index.c                        |  6 +-
+ fs/nfs/fscache.c                              | 18 ++++--
+ fs/nfs/fscache.h                              |  8 ++-
+ fs/nfs/nfs4xdr.c                              | 10 ++--
+ fs/quota/quotaio_v1.h                         |  6 +-
+ fs/xfs/xfs_dquot.c                            |  6 +-
+ fs/xfs/xfs_ioctl.c                            | 26 +++++++++
+ fs/xfs/xfs_ioctl32.c                          |  2 +-
+ fs/xfs/xfs_ioctl32.h                          |  2 +-
+ fs/xfs/xfs_qm.h                               |  6 +-
+ fs/xfs/xfs_quotaops.c                         |  6 +-
+ fs/xfs/xfs_trans_dquot.c                      |  8 ++-
+ include/linux/jiffies.h                       | 20 -------
+ include/linux/sunrpc/cache.h                  | 42 ++++++++------
+ include/linux/sunrpc/gss_api.h                |  4 +-
+ include/linux/sunrpc/gss_krb5.h               |  2 +-
+ include/linux/syscalls.h                      |  9 ++-
+ include/uapi/linux/acct.h                     |  2 +
+ include/uapi/linux/input.h                    |  1 +
+ include/uapi/linux/taskstats.h                |  6 +-
+ include/uapi/linux/time_types.h               |  5 ++
+ include/uapi/linux/timex.h                    |  2 +
+ kernel/acct.c                                 |  4 +-
+ kernel/time/itimer.c                          | 18 +++---
+ kernel/time/time.c                            | 58 ++-----------------
+ kernel/tsacct.c                               |  9 ++-
+ net/packet/af_packet.c                        | 27 +++++----
+ net/sunrpc/auth_gss/gss_krb5_mech.c           | 12 +++-
+ net/sunrpc/auth_gss/gss_krb5_seal.c           |  8 +--
+ net/sunrpc/auth_gss/gss_krb5_unseal.c         |  6 +-
+ net/sunrpc/auth_gss/gss_krb5_wrap.c           | 16 ++---
+ net/sunrpc/auth_gss/gss_mech_switch.c         |  2 +-
+ net/sunrpc/auth_gss/svcauth_gss.c             |  6 +-
+ net/sunrpc/cache.c                            | 16 ++---
+ net/sunrpc/svcauth_unix.c                     | 10 ++--
+ 59 files changed, 351 insertions(+), 290 deletions(-)
+
+-- 
+2.20.0
+
+Cc: jdike@addtoit.com
+Cc: richard@nod.at
+Cc: jcmvbkbc@gmail.com
+Cc: stefanr@s5r6.in-berlin.de
+Cc: l.stach@pengutronix.de
+Cc: linux+etnaviv@armlinux.org.uk
+Cc: christian.gmeiner@gmail.com
+Cc: airlied@linux.ie
+Cc: daniel@ffwll.ch
+Cc: robdclark@gmail.com
+Cc: sean@poorly.run
+Cc: valdis.kletnieks@vt.edu
+Cc: gregkh@linuxfoundation.org
+Cc: ccaulfie@redhat.com
+Cc: teigland@redhat.com
+Cc: hirofumi@mail.parknet.co.jp
+Cc: jack@suse.com
+Cc: davem@davemloft.net
+Cc: fw@strlen.de
+Cc: viro@zeniv.linux.org.uk
+Cc: rfontana@redhat.com
+Cc: tglx@linutronix.de
+Cc: linux-um@lists.infradead.org
+Cc: linux1394-devel@lists.sourceforge.net
+Cc: etnaviv@lists.freedesktop.org
+Cc: dri-devel@lists.freedesktop.org
+Cc: linux-arm-msm@vger.kernel.org
+Cc: freedreno@lists.freedesktop.org
+Cc: devel@driverdev.osuosl.org
+Cc: cluster-devel@redhat.com
+Cc: linux-fsdevel@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: trond.myklebust@hammerspace.com
+Cc: anna.schumaker@netapp.com
+Cc: linux-nfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com
+Cc: sparclinux@vger.kernel.org
