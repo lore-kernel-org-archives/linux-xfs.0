@@ -2,131 +2,143 @@ Return-Path: <SRS0=jVwY=2D=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AD50C2D0C9
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 21:18:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08DA1C43603
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 22:09:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7E3C720663
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 21:18:52 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="H4cnMEb7"
+	by mail.kernel.org (Postfix) with ESMTP id D61482073D
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 22:09:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726463AbfLMVSw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 13 Dec 2019 16:18:52 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:32838 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726590AbfLMVSv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Dec 2019 16:18:51 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBDKsfWh090998;
-        Fri, 13 Dec 2019 21:18:44 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=X+2tEe+tYzg2Fks7bhpQkOAxHyaWVZAH0k0u6MwuV5E=;
- b=H4cnMEb75s31C6RYwQ5AebrGol7SnOC1Qk5+YeI7AkILJFOJI7bwjTkhzP/lGoR3offr
- 6pT2Xb+3QrPEGC/ia4XkeVB7qdZOuf3yho59Ezkf7Gw1DKMt84PnCQQGr9/rhAFcXKJK
- y4rm6gRy9f4RdFO5lR/iYuNTioANmVlZR2Byz5acHHNJQBiKOqo4fFFYqPH+HmMcQdku
- kpeen3aaR2BP/vdGMFaNZvMm24w06eBb8I5RitF7eY2aTWuxGo5R0Y2O2mK2KMc1XJy1
- ZckE6m7TSRyhjvsP/oVX4grX+XJIlUaKnVPkL/XWwsZEUCWQFL/8FAZXza9EKMpdV4n+ 3Q== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 2wr41qud5v-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 13 Dec 2019 21:18:44 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBDKscae067505;
-        Fri, 13 Dec 2019 21:18:43 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 2wvdtvdd6j-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 13 Dec 2019 21:18:43 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xBDLIgls012266;
-        Fri, 13 Dec 2019 21:18:42 GMT
-Received: from localhost (/10.145.178.64)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 13 Dec 2019 13:18:41 -0800
-Date:   Fri, 13 Dec 2019 13:18:40 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Arnd Bergmann <arnd@arndb.de>
-Cc:     y2038@lists.linaro.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        Nick Bowler <nbowler@draconx.ca>
-Subject: Re: [PATCH v2 19/24] xfs: rename compat_time_t to old_time32_t
-Message-ID: <20191213211840.GM99875@magnolia>
-References: <20191213204936.3643476-1-arnd@arndb.de>
- <20191213205417.3871055-10-arnd@arndb.de>
+        id S1726090AbfLMWJx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 13 Dec 2019 17:09:53 -0500
+Received: from sandeen.net ([63.231.237.45]:59270 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725948AbfLMWJx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 13 Dec 2019 17:09:53 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 2ECE22ABE;
+        Fri, 13 Dec 2019 16:09:44 -0600 (CST)
+Subject: Re: [PATCH] xfs_restore: Fix compile warnings with strncpy size equal
+ to string size
+To:     Frank Sorenson <sorenson@redhat.com>, linux-xfs@vger.kernel.org
+References: <20191213001114.3442739-1-sorenson@redhat.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <c40ef1e4-17cc-aaea-a6b8-1198e90e01f6@sandeen.net>
+Date:   Fri, 13 Dec 2019 16:09:50 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.3.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191213205417.3871055-10-arnd@arndb.de>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9470 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=854
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1912130154
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9470 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=905 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1912130154
+In-Reply-To: <20191213001114.3442739-1-sorenson@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Dec 13, 2019 at 09:53:47PM +0100, Arnd Bergmann wrote:
-> The compat_time_t type has been removed everywhere else,
-> as most users rely on old_time32_t for both native and
-> compat mode handling of 32-bit time_t.
+On 12/12/19 6:11 PM, Frank Sorenson wrote:
+> If the strncpy size equals the string size, the result will not
+> be null-terminated.
 > 
-> Remove the last one in xfs.
+> Call the already-existing strncpyterm which ensures proper
+> termination.
 > 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Signed-off-by: Frank Sorenson <sorenson@redhat.com>
 
-Looks fine to me, assuming that compat_time_t -> old_time32_t.
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Thanks Frank!
 
---D
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
 > ---
->  fs/xfs/xfs_ioctl32.c | 2 +-
->  fs/xfs/xfs_ioctl32.h | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
+>  restore/content.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-> index c4c4f09113d3..a49bd80b2c3b 100644
-> --- a/fs/xfs/xfs_ioctl32.c
-> +++ b/fs/xfs/xfs_ioctl32.c
-> @@ -107,7 +107,7 @@ xfs_ioctl32_bstime_copyin(
->  	xfs_bstime_t		*bstime,
->  	compat_xfs_bstime_t	__user *bstime32)
->  {
-> -	compat_time_t		sec32;	/* tv_sec differs on 64 vs. 32 */
-> +	old_time32_t		sec32;	/* tv_sec differs on 64 vs. 32 */
->  
->  	if (get_user(sec32,		&bstime32->tv_sec)	||
->  	    get_user(bstime->tv_nsec,	&bstime32->tv_nsec))
-> diff --git a/fs/xfs/xfs_ioctl32.h b/fs/xfs/xfs_ioctl32.h
-> index 8c7743cd490e..053de7d894cd 100644
-> --- a/fs/xfs/xfs_ioctl32.h
-> +++ b/fs/xfs/xfs_ioctl32.h
-> @@ -32,7 +32,7 @@
->  #endif
->  
->  typedef struct compat_xfs_bstime {
-> -	compat_time_t	tv_sec;		/* seconds		*/
-> +	old_time32_t	tv_sec;		/* seconds		*/
->  	__s32		tv_nsec;	/* and nanoseconds	*/
->  } compat_xfs_bstime_t;
->  
-> -- 
-> 2.20.0
+> diff --git a/restore/content.c b/restore/content.c
+> index 5e30f08..4c4d6ec 100644
+> --- a/restore/content.c
+> +++ b/restore/content.c
+> @@ -5081,7 +5081,7 @@ pi_insertfile(ix_t drivecnt,
+>  	     &&
+>  	     ! DH2O(objh)->o_idlabvalpr) {
+>  		uuid_copy(DH2O(objh)->o_id, *mediaidp);
+> -		strncpy(DH2O(objh)->o_lab,
+> +		strncpyterm(DH2O(objh)->o_lab,
+>  			 medialabel,
+>  			 sizeof(DH2O(objh)->o_lab));
+>  		DH2O(objh)->o_idlabvalpr = BOOL_TRUE;
+> @@ -5111,7 +5111,7 @@ pi_insertfile(ix_t drivecnt,
+>  	     &&
+>  	     ! DH2O(prevobjh)->o_idlabvalpr) {
+>  		uuid_copy(DH2O(prevobjh)->o_id, *prevmediaidp);
+> -		strncpy(DH2O(prevobjh)->o_lab,
+> +		strncpyterm(DH2O(prevobjh)->o_lab,
+>  			       prevmedialabel,
+>  			       sizeof(DH2O(prevobjh)->o_lab));
+>  		DH2O(prevobjh)->o_idlabvalpr = BOOL_TRUE;
+> @@ -5581,7 +5581,7 @@ pi_transcribe(inv_session_t *sessp)
+>  					       fileszvalpr,
+>  					       filep->m_size);
+>  			uuid_copy(lastobjid, filep->m_moid);
+> -			strncpy(lastobjlabel,
+> +			strncpyterm(lastobjlabel,
+>  				 filep->m_label,
+>  				 sizeof(lastobjlabel));
+>  			dumpmediafileix++;
+> @@ -6749,7 +6749,7 @@ addobj(bag_t *bagp,
+>  	bagobjp = (bagobj_t *)calloc(1, sizeof(bagobj_t));
+>  	assert(bagobjp);
+>  	uuid_copy(bagobjp->id, *idp);
+> -	strncpy(bagobjp->label,
+> +	strncpyterm(bagobjp->label,
+>  		 label,
+>  		 sizeof(bagobjp->label));
+>  	bagobjp->indrivepr = indrivepr;
 > 
