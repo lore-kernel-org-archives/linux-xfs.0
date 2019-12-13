@@ -6,97 +6,131 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E5CFC4D2C1
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 20:57:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9940C4D2C4
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 20:57:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C77CA246A9
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 20:57:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0215A2469F
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 20:57:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726524AbfLMU5k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 13 Dec 2019 15:57:40 -0500
-Received: from mout.kundenserver.de ([212.227.126.133]:55425 "EHLO
+        id S1726518AbfLMU56 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 13 Dec 2019 15:57:58 -0500
+Received: from mout.kundenserver.de ([212.227.126.135]:56003 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725747AbfLMU5k (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Dec 2019 15:57:40 -0500
+        with ESMTP id S1725747AbfLMU55 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Dec 2019 15:57:57 -0500
 Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
  (mreue010 [212.227.15.129]) with ESMTPA (Nemesis) id
- 1M2w0K-1ijAJy1eIO-003Mbu; Fri, 13 Dec 2019 21:57:30 +0100
+ 1N9dg5-1hcRf53jM5-015a8l; Fri, 13 Dec 2019 21:57:46 +0100
 From:   Arnd Bergmann <arnd@arndb.de>
 To:     y2038@lists.linaro.org, linux-kernel@vger.kernel.org,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
         linux-xfs@vger.kernel.org
 Cc:     Arnd Bergmann <arnd@arndb.de>, Brian Foster <bfoster@redhat.com>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        Nick Bowler <nbowler@draconx.ca>
-Subject: [PATCH v2 19/24] xfs: rename compat_time_t to old_time32_t
-Date:   Fri, 13 Dec 2019 21:53:47 +0100
-Message-Id: <20191213205417.3871055-10-arnd@arndb.de>
+        Dave Chinner <dchinner@redhat.com>,
+        Allison Collins <allison.henderson@oracle.com>,
+        Jan Kara <jack@suse.cz>, Eric Sandeen <sandeen@sandeen.net>
+Subject: [PATCH v2 20/24] xfs: disallow broken ioctls without compat-32-bit-time
+Date:   Fri, 13 Dec 2019 21:53:48 +0100
+Message-Id: <20191213205417.3871055-11-arnd@arndb.de>
 X-Mailer: git-send-email 2.20.0
 In-Reply-To: <20191213204936.3643476-1-arnd@arndb.de>
 References: <20191213204936.3643476-1-arnd@arndb.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:zARXgYKok4zeFDeeiNI16bU/sUy4YFIaNYCQJhqKBzQvtO+A17j
- v4tP1EL/FypfHgRghMWum3GsKwt3bSsFh+LQlXfZ8b1QoXAeO/eXJeoUue+k/qwEXtW3KQt
- 8CymFTBFACC8PMqkvogi/8JqezrnKFM7ZCyKZRi4H0KE11VQzGJsVCZgVf1eHP+T/QD+CG0
- QqYUBx+tj3Lzwj6dluayA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:KuBqyk8mLpI=:DXXot5F8i3KR2QR2b5njA0
- C5sUb6IXLZGwy3iRjXzZtPcQ0bKQ98ph2rn+5bOAuE1WA2E+2DRWnJJwJBLnk7uF/5alcwxq4
- pw1I7k3cyzP0yWzHOgS58+gxZpIyQWP3bGUZZmYFdPuRnwOpIu/r2v8vUv5dNxfKiQwdi9cH0
- fjOQ0dEq8+9hs4nrEg1rfLtCebS0M6cjEiTK9Wrt3/1XHGqfDbFQTY3MUMMx1vhfBw/ya46HS
- 8d55sKQU+FiWDcBt4fRWxUff/lKINLgvy3w49NzDtn1ZYAxMFYK0ExbRxoc9f/lsR++hpy/kM
- EzHD7K5n9vG2kY4S+oqQ+5Dbpo0JwcACUDE1GReG9NDvCoZvj7l2K3NSJjCCFHTh4mc875uvg
- 2Z3ZPzuSPl8EFMO8SXyeuESMwXOVZCjqSY9YVkaBxJFPGg5Oq3N+3OWILmR44OvK/bioeHV/7
- cFeH0oJM0xLojwAFlNdyMi7s5bn7erLfG7ZzBfvKWxbxT4u+jZYvHS4E+Wof/p+yQOi+eKhEZ
- InFbWlGZu0VLsmLuu8Gbxtkz+dbyEegQ6pzqR3Dgp3boxgCVmksoKok2pTcahOlUXGxH+kUUa
- T1+NbB2FCuUBTv7ig9jXs1q11ukMR8Q0lOL3NaWSZXipJGyCIAE3kZloJ+P1Mch6AUh4DSuEt
- NgFYm0LS/edpWjeMa+I0kb6ujA0GaoeoIqc4ruiaB49lzL6HlHKoaAO/gCWIFg+2X6mf8E9ZE
- CaO9gEtvqhPOkkWKJM3kbSyN9/TssF0J8NS0KTjcdpuNPSALWSGojoK/MpKxCsC52LDfHOnlz
- fACIRYflX0kBmHe8Va1nfHfCblPXXBBPcFy8WX5anhd0ChMO8MavG4yqDO9KqJObrVIcJssKB
- csAnZVpQ8ahGdl4jO+Sg==
+X-Provags-ID: V03:K1:+OC98lqsRIacY7Fo8hffNaEguwEx5BrW1ehoyzc3XQFB5ZHNiyH
+ 3YX603rEPTrkOQExfMO9QXAGFroF+FD93OMx9FVC6EZty09STF3GnlQELmGO576vt5HzmMn
+ X5re2BzBcKgFmWs4Z1qDbbqpMGHnWYZCouGOGdR3XUvGTqVJihZQ7bnJ/2nvsy1qXT1bBNT
+ LbByJ8SMK3jY0wg9jfTVA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:hyZOFL3Pdhc=:c8WEjei9ibUrYRg7I5nOOT
+ uV2U+LutYN//sc6CK3IG/2yqD9u5+kPxqEpfyfGI5AnPSM42vSXYkcWAmuHZNl3qkpHZfBfi5
+ jL3Y/aBoYbidXGGJpMF9E4OjvFS+f1i0kfrEk6woVEmJDvyxstAQx0azJUrOpRZ8D5lMEErZY
+ zKTSPj3FmzEE7eIytszzFwKN7qLS0lY4X+6j76qz+q46OloyHeJE0EZy9TiVFErDzyzMt7Rrw
+ DEDRlCQfw9ic8qFrLRqjgIitBCIhLFktVhXGQVtF8Hw4gXZONvO3lF/Ugtfpscc9K3DuEz7NO
+ Tl/TE2WRwqa2ELqxyPYka4nMkdhcQ6XBF1GmkHKtzbStWOLw4Mn6OUpCRasZZ1iArigNbCA39
+ xvzP7ILLUKggS0iNdk6flDo16UFbFGuN5Owv0f59Jm6ipUZntiBhIm2GjTE0bTPdFq6vasDAk
+ SFTAJT/jZtxnclb1CEN7VFV4ZV81CxAqh/2ISzAhACjF5gE3OTVR0fz5Fil39oMVYA1uEGIT3
+ HWoPW/SNtQ363sKS75X6AAyU9us76vzNZbZyPj3Hi7BYvXrSdLoOAajFzm7gEYfPWJlQ3GJS5
+ lriS8hPIMhzMFlAEnAw05o0230kTwVbTLNafzi7NjuGr/2YnwzdVoAJRe3Q+6hxYQx5XcJLYU
+ gHc2QlrcR8ihFfBqSSxgf/5OA9HkYzWL02Ey9ma6puSYTXvA8kqvcCeCKm+Y07/FKPiQdJ6ut
+ ufWZcVA+3+STIzCrybd1pcL1zSIUCpmwFMvwlvCEEKzPw48lb7P48aagOI/F7pG3V2O+b6Z4M
+ TJGaa3pPvY/0B4jk3pyexJfYgefRXzzP9aN7oQZ3CjYDbtfQnBUfJiyByUAHvN1GfXJ4E08fU
+ 3wzrXqTv0isiQ9PrA16w==
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The compat_time_t type has been removed everywhere else,
-as most users rely on old_time32_t for both native and
-compat mode handling of 32-bit time_t.
+When building a kernel that disables support for 32-bit time_t
+system calls, it also makes sense to disable the old xfs_bstat
+ioctls completely, as they truncate the timestamps to 32-bit
+values.
 
-Remove the last one in xfs.
+Any application using these needs to be updated to use the v5
+interfaces.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- fs/xfs/xfs_ioctl32.c | 2 +-
- fs/xfs/xfs_ioctl32.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_ioctl.c | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index c4c4f09113d3..a49bd80b2c3b 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -107,7 +107,7 @@ xfs_ioctl32_bstime_copyin(
- 	xfs_bstime_t		*bstime,
- 	compat_xfs_bstime_t	__user *bstime32)
- {
--	compat_time_t		sec32;	/* tv_sec differs on 64 vs. 32 */
-+	old_time32_t		sec32;	/* tv_sec differs on 64 vs. 32 */
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 7b35d62ede9f..a4a4eed8879c 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -36,6 +36,7 @@
+ #include "xfs_reflink.h"
+ #include "xfs_ioctl.h"
  
- 	if (get_user(sec32,		&bstime32->tv_sec)	||
- 	    get_user(bstime->tv_nsec,	&bstime32->tv_nsec))
-diff --git a/fs/xfs/xfs_ioctl32.h b/fs/xfs/xfs_ioctl32.h
-index 8c7743cd490e..053de7d894cd 100644
---- a/fs/xfs/xfs_ioctl32.h
-+++ b/fs/xfs/xfs_ioctl32.h
-@@ -32,7 +32,7 @@
- #endif
++#include <linux/compat.h>
+ #include <linux/mount.h>
+ #include <linux/namei.h>
  
- typedef struct compat_xfs_bstime {
--	compat_time_t	tv_sec;		/* seconds		*/
-+	old_time32_t	tv_sec;		/* seconds		*/
- 	__s32		tv_nsec;	/* and nanoseconds	*/
- } compat_xfs_bstime_t;
+@@ -617,6 +618,23 @@ xfs_fsinumbers_fmt(
+ 	return xfs_ibulk_advance(breq, sizeof(struct xfs_inogrp));
+ }
  
++/* disallow y2038-unsafe ioctls with CONFIG_COMPAT_32BIT_TIME=n */
++static bool xfs_have_compat_bstat_time32(unsigned int cmd)
++{
++	if (IS_ENABLED(CONFIG_COMPAT_32BIT_TIME))
++		return true;
++
++	if (IS_ENABLED(CONFIG_64BIT) && !in_compat_syscall())
++		return true;
++
++	if (cmd == XFS_IOC_FSBULKSTAT_SINGLE ||
++	    cmd == XFS_IOC_FSBULKSTAT ||
++	    cmd == XFS_IOC_SWAPEXT)
++		return false;
++
++	return true;
++}
++
+ STATIC int
+ xfs_ioc_fsbulkstat(
+ 	xfs_mount_t		*mp,
+@@ -637,6 +655,9 @@ xfs_ioc_fsbulkstat(
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EPERM;
+ 
++	if (!xfs_have_compat_bstat_time32(cmd))
++		return -EINVAL;
++
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
+@@ -1815,6 +1836,11 @@ xfs_ioc_swapext(
+ 	struct fd	f, tmp;
+ 	int		error = 0;
+ 
++	if (xfs_have_compat_bstat_time32(XFS_IOC_SWAPEXT)) {
++		error = -EINVAL;
++		goto out;
++	}
++
+ 	/* Pull information for the target fd */
+ 	f = fdget((int)sxp->sx_fdtarget);
+ 	if (!f.file) {
 -- 
 2.20.0
 
