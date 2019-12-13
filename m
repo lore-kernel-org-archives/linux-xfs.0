@@ -1,4 +1,4 @@
-Return-Path: <SRS0=0MSb=2C=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=jVwY=2D=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
@@ -7,131 +7,106 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B24E2C43603
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Dec 2019 23:33:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80BF8C00454
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 00:11:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 81EFF214AF
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Dec 2019 23:33:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5270C206E2
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 00:11:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="g3rKK9vC"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aC3SYiKM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731168AbfLLXdH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Dec 2019 18:33:07 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:49043 "EHLO
+        id S1731790AbfLMALX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Dec 2019 19:11:23 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:27944 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730934AbfLLXdH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Dec 2019 18:33:07 -0500
+        with ESMTP id S1731397AbfLMALX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Dec 2019 19:11:23 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1576193585;
+        s=mimecast20190719; t=1576195881;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding;
-        bh=HdKhJh/qqAzHDwkzLqaUqRtiDHeAJoTAJQ63f9ozLGM=;
-        b=g3rKK9vCnnSfv8SH/Phl70MXe97J5y0pjzgDb+DNGogYMkc6qn6dC4/+9RLZTnfx/Bpofc
-        McuvSPpqZUrNyK19AtWW0VmQwtojYrTy1Z3TgiYExHD5BKWZxQasKhVpRLslmo3kO7F/4f
-        dNpJaWQ/9W9T7QsUNJG3caxAyn86j14=
+        bh=ezZwUUHQuZqJaD/c/lGW0ptuelyzVFej3slUG6VBGlE=;
+        b=aC3SYiKMryUAVKfaBo1asYcknQlvZtmZBZiCGBDGP/UlrMpytfs5v3toHlklz+l1mA02SI
+        IuJlbxZQyMiqvFYdBi8848PHYBlnkZ6UTmoflhjnvf629rgWTCBRUVUS74xFZqLXPSMkxY
+        FGy7RjHxWxvcoGSasZOmh5s21GXsR4Y=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-222-7Leh20vzPAqrE9eZ1sR5Jw-1; Thu, 12 Dec 2019 18:33:01 -0500
-X-MC-Unique: 7Leh20vzPAqrE9eZ1sR5Jw-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+ us-mta-242-lTF4d07TMX-DjaYiIlIACw-1; Thu, 12 Dec 2019 19:11:20 -0500
+X-MC-Unique: lTF4d07TMX-DjaYiIlIACw-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0F99A107ACE6;
-        Thu, 12 Dec 2019 23:33:01 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 80BEB102313E;
+        Fri, 13 Dec 2019 00:11:19 +0000 (UTC)
 Received: from hut.sorensonfamily.com.com (ovpn-118-17.phx2.redhat.com [10.3.118.17])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 4D07C67668;
-        Thu, 12 Dec 2019 23:32:50 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8FAF546E8A;
+        Fri, 13 Dec 2019 00:11:16 +0000 (UTC)
 From:   Frank Sorenson <sorenson@redhat.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     sandeen@sandeen.net, sorenson@redhat.com
-Subject: [PATCH] xfs_restore: Return on error when restoring file or symlink
-Date:   Thu, 12 Dec 2019 17:32:48 -0600
-Message-Id: <20191212233248.3428280-1-sorenson@redhat.com>
+Subject: [PATCH] xfs_restore: Fix compile warnings with strncpy size equal to string size
+Date:   Thu, 12 Dec 2019 18:11:14 -0600
+Message-Id: <20191213001114.3442739-1-sorenson@redhat.com>
 MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-If an error occurs while opening or truncating a regular
-file, or while creating a symlink, during a restore, no error
-is currently propagated back to the caller, so xfsrestore can
-return SUCCESS on a failed restore.
+If the strncpy size equals the string size, the result will not
+be null-terminated.
 
-Make restore_reg and restore_symlink return an error code
-indicating the restore was incomplete.
+Call the already-existing strncpyterm which ensures proper
+termination.
 
 Signed-off-by: Frank Sorenson <sorenson@redhat.com>
 ---
- restore/content.c | 17 +++++++++++------
- 1 file changed, 11 insertions(+), 6 deletions(-)
+ restore/content.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/restore/content.c b/restore/content.c
-index c267234..5e30f08 100644
+index 5e30f08..4c4d6ec 100644
 --- a/restore/content.c
 +++ b/restore/content.c
-@@ -7429,7 +7429,7 @@ done:
-=20
- /* called to begin a regular file. if no path given, or if just toc,
-  * don't actually write, just read. also get into that situation if
-- * cannot prepare destination. fd =3D=3D -1 signifies no write. *statp
-+ * cannot prepare destination. fd =3D=3D -1 signifies no write. *rvp
-  * is set to indicate drive errors. returns FALSE if should abort
-  * this iteration.
-  */
-@@ -7486,12 +7486,13 @@ restore_reg(drive_t *drivep,
-=20
- 	*fdp =3D open(path, oflags, S_IRUSR | S_IWUSR);
- 	if (*fdp < 0) {
--		mlog(MLOG_NORMAL | MLOG_WARNING,
-+		mlog(MLOG_NORMAL | MLOG_ERROR,
- 		      _("open of %s failed: %s: discarding ino %llu\n"),
- 		      path,
- 		      strerror(errno),
- 		      bstatp->bs_ino);
--		return BOOL_TRUE;
-+		*rvp =3D RV_INCOMPLETE;
-+		return BOOL_FALSE;
- 	}
-=20
- 	rval =3D fstat64(*fdp, &stat);
-@@ -7510,10 +7511,12 @@ restore_reg(drive_t *drivep,
-=20
- 			rval =3D ftruncate64(*fdp, bstatp->bs_size);
- 			if (rval !=3D 0) {
--				mlog(MLOG_VERBOSE | MLOG_WARNING,
-+				mlog(MLOG_VERBOSE | MLOG_ERROR,
- 				      _("attempt to truncate %s failed: %s\n"),
- 				      path,
- 				      strerror(errno));
-+				*rvp =3D RV_INCOMPLETE;
-+				return BOOL_FALSE;
- 			}
- 		}
- 	}
-@@ -8021,7 +8024,8 @@ restore_symlink(drive_t *drivep,
- 			      bstatp->bs_ino,
- 			      path);
- 		}
--		return BOOL_TRUE;
-+		*rvp =3D RV_INCOMPLETE;
-+		return BOOL_FALSE;
- 	}
- 	scratchpath[nread] =3D 0;
- 	if (!tranp->t_toconlypr && path) {
-@@ -8045,7 +8049,8 @@ restore_symlink(drive_t *drivep,
- 			      bstatp->bs_ino,
- 			      path,
- 			      strerror(errno));
--			return BOOL_TRUE;
-+			*rvp =3D RV_INCOMPLETE;
-+			return BOOL_FALSE;
- 		}
-=20
- 		/* set the owner and group (if enabled)
+@@ -5081,7 +5081,7 @@ pi_insertfile(ix_t drivecnt,
+ 	     &&
+ 	     ! DH2O(objh)->o_idlabvalpr) {
+ 		uuid_copy(DH2O(objh)->o_id, *mediaidp);
+-		strncpy(DH2O(objh)->o_lab,
++		strncpyterm(DH2O(objh)->o_lab,
+ 			 medialabel,
+ 			 sizeof(DH2O(objh)->o_lab));
+ 		DH2O(objh)->o_idlabvalpr =3D BOOL_TRUE;
+@@ -5111,7 +5111,7 @@ pi_insertfile(ix_t drivecnt,
+ 	     &&
+ 	     ! DH2O(prevobjh)->o_idlabvalpr) {
+ 		uuid_copy(DH2O(prevobjh)->o_id, *prevmediaidp);
+-		strncpy(DH2O(prevobjh)->o_lab,
++		strncpyterm(DH2O(prevobjh)->o_lab,
+ 			       prevmedialabel,
+ 			       sizeof(DH2O(prevobjh)->o_lab));
+ 		DH2O(prevobjh)->o_idlabvalpr =3D BOOL_TRUE;
+@@ -5581,7 +5581,7 @@ pi_transcribe(inv_session_t *sessp)
+ 					       fileszvalpr,
+ 					       filep->m_size);
+ 			uuid_copy(lastobjid, filep->m_moid);
+-			strncpy(lastobjlabel,
++			strncpyterm(lastobjlabel,
+ 				 filep->m_label,
+ 				 sizeof(lastobjlabel));
+ 			dumpmediafileix++;
+@@ -6749,7 +6749,7 @@ addobj(bag_t *bagp,
+ 	bagobjp =3D (bagobj_t *)calloc(1, sizeof(bagobj_t));
+ 	assert(bagobjp);
+ 	uuid_copy(bagobjp->id, *idp);
+-	strncpy(bagobjp->label,
++	strncpyterm(bagobjp->label,
+ 		 label,
+ 		 sizeof(bagobjp->label));
+ 	bagobjp->indrivepr =3D indrivepr;
 --=20
 2.20.1
 
