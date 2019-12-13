@@ -6,27 +6,27 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08DA1C43603
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 22:09:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D3D9C2D0CA
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 22:25:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D61482073D
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 22:09:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7148E22527
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 22:25:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726090AbfLMWJx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 13 Dec 2019 17:09:53 -0500
-Received: from sandeen.net ([63.231.237.45]:59270 "EHLO sandeen.net"
+        id S1726750AbfLMWZE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 13 Dec 2019 17:25:04 -0500
+Received: from sandeen.net ([63.231.237.45]:60036 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725948AbfLMWJx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 13 Dec 2019 17:09:53 -0500
+        id S1726345AbfLMWZE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 13 Dec 2019 17:25:04 -0500
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 2ECE22ABE;
-        Fri, 13 Dec 2019 16:09:44 -0600 (CST)
-Subject: Re: [PATCH] xfs_restore: Fix compile warnings with strncpy size equal
- to string size
+        by sandeen.net (Postfix) with ESMTPSA id 9C32D2ABE;
+        Fri, 13 Dec 2019 16:24:55 -0600 (CST)
+Subject: Re: [PATCH] xfs_restore: Return on error when restoring file or
+ symlink
 To:     Frank Sorenson <sorenson@redhat.com>, linux-xfs@vger.kernel.org
-References: <20191213001114.3442739-1-sorenson@redhat.com>
+References: <20191212233248.3428280-1-sorenson@redhat.com>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -70,75 +70,121 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <c40ef1e4-17cc-aaea-a6b8-1198e90e01f6@sandeen.net>
-Date:   Fri, 13 Dec 2019 16:09:50 -0600
+Message-ID: <72626168-8207-7e05-bc55-f18074e4a5dc@sandeen.net>
+Date:   Fri, 13 Dec 2019 16:25:00 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.3.0
 MIME-Version: 1.0
-In-Reply-To: <20191213001114.3442739-1-sorenson@redhat.com>
+In-Reply-To: <20191212233248.3428280-1-sorenson@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 12/12/19 6:11 PM, Frank Sorenson wrote:
-> If the strncpy size equals the string size, the result will not
-> be null-terminated.
+On 12/12/19 5:32 PM, Frank Sorenson wrote:
+> If an error occurs while opening or truncating a regular
+> file, or while creating a symlink, during a restore, no error
+> is currently propagated back to the caller, so xfsrestore can
+> return SUCCESS on a failed restore.
 > 
-> Call the already-existing strncpyterm which ensures proper
-> termination.
-> 
+> Make restore_reg and restore_symlink return an error code
+> indicating the restore was incomplete.
+
+Thanks for looking at this, some stuff below
+
 > Signed-off-by: Frank Sorenson <sorenson@redhat.com>
-
-Thanks Frank!
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
 > ---
->  restore/content.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
+>  restore/content.c | 17 +++++++++++------
+>  1 file changed, 11 insertions(+), 6 deletions(-)
 > 
 > diff --git a/restore/content.c b/restore/content.c
-> index 5e30f08..4c4d6ec 100644
+> index c267234..5e30f08 100644
 > --- a/restore/content.c
 > +++ b/restore/content.c
-> @@ -5081,7 +5081,7 @@ pi_insertfile(ix_t drivecnt,
->  	     &&
->  	     ! DH2O(objh)->o_idlabvalpr) {
->  		uuid_copy(DH2O(objh)->o_id, *mediaidp);
-> -		strncpy(DH2O(objh)->o_lab,
-> +		strncpyterm(DH2O(objh)->o_lab,
->  			 medialabel,
->  			 sizeof(DH2O(objh)->o_lab));
->  		DH2O(objh)->o_idlabvalpr = BOOL_TRUE;
-> @@ -5111,7 +5111,7 @@ pi_insertfile(ix_t drivecnt,
->  	     &&
->  	     ! DH2O(prevobjh)->o_idlabvalpr) {
->  		uuid_copy(DH2O(prevobjh)->o_id, *prevmediaidp);
-> -		strncpy(DH2O(prevobjh)->o_lab,
-> +		strncpyterm(DH2O(prevobjh)->o_lab,
->  			       prevmedialabel,
->  			       sizeof(DH2O(prevobjh)->o_lab));
->  		DH2O(prevobjh)->o_idlabvalpr = BOOL_TRUE;
-> @@ -5581,7 +5581,7 @@ pi_transcribe(inv_session_t *sessp)
->  					       fileszvalpr,
->  					       filep->m_size);
->  			uuid_copy(lastobjid, filep->m_moid);
-> -			strncpy(lastobjlabel,
-> +			strncpyterm(lastobjlabel,
->  				 filep->m_label,
->  				 sizeof(lastobjlabel));
->  			dumpmediafileix++;
-> @@ -6749,7 +6749,7 @@ addobj(bag_t *bagp,
->  	bagobjp = (bagobj_t *)calloc(1, sizeof(bagobj_t));
->  	assert(bagobjp);
->  	uuid_copy(bagobjp->id, *idp);
-> -	strncpy(bagobjp->label,
-> +	strncpyterm(bagobjp->label,
->  		 label,
->  		 sizeof(bagobjp->label));
->  	bagobjp->indrivepr = indrivepr;
+> @@ -7429,7 +7429,7 @@ done:
+>  
+>  /* called to begin a regular file. if no path given, or if just toc,
+>   * don't actually write, just read. also get into that situation if
+> - * cannot prepare destination. fd == -1 signifies no write. *statp
+> + * cannot prepare destination. fd == -1 signifies no write. *rvp
+>   * is set to indicate drive errors. returns FALSE if should abort
+>   * this iteration.
+>   */
+> @@ -7486,12 +7486,13 @@ restore_reg(drive_t *drivep,
+>  
+>  	*fdp = open(path, oflags, S_IRUSR | S_IWUSR);
+>  	if (*fdp < 0) {
+> -		mlog(MLOG_NORMAL | MLOG_WARNING,
+> +		mlog(MLOG_NORMAL | MLOG_ERROR,
+>  		      _("open of %s failed: %s: discarding ino %llu\n"),
+>  		      path,
+>  		      strerror(errno),
+>  		      bstatp->bs_ino);
+> -		return BOOL_TRUE;
+> +		*rvp = RV_INCOMPLETE;
+> +		return BOOL_FALSE;
+>  	}
+
+I'm really not sure about original intent of the return values here and
+when "this iteration should abort"
+
+Before this patch, the function always returned BOOL_TRUE so there's
+not much guidance.  Presumably all the "log something and return true"
+considered these to be transient errors ...
+  
+>  	rval = fstat64(*fdp, &stat);
+> @@ -7510,10 +7511,12 @@ restore_reg(drive_t *drivep,
+>  
+>  			rval = ftruncate64(*fdp, bstatp->bs_size);
+>  			if (rval != 0) {
+> -				mlog(MLOG_VERBOSE | MLOG_WARNING,
+> +				mlog(MLOG_VERBOSE | MLOG_ERROR,
+>  				      _("attempt to truncate %s failed: %s\n"),
+>  				      path,
+>  				      strerror(errno));
+> +				*rvp = RV_INCOMPLETE;
+> +				return BOOL_FALSE;
+>  			}
+>  		}
+>  	}
+
+so this aborts on an open or frtruncate failure, but continues on
+an fstat failure or a set_file_owner failure or an XFS_IOC_FSSETXATTR
+failure ... 
+
+Was this motivated by ENOSPC, i.e. maybe the open couldn't even create
+a new inode?  I could see that possibly being a hard error to stop on,
+but given the prior behavior of trying to coninue as much as possible
+I'm unsure about the BOOL_FALSE's here.  Setting RV_INCOMPLETE would
+still make sense to me though, I think, for anything that caused the restore
+to actually be incomplete.
+
+(And this is all a little speculative as nobody really understands
+this code anymore....)
+
+-Eric
+
+> @@ -8021,7 +8024,8 @@ restore_symlink(drive_t *drivep,
+>  			      bstatp->bs_ino,
+>  			      path);
+>  		}
+> -		return BOOL_TRUE;
+> +		*rvp = RV_INCOMPLETE;
+> +		return BOOL_FALSE;
+>  	}
+>  	scratchpath[nread] = 0;
+>  	if (!tranp->t_toconlypr && path) {
+> @@ -8045,7 +8049,8 @@ restore_symlink(drive_t *drivep,
+>  			      bstatp->bs_ino,
+>  			      path,
+>  			      strerror(errno));
+> -			return BOOL_TRUE;
+> +			*rvp = RV_INCOMPLETE;
+> +			return BOOL_FALSE;
+>  		}
+>  
+>  		/* set the owner and group (if enabled)
 > 
