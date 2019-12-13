@@ -6,131 +6,173 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9940C4D2C4
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 20:57:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91ACCC4D2C5
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 20:58:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0215A2469F
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 20:57:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C63FB2469F
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 20:58:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726518AbfLMU56 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 13 Dec 2019 15:57:58 -0500
-Received: from mout.kundenserver.de ([212.227.126.135]:56003 "EHLO
+        id S1726674AbfLMU6O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 13 Dec 2019 15:58:14 -0500
+Received: from mout.kundenserver.de ([212.227.126.131]:60083 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725747AbfLMU55 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Dec 2019 15:57:57 -0500
+        with ESMTP id S1726494AbfLMU6O (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Dec 2019 15:58:14 -0500
 Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
  (mreue010 [212.227.15.129]) with ESMTPA (Nemesis) id
- 1N9dg5-1hcRf53jM5-015a8l; Fri, 13 Dec 2019 21:57:46 +0100
+ 1M89bP-1iacoR0uTj-005GHx; Fri, 13 Dec 2019 21:58:04 +0100
 From:   Arnd Bergmann <arnd@arndb.de>
 To:     y2038@lists.linaro.org, linux-kernel@vger.kernel.org,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
         linux-xfs@vger.kernel.org
 Cc:     Arnd Bergmann <arnd@arndb.de>, Brian Foster <bfoster@redhat.com>,
+        Carlos Maiolino <cmaiolino@redhat.com>,
+        Pavel Reichl <preichl@redhat.com>,
+        Eric Sandeen <sandeen@sandeen.net>,
         Dave Chinner <dchinner@redhat.com>,
         Allison Collins <allison.henderson@oracle.com>,
-        Jan Kara <jack@suse.cz>, Eric Sandeen <sandeen@sandeen.net>
-Subject: [PATCH v2 20/24] xfs: disallow broken ioctls without compat-32-bit-time
-Date:   Fri, 13 Dec 2019 21:53:48 +0100
-Message-Id: <20191213205417.3871055-11-arnd@arndb.de>
+        Jan Kara <jack@suse.cz>
+Subject: [PATCH v2 21/24] xfs: quota: move to time64_t interfaces
+Date:   Fri, 13 Dec 2019 21:53:49 +0100
+Message-Id: <20191213205417.3871055-12-arnd@arndb.de>
 X-Mailer: git-send-email 2.20.0
 In-Reply-To: <20191213204936.3643476-1-arnd@arndb.de>
 References: <20191213204936.3643476-1-arnd@arndb.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:+OC98lqsRIacY7Fo8hffNaEguwEx5BrW1ehoyzc3XQFB5ZHNiyH
- 3YX603rEPTrkOQExfMO9QXAGFroF+FD93OMx9FVC6EZty09STF3GnlQELmGO576vt5HzmMn
- X5re2BzBcKgFmWs4Z1qDbbqpMGHnWYZCouGOGdR3XUvGTqVJihZQ7bnJ/2nvsy1qXT1bBNT
- LbByJ8SMK3jY0wg9jfTVA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:hyZOFL3Pdhc=:c8WEjei9ibUrYRg7I5nOOT
- uV2U+LutYN//sc6CK3IG/2yqD9u5+kPxqEpfyfGI5AnPSM42vSXYkcWAmuHZNl3qkpHZfBfi5
- jL3Y/aBoYbidXGGJpMF9E4OjvFS+f1i0kfrEk6woVEmJDvyxstAQx0azJUrOpRZ8D5lMEErZY
- zKTSPj3FmzEE7eIytszzFwKN7qLS0lY4X+6j76qz+q46OloyHeJE0EZy9TiVFErDzyzMt7Rrw
- DEDRlCQfw9ic8qFrLRqjgIitBCIhLFktVhXGQVtF8Hw4gXZONvO3lF/Ugtfpscc9K3DuEz7NO
- Tl/TE2WRwqa2ELqxyPYka4nMkdhcQ6XBF1GmkHKtzbStWOLw4Mn6OUpCRasZZ1iArigNbCA39
- xvzP7ILLUKggS0iNdk6flDo16UFbFGuN5Owv0f59Jm6ipUZntiBhIm2GjTE0bTPdFq6vasDAk
- SFTAJT/jZtxnclb1CEN7VFV4ZV81CxAqh/2ISzAhACjF5gE3OTVR0fz5Fil39oMVYA1uEGIT3
- HWoPW/SNtQ363sKS75X6AAyU9us76vzNZbZyPj3Hi7BYvXrSdLoOAajFzm7gEYfPWJlQ3GJS5
- lriS8hPIMhzMFlAEnAw05o0230kTwVbTLNafzi7NjuGr/2YnwzdVoAJRe3Q+6hxYQx5XcJLYU
- gHc2QlrcR8ihFfBqSSxgf/5OA9HkYzWL02Ey9ma6puSYTXvA8kqvcCeCKm+Y07/FKPiQdJ6ut
- ufWZcVA+3+STIzCrybd1pcL1zSIUCpmwFMvwlvCEEKzPw48lb7P48aagOI/F7pG3V2O+b6Z4M
- TJGaa3pPvY/0B4jk3pyexJfYgefRXzzP9aN7oQZ3CjYDbtfQnBUfJiyByUAHvN1GfXJ4E08fU
- 3wzrXqTv0isiQ9PrA16w==
+X-Provags-ID: V03:K1:U4OoSyJcMxWrLz56NTLy5TvcMiZnlFrF1R3kAshvAlEbSRCOzeC
+ MU+a+kgOurK/EF2WxWRPMR623nA1fdKR5uRZ5zKbNPf7Q2ifioCKn5m71y7W41kzptK+bmW
+ 9TOOEK3FNdMOUOQoRUe5MnmmUq4cS3xgQeGYFPjj5jUUq3spY9G9co13nAzhAlTt8J/ZDfO
+ +dqdMz7x2VQcU+LqrJVNQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:4lyDylcgSX0=:F5ZQkV9kT770JxgnJn/cL8
+ evBqGVlSOOHU9YaF40rxkzMeuVOWdyUbeluOGJJoi27Gtec8k8wXepwcwF2X+kQ/bGHRH+J8j
+ PjjDXCcTk2Hty4XzJOPpv7Fv0xgqAP+4gQfP8IdGfq2OuJ/OyARMKjaCfYMhmYLIP3wrg6ccW
+ gtiugyTF6LhkR33EtG6hVSDPgEXi/exbCoyrKa6ShVgnIi/JlRRJBYPgj16sjAMO/OXbkvY6u
+ Xps2P8/JfVrKNZbEiZlLVALGFNqcrUdGKMOUOT571zbbP7E62dCsyD02WJMx8t0JydYxsC/Ou
+ VtgaSRolPluzw+f7YnHCpjtW4QxfSH60A9mLCFjtEg0SQiDmUxREbHg3t7FVMBSGkktjffPAz
+ LFgTgjqOoYjMEHC5hNqhHp1HmEJvIuXDpcLpPu5VD8VnYLDl7YSM71H6pZm4oL7VrAFpgcD0s
+ l9qvZ/Jx0kmcY97rs/JGUZQXE6C5exrGmn2EZLLXyBZ+AKj83tgyN8NZY7olersMN9gPyeafi
+ n1EpZh7UBE+d/XXv5ZvG7rqLqCAE9Sk2q6rik8uvPQ6DqP6aEvyQ50sA6CgFKwP2p3pdJelUO
+ 5rFSAbi9xXwOqG0ZwWf++sNzNgbH3uiPbJ0poN26J4mz3BZmaKNVv3nY9UFqUCH5J8y37HHrC
+ RFD0VmbxowJHo/BR9zbH3SBtYyP0ODVTvILY5ibLHYZMMkktaI+DZXL0LHXVbczPyIs3cUCx5
+ dgU73Z+qHw36dXcT3e6TEf9S9ASK7H4SEglU5STCth0eRVfRvGBiyf6GteFPF2suKIchlxBo9
+ 5bBLjgE/fCM3JhJUtx7QoCvNKcxyA7urx4LcaHNsEjy7ZKwk5V21PMatuptaWTElQOF7utsKd
+ sdIkxulCikM8Z1R+3ZYg==
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-When building a kernel that disables support for 32-bit time_t
-system calls, it also makes sense to disable the old xfs_bstat
-ioctls completely, as they truncate the timestamps to 32-bit
-values.
-
-Any application using these needs to be updated to use the v5
-interfaces.
+As a preparation for removing the 32-bit time_t type and
+all associated interfaces, change xfs to use time64_t and
+ktime_get_real_seconds() for the quota housekeeping.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- fs/xfs/xfs_ioctl.c | 26 ++++++++++++++++++++++++++
- 1 file changed, 26 insertions(+)
+ fs/xfs/xfs_dquot.c       | 6 +++---
+ fs/xfs/xfs_qm.h          | 6 +++---
+ fs/xfs/xfs_quotaops.c    | 6 +++---
+ fs/xfs/xfs_trans_dquot.c | 8 +++++---
+ 4 files changed, 14 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 7b35d62ede9f..a4a4eed8879c 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -36,6 +36,7 @@
- #include "xfs_reflink.h"
- #include "xfs_ioctl.h"
- 
-+#include <linux/compat.h>
- #include <linux/mount.h>
- #include <linux/namei.h>
- 
-@@ -617,6 +618,23 @@ xfs_fsinumbers_fmt(
- 	return xfs_ibulk_advance(breq, sizeof(struct xfs_inogrp));
- }
- 
-+/* disallow y2038-unsafe ioctls with CONFIG_COMPAT_32BIT_TIME=n */
-+static bool xfs_have_compat_bstat_time32(unsigned int cmd)
-+{
-+	if (IS_ENABLED(CONFIG_COMPAT_32BIT_TIME))
-+		return true;
-+
-+	if (IS_ENABLED(CONFIG_64BIT) && !in_compat_syscall())
-+		return true;
-+
-+	if (cmd == XFS_IOC_FSBULKSTAT_SINGLE ||
-+	    cmd == XFS_IOC_FSBULKSTAT ||
-+	    cmd == XFS_IOC_SWAPEXT)
-+		return false;
-+
-+	return true;
-+}
-+
- STATIC int
- xfs_ioc_fsbulkstat(
- 	xfs_mount_t		*mp,
-@@ -637,6 +655,9 @@ xfs_ioc_fsbulkstat(
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EPERM;
- 
-+	if (!xfs_have_compat_bstat_time32(cmd))
-+		return -EINVAL;
-+
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
- 
-@@ -1815,6 +1836,11 @@ xfs_ioc_swapext(
- 	struct fd	f, tmp;
- 	int		error = 0;
- 
-+	if (xfs_have_compat_bstat_time32(XFS_IOC_SWAPEXT)) {
-+		error = -EINVAL;
-+		goto out;
-+	}
-+
- 	/* Pull information for the target fd */
- 	f = fdget((int)sxp->sx_fdtarget);
- 	if (!f.file) {
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 2bff21ca9d78..9cfd3209f52b 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -137,7 +137,7 @@ xfs_qm_adjust_dqtimers(
+ 		    (d->d_blk_hardlimit &&
+ 		     (be64_to_cpu(d->d_bcount) >
+ 		      be64_to_cpu(d->d_blk_hardlimit)))) {
+-			d->d_btimer = cpu_to_be32(get_seconds() +
++			d->d_btimer = cpu_to_be32(ktime_get_real_seconds() +
+ 					mp->m_quotainfo->qi_btimelimit);
+ 		} else {
+ 			d->d_bwarns = 0;
+@@ -160,7 +160,7 @@ xfs_qm_adjust_dqtimers(
+ 		    (d->d_ino_hardlimit &&
+ 		     (be64_to_cpu(d->d_icount) >
+ 		      be64_to_cpu(d->d_ino_hardlimit)))) {
+-			d->d_itimer = cpu_to_be32(get_seconds() +
++			d->d_itimer = cpu_to_be32(ktime_get_real_seconds() +
+ 					mp->m_quotainfo->qi_itimelimit);
+ 		} else {
+ 			d->d_iwarns = 0;
+@@ -183,7 +183,7 @@ xfs_qm_adjust_dqtimers(
+ 		    (d->d_rtb_hardlimit &&
+ 		     (be64_to_cpu(d->d_rtbcount) >
+ 		      be64_to_cpu(d->d_rtb_hardlimit)))) {
+-			d->d_rtbtimer = cpu_to_be32(get_seconds() +
++			d->d_rtbtimer = cpu_to_be32(ktime_get_real_seconds() +
+ 					mp->m_quotainfo->qi_rtbtimelimit);
+ 		} else {
+ 			d->d_rtbwarns = 0;
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index 7823af39008b..4e57edca8bce 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -64,9 +64,9 @@ struct xfs_quotainfo {
+ 	struct xfs_inode	*qi_pquotaip;	/* project quota inode */
+ 	struct list_lru	 qi_lru;
+ 	int		 qi_dquots;
+-	time_t		 qi_btimelimit;	 /* limit for blks timer */
+-	time_t		 qi_itimelimit;	 /* limit for inodes timer */
+-	time_t		 qi_rtbtimelimit;/* limit for rt blks timer */
++	time64_t	 qi_btimelimit;	 /* limit for blks timer */
++	time64_t	 qi_itimelimit;	 /* limit for inodes timer */
++	time64_t	 qi_rtbtimelimit;/* limit for rt blks timer */
+ 	xfs_qwarncnt_t	 qi_bwarnlimit;	 /* limit for blks warnings */
+ 	xfs_qwarncnt_t	 qi_iwarnlimit;	 /* limit for inodes warnings */
+ 	xfs_qwarncnt_t	 qi_rtbwarnlimit;/* limit for rt blks warnings */
+diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
+index c7de17deeae6..38669e827206 100644
+--- a/fs/xfs/xfs_quotaops.c
++++ b/fs/xfs/xfs_quotaops.c
+@@ -37,9 +37,9 @@ xfs_qm_fill_state(
+ 	tstate->flags |= QCI_SYSFILE;
+ 	tstate->blocks = ip->i_d.di_nblocks;
+ 	tstate->nextents = ip->i_d.di_nextents;
+-	tstate->spc_timelimit = q->qi_btimelimit;
+-	tstate->ino_timelimit = q->qi_itimelimit;
+-	tstate->rt_spc_timelimit = q->qi_rtbtimelimit;
++	tstate->spc_timelimit = (u32)q->qi_btimelimit;
++	tstate->ino_timelimit = (u32)q->qi_itimelimit;
++	tstate->rt_spc_timelimit = (u32)q->qi_rtbtimelimit;
+ 	tstate->spc_warnlimit = q->qi_bwarnlimit;
+ 	tstate->ino_warnlimit = q->qi_iwarnlimit;
+ 	tstate->rt_spc_warnlimit = q->qi_rtbwarnlimit;
+diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+index a6fe2d8dc40f..d1b9869bc5fa 100644
+--- a/fs/xfs/xfs_trans_dquot.c
++++ b/fs/xfs/xfs_trans_dquot.c
+@@ -580,7 +580,7 @@ xfs_trans_dqresv(
+ {
+ 	xfs_qcnt_t		hardlimit;
+ 	xfs_qcnt_t		softlimit;
+-	time_t			timer;
++	time64_t		timer;
+ 	xfs_qwarncnt_t		warns;
+ 	xfs_qwarncnt_t		warnlimit;
+ 	xfs_qcnt_t		total_count;
+@@ -635,7 +635,8 @@ xfs_trans_dqresv(
+ 				goto error_return;
+ 			}
+ 			if (softlimit && total_count > softlimit) {
+-				if ((timer != 0 && get_seconds() > timer) ||
++				if ((timer != 0 &&
++				     ktime_get_real_seconds() > timer) ||
+ 				    (warns != 0 && warns >= warnlimit)) {
+ 					xfs_quota_warn(mp, dqp,
+ 						       QUOTA_NL_BSOFTLONGWARN);
+@@ -662,7 +663,8 @@ xfs_trans_dqresv(
+ 				goto error_return;
+ 			}
+ 			if (softlimit && total_count > softlimit) {
+-				if  ((timer != 0 && get_seconds() > timer) ||
++				if  ((timer != 0 &&
++				      ktime_get_real_seconds() > timer) ||
+ 				     (warns != 0 && warns >= warnlimit)) {
+ 					xfs_quota_warn(mp, dqp,
+ 						       QUOTA_NL_ISOFTLONGWARN);
 -- 
 2.20.0
 
