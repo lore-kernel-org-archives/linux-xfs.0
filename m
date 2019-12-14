@@ -1,167 +1,368 @@
-Return-Path: <SRS0=jVwY=2D=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=IS9S=2E=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79666C43603
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 23:07:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4BBCC43603
+	for <linux-xfs@archiver.kernel.org>; Sat, 14 Dec 2019 06:57:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5DA2024656
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Dec 2019 23:07:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 971E62465B
+	for <linux-xfs@archiver.kernel.org>; Sat, 14 Dec 2019 06:57:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bu0BOqUo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726824AbfLMXHe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 13 Dec 2019 18:07:34 -0500
-Received: from sandeen.net ([63.231.237.45]:33896 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726828AbfLMXHe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 13 Dec 2019 18:07:34 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id CB3502ABE
-        for <linux-xfs@vger.kernel.org>; Fri, 13 Dec 2019 17:07:25 -0600 (CST)
-To:     linux-xfs <linux-xfs@vger.kernel.org>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to 7e8a6edb
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
- nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
- WL05ODFQ2cemDhx5uLghHEeOxuGj+1AI+kh/FCzMedHc6k87Yu2ZuaWF+Gh1W2ix6hikRJmQ
- vj5BEeAx7xKkyBhzdbNIbbjV/iGi9b26B/dNcyd5w2My2gxMtxaiP7q5b6GM2rsQklHP8FtW
- ZiYO7jsg/qIppR1C6Zr5jK1GQlMUIclYFeBbKggJ9mSwXJH7MIftilGQ8KDvNuV5AbkronGC
- sEEHj2khs7GfVv4pmUUHf1MRIvV0x3WJkpmhuZaYg8AdJlyGKgp+TQ7B+wCjNTdVqMI1vDk2
- BS6Rg851ay7AypbCPx2w4d8jIkQEgNjACHVDU89PNKAjScK1aTnW+HNUqg9BliCvuX5g4z2j
- gJBs57loTWAGe2Ve3cMy3VoQ40Wt3yKK0Eno8jfgzgb48wyycINZgnseMRhxc2c8hd51tftK
- LKhPj4c7uqjnBjrgOVaVBupGUmvLiePlnW56zJZ51BR5igWnILeOJ1ZIcf7KsaHyE6B1mG+X
- dmYtjDhjf3NAcoBWJuj8euxMB6TcQN2MrSXy5wSKaw40evooGwARAQABtCVFcmljIFIuIFNh
- bmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+iQI7BBMBAgAlAhsDBgsJCAcDAgYVCAIJCgsE
- FgIDAQIeAQIXgAUCUzMzbAIZAQAKCRAgrhaS4T3e4Fr7D/wO+fenqVvHjq21SCjDCrt8HdVj
- aJ28B1SqSU2toxyg5I160GllAxEHpLFGdbFAhQfBtnmlY9eMjwmJb0sCIrkrB6XNPSPA/B2B
- UPISh0z2odJv35/euJF71qIFgWzp2czJHkHWwVZaZpMWWNvsLIroXoR+uA9c2V1hQFVAJZyk
- EE4xzfm1+oVtjIC12B9tTCuS00pY3AUy21yzNowT6SSk7HAzmtG/PJ/uSB5wEkwldB6jVs2A
- sjOg1wMwVvh/JHilsQg4HSmDfObmZj1d0RWlMWcUE7csRnCE0ZWBMp/ttTn+oosioGa09HAS
- 9jAnauznmYg43oQ5Akd8iQRxz5I58F/+JsdKvWiyrPDfYZtFS+UIgWD7x+mHBZ53Qjazszox
- gjwO9ehZpwUQxBm4I0lPDAKw3HJA+GwwiubTSlq5PS3P7QoCjaV8llH1bNFZMz2o8wPANiDx
- 5FHgpRVgwLHakoCU1Gc+LXHXBzDXt7Cj02WYHdFzMm2hXaslRdhNGowLo1SXZFXa41KGTlNe
- 4di53y9CK5ynV0z+YUa+5LR6RdHrHtgywdKnjeWdqhoVpsWIeORtwWGX8evNOiKJ7j0RsHha
- WrePTubr5nuYTDsQqgc2r4aBIOpeSRR2brlT/UE3wGgy9LY78L4EwPR0MzzecfE1Ws60iSqw
- Pu3vhb7h3bkCDQROsffUARAA0DrUifTrXQzqxO8aiQOC5p9Tz25Np/Tfpv1rofOwL8VPBMvJ
- X4P5l1V2yd70MZRUVgjmCydEyxLJ6G2YyHO2IZTEajUY0Up+b3ErOpLpZwhvgWatjifpj6bB
- SKuDXeThqFdkphF5kAmgfVAIkan5SxWK3+S0V2F/oxstIViBhMhDwI6XsRlnVBoLLYcEilxA
- 2FlRUS7MOZGmRJkRtdGD5koVZSM6xVZQSmfEBaYQ/WJBGJQdPy94nnlAVn3lH3+N7pXvNUuC
- GV+t4YUt3tLcRuIpYBCOWlc7bpgeCps5Xa0dIZgJ8Louu6OBJ5vVXjPxTlkFdT0S0/uerCG5
- 1u8p6sGRLnUeAUGkQfIUqGUjW2rHaXgWNvzOV6i3tf9YaiXKl3avFaNW1kKBs0T5M1cnlWZU
- Utl6k04lz5OjoNY9J/bGyV3DSlkblXRMK87iLYQSrcV6cFz9PRl4vW1LGff3xRQHngeN5fPx
- ze8X5NE3hb+SSwyMSEqJxhVTXJVfQWWW0dQxP7HNwqmOWYF/6m+1gK/Y2gY3jAQnsWTru4RV
- TZGnKwEPmOCpSUvsTRXsVHgsWJ70qd0yOSjWuiv4b8vmD3+QFgyvCBxPMdP3xsxN5etheLMO
- gRwWpLn6yNFq/xtgs+ECgG+gR78yXQyA7iCs5tFs2OrMqV5juSMGmn0kxJUAEQEAAYkCHwQY
- AQIACQUCTrH31AIbDAAKCRAgrhaS4T3e4BKwD/0ZOOmUNOZCSOLAMjZx3mtYtjYgfUNKi0ki
- YPveGoRWTqbis8UitPtNrG4XxgzLOijSdOEzQwkdOIp/QnZhGNssMejCnsluK0GQd+RkFVWN
- mcQT78hBeGcnEMAXZKq7bkIKzvc06GFmkMbX/gAl6DiNGv0UNAX+5FYh+ucCJZSyAp3sA+9/
- LKjxnTedX0aygXA6rkpX0Y0FvN/9dfm47+LGq7WAqBOyYTU3E6/+Z72bZoG/cG7ANLxcPool
- LOrU43oqFnD8QwcN56y4VfFj3/jDF2MX3xu4v2OjglVjMEYHTCxP3mpxesGHuqOit/FR+mF0
- MP9JGfj6x+bj/9JMBtCW1bY/aPeMdPGTJvXjGtOVYblGZrSjXRn5++Uuy36CvkcrjuziSDG+
- JEexGxczWwN4mrOQWhMT5Jyb+18CO+CWxJfHaYXiLEW7dI1AynL4jjn4W0MSiXpWDUw+fsBO
- Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
- m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
- fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <ce2d85c4-e989-7faa-2889-89dfc68098fb@sandeen.net>
-Date:   Fri, 13 Dec 2019 17:07:30 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.3.0
+        id S1725870AbfLNG5u (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 14 Dec 2019 01:57:50 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:58722 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725851AbfLNG5t (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Dec 2019 01:57:49 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBE6nlkL068698;
+        Sat, 14 Dec 2019 06:57:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : subject : to :
+ cc : references : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2019-08-05;
+ bh=wdVRGkN/V3hNJRal9oYfak7NrB/bHyFeiLQdz/yN/7c=;
+ b=bu0BOqUoI1e/OCwNJyzEg25JP1HRM0EBmUqK4bxtCOGkDgAwfpM3EtZzD7dkdejce6FI
+ 432JvagBMmvSMnYs4ehIADuWzOYv/awmJpzxy9KaeTRwA/1b9v4vv7PjDUKm2HLduY9B
+ 4/v/wmBn7hu+/8P8IQmBmgWqyosXjStzO8xOlcwbZAy508ih5YIQcxF7e0+zIAyj49If
+ OnKcni50S0NCDaET88OMNen9Ny4TwL1aUcpiQRxEhJq8wqVQrgKnhuTgvhlboDE7VihD
+ OmvTZq5Le3tbCt6sfraKtcld2UIRuVUItIdp4KWOPavrhIbhy/bA/hCIH7GLkOLm0ncs tA== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2wvqpprbb6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 14 Dec 2019 06:57:46 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBE6sZkA098927;
+        Sat, 14 Dec 2019 06:57:45 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 2wvqju99cx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 14 Dec 2019 06:57:45 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xBE6vjFW004004;
+        Sat, 14 Dec 2019 06:57:45 GMT
+Received: from [192.168.1.9] (/67.1.205.161)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 13 Dec 2019 22:57:44 -0800
+From:   Allison Collins <allison.henderson@oracle.com>
+Subject: Re: [PATCH v5 02/14] xfs: Replace attribute parameters with struct
+ xfs_name
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <20191212041513.13855-1-allison.henderson@oracle.com>
+ <20191212041513.13855-3-allison.henderson@oracle.com>
+ <20191213130714.GB43376@bfoster>
+Message-ID: <cd64e8ab-ccc7-fc09-1410-d877d90ac3af@oracle.com>
+Date:   Fri, 13 Dec 2019 23:57:43 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="PaulfRBX8tFn49k0KK3RtCtkgOZ0u0xCa"
+In-Reply-To: <20191213130714.GB43376@bfoster>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9470 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-1912140049
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9470 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-1912140049
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---PaulfRBX8tFn49k0KK3RtCtkgOZ0u0xCa
-Content-Type: multipart/mixed; boundary="9DRihZESqtEm1patoNw8sxCdH3saBy1FY"
+On 12/13/19 6:07 AM, Brian Foster wrote:
+> On Wed, Dec 11, 2019 at 09:15:01PM -0700, Allison Collins wrote:
+>> This patch replaces the attribute name and length parameters with a
+>> single struct xfs_name parameter.  This helps to clean up the numbers of
+>> parameters being passed around and pre-simplifies the code some.
+>>
+>> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+>> ---
+>>   fs/xfs/libxfs/xfs_attr.c  | 22 +++++++++-------------
+>>   fs/xfs/libxfs/xfs_attr.h  | 12 +++++-------
+>>   fs/xfs/libxfs/xfs_types.c | 10 ++++++++++
+>>   fs/xfs/libxfs/xfs_types.h |  1 +
+>>   fs/xfs/xfs_acl.c          | 27 +++++++++++++--------------
+>>   fs/xfs/xfs_ioctl.c        | 23 +++++++++++++----------
+>>   fs/xfs/xfs_iops.c         |  6 +++---
+>>   fs/xfs/xfs_xattr.c        | 23 +++++++++++++----------
+>>   8 files changed, 67 insertions(+), 57 deletions(-)
+>>
+> ...
+>> diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
+>> index 4f59554..c81a904 100644
+>> --- a/fs/xfs/libxfs/xfs_types.c
+>> +++ b/fs/xfs/libxfs/xfs_types.c
+>> @@ -12,6 +12,16 @@
+>>   #include "xfs_bit.h"
+>>   #include "xfs_mount.h"
+>>   
+>> +/* Initialize a struct xfs_name with a null terminated string name */
+>> +void
+>> +xfs_name_init(
+>> +	struct xfs_name *xname,
+>> +	const char *name)
+>> +{
+>> +	xname->name = name;
+>> +	xname->len = (strlen(name));
+> 
+> Are the extra braces necessary here? Also, perhaps we should initialize
+> ->type to zero or something so it doesn't carry garbage data.
+I may have borrowed the extra braces from somewhere else in the code. 
+Will clean out and also add the type init.
 
---9DRihZESqtEm1patoNw8sxCdH3saBy1FY
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+> 
+>> +}
+>> +
+>>   /* Find the size of the AG, in blocks. */
+>>   xfs_agblock_t
+>>   xfs_ag_block_count(
+> ...
+>> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+>> index b58e18c..7b0e5b7 100644
+>> --- a/fs/xfs/xfs_acl.c
+>> +++ b/fs/xfs/xfs_acl.c
+>> @@ -123,7 +123,7 @@ xfs_get_acl(struct inode *inode, int type)
+>>   	struct xfs_inode *ip = XFS_I(inode);
+>>   	struct posix_acl *acl = NULL;
+>>   	struct xfs_acl *xfs_acl = NULL;
+>> -	unsigned char *ea_name;
+>> +	struct xfs_name name;
+>>   	int error;
+>>   	int len;
+>>   
+>> @@ -131,10 +131,10 @@ xfs_get_acl(struct inode *inode, int type)
+>>   
+>>   	switch (type) {
+>>   	case ACL_TYPE_ACCESS:
+>> -		ea_name = SGI_ACL_FILE;
+>> +		name.name = SGI_ACL_FILE;
+>>   		break;
+>>   	case ACL_TYPE_DEFAULT:
+>> -		ea_name = SGI_ACL_DEFAULT;
+>> +		name.name = SGI_ACL_DEFAULT;
+>>   		break;
+>>   	default:
+>>   		BUG();
+>> @@ -145,9 +145,9 @@ xfs_get_acl(struct inode *inode, int type)
+>>   	 * go out to the disk.
+>>   	 */
+>>   	len = XFS_ACL_MAX_SIZE(ip->i_mount);
+>> -	error = xfs_attr_get(ip, ea_name, strlen(ea_name),
+>> -				(unsigned char **)&xfs_acl, &len,
+>> -				ATTR_ALLOC | ATTR_ROOT);
+>> +	xfs_name_init(&name, name.name);
+> 
+> Could we call xfs_name_init() in the switch branches above to avoid this
+> partial init weirdness? Same question applies below, otherwise looks Ok
+> to me.
+> 
+> Brian
+Sure, I will scoot that up.  Thx!
+Allison
 
-Hi folks,
-
-The for-next branch of the xfsprogs repository at:
-
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-
-has just been updated.  This included a rebase to fix typos in SOB:
-lines of the last libxfs-sync update.
-
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-The new head of the master branch is commit:
-
-7e8a6edb (HEAD -> for-next, origin/for-next, korg/for-next) mkfs: Break b=
-lock discard into chunks of 2 GB
-
-New Commits:
-
-Darrick J. Wong (2):
-      [8db10a9a] xfs_admin: support external log devices
-      [3f153e05] xfs_admin: enable online label getting and setting
-
-Eric Sandeen (1):
-      [998aed52] xfsprogs: remove stray libxfs whitespace
-
-John Pittman (1):
-      [2ab6ea6a] xfsprogs: add missing line feeds in libxfs/rdwr.c
-
-Pavel Reichl (1):
-      [7e8a6edb] mkfs: Break block discard into chunks of 2 GB
-
-
-Code Diffstat:
-
- db/xfs_admin.sh          | 54 ++++++++++++++++++++++++++++++++++++++++++=
-++----
- libxfs/rdwr.c            |  6 +++---
- libxfs/xfs_fs.h          |  2 +-
- libxfs/xfs_inode_buf.c   |  1 +
- libxfs/xfs_trans_inode.c |  1 +
- man/man8/xfs_admin.8     | 18 +++++++++++++++-
- mkfs/xfs_mkfs.c          | 50 ++++++++++++++++++++++++++++++++----------=
---
- 7 files changed, 110 insertions(+), 22 deletions(-)
-
-
---9DRihZESqtEm1patoNw8sxCdH3saBy1FY--
-
---PaulfRBX8tFn49k0KK3RtCtkgOZ0u0xCa
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl30GbQACgkQIK4WkuE9
-3uDgZRAAsiikdzv88j9PMnNHwnTMmmebJgunOmIfV/df9sBGpMndo+bI0a4Pv7NE
-fcQtOKYDR7WAsdNbyuLrY8fU60HquwDbLUOWqjf569kVkXsghw6mJ362p7hyC4h9
-Oead5XwrtarvfCLKFSa9wNaCtVaho6IQ+eatzyW2l+eMcs6uOUHlZzVTltBaDC8L
-dDPUdU34U4f9mxY0trare2kzEj45PYH4mpIXu7ef/dcU/HC4HT2dFecy4zQNfHwQ
-Dt0LQo9GY2aQ+BXnigOw7BR2rv1kQOJnp8J9nHOb2dmmTJe7cpJBXg+Mbhop+16p
-ORAJ3Enpy/JyWfcgupPrWzFbqPDuyhX9CCRd6AuxQBL4KEgs8b2QbqgG+43u+jRv
-MSK+OzTyWzCaxMWouceo6HjbQZuDtMmiX4KOMak++yjyTK+1QE8Jk9VZRNUbPbb3
-uIPYPLCWFxMR7sgwb0OFr/614rZQ4m2ndlLgw/8rrXUMr4ELuY2Ea0kdrSw3MvOY
-iHLd3guxW2yLaTtrcYlqIdX3Jdh52TEE9pE80icvE0gAD4ZVPx+hF7lz/1Cvp1RE
-lJgVVqGNivl0fAhImN4VC8zCIIpfjYP4ZVl1ItrVF/iG/IZHqZKYroEaZN15v9Al
-l2V2sYbKVAC1cB5n68UhQC2Uwwi/xi6ogTaLU1tnzShXPeqd5rU=
-=5FuV
------END PGP SIGNATURE-----
-
---PaulfRBX8tFn49k0KK3RtCtkgOZ0u0xCa--
+> 
+>> +	error = xfs_attr_get(ip, &name, (unsigned char **)&xfs_acl, &len,
+>> +			     ATTR_ALLOC | ATTR_ROOT);
+>>   	if (error) {
+>>   		/*
+>>   		 * If the attribute doesn't exist make sure we have a negative
+>> @@ -167,17 +167,17 @@ int
+>>   __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+>>   {
+>>   	struct xfs_inode *ip = XFS_I(inode);
+>> -	unsigned char *ea_name;
+>> +	struct xfs_name name;
+>>   	int error;
+>>   
+>>   	switch (type) {
+>>   	case ACL_TYPE_ACCESS:
+>> -		ea_name = SGI_ACL_FILE;
+>> +		name.name = SGI_ACL_FILE;
+>>   		break;
+>>   	case ACL_TYPE_DEFAULT:
+>>   		if (!S_ISDIR(inode->i_mode))
+>>   			return acl ? -EACCES : 0;
+>> -		ea_name = SGI_ACL_DEFAULT;
+>> +		name.name = SGI_ACL_DEFAULT;
+>>   		break;
+>>   	default:
+>>   		return -EINVAL;
+>> @@ -197,17 +197,16 @@ __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+>>   		len -= sizeof(struct xfs_acl_entry) *
+>>   			 (XFS_ACL_MAX_ENTRIES(ip->i_mount) - acl->a_count);
+>>   
+>> -		error = xfs_attr_set(ip, ea_name, strlen(ea_name),
+>> -				     (unsigned char *)xfs_acl, len, ATTR_ROOT);
+>> +		xfs_name_init(&name, name.name);
+>> +		error = xfs_attr_set(ip, &name, (unsigned char *)xfs_acl, len,
+>> +				     ATTR_ROOT);
+>>   
+>>   		kmem_free(xfs_acl);
+>>   	} else {
+>>   		/*
+>>   		 * A NULL ACL argument means we want to remove the ACL.
+>>   		 */
+>> -		error = xfs_attr_remove(ip, ea_name,
+>> -					strlen(ea_name),
+>> -					ATTR_ROOT);
+>> +		error = xfs_attr_remove(ip, &name, ATTR_ROOT);
+>>   
+>>   		/*
+>>   		 * If the attribute didn't exist to start with that's fine.
+>> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+>> index f5a9bf9..4fc8698 100644
+>> --- a/fs/xfs/xfs_ioctl.c
+>> +++ b/fs/xfs/xfs_ioctl.c
+>> @@ -357,7 +357,9 @@ xfs_attrmulti_attr_get(
+>>   {
+>>   	unsigned char		*kbuf;
+>>   	int			error = -EFAULT;
+>> -	size_t			namelen;
+>> +	struct xfs_name		xname;
+>> +
+>> +	xfs_name_init(&xname, name);
+>>   
+>>   	if (*len > XFS_XATTR_SIZE_MAX)
+>>   		return -EINVAL;
+>> @@ -365,9 +367,7 @@ xfs_attrmulti_attr_get(
+>>   	if (!kbuf)
+>>   		return -ENOMEM;
+>>   
+>> -	namelen = strlen(name);
+>> -	error = xfs_attr_get(XFS_I(inode), name, namelen, &kbuf, (int *)len,
+>> -			     flags);
+>> +	error = xfs_attr_get(XFS_I(inode), &xname, &kbuf, (int *)len, flags);
+>>   	if (error)
+>>   		goto out_kfree;
+>>   
+>> @@ -389,7 +389,9 @@ xfs_attrmulti_attr_set(
+>>   {
+>>   	unsigned char		*kbuf;
+>>   	int			error;
+>> -	size_t			namelen;
+>> +	struct xfs_name		xname;
+>> +
+>> +	xfs_name_init(&xname, name);
+>>   
+>>   	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
+>>   		return -EPERM;
+>> @@ -400,8 +402,7 @@ xfs_attrmulti_attr_set(
+>>   	if (IS_ERR(kbuf))
+>>   		return PTR_ERR(kbuf);
+>>   
+>> -	namelen = strlen(name);
+>> -	error = xfs_attr_set(XFS_I(inode), name, namelen, kbuf, len, flags);
+>> +	error = xfs_attr_set(XFS_I(inode), &xname, kbuf, len, flags);
+>>   	if (!error)
+>>   		xfs_forget_acl(inode, name, flags);
+>>   	kfree(kbuf);
+>> @@ -415,12 +416,14 @@ xfs_attrmulti_attr_remove(
+>>   	uint32_t		flags)
+>>   {
+>>   	int			error;
+>> -	size_t			namelen;
+>> +	struct xfs_name		xname;
+>> +
+>> +	xfs_name_init(&xname, name);
+>>   
+>>   	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
+>>   		return -EPERM;
+>> -	namelen = strlen(name);
+>> -	error = xfs_attr_remove(XFS_I(inode), name, namelen, flags);
+>> +
+>> +	error = xfs_attr_remove(XFS_I(inode), &xname, flags);
+>>   	if (!error)
+>>   		xfs_forget_acl(inode, name, flags);
+>>   	return error;
+>> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+>> index 81f2f93..e85bbf5 100644
+>> --- a/fs/xfs/xfs_iops.c
+>> +++ b/fs/xfs/xfs_iops.c
+>> @@ -48,11 +48,11 @@ xfs_initxattrs(
+>>   	const struct xattr	*xattr;
+>>   	struct xfs_inode	*ip = XFS_I(inode);
+>>   	int			error = 0;
+>> +	struct xfs_name		name;
+>>   
+>>   	for (xattr = xattr_array; xattr->name != NULL; xattr++) {
+>> -		error = xfs_attr_set(ip, xattr->name,
+>> -				     strlen(xattr->name),
+>> -				     xattr->value, xattr->value_len,
+>> +		xfs_name_init(&name, xattr->name);
+>> +		error = xfs_attr_set(ip, &name, xattr->value, xattr->value_len,
+>>   				     ATTR_SECURE);
+>>   		if (error < 0)
+>>   			break;
+>> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+>> index 1f1601f..5623682 100644
+>> --- a/fs/xfs/xfs_xattr.c
+>> +++ b/fs/xfs/xfs_xattr.c
+>> @@ -21,10 +21,12 @@ static int
+>>   xfs_xattr_get(const struct xattr_handler *handler, struct dentry *unused,
+>>   		struct inode *inode, const char *name, void *value, size_t size)
+>>   {
+>> -	int xflags = handler->flags;
+>> -	struct xfs_inode *ip = XFS_I(inode);
+>> -	int error, asize = size;
+>> -	size_t namelen = strlen(name);
+>> +	int			xflags = handler->flags;
+>> +	struct xfs_inode	*ip = XFS_I(inode);
+>> +	int			error, asize = size;
+>> +	struct xfs_name		xname;
+>> +
+>> +	xfs_name_init(&xname, name);
+>>   
+>>   	/* Convert Linux syscall to XFS internal ATTR flags */
+>>   	if (!size) {
+>> @@ -32,8 +34,8 @@ xfs_xattr_get(const struct xattr_handler *handler, struct dentry *unused,
+>>   		value = NULL;
+>>   	}
+>>   
+>> -	error = xfs_attr_get(ip, name, namelen, (unsigned char **)&value,
+>> -			     &asize, xflags);
+>> +	error = xfs_attr_get(ip, &xname, (unsigned char **)&value, &asize,
+>> +			     xflags);
+>>   	if (error)
+>>   		return error;
+>>   	return asize;
+>> @@ -69,7 +71,9 @@ xfs_xattr_set(const struct xattr_handler *handler, struct dentry *unused,
+>>   	int			xflags = handler->flags;
+>>   	struct xfs_inode	*ip = XFS_I(inode);
+>>   	int			error;
+>> -	size_t			namelen = strlen(name);
+>> +	struct xfs_name		xname;
+>> +
+>> +	xfs_name_init(&xname, name);
+>>   
+>>   	/* Convert Linux syscall to XFS internal ATTR flags */
+>>   	if (flags & XATTR_CREATE)
+>> @@ -78,9 +82,8 @@ xfs_xattr_set(const struct xattr_handler *handler, struct dentry *unused,
+>>   		xflags |= ATTR_REPLACE;
+>>   
+>>   	if (!value)
+>> -		return xfs_attr_remove(ip, name,
+>> -				       namelen, xflags);
+>> -	error = xfs_attr_set(ip, name, namelen, (void *)value, size, xflags);
+>> +		return xfs_attr_remove(ip, &xname, xflags);
+>> +	error = xfs_attr_set(ip, &xname, (void *)value, size, xflags);
+>>   	if (!error)
+>>   		xfs_forget_acl(inode, name, xflags);
+>>   
+>> -- 
+>> 2.7.4
+>>
+> 
