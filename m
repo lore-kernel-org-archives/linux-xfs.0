@@ -6,29 +6,30 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65637C43603
-	for <linux-xfs@archiver.kernel.org>; Sat, 14 Dec 2019 18:47:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4327AC43603
+	for <linux-xfs@archiver.kernel.org>; Sat, 14 Dec 2019 18:54:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 38D2220724
-	for <linux-xfs@archiver.kernel.org>; Sat, 14 Dec 2019 18:47:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E9A52073D
+	for <linux-xfs@archiver.kernel.org>; Sat, 14 Dec 2019 18:54:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725975AbfLNSrO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 14 Dec 2019 13:47:14 -0500
-Received: from sandeen.net ([63.231.237.45]:35564 "EHLO sandeen.net"
+        id S1726072AbfLNSx7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 14 Dec 2019 13:53:59 -0500
+Received: from sandeen.net ([63.231.237.45]:35912 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725943AbfLNSrO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 14 Dec 2019 13:47:14 -0500
+        id S1725943AbfLNSx7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 14 Dec 2019 13:53:59 -0500
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 4FDBF78D4;
-        Sat, 14 Dec 2019 12:47:05 -0600 (CST)
-Subject: [PATCH] mkfs: tidy up discard notifications
+        by sandeen.net (Postfix) with ESMTPSA id A990978D4;
+        Sat, 14 Dec 2019 12:53:49 -0600 (CST)
+Subject: [PATCH V2] mkfs: tidy up discard notifications
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
         Eric Sandeen <sandeen@redhat.com>
 Cc:     xfs <linux-xfs@vger.kernel.org>
 References: <20191214180559.GN99875@magnolia>
  <03236390-ea33-3da7-e2a2-a33ff651bfe8@sandeen.net>
+ <371216cf-4e6b-ec5f-c147-6ebd545818d1@sandeen.net>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -72,15 +73,15 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <371216cf-4e6b-ec5f-c147-6ebd545818d1@sandeen.net>
-Date:   Sat, 14 Dec 2019 12:47:11 -0600
+Message-ID: <c4d20fc5-150b-7afc-e2fd-2358e52acb9c@sandeen.net>
+Date:   Sat, 14 Dec 2019 12:53:56 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.3.0
 MIME-Version: 1.0
-In-Reply-To: <03236390-ea33-3da7-e2a2-a33ff651bfe8@sandeen.net>
+In-Reply-To: <371216cf-4e6b-ec5f-c147-6ebd545818d1@sandeen.net>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -92,8 +93,10 @@ and be sure to print a trailing newline if we stop early.
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
+V2: Logic is hard.  ;)  If I messed this one up, take it back Darrick.  :)
+
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 4bfdebf6..afa7feb4 100644
+index 4bfdebf6..606f79da 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
 @@ -1251,10 +1251,6 @@ discard_blocks(dev_t dev, uint64_t nsectors, int quiet)
@@ -107,7 +110,7 @@ index 4bfdebf6..afa7feb4 100644
  
  	/* The block discarding happens in smaller batches so it can be
  	 * interrupted prematurely
-@@ -1267,8 +1263,16 @@ discard_blocks(dev_t dev, uint64_t nsectors, int quiet)
+@@ -1267,12 +1263,20 @@ discard_blocks(dev_t dev, uint64_t nsectors, int quiet)
  		 * not necessary for the mkfs functionality but just an
  		 * optimization. However we should stop on error.
  		 */
@@ -117,12 +120,18 @@ index 4bfdebf6..afa7feb4 100644
 +				printf("Discarding blocks...");
 +				fflush(stdout);
 +			}
-+		} else if (!quiet) {
-+			if (offset != 0)
++		} else {
++			if (offset > 0 && !quiet)
 +				printf("\n");
  			return;
 +		}
  
  		offset += tmp_step;
  	}
+-	if (!quiet)
++	if (offset > 0 && !quiet)
+ 		printf("Done.\n");
+ }
+ 
+
 
