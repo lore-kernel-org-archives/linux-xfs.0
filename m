@@ -6,28 +6,29 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26793C43603
-	for <linux-xfs@archiver.kernel.org>; Sat, 14 Dec 2019 18:34:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65637C43603
+	for <linux-xfs@archiver.kernel.org>; Sat, 14 Dec 2019 18:47:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E50BC207FD
-	for <linux-xfs@archiver.kernel.org>; Sat, 14 Dec 2019 18:34:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 38D2220724
+	for <linux-xfs@archiver.kernel.org>; Sat, 14 Dec 2019 18:47:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726333AbfLNSec (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 14 Dec 2019 13:34:32 -0500
-Received: from sandeen.net ([63.231.237.45]:34914 "EHLO sandeen.net"
+        id S1725975AbfLNSrO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 14 Dec 2019 13:47:14 -0500
+Received: from sandeen.net ([63.231.237.45]:35564 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725943AbfLNSec (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 14 Dec 2019 13:34:32 -0500
+        id S1725943AbfLNSrO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 14 Dec 2019 13:47:14 -0500
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 724D978D4;
-        Sat, 14 Dec 2019 12:34:22 -0600 (CST)
-Subject: Re: [PATCH] mkfs: print newline if discard fails
+        by sandeen.net (Postfix) with ESMTPSA id 4FDBF78D4;
+        Sat, 14 Dec 2019 12:47:05 -0600 (CST)
+Subject: [PATCH] mkfs: tidy up discard notifications
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
         Eric Sandeen <sandeen@redhat.com>
 Cc:     xfs <linux-xfs@vger.kernel.org>
 References: <20191214180559.GN99875@magnolia>
+ <03236390-ea33-3da7-e2a2-a33ff651bfe8@sandeen.net>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -71,12 +72,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <03236390-ea33-3da7-e2a2-a33ff651bfe8@sandeen.net>
-Date:   Sat, 14 Dec 2019 12:34:29 -0600
+Message-ID: <371216cf-4e6b-ec5f-c147-6ebd545818d1@sandeen.net>
+Date:   Sat, 14 Dec 2019 12:47:11 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.3.0
 MIME-Version: 1.0
-In-Reply-To: <20191214180559.GN99875@magnolia>
+In-Reply-To: <03236390-ea33-3da7-e2a2-a33ff651bfe8@sandeen.net>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -85,79 +86,17 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 12/14/19 12:05 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Make sure the "Discarding..." gets a newline after it no matter how we
-> exit the function.  Don't bother with any printing it even a small
-> discard request fails.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  mkfs/xfs_mkfs.c |   12 +++++++++++-
->  1 file changed, 11 insertions(+), 1 deletion(-)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 4bfdebf6..948a5a77 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -1251,6 +1251,14 @@ discard_blocks(dev_t dev, uint64_t nsectors, int quiet)
->  	fd = libxfs_device_to_fd(dev);
->  	if (fd <= 0)
->  		return;
-> +
-> +	/*
-> +	 * Try discarding the first 64k; if that fails, don't bother printing
-> +	 * any messages at all.
-> +	 */
-> +	if (platform_discard_blocks(fd, offset, 65536))
-> +		return;
+Only notify user of discard operations if the first one succeeds,
+and be sure to print a trailing newline if we stop early.
 
-or trying to discard at all for that matter ;)  (i.e. this does more than suppress
-messages)
-
-I think this patch does 2 things... and that comment is a little confusing.
-
-Also you discard the first 64k twice which is ok but...?
-
->  	if (!quiet) {
->  		printf("(ks...");
->  		fflush(stdout);
-> @@ -1267,8 +1275,10 @@ discard_blocks(dev_t dev, uint64_t nsectors, int quiet)
->  		 * not necessary for the mkfs functionality but just an
->  		 * optimization. However we should stop on error.
->  		 */
-> -		if (platform_discard_blocks(fd, offset, tmp_step))
-> +		if (platform_discard_blocks(fd, offset, tmp_step)) {
-
-also we don't want to do this if (quiet) ;)
-
-> +			printf("\n");
->  			return;
-> +		}
->  
->  		offset += tmp_step;
->  	}
-> 
-
-How about this, though I'd split it into 2 patches, 1 to catch the newline
-if discard fails (and !quiet), and another to only print status if/after
-the first discard succeeds
-
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 4bfdebf6..9f07f042 100644
+index 4bfdebf6..afa7feb4 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -1244,6 +1244,7 @@ discard_blocks(dev_t dev, uint64_t nsectors, int quiet)
- {
- 	int		fd;
- 	uint64_t	offset = 0;
-+	bool		messaged = false;
- 	/* Discard the device 2G at a time */
- 	const uint64_t	step = 2ULL << 30;
- 	const uint64_t	count = BBTOB(nsectors);
-@@ -1251,10 +1252,6 @@ discard_blocks(dev_t dev, uint64_t nsectors, int quiet)
+@@ -1251,10 +1251,6 @@ discard_blocks(dev_t dev, uint64_t nsectors, int quiet)
  	fd = libxfs_device_to_fd(dev);
  	if (fd <= 0)
  		return;
@@ -168,27 +107,22 @@ index 4bfdebf6..9f07f042 100644
  
  	/* The block discarding happens in smaller batches so it can be
  	 * interrupted prematurely
-@@ -1267,12 +1264,20 @@ discard_blocks(dev_t dev, uint64_t nsectors, int quiet)
+@@ -1267,8 +1263,16 @@ discard_blocks(dev_t dev, uint64_t nsectors, int quiet)
  		 * not necessary for the mkfs functionality but just an
  		 * optimization. However we should stop on error.
  		 */
 -		if (platform_discard_blocks(fd, offset, tmp_step))
 +		if (platform_discard_blocks(fd, offset, tmp_step) == 0) {
-+			if (!messaged && !quiet) {
++			if (offset == 0 && !quiet) {
 +				printf("Discarding blocks...");
 +				fflush(stdout);
-+				messaged = true;
 +			}
-+		} else if (messaged && !quiet) {
-+			printf("\n");
++		} else if (!quiet) {
++			if (offset != 0)
++				printf("\n");
  			return;
 +		}
  
  		offset += tmp_step;
  	}
--	if (!quiet)
-+	if (messaged && !quiet)
- 		printf("Done.\n");
- }
- 
 
