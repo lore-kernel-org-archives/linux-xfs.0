@@ -1,156 +1,215 @@
-Return-Path: <SRS0=IS9S=2E=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=atth=2F=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26CC2C43603
-	for <linux-xfs@archiver.kernel.org>; Sat, 14 Dec 2019 22:24:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81175C2D0CB
+	for <linux-xfs@archiver.kernel.org>; Sun, 15 Dec 2019 10:24:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 01476207FD
-	for <linux-xfs@archiver.kernel.org>; Sat, 14 Dec 2019 22:24:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4DAD4206E0
+	for <linux-xfs@archiver.kernel.org>; Sun, 15 Dec 2019 10:24:42 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=mbobrowski-org.20150623.gappssmtp.com header.i=@mbobrowski-org.20150623.gappssmtp.com header.b="zOyf3Bwf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726713AbfLNWYS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 14 Dec 2019 17:24:18 -0500
-Received: from sandeen.net ([63.231.237.45]:46736 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726687AbfLNWYS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 14 Dec 2019 17:24:18 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 5D67911718;
-        Sat, 14 Dec 2019 16:24:08 -0600 (CST)
-Subject: Re: [PATCH V2] mkfs: tidy up discard notifications
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
-References: <20191214180559.GN99875@magnolia>
- <03236390-ea33-3da7-e2a2-a33ff651bfe8@sandeen.net>
- <371216cf-4e6b-ec5f-c147-6ebd545818d1@sandeen.net>
- <c4d20fc5-150b-7afc-e2fd-2358e52acb9c@sandeen.net>
- <20191214202140.GD99884@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <49fe38c6-3f49-a32d-13bb-9f0874946461@sandeen.net>
-Date:   Sat, 14 Dec 2019 16:24:16 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.3.0
+        id S1726112AbfLOKYj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 15 Dec 2019 05:24:39 -0500
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:42818 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726136AbfLOKYi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Dec 2019 05:24:38 -0500
+Received: by mail-pg1-f195.google.com with SMTP id s64so1977942pgb.9
+        for <linux-xfs@vger.kernel.org>; Sun, 15 Dec 2019 02:24:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=mbobrowski-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=K/TKHTmFxJ8YdG3sUPcrGwBNTxenqC4Aj/U0QSaMIbY=;
+        b=zOyf3Bwf+7Y/DitdVsQrhzKPj0M+ug6+s7ghDLXkd1tYz3NjBMxegPzIyTNoaf25ZS
+         2NKbiOOirVwh/ZiY1J1xcp8W9YY2FwISMUQ8WV6a1T/DRXjUDIMvmiCTsTfDY1PrjMkE
+         IK9XbelO9sb2bYI+8FZen7lShNhahmdJQRukfT4FoSNOxBsupjcRJq0tc3+eH542ztnU
+         6sR8M2X7TGN/pBducUDkVuZ38iSKebtG1mqnCeRH+cuzM11Wi7DFcnwL97cgbShzcZ+6
+         0RP5J2op1jbDzsrJb/nJu0XlpZp8FHMM3u6sh6atF+sftcgJ9N+iq4HU5PbONx2Xkn+n
+         CxtA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=K/TKHTmFxJ8YdG3sUPcrGwBNTxenqC4Aj/U0QSaMIbY=;
+        b=GoG/UXHH/Uk4Io/02NucTSOL8Sj5Aa4jSnRwRC88OPlgwUl4MVkkwdoHPLV6XzbKcP
+         yQOIJQQaUDs4MukxI5karvyjUklLIuG/wG7UEz56xUf7A6ukAC3FIZ+nmFc+nRXc6Ary
+         kuD0cJGu/dbNueIBXmUpMTo/jwGbWlXzJ+au+k2vKpeGCit0VuEMnP6W7dOtf2EEPD/t
+         yb8V+BX+9aAzTD+CRx3VftYWIe1VlXvKKOf5omWw8UENCNd3A0SNhtqWJxfReCC+SOCw
+         UH6bngGVwG3Ova0mel0bBHWiOgjBqyt1KlxvYI16H+BAquI6Qku2EfSWovOPGkhKBidI
+         pmMQ==
+X-Gm-Message-State: APjAAAUor/vkOgV4ivmlEQtMn74ADJ0uhfF8V06NSpjKCcxEWS0N9ij+
+        ap7Hqpvms7wNvuNup8akfkHF
+X-Google-Smtp-Source: APXvYqxPwJuxJjnCWXIacyxzHwzOXHvU/cuyY2c40rTRORCWnto0ZGz8TH0sl1HNALnGYqRjCtxwEA==
+X-Received: by 2002:a62:ed19:: with SMTP id u25mr10415002pfh.173.1576405471875;
+        Sun, 15 Dec 2019 02:24:31 -0800 (PST)
+Received: from morpheus.bobrowski.net (d114-75-67-234.sbr1.nsw.optusnet.com.au. [114.75.67.234])
+        by smtp.gmail.com with ESMTPSA id i9sm18211213pfk.24.2019.12.15.02.24.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 15 Dec 2019 02:24:31 -0800 (PST)
+Date:   Sun, 15 Dec 2019 21:24:24 +1100
+From:   Matthew Bobrowski <mbobrowski@mbobrowski.org>
+To:     Jan Kara <jack@suse.cz>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        syzbot <syzbot+bea68382bae9490e7dd6@syzkaller.appspotmail.com>,
+        darrick.wong@oracle.com, hch@infradead.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com,
+        linux-ext4@vger.kernel.org
+Subject: Re: KASAN: use-after-free Read in iov_iter_alignment
+Message-ID: <20191215102422.GA3967@morpheus.bobrowski.net>
+References: <000000000000ad9f910598bbb867@google.com>
+ <20191202211037.GF2695@dread.disaster.area>
+ <20191202231118.GA7527@bobrowski.net>
+ <20191213113030.GE15474@quack2.suse.cz>
 MIME-Version: 1.0
-In-Reply-To: <20191214202140.GD99884@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191213113030.GE15474@quack2.suse.cz>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 12/14/19 2:21 PM, Darrick J. Wong wrote:
-> On Sat, Dec 14, 2019 at 12:53:56PM -0600, Eric Sandeen wrote:
->> Only notify user of discard operations if the first one succeeds,
->> and be sure to print a trailing newline if we stop early.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->> V2: Logic is hard.  ;)  If I messed this one up, take it back Darrick.  :)
->>
->> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
->> index 4bfdebf6..606f79da 100644
->> --- a/mkfs/xfs_mkfs.c
->> +++ b/mkfs/xfs_mkfs.c
->> @@ -1251,10 +1251,6 @@ discard_blocks(dev_t dev, uint64_t nsectors, int quiet)
->>  	fd = libxfs_device_to_fd(dev);
->>  	if (fd <= 0)
->>  		return;
->> -	if (!quiet) {
->> -		printf("Discarding blocks...");
->> -		fflush(stdout);
->> -	}
->>  
->>  	/* The block discarding happens in smaller batches so it can be
->>  	 * interrupted prematurely
->> @@ -1267,12 +1263,20 @@ discard_blocks(dev_t dev, uint64_t nsectors, int quiet)
->>  		 * not necessary for the mkfs functionality but just an
->>  		 * optimization. However we should stop on error.
->>  		 */
->> -		if (platform_discard_blocks(fd, offset, tmp_step))
->> +		if (platform_discard_blocks(fd, offset, tmp_step) == 0) {
->> +			if (offset == 0 && !quiet) {
->> +				printf("Discarding blocks...");
->> +				fflush(stdout);
->> +			}
->> +		} else {
->> +			if (offset > 0 && !quiet)
->> +				printf("\n");
+On Fri, Dec 13, 2019 at 12:30:30PM +0100, Jan Kara wrote:
+> On Tue 03-12-19 10:11:20, Matthew Bobrowski wrote:
+> > On Tue, Dec 03, 2019 at 08:10:37AM +1100, Dave Chinner wrote:
+> > > [cc linux-ext4@vger.kernel.org - this is reported from the new ext4
+> > > dio->iomap code]
+> > > 
+> > > On Mon, Dec 02, 2019 at 09:15:08AM -0800, syzbot wrote:
+> > > > Hello,
+> > > > 
+> > > > syzbot found the following crash on:
+> > > > 
+> > > > HEAD commit:    b94ae8ad Merge tag 'seccomp-v5.5-rc1' of git://git.kernel...
+> > > > git tree:       upstream
+> > > > console output: https://syzkaller.appspot.com/x/log.txt?x=135a8d7ae00000
+> > > > kernel config:  https://syzkaller.appspot.com/x/.config?x=c2e464ae414aee8c
+> > > > dashboard link: https://syzkaller.appspot.com/bug?extid=bea68382bae9490e7dd6
+> > > > compiler:       clang version 9.0.0 (/home/glider/llvm/clang
+> > > > 80fee25776c2fb61e74c1ecb1a523375c2500b69)
+> > > > syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1135cb36e00000
+> > > > C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=14e90abce00000
+> > > > 
+> > > > IMPORTANT: if you fix the bug, please add the following tag to the commit:
+> > > > Reported-by: syzbot+bea68382bae9490e7dd6@syzkaller.appspotmail.com
+> > > > 
+> > > > ==================================================================
+> > > > BUG: KASAN: use-after-free in iov_iter_alignment+0x6a1/0x7b0
+> > > > lib/iov_iter.c:1225
+> > > > Read of size 4 at addr ffff888098d40f54 by task loop0/8203
+> > > > 
+> > > > CPU: 0 PID: 8203 Comm: loop0 Not tainted 5.4.0-syzkaller #0
+> > > > Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS
+> > > > Google 01/01/2011
+> > > > Call Trace:
+> > > >  __dump_stack lib/dump_stack.c:77 [inline]
+> > > >  dump_stack+0x1fb/0x318 lib/dump_stack.c:118
+> > > >  print_address_description+0x75/0x5c0 mm/kasan/report.c:374
+> > > >  __kasan_report+0x14b/0x1c0 mm/kasan/report.c:506
+> > > >  kasan_report+0x26/0x50 mm/kasan/common.c:634
+> > > >  __asan_report_load4_noabort+0x14/0x20 mm/kasan/generic_report.c:131
+> > > >  iov_iter_alignment+0x6a1/0x7b0 lib/iov_iter.c:1225
+> > > >  iomap_dio_bio_actor+0x1a7/0x11e0 fs/iomap/direct-io.c:203
+> > > >  iomap_dio_actor+0x2b4/0x4a0 fs/iomap/direct-io.c:375
+> > > >  iomap_apply+0x370/0x490 fs/iomap/apply.c:80
+> > > >  iomap_dio_rw+0x8ad/0x1010 fs/iomap/direct-io.c:493
+> > > >  ext4_dio_read_iter fs/ext4/file.c:77 [inline]
+> > > >  ext4_file_read_iter+0x834/0xc20 fs/ext4/file.c:128
+> > > >  lo_rw_aio+0xcbb/0xea0 include/linux/fs.h:1889
+> > > 
+> > > loopback -> ext4 direct IO, bad access on iov passed to iomap DIO
+> > > code.
+> > > 
+> > > >  do_req_filebacked drivers/block/loop.c:616 [inline]
+> > > >  loop_handle_cmd drivers/block/loop.c:1952 [inline]
+> > > >  loop_queue_work+0x13ab/0x2590 drivers/block/loop.c:1966
+> > > >  kthread_worker_fn+0x449/0x700 kernel/kthread.c:671
+> > > >  loop_kthread_worker_fn+0x40/0x60 drivers/block/loop.c:901
+> > > >  kthread+0x332/0x350 kernel/kthread.c:255
+> > > >  ret_from_fork+0x24/0x30 arch/x86/entry/entry_64.S:352
+> > > > 
+> > > > Allocated by task 4198:
+> > > >  save_stack mm/kasan/common.c:69 [inline]
+> > > >  set_track mm/kasan/common.c:77 [inline]
+> > > >  __kasan_kmalloc+0x11c/0x1b0 mm/kasan/common.c:510
+> > > >  kasan_slab_alloc+0xf/0x20 mm/kasan/common.c:518
+> > > >  slab_post_alloc_hook mm/slab.h:584 [inline]
+> > > >  slab_alloc mm/slab.c:3319 [inline]
+> > > >  kmem_cache_alloc+0x1f5/0x2e0 mm/slab.c:3483
+> > > >  mempool_alloc_slab+0x4d/0x70 mm/mempool.c:513
+> > > >  mempool_alloc+0x104/0x5e0 mm/mempool.c:393
+> > > >  bio_alloc_bioset+0x1b0/0x5f0 block/bio.c:477
+> > > >  bio_alloc include/linux/bio.h:400 [inline]
+> > > >  mpage_alloc fs/mpage.c:79 [inline]
+> > > >  do_mpage_readpage+0x1685/0x1d10 fs/mpage.c:306
+> > > >  mpage_readpages+0x2a9/0x440 fs/mpage.c:404
+> > > >  blkdev_readpages+0x2c/0x40 fs/block_dev.c:620
+> > > >  read_pages+0xad/0x4d0 mm/readahead.c:126
+> > > >  __do_page_cache_readahead+0x480/0x530 mm/readahead.c:212
+> > > >  force_page_cache_readahead mm/readahead.c:243 [inline]
+> > > >  page_cache_sync_readahead+0x329/0x3b0 mm/readahead.c:522
+> > > >  generic_file_buffered_read+0x41d/0x2570 mm/filemap.c:2051
+> > > >  generic_file_read_iter+0xa9/0x450 mm/filemap.c:2324
+> > > >  blkdev_read_iter+0x12e/0x140 fs/block_dev.c:2039
+> > > >  call_read_iter include/linux/fs.h:1889 [inline]
+> > > >  new_sync_read fs/read_write.c:414 [inline]
+> > > >  __vfs_read+0x59e/0x730 fs/read_write.c:427
+> > > >  vfs_read+0x1dd/0x420 fs/read_write.c:461
+> > > >  ksys_read+0x117/0x220 fs/read_write.c:587
+> > > >  __do_sys_read fs/read_write.c:597 [inline]
+> > > >  __se_sys_read fs/read_write.c:595 [inline]
+> > > >  __x64_sys_read+0x7b/0x90 fs/read_write.c:595
+> > > >  do_syscall_64+0xf7/0x1c0 arch/x86/entry/common.c:294
+> > > >  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+> > > > 
+> > > > Freed by task 4205:
+> > > >  save_stack mm/kasan/common.c:69 [inline]
+> > > >  set_track mm/kasan/common.c:77 [inline]
+> > > >  kasan_set_free_info mm/kasan/common.c:332 [inline]
+> > > >  __kasan_slab_free+0x12a/0x1e0 mm/kasan/common.c:471
+> > > >  kasan_slab_free+0xe/0x10 mm/kasan/common.c:480
+> > > >  __cache_free mm/slab.c:3425 [inline]
+> > > >  kmem_cache_free+0x81/0xf0 mm/slab.c:3693
+> > > >  mempool_free_slab+0x1d/0x30 mm/mempool.c:520
+> > > >  mempool_free+0xd5/0x350 mm/mempool.c:502
+> > > >  bio_put+0x38b/0x460 block/bio.c:255
+> > > >  mpage_end_io+0x2f5/0x330 fs/mpage.c:58
+> > > >  bio_endio+0x4ff/0x570 block/bio.c:1818
+> > > >  req_bio_endio block/blk-core.c:245 [inline]
+> > > >  blk_update_request+0x438/0x10d0 block/blk-core.c:1464
+> > > >  scsi_end_request+0x8c/0xa20 drivers/scsi/scsi_lib.c:579
+> > > >  scsi_io_completion+0x17c/0x1b80 drivers/scsi/scsi_lib.c:963
+> > > >  scsi_finish_command+0x3b3/0x560 drivers/scsi/scsi.c:228
+> > > >  scsi_softirq_done+0x289/0x310 drivers/scsi/scsi_lib.c:1477
+> > > >  blk_done_softirq+0x312/0x370 block/blk-softirq.c:37
+> > > >  __do_softirq+0x333/0x7c4 arch/x86/include/asm/paravirt.h:762
+> > > 
+> > > Looks like buffered read IO on a loopback device on an ext4 image
+> > > file, and something is being tripped over in the new ext4 direct IO
+> > > path.  Might be an iomap issue, might be an ext4 issue, but it looks
+> > > like the buffered read bio completion is running while the iov is
+> > > still being submitted...
+> > 
+> > Thanks Dave.
+> > 
+> > I will take a look at this when I get home this evening and see
+> > whether I can pinpoint what's going on here...
 > 
-> Maybe we should say failed?  Or ... eh... whatever, the format happens
-> regardless.
+> Any luck in diagnosing this Matthew?
 
-Yeah... a "failed" printf will launch support calls & emails.  :)
+No, not yet. I just purchased my first home and I'm not far out from
+my wedding day, so I've had my hands tied behind by back doing all
+that crap. I will try get to it sometime this week.
 
-> Looks ok,
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+/M
 
-Thanks Darrick.
-
--Eric
-
-> --D
-> 
->>  			return;
->> +		}
->>  
->>  		offset += tmp_step;
->>  	}
->> -	if (!quiet)
->> +	if (offset > 0 && !quiet)
->>  		printf("Done.\n");
->>  }
->>  
->>
->>
-> 
