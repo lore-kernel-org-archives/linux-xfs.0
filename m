@@ -1,215 +1,425 @@
-Return-Path: <SRS0=atth=2F=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=k6ZN=2G=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81175C2D0CB
-	for <linux-xfs@archiver.kernel.org>; Sun, 15 Dec 2019 10:24:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97615C43603
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Dec 2019 00:05:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4DAD4206E0
-	for <linux-xfs@archiver.kernel.org>; Sun, 15 Dec 2019 10:24:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4FF032072A
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Dec 2019 00:05:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=mbobrowski-org.20150623.gappssmtp.com header.i=@mbobrowski-org.20150623.gappssmtp.com header.b="zOyf3Bwf"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Fbc+54bm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726112AbfLOKYj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 15 Dec 2019 05:24:39 -0500
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:42818 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726136AbfLOKYi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Dec 2019 05:24:38 -0500
-Received: by mail-pg1-f195.google.com with SMTP id s64so1977942pgb.9
-        for <linux-xfs@vger.kernel.org>; Sun, 15 Dec 2019 02:24:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=mbobrowski-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=K/TKHTmFxJ8YdG3sUPcrGwBNTxenqC4Aj/U0QSaMIbY=;
-        b=zOyf3Bwf+7Y/DitdVsQrhzKPj0M+ug6+s7ghDLXkd1tYz3NjBMxegPzIyTNoaf25ZS
-         2NKbiOOirVwh/ZiY1J1xcp8W9YY2FwISMUQ8WV6a1T/DRXjUDIMvmiCTsTfDY1PrjMkE
-         IK9XbelO9sb2bYI+8FZen7lShNhahmdJQRukfT4FoSNOxBsupjcRJq0tc3+eH542ztnU
-         6sR8M2X7TGN/pBducUDkVuZ38iSKebtG1mqnCeRH+cuzM11Wi7DFcnwL97cgbShzcZ+6
-         0RP5J2op1jbDzsrJb/nJu0XlpZp8FHMM3u6sh6atF+sftcgJ9N+iq4HU5PbONx2Xkn+n
-         CxtA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=K/TKHTmFxJ8YdG3sUPcrGwBNTxenqC4Aj/U0QSaMIbY=;
-        b=GoG/UXHH/Uk4Io/02NucTSOL8Sj5Aa4jSnRwRC88OPlgwUl4MVkkwdoHPLV6XzbKcP
-         yQOIJQQaUDs4MukxI5karvyjUklLIuG/wG7UEz56xUf7A6ukAC3FIZ+nmFc+nRXc6Ary
-         kuD0cJGu/dbNueIBXmUpMTo/jwGbWlXzJ+au+k2vKpeGCit0VuEMnP6W7dOtf2EEPD/t
-         yb8V+BX+9aAzTD+CRx3VftYWIe1VlXvKKOf5omWw8UENCNd3A0SNhtqWJxfReCC+SOCw
-         UH6bngGVwG3Ova0mel0bBHWiOgjBqyt1KlxvYI16H+BAquI6Qku2EfSWovOPGkhKBidI
-         pmMQ==
-X-Gm-Message-State: APjAAAUor/vkOgV4ivmlEQtMn74ADJ0uhfF8V06NSpjKCcxEWS0N9ij+
-        ap7Hqpvms7wNvuNup8akfkHF
-X-Google-Smtp-Source: APXvYqxPwJuxJjnCWXIacyxzHwzOXHvU/cuyY2c40rTRORCWnto0ZGz8TH0sl1HNALnGYqRjCtxwEA==
-X-Received: by 2002:a62:ed19:: with SMTP id u25mr10415002pfh.173.1576405471875;
-        Sun, 15 Dec 2019 02:24:31 -0800 (PST)
-Received: from morpheus.bobrowski.net (d114-75-67-234.sbr1.nsw.optusnet.com.au. [114.75.67.234])
-        by smtp.gmail.com with ESMTPSA id i9sm18211213pfk.24.2019.12.15.02.24.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 15 Dec 2019 02:24:31 -0800 (PST)
-Date:   Sun, 15 Dec 2019 21:24:24 +1100
-From:   Matthew Bobrowski <mbobrowski@mbobrowski.org>
-To:     Jan Kara <jack@suse.cz>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        syzbot <syzbot+bea68382bae9490e7dd6@syzkaller.appspotmail.com>,
-        darrick.wong@oracle.com, hch@infradead.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com,
-        linux-ext4@vger.kernel.org
-Subject: Re: KASAN: use-after-free Read in iov_iter_alignment
-Message-ID: <20191215102422.GA3967@morpheus.bobrowski.net>
-References: <000000000000ad9f910598bbb867@google.com>
- <20191202211037.GF2695@dread.disaster.area>
- <20191202231118.GA7527@bobrowski.net>
- <20191213113030.GE15474@quack2.suse.cz>
+        id S1726373AbfLPAFz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 15 Dec 2019 19:05:55 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:34168 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726299AbfLPAFz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Dec 2019 19:05:55 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBG055bT183895;
+        Mon, 16 Dec 2019 00:05:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
+ bh=iL8TY9CvBQzOUOZdBvZ1a5n5XKIyTYFQBIJMszthtbE=;
+ b=Fbc+54bmno6//3x0w4xIwL28Gq5xmoVPULGvYVRqy+dr58zExqwmukA3T8nTwHoq5gvV
+ YTBW58ZoUwVdkYOMT7ELPEfyOx/ty+XvGmfV/RBySEKx3LVFP/4CYyG0usk98RQgH/O+
+ YFvrUjzd2f3FLEBKTPsSMt1Rx9qEHuZDSPyZFYgFvqwJcwKUoP0i6t4UClwdOJ7oXWyY
+ twqhW1R1SJMAZptTZAIyXZKH7814ydlDp2CftTpbahGat/Ed8oerIvijiadc+7FvR/SG
+ mKJ6FkK2wR5XT+AhqOlUmPgwEnnqP9nK5n6kBE6+n9WGMgVWhmGHCPAuW8WGwF6YWn8b nA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 2wvqppvdcm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 16 Dec 2019 00:05:46 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBG03cfT109654;
+        Mon, 16 Dec 2019 00:05:46 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 2ww96us4d5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 16 Dec 2019 00:05:45 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xBG05g1Q025608;
+        Mon, 16 Dec 2019 00:05:42 GMT
+Received: from localhost (/10.159.137.228)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sun, 15 Dec 2019 16:05:42 -0800
+Date:   Sun, 15 Dec 2019 16:05:41 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>, Alex Lyakas <alex@zadara.com>,
+        Dave Chinner <david@fromorbit.com>
+Subject: [PATCH v3] xfs: don't commit sunit/swidth updates to disk if that
+ would cause repair failures
+Message-ID: <20191216000541.GE99884@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191213113030.GE15474@quack2.suse.cz>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9472 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-1912150225
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9472 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-1912150225
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Dec 13, 2019 at 12:30:30PM +0100, Jan Kara wrote:
-> On Tue 03-12-19 10:11:20, Matthew Bobrowski wrote:
-> > On Tue, Dec 03, 2019 at 08:10:37AM +1100, Dave Chinner wrote:
-> > > [cc linux-ext4@vger.kernel.org - this is reported from the new ext4
-> > > dio->iomap code]
-> > > 
-> > > On Mon, Dec 02, 2019 at 09:15:08AM -0800, syzbot wrote:
-> > > > Hello,
-> > > > 
-> > > > syzbot found the following crash on:
-> > > > 
-> > > > HEAD commit:    b94ae8ad Merge tag 'seccomp-v5.5-rc1' of git://git.kernel...
-> > > > git tree:       upstream
-> > > > console output: https://syzkaller.appspot.com/x/log.txt?x=135a8d7ae00000
-> > > > kernel config:  https://syzkaller.appspot.com/x/.config?x=c2e464ae414aee8c
-> > > > dashboard link: https://syzkaller.appspot.com/bug?extid=bea68382bae9490e7dd6
-> > > > compiler:       clang version 9.0.0 (/home/glider/llvm/clang
-> > > > 80fee25776c2fb61e74c1ecb1a523375c2500b69)
-> > > > syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1135cb36e00000
-> > > > C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=14e90abce00000
-> > > > 
-> > > > IMPORTANT: if you fix the bug, please add the following tag to the commit:
-> > > > Reported-by: syzbot+bea68382bae9490e7dd6@syzkaller.appspotmail.com
-> > > > 
-> > > > ==================================================================
-> > > > BUG: KASAN: use-after-free in iov_iter_alignment+0x6a1/0x7b0
-> > > > lib/iov_iter.c:1225
-> > > > Read of size 4 at addr ffff888098d40f54 by task loop0/8203
-> > > > 
-> > > > CPU: 0 PID: 8203 Comm: loop0 Not tainted 5.4.0-syzkaller #0
-> > > > Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS
-> > > > Google 01/01/2011
-> > > > Call Trace:
-> > > >  __dump_stack lib/dump_stack.c:77 [inline]
-> > > >  dump_stack+0x1fb/0x318 lib/dump_stack.c:118
-> > > >  print_address_description+0x75/0x5c0 mm/kasan/report.c:374
-> > > >  __kasan_report+0x14b/0x1c0 mm/kasan/report.c:506
-> > > >  kasan_report+0x26/0x50 mm/kasan/common.c:634
-> > > >  __asan_report_load4_noabort+0x14/0x20 mm/kasan/generic_report.c:131
-> > > >  iov_iter_alignment+0x6a1/0x7b0 lib/iov_iter.c:1225
-> > > >  iomap_dio_bio_actor+0x1a7/0x11e0 fs/iomap/direct-io.c:203
-> > > >  iomap_dio_actor+0x2b4/0x4a0 fs/iomap/direct-io.c:375
-> > > >  iomap_apply+0x370/0x490 fs/iomap/apply.c:80
-> > > >  iomap_dio_rw+0x8ad/0x1010 fs/iomap/direct-io.c:493
-> > > >  ext4_dio_read_iter fs/ext4/file.c:77 [inline]
-> > > >  ext4_file_read_iter+0x834/0xc20 fs/ext4/file.c:128
-> > > >  lo_rw_aio+0xcbb/0xea0 include/linux/fs.h:1889
-> > > 
-> > > loopback -> ext4 direct IO, bad access on iov passed to iomap DIO
-> > > code.
-> > > 
-> > > >  do_req_filebacked drivers/block/loop.c:616 [inline]
-> > > >  loop_handle_cmd drivers/block/loop.c:1952 [inline]
-> > > >  loop_queue_work+0x13ab/0x2590 drivers/block/loop.c:1966
-> > > >  kthread_worker_fn+0x449/0x700 kernel/kthread.c:671
-> > > >  loop_kthread_worker_fn+0x40/0x60 drivers/block/loop.c:901
-> > > >  kthread+0x332/0x350 kernel/kthread.c:255
-> > > >  ret_from_fork+0x24/0x30 arch/x86/entry/entry_64.S:352
-> > > > 
-> > > > Allocated by task 4198:
-> > > >  save_stack mm/kasan/common.c:69 [inline]
-> > > >  set_track mm/kasan/common.c:77 [inline]
-> > > >  __kasan_kmalloc+0x11c/0x1b0 mm/kasan/common.c:510
-> > > >  kasan_slab_alloc+0xf/0x20 mm/kasan/common.c:518
-> > > >  slab_post_alloc_hook mm/slab.h:584 [inline]
-> > > >  slab_alloc mm/slab.c:3319 [inline]
-> > > >  kmem_cache_alloc+0x1f5/0x2e0 mm/slab.c:3483
-> > > >  mempool_alloc_slab+0x4d/0x70 mm/mempool.c:513
-> > > >  mempool_alloc+0x104/0x5e0 mm/mempool.c:393
-> > > >  bio_alloc_bioset+0x1b0/0x5f0 block/bio.c:477
-> > > >  bio_alloc include/linux/bio.h:400 [inline]
-> > > >  mpage_alloc fs/mpage.c:79 [inline]
-> > > >  do_mpage_readpage+0x1685/0x1d10 fs/mpage.c:306
-> > > >  mpage_readpages+0x2a9/0x440 fs/mpage.c:404
-> > > >  blkdev_readpages+0x2c/0x40 fs/block_dev.c:620
-> > > >  read_pages+0xad/0x4d0 mm/readahead.c:126
-> > > >  __do_page_cache_readahead+0x480/0x530 mm/readahead.c:212
-> > > >  force_page_cache_readahead mm/readahead.c:243 [inline]
-> > > >  page_cache_sync_readahead+0x329/0x3b0 mm/readahead.c:522
-> > > >  generic_file_buffered_read+0x41d/0x2570 mm/filemap.c:2051
-> > > >  generic_file_read_iter+0xa9/0x450 mm/filemap.c:2324
-> > > >  blkdev_read_iter+0x12e/0x140 fs/block_dev.c:2039
-> > > >  call_read_iter include/linux/fs.h:1889 [inline]
-> > > >  new_sync_read fs/read_write.c:414 [inline]
-> > > >  __vfs_read+0x59e/0x730 fs/read_write.c:427
-> > > >  vfs_read+0x1dd/0x420 fs/read_write.c:461
-> > > >  ksys_read+0x117/0x220 fs/read_write.c:587
-> > > >  __do_sys_read fs/read_write.c:597 [inline]
-> > > >  __se_sys_read fs/read_write.c:595 [inline]
-> > > >  __x64_sys_read+0x7b/0x90 fs/read_write.c:595
-> > > >  do_syscall_64+0xf7/0x1c0 arch/x86/entry/common.c:294
-> > > >  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-> > > > 
-> > > > Freed by task 4205:
-> > > >  save_stack mm/kasan/common.c:69 [inline]
-> > > >  set_track mm/kasan/common.c:77 [inline]
-> > > >  kasan_set_free_info mm/kasan/common.c:332 [inline]
-> > > >  __kasan_slab_free+0x12a/0x1e0 mm/kasan/common.c:471
-> > > >  kasan_slab_free+0xe/0x10 mm/kasan/common.c:480
-> > > >  __cache_free mm/slab.c:3425 [inline]
-> > > >  kmem_cache_free+0x81/0xf0 mm/slab.c:3693
-> > > >  mempool_free_slab+0x1d/0x30 mm/mempool.c:520
-> > > >  mempool_free+0xd5/0x350 mm/mempool.c:502
-> > > >  bio_put+0x38b/0x460 block/bio.c:255
-> > > >  mpage_end_io+0x2f5/0x330 fs/mpage.c:58
-> > > >  bio_endio+0x4ff/0x570 block/bio.c:1818
-> > > >  req_bio_endio block/blk-core.c:245 [inline]
-> > > >  blk_update_request+0x438/0x10d0 block/blk-core.c:1464
-> > > >  scsi_end_request+0x8c/0xa20 drivers/scsi/scsi_lib.c:579
-> > > >  scsi_io_completion+0x17c/0x1b80 drivers/scsi/scsi_lib.c:963
-> > > >  scsi_finish_command+0x3b3/0x560 drivers/scsi/scsi.c:228
-> > > >  scsi_softirq_done+0x289/0x310 drivers/scsi/scsi_lib.c:1477
-> > > >  blk_done_softirq+0x312/0x370 block/blk-softirq.c:37
-> > > >  __do_softirq+0x333/0x7c4 arch/x86/include/asm/paravirt.h:762
-> > > 
-> > > Looks like buffered read IO on a loopback device on an ext4 image
-> > > file, and something is being tripped over in the new ext4 direct IO
-> > > path.  Might be an iomap issue, might be an ext4 issue, but it looks
-> > > like the buffered read bio completion is running while the iov is
-> > > still being submitted...
-> > 
-> > Thanks Dave.
-> > 
-> > I will take a look at this when I get home this evening and see
-> > whether I can pinpoint what's going on here...
-> 
-> Any luck in diagnosing this Matthew?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-No, not yet. I just purchased my first home and I'm not far out from
-my wedding day, so I've had my hands tied behind by back doing all
-that crap. I will try get to it sometime this week.
+Alex Lyakas reported[1] that mounting an xfs filesystem with new sunit
+and swidth values could cause xfs_repair to fail loudly.  The problem
+here is that repair calculates the where mkfs should have allocated the
+root inode, based on the superblock geometry.  The allocation decisions
+depend on sunit, which means that we really can't go updating sunit if
+it would lead to a subsequent repair failure on an otherwise correct
+filesystem.
 
-/M
+Port the computation code from xfs_repair and teach mount to avoid the
+ondisk update if it would cause problems for repair.  We allow the mount
+to proceed (and new allocations will reflect this new geometry) because
+we've never screened this kind of thing before.
 
+[1] https://lore.kernel.org/linux-xfs/20191125130744.GA44777@bfoster/T/#m00f9594b511e076e2fcdd489d78bc30216d72a7d
+
+Reported-by: Alex Lyakas <alex@zadara.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v3: actually check the alignment check function return value
+v2: v2: refactor the agfl length calculations, clarify the fsgeometry ioctl
+behavior, fix a bunch of the comments and make it clearer how we compute
+the rootino location
+---
+ fs/xfs/libxfs/xfs_alloc.c  |   18 ++++++--
+ fs/xfs/libxfs/xfs_ialloc.c |   70 +++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_ialloc.h |    1 
+ fs/xfs/xfs_mount.c         |   99 +++++++++++++++++++++++++++++++-------------
+ fs/xfs/xfs_trace.h         |   21 +++++++++
+ 5 files changed, 175 insertions(+), 34 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index c284e10af491..fc93fd88ec89 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2248,24 +2248,32 @@ xfs_alloc_longest_free_extent(
+ 	return pag->pagf_flcount > 0 || pag->pagf_longest > 0;
+ }
+ 
++/*
++ * Compute the minimum length of the AGFL in the given AG.  If @pag is NULL,
++ * return the largest possible minimum length.
++ */
+ unsigned int
+ xfs_alloc_min_freelist(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_perag	*pag)
+ {
++	/* AG btrees have at least 1 level. */
++	static const uint8_t	fake_levels[XFS_BTNUM_AGF] = {1, 1, 1};
++	const uint8_t		*levels = pag ? pag->pagf_levels : fake_levels;
+ 	unsigned int		min_free;
+ 
++	ASSERT(mp->m_ag_maxlevels > 0);
++
+ 	/* space needed by-bno freespace btree */
+-	min_free = min_t(unsigned int, pag->pagf_levels[XFS_BTNUM_BNOi] + 1,
++	min_free = min_t(unsigned int, levels[XFS_BTNUM_BNOi] + 1,
+ 				       mp->m_ag_maxlevels);
+ 	/* space needed by-size freespace btree */
+-	min_free += min_t(unsigned int, pag->pagf_levels[XFS_BTNUM_CNTi] + 1,
++	min_free += min_t(unsigned int, levels[XFS_BTNUM_CNTi] + 1,
+ 				       mp->m_ag_maxlevels);
+ 	/* space needed reverse mapping used space btree */
+ 	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
+-		min_free += min_t(unsigned int,
+-				  pag->pagf_levels[XFS_BTNUM_RMAPi] + 1,
+-				  mp->m_rmap_maxlevels);
++		min_free += min_t(unsigned int, levels[XFS_BTNUM_RMAPi] + 1,
++						mp->m_rmap_maxlevels);
+ 
+ 	return min_free;
+ }
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 988cde7744e6..7b4e76c75c58 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -2909,3 +2909,73 @@ xfs_ialloc_setup_geometry(
+ 	else
+ 		igeo->ialloc_align = 0;
+ }
++
++/*
++ * Compute the location of the root directory inode that is laid out by mkfs.
++ * The @sunit parameter will be copied from the superblock if it is negative.
++ */
++xfs_ino_t
++xfs_ialloc_calc_rootino(
++	struct xfs_mount	*mp,
++	int			sunit)
++{
++	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
++	xfs_agblock_t		first_bno;
++
++	if (sunit < 0)
++		sunit = mp->m_sb.sb_unit;
++
++	/*
++	 * Pre-calculate the geometry of AG 0.  We know what it looks like
++	 * because libxfs knows how to create allocation groups now.
++	 *
++	 * first_bno is the first block in which mkfs could possibly have
++	 * allocated the root directory inode, once we factor in the metadata
++	 * that mkfs formats before it.  Namely, the four AG headers...
++	 */
++	first_bno = howmany(4 * mp->m_sb.sb_sectsize, mp->m_sb.sb_blocksize);
++
++	/* ...the two free space btree roots... */
++	first_bno += 2;
++
++	/* ...the inode btree root... */
++	first_bno += 1;
++
++	/* ...the initial AGFL... */
++	first_bno += xfs_alloc_min_freelist(mp, NULL);
++
++	/* ...the free inode btree root... */
++	if (xfs_sb_version_hasfinobt(&mp->m_sb))
++		first_bno++;
++
++	/* ...the reverse mapping btree root... */
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++		first_bno++;
++
++	/* ...the reference count btree... */
++	if (xfs_sb_version_hasreflink(&mp->m_sb))
++		first_bno++;
++
++	/*
++	 * ...and the log, if it is allocated in the first allocation group.
++	 *
++	 * This can happens with filesystems that only have a single
++	 * allocation group, or very odd geometries created by old mkfs
++	 * versions on very small filesystems.
++	 */
++	if (mp->m_sb.sb_logstart &&
++	    XFS_FSB_TO_AGNO(mp, mp->m_sb.sb_logstart) == 0)
++		 first_bno += mp->m_sb.sb_logblocks;
++
++	/*
++	 * Now round first_bno up to whatever allocation alignment is given
++	 * by the filesystem or was passed in.
++	 */
++	if (xfs_sb_version_hasdalign(&mp->m_sb) && igeo->ialloc_align > 0)
++		first_bno = roundup(first_bno, sunit);
++	else if (xfs_sb_version_hasalign(&mp->m_sb) &&
++			mp->m_sb.sb_inoalignmt > 1)
++		first_bno = roundup(first_bno, mp->m_sb.sb_inoalignmt);
++
++	return XFS_AGINO_TO_INO(mp, 0, XFS_AGB_TO_AGINO(mp, first_bno));
++}
+diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
+index 323592d563d5..72b3468b97b1 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.h
++++ b/fs/xfs/libxfs/xfs_ialloc.h
+@@ -152,5 +152,6 @@ int xfs_inobt_insert_rec(struct xfs_btree_cur *cur, uint16_t holemask,
+ 
+ int xfs_ialloc_cluster_alignment(struct xfs_mount *mp);
+ void xfs_ialloc_setup_geometry(struct xfs_mount *mp);
++xfs_ino_t xfs_ialloc_calc_rootino(struct xfs_mount *mp, int sunit);
+ 
+ #endif	/* __XFS_IALLOC_H__ */
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index fca65109cf24..e133a62aae47 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -31,7 +31,7 @@
+ #include "xfs_reflink.h"
+ #include "xfs_extent_busy.h"
+ #include "xfs_health.h"
+-
++#include "xfs_trace.h"
+ 
+ static DEFINE_MUTEX(xfs_uuid_table_mutex);
+ static int xfs_uuid_table_size;
+@@ -359,15 +359,55 @@ xfs_readsb(
+ 	return error;
+ }
+ 
++/*
++ * If the sunit/swidth change would move the precomputed root inode value, we
++ * must reject the ondisk change because repair will stumble over that.
++ * However, we allow the mount to proceed because we never rejected this
++ * combination before.  Returns true to update the sb, false otherwise.
++ */
++static inline int
++xfs_check_new_dalign(
++	struct xfs_mount	*mp,
++	int			new_dalign,
++	bool			*update_sb)
++{
++	struct xfs_sb		*sbp = &mp->m_sb;
++	xfs_ino_t		calc_ino;
++
++	calc_ino = xfs_ialloc_calc_rootino(mp, new_dalign);
++	trace_xfs_check_new_dalign(mp, new_dalign, calc_ino);
++
++	if (sbp->sb_rootino == calc_ino) {
++		*update_sb = true;
++		return 0;
++	}
++
++	xfs_warn(mp,
++"Cannot change stripe alignment; would require moving root inode.");
++
++	/*
++	 * XXX: Next time we add a new incompat feature, this should start
++	 * returning -EINVAL to fail the mount.  Until then, spit out a warning
++	 * that we're ignoring the administrator's instructions.
++	 */
++	xfs_warn(mp, "Skipping superblock stripe alignment update.");
++	*update_sb = false;
++	return 0;
++}
++
+ /*
+  * Update alignment values based on mount options and sb values
+  */
+ STATIC int
+-xfs_update_alignment(xfs_mount_t *mp)
++xfs_update_alignment(
++	struct xfs_mount	*mp)
+ {
+-	xfs_sb_t	*sbp = &(mp->m_sb);
++	struct xfs_sb		*sbp = &mp->m_sb;
+ 
+ 	if (mp->m_dalign) {
++		bool		update_sb;
++		int		error;
++
+ 		/*
+ 		 * If stripe unit and stripe width are not multiples
+ 		 * of the fs blocksize turn off alignment.
+@@ -398,28 +438,28 @@ xfs_update_alignment(xfs_mount_t *mp)
+ 			}
+ 		}
+ 
+-		/*
+-		 * Update superblock with new values
+-		 * and log changes
+-		 */
+-		if (xfs_sb_version_hasdalign(sbp)) {
+-			if (sbp->sb_unit != mp->m_dalign) {
+-				sbp->sb_unit = mp->m_dalign;
+-				mp->m_update_sb = true;
+-			}
+-			if (sbp->sb_width != mp->m_swidth) {
+-				sbp->sb_width = mp->m_swidth;
+-				mp->m_update_sb = true;
+-			}
+-		} else {
++		/* Update superblock with new values and log changes. */
++		if (!xfs_sb_version_hasdalign(sbp)) {
+ 			xfs_warn(mp,
+ 	"cannot change alignment: superblock does not support data alignment");
+ 			return -EINVAL;
+ 		}
++
++		if (sbp->sb_unit == mp->m_dalign &&
++		    sbp->sb_width == mp->m_swidth)
++			return 0;
++
++		error = xfs_check_new_dalign(mp, mp->m_dalign, &update_sb);
++		if (error || !update_sb)
++			return error;
++
++		sbp->sb_unit = mp->m_dalign;
++		sbp->sb_width = mp->m_swidth;
++		mp->m_update_sb = true;
+ 	} else if ((mp->m_flags & XFS_MOUNT_NOALIGN) != XFS_MOUNT_NOALIGN &&
+ 		    xfs_sb_version_hasdalign(&mp->m_sb)) {
+-			mp->m_dalign = sbp->sb_unit;
+-			mp->m_swidth = sbp->sb_width;
++		mp->m_dalign = sbp->sb_unit;
++		mp->m_swidth = sbp->sb_width;
+ 	}
+ 
+ 	return 0;
+@@ -647,16 +687,6 @@ xfs_mountfs(
+ 		mp->m_update_sb = true;
+ 	}
+ 
+-	/*
+-	 * Check if sb_agblocks is aligned at stripe boundary
+-	 * If sb_agblocks is NOT aligned turn off m_dalign since
+-	 * allocator alignment is within an ag, therefore ag has
+-	 * to be aligned at stripe boundary.
+-	 */
+-	error = xfs_update_alignment(mp);
+-	if (error)
+-		goto out;
+-
+ 	xfs_alloc_compute_maxlevels(mp);
+ 	xfs_bmap_compute_maxlevels(mp, XFS_DATA_FORK);
+ 	xfs_bmap_compute_maxlevels(mp, XFS_ATTR_FORK);
+@@ -664,6 +694,17 @@ xfs_mountfs(
+ 	xfs_rmapbt_compute_maxlevels(mp);
+ 	xfs_refcountbt_compute_maxlevels(mp);
+ 
++	/*
++	 * Check if sb_agblocks is aligned at stripe boundary.  If sb_agblocks
++	 * is NOT aligned turn off m_dalign since allocator alignment is within
++	 * an ag, therefore ag has to be aligned at stripe boundary.  Note that
++	 * we must compute the free space and rmap btree geometry before doing
++	 * this.
++	 */
++	error = xfs_update_alignment(mp);
++	if (error)
++		goto out;
++
+ 	/* enable fail_at_unmount as default */
+ 	mp->m_fail_unmount = true;
+ 
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index c13bb3655e48..a86be7f807ee 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3573,6 +3573,27 @@ DEFINE_KMEM_EVENT(kmem_alloc_large);
+ DEFINE_KMEM_EVENT(kmem_realloc);
+ DEFINE_KMEM_EVENT(kmem_zone_alloc);
+ 
++TRACE_EVENT(xfs_check_new_dalign,
++	TP_PROTO(struct xfs_mount *mp, int new_dalign, xfs_ino_t calc_rootino),
++	TP_ARGS(mp, new_dalign, calc_rootino),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(int, new_dalign)
++		__field(xfs_ino_t, sb_rootino)
++		__field(xfs_ino_t, calc_rootino)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->new_dalign = new_dalign;
++		__entry->sb_rootino = mp->m_sb.sb_rootino;
++		__entry->calc_rootino = calc_rootino;
++	),
++	TP_printk("dev %d:%d new_dalign %d sb_rootino %llu calc_rootino %llu",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->new_dalign, __entry->sb_rootino,
++		  __entry->calc_rootino)
++)
++
+ #endif /* _TRACE_XFS_H */
+ 
+ #undef TRACE_INCLUDE_PATH
