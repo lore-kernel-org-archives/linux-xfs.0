@@ -2,125 +2,87 @@ Return-Path: <SRS0=k6ZN=2G=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 208BFC43603
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Dec 2019 16:53:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73E06C2D0BF
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Dec 2019 18:27:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F138720717
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Dec 2019 16:53:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 426FB21775
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Dec 2019 18:27:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1576520854;
+	bh=b7Zp+m/Ds/ef6McCgYGXwFpr6eOhigKmMCfpL2V5pcU=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=dH5Q6F33Ro5JFFBs2vxN1gdrBH9F8t6I4uA95cFs2oOHdl/wICddOUykGMreMXuf3
+	 wt24VSDDCBnQXUiVLfZT3SCkJmrBErxpCRxjG7RuIUm6YEhI3dnToP9FKkuXXgw/Mt
+	 tPA2C9dPFwboowO3esXKnt3xSCj0sIIW43WIyISE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725805AbfLPQxO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 Dec 2019 11:53:14 -0500
-Received: from mout.kundenserver.de ([212.227.126.133]:59393 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726445AbfLPQxO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Dec 2019 11:53:14 -0500
-Received: from mail-qk1-f172.google.com ([209.85.222.172]) by
- mrelayeu.kundenserver.de (mreue012 [212.227.15.129]) with ESMTPSA (Nemesis)
- id 1MCGag-1iXVgQ1zLW-009Lmc; Mon, 16 Dec 2019 17:53:12 +0100
-Received: by mail-qk1-f172.google.com with SMTP id z76so2766073qka.2;
-        Mon, 16 Dec 2019 08:53:12 -0800 (PST)
-X-Gm-Message-State: APjAAAWSy7q24yjWDIWvQ3YcznVV0B2CXymdLUJr9yVkYxIBzWDbnakP
-        CcGM7vEXN1syFtNYtPgTYHqyGAi88feM3GCwThY=
-X-Google-Smtp-Source: APXvYqx8OQ28y6zwlRWDG2wjFiQrXKgjpoyFeMfLdTx1B0TskmgazaNwwlSGO+Y/a0jpZf5xmEmtkNZeY6gnecHFA2U=
-X-Received: by 2002:a37:b283:: with SMTP id b125mr189741qkf.352.1576515191229;
- Mon, 16 Dec 2019 08:53:11 -0800 (PST)
-MIME-Version: 1.0
-References: <20191213204936.3643476-1-arnd@arndb.de> <20191213205417.3871055-12-arnd@arndb.de>
- <20191213211728.GL99875@magnolia>
-In-Reply-To: <20191213211728.GL99875@magnolia>
-From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Mon, 16 Dec 2019 17:52:55 +0100
-X-Gmail-Original-Message-ID: <CAK8P3a3k9dq+9DnPFBKdzOe=ALPXXjCvBBj8r_xsqz1vTswGsg@mail.gmail.com>
-Message-ID: <CAK8P3a3k9dq+9DnPFBKdzOe=ALPXXjCvBBj8r_xsqz1vTswGsg@mail.gmail.com>
-Subject: Re: [PATCH v2 21/24] xfs: quota: move to time64_t interfaces
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     y2038 Mailman List <y2038@lists.linaro.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Brian Foster <bfoster@redhat.com>,
-        Carlos Maiolino <cmaiolino@redhat.com>,
-        Pavel Reichl <preichl@redhat.com>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        Dave Chinner <dchinner@redhat.com>,
-        Allison Collins <allison.henderson@oracle.com>,
-        Jan Kara <jack@suse.cz>
-Content-Type: text/plain; charset="UTF-8"
-X-Provags-ID: V03:K1:b0mKWonuY5xcyu40CrefNUDzjFx1xfsC/KkgRDd/UDY9c4T5TN1
- UxbAoCtpBcPVUsN9+jpx6MKF5TrPS7rPYa9EJs5T6j5hXDMfjcNJ4V1lv5kUuWCjqgp7OyV
- wZFI4mf+H/a2O6+ZUh6Dcej5lojL4TMNhnECbWDFGJ1VilbQQtpitTDoQaIBCG7xUbvfgEs
- dTea7yCp2GwlgCBj2bYBA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:8i/krf8idpY=:Oa0oQseFk3Sx7eN72qMNa6
- d6NDz/jySMVJUM8lxjT+9trKDQYlxl9BM+qQhTx8Hu49ell6RXXrygobiwNo6yuE4OY6H0yOB
- uUHl839/ymPzT6aMOHdK9TdNoNWC4vxlbfxYod906VOELKKn6WlWvmfn6Dv2QUKO/Sw4TJsQo
- f7KtWNCCTASHAPVlS3OgfAlE7dmfWfTm2AwHA4+4WbOYCbNmaZuCxgmA7ZO0lcg93hhPwyDlr
- VjJaIUMJyqc3Fw8iwfrcZ1O41kazLnqkB5AqsZlAWrm7mTgoopikBiZYvtpCmhPQJc/kw8Ejz
- W7CcQQvByY0w+NiuUozLZqcoW2I6cSqEf49TBaoB4SYU+l9Lr0eC8XW4elPFJvjRZOonOUEM5
- YOz/aDZULXPSit39l1ge6B81ogmTc8GyRWoIz27TpwlCQRC26QLO375+5VzMTTbRIDqKc46gu
- EcQTmcjpSFXDv8H/inwCw6Ci1BHGzRJss+aN0G2zf90DG4FNg8UdbnaLRGahpg0tOpaIX3c1m
- 12aWBeg1s9O2uFXtvDEaWqhkzUlxhob8qFUiyWmorAy92U3z3vXEJvMDt4S2H6TN7l+/4OzfD
- r3wn9e+4FsaMMUNLBz8K/nBaKK4D6EgJohKHGgYpl6tziDbRcUgO79NzHgPFocID+eQMjStPK
- vTvtryK5S8rY1BqsSqzk1V9VlqDopebZd1UHCEjBtTdxzE/v2nkwWW5TSpoYgIuJLauhwcFFv
- Td1txV4xBqzI5kZFi/NCfEOTY6ftlbZUm0+0skie84S2PE6nBILPo6ZB5Do9HQTY/AYketEsB
- p7ylfclF44MCXZM75vv7aclbX0581CcMH+3JFUmNUvmEP1fJHCeuOMwCqw6LlcEUM4t4P1QeU
- 4CdXM1npGsmjPCdQhVhQ==
+        id S1731227AbfLPS1c (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 Dec 2019 13:27:32 -0500
+Received: from mail.kernel.org ([198.145.29.99]:46528 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727628AbfLPS1b (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 16 Dec 2019 13:27:31 -0500
+Received: from debian5.Home (bl8-197-74.dsl.telepac.pt [85.241.197.74])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2BB2020674;
+        Mon, 16 Dec 2019 18:27:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1576520851;
+        bh=b7Zp+m/Ds/ef6McCgYGXwFpr6eOhigKmMCfpL2V5pcU=;
+        h=From:To:Cc:Subject:Date:From;
+        b=jo2ByGw83eCwSN9pPuEYe9csRAGVRIV0Dl4pLna2CCBBMcXaF0gkHChJKXSFAMJDk
+         Ds1OfC4E1Tkngf25ebedwFUZHvuBMuUzs92CpDodtVPXsmY09d2LA/0lRZYHbH4J8b
+         dsW42sN6kAfJErOvaEcrlJ5ydgLQbmsZiBlKKuko=
+From:   fdmanana@kernel.org
+To:     linux-fsdevel@vger.kernel.org
+Cc:     linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+        darrick.wong@oracle.com, Filipe Manana <fdmanana@suse.com>
+Subject: [PATCH 0/2] Allow deduplication of the eof block when it is safe to do so
+Date:   Mon, 16 Dec 2019 18:26:54 +0000
+Message-Id: <20191216182656.15624-1-fdmanana@kernel.org>
+X-Mailer: git-send-email 2.11.0
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Dec 13, 2019 at 10:17 PM Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
->
-> On Fri, Dec 13, 2019 at 09:53:49PM +0100, Arnd Bergmann wrote:
-> > As a preparation for removing the 32-bit time_t type and
-> > all associated interfaces, change xfs to use time64_t and
-> > ktime_get_real_seconds() for the quota housekeeping.
-> >
-> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->
-> Looks mostly reasonable to me...
->
-> The bigtime series refactors the triplicated timer handling and whatnot,
-> but I don't think it would be difficult to rebase that series assuming
-> this lands first (which it probably will, I expect a new incompat ondisk
-> feature to take a /long/ time to get through review.)
+From: Filipe Manana <fdmanana@suse.com>
 
-Could you just merge my three patches into your tree then once
-you are happy with all the changes?
+Hi,
 
-> > @@ -183,7 +183,7 @@ xfs_qm_adjust_dqtimers(
-> >                   (d->d_rtb_hardlimit &&
-> >                    (be64_to_cpu(d->d_rtbcount) >
-> >                     be64_to_cpu(d->d_rtb_hardlimit)))) {
-> > -                     d->d_rtbtimer = cpu_to_be32(get_seconds() +
-> > +                     d->d_rtbtimer = cpu_to_be32(ktime_get_real_seconds() +
-> >                                       mp->m_quotainfo->qi_rtbtimelimit);
->
-> Hmm, so one thing that I clean up on the way to bigtime is the total
-> lack of clamping here.  If (for example) it's September 2105 and
-> rtbtimelimit is set to 1 year, this will cause an integer overflow.  The
-> quota timer will be set to 1970 and expire immediately, rather than what
-> I'd consider the best effort of February 2106.
+This short series allows deduplication of the last block of a file when
+the eof is not aligned to the sector size, as long as the range's end
+offset matches the eof of the destination file.
 
-I don't think clamping would be good here, that just replaces
-one bug with another at the overflow time. If you would like to
-have something better before this gets extended, I could try to
-come up with a version that converts it to the nearest 64-bit
-timestamp, similar to the way that time_before32() in the kernel
-or the NTP protocol work.
+This is a safe case unlike the case where we attempt to clone the block in
+the middle of a file (which results in a corruption I found last year and
+affected both btrfs and xfs).
 
-If you think it can get extended properly soon, I'd just leave the
-patch as it is today in order to remove the get_seconds()
-interface for v5.6.
+This is motivated by btrfs users reporting lower deduplication scores
+starting with kernel 5.0, which was the kernel release where btrfs was
+changed to use the generic VFS helper generic_remap_file_range_prep().
+Users observed that the last block was no longer deduplicated when a
+file's size is not block size aligned.  For btrfs this is specially
+important because references are kept per extent and not per block, so
+not having the last block deduplicated means the entire extent is kept
+allocated, making the deduplication not effective and often pointless in
+many cases.
 
-> (I'll grant you the current code also behaves like this...)
->
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Thanks.
 
-Thanks,
+Filipe Manana (2):
+  fs: allow deduplication of eof block into the end of the destination
+    file
+  Btrfs: make deduplication with range including the last block work
 
-       Arnd
+ fs/btrfs/ioctl.c |  3 ++-
+ fs/read_write.c  | 10 ++++------
+ 2 files changed, 6 insertions(+), 7 deletions(-)
+
+-- 
+2.11.0
+
