@@ -6,82 +6,88 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76E3AC2D0CD
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Dec 2019 12:34:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E01CC43603
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Dec 2019 13:05:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 49D342176D
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Dec 2019 12:34:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 234C42146E
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Dec 2019 13:05:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727924AbfLQMeV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 Dec 2019 07:34:21 -0500
-Received: from mout.kundenserver.de ([212.227.126.130]:54417 "EHLO
+        id S1726402AbfLQNFt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 17 Dec 2019 08:05:49 -0500
+Received: from mout.kundenserver.de ([212.227.126.134]:42211 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727868AbfLQMeU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Dec 2019 07:34:20 -0500
+        with ESMTP id S1726191AbfLQNFt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Dec 2019 08:05:49 -0500
 Received: from [192.168.1.155] ([95.114.21.161]) by mrelayeu.kundenserver.de
  (mreue012 [212.227.15.167]) with ESMTPSA (Nemesis) id
- 1Mw9oq-1hrIM82g0i-00s3SR; Tue, 17 Dec 2019 13:34:16 +0100
+ 1N4eOd-1hjMRu0z83-011hdK; Tue, 17 Dec 2019 14:05:41 +0100
 Subject: Re: [PATCH 0/2] New zonefs file system
-To:     Damien Le Moal <damien.lemoal@wdc.com>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Carlos Maiolino <cmaiolino@redhat.com>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 References: <20191212183816.102402-1-damien.lemoal@wdc.com>
  <29fb138e-e9e5-5905-5422-4454c956e685@metux.net>
  <20191216093557.2vackj7qakk2jngd@orion>
+ <20191216094241.til4qae4ihzi7ors@orion.redhat.com>
+ <BYAPR04MB5816894E05A9334C122E785DE7500@BYAPR04MB5816.namprd04.prod.outlook.com>
 From:   "Enrico Weigelt, metux IT consult" <lkml@metux.net>
-Message-ID: <73615b86-6da7-0e65-0dbc-c158159647ef@metux.net>
-Date:   Tue, 17 Dec 2019 13:33:42 +0100
+Message-ID: <3565a0e7-b9ba-4f32-9f4b-3387f0a379a1@metux.net>
+Date:   Tue, 17 Dec 2019 14:05:09 +0100
 User-Agent: Mozilla/5.0 (X11; Linux i686 on x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.9.0
 MIME-Version: 1.0
-In-Reply-To: <20191216093557.2vackj7qakk2jngd@orion>
+In-Reply-To: <BYAPR04MB5816894E05A9334C122E785DE7500@BYAPR04MB5816.namprd04.prod.outlook.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: tl
-Content-Transfer-Encoding: 7bit
-X-Provags-ID: V03:K1:kOHhF89bTYSwYfWhqLmxQ2esZHjEOBKvTZP6nzNhMnQE3Qb5rlJ
- DUsJ3ZZDXazB0ANWp/gJ8ZJIMVmFJxqFg7TrLNhyNw2UwAtjwKIsHJVuxpXk0DBAA0ugJeQ
- TNd5odFh5KriFGPQNPJo7oOCBjPeTCogB1qh7u02bFT3R54N2x/1KZpKmOr/pI0kXDbMMe4
- 4UfaoZWDbangAuRUhoQVQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:sNg7eYdd92o=:Cgsk6pYi2BfKS0I+OWTdi2
- 88ADVJKZm6uCFsM6ABJ2Kkiz+EYRUoBTjlLE3vBqczOWiVgZTFfk9wUnjgCXaXn7lFinUa0sV
- XXxvbCRbRTiL3uafC0mSF34ssaygPD481SMEUSLSkcGt7WLO5ksUzO/4ww1BTIIupFk50WJ+k
- kuBuxl2Z3Wu30Xo1jGi2MFt2BHiokefRi4fA4QqirNx8QGKh4uvqAd1lQs7Zj9qN6qXMoTMV9
- W9nEEkLjmHVpfH24Ev9xd3g3K5scv2+ixShTsT1wFlayUwXmW9lRohsXc1D89fUvROVh9du0X
- AuWc+7dno3BT7e9dlLCtLk1IQiupBZtnIVeHJNwPCfWzqud11M1no8hogxBOTKmpigba/406b
- 6nLCp5FJGbBmKkMIJe+Cf8bzKVXYXn2+1kqkvN4OujZ4oqDHW1T3en6pRlcmHnYrisqEdbHKU
- dnwxuZ+jRMi82+D44OZQ7qIg3LjZ/wTijUAxwvnNAD9dF9/dgmywZyafMnmtcJ3I8Fc170cCS
- NzyERJqTiACFhAL/AWwWw+nL2tV8z/c2gsO4RZTDySRyA99JsiVR88WEkFh6U3JoTHix1NoOp
- LSxgpaITd+/XDaVV99/YDyvbLVJGvp6UTCglBxiK6xkBw896/+jRBpvmO0bIou4mk9iuZrg/b
- eYMhP52SBNdsj1CEkpLcSpTru/cdL0+gP6kmTTZANKUiivKxcqSb8IKcAhekwT6PFVmJ/boqf
- FY9REAvcZ3EfYgWayCJ7dllV6ABzKmMVyXv08bavv7lvfW7h0/jDFin4e3jiehCcsUCP2IygC
- 6p3Dsz4unzbvv66r4UDQ0WNHp2ctjcApiu+bGwU2uxcIvs8ASLyHuQgdYuZI1rfSu9hySBwhu
- wAVncdejDQWC0VSFT/QA==
+Content-Transfer-Encoding: 8bit
+X-Provags-ID: V03:K1:+ABngioGkIBLDL6fLn8WCq3MvTH87+LP+0U3o+yGUKK5bO3Vh62
+ 6tUB8Z8zlSuT6yjUhIPhfiv8XDi56UUazaAhK8DbChs6tgAIngH/dRvFQxadl6vvfrs99Q+
+ FtuHBf6sHVRw5F8IKs2EJm5KvVcrd+HeeX3rz0dbIhSDDXtmAi2x+kzFPqPLkzYdrXxS19V
+ hNOqtfCJhjSaDRPyBF5QQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:Cbpw+reR0po=:oCZ4QpXWXVdJvR4emq05Ya
+ +ENqKlNd7LhKXVzBvmgQwGndst/nG18+d/PEQDo1BcT6BPUvox03LjweuBMpkv/7mNHQvIyX1
+ 6iwoNnMyh73Hcbx80xLVAlRPJME6DEBPg1Tcp/e83Z6maz3Jh92Ker9BnhU95lLG33kF+OUTl
+ 1CnnmmviB4RL893JfY1ma1/7Zk3E/c4a7fIsv4vSAle1UAYLy+Q7SR3vp9rDCQxF6hAAmKMS1
+ 4/R+QkEZu2qcAiLkOi6WOzP3dhADw9CDtQxwvFtFpk+ogIEOtMm3hCJYk3s9RzuotXwrs3qnN
+ nHZ+v2F0xjgKzCr0PlqYwb207wE8If7u9IYmypQaQ9R4g0CkTJSvj8cOstLCvziKstQiuIg+o
+ Rev8SMdkYWum9olIL3VSsfviI6xncGPKApOJuQguBnHBiV3u/+6Jj1CdQsoutIcfNPrHzl/6H
+ KjhvorICqOgX2AcOugkuHPksupygpD7V5IwK91DTVQdCDn8otPwDyIFzZH47xQaEL3ZerHD0h
+ brSi7PVWjSONlrbXt6Ou0NckhJvh7z8LWHJgf9AUMKgaKe7cz7ZhjPgcJiZCx2ZfhEG40IGQz
+ UZ36BoUjzFVr7bh3/8wq9MO6r3D7+ef3veP0pQP/aIrnq92mJ1WnsDN/g44S4JroUPUFkIyxm
+ IZWsZQ+31sx2ESSKGiVj1iBkVPa6FpatOFWhtMRgDVo881XUuXTO+ePLzO8ibM3XFmnbuUdbf
+ p+R6J3cNpmG6hYrO4e0NRVyffnFC7RKGwEu6zzBvyM5Qhv8qq5b75hTrYhDn6QuNzZ5+0ADlB
+ X2bnpqwqdQre4XUWmjPoKIzwr6bkwo/gj6lNfn8zVSSDv1gTLcfQYTvwwZjE8ArscMNHQRrpP
+ vSDzSgJU3TOtRWpu1/Fg==
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 16.12.19 10:35, Carlos Maiolino wrote:
+On 17.12.19 01:26, Damien Le Moal wrote:
 
 Hi,
 
->> Just curious: what's the exact definition of "zoned" here ?
->> Something like partitions ?
-> 
-> Zones inside a SMR HDD.
+> On the SSD front, NVMe Zoned Namespace standard is still a draft and
+> being worked on be the NVMe committee and no devices are available on
+> the market yet.
 
-Oh, I wasn't aware that those things are exposed to the host at all.
-Are you dealing with host-managed SMR-HDDs ?
+anybody here who can tell why this could be useful ?
 
-> On a SMR HDD, each zone can only be written sequentially, due to physics
-> constraints. I won't post any link with references because I think majordomo
-> will spam my email if I do, but do a google search of something like 'SMR HDD
-> zones' and you'll get a better idea
+Can erase blocks made be so enourmously huge and is there really a huge
+gain in doing so, which makes any practical difference ?
 
-Reminds me on classic CDRs or tapes. Why not dealing them similarily ?
+Oh, BTW, since the write semantics seem so similar, why not treating
+them similar to raw flashes ?
 
 
 --mtx
 
+-- 
+---
+Hinweis: unverschlüsselte E-Mails können leicht abgehört und manipuliert
+werden ! Für eine vertrauliche Kommunikation senden Sie bitte ihren
+GPG/PGP-Schlüssel zu.
 ---
 Enrico Weigelt, metux IT consult
 Free software and Linux embedded engineering
