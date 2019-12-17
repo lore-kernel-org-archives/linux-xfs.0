@@ -2,66 +2,59 @@ Return-Path: <SRS0=4VMi=2H=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE8C9C2D0CD
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97C06C43603
 	for <linux-xfs@archiver.kernel.org>; Tue, 17 Dec 2019 12:03:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C44FF207FF
+	by mail.kernel.org (Postfix) with ESMTP id 6565B207FF
 	for <linux-xfs@archiver.kernel.org>; Tue, 17 Dec 2019 12:03:16 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WC/BLmfQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726986AbfLQMDQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1726709AbfLQMDQ convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
         Tue, 17 Dec 2019 07:03:16 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:40860 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726608AbfLQMDQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Dec 2019 07:03:16 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1576584195;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=tD8dOME/4sWvD8hMnn32Hm7Actlpg4gWVP8R84BLjfA=;
-        b=WC/BLmfQiAG3hS02f1uhlK6qvWHrJX2ADVnLzA4ig2mhzHgIjnWzVx4Z+wkVOqPK0q6rAY
-        g4yibDNlCNobgzTUZcjViLAhkt1QvOnmktNGwD3Yqa9QsgYT5z6WqQa8Om2mvn4YoSKy+0
-        7OeyGLSwilfw8Q57EjyZ6gqQK66dBIs=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-207-Gr_7FM5vNc-CB4HOR73Mdw-1; Tue, 17 Dec 2019 07:03:08 -0500
-X-MC-Unique: Gr_7FM5vNc-CB4HOR73Mdw-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id BBB9F1800D42;
-        Tue, 17 Dec 2019 12:03:07 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 626031000328;
-        Tue, 17 Dec 2019 12:03:07 +0000 (UTC)
-Date:   Tue, 17 Dec 2019 07:03:05 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     bugzilla-daemon@bugzilla.kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [Bug 205833] fsfreeze blocks close(fd) on xfs sometimes
-Message-ID: <20191217120305.GD48778@bfoster>
+Received: from mail.kernel.org ([198.145.29.99]:35836 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726608AbfLQMDP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 17 Dec 2019 07:03:15 -0500
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 205833] fsfreeze blocks close(fd) on xfs sometimes
+Date:   Tue, 17 Dec 2019 12:03:14 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: bfoster@redhat.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-205833-201763-5VNjAN6lsV@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-205833-201763@https.bugzilla.kernel.org/>
 References: <bug-205833-201763@https.bugzilla.kernel.org/>
- <bug-205833-201763-eFyXjnn6uA@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bug-205833-201763-eFyXjnn6uA@https.bugzilla.kernel.org/>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 17, 2019 at 09:34:34AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=205833
+
+--- Comment #3 from bfoster@redhat.com ---
+On Tue, Dec 17, 2019 at 09:34:34AM +0000, bugzilla-daemon@bugzilla.kernel.org
+wrote:
 > https://bugzilla.kernel.org/show_bug.cgi?id=205833
 > 
 > --- Comment #2 from Stefan @dns2utf8 Schindler (kernel.org@estada.ch) ---
@@ -112,5 +105,8 @@ Brian
 > -- 
 > You are receiving this mail because:
 > You are watching the assignee of the bug.
-> 
+>
 
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
