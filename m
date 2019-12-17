@@ -2,136 +2,87 @@ Return-Path: <SRS0=4VMi=2H=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83022C43603
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Dec 2019 07:28:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1178CC2D0C8
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Dec 2019 09:34:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5FC722067C
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Dec 2019 07:28:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D2394207FF
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Dec 2019 09:34:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726710AbfLQH2i (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 Dec 2019 02:28:38 -0500
-Received: from mx2.suse.de ([195.135.220.15]:40812 "EHLO mx2.suse.de"
+        id S1726833AbfLQJef convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 17 Dec 2019 04:34:35 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39016 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726411AbfLQH2h (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 17 Dec 2019 02:28:37 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id D8EAEAC0C;
-        Tue, 17 Dec 2019 07:28:34 +0000 (UTC)
-Subject: Re: [PATCH 1/2] fs: New zonefs file system
-To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     Johannes Thumshirn <jth@kernel.org>,
-        Naohiro Aota <Naohiro.Aota@wdc.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>
-References: <20191212183816.102402-1-damien.lemoal@wdc.com>
- <20191212183816.102402-2-damien.lemoal@wdc.com>
- <c7f17b54-8f90-3dd3-98f7-cf540d70333d@suse.de>
- <BYAPR04MB5816D17D0A14D5651E37F700E7500@BYAPR04MB5816.namprd04.prod.outlook.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <32e3418b-727e-3018-1b8a-0530608fb34d@suse.de>
-Date:   Tue, 17 Dec 2019 08:28:33 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.1
+        id S1726496AbfLQJef (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 17 Dec 2019 04:34:35 -0500
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 205833] fsfreeze blocks close(fd) on xfs sometimes
+Date:   Tue, 17 Dec 2019 09:34:34 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: kernel.org@estada.ch
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-205833-201763-eFyXjnn6uA@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-205833-201763@https.bugzilla.kernel.org/>
+References: <bug-205833-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-In-Reply-To: <BYAPR04MB5816D17D0A14D5651E37F700E7500@BYAPR04MB5816.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 12/17/19 1:20 AM, Damien Le Moal wrote:
-> On 2019/12/16 17:36, Hannes Reinecke wrote:
-> [...]
->>> +static int zonefs_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
->>> +			      unsigned int flags, struct iomap *iomap,
->>> +			      struct iomap *srcmap)
->>> +{
->>> +	struct zonefs_sb_info *sbi = ZONEFS_SB(inode->i_sb);
->>> +	struct zonefs_inode_info *zi = ZONEFS_I(inode);
->>> +	loff_t max_isize = zi->i_max_size;
->>> +	loff_t isize;
->>> +
->>> +	/*
->>> +	 * For sequential zones, enforce direct IO writes. This is already
->>> +	 * checked when writes are issued, so warn about this here if we
->>> +	 * get buffered write to a sequential file inode.
->>> +	 */
->>> +	if (WARN_ON_ONCE(zi->i_ztype == ZONEFS_ZTYPE_SEQ &&
->>> +			 (flags & IOMAP_WRITE) && !(flags & IOMAP_DIRECT)))
->>> +		return -EIO;
->>> +
->>> +	/*
->>> +	 * For all zones, all blocks are always mapped. For sequential zones,
->>> +	 * all blocks after the write pointer (inode size) are always unwritten.
->>> +	 */
->>> +	mutex_lock(&zi->i_truncate_mutex);
->>> +	isize = i_size_read(inode);
->>> +	if (offset >= isize) {
->>> +		length = min(length, max_isize - offset);
->>> +		if (zi->i_ztype == ZONEFS_ZTYPE_CNV)
->>> +			iomap->type = IOMAP_MAPPED;
->>> +		else
->>> +			iomap->type = IOMAP_UNWRITTEN;
->>> +	} else {
->>> +		length = min(length, isize - offset);
->>> +		iomap->type = IOMAP_MAPPED;
->>> +	}
->>> +	mutex_unlock(&zi->i_truncate_mutex);
->>> +
->>> +	iomap->offset = offset & (~sbi->s_blocksize_mask);
->>> +	iomap->length = ((offset + length + sbi->s_blocksize_mask) &
->>> +			 (~sbi->s_blocksize_mask)) - iomap->offset;
->>> +	iomap->bdev = inode->i_sb->s_bdev;
->>> +	iomap->addr = (zi->i_zsector << SECTOR_SHIFT) + iomap->offset;
->>> +
->>> +	return 0;
->>> +}
->>> +
->>> +static const struct iomap_ops zonefs_iomap_ops = {
->>> +	.iomap_begin	= zonefs_iomap_begin,
->>> +};
->>> +
->> This probably shows my complete ignorance, but what is the effect on
->> enforcing the direct I/O writes on the pagecache?
->> IE what happens for buffered reads? Will the pages be invalidated when a
->> write has been issued?
-> 
-> Yes, a direct write issued to a file range that has cached pages result
-> in these pages to be invalidated. But note that in the case of zonefs,
-> this can happen only in the case of conventional zones. For sequential
-> zones, this does not happen: reads can be buffered and cache pages but
-> only for pages below the write pointer. And writes can only be issued at
-> the write pointer. So there is never any possible overlap between
-> buffered reads and direct writes.
-> 
-Oh, indeed, you are correct. That's indeed easy then.
+https://bugzilla.kernel.org/show_bug.cgi?id=205833
 
->> Or do we simply rely on upper layers to ensure no concurrent buffered
->> and direct I/O is being made?
-> 
-> Nope. VFS, or the file system specific implementation, takes care of
-> that. See generic_file_direct_write() and its call to
-> invalidate_inode_pages2_range().
-> 
-Of course.
-One could even say: not applicable, as it won't happen.
+--- Comment #2 from Stefan @dns2utf8 Schindler (kernel.org@estada.ch) ---
+Hi Brian
 
-Cheers,
+Thank you! Here is the stack of a blocked `tail 0.txt` process:
 
-Hannes
+cat /proc/276/stack
+[<0>] call_rwsem_down_read_failed+0x18/0x30
+[<0>] __percpu_down_read+0x58/0x80
+[<0>] __sb_start_write+0x65/0x70
+[<0>] xfs_trans_alloc+0xec/0x130 [xfs]
+[<0>] xfs_free_eofblocks+0x12a/0x1e0 [xfs]
+[<0>] xfs_release+0x144/0x170 [xfs]
+[<0>] xfs_file_release+0x15/0x20 [xfs]
+[<0>] __fput+0xea/0x220
+[<0>] ____fput+0xe/0x10
+[<0>] task_work_run+0x9d/0xc0
+[<0>] ptrace_notify+0x84/0x90
+[<0>] tracehook_report_syscall_exit+0x90/0xd0
+[<0>] syscall_slow_exit_work+0x50/0xd0
+[<0>] do_syscall_64+0x12b/0x130
+[<0>] entry_SYSCALL_64_after_hwframe+0x3d/0xa2
+[<0>] 0xffffffffffffffff
+
+Your explanation matches the behaviour I see on the system.
+
+If there was a patch, do you think it would get backported or just stay in
+mainline and ship with the regular releases?
+
+Best,
+Stefan
+
 -- 
-Dr. Hannes Reinecke            Teamlead Storage & Networking
-hare@suse.de                               +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+You are receiving this mail because:
+You are watching the assignee of the bug.
