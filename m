@@ -2,111 +2,87 @@ Return-Path: <SRS0=4VMi=2H=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97C06C43603
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Dec 2019 12:03:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76E3AC2D0CD
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Dec 2019 12:34:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6565B207FF
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Dec 2019 12:03:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 49D342176D
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Dec 2019 12:34:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726709AbfLQMDQ convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 Dec 2019 07:03:16 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35836 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726608AbfLQMDP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 17 Dec 2019 07:03:15 -0500
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 205833] fsfreeze blocks close(fd) on xfs sometimes
-Date:   Tue, 17 Dec 2019 12:03:14 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: bfoster@redhat.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-205833-201763-5VNjAN6lsV@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-205833-201763@https.bugzilla.kernel.org/>
-References: <bug-205833-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        id S1727924AbfLQMeV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 17 Dec 2019 07:34:21 -0500
+Received: from mout.kundenserver.de ([212.227.126.130]:54417 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727868AbfLQMeU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Dec 2019 07:34:20 -0500
+Received: from [192.168.1.155] ([95.114.21.161]) by mrelayeu.kundenserver.de
+ (mreue012 [212.227.15.167]) with ESMTPSA (Nemesis) id
+ 1Mw9oq-1hrIM82g0i-00s3SR; Tue, 17 Dec 2019 13:34:16 +0100
+Subject: Re: [PATCH 0/2] New zonefs file system
+To:     Damien Le Moal <damien.lemoal@wdc.com>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+References: <20191212183816.102402-1-damien.lemoal@wdc.com>
+ <29fb138e-e9e5-5905-5422-4454c956e685@metux.net>
+ <20191216093557.2vackj7qakk2jngd@orion>
+From:   "Enrico Weigelt, metux IT consult" <lkml@metux.net>
+Message-ID: <73615b86-6da7-0e65-0dbc-c158159647ef@metux.net>
+Date:   Tue, 17 Dec 2019 13:33:42 +0100
+User-Agent: Mozilla/5.0 (X11; Linux i686 on x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
+In-Reply-To: <20191216093557.2vackj7qakk2jngd@orion>
+Content-Type: text/plain; charset=utf-8
+Content-Language: tl
+Content-Transfer-Encoding: 7bit
+X-Provags-ID: V03:K1:kOHhF89bTYSwYfWhqLmxQ2esZHjEOBKvTZP6nzNhMnQE3Qb5rlJ
+ DUsJ3ZZDXazB0ANWp/gJ8ZJIMVmFJxqFg7TrLNhyNw2UwAtjwKIsHJVuxpXk0DBAA0ugJeQ
+ TNd5odFh5KriFGPQNPJo7oOCBjPeTCogB1qh7u02bFT3R54N2x/1KZpKmOr/pI0kXDbMMe4
+ 4UfaoZWDbangAuRUhoQVQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:sNg7eYdd92o=:Cgsk6pYi2BfKS0I+OWTdi2
+ 88ADVJKZm6uCFsM6ABJ2Kkiz+EYRUoBTjlLE3vBqczOWiVgZTFfk9wUnjgCXaXn7lFinUa0sV
+ XXxvbCRbRTiL3uafC0mSF34ssaygPD481SMEUSLSkcGt7WLO5ksUzO/4ww1BTIIupFk50WJ+k
+ kuBuxl2Z3Wu30Xo1jGi2MFt2BHiokefRi4fA4QqirNx8QGKh4uvqAd1lQs7Zj9qN6qXMoTMV9
+ W9nEEkLjmHVpfH24Ev9xd3g3K5scv2+ixShTsT1wFlayUwXmW9lRohsXc1D89fUvROVh9du0X
+ AuWc+7dno3BT7e9dlLCtLk1IQiupBZtnIVeHJNwPCfWzqud11M1no8hogxBOTKmpigba/406b
+ 6nLCp5FJGbBmKkMIJe+Cf8bzKVXYXn2+1kqkvN4OujZ4oqDHW1T3en6pRlcmHnYrisqEdbHKU
+ dnwxuZ+jRMi82+D44OZQ7qIg3LjZ/wTijUAxwvnNAD9dF9/dgmywZyafMnmtcJ3I8Fc170cCS
+ NzyERJqTiACFhAL/AWwWw+nL2tV8z/c2gsO4RZTDySRyA99JsiVR88WEkFh6U3JoTHix1NoOp
+ LSxgpaITd+/XDaVV99/YDyvbLVJGvp6UTCglBxiK6xkBw896/+jRBpvmO0bIou4mk9iuZrg/b
+ eYMhP52SBNdsj1CEkpLcSpTru/cdL0+gP6kmTTZANKUiivKxcqSb8IKcAhekwT6PFVmJ/boqf
+ FY9REAvcZ3EfYgWayCJ7dllV6ABzKmMVyXv08bavv7lvfW7h0/jDFin4e3jiehCcsUCP2IygC
+ 6p3Dsz4unzbvv66r4UDQ0WNHp2ctjcApiu+bGwU2uxcIvs8ASLyHuQgdYuZI1rfSu9hySBwhu
+ wAVncdejDQWC0VSFT/QA==
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=205833
+On 16.12.19 10:35, Carlos Maiolino wrote:
 
---- Comment #3 from bfoster@redhat.com ---
-On Tue, Dec 17, 2019 at 09:34:34AM +0000, bugzilla-daemon@bugzilla.kernel.org
-wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=205833
-> 
-> --- Comment #2 from Stefan @dns2utf8 Schindler (kernel.org@estada.ch) ---
-> Hi Brian
-> 
-> Thank you! Here is the stack of a blocked `tail 0.txt` process:
-> 
-> cat /proc/276/stack
-> [<0>] call_rwsem_down_read_failed+0x18/0x30
-> [<0>] __percpu_down_read+0x58/0x80
-> [<0>] __sb_start_write+0x65/0x70
-> [<0>] xfs_trans_alloc+0xec/0x130 [xfs]
-> [<0>] xfs_free_eofblocks+0x12a/0x1e0 [xfs]
-> [<0>] xfs_release+0x144/0x170 [xfs]
-> [<0>] xfs_file_release+0x15/0x20 [xfs]
-> [<0>] __fput+0xea/0x220
-> [<0>] ____fput+0xe/0x10
-> [<0>] task_work_run+0x9d/0xc0
-> [<0>] ptrace_notify+0x84/0x90
-> [<0>] tracehook_report_syscall_exit+0x90/0xd0
-> [<0>] syscall_slow_exit_work+0x50/0xd0
-> [<0>] do_syscall_64+0x12b/0x130
-> [<0>] entry_SYSCALL_64_after_hwframe+0x3d/0xa2
-> [<0>] 0xffffffffffffffff
-> 
-> Your explanation matches the behaviour I see on the system.
-> 
-> If there was a patch, do you think it would get backported or just stay in
-> mainline and ship with the regular releases?
-> 
+Hi,
 
-There was a patch, but it was RFC and hadn't been merged because IIRC
-more investigation/testing was required to evaluate side effects. For
-reference, the last post I see is the one below. In particular, patch 3
-bypasses EOF block truncation from read-only file descriptors (I believe
-the file writer task would still block).
-
-https://marc.info/?l=linux-xfs&m=154951612101291&w=2
-
-Based on the stack above, note that this is (at least for the time
-being) expected behavior on XFS.
-
-Brian
-
-> Best,
-> Stefan
+>> Just curious: what's the exact definition of "zoned" here ?
+>> Something like partitions ?
 > 
-> -- 
-> You are receiving this mail because:
-> You are watching the assignee of the bug.
->
+> Zones inside a SMR HDD.
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Oh, I wasn't aware that those things are exposed to the host at all.
+Are you dealing with host-managed SMR-HDDs ?
+
+> On a SMR HDD, each zone can only be written sequentially, due to physics
+> constraints. I won't post any link with references because I think majordomo
+> will spam my email if I do, but do a google search of something like 'SMR HDD
+> zones' and you'll get a better idea
+
+Reminds me on classic CDRs or tapes. Why not dealing them similarily ?
+
+
+--mtx
+
+---
+Enrico Weigelt, metux IT consult
+Free software and Linux embedded engineering
+info@metux.net -- +49-151-27565287
