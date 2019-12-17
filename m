@@ -2,215 +2,188 @@ Return-Path: <SRS0=4VMi=2H=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2FFAC43603
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Dec 2019 02:35:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A69ADC43603
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Dec 2019 05:59:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9EE6A218AC
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Dec 2019 02:35:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6CE5B206B7
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Dec 2019 05:59:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="M9fKZePI"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="K0DA9reS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726539AbfLQCf5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 Dec 2019 21:35:57 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:57768 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726448AbfLQCf5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Dec 2019 21:35:57 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBH2XwCS089373;
-        Tue, 17 Dec 2019 02:35:43 GMT
+        id S1726609AbfLQF7g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 17 Dec 2019 00:59:36 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:42124 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725812AbfLQF7g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Dec 2019 00:59:36 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBH5st5s028012;
+        Tue, 17 Dec 2019 05:59:32 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
- bh=FQx9uUCzwjNEqSFRgtQ7vYbGxbtz0wLXjTHssqdLiXI=;
- b=M9fKZePI3GPe1kHwVkG539A/QQaQt2eM86KVeLRhzpcd+5ThDEtDQHcPm+Z87Au3pXSc
- WxMIUYVucH5NhZneVcgqmzNTQUKUwyekzvV+owfX1OU1FnKcQTrxJYjyOwR2jtotymju
- BFeZueSLwl28vO2xKuHmB0awuAhKNKHT1yMAT2RJXYK17BBP4XpaDVXTat9tlc9m/Mdg
- mpD58CNzSLl2HJWgQu2yChW9XNKt6I2XSSLsWFJ4ua4hCAM+/Li9mwSayfMwlUDRtd7b
- Qi5vt1T7uk1lUhmZHA+BDCFS3KcNqt8o6TmkfCZ5VgiwrITZQV+a7huWvls3AZNR4FYw FA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2wvq5ubn7p-1
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=1u8l54WBfBDENNuWRpLuNwD15ENxULbCjOZ35SP/kWQ=;
+ b=K0DA9reS1mKi9m7GI+CXXWPD88mpuDuqHye62Z2xeNasBcC+81npwjUwRvup12abHeCF
+ i3LOZwyJa1aHUusqowXY51hnahpZGcrs6Q1b2nQSwClDnVnkgVCcQNzGfZlkE0rlJ0ni
+ fjqLizVv9budOMx/aghuVkfezvizSsG6RMsJiAxfFX/IZz/QWh25bl58lvrX4oMlD4RH
+ lVll0Pa5RSi0T6h2DyVfeOeIZyA0+K79j8GKRvZa3KI4chChvRpygpSZEj01/IjO/BC2
+ lmmF1sd2dzavs4z7vUunhzZFnAq+lFFaIErloafoG/CcFQlpJqLhRYozCn/lfMNFPm2v oQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 2wvqpq4ed0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 17 Dec 2019 02:35:43 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBH2Sc18141391;
-        Tue, 17 Dec 2019 02:35:42 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2wxm6xt70j-1
+        Tue, 17 Dec 2019 05:59:32 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBH5x5WQ140962;
+        Tue, 17 Dec 2019 05:59:32 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 2wxm4v4fgv-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 17 Dec 2019 02:35:42 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xBH2ZecH006698;
-        Tue, 17 Dec 2019 02:35:41 GMT
+        Tue, 17 Dec 2019 05:59:32 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xBH5xVvF007939;
+        Tue, 17 Dec 2019 05:59:31 GMT
 Received: from localhost (/10.159.159.234)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 16 Dec 2019 18:35:40 -0800
-Date:   Mon, 16 Dec 2019 18:35:35 -0800
+        with ESMTP ; Mon, 16 Dec 2019 21:59:31 -0800
+Date:   Mon, 16 Dec 2019 21:59:27 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@redhat.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] libxfs: make resync with the userspace libxfs easier
-Message-ID: <20191217023535.GA12765@magnolia>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: stabilize insert range start boundary to avoid COW
+ writeback race
+Message-ID: <20191217055927.GB12765@magnolia>
+References: <20191210132340.11330-1-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20191210132340.11330-1-bfoster@redhat.com>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9473 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1912170021
+ engine=8.0.1-1911140001 definitions=main-1912170053
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9473 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1912170022
+ definitions=main-1912170053
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Dec 10, 2019 at 08:23:40AM -0500, Brian Foster wrote:
+> generic/522 (fsx) occasionally fails with a file corruption due to
+> an insert range operation. The primary characteristic of the
+> corruption is a misplaced insert range operation that differs from
+> the requested target offset. The reason for this behavior is a race
+> between the extent shift sequence of an insert range and a COW
+> writeback completion that causes a front merge with the first extent
+> in the shift.
+> 
+> The shift preparation function flushes and unmaps from the target
+> offset of the operation to the end of the file to ensure no
+> modifications can be made and page cache is invalidated before file
+> data is shifted. An insert range operation then splits the extent at
+> the target offset, if necessary, and begins to shift the start
+> offset of each extent starting from the end of the file to the start
+> offset. The shift sequence operates at extent level and so depends
+> on the preparation sequence to guarantee no changes can be made to
+> the target range during the shift. If the block immediately prior to
+> the target offset was dirty and shared, however, it can undergo
+> writeback and move from the COW fork to the data fork at any point
+> during the shift. If the block is contiguous with the block at the
+> start offset of the insert range, it can front merge and alter the
+> start offset of the extent. Once the shift sequence reaches the
+> target offset, it shifts based on the latest start offset and
+> silently changes the target offset of the operation and corrupts the
+> file.
+> 
+> To address this problem, update the shift preparation code to
+> stabilize the start boundary along with the full range of the
+> insert. Also update the existing corruption check to fail if any
+> extent is shifted with a start offset behind the target offset of
+> the insert range. This prevents insert from racing with COW
+> writeback completion and fails loudly in the event of an unexpected
+> extent shift.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+> 
+> This has survived a couple fstests runs (upstream) so far as well as an
+> overnight loop test of generic/522 (on RHEL). The RHEL based kernel just
+> happened to be where this was originally diagnosed and provides a fairly
+> reliable failure rate of within 30 iterations or so. The current test is
+> at almost 70 iterations and still running.
+> 
+> Brian
 
-Prepare to resync the userspace libxfs with the kernel libxfs.  There
-were a few things I missed -- a couple of static inline directory
-functions that have to be exported for xfs_repair; a couple of directory
-naming functions that make porting much easier if they're /not/ static
-inline; and a u16 usage that should have been uint16_t.
+After a week of testing I declare that 2.5 billion fsxops should be
+enough for anyone. :P
 
-None of these things are bugs in their own right; this just makes
-porting xfsprogs easier.
+This /also/ seems to have fixed the separate corruption problems I was
+seeing, so...
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_bmap.c      |    2 +-
- fs/xfs/libxfs/xfs_dir2.c      |   21 +++++++++++++++++++++
- fs/xfs/libxfs/xfs_dir2_priv.h |   29 +++++++++--------------------
- fs/xfs/libxfs/xfs_dir2_sf.c   |    6 +++---
- 4 files changed, 34 insertions(+), 24 deletions(-)
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 4a802b3abe77..4c2e046fbfad 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4561,7 +4561,7 @@ xfs_bmapi_convert_delalloc(
- 	struct xfs_mount	*mp = ip->i_mount;
- 	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 	struct xfs_bmalloca	bma = { NULL };
--	u16			flags = 0;
-+	uint16_t		flags = 0;
- 	struct xfs_trans	*tp;
- 	int			error;
- 
-diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index 0aa87cbde49e..dd6fcaaea318 100644
---- a/fs/xfs/libxfs/xfs_dir2.c
-+++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -724,3 +724,24 @@ xfs_dir2_namecheck(
- 	/* There shouldn't be any slashes or nulls here */
- 	return !memchr(name, '/', length) && !memchr(name, 0, length);
- }
-+
-+xfs_dahash_t
-+xfs_dir2_hashname(
-+	struct xfs_mount	*mp,
-+	struct xfs_name		*name)
-+{
-+	if (unlikely(xfs_sb_version_hasasciici(&mp->m_sb)))
-+		return xfs_ascii_ci_hashname(name);
-+	return xfs_da_hashname(name->name, name->len);
-+}
-+
-+enum xfs_dacmp
-+xfs_dir2_compname(
-+	struct xfs_da_args	*args,
-+	const unsigned char	*name,
-+	int			len)
-+{
-+	if (unlikely(xfs_sb_version_hasasciici(&args->dp->i_mount->m_sb)))
-+		return xfs_ascii_ci_compname(args, name, len);
-+	return xfs_da_compname(args, name, len);
-+}
-diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
-index c031c53d0f0d..01ee0b926572 100644
---- a/fs/xfs/libxfs/xfs_dir2_priv.h
-+++ b/fs/xfs/libxfs/xfs_dir2_priv.h
-@@ -175,6 +175,12 @@ extern int xfs_dir2_sf_lookup(struct xfs_da_args *args);
- extern int xfs_dir2_sf_removename(struct xfs_da_args *args);
- extern int xfs_dir2_sf_replace(struct xfs_da_args *args);
- extern xfs_failaddr_t xfs_dir2_sf_verify(struct xfs_inode *ip);
-+int xfs_dir2_sf_entsize(struct xfs_mount *mp,
-+		struct xfs_dir2_sf_hdr *hdr, int len);
-+void xfs_dir2_sf_put_ino(struct xfs_mount *mp, struct xfs_dir2_sf_hdr *hdr,
-+		struct xfs_dir2_sf_entry *sfep, xfs_ino_t ino);
-+void xfs_dir2_sf_put_ftype(struct xfs_mount *mp,
-+		struct xfs_dir2_sf_entry *sfep, uint8_t ftype);
- 
- /* xfs_dir2_readdir.c */
- extern int xfs_readdir(struct xfs_trans *tp, struct xfs_inode *dp,
-@@ -194,25 +200,8 @@ xfs_dir2_data_entsize(
- 	return round_up(len, XFS_DIR2_DATA_ALIGN);
- }
- 
--static inline xfs_dahash_t
--xfs_dir2_hashname(
--	struct xfs_mount	*mp,
--	struct xfs_name		*name)
--{
--	if (unlikely(xfs_sb_version_hasasciici(&mp->m_sb)))
--		return xfs_ascii_ci_hashname(name);
--	return xfs_da_hashname(name->name, name->len);
--}
--
--static inline enum xfs_dacmp
--xfs_dir2_compname(
--	struct xfs_da_args	*args,
--	const unsigned char	*name,
--	int			len)
--{
--	if (unlikely(xfs_sb_version_hasasciici(&args->dp->i_mount->m_sb)))
--		return xfs_ascii_ci_compname(args, name, len);
--	return xfs_da_compname(args, name, len);
--}
-+xfs_dahash_t xfs_dir2_hashname(struct xfs_mount *mp, struct xfs_name *name);
-+enum xfs_dacmp xfs_dir2_compname(struct xfs_da_args *args,
-+		const unsigned char *name, int len);
- 
- #endif /* __XFS_DIR2_PRIV_H__ */
-diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-index 8b94d33d232f..7b7f6fb2ea3b 100644
---- a/fs/xfs/libxfs/xfs_dir2_sf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-@@ -37,7 +37,7 @@ static void xfs_dir2_sf_check(xfs_da_args_t *args);
- static void xfs_dir2_sf_toino4(xfs_da_args_t *args);
- static void xfs_dir2_sf_toino8(xfs_da_args_t *args);
- 
--static int
-+int
- xfs_dir2_sf_entsize(
- 	struct xfs_mount	*mp,
- 	struct xfs_dir2_sf_hdr	*hdr,
-@@ -84,7 +84,7 @@ xfs_dir2_sf_get_ino(
- 	return get_unaligned_be64(from) & XFS_MAXINUMBER;
- }
- 
--static void
-+void
- xfs_dir2_sf_put_ino(
- 	struct xfs_mount		*mp,
- 	struct xfs_dir2_sf_hdr		*hdr,
-@@ -145,7 +145,7 @@ xfs_dir2_sf_get_ftype(
- 	return XFS_DIR3_FT_UNKNOWN;
- }
- 
--static void
-+void
- xfs_dir2_sf_put_ftype(
- 	struct xfs_mount	*mp,
- 	struct xfs_dir2_sf_entry *sfep,
+--D
+
+> 
+>  fs/xfs/libxfs/xfs_bmap.c |  3 +--
+>  fs/xfs/xfs_bmap_util.c   | 12 ++++++++++++
+>  2 files changed, 13 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index a9ad1f991ba3..4a802b3abe77 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -5972,8 +5972,7 @@ xfs_bmap_insert_extents(
+>  		goto del_cursor;
+>  	}
+>  
+> -	if (XFS_IS_CORRUPT(mp,
+> -			   stop_fsb >= got.br_startoff + got.br_blockcount)) {
+> +	if (XFS_IS_CORRUPT(mp, stop_fsb > got.br_startoff)) {
+>  		error = -EFSCORRUPTED;
+>  		goto del_cursor;
+>  	}
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 2efd78a9719e..e62fb5216341 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -992,6 +992,7 @@ xfs_prepare_shift(
+>  	struct xfs_inode	*ip,
+>  	loff_t			offset)
+>  {
+> +	struct xfs_mount	*mp = ip->i_mount;
+>  	int			error;
+>  
+>  	/*
+> @@ -1004,6 +1005,17 @@ xfs_prepare_shift(
+>  			return error;
+>  	}
+>  
+> +	/*
+> +	 * Shift operations must stabilize the start block offset boundary along
+> +	 * with the full range of the operation. If we don't, a COW writeback
+> +	 * completion could race with an insert, front merge with the start
+> +	 * extent (after split) during the shift and corrupt the file. Start
+> +	 * with the block just prior to the start to stabilize the boundary.
+> +	 */
+> +	offset = round_down(offset, 1 << mp->m_sb.sb_blocklog);
+> +	if (offset)
+> +		offset -= (1 << mp->m_sb.sb_blocklog);
+> +
+>  	/*
+>  	 * Writeback and invalidate cache for the remainder of the file as we're
+>  	 * about to shift down every extent from offset to EOF.
+> -- 
+> 2.20.1
+> 
