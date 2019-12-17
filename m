@@ -2,119 +2,174 @@ Return-Path: <SRS0=4VMi=2H=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+X-Spam-Status: No, score=-7.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C9DEC43603
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Dec 2019 21:51:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36EC0C2D0BF
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Dec 2019 22:07:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1AC982072D
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Dec 2019 21:51:51 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="rdphKxjR"
+	by mail.kernel.org (Postfix) with ESMTP id 12DDE20716
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Dec 2019 22:07:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727335AbfLQVvv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 Dec 2019 16:51:51 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:46442 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726874AbfLQVvv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Dec 2019 16:51:51 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBHLjrSn074387;
-        Tue, 17 Dec 2019 21:51:46 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=WpqUjpkSsbvjLlJ56HCP9aAdithyr7RKD4X4F6UkX+k=;
- b=rdphKxjRifG17xc823PtiD05FGoI/PsC4KgSh95f8C5EyXD58fAy19v2f4hTPCvAZF02
- aLIxw82XqSzyTd4MxYHawwyVmArBFq+s/cOOAM9h+B5HIUHtbkeTLgVLcIqrdpx5U4Nk
- Juw/7VMI/BLe+Ex6Th3Lz2uApsGms2CN8tYjV8UwCMCCsQ/eLge8U3xxXq6+vTzH2X+i
- jYjG7ygYCmKKrhEteGj/DY5p2Lhz2y5QJCfzbKl8WvaPI1NWwZklmiOTob8GAC+HwWJM
- 6J5Ha1hd8vbwPKXFCZW1WkDUjH02kchyy8HMyPq604o1TLMgEzn0ZbFnPD8Nt36TliE2 oQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2wvq5uhp3d-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 17 Dec 2019 21:51:46 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBHLiI5K049401;
-        Tue, 17 Dec 2019 21:51:45 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2wxm5nxenb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 17 Dec 2019 21:51:45 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xBHLpiw1018762;
-        Tue, 17 Dec 2019 21:51:45 GMT
-Received: from localhost (/10.159.137.228)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 17 Dec 2019 13:51:44 -0800
-Date:   Tue, 17 Dec 2019 13:51:43 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: use bitops interface for buf log item AIL flag check
-Message-ID: <20191217215143.GD12765@magnolia>
-References: <20191217184203.56997-1-bfoster@redhat.com>
- <b6375ec4-f2e4-0e87-376c-ff25ee83a563@sandeen.net>
+        id S1726205AbfLQWHL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 17 Dec 2019 17:07:11 -0500
+Received: from sandeen.net ([63.231.237.45]:35246 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725940AbfLQWHL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 17 Dec 2019 17:07:11 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 58BE278D4
+        for <linux-xfs@vger.kernel.org>; Tue, 17 Dec 2019 16:06:57 -0600 (CST)
+To:     linux-xfs <linux-xfs@vger.kernel.org>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs for-next updated to a4e8b806 / v5.4.0-rc1
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <dcbf2e9a-0b45-aa70-c1c1-54971a762041@sandeen.net>
+Date:   Tue, 17 Dec 2019 16:07:08 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.3.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b6375ec4-f2e4-0e87-376c-ff25ee83a563@sandeen.net>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9474 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=719
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1912170173
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9474 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=781 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1912170173
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="Hjc1a81mGfiQkNYxHZUJCKM8orIVFVnxH"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 17, 2019 at 02:01:26PM -0600, Eric Sandeen wrote:
-> On 12/17/19 12:42 PM, Brian Foster wrote:
-> > The xfs_log_item flags were converted to atomic bitops as of commit
-> > 22525c17ed ("xfs: log item flags are racy"). The assert check for
-> > AIL presence in xfs_buf_item_relse() still uses the old value based
-> > check. This likely went unnoticed as XFS_LI_IN_AIL evaluates to 0
-> > and causes the assert to unconditionally pass. Fix up the check.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> 
-> Whoops.
-> 
-> Fixes: 22525c17ed ("xfs: log item flags are racy")
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-> 
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--Hjc1a81mGfiQkNYxHZUJCKM8orIVFVnxH
+Content-Type: multipart/mixed; boundary="78kFM5EM4c4cnTL9G7USUsyWaWaPdjSgK"
 
-Looks ok to me,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+--78kFM5EM4c4cnTL9G7USUsyWaWaPdjSgK
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
---D
+Hi folks,
 
-> > ---
-> >  fs/xfs/xfs_buf_item.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> > index 3458a1264a3f..3984779e5911 100644
-> > --- a/fs/xfs/xfs_buf_item.c
-> > +++ b/fs/xfs/xfs_buf_item.c
-> > @@ -956,7 +956,7 @@ xfs_buf_item_relse(
-> >  	struct xfs_buf_log_item	*bip = bp->b_log_item;
-> >  
-> >  	trace_xfs_buf_item_relse(bp, _RET_IP_);
-> > -	ASSERT(!(bip->bli_item.li_flags & XFS_LI_IN_AIL));
-> > +	ASSERT(!test_bit(XFS_LI_IN_AIL, &bip->bli_item.li_flags));
-> >  
-> >  	bp->b_log_item = NULL;
-> >  	if (list_empty(&bp->b_li_list))
-> > 
+The for-next branch of the xfsprogs repository at:
+
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+has just been updated and tagged with v5.4.0-rc1
+
+Barring late-breaking catastrophes I'll merge this to the master branch
+shortly.
+
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
+
+The new head of the master branch is commit:
+
+a4e8b806 (HEAD -> guilt/for-next, tag: v5.4.0-rc1, korg/for-next, refs/pa=
+tches/for-next/5.4.0-rc1) xfsprogs: Release v5.4.0-rc1
+
+New Commits:
+
+Darrick J. Wong (2):
+      [8db10a9a] xfs_admin: support external log devices
+      [3f153e05] xfs_admin: enable online label getting and setting
+
+Eric Sandeen (3):
+      [998aed52] xfsprogs: remove stray libxfs whitespace
+      [2383d7c5] mkfs: tidy up discard notifications
+      [a4e8b806] xfsprogs: Release v5.4.0-rc1
+
+John Pittman (1):
+      [2ab6ea6a] xfsprogs: add missing line feeds in libxfs/rdwr.c
+
+Pavel Reichl (1):
+      [7e8a6edb] mkfs: Break block discard into chunks of 2 GB
+
+
+Code Diffstat:
+
+ VERSION                  |  2 +-
+ configure.ac             |  2 +-
+ db/xfs_admin.sh          | 54 ++++++++++++++++++++++++++++++++++++++++++=
+++++++++----
+ debian/changelog         |  6 ++++++
+ doc/CHANGES              |  5 +++++
+ libxfs/rdwr.c            |  6 +++---
+ libxfs/xfs_fs.h          |  2 +-
+ libxfs/xfs_inode_buf.c   |  1 +
+ libxfs/xfs_trans_inode.c |  1 +
+ man/man8/xfs_admin.8     | 18 +++++++++++++++++-
+ mkfs/xfs_mkfs.c          | 54 +++++++++++++++++++++++++++++++++++++++++-=
+------------
+ 11 files changed, 127 insertions(+), 24 deletions(-)
+
+
+--78kFM5EM4c4cnTL9G7USUsyWaWaPdjSgK--
+
+--Hjc1a81mGfiQkNYxHZUJCKM8orIVFVnxH
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl35UYwACgkQIK4WkuE9
+3uDpVxAAuzsk4jE/Uh9l+UfEsFC5utxVbXfb2o0jvJyIxklwBU2NUfZGUE99ek4l
+tx27HWVKIWdgxdRjOq7OvWaahbyz4f8yQhXEcZKdyMLnnsAYpib/hb1tcx5t4DEz
+1wlqexUtgE23oqkTIuHcEubo6zSgD/qNWpZmDMfkPpnoOBA4DFQpYHBHFvnoKHyx
+9vmqm/0OjW3wj4uQ8pWgyhAp5iJTLK122QNQguqAhcjB2WcXmCc2g4514TwB7iyy
+sav+s7JPwwBTFP2AYuY1Gfo6itTllS9+6K0m41QtS5s+Ry9w3XWGQH86Zhy54Zea
+g30ZJESi2zcP27ND8VTItAz+w1tANj+05NNAv+1F2XjDvYs397C/1v/RXHQRaynT
+ZEVzTV5xQbVqwY49i0cO6H/4S404V8gWdTVucCt+sIDk3VOYN+BP+pzWeD7RWSel
+HmTJu3Gbj8cxhLgM1Gh22lVKTBqYPqZhOQflLi2+WlQR8mmdK9eHarwM58lPSTIC
+zUzStgQ+QPlBx+uy0aBcqLZjXrTG4pRKn5CX/8AYHlF+Nm4GRM7FMDfuMOcZ7vik
+tARFXq2H1BXPA6w0kYEDV2UADWttwn9uEmADHuVV2fTFm/XkQs5F6JFt7R054Xyz
+2wxvvMCJRo3/OIc97jWKNctqIPvkRmT7C45zZHit++t9HWzMsws=
+=aVqV
+-----END PGP SIGNATURE-----
+
+--Hjc1a81mGfiQkNYxHZUJCKM8orIVFVnxH--
