@@ -4,154 +4,203 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D559C43603
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 04:27:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A461C43603
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 12:10:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 405B32146E
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 04:27:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3EF102072B
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 12:10:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nEQ7sPvy"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="W1cELG/0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726492AbfLRE1C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 Dec 2019 23:27:02 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:44856 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726387AbfLRE1C (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Dec 2019 23:27:02 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBI4OFre149576;
-        Wed, 18 Dec 2019 04:26:59 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=4dV2a2GqF/XBM3TVqlxN3wfk/Pz8z7WO5jIHB9ckyp8=;
- b=nEQ7sPvyDDoHxLRMbf9yDCH33FwiufsK9FACPIAo9TCWNQqzYv1dar1SxuOMa9tqn2ba
- LT7YZqxJGztrqCKYzkjUzxokOiKOhh+BdLbnIbjppyzz75wzfm6R/hH93ptgX7RO+s+e
- laZtAWQOECumDrKGBXVjYGxzkuc2qh/DdwYA6NHrqulf0xvQk5L4u4LFRbTS8OhwfBxC
- Yyc008THnX3xktHxIFe7N8cH7wXB6WQEsSEMzAXGpsWYLs/hZdF8sqO6gbyWeNAmjH8B
- +/CR6a1YkWjvnSuqfSkEtBgQf6llx1vSeSL+eNf9U88h5wAZ7T9EZsQscJybeUz+xFNX rw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 2wvqpqb1s4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Dec 2019 04:26:59 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBI4OCRA024696;
-        Wed, 18 Dec 2019 04:26:59 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 2wxm75n38q-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Dec 2019 04:26:59 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xBI4Qwwu024238;
-        Wed, 18 Dec 2019 04:26:58 GMT
-Received: from localhost (/10.159.137.228)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 17 Dec 2019 20:26:58 -0800
-Date:   Tue, 17 Dec 2019 20:26:57 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@redhat.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs_repair: fix totally broken unit conversion in
- directory invalidation
-Message-ID: <20191218042657.GM12765@magnolia>
-References: <20191218042402.GL12765@magnolia>
+        id S1726591AbfLRMKj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Dec 2019 07:10:39 -0500
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:40505 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726141AbfLRMKj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Dec 2019 07:10:39 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1576671038;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=z+5mz3F6uqH+NcMfXKj6tEQ0HIa1GOVPaCUuG9eRhv8=;
+        b=W1cELG/0XlSMa5la7/n2o68rhTrPySyk2hZyAsWmdOKrf1bqNBINjeobiNw7hp0YI2nvIT
+        VuaRGNZFToIMW1WJjHwDqhmTt0dodIoxgKmvVmbjd97IWHEAAdbrKoK/0HmRaj5cOt+1YY
+        JLq9+T81gKRxLv9stAwo+M60wfxyaYs=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-221-9U8m6rwVPUa2gDahqoejTA-1; Wed, 18 Dec 2019 07:10:36 -0500
+X-MC-Unique: 9U8m6rwVPUa2gDahqoejTA-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9E3CE8017DF;
+        Wed, 18 Dec 2019 12:10:35 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 451685C28D;
+        Wed, 18 Dec 2019 12:10:35 +0000 (UTC)
+Date:   Wed, 18 Dec 2019 07:10:33 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/3] xfs: rework insert range into an atomic operation
+Message-ID: <20191218121033.GA63809@bfoster>
+References: <20191213171258.36934-1-bfoster@redhat.com>
+ <20191213171258.36934-3-bfoster@redhat.com>
+ <20191218023726.GH12765@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191218042402.GL12765@magnolia>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9474 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1912180033
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9474 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1912180033
+In-Reply-To: <20191218023726.GH12765@magnolia>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 17, 2019 at 08:24:02PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Dec 17, 2019 at 06:37:26PM -0800, Darrick J. Wong wrote:
+> On Fri, Dec 13, 2019 at 12:12:57PM -0500, Brian Foster wrote:
+> > The insert range operation uses a unique transaction and ilock cycle
+> > for the extent split and each extent shift iteration of the overall
+> > operation. While this works, it is risks racing with other
+> > operations in subtle ways such as COW writeback modifying an extent
+> > tree in the middle of a shift operation.
+> > 
+> > To avoid this problem, make insert range atomic with respect to
+> > ilock. Hold the ilock across the entire operation, replace the
+> > individual transactions with a single rolling transaction sequence
+> > and relog the inode to keep it moving in the log. This guarantees
+> > that nothing else can change the extent mapping of an inode while
+> > an insert range operation is in progress.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> >  fs/xfs/xfs_bmap_util.c | 32 +++++++++++++-------------------
+> >  1 file changed, 13 insertions(+), 19 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> > index 829ab1a804c9..555c8b49a223 100644
+> > --- a/fs/xfs/xfs_bmap_util.c
+> > +++ b/fs/xfs/xfs_bmap_util.c
+> > @@ -1134,47 +1134,41 @@ xfs_insert_file_space(
+> >  	if (error)
+> >  		return error;
+> >  
+> > -	/*
+> > -	 * The extent shifting code works on extent granularity. So, if stop_fsb
+> > -	 * is not the starting block of extent, we need to split the extent at
+> > -	 * stop_fsb.
+> > -	 */
+> >  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write,
+> >  			XFS_DIOSTRAT_SPACE_RES(mp, 0), 0, 0, &tp);
+> >  	if (error)
+> >  		return error;
+> >  
+> >  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> > -	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+> > +	xfs_trans_ijoin(tp, ip, 0);
+> >  
+> > +	/*
+> > +	 * The extent shifting code works on extent granularity. So, if stop_fsb
+> > +	 * is not the starting block of extent, we need to split the extent at
+> > +	 * stop_fsb.
+> > +	 */
+> >  	error = xfs_bmap_split_extent(tp, ip, stop_fsb);
+> >  	if (error)
+> >  		goto out_trans_cancel;
+> >  
+> > -	error = xfs_trans_commit(tp);
+> > -	if (error)
+> > -		return error;
+> > -
+> > -	while (!error && !done) {
+> > -		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0, 0,
+> > -					&tp);
 > 
-> Your humble author forgot that xfs_dablk_t has the same units as
-> xfs_fileoff_t, and totally screwed up the directory buffer invalidation
-> loop in dir_binval.  Not only is there an off-by-one error in the loop
-> conditional, but the unit conversions are wrong.
+> I'm a little concerned about the livelock potential here, if there are a lot of
+> other threads that have eaten all the transaction reservation and are trying to
+> get our ILOCK, while at the same time this thread has the ILOCK and is trying
+> to roll the transaction to move another extent, having already rolled the
+> transaction more than logcount times.
 > 
-> Fix all this stupidity by adding a for loop macro to take care of these
-> details for us so that everyone can iterate all logical directory blocks
-> (xfs_dir2_db_t) that start within a given bmbt record.
-> 
-> The pre-5.5 xfs_da_get_buf implementation mostly hides the off-by-one
-> error because dir_binval turns on "don't complain if no mapping" mode,
-> but on dirblocksize > fsblocksize filesystems the incorrect units can
-> cause us to miss invalidating some blocks, which can lead to other
-> buffer cache errors later.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Fixes: f9c559f4e4fb4 ("xfs_repair: invalidate dirty dir buffers when we zap a  directory")
+My understanding is that the regrant mechanism is intended to deal with
+that scenario. Even after the initial (res * logcount) reservation is
+consumed, a regrant is different from an initial reservation in that the
+reservation head is unconditionally updated with a new reservation unit.
+We do wait on the write head in regrant, but IIUC that should be limited
+to the pool of already allocated transactions (and is woken before the
+reserve head waiters IIRC). I suppose something like this might be
+possible in theory if we were blocked on regrant and the entirety of
+remaining log space was consumed by transactions waiting on our ilock,
+but I think that is highly unlikely since we also hold the iolock here.
 
---D
+Also note that this approach is based on the current truncate algorithm,
+which is probably a better barometer of potential for this kind of issue
+as it is a less specialized operation. I'd argue that if this is safe
+enough for truncate, it should be safe enough for range shifting.
 
-> ---
->  libxfs/xfs_dir2.h |   10 ++++++++++
->  repair/phase6.c   |    8 ++------
->  2 files changed, 12 insertions(+), 6 deletions(-)
+> I think the extent shifting loop starts with the highest offset mapping and
+> shifts it up and continues in order of decreasing offset until it gets to
+>  @stop_fsb, correct?
 > 
-> diff --git a/libxfs/xfs_dir2.h b/libxfs/xfs_dir2.h
-> index f5424477..13221243 100644
-> --- a/libxfs/xfs_dir2.h
-> +++ b/libxfs/xfs_dir2.h
-> @@ -308,6 +308,16 @@ xfs_dir2_leaf_tail_p(struct xfs_da_geometry *geo, struct xfs_dir2_leaf *lp)
->  		  sizeof(struct xfs_dir2_leaf_tail));
->  }
->  
-> +/*
-> + * For a given dir/attr geometry and extent mapping record, walk every file
-> + * offset block (xfs_dablk_t) in the mapping that corresponds to the start
-> + * of a logical directory block (xfs_dir2_db_t).
-> + */
-> +#define for_each_xfs_bmap_dabno(geo, irec, dabno) \
-> +	for ((dabno) = round_up((irec)->br_startoff, (geo)->fsbcount); \
-> +	     (dabno) < (irec)->br_startoff + (irec)->br_blockcount; \
-> +	     (dabno) += (geo)->fsbcount)
-> +
->  /*
->   * The Linux API doesn't pass down the total size of the buffer
->   * we read into down to the filesystem.  With the filldir concept
-> diff --git a/repair/phase6.c b/repair/phase6.c
-> index 91d208a6..a4dd3188 100644
-> --- a/repair/phase6.c
-> +++ b/repair/phase6.c
-> @@ -1276,7 +1276,7 @@ dir_binval(
->  	struct xfs_ifork	*ifp;
->  	struct xfs_da_geometry	*geo;
->  	struct xfs_buf		*bp;
-> -	xfs_dablk_t		dabno, end_dabno;
-> +	xfs_dablk_t		dabno;
->  	int			error = 0;
->  
->  	if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS &&
-> @@ -1286,11 +1286,7 @@ dir_binval(
->  	geo = tp->t_mountp->m_dir_geo;
->  	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
->  	for_each_xfs_iext(ifp, &icur, &rec) {
-> -		dabno = xfs_dir2_db_to_da(geo, rec.br_startoff +
-> -				geo->fsbcount - 1);
-> -		end_dabno = xfs_dir2_db_to_da(geo, rec.br_startoff +
-> -				rec.br_blockcount);
-> -		for (; dabno <= end_dabno; dabno += geo->fsbcount) {
-> +		for_each_xfs_bmap_dabno(geo, &rec, dabno) {
->  			bp = NULL;
->  			error = -libxfs_da_get_buf(tp, ip, dabno, -2, &bp,
->  					whichfork);
+
+Yep, for insert range at least.
+
+> Can we use "alloc trans; ilock; move; commit" for every extent higher than the
+> one that crosses @stop_fsb, and use "alloc trans; ilock; split; roll;
+> insert_extents; commit" to deal with that one extent that crosses @stop_fsb?
+> tr_write pre-reserves enough space to that the roll won't need to get more,
+> which would eliminate that potential problem, I think.
+> 
+
+We'd have to reorder the extent split for that kind of approach, which I
+think you've noted in the sequence above, as the race window is between
+the split and subsequent shift. Otherwise I think that would work.
+
+That said, I'd prefer not to introduce the extra complexity and
+functional variance unless it were absolutely necessary, and it's not
+clear to me that it is. If it is, we'd probably have seen similar issues
+in truncate and should target a fix there before worrying about range
+shift.
+
+Brian
+
+> --D
+> 
+> > +	do {
+> > +		error = xfs_trans_roll_inode(&tp, ip);
+> >  		if (error)
+> > -			break;
+> > +			goto out_trans_cancel;
+> >  
+> > -		xfs_ilock(ip, XFS_ILOCK_EXCL);
+> > -		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+> >  		error = xfs_bmap_insert_extents(tp, ip, &next_fsb, shift_fsb,
+> >  				&done, stop_fsb);
+> >  		if (error)
+> >  			goto out_trans_cancel;
+> > +	} while (!done);
+> >  
+> > -		error = xfs_trans_commit(tp);
+> > -	}
+> > -
+> > +	error = xfs_trans_commit(tp);
+> > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> >  	return error;
+> >  
+> >  out_trans_cancel:
+> >  	xfs_trans_cancel(tp);
+> > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> >  	return error;
+> >  }
+> >  
+> > -- 
+> > 2.20.1
+> > 
+> 
+
