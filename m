@@ -7,72 +7,72 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37F06C43603
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 21:15:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5C0DC43603
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 21:19:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F13B42146E
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 21:15:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 78F6B21D7D
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 21:19:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Z1VBleGe"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kD9hmz6Q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725991AbfLRVPs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Dec 2019 16:15:48 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:53912 "EHLO
+        id S1726510AbfLRVTM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Dec 2019 16:19:12 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:56862 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725990AbfLRVPs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Dec 2019 16:15:48 -0500
+        with ESMTP id S1726496AbfLRVTL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Dec 2019 16:19:11 -0500
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBILAEPj002364;
-        Wed, 18 Dec 2019 21:15:42 GMT
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBIL9uI1002090;
+        Wed, 18 Dec 2019 21:19:09 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=iCme6WgGG9i4DKQ3Kx1+KfzO+hqkZO6s7rhvzCJOICE=;
- b=Z1VBleGeGhLxvhfOiJnXrKOHt8Uflnu5HzUYfNcv5U38uWv/Un5BdUzKwgbTLwIVipWH
- lHq6DPbrcOiOt+8IQ7/KXq7YIWLyNjuGqAHT9WO0yE9hAeJQ7kFT6+Oe30TBhoB4unXf
- W8PI6TTXisoCwpN09psynwovAvYp6lcWBEk3Q1TVuoWryU9RVrYvj2MBTHc87JQe/62d
- sPxXrGjPc7WzYA883nFwmVyV22zU/gsLC4XFWGSXpkjdjU3luED3cTMpj37r7NvfOrBk
- VCglDCThrydXVg1EqiewV43sGjYzeUgpKHmmTvdm9rQi0cW+hyxosEd8nXdi5OrcNVqW RQ== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 2wvqpqg72b-1
+ bh=ne1bPCQjMvyjr5GPjN2TJHRC6FVV8lfi+mMqMIQjoKc=;
+ b=kD9hmz6Qdq3uwg/jfjigHf9GxRN1qf4SFynBoUoBynvMNsjtWJOkN6U/TOPFAQYN70bU
+ NEMAN1lHkbW3THSCdNO4CVXU5RKfaMLS4oXon2Fpo3IkSrHXO0Ia7vEz74ww5cs7v1IJ
+ BPPUvBemDXoW7oAD5jK5L8UDOWIYkCZzERsXdWzW6TS4BGrlCrOirIhwVtBLPfmKH8bX
+ RffSn8NrOaSt0F9sX1li5YuSA6HsxZtCbKjis/A9p9u1ub091OjJHZrzRUcSlG3yKcbC
+ qAHMAZ9op4c2f5eEpGcbzMNjZrRL6qomtMiq+hHEaB4WD8uaLBKXqLJralcmNbUeoI1u Tw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 2wvqpqg7fs-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Dec 2019 21:15:42 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBILAuTN186635;
-        Wed, 18 Dec 2019 21:15:42 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 2wyut4847e-1
+        Wed, 18 Dec 2019 21:19:09 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBIL8mpp033917;
+        Wed, 18 Dec 2019 21:19:08 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 2wyk3btcu5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Dec 2019 21:15:41 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xBILFfdp030847;
-        Wed, 18 Dec 2019 21:15:41 GMT
+        Wed, 18 Dec 2019 21:19:08 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xBILJ66w011234;
+        Wed, 18 Dec 2019 21:19:07 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 18 Dec 2019 13:15:41 -0800
-Date:   Wed, 18 Dec 2019 13:15:40 -0800
+        with ESMTP ; Wed, 18 Dec 2019 13:19:06 -0800
+Date:   Wed, 18 Dec 2019 13:19:05 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: rework insert range into an atomic operation
-Message-ID: <20191218211540.GB7489@magnolia>
+Subject: Re: [PATCH 3/3] xfs: rework collapse range into an atomic operation
+Message-ID: <20191218211905.GC7489@magnolia>
 References: <20191213171258.36934-1-bfoster@redhat.com>
- <20191213171258.36934-3-bfoster@redhat.com>
- <20191218023726.GH12765@magnolia>
- <20191218121033.GA63809@bfoster>
+ <20191213171258.36934-4-bfoster@redhat.com>
+ <20191218023958.GI12765@magnolia>
+ <20191218121120.GB63809@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191218121033.GA63809@bfoster>
+In-Reply-To: <20191218121120.GB63809@bfoster>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9475 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1911140001 definitions=main-1912180163
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9475 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
  definitions=main-1912180163
@@ -81,127 +81,42 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Dec 18, 2019 at 07:10:33AM -0500, Brian Foster wrote:
-> On Tue, Dec 17, 2019 at 06:37:26PM -0800, Darrick J. Wong wrote:
-> > On Fri, Dec 13, 2019 at 12:12:57PM -0500, Brian Foster wrote:
-> > > The insert range operation uses a unique transaction and ilock cycle
-> > > for the extent split and each extent shift iteration of the overall
-> > > operation. While this works, it is risks racing with other
-> > > operations in subtle ways such as COW writeback modifying an extent
-> > > tree in the middle of a shift operation.
-> > > 
-> > > To avoid this problem, make insert range atomic with respect to
-> > > ilock. Hold the ilock across the entire operation, replace the
-> > > individual transactions with a single rolling transaction sequence
-> > > and relog the inode to keep it moving in the log. This guarantees
-> > > that nothing else can change the extent mapping of an inode while
-> > > an insert range operation is in progress.
-> > > 
-> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > ---
-> > >  fs/xfs/xfs_bmap_util.c | 32 +++++++++++++-------------------
-> > >  1 file changed, 13 insertions(+), 19 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> > > index 829ab1a804c9..555c8b49a223 100644
-> > > --- a/fs/xfs/xfs_bmap_util.c
-> > > +++ b/fs/xfs/xfs_bmap_util.c
-> > > @@ -1134,47 +1134,41 @@ xfs_insert_file_space(
-> > >  	if (error)
-> > >  		return error;
-> > >  
-> > > -	/*
-> > > -	 * The extent shifting code works on extent granularity. So, if stop_fsb
-> > > -	 * is not the starting block of extent, we need to split the extent at
-> > > -	 * stop_fsb.
-> > > -	 */
-> > >  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write,
-> > >  			XFS_DIOSTRAT_SPACE_RES(mp, 0), 0, 0, &tp);
-> > >  	if (error)
-> > >  		return error;
-> > >  
-> > >  	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> > > -	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-> > > +	xfs_trans_ijoin(tp, ip, 0);
-> > >  
-> > > +	/*
-> > > +	 * The extent shifting code works on extent granularity. So, if stop_fsb
-> > > +	 * is not the starting block of extent, we need to split the extent at
-> > > +	 * stop_fsb.
-> > > +	 */
-> > >  	error = xfs_bmap_split_extent(tp, ip, stop_fsb);
-> > >  	if (error)
-> > >  		goto out_trans_cancel;
-> > >  
-> > > -	error = xfs_trans_commit(tp);
-> > > -	if (error)
-> > > -		return error;
-> > > -
-> > > -	while (!error && !done) {
-> > > -		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0, 0,
-> > > -					&tp);
+On Wed, Dec 18, 2019 at 07:11:20AM -0500, Brian Foster wrote:
+> On Tue, Dec 17, 2019 at 06:39:58PM -0800, Darrick J. Wong wrote:
+> > On Fri, Dec 13, 2019 at 12:12:58PM -0500, Brian Foster wrote:
+> > > The collapse range operation uses a unique transaction and ilock
+> > > cycle for the hole punch and each extent shift iteration of the
+> > > overall operation. While the hole punch is safe as a separate
+> > > operation due to the iolock, cycling the ilock after each extent
+> > > shift is risky similar to insert range.
 > > 
-> > I'm a little concerned about the livelock potential here, if there are a lot of
-> > other threads that have eaten all the transaction reservation and are trying to
-> > get our ILOCK, while at the same time this thread has the ILOCK and is trying
-> > to roll the transaction to move another extent, having already rolled the
-> > transaction more than logcount times.
+> > It is?  I thought collapse range was safe because we started by punching
+> > out the doomed range and shifting downwards, which eliminates the
+> > problems that come with two adjacent mappings that could be combined?
+> > 
+> > <confused?>
 > > 
 > 
-> My understanding is that the regrant mechanism is intended to deal with
-> that scenario. Even after the initial (res * logcount) reservation is
-> consumed, a regrant is different from an initial reservation in that the
-> reservation head is unconditionally updated with a new reservation unit.
-> We do wait on the write head in regrant, but IIUC that should be limited
-> to the pool of already allocated transactions (and is woken before the
-> reserve head waiters IIRC). I suppose something like this might be
-> possible in theory if we were blocked on regrant and the entirety of
-> remaining log space was consumed by transactions waiting on our ilock,
-> but I think that is highly unlikely since we also hold the iolock here.
+> This is somewhat vague wording. I don't mean to say the same bug is
+> possible on collapse. Indeed, I don't think that it is. What I mean to
+> say is just that cycling the ilock generally opens the operation up to
+> concurrent extent changes, similar to the behavior that resulted in the
+> insert range bug and against the general design principle of the
+> operation (as implied by the iolock hold -> flush -> unmap preparation
+> sequence).
 
-True.  The only time I saw this happen was with buffered COW writeback
-completions (which hold lock other than ILOCK), which should have been
-fixed by the patch I made to put all the writeback items to a single
-inode queue and run /one/ worker thread to process them all.  So maybe
-my fears are unfounded nowadays. :)
+Oh, ok, you're merely trying to prevent anyone from seeing the inode
+metadata while we're in the middle of a collapse-range operation.  I
+wonder then if we need to take a look at the remap range operations, but
+oh wow is that a gnarly mess of inode locking. :)
 
-The only other place I can think of that does a lot of transaction
-rolling on a single inode is online repair, and it always holds all
-three exclusive locks.
+> IOW, it seems to me that a similar behavior is possible on collapse, it
+> just might occur after an extent has been shifted into its new target
+> range rather than before. That wouldn't be a corruption/bug because it
+> doesn't change the semantics of the shift operation or the content of
+> the file, but it's subtle and arguably a misbehavior and/or landmine.
 
-> Also note that this approach is based on the current truncate algorithm,
-> which is probably a better barometer of potential for this kind of issue
-> as it is a less specialized operation. I'd argue that if this is safe
-> enough for truncate, it should be safe enough for range shifting.
-
-Hehehe.
-
-> > I think the extent shifting loop starts with the highest offset mapping and
-> > shifts it up and continues in order of decreasing offset until it gets to
-> >  @stop_fsb, correct?
-> > 
-> 
-> Yep, for insert range at least.
-> 
-> > Can we use "alloc trans; ilock; move; commit" for every extent higher than the
-> > one that crosses @stop_fsb, and use "alloc trans; ilock; split; roll;
-> > insert_extents; commit" to deal with that one extent that crosses @stop_fsb?
-> > tr_write pre-reserves enough space to that the roll won't need to get more,
-> > which would eliminate that potential problem, I think.
-> > 
-> 
-> We'd have to reorder the extent split for that kind of approach, which I
-> think you've noted in the sequence above, as the race window is between
-> the split and subsequent shift. Otherwise I think that would work.
-> 
-> That said, I'd prefer not to introduce the extra complexity and
-> functional variance unless it were absolutely necessary, and it's not
-> clear to me that it is. If it is, we'd probably have seen similar issues
-> in truncate and should target a fix there before worrying about range
-> shift.
-
-Ok.  Looking back through lore I don't see any complaints about insert
-range, so I guess it's fine.
+<nod> Ok, just making sure. :)
 
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
@@ -211,23 +126,72 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
 > > --D
 > > 
-> > > +	do {
-> > > +		error = xfs_trans_roll_inode(&tp, ip);
-> > >  		if (error)
+> > > To avoid this problem, make collapse range atomic with respect to
+> > > ilock. Hold the ilock across the entire operation, replace the
+> > > individual transactions with a single rolling transaction sequence
+> > > and finish dfops on each iteration to perform pending frees and roll
+> > > the transaction. Remove the unnecessary quota reservation as
+> > > collapse range can only ever merge extents (and thus remove extent
+> > > records and potentially free bmap blocks). The dfops call
+> > > automatically relogs the inode to keep it moving in the log. This
+> > > guarantees that nothing else can change the extent mapping of an
+> > > inode while a collapse range operation is in progress.
+> > > 
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > ---
+> > >  fs/xfs/xfs_bmap_util.c | 29 +++++++++++++++--------------
+> > >  1 file changed, 15 insertions(+), 14 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> > > index 555c8b49a223..1c34a34997ca 100644
+> > > --- a/fs/xfs/xfs_bmap_util.c
+> > > +++ b/fs/xfs/xfs_bmap_util.c
+> > > @@ -1050,7 +1050,6 @@ xfs_collapse_file_space(
+> > >  	int			error;
+> > >  	xfs_fileoff_t		next_fsb = XFS_B_TO_FSB(mp, offset + len);
+> > >  	xfs_fileoff_t		shift_fsb = XFS_B_TO_FSB(mp, len);
+> > > -	uint			resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
+> > >  	bool			done = false;
+> > >  
+> > >  	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+> > > @@ -1066,32 +1065,34 @@ xfs_collapse_file_space(
+> > >  	if (error)
+> > >  		return error;
+> > >  
+> > > -	while (!error && !done) {
+> > > -		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0,
+> > > -					&tp);
+> > > -		if (error)
 > > > -			break;
-> > > +			goto out_trans_cancel;
+> > > +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0, 0, &tp);
+> > > +	if (error)
+> > > +		return error;
 > > >  
 > > > -		xfs_ilock(ip, XFS_ILOCK_EXCL);
+> > > -		error = xfs_trans_reserve_quota(tp, mp, ip->i_udquot,
+> > > -				ip->i_gdquot, ip->i_pdquot, resblks, 0,
+> > > -				XFS_QMOPT_RES_REGBLKS);
+> > > -		if (error)
+> > > -			goto out_trans_cancel;
 > > > -		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-> > >  		error = xfs_bmap_insert_extents(tp, ip, &next_fsb, shift_fsb,
-> > >  				&done, stop_fsb);
+> > > +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> > > +	xfs_trans_ijoin(tp, ip, 0);
+> > >  
+> > > +	while (!done) {
+> > >  		error = xfs_bmap_collapse_extents(tp, ip, &next_fsb, shift_fsb,
+> > >  				&done);
 > > >  		if (error)
 > > >  			goto out_trans_cancel;
-> > > +	} while (!done);
+> > > +		if (done)
+> > > +			break;
 > > >  
 > > > -		error = xfs_trans_commit(tp);
-> > > -	}
-> > > -
+> > > +		/* finish any deferred frees and roll the transaction */
+> > > +		error = xfs_defer_finish(&tp);
+> > > +		if (error)
+> > > +			goto out_trans_cancel;
+> > >  	}
+> > >  
 > > > +	error = xfs_trans_commit(tp);
 > > > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
 > > >  	return error;
