@@ -2,33 +2,32 @@ Return-Path: <SRS0=QbY/=2I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9033C43603
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 23:16:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 292CFC43603
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 23:26:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AF1142176D
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 23:16:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0536A21582
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 23:26:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726569AbfLRXQ7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Dec 2019 18:16:59 -0500
-Received: from sandeen.net ([63.231.237.45]:50398 "EHLO sandeen.net"
+        id S1726559AbfLRX0q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Dec 2019 18:26:46 -0500
+Received: from sandeen.net ([63.231.237.45]:50816 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726463AbfLRXQ7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 18 Dec 2019 18:16:59 -0500
+        id S1726518AbfLRX0q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 18 Dec 2019 18:26:46 -0500
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id A50B8F8AF6;
-        Wed, 18 Dec 2019 17:16:43 -0600 (CST)
-Subject: Re: [PATCH 1/2] libfrog: remove libxfs.h dependencies in fsgeom.c and
- linux.c
+        by sandeen.net (Postfix) with ESMTPSA id 960D3F8BEA;
+        Wed, 18 Dec 2019 17:26:30 -0600 (CST)
+Subject: Re: [PATCH 2/2] libfrog: move topology.[ch] to libxfs
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <157671084242.190323.8759111252624617622.stgit@magnolia>
- <157671084856.190323.6646004639671192722.stgit@magnolia>
+ <157671085471.190323.17808121856491080720.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -72,12 +71,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <e604bbb4-b79a-a049-b647-427fe721d4df@sandeen.net>
-Date:   Wed, 18 Dec 2019 17:16:57 -0600
+Message-ID: <60af7775-96f6-7dcb-9310-47b509c8f0f5@sandeen.net>
+Date:   Wed, 18 Dec 2019 17:26:44 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.3.1
 MIME-Version: 1.0
-In-Reply-To: <157671084856.190323.6646004639671192722.stgit@magnolia>
+In-Reply-To: <157671085471.190323.17808121856491080720.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -89,11 +88,12 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 12/18/19 5:14 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> libfrog isn't supposed to depend on libxfs, so don't include the header
-> file in the libfrog source code.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> The functions in libfrog/topology.c rely on internal libxfs symbols and
+> functions, so move this file from libfrog to libxfs.
 
-swizzle all the headers
+None of this is used anywhere but mkfs & repair, and it's not really
+part of libxfs per se (i.e. it shares nothing w/ kernel code).
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+It used to be in libxcmd.  Perhaps it should just be moved back?
+
+-Eric
