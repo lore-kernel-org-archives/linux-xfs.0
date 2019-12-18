@@ -7,61 +7,62 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD454C2D0CD
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 23:10:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0FEBC43603
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 23:10:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7E808227BF
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 23:10:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B6D002176D
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 23:10:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="dciglZt8"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BaQogToI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726546AbfLRXKN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Dec 2019 18:10:13 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:51528 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726559AbfLRXKM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Dec 2019 18:10:12 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBIN9tnS113323;
-        Wed, 18 Dec 2019 23:10:10 GMT
+        id S1726569AbfLRXKw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Dec 2019 18:10:52 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:38960 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726463AbfLRXKw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Dec 2019 18:10:52 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBINA2rp091205;
+        Wed, 18 Dec 2019 23:10:49 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=+tDUtIGd+CZmRNNIaS7GP/hM8dwz1JTOx6y/bt3ey3s=;
- b=dciglZt8FQweSEoyF5rB80d6hrX3YmvtsA6lp9q35S4CL0Ax7uViCWwpqj6OyKHPsMb5
- upDOQ/lujqj2Q0+9MuTXoq9x023CzzV3dJLIbQHjEvnV+Da0p1vWwLbQNlaXI5FsrqHY
- ra5VT7mOv9VB5oiGb8odYJhRq96ZhVoSn6GGSSNRppH2XqeGgYAhwxT3vK+PID5S5chW
- GYsejVplrM/ccZR7IbdlEKjSpROEAhPG6d7VzJNbiavOo459POwuMtMpcO41jHk/VUsm
- JeMTzB7l2rGJvIxLxjcM1LDiz+gzA9U5/Bwl5y5pZdWkTPpRRU3JTTtXj1juwsV+tsI2 Xw== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2wvq5urr1p-1
+ bh=ya/Jv4Q7NQLfAwu0XdQdWAoOALErEkwivi9c3Vcm67k=;
+ b=BaQogToI7DVnvFMXo4HRpSkDPHd5DsXdD7IY4q6NgE4OwG3pCAYHeTZsX8ZCk9+hSLoN
+ TGX67/iU5mKj2D9xU5h/XFZ8oLKJuBi3OkBLhqGJVM4HgzuRsu3tf2YIHDT3KyvaXbu0
+ nn2rMqFqmAYBxGbpaeFReiThA70fmE1+mhO26BI8vz653mCHOru3a6KBEOWblEomS4pV
+ qnfkfhNAaQ7hsfZoqFm4p4q/nouF+1+oybOvQAMTTI7BojQIf4wj/MDf40nYlayQ5KrY
+ 4R//qjaNxKpvG8VsxZtE2hXA68ANiBehnw7cVhl+2FV3i6/y7seQKEI8jRfi8z2vI2GI Dw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 2wvqpqgm2u-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Dec 2019 23:10:10 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBIN9sm0048954;
-        Wed, 18 Dec 2019 23:10:09 GMT
+        Wed, 18 Dec 2019 23:10:49 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBIN9pEP108497;
+        Wed, 18 Dec 2019 23:10:48 GMT
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 2wyut4c32f-1
+        by userp3030.oracle.com with ESMTP id 2wyk3bxk5y-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Dec 2019 23:10:08 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xBIN9art006649;
-        Wed, 18 Dec 2019 23:09:36 GMT
+        Wed, 18 Dec 2019 23:10:48 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xBINAl8I007313;
+        Wed, 18 Dec 2019 23:10:47 GMT
 Received: from localhost (/10.145.179.16)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 18 Dec 2019 15:09:36 -0800
-Date:   Wed, 18 Dec 2019 15:09:35 -0800
+        with ESMTP ; Wed, 18 Dec 2019 15:10:46 -0800
+Date:   Wed, 18 Dec 2019 15:10:45 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Eric Sandeen <sandeen@sandeen.net>
 Cc:     linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 2/3] xfsprogs: make a couple of structures static
-Message-ID: <20191218230935.GJ7489@magnolia>
+Subject: Re: [PATCH 1/3] xfsprogs: include headers to fix sparse warnings
+ about statics
+Message-ID: <20191218231045.GK7489@magnolia>
 References: <291387f3-1517-14c0-f64a-a98164131f89@sandeen.net>
- <ea404006-44aa-ac0a-6bea-b23fb748e71d@sandeen.net>
+ <a67fa479-1749-9485-2fd8-c2a12acea909@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ea404006-44aa-ac0a-6bea-b23fb748e71d@sandeen.net>
+In-Reply-To: <a67fa479-1749-9485-2fd8-c2a12acea909@sandeen.net>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9475 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
@@ -79,43 +80,108 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Dec 18, 2019 at 04:55:38PM -0600, Eric Sandeen wrote:
+On Wed, Dec 18, 2019 at 04:54:46PM -0600, Eric Sandeen wrote:
 > From: Eric Sandeen <sandeen@redhat.com>
 > 
-> Eliminates 2 sparse warnings.
+> Addresses many "foo was not declared. Should it be static?"
+> warnings from sparse.
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
 > 
-> diff --git a/db/btheight.c b/db/btheight.c
-> index 8aa17c89..fdb19a6d 100644
-> --- a/db/btheight.c
-> +++ b/db/btheight.c
-> @@ -22,7 +22,7 @@ static int rmap_maxrecs(struct xfs_mount *mp, int blocklen, int leaf)
->  	return libxfs_rmapbt_maxrecs(blocklen, leaf);
->  }
+> diff --git a/libfrog/linux.c b/libfrog/linux.c
+> index 79bd79eb..d7264108 100644
+> --- a/libfrog/linux.c
+> +++ b/libfrog/linux.c
+> @@ -9,6 +9,7 @@
+>  #include <sys/ioctl.h>
+>  #include <sys/sysinfo.h>
 >  
-> -struct btmap {
-> +static struct btmap {
+> +#include "libfrog/platform.h"
+>  #include "libxfs_priv.h"
 
-Maybe these both should be static const?
+libfrog code shouldn't depend on anything in libxfs/ but I'll send my
+own patch to fix that.
+
+Looks ok otherwise
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
->  	const char	*tag;
->  	int		(*maxrecs)(struct xfs_mount *mp, int blocklen,
->  				   int leaf);
-> diff --git a/io/bulkstat.c b/io/bulkstat.c
-> index 201470b2..05a3d6d6 100644
-> --- a/io/bulkstat.c
-> +++ b/io/bulkstat.c
-> @@ -230,7 +230,7 @@ struct single_map {
->  	uint64_t		code;
->  };
+
+>  #include "xfs_fs.h"
+>  #include "init.h"
+> diff --git a/libxfs/util.c b/libxfs/util.c
+> index 885dd42b..cd303341 100644
+> --- a/libxfs/util.c
+> +++ b/libxfs/util.c
+> @@ -28,6 +28,7 @@
+>  #include "xfs_da_format.h"
+>  #include "xfs_da_btree.h"
+>  #include "xfs_dir2_priv.h"
+> +#include "xfs_health.h"
 >  
-> -struct single_map tags[] = {
-> +static struct single_map tags[] = {
->  	{"root", XFS_BULK_IREQ_SPECIAL_ROOT},
->  	{NULL, 0},
->  };
+>  /*
+>   * Calculate the worst case log unit reservation for a given superblock
+> diff --git a/libxfs/xfs_ag_resv.c b/libxfs/xfs_ag_resv.c
+> index 1328e5de..1fe13bf4 100644
+> --- a/libxfs/xfs_ag_resv.c
+> +++ b/libxfs/xfs_ag_resv.c
+> @@ -15,6 +15,8 @@
+>  #include "xfs_btree.h"
+>  #include "xfs_refcount_btree.h"
+>  #include "xfs_ialloc_btree.h"
+> +#include "xfs_sb.h"
+> +#include "xfs_ag_resv.h"
+>  
+>  /*
+>   * Per-AG Block Reservations
+> diff --git a/libxfs/xfs_attr_remote.c b/libxfs/xfs_attr_remote.c
+> index 7234f86c..1ce6359a 100644
+> --- a/libxfs/xfs_attr_remote.c
+> +++ b/libxfs/xfs_attr_remote.c
+> @@ -18,6 +18,7 @@
+>  #include "xfs_inode.h"
+>  #include "xfs_trans.h"
+>  #include "xfs_bmap.h"
+> +#include "xfs_attr_remote.h"
+>  #include "xfs_trace.h"
+>  
+>  #define ATTR_RMTVALUE_MAPSIZE	1	/* # of map entries at once */
+> diff --git a/libxfs/xfs_bit.c b/libxfs/xfs_bit.c
+> index 6a76a5ad..3f97fa3e 100644
+> --- a/libxfs/xfs_bit.c
+> +++ b/libxfs/xfs_bit.c
+> @@ -5,6 +5,7 @@
+>   */
+>  #include "libxfs_priv.h"
+>  #include "xfs_log_format.h"
+> +#include "xfs_bit.h"
+>  
+>  /*
+>   * XFS bit manipulation routines, used in non-realtime code.
+> diff --git a/libxfs/xfs_dir2_data.c b/libxfs/xfs_dir2_data.c
+> index 68da426e..044f1272 100644
+> --- a/libxfs/xfs_dir2_data.c
+> +++ b/libxfs/xfs_dir2_data.c
+> @@ -13,6 +13,7 @@
+>  #include "xfs_mount.h"
+>  #include "xfs_inode.h"
+>  #include "xfs_dir2.h"
+> +#include "xfs_dir2_priv.h"
+>  #include "xfs_trans.h"
+>  
+>  static xfs_failaddr_t xfs_dir2_data_freefind_verify(
+> diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+> index 583d29aa..4f750d19 100644
+> --- a/libxfs/xfs_sb.c
+> +++ b/libxfs/xfs_sb.c
+> @@ -10,6 +10,7 @@
+>  #include "xfs_log_format.h"
+>  #include "xfs_trans_resv.h"
+>  #include "xfs_bit.h"
+> +#include "xfs_sb.h"
+>  #include "xfs_mount.h"
+>  #include "xfs_ialloc.h"
+>  #include "xfs_alloc.h"
 > 
