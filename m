@@ -7,63 +7,62 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72F89C3F68F
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 21:31:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09957C43603
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 21:33:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4654A21D7D
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 21:31:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD667218AC
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 21:33:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IkJCxMyA"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ftYPu0pj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726496AbfLRVbP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Dec 2019 16:31:15 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:55326 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726212AbfLRVbP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Dec 2019 16:31:15 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBILTrjp015956;
-        Wed, 18 Dec 2019 21:31:12 GMT
+        id S1726540AbfLRVdK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Dec 2019 16:33:10 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:54644 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726512AbfLRVdK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Dec 2019 16:33:10 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBILTpV4039718;
+        Wed, 18 Dec 2019 21:33:06 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=O2cLJHd34AqpHGMDMsYPh8JGJkOsXdv92ZBrHpBu5zU=;
- b=IkJCxMyA+Tt9L1Mu7YT7CjWZsAZGXXEc2oZbmRFIhVJ6Hg0021D9QHRoX+FgVSS3H+NA
- W9qlafMeq/p9W27OzonltVLYfcWF4NIyu/M5THQu4fChutCLtY3BQ361aW5v4g/E8Pig
- xmiXyg5C+y7sNhQPc1shcJkaJ6ycHAA0oVJxBvNwsr4POppR8E7RPgk2IezNBlBbofjS
- kuzF+xH3GHde0W0KyruTuhIw/Ry8gB2rbiMeqsoSxo7ot60X0QE8mFGm2q7RJbf+A1YD
- qZKn9BLAZR34o3j9IW76VQLxj0LmwvuAJCBNS4Fw9t7uwIO/dIMHmhtW1UKTWR4sNbJy NA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2wvrcrg6c9-1
+ bh=WZSMG/eamV7EqcDxJQrMXWu7tXM1jyWEdwRR+EnnIIY=;
+ b=ftYPu0pjS1RatRLZm+tfOKYBXu71+gMV2g9CzeeJVjFnkcgBc2wx0pnDA6cXn7+LCUI+
+ bgz0wr/93iM+wATOkSgk/a3xdLeDom/adxUHWtNqB3RW+a8pgCRSSja+//3uJJlv+hTu
+ FkeoGiIFe46ydKNvDpI1R5K1iIxpDXB+foqhUbDWNecYjSoYO5SbR1c8BE2I5lllCT4B
+ yakV+NkqfRjC+/OUyz09DOm7+8MRO5SeiUfH6+Yklo7hk6d7j7fc4sHi/HrcfNAcG5RH
+ wSlb8mPI3aqJCOZFs/Rsn8yuVf79P1nwZOWVbewpssDhAFhKTZED2bN7qwzNnkgY5JRV cQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2wvq5urd87-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Dec 2019 21:31:12 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBILTepE024140;
-        Wed, 18 Dec 2019 21:31:11 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2wyp4yjbvu-1
+        Wed, 18 Dec 2019 21:33:06 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBILTdI8040789;
+        Wed, 18 Dec 2019 21:33:05 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2wyp08abv1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Dec 2019 21:31:11 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xBILV94E017456;
-        Wed, 18 Dec 2019 21:31:10 GMT
+        Wed, 18 Dec 2019 21:33:05 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xBILX4m6008575;
+        Wed, 18 Dec 2019 21:33:04 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 18 Dec 2019 13:31:09 -0800
-Date:   Wed, 18 Dec 2019 13:31:08 -0800
+        with ESMTP ; Wed, 18 Dec 2019 13:33:04 -0800
+Date:   Wed, 18 Dec 2019 13:33:03 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org,
         Allison Collins <allison.henderson@oracle.com>
-Subject: Re: [PATCH 03/33] xfs: also remove cached ACLs when removing the
- underlying attr
-Message-ID: <20191218213108.GF7489@magnolia>
+Subject: Re: [PATCH 04/33] xfs: fix misuse of the XFS_ATTR_INCOMPLETE flag
+Message-ID: <20191218213303.GG7489@magnolia>
 References: <20191212105433.1692-1-hch@lst.de>
- <20191212105433.1692-4-hch@lst.de>
+ <20191212105433.1692-5-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191212105433.1692-4-hch@lst.de>
+In-Reply-To: <20191212105433.1692-5-hch@lst.de>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9475 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
@@ -81,41 +80,90 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 12, 2019 at 11:54:03AM +0100, Christoph Hellwig wrote:
-> We should not just invalidate the ACL when setting the underlying
-> attribute, but also when removing it.  The ioctl interface gets that
-> right, but the normal xattr inteface skipped the xfs_forget_acl due
-> to an early return.
+On Thu, Dec 12, 2019 at 11:54:04AM +0100, Christoph Hellwig wrote:
+> XFS_ATTR_INCOMPLETE is a flag in the on-disk attribute format, and thus
+> in a different namespace as the ATTR_* flags in xfs_da_args.flags.
+> Switch to using a XFS_DA_OP_INCOMPLETE flag in op_flags instead.  Without
+> this users might be able to inject this flag into operations using the
+> attr by handle ioctl.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Shouldn't someone have a testcase for this?
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
 > ---
->  fs/xfs/xfs_xattr.c | 7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
+>  fs/xfs/libxfs/xfs_attr.c      | 2 +-
+>  fs/xfs/libxfs/xfs_attr_leaf.c | 4 ++--
+>  fs/xfs/libxfs/xfs_da_btree.h  | 4 +++-
+>  fs/xfs/libxfs/xfs_da_format.h | 2 --
+>  4 files changed, 6 insertions(+), 6 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-> index 383f0203d103..2288f20ae282 100644
-> --- a/fs/xfs/xfs_xattr.c
-> +++ b/fs/xfs/xfs_xattr.c
-> @@ -74,10 +74,11 @@ xfs_xattr_set(const struct xattr_handler *handler, struct dentry *unused,
->  	if (flags & XATTR_REPLACE)
->  		xflags |= ATTR_REPLACE;
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 0d7fcc983b3d..2368a1bfe7e8 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -1007,7 +1007,7 @@ xfs_attr_node_addname(
+>  		 * The INCOMPLETE flag means that we will find the "old"
+>  		 * attr, not the "new" one.
+>  		 */
+> -		args->flags |= XFS_ATTR_INCOMPLETE;
+> +		args->op_flags |= XFS_DA_OP_INCOMPLETE;
+>  		state = xfs_da_state_alloc();
+>  		state->args = args;
+>  		state->mp = mp;
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index 08d4b10ae2d5..fed537a4353d 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -2403,8 +2403,8 @@ xfs_attr3_leaf_lookup_int(
+>  		 * If we are looking for INCOMPLETE entries, show only those.
+>  		 * If we are looking for complete entries, show only those.
+>  		 */
+> -		if ((args->flags & XFS_ATTR_INCOMPLETE) !=
+> -		    (entry->flags & XFS_ATTR_INCOMPLETE)) {
+> +		if (!!(args->op_flags & XFS_DA_OP_INCOMPLETE) !=
+> +		    !!(entry->flags & XFS_ATTR_INCOMPLETE)) {
+>  			continue;
+>  		}
+>  		if (entry->flags & XFS_ATTR_LOCAL) {
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
+> index e16610d1c14f..0f4fbb0889ff 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.h
+> +++ b/fs/xfs/libxfs/xfs_da_btree.h
+> @@ -89,6 +89,7 @@ typedef struct xfs_da_args {
+>  #define XFS_DA_OP_OKNOENT	0x0008	/* lookup/add op, ENOENT ok, else die */
+>  #define XFS_DA_OP_CILOOKUP	0x0010	/* lookup to return CI name if found */
+>  #define XFS_DA_OP_ALLOCVAL	0x0020	/* lookup to alloc buffer if found  */
+> +#define XFS_DA_OP_INCOMPLETE	0x0040	/* lookup INCOMPLETE attr keys */
 >  
-> -	if (!value)
-> -		return xfs_attr_remove(ip, (unsigned char *)name, xflags);
-> -	error = xfs_attr_set(ip, (unsigned char *)name,
-> +	if (value)
-> +		error = xfs_attr_set(ip, (unsigned char *)name,
->  				(void *)value, size, xflags);
-> +	else
-> +		error = xfs_attr_remove(ip, (unsigned char *)name, xflags);
->  	if (!error)
->  		xfs_forget_acl(inode, name, xflags);
+>  #define XFS_DA_OP_FLAGS \
+>  	{ XFS_DA_OP_JUSTCHECK,	"JUSTCHECK" }, \
+> @@ -96,7 +97,8 @@ typedef struct xfs_da_args {
+>  	{ XFS_DA_OP_ADDNAME,	"ADDNAME" }, \
+>  	{ XFS_DA_OP_OKNOENT,	"OKNOENT" }, \
+>  	{ XFS_DA_OP_CILOOKUP,	"CILOOKUP" }, \
+> -	{ XFS_DA_OP_ALLOCVAL,	"ALLOCVAL" }
+> +	{ XFS_DA_OP_ALLOCVAL,	"ALLOCVAL" }, \
+> +	{ XFS_DA_OP_INCOMPLETE,	"INCOMPLETE" }
 >  
+>  /*
+>   * Storage for holding state during Btree searches and split/join ops.
+> diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+> index 3dee33043e09..05615d1f4113 100644
+> --- a/fs/xfs/libxfs/xfs_da_format.h
+> +++ b/fs/xfs/libxfs/xfs_da_format.h
+> @@ -683,8 +683,6 @@ struct xfs_attr3_leafblock {
+>  
+>  /*
+>   * Flags used in the leaf_entry[i].flags field.
+> - * NOTE: the INCOMPLETE bit must not collide with the flags bits specified
+> - * on the system call, they are "or"ed together for various operations.
+>   */
+>  #define	XFS_ATTR_LOCAL_BIT	0	/* attr is stored locally */
+>  #define	XFS_ATTR_ROOT_BIT	1	/* limit access to trusted attrs */
 > -- 
 > 2.20.1
 > 
