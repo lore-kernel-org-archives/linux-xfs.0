@@ -2,365 +2,101 @@ Return-Path: <SRS0=QbY/=2I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8505C2D0C3
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 14:10:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D4B9C43603
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 16:40:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 70D7F2176D
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 14:10:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DFF220717
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 16:40:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727174AbfLROKV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Dec 2019 09:10:21 -0500
-Received: from mx2.suse.de ([195.135.220.15]:38380 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727027AbfLROKU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 18 Dec 2019 09:10:20 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id ED888AC2F;
-        Wed, 18 Dec 2019 14:10:15 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id ED2BF1E0B2D; Wed, 18 Dec 2019 15:10:12 +0100 (CET)
-Date:   Wed, 18 Dec 2019 15:10:12 +0100
-From:   Jan Kara <jack@suse.cz>
-To:     Andreas Gruenbacher <agruenba@redhat.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@infradead.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-kernel@vger.kernel.org, Jeff Layton <jlayton@kernel.org>,
-        Sage Weil <sage@redhat.com>, Ilya Dryomov <idryomov@gmail.com>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Richard Weinberger <richard@nod.at>,
-        Artem Bityutskiy <dedekind1@gmail.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        linux-mtd@lists.infradead.org, Chris Mason <clm@fb.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org,
-        Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v3] fs: Fix page_mkwrite off-by-one errors
-Message-ID: <20191218141012.GD19387@quack2.suse.cz>
-References: <20191218130935.32402-1-agruenba@redhat.com>
+        id S1727217AbfLRQkJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Dec 2019 11:40:09 -0500
+Received: from mout.kundenserver.de ([212.227.17.24]:40215 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727124AbfLRQkJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Dec 2019 11:40:09 -0500
+Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
+ (mreue108 [212.227.15.145]) with ESMTPA (Nemesis) id
+ 1MRTIx-1iMu9G3WSb-00NRZ9; Wed, 18 Dec 2019 17:39:55 +0100
+From:   Arnd Bergmann <arnd@arndb.de>
+To:     "Darrick J . Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org
+Cc:     y2038@lists.linaro.org, Arnd Bergmann <arnd@arndb.de>,
+        Brian Foster <bfoster@redhat.com>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        Allison Collins <allison.henderson@oracle.com>,
+        Nick Bowler <nbowler@draconx.ca>, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/3] xfs: rename compat_time_t to old_time32_t
+Date:   Wed, 18 Dec 2019 17:39:28 +0100
+Message-Id: <20191218163954.296726-1-arnd@arndb.de>
+X-Mailer: git-send-email 2.20.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191218130935.32402-1-agruenba@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
+X-Provags-ID: V03:K1:E9mF7OYDn9JyQwrHLT+pY4Y1q8BDrhiycRQ3Ygb25o5lMFAbgML
+ r8VIN8pCIoF2EG1eS0sqGdFs16ROCCbwJCM4eSC/EYLBG0P6ZOPrM+WDns2LZkHEOt6dKVZ
+ KigR86K6jd1IXB9Is8ld5PoRU9RZXPkHIF0Ikm07i5N+v7aolUwAq5o8tcWHEe2Aa88Ttmy
+ llvpZ3Q1tHfVjtUL7sAfw==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:7cATP4CSdSk=:f9D6xz2FFGd7zqBrEqzNNr
+ 25DzUk6VbJWMouHADDk631BIoq1VL5PSh7hi6MN7wfep+gWhhjEucBFmXuR2bO/5OCMvY4mta
+ vqgKF5AmsMkxvawUCqaQx9jqlJYt+V0c40DieoYHeHf9vAficZdjykAMQi1lEz7IsTNnfqKFC
+ /TMI42qGT8keVFBCOH12cYI6rMio/a0LVhxBntLzfQbCqgPdqzc2+v0ZyE/PZ7kHc204eXCmH
+ bVIMh9B04C8NF1hVACl+DoJt9N2f0tWqd7CqzDkzS+BMWZVzCzr09i4m55OonYvDPGoegMKBm
+ ZS7rWzAqtE1AITyw5o6qk/cphSQaBc/7tQzq7UnsXkgCCo9kZsno4XJdeh5+hnkIlX2Ob4wJX
+ RajGiL1S3Kv35a3gUDWFM8zdebH4mahgIsiZGUIkOKeiBHfbiL1G9VyGq0QSTbRnSHM5x+SQi
+ mHVSlXEaCQ39FQVNDnBpUJRRlssjqUHB9ShEY3V8+j19mYM0hnRGqAShlC+fo3QJXfDe4CGlM
+ TfhaUyhamZXOXWxHWrFajja0AaRBC3L0vLcbJE4hS5kn1BGLng2eLIdq3gLwR457YQKuZh04O
+ D7x6Wbf7HocsfpQu2rOdNz9uV3KHehT/U7FnUHY7FcNNXKARfZgRf8GOHj/zc6teMnBwp1k9o
+ Ngk6ivNWG315zPJL7eah7wniA6dIDSAQXeXMgf6p5/QOWfpB5l+vV6k/lp8gpQ6mLSXyIKiAS
+ B0NPEgoYzzGoK1y+rI4p/pShuZcq0fMxeraEw/VyuYarTKmEP3YlNUnzzkYY2A37KPWbwOTBW
+ v4KERGsd9uBcow2SO2fhq7ww64iL5AdyKwz7i1X0lQhBkxO8+1QRZjn7l5nQyxZFmQpH3fTxd
+ fVGYeDs4N4d/GOxBRhYQ==
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed 18-12-19 14:09:35, Andreas Gruenbacher wrote:
-> Hi Darrick,
-> 
-> can this fix go in via the xfs tree?
-> 
-> Thanks,
-> Andreas
-> 
-> --
-> 
-> The check in block_page_mkwrite that is meant to determine whether an
-> offset is within the inode size is off by one.  This bug has been copied
-> into iomap_page_mkwrite and several filesystems (ubifs, ext4, f2fs,
-> ceph).
-> 
-> Fix that by introducing a new page_mkwrite_check_truncate helper that
-> checks for truncate and computes the bytes in the page up to EOF.  Use
-> the helper in the above mentioned filesystems.
-> 
-> In addition, use the new helper in btrfs as well.
-> 
-> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-> Acked-by: David Sterba <dsterba@suse.com> (btrfs part)
-> Acked-by: Richard Weinberger <richard@nod.at> (ubifs part)
+The compat_time_t type has been removed everywhere else,
+as most users rely on old_time32_t for both native and
+compat mode handling of 32-bit time_t.
 
-The patch looks good to me (didn't really check btrfs). I'd just note that
-page_mkwrite_check_truncate() doesn't seem that small to be worth
-inlining... Other than that feel free to add:
+Remove the last one in xfs.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ fs/xfs/xfs_ioctl32.c | 2 +-
+ fs/xfs/xfs_ioctl32.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-								Honza
-
-
-> ---
->  fs/btrfs/inode.c        | 15 ++++-----------
->  fs/buffer.c             | 16 +++-------------
->  fs/ceph/addr.c          |  2 +-
->  fs/ext4/inode.c         | 14 ++++----------
->  fs/f2fs/file.c          | 19 +++++++------------
->  fs/iomap/buffered-io.c  | 18 +++++-------------
->  fs/ubifs/file.c         |  3 +--
->  include/linux/pagemap.h | 28 ++++++++++++++++++++++++++++
->  8 files changed, 53 insertions(+), 62 deletions(-)
-> 
-> diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-> index 56032c518b26..86c6fcd8139d 100644
-> --- a/fs/btrfs/inode.c
-> +++ b/fs/btrfs/inode.c
-> @@ -9016,13 +9016,11 @@ vm_fault_t btrfs_page_mkwrite(struct vm_fault *vmf)
->  	ret = VM_FAULT_NOPAGE; /* make the VM retry the fault */
->  again:
->  	lock_page(page);
-> -	size = i_size_read(inode);
->  
-> -	if ((page->mapping != inode->i_mapping) ||
-> -	    (page_start >= size)) {
-> -		/* page got truncated out from underneath us */
-> +	ret2 = page_mkwrite_check_truncate(page, inode);
-> +	if (ret2 < 0)
->  		goto out_unlock;
-> -	}
-> +	zero_start = ret2;
->  	wait_on_page_writeback(page);
->  
->  	lock_extent_bits(io_tree, page_start, page_end, &cached_state);
-> @@ -9043,6 +9041,7 @@ vm_fault_t btrfs_page_mkwrite(struct vm_fault *vmf)
->  		goto again;
->  	}
->  
-> +	size = i_size_read(inode);
->  	if (page->index == ((size - 1) >> PAGE_SHIFT)) {
->  		reserved_space = round_up(size - page_start,
->  					  fs_info->sectorsize);
-> @@ -9075,12 +9074,6 @@ vm_fault_t btrfs_page_mkwrite(struct vm_fault *vmf)
->  	}
->  	ret2 = 0;
->  
-> -	/* page is wholly or partially inside EOF */
-> -	if (page_start + PAGE_SIZE > size)
-> -		zero_start = offset_in_page(size);
-> -	else
-> -		zero_start = PAGE_SIZE;
-> -
->  	if (zero_start != PAGE_SIZE) {
->  		kaddr = kmap(page);
->  		memset(kaddr + zero_start, 0, PAGE_SIZE - zero_start);
-> diff --git a/fs/buffer.c b/fs/buffer.c
-> index d8c7242426bb..53aabde57ca7 100644
-> --- a/fs/buffer.c
-> +++ b/fs/buffer.c
-> @@ -2499,23 +2499,13 @@ int block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
->  	struct page *page = vmf->page;
->  	struct inode *inode = file_inode(vma->vm_file);
->  	unsigned long end;
-> -	loff_t size;
->  	int ret;
->  
->  	lock_page(page);
-> -	size = i_size_read(inode);
-> -	if ((page->mapping != inode->i_mapping) ||
-> -	    (page_offset(page) > size)) {
-> -		/* We overload EFAULT to mean page got truncated */
-> -		ret = -EFAULT;
-> +	ret = page_mkwrite_check_truncate(page, inode);
-> +	if (ret < 0)
->  		goto out_unlock;
-> -	}
-> -
-> -	/* page is wholly or partially inside EOF */
-> -	if (((page->index + 1) << PAGE_SHIFT) > size)
-> -		end = size & ~PAGE_MASK;
-> -	else
-> -		end = PAGE_SIZE;
-> +	end = ret;
->  
->  	ret = __block_write_begin(page, 0, end, get_block);
->  	if (!ret)
-> diff --git a/fs/ceph/addr.c b/fs/ceph/addr.c
-> index 7ab616601141..ef958aa4adb4 100644
-> --- a/fs/ceph/addr.c
-> +++ b/fs/ceph/addr.c
-> @@ -1575,7 +1575,7 @@ static vm_fault_t ceph_page_mkwrite(struct vm_fault *vmf)
->  	do {
->  		lock_page(page);
->  
-> -		if ((off > size) || (page->mapping != inode->i_mapping)) {
-> +		if (page_mkwrite_check_truncate(page, inode) < 0) {
->  			unlock_page(page);
->  			ret = VM_FAULT_NOPAGE;
->  			break;
-> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-> index 28f28de0c1b6..51ab1d2cac80 100644
-> --- a/fs/ext4/inode.c
-> +++ b/fs/ext4/inode.c
-> @@ -5871,7 +5871,6 @@ vm_fault_t ext4_page_mkwrite(struct vm_fault *vmf)
->  {
->  	struct vm_area_struct *vma = vmf->vma;
->  	struct page *page = vmf->page;
-> -	loff_t size;
->  	unsigned long len;
->  	int err;
->  	vm_fault_t ret;
-> @@ -5907,18 +5906,13 @@ vm_fault_t ext4_page_mkwrite(struct vm_fault *vmf)
->  	}
->  
->  	lock_page(page);
-> -	size = i_size_read(inode);
-> -	/* Page got truncated from under us? */
-> -	if (page->mapping != mapping || page_offset(page) > size) {
-> +	err = page_mkwrite_check_truncate(page, inode);
-> +	if (err < 0) {
->  		unlock_page(page);
-> -		ret = VM_FAULT_NOPAGE;
-> -		goto out;
-> +		goto out_ret;
->  	}
-> +	len = err;
->  
-> -	if (page->index == size >> PAGE_SHIFT)
-> -		len = size & ~PAGE_MASK;
-> -	else
-> -		len = PAGE_SIZE;
->  	/*
->  	 * Return if we have all the buffers mapped. This avoids the need to do
->  	 * journal_start/journal_stop which can block and take a long time
-> diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
-> index 85af112e868d..0e77b2e6f873 100644
-> --- a/fs/f2fs/file.c
-> +++ b/fs/f2fs/file.c
-> @@ -51,7 +51,7 @@ static vm_fault_t f2fs_vm_page_mkwrite(struct vm_fault *vmf)
->  	struct inode *inode = file_inode(vmf->vma->vm_file);
->  	struct f2fs_sb_info *sbi = F2FS_I_SB(inode);
->  	struct dnode_of_data dn = { .node_changed = false };
-> -	int err;
-> +	int offset, err;
->  
->  	if (unlikely(f2fs_cp_error(sbi))) {
->  		err = -EIO;
-> @@ -70,13 +70,14 @@ static vm_fault_t f2fs_vm_page_mkwrite(struct vm_fault *vmf)
->  	file_update_time(vmf->vma->vm_file);
->  	down_read(&F2FS_I(inode)->i_mmap_sem);
->  	lock_page(page);
-> -	if (unlikely(page->mapping != inode->i_mapping ||
-> -			page_offset(page) > i_size_read(inode) ||
-> -			!PageUptodate(page))) {
-> +	err = -EFAULT;
-> +	if (likely(PageUptodate(page)))
-> +		err = page_mkwrite_check_truncate(page, inode);
-> +	if (unlikely(err < 0)) {
->  		unlock_page(page);
-> -		err = -EFAULT;
->  		goto out_sem;
->  	}
-> +	offset = err;
->  
->  	/* block allocation */
->  	__do_map_lock(sbi, F2FS_GET_BLOCK_PRE_AIO, true);
-> @@ -101,14 +102,8 @@ static vm_fault_t f2fs_vm_page_mkwrite(struct vm_fault *vmf)
->  	if (PageMappedToDisk(page))
->  		goto out_sem;
->  
-> -	/* page is wholly or partially inside EOF */
-> -	if (((loff_t)(page->index + 1) << PAGE_SHIFT) >
-> -						i_size_read(inode)) {
-> -		loff_t offset;
-> -
-> -		offset = i_size_read(inode) & ~PAGE_MASK;
-> +	if (offset != PAGE_SIZE)
->  		zero_user_segment(page, offset, PAGE_SIZE);
-> -	}
->  	set_page_dirty(page);
->  	if (!PageUptodate(page))
->  		SetPageUptodate(page);
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index d33c7bc5ee92..1aaf157fd6e9 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -1062,24 +1062,16 @@ vm_fault_t iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops)
->  	struct page *page = vmf->page;
->  	struct inode *inode = file_inode(vmf->vma->vm_file);
->  	unsigned long length;
-> -	loff_t offset, size;
-> +	loff_t offset;
->  	ssize_t ret;
->  
->  	lock_page(page);
-> -	size = i_size_read(inode);
-> -	offset = page_offset(page);
-> -	if (page->mapping != inode->i_mapping || offset > size) {
-> -		/* We overload EFAULT to mean page got truncated */
-> -		ret = -EFAULT;
-> +	ret = page_mkwrite_check_truncate(page, inode);
-> +	if (ret < 0)
->  		goto out_unlock;
-> -	}
-> -
-> -	/* page is wholly or partially inside EOF */
-> -	if (offset > size - PAGE_SIZE)
-> -		length = offset_in_page(size);
-> -	else
-> -		length = PAGE_SIZE;
-> +	length = ret;
->  
-> +	offset = page_offset(page);
->  	while (length > 0) {
->  		ret = iomap_apply(inode, offset, length,
->  				IOMAP_WRITE | IOMAP_FAULT, ops, page,
-> diff --git a/fs/ubifs/file.c b/fs/ubifs/file.c
-> index cd52585c8f4f..91f7a1f2db0d 100644
-> --- a/fs/ubifs/file.c
-> +++ b/fs/ubifs/file.c
-> @@ -1563,8 +1563,7 @@ static vm_fault_t ubifs_vm_page_mkwrite(struct vm_fault *vmf)
->  	}
->  
->  	lock_page(page);
-> -	if (unlikely(page->mapping != inode->i_mapping ||
-> -		     page_offset(page) > i_size_read(inode))) {
-> +	if (unlikely(page_mkwrite_check_truncate(page, inode) < 0)) {
->  		/* Page got truncated out from underneath us */
->  		goto sigbus;
->  	}
-> diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-> index 37a4d9e32cd3..ccb14b6a16b5 100644
-> --- a/include/linux/pagemap.h
-> +++ b/include/linux/pagemap.h
-> @@ -636,4 +636,32 @@ static inline unsigned long dir_pages(struct inode *inode)
->  			       PAGE_SHIFT;
->  }
->  
-> +/**
-> + * page_mkwrite_check_truncate - check if page was truncated
-> + * @page: the page to check
-> + * @inode: the inode to check the page against
-> + *
-> + * Returns the number of bytes in the page up to EOF,
-> + * or -EFAULT if the page was truncated.
-> + */
-> +static inline int page_mkwrite_check_truncate(struct page *page,
-> +					      struct inode *inode)
-> +{
-> +	loff_t size = i_size_read(inode);
-> +	pgoff_t index = size >> PAGE_SHIFT;
-> +	int offset = offset_in_page(size);
-> +
-> +	if (page->mapping != inode->i_mapping)
-> +		return -EFAULT;
-> +
-> +	/* page is wholly inside EOF */
-> +	if (page->index < index)
-> +		return PAGE_SIZE;
-> +	/* page is wholly past EOF */
-> +	if (page->index > index || !offset)
-> +		return -EFAULT;
-> +	/* page is partially inside EOF */
-> +	return offset;
-> +}
-> +
->  #endif /* _LINUX_PAGEMAP_H */
-> -- 
-> 2.20.1
-> 
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index c4c4f09113d3..a49bd80b2c3b 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -107,7 +107,7 @@ xfs_ioctl32_bstime_copyin(
+ 	xfs_bstime_t		*bstime,
+ 	compat_xfs_bstime_t	__user *bstime32)
+ {
+-	compat_time_t		sec32;	/* tv_sec differs on 64 vs. 32 */
++	old_time32_t		sec32;	/* tv_sec differs on 64 vs. 32 */
+ 
+ 	if (get_user(sec32,		&bstime32->tv_sec)	||
+ 	    get_user(bstime->tv_nsec,	&bstime32->tv_nsec))
+diff --git a/fs/xfs/xfs_ioctl32.h b/fs/xfs/xfs_ioctl32.h
+index 8c7743cd490e..053de7d894cd 100644
+--- a/fs/xfs/xfs_ioctl32.h
++++ b/fs/xfs/xfs_ioctl32.h
+@@ -32,7 +32,7 @@
+ #endif
+ 
+ typedef struct compat_xfs_bstime {
+-	compat_time_t	tv_sec;		/* seconds		*/
++	old_time32_t	tv_sec;		/* seconds		*/
+ 	__s32		tv_nsec;	/* and nanoseconds	*/
+ } compat_xfs_bstime_t;
+ 
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.20.0
+
