@@ -2,102 +2,229 @@ Return-Path: <SRS0=QbY/=2I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C4B0C43603
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 16:45:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44A07C43603
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 17:09:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 69BC220717
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 16:45:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E5D8206A5
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 17:09:58 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="TKoG4aH9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727192AbfLRQpA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Dec 2019 11:45:00 -0500
-Received: from mout.kundenserver.de ([212.227.126.130]:44713 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727160AbfLRQo7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Dec 2019 11:44:59 -0500
-Received: from mail-qt1-f182.google.com ([209.85.160.182]) by
- mrelayeu.kundenserver.de (mreue012 [212.227.15.129]) with ESMTPSA (Nemesis)
- id 1My6xz-1hl6H70dkV-00zTNH; Wed, 18 Dec 2019 17:44:58 +0100
-Received: by mail-qt1-f182.google.com with SMTP id n15so2454485qtp.5;
-        Wed, 18 Dec 2019 08:44:57 -0800 (PST)
-X-Gm-Message-State: APjAAAWe3Vs1VVwusIdEy6EtesIfTgwMQJvs1Te9YS3hWfT4/TadfwF7
-        ASCnD5Wm5XUx10kvVQj21CQrQH9naHcKbmgtq5w=
-X-Google-Smtp-Source: APXvYqz+l4BOlK2W2ys3sLUa8ROCWJ8lqlRzESKGpDoxTAUgyCUDZt0Q19zyLDMrdWwIzD8L81ulsb8WG6J0gy/M2Bo=
-X-Received: by 2002:ac8:6153:: with SMTP id d19mr2990509qtm.18.1576687497010;
- Wed, 18 Dec 2019 08:44:57 -0800 (PST)
+        id S1727021AbfLRRJ6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Dec 2019 12:09:58 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:43008 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726939AbfLRRJ6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Dec 2019 12:09:58 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBIH9EJL001975;
+        Wed, 18 Dec 2019 17:09:54 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
+ bh=wLwGQnTnOdeXnt/wkEWQK6QY8ejl2OQMYW8MaHlKpFc=;
+ b=TKoG4aH9gh/icp4cxyGZf7ieOItFqxOdBxM62T9Lqbriq+d8q7nCcgmYtEOo5H9vfI3L
+ +QLP8JATAxWSH08VN6V6R3FOhBObwKBkdecKVkSLCHmw2ov9MTTjXjloqYSOdJKaBHUt
+ QDc9UOb+EWgWpjbE+oJP4oUsOMeYRP4RYyG33IvY8EBHlQSXESC5cfdL1S0Ywvxt6uwx
+ +gaMUGVqblGKDvUTG2s0Wuyzx5+aAKi7SlkLr8VEeXUeszRxYm/cZZphsGvAJhi+WmhW
+ KaPanLMhHszDhepveL7EjcEwdkXJRlT9eMwMlxNaE0K54WCAKrXUGWKeIdIshLjwFwP1 kA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 2wvrcrewr2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 18 Dec 2019 17:09:54 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBIH4fsH189849;
+        Wed, 18 Dec 2019 17:09:54 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 2wyk3bfu1a-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 18 Dec 2019 17:09:54 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xBIH9r0M004043;
+        Wed, 18 Dec 2019 17:09:53 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 18 Dec 2019 09:09:52 -0800
+Date:   Wed, 18 Dec 2019 09:09:51 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Eric Sandeen <sandeen@redhat.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] man: list xfs_io lsattr inode flag letters
+Message-ID: <20191218170951.GN12765@magnolia>
 MIME-Version: 1.0
-References: <20191213204936.3643476-1-arnd@arndb.de> <20191213205417.3871055-12-arnd@arndb.de>
- <20191213211728.GL99875@magnolia> <CAK8P3a3k9dq+9DnPFBKdzOe=ALPXXjCvBBj8r_xsqz1vTswGsg@mail.gmail.com>
- <CAK8P3a2nJKR+_Gc6G_S6Bd0fKecBCM+a2cekOU+6m6kw_c4q9A@mail.gmail.com> <20191217221555.GE12765@magnolia>
-In-Reply-To: <20191217221555.GE12765@magnolia>
-From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Wed, 18 Dec 2019 17:44:40 +0100
-X-Gmail-Original-Message-ID: <CAK8P3a1QWxbGao7MLbAg-Wmv58oQ8ZsURYHgf3mihJ6-RKACrQ@mail.gmail.com>
-Message-ID: <CAK8P3a1QWxbGao7MLbAg-Wmv58oQ8ZsURYHgf3mihJ6-RKACrQ@mail.gmail.com>
-Subject: Re: [PATCH v2 21/24] xfs: quota: move to time64_t interfaces
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     y2038 Mailman List <y2038@lists.linaro.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Brian Foster <bfoster@redhat.com>,
-        Carlos Maiolino <cmaiolino@redhat.com>,
-        Pavel Reichl <preichl@redhat.com>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        Dave Chinner <dchinner@redhat.com>,
-        Allison Collins <allison.henderson@oracle.com>,
-        Jan Kara <jack@suse.cz>
-Content-Type: text/plain; charset="UTF-8"
-X-Provags-ID: V03:K1:j5/HNtZsXsGRbPZkpl4k+drfIvbR0CyOiXMiafhTVZpdhwkPTMH
- WdWO1B+LVkkCAe7uzp9t7MKWFMt1p42mqh9daEwoiA3Mmtcbl8y9dLXJEI/hpqIweNCjTf3
- zqSCX0VLAKrsWiV/KfQfU0EtNOMf03QEv4frx1sjDtesNn3tYBfgfbCZovx04EDKffVSCSt
- LPyU37UjKB33gIrsgb8LA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:k4N9wcJcEio=:S1vAD/RU39IDfIxJZEYlRp
- 1Oc7mv12ZmRoKyDbRo+UCmQYBX0+yBS7BqREqavcBvoYgRbnq5ZsBZdIL464pUWs1VsqJAHWW
- UT4IDn3nH/1zAxLhC8de1OUk6Ggnk8TkO5/Yx2a8hqP6vmSlQcKUYGZCliP6dO/bLlaKN4/JW
- CztHn7shrnKxkSvvEZuuUcA3xdEq7w42+T2u0oaTM/v7bvQqro7Hz1IM3F1Cr0v5LtPa7obLT
- c85miHvZVgD9QgzHhp9i0emPnWvHHJffOcRwKUtfqkVXxVYgaYKIpWjMtAubOxaMv7LOsE1Ld
- 2qhjDVoMV5K/L/yP4hNETfHx/WHsF7yMMlDi7SIFj5rv24A6W1PW5ISnVtEuoXyK49ig3MIVw
- eg3Jj+tPpj8G6gvyt/7w33e6O5ViBLJy9pu2EzT9DOFM6q0KKUy/XXkdXhxPbYxLRyEKd2Atd
- CS5LqGCM+jWo72C9ZLkrxLRIT7BUk17tX1XckBr5szJBhd2nbkMI9uF/LLfGQMWG/vlNdSH+3
- 9Y7ItA2/FePuiWUmBgOoQbqcrZ1YFD4qcck0FWMe0ZoOw3TdQxXyNRQ7+pTTMfso+GTeiGqKC
- v+Ybl4JU6kdIn8knU5zrMB/B/tZswbdm53G/gAXg9Lh2+cdoacL31pplzynS0YowNcQWJV0nf
- itCIVn8s9hfO67eXrIMjZJVZtGH/91SM9/Ix77zCZ7BXb6wgy0NR/1unS+gf1NdN2RkvnDcYB
- hzdc+bay0VDpyDxbOo1ZZNrwXga+zOG0w84hzFly69l6M8msF9DcVyx5WjGVQlTnZqPUkfPkM
- jXKcBdcPWXY/hjk96UQ8kTPRCNbs9/S1Qc6JNtMcrDZ8fkkAN+LcpbbKOu8pPFxE0iakYFzS6
- 3d8jfd7LIN3ok3+0HoeA==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9475 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-1912180139
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9475 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-1912180140
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 17, 2019 at 11:18 PM Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> On Tue, Dec 17, 2019 at 04:02:47PM +0100, Arnd Bergmann wrote:
-> > On Mon, Dec 16, 2019 at 5:52 PM Arnd Bergmann <arnd@arndb.de> wrote:
-> > > On Fri, Dec 13, 2019 at 10:17 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> > >>
-> > >> Hmm, so one thing that I clean up on the way to bigtime is the total
-> > >> lack of clamping here.  If (for example) it's September 2105 and
-> > >> rtbtimelimit is set to 1 year, this will cause an integer overflow.  The
-> > >> quota timer will be set to 1970 and expire immediately, rather than what
-> > >> I'd consider the best effort of February 2106.
-> >
-> > One more hing to note (I will add this to the changelog text) is that on
->
-> Ok, I'll look for it in the next revision you send out.
->
-> By the way, would you mind cc'ing the xfs list on all 24 patches?  They
-> probably aren't directly relevant to xfs, but it does make it a lot
-> easier for us to look at the other 21 patches and think "Oh, ok, so
-> there isn't some core infrastructure change that we're not seeing".
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I wasn't planning on sending the full series once more, as there were very
-few comments now. I've sent the three XFS patches again by themselves
-now. If you can pick these up, I'll put the rest into linux-next to give them
-some more testing, and hopefully have others pick up a couple more
-before I send a pull request.
+The section of the xfs_io manpage for the 'chattr' command says to refer
+to xfsctl(3) for information on the flags.  The inode flag information
+was moved to ioctl_xfs_fssetxattr(2) ages ago, and it never actually
+mapped the inode flag letters to inode flag bits, so add those to the
+xfs_io manpage.
 
-      Arnd
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ man/man8/xfs_io.8 |  123 ++++++++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 117 insertions(+), 6 deletions(-)
+
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 2f17c64c..26523ab8 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -794,18 +794,129 @@ for all directory entries below the currently open file
+ can be used to restrict the output to directories only).
+ This is a depth first descent, it does not follow symlinks and
+ it also does not cross mount points.
++
++The current inode flag letters are:
++
++.PD 0
++.RS
++.TP 0.5i
++.SM "r (XFS_XFLAG_REALTIME)"
++The file is a realtime file.
++
++.TP
++.SM "p (XFS_XFLAG_PREALLOC)"
++The file has preallocated space.
++
++.TP
++.SM "i (XFS_XFLAG_IMMUTABLE)"
++The file is immutable - it cannot be modified, deleted or renamed, no link can
++be created to this file and no data can be written to the file.
++Only the superuser or a process possessing the CAP_LINUX_IMMUTABLE capability
++can set or clear this flag.
++
++.TP
++.SM "a (XFS_XFLAG_APPEND)"
++The file is append-only - it can only be open in append mode for writing.
++Only the superuser or a process possessing the CAP_LINUX_IMMUTABLE capability
++can set or clear this flag.
++
++.TP
++.SM "s (XFS_XFLAG_SYNC)"
++All writes to the file are synchronous.
++
++.TP
++.SM "A (XFS_XFLAG_NOATIME)"
++When the file is accessed, its atime record is not modified.
++
++.TP
++.SM "d (XFS_XFLAG_NODUMP)"
++The file should be skipped by backup utilities.
++
++.TP
++.SM "t (XFS_XFLAG_RTINHERIT)"
++New files created in this directory will be automatically flagged as realtime.
++New directories created in the directory will inherit the inheritance bit.
++
++.TP
++.SM "P (XFS_XFLAG_PROJINHERIT)"
++New files and directories created in the directory will inherit the parent's
++project ID.
++New directories also inherit the project ID and project inheritance bit.
++
++.TP
++.SM "n (XFS_XFLAG_NOSYMLINKS)"
++Can only be set on a directory and disallows creation of symbolic links in the
++directory.
++
++.TP
++.SM "e (XFS_XFLAG_EXTSIZE)"
++Extent size hint - if a basic extent size value is set on the file then the
++allocator will try allocate in multiples of the set size for this file.
++This only applies to non-realtime files.
++See
++.BR ioctl_xfs_fsgetxattr "(2)"
++for more information.
++
++.TP
++.SM "E (XFS_XFLAG_EXTSZINHERIT)"
++New files and directories created in the directory will inherit the parent's
++basic extent size value (see above).
++Can only be set on a directory.
++
++.TP
++.SM "f (XFS_XFLAG_NODEFRAG)"
++The file should be skipped during a defragmentation operation.
++When applied to a directory, new files and directories created will
++inherit the no\-defrag state.
++
++.TP
++.SM "S (XFS_XFLAG_FILESTREAM)"
++Filestream allocator - allows a directory to reserve an allocation group for
++exclusive use by files created within that directory.
++Files being written in other directories will not use the same allocation group
++and so files within different directories will not interleave
++extents on disk.
++The reservation is only active while files are being created and written into
++the directory.
++
++.TP
++.SM "x (XFS_XFLAG_DAX)"
++If the filesystem lives on directly accessible persistent memory, reads and
++writes to this file will go straight to the persistent memory, bypassing the
++page cache.
++A file with this flag set cannot share blocks.
++If set on a directory, new files and directories created will inherit the
++persistent memory capability.
++
++.TP
++.SM "C (XFS_XFLAG_COWEXTSIZE)"
++Copy on Write Extent size hint - if a CoW extent size value is set on the file,
++the allocator will allocate extents for staging a copy on write operation
++in multiples of the set size for this file.
++See
++.BR ioctl_xfs_fsgetxattr "(2)"
++for more information.
++If the CoW extent size is set on a directory, then new file and directories
++created in the directory will inherit the parent's CoW extent size value.
++
++.TP
++.SM "X (XFS_XFLAG_HASATTR)"
++The file has extended attributes associated with it.
++This flag cannot be changed via chattr.
++.RE
++
+ .TP
+ .BR chattr " [ " \-R " | " \-D " ] [ " + / \-riasAdtPneEfSxC " ]"
+ Change extended inode flags on the currently open file. The
+ .B \-R
+ and
+ .B \-D
+-options have the same meaning as above. The mapping between each
+-letter and the inode flags (refer to
+-.BR xfsctl (3)
+-for the full list) is available via the
+-.B help
+-command.
++options have the same meaning as above.
++
++See the
++.B lsattr
++command above for the list of inode flag letters.
++
+ .TP
+ .BI "flink " path
+ Link the currently open file descriptor into the filesystem namespace.
