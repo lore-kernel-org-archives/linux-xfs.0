@@ -6,24 +6,24 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFA42C43603
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 22:55:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6505C43603
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 22:56:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BB52121D7D
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 22:55:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ADE13218AC
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 22:56:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726518AbfLRWzk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Dec 2019 17:55:40 -0500
-Received: from sandeen.net ([63.231.237.45]:49292 "EHLO sandeen.net"
+        id S1726518AbfLRW4W (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Dec 2019 17:56:22 -0500
+Received: from sandeen.net ([63.231.237.45]:49360 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726510AbfLRWzk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 18 Dec 2019 17:55:40 -0500
+        id S1726387AbfLRW4W (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 18 Dec 2019 17:56:22 -0500
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id CECFFF8BF1
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Dec 2019 16:55:24 -0600 (CST)
-Subject: [PATCH 2/3] xfsprogs: make a couple of structures static
+        by sandeen.net (Postfix) with ESMTPSA id 6FCF2F8AF6
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Dec 2019 16:56:06 -0600 (CST)
+Subject: [PATCH 3/3] fsr: remove shadow variable in fsr_setup_attr_fork
 From:   Eric Sandeen <sandeen@sandeen.net>
 To:     linux-xfs <linux-xfs@vger.kernel.org>
 References: <291387f3-1517-14c0-f64a-a98164131f89@sandeen.net>
@@ -69,8 +69,8 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <ea404006-44aa-ac0a-6bea-b23fb748e71d@sandeen.net>
-Date:   Wed, 18 Dec 2019 16:55:38 -0600
+Message-ID: <fd893f4d-f436-b568-8dbf-5522c291952a@sandeen.net>
+Date:   Wed, 18 Dec 2019 16:56:20 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.3.1
 MIME-Version: 1.0
@@ -85,35 +85,23 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Eric Sandeen <sandeen@redhat.com>
 
-Eliminates 2 sparse warnings.
+There's no need for the extra inner-scope ret variable in this
+function, so remove it.  The shadow was harmless though.
 
+Fixes: f31b5e12 ("libfrog: refactor open-coded bulkstat calls")
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
-diff --git a/db/btheight.c b/db/btheight.c
-index 8aa17c89..fdb19a6d 100644
---- a/db/btheight.c
-+++ b/db/btheight.c
-@@ -22,7 +22,7 @@ static int rmap_maxrecs(struct xfs_mount *mp, int blocklen, int leaf)
- 	return libxfs_rmapbt_maxrecs(blocklen, leaf);
- }
+diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+index 77a10a1d..32282126 100644
+--- a/fsr/xfs_fsr.c
++++ b/fsr/xfs_fsr.c
+@@ -988,7 +988,6 @@ fsr_setup_attr_fork(
+ 	do {
+ 		struct xfs_bulkstat	tbstat;
+ 		char		name[64];
+-		int		ret;
  
--struct btmap {
-+static struct btmap {
- 	const char	*tag;
- 	int		(*maxrecs)(struct xfs_mount *mp, int blocklen,
- 				   int leaf);
-diff --git a/io/bulkstat.c b/io/bulkstat.c
-index 201470b2..05a3d6d6 100644
---- a/io/bulkstat.c
-+++ b/io/bulkstat.c
-@@ -230,7 +230,7 @@ struct single_map {
- 	uint64_t		code;
- };
- 
--struct single_map tags[] = {
-+static struct single_map tags[] = {
- 	{"root", XFS_BULK_IREQ_SPECIAL_ROOT},
- 	{NULL, 0},
- };
+ 		/*
+ 		 * bulkstat the temp inode to see what the forkoff is.  Use
 
