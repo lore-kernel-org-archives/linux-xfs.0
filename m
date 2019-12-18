@@ -7,63 +7,63 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CBC6C2D0BF
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 21:30:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72F89C3F68F
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 21:31:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EF1372176D
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 21:30:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4654A21D7D
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 21:31:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="pYoBx6s3"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IkJCxMyA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726520AbfLRVaB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Dec 2019 16:30:01 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:54204 "EHLO
+        id S1726496AbfLRVbP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Dec 2019 16:31:15 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:55326 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726496AbfLRVaB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Dec 2019 16:30:01 -0500
+        with ESMTP id S1726212AbfLRVbP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Dec 2019 16:31:15 -0500
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBILTsfS016069;
-        Wed, 18 Dec 2019 21:29:57 GMT
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBILTrjp015956;
+        Wed, 18 Dec 2019 21:31:12 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=pEu/wevBP+vXacJchcE9ZYIZDW6WFseRQ7lMsjNBluQ=;
- b=pYoBx6s3wOquE3Zwe9YxgG6KSy9dh0uMK0D0+yCey/QGYH4GE/FPfG4GaTjQeMcCWmgs
- YYttq3SNg7Gs15aIkMYSPdRz4XtuCihh0CZrbKqswRWT/URGbftLEux/PVPmTS/SddSN
- Sb/Z8/NgtzfHMQ59ZoOL88EXG5Fan63iGPxjeEniZKPOPfjzkZ4vHatj98EcALoblCdu
- /ca5S7VE3jPMqw9GAmKgLJ1chGsBLyZdOyy0Y5L+ZLQq1s4V7v5yiAVY9b9QedQZg0L2
- gSd2flX0MRRMQfBkUvPu3OVXNjxY3lQYde6kqO3T1KWSDhId9SSQifrNVbhKq8zlvC2R KA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2wvrcrg65r-1
+ bh=O2cLJHd34AqpHGMDMsYPh8JGJkOsXdv92ZBrHpBu5zU=;
+ b=IkJCxMyA+Tt9L1Mu7YT7CjWZsAZGXXEc2oZbmRFIhVJ6Hg0021D9QHRoX+FgVSS3H+NA
+ W9qlafMeq/p9W27OzonltVLYfcWF4NIyu/M5THQu4fChutCLtY3BQ361aW5v4g/E8Pig
+ xmiXyg5C+y7sNhQPc1shcJkaJ6ycHAA0oVJxBvNwsr4POppR8E7RPgk2IezNBlBbofjS
+ kuzF+xH3GHde0W0KyruTuhIw/Ry8gB2rbiMeqsoSxo7ot60X0QE8mFGm2q7RJbf+A1YD
+ qZKn9BLAZR34o3j9IW76VQLxj0LmwvuAJCBNS4Fw9t7uwIO/dIMHmhtW1UKTWR4sNbJy NA== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 2wvrcrg6c9-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Dec 2019 21:29:56 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBILTdjC080805;
-        Wed, 18 Dec 2019 21:29:56 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 2wyk3btqvd-1
+        Wed, 18 Dec 2019 21:31:12 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBILTepE024140;
+        Wed, 18 Dec 2019 21:31:11 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 2wyp4yjbvu-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Dec 2019 21:29:55 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xBILTs45027537;
-        Wed, 18 Dec 2019 21:29:54 GMT
+        Wed, 18 Dec 2019 21:31:11 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xBILV94E017456;
+        Wed, 18 Dec 2019 21:31:10 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 18 Dec 2019 13:29:53 -0800
-Date:   Wed, 18 Dec 2019 13:29:52 -0800
+        with ESMTP ; Wed, 18 Dec 2019 13:31:09 -0800
+Date:   Wed, 18 Dec 2019 13:31:08 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org,
         Allison Collins <allison.henderson@oracle.com>
-Subject: Re: [PATCH 02/33] xfs: reject invalid flags combinations in
- XFS_IOC_ATTRMULTI_BY_HANDLE
-Message-ID: <20191218212952.GE7489@magnolia>
+Subject: Re: [PATCH 03/33] xfs: also remove cached ACLs when removing the
+ underlying attr
+Message-ID: <20191218213108.GF7489@magnolia>
 References: <20191212105433.1692-1-hch@lst.de>
- <20191212105433.1692-3-hch@lst.de>
+ <20191212105433.1692-4-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191212105433.1692-3-hch@lst.de>
+In-Reply-To: <20191212105433.1692-4-hch@lst.de>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9475 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
@@ -81,58 +81,41 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 12, 2019 at 11:54:02AM +0100, Christoph Hellwig wrote:
-> While the flags field in the ABI and the on-disk format allows for
-> multiple namespace flags, that is a logically invalid combination that
-> scrub complains about.  Reject it at the ioctl level, as all other
-> interface already get this right at higher levels.
+On Thu, Dec 12, 2019 at 11:54:03AM +0100, Christoph Hellwig wrote:
+> We should not just invalidate the ACL when setting the underlying
+> attribute, but also when removing it.  The ioctl interface gets that
+> right, but the normal xattr inteface skipped the xfs_forget_acl due
+> to an early return.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks ok I think.  We never have attrs in two namespaces at once...
-assuming that "attr_multi(3)" is the right manpage for all this?
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Shouldn't someone have a testcase for this?
 
 --D
 
 > ---
->  fs/xfs/xfs_ioctl.c   | 5 +++++
->  fs/xfs/xfs_ioctl32.c | 5 +++++
->  2 files changed, 10 insertions(+)
+>  fs/xfs/xfs_xattr.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 2f76d0a7b818..f3a53e0db2cf 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -462,6 +462,11 @@ xfs_attrmulti_by_handle(
+> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+> index 383f0203d103..2288f20ae282 100644
+> --- a/fs/xfs/xfs_xattr.c
+> +++ b/fs/xfs/xfs_xattr.c
+> @@ -74,10 +74,11 @@ xfs_xattr_set(const struct xattr_handler *handler, struct dentry *unused,
+>  	if (flags & XATTR_REPLACE)
+>  		xflags |= ATTR_REPLACE;
 >  
->  	error = 0;
->  	for (i = 0; i < am_hreq.opcount; i++) {
-> +		if ((ops[i].am_flags & ATTR_ROOT) &&
-> +		    (ops[i].am_flags & ATTR_SECURE)) {
-> +			ops[i].am_error = -EINVAL;
-> +			continue;
-> +		}
->  		ops[i].am_flags &= ATTR_KERNEL_FLAGS;
+> -	if (!value)
+> -		return xfs_attr_remove(ip, (unsigned char *)name, xflags);
+> -	error = xfs_attr_set(ip, (unsigned char *)name,
+> +	if (value)
+> +		error = xfs_attr_set(ip, (unsigned char *)name,
+>  				(void *)value, size, xflags);
+> +	else
+> +		error = xfs_attr_remove(ip, (unsigned char *)name, xflags);
+>  	if (!error)
+>  		xfs_forget_acl(inode, name, xflags);
 >  
->  		ops[i].am_error = strncpy_from_user((char *)attr_name,
-> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-> index 8b5acf8c42e1..720eb72f3be3 100644
-> --- a/fs/xfs/xfs_ioctl32.c
-> +++ b/fs/xfs/xfs_ioctl32.c
-> @@ -450,6 +450,11 @@ xfs_compat_attrmulti_by_handle(
->  
->  	error = 0;
->  	for (i = 0; i < am_hreq.opcount; i++) {
-> +		if ((ops[i].am_flags & ATTR_ROOT) &&
-> +		    (ops[i].am_flags & ATTR_SECURE)) {
-> +			ops[i].am_error = -EINVAL;
-> +			continue;
-> +		}
->  		ops[i].am_flags &= ATTR_KERNEL_FLAGS;
->  
->  		ops[i].am_error = strncpy_from_user((char *)attr_name,
 > -- 
 > 2.20.1
 > 
