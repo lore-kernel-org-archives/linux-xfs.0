@@ -2,60 +2,63 @@ Return-Path: <SRS0=QbY/=2I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88EFCC43603
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 23:14:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31CF7C43603
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 23:14:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 582C52176D
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 23:14:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE9A92176D
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 23:14:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PvN6bKsP"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="gGNNsSYz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726463AbfLRXOI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Dec 2019 18:14:08 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:41690 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726387AbfLRXOH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Dec 2019 18:14:07 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBINA5Oo091229;
-        Wed, 18 Dec 2019 23:14:05 GMT
+        id S1726559AbfLRXON (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Dec 2019 18:14:13 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:54990 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726387AbfLRXON (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Dec 2019 18:14:13 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBIN9gdg113240;
+        Wed, 18 Dec 2019 23:14:11 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : mime-version : content-type :
- content-transfer-encoding; s=corp-2019-08-05;
- bh=L5RMJt5G0A40FpBa/GxA+BZa5RZYJVYRtLDZZsy1l88=;
- b=PvN6bKsP8QaATjCTKYgBYzC9d+j+A/5i3gZKq6uvkv1Ogtjn3Jb4qRhAH8fPJMYoR0Ax
- pMt75ZePGGgEUe4dm3qUXkpfduTnQCq6cvVDz/QL9KTdQ08OfpCKTHODrr62XvRd8SB1
- WvsU1PY56gVfuKZVAquwSLk2E8QrZJm3+vUGfZJr3QiPGNiN7+gRZ7HeZ/4w65Yb0K9W
- NXv74HNrqA8n4F/2oANJRgBQvL6PTCLhs1SbxsrFUEM2s5/YPTjpKWLxDjO1ROAY7XSi
- vQOW5XpwMY0aoE+5fnwWZvc46AIrUNOcnf8tthplJaZBXzcOAXBw9ak89bFuRk2B8LgG 3w== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2wvqpqgme4-1
+ cc : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2019-08-05;
+ bh=GrVcBrtNA78FptlKlNcR5e+UY7mEu7XSTcaQQSe4lVw=;
+ b=gGNNsSYz/bmFoU3T61imPEH852aBkOsed+1TFXTDuQ0g2m+7paU8zOGIpJYN1VPn4Cvm
+ oxeEu12NfsqPB+e4LtRUlFpreQLQK/q++6uJyq1gIX7VFL4iImZifGT8GM8q0rMaakWK
+ EZTzHz3fuPQCPnnt11JhyB+EnU+f43guDepyBKA812/TjyMbzp29ahNVRneZvrGZhQXx
+ 6dSOwt5uvAsR+iAzYQwdDjg1ZUuvxZOewgUpGU5444jLLvNbTb7xQKM4yi6EK3Alk49r
+ 1/LmtToMby2J56roZX/+kuMrLc4roPXo8xc2w0S1KR6YAicqiV1nytv/8v5f+F9N4wPi KQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2wvq5urrgw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Dec 2019 23:14:05 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBIN9nQA108434;
-        Wed, 18 Dec 2019 23:14:04 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 2wyk3bxqgx-1
+        Wed, 18 Dec 2019 23:14:10 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBIN9pjx064683;
+        Wed, 18 Dec 2019 23:14:10 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2wyp08e5sc-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Dec 2019 23:14:04 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xBINE3U6024120;
-        Wed, 18 Dec 2019 23:14:03 GMT
+        Wed, 18 Dec 2019 23:14:10 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xBINE92e008786;
+        Wed, 18 Dec 2019 23:14:09 GMT
 Received: from localhost (/10.145.179.16)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 18 Dec 2019 15:14:03 -0800
-Subject: [PATCH 0/2] libfrog: various small fixes
+        with ESMTP ; Wed, 18 Dec 2019 15:14:09 -0800
+Subject: [PATCH 1/2] libfrog: remove libxfs.h dependencies in fsgeom.c and
+ linux.c
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 18 Dec 2019 15:14:02 -0800
-Message-ID: <157671084242.190323.8759111252624617622.stgit@magnolia>
+Date:   Wed, 18 Dec 2019 15:14:08 -0800
+Message-ID: <157671084856.190323.6646004639671192722.stgit@magnolia>
+In-Reply-To: <157671084242.190323.8759111252624617622.stgit@magnolia>
+References: <157671084242.190323.8759111252624617622.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -76,19 +79,46 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Clean up a few weird things in libfrog, like the topology code actually
-needing to be in libxfs, and clean up a few source files that pull in
-headers from libxfs even though they shouldn't.
+libfrog isn't supposed to depend on libxfs, so don't include the header
+file in the libfrog source code.
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ libfrog/fsgeom.c |    4 +++-
+ libfrog/linux.c  |    4 ++--
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
 
---D
+diff --git a/libfrog/fsgeom.c b/libfrog/fsgeom.c
+index 19a4911f..bd93924e 100644
+--- a/libfrog/fsgeom.c
++++ b/libfrog/fsgeom.c
+@@ -2,7 +2,9 @@
+ /*
+  * Copyright (c) 2000-2005 Silicon Graphics, Inc. All Rights Reserved.
+  */
+-#include "libxfs.h"
++#include "platform_defs.h"
++#include "xfs.h"
++#include "bitops.h"
+ #include "fsgeom.h"
+ #include "util.h"
+ 
+diff --git a/libfrog/linux.c b/libfrog/linux.c
+index 79bd79eb..41a168b4 100644
+--- a/libfrog/linux.c
++++ b/libfrog/linux.c
+@@ -9,8 +9,8 @@
+ #include <sys/ioctl.h>
+ #include <sys/sysinfo.h>
+ 
+-#include "libxfs_priv.h"
+-#include "xfs_fs.h"
++#include "platform_defs.h"
++#include "xfs.h"
+ #include "init.h"
+ 
+ extern char *progname;
 
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=libfrog-fixes
