@@ -2,169 +2,193 @@ Return-Path: <SRS0=QbY/=2I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5ABAC43603
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 01:09:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B584C43603
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 02:18:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6666921775
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 01:09:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B84821582
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 02:18:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="AtwhYM04";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="ifQoZTLz"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PUc5M+bn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726143AbfLRBJq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 Dec 2019 20:09:46 -0500
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:22968 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725946AbfLRBJq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Dec 2019 20:09:46 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1576631386; x=1608167386;
-  h=from:to:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=IvWAgzgX0edM4UljXrS5sCD5mjLMWFD4weoDyfvih6I=;
-  b=AtwhYM04TorCJfMlIb+/WJwmPg5Ay8MGhsMEK3lSlxBzjGAONuz0W8g8
-   CHvVNWSCPBMYmy98YI4wlDmV3RjYBl8DOp8acrBpq4gxioRc+ZhIne8Ks
-   apw0K26pyDBwOQUdgaTWfj2+kzmEuZLeRugicP0yCJAxY3zBHgkLMcKjf
-   lFZMcqs58OuCe84x7gfYozoM+cXDotQNpDx9N1/xDdolDOtF7Dk0W7tMe
-   SiM1QSopOcgqAYX9h1YNcKA1MB0IiylZKk+6qZvHTd70pSm74w7du1VUO
-   zSsZcAH5PUm2QwyK5dQmAFnAZxu1UeHa3n/qNIsfSbmvjlj1bLRXSj4V0
-   w==;
-IronPort-SDR: 5IsRiZAnJdCrx8SEIEZcouEmFi+nxHK12hWTSobDiEHA4kOEYB4RzOKc3EML3v5BVPD6qelVJd
- 7ubBb+LWygrq/+6ypAyZ2EaoZcL8BUa/knx/G9ULcKC6s5L+QY7QqLxUAMoHOMfbfvEs3pyvCd
- EB+eJxY6OvZ9PapUrY/egOfz6GiSKMeUSRMWlwBZ9aMDJhlqi13RNBN86Rxrkqk55XiZFu8d1I
- qWUpjUswF7BkhYLqzImaViEmASGmlz5FD1Gwe1PnliFOnvgoAZZQMPnyfFeksB3C+w/3vuDFFE
- JgI=
-X-IronPort-AV: E=Sophos;i="5.69,327,1571673600"; 
-   d="scan'208";a="127213640"
-Received: from mail-bn8nam11lp2173.outbound.protection.outlook.com (HELO NAM11-BN8-obe.outbound.protection.outlook.com) ([104.47.58.173])
-  by ob1.hgst.iphmx.com with ESMTP; 18 Dec 2019 09:09:45 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Fx+YThsOHzMO0Mf2+/UwFyJr8C8+AsZ/IeWOS44fJJxuIOc0XWhr4NemEh7w/IrIlCMGmxsFixo7HbKyt6d6sQPD5ZY8DXkigQ+iDvaz7fRmCp9iD8Mscb+Jf07D4E6OI7/T5A4KVCvG/f648Ew05iHwnolKLdfPKLZ0kevd+wLPljGoR6oYPSN2PmWw2semOhPmw6QXRg+sa9xki5O/Yc0NRHmR4Zo2hXYNPpP2Ych8JwKDmd2XX2nK8v5SAFmyRrip1APDfYsUILdE7slAoy1ns8Hx1yXxM/k4x7fJ49FJNOGyn/UQtBXkcPMbXWghtJb2ck5+bA6kTleV49UK1Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=IvWAgzgX0edM4UljXrS5sCD5mjLMWFD4weoDyfvih6I=;
- b=BkhSLKup485+f/zjhv0nDVkcwLmd6s6Npg1wo3Fhbj35CYQpyCzKK2RezGEh4WUq/dpeIoTRSOxAJcTTfjbkGu6198jQ95YAsIqeXHx4cwhBLyj8ig9v0TI96xDO1B0i+1k5uqGWjMbnvzy9TBHCADFpWYrwXmuLz+eyOI15TnXH2pJqGYxF6cZfYJte2JIcamtsPvCKoAwuqksZa+QR6ZkSsT8o+59dYD9RPWuZ9OeIZ6plT+Lx/ddHAK0CeyhRfH06RV85pB6uATU1GyAfrt3iMFxltnWBcwXJJN3gCTSA/MVHRLi5jeV02aZRcp3LRN3sPynEPRQm2NVXaW4UFg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=IvWAgzgX0edM4UljXrS5sCD5mjLMWFD4weoDyfvih6I=;
- b=ifQoZTLzsblmOsz323m0KR1cEDyYlKVWjFxfjcsMoMM+t7sRu2gWnWpMS8bbBYD/apgmzS68PAACARqyGH02XxVAmaWnvgwFzL+zNJJBLaAmMq0rgowjLdeew6AKMREZceDTNtkUnjxA+463kKvteG24ZVnyXFM2Mv8+BWDGiqU=
-Received: from BYAPR04MB5816.namprd04.prod.outlook.com (20.179.59.16) by
- BYAPR04MB4103.namprd04.prod.outlook.com (52.135.214.150) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2538.20; Wed, 18 Dec 2019 01:09:43 +0000
-Received: from BYAPR04MB5816.namprd04.prod.outlook.com
- ([fe80::cd8e:d1de:e661:a61]) by BYAPR04MB5816.namprd04.prod.outlook.com
- ([fe80::cd8e:d1de:e661:a61%5]) with mapi id 15.20.2559.012; Wed, 18 Dec 2019
- 01:09:43 +0000
-From:   Damien Le Moal <Damien.LeMoal@wdc.com>
-To:     "Enrico Weigelt, metux IT consult" <lkml@metux.net>,
-        Carlos Maiolino <cmaiolino@redhat.com>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 0/2] New zonefs file system
-Thread-Topic: [PATCH 0/2] New zonefs file system
-Thread-Index: AQHVsRth1IpCuMwSZ02s8MNISyP74A==
-Date:   Wed, 18 Dec 2019 01:09:43 +0000
-Message-ID: <BYAPR04MB58162DEB58C1D262E20A708FE7530@BYAPR04MB5816.namprd04.prod.outlook.com>
-References: <20191212183816.102402-1-damien.lemoal@wdc.com>
- <29fb138e-e9e5-5905-5422-4454c956e685@metux.net>
- <20191216093557.2vackj7qakk2jngd@orion>
- <20191216094241.til4qae4ihzi7ors@orion.redhat.com>
- <BYAPR04MB5816894E05A9334C122E785DE7500@BYAPR04MB5816.namprd04.prod.outlook.com>
- <3565a0e7-b9ba-4f32-9f4b-3387f0a379a1@metux.net>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Damien.LeMoal@wdc.com; 
-x-originating-ip: [199.255.47.7]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 6111d838-6945-4530-0b30-08d78356f742
-x-ms-traffictypediagnostic: BYAPR04MB4103:
-x-microsoft-antispam-prvs: <BYAPR04MB41030DF06837610D6E7C6A47E7530@BYAPR04MB4103.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:10000;
-x-forefront-prvs: 0255DF69B9
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(39860400002)(396003)(376002)(346002)(366004)(136003)(189003)(199004)(64756008)(66446008)(66946007)(66556008)(86362001)(91956017)(55016002)(9686003)(5660300002)(186003)(53546011)(66476007)(76116006)(26005)(6506007)(81156014)(8676002)(33656002)(71200400001)(478600001)(81166006)(52536014)(7696005)(110136005)(8936002)(316002)(2906002);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR04MB4103;H:BYAPR04MB5816.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: NzFKJzu0Qa2wsaxH3V3cYZYTBkEVHgS7eHxYN6+/RWdMOz7Y4Pz2sAQjC3X8bslHbwvw6UzMljuWJSDmwr5p13OIuOo4CKjYKBFCBcIyY8AnkyBzI0d9Q9QlpQQ3z/tLtXb+P9LG3+ym4sGasqsYd1EQ611kjO/YyaiTobgwVcbeneDdyODgr1k+g07hPH2IV2+yvXXHofOvbsv6/SSR+N8FYcQJTG43KSyTmEPn0A4SMuEd8RZdR3C0zAd07vPXTThO2oTJPMpwPSxpu0ikLAhj1S8C+9yxfQ6fu7hjwHF4M8TRdEIws8ufyvyLRaQ+3JID+vkhfGpTMnlQiUSsOkhJwJORumDiu339JVz4eyP6i2mHw66jp408+7VVEjb+zPrKCWEC3K1bL83wPzroGApdwZv2pVT8Ocx3eDFTacQc4ajGv0o5myv2S6n57F7I
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1726387AbfLRCSh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 17 Dec 2019 21:18:37 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:44872 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726167AbfLRCSg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Dec 2019 21:18:36 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBI2FCeT076596;
+        Wed, 18 Dec 2019 02:18:33 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=yjaYCBJuu+SWa5GeVjQLohwA7fwwYFkL9vqsAB5SPrk=;
+ b=PUc5M+bnYnqz2JovWViJjMQRGOaARiN84H576HCJOfVC1Iw1BYwU+gh2MXn2y7F87xQ9
+ 5PnzOVMGkd540Z0U/mcFKbmniCD5YIP2w3EbKPDsykHhnLZc7h9unqJ7Js7cZqy7VqDI
+ ryzPThWmY1Ggh3XlmR6Al1rX2/66C7vddLXYOgqCVf12AW/+oKP5FZf12If65QkbeAUS
+ C9mo0YoY9x1nNznAM89gNBum78MnPuJvisACi1QnhGjGZGwi232wW8KV1n2uwziKmJSm
+ 8rELPOjKleAzMPoHtYue8Jvolyfg/eGkbaONH+ectJkr6RIYqWkI8/5h4MlYmVhyZX7T Yg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2wvq5ujn8w-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 18 Dec 2019 02:18:33 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBI29HP1136485;
+        Wed, 18 Dec 2019 02:16:32 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 2wxm7534e6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 18 Dec 2019 02:16:32 +0000
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xBI2GV0x017586;
+        Wed, 18 Dec 2019 02:16:31 GMT
+Received: from localhost (/10.159.137.228)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 17 Dec 2019 18:16:31 -0800
+Date:   Tue, 17 Dec 2019 18:16:30 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs: open code insert range extent split helper
+Message-ID: <20191218021630.GG12765@magnolia>
+References: <20191213171258.36934-1-bfoster@redhat.com>
+ <20191213171258.36934-2-bfoster@redhat.com>
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6111d838-6945-4530-0b30-08d78356f742
-X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Dec 2019 01:09:43.3302
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Wru6PRfUpzPWQAR7opRIbkuGTyqHLDMIs5/a+jWRh/qUGXVjHDojN8wycJTpPIT/r5YF+En+ptARI4lcxEHcRw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB4103
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191213171258.36934-2-bfoster@redhat.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9474 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-1912180016
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9474 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-1912180017
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2019/12/17 22:05, Enrico Weigelt, metux IT consult wrote:=0A=
-> On 17.12.19 01:26, Damien Le Moal wrote:=0A=
-> =0A=
-> Hi,=0A=
-> =0A=
->> On the SSD front, NVMe Zoned Namespace standard is still a draft and=0A=
->> being worked on be the NVMe committee and no devices are available on=0A=
->> the market yet.=0A=
-> =0A=
-> anybody here who can tell why this could be useful ?=0A=
-=0A=
-To reduce device costs thanks to less flash over provisioning needed=0A=
-(leading to higher usable capacities), simpler device firmware FTL=0A=
-(leading to lower DRAM needs, so lower power and less heat) and higher=0A=
-predictability of IO latencies.=0A=
-=0A=
-Yes, there is the sequential write constraint (that's the "no free=0A=
-lunch" part of the picture), but many workloads can accommodate this=0A=
-constraint (any video streaming application, sensor logging, etc...)=0A=
-=0A=
-> Can erase blocks made be so enourmously huge and is there really a huge=
-=0A=
-> gain in doing so, which makes any practical difference ?=0A=
-=0A=
-Making the erase block enormous would likely lead to enormous zone=0A=
-sizes, which is generally not desired as that becomes very costly if the=0A=
-application/user needs to do GC on the zones. A balance is generally=0A=
-reached here between HW media needs and usability.=0A=
-=0A=
-> Oh, BTW, since the write semantics seem so similar, why not treating=0A=
-> them similar to raw flashes ?=0A=
-=0A=
-This is the OpenChannel SSD model. This exists and is supported by Linux=0A=
-(lightnvm). This model is however more complex due to the plethora of=0A=
-parameters that the host can/needs to control. The zone model is much=0A=
-simpler and its application to NVMe with Zoned Namespace fits very well=0A=
-into the block IO stack work that was done for SMR since kernel 4.10.=0A=
-=0A=
-Another reason for choosing ZNS over OCSSD is that device vendors can=0A=
-actually give guarantees for devices sold as the device firmware retains=0A=
-control over the the flash cells health management, which is much less=0A=
-the case for OCSSD (the device health depends much more on what the user=0A=
-is doing).=0A=
-=0A=
-Best regards.=0A=
-=0A=
--- =0A=
-Damien Le Moal=0A=
-Western Digital Research=0A=
+On Fri, Dec 13, 2019 at 12:12:56PM -0500, Brian Foster wrote:
+> The insert range operation currently splits the extent at the target
+> offset in a separate transaction and lock cycle from the one that
+> shifts extents. In preparation for reworking insert range into an
+> atomic operation, lift the code into the caller so it can be easily
+> condensed to a single rolling transaction and lock cycle and
+> eliminate the helper. No functional changes.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 32 ++------------------------------
+>  fs/xfs/libxfs/xfs_bmap.h |  3 ++-
+>  fs/xfs/xfs_bmap_util.c   | 14 +++++++++++++-
+>  3 files changed, 17 insertions(+), 32 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index a9ad1f991ba3..2bba0f983e4f 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -6021,8 +6021,8 @@ xfs_bmap_insert_extents(
+>   * @split_fsb is a block where the extents is split.  If split_fsb lies in a
+>   * hole or the first block of extents, just return 0.
+>   */
+> -STATIC int
+> -xfs_bmap_split_extent_at(
+> +int
+> +xfs_bmap_split_extent(
+>  	struct xfs_trans	*tp,
+>  	struct xfs_inode	*ip,
+>  	xfs_fileoff_t		split_fsb)
+> @@ -6138,34 +6138,6 @@ xfs_bmap_split_extent_at(
+>  	return error;
+>  }
+>  
+> -int
+> -xfs_bmap_split_extent(
+> -	struct xfs_inode        *ip,
+> -	xfs_fileoff_t           split_fsb)
+> -{
+> -	struct xfs_mount        *mp = ip->i_mount;
+> -	struct xfs_trans        *tp;
+> -	int                     error;
+> -
+> -	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write,
+> -			XFS_DIOSTRAT_SPACE_RES(mp, 0), 0, 0, &tp);
+> -	if (error)
+> -		return error;
+> -
+> -	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> -	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+> -
+> -	error = xfs_bmap_split_extent_at(tp, ip, split_fsb);
+> -	if (error)
+> -		goto out;
+> -
+> -	return xfs_trans_commit(tp);
+> -
+> -out:
+> -	xfs_trans_cancel(tp);
+> -	return error;
+> -}
+> -
+>  /* Deferred mapping is only for real extents in the data fork. */
+>  static bool
+>  xfs_bmap_is_update_needed(
+> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+> index 14d25e0b7d9c..f3259ad5c22c 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.h
+> +++ b/fs/xfs/libxfs/xfs_bmap.h
+> @@ -222,7 +222,8 @@ int	xfs_bmap_can_insert_extents(struct xfs_inode *ip, xfs_fileoff_t off,
+>  int	xfs_bmap_insert_extents(struct xfs_trans *tp, struct xfs_inode *ip,
+>  		xfs_fileoff_t *next_fsb, xfs_fileoff_t offset_shift_fsb,
+>  		bool *done, xfs_fileoff_t stop_fsb);
+> -int	xfs_bmap_split_extent(struct xfs_inode *ip, xfs_fileoff_t split_offset);
+> +int	xfs_bmap_split_extent(struct xfs_trans *tp, struct xfs_inode *ip,
+> +		xfs_fileoff_t split_offset);
+>  int	xfs_bmapi_reserve_delalloc(struct xfs_inode *ip, int whichfork,
+>  		xfs_fileoff_t off, xfs_filblks_t len, xfs_filblks_t prealloc,
+>  		struct xfs_bmbt_irec *got, struct xfs_iext_cursor *cur,
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 2efd78a9719e..829ab1a804c9 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1139,7 +1139,19 @@ xfs_insert_file_space(
+>  	 * is not the starting block of extent, we need to split the extent at
+>  	 * stop_fsb.
+>  	 */
+> -	error = xfs_bmap_split_extent(ip, stop_fsb);
+> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write,
+> +			XFS_DIOSTRAT_SPACE_RES(mp, 0), 0, 0, &tp);
+> +	if (error)
+> +		return error;
+> +
+> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> +	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+> +
+> +	error = xfs_bmap_split_extent(tp, ip, stop_fsb);
+> +	if (error)
+> +		goto out_trans_cancel;
+> +
+> +	error = xfs_trans_commit(tp);
+>  	if (error)
+>  		return error;
+>  
+> -- 
+> 2.20.1
+> 
