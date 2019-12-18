@@ -1,238 +1,177 @@
-Return-Path: <SRS0=4VMi=2H=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=QbY/=2I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 404B7C2D0BF
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Dec 2019 22:34:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E575C47409
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 00:57:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1D9052176D
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Dec 2019 22:34:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4445D24679
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Dec 2019 00:57:27 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="iuVznX/s";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="SFofzQ24"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726227AbfLQWeJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 Dec 2019 17:34:09 -0500
-Received: from sandeen.net ([63.231.237.45]:36632 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725886AbfLQWeI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 17 Dec 2019 17:34:08 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id D3D80F8AF6;
-        Tue, 17 Dec 2019 16:33:54 -0600 (CST)
-To:     linux-xfs <linux-xfs@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>
-Cc:     Zorro Lang <zlang@redhat.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: [PATCH V2] fstests: verify that xfs_growfs can operate on mounted
- device node
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
- nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
- WL05ODFQ2cemDhx5uLghHEeOxuGj+1AI+kh/FCzMedHc6k87Yu2ZuaWF+Gh1W2ix6hikRJmQ
- vj5BEeAx7xKkyBhzdbNIbbjV/iGi9b26B/dNcyd5w2My2gxMtxaiP7q5b6GM2rsQklHP8FtW
- ZiYO7jsg/qIppR1C6Zr5jK1GQlMUIclYFeBbKggJ9mSwXJH7MIftilGQ8KDvNuV5AbkronGC
- sEEHj2khs7GfVv4pmUUHf1MRIvV0x3WJkpmhuZaYg8AdJlyGKgp+TQ7B+wCjNTdVqMI1vDk2
- BS6Rg851ay7AypbCPx2w4d8jIkQEgNjACHVDU89PNKAjScK1aTnW+HNUqg9BliCvuX5g4z2j
- gJBs57loTWAGe2Ve3cMy3VoQ40Wt3yKK0Eno8jfgzgb48wyycINZgnseMRhxc2c8hd51tftK
- LKhPj4c7uqjnBjrgOVaVBupGUmvLiePlnW56zJZ51BR5igWnILeOJ1ZIcf7KsaHyE6B1mG+X
- dmYtjDhjf3NAcoBWJuj8euxMB6TcQN2MrSXy5wSKaw40evooGwARAQABtCVFcmljIFIuIFNh
- bmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+iQI7BBMBAgAlAhsDBgsJCAcDAgYVCAIJCgsE
- FgIDAQIeAQIXgAUCUzMzbAIZAQAKCRAgrhaS4T3e4Fr7D/wO+fenqVvHjq21SCjDCrt8HdVj
- aJ28B1SqSU2toxyg5I160GllAxEHpLFGdbFAhQfBtnmlY9eMjwmJb0sCIrkrB6XNPSPA/B2B
- UPISh0z2odJv35/euJF71qIFgWzp2czJHkHWwVZaZpMWWNvsLIroXoR+uA9c2V1hQFVAJZyk
- EE4xzfm1+oVtjIC12B9tTCuS00pY3AUy21yzNowT6SSk7HAzmtG/PJ/uSB5wEkwldB6jVs2A
- sjOg1wMwVvh/JHilsQg4HSmDfObmZj1d0RWlMWcUE7csRnCE0ZWBMp/ttTn+oosioGa09HAS
- 9jAnauznmYg43oQ5Akd8iQRxz5I58F/+JsdKvWiyrPDfYZtFS+UIgWD7x+mHBZ53Qjazszox
- gjwO9ehZpwUQxBm4I0lPDAKw3HJA+GwwiubTSlq5PS3P7QoCjaV8llH1bNFZMz2o8wPANiDx
- 5FHgpRVgwLHakoCU1Gc+LXHXBzDXt7Cj02WYHdFzMm2hXaslRdhNGowLo1SXZFXa41KGTlNe
- 4di53y9CK5ynV0z+YUa+5LR6RdHrHtgywdKnjeWdqhoVpsWIeORtwWGX8evNOiKJ7j0RsHha
- WrePTubr5nuYTDsQqgc2r4aBIOpeSRR2brlT/UE3wGgy9LY78L4EwPR0MzzecfE1Ws60iSqw
- Pu3vhb7h3bkCDQROsffUARAA0DrUifTrXQzqxO8aiQOC5p9Tz25Np/Tfpv1rofOwL8VPBMvJ
- X4P5l1V2yd70MZRUVgjmCydEyxLJ6G2YyHO2IZTEajUY0Up+b3ErOpLpZwhvgWatjifpj6bB
- SKuDXeThqFdkphF5kAmgfVAIkan5SxWK3+S0V2F/oxstIViBhMhDwI6XsRlnVBoLLYcEilxA
- 2FlRUS7MOZGmRJkRtdGD5koVZSM6xVZQSmfEBaYQ/WJBGJQdPy94nnlAVn3lH3+N7pXvNUuC
- GV+t4YUt3tLcRuIpYBCOWlc7bpgeCps5Xa0dIZgJ8Louu6OBJ5vVXjPxTlkFdT0S0/uerCG5
- 1u8p6sGRLnUeAUGkQfIUqGUjW2rHaXgWNvzOV6i3tf9YaiXKl3avFaNW1kKBs0T5M1cnlWZU
- Utl6k04lz5OjoNY9J/bGyV3DSlkblXRMK87iLYQSrcV6cFz9PRl4vW1LGff3xRQHngeN5fPx
- ze8X5NE3hb+SSwyMSEqJxhVTXJVfQWWW0dQxP7HNwqmOWYF/6m+1gK/Y2gY3jAQnsWTru4RV
- TZGnKwEPmOCpSUvsTRXsVHgsWJ70qd0yOSjWuiv4b8vmD3+QFgyvCBxPMdP3xsxN5etheLMO
- gRwWpLn6yNFq/xtgs+ECgG+gR78yXQyA7iCs5tFs2OrMqV5juSMGmn0kxJUAEQEAAYkCHwQY
- AQIACQUCTrH31AIbDAAKCRAgrhaS4T3e4BKwD/0ZOOmUNOZCSOLAMjZx3mtYtjYgfUNKi0ki
- YPveGoRWTqbis8UitPtNrG4XxgzLOijSdOEzQwkdOIp/QnZhGNssMejCnsluK0GQd+RkFVWN
- mcQT78hBeGcnEMAXZKq7bkIKzvc06GFmkMbX/gAl6DiNGv0UNAX+5FYh+ucCJZSyAp3sA+9/
- LKjxnTedX0aygXA6rkpX0Y0FvN/9dfm47+LGq7WAqBOyYTU3E6/+Z72bZoG/cG7ANLxcPool
- LOrU43oqFnD8QwcN56y4VfFj3/jDF2MX3xu4v2OjglVjMEYHTCxP3mpxesGHuqOit/FR+mF0
- MP9JGfj6x+bj/9JMBtCW1bY/aPeMdPGTJvXjGtOVYblGZrSjXRn5++Uuy36CvkcrjuziSDG+
- JEexGxczWwN4mrOQWhMT5Jyb+18CO+CWxJfHaYXiLEW7dI1AynL4jjn4W0MSiXpWDUw+fsBO
- Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
- m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
- fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <4cdefab7-02f0-7703-a3d2-8c2b3ce655b7@sandeen.net>
-Date:   Tue, 17 Dec 2019 16:34:07 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.3.0
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        id S1726143AbfLRA50 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 17 Dec 2019 19:57:26 -0500
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:27588 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726594AbfLRA5Z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Dec 2019 19:57:25 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1576630644; x=1608166644;
+  h=from:to:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=GZo4h8Oqx+9F0EfePin0UYLeGX/KzwgsGp8IDQrP21Y=;
+  b=iuVznX/srem3F7y1RHVLmWmtaUm7Jx2MWJwxFQ9Vu6evLjhuM6YqdH9r
+   S5xqd7rGVunumMyUYgMd69QvWSKK3EZ9pkG3NnWcAXhoY/QsmuRh5M2zO
+   InIFwUvHMZz9nELIdLrRs4oYx8Kx3eKZewIafZr8uj5wM5j8acNnndO+Q
+   oJa4luyclHvcTAkdsX3NZ5VOoVcRSscCTdyQxYONal25BAK8jqqomzoSs
+   EguW2YwznGq3uHWEt7y8eeKmO0Hm+ASKggGoYmdR5AkXUYnjBD4YdF9b9
+   H6ICYrSmmlL8/a2CvN/D8dIvrZWEWZg1vht8DTddzntSoisTKvxY5Anq6
+   g==;
+IronPort-SDR: XP5Y0NcYoUB40ZdNYS+KQTmfR/BzCSp2OSmsTZtUSkrrQVbpT2Uc4QEI85LYwCJgxWH9al8HqW
+ SckJRXlqcuS3rbWISm3f8272cxb4solw0ZTy54srF9Fr9I07btq1z9sXwc4UchJhRT9H3q+Ja2
+ Sef8PbvQrUr4WmY73EmExRcOBxVNMCxRMlM1qVBMkl7FjnUHtqkFdOOrk8C4Ee2WMXmP6AzMJF
+ AJ7e/TETQYy5i7Uqk1a9MYzZpOw1w/yOW9JnHoON+QY9D926lLXqcTOGFYT193oy7skmHpKGF7
+ lps=
+X-IronPort-AV: E=Sophos;i="5.69,327,1571673600"; 
+   d="scan'208";a="125583723"
+Received: from mail-co1nam11lp2168.outbound.protection.outlook.com (HELO NAM11-CO1-obe.outbound.protection.outlook.com) ([104.47.56.168])
+  by ob1.hgst.iphmx.com with ESMTP; 18 Dec 2019 08:57:23 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=cf3TjZDPJyL/T7iLV359TMz9rjgkDj9cYmycPBOTursrgVMucqgIFmkIDwNJqMU6uuQ7gj9/rZ3HdtdEst0LnrD0w2GWkZODQWTrETRFyvZ4J+zOFtHl6eFHOwvBVDMahJJNLqa/xQc7N5WwiZV7jwlRUfUzGEf0CmhQHinwmOsDNf0T21TIn9g1tE8mSuRPdweJJyiNuWsQ+Avplji9EtPvRxq6bFsrVwNxH2sMzWp/3CfeB0udgvB2t4eYj2FLBRJu9ErOaZJ/i2WrwtwLl7pDCtF2e3oB3vyT/jxi8baD++KxGZTBQdKlaEXefp408nNQi0a6AMcI6Wc4ipRpgg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=GZo4h8Oqx+9F0EfePin0UYLeGX/KzwgsGp8IDQrP21Y=;
+ b=gmfDtfJr/w0jkPNdKFUrafiE0RT7ExFGo3SDJsH9acdmFo7MsivKMjVwAOBXuC0isipfHJkKZdhdCDYS7V334GyOPb5Bu7Wq8L1/JEL8vMExDWhtbv1Uey4460iBNcHMVf4VGBQ0ddWxhtV2Ry4cwtt6D4IYI0N1yem7BOt7vHihCTkEn0phgpQfQhPtj1fddnAmyYvMbuj8KOh6k8EYxx5/pGS/R0wxFnThVxeqBMtML8oPkPec2g1MpApxFDp7DRPlSQtcnMFAcBanShVYGRsOZPVXD0RJthgCs8ip1DVqP9LGvyPmCAMj8kF875VeW2KW2SbchfK+tPXVPHwLjA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=GZo4h8Oqx+9F0EfePin0UYLeGX/KzwgsGp8IDQrP21Y=;
+ b=SFofzQ24JWeGkrn2Dz9ZPvoa+lk0CaoVZq+xu1KaCNFA2Ul1CkSokNBSrBeeauBXfOjlUDqw9BFKuCI/v0AZGUJhDquZBPX2vUwbosvMBH0kxaWhcfFRusXga7Zv//2WzR7UmT1KbU0vlobl/zT8MU9zuHZ3QHkiD837JbX+tPk=
+Received: from BYAPR04MB5816.namprd04.prod.outlook.com (20.179.59.16) by
+ BYAPR04MB4310.namprd04.prod.outlook.com (52.135.205.13) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2538.18; Wed, 18 Dec 2019 00:57:22 +0000
+Received: from BYAPR04MB5816.namprd04.prod.outlook.com
+ ([fe80::cd8e:d1de:e661:a61]) by BYAPR04MB5816.namprd04.prod.outlook.com
+ ([fe80::cd8e:d1de:e661:a61%5]) with mapi id 15.20.2559.012; Wed, 18 Dec 2019
+ 00:57:22 +0000
+From:   Damien Le Moal <Damien.LeMoal@wdc.com>
+To:     "Enrico Weigelt, metux IT consult" <lkml@metux.net>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 0/2] New zonefs file system
+Thread-Topic: [PATCH 0/2] New zonefs file system
+Thread-Index: AQHVsRth1IpCuMwSZ02s8MNISyP74A==
+Date:   Wed, 18 Dec 2019 00:57:22 +0000
+Message-ID: <BYAPR04MB5816C05227160785F7B88DA7E7530@BYAPR04MB5816.namprd04.prod.outlook.com>
+References: <20191212183816.102402-1-damien.lemoal@wdc.com>
+ <29fb138e-e9e5-5905-5422-4454c956e685@metux.net>
+ <20191216093557.2vackj7qakk2jngd@orion>
+ <73615b86-6da7-0e65-0dbc-c158159647ef@metux.net>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Damien.LeMoal@wdc.com; 
+x-originating-ip: [199.255.47.7]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: d2f2f138-66fd-4f60-8bbe-08d783553dac
+x-ms-traffictypediagnostic: BYAPR04MB4310:
+x-microsoft-antispam-prvs: <BYAPR04MB43108B56F78F91C7F3287493E7530@BYAPR04MB4310.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:8273;
+x-forefront-prvs: 0255DF69B9
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(346002)(376002)(366004)(136003)(396003)(39860400002)(199004)(189003)(8936002)(53546011)(6506007)(81166006)(81156014)(8676002)(26005)(55016002)(71200400001)(86362001)(7696005)(186003)(66446008)(66946007)(64756008)(66556008)(76116006)(66476007)(91956017)(316002)(110136005)(2906002)(33656002)(5660300002)(52536014)(478600001)(9686003)(2004002);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR04MB4310;H:BYAPR04MB5816.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: DjJyhHe6gxMKxASWQ947rzrqF6IOUm6Ji7+H82gdyQ5ZIS7t7+4Fmoy8/xhtFi9J3YzN8UPyVLATHxc9aykvNy25/uZVTH8j8ROd+lcpTc+fal4jbsWad/58Icf7SpsfRSCLClhz2yag/DVDEhDONIzAfo7iJEQPY54UmMmwBHt4EjzjeAJ4Dedy7vQCvI2Ej0x5qN6HJ/x15mxIe4xS4z1fVlCUsHgx26RCnEg5g4rJk7b7MXP8/0KwxhPygACP1jJWY1yNjA2reMOsJ9dRsYJBhZZ/wZgYpB8fS8upkYOgeP/2nsKzoP9VxECeuV5lc6jLd60BkJF7Ap6I9eLNbWlWCPK3e2hn7jak+uAoDb+3uBK8HeKJoVTf3wrlIqOAGn2yq4L6gsTAdawbClgf0iTR1yJrijcPP9l1EEx33udGJa7XAJbQ0uMgFYc5UdhEkuxcigZEz0HYoW4oMTwt4VRDuFw5Ax7RAFBmdUiXC3s=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: d2f2f138-66fd-4f60-8bbe-08d783553dac
+X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Dec 2019 00:57:22.4712
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 3kodV0ERqhJxCp9BW1TeKgGe66CYabMyydXT/d6jJD+ZPoRaGJn8NQgc82zFPHcK5nHgDwyD67BEDtzLHQIhPw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB4310
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Eric Sandeen <sandeen@redhat.com>
-
-The ability to use a mounted device node as the primary argument
-to xfs_growfs was added back in with:
-  7e8275f8 xfs_growfs: allow mounted device node as argument
-because it was an undocumented behavior that some userspace depended on.
-This test exercises that functionality.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-V2: Address Eryu's review concerns
-
-diff --git a/tests/xfs/999 b/tests/xfs/999
-new file mode 100755
-index 00000000..186a29eb
---- /dev/null
-+++ b/tests/xfs/999
-@@ -0,0 +1,101 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
-+#
-+# FS QA Test 999
-+#
-+# Test to ensure xfs_growfs command accepts device nodes if & only
-+# if they are mounted.
-+# This functionality, though undocumented, worked until xfsprogs v4.12
-+# It was added back and documented after xfsprogs v5.2 via
-+#   7e8275f8 xfs_growfs: allow mounted device node as argument
-+#
-+# Based on xfs/289
-+#
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+loopfile=$TEST_DIR/fsfile
-+mntdir=$TEST_DIR/mntdir
-+loop_symlink=$TEST_DIR/loop_symlink.$$
-+
-+_cleanup()
-+{
-+    $UMOUNT_PROG $mntdir
-+    [ -n "$loop_dev" ] && _destroy_loop_device $loop_dev
-+    rmdir $mntdir
-+    rm -f $loop_symlink
-+    rm -f $loopfile
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs xfs
-+_supported_os Linux
-+_require_test
-+_require_loop
-+
-+mkdir -p $mntdir || _fail "!!! failed to create temp mount dir"
-+
-+echo "=== mkfs.xfs ==="
-+$MKFS_XFS_PROG -d file,name=$loopfile,size=16m -f >/dev/null 2>&1
-+
-+echo "=== truncate ==="
-+$XFS_IO_PROG -fc "truncate 256m" $loopfile
-+
-+echo "=== create loop device ==="
-+loop_dev=$(_create_loop_device $loopfile)
-+
-+echo "=== create loop device symlink ==="
-+ln -s $loop_dev $loop_symlink
-+
-+echo "loop device is $loop_dev" >> $seqres.full
-+
-+# These unmounted operations should fail
-+
-+echo "=== xfs_growfs - unmounted device, command should be rejected ==="
-+$XFS_GROWFS_PROG $loop_dev 2>&1 | sed -e s:$loop_dev:LOOPDEV:
-+
-+echo "=== xfs_growfs - check symlinked dev, unmounted ==="
-+$XFS_GROWFS_PROG $loop_symlink 2>&1 | sed -e s:$loop_symlink:LOOPSYMLINK:
-+
-+# These mounted operations should pass
-+
-+echo "=== mount ==="
-+$MOUNT_PROG $loop_dev $mntdir || _fail "!!! failed to loopback mount"
-+
-+echo "=== xfs_growfs - check device node ==="
-+$XFS_GROWFS_PROG -D 8192 $loop_dev > /dev/null
-+
-+echo "=== xfs_growfs - check device symlink ==="
-+$XFS_GROWFS_PROG -D 12288 $loop_symlink > /dev/null
-+
-+echo "=== unmount ==="
-+$UMOUNT_PROG $mntdir || _fail "!!! failed to unmount"
-+
-+echo "=== mount device symlink ==="
-+$MOUNT_PROG $loop_symlink $mntdir || _fail "!!! failed to loopback mount"
-+
-+echo "=== xfs_growfs - check device symlink ==="
-+$XFS_GROWFS_PROG -D 16384 $loop_symlink > /dev/null
-+
-+echo "=== xfs_growfs - check device node ==="
-+$XFS_GROWFS_PROG -D 20480 $loop_dev > /dev/null
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/999.out b/tests/xfs/999.out
-new file mode 100644
-index 00000000..ababb892
---- /dev/null
-+++ b/tests/xfs/999.out
-@@ -0,0 +1,16 @@
-+QA output created by 999
-+=== mkfs.xfs ===
-+=== truncate ===
-+=== create loop device ===
-+=== create loop device symlink ===
-+=== xfs_growfs - unmounted device, command should be rejected ===
-+xfs_growfs: LOOPDEV is not a mounted XFS filesystem
-+=== xfs_growfs - check symlinked dev, unmounted ===
-+xfs_growfs: LOOPSYMLINK is not a mounted XFS filesystem
-+=== mount ===
-+=== xfs_growfs - check device node ===
-+=== xfs_growfs - check device symlink ===
-+=== unmount ===
-+=== mount device symlink ===
-+=== xfs_growfs - check device symlink ===
-+=== xfs_growfs - check device node ===
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 4373d082..ff251002 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -508,3 +508,4 @@
- 509 auto ioctl
- 510 auto ioctl quick
- 511 auto quick quota
-+999 quick auto growfs
-
+On 2019/12/17 21:34, Enrico Weigelt, metux IT consult wrote:=0A=
+> On 16.12.19 10:35, Carlos Maiolino wrote:=0A=
+> =0A=
+> Hi,=0A=
+> =0A=
+>>> Just curious: what's the exact definition of "zoned" here ?=0A=
+>>> Something like partitions ?=0A=
+>>=0A=
+>> Zones inside a SMR HDD.=0A=
+> =0A=
+> Oh, I wasn't aware that those things are exposed to the host at all.=0A=
+> Are you dealing with host-managed SMR-HDDs ?=0A=
+=0A=
+Yes. The host-managed models of SMR drives have become the de-facto=0A=
+standard for enterprise applications because of their more predictable=0A=
+performance compared to host-aware models.=0A=
+=0A=
+Many USB external disks these days also use SMR, but drive-managed=0A=
+models. These are regular block devices from the interface point of=0A=
+view: the host does not and cannot see the "zones" of the disk. SMR=0A=
+constraints are hidden by the device firmware.=0A=
+=0A=
+> =0A=
+>> On a SMR HDD, each zone can only be written sequentially, due to physics=
+=0A=
+>> constraints. I won't post any link with references because I think major=
+domo=0A=
+>> will spam my email if I do, but do a google search of something like 'SM=
+R HDD=0A=
+>> zones' and you'll get a better idea=0A=
+> =0A=
+> Reminds me on classic CDRs or tapes. Why not dealing them similarily ?=0A=
+=0A=
+Because of the performance difference. Excluding any software/use=0A=
+difference (i.e. GC overhead if needed), from a purely IO perspective,=0A=
+SMR host-managed disks are as fast as regular disks and can handle=0A=
+multiple streams simultaneously at high queue depth for better=0A=
+throughput (think video surveillance applications or video streaming).=0A=
+That is not the case for CDs or tapes.=0A=
+=0A=
+The performance difference with CDs and tapes, leading to different=0A=
+possible workloads and usage patterns, is even more pronounced with=0A=
+SSDs. In the end, only the write pattern looks similar with CDs and=0A=
+Tapes. Everything else is the same as a regular block device.=0A=
+=0A=
+> =0A=
+> =0A=
+> --mtx=0A=
+> =0A=
+> ---=0A=
+> Enrico Weigelt, metux IT consult=0A=
+> Free software and Linux embedded engineering=0A=
+> info@metux.net -- +49-151-27565287=0A=
+> =0A=
+=0A=
+=0A=
+-- =0A=
+Damien Le Moal=0A=
+Western Digital Research=0A=
