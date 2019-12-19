@@ -7,216 +7,108 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E752AC43603
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Dec 2019 11:55:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55C60C43603
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Dec 2019 11:56:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A6FDF24672
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Dec 2019 11:55:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2183424679
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Dec 2019 11:56:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VLhNc3X3"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hmc0XUf+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726701AbfLSLz6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Dec 2019 06:55:58 -0500
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:49482 "EHLO
+        id S1726757AbfLSL4P (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Dec 2019 06:56:15 -0500
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:34184 "EHLO
         us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726698AbfLSLz5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Dec 2019 06:55:57 -0500
+        by vger.kernel.org with ESMTP id S1726668AbfLSL4O (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Dec 2019 06:56:14 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1576756555;
+        s=mimecast20190719; t=1576756573;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=1l+AtS/ivoBglmcX/mBLEcaaeZdb1d9AtEqP/25M+pU=;
-        b=VLhNc3X3aeZAQteauTTSCf8LvHqbGeYXrZ9OJhh/k9L0+GEL0jy1h9nRFxTgz5XGbqblG1
-        9CalIAV+4+6gFwTITMdbCFoZys2vpJQoz2NP5jrS3DGSBj1VX+w1EMyHVJELuqoIJZTp4y
-        DwwKHukhPOkMxr4+2RG99PjXdnUrYJI=
+        bh=OKAC8eiKIbYvzGu8uA+yUMq3QxWuO4209nq/ZrmpRoE=;
+        b=hmc0XUf+6lU47riIxbkyL2HiszMPeB2Ufa0sF5eXkPZp3C+cVr5vkR+DgXl/Q3RxjVzcRP
+        LTbVM30MeDuZcOULV3VM8Lm5xzBx9aS5W90Tu7JPDbYildoXLFqtSrmHTzoH5UoFuhZlhS
+        iTEOPT+nbM2absWCXU6ljZGV5H3JdWI=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-29-9A5w6ddDNlmm9LPYL_yvWQ-1; Thu, 19 Dec 2019 06:55:54 -0500
-X-MC-Unique: 9A5w6ddDNlmm9LPYL_yvWQ-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+ us-mta-267-MTt8YQcvNwC3SRU-0Y9WbA-1; Thu, 19 Dec 2019 06:56:10 -0500
+X-MC-Unique: MTt8YQcvNwC3SRU-0Y9WbA-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id EE5F9801F7A;
-        Thu, 19 Dec 2019 11:55:52 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 63424800D53;
+        Thu, 19 Dec 2019 11:56:09 +0000 (UTC)
 Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8604B5D9E2;
-        Thu, 19 Dec 2019 11:55:52 +0000 (UTC)
-Date:   Thu, 19 Dec 2019 06:55:50 -0500
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 0E0B367E47;
+        Thu, 19 Dec 2019 11:56:08 +0000 (UTC)
+Date:   Thu, 19 Dec 2019 06:56:07 -0500
 From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: rework insert range into an atomic operation
-Message-ID: <20191219115550.GA6995@bfoster>
+Subject: Re: [PATCH 3/3] xfs: rework collapse range into an atomic operation
+Message-ID: <20191219115607.GB6995@bfoster>
 References: <20191213171258.36934-1-bfoster@redhat.com>
- <20191213171258.36934-3-bfoster@redhat.com>
- <20191218023726.GH12765@magnolia>
- <20191218121033.GA63809@bfoster>
- <20191218211540.GB7489@magnolia>
+ <20191213171258.36934-4-bfoster@redhat.com>
+ <20191218023958.GI12765@magnolia>
+ <20191218121120.GB63809@bfoster>
+ <20191218211905.GC7489@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191218211540.GB7489@magnolia>
+In-Reply-To: <20191218211905.GC7489@magnolia>
 User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Dec 18, 2019 at 01:15:40PM -0800, Darrick J. Wong wrote:
-> On Wed, Dec 18, 2019 at 07:10:33AM -0500, Brian Foster wrote:
-> > On Tue, Dec 17, 2019 at 06:37:26PM -0800, Darrick J. Wong wrote:
-> > > On Fri, Dec 13, 2019 at 12:12:57PM -0500, Brian Foster wrote:
-> > > > The insert range operation uses a unique transaction and ilock cycle
-> > > > for the extent split and each extent shift iteration of the overall
-> > > > operation. While this works, it is risks racing with other
-> > > > operations in subtle ways such as COW writeback modifying an extent
-> > > > tree in the middle of a shift operation.
-> > > > 
-> > > > To avoid this problem, make insert range atomic with respect to
-> > > > ilock. Hold the ilock across the entire operation, replace the
-> > > > individual transactions with a single rolling transaction sequence
-> > > > and relog the inode to keep it moving in the log. This guarantees
-> > > > that nothing else can change the extent mapping of an inode while
-> > > > an insert range operation is in progress.
-> > > > 
-> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > > ---
-> > > >  fs/xfs/xfs_bmap_util.c | 32 +++++++++++++-------------------
-> > > >  1 file changed, 13 insertions(+), 19 deletions(-)
-> > > > 
-> > > > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> > > > index 829ab1a804c9..555c8b49a223 100644
-> > > > --- a/fs/xfs/xfs_bmap_util.c
-> > > > +++ b/fs/xfs/xfs_bmap_util.c
-> > > > @@ -1134,47 +1134,41 @@ xfs_insert_file_space(
-> > > >  	if (error)
-> > > >  		return error;
-> > > >  
-> > > > -	/*
-> > > > -	 * The extent shifting code works on extent granularity. So, if stop_fsb
-> > > > -	 * is not the starting block of extent, we need to split the extent at
-> > > > -	 * stop_fsb.
-> > > > -	 */
-> > > >  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write,
-> > > >  			XFS_DIOSTRAT_SPACE_RES(mp, 0), 0, 0, &tp);
-> > > >  	if (error)
-> > > >  		return error;
-> > > >  
-> > > >  	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> > > > -	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-> > > > +	xfs_trans_ijoin(tp, ip, 0);
-> > > >  
-> > > > +	/*
-> > > > +	 * The extent shifting code works on extent granularity. So, if stop_fsb
-> > > > +	 * is not the starting block of extent, we need to split the extent at
-> > > > +	 * stop_fsb.
-> > > > +	 */
-> > > >  	error = xfs_bmap_split_extent(tp, ip, stop_fsb);
-> > > >  	if (error)
-> > > >  		goto out_trans_cancel;
-> > > >  
-> > > > -	error = xfs_trans_commit(tp);
-> > > > -	if (error)
-> > > > -		return error;
-> > > > -
-> > > > -	while (!error && !done) {
-> > > > -		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0, 0,
-> > > > -					&tp);
+On Wed, Dec 18, 2019 at 01:19:05PM -0800, Darrick J. Wong wrote:
+> On Wed, Dec 18, 2019 at 07:11:20AM -0500, Brian Foster wrote:
+> > On Tue, Dec 17, 2019 at 06:39:58PM -0800, Darrick J. Wong wrote:
+> > > On Fri, Dec 13, 2019 at 12:12:58PM -0500, Brian Foster wrote:
+> > > > The collapse range operation uses a unique transaction and ilock
+> > > > cycle for the hole punch and each extent shift iteration of the
+> > > > overall operation. While the hole punch is safe as a separate
+> > > > operation due to the iolock, cycling the ilock after each extent
+> > > > shift is risky similar to insert range.
 > > > 
-> > > I'm a little concerned about the livelock potential here, if there are a lot of
-> > > other threads that have eaten all the transaction reservation and are trying to
-> > > get our ILOCK, while at the same time this thread has the ILOCK and is trying
-> > > to roll the transaction to move another extent, having already rolled the
-> > > transaction more than logcount times.
+> > > It is?  I thought collapse range was safe because we started by punching
+> > > out the doomed range and shifting downwards, which eliminates the
+> > > problems that come with two adjacent mappings that could be combined?
+> > > 
+> > > <confused?>
 > > > 
 > > 
-> > My understanding is that the regrant mechanism is intended to deal with
-> > that scenario. Even after the initial (res * logcount) reservation is
-> > consumed, a regrant is different from an initial reservation in that the
-> > reservation head is unconditionally updated with a new reservation unit.
-> > We do wait on the write head in regrant, but IIUC that should be limited
-> > to the pool of already allocated transactions (and is woken before the
-> > reserve head waiters IIRC). I suppose something like this might be
-> > possible in theory if we were blocked on regrant and the entirety of
-> > remaining log space was consumed by transactions waiting on our ilock,
-> > but I think that is highly unlikely since we also hold the iolock here.
+> > This is somewhat vague wording. I don't mean to say the same bug is
+> > possible on collapse. Indeed, I don't think that it is. What I mean to
+> > say is just that cycling the ilock generally opens the operation up to
+> > concurrent extent changes, similar to the behavior that resulted in the
+> > insert range bug and against the general design principle of the
+> > operation (as implied by the iolock hold -> flush -> unmap preparation
+> > sequence).
 > 
-> True.  The only time I saw this happen was with buffered COW writeback
-> completions (which hold lock other than ILOCK), which should have been
-> fixed by the patch I made to put all the writeback items to a single
-> inode queue and run /one/ worker thread to process them all.  So maybe
-> my fears are unfounded nowadays. :)
+> Oh, ok, you're merely trying to prevent anyone from seeing the inode
+> metadata while we're in the middle of a collapse-range operation.  I
+> wonder then if we need to take a look at the remap range operations, but
+> oh wow is that a gnarly mess of inode locking. :)
 > 
 
-Ok. If I'm following correctly, that goes back to this[1] commit. The
-commit log describes a situation where we basically have unbound,
-concurrent attempts to do to COW remappings on writeback completion.
-That leads to heavy ilock contention and the potential for deadlocks
-between log reservation and inode locks. Out of curiosity, was that old
-scheme bad enough to reproduce that kind of deadlock or was the deadlock
-description based on code analysis?
-
-I am a bit curious how "deadlock avoidant" the current transaction
-rolling/regrant mechanism is intended to be on its own vs. how much
-responsibility is beared by the implementation of certain operations
-(like truncate holding IOLOCK and assuming that sufficiently restricts
-object access). ISTM that it's technically possible for this lockup
-state to occur, but it relies on something unusual like the above where
-we allow enough unbound (open reservation -> lock) concurrency on a
-single metadata object to exhaust all log space.
-
-[1] cb357bf3d1 ("xfs: implement per-inode writeback completion queues")
-
-> The only other place I can think of that does a lot of transaction
-> rolling on a single inode is online repair, and it always holds all
-> three exclusive locks.
-> 
-
-So I guess that should similarly hold off transaction reservation from
-userspace intended to modify the particular inode, provided the XFS
-internals play nice (re: your workqueue fix above).
-
-> > Also note that this approach is based on the current truncate algorithm,
-> > which is probably a better barometer of potential for this kind of issue
-> > as it is a less specialized operation. I'd argue that if this is safe
-> > enough for truncate, it should be safe enough for range shifting.
-> 
-> Hehehe.
-> 
-> > > I think the extent shifting loop starts with the highest offset mapping and
-> > > shifts it up and continues in order of decreasing offset until it gets to
-> > >  @stop_fsb, correct?
-> > > 
-> > 
-> > Yep, for insert range at least.
-> > 
-> > > Can we use "alloc trans; ilock; move; commit" for every extent higher than the
-> > > one that crosses @stop_fsb, and use "alloc trans; ilock; split; roll;
-> > > insert_extents; commit" to deal with that one extent that crosses @stop_fsb?
-> > > tr_write pre-reserves enough space to that the roll won't need to get more,
-> > > which would eliminate that potential problem, I think.
-> > > 
-> > 
-> > We'd have to reorder the extent split for that kind of approach, which I
-> > think you've noted in the sequence above, as the race window is between
-> > the split and subsequent shift. Otherwise I think that would work.
-> > 
-> > That said, I'd prefer not to introduce the extra complexity and
-> > functional variance unless it were absolutely necessary, and it's not
-> > clear to me that it is. If it is, we'd probably have seen similar issues
-> > in truncate and should target a fix there before worrying about range
-> > shift.
-> 
-> Ok.  Looking back through lore I don't see any complaints about insert
-> range, so I guess it's fine.
-> 
-
-Ok, thanks.
+Yeah, that's actually a much better way to put it. ;) Feel free to tweak
+the commit log along those lines if my current description is too
+vague/confusing. Thanks for the reviews..
 
 Brian
 
+> > IOW, it seems to me that a similar behavior is possible on collapse, it
+> > just might occur after an extent has been shifted into its new target
+> > range rather than before. That wouldn't be a corruption/bug because it
+> > doesn't change the semantics of the shift operation or the content of
+> > the file, but it's subtle and arguably a misbehavior and/or landmine.
+> 
+> <nod> Ok, just making sure. :)
+> 
 > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
 > --D
@@ -225,23 +117,72 @@ Brian
 > > 
 > > > --D
 > > > 
-> > > > +	do {
-> > > > +		error = xfs_trans_roll_inode(&tp, ip);
-> > > >  		if (error)
+> > > > To avoid this problem, make collapse range atomic with respect to
+> > > > ilock. Hold the ilock across the entire operation, replace the
+> > > > individual transactions with a single rolling transaction sequence
+> > > > and finish dfops on each iteration to perform pending frees and roll
+> > > > the transaction. Remove the unnecessary quota reservation as
+> > > > collapse range can only ever merge extents (and thus remove extent
+> > > > records and potentially free bmap blocks). The dfops call
+> > > > automatically relogs the inode to keep it moving in the log. This
+> > > > guarantees that nothing else can change the extent mapping of an
+> > > > inode while a collapse range operation is in progress.
+> > > > 
+> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > > ---
+> > > >  fs/xfs/xfs_bmap_util.c | 29 +++++++++++++++--------------
+> > > >  1 file changed, 15 insertions(+), 14 deletions(-)
+> > > > 
+> > > > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> > > > index 555c8b49a223..1c34a34997ca 100644
+> > > > --- a/fs/xfs/xfs_bmap_util.c
+> > > > +++ b/fs/xfs/xfs_bmap_util.c
+> > > > @@ -1050,7 +1050,6 @@ xfs_collapse_file_space(
+> > > >  	int			error;
+> > > >  	xfs_fileoff_t		next_fsb = XFS_B_TO_FSB(mp, offset + len);
+> > > >  	xfs_fileoff_t		shift_fsb = XFS_B_TO_FSB(mp, len);
+> > > > -	uint			resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
+> > > >  	bool			done = false;
+> > > >  
+> > > >  	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+> > > > @@ -1066,32 +1065,34 @@ xfs_collapse_file_space(
+> > > >  	if (error)
+> > > >  		return error;
+> > > >  
+> > > > -	while (!error && !done) {
+> > > > -		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0,
+> > > > -					&tp);
+> > > > -		if (error)
 > > > > -			break;
-> > > > +			goto out_trans_cancel;
+> > > > +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0, 0, &tp);
+> > > > +	if (error)
+> > > > +		return error;
 > > > >  
 > > > > -		xfs_ilock(ip, XFS_ILOCK_EXCL);
+> > > > -		error = xfs_trans_reserve_quota(tp, mp, ip->i_udquot,
+> > > > -				ip->i_gdquot, ip->i_pdquot, resblks, 0,
+> > > > -				XFS_QMOPT_RES_REGBLKS);
+> > > > -		if (error)
+> > > > -			goto out_trans_cancel;
 > > > > -		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-> > > >  		error = xfs_bmap_insert_extents(tp, ip, &next_fsb, shift_fsb,
-> > > >  				&done, stop_fsb);
+> > > > +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> > > > +	xfs_trans_ijoin(tp, ip, 0);
+> > > >  
+> > > > +	while (!done) {
+> > > >  		error = xfs_bmap_collapse_extents(tp, ip, &next_fsb, shift_fsb,
+> > > >  				&done);
 > > > >  		if (error)
 > > > >  			goto out_trans_cancel;
-> > > > +	} while (!done);
+> > > > +		if (done)
+> > > > +			break;
 > > > >  
 > > > > -		error = xfs_trans_commit(tp);
-> > > > -	}
-> > > > -
+> > > > +		/* finish any deferred frees and roll the transaction */
+> > > > +		error = xfs_defer_finish(&tp);
+> > > > +		if (error)
+> > > > +			goto out_trans_cancel;
+> > > >  	}
+> > > >  
 > > > > +	error = xfs_trans_commit(tp);
 > > > > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
 > > > >  	return error;
