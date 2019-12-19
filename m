@@ -2,115 +2,260 @@ Return-Path: <SRS0=RLxe=2J=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADE7EC43603
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Dec 2019 01:04:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E752AC43603
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Dec 2019 11:55:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8B5CC218AC
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Dec 2019 01:04:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A6FDF24672
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Dec 2019 11:55:58 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VLhNc3X3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726616AbfLSBEf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Dec 2019 20:04:35 -0500
-Received: from sandeen.net ([63.231.237.45]:55454 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726599AbfLSBEf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 18 Dec 2019 20:04:35 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1726701AbfLSLz6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Dec 2019 06:55:58 -0500
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:49482 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726698AbfLSLz5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Dec 2019 06:55:57 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1576756555;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=1l+AtS/ivoBglmcX/mBLEcaaeZdb1d9AtEqP/25M+pU=;
+        b=VLhNc3X3aeZAQteauTTSCf8LvHqbGeYXrZ9OJhh/k9L0+GEL0jy1h9nRFxTgz5XGbqblG1
+        9CalIAV+4+6gFwTITMdbCFoZys2vpJQoz2NP5jrS3DGSBj1VX+w1EMyHVJELuqoIJZTp4y
+        DwwKHukhPOkMxr4+2RG99PjXdnUrYJI=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-29-9A5w6ddDNlmm9LPYL_yvWQ-1; Thu, 19 Dec 2019 06:55:54 -0500
+X-MC-Unique: 9A5w6ddDNlmm9LPYL_yvWQ-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 8AB514434;
-        Wed, 18 Dec 2019 19:04:19 -0600 (CST)
-Subject: Re: [PATCH 2/2] libfrog: move topology.[ch] to libxfs
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id EE5F9801F7A;
+        Thu, 19 Dec 2019 11:55:52 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8604B5D9E2;
+        Thu, 19 Dec 2019 11:55:52 +0000 (UTC)
+Date:   Thu, 19 Dec 2019 06:55:50 -0500
+From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-References: <157671084242.190323.8759111252624617622.stgit@magnolia>
- <157671085471.190323.17808121856491080720.stgit@magnolia>
- <60af7775-96f6-7dcb-9310-47b509c8f0f5@sandeen.net>
- <20191219001208.GN7489@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <b48693ed-3c4d-bfc8-c82f-48f871b2dc77@sandeen.net>
-Date:   Wed, 18 Dec 2019 19:04:32 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.3.1
+Subject: Re: [PATCH 2/3] xfs: rework insert range into an atomic operation
+Message-ID: <20191219115550.GA6995@bfoster>
+References: <20191213171258.36934-1-bfoster@redhat.com>
+ <20191213171258.36934-3-bfoster@redhat.com>
+ <20191218023726.GH12765@magnolia>
+ <20191218121033.GA63809@bfoster>
+ <20191218211540.GB7489@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20191219001208.GN7489@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191218211540.GB7489@magnolia>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 12/18/19 6:12 PM, Darrick J. Wong wrote:
-> On Wed, Dec 18, 2019 at 05:26:44PM -0600, Eric Sandeen wrote:
->> On 12/18/19 5:14 PM, Darrick J. Wong wrote:
->>> From: Darrick J. Wong <darrick.wong@oracle.com>
->>>
->>> The functions in libfrog/topology.c rely on internal libxfs symbols and
->>> functions, so move this file from libfrog to libxfs.
->>
->> None of this is used anywhere but mkfs & repair, and it's not really
->> part of libxfs per se (i.e. it shares nothing w/ kernel code).
->>
->> It used to be in libxcmd.  Perhaps it should just be moved back?
+On Wed, Dec 18, 2019 at 01:15:40PM -0800, Darrick J. Wong wrote:
+> On Wed, Dec 18, 2019 at 07:10:33AM -0500, Brian Foster wrote:
+> > On Tue, Dec 17, 2019 at 06:37:26PM -0800, Darrick J. Wong wrote:
+> > > On Fri, Dec 13, 2019 at 12:12:57PM -0500, Brian Foster wrote:
+> > > > The insert range operation uses a unique transaction and ilock cycle
+> > > > for the extent split and each extent shift iteration of the overall
+> > > > operation. While this works, it is risks racing with other
+> > > > operations in subtle ways such as COW writeback modifying an extent
+> > > > tree in the middle of a shift operation.
+> > > > 
+> > > > To avoid this problem, make insert range atomic with respect to
+> > > > ilock. Hold the ilock across the entire operation, replace the
+> > > > individual transactions with a single rolling transaction sequence
+> > > > and relog the inode to keep it moving in the log. This guarantees
+> > > > that nothing else can change the extent mapping of an inode while
+> > > > an insert range operation is in progress.
+> > > > 
+> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > > ---
+> > > >  fs/xfs/xfs_bmap_util.c | 32 +++++++++++++-------------------
+> > > >  1 file changed, 13 insertions(+), 19 deletions(-)
+> > > > 
+> > > > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> > > > index 829ab1a804c9..555c8b49a223 100644
+> > > > --- a/fs/xfs/xfs_bmap_util.c
+> > > > +++ b/fs/xfs/xfs_bmap_util.c
+> > > > @@ -1134,47 +1134,41 @@ xfs_insert_file_space(
+> > > >  	if (error)
+> > > >  		return error;
+> > > >  
+> > > > -	/*
+> > > > -	 * The extent shifting code works on extent granularity. So, if stop_fsb
+> > > > -	 * is not the starting block of extent, we need to split the extent at
+> > > > -	 * stop_fsb.
+> > > > -	 */
+> > > >  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write,
+> > > >  			XFS_DIOSTRAT_SPACE_RES(mp, 0), 0, 0, &tp);
+> > > >  	if (error)
+> > > >  		return error;
+> > > >  
+> > > >  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> > > > -	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+> > > > +	xfs_trans_ijoin(tp, ip, 0);
+> > > >  
+> > > > +	/*
+> > > > +	 * The extent shifting code works on extent granularity. So, if stop_fsb
+> > > > +	 * is not the starting block of extent, we need to split the extent at
+> > > > +	 * stop_fsb.
+> > > > +	 */
+> > > >  	error = xfs_bmap_split_extent(tp, ip, stop_fsb);
+> > > >  	if (error)
+> > > >  		goto out_trans_cancel;
+> > > >  
+> > > > -	error = xfs_trans_commit(tp);
+> > > > -	if (error)
+> > > > -		return error;
+> > > > -
+> > > > -	while (!error && !done) {
+> > > > -		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0, 0,
+> > > > -					&tp);
+> > > 
+> > > I'm a little concerned about the livelock potential here, if there are a lot of
+> > > other threads that have eaten all the transaction reservation and are trying to
+> > > get our ILOCK, while at the same time this thread has the ILOCK and is trying
+> > > to roll the transaction to move another extent, having already rolled the
+> > > transaction more than logcount times.
+> > > 
+> > 
+> > My understanding is that the regrant mechanism is intended to deal with
+> > that scenario. Even after the initial (res * logcount) reservation is
+> > consumed, a regrant is different from an initial reservation in that the
+> > reservation head is unconditionally updated with a new reservation unit.
+> > We do wait on the write head in regrant, but IIUC that should be limited
+> > to the pool of already allocated transactions (and is woken before the
+> > reserve head waiters IIRC). I suppose something like this might be
+> > possible in theory if we were blocked on regrant and the entirety of
+> > remaining log space was consumed by transactions waiting on our ilock,
+> > but I think that is highly unlikely since we also hold the iolock here.
 > 
-> But the whole point of getting it out of libxcmd was that it had nothing
-> to do with command processing.
+> True.  The only time I saw this happen was with buffered COW writeback
+> completions (which hold lock other than ILOCK), which should have been
+> fixed by the patch I made to put all the writeback items to a single
+> inode queue and run /one/ worker thread to process them all.  So maybe
+> my fears are unfounded nowadays. :)
+> 
 
-Yeah I almost asked that.  ;)
- 
-> I dunno, I kinda wonder if this should just be libxtopo or something.
+Ok. If I'm following correctly, that goes back to this[1] commit. The
+commit log describes a situation where we basically have unbound,
+concurrent attempts to do to COW remappings on writeback completion.
+That leads to heavy ilock contention and the potential for deadlocks
+between log reservation and inode locks. Out of curiosity, was that old
+scheme bad enough to reproduce that kind of deadlock or was the deadlock
+description based on code analysis?
 
-bleargh, not sure what it gains us to keep creating little internal libraries,
-either.
+I am a bit curious how "deadlock avoidant" the current transaction
+rolling/regrant mechanism is intended to be on its own vs. how much
+responsibility is beared by the implementation of certain operations
+(like truncate holding IOLOCK and assuming that sufficiently restricts
+object access). ISTM that it's technically possible for this lockup
+state to occur, but it relies on something unusual like the above where
+we allow enough unbound (open reservation -> lock) concurrency on a
+single metadata object to exhaust all log space.
 
-I guess I don't really care, tbh.  Doesn't feel right to shove unrelated stuff
-into libxfs/ though, when its main rationale is to share kernel code.
+[1] cb357bf3d1 ("xfs: implement per-inode writeback completion queues")
 
--Eric
+> The only other place I can think of that does a lot of transaction
+> rolling on a single inode is online repair, and it always holds all
+> three exclusive locks.
+> 
+
+So I guess that should similarly hold off transaction reservation from
+userspace intended to modify the particular inode, provided the XFS
+internals play nice (re: your workqueue fix above).
+
+> > Also note that this approach is based on the current truncate algorithm,
+> > which is probably a better barometer of potential for this kind of issue
+> > as it is a less specialized operation. I'd argue that if this is safe
+> > enough for truncate, it should be safe enough for range shifting.
+> 
+> Hehehe.
+> 
+> > > I think the extent shifting loop starts with the highest offset mapping and
+> > > shifts it up and continues in order of decreasing offset until it gets to
+> > >  @stop_fsb, correct?
+> > > 
+> > 
+> > Yep, for insert range at least.
+> > 
+> > > Can we use "alloc trans; ilock; move; commit" for every extent higher than the
+> > > one that crosses @stop_fsb, and use "alloc trans; ilock; split; roll;
+> > > insert_extents; commit" to deal with that one extent that crosses @stop_fsb?
+> > > tr_write pre-reserves enough space to that the roll won't need to get more,
+> > > which would eliminate that potential problem, I think.
+> > > 
+> > 
+> > We'd have to reorder the extent split for that kind of approach, which I
+> > think you've noted in the sequence above, as the race window is between
+> > the split and subsequent shift. Otherwise I think that would work.
+> > 
+> > That said, I'd prefer not to introduce the extra complexity and
+> > functional variance unless it were absolutely necessary, and it's not
+> > clear to me that it is. If it is, we'd probably have seen similar issues
+> > in truncate and should target a fix there before worrying about range
+> > shift.
+> 
+> Ok.  Looking back through lore I don't see any complaints about insert
+> range, so I guess it's fine.
+> 
+
+Ok, thanks.
+
+Brian
+
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> --D
+> 
+> > Brian
+> > 
+> > > --D
+> > > 
+> > > > +	do {
+> > > > +		error = xfs_trans_roll_inode(&tp, ip);
+> > > >  		if (error)
+> > > > -			break;
+> > > > +			goto out_trans_cancel;
+> > > >  
+> > > > -		xfs_ilock(ip, XFS_ILOCK_EXCL);
+> > > > -		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+> > > >  		error = xfs_bmap_insert_extents(tp, ip, &next_fsb, shift_fsb,
+> > > >  				&done, stop_fsb);
+> > > >  		if (error)
+> > > >  			goto out_trans_cancel;
+> > > > +	} while (!done);
+> > > >  
+> > > > -		error = xfs_trans_commit(tp);
+> > > > -	}
+> > > > -
+> > > > +	error = xfs_trans_commit(tp);
+> > > > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > > >  	return error;
+> > > >  
+> > > >  out_trans_cancel:
+> > > >  	xfs_trans_cancel(tp);
+> > > > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > > >  	return error;
+> > > >  }
+> > > >  
+> > > > -- 
+> > > > 2.20.1
+> > > > 
+> > > 
+> > 
+> 
+
