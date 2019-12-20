@@ -2,296 +2,1745 @@ Return-Path: <SRS0=kies=2K=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FC91C43603
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Dec 2019 21:59:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60CE8C43603
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Dec 2019 22:38:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 26B6D21655
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Dec 2019 21:59:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 06C582082E
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Dec 2019 22:38:44 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="eepFu9fE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727489AbfLTV7T (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 Dec 2019 16:59:19 -0500
-Received: from sandeen.net ([63.231.237.45]:40248 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727473AbfLTV7T (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 20 Dec 2019 16:59:19 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 5A4F1146282
-        for <linux-xfs@vger.kernel.org>; Fri, 20 Dec 2019 15:59:00 -0600 (CST)
-To:     linux-xfs <linux-xfs@vger.kernel.org>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs v5.4.0 released
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <a5cdfcf1-48dc-1ff6-bf4c-6c9ad2b2fdc8@sandeen.net>
-Date:   Fri, 20 Dec 2019 15:59:15 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.3.1
+        id S1726633AbfLTWin (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 Dec 2019 17:38:43 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:47844 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726571AbfLTWin (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Dec 2019 17:38:43 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBKMYFPZ129521;
+        Fri, 20 Dec 2019 22:38:29 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=xHa4YQtZ3msV+gWBH1yVRL3JLck8BD/BfxfbE54aFEY=;
+ b=eepFu9fE/DdhAspVC7FJ+u+UfFf11sSk2OzOdkGDVGvevR1v2Kz+tXrmNl88xy3s+nLH
+ 3T+pcueFlrusSIzb4+7J7mgNOJf3FzozMuH2rD47lBOHptJq/ClG28p5BlHc8xvtwQEB
+ 8M4pKBRMJJLYBigrGBDd4gDaN+sHq2LBkjZKWCi+YCrvkpFk4xH35ox6ekG4mKUEBRrn
+ sOVx4Q2ILOvyw9i2poshMuNhw4eAG+2O8UHRJRGkquVXCpddMvl4x4tsWarCLiTHdRrm
+ 7UEnrzBci642PaxH4XPRA6X4v/ljDRWVN3C3CiSzJ/qWSlsVv1Qqd2w/oC0mFDCftkRO cA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2x0ag18a3f-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 20 Dec 2019 22:38:28 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBKMJqvp088237;
+        Fri, 20 Dec 2019 22:36:28 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 2x0bgp91ua-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 20 Dec 2019 22:36:27 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xBKMaQR4011997;
+        Fri, 20 Dec 2019 22:36:26 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 20 Dec 2019 14:36:25 -0800
+Date:   Fri, 20 Dec 2019 14:36:24 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Damien Le Moal <damien.lemoal@wdc.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Johannes Thumshirn <jth@kernel.org>,
+        Naohiro Aota <naohiro.aota@wdc.com>,
+        Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v2 1/2] fs: New zonefs file system
+Message-ID: <20191220223624.GC7476@magnolia>
+References: <20191220065528.317947-1-damien.lemoal@wdc.com>
+ <20191220065528.317947-2-damien.lemoal@wdc.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="U7qmKhO2NWBQuzDXRRgQcm7l7RjlnxXPn"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191220065528.317947-2-damien.lemoal@wdc.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9477 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=52 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-1912200172
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9477 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=52 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-1912200173
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---U7qmKhO2NWBQuzDXRRgQcm7l7RjlnxXPn
-Content-Type: multipart/mixed; boundary="ww6Utlr43GtkvNGtPz2H5K5b44OhL3i9X"
+On Fri, Dec 20, 2019 at 03:55:27PM +0900, Damien Le Moal wrote:
+> zonefs is a very simple file system exposing each zone of a zoned block
+> device as a file. Unlike a regular file system with zoned block device
+> support (e.g. f2fs), zonefs does not hide the sequential write
+> constraint of zoned block devices to the user. Files representing
+> sequential write zones of the device must be written sequentially
+> starting from the end of the file (append only writes).
+> 
+> As such, zonefs is in essence closer to a raw block device access
+> interface than to a full featured POSIX file system. The goal of zonefs
+> is to simplify the implementation of zoned block devices support in
+> applications by replacing raw block device file accesses with a richer
+> file API, avoiding relying on direct block device file ioctls which may
+> be more obscure to developers. One example of this approach is the
+> implementation of LSM (log-structured merge) tree structures (such as
+> used in RocksDB and LevelDB) on zoned block devices by allowing SSTables
+> to be stored in a zone file similarly to a regular file system rather
+> than as a range of sectors of a zoned device. The introduction of the
+> higher level construct "one file is one zone" can help reducing the
+> amount of changes needed in the application as well as introducing
+> support for different application programming languages.
+> 
+> Zonefs on-disk metadata is reduced to an immutable super block to
+> persistently store a magic number and optional features flags and
+> values. On mount, zonefs uses blkdev_report_zones() to obtain the device
+> zone configuration and populates the mount point with a static file tree
+> solely based on this information. E.g. file sizes come from the device
+> zone type and write pointer offset managed by the device itself.
+> 
+> The zone files created on mount have the following characteristics.
+> 1) Files representing zones of the same type are grouped together
+>    under a common sub-directory:
+>      * For conventional zones, the sub-directory "cnv" is used.
+>      * For sequential write zones, the sub-directory "seq" is used.
+>   These two directories are the only directories that exist in zonefs.
+>   Users cannot create other directories and cannot rename nor delete
+>   the "cnv" and "seq" sub-directories.
+> 2) The name of zone files is the number of the file within the zone
+>    type sub-directory, in order of increasing zone start sector.
+> 3) The size of conventional zone files is fixed to the device zone size.
+>    Conventional zone files cannot be truncated.
+> 4) The size of sequential zone files represent the file's zone write
+>    pointer position relative to the zone start sector. Truncating these
+>    files is allowed only down to 0, in wich case, the zone is reset to
+>    rewind the zone write pointer position to the start of the zone, or
+>    up to the zone size, in which case the file's zone is transitioned
+>    to the FULL state (finish zone operation).
+> 5) All read and write operations to files are not allowed beyond the
+>    file zone size. Any access exceeding the zone size is failed with
+>    the -EFBIG error.
+> 6) Creating, deleting, renaming or modifying any attribute of files and
+>    sub-directories is not allowed.
+> 7) There are no restrictions on the type of read and write operations
+>    that can be issued to conventional zone files. Buffered, direct and
+>    mmap read & write operations are accepted. For sequential zone files,
+>    there are no restrictions on read operations, but all write
+>    operations must be direct IO append writes. mmap write of sequential
+>    files is not allowed.
+> 
+> Several optional features of zonefs can be enabled at format time.
+> * Conventional zone aggregation: ranges of contiguous conventional
+>   zones can be agregated into a single larger file instead of the
+>   default one file per zone.
+> * File ownership: The owner UID and GID of zone files is by default 0
+>   (root) but can be changed to any valid UID/GID.
+> * File access permissions: the default 640 access permissions can be
+>   changed.
+> 
+> The mkzonefs tool is used to format zoned block devices for use with
+> zonefs. This tool is available on Github at:
+> 
+> git@github.com:damien-lemoal/zonefs-tools.git.
+> 
+> zonefs-tools also includes a test suite which can be run against any
+> zoned block device, including null_blk block device created with zoned
+> mode.
+> 
+> Example: the following formats a 15TB host-managed SMR HDD with 256 MB
+> zones with the conventional zones aggregation feature enabled.
+> 
+> $ sudo mkzonefs -o aggr_cnv /dev/sdX
+> $ sudo mount -t zonefs /dev/sdX /mnt
+> $ ls -l /mnt/
+> total 0
+> dr-xr-xr-x 2 root root     1 Nov 25 13:23 cnv
+> dr-xr-xr-x 2 root root 55356 Nov 25 13:23 seq
+> 
+> The size of the zone files sub-directories indicate the number of files
+> existing for each type of zones. In this example, there is only one
+> conventional zone file (all conventional zones are agreggated under a
+> single file).
+> 
+> $ ls -l /mnt/cnv
+> total 137101312
+> -rw-r----- 1 root root 140391743488 Nov 25 13:23 0
+> 
+> This aggregated conventional zone file can be used as a regular file.
+> 
+> $ sudo mkfs.ext4 /mnt/cnv/0
+> $ sudo mount -o loop /mnt/cnv/0 /data
+> 
+> The "seq" sub-directory grouping files for sequential write zones has
+> in this example 55356 zones.
+> 
+> $ ls -lv /mnt/seq
+> total 14511243264
+> -rw-r----- 1 root root 0 Nov 25 13:23 0
+> -rw-r----- 1 root root 0 Nov 25 13:23 1
+> -rw-r----- 1 root root 0 Nov 25 13:23 2
+> ...
+> -rw-r----- 1 root root 0 Nov 25 13:23 55354
+> -rw-r----- 1 root root 0 Nov 25 13:23 55355
+> 
+> For sequential write zone files, the file size changes as data is
+> appended at the end of the file, similarly to any regular file system.
+> 
+> $ dd if=/dev/zero of=/mnt/seq/0 bs=4K count=1 conv=notrunc oflag=direct
+> 1+0 records in
+> 1+0 records out
+> 4096 bytes (4.1 kB, 4.0 KiB) copied, 1.05112 s, 3.9 kB/s
+> 
+> $ ls -l /mnt/seq/0
+> -rw-r----- 1 root root 4096 Nov 25 13:23 /mnt/sdh/seq/0
+> 
+> The written file can be truncated to the zone size, prventing any
+> further write operation.
+> 
+> $ truncate -s 268435456 /mnt/seq/0
+> $ ls -l /mnt/seq/0
+> -rw-r----- 1 root root 268435456 Nov 25 13:49 /mnt/seq/0
+> 
+> Truncation to 0 size allows freeing the file zone storage space and
+> restart append-writes to the file.
+> 
+> $ truncate -s 0 /mnt/seq/0
+> $ ls -l /mnt/seq/0
+> -rw-r----- 1 root root 0 Nov 25 13:49 /mnt/seq/0
+> 
+> Since files are statically mapped to zones on the disk, the number of
+> blocks of a file as reported by stat() and fstat() indicates the size
+> of the file zone.
+> 
+> $ stat /mnt/seq/0
+>   File: /mnt/seq/0
+>   Size: 0       Blocks: 524288     IO Block: 4096   regular empty file
+> Device: 870h/2160d      Inode: 50431       Links: 1
+> Access: (0640/-rw-r-----)  Uid: (    0/    root)   Gid: (    0/  root)
+> Access: 2019-11-25 13:23:57.048971997 +0900
+> Modify: 2019-11-25 13:52:25.553805765 +0900
+> Change: 2019-11-25 13:52:25.553805765 +0900
+>  Birth: -
+> 
+> The number of blocks of the file ("Blocks") in units of 512B blocks
+> gives the maximum file size of 524288 * 512 B = 256 MB, corresponding
+> to the device zone size in this example. Of note is that the "IO block"
+> field always indicates the minimum IO size for writes and corresponds
+> to the device physical sector size.
+> 
+> This code contains contributions from:
+> * Johannes Thumshirn <jthumshirn@suse.de>,
+> * Darrick J. Wong <darrick.wong@oracle.com>,
+> * Christoph Hellwig <hch@lst.de>,
+> * Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com> and
+> * Ting Yao <tingyao@hust.edu.cn>.
+> 
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  MAINTAINERS                |    9 +
+>  fs/Kconfig                 |    1 +
+>  fs/Makefile                |    1 +
+>  fs/zonefs/Kconfig          |    9 +
+>  fs/zonefs/Makefile         |    4 +
+>  fs/zonefs/super.c          | 1158 ++++++++++++++++++++++++++++++++++++
+>  fs/zonefs/zonefs.h         |  169 ++++++
+>  include/uapi/linux/magic.h |    1 +
+>  8 files changed, 1352 insertions(+)
+>  create mode 100644 fs/zonefs/Kconfig
+>  create mode 100644 fs/zonefs/Makefile
+>  create mode 100644 fs/zonefs/super.c
+>  create mode 100644 fs/zonefs/zonefs.h
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index a049abccaa26..8eb6f02a1efa 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -18284,6 +18284,15 @@ L:	linux-kernel@vger.kernel.org
+>  S:	Maintained
+>  F:	arch/x86/kernel/cpu/zhaoxin.c
+>  
+> +ZONEFS FILESYSTEM
+> +M:	Damien Le Moal <damien.lemoal@wdc.com>
+> +M:	Naohiro Aota <naohiro.aota@wdc.com>
+> +R:	Johannes Thumshirn <jth@kernel.org>
+> +L:	linux-fsdevel@vger.kernel.org
+> +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/dlemoal/zonefs.git
+> +S:	Maintained
+> +F:	fs/zonefs/
+> +
+>  ZPOOL COMPRESSED PAGE STORAGE API
+>  M:	Dan Streetman <ddstreet@ieee.org>
+>  L:	linux-mm@kvack.org
+> diff --git a/fs/Kconfig b/fs/Kconfig
+> index 7b623e9fc1b0..a3f97ca2bd46 100644
+> --- a/fs/Kconfig
+> +++ b/fs/Kconfig
+> @@ -40,6 +40,7 @@ source "fs/ocfs2/Kconfig"
+>  source "fs/btrfs/Kconfig"
+>  source "fs/nilfs2/Kconfig"
+>  source "fs/f2fs/Kconfig"
+> +source "fs/zonefs/Kconfig"
+>  
+>  config FS_DAX
+>  	bool "Direct Access (DAX) support"
+> diff --git a/fs/Makefile b/fs/Makefile
+> index 1148c555c4d3..527f228a5e8a 100644
+> --- a/fs/Makefile
+> +++ b/fs/Makefile
+> @@ -133,3 +133,4 @@ obj-$(CONFIG_CEPH_FS)		+= ceph/
+>  obj-$(CONFIG_PSTORE)		+= pstore/
+>  obj-$(CONFIG_EFIVAR_FS)		+= efivarfs/
+>  obj-$(CONFIG_EROFS_FS)		+= erofs/
+> +obj-$(CONFIG_ZONEFS_FS)		+= zonefs/
+> diff --git a/fs/zonefs/Kconfig b/fs/zonefs/Kconfig
+> new file mode 100644
+> index 000000000000..6490547e9763
+> --- /dev/null
+> +++ b/fs/zonefs/Kconfig
+> @@ -0,0 +1,9 @@
+> +config ZONEFS_FS
+> +	tristate "zonefs filesystem support"
+> +	depends on BLOCK
+> +	depends on BLK_DEV_ZONED
+> +	help
+> +	  zonefs is a simple File System which exposes zones of a zoned block
+> +	  device as files.
+> +
+> +	  If unsure, say N.
+> diff --git a/fs/zonefs/Makefile b/fs/zonefs/Makefile
+> new file mode 100644
+> index 000000000000..75a380aa1ae1
+> --- /dev/null
+> +++ b/fs/zonefs/Makefile
+> @@ -0,0 +1,4 @@
+> +# SPDX-License-Identifier: GPL-2.0
+> +obj-$(CONFIG_ZONEFS_FS) += zonefs.o
+> +
+> +zonefs-y	:= super.o
+> diff --git a/fs/zonefs/super.c b/fs/zonefs/super.c
+> new file mode 100644
+> index 000000000000..1b2ff2d8a5d1
+> --- /dev/null
+> +++ b/fs/zonefs/super.c
+> @@ -0,0 +1,1158 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Simple zone file system for zoned block devices.
+> + *
+> + * Copyright (C) 2019 Western Digital Corporation or its affiliates.
+> + */
+> +#include <linux/module.h>
+> +#include <linux/fs.h>
+> +#include <linux/magic.h>
+> +#include <linux/iomap.h>
+> +#include <linux/init.h>
+> +#include <linux/slab.h>
+> +#include <linux/blkdev.h>
+> +#include <linux/statfs.h>
+> +#include <linux/writeback.h>
+> +#include <linux/quotaops.h>
+> +#include <linux/seq_file.h>
+> +#include <linux/parser.h>
+> +#include <linux/uio.h>
+> +#include <linux/mman.h>
+> +#include <linux/sched/mm.h>
+> +#include <linux/crc32.h>
+> +
+> +#include "zonefs.h"
+> +
+> +static int zonefs_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+> +			      unsigned int flags, struct iomap *iomap,
+> +			      struct iomap *srcmap)
+> +{
+> +	struct zonefs_sb_info *sbi = ZONEFS_SB(inode->i_sb);
+> +	struct zonefs_inode_info *zi = ZONEFS_I(inode);
+> +	loff_t max_isize = zi->i_max_size;
+> +	loff_t isize;
+> +
+> +	/*
+> +	 * For sequential zones, enforce direct IO writes. This is already
+> +	 * checked when writes are issued, so warn about this here if we
+> +	 * get buffered write to a sequential file inode.
+> +	 */
+> +	if (WARN_ON_ONCE(zi->i_ztype == ZONEFS_ZTYPE_SEQ &&
+> +			 (flags & IOMAP_WRITE) && !(flags & IOMAP_DIRECT)))
+> +		return -EIO;
+> +
+> +	/*
+> +	 * For all zones, all blocks are always mapped. For sequential zones,
+> +	 * all blocks after the write pointer (inode size) are always unwritten.
+> +	 */
+> +	mutex_lock(&zi->i_truncate_mutex);
+> +	isize = i_size_read(inode);
+> +	if (offset >= isize) {
+> +		length = min(length, max_isize - offset);
+> +		if (zi->i_ztype == ZONEFS_ZTYPE_CNV)
+> +			iomap->type = IOMAP_MAPPED;
+> +		else
+> +			iomap->type = IOMAP_UNWRITTEN;
+> +	} else {
+> +		length = min(length, isize - offset);
+> +		iomap->type = IOMAP_MAPPED;
+> +	}
+> +	mutex_unlock(&zi->i_truncate_mutex);
+> +
+> +	iomap->offset = offset & (~sbi->s_blocksize_mask);
+> +	iomap->length = ((offset + length + sbi->s_blocksize_mask) &
+> +			 (~sbi->s_blocksize_mask)) - iomap->offset;
+> +	iomap->bdev = inode->i_sb->s_bdev;
+> +	iomap->addr = (zi->i_zsector << SECTOR_SHIFT) + iomap->offset;
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct iomap_ops zonefs_iomap_ops = {
+> +	.iomap_begin	= zonefs_iomap_begin,
+> +};
+> +
+> +static int zonefs_readpage(struct file *unused, struct page *page)
+> +{
+> +	return iomap_readpage(page, &zonefs_iomap_ops);
+> +}
+> +
+> +static int zonefs_readpages(struct file *unused, struct address_space *mapping,
+> +			    struct list_head *pages, unsigned int nr_pages)
+> +{
+> +	return iomap_readpages(mapping, pages, nr_pages, &zonefs_iomap_ops);
+> +}
+> +
+> +static int zonefs_map_blocks(struct iomap_writepage_ctx *wpc,
+> +			     struct inode *inode, loff_t offset)
+> +{
+> +	if (offset >= wpc->iomap.offset &&
+> +	    offset < wpc->iomap.offset + wpc->iomap.length)
+> +		return 0;
+> +
+> +	memset(&wpc->iomap, 0, sizeof(wpc->iomap));
+> +	return zonefs_iomap_begin(inode, offset, ZONEFS_I(inode)->i_max_size,
+> +				  0, &wpc->iomap, NULL);
+> +}
+> +
+> +static const struct iomap_writeback_ops zonefs_writeback_ops = {
+> +	.map_blocks		= zonefs_map_blocks,
+> +};
+> +
+> +static int zonefs_writepage(struct page *page, struct writeback_control *wbc)
+> +{
+> +	struct iomap_writepage_ctx wpc = { };
+> +
+> +	return iomap_writepage(page, wbc, &wpc, &zonefs_writeback_ops);
+> +}
+> +
+> +static int zonefs_writepages(struct address_space *mapping,
+> +			     struct writeback_control *wbc)
+> +{
+> +	struct iomap_writepage_ctx wpc = { };
+> +
+> +	return iomap_writepages(mapping, wbc, &wpc, &zonefs_writeback_ops);
+> +}
+> +
+> +static const struct address_space_operations zonefs_file_aops = {
+> +	.readpage		= zonefs_readpage,
+> +	.readpages		= zonefs_readpages,
+> +	.writepage		= zonefs_writepage,
+> +	.writepages		= zonefs_writepages,
+> +	.set_page_dirty		= iomap_set_page_dirty,
+> +	.releasepage		= iomap_releasepage,
+> +	.invalidatepage		= iomap_invalidatepage,
+> +	.migratepage		= iomap_migrate_page,
+> +	.is_partially_uptodate  = iomap_is_partially_uptodate,
+> +	.error_remove_page	= generic_error_remove_page,
+> +	.direct_IO		= noop_direct_IO,
+> +};
+> +
+> +static void zonefs_update_stats(struct inode *inode, loff_t new_isize)
+> +{
+> +	struct super_block *sb = inode->i_sb;
+> +	struct zonefs_sb_info *sbi = ZONEFS_SB(sb);
+> +	loff_t old_isize = i_size_read(inode);
+> +
+> +	if (new_isize == old_isize)
+> +		return;
+> +
+> +	spin_lock(&sbi->s_lock);
+> +
+> +	if (!new_isize) {
+> +		/* File truncated to 0 */
+> +		sbi->s_used_blocks -= old_isize >> sb->s_blocksize_bits;
+> +	} else if (new_isize > old_isize) {
+> +		/* File written or truncated to max size */
+> +		sbi->s_used_blocks +=
+> +			(new_isize - old_isize) >> sb->s_blocksize_bits;
+> +	} else {
+> +		/* Sequential zone files can only grow or be truncated to 0 */
+> +		WARN_ON(new_isize < old_isize);
+> +	}
+> +
+> +	spin_unlock(&sbi->s_lock);
+> +}
+> +
+> +static int zonefs_seq_file_truncate(struct inode *inode, loff_t isize)
+> +{
+> +	struct zonefs_inode_info *zi = ZONEFS_I(inode);
+> +	loff_t old_isize;
+> +	enum req_opf op;
+> +	int ret = 0;
+> +
+> +	/*
+> +	 * For sequential zone files, we can only allow truncating to 0 size,
+> +	 * which is equivalent to a zone reset, or to the maximum file size,
+> +	 * which is equivalent to a zone finish.
+> +	 */
+> +	if (!isize)
+> +		op = REQ_OP_ZONE_RESET;
+> +	else if (isize == zi->i_max_size)
+> +		op = REQ_OP_ZONE_FINISH;
+> +	else
+> +		return -EPERM;
+> +
+> +	inode_dio_wait(inode);
+> +
+> +	/* Serialize against page faults */
+> +	down_write(&zi->i_mmap_sem);
+> +
+> +	/* Serialize against zonefs_iomap_begin() */
+> +	mutex_lock(&zi->i_truncate_mutex);
+> +
+> +	old_isize = i_size_read(inode);
+> +	if (isize == old_isize)
+> +		goto unlock;
+> +
+> +	ret = blkdev_zone_mgmt(inode->i_sb->s_bdev, op, zi->i_zsector,
+> +			       zi->i_max_size >> SECTOR_SHIFT, GFP_NOFS);
+> +	if (ret) {
+> +		zonefs_err(inode->i_sb,
+> +			   "Zone management operation at %llu failed %d",
+> +			   zi->i_zsector, ret);
+> +		goto unlock;
+> +	}
+> +
+> +	zonefs_update_stats(inode, isize);
+> +	truncate_setsize(inode, isize);
+> +	zi->i_wpoffset = isize;
+> +
+> +unlock:
+> +	mutex_unlock(&zi->i_truncate_mutex);
+> +	up_write(&zi->i_mmap_sem);
+> +
+> +	return ret;
+> +}
+> +
+> +static int zonefs_inode_setattr(struct dentry *dentry, struct iattr *iattr)
+> +{
+> +	struct inode *inode = d_inode(dentry);
+> +	int ret;
+> +
+> +	ret = setattr_prepare(dentry, iattr);
+> +	if (ret)
+> +		return ret;
+> +
+> +	if ((iattr->ia_valid & ATTR_UID &&
+> +	     !uid_eq(iattr->ia_uid, inode->i_uid)) ||
+> +	    (iattr->ia_valid & ATTR_GID &&
+> +	     !gid_eq(iattr->ia_gid, inode->i_gid))) {
+> +		ret = dquot_transfer(inode, iattr);
+> +		if (ret)
+> +			return ret;
+> +	}
+> +
+> +	if (iattr->ia_valid & ATTR_SIZE) {
+> +		/* The size of conventional zone files cannot be changed */
+> +		if (ZONEFS_I(inode)->i_ztype == ZONEFS_ZTYPE_CNV)
+> +			return -EPERM;
+> +
+> +		ret = zonefs_seq_file_truncate(inode, iattr->ia_size);
+> +		if (ret)
+> +			return ret;
+> +	}
 
---ww6Utlr43GtkvNGtPz2H5K5b44OhL3i9X
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+/me wonders if you need to filter out ATTR_MODE changes here, at least
+so you can't make the zone file for a readonly zone writable?
 
-Hi folks,
+I also wonder, does an O_TRUNC open reset the zone's write pointer to
+zero?
 
-xfsprogs v5.4.0 has been released, and the xfsprogs repository at:
+> +
+> +	setattr_copy(inode, iattr);
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct inode_operations zonefs_file_inode_operations = {
+> +	.setattr	= zonefs_inode_setattr,
+> +};
+> +
+> +static int zonefs_file_fsync(struct file *file, loff_t start, loff_t end,
+> +			     int datasync)
+> +{
+> +	struct inode *inode = file_inode(file);
+> +	int ret = 0;
+> +
+> +	/*
+> +	 * Since only direct writes are allowed in sequential files, page cache
+> +	 * flush is needed only for conventional zone files.
+> +	 */
+> +	if (ZONEFS_I(inode)->i_ztype == ZONEFS_ZTYPE_CNV) {
+> +		ret = file_write_and_wait_range(file, start, end);
+> +		if (ret)
+> +			return ret;
+> +		ret = file_check_and_advance_wb_err(file);
+> +	}
+> +
+> +	if (ret == 0)
+> +		ret = blkdev_issue_flush(inode->i_sb->s_bdev, GFP_KERNEL, NULL);
+> +
+> +	return ret;
+> +}
+> +
+> +static vm_fault_t zonefs_filemap_fault(struct vm_fault *vmf)
+> +{
+> +	struct zonefs_inode_info *zi = ZONEFS_I(file_inode(vmf->vma->vm_file));
+> +	vm_fault_t ret;
+> +
+> +	down_read(&zi->i_mmap_sem);
+> +	ret = filemap_fault(vmf);
+> +	up_read(&zi->i_mmap_sem);
+> +
+> +	return ret;
+> +}
+> +
+> +static vm_fault_t zonefs_filemap_page_mkwrite(struct vm_fault *vmf)
+> +{
+> +	struct inode *inode = file_inode(vmf->vma->vm_file);
+> +	struct zonefs_inode_info *zi = ZONEFS_I(inode);
+> +	vm_fault_t ret;
+> +
+> +	sb_start_pagefault(inode->i_sb);
+> +	file_update_time(vmf->vma->vm_file);
+> +
+> +	/* Serialize against truncates */
+> +	down_read(&zi->i_mmap_sem);
+> +	ret = iomap_page_mkwrite(vmf, &zonefs_iomap_ops);
+> +	up_read(&zi->i_mmap_sem);
+> +
+> +	sb_end_pagefault(inode->i_sb);
+> +	return ret;
+> +}
+> +
+> +static const struct vm_operations_struct zonefs_file_vm_ops = {
+> +	.fault		= zonefs_filemap_fault,
+> +	.map_pages	= filemap_map_pages,
+> +	.page_mkwrite	= zonefs_filemap_page_mkwrite,
+> +};
+> +
+> +static int zonefs_file_mmap(struct file *file, struct vm_area_struct *vma)
+> +{
+> +	/*
+> +	 * Conventional zone files can be mmap-ed READ/WRITE.
+> +	 * For sequential zone files, only readonly mappings are possible.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+Hmm, but the code below looks like it allows private writable mmapings
+of sequential zones?
 
-has just been updated.
+> +	 */
+> +	if (ZONEFS_I(file_inode(file))->i_ztype == ZONEFS_ZTYPE_SEQ &&
+> +	    (vma->vm_flags & VM_SHARED) && (vma->vm_flags & VM_MAYWRITE))
+> +		return -EINVAL;
+> +
+> +	file_accessed(file);
+> +	vma->vm_ops = &zonefs_file_vm_ops;
+> +
+> +	return 0;
+> +}
+> +
+> +static loff_t zonefs_file_llseek(struct file *file, loff_t offset, int whence)
+> +{
+> +	loff_t isize = i_size_read(file_inode(file));
+> +
+> +	/*
+> +	 * Seeks are limited to below the zone size for conventional zones
+> +	 * and below the zone write pointer for sequential zones. In both
+> +	 * cases, this limit is the inode size.
+> +	 */
+> +	return generic_file_llseek_size(file, offset, whence, isize, isize);
+> +}
+> +
+> +static ssize_t zonefs_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
+> +{
+> +	struct inode *inode = file_inode(iocb->ki_filp);
+> +	struct zonefs_sb_info *sbi = ZONEFS_SB(inode->i_sb);
+> +	struct zonefs_inode_info *zi = ZONEFS_I(inode);
+> +	loff_t max_pos;
+> +	size_t count;
+> +	ssize_t ret;
+> +
+> +	if (iocb->ki_pos >= zi->i_max_size)
+> +		return 0;
+> +
+> +	if (iocb->ki_flags & IOCB_NOWAIT) {
+> +		if (!inode_trylock_shared(inode))
+> +			return -EAGAIN;
+> +	} else {
+> +		inode_lock_shared(inode);
+> +	}
+> +
+> +	mutex_lock(&zi->i_truncate_mutex);
+> +
+> +	/*
+> +	 * Limit read operations to written data.
+> +	 */
+> +	max_pos = i_size_read(inode);
+> +	if (iocb->ki_pos >= max_pos) {
+> +		mutex_unlock(&zi->i_truncate_mutex);
+> +		ret = 0;
+> +		goto out;
+> +	}
+> +
+> +	iov_iter_truncate(to, max_pos - iocb->ki_pos);
+> +
+> +	mutex_unlock(&zi->i_truncate_mutex);
+> +
+> +	count = iov_iter_count(to);
+> +
+> +	if (iocb->ki_flags & IOCB_DIRECT) {
+> +		if ((iocb->ki_pos | count) & sbi->s_blocksize_mask) {
+> +			ret = -EINVAL;
+> +			goto out;
+> +		}
+> +		file_accessed(iocb->ki_filp);
+> +		ret = iomap_dio_rw(iocb, to, &zonefs_iomap_ops, NULL,
+> +				   is_sync_kiocb(iocb));
+> +	} else {
+> +		ret = generic_file_read_iter(iocb, to);
+> +	}
+> +
+> +out:
+> +	inode_unlock_shared(inode);
+> +
+> +	return ret;
+> +}
+> +
+> +static int zonefs_report_zones_err_cb(struct blk_zone *zone, unsigned int idx,
+> +				      void *data)
+> +{
+> +	struct inode *inode = data;
+> +	struct zonefs_inode_info *zi = ZONEFS_I(inode);
+> +	loff_t pos;
+> +
+> +	pos = (zone->wp - zone->start) << SECTOR_SHIFT;
+> +	zi->i_wpoffset = pos;
+> +	if (i_size_read(inode) != pos) {
+> +		zonefs_update_stats(inode, pos);
+> +		i_size_write(inode, pos);
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +/*
+> + * When a write error occurs in a sequential zone, the zone write pointer
+> + * position must be refreshed to correct the file size and zonefs inode
+> + * write pointer offset.
+> + */
+> +static int zonefs_seq_file_write_failed(struct inode *inode, int error)
+> +{
+> +	struct zonefs_inode_info *zi = ZONEFS_I(inode);
+> +	struct super_block *sb = inode->i_sb;
+> +	sector_t sector = zi->i_zsector;
+> +	unsigned int nofs_flag;
+> +	int ret;
+> +
+> +	zonefs_warn(sb, "Updating inode zone %llu info\n", sector);
+> +
+> +	/*
+> +	 * blkdev_report_zones() uses GFP_KERNEL by default. Force execution as
+> +	 * if GFP_NOFS was specified so that it will not end up recursing into
+> +	 * the FS on memory allocation.
+> +	 */
+> +	nofs_flag = memalloc_nofs_save();
+> +	ret = blkdev_report_zones(sb->s_bdev, sector, 1,
+> +				  zonefs_report_zones_err_cb, inode);
+> +	memalloc_nofs_restore(nofs_flag);
+> +
+> +	if (ret != 1) {
+> +		if (!ret)
+> +			ret = -EIO;
+> +		zonefs_err(sb, "Get zone %llu report failed %d\n",
+> +			   sector, ret);
+> +		return ret;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int zonefs_file_dio_write_end(struct kiocb *iocb, ssize_t size, int ret,
+> +				     unsigned int flags)
+> +{
+> +	struct inode *inode = file_inode(iocb->ki_filp);
+> +	struct zonefs_inode_info *zi = ZONEFS_I(inode);
+> +
+> +	if (ret)
+> +		return ret;
+> +
+> +	/*
+> +	 * Conventional zone file size is fixed to the zone size so there
+> +	 * is no need to do anything.
+> +	 */
+> +	if (zi->i_ztype == ZONEFS_ZTYPE_CNV)
+> +		return 0;
+> +
+> +	mutex_lock(&zi->i_truncate_mutex);
+> +
+> +	if (size < 0) {
+> +		ret = zonefs_seq_file_write_failed(inode, size);
+> +	} else if (i_size_read(inode) < iocb->ki_pos + size) {
+> +		zonefs_update_stats(inode, iocb->ki_pos + size);
+> +		i_size_write(inode, iocb->ki_pos + size);
+> +	}
+> +
+> +	mutex_unlock(&zi->i_truncate_mutex);
+> +
+> +	return ret;
+> +}
+> +
+> +static const struct iomap_dio_ops zonefs_dio_ops = {
+> +	.end_io			= zonefs_file_dio_write_end,
+> +};
+> +
+> +static ssize_t zonefs_file_dio_write(struct kiocb *iocb, struct iov_iter *from)
+> +{
+> +	struct inode *inode = file_inode(iocb->ki_filp);
+> +	struct zonefs_sb_info *sbi = ZONEFS_SB(inode->i_sb);
+> +	struct zonefs_inode_info *zi = ZONEFS_I(inode);
+> +	size_t count;
+> +	ssize_t ret;
+> +
+> +	if (iocb->ki_flags & IOCB_NOWAIT) {
+> +		if (!inode_trylock(inode))
+> +			return -EAGAIN;
+> +	} else {
+> +		inode_lock(inode);
+> +	}
+> +
+> +	ret = generic_write_checks(iocb, from);
+> +	if (ret <= 0)
+> +		goto out;
+> +
+> +	iov_iter_truncate(from, zi->i_max_size - iocb->ki_pos);
+> +	count = iov_iter_count(from);
+> +
+> +	/*
+> +	 * Direct writes must be aligned to the block size, that is, the device
+> +	 * physical sector size, to avoid errors when writing sequential zones
+> +	 * on 512e devices (512B logical sector, 4KB physical sectors).
+> +	 */
+> +	if ((iocb->ki_pos | count) & sbi->s_blocksize_mask) {
+> +		ret = -EINVAL;
+> +		goto out;
+> +	}
+> +
+> +	/*
+> +	 * Enforce sequential writes (append only) in sequential zones.
+> +	 */
 
-Tarballs are available at:
+I wonder, shouldn't zonefs require users to open sequential zones with
+O_APPEND?  I don't see anything in here that would suggest that it does,
+though maybe I missed something.
 
-https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.4.0.tar=
-=2Egz
-https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.4.0.tar=
-=2Exz
-https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.4.0.tar=
-=2Esign
+> +	mutex_lock(&zi->i_truncate_mutex);
+> +	if (zi->i_ztype == ZONEFS_ZTYPE_SEQ &&
+> +	    iocb->ki_pos != zi->i_wpoffset) {
+> +		zonefs_err(inode->i_sb,
+> +			   "Unaligned write at %llu + %zu (wp %llu)\n",
+> +			   iocb->ki_pos, count,
+> +			   zi->i_wpoffset);
+> +		mutex_unlock(&zi->i_truncate_mutex);
+> +		ret = -EINVAL;
+> +		goto out;
+> +	}
+> +	mutex_unlock(&zi->i_truncate_mutex);
+> +
+> +	ret = iomap_dio_rw(iocb, from, &zonefs_iomap_ops, &zonefs_dio_ops,
+> +			   is_sync_kiocb(iocb));
+> +	if (zi->i_ztype == ZONEFS_ZTYPE_SEQ &&
+> +	    (ret > 0 || ret == -EIOCBQUEUED)) {
+> +		if (ret > 0)
+> +			count = ret;
+> +		mutex_lock(&zi->i_truncate_mutex);
+> +		zi->i_wpoffset += count;
+> +		mutex_unlock(&zi->i_truncate_mutex);
+> +	}
+> +
+> +out:
+> +	inode_unlock(inode);
+> +
+> +	return ret;
+> +}
+> +
+> +static ssize_t zonefs_file_buffered_write(struct kiocb *iocb,
+> +					  struct iov_iter *from)
+> +{
+> +	struct inode *inode = file_inode(iocb->ki_filp);
+> +	struct zonefs_inode_info *zi = ZONEFS_I(inode);
+> +	size_t count;
+> +	ssize_t ret;
+> +
+> +	/*
+> +	 * Direct IO writes are mandatory for sequential zones so that the
+> +	 * write IO order is preserved.
+> +	 */
+> +	if (zi->i_ztype == ZONEFS_ZTYPE_SEQ)
+> +		return -EIO;
+> +
+> +	if (iocb->ki_flags & IOCB_NOWAIT) {
+> +		if (!inode_trylock(inode))
+> +			return -EAGAIN;
+> +	} else {
+> +		inode_lock(inode);
+> +	}
+> +
+> +	ret = generic_write_checks(iocb, from);
+> +	if (ret <= 0)
+> +		goto out;
+> +
+> +	iov_iter_truncate(from, zi->i_max_size - iocb->ki_pos);
+> +	count = iov_iter_count(from);
+> +
+> +	ret = iomap_file_buffered_write(iocb, from, &zonefs_iomap_ops);
+> +	if (ret > 0)
+> +		iocb->ki_pos += ret;
+> +
+> +out:
+> +	inode_unlock(inode);
+> +	if (ret > 0)
+> +		ret = generic_write_sync(iocb, ret);
+> +
+> +	return ret;
+> +}
+> +
+> +static ssize_t zonefs_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+> +{
+> +	struct inode *inode = file_inode(iocb->ki_filp);
+> +
+> +	/*
+> +	 * Check that the write operation does not go beyond the zone size.
+> +	 */
+> +	if (iocb->ki_pos >= ZONEFS_I(inode)->i_max_size)
+> +		return -EFBIG;
+> +
+> +	if (iocb->ki_flags & IOCB_DIRECT)
+> +		return zonefs_file_dio_write(iocb, from);
+> +
+> +	return zonefs_file_buffered_write(iocb, from);
+> +}
+> +
+> +static const struct file_operations zonefs_file_operations = {
+> +	.open		= generic_file_open,
 
-This is a relatively minor update aside from the normal libxfs changes.
-Details are below.
+Hmm, ok, so there isn't any explicit O_APPEND requirement, even though
+it looks like the filesystem enforces one.
 
-Thanks,
--Eric
+> +	.fsync		= zonefs_file_fsync,
+> +	.mmap		= zonefs_file_mmap,
+> +	.llseek		= zonefs_file_llseek,
+> +	.read_iter	= zonefs_file_read_iter,
+> +	.write_iter	= zonefs_file_write_iter,
+> +	.splice_read	= generic_file_splice_read,
+> +	.splice_write	= iter_file_splice_write,
+> +	.iopoll		= iomap_dio_iopoll,
+> +};
+> +
+> +static struct kmem_cache *zonefs_inode_cachep;
+> +
+> +static struct inode *zonefs_alloc_inode(struct super_block *sb)
+> +{
+> +	struct zonefs_inode_info *zi;
+> +
+> +	zi = kmem_cache_alloc(zonefs_inode_cachep, GFP_KERNEL);
+> +	if (!zi)
+> +		return NULL;
+> +
+> +	inode_init_once(&zi->i_vnode);
+> +	mutex_init(&zi->i_truncate_mutex);
+> +	init_rwsem(&zi->i_mmap_sem);
+> +
+> +	return &zi->i_vnode;
+> +}
+> +
+> +static void zonefs_free_inode(struct inode *inode)
+> +{
+> +	kmem_cache_free(zonefs_inode_cachep, ZONEFS_I(inode));
+> +}
+> +
+> +/*
+> + * File system stat.
+> + */
+> +static int zonefs_statfs(struct dentry *dentry, struct kstatfs *buf)
+> +{
+> +	struct super_block *sb = dentry->d_sb;
+> +	struct zonefs_sb_info *sbi = ZONEFS_SB(sb);
+> +	enum zonefs_ztype t;
+> +	u64 fsid;
+> +
+> +	buf->f_type = ZONEFS_MAGIC;
+> +	buf->f_bsize = sb->s_blocksize;
+> +	buf->f_namelen = ZONEFS_NAME_MAX;
+> +
+> +	spin_lock(&sbi->s_lock);
+> +
+> +	buf->f_blocks = sbi->s_blocks;
+> +	if (WARN_ON(sbi->s_used_blocks > sbi->s_blocks))
+> +		buf->f_bfree = 0;
+> +	else
+> +		buf->f_bfree = buf->f_blocks - sbi->s_used_blocks;
+> +	buf->f_bavail = buf->f_bfree;
+> +
+> +	for (t = 0; t < ZONEFS_ZTYPE_MAX; t++) {
+> +		if (sbi->s_nr_files[t])
+> +			buf->f_files += sbi->s_nr_files[t] + 1;
+> +	}
+> +	buf->f_ffree = 0;
+> +
+> +	spin_unlock(&sbi->s_lock);
+> +
+> +	fsid = le64_to_cpup((void *)sbi->s_uuid.b) ^
+> +		le64_to_cpup((void *)sbi->s_uuid.b + sizeof(u64));
+> +	buf->f_fsid.val[0] = (u32)fsid;
+> +	buf->f_fsid.val[1] = (u32)(fsid >> 32);
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct super_operations zonefs_sops = {
+> +	.alloc_inode	= zonefs_alloc_inode,
+> +	.free_inode	= zonefs_free_inode,
+> +	.statfs		= zonefs_statfs,
+> +};
+> +
+> +static void zonefs_init_dir_inode(struct inode *parent, struct inode *inode)
+> +{
+> +	inode_init_owner(inode, parent, S_IFDIR | 0555);
+> +	inode->i_fop = &simple_dir_operations;
+> +	inode->i_op = &simple_dir_inode_operations;
+> +	set_nlink(inode, 2);
+> +	inc_nlink(parent);
+> +}
+> +
+> +static void zonefs_init_file_inode(struct inode *inode, struct blk_zone *zone)
+> +{
+> +	struct super_block *sb = inode->i_sb;
+> +	struct zonefs_sb_info *sbi = ZONEFS_SB(sb);
+> +	struct zonefs_inode_info *zi = ZONEFS_I(inode);
+> +	umode_t	perm = sbi->s_perm;
+> +
+> +	zi->i_ztype = zonefs_zone_type(zone);
+> +	zi->i_zsector = zone->start;
+> +
+> +	switch (zone->cond) {
+> +	case BLK_ZONE_COND_OFFLINE:
+> +		/*
+> +		 * Disable all accesses and set the file size to 0 for
+> +		 * offline zones.
+> +		 */
+> +		zi->i_wpoffset = 0;
+> +		zi->i_max_size = 0;
+> +		perm = 0;
+> +		break;
+> +	case BLK_ZONE_COND_READONLY:
+> +		/* Do not allow writes in read-only zones*/
+> +		perm &= ~(0222); /* S_IWUGO */
+> +		/* Fallthrough */
 
-Abbreviated changelog:
+You might want to set S_IMMUTABLE in i_flags here, since (I assume)
+readonly zones are never, ever, going to be modifable in any way?
 
-xfsprogs-5.4.0 (20 Dec 2019)
-        - No further changes
+In which case, zonefs probably shouldn't let people run 'chmod a+w' on a
+readonly zone.  Either that or disallow mode changes via
+zonefs_inode_setattr.
 
-xfsprogs-5.4.0-rc1 (17 Dec 2019)
-        - mkfs.xfs: Notify about discard & make it interruptable (Pavel R=
-eichl)
-        - xfs_admin: support external log devices (Darrick Wong)
-        - xfs_admin: enable online label getting and setting (Darrick Won=
-g)
+> +	default:
+> +		zi->i_max_size = min_t(loff_t, MAX_LFS_FILESIZE,
+> +				       zone->len << SECTOR_SHIFT);
+> +		if (zi->i_ztype == ZONEFS_ZTYPE_CNV)
+> +			zi->i_wpoffset = zi->i_max_size;
+> +		else
+> +			zi->i_wpoffset =
+> +				(zone->wp - zone->start) << SECTOR_SHIFT;
+> +		break;
+> +	}
+> +
+> +	inode->i_mode = S_IFREG | perm;
+> +	inode->i_uid = sbi->s_uid;
+> +	inode->i_gid = sbi->s_gid;
+> +	inode->i_size = zi->i_wpoffset;
+> +	inode->i_blocks = zone->len;
+> +
+> +	inode->i_fop = &zonefs_file_operations;
+> +	inode->i_op = &zonefs_file_inode_operations;
+> +	inode->i_mapping->a_ops = &zonefs_file_aops;
+> +
+> +	sb->s_maxbytes = max(zi->i_max_size, sb->s_maxbytes);
+> +	sbi->s_blocks += zi->i_max_size >> sb->s_blocksize_bits;
+> +	sbi->s_used_blocks += zi->i_wpoffset >> sb->s_blocksize_bits;
+> +}
+> +
+> +static struct dentry *zonefs_create_inode(struct dentry *parent,
+> +					const char *name, struct blk_zone *zone)
+> +{
+> +	struct inode *dir = d_inode(parent);
+> +	struct dentry *dentry;
+> +	struct inode *inode;
+> +
+> +	dentry = d_alloc_name(parent, name);
+> +	if (!dentry)
+> +		return NULL;
+> +
+> +	inode = new_inode(parent->d_sb);
+> +	if (!inode)
+> +		goto out;
+> +
+> +	inode->i_ino = get_next_ino();
+> +	inode->i_ctime = inode->i_mtime = inode->i_atime = dir->i_ctime;
+> +	if (zone)
+> +		zonefs_init_file_inode(inode, zone);
+> +	else
+> +		zonefs_init_dir_inode(dir, inode);
+> +	d_add(dentry, inode);
+> +	dir->i_size++;
+> +
+> +	return dentry;
+> +
+> +out:
+> +	dput(dentry);
+> +
+> +	return NULL;
+> +}
+> +
+> +static char *zgroups_name[ZONEFS_ZTYPE_MAX] = { "cnv", "seq" };
+> +
+> +struct zonefs_zone_data {
+> +	struct super_block *sb;
+> +	unsigned int nr_zones[ZONEFS_ZTYPE_MAX];
+> +	struct blk_zone *zones;
+> +};
+> +
+> +/*
+> + * Create a zone group and populate it with zone files.
+> + */
+> +static int zonefs_create_zgroup(struct zonefs_zone_data *zd,
+> +				enum zonefs_ztype type)
+> +{
+> +	struct super_block *sb = zd->sb;
+> +	struct zonefs_sb_info *sbi = ZONEFS_SB(sb);
+> +	struct blk_zone *zone, *next, *end;
+> +	char name[ZONEFS_NAME_MAX];
+> +	struct dentry *dir;
+> +	unsigned int n = 0;
+> +
+> +	/* If the group is empty, there is nothing to do */
+> +	if (!zd->nr_zones[type])
+> +		return 0;
+> +
+> +	dir = zonefs_create_inode(sb->s_root, zgroups_name[type], NULL);
+> +	if (!dir)
+> +		return -ENOMEM;
+> +
+> +	/*
+> +	 * The first zone contains the super block: skip it.
+> +	 */
+> +	end = zd->zones + blkdev_nr_zones(sb->s_bdev->bd_disk);
+> +	for (zone = &zd->zones[1]; zone < end; zone = next) {
+> +
+> +		next = zone + 1;
+> +		if (zonefs_zone_type(zone) != type)
+> +			continue;
+> +
+> +		/*
+> +		 * For conventional zones, contiguous zones can be aggregated
+> +		 * together to form larger files.
+> +		 * Note that this overwrites the length of the first zone of
+> +		 * the set of contiguous zones aggregated together.
+> +		 * Only zones with the same condition can be agreggated so that
+> +		 * offline zones are excluded and readonly zones are aggregated
+> +		 * together into a read only file.
+> +		 */
+> +		if (type == ZONEFS_ZTYPE_CNV &&
+> +		    sbi->s_features & ZONEFS_F_AGGRCNV) {
 
-xfsprogs-5.4.0-rc0 (15 Nov 2019)
-        - libxfs changes merged from kernel 5.4
+This probably needs parentheses around the flag check, e.g.
 
+		if (type == ZONEFS_ZTYPE_CNV &&
+		    (sbi->s_features & ZONEFS_F_AGGRCNV)) {
 
+> +			for (; next < end; next++) {
+> +				if (zonefs_zone_type(next) != type ||
+> +				    next->cond != zone->cond)
+> +					break;
+> +				zone->len += next->len;
+> +			}
+> +		}
+> +
+> +		/*
+> +		 * Use the file number within its group as file name.
+> +		 */
+> +		snprintf(name, ZONEFS_NAME_MAX - 1, "%u", n);
+> +		if (!zonefs_create_inode(dir, name, zone))
+> +			return -ENOMEM;
+> +
+> +		n++;
+> +	}
+> +
+> +	zonefs_info(sb, "Zone group \"%s\" has %u file%s\n",
+> +		    zgroups_name[type], n, n > 1 ? "s" : "");
+> +
+> +	sbi->s_nr_files[type] = n;
+> +
+> +	return 0;
+> +}
+> +
+> +static int zonefs_get_zone_info_cb(struct blk_zone *zone, unsigned int idx,
+> +				   void *data)
+> +{
+> +	struct zonefs_zone_data *zd = data;
+> +
+> +	/*
+> +	 * Count the number of usable zones: the first zone at index 0 contains
+> +	 * the super block and is ignored.
+> +	 */
+> +	switch (zone->type) {
+> +	case BLK_ZONE_TYPE_CONVENTIONAL:
+> +		zone->wp = zone->start + zone->len;
+> +		if (idx)
+> +			zd->nr_zones[ZONEFS_ZTYPE_CNV]++;
+> +		break;
+> +	case BLK_ZONE_TYPE_SEQWRITE_REQ:
+> +	case BLK_ZONE_TYPE_SEQWRITE_PREF:
+> +		if (idx)
+> +			zd->nr_zones[ZONEFS_ZTYPE_SEQ]++;
+> +		break;
+> +	default:
+> +		zonefs_err(zd->sb, "Unsupported zone type 0x%x\n",
+> +			   zone->type);
+> +		return -EIO;
+> +	}
+> +
+> +	memcpy(&zd->zones[idx], zone, sizeof(struct blk_zone));
+> +
+> +	return 0;
+> +}
+> +
+> +static int zonefs_get_zone_info(struct zonefs_zone_data *zd)
+> +{
+> +	struct block_device *bdev = zd->sb->s_bdev;
+> +	int ret;
+> +
+> +	zd->zones = kvcalloc(blkdev_nr_zones(bdev->bd_disk),
+> +			     sizeof(struct blk_zone), GFP_KERNEL);
 
-Commits since 5.3.0:
+Hmm, so one 64-byte blk_zone structure for each zone on the disk?
 
-0cfb2952 (HEAD -> guilt/for-next, tag: v5.4.0, korg/master, korg/for-next=
-, refs/patches/for-next/xfsprogs-5.4.0) xfsprogs: Release v5.4.0
+I have a 14TB SMR disk with ~459,000x 32M zones on it.  That's going to
+require a contiguous 30MB memory allocation to hold all the zone
+information.  Even your 15T drive from the commit message will need a
+contiguous 3.8MB memory allocation for all the zone info.
 
-New Commits:
+I wonder if each zone should really be allocated separately and then
+indexed with an xarray or something like that to reduce the chance of
+failure when memory is fragmented or tight.
 
-Brian Foster (4):
-      [e102336b] xfs: convert inode to extent format after extent merge d=
-ue to shift
-      [2e3614c7] xfs: log the inode on directory sf to block format chang=
-e
-      [a35db947] xfs: remove broken error handling on failed attr sf to l=
-eaf change
-      [feee8e52] xfs: move local to extent inode logging into bmap helper=
+That could be subsequent work though, since in the meantime that just
+makes zonefs mounts more likely to run out of memory and fail.  I
+suppose you don't hang on to the huge allocation for very long.
 
+> +	if (!zd->zones)
+> +		return -ENOMEM;
+> +
+> +	/* Get zones information */
+> +	ret = blkdev_report_zones(bdev, 0, BLK_ALL_ZONES,
+> +				  zonefs_get_zone_info_cb, zd);
+> +	if (ret < 0) {
+> +		zonefs_err(zd->sb, "Zone report failed %d\n", ret);
+> +		return ret;
+> +	}
+> +
+> +	if (ret != blkdev_nr_zones(bdev->bd_disk)) {
+> +		zonefs_err(zd->sb, "Invalid zone report (%d/%u zones)\n",
+> +			   ret, blkdev_nr_zones(bdev->bd_disk));
+> +		return -EIO;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static inline void zonefs_cleanup_zone_info(struct zonefs_zone_data *zd)
+> +{
+> +	kvfree(zd->zones);
+> +}
+> +
+> +/*
+> + * Read super block information from the device.
+> + */
+> +static int zonefs_read_super(struct super_block *sb)
+> +{
+> +	struct zonefs_sb_info *sbi = ZONEFS_SB(sb);
+> +	struct zonefs_super *super;
+> +	u32 crc, stored_crc;
+> +	struct page *page;
+> +	struct bio_vec bio_vec;
+> +	struct bio bio;
+> +	int ret;
+> +
+> +	page = alloc_page(GFP_KERNEL);
+> +	if (!page)
+> +		return -ENOMEM;
+> +
+> +	bio_init(&bio, &bio_vec, 1);
+> +	bio.bi_iter.bi_sector = 0;
+> +	bio_set_dev(&bio, sb->s_bdev);
+> +	bio_set_op_attrs(&bio, REQ_OP_READ, 0);
+> +	bio_add_page(&bio, page, PAGE_SIZE, 0);
+> +
+> +	ret = submit_bio_wait(&bio);
+> +	if (ret)
+> +		goto out;
+> +
+> +	super = page_address(page);
+> +
+> +	stored_crc = super->s_crc;
+> +	super->s_crc = 0;
+> +	crc = crc32_le(ZONEFS_MAGIC, (unsigned char *)super,
+> +		       sizeof(struct zonefs_super));
 
-Christoph Hellwig (2):
-      [ed110c33] xfs: remove the unused XFS_ALLOC_USERDATA flag
-      [14790ed0] xfs: add a xfs_valid_startblock helper
+Unusual; usually crc32 computations are seeded with ~0U, but <shrug>.
 
-Darrick J. Wong (15):
-      [78173279] xfs: fix maxicount division by zero error
-      [6c3013ad] xfs: don't return _QUERY_ABORT from xfs_rmap_has_other_k=
-eys
-      [9e468ed6] xfs: fix sign handling problem in xfs_bmbt_diff_two_keys=
+Anyway, this looks to be in decent shape now, modulo other comments.
 
-      [4b4772dc] xfs: remove unnecessary parameter from xfs_iext_inc_seq
-      [46d29bb9] xfs: remove unnecessary int returns from deferred rmap f=
-unctions
-      [5965a482] xfs: remove unnecessary int returns from deferred refcou=
-nt functions
-      [60a802cc] xfs: remove unnecessary int returns from deferred bmap f=
-unctions
-      [d4eb45ad] xfs: reinitialize rm_flags when unpacking an offset into=
- an rmap irec
-      [a0f17dde] xfs: remove all *_ITER_ABORT values
-      [7dd6dee1] xfs: remove all *_ITER_CONTINUE values
-      [feb5c737] xfs: define a flags field for the AG geometry ioctl stru=
-cture
-      [c3fcbe14] xfs: revert 1baa2800e62d ("xfs: remove the unused XFS_AL=
-LOC_USERDATA flag")
-      [0f498e72] xfs: change the seconds fields in xfs_bulkstat to signed=
+--D
 
-      [8db10a9a] xfs_admin: support external log devices
-      [3f153e05] xfs_admin: enable online label getting and setting
-
-Dave Chinner (11):
-      [74945501] xfs: add kmem allocation trace points
-      [e3d4203e] xfs: move xfs_dir2_addname()
-      [34af510f] xfs: factor data block addition from xfs_dir2_node_addna=
-me_int()
-      [64b80d86] xfs: factor free block index lookup from xfs_dir2_node_a=
-ddname_int()
-      [4ebdc2c8] xfs: speed up directory bestfree block scanning
-      [b5784c09] xfs: reverse search directory freespace indexes
-      [42a383ab] xfs: make attr lookup returns consistent
-      [ab0d25d8] xfs: remove unnecessary indenting from xfs_attr3_leaf_ge=
-tvalue
-      [17e72771] xfs: move remote attr retrieval into xfs_attr3_leaf_getv=
-alue
-      [4343d303] xfs: consolidate attribute value copying
-      [b4b9ad30] xfs: allocate xattr buffer on demand
-
-Eric Sandeen (7):
-      [55b503df] xfs: log proper length of superblock
-      [2671b64d] xfs: remove unused flags arg from xfs_get_aghdr_buf()
-      [6f1df6a3] xfsprogs: Release v5.4.0-rc0
-      [998aed52] xfsprogs: remove stray libxfs whitespace
-      [2383d7c5] mkfs: tidy up discard notifications
-      [a4e8b806] xfsprogs: Release v5.4.0-rc1
-      [0cfb2952] xfsprogs: Release v5.4.0
-
-John Pittman (1):
-      [2ab6ea6a] xfsprogs: add missing line feeds in libxfs/rdwr.c
-
-Pavel Reichl (1):
-      [7e8a6edb] mkfs: Break block discard into chunks of 2 GB
-
-Tetsuo Handa (1):
-      [6cd1e6db] fs: xfs: Remove KM_NOSLEEP and KM_SLEEP.
-
-zhengbin (1):
-      [763d7f07] xfs: remove excess function parameter description in 'xf=
-s_btree_sblock_v5hdr_verify'
-
-
-Code Diffstat:
-
- VERSION                   |   2 +-
- configure.ac              |   2 +-
- db/xfs_admin.sh           |  54 +++++-
- debian/changelog          |  18 ++
- doc/CHANGES               |  11 ++
- include/kmem.h            |   3 +-
- include/xfs_mount.h       |   8 -
- libxfs/kmem.c             |   6 +
- libxfs/libxfs_priv.h      |   2 +-
- libxfs/logitem.c          |   6 +-
- libxfs/rdwr.c             |   6 +-
- libxfs/trans.c            |   4 +-
- libxfs/xfs_ag.c           |   5 +-
- libxfs/xfs_alloc.c        |   2 +-
- libxfs/xfs_attr.c         |  79 +++++---
- libxfs/xfs_attr.h         |   6 +-
- libxfs/xfs_attr_leaf.c    | 151 +++++++--------
- libxfs/xfs_attr_remote.c  |   2 +
- libxfs/xfs_bmap.c         |  88 ++++-----
- libxfs/xfs_bmap.h         |  14 +-
- libxfs/xfs_bmap_btree.c   |  16 +-
- libxfs/xfs_btree.c        |  14 +-
- libxfs/xfs_btree.h        |  10 +-
- libxfs/xfs_da_btree.c     |   6 +-
- libxfs/xfs_da_btree.h     |   4 +-
- libxfs/xfs_defer.c        |   2 +-
- libxfs/xfs_dir2.c         |  14 +-
- libxfs/xfs_dir2_block.c   |   4 +-
- libxfs/xfs_dir2_node.c    | 678 ++++++++++++++++++++++++++++++++--------=
-----------------------------
- libxfs/xfs_dir2_sf.c      |   8 +-
- libxfs/xfs_fs.h           |  12 +-
- libxfs/xfs_ialloc.c       |   9 +-
- libxfs/xfs_iext_tree.c    |   8 +-
- libxfs/xfs_inode_buf.c    |   1 +
- libxfs/xfs_inode_fork.c   |  16 +-
- libxfs/xfs_refcount.c     |  50 ++---
- libxfs/xfs_refcount.h     |  12 +-
- libxfs/xfs_rmap.c         |  59 +++---
- libxfs/xfs_rmap.h         |  11 +-
- libxfs/xfs_sb.c           |   2 +-
- libxfs/xfs_shared.h       |   6 -
- libxfs/xfs_trans_inode.c  |   1 +
- libxfs/xfs_types.h        |   8 +
- libxlog/xfs_log_recover.c |  10 +-
- man/man8/xfs_admin.8      |  18 +-
- mkfs/xfs_mkfs.c           |  54 ++++--
- 46 files changed, 818 insertions(+), 684 deletions(-)
-
-
---ww6Utlr43GtkvNGtPz2H5K5b44OhL3i9X--
-
---U7qmKhO2NWBQuzDXRRgQcm7l7RjlnxXPn
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl39RDUACgkQIK4WkuE9
-3uCeYw//aBY9nlSCsebBoTaM+ZMiUAG28bpA3XyHWZLnSXTCckQ9PvBWasVIFjcl
-dr4W37RXX2CDLHB7JewntPiy9DKkmTRUVq5hQOL/IJ34uVnCkKUmzljLnbZIxmHc
-DU2ijpTU0rRJrRDVc3pcXfntLriBm8PHDQRxow1B/sdTXRMTRxLBtcBNMnSOGcyo
-9DpqOj9LK9Akoz8ZNOGMQ17Xzb7Kevc4g6VrxOokVVUDR8rpqaePE1+x7exdk72z
-dIRtiZdUsW+ScdZ5TkuHeZ53yoLyF52DxQYBQw6nnR49sV45ft4K47z9gA8Sc9fC
-O/SEeICKbk5z6YCHFS3IJ9C7EmJWlhqIkuCzWj7woS5J6V4Rh8DKqWR/jrHfjnzL
-GTBOQzjt0Mr1hvxQ6+jNC2/OC6IIQ77j71X8IwgkVFnKXoGt8NKrYHnpVViERBfd
-HowIALW2462Aj0IgU082JbfXdQXYyAxBjtdFOxBZ7BUDksFf8V9fweJYtWWnHMq+
-djnbsj7K42pv/ZAAH+eDcwvypzFFB8YQcOnlbL7I5OICa5h5o3ttm/NlRDXOIF/H
-sVzq8ixd+apkQnOCLNvCTaDb5DR6z8QHwF/1GaneOEKvfr4DxD/cnU0x8f+iN+C1
-zikt06D3CNKRoa0Z6eBEGQT02EldPVWtLLuEOsg18Lno9vmBFnA=
-=MrwC
------END PGP SIGNATURE-----
-
---U7qmKhO2NWBQuzDXRRgQcm7l7RjlnxXPn--
+> +	if (crc != stored_crc) {
+> +		zonefs_err(sb, "Invalid checksum (Expected 0x%08x, got 0x%08x)",
+> +			   crc, stored_crc);
+> +		ret = -EIO;
+> +		goto out;
+> +	}
+> +
+> +	ret = -EINVAL;
+> +	if (le32_to_cpu(super->s_magic) != ZONEFS_MAGIC)
+> +		goto out;
+> +
+> +	sbi->s_features = le64_to_cpu(super->s_features);
+> +	if (sbi->s_features & ~ZONEFS_F_DEFINED_FEATURES) {
+> +		zonefs_err(sb, "Unknown features set 0x%llx\n",
+> +			   sbi->s_features);
+> +		goto out;
+> +	}
+> +
+> +	if (sbi->s_features & ZONEFS_F_UID) {
+> +		sbi->s_uid = make_kuid(current_user_ns(),
+> +				       le32_to_cpu(super->s_uid));
+> +		if (!uid_valid(sbi->s_uid)) {
+> +			zonefs_err(sb, "Invalid UID feature\n");
+> +			goto out;
+> +		}
+> +	}
+> +
+> +	if (sbi->s_features & ZONEFS_F_GID) {
+> +		sbi->s_gid = make_kgid(current_user_ns(),
+> +				       le32_to_cpu(super->s_gid));
+> +		if (!gid_valid(sbi->s_gid)) {
+> +			zonefs_err(sb, "Invalid GID feature\n");
+> +			goto out;
+> +		}
+> +	}
+> +
+> +	if (sbi->s_features & ZONEFS_F_PERM)
+> +		sbi->s_perm = le32_to_cpu(super->s_perm);
+> +
+> +	if (memchr_inv(super->s_reserved, 0, sizeof(super->s_reserved))) {
+> +		zonefs_err(sb, "Reserved area is being used\n");
+> +		goto out;
+> +	}
+> +
+> +	uuid_copy(&sbi->s_uuid, &super->s_uuid);
+> +	ret = 0;
+> +
+> +out:
+> +	__free_page(page);
+> +
+> +	return ret;
+> +}
+> +
+> +/*
+> + * Check that the device is zoned. If it is, get the list of zones and create
+> + * sub-directories and files according to the device zone configuration and
+> + * format options.
+> + */
+> +static int zonefs_fill_super(struct super_block *sb, void *data, int silent)
+> +{
+> +	struct zonefs_zone_data zd;
+> +	struct zonefs_sb_info *sbi;
+> +	struct inode *inode;
+> +	enum zonefs_ztype t;
+> +	int ret;
+> +
+> +	if (!bdev_is_zoned(sb->s_bdev)) {
+> +		zonefs_err(sb, "Not a zoned block device\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	/*
+> +	 * Initialize super block information: the maximum file size is updated
+> +	 * when the zone files are created so that the format option
+> +	 * ZONEFS_F_AGGRCNV which increases the maximum file size of a file
+> +	 * beyond the zone size is taken into account.
+> +	 */
+> +	sbi = kzalloc(sizeof(*sbi), GFP_KERNEL);
+> +	if (!sbi)
+> +		return -ENOMEM;
+> +
+> +	spin_lock_init(&sbi->s_lock);
+> +	sb->s_fs_info = sbi;
+> +	sb->s_magic = ZONEFS_MAGIC;
+> +	sb->s_maxbytes = 0;
+> +	sb->s_op = &zonefs_sops;
+> +	sb->s_time_gran	= 1;
+> +
+> +	/*
+> +	 * The block size is always equal to the device physical sector size to
+> +	 * ensure that writes on 512e devices (512B logical block and 4KB
+> +	 * physical block) are always aligned to the device physical blocks
+> +	 * (as required for writes to sequential zones on ZBC/ZAC disks).
+> +	 */
+> +	sb_set_blocksize(sb, bdev_physical_block_size(sb->s_bdev));
+> +	sbi->s_blocksize_mask = sb->s_blocksize - 1;
+> +	sbi->s_uid = GLOBAL_ROOT_UID;
+> +	sbi->s_gid = GLOBAL_ROOT_GID;
+> +	sbi->s_perm = 0640; /* S_IRUSR | S_IWUSR | S_IRGRP */
+> +
+> +	ret = zonefs_read_super(sb);
+> +	if (ret)
+> +		return ret;
+> +
+> +	memset(&zd, 0, sizeof(struct zonefs_zone_data));
+> +	zd.sb = sb;
+> +	ret = zonefs_get_zone_info(&zd);
+> +	if (ret)
+> +		goto out;
+> +
+> +	zonefs_info(sb, "Mounting %u zones",
+> +		    blkdev_nr_zones(sb->s_bdev->bd_disk));
+> +
+> +	/* Create root directory inode */
+> +	ret = -ENOMEM;
+> +	inode = new_inode(sb);
+> +	if (!inode)
+> +		goto out;
+> +
+> +	inode->i_ino = get_next_ino();
+> +	inode->i_mode = S_IFDIR | 0755;
+> +	inode->i_ctime = inode->i_mtime = inode->i_atime = current_time(inode);
+> +	inode->i_op = &simple_dir_inode_operations;
+> +	inode->i_fop = &simple_dir_operations;
+> +	set_nlink(inode, 2);
+> +
+> +	sb->s_root = d_make_root(inode);
+> +	if (!sb->s_root)
+> +		goto out;
+> +
+> +	/* Create and populate files in zone groups directories */
+> +	for (t = 0; t < ZONEFS_ZTYPE_MAX; t++) {
+> +		ret = zonefs_create_zgroup(&zd, t);
+> +		if (ret)
+> +			break;
+> +	}
+> +
+> +out:
+> +	zonefs_cleanup_zone_info(&zd);
+> +
+> +	return ret;
+> +}
+> +
+> +static struct dentry *zonefs_mount(struct file_system_type *fs_type,
+> +				   int flags, const char *dev_name, void *data)
+> +{
+> +	return mount_bdev(fs_type, flags, dev_name, data, zonefs_fill_super);
+> +}
+> +
+> +static void zonefs_kill_super(struct super_block *sb)
+> +{
+> +	struct zonefs_sb_info *sbi = ZONEFS_SB(sb);
+> +
+> +	kfree(sbi);
+> +	if (sb->s_root)
+> +		d_genocide(sb->s_root);
+> +	kill_block_super(sb);
+> +}
+> +
+> +/*
+> + * File system definition and registration.
+> + */
+> +static struct file_system_type zonefs_type = {
+> +	.owner		= THIS_MODULE,
+> +	.name		= "zonefs",
+> +	.mount		= zonefs_mount,
+> +	.kill_sb	= zonefs_kill_super,
+> +	.fs_flags	= FS_REQUIRES_DEV,
+> +};
+> +
+> +static int __init zonefs_init_inodecache(void)
+> +{
+> +	zonefs_inode_cachep = kmem_cache_create("zonefs_inode_cache",
+> +			sizeof(struct zonefs_inode_info), 0,
+> +			(SLAB_RECLAIM_ACCOUNT | SLAB_MEM_SPREAD | SLAB_ACCOUNT),
+> +			NULL);
+> +	if (zonefs_inode_cachep == NULL)
+> +		return -ENOMEM;
+> +	return 0;
+> +}
+> +
+> +static void zonefs_destroy_inodecache(void)
+> +{
+> +	/*
+> +	 * Make sure all delayed rcu free inodes are flushed before we
+> +	 * destroy the inode cache.
+> +	 */
+> +	rcu_barrier();
+> +	kmem_cache_destroy(zonefs_inode_cachep);
+> +}
+> +
+> +static int __init zonefs_init(void)
+> +{
+> +	int ret;
+> +
+> +	BUILD_BUG_ON(sizeof(struct zonefs_super) != ZONEFS_SUPER_SIZE);
+> +
+> +	ret = zonefs_init_inodecache();
+> +	if (ret)
+> +		return ret;
+> +
+> +	ret = register_filesystem(&zonefs_type);
+> +	if (ret) {
+> +		zonefs_destroy_inodecache();
+> +		return ret;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static void __exit zonefs_exit(void)
+> +{
+> +	zonefs_destroy_inodecache();
+> +	unregister_filesystem(&zonefs_type);
+> +}
+> +
+> +MODULE_AUTHOR("Damien Le Moal");
+> +MODULE_DESCRIPTION("Zone file system for zoned block devices");
+> +MODULE_LICENSE("GPL");
+> +module_init(zonefs_init);
+> +module_exit(zonefs_exit);
+> diff --git a/fs/zonefs/zonefs.h b/fs/zonefs/zonefs.h
+> new file mode 100644
+> index 000000000000..0296b3426f7b
+> --- /dev/null
+> +++ b/fs/zonefs/zonefs.h
+> @@ -0,0 +1,169 @@
+> +/* SPDX-License-Identifier: GPL-2.0 */
+> +/*
+> + * Simple zone file system for zoned block devices.
+> + *
+> + * Copyright (C) 2019 Western Digital Corporation or its affiliates.
+> + */
+> +#ifndef __ZONEFS_H__
+> +#define __ZONEFS_H__
+> +
+> +#include <linux/fs.h>
+> +#include <linux/magic.h>
+> +#include <linux/uuid.h>
+> +#include <linux/mutex.h>
+> +#include <linux/rwsem.h>
+> +
+> +/*
+> + * Maximum length of file names: this only needs to be large enough to fit
+> + * the zone group directory names and a decimal value of the start sector of
+> + * the zones for file names. 16 characters is plenty.
+> + */
+> +#define ZONEFS_NAME_MAX		16
+> +
+> +/*
+> + * Zone types: ZONEFS_ZTYPE_SEQ is used for all sequential zone types
+> + * defined in linux/blkzoned.h, that is, BLK_ZONE_TYPE_SEQWRITE_REQ and
+> + * BLK_ZONE_TYPE_SEQWRITE_PREF.
+> + */
+> +enum zonefs_ztype {
+> +	ZONEFS_ZTYPE_CNV,
+> +	ZONEFS_ZTYPE_SEQ,
+> +	ZONEFS_ZTYPE_MAX,
+> +};
+> +
+> +static inline enum zonefs_ztype zonefs_zone_type(struct blk_zone *zone)
+> +{
+> +	if (zone->type == BLK_ZONE_TYPE_CONVENTIONAL)
+> +		return ZONEFS_ZTYPE_CNV;
+> +	return ZONEFS_ZTYPE_SEQ;
+> +}
+> +
+> +/*
+> + * In-memory inode data.
+> + */
+> +struct zonefs_inode_info {
+> +	struct inode		i_vnode;
+> +
+> +	/* File zone type */
+> +	enum zonefs_ztype	i_ztype;
+> +
+> +	/* File zone start sector (512B unit) */
+> +	sector_t		i_zsector;
+> +
+> +	/* File zone write pointer position (sequential zones only) */
+> +	loff_t			i_wpoffset;
+> +
+> +	/* File maximum size */
+> +	loff_t			i_max_size;
+> +
+> +	/*
+> +	 * To serialise fully against both syscall and mmap based IO and
+> +	 * sequential file truncation, two locks are used. For serializing
+> +	 * zonefs_seq_file_truncate() against zonefs_iomap_begin(), that is,
+> +	 * file truncate operations against block mapping, i_truncate_mutex is
+> +	 * used. i_truncate_mutex also protects against concurrent accesses
+> +	 * and changes to the inode private data, and in particular changes to
+> +	 * a sequential file size on completion of direct IO writes.
+> +	 * Serialization of mmap read IOs with truncate and syscall IO
+> +	 * operations is done with i_mmap_sem in addition to i_truncate_mutex.
+> +	 * Only zonefs_seq_file_truncate() takes both lock (i_mmap_sem first,
+> +	 * i_truncate_mutex second).
+> +	 */
+> +	struct mutex		i_truncate_mutex;
+> +	struct rw_semaphore	i_mmap_sem;
+> +};
+> +
+> +static inline struct zonefs_inode_info *ZONEFS_I(struct inode *inode)
+> +{
+> +	return container_of(inode, struct zonefs_inode_info, i_vnode);
+> +}
+> +
+> +/*
+> + * On-disk super block (block 0).
+> + */
+> +#define ZONEFS_SUPER_SIZE	4096
+> +struct zonefs_super {
+> +
+> +	/* Magic number */
+> +	__le32		s_magic;
+> +
+> +	/* Checksum */
+> +	__le32		s_crc;
+> +
+> +	/* Features */
+> +	__le64		s_features;
+> +
+> +	/* 128-bit uuid */
+> +	uuid_t		s_uuid;
+> +
+> +	/* UID/GID to use for files */
+> +	__le32		s_uid;
+> +	__le32		s_gid;
+> +
+> +	/* File permissions */
+> +	__le32		s_perm;
+> +
+> +	/* Padding to ZONEFS_SUPER_SIZE bytes */
+> +	__u8		s_reserved[4052];
+> +
+> +} __packed;
+> +
+> +/*
+> + * Feature flags: used on disk in the s_features field of struct zonefs_super
+> + * and in-memory in the s_feartures field of struct zonefs_sb_info.
+> + */
+> +enum zonefs_features {
+> +	/*
+> +	 * Aggregate contiguous conventional zones into a single file.
+> +	 */
+> +	ZONEFS_F_AGGRCNV = 1ULL << 0,
+> +	/*
+> +	 * Use super block specified UID for files instead of default.
+> +	 */
+> +	ZONEFS_F_UID = 1ULL << 1,
+> +	/*
+> +	 * Use super block specified GID for files instead of default.
+> +	 */
+> +	ZONEFS_F_GID = 1ULL << 2,
+> +	/*
+> +	 * Use super block specified file permissions instead of default 640.
+> +	 */
+> +	ZONEFS_F_PERM = 1ULL << 3,
+> +};
+> +
+> +#define ZONEFS_F_DEFINED_FEATURES \
+> +	(ZONEFS_F_AGGRCNV | ZONEFS_F_UID | ZONEFS_F_GID | ZONEFS_F_PERM)
+> +
+> +/*
+> + * In-memory Super block information.
+> + */
+> +struct zonefs_sb_info {
+> +
+> +	spinlock_t		s_lock;
+> +
+> +	unsigned long long	s_features;
+> +	kuid_t			s_uid;
+> +	kgid_t			s_gid;
+> +	umode_t			s_perm;
+> +	uuid_t			s_uuid;
+> +	loff_t			s_blocksize_mask;
+> +
+> +	unsigned int		s_nr_files[ZONEFS_ZTYPE_MAX];
+> +
+> +	loff_t			s_blocks;
+> +	loff_t			s_used_blocks;
+> +};
+> +
+> +static inline struct zonefs_sb_info *ZONEFS_SB(struct super_block *sb)
+> +{
+> +	return sb->s_fs_info;
+> +}
+> +
+> +#define zonefs_info(sb, format, args...)	\
+> +	pr_info("zonefs (%s): " format, sb->s_id, ## args)
+> +#define zonefs_err(sb, format, args...)	\
+> +	pr_err("zonefs (%s) ERROR: " format, sb->s_id, ## args)
+> +#define zonefs_warn(sb, format, args...)	\
+> +	pr_warn("zonefs (%s) WARN: " format, sb->s_id, ## args)
+> +
+> +#endif
+> diff --git a/include/uapi/linux/magic.h b/include/uapi/linux/magic.h
+> index 3ac436376d79..d78064007b17 100644
+> --- a/include/uapi/linux/magic.h
+> +++ b/include/uapi/linux/magic.h
+> @@ -87,6 +87,7 @@
+>  #define NSFS_MAGIC		0x6e736673
+>  #define BPF_FS_MAGIC		0xcafe4a11
+>  #define AAFS_MAGIC		0x5a3c69f0
+> +#define ZONEFS_MAGIC		0x5a4f4653
+>  
+>  /* Since UDF 2.01 is ISO 13346 based... */
+>  #define UDF_SUPER_MAGIC		0x15013346
+> -- 
+> 2.23.0
+> 
