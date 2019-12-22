@@ -2,124 +2,112 @@ Return-Path: <SRS0=cf1J=2M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 401A8C2D0D4
-	for <linux-xfs@archiver.kernel.org>; Sun, 22 Dec 2019 16:32:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BD46C2D0C0
+	for <linux-xfs@archiver.kernel.org>; Sun, 22 Dec 2019 16:36:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 171E82070A
-	for <linux-xfs@archiver.kernel.org>; Sun, 22 Dec 2019 16:32:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1577032343;
-	bh=5SW2T5Nijt/qrSRhZFyckkiMkH+dLeo4Zi67LBsr0f4=;
-	h=Date:From:To:Cc:Subject:List-ID:From;
-	b=lmSy3AQWAZ+VvEJOjU5oylQZ5TTnbH8ON7VUuSWlNiZmubN53xK0xTidgvxdsMWU8
-	 lDwfeLov/p3HAScqJYJstlrawKPOo/K3jFl+svsfYof+A3n8jJ4A4TfCpXmCBpz0cT
-	 QhXqUc/2ch8BL71gSlaR3mKxKW6LbAkAo5fqYZyo=
+	by mail.kernel.org (Postfix) with ESMTP id 4458B206D3
+	for <linux-xfs@archiver.kernel.org>; Sun, 22 Dec 2019 16:36:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Tw9097qK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726010AbfLVQcT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 22 Dec 2019 11:32:19 -0500
-Received: from mail.kernel.org ([198.145.29.99]:60852 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725919AbfLVQcT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 22 Dec 2019 11:32:19 -0500
-Received: from localhost (c-67-169-218-210.hsd1.or.comcast.net [67.169.218.210])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2394420684;
-        Sun, 22 Dec 2019 16:32:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1577032339;
-        bh=5SW2T5Nijt/qrSRhZFyckkiMkH+dLeo4Zi67LBsr0f4=;
-        h=Date:From:To:Cc:Subject:From;
-        b=NJkL977ZRx9WCtyHT3E9czhX/VOPXFAu8NmnyX0V9FI04+SV0DIP0BMFa9o59lzxX
-         0UrJL72ytloM63TWWcx2NkymUCN25IVXBNjS89BhcykFJ8BB6MNh/lGliQSasX4dPD
-         Q7cU5gaMbFRNJgMZ+5hP5MP+85X3MrvB9J8wSlss=
-Date:   Sun, 22 Dec 2019 08:32:18 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, linux-kernel@vger.kernel.org,
-        sandeen@sandeen.net, hch@lst.de
-Subject: [GIT PULL] xfs: fixes for 5.5-rc3
-Message-ID: <20191222163218.GR7489@magnolia>
+        id S1725922AbfLVQge (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 22 Dec 2019 11:36:34 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:55576 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725919AbfLVQge (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Dec 2019 11:36:34 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBMGYOlr075490
+        for <linux-xfs@vger.kernel.org>; Sun, 22 Dec 2019 16:36:32 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : mime-version : content-type; s=corp-2019-08-05;
+ bh=+nDbHn1fqKfrercfnLlWeAqmTsXyxsAdKheh/FmhNuY=;
+ b=Tw9097qKGii5zr5BHl0YTH7/PM/VdUbXViWX2TOxJoWBu3dMq1sawSNOxdb4I75PFFbE
+ aXP7iKdYDWR1DXBmmf2AWeQZwHCSR0gS0Siro7aJg+MqWUUpOBdWI5xtt6OH0t+nex4V
+ dyx9xeQqRfq3eeAZOv9Il2QbOXzuc3wn051pWFbxAqNh0TNj64A88hv68bpQU1Ig2xji
+ ig3rXd1zwNpYH8AR/OBtZhiSvFFQ83GMGg6yLBD5bhDIhzd/cZQNlh4CN9hk2m6CDVl1
+ VoAVmP2gV6emF4SEiSu7wVVvtlJqAzok7Go8rAEJoB9fbp+uAG8DM4eLv2dRRWV3o4lc wA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 2x1bbpkpd9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 22 Dec 2019 16:36:32 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBMGYNgr107507
+        for <linux-xfs@vger.kernel.org>; Sun, 22 Dec 2019 16:36:32 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 2x1wj7sv34-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 22 Dec 2019 16:36:32 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xBMGaVUp003519
+        for <linux-xfs@vger.kernel.org>; Sun, 22 Dec 2019 16:36:32 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sun, 22 Dec 2019 08:36:31 -0800
+Date:   Sun, 22 Dec 2019 08:36:30 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] xfs: truncate should remove all blocks, not just to the end
+ of the page cache
+Message-ID: <20191222163630.GS7489@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9479 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-1912220150
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9479 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-1912220150
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Please pull these bug fixes for 5.5-rc3, which fix a few bugs that could
-lead to corrupt files, fsck complaints, and filesystem crashes.
+xfs_itruncate_extents_flags() is supposed to unmap every block in a file
+from EOF onwards.  Oddly, it uses s_maxbytes as the upper limit to the
+bunmapi range, even though s_maxbytes reflects the highest offset the
+pagecache can support, not the highest offset that XFS supports.
 
-The branch has survived a couple of days of xfstests runs and merges
-cleanly with this morning's master.  Please let me know if anything
-strange happens.
+The result of this confusion is that if you create a 20T file on a
+64-bit machine, mount the filesystem on a 32-bit machine, and remove the
+file, we leak everything above 16T.  Fix this by capping the bunmapi
+request at the maximum possible block offset, not s_maxbytes.
 
---D
+Fixes: 32972383ca462 ("xfs: make largest supported offset less shouty")
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_inode.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-The following changes since commit e42617b825f8073569da76dc4510bfa019b1c35a:
-
-  Linux 5.5-rc1 (2019-12-08 14:57:55 -0800)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.5-fixes-2
-
-for you to fetch changes up to 5084bf6b2006fcd46f1e44e3c51b687507b362e2:
-
-  xfs: Make the symbol 'xfs_rtalloc_log_count' static (2019-12-20 08:07:31 -0800)
-
-----------------------------------------------------------------
-Fixes for 5.5:
-- Minor documentation fixes
-- Fix a file corruption due to read racing with an insert range
-operation.
-- Fix log reservation overflows when allocating large rt extents
-- Fix a buffer log item flags check
-- Don't allow administrators to mount with sunit= options that will
-cause later xfs_repair complaints about the root directory being
-suspicious because the fs geometry appeared inconsistent
-- Fix a non-static helper that should have been static
-
-----------------------------------------------------------------
-Brian Foster (2):
-      xfs: stabilize insert range start boundary to avoid COW writeback race
-      xfs: use bitops interface for buf log item AIL flag check
-
-Chen Wandun (1):
-      xfs: Make the symbol 'xfs_rtalloc_log_count' static
-
-Darrick J. Wong (5):
-      xfs: fix log reservation overflows when allocating large rt extents
-      libxfs: resync with the userspace libxfs
-      xfs: refactor agfl length computation function
-      xfs: split the sunit parameter update into two parts
-      xfs: don't commit sunit/swidth updates to disk if that would cause repair failures
-
-Randy Dunlap (1):
-      xfs: fix Sphinx documentation warning
-
- Documentation/admin-guide/xfs.rst |   2 +-
- fs/xfs/libxfs/xfs_alloc.c         |  18 ++--
- fs/xfs/libxfs/xfs_bmap.c          |   5 +-
- fs/xfs/libxfs/xfs_dir2.c          |  21 +++++
- fs/xfs/libxfs/xfs_dir2_priv.h     |  29 ++-----
- fs/xfs/libxfs/xfs_dir2_sf.c       |   6 +-
- fs/xfs/libxfs/xfs_ialloc.c        |  64 +++++++++++++++
- fs/xfs/libxfs/xfs_ialloc.h        |   1 +
- fs/xfs/libxfs/xfs_trans_resv.c    |  96 +++++++++++++++++-----
- fs/xfs/xfs_bmap_util.c            |  12 +++
- fs/xfs/xfs_buf_item.c             |   2 +-
- fs/xfs/xfs_mount.c                | 168 ++++++++++++++++++++++++++------------
- fs/xfs/xfs_trace.h                |  21 +++++
- 13 files changed, 341 insertions(+), 104 deletions(-)
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 401da197f012..eaa85d5933cb 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1544,9 +1544,12 @@ xfs_itruncate_extents_flags(
+ 	 * possible file size.  If the first block to be removed is
+ 	 * beyond the maximum file size (ie it is the same as last_block),
+ 	 * then there is nothing to do.
++	 *
++	 * We have to free all the blocks to the bmbt maximum offset, even if
++	 * the page cache can't scale that far.
+ 	 */
+ 	first_unmap_block = XFS_B_TO_FSB(mp, (xfs_ufsize_t)new_size);
+-	last_block = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
++	last_block = (1ULL << BMBT_STARTOFF_BITLEN) - 1;
+ 	if (first_unmap_block == last_block)
+ 		return 0;
+ 
