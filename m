@@ -7,106 +7,132 @@ X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 262D3C2D0CF
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Dec 2019 16:47:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADCEBC2D0CF
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Dec 2019 16:52:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DC1562071A
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Dec 2019 16:47:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 74EA52063A
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Dec 2019 16:52:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="hX1c30WP"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BBCpeVOr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726171AbfLXQrj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Dec 2019 11:47:39 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:52616 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726168AbfLXQrj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Dec 2019 11:47:39 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBOGiT8X098648;
-        Tue, 24 Dec 2019 16:47:31 GMT
+        id S1726171AbfLXQwY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Dec 2019 11:52:24 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:58102 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726168AbfLXQwX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Dec 2019 11:52:23 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBOGnVC3120406;
+        Tue, 24 Dec 2019 16:52:17 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=kYfm2KG9tqvqGVMMKheJxao/38Iw4s+jZ5wAmaOvMTs=;
- b=hX1c30WPZY0EQqkX4GI06KxpdrJbu517+1BlKJ92oxC8v+k4Vi0Xs7bhPA1jfVzxvw+4
- e/nAXIeQig8wFMQd6u6CnDqx4eS6hX2csRjQn1U98JEJnNCGxB29UNeRQtqvQugeOyZ2
- v7PkfVQO0PJ5HlUSPgOnvxK24nWNDzmh/3p9XANrGCeinaX/zXnzHkoCxRb2j1I9OXM4
- A06mE/IBCoYdko91JGvnCrFq0JL9+6ywjPIkHqMYPBoozGQtkdHhDlSU5UhquNBIT92k
- T6xeXpRqFcCcCZIYMyiFndvs0nxkUr/Lj4vGKerzup3Xfjm/v1w3j9o0VhEA40scDHaU hg== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2x1bbpvdsf-1
+ bh=f4dQLTDai+dyaK8zbcQJWy49SdSMqdE5IVWgHZvVLjs=;
+ b=BBCpeVOrzof4tD1KdyZS7a8HEfBkzh/s/sPN7oFWq/alnduOQNrauXoWOl6+G1uIjLtm
+ MHmToBDqcZ63xDa2nCzt9hO4phdx1JjvTBN8zQPzTPguQoNhdu4hX9JkVnYQ83MA7twG
+ lPDfGmVMSrBg3R6GVEUatXFVzUpEBwREO00zf+GlUQTKeGcGwjmLYpCaZcek0js8Y+jV
+ ruKr4zoApYRZZltegBw27xEgl6Z2TmzhVlyWyo6AEzlXtQxpExprXEpm0fzbLUcmuB5z
+ eyBvDXHIYVL7L39ezw28P8Qr4awjBn2HwWwRI7gwIcJaQj1zY/8mRGtACmajknrYUIxS 1A== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2x1attmev7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 24 Dec 2019 16:47:30 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBOGiLM3095248;
-        Tue, 24 Dec 2019 16:45:30 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2x3nn5hm46-1
+        Tue, 24 Dec 2019 16:52:16 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBOGma3f029586;
+        Tue, 24 Dec 2019 16:52:16 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 2x37te7hes-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 24 Dec 2019 16:45:30 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xBOGjTVO028890;
-        Tue, 24 Dec 2019 16:45:29 GMT
+        Tue, 24 Dec 2019 16:52:16 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xBOGqFjJ021842;
+        Tue, 24 Dec 2019 16:52:15 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 24 Dec 2019 08:45:29 -0800
-Date:   Tue, 24 Dec 2019 08:45:28 -0800
+        with ESMTP ; Tue, 24 Dec 2019 08:52:15 -0800
+Date:   Tue, 24 Dec 2019 08:52:14 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: rework insert range into an atomic operation
-Message-ID: <20191224164528.GZ7489@magnolia>
-References: <20191213171258.36934-1-bfoster@redhat.com>
- <20191213171258.36934-3-bfoster@redhat.com>
- <20191218023726.GH12765@magnolia>
- <20191218121033.GA63809@bfoster>
- <20191218211540.GB7489@magnolia>
- <20191219115550.GA6995@bfoster>
- <20191220201717.GQ7489@magnolia>
- <20191224112845.GC24663@infradead.org>
+Cc:     Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs_repair: fix totally broken unit conversion in
+ directory invalidation
+Message-ID: <20191224165214.GA7489@magnolia>
+References: <20191218042402.GL12765@magnolia>
+ <20191224083843.GA1739@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191224112845.GC24663@infradead.org>
+In-Reply-To: <20191224083843.GA1739@infradead.org>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9481 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1912240146
+ engine=8.0.1-1911140001 definitions=main-1912240147
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9481 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1912240146
+ definitions=main-1912240147
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 24, 2019 at 03:28:45AM -0800, Christoph Hellwig wrote:
-> On Fri, Dec 20, 2019 at 12:17:17PM -0800, Darrick J. Wong wrote:
-> > I think directio completions might suffer from the same class of problem
-> > though, since we allow concurrent dio writes and dio doesn't do any of
-> > the ioend batching that we do with buffered write ioends.
+On Tue, Dec 24, 2019 at 12:38:43AM -0800, Christoph Hellwig wrote:
+> On Tue, Dec 17, 2019 at 08:24:02PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Your humble author forgot that xfs_dablk_t has the same units as
+> > xfs_fileoff_t, and totally screwed up the directory buffer invalidation
+> > loop in dir_binval.  Not only is there an off-by-one error in the loop
+> > conditional, but the unit conversions are wrong.
 > 
-> OTOH direct I/O completions are per-I/O, and not per-extent like
-> buffered I/O completions.  Moreover for the case where we don't update
-> i_size and don't need a separate log force (overwrites without O_SYNC
-> or using fua) we could actually avoid the workqueue entirely with just
-> a little work.
+> Can we kill off xfs_dablk_t?  I found the concept very, very confusing
+> when touching the dir code.
 
-<nod>
+I personally wouldn't mind if that happened (as a separate patch).
 
-> > It might also be nice to find a way to unify the ioend paths since they
-> > both do "convert unwritten and do cow remapping" on the entire range,
-> > and diverge only once that's done.
+> > --- a/libxfs/xfs_dir2.h
+> > +++ b/libxfs/xfs_dir2.h
+> > @@ -308,6 +308,16 @@ xfs_dir2_leaf_tail_p(struct xfs_da_geometry *geo, struct xfs_dir2_leaf *lp)
+> >  		  sizeof(struct xfs_dir2_leaf_tail));
+> >  }
+> >  
+> > +/*
+> > + * For a given dir/attr geometry and extent mapping record, walk every file
+> > + * offset block (xfs_dablk_t) in the mapping that corresponds to the start
+> > + * of a logical directory block (xfs_dir2_db_t).
+> > + */
+> > +#define for_each_xfs_bmap_dabno(geo, irec, dabno) \
+> > +	for ((dabno) = round_up((irec)->br_startoff, (geo)->fsbcount); \
+> > +	     (dabno) < (irec)->br_startoff + (irec)->br_blockcount; \
+> > +	     (dabno) += (geo)->fsbcount)
 > 
-> They were common a while ago and it was a complete mess.  That is why
-> I split them.
+> I think not having the magic for macro would be cleaner..
 
-And I couldn't figure out a sane way to make them work together so I
-guess it's just as well. :)
+Eh, yeah, we don't really need it...
 
 --D
+
+> 
+> > +	xfs_dablk_t		dabno;
+> >  	int			error = 0;
+> >  
+> >  	if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS &&
+> > @@ -1286,11 +1286,7 @@ dir_binval(
+> >  	geo = tp->t_mountp->m_dir_geo;
+> >  	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+> >  	for_each_xfs_iext(ifp, &icur, &rec) {
+> > -		dabno = xfs_dir2_db_to_da(geo, rec.br_startoff +
+> > -				geo->fsbcount - 1);
+> > -		end_dabno = xfs_dir2_db_to_da(geo, rec.br_startoff +
+> > -				rec.br_blockcount);
+> > -		for (; dabno <= end_dabno; dabno += geo->fsbcount) {
+> > +		for_each_xfs_bmap_dabno(geo, &rec, dabno) {
+> >  			bp = NULL;
+> >  			error = -libxfs_da_get_buf(tp, ip, dabno, -2, &bp,
+> >  					whichfork);
+> 
+> But either way, the fix looks good.
