@@ -2,56 +2,52 @@ Return-Path: <SRS0=yXRu=2O=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11083C2D0CF
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Dec 2019 11:29:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00E60C2D0CF
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Dec 2019 11:56:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D815320706
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Dec 2019 11:29:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="oBfQxFQD"
+	by mail.kernel.org (Postfix) with ESMTP id D20712053B
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Dec 2019 11:56:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726222AbfLXL34 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Dec 2019 06:29:56 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:49152 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726201AbfLXL34 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Dec 2019 06:29:56 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=6CSH0KIjAnKOXgwFxeOf6zq3Fl/DFfMTJRaUxx72V3s=; b=oBfQxFQDQM9Vi4zst44R09DI7
-        OTl5u0bIsPcATTkwbPlLC2b9DmwTwScDRbQRtkqKDtXQdQMKORZwZbeuVTTTk0RAWiHrcFn4UlYY9
-        0IzUB9/YX2dsZBx9FoWsiSfMUEyoWgZmadVBQB3z0V1EUW/7TKlX/+kd56t8yYcCmjlHTp0sXSWAA
-        3vpAi+xKAEm/ReJqjm7dUlaPgKJ65B3qe5HIee/fEhUmvQ/Oufm4qLSo/odXG+ICqQM6mUunzZDcK
-        40IDCXdZqngF3fWbs1o0vVZ1lqyIBvd1vawhxoxUS6aeSQnHRF5FxAkshlS14EcxkkDdKoKv2euSl
-        ewm2lHxgg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1ijiNt-000256-Dv; Tue, 24 Dec 2019 11:29:55 +0000
-Date:   Tue, 24 Dec 2019 03:29:53 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: rework collapse range into an atomic operation
-Message-ID: <20191224112953.GD24663@infradead.org>
-References: <20191213171258.36934-1-bfoster@redhat.com>
- <20191213171258.36934-4-bfoster@redhat.com>
+        id S1726246AbfLXL4T (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Dec 2019 06:56:19 -0500
+Received: from verein.lst.de ([213.95.11.211]:59140 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726102AbfLXL4T (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Dec 2019 06:56:19 -0500
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id B131368B20; Tue, 24 Dec 2019 12:56:16 +0100 (CET)
+Date:   Tue, 24 Dec 2019 12:56:16 +0100
+From:   Christoph Hellwig <hch@lst.de>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        Allison Collins <allison.henderson@oracle.com>
+Subject: Re: [PATCH 01/33] xfs: clear kernel only flags in
+ XFS_IOC_ATTRMULTI_BY_HANDLE
+Message-ID: <20191224115616.GA30689@lst.de>
+References: <20191212105433.1692-1-hch@lst.de> <20191212105433.1692-2-hch@lst.de> <20191218212608.GD7489@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191213171258.36934-4-bfoster@redhat.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20191218212608.GD7489@magnolia>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Looks good modulo any commit log issues:
+On Wed, Dec 18, 2019 at 01:26:08PM -0800, Darrick J. Wong wrote:
+> >  	for (i = 0; i < am_hreq.opcount; i++) {
+> > +		ops[i].am_flags &= ATTR_KERNEL_FLAGS;
+> 
+> The only flags we allow from userspace are the internal state flags?
+> Is this supposed to be am_flags &= ~ATTR_KERNEL_FLAGS?
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Yes.  I switched back a few times between enumerating kernel only or
+user flags and finally settled on this one.  The sad part is that a full
+xfstests run didn't catch this.  In fact xfsprogs or xfstests seem to
+have no direct calls to XFS_IOC_ATTRMULTI_BY_HANDLE and its two wrappers
+in libhandle.  xfsdump does, but probably not in a way that is exercises.
