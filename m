@@ -2,204 +2,111 @@ Return-Path: <SRS0=hYYw=2P=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D93CC2D0C3
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Dec 2019 02:58:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC88BC2D0C8
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Dec 2019 04:22:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3ECAE2053B
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Dec 2019 02:58:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A99A72053B
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Dec 2019 04:22:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="jSgsCu3Y";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="ZqX3nrfn"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bJhPwhOZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726316AbfLYC6E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Dec 2019 21:58:04 -0500
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:63781 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726314AbfLYC6E (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Dec 2019 21:58:04 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1577242683; x=1608778683;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=WoUuBhU5ULlBMW9zHLB3qXbdkKByyhkjVBpOop6CL2M=;
-  b=jSgsCu3YX0wE1eSjvSIg9JAlY4K+4mk69VrtlIif4fLFYSfPv43lC9xz
-   8YmgwY2H1MSjKKmSEXRV49f1hQY1Z80KfoC4NJFkwhEfR8Q1hSXYH89or
-   R0s3Pehk6pfjVh26pk33Aqu4c1WQMpsfjXxPCxOsW9si7twP7vYWaIvHp
-   qXcbbo+NBdyYgxn4kBr5Wjd7cEHLTLlv/eLhakzv0E35lntgy9tgLYwTR
-   9QEPoMT7z9gfu7zT4c/XKc+kOGanqj4vK0E2Vxdp6KKDS0CUhAacgs1oD
-   a0xBrAcwXtEMcUvPXQ8yc6Ed8TV9ZHRwmGBm+HKXNW7XH5n36DRCLV6HO
-   Q==;
-IronPort-SDR: vxgYlB2tgoQTM5JnhlQFnKEJaHQO37kpR+yrOuXpxCYZu7tFuNGeHjMEdTJEvRVuqSW39W9tyn
- rBktirRTtupUna28KERG12VLX75/tjHbKqoYfDzoWc5bCpcSJGiPDL2Tymq/mASZF6+LNRKjrT
- 65NCjIIsdreXOlaUHA+CJFqOiNrbSdy0VXKQI4/seQbsrMwH4oRQyj++qJMLgBynwIOIVSfa6U
- KvCo3ldVrEVARpDyws2zgRWSazu0Yax3pRffdtXwU89l7apYnCn9IoJWZiA/a8OEFbjICmALm9
- Jg0=
-X-IronPort-AV: E=Sophos;i="5.69,353,1571673600"; 
-   d="scan'208";a="127687701"
-Received: from mail-bn8nam11lp2176.outbound.protection.outlook.com (HELO NAM11-BN8-obe.outbound.protection.outlook.com) ([104.47.58.176])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Dec 2019 10:58:02 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=mUwpYBnBOZHIaaIz2YvcRJ+pvQDQEOEDn58DArAmhCW8i4CAPu7Z32gSJmIuktwDZcZsO98VtEAxVfFOynxR1lXUsPQGk2H5ZJtA7AMa6/y/O7nWdIfsg4zVDYIcq6A5zhQqFJ7h1gm5iMh/c31wb4GnYYhPYncZV57G6B8lBGvwIR4wwly8hKcGYRJbqKcHnp2wcrxkO7HSFMX6361XN3+z/HMF64xhqQXetAsMIlkVS8fODQ5evLj6woNqTxyiCQUUXT/OJdblTK/r+DRtgs/7e4qz61rW3jVcKEQ7L1Xk3mjYjzQvPZiCvDoKG67wXPsbFK5VwGOQapLRJSDEvw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WyrK8YIuHomjoe9LPr85brdCa0UgTx3zfSmZLDNNtYQ=;
- b=MPVdNY/eYsSDyT0bwePMiRUaNn4z9y2KHFAiJWxDAdyY/9t9ZCOm5qMOL6ZDWo90zjyquiGsE7jeTaNiG3IA1zuP+8Ef0E8RLbC7RA2N5hY5IZv4T2GiODw+Ox0/NYO1FSKKQl1cSvU1sr7rYTWShqK6Jhf8OOnJFSErG5vUCiNerhq2+nkMZDshRc6vcAr5TA8xMRIZ6KGma2j0QLoNaWNUDwHtHewIcM/f9YXqcuZuyAQ5sUKSA1dwcifho5twv+lNRKL8+7dik+DfCyHkBhM7ttWBZAowMfhcikzLajQ7sfgDhE8O2rgEF0EpyVxKXAbLECMhcK7D5tna4lSEcQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WyrK8YIuHomjoe9LPr85brdCa0UgTx3zfSmZLDNNtYQ=;
- b=ZqX3nrfnxbpAA63AHnOgvKHAlQO1v2JTB8tBWnuheYhmQobemmCFY737fPEjIUP3mHxDs06RUZnTt6DB7vEmqvuUuh3QogyBi36HD63hsih+gesNS8hkL/iRsGlIjGdZTFNPCERze6SitgpaK+PoiKRhXJHavxYjaBLWi4AYmiY=
-Received: from BN8PR04MB5812.namprd04.prod.outlook.com (20.179.75.75) by
- BN8PR04MB5489.namprd04.prod.outlook.com (20.178.215.221) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2559.14; Wed, 25 Dec 2019 02:57:59 +0000
-Received: from BN8PR04MB5812.namprd04.prod.outlook.com
- ([fe80::b89f:12e0:be8a:8ecf]) by BN8PR04MB5812.namprd04.prod.outlook.com
- ([fe80::b89f:12e0:be8a:8ecf%6]) with mapi id 15.20.2559.017; Wed, 25 Dec 2019
- 02:57:59 +0000
-From:   Damien Le Moal <Damien.LeMoal@wdc.com>
-To:     Randy Dunlap <rdunlap@infradead.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-CC:     Johannes Thumshirn <jth@kernel.org>,
-        Naohiro Aota <Naohiro.Aota@wdc.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 2/2] zonefs: Add documentation
-Thread-Topic: [PATCH v3 2/2] zonefs: Add documentation
-Thread-Index: AQHVuf7Aj/1RgKnKOE6js//cNKXmzQ==
-Date:   Wed, 25 Dec 2019 02:57:58 +0000
-Message-ID: <BN8PR04MB5812F5201C29A24CAB8C093DE7280@BN8PR04MB5812.namprd04.prod.outlook.com>
-References: <20191224020615.134668-1-damien.lemoal@wdc.com>
- <20191224020615.134668-3-damien.lemoal@wdc.com>
- <ac1bd604-0088-2002-f03b-5752425bb530@infradead.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Damien.LeMoal@wdc.com; 
-x-originating-ip: [199.255.47.7]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 0c90dbc9-3be7-4ef5-3b38-08d788e63fe1
-x-ms-traffictypediagnostic: BN8PR04MB5489:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BN8PR04MB548958E6514D57B3978BA901E7280@BN8PR04MB5489.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:6790;
-x-forefront-prvs: 02622CEF0A
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(396003)(366004)(136003)(346002)(376002)(39860400002)(189003)(199004)(8676002)(55016002)(4326008)(81166006)(2906002)(8936002)(478600001)(81156014)(9686003)(7696005)(6506007)(66476007)(66946007)(66556008)(64756008)(91956017)(5660300002)(33656002)(71200400001)(76116006)(110136005)(86362001)(186003)(53546011)(316002)(26005)(66446008)(52536014)(54906003);DIR:OUT;SFP:1102;SCL:1;SRVR:BN8PR04MB5489;H:BN8PR04MB5812.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: rpFNzPgVmTbi1WfBySajkTnNRVeX68C+EZO1C6MGxMmG1aWK9oAiEh/nnJy2ecJJPc6TgJA5olZ+UEKd40B0OrQg9tfGBFlsxfSwmBfGLaoXRW5Z0mY1pLtdJULm3pG33EDBjvPP8DIoulRV7mgCiCCRHgRDTLdOBjONgnAhDDPM4so3xwfFjo6H7DCvnXRlhinUSCgO0h5wKfurrzpJi7IBVdBaGpu6LTv98/VAnEUD8gUq9qaPv/x9dg+76ehHdcCYlLQXZeNiY23xvCz+KchHfe+QByNOyiOwmrTMVmE3vMZmlSh2pzfmhjtt4vHH9KzQf77zTW0w2GJdYy6MoXH4Mbc25z3d7VYW97jWzrKYTdlXHovet6PSqhNFBS3UV7X4JXhbHtH/2rNqyPOv7uZbZOr5pnJduE6yBqs8/nYRKOnqWxbcbWQiN3bdiMi9
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1726352AbfLYEWF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Dec 2019 23:22:05 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:33240 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726347AbfLYEWF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Dec 2019 23:22:05 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBP4JxK3185776;
+        Wed, 25 Dec 2019 04:21:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2019-08-05;
+ bh=7MBzP4S/3K7+JlBZRzIp/2HsB2y4cytznLogt6im6jU=;
+ b=bJhPwhOZF4yJW1FXXEETQpuQ+0obMkxhstlVYvPIIuPduebWTUjDg5m5bQCQJvGGm1Ag
+ aGQ3vfujEmWAzT6gFMrYJh0jDcRcY3wwS0T/R7nBvD4obI48A9fN9pKKEXSB/Dl+RzlB
+ HnU1op2LdorO62gh/ceK3FheO/WX+89XsAGLZypiPz5hXXrCOT3lL727hCYZjhLtwa5t
+ f4sA4TfEaguZBySchXdreZ+Y5nPfctUdhc1iGuVKhLd9Wg9KxGkQs4OlDrORrt51ZfBa
+ XuLTGsajUPj2AL5neE6yv2EwRq4BrqshHcKh+rwx4AhDfFKE2z428AeQ8Ql79wK/PGU9 uQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2x1attp8mu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 25 Dec 2019 04:21:56 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBP4Imiu099975;
+        Wed, 25 Dec 2019 04:21:55 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 2x3amuhamy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 25 Dec 2019 04:21:55 +0000
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xBP4LpF8019831;
+        Wed, 25 Dec 2019 04:21:51 GMT
+Received: from [192.168.1.223] (/67.1.3.112)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 24 Dec 2019 20:21:51 -0800
+Subject: Re: [PATCH v5 04/14] xfs: Add xfs_has_attr and subroutines
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org
+References: <20191212041513.13855-1-allison.henderson@oracle.com>
+ <20191212041513.13855-5-allison.henderson@oracle.com>
+ <20191224121830.GD18379@infradead.org>
+From:   Allison Collins <allison.henderson@oracle.com>
+Message-ID: <2b29c0a0-03bb-8a21-8a8a-fd4754bff3ff@oracle.com>
+Date:   Tue, 24 Dec 2019 21:21:49 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0c90dbc9-3be7-4ef5-3b38-08d788e63fe1
-X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Dec 2019 02:57:58.5878
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: jx7UQxu+2Z5PGLDMg+CRKYnhFym9D4WEhMgETvBcF8/3/sMrZycoxTJNFmKpLjjCToV/aguk9uxYArkm8F9Mew==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN8PR04MB5489
+In-Reply-To: <20191224121830.GD18379@infradead.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9481 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-1912250030
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9481 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-1912250030
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Randy,=0A=
-=0A=
-On 2019/12/25 10:33, Randy Dunlap wrote:=0A=
-[...]=0A=
->> +Sequential zone files can only be written sequentially, starting from t=
-he file=0A=
->> +end, that is, write operations can only be append writes. Zonefs makes =
-no=0A=
->> +attempt at accepting random writes and will fail any write request that=
- has a=0A=
->> +start offset not corresponding to the end of the last issued write.=0A=
->> +=0A=
->> +In order to give guarantees regarding write ordering, zonefs also preve=
-nts=0A=
->> +buffered writes and mmap writes for sequential files. Only direct IO wr=
-ites are=0A=
->> +accepted. There are no restrictions on read operations nor on the type =
-of IO=0A=
->> +used to request reads (buffered IOs, direct IOs and mmap reads are all=
-=0A=
->> +accepted).=0A=
->> +=0A=
->> +Truncating sequential zone files is allowed only down to 0, in wich cas=
-e, the=0A=
-> =0A=
->                                                                   which=
-=0A=
-> =0A=
->> +zone is reset to rewind the file zone write pointer position to the sta=
-rt of=0A=
->> +the zone, or up to the zone size, in which case the file's zone is tran=
-sitioned=0A=
->> +to the FULL state (finish zone operation).=0A=
-> =0A=
-> Just to clarify, truncate can be done to zero or the the zone size, but n=
-othing else.=0A=
-> Is that correct?=0A=
-=0A=
-Yes, that is correct. That matches the drive processing of the=0A=
-REQ_OP_ZONE_RESET and REQ_OP_ZONE_FINISH requests which respectively=0A=
-reset the zone (file size down to 0) and transition the zone to full=0A=
-state (file size becomes zone size).=0A=
-=0A=
-[...]=0A=
->> +# dd if=3D/dev/zero of=3D/mnt/seq/0 bs=3D4096 count=3D1 conv=3Dnotrunc =
-oflag=3Ddirect=0A=
->> +1+0 records in=0A=
->> +1+0 records out=0A=
->> +4096 bytes (4.1 kB, 4.0 KiB) copied, 1.05112 s, 3.9 kB/s=0A=
-> =0A=
-> why so slow?=0A=
-=0A=
-Indeed, that is really slow. I missed it :)=0A=
-The SMR drive I used for running this was probably in low power mode=0A=
-when I ran dd and needed waking up first, hence the slow response time.=0A=
-Running the same again, I get:=0A=
-=0A=
-dd if=3D/dev/zero of=3D/mnt/seq/0 count=3D1 bs=3D4096 oflag=3Ddirect conv=
-=3Dnotrunc=0A=
-1+0 records in=0A=
-1+0 records out=0A=
-4096 bytes (4.1 kB, 4.0 KiB) copied, 0.000482601 s, 8.5 MB/s=0A=
-=0A=
-0.5ms for a 4K direct write on an HDD, that looks OK to me (write cache=0A=
-is enabled on the HDD side).=0A=
-=0A=
-The same on a zoned null_blk device gives:=0A=
-=0A=
-dd if=3D/dev/zero of=3D/mnt/seq/0 count=3D1 bs=3D4096 oflag=3Ddirect conv=
-=3Dnotrunc=0A=
-1+0 records in=0A=
-1+0 records out=0A=
-4096 bytes (4.1 kB, 4.0 KiB) copied, 0.00017558 s, 23.3 MB/s=0A=
-=0A=
-175us for a single 4K direct write. Looks OK too.=0A=
-=0A=
-Thank you for all the typo & nit pointers. I will fix everything and=0A=
-post a v4.=0A=
-=0A=
--- =0A=
-Damien Le Moal=0A=
-Western Digital Research=0A=
+On 12/24/19 5:18 AM, Christoph Hellwig wrote:
+> On Wed, Dec 11, 2019 at 09:15:03PM -0700, Allison Collins wrote:
+>> From: Allison Henderson <allison.henderson@oracle.com>
+>>
+>> This patch adds a new functions to check for the existence of
+>> an attribute.  Subroutines are also added to handle the cases
+>> of leaf blocks, nodes or shortform.  Common code that appears
+>> in existing attr add and remove functions have been factored
+>> out to help reduce the appearance of duplicated code.  We will
+>> need these routines later for delayed attributes since delayed
+>> operations cannot return error codes.
+> 
+> Can you explain why we need the ahead of time check?  The first
+> operation should be able to still return an error, and doing
+> a separate check instead of letting the actual operation fail
+> gracefully is more expensive, and also creates a lot of additional
+> code.  As is I can't say I like the direction at all.
+> 
+
+This one I can answer quickly: later when we get into delayed 
+attributes, this will get called from xfs_defer_finish_noroll as part of 
+a .finish_item call back.  If these callbacks return anything other than 
+0 or -EAGAIN, it causes a shutdown.  Which is not what we would want for 
+example: when the user tries to rename a non-existent attribute.  The 
+error code needs to go back up.  So we check for things like that before 
+starting a delayed operation.  Hope that helps.  Thanks!
+
+Allison
