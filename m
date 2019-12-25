@@ -1,123 +1,364 @@
-Return-Path: <SRS0=yXRu=2O=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=hYYw=2P=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6740C2D0C3
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Dec 2019 23:18:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1519DC2D0D5
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Dec 2019 01:33:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 77501206D3
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Dec 2019 23:18:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DF7B1206B7
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Dec 2019 01:33:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="dIepkXMW"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HNWZ4B+q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726237AbfLXXSQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Dec 2019 18:18:16 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:49202 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726224AbfLXXSP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Dec 2019 18:18:15 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBONEngA147543;
-        Tue, 24 Dec 2019 23:18:03 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=DYW428K2mM6Bjv87V4SJwc7X0Xgl02NN3ShMB7pbeqI=;
- b=dIepkXMW4TflB5azbX9QRCkOzax8YDvjauWuAauSDqQUT7OAFfMs2cbfeTm4lcWywXtJ
- 2eC3DEcUlf5ivlWsKpKr+rehItGLbfFtsoPgY8phcpCB5btDB+IMxnNBiBd+B2W7opXM
- x7FNgixZfBNiTsNH3hgDhHxaryJuh8gi33dYh2W5aPrnclSK7z/HEyL9dNQ6o6hatpJN
- nVcODAqQOI0d7mM5pEoRYdJgLAPUAWspiQ7NkdBTNonz/33tb5JfPpNYcrzEhQ8mFWBo
- 08qwuoH5L0Co2Q+axZ5iaN4KFdheKBkMyN9pjS+0pTmHG8O1Z91/ghc6tRHMiaFFgmKB Ig== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2x1bbpw6wy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 24 Dec 2019 23:18:03 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBONEi99187976;
-        Tue, 24 Dec 2019 23:18:02 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2x3bre2qum-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 24 Dec 2019 23:18:02 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xBONI1FS023660;
-        Tue, 24 Dec 2019 23:18:02 GMT
-Received: from [192.168.1.223] (/67.1.3.112)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 24 Dec 2019 15:18:01 -0800
-Subject: Re: [PATCH v5 13/14] xfs: Add delay ready attr remove routines
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org
-References: <20191212041513.13855-1-allison.henderson@oracle.com>
- <20191212041513.13855-14-allison.henderson@oracle.com>
- <20191224123025.GI18379@infradead.org>
-From:   Allison Collins <allison.henderson@oracle.com>
-Message-ID: <6cfffc64-350c-e16e-5e4a-a45775ea1faa@oracle.com>
-Date:   Tue, 24 Dec 2019 16:18:00 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1726246AbfLYBdY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Dec 2019 20:33:24 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:44870 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726237AbfLYBdY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Dec 2019 20:33:24 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:
+        Subject:Sender:Reply-To:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=B7vf1Lr+0vpG04aPGihhTl0MZWGW2MJj0bafFcdjdMk=; b=HNWZ4B+qJ+4daIU9cLRoqebso
+        uD0fy9nZmBV34lrqbLjTU8poeKfZ8vKMXJ+2bkyzBhGtWjQT+Ojzxn/OD5r/OJ+TkMSmLQMQBUm3Y
+        /i22SV476jUCPkq6ofG4atiwSOSOSmeWY4cTY3OuWpVY0p7WFx+uiJOMJZ1FPv13SP4peiUOwM6Fj
+        /DIWN8DGtSa7+t6BshbY8SaTekZt9S8nq/PF8/q6MK2zBJ/z/gKJxtNE+zO2HzUMC68WSxWAQhFmd
+        H5et2qhXxS0JUWaP7uu+Eff3xnq4zNEPXSwYF1opPNiUR2yZWtsiX1vwxOqk55Gad28OIb9LIbyHM
+        XzTIvF1Jg==;
+Received: from [2601:1c0:6280:3f0::fee9]
+        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1ijvY4-0001B5-EY; Wed, 25 Dec 2019 01:33:16 +0000
+Subject: Re: [PATCH v3 2/2] zonefs: Add documentation
+To:     Damien Le Moal <damien.lemoal@wdc.com>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     Johannes Thumshirn <jth@kernel.org>,
+        Naohiro Aota <naohiro.aota@wdc.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Hannes Reinecke <hare@suse.de>
+References: <20191224020615.134668-1-damien.lemoal@wdc.com>
+ <20191224020615.134668-3-damien.lemoal@wdc.com>
+From:   Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <ac1bd604-0088-2002-f03b-5752425bb530@infradead.org>
+Date:   Tue, 24 Dec 2019 17:33:14 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.1
 MIME-Version: 1.0
-In-Reply-To: <20191224123025.GI18379@infradead.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20191224020615.134668-3-damien.lemoal@wdc.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9481 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1912240201
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9481 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1912240201
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-I'll have to come back and respond to your other reviews in depth later 
-when I have a little more time, but I think responding to this one 
-quickly will help answer a lot of questions.  The set actually has a lot 
-more history as a delayed attributes series, and even more as parent 
-pointers.  I try to keep the whole set up to date because parent 
-pointers is sort of a good test case for the rest it.  And also because 
-I want to make sure things still work for the future uses they are 
-intended for.
+Hi,
 
-To give you an idea, this is the same series + delayed attrs + parent pptrs:
-https://github.com/allisonhenderson/xfs_work/tree/pptrs_restart41
+Just a few typos and nits and a few questions...
 
-I usually just send out the "delay ready" portion of it just to cut down 
-on the amount of code that people have to review (because I know people 
-are swamped with review backlog).  And also because some time ago, folks 
-felt that trying to push it in all at once was a little unwieldy, so 
-they requested that I chop it down to this sub series that focuses on 
-refactor only with no functional change.  And then that would give it 
-time to stabilize before proceeding too.
-
-I hope the history of it helps a bit.  Otherwise I can see where it 
-looks like a whole bunch of craziness for nothing, but that's the long 
-term plan for it.  And while I think people agree that it's not the 
-prettiest at the moment, the function that we are trying to achieve with 
-it isn't simplest either, so people have been pretty active in shaping 
-it as it goes along.  I'll go through your set and see which bits I can 
-pick up and sort of integrate so that we don't have so much conflict. 
-Thanks!
-
-Allison
-
-On 12/24/19 5:30 AM, Christoph Hellwig wrote:
-> This code looks pretty scary, mostly because it adds hard to parse
-> monster functions.  Also as-is it seems totally pointless as no
-> user of the change appears.  In fact this series adds almost 500
-> lines of code without adding any code or speeding operations up (in
-> fact I think it will cause minor slow downs).  So to me it is a very
-> hard sell.
+On 12/23/19 6:06 PM, Damien Le Moal wrote:
+> Add the new file Documentation/filesystems/zonefs.txt to document zonefs
+> principles and user-space tool usage.
 > 
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+> Reviewed-by: Hannes Reinecke <hare@suse.com>
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  Documentation/filesystems/zonefs.txt | 215 +++++++++++++++++++++++++++
+>  MAINTAINERS                          |   1 +
+>  2 files changed, 216 insertions(+)
+>  create mode 100644 Documentation/filesystems/zonefs.txt
+> 
+> diff --git a/Documentation/filesystems/zonefs.txt b/Documentation/filesystems/zonefs.txt
+> new file mode 100644
+> index 000000000000..e88a4743bc64
+> --- /dev/null
+> +++ b/Documentation/filesystems/zonefs.txt
+> @@ -0,0 +1,215 @@
+> +ZoneFS - Zone filesystem for Zoned block devices
+> +
+> +Overview
+> +========
+> +
+> +zonefs is a very simple file system exposing each zone of a zoned block device
+> +as a file. Unlike a regular file system with zoned block device support (e.g.
+> +f2fs), zonefs does not hide the sequential write constraint of zoned block
+> +devices to the user. Files representing sequential write zones of the device
+> +must be written sequentially starting from the end of the file (append only
+> +writes).
+> +
+> +As such, zonefs is in essence closer to a raw block device access interface
+> +than to a full featured POSIX file system. The goal of zonefs is to simplify
+> +the implementation of zoned block devices support in applications by replacing
+
+                      of zoned block device support
+
+> +raw block device file accesses with a richer file API, avoiding relying on
+> +direct block device file ioctls which may be more obscure to developers. One
+> +example of this approach is the implementation of LSM (log-structured merge)
+> +tree structures (such as used in RocksDB and LevelDB) on zoned block devices
+> +by allowing SSTables to be stored in a zone file similarly to a regular file
+> +system rather than as a range of sectors of the entire disk. The introduction
+> +of the higher level construct "one file is one zone" can help reducing the
+> +amount of changes needed in the application as well as introducing support for
+> +different application programming languages.
+> +
+> +zonefs on-disk metadata
+> +-----------------------
+> +
+> +zonefs on-disk metadata is reduced to an immutable super block which
+> +persistently stores a magic number and optional features flags and values. On
+
+                                                   feature
+
+> +mount, zonefs uses blkdev_report_zones() to obtain the device zone configuration
+> +and populates the mount point with a static file tree solely based on this
+> +information. File sizes come from the device zone type and write pointer
+> +position managed by the device itself.
+> +
+> +The super block is always writen on disk at sector 0. The first zone of the
+
+                             written
+
+> +device storing the super block is never exposed as a zone file by zonefs. If the
+> +zone containing the super block is a sequential zone, the mkzonefs format tool
+> +always "finishes" the zone, that is, transition the zone to a full state to make
+
+                                        it transitions the zone
+
+> +it readonly, preventing any data write.
+> +
+> +Zone type sub-directories
+> +-------------------------
+> +
+> +Files representing zones of the same type are grouped together under the same
+> +sub-directory automatically created on mount.
+> +
+> +For conventional zones, the sub-directory "cnv" is used. This directory is
+> +however created only and only if the device has useable conventional zones. If
+
+                   if and only if                  usable
+
+> +the device only has a single conventional zone at sector 0, the zone will not
+> +be exposed as a file as it will be used to store zonefs super block. For such
+
+                                           to store the zonefs super block.
+
+> +devices, the "cnv" sub-directory will not be created.
+> +
+> +For sequential write zones, the sub-directory "seq" is used.
+> +
+> +These two directories are the only directories that exist in zonefs. Users
+> +cannot create other directories and cannot rename nor delete the "cnv" and
+> +"seq" sub-directories.
+> +
+> +The size of the directories indicated by the st_size field of struct stat,
+> +obtained with the stat() or fstat() system calls, indicate the number of files
+
+                                                     indicates
+
+> +existing under the directory.
+> +
+> +Zone files
+> +----------
+> +
+> +Zone files are named using the number of the zone they represent within the set
+> +of zones of a particular type. That is, both the "cnv" and "seq" directories
+> +contain files named "0", "1", "2", ... The file numbers also represent
+> +increasing zone start sector on the device.
+> +
+> +All read and write operations to zone files are not allowed beyond the file
+> +maximum size, that is, beyond the zone size. Any access exceeding the zone
+> +size is failed with the -EFBIG error.
+> +
+> +Creating, deleting, renaming or modifying any attribute of files and
+> +sub-directories is not allowed.
+> +
+> +The number of blocks of a file as reported by stat() and fstat() indicates the
+> +size of the file zone, or in other words, the maximum file size.
+> +
+> +Conventional zone files
+> +-----------------------
+> +
+> +The size of conventional zone files is fixed to the size of the zone they
+> +represent. Conventional zone files cannot be truncated.
+> +
+> +These files can be randomly read and written, using any form of IO operation:
+> +buffered IOs, direct IOs, memory mapped IOs (mmap) etc. There are no IO
+
+                                                     , etc.
+
+> +constraint for these files beyond the file size limit mentioned above.
+
+   constraints
+
+> +
+> +Sequential zone files
+> +---------------------
+> +
+> +The size of sequential zone files present in the "seq" sub-directory represent
+
+                                                                        represents
+
+> +the file's zone write pointer position relative to the zone start sector.
+> +
+> +Sequential zone files can only be written sequentially, starting from the file
+> +end, that is, write operations can only be append writes. Zonefs makes no
+> +attempt at accepting random writes and will fail any write request that has a
+> +start offset not corresponding to the end of the last issued write.
+> +
+> +In order to give guarantees regarding write ordering, zonefs also prevents
+> +buffered writes and mmap writes for sequential files. Only direct IO writes are
+> +accepted. There are no restrictions on read operations nor on the type of IO
+> +used to request reads (buffered IOs, direct IOs and mmap reads are all
+> +accepted).
+> +
+> +Truncating sequential zone files is allowed only down to 0, in wich case, the
+
+                                                                  which
+
+> +zone is reset to rewind the file zone write pointer position to the start of
+> +the zone, or up to the zone size, in which case the file's zone is transitioned
+> +to the FULL state (finish zone operation).
+
+Just to clarify, truncate can be done to zero or the the zone size, but nothing else.
+Is that correct?
+
+> +
+> +zonefs format options
+> +---------------------
+> +
+> +Several optional features of zonefs can be enabled at format time.
+> +* Conventional zone aggregation: ranges of contiguous conventional zones can be
+> +  agregated into a single larger file instead of the default one file per zone.
+
+     aggregated
+
+> +* File ownership: The owner UID and GID of zone files is by default 0 (root)
+> +  but can be changed to any valid UID/GID.
+> +* File access permissions: the default 640 access permissions can be changed.
+> +
+> +User Space Tools
+> +----------------
+> +
+> +The mkzonefs tool is used to format zoned block devices for use with zonefs.
+> +This tool is available on Github at:
+> +
+> +git@github.com:damien-lemoal/zonefs-tools.git.
+
+maybe better to say:  https://github.com/damien-lemoal/zonefs-tools
+
+> +
+> +zonefs-tools also includes a test suite which can be run against any zoned
+> +block device, including null_blk block device created with zoned mode.
+> +
+> +Examples
+> +--------
+> +
+> +The following formats a 15TB host-managed SMR HDD with 256 MB zones
+> +with the conventional zones aggregation feature enabled.
+> +
+> +# mkzonefs -o aggr_cnv /dev/sdX
+> +# mount -t zonefs /dev/sdX /mnt
+> +# ls -l /mnt/
+> +total 0
+> +dr-xr-xr-x 2 root root     1 Nov 25 13:23 cnv
+> +dr-xr-xr-x 2 root root 55356 Nov 25 13:23 seq
+> +
+> +The size of the zone files sub-directories indicate the number of files
+> +existing for each type of zones. In this example, there is only one
+> +conventional zone file (all conventional zones are agreggated under a single
+
+                                                      aggregated
+
+> +file).
+> +
+> +# ls -l /mnt/cnv
+> +total 137101312
+> +-rw-r----- 1 root root 140391743488 Nov 25 13:23 0
+> +
+> +This aggregated conventional zone file can be used as a regular file.
+> +
+> +# mkfs.ext4 /mnt/cnv/0
+> +# mount -o loop /mnt/cnv/0 /data
+> +
+> +The "seq" sub-directory grouping files for sequential write zones has in this
+> +example 55356 zones.
+> +
+> +# ls -lv /mnt/seq
+> +total 14511243264
+> +-rw-r----- 1 root root 0 Nov 25 13:23 0
+> +-rw-r----- 1 root root 0 Nov 25 13:23 1
+> +-rw-r----- 1 root root 0 Nov 25 13:23 2
+> +...
+> +-rw-r----- 1 root root 0 Nov 25 13:23 55354
+> +-rw-r----- 1 root root 0 Nov 25 13:23 55355
+> +
+> +For sequential write zone files, the file size changes as data is appended at
+> +the end of the file, similarly to any regular file system.
+> +
+> +# dd if=/dev/zero of=/mnt/seq/0 bs=4096 count=1 conv=notrunc oflag=direct
+> +1+0 records in
+> +1+0 records out
+> +4096 bytes (4.1 kB, 4.0 KiB) copied, 1.05112 s, 3.9 kB/s
+
+why so slow?
+
+> +
+> +# ls -l /mnt/seq/0
+> +-rw-r----- 1 root root 4096 Nov 25 13:23 /mnt/sdh/seq/0
+
+I don't understand the "sdh/" here. Please explain for me (not necessarily
+in the doc file).
+
+> +
+> +The written file can be truncated to the zone size, prventing any further write
+
+                                                       preventing
+
+> +operation.
+> +
+> +# truncate -s 268435456 /mnt/seq/0
+> +# ls -l /mnt/seq/0
+> +-rw-r----- 1 root root 268435456 Nov 25 13:49 /mnt/seq/0
+> +
+> +Truncation to 0 size allows freeing the file zone storage space and restart
+> +append-writes to the file.
+> +
+> +# truncate -s 0 /mnt/seq/0
+> +# ls -l /mnt/seq/0
+> +-rw-r----- 1 root root 0 Nov 25 13:49 /mnt/seq/0
+> +
+> +Since files are statically mapped to zones on the disk, the number of blocks of
+> +a file as reported by stat() and fstat() indicates the size of the file zone.
+> +
+> +# stat /mnt/seq/0
+> +  File: /mnt/seq/0
+> +  Size: 0         	Blocks: 524288     IO Block: 4096   regular empty file
+> +Device: 870h/2160d	Inode: 50431       Links: 1
+> +Access: (0640/-rw-r-----)  Uid: (    0/    root)   Gid: (    0/    root)
+> +Access: 2019-11-25 13:23:57.048971997 +0900
+> +Modify: 2019-11-25 13:52:25.553805765 +0900
+> +Change: 2019-11-25 13:52:25.553805765 +0900
+> + Birth: -
+> +
+> +The number of blocks of the file ("Blocks") in units of 512B blocks gives the
+> +maximum file size of 524288 * 512 B = 256 MB, corresponding to the device zone
+> +size in this example. Of note is that the "IO block" field always indicates the
+> +minimum IO size for writes and corresponds to the device physical sector size.
+
+
+thanks.
+-- 
+~Randy
+
