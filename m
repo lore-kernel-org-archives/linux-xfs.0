@@ -2,107 +2,150 @@ Return-Path: <SRS0=kaVg=2T=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A298BC2D0C0
-	for <linux-xfs@archiver.kernel.org>; Sun, 29 Dec 2019 04:43:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2BF1C2D0D1
+	for <linux-xfs@archiver.kernel.org>; Sun, 29 Dec 2019 05:28:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7157C206CB
-	for <linux-xfs@archiver.kernel.org>; Sun, 29 Dec 2019 04:43:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D23F6208E4
+	for <linux-xfs@archiver.kernel.org>; Sun, 29 Dec 2019 05:28:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726364AbfL2EnZ convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 28 Dec 2019 23:43:25 -0500
-Received: from sandeen.net ([63.231.237.45]:49030 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726329AbfL2EnZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 28 Dec 2019 23:43:25 -0500
-Received: from [192.168.254.58] (unknown [50.34.188.200])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 0E4D722C5;
-        Sat, 28 Dec 2019 22:42:53 -0600 (CST)
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (1.0)
-Subject: Re: How to fix bad superblock or xfs_repair: error - read only 0 of 512 bytes
-From:   Eric Sandeen <sandeen@sandeen.net>
-X-Mailer: iPhone Mail (16G140)
-In-Reply-To: <CAH3av2k4c63LKQ0eG9twweXEgC7QD7G_w3=c23tSO5rLP_cAfQ@mail.gmail.com>
-Date:   Sat, 28 Dec 2019 20:43:02 -0800
-Cc:     linux-xfs@vger.kernel.org
-Content-Transfer-Encoding: 8BIT
-Message-Id: <FED1D514-006F-4522-A227-66889C82B82C@sandeen.net>
-References: <CAH3av2k4c63LKQ0eG9twweXEgC7QD7G_w3=c23tSO5rLP_cAfQ@mail.gmail.com>
-To:     Utpal Bora <cs14mtech11017@iith.ac.in>
+        id S1726230AbfL2F2T (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 29 Dec 2019 00:28:19 -0500
+Received: from james.kirk.hungrycats.org ([174.142.39.145]:38926 "EHLO
+        james.kirk.hungrycats.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725768AbfL2F2S (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 29 Dec 2019 00:28:18 -0500
+X-Greylist: delayed 336 seconds by postgrey-1.27 at vger.kernel.org; Sun, 29 Dec 2019 00:28:18 EST
+Received: by james.kirk.hungrycats.org (Postfix, from userid 1002)
+        id 4E862546552; Sun, 29 Dec 2019 00:22:40 -0500 (EST)
+Date:   Sun, 29 Dec 2019 00:22:40 -0500
+From:   Zygo Blaxell <ce3g8jdj@umail.furryterror.org>
+To:     fdmanana@kernel.org
+Cc:     linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-xfs@vger.kernel.org, darrick.wong@oracle.com,
+        Filipe Manana <fdmanana@suse.com>
+Subject: Re: [PATCH 2/2] Btrfs: make deduplication with range including the
+ last block work
+Message-ID: <20191229052240.GG13306@hungrycats.org>
+References: <20191216182656.15624-1-fdmanana@kernel.org>
+ <20191216182656.15624-3-fdmanana@kernel.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="bFsKbPszpzYNtEU6"
+Content-Disposition: inline
+In-Reply-To: <20191216182656.15624-3-fdmanana@kernel.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Dec 28, 2019, at 3:11 AM, Utpal Bora <cs14mtech11017@iith.ac.in> wrote:
-> 
-> Hi,
-> 
-> My XFS home drive is corrupt after trying to extend it with lvm.
-> This is what I did to extend the partition.
-> 1. Extend Volume group to use a new physical volume of around 1.2TB.
-> This was successful without any error.
->    vgextend vg-1 /dev/sdc1
-> 
-> 2. Extend logical volume (home-lv) to use the free space.
->    lvextend -l 100%FREE /dev/mapper/vg--1-home--lv -r
-> 
-This probably invoked xfs_growfs
 
-> 3. Resized home-lv and reduce 55 GB
->   lvreduce -L 55G  /dev/mapper/vg--1-home--lv -r
-> 
-XFS cannot shrink.  This corrupted your filesystem by truncating the block device.
+--bFsKbPszpzYNtEU6
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> I assumed that -r will invoke xfs_grow internally.
-> Everything was working fine until the server was restarted.
-> After restart, the home volume is not mounting. Please see the following.
-> 
-> server% sudo mount -t xfs /dev/mapper/vg--1-home--lv /home
-> mount: /home: can't read superblock on /dev/mapper/vg--1-home--lv.
-> 
-> server% dmesg| tail
-> [162580.208796] attempt to access beyond end of device
-> [162580.208800] dm-3: rw=4096, want=6650552320, limit=6640066560
-> [162580.208805] XFS (dm-3): last sector read failed
+On Mon, Dec 16, 2019 at 06:26:56PM +0000, fdmanana@kernel.org wrote:
+> From: Filipe Manana <fdmanana@suse.com>
+>=20
+> Since btrfs was migrated to use the generic VFS helpers for clone and
+> deduplication, it stopped allowing for the last block of a file to be
+> deduplicated when the source file size is not sector size aligned (when
+> eof is somewhere in the middle of the last block). There are two reasons
+> for that:
+>=20
+> 1) The generic code always rounds down, to a multiple of the block size,
+>    the range's length for deduplications. This means we end up never
+>    deduplicating the last block when the eof is not block size aligned,
+>    even for the safe case where the destination range's end offset matches
+>    the destination file's size. That rounding down operation is done at
+>    generic_remap_check_len();
+>=20
+> 2) Because of that, the btrfs specific code does not expect anymore any
+>    non-aligned range length's for deduplication and therefore does not
+>    work if such nona-aligned length is given.
+>=20
+> This patch addresses that second part, and it depends on a patch that
+> fixes generic_remap_check_len(), in the VFS, which was submitted ealier
+> and has the following subject:
+>=20
+>   "fs: allow deduplication of eof block into the end of the destination f=
+ile"
+>=20
+> These two patches address reports from users that started seeing lower
+> deduplication rates due to the last block never being deduplicated when
+> the file size is not aligned to the filesystem's block size.
+>=20
+> Link: https://lore.kernel.org/linux-btrfs/2019-1576167349.500456@svIo.N5d=
+q.dFFD/
+> Signed-off-by: Filipe Manana <fdmanana@suse.com>
 
-Because you chopped off 55g from the end.
+Should these patches be marked for stable (5.0+, but see below for
+caveats about 5.0)?  The bug affects 5.3 and 5.4 which are still active,
+and dedupe is an important feature for some users.
 
-> server% sudo xfs_repair -n
+> ---
+>  fs/btrfs/ioctl.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
+> index 3418decb9e61..c41c276ff272 100644
+> --- a/fs/btrfs/ioctl.c
+> +++ b/fs/btrfs/ioctl.c
+> @@ -3237,6 +3237,7 @@ static void btrfs_double_extent_lock(struct inode *=
+inode1, u64 loff1,
+>  static int btrfs_extent_same_range(struct inode *src, u64 loff, u64 len,
+>  				   struct inode *dst, u64 dst_loff)
+>  {
+> +	const u64 bs =3D BTRFS_I(src)->root->fs_info->sb->s_blocksize;
+>  	int ret;
+> =20
+>  	/*
+> @@ -3244,7 +3245,7 @@ static int btrfs_extent_same_range(struct inode *sr=
+c, u64 loff, u64 len,
+>  	 * source range to serialize with relocation.
+>  	 */
+>  	btrfs_double_extent_lock(src, loff, dst, dst_loff, len);
+> -	ret =3D btrfs_clone(src, dst, loff, len, len, dst_loff, 1);
+> +	ret =3D btrfs_clone(src, dst, loff, len, ALIGN(len, bs), dst_loff, 1);
 
-Repair cannot read blocks that have been removed from the filesystem.
+A heads-up for anyone backporting this to 5.0:  this patch depends on
 
+	57a50e2506df Btrfs: remove no longer needed range length checks for dedupl=
+ication
 
-> /dev/mapper/vg--1-home--lv
-> Phase 1 - find and verify superblock...
-> xfs_repair: error - read only 0 of 512 bytes
+Simply resolving the git conflict without including 57a50e2506df produces
+a kernel where dedupe rounds the size of the dst file up to the next
+block boundary.  This is because 57a50e2506df changes the value of
+"len".  Before 57a50e2506df, "len" is equivalent to "ALIGN(len, bs)"
+at the btrfs_clone line; after 57a50e2506df, "len" is the unaligned
+dedupe request length passed to the btrfs_extent_same_range function.
+This changes the semantics of the btrfs_clone line significantly.
 
-Failed to read a backup super beyond the end of the reduced lv.
+57a50e2506df is in 5.1, so 5.1+ kernels do not require any additional
+patches.
 
-Grow the lv back to 100% I.e. the size before the lvreduce and it’ll probably be ok again
+4.20 and earlier don't have the bug, so don't need a fix.
 
--Eric
+>  	btrfs_double_extent_unlock(src, loff, dst, dst_loff, len);
+> =20
+>  	return ret;
+> --=20
+> 2.11.0
+>=20
 
-> OS: Ubuntu Server 18.04.3
-> Kernel: 4.15.0-72-generic
-> 
-> I have gone through the earlier posts on this subject. They did not help me.
-> 
-> Is it possible to repair the XFS volume? Kindly suggest.
-> 
-> Regards,
-> 
-> Utpal Bora
-> Ph.D. Scholar
-> Computer Science & Engineering
-> IIT Hyderabad
-> 
+--bFsKbPszpzYNtEU6
+Content-Type: application/pgp-signature; name="signature.asc"
 
+-----BEGIN PGP SIGNATURE-----
+
+iF0EABECAB0WIQSnOVjcfGcC/+em7H2B+YsaVrMbnAUCXgg4IAAKCRCB+YsaVrMb
+nFY0AJ0fIi9yEzH1FwUObJW7SQl3uNevCACeIca5z3SPIG29//ckhcA5JgBwf8Y=
+=cmLe
+-----END PGP SIGNATURE-----
+
+--bFsKbPszpzYNtEU6--
