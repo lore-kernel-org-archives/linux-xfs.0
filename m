@@ -7,57 +7,57 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6FE3C2D0CE
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:02:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B0A6C2D0DD
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:03:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9BD95206E4
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:02:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 05BF4206E4
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:03:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="CNlS3r1A"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="HVEMnZlX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727189AbgAABC6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Dec 2019 20:02:58 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:48438 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727142AbgAABC6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:02:58 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 001105PP083994
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:02:56 GMT
+        id S1727190AbgAABDA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Dec 2019 20:03:00 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:45204 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727142AbgAABDA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:03:00 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00110Eri086386
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:02:59 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=ChK0Va3tItkXG5GoUmxXtpLSkkIyqaIag6N+MHegRVA=;
- b=CNlS3r1A8AU+Og5m0xiNJX5HbBG6RsXKms2Nbui0sw3dE8fp4h9mnuawsEC7vogVMHqr
- imgItDIsqHPcX7LWl65AEAYqSnBb8trfFgNuUCb+lToYVLfDwFVTBLkgjDdWyHl0ZBhu
- CXzQurXLpBdUdQA2EFLF3oawDvretSwikqkj+oxWUwQ3qO+Y5qrW19YBe5nHzvXIWxV2
- HWFhJWYxERbi53sfnim+V0Y4wO0DEKMSPR4M2bsBIwUbqfWvW1GkAMA0F07FvE9yvcRq
- 94PO0ZIhJUj0k6SnR38Qy59Laj0IxZfkZYS1p7UG+r6YlnWS+re82SeN0PVuNe7H+n4c vg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 2x5y0pjxkh-1
+ bh=gD045WoH1xfZ3fPlobky9LTz20CJxUGg0upldj0vwXY=;
+ b=HVEMnZlXWjmjhI5GOrCoj3j573A6r+lPsRU3HYZk6y1/VG4mkYpx251iMiuccyNQbX8O
+ 2YCULG/h1mw9dBLzKnEZEADlHuYhny6bcDeP2LA36Q4zWEFsoLW1uZabYnaIHE5OijeG
+ /rfBBWUGZD3zBzQGsEjFnrjRNmCVeJxuYFDa/t+aJC8OR06gbbRYmF+LlwKET0ZsaPgj
+ mVYa9ziuaKRAcUR8odCGeTJZ9w1Z+y9vo6Vt3Ef4BIxUjQa+0tQfrCTnt/jSyF1zINbb
+ XZPuhPKpnq9PadDsggt+2nW9ALlVtxzOx4ZKe4makA0Qr8FPSvc0AKhZZJf053TIOqiw fw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2x5ypqjw4p-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:02:55 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0010wwss190729
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:02:55 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 2x8guedp6x-1
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:02:59 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0010whxj172218
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:00:58 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2x8bsrfsce-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:02:55 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00112sc1023839
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:02:55 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:00:58 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00110vaA002408
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:00:57 GMT
 Received: from localhost (/10.159.150.156)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 31 Dec 2019 17:02:54 -0800
-Subject: [PATCH 2/5] xfs: create a big array data structure
+        with ESMTP ; Tue, 31 Dec 2019 17:00:57 -0800
+Subject: [PATCH 1/4] xfs: introduce fake roots for ag-rooted btrees
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 31 Dec 2019 17:02:52 -0800
-Message-ID: <157784057221.1358685.17443730600278916582.stgit@magnolia>
-In-Reply-To: <157784055814.1358685.7277201980352188138.stgit@magnolia>
-References: <157784055814.1358685.7277201980352188138.stgit@magnolia>
+Date:   Tue, 31 Dec 2019 17:00:53 -0800
+Message-ID: <157784045374.1357300.9988188401838730274.stgit@magnolia>
+In-Reply-To: <157784044590.1357300.12663203884553611459.stgit@magnolia>
+References: <157784044590.1357300.12663203884553611459.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -80,904 +80,263 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create a simple 'big array' data structure for storage of fixed-size
-metadata records that will be used to reconstruct a btree index.  For
-repair operations, the most important operations are append, iterate,
-and sort.
-
-Earlier implementations of the big array used linked lists and suffered
-from severe problems -- pinning all records in kernel memory was not a
-good idea and frequently lead to OOM situations; random access was very
-inefficient; and record overhead for the lists was unacceptably high at
-40-60%.
-
-Therefore, the big memory array relies on the 'xfile' abstraction, which
-creates a memfd file and stores the records in page cache pages.  Since
-the memfd is created in tmpfs, the memory pages can be pushed out to
-disk if necessary and we have a built-in usage limit of 50% of physical
-memory.
+Create an in-core fake root for AG-rooted btree types so that callers
+can generate a whole new btree using the upcoming btree bulk load
+function without making the new tree accessible from the rest of the
+filesystem.  It is up to the individual btree type to provide a function
+to create a staged cursor (presumably with the appropriate callouts to
+update the fakeroot) and then commit the staged root back into the
+filesystem.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/Makefile      |    2 
- fs/xfs/scrub/array.c |  647 ++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/array.h |   45 +++
- fs/xfs/scrub/trace.h |   23 ++
- fs/xfs/scrub/xfile.c |   82 ++++++
- fs/xfs/scrub/xfile.h |   21 ++
- 6 files changed, 820 insertions(+)
- create mode 100644 fs/xfs/scrub/array.c
- create mode 100644 fs/xfs/scrub/array.h
- create mode 100644 fs/xfs/scrub/xfile.c
- create mode 100644 fs/xfs/scrub/xfile.h
+ fs/xfs/libxfs/xfs_btree.c |  117 +++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_btree.h |   42 ++++++++++++++--
+ fs/xfs/xfs_trace.h        |   28 +++++++++++
+ 3 files changed, 182 insertions(+), 5 deletions(-)
 
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index aceca2f9a3db..2586f07e1fdb 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -159,8 +159,10 @@ xfs-$(CONFIG_XFS_QUOTA)		+= scrub/quota.o
- ifeq ($(CONFIG_XFS_ONLINE_REPAIR),y)
- xfs-y				+= $(addprefix scrub/, \
- 				   agheader_repair.o \
-+				   array.o \
- 				   bitmap.o \
- 				   repair.o \
-+				   xfile.o \
- 				   )
- endif
- endif
-diff --git a/fs/xfs/scrub/array.c b/fs/xfs/scrub/array.c
-new file mode 100644
-index 000000000000..47028449071e
---- /dev/null
-+++ b/fs/xfs/scrub/array.c
-@@ -0,0 +1,647 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2019 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "scrub/array.h"
-+#include "scrub/scrub.h"
-+#include "scrub/trace.h"
-+#include "scrub/xfile.h"
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index e2cc98931552..6d3d2a301f7d 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -382,6 +382,8 @@ xfs_btree_del_cursor(
+ 	/*
+ 	 * Free the cursor.
+ 	 */
++	if (unlikely(cur->bc_flags & XFS_BTREE_STAGING))
++		kmem_free((void *)cur->bc_ops);
+ 	kmem_cache_free(xfs_btree_cur_zone, cur);
+ }
+ 
+@@ -4947,3 +4949,118 @@ xfs_btree_has_more_records(
+ 	else
+ 		return block->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK);
+ }
 +
-+/*
-+ * XFS Fixed-Size Big Memory Array
-+ * ===============================
-+ * The file-backed memory array uses a memfd "file" to store large numbers of
-+ * fixed-size records in memory that can be paged out.  This puts less stress
-+ * on the memory reclaim algorithms because memfd file pages are not pinned and
-+ * can be paged out; however, array access is less direct than would be in a
-+ * regular memory array.  Access to the array is performed via indexed get and
-+ * put methods, and an append method is provided for convenience.  Array
-+ * elements can be set to all zeroes, which means that the entry is NULL and
-+ * will be skipped during iteration.
-+ */
-+
-+#define XFBMA_MAX_TEMP	(2)
-+
-+/*
-+ * Pointer to temp space.  Because we can't access the memfd data directly, we
-+ * allocate a small amount of memory on the end of the xfbma to buffer array
-+ * items when we need space to store values temporarily.
-+ */
-+static inline void *
-+xfbma_temp(
-+	struct xfbma	*array,
-+	unsigned int	nr)
++/* We don't allow staging cursors to be duplicated. */
++STATIC struct xfs_btree_cur *
++xfs_btree_fakeroot_dup_cursor(
++	struct xfs_btree_cur	*cur)
 +{
-+	ASSERT(nr < XFBMA_MAX_TEMP);
-+
-+	return ((char *)(array + 1)) + (nr * array->obj_size);
++	ASSERT(0);
++	return NULL;
 +}
 +
-+/* Initialize a big memory array. */
-+struct xfbma *
-+xfbma_init(
-+	size_t		obj_size)
++/* Refuse to allow regular block allocation for a staging cursor. */
++STATIC int
++xfs_btree_fakeroot_alloc_block(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_ptr	*start_bno,
++	union xfs_btree_ptr	*new_bno,
++	int			*stat)
 +{
-+	struct xfbma	*array;
-+	struct file	*filp;
-+	int		error;
-+
-+	filp = xfile_create("big array");
-+	if (!filp)
-+		return ERR_PTR(-ENOMEM);
-+	if (IS_ERR(filp))
-+		return ERR_CAST(filp);
-+
-+	error = -ENOMEM;
-+	array = kmem_alloc(sizeof(struct xfbma) + (XFBMA_MAX_TEMP * obj_size),
-+			KM_NOFS | KM_MAYFAIL);
-+	if (!array)
-+		goto out_filp;
-+
-+	array->filp = filp;
-+	array->obj_size = obj_size;
-+	array->nr = 0;
-+	return array;
-+out_filp:
-+	fput(filp);
-+	return ERR_PTR(error);
++	ASSERT(0);
++	return -EFSCORRUPTED;
 +}
 +
++/* Refuse to allow block freeing for a staging cursor. */
++STATIC int
++xfs_btree_fakeroot_free_block(
++	struct xfs_btree_cur	*cur,
++	struct xfs_buf		*bp)
++{
++	ASSERT(0);
++	return -EFSCORRUPTED;
++}
++
++/* Initialize a pointer to the root block from the fakeroot. */
++STATIC void
++xfs_btree_fakeroot_init_ptr_from_cur(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_ptr	*ptr)
++{
++	struct xbtree_afakeroot	*afake;
++
++	ASSERT(cur->bc_flags & XFS_BTREE_STAGING);
++
++	afake = cur->bc_private.a.afake;
++	ptr->s = cpu_to_be32(afake->af_root);
++}
++
++/* Set the root block when our tree has a fakeroot. */
++STATIC void
++xfs_btree_afakeroot_set_root(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_ptr	*ptr,
++	int			inc)
++{
++	struct xbtree_afakeroot	*afake = cur->bc_private.a.afake;
++
++	ASSERT(cur->bc_flags & XFS_BTREE_STAGING);
++	afake->af_root = be32_to_cpu(ptr->s);
++	afake->af_levels += inc;
++}
++
++/*
++ * Initialize a AG-rooted btree cursor with the given AG btree fake root.  The
++ * btree cursor's @bc_ops will be overridden as needed to make the staging
++ * functionality work.  If @new_ops is not NULL, these new ops will be passed
++ * out to the caller for further overriding.
++ */
 +void
-+xfbma_destroy(
-+	struct xfbma	*array)
++xfs_btree_stage_afakeroot(
++	struct xfs_btree_cur		*cur,
++	struct xbtree_afakeroot		*afake,
++	struct xfs_btree_ops		**new_ops)
 +{
-+	xfile_destroy(array->filp);
-+	kmem_free(array);
-+}
++	struct xfs_btree_ops		*nops;
 +
-+/* Compute offset of array element. */
-+static inline loff_t
-+xfbma_offset(
-+	struct xfbma	*array,
-+	uint64_t	nr)
-+{
-+	if (nr >= array->nr)
-+		return -1;
-+	return nr * array->obj_size;
-+}
++	ASSERT(!(cur->bc_flags & XFS_BTREE_STAGING));
++	ASSERT(!(cur->bc_flags & XFS_BTREE_ROOT_IN_INODE));
 +
-+/* Get an element from the array. */
-+int
-+xfbma_get(
-+	struct xfbma	*array,
-+	uint64_t	nr,
-+	void		*ptr)
-+{
-+	loff_t		pos = xfbma_offset(array, nr);
++	nops = kmem_alloc(sizeof(struct xfs_btree_ops), KM_NOFS);
++	memcpy(nops, cur->bc_ops, sizeof(struct xfs_btree_ops));
++	nops->alloc_block = xfs_btree_fakeroot_alloc_block;
++	nops->free_block = xfs_btree_fakeroot_free_block;
++	nops->init_ptr_from_cur = xfs_btree_fakeroot_init_ptr_from_cur;
++	nops->set_root = xfs_btree_afakeroot_set_root;
++	nops->dup_cursor = xfs_btree_fakeroot_dup_cursor;
 +
-+	if (pos < 0) {
-+		ASSERT(0);
-+		return -ENODATA;
-+	}
++	cur->bc_private.a.afake = afake;
++	cur->bc_nlevels = afake->af_levels;
++	cur->bc_ops = nops;
++	cur->bc_flags |= XFS_BTREE_STAGING;
 +
-+	return xfile_io(array->filp, XFILE_IO_READ, &pos, ptr, array->obj_size);
-+}
-+
-+/* Put an element in the array. */
-+int
-+xfbma_set(
-+	struct xfbma	*array,
-+	uint64_t	nr,
-+	void		*ptr)
-+{
-+	loff_t		pos = xfbma_offset(array, nr);
-+
-+	if (pos < 0) {
-+		ASSERT(0);
-+		return -ENODATA;
-+	}
-+
-+	return xfile_io(array->filp, XFILE_IO_WRITE, &pos, ptr,
-+			array->obj_size);
-+}
-+
-+/* Is this array element NULL? */
-+bool
-+xfbma_is_null(
-+	struct xfbma	*array,
-+	void		*ptr)
-+{
-+	return !memchr_inv(ptr, 0, array->obj_size);
-+}
-+
-+/* Put an element anywhere in the array that isn't NULL. */
-+int
-+xfbma_insert_anywhere(
-+	struct xfbma	*array,
-+	void		*ptr)
-+{
-+	void		*temp = xfbma_temp(array, 0);
-+	uint64_t	i;
-+	int		error;
-+
-+	/* Find a null slot to put it in. */
-+	for (i = 0; i < array->nr; i++) {
-+		error = xfbma_get(array, i, temp);
-+		if (error || !xfbma_is_null(array, temp))
-+			continue;
-+		return xfbma_set(array, i, ptr);
-+	}
-+
-+	/* No null slots, just dump it on the end. */
-+	return xfbma_append(array, ptr);
-+}
-+
-+/* NULL an element in the array. */
-+int
-+xfbma_nullify(
-+	struct xfbma	*array,
-+	uint64_t	nr)
-+{
-+	void		*temp = xfbma_temp(array, 0);
-+	loff_t		pos = xfbma_offset(array, nr);
-+
-+	if (pos < 0) {
-+		ASSERT(0);
-+		return -ENODATA;
-+	}
-+
-+	memset(temp, 0, array->obj_size);
-+	return xfile_io(array->filp, XFILE_IO_WRITE, &pos, temp,
-+			array->obj_size);
-+}
-+
-+/* Append an element to the array. */
-+int
-+xfbma_append(
-+	struct xfbma	*array,
-+	void		*ptr)
-+{
-+	loff_t		pos = array->obj_size * array->nr;
-+	int		error;
-+
-+	if (pos < 0) {
-+		ASSERT(0);
-+		return -ENODATA;
-+	}
-+
-+	error = xfile_io(array->filp, XFILE_IO_WRITE, &pos, ptr,
-+			array->obj_size);
-+	if (error)
-+		return error;
-+	array->nr++;
-+	return 0;
++	if (new_ops)
++		*new_ops = nops;
 +}
 +
 +/*
-+ * Iterate every element in this array, freeing each element as we go.
-+ * Array elements will be nulled out.
++ * Transform an AG-rooted staging btree cursor back into a regular cursor by
++ * substituting a real btree root for the fake one and restoring normal btree
++ * cursor ops.  The caller must log the btree root change prior to calling
++ * this.
 + */
-+int
-+xfbma_iter_del(
-+	struct xfbma	*array,
-+	xfbma_iter_fn	iter_fn,
-+	void		*priv)
++void
++xfs_btree_commit_afakeroot(
++	struct xfs_btree_cur		*cur,
++	struct xfs_buf			*agbp,
++	const struct xfs_btree_ops	*ops)
 +{
-+	void		*temp = xfbma_temp(array, 0);
-+	pgoff_t		oldpagenr = 0;
-+	uint64_t	max_bytes;
-+	uint64_t	i;
-+	loff_t		pos;
-+	int		error = 0;
++	ASSERT(cur->bc_flags & XFS_BTREE_STAGING);
 +
-+	max_bytes = array->nr * array->obj_size;
-+	for (pos = 0, i = 0; pos < max_bytes; i++) {
-+		pgoff_t	pagenr;
++	trace_xfs_btree_commit_afakeroot(cur);
 +
-+		error = xfile_io(array->filp, XFILE_IO_READ, &pos, temp,
-+				array->obj_size);
-+		if (error)
-+			break;
-+		if (xfbma_is_null(array, temp))
-+			goto next;
-+		error = iter_fn(temp, priv);
-+		if (error)
-+			break;
-+next:
-+		/* Release the previous page if possible. */
-+		pagenr = pos >> PAGE_SHIFT;
-+		if (pagenr != oldpagenr)
-+			xfile_discard(array->filp, oldpagenr << PAGE_SHIFT,
-+					pos - 1);
-+		oldpagenr = pagenr;
-+	}
-+
-+	return error;
++	kmem_free((void *)cur->bc_ops);
++	cur->bc_private.a.agbp = agbp;
++	cur->bc_ops = ops;
++	cur->bc_flags &= ~XFS_BTREE_STAGING;
 +}
-+
-+/* Return length of array. */
-+uint64_t
-+xfbma_length(
-+	struct xfbma	*array)
-+{
-+	return array->nr;
-+}
-+
-+/*
-+ * Select the median value from a[lo], a[mid], and a[hi].  Put the median in
-+ * a[lo], the lowest in a[lo], and the highest in a[hi].  Using the median of
-+ * the three reduces the chances that we pick the worst case pivot value, since
-+ * it's likely that our array values are nearly sorted.
-+ */
-+STATIC int
-+xfbma_qsort_pivot(
-+	struct xfbma	*array,
-+	xfbma_cmp_fn	cmp_fn,
-+	uint64_t	lo,
-+	uint64_t	mid,
-+	uint64_t	hi)
-+{
-+	void		*a = xfbma_temp(array, 0);
-+	void		*b = xfbma_temp(array, 1);
-+	int		error;
-+
-+	/* if a[mid] < a[lo], swap a[mid] and a[lo]. */
-+	error = xfbma_get(array, mid, a);
-+	if (error)
-+		return error;
-+	error = xfbma_get(array, lo, b);
-+	if (error)
-+		return error;
-+	if (cmp_fn(a, b) < 0) {
-+		error = xfbma_set(array, lo, a);
-+		if (error)
-+			return error;
-+		error = xfbma_set(array, mid, b);
-+		if (error)
-+			return error;
-+	}
-+
-+	/* if a[hi] < a[mid], swap a[mid] and a[hi]. */
-+	error = xfbma_get(array, hi, a);
-+	if (error)
-+		return error;
-+	error = xfbma_get(array, mid, b);
-+	if (error)
-+		return error;
-+	if (cmp_fn(a, b) < 0) {
-+		error = xfbma_set(array, mid, a);
-+		if (error)
-+			return error;
-+		error = xfbma_set(array, hi, b);
-+		if (error)
-+			return error;
-+	} else {
-+		goto move_front;
-+	}
-+
-+	/* if a[mid] < a[lo], swap a[mid] and a[lo]. */
-+	error = xfbma_get(array, mid, a);
-+	if (error)
-+		return error;
-+	error = xfbma_get(array, lo, b);
-+	if (error)
-+		return error;
-+	if (cmp_fn(a, b) < 0) {
-+		error = xfbma_set(array, lo, a);
-+		if (error)
-+			return error;
-+		error = xfbma_set(array, mid, b);
-+		if (error)
-+			return error;
-+	}
-+move_front:
-+	/* move our selected pivot to a[lo] */
-+	error = xfbma_get(array, lo, b);
-+	if (error)
-+		return error;
-+	error = xfbma_get(array, mid, a);
-+	if (error)
-+		return error;
-+	error = xfbma_set(array, mid, b);
-+	if (error)
-+		return error;
-+	return xfbma_set(array, lo, a);
-+}
-+
-+/*
-+ * Perform an insertion sort on a subset of the array.
-+ * Though insertion sort is an O(n^2) algorithm, for small set sizes it's
-+ * faster than quicksort's stack machine, so we let it take over for that.
-+ */
-+STATIC int
-+xfbma_isort(
-+	struct xfbma	*array,
-+	xfbma_cmp_fn	cmp_fn,
-+	uint64_t	start,
-+	uint64_t	end)
-+{
-+	void		*a = xfbma_temp(array, 0);
-+	void		*b = xfbma_temp(array, 1);
-+	uint64_t	tmp;
-+	uint64_t	i;
-+	uint64_t	run;
-+	int		error;
-+
-+	/*
-+	 * Move the smallest element in a[start..end] to a[start].  This
-+	 * simplifies the loop control logic below.
-+	 */
-+	tmp = start;
-+	error = xfbma_get(array, tmp, b);
-+	if (error)
-+		return error;
-+	for (run = start + 1; run <= end; run++) {
-+		/* if a[run] < a[tmp], tmp = run */
-+		error = xfbma_get(array, run, a);
-+		if (error)
-+			return error;
-+		if (cmp_fn(a, b) < 0) {
-+			tmp = run;
-+			memcpy(b, a, array->obj_size);
-+		}
-+	}
-+
-+	/*
-+	 * The smallest element is a[tmp]; swap with a[start] if tmp != start.
-+	 * Recall that a[tmp] is already in *b.
-+	 */
-+	if (tmp != start) {
-+		error = xfbma_get(array, start, a);
-+		if (error)
-+			return error;
-+		error = xfbma_set(array, tmp, a);
-+		if (error)
-+			return error;
-+		error = xfbma_set(array, start, b);
-+		if (error)
-+			return error;
-+	}
-+
-+	/*
-+	 * Perform an insertion sort on a[start+1..end].  We already made sure
-+	 * that the smallest value in the original range is now in a[start],
-+	 * so the inner loop should never underflow.
-+	 *
-+	 * For each a[start+2..end], make sure it's in the correct position
-+	 * with respect to the elements that came before it.
-+	 */
-+	for (run = start + 2; run <= end; run++) {
-+		error = xfbma_get(array, run, a);
-+		if (error)
-+			return error;
-+
-+		/*
-+		 * Find the correct place for a[run] by walking leftwards
-+		 * towards the start of the range until a[tmp] is no longer
-+		 * greater than a[run].
-+		 */
-+		tmp = run - 1;
-+		error = xfbma_get(array, tmp, b);
-+		if (error)
-+			return error;
-+		while (cmp_fn(a, b) < 0) {
-+			tmp--;
-+			error = xfbma_get(array, tmp, b);
-+			if (error)
-+				return error;
-+		}
-+		tmp++;
-+
-+		/*
-+		 * If tmp != run, then a[tmp..run-1] are all less than a[run],
-+		 * so right barrel roll a[tmp..run] to get this range in
-+		 * sorted order.
-+		 */
-+		if (tmp == run)
-+			continue;
-+
-+		for (i = run; i >= tmp; i--) {
-+			error = xfbma_get(array, i - 1, b);
-+			if (error)
-+				return error;
-+			error = xfbma_set(array, i, b);
-+			if (error)
-+				return error;
-+		}
-+		error = xfbma_set(array, tmp, a);
-+		if (error)
-+			return error;
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * Sort the array elements via quicksort.  This implementation incorporates
-+ * four optimizations discussed in Sedgewick:
-+ *
-+ * 1. Use an explicit stack of array indicies to store the next array
-+ *    partition to sort.  This helps us to avoid recursion in the call stack,
-+ *    which is particularly expensive in the kernel.
-+ *
-+ * 2. Choose the pivot element using a median-of-three decision tree.  This
-+ *    reduces the probability of selecting a bad pivot value which causes
-+ *    worst case behavior (i.e. partition sizes of 1).  Chance are fairly good
-+ *    that the list is nearly sorted, so this is important.
-+ *
-+ * 3. The smaller of the two sub-partitions is pushed onto the stack to start
-+ *    the next level of recursion, and the larger sub-partition replaces the
-+ *    current stack frame.  This guarantees that we won't need more than
-+ *    log2(nr) stack space.
-+ *
-+ * 4. Use insertion sort for small sets since since insertion sort is faster
-+ *    for small, mostly sorted array segments.  In the author's experience,
-+ *    substituting insertion sort for arrays smaller than 4 elements yields
-+ *    a ~10% reduction in runtime.
-+ */
-+
-+/*
-+ * Due to the use of signed indices, we can only support up to 2^63 records.
-+ * Files can only grow to 2^63 bytes, so this is not much of a limitation.
-+ */
-+#define QSORT_MAX_RECS		(1ULL << 63)
-+
-+/*
-+ * For array subsets smaller than 4 elements, it's slightly faster to use
-+ * insertion sort than quicksort's stack machine.
-+ */
-+#define ISORT_THRESHOLD		(4)
-+int
-+xfbma_sort(
-+	struct xfbma	*array,
-+	xfbma_cmp_fn	cmp_fn)
-+{
-+	int64_t		*stack;
-+	int64_t		*beg;
-+	int64_t		*end;
-+	void		*pivot = xfbma_temp(array, 0);
-+	void		*temp = xfbma_temp(array, 1);
-+	int64_t		lo, mid, hi;
-+	const int	max_stack_depth = ilog2(array->nr) + 1;
-+	int		stack_depth = 0;
-+	int		max_stack_used = 0;
-+	int		error = 0;
-+
-+	if (array->nr == 0)
-+		return 0;
-+	if (array->nr >= QSORT_MAX_RECS)
-+		return -E2BIG;
-+	if (array->nr <= ISORT_THRESHOLD)
-+		return xfbma_isort(array, cmp_fn, 0, array->nr - 1);
-+
-+	/* Allocate our pointer stacks for sorting. */
-+	stack = kmem_alloc(sizeof(int64_t) * 2 * max_stack_depth,
-+			KM_NOFS | KM_MAYFAIL);
-+	if (!stack)
-+		return -ENOMEM;
-+	beg = stack;
-+	end = &stack[max_stack_depth];
-+
-+	beg[0] = 0;
-+	end[0] = array->nr;
-+	while (stack_depth >= 0) {
-+		lo = beg[stack_depth];
-+		hi = end[stack_depth] - 1;
-+
-+		/* Nothing left in this partition to sort; pop stack. */
-+		if (lo >= hi) {
-+			stack_depth--;
-+			continue;
-+		}
-+
-+		/* Small enough for insertion sort? */
-+		if (hi - lo <= ISORT_THRESHOLD) {
-+			error = xfbma_isort(array, cmp_fn, lo, hi);
-+			if (error)
-+				goto out_free;
-+			stack_depth--;
-+			continue;
-+		}
-+
-+		/* Pick a pivot, move it to a[lo] and stash it. */
-+		mid = lo + ((hi - lo) / 2);
-+		error = xfbma_qsort_pivot(array, cmp_fn, lo, mid, hi);
-+		if (error)
-+			goto out_free;
-+
-+		error = xfbma_get(array, lo, pivot);
-+		if (error)
-+			goto out_free;
-+
-+		/*
-+		 * Rearrange a[lo..hi] such that everything smaller than the
-+		 * pivot is on the left side of the range and everything larger
-+		 * than the pivot is on the right side of the range.
-+		 */
-+		while (lo < hi) {
-+			/*
-+			 * Decrement hi until it finds an a[hi] less than the
-+			 * pivot value.
-+			 */
-+			error = xfbma_get(array, hi, temp);
-+			if (error)
-+				goto out_free;
-+			while (cmp_fn(temp, pivot) >= 0 && lo < hi) {
-+				hi--;
-+				error = xfbma_get(array, hi, temp);
-+				if (error)
-+					goto out_free;
-+			}
-+
-+			/* Copy that item (a[hi]) to a[lo]. */
-+			if (lo < hi) {
-+				error = xfbma_set(array, lo++, temp);
-+				if (error)
-+					goto out_free;
-+			}
-+
-+			/*
-+			 * Increment lo until it finds an a[lo] greater than
-+			 * the pivot value.
-+			 */
-+			error = xfbma_get(array, lo, temp);
-+			if (error)
-+				goto out_free;
-+			while (cmp_fn(temp, pivot) <= 0 && lo < hi) {
-+				lo++;
-+				error = xfbma_get(array, lo, temp);
-+				if (error)
-+					goto out_free;
-+			}
-+
-+			/* Copy that item (a[lo]) to a[hi]. */
-+			if (lo < hi) {
-+				error = xfbma_set(array, hi--, temp);
-+				if (error)
-+					goto out_free;
-+			}
-+		}
-+
-+		/*
-+		 * Put our pivot value in the correct place at a[lo].  All
-+		 * values between a[beg[i]] and a[lo - 1] should be less than
-+		 * the pivot; and all values between a[lo + 1] and a[end[i]-1]
-+		 * should be greater than the pivot.
-+		 */
-+		error = xfbma_set(array, lo, pivot);
-+		if (error)
-+			goto out_free;
-+
-+		/*
-+		 * Set up the pointers for the next iteration.  We push onto
-+		 * the stack all of the unsorted values between a[lo + 1] and
-+		 * a[end[i]], and we tweak the current stack frame to point to
-+		 * the unsorted values between a[beg[i]] and a[lo] so that
-+		 * those values will be sorted when we pop the stack.
-+		 */
-+		beg[stack_depth + 1] = lo + 1;
-+		end[stack_depth + 1] = end[stack_depth];
-+		end[stack_depth++] = lo;
-+
-+		/* Check our stack usage. */
-+		max_stack_used = max(max_stack_used, stack_depth);
-+		if (stack_depth >= max_stack_depth) {
-+			ASSERT(0);
-+			error = -EFSCORRUPTED;
-+			goto out_free;
-+		}
-+
-+		/*
-+		 * Always start with the smaller of the two partitions to keep
-+		 * the amount of recursion in check.
-+		 */
-+		if (end[stack_depth] - beg[stack_depth] >
-+		    end[stack_depth - 1] - beg[stack_depth - 1]) {
-+			swap(beg[stack_depth], beg[stack_depth - 1]);
-+			swap(end[stack_depth], end[stack_depth - 1]);
-+		}
-+	}
-+
-+out_free:
-+	kfree(stack);
-+	trace_xfbma_sort_stats(array->nr, max_stack_depth, max_stack_used,
-+			error);
-+	return error;
-+}
-+
-+/* Convenience method to step through an array until we find a non-null item. */
-+int
-+xfbma_get_data(
-+	struct xfbma	*array,
-+	uint64_t	*nr,
-+	void		*rec)
-+{
-+	int		error;
-+
-+	do {
-+		error = xfbma_get(array, (*nr)++, rec);
-+	} while (error == 0 && xfbma_is_null(array, rec));
-+
-+	return error;
-+}
-diff --git a/fs/xfs/scrub/array.h b/fs/xfs/scrub/array.h
-new file mode 100644
-index 000000000000..77b7f6005da4
---- /dev/null
-+++ b/fs/xfs/scrub/array.h
-@@ -0,0 +1,45 @@
-+/* SPDX-License-Identifier: GPL-2.0-or-later */
-+/*
-+ * Copyright (C) 2019 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ */
-+#ifndef __XFS_SCRUB_ARRAY_H__
-+#define __XFS_SCRUB_ARRAY_H__
-+
-+struct xfbma {
-+	struct file	*filp;
-+	size_t		obj_size;
-+	uint64_t	nr;
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index fb9b2121c628..524f9ef89d1d 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -188,6 +188,16 @@ union xfs_btree_cur_private {
+ 	} abt;
+ };
+ 
++/* Private information for a AG-rooted btree. */
++struct xfs_btree_priv_ag {			/* needed for BNO, CNT, INO */
++	union {
++		struct xfs_buf		*agbp;	/* agf/agi buffer pointer */
++		struct xbtree_afakeroot	*afake;	/* fake ag header root */
++	};
++	xfs_agnumber_t			agno;	/* ag number */
++	union xfs_btree_cur_private	priv;
 +};
 +
-+struct xfbma *xfbma_init(size_t obj_size);
-+void xfbma_destroy(struct xfbma *array);
-+int xfbma_get(struct xfbma *array, uint64_t nr, void *ptr);
-+int xfbma_set(struct xfbma *array, uint64_t nr, void *ptr);
-+int xfbma_insert_anywhere(struct xfbma *array, void *ptr);
-+bool xfbma_is_null(struct xfbma *array, void *ptr);
-+int xfbma_nullify(struct xfbma *array, uint64_t nr);
-+int xfbma_append(struct xfbma *array, void *ptr);
-+uint64_t xfbma_length(struct xfbma *array);
-+int xfbma_get_data(struct xfbma *array, uint64_t *nr, void *rec);
-+
+ /*
+  * Btree cursor structure.
+  * This collects all information needed by the btree code in one place.
+@@ -209,11 +219,7 @@ typedef struct xfs_btree_cur
+ 	xfs_btnum_t	bc_btnum;	/* identifies which btree type */
+ 	int		bc_statoff;	/* offset of btre stats array */
+ 	union {
+-		struct {			/* needed for BNO, CNT, INO */
+-			struct xfs_buf	*agbp;	/* agf/agi buffer pointer */
+-			xfs_agnumber_t	agno;	/* ag number */
+-			union xfs_btree_cur_private	priv;
+-		} a;
++		struct xfs_btree_priv_ag a;
+ 		struct {			/* needed for BMAP */
+ 			struct xfs_inode *ip;	/* pointer to our inode */
+ 			int		allocated;	/* count of alloced */
+@@ -232,6 +238,12 @@ typedef struct xfs_btree_cur
+ #define XFS_BTREE_LASTREC_UPDATE	(1<<2)	/* track last rec externally */
+ #define XFS_BTREE_CRC_BLOCKS		(1<<3)	/* uses extended btree blocks */
+ #define XFS_BTREE_OVERLAPPING		(1<<4)	/* overlapping intervals */
 +/*
-+ * Return codes for the array iterator function are 0 to continue iterating,
-+ * and non-zero to stop iterating.  Any non-zero value will be passed up to the
-+ * iteration caller.  The special value -ECANCELED can be used to stop
-+ * iteration, because the iterator never generates that error code on its own.
++ * The root of this btree is a fakeroot structure so that we can stage a btree
++ * rebuild without leaving it accessible via primary metadata.  The ops struct
++ * is dynamically allocated and must be freed when the cursor is deleted.
 + */
-+typedef int (*xfbma_iter_fn)(const void *item, void *priv);
-+
-+int xfbma_iter_del(struct xfbma *array, xfbma_iter_fn iter_fn, void *priv);
-+
-+typedef int (*xfbma_cmp_fn)(const void *a, const void *b);
-+
-+int xfbma_sort(struct xfbma *array, xfbma_cmp_fn cmp_fn);
-+
-+#define foreach_xfbma_item(array, i, rec) \
-+	for ((i) = 0; (i) < xfbma_length((array)); (i)++) \
-+		if (xfbma_get((array), (i), &(rec)) == 0 && \
-+		    !xfbma_is_null((array), &(rec)))
-+
-+#endif /* __XFS_SCRUB_ARRAY_H__ */
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 651d7b8ee09f..7ba12e68ea01 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -940,6 +940,29 @@ DEFINE_NEWBT_EXTENT_EVENT(xrep_newbt_alloc_blocks);
- DEFINE_NEWBT_EXTENT_EVENT(xrep_newbt_free_blocks);
- DEFINE_NEWBT_EXTENT_EVENT(xrep_newbt_claim_block);
++#define XFS_BTREE_STAGING		(1<<5)
  
-+TRACE_EVENT(xfbma_sort_stats,
-+	TP_PROTO(uint64_t nr, unsigned int max_stack_depth,
-+		 unsigned int max_stack_used, int error),
-+	TP_ARGS(nr, max_stack_depth, max_stack_used, error),
+ 
+ #define	XFS_BTREE_NOERROR	0
+@@ -533,4 +545,24 @@ xfs_btree_islastblock(
+ 	return block->bb_u.s.bb_rightsib == cpu_to_be32(NULLAGBLOCK);
+ }
+ 
++/* Fake root for an AG-rooted btree. */
++struct xbtree_afakeroot {
++	/* AG block number of the new btree root. */
++	xfs_agblock_t		af_root;
++
++	/* Height of the new btree. */
++	unsigned int		af_levels;
++
++	/* Number of blocks used by the btree. */
++	unsigned int		af_blocks;
++};
++
++/* Cursor interactions with with fake roots for AG-rooted btrees. */
++void xfs_btree_stage_afakeroot(struct xfs_btree_cur *cur,
++		struct xbtree_afakeroot *afake,
++		struct xfs_btree_ops **new_ops);
++void xfs_btree_commit_afakeroot(struct xfs_btree_cur *cur,
++		struct xfs_buf *agbp,
++		const struct xfs_btree_ops *ops);
++
+ #endif	/* __XFS_BTREE_H__ */
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index a86be7f807ee..0bc245988501 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3594,6 +3594,34 @@ TRACE_EVENT(xfs_check_new_dalign,
+ 		  __entry->calc_rootino)
+ )
+ 
++TRACE_EVENT(xfs_btree_commit_afakeroot,
++	TP_PROTO(struct xfs_btree_cur *cur),
++	TP_ARGS(cur),
 +	TP_STRUCT__entry(
-+		__field(uint64_t, nr)
-+		__field(unsigned int, max_stack_depth)
-+		__field(unsigned int, max_stack_used)
-+		__field(int, error)
++		__field(dev_t, dev)
++		__field(xfs_btnum_t, btnum)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, agbno)
++		__field(unsigned int, levels)
++		__field(unsigned int, blocks)
 +	),
 +	TP_fast_assign(
-+		__entry->nr = nr;
-+		__entry->max_stack_depth = max_stack_depth;
-+		__entry->max_stack_used = max_stack_used;
-+		__entry->error = error;
++		__entry->dev = cur->bc_mp->m_super->s_dev;
++		__entry->btnum = cur->bc_btnum;
++		__entry->agno = cur->bc_private.a.agno;
++		__entry->agbno = cur->bc_private.a.afake->af_root;
++		__entry->levels = cur->bc_private.a.afake->af_levels;
++		__entry->blocks = cur->bc_private.a.afake->af_blocks;
 +	),
-+	TP_printk("nr %llu max_depth %u max_used %u error %d",
-+		  __entry->nr,
-+		  __entry->max_stack_depth,
-+		  __entry->max_stack_used,
-+		  __entry->error)
-+);
++	TP_printk("dev %d:%d btree %s ag %u levels %u blocks %u root %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
++		  __entry->agno,
++		  __entry->levels,
++		  __entry->blocks,
++		  __entry->agbno)
++)
 +
- #endif /* IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR) */
+ #endif /* _TRACE_XFS_H */
  
- #endif /* _TRACE_XFS_SCRUB_TRACE_H */
-diff --git a/fs/xfs/scrub/xfile.c b/fs/xfs/scrub/xfile.c
-new file mode 100644
-index 000000000000..2d96e2f9917c
---- /dev/null
-+++ b/fs/xfs/scrub/xfile.c
-@@ -0,0 +1,82 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2019 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "scrub/array.h"
-+#include "scrub/scrub.h"
-+#include "scrub/trace.h"
-+#include "scrub/xfile.h"
-+#include <linux/shmem_fs.h>
-+
-+/*
-+ * Create a memfd to our specifications and return a file pointer.  The file
-+ * is not installed in the file description table (because userspace has no
-+ * business accessing our internal data), which means that the caller /must/
-+ * fput the file when finished.
-+ */
-+struct file *
-+xfile_create(
-+	const char	*description)
-+{
-+	struct file	*filp;
-+
-+	filp = shmem_file_setup(description, 0, 0);
-+	if (IS_ERR_OR_NULL(filp))
-+		return filp;
-+
-+	filp->f_mode |= FMODE_PREAD | FMODE_PWRITE | FMODE_NOCMTIME;
-+	filp->f_flags |= O_RDWR | O_LARGEFILE | O_NOATIME;
-+	return filp;
-+}
-+
-+void
-+xfile_destroy(
-+	struct file	*filp)
-+{
-+	fput(filp);
-+}
-+
-+/*
-+ * Perform a read or write IO to the file backing the array.  We can defer
-+ * the work to a workqueue if the caller so desires, either to reduce stack
-+ * usage or because the xfs is frozen and we want to avoid deadlocking on the
-+ * page fault that might be about to happen.
-+ */
-+int
-+xfile_io(
-+	struct file	*filp,
-+	unsigned int	cmd_flags,
-+	loff_t		*pos,
-+	void		*ptr,
-+	size_t		count)
-+{
-+	ssize_t		ret;
-+	unsigned int	pflags = memalloc_nofs_save();
-+
-+	if ((cmd_flags & XFILE_IO_MASK) == XFILE_IO_READ)
-+		ret = kernel_read(filp, ptr, count, pos);
-+	else
-+		ret = kernel_write(filp, ptr, count, pos);
-+	memalloc_nofs_restore(pflags);
-+
-+	/*
-+	 * Since we're treating this file as "memory", any IO error should be
-+	 * treated as a failure to find any memory.
-+	 */
-+	return ret == count ? 0 : -ENOMEM;
-+}
-+
-+/* Discard pages backing a range of the file. */
-+void
-+xfile_discard(
-+	struct file	*filp,
-+	loff_t		start,
-+	loff_t		end)
-+{
-+	shmem_truncate_range(file_inode(filp), start, end);
-+}
-diff --git a/fs/xfs/scrub/xfile.h b/fs/xfs/scrub/xfile.h
-new file mode 100644
-index 000000000000..41817bcadc43
---- /dev/null
-+++ b/fs/xfs/scrub/xfile.h
-@@ -0,0 +1,21 @@
-+/* SPDX-License-Identifier: GPL-2.0-or-later */
-+/*
-+ * Copyright (C) 2019 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ */
-+#ifndef __XFS_SCRUB_XFILE_H__
-+#define __XFS_SCRUB_XFILE_H__
-+
-+struct file *xfile_create(const char *description);
-+void xfile_destroy(struct file *filp);
-+
-+/* read or write? */
-+#define XFILE_IO_READ		(0)
-+#define XFILE_IO_WRITE		(1)
-+#define XFILE_IO_MASK		(1 << 0)
-+int xfile_io(struct file *filp, unsigned int cmd_flags, loff_t *pos,
-+		void *ptr, size_t count);
-+
-+void xfile_discard(struct file *filp, loff_t start, loff_t end);
-+
-+#endif /* __XFS_SCRUB_XFILE_H__ */
+ #undef TRACE_INCLUDE_PATH
 
