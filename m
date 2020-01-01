@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08469C2D0CE
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:11:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47291C2D0CE
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:11:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CC8FB206E4
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:11:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 19B2A206E4
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:11:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="An9I/0x4"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kA4FtYtl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727161AbgAABL0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Dec 2019 20:11:26 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:53084 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727132AbgAABL0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:11:26 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0011ALvf089850
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:11:25 GMT
+        id S1727141AbgAABLj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Dec 2019 20:11:39 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:50000 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727132AbgAABLj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:11:39 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00118xeu091223
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:11:37 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=K7JvRrccH/xH41TpbgdLBR/3+PoOm/CR7h81UFGot8s=;
- b=An9I/0x4QDgi05FvvKti3lc9njnK3Rsli+7dEwvD4ZTqpoL35NHT+lvj1u1RsoIgIZXb
- sWRMdMC5+L69nZ4AfcWGOBUB93M2G0HeHjodmmjv7T+QMAMSTeP4E1StWhso53y81WNA
- 4nkkc2ElPPye/gAO8D2VQVtI48/GQD1Bd4Ae2fVRVpWq8O5BLFNO+kcoNbpqi8ykXZaT
- OlTiOn1y55PXBWTpFGE6hYnwsho+ZV0KqkHrc8as5YeBM8RpUUmZqV//bvfrfZOB0vZP
- HjRhcuR4t0tdK/Rd+7BKoQrMq2nTn0WWK53/zicAdKHCkpqFm5hEgtdevrPSxQ5yBm6K bA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2x5y0pjxw6-1
+ bh=W8JKF9t7k5KBFBNYVhoscYbkLA2KOHUroxLK+7/t1NY=;
+ b=kA4FtYtlVrq87EeSVAZQm7iq32l4CeWbrcAhPoPk1KAT9H0sUc5BzNNqEf7mQmTK/ITB
+ UO+DnWMR0brkKqUNsL92DQVUVfXZ3tVg1b/fSlB9GkcxaGSk0GkJDkbn8cF51psdL/4p
+ bAsPbApfxuScrzo4lmYz4mZhMWJ5fUXIufFE5ppupdZfd+mMspHB9xhboGYBBn4pxO6C
+ G8zkpi8R2N9PI/T528Y1gDSWHLXuDH/M/agkwH4ZEch/Z43QO5KYSN0unnwPliTKlYO4
+ Ux7cetgXBj9GLWdKigOrvxDocNK/Hx2Vrlxrq32UqtQkMf+FCR/2uqUTQLcagN+1Xoxs 7w== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 2x5ypqjwev-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:11:25 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00118v7N190321
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:11:24 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2x8bsrg15d-1
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:11:37 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00118xHi012453
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:11:37 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 2x8gueev7j-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:11:24 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0011BOhK032335
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:11:24 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:11:36 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0011BaP5006607
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:11:36 GMT
 Received: from localhost (/10.159.150.156)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 31 Dec 2019 17:11:23 -0800
-Subject: [PATCH 03/14] xfs: refactor quota exceeded test
+        with ESMTP ; Tue, 31 Dec 2019 17:11:36 -0800
+Subject: [PATCH 05/14] xfs: refactor quota expiration timer modification
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 31 Dec 2019 17:11:21 -0800
-Message-ID: <157784108138.1364230.6221331077843589601.stgit@magnolia>
+Date:   Tue, 31 Dec 2019 17:11:33 -0800
+Message-ID: <157784109369.1364230.637677553755124721.stgit@magnolia>
 In-Reply-To: <157784106066.1364230.569420432829402226.stgit@magnolia>
 References: <157784106066.1364230.569420432829402226.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,127 +80,154 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Refactor the open-coded test for whether or not we're over quota.
+Define explicit limits on the range of quota grace period expiration
+timeouts and refactor the code that modifies the timeouts into helpers
+that clamp the values appropriately.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_dquot.c |   61 +++++++++++++++++++++-------------------------------
- 1 file changed, 25 insertions(+), 36 deletions(-)
+ fs/xfs/libxfs/xfs_format.h |   22 ++++++++++++++++++++++
+ fs/xfs/xfs_dquot.c         |   42 ++++++++++++++++++++++++++++++++++++------
+ fs/xfs/xfs_ondisk.h        |    2 ++
+ 3 files changed, 60 insertions(+), 6 deletions(-)
 
 
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 82b15832ba32..95761b38fe86 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -1180,6 +1180,28 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
+ #define XFS_DQUOT_MAGIC		0x4451		/* 'DQ' */
+ #define XFS_DQUOT_VERSION	(uint8_t)0x01	/* latest version number */
+ 
++/*
++ * XFS Quota Timers
++ * ================
++ *
++ * Quota grace period expiration timers are an unsigned 32-bit seconds counter;
++ * time zero is the Unix epoch, Jan  1 00:00:01 UTC 1970.  An expiration value
++ * of zero means that the quota limit has not been reached, and therefore no
++ * expiration has been set.
++ */
++
++/*
++ * Smallest possible quota expiration with traditional timestamps, which is
++ * Jan  1 00:00:01 UTC 1970.
++ */
++#define XFS_DQ_TIMEOUT_MIN	((int64_t)1)
++
++/*
++ * Largest possible quota expiration with traditional timestamps, which is
++ * Feb  7 06:28:15 UTC 2106.
++ */
++#define XFS_DQ_TIMEOUT_MAX	((int64_t)U32_MAX)
++
+ /*
+  * This is the main portion of the on-disk representation of quota
+  * information for a user. This is the q_core of the struct xfs_dquot that
 diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index e50c75d9d788..54e7fdcd1d4d 100644
+index ae7bb6361a99..44bae5f16b55 100644
 --- a/fs/xfs/xfs_dquot.c
 +++ b/fs/xfs/xfs_dquot.c
-@@ -99,6 +99,17 @@ xfs_qm_adjust_dqlimits(
- 		xfs_dquot_set_prealloc_limits(dq);
+@@ -113,6 +113,36 @@ xfs_quota_exceeded(
+ 	return *hardlimit && count > be64_to_cpup(hardlimit);
  }
  
-+static inline bool
-+xfs_quota_exceeded(
-+	const __be64		*count,
-+	const __be64		*softlimit,
-+	const __be64		*hardlimit) {
++/*
++ * Clamp a quota grace period expiration timer to the range that we support.
++ */
++static inline time64_t
++xfs_dquot_clamp_timer(
++	time64_t			timer)
++{
++	return clamp_t(time64_t, timer, XFS_DQ_TIMEOUT_MIN, XFS_DQ_TIMEOUT_MAX);
++}
 +
-+	if (*softlimit && be64_to_cpup(count) > be64_to_cpup(softlimit))
-+		return true;
-+	return *hardlimit && be64_to_cpup(count) > be64_to_cpup(hardlimit);
++/* Set a quota grace period expiration timer. */
++static inline void
++xfs_quota_set_timer(
++	__be32			*dtimer,
++	time_t			limit)
++{
++	time64_t		new_timeout;
++
++	new_timeout = xfs_dquot_clamp_timer(get_seconds() + limit);
++	*dtimer = cpu_to_be32(new_timeout);
++}
++
++/* Clear a quota grace period expiration timer. */
++static inline void
++xfs_quota_clear_timer(
++	__be32			*dtimer)
++{
++	*dtimer = cpu_to_be32(0);
 +}
 +
  /*
   * Check the limits and timers of a dquot and start or reset timers
   * if necessary.
-@@ -117,6 +128,8 @@ xfs_qm_adjust_dqtimers(
- 	struct xfs_mount	*mp,
- 	struct xfs_disk_dquot	*d)
- {
-+	bool			over;
-+
- 	ASSERT(d->d_id);
- 
- #ifdef DEBUG
-@@ -131,71 +144,47 @@ xfs_qm_adjust_dqtimers(
- 		       be64_to_cpu(d->d_rtb_hardlimit));
- #endif
- 
-+	over = xfs_quota_exceeded(&d->d_bcount, &d->d_blk_softlimit,
-+			&d->d_blk_hardlimit);
+@@ -152,14 +182,14 @@ xfs_qm_adjust_dqtimers(
+ 			&d->d_blk_softlimit, &d->d_blk_hardlimit);
  	if (!d->d_btimer) {
--		if ((d->d_blk_softlimit &&
--		     (be64_to_cpu(d->d_bcount) >
--		      be64_to_cpu(d->d_blk_softlimit))) ||
--		    (d->d_blk_hardlimit &&
--		     (be64_to_cpu(d->d_bcount) >
--		      be64_to_cpu(d->d_blk_hardlimit)))) {
-+		if (over) {
- 			d->d_btimer = cpu_to_be32(get_seconds() +
+ 		if (over) {
+-			d->d_btimer = cpu_to_be32(get_seconds() +
++			xfs_quota_set_timer(&d->d_btimer,
  					mp->m_quotainfo->qi_btimelimit);
  		} else {
  			d->d_bwarns = 0;
  		}
  	} else {
--		if ((!d->d_blk_softlimit ||
--		     (be64_to_cpu(d->d_bcount) <=
--		      be64_to_cpu(d->d_blk_softlimit))) &&
--		    (!d->d_blk_hardlimit ||
--		    (be64_to_cpu(d->d_bcount) <=
--		     be64_to_cpu(d->d_blk_hardlimit)))) {
-+		if (!over) {
- 			d->d_btimer = 0;
+ 		if (!over) {
+-			d->d_btimer = 0;
++			xfs_quota_clear_timer(&d->d_btimer);
  		}
  	}
  
-+	over = xfs_quota_exceeded(&d->d_icount, &d->d_ino_softlimit,
-+			&d->d_ino_hardlimit);
+@@ -167,14 +197,14 @@ xfs_qm_adjust_dqtimers(
+ 			&d->d_ino_softlimit, &d->d_ino_hardlimit);
  	if (!d->d_itimer) {
--		if ((d->d_ino_softlimit &&
--		     (be64_to_cpu(d->d_icount) >
--		      be64_to_cpu(d->d_ino_softlimit))) ||
--		    (d->d_ino_hardlimit &&
--		     (be64_to_cpu(d->d_icount) >
--		      be64_to_cpu(d->d_ino_hardlimit)))) {
-+		if (over) {
- 			d->d_itimer = cpu_to_be32(get_seconds() +
+ 		if (over) {
+-			d->d_itimer = cpu_to_be32(get_seconds() +
++			xfs_quota_set_timer(&d->d_itimer,
  					mp->m_quotainfo->qi_itimelimit);
  		} else {
  			d->d_iwarns = 0;
  		}
  	} else {
--		if ((!d->d_ino_softlimit ||
--		     (be64_to_cpu(d->d_icount) <=
--		      be64_to_cpu(d->d_ino_softlimit)))  &&
--		    (!d->d_ino_hardlimit ||
--		     (be64_to_cpu(d->d_icount) <=
--		      be64_to_cpu(d->d_ino_hardlimit)))) {
-+		if (!over) {
- 			d->d_itimer = 0;
+ 		if (!over) {
+-			d->d_itimer = 0;
++			xfs_quota_clear_timer(&d->d_itimer);
  		}
  	}
  
-+	over = xfs_quota_exceeded(&d->d_rtbcount, &d->d_rtb_softlimit,
-+			&d->d_rtb_hardlimit);
+@@ -182,14 +212,14 @@ xfs_qm_adjust_dqtimers(
+ 			&d->d_rtb_softlimit, &d->d_rtb_hardlimit);
  	if (!d->d_rtbtimer) {
--		if ((d->d_rtb_softlimit &&
--		     (be64_to_cpu(d->d_rtbcount) >
--		      be64_to_cpu(d->d_rtb_softlimit))) ||
--		    (d->d_rtb_hardlimit &&
--		     (be64_to_cpu(d->d_rtbcount) >
--		      be64_to_cpu(d->d_rtb_hardlimit)))) {
-+		if (over) {
- 			d->d_rtbtimer = cpu_to_be32(get_seconds() +
+ 		if (over) {
+-			d->d_rtbtimer = cpu_to_be32(get_seconds() +
++			xfs_quota_set_timer(&d->d_rtbtimer,
  					mp->m_quotainfo->qi_rtbtimelimit);
  		} else {
  			d->d_rtbwarns = 0;
  		}
  	} else {
--		if ((!d->d_rtb_softlimit ||
--		     (be64_to_cpu(d->d_rtbcount) <=
--		      be64_to_cpu(d->d_rtb_softlimit))) &&
--		    (!d->d_rtb_hardlimit ||
--		     (be64_to_cpu(d->d_rtbcount) <=
--		      be64_to_cpu(d->d_rtb_hardlimit)))) {
-+		if (!over) {
- 			d->d_rtbtimer = 0;
+ 		if (!over) {
+-			d->d_rtbtimer = 0;
++			xfs_quota_clear_timer(&d->d_rtbtimer);
  		}
  	}
+ }
+diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
+index f67f3645efcd..52dc5326b7bf 100644
+--- a/fs/xfs/xfs_ondisk.h
++++ b/fs/xfs/xfs_ondisk.h
+@@ -25,6 +25,8 @@ xfs_check_ondisk_structs(void)
+ 	/* make sure timestamp limits are correct */
+ 	XFS_CHECK_VALUE(XFS_INO_TIME_MIN, 			-2147483648LL);
+ 	XFS_CHECK_VALUE(XFS_INO_TIME_MAX,			2147483647LL);
++	XFS_CHECK_VALUE(XFS_DQ_TIMEOUT_MIN,			1LL);
++	XFS_CHECK_VALUE(XFS_DQ_TIMEOUT_MAX,			4294967295LL);
+ 
+ 	/* ag/file structures */
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_acl,			4);
 
