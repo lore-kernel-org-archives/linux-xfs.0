@@ -7,55 +7,56 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CCE6C2D0CE
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:16:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9787DC2D0CE
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:16:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1AF47206E4
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:16:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 56035206E4
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:16:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="hsojDXzN"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bDCWHZYn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727170AbgAABQc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Dec 2019 20:16:32 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:57102 "EHLO
+        id S1727145AbgAABQq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Dec 2019 20:16:46 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:57224 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727132AbgAABQc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:16:32 -0500
+        with ESMTP id S1727132AbgAABQp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:16:45 -0500
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0011EP98112620
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:16:30 GMT
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0011E8bw112531
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:16:42 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=6dQ5zAPk6FB3P5ErqJLpvsWHIg///lZWkwY6AT0Fn3U=;
- b=hsojDXzNtpnI3UC+tI3QduwNdsYJuT8wkRadvhP3PDheUEiMf/Y7Ea+BBpsGO3YbkJkm
- hHZD2Y+7m5LqVxn+HjXDzKQtp2PiQETHlX+zO10Iv0nW5DF8HzOg2pJfwiLXERA3Mxbo
- znOSx4kCh8+MQa3Sbe2sSRg/kO+RkQxxNaw0sHA6Dw911wN9Fg9luzan1ocnlL1kSgBT
- SilM4llx/pFgWAtV7FVEzFW89qBITrTvWzxjTkcw1qFNzTHcec5VaYqzDaBHipk8DOOI
- nmnYhI4SGXu70jThiKgfWDiKwvJXcZ8YUdx8ufm5sfjnn+L/T8nW0RQ0g4y7ddms88nD OA== 
+ bh=nWLfDkaghjlX4RctBZeR7hWPJgMqiARHSJ0tn/JKgAI=;
+ b=bDCWHZYn1Uv3y8d+mwtkndNtQQc7Ogo37jmTyztN8OibTIjB3VJhM6UFwQVoW73SEJvM
+ aUgbGn1ydEpNNJXiINhFkUSOpuuxi1ZIa6mLZBiCK1bqvC+RO59KU4qeff87Y6Dnt82N
+ 525yK80/FXV+VM3pXm1//pg7PgIpf5wiyCgrP+QN/+EPEJ4PITovX/sc7pyljCE+KZaf
+ oCVDD/dkAhZ93Qp+ragPStPEkDjVlUXIMiM5+lLISJQmqaWLxLOX4ELkX0TFIufSOvw0
+ 8W2LyhA76Mmdrnr0RWGjNpZ5rXkzr1zyDc3bCKsmfRFMr5DdOTe0ZP5EC5hw1Uemdn5G ug== 
 Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2x5xftk2n9-1
+        by userp2130.oracle.com with ESMTP id 2x5xftk2nc-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:16:29 +0000
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:16:42 +0000
 Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00118wqN172101
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:16:29 GMT
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00118vXF172094
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:16:42 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2x8gj91apu-1
+        by userp3030.oracle.com with ESMTP id 2x8gj91atf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:16:29 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0011GSDq001672
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:16:29 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:16:42 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0011Gf2T001809
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:16:41 GMT
 Received: from localhost (/10.159.150.156)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 31 Dec 2019 17:16:28 -0800
-Subject: [PATCH 01/21] xfs: make iroot_realloc a btree function
+        with ESMTP ; Tue, 31 Dec 2019 17:16:41 -0800
+Subject: [PATCH 03/21] xfs: widen xfs_rmap_irec fields to handle realtime
+ rmapbt
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 31 Dec 2019 17:16:26 -0800
-Message-ID: <157784138596.1368137.4941197849810187069.stgit@magnolia>
+Date:   Tue, 31 Dec 2019 17:16:38 -0800
+Message-ID: <157784139871.1368137.13166326523641835965.stgit@magnolia>
 In-Reply-To: <157784137939.1368137.1149711841610071256.stgit@magnolia>
 References: <157784137939.1368137.1149711841610071256.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,435 +81,518 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-For btrees that are rooted in the inode core, we have to have a
-function to resize the root.  This is fairly specific to each
-btree type, so make xfs_iroot_realloc a per-btree function.
+Change the startblock and blockcount fields of xfs_rmap_irec to be 64
+bits wide.  This enables us to use the same high level rmap code for
+either tree.  We'll also collect all the resulting breakage fixes here.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c       |    6 +-
- fs/xfs/libxfs/xfs_bmap_btree.c |  139 ++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_bmap_btree.h |    2 +
- fs/xfs/libxfs/xfs_btree.c      |   12 +--
- fs/xfs/libxfs/xfs_btree.h      |    7 ++
- fs/xfs/libxfs/xfs_inode_fork.c |  130 -------------------------------------
- fs/xfs/libxfs/xfs_inode_fork.h |    1 
- 7 files changed, 155 insertions(+), 142 deletions(-)
+ fs/xfs/libxfs/xfs_format.h   |    4 +-
+ fs/xfs/libxfs/xfs_refcount.c |    6 +--
+ fs/xfs/libxfs/xfs_rmap.c     |   81 +++++++++++++++++++++---------------------
+ fs/xfs/libxfs/xfs_rmap.h     |   36 +++++++++----------
+ fs/xfs/scrub/alloc_repair.c  |    6 +--
+ fs/xfs/xfs_trace.h           |   38 ++++++++++----------
+ 6 files changed, 84 insertions(+), 87 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 172a1848cba0..6a52e24a0466 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -641,7 +641,7 @@ xfs_bmap_btree_to_extents(
- 	xfs_trans_binval(tp, cbp);
- 	if (cur->bc_bufs[0] == cbp)
- 		cur->bc_bufs[0] = NULL;
--	xfs_iroot_realloc(ip, -1, whichfork);
-+	cur->bc_ops->iroot_realloc(cur, -1);
- 	ASSERT(ifp->if_broot == NULL);
- 	ASSERT((ifp->if_flags & XFS_IFBROOT) == 0);
- 	XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
-@@ -686,7 +686,7 @@ xfs_bmap_extents_to_btree(
- 	 * Make space in the inode incore. This needs to be undone if we fail
- 	 * to expand the root.
- 	 */
--	xfs_iroot_realloc(ip, 1, whichfork);
-+	xfs_bmbt_iroot_realloc(ip, 1, whichfork);
- 	ifp->if_flags |= XFS_IFBROOT;
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index b610338de5b0..8b3975dedd7f 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -1582,8 +1582,8 @@ struct xfs_rmap_rec {
+ 					 XFS_RMAP_BMBT_BLOCK)
+ #define XFS_RMAP_REC_FLAGS		(XFS_RMAP_UNWRITTEN)
+ struct xfs_rmap_irec {
+-	xfs_agblock_t	rm_startblock;	/* extent start block */
+-	xfs_extlen_t	rm_blockcount;	/* extent length */
++	xfs_fsblock_t	rm_startblock;	/* extent start block */
++	xfs_filblks_t	rm_blockcount;	/* extent length */
+ 	uint64_t	rm_owner;	/* extent owner */
+ 	uint64_t	rm_offset;	/* offset within the owner */
+ 	unsigned int	rm_flags;	/* state flags */
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index af597f4496ab..e761b796170e 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -1663,8 +1663,7 @@ xfs_refcount_alloc_cow_extent(
+ 	__xfs_refcount_add(tp, XFS_REFCOUNT_ALLOC_COW, fsb, len);
  
- 	/*
-@@ -790,7 +790,7 @@ xfs_bmap_extents_to_btree(
- out_unreserve_dquot:
- 	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, -1L);
- out_root_realloc:
--	xfs_iroot_realloc(ip, -1, whichfork);
-+	cur->bc_ops->iroot_realloc(cur, -1);
- 	XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
- 	ASSERT(ifp->if_broot == NULL);
- 	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index e9c1e2862df5..7158a90e56d3 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -410,6 +410,144 @@ xfs_bmbt_diff_two_keys(
- 	return 0;
+ 	/* Add rmap entry */
+-	xfs_rmap_alloc_extent(tp, XFS_FSB_TO_AGNO(mp, fsb),
+-			XFS_FSB_TO_AGBNO(mp, fsb), len, XFS_RMAP_OWN_COW);
++	xfs_rmap_alloc_extent(tp, fsb, len, XFS_RMAP_OWN_COW);
  }
  
-+/*
-+ * Reallocate the space for if_broot based on the number of records
-+ * being added or deleted as indicated in rec_diff.  Move the records
-+ * and pointers in if_broot to fit the new size.  When shrinking this
-+ * will eliminate holes between the records and pointers created by
-+ * the caller.  When growing this will create holes to be filled in
-+ * by the caller.
-+ *
-+ * The caller must not request to add more records than would fit in
-+ * the on-disk inode root.  If the if_broot is currently NULL, then
-+ * if we are adding records, one will be allocated.  The caller must also
-+ * not request that the number of records go below zero, although
-+ * it can go to zero.
-+ *
-+ * ip -- the inode whose if_broot area is changing
-+ * ext_diff -- the change in the number of records, positive or negative,
-+ *	 requested for the if_broot array.
-+ */
-+void
-+xfs_bmbt_iroot_realloc(
-+	xfs_inode_t		*ip,
-+	int			rec_diff,
-+	int			whichfork)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	int			cur_max;
-+	struct xfs_ifork	*ifp;
-+	struct xfs_btree_block	*new_broot;
-+	int			new_max;
-+	size_t			new_size;
-+	char			*np;
-+	char			*op;
-+
-+	/*
-+	 * Handle the degenerate case quietly.
-+	 */
-+	if (rec_diff == 0) {
-+		return;
-+	}
-+
-+	ifp = XFS_IFORK_PTR(ip, whichfork);
-+	if (rec_diff > 0) {
-+		/*
-+		 * If there wasn't any memory allocated before, just
-+		 * allocate it now and get out.
-+		 */
-+		if (ifp->if_broot_bytes == 0) {
-+			new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, rec_diff);
-+			ifp->if_broot = kmem_alloc(new_size, KM_NOFS);
-+			ifp->if_broot_bytes = (int)new_size;
-+			return;
-+		}
-+
-+		/*
-+		 * If there is already an existing if_broot, then we need
-+		 * to realloc() it and shift the pointers to their new
-+		 * location.  The records don't change location because
-+		 * they are kept butted up against the btree block header.
-+		 */
-+		cur_max = xfs_bmbt_maxrecs(mp, ifp->if_broot_bytes, 0);
-+		new_max = cur_max + rec_diff;
-+		new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, new_max);
-+		ifp->if_broot = kmem_realloc(ifp->if_broot, new_size,
-+				KM_NOFS);
-+		op = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
-+						     ifp->if_broot_bytes);
-+		np = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
-+						     (int)new_size);
-+		ifp->if_broot_bytes = (int)new_size;
-+		ASSERT(XFS_BMAP_BMDR_SPACE(ifp->if_broot) <=
-+			XFS_IFORK_SIZE(ip, whichfork));
-+		memmove(np, op, cur_max * (uint)sizeof(xfs_fsblock_t));
-+		return;
-+	}
-+
-+	/*
-+	 * rec_diff is less than 0.  In this case, we are shrinking the
-+	 * if_broot buffer.  It must already exist.  If we go to zero
-+	 * records, just get rid of the root and clear the status bit.
-+	 */
-+	ASSERT((ifp->if_broot != NULL) && (ifp->if_broot_bytes > 0));
-+	cur_max = xfs_bmbt_maxrecs(mp, ifp->if_broot_bytes, 0);
-+	new_max = cur_max + rec_diff;
-+	ASSERT(new_max >= 0);
-+	if (new_max > 0)
-+		new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, new_max);
-+	else
-+		new_size = 0;
-+	if (new_size > 0) {
-+		new_broot = kmem_alloc(new_size, KM_NOFS);
-+		/*
-+		 * First copy over the btree block header.
-+		 */
-+		memcpy(new_broot, ifp->if_broot,
-+			XFS_BMBT_BLOCK_LEN(ip->i_mount));
-+	} else {
-+		new_broot = NULL;
-+		ifp->if_flags &= ~XFS_IFBROOT;
-+	}
-+
-+	/*
-+	 * Only copy the records and pointers if there are any.
-+	 */
-+	if (new_max > 0) {
-+		/*
-+		 * First copy the records.
-+		 */
-+		op = (char *)XFS_BMBT_REC_ADDR(mp, ifp->if_broot, 1);
-+		np = (char *)XFS_BMBT_REC_ADDR(mp, new_broot, 1);
-+		memcpy(np, op, new_max * (uint)sizeof(xfs_bmbt_rec_t));
-+
-+		/*
-+		 * Then copy the pointers.
-+		 */
-+		op = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
-+						     ifp->if_broot_bytes);
-+		np = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, new_broot, 1,
-+						     (int)new_size);
-+		memcpy(np, op, new_max * (uint)sizeof(xfs_fsblock_t));
-+	}
-+	kmem_free(ifp->if_broot);
-+	ifp->if_broot = new_broot;
-+	ifp->if_broot_bytes = (int)new_size;
-+	if (ifp->if_broot)
-+		ASSERT(XFS_BMAP_BMDR_SPACE(ifp->if_broot) <=
-+			XFS_IFORK_SIZE(ip, whichfork));
-+	return;
-+}
-+
-+STATIC void
-+__xfs_bmbt_iroot_realloc(
-+	struct xfs_btree_cur	*cur,
-+	int			rec_diff)
-+{
-+	return xfs_bmbt_iroot_realloc(cur->bc_private.b.ip, rec_diff,
-+			cur->bc_private.b.whichfork);
-+}
-+
- static xfs_failaddr_t
- xfs_bmbt_verify(
- 	struct xfs_buf		*bp)
-@@ -528,6 +666,7 @@ static const struct xfs_btree_ops xfs_bmbt_ops = {
- 	.key_diff		= xfs_bmbt_key_diff,
- 	.diff_two_keys		= xfs_bmbt_diff_two_keys,
- 	.buf_ops		= &xfs_bmbt_buf_ops,
-+	.iroot_realloc		= __xfs_bmbt_iroot_realloc,
- 	.keys_inorder		= xfs_bmbt_keys_inorder,
- 	.recs_inorder		= xfs_bmbt_recs_inorder,
- };
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
-index 0b20736808a3..69afabf3f5dd 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.h
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.h
-@@ -114,5 +114,7 @@ void xfs_bmbt_commit_staged_btree(struct xfs_btree_cur *cur, int whichfork);
+ /* Forget a CoW staging event in the refcount btree. */
+@@ -1680,8 +1679,7 @@ xfs_refcount_free_cow_extent(
+ 		return;
  
- extern unsigned long long xfs_bmbt_calc_size(struct xfs_mount *mp,
- 		unsigned long long len);
-+extern void xfs_bmbt_iroot_realloc(struct xfs_inode *ip, int rec_diff,
-+		int whichfork);
- 
- #endif	/* __XFS_BMAP_BTREE_H__ */
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index a0dd4d893c11..464ae3eafe16 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -3007,9 +3007,7 @@ xfs_btree_new_iroot(
- 
- 	xfs_btree_copy_ptrs(cur, pp, &nptr, 1);
- 
--	xfs_iroot_realloc(cur->bc_private.b.ip,
--			  1 - xfs_btree_get_numrecs(cblock),
--			  cur->bc_private.b.whichfork);
-+	cur->bc_ops->iroot_realloc(cur, 1 - xfs_btree_get_numrecs(cblock));
- 
- 	xfs_btree_setbuf(cur, level, cbp);
- 
-@@ -3178,7 +3176,7 @@ xfs_btree_make_block_unfull(
- 
- 		if (numrecs < cur->bc_ops->get_dmaxrecs(cur, level)) {
- 			/* A root block that can be made bigger. */
--			xfs_iroot_realloc(ip, 1, cur->bc_private.b.whichfork);
-+			cur->bc_ops->iroot_realloc(cur, 1);
- 			*stat = 1;
- 		} else {
- 			/* A root block that needs replacing */
-@@ -3584,8 +3582,7 @@ xfs_btree_kill_iroot(
- 
- 	index = numrecs - cur->bc_ops->get_maxrecs(cur, level);
- 	if (index) {
--		xfs_iroot_realloc(cur->bc_private.b.ip, index,
--				  cur->bc_private.b.whichfork);
-+		cur->bc_ops->iroot_realloc(cur, index);
- 		block = ifp->if_broot;
- 	}
- 
-@@ -3782,8 +3779,7 @@ xfs_btree_delrec(
- 	 */
- 	if (level == cur->bc_nlevels - 1) {
- 		if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) {
--			xfs_iroot_realloc(cur->bc_private.b.ip, -1,
--					  cur->bc_private.b.whichfork);
-+			cur->bc_ops->iroot_realloc(cur, -1);
- 
- 			error = xfs_btree_kill_iroot(cur);
- 			if (error)
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index 6708ab2433cf..4bf6eadf9b0a 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -149,6 +149,13 @@ struct xfs_btree_ops {
- 				   union xfs_btree_key *key1,
- 				   union xfs_btree_key *key2);
- 
-+	/*
-+	 * Reallocate the space for if_broot based on the number of records
-+	 * being added or deleted as indicated in rec_diff.
-+	 */
-+	void (*iroot_realloc)(struct xfs_btree_cur *cur,
-+			      int rec_diff);
-+
- 	const struct xfs_buf_ops	*buf_ops;
- 
- 	/* check that k1 is lower than k2 */
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 1ac9796fd86c..b66d34c99787 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -333,136 +333,6 @@ xfs_iformat_btree(
- 	return 0;
+ 	/* Remove rmap entry */
+-	xfs_rmap_free_extent(tp, XFS_FSB_TO_AGNO(mp, fsb),
+-			XFS_FSB_TO_AGBNO(mp, fsb), len, XFS_RMAP_OWN_COW);
++	xfs_rmap_free_extent(tp, fsb, len, XFS_RMAP_OWN_COW);
+ 	__xfs_refcount_add(tp, XFS_REFCOUNT_FREE_COW, fsb, len);
  }
  
--/*
-- * Reallocate the space for if_broot based on the number of records
-- * being added or deleted as indicated in rec_diff.  Move the records
-- * and pointers in if_broot to fit the new size.  When shrinking this
-- * will eliminate holes between the records and pointers created by
-- * the caller.  When growing this will create holes to be filled in
-- * by the caller.
-- *
-- * The caller must not request to add more records than would fit in
-- * the on-disk inode root.  If the if_broot is currently NULL, then
-- * if we are adding records, one will be allocated.  The caller must also
-- * not request that the number of records go below zero, although
-- * it can go to zero.
-- *
-- * ip -- the inode whose if_broot area is changing
-- * ext_diff -- the change in the number of records, positive or negative,
-- *	 requested for the if_broot array.
-- */
--void
--xfs_iroot_realloc(
--	xfs_inode_t		*ip,
--	int			rec_diff,
--	int			whichfork)
--{
--	struct xfs_mount	*mp = ip->i_mount;
--	int			cur_max;
--	struct xfs_ifork	*ifp;
--	struct xfs_btree_block	*new_broot;
--	int			new_max;
--	size_t			new_size;
--	char			*np;
--	char			*op;
--
--	/*
--	 * Handle the degenerate case quietly.
--	 */
--	if (rec_diff == 0) {
--		return;
--	}
--
--	ifp = XFS_IFORK_PTR(ip, whichfork);
--	if (rec_diff > 0) {
--		/*
--		 * If there wasn't any memory allocated before, just
--		 * allocate it now and get out.
--		 */
--		if (ifp->if_broot_bytes == 0) {
--			new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, rec_diff);
--			ifp->if_broot = kmem_alloc(new_size, KM_NOFS);
--			ifp->if_broot_bytes = (int)new_size;
--			return;
--		}
--
--		/*
--		 * If there is already an existing if_broot, then we need
--		 * to realloc() it and shift the pointers to their new
--		 * location.  The records don't change location because
--		 * they are kept butted up against the btree block header.
--		 */
--		cur_max = xfs_bmbt_maxrecs(mp, ifp->if_broot_bytes, 0);
--		new_max = cur_max + rec_diff;
--		new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, new_max);
--		ifp->if_broot = kmem_realloc(ifp->if_broot, new_size,
--				KM_NOFS);
--		op = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
--						     ifp->if_broot_bytes);
--		np = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
--						     (int)new_size);
--		ifp->if_broot_bytes = (int)new_size;
--		ASSERT(XFS_BMAP_BMDR_SPACE(ifp->if_broot) <=
--			XFS_IFORK_SIZE(ip, whichfork));
--		memmove(np, op, cur_max * (uint)sizeof(xfs_fsblock_t));
--		return;
--	}
--
--	/*
--	 * rec_diff is less than 0.  In this case, we are shrinking the
--	 * if_broot buffer.  It must already exist.  If we go to zero
--	 * records, just get rid of the root and clear the status bit.
--	 */
--	ASSERT((ifp->if_broot != NULL) && (ifp->if_broot_bytes > 0));
--	cur_max = xfs_bmbt_maxrecs(mp, ifp->if_broot_bytes, 0);
--	new_max = cur_max + rec_diff;
--	ASSERT(new_max >= 0);
--	if (new_max > 0)
--		new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, new_max);
--	else
--		new_size = 0;
--	if (new_size > 0) {
--		new_broot = kmem_alloc(new_size, KM_NOFS);
--		/*
--		 * First copy over the btree block header.
--		 */
--		memcpy(new_broot, ifp->if_broot,
--			XFS_BMBT_BLOCK_LEN(ip->i_mount));
--	} else {
--		new_broot = NULL;
--		ifp->if_flags &= ~XFS_IFBROOT;
--	}
--
--	/*
--	 * Only copy the records and pointers if there are any.
--	 */
--	if (new_max > 0) {
--		/*
--		 * First copy the records.
--		 */
--		op = (char *)XFS_BMBT_REC_ADDR(mp, ifp->if_broot, 1);
--		np = (char *)XFS_BMBT_REC_ADDR(mp, new_broot, 1);
--		memcpy(np, op, new_max * (uint)sizeof(xfs_bmbt_rec_t));
--
--		/*
--		 * Then copy the pointers.
--		 */
--		op = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
--						     ifp->if_broot_bytes);
--		np = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, new_broot, 1,
--						     (int)new_size);
--		memcpy(np, op, new_max * (uint)sizeof(xfs_fsblock_t));
--	}
--	kmem_free(ifp->if_broot);
--	ifp->if_broot = new_broot;
--	ifp->if_broot_bytes = (int)new_size;
--	if (ifp->if_broot)
--		ASSERT(XFS_BMAP_BMDR_SPACE(ifp->if_broot) <=
--			XFS_IFORK_SIZE(ip, whichfork));
--	return;
--}
--
--
- /*
-  * This is called when the amount of space needed for if_data
-  * is increased or decreased.  The change in size is indicated by
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index 370ac0b099f0..fe9109f88a4c 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.h
-+++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -100,7 +100,6 @@ void		xfs_ifork_reset(struct xfs_ifork *ifp);
- void		xfs_idestroy_fork(struct xfs_inode *, int);
- void		xfs_idata_realloc(struct xfs_inode *ip, int64_t byte_diff,
- 				int whichfork);
--void		xfs_iroot_realloc(struct xfs_inode *, int, int);
- int		xfs_iread_extents(struct xfs_trans *, struct xfs_inode *, int);
- int		xfs_iextents_copy(struct xfs_inode *, struct xfs_bmbt_rec *,
- 				  int);
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index c0c2c4acb61e..8f81151a063e 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -30,8 +30,8 @@
+ int
+ xfs_rmap_lookup_le(
+ 	struct xfs_btree_cur	*cur,
+-	xfs_agblock_t		bno,
+-	xfs_extlen_t		len,
++	xfs_fsblock_t		bno,
++	xfs_filblks_t		len,
+ 	uint64_t		owner,
+ 	uint64_t		offset,
+ 	unsigned int		flags,
+@@ -52,8 +52,8 @@ xfs_rmap_lookup_le(
+ int
+ xfs_rmap_lookup_eq(
+ 	struct xfs_btree_cur	*cur,
+-	xfs_agblock_t		bno,
+-	xfs_extlen_t		len,
++	xfs_fsblock_t		bno,
++	xfs_filblks_t		len,
+ 	uint64_t		owner,
+ 	uint64_t		offset,
+ 	unsigned int		flags,
+@@ -99,8 +99,8 @@ xfs_rmap_update(
+ int
+ xfs_rmap_insert(
+ 	struct xfs_btree_cur	*rcur,
+-	xfs_agblock_t		agbno,
+-	xfs_extlen_t		len,
++	xfs_fsblock_t		agbno,
++	xfs_filblks_t		len,
+ 	uint64_t		owner,
+ 	uint64_t		offset,
+ 	unsigned int		flags)
+@@ -143,8 +143,8 @@ xfs_rmap_insert(
+ STATIC int
+ xfs_rmap_delete(
+ 	struct xfs_btree_cur	*rcur,
+-	xfs_agblock_t		agbno,
+-	xfs_extlen_t		len,
++	xfs_fsblock_t		agbno,
++	xfs_filblks_t		len,
+ 	uint64_t		owner,
+ 	uint64_t		offset,
+ 	unsigned int		flags)
+@@ -212,6 +212,9 @@ xfs_rmap_get_rec(
+ 	union xfs_btree_rec	*rec;
+ 	int			error;
+ 
++	if (cur->bc_btnum != XFS_BTNUM_RMAP)
++		goto out_bad_rec;
++
+ 	error = xfs_btree_get_rec(cur, &rec, stat);
+ 	if (error || !*stat)
+ 		return error;
+@@ -249,7 +252,7 @@ xfs_rmap_get_rec(
+ 		"Reverse Mapping BTree record corruption in AG %d detected!",
+ 		agno);
+ 	xfs_warn(mp,
+-		"Owner 0x%llx, flags 0x%x, start block 0x%x block count 0x%x",
++		"Owner 0x%llx, flags 0x%x, start block 0x%llx block count 0x%llx",
+ 		irec->rm_owner, irec->rm_flags, irec->rm_startblock,
+ 		irec->rm_blockcount);
+ 	xfs_btree_mark_sick(cur);
+@@ -296,7 +299,7 @@ xfs_rmap_find_left_neighbor_helper(
+ int
+ xfs_rmap_find_left_neighbor(
+ 	struct xfs_btree_cur	*cur,
+-	xfs_agblock_t		bno,
++	xfs_fsblock_t		bno,
+ 	uint64_t		owner,
+ 	uint64_t		offset,
+ 	unsigned int		flags,
+@@ -374,7 +377,7 @@ xfs_rmap_lookup_le_range_helper(
+ int
+ xfs_rmap_lookup_le_range(
+ 	struct xfs_btree_cur	*cur,
+-	xfs_agblock_t		bno,
++	xfs_fsblock_t		bno,
+ 	uint64_t		owner,
+ 	uint64_t		offset,
+ 	unsigned int		flags,
+@@ -496,8 +499,8 @@ xfs_rmap_free_check_owner(
+ STATIC int
+ xfs_rmap_unmap(
+ 	struct xfs_btree_cur		*cur,
+-	xfs_agblock_t			bno,
+-	xfs_extlen_t			len,
++	xfs_fsblock_t			bno,
++	xfs_filblks_t			len,
+ 	bool				unwritten,
+ 	const struct xfs_owner_info	*oinfo)
+ {
+@@ -670,7 +673,7 @@ xfs_rmap_unmap(
+ 		 * Result:  |rrrrr|         |rrrr|
+ 		 *               bno       len
+ 		 */
+-		xfs_extlen_t	orig_len = ltrec.rm_blockcount;
++		xfs_filblks_t	orig_len = ltrec.rm_blockcount;
+ 
+ 		ltrec.rm_blockcount = bno - ltrec.rm_startblock;
+ 		error = xfs_rmap_update(cur, &ltrec);
+@@ -774,8 +777,8 @@ xfs_rmap_is_mergeable(
+ STATIC int
+ xfs_rmap_map(
+ 	struct xfs_btree_cur		*cur,
+-	xfs_agblock_t			bno,
+-	xfs_extlen_t			len,
++	xfs_fsblock_t			bno,
++	xfs_filblks_t			len,
+ 	bool				unwritten,
+ 	const struct xfs_owner_info	*oinfo)
+ {
+@@ -1016,8 +1019,8 @@ xfs_rmap_alloc(
+ STATIC int
+ xfs_rmap_convert(
+ 	struct xfs_btree_cur		*cur,
+-	xfs_agblock_t			bno,
+-	xfs_extlen_t			len,
++	xfs_fsblock_t			bno,
++	xfs_filblks_t			len,
+ 	bool				unwritten,
+ 	const struct xfs_owner_info	*oinfo)
+ {
+@@ -1536,8 +1539,8 @@ xfs_rmap_convert(
+ STATIC int
+ xfs_rmap_convert_shared(
+ 	struct xfs_btree_cur		*cur,
+-	xfs_agblock_t			bno,
+-	xfs_extlen_t			len,
++	xfs_fsblock_t			bno,
++	xfs_filblks_t			len,
+ 	bool				unwritten,
+ 	const struct xfs_owner_info	*oinfo)
+ {
+@@ -1972,8 +1975,8 @@ xfs_rmap_convert_shared(
+ STATIC int
+ xfs_rmap_unmap_shared(
+ 	struct xfs_btree_cur		*cur,
+-	xfs_agblock_t			bno,
+-	xfs_extlen_t			len,
++	xfs_fsblock_t			bno,
++	xfs_filblks_t			len,
+ 	bool				unwritten,
+ 	const struct xfs_owner_info	*oinfo)
+ {
+@@ -2119,7 +2122,7 @@ xfs_rmap_unmap_shared(
+ 		 * Result:  |rrrrr|         |rrrr|
+ 		 *               bno       len
+ 		 */
+-		xfs_extlen_t	orig_len = ltrec.rm_blockcount;
++		xfs_filblks_t	orig_len = ltrec.rm_blockcount;
+ 
+ 		/* Shrink the left side of the rmap */
+ 		error = xfs_rmap_lookup_eq(cur, ltrec.rm_startblock,
+@@ -2167,8 +2170,8 @@ xfs_rmap_unmap_shared(
+ STATIC int
+ xfs_rmap_map_shared(
+ 	struct xfs_btree_cur		*cur,
+-	xfs_agblock_t			bno,
+-	xfs_extlen_t			len,
++	xfs_fsblock_t			bno,
++	xfs_filblks_t			len,
+ 	bool				unwritten,
+ 	const struct xfs_owner_info	*oinfo)
+ {
+@@ -2443,7 +2446,7 @@ xfs_rmap_finish_one(
+ 	int				error = 0;
+ 	xfs_agnumber_t			agno;
+ 	struct xfs_owner_info		oinfo;
+-	xfs_agblock_t			bno;
++	xfs_fsblock_t			bno;
+ 	bool				unwritten;
+ 
+ 	agno = XFS_FSB_TO_AGNO(mp, startblock);
+@@ -2631,9 +2634,8 @@ xfs_rmap_convert_extent(
+ void
+ xfs_rmap_alloc_extent(
+ 	struct xfs_trans	*tp,
+-	xfs_agnumber_t		agno,
+-	xfs_agblock_t		bno,
+-	xfs_extlen_t		len,
++	xfs_fsblock_t		fsbno,
++	xfs_filblks_t		len,
+ 	uint64_t		owner)
+ {
+ 	struct xfs_bmbt_irec	bmap;
+@@ -2641,7 +2643,7 @@ xfs_rmap_alloc_extent(
+ 	if (!xfs_rmap_update_is_needed(tp->t_mountp, XFS_DATA_FORK))
+ 		return;
+ 
+-	bmap.br_startblock = XFS_AGB_TO_FSB(tp->t_mountp, agno, bno);
++	bmap.br_startblock = fsbno;
+ 	bmap.br_blockcount = len;
+ 	bmap.br_startoff = 0;
+ 	bmap.br_state = XFS_EXT_NORM;
+@@ -2653,9 +2655,8 @@ xfs_rmap_alloc_extent(
+ void
+ xfs_rmap_free_extent(
+ 	struct xfs_trans	*tp,
+-	xfs_agnumber_t		agno,
+-	xfs_agblock_t		bno,
+-	xfs_extlen_t		len,
++	xfs_fsblock_t		fsbno,
++	xfs_filblks_t		len,
+ 	uint64_t		owner)
+ {
+ 	struct xfs_bmbt_irec	bmap;
+@@ -2663,7 +2664,7 @@ xfs_rmap_free_extent(
+ 	if (!xfs_rmap_update_is_needed(tp->t_mountp, XFS_DATA_FORK))
+ 		return;
+ 
+-	bmap.br_startblock = XFS_AGB_TO_FSB(tp->t_mountp, agno, bno);
++	bmap.br_startblock = fsbno;
+ 	bmap.br_blockcount = len;
+ 	bmap.br_startoff = 0;
+ 	bmap.br_state = XFS_EXT_NORM;
+@@ -2703,8 +2704,8 @@ xfs_rmap_compare(
+ int
+ xfs_rmap_has_record(
+ 	struct xfs_btree_cur	*cur,
+-	xfs_agblock_t		bno,
+-	xfs_extlen_t		len,
++	xfs_fsblock_t		bno,
++	xfs_filblks_t		len,
+ 	bool			*exists)
+ {
+ 	union xfs_btree_irec	low;
+@@ -2728,8 +2729,8 @@ xfs_rmap_has_record(
+ int
+ xfs_rmap_record_exists(
+ 	struct xfs_btree_cur		*cur,
+-	xfs_agblock_t			bno,
+-	xfs_extlen_t			len,
++	xfs_fsblock_t			bno,
++	xfs_filblks_t			len,
+ 	const struct xfs_owner_info	*oinfo,
+ 	bool				*has_rmap)
+ {
+@@ -2796,8 +2797,8 @@ xfs_rmap_has_other_keys_helper(
+ int
+ xfs_rmap_has_other_keys(
+ 	struct xfs_btree_cur		*cur,
+-	xfs_agblock_t			bno,
+-	xfs_extlen_t			len,
++	xfs_fsblock_t			bno,
++	xfs_filblks_t			len,
+ 	const struct xfs_owner_info	*oinfo,
+ 	bool				*has_rmap)
+ {
+diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
+index e756989d0da5..c187f1a678dd 100644
+--- a/fs/xfs/libxfs/xfs_rmap.h
++++ b/fs/xfs/libxfs/xfs_rmap.h
+@@ -119,14 +119,14 @@ int xfs_rmap_free(struct xfs_trans *tp, struct xfs_buf *agbp,
+ 		  xfs_agnumber_t agno, xfs_agblock_t bno, xfs_extlen_t len,
+ 		  const struct xfs_owner_info *oinfo);
+ 
+-int xfs_rmap_lookup_le(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+-		xfs_extlen_t len, uint64_t owner, uint64_t offset,
++int xfs_rmap_lookup_le(struct xfs_btree_cur *cur, xfs_fsblock_t bno,
++		xfs_filblks_t len, uint64_t owner, uint64_t offset,
+ 		unsigned int flags, int *stat);
+-int xfs_rmap_lookup_eq(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+-		xfs_extlen_t len, uint64_t owner, uint64_t offset,
++int xfs_rmap_lookup_eq(struct xfs_btree_cur *cur, xfs_fsblock_t bno,
++		xfs_filblks_t len, uint64_t owner, uint64_t offset,
+ 		unsigned int flags, int *stat);
+-int xfs_rmap_insert(struct xfs_btree_cur *rcur, xfs_agblock_t agbno,
+-		xfs_extlen_t len, uint64_t owner, uint64_t offset,
++int xfs_rmap_insert(struct xfs_btree_cur *rcur, xfs_fsblock_t agbno,
++		xfs_filblks_t len, uint64_t owner, uint64_t offset,
+ 		unsigned int flags);
+ int xfs_rmap_get_rec(struct xfs_btree_cur *cur, struct xfs_rmap_irec *irec,
+ 		int *stat);
+@@ -169,10 +169,10 @@ void xfs_rmap_unmap_extent(struct xfs_trans *tp, struct xfs_inode *ip,
+ void xfs_rmap_convert_extent(struct xfs_mount *mp, struct xfs_trans *tp,
+ 		struct xfs_inode *ip, int whichfork,
+ 		struct xfs_bmbt_irec *imap);
+-void xfs_rmap_alloc_extent(struct xfs_trans *tp, xfs_agnumber_t agno,
+-		xfs_agblock_t bno, xfs_extlen_t len, uint64_t owner);
+-void xfs_rmap_free_extent(struct xfs_trans *tp, xfs_agnumber_t agno,
+-		xfs_agblock_t bno, xfs_extlen_t len, uint64_t owner);
++void xfs_rmap_alloc_extent(struct xfs_trans *tp, xfs_fsblock_t fsbno,
++		xfs_filblks_t len, uint64_t owner);
++void xfs_rmap_free_extent(struct xfs_trans *tp, xfs_fsblock_t fsbno,
++		xfs_filblks_t len, uint64_t owner);
+ 
+ void xfs_rmap_finish_one_cleanup(struct xfs_trans *tp,
+ 		struct xfs_btree_cur *rcur, int error);
+@@ -181,10 +181,10 @@ int xfs_rmap_finish_one(struct xfs_trans *tp, enum xfs_rmap_intent_type type,
+ 		xfs_fsblock_t startblock, xfs_filblks_t blockcount,
+ 		xfs_exntst_t state, struct xfs_btree_cur **pcur);
+ 
+-int xfs_rmap_find_left_neighbor(struct xfs_btree_cur *cur, xfs_agblock_t bno,
++int xfs_rmap_find_left_neighbor(struct xfs_btree_cur *cur, xfs_fsblock_t bno,
+ 		uint64_t owner, uint64_t offset, unsigned int flags,
+ 		struct xfs_rmap_irec *irec, int	*stat);
+-int xfs_rmap_lookup_le_range(struct xfs_btree_cur *cur, xfs_agblock_t bno,
++int xfs_rmap_lookup_le_range(struct xfs_btree_cur *cur, xfs_fsblock_t bno,
+ 		uint64_t owner, uint64_t offset, unsigned int flags,
+ 		struct xfs_rmap_irec *irec, int	*stat);
+ int xfs_rmap_compare(const struct xfs_rmap_irec *a,
+@@ -192,13 +192,13 @@ int xfs_rmap_compare(const struct xfs_rmap_irec *a,
+ union xfs_btree_rec;
+ int xfs_rmap_btrec_to_irec(struct xfs_btree_cur *cur, union xfs_btree_rec *rec,
+ 		struct xfs_rmap_irec *irec);
+-int xfs_rmap_has_record(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+-		xfs_extlen_t len, bool *exists);
+-int xfs_rmap_record_exists(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+-		xfs_extlen_t len, const struct xfs_owner_info *oinfo,
++int xfs_rmap_has_record(struct xfs_btree_cur *cur, xfs_fsblock_t bno,
++		xfs_filblks_t len, bool *exists);
++int xfs_rmap_record_exists(struct xfs_btree_cur *cur, xfs_fsblock_t bno,
++		xfs_filblks_t len, const struct xfs_owner_info *oinfo,
+ 		bool *has_rmap);
+-int xfs_rmap_has_other_keys(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+-		xfs_extlen_t len, const struct xfs_owner_info *oinfo,
++int xfs_rmap_has_other_keys(struct xfs_btree_cur *cur, xfs_fsblock_t bno,
++		xfs_filblks_t len, const struct xfs_owner_info *oinfo,
+ 		bool *has_rmap);
+ int xfs_rmap_map_raw(struct xfs_btree_cur *cur, struct xfs_rmap_irec *rmap);
+ 
+diff --git a/fs/xfs/scrub/alloc_repair.c b/fs/xfs/scrub/alloc_repair.c
+index c098715f704e..ec04bbe14120 100644
+--- a/fs/xfs/scrub/alloc_repair.c
++++ b/fs/xfs/scrub/alloc_repair.c
+@@ -407,10 +407,8 @@ xrep_abt_dispose_reservations(
+ 	for_each_xrep_newbt_reservation(&ra->new_bnobt_info, resv, n) {
+ 		/* Add a deferred rmap for each extent we used. */
+ 		if (resv->used > 0)
+-			xfs_rmap_alloc_extent(sc->tp,
+-					XFS_FSB_TO_AGNO(sc->mp, resv->fsbno),
+-					XFS_FSB_TO_AGBNO(sc->mp, resv->fsbno),
+-					resv->used, XFS_RMAP_OWN_AG);
++			xfs_rmap_alloc_extent(sc->tp, resv->fsbno, resv->used,
++					XFS_RMAP_OWN_AG);
+ 
+ 		/*
+ 		 * Add a deferred free for each block we didn't use and now
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 6ed9139b1463..36361e7bcb04 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -2403,14 +2403,14 @@ DEFINE_BMAP_FREE_DEFERRED_EVENT(xfs_agfl_free_deferred);
+ /* rmap tracepoints */
+ DECLARE_EVENT_CLASS(xfs_rmap_class,
+ 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
+-		 xfs_agblock_t agbno, xfs_extlen_t len, bool unwritten,
++		 xfs_fsblock_t bno, xfs_filblks_t len, bool unwritten,
+ 		 const struct xfs_owner_info *oinfo),
+-	TP_ARGS(mp, agno, agbno, len, unwritten, oinfo),
++	TP_ARGS(mp, agno, bno, len, unwritten, oinfo),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+ 		__field(xfs_agnumber_t, agno)
+-		__field(xfs_agblock_t, agbno)
+-		__field(xfs_extlen_t, len)
++		__field(xfs_fsblock_t, bno)
++		__field(xfs_filblks_t, len)
+ 		__field(uint64_t, owner)
+ 		__field(uint64_t, offset)
+ 		__field(unsigned long, flags)
+@@ -2418,7 +2418,7 @@ DECLARE_EVENT_CLASS(xfs_rmap_class,
+ 	TP_fast_assign(
+ 		__entry->dev = mp->m_super->s_dev;
+ 		__entry->agno = agno;
+-		__entry->agbno = agbno;
++		__entry->bno = bno;
+ 		__entry->len = len;
+ 		__entry->owner = oinfo->oi_owner;
+ 		__entry->offset = oinfo->oi_offset;
+@@ -2426,10 +2426,10 @@ DECLARE_EVENT_CLASS(xfs_rmap_class,
+ 		if (unwritten)
+ 			__entry->flags |= XFS_RMAP_UNWRITTEN;
+ 	),
+-	TP_printk("dev %d:%d agno %u agbno %u len %u owner %lld offset %llu flags 0x%lx",
++	TP_printk("dev %d:%d agno %d bno %llu len %llu owner %lld offset %llu flags 0x%lx",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->agno,
+-		  __entry->agbno,
++		  __entry->bno,
+ 		  __entry->len,
+ 		  __entry->owner,
+ 		  __entry->offset,
+@@ -2438,9 +2438,9 @@ DECLARE_EVENT_CLASS(xfs_rmap_class,
+ #define DEFINE_RMAP_EVENT(name) \
+ DEFINE_EVENT(xfs_rmap_class, name, \
+ 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
+-		 xfs_agblock_t agbno, xfs_extlen_t len, bool unwritten, \
++		 xfs_fsblock_t bno, xfs_filblks_t len, bool unwritten, \
+ 		 const struct xfs_owner_info *oinfo), \
+-	TP_ARGS(mp, agno, agbno, len, unwritten, oinfo))
++	TP_ARGS(mp, agno, bno, len, unwritten, oinfo))
+ 
+ /* simple AG-based error/%ip tracepoint class */
+ DECLARE_EVENT_CLASS(xfs_ag_error_class,
+@@ -2459,7 +2459,7 @@ DECLARE_EVENT_CLASS(xfs_ag_error_class,
+ 		__entry->error = error;
+ 		__entry->caller_ip = caller_ip;
+ 	),
+-	TP_printk("dev %d:%d agno %u error %d caller %pS",
++	TP_printk("dev %d:%d agno %d error %d caller %pS",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->agno,
+ 		  __entry->error,
+@@ -2485,14 +2485,14 @@ DEFINE_AG_ERROR_EVENT(xfs_rmap_convert_state);
+ 
+ DECLARE_EVENT_CLASS(xfs_rmapbt_class,
+ 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
+-		 xfs_agblock_t agbno, xfs_extlen_t len,
++		 xfs_fsblock_t bno, xfs_filblks_t len,
+ 		 uint64_t owner, uint64_t offset, unsigned int flags),
+-	TP_ARGS(mp, agno, agbno, len, owner, offset, flags),
++	TP_ARGS(mp, agno, bno, len, owner, offset, flags),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+ 		__field(xfs_agnumber_t, agno)
+-		__field(xfs_agblock_t, agbno)
+-		__field(xfs_extlen_t, len)
++		__field(xfs_fsblock_t, bno)
++		__field(xfs_filblks_t, len)
+ 		__field(uint64_t, owner)
+ 		__field(uint64_t, offset)
+ 		__field(unsigned int, flags)
+@@ -2500,16 +2500,16 @@ DECLARE_EVENT_CLASS(xfs_rmapbt_class,
+ 	TP_fast_assign(
+ 		__entry->dev = mp->m_super->s_dev;
+ 		__entry->agno = agno;
+-		__entry->agbno = agbno;
++		__entry->bno = bno;
+ 		__entry->len = len;
+ 		__entry->owner = owner;
+ 		__entry->offset = offset;
+ 		__entry->flags = flags;
+ 	),
+-	TP_printk("dev %d:%d agno %u agbno %u len %u owner %lld offset %llu flags 0x%x",
++	TP_printk("dev %d:%d agno %d bno %llu len %llu owner %lld offset %llu flags 0x%x",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->agno,
+-		  __entry->agbno,
++		  __entry->bno,
+ 		  __entry->len,
+ 		  __entry->owner,
+ 		  __entry->offset,
+@@ -2518,9 +2518,9 @@ DECLARE_EVENT_CLASS(xfs_rmapbt_class,
+ #define DEFINE_RMAPBT_EVENT(name) \
+ DEFINE_EVENT(xfs_rmapbt_class, name, \
+ 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
+-		 xfs_agblock_t agbno, xfs_extlen_t len, \
++		 xfs_fsblock_t bno, xfs_filblks_t len, \
+ 		 uint64_t owner, uint64_t offset, unsigned int flags), \
+-	TP_ARGS(mp, agno, agbno, len, owner, offset, flags))
++	TP_ARGS(mp, agno, bno, len, owner, offset, flags))
+ 
+ #define DEFINE_RMAP_DEFERRED_EVENT DEFINE_MAP_EXTENT_DEFERRED_EVENT
+ DEFINE_RMAP_DEFERRED_EVENT(xfs_rmap_defer);
 
