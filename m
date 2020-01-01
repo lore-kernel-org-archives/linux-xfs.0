@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42C9AC2D0CE
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:11:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2EBFC2D0CE
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:11:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0B188206E4
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:11:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 956FD206E6
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:11:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="T9KxoFCC"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IOb2CmBI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727154AbgAABLq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Dec 2019 20:11:46 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:54416 "EHLO
+        id S1727166AbgAABLx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Dec 2019 20:11:53 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:54466 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727132AbgAABLq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:11:46 -0500
+        with ESMTP id S1727132AbgAABLx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:11:53 -0500
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00118xcb109438
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:11:45 GMT
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00118xTO109446
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:11:51 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=IKybvFOU1NMxnG4Ebbe9s3IXvASDXW0zlhgNasGoYcM=;
- b=T9KxoFCCJqoJMC8pio0xZGDBue4g/qPKmTso3EpqyHGNg+u6k4OrmyVHiomTYRoeqtHr
- 47McCLxuFwRxBU1WZf+XXB5pCk6CEKzVJFyb51u6M9Qmp6DLXP+J9GnMPITsfpsQ+C3Q
- LO+59ygj+JJHmjzUvPNvapHKLVz4z45OD0VwOMD3S+/+rAsY+nkr++Q3C2kd//XWgie/
- YJmzydLglFK+5SKRIRMaHpEstbMvMEWw5qloGAXKt0XAgzvuIFZHzmEGiMgO1cbwBkCo
- K/T0OU6Ue2O/hKaUhBhxMijig7RlrTthqkHOXI3hNAzHhLr+dg/4wjAPrw3pQCPhTRSQ Gg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2x5xftk2fj-1
+ bh=FCXC94uTPkN+iHB2WMSLOWhsqqelNuJPBaCFrUs+K64=;
+ b=IOb2CmBIonM5UxsepFeANU5U5sk9rnK88dn16dXLA3SZybT9LGGJdpgxsvBZ4I9Vtm/r
+ lj5VzrBxzWvC8O9a0DiH2u/K5EPIbykZcoqCe2jjnPNwmyARIIAGEsXeNUMBygveznaQ
+ S7/pHDvDDC3HjalKDhysTi12iXgbdpJy2xTwhxQguWiYFI7PvZ+4fRjKriVJuXAQMN7L
+ PrZvY392bMtr5h882aRhYU9H6EbETGr81AW/9TPFnaz5UWnMx8CzM9mnf/mxdQItqVN+
+ a/+bOT50qEWuKhdoTtj/gP3Hdgg8ksR6LCWZhEqESs/6DmUgYUKJIjtoxewf8IKHUfob OQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2x5xftk2fk-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:11:44 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00118xH8012506
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:11:44 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 2x8gueew0n-1
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:11:51 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00118u77190223
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:11:51 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2x8bsrg1dm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:11:43 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0011BgcL012055
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:11:42 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:11:50 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0011BoJ4006793
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:11:50 GMT
 Received: from localhost (/10.159.150.156)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 31 Dec 2019 17:11:42 -0800
-Subject: [PATCH 06/14] xfs: refactor default quota grace period setting code
+        with ESMTP ; Tue, 31 Dec 2019 17:11:49 -0800
+Subject: [PATCH 07/14] xfs: remove xfs_timestamp_t
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 31 Dec 2019 17:11:40 -0800
-Message-ID: <157784110016.1364230.5024129406313355261.stgit@magnolia>
+Date:   Tue, 31 Dec 2019 17:11:46 -0800
+Message-ID: <157784110639.1364230.14074605479739527100.stgit@magnolia>
 In-Reply-To: <157784106066.1364230.569420432829402226.stgit@magnolia>
 References: <157784106066.1364230.569420432829402226.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,156 +80,91 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Refactor the code that sets the default quota grace period into a helper
-function so that we can override the ondisk behavior later.
+Kill this old typedef.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_format.h |    8 ++++++++
- fs/xfs/xfs_ondisk.h        |    2 ++
- fs/xfs/xfs_qm_syscalls.c   |   35 +++++++++++++++++++++++------------
- fs/xfs/xfs_trans_dquot.c   |   16 ++++++++++++----
- 4 files changed, 45 insertions(+), 16 deletions(-)
+ fs/xfs/libxfs/xfs_format.h     |   12 ++++++------
+ fs/xfs/libxfs/xfs_log_format.h |   12 ++++++------
+ 2 files changed, 12 insertions(+), 12 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 95761b38fe86..557db5e51eec 100644
+index 557db5e51eec..b3ace144f6ce 100644
 --- a/fs/xfs/libxfs/xfs_format.h
 +++ b/fs/xfs/libxfs/xfs_format.h
-@@ -1188,6 +1188,10 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
-  * time zero is the Unix epoch, Jan  1 00:00:01 UTC 1970.  An expiration value
-  * of zero means that the quota limit has not been reached, and therefore no
-  * expiration has been set.
-+ *
-+ * The length of quota grace periods are unsigned 32-bit quantities in units of
-+ * seconds (which are stored in the root dquot).  A value of zero means to use
-+ * the default period.
+@@ -848,10 +848,10 @@ typedef struct xfs_agfl {
+  * Inode timestamps consist of signed 32-bit counters for seconds and
+  * nanoseconds; time zero is the Unix epoch, Jan  1 00:00:00 UTC 1970.
   */
+-typedef struct xfs_timestamp {
++struct xfs_timestamp {
+ 	__be32		t_sec;		/* timestamp seconds */
+ 	__be32		t_nsec;		/* timestamp nanoseconds */
+-} xfs_timestamp_t;
++};
  
  /*
-@@ -1202,6 +1206,10 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
+  * Smallest possible timestamp with traditional timestamps, which is
+@@ -896,9 +896,9 @@ typedef struct xfs_dinode {
+ 	__be16		di_projid_hi;	/* higher part owner's project id */
+ 	__u8		di_pad[6];	/* unused, zeroed space */
+ 	__be16		di_flushiter;	/* incremented on flush */
+-	xfs_timestamp_t	di_atime;	/* time last accessed */
+-	xfs_timestamp_t	di_mtime;	/* time last modified */
+-	xfs_timestamp_t	di_ctime;	/* time created/inode modified */
++	struct xfs_timestamp di_atime;	/* time last accessed */
++	struct xfs_timestamp di_mtime;	/* time last modified */
++	struct xfs_timestamp di_ctime;	/* time created/inode modified */
+ 	__be64		di_size;	/* number of bytes in file */
+ 	__be64		di_nblocks;	/* # of direct & btree blocks used */
+ 	__be32		di_extsize;	/* basic/minimum extent size for file */
+@@ -923,7 +923,7 @@ typedef struct xfs_dinode {
+ 	__u8		di_pad2[12];	/* more padding for future expansion */
+ 
+ 	/* fields only written to during inode creation */
+-	xfs_timestamp_t	di_crtime;	/* time created */
++	struct xfs_timestamp di_crtime;	/* time created */
+ 	__be64		di_ino;		/* inode number */
+ 	uuid_t		di_uuid;	/* UUID of the filesystem */
+ 
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index 8ef31d71a9c7..6694be6ddc3c 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -368,10 +368,10 @@ static inline int xfs_ilog_fdata(int w)
+  * directly mirrors the xfs_dinode structure as it must contain all the same
+  * information.
   */
- #define XFS_DQ_TIMEOUT_MAX	((int64_t)U32_MAX)
+-typedef struct xfs_ictimestamp {
++struct xfs_ictimestamp {
+ 	int32_t		t_sec;		/* timestamp seconds */
+ 	int32_t		t_nsec;		/* timestamp nanoseconds */
+-} xfs_ictimestamp_t;
++};
  
-+/* Quota grace periods, ranging from zero (use the defaults) to ~136 years. */
-+#define XFS_DQ_GRACE_MIN	((int64_t)0)
-+#define XFS_DQ_GRACE_MAX	((int64_t)U32_MAX)
-+
  /*
-  * This is the main portion of the on-disk representation of quota
-  * information for a user. This is the q_core of the struct xfs_dquot that
-diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-index 52dc5326b7bf..b8811f927a3c 100644
---- a/fs/xfs/xfs_ondisk.h
-+++ b/fs/xfs/xfs_ondisk.h
-@@ -27,6 +27,8 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_VALUE(XFS_INO_TIME_MAX,			2147483647LL);
- 	XFS_CHECK_VALUE(XFS_DQ_TIMEOUT_MIN,			1LL);
- 	XFS_CHECK_VALUE(XFS_DQ_TIMEOUT_MAX,			4294967295LL);
-+	XFS_CHECK_VALUE(XFS_DQ_GRACE_MIN,			0LL);
-+	XFS_CHECK_VALUE(XFS_DQ_GRACE_MAX,			4294967295LL);
+  * Define the format of the inode core that is logged. This structure must be
+@@ -390,9 +390,9 @@ struct xfs_log_dinode {
+ 	uint16_t	di_projid_hi;	/* higher part of owner's project id */
+ 	uint8_t		di_pad[6];	/* unused, zeroed space */
+ 	uint16_t	di_flushiter;	/* incremented on flush */
+-	xfs_ictimestamp_t di_atime;	/* time last accessed */
+-	xfs_ictimestamp_t di_mtime;	/* time last modified */
+-	xfs_ictimestamp_t di_ctime;	/* time created/inode modified */
++	struct xfs_ictimestamp di_atime;	/* time last accessed */
++	struct xfs_ictimestamp di_mtime;	/* time last modified */
++	struct xfs_ictimestamp di_ctime;	/* time created/inode modified */
+ 	xfs_fsize_t	di_size;	/* number of bytes in file */
+ 	xfs_rfsblock_t	di_nblocks;	/* # of direct & btree blocks used */
+ 	xfs_extlen_t	di_extsize;	/* basic/minimum extent size for file */
+@@ -417,7 +417,7 @@ struct xfs_log_dinode {
+ 	uint8_t		di_pad2[12];	/* more padding for future expansion */
  
- 	/* ag/file structures */
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_acl,			4);
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index 74220948a360..20a6d304d1be 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -438,6 +438,20 @@ xfs_qm_scall_quotaon(
- 	return 0;
- }
+ 	/* fields only written to during inode creation */
+-	xfs_ictimestamp_t di_crtime;	/* time created */
++	struct xfs_ictimestamp di_crtime;	/* time created */
+ 	xfs_ino_t	di_ino;		/* inode number */
+ 	uuid_t		di_uuid;	/* UUID of the filesystem */
  
-+/* Set a new quota grace period. */
-+static inline void
-+xfs_qm_set_grace(
-+	time_t			*qi_limit,
-+	__be32			*dtimer,
-+	const s64		grace)
-+{
-+	time64_t		new_grace;
-+
-+	new_grace = clamp_t(time64_t, grace, XFS_DQ_GRACE_MIN,
-+					     XFS_DQ_GRACE_MAX);
-+	*dtimer = cpu_to_be32(new_grace);
-+}
-+
- #define XFS_QC_MASK \
- 	(QC_LIMIT_MASK | QC_TIMER_MASK | QC_WARNS_MASK)
- 
-@@ -567,18 +581,15 @@ xfs_qm_scall_setqlim(
- 		 * soft and hard limit values (already done, above), and
- 		 * for warnings.
- 		 */
--		if (newlim->d_fieldmask & QC_SPC_TIMER) {
--			q->qi_btimelimit = newlim->d_spc_timer;
--			ddq->d_btimer = cpu_to_be32(newlim->d_spc_timer);
--		}
--		if (newlim->d_fieldmask & QC_INO_TIMER) {
--			q->qi_itimelimit = newlim->d_ino_timer;
--			ddq->d_itimer = cpu_to_be32(newlim->d_ino_timer);
--		}
--		if (newlim->d_fieldmask & QC_RT_SPC_TIMER) {
--			q->qi_rtbtimelimit = newlim->d_rt_spc_timer;
--			ddq->d_rtbtimer = cpu_to_be32(newlim->d_rt_spc_timer);
--		}
-+		if (newlim->d_fieldmask & QC_SPC_TIMER)
-+			xfs_qm_set_grace(&q->qi_btimelimit, &ddq->d_btimer,
-+					newlim->d_spc_timer);
-+		if (newlim->d_fieldmask & QC_INO_TIMER)
-+			xfs_qm_set_grace(&q->qi_itimelimit, &ddq->d_itimer,
-+					newlim->d_ino_timer);
-+		if (newlim->d_fieldmask & QC_RT_SPC_TIMER)
-+			xfs_qm_set_grace(&q->qi_rtbtimelimit, &ddq->d_rtbtimer,
-+					newlim->d_rt_spc_timer);
- 		if (newlim->d_fieldmask & QC_SPC_WARNS)
- 			q->qi_bwarnlimit = newlim->d_spc_warns;
- 		if (newlim->d_fieldmask & QC_INO_WARNS)
-diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-index 248cfc369efc..7a2a3bd11db9 100644
---- a/fs/xfs/xfs_trans_dquot.c
-+++ b/fs/xfs/xfs_trans_dquot.c
-@@ -563,6 +563,14 @@ xfs_quota_warn(
- 			   mp->m_super->s_dev, type);
- }
- 
-+/* Has a quota grace period expired? */
-+static inline bool
-+xfs_quota_timer_exceeded(
-+	time64_t		timer)
-+{
-+	return timer != 0 && get_seconds() > timer;
-+}
-+
- /*
-  * This reserves disk blocks and inodes against a dquot.
-  * Flags indicate if the dquot is to be locked here and also
-@@ -580,7 +588,7 @@ xfs_trans_dqresv(
- {
- 	xfs_qcnt_t		hardlimit;
- 	xfs_qcnt_t		softlimit;
--	time_t			timer;
-+	time64_t		timer;
- 	xfs_qwarncnt_t		warns;
- 	xfs_qwarncnt_t		warnlimit;
- 	xfs_qcnt_t		total_count;
-@@ -635,7 +643,7 @@ xfs_trans_dqresv(
- 				goto error_return;
- 			}
- 			if (softlimit && total_count > softlimit) {
--				if ((timer != 0 && get_seconds() > timer) ||
-+				if (xfs_quota_timer_exceeded(timer) ||
- 				    (warns != 0 && warns >= warnlimit)) {
- 					xfs_quota_warn(mp, dqp,
- 						       QUOTA_NL_BSOFTLONGWARN);
-@@ -662,8 +670,8 @@ xfs_trans_dqresv(
- 				goto error_return;
- 			}
- 			if (softlimit && total_count > softlimit) {
--				if  ((timer != 0 && get_seconds() > timer) ||
--				     (warns != 0 && warns >= warnlimit)) {
-+				if (xfs_quota_timer_exceeded(timer) ||
-+				    (warns != 0 && warns >= warnlimit)) {
- 					xfs_quota_warn(mp, dqp,
- 						       QUOTA_NL_ISOFTLONGWARN);
- 					goto error_return;
 
