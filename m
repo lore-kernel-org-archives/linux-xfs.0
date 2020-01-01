@@ -7,56 +7,55 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01457C2D0CE
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:21:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AE95C2D0CE
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:21:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C905E20718
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:21:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F0416206E4
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:21:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="SG1eY+nD"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="B8vj4XQc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727141AbgAABVB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Dec 2019 20:21:01 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:58076 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727132AbgAABVB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:21:01 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0011EA8p092020;
-        Wed, 1 Jan 2020 01:20:59 GMT
+        id S1727158AbgAABVH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Dec 2019 20:21:07 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:55002 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727132AbgAABVH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:21:07 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0011F3ZX094678;
+        Wed, 1 Jan 2020 01:21:04 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=GpHvEWcZReaWylEgfeiVILojJZeJJoOInPnYwY6LYPU=;
- b=SG1eY+nD67p+QOqPH9vZw7E8cTvlHIDJT+l8/c7c3EWnTAjfdCfXk34knmBAzIE82d5X
- TZcGkMKtofW4tLhOkqNfQoBY/2FtiMMQLrI09xSYmKm47eS4qijMZsYN6+uam7HGrB8/
- zCxiS2+UXO4UKeZB6AvXSw2BaooT9QvFyeg3BdAj1JADnD8fcD+BAJk+U5hnZzOHxvk1
- jy2zCAEivSA+YdwNHPPHjSdtBMRtuq+lzS2ddNuIQ5x1hXsIKtLYn3ravPmEuT+c5kAL
- 9e5UxLwVrQRH3c5OAVk14XhepnyqWafeL+OsqDdmiE0gqgyuQ8Y7Y/M7aMPRLzTfuHAs 5g== 
+ bh=20d1TRDNni/vKObZLnWSe7pAkwlMgXONdCRh39zXf7k=;
+ b=B8vj4XQcSkpAS6IqoeKekHscL/dMuibw7xxDFV/CkB1jjqyrET9bTWJjN2bqL2ZmD1hX
+ U0vCTjytJ2hPY3lIOOemHtAyR/vFIiqdrkatu4gnL/144FIJmIQ8F7j+2/PgI11FamSM
+ nnLVb1vICI2OIhCLVEdn81tNR8413jZkw4F8WkoWpYq/rpLrAG/mk5gXyYackjHSzg1j
+ KMICL+GUDqcA3cBt5x19nxHtQzHJGzYfSOJtKWt9JKzN8pFgxXuRIuJgkjzFQMwK9YKv
+ mgDeRtErp2iYonDkZDvVgCqGdqp5Xy0th3iIxVP3ga/G4iX4wQlO0WcVA2N/qOC5kuqH fg== 
 Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2x5y0pjy6s-1
+        by userp2120.oracle.com with ESMTP id 2x5ypqjwr6-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 01 Jan 2020 01:20:58 +0000
+        Wed, 01 Jan 2020 01:21:04 +0000
 Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0011J7Fe184942;
-        Wed, 1 Jan 2020 01:20:58 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2x8gj91d50-1
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0011J75Q184935;
+        Wed, 1 Jan 2020 01:21:04 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 2x8gj91d7p-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 01 Jan 2020 01:20:58 +0000
+        Wed, 01 Jan 2020 01:21:04 +0000
 Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0011Kv7M030871;
-        Wed, 1 Jan 2020 01:20:57 GMT
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0011L3cP016209;
+        Wed, 1 Jan 2020 01:21:03 GMT
 Received: from localhost (/10.159.150.156)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 31 Dec 2019 17:20:57 -0800
-Subject: [PATCH 2/6] xfs_repair: enforce that inode btree chunks can't point
- to AG headers
+        with ESMTP ; Tue, 31 Dec 2019 17:21:03 -0800
+Subject: [PATCH 3/6] xfs_repair: refactor fixed inode location checks
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org, alex@zadara.com
-Date:   Tue, 31 Dec 2019 17:20:54 -0800
-Message-ID: <157784165438.1371066.4301130203678483556.stgit@magnolia>
+Date:   Tue, 31 Dec 2019 17:21:00 -0800
+Message-ID: <157784166059.1371066.17997388293658262497.stgit@magnolia>
 In-Reply-To: <157784164200.1371066.15490825981810186191.stgit@magnolia>
 References: <157784164200.1371066.15490825981810186191.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -81,98 +80,137 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-xfs_repair has a very old check that evidently excuses the AG 0 inode
-btrees pointing to blocks that are already marked XR_E_INUSE_FS* (e.g.
-AG headers).  mkfs never formats filesystems that way and it looks like
-an error, so purge the check.  After this, we always complain if inodes
-overlap with AG headers because that should never happen.
+Refactor the checking and resetting of fixed-location inodes (root,
+rbmino, rsumino) into a helper function.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/globals.c    |    1 -
- repair/globals.h    |    1 -
- repair/scan.c       |   19 -------------------
- repair/xfs_repair.c |    7 -------
- 4 files changed, 28 deletions(-)
+ repair/xfs_repair.c |  106 ++++++++++++++++++---------------------------------
+ 1 file changed, 37 insertions(+), 69 deletions(-)
 
 
-diff --git a/repair/globals.c b/repair/globals.c
-index dcd79ea4..8a60e706 100644
---- a/repair/globals.c
-+++ b/repair/globals.c
-@@ -73,7 +73,6 @@ int	lost_gquotino;
- int	lost_pquotino;
- 
- xfs_agino_t	first_prealloc_ino;
--xfs_agino_t	last_prealloc_ino;
- xfs_agblock_t	bnobt_root;
- xfs_agblock_t	bcntbt_root;
- xfs_agblock_t	inobt_root;
-diff --git a/repair/globals.h b/repair/globals.h
-index 008bdd90..2ed5c894 100644
---- a/repair/globals.h
-+++ b/repair/globals.h
-@@ -114,7 +114,6 @@ extern int		lost_gquotino;
- extern int		lost_pquotino;
- 
- extern xfs_agino_t	first_prealloc_ino;
--extern xfs_agino_t	last_prealloc_ino;
- extern xfs_agblock_t	bnobt_root;
- extern xfs_agblock_t	bcntbt_root;
- extern xfs_agblock_t	inobt_root;
-diff --git a/repair/scan.c b/repair/scan.c
-index c383f3aa..05707dd2 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -1645,13 +1645,6 @@ scan_single_ino_chunk(
- 				break;
- 			case XR_E_INUSE_FS:
- 			case XR_E_INUSE_FS1:
--				if (agno == 0 &&
--				    ino + j >= first_prealloc_ino &&
--				    ino + j < last_prealloc_ino) {
--					set_bmap(agno, agbno, XR_E_INO);
--					break;
--				}
--				/* fall through */
- 			default:
- 				/* XXX - maybe should mark block a duplicate */
- 				do_warn(
-@@ -1782,18 +1775,6 @@ _("inode chunk claims untracked block, finobt block - agno %d, bno %d, inopb %d\
- 				break;
- 			case XR_E_INUSE_FS:
- 			case XR_E_INUSE_FS1:
--				if (agno == 0 &&
--				    ino + j >= first_prealloc_ino &&
--				    ino + j < last_prealloc_ino) {
--					do_warn(
--_("inode chunk claims untracked block, finobt block - agno %d, bno %d, inopb %d\n"),
--						agno, agbno, mp->m_sb.sb_inopblock);
--
--					set_bmap(agno, agbno, XR_E_INO);
--					suspect++;
--					break;
--				}
--				/* fall through */
- 			default:
- 				do_warn(
- _("inode chunk claims used block, finobt block - agno %d, bno %d, inopb %d\n"),
 diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 9295673d..3e9059f3 100644
+index 3e9059f3..94673750 100644
 --- a/repair/xfs_repair.c
 +++ b/repair/xfs_repair.c
-@@ -460,13 +460,6 @@ calc_mkfs(xfs_mount_t *mp)
- 		first_prealloc_ino = XFS_AGB_TO_AGINO(mp, fino_bno);
- 	}
+@@ -395,6 +395,37 @@ do_log(char const *msg, ...)
+ 	va_end(args);
+ }
  
--	ASSERT(M_IGEO(mp)->ialloc_blks > 0);
--
--	if (M_IGEO(mp)->ialloc_blks > 1)
--		last_prealloc_ino = first_prealloc_ino + XFS_INODES_PER_CHUNK;
--	else
--		last_prealloc_ino = XFS_AGB_TO_AGINO(mp, fino_bno + 1);
--
++/* Make sure a fixed-location inode is where it should be. */
++static void
++ensure_fixed_ino(
++	xfs_ino_t	*ino,
++	xfs_ino_t	expected_ino,
++	const char	*tag)
++{
++	if (*ino == expected_ino)
++		return;
++
++	do_warn(
++_("sb %s inode value %" PRIu64 " %sinconsistent with calculated value %"PRIu64"\n"),
++		tag, *ino, *ino == NULLFSINO ? "(NULLFSINO) " : "",
++		expected_ino);
++
++	if (!no_modify)
++		do_warn(
++_("resetting superblock %s inode pointer to %"PRIu64"\n"),
++			tag, expected_ino);
++	else
++		do_warn(
++_("would reset superblock %s inode pointer to %"PRIu64"\n"),
++			tag, expected_ino);
++
++	/*
++	 * Just set the value -- safe since the superblock doesn't get flushed
++	 * out if no_modify is set.
++	 */
++	*ino = expected_ino;
++}
++
+ static void
+ calc_mkfs(xfs_mount_t *mp)
+ {
+@@ -463,75 +494,12 @@ calc_mkfs(xfs_mount_t *mp)
  	/*
  	 * now the first 3 inodes in the system
  	 */
+-	if (mp->m_sb.sb_rootino != first_prealloc_ino)  {
+-		do_warn(
+-_("sb root inode value %" PRIu64 " %sinconsistent with calculated value %u\n"),
+-			mp->m_sb.sb_rootino,
+-			(mp->m_sb.sb_rootino == NULLFSINO ? "(NULLFSINO) ":""),
+-			first_prealloc_ino);
+-
+-		if (!no_modify)
+-			do_warn(
+-		_("resetting superblock root inode pointer to %u\n"),
+-				first_prealloc_ino);
+-		else
+-			do_warn(
+-		_("would reset superblock root inode pointer to %u\n"),
+-				first_prealloc_ino);
+-
+-		/*
+-		 * just set the value -- safe since the superblock
+-		 * doesn't get flushed out if no_modify is set
+-		 */
+-		mp->m_sb.sb_rootino = first_prealloc_ino;
+-	}
+-
+-	if (mp->m_sb.sb_rbmino != first_prealloc_ino + 1)  {
+-		do_warn(
+-_("sb realtime bitmap inode %" PRIu64 " %sinconsistent with calculated value %u\n"),
+-			mp->m_sb.sb_rbmino,
+-			(mp->m_sb.sb_rbmino == NULLFSINO ? "(NULLFSINO) ":""),
+-			first_prealloc_ino + 1);
+-
+-		if (!no_modify)
+-			do_warn(
+-		_("resetting superblock realtime bitmap ino pointer to %u\n"),
+-				first_prealloc_ino + 1);
+-		else
+-			do_warn(
+-		_("would reset superblock realtime bitmap ino pointer to %u\n"),
+-				first_prealloc_ino + 1);
+-
+-		/*
+-		 * just set the value -- safe since the superblock
+-		 * doesn't get flushed out if no_modify is set
+-		 */
+-		mp->m_sb.sb_rbmino = first_prealloc_ino + 1;
+-	}
+-
+-	if (mp->m_sb.sb_rsumino != first_prealloc_ino + 2)  {
+-		do_warn(
+-_("sb realtime summary inode %" PRIu64 " %sinconsistent with calculated value %u\n"),
+-			mp->m_sb.sb_rsumino,
+-			(mp->m_sb.sb_rsumino == NULLFSINO ? "(NULLFSINO) ":""),
+-			first_prealloc_ino + 2);
+-
+-		if (!no_modify)
+-			do_warn(
+-		_("resetting superblock realtime summary ino pointer to %u\n"),
+-				first_prealloc_ino + 2);
+-		else
+-			do_warn(
+-		_("would reset superblock realtime summary ino pointer to %u\n"),
+-				first_prealloc_ino + 2);
+-
+-		/*
+-		 * just set the value -- safe since the superblock
+-		 * doesn't get flushed out if no_modify is set
+-		 */
+-		mp->m_sb.sb_rsumino = first_prealloc_ino + 2;
+-	}
+-
++	ensure_fixed_ino(&mp->m_sb.sb_rootino, first_prealloc_ino,
++			_("root"));
++	ensure_fixed_ino(&mp->m_sb.sb_rbmino, first_prealloc_ino + 1,
++			_("realtime bitmap"));
++	ensure_fixed_ino(&mp->m_sb.sb_rsumino, first_prealloc_ino + 2,
++			_("realtime summary"));
+ }
+ 
+ /*
 
