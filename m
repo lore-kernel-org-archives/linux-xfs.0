@@ -7,55 +7,56 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BF04C2D0CE
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:13:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2358C2D0CE
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:13:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2ACA0206E4
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:13:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B4288206E4
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:13:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="hpvIEhJf"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jFnRKJ+J"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727163AbgAABNl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Dec 2019 20:13:41 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:55504 "EHLO
+        id S1727173AbgAABNo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Dec 2019 20:13:44 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:55536 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727134AbgAABNl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:13:41 -0500
+        with ESMTP id S1727134AbgAABNo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:13:44 -0500
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0011CbN9111691
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:13:37 GMT
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0011Aw6v110406
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:13:42 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=JJAjPsgVfGARTIHjMFVLUxxHtbKNGQOg6YVGLr4QkgM=;
- b=hpvIEhJfmVZEDT8pFlnk+5WxzW2QOAw/9QpsZoLbmpRJPGx38AQ7jASU228dxy16wr3u
- w8zNLZi7yGXoEKH9YC1yAf8wIjx674iaFfsxqMqQ7PiiwLqS7bFTRLR1y36OdfEHHamM
- iAXUotlmPMBO4XIB+24xhw+rduLw0v3s+OBwTIOvuP65IO7R2aNTUSQC/nps0Tdper+k
- uziII6aTjemg22OAYKDGaSRuTqGSpV7K2WJt4sfcE+4yq8l32Y9Wu3bY9WpdjO12i9Eu
- fqPF7sxClHOuCiBKJeIKlGXUetTryp9tRTXyUshSAoW0mBzmDJc0OIj97yCJuVsXM58j zg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2x5xftk2j9-1
+ bh=yGvub9U/OpLDL/ouGP8z2z8K1qHXn4trxBN9qX0kzU4=;
+ b=jFnRKJ+JGhOszMyyMVFNeSZ7rOnv9hYgjeuXeOUNCdGaXR6Jh/ZY4mUQljlkFsp/DUDp
+ UaVZo+ZDjAKDfUH2HACKGNj6+XeFhszyXG46DfcjLEIKBQzY0TRM5vSFMIFCMbDwVL3j
+ /xfh35extSVsBjmplT9W3/IvmQzlKZIOVCjxJ/z2eR27wadPGixuXClZwO4iSynjfaht
+ uXdvjOlZUhRzdrh4Er5YtfqIxI5qyhLHKNK1P0rtRMgWT0RMJXI1/YWKk5OyuuOBWH27
+ 4IVgM0i5anJRxORf89ZJHIFqvu4M/AAc9nTPK4kXgd13pegyWoAV6nLQxxIq3h7M8FYM uQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2x5xftk2jd-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:13:37 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00118xfE012445
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:13:36 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2x8guef3pr-1
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:13:42 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00118ugt190234
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:13:41 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2x8bsrg2m9-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:13:36 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0011DYh9000618
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:13:35 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:13:41 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0011Dewu007298
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:13:40 GMT
 Received: from localhost (/10.159.150.156)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 31 Dec 2019 17:13:34 -0800
-Subject: [PATCH 09/21] xfs: hoist inode allocation function
+        with ESMTP ; Tue, 31 Dec 2019 17:13:40 -0800
+Subject: [PATCH 10/21] xfs: push xfs_ialloc_args creation out of
+ xfs_dir_ialloc
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 31 Dec 2019 17:13:31 -0800
-Message-ID: <157784121185.1365473.15162105803170028827.stgit@magnolia>
+Date:   Tue, 31 Dec 2019 17:13:38 -0800
+Message-ID: <157784121815.1365473.16418584721128229029.stgit@magnolia>
 In-Reply-To: <157784115560.1365473.15056496428451670757.stgit@magnolia>
 References: <157784115560.1365473.15056496428451670757.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,622 +81,409 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Move the inode allocation function into libxfs.
+Move the initialization of the xfs_ialloc_args structure out of
+xfs_dir_ialloc into its callers' callers so that we can set the new
+inode's parameters in one place and pass it through instead of open
+coding the new uid/gid/prid all over the code.  This also prepares us
+for moving xfs_dir_ialloc and xfs_create to libxfs.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_inode_util.c |  248 ++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_inode_util.h |   18 +++
- fs/xfs/libxfs/xfs_shared.h     |    9 -
- fs/xfs/xfs_inode.c             |  246 ----------------------------------------
- fs/xfs/xfs_inode.h             |    1 
- fs/xfs/xfs_trans.h             |    1 
- 6 files changed, 267 insertions(+), 256 deletions(-)
+ fs/xfs/xfs_inode.c   |  131 +++++++++++++++++++++++---------------------------
+ fs/xfs/xfs_inode.h   |   10 ++--
+ fs/xfs/xfs_iops.c    |   44 ++++++++++-------
+ fs/xfs/xfs_qm.c      |    6 ++
+ fs/xfs/xfs_symlink.c |   17 ++++--
+ 5 files changed, 107 insertions(+), 101 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_inode_util.c b/fs/xfs/libxfs/xfs_inode_util.c
-index 6931871b109d..30c6e4c5aae9 100644
---- a/fs/xfs/libxfs/xfs_inode_util.c
-+++ b/fs/xfs/libxfs/xfs_inode_util.c
-@@ -3,6 +3,7 @@
-  * Copyright (c) 2000-2006 Silicon Graphics, Inc.
-  * All Rights Reserved.
-  */
-+#include <linux/iversion.h>
- #include "xfs.h"
- #include "xfs_fs.h"
- #include "xfs_shared.h"
-@@ -13,6 +14,9 @@
- #include "xfs_mount.h"
- #include "xfs_inode.h"
- #include "xfs_inode_util.h"
-+#include "xfs_trans.h"
-+#include "xfs_ialloc.h"
-+#include "xfs_health.h"
- 
- uint16_t
- xfs_flags2diflags(
-@@ -136,3 +140,247 @@ xfs_get_initial_prid(
- 
- 	return XFS_PROJID_DEFAULT;
- }
-+
-+/*
-+ * Initialize a newly allocated inode with the given arguments.  Heritable
-+ * inode properties will be copied from the parent if one is supplied and the
-+ * appropriate inode flags are set on the parent.
-+ */
-+void
-+xfs_inode_init(
-+	struct xfs_trans		*tp,
-+	const struct xfs_ialloc_args	*args,
-+	struct xfs_inode		*ip)
-+{
-+	struct xfs_inode		*pip = args->pip;
-+	struct inode			*inode = VFS_I(ip);
-+	int				times;
-+	uint				flags;
-+
-+	/*
-+	 * We always convert v1 inodes to v2 now - we only support filesystems
-+	 * with >= v2 inode capability, so there is no reason for ever leaving
-+	 * an inode in v1 format.
-+	 */
-+	if (ip->i_d.di_version == 1)
-+		ip->i_d.di_version = 2;
-+
-+	inode->i_mode = args->mode;
-+	set_nlink(inode, args->nlink);
-+	ip->i_d.di_uid = args->uid;
-+	ip->i_d.di_gid = args->gid;
-+	inode->i_rdev = args->rdev;
-+	ip->i_d.di_projid = args->prid;
-+
-+	if (pip && XFS_INHERIT_GID(pip)) {
-+		ip->i_d.di_gid = pip->i_d.di_gid;
-+		if ((VFS_I(pip)->i_mode & S_ISGID) && S_ISDIR(args->mode))
-+			inode->i_mode |= S_ISGID;
-+	}
-+
-+	/*
-+	 * If the group ID of the new file does not match the effective group
-+	 * ID or one of the supplementary group IDs, the S_ISGID bit is cleared
-+	 * (and only if the irix_sgid_inherit compatibility variable is set).
-+	 */
-+	if ((irix_sgid_inherit) &&
-+	    (inode->i_mode & S_ISGID) &&
-+	    (!in_group_p(xfs_gid_to_kgid(ip->i_d.di_gid))))
-+		inode->i_mode &= ~S_ISGID;
-+
-+	ip->i_d.di_size = 0;
-+	ip->i_d.di_nextents = 0;
-+	ASSERT(ip->i_d.di_nblocks == 0);
-+
-+	times = XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG | XFS_ICHGTIME_ACCESS;
-+	ip->i_d.di_extsize = 0;
-+	ip->i_d.di_dmevmask = 0;
-+	ip->i_d.di_dmstate = 0;
-+	ip->i_d.di_flags = 0;
-+
-+	if (ip->i_d.di_version == 3) {
-+		inode_set_iversion(inode, 1);
-+		ip->i_d.di_flags2 = 0;
-+		if (xfs_sb_version_hasbigtime(&ip->i_mount->m_sb))
-+			ip->i_d.di_flags2 |= XFS_DIFLAG2_BIGTIME;
-+		ip->i_d.di_cowextsize = 0;
-+		times |= XFS_ICHGTIME_CREATE;
-+	}
-+
-+	xfs_trans_ichgtime(tp, ip, times);
-+
-+	flags = XFS_ILOG_CORE;
-+	switch (args->mode & S_IFMT) {
-+	case S_IFIFO:
-+	case S_IFCHR:
-+	case S_IFBLK:
-+	case S_IFSOCK:
-+		ip->i_d.di_format = XFS_DINODE_FMT_DEV;
-+		ip->i_df.if_flags = 0;
-+		flags |= XFS_ILOG_DEV;
-+		break;
-+	case S_IFREG:
-+	case S_IFDIR:
-+		if (pip && (pip->i_d.di_flags & XFS_DIFLAG_ANY)) {
-+			uint		di_flags = 0;
-+
-+			if (S_ISDIR(args->mode)) {
-+				if (pip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)
-+					di_flags |= XFS_DIFLAG_RTINHERIT;
-+				if (pip->i_d.di_flags & XFS_DIFLAG_EXTSZINHERIT) {
-+					di_flags |= XFS_DIFLAG_EXTSZINHERIT;
-+					ip->i_d.di_extsize = pip->i_d.di_extsize;
-+				}
-+				if (pip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
-+					di_flags |= XFS_DIFLAG_PROJINHERIT;
-+			} else if (S_ISREG(args->mode)) {
-+				if (pip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)
-+					di_flags |= XFS_DIFLAG_REALTIME;
-+				if (pip->i_d.di_flags & XFS_DIFLAG_EXTSZINHERIT) {
-+					di_flags |= XFS_DIFLAG_EXTSIZE;
-+					ip->i_d.di_extsize = pip->i_d.di_extsize;
-+				}
-+			}
-+			if ((pip->i_d.di_flags & XFS_DIFLAG_NOATIME) &&
-+			    xfs_inherit_noatime)
-+				di_flags |= XFS_DIFLAG_NOATIME;
-+			if ((pip->i_d.di_flags & XFS_DIFLAG_NODUMP) &&
-+			    xfs_inherit_nodump)
-+				di_flags |= XFS_DIFLAG_NODUMP;
-+			if ((pip->i_d.di_flags & XFS_DIFLAG_SYNC) &&
-+			    xfs_inherit_sync)
-+				di_flags |= XFS_DIFLAG_SYNC;
-+			if ((pip->i_d.di_flags & XFS_DIFLAG_NOSYMLINKS) &&
-+			    xfs_inherit_nosymlinks)
-+				di_flags |= XFS_DIFLAG_NOSYMLINKS;
-+			if ((pip->i_d.di_flags & XFS_DIFLAG_NODEFRAG) &&
-+			    xfs_inherit_nodefrag)
-+				di_flags |= XFS_DIFLAG_NODEFRAG;
-+			if (pip->i_d.di_flags & XFS_DIFLAG_FILESTREAM)
-+				di_flags |= XFS_DIFLAG_FILESTREAM;
-+
-+			ip->i_d.di_flags |= di_flags;
-+		}
-+		if (pip &&
-+		    (pip->i_d.di_flags2 & XFS_DIFLAG2_ANY) &&
-+		    pip->i_d.di_version == 3 &&
-+		    ip->i_d.di_version == 3) {
-+			if (pip->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE) {
-+				ip->i_d.di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
-+				ip->i_d.di_cowextsize = pip->i_d.di_cowextsize;
-+			}
-+			if (pip->i_d.di_flags2 & XFS_DIFLAG2_DAX)
-+				ip->i_d.di_flags2 |= XFS_DIFLAG2_DAX;
-+		}
-+		/* FALLTHROUGH */
-+	case S_IFLNK:
-+		ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
-+		ip->i_df.if_flags = XFS_IFEXTENTS;
-+		ip->i_df.if_bytes = 0;
-+		ip->i_df.if_u1.if_root = NULL;
-+		break;
-+	default:
-+		ASSERT(0);
-+	}
-+	/*
-+	 * Attribute fork settings for new inode.
-+	 */
-+	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
-+	ip->i_d.di_anextents = 0;
-+
-+	/*
-+	 * Log the new values stuffed into the inode.
-+	 */
-+	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-+	xfs_trans_log_inode(tp, ip, flags);
-+
-+	/* now that we have an i_mode we can setup the inode structure */
-+	xfs_setup_inode(ip);
-+}
-+
-+/*
-+ * Allocate an inode on disk and return a copy of its in-core version.
-+ * The in-core inode is locked exclusively.  Set mode, nlink, and rdev
-+ * appropriately within the inode.  The uid and gid for the inode are
-+ * set according to the contents of the given cred structure.
-+ *
-+ * Use xfs_dialloc() to allocate the on-disk inode. If xfs_dialloc()
-+ * has a free inode available, call xfs_iget() to obtain the in-core
-+ * version of the allocated inode.  Finally, fill in the inode and
-+ * log its initial contents.  In this case, ialloc_context would be
-+ * set to NULL.
-+ *
-+ * If xfs_dialloc() does not have an available inode, it will replenish
-+ * its supply by doing an allocation. Since we can only do one
-+ * allocation within a transaction without deadlocks, we must commit
-+ * the current transaction before returning the inode itself.
-+ * In this case, therefore, we will set ialloc_context and return.
-+ * The caller should then commit the current transaction, start a new
-+ * transaction, and call xfs_ialloc() again to actually get the inode.
-+ *
-+ * To ensure that some other process does not grab the inode that
-+ * was allocated during the first call to xfs_ialloc(), this routine
-+ * also returns the [locked] bp pointing to the head of the freelist
-+ * as ialloc_context.  The caller should hold this buffer across
-+ * the commit and pass it back into this routine on the second call.
-+ *
-+ * If we are allocating quota inodes, we do not have a parent inode
-+ * to attach to or associate with (i.e. pip == NULL) because they
-+ * are not linked into the directory structure - they are attached
-+ * directly to the superblock - and so have no parent.
-+ */
-+int
-+xfs_ialloc(
-+	struct xfs_trans		*tp,
-+	const struct xfs_ialloc_args	*args,
-+	struct xfs_buf			**ialloc_context,
-+	struct xfs_inode		**ipp)
-+{
-+	struct xfs_mount		*mp = tp->t_mountp;
-+	struct xfs_inode		*pip = args->pip;
-+	struct xfs_inode		*ip;
-+	xfs_ino_t			ino;
-+	int				error;
-+
-+	/*
-+	 * Call the space management code to pick
-+	 * the on-disk inode to be allocated.
-+	 */
-+	error = xfs_dialloc(tp, pip ? pip->i_ino : 0, args->mode,
-+			    ialloc_context, &ino);
-+	if (error)
-+		return error;
-+	if (*ialloc_context || ino == NULLFSINO) {
-+		*ipp = NULL;
-+		return 0;
-+	}
-+	ASSERT(*ialloc_context == NULL);
-+
-+	/*
-+	 * Protect against obviously corrupt allocation btree records. Later
-+	 * xfs_iget checks will catch re-allocation of other active in-memory
-+	 * and on-disk inodes. If we don't catch reallocating the parent inode
-+	 * here we will deadlock in xfs_iget() so we have to do these checks
-+	 * first.
-+	 */
-+	if ((pip && ino == pip->i_ino) || !xfs_verify_dir_ino(mp, ino)) {
-+		xfs_alert(mp, "Allocated a known in-use inode 0x%llx!", ino);
-+		xfs_agno_mark_sick(mp, XFS_INO_TO_AGNO(mp, ino),
-+				XFS_SICK_AG_INOBT);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	/*
-+	 * Get the in-core inode with the lock held exclusively.
-+	 * This is because we're setting fields here we need
-+	 * to prevent others from looking at until we're done.
-+	 */
-+	error = xfs_ialloc_iget(tp, ino, &ip);
-+	if (error)
-+		return error;
-+	ASSERT(ip != NULL);
-+
-+	xfs_inode_init(tp, args, ip);
-+	*ipp = ip;
-+	return 0;
-+}
-diff --git a/fs/xfs/libxfs/xfs_inode_util.h b/fs/xfs/libxfs/xfs_inode_util.h
-index 932ddcc2c618..b54495182932 100644
---- a/fs/xfs/libxfs/xfs_inode_util.h
-+++ b/fs/xfs/libxfs/xfs_inode_util.h
-@@ -27,4 +27,22 @@ struct xfs_ialloc_args {
- 	umode_t				mode;
- };
- 
-+/* The libxfs client must provide this group of helper functions. */
-+void xfs_setup_inode(struct xfs_inode *ip);
-+/*
-+ * Flags for xfs_trans_ichgtime().
-+ */
-+#define	XFS_ICHGTIME_MOD	0x1	/* data fork modification timestamp */
-+#define	XFS_ICHGTIME_CHG	0x2	/* inode field change timestamp */
-+#define	XFS_ICHGTIME_CREATE	0x4	/* inode create timestamp */
-+#define	XFS_ICHGTIME_ACCESS	0x8	/* last access timestamp */
-+void xfs_trans_ichgtime(struct xfs_trans *tp, struct xfs_inode *ip, int flags);
-+int xfs_ialloc_iget(struct xfs_trans *tp, xfs_ino_t ino,
-+		    struct xfs_inode **ipp);
-+
-+int xfs_ialloc(struct xfs_trans *tp, const struct xfs_ialloc_args *args,
-+	       struct xfs_buf **ialloc_context, struct xfs_inode **ipp);
-+void xfs_inode_init(struct xfs_trans *tp, const struct xfs_ialloc_args *args,
-+		    struct xfs_inode *ip);
-+
- #endif /* __XFS_INODE_UTIL_H__ */
-diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
-index 41022c55289d..cd6a0d68a75f 100644
---- a/fs/xfs/libxfs/xfs_shared.h
-+++ b/fs/xfs/libxfs/xfs_shared.h
-@@ -115,15 +115,6 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
- #define	XFS_REFC_BTREE_REF	1
- #define	XFS_SSB_REF		0
- 
--/*
-- * Flags for xfs_trans_ichgtime().
-- */
--#define	XFS_ICHGTIME_MOD	0x1	/* data fork modification timestamp */
--#define	XFS_ICHGTIME_CHG	0x2	/* inode field change timestamp */
--#define	XFS_ICHGTIME_CREATE	0x4	/* inode create timestamp */
--#define	XFS_ICHGTIME_ACCESS	0x8	/* last access timestamp */
--
--
- /*
-  * Symlink decoding/encoding functions
-  */
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 7832ee9550e5..00547fdf7c15 100644
+index 00547fdf7c15..eef85fbb6102 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -622,7 +622,7 @@ xfs_lookup(
-  * inode with the lock held exclusively because we're setting fields here and
-  * need to prevent others from looking at the inode until we're done.
+@@ -644,32 +644,16 @@ xfs_ialloc_iget(
   */
--static int
-+int
- xfs_ialloc_iget(
- 	struct xfs_trans	*tp,
- 	xfs_ino_t		ino,
-@@ -632,250 +632,6 @@ xfs_ialloc_iget(
- 			ipp);
- }
+ int
+ xfs_dir_ialloc(
+-	xfs_trans_t	**tpp,		/* input: current transaction;
+-					   output: may be a new transaction. */
+-	xfs_inode_t	*dp,		/* directory within whose allocate
+-					   the inode. */
+-	umode_t		mode,
+-	xfs_nlink_t	nlink,
+-	dev_t		rdev,
+-	prid_t		prid,		/* project id */
+-	xfs_inode_t	**ipp)		/* pointer to inode; it will be
+-					   locked. */
++	struct xfs_trans		**tpp,
++	const struct xfs_ialloc_args	*args,
++	struct xfs_inode		**ipp)
+ {
+-	struct xfs_ialloc_args	args = {
+-		.pip	= dp,
+-		.uid	= xfs_kuid_to_uid(current_fsuid()),
+-		.gid	= xfs_kgid_to_gid(current_fsgid()),
+-		.prid	= prid,
+-		.nlink	= nlink,
+-		.rdev	= rdev,
+-		.mode	= mode,
+-	};
+-	xfs_trans_t	*tp;
+-	xfs_inode_t	*ip;
+-	xfs_buf_t	*ialloc_context = NULL;
+-	int		code;
+-	void		*dqinfo;
+-	uint		tflags;
++	struct xfs_trans		*tp;
++	struct xfs_inode		*ip;
++	struct xfs_buf			*ialloc_context = NULL;
++	void				*dqinfo;
++	uint				tflags;
++	int				code;
  
--/*
-- * Initialize a newly allocated inode with the given arguments.  Heritable
-- * inode properties will be copied from the parent if one is supplied and the
-- * appropriate inode flags are set on the parent.
-- */
--STATIC void
--xfs_inode_init(
--	struct xfs_trans		*tp,
--	const struct xfs_ialloc_args	*args,
--	struct xfs_inode		*ip)
+ 	tp = *tpp;
+ 	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
+@@ -689,7 +673,7 @@ xfs_dir_ialloc(
+ 	 * transaction commit so that no other process can steal
+ 	 * the inode(s) that we've just allocated.
+ 	 */
+-	code = xfs_ialloc(tp, &args, &ialloc_context, &ip);
++	code = xfs_ialloc(tp, args, &ialloc_context, &ip);
+ 
+ 	/*
+ 	 * Return an error if we were unable to allocate a new inode.
+@@ -758,7 +742,7 @@ xfs_dir_ialloc(
+ 		 * other allocations in this allocation group,
+ 		 * this call should always succeed.
+ 		 */
+-		code = xfs_ialloc(tp, &args, &ialloc_context, &ip);
++		code = xfs_ialloc(tp, args, &ialloc_context, &ip);
+ 
+ 		/*
+ 		 * If we get an error at this point, return to the caller
+@@ -817,38 +801,34 @@ xfs_bumplink(
+ 
+ int
+ xfs_create(
+-	xfs_inode_t		*dp,
+-	struct xfs_name		*name,
+-	umode_t			mode,
+-	dev_t			rdev,
+-	xfs_inode_t		**ipp)
 -{
--	struct xfs_inode		*pip = args->pip;
--	struct inode			*inode = VFS_I(ip);
--	int				times;
--	uint				flags;
+-	int			is_dir = S_ISDIR(mode);
+-	struct xfs_mount	*mp = dp->i_mount;
+-	struct xfs_inode	*ip = NULL;
+-	struct xfs_trans	*tp = NULL;
+-	int			error;
+-	bool                    unlock_dp_on_error = false;
+-	prid_t			prid;
+-	struct xfs_dquot	*udqp = NULL;
+-	struct xfs_dquot	*gdqp = NULL;
+-	struct xfs_dquot	*pdqp = NULL;
+-	struct xfs_trans_res	*tres;
+-	bool			cleared_space = false;
+-	uint			resblks;
 -
--	/*
--	 * We always convert v1 inodes to v2 now - we only support filesystems
--	 * with >= v2 inode capability, so there is no reason for ever leaving
--	 * an inode in v1 format.
--	 */
--	if (ip->i_d.di_version == 1)
--		ip->i_d.di_version = 2;
++	struct xfs_inode		*dp,
++	struct xfs_name			*name,
++	const struct xfs_ialloc_args	*args,
++	struct xfs_inode		**ipp)
++{
++	struct xfs_mount		*mp = dp->i_mount;
++	struct xfs_inode		*ip = NULL;
++	struct xfs_trans		*tp = NULL;
++	struct xfs_dquot		*udqp = NULL;
++	struct xfs_dquot		*gdqp = NULL;
++	struct xfs_dquot		*pdqp = NULL;
++	struct xfs_trans_res		*tres;
++	uint				resblks;
++	bool				unlock_dp_on_error = false;
++	bool				is_dir = S_ISDIR(args->mode);
++	bool				cleared_space = false;
++	int				error;
++
++	ASSERT(args->pip == dp);
+ 	trace_xfs_create(dp, name);
+ 
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
+-	prid = xfs_get_initial_prid(dp);
 -
--	inode->i_mode = args->mode;
--	set_nlink(inode, args->nlink);
--	ip->i_d.di_uid = args->uid;
--	ip->i_d.di_gid = args->gid;
--	inode->i_rdev = args->rdev;
--	ip->i_d.di_projid = args->prid;
--
--	if (pip && XFS_INHERIT_GID(pip)) {
--		ip->i_d.di_gid = pip->i_d.di_gid;
--		if ((VFS_I(pip)->i_mode & S_ISGID) && S_ISDIR(args->mode))
--			inode->i_mode |= S_ISGID;
--	}
--
--	/*
--	 * If the group ID of the new file does not match the effective group
--	 * ID or one of the supplementary group IDs, the S_ISGID bit is cleared
--	 * (and only if the irix_sgid_inherit compatibility variable is set).
--	 */
--	if ((irix_sgid_inherit) &&
--	    (inode->i_mode & S_ISGID) &&
--	    (!in_group_p(xfs_gid_to_kgid(ip->i_d.di_gid))))
--		inode->i_mode &= ~S_ISGID;
--
--	ip->i_d.di_size = 0;
--	ip->i_d.di_nextents = 0;
--	ASSERT(ip->i_d.di_nblocks == 0);
--
--	times = XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG | XFS_ICHGTIME_ACCESS;
--	ip->i_d.di_extsize = 0;
--	ip->i_d.di_dmevmask = 0;
--	ip->i_d.di_dmstate = 0;
--	ip->i_d.di_flags = 0;
--
--	if (ip->i_d.di_version == 3) {
--		inode_set_iversion(inode, 1);
--		ip->i_d.di_flags2 = 0;
--		if (xfs_sb_version_hasbigtime(&ip->i_mount->m_sb))
--			ip->i_d.di_flags2 |= XFS_DIFLAG2_BIGTIME;
--		ip->i_d.di_cowextsize = 0;
--		times |= XFS_ICHGTIME_CREATE;
--	}
--
--	xfs_trans_ichgtime(tp, ip, times);
--
--	flags = XFS_ILOG_CORE;
--	switch (args->mode & S_IFMT) {
--	case S_IFIFO:
--	case S_IFCHR:
--	case S_IFBLK:
--	case S_IFSOCK:
--		ip->i_d.di_format = XFS_DINODE_FMT_DEV;
--		ip->i_df.if_flags = 0;
--		flags |= XFS_ILOG_DEV;
--		break;
--	case S_IFREG:
--	case S_IFDIR:
--		if (pip && (pip->i_d.di_flags & XFS_DIFLAG_ANY)) {
--			uint		di_flags = 0;
--
--			if (S_ISDIR(args->mode)) {
--				if (pip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)
--					di_flags |= XFS_DIFLAG_RTINHERIT;
--				if (pip->i_d.di_flags & XFS_DIFLAG_EXTSZINHERIT) {
--					di_flags |= XFS_DIFLAG_EXTSZINHERIT;
--					ip->i_d.di_extsize = pip->i_d.di_extsize;
--				}
--				if (pip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
--					di_flags |= XFS_DIFLAG_PROJINHERIT;
--			} else if (S_ISREG(args->mode)) {
--				if (pip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)
--					di_flags |= XFS_DIFLAG_REALTIME;
--				if (pip->i_d.di_flags & XFS_DIFLAG_EXTSZINHERIT) {
--					di_flags |= XFS_DIFLAG_EXTSIZE;
--					ip->i_d.di_extsize = pip->i_d.di_extsize;
--				}
--			}
--			if ((pip->i_d.di_flags & XFS_DIFLAG_NOATIME) &&
--			    xfs_inherit_noatime)
--				di_flags |= XFS_DIFLAG_NOATIME;
--			if ((pip->i_d.di_flags & XFS_DIFLAG_NODUMP) &&
--			    xfs_inherit_nodump)
--				di_flags |= XFS_DIFLAG_NODUMP;
--			if ((pip->i_d.di_flags & XFS_DIFLAG_SYNC) &&
--			    xfs_inherit_sync)
--				di_flags |= XFS_DIFLAG_SYNC;
--			if ((pip->i_d.di_flags & XFS_DIFLAG_NOSYMLINKS) &&
--			    xfs_inherit_nosymlinks)
--				di_flags |= XFS_DIFLAG_NOSYMLINKS;
--			if ((pip->i_d.di_flags & XFS_DIFLAG_NODEFRAG) &&
--			    xfs_inherit_nodefrag)
--				di_flags |= XFS_DIFLAG_NODEFRAG;
--			if (pip->i_d.di_flags & XFS_DIFLAG_FILESTREAM)
--				di_flags |= XFS_DIFLAG_FILESTREAM;
--
--			ip->i_d.di_flags |= di_flags;
--		}
--		if (pip &&
--		    (pip->i_d.di_flags2 & XFS_DIFLAG2_ANY) &&
--		    pip->i_d.di_version == 3 &&
--		    ip->i_d.di_version == 3) {
--			if (pip->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE) {
--				ip->i_d.di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
--				ip->i_d.di_cowextsize = pip->i_d.di_cowextsize;
--			}
--			if (pip->i_d.di_flags2 & XFS_DIFLAG2_DAX)
--				ip->i_d.di_flags2 |= XFS_DIFLAG2_DAX;
--		}
--		/* FALLTHROUGH */
--	case S_IFLNK:
--		ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
--		ip->i_df.if_flags = XFS_IFEXTENTS;
--		ip->i_df.if_bytes = 0;
--		ip->i_df.if_u1.if_root = NULL;
--		break;
--	default:
--		ASSERT(0);
--	}
--	/*
--	 * Attribute fork settings for new inode.
--	 */
--	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
--	ip->i_d.di_anextents = 0;
--
--	/*
--	 * Log the new values stuffed into the inode.
--	 */
--	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
--	xfs_trans_log_inode(tp, ip, flags);
--
--	/* now that we have an i_mode we can setup the inode structure */
--	xfs_setup_inode(ip);
--}
--
--/*
-- * Allocate an inode on disk and return a copy of its in-core version.
-- * The in-core inode is locked exclusively.  Set mode, nlink, and rdev
-- * appropriately within the inode.  The uid and gid for the inode are
-- * set according to the contents of the given cred structure.
-- *
-- * Use xfs_dialloc() to allocate the on-disk inode. If xfs_dialloc()
-- * has a free inode available, call xfs_iget() to obtain the in-core
-- * version of the allocated inode.  Finally, fill in the inode and
-- * log its initial contents.  In this case, ialloc_context would be
-- * set to NULL.
-- *
-- * If xfs_dialloc() does not have an available inode, it will replenish
-- * its supply by doing an allocation. Since we can only do one
-- * allocation within a transaction without deadlocks, we must commit
-- * the current transaction before returning the inode itself.
-- * In this case, therefore, we will set ialloc_context and return.
-- * The caller should then commit the current transaction, start a new
-- * transaction, and call xfs_ialloc() again to actually get the inode.
-- *
-- * To ensure that some other process does not grab the inode that
-- * was allocated during the first call to xfs_ialloc(), this routine
-- * also returns the [locked] bp pointing to the head of the freelist
-- * as ialloc_context.  The caller should hold this buffer across
-- * the commit and pass it back into this routine on the second call.
-- *
-- * If we are allocating quota inodes, we do not have a parent inode
-- * to attach to or associate with (i.e. pip == NULL) because they
-- * are not linked into the directory structure - they are attached
-- * directly to the superblock - and so have no parent.
-- */
--static int
--xfs_ialloc(
--	struct xfs_trans		*tp,
--	const struct xfs_ialloc_args	*args,
--	struct xfs_buf			**ialloc_context,
--	struct xfs_inode		**ipp)
+ 	/*
+ 	 * Make sure that we have allocated dquot(s) on disk.
+ 	 */
+-	error = xfs_qm_vop_dqalloc(dp, xfs_kuid_to_uid(current_fsuid()),
+-					xfs_kgid_to_gid(current_fsgid()), prid,
++	error = xfs_qm_vop_dqalloc(dp, args->uid, args->gid, args->prid,
+ 					XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
+ 					&udqp, &gdqp, &pdqp);
+ 	if (error)
+@@ -917,7 +897,7 @@ xfs_create(
+ 	 * entry pointing to them, but a directory also the "." entry
+ 	 * pointing to itself.
+ 	 */
+-	error = xfs_dir_ialloc(&tp, dp, mode, is_dir ? 2 : 1, rdev, prid, &ip);
++	error = xfs_dir_ialloc(&tp, args, &ip);
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+@@ -999,31 +979,30 @@ xfs_create(
+ 
+ int
+ xfs_create_tmpfile(
+-	struct xfs_inode	*dp,
+-	umode_t			mode,
+-	struct xfs_inode	**ipp)
 -{
--	struct xfs_mount		*mp = tp->t_mountp;
--	struct xfs_inode		*pip = args->pip;
--	struct xfs_inode		*ip;
--	xfs_ino_t			ino;
--	int				error;
+-	struct xfs_mount	*mp = dp->i_mount;
+-	struct xfs_inode	*ip = NULL;
+-	struct xfs_trans	*tp = NULL;
+-	int			error;
+-	prid_t                  prid;
+-	struct xfs_dquot	*udqp = NULL;
+-	struct xfs_dquot	*gdqp = NULL;
+-	struct xfs_dquot	*pdqp = NULL;
+-	struct xfs_trans_res	*tres;
+-	uint			resblks;
++	struct xfs_inode		*dp,
++	const struct xfs_ialloc_args	*args,
++	struct xfs_inode		**ipp)
++{
++	struct xfs_mount		*mp = dp->i_mount;
++	struct xfs_inode		*ip = NULL;
++	struct xfs_trans		*tp = NULL;
++	struct xfs_dquot		*udqp = NULL;
++	struct xfs_dquot		*gdqp = NULL;
++	struct xfs_dquot		*pdqp = NULL;
++	struct xfs_trans_res		*tres;
++	uint				resblks;
++	int				error;
++
++	ASSERT(args->nlink == 0);
++	ASSERT(args->pip == dp);
+ 
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
+-	prid = xfs_get_initial_prid(dp);
 -
--	/*
--	 * Call the space management code to pick
--	 * the on-disk inode to be allocated.
--	 */
--	error = xfs_dialloc(tp, pip ? pip->i_ino : 0, args->mode,
--			    ialloc_context, &ino);
--	if (error)
--		return error;
--	if (*ialloc_context || ino == NULLFSINO) {
--		*ipp = NULL;
--		return 0;
--	}
--	ASSERT(*ialloc_context == NULL);
--
--	/*
--	 * Protect against obviously corrupt allocation btree records. Later
--	 * xfs_iget checks will catch re-allocation of other active in-memory
--	 * and on-disk inodes. If we don't catch reallocating the parent inode
--	 * here we will deadlock in xfs_iget() so we have to do these checks
--	 * first.
--	 */
--	if ((pip && ino == pip->i_ino) || !xfs_verify_dir_ino(mp, ino)) {
--		xfs_alert(mp, "Allocated a known in-use inode 0x%llx!", ino);
--		xfs_agno_mark_sick(mp, XFS_INO_TO_AGNO(mp, ino),
--				XFS_SICK_AG_INOBT);
--		return -EFSCORRUPTED;
--	}
--
--	/*
--	 * Get the in-core inode with the lock held exclusively.
--	 * This is because we're setting fields here we need
--	 * to prevent others from looking at until we're done.
--	 */
--	error = xfs_ialloc_iget(tp, ino, &ip);
--	if (error)
--		return error;
--	ASSERT(ip != NULL);
--
--	xfs_inode_init(tp, args, ip);
--	*ipp = ip;
--	return 0;
--}
--
- /*
-  * Allocates a new inode from disk and return a pointer to the
-  * incore copy. This routine will internally commit the current
+ 	/*
+ 	 * Make sure that we have allocated dquot(s) on disk.
+ 	 */
+-	error = xfs_qm_vop_dqalloc(dp, xfs_kuid_to_uid(current_fsuid()),
+-				xfs_kgid_to_gid(current_fsgid()), prid,
++	error = xfs_qm_vop_dqalloc(dp, args->uid, args->gid, args->prid,
+ 				XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
+ 				&udqp, &gdqp, &pdqp);
+ 	if (error)
+@@ -1041,7 +1020,7 @@ xfs_create_tmpfile(
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+-	error = xfs_dir_ialloc(&tp, dp, mode, 0, 0, prid, &ip);
++	error = xfs_dir_ialloc(&tp, args, &ip);
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+@@ -3086,10 +3065,18 @@ xfs_rename_alloc_whiteout(
+ 	struct xfs_inode	*dp,
+ 	struct xfs_inode	**wip)
+ {
++	struct xfs_ialloc_args	args = {
++		.pip	= dp,
++		.uid	= xfs_kuid_to_uid(current_fsuid()),
++		.gid	= xfs_kgid_to_gid(current_fsgid()),
++		.prid	= xfs_get_initial_prid(dp),
++		.nlink	= 0,
++		.mode	= S_IFCHR | WHITEOUT_MODE,
++	};
+ 	struct xfs_inode	*tmpfile;
+ 	int			error;
+ 
+-	error = xfs_create_tmpfile(dp, S_IFCHR | WHITEOUT_MODE, &tmpfile);
++	error = xfs_create_tmpfile(dp, &args, &tmpfile);
+ 	if (error)
+ 		return error;
+ 
 diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 6cc1cddd6bfa..336f2642336a 100644
+index 336f2642336a..24e167cd9a72 100644
 --- a/fs/xfs/xfs_inode.h
 +++ b/fs/xfs/xfs_inode.h
-@@ -466,7 +466,6 @@ int	xfs_break_layouts(struct inode *inode, uint *iolock,
- 		enum layout_break_reason reason);
+@@ -405,8 +405,10 @@ void		xfs_inactive(struct xfs_inode *ip);
+ int		xfs_lookup(struct xfs_inode *dp, struct xfs_name *name,
+ 			   struct xfs_inode **ipp, struct xfs_name *ci_name);
+ int		xfs_create(struct xfs_inode *dp, struct xfs_name *name,
+-			   umode_t mode, dev_t rdev, struct xfs_inode **ipp);
+-int		xfs_create_tmpfile(struct xfs_inode *dp, umode_t mode,
++			   const struct xfs_ialloc_args *iargs,
++			   struct xfs_inode **ipp);
++int		xfs_create_tmpfile(struct xfs_inode *dp,
++			   const struct xfs_ialloc_args *iargs,
+ 			   struct xfs_inode **ipp);
+ int		xfs_remove(struct xfs_inode *dp, struct xfs_name *name,
+ 			   struct xfs_inode *ip);
+@@ -438,8 +440,8 @@ int		xfs_iflush(struct xfs_inode *, struct xfs_buf **);
+ void		xfs_lock_two_inodes(struct xfs_inode *ip0, uint ip0_mode,
+ 				struct xfs_inode *ip1, uint ip1_mode);
  
- /* from xfs_iops.c */
--extern void xfs_setup_inode(struct xfs_inode *ip);
- extern void xfs_setup_iops(struct xfs_inode *ip);
+-int		xfs_dir_ialloc(struct xfs_trans **, struct xfs_inode *, umode_t,
+-			       xfs_nlink_t, dev_t, prid_t,
++int		xfs_dir_ialloc(struct xfs_trans **,
++			       const struct xfs_ialloc_args *,
+ 			       struct xfs_inode **);
  
- /*
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 982d53eb2853..7908f925074b 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -224,7 +224,6 @@ void		xfs_trans_stale_inode_buf(xfs_trans_t *, struct xfs_buf *);
- bool		xfs_trans_ordered_buf(xfs_trans_t *, struct xfs_buf *);
- void		xfs_trans_dquot_buf(xfs_trans_t *, struct xfs_buf *, uint);
- void		xfs_trans_inode_alloc_buf(xfs_trans_t *, struct xfs_buf *);
--void		xfs_trans_ichgtime(struct xfs_trans *, struct xfs_inode *, int);
- void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
- void		xfs_trans_log_buf(struct xfs_trans *, struct xfs_buf *, uint,
- 				  uint);
+ static inline int
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index e4635b29a20d..9db69b8b8077 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -123,42 +123,52 @@ xfs_cleanup_inode(
+ 
+ STATIC int
+ xfs_generic_create(
+-	struct inode	*dir,
+-	struct dentry	*dentry,
+-	umode_t		mode,
+-	dev_t		rdev,
+-	bool		tmpfile)	/* unnamed file */
++	struct inode		*dir,
++	struct dentry		*dentry,
++	umode_t			mode,
++	dev_t			rdev,
++	bool			tmpfile)	/* unnamed file */
+ {
+-	struct inode	*inode;
+-	struct xfs_inode *ip = NULL;
+-	struct posix_acl *default_acl, *acl;
+-	struct xfs_name	name;
+-	int		error;
++	struct xfs_ialloc_args args = {
++		.pip		= XFS_I(dir),
++		.uid		= xfs_kuid_to_uid(current_fsuid()),
++		.gid		= xfs_kgid_to_gid(current_fsgid()),
++		.prid		= xfs_get_initial_prid(XFS_I(dir)),
++		.nlink		= tmpfile ? 0 : (S_ISDIR(mode) ? 2 : 1),
++		.rdev		= rdev,
++		.mode		= mode,
++	};
++	struct inode		*inode;
++	struct xfs_inode	*ip = NULL;
++	struct posix_acl	*default_acl, *acl;
++	struct xfs_name		name;
++	int			error;
+ 
+ 	/*
+ 	 * Irix uses Missed'em'V split, but doesn't want to see
+ 	 * the upper 5 bits of (14bit) major.
+ 	 */
+-	if (S_ISCHR(mode) || S_ISBLK(mode)) {
+-		if (unlikely(!sysv_valid_dev(rdev) || MAJOR(rdev) & ~0x1ff))
++	if (S_ISCHR(args.mode) || S_ISBLK(args.mode)) {
++		if (unlikely(!sysv_valid_dev(args.rdev) ||
++			     MAJOR(args.rdev) & ~0x1ff))
+ 			return -EINVAL;
+ 	} else {
+-		rdev = 0;
++		args.rdev = 0;
+ 	}
+ 
+-	error = posix_acl_create(dir, &mode, &default_acl, &acl);
++	error = posix_acl_create(dir, &args.mode, &default_acl, &acl);
+ 	if (error)
+ 		return error;
+ 
+ 	/* Verify mode is valid also for tmpfile case */
+-	error = xfs_dentry_mode_to_name(&name, dentry, mode);
++	error = xfs_dentry_mode_to_name(&name, dentry, args.mode);
+ 	if (unlikely(error))
+ 		goto out_free_acl;
+ 
+ 	if (!tmpfile) {
+-		error = xfs_create(XFS_I(dir), &name, mode, rdev, &ip);
++		error = xfs_create(XFS_I(dir), &name, &args, &ip);
+ 	} else {
+-		error = xfs_create_tmpfile(XFS_I(dir), mode, &ip);
++		error = xfs_create_tmpfile(XFS_I(dir), &args, &ip);
+ 	}
+ 	if (unlikely(error))
+ 		goto out_free_acl;
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index fb671be5ca25..22b6d47670a3 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -757,6 +757,10 @@ xfs_qm_qino_alloc(
+ 	xfs_inode_t	**ip,
+ 	uint		flags)
+ {
++	struct xfs_ialloc_args	args = {
++		.nlink	= 1,
++		.mode	= S_IFREG,
++	};
+ 	xfs_trans_t	*tp;
+ 	int		error;
+ 	bool		need_alloc = true;
+@@ -806,7 +810,7 @@ xfs_qm_qino_alloc(
+ 		return error;
+ 
+ 	if (need_alloc) {
+-		error = xfs_dir_ialloc(&tp, NULL, S_IFREG, 1, 0, 0, ip);
++		error = xfs_dir_ialloc(&tp, &args, ip);
+ 		if (error) {
+ 			xfs_trans_cancel(tp);
+ 			return error;
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index bc6cf78a44ef..1c6b1d4040c0 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -235,6 +235,14 @@ xfs_symlink(
+ 	umode_t			mode,
+ 	struct xfs_inode	**ipp)
+ {
++	struct xfs_ialloc_args	args = {
++		.pip	= dp,
++		.uid	= xfs_kuid_to_uid(current_fsuid()),
++		.gid	= xfs_kgid_to_gid(current_fsgid()),
++		.prid	= xfs_get_initial_prid(dp),
++		.nlink	= 1,
++		.mode	= S_IFLNK | (mode & ~S_IFMT),
++	};
+ 	struct xfs_mount	*mp = dp->i_mount;
+ 	struct xfs_trans	*tp = NULL;
+ 	struct xfs_inode	*ip = NULL;
+@@ -242,7 +250,6 @@ xfs_symlink(
+ 	int			pathlen;
+ 	bool                    unlock_dp_on_error = false;
+ 	xfs_filblks_t		fs_blocks;
+-	prid_t			prid;
+ 	struct xfs_dquot	*udqp = NULL;
+ 	struct xfs_dquot	*gdqp = NULL;
+ 	struct xfs_dquot	*pdqp = NULL;
+@@ -264,14 +271,11 @@ xfs_symlink(
+ 	ASSERT(pathlen > 0);
+ 
+ 	udqp = gdqp = NULL;
+-	prid = xfs_get_initial_prid(dp);
+ 
+ 	/*
+ 	 * Make sure that we have allocated dquot(s) on disk.
+ 	 */
+-	error = xfs_qm_vop_dqalloc(dp,
+-			xfs_kuid_to_uid(current_fsuid()),
+-			xfs_kgid_to_gid(current_fsgid()), prid,
++	error = xfs_qm_vop_dqalloc(dp, args.uid, args.gid, args.prid,
+ 			XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
+ 			&udqp, &gdqp, &pdqp);
+ 	if (error)
+@@ -313,8 +317,7 @@ xfs_symlink(
+ 	/*
+ 	 * Allocate an inode for the symlink.
+ 	 */
+-	error = xfs_dir_ialloc(&tp, dp, S_IFLNK | (mode & ~S_IFMT), 1, 0,
+-			       prid, &ip);
++	error = xfs_dir_ialloc(&tp, &args, &ip);
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
 
