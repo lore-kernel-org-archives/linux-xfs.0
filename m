@@ -7,69 +7,70 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D817CC2D0CE
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:05:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B350C2D0DF
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:05:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8C4D5206E4
+	by mail.kernel.org (Postfix) with ESMTP id D5D4C20718
 	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:05:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="NtkJXgD0"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="hDa4QMVR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727158AbgAABFV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1727139AbgAABFV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Tue, 31 Dec 2019 20:05:21 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:46586 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:46632 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727139AbgAABFU (ORCPT
+        with ESMTP id S1727144AbgAABFU (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:05:20 -0500
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00115GKm089307
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:05:16 GMT
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00115JgQ089325
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:05:19 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=ieKbno1dDr1PNT5Yd2GZK/lpGDtiubTBJzqoTcLznWg=;
- b=NtkJXgD0n9wr25hI3tg7WqOHBFXANI37ZzHwwYCdelG8XZ8s1MIbbaEOTk1wPaF7sGgh
- 5NeGvsUnzhzGOTk/Bu6tNXCCCURlXWPgu6uvpYoEPlxXpztbQskGSEsm2dNaV43x5v8t
- YqrMzYjd9/wCk3WHRzjhaGFRILo3EKHB+7RzScz6RWuEyyVQ9ezhR2VpOtnrJPAcSl8g
- fiQFEFbdxb80XTHbcz8Bu9mK+tI+Owlem0XHBGFTZUYqX9xyPNnqX7qu259JOsuIYxlx
- wjfEejsMwdd7QJztTPmV1LaDbZx2sRkf4e/qSr3T5FBji0+gQsaEH0Aqkoygjtx5JRxt xQ== 
+ bh=V9YMukvvnT7Wg3oj0hDG8+2Pq1VzzoXCjVo2zvaG1HE=;
+ b=hDa4QMVRiX+V7cqcS9cbK86Gb1ITSwVFyEtzstoE9QYDjGcUu5fx/yYowzyShz9lLclX
+ q39KlYh27WSrDp6WiWb1E/a5PX24qhDNGjBtqf3IfwnHrQDli4gTwcqdiaY/J846EAL+
+ 9WnwkrsT3TBXPe2d44oJR2nTShzU077JX9D8Tqc1v0/DWrKMQKVhIR2XsnipptN9K6eF
+ Rj6KGiCbNDOWK0FmT/qwICvHeM8D8q1aTY1QZm3rklqsjUG21yt0ZdotcB+k5OlihrG5
+ zMUREdlpiR9DJTP3EX1VaHNyxUolQY4ALSqBT5IwK5tSQWDRQkPfz/BS45nXXsf1b974 QQ== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2x5ypqjw7x-1
+        by userp2120.oracle.com with ESMTP id 2x5ypqjw85-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:05:16 +0000
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:05:19 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00115ABn183812
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:05:15 GMT
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0011594o183756
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:05:19 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 2x8bsrfvhd-1
+        by userp3020.oracle.com with ESMTP id 2x8bsrfvxe-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:05:14 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00114J5L025615
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:04:19 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:05:19 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00115INF026133
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:05:18 GMT
 Received: from localhost (/10.159.150.156)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 31 Dec 2019 17:04:18 -0800
-Subject: [PATCH 5/6] xfs: repair extended attributes
+        with ESMTP ; Tue, 31 Dec 2019 17:05:17 -0800
+Subject: [PATCH 05/10] xfs: report dir/attr block corruption errors to the
+ health system
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 31 Dec 2019 17:04:16 -0800
-Message-ID: <157784065654.1358958.6077721422203745601.stgit@magnolia>
-In-Reply-To: <157784062523.1358958.17318700801044648140.stgit@magnolia>
-References: <157784062523.1358958.17318700801044648140.stgit@magnolia>
+Date:   Tue, 31 Dec 2019 17:05:15 -0800
+Message-ID: <157784071558.1360095.5833103652518516086.stgit@magnolia>
+In-Reply-To: <157784067947.1360095.12276226432994685051.stgit@magnolia>
+References: <157784067947.1360095.12276226432994685051.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9487 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=4 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=3 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1911140001 definitions=main-2001010008
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9487 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=4 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=3 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
  definitions=main-2001010008
@@ -80,862 +81,589 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-If the extended attributes look bad, try to sift through the rubble to
-find whatever keys/values we can, zap the attr tree, and re-add the
-values.
+Whenever we encounter corrupt directory or extended attribute blocks, we
+should report that to the health monitoring system for later reporting.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/Makefile            |    1 
- fs/xfs/scrub/attr.c        |   10 -
- fs/xfs/scrub/attr.h        |   10 +
- fs/xfs/scrub/attr_repair.c |  727 ++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/repair.h      |    2 
- fs/xfs/scrub/scrub.c       |    2 
- fs/xfs/scrub/scrub.h       |    3 
- 7 files changed, 752 insertions(+), 3 deletions(-)
- create mode 100644 fs/xfs/scrub/attr_repair.c
+ fs/xfs/libxfs/xfs_attr_leaf.c   |    5 ++++-
+ fs/xfs/libxfs/xfs_attr_remote.c |   27 ++++++++++++++++-----------
+ fs/xfs/libxfs/xfs_da_btree.c    |   35 ++++++++++++++++++++++++++++++-----
+ fs/xfs/libxfs/xfs_dir2.c        |    5 ++++-
+ fs/xfs/libxfs/xfs_dir2_data.c   |    2 ++
+ fs/xfs/libxfs/xfs_dir2_leaf.c   |    3 +++
+ fs/xfs/libxfs/xfs_dir2_node.c   |    7 +++++++
+ fs/xfs/libxfs/xfs_health.h      |    3 +++
+ fs/xfs/xfs_attr_inactive.c      |    4 ++++
+ fs/xfs/xfs_attr_list.c          |    7 ++++++-
+ fs/xfs/xfs_health.c             |   39 +++++++++++++++++++++++++++++++++++++++
+ 11 files changed, 118 insertions(+), 19 deletions(-)
 
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 1a9a5e1840d2..257d8ffef721 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -161,6 +161,7 @@ xfs-y				+= $(addprefix scrub/, \
- 				   agheader_repair.o \
- 				   alloc_repair.o \
- 				   array.o \
-+				   attr_repair.o \
- 				   bitmap.o \
- 				   blob.o \
- 				   bmap_repair.o \
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index d9f0dd444b80..5ecb194d8ec8 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -38,9 +38,15 @@ xchk_setup_xattr_buf(
- 	 * We need enough space to read an xattr value from the file or enough
- 	 * space to hold three copies of the xattr free space bitmap.  We don't
- 	 * need the buffer space for both purposes at the same time.
-+	 *
-+	 * If we're doing a repair, we need enough space to hold the largest
-+	 * xattr value and the largest xattr name.
- 	 */
- 	sz = 3 * sizeof(long) * BITS_TO_LONGS(sc->mp->m_attr_geo->blksize);
--	sz = max_t(size_t, sz, value_size);
-+	if (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
-+		sz = max_t(size_t, sz, value_size + XATTR_NAME_MAX + 1);
-+	else
-+		sz = max_t(size_t, sz, value_size);
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 7d14589ba8d1..322454aedabd 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -27,7 +27,7 @@
+ #include "xfs_buf_item.h"
+ #include "xfs_dir2.h"
+ #include "xfs_log.h"
+-
++#include "xfs_health.h"
  
- 	/*
- 	 * If there's already a buffer, figure out if we need to reallocate it
-@@ -182,7 +188,7 @@ xchk_xattr_listent(
-  * Within a char, the lowest bit of the char represents the byte with
-  * the smallest address
+ /*
+  * xfs_attr_leaf.c
+@@ -2357,6 +2357,7 @@ xfs_attr3_leaf_lookup_int(
+ 	entries = xfs_attr3_leaf_entryp(leaf);
+ 	if (ichdr.count >= args->geo->blksize / 8) {
+ 		xfs_buf_corruption_error(bp);
++		xfs_da_mark_sick(args);
+ 		return -EFSCORRUPTED;
+ 	}
+ 
+@@ -2376,10 +2377,12 @@ xfs_attr3_leaf_lookup_int(
+ 	}
+ 	if (!(probe >= 0 && (!ichdr.count || probe < ichdr.count))) {
+ 		xfs_buf_corruption_error(bp);
++		xfs_da_mark_sick(args);
+ 		return -EFSCORRUPTED;
+ 	}
+ 	if (!(span <= 4 || be32_to_cpu(entry->hashval) == hashval)) {
+ 		xfs_buf_corruption_error(bp);
++		xfs_da_mark_sick(args);
+ 		return -EFSCORRUPTED;
+ 	}
+ 
+diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+index a6ef5df42669..ef34d90501a7 100644
+--- a/fs/xfs/libxfs/xfs_attr_remote.c
++++ b/fs/xfs/libxfs/xfs_attr_remote.c
+@@ -22,6 +22,7 @@
+ #include "xfs_attr_remote.h"
+ #include "xfs_trace.h"
+ #include "xfs_error.h"
++#include "xfs_health.h"
+ 
+ #define ATTR_RMTVALUE_MAPSIZE	1	/* # of map entries at once */
+ 
+@@ -261,17 +262,18 @@ xfs_attr3_rmt_hdr_set(
   */
--STATIC bool
-+bool
- xchk_xattr_set_map(
- 	struct xfs_scrub	*sc,
- 	unsigned long		*map,
-diff --git a/fs/xfs/scrub/attr.h b/fs/xfs/scrub/attr.h
-index 13a1d2e8424d..b2d758953300 100644
---- a/fs/xfs/scrub/attr.h
-+++ b/fs/xfs/scrub/attr.h
-@@ -37,6 +37,16 @@ xchk_xattr_valuebuf(
- 	return ab->buf;
+ STATIC int
+ xfs_attr_rmtval_copyout(
+-	struct xfs_mount *mp,
+-	struct xfs_buf	*bp,
+-	xfs_ino_t	ino,
+-	int		*offset,
+-	int		*valuelen,
+-	uint8_t		**dst)
++	struct xfs_mount	*mp,
++	struct xfs_buf		*bp,
++	struct xfs_inode	*dp,
++	int			*offset,
++	int			*valuelen,
++	uint8_t			**dst)
+ {
+-	char		*src = bp->b_addr;
+-	xfs_daddr_t	bno = bp->b_bn;
+-	int		len = BBTOB(bp->b_length);
+-	int		blksize = mp->m_attr_geo->blksize;
++	char			*src = bp->b_addr;
++	xfs_ino_t		ino = dp->i_ino;
++	xfs_daddr_t		bno = bp->b_bn;
++	int			len = BBTOB(bp->b_length);
++	int			blksize = mp->m_attr_geo->blksize;
+ 
+ 	ASSERT(len >= blksize);
+ 
+@@ -287,6 +289,7 @@ xfs_attr_rmtval_copyout(
+ 				xfs_alert(mp,
+ "remote attribute header mismatch bno/off/len/owner (0x%llx/0x%x/Ox%x/0x%llx)",
+ 					bno, *offset, byte_cnt, ino);
++				xfs_dirattr_mark_sick(dp, XFS_ATTR_FORK);
+ 				return -EFSCORRUPTED;
+ 			}
+ 			hdr_size = sizeof(struct xfs_attr3_rmt_hdr);
+@@ -405,10 +408,12 @@ xfs_attr_rmtval_get(
+ 						   mp->m_ddev_targp,
+ 						   dblkno, dblkcnt, 0, &bp,
+ 						   &xfs_attr3_rmt_buf_ops);
++			if (xfs_metadata_is_sick(error))
++				xfs_da_mark_sick(args);
+ 			if (error)
+ 				return error;
+ 
+-			error = xfs_attr_rmtval_copyout(mp, bp, args->dp->i_ino,
++			error = xfs_attr_rmtval_copyout(mp, bp, args->dp,
+ 							&offset, &valuelen,
+ 							&dst);
+ 			xfs_trans_brelse(args->trans, bp);
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index 8c3eafe280ed..90854f161c08 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -22,6 +22,7 @@
+ #include "xfs_trace.h"
+ #include "xfs_buf_item.h"
+ #include "xfs_log.h"
++#include "xfs_health.h"
+ 
+ /*
+  * xfs_da_btree.c
+@@ -334,6 +335,8 @@ const struct xfs_buf_ops xfs_da3_node_buf_ops = {
+ static int
+ xfs_da3_node_set_type(
+ 	struct xfs_trans	*tp,
++	struct xfs_inode	*dp,
++	int			whichfork,
+ 	struct xfs_buf		*bp)
+ {
+ 	struct xfs_da_blkinfo	*info = bp->b_addr;
+@@ -355,6 +358,7 @@ xfs_da3_node_set_type(
+ 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, tp->t_mountp,
+ 				info, sizeof(*info));
+ 		xfs_trans_brelse(tp, bp);
++		xfs_dirattr_mark_sick(dp, whichfork);
+ 		return -EFSCORRUPTED;
+ 	}
+ }
+@@ -373,7 +377,7 @@ xfs_da3_node_read(
+ 			&xfs_da3_node_buf_ops);
+ 	if (error || !*bpp || !tp)
+ 		return error;
+-	return xfs_da3_node_set_type(tp, *bpp);
++	return xfs_da3_node_set_type(tp, dp, whichfork, *bpp);
  }
  
-+/* A place to store attribute names. */
-+static inline unsigned char *
-+xchk_xattr_namebuf(
-+	struct xfs_scrub	*sc)
-+{
-+	struct xchk_xattr_buf	*ab = sc->buf;
+ int
+@@ -400,7 +404,7 @@ xfs_da3_node_read_mapped(
+ 
+ 	if (!tp)
+ 		return 0;
+-	return xfs_da3_node_set_type(tp, *bpp);
++	return xfs_da3_node_set_type(tp, dp, whichfork, *bpp);
+ }
+ 
+ /*========================================================================
+@@ -591,6 +595,7 @@ xfs_da3_split(
+ 	if (node->hdr.info.forw) {
+ 		if (be32_to_cpu(node->hdr.info.forw) != addblk->blkno) {
+ 			xfs_buf_corruption_error(oldblk->bp);
++			xfs_da_mark_sick(state->args);
+ 			error = -EFSCORRUPTED;
+ 			goto out;
+ 		}
+@@ -604,6 +609,7 @@ xfs_da3_split(
+ 	if (node->hdr.info.back) {
+ 		if (be32_to_cpu(node->hdr.info.back) != addblk->blkno) {
+ 			xfs_buf_corruption_error(oldblk->bp);
++			xfs_da_mark_sick(state->args);
+ 			error = -EFSCORRUPTED;
+ 			goto out;
+ 		}
+@@ -1625,6 +1631,7 @@ xfs_da3_node_lookup_int(
+ 
+ 		if (magic != XFS_DA_NODE_MAGIC && magic != XFS_DA3_NODE_MAGIC) {
+ 			xfs_buf_corruption_error(blk->bp);
++			xfs_da_mark_sick(args);
+ 			return -EFSCORRUPTED;
+ 		}
+ 
+@@ -1640,6 +1647,7 @@ xfs_da3_node_lookup_int(
+ 		/* Tree taller than we can handle; bail out! */
+ 		if (nodehdr.level >= XFS_DA_NODE_MAXDEPTH) {
+ 			xfs_buf_corruption_error(blk->bp);
++			xfs_da_mark_sick(args);
+ 			return -EFSCORRUPTED;
+ 		}
+ 
+@@ -1648,6 +1656,7 @@ xfs_da3_node_lookup_int(
+ 			expected_level = nodehdr.level - 1;
+ 		else if (expected_level != nodehdr.level) {
+ 			xfs_buf_corruption_error(blk->bp);
++			xfs_da_mark_sick(args);
+ 			return -EFSCORRUPTED;
+ 		} else
+ 			expected_level--;
+@@ -1699,12 +1708,16 @@ xfs_da3_node_lookup_int(
+ 		}
+ 
+ 		/* We can't point back to the root. */
+-		if (XFS_IS_CORRUPT(dp->i_mount, blkno == args->geo->leafblk))
++		if (XFS_IS_CORRUPT(dp->i_mount, blkno == args->geo->leafblk)) {
++			xfs_da_mark_sick(args);
+ 			return -EFSCORRUPTED;
++		}
+ 	}
+ 
+-	if (XFS_IS_CORRUPT(dp->i_mount, expected_level != 0))
++	if (XFS_IS_CORRUPT(dp->i_mount, expected_level != 0)) {
++		xfs_da_mark_sick(args);
+ 		return -EFSCORRUPTED;
++	}
+ 
+ 	/*
+ 	 * A leaf block that ends in the hashval that we are interested in
+@@ -1722,6 +1735,7 @@ xfs_da3_node_lookup_int(
+ 			args->blkno = blk->blkno;
+ 		} else {
+ 			ASSERT(0);
++			xfs_da_mark_sick(args);
+ 			return -EFSCORRUPTED;
+ 		}
+ 		if (((retval == -ENOENT) || (retval == -ENOATTR)) &&
+@@ -2286,8 +2300,10 @@ xfs_da3_swap_lastblock(
+ 	error = xfs_bmap_last_before(tp, dp, &lastoff, w);
+ 	if (error)
+ 		return error;
+-	if (XFS_IS_CORRUPT(mp, lastoff == 0))
++	if (XFS_IS_CORRUPT(mp, lastoff == 0)) {
++		xfs_da_mark_sick(args);
+ 		return -EFSCORRUPTED;
++	}
+ 	/*
+ 	 * Read the last block in the btree space.
+ 	 */
+@@ -2336,6 +2352,7 @@ xfs_da3_swap_lastblock(
+ 		if (XFS_IS_CORRUPT(mp,
+ 				   be32_to_cpu(sib_info->forw) != last_blkno ||
+ 				   sib_info->magic != dead_info->magic)) {
++			xfs_da_mark_sick(args);
+ 			error = -EFSCORRUPTED;
+ 			goto done;
+ 		}
+@@ -2356,6 +2373,7 @@ xfs_da3_swap_lastblock(
+ 		if (XFS_IS_CORRUPT(mp,
+ 				   be32_to_cpu(sib_info->back) != last_blkno ||
+ 				   sib_info->magic != dead_info->magic)) {
++			xfs_da_mark_sick(args);
+ 			error = -EFSCORRUPTED;
+ 			goto done;
+ 		}
+@@ -2378,6 +2396,7 @@ xfs_da3_swap_lastblock(
+ 		xfs_da3_node_hdr_from_disk(dp->i_mount, &par_hdr, par_node);
+ 		if (XFS_IS_CORRUPT(mp,
+ 				   level >= 0 && level != par_hdr.level + 1)) {
++			xfs_da_mark_sick(args);
+ 			error = -EFSCORRUPTED;
+ 			goto done;
+ 		}
+@@ -2389,6 +2408,7 @@ xfs_da3_swap_lastblock(
+ 		     entno++)
+ 			continue;
+ 		if (XFS_IS_CORRUPT(mp, entno == par_hdr.count)) {
++			xfs_da_mark_sick(args);
+ 			error = -EFSCORRUPTED;
+ 			goto done;
+ 		}
+@@ -2414,6 +2434,7 @@ xfs_da3_swap_lastblock(
+ 		xfs_trans_brelse(tp, par_buf);
+ 		par_buf = NULL;
+ 		if (XFS_IS_CORRUPT(mp, par_blkno == 0)) {
++			xfs_da_mark_sick(args);
+ 			error = -EFSCORRUPTED;
+ 			goto done;
+ 		}
+@@ -2423,6 +2444,7 @@ xfs_da3_swap_lastblock(
+ 		par_node = par_buf->b_addr;
+ 		xfs_da3_node_hdr_from_disk(dp->i_mount, &par_hdr, par_node);
+ 		if (XFS_IS_CORRUPT(mp, par_hdr.level != level)) {
++			xfs_da_mark_sick(args);
+ 			error = -EFSCORRUPTED;
+ 			goto done;
+ 		}
+@@ -2549,6 +2571,7 @@ xfs_dabuf_map(
+ invalid_mapping:
+ 	/* Caller ok with no mapping. */
+ 	if (XFS_IS_CORRUPT(mp, !(flags & XFS_DABUF_MAP_HOLE_OK))) {
++		xfs_dirattr_mark_sick(dp, whichfork);
+ 		error = -EFSCORRUPTED;
+ 		if (xfs_error_level >= XFS_ERRLEVEL_LOW) {
+ 			xfs_alert(mp, "%s: bno %u inode %llu",
+@@ -2634,6 +2657,8 @@ xfs_da_read_buf(
+ 
+ 	error = xfs_trans_read_buf_map(mp, tp, mp->m_ddev_targp, mapp, nmap, 0,
+ 			&bp, ops);
++	if (xfs_metadata_is_sick(error))
++		xfs_dirattr_mark_sick(dp, whichfork);
+ 	if (error)
+ 		goto out_free;
+ 
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index dd6fcaaea318..e18f248a08a9 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -18,6 +18,7 @@
+ #include "xfs_errortag.h"
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
++#include "xfs_health.h"
+ 
+ struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2, XFS_DIR3_FT_DIR };
+ 
+@@ -608,8 +609,10 @@ xfs_dir2_isblock(
+ 	rval = XFS_FSB_TO_B(args->dp->i_mount, last) == args->geo->blksize;
+ 	if (XFS_IS_CORRUPT(args->dp->i_mount,
+ 			   rval != 0 &&
+-			   args->dp->i_d.di_size != args->geo->blksize))
++			   args->dp->i_d.di_size != args->geo->blksize)) {
++		xfs_da_mark_sick(args);
+ 		return -EFSCORRUPTED;
++	}
+ 	*vp = rval;
+ 	return 0;
+ }
+diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
+index b9eba8213180..f167aff266fb 100644
+--- a/fs/xfs/libxfs/xfs_dir2_data.c
++++ b/fs/xfs/libxfs/xfs_dir2_data.c
+@@ -18,6 +18,7 @@
+ #include "xfs_trans.h"
+ #include "xfs_buf_item.h"
+ #include "xfs_log.h"
++#include "xfs_health.h"
+ 
+ static xfs_failaddr_t xfs_dir2_data_freefind_verify(
+ 		struct xfs_dir2_data_hdr *hdr, struct xfs_dir2_data_free *bf,
+@@ -1170,6 +1171,7 @@ xfs_dir2_data_use_free(
+ corrupt:
+ 	xfs_corruption_error(__func__, XFS_ERRLEVEL_LOW, args->dp->i_mount,
+ 			hdr, sizeof(*hdr), __FILE__, __LINE__, fa);
++	xfs_da_mark_sick(args);
+ 	return -EFSCORRUPTED;
+ }
+ 
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index a131b520aac7..9c2443152fa0 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -19,6 +19,7 @@
+ #include "xfs_trace.h"
+ #include "xfs_trans.h"
+ #include "xfs_buf_item.h"
++#include "xfs_health.h"
+ 
+ /*
+  * Local function declarations.
+@@ -1384,8 +1385,10 @@ xfs_dir2_leaf_removename(
+ 	bestsp = xfs_dir2_leaf_bests_p(ltp);
+ 	if (be16_to_cpu(bestsp[db]) != oldbest) {
+ 		xfs_buf_corruption_error(lbp);
++		xfs_da_mark_sick(args);
+ 		return -EFSCORRUPTED;
+ 	}
 +
-+	return (unsigned char *)ab->buf + ab->sz - XATTR_NAME_MAX - 1;
-+}
-+
- /* A bitmap of space usage computed by walking an attr leaf block. */
- static inline unsigned long *
- xchk_xattr_usedmap(
-diff --git a/fs/xfs/scrub/attr_repair.c b/fs/xfs/scrub/attr_repair.c
-new file mode 100644
-index 000000000000..66d2fe00a439
---- /dev/null
-+++ b/fs/xfs/scrub/attr_repair.c
-@@ -0,0 +1,727 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2019 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_sb.h"
-+#include "xfs_inode.h"
+ 	/*
+ 	 * Mark the former data entry unused.
+ 	 */
+diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+index a0cc5e240306..692db3ed64b2 100644
+--- a/fs/xfs/libxfs/xfs_dir2_node.c
++++ b/fs/xfs/libxfs/xfs_dir2_node.c
+@@ -20,6 +20,7 @@
+ #include "xfs_trans.h"
+ #include "xfs_buf_item.h"
+ #include "xfs_log.h"
++#include "xfs_health.h"
+ 
+ /*
+  * Function declarations.
+@@ -228,6 +229,7 @@ __xfs_dir3_free_read(
+ 	if (fa) {
+ 		xfs_verifier_error(*bpp, -EFSCORRUPTED, fa);
+ 		xfs_trans_brelse(tp, *bpp);
++		xfs_dirattr_mark_sick(dp, XFS_DATA_FORK);
+ 		return -EFSCORRUPTED;
+ 	}
+ 
+@@ -440,6 +442,7 @@ xfs_dir2_leaf_to_node(
+ 	if (be32_to_cpu(ltp->bestcount) >
+ 				(uint)dp->i_d.di_size / args->geo->blksize) {
+ 		xfs_buf_corruption_error(lbp);
++		xfs_da_mark_sick(args);
+ 		return -EFSCORRUPTED;
+ 	}
+ 
+@@ -514,6 +517,7 @@ xfs_dir2_leafn_add(
+ 	 */
+ 	if (index < 0) {
+ 		xfs_buf_corruption_error(bp);
++		xfs_da_mark_sick(args);
+ 		return -EFSCORRUPTED;
+ 	}
+ 
+@@ -733,6 +737,7 @@ xfs_dir2_leafn_lookup_for_addname(
+ 					   cpu_to_be16(NULLDATAOFF))) {
+ 				if (curfdb != newfdb)
+ 					xfs_trans_brelse(tp, curbp);
++				xfs_da_mark_sick(args);
+ 				return -EFSCORRUPTED;
+ 			}
+ 			curfdb = newfdb;
+@@ -801,6 +806,7 @@ xfs_dir2_leafn_lookup_for_entry(
+ 	xfs_dir3_leaf_check(dp, bp);
+ 	if (leafhdr.count <= 0) {
+ 		xfs_buf_corruption_error(bp);
++		xfs_da_mark_sick(args);
+ 		return -EFSCORRUPTED;
+ 	}
+ 
+@@ -1736,6 +1742,7 @@ xfs_dir2_node_add_datablk(
+ 			} else {
+ 				xfs_alert(mp, " ... fblk is NULL");
+ 			}
++			xfs_da_mark_sick(args);
+ 			return -EFSCORRUPTED;
+ 		}
+ 
+diff --git a/fs/xfs/libxfs/xfs_health.h b/fs/xfs/libxfs/xfs_health.h
+index 8e3247a192c1..b7ffcabf5d81 100644
+--- a/fs/xfs/libxfs/xfs_health.h
++++ b/fs/xfs/libxfs/xfs_health.h
+@@ -38,6 +38,7 @@ struct xfs_perag;
+ struct xfs_inode;
+ struct xfs_fsop_geom;
+ struct xfs_btree_cur;
++struct xfs_da_args;
+ 
+ /* Observable health issues for metadata spanning the entire filesystem. */
+ #define XFS_SICK_FS_COUNTERS	(1 << 0)  /* summary counters */
+@@ -141,6 +142,8 @@ void xfs_inode_measure_sickness(struct xfs_inode *ip, unsigned int *sick,
+ void xfs_health_unmount(struct xfs_mount *mp);
+ void xfs_bmap_mark_sick(struct xfs_inode *ip, int whichfork);
+ void xfs_btree_mark_sick(struct xfs_btree_cur *cur);
++void xfs_dirattr_mark_sick(struct xfs_inode *ip, int whichfork);
++void xfs_da_mark_sick(struct xfs_da_args *args);
+ 
+ /* Now some helpers. */
+ 
+diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+index 5ff49523d8ea..0926c18c3e52 100644
+--- a/fs/xfs/xfs_attr_inactive.c
++++ b/fs/xfs/xfs_attr_inactive.c
+@@ -23,6 +23,7 @@
+ #include "xfs_quota.h"
+ #include "xfs_dir2.h"
+ #include "xfs_error.h"
++#include "xfs_health.h"
+ 
+ /*
+  * Look at all the extents for this logical region,
+@@ -210,6 +211,7 @@ xfs_attr3_node_inactive(
+ 	if (level > XFS_DA_NODE_MAXDEPTH) {
+ 		xfs_trans_brelse(*trans, bp);	/* no locks for later trans */
+ 		xfs_buf_corruption_error(bp);
++		xfs_dirattr_mark_sick(dp, XFS_ATTR_FORK);
+ 		return -EFSCORRUPTED;
+ 	}
+ 
+@@ -257,6 +259,7 @@ xfs_attr3_node_inactive(
+ 			error = xfs_attr3_leaf_inactive(trans, dp, child_bp);
+ 			break;
+ 		default:
++			xfs_dirattr_mark_sick(dp, XFS_ATTR_FORK);
+ 			xfs_buf_corruption_error(child_bp);
+ 			xfs_trans_brelse(*trans, child_bp);
+ 			error = -EFSCORRUPTED;
+@@ -350,6 +353,7 @@ xfs_attr3_root_inactive(
+ 		error = xfs_attr3_leaf_inactive(trans, dp, bp);
+ 		break;
+ 	default:
++		xfs_dirattr_mark_sick(dp, XFS_ATTR_FORK);
+ 		error = -EFSCORRUPTED;
+ 		xfs_buf_corruption_error(bp);
+ 		xfs_trans_brelse(*trans, bp);
+diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+index d37743bdf274..c2e79b537de8 100644
+--- a/fs/xfs/xfs_attr_list.c
++++ b/fs/xfs/xfs_attr_list.c
+@@ -21,6 +21,7 @@
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
+ #include "xfs_dir2.h"
++#include "xfs_health.h"
+ 
+ STATIC int
+ xfs_attr_shortform_compare(const void *a, const void *b)
+@@ -131,6 +132,7 @@ xfs_attr_shortform_list(
+ 					     context->dp->i_mount, sfe,
+ 					     sizeof(*sfe));
+ 			kmem_free(sbuf);
++			xfs_dirattr_mark_sick(dp, XFS_ATTR_FORK);
+ 			return -EFSCORRUPTED;
+ 		}
+ 
+@@ -268,8 +270,10 @@ xfs_attr_node_list_lookup(
+ 			return 0;
+ 
+ 		/* We can't point back to the root. */
+-		if (XFS_IS_CORRUPT(mp, cursor->blkno == 0))
++		if (XFS_IS_CORRUPT(mp, cursor->blkno == 0)) {
++			xfs_dirattr_mark_sick(dp, XFS_ATTR_FORK);
+ 			return -EFSCORRUPTED;
++		}
+ 	}
+ 
+ 	if (expected_level != 0)
+@@ -281,6 +285,7 @@ xfs_attr_node_list_lookup(
+ out_corruptbuf:
+ 	xfs_buf_corruption_error(bp);
+ 	xfs_trans_brelse(tp, bp);
++	xfs_dirattr_mark_sick(dp, XFS_ATTR_FORK);
+ 	return -EFSCORRUPTED;
+ }
+ 
+diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
+index 1f09027c55ad..c1b6e8fb72ec 100644
+--- a/fs/xfs/xfs_health.c
++++ b/fs/xfs/xfs_health.c
+@@ -15,6 +15,8 @@
+ #include "xfs_trace.h"
+ #include "xfs_health.h"
+ #include "xfs_btree.h"
 +#include "xfs_da_format.h"
 +#include "xfs_da_btree.h"
-+#include "xfs_dir2.h"
-+#include "xfs_attr.h"
-+#include "xfs_attr_leaf.h"
-+#include "xfs_attr_sf.h"
-+#include "xfs_attr_remote.h"
-+#include "xfs_bmap.h"
-+#include "scrub/xfs_scrub.h"
-+#include "scrub/scrub.h"
-+#include "scrub/common.h"
-+#include "scrub/trace.h"
-+#include "scrub/repair.h"
-+#include "scrub/array.h"
-+#include "scrub/blob.h"
-+#include "scrub/attr.h"
+ 
+ /*
+  * Warn about metadata corruption that we detected but haven't fixed, and
+@@ -517,3 +519,40 @@ xfs_btree_mark_sick(
+ 
+ 	xfs_agno_mark_sick(cur->bc_mp, cur->bc_private.a.agno, mask);
+ }
 +
 +/*
-+ * Extended Attribute Repair
-+ * =========================
-+ *
-+ * We repair extended attributes by reading the attribute fork blocks looking
-+ * for keys and values, then truncate the entire attr fork and reinsert all
-+ * the attributes.  Unfortunately, there's no secondary copy of most extended
-+ * attribute data, which means that if we blow up midway through there's
-+ * little we can do.
++ * Record observations of dir/attr btree corruption with the health tracking
++ * system.
 + */
-+
-+struct xrep_xattr_key {
-+	xblob_cookie		value_cookie;
-+	xblob_cookie		name_cookie;
-+	uint			hash;
-+	int			flags;
-+	uint32_t		valuelen;
-+	uint16_t		namelen;
-+} __packed;
-+
-+struct xrep_xattr {
-+	struct xfs_scrub	*sc;
-+	struct xfbma		*xattr_records;
-+	struct xblob		*xattr_blobs;
-+
-+	/* Size of the largest attribute value we're trying to salvage. */
-+	size_t			max_valuelen;
-+};
-+
-+/*
-+ * Decide if we want to salvage this attribute.  We don't bother with
-+ * incomplete or oversized keys or values.
-+ */
-+STATIC int
-+xrep_xattr_want_salvage(
-+	int			flags,
-+	const void		*name,
-+	int			namelen,
-+	int			valuelen)
++void
++xfs_dirattr_mark_sick(
++	struct xfs_inode	*ip,
++	int			whichfork)
 +{
-+	if (flags & XFS_ATTR_INCOMPLETE)
-+		return false;
-+	if (namelen > XATTR_NAME_MAX || namelen <= 0)
-+		return false;
-+	if (valuelen > XATTR_SIZE_MAX || valuelen < 0)
-+		return false;
-+	if (!xfs_attr_namecheck(name, namelen))
-+		return false;
-+	return true;
-+}
++	unsigned int		mask;
 +
-+/* Allocate an in-core record to hold xattrs while we rebuild the xattr data. */
-+STATIC int
-+xrep_xattr_salvage_key(
-+	struct xrep_xattr	*rx,
-+	int			flags,
-+	unsigned char		*name,
-+	int			namelen,
-+	unsigned char		*value,
-+	int			valuelen)
-+{
-+	struct xrep_xattr_key	key = {
-+		.valuelen	= valuelen,
-+		.flags		= flags & (XFS_ATTR_ROOT | XFS_ATTR_SECURE),
-+		.namelen	= namelen,
-+	};
-+	int			error = 0;
-+
-+	if (xchk_should_terminate(rx->sc, &error))
-+		return error;
-+
-+	error = xblob_put(rx->xattr_blobs, &key.name_cookie, name, namelen);
-+	if (error)
-+		return error;
-+	error = xblob_put(rx->xattr_blobs, &key.value_cookie, value, valuelen);
-+	if (error)
-+		return error;
-+
-+	key.hash = xfs_da_hashname(name, namelen);
-+
-+	error = xfbma_append(rx->xattr_records, &key);
-+	if (error)
-+		return error;
-+
-+	rx->max_valuelen = max_t(size_t, rx->max_valuelen, valuelen);
-+	return 0;
-+}
-+
-+/*
-+ * Record a shortform extended attribute key & value for later reinsertion
-+ * into the inode.
-+ */
-+STATIC int
-+xrep_xattr_salvage_sf_attr(
-+	struct xrep_xattr		*rx,
-+	struct xfs_attr_sf_entry	*sfe)
-+{
-+	unsigned char			*value = &sfe->nameval[sfe->namelen];
-+
-+	if (!xrep_xattr_want_salvage(sfe->flags, sfe->nameval, sfe->namelen,
-+			sfe->valuelen))
-+		return 0;
-+
-+	return xrep_xattr_salvage_key(rx, sfe->flags, sfe->nameval,
-+			sfe->namelen, value, sfe->valuelen);
-+}
-+
-+/*
-+ * Record a local format extended attribute key & value for later reinsertion
-+ * into the inode.
-+ */
-+STATIC int
-+xrep_xattr_salvage_local_attr(
-+	struct xrep_xattr		*rx,
-+	struct xfs_attr_leaf_entry	*ent,
-+	unsigned int			nameidx,
-+	const char			*buf_end,
-+	struct xfs_attr_leaf_name_local	*lentry)
-+{
-+	unsigned char			*value;
-+	unsigned long			*usedmap = xchk_xattr_usedmap(rx->sc);
-+	unsigned int			valuelen;
-+	unsigned int			namesize;
-+
-+	/*
-+	 * Decode the leaf local entry format.  If something seems wrong, we
-+	 * junk the attribute.
-+	 */
-+	valuelen = be16_to_cpu(lentry->valuelen);
-+	namesize = xfs_attr_leaf_entsize_local(lentry->namelen, valuelen);
-+	if ((char *)lentry + namesize > buf_end)
-+		return 0;
-+	if (!xrep_xattr_want_salvage(ent->flags, lentry->nameval,
-+			lentry->namelen, valuelen))
-+		return 0;
-+	if (!xchk_xattr_set_map(rx->sc, usedmap, nameidx, namesize))
-+		return 0;
-+
-+	/* Try to save this attribute. */
-+	value = &lentry->nameval[lentry->namelen];
-+	return xrep_xattr_salvage_key(rx, ent->flags, lentry->nameval,
-+			lentry->namelen, value, valuelen);
-+}
-+
-+/*
-+ * Record a remote format extended attribute key & value for later reinsertion
-+ * into the inode.
-+ */
-+STATIC int
-+xrep_xattr_salvage_remote_attr(
-+	struct xrep_xattr		*rx,
-+	struct xfs_attr_leaf_entry	*ent,
-+	unsigned int			nameidx,
-+	const char			*buf_end,
-+	struct xfs_attr_leaf_name_remote *rentry,
-+	unsigned int			ent_idx,
-+	struct xfs_buf			*leaf_bp)
-+{
-+	struct xfs_da_args		args = {
-+		.trans	= rx->sc->tp,
-+		.dp	= rx->sc->ip,
-+		.index	= ent_idx,
-+		.geo	= rx->sc->mp->m_attr_geo,
-+	};
-+	unsigned long			*usedmap = xchk_xattr_usedmap(rx->sc);
-+	unsigned char			*value;
-+	unsigned int			valuelen;
-+	unsigned int			namesize;
-+	int				error;
-+
-+	/*
-+	 * Decode the leaf remote entry format.  If something seems wrong, we
-+	 * junk the attribute.  Note that we should never find a zero-length
-+	 * remote attribute value.
-+	 */
-+	valuelen = be32_to_cpu(rentry->valuelen);
-+	namesize = xfs_attr_leaf_entsize_remote(rentry->namelen);
-+	if ((char *)rentry + namesize > buf_end)
-+		return 0;
-+	if (valuelen == 0 ||
-+	    !xrep_xattr_want_salvage(ent->flags, rentry->name, rentry->namelen,
-+			valuelen))
-+		return 0;
-+	if (!xchk_xattr_set_map(rx->sc, usedmap, nameidx, namesize))
-+		return 0;
-+
-+	/*
-+	 * Find somewhere to save this value.  We can't use the xchk_xattr_buf
-+	 * here because we're still using the memory for the attr block bitmap.
-+	 */
-+	value = kmem_alloc_large(valuelen, KM_MAYFAIL);
-+	if (!value)
-+		return -ENOMEM;
-+
-+	/* Look up the remote value and stash it for reconstruction. */
-+	args.valuelen = valuelen;
-+	args.namelen = rentry->namelen;
-+	args.name = rentry->name;
-+	args.value = value;
-+	error = xfs_attr3_leaf_getvalue(leaf_bp, &args);
-+	if (error || args.rmtblkno == 0)
-+		goto err_free;
-+
-+	error = xfs_attr_rmtval_get(&args);
-+	if (error)
-+		goto err_free;
-+
-+	/* Try to save this attribute. */
-+	error = xrep_xattr_salvage_key(rx, ent->flags, rentry->name,
-+			rentry->namelen, value, valuelen);
-+err_free:
-+	/* remote value was garbage, junk it */
-+	if (error == -EFSBADCRC || error == -EFSCORRUPTED)
-+		error = 0;
-+	kmem_free(value);
-+	return error;
-+}
-+
-+/* Extract every xattr key that we can from this attr fork block. */
-+STATIC int
-+xrep_xattr_recover_leaf(
-+	struct xrep_xattr		*rx,
-+	struct xfs_buf			*bp)
-+{
-+	struct xfs_attr3_icleaf_hdr	leafhdr;
-+	struct xfs_scrub		*sc = rx->sc;
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_attr_leafblock	*leaf;
-+	unsigned long			*usedmap = xchk_xattr_usedmap(sc);
-+	struct xfs_attr_leaf_name_local	*lentry;
-+	struct xfs_attr_leaf_name_remote *rentry;
-+	struct xfs_attr_leaf_entry	*ent;
-+	struct xfs_attr_leaf_entry	*entries;
-+	char				*buf_end;
-+	size_t				off;
-+	unsigned int			nameidx;
-+	unsigned int			hdrsize;
-+	int				i;
-+	int				error = 0;
-+
-+	bitmap_zero(usedmap, mp->m_attr_geo->blksize);
-+
-+	/* Check the leaf header */
-+	leaf = bp->b_addr;
-+	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
-+	hdrsize = xfs_attr3_leaf_hdr_size(leaf);
-+	xchk_xattr_set_map(sc, usedmap, 0, hdrsize);
-+	entries = xfs_attr3_leaf_entryp(leaf);
-+
-+	buf_end = (char *)bp->b_addr + mp->m_attr_geo->blksize;
-+	for (i = 0, ent = entries; i < leafhdr.count; ent++, i++) {
-+		if (xchk_should_terminate(sc, &error))
-+			break;
-+
-+		/* Skip key if it conflicts with something else? */
-+		off = (char *)ent - (char *)leaf;
-+		if (!xchk_xattr_set_map(sc, usedmap, off,
-+				sizeof(xfs_attr_leaf_entry_t)))
-+			continue;
-+
-+		/* Check the name information. */
-+		nameidx = be16_to_cpu(ent->nameidx);
-+		if (nameidx < leafhdr.firstused ||
-+		    nameidx >= mp->m_attr_geo->blksize)
-+			continue;
-+
-+		if (ent->flags & XFS_ATTR_LOCAL) {
-+			lentry = xfs_attr3_leaf_name_local(leaf, i);
-+			error = xrep_xattr_salvage_local_attr(rx, ent, nameidx,
-+					buf_end, lentry);
-+		} else {
-+			rentry = xfs_attr3_leaf_name_remote(leaf, i);
-+			error = xrep_xattr_salvage_remote_attr(rx, ent, nameidx,
-+					buf_end, rentry, i, bp);
-+		}
-+		if (error)
-+			break;
-+	}
-+
-+	return error;
-+}
-+
-+/* Try to recover shortform attrs. */
-+STATIC int
-+xrep_xattr_recover_sf(
-+	struct xrep_xattr		*rx)
-+{
-+	struct xfs_attr_shortform	*sf;
-+	struct xfs_attr_sf_entry	*sfe;
-+	struct xfs_attr_sf_entry	*next;
-+	struct xfs_ifork		*ifp;
-+	unsigned char			*end;
-+	int				i;
-+	int				error;
-+
-+	ifp = XFS_IFORK_PTR(rx->sc->ip, XFS_ATTR_FORK);
-+	sf = (struct xfs_attr_shortform *)rx->sc->ip->i_afp->if_u1.if_data;
-+	end = (unsigned char *)ifp->if_u1.if_data + ifp->if_bytes;
-+
-+	for (i = 0, sfe = &sf->list[0]; i < sf->hdr.count; i++) {
-+		if (xchk_should_terminate(rx->sc, &error))
-+			break;
-+
-+		next = XFS_ATTR_SF_NEXTENTRY(sfe);
-+		if ((unsigned char *)next > end)
-+			break;
-+
-+		/* Ok, let's save this key/value. */
-+		error = xrep_xattr_salvage_sf_attr(rx, sfe);
-+		if (error)
-+			return error;
-+
-+		sfe = next;
-+	}
-+
-+	return 0;
-+}
-+
-+/* Extract as many attribute keys and values as we can. */
-+STATIC int
-+xrep_xattr_recover(
-+	struct xrep_xattr	*rx)
-+{
-+	struct xfs_iext_cursor	icur;
-+	struct xfs_bmbt_irec	got;
-+	struct xfs_scrub	*sc = rx->sc;
-+	struct xfs_ifork	*ifp;
-+	struct xfs_da_blkinfo	*info;
-+	struct xfs_buf		*bp;
-+	struct xfs_da_geometry	*geo = sc->mp->m_attr_geo;
-+	xfs_dablk_t		dabno;
-+	int			error = 0;
-+
-+	if (sc->ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL)
-+		return xrep_xattr_recover_sf(rx);
-+
-+	/*
-+	 * Set the xchk_attr_buf to be as large as we're going to need it to be
-+	 * to compute space usage bitmaps for each attr block we try to
-+	 * salvage.  We don't salvage attrs whose name and value areas are
-+	 * crosslinked with anything else.
-+	 */
-+	error = xchk_setup_xattr_buf(sc, 0, KM_MAYFAIL);
-+	if (error == -ENOMEM)
-+		return -EDEADLOCK;
-+	if (error)
-+		return error;
-+
-+	/* Iterate each attr block in the attr fork. */
-+	ifp = XFS_IFORK_PTR(sc->ip, XFS_ATTR_FORK);
-+	for_each_xfs_iext(ifp, &icur, &got) {
-+		xfs_trim_extent(&got, 0, (xfs_dablk_t)-1U);
-+		if (got.br_blockcount == 0)
-+			continue;
-+		for (dabno = round_up(got.br_startoff, geo->fsbcount);
-+		     dabno < got.br_startoff + got.br_blockcount;
-+		     dabno += geo->fsbcount) {
-+			if (xchk_should_terminate(sc, &error))
-+				return error;
-+
-+			/*
-+			 * Try to read buffer.  We invalidate them in the next
-+			 * step so we don't bother to set a buffer type or
-+			 * ops.
-+			 */
-+			error = xfs_da_read_buf(sc->tp, sc->ip, dabno, -1, &bp,
-+					XFS_ATTR_FORK, NULL);
-+			if (error || !bp)
-+				continue;
-+
-+			/* Screen out non-leaves & other garbage. */
-+			info = bp->b_addr;
-+			if (info->magic != cpu_to_be16(XFS_ATTR3_LEAF_MAGIC) ||
-+			    xfs_attr3_leaf_buf_ops.verify_struct(bp) != NULL)
-+				continue;
-+
-+			error = xrep_xattr_recover_leaf(rx, bp);
-+			if (error)
-+				return error;
-+		}
-+	}
-+
-+	return error;
-+}
-+
-+/* Reset a shortform attr fork. */
-+static void
-+xrep_xattr_reset_attr_local(
-+	struct xfs_scrub	*sc,
-+	uint64_t		nr_attrs)
-+{
-+	struct xfs_attr_sf_hdr	*hdr;
-+	struct xfs_ifork	*ifp;
-+
-+	/*
-+	 * If the data fork isn't in btree format (or there are no attrs) then
-+	 * all we need to do is zap the attr fork.
-+	 */
-+	if (nr_attrs == 0 || sc->ip->i_d.di_format != XFS_DINODE_FMT_BTREE) {
-+		xfs_attr_fork_remove(sc->ip, sc->tp);
++	switch (whichfork) {
++	case XFS_DATA_FORK:
++		mask = XFS_SICK_INO_DIR;
++		break;
++	case XFS_ATTR_FORK:
++		mask = XFS_SICK_INO_XATTR;
++		break;
++	default:
++		ASSERT(0);
 +		return;
 +	}
 +
-+	/*
-+	 * If the data fork is in btree format we can't change di_forkoff
-+	 * because we could run afoul of the rule that forks aren't supposed to
-+	 * be in btree format if there's enough space in the fork that we could
-+	 * have extents format.  Instead, reinitialize the shortform fork to
-+	 * have zero attributes.
-+	 */
-+	ifp = XFS_IFORK_PTR(sc->ip, XFS_ATTR_FORK);
-+	xfs_idata_realloc(sc->ip, (int)sizeof(*hdr) - ifp->if_bytes,
-+			XFS_ATTR_FORK);
-+	hdr = (struct xfs_attr_sf_hdr *)ifp->if_u1.if_data;
-+	hdr->count = 0;
-+	hdr->totsize = cpu_to_be16(sizeof(*hdr));
-+	xfs_trans_log_inode(sc->tp, sc->ip, XFS_ILOG_CORE | XFS_ILOG_ADATA);
-+}
-+
-+/* Free all the attribute fork blocks and delete the fork. */
-+STATIC int
-+xrep_xattr_reset_fork(
-+	struct xfs_scrub	*sc,
-+	uint64_t		nr_attrs)
-+{
-+	struct xfs_iext_cursor	icur;
-+	struct xfs_bmbt_irec	got;
-+	struct xfs_ifork	*ifp;
-+	struct xfs_buf		*bp;
-+	struct xfs_da_geometry	*geo = sc->mp->m_attr_geo;
-+	xfs_dablk_t		dabno;
-+	int			error;
-+
-+	xfs_trans_ijoin(sc->tp, sc->ip, 0);
-+
-+	if (sc->ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
-+		xrep_xattr_reset_attr_local(sc, nr_attrs);
-+		return 0;
-+	}
-+
-+	/* Invalidate each attr block in the attr fork. */
-+	ifp = XFS_IFORK_PTR(sc->ip, XFS_ATTR_FORK);
-+	for_each_xfs_iext(ifp, &icur, &got) {
-+		xfs_trim_extent(&got, 0, (xfs_dablk_t)-1U);
-+		if (got.br_blockcount == 0)
-+			continue;
-+		for (dabno = round_up(got.br_startoff, geo->fsbcount);
-+		     dabno < got.br_startoff + got.br_blockcount;
-+		     dabno += geo->fsbcount) {
-+			error = xfs_da_get_buf(sc->tp, sc->ip, dabno, &bp,
-+					XFS_ATTR_FORK);
-+			if (error || !bp)
-+				continue;
-+			xfs_trans_binval(sc->tp, bp);
-+			error = xfs_trans_roll_inode(&sc->tp, sc->ip);
-+			if (error)
-+				return error;
-+		}
-+	}
-+
-+	/* Now free all the blocks. */
-+	error = xfs_bunmapi_range(&sc->tp, sc->ip, XFS_ATTR_FORK, 0, -1ULL,
-+			XFS_BMAPI_NODISCARD);
-+	if (error)
-+		return error;
-+
-+	/* Log the inode core to keep it moving forward in the log. */
-+	xfs_trans_log_inode(sc->tp, sc->ip, XFS_ILOG_CORE);
-+
-+	/* Reset the attribute fork - this also destroys the in-core fork */
-+	xfs_attr_fork_remove(sc->ip, sc->tp);
-+	return 0;
++	xfs_inode_mark_sick(ip, mask);
 +}
 +
 +/*
-+ * Compare two xattr keys.  ATTR_SECURE keys come before ATTR_ROOT and
-+ * ATTR_ROOT keys come before user attrs.  Otherwise sort in hash order.
++ * Record observations of dir/attr btree corruption with the health tracking
++ * system.
 + */
-+static int
-+xrep_xattr_key_cmp(
-+	const void			*a,
-+	const void			*b)
++void
++xfs_da_mark_sick(
++	struct xfs_da_args	*args)
 +{
-+	const struct xrep_xattr_key	*ap = a;
-+	const struct xrep_xattr_key	*bp = b;
-+
-+	if (ap->flags > bp->flags)
-+		return 1;
-+	else if (ap->flags < bp->flags)
-+		return -1;
-+
-+	if (ap->hash > bp->hash)
-+		return 1;
-+	else if (ap->hash < bp->hash)
-+		return -1;
-+	return 0;
++	xfs_dirattr_mark_sick(args->dp, args->whichfork);
 +}
-+
-+/*
-+ * Find all the extended attributes for this inode by scraping them out of the
-+ * attribute key blocks by hand.  The caller must clean up the lists if
-+ * anything goes wrong.
-+ */
-+STATIC int
-+xrep_xattr_find_attributes(
-+	struct xfs_scrub	*sc,
-+	struct xfbma		*xattr_records,
-+	struct xblob		*xattr_blobs)
-+{
-+	struct xrep_xattr	rx = {
-+		.sc		= sc,
-+		.xattr_records	= xattr_records,
-+		.xattr_blobs	= xattr_blobs,
-+	};
-+	struct xfs_ifork	*ifp;
-+	int			error;
-+
-+	error = xrep_ino_dqattach(sc);
-+	if (error)
-+		return error;
-+
-+	/* Extent map should be loaded. */
-+	ifp = XFS_IFORK_PTR(sc->ip, XFS_ATTR_FORK);
-+	if (XFS_IFORK_FORMAT(sc->ip, XFS_ATTR_FORK) != XFS_DINODE_FMT_LOCAL &&
-+	    !(ifp->if_flags & XFS_IFEXTENTS)) {
-+		error = xfs_iread_extents(sc->tp, sc->ip, XFS_ATTR_FORK);
-+		if (error)
-+			return error;
-+	}
-+
-+	/* Read every attr key and value and record them in memory. */
-+	error = xrep_xattr_recover(&rx);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * Reset the xchk_attr_buf to be as large as we're going to need it to
-+	 * be to store each attribute name and value as we re-add them to the
-+	 * file.  We must preallocate the memory here because once we start
-+	 * to modify the filesystem we cannot afford an ENOMEM.
-+	 */
-+	error = xchk_setup_xattr_buf(sc, rx.max_valuelen, KM_MAYFAIL);
-+	if (error == -ENOMEM)
-+		return -EDEADLOCK;
-+	if (error)
-+		return error;
-+
-+	return 0;
-+}
-+
-+struct xrep_add_attr {
-+	struct xfs_scrub	*sc;
-+	struct xfbma		*xattr_records;
-+	struct xblob		*xattr_blobs;
-+};
-+
-+/* Insert one xattr key/value. */
-+STATIC int
-+xrep_xattr_insert_rec(
-+	const void			*item,
-+	void				*priv)
-+{
-+	const struct xrep_xattr_key	*key = item;
-+	struct xrep_add_attr		*x = priv;
-+	unsigned char			*name = xchk_xattr_namebuf(x->sc);
-+	unsigned char			*value = xchk_xattr_valuebuf(x->sc);
-+	int				error;
-+
-+	/*
-+	 * The attribute name is stored near the end of the in-core buffer,
-+	 * though we reserve one more byte to ensure null termination.
-+	 */
-+	name[XATTR_NAME_MAX] = 0;
-+
-+	error = xblob_get(x->xattr_blobs, key->name_cookie, name, key->namelen);
-+	if (error)
-+		return error;
-+
-+	error = xblob_free(x->xattr_blobs, key->name_cookie);
-+	if (error)
-+		return error;
-+
-+	error = xblob_get(x->xattr_blobs, key->value_cookie, value,
-+			key->valuelen);
-+	if (error)
-+		return error;
-+
-+	error = xblob_free(x->xattr_blobs, key->value_cookie);
-+	if (error)
-+		return error;
-+
-+	name[key->namelen] = 0;
-+	value[key->valuelen] = 0;
-+
-+	return xfs_attr_set(x->sc->ip, name, value, key->valuelen,
-+			XFS_ATTR_NSP_ONDISK_TO_ARGS(key->flags));
-+}
-+
-+/*
-+ * Insert all the attributes that we collected.
-+ *
-+ * Commit the repair transaction and drop the ilock because the attribute
-+ * setting code needs to be able to allocate special transactions and take the
-+ * ilock on its own.  Some day we'll have deferred attribute setting, at which
-+ * point we'll be able to use that to replace the attributes atomically and
-+ * safely.
-+ */
-+STATIC int
-+xrep_xattr_rebuild_tree(
-+	struct xfs_scrub	*sc,
-+	struct xfbma		*xattr_records,
-+	struct xblob		*xattr_blobs)
-+{
-+	struct xrep_add_attr	x = {
-+		.sc		= sc,
-+		.xattr_records	= xattr_records,
-+		.xattr_blobs	= xattr_blobs,
-+	};
-+	int			error;
-+
-+	error = xfs_trans_commit(sc->tp);
-+	sc->tp = NULL;
-+	if (error)
-+		return error;
-+
-+	xfs_iunlock(sc->ip, XFS_ILOCK_EXCL);
-+	sc->ilock_flags &= ~XFS_ILOCK_EXCL;
-+
-+	/*
-+	 * Sort the attribute keys by hash to minimize dabtree splits when we
-+	 * rebuild the extended attribute information.
-+	 */
-+	error = xfbma_sort(xattr_records, xrep_xattr_key_cmp);
-+	if (error)
-+		return error;
-+
-+	/* Re-add every attr to the file. */
-+	return xfbma_iter_del(xattr_records, xrep_xattr_insert_rec, &x);
-+}
-+
-+/*
-+ * Repair the extended attribute metadata.
-+ *
-+ * XXX: Remote attribute value buffers encompass the entire (up to 64k) buffer.
-+ * The buffer cache in XFS can't handle aliased multiblock buffers, so this
-+ * might misbehave if the attr fork is crosslinked with other filesystem
-+ * metadata.
-+ */
-+int
-+xrep_xattr(
-+	struct xfs_scrub	*sc)
-+{
-+	struct xfbma		*xattr_records;
-+	struct xblob		*xattr_blobs;
-+	int			error;
-+
-+	if (!xfs_inode_hasattr(sc->ip))
-+		return -ENOENT;
-+
-+	/* Set up some storage */
-+	xattr_records = xfbma_init(sizeof(struct xrep_xattr_key));
-+	if (IS_ERR(xattr_records))
-+		return PTR_ERR(xattr_records);
-+	xattr_blobs = xblob_init();
-+	if (IS_ERR(xattr_blobs)) {
-+		error = PTR_ERR(xattr_blobs);
-+		goto out_arr;
-+	}
-+
-+	/* Collect extended attributes by parsing raw blocks. */
-+	error = xrep_xattr_find_attributes(sc, xattr_records, xattr_blobs);
-+	if (error)
-+		goto out;
-+
-+	/*
-+	 * Invalidate and truncate all attribute fork extents.  This is the
-+	 * point at which we are no longer able to bail out gracefully.
-+	 * We commit the transaction here because xfs_attr_set allocates its
-+	 * own transactions.
-+	 */
-+	error = xrep_xattr_reset_fork(sc, xfbma_length(xattr_records));
-+	if (error)
-+		goto out;
-+
-+	/* Now rebuild the attribute information. */
-+	error = xrep_xattr_rebuild_tree(sc, xattr_records, xattr_blobs);
-+out:
-+	xblob_destroy(xattr_blobs);
-+out_arr:
-+	xfbma_destroy(xattr_records);
-+	return error;
-+}
-diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index 4ff872b7b8cd..4282e249be14 100644
---- a/fs/xfs/scrub/repair.h
-+++ b/fs/xfs/scrub/repair.h
-@@ -75,6 +75,7 @@ int xrep_inode(struct xfs_scrub *sc);
- int xrep_bmap_data(struct xfs_scrub *sc);
- int xrep_bmap_attr(struct xfs_scrub *sc);
- int xrep_symlink(struct xfs_scrub *sc);
-+int xrep_xattr(struct xfs_scrub *sc);
- 
- struct xrep_newbt_resv {
- 	/* Link to list of extents that we've reserved. */
-@@ -177,6 +178,7 @@ xrep_reset_perag_resv(
- #define xrep_bmap_data			xrep_notsupported
- #define xrep_bmap_attr			xrep_notsupported
- #define xrep_symlink			xrep_notsupported
-+#define xrep_xattr			xrep_notsupported
- 
- #endif /* CONFIG_XFS_ONLINE_REPAIR */
- 
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index ff06bc5031ae..86493e6cc712 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -291,7 +291,7 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
- 		.type	= ST_INODE,
- 		.setup	= xchk_setup_xattr,
- 		.scrub	= xchk_xattr,
--		.repair	= xrep_notsupported,
-+		.repair	= xrep_xattr,
- 	},
- 	[XFS_SCRUB_TYPE_SYMLINK] = {	/* symbolic link */
- 		.type	= ST_INODE,
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 16ed1d3e1404..99c4a3021284 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -170,4 +170,7 @@ struct xchk_fscounters {
- 	unsigned long long	icount_max;
- };
- 
-+bool xchk_xattr_set_map(struct xfs_scrub *sc, unsigned long *map,
-+		unsigned int start, unsigned int len);
-+
- #endif	/* __XFS_SCRUB_SCRUB_H__ */
 
