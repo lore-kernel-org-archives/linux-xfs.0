@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A1FCC2D0CE
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:21:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69493C2D0CE
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:21:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 32DC320718
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:21:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3BF86206E4
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:21:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="c0fLfpqL"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="KSt6srql"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727159AbgAABVO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Dec 2019 20:21:14 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:59558 "EHLO
+        id S1727163AbgAABVT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Dec 2019 20:21:19 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:59598 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727132AbgAABVO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:21:14 -0500
+        with ESMTP id S1727132AbgAABVT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:21:19 -0500
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0011LCet116223;
-        Wed, 1 Jan 2020 01:21:12 GMT
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0011KR0u115860;
+        Wed, 1 Jan 2020 01:21:17 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=DfLzYe+ZJg79fUZjeJz8m53/FM9GM9N88IGyETV2wrM=;
- b=c0fLfpqL5oVrNoJlPPlM/bpQ/tCG3/8p4prt3mLn2kFVHktyugdU8XTVDCHpXsKxNv1s
- DQssGTPa8jpFa1cdfJpcQ0+GGO4l/urgbUjYKzq+l9Qzo8tbbasVgyTy7C/H12vUIkKj
- det4SjgHkm6p4m/+tohBC/jdrFsAhLJn/OPwpONeUoNrO6NPQ52eDqvoI219q8MjyKvl
- gNAo4Vrhht+FBJ6s7RkeWtNlIuXmtZ9oRh4CGGLSqIckBD8Z8fthuaRX5Y7+CMRXNJhw
- eMFPdF3fHbQfQOWWRByCtWRqlzAxtq5k/YTeWWZtUEBzIAuZdiwTmz6Wsj7FAAGgwn2W KA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2x5xftk2s9-1
+ bh=EU1fv0NHuGomy0PkH+Ql1ABZvYEyeIguXxoao66n240=;
+ b=KSt6srql2MR70zaI5D0seLJljr4NMUy3KbAEMjR/z6hiKj0oGxVwYwEJh5QpQe9h3D4X
+ 59f6DFq7tTCB4ZB2wkip/3jYhzxj54/qarIWNRlMaIFri7QDXonNSDwf1Cfg1FIj3p8I
+ /ONof3fWVHV738+RDgWb+zgqH0AllN0j+dvmkFGoateSBgA4keRG6LfUXQy3SKJ9lpGJ
+ BMUkO0ppmdZb6nmen8EqDc9hI+hrXwNMhN/uG0h2ZHn5J5+4JO2xl0X+3GLk1ZgtI+Xr
+ wnvisO0OkacaV72Ho42mQVxxFZ/mCVXeqnPYT29z0/xc9L76O7VGm4HDtUk9MPDtHNHA AA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2x5xftk2sa-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 01 Jan 2020 01:21:12 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0011ISK7057588;
-        Wed, 1 Jan 2020 01:21:11 GMT
+        Wed, 01 Jan 2020 01:21:17 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0011JCtj007175;
+        Wed, 1 Jan 2020 01:21:16 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 2x7medfj99-1
+        by userp3020.oracle.com with ESMTP id 2x8bsrg7a3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 01 Jan 2020 01:21:11 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0011L9Hx003529;
-        Wed, 1 Jan 2020 01:21:10 GMT
+        Wed, 01 Jan 2020 01:21:16 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0011LGNv003538;
+        Wed, 1 Jan 2020 01:21:16 GMT
 Received: from localhost (/10.159.150.156)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 31 Dec 2019 17:21:09 -0800
-Subject: [PATCH 4/6] xfs_repair: use libxfs function to calculate root inode
- location
+        with ESMTP ; Tue, 31 Dec 2019 17:21:15 -0800
+Subject: [PATCH 5/6] xfs_repair: check plausibility of root dir pointer
+ before trashing it
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org, alex@zadara.com
-Date:   Tue, 31 Dec 2019 17:21:07 -0800
-Message-ID: <157784166699.1371066.10740013955020361949.stgit@magnolia>
+Date:   Tue, 31 Dec 2019 17:21:13 -0800
+Message-ID: <157784167320.1371066.16235730726128503766.stgit@magnolia>
 In-Reply-To: <157784164200.1371066.15490825981810186191.stgit@magnolia>
 References: <157784164200.1371066.15490825981810186191.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -81,142 +81,79 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Use libxfs_ialloc_calc_rootino to compute the location of the root
-inode, and improve the function comments while we're at it.
+If sb_rootino doesn't point to where we think mkfs should have allocated
+the root directory, check to see if the alleged root directory actually
+looks like a root directory.  If so, we'll let it live because someone
+could have changed sunit since formatting time, and that changes the
+root directory inode estimate.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/globals.c    |    5 ---
- repair/globals.h    |    5 ---
- repair/xfs_repair.c |   78 +++++++--------------------------------------------
- 3 files changed, 11 insertions(+), 77 deletions(-)
+ repair/xfs_repair.c |   45 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 45 insertions(+)
 
 
-diff --git a/repair/globals.c b/repair/globals.c
-index 8a60e706..299bacd1 100644
---- a/repair/globals.c
-+++ b/repair/globals.c
-@@ -72,11 +72,6 @@ int	lost_uquotino;
- int	lost_gquotino;
- int	lost_pquotino;
- 
--xfs_agino_t	first_prealloc_ino;
--xfs_agblock_t	bnobt_root;
--xfs_agblock_t	bcntbt_root;
--xfs_agblock_t	inobt_root;
--
- /* configuration vars -- fs geometry dependent */
- 
- int		inodes_per_block;
-diff --git a/repair/globals.h b/repair/globals.h
-index 2ed5c894..953e3dfb 100644
---- a/repair/globals.h
-+++ b/repair/globals.h
-@@ -113,11 +113,6 @@ extern int		lost_uquotino;
- extern int		lost_gquotino;
- extern int		lost_pquotino;
- 
--extern xfs_agino_t	first_prealloc_ino;
--extern xfs_agblock_t	bnobt_root;
--extern xfs_agblock_t	bcntbt_root;
--extern xfs_agblock_t	inobt_root;
--
- /* configuration vars -- fs geometry dependent */
- 
- extern int		inodes_per_block;
 diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 94673750..53b04dae 100644
+index 53b04dae..372616c4 100644
 --- a/repair/xfs_repair.c
 +++ b/repair/xfs_repair.c
-@@ -426,79 +426,23 @@ _("would reset superblock %s inode pointer to %"PRIu64"\n"),
+@@ -426,6 +426,37 @@ _("would reset superblock %s inode pointer to %"PRIu64"\n"),
  	*ino = expected_ino;
  }
  
-+/*
-+ * Make sure that the first 3 inodes in the filesystem are the root directory,
-+ * the realtime bitmap, and the realtime summary, in that order.
-+ */
- static void
--calc_mkfs(xfs_mount_t *mp)
-+calc_mkfs(
++/* Does the root directory inode look like a plausible root directory? */
++static bool
++has_plausible_rootdir(
 +	struct xfs_mount	*mp)
- {
--	xfs_agblock_t	fino_bno;
--	int		do_inoalign;
--
--	do_inoalign = M_IGEO(mp)->ialloc_align;
--
--	/*
--	 * Pre-calculate the geometry of ag 0. We know what it looks like
--	 * because we know what mkfs does: 2 allocation btree roots (by block
--	 * and by size), the inode allocation btree root, the free inode
--	 * allocation btree root (if enabled) and some number of blocks to
--	 * prefill the agfl.
--	 *
--	 * Because the current shape of the btrees may differ from the current
--	 * shape, we open code the mkfs freelist block count here. mkfs creates
--	 * single level trees, so the calculation is pertty straight forward for
--	 * the trees that use the AGFL.
--	 */
--	bnobt_root = howmany(4 * mp->m_sb.sb_sectsize, mp->m_sb.sb_blocksize);
--	bcntbt_root = bnobt_root + 1;
--	inobt_root = bnobt_root + 2;
--	fino_bno = inobt_root + (2 * min(2, mp->m_ag_maxlevels)) + 1;
--	if (xfs_sb_version_hasfinobt(&mp->m_sb))
--		fino_bno++;
--	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
--		fino_bno += min(2, mp->m_rmap_maxlevels); /* agfl blocks */
--		fino_bno++;
--	}
--	if (xfs_sb_version_hasreflink(&mp->m_sb))
--		fino_bno++;
-+	xfs_ino_t		rootino;
++{
++	struct xfs_inode	*ip;
++	xfs_ino_t		ino;
++	int			error;
++	bool			ret = false;
++
++	error = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &ip,
++			&xfs_default_ifork_ops);
++	if (error)
++		goto out;
++	if (!S_ISDIR(VFS_I(ip)->i_mode))
++		goto out_rele;
++
++	error = -libxfs_dir_lookup(NULL, ip, &xfs_name_dotdot, &ino, NULL);
++	if (error)
++		goto out_rele;
++
++	/* The root directory '..' entry points to the directory. */
++	if (ino == mp->m_sb.sb_rootino)
++		ret = true;
++
++out_rele:
++	libxfs_irele(ip);
++out:
++	return ret;
++}
++
+ /*
+  * Make sure that the first 3 inodes in the filesystem are the root directory,
+  * the realtime bitmap, and the realtime summary, in that order.
+@@ -438,6 +469,20 @@ calc_mkfs(
  
--	/*
--	 * If the log is allocated in the first allocation group we need to
--	 * add the number of blocks used by the log to the above calculation.
--	 *
--	 * This can happens with filesystems that only have a single
--	 * allocation group, or very odd geometries created by old mkfs
--	 * versions on very small filesystems.
--	 */
--	if (mp->m_sb.sb_logstart &&
--	    XFS_FSB_TO_AGNO(mp, mp->m_sb.sb_logstart) == 0) {
-+	rootino = libxfs_ialloc_calc_rootino(mp, mp->m_sb.sb_unit);
+ 	rootino = libxfs_ialloc_calc_rootino(mp, mp->m_sb.sb_unit);
  
--		/*
--		 * XXX(hch): verify that sb_logstart makes sense?
--		 */
--		 fino_bno += mp->m_sb.sb_logblocks;
--	}
--
--	/*
--	 * ditto the location of the first inode chunks in the fs ('/')
--	 */
--	if (xfs_sb_version_hasdalign(&mp->m_sb) && do_inoalign)  {
--		first_prealloc_ino = XFS_AGB_TO_AGINO(mp, roundup(fino_bno,
--					mp->m_sb.sb_unit));
--	} else if (xfs_sb_version_hasalign(&mp->m_sb) &&
--					mp->m_sb.sb_inoalignmt > 1)  {
--		first_prealloc_ino = XFS_AGB_TO_AGINO(mp,
--					roundup(fino_bno,
--						mp->m_sb.sb_inoalignmt));
--	} else  {
--		first_prealloc_ino = XFS_AGB_TO_AGINO(mp, fino_bno);
--	}
--
--	/*
--	 * now the first 3 inodes in the system
--	 */
--	ensure_fixed_ino(&mp->m_sb.sb_rootino, first_prealloc_ino,
-+	ensure_fixed_ino(&mp->m_sb.sb_rootino, rootino,
++	/*
++	 * If the root inode isn't where we think it is, check its plausibility
++	 * as a root directory.  It's possible that somebody changed sunit
++	 * since the filesystem was created, which can change the value of the
++	 * above computation.  Don't blow up the root directory if this is the
++	 * case.
++	 */
++	if (mp->m_sb.sb_rootino != rootino && has_plausible_rootdir(mp)) {
++		do_warn(
++_("sb root inode value %" PRIu64 " inconsistent with alignment (expected %"PRIu64")\n"),
++			mp->m_sb.sb_rootino, rootino);
++		rootino = mp->m_sb.sb_rootino;
++	}
++
+ 	ensure_fixed_ino(&mp->m_sb.sb_rootino, rootino,
  			_("root"));
--	ensure_fixed_ino(&mp->m_sb.sb_rbmino, first_prealloc_ino + 1,
-+	ensure_fixed_ino(&mp->m_sb.sb_rbmino, rootino + 1,
- 			_("realtime bitmap"));
--	ensure_fixed_ino(&mp->m_sb.sb_rsumino, first_prealloc_ino + 2,
-+	ensure_fixed_ino(&mp->m_sb.sb_rsumino, rootino + 2,
- 			_("realtime summary"));
- }
- 
+ 	ensure_fixed_ino(&mp->m_sb.sb_rbmino, rootino + 1,
 
