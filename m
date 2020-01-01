@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18943C2D0CE
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:17:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E593CC2D0CE
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:17:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D48D0206E4
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:17:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F382206E4
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:17:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GEoyvnI8"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nqEqh9f9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727149AbgAABRJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Dec 2019 20:17:09 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:56098 "EHLO
+        id S1727159AbgAABRQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Dec 2019 20:17:16 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:56150 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727132AbgAABRJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:17:09 -0500
+        with ESMTP id S1727132AbgAABRQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:17:16 -0500
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0011FRMq092835
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:17:07 GMT
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0011E9qx092017
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:17:13 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=g5Mri6OXX1P8CmC5cQQ+P52bfNPIlPhtw7ohDbDDPEI=;
- b=GEoyvnI8bIAPradnqTS9lKUZD70OT9l3+xcaynSOIimQEtvUmrzSrHWMy7Z05GdDV1qF
- wmPSnZFBqptjvvrYloFtHxN8ZqbiY2a8LQOXaONvkRd+oSv7YgafRfZz47zYtQuqvhrm
- rhjwLyObtVpxqUY4wqQuHVtdFweJ70k7SMkntwe5QHV3NcTUE40dxY75QQhnov7Jv24v
- m9fcrr9epbPWv0rlvSX4hfszsakjLUBhvgd++iF9C0IfRtHB8uoxy9VSiYwlQbVA6Skc
- KE9LitStR3I8sv7azWqUPrDJOT3zr0CQz6+7wGULmlbWTsesR8+o25d8wPX9vCGTQNsU yg== 
+ bh=c6rLExFcHdUE5eFEHyjQspHCpHnTlvB/HkJMAHrG4PU=;
+ b=nqEqh9f99QrXpbYhPLOUcqfpiompeyi5sLuIBAWTFav8diIs0+BZDboVWmAILJ4svPpe
+ X1m3XBCU1aH9XUGQ93OYCqC5xLV7vGqvo1YNTiRW4i/mD7IxvWGjy31sLhZO9fkvmHdk
+ SYlAXRSfQvxW+4jqMgzNz9VeHpyn2WcN5YonEKmYI0pqwOynxD9ibF1gKcgITV2ub/11
+ jS7707Wj2xlRlzXRabuGb4IX+sdVlC7oZaAnxII2PD3Y+dAgqg2/evNc6N4oOdJ+kRi/
+ 0pFKiXFZX+JDFddqy0oP3H6/pUBxIj22XfrXfijUglhg643gTuABkbVpBXl32mUP8Jzk cw== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 2x5y0pjy39-1
+        by aserp2120.oracle.com with ESMTP id 2x5y0pjy3f-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:17:07 +0000
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:17:13 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00118vcZ045348
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:17:06 GMT
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00118uX7045293
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:17:13 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 2x7medfg2s-1
+        by aserp3030.oracle.com with ESMTP id 2x7medfg4t-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:17:06 +0000
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0011H6VS014816
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:17:06 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:17:13 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0011HC16016167
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:17:12 GMT
 Received: from localhost (/10.159.150.156)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 31 Dec 2019 17:17:06 -0800
-Subject: [PATCH 07/21] xfs: add realtime rmap btree operations
+        with ESMTP ; Tue, 31 Dec 2019 17:17:12 -0800
+Subject: [PATCH 08/21] xfs: prepare rmap functions to deal with rtrmapbt
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 31 Dec 2019 17:17:03 -0800
-Message-ID: <157784142363.1368137.6540778365957586948.stgit@magnolia>
+Date:   Tue, 31 Dec 2019 17:17:09 -0800
+Message-ID: <157784142986.1368137.1557673190985306083.stgit@magnolia>
 In-Reply-To: <157784137939.1368137.1149711841610071256.stgit@magnolia>
 References: <157784137939.1368137.1149711841610071256.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -63,13 +63,13 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9487 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=4 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1911140001 definitions=main-2001010009
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9487 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=4 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
  definitions=main-2001010010
@@ -80,360 +80,572 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Implement the generic btree operations needed to manipulate rtrmap
-btree blocks. This is different from the regular rmapbt in that we
-allocate space from the filesystem at large, and are neither
-constrained to the free space nor any particular AG.
+Prepare the high-level rmap functions to deal with the new realtime
+rmapbt and its slightly different conventions.  Provide the ability
+to talk to either rmapbt or rtrmapbt formats from the same high
+level code.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_rtrmap_btree.c |  308 ++++++++++++++++++++++++++++++++++++++
- 1 file changed, 308 insertions(+)
+ fs/xfs/libxfs/xfs_rmap.c |  174 +++++++++++++++++++++++++++-------------------
+ 1 file changed, 104 insertions(+), 70 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_rtrmap_btree.c b/fs/xfs/libxfs/xfs_rtrmap_btree.c
-index 38147bd10a3d..b6a10926359c 100644
---- a/fs/xfs/libxfs/xfs_rtrmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_rtrmap_btree.c
-@@ -17,12 +17,14 @@
- #include "xfs_trans.h"
- #include "xfs_alloc.h"
- #include "xfs_btree.h"
-+#include "xfs_rmap.h"
- #include "xfs_rtrmap_btree.h"
- #include "xfs_trace.h"
- #include "xfs_cksum.h"
- #include "xfs_error.h"
- #include "xfs_extent_busy.h"
- #include "xfs_ag_resv.h"
-+#include "xfs_bmap.h"
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index 03b2169d5ecf..15518f624396 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -23,6 +23,24 @@
+ #include "xfs_inode.h"
+ #include "xfs_health.h"
  
++/* By convention, the rtrmapbt's "AG" number is NULLAGNUMBER. */
++static xfs_agnumber_t
++xfs_rmap_cur_agno(
++	struct xfs_btree_cur	*cur)
++{
++	return (cur->bc_flags & XFS_BTREE_LONG_PTRS) ?
++			NULLAGNUMBER : cur->bc_private.a.agno;
++}
++
++/* Return the maximum length of an rmap record. */
++static xfs_filblks_t
++xfs_rmap_len_max(
++	struct xfs_btree_cur	*cur)
++{
++	return (cur->bc_flags & XFS_BTREE_LONG_PTRS) ?
++			XFS_RTRMAP_LEN_MAX : XFS_RMAP_LEN_MAX;
++}
++
  /*
-  * Realtime Reverse map btree.
-@@ -51,6 +53,264 @@ xfs_rtrmapbt_dup_cursor(
- 	return new;
+  * Lookup the first record less than or equal to [bno, len, owner, offset]
+  * in the btree given by cur.
+@@ -80,19 +98,27 @@ xfs_rmap_update(
+ 	union xfs_btree_rec	rec;
+ 	int			error;
+ 
+-	trace_xfs_rmap_update(cur->bc_mp, cur->bc_private.a.agno,
++	trace_xfs_rmap_update(cur->bc_mp, xfs_rmap_cur_agno(cur),
+ 			irec->rm_startblock, irec->rm_blockcount,
+ 			irec->rm_owner, irec->rm_offset, irec->rm_flags);
+ 
+-	rec.rmap.rm_startblock = cpu_to_be32(irec->rm_startblock);
+-	rec.rmap.rm_blockcount = cpu_to_be32(irec->rm_blockcount);
+-	rec.rmap.rm_owner = cpu_to_be64(irec->rm_owner);
+-	rec.rmap.rm_offset = cpu_to_be64(
+-			xfs_rmap_irec_offset_pack(irec));
++	if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
++		rec.rtrmap.rm_startblock = cpu_to_be64(irec->rm_startblock);
++		rec.rtrmap.rm_blockcount = cpu_to_be64(irec->rm_blockcount);
++		rec.rtrmap.rm_owner = cpu_to_be64(irec->rm_owner);
++		rec.rtrmap.rm_offset = cpu_to_be64(
++				xfs_rmap_irec_offset_pack(irec));
++	} else {
++		rec.rmap.rm_startblock = cpu_to_be32(irec->rm_startblock);
++		rec.rmap.rm_blockcount = cpu_to_be32(irec->rm_blockcount);
++		rec.rmap.rm_owner = cpu_to_be64(irec->rm_owner);
++		rec.rmap.rm_offset = cpu_to_be64(
++				xfs_rmap_irec_offset_pack(irec));
++	}
+ 	error = xfs_btree_update(cur, &rec);
+ 	if (error)
+ 		trace_xfs_rmap_update_error(cur->bc_mp,
+-				cur->bc_private.a.agno, error, _RET_IP_);
++				xfs_rmap_cur_agno(cur), error, _RET_IP_);
+ 	return error;
  }
  
-+STATIC int
-+xfs_rtrmapbt_alloc_block(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_ptr	*start,
-+	union xfs_btree_ptr	*new,
-+	int			*stat)
-+{
-+	struct xfs_alloc_arg	args;
-+	int			error;
-+
-+	memset(&args, 0, sizeof(args));
-+	args.tp = cur->bc_tp;
-+	args.mp = cur->bc_mp;
-+	args.fsbno = cur->bc_tp->t_firstblock;
-+	xfs_rmap_ino_bmbt_owner(&args.oinfo, cur->bc_private.b.ip->i_ino,
-+			cur->bc_private.b.whichfork);
-+
-+	if (args.fsbno == NULLFSBLOCK) {
-+		args.fsbno = be64_to_cpu(start->l);
-+		args.type = XFS_ALLOCTYPE_START_BNO;
-+		/*
-+		 * Make sure there is sufficient room left in the AG to
-+		 * complete a full tree split for an extent insert.  If
-+		 * we are converting the middle part of an extent then
-+		 * we may need space for two tree splits.
-+		 *
-+		 * We are relying on the caller to make the correct block
-+		 * reservation for this operation to succeed.  If the
-+		 * reservation amount is insufficient then we may fail a
-+		 * block allocation here and corrupt the filesystem.
-+		 */
-+		args.minleft = args.tp->t_blk_res;
-+	} else if (cur->bc_tp->t_flags & XFS_TRANS_LOWMODE) {
-+		args.type = XFS_ALLOCTYPE_START_BNO;
+@@ -108,7 +134,7 @@ xfs_rmap_insert(
+ 	int			i;
+ 	int			error;
+ 
+-	trace_xfs_rmap_insert(rcur->bc_mp, rcur->bc_private.a.agno, agbno,
++	trace_xfs_rmap_insert(rcur->bc_mp, xfs_rmap_cur_agno(rcur), agbno,
+ 			len, owner, offset, flags);
+ 
+ 	error = xfs_rmap_lookup_eq(rcur, agbno, len, owner, offset, flags, &i);
+@@ -136,7 +162,7 @@ xfs_rmap_insert(
+ done:
+ 	if (error)
+ 		trace_xfs_rmap_insert_error(rcur->bc_mp,
+-				rcur->bc_private.a.agno, error, _RET_IP_);
++				xfs_rmap_cur_agno(rcur), error, _RET_IP_);
+ 	return error;
+ }
+ 
+@@ -152,7 +178,7 @@ xfs_rmap_delete(
+ 	int			i;
+ 	int			error;
+ 
+-	trace_xfs_rmap_delete(rcur->bc_mp, rcur->bc_private.a.agno, agbno,
++	trace_xfs_rmap_delete(rcur->bc_mp, xfs_rmap_cur_agno(rcur), agbno,
+ 			len, owner, offset, flags);
+ 
+ 	error = xfs_rmap_lookup_eq(rcur, agbno, len, owner, offset, flags, &i);
+@@ -175,7 +201,7 @@ xfs_rmap_delete(
+ done:
+ 	if (error)
+ 		trace_xfs_rmap_delete_error(rcur->bc_mp,
+-				rcur->bc_private.a.agno, error, _RET_IP_);
++				xfs_rmap_cur_agno(rcur), error, _RET_IP_);
+ 	return error;
+ }
+ 
+@@ -188,11 +214,20 @@ xfs_rmap_btrec_to_irec(
+ {
+ 	int			error;
+ 
+-	irec->rm_startblock = be32_to_cpu(rec->rmap.rm_startblock);
+-	irec->rm_blockcount = be32_to_cpu(rec->rmap.rm_blockcount);
+-	irec->rm_owner = be64_to_cpu(rec->rmap.rm_owner);
+-	error = xfs_rmap_irec_offset_unpack(be64_to_cpu(rec->rmap.rm_offset),
+-			irec);
++	if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
++		irec->rm_startblock = be64_to_cpu(rec->rtrmap.rm_startblock);
++		irec->rm_blockcount = be64_to_cpu(rec->rtrmap.rm_blockcount);
++		irec->rm_owner = be64_to_cpu(rec->rtrmap.rm_owner);
++		error = xfs_rmap_irec_offset_unpack(
++				be64_to_cpu(rec->rtrmap.rm_offset), irec);
 +	} else {
-+		args.type = XFS_ALLOCTYPE_NEAR_BNO;
++		irec->rm_startblock = be32_to_cpu(rec->rmap.rm_startblock);
++		irec->rm_blockcount = be32_to_cpu(rec->rmap.rm_blockcount);
++		irec->rm_owner = be64_to_cpu(rec->rmap.rm_owner);
++		error = xfs_rmap_irec_offset_unpack(
++				be64_to_cpu(rec->rmap.rm_offset), irec);
 +	}
 +
-+	args.minlen = args.maxlen = args.prod = 1;
-+	args.wasdel = 0;
-+	error = xfs_alloc_vextent(&args);
-+	if (error)
-+		goto error0;
-+
-+	if (args.fsbno == NULLFSBLOCK && args.minleft) {
-+		/*
-+		 * Could not find an AG with enough free space to satisfy
-+		 * a full btree split.  Try again without minleft and if
-+		 * successful activate the lowspace algorithm.
-+		 */
-+		args.fsbno = 0;
-+		args.type = XFS_ALLOCTYPE_FIRST_AG;
-+		args.minleft = 0;
-+		error = xfs_alloc_vextent(&args);
-+		if (error)
-+			goto error0;
-+		cur->bc_tp->t_flags |= XFS_TRANS_LOWMODE;
-+	}
-+	if (args.fsbno == NULLFSBLOCK) {
-+		*stat = 0;
-+		return 0;
-+	}
-+	ASSERT(args.len == 1);
-+	cur->bc_private.b.allocated++;
-+	cur->bc_private.b.ip->i_d.di_nblocks++;
-+	xfs_trans_log_inode(args.tp, cur->bc_private.b.ip, XFS_ILOG_CORE);
-+
-+	new->l = cpu_to_be64(args.fsbno);
-+
-+	*stat = 1;
-+	return 0;
-+
-+ error0:
-+	return error;
-+}
-+
-+STATIC int
-+xfs_rtrmapbt_free_block(
-+	struct xfs_btree_cur	*cur,
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_mount	*mp = cur->bc_mp;
-+	struct xfs_inode	*ip = cur->bc_private.b.ip;
-+	struct xfs_trans	*tp = cur->bc_tp;
-+	xfs_fsblock_t		fsbno = XFS_DADDR_TO_FSB(mp, XFS_BUF_ADDR(bp));
-+	struct xfs_owner_info	oinfo;
-+
-+	xfs_rmap_ino_bmbt_owner(&oinfo, ip->i_ino, cur->bc_private.b.whichfork);
-+	xfs_bmap_add_free(cur->bc_tp, fsbno, 1, &oinfo);
-+	ip->i_d.di_nblocks--;
-+
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+	return 0;
-+}
-+
-+/*
-+ * Calculate number of records in the in-core realtime rmap btree inode root.
-+ */
-+STATIC int
-+xfs_rtrmapbt_broot_maxrecs(
-+	int			blocklen,
-+	bool			leaf)
-+{
-+	blocklen -= XFS_RTRMAP_BLOCK_LEN;
-+
-+	if (leaf)
-+		return blocklen / sizeof(struct xfs_rtrmap_rec);
-+	return blocklen / (2 * sizeof(struct xfs_rtrmap_key) +
-+			sizeof(xfs_rtrmap_ptr_t));
-+}
-+
-+STATIC int
-+xfs_rtrmapbt_get_minrecs(
-+	struct xfs_btree_cur	*cur,
-+	int			level)
-+{
-+	if (level == cur->bc_nlevels - 1) {
-+		struct xfs_ifork	*ifp = xfs_btree_ifork_ptr(cur);
-+
-+		return xfs_rtrmapbt_broot_maxrecs(ifp->if_broot_bytes,
-+				level == 0) / 2;
-+	}
-+
-+	return cur->bc_mp->m_rtrmap_mnr[level != 0];
-+}
-+
-+STATIC int
-+xfs_rtrmapbt_get_maxrecs(
-+	struct xfs_btree_cur	*cur,
-+	int			level)
-+{
-+	if (level == cur->bc_nlevels - 1) {
-+		struct xfs_ifork	*ifp = xfs_btree_ifork_ptr(cur);
-+
-+		return xfs_rtrmapbt_broot_maxrecs(ifp->if_broot_bytes,
-+				level == 0);
-+	}
-+
-+	return cur->bc_mp->m_rtrmap_mxr[level != 0];
-+}
-+
-+STATIC void
-+xfs_rtrmapbt_init_key_from_rec(
-+	union xfs_btree_key	*key,
-+	union xfs_btree_rec	*rec)
-+{
-+	key->rtrmap.rm_startblock = rec->rtrmap.rm_startblock;
-+	key->rtrmap.rm_owner = rec->rtrmap.rm_owner;
-+	key->rtrmap.rm_offset = rec->rtrmap.rm_offset;
-+}
-+
-+STATIC void
-+xfs_rtrmapbt_init_high_key_from_rec(
-+	union xfs_btree_key	*key,
-+	union xfs_btree_rec	*rec)
-+{
-+	uint64_t		off;
-+	int			adj;
-+
-+	adj = be64_to_cpu(rec->rtrmap.rm_blockcount) - 1;
-+
-+	key->rtrmap.rm_startblock = rec->rtrmap.rm_startblock;
-+	be64_add_cpu(&key->rtrmap.rm_startblock, adj);
-+	key->rtrmap.rm_owner = rec->rtrmap.rm_owner;
-+	key->rtrmap.rm_offset = rec->rtrmap.rm_offset;
-+	if (XFS_RMAP_NON_INODE_OWNER(be64_to_cpu(rec->rtrmap.rm_owner)) ||
-+	    XFS_RMAP_IS_BMBT_BLOCK(be64_to_cpu(rec->rtrmap.rm_offset)))
-+		return;
-+	off = be64_to_cpu(key->rtrmap.rm_offset);
-+	off = (XFS_RMAP_OFF(off) + adj) | (off & ~XFS_RMAP_OFF_MASK);
-+	key->rtrmap.rm_offset = cpu_to_be64(off);
-+}
-+
-+STATIC void
-+xfs_rtrmapbt_init_rec_from_cur(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_rec	*rec)
-+{
-+	rec->rtrmap.rm_startblock = cpu_to_be64(cur->bc_rec.r.rm_startblock);
-+	rec->rtrmap.rm_blockcount = cpu_to_be64(cur->bc_rec.r.rm_blockcount);
-+	rec->rtrmap.rm_owner = cpu_to_be64(cur->bc_rec.r.rm_owner);
-+	rec->rtrmap.rm_offset = cpu_to_be64(
-+			xfs_rmap_irec_offset_pack(&cur->bc_rec.r));
-+}
-+
-+STATIC void
-+xfs_rtrmapbt_init_ptr_from_cur(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_ptr	*ptr)
-+{
-+	ptr->l = 0;
-+}
-+
-+STATIC int64_t
-+xfs_rtrmapbt_key_diff(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_key	*key)
-+{
-+	struct xfs_rmap_irec	*rec = &cur->bc_rec.r;
-+	struct xfs_rtrmap_key	*kp = &key->rtrmap;
-+	__u64			x, y;
-+
-+	x = be64_to_cpu(kp->rm_startblock);
-+	y = rec->rm_startblock;
-+	if (x > y)
-+		return 1;
-+	else if (y > x)
-+		return -1;
-+
-+	x = be64_to_cpu(kp->rm_owner);
-+	y = rec->rm_owner;
-+	if (x > y)
-+		return 1;
-+	else if (y > x)
-+		return -1;
-+
-+	x = XFS_RMAP_OFF(be64_to_cpu(kp->rm_offset));
-+	y = rec->rm_offset;
-+	if (x > y)
-+		return 1;
-+	else if (y > x)
-+		return -1;
-+	return 0;
-+}
-+
-+STATIC int64_t
-+xfs_rtrmapbt_diff_two_keys(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_key	*k1,
-+	union xfs_btree_key	*k2)
-+{
-+	struct xfs_rtrmap_key	*kp1 = &k1->rtrmap;
-+	struct xfs_rtrmap_key	*kp2 = &k2->rtrmap;
-+	__u64			x, y;
-+
-+	x = be64_to_cpu(kp1->rm_startblock);
-+	y = be64_to_cpu(kp2->rm_startblock);
-+	if (x > y)
-+		return 1;
-+	else if (y > x)
-+		return -1;
-+
-+	x = be64_to_cpu(kp1->rm_owner);
-+	y = be64_to_cpu(kp2->rm_owner);
-+	if (x > y)
-+		return 1;
-+	else if (y > x)
-+		return -1;
-+
-+	x = XFS_RMAP_OFF(be64_to_cpu(kp1->rm_offset));
-+	y = XFS_RMAP_OFF(be64_to_cpu(kp2->rm_offset));
-+	if (x > y)
-+		return 1;
-+	else if (y > x)
-+		return -1;
-+	return 0;
-+}
-+
- static xfs_failaddr_t
- xfs_rtrmapbt_verify(
- 	struct xfs_buf		*bp)
-@@ -116,12 +376,60 @@ const struct xfs_buf_ops xfs_rtrmapbt_buf_ops = {
- 	.verify_struct		= xfs_rtrmapbt_verify,
- };
+ 	if (xfs_metadata_is_sick(error))
+ 		xfs_btree_mark_sick(cur);
+ 	return error;
+@@ -288,7 +323,7 @@ xfs_rmap_find_left_neighbor_helper(
+ 	struct xfs_find_left_neighbor_info	*info = priv;
  
-+STATIC int
-+xfs_rtrmapbt_keys_inorder(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_key	*k1,
-+	union xfs_btree_key	*k2)
-+{
-+	if (be64_to_cpu(k1->rtrmap.rm_startblock) <
-+	    be64_to_cpu(k2->rtrmap.rm_startblock))
-+		return 1;
-+	if (be64_to_cpu(k1->rtrmap.rm_owner) <
-+	    be64_to_cpu(k2->rtrmap.rm_owner))
-+		return 1;
-+	if (XFS_RMAP_OFF(be64_to_cpu(k1->rtrmap.rm_offset)) <=
-+	    XFS_RMAP_OFF(be64_to_cpu(k2->rtrmap.rm_offset)))
-+		return 1;
-+	return 0;
-+}
-+
-+STATIC int
-+xfs_rtrmapbt_recs_inorder(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_rec	*r1,
-+	union xfs_btree_rec	*r2)
-+{
-+	if (be64_to_cpu(r1->rtrmap.rm_startblock) <
-+	    be64_to_cpu(r2->rtrmap.rm_startblock))
-+		return 1;
-+	if (XFS_RMAP_OFF(be64_to_cpu(r1->rtrmap.rm_offset)) <
-+	    XFS_RMAP_OFF(be64_to_cpu(r2->rtrmap.rm_offset)))
-+		return 1;
-+	if (be64_to_cpu(r1->rtrmap.rm_owner) <=
-+	    be64_to_cpu(r2->rtrmap.rm_owner))
-+		return 1;
-+	return 0;
-+}
-+
- static const struct xfs_btree_ops xfs_rtrmapbt_ops = {
- 	.rec_len		= sizeof(struct xfs_rtrmap_rec),
- 	.key_len		= 2 * sizeof(struct xfs_rtrmap_key),
+ 	trace_xfs_rmap_find_left_neighbor_candidate(cur->bc_mp,
+-			cur->bc_private.a.agno, rec->rm_startblock,
++			xfs_rmap_cur_agno(cur), rec->rm_startblock,
+ 			rec->rm_blockcount, rec->rm_owner, rec->rm_offset,
+ 			rec->rm_flags);
  
- 	.dup_cursor		= xfs_rtrmapbt_dup_cursor,
-+	.alloc_block		= xfs_rtrmapbt_alloc_block,
-+	.free_block		= xfs_rtrmapbt_free_block,
-+	.get_minrecs		= xfs_rtrmapbt_get_minrecs,
-+	.get_maxrecs		= xfs_rtrmapbt_get_maxrecs,
-+	.init_key_from_rec	= xfs_rtrmapbt_init_key_from_rec,
-+	.init_high_key_from_rec	= xfs_rtrmapbt_init_high_key_from_rec,
-+	.init_rec_from_cur	= xfs_rtrmapbt_init_rec_from_cur,
-+	.init_ptr_from_cur	= xfs_rtrmapbt_init_ptr_from_cur,
-+	.key_diff		= xfs_rtrmapbt_key_diff,
- 	.buf_ops		= &xfs_rtrmapbt_buf_ops,
-+	.diff_two_keys		= xfs_rtrmapbt_diff_two_keys,
-+	.keys_inorder		= xfs_rtrmapbt_keys_inorder,
-+	.recs_inorder		= xfs_rtrmapbt_recs_inorder,
- };
+@@ -340,7 +375,7 @@ xfs_rmap_find_left_neighbor(
+ 	info.stat = stat;
  
- /* Initialize a new rt rmap btree cursor. */
+ 	trace_xfs_rmap_find_left_neighbor_query(cur->bc_mp,
+-			cur->bc_private.a.agno, bno, 0, owner, offset, flags);
++			xfs_rmap_cur_agno(cur), bno, 0, owner, offset, flags);
+ 
+ 	error = xfs_rmap_query_range(cur, &info.high, &info.high,
+ 			xfs_rmap_find_left_neighbor_helper, &info);
+@@ -348,7 +383,7 @@ xfs_rmap_find_left_neighbor(
+ 		error = 0;
+ 	if (*stat)
+ 		trace_xfs_rmap_find_left_neighbor_result(cur->bc_mp,
+-				cur->bc_private.a.agno, irec->rm_startblock,
++				xfs_rmap_cur_agno(cur), irec->rm_startblock,
+ 				irec->rm_blockcount, irec->rm_owner,
+ 				irec->rm_offset, irec->rm_flags);
+ 	return error;
+@@ -364,7 +399,7 @@ xfs_rmap_lookup_le_range_helper(
+ 	struct xfs_find_left_neighbor_info	*info = priv;
+ 
+ 	trace_xfs_rmap_lookup_le_range_candidate(cur->bc_mp,
+-			cur->bc_private.a.agno, rec->rm_startblock,
++			xfs_rmap_cur_agno(cur), rec->rm_startblock,
+ 			rec->rm_blockcount, rec->rm_owner, rec->rm_offset,
+ 			rec->rm_flags);
+ 
+@@ -413,14 +448,14 @@ xfs_rmap_lookup_le_range(
+ 	info.stat = stat;
+ 
+ 	trace_xfs_rmap_lookup_le_range(cur->bc_mp,
+-			cur->bc_private.a.agno, bno, 0, owner, offset, flags);
++			xfs_rmap_cur_agno(cur), bno, 0, owner, offset, flags);
+ 	error = xfs_rmap_query_range(cur, &info.high, &info.high,
+ 			xfs_rmap_lookup_le_range_helper, &info);
+ 	if (error == -ECANCELED)
+ 		error = 0;
+ 	if (*stat)
+ 		trace_xfs_rmap_lookup_le_range_result(cur->bc_mp,
+-				cur->bc_private.a.agno, irec->rm_startblock,
++				xfs_rmap_cur_agno(cur), irec->rm_startblock,
+ 				irec->rm_blockcount, irec->rm_owner,
+ 				irec->rm_offset, irec->rm_flags);
+ 	return error;
+@@ -532,7 +567,7 @@ xfs_rmap_unmap(
+ 			(flags & XFS_RMAP_BMBT_BLOCK);
+ 	if (unwritten)
+ 		flags |= XFS_RMAP_UNWRITTEN;
+-	trace_xfs_rmap_unmap(mp, cur->bc_private.a.agno, bno, len,
++	trace_xfs_rmap_unmap(mp, xfs_rmap_cur_agno(cur), bno, len,
+ 			unwritten, oinfo);
+ 
+ 	/*
+@@ -558,7 +593,7 @@ xfs_rmap_unmap(
+ 		goto out_error;
+ 	}
+ 	trace_xfs_rmap_lookup_le_range_result(cur->bc_mp,
+-			cur->bc_private.a.agno, ltrec.rm_startblock,
++			xfs_rmap_cur_agno(cur), ltrec.rm_startblock,
+ 			ltrec.rm_blockcount, ltrec.rm_owner,
+ 			ltrec.rm_offset, ltrec.rm_flags);
+ 	ltoff = ltrec.rm_offset;
+@@ -627,7 +662,7 @@ xfs_rmap_unmap(
+ 
+ 	if (ltrec.rm_startblock == bno && ltrec.rm_blockcount == len) {
+ 		/* exact match, simply remove the record from rmap tree */
+-		trace_xfs_rmap_delete(mp, cur->bc_private.a.agno,
++		trace_xfs_rmap_delete(mp, xfs_rmap_cur_agno(cur),
+ 				ltrec.rm_startblock, ltrec.rm_blockcount,
+ 				ltrec.rm_owner, ltrec.rm_offset,
+ 				ltrec.rm_flags);
+@@ -706,7 +741,7 @@ xfs_rmap_unmap(
+ 		else
+ 			cur->bc_rec.r.rm_offset = offset + len;
+ 		cur->bc_rec.r.rm_flags = flags;
+-		trace_xfs_rmap_insert(mp, cur->bc_private.a.agno,
++		trace_xfs_rmap_insert(mp, xfs_rmap_cur_agno(cur),
+ 				cur->bc_rec.r.rm_startblock,
+ 				cur->bc_rec.r.rm_blockcount,
+ 				cur->bc_rec.r.rm_owner,
+@@ -718,11 +753,11 @@ xfs_rmap_unmap(
+ 	}
+ 
+ out_done:
+-	trace_xfs_rmap_unmap_done(mp, cur->bc_private.a.agno, bno, len,
++	trace_xfs_rmap_unmap_done(mp, xfs_rmap_cur_agno(cur), bno, len,
+ 			unwritten, oinfo);
+ out_error:
+ 	if (error)
+-		trace_xfs_rmap_unmap_error(mp, cur->bc_private.a.agno,
++		trace_xfs_rmap_unmap_error(mp, xfs_rmap_cur_agno(cur),
+ 				error, _RET_IP_);
+ 	return error;
+ }
+@@ -813,7 +848,7 @@ xfs_rmap_map(
+ 			(flags & XFS_RMAP_BMBT_BLOCK);
+ 	if (unwritten)
+ 		flags |= XFS_RMAP_UNWRITTEN;
+-	trace_xfs_rmap_map(mp, cur->bc_private.a.agno, bno, len,
++	trace_xfs_rmap_map(mp, xfs_rmap_cur_agno(cur), bno, len,
+ 			unwritten, oinfo);
+ 	ASSERT(!xfs_rmap_should_skip_owner_update(oinfo));
+ 
+@@ -836,7 +871,7 @@ xfs_rmap_map(
+ 			goto out_error;
+ 		}
+ 		trace_xfs_rmap_lookup_le_range_result(cur->bc_mp,
+-				cur->bc_private.a.agno, ltrec.rm_startblock,
++				xfs_rmap_cur_agno(cur), ltrec.rm_startblock,
+ 				ltrec.rm_blockcount, ltrec.rm_owner,
+ 				ltrec.rm_offset, ltrec.rm_flags);
+ 
+@@ -875,7 +910,7 @@ xfs_rmap_map(
+ 			goto out_error;
+ 		}
+ 		trace_xfs_rmap_find_right_neighbor_result(cur->bc_mp,
+-			cur->bc_private.a.agno, gtrec.rm_startblock,
++			xfs_rmap_cur_agno(cur), gtrec.rm_startblock,
+ 			gtrec.rm_blockcount, gtrec.rm_owner,
+ 			gtrec.rm_offset, gtrec.rm_flags);
+ 		if (!xfs_rmap_is_mergeable(&gtrec, owner, flags))
+@@ -902,8 +937,8 @@ xfs_rmap_map(
+ 		if (have_gt &&
+ 		    bno + len == gtrec.rm_startblock &&
+ 		    (ignore_off || offset + len == gtrec.rm_offset) &&
+-		    (unsigned long)ltrec.rm_blockcount + len +
+-				gtrec.rm_blockcount <= XFS_RMAP_LEN_MAX) {
++		    ltrec.rm_blockcount + len + gtrec.rm_blockcount <=
++		    xfs_rmap_len_max(cur)) {
+ 			/*
+ 			 * right edge also contiguous, delete right record
+ 			 * and merge into left record.
+@@ -914,7 +949,7 @@ xfs_rmap_map(
+ 			 * result: |rrrrrrrrrrrrrrrrrrrrrrrrrrrrr|
+ 			 */
+ 			ltrec.rm_blockcount += gtrec.rm_blockcount;
+-			trace_xfs_rmap_delete(mp, cur->bc_private.a.agno,
++			trace_xfs_rmap_delete(mp, xfs_rmap_cur_agno(cur),
+ 					gtrec.rm_startblock,
+ 					gtrec.rm_blockcount,
+ 					gtrec.rm_owner,
+@@ -966,7 +1001,7 @@ xfs_rmap_map(
+ 		cur->bc_rec.r.rm_owner = owner;
+ 		cur->bc_rec.r.rm_offset = offset;
+ 		cur->bc_rec.r.rm_flags = flags;
+-		trace_xfs_rmap_insert(mp, cur->bc_private.a.agno, bno, len,
++		trace_xfs_rmap_insert(mp, xfs_rmap_cur_agno(cur), bno, len,
+ 			owner, offset, flags);
+ 		error = xfs_btree_insert(cur, &i);
+ 		if (error)
+@@ -978,11 +1013,11 @@ xfs_rmap_map(
+ 		}
+ 	}
+ 
+-	trace_xfs_rmap_map_done(mp, cur->bc_private.a.agno, bno, len,
++	trace_xfs_rmap_map_done(mp, xfs_rmap_cur_agno(cur), bno, len,
+ 			unwritten, oinfo);
+ out_error:
+ 	if (error)
+-		trace_xfs_rmap_map_error(mp, cur->bc_private.a.agno,
++		trace_xfs_rmap_map_error(mp, xfs_rmap_cur_agno(cur),
+ 				error, _RET_IP_);
+ 	return error;
+ }
+@@ -1056,7 +1091,7 @@ xfs_rmap_convert(
+ 			(flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))));
+ 	oldext = unwritten ? XFS_RMAP_UNWRITTEN : 0;
+ 	new_endoff = offset + len;
+-	trace_xfs_rmap_convert(mp, cur->bc_private.a.agno, bno, len,
++	trace_xfs_rmap_convert(mp, xfs_rmap_cur_agno(cur), bno, len,
+ 			unwritten, oinfo);
+ 
+ 	/*
+@@ -1082,7 +1117,7 @@ xfs_rmap_convert(
+ 		goto done;
+ 	}
+ 	trace_xfs_rmap_lookup_le_range_result(cur->bc_mp,
+-			cur->bc_private.a.agno, PREV.rm_startblock,
++			xfs_rmap_cur_agno(cur), PREV.rm_startblock,
+ 			PREV.rm_blockcount, PREV.rm_owner,
+ 			PREV.rm_offset, PREV.rm_flags);
+ 
+@@ -1126,7 +1161,7 @@ xfs_rmap_convert(
+ 			goto done;
+ 		}
+ 		trace_xfs_rmap_find_left_neighbor_result(cur->bc_mp,
+-				cur->bc_private.a.agno, LEFT.rm_startblock,
++				xfs_rmap_cur_agno(cur), LEFT.rm_startblock,
+ 				LEFT.rm_blockcount, LEFT.rm_owner,
+ 				LEFT.rm_offset, LEFT.rm_flags);
+ 		if (LEFT.rm_startblock + LEFT.rm_blockcount == bno &&
+@@ -1167,7 +1202,7 @@ xfs_rmap_convert(
+ 			goto done;
+ 		}
+ 		trace_xfs_rmap_find_right_neighbor_result(cur->bc_mp,
+-				cur->bc_private.a.agno, RIGHT.rm_startblock,
++				xfs_rmap_cur_agno(cur), RIGHT.rm_startblock,
+ 				RIGHT.rm_blockcount, RIGHT.rm_owner,
+ 				RIGHT.rm_offset, RIGHT.rm_flags);
+ 		if (bno + len == RIGHT.rm_startblock &&
+@@ -1181,11 +1216,11 @@ xfs_rmap_convert(
+ 			 RMAP_RIGHT_FILLING | RMAP_RIGHT_CONTIG)) ==
+ 	    (RMAP_LEFT_FILLING | RMAP_LEFT_CONTIG |
+ 	     RMAP_RIGHT_FILLING | RMAP_RIGHT_CONTIG) &&
+-	    (unsigned long)LEFT.rm_blockcount + len +
+-	     RIGHT.rm_blockcount > XFS_RMAP_LEN_MAX)
++	    LEFT.rm_blockcount + len + RIGHT.rm_blockcount >
++	    xfs_rmap_len_max(cur))
+ 		state &= ~RMAP_RIGHT_CONTIG;
+ 
+-	trace_xfs_rmap_convert_state(mp, cur->bc_private.a.agno, state,
++	trace_xfs_rmap_convert_state(mp, xfs_rmap_cur_agno(cur), state,
+ 			_RET_IP_);
+ 
+ 	/* reset the cursor back to PREV */
+@@ -1217,7 +1252,7 @@ xfs_rmap_convert(
+ 			error = -EFSCORRUPTED;
+ 			goto done;
+ 		}
+-		trace_xfs_rmap_delete(mp, cur->bc_private.a.agno,
++		trace_xfs_rmap_delete(mp, xfs_rmap_cur_agno(cur),
+ 				RIGHT.rm_startblock, RIGHT.rm_blockcount,
+ 				RIGHT.rm_owner, RIGHT.rm_offset,
+ 				RIGHT.rm_flags);
+@@ -1237,7 +1272,7 @@ xfs_rmap_convert(
+ 			error = -EFSCORRUPTED;
+ 			goto done;
+ 		}
+-		trace_xfs_rmap_delete(mp, cur->bc_private.a.agno,
++		trace_xfs_rmap_delete(mp, xfs_rmap_cur_agno(cur),
+ 				PREV.rm_startblock, PREV.rm_blockcount,
+ 				PREV.rm_owner, PREV.rm_offset,
+ 				PREV.rm_flags);
+@@ -1269,7 +1304,7 @@ xfs_rmap_convert(
+ 		 * Setting all of a previous oldext extent to newext.
+ 		 * The left neighbor is contiguous, the right is not.
+ 		 */
+-		trace_xfs_rmap_delete(mp, cur->bc_private.a.agno,
++		trace_xfs_rmap_delete(mp, xfs_rmap_cur_agno(cur),
+ 				PREV.rm_startblock, PREV.rm_blockcount,
+ 				PREV.rm_owner, PREV.rm_offset,
+ 				PREV.rm_flags);
+@@ -1309,7 +1344,7 @@ xfs_rmap_convert(
+ 			error = -EFSCORRUPTED;
+ 			goto done;
+ 		}
+-		trace_xfs_rmap_delete(mp, cur->bc_private.a.agno,
++		trace_xfs_rmap_delete(mp, xfs_rmap_cur_agno(cur),
+ 				RIGHT.rm_startblock, RIGHT.rm_blockcount,
+ 				RIGHT.rm_owner, RIGHT.rm_offset,
+ 				RIGHT.rm_flags);
+@@ -1390,7 +1425,7 @@ xfs_rmap_convert(
+ 		NEW.rm_blockcount = len;
+ 		NEW.rm_flags = newext;
+ 		cur->bc_rec.r = NEW;
+-		trace_xfs_rmap_insert(mp, cur->bc_private.a.agno, bno,
++		trace_xfs_rmap_insert(mp, xfs_rmap_cur_agno(cur), bno,
+ 				len, owner, offset, newext);
+ 		error = xfs_btree_insert(cur, &i);
+ 		if (error)
+@@ -1449,7 +1484,7 @@ xfs_rmap_convert(
+ 		NEW.rm_blockcount = len;
+ 		NEW.rm_flags = newext;
+ 		cur->bc_rec.r = NEW;
+-		trace_xfs_rmap_insert(mp, cur->bc_private.a.agno, bno,
++		trace_xfs_rmap_insert(mp, xfs_rmap_cur_agno(cur), bno,
+ 				len, owner, offset, newext);
+ 		error = xfs_btree_insert(cur, &i);
+ 		if (error)
+@@ -1481,7 +1516,7 @@ xfs_rmap_convert(
+ 		NEW = PREV;
+ 		NEW.rm_blockcount = offset - PREV.rm_offset;
+ 		cur->bc_rec.r = NEW;
+-		trace_xfs_rmap_insert(mp, cur->bc_private.a.agno,
++		trace_xfs_rmap_insert(mp, xfs_rmap_cur_agno(cur),
+ 				NEW.rm_startblock, NEW.rm_blockcount,
+ 				NEW.rm_owner, NEW.rm_offset,
+ 				NEW.rm_flags);
+@@ -1510,7 +1545,7 @@ xfs_rmap_convert(
+ 		/* new middle extent - newext */
+ 		cur->bc_rec.r.rm_flags &= ~XFS_RMAP_UNWRITTEN;
+ 		cur->bc_rec.r.rm_flags |= newext;
+-		trace_xfs_rmap_insert(mp, cur->bc_private.a.agno, bno, len,
++		trace_xfs_rmap_insert(mp, xfs_rmap_cur_agno(cur), bno, len,
+ 				owner, offset, newext);
+ 		error = xfs_btree_insert(cur, &i);
+ 		if (error)
+@@ -1535,12 +1570,12 @@ xfs_rmap_convert(
+ 		ASSERT(0);
+ 	}
+ 
+-	trace_xfs_rmap_convert_done(mp, cur->bc_private.a.agno, bno, len,
++	trace_xfs_rmap_convert_done(mp, xfs_rmap_cur_agno(cur), bno, len,
+ 			unwritten, oinfo);
+ done:
+ 	if (error)
+ 		trace_xfs_rmap_convert_error(cur->bc_mp,
+-				cur->bc_private.a.agno, error, _RET_IP_);
++				xfs_rmap_cur_agno(cur), error, _RET_IP_);
+ 	return error;
+ }
+ 
+@@ -1576,7 +1611,7 @@ xfs_rmap_convert_shared(
+ 			(flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))));
+ 	oldext = unwritten ? XFS_RMAP_UNWRITTEN : 0;
+ 	new_endoff = offset + len;
+-	trace_xfs_rmap_convert(mp, cur->bc_private.a.agno, bno, len,
++	trace_xfs_rmap_convert(mp, xfs_rmap_cur_agno(cur), bno, len,
+ 			unwritten, oinfo);
+ 
+ 	/*
+@@ -1647,7 +1682,7 @@ xfs_rmap_convert_shared(
+ 			goto done;
+ 		}
+ 		trace_xfs_rmap_find_right_neighbor_result(cur->bc_mp,
+-				cur->bc_private.a.agno, RIGHT.rm_startblock,
++				xfs_rmap_cur_agno(cur), RIGHT.rm_startblock,
+ 				RIGHT.rm_blockcount, RIGHT.rm_owner,
+ 				RIGHT.rm_offset, RIGHT.rm_flags);
+ 		if (xfs_rmap_is_mergeable(&RIGHT, owner, newext))
+@@ -1659,11 +1694,11 @@ xfs_rmap_convert_shared(
+ 			 RMAP_RIGHT_FILLING | RMAP_RIGHT_CONTIG)) ==
+ 	    (RMAP_LEFT_FILLING | RMAP_LEFT_CONTIG |
+ 	     RMAP_RIGHT_FILLING | RMAP_RIGHT_CONTIG) &&
+-	    (unsigned long)LEFT.rm_blockcount + len +
+-	     RIGHT.rm_blockcount > XFS_RMAP_LEN_MAX)
++	    LEFT.rm_blockcount + len + RIGHT.rm_blockcount >
++	    xfs_rmap_len_max(cur))
+ 		state &= ~RMAP_RIGHT_CONTIG;
+ 
+-	trace_xfs_rmap_convert_state(mp, cur->bc_private.a.agno, state,
++	trace_xfs_rmap_convert_state(mp, xfs_rmap_cur_agno(cur), state,
+ 			_RET_IP_);
+ 	/*
+ 	 * Switch out based on the FILLING and CONTIG state bits.
+@@ -1962,12 +1997,12 @@ xfs_rmap_convert_shared(
+ 		ASSERT(0);
+ 	}
+ 
+-	trace_xfs_rmap_convert_done(mp, cur->bc_private.a.agno, bno, len,
++	trace_xfs_rmap_convert_done(mp, xfs_rmap_cur_agno(cur), bno, len,
+ 			unwritten, oinfo);
+ done:
+ 	if (error)
+ 		trace_xfs_rmap_convert_error(cur->bc_mp,
+-				cur->bc_private.a.agno, error, _RET_IP_);
++				xfs_rmap_cur_agno(cur), error, _RET_IP_);
+ 	return error;
+ }
+ 
+@@ -2005,7 +2040,7 @@ xfs_rmap_unmap_shared(
+ 	xfs_owner_info_unpack(oinfo, &owner, &offset, &flags);
+ 	if (unwritten)
+ 		flags |= XFS_RMAP_UNWRITTEN;
+-	trace_xfs_rmap_unmap(mp, cur->bc_private.a.agno, bno, len,
++	trace_xfs_rmap_unmap(mp, xfs_rmap_cur_agno(cur), bno, len,
+ 			unwritten, oinfo);
+ 
+ 	/*
+@@ -2162,12 +2197,12 @@ xfs_rmap_unmap_shared(
+ 			goto out_error;
+ 	}
+ 
+-	trace_xfs_rmap_unmap_done(mp, cur->bc_private.a.agno, bno, len,
++	trace_xfs_rmap_unmap_done(mp, xfs_rmap_cur_agno(cur), bno, len,
+ 			unwritten, oinfo);
+ out_error:
+ 	if (error)
+ 		trace_xfs_rmap_unmap_error(cur->bc_mp,
+-				cur->bc_private.a.agno, error, _RET_IP_);
++				xfs_rmap_cur_agno(cur), error, _RET_IP_);
+ 	return error;
+ }
+ 
+@@ -2202,7 +2237,7 @@ xfs_rmap_map_shared(
+ 	xfs_owner_info_unpack(oinfo, &owner, &offset, &flags);
+ 	if (unwritten)
+ 		flags |= XFS_RMAP_UNWRITTEN;
+-	trace_xfs_rmap_map(mp, cur->bc_private.a.agno, bno, len,
++	trace_xfs_rmap_map(mp, xfs_rmap_cur_agno(cur), bno, len,
+ 			unwritten, oinfo);
+ 
+ 	/* Is there a left record that abuts our range? */
+@@ -2229,7 +2264,7 @@ xfs_rmap_map_shared(
+ 			goto out_error;
+ 		}
+ 		trace_xfs_rmap_find_right_neighbor_result(cur->bc_mp,
+-			cur->bc_private.a.agno, gtrec.rm_startblock,
++			xfs_rmap_cur_agno(cur), gtrec.rm_startblock,
+ 			gtrec.rm_blockcount, gtrec.rm_owner,
+ 			gtrec.rm_offset, gtrec.rm_flags);
+ 
+@@ -2323,12 +2358,12 @@ xfs_rmap_map_shared(
+ 			goto out_error;
+ 	}
+ 
+-	trace_xfs_rmap_map_done(mp, cur->bc_private.a.agno, bno, len,
++	trace_xfs_rmap_map_done(mp, xfs_rmap_cur_agno(cur), bno, len,
+ 			unwritten, oinfo);
+ out_error:
+ 	if (error)
+ 		trace_xfs_rmap_map_error(cur->bc_mp,
+-				cur->bc_private.a.agno, error, _RET_IP_);
++				xfs_rmap_cur_agno(cur), error, _RET_IP_);
+ 	return error;
+ }
+ 
+@@ -2472,13 +2507,12 @@ xfs_rmap_finish_one(
+ 	if (XFS_TEST_ERROR(false, mp,
+ 			XFS_ERRTAG_RMAP_FINISH_ONE))
+ 		return -EIO;
+-
+ 	/*
+ 	 * If we haven't gotten a cursor or the cursor AG doesn't match
+ 	 * the startblock, get one now.
+ 	 */
+ 	rcur = *pcur;
+-	if (rcur != NULL && rcur->bc_private.a.agno != agno) {
++	if (rcur != NULL && xfs_rmap_cur_agno(rcur) != agno) {
+ 		xfs_rmap_finish_one_cleanup(tp, rcur, 0);
+ 		rcur = NULL;
+ 		*pcur = NULL;
 
