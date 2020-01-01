@@ -7,55 +7,56 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56078C2D0DE
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:14:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20A5DC2D0CE
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:14:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 29BD8206E4
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:14:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E5D14206E4
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:14:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="QEaX72eX"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="dfvVVAY+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727183AbgAABOI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Dec 2019 20:14:08 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:54512 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727134AbgAABOI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:14:08 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0011E6fZ092009
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:14:07 GMT
+        id S1727186AbgAABOO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Dec 2019 20:14:14 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:51530 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727134AbgAABOO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:14:14 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0011ECbX094423
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:14:12 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=nUqkDh3U4ba5cz3sByq0lByBPpvASaMGGQq+HsYYcWM=;
- b=QEaX72eXZTPqwQjpuvsbHfkeiaYzaTBoyCHmZDZzyjFCprUhGxaR2Urm/kPr4POnArUF
- rggPojllVRfqGxIQR2vUUbQ484GSvrfrGLOmA2k1KFcCEfN4GWi/Y8kBsdmCSYSxbzWR
- 0DR/n2b91iQkPaP1QihHbB2RGOmnwCF/rqwEei1d7NE5XVJO5XP/PSyc37ptSBzR9v9F
- L+Ekn0vXJS2ii+T880GSKCXtAOc+n03CcVDYUWNs0ta26VY4sYjO1VvsV1PEqLYjfsOn
- mwlW9ffMmaiQo0jZXM4zg7nzOazlA++d3/utG6xVD/pjfFiO3AIgGEwOhMfWbeMtahpd LA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 2x5y0pjy01-1
+ bh=M4FHSiFn4Ua/aUNrmNSL3Mk1ekPfAZr77WOe4dra00Q=;
+ b=dfvVVAY+vthbILBcBbwc1wDqDKJI37i5Tpsb+vzbcPLZe0S8UV4TDIC3CWnvp3fxWGJm
+ egBkHxevpTD1r/AQBHAbGkrDCwZfTYbJ84MUQM/uazRPTQGrNIjvCT1c5nNZnFCvKcH8
+ 8r2odRRlMse4QRGt1yPNkGIrwvx7LekU8HiX46SxySbyeuXniD6jJy7u9FwZSN/9/af7
+ u1mYWqJzxwx9aVWA8EBUWj7ntVlnzjbIUzr4o5a3saXcoMTF6Hi0nv5SIs3M240ONg2H
+ v+GganhxxmGeigs96+mFy9/XXzrQPOwdtfGwnhhIBpxnNgE7E9hjJdYe0R9a2TV+amGX ng== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 2x5ypqjwja-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:14:07 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0011A9pd014231
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:14:06 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:14:12 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00118wVn172138
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:14:12 GMT
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 2x8guef3y0-1
+        by userp3030.oracle.com with ESMTP id 2x8gj9191e-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:14:06 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0011E5Ob012751
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:14:05 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:14:12 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0011EBj2012844
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:14:11 GMT
 Received: from localhost (/10.159.150.156)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 31 Dec 2019 17:14:05 -0800
-Subject: [PATCH 14/21] xfs: hoist xfs_{bump,drop}link to libxfs
+        with ESMTP ; Tue, 31 Dec 2019 17:14:11 -0800
+Subject: [PATCH 15/21] xfs: create libxfs helper to link a new inode into a
+ directory
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 31 Dec 2019 17:14:03 -0800
-Message-ID: <157784124309.1365473.12548882203103913937.stgit@magnolia>
+Date:   Tue, 31 Dec 2019 17:14:09 -0800
+Message-ID: <157784124917.1365473.16251552432619701137.stgit@magnolia>
 In-Reply-To: <157784115560.1365473.15056496428451670757.stgit@magnolia>
 References: <157784115560.1365473.15056496428451670757.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,118 +81,120 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Move xfs_bumplink and xfs_droplink to libxfs.
+Create a new libxfs function to link a newly created inode into a
+directory.  The upcoming metadata directory feature will need this to
+create a metadata directory tree.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_inode_util.c |   36 ++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_inode_util.h |    2 ++
- fs/xfs/xfs_inode.c             |   36 ------------------------------------
- 3 files changed, 38 insertions(+), 36 deletions(-)
+ fs/xfs/libxfs/xfs_dir2.c |   46 ++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_dir2.h |    4 ++++
+ fs/xfs/xfs_inode.c       |   18 ++----------------
+ 3 files changed, 52 insertions(+), 16 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_inode_util.c b/fs/xfs/libxfs/xfs_inode_util.c
-index c4928f4dc0ee..12f3ad09795f 100644
---- a/fs/xfs/libxfs/xfs_inode_util.c
-+++ b/fs/xfs/libxfs/xfs_inode_util.c
-@@ -914,3 +914,39 @@ xfs_iunlink_remove(
- 		xfs_perag_put(pag);
- 	return error;
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index e18f248a08a9..2a41aa2b3b30 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -19,6 +19,9 @@
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
+ #include "xfs_health.h"
++#include "xfs_shared.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_trans_space.h"
+ 
+ struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2, XFS_DIR3_FT_DIR };
+ 
+@@ -748,3 +751,46 @@ xfs_dir2_compname(
+ 		return xfs_ascii_ci_compname(args, name, len);
+ 	return xfs_da_compname(args, name, len);
  }
 +
 +/*
-+ * Decrement the link count on an inode & log the change.  If this causes the
-+ * link count to go to zero, move the inode to AGI unlinked list so that it can
-+ * be freed when the last active reference goes away via xfs_inactive().
++ * Given a directory @dp, a newly allocated inode @ip, and a @name, link @ip
++ * into @dp under the given @name.  If @ip is a directory, it will be
++ * initialized.  Both inodes must have the ILOCK held and the transaction must
++ * have sufficient blocks reserved.
 + */
 +int
-+xfs_droplink(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip)
++xfs_dir_create_new_child(
++	struct xfs_trans		*tp,
++	uint				resblks,
++	struct xfs_inode		*dp,
++	struct xfs_name			*name,
++	struct xfs_inode		*ip)
 +{
-+	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
++	struct xfs_mount		*mp = tp->t_mountp;
++	int				error;
 +
-+	drop_nlink(VFS_I(ip));
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
++	ASSERT(xfs_isilocked(dp, XFS_ILOCK_EXCL));
++	ASSERT(resblks == 0 || resblks > XFS_IALLOC_SPACE_RES(mp));
 +
-+	if (VFS_I(ip)->i_nlink)
++	error = xfs_dir_createname(tp, dp, name, ip->i_ino,
++				   resblks ?
++					resblks - XFS_IALLOC_SPACE_RES(mp) : 0);
++	if (error) {
++		ASSERT(error != -ENOSPC);
++		return error;
++	}
++
++	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
++	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
++
++	if (!S_ISDIR(VFS_I(ip)->i_mode))
 +		return 0;
 +
-+	return xfs_iunlink(tp, ip);
-+}
++	error = xfs_dir_init(tp, ip, dp);
++	if (error)
++		return error;
 +
-+/*
-+ * Increment the link count on an inode & log the change.
-+ */
-+void
-+xfs_bumplink(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip)
-+{
-+	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
-+
-+	ASSERT(ip->i_d.di_version > 1);
-+	inc_nlink(VFS_I(ip));
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++	xfs_bumplink(tp, dp);
++	return 0;
 +}
-diff --git a/fs/xfs/libxfs/xfs_inode_util.h b/fs/xfs/libxfs/xfs_inode_util.h
-index c4e851589c57..d716bffb06ed 100644
---- a/fs/xfs/libxfs/xfs_inode_util.h
-+++ b/fs/xfs/libxfs/xfs_inode_util.h
-@@ -48,6 +48,8 @@ void xfs_inode_init(struct xfs_trans *tp, const struct xfs_ialloc_args *args,
+diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+index 033777e282f2..de38d6335a72 100644
+--- a/fs/xfs/libxfs/xfs_dir2.h
++++ b/fs/xfs/libxfs/xfs_dir2.h
+@@ -250,4 +250,8 @@ unsigned int xfs_dir3_data_end_offset(struct xfs_da_geometry *geo,
+ 		struct xfs_dir2_data_hdr *hdr);
+ bool xfs_dir2_namecheck(const void *name, size_t length);
  
- int xfs_iunlink(struct xfs_trans *tp, struct xfs_inode *ip);
- int xfs_iunlink_remove(struct xfs_trans *tp, struct xfs_inode *ip);
-+int xfs_droplink(struct xfs_trans *tp, struct xfs_inode *ip);
-+void xfs_bumplink(struct xfs_trans *tp, struct xfs_inode *ip);
- 
- /* The libxfs client must provide these iunlink helper functions. */
- int xfs_iunlink_init(struct xfs_perag *pag);
++int xfs_dir_create_new_child(struct xfs_trans *tp, uint resblks,
++		struct xfs_inode *dp, struct xfs_name *name,
++		struct xfs_inode *ip);
++
+ #endif	/* __XFS_DIR2_H__ */
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 83bd046de786..af4c20a09514 100644
+index af4c20a09514..b3ff374025dd 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -668,42 +668,6 @@ xfs_dir_ialloc_roll(
- 	return error;
- }
+@@ -780,23 +780,9 @@ xfs_create(
+ 	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
+ 	unlock_dp_on_error = false;
  
--/*
-- * Decrement the link count on an inode & log the change.  If this causes the
-- * link count to go to zero, move the inode to AGI unlinked list so that it can
-- * be freed when the last active reference goes away via xfs_inactive().
-- */
--static int			/* error */
--xfs_droplink(
--	xfs_trans_t *tp,
--	xfs_inode_t *ip)
--{
--	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+-	error = xfs_dir_createname(tp, dp, name, ip->i_ino,
+-				   resblks ?
+-					resblks - XFS_IALLOC_SPACE_RES(mp) : 0);
+-	if (error) {
+-		ASSERT(error != -ENOSPC);
++	error = xfs_dir_create_new_child(tp, resblks, dp, name, ip);
++	if (error)
+ 		goto out_trans_cancel;
+-	}
+-	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+-	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
 -
--	drop_nlink(VFS_I(ip));
--	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-	if (is_dir) {
+-		error = xfs_dir_init(tp, ip, dp);
+-		if (error)
+-			goto out_trans_cancel;
 -
--	if (VFS_I(ip)->i_nlink)
--		return 0;
--
--	return xfs_iunlink(tp, ip);
--}
--
--/*
-- * Increment the link count on an inode & log the change.
-- */
--static void
--xfs_bumplink(
--	xfs_trans_t *tp,
--	xfs_inode_t *ip)
--{
--	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
--
--	ASSERT(ip->i_d.di_version > 1);
--	inc_nlink(VFS_I(ip));
--	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--}
--
- int
- xfs_create(
- 	struct xfs_inode		*dp,
+-		xfs_bumplink(tp, dp);
+-	}
+ 
+ 	/*
+ 	 * If this is a synchronous mount, make sure that the
 
