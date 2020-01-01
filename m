@@ -2,60 +2,61 @@ Return-Path: <SRS0=v9Pv=2W=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	UNWANTED_LANGUAGE_BODY autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F29EC2D0DD
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:22:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35B53C2D0CE
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:22:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E43C9206EE
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:22:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA6832072A
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:22:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="qMKtD8rt"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="lZnjecUE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727145AbgAABWC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Dec 2019 20:22:02 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:59936 "EHLO
+        id S1727149AbgAABWJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Dec 2019 20:22:09 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:59998 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727132AbgAABWC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:22:02 -0500
+        with ESMTP id S1727132AbgAABWJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:22:09 -0500
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0011EADK112544;
-        Wed, 1 Jan 2020 01:21:59 GMT
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0011FXHi113308;
+        Wed, 1 Jan 2020 01:22:05 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=UCa2fD/O+legcwsKUddT7/ZD8rDnE4kpooNN84BWMsU=;
- b=qMKtD8rt3IzjlURL37uBdrjE5h+Ggu3Epq/hOPzl83g1y57FrxQDt+IebvbpBb9QCgDD
- +wPaCAmpTxSBwTbB2xGCRJ1VH9X0/HtCBTip/vBs53lI0eMNf760Hob1mGR+3cw63XYS
- Ov72qxwGtxL7gxDb0GHRidgv6DFkDBLDFIfYo4zJNJ4lMmJF8lVorsZiz4BuLYeAhH0x
- LLInryAXpa3nVO2g2rMbNg53zVGvfXH0fY/f4/n9JHDsHXjk9qMDot465uZMnyMd1zUa
- F0w78IOe0qHT0WrmVhqhLGGbgQ0XXKMcMrrSxzCsplMRq20P+8fLLI2tJmv/Eq4G6fml dA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2x5xftk2ss-1
+ bh=tXzrZkfWfaWFoHpJA2Hm0JZMwV6icZJJqgOKJ/4mb28=;
+ b=lZnjecUEnezUVG9vMlWp+Gs8PudrIbMNbmuotPwcJT3DVlYJlxmS7EOxQDXyLSVNs748
+ f5XM5SeUJxWfaam09KH6wy0/iCyVrgKe94gTxP8irvw09HO8nZpDI500UfBM93PXDWtQ
+ 5hPUpaJNwqLMEY/+RL82qU9rr9rv2hNOqnWyE1Jo2QKZ9IzbWQ7uM++mIGNTce0gPFPE
+ PhdbWs3FWAjJnhejXBzzbjoQtsviejN2yCmXBYMLpn8tzy0eQ6KUdAP/bSD3fLmzYaJ0
+ 36EzyB+6HmWmeUwkgTi2YNcHRorf31lUPGudptttfHZlZXCn7Y+wAw8HHQrIGR1aQVio qg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 2x5xftk2t0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 01 Jan 2020 01:21:59 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0011IALg056984;
-        Wed, 1 Jan 2020 01:21:58 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 2x7medfjv6-1
+        Wed, 01 Jan 2020 01:22:05 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0011J7GM185046;
+        Wed, 1 Jan 2020 01:22:05 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 2x8gj91dvc-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 01 Jan 2020 01:21:58 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0011LvI4001375;
-        Wed, 1 Jan 2020 01:21:57 GMT
+        Wed, 01 Jan 2020 01:22:04 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0011M4LT016824;
+        Wed, 1 Jan 2020 01:22:04 GMT
 Received: from localhost (/10.159.150.156)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 31 Dec 2019 17:21:57 -0800
-Subject: [PATCH 5/9] xfs_repair: rebuild inode btrees with bulk loader
+        with ESMTP ; Tue, 31 Dec 2019 17:22:03 -0800
+Subject: [PATCH 6/9] xfs_repair: rebuild reverse mapping btrees with bulk
+ loader
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 31 Dec 2019 17:21:54 -0800
-Message-ID: <157784171471.1371226.774123922566675811.stgit@magnolia>
+Date:   Tue, 31 Dec 2019 17:22:01 -0800
+Message-ID: <157784172123.1371226.4929309373566132316.stgit@magnolia>
 In-Reply-To: <157784168333.1371226.17162288990534822154.stgit@magnolia>
 References: <157784168333.1371226.17162288990534822154.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,143 +81,70 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Use the btree bulk loading functions to rebuild the inode btrees
-and drop the open-coded implementation.
+Use the btree bulk loading functions to rebuild the reverse mapping
+btrees and drop the open-coded implementation.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
  libxfs/libxfs_api_defs.h |    1 
- repair/phase5.c          |  607 +++++++++++++++++-----------------------------
- 2 files changed, 227 insertions(+), 381 deletions(-)
+ repair/phase5.c          |  410 ++++++++--------------------------------------
+ 2 files changed, 71 insertions(+), 340 deletions(-)
 
 
 diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index 60dc9297..468503c6 100644
+index 468503c6..4fc26d15 100644
 --- a/libxfs/libxfs_api_defs.h
 +++ b/libxfs/libxfs_api_defs.h
-@@ -181,5 +181,6 @@
- #define xfs_btree_bload_compute_geometry libxfs_btree_bload_compute_geometry
+@@ -182,5 +182,6 @@
  #define xfs_btree_bload			libxfs_btree_bload
  #define xfs_allocbt_stage_cursor	libxfs_allocbt_stage_cursor
-+#define xfs_inobt_stage_cursor		libxfs_inobt_stage_cursor
+ #define xfs_inobt_stage_cursor		libxfs_inobt_stage_cursor
++#define xfs_rmapbt_stage_cursor		libxfs_rmapbt_stage_cursor
  
  #endif /* __LIBXFS_API_DEFS_H__ */
 diff --git a/repair/phase5.c b/repair/phase5.c
-index 2421c4bc..1285527a 100644
+index 1285527a..ef120b5e 100644
 --- a/repair/phase5.c
 +++ b/repair/phase5.c
-@@ -75,6 +75,10 @@ struct bt_rebuild {
- 			struct extent_tree_node	*bno_rec;
- 			xfs_agblock_t		*freeblks;
- 		};
-+		struct {
-+			struct ino_tree_node	*ino_rec;
-+			struct agi_stat		*agi_stat;
-+		};
- 	};
- };
+@@ -1070,359 +1070,89 @@ build_agi(
  
-@@ -764,48 +768,40 @@ _("Error %d while writing cntbt btree for AG %u.\n"), error, agno);
- 	sc->tp = NULL;
- }
- 
--/*
-- * XXX(hch): any reason we don't just look at mp->m_inobt_mxr?
-- */
--#define XR_INOBT_BLOCK_MAXRECS(mp, level) \
--			libxfs_inobt_maxrecs((mp), (mp)->m_sb.sb_blocksize, \
--						(level) == 0)
-+/* Inode Btrees */
+ /* rebuild the rmap tree */
  
 -/*
 - * we don't have to worry here about how chewing up free extents
-- * may perturb things because inode tree building happens before
+- * may perturb things because rmap tree building happens before
 - * freespace tree building.
 - */
-+/* Initialize both inode btree cursors as needed. */
++/* Set up the rmap rebuild parameters. */
  static void
--init_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
--		uint64_t *num_inos, uint64_t *num_free_inos, int finobt)
-+init_ino_cursors(
-+	struct repair_ctx	*sc,
-+	xfs_agnumber_t		agno,
-+	unsigned int		free_space,
-+	uint64_t		*num_inos,
-+	uint64_t		*num_free_inos,
-+	struct bt_rebuild	*btr_ino,
-+	struct bt_rebuild	*btr_fino)
- {
--	uint64_t		ninos;
--	uint64_t		nfinos;
--	int			rec_nfinos;
--	int			rec_ninos;
--	ino_tree_node_t		*ino_rec;
--	int			num_recs;
+ init_rmapbt_cursor(
+-	struct xfs_mount	*mp,
+-	xfs_agnumber_t		agno,
+-	struct bt_status	*btree_curs)
+-{
+-	size_t			num_recs;
 -	int			level;
--	bt_stat_level_t		*lptr;
--	bt_stat_level_t		*p_lptr;
+-	struct bt_stat_level	*lptr;
+-	struct bt_stat_level	*p_lptr;
 -	xfs_extlen_t		blocks_allocated;
--	int			i;
-+	struct xfs_btree_cur	*cur;
-+	struct ino_tree_node	*ino_rec;
-+	unsigned int		ino_recs = 0;
-+	unsigned int		fino_recs = 0;
-+	bool			finobt;
-+	int			error;
- 
--	*num_inos = *num_free_inos = 0;
--	ninos = nfinos = 0;
-+	finobt = xfs_sb_version_hasfinobt(&sc->mp->m_sb);
-+	init_rebuild(sc, &XFS_RMAP_OINFO_INOBT, free_space, btr_ino);
-+	init_rebuild(sc, &XFS_RMAP_OINFO_INOBT, free_space, btr_fino);
- 
+-	int			maxrecs;
+-
+-	if (!xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+-		memset(btree_curs, 0, sizeof(struct bt_status));
+-		return;
+-	}
+-
 -	lptr = &btree_curs->level[0];
 -	btree_curs->init = 1;
--	btree_curs->owner = XFS_RMAP_OWN_INOBT;
-+	/* Compute inode statistics. */
-+	*num_free_inos = 0;
-+	*num_inos = 0;
-+	for (ino_rec = findfirst_inode_rec(agno);
-+	     ino_rec != NULL;
-+	     ino_rec = next_ino_rec(ino_rec))  {
-+		unsigned int	rec_ninos = 0;
-+		unsigned int	rec_nfinos = 0;
-+		int		i;
- 
+-	btree_curs->owner = XFS_RMAP_OWN_AG;
+-
 -	/*
 -	 * build up statistics
 -	 */
--	ino_rec = findfirst_inode_rec(agno);
--	for (num_recs = 0; ino_rec != NULL; ino_rec = next_ino_rec(ino_rec))  {
--		rec_ninos = 0;
--		rec_nfinos = 0;
- 		for (i = 0; i < XFS_INODES_PER_CHUNK; i++)  {
- 			ASSERT(is_inode_confirmed(ino_rec, i));
- 			/*
-@@ -819,168 +815,222 @@ init_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
- 			rec_ninos++;
- 		}
- 
--		/*
--		 * finobt only considers records with free inodes
--		 */
--		if (finobt && !rec_nfinos)
--			continue;
-+		*num_free_inos += rec_nfinos;
-+		*num_inos += rec_ninos;
-+		ino_recs++;
- 
--		nfinos += rec_nfinos;
--		ninos += rec_ninos;
--		num_recs++;
-+		/* finobt only considers records with free inodes */
-+		if (rec_nfinos)
-+			fino_recs++;
- 	}
- 
+-	num_recs = rmap_record_count(mp, agno);
 -	if (num_recs == 0) {
 -		/*
--		 * easy corner-case -- no inode records
+-		 * easy corner-case -- no rmap records
 -		 */
 -		lptr->num_blocks = 1;
 -		lptr->modulo = 0;
@@ -225,42 +153,26 @@ index 2421c4bc..1285527a 100644
 -
 -		btree_curs->num_levels = 1;
 -		btree_curs->num_tot_blocks = btree_curs->num_free_blocks = 1;
-+	/* Compute how many inobt blocks we'll need. */
-+	cur = libxfs_inobt_stage_cursor(sc->mp, sc->tp,
-+			&btr_ino->newbt.afake, agno, XFS_BTNUM_INO);
-+	error = -libxfs_btree_bload_compute_geometry(cur, &btr_ino->bload,
-+			ino_recs);
-+	if (error)
-+		do_error(
-+_("Unable to compute inode btree geometry, error %d.\n"), error);
-+	libxfs_btree_del_cursor(cur, error);
- 
+-
 -		setup_cursor(mp, agno, btree_curs);
-+	setup_rebuild(sc->mp, agno, btr_ino, btr_ino->bload.nr_blocks);
- 
-+	if (!finobt)
- 		return;
+-
+-		return;
 -	}
- 
--	blocks_allocated = lptr->num_blocks = howmany(num_recs,
--					XR_INOBT_BLOCK_MAXRECS(mp, 0));
-+	/* Compute how many finobt blocks we'll need. */
-+	cur = libxfs_inobt_stage_cursor(sc->mp, sc->tp,
-+			&btr_fino->newbt.afake, agno, XFS_BTNUM_FINO);
-+	error = -libxfs_btree_bload_compute_geometry(cur, &btr_fino->bload,
-+			fino_recs);
-+	if (error)
-+		do_error(
-+_("Unable to compute free inode btree geometry, error %d.\n"), error);
-+	libxfs_btree_del_cursor(cur, error);
- 
+-
+-	/*
+-	 * Leave enough slack in the rmapbt that we can insert the
+-	 * metadata AG entries without too many splits.
+-	 */
+-	maxrecs = mp->m_rmap_mxr[0];
+-	if (num_recs > maxrecs)
+-		maxrecs -= 10;
+-	blocks_allocated = lptr->num_blocks = howmany(num_recs, maxrecs);
+-
 -	lptr->modulo = num_recs % lptr->num_blocks;
 -	lptr->num_recs_pb = num_recs / lptr->num_blocks;
 -	lptr->num_recs_tot = num_recs;
 -	level = 1;
-+	setup_rebuild(sc->mp, agno, btr_fino, btr_fino->bload.nr_blocks);
-+}
- 
+-
 -	if (lptr->num_blocks > 1)  {
 -		for (; btree_curs->level[level-1].num_blocks > 1
 -				&& level < XFS_BTREE_MAXLEVELS;
@@ -268,142 +180,63 @@ index 2421c4bc..1285527a 100644
 -			lptr = &btree_curs->level[level];
 -			p_lptr = &btree_curs->level[level - 1];
 -			lptr->num_blocks = howmany(p_lptr->num_blocks,
--				XR_INOBT_BLOCK_MAXRECS(mp, level));
+-				mp->m_rmap_mxr[1]);
 -			lptr->modulo = p_lptr->num_blocks % lptr->num_blocks;
 -			lptr->num_recs_pb = p_lptr->num_blocks
 -					/ lptr->num_blocks;
 -			lptr->num_recs_tot = p_lptr->num_blocks;
-+/* Copy one incore inode record into the inobt cursor. */
-+static void
-+get_inode_data(
-+	struct xfs_btree_cur		*cur,
-+	struct ino_tree_node		*ino_rec,
-+	struct agi_stat			*agi_stat)
-+{
-+	struct xfs_inobt_rec_incore	*irec = &cur->bc_rec.i;
-+	int				inocnt = 0;
-+	int				finocnt = 0;
-+	int				k;
- 
+-
 -			blocks_allocated += lptr->num_blocks;
 -		}
-+	irec->ir_startino = ino_rec->ino_startnum;
-+	irec->ir_free = ino_rec->ir_free;
-+
-+	for (k = 0; k < sizeof(xfs_inofree_t) * NBBY; k++)  {
-+		ASSERT(is_inode_confirmed(ino_rec, k));
-+
-+		if (is_inode_sparse(ino_rec, k))
-+			continue;
-+		if (is_inode_free(ino_rec, k))
-+			finocnt++;
-+		inocnt++;
- 	}
+-	}
 -	ASSERT(lptr->num_blocks == 1);
 -	btree_curs->num_levels = level;
- 
+-
 -	btree_curs->num_tot_blocks = btree_curs->num_free_blocks
 -			= blocks_allocated;
-+	irec->ir_count = inocnt;
-+	irec->ir_freecount = finocnt;
- 
+-
 -	setup_cursor(mp, agno, btree_curs);
-+	if (xfs_sb_version_hassparseinodes(&cur->bc_mp->m_sb)) {
-+		uint64_t		sparse;
-+		int			spmask;
-+		uint16_t		holemask;
-+
-+		/*
-+		 * Convert the 64-bit in-core sparse inode state to the
-+		 * 16-bit on-disk holemask.
-+		 */
-+		holemask = 0;
-+		spmask = (1 << XFS_INODES_PER_HOLEMASK_BIT) - 1;
-+		sparse = ino_rec->ir_sparse;
-+		for (k = 0; k < XFS_INOBT_HOLEMASK_BITS; k++) {
-+			if (sparse & spmask) {
-+				ASSERT((sparse & spmask) == spmask);
-+				holemask |= (1 << k);
-+			} else
-+				ASSERT((sparse & spmask) == 0);
-+			sparse >>= XFS_INODES_PER_HOLEMASK_BIT;
-+		}
- 
--	*num_inos = ninos;
--	*num_free_inos = nfinos;
-+		irec->ir_holemask = holemask;
-+	} else {
-+		irec->ir_holemask = 0;
-+	}
- 
--	return;
-+	if (!agi_stat)
-+		return;
-+
-+	if (agi_stat->first_agino != NULLAGINO)
-+		agi_stat->first_agino = ino_rec->ino_startnum;
-+	agi_stat->freecount += finocnt;
-+	agi_stat->count += inocnt;
- }
- 
+-}
+-
 -static void
--prop_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
--	xfs_btnum_t btnum, xfs_agino_t startino, int level)
-+/* Grab one inobt record. */
-+static int
-+get_inobt_data(
-+	struct xfs_btree_cur		*cur,
-+	void				*priv)
+-prop_rmap_cursor(
+-	struct xfs_mount	*mp,
++	struct repair_ctx	*sc,
+ 	xfs_agnumber_t		agno,
+-	struct bt_status	*btree_curs,
+-	struct xfs_rmap_irec	*rm_rec,
+-	int			level)
++	unsigned int		free_space,
++	struct bt_rebuild	*btr)
  {
 -	struct xfs_btree_block	*bt_hdr;
--	xfs_inobt_key_t		*bt_key;
--	xfs_inobt_ptr_t		*bt_ptr;
+-	struct xfs_rmap_key	*bt_key;
+-	xfs_rmap_ptr_t		*bt_ptr;
 -	xfs_agblock_t		agbno;
--	bt_stat_level_t		*lptr;
--	const struct xfs_buf_ops *ops = btnum_to_ops(btnum);
-+	struct bt_rebuild		*rebuild = priv;
+-	struct bt_stat_level	*lptr;
+-	const struct xfs_buf_ops *ops = btnum_to_ops(XFS_BTNUM_RMAP);
++	struct xfs_btree_cur	*rmap_cur;
++	int			error;
  
 -	level++;
-+	get_inode_data(cur, rebuild->ino_rec, rebuild->agi_stat);
-+	rebuild->ino_rec = next_ino_rec(rebuild->ino_rec);
-+	return 0;
-+}
++	init_rebuild(sc, &XFS_RMAP_OINFO_AG, free_space, btr);
  
 -	if (level >= btree_curs->num_levels)
--		return;
-+/* Rebuild a inobt btree. */
-+static void
-+build_inobt(
-+	struct repair_ctx	*sc,
-+	xfs_agnumber_t		agno,
-+	struct bt_rebuild	*btr_ino,
-+	struct agi_stat		*agi_stat)
-+{
-+	struct xfs_btree_cur	*cur;
-+	int			error;
++	if (!xfs_sb_version_hasrmapbt(&sc->mp->m_sb))
+ 		return;
  
 -	lptr = &btree_curs->level[level];
 -	bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
-+	btr_ino->bload.get_data = get_inobt_data;
-+	btr_ino->bload.alloc_block = rebuild_alloc_block;
-+	agi_stat->count = agi_stat->freecount = 0;
-+	agi_stat->first_agino = NULLAGINO;
-+	btr_ino->agi_stat = agi_stat;
-+	btr_ino->ino_rec = findfirst_inode_rec(agno);
- 
+-
 -	if (be16_to_cpu(bt_hdr->bb_numrecs) == 0)  {
 -		/*
 -		 * this only happens once to initialize the
 -		 * first path up the left side of the tree
 -		 * where the agbno's are already set up
 -		 */
--		prop_ino_cursor(mp, agno, btree_curs, btnum, startino, level);
+-		prop_rmap_cursor(mp, agno, btree_curs, rm_rec, level);
 -	}
-+	error = -libxfs_trans_alloc_empty(sc->mp, &sc->tp);
-+	if (error)
-+		do_error(
-+_("Insufficient memory to construct inobt rebuild transaction.\n"));
- 
+-
 -	if (be16_to_cpu(bt_hdr->bb_numrecs) ==
 -				lptr->num_recs_pb + (lptr->modulo > 0))  {
 -		/*
@@ -411,189 +244,149 @@ index 2421c4bc..1285527a 100644
 -		 * and set the rightsib pointer of current block
 -		 */
 -#ifdef XR_BLD_INO_TRACE
--		fprintf(stderr, " ino prop agbno %d ", lptr->prev_agbno);
+-		fprintf(stderr, " rmap prop agbno %d ", lptr->prev_agbno);
 -#endif
 -		if (lptr->prev_agbno != NULLAGBLOCK)  {
 -			ASSERT(lptr->prev_buf_p != NULL);
 -			libxfs_writebuf(lptr->prev_buf_p, 0);
 -		}
--		lptr->prev_agbno = lptr->agbno;;
+-		lptr->prev_agbno = lptr->agbno;
 -		lptr->prev_buf_p = lptr->buf_p;
 -		agbno = get_next_blockaddr(agno, level, btree_curs);
-+	/* Add all observed inobt records. */
-+	cur = libxfs_inobt_stage_cursor(sc->mp, sc->tp,
-+			&btr_ino->newbt.afake, agno, XFS_BTNUM_INO);
-+	error = -libxfs_btree_bload(cur, &btr_ino->bload, btr_ino);
-+	if (error)
-+		do_error(
-+_("Error %d while creating inobt btree for AG %u.\n"), error, agno);
- 
+-
 -		bt_hdr->bb_u.s.bb_rightsib = cpu_to_be32(agbno);
-+	/* Since we're not writing the AGI yet, no need to commit the cursor */
-+	libxfs_btree_del_cursor(cur, 0);
-+	error = -libxfs_trans_commit(sc->tp);
-+	if (error)
-+		do_error(
-+_("Error %d while writing inobt btree for AG %u.\n"), error, agno);
-+	sc->tp = NULL;
-+}
- 
+-
 -		lptr->buf_p = libxfs_getbuf(mp->m_dev,
 -					XFS_AGB_TO_DADDR(mp, agno, agbno),
 -					XFS_FSB_TO_BB(mp, 1));
 -		lptr->agbno = agbno;
-+/* Grab one finobt record. */
-+static int
-+get_finobt_data(
-+	struct xfs_btree_cur		*cur,
-+	void				*priv)
-+{
-+	struct bt_rebuild		*rebuild = priv;
- 
+-
 -		if (lptr->modulo)
 -			lptr->modulo--;
-+	get_inode_data(cur, rebuild->ino_rec, NULL);
-+	rebuild->ino_rec = next_free_ino_rec(rebuild->ino_rec);
-+	return 0;
-+}
- 
+-
 -		/*
 -		 * initialize block header
 -		 */
 -		lptr->buf_p->b_ops = ops;
 -		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
 -		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
--		libxfs_btree_init_block(mp, lptr->buf_p, btnum,
+-		libxfs_btree_init_block(mp, lptr->buf_p, XFS_BTNUM_RMAP,
 -					level, 0, agno);
-+/* Rebuild a finobt btree. */
-+static void
-+build_finobt(
-+	struct repair_ctx	*sc,
-+	xfs_agnumber_t		agno,
-+	struct bt_rebuild	*btr_fino)
-+{
-+	struct xfs_btree_cur	*cur;
-+	int			error;
- 
+-
 -		bt_hdr->bb_u.s.bb_leftsib = cpu_to_be32(lptr->prev_agbno);
-+	btr_fino->bload.get_data = get_finobt_data;
-+	btr_fino->bload.alloc_block = rebuild_alloc_block;
-+	btr_fino->ino_rec = findfirst_free_inode_rec(agno);
- 
+-
 -		/*
 -		 * propagate extent record for first extent in new block up
 -		 */
--		prop_ino_cursor(mp, agno, btree_curs, btnum, startino, level);
+-		prop_rmap_cursor(mp, agno, btree_curs, rm_rec, level);
 -	}
 -	/*
--	 * add inode info to current block
+-	 * add rmap info to current block
 -	 */
 -	be16_add_cpu(&bt_hdr->bb_numrecs, 1);
-+	error = -libxfs_trans_alloc_empty(sc->mp, &sc->tp);
-+	if (error)
-+		do_error(
-+_("Insufficient memory to construct finobt rebuild transaction.\n"));
- 
--	bt_key = XFS_INOBT_KEY_ADDR(mp, bt_hdr,
+-
+-	bt_key = XFS_RMAP_KEY_ADDR(bt_hdr,
 -				    be16_to_cpu(bt_hdr->bb_numrecs));
--	bt_ptr = XFS_INOBT_PTR_ADDR(mp, bt_hdr,
+-	bt_ptr = XFS_RMAP_PTR_ADDR(bt_hdr,
 -				    be16_to_cpu(bt_hdr->bb_numrecs),
--				    M_IGEO(mp)->inobt_mxr[1]);
-+	/* Add all observed finobt records. */
-+	cur = libxfs_inobt_stage_cursor(sc->mp, sc->tp,
-+			&btr_fino->newbt.afake, agno, XFS_BTNUM_FINO);
-+	error = -libxfs_btree_bload(cur, &btr_fino->bload, btr_fino);
+-				    mp->m_rmap_mxr[1]);
+-
+-	bt_key->rm_startblock = cpu_to_be32(rm_rec->rm_startblock);
+-	bt_key->rm_owner = cpu_to_be64(rm_rec->rm_owner);
+-	bt_key->rm_offset = cpu_to_be64(rm_rec->rm_offset);
++	/* Compute how many blocks we'll need. */
++	rmap_cur = libxfs_rmapbt_stage_cursor(sc->mp, sc->tp,
++			&btr->newbt.afake, agno);
++	error = -libxfs_btree_bload_compute_geometry(rmap_cur, &btr->bload,
++			rmap_record_count(sc->mp, agno));
 +	if (error)
 +		do_error(
-+_("Error %d while creating finobt btree for AG %u.\n"), error, agno);
++_("Unable to compute rmap btree geometry, error %d.\n"), error);
++	libxfs_btree_del_cursor(rmap_cur, error);
  
--	bt_key->ir_startino = cpu_to_be32(startino);
 -	*bt_ptr = cpu_to_be32(btree_curs->level[level-1].agbno);
-+	/* Since we're not writing the AGI yet, no need to commit the cursor */
-+	libxfs_btree_del_cursor(cur, 0);
-+	error = -libxfs_trans_commit(sc->tp);
-+	if (error)
-+		do_error(
-+_("Error %d while writing finobt btree for AG %u.\n"), error, agno);
-+	sc->tp = NULL;
++	setup_rebuild(sc->mp, agno, btr, btr->bload.nr_blocks);
  }
  
- /*
-  * XXX: yet more code that can be shared with mkfs, growfs.
-  */
- static void
--build_agi(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
--		bt_status_t *finobt_curs, struct agi_stat *agi_stat)
-+build_agi(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno,
-+	struct bt_rebuild	*ino_bt,
-+	struct bt_rebuild	*fino_bt,
-+	struct agi_stat		*agi_stat)
+-static void
+-prop_rmap_highkey(
+-	struct xfs_mount	*mp,
+-	xfs_agnumber_t		agno,
+-	struct bt_status	*btree_curs,
+-	struct xfs_rmap_irec	*rm_highkey)
++/* Grab one rmap record. */
++static int
++get_rmap_data(
++	struct xfs_btree_cur		*cur,
++	void				*priv)
  {
--	xfs_buf_t	*agi_buf;
--	xfs_agi_t	*agi;
--	int		i;
-+	struct xfs_buf		*agi_buf;
-+	struct xfs_agi		*agi;
-+	int			i;
+-	struct xfs_btree_block	*bt_hdr;
+-	struct xfs_rmap_key	*bt_key;
+-	struct bt_stat_level	*lptr;
+-	struct xfs_rmap_irec	key = {0};
+-	struct xfs_rmap_irec	high_key;
+-	int			level;
+-	int			i;
+-	int			numrecs;
++	struct xfs_rmap_irec		*rmap = &cur->bc_rec.r;
++	struct xfs_rmap_irec		*rec;
++	struct bt_rebuild		*btr = priv;
  
- 	agi_buf = libxfs_getbuf(mp->m_dev,
- 			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
-@@ -998,8 +1048,8 @@ build_agi(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
- 		agi->agi_length = cpu_to_be32(mp->m_sb.sb_dblocks -
- 			(xfs_rfsblock_t) mp->m_sb.sb_agblocks * agno);
- 	agi->agi_count = cpu_to_be32(agi_stat->count);
--	agi->agi_root = cpu_to_be32(btree_curs->root);
--	agi->agi_level = cpu_to_be32(btree_curs->num_levels);
-+	agi->agi_root = cpu_to_be32(ino_bt->newbt.afake.af_root);
-+	agi->agi_level = cpu_to_be32(ino_bt->newbt.afake.af_levels);
- 	agi->agi_freecount = cpu_to_be32(agi_stat->freecount);
- 	agi->agi_newino = cpu_to_be32(agi_stat->first_agino);
- 	agi->agi_dirino = cpu_to_be32(NULLAGINO);
-@@ -1011,192 +1061,13 @@ build_agi(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
- 		platform_uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_meta_uuid);
- 
- 	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
--		agi->agi_free_root = cpu_to_be32(finobt_curs->root);
--		agi->agi_free_level = cpu_to_be32(finobt_curs->num_levels);
-+		agi->agi_free_root = cpu_to_be32(fino_bt->newbt.afake.af_root);
-+		agi->agi_free_level = cpu_to_be32(fino_bt->newbt.afake.af_levels);
- 	}
- 
- 	libxfs_writebuf(agi_buf, 0);
+-	high_key = *rm_highkey;
+-	for (level = 1; level < btree_curs->num_levels; level++) {
+-		lptr = &btree_curs->level[level];
+-		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
+-		numrecs = be16_to_cpu(bt_hdr->bb_numrecs);
+-		bt_key = XFS_RMAP_HIGH_KEY_ADDR(bt_hdr, numrecs);
+-
+-		bt_key->rm_startblock = cpu_to_be32(high_key.rm_startblock);
+-		bt_key->rm_owner = cpu_to_be64(high_key.rm_owner);
+-		bt_key->rm_offset = cpu_to_be64(
+-				libxfs_rmap_irec_offset_pack(&high_key));
+-
+-		for (i = 1; i <= numrecs; i++) {
+-			bt_key = XFS_RMAP_HIGH_KEY_ADDR(bt_hdr, i);
+-			key.rm_startblock = be32_to_cpu(bt_key->rm_startblock);
+-			key.rm_owner = be64_to_cpu(bt_key->rm_owner);
+-			key.rm_offset = be64_to_cpu(bt_key->rm_offset);
+-			if (rmap_diffkeys(&key, &high_key) > 0)
+-				high_key = key;
+-		}
+-	}
++	rec = pop_slab_cursor(btr->slab_cursor);
++	memcpy(rmap, rec, sizeof(struct xfs_rmap_irec));
++	return 0;
  }
  
 -/*
-- * rebuilds an inode tree given a cursor.  We're lazy here and call
-- * the routine that builds the agi
+- * rebuilds a rmap btree given a cursor.
 - */
--static void
--build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
--		bt_status_t *btree_curs, xfs_btnum_t btnum,
--		struct agi_stat *agi_stat)
--{
++/* Rebuild a rmap btree. */
+ static void
+ build_rmap_tree(
+-	struct xfs_mount	*mp,
++	struct repair_ctx	*sc,
+ 	xfs_agnumber_t		agno,
+-	struct bt_status	*btree_curs)
++	struct bt_rebuild	*btr)
+ {
 -	xfs_agnumber_t		i;
 -	xfs_agblock_t		j;
 -	xfs_agblock_t		agbno;
--	xfs_agino_t		first_agino;
 -	struct xfs_btree_block	*bt_hdr;
--	xfs_inobt_rec_t		*bt_rec;
--	ino_tree_node_t		*ino_rec;
--	bt_stat_level_t		*lptr;
--	const struct xfs_buf_ops *ops = btnum_to_ops(btnum);
--	xfs_agino_t		count = 0;
--	xfs_agino_t		freecount = 0;
--	int			inocnt;
--	uint8_t			finocnt;
--	int			k;
+-	struct xfs_rmap_irec	*rm_rec;
+-	struct xfs_slab_cursor	*rmap_cur;
+-	struct xfs_rmap_rec	*bt_rec;
+-	struct xfs_rmap_irec	highest_key = {0};
+-	struct xfs_rmap_irec	hi_key = {0};
+-	struct bt_stat_level	*lptr;
+-	const struct xfs_buf_ops *ops = btnum_to_ops(XFS_BTNUM_RMAP);
+-	int			numrecs;
 -	int			level = btree_curs->num_levels;
--	int			spmask;
--	uint64_t		sparse;
--	uint16_t		holemask;
--
--	ASSERT(btnum == XFS_BTNUM_INO || btnum == XFS_BTNUM_FINO);
--
++	struct xfs_btree_cur	*rmap_cur;
+ 	int			error;
+ 
+-	highest_key.rm_flags = 0;
 -	for (i = 0; i < level; i++)  {
 -		lptr = &btree_curs->level[i];
 -
@@ -611,115 +404,90 @@ index 2421c4bc..1285527a 100644
 -		/*
 -		 * initialize block header
 -		 */
--
++	btr->bload.get_data = get_rmap_data;
++	btr->bload.alloc_block = rebuild_alloc_block;
+ 
 -		lptr->buf_p->b_ops = ops;
 -		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
 -		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
--		libxfs_btree_init_block(mp, lptr->buf_p, btnum, i, 0, agno);
+-		libxfs_btree_init_block(mp, lptr->buf_p, XFS_BTNUM_RMAP,
+-					i, 0, agno);
 -	}
 -
 -	/*
 -	 * run along leaf, setting up records.  as we have to switch
--	 * blocks, call the prop_ino_cursor routine to set up the new
+-	 * blocks, call the prop_rmap_cursor routine to set up the new
 -	 * pointers for the parent.  that can recurse up to the root
 -	 * if required.  set the sibling pointers for leaf level here.
 -	 */
--	if (btnum == XFS_BTNUM_FINO)
--		ino_rec = findfirst_free_inode_rec(agno);
--	else
--		ino_rec = findfirst_inode_rec(agno);
--
--	if (ino_rec != NULL)
--		first_agino = ino_rec->ino_startnum;
--	else
--		first_agino = NULLAGINO;
--
+-	error = rmap_init_cursor(agno, &rmap_cur);
++	error = -libxfs_trans_alloc_empty(sc->mp, &sc->tp);
+ 	if (error)
+ 		do_error(
+-_("Insufficient memory to construct reverse-map cursor."));
+-	rm_rec = pop_slab_cursor(rmap_cur);
 -	lptr = &btree_curs->level[0];
 -
 -	for (i = 0; i < lptr->num_blocks; i++)  {
+-		numrecs = lptr->num_recs_pb + (lptr->modulo > 0);
+-		ASSERT(rm_rec != NULL || numrecs == 0);
+-
 -		/*
 -		 * block initialization, lay in block header
 -		 */
 -		lptr->buf_p->b_ops = ops;
 -		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
 -		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
--		libxfs_btree_init_block(mp, lptr->buf_p, btnum, 0, 0, agno);
+-		libxfs_btree_init_block(mp, lptr->buf_p, XFS_BTNUM_RMAP,
+-					0, 0, agno);
 -
 -		bt_hdr->bb_u.s.bb_leftsib = cpu_to_be32(lptr->prev_agbno);
--		bt_hdr->bb_numrecs = cpu_to_be16(lptr->num_recs_pb +
--							(lptr->modulo > 0));
+-		bt_hdr->bb_numrecs = cpu_to_be16(numrecs);
 -
 -		if (lptr->modulo > 0)
 -			lptr->modulo--;
 -
--		if (lptr->num_recs_pb > 0)
--			prop_ino_cursor(mp, agno, btree_curs, btnum,
--					ino_rec->ino_startnum, 0);
--
--		bt_rec = (xfs_inobt_rec_t *)
--			  ((char *)bt_hdr + XFS_INOBT_BLOCK_LEN(mp));
+-		if (lptr->num_recs_pb > 0) {
+-			ASSERT(rm_rec != NULL);
+-			prop_rmap_cursor(mp, agno, btree_curs, rm_rec, 0);
+-		}
++_("Insufficient memory to construct rmap rebuild transaction.\n"));
+ 
+-		bt_rec = (struct xfs_rmap_rec *)
+-			  ((char *)bt_hdr + XFS_RMAP_BLOCK_LEN);
+-		highest_key.rm_startblock = 0;
+-		highest_key.rm_owner = 0;
+-		highest_key.rm_offset = 0;
 -		for (j = 0; j < be16_to_cpu(bt_hdr->bb_numrecs); j++) {
--			ASSERT(ino_rec != NULL);
--			bt_rec[j].ir_startino =
--					cpu_to_be32(ino_rec->ino_startnum);
--			bt_rec[j].ir_free = cpu_to_be64(ino_rec->ir_free);
+-			ASSERT(rm_rec != NULL);
+-			bt_rec[j].rm_startblock =
+-					cpu_to_be32(rm_rec->rm_startblock);
+-			bt_rec[j].rm_blockcount =
+-					cpu_to_be32(rm_rec->rm_blockcount);
+-			bt_rec[j].rm_owner = cpu_to_be64(rm_rec->rm_owner);
+-			bt_rec[j].rm_offset = cpu_to_be64(
+-					libxfs_rmap_irec_offset_pack(rm_rec));
+-			rmap_high_key_from_rec(rm_rec, &hi_key);
+-			if (rmap_diffkeys(&hi_key, &highest_key) > 0)
+-				highest_key = hi_key;
 -
--			inocnt = finocnt = 0;
--			for (k = 0; k < sizeof(xfs_inofree_t)*NBBY; k++)  {
--				ASSERT(is_inode_confirmed(ino_rec, k));
--
--				if (is_inode_sparse(ino_rec, k))
--					continue;
--				if (is_inode_free(ino_rec, k))
--					finocnt++;
--				inocnt++;
--			}
--
--			/*
--			 * Set the freecount and check whether we need to update
--			 * the sparse format fields. Otherwise, skip to the next
--			 * record.
--			 */
--			inorec_set_freecount(mp, &bt_rec[j], finocnt);
--			if (!xfs_sb_version_hassparseinodes(&mp->m_sb))
--				goto nextrec;
--
--			/*
--			 * Convert the 64-bit in-core sparse inode state to the
--			 * 16-bit on-disk holemask.
--			 */
--			holemask = 0;
--			spmask = (1 << XFS_INODES_PER_HOLEMASK_BIT) - 1;
--			sparse = ino_rec->ir_sparse;
--			for (k = 0; k < XFS_INOBT_HOLEMASK_BITS; k++) {
--				if (sparse & spmask) {
--					ASSERT((sparse & spmask) == spmask);
--					holemask |= (1 << k);
--				} else
--					ASSERT((sparse & spmask) == 0);
--				sparse >>= XFS_INODES_PER_HOLEMASK_BIT;
--			}
--
--			bt_rec[j].ir_u.sp.ir_count = inocnt;
--			bt_rec[j].ir_u.sp.ir_holemask = cpu_to_be16(holemask);
--
--nextrec:
--			freecount += finocnt;
--			count += inocnt;
--
--			if (btnum == XFS_BTNUM_FINO)
--				ino_rec = next_free_ino_rec(ino_rec);
--			else
--				ino_rec = next_ino_rec(ino_rec);
+-			rm_rec = pop_slab_cursor(rmap_cur);
 -		}
 -
--		if (ino_rec != NULL)  {
+-		/* Now go set the parent key */
+-		prop_rmap_highkey(mp, agno, btree_curs, &highest_key);
++	error = rmap_init_cursor(agno, &btr->slab_cursor);
++	if (error)
++		do_error(
++_("Insufficient memory to construct rmap cursor.\n"));
+ 
+-		if (rm_rec != NULL)  {
 -			/*
 -			 * get next leaf level block
 -			 */
 -			if (lptr->prev_buf_p != NULL)  {
--#ifdef XR_BLD_INO_TRACE
--				fprintf(stderr, "writing inobt agbno %u\n",
+-#ifdef XR_BLD_RL_TRACE
+-				fprintf(stderr, "writing rmapbt agbno %u\n",
 -					lptr->prev_agbno);
 -#endif
 -				ASSERT(lptr->prev_agbno != NULLAGBLOCK);
@@ -729,107 +497,121 @@ index 2421c4bc..1285527a 100644
 -			lptr->prev_agbno = lptr->agbno;
 -			lptr->agbno = get_next_blockaddr(agno, 0, btree_curs);
 -			bt_hdr->bb_u.s.bb_rightsib = cpu_to_be32(lptr->agbno);
--
++	/* Add all observed rmap records. */
++	rmap_cur = libxfs_rmapbt_stage_cursor(sc->mp, sc->tp,
++			&btr->newbt.afake, agno);
++	error = -libxfs_btree_bload(rmap_cur, &btr->bload, btr);
++	if (error)
++		do_error(
++_("Error %d while creating rmap btree for AG %u.\n"), error, agno);
+ 
 -			lptr->buf_p = libxfs_getbuf(mp->m_dev,
 -					XFS_AGB_TO_DADDR(mp, agno, lptr->agbno),
 -					XFS_FSB_TO_BB(mp, 1));
 -		}
 -	}
--
--	if (agi_stat) {
--		agi_stat->first_agino = first_agino;
--		agi_stat->count = count;
--		agi_stat->freecount = freecount;
--	}
--}
--
- /* rebuild the rmap tree */
+-	free_slab_cursor(&rmap_cur);
++	/* Since we're not writing the AGF yet, no need to commit the cursor */
++	libxfs_btree_del_cursor(rmap_cur, 0);
++	free_slab_cursor(&btr->slab_cursor);
++	error = -libxfs_trans_commit(sc->tp);
++	if (error)
++		do_error(
++_("Error %d while writing rmap btree for AG %u.\n"), error, agno);
++	sc->tp = NULL;
+ }
  
- /*
-@@ -2082,14 +1953,10 @@ phase5_func(
+ /* rebuild the refcount tree */
+@@ -1753,7 +1483,7 @@ build_agf_agfl(
+ 	struct bt_rebuild	*btr_cnt,
+ 	xfs_extlen_t		freeblks,	/* # free blocks in tree */
+ 	int			lostblocks,	/* # blocks that will be lost */
+-	struct bt_status	*rmap_bt,
++	struct bt_rebuild	*btr_rmap,
+ 	struct bt_status	*refcnt_bt,
+ 	struct xfs_slab		*lost_fsb)
  {
- 	struct repair_ctx	sc = { .mp = mp, };
- 	struct agi_stat		agi_stat = {0,};
--	uint64_t		num_inos;
--	uint64_t		num_free_inos;
--	uint64_t		finobt_num_inos;
--	uint64_t		finobt_num_free_inos;
- 	struct bt_rebuild	btr_bno;
+@@ -1797,11 +1527,12 @@ build_agf_agfl(
+ 			cpu_to_be32(btr_cnt->newbt.afake.af_root);
+ 	agf->agf_levels[XFS_BTNUM_CNT] =
+ 			cpu_to_be32(btr_cnt->newbt.afake.af_levels);
+-	agf->agf_roots[XFS_BTNUM_RMAP] = cpu_to_be32(rmap_bt->root);
+-	agf->agf_levels[XFS_BTNUM_RMAP] = cpu_to_be32(rmap_bt->num_levels);
++	agf->agf_roots[XFS_BTNUM_RMAP] =
++			cpu_to_be32(btr_rmap->newbt.afake.af_root);
++	agf->agf_levels[XFS_BTNUM_RMAP] =
++			cpu_to_be32(btr_rmap->newbt.afake.af_levels);
+ 	agf->agf_freeblks = cpu_to_be32(freeblks);
+-	agf->agf_rmap_blocks = cpu_to_be32(rmap_bt->num_tot_blocks -
+-			rmap_bt->num_free_blocks);
++	agf->agf_rmap_blocks = cpu_to_be32(btr_rmap->newbt.afake.af_blocks);
+ 	agf->agf_refcount_root = cpu_to_be32(refcnt_bt->root);
+ 	agf->agf_refcount_level = cpu_to_be32(refcnt_bt->num_levels);
+ 	agf->agf_refcount_blocks = cpu_to_be32(refcnt_bt->num_tot_blocks -
+@@ -1819,7 +1550,7 @@ build_agf_agfl(
+ 		blks = btr_bno->newbt.afake.af_blocks +
+ 			btr_cnt->newbt.afake.af_blocks - 2;
+ 		if (xfs_sb_version_hasrmapbt(&mp->m_sb))
+-			blks += rmap_bt->num_tot_blocks - rmap_bt->num_free_blocks - 1;
++			blks += btr_rmap->newbt.afake.af_blocks - 1;
+ 		agf->agf_btreeblks = cpu_to_be32(blks);
+ #ifdef XR_BLD_FREE_TRACE
+ 		fprintf(stderr, "agf->agf_btreeblks = %u\n",
+@@ -1860,6 +1591,7 @@ build_agf_agfl(
+ 	/* Fill the AGFL with leftover blocks or save them for later. */
+ 	fill_agfl(btr_bno, freelist, &i);
+ 	fill_agfl(btr_cnt, freelist, &i);
++	fill_agfl(btr_rmap, freelist, &i);
+ 
+ 	/* Set the AGF counters for the AGFL. */
+ 	if (i > 0) {
+@@ -1957,7 +1689,7 @@ phase5_func(
  	struct bt_rebuild	btr_cnt;
--	bt_status_t		ino_btree_curs;
--	bt_status_t		fino_btree_curs;
-+	struct bt_rebuild	btr_ino;
-+	struct bt_rebuild	btr_fino;
- 	bt_status_t		rmap_btree_curs;
+ 	struct bt_rebuild	btr_ino;
+ 	struct bt_rebuild	btr_fino;
+-	bt_status_t		rmap_btree_curs;
++	struct bt_rebuild	btr_rmap;
  	bt_status_t		refcnt_btree_curs;
  	int			extra_blocks = 0;
-@@ -2126,21 +1993,8 @@ phase5_func(
- 			agno);
+ 	uint			num_freeblocks;
+@@ -2000,7 +1732,7 @@ phase5_func(
+ 	 * Set up the btree cursors for the on-disk rmap btrees,
+ 	 * which includes pre-allocating all required blocks.
+ 	 */
+-	init_rmapbt_cursor(mp, agno, &rmap_btree_curs);
++	init_rmapbt_cursor(&sc, agno, num_freeblocks, &btr_rmap);
+ 
+ 	/*
+ 	 * Set up the btree cursors for the on-disk refcount btrees,
+@@ -2073,10 +1805,8 @@ phase5_func(
+ 	ASSERT(freeblks1 == freeblks2);
+ 
+ 	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+-		build_rmap_tree(mp, agno, &rmap_btree_curs);
+-		write_cursor(&rmap_btree_curs);
+-		sb_fdblocks_ag[agno] += (rmap_btree_curs.num_tot_blocks -
+-				rmap_btree_curs.num_free_blocks) - 1;
++		build_rmap_tree(&sc, agno, &btr_rmap);
++		sb_fdblocks_ag[agno] += btr_rmap.newbt.afake.af_blocks - 1;
  	}
  
--	/*
--	 * ok, now set up the btree cursors for the
--	 * on-disk btrees (includs pre-allocating all
--	 * required blocks for the trees themselves)
--	 */
--	init_ino_cursor(mp, agno, &ino_btree_curs, &num_inos,
--			&num_free_inos, 0);
--
--	if (xfs_sb_version_hasfinobt(&mp->m_sb))
--		init_ino_cursor(mp, agno, &fino_btree_curs,
--				&finobt_num_inos, &finobt_num_free_inos,
--				1);
--
--	sb_icount_ag[agno] += num_inos;
--	sb_ifree_ag[agno] += num_free_inos;
-+	init_ino_cursors(&sc, agno, num_freeblocks, &sb_icount_ag[agno],
-+			&sb_ifree_ag[agno], &btr_ino, &btr_fino);
- 
- 	/*
- 	 * Set up the btree cursors for the on-disk rmap btrees,
-@@ -2237,36 +2091,27 @@ phase5_func(
- 			&rmap_btree_curs, &refcnt_btree_curs, lost_fsb);
- 
- 	/*
--	 * build inode allocation tree.
-+	 * build inode allocation trees.
+ 	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+@@ -2088,7 +1818,7 @@ phase5_func(
+ 	 * set up agf and agfl
  	 */
--	build_ino_tree(mp, agno, &ino_btree_curs, XFS_BTNUM_INO,
--			&agi_stat);
--	write_cursor(&ino_btree_curs);
--
--	/*
--	 * build free inode tree
--	 */
--	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
--		build_ino_tree(mp, agno, &fino_btree_curs,
--				XFS_BTNUM_FINO, NULL);
--		write_cursor(&fino_btree_curs);
--	}
-+	build_inobt(&sc, agno, &btr_ino, &agi_stat);
-+	if (xfs_sb_version_hasfinobt(&mp->m_sb))
-+		build_finobt(&sc, agno, &btr_fino);
- 
- 	/* build the agi */
--	build_agi(mp, agno, &ino_btree_curs, &fino_btree_curs,
--		  &agi_stat);
-+	build_agi(mp, agno, &btr_ino, &btr_fino, &agi_stat);
+ 	build_agf_agfl(mp, agno, &btr_bno, &btr_cnt, freeblks1, extra_blocks,
+-			&rmap_btree_curs, &refcnt_btree_curs, lost_fsb);
++			&btr_rmap, &refcnt_btree_curs, lost_fsb);
  
  	/*
- 	 * tear down cursors
- 	 */
- 	finish_rebuild(mp, &btr_bno, lost_fsb);
- 	finish_rebuild(mp, &btr_cnt, lost_fsb);
-+	finish_rebuild(mp, &btr_ino, lost_fsb);
-+	if (xfs_sb_version_hasfinobt(&mp->m_sb))
-+		finish_rebuild(mp, &btr_fino, lost_fsb);
+ 	 * build inode allocation trees.
+@@ -2109,7 +1839,7 @@ phase5_func(
+ 	if (xfs_sb_version_hasfinobt(&mp->m_sb))
+ 		finish_rebuild(mp, &btr_fino, lost_fsb);
  	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
- 		finish_cursor(&rmap_btree_curs);
+-		finish_cursor(&rmap_btree_curs);
++		finish_rebuild(mp, &btr_rmap, lost_fsb);
  	if (xfs_sb_version_hasreflink(&mp->m_sb))
  		finish_cursor(&refcnt_btree_curs);
--	if (xfs_sb_version_hasfinobt(&mp->m_sb))
--		finish_cursor(&fino_btree_curs);
  
- 	/*
- 	 * release the incore per-AG bno/bcnt trees so
 
