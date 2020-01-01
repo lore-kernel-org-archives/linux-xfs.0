@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21E55C2D0DF
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:09:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31278C2D0CE
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:09:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EA6242064B
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:09:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE03F2064B
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:09:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="izaQarDL"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="HCqLqKGJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727141AbgAABJK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Dec 2019 20:09:10 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:48756 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727166AbgAABJK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:09:10 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 001190j1091263
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:09:09 GMT
+        id S1727154AbgAABJQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Dec 2019 20:09:16 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:51934 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727166AbgAABJQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:09:16 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 001190E9089146
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:09:15 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=+05yX1vqhyr3tBXE68f5jvu7CUA2x7DycxpASCpqq7A=;
- b=izaQarDLuu1O4tiGSWnHEfn5ietAIwWXsKHJsDSG6NSTNHXmRaPgTyCt6B+iUUSi3bxf
- B3OxkUETuRHVq/mu/GR0KK0i/zmE5owYbi5CRuriQVNM1Oab3qKWIbGDfVZL8iafmcAU
- Ic6gACYoEz18WAO8usE6tKcm8PQJtBWBcLJRdGtG4e8ZUfzUlPqx8lJJMzn3IcvSpZJf
- 10ePQaxucom0wiQrQIBdyAcwtdWRthoTZRR9GvsKvi62pj7l15GpN92QeBLML4Q5Yg0K
- VjpBV30uvjzvc/XMGKQMFXpPweFsyLCsrzVz6bTxpP8l00H2pjTidn+CAhn/q+5rL/nw 3g== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2x5ypqjwcw-1
+ bh=OaG8tpL4qB6UWPwwfBYGMRrnahpGobE/W8ACWnKvmuw=;
+ b=HCqLqKGJd/BQJBDuH1rDxdTrm5ph4drUJRLQuDXD77LAawPrYbiarjm4t68XG8zitVV4
+ 61YnMLEj6JyGQNiMOZIER88rnlpP8w2FxBECMAlTaNXj5cZ7oRSnEm03oHErqMOXgxcV
+ D41sELt1AK87UZVPF3LHpXxbc4PT75MoVsYijUvSeV9NdvwfVep3X3hDIpiZD5szToj0
+ 5xbawHAqquJlvGJYWF/2GkUNRn/99tpBBUa9rHNg0W58I399nTKXuEESV6aqYOuh5GJc
+ qPK72Bmd4bBfHHY0qDHC8qTVDjIbMEOriJfptlU8cn+UHr+2x3Mq0kllqDP8+3bOcVJF Xg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2x5y0pjxu0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:09:09 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00118uXZ045261
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:09:08 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:09:14 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00118vOK190257
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:09:14 GMT
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 2x7medfb4m-1
+        by userp3020.oracle.com with ESMTP id 2x8bsrfyke-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:09:08 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 001197em011027
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:09:07 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:09:14 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00119D8E011036
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:09:13 GMT
 Received: from localhost (/10.159.150.156)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 31 Dec 2019 17:09:07 -0800
-Subject: [PATCH 04/10] xfs: pass per-ag structure to the xfs_ici_walk
- execute function
+        with ESMTP ; Tue, 31 Dec 2019 17:09:13 -0800
+Subject: [PATCH 05/10] xfs: pass around xfs_inode_ag_walk iget/irele helper
+ functions
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 31 Dec 2019 17:09:05 -0800
-Message-ID: <157784094496.1362752.10290761414347952592.stgit@magnolia>
+Date:   Tue, 31 Dec 2019 17:09:11 -0800
+Message-ID: <157784095105.1362752.6192279595180573182.stgit@magnolia>
 In-Reply-To: <157784092020.1362752.15046503361741521784.stgit@magnolia>
 References: <157784092020.1362752.15046503361741521784.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -81,132 +81,191 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Pass the per-AG structure to the xfs_ici_walk execute function.  This
-isn't needed now, but deferred inactivation will need it to modify some
-per-ag data.
+Create an alternative version of xfs_ici_walk() that allow a caller to
+pass in custom inode grab and inode release helper functions.  Deferred
+inode inactivation deals with xfs inodes that are still in memory but no
+longer visible to the vfs, which means that it has to screen and process
+those inodes differently.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_icache.c      |   24 ++++++++++++++++--------
- fs/xfs/xfs_icache.h      |    2 +-
- fs/xfs/xfs_qm_syscalls.c |    1 +
- 3 files changed, 18 insertions(+), 9 deletions(-)
+ fs/xfs/xfs_icache.c |   82 +++++++++++++++++++++++++++++++++++++++------------
+ fs/xfs/xfs_icache.h |    6 ++--
+ 2 files changed, 65 insertions(+), 23 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 1a09d4854266..d9bfc78a1b85 100644
+index d9bfc78a1b85..01f5502d984a 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -26,8 +26,10 @@
+@@ -792,20 +792,38 @@ xfs_inode_ag_walk_grab(
+ 	return false;
+ }
  
- #include <linux/iversion.h>
- 
--STATIC int xfs_inode_free_eofblocks(struct xfs_inode *ip, void *args);
--STATIC int xfs_inode_free_cowblocks(struct xfs_inode *ip, void *args);
-+STATIC int xfs_inode_free_eofblocks(struct xfs_inode *ip, struct xfs_perag *pag,
-+		void *args);
-+STATIC int xfs_inode_free_cowblocks(struct xfs_inode *ip, struct xfs_perag *pag,
-+		void *args);
- 
++struct xfs_ici_walk_ops {
++	/*
++	 * Examine the given inode to decide if we want to pass it to the
++	 * execute function.  If so, this function should do whatever is needed
++	 * to prevent others from grabbing it.  If not, this function should
++	 * release the inode.
++	 */
++	bool		(*igrab)(struct xfs_inode *ip, int iter_flags);
++
++	/* Do something with the given inode. */
++	xfs_ici_walk_fn	iwalk;
++
++	/*
++	 * Release an inode after the execution function runs.  This function
++	 * is optional.
++	 */
++	void		(*irele)(struct xfs_inode *ip);
++};
++
  /*
-  * Allocate and initialise an xfs_inode.
-@@ -798,7 +800,8 @@ STATIC int
+  * For a given per-AG structure @pag, @grab, @execute, and @rele all incore
+  * inodes with the given radix tree @tag.
+  */
+ STATIC int
  xfs_ici_walk_ag(
- 	struct xfs_mount	*mp,
+-	struct xfs_mount	*mp,
  	struct xfs_perag	*pag,
--	int			(*execute)(struct xfs_inode *ip, void *args),
-+	int			(*execute)(struct xfs_inode *ip,
-+					   struct xfs_perag *pag, void *args),
+-	int			(*execute)(struct xfs_inode *ip,
+-					   struct xfs_perag *pag, void *args),
++	const struct xfs_ici_walk_ops *ops,
++	int			iter_flags,
  	void			*args,
- 	int			tag,
- 	int			iter_flags)
-@@ -874,7 +877,7 @@ xfs_ici_walk_ag(
+-	int			tag,
+-	int			iter_flags)
++	int			tag)
+ {
++	struct xfs_mount	*mp = pag->pag_mount;
+ 	uint32_t		first_index;
+ 	int			last_error = 0;
+ 	int			skipped;
+@@ -846,7 +864,7 @@ xfs_ici_walk_ag(
+ 		for (i = 0; i < nr_found; i++) {
+ 			struct xfs_inode *ip = batch[i];
+ 
+-			if (done || !xfs_inode_ag_walk_grab(ip, iter_flags))
++			if (done || !ops->igrab(ip, iter_flags))
+ 				batch[i] = NULL;
+ 
+ 			/*
+@@ -877,8 +895,9 @@ xfs_ici_walk_ag(
  			if ((iter_flags & XFS_ICI_WALK_INEW_WAIT) &&
  			    xfs_iflags_test(batch[i], XFS_INEW))
  				xfs_inew_wait(batch[i]);
--			error = execute(batch[i], args);
-+			error = execute(batch[i], pag, args);
- 			xfs_irele(batch[i]);
+-			error = execute(batch[i], pag, args);
+-			xfs_irele(batch[i]);
++			error = ops->iwalk(batch[i], pag, args);
++			if (ops->irele)
++				ops->irele(batch[i]);
  			if (error == -EAGAIN) {
  				skipped++;
-@@ -919,7 +922,8 @@ STATIC int
- xfs_ici_walk(
+ 				continue;
+@@ -915,15 +934,14 @@ xfs_ici_walk_get_perag(
+ }
+ 
+ /*
+- * Call the @execute function on all incore inodes matching the radix tree
+- * @tag.
++ * Call the @grab, @execute, and @rele functions on all incore inodes matching
++ * the radix tree @tag.
+  */
+ STATIC int
+-xfs_ici_walk(
++xfs_ici_walk_fns(
  	struct xfs_mount	*mp,
++	const struct xfs_ici_walk_ops *ops,
  	int			iter_flags,
--	int			(*execute)(struct xfs_inode *ip, void *args),
-+	int			(*execute)(struct xfs_inode *ip,
-+					   struct xfs_perag *pag, void *args),
+-	int			(*execute)(struct xfs_inode *ip,
+-					   struct xfs_perag *pag, void *args),
  	void			*args,
  	int			tag)
  {
-@@ -950,7 +954,8 @@ xfs_ici_walk(
+@@ -935,8 +953,7 @@ xfs_ici_walk(
+ 	ag = 0;
+ 	while ((pag = xfs_ici_walk_get_perag(mp, ag, tag))) {
+ 		ag = pag->pag_agno + 1;
+-		error = xfs_ici_walk_ag(mp, pag, execute, args, tag,
+-				iter_flags);
++		error = xfs_ici_walk_ag(pag, ops, iter_flags, args, tag);
+ 		xfs_perag_put(pag);
+ 		if (error) {
+ 			last_error = error;
+@@ -947,6 +964,27 @@ xfs_ici_walk(
+ 	return last_error;
+ }
+ 
++/*
++ * Call the @execute function on all incore inodes matching a given radix tree
++ * @tag.
++ */
++STATIC int
++xfs_ici_walk(
++	struct xfs_mount	*mp,
++	int			iter_flags,
++	xfs_ici_walk_fn		iwalk,
++	void			*args,
++	int			tag)
++{
++	struct xfs_ici_walk_ops	ops = {
++		.igrab		= xfs_inode_ag_walk_grab,
++		.iwalk		= iwalk,
++		.irele		= xfs_irele,
++	};
++
++	return xfs_ici_walk_fns(mp, &ops, iter_flags, args, tag);
++}
++
+ /*
+  * Walk all incore inodes in the filesystem.  Knowledge of radix tree tags
+  * is hidden and we always wait for INEW inodes.
+@@ -954,11 +992,10 @@ xfs_ici_walk(
  int
  xfs_ici_walk_all(
  	struct xfs_mount	*mp,
--	int			(*execute)(struct xfs_inode *ip, void *args),
-+	int			(*execute)(struct xfs_inode *ip,
-+					   struct xfs_perag *pag, void *args),
+-	int			(*execute)(struct xfs_inode *ip,
+-					   struct xfs_perag *pag, void *args),
++	xfs_ici_walk_fn		iwalk,
  	void			*args)
  {
- 	return xfs_ici_walk(mp, XFS_ICI_WALK_INEW_WAIT, execute, args,
-@@ -977,15 +982,16 @@ xfs_queue_blockgc(
- static int
- xfs_blockgc_scan_inode(
- 	struct xfs_inode	*ip,
-+	struct xfs_perag	*pag,
- 	void			*args)
- {
- 	int			error;
- 
--	error = xfs_inode_free_eofblocks(ip, args);
-+	error = xfs_inode_free_eofblocks(ip, pag, args);
- 	if (error && error != -EAGAIN)
- 		return error;
- 
--	return xfs_inode_free_cowblocks(ip, args);
-+	return xfs_inode_free_cowblocks(ip, pag, args);
+-	return xfs_ici_walk(mp, XFS_ICI_WALK_INEW_WAIT, execute, args,
++	return xfs_ici_walk(mp, XFS_ICI_WALK_INEW_WAIT, iwalk, args,
+ 			XFS_ICI_NO_TAG);
  }
  
- /* Scan an AG's inodes for block preallocations that we can remove. */
-@@ -1528,6 +1534,7 @@ xfs_inode_matches_eofb(
- STATIC int
- xfs_inode_free_eofblocks(
- 	struct xfs_inode	*ip,
-+	struct xfs_perag	*pag,
- 	void			*args)
+@@ -1000,8 +1037,13 @@ xfs_blockgc_scan_pag(
+ 	struct xfs_perag	*pag,
+ 	struct xfs_eofblocks	*eofb)
  {
- 	struct xfs_eofblocks	*eofb = args;
-@@ -1806,6 +1813,7 @@ xfs_prep_free_cowblocks(
- STATIC int
- xfs_inode_free_cowblocks(
- 	struct xfs_inode	*ip,
-+	struct xfs_perag	*pag,
- 	void			*args)
- {
- 	struct xfs_eofblocks	*eofb = args;
+-	return xfs_ici_walk_ag(pag->pag_mount, pag, xfs_blockgc_scan_inode,
+-			eofb, XFS_ICI_BLOCK_GC_TAG, 0);
++	static const struct xfs_ici_walk_ops	ops = {
++		.igrab		= xfs_inode_ag_walk_grab,
++		.iwalk		= xfs_blockgc_scan_inode,
++		.irele		= xfs_irele,
++	};
++
++	return xfs_ici_walk_ag(pag, &ops, 0, eofb, XFS_ICI_BLOCK_GC_TAG);
+ }
+ 
+ /* Scan all incore inodes for block preallocations that we can remove. */
 diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index ee4e05b59afb..d7713eb0734d 100644
+index d7713eb0734d..3c34c0e2e266 100644
 --- a/fs/xfs/xfs_icache.h
 +++ b/fs/xfs/xfs_icache.h
-@@ -70,7 +70,7 @@ void xfs_inode_clear_cowblocks_tag(struct xfs_inode *ip);
+@@ -69,9 +69,9 @@ void xfs_inode_set_cowblocks_tag(struct xfs_inode *ip);
+ void xfs_inode_clear_cowblocks_tag(struct xfs_inode *ip);
  int xfs_icache_free_cowblocks(struct xfs_mount *, struct xfs_eofblocks *);
  
- int xfs_ici_walk_all(struct xfs_mount *mp,
--	int (*execute)(struct xfs_inode *ip, void *args),
-+	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag, void *args),
- 	void *args);
+-int xfs_ici_walk_all(struct xfs_mount *mp,
+-	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag, void *args),
+-	void *args);
++typedef int (*xfs_ici_walk_fn)(struct xfs_inode *ip, struct xfs_perag *pag,
++			       void *args);
++int xfs_ici_walk_all(struct xfs_mount *mp, xfs_ici_walk_fn iwalk, void *args);
  
  int xfs_icache_inode_is_allocated(struct xfs_mount *mp, struct xfs_trans *tp,
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index d93bf0c39d3d..fa0db72f8d0d 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -733,6 +733,7 @@ struct xfs_dqrele {
- STATIC int
- xfs_dqrele_inode(
- 	struct xfs_inode	*ip,
-+	struct xfs_perag	*pag,
- 	void			*args)
- {
- 	struct xfs_dqrele	*dqr = args;
+ 				  xfs_ino_t ino, bool *inuse);
 
