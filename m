@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E2FDC2D0CE
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:06:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCA0FC2D0CE
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:07:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 60F5520718
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:06:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F32B2064B
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:07:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="hrXq5HC1"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="YIfloep7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727159AbgAABGu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Dec 2019 20:06:50 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:47468 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727139AbgAABGt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:06:49 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00116m7r090364
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:06:48 GMT
+        id S1727163AbgAABHB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Dec 2019 20:07:01 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:51836 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727139AbgAABHA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:07:00 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00116xtg108571
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:06:59 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=p2qCCtbR2bpLHiviiQqAD1CLaKOBJJ/77nKFsV/zvrs=;
- b=hrXq5HC13DafXgI1eqN1EZ8cKx5cCnj3pCw1AoFJSpMXVG2BSpptkT1DytNeYWrdU4D3
- WjJj7SZlBN2O+B3BorBznMw8sJnA1AQzLm7l6WXh+7S5E3cLzn72mt04NrFt+etPdeST
- t8DpNPrkZ1Y8zhuEuHdqAADbALHjhSnf2dmL/o1hPVoJQyWa3Tgdrp5vS4F8WYiAtBLo
- p2CthavjECO97wKu4R6m2lxRn6VGz90kcghSBB5w5MDDqFdDgiSKukRDPIxdtfsAbplW
- emo/O81J03ekWUNJGSMgSMuACUil4IfDt8zXbjhwox7MF2kykSqW1SpTXai4Q9Re9v1I EQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2x5ypqjwa9-1
+ bh=Cz862Zfb8fPjgskiwJvGFjmgXqFrsYsFd+k5FFT95Js=;
+ b=YIfloep7mayWoUo4BpQU04V3+/4s3tArczwRVKIHv4l2ptDnjEQoUWGF/cULi18QTqSk
+ JRl3GTMVecBCj/hsUymLa00uReR3+5XcQ5R8PtYa7ahwbWLmAn+FSzV/238kfIy19e4m
+ rY0EGQB5uOekFQkCgi9ZYAfYKlNgqQOYtVaekb9LNcNupz0W7vLyD/RW2i0ezV5KpjG1
+ DCrAV17VhtvoTs6pBWIpHBVahM+RnVsHqzW0KzYFh4ogGywKqFz9OlMJ6JsRVtkUp9mC
+ j8AldoVDjDH/g7+f8nL4hmDmI73ABhGOgnjGTixxSXvESXT+SXfDn2vPd2F9QOE7ehGB 7g== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2x5xftk2ax-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:06:48 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 001159Qg183719
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:06:47 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2x8bsrfx7g-1
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:06:59 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00115Fmj006734
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:06:58 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 2x8guee2pg-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:06:47 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00116kIL010248
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:06:46 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:06:58 +0000
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00116wBT026798
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:06:58 GMT
 Received: from localhost (/10.159.150.156)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 31 Dec 2019 17:06:45 -0800
-Subject: [PATCH 07/11] xfs: refactor eofb matching into a single helper
+        with ESMTP ; Tue, 31 Dec 2019 17:06:58 -0800
+Subject: [PATCH 09/11] xfs: use bool for done in xfs_inode_ag_walk
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 31 Dec 2019 17:06:43 -0800
-Message-ID: <157784080384.1360343.10280402715883473936.stgit@magnolia>
+Date:   Tue, 31 Dec 2019 17:06:56 -0800
+Message-ID: <157784081608.1360343.8892190103324406330.stgit@magnolia>
 In-Reply-To: <157784075463.1360343.1278255546758019580.stgit@magnolia>
 References: <157784075463.1360343.1278255546758019580.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -63,14 +63,14 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9487 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=3 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=854
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1911140001 definitions=main-2001010008
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9487 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=3 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=917 adultscore=0
+ suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
  definitions=main-2001010008
 Sender: linux-xfs-owner@vger.kernel.org
@@ -80,109 +80,39 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Refactor the two eofb-matching logics into a single helper so that we
-don't repeat ourselves.
+This is a boolean variable, so use the bool type.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_icache.c |   59 +++++++++++++++++++++++++++------------------------
- 1 file changed, 31 insertions(+), 28 deletions(-)
+ fs/xfs/xfs_icache.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 4060f43a2ca3..efac12e2ac18 100644
+index fbe0d8fb59c1..c3964af55979 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -1422,6 +1422,33 @@ xfs_inode_match_id_union(
- 	return 0;
- }
+@@ -799,11 +799,11 @@ xfs_inode_ag_walk(
+ 	uint32_t		first_index;
+ 	int			last_error = 0;
+ 	int			skipped;
+-	int			done;
++	bool			done;
+ 	int			nr_found;
  
-+/*
-+ * Is this inode @ip eligible for eof/cow block reclamation, given some
-+ * filtering parameters @eofb?  The inode is eligible if @eofb is null or
-+ * if the predicate functions match.
-+ */
-+static bool
-+xfs_inode_matches_eofb(
-+	struct xfs_inode	*ip,
-+	struct xfs_eofblocks	*eofb)
-+{
-+	int			match;
-+
-+	if (!eofb)
-+		return true;
-+
-+	if (eofb->eof_flags & XFS_EOF_FLAGS_UNION)
-+		match = xfs_inode_match_id_union(ip, eofb);
-+	else
-+		match = xfs_inode_match_id(ip, eofb);
-+	if (match)
-+		return true;
-+
-+	/* skip the inode if the file size is too small */
-+	return !(eofb->eof_flags & XFS_EOF_FLAGS_MINFILESIZE &&
-+		 XFS_ISIZE(ip) < eofb->eof_min_file_size);
-+}
-+
- STATIC int
- xfs_inode_free_eofblocks(
- 	struct xfs_inode	*ip,
-@@ -1429,7 +1456,6 @@ xfs_inode_free_eofblocks(
- {
- 	struct xfs_eofblocks	*eofb = args;
- 	bool			wait;
--	int			match;
- 	int			ret = 0;
+ restart:
+-	done = 0;
++	done = false;
+ 	skipped = 0;
+ 	first_index = 0;
+ 	nr_found = 0;
+@@ -855,7 +855,7 @@ xfs_inode_ag_walk(
+ 				continue;
+ 			first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
+ 			if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino))
+-				done = 1;
++				done = true;
+ 		}
  
- 	wait = (eofb && (eofb->eof_flags & XFS_EOF_FLAGS_SYNC));
-@@ -1448,19 +1474,8 @@ xfs_inode_free_eofblocks(
- 	if (!wait && mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY))
- 		return 0;
- 
--	if (eofb) {
--		if (eofb->eof_flags & XFS_EOF_FLAGS_UNION)
--			match = xfs_inode_match_id_union(ip, eofb);
--		else
--			match = xfs_inode_match_id(ip, eofb);
--		if (!match)
--			return 0;
--
--		/* skip the inode if the file size is too small */
--		if (eofb->eof_flags & XFS_EOF_FLAGS_MINFILESIZE &&
--		    XFS_ISIZE(ip) < eofb->eof_min_file_size)
--			return 0;
--	}
-+	if (!xfs_inode_matches_eofb(ip, eofb))
-+		return 0;
- 
- 	/*
- 	 * If the caller is waiting, return -EAGAIN to keep the background
-@@ -1702,25 +1717,13 @@ xfs_inode_free_cowblocks(
- 	void			*args)
- {
- 	struct xfs_eofblocks	*eofb = args;
--	int			match;
- 	int			ret = 0;
- 
- 	if (!xfs_prep_free_cowblocks(ip))
- 		return 0;
- 
--	if (eofb) {
--		if (eofb->eof_flags & XFS_EOF_FLAGS_UNION)
--			match = xfs_inode_match_id_union(ip, eofb);
--		else
--			match = xfs_inode_match_id(ip, eofb);
--		if (!match)
--			return 0;
--
--		/* skip the inode if the file size is too small */
--		if (eofb->eof_flags & XFS_EOF_FLAGS_MINFILESIZE &&
--		    XFS_ISIZE(ip) < eofb->eof_min_file_size)
--			return 0;
--	}
-+	if (!xfs_inode_matches_eofb(ip, eofb))
-+		return 0;
- 
- 	/* Free the CoW blocks */
- 	xfs_ilock(ip, XFS_IOLOCK_EXCL);
+ 		/* unlock now we've grabbed the inodes. */
 
