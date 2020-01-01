@@ -7,57 +7,57 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF297C2D0CE
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:09:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 036CAC2D0DE
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:09:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 983342064B
+	by mail.kernel.org (Postfix) with ESMTP id CCB1720730
 	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jan 2020 01:09:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="chEmxQqP"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Etf6hVmb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727159AbgAABJB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1727134AbgAABJB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Tue, 31 Dec 2019 20:09:01 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:52922 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727134AbgAABJB (ORCPT
+Received: from userp2120.oracle.com ([156.151.31.85]:48602 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727132AbgAABJB (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Dec 2019 20:09:01 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00118xYg109458
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00118xL7091232
         for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:08:59 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=QfJwhhf4iNm3FTBow7upUy3SCx+PM8aXJKtmaBuZ+s4=;
- b=chEmxQqP0UJwTl+0x6XZWNQf6n6LWObt5MzXKPjTeRoJU0h9WGyLcvv0Lii2lcKJ3/ar
- qAP06kuCjvcV2B8fqiTC4zhjgx4q4nC0emh/AkBboz+PfMuVq4SNBxwvOW4EtAtAeIDx
- ocY13GjPtQ7t1HAsAVvPTf/sQXj9wOZKlFe9RKCPRdqLAHTVwaajNn5WxIFjN4ob+qPG
- Xn3J181Gerqk5s6E3fCHD350CmgYMwJmzGvliQjWuyfLiUTUO+W/KEzam+3jIyPWDLmR
- ZF20YDGnG4eTsw8WlvXeWf5RzMUZrPp7GYmwstTP0HRyDY7X14kVotz3lVIUOPVvrSdq 6Q== 
+ bh=7TaSHvryPFwHNpM2TihZjMjAPgqHT09j0ZWFU9tuKF8=;
+ b=Etf6hVmbFOU3T1OYHzQL+xrB9O9oYAlbYSCyohhrFiivEu38DJsvOEh6vQ8dmHIo4/QO
+ U91Y+qQpX8y4R1W8/mdaS/XinFXegajnEgy4/6DSy5jC+GxQpSyhAIcCd0za+GEWsZOz
+ ijd46aPyd9OrVRR/J2GQNGuPEKvpgN2E7Nt0SdHtnusNYeeETMXy+DQeooAFqXme8OB3
+ f2t1N/DxwgFZxK9x8RiAy0GcEZWHGr/ZyDIBoi5kK7Z4Ae2UTgLpP2j2iSh2CY7iGiUk
+ 9Lr6TKkUVOue8Gj4cYXx9CorGC80w12+lBTsuTeHgg2eBUj6aOdVAjHvkfB1t6PXQ2BJ 0Q== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2x5xftk2c3-1
+        by userp2120.oracle.com with ESMTP id 2x5ypqjwby-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
         for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:08:59 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00118uIV190239
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00118vcA190345
         for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:08:57 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2x8bsrfy2f-1
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2x8bsrfy7v-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
         for <linux-xfs@vger.kernel.org>; Wed, 01 Jan 2020 01:08:57 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 001185rL031041
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:08:05 GMT
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00118nnl010860
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Jan 2020 01:08:49 GMT
 Received: from localhost (/10.159.150.156)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 31 Dec 2019 17:08:04 -0800
-Subject: [PATCH 1/6] xfs: refactor the predicate part of xfs_free_eofblocks
+        with ESMTP ; Tue, 31 Dec 2019 17:08:48 -0800
+Subject: [PATCH 01/10] xfs: decide if inode needs inactivation
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 31 Dec 2019 17:08:02 -0800
-Message-ID: <157784088213.1361683.10381610571454563314.stgit@magnolia>
-In-Reply-To: <157784087594.1361683.5987233633798863051.stgit@magnolia>
-References: <157784087594.1361683.5987233633798863051.stgit@magnolia>
+Date:   Tue, 31 Dec 2019 17:08:46 -0800
+Message-ID: <157784092655.1362752.15438079465056974707.stgit@magnolia>
+In-Reply-To: <157784092020.1362752.15046503361741521784.stgit@magnolia>
+References: <157784092020.1362752.15046503361741521784.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -80,200 +80,98 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Refactor the part of _free_eofblocks that decides if it's really going
-to truncate post-EOF blocks into a separate helper function.  The
-upcoming deferred inode inactivation patch requires us to be able to
-decide this prior to actual inactivation.  No functionality changes.
+Add a predicate function to decide if an inode needs (deferred)
+inactivation.  Any file that has been unlinked or has speculative
+preallocations either for post-EOF writes or for CoW qualifies.
+This function will also be used by the upcoming deferred inactivation
+patch.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_bmap_util.c |  105 +++++++++++++++++++++---------------------------
- fs/xfs/xfs_inode.c     |   36 ++++++++++++++++
- fs/xfs/xfs_inode.h     |    1 
- 3 files changed, 82 insertions(+), 60 deletions(-)
+ fs/xfs/xfs_inode.c |   59 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_inode.h |    1 +
+ 2 files changed, 60 insertions(+)
 
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index cd993802cfa2..6553d533d659 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -637,78 +637,63 @@ xfs_free_eofblocks(
- 	struct xfs_inode	*ip)
- {
- 	struct xfs_trans	*tp;
--	int			error;
--	xfs_fileoff_t		end_fsb;
--	xfs_fileoff_t		last_fsb;
--	xfs_filblks_t		map_len;
--	int			nimaps;
--	struct xfs_bmbt_irec	imap;
- 	struct xfs_mount	*mp = ip->i_mount;
-+	bool			has;
-+	int			error;
- 
- 	/*
--	 * Figure out if there are any blocks beyond the end
--	 * of the file.  If not, then there is nothing to do.
-+	 * If there are blocks after the end of file, truncate the file to its
-+	 * current size to free them up.
- 	 */
--	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
--	last_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
--	if (last_fsb <= end_fsb)
--		return 0;
--	map_len = last_fsb - end_fsb;
--
--	nimaps = 1;
--	xfs_ilock(ip, XFS_ILOCK_SHARED);
--	error = xfs_bmapi_read(ip, end_fsb, map_len, &imap, &nimaps, 0);
--	xfs_iunlock(ip, XFS_ILOCK_SHARED);
-+	error = xfs_has_eofblocks(ip, &has);
-+	if (error || !has)
-+		return error;
- 
- 	/*
--	 * If there are blocks after the end of file, truncate the file to its
--	 * current size to free them up.
-+	 * Attach the dquots to the inode up front.
- 	 */
--	if (!error && (nimaps != 0) &&
--	    (imap.br_startblock != HOLESTARTBLOCK ||
--	     ip->i_delayed_blks)) {
--		/*
--		 * Attach the dquots to the inode up front.
--		 */
--		error = xfs_qm_dqattach(ip);
--		if (error)
--			return error;
-+	error = xfs_qm_dqattach(ip);
-+	if (error)
-+		return error;
- 
--		/* wait on dio to ensure i_size has settled */
--		inode_dio_wait(VFS_I(ip));
-+	/* wait on dio to ensure i_size has settled */
-+	inode_dio_wait(VFS_I(ip));
- 
--		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0,
--				&tp);
--		if (error) {
--			ASSERT(XFS_FORCED_SHUTDOWN(mp));
--			return error;
--		}
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
-+	if (error) {
-+		ASSERT(XFS_FORCED_SHUTDOWN(mp));
-+		return error;
-+	}
- 
--		xfs_ilock(ip, XFS_ILOCK_EXCL);
--		xfs_trans_ijoin(tp, ip, 0);
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin(tp, ip, 0);
- 
--		/*
--		 * Do not update the on-disk file size.  If we update the
--		 * on-disk file size and then the system crashes before the
--		 * contents of the file are flushed to disk then the files
--		 * may be full of holes (ie NULL files bug).
--		 */
--		error = xfs_itruncate_extents_flags(&tp, ip, XFS_DATA_FORK,
--					XFS_ISIZE(ip), XFS_BMAPI_NODISCARD);
--		if (error) {
--			/*
--			 * If we get an error at this point we simply don't
--			 * bother truncating the file.
--			 */
--			xfs_trans_cancel(tp);
--		} else {
--			error = xfs_trans_commit(tp);
--			if (!error)
--				xfs_inode_clear_eofblocks_tag(ip);
--		}
-+	/*
-+	 * Do not update the on-disk file size.  If we update the
-+	 * on-disk file size and then the system crashes before the
-+	 * contents of the file are flushed to disk then the files
-+	 * may be full of holes (ie NULL files bug).
-+	 */
-+	error = xfs_itruncate_extents_flags(&tp, ip, XFS_DATA_FORK,
-+				XFS_ISIZE(ip), XFS_BMAPI_NODISCARD);
-+	if (error)
-+		goto err_cancel;
- 
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--	}
-+	error = xfs_trans_commit(tp);
-+	if (error)
-+		goto out_unlock;
-+
-+	xfs_inode_clear_eofblocks_tag(ip);
-+	goto out_unlock;
-+
-+err_cancel:
-+	/*
-+	 * If we get an error at this point we simply don't
-+	 * bother truncating the file.
-+	 */
-+	xfs_trans_cancel(tp);
-+out_unlock:
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	return error;
- }
- 
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index c41003fae9d5..1187ff7035d9 100644
+index 1187ff7035d9..097a89826ba7 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -3962,3 +3962,39 @@ xfs_irele(
- 	trace_xfs_irele(ip, _RET_IP_);
- 	iput(VFS_I(ip));
+@@ -1806,6 +1806,65 @@ xfs_inactive_ifree(
+ 	return 0;
  }
-+
+ 
 +/*
-+ * Decide if this inode have post-EOF blocks.  The caller is responsible
-+ * for knowing / caring about the PREALLOC/APPEND flags.
++ * Returns true if we need to update the on-disk metadata before we can free
++ * the memory used by this inode.  Updates include freeing post-eof
++ * preallocations; freeing COW staging extents; and marking the inode free in
++ * the inobt if it is on the unlinked list.
 + */
-+int
-+xfs_has_eofblocks(
-+	struct xfs_inode	*ip,
-+	bool			*has)
++bool
++xfs_inode_needs_inactivation(
++	struct xfs_inode	*ip)
 +{
-+	struct xfs_bmbt_irec	imap;
 +	struct xfs_mount	*mp = ip->i_mount;
-+	xfs_fileoff_t		end_fsb;
-+	xfs_fileoff_t		last_fsb;
-+	xfs_filblks_t		map_len;
-+	int			nimaps;
-+	int			error;
++	struct xfs_ifork	*cow_ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
 +
-+	*has = false;
-+	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
-+	last_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
-+	if (last_fsb <= end_fsb)
-+		return 0;
-+	map_len = last_fsb - end_fsb;
++	/*
++	 * If the inode is already free, then there can be nothing
++	 * to clean up here.
++	 */
++	if (VFS_I(ip)->i_mode == 0)
++		return false;
 +
-+	nimaps = 1;
-+	xfs_ilock(ip, XFS_ILOCK_SHARED);
-+	error = xfs_bmapi_read(ip, end_fsb, map_len, &imap, &nimaps, 0);
-+	xfs_iunlock(ip, XFS_ILOCK_SHARED);
++	/* If this is a read-only mount, don't do this (would generate I/O) */
++	if (mp->m_flags & XFS_MOUNT_RDONLY)
++		return false;
 +
-+	if (error || nimaps == 0)
-+		return error;
++	/* Try to clean out the cow blocks if there are any. */
++	if (cow_ifp && cow_ifp->if_bytes > 0)
++		return true;
 +
-+	*has = imap.br_startblock != HOLESTARTBLOCK || ip->i_delayed_blks;
-+	return 0;
++	if (VFS_I(ip)->i_nlink != 0) {
++		int	error;
++		bool	has;
++
++		/*
++		 * force is true because we are evicting an inode from the
++		 * cache. Post-eof blocks must be freed, lest we end up with
++		 * broken free space accounting.
++		 *
++		 * Note: don't bother with iolock here since lockdep complains
++		 * about acquiring it in reclaim context. We have the only
++		 * reference to the inode at this point anyways.
++		 *
++		 * If the predicate errors out, send the inode through
++		 * inactivation anyway, because that's what we did before.
++		 * The inactivation worker will ignore an inode that doesn't
++		 * actually need it.
++		 */
++		if (!xfs_can_free_eofblocks(ip, true))
++			return false;
++		error = xfs_has_eofblocks(ip, &has);
++		return error != 0 || has;
++	}
++
++	/*
++	 * Link count dropped to zero, which means we have to mark the inode
++	 * free on disk and remove it from the AGI unlinked list.
++	 */
++	return true;
 +}
++
+ /*
+  * xfs_inactive
+  *
 diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 492e53992fa9..377e02cd3c0a 100644
+index 377e02cd3c0a..0a46548e51a8 100644
 --- a/fs/xfs/xfs_inode.h
 +++ b/fs/xfs/xfs_inode.h
-@@ -497,6 +497,7 @@ extern struct kmem_zone	*xfs_inode_zone;
- #define XFS_DEFAULT_COWEXTSZ_HINT 32
+@@ -498,6 +498,7 @@ extern struct kmem_zone	*xfs_inode_zone;
  
  bool xfs_inode_verify_forks(struct xfs_inode *ip);
-+int xfs_has_eofblocks(struct xfs_inode *ip, bool *has);
+ int xfs_has_eofblocks(struct xfs_inode *ip, bool *has);
++bool xfs_inode_needs_inactivation(struct xfs_inode *ip);
  
  int xfs_iunlink_init(struct xfs_perag *pag);
  void xfs_iunlink_destroy(struct xfs_perag *pag);
