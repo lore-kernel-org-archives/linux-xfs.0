@@ -6,107 +6,197 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBBAEC2D0C2
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Jan 2020 20:41:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED45FC2D0C2
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Jan 2020 20:41:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A87AE217F4
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Jan 2020 20:41:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD52221835
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Jan 2020 20:41:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725837AbgABUlQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 2 Jan 2020 15:41:16 -0500
-Received: from mout.kundenserver.de ([212.227.126.130]:37229 "EHLO
+        id S1725783AbgABUlf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Jan 2020 15:41:35 -0500
+Received: from mout.kundenserver.de ([212.227.126.187]:48131 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725827AbgABUlP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Jan 2020 15:41:15 -0500
+        with ESMTP id S1725827AbgABUlf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Jan 2020 15:41:35 -0500
 Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
  (mreue012 [212.227.15.129]) with ESMTPA (Nemesis) id
- 1Mhnnc-1jQpo31wJM-00dpmk; Thu, 02 Jan 2020 21:40:59 +0100
+ 1MvKTJ-1jeFvm46W9-00rDm7; Thu, 02 Jan 2020 21:41:16 +0100
 From:   Arnd Bergmann <arnd@arndb.de>
 To:     "Darrick J . Wong" <darrick.wong@oracle.com>,
         linux-xfs@vger.kernel.org
 Cc:     Christoph Hellwig <hch@infradead.org>, y2038@lists.linaro.org,
         linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-        Christoph Hellwig <hch@lst.de>,
         Brian Foster <bfoster@redhat.com>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        Allison Collins <allison.henderson@oracle.com>
-Subject: [PATCH v3 1/2] xfs: rename compat_time_t to old_time32_t
-Date:   Thu,  2 Jan 2020 21:40:45 +0100
-Message-Id: <20200102204058.2005468-1-arnd@arndb.de>
+        Carlos Maiolino <cmaiolino@redhat.com>,
+        Pavel Reichl <preichl@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Allison Collins <allison.henderson@oracle.com>,
+        Eric Sandeen <sandeen@sandeen.net>, Jan Kara <jack@suse.cz>,
+        Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Subject: [PATCH v3 2/2] xfs: quota: move to time64_t interfaces
+Date:   Thu,  2 Jan 2020 21:40:46 +0100
+Message-Id: <20200102204058.2005468-2-arnd@arndb.de>
 X-Mailer: git-send-email 2.20.0
+In-Reply-To: <20200102204058.2005468-1-arnd@arndb.de>
+References: <20200102204058.2005468-1-arnd@arndb.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:Am5ZpQy974RBM1IMSacw41L4RnaQSGuNLcQlMxsJsyLcId6T1mY
- 2kEgbyY3GdOOOo3/5wPngaqYQubNDl5xr4pieo9wsQDG/4qYpYkfLuVn6WHfRc3v8E4e+be
- tuC5WFzaXJtKDKdEwtXLINySy1ae1yvQFaRgvQZs2PCJld3/jBQxAT37Xhwk5tfI0cfrfYA
- ejlpXeFbTJqWHaKqDV1Pw==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:vDHbDrbHb6k=:iAjX+Np1HRh7wssxhbFJ+Z
- hRJSwbEO+6SR5o1kXVnUCvCKQ1i9DcALZeCqrcEVRP8MLHg1Rmgc/5+J+DKFwWMUi+t9y4J9V
- RwLysRwFd5CKFBoTBCpHRm6hfbJDQS15ZhXMucLh/f4Z+T3ngnn05VffaH0/as5pl9Bjm4NK6
- UQJmRWp2ae+ooeEZJrDKT9Ys8+ZpyEVoEcaN+CEU9/FCZ5BNud3d4dDzlzCSnwV5psvak88Sf
- bX48xFK1TjOonxazGTQlNNS7fZcqjcqgyXMRbwc19FtoXAgK9RDl9TmCGIM5V7krZdtOfWNtF
- uPKVbbIZBmvRLpO2hpcrDkeRUq1tf0mUgi6nCMPViT34xANvYqfWEuMyeW25xcMTbYYCRyjCZ
- fD/iRA3KXUzUU5PKzuPtLHIBw3/nesuasu5oE394FXleB8JTpZ6MRHvQDuyyGYNOU80R5a1r7
- jbSldkO9tM9Gfd8F6YNcu0Vw94a7bnflMtK/m/YbWSk//HeAWqnIOG3oqgSI+2GXz3HNp9LVr
- H+zkwljv2G0AJ5Lh2jsucDlljtrIl4pfI4HcziuNoUJHM1eSVpcyOzPsr5lsoLsmIfa1v0CPs
- Cqmr64JEgDZvhtnA37geR1nnLABfNlm8KmUIGIN4In7DhxNjrj0o7+tjZJsoGz9vfKyEW0yyW
- Cgm5wxBKebfQn63Uy8lXVC1ppMUT+RB9/JsfJg/Kk3EpgzPIxJYAeLaWUGxW1LDg0k2iWjy6k
- +70IorddsG8Sqq9Fd1vzSQNDTJy86021DKnitK2JnT0fM4IsYL8tDV5K/VMiy2g7WmGB0JB6N
- WrPQWOvO7boDy74yfBwFekjP8PjrHR58ReaNGG+TnfvLmh3Hy8TDjjhuGkCn/dJsEuvVe/wO8
- PW0uvtNCnbiunKr5YKHA==
+X-Provags-ID: V03:K1:onU+uB1esbQ3dsXBT7fEhIdBt0hzU21s3R+y0vIg8afhzsq7nRk
+ ya/iySXsCZKeAjNroJnGdLoAWsx5vrmlb0OPxeJ6nMm/2LFcAwJ+Wx5uGD1iaf/X/M2pBy6
+ TJq7uK+/hP6k7fYa1cdYx+Wmx/9JO5rw8CSRnl6L8//m+NKDW3iMn2g6+i3ewAqyrbyDgq2
+ cNhHNES1SFpJQgfZl4iog==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:1oUVC3DCrLs=:Lf4LJmEhdt2ALfh+Izfopx
+ 5DIpp2n2VVAyKd+lc9r0Xiran6T67mX4v8kVtm0YEGrvJ4ZVlzymGynIj/omOPs5r2DyeIe5R
+ BvUAhadsP8vMdqc3MnMtFEe427cweoQukMs936LK6JYwMmvv+LzdhVATgvIrWXgSGab6HmXyo
+ CURHIi5s9W8tfXcB0UB81ie6+tvx3GwG3PTz1a7i+cvumQn/NTeb28dTF55RFLZ9hXfyYlVI7
+ TNwdiDnE2aIVzOIvTQ5jlrzUX14jzkRa5J9xwxR/XBw3yZNoVL0JpZ1IeSsSiPmvscncNThH+
+ DTmwCZGkI8L9C4jGp4wN+sWi9G6/mQ8cUx+d9mpOAU3gdsJJ97XioyBuSGgnMyaC1Moac+LyJ
+ mU8+wwT01a7xzVIRm5x71P1Bi6h52EbH7zwM3JTz71TML875tN8/8Fh2Fw7JUEIHGGhkXMmen
+ gaLR8i+3YlztUPZqjU+aP4+hI9xHloR3YR0HHmRLjJ8w1d0qso3/2Hd6aHQvrKKQrWBkCUG9V
+ PHb/wlVQGlBSXu3lDFwI1BrTHTlSr4jHG9lvWoMnuRN5oYLURjqeJ3ueXYzZ1UFY6LeBQz1FD
+ inSNzU/xO0ku5gsvcPZWgZm6nqp1sjlWW+m5hpbb6hthrWkyP1TEAKlJyW6yDBAxbxImi0+7U
+ /VKYBRB8QHDcN7iS3VUxhihygV8ty/2zpAqZ1wlmU7VyMYj8DyMe9UEoWeQMZv5d2wKEs15K3
+ gcNIra9s2fgrKpILp9nw4BhgHQhLIQn2k8WzqrBTY7mc6Mmr/P8jXt3J+7R5q+1fKliRkZYyo
+ MWs9KY6qHwyYKusfN0kTLnP8skDG3YiEnS0N03sXefaQOJ13Yqh/biO/xkeunOXwXethzFDK/
+ c0lekH57mzdgmFpFTeBA==
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The compat_time_t type has been removed everywhere else,
-as most users rely on old_time32_t for both native and
-compat mode handling of 32-bit time_t.
+As a preparation for removing the 32-bit time_t type and
+all associated interfaces, change xfs to use time64_t and
+ktime_get_real_seconds() for the quota housekeeping.
 
-Remove the last one in xfs.
+This avoids one difference between 32-bit and 64-bit kernels,
+raising the theoretical limit for the quota grace period
+to year 2106 on 32-bit instead of year 2038.
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Note that common user space tools using the XFS quotactl
+interface instead of the generic one still use the y2038
+dates.
+
+To fix quotas properly, both the on-disk format and user
+space still need to be changed.
+
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
-As explained in https://www.spinics.net/lists/linux-xfs/msg35524.html
-I've dropped the patch "xfs: disallow broken ioctls without
-compat-32-bit-time" for this submission but will get to that later
-when doing that as a treewide change.
+This has a small conflict against the series at
+https://www.spinics.net/lists/linux-xfs/msg35409.html
+("xfs: widen timestamps to deal with y2038") which needs
+to be rebased on top of this.
 
-Please apply these two for v5.6 in the meantime so we can kill off
-compat_time_t, time_t and get_seconds() for good.
+All other changes to remove time_t and get_seconds()
+are now in linux-next, this is one of the last patches
+needed to remove their definitions for v5.6.
 
- fs/xfs/xfs_ioctl32.c | 2 +-
- fs/xfs/xfs_ioctl32.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+If the widened timestamps make it into v5.6, this patch
+can be dropped.
+---
+ fs/xfs/xfs_dquot.c       | 6 +++---
+ fs/xfs/xfs_qm.h          | 6 +++---
+ fs/xfs/xfs_quotaops.c    | 6 +++---
+ fs/xfs/xfs_trans_dquot.c | 8 +++++---
+ 4 files changed, 14 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index bd07a79ca3c0..9ab0263586da 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -108,7 +108,7 @@ xfs_ioctl32_bstime_copyin(
- 	xfs_bstime_t		*bstime,
- 	compat_xfs_bstime_t	__user *bstime32)
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 2bff21ca9d78..9cfd3209f52b 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -137,7 +137,7 @@ xfs_qm_adjust_dqtimers(
+ 		    (d->d_blk_hardlimit &&
+ 		     (be64_to_cpu(d->d_bcount) >
+ 		      be64_to_cpu(d->d_blk_hardlimit)))) {
+-			d->d_btimer = cpu_to_be32(get_seconds() +
++			d->d_btimer = cpu_to_be32(ktime_get_real_seconds() +
+ 					mp->m_quotainfo->qi_btimelimit);
+ 		} else {
+ 			d->d_bwarns = 0;
+@@ -160,7 +160,7 @@ xfs_qm_adjust_dqtimers(
+ 		    (d->d_ino_hardlimit &&
+ 		     (be64_to_cpu(d->d_icount) >
+ 		      be64_to_cpu(d->d_ino_hardlimit)))) {
+-			d->d_itimer = cpu_to_be32(get_seconds() +
++			d->d_itimer = cpu_to_be32(ktime_get_real_seconds() +
+ 					mp->m_quotainfo->qi_itimelimit);
+ 		} else {
+ 			d->d_iwarns = 0;
+@@ -183,7 +183,7 @@ xfs_qm_adjust_dqtimers(
+ 		    (d->d_rtb_hardlimit &&
+ 		     (be64_to_cpu(d->d_rtbcount) >
+ 		      be64_to_cpu(d->d_rtb_hardlimit)))) {
+-			d->d_rtbtimer = cpu_to_be32(get_seconds() +
++			d->d_rtbtimer = cpu_to_be32(ktime_get_real_seconds() +
+ 					mp->m_quotainfo->qi_rtbtimelimit);
+ 		} else {
+ 			d->d_rtbwarns = 0;
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index 7823af39008b..4e57edca8bce 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -64,9 +64,9 @@ struct xfs_quotainfo {
+ 	struct xfs_inode	*qi_pquotaip;	/* project quota inode */
+ 	struct list_lru	 qi_lru;
+ 	int		 qi_dquots;
+-	time_t		 qi_btimelimit;	 /* limit for blks timer */
+-	time_t		 qi_itimelimit;	 /* limit for inodes timer */
+-	time_t		 qi_rtbtimelimit;/* limit for rt blks timer */
++	time64_t	 qi_btimelimit;	 /* limit for blks timer */
++	time64_t	 qi_itimelimit;	 /* limit for inodes timer */
++	time64_t	 qi_rtbtimelimit;/* limit for rt blks timer */
+ 	xfs_qwarncnt_t	 qi_bwarnlimit;	 /* limit for blks warnings */
+ 	xfs_qwarncnt_t	 qi_iwarnlimit;	 /* limit for inodes warnings */
+ 	xfs_qwarncnt_t	 qi_rtbwarnlimit;/* limit for rt blks warnings */
+diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
+index c7de17deeae6..38669e827206 100644
+--- a/fs/xfs/xfs_quotaops.c
++++ b/fs/xfs/xfs_quotaops.c
+@@ -37,9 +37,9 @@ xfs_qm_fill_state(
+ 	tstate->flags |= QCI_SYSFILE;
+ 	tstate->blocks = ip->i_d.di_nblocks;
+ 	tstate->nextents = ip->i_d.di_nextents;
+-	tstate->spc_timelimit = q->qi_btimelimit;
+-	tstate->ino_timelimit = q->qi_itimelimit;
+-	tstate->rt_spc_timelimit = q->qi_rtbtimelimit;
++	tstate->spc_timelimit = (u32)q->qi_btimelimit;
++	tstate->ino_timelimit = (u32)q->qi_itimelimit;
++	tstate->rt_spc_timelimit = (u32)q->qi_rtbtimelimit;
+ 	tstate->spc_warnlimit = q->qi_bwarnlimit;
+ 	tstate->ino_warnlimit = q->qi_iwarnlimit;
+ 	tstate->rt_spc_warnlimit = q->qi_rtbwarnlimit;
+diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+index a6fe2d8dc40f..d1b9869bc5fa 100644
+--- a/fs/xfs/xfs_trans_dquot.c
++++ b/fs/xfs/xfs_trans_dquot.c
+@@ -580,7 +580,7 @@ xfs_trans_dqresv(
  {
--	compat_time_t		sec32;	/* tv_sec differs on 64 vs. 32 */
-+	old_time32_t		sec32;	/* tv_sec differs on 64 vs. 32 */
- 
- 	if (get_user(sec32,		&bstime32->tv_sec)	||
- 	    get_user(bstime->tv_nsec,	&bstime32->tv_nsec))
-diff --git a/fs/xfs/xfs_ioctl32.h b/fs/xfs/xfs_ioctl32.h
-index 8c7743cd490e..053de7d894cd 100644
---- a/fs/xfs/xfs_ioctl32.h
-+++ b/fs/xfs/xfs_ioctl32.h
-@@ -32,7 +32,7 @@
- #endif
- 
- typedef struct compat_xfs_bstime {
--	compat_time_t	tv_sec;		/* seconds		*/
-+	old_time32_t	tv_sec;		/* seconds		*/
- 	__s32		tv_nsec;	/* and nanoseconds	*/
- } compat_xfs_bstime_t;
- 
+ 	xfs_qcnt_t		hardlimit;
+ 	xfs_qcnt_t		softlimit;
+-	time_t			timer;
++	time64_t		timer;
+ 	xfs_qwarncnt_t		warns;
+ 	xfs_qwarncnt_t		warnlimit;
+ 	xfs_qcnt_t		total_count;
+@@ -635,7 +635,8 @@ xfs_trans_dqresv(
+ 				goto error_return;
+ 			}
+ 			if (softlimit && total_count > softlimit) {
+-				if ((timer != 0 && get_seconds() > timer) ||
++				if ((timer != 0 &&
++				     ktime_get_real_seconds() > timer) ||
+ 				    (warns != 0 && warns >= warnlimit)) {
+ 					xfs_quota_warn(mp, dqp,
+ 						       QUOTA_NL_BSOFTLONGWARN);
+@@ -662,7 +663,8 @@ xfs_trans_dqresv(
+ 				goto error_return;
+ 			}
+ 			if (softlimit && total_count > softlimit) {
+-				if  ((timer != 0 && get_seconds() > timer) ||
++				if  ((timer != 0 &&
++				      ktime_get_real_seconds() > timer) ||
+ 				     (warns != 0 && warns >= warnlimit)) {
+ 					xfs_quota_warn(mp, dqp,
+ 						       QUOTA_NL_ISOFTLONGWARN);
 -- 
 2.20.0
 
