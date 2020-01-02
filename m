@@ -2,204 +2,317 @@ Return-Path: <SRS0=76Wm=2X=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C70CC2D0C2
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Jan 2020 18:41:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8793C2D0C2
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Jan 2020 19:15:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C96EB21582
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Jan 2020 18:41:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A21F020863
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Jan 2020 19:15:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="e+7/9PLu"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="TWASf5K0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728174AbgABSla (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 2 Jan 2020 13:41:30 -0500
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:32207 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727951AbgABSla (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Jan 2020 13:41:30 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1577990487;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Ab29eiOf5rCBzfzo0NudRqfVJUQsrfjBWEmuZyT1adY=;
-        b=e+7/9PLuwkxi+wvbvC+dvgvPNIT+0bclfgcM4K6nj1bQjqL6QhDTf6GNWrKy/v69zGyg80
-        lGtCISUIiRAKQzIA0/MIJjG/t4XmVDRt/EvCxe4RnWim5IbDx4EHzV1l8c5Rzqj7KTAdNM
-        pla/iU5naw6zrK12r4ycqtFgMKMrjaA=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-200-xwMoJwzMNS-9qr64cm_Mpw-1; Thu, 02 Jan 2020 13:41:26 -0500
-X-MC-Unique: xwMoJwzMNS-9qr64cm_Mpw-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 87538DBE5;
-        Thu,  2 Jan 2020 18:41:24 +0000 (UTC)
-Received: from llong.remote.csb (dhcp-17-59.bos.redhat.com [10.18.17.59])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 970EA5C553;
-        Thu,  2 Jan 2020 18:41:21 +0000 (UTC)
-Subject: Re: [PATCH] xfs: Fix false positive lockdep warning with sb_internal
- & fs_reclaim
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>, Qian Cai <cai@lca.pw>
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dave Chinner <david@fromorbit.com>,
-        Eric Sandeen <sandeen@redhat.com>
-References: <20200102155208.8977-1-longman@redhat.com>
- <24F33D67-E975-48E1-A285-0D0129CC3033@lca.pw>
- <20200102182435.GB1508633@magnolia>
-From:   Waiman Long <longman@redhat.com>
-Organization: Red Hat
-Message-ID: <2eea17a5-a9b7-29e0-62bc-15cdb676abcd@redhat.com>
-Date:   Thu, 2 Jan 2020 13:41:20 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
+        id S1727989AbgABTPi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Jan 2020 14:15:38 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:38258 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727951AbgABTPi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Jan 2020 14:15:38 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Type:MIME-Version:Message-ID:
+        Subject:To:From:Date:Sender:Reply-To:Cc:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=vluhWNX3j2FfQDLbdk+NxlWrmmkIqj11g81oWJAiPoo=; b=TWASf5K0BiF2pNGtAG7jAlypQ8
+        OHmnuM9FO3/W+eJGN4qQwSsN0oBRds5pDDiqjJFF+0c+eR4iS8BBaksoWlp5WI3/2qo+HqhyQOdCi
+        GiFWsff6gvdTMHfsPYRBpwqXwgNX2Bb5JxoLGeY/6SyjEosWK1bH2wKDsecJfF/C57xubTXnzlVo4
+        SAB/gWOpC/TKWQUxu3GMMjC3ziRBa70HVVDsARL1K0SUJ4ulDZtF54r/Q8ykEmKmrfj5XkzjO56t5
+        N7+nEBNC6Ozep5ZhJwU+iEhbopuHIEbsjWJFfcfZiIkrai1rvJqLJXjuHJKswEm0xi/gz9D0V97Vz
+        Z1CCZ9SA==;
+Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1in5wX-0007gh-K2
+        for linux-xfs@vger.kernel.org; Thu, 02 Jan 2020 19:15:37 +0000
+Date:   Thu, 2 Jan 2020 11:15:37 -0800
+From:   Matthew Wilcox <willy@infradead.org>
+To:     linux-xfs@vger.kernel.org
+Subject: assertion failure when running generic/019
+Message-ID: <20200102191537.GG6788@bombadil.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20200102182435.GB1508633@magnolia>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 1/2/20 1:24 PM, Darrick J. Wong wrote:
-> On Thu, Jan 02, 2020 at 11:19:51AM -0500, Qian Cai wrote:
->>
->>> On Jan 2, 2020, at 10:52 AM, Waiman Long <longman@redhat.com> wrote:
->>>
->>> Depending on the workloads, the following circular locking dependency
->>> warning between sb_internal (a percpu rwsem) and fs_reclaim (a pseudo
->>> lock) may show up:
->>>
->>> ======================================================
->>> WARNING: possible circular locking dependency detected
->>> 5.0.0-rc1+ #60 Tainted: G        W
->>> ------------------------------------------------------
->>> fsfreeze/4346 is trying to acquire lock:
->>> 0000000026f1d784 (fs_reclaim){+.+.}, at:
->>> fs_reclaim_acquire.part.19+0x5/0x30
->>>
->>> but task is already holding lock:
->>> 0000000072bfc54b (sb_internal){++++}, at: percpu_down_write+0xb4/0x650
->>>
->>> which lock already depends on the new lock.
->>>  :
->>> Possible unsafe locking scenario:
->>>
->>>       CPU0                    CPU1
->>>       ----                    ----
->>>  lock(sb_internal);
->>>                               lock(fs_reclaim);
->>>                               lock(sb_internal);
->>>  lock(fs_reclaim);
->>>
->>> *** DEADLOCK ***
->>>
->>> 4 locks held by fsfreeze/4346:
->>> #0: 00000000b478ef56 (sb_writers#8){++++}, at: percpu_down_write+0xb4/0x650
->>> #1: 000000001ec487a9 (&type->s_umount_key#28){++++}, at: freeze_super+0xda/0x290
->>> #2: 000000003edbd5a0 (sb_pagefaults){++++}, at: percpu_down_write+0xb4/0x650
->>> #3: 0000000072bfc54b (sb_internal){++++}, at: percpu_down_write+0xb4/0x650
->>>
->>> stack backtrace:
->>> Call Trace:
->>> dump_stack+0xe0/0x19a
->>> print_circular_bug.isra.10.cold.34+0x2f4/0x435
->>> check_prev_add.constprop.19+0xca1/0x15f0
->>> validate_chain.isra.14+0x11af/0x3b50
->>> __lock_acquire+0x728/0x1200
->>> lock_acquire+0x269/0x5a0
->>> fs_reclaim_acquire.part.19+0x29/0x30
->>> fs_reclaim_acquire+0x19/0x20
->>> kmem_cache_alloc+0x3e/0x3f0
->>> kmem_zone_alloc+0x79/0x150
->>> xfs_trans_alloc+0xfa/0x9d0
->>> xfs_sync_sb+0x86/0x170
->>> xfs_log_sbcount+0x10f/0x140
->>> xfs_quiesce_attr+0x134/0x270
->>> xfs_fs_freeze+0x4a/0x70
->>> freeze_super+0x1af/0x290
->>> do_vfs_ioctl+0xedc/0x16c0
->>> ksys_ioctl+0x41/0x80
->>> __x64_sys_ioctl+0x73/0xa9
->>> do_syscall_64+0x18f/0xd23
->>> entry_SYSCALL_64_after_hwframe+0x49/0xbe
->>>
->>> According to Dave Chinner:
->>>
->>>  Freezing the filesystem, after all the data has been cleaned. IOWs
->>>  memory reclaim will never run the above writeback path when
->>>  the freeze process is trying to allocate a transaction here because
->>>  there are no dirty data pages in the filesystem at this point.
->>>
->>>  Indeed, this xfs_sync_sb() path sets XFS_TRANS_NO_WRITECOUNT so that
->>>  it /doesn't deadlock/ by taking freeze references for the
->>>  transaction. We've just drained all the transactions
->>>  in progress and written back all the dirty metadata, too, and so the
->>>  filesystem is completely clean and only needs the superblock to be
->>>  updated to complete the freeze process. And to do that, it does not
->>>  take a freeze reference because calling sb_start_intwrite() here
->>>  would deadlock.
->>>
->>>  IOWs, this is a false positive, caused by the fact that
->>>  xfs_trans_alloc() is called from both above and below memory reclaim
->>>  as well as within /every level/ of freeze processing. Lockdep is
->>>  unable to describe the staged flush logic in the freeze process that
->>>  prevents deadlocks from occurring, and hence we will pretty much
->>>  always see false positives in the freeze path....
->>>
->>> Perhaps breaking the fs_reclaim pseudo lock into a per filesystem lock
->>> may fix the issue. However, that will greatly complicate the logic and
->>> may not be worth it.
->>>
->>> Another way to fix it is to disable the taking of the fs_reclaim
->>> pseudo lock when in the freezing code path as a reclaim on the freezed
->>> filesystem is not possible as stated above. This patch takes this
->>> approach by setting the __GFP_NOLOCKDEP flag in the slab memory
->>> allocation calls when the filesystem has been freezed.
->>>
->>> Without this patch, the command sequence below will show that the lock
->>> dependency chain sb_internal -> fs_reclaim exists.
->>>
->>> # fsfreeze -f /home
->>> # fsfreeze --unfreeze /home
->>> # grep -i fs_reclaim -C 3 /proc/lockdep_chains | grep -C 5 sb_internal
->>>
->>> After applying the patch, such sb_internal -> fs_reclaim lock dependency
->>> chain can no longer be found. Because of that, the locking dependency
->>> warning will not be shown.
->> There was an attempt to fix this in the past, but Dave rejected right
->> away for any workaround in xfs and insisted to make lockdep smarter
->> instead. No sure your approach will make any difference this time.
->> Good luck.
-> /me wonders if you can fix this by having the freeze path call
-> memalloc_nofs_save() since we probably don't want to be recursing into
-> the fs for reclaim while freezing it?  Probably not, because that's a
-> bigger hammer than we really need here.  We can certainly steal memory
-> from other filesystems that aren't frozen.
->
-> It doesn't solve the key issue that lockdep isn't smart enough to know
-> that we can't recurse into the fs that's being frozen and therefore
-> there's no chance of deadlock.
 
-Lockdep only looks at all the possible locking chains to see if a
-circular deadlock is possible. It doesn't have the smart to understand
-filesystem internals. The problem here is caused by the fact that
-fs_reclaim is a global pseudo lock that is acquired whenever there is a
-chance that FS reclaim can happen. As I said in the commit log, it may
-be possible to fix that by breaking up fs_reclaim into a set of
-per-filesystem pseudo locks, but that will add quite a bit of complexity
-to the code. That is why I don't want to go this route. This patch is
-the least invasive that I can think of to address the problem without
-inhibiting other valid lockdep checking.
+I've hit a few of these.  Occurs in maybe 10-20% of the runs so it can
+take a while to decide whether a kernel is good or bad doing a bisect.
+Here's one from commit 6210469417fd967ec72dea56723593beefeecafb in
+Linus' tree.  I'm using the 01.org build-bot config & job-script.
 
-Cheers,
-Longman
+job=/lkp/jobs/scheduled/vm-snb-ea9f97a663a6/xfstests-4HDD-xfs-generic-group00-debian-x86_64-2019-11-14.cgz-72273b2-20191222-10497-fw38k8-2.yaml
+...
+        run_test test='generic-group00' $LKP_SRC/tests/wrapper xfstests
+
+
+[   65.455593] run fstests generic/019 at 2020-01-02 13:24:44
+[   65.651992] XFS (vda): Mounting V5 Filesystem
+[   65.657920] XFS (vda): Ending clean mount
+[   65.660127] xfs filesystem being mounted at /fs/vda supports timestamps until 2038 (0x7fffffff)
+[   66.108165] XFS (vdd): Mounting V5 Filesystem
+[   66.112144] XFS (vdd): Ending clean mount
+[   66.114597] xfs filesystem being mounted at /fs/scratch supports timestamps until 2038 (0x7fffffff)
+[   75.759802] XFS (vdd): xlog_verify_grant_tail: space > BBTOB(tail_blocks)
+[   96.133916] vdd: writeback error on inode 562692, offset 0, sector 578584
+[   96.135397] vdd: writeback error on inode 134277997, offset 1638400, sector 193107816
+[   96.144409] XFS (vdd): log I/O error -5
+[   96.149853] XFS (vdd): xfs_do_force_shutdown(0x2) called from line 1297 of file fs/xfs/xfs_log.c. Return address = ffffffffc044d773
+[   96.154022] XFS (vdd): Log I/O Error Detected. Shutting down filesystem
+[   96.156382] XFS (vdd): Please unmount the filesystem and rectify the problem(s)
+[   96.164120] XFS (vdd): log I/O error -5
+[   96.170256] XFS: Assertion failed: cur->bc_btnum != XFS_BTNUM_BMAP || cur->bc_private.b.allocated == 0, file: fs/xfs/libxfs/xfs_btree.c, line: 380
+[   96.177104] ------------[ cut here ]------------
+[   96.179178] kernel BUG at fs/xfs/xfs_message.c:110!
+[   96.181561] invalid opcode: 0000 [#1] SMP PTI
+[   96.183267] CPU: 1 PID: 11823 Comm: fio Not tainted 5.5.0-rc2-00351-g6210469417fd #7
+[   96.185909] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.13.0-1 04/01/2014
+[   96.189730] RIP: 0010:assfail+0x23/0x28 [xfs]
+[   96.192215] Code: 67 fc ff ff 0f 0b c3 0f 1f 44 00 00 41 89 c8 48 89 d1 48 89 f2 48 c7 c6 98 0b 4a c0 e8 82 f9 ff ff 80 3d 54 0c 09 00 00 74 02 <0f> 0b 0f 0b c3 48 8b 33 48 c7 c7 10 10 4a c0 c6 05 40 7a 0a 00 01
+[   96.197036] RSP: 0018:ffffb9e50527b7c0 EFLAGS: 00010202
+[   96.198841] RAX: 0000000000000000 RBX: 0000000000000003 RCX: 0000000000000000
+[   96.200900] RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffffc04932f7
+[   96.202952] RBP: ffff8edc7d03b620 R08: 0000000000000000 R09: 0000000000000000
+[   96.205053] R10: 000000000000000a R11: f000000000000000 R12: 00000000fffffffb
+[   96.207106] R13: 0000000000c347cc R14: ffffb9e50527b860 R15: 0000000000000000
+[   96.209148] FS:  00007fd2450c1a80(0000) GS:ffff8edd0f500000(0000) knlGS:0000000000000000
+[   96.211385] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   96.213342] CR2: 00007f1fcb1617f0 CR3: 00000000bcac4000 CR4: 00000000000006e0
+[   96.215409] Call Trace:
+[   96.216830]  xfs_btree_del_cursor+0x83/0x90 [xfs]
+[   96.218574]  xfs_bmapi_write+0x754/0xaf0 [xfs]
+[   96.220390]  xfs_iomap_write_direct+0x1c1/0x2e0 [xfs]
+[   96.222208]  xfs_direct_write_iomap_begin+0x423/0x5d0 [xfs]
+[   96.224025]  iomap_apply+0x98/0x370
+[   96.225640]  ? iomap_dio_bio_actor+0x3a0/0x3a0
+[   96.227326]  ? iomap_dio_rw+0x2d8/0x480
+[   96.228962]  iomap_dio_rw+0x2d8/0x480
+[   96.230836]  ? iomap_dio_bio_actor+0x3a0/0x3a0
+[   96.232504]  ? xfs_file_dio_aio_write+0x110/0x320 [xfs]
+[   96.234364]  xfs_file_dio_aio_write+0x110/0x320 [xfs]
+[   96.236186]  xfs_file_write_iter+0x93/0xe0 [xfs]
+[   96.237898]  aio_write+0xec/0x1a0
+[   96.239388]  ? __switch_to_asm+0x40/0x70
+[   96.240982]  ? account_kernel_stack+0x69/0x120
+[   96.242607]  ? put_task_stack+0x49/0x190
+[   96.244150]  ? _copy_to_user+0x76/0x90
+[   96.245666]  __io_submit_one.constprop.0+0x39c/0x710
+[   96.247387]  ? io_submit_one+0xe8/0x580
+[   96.248913]  io_submit_one+0xe8/0x580
+[   96.250412]  __x64_sys_io_submit+0x91/0x1a0
+[   96.252015]  do_syscall_64+0x5b/0x1f0
+[   96.253527]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[   96.255226] RIP: 0033:0x7fd2315e2717
+[   96.256614] Code: 00 75 08 8b 47 0c 39 47 08 74 08 e9 c3 ff ff ff 0f 1f 00 31 c0 c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 00 b8 d1 00 00 00 0f 05 <c3> 0f 1f 84 00 00 00 00 00 b8 d2 00 00 00 0f 05 c3 0f 1f 84 00 00
+[   96.261250] RSP: 002b:00007ffcd13e1558 EFLAGS: 00000202 ORIG_RAX: 00000000000000d1
+[   96.263295] RAX: ffffffffffffffda RBX: 00007fd2183e7418 RCX: 00007fd2315e2717
+[   96.265267] RDX: 000055d2ff0f19f0 RSI: 0000000000000001 RDI: 00007fd245021000
+[   96.267218] RBP: 00000000000000a0 R08: 0000000000000001 R09: 000055d2ff0e2f60
+[   96.269089] R10: 00007ffcd13e1550 R11: 0000000000000202 R12: 0000000000000000
+[   96.271042] R13: 00007fd2183e7418 R14: 000055d2ff0f1d60 R15: 000055d2ff0d3f40
+[   96.272940] Modules linked in: xfs libcrc32c sr_mod cdrom sg bochs_drm ppdev drm_vram_helper ata_generic pata_acpi drm_ttm_helper ttm drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops drm joydev serio_raw pcspkr ata_piix libata i2c_piix4 parport_pc floppy parport ip_tables
+[   96.279526] ---[ end trace 64727b1562864575 ]---
+[   96.281463] RIP: 0010:assfail+0x23/0x28 [xfs]
+[   96.283045] Code: 67 fc ff ff 0f 0b c3 0f 1f 44 00 00 41 89 c8 48 89 d1 48 89 f2 48 c7 c6 98 0b 4a c0 e8 82 f9 ff ff 80 3d 54 0c 09 00 00 74 02 <0f> 0b 0f 0b c3 48 8b 33 48 c7 c7 10 10 4a c0 c6 05 40 7a 0a 00 01
+[   96.287609] RSP: 0018:ffffb9e50527b7c0 EFLAGS: 00010202
+[   96.289265] RAX: 0000000000000000 RBX: 0000000000000003 RCX: 0000000000000000
+[   96.291403] RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffffc04932f7
+[   96.293492] RBP: ffff8edc7d03b620 R08: 0000000000000000 R09: 0000000000000000
+[   96.295507] R10: 000000000000000a R11: f000000000000000 R12: 00000000fffffffb
+[   96.297504] R13: 0000000000c347cc R14: ffffb9e50527b860 R15: 0000000000000000
+[   96.299493] FS:  00007fd2450c1a80(0000) GS:ffff8edd0f500000(0000) knlGS:0000000000000000
+[   96.301628] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   96.303404] CR2: 00007f1fcb1617f0 CR3: 00000000bcac4000 CR4: 00000000000006e0
+[   96.305387] Kernel panic - not syncing: Fatal exception
+[   96.307129] Kernel Offset: 0x14400000 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffffbfffffff)
+
+-- earlier from a tree with some of my patches in it --
+
+[   64.961563] run fstests generic/019 at 2020-01-02 10:20:48
+[   65.153636] XFS (vda): Mounting V5 Filesystem
+[   65.159796] XFS (vda): Ending clean mount
+[   65.161731] xfs filesystem being mounted at /fs/vda supports timestamps until 2038 (0x7fffffff)
+[   65.621885] XFS (vdd): Mounting V5 Filesystem
+[   65.626777] XFS (vdd): Ending clean mount
+[   65.629441] xfs filesystem being mounted at /fs/scratch supports timestamps until 2038 (0x7fffffff)
+[   77.556762] XFS (vdd): xlog_verify_grant_tail: space > BBTOB(tail_blocks)
+[   95.664553] vdd: writeback error on inode 268698003, offset 585728, sector 403860000
+[   95.667287] XFS (vdd): log I/O error -5
+[   95.673012] XFS (vdd): xfs_do_force_shutdown(0x2) called from line 1297 of file fs/xfs/xfs_log.c. Return address = ffffffffc06fbbd3
+[   95.676868] XFS (vdd): Log I/O Error Detected. Shutting down filesystem
+[   95.678914] XFS (vdd): Please unmount the filesystem and rectify the problem(s)
+[   95.684242] XFS (vdd): log I/O error -5
+[   95.688913] XFS: Assertion failed: cur->bc_btnum != XFS_BTNUM_BMAP || cur->bc_private.b.allocated == 0, file: fs/xfs/libxfs/xfs_btree.c, line: 380
+[   95.696002] ------------[ cut here ]------------
+[   95.697775] kernel BUG at fs/xfs/xfs_message.c:110!
+[   95.700572] invalid opcode: 0000 [#1] SMP PTI
+[   95.702419] CPU: 1 PID: 11840 Comm: fio Not tainted 5.5.0-rc4-00074-g927ecff81368-dirty #6
+[   95.705563] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.13.0-1 04/01/2014
+[   95.708482] RIP: 0010:assfail+0x23/0x28 [xfs]
+[   95.710573] Code: 67 fc ff ff 0f 0b c3 0f 1f 44 00 00 41 89 c8 48 89 d1 48 89 f2 48 c7 c6 00 fc 74 c0 e8 82 f9 ff ff 80 3d 54 29 09 00 00 74 02 <0f> 0b 0f 0b c3 48 8b 33 48 c7 c7 f0 00 75 c0 c6 05 00 98 0a 00 01
+[   95.718459] RSP: 0018:ffffb6aac51fb7c0 EFLAGS: 00010202
+[   95.720407] RAX: 0000000000000000 RBX: 0000000000000003 RCX: 0000000000000000
+[   95.722637] RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffffc0742350
+[   95.724841] RBP: ffff89dbbc2f7a80 R08: 0000000000000000 R09: 0000000000000000
+[   95.727079] R10: 000000000000000a R11: f000000000000000 R12: 00000000fffffffb
+[   95.729347] R13: 0000000000fc776d R14: ffffb6aac51fb860 R15: 0000000000000000
+[   95.731521] FS:  00007fcf2b620a80(0000) GS:ffff89dc2fd00000(0000) knlGS:0000000000000000
+[   95.733864] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   95.735845] CR2: 00007fb5b5aa95e0 CR3: 00000000bd5dc000 CR4: 00000000000006e0
+[   95.738042] Call Trace:
+[   95.739565]  xfs_btree_del_cursor+0x83/0x90 [xfs]
+[   95.741399]  xfs_bmapi_write+0x754/0xaf0 [xfs]
+[   95.743181]  xfs_iomap_write_direct+0x1c1/0x2e0 [xfs]
+[   95.745141]  xfs_direct_write_iomap_begin+0x423/0x5d0 [xfs]
+[   95.747187]  iomap_apply+0x98/0x370
+[   95.748849]  ? iomap_dio_bio_actor+0x3a0/0x3a0
+[   95.750689]  ? iomap_dio_rw+0x2d8/0x480
+[   95.752377]  iomap_dio_rw+0x2d8/0x480
+[   95.754084]  ? iomap_dio_bio_actor+0x3a0/0x3a0
+[   95.756321]  ? xfs_file_dio_aio_write+0x110/0x320 [xfs]
+[   95.758234]  xfs_file_dio_aio_write+0x110/0x320 [xfs]
+[   95.760236]  xfs_file_write_iter+0x93/0xe0 [xfs]
+[   95.762076]  aio_write+0xec/0x1a0
+[   95.763714]  ? __switch_to_asm+0x34/0x70
+[   95.765344]  ? __switch_to_asm+0x34/0x70
+[   95.767020]  ? __switch_to_asm+0x40/0x70
+[   95.768694]  ? __switch_to_asm+0x34/0x70
+[   95.770329]  ? __switch_to_asm+0x40/0x70
+[   95.771960]  ? __switch_to_asm+0x34/0x70
+[   95.773572]  ? __switch_to_asm+0x40/0x70
+[   95.775109]  ? __switch_to_asm+0x34/0x70
+[   95.776670]  ? __switch_to_asm+0x40/0x70
+[   95.778162]  ? __switch_to_asm+0x34/0x70
+[   95.779623]  ? __switch_to_asm+0x40/0x70
+[   95.781091]  ? _copy_to_user+0x76/0x90
+[   95.782745]  __io_submit_one.constprop.0+0x39c/0x710
+[   95.784385]  ? io_submit_one+0xe8/0x580
+[   95.785800]  io_submit_one+0xe8/0x580
+[   95.787189]  __x64_sys_io_submit+0x91/0x1a0
+[   95.788689]  do_syscall_64+0x5b/0x1f0
+[   95.789975]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[   95.791561] RIP: 0033:0x7fcf17b3d717
+[   95.792893] Code: 00 75 08 8b 47 0c 39 47 08 74 08 e9 c3 ff ff ff 0f 1f 00 31 c0 c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 00 b8 d1 00 00 00 0f 05 <c3> 0f 1f 84 00 00 00 00 00 b8 d2 00 00 00 0f 05 c3 0f 1f 84 00 00
+[   95.797521] RSP: 002b:00007fff8d6e48c8 EFLAGS: 00000206 ORIG_RAX: 00000000000000d1
+[   95.799617] RAX: ffffffffffffffda RBX: 00007fcefe934810 RCX: 00007fcf17b3d717
+[   95.801574] RDX: 000055c818e1bc08 RSI: 0000000000000001 RDI: 00007fcf2b581000
+[   95.803498] RBP: 00000000000002b8 R08: 0000000000000001 R09: 000055c818e0aa20
+[   95.805404] R10: 00007fff8d6e48c0 R11: 0000000000000206 R12: 0000000000000000
+[   95.807242] R13: 00007fcefe934810 R14: 000055c818e1bd60 R15: 000055c818dfdf40
+[   95.809113] Modules linked in: xfs libcrc32c sr_mod cdrom bochs_drm sg drm_vram_helper drm_ttm_helper ttm ata_generic pata_acpi ppdev drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops pcspkr joydev ata_piix serio_raw drm libata i2c_piix4 parport_pc parport floppy ip_tables
+[   95.815578] ---[ end trace a8509ddc8ad5e877 ]---
+[   95.817134] RIP: 0010:assfail+0x23/0x28 [xfs]
+[   95.818634] Code: 67 fc ff ff 0f 0b c3 0f 1f 44 00 00 41 89 c8 48 89 d1 48 89 f2 48 c7 c6 00 fc 74 c0 e8 82 f9 ff ff 80 3d 54 29 09 00 00 74 02 <0f> 0b 0f 0b c3 48 8b 33 48 c7 c7 f0 00 75 c0 c6 05 00 98 0a 00 01
+[   95.823345] RSP: 0018:ffffb6aac51fb7c0 EFLAGS: 00010202
+[   95.824984] RAX: 0000000000000000 RBX: 0000000000000003 RCX: 0000000000000000
+[   95.826893] RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffffc0742350
+[   95.828938] RBP: ffff89dbbc2f7a80 R08: 0000000000000000 R09: 0000000000000000
+[   95.830984] R10: 000000000000000a R11: f000000000000000 R12: 00000000fffffffb
+[   95.832878] R13: 0000000000fc776d R14: ffffb6aac51fb860 R15: 0000000000000000
+[   95.834896] FS:  00007fcf2b620a80(0000) GS:ffff89dc2fd00000(0000) knlGS:0000000000000000
+[   95.837106] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   95.838941] CR2: 00007fb5b5aa95e0 CR3: 00000000bd5dc000 CR4: 00000000000006e0
+[   95.840926] Kernel panic - not syncing: Fatal exception
+[   95.842747] Kernel Offset: 0x15000000 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffffbfffffff)
+
+
+[   64.141329] run fstests generic/019 at 2020-01-02 11:52:59
+[   64.333664] XFS (vda): Mounting V5 Filesystem
+[   64.339484] XFS (vda): Ending clean mount
+[   64.343071] xfs filesystem being mounted at /fs/vda supports timestamps until 2038 (0x7fffffff)
+[   64.830077] XFS (vdd): Mounting V5 Filesystem
+[   64.843176] XFS (vdd): Ending clean mount
+[   64.851589] xfs filesystem being mounted at /fs/scratch supports timestamps until 2038 (0x7fffffff)
+[   75.545765] XFS (vdd): xlog_verify_grant_tail: space > BBTOB(tail_blocks)
+[   94.884746] XFS (vdd): log I/O error -5
+[   94.885861] vdd: writeback error on inode 268697721, offset 36864, sector 268774616
+[   94.891453] XFS (vdd): xfs_do_force_shutdown(0x2) called from line 1297 of file fs/xfs/xfs_log.c. Return address = ffffffffc04debd3
+[   94.894365] XFS: Assertion failed: cur->bc_btnum != XFS_BTNUM_BMAP || cur->bc_private.b.allocated == 0, file: fs/xfs/libxfs/xfs_btree.c, line: 380
+[   94.896511] XFS (vdd): Log I/O Error Detected. Shutting down filesystem
+[   94.896513] XFS (vdd): Please unmount the filesystem and rectify the problem(s)
+[   94.900797] ------------[ cut here ]------------
+[   94.905374] XFS (vdd): log I/O error -5
+[   94.907952] kernel BUG at fs/xfs/xfs_message.c:110!
+[   94.908014] invalid opcode: 0000 [#1] SMP PTI
+[   94.914891] CPU: 1 PID: 11830 Comm: fio Not tainted 5.5.0-rc4-00074-g927ecff81368-dirty #6
+[   94.917056] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.13.0-1 04/01/2014
+[   94.919335] RIP: 0010:assfail+0x23/0x28 [xfs]
+[   94.920987] Code: 67 fc ff ff 0f 0b c3 0f 1f 44 00 00 41 89 c8 48 89 d1 48 89 f2 48 c7 c6 00 2c 53 c0 e8 82 f9 ff ff 80 3d 54 29 09 00 00 74 02 <0f> 0b 0f 0b c3 48 8b 33 48 c7 c7 f0 30 53 c0 c6 05 00 98 0a 00 01
+[   94.926838] RSP: 0000:ffffb975c549b7c0 EFLAGS: 00010202
+[   94.928738] RAX: 0000000000000000 RBX: 0000000000000003 RCX: 0000000000000000
+[   94.930957] RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffffc0525350
+[   94.933124] RBP: ffff9f52fbd6c620 R08: 0000000000000000 R09: 0000000000000000
+[   94.935230] R10: 000000000000000a R11: f000000000000000 R12: 00000000fffffffb
+[   94.937382] R13: 000000000104d6d7 R14: ffffb975c549b860 R15: 0000000000000000
+[   94.939490] FS:  00007f46ecfefa80(0000) GS:ffff9f5377500000(0000) knlGS:0000000000000000
+[   94.941730] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   94.943567] CR2: 00000000017eb298 CR3: 00000000bc0e2000 CR4: 00000000000006e0
+[   94.945668] Call Trace:
+[   94.947341]  xfs_btree_del_cursor+0x83/0x90 [xfs]
+[   94.949202]  xfs_bmapi_write+0x754/0xaf0 [xfs]
+[   94.950900]  xfs_iomap_write_direct+0x1c1/0x2e0 [xfs]
+[   94.952724]  xfs_direct_write_iomap_begin+0x423/0x5d0 [xfs]
+[   94.954588]  iomap_apply+0x98/0x370
+[   94.956139]  ? iomap_dio_bio_actor+0x3a0/0x3a0
+[   94.957828]  ? iomap_dio_rw+0x2d8/0x480
+[   94.959358]  iomap_dio_rw+0x2d8/0x480
+[   94.960926]  ? iomap_dio_bio_actor+0x3a0/0x3a0
+[   94.962612]  ? xfs_file_dio_aio_write+0x110/0x320 [xfs]
+[   94.965422]  xfs_file_dio_aio_write+0x110/0x320 [xfs]
+[   94.967192]  xfs_file_write_iter+0x93/0xe0 [xfs]
+[   94.968935]  aio_write+0xec/0x1a0
+[   94.970484]  ? __switch_to_asm+0x34/0x70
+[   94.972109]  ? __switch_to_asm+0x34/0x70
+[   94.973723]  ? __switch_to_asm+0x40/0x70
+[   94.975292]  ? __switch_to_asm+0x34/0x70
+[   94.976811]  ? __switch_to_asm+0x40/0x70
+[   94.978316]  ? __switch_to_asm+0x34/0x70
+[   94.979800]  ? __switch_to_asm+0x40/0x70
+[   94.981356]  ? __switch_to_asm+0x34/0x70
+[   94.982776]  ? __switch_to_asm+0x40/0x70
+[   94.984177]  ? __switch_to_asm+0x34/0x70
+[   94.985854]  ? __switch_to_asm+0x40/0x70
+[   94.987202]  ? _copy_to_user+0x76/0x90
+[   94.988472]  __io_submit_one.constprop.0+0x39c/0x710
+[   94.989929]  ? io_submit_one+0xe8/0x580
+[   94.991199]  io_submit_one+0xe8/0x580
+[   94.992957]  __x64_sys_io_submit+0x91/0x1a0
+[   94.995349]  do_syscall_64+0x5b/0x1f0
+[   94.996651]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[   94.998193] RIP: 0033:0x7f46d950c717
+[   94.999383] Code: 00 75 08 8b 47 0c 39 47 08 74 08 e9 c3 ff ff ff 0f 1f 00 31 c0 c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 00 b8 d1 00 00 00 0f 05 <c3> 0f 1f 84 00 00 00 00 00 b8 d2 00 00 00 0f 05 c3 0f 1f 84 00 00
+[   95.003580] RSP: 002b:00007ffc20e20678 EFLAGS: 00000202 ORIG_RAX: 00000000000000d1
+[   95.005616] RAX: ffffffffffffffda RBX: 00007f46c0311418 RCX: 00007f46d950c717
+[   95.007379] RDX: 000055fe8bcc3ca0 RSI: 0000000000000001 RDI: 00007f46ecf4f000
+[   95.009117] RBP: 0000000000000350 R08: 0000000000000001 R09: 000055fe8bcbb9e0
+[   95.010810] R10: 00007ffc20e20670 R11: 0000000000000202 R12: 0000000000000000
+[   95.012506] R13: 00007f46c0311418 R14: 000055fe8bcc3d60 R15: 000055fe8bca5f40
+[   95.014708] Modules linked in: xfs libcrc32c sr_mod cdrom sg ata_generic pata_acpi bochs_drm drm_vram_helper drm_ttm_helper ttm drm_kms_helper syscopyarea sysfillrect sysimgblt ppdev fb_sys_fops drm ata_piix joydev libata pcspkr serio_raw i2c_piix4 floppy parport_pc parport ip_tables
+[   95.020735] ---[ end trace 1ab5851cbc576936 ]---
+[   95.022308] RIP: 0010:assfail+0x23/0x28 [xfs]
+[   95.023713] Code: 67 fc ff ff 0f 0b c3 0f 1f 44 00 00 41 89 c8 48 89 d1 48 89 f2 48 c7 c6 00 2c 53 c0 e8 82 f9 ff ff 80 3d 54 29 09 00 00 74 02 <0f> 0b 0f 0b c3 48 8b 33 48 c7 c7 f0 30 53 c0 c6 05 00 98 0a 00 01
+[   95.027624] RSP: 0000:ffffb975c549b7c0 EFLAGS: 00010202
+[   95.028955] RAX: 0000000000000000 RBX: 0000000000000003 RCX: 0000000000000000
+[   95.031863] RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffffc0525350
+[   95.033737] RBP: ffff9f52fbd6c620 R08: 0000000000000000 R09: 0000000000000000
+[   95.035559] R10: 000000000000000a R11: f000000000000000 R12: 00000000fffffffb
+[   95.037478] R13: 000000000104d6d7 R14: ffffb975c549b860 R15: 0000000000000000
+[   95.039368] FS:  00007f46ecfefa80(0000) GS:ffff9f5377500000(0000) knlGS:0000000000000000
+[   95.041412] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   95.043199] CR2: 00000000017eb298 CR3: 00000000bc0e2000 CR4: 00000000000006e0
+[   95.045355] Kernel panic - not syncing: Fatal exception
+[   95.047008] Kernel Offset: 0x2ec00000 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffffbfffffff)
 
