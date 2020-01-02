@@ -2,238 +2,233 @@ Return-Path: <SRS0=76Wm=2X=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C323C3276C
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Jan 2020 15:52:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97446C2D0DC
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Jan 2020 16:08:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EB8F12467C
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Jan 2020 15:52:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 527BF21D7D
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Jan 2020 16:08:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ST1wSuao"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZLuhPJYt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728692AbgABPwc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 2 Jan 2020 10:52:32 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:32139 "EHLO
+        id S1728755AbgABQIQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Jan 2020 11:08:16 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:50148 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728678AbgABPw3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Jan 2020 10:52:29 -0500
+        with ESMTP id S1728744AbgABQIQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Jan 2020 11:08:16 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1577980347;
+        s=mimecast20190719; t=1577981293;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc; bh=tcdT+WBt9piwYSkuFEZriwn4HoTv8JvjfaEstULl0KM=;
-        b=ST1wSuaoaC1gb0Wc+3ykUjsm0zeYW8y0CBlieoc/7Kwp14enZfPILhfLYJS+vvL3vvJFlp
-        t+fwPL7KdUnwFcgyvas62V4dvs68Ej/QaXKoXT5xrnAVaMSOyqlHmICVcAD7B9sUc0nNNG
-        CW1h5UP82aiCQMuv8kSQyypihIexC1k=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-77-DYS2THfOPOGmYZ9hxdsWHw-1; Thu, 02 Jan 2020 10:52:24 -0500
-X-MC-Unique: DYS2THfOPOGmYZ9hxdsWHw-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0A79F800EB6;
-        Thu,  2 Jan 2020 15:52:23 +0000 (UTC)
-Received: from llong.com (dhcp-17-59.bos.redhat.com [10.18.17.59])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 6944C675AE;
-        Thu,  2 Jan 2020 15:52:17 +0000 (UTC)
-From:   Waiman Long <longman@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dave Chinner <david@fromorbit.com>, Qian Cai <cai@lca.pw>,
-        Eric Sandeen <sandeen@redhat.com>,
-        Waiman Long <longman@redhat.com>
-Subject: [PATCH] xfs: Fix false positive lockdep warning with sb_internal & fs_reclaim
-Date:   Thu,  2 Jan 2020 10:52:08 -0500
-Message-Id: <20200102155208.8977-1-longman@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=+R302pVk+go2BaELUjPg4idOT/nymm+s8iXF6IuDHe0=;
+        b=ZLuhPJYtl8u0FaxNKRmKceJRFwC4jeNcn+dMdU9SPnCPPP5z68LX6NBmywsPcE0OyDScNy
+        +5KQkoVs7juEQnuuUvo4xehK2kox0Xwri7CL3U09PisxJG+qAM89topu/KAjDYygQqh5V2
+        f6cBXVtwluIRyKzatA/m0mzC/sx+lRQ=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-252-RW8RypWuNHOuDodgon4KIg-1; Thu, 02 Jan 2020 11:08:12 -0500
+X-MC-Unique: RW8RypWuNHOuDodgon4KIg-1
+Received: by mail-wr1-f72.google.com with SMTP id b13so4174334wrx.22
+        for <linux-xfs@vger.kernel.org>; Thu, 02 Jan 2020 08:08:12 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :content-transfer-encoding:in-reply-to;
+        bh=+R302pVk+go2BaELUjPg4idOT/nymm+s8iXF6IuDHe0=;
+        b=IdCqEI122ItvA7pUr1k7lOA5R1vf1noDjlgO91OUn46eZrmktX6ucZ5KWi4V+YbeUK
+         XwTzkMOVZZHlpiWo3WAGa9X6Ees7Jkl1uW/DV1tHQ1Ot2ZQEcw/Nn9gi2zkJwi0KhmHe
+         ZILwFwrwvnMlgqBCClCE8y1fjVAPFFuF7UngNQKLnVsNLhh2RElxiPThV50xMlqPIRUf
+         vn+Y1Hy6bIWOBJy4H7BRprcVTmRgGx3rFSJXtI6BO5RKtuFGmSPGCXiFpOGDgUwjdeuF
+         9+775nXSjpPIKFilsiimyuOHXVpNvkeeZ3CoTAO25f3MxAjkBQc1cyeZ33nB8tRrMv8o
+         sSUA==
+X-Gm-Message-State: APjAAAW03h+Q/XtJcB6ORuKBTjPspZsSI3u7zs8NR0lO9gu77wLzOdj3
+        hH95lfvQ9EK+TyDPAmm9xfYKDzOw3ATDOmfLHQsDq+06deQv2QdjKZZE6xFIB6lZtAPEyzingBd
+        c0DkmhaPfu2ALWP8GoeGU
+X-Received: by 2002:a5d:4044:: with SMTP id w4mr48839573wrp.322.1577981291212;
+        Thu, 02 Jan 2020 08:08:11 -0800 (PST)
+X-Google-Smtp-Source: APXvYqzk9kF3l2VUbLYjQz0SAk0TY5I4zrngX/NMluxM7IfJs8WOa/ZDAhix09UjrKbm3dZbm6ZpuA==
+X-Received: by 2002:a5d:4044:: with SMTP id w4mr48839539wrp.322.1577981290698;
+        Thu, 02 Jan 2020 08:08:10 -0800 (PST)
+Received: from orion.redhat.com (ip-89-103-126-188.net.upcbroadband.cz. [89.103.126.188])
+        by smtp.gmail.com with ESMTPSA id s10sm57274339wrw.12.2020.01.02.08.08.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 02 Jan 2020 08:08:09 -0800 (PST)
+Date:   Thu, 2 Jan 2020 17:08:07 +0100
+From:   Carlos Maiolino <cmaiolino@redhat.com>
+To:     Daniel Storey <daniel.storey@rededucation.com>
+Cc:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: xfs_repair: superblock read failed, fatal error -- Input/output
+ error
+Message-ID: <20200102160807.dsoozldhtq7glw6z@orion.redhat.com>
+Mail-Followup-To: Daniel Storey <daniel.storey@rededucation.com>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+References: <FF3D9678-1449-467B-AA27-DA8C4B6A6DA2@rededucation.com>
+ <379BEB4C-D422-4EE8-8C1C-CDF8AA3016E0@rededucation.com>
+ <6C0FFC4B-AE04-4C97-87FF-BD86E610F549@rededucation.com>
+ <0D8F4E6F-CA2E-4032-BFD5-E87F651E2585@rededucation.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <0D8F4E6F-CA2E-4032-BFD5-E87F651E2585@rededucation.com>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Depending on the workloads, the following circular locking dependency
-warning between sb_internal (a percpu rwsem) and fs_reclaim (a pseudo
-lock) may show up:
+Hello.
 
-======================================================
-WARNING: possible circular locking dependency detected
-5.0.0-rc1+ #60 Tainted: G        W
-------------------------------------------------------
-fsfreeze/4346 is trying to acquire lock:
-0000000026f1d784 (fs_reclaim){+.+.}, at:
-fs_reclaim_acquire.part.19+0x5/0x30
+> I’ve not got a lot of experience with XFS, so please be gentle.
+>  
+> I’ve got 2 external HDD’s mounted through ESXi to a machine called USB-3 which each have vdo running on them and then a Logical Volume called vdovg-vdolvm on it.
 
-but task is already holding lock:
-0000000072bfc54b (sb_internal){++++}, at: percpu_down_write+0xb4/0x650
+I believe you're talking about VMWare ESXi and you are mounting these external
+HDDs into a virtual machine.
 
-which lock already depends on the new lock.
-  :
- Possible unsafe locking scenario:
 
-       CPU0                    CPU1
-       ----                    ----
-  lock(sb_internal);
-                               lock(fs_reclaim);
-                               lock(sb_internal);
-  lock(fs_reclaim);
+>  
+> It’s currently unable to be mounted.  It gives the error:
+>  
+> [daniel.storey@usb-3 ~]$ sudo mount /data
+> mount: mount /dev/mapper/vdovg-vdolvm on /data failed: Structure needs cleaning
+> And then when I try to run xfs_repair it throws the following error:
 
- *** DEADLOCK ***
+Ok, so, sounds like your FS is corrupted?!
 
-4 locks held by fsfreeze/4346:
- #0: 00000000b478ef56 (sb_writers#8){++++}, at: percpu_down_write+0xb4/0x650
- #1: 000000001ec487a9 (&type->s_umount_key#28){++++}, at: freeze_super+0xda/0x290
- #2: 000000003edbd5a0 (sb_pagefaults){++++}, at: percpu_down_write+0xb4/0x650
- #3: 0000000072bfc54b (sb_internal){++++}, at: percpu_down_write+0xb4/0x650
+>  
+> [daniel.storey@usb-3 ~]$ sudo xfs_repair /dev/dm-4
+> Phase 1 - find and verify superblock...
+> superblock read failed, offset 6597069742080, size 131072, ag 6, rval -1
+>  
+> fatal error -- Input/output error
 
-stack backtrace:
-Call Trace:
- dump_stack+0xe0/0x19a
- print_circular_bug.isra.10.cold.34+0x2f4/0x435
- check_prev_add.constprop.19+0xca1/0x15f0
- validate_chain.isra.14+0x11af/0x3b50
- __lock_acquire+0x728/0x1200
- lock_acquire+0x269/0x5a0
- fs_reclaim_acquire.part.19+0x29/0x30
- fs_reclaim_acquire+0x19/0x20
- kmem_cache_alloc+0x3e/0x3f0
- kmem_zone_alloc+0x79/0x150
- xfs_trans_alloc+0xfa/0x9d0
- xfs_sync_sb+0x86/0x170
- xfs_log_sbcount+0x10f/0x140
- xfs_quiesce_attr+0x134/0x270
- xfs_fs_freeze+0x4a/0x70
- freeze_super+0x1af/0x290
- do_vfs_ioctl+0xedc/0x16c0
- ksys_ioctl+0x41/0x80
- __x64_sys_ioctl+0x73/0xa9
- do_syscall_64+0x18f/0xd23
- entry_SYSCALL_64_after_hwframe+0x49/0xbe
+You are having I/O errors on your device. Have you ever tried to mount this
+device on a machine other than VMWare hosted machine? Bare-metal specially.
 
-According to Dave Chinner:
+Also, why are you pointing /dev/dm-4 directly, instead of using the VDO link you
+mentioned above?
 
-  Freezing the filesystem, after all the data has been cleaned. IOWs
-  memory reclaim will never run the above writeback path when
-  the freeze process is trying to allocate a transaction here because
-  there are no dirty data pages in the filesystem at this point.
+>  
+> However, I’m able to view the file system with ufs explorer, so I think it’s still there.
+>  
 
-  Indeed, this xfs_sync_sb() path sets XFS_TRANS_NO_WRITECOUNT so that
-  it /doesn't deadlock/ by taking freeze references for the
-  transaction. We've just drained all the transactions
-  in progress and written back all the dirty metadata, too, and so the
-  filesystem is completely clean and only needs the superblock to be
-  updated to complete the freeze process. And to do that, it does not
-  take a freeze reference because calling sb_start_intwrite() here
-  would deadlock.
+Also on a vmware machine? On the same hypervisor? For sure not on the same host,
+since UFS explorer (AFAIK) does not have a Linux version.
 
-  IOWs, this is a false positive, caused by the fact that
-  xfs_trans_alloc() is called from both above and below memory reclaim
-  as well as within /every level/ of freeze processing. Lockdep is
-  unable to describe the staged flush logic in the freeze process that
-  prevents deadlocks from occurring, and hence we will pretty much
-  always see false positives in the freeze path....
+And btw, UFS Explorer is built so that you can scan/recover data on very damaged
+filesystems and disks, while filesystems won't let you mount a corrupted
+filesystem to avoid doing even more damage. So, yeah, you might still see
+filesystem data/metadata using UFS explorer with damaged filesystems or block
+devices.
 
-Perhaps breaking the fs_reclaim pseudo lock into a per filesystem lock
-may fix the issue. However, that will greatly complicate the logic and
-may not be worth it.
 
-Another way to fix it is to disable the taking of the fs_reclaim
-pseudo lock when in the freezing code path as a reclaim on the freezed
-filesystem is not possible as stated above. This patch takes this
-approach by setting the __GFP_NOLOCKDEP flag in the slab memory
-allocation calls when the filesystem has been freezed.
+Now, looking at the dmesg output you sent:
 
-Without this patch, the command sequence below will show that the lock
-dependency chain sb_internal -> fs_reclaim exists.
+> [52244.526969] kvdo1:logQ0: Completing read VIO for LBN 1610612991 with error after readData: kvdo: Compressed block fragment is invalid (2073)
+> [52244.526978] kvdo1:cpuQ0: mapToSystemError: mapping internal status code 2073 (kvdo: VDO_INVALID_FRAGMENT: kvdo: Compressed block fragment is invalid) to EIO
+> [52244.527440] kvdo1:logQ0: Completing read VIO for LBN 1610612990 with error after readData: kvdo: Compressed block fragment is invalid (2073)
+> [52244.527447] kvdo1:cpuQ0: mapToSystemError: mapping internal status code 2073 (kvdo: VDO_INVALID_FRAGMENT: kvdo: Compressed block fragment is invalid) to EIO
+> [52244.527851] kvdo1:logQ0: Completing read VIO for LBN 1610612987 with error after readData: kvdo: Compressed block fragment is invalid (2073)
+> [52244.527856] kvdo1:cpuQ0: mapToSystemError: mapping internal status code 2073 (kvdo: VDO_INVALID_FRAGMENT: kvdo: Compressed block fragment is invalid) to EIO
+> [52316.831349] kvdo1:logQ0: Completing read VIO for LBN 1610612991 with error after readData: kvdo: Compressed block fragment is invalid (2073)
+> [52316.831364] kvdo1:cpuQ1: mapToSystemError: mapping internal status code 2073 (kvdo: VDO_INVALID_FRAGMENT: kvdo: Compressed block fragment is invalid) to EIO
+> [52316.832085] kvdo1:logQ0: Completing read VIO for LBN 1610612990 with error after readData: kvdo: Compressed block fragment is invalid (2073)
+> [52316.832092] kvdo1:cpuQ1: mapToSystemError: mapping internal status code 2073 (kvdo: VDO_INVALID_FRAGMENT: kvdo: Compressed block fragment is invalid) to EIO
+> [52316.832802] kvdo1:logQ0: Completing read VIO for LBN 1610612987 with error after readData: kvdo: Compressed block fragment is invalid (2073)
+> [52316.832809] kvdo1:cpuQ1: mapToSystemError: mapping internal status code 2073 (kvdo: VDO_INVALID_FRAGMENT: kvdo: Compressed block fragment is invalid) to EIO
+> [52819.634153] kvdo1:logQ0: Completing read VIO for LBN 1610612987 with error after readData: kvdo: Compressed block fragment is invalid (2073)
+> [52819.634177] kvdo1:cpuQ1: mapToSystemError: mapping internal status code 2073 (kvdo: VDO_INVALID_FRAGMENT: kvdo: Compressed block fragment is invalid) to EIO
+> [52819.637152] kvdo1:logQ0: Completing read VIO for LBN 1610612987 with error after readData: kvdo: Compressed block fragment is invalid (2073)
+> [52819.637173] kvdo1:cpuQ1: mapToSystemError: mapping internal status code 2073 (kvdo: VDO_INVALID_FRAGMENT: kvdo: Compressed block fragment is invalid) to EIO
 
- # fsfreeze -f /home
- # fsfreeze --unfreeze /home
- # grep -i fs_reclaim -C 3 /proc/lockdep_chains | grep -C 5 sb_internal
 
-After applying the patch, such sb_internal -> fs_reclaim lock dependency
-chain can no longer be found. Because of that, the locking dependency
-warning will not be shown.
+Even VDO driver is having problems to issue IO to your device. So either your
+device is reaching End-Of-Life, or VMWare has something to do there which is
+causing IO Errors.
 
-Signed-off-by: Waiman Long <longman@redhat.com>
----
- fs/xfs/kmem.h      | 11 ++++++++++-
- fs/xfs/xfs_log.c   |  3 ++-
- fs/xfs/xfs_trans.c |  8 +++++++-
- 3 files changed, 19 insertions(+), 3 deletions(-)
+So, again, I'd try to open these devices on a bare-metal machine and check the
+device for errors. If the errors are still present, replace the devices.
 
-diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-index 6143117770e9..901189dcc474 100644
---- a/fs/xfs/kmem.h
-+++ b/fs/xfs/kmem.h
-@@ -20,6 +20,12 @@ typedef unsigned __bitwise xfs_km_flags_t;
- #define KM_MAYFAIL	((__force xfs_km_flags_t)0x0008u)
- #define KM_ZERO		((__force xfs_km_flags_t)0x0010u)
- 
-+#ifdef CONFIG_LOCKDEP
-+#define KM_NOLOCKDEP	((__force xfs_km_flags_t)0x0020u)
-+#else
-+#define KM_NOLOCKDEP	((__force xfs_km_flags_t)0)
-+#endif
-+
- /*
-  * We use a special process flag to avoid recursive callbacks into
-  * the filesystem during transactions.  We will also issue our own
-@@ -30,7 +36,7 @@ kmem_flags_convert(xfs_km_flags_t flags)
- {
- 	gfp_t	lflags;
- 
--	BUG_ON(flags & ~(KM_NOFS|KM_MAYFAIL|KM_ZERO));
-+	BUG_ON(flags & ~(KM_NOFS|KM_MAYFAIL|KM_ZERO|KM_NOLOCKDEP));
- 
- 	lflags = GFP_KERNEL | __GFP_NOWARN;
- 	if (flags & KM_NOFS)
-@@ -49,6 +55,9 @@ kmem_flags_convert(xfs_km_flags_t flags)
- 	if (flags & KM_ZERO)
- 		lflags |= __GFP_ZERO;
- 
-+	if (flags & KM_NOLOCKDEP)
-+		lflags |= __GFP_NOLOCKDEP;
-+
- 	return lflags;
- }
- 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index f6006d94a581..b1997649ecd8 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -454,7 +454,8 @@ xfs_log_reserve(
- 	XFS_STATS_INC(mp, xs_try_logspace);
- 
- 	ASSERT(*ticp == NULL);
--	tic = xlog_ticket_alloc(log, unit_bytes, cnt, client, permanent, 0);
-+	tic = xlog_ticket_alloc(log, unit_bytes, cnt, client, permanent,
-+			mp->m_super->s_writers.frozen ? KM_NOLOCKDEP : 0);
- 	*ticp = tic;
- 
- 	xlog_grant_push_ail(log, tic->t_cnt ? tic->t_unit_res * tic->t_cnt
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 3b208f9a865c..c0e42e4f5b77 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -262,8 +262,14 @@ xfs_trans_alloc(
- 	 * Allocate the handle before we do our freeze accounting and setting up
- 	 * GFP_NOFS allocation context so that we avoid lockdep false positives
- 	 * by doing GFP_KERNEL allocations inside sb_start_intwrite().
-+	 *
-+	 * To prevent false positive lockdep warning of circular locking
-+	 * dependency between sb_internal and fs_reclaim, disable the
-+	 * acquisition of the fs_reclaim pseudo-lock when the superblock
-+	 * has been frozen or in the process of being frozen.
- 	 */
--	tp = kmem_zone_zalloc(xfs_trans_zone, 0);
-+	tp = kmem_zone_zalloc(xfs_trans_zone,
-+		mp->m_super->s_writers.frozen ? KM_NOLOCKDEP : 0);
- 	if (!(flags & XFS_TRANS_NO_WRITECOUNT))
- 		sb_start_intwrite(mp->m_super);
- 
+
+Cheers.
+
+> [52819.637179] Buffer I/O error on dev dm-4, logical block 1610612731, async page read
+> [54235.537518] XFS (dm-4): Mounting V5 Filesystem
+> [54236.686544] XFS (dm-4): Starting recovery (logdev: internal)
+> [54236.966501] XFS (dm-4): Metadata corruption detected at xfs_inode_buf_verify+0x79/0x100 [xfs], xfs_inode block 0x30064db50
+> [54236.968126] XFS (dm-4): Unmount and run xfs_repair
+> [54236.968683] XFS (dm-4): First 64 bytes of corrupted metadata buffer:
+> [54236.969267] ffffb9ad71884000: 49 4e 81 a4 03 02 00 00 00 00 00 00 00 00 00 00  IN..............
+> [54236.969836] ffffb9ad71884010: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> [54236.970422] ffffb9ad71884020: 5d e1 4f 12 1b a2 b7 8a 5d e1 4f 11 37 5a 0d c5  ].O.....].O.7Z..
+> [54236.971012] ffffb9ad71884030: 5d e1 4f 11 37 5a 0d c5 00 00 00 00 01 50 50 00  ].O.7Z.......PP.
+> [54236.971582] XFS (dm-4): Metadata corruption detected at xfs_inode_buf_verify+0x79/0x100 [xfs], xfs_inode block 0x30064db50
+> [54236.972721] XFS (dm-4): Unmount and run xfs_repair
+> [54236.973297] XFS (dm-4): First 64 bytes of corrupted metadata buffer:
+> [54236.973843] ffffb9ad71884000: 49 4e 81 a4 03 02 00 00 00 00 00 00 00 00 00 00  IN..............
+> [54236.974433] ffffb9ad71884010: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> [54236.975009] ffffb9ad71884020: 5d e1 4f 12 1b a2 b7 8a 5d e1 4f 11 37 5a 0d c5  ].O.....].O.7Z..
+> [54236.975564] ffffb9ad71884030: 5d e1 4f 11 37 5a 0d c5 00 00 00 00 01 50 50 00  ].O.7Z.......PP.
+> [54236.976161] XFS (dm-4): Metadata corruption detected at xfs_inode_buf_verify+0x79/0x100 [xfs], xfs_inode block 0x30064db50
+> [54236.977296] XFS (dm-4): Unmount and run xfs_repair
+> [54236.977837] XFS (dm-4): First 64 bytes of corrupted metadata buffer:
+> [54236.978414] ffffb9ad71884000: 49 4e 81 a4 03 02 00 00 00 00 00 00 00 00 00 00  IN..............
+> [54236.978993] ffffb9ad71884010: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> [54236.979547] ffffb9ad71884020: 5d e1 4f 12 1b a2 b7 8a 5d e1 4f 11 37 5a 0d c5  ].O.....].O.7Z..
+> [54236.980129] ffffb9ad71884030: 5d e1 4f 11 37 5a 0d c5 00 00 00 00 01 50 50 00  ].O.7Z.......PP.
+> [54236.980701] XFS (dm-4): Metadata corruption detected at xfs_inode_buf_verify+0x79/0x100 [xfs], xfs_inode block 0x30064db50
+> [54236.981835] XFS (dm-4): Unmount and run xfs_repair
+> [54236.982407] XFS (dm-4): First 64 bytes of corrupted metadata buffer:
+> [54236.982952] ffffb9ad71884000: 49 4e 81 a4 03 02 00 00 00 00 00 00 00 00 00 00  IN..............
+> [54236.983544] ffffb9ad71884010: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> [54236.984119] ffffb9ad71884020: 5d e1 4f 12 1b a2 b7 8a 5d e1 4f 11 37 5a 0d c5  ].O.....].O.7Z..
+> [54236.984671] ffffb9ad71884030: 5d e1 4f 11 37 5a 0d c5 00 00 00 00 01 50 50 00  ].O.7Z.......PP.
+> [54236.985268] XFS (dm-4): Metadata corruption detected at xfs_inode_buf_verify+0x79/0x100 [xfs], xfs_inode block 0x30064db50
+> [54236.986400] XFS (dm-4): Unmount and run xfs_repair
+> [54236.986943] XFS (dm-4): First 64 bytes of corrupted metadata buffer:
+> [54236.987517] ffffb9ad71884000: 49 4e 81 a4 03 02 00 00 00 00 00 00 00 00 00 00  IN..............
+> [54236.988094] ffffb9ad71884010: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> [54236.988620] ffffb9ad71884020: 5d e1 4f 12 1b a2 b7 8a 5d e1 4f 11 37 5a 0d c5  ].O.....].O.7Z..
+> [54236.989178] ffffb9ad71884030: 5d e1 4f 11 37 5a 0d c5 00 00 00 00 01 50 50 00  ].O.7Z.......PP.
+> [54236.989719] XFS (dm-4): Metadata corruption detected at xfs_inode_buf_verify+0x79/0x100 [xfs], xfs_inode block 0x30064db50
+> [54236.990808] XFS (dm-4): Unmount and run xfs_repair
+> [54236.991373] XFS (dm-4): First 64 bytes of corrupted metadata buffer:
+> [54236.991911] ffffb9ad71884000: 49 4e 81 a4 03 02 00 00 00 00 00 00 00 00 00 00  IN..............
+> [54236.992483] ffffb9ad71884010: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> [54236.993041] ffffb9ad71884020: 5d e1 4f 12 1b a2 b7 8a 5d e1 4f 11 37 5a 0d c5  ].O.....].O.7Z..
+> [54236.993568] ffffb9ad71884030: 5d e1 4f 11 37 5a 0d c5 00 00 00 00 01 50 50 00  ].O.7Z.......PP.
+> [54236.994139] XFS (dm-4): Metadata corruption detected at xfs_inode_buf_verify+0x79/0x100 [xfs], xfs_inode block 0x30064db50
+> [54236.995228] XFS (dm-4): Unmount and run xfs_repair
+> [54236.995761] XFS (dm-4): First 64 bytes of corrupted metadata buffer:
+> [54236.996329] ffffb9ad71884000: 49 4e 81 a4 03 02 00 00 00 00 00 00 00 00 00 00  IN..............
+> [54236.996870] ffffb9ad71884010: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> [54236.997428] ffffb9ad71884020: 5d e1 4f 12 1b a2 b7 8a 5d e1 4f 11 37 5a 0d c5  ].O.....].O.7Z..
+> [54236.997954] ffffb9ad71884030: 5d e1 4f 11 37 5a 0d c5 00 00 00 00 01 50 50 00  ].O.7Z.......PP.
+> [54236.998529] XFS (dm-4): Metadata corruption detected at xfs_inode_buf_verify+0x79/0x100 [xfs], xfs_inode block 0x30064db50
+> [54236.999621] XFS (dm-4): Unmount and run xfs_repair
+> [54237.000183] XFS (dm-4): First 64 bytes of corrupted metadata buffer:
+> [54237.000727] ffffb9ad71884000: 49 4e 81 a4 03 02 00 00 00 00 00 00 00 00 00 00  IN..............
+> [54237.001469] ffffb9ad71884010: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> [54237.002026] ffffb9ad71884020: 5d e1 4f 12 1b a2 b7 8a 5d e1 4f 11 37 5a 0d c5  ].O.....].O.7Z..
+> [54237.002553] ffffb9ad71884030: 5d e1 4f 11 37 5a 0d c5 00 00 00 00 01 50 50 00  ].O.7Z.......PP.
+> [54237.003195] XFS (dm-4): metadata I/O error: block 0x30064db50 ("xlog_recover_do..(read#2)") error 117 numblks 32
+> [54237.004631] XFS (dm-4): log mount/recovery failed: error -117
+> [54237.004945] XFS (dm-4): log mount failed
+> [54289.229381] kvdo1:logQ0: Completing read VIO for LBN 1610612991 with error after readData: kvdo: Compressed block fragment is invalid (2073)
+> [54289.229422] kvdo1:cpuQ0: mapToSystemError: mapping internal status code 2073 (kvdo: VDO_INVALID_FRAGMENT: kvdo: Compressed block fragment is invalid) to EIO
+> [54289.230502] kvdo1:logQ0: Completing read VIO for LBN 1610612990 with error after readData: kvdo: Compressed block fragment is invalid (2073)
+> [54289.230527] kvdo1:cpuQ0: mapToSystemError: mapping internal status code 2073 (kvdo: VDO_INVALID_FRAGMENT: kvdo: Compressed block fragment is invalid) to EIO
+> [54289.231126] kvdo1:logQ0: Completing read VIO for LBN 1610612987 with error after readData: kvdo: Compressed block fragment is invalid (2073)
+> [54289.231147] kvdo1:cpuQ0: mapToSystemError: mapping internal status code 2073 (kvdo: VDO_INVALID_FRAGMENT: kvdo: Compressed block fragment is invalid) to EIO
+
+
 -- 
-2.18.1
+Carlos
 
