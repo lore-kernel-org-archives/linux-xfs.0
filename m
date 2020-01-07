@@ -2,133 +2,153 @@ Return-Path: <SRS0=eQYP=24=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F907C33C8C
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 16:23:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 948B0C33C9E
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 16:52:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 337CC2146E
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 16:23:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1578414209;
-	bh=y7nyHtre1LVdk95yztadAkAzthxIXXf14CuMTJ61HGs=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=hg8g/D1msEzOy3hMC6kSfmisba93UxNTgav5WVzjURv00RXUCLEXSUDfCZ9E5hQ2U
-	 g14LBPmA2ITymYpt+bYwcbBmvOis4bK2H7rdE+qkcs+Ou/HnXWD1MRKVUX/nk8LDvR
-	 fu9Ghx8qesl+6Y9zUbSPK2XGgae7J46SxwtnCj20=
+	by mail.kernel.org (Postfix) with ESMTP id 6B5FE214D8
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 16:52:59 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nReyFPFO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728361AbgAGQX2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Jan 2020 11:23:28 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36352 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727994AbgAGQX2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 7 Jan 2020 11:23:28 -0500
-Received: from mail-vs1-f49.google.com (mail-vs1-f49.google.com [209.85.217.49])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4A6372146E;
-        Tue,  7 Jan 2020 16:23:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1578414207;
-        bh=y7nyHtre1LVdk95yztadAkAzthxIXXf14CuMTJ61HGs=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=AdqHTgr9/+5YfzEvhvZhdfa21HP+uYxYsTFXS4bonTvyw/IkO9e/C+fwOups+6UG8
-         wYIMhDOve5TkopEUuNJkHCuCMro+Z404UQ7UsqGTzQfqyIyCfiO9R14CnYti8hjAD2
-         VuuuM5MZloEqTdWrVrHYLyTFvX2J35EP1Q1F0/yk=
-Received: by mail-vs1-f49.google.com with SMTP id g23so34257502vsr.7;
-        Tue, 07 Jan 2020 08:23:27 -0800 (PST)
-X-Gm-Message-State: APjAAAWK+57bPm3mePm6fOqc1KUaNfSi9F8r7L0phoIIqQQyIZOHSoNT
-        8P+QY9KO9CIau3ZYKqUjrrH12xy3rwiLrztCMVQ=
-X-Google-Smtp-Source: APXvYqyiwyikq1PqEkeZKmAg7xDHHQPQzHxwAbHs7MSq4VO4o/FxN0C0BcFRx0UnAmSOenPMK90qFwJtl+8LLe/QgVk=
-X-Received: by 2002:a05:6102:535:: with SMTP id m21mr55052092vsa.95.1578414206426;
- Tue, 07 Jan 2020 08:23:26 -0800 (PST)
+        id S1728408AbgAGQw7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Jan 2020 11:52:59 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:51446 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728215AbgAGQw6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jan 2020 11:52:58 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=uX1cNfoUjlP7M1M+NyKWUF0XVUS6WmFcz58xFnZiu+o=; b=nReyFPFO+7l9lq7HCOa9MYg8F
+        33QXE6lEJbd/nG/7YgY3uf/cLcFTDuXIhY1b9Zypsk+5s4zmtM4qW0590htEUmvu7jswaJt+6U3Vm
+        xWbCVvmdHztZrbp2BBeYzr/Ix5+tslCbpE9PbSs3M/C9tinRwsmKSYuAgQS3GtpCCe2rX95ua+3dH
+        iao8W30ZcF6JJHnAfOTNK9VsR9k5wbIYhWPW9vwW/UqGRli8Qm18BM3STBcscKyad8sDzfKfJJmPw
+        tKLGEjpGRzt+9Fymf/+hh0OhKtyqt2984PBmZeXX8UM6PPDrb1X/1VqhSIB5f03lOma7nWKDASp3q
+        JnfLZlPIQ==;
+Received: from clnet-p19-102.ikbnet.co.at ([83.175.77.102] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1ios6E-00028K-2c; Tue, 07 Jan 2020 16:52:58 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     fstests@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: add a new test for removing ACLs through the attr interface
+Date:   Tue,  7 Jan 2020 17:52:55 +0100
+Message-Id: <20200107165255.261877-1-hch@lst.de>
+X-Mailer: git-send-email 2.24.1
 MIME-Version: 1.0
-References: <20191216182656.15624-1-fdmanana@kernel.org> <20191216182656.15624-2-fdmanana@kernel.org>
-In-Reply-To: <20191216182656.15624-2-fdmanana@kernel.org>
-From:   Filipe Manana <fdmanana@kernel.org>
-Date:   Tue, 7 Jan 2020 16:23:15 +0000
-X-Gmail-Original-Message-ID: <CAL3q7H5+CMRkJ9yAa2AeB0aKtA=b_yW2g9JSQwCOhOtLNrH1iQ@mail.gmail.com>
-Message-ID: <CAL3q7H5+CMRkJ9yAa2AeB0aKtA=b_yW2g9JSQwCOhOtLNrH1iQ@mail.gmail.com>
-Subject: Re: [PATCH 1/2] fs: allow deduplication of eof block into the end of
- the destination file
-To:     linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Cc:     linux-btrfs <linux-btrfs@vger.kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Filipe Manana <fdmanana@suse.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Dec 16, 2019 at 6:28 PM <fdmanana@kernel.org> wrote:
->
-> From: Filipe Manana <fdmanana@suse.com>
->
-> We always round down, to a multiple of the filesystem's block size, the
-> length to deduplicate at generic_remap_check_len().  However this is only
-> needed if an attempt to deduplicate the last block into the middle of the
-> destination file is requested, since that leads into a corruption if the
-> length of the source file is not block size aligned.  When an attempt to
-> deduplicate the last block into the end of the destination file is
-> requested, we should allow it because it is safe to do it - there's no
-> stale data exposure and we are prepared to compare the data ranges for
-> a length not aligned to the block (or page) size - in fact we even do
-> the data compare before adjusting the deduplication length.
->
-> After btrfs was updated to use the generic helpers from VFS (by commit
-> 34a28e3d77535e ("Btrfs: use generic_remap_file_range_prep() for cloning
-> and deduplication")) we started to have user reports of deduplication
-> not reflinking the last block anymore, and whence users getting lower
-> deduplication scores.  The main use case is deduplication of entire
-> files that have a size not aligned to the block size of the filesystem.
->
-> We already allow cloning the last block to the end (and beyond) of the
-> destination file, so allow for deduplication as well.
->
-> Link: https://lore.kernel.org/linux-btrfs/2019-1576167349.500456@svIo.N5dq.dFFD/
-> Signed-off-by: Filipe Manana <fdmanana@suse.com>
+Test that removing the SGI_ACL_FILE attr also removes the cached ACL
+used for access control checking.
 
-Darrick, Al, any feedback?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ tests/xfs/666     | 58 +++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/666.out |  7 ++++++
+ tests/xfs/group   |  1 +
+ 3 files changed, 66 insertions(+)
+ create mode 100755 tests/xfs/666
+ create mode 100644 tests/xfs/666.out
 
-Thanks.
+diff --git a/tests/xfs/666 b/tests/xfs/666
+new file mode 100755
+index 00000000..00d3cbc1
+--- /dev/null
++++ b/tests/xfs/666
+@@ -0,0 +1,58 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2020 Christoph Hellwig
++#
++# FS QA Test 666
++#
++# Ensure that removing the access ACL through the XFS-specific attr name removes
++# the cached ACL as well
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $FILE
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/attr
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++
++_require_test
++_require_runas
++_require_acls
++_require_user
++
++FILE=$TEST_DIR/foo
++
++echo "This is a test" > ${FILE}
++chmod g-r $FILE
++chmod o-r $FILE
++chmod u-r $FILE
++
++echo "No ACL: "
++_user_do "cat $FILE"
++
++echo "With ACL: "
++setfacl -m u:$qa_user:r $FILE
++_user_do "cat $FILE"
++
++echo "ACL Removed through attr:"
++setfattr -x trusted.SGI_ACL_FILE ${FILE}
++_user_do "cat $FILE"
++
++status=0
++exit
+diff --git a/tests/xfs/666.out b/tests/xfs/666.out
+new file mode 100644
+index 00000000..bd45c3ef
+--- /dev/null
++++ b/tests/xfs/666.out
+@@ -0,0 +1,7 @@
++QA output created by 666
++No ACL: 
++Permission denied
++With ACL: 
++This is a test
++ACL Removed through attr:
++Permission denied
+diff --git a/tests/xfs/group b/tests/xfs/group
+index c7253cf1..6af5171e 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -509,3 +509,4 @@
+ 509 auto ioctl
+ 510 auto ioctl quick
+ 511 auto quick quota
++666 auto quick acl attr
+-- 
+2.24.1
 
-> ---
->  fs/read_write.c | 10 ++++------
->  1 file changed, 4 insertions(+), 6 deletions(-)
->
-> diff --git a/fs/read_write.c b/fs/read_write.c
-> index 5bbf587f5bc1..7458fccc59e1 100644
-> --- a/fs/read_write.c
-> +++ b/fs/read_write.c
-> @@ -1777,10 +1777,9 @@ static int remap_verify_area(struct file *file, loff_t pos, loff_t len,
->   * else.  Assume that the offsets have already been checked for block
->   * alignment.
->   *
-> - * For deduplication we always scale down to the previous block because we
-> - * can't meaningfully compare post-EOF contents.
-> - *
-> - * For clone we only link a partial EOF block above the destination file's EOF.
-> + * For clone we only link a partial EOF block above or at the destination file's
-> + * EOF.  For deduplication we accept a partial EOF block only if it ends at the
-> + * destination file's EOF (can not link it into the middle of a file).
->   *
->   * Shorten the request if possible.
->   */
-> @@ -1796,8 +1795,7 @@ static int generic_remap_check_len(struct inode *inode_in,
->         if ((*len & blkmask) == 0)
->                 return 0;
->
-> -       if ((remap_flags & REMAP_FILE_DEDUP) ||
-> -           pos_out + *len < i_size_read(inode_out))
-> +       if (pos_out + *len < i_size_read(inode_out))
->                 new_len &= ~blkmask;
->
->         if (new_len == *len)
-> --
-> 2.11.0
->
