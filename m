@@ -2,208 +2,133 @@ Return-Path: <SRS0=eQYP=24=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4782C282DD
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 18:16:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 999FFC282DD
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 18:16:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C41D420848
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 18:16:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 71C2F20848
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 18:16:46 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VaYONphR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728488AbgAGSQc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Jan 2020 13:16:32 -0500
-Received: from james.kirk.hungrycats.org ([174.142.39.145]:40270 "EHLO
-        james.kirk.hungrycats.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728430AbgAGSQc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jan 2020 13:16:32 -0500
-Received: by james.kirk.hungrycats.org (Postfix, from userid 1002)
-        id 306E756028F; Tue,  7 Jan 2020 13:16:31 -0500 (EST)
-Date:   Tue, 7 Jan 2020 13:16:31 -0500
-From:   Zygo Blaxell <ce3g8jdj@umail.furryterror.org>
-To:     Filipe Manana <fdmanana@kernel.org>
-Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-btrfs <linux-btrfs@vger.kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Filipe Manana <fdmanana@suse.com>
-Subject: Re: [PATCH 2/2] Btrfs: make deduplication with range including the
- last block work
-Message-ID: <20200107181630.GB24056@hungrycats.org>
-References: <20191216182656.15624-1-fdmanana@kernel.org>
- <20191216182656.15624-3-fdmanana@kernel.org>
- <20191229052240.GG13306@hungrycats.org>
- <CAL3q7H5FcdsA3NEcRae4iE5k8j8tHe-3KjKo_tTg6=fu0c_0gw@mail.gmail.com>
+        id S1728459AbgAGSQq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Jan 2020 13:16:46 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:35582 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728430AbgAGSQp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jan 2020 13:16:45 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 007IEFY4181854;
+        Tue, 7 Jan 2020 18:16:23 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=VbFozqPz1Ni4r6WQYrlEExCVTtwHzP0/vUt3SiGSswE=;
+ b=VaYONphRAP0fotWd/fOnG1B8z4750kpMyCjiKRfLJPk0y9YZhTDmXvAhxZV0iM3HpiRh
+ 5Fw1IJRq1HFa3yjN+VBHHNabIS67G26GinoAQcmZ3HKHlIDhFFr6FXd2SqEqNdsp5/S0
+ unDOhBEmjdOKhsdjW+l74ySc/1BQYOgLJaCgPN5aGHjnxPSj/rSMINTyx6SCNPGCxo/o
+ IWL4p4zTFX+30S6KX02uQVAh40Yr0+vRuX0pt6AtR7trQvIi5mzGw+4ais23u2JL77Rv
+ dOuhU76fT7tfOj+msJ7TpFQw4DgRKS7K8sGwnBJZOTq6J0LlaeMHrxGgaUbVVjjWQQuS DA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 2xakbqq6b8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 07 Jan 2020 18:16:23 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 007IEBIc170778;
+        Tue, 7 Jan 2020 18:16:23 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 2xcjvdpwfm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 07 Jan 2020 18:16:23 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 007IGGM1028225;
+        Tue, 7 Jan 2020 18:16:17 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 07 Jan 2020 10:16:16 -0800
+Date:   Tue, 7 Jan 2020 10:16:14 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Arnd Bergmann <arnd@arndb.de>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        y2038 Mailman List <y2038@lists.linaro.org>,
+        Brian Foster <bfoster@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Allison Collins <allison.henderson@oracle.com>,
+        Jan Kara <jack@suse.cz>, Eric Sandeen <sandeen@sandeen.net>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 2/3] xfs: disallow broken ioctls without
+ compat-32-bit-time
+Message-ID: <20200107181614.GA917713@magnolia>
+References: <20191218163954.296726-1-arnd@arndb.de>
+ <20191218163954.296726-2-arnd@arndb.de>
+ <20191224084514.GC1739@infradead.org>
+ <CAK8P3a2ANKoV1DhJMUuAr0qKW7HgRvz9LM2yLkSVWP9Rn-LUhA@mail.gmail.com>
+ <20200102180749.GA1508633@magnolia>
+ <20200107141634.GC10628@infradead.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="+g7M9IMkV8truYOl"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAL3q7H5FcdsA3NEcRae4iE5k8j8tHe-3KjKo_tTg6=fu0c_0gw@mail.gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20200107141634.GC10628@infradead.org>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9492 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-2001070144
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9492 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-2001070144
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Tue, Jan 07, 2020 at 06:16:34AM -0800, Christoph Hellwig wrote:
+> On Thu, Jan 02, 2020 at 10:07:49AM -0800, Darrick J. Wong wrote:
+> > > Sorry I missed that comment earlier. I've had a fresh look now, but
+> > > I think we still need to deprecate XFS_IOC_SWAPEXT and add a
+> > > v5 version of it, since the comparison will fail as soon as the range
+> > > of the inode timestamps is extended beyond 2038, otherwise the
+> > > comparison will always be false, or require comparing the truncated
+> > > time values which would add yet another representation.
+> > 
+> > I prefer we replace the old SWAPEXT with a new version to get rid of
+> > struct xfs_bstat.  Though a SWAPEXT_V5 probably only needs to contain
+> > the *stat fields that swapext actually needs to check that the file
+> > hasn't been changed, which would be ino/gen/btime/ctime.
+> > 
+> > (Maybe I'd add an offset/length too...)
+> 
+> And most importantly we need to lift it to the VFS instead of all the
+> crazy fs specific interfaces at the moment.
 
---+g7M9IMkV8truYOl
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Yeah.  Fixing that (and maybe adding an ioctl to set the FS UUID online)
+were on my list for 5.6 but clearly I have to defer everything until 5.7
+because we've just run out of time.
 
-On Tue, Jan 07, 2020 at 04:18:42PM +0000, Filipe Manana wrote:
-> On Sun, Dec 29, 2019 at 5:22 AM Zygo Blaxell
-> <ce3g8jdj@umail.furryterror.org> wrote:
-> >
-> > On Mon, Dec 16, 2019 at 06:26:56PM +0000, fdmanana@kernel.org wrote:
-> > > From: Filipe Manana <fdmanana@suse.com>
-> > >
-> > > Since btrfs was migrated to use the generic VFS helpers for clone and
-> > > deduplication, it stopped allowing for the last block of a file to be
-> > > deduplicated when the source file size is not sector size aligned (wh=
-en
-> > > eof is somewhere in the middle of the last block). There are two reas=
-ons
-> > > for that:
-> > >
-> > > 1) The generic code always rounds down, to a multiple of the block si=
-ze,
-> > >    the range's length for deduplications. This means we end up never
-> > >    deduplicating the last block when the eof is not block size aligne=
-d,
-> > >    even for the safe case where the destination range's end offset ma=
-tches
-> > >    the destination file's size. That rounding down operation is done =
-at
-> > >    generic_remap_check_len();
-> > >
-> > > 2) Because of that, the btrfs specific code does not expect anymore a=
-ny
-> > >    non-aligned range length's for deduplication and therefore does not
-> > >    work if such nona-aligned length is given.
-> > >
-> > > This patch addresses that second part, and it depends on a patch that
-> > > fixes generic_remap_check_len(), in the VFS, which was submitted eali=
-er
-> > > and has the following subject:
-> > >
-> > >   "fs: allow deduplication of eof block into the end of the destinati=
-on file"
-> > >
-> > > These two patches address reports from users that started seeing lower
-> > > deduplication rates due to the last block never being deduplicated wh=
-en
-> > > the file size is not aligned to the filesystem's block size.
-> > >
-> > > Link: https://lore.kernel.org/linux-btrfs/2019-1576167349.500456@svIo=
-=2EN5dq.dFFD/
-> > > Signed-off-by: Filipe Manana <fdmanana@suse.com>
-> >
-> > Should these patches be marked for stable (5.0+, but see below for
-> > caveats about 5.0)?  The bug affects 5.3 and 5.4 which are still active,
-> > and dedupe is an important feature for some users.
->=20
-> Usually I only mark things for stable that are critical: corruptions,
-> crashes and memory leaks for example.
-> I don't think this is a critical issue, since none of those things
-> happen. It's certainly inconvenient to not have
-> an extent fully deduplicated, but it's just that.
+Uh... I started looking into unifying the ext4 and xfs defrag ioctl, but
+gagged when I realized that the ext4 ioctl also handles the data copy
+inside the kernel.  I think that's the sort of behavior we should /not/
+allow into the new ioctl, though that also means that the required
+changes for ext4/e4defrag will be non-trivial.
 
-In btrfs the reference counting is done by extent and extents are
-immutable, so extents are either fully deduplicated, or not deduplicated
-at all.  We have to dedupe every part of an extent, and if we fail to
-do so, no data space is saved while metadata usage increases for the
-new partial extent reference.
+The btrfs defrag ioctl also contains thresholding information and
+optional knobs to enable compression, which makes me wonder if we should
+focus narrowly on swapext being "swap these extents but only if the
+source file hasn't changed" and not necessarily defrag?
 
-This bug means the dedupe feature is not usable _at all_ for single-extent
-files with non-aligned EOF, and that is a significant problem for users
-that rely on dedupe to manage space usage on btrfs (e.g. for build
-servers where there are millions of duplicate odd-sized small files, and
-the space savings from working dedupe can be 90% or more).  Doubling or
-tripling space usage for the same data is beyond inconvenience.
+...in which case I wonder, can people (ab)use this interface for atomic
+file updates?  Create an O_TMPFILE, reflink the source file into the
+temp file, make your updates to the tempfile, and then swapext the
+donor's file data back into the source file, but only if the source file
+hasn't changed?
 
-It is possible to work around the bug in userspace and recover the space
-with clone, but there is no way to do it safely on live data without a
-working dedupe-range ioctl.
-
-> If a maintainer wants to add it for stable, I'm fine with it.
-
-At this point it would only affect 5.4--all the other short-term kernels
-are closed, and none of the LTS kernels need the patch--but it would be
-nice if 5.4 had working dedupe.
-
-> >
-> > > ---
-> > >  fs/btrfs/ioctl.c | 3 ++-
-> > >  1 file changed, 2 insertions(+), 1 deletion(-)
-> > >
-> > > diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
-> > > index 3418decb9e61..c41c276ff272 100644
-> > > --- a/fs/btrfs/ioctl.c
-> > > +++ b/fs/btrfs/ioctl.c
-> > > @@ -3237,6 +3237,7 @@ static void btrfs_double_extent_lock(struct ino=
-de *inode1, u64 loff1,
-> > >  static int btrfs_extent_same_range(struct inode *src, u64 loff, u64 =
-len,
-> > >                                  struct inode *dst, u64 dst_loff)
-> > >  {
-> > > +     const u64 bs =3D BTRFS_I(src)->root->fs_info->sb->s_blocksize;
-> > >       int ret;
-> > >
-> > >       /*
-> > > @@ -3244,7 +3245,7 @@ static int btrfs_extent_same_range(struct inode=
- *src, u64 loff, u64 len,
-> > >        * source range to serialize with relocation.
-> > >        */
-> > >       btrfs_double_extent_lock(src, loff, dst, dst_loff, len);
-> > > -     ret =3D btrfs_clone(src, dst, loff, len, len, dst_loff, 1);
-> > > +     ret =3D btrfs_clone(src, dst, loff, len, ALIGN(len, bs), dst_lo=
-ff, 1);
-> >
-> > A heads-up for anyone backporting this to 5.0:  this patch depends on
-> >
-> >         57a50e2506df Btrfs: remove no longer needed range length checks=
- for deduplication
->=20
-> For any kernel without that cleanup patch, backporting the first patch
-> in the series (the one touching only fs/read_write.c) is enough.
-> For any kernel with that cleanup patch, then both patches in the
-> series are needed.
->=20
-> Thanks.
->=20
-> >
-> > Simply resolving the git conflict without including 57a50e2506df produc=
-es
-> > a kernel where dedupe rounds the size of the dst file up to the next
-> > block boundary.  This is because 57a50e2506df changes the value of
-> > "len".  Before 57a50e2506df, "len" is equivalent to "ALIGN(len, bs)"
-> > at the btrfs_clone line; after 57a50e2506df, "len" is the unaligned
-> > dedupe request length passed to the btrfs_extent_same_range function.
-> > This changes the semantics of the btrfs_clone line significantly.
-> >
-> > 57a50e2506df is in 5.1, so 5.1+ kernels do not require any additional
-> > patches.
-> >
-> > 4.20 and earlier don't have the bug, so don't need a fix.
-> >
-> > >       btrfs_double_extent_unlock(src, loff, dst, dst_loff, len);
-> > >
-> > >       return ret;
-> > > --
-> > > 2.11.0
-> > >
->=20
-
---+g7M9IMkV8truYOl
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iF0EABECAB0WIQSnOVjcfGcC/+em7H2B+YsaVrMbnAUCXhTK/AAKCRCB+YsaVrMb
-nDX5AKDCixhO+bYov3oH6QkygkXlvW6BbwCeJ5Bq6HXmpuBiVrm6RrXMA4HnyK0=
-=6TDx
------END PGP SIGNATURE-----
-
---+g7M9IMkV8truYOl--
+--D
