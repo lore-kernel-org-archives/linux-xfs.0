@@ -1,118 +1,69 @@
-Return-Path: <SRS0=XUqT=23=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=eQYP=24=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0524C33C8C
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jan 2020 23:33:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A24FBC32771
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 02:09:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CCE0D2080A
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jan 2020 23:33:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E9D52075A
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 02:09:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727067AbgAFXds (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Jan 2020 18:33:48 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:58979 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726858AbgAFXds (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jan 2020 18:33:48 -0500
-Received: from dread.disaster.area (pa49-180-68-255.pa.nsw.optusnet.com.au [49.180.68.255])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id B141A3A0F8B;
-        Tue,  7 Jan 2020 10:33:44 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1iobsV-0006Xz-KI; Tue, 07 Jan 2020 10:33:43 +1100
-Date:   Tue, 7 Jan 2020 10:33:43 +1100
-From:   Dave Chinner <david@fromorbit.com>
+        id S1727358AbgAGCJ6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 6 Jan 2020 21:09:58 -0500
+Received: from szxga07-in.huawei.com ([45.249.212.35]:41500 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727250AbgAGCJ6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 6 Jan 2020 21:09:58 -0500
+Received: from DGGEMS408-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id C36D1DC97F6905CA2BEE;
+        Tue,  7 Jan 2020 10:09:55 +0800 (CST)
+Received: from [127.0.0.1] (10.173.220.96) by DGGEMS408-HUB.china.huawei.com
+ (10.3.19.208) with Microsoft SMTP Server id 14.3.439.0; Tue, 7 Jan 2020
+ 10:09:45 +0800
+Subject: Re: [PATCH 2/2] xfs: fix stale data exposure problem when punch hole,
+ collapse range or zero range across a delalloc extent
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Allison Collins <allison.henderson@oracle.com>,
-        Brian Foster <bfoster@redhat.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v5 05/14] xfs: Factor out new helper functions
- xfs_attr_rmtval_set
-Message-ID: <20200106233343.GD23128@dread.disaster.area>
-References: <20191212041513.13855-1-allison.henderson@oracle.com>
- <20191212041513.13855-6-allison.henderson@oracle.com>
- <20191224121410.GB18379@infradead.org>
- <07284127-d9d7-e3eb-8e25-396e36ffaa93@oracle.com>
- <20200106144650.GB6799@bfoster>
- <af903a9f-2e2c-ac21-37a4-093be64f113d@oracle.com>
- <20200106214500.GA472651@magnolia>
+CC:     <bfoster@redhat.com>, <dchinner@redhat.com>, <sandeen@sandeen.net>,
+        <cmaiolino@redhat.com>, <hch@lst.de>, <linux-xfs@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <zhengbin13@huawei.com>,
+        <yi.zhang@huawei.com>, <houtao1@huawei.com>
+References: <20191226134721.43797-1-yukuai3@huawei.com>
+ <20191226134721.43797-3-yukuai3@huawei.com>
+ <20200106215755.GB472651@magnolia>
+From:   "yukuai (C)" <yukuai3@huawei.com>
+Message-ID: <f4bf9490-0476-3a6a-55e0-786186669c6c@huawei.com>
+Date:   Tue, 7 Jan 2020 10:09:44 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200106214500.GA472651@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
-        a=sbdTpStuSq8iNQE8viVliQ==:117 a=sbdTpStuSq8iNQE8viVliQ==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=Jdjhy38mL1oA:10
-        a=7-415B0cAAAA:8 a=GL8j6hCzjZu6FFPWmo8A:9 a=gsZ_OMfrtA_LO8UT:21
-        a=D0J2j-ms7_TrVp2q:21 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20200106215755.GB472651@magnolia>
+Content-Type: text/plain; charset="gbk"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.173.220.96]
+X-CFilter-Loop: Reflected
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 06, 2020 at 01:45:01PM -0800, Darrick J. Wong wrote:
-> On Mon, Jan 06, 2020 at 11:29:29AM -0700, Allison Collins wrote:
-> > 
-> > 
-> > On 1/6/20 7:46 AM, Brian Foster wrote:
-> > > On Wed, Dec 25, 2019 at 10:43:15AM -0700, Allison Collins wrote:
-> > > > 
-> > > > 
-> > > > On 12/24/19 5:14 AM, Christoph Hellwig wrote:
-> > > > > On Wed, Dec 11, 2019 at 09:15:04PM -0700, Allison Collins wrote:
-> > > > > > Break xfs_attr_rmtval_set into two helper functions
-> > > > > > xfs_attr_rmt_find_hole and xfs_attr_rmtval_set_value.
-> > > > > > xfs_attr_rmtval_set rolls the transaction between the
-> > > > > > helpers, but delayed operations cannot.  We will use
-> > > > > > the helpers later when constructing new delayed
-> > > > > > attribute routines.
-> > > > > 
-> > > > > Please use up the foll 72-ish characters for the changelog (also for
-> > > > > various other patches).
-> > > > Hmm, in one of my older reviews, we thought the standard line wrap length
-> > > > was 68.  Maybe when more folks get back from holiday break, we can have more
-> > > > chime in here.
-> > > > 
-> > > 
-> > > I thought it was 68 as well (I think that qualifies as 72-ish" at
-> > > least), but the current commit logs still look short of that at a
-> > > glance. ;P
-> > > 
-> > > Brian
-> > Ok I doubled checked, the last few lines do wrap a little early, but the
-> > rest is correct for 68 because of the function names.  We should probably
-> > establish a number though.  In perusing around some of the other patches on
-> > the list, it looks to me like people are using 81?
+
+
+On 2020/1/7 5:57, Darrick J. Wong wrote:
+> So your solution is to split the delalloc reservation to constrain the
+> allocation to the range that's being operated on?
+Yes, I'm trying to split delalloc reservation.
 > 
-> I use 72 columns for emails and commit messages, and 79 for code.
+> If so, I think a better solution (at least from the perspective of
+> reducing fragmentation) would be to map the extent unwritten and force a
+> post-writeback conversion[1] but I got shot down for performance reasons
+> the last time I suggested that.
+I'm wondering if spliting delalloc reservation have the same performance 
+issue.
 
-Typically 68-72 columns for commit messages, often 68 because git
-log output adds a 4 space indent to the commit message and that
-often gets quoted directly in email...
+Thanks!
+Yu Kuai
 
-> Though to be honest that's just my editor settings; I'm sure interested
-> parties could find plenty of instances where my enforcement of even that
-> is totally lax --
-> 
-> I have enough of a difficult time finding all the subtle bugs and corner
-> case design problems in the kernel code (which will cause problems in
-> our users' lives) that so long as you're not obviously going past the
-> flaming red stripe that I told vim to put at column 80, I don't really
-> care (because maxcolumns errors don't usually cause data loss). :)
-
-Yeah, I have the flaming red column set to 80 by default, 68 for
-email and commit messages...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
