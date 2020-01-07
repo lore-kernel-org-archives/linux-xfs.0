@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D64F4C33CA2
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 16:54:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3CA9C33C8C
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 16:54:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AC5CB21744
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 16:54:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C3D824679
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 16:54:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="O7/4YJ2W"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WWExcu9x"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728468AbgAGQyy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Jan 2020 11:54:54 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:52234 "EHLO
+        id S1728680AbgAGQyw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Jan 2020 11:54:52 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:52224 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728391AbgAGQyx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jan 2020 11:54:53 -0500
+        with ESMTP id S1728478AbgAGQyw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jan 2020 11:54:52 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
-        :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=2S6EU5V4HACqDVtrr9GHTkUrFxxbjvBmBf462dPdEQQ=; b=O7/4YJ2WhSG6BaYa3Vhi08q5i5
-        pWLB+Nleg9KQ0rQke9hzWCHFCVeTPVweij89OZV6hN6uh5bPE7iyF0+CeqJmnXzURt87gLY+Alog7
-        AHlxPU6bLg2d+meMdS68WOOV/KRcES0eX3siyVjbXH2ryhI+lb33Y1E1KcMpFRoXuqWF/TrD51Mru
-        ucazFkF8en+4QS9noQf7tItnBwYB1AY5hyJ7msRmqK0YWfcAhTkdZ3usfYxn//MR8O31rFY5DjF3k
-        PwAmtPiwVMk1Cx9q2WtjoaQ3E2pmX4IsBwyN62626Wleyohd/gn1N6pBgXVjVDiNiKN8piR/HL6wE
-        b7/c+tow==;
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
+        Reply-To:Cc:Content-Type:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=XpoEisxqNSAGBrb+u1AqyRI5z7tK8Mb8j9qM37grzvg=; b=WWExcu9xJr2Is39KQzdu5FN8/
+        +mTGHnHpfGieo0ICZZLnD96qMz+QmY++Y4maBcbJ8DKpPc/+Idbw8GnQWA9rwVVC0CuMZbJVldBPV
+        kE78vRkKtYhnHGlojgfnD0cbZrSf0+IpzjJAtnCcQ9PyAATd1I2AI/XFxbjadHchU5MTirQ3c+uHX
+        Dbn0uZIZjZvtsnDOmLO9waKmhBt9xtncnLJEOIsx3fhCKPmdqgpOC110N8l+gY+1oqcb2UsjifRQM
+        /dMqjd5ky3Ij9WEQz1s7K+qUM92rXaQpEXXlH1Nil2oejWrXiYVCvmvwmKqxlpV56OJNlEwMm2BTf
+        T0OrP/DoQ==;
 Received: from clnet-p19-102.ikbnet.co.at ([83.175.77.102] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1ios85-0002R6-AC; Tue, 07 Jan 2020 16:54:53 +0000
+        id 1ios83-0002QR-4M
+        for linux-xfs@vger.kernel.org; Tue, 07 Jan 2020 16:54:51 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
-Cc:     "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 4/4] xfs: fix misuse of the XFS_ATTR_INCOMPLETE flag
-Date:   Tue,  7 Jan 2020 17:54:42 +0100
-Message-Id: <20200107165442.262020-5-hch@lst.de>
+Subject: [PATCH 3/4] xfs: also remove cached ACLs when removing the underlying attr
+Date:   Tue,  7 Jan 2020 17:54:41 +0100
+Message-Id: <20200107165442.262020-4-hch@lst.de>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200107165442.262020-1-hch@lst.de>
 References: <20200107165442.262020-1-hch@lst.de>
@@ -53,84 +53,35 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-XFS_ATTR_INCOMPLETE is a flag in the on-disk attribute format, and thus
-in a different namespace as the ATTR_* flags in xfs_da_args.flags.
-Switch to using a XFS_DA_OP_INCOMPLETE flag in op_flags instead.  Without
-this users might be able to inject this flag into operations using the
-attr by handle ioctl.
+We should not just invalidate the ACL when setting the underlying
+attribute, but also when removing it.  The ioctl interface gets that
+right, but the normal xattr inteface skipped the xfs_forget_acl due
+to an early return.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr.c      | 2 +-
- fs/xfs/libxfs/xfs_attr_leaf.c | 4 ++--
- fs/xfs/libxfs/xfs_da_btree.h  | 4 +++-
- fs/xfs/libxfs/xfs_da_format.h | 2 --
- 4 files changed, 6 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_xattr.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 0d7fcc983b3d..2368a1bfe7e8 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -1007,7 +1007,7 @@ xfs_attr_node_addname(
- 		 * The INCOMPLETE flag means that we will find the "old"
- 		 * attr, not the "new" one.
- 		 */
--		args->flags |= XFS_ATTR_INCOMPLETE;
-+		args->op_flags |= XFS_DA_OP_INCOMPLETE;
- 		state = xfs_da_state_alloc();
- 		state->args = args;
- 		state->mp = mp;
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index 08d4b10ae2d5..fed537a4353d 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -2403,8 +2403,8 @@ xfs_attr3_leaf_lookup_int(
- 		 * If we are looking for INCOMPLETE entries, show only those.
- 		 * If we are looking for complete entries, show only those.
- 		 */
--		if ((args->flags & XFS_ATTR_INCOMPLETE) !=
--		    (entry->flags & XFS_ATTR_INCOMPLETE)) {
-+		if (!!(args->op_flags & XFS_DA_OP_INCOMPLETE) !=
-+		    !!(entry->flags & XFS_ATTR_INCOMPLETE)) {
- 			continue;
- 		}
- 		if (entry->flags & XFS_ATTR_LOCAL) {
-diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
-index e16610d1c14f..0f4fbb0889ff 100644
---- a/fs/xfs/libxfs/xfs_da_btree.h
-+++ b/fs/xfs/libxfs/xfs_da_btree.h
-@@ -89,6 +89,7 @@ typedef struct xfs_da_args {
- #define XFS_DA_OP_OKNOENT	0x0008	/* lookup/add op, ENOENT ok, else die */
- #define XFS_DA_OP_CILOOKUP	0x0010	/* lookup to return CI name if found */
- #define XFS_DA_OP_ALLOCVAL	0x0020	/* lookup to alloc buffer if found  */
-+#define XFS_DA_OP_INCOMPLETE	0x0040	/* lookup INCOMPLETE attr keys */
+diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+index 383f0203d103..2288f20ae282 100644
+--- a/fs/xfs/xfs_xattr.c
++++ b/fs/xfs/xfs_xattr.c
+@@ -74,10 +74,11 @@ xfs_xattr_set(const struct xattr_handler *handler, struct dentry *unused,
+ 	if (flags & XATTR_REPLACE)
+ 		xflags |= ATTR_REPLACE;
  
- #define XFS_DA_OP_FLAGS \
- 	{ XFS_DA_OP_JUSTCHECK,	"JUSTCHECK" }, \
-@@ -96,7 +97,8 @@ typedef struct xfs_da_args {
- 	{ XFS_DA_OP_ADDNAME,	"ADDNAME" }, \
- 	{ XFS_DA_OP_OKNOENT,	"OKNOENT" }, \
- 	{ XFS_DA_OP_CILOOKUP,	"CILOOKUP" }, \
--	{ XFS_DA_OP_ALLOCVAL,	"ALLOCVAL" }
-+	{ XFS_DA_OP_ALLOCVAL,	"ALLOCVAL" }, \
-+	{ XFS_DA_OP_INCOMPLETE,	"INCOMPLETE" }
+-	if (!value)
+-		return xfs_attr_remove(ip, (unsigned char *)name, xflags);
+-	error = xfs_attr_set(ip, (unsigned char *)name,
++	if (value)
++		error = xfs_attr_set(ip, (unsigned char *)name,
+ 				(void *)value, size, xflags);
++	else
++		error = xfs_attr_remove(ip, (unsigned char *)name, xflags);
+ 	if (!error)
+ 		xfs_forget_acl(inode, name, xflags);
  
- /*
-  * Storage for holding state during Btree searches and split/join ops.
-diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index 3dee33043e09..05615d1f4113 100644
---- a/fs/xfs/libxfs/xfs_da_format.h
-+++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -683,8 +683,6 @@ struct xfs_attr3_leafblock {
- 
- /*
-  * Flags used in the leaf_entry[i].flags field.
-- * NOTE: the INCOMPLETE bit must not collide with the flags bits specified
-- * on the system call, they are "or"ed together for various operations.
-  */
- #define	XFS_ATTR_LOCAL_BIT	0	/* attr is stored locally */
- #define	XFS_ATTR_ROOT_BIT	1	/* limit access to trusted attrs */
 -- 
 2.24.1
 
