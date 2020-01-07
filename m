@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3B2AC33C8C
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 16:54:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B019C33C9B
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 16:54:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B648A21744
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 16:54:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 681802073D
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 16:54:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="bUfV9fX/"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="B0Go5j7n"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728470AbgAGQys (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Jan 2020 11:54:48 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:52182 "EHLO
+        id S1728467AbgAGQyu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Jan 2020 11:54:50 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:52202 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728391AbgAGQyr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jan 2020 11:54:47 -0500
+        with ESMTP id S1728391AbgAGQyt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jan 2020 11:54:49 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
-        Reply-To:Cc:Content-Type:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=vIvuVt2fY3VUuV1knM+rjYXU5OqZwZpaAmhbjkcSRZU=; b=bUfV9fX/9bq117OGDsLu6jlMl
-        NxSH6DvTJFkRCGDAbTqa2F9SQFZYkaAADvAPw8GwdTBaz9XQreK89yRAcb483IuBNYTkLEnmq/RpD
-        jM2d496D4T3GxxmqajxssQA+ngd71J13xHbAwNVJse20JQ1dsgy9AExONc0vY/o7VBXJwlAjcbPDX
-        tBTYGEb4FBB3h3ygXj841njJRnWc7rbtEaXqB50GrqbHGr6Z7HcUJK9r9p8SfT1cds/oMYc5HtLGg
-        I0a4BmBwaZmj/NPht6NYF47VdGrOs8XbrQmdC9REA8Xz1nK9BS09VwucEJjzxANL5afrCMw4nFnf7
-        GMatdPEXA==;
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
+        :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=kUPZOML+uLnYPgpjQGR/7/Zmj/V06a0odfpumk93+aY=; b=B0Go5j7njJv3ksxpg0Jy7rSa3E
+        VtQPuhAtrbGYErIjWI9UN7o68zkImHVZjTKOsn8Hw30aTPR/jhfkbw97eOVr6kKkMmSNB0APDkKFe
+        1ueR11dI+gMSUqtzZKkSeG9R85Ib4nS6I+PQyotwJMKjH6+4PPVVeKIT5uXfLdihehYGBM5cHD7UY
+        uuJexy+oOXHVSZBKYw7Kr5XcV/XCPsOwvGFwn1p6cU3rh+0gsFBd+RWGJ9ZFl5KIsxbMBMugFbhO+
+        4plz9NTM9l4ZDCC4qNR5SH+QYXY80a+YZLiy6yQGmrtu8QtsactsX9ZtA+i3rlQOZlS6z7OfVD1XV
+        c8+517Ng==;
 Received: from clnet-p19-102.ikbnet.co.at ([83.175.77.102] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1ios7y-0002PG-O4
-        for linux-xfs@vger.kernel.org; Tue, 07 Jan 2020 16:54:47 +0000
+        id 1ios80-0002Pn-TW; Tue, 07 Jan 2020 16:54:49 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 1/4] xfs: clear kernel only flags in XFS_IOC_ATTRMULTI_BY_HANDLE
-Date:   Tue,  7 Jan 2020 17:54:39 +0100
-Message-Id: <20200107165442.262020-2-hch@lst.de>
+Cc:     "Darrick J . Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 2/4] xfs: reject invalid flags combinations in XFS_IOC_ATTRMULTI_BY_HANDLE
+Date:   Tue,  7 Jan 2020 17:54:40 +0100
+Message-Id: <20200107165442.262020-3-hch@lst.de>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200107165442.262020-1-hch@lst.de>
 References: <20200107165442.262020-1-hch@lst.de>
@@ -53,68 +53,50 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Don't allow passing arbitrary flags as they change behavior including
-memory allocation that the call stack is not prepared for.
+While the flags field in the ABI and the on-disk format allows for
+multiple namespace flags, that is a logically invalid combination that
+scrub complains about.  Reject it at the ioctl level, as all other
+interface already get this right at higher levels.
 
-Fixes: ddbca70cc45c ("xfs: allocate xattr buffer on demand")
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr.h | 7 +++++--
- fs/xfs/xfs_ioctl.c       | 2 ++
- fs/xfs/xfs_ioctl32.c     | 2 ++
- 3 files changed, 9 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_ioctl.c   | 5 +++++
+ fs/xfs/xfs_ioctl32.c | 5 +++++
+ 2 files changed, 10 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-index 94badfa1743e..91c2cb14276e 100644
---- a/fs/xfs/libxfs/xfs_attr.h
-+++ b/fs/xfs/libxfs/xfs_attr.h
-@@ -26,7 +26,7 @@ struct xfs_attr_list_context;
-  *========================================================================*/
- 
- 
--#define ATTR_DONTFOLLOW	0x0001	/* -- unused, from IRIX -- */
-+#define ATTR_DONTFOLLOW	0x0001	/* -- ignored, from IRIX -- */
- #define ATTR_ROOT	0x0002	/* use attrs in root (trusted) namespace */
- #define ATTR_TRUST	0x0004	/* -- unused, from IRIX -- */
- #define ATTR_SECURE	0x0008	/* use attrs in security namespace */
-@@ -37,7 +37,10 @@ struct xfs_attr_list_context;
- #define ATTR_KERNOVAL	0x2000	/* [kernel] get attr size only, not value */
- 
- #define ATTR_INCOMPLETE	0x4000	/* [kernel] return INCOMPLETE attr keys */
--#define ATTR_ALLOC	0x8000	/* allocate xattr buffer on demand */
-+#define ATTR_ALLOC	0x8000	/* [kernel] allocate xattr buffer on demand */
-+
-+#define ATTR_KERNEL_FLAGS \
-+	(ATTR_KERNOTIME | ATTR_KERNOVAL | ATTR_INCOMPLETE | ATTR_ALLOC)
- 
- #define XFS_ATTR_FLAGS \
- 	{ ATTR_DONTFOLLOW, 	"DONTFOLLOW" }, \
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 7b35d62ede9f..edfbdb8f85e2 100644
+index edfbdb8f85e2..17b4a981be4d 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -462,6 +462,8 @@ xfs_attrmulti_by_handle(
+@@ -462,6 +462,11 @@ xfs_attrmulti_by_handle(
  
  	error = 0;
  	for (i = 0; i < am_hreq.opcount; i++) {
-+		ops[i].am_flags &= ~ATTR_KERNEL_FLAGS;
-+
++		if ((ops[i].am_flags & ATTR_ROOT) &&
++		    (ops[i].am_flags & ATTR_SECURE)) {
++			ops[i].am_error = -EINVAL;
++			continue;
++		}
+ 		ops[i].am_flags &= ~ATTR_KERNEL_FLAGS;
+ 
  		ops[i].am_error = strncpy_from_user((char *)attr_name,
- 				ops[i].am_attrname, MAXNAMELEN);
- 		if (ops[i].am_error == 0 || ops[i].am_error == MAXNAMELEN)
 diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index c4c4f09113d3..bd9d9ebf85d8 100644
+index bd9d9ebf85d8..565c6404ee94 100644
 --- a/fs/xfs/xfs_ioctl32.c
 +++ b/fs/xfs/xfs_ioctl32.c
-@@ -450,6 +450,8 @@ xfs_compat_attrmulti_by_handle(
+@@ -450,6 +450,11 @@ xfs_compat_attrmulti_by_handle(
  
  	error = 0;
  	for (i = 0; i < am_hreq.opcount; i++) {
-+		ops[i].am_flags &= ~ATTR_KERNEL_FLAGS;
-+
++		if ((ops[i].am_flags & ATTR_ROOT) &&
++		    (ops[i].am_flags & ATTR_SECURE)) {
++			ops[i].am_error = -EINVAL;
++			continue;
++		}
+ 		ops[i].am_flags &= ~ATTR_KERNEL_FLAGS;
+ 
  		ops[i].am_error = strncpy_from_user((char *)attr_name,
- 				compat_ptr(ops[i].am_attrname),
- 				MAXNAMELEN);
 -- 
 2.24.1
 
