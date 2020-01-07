@@ -7,103 +7,100 @@ X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6715DC33C9E
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 18:52:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D223C282DD
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 19:37:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3DE75222D9
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 18:52:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 753FA214D8
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 19:37:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="cTeiS/Zz"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="l6yOEPVe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728451AbgAGSwF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Jan 2020 13:52:05 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:48788 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728358AbgAGSwF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jan 2020 13:52:05 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 007In640006856;
-        Tue, 7 Jan 2020 18:51:57 GMT
+        id S1728580AbgAGThs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Jan 2020 14:37:48 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:45010 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728454AbgAGThs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jan 2020 14:37:48 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 007JYCYQ070361;
+        Tue, 7 Jan 2020 19:37:40 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=RH55Q8AOGScmovubcyILiqEgNgHLLVIJC2us/cB7ITI=;
- b=cTeiS/ZzsDGy7wkkKTXFCgItGf0RCzFFBj1dANiUH9NU5GPVUg8+SSVR04MWocOWp5r3
- JBfsF1aI2amW9z/Q9wsTZ/LEcxbaUkdklUF11sgX2+pv4M/sEVBCAnE6yJ54LwA44ZNz
- e9QXlXNcjyt5IarF7wc+b7+tuaOnc6lA+ZyQdzl8f+ZU9N3uABWbwbhcmSZyk+/hzEz0
- pok2gtvOV4eEdSXRLmrv3CKoAqCcSE4DuBLU7OBnEXzrexHJoGcTPYeT+rBRbYQlKwon
- 859GJK/F+gc0ZCDTxfSV6/K1PbrSt3NBaVB/nCC7oDizg/SKxgYxWFIXL+RJifdpe6oq tQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2xajnpyepq-1
+ bh=PbtPKlMGf7rQeYXu72gjdbZ5tS7/+7P93T+3RQZmVzs=;
+ b=l6yOEPVeyJBFoHLjm9aLjb5n9H/H/Dr08uVrGlFYi0/v/GsZvFEiaBoDB+yjBJj5prM5
+ u0gxhRCQVourmtrdczy8Kn/7X/89bOSRpMevF4Rn/GsFHk53sF7CWD1mfrd2TZXsL0C8
+ nlj5W+XLw6Sn/sfP9assxdgogbXqO9lPCqkuX/AzWW/hFf40awHzihufA1pkDvflb+Nm
+ Z79ggDXsfii4/BlKW6zIJI5ib06VN/OzWSXZLyYtP8lefRHcx3vpIjAHBLxQmT5pmgS1
+ grm4j1SNB+JONEDfgncJXrZYFVnPv0GOgPW2x9LZsob59XjSArBxaYfBvt5nEkcvGLGe kQ== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 2xaj4tyu3t-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 07 Jan 2020 18:51:56 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 007InI5U079062;
-        Tue, 7 Jan 2020 18:51:56 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2xcpcqv54s-1
+        Tue, 07 Jan 2020 19:37:40 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 007JXW4i168584;
+        Tue, 7 Jan 2020 19:35:39 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 2xcjvdu992-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 07 Jan 2020 18:51:55 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 007Ipq79017148;
-        Tue, 7 Jan 2020 18:51:55 GMT
+        Tue, 07 Jan 2020 19:35:39 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 007JZcHb005569;
+        Tue, 7 Jan 2020 19:35:39 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 07 Jan 2020 10:51:52 -0800
-Date:   Tue, 7 Jan 2020 10:51:51 -0800
+        with ESMTP ; Tue, 07 Jan 2020 11:35:38 -0800
+Date:   Tue, 7 Jan 2020 11:35:37 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Christoph Hellwig <hch@infradead.org>
 Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/4] debian: turn debhelper compat level up to 11
-Message-ID: <20200107185151.GC917713@magnolia>
+Subject: Re: [PATCH 1/4] misc: support building flatpak images
+Message-ID: <20200107193537.GD917713@magnolia>
 References: <157784176039.1372453.10128269126585047352.stgit@magnolia>
- <157784177377.1372453.1008055450028015778.stgit@magnolia>
- <20200107142123.GB17614@infradead.org>
+ <157784176718.1372453.6932244685934321782.stgit@magnolia>
+ <20200107142035.GA17614@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200107142123.GB17614@infradead.org>
+In-Reply-To: <20200107142035.GA17614@infradead.org>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9492 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2001070147
+ engine=8.0.1-1911140001 definitions=main-2001070154
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9492 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2001070147
+ definitions=main-2001070154
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 07, 2020 at 06:21:23AM -0800, Christoph Hellwig wrote:
-> On Tue, Dec 31, 2019 at 05:22:53PM -0800, Darrick J. Wong wrote:
+On Tue, Jan 07, 2020 at 06:20:35AM -0800, Christoph Hellwig wrote:
+> On Tue, Dec 31, 2019 at 05:22:47PM -0800, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > Upgrade to debhelper level 11 to take advantage of dh_installsystemd,
-> > which greatly simplifies the installation and activation of the scrub
-> > systemd services.
+> > Poke the system until it supports building flatpaks.  Maybe.
 > 
-> The subject and description seem upside down.  You want to use
-> dh_installsystemd, and to do so you'll have to bump the level..
+> Why would we want to support such a fucked up package delivery
+> mechanism?
 
-Heh, ok.
+In theory we could use it as a means to distribute uptodate xfs_repair
+so that anyone with a problem that their distro's copy of xfs_repair
+can't or won't fix can try upstream without having to build xfsprogs
+themselves.
 
-"debian: install scrub services with dh_installsystemd
+Though I wonder how many people in that situation are running some
+colorful linux distribution but are too stingy to pay for a support
+contract.... :)
 
-"Use dh_installsystemd to handle the installation and activation of the
-scrub systemd services.  This requires bumping the compat version to
-11."
+Also, can you elaborate on 'fucked up package delivery mechanism'?
 
-(Admittedly the subject was a riff on the old 'turn it up to 11' joke)
-
-Related question: Are Debian oldoldstable and Ubuntu 16.04LTS old enough
-to drop the "debian: permit compat level 9 dh builds" patch?  On systems
-with software that old the kernel isn't going to support scrub, and who's
-going to build xfsprogs 5.xx for those old systems?
+Admittedly I'm /not/ volunteering to maintain a xfs_repair flatpak, so
+perhaps I should just drop this whole thing.
 
 --D
