@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B019C33C9B
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 16:54:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D64F4C33CA2
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 16:54:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 681802073D
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 16:54:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AC5CB21744
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 16:54:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="B0Go5j7n"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="O7/4YJ2W"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728467AbgAGQyu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Jan 2020 11:54:50 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:52202 "EHLO
+        id S1728468AbgAGQyy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Jan 2020 11:54:54 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:52234 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728391AbgAGQyt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jan 2020 11:54:49 -0500
+        with ESMTP id S1728391AbgAGQyx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jan 2020 11:54:53 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=kUPZOML+uLnYPgpjQGR/7/Zmj/V06a0odfpumk93+aY=; b=B0Go5j7njJv3ksxpg0Jy7rSa3E
-        VtQPuhAtrbGYErIjWI9UN7o68zkImHVZjTKOsn8Hw30aTPR/jhfkbw97eOVr6kKkMmSNB0APDkKFe
-        1ueR11dI+gMSUqtzZKkSeG9R85Ib4nS6I+PQyotwJMKjH6+4PPVVeKIT5uXfLdihehYGBM5cHD7UY
-        uuJexy+oOXHVSZBKYw7Kr5XcV/XCPsOwvGFwn1p6cU3rh+0gsFBd+RWGJ9ZFl5KIsxbMBMugFbhO+
-        4plz9NTM9l4ZDCC4qNR5SH+QYXY80a+YZLiy6yQGmrtu8QtsactsX9ZtA+i3rlQOZlS6z7OfVD1XV
-        c8+517Ng==;
+        bh=2S6EU5V4HACqDVtrr9GHTkUrFxxbjvBmBf462dPdEQQ=; b=O7/4YJ2WhSG6BaYa3Vhi08q5i5
+        pWLB+Nleg9KQ0rQke9hzWCHFCVeTPVweij89OZV6hN6uh5bPE7iyF0+CeqJmnXzURt87gLY+Alog7
+        AHlxPU6bLg2d+meMdS68WOOV/KRcES0eX3siyVjbXH2ryhI+lb33Y1E1KcMpFRoXuqWF/TrD51Mru
+        ucazFkF8en+4QS9noQf7tItnBwYB1AY5hyJ7msRmqK0YWfcAhTkdZ3usfYxn//MR8O31rFY5DjF3k
+        PwAmtPiwVMk1Cx9q2WtjoaQ3E2pmX4IsBwyN62626Wleyohd/gn1N6pBgXVjVDiNiKN8piR/HL6wE
+        b7/c+tow==;
 Received: from clnet-p19-102.ikbnet.co.at ([83.175.77.102] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1ios80-0002Pn-TW; Tue, 07 Jan 2020 16:54:49 +0000
+        id 1ios85-0002R6-AC; Tue, 07 Jan 2020 16:54:53 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
 Cc:     "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 2/4] xfs: reject invalid flags combinations in XFS_IOC_ATTRMULTI_BY_HANDLE
-Date:   Tue,  7 Jan 2020 17:54:40 +0100
-Message-Id: <20200107165442.262020-3-hch@lst.de>
+Subject: [PATCH 4/4] xfs: fix misuse of the XFS_ATTR_INCOMPLETE flag
+Date:   Tue,  7 Jan 2020 17:54:42 +0100
+Message-Id: <20200107165442.262020-5-hch@lst.de>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200107165442.262020-1-hch@lst.de>
 References: <20200107165442.262020-1-hch@lst.de>
@@ -53,50 +53,84 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-While the flags field in the ABI and the on-disk format allows for
-multiple namespace flags, that is a logically invalid combination that
-scrub complains about.  Reject it at the ioctl level, as all other
-interface already get this right at higher levels.
+XFS_ATTR_INCOMPLETE is a flag in the on-disk attribute format, and thus
+in a different namespace as the ATTR_* flags in xfs_da_args.flags.
+Switch to using a XFS_DA_OP_INCOMPLETE flag in op_flags instead.  Without
+this users might be able to inject this flag into operations using the
+attr by handle ioctl.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_ioctl.c   | 5 +++++
- fs/xfs/xfs_ioctl32.c | 5 +++++
- 2 files changed, 10 insertions(+)
+ fs/xfs/libxfs/xfs_attr.c      | 2 +-
+ fs/xfs/libxfs/xfs_attr_leaf.c | 4 ++--
+ fs/xfs/libxfs/xfs_da_btree.h  | 4 +++-
+ fs/xfs/libxfs/xfs_da_format.h | 2 --
+ 4 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index edfbdb8f85e2..17b4a981be4d 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -462,6 +462,11 @@ xfs_attrmulti_by_handle(
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 0d7fcc983b3d..2368a1bfe7e8 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -1007,7 +1007,7 @@ xfs_attr_node_addname(
+ 		 * The INCOMPLETE flag means that we will find the "old"
+ 		 * attr, not the "new" one.
+ 		 */
+-		args->flags |= XFS_ATTR_INCOMPLETE;
++		args->op_flags |= XFS_DA_OP_INCOMPLETE;
+ 		state = xfs_da_state_alloc();
+ 		state->args = args;
+ 		state->mp = mp;
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 08d4b10ae2d5..fed537a4353d 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -2403,8 +2403,8 @@ xfs_attr3_leaf_lookup_int(
+ 		 * If we are looking for INCOMPLETE entries, show only those.
+ 		 * If we are looking for complete entries, show only those.
+ 		 */
+-		if ((args->flags & XFS_ATTR_INCOMPLETE) !=
+-		    (entry->flags & XFS_ATTR_INCOMPLETE)) {
++		if (!!(args->op_flags & XFS_DA_OP_INCOMPLETE) !=
++		    !!(entry->flags & XFS_ATTR_INCOMPLETE)) {
+ 			continue;
+ 		}
+ 		if (entry->flags & XFS_ATTR_LOCAL) {
+diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
+index e16610d1c14f..0f4fbb0889ff 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.h
++++ b/fs/xfs/libxfs/xfs_da_btree.h
+@@ -89,6 +89,7 @@ typedef struct xfs_da_args {
+ #define XFS_DA_OP_OKNOENT	0x0008	/* lookup/add op, ENOENT ok, else die */
+ #define XFS_DA_OP_CILOOKUP	0x0010	/* lookup to return CI name if found */
+ #define XFS_DA_OP_ALLOCVAL	0x0020	/* lookup to alloc buffer if found  */
++#define XFS_DA_OP_INCOMPLETE	0x0040	/* lookup INCOMPLETE attr keys */
  
- 	error = 0;
- 	for (i = 0; i < am_hreq.opcount; i++) {
-+		if ((ops[i].am_flags & ATTR_ROOT) &&
-+		    (ops[i].am_flags & ATTR_SECURE)) {
-+			ops[i].am_error = -EINVAL;
-+			continue;
-+		}
- 		ops[i].am_flags &= ~ATTR_KERNEL_FLAGS;
+ #define XFS_DA_OP_FLAGS \
+ 	{ XFS_DA_OP_JUSTCHECK,	"JUSTCHECK" }, \
+@@ -96,7 +97,8 @@ typedef struct xfs_da_args {
+ 	{ XFS_DA_OP_ADDNAME,	"ADDNAME" }, \
+ 	{ XFS_DA_OP_OKNOENT,	"OKNOENT" }, \
+ 	{ XFS_DA_OP_CILOOKUP,	"CILOOKUP" }, \
+-	{ XFS_DA_OP_ALLOCVAL,	"ALLOCVAL" }
++	{ XFS_DA_OP_ALLOCVAL,	"ALLOCVAL" }, \
++	{ XFS_DA_OP_INCOMPLETE,	"INCOMPLETE" }
  
- 		ops[i].am_error = strncpy_from_user((char *)attr_name,
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index bd9d9ebf85d8..565c6404ee94 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -450,6 +450,11 @@ xfs_compat_attrmulti_by_handle(
+ /*
+  * Storage for holding state during Btree searches and split/join ops.
+diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+index 3dee33043e09..05615d1f4113 100644
+--- a/fs/xfs/libxfs/xfs_da_format.h
++++ b/fs/xfs/libxfs/xfs_da_format.h
+@@ -683,8 +683,6 @@ struct xfs_attr3_leafblock {
  
- 	error = 0;
- 	for (i = 0; i < am_hreq.opcount; i++) {
-+		if ((ops[i].am_flags & ATTR_ROOT) &&
-+		    (ops[i].am_flags & ATTR_SECURE)) {
-+			ops[i].am_error = -EINVAL;
-+			continue;
-+		}
- 		ops[i].am_flags &= ~ATTR_KERNEL_FLAGS;
- 
- 		ops[i].am_error = strncpy_from_user((char *)attr_name,
+ /*
+  * Flags used in the leaf_entry[i].flags field.
+- * NOTE: the INCOMPLETE bit must not collide with the flags bits specified
+- * on the system call, they are "or"ed together for various operations.
+  */
+ #define	XFS_ATTR_LOCAL_BIT	0	/* attr is stored locally */
+ #define	XFS_ATTR_ROOT_BIT	1	/* limit access to trusted attrs */
 -- 
 2.24.1
 
