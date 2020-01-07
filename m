@@ -2,186 +2,170 @@ Return-Path: <SRS0=eQYP=24=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFD04C33C8C
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 15:40:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0CC8C33C9E
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 16:18:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6B8B82081E
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 15:40:24 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BX/zTP1K"
+	by mail.kernel.org (Postfix) with ESMTP id B67052073D
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jan 2020 16:18:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1578413938;
+	bh=VHaQ61kdMj1zQ28aJj/C17UOc1bhJar0a2DB7650RJo=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=cBdyXlJEcj1sVisd3KUBYvpxhHvvbde5op8Mnf22Bj+064gwJ0CGwht08R9CGFosr
+	 pp1P3bFVkuAirhSPBjt2qzNg27wfvMRksuZTiE3Mt8eCsaiRvBX6WB7+gIFeSL+Dzy
+	 d9/jr2m2Ml7Gh+A8lyKVnH4tQMFvee1rccbJUkuU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728052AbgAGPkY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Jan 2020 10:40:24 -0500
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:50358 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727974AbgAGPkX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jan 2020 10:40:23 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1578411622;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=NfXsBziSfycjtdQIDxeTWgPx4jbch/ijppbuMtikU4c=;
-        b=BX/zTP1Ke7FkGWPbmHLZ5jjXSqzXByc/p+6eZgJ4kay6QnOLhyaRptXHQYLnBOu7mBirB1
-        ElPGWpexzN+VPSKxoa9zGwPQXimgp9PFUgQ+0te8oMK7Vg5v3Vs2EmZ5rm5bFG6FRI7CbP
-        OjoWFb7tzyjoZMvT4cyJsGO9hITkOUI=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-228-UiLEDjjUOfq-wmPiyq0FfA-1; Tue, 07 Jan 2020 10:40:19 -0500
-X-MC-Unique: UiLEDjjUOfq-wmPiyq0FfA-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1728406AbgAGQS4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Jan 2020 11:18:56 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55240 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728335AbgAGQS4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 7 Jan 2020 11:18:56 -0500
+Received: from mail-vs1-f47.google.com (mail-vs1-f47.google.com [209.85.217.47])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 58137802563;
-        Tue,  7 Jan 2020 15:40:16 +0000 (UTC)
-Received: from llong.remote.csb (dhcp-17-59.bos.redhat.com [10.18.17.59])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 74D7E7BA50;
-        Tue,  7 Jan 2020 15:40:12 +0000 (UTC)
-Subject: Re: [PATCH] xfs: Fix false positive lockdep warning with sb_internal
- & fs_reclaim
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Qian Cai <cai@lca.pw>, Eric Sandeen <sandeen@redhat.com>
-References: <20200102155208.8977-1-longman@redhat.com>
- <20200104023657.GA23128@dread.disaster.area>
- <922bff4b-a463-11db-f969-d268462802a1@redhat.com>
- <20200106210127.GC23128@dread.disaster.area>
-From:   Waiman Long <longman@redhat.com>
-Organization: Red Hat
-Message-ID: <92d8a1fc-4b9d-72bb-5b44-9da5f153945e@redhat.com>
-Date:   Tue, 7 Jan 2020 10:40:12 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
+        by mail.kernel.org (Postfix) with ESMTPSA id 93DF02146E;
+        Tue,  7 Jan 2020 16:18:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1578413934;
+        bh=VHaQ61kdMj1zQ28aJj/C17UOc1bhJar0a2DB7650RJo=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=rZi0gUw5vTAwlfrpb2ixg2DIo+LTfSYmSN1bqVUfHuKHB340JxlkfmiV5SS3c/o85
+         2lnjYqtZplqfqgtDo91GCqRhhx9wRWUlrUZHqsAOacB/sDyYbvThQWHBGV0BrCKB8V
+         /YzpTv14l8x+EcEW72dmW8s2Rf+5iosvk4++KGEI=
+Received: by mail-vs1-f47.google.com with SMTP id g23so34246851vsr.7;
+        Tue, 07 Jan 2020 08:18:54 -0800 (PST)
+X-Gm-Message-State: APjAAAWIqQzRwCjfc+3YEDAD8THYPNlvDR7nJo+fiuALjXmf2saKbbXO
+        LPsGR2B+sE2+8xCYmOxWnM5F44YRryCi5zwAX5A=
+X-Google-Smtp-Source: APXvYqzvpalX9mYxg6Cv3airS1ivUXrhzCkCxHPr449SlfZoXw65XfEJe/ap5H8kaopm7p5nfYOfCqLcTkym5I6xFfA=
+X-Received: by 2002:a67:af11:: with SMTP id v17mr34139741vsl.99.1578413933613;
+ Tue, 07 Jan 2020 08:18:53 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20200106210127.GC23128@dread.disaster.area>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+References: <20191216182656.15624-1-fdmanana@kernel.org> <20191216182656.15624-3-fdmanana@kernel.org>
+ <20191229052240.GG13306@hungrycats.org>
+In-Reply-To: <20191229052240.GG13306@hungrycats.org>
+From:   Filipe Manana <fdmanana@kernel.org>
+Date:   Tue, 7 Jan 2020 16:18:42 +0000
+X-Gmail-Original-Message-ID: <CAL3q7H5FcdsA3NEcRae4iE5k8j8tHe-3KjKo_tTg6=fu0c_0gw@mail.gmail.com>
+Message-ID: <CAL3q7H5FcdsA3NEcRae4iE5k8j8tHe-3KjKo_tTg6=fu0c_0gw@mail.gmail.com>
+Subject: Re: [PATCH 2/2] Btrfs: make deduplication with range including the
+ last block work
+To:     Zygo Blaxell <ce3g8jdj@umail.furryterror.org>
+Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-btrfs <linux-btrfs@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Filipe Manana <fdmanana@suse.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 1/6/20 4:01 PM, Dave Chinner wrote:
-> On Mon, Jan 06, 2020 at 11:12:32AM -0500, Waiman Long wrote:
->> On 1/3/20 9:36 PM, Dave Chinner wrote:
->>> On Thu, Jan 02, 2020 at 10:52:08AM -0500, Waiman Long wrote:
->>>> Depending on the workloads, the following circular locking dependency
->>>> warning between sb_internal (a percpu rwsem) and fs_reclaim (a pseudo
->>>> lock) may show up:
-> ....
->>>>   IOWs, this is a false positive, caused by the fact that
->>>>   xfs_trans_alloc() is called from both above and below memory reclaim
->>>>   as well as within /every level/ of freeze processing. Lockdep is
->>>>   unable to describe the staged flush logic in the freeze process that
->>>>   prevents deadlocks from occurring, and hence we will pretty much
->>>>   always see false positives in the freeze path....
->>>>
->>>> Perhaps breaking the fs_reclaim pseudo lock into a per filesystem lock
->>>> may fix the issue. However, that will greatly complicate the logic and
->>>> may not be worth it.
->>> ANd it won't work, because now we'll just get lockedp warnings on
->>> the per-fs reclaim lockdep context.
->> It may or may not work depending on how we are going to break it up. I
->> haven't thought through that alternative yet as I am expecting that it
->> will be a bigger change if we decide to go this route.
-> A per-filesystem lock will not work because a single XFS filesystem
-> can trigger this "locking" inversion -both contexts that lockdep
-> warns about occur in the normal operation of that single filesystem.
+On Sun, Dec 29, 2019 at 5:22 AM Zygo Blaxell
+<ce3g8jdj@umail.furryterror.org> wrote:
 >
-> The only way to avoid this is to have multiple context specific
-> reclaim lockdep contexts per filesystem, and that becomes a mess
-> really quickly. The biggest problem with this is that the "lock
-> context" is no longer validated consistently across the entire
-> filesystem - we con only internally validate the order or each lock
-> context against itself, and not against operations in the other lock
-> contexts. Hence there's no global validation of lock orders -
-> lockdep allows different lock orders in different contexts and so
-> that defeats the purpose of using lockdep for this validation.
+> On Mon, Dec 16, 2019 at 06:26:56PM +0000, fdmanana@kernel.org wrote:
+> > From: Filipe Manana <fdmanana@suse.com>
+> >
+> > Since btrfs was migrated to use the generic VFS helpers for clone and
+> > deduplication, it stopped allowing for the last block of a file to be
+> > deduplicated when the source file size is not sector size aligned (when
+> > eof is somewhere in the middle of the last block). There are two reasons
+> > for that:
+> >
+> > 1) The generic code always rounds down, to a multiple of the block size,
+> >    the range's length for deduplications. This means we end up never
+> >    deduplicating the last block when the eof is not block size aligned,
+> >    even for the safe case where the destination range's end offset matches
+> >    the destination file's size. That rounding down operation is done at
+> >    generic_remap_check_len();
+> >
+> > 2) Because of that, the btrfs specific code does not expect anymore any
+> >    non-aligned range length's for deduplication and therefore does not
+> >    work if such nona-aligned length is given.
+> >
+> > This patch addresses that second part, and it depends on a patch that
+> > fixes generic_remap_check_len(), in the VFS, which was submitted ealier
+> > and has the following subject:
+> >
+> >   "fs: allow deduplication of eof block into the end of the destination file"
+> >
+> > These two patches address reports from users that started seeing lower
+> > deduplication rates due to the last block never being deduplicated when
+> > the file size is not aligned to the filesystem's block size.
+> >
+> > Link: https://lore.kernel.org/linux-btrfs/2019-1576167349.500456@svIo.N5dq.dFFD/
+> > Signed-off-by: Filipe Manana <fdmanana@suse.com>
 >
-> Indeed, we've been down this path before with lockdep for XFS inode
-> locking vs inode reclaim(*), and we removed it years ago because
-> multiple lock contexts for different operations and/or life-cycle
-> stages just hasn't been reliable or maintainable. We still get false
-> positives because we haven't solved the "lockdep can't express the
-> dependencies fully" problem, yet we've reduced the lock order
-> validation scope of lockdep considerably....
->
-That is true. You can make lockdep to check these kind of complicated
-dependency accurately.
+> Should these patches be marked for stable (5.0+, but see below for
+> caveats about 5.0)?  The bug affects 5.3 and 5.4 which are still active,
+> and dedupe is an important feature for some users.
 
+Usually I only mark things for stable that are critical: corruptions,
+crashes and memory leaks for example.
+I don't think this is a critical issue, since none of those things
+happen. It's certainly inconvenient to not have
+an extent fully deduplicated, but it's just that.
 
->>>> Another way to fix it is to disable the taking of the fs_reclaim
->>>> pseudo lock when in the freezing code path as a reclaim on the freezed
->>>> filesystem is not possible as stated above. This patch takes this
->>>> approach by setting the __GFP_NOLOCKDEP flag in the slab memory
->>>> allocation calls when the filesystem has been freezed.
->>> IOWs, "fix" it by stating that "lockdep can't track freeze
->>> dependencies correctly"?
->> The lockdep code has a singular focus on spotting possible deadlock
->> scenarios from a locking point of view.
-> IMO, lockdep only works for very simplistic locking strategies.
-> Anything complex requires more work to get lockdep annotations
-> "correct enough" to prevent false positives than it does to actually
-> read the code and very the locking is correct.
->
-> Have you noticed we do runs of nested trylock-and-back-out-on-
-> failure because we lock objects in an order that might deadlock
-> because of cross-object state dependencies that can't be covered by
-> lockdep?  e.g. xfs_lock_inodes() which nests up to 5 inodes deep,
-> can nest 3 separate locks per inode and has to take into account
-> journal flushing depenedencies when locking multiple inodes?
->
-> Lockdep is very simplisitic and the complex annotations we need to
-> handle situations like the above are very difficult to design,
-> use and maintainr. It's so much simpler just to use big hammers like
-> GFP_NOFS to shut up all the different types of false positives
-> lockdep throws up for reclaim context false positives because after
-> all these years there still isn't a viable mechanism to easily
-> express this sort of complex dependency chain.
-Regarding the trylock-and-back-out-on_failure code, do you think adding
-new APIs with timeout for mutex and rwsem and may be spin count for
-spinlock will help to at least reduce the number of failures that can
-happen in the code. RT mutex does have a rt_mutex_timed_lock(), but
-there is no equivalent for mutex and rwsem.
->> The freeze dependency has to be
->> properly translated into appropriate locking sequences to make lockdep
->> work correctly.i
-> This is part of the problem - freeze context is not actually a lock
-> but it's close enough that freezing on simple filesystems can be
-> validated with lockdep annotations. i.e. same basic concept as the
-> lockdep reclaim context. However, it just doesn't work reliably for
-> more complex subsystems where there are much more subtle and complex
-> behavioural interactions and dependencies that a single lock context
-> cannot express or be annotated to express. That's where lockdep
-> falls down....
->
->> I would say that the use of a global fs_reclaim pseudo
->> lock is not a perfect translation and so it has exception cases we need
->> to handle.
-> Exactly the problem.
->
->>> Nope. We are getting rid of kmem_alloc wrappers and all the
->>> associated flags, not adding new ones. Part of that process is
->>> identifying all the places we currently use KM_NOFS to "shut up
->>> lockdep" and converting them to explicit __GFP_NOLOCKDEP flags.
->>>
->>> So right now, this change needs to be queued up behind the API
->>> changes that are currently in progress...
->> That is fine. I can wait and post a revised patch after that. Who is
->> going to make these changes?
-> https://lore.kernel.org/linux-xfs/20191120104425.407213-1-cmaiolino@redhat.com/
+If a maintainer wants to add it for stable, I'm fine with it.
 
-Thanks for the pointer. I will rebase my patch on top of that.
+>
+> > ---
+> >  fs/btrfs/ioctl.c | 3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
+> > index 3418decb9e61..c41c276ff272 100644
+> > --- a/fs/btrfs/ioctl.c
+> > +++ b/fs/btrfs/ioctl.c
+> > @@ -3237,6 +3237,7 @@ static void btrfs_double_extent_lock(struct inode *inode1, u64 loff1,
+> >  static int btrfs_extent_same_range(struct inode *src, u64 loff, u64 len,
+> >                                  struct inode *dst, u64 dst_loff)
+> >  {
+> > +     const u64 bs = BTRFS_I(src)->root->fs_info->sb->s_blocksize;
+> >       int ret;
+> >
+> >       /*
+> > @@ -3244,7 +3245,7 @@ static int btrfs_extent_same_range(struct inode *src, u64 loff, u64 len,
+> >        * source range to serialize with relocation.
+> >        */
+> >       btrfs_double_extent_lock(src, loff, dst, dst_loff, len);
+> > -     ret = btrfs_clone(src, dst, loff, len, len, dst_loff, 1);
+> > +     ret = btrfs_clone(src, dst, loff, len, ALIGN(len, bs), dst_loff, 1);
+>
+> A heads-up for anyone backporting this to 5.0:  this patch depends on
+>
+>         57a50e2506df Btrfs: remove no longer needed range length checks for deduplication
 
-Cheers,
-Longman
+For any kernel without that cleanup patch, backporting the first patch
+in the series (the one touching only fs/read_write.c) is enough.
+For any kernel with that cleanup patch, then both patches in the
+series are needed.
 
+Thanks.
+
+>
+> Simply resolving the git conflict without including 57a50e2506df produces
+> a kernel where dedupe rounds the size of the dst file up to the next
+> block boundary.  This is because 57a50e2506df changes the value of
+> "len".  Before 57a50e2506df, "len" is equivalent to "ALIGN(len, bs)"
+> at the btrfs_clone line; after 57a50e2506df, "len" is the unaligned
+> dedupe request length passed to the btrfs_extent_same_range function.
+> This changes the semantics of the btrfs_clone line significantly.
+>
+> 57a50e2506df is in 5.1, so 5.1+ kernels do not require any additional
+> patches.
+>
+> 4.20 and earlier don't have the bug, so don't need a fix.
+>
+> >       btrfs_double_extent_unlock(src, loff, dst, dst_loff, len);
+> >
+> >       return ret;
+> > --
+> > 2.11.0
+> >
