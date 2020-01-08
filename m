@@ -2,111 +2,84 @@ Return-Path: <SRS0=Z9mQ=25=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D71FC282DD
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 17:22:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A33ABC282DD
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 20:40:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D3C6D205F4
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 17:22:53 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nkI2fj1O"
+	by mail.kernel.org (Postfix) with ESMTP id 71ED120692
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 20:40:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729786AbgAHRWx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Jan 2020 12:22:53 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:51950 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729748AbgAHRWw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jan 2020 12:22:52 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 008HJ0wB081445;
-        Wed, 8 Jan 2020 17:22:48 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=lmpd3GudUxaEZpwqwNUvLcjXeorT931cpobPy3OpZTM=;
- b=nkI2fj1O9jMOPpbf0Eo3SYFEvp4naJ9hWL1GjbXy4p+bt0IHqchHcVNjP6Uhily1P6rG
- Fx1k459HJeGTSntL11tJcKsl01Q47RujJ1k7rgnKuKRS6JkzjKTTEcC7rGLWiegWgozB
- ppk/UgXobrXXXi9pI3iIoHf0+yNEv8pVgbUCf+ZhdmgsjKjH9/dSsnYNRszpSAGDUfTL
- rzBrNmvtJOp1/qLfxHdAysHC1OlcLNErqIwdm5zDxxpo4vQQ96+Ww1rJdR3KVtGu70y3
- ndpsanD6MNXd7usX01XEKf+kkVj622nDvhN6nuKbvkqKRYdtLh9uSOkmNz9HbKl//70g Ig== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2xakbqw8vy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 08 Jan 2020 17:22:47 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 008HJEmG045696;
-        Wed, 8 Jan 2020 17:22:47 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2xcpct3yxs-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 08 Jan 2020 17:22:47 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 008HMkM6002563;
-        Wed, 8 Jan 2020 17:22:46 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 08 Jan 2020 09:22:46 -0800
-Date:   Wed, 8 Jan 2020 09:22:43 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
+        id S1726913AbgAHUkp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Jan 2020 15:40:45 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:55351 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726426AbgAHUko (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jan 2020 15:40:44 -0500
+Received: from dread.disaster.area (pa49-180-68-255.pa.nsw.optusnet.com.au [49.180.68.255])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 6FAFD3A4276;
+        Thu,  9 Jan 2020 07:40:42 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1ipI89-0005bt-G5; Thu, 09 Jan 2020 07:40:41 +1100
+Date:   Thu, 9 Jan 2020 07:40:41 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: complain if anyone tries to create a too-large
- buffer log item
-Message-ID: <20200108172243.GJ5552@magnolia>
-References: <157845708352.84011.17764262087965041304.stgit@magnolia>
- <157845709897.84011.1433283906403215456.stgit@magnolia>
- <20200108085131.GB12889@infradead.org>
+Subject: Re: [PATCH 1/3] xfs: introduce XFS_MAX_FILEOFF
+Message-ID: <20200108204041.GF23128@dread.disaster.area>
+References: <157845705246.82882.11480625967486872968.stgit@magnolia>
+ <157845705884.82882.5003824524655587269.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200108085131.GB12889@infradead.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9494 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2001080140
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9494 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2001080140
+In-Reply-To: <157845705884.82882.5003824524655587269.stgit@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
+        a=sbdTpStuSq8iNQE8viVliQ==:117 a=sbdTpStuSq8iNQE8viVliQ==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=Jdjhy38mL1oA:10
+        a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8 a=PUWKjkzJjGX9PewAdI4A:9
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 08, 2020 at 12:51:31AM -0800, Christoph Hellwig wrote:
-> On Tue, Jan 07, 2020 at 08:18:19PM -0800, Darrick J. Wong wrote:
-> > diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> > index 3984779e5911..bfbe8a5b8959 100644
-> > --- a/fs/xfs/xfs_buf_item.c
-> > +++ b/fs/xfs/xfs_buf_item.c
-> > @@ -761,18 +761,25 @@ xfs_buf_item_init(
-> >  	 * buffer. This makes the implementation as simple as possible.
-> >  	 */
-> >  	error = xfs_buf_item_get_format(bip, bp->b_map_count);
-> > -	ASSERT(error == 0);
-> > -	if (error) {	/* to stop gcc throwing set-but-unused warnings */
-> > -		kmem_cache_free(xfs_buf_item_zone, bip);
-> > -		return error;
-> > +	if (error) {
-> > +		xfs_err(mp, "could not allocate buffer item, err=%d", error);
-> > +		goto err;
-> >  	}
+On Tue, Jan 07, 2020 at 08:17:38PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> The error handling here is weird, as xfs_buf_item_get_format can't fail
-> to start with.  I'd rather see a prep patch removing the bogus check
-> for the kmem_zalloc and change the return value from
-> xfs_buf_item_get_format to void.
+> Introduce a new #define for the maximum supported file block offset.
+> We'll use this in the next patch to make it more obvious that we're
+> doing some operation for all possible inode fork mappings after a given
+> offset.  We can't use ULLONG_MAX here because bunmapi uses that to
+> detect when it's done.
 > 
-> Otherwise the patch looks good.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_format.h |    1 +
+>  fs/xfs/xfs_reflink.c       |    3 ++-
+>  2 files changed, 3 insertions(+), 1 deletion(-)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index 1b7dcbae051c..c2976e441d43 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -1540,6 +1540,7 @@ typedef struct xfs_bmdr_block {
+>  #define BMBT_BLOCKCOUNT_BITLEN	21
+>  
+>  #define BMBT_STARTOFF_MASK	((1ULL << BMBT_STARTOFF_BITLEN) - 1)
+> +#define XFS_MAX_FILEOFF		(BMBT_STARTOFF_MASK)
 
-Ok.
+Isn't the maximum file offset in the BMBT the max start offset + the
+max length of the extent that is located at BMBT_STARTOFF_MASK?
 
---D
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
