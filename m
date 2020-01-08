@@ -2,90 +2,96 @@ Return-Path: <SRS0=Z9mQ=25=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62A26C00523
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 08:54:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 527E3C00523
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 08:57:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 343F620692
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 08:54:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2413B20692
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 08:57:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="DG9w6lNZ"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qaKEei73"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726964AbgAHIyC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Jan 2020 03:54:02 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:56088 "EHLO
+        id S1726891AbgAHI5p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Jan 2020 03:57:45 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:58016 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726481AbgAHIyC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jan 2020 03:54:02 -0500
+        with ESMTP id S1726481AbgAHI5p (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jan 2020 03:57:45 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=h4IOCuM64JTKY9XN4ROqZ1j0avw6G9K5ojtE+SFFO3M=; b=DG9w6lNZoKKbAv6HRLWf+yjgR
-        lx4O+ptEze0RKcXHKualVQok0eimE1XeAX4XCGR5iuJDia9558Yrc9stozxWpd9NET6LnTV/j0xvu
-        wDxQlmmUzy9s5QQETCGDi1TMt5yj6Nui5B5QXkThIK1jsMyPmK7ZRkXLRA3dQARuI+k/fSSaOS/qV
-        wcmUr1fwouU4YTnL7nTVScVQez6kaoDqdPE67PMehi4yyKKYqj7S+ydZ0XJrwHpVDnyBeTFP3t7pT
-        raoCtqV1Pa+5VVMfnwR4eYGH29uqqb+du+ItusgAlPKJX/q3PuXJix8RcwB+zHfQRnc0LyaDRhldP
-        ZgvBrLWLQ==;
+         bh=qYZOX4MN2BVKeqHiH0VTE4qb5nlSzzRTXM4p2InWJLQ=; b=qaKEei73SAog39nzSC3f692iP
+        X3ITf8gpehDIqYHYTMC/fLjnUruw1k2otHY9ai2939qu4hKbSu18jUhdPgawodTTBZLDlYwYQIV0D
+        VXPqFlbQ+4rem7ZkUfAW1h3IbOUFwC581Bcne2AvyoOVNNxdSo4qJicXzFGsNeN2CJbfy1oEWYiZc
+        CiZDza1W2wSCl63/7P35D54MczTsF2KtVr/rZh+9bMEDEpkWpi3CyF1eDIFM9Vf3lvD5Sdo9ILBJI
+        7F0/K1XguRgnyb4Rp5NSxUC0tUla9vk8svgVcvM4i/wtPwUsWDO5U7U7roSfzrpy/FmOPXc4nOflN
+        QR4Bq0qYA==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1ip76I-0000TT-9W; Wed, 08 Jan 2020 08:54:02 +0000
-Date:   Wed, 8 Jan 2020 00:54:02 -0800
+        id 1ip79r-0002AT-Jc; Wed, 08 Jan 2020 08:57:43 +0000
+Date:   Wed, 8 Jan 2020 00:57:43 -0800
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: make struct xfs_buf_log_format have a
- consistent size
-Message-ID: <20200108085402.GC12889@infradead.org>
-References: <157845708352.84011.17764262087965041304.stgit@magnolia>
- <157845710512.84011.14528616369807048509.stgit@magnolia>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        y2038 Mailman List <y2038@lists.linaro.org>,
+        Brian Foster <bfoster@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Allison Collins <allison.henderson@oracle.com>,
+        Jan Kara <jack@suse.cz>, Eric Sandeen <sandeen@sandeen.net>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 2/3] xfs: disallow broken ioctls without
+ compat-32-bit-time
+Message-ID: <20200108085743.GA6971@infradead.org>
+References: <20191218163954.296726-1-arnd@arndb.de>
+ <20191218163954.296726-2-arnd@arndb.de>
+ <20191224084514.GC1739@infradead.org>
+ <CAK8P3a2ANKoV1DhJMUuAr0qKW7HgRvz9LM2yLkSVWP9Rn-LUhA@mail.gmail.com>
+ <20200102180749.GA1508633@magnolia>
+ <20200107141634.GC10628@infradead.org>
+ <20200107181614.GA917713@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <157845710512.84011.14528616369807048509.stgit@magnolia>
+In-Reply-To: <20200107181614.GA917713@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 07, 2020 at 08:18:25PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Jan 07, 2020 at 10:16:14AM -0800, Darrick J. Wong wrote:
+> Yeah.  Fixing that (and maybe adding an ioctl to set the FS UUID online)
+> were on my list for 5.6 but clearly I have to defer everything until 5.7
+> because we've just run out of time.
 > 
-> Increase XFS_BLF_DATAMAP_SIZE by 1 to fill in the implied padding at the
-> end of struct xfs_buf_log_format.  This makes the size consistent so
-> that we can check it in xfs_ondisk.h, and will be needed once we start
-> logging attribute values.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_log_format.h |    9 +++++----
->  fs/xfs/xfs_ondisk.h            |    1 +
->  2 files changed, 6 insertions(+), 4 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-> index 8ef31d71a9c7..5d8eb8978c33 100644
-> --- a/fs/xfs/libxfs/xfs_log_format.h
-> +++ b/fs/xfs/libxfs/xfs_log_format.h
-> @@ -462,11 +462,12 @@ static inline uint xfs_log_dinode_size(int version)
->  #define	XFS_BLF_GDQUOT_BUF	(1<<4)
->  
->  /*
-> - * This is the structure used to lay out a buf log item in the
-> - * log.  The data map describes which 128 byte chunks of the buffer
-> - * have been logged.
-> + * This is the structure used to lay out a buf log item in the log.  The data
-> + * map describes which 128 byte chunks of the buffer have been logged.  Note
-> + * that XFS_BLF_DATAMAP_SIZE is an odd number so that the structure size will
-> + * be consistent between 32-bit and 64-bit platforms.
->   */
-> -#define XFS_BLF_DATAMAP_SIZE	((XFS_MAX_BLOCKSIZE / XFS_BLF_CHUNK) / NBWORD)
-> +#define XFS_BLF_DATAMAP_SIZE	(1 + ((XFS_MAX_BLOCKSIZE / XFS_BLF_CHUNK) / NBWORD))
+> Uh... I started looking into unifying the ext4 and xfs defrag ioctl, but
+> gagged when I realized that the ext4 ioctl also handles the data copy
+> inside the kernel.  I think that's the sort of behavior we should /not/
+> allow into the new ioctl, though that also means that the required
+> changes for ext4/e4defrag will be non-trivial.
 
-I don't understand the explanation.  Why would the size differ for
-32-bit vs 64-bit architectures when it only uses fixed size types?
+Well, we should eventually end up with a common defrag tool (e.g. in
+util-linux).  We might as well start of with the xfs_fsr codebase
+for that or whatever suits us best.
+
+> The btrfs defrag ioctl also contains thresholding information and
+> optional knobs to enable compression, which makes me wonder if we should
+> focus narrowly on swapext being "swap these extents but only if the
+> source file hasn't changed" and not necessarily defrag?
+
+That sounds like the most useful common API.
+
+> ...in which case I wonder, can people (ab)use this interface for atomic
+> file updates?  Create an O_TMPFILE, reflink the source file into the
+> temp file, make your updates to the tempfile, and then swapext the
+> donor's file data back into the source file, but only if the source file
+> hasn't changed?
+
+Sure.
