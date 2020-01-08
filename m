@@ -2,117 +2,406 @@ Return-Path: <SRS0=Z9mQ=25=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BB5FC282DD
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 22:42:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33190C33CA1
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 22:42:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ED19D2053B
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 22:42:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E9BE620705
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 22:42:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1578523379;
+	bh=o+EBZqF4Q3rb3rJsaguToktWL8ixzhk3Cs0X6JHnuWQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=nVIPWfHrN9UVEX2J9v5y2EM2RnY+E2zAg6fFE9KCN5sQgcZEPN/ElZFvYCBvVYOHE
+	 +895TcfxiMkQbTAm4k2Bp6tamZnyAViIgcY9zyfiDj63WkfumHU6XRIYFbjmC5z89X
+	 JStzHTzT5l6MGID5Ud5VsEEq4VDbJm5zlWNaN2a0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726758AbgAHWmV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Jan 2020 17:42:21 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:50885 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726548AbgAHWmV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jan 2020 17:42:21 -0500
-Received: from dread.disaster.area (pa49-180-68-255.pa.nsw.optusnet.com.au [49.180.68.255])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id DB8C0821417;
-        Thu,  9 Jan 2020 09:42:17 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1ipK1o-0006Il-GX; Thu, 09 Jan 2020 09:42:16 +1100
-Date:   Thu, 9 Jan 2020 09:42:16 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs: introduce XFS_MAX_FILEOFF
-Message-ID: <20200108224216.GH23128@dread.disaster.area>
-References: <157845705246.82882.11480625967486872968.stgit@magnolia>
- <157845705884.82882.5003824524655587269.stgit@magnolia>
- <20200108204041.GF23128@dread.disaster.area>
- <20200108223238.GK5552@magnolia>
+        id S1727387AbgAHWmz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Jan 2020 17:42:55 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48700 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726548AbgAHWmz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 8 Jan 2020 17:42:55 -0500
+Received: from localhost (unknown [104.132.0.81])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4A6DA2053B;
+        Wed,  8 Jan 2020 22:42:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1578523374;
+        bh=o+EBZqF4Q3rb3rJsaguToktWL8ixzhk3Cs0X6JHnuWQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=k5NdnaWaKTe+ShsNn7Avicpv6kmAudgSdjCCCkHc8JkJ93E1FGAoiqJTJv9Gt2b7h
+         K86oj/gBeyC8BzLIZWCfEwzTczvjm+Q6NtHwDbaI/4l6BETeoUDyqXGraok+juAheo
+         k9q1huD97Dyfqg5/bZhKEna9PZ9KqS6dlvuuDgUI=
+Date:   Wed, 8 Jan 2020 14:42:53 -0800
+From:   Jaegeuk Kim <jaegeuk@kernel.org>
+To:     Andreas Gruenbacher <agruenba@redhat.com>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-kernel@vger.kernel.org, Jeff Layton <jlayton@kernel.org>,
+        Sage Weil <sage@redhat.com>, Ilya Dryomov <idryomov@gmail.com>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Chao Yu <chao@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, Richard Weinberger <richard@nod.at>,
+        Artem Bityutskiy <dedekind1@gmail.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-mtd@lists.infradead.org, Chris Mason <clm@fb.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org,
+        Jan Kara <jack@suse.cz>, YueHaibing <yuehaibing@huawei.com>,
+        Arnd Bergmann <arnd@arndb.de>, Chao Yu <yuchao0@huawei.com>
+Subject: Re: [PATCH v4] fs: Fix page_mkwrite off-by-one errors
+Message-ID: <20200108224253.GA42219@jaegeuk-macbookpro.roam.corp.google.com>
+References: <20200108131528.4279-1-agruenba@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200108223238.GK5552@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
-        a=sbdTpStuSq8iNQE8viVliQ==:117 a=sbdTpStuSq8iNQE8viVliQ==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=Jdjhy38mL1oA:10
-        a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8 a=ueTTxCAjp1a8ooercxkA:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20200108131528.4279-1-agruenba@redhat.com>
+User-Agent: Mutt/1.8.2 (2017-04-18)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 08, 2020 at 02:32:38PM -0800, Darrick J. Wong wrote:
-> On Thu, Jan 09, 2020 at 07:40:41AM +1100, Dave Chinner wrote:
-> > On Tue, Jan 07, 2020 at 08:17:38PM -0800, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Introduce a new #define for the maximum supported file block offset.
-> > > We'll use this in the next patch to make it more obvious that we're
-> > > doing some operation for all possible inode fork mappings after a given
-> > > offset.  We can't use ULLONG_MAX here because bunmapi uses that to
-> > > detect when it's done.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/libxfs/xfs_format.h |    1 +
-> > >  fs/xfs/xfs_reflink.c       |    3 ++-
-> > >  2 files changed, 3 insertions(+), 1 deletion(-)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> > > index 1b7dcbae051c..c2976e441d43 100644
-> > > --- a/fs/xfs/libxfs/xfs_format.h
-> > > +++ b/fs/xfs/libxfs/xfs_format.h
-> > > @@ -1540,6 +1540,7 @@ typedef struct xfs_bmdr_block {
-> > >  #define BMBT_BLOCKCOUNT_BITLEN	21
-> > >  
-> > >  #define BMBT_STARTOFF_MASK	((1ULL << BMBT_STARTOFF_BITLEN) - 1)
-> > > +#define XFS_MAX_FILEOFF		(BMBT_STARTOFF_MASK)
-> > 
-> > Isn't the maximum file offset in the BMBT the max start offset + the
-> > max length of the extent that is located at BMBT_STARTOFF_MASK?
+On 01/08, Andreas Gruenbacher wrote:
+> Hi Darrick,
 > 
-> Apologies for responding to a question with another question, but has
-> there ever been an XFS that supported an inode size of more than 8EB?
+> here's an updated version with the latest feedback incorporated.  Hope
+> you find that useful.
+> 
+> As far as the f2fs merge conflict goes, I've been told by Linus not to
+> resolve those kinds of conflicts but to point them out when sending the
+> merge request.  So this shouldn't be a big deal.
+> 
+> Changes:
+> 
+> * Turn page_mkwrite_check_truncate into a non-inline function.
+> * Get rid of now-unused mapping variable in ext4_page_mkwrite.
+> * In btrfs_page_mkwrite, don't ignore the return value of
+>   block_page_mkwrite_return (no change in behavior).
+> * Clean up the f2fs_vm_page_mkwrite changes as suggested by
+>   Jaegeuk Kim.
+> 
+> Thanks,
+> Andreas
+> 
+> --
+> 
+> The check in block_page_mkwrite that is meant to determine whether an
+> offset is within the inode size is off by one.  This bug has been copied
+> into iomap_page_mkwrite and several filesystems (ubifs, ext4, f2fs,
+> ceph).
+> 
+> Fix that by introducing a new page_mkwrite_check_truncate helper that
+> checks for truncate and computes the bytes in the page up to EOF.  Use
+> the helper in the above mentioned filesystems.
+> 
+> In addition, use the new helper in btrfs as well.
+> 
+> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+> Acked-by: David Sterba <dsterba@suse.com> (btrfs)
+> Acked-by: Richard Weinberger <richard@nod.at> (ubifs)
+> Acked-by: Theodore Ts'o <tytso@mit.edu> (ext4)
+> Acked-by: Chao Yu <yuchao0@huawei.com> (f2fs)
 
-Doubt it.
+Acked-by: Jaegeuk Kim <jaegeuk@kernel.org>
 
-> Linux supports at most a file offset of 8EB, which is 2^63-1, or
-> 0x7FFF,FFFF,FFFF,FFFF.  On a filesystem with 512-byte blocks, the very
-> last byte in the file would be in block 2^54-1, or 0x3F,FFFF,FFFF,FFFF.
-> Larger blocksizes decrease that even further (e.g. 2^47-1, or
-> 0x7FFF,FFFF,FFFF on 64k block filesystems).
->
-> Therefore, on Linux I conclude that the largest file offset (block)
-> possible is 2^54-1, which is BMBT_STARTOFF_MASK.  Unless there's an
-> XFS port that actually supports 16EB files, BMBT_STARTOFF_MASK will
-> suffice here.
-
-Sure, but my point was that checks against the max file offset
-as a block count are applied to the startoff field, not the
-startoff + blockcount value, so we can potentially get extents on
-disk beyond the above definition of XFS_MAX_FILEOFF...
-
-i.e. startoff can be < XFS_MAX_FILEOFF, but startoff + blockcount
-can be > XFS_MAX_FILEOFF, and there's nothing in the code that
-prevents that from occurring...
-
-e.g. what's preventing speculative delalloc from going beyond
-XFS_MAX_FILEOFF, even though the actual file offset that is being
-written is within XFS_MAX_FILEOFF?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> ---
+>  fs/btrfs/inode.c        | 16 +++++-----------
+>  fs/buffer.c             | 16 +++-------------
+>  fs/ceph/addr.c          |  2 +-
+>  fs/ext4/inode.c         | 15 ++++-----------
+>  fs/f2fs/file.c          | 19 +++++++------------
+>  fs/iomap/buffered-io.c  | 18 +++++-------------
+>  fs/ubifs/file.c         |  3 +--
+>  include/linux/pagemap.h |  2 ++
+>  mm/filemap.c            | 28 ++++++++++++++++++++++++++++
+>  9 files changed, 56 insertions(+), 63 deletions(-)
+> 
+> diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+> index e3c76645cad7..23e6f614e000 100644
+> --- a/fs/btrfs/inode.c
+> +++ b/fs/btrfs/inode.c
+> @@ -9011,16 +9011,15 @@ vm_fault_t btrfs_page_mkwrite(struct vm_fault *vmf)
+>  		goto out_noreserve;
+>  	}
+>  
+> -	ret = VM_FAULT_NOPAGE; /* make the VM retry the fault */
+>  again:
+>  	lock_page(page);
+> -	size = i_size_read(inode);
+>  
+> -	if ((page->mapping != inode->i_mapping) ||
+> -	    (page_start >= size)) {
+> -		/* page got truncated out from underneath us */
+> +	ret2 = page_mkwrite_check_truncate(page, inode);
+> +	if (ret2 < 0) {
+> +		ret = block_page_mkwrite_return(ret2);
+>  		goto out_unlock;
+>  	}
+> +	zero_start = ret2;
+>  	wait_on_page_writeback(page);
+>  
+>  	lock_extent_bits(io_tree, page_start, page_end, &cached_state);
+> @@ -9041,6 +9040,7 @@ vm_fault_t btrfs_page_mkwrite(struct vm_fault *vmf)
+>  		goto again;
+>  	}
+>  
+> +	size = i_size_read(inode);
+>  	if (page->index == ((size - 1) >> PAGE_SHIFT)) {
+>  		reserved_space = round_up(size - page_start,
+>  					  fs_info->sectorsize);
+> @@ -9073,12 +9073,6 @@ vm_fault_t btrfs_page_mkwrite(struct vm_fault *vmf)
+>  	}
+>  	ret2 = 0;
+>  
+> -	/* page is wholly or partially inside EOF */
+> -	if (page_start + PAGE_SIZE > size)
+> -		zero_start = offset_in_page(size);
+> -	else
+> -		zero_start = PAGE_SIZE;
+> -
+>  	if (zero_start != PAGE_SIZE) {
+>  		kaddr = kmap(page);
+>  		memset(kaddr + zero_start, 0, PAGE_SIZE - zero_start);
+> diff --git a/fs/buffer.c b/fs/buffer.c
+> index d8c7242426bb..53aabde57ca7 100644
+> --- a/fs/buffer.c
+> +++ b/fs/buffer.c
+> @@ -2499,23 +2499,13 @@ int block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+>  	struct page *page = vmf->page;
+>  	struct inode *inode = file_inode(vma->vm_file);
+>  	unsigned long end;
+> -	loff_t size;
+>  	int ret;
+>  
+>  	lock_page(page);
+> -	size = i_size_read(inode);
+> -	if ((page->mapping != inode->i_mapping) ||
+> -	    (page_offset(page) > size)) {
+> -		/* We overload EFAULT to mean page got truncated */
+> -		ret = -EFAULT;
+> +	ret = page_mkwrite_check_truncate(page, inode);
+> +	if (ret < 0)
+>  		goto out_unlock;
+> -	}
+> -
+> -	/* page is wholly or partially inside EOF */
+> -	if (((page->index + 1) << PAGE_SHIFT) > size)
+> -		end = size & ~PAGE_MASK;
+> -	else
+> -		end = PAGE_SIZE;
+> +	end = ret;
+>  
+>  	ret = __block_write_begin(page, 0, end, get_block);
+>  	if (!ret)
+> diff --git a/fs/ceph/addr.c b/fs/ceph/addr.c
+> index 7ab616601141..ef958aa4adb4 100644
+> --- a/fs/ceph/addr.c
+> +++ b/fs/ceph/addr.c
+> @@ -1575,7 +1575,7 @@ static vm_fault_t ceph_page_mkwrite(struct vm_fault *vmf)
+>  	do {
+>  		lock_page(page);
+>  
+> -		if ((off > size) || (page->mapping != inode->i_mapping)) {
+> +		if (page_mkwrite_check_truncate(page, inode) < 0) {
+>  			unlock_page(page);
+>  			ret = VM_FAULT_NOPAGE;
+>  			break;
+> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+> index 629a25d999f0..3244803df30a 100644
+> --- a/fs/ext4/inode.c
+> +++ b/fs/ext4/inode.c
+> @@ -5871,13 +5871,11 @@ vm_fault_t ext4_page_mkwrite(struct vm_fault *vmf)
+>  {
+>  	struct vm_area_struct *vma = vmf->vma;
+>  	struct page *page = vmf->page;
+> -	loff_t size;
+>  	unsigned long len;
+>  	int err;
+>  	vm_fault_t ret;
+>  	struct file *file = vma->vm_file;
+>  	struct inode *inode = file_inode(file);
+> -	struct address_space *mapping = inode->i_mapping;
+>  	handle_t *handle;
+>  	get_block_t *get_block;
+>  	int retries = 0;
+> @@ -5907,18 +5905,13 @@ vm_fault_t ext4_page_mkwrite(struct vm_fault *vmf)
+>  	}
+>  
+>  	lock_page(page);
+> -	size = i_size_read(inode);
+> -	/* Page got truncated from under us? */
+> -	if (page->mapping != mapping || page_offset(page) > size) {
+> +	err = page_mkwrite_check_truncate(page, inode);
+> +	if (err < 0) {
+>  		unlock_page(page);
+> -		ret = VM_FAULT_NOPAGE;
+> -		goto out;
+> +		goto out_ret;
+>  	}
+> +	len = err;
+>  
+> -	if (page->index == size >> PAGE_SHIFT)
+> -		len = size & ~PAGE_MASK;
+> -	else
+> -		len = PAGE_SIZE;
+>  	/*
+>  	 * Return if we have all the buffers mapped. This avoids the need to do
+>  	 * journal_start/journal_stop which can block and take a long time
+> diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
+> index 85af112e868d..c2d919210a26 100644
+> --- a/fs/f2fs/file.c
+> +++ b/fs/f2fs/file.c
+> @@ -51,7 +51,7 @@ static vm_fault_t f2fs_vm_page_mkwrite(struct vm_fault *vmf)
+>  	struct inode *inode = file_inode(vmf->vma->vm_file);
+>  	struct f2fs_sb_info *sbi = F2FS_I_SB(inode);
+>  	struct dnode_of_data dn = { .node_changed = false };
+> -	int err;
+> +	int offset, err;
+>  
+>  	if (unlikely(f2fs_cp_error(sbi))) {
+>  		err = -EIO;
+> @@ -70,11 +70,12 @@ static vm_fault_t f2fs_vm_page_mkwrite(struct vm_fault *vmf)
+>  	file_update_time(vmf->vma->vm_file);
+>  	down_read(&F2FS_I(inode)->i_mmap_sem);
+>  	lock_page(page);
+> -	if (unlikely(page->mapping != inode->i_mapping ||
+> -			page_offset(page) > i_size_read(inode) ||
+> -			!PageUptodate(page))) {
+> +	offset = -EFAULT;
+> +	if (likely(PageUptodate(page)))
+> +		offset = page_mkwrite_check_truncate(page, inode);
+> +	if (unlikely(offset < 0)) {
+>  		unlock_page(page);
+> -		err = -EFAULT;
+> +		err = offset;
+>  		goto out_sem;
+>  	}
+>  
+> @@ -101,14 +102,8 @@ static vm_fault_t f2fs_vm_page_mkwrite(struct vm_fault *vmf)
+>  	if (PageMappedToDisk(page))
+>  		goto out_sem;
+>  
+> -	/* page is wholly or partially inside EOF */
+> -	if (((loff_t)(page->index + 1) << PAGE_SHIFT) >
+> -						i_size_read(inode)) {
+> -		loff_t offset;
+> -
+> -		offset = i_size_read(inode) & ~PAGE_MASK;
+> +	if (offset != PAGE_SIZE)
+>  		zero_user_segment(page, offset, PAGE_SIZE);
+> -	}
+>  	set_page_dirty(page);
+>  	if (!PageUptodate(page))
+>  		SetPageUptodate(page);
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 828444e14d09..7c84c4c027c4 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -1077,24 +1077,16 @@ vm_fault_t iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops)
+>  	struct page *page = vmf->page;
+>  	struct inode *inode = file_inode(vmf->vma->vm_file);
+>  	unsigned long length;
+> -	loff_t offset, size;
+> +	loff_t offset;
+>  	ssize_t ret;
+>  
+>  	lock_page(page);
+> -	size = i_size_read(inode);
+> -	offset = page_offset(page);
+> -	if (page->mapping != inode->i_mapping || offset > size) {
+> -		/* We overload EFAULT to mean page got truncated */
+> -		ret = -EFAULT;
+> +	ret = page_mkwrite_check_truncate(page, inode);
+> +	if (ret < 0)
+>  		goto out_unlock;
+> -	}
+> -
+> -	/* page is wholly or partially inside EOF */
+> -	if (offset > size - PAGE_SIZE)
+> -		length = offset_in_page(size);
+> -	else
+> -		length = PAGE_SIZE;
+> +	length = ret;
+>  
+> +	offset = page_offset(page);
+>  	while (length > 0) {
+>  		ret = iomap_apply(inode, offset, length,
+>  				IOMAP_WRITE | IOMAP_FAULT, ops, page,
+> diff --git a/fs/ubifs/file.c b/fs/ubifs/file.c
+> index cd52585c8f4f..91f7a1f2db0d 100644
+> --- a/fs/ubifs/file.c
+> +++ b/fs/ubifs/file.c
+> @@ -1563,8 +1563,7 @@ static vm_fault_t ubifs_vm_page_mkwrite(struct vm_fault *vmf)
+>  	}
+>  
+>  	lock_page(page);
+> -	if (unlikely(page->mapping != inode->i_mapping ||
+> -		     page_offset(page) > i_size_read(inode))) {
+> +	if (unlikely(page_mkwrite_check_truncate(page, inode) < 0)) {
+>  		/* Page got truncated out from underneath us */
+>  		goto sigbus;
+>  	}
+> diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+> index 37a4d9e32cd3..6c9c5b88924d 100644
+> --- a/include/linux/pagemap.h
+> +++ b/include/linux/pagemap.h
+> @@ -636,4 +636,6 @@ static inline unsigned long dir_pages(struct inode *inode)
+>  			       PAGE_SHIFT;
+>  }
+>  
+> +int page_mkwrite_check_truncate(struct page *page, struct inode *inode);
+> +
+>  #endif /* _LINUX_PAGEMAP_H */
+> diff --git a/mm/filemap.c b/mm/filemap.c
+> index bf6aa30be58d..d3e2766216e3 100644
+> --- a/mm/filemap.c
+> +++ b/mm/filemap.c
+> @@ -2700,6 +2700,34 @@ const struct vm_operations_struct generic_file_vm_ops = {
+>  	.page_mkwrite	= filemap_page_mkwrite,
+>  };
+>  
+> +/**
+> + * page_mkwrite_check_truncate - check if page was truncated
+> + * @page: the page to check
+> + * @inode: the inode to check the page against
+> + *
+> + * Returns the number of bytes in the page up to EOF,
+> + * or -EFAULT if the page was truncated.
+> + */
+> +int page_mkwrite_check_truncate(struct page *page, struct inode *inode)
+> +{
+> +	loff_t size = i_size_read(inode);
+> +	pgoff_t index = size >> PAGE_SHIFT;
+> +	int offset = offset_in_page(size);
+> +
+> +	if (page->mapping != inode->i_mapping)
+> +		return -EFAULT;
+> +
+> +	/* page is wholly inside EOF */
+> +	if (page->index < index)
+> +		return PAGE_SIZE;
+> +	/* page is wholly past EOF */
+> +	if (page->index > index || !offset)
+> +		return -EFAULT;
+> +	/* page is partially inside EOF */
+> +	return offset;
+> +}
+> +EXPORT_SYMBOL(page_mkwrite_check_truncate);
+> +
+>  /* This is used for a general mmap of a disk file */
+>  
+>  int generic_file_mmap(struct file * file, struct vm_area_struct * vma)
+> -- 
+> 2.20.1
