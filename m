@@ -6,60 +6,65 @@ X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A3FBC00523
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 08:58:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B7ADC00523
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 08:59:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0A5A2206DA
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 08:58:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 32BC820692
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 08:59:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LCCE89V1"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ITLMRuYA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727180AbgAHI6k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Jan 2020 03:58:40 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:59788 "EHLO
+        id S1726921AbgAHI7o (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Jan 2020 03:59:44 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:59844 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726891AbgAHI6k (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jan 2020 03:58:40 -0500
+        with ESMTP id S1726891AbgAHI7o (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jan 2020 03:59:44 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=l+lIqp6gkEDzFDNgCjU0Ga7bQ71JRj5Yjp1agZEtwBE=; b=LCCE89V16Fl6fBtgDeZBl4G+x
-        LT73VUH4BcVF8ur6n2dkkrJSMjuDVJEhlraJPYsFIoD4vmu1EliRGMASRB2appIQK4bVJEnodFdtM
-        ydSKTjCm90bI1IMsnpQTMFQMuogGmi3uE6owV+h0kpcMp9hUkkumWc6Y7u73zPL+X7Tc45qKUXnEq
-        k5rtlJkhYK4tsKtEVHp3QcRaH0hp+STfX8uNHX8ett1QbZqjH1tGId51KbWEi77ZLzAudlV90tgZp
-        jatc7Cb5PoKwYssks0hAvbQHFSmJ51tQPD6PF6G69d7TttpYPXL77OAZXf4B0vJMQ+nwYe7n8WCsh
-        bbhTKWjwA==;
+         bh=GD8eVi7KjuzpioAE+oB2S2I4zY/IRYXjqyZrlWWYZug=; b=ITLMRuYATDPKy3Yl4lpqIIkKS
+        kdcH7mOvtq0JNxQiYHBI1AbWkTVVzHJCJTRZalDsfBGKzcoRzR8haibJE+RTNANkLAjeAn5fERmZt
+        23JYkobov2tvtIRk7QLx/8ZVI5Z0+eEiD9SCchMfXtvomsdsELbMqEMtyi7BX0IkuEqNXmrBWIK29
+        5w9CJdUTbJ63jinqXIMc58u8EGU7ZYmVZqdFwhHEWuG3LozwhOG8A+SPaaRuA857M419mlIAKS7Wb
+        WvDhp7UU2tsJxgrFqQi0zwPSuGAGUvCVmv9yljd9ULXVjGrpyobEpLQUgZuMJk4fXuUY0JmccI6Wu
+        hzG/a0S3A==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1ip7Al-0002W0-1f; Wed, 08 Jan 2020 08:58:39 +0000
-Date:   Wed, 8 Jan 2020 00:58:39 -0800
+        id 1ip7Bn-0002ix-2S; Wed, 08 Jan 2020 08:59:43 +0000
+Date:   Wed, 8 Jan 2020 00:59:43 -0800
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     Christoph Hellwig <hch@infradead.org>, sandeen@sandeen.net,
         linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/4] debian: turn debhelper compat level up to 11
-Message-ID: <20200108085839.GB6971@infradead.org>
+Subject: Re: [PATCH 1/4] misc: support building flatpak images
+Message-ID: <20200108085943.GC6971@infradead.org>
 References: <157784176039.1372453.10128269126585047352.stgit@magnolia>
- <157784177377.1372453.1008055450028015778.stgit@magnolia>
- <20200107142123.GB17614@infradead.org>
- <20200107185151.GC917713@magnolia>
+ <157784176718.1372453.6932244685934321782.stgit@magnolia>
+ <20200107142035.GA17614@infradead.org>
+ <20200107193537.GD917713@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200107185151.GC917713@magnolia>
+In-Reply-To: <20200107193537.GD917713@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 07, 2020 at 10:51:51AM -0800, Darrick J. Wong wrote:
-> Related question: Are Debian oldoldstable and Ubuntu 16.04LTS old enough
-> to drop the "debian: permit compat level 9 dh builds" patch?  On systems
-> with software that old the kernel isn't going to support scrub, and who's
-> going to build xfsprogs 5.xx for those old systems?
+On Tue, Jan 07, 2020 at 11:35:37AM -0800, Darrick J. Wong wrote:
+> In theory we could use it as a means to distribute uptodate xfs_repair
+> so that anyone with a problem that their distro's copy of xfs_repair
+> can't or won't fix can try upstream without having to build xfsprogs
+> themselves.
 
-This sounds old enough to not bother.  And if someone screams loud
-enough we could still add it back.
+And someone would allow a random weirdo package format access to their
+disks?
+
+> Also, can you elaborate on 'fucked up package delivery mechanism'?
+
+It completely messes up how the system is supposed to work, and not your
+are in a maze of unssuportable package versions just like npm.
