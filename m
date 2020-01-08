@@ -2,107 +2,246 @@ Return-Path: <SRS0=Z9mQ=25=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F10EC282DD
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 14:53:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C58FC282DD
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 16:15:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2B238206F0
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 14:53:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 51E6620678
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 16:15:46 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="REp6KhlZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728197AbgAHOxv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Jan 2020 09:53:51 -0500
-Received: from mx2.suse.de ([195.135.220.15]:51934 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728673AbgAHOxv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 8 Jan 2020 09:53:51 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id B2081AC44;
-        Wed,  8 Jan 2020 14:53:48 +0000 (UTC)
-Received: by ds.suse.cz (Postfix, from userid 10065)
-        id CD5D0DA791; Wed,  8 Jan 2020 15:53:37 +0100 (CET)
-Date:   Wed, 8 Jan 2020 15:53:37 +0100
-From:   David Sterba <dsterba@suse.cz>
+        id S1728062AbgAHQPp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Jan 2020 11:15:45 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:36216 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727428AbgAHQPp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jan 2020 11:15:45 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 008GDYpa037316;
+        Wed, 8 Jan 2020 16:15:40 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=oklRrEVlj6k/Cjq3D6MlUM9I3rFCQGMWc+jgrM63Qus=;
+ b=REp6KhlZaS7GxE2PnCYfFQok/BUu5ZXLrIECKFpgNCUoOPHXvMk38yyJm53NmGN57Spt
+ tQ8Ixh+6xN1lWbapjYnHSv1deKT/3N810JoxHPZmsraBScn7jDssFhZ3u2Z+ahLlT+Ue
+ odFQfKOZZNY2r2kM7SSVt4yPD496M7aVTo6Q5phMnSSFPsmjH8j0Wa9s+dfpbOpHCH2G
+ agHU3VPrXgO/RquIqBhkYZ+zAwMdLIzNhElXAmYZgChAsOlVtcceLCT32tzikW9i6mZp
+ vy9xaimYzRnrn/UTog6mxNIXQwJZVXJTbxBHJvLV8PLmNC89Aw/5bVQYGvT82k3oAQaI Cg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 2xaj4u50uy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 08 Jan 2020 16:15:40 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 008GEHXY044963;
+        Wed, 8 Jan 2020 16:15:40 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 2xcjvfw9xk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 08 Jan 2020 16:15:39 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 008GFcxN021396;
+        Wed, 8 Jan 2020 16:15:38 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 08 Jan 2020 08:15:38 -0800
+Date:   Wed, 8 Jan 2020 08:15:36 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Filipe Manana <fdmanana@kernel.org>
-Cc:     Zygo Blaxell <ce3g8jdj@umail.furryterror.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
         linux-btrfs <linux-btrfs@vger.kernel.org>,
         xfs <linux-xfs@vger.kernel.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Filipe Manana <fdmanana@suse.com>
-Subject: Re: [PATCH 2/2] Btrfs: make deduplication with range including the
- last block work
-Message-ID: <20200108145336.GF3929@twin.jikos.cz>
-Reply-To: dsterba@suse.cz
-Mail-Followup-To: dsterba@suse.cz, Filipe Manana <fdmanana@kernel.org>,
-        Zygo Blaxell <ce3g8jdj@umail.furryterror.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-btrfs <linux-btrfs@vger.kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Filipe Manana <fdmanana@suse.com>
+        Filipe Manana <fdmanana@suse.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>
+Subject: Re: [PATCH 1/2] fs: allow deduplication of eof block into the end of
+ the destination file
+Message-ID: <20200108161536.GC5552@magnolia>
 References: <20191216182656.15624-1-fdmanana@kernel.org>
- <20191216182656.15624-3-fdmanana@kernel.org>
- <20191229052240.GG13306@hungrycats.org>
- <CAL3q7H5FcdsA3NEcRae4iE5k8j8tHe-3KjKo_tTg6=fu0c_0gw@mail.gmail.com>
- <20200107181630.GB24056@hungrycats.org>
- <CAL3q7H58avTiOiTOuzTt-q3L0i5d9G10e+4j9f0RTps+bOH+1w@mail.gmail.com>
+ <20191216182656.15624-2-fdmanana@kernel.org>
+ <CAL3q7H5+CMRkJ9yAa2AeB0aKtA=b_yW2g9JSQwCOhOtLNrH1iQ@mail.gmail.com>
+ <20200107175739.GC472651@magnolia>
+ <CAL3q7H5TuaLDW3aXSa68pxvLu4s1Gg38RRSRyA430LxK302k3A@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAL3q7H58avTiOiTOuzTt-q3L0i5d9G10e+4j9f0RTps+bOH+1w@mail.gmail.com>
-User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
+In-Reply-To: <CAL3q7H5TuaLDW3aXSa68pxvLu4s1Gg38RRSRyA430LxK302k3A@mail.gmail.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9494 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-2001080133
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9494 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-2001080133
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 08, 2020 at 11:42:05AM +0000, Filipe Manana wrote:
-> > > > Should these patches be marked for stable (5.0+, but see below for
-> > > > caveats about 5.0)?  The bug affects 5.3 and 5.4 which are still active,
-> > > > and dedupe is an important feature for some users.
+On Wed, Jan 08, 2020 at 11:36:04AM +0000, Filipe Manana wrote:
+> On Tue, Jan 7, 2020 at 5:57 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> >
+> > On Tue, Jan 07, 2020 at 04:23:15PM +0000, Filipe Manana wrote:
+> > > On Mon, Dec 16, 2019 at 6:28 PM <fdmanana@kernel.org> wrote:
+> > > >
+> > > > From: Filipe Manana <fdmanana@suse.com>
+> > > >
+> > > > We always round down, to a multiple of the filesystem's block size, the
+> > > > length to deduplicate at generic_remap_check_len().  However this is only
+> > > > needed if an attempt to deduplicate the last block into the middle of the
+> > > > destination file is requested, since that leads into a corruption if the
+> > > > length of the source file is not block size aligned.  When an attempt to
+> > > > deduplicate the last block into the end of the destination file is
+> > > > requested, we should allow it because it is safe to do it - there's no
+> > > > stale data exposure and we are prepared to compare the data ranges for
+> > > > a length not aligned to the block (or page) size - in fact we even do
+> > > > the data compare before adjusting the deduplication length.
+> > > >
+> > > > After btrfs was updated to use the generic helpers from VFS (by commit
+> > > > 34a28e3d77535e ("Btrfs: use generic_remap_file_range_prep() for cloning
+> > > > and deduplication")) we started to have user reports of deduplication
+> > > > not reflinking the last block anymore, and whence users getting lower
+> > > > deduplication scores.  The main use case is deduplication of entire
+> > > > files that have a size not aligned to the block size of the filesystem.
+> > > >
+> > > > We already allow cloning the last block to the end (and beyond) of the
+> > > > destination file, so allow for deduplication as well.
+> > > >
+> > > > Link: https://lore.kernel.org/linux-btrfs/2019-1576167349.500456@svIo.N5dq.dFFD/
+> > > > Signed-off-by: Filipe Manana <fdmanana@suse.com>
 > > >
-> > > Usually I only mark things for stable that are critical: corruptions,
-> > > crashes and memory leaks for example.
-> > > I don't think this is a critical issue, since none of those things
-> > > happen. It's certainly inconvenient to not have
-> > > an extent fully deduplicated, but it's just that.
+> > > Darrick, Al, any feedback?
 > >
-> > In btrfs the reference counting is done by extent and extents are
-> > immutable, so extents are either fully deduplicated, or not deduplicated
-> > at all.  We have to dedupe every part of an extent, and if we fail to
-> > do so, no data space is saved while metadata usage increases for the
-> > new partial extent reference.
+> > Is there a fstest to check for correct operation of dedupe at or beyond
+> > source and destfile EOF?  Particularly if one range is /not/ at EOF?
 > 
-> Yes, I know. That was explained in the cover letter, why allowing
-> deduplication of the eof block is more important for btrfs than it is
-> for xfs for example.
+> Such as what generic/158 does already?
+
+Urk, heh. :)
+
+> > And that an mmap read of the EOF block will see zeroes past EOF before
+> > and after the dedupe operation?
+> 
+> Can you elaborate a bit more? Why an mmap read and not a buffered or a
+> direct IO read before and after deduplication?
+> Is there anything special for the mmap reads on xfs, is that your
+> concern? Or is the idea to deduplicate while the file is mmap'ed?
+
+I cite mmap reads past EOF specifically because unlike buffered/direct
+reads where the VFS will stop reading exactly at EOF, a memory mapping
+maps in an entire memory page, and the fs is supposed to ensure that the
+bytes past EOF are zeroed.
+
+Hm now that I look at g/158 it doesn't actually verify mmap reads.  I
+looked around and can't really see anything that checks mmap reads
+before and after a dedupe operation at EOF.
+
+> > If I fallocate a 16k file, write 'X' into the first 5000 bytes,
+> > write 'X' into the first 66,440 bytes (60k + 5000) of a second file, and
+> > then try to dedupe (first file, 0-8k) with (second file, 60k-68k),
+> > should that work?
+> 
+> You haven't mentioned the size of the second file, nor if the first
+> file has a size of 16K which I assume (instead of fallocate with the
+> keep size flag).
+
+Er, sorry, yes.  The first file is 16,384 bytes long; the second file is
+66,440 bytes.
+
+> Anyway, I assume you actually meant to dedupe the range 0 - 5000 from
+> the first file into the range 60k - 60k + 5000 of the second file, and
+> that the second file has a size of 60k + 5000.
+
+Nope, I meant to say to dedupe the range (offset: 0, length: 8192) from
+the first file into the second file (offset: 61440, length: 8192).  The
+source range is entirely below EOF, and the dest range ends right at
+EOF in the second file.
+
+> If so, that fails with -EINVAL because the source range is not block
+> size aligned, and we already have generic fstests that test attempt to
+> duplication and clone non-aligned ranges that don't end at eof.
+> This patch doesn't change that behaviour, it only aims to allow
+> deduplication of the eof block of the source file into the eof of the
+> destination file.
+> 
 > 
 > >
-> > This bug means the dedupe feature is not usable _at all_ for single-extent
-> > files with non-aligned EOF, and that is a significant problem for users
-> > that rely on dedupe to manage space usage on btrfs (e.g. for build
-> > servers where there are millions of duplicate odd-sized small files, and
-> > the space savings from working dedupe can be 90% or more).  Doubling or
-> > tripling space usage for the same data is beyond inconvenience.
+> > I'm convinced that we could support dedupe to EOF when the ranges of the
+> > two files both end at the respective file's EOF, but it's the weirder
+> > corner cases that I worry about...
 > 
-> Sure, I understand that, I know how btrfs manages extents and I'm well
-> familiar with its cloning/deduplication implementation.
+> Well, we used to do that in btrfs before migrating to the generic code.
+> Since I discovered the corruption due to deduplication of the eof
+> block into the middle of a file in 2018's summer, the btrfs fix
+> allowed deduplication of the eof block only if the destination end
+> offset matched the eof of the destination file:
 > 
-> Still, it's not something I consider critical enough to get to stable,
-> as there's no corruption, data loss or a crash.
-> That doesn't mean the patches aren't going to stable branches, that
-> depends on the maintainers of each subsystem (vfs, btrfs).
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=de02b9f6bb65a6a1848f346f7a3617b7a9b930c0
+> 
+> Since then no issues were found nor users reported any problems so far.
 
-To me this looks like a usability bug and regression so I'm all for
-adding it to stable. Less serious fixes than corruption, data loss and
-crash land in stable kernels anyway, so if this fixes behaviour and
-usecases then it qualifies.
+<nod> I'm ok with that one scenario, it's the "one range ends at eof,
+the other doesn't" case that I'm picking on. :)
 
-I evaluate each patch for stable inclusion so the CC: stable is not
-required to be in the patch itself when posted, and late requests
-for inclusion to stable have been working well so we have the process in
-place.
+(Another way to shut me up would be to run generic/52[12] with
+TIME_FACTOR=1000 (i.e. 1 billion fsx ops) and see what comes exploding
+out. :))
+
+> Any other specific test you would like to see?
+
+No, just that.  And mmap reads. :)
+
+--D
+
+> Thanks.
+> 
+> >
+> > --D
+> >
+> > > Thanks.
+> > >
+> > > > ---
+> > > >  fs/read_write.c | 10 ++++------
+> > > >  1 file changed, 4 insertions(+), 6 deletions(-)
+> > > >
+> > > > diff --git a/fs/read_write.c b/fs/read_write.c
+> > > > index 5bbf587f5bc1..7458fccc59e1 100644
+> > > > --- a/fs/read_write.c
+> > > > +++ b/fs/read_write.c
+> > > > @@ -1777,10 +1777,9 @@ static int remap_verify_area(struct file *file, loff_t pos, loff_t len,
+> > > >   * else.  Assume that the offsets have already been checked for block
+> > > >   * alignment.
+> > > >   *
+> > > > - * For deduplication we always scale down to the previous block because we
+> > > > - * can't meaningfully compare post-EOF contents.
+> > > > - *
+> > > > - * For clone we only link a partial EOF block above the destination file's EOF.
+> > > > + * For clone we only link a partial EOF block above or at the destination file's
+> > > > + * EOF.  For deduplication we accept a partial EOF block only if it ends at the
+> > > > + * destination file's EOF (can not link it into the middle of a file).
+> > > >   *
+> > > >   * Shorten the request if possible.
+> > > >   */
+> > > > @@ -1796,8 +1795,7 @@ static int generic_remap_check_len(struct inode *inode_in,
+> > > >         if ((*len & blkmask) == 0)
+> > > >                 return 0;
+> > > >
+> > > > -       if ((remap_flags & REMAP_FILE_DEDUP) ||
+> > > > -           pos_out + *len < i_size_read(inode_out))
+> > > > +       if (pos_out + *len < i_size_read(inode_out))
+> > > >                 new_len &= ~blkmask;
+> > > >
+> > > >         if (new_len == *len)
+> > > > --
+> > > > 2.11.0
+> > > >
