@@ -2,149 +2,87 @@ Return-Path: <SRS0=Z9mQ=25=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A62F2C282DD
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 16:37:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC844C282DD
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 16:57:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 797E020692
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 16:37:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 930492072A
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 16:57:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="aqcIK/gu"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="EY7ctXSu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727825AbgAHQhg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Jan 2020 11:37:36 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:36050 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727148AbgAHQhf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jan 2020 11:37:35 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 008GXEl4040870;
-        Wed, 8 Jan 2020 16:37:30 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=eXtD+v3PONlgMhXP5RuJgmw5cTbx4VzaKN74Sq31I/0=;
- b=aqcIK/guGbB4Ty8bvhNMOryNTuRXE2Ds6EsYAuiWdgJ/A1SO0oXx59uMxlaUubjsZ9aA
- oa3uBcBeqEK9pu3xbNv6CLd6lbJ3AyAjUiza2AIuVn2gUkZq5fnD/g2d60nUGKU/BXTy
- Nx2bUdQlG3trDuoFdjT+IDdfZqL6jwqqLedrztlPDmmxa+3+RzB8SX7fiJtr9NpSaPUn
- fwtQI7Wn96ULlLsyXmJvJl+oKu5B+odFnxgfnXFPPMY0RsvR+iP3uy4J+5i9K2P+zhUi
- 9x0x1FE2EnTKBeT/c+x474/eczbuNi8Ea9Rr2SXpE61x9rZGogl5fVkWmWJLYQLSAlw7 1w== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2xakbqw024-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 08 Jan 2020 16:37:30 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 008GY20I020134;
-        Wed, 8 Jan 2020 16:37:29 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 2xcqbpm0p8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 08 Jan 2020 16:37:29 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 008GbTCf018779;
-        Wed, 8 Jan 2020 16:37:29 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 08 Jan 2020 08:37:28 -0800
-Date:   Wed, 8 Jan 2020 08:37:27 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: truncate should remove all blocks, not just to
- the end of the page cache
-Message-ID: <20200108163727.GG5552@magnolia>
-References: <157845705246.82882.11480625967486872968.stgit@magnolia>
- <157845706502.82882.5903950627987445484.stgit@magnolia>
- <20200108081157.GB25201@infradead.org>
+        id S1729578AbgAHQ5Z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Jan 2020 11:57:25 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:59896 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727308AbgAHQ5Z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jan 2020 11:57:25 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=2/grOTBgUAvethVaNAqsX059fFfNkvhqoW88UGGxm7k=; b=EY7ctXSukj3r60Zq9V0xRGPZt
+        pcoHDTBrU9/U/T9W/u7/lPBqYmJdHvn5joBgWqzJu1kAAB2agXa5CJ7F/4uJphAZaXGoYTLf6G5/P
+        gcJvpUoZeccH3ZtoOX32cTJpBHYG4bWhyo6nyjiT6dZmk740K9aOUnm8QH7rSdOi2RFCL8bD+uHyw
+        QMufaqnCW10JBHm5uCzrI3oylj/Q+JMQz+H5+Is4pS2PxVaj+FSGfRn1VBAKYsNfDu02oZlBsEDqJ
+        sDCbs19FvbQfZpWPe5oSLlGfx2J6RXwCniDvD/bOgDRH5OzetrI29+4h1GU4MPNhYPQahNaivzf1l
+        /o3ltpAug==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1ipEdq-000890-Pg; Wed, 08 Jan 2020 16:57:10 +0000
+Date:   Wed, 8 Jan 2020 08:57:10 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Andreas Gruenbacher <agruenba@redhat.com>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-kernel@vger.kernel.org, Jeff Layton <jlayton@kernel.org>,
+        Sage Weil <sage@redhat.com>, Ilya Dryomov <idryomov@gmail.com>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Richard Weinberger <richard@nod.at>,
+        Artem Bityutskiy <dedekind1@gmail.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-mtd@lists.infradead.org, Chris Mason <clm@fb.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org,
+        Jan Kara <jack@suse.cz>, YueHaibing <yuehaibing@huawei.com>,
+        Arnd Bergmann <arnd@arndb.de>, Chao Yu <yuchao0@huawei.com>
+Subject: Re: [PATCH v4] fs: Fix page_mkwrite off-by-one errors
+Message-ID: <20200108165710.GA18523@infradead.org>
+References: <20200108131528.4279-1-agruenba@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200108081157.GB25201@infradead.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9494 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2001080136
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9494 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2001080136
+In-Reply-To: <20200108131528.4279-1-agruenba@redhat.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 08, 2020 at 12:11:57AM -0800, Christoph Hellwig wrote:
-> On Tue, Jan 07, 2020 at 08:17:45PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > xfs_itruncate_extents_flags() is supposed to unmap every block in a file
-> > from EOF onwards.  Oddly, it uses s_maxbytes as the upper limit to the
-> > bunmapi range, even though s_maxbytes reflects the highest offset the
-> > pagecache can support, not the highest offset that XFS supports.
-> > 
-> > The result of this confusion is that if you create a 20T file on a
-> > 64-bit machine, mount the filesystem on a 32-bit machine, and remove the
-> > file, we leak everything above 16T.  Fix this by capping the bunmapi
-> > request at the maximum possible block offset, not s_maxbytes.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/xfs_inode.c |   23 +++++++++++------------
-> >  1 file changed, 11 insertions(+), 12 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > index fc3aec26ef87..79799ab30c93 100644
-> > --- a/fs/xfs/xfs_inode.c
-> > +++ b/fs/xfs/xfs_inode.c
-> > @@ -1518,7 +1518,6 @@ xfs_itruncate_extents_flags(
-> >  	struct xfs_mount	*mp = ip->i_mount;
-> >  	struct xfs_trans	*tp = *tpp;
-> >  	xfs_fileoff_t		first_unmap_block;
-> > -	xfs_fileoff_t		last_block;
-> >  	xfs_filblks_t		unmap_len;
-> >  	int			error = 0;
-> >  
-> > @@ -1540,21 +1539,21 @@ xfs_itruncate_extents_flags(
-> >  	 * the end of the file (in a crash where the space is allocated
-> >  	 * but the inode size is not yet updated), simply remove any
-> >  	 * blocks which show up between the new EOF and the maximum
-> > -	 * possible file size.  If the first block to be removed is
-> > -	 * beyond the maximum file size (ie it is the same as last_block),
-> > -	 * then there is nothing to do.
-> > +	 * possible file size.
-> > +	 *
-> > +	 * We have to free all the blocks to the bmbt maximum offset, even if
-> > +	 * the page cache can't scale that far.
-> >  	 */
-> >  	first_unmap_block = XFS_B_TO_FSB(mp, (xfs_ufsize_t)new_size);
-> > -	last_block = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
-> > -	if (first_unmap_block == last_block)
-> > +	if (first_unmap_block == XFS_MAX_FILEOFF)
-> >  		return 0;
-> >  
-> > -	ASSERT(first_unmap_block < last_block);
-> > -	unmap_len = last_block - first_unmap_block + 1;
-> > -	while (!done) {
-> > +	ASSERT(first_unmap_block < XFS_MAX_FILEOFF);
-> 
-> Instead of the assert we could just do the early return for
-> 
-> 	first_unmap_block >= XFS_MAX_FILEOFF
-> 
-> and throw in a WARN_ON_ONCE, as that condition really should be nothing
-> but a sanity check.
-> 
-> Otherwise this looks good to me.
+I don't want to be the party pooper, but shouldn't this be a series
+with one patch to add the helper, and then once for each fs / piece
+of common code switched over?
 
-Ok, done.
+On Wed, Jan 08, 2020 at 02:15:28PM +0100, Andreas Gruenbacher wrote:
+> Hi Darrick,
+> 
+> here's an updated version with the latest feedback incorporated.  Hope
+> you find that useful.
+> 
+> As far as the f2fs merge conflict goes, I've been told by Linus not to
+> resolve those kinds of conflicts but to point them out when sending the
+> merge request.  So this shouldn't be a big deal.
 
---D
+Also this isn't really the proper way to write a commit message.  This
+text would go into the cover letter if it was a series..
