@@ -2,128 +2,78 @@ Return-Path: <SRS0=Z9mQ=25=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49E5AC00523
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 08:49:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C121CC00523
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 08:51:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1AFAF206DA
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 08:49:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C91320692
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 08:51:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="TLprdij4"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ruKL4iqK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727313AbgAHItW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Jan 2020 03:49:22 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:55914 "EHLO
+        id S1727313AbgAHIvc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Jan 2020 03:51:32 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:56032 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726481AbgAHItW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jan 2020 03:49:22 -0500
+        with ESMTP id S1726481AbgAHIvc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jan 2020 03:51:32 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=m6SY49mdt3fNCgaPf9aluer6MGPrVxKOWbKWreaHJjE=; b=TLprdij4WA4OHdxS9roizg41h
-        AK7aI1mS9kaS5jKE5Guzqb7rPGQfFCc7VIhv9RmqDu/1FUCgToL4e1SjpZ3ChEwRVNWMct1xEAWs9
-        xB37EIpIJOGJTFtOD9q5LJwO27+1Cjo2EAtw50bBwuOVQygrG5USyIWDtRFZxU0Uii704RXdbhU+e
-        bK7DYD4ja4FkULXetxbUlKyCU7KHQF2dvZ1KqKpGGG1NLvkcMWIEsJHw/Vbaf/vwSM3h7Cy6LNTyS
-        neDENh/ASMHxZkaPx2wVY6g+ogCAZ35g8ktRPYsGYbElrafPOp7THv1/ZsVNsQxf3uf0sfJGHgHkU
-        UHw3cvbtQ==;
+         bh=oNv7f6MV2jk5eshW/Kand4tY3/N798JYLSQoOlyd3q4=; b=ruKL4iqKVl3UPT8/Pm6BD7Vdr
+        SBpZzRTK7jwfQz8zhNNDN5sqjwKGRumU4LyX4aoKzbffofE7knpcVIFvr0Tz2CEtL31wKTq3JEHud
+        /FLYONBsAPMrHqHWPWMn+abTNs/CARxunpPTTbbKtd3AQdLweK4Hx9I58saxeMGD1PbJ06aWEAOpM
+        XUKsrRVBWj7KP1jZ2yA5WjpgM8U8bEC1t0sKiAnk6UjnFYK6mp54q6y1BPUJzR0sOh0Lgdk4Auvw5
+        Y3ukBWxVjstsMweNr7uWIgTyVz5FE76zOgpsEVGvufxqcW55we5kEsPwIIWN56wE7NZSNHHOAM3SQ
+        HMqckUWzg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1ip71m-0007M0-4c; Wed, 08 Jan 2020 08:49:22 +0000
-Date:   Wed, 8 Jan 2020 00:49:22 -0800
+        id 1ip73r-0000MZ-Ni; Wed, 08 Jan 2020 08:51:31 +0000
+Date:   Wed, 8 Jan 2020 00:51:31 -0800
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs: refactor remote attr value buffer invalidation
-Message-ID: <20200108084922.GA12889@infradead.org>
+Subject: Re: [PATCH 2/3] xfs: complain if anyone tries to create a too-large
+ buffer log item
+Message-ID: <20200108085131.GB12889@infradead.org>
 References: <157845708352.84011.17764262087965041304.stgit@magnolia>
- <157845709180.84011.3139453026212575913.stgit@magnolia>
+ <157845709897.84011.1433283906403215456.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <157845709180.84011.3139453026212575913.stgit@magnolia>
+In-Reply-To: <157845709897.84011.1433283906403215456.stgit@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The refactor in the subject is very misleading.  You are not refactoring
-code, but fixing a bug.
-
-> -			error = xfs_trans_read_buf(mp, args->trans,
-> +			error = xfs_trans_read_buf(mp, NULL,
->  						   mp->m_ddev_targp,
->  						   dblkno, dblkcnt, 0, &bp,
->  						   &xfs_attr3_rmt_buf_ops);
-
-xfs_trans_read_buf with an always NULL tp is a strange interface.  Any
-reason not to use xfs_buf_read directly?
-
-> +/* Mark stale any buffers for the remote value. */
-> +void
-> +xfs_attr_rmtval_stale(
-> +	struct xfs_inode	*ip,
-> +	struct xfs_bmbt_irec	*map)
-> +{
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	struct xfs_buf		*bp;
-> +	xfs_daddr_t		dblkno;
-> +	int			dblkcnt;
-> +
-> +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> +	if (map->br_startblock == HOLESTARTBLOCK)
-> +		return;
-> +
-> +	dblkno = XFS_FSB_TO_DADDR(mp, map->br_startblock),
-> +	dblkcnt = XFS_FSB_TO_BB(mp, map->br_blockcount);
-
-Now this helper seems like a real refactoring in that it splits out a
-common helper.  It matches one o the call sites exactly, while the
-other has a major change, so I think it shouldn't just be one extra
-patch, but instead of two extra patche to clearly document the changes.
-
-> -		/*
-> -		 * If it's a hole, these are already unmapped
-> -		 * so there's nothing to invalidate.
-> -		 */
-> -		if (map.br_startblock != HOLESTARTBLOCK) {
-
-Isn't this something we should keep in the caller?  That way the actual
-invalide helper can assert that the map contains neither a hole or
-a delaystartblock.
-
-> -			bp = xfs_trans_get_buf(*trans,
-> -					dp->i_mount->m_ddev_targp,
-> -					dblkno, dblkcnt, 0);
-> -			if (!bp)
-> -				return -ENOMEM;
-> -			xfs_trans_binval(*trans, bp);
-
-And this is a pretty big change in that we now trylock and never read
-a buffer from disk if it isn't in core.  That change looks fine to me
-from trying to understand what is going on, but it clearly needs to
-be split out and documented.
-
-> -			/*
-> -			 * Roll to next transaction.
-> -			 */
-> -			error = xfs_trans_roll_inode(trans, dp);
-> -			if (error)
-> -				return error;
-> -		}
-> +		xfs_attr_rmtval_stale(dp, &map);
->  
->  		tblkno += map.br_blockcount;
->  		tblkcnt -= map.br_blockcount;
+On Tue, Jan 07, 2020 at 08:18:19PM -0800, Darrick J. Wong wrote:
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index 3984779e5911..bfbe8a5b8959 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -761,18 +761,25 @@ xfs_buf_item_init(
+>  	 * buffer. This makes the implementation as simple as possible.
+>  	 */
+>  	error = xfs_buf_item_get_format(bip, bp->b_map_count);
+> -	ASSERT(error == 0);
+> -	if (error) {	/* to stop gcc throwing set-but-unused warnings */
+> -		kmem_cache_free(xfs_buf_item_zone, bip);
+> -		return error;
+> +	if (error) {
+> +		xfs_err(mp, "could not allocate buffer item, err=%d", error);
+> +		goto err;
 >  	}
->  
-> -	return 0;
-> +	return xfs_trans_roll_inode(trans, dp);
 
-xfs_attr3_leaf_freextent not doesn't do anything with the trans but
-rolling it.  I think you can drop both the roll and the trans argument.
+The error handling here is weird, as xfs_buf_item_get_format can't fail
+to start with.  I'd rather see a prep patch removing the bogus check
+for the kmem_zalloc and change the return value from
+xfs_buf_item_get_format to void.
+
+Otherwise the patch looks good.
