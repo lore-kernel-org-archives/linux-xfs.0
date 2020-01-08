@@ -2,99 +2,195 @@ Return-Path: <SRS0=Z9mQ=25=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74EBDC33C9E
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 09:28:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4BD1C33CA1
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 11:36:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 55E862073A
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 09:28:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 82F8120656
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jan 2020 11:36:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1578483379;
+	bh=6l5MrTMa36YQHowQlrBJo4LPKmB21icAwjOtvtoNU7I=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=TBDGpLXmImNmSK70JfcO6U+lmroXOxLomP53TAfzbj2uEpj6MYQSv4XlNr2imJMud
+	 ckRBke9JhaAMRPt+HUqNuo95BL6ifZlNP5y9BAX86pwGr67W5I7t3jqWs5jZYJlU54
+	 mu1bhEGA+1x4PKglk4k7+vOQwHyU+Diq0WVj/NVc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727612AbgAHJ2v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Jan 2020 04:28:51 -0500
-Received: from szxga06-in.huawei.com ([45.249.212.32]:51996 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727205AbgAHJ2v (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 8 Jan 2020 04:28:51 -0500
-Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id C828A7ADC278D822FC12;
-        Wed,  8 Jan 2020 17:28:49 +0800 (CST)
-Received: from huawei.com (10.175.124.28) by DGGEMS414-HUB.china.huawei.com
- (10.3.19.214) with Microsoft SMTP Server id 14.3.439.0; Wed, 8 Jan 2020
- 17:28:39 +0800
-From:   yu kuai <yukuai3@huawei.com>
-To:     <guaneryu@gmail.com>, <darrick.wong@oracle.com>
-CC:     <jbacik@fusionio.com>, <fstests@vger.kernel.org>,
-        <linux-xfs@vger.kernel.org>, <yukuai3@huawei.com>,
-        <zhengbin13@huawei.com>, <yi.zhang@huawei.com>
-Subject: [PATCH] xfs/126: fix that corrupt xattr might fail with a small probability
-Date:   Wed, 8 Jan 2020 17:27:58 +0800
-Message-ID: <20200108092758.41363-1-yukuai3@huawei.com>
-X-Mailer: git-send-email 2.17.2
+        id S1727112AbgAHLgR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Jan 2020 06:36:17 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56344 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726098AbgAHLgR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 8 Jan 2020 06:36:17 -0500
+Received: from mail-ua1-f48.google.com (mail-ua1-f48.google.com [209.85.222.48])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 07D2B20656;
+        Wed,  8 Jan 2020 11:36:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1578483376;
+        bh=6l5MrTMa36YQHowQlrBJo4LPKmB21icAwjOtvtoNU7I=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=GK8Ncn/C5GO4nYCOUjSepzM9ghLttFM3Ui24XFm6Ca5/t2HcuGXOM349u2zy7G6h7
+         qXMkhbiAS1E0bIhCp0wXKgQyP7TIcLVcE6pr2HEVWrHdN/MFKD+1QdmvewSPILpnMP
+         vJ2PG1d5aedv5Llsy67T52cyGK651AR0rKwFDbwA=
+Received: by mail-ua1-f48.google.com with SMTP id c14so960832uaq.11;
+        Wed, 08 Jan 2020 03:36:15 -0800 (PST)
+X-Gm-Message-State: APjAAAWCwtbAAYnUG8FbsSEpcTAZdceLqakMYZcbvq9qkJDOBMkCQQFV
+        x8lNYoOL7WtraFoTK+d3dd8xWY8ffF+KpLilybs=
+X-Google-Smtp-Source: APXvYqxBYjnwEvjxQOq9WcUn/wTWUag1L2k2a/9dif0jVh9/EZ1sln6m0OjzOjjXtG45Zb5xZ8wQi8owxM8/s5KEM+s=
+X-Received: by 2002:ab0:738c:: with SMTP id l12mr2749363uap.135.1578483375023;
+ Wed, 08 Jan 2020 03:36:15 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.175.124.28]
-X-CFilter-Loop: Reflected
+References: <20191216182656.15624-1-fdmanana@kernel.org> <20191216182656.15624-2-fdmanana@kernel.org>
+ <CAL3q7H5+CMRkJ9yAa2AeB0aKtA=b_yW2g9JSQwCOhOtLNrH1iQ@mail.gmail.com> <20200107175739.GC472651@magnolia>
+In-Reply-To: <20200107175739.GC472651@magnolia>
+From:   Filipe Manana <fdmanana@kernel.org>
+Date:   Wed, 8 Jan 2020 11:36:04 +0000
+X-Gmail-Original-Message-ID: <CAL3q7H5TuaLDW3aXSa68pxvLu4s1Gg38RRSRyA430LxK302k3A@mail.gmail.com>
+Message-ID: <CAL3q7H5TuaLDW3aXSa68pxvLu4s1Gg38RRSRyA430LxK302k3A@mail.gmail.com>
+Subject: Re: [PATCH 1/2] fs: allow deduplication of eof block into the end of
+ the destination file
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-btrfs <linux-btrfs@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>,
+        Filipe Manana <fdmanana@suse.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The cmd used in xfs_db to corrupt xattr is "blocktrash -x 32
--y $((blksz * 8)) -n8 -3", which means select random 8 bit from 32 to
-end of the block, and the changed bits are randomized. However,
-there is a small chance that corrupting xattr failed because irrelevant
-bits are chossen or the chooosen bits are not changed, which lead to
-output missmatch:
-QA output created by 126                    QA output created by 126
-+ create scratch fs                         + create scratch fs
-+ mount fs image                            + mount fs image
-+ make some files                           + make some files
-+ check fs                                  + check fs
-+ check xattr                               + check xattr
-+ corrupt xattr                             + corrupt xattr
-+ mount image && modify xattr               + mount image && modify xattr
-+ repair fs                                 + repair fs
-+ mount image (2)                           + mount image (2)
-+ chattr -R -i                              + chattr -R -i
-+ modify xattr (2)                          + modify xattr (2)
-                                            > # file: tmp/scratch/attrfile
-                                            > user.x00000000="0000000000000000"
-                                            >
-+ check fs (2)                              + check fs (2)
+On Tue, Jan 7, 2020 at 5:57 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> On Tue, Jan 07, 2020 at 04:23:15PM +0000, Filipe Manana wrote:
+> > On Mon, Dec 16, 2019 at 6:28 PM <fdmanana@kernel.org> wrote:
+> > >
+> > > From: Filipe Manana <fdmanana@suse.com>
+> > >
+> > > We always round down, to a multiple of the filesystem's block size, the
+> > > length to deduplicate at generic_remap_check_len().  However this is only
+> > > needed if an attempt to deduplicate the last block into the middle of the
+> > > destination file is requested, since that leads into a corruption if the
+> > > length of the source file is not block size aligned.  When an attempt to
+> > > deduplicate the last block into the end of the destination file is
+> > > requested, we should allow it because it is safe to do it - there's no
+> > > stale data exposure and we are prepared to compare the data ranges for
+> > > a length not aligned to the block (or page) size - in fact we even do
+> > > the data compare before adjusting the deduplication length.
+> > >
+> > > After btrfs was updated to use the generic helpers from VFS (by commit
+> > > 34a28e3d77535e ("Btrfs: use generic_remap_file_range_prep() for cloning
+> > > and deduplication")) we started to have user reports of deduplication
+> > > not reflinking the last block anymore, and whence users getting lower
+> > > deduplication scores.  The main use case is deduplication of entire
+> > > files that have a size not aligned to the block size of the filesystem.
+> > >
+> > > We already allow cloning the last block to the end (and beyond) of the
+> > > destination file, so allow for deduplication as well.
+> > >
+> > > Link: https://lore.kernel.org/linux-btrfs/2019-1576167349.500456@svIo.N5dq.dFFD/
+> > > Signed-off-by: Filipe Manana <fdmanana@suse.com>
+> >
+> > Darrick, Al, any feedback?
+>
+> Is there a fstest to check for correct operation of dedupe at or beyond
+> source and destfile EOF?  Particularly if one range is /not/ at EOF?
 
-Fix the problem by adding a seed for random processing to select same
-bits each time, and inverting the selected bits.
+Such as what generic/158 does already?
 
-Signed-off-by: yu kuai <yukuai3@huawei.com>
----
- tests/xfs/126 | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/tests/xfs/126 b/tests/xfs/126
-index 4f9f8cf9..9b57e58b 100755
---- a/tests/xfs/126
-+++ b/tests/xfs/126
-@@ -37,7 +37,7 @@ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
- _require_populate_commands
- _require_xfs_db_blocktrash_z_command
--test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
-+test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -2"
- 
- rm -f $seqres.full
- 
-@@ -72,7 +72,7 @@ echo "+ corrupt xattr"
- loff=1
- while true; do
- 	_scratch_xfs_db -x -c "inode ${inode}" -c "ablock ${loff}" -c "stack" | grep -q 'file attr block is unmapped' && break
--	_scratch_xfs_db -x -c "inode ${inode}" -c "ablock ${loff}" -c "stack" -c "blocktrash -x 32 -y $((blksz * 8)) -z ${FUZZ_ARGS}" >> $seqres.full
-+	_scratch_xfs_db -x -c "inode ${inode}" -c "ablock ${loff}" -c "stack" -c "blocktrash -s 1024 -x 32 -y $((blksz * 8)) -z ${FUZZ_ARGS}" >> $seqres.full
- 	loff="$((loff + 1))"
- done
- 
--- 
-2.17.2
+> And that an mmap read of the EOF block will see zeroes past EOF before
+> and after the dedupe operation?
 
+Can you elaborate a bit more? Why an mmap read and not a buffered or a
+direct IO read before and after deduplication?
+Is there anything special for the mmap reads on xfs, is that your
+concern? Or is the idea to deduplicate while the file is mmap'ed?
+
+>
+> If I fallocate a 16k file, write 'X' into the first 5000 bytes,
+> write 'X' into the first 66,440 bytes (60k + 5000) of a second file, and
+> then try to dedupe (first file, 0-8k) with (second file, 60k-68k),
+> should that work?
+
+You haven't mentioned the size of the second file, nor if the first
+file has a size of 16K which I assume (instead of fallocate with the
+keep size flag).
+
+Anyway, I assume you actually meant to dedupe the range 0 - 5000 from
+the first file into the range 60k - 60k + 5000 of the second file, and
+that the second file has a size of 60k + 5000.
+If so, that fails with -EINVAL because the source range is not block
+size aligned, and we already have generic fstests that test attempt to
+duplication and clone non-aligned ranges that don't end at eof.
+This patch doesn't change that behaviour, it only aims to allow
+deduplication of the eof block of the source file into the eof of the
+destination file.
+
+
+>
+> I'm convinced that we could support dedupe to EOF when the ranges of the
+> two files both end at the respective file's EOF, but it's the weirder
+> corner cases that I worry about...
+
+Well, we used to do that in btrfs before migrating to the generic code.
+Since I discovered the corruption due to deduplication of the eof
+block into the middle of a file in 2018's summer, the btrfs fix
+allowed deduplication of the eof block only if the destination end
+offset matched the eof of the destination file:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=de02b9f6bb65a6a1848f346f7a3617b7a9b930c0
+
+Since then no issues were found nor users reported any problems so far.
+
+Any other specific test you would like to see?
+
+Thanks.
+
+>
+> --D
+>
+> > Thanks.
+> >
+> > > ---
+> > >  fs/read_write.c | 10 ++++------
+> > >  1 file changed, 4 insertions(+), 6 deletions(-)
+> > >
+> > > diff --git a/fs/read_write.c b/fs/read_write.c
+> > > index 5bbf587f5bc1..7458fccc59e1 100644
+> > > --- a/fs/read_write.c
+> > > +++ b/fs/read_write.c
+> > > @@ -1777,10 +1777,9 @@ static int remap_verify_area(struct file *file, loff_t pos, loff_t len,
+> > >   * else.  Assume that the offsets have already been checked for block
+> > >   * alignment.
+> > >   *
+> > > - * For deduplication we always scale down to the previous block because we
+> > > - * can't meaningfully compare post-EOF contents.
+> > > - *
+> > > - * For clone we only link a partial EOF block above the destination file's EOF.
+> > > + * For clone we only link a partial EOF block above or at the destination file's
+> > > + * EOF.  For deduplication we accept a partial EOF block only if it ends at the
+> > > + * destination file's EOF (can not link it into the middle of a file).
+> > >   *
+> > >   * Shorten the request if possible.
+> > >   */
+> > > @@ -1796,8 +1795,7 @@ static int generic_remap_check_len(struct inode *inode_in,
+> > >         if ((*len & blkmask) == 0)
+> > >                 return 0;
+> > >
+> > > -       if ((remap_flags & REMAP_FILE_DEDUP) ||
+> > > -           pos_out + *len < i_size_read(inode_out))
+> > > +       if (pos_out + *len < i_size_read(inode_out))
+> > >                 new_len &= ~blkmask;
+> > >
+> > >         if (new_len == *len)
+> > > --
+> > > 2.11.0
+> > >
