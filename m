@@ -6,40 +6,41 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 882A6C3F68F
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jan 2020 03:57:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1CB9C3F68F
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jan 2020 04:00:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5C3E72072C
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jan 2020 03:57:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A975D2073A
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jan 2020 04:00:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727652AbgAID5O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Jan 2020 22:57:14 -0500
-Received: from szxga04-in.huawei.com ([45.249.212.190]:9138 "EHLO huawei.com"
+        id S1727642AbgAIEAf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Jan 2020 23:00:35 -0500
+Received: from szxga07-in.huawei.com ([45.249.212.35]:39900 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726913AbgAID5O (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 8 Jan 2020 22:57:14 -0500
-Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id 0A5061BCAFEFDEF1E8AA;
-        Thu,  9 Jan 2020 11:57:07 +0800 (CST)
-Received: from [127.0.0.1] (10.173.220.96) by DGGEMS413-HUB.china.huawei.com
- (10.3.19.213) with Microsoft SMTP Server id 14.3.439.0; Thu, 9 Jan 2020
- 11:56:58 +0800
+        id S1726913AbgAIEAf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 8 Jan 2020 23:00:35 -0500
+Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 4EB737CB03E92DD7EADC;
+        Thu,  9 Jan 2020 12:00:27 +0800 (CST)
+Received: from [127.0.0.1] (10.173.220.96) by DGGEMS406-HUB.china.huawei.com
+ (10.3.19.206) with Microsoft SMTP Server id 14.3.439.0; Thu, 9 Jan 2020
+ 12:00:20 +0800
 Subject: Re: [PATCH] xfs/126: fix that corrupt xattr might fail with a small
  probability
-To:     "yukuai (C)" <yukuai3@huawei.com>
-CC:     <fstests@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+CC:     <guaneryu@gmail.com>, <jbacik@fusionio.com>,
+        <fstests@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
         <zhengbin13@huawei.com>, <yi.zhang@huawei.com>
 References: <20200108092758.41363-1-yukuai3@huawei.com>
  <20200108162227.GD5552@magnolia>
 From:   "yukuai (C)" <yukuai3@huawei.com>
-Message-ID: <8930fa6b-4e16-1fa2-6b04-52cd42aaed88@huawei.com>
-Date:   Thu, 9 Jan 2020 11:56:57 +0800
+Message-ID: <3c7e9497-e0ed-23e4-ff9c-4b1c1a77c9fa@huawei.com>
+Date:   Thu, 9 Jan 2020 12:00:20 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
 In-Reply-To: <20200108162227.GD5552@magnolia>
 Content-Type: multipart/mixed;
-        boundary="------------A4734267E33DFFA6F9DCB967"
+        boundary="------------5F28C840E4153DA1C4D03047"
 X-Originating-IP: [10.173.220.96]
 X-CFilter-Loop: Reflected
 Sender: linux-xfs-owner@vger.kernel.org
@@ -47,7 +48,7 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
---------------A4734267E33DFFA6F9DCB967
+--------------5F28C840E4153DA1C4D03047
 Content-Type: text/plain; charset="gbk"; format=flowed
 Content-Transfer-Encoding: 7bit
 
@@ -58,6 +59,7 @@ On 2020/1/9 0:22, Darrick J. Wong wrote:
 > buffer before randomizing it and try again if the contents don't change?
 > I suspect most of our fuzz tests expect "randomize the ____" to return
 > with ____ full of random junk, not the exact same contents as before.
+
 
 In order to figure out how blocktrash works, I modified xfs/126:
 @@ -72,7 +72,14 @@ echo "+ corrupt xattr"
@@ -81,21 +83,21 @@ $seqres.full
 
 
 And in the normal case, I got the result as shown in "126.out.good".
-On the other hand, if I add "-s 0" when blocktrash is performed, corrupt 
+On the other hand, if I add "-s 0" when blocktrash is performed, corrupt
 xattr will failed, and the result is in "126.out.bad".
 
-It seems that in the attr block, there are some range that the content 
-is 0, and if blocktrash happens to modify within the range, corrupt 
+It seems that in the attr block, there are some range that the content
+is 0, and if blocktrash happens to modify within the range, corrupt
 xattr will fail.
 
-Maybe we can save the contents in the block before blocktrash is 
-preformed, and try again if the non-zero range is the same. However, I'm 
+Maybe we can save the contents in the block before blocktrash is
+preformed, and try again if the non-zero range is the same. However, I'm
 not sure about the foundation of this phenomenon.
 
 Thanks!
 Yu Kuai
 
---------------A4734267E33DFFA6F9DCB967
+--------------5F28C840E4153DA1C4D03047
 Content-Type: text/plain; charset="UTF-8"; name="126.out.bad"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: attachment; filename="126.out.bad"
@@ -375,7 +377,7 @@ user.x00000000="0000000000000000"
 
 + check fs (2)
 
---------------A4734267E33DFFA6F9DCB967
+--------------5F28C840E4153DA1C4D03047
 Content-Type: text/plain; charset="UTF-8"; name="126.out.good"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: attachment; filename="126.out.good"
@@ -652,4 +654,4 @@ fe0: 30303030 00000000 00000000 00000000 00000000 00000000 00 |	fe0: 0f268948 b7
 + modify xattr (2)
 + check fs (2)
 
---------------A4734267E33DFFA6F9DCB967--
+--------------5F28C840E4153DA1C4D03047--
