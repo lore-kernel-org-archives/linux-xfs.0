@@ -7,56 +7,55 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3ECCAC282DD
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jan 2020 18:44:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 746D4C282DD
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jan 2020 18:45:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 06ACE20678
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jan 2020 18:44:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4670B20678
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jan 2020 18:45:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nxv4YyJ3"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="RGh/QwI7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732172AbgAISo6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Jan 2020 13:44:58 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:51540 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729778AbgAISo6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Jan 2020 13:44:58 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 009IdEmt130533
-        for <linux-xfs@vger.kernel.org>; Thu, 9 Jan 2020 18:44:57 GMT
+        id S1730169AbgAISpG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Jan 2020 13:45:06 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:51632 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729778AbgAISpG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Jan 2020 13:45:06 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 009Id9Yt156687
+        for <linux-xfs@vger.kernel.org>; Thu, 9 Jan 2020 18:45:05 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=xGiQJOwr0TzB/PCNOdWtZSMZ4+UPshLLb0IZ+9TJR90=;
- b=nxv4YyJ304emEybLXv6n1VWCvnCBRSruTetOuSht0tFRBuZoxBEhWqJH9WRsuuoJ2D3P
- WJydZO2C9QfOv1SARxfUpKdEwAa3sEVucNWwRJ8AUpayz1/U0VrILin5SI+m2pZaFiFw
- JNQVOrQATZMipneo9HYMBetJMPP2YljhWhG9mUuCw6+U40V/AjHpjdRbOLyUpsAuX9aM
- 9cK0auTk2b4FD60jXmxiljOrIeWuqfVBXBBEs6Beif65D6LxPBO+p8aAiZmszIBRboZV
- h5s/urF+fWx5IJk7YY2P8zhMQ4OPCwEI05dfZB3ihnXnWUO3qbasf618RPDiMbQmlDJX tQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2xajnqcrty-1
+ bh=HvHYceRH3pipWrbPe1fEcIejpDpTdvIm/q0mMr2/4PQ=;
+ b=RGh/QwI7ILgWt1HyG5MCEX6bRu4tDD4K8FJTMQNgtrjTxjx9oxAH8OI0t7BTD5Z6pfeU
+ XFwqATGFWdt2BWNv6s+9MzOsCVn0EFd4CnSKqKq8Bj2R/qerishReDC1lFYQUY+vzq4b
+ wNMANjswMZJgd8F+9uoKFNQcpYANKGsETSYAKpLR6LhE0hcJfzuyDaAbFR++ItSS9Bis
+ tAlLLRO56LULohp8gnRbcsJXE6JvOnvjGY3xy7vXYqpfWDqVrmc7oSwhsU/5sTvFrsGR
+ q1vogcxWyZxv0wufC6IeSr6sdBBxSJOGCGkJ4DnHU0XNzHTUXYzERPf0Nio1LOfWGln9 fg== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2xaj4ucwbu-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Jan 2020 18:44:56 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 009IdCpD171380
-        for <linux-xfs@vger.kernel.org>; Thu, 9 Jan 2020 18:44:56 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 2xdmryueme-1
+        for <linux-xfs@vger.kernel.org>; Thu, 09 Jan 2020 18:45:04 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 009Ide5T050680
+        for <linux-xfs@vger.kernel.org>; Thu, 9 Jan 2020 18:45:04 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 2xdj4r95vv-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Jan 2020 18:44:56 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 009IitMR011855
-        for <linux-xfs@vger.kernel.org>; Thu, 9 Jan 2020 18:44:55 GMT
+        for <linux-xfs@vger.kernel.org>; Thu, 09 Jan 2020 18:45:04 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 009Ij2km030974
+        for <linux-xfs@vger.kernel.org>; Thu, 9 Jan 2020 18:45:03 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 09 Jan 2020 10:44:54 -0800
-Subject: [PATCH 2/5] xfs: fix memory corruption during remote attr value
- buffer invalidation
+        with ESMTP ; Thu, 09 Jan 2020 10:45:02 -0800
+Subject: [PATCH 3/5] xfs: clean up xfs_buf_item_get_format return value
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 09 Jan 2020 10:44:54 -0800
-Message-ID: <157859549406.164065.17179006268680393660.stgit@magnolia>
+Date:   Thu, 09 Jan 2020 10:45:00 -0800
+Message-ID: <157859550017.164065.4715415441588345394.stgit@magnolia>
 In-Reply-To: <157859548029.164065.5207227581806532577.stgit@magnolia>
 References: <157859548029.164065.5207227581806532577.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -64,13 +63,13 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9495 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=3 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1911140001 definitions=main-2001090154
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9495 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=3 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
  definitions=main-2001090154
@@ -81,147 +80,66 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-While running generic/103, I observed what looks like memory corruption
-and (with slub debugging turned on) a slub redzone warning on i386 when
-inactivating an inode with a 64k remote attr value.
-
-On a v5 filesystem, maximally sized remote attr values require one block
-more than 64k worth of space to hold both the remote attribute value
-header (64 bytes).  On a 4k block filesystem this results in a 68k
-buffer; on a 64k block filesystem, this would be a 128k buffer.  Note
-that even though we'll never use more than 65,600 bytes of this buffer,
-XFS_MAX_BLOCKSIZE is 64k.
-
-This is a problem because the definition of struct xfs_buf_log_format
-allows for XFS_MAX_BLOCKSIZE worth of dirty bitmap (64k).  On i386 when we
-invalidate a remote attribute, xfs_trans_binval zeroes all 68k worth of
-the dirty map, writing right off the end of the log item and corrupting
-memory.  We've gotten away with this on x86_64 for years because the
-compiler inserts a u32 padding on the end of struct xfs_buf_log_format.
-
-Fortunately for us, remote attribute values are written to disk with
-xfs_bwrite(), which is to say that they are not logged.  Fix the problem
-by removing all places where we could end up creating a buffer log item
-for a remote attribute value and leave a note explaining why.
+The only thing that can cause a nonzero return from
+xfs_buf_item_get_format is if the kmem_alloc fails, which it can't.
+Get rid of all the unnecessary error handling.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr_remote.c |   21 +++++++++++++++++++--
- fs/xfs/xfs_attr_inactive.c      |   34 ++++++----------------------------
- 2 files changed, 25 insertions(+), 30 deletions(-)
+ fs/xfs/xfs_buf_item.c |   16 +++-------------
+ 1 file changed, 3 insertions(+), 13 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-index 6babdaac6057..1765f5351f9e 100644
---- a/fs/xfs/libxfs/xfs_attr_remote.c
-+++ b/fs/xfs/libxfs/xfs_attr_remote.c
-@@ -25,6 +25,23 @@
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 3984779e5911..9737f177a49b 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -688,7 +688,7 @@ static const struct xfs_item_ops xfs_buf_item_ops = {
+ 	.iop_push	= xfs_buf_item_push,
+ };
  
- #define ATTR_RMTVALUE_MAPSIZE	1	/* # of map entries at once */
+-STATIC int
++STATIC void
+ xfs_buf_item_get_format(
+ 	struct xfs_buf_log_item	*bip,
+ 	int			count)
+@@ -698,14 +698,11 @@ xfs_buf_item_get_format(
  
-+/*
-+ * Remote Attribute Values
-+ * =======================
-+ *
-+ * Remote extended attribute values are conceptually simple -- they're written
-+ * to data blocks mapped by an inode's attribute fork, and they have an upper
-+ * size limit of 64k.  Setting a value does not involve the XFS log.
-+ *
-+ * However, on a v5 filesystem, maximally sized remote attr values require one
-+ * block more than 64k worth of space to hold both the remote attribute value
-+ * header (64 bytes).  On a 4k block filesystem this results in a 68k buffer;
-+ * on a 64k block filesystem, this would be a 128k buffer.  Note that the log
-+ * format can only handle a dirty buffer of XFS_MAX_BLOCKSIZE length (64k).
-+ * Therefore, we /must/ ensure that remote attribute value buffers never touch
-+ * the logging system and therefore never have a log item.
-+ */
-+
- /*
-  * Each contiguous block has a header, so it is not just a simple attribute
-  * length to FSB conversion.
-@@ -401,7 +418,7 @@ xfs_attr_rmtval_get(
- 			       (map[i].br_startblock != HOLESTARTBLOCK));
- 			dblkno = XFS_FSB_TO_DADDR(mp, map[i].br_startblock);
- 			dblkcnt = XFS_FSB_TO_BB(mp, map[i].br_blockcount);
--			error = xfs_trans_read_buf(mp, args->trans,
-+			error = xfs_trans_read_buf(mp, NULL,
- 						   mp->m_ddev_targp,
- 						   dblkno, dblkcnt, 0, &bp,
- 						   &xfs_attr3_rmt_buf_ops);
-@@ -411,7 +428,7 @@ xfs_attr_rmtval_get(
- 			error = xfs_attr_rmtval_copyout(mp, bp, args->dp->i_ino,
- 							&offset, &valuelen,
- 							&dst);
--			xfs_trans_brelse(args->trans, bp);
-+			xfs_buf_relse(bp);
- 			if (error)
- 				return error;
- 
-diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
-index 5ff49523d8ea..5c83dd3611af 100644
---- a/fs/xfs/xfs_attr_inactive.c
-+++ b/fs/xfs/xfs_attr_inactive.c
-@@ -30,17 +30,13 @@
-  */
- STATIC int
- xfs_attr3_leaf_freextent(
--	struct xfs_trans	**trans,
- 	struct xfs_inode	*dp,
- 	xfs_dablk_t		blkno,
- 	int			blkcnt)
- {
- 	struct xfs_bmbt_irec	map;
--	struct xfs_buf		*bp;
- 	xfs_dablk_t		tblkno;
--	xfs_daddr_t		dblkno;
- 	int			tblkcnt;
--	int			dblkcnt;
- 	int			nmap;
- 	int			error;
- 
-@@ -64,28 +60,12 @@ xfs_attr3_leaf_freextent(
- 		ASSERT(map.br_startblock != DELAYSTARTBLOCK);
- 
- 		/*
--		 * If it's a hole, these are already unmapped
--		 * so there's nothing to invalidate.
-+		 * Mark any incore buffers for the remote value as stale.  We
-+		 * never log remote attr value buffers, so the buffer should be
-+		 * easy to kill.
- 		 */
--		if (map.br_startblock != HOLESTARTBLOCK) {
--
--			dblkno = XFS_FSB_TO_DADDR(dp->i_mount,
--						  map.br_startblock);
--			dblkcnt = XFS_FSB_TO_BB(dp->i_mount,
--						map.br_blockcount);
--			bp = xfs_trans_get_buf(*trans,
--					dp->i_mount->m_ddev_targp,
--					dblkno, dblkcnt, 0);
--			if (!bp)
--				return -ENOMEM;
--			xfs_trans_binval(*trans, bp);
--			/*
--			 * Roll to next transaction.
--			 */
--			error = xfs_trans_roll_inode(trans, dp);
--			if (error)
--				return error;
--		}
-+		if (map.br_startblock != HOLESTARTBLOCK)
-+			xfs_attr_rmtval_stale(dp, &map);
- 
- 		tblkno += map.br_blockcount;
- 		tblkcnt -= map.br_blockcount;
-@@ -174,9 +154,7 @@ xfs_attr3_leaf_inactive(
- 	 */
- 	error = 0;
- 	for (lp = list, i = 0; i < count; i++, lp++) {
--		tmp = xfs_attr3_leaf_freextent(trans, dp,
--				lp->valueblk, lp->valuelen);
--
-+		tmp = xfs_attr3_leaf_freextent(dp, lp->valueblk, lp->valuelen);
- 		if (error == 0)
- 			error = tmp;	/* save only the 1st errno */
+ 	if (count == 1) {
+ 		bip->bli_formats = &bip->__bli_format;
+-		return 0;
++		return;
  	}
+ 
+ 	bip->bli_formats = kmem_zalloc(count * sizeof(struct xfs_buf_log_format),
+ 				0);
+-	if (!bip->bli_formats)
+-		return -ENOMEM;
+-	return 0;
+ }
+ 
+ STATIC void
+@@ -731,7 +728,6 @@ xfs_buf_item_init(
+ 	struct xfs_buf_log_item	*bip = bp->b_log_item;
+ 	int			chunks;
+ 	int			map_size;
+-	int			error;
+ 	int			i;
+ 
+ 	/*
+@@ -760,13 +756,7 @@ xfs_buf_item_init(
+ 	 * Discontiguous buffer support follows the layout of the underlying
+ 	 * buffer. This makes the implementation as simple as possible.
+ 	 */
+-	error = xfs_buf_item_get_format(bip, bp->b_map_count);
+-	ASSERT(error == 0);
+-	if (error) {	/* to stop gcc throwing set-but-unused warnings */
+-		kmem_cache_free(xfs_buf_item_zone, bip);
+-		return error;
+-	}
+-
++	xfs_buf_item_get_format(bip, bp->b_map_count);
+ 
+ 	for (i = 0; i < bip->bli_format_count; i++) {
+ 		chunks = DIV_ROUND_UP(BBTOB(bp->b_maps[i].bm_len),
 
