@@ -4,28 +4,28 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1886C282DD
-	for <linux-xfs@archiver.kernel.org>; Fri, 10 Jan 2020 19:30:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A38BCC33CA4
+	for <linux-xfs@archiver.kernel.org>; Fri, 10 Jan 2020 19:30:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AE52B2082E
-	for <linux-xfs@archiver.kernel.org>; Fri, 10 Jan 2020 19:30:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A81120848
+	for <linux-xfs@archiver.kernel.org>; Fri, 10 Jan 2020 19:30:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729025AbgAJTaQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 10 Jan 2020 14:30:16 -0500
-Received: from mga09.intel.com ([134.134.136.24]:22315 "EHLO mga09.intel.com"
+        id S1729096AbgAJTaf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 10 Jan 2020 14:30:35 -0500
+Received: from mga11.intel.com ([192.55.52.93]:46986 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728977AbgAJTaP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 10 Jan 2020 14:30:15 -0500
+        id S1728924AbgAJTaM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 10 Jan 2020 14:30:12 -0500
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 10 Jan 2020 11:30:15 -0800
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 10 Jan 2020 11:30:12 -0800
 X-IronPort-AV: E=Sophos;i="5.69,418,1571727600"; 
-   d="scan'208";a="218160906"
+   d="scan'208";a="304262908"
 Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.157])
-  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 10 Jan 2020 11:30:14 -0800
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 10 Jan 2020 11:30:11 -0800
 From:   ira.weiny@intel.com
 To:     linux-kernel@vger.kernel.org
 Cc:     Ira Weiny <ira.weiny@intel.com>,
@@ -37,9 +37,9 @@ Cc:     Ira Weiny <ira.weiny@intel.com>,
         "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: [RFC PATCH V2 12/12] fs/xfs: Allow toggle of effective DAX flag
-Date:   Fri, 10 Jan 2020 11:29:42 -0800
-Message-Id: <20200110192942.25021-13-ira.weiny@intel.com>
+Subject: [RFC PATCH V2 10/12] fs/xfs: Fix truncate up
+Date:   Fri, 10 Jan 2020 11:29:40 -0800
+Message-Id: <20200110192942.25021-11-ira.weiny@intel.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20200110192942.25021-1-ira.weiny@intel.com>
 References: <20200110192942.25021-1-ira.weiny@intel.com>
@@ -52,106 +52,30 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Ira Weiny <ira.weiny@intel.com>
 
-Now that locking of the inode is in place we can allow a mode change
-while under the new lock.
+When zeroing the end of a file we must account for bytes contained in
+the final page which are past EOF.
+
+Extend the range passed to iomap_zero_range() to reach LLONG_MAX which
+will include all bytes of the final page.
 
 Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 ---
- fs/xfs/xfs_inode.h |  1 +
- fs/xfs/xfs_ioctl.c |  9 ++++++---
- fs/xfs/xfs_iops.c  | 15 +++++++++++----
- 3 files changed, 18 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_iops.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 693ca66bd89b..b0d2e7da88c6 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -474,6 +474,7 @@ int	xfs_break_layouts(struct inode *inode, uint *iolock,
- /* from xfs_iops.c */
- extern void xfs_setup_inode(struct xfs_inode *ip);
- extern void xfs_setup_iops(struct xfs_inode *ip);
-+extern void xfs_setup_a_ops(struct xfs_inode *ip);
- 
- /*
-  * When setting up a newly allocated inode, we need to call
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 9a35bf83eaa1..e07559bf70a9 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1109,12 +1109,11 @@ xfs_diflags_to_linux(
- 		inode->i_flags |= S_NOATIME;
- 	else
- 		inode->i_flags &= ~S_NOATIME;
--#if 0	/* disabled until the flag switching races are sorted out */
- 	if (xflags & FS_XFLAG_DAX)
- 		inode->i_flags |= S_DAX;
- 	else
- 		inode->i_flags &= ~S_DAX;
--#endif
-+
- }
- 
- static int
-@@ -1191,7 +1190,7 @@ xfs_ioctl_setattr_dax_invalidate(
- 	if (S_ISDIR(inode->i_mode))
- 		return 0;
- 
--	flags = XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL;
-+	flags = XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL | XFS_DAX_EXCL;
- 
- 	/* lock, flush and invalidate mapping in preparation for flag change */
- 	xfs_ilock(ip, flags);
-@@ -1512,6 +1511,8 @@ xfs_ioctl_setattr(
- 	else
- 		ip->i_d.di_cowextsize = 0;
- 
-+	xfs_setup_a_ops(ip);
-+
- 	code = xfs_trans_commit(tp);
- 
- 	/*
-@@ -1621,6 +1622,8 @@ xfs_ioc_setxflags(
- 		goto out_drop_write;
- 	}
- 
-+	xfs_setup_a_ops(ip);
-+
- 	error = xfs_trans_commit(tp);
- out_drop_write:
- 	mnt_drop_write_file(filp);
 diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index a34b04e8ac9c..c70164a0df97 100644
+index a2f2604c3187..a34b04e8ac9c 100644
 --- a/fs/xfs/xfs_iops.c
 +++ b/fs/xfs/xfs_iops.c
-@@ -1386,6 +1386,16 @@ xfs_setup_inode(
- 	}
- }
- 
-+void xfs_setup_a_ops(struct xfs_inode *ip)
-+{
-+	struct inode		*inode = &ip->i_vnode;
-+
-+	if (IS_DAX(inode))
-+		inode->i_mapping->a_ops = &xfs_dax_aops;
-+	else
-+		inode->i_mapping->a_ops = &xfs_address_space_operations;
-+}
-+
- void
- xfs_setup_iops(
- 	struct xfs_inode	*ip)
-@@ -1396,10 +1406,7 @@ xfs_setup_iops(
- 	case S_IFREG:
- 		inode->i_op = &xfs_reg_inode_operations;
- 		inode->i_fop = &xfs_file_operations;
--		if (IS_DAX(inode))
--			inode->i_mapping->a_ops = &xfs_dax_aops;
--		else
--			inode->i_mapping->a_ops = &xfs_address_space_operations;
-+		xfs_setup_a_ops(ip);
- 		break;
- 	case S_IFDIR:
- 		if (xfs_sb_version_hasasciici(&XFS_M(inode->i_sb)->m_sb))
+@@ -910,7 +910,7 @@ xfs_setattr_size(
+ 	 */
+ 	if (newsize > oldsize) {
+ 		trace_xfs_zero_eof(ip, oldsize, newsize - oldsize);
+-		error = iomap_zero_range(inode, oldsize, newsize - oldsize,
++		error = iomap_zero_range(inode, oldsize, LLONG_MAX - oldsize,
+ 				&did_zeroing, &xfs_buffered_write_iomap_ops);
+ 	} else {
+ 		error = iomap_truncate_page(inode, newsize, &did_zeroing,
 -- 
 2.21.0
 
