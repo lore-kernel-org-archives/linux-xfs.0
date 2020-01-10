@@ -6,89 +6,78 @@ X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCF66C33CA2
-	for <linux-xfs@archiver.kernel.org>; Fri, 10 Jan 2020 11:55:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 669EEC33CA2
+	for <linux-xfs@archiver.kernel.org>; Fri, 10 Jan 2020 11:57:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A3D732072A
-	for <linux-xfs@archiver.kernel.org>; Fri, 10 Jan 2020 11:55:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 38F552072A
+	for <linux-xfs@archiver.kernel.org>; Fri, 10 Jan 2020 11:57:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="t1sE5Omv"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Z6g2T66X"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727957AbgAJLzl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 10 Jan 2020 06:55:41 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:52726 "EHLO
+        id S1727949AbgAJL5m (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 10 Jan 2020 06:57:42 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:35098 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727953AbgAJLzk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Jan 2020 06:55:40 -0500
+        with ESMTP id S1727710AbgAJL5m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Jan 2020 06:57:42 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=K2hRgwL8eJP9PvuMsx//Vb/xyldNHtw5Ekg00Ct9N5A=; b=t1sE5Omvj3xHkqOQ+RgR6fcYE
-        ha7J2/ka0iGh14EBm1fUhfYejdNsUdH3Z2OJBshb2tzYCmlFurmbUxEHtsIRN9odDeGmnZ5J9pFIj
-        IFACPQkHvauKXR/BkonY4XgRhURP9V1lnhtn9tFyLtC5enfwhqxo3rJrc9i4uQXaUpRkBkjjk2Eop
-        1aWSU0VgElxjowp7I70VXYiO9a6uAOI7HfU0Xea12rwL7E5p4hb+pxIj+/5UuGY3G43nrdjGAaBkF
-        j0ZDI3GxE5yfSaezg8nRayzWrkj8+0lCPTaRX1gnSOBEMQJdQp0rr//+2JDj/cH+kmd0E2AZKISL9
-        JMBTO5QTw==;
+         bh=x0DSt55co83hYVzLtSNJTN5LSd7ti99psefmVUr/k2Q=; b=Z6g2T66Xy6AoEwlmqdbbQ6Jyg
+        LAhvCfzVlMYwkz1MQwxjnkAtUlJboDvxnDYu+NHJyNjDjIA/3mMSxkp7WesRbbVFvKrHiK1f/WzpZ
+        9d8vzPeYvcibnuOKKQWFwIolZUCvy5ZsjztL95yuXNW8OwkrQde63RmnvybZfM7MoKjo/G1o+aibn
+        hV0bZ95sQatPFBqiu5UG0KflmqwBU/2MeXQZNrQC2FJcqXjM3VNnthL8OAx2P2lvmD4VFZ9Yj2i1s
+        N9H6hHWVdb3TQUY/93Mw7Au6vRzf7yrrz0a1K5SkPE+tSP25tNpLUHIowG/p2PwmwqQ3gxf2Cs6m2
+        OfV2uHqvQ==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1ipstA-0000FS-5v; Fri, 10 Jan 2020 11:55:40 +0000
-Date:   Fri, 10 Jan 2020 03:55:40 -0800
+        id 1ipsv8-00027x-DJ; Fri, 10 Jan 2020 11:57:42 +0000
+Date:   Fri, 10 Jan 2020 03:57:42 -0800
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/5] xfs: refactor remote attr value buffer invalidation
-Message-ID: <20200110115540.GC19577@infradead.org>
+Subject: Re: [PATCH 2/5] xfs: fix memory corruption during remote attr value
+ buffer invalidation
+Message-ID: <20200110115742.GD19577@infradead.org>
 References: <157859548029.164065.5207227581806532577.stgit@magnolia>
- <157859548668.164065.18078635787497973193.stgit@magnolia>
+ <157859549406.164065.17179006268680393660.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <157859548668.164065.18078635787497973193.stgit@magnolia>
+In-Reply-To: <157859549406.164065.17179006268680393660.stgit@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	struct xfs_buf		*bp;
-> +	xfs_daddr_t		dblkno;
-> +	int			dblkcnt;
-> +
-> +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> +
-> +	dblkno = XFS_FSB_TO_DADDR(mp, map->br_startblock),
-> +	dblkcnt = XFS_FSB_TO_BB(mp, map->br_blockcount);
-> +
-> +	/*
-> +	 * If the "remote" value is in the cache, remove it.
-> +	 */
-> +	bp = xfs_buf_incore(mp->m_ddev_targp, dblkno, dblkcnt, XBF_TRYLOCK);
+> While running generic/103, I observed what looks like memory corruption
+> and (with slub debugging turned on) a slub redzone warning on i386 when
+> inactivating an inode with a 64k remote attr value.
+> 
+> On a v5 filesystem, maximally sized remote attr values require one block
+> more than 64k worth of space to hold both the remote attribute value
+> header (64 bytes).  On a 4k block filesystem this results in a 68k
+> buffer; on a 64k block filesystem, this would be a 128k buffer.  Note
+> that even though we'll never use more than 65,600 bytes of this buffer,
+> XFS_MAX_BLOCKSIZE is 64k.
+> 
+> This is a problem because the definition of struct xfs_buf_log_format
+> allows for XFS_MAX_BLOCKSIZE worth of dirty bitmap (64k).  On i386 when we
+> invalidate a remote attribute, xfs_trans_binval zeroes all 68k worth of
+> the dirty map, writing right off the end of the log item and corrupting
+> memory.  We've gotten away with this on x86_64 for years because the
+> compiler inserts a u32 padding on the end of struct xfs_buf_log_format.
+> 
+> Fortunately for us, remote attribute values are written to disk with
+> xfs_bwrite(), which is to say that they are not logged.  Fix the problem
+> by removing all places where we could end up creating a buffer log item
+> for a remote attribute value and leave a note explaining why.
 
-Do we really need the dblkno and dblkcnt local variables here?
-
-> @@ -592,18 +614,8 @@ xfs_attr_rmtval_remove(
->  		ASSERT((map.br_startblock != DELAYSTARTBLOCK) &&
->  		       (map.br_startblock != HOLESTARTBLOCK));
->  
-> -		dblkno = XFS_FSB_TO_DADDR(mp, map.br_startblock),
-> -		dblkcnt = XFS_FSB_TO_BB(mp, map.br_blockcount);
-> -
-> -		/*
-> -		 * If the "remote" value is in the cache, remove it.
-> -		 */
-> -		bp = xfs_buf_incore(mp->m_ddev_targp, dblkno, dblkcnt, XBF_TRYLOCK);
-> -		if (bp) {
-> -			xfs_buf_stale(bp);
-> -			xfs_buf_relse(bp);
-> -			bp = NULL;
-> -		}
-> +		if (map.br_startblock != HOLESTARTBLOCK)
-> +			xfs_attr_rmtval_stale(args->dp, &map);
-
-I don't think we need the HOLESTARTBLOCK check here, given that we have
-the asserts above.  I also think the assert should move into
-xfs_attr_rmtval_stale and be split into two asserts, one each for the
-invalid values.
+I think this changelog needs an explanation why using
+xfs_attr_rmtval_stale which just trylock and checks if the buffers are
+in core only in xfs_attr3_leaf_freextent is fine.  And while the incore
+part looks sane to me, I think the trylock is wrong and we need to pass
+the locking flag to xfs_attr_rmtval_stale.
