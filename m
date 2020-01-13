@@ -2,47 +2,50 @@ Return-Path: <SRS0=9ni0=3C=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 168A2C33CB7
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 15:37:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D932C35242
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 15:38:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DF3BA21734
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 15:37:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 41DB82081E
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 15:38:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="aXRA6eIk"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="iFiz31mv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728789AbgAMPhy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Jan 2020 10:37:54 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:57844 "EHLO
+        id S1728792AbgAMPh7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Jan 2020 10:37:59 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:57850 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726567AbgAMPhx (ORCPT
+        with ESMTP id S1728783AbgAMPhx (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Jan 2020 10:37:53 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=PyHbyvKFQNe8v5T0y5nRYH5QHMFCBJQIcCvIL1xBpxU=; b=aXRA6eIkhgUgZqBvbUS+ZT0AY
-        Ux0HfjsTPwuBndSDbLlPFYPMuDrL5UPjn7V+uWPhI0Uonke0LyYqhJQt5I8fekhyUoIr/i7MENFfH
-        krWVP95kKeqDv5LMdxMgajQV8ep7p4jSGWuWcFcbW+SWoQrIjORQd4iEMjtI5FE91MUy9jD2QTWQX
-        SO+CvbiJfx7clU0wIuWhNtsC05ZLJzRnh5XqWFKeoETzy88ij9ENSzkSliyoXrBFEKrsOZjtCgBjG
-        CvnWRJjqZ6vQEaxyuAvXYKUW89bjx8tk6KlSxpK8yE2KFdMB3VRIoQrd0K6ZGoFvHj8QAoyPyvAVR
-        MhswCUdAQ==;
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
+        :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=7T6itBiApRciaky4TlalX8Xey/dXpsbhmN7GfbwBCQQ=; b=iFiz31mvlvB3F6V2/KzYd35pGt
+        wnp/9Khlrp6Ks1AfTMi8ggNFuMEvwljAsoUT6Fd7KNY5kWrArU9md8WO/2jb5DQUZyRx5JltVNlsG
+        9Sn7kZKGvrsR3HQNu1TZgNDUTK41FhI0YSJET42oZm/zJLR3VGnXtL3pxV6ooOYJCBDFLb2TrXh5H
+        5PaYFUKnDEGt82/8ODHp9AE33gQmXZMJoLYn/hy3n3Qfg/NomfJieYUirOeJl+kRqcEXijqT8WUg1
+        Xwy+R8s17c2KZMLGywc1RDNoNM3ZZ1zWg1cKy3pnKfurg/HrMl38mHkZ+3ngS6eXPEYUqQ8ZZ+Su7
+        lBO1JPZg==;
 Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1ir1mr-00075X-0L; Mon, 13 Jan 2020 15:37:53 +0000
+        id 1ir1mr-00075f-3B; Mon, 13 Jan 2020 15:37:53 +0000
 From:   Matthew Wilcox <willy@infradead.org>
 To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-mm@kvack.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         jlayton@kernel.org, hch@infradead.org
-Subject: [RFC 0/8] Replacing the readpages a_op
-Date:   Mon, 13 Jan 2020 07:37:38 -0800
-Message-Id: <20200113153746.26654-1-willy@infradead.org>
+Subject: [PATCH 2/8] mm: Fix the return type of __do_page_cache_readahead
+Date:   Mon, 13 Jan 2020 07:37:40 -0800
+Message-Id: <20200113153746.26654-3-willy@infradead.org>
 X-Mailer: git-send-email 2.21.0
+In-Reply-To: <20200113153746.26654-1-willy@infradead.org>
+References: <20200113153746.26654-1-willy@infradead.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
@@ -52,81 +55,53 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
-I think everybody hates the readpages API.  The fundamental problem with
-it is that it passes the pages to be read on a doubly linked list, using
-the ->lru list in the struct page.  That means the filesystems have to
-do the work of calling add_to_page_cache{,_lru,_locked}, and handling
-failures (because another task is also accessing that chunk of the file,
-and so it fails).
+ra_submit() which is a wrapper around __do_page_cache_readahead() already
+returns an unsigned long, and the 'nr_to_read' parameter is an unsigned
+long, so fix __do_page_cache_readahead() to return an unsigned long,
+even though I'm pretty sure we're not going to readahead more than 2^32
+pages ever.
 
-This is an attempt to add a ->readahead op to replace ->readpages.  I've
-converted two users, iomap/xfs and cifs.  The cifs conversion is lacking
-fscache support, and that's just because I didn't want to do that work;
-I don't believe there's anything fundamental to it.  But I wanted to do
-iomap because it is The Infrastructure Of The Future and cifs because it
-is the sole remaining user of add_to_page_cache_locked(), which enables
-the last two patches in the series.  By the way, that gives CIFS access
-to the workingset shadow infrastructure, which it had to ignore before
-because it couldn't put pages onto the lru list at the right time.
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+---
+ mm/internal.h  | 2 +-
+ mm/readahead.c | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-The fundamental question is, how do we indicate to the implementation of
-->readahead what pages to operate on?  I've gone with passing a pagevec.
-This has the obvious advantage that it's a data structure that already
-exists and is used within filemap for batches of pages.  I had to add a
-bit of new infrastructure to support iterating over the pages in the
-pagevec, but with that done, it's quite nice.
-
-I think the biggest problem is that the size of the pagevec is limited
-to 15 pages (60kB).  So that'll mean that if the readahead window bumps
-all the way up to 256kB, we may end up making 5 BIOs (and merging them)
-instead of one.  I'd kind of like to be able to allocate variable length
-pagevecs while allowing regular pagevecs to be allocated on the stack,
-but I can't figure out a way to do that.  eg this doesn't work:
-
--       struct page *pages[PAGEVEC_SIZE];
-+       union {
-+               struct page *pages[PAGEVEC_SIZE];
-+               struct page *_pages[];
-+       }
-
-and if we just allocate them, useful and wonderful tools are going to
-point out when pages[16] is accessed that we've overstepped the end of
-the array.
-
-I have considered alternatives to the pagevec like just having the
-->readahead implementation look up the pages in the i_pages XArray
-directly.  That didn't work out too well.
-
-Anyway, I want to draw your attention to the diffstat below.  Net 91 lines
-deleted, and that's with adding all the infrastructure for ->readahead
-and getting rid of none of the infrastructure for ->readpages.  There's
-probably a good couple of hundred lines of code to be deleted there.
-
-Matthew Wilcox (Oracle) (8):
-  pagevec: Add an iterator
-  mm: Fix the return type of __do_page_cache_readahead
-  mm: Use a pagevec for readahead
-  mm/fs: Add a_ops->readahead
-  iomap,xfs: Convert from readpages to readahead
-  cifs: Convert from readpages to readahead
-  mm: Remove add_to_page_cache_locked
-  mm: Unify all add_to_page_cache variants
-
- Documentation/filesystems/locking.rst |   8 +-
- Documentation/filesystems/vfs.rst     |   9 ++
- fs/cifs/file.c                        | 125 ++++-------------------
- fs/iomap/buffered-io.c                |  60 +++--------
- fs/iomap/trace.h                      |  18 ++--
- fs/xfs/xfs_aops.c                     |  12 +--
- include/linux/fs.h                    |   3 +
- include/linux/iomap.h                 |   4 +-
- include/linux/pagemap.h               |  23 +----
- include/linux/pagevec.h               |  20 ++++
- mm/filemap.c                          |  72 ++++---------
- mm/internal.h                         |   2 +-
- mm/readahead.c                        | 141 +++++++++++++++++---------
- 13 files changed, 203 insertions(+), 294 deletions(-)
-
+diff --git a/mm/internal.h b/mm/internal.h
+index 3cf20ab3ca01..41b93c4b3ab7 100644
+--- a/mm/internal.h
++++ b/mm/internal.h
+@@ -49,7 +49,7 @@ void unmap_page_range(struct mmu_gather *tlb,
+ 			     unsigned long addr, unsigned long end,
+ 			     struct zap_details *details);
+ 
+-extern unsigned int __do_page_cache_readahead(struct address_space *mapping,
++extern unsigned long __do_page_cache_readahead(struct address_space *mapping,
+ 		struct file *filp, pgoff_t offset, unsigned long nr_to_read,
+ 		unsigned long lookahead_size);
+ 
+diff --git a/mm/readahead.c b/mm/readahead.c
+index 2fe72cd29b47..6bf73ef33b7e 100644
+--- a/mm/readahead.c
++++ b/mm/readahead.c
+@@ -152,7 +152,7 @@ static int read_pages(struct address_space *mapping, struct file *filp,
+  *
+  * Returns the number of pages requested, or the maximum amount of I/O allowed.
+  */
+-unsigned int __do_page_cache_readahead(struct address_space *mapping,
++unsigned long __do_page_cache_readahead(struct address_space *mapping,
+ 		struct file *filp, pgoff_t offset, unsigned long nr_to_read,
+ 		unsigned long lookahead_size)
+ {
+@@ -161,7 +161,7 @@ unsigned int __do_page_cache_readahead(struct address_space *mapping,
+ 	unsigned long end_index;	/* The last page we want to read */
+ 	LIST_HEAD(page_pool);
+ 	int page_idx;
+-	unsigned int nr_pages = 0;
++	unsigned long nr_pages = 0;
+ 	loff_t isize = i_size_read(inode);
+ 	gfp_t gfp_mask = readahead_gfp_mask(mapping);
+ 
 -- 
 2.24.1
 
