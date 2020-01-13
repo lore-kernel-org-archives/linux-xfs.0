@@ -2,213 +2,167 @@ Return-Path: <SRS0=9ni0=3C=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59C6FC33CAE
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 16:42:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1902C33CA9
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 16:53:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 24AC62084D
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 16:42:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ABE4C207FD
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 16:53:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=fb.com header.i=@fb.com header.b="QrrmfG+i";
-	dkim=pass (1024-bit key) header.d=fb.onmicrosoft.com header.i=@fb.onmicrosoft.com header.b="PGjQlWi+"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="U64IGnrD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728679AbgAMQm0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Jan 2020 11:42:26 -0500
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:19240 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728674AbgAMQm0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Jan 2020 11:42:26 -0500
-Received: from pps.filterd (m0109334.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00DGdWr4028926;
-        Mon, 13 Jan 2020 08:42:12 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=facebook;
- bh=KX6kiDiTrVCm8HNiZ4A950RNSNx04RzNKJneuFh3YEY=;
- b=QrrmfG+it6XPeMvLIBcJeAQJEa8IYsnE2zU8ZfmtE/h+UAqVO2hXG3spIawDY/ptpGnI
- ZarX5cI+DcNwd1Fh8qUOPSCZchQd9ApquUppDnDzmWxL3Mprk35hq0j8spJatLcRda3o
- ezoSMdOyE7pFbGXKd9lyiIB3g7xi2cvF/4E= 
-Received: from mail.thefacebook.com ([163.114.132.120])
-        by mx0a-00082601.pphosted.com with ESMTP id 2xfxy05a5v-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 13 Jan 2020 08:42:12 -0800
-Received: from NAM11-CO1-obe.outbound.protection.outlook.com (100.104.98.9) by
- o365-in.thefacebook.com (100.104.94.198) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Mon, 13 Jan 2020 08:42:12 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=NHetSzZYH5Lj+a69IG2h2Vngn1QP2PVjU2777fBzJUbm1+RXRrkkGuS3XpfTJp7o66y0qfQOA/x8Np1Ts8HNanfkcVHOOOsrCuuzfy4u78ij6UZMo9YlmWS9nA9bOZNCKCgIU98Ee2Rb9SnC4UPuvxR3cv2pBaykalhK705lHJi/PcN0pHcX79MyJvEEpRZMUDvfKOA01Fss7SPPpkgUTJt0CRDQA/M6nMSVdteWvCaeg3r8eESbB6xndO5sINjDgjjxQhemzisX/Z0vAnEsJGpHcYSE62wMDA9G/ECodrrLz9gvh/gBpOdmQTezPKGofbMUM7ECer2LvQpfrDAqDA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=KX6kiDiTrVCm8HNiZ4A950RNSNx04RzNKJneuFh3YEY=;
- b=jQRpZ3Q/j/1po4U9TlHPX2FBC6E8YRit+j2pDasoLyo/TNhN7PePMl39rd8WqXMxAXyvhQWiEGgloSfk/SqcXqBj0Q2xV/PWAB/Gok3eJTg01u1aG96jMappve7w7d5aN0P3AJ4K2iIp52xmnj2PicbZ1s1+J425EoA18CVNrpn0FZH7LatAbxlF/DPPZi+6tW2gnFEWAEWPt7YNg82uqduNvdqA+ZQGXwP0plXruDFU5xI42vDB8sZVpjejJGvGypiI8eeJHxg8TacZPAkLzbce7x5TImDlNVrQXMpwW25FPi07y/5/Be8LwgEVR3LRrZ6F5kHMp/JauGbpUHr68w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=fb.com; dmarc=pass action=none header.from=fb.com; dkim=pass
- header.d=fb.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=KX6kiDiTrVCm8HNiZ4A950RNSNx04RzNKJneuFh3YEY=;
- b=PGjQlWi+YiSFSxDfAp4cKXJ+YcfBlBBgxJxOy/NvvFhFo1ugaaoGyCmtj9cQIZqTiVjCeIaiuHuWHO1pATEni269Za8M5v1uzaQmRQVeR0zAv3muieuLMgzLqQ1fQxR2pUN/X1YRx+SsGOKgJPh1ZFm8J9Zx2eLCpooPPCUd99s=
-Received: from SN6PR15MB2446.namprd15.prod.outlook.com (52.135.64.153) by
- SN6PR15MB2287.namprd15.prod.outlook.com (52.135.65.15) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2623.11; Mon, 13 Jan 2020 16:42:10 +0000
-Received: from SN6PR15MB2446.namprd15.prod.outlook.com
- ([fe80::615e:4236:ddfa:3d10]) by SN6PR15MB2446.namprd15.prod.outlook.com
- ([fe80::615e:4236:ddfa:3d10%6]) with mapi id 15.20.2623.015; Mon, 13 Jan 2020
- 16:42:10 +0000
-Received: from [172.30.120.61] (2620:10d:c091:480::1025) by MN2PR05CA0066.namprd05.prod.outlook.com (2603:10b6:208:236::35) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2644.10 via Frontend Transport; Mon, 13 Jan 2020 16:42:09 +0000
-From:   Chris Mason <clm@fb.com>
-To:     Matthew Wilcox <willy@infradead.org>
-CC:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "jlayton@kernel.org" <jlayton@kernel.org>,
-        "hch@infradead.org" <hch@infradead.org>
-Subject: Re: [RFC 0/8] Replacing the readpages a_op
-Thread-Topic: [RFC 0/8] Replacing the readpages a_op
-Thread-Index: AQHVyieJJr3DU4NMDUiHtIM35/TqzKfozHmA
-Date:   Mon, 13 Jan 2020 16:42:10 +0000
-Message-ID: <6CA4CD96-0812-4261-8FF9-CD28AA2EC38A@fb.com>
-References: <20200113153746.26654-1-willy@infradead.org>
-In-Reply-To: <20200113153746.26654-1-willy@infradead.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: MailMate (1.13.1r5671)
-x-clientproxiedby: MN2PR05CA0066.namprd05.prod.outlook.com
- (2603:10b6:208:236::35) To SN6PR15MB2446.namprd15.prod.outlook.com
- (2603:10b6:805:22::25)
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [2620:10d:c091:480::1025]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 4c2bef0e-e80e-44f0-ec78-08d7984788f5
-x-ms-traffictypediagnostic: SN6PR15MB2287:
-x-microsoft-antispam-prvs: <SN6PR15MB22875E5D577B5467FCC7BE6ED3350@SN6PR15MB2287.namprd15.prod.outlook.com>
-x-fb-source: Internal
-x-ms-oob-tlc-oobclassifiers: OLM:9508;
-x-forefront-prvs: 028166BF91
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(376002)(346002)(39860400002)(366004)(136003)(396003)(189003)(199004)(53546011)(54906003)(16526019)(2906002)(36756003)(52116002)(6486002)(5660300002)(33656002)(316002)(186003)(8936002)(8676002)(478600001)(86362001)(66946007)(66476007)(71200400001)(64756008)(6666004)(66556008)(66446008)(81166006)(2616005)(6916009)(4326008)(81156014);DIR:OUT;SFP:1102;SCL:1;SRVR:SN6PR15MB2287;H:SN6PR15MB2446.namprd15.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: fb.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: hwZGO/J+lp5+NbpRu30sGRimcuqsbrrEMwHvIYPFWRcWJoPOuAQd83YOAwMITkgQ6vq63tFTMBu4Odr1kctA7ifKMyQCPzcKKjyM6P1qjuy/DO3TjOEXN7pOvW5f4C+9tOpWGLJDOWxkkvVn5q36hgdB5oYv4KWo06hkoGnIOWieI59me5zdOFdlvwmS1r94qbsq5mJi3I045qfg6EMfzEZaRNO12criiT4obVhhn5mrjO/u8bJSDQnyf9sacc2/n6oXisCVLLB4VjQ2znu8buBo52jYCANQg8z5jpPW4h8495hFBaTCTzWgatwRfUrxRmMwGh5cTOP6Km3dLTO+ovRxTH7Top+kInPcsz6207F/ru7GIllScVMNne6x0QEksz9k9r6j1C67ZyXUJkbzO8+PopJRsycULeDx2DTkNjKkXESQUi5j4KHzgZfJeZrw
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+        id S1727222AbgAMQxq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Jan 2020 11:53:46 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:54008 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726567AbgAMQxq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Jan 2020 11:53:46 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00DGpgiF086622;
+        Mon, 13 Jan 2020 16:53:42 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=iyHoOYQJXRm2nc2tsbiEPWTnmg9sCwdjazYykxMxbxA=;
+ b=U64IGnrDZxCF0hhAG8fvWgLWQyCNiauXxEzEumRJV1RhXeA7oXLJqI+ZuylZfzg8YDJd
+ X9wjOhxxyHHKpI7NDmtWQE3DPBEg8C/h0G49vwFg5ghZsbnjYorfZ/VaxQS4dfuax/oM
+ N6UNiZhjP461Y85jeEoKIyrv3QT9rvQgiWt+6i8j5rQM1AznktiUqph8oXBw2gh8wzzp
+ q98/rrzzz3fmoDwf21hv0eQdhXdqJ+5YAsPWA8qMzqoAV9BYrhCwL/3FB/ind5E/29pr
+ tpsuI8YcPAsCPhML+tlskuydqOcaGuBAXLL7z3sEZ8rWaa4A2UMGyFVqAu57flUeN4NL Iw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 2xf73y87uy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 13 Jan 2020 16:53:42 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00DGpcp8154923;
+        Mon, 13 Jan 2020 16:53:42 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 2xfqu4ugpg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 13 Jan 2020 16:53:42 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00DGreC8016940;
+        Mon, 13 Jan 2020 16:53:40 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 13 Jan 2020 08:53:40 -0800
+Date:   Mon, 13 Jan 2020 08:53:41 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Gionatan Danti <g.danti@assyoma.it>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: XFS reflink vs ThinLVM
+Message-ID: <20200113165341.GE8247@magnolia>
+References: <fe697fb6-cef6-2e06-de77-3530700852da@assyoma.it>
+ <20200113111025.liaargk3sf4wbngr@orion>
+ <703a6c17-cc02-2c2c-31ce-6cd12a888743@assyoma.it>
+ <20200113114356.midcgudwxpze3xfw@orion>
+ <627cb07f-9433-ddfd-37d7-27efedd89727@assyoma.it>
+ <39b50e2c-cb78-3bcd-0130-defa9c573b71@assyoma.it>
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4c2bef0e-e80e-44f0-ec78-08d7984788f5
-X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Jan 2020 16:42:10.5831
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: k08XblUDNKbGggEF2fIkP1109q+YQg98kb39qdB4fdmwYS79WUQs6+5CqLmJWKz3
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR15MB2287
-X-OriginatorOrg: fb.com
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
- definitions=2020-01-13_05:2020-01-13,2020-01-13 signatures=0
-X-Proofpoint-Spam-Details: rule=fb_default_notspam policy=fb_default score=0 phishscore=0
- priorityscore=1501 lowpriorityscore=0 spamscore=0 mlxscore=0
- mlxlogscore=999 clxscore=1011 malwarescore=0 suspectscore=0 bulkscore=0
- adultscore=0 impostorscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-1910280000 definitions=main-2001130139
-X-FB-Internal: deliver
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <39b50e2c-cb78-3bcd-0130-defa9c573b71@assyoma.it>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9499 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-2001130140
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9499 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-2001130140
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Mon, Jan 13, 2020 at 04:34:50PM +0100, Gionatan Danti wrote:
+> On 13/01/20 13:21, Gionatan Danti wrote:
+> > On 13/01/20 12:43, Carlos Maiolino wrote:
+> > > I should have mentioned it, my apologies.
+> > > 
+> > > 'extsize' argument for mkfs.xfs will set the size of the blocks in the RT
+> > > section.
 
+mkfs.xfs -d extszinherit=NNN is what you want here.
 
-On 13 Jan 2020, at 10:37, Matthew Wilcox wrote:
+> > > 
+> > > Although, the 'extsize' command in xfs_io, will set the extent size
+> > > hints on any
+> > > file of any xfs filesystem (or filesystem supporting FS_IOC_FSSETXATTR).
+> > > 
+> > > Notice you can use xfs_io extsize to set the extent size hint to a
+> > > directory,
+> > > and all files under the directory will inherit the same extent hint.
+> > 
+> > My bad, I forgot about xfs_io.
+> > Thanks for the detailed explanation.
+> 
+> Well, I did some test with a reflinked file and I must say I am impressed on
+> how well XFS handles small rewrites (for example 4K).
+> 
+> From my understanding, by mapping at 4K granularity but allocating at 128K,
+> it avoid most read/write amplification *and* keep low fragmentation. After
+> "speculative_cow_prealloc_lifetime" it reclaim the allocated but unused
+> space, bringing back any available free space to the filesystem. Is this
+> understanding correct?
 
-> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
->
-> I think everybody hates the readpages API.  The fundamental problem=20
-> with
-> it is that it passes the pages to be read on a doubly linked list,=20
-> using
-> the ->lru list in the struct page.  That means the filesystems have to
-> do the work of calling add_to_page_cache{,_lru,_locked}, and handling
-> failures (because another task is also accessing that chunk of the=20
-> file,
-> and so it fails).
->
-> This is an attempt to add a ->readahead op to replace ->readpages. =20
-> I've
-> converted two users, iomap/xfs and cifs.  The cifs conversion is=20
-> lacking
-> fscache support, and that's just because I didn't want to do that=20
-> work;
-> I don't believe there's anything fundamental to it.  But I wanted to=20
-> do
-> iomap because it is The Infrastructure Of The Future and cifs because=20
-> it
-> is the sole remaining user of add_to_page_cache_locked(), which=20
-> enables
-> the last two patches in the series.  By the way, that gives CIFS=20
-> access
-> to the workingset shadow infrastructure, which it had to ignore before
-> because it couldn't put pages onto the lru list at the right time.
+Right.
 
-I've always kind of liked the compromise of sending the lists.  It's=20
-really good at the common case and doesn't have massive problems when=20
-things break down.   Just glancing through the patches, the old=20
-readpages is called in bigger chunks, so for massive reads we can do=20
-more effective readahead on metadata.  I don't think any of us actually=20
-do, but we could.
+> I have a question: how can I see the allocated-but-unused cow extents? For
+> example, giving the following files:
+> 
+> [root@neutron xfs]# stat test.img copy.img
+>   File: test.img
+>   Size: 1073741824      Blocks: 2097400    IO Block: 4096   regular file
+> Device: 810h/2064d      Inode: 131         Links: 1
+> Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+> Context: unconfined_u:object_r:unlabeled_t:s0
+> Access: 2020-01-13 15:40:50.280711297 +0100
+> Modify: 2020-01-13 16:21:55.564726283 +0100
+> Change: 2020-01-13 16:21:55.564726283 +0100
+>  Birth: -
+> 
+>   File: copy.img
+>   Size: 1073741824      Blocks: 2097152    IO Block: 4096   regular file
+> Device: 810h/2064d      Inode: 132         Links: 1
+> Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+> Context: unconfined_u:object_r:unlabeled_t:s0
+> Access: 2020-01-13 15:40:50.280711297 +0100
+> Modify: 2020-01-13 15:40:57.828552412 +0100
+> Change: 2020-01-13 15:41:48.190492279 +0100
+>  Birth: -
+> 
+> I can clearly see that test.img has an additional 124K allocated after a 4K
+> rewrite. This matches my expectation: a 4K rewrite really allocates a 128K
+> blocks, leading to 124K of temporarily "wasted" space.
+> 
+> But both "filefrag -v" and "xfs_bmap -vep" show only the used space as seen
+> by an userspace application (ie: 262144 blocks of 4096 bytes = 1073741824
+> bytes).
 
-With this new operation, our window is constant, and much smaller.
+xfs_bmap -c, but only if you have xfs debugging enabled.
 
->
-> The fundamental question is, how do we indicate to the implementation=20
-> of
-> ->readahead what pages to operate on?  I've gone with passing a=20
-> pagevec.
-> This has the obvious advantage that it's a data structure that already
-> exists and is used within filemap for batches of pages.  I had to add=20
-> a
-> bit of new infrastructure to support iterating over the pages in the
-> pagevec, but with that done, it's quite nice.
->
-> I think the biggest problem is that the size of the pagevec is limited
-> to 15 pages (60kB).  So that'll mean that if the readahead window=20
-> bumps
-> all the way up to 256kB, we may end up making 5 BIOs (and merging=20
-> them)
-> instead of one.  I'd kind of like to be able to allocate variable=20
-> length
-> pagevecs while allowing regular pagevecs to be allocated on the stack,
-> but I can't figure out a way to do that.  eg this doesn't work:
->
-> -       struct page *pages[PAGEVEC_SIZE];
-> +       union {
-> +               struct page *pages[PAGEVEC_SIZE];
-> +               struct page *_pages[];
-> +       }
->
-> and if we just allocate them, useful and wonderful tools are going to
-> point out when pages[16] is accessed that we've overstepped the end of
-> the array.
->
-> I have considered alternatives to the pagevec like just having the
-> ->readahead implementation look up the pages in the i_pages XArray
-> directly.  That didn't work out too well.
->
+> How can I check the total allocated space as reported by stat?
+> Thanks.
 
-Btrfs basically does this now, honestly iomap isn't that far away. =20
-Given how sensible iomap is for this, I'd rather see us pile into that=20
-abstraction than try to pass pagevecs for large ranges.  Otherwise, if=20
-the lists are awkward we can make some helpers to make it less error=20
-prone?
+If you happen to have rmap enabled, you can use the xfs_io fsmap command
+to look for 'cow reservation' blocks, since that 124k is (according to
+ondisk metadata, anyway) owned by the refcount btree until it gets
+remapped into the file on writeback.
 
--chris
+--D
 
+> -- 
+> Danti Gionatan
+> Supporto Tecnico
+> Assyoma S.r.l. - www.assyoma.it
+> email: g.danti@assyoma.it - info@assyoma.it
+> GPG public key ID: FF5F32A8
