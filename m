@@ -7,19 +7,19 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB8A9C35241
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFE3AC35240
 	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 15:37:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BFBA3222C3
+	by mail.kernel.org (Postfix) with ESMTP id 9463021734
 	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 15:37:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pfVJyi71"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HIDZ4epq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728800AbgAMPhy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1728794AbgAMPhy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Mon, 13 Jan 2020 10:37:54 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:57868 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:57874 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728794AbgAMPhx (ORCPT
+        with ESMTP id S1728797AbgAMPhx (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Jan 2020 10:37:53 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
@@ -27,22 +27,22 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=/YqWOqUUs8RSFa3ffU4BQTUKpG67TjfYQGjVpA3xoSU=; b=pfVJyi71Ce4BNn0c+BJ3P99nBw
-        3hbi7tvkAjeU/zLTNVnpi9PuXEsJYZnwVxGSHUmqLpVT6KVvXPvCzfSSDVHxIHacmX0TZvScsSPyO
-        +i+kbHASx3yTaEKq9VHRsgJbFEt9rC6MA55I0o0mNeVcVk+JIgfp2IF8lwJK9npNDneW/yzlfBeHT
-        vszeYJIXp0r/SBUCz/0K3g7p463EKtIh5ccANObOLM9/8SbAYfI2vFdOQW+Jxf0tqmaTaiA1uGlBM
-        BE8gfdee00kt0INiZMvRXNH5h2AKjAeeeGX3/Eaov56gqocWPn+VIVrKaDLMAxC+wDlLVCSH/U7TT
-        oFCRpCKQ==;
+        bh=fWczM9DLx1FK48u8XSx4af+h330mJlxpghJsvnVaqrA=; b=HIDZ4epq926UxT06NFoqXP0QdF
+        Ur59vo1stJEQAhFpBPj902qub5AA6aZ7tjmo1T7b4Bcn2M748hVk7zbdKY5MFiDnyCP+EYp83n7c1
+        mIJcpbWNlLa7w7YYPsTor72vLw7U68oj1pYpktn7LtqKhB4sKnJdMw0h3gxGqpUYaK6bWb5mh6yKK
+        2SMI4g3AZ8CLnrcxV+gcRnOtTaubpDDvHj6O/oiGqptYxwiI2sBHJao24upsbhSZi9mspf5lxIi0T
+        d+vrwlC5bGgBsGaC9TUwvsYkclacLYkvAufbbyeDvAgDj79k2tTURRn3PVsKZN2y7KebhYvSxpSWy
+        j0iUJV7w==;
 Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1ir1mr-00076j-9X; Mon, 13 Jan 2020 15:37:53 +0000
+        id 1ir1mr-00077G-CN; Mon, 13 Jan 2020 15:37:53 +0000
 From:   Matthew Wilcox <willy@infradead.org>
 To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-mm@kvack.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         jlayton@kernel.org, hch@infradead.org
-Subject: [PATCH 6/8] cifs: Convert from readpages to readahead
-Date:   Mon, 13 Jan 2020 07:37:44 -0800
-Message-Id: <20200113153746.26654-7-willy@infradead.org>
+Subject: [PATCH 8/8] mm: Unify all add_to_page_cache variants
+Date:   Mon, 13 Jan 2020 07:37:46 -0800
+Message-Id: <20200113153746.26654-9-willy@infradead.org>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20200113153746.26654-1-willy@infradead.org>
 References: <20200113153746.26654-1-willy@infradead.org>
@@ -55,224 +55,148 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
-Use the new readahead operation in CIFS
+We already have various bits of add_to_page_cache() executed conditionally
+on !PageHuge(page); add the add_to_page_cache_lru() pieces as some
+more code which isn't executed for huge pages.  This lets us remove
+the old add_to_page_cache() and rename __add_to_page_cache_locked() to
+add_to_page_cache().  Include a compatibility define so we don't have
+to change all 20+ callers of add_to_page_cache_lru().
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 ---
- fs/cifs/file.c | 125 ++++++++-----------------------------------------
- 1 file changed, 19 insertions(+), 106 deletions(-)
+ include/linux/pagemap.h |  5 ++--
+ mm/filemap.c            | 65 ++++++++++++-----------------------------
+ 2 files changed, 21 insertions(+), 49 deletions(-)
 
-diff --git a/fs/cifs/file.c b/fs/cifs/file.c
-index 043288b5c728..816670b501d8 100644
---- a/fs/cifs/file.c
-+++ b/fs/cifs/file.c
-@@ -4280,70 +4280,10 @@ cifs_readpages_copy_into_pages(struct TCP_Server_Info *server,
- 	return readpages_fill_pages(server, rdata, iter, iter->count);
- }
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index 3ce051fb9c73..753e8df6a5b1 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -606,14 +606,15 @@ static inline int fault_in_pages_readable(const char __user *uaddr, int size)
  
--static int
--readpages_get_pages(struct address_space *mapping, struct list_head *page_list,
--		    unsigned int rsize, struct list_head *tmplist,
--		    unsigned int *nr_pages, loff_t *offset, unsigned int *bytes)
+ int add_to_page_cache(struct page *page, struct address_space *mapping,
+ 				pgoff_t index, gfp_t gfp);
+-int add_to_page_cache_lru(struct page *page, struct address_space *mapping,
+-				pgoff_t index, gfp_t gfp_mask);
+ extern void delete_from_page_cache(struct page *page);
+ extern void __delete_from_page_cache(struct page *page, void *shadow);
+ int replace_page_cache_page(struct page *old, struct page *new, gfp_t gfp_mask);
+ void delete_from_page_cache_batch(struct address_space *mapping,
+ 				  struct pagevec *pvec);
+ 
++#define add_to_page_cache_lru(page, mapping, index, gfp) \
++	add_to_page_cache(page, mapping, index, gfp)
++
+ static inline unsigned long dir_pages(struct inode *inode)
+ {
+ 	return (unsigned long)(inode->i_size + PAGE_SIZE - 1) >>
+diff --git a/mm/filemap.c b/mm/filemap.c
+index fb87f5fa75e6..83f45f31a00a 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -847,19 +847,18 @@ int replace_page_cache_page(struct page *old, struct page *new, gfp_t gfp_mask)
+ }
+ EXPORT_SYMBOL_GPL(replace_page_cache_page);
+ 
+-static int __add_to_page_cache_locked(struct page *page,
+-				      struct address_space *mapping,
+-				      pgoff_t offset, gfp_t gfp_mask,
+-				      void **shadowp)
++int add_to_page_cache(struct page *page, struct address_space *mapping,
++		pgoff_t offset, gfp_t gfp_mask)
+ {
+ 	XA_STATE(xas, &mapping->i_pages, offset);
+ 	int huge = PageHuge(page);
+ 	struct mem_cgroup *memcg;
+ 	int error;
+-	void *old;
++	void *old, *shadow = NULL;
+ 
+ 	VM_BUG_ON_PAGE(!PageLocked(page), page);
+ 	VM_BUG_ON_PAGE(PageSwapBacked(page), page);
++	__SetPageLocked(page);
+ 	mapping_set_update(&xas, mapping);
+ 
+ 	if (!huge) {
+@@ -884,8 +883,7 @@ static int __add_to_page_cache_locked(struct page *page,
+ 
+ 		if (xa_is_value(old)) {
+ 			mapping->nrexceptional--;
+-			if (shadowp)
+-				*shadowp = old;
++			shadow = old;
+ 		}
+ 		mapping->nrpages++;
+ 
+@@ -899,45 +897,8 @@ static int __add_to_page_cache_locked(struct page *page,
+ 	if (xas_error(&xas))
+ 		goto error;
+ 
+-	if (!huge)
++	if (!huge) {
+ 		mem_cgroup_commit_charge(page, memcg, false, false);
+-	trace_mm_filemap_add_to_page_cache(page);
+-	return 0;
+-error:
+-	page->mapping = NULL;
+-	/* Leave page->index set: truncation relies upon it */
+-	if (!huge)
+-		mem_cgroup_cancel_charge(page, memcg, false);
+-	put_page(page);
+-	return xas_error(&xas);
+-}
+-ALLOW_ERROR_INJECTION(__add_to_page_cache_locked, ERRNO);
+-
+-int add_to_page_cache(struct page *page, struct address_space *mapping,
+-		pgoff_t offset, gfp_t gfp_mask)
 -{
--	struct page *page, *tpage;
--	unsigned int expected_index;
--	int rc;
--	gfp_t gfp = readahead_gfp_mask(mapping);
+-	int err;
 -
--	INIT_LIST_HEAD(tmplist);
--
--	page = lru_to_page(page_list);
--
--	/*
--	 * Lock the page and put it in the cache. Since no one else
--	 * should have access to this page, we're safe to simply set
--	 * PG_locked without checking it first.
--	 */
 -	__SetPageLocked(page);
--	rc = add_to_page_cache_locked(page, mapping,
--				      page->index, gfp);
--
--	/* give up if we can't stick it in the cache */
--	if (rc) {
+-	err = __add_to_page_cache_locked(page, mapping, offset,
+-					  gfp_mask, NULL);
+-	if (unlikely(err))
 -		__ClearPageLocked(page);
--		return rc;
--	}
--
--	/* move first page to the tmplist */
--	*offset = (loff_t)page->index << PAGE_SHIFT;
--	*bytes = PAGE_SIZE;
--	*nr_pages = 1;
--	list_move_tail(&page->lru, tmplist);
--
--	/* now try and add more pages onto the request */
--	expected_index = page->index + 1;
--	list_for_each_entry_safe_reverse(page, tpage, page_list, lru) {
--		/* discontinuity ? */
--		if (page->index != expected_index)
--			break;
--
--		/* would this page push the read over the rsize? */
--		if (*bytes + PAGE_SIZE > rsize)
--			break;
--
--		__SetPageLocked(page);
--		if (add_to_page_cache_locked(page, mapping, page->index, gfp)) {
--			__ClearPageLocked(page);
--			break;
--		}
--		list_move_tail(&page->lru, tmplist);
--		(*bytes) += PAGE_SIZE;
--		expected_index++;
--		(*nr_pages)++;
--	}
--	return rc;
+-	return err;
 -}
 -
--static int cifs_readpages(struct file *file, struct address_space *mapping,
--	struct list_head *page_list, unsigned num_pages)
-+static void cifs_readahead(struct file *file, struct address_space *mapping,
-+		struct pagevec *pages, pgoff_t index)
- {
- 	int rc;
--	struct list_head tmplist;
- 	struct cifsFileInfo *open_file = file->private_data;
- 	struct cifs_sb_info *cifs_sb = CIFS_FILE_SB(file);
- 	struct TCP_Server_Info *server;
-@@ -4358,11 +4298,10 @@ static int cifs_readpages(struct file *file, struct address_space *mapping,
- 	 * After this point, every page in the list might have PG_fscache set,
- 	 * so we will need to clean that up off of every page we don't use.
- 	 */
--	rc = cifs_readpages_from_fscache(mapping->host, mapping, page_list,
--					 &num_pages);
-+	rc = -ENOBUFS;
- 	if (rc == 0) {
- 		free_xid(xid);
--		return rc;
-+		return;
- 	}
- 
- 	if (cifs_sb->mnt_cifs_flags & CIFS_MOUNT_RWPIDFORWARD)
-@@ -4373,24 +4312,12 @@ static int cifs_readpages(struct file *file, struct address_space *mapping,
- 	rc = 0;
- 	server = tlink_tcon(open_file->tlink)->ses->server;
- 
--	cifs_dbg(FYI, "%s: file=%p mapping=%p num_pages=%u\n",
--		 __func__, file, mapping, num_pages);
-+	cifs_dbg(FYI, "%s: file=%p mapping=%p index=%lu\n",
-+		 __func__, file, mapping, index);
- 
--	/*
--	 * Start with the page at end of list and move it to private
--	 * list. Do the same with any following pages until we hit
--	 * the rsize limit, hit an index discontinuity, or run out of
--	 * pages. Issue the async read and then start the loop again
--	 * until the list is empty.
--	 *
--	 * Note that list order is important. The page_list is in
--	 * the order of declining indexes. When we put the pages in
--	 * the rdata->pages, then we want them in increasing order.
--	 */
--	while (!list_empty(page_list)) {
--		unsigned int i, nr_pages, bytes, rsize;
--		loff_t offset;
--		struct page *page, *tpage;
-+	while (pages->first < pages->nr) {
-+		unsigned int i, nr_pages, rsize;
-+		struct page *page;
- 		struct cifs_readdata *rdata;
- 		struct cifs_credits credits_on_stack;
- 		struct cifs_credits *credits = &credits_on_stack;
-@@ -4408,6 +4335,7 @@ static int cifs_readpages(struct file *file, struct address_space *mapping,
- 		if (rc)
- 			break;
- 
-+		nr_pages = rsize / PAGE_SIZE;
- 		/*
- 		 * Give up immediately if rsize is too small to read an entire
- 		 * page. The VFS will fall back to readpage. We should never
-@@ -4415,36 +4343,23 @@ static int cifs_readpages(struct file *file, struct address_space *mapping,
- 		 * rsize is smaller than a cache page.
- 		 */
- 		if (unlikely(rsize < PAGE_SIZE)) {
--			add_credits_and_wake_if(server, credits, 0);
--			free_xid(xid);
--			return 0;
--		}
+-int add_to_page_cache_lru(struct page *page, struct address_space *mapping,
+-				pgoff_t offset, gfp_t gfp_mask)
+-{
+-	void *shadow = NULL;
+-	int ret;
 -
--		rc = readpages_get_pages(mapping, page_list, rsize, &tmplist,
--					 &nr_pages, &offset, &bytes);
--		if (rc) {
- 			add_credits_and_wake_if(server, credits, 0);
- 			break;
- 		}
- 
-+		if (nr_pages > pagevec_count(pages))
-+			nr_pages = pagevec_count(pages);
-+
- 		rdata = cifs_readdata_alloc(nr_pages, cifs_readv_complete);
- 		if (!rdata) {
- 			/* best to give up if we're out of mem */
--			list_for_each_entry_safe(page, tpage, &tmplist, lru) {
--				list_del(&page->lru);
--				lru_cache_add_file(page);
--				unlock_page(page);
--				put_page(page);
--			}
--			rc = -ENOMEM;
- 			add_credits_and_wake_if(server, credits, 0);
- 			break;
- 		}
- 
- 		rdata->cfile = cifsFileInfo_get(open_file);
- 		rdata->mapping = mapping;
--		rdata->offset = offset;
--		rdata->bytes = bytes;
-+		rdata->offset = index;
- 		rdata->pid = pid;
- 		rdata->pagesz = PAGE_SIZE;
- 		rdata->tailsz = PAGE_SIZE;
-@@ -4452,9 +4367,10 @@ static int cifs_readpages(struct file *file, struct address_space *mapping,
- 		rdata->copy_into_pages = cifs_readpages_copy_into_pages;
- 		rdata->credits = credits_on_stack;
- 
--		list_for_each_entry_safe(page, tpage, &tmplist, lru) {
--			list_del(&page->lru);
--			rdata->pages[rdata->nr_pages++] = page;
-+		for (i = 0; i < rdata->nr_pages; i++) {
-+			rdata->pages[rdata->nr_pages++] = pagevec_next(pages);
-+			index++;
-+			rdata->bytes += PAGE_SIZE;
- 		}
- 
- 		rc = adjust_credits(server, &rdata->credits, rdata->bytes);
-@@ -4470,7 +4386,6 @@ static int cifs_readpages(struct file *file, struct address_space *mapping,
- 			add_credits_and_wake_if(server, &rdata->credits, 0);
- 			for (i = 0; i < rdata->nr_pages; i++) {
- 				page = rdata->pages[i];
--				lru_cache_add_file(page);
- 				unlock_page(page);
- 				put_page(page);
- 			}
-@@ -4486,9 +4401,7 @@ static int cifs_readpages(struct file *file, struct address_space *mapping,
- 	 * the pagecache must be uncached before they get returned to the
- 	 * allocator.
- 	 */
--	cifs_fscache_readpages_cancel(mapping->host, page_list);
- 	free_xid(xid);
--	return rc;
+-	__SetPageLocked(page);
+-	ret = __add_to_page_cache_locked(page, mapping, offset,
+-					 gfp_mask, &shadow);
+-	if (unlikely(ret))
+-		__ClearPageLocked(page);
+-	else {
+ 		/*
+ 		 * The page might have been evicted from cache only
+ 		 * recently, in which case it should be activated like
+@@ -951,9 +912,19 @@ int add_to_page_cache_lru(struct page *page, struct address_space *mapping,
+ 			workingset_refault(page, shadow);
+ 		lru_cache_add(page);
+ 	}
+-	return ret;
++	trace_mm_filemap_add_to_page_cache(page);
++	return 0;
++error:
++	page->mapping = NULL;
++	/* Leave page->index set: truncation relies upon it */
++	if (!huge)
++		mem_cgroup_cancel_charge(page, memcg, false);
++	put_page(page);
++	__ClearPageLocked(page);
++	return xas_error(&xas);
  }
+-EXPORT_SYMBOL_GPL(add_to_page_cache_lru);
++ALLOW_ERROR_INJECTION(add_to_page_cache, ERRNO);
++EXPORT_SYMBOL_GPL(add_to_page_cache);
  
- /*
-@@ -4806,7 +4719,7 @@ cifs_direct_io(struct kiocb *iocb, struct iov_iter *iter)
- 
- const struct address_space_operations cifs_addr_ops = {
- 	.readpage = cifs_readpage,
--	.readpages = cifs_readpages,
-+	.readahead = cifs_readahead,
- 	.writepage = cifs_writepage,
- 	.writepages = cifs_writepages,
- 	.write_begin = cifs_write_begin,
+ #ifdef CONFIG_NUMA
+ struct page *__page_cache_alloc(gfp_t gfp)
 -- 
 2.24.1
 
