@@ -2,535 +2,170 @@ Return-Path: <SRS0=9ni0=3C=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 247C1C3F68F
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 18:00:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5CC4C33CAF
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 18:01:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E5C7E222C2
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 18:00:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 83F4020678
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 18:01:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kWat1rxx"
+	dkim=pass (1024-bit key) header.d=fb.com header.i=@fb.com header.b="HC6ogb+d";
+	dkim=pass (1024-bit key) header.d=fb.onmicrosoft.com header.i=@fb.onmicrosoft.com header.b="RyN2UJGz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727726AbgAMSAo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Jan 2020 13:00:44 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:43878 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726878AbgAMSAo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Jan 2020 13:00:44 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00DHwSOa137836;
-        Mon, 13 Jan 2020 18:00:40 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- content-transfer-encoding : in-reply-to; s=corp-2019-08-05;
- bh=Co1Dk9bCDrHARSxyySWsn5pWkbnOfs2yXAv3KVUZww0=;
- b=kWat1rxx26SIe4ELCS/JpBalb5NWMopSm2UYNbmDslENusrQZNpssyg03BW+YuGwiyrM
- VswElQf5Uo5kaIje/16QdQ83hJ5xa4pkgBJWSl4lCCCviit6BF2kRAbHl93eQyzh9q6h
- 14B11LOfwJoOSKMOcmxXnaIaB6M92kcF8MO7Db9ElTJXGDDfvhwMx7DbcA143J6DwkMD
- hy/Hn/aV7H+t68wiMhKZOZXl/JBtDr8HrAhZPFBb1gf2thWPXP/dV1k0uQOn+XTZjrSb
- /0++Tt29UBS1bwMQD/HRxyyyX43s5us8tkfCnyHfAtxxr440h/7jdFsHk3J5fx1K9Bmf xQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2xf73tgmxp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 13 Jan 2020 18:00:40 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00DHdQgA018352;
-        Mon, 13 Jan 2020 18:00:39 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 2xfrgj4fcp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 13 Jan 2020 18:00:39 +0000
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00DI0cwK027025;
-        Mon, 13 Jan 2020 18:00:38 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 13 Jan 2020 10:00:37 -0800
-Date:   Mon, 13 Jan 2020 10:00:36 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Zorro Lang <zlang@redhat.com>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [PATCH v2] xfstests: xfs mount option sanity test
-Message-ID: <20200113180036.GH8247@magnolia>
-References: <20191030103410.2239-1-zlang@redhat.com>
+        id S1728738AbgAMSBE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Jan 2020 13:01:04 -0500
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:46600 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728633AbgAMSBD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Jan 2020 13:01:03 -0500
+Received: from pps.filterd (m0001303.ppops.net [127.0.0.1])
+        by m0001303.ppops.net (8.16.0.42/8.16.0.42) with SMTP id 00DHr9Xp015144;
+        Mon, 13 Jan 2020 10:00:55 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=facebook;
+ bh=S8noNA3HH4KBOgOZ57Yns89d3C/LADlJzhiVXf8KWMM=;
+ b=HC6ogb+dpHbdyhqY6aj7WCaVR4ikYPNu1u8XE5CBiApv2Ngs1G9aHYUtjbFyyyAfF/Qd
+ yGdm8iC6wziRXdX9Jip2gUcAanHJds84FoMa3QUPrOoR69K2nEKqE46p7eVx6uwwySQs
+ ZLJDvHb850g/yF7lA58wNFCxYAv//MBl8xM= 
+Received: from mail.thefacebook.com (mailout.thefacebook.com [199.201.64.23])
+        by m0001303.ppops.net with ESMTP id 2xfawr9bps-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Mon, 13 Jan 2020 10:00:55 -0800
+Received: from prn-hub03.TheFacebook.com (2620:10d:c081:35::127) by
+ prn-hub04.TheFacebook.com (2620:10d:c081:35::128) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.1.1713.5; Mon, 13 Jan 2020 10:00:53 -0800
+Received: from NAM10-BN7-obe.outbound.protection.outlook.com (192.168.54.28)
+ by o365-in.thefacebook.com (192.168.16.27) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.1.1713.5
+ via Frontend Transport; Mon, 13 Jan 2020 10:00:53 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=mLY8d8ShYWi3caN2SBLP2xJ27wsRAP1e9p16niQO/ZoYiLGy4b5kSHXggiHRD9//FuHGu5TmB2OOzJz+01NITQL2X/G5lQWrbXiV9ht+gqfu5XLOjzR76sslc5c1oqZC4IAbQri7gcw4P/0JBUHbSXJSP5kd588Dey6XRNk/LSTKYlOyazh0Pqo2XCrYW+OHDkk+PpOUpYS+RSHDbgJTeZs32h8rMYxx8mwmHZ2GN7bCThw5NhLmFfi2sy9IX124DjptGrpi/tFnGGv5d0jWFpPXAZlRjp+qNHwWZv1+iSInMKGsFTsLSQLYVH3u/OFepiZKmVeTPOPjg/DH6lF0pA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=S8noNA3HH4KBOgOZ57Yns89d3C/LADlJzhiVXf8KWMM=;
+ b=aelgTNKUBskdsiCAci3nZzyO/gvMRNhztA6G/gmjzd21fNnsxJlGkJij93x6nzmSfX3dMt2fqA/WDM0L570Kd7w7gBEAbcdNwcj0kRVmoZIbzZTj3bfMnE0eU6tQNn0pZeReNAB9lXXS0Z8qEaFl0oVGsK/l5XbCCw/vIX53JgWEeuK7ClZgI2MEej4+cE4bAKDp19L8RajWR4PYZnbkG19q+C6JEVIjTIe84RY/0dqLAWzl31SiR9vCNdvhk8anrpp/2BXTxMci8m79uriuwqH9HWJWnJbGF2M0N25skoQebOvleRIN3B5m8NgHrPAMDU+bSNwVUSxTJezPzmsQJA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=fb.com; dmarc=pass action=none header.from=fb.com; dkim=pass
+ header.d=fb.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector2-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=S8noNA3HH4KBOgOZ57Yns89d3C/LADlJzhiVXf8KWMM=;
+ b=RyN2UJGzFJISB3qEhl//pvUKbtTk+y04xBocCP4D8xu7A1kS+xKxZI8a55G+MMMjVYWfRKhX0Dt1GH+0D9I6f949L2Do02r8x5DvNc1rVV/bUGafuk0iu1eosMCZDd65FUJGhZHrY0XKZeIBfQULktalMpg0fb+trMSv7KRnRgk=
+Received: from SN6PR15MB2446.namprd15.prod.outlook.com (52.135.64.153) by
+ SN6PR15MB2432.namprd15.prod.outlook.com (52.135.65.156) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2623.9; Mon, 13 Jan 2020 18:00:52 +0000
+Received: from SN6PR15MB2446.namprd15.prod.outlook.com
+ ([fe80::615e:4236:ddfa:3d10]) by SN6PR15MB2446.namprd15.prod.outlook.com
+ ([fe80::615e:4236:ddfa:3d10%6]) with mapi id 15.20.2623.015; Mon, 13 Jan 2020
+ 18:00:52 +0000
+Received: from [172.30.120.61] (2620:10d:c091:480::1025) by MN2PR14CA0024.namprd14.prod.outlook.com (2603:10b6:208:23e::29) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2623.9 via Frontend Transport; Mon, 13 Jan 2020 18:00:51 +0000
+From:   Chris Mason <clm@fb.com>
+To:     Matthew Wilcox <willy@infradead.org>
+CC:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "jlayton@kernel.org" <jlayton@kernel.org>,
+        "hch@infradead.org" <hch@infradead.org>
+Subject: Re: [RFC 0/8] Replacing the readpages a_op
+Thread-Topic: [RFC 0/8] Replacing the readpages a_op
+Thread-Index: AQHVyieJJr3DU4NMDUiHtIM35/TqzKfozHmAgAAQNgCAAAXGAA==
+Date:   Mon, 13 Jan 2020 18:00:52 +0000
+Message-ID: <15C84CC9-3196-441D-94DE-F3FD7AC364F0@fb.com>
+References: <20200113153746.26654-1-willy@infradead.org>
+ <6CA4CD96-0812-4261-8FF9-CD28AA2EC38A@fb.com>
+ <20200113174008.GB332@bombadil.infradead.org>
+In-Reply-To: <20200113174008.GB332@bombadil.infradead.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: MailMate (1.13.1r5671)
+x-clientproxiedby: MN2PR14CA0024.namprd14.prod.outlook.com
+ (2603:10b6:208:23e::29) To SN6PR15MB2446.namprd15.prod.outlook.com
+ (2603:10b6:805:22::25)
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [2620:10d:c091:480::1025]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 6752ab99-e401-4ffa-20dc-08d798528734
+x-ms-traffictypediagnostic: SN6PR15MB2432:
+x-microsoft-antispam-prvs: <SN6PR15MB2432D576856B5E6F5216B3CAD3350@SN6PR15MB2432.namprd15.prod.outlook.com>
+x-fb-source: Internal
+x-ms-oob-tlc-oobclassifiers: OLM:4714;
+x-forefront-prvs: 028166BF91
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(396003)(136003)(346002)(366004)(376002)(39860400002)(199004)(189003)(86362001)(4326008)(478600001)(5660300002)(81156014)(81166006)(8936002)(8676002)(36756003)(6486002)(33656002)(66946007)(66556008)(66446008)(66476007)(64756008)(6916009)(2906002)(53546011)(71200400001)(52116002)(2616005)(16526019)(186003)(54906003)(316002);DIR:OUT;SFP:1102;SCL:1;SRVR:SN6PR15MB2432;H:SN6PR15MB2446.namprd15.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: fb.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: VyIuF3+r+sfLZiROhh2Fp4z0mJ8Bq/f+1+cg/aDGNYEufAoEpL9xjnJ7P0ZtLDKVLsXFHdrIw4YthkHg/v7DXkR8oM2/CdXe6FluazYMHjBdrMWbd209T9g//7hHkK5AapMHBnjZ+Po4lfhi+Nu0w1a1Em+RPJwiVu2shw2wkcqMnuNn30BY2oOY4egOWAuztHx9P+1gtCrgf4sXdkEHTE95PNNqrr6rN7lHuqAV7d98su5gCTNyxbFQMcMdkFx6EqRmD5wsxb+nlJyuE60sXXGVnYsdgixw12NNvoi6FlyGp6pPA7Gd4MqX2SXoDptPv2BehgE7zYodKjuporVjD1zZ/2dAsmTJESnv0G+5M7BfHgcq5xOoVcoyJYHScshZYIquvSuvL3B4GUjovqqaJZlJMrDFvCLivizeRcoDbQQd819dx5ieeTDMJQm79bII
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20191030103410.2239-1-zlang@redhat.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9499 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2001130144
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9499 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2001130145
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6752ab99-e401-4ffa-20dc-08d798528734
+X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Jan 2020 18:00:52.0944
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: RoINcDA8ItYwxe8LOScqcr+Jwub00lTLYkh0XUIDLxOnpccN5ZuS02ASO+p0Reot
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR15MB2432
+X-OriginatorOrg: fb.com
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
+ definitions=2020-01-13_06:2020-01-13,2020-01-13 signatures=0
+X-Proofpoint-Spam-Details: rule=fb_default_notspam policy=fb_default score=0 lowpriorityscore=0
+ priorityscore=1501 malwarescore=0 impostorscore=0 bulkscore=0 adultscore=0
+ clxscore=1015 suspectscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-1910280000 definitions=main-2001130144
+X-FB-Internal: deliver
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 30, 2019 at 06:34:10PM +0800, Zorro Lang wrote:
-> XFS is changing to suit the new mount API, so add this case to make
-> sure the changing won't bring in regression issue on xfs mount option
-> parse phase, and won't change some default behaviors either.
+On 13 Jan 2020, at 12:40, Matthew Wilcox wrote:
 
-This testcase examines the intersection of some mkfs options and a large
-number of mount options, but it doesn't log any breadcrumbs of which
-scenario it's testing at any given time.  When something goes wrong,
-it's /very/ difficult to map that back to the do_mkfs/do_test call.
+> On Mon, Jan 13, 2020 at 04:42:10PM +0000, Chris Mason wrote:
+>
+> I did do a couple of helpers for lists for iomap before deciding the
+> whole thing was too painful.  I didn't look at btrfs until just now,=20
+> but, um ...
+>
+> int extent_readpages(struct address_space *mapping, struct list_head=20
+> *pages,
+>                      unsigned nr_pages)
+> ..
+>         struct page *pagepool[16];
+> ..
+>         while (!list_empty(pages)) {
+> ..
+>                         list_del(&page->lru);
+>                         if (add_to_page_cache_lru(page, mapping,=20
+> page->index,
+> ..
+>                         pagepool[nr++] =3D page;
+>
+> you're basically doing exactly what i'm proposing to be the new=20
+> interface!
+> OK, you get one extra page per batch ;-P
 
-(FWIW I added this test as xfs/997 and attached the diff I needed to
-debug the problem I complained about a month ago.)
+This is true, I didn't explain that part well ;)  Depending on=20
+compression etc we might end up poking the xarray inside the actual IO=20
+functions, but the main difference is that btrfs is building a single=20
+bio.  You're moving the plug so you'll merge into single bio, but I'd=20
+rather build 2MB bios than merge them.
 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
-> ---
-> 
-> Hi,
-> 
-> V2 did below changes:
-> 1) Fix wrong output messages in _do_test function
-> 2) Remove logbufs=N and logbsize=N default display test. Lastest upstream
->    kernel displays these options in /proc/mounts by default, but old kernel
->    doesn't show them except user indicate these options when mount xfs.
->    Refer to https://marc.info/?l=fstests&m=157199699615477&w=2
-> 
-> Thanks,
-> Zorro
-> 
->  tests/xfs/148     | 320 ++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/148.out |   6 +
->  tests/xfs/group   |   1 +
->  3 files changed, 327 insertions(+)
->  create mode 100755 tests/xfs/148
->  create mode 100644 tests/xfs/148.out
-> 
-> diff --git a/tests/xfs/148 b/tests/xfs/148
-> new file mode 100755
-> index 00000000..a662f6f7
-> --- /dev/null
-> +++ b/tests/xfs/148
-> @@ -0,0 +1,320 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2019 Red Hat, Inc. All Rights Reserved.
-> +#
-> +# FS QA Test 148
-> +#
-> +# XFS mount options sanity check, refer to 'man 5 xfs'.
-> +#
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +	$UMOUNT_PROG $LOOP_MNT 2>/dev/null
-> +	if [ -n "$LOOP_DEV" ];then
-> +		_destroy_loop_device $LOOP_DEV 2>/dev/null
-> +	fi
-> +	if [ -n "$LOOP_SPARE_DEV" ];then
-> +		_destroy_loop_device $LOOP_SPARE_DEV 2>/dev/null
-> +	fi
-> +	rm -f $LOOP_IMG
-> +	rm -f $LOOP_SPARE_IMG
-> +	rmdir $LOOP_MNT
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_test
-> +_require_loop
-> +_require_xfs_io_command "falloc"
-> +
-> +LOOP_IMG=$TEST_DIR/$seq.dev
-> +LOOP_SPARE_IMG=$TEST_DIR/$seq.logdev
-> +LOOP_MNT=$TEST_DIR/$seq.mnt
-> +
-> +echo "** create loop device"
-> +$XFS_IO_PROG -f -c "falloc 0 1g" $LOOP_IMG
-> +LOOP_DEV=`_create_loop_device $LOOP_IMG`
-> +
-> +echo "** create loop log device"
-> +$XFS_IO_PROG -f -c "falloc 0 512m" $LOOP_SPARE_IMG
-> +LOOP_SPARE_DEV=`_create_loop_device $LOOP_SPARE_IMG`
-> +
-> +echo "** create loop mount point"
-> +rmdir $LOOP_MNT 2>/dev/null
-> +mkdir -p $LOOP_MNT || _fail "cannot create loopback mount point"
-> +
-> +# avoid the effection from MKFS_OPTIONS
-> +MKFS_OPTIONS=""
-> +do_mkfs()
-> +{
+I guess it doesn't feel like enough of a win to justify the churn.  If=20
+we find a way to do much larger pagevecs, I think this makes more sense.
 
-Please log what options we're passing.
+-chris
 
-> +	$MKFS_XFS_PROG -f $* $LOOP_DEV | _filter_mkfs >$seqres.full 2>$tmp.mkfs
-
->>$seqres.full, because this otherwise obliterates seqres.full
-
-> +	if [ "${PIPESTATUS[0]}" -ne 0 ]; then
-> +		_fail "Fails on _mkfs_dev $* $LOOP_DEV"
-> +	fi
-> +	. $tmp.mkfs
-> +}
-> +
-> +is_dev_mounted()
-> +{
-> +	findmnt --source $LOOP_DEV >/dev/null
-> +	return $?
-> +}
-> +
-> +get_mount_info()
-> +{
-> +	findmnt --source $LOOP_DEV -o OPTIONS -n
-> +}
-> +
-> +force_unmount()
-> +{
-> +	$UMOUNT_PROG $LOOP_MNT >/dev/null 2>&1
-> +}
-> +
-> +# _do_test <mount options> <should be mounted?> [<key string> <key should be found?>]
-> +_do_test()
-> +{
-> +	local opts="$1"
-> +	local mounted="$2"	# pass or fail
-> +	local key="$3"
-> +	local found="$4"	# true or false
-> +	local rc
-> +	local info
-> +
-> +	# mount test
-> +	_mount $LOOP_DEV $LOOP_MNT $opts 2>/dev/null
-
-Please capture the stderr output to seqres.full
-
-> +	rc=$?
-> +	if [ $rc -eq 0 ];then
-> +		if [ "${mounted}" = "fail" ];then
-> +			echo "[FAILED]: mount $LOOP_DEV $LOOP_MNT $opts"
-> +			echo "ERROR: expect ${mounted}, but pass"
-
-The wording of these error messages is a little weird, I'll fix that....
-
-> +			return 1
-> +		fi
-> +		is_dev_mounted
-> +		if [ $? -ne 0 ];then
-> +			echo "[FAILED]: mount $LOOP_DEV $LOOP_MNT $opts"
-> +			echo "ERROR: fs not mounted even mount return 0"
-> +			return 1
-> +		fi
-> +	else
-> +		if [ "${mount_ret}" = "pass" ];then
-
-$mount_ret is not defined here, did you mean $mounted?
-
-> +			echo "[FAILED]: mount $LOOP_DEV $LOOP_MNT $opts"
-> +			echo "ERROR: expect ${mounted}, but fail"
-> +			return 1
-> +		fi
-> +		is_dev_mounted
-> +		if [ $? -eq 0 ];then
-> +			echo "[FAILED]: mount $LOOP_DEV $LOOP_MNT $opts"
-> +			echo "ERROR: fs is mounted even mount return non-zero"
-> +			return 1
-> +		fi
-> +	fi
-> +
-> +	# Skip below checking if "$key" argument isn't specified
-> +	if [ -z "$key" ];then
-> +		return 0
-> +	fi
-> +	# Check the mount options after fs mounted.
-> +	info=`get_mount_info`
-> +	echo $info | grep -q "${key}"
-
-echo "$info" so we can at least pretend to have proper string handling
-;)
-
-> +	rc=$?
-> +	if [ $rc -eq 0 ];then
-> +		if [ "$found" != "true" ];then
-> +			echo "[FAILED]: mount $LOOP_DEV $LOOP_MNT $opts"
-> +			echo "ERROR: expect there's not $key in $info, but not found"
-> +			return 1
-> +		fi
-> +	else
-> +		if [ "$found" != "false" ];then
-> +			echo "[FAILED]: mount $LOOP_DEV $LOOP_MNT $opts"
-> +			echo "ERROR: expect there's $key in $info, but found"
-
-So earlier, I complained that I was seeing this error in the case where
-the fs was formatted with rmapbt=1 and the mount options were "-o
-logbsize=16k".  It turns out that formatting a 1G fs with an internal
-log results in a log that is the minimum allowed size with the default
-mount options.
-
-When the test adds in the logbsize=16k argument, this increases the
-kernel's expectation of minimum log size from 3273 to 3299 blocks, so
-the mount fails.  The stderr output from mount is discarded, which
-means one has to refer to dmesg to figure out that the mount failed.
-The test leaves no mkfs/mount option breadcrumb trail, so it is
-difficult even to figure out where we were in the test.
-
-The erroneous $mount_ret logic allows the test to escape to the mount
-info testing, which of course fails because the fs didn't mount, which
-produced the broken-looking error message about "expect there's
-logbsize=16k in  , but not found".
-
-So ... I've fixed this test up enough to be (mostly) passable, but that
-leaves the problem that a filesystem formatted with the minimum size log
-fails to mount when one starts running with non-default mount options.
-That alone might not be a big deal since we always advise to accept the
-defaults unless a customer's workload proves that a non-default option
-is better, however...
-
-A filesystem formatted with the mininum log size is at high risk of
-encountering mount failures in the future if we are not /exceedingly/
-careful about changing things that cause perturbations in the log
-reservation calculations.  I observed that at some point between 4.15
-and 4.18 the minimum log size calculation decreased (when formatting
-with reflink=1), though's only likely to affect people moving to an
-older kernel, so we're probably ok for now.
-
-I /think/ a solution here is to change mkfs to detect when the log size
-it proposes to format is the same as the minimum log size and increase
-it by (say) 10% to buffer the fs against these kinds of fluctuations.
-Obviously if the user forces the log size to minimum then we'll continue
-to respect that, but we don't have to format that way by default.
-
---D
-
-> +			return 1
-> +		fi
-> +	fi
-> +
-> +	return 0
-> +}
-> +
-> +do_test()
-> +{
-
-Please log what mount options we're testing here.
-
---D
-
-> +	# force unmount before testing
-> +	force_unmount
-> +	_do_test "$@"
-> +	# force unmount after testing
-> +	force_unmount
-> +}
-> +
-> +echo "** start xfs mount testing ..."
-> +# Test allocsize=size
-> +# Valid values for this option are page size (typically 4KiB) through to 1GiB
-> +do_mkfs
-> +if [ $dbsize -ge 1024 ];then
-> +	blsize="$((dbsize / 1024))k"
-> +fi
-> +do_test "" pass "allocsize" "false"
-> +do_test "-o allocsize=$blsize" pass "allocsize=$blsize" "true"
-> +do_test "-o allocsize=1048576k" pass "allocsize=1048576k" "true"
-> +do_test "-o allocsize=$((dbsize / 2))" fail
-> +do_test "-o allocsize=2g" fail
-> +
-> +# Test attr2
-> +do_mkfs -m crc=1
-> +do_test "" pass "attr2" "true"
-> +do_test "-o attr2" pass "attr2" "true"
-> +do_test "-o noattr2" fail
-> +do_mkfs -m crc=0
-> +do_test "" pass "attr2" "true"
-> +do_test "-o attr2" pass "attr2" "true"
-> +do_test "-o noattr2" pass "attr2" "false"
-> +
-> +# Test discard
-> +do_mkfs
-> +do_test "" pass "discard" "false"
-> +do_test "-o discard" pass "discard" "true"
-> +do_test "-o nodiscard" pass "discard" "false"
-> +
-> +# Test grpid|bsdgroups|nogrpid|sysvgroups
-> +do_test "" pass "grpid" "false"
-> +do_test "-o grpid" pass "grpid" "true"
-> +do_test "-o bsdgroups" pass "grpid" "true"
-> +do_test "-o nogrpid" pass "grpid" "false"
-> +do_test "-o sysvgroups" pass "grpid" "false"
-> +
-> +# Test filestreams
-> +do_test "" pass "filestreams" "false"
-> +do_test "-o filestreams" pass "filestreams" "true"
-> +
-> +# Test ikeep
-> +do_test "" pass "ikeep" "false"
-> +do_test "-o ikeep" pass "ikeep" "true"
-> +do_test "-o noikeep" pass "ikeep" "false"
-> +
-> +# Test inode32|inode64
-> +do_test "" pass "inode64" "true"
-> +do_test "-o inode32" pass "inode32" "true"
-> +do_test "-o inode64" pass "inode64" "true"
-> +
-> +# Test largeio
-> +do_test "" pass "largeio" "false"
-> +do_test "-o largeio" pass "largeio" "true"
-> +do_test "-o nolargeio" pass "largeio" "false"
-> +
-> +# Test logbufs=value. Valid numbers range from 2–8 inclusive.
-> +# New kernel (refer to 4f62282a3696 xfs: cleanup xlog_get_iclog_buffer_size)
-> +# prints "logbufs=N" in /proc/mounts, but old kernel not. So the default
-> +# 'display' about logbufs can't be expected, disable this test.
-> +#do_test "" pass "logbufs" "false"
-> +do_test "-o logbufs=8" pass "logbufs=8" "true"
-> +do_test "-o logbufs=2" pass "logbufs=2" "true"
-> +do_test "-o logbufs=1" fail
-> +do_test "-o logbufs=9" fail
-> +do_test "-o logbufs=99999999999999" fail
-> +
-> +# Test logbsize=value.
-> +do_mkfs -m crc=1 -l version=2
-> +# New kernel (refer to 4f62282a3696 xfs: cleanup xlog_get_iclog_buffer_size)
-> +# prints "logbsize=N" in /proc/mounts, but old kernel not. So the default
-> +# 'display' about logbsize can't be expected, disable this test.
-> +#do_test "" pass "logbsize" "false"
-> +do_test "-o logbsize=16384" pass "logbsize=16k" "true"
-> +do_test "-o logbsize=16k" pass "logbsize=16k" "true"
-> +do_test "-o logbsize=32k" pass "logbsize=32k" "true"
-> +do_test "-o logbsize=64k" pass "logbsize=64k" "true"
-> +do_test "-o logbsize=128k" pass "logbsize=128k" "true"
-> +do_test "-o logbsize=256k" pass "logbsize=256k" "true"
-> +do_test "-o logbsize=8k" fail
-> +do_test "-o logbsize=512k" fail
-> +do_mkfs -m crc=0 -l version=1
-> +# New kernel (refer to 4f62282a3696 xfs: cleanup xlog_get_iclog_buffer_size)
-> +# prints "logbsize=N" in /proc/mounts, but old kernel not. So the default
-> +# 'display' about logbsize can't be expected, disable this test.
-> +#do_test "" pass "logbsize" "false"
-> +do_test "-o logbsize=16384" pass "logbsize=16k" "true"
-> +do_test "-o logbsize=16k" pass "logbsize=16k" "true"
-> +do_test "-o logbsize=32k" pass "logbsize=32k" "true"
-> +do_test "-o logbsize=64k" fail
-> +
-> +# Test logdev
-> +do_mkfs
-> +do_test "" pass "logdev" "false"
-> +do_test "-o logdev=$LOOP_SPARE_DEV" fail
-> +do_mkfs -l logdev=$LOOP_SPARE_DEV
-> +do_test "-o logdev=$LOOP_SPARE_DEV" pass "logdev=$LOOP_SPARE_DEV" "true"
-> +do_test "" fail
-> +
-> +# Test noalign
-> +do_mkfs
-> +do_test "" pass "noalign" "false"
-> +do_test "-o noalign" pass "noalign" "true"
-> +
-> +# Test norecovery
-> +do_test "" pass "norecovery" "false"
-> +do_test "-o norecovery,ro" pass "norecovery" "true"
-> +do_test "-o norecovery" fail
-> +
-> +# Test nouuid
-> +do_test "" pass "nouuid" "false"
-> +do_test "-o nouuid" pass "nouuid" "true"
-> +
-> +# Test noquota
-> +do_test "" pass "noquota" "true"
-> +do_test "-o noquota" pass "noquota" "true"
-> +
-> +# Test uquota/usrquota/quota/uqnoenforce/qnoenforce
-> +do_test "" pass "usrquota" "false"
-> +do_test "-o uquota" pass "usrquota" "true"
-> +do_test "-o usrquota" pass "usrquota" "true"
-> +do_test "-o quota" pass "usrquota" "true"
-> +do_test "-o uqnoenforce" pass "usrquota" "true"
-> +do_test "-o qnoenforce" pass "usrquota" "true"
-> +
-> +# Test gquota/grpquota/gqnoenforce
-> +do_test "" pass "grpquota" "false"
-> +do_test "-o gquota" pass "grpquota" "true"
-> +do_test "-o grpquota" pass "grpquota" "true"
-> +do_test "-o gqnoenforce" pass "gqnoenforce" "true"
-> +
-> +# Test pquota/prjquota/pqnoenforce
-> +do_test "" pass "prjquota" "false"
-> +do_test "-o pquota" pass "prjquota" "true"
-> +do_test "-o prjquota" pass "prjquota" "true"
-> +do_test "-o pqnoenforce" pass "pqnoenforce" "true"
-> +
-> +# Test sunit=value and swidth=value
-> +do_mkfs -d sunit=128,swidth=128
-> +do_test "-o sunit=8,swidth=8" pass "sunit=8,swidth=8" "true"
-> +do_test "-o sunit=8,swidth=64" pass "sunit=8,swidth=64" "true"
-> +do_test "-o sunit=128,swidth=128" pass "sunit=128,swidth=128" "true"
-> +do_test "-o sunit=256,swidth=256" pass "sunit=256,swidth=256" "true"
-> +do_test "-o sunit=2,swidth=2" fail
-> +
-> +# Test swalloc
-> +do_mkfs
-> +do_test "" pass "swalloc" "false"
-> +do_test "-o swalloc" pass "swalloc" "true"
-> +
-> +# Test wsync
-> +do_test "" pass "wsync" "false"
-> +do_test "-o wsync" pass "wsync" "true"
-> +
-> +echo "** end of testing"
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/148.out b/tests/xfs/148.out
-> new file mode 100644
-> index 00000000..a71d9231
-> --- /dev/null
-> +++ b/tests/xfs/148.out
-> @@ -0,0 +1,6 @@
-> +QA output created by 148
-> +** create loop device
-> +** create loop log device
-> +** create loop mount point
-> +** start xfs mount testing ...
-> +** end of testing
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index f4ebcd8c..019aebad 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -145,6 +145,7 @@
->  145 dmapi
->  146 dmapi
->  147 dmapi
-> +148 auto quick mount
->  150 dmapi
->  151 dmapi
->  152 dmapi
-> -- 
-> 2.20.1
-> 
