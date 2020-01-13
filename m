@@ -2,106 +2,85 @@ Return-Path: <SRS0=9ni0=3C=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D932C35242
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 15:38:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D1FBC33CA9
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 16:14:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 41DB82081E
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 15:38:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 626432080D
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 16:14:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="iFiz31mv"
+	dkim=pass (2048-bit key) header.d=colorremedies-com.20150623.gappssmtp.com header.i=@colorremedies-com.20150623.gappssmtp.com header.b="0fT73zLr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728792AbgAMPh7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Jan 2020 10:37:59 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:57850 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728783AbgAMPhx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Jan 2020 10:37:53 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
-        :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=7T6itBiApRciaky4TlalX8Xey/dXpsbhmN7GfbwBCQQ=; b=iFiz31mvlvB3F6V2/KzYd35pGt
-        wnp/9Khlrp6Ks1AfTMi8ggNFuMEvwljAsoUT6Fd7KNY5kWrArU9md8WO/2jb5DQUZyRx5JltVNlsG
-        9Sn7kZKGvrsR3HQNu1TZgNDUTK41FhI0YSJET42oZm/zJLR3VGnXtL3pxV6ooOYJCBDFLb2TrXh5H
-        5PaYFUKnDEGt82/8ODHp9AE33gQmXZMJoLYn/hy3n3Qfg/NomfJieYUirOeJl+kRqcEXijqT8WUg1
-        Xwy+R8s17c2KZMLGywc1RDNoNM3ZZ1zWg1cKy3pnKfurg/HrMl38mHkZ+3ngS6eXPEYUqQ8ZZ+Su7
-        lBO1JPZg==;
-Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1ir1mr-00075f-3B; Mon, 13 Jan 2020 15:37:53 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org
-Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        jlayton@kernel.org, hch@infradead.org
-Subject: [PATCH 2/8] mm: Fix the return type of __do_page_cache_readahead
-Date:   Mon, 13 Jan 2020 07:37:40 -0800
-Message-Id: <20200113153746.26654-3-willy@infradead.org>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20200113153746.26654-1-willy@infradead.org>
-References: <20200113153746.26654-1-willy@infradead.org>
+        id S1727331AbgAMQOc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Jan 2020 11:14:32 -0500
+Received: from mail-wr1-f47.google.com ([209.85.221.47]:42322 "EHLO
+        mail-wr1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726943AbgAMQOc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Jan 2020 11:14:32 -0500
+Received: by mail-wr1-f47.google.com with SMTP id q6so9150107wro.9
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Jan 2020 08:14:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=colorremedies-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=ZvpsfGYATLEf/xvhrnHhDR6lj2j7KgzJ3z76Gl4IuN0=;
+        b=0fT73zLrgz1trSU7IZqQRFLN1Pk3v23PG0e+2L53zu3Sakc8sX1/mJrgQqlwnHtnrI
+         mETYUiMHAzaWpr1imfd79dan/R5Uge/gyQYfsX9hEM9uOiuSPaa+YwizCxxA9gqET3XG
+         uuaHwvqsnXpCntar0BHOS0kmuX2OAsAoyeCw+tlmtbxzLYgCdTO7+teNxpLoOv68SztO
+         6zHCuuX0zLj6EOW7WocNvMve4KZyq5b5wSP9V5zPsg2E2gLuzFJjweahwg3qUhru8fXi
+         mhe/1QPec3lxE9AqdHClMvZXwIwRfdTDy4w2jfuqEbX3GTZJU1n9TcyZDctrHq7so+5q
+         zJMQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=ZvpsfGYATLEf/xvhrnHhDR6lj2j7KgzJ3z76Gl4IuN0=;
+        b=HxPDsLGr53du3FjlaIL+4fjMMWS/+7zTXE4wWOziHvnVcX9AOddZ05qlAnY6yRXuL7
+         sJEU2VhYmlCawlGHS2sEsO7A8F4l/gT29TipdYcQI5e8HH/zT0zpbk88llUyDoe9FN6x
+         b5OcZn0nnRshs5Y/ta7Ds2Znc8PjAqYqIAH7V+5/j5ucY5gvVK00WniAHl07F5xK7kLK
+         i4qQY9n316qF6aH0OpuOuFsgQy6WCUgywNuqPvkSmF+Ywmgw4obutdxBcUf4ZTiyP1ff
+         sXTn/XEW0sDEnxgJIq3Y5defgsMQ50oDYbvqe03/0Po9X5GQRIF8HrBXbFJc6M4OLR7q
+         bpXQ==
+X-Gm-Message-State: APjAAAWvH7PtPWwrzS4amyR8dEvmYhO8Ngf9iSu/ZkRkSDsSZONIriss
+        VuUNAK7o+xi9EwULHH+PkCit7ldKSqMqehMOaz7GxRihDqg=
+X-Google-Smtp-Source: APXvYqwiOTRb9+UR+kdDsc9JRzhSgiGSpL8lr6cmzEYrYFaKc6L3f6hn6JuBUKmbgS0uouhOOd6IhGuuUlEIM+QPbtw=
+X-Received: by 2002:adf:82f3:: with SMTP id 106mr19966956wrc.69.1578932070712;
+ Mon, 13 Jan 2020 08:14:30 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <fe697fb6-cef6-2e06-de77-3530700852da@assyoma.it>
+In-Reply-To: <fe697fb6-cef6-2e06-de77-3530700852da@assyoma.it>
+From:   Chris Murphy <lists@colorremedies.com>
+Date:   Mon, 13 Jan 2020 09:14:14 -0700
+Message-ID: <CAJCQCtShw=TTqfnxWpEROXfUgs2TtAOnLzPdi4LpOo9aYsN-gg@mail.gmail.com>
+Subject: Re: XFS reflink vs ThinLVM
+To:     xfs list <linux-xfs@vger.kernel.org>
+Cc:     Gionatan Danti <g.danti@assyoma.it>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+On Mon, Jan 13, 2020 at 3:28 AM Gionatan Danti <g.danti@assyoma.it> wrote:
+>
+> Still, in at least one use case they are quite similar: single-volume
+> storage of virtual machine files, with vdisk-level snapshot. So lets say
+> I have a single big volume for storing virtual disk image file, and
+> using XFS reflink to take atomic, per file snapshot via a simple "cp
+> --reflink vdisk.img vdisk_snap.img".
 
-ra_submit() which is a wrapper around __do_page_cache_readahead() already
-returns an unsigned long, and the 'nr_to_read' parameter is an unsigned
-long, so fix __do_page_cache_readahead() to return an unsigned long,
-even though I'm pretty sure we're not going to readahead more than 2^32
-pages ever.
+Is --reflink on XFS atomic? In particular for a VM file that's being
+used, that's possibly quite a lot of metadata on disk and in-flight in
+the host and in the guest.
 
-Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
----
- mm/internal.h  | 2 +-
- mm/readahead.c | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+I ask because I'm not certain --reflink copies on Btrfs are atomic,
+I'll have to ask over there too. Whereas btrfs subvolume snapshots are
+considered atomic.
 
-diff --git a/mm/internal.h b/mm/internal.h
-index 3cf20ab3ca01..41b93c4b3ab7 100644
---- a/mm/internal.h
-+++ b/mm/internal.h
-@@ -49,7 +49,7 @@ void unmap_page_range(struct mmu_gather *tlb,
- 			     unsigned long addr, unsigned long end,
- 			     struct zap_details *details);
- 
--extern unsigned int __do_page_cache_readahead(struct address_space *mapping,
-+extern unsigned long __do_page_cache_readahead(struct address_space *mapping,
- 		struct file *filp, pgoff_t offset, unsigned long nr_to_read,
- 		unsigned long lookahead_size);
- 
-diff --git a/mm/readahead.c b/mm/readahead.c
-index 2fe72cd29b47..6bf73ef33b7e 100644
---- a/mm/readahead.c
-+++ b/mm/readahead.c
-@@ -152,7 +152,7 @@ static int read_pages(struct address_space *mapping, struct file *filp,
-  *
-  * Returns the number of pages requested, or the maximum amount of I/O allowed.
-  */
--unsigned int __do_page_cache_readahead(struct address_space *mapping,
-+unsigned long __do_page_cache_readahead(struct address_space *mapping,
- 		struct file *filp, pgoff_t offset, unsigned long nr_to_read,
- 		unsigned long lookahead_size)
- {
-@@ -161,7 +161,7 @@ unsigned int __do_page_cache_readahead(struct address_space *mapping,
- 	unsigned long end_index;	/* The last page we want to read */
- 	LIST_HEAD(page_pool);
- 	int page_idx;
--	unsigned int nr_pages = 0;
-+	unsigned long nr_pages = 0;
- 	loff_t isize = i_size_read(inode);
- 	gfp_t gfp_mask = readahead_gfp_mask(mapping);
- 
+
+
 -- 
-2.24.1
-
+Chris Murphy
