@@ -2,69 +2,99 @@ Return-Path: <SRS0=9ni0=3C=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F8C5C33CA9
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 21:58:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33B77C33CA9
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 22:00:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 400D3222C2
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 21:58:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 045952075B
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 22:00:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QhjG5sZ7"
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="JZLwjnJI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728877AbgAMV6L (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Jan 2020 16:58:11 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:40128 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728733AbgAMV6L (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Jan 2020 16:58:11 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=vIM78U2tiWS9Y/ZT/+KZFKq5Yv/4AD1q7UnORAYypVA=; b=QhjG5sZ73yT68+nsT+PJK7boT
-        5hGKSj9h0MWjy4zOpkZ99sx5F6bMnW4oeh/BVRiYN7rRSA5+LDcu4UCW4ylznEE2T+LXn6e7l0h3v
-        Wk/kRBrV2qeyieT7kIa2lL9X5D/SVPWk8lvc1U6nfVa8mcU0kp19XDbP/87FSMlP7A+H445fZlN8l
-        5uPAOyAkMVsLHkA2Wbswv6mGE1BGhr0mjdBHjwmSWONgFNHiDjm9hUy8ne2zu+8AfRc6SOpDyFXFv
-        vPFy5BBfjcF4YapnTJ3IUrvylWDHRrrdixB/pAlaPyYUgfzCNGdwD5g+fI0AfTp9fabFTNFVZFiD6
-        LH5vvu3jA==;
-Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1ir7it-0001Om-5J; Mon, 13 Jan 2020 21:58:11 +0000
-Date:   Mon, 13 Jan 2020 13:58:11 -0800
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Chris Mason <clm@fb.com>
+        id S1728838AbgAMWAm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Jan 2020 17:00:42 -0500
+Received: from mail-io1-f67.google.com ([209.85.166.67]:33762 "EHLO
+        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728792AbgAMWAm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Jan 2020 17:00:42 -0500
+Received: by mail-io1-f67.google.com with SMTP id z8so11577979ioh.0
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Jan 2020 14:00:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=6OXWt9fjGuGkgSEMyujLuP1/3L7zMMRQcPORZ/BCTp0=;
+        b=JZLwjnJIiB2VPgbJJXYgO9P/bSWC64Fqjw8s87im1FHRvfGbqIj5bilaokUAku05tt
+         vzP0IiUEAhN5jJx+IUpw0hZfbcYVqzyZ3ke3oEI45RzXbml4M8IAnhRJviVFYcOd60R0
+         dSKAYXkM1K1OKNjjDWrxQ7c02cpXgA68nIvqzxQFFlIuN+TyXWADfwD9FUnXBZNiTEBN
+         iTyaJYdVvLOspJbJ9eVqXXl+xJfwuYEbeNH8q4ISGSnfuz3rUzmAMrPPVUAP2t2FD1bm
+         h/C1Ez9i5Ks4ZA0I5Vm9z/tqgTOm71h3pD7wHCnkvJlxdHCZ9ksWa9DzY6bmfzCZSf1D
+         wJrg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=6OXWt9fjGuGkgSEMyujLuP1/3L7zMMRQcPORZ/BCTp0=;
+        b=SWxMmYp0W4YyNQ9xq9asOH8LM2VO492opZNyj3U62Vi0J4n/KmDFPpcGzInZ9xCmKC
+         5Q/1zJACgYro6FJuL99NTUTrJF44OXhwtznEgyVRict93eA+nA56fl14KE5kUkh9r0/h
+         mEw8VbhtaoMIIzG7JPmFtqVonO8mdvUs2P3I19R4AgYLZZXuKmNaGgSFf9IzCKHpayLL
+         ZPURsPwaLFQ0Htb9EJUPmqX/MRvtL7Uvlfhx0NMZftOQqi4W06NrQAxxsxnvlDDpYRXP
+         IXaVzqY/YeXRDx6iacFTOCnE5bl/hQgR5nZlo3PIM0GXsSd2aVc+vTQrZZGX+Y276QEr
+         pnAA==
+X-Gm-Message-State: APjAAAXMv7uPyU+A40plCay30N4k5A84vAXtryJaR+fXs4DiCoDY7pgA
+        eP2C+aS/1WyVwh2LSEKUn7uDsIGBy4Y=
+X-Google-Smtp-Source: APXvYqws4PS4QzRyH3Eku9Bg95x93B8Hl2L5b3Nvi8PKwZH2Qq2Xq40gYSPOkkfYrvVpZNq5veC1ww==
+X-Received: by 2002:a02:3312:: with SMTP id c18mr15775836jae.24.1578952841579;
+        Mon, 13 Jan 2020 14:00:41 -0800 (PST)
+Received: from [192.168.1.159] ([65.144.74.34])
+        by smtp.gmail.com with ESMTPSA id e13sm3046286iol.16.2020.01.13.14.00.40
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 13 Jan 2020 14:00:41 -0800 (PST)
+Subject: Re: [RFC 0/8] Replacing the readpages a_op
+To:     Matthew Wilcox <willy@infradead.org>, Chris Mason <clm@fb.com>
 Cc:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
         "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
         "linux-mm@kvack.org" <linux-mm@kvack.org>,
         "jlayton@kernel.org" <jlayton@kernel.org>,
-        "hch@infradead.org" <hch@infradead.org>,
-        Jens Axboe <axboe@kernel.dk>
-Subject: Re: [RFC 0/8] Replacing the readpages a_op
-Message-ID: <20200113215811.GA18216@bombadil.infradead.org>
+        "hch@infradead.org" <hch@infradead.org>
 References: <20200113153746.26654-1-willy@infradead.org>
  <6CA4CD96-0812-4261-8FF9-CD28AA2EC38A@fb.com>
  <20200113174008.GB332@bombadil.infradead.org>
  <15C84CC9-3196-441D-94DE-F3FD7AC364F0@fb.com>
+ <20200113215811.GA18216@bombadil.infradead.org>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <910af281-4e2b-3e5d-5533-b5ceafd59665@kernel.dk>
+Date:   Mon, 13 Jan 2020 15:00:40 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <15C84CC9-3196-441D-94DE-F3FD7AC364F0@fb.com>
+In-Reply-To: <20200113215811.GA18216@bombadil.infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 13, 2020 at 06:00:52PM +0000, Chris Mason wrote:
-> This is true, I didn't explain that part well ;)  Depending on 
-> compression etc we might end up poking the xarray inside the actual IO 
-> functions, but the main difference is that btrfs is building a single 
-> bio.  You're moving the plug so you'll merge into single bio, but I'd 
-> rather build 2MB bios than merge them.
+On 1/13/20 2:58 PM, Matthew Wilcox wrote:
+> On Mon, Jan 13, 2020 at 06:00:52PM +0000, Chris Mason wrote:
+>> This is true, I didn't explain that part well ;)  Depending on 
+>> compression etc we might end up poking the xarray inside the actual IO 
+>> functions, but the main difference is that btrfs is building a single 
+>> bio.  You're moving the plug so you'll merge into single bio, but I'd 
+>> rather build 2MB bios than merge them.
+> 
+> Why don't we store a bio pointer inside the plug?  You're opencoding that,
+> iomap is opencoding that, and I bet there's a dozen other places where
+> we pass a bio around.  Then blk_finish_plug can submit the bio.
 
-Why don't we store a bio pointer inside the plug?  You're opencoding that,
-iomap is opencoding that, and I bet there's a dozen other places where
-we pass a bio around.  Then blk_finish_plug can submit the bio.
+Plugs aren't necessarily a bio, they can be callbacks too.
+
+-- 
+Jens Axboe
+
