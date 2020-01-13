@@ -2,170 +2,146 @@ Return-Path: <SRS0=9ni0=3C=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5CC4C33CAF
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 18:01:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D282C33CA9
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 18:09:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 83F4020678
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 18:01:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 705E6207FD
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jan 2020 18:09:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=fb.com header.i=@fb.com header.b="HC6ogb+d";
-	dkim=pass (1024-bit key) header.d=fb.onmicrosoft.com header.i=@fb.onmicrosoft.com header.b="RyN2UJGz"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="fpIgpHDc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728738AbgAMSBE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Jan 2020 13:01:04 -0500
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:46600 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728633AbgAMSBD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Jan 2020 13:01:03 -0500
-Received: from pps.filterd (m0001303.ppops.net [127.0.0.1])
-        by m0001303.ppops.net (8.16.0.42/8.16.0.42) with SMTP id 00DHr9Xp015144;
-        Mon, 13 Jan 2020 10:00:55 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=facebook;
- bh=S8noNA3HH4KBOgOZ57Yns89d3C/LADlJzhiVXf8KWMM=;
- b=HC6ogb+dpHbdyhqY6aj7WCaVR4ikYPNu1u8XE5CBiApv2Ngs1G9aHYUtjbFyyyAfF/Qd
- yGdm8iC6wziRXdX9Jip2gUcAanHJds84FoMa3QUPrOoR69K2nEKqE46p7eVx6uwwySQs
- ZLJDvHb850g/yF7lA58wNFCxYAv//MBl8xM= 
-Received: from mail.thefacebook.com (mailout.thefacebook.com [199.201.64.23])
-        by m0001303.ppops.net with ESMTP id 2xfawr9bps-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Mon, 13 Jan 2020 10:00:55 -0800
-Received: from prn-hub03.TheFacebook.com (2620:10d:c081:35::127) by
- prn-hub04.TheFacebook.com (2620:10d:c081:35::128) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.1.1713.5; Mon, 13 Jan 2020 10:00:53 -0800
-Received: from NAM10-BN7-obe.outbound.protection.outlook.com (192.168.54.28)
- by o365-in.thefacebook.com (192.168.16.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.1.1713.5
- via Frontend Transport; Mon, 13 Jan 2020 10:00:53 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=mLY8d8ShYWi3caN2SBLP2xJ27wsRAP1e9p16niQO/ZoYiLGy4b5kSHXggiHRD9//FuHGu5TmB2OOzJz+01NITQL2X/G5lQWrbXiV9ht+gqfu5XLOjzR76sslc5c1oqZC4IAbQri7gcw4P/0JBUHbSXJSP5kd588Dey6XRNk/LSTKYlOyazh0Pqo2XCrYW+OHDkk+PpOUpYS+RSHDbgJTeZs32h8rMYxx8mwmHZ2GN7bCThw5NhLmFfi2sy9IX124DjptGrpi/tFnGGv5d0jWFpPXAZlRjp+qNHwWZv1+iSInMKGsFTsLSQLYVH3u/OFepiZKmVeTPOPjg/DH6lF0pA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=S8noNA3HH4KBOgOZ57Yns89d3C/LADlJzhiVXf8KWMM=;
- b=aelgTNKUBskdsiCAci3nZzyO/gvMRNhztA6G/gmjzd21fNnsxJlGkJij93x6nzmSfX3dMt2fqA/WDM0L570Kd7w7gBEAbcdNwcj0kRVmoZIbzZTj3bfMnE0eU6tQNn0pZeReNAB9lXXS0Z8qEaFl0oVGsK/l5XbCCw/vIX53JgWEeuK7ClZgI2MEej4+cE4bAKDp19L8RajWR4PYZnbkG19q+C6JEVIjTIe84RY/0dqLAWzl31SiR9vCNdvhk8anrpp/2BXTxMci8m79uriuwqH9HWJWnJbGF2M0N25skoQebOvleRIN3B5m8NgHrPAMDU+bSNwVUSxTJezPzmsQJA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=fb.com; dmarc=pass action=none header.from=fb.com; dkim=pass
- header.d=fb.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=S8noNA3HH4KBOgOZ57Yns89d3C/LADlJzhiVXf8KWMM=;
- b=RyN2UJGzFJISB3qEhl//pvUKbtTk+y04xBocCP4D8xu7A1kS+xKxZI8a55G+MMMjVYWfRKhX0Dt1GH+0D9I6f949L2Do02r8x5DvNc1rVV/bUGafuk0iu1eosMCZDd65FUJGhZHrY0XKZeIBfQULktalMpg0fb+trMSv7KRnRgk=
-Received: from SN6PR15MB2446.namprd15.prod.outlook.com (52.135.64.153) by
- SN6PR15MB2432.namprd15.prod.outlook.com (52.135.65.156) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2623.9; Mon, 13 Jan 2020 18:00:52 +0000
-Received: from SN6PR15MB2446.namprd15.prod.outlook.com
- ([fe80::615e:4236:ddfa:3d10]) by SN6PR15MB2446.namprd15.prod.outlook.com
- ([fe80::615e:4236:ddfa:3d10%6]) with mapi id 15.20.2623.015; Mon, 13 Jan 2020
- 18:00:52 +0000
-Received: from [172.30.120.61] (2620:10d:c091:480::1025) by MN2PR14CA0024.namprd14.prod.outlook.com (2603:10b6:208:23e::29) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2623.9 via Frontend Transport; Mon, 13 Jan 2020 18:00:51 +0000
-From:   Chris Mason <clm@fb.com>
-To:     Matthew Wilcox <willy@infradead.org>
-CC:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "jlayton@kernel.org" <jlayton@kernel.org>,
-        "hch@infradead.org" <hch@infradead.org>
-Subject: Re: [RFC 0/8] Replacing the readpages a_op
-Thread-Topic: [RFC 0/8] Replacing the readpages a_op
-Thread-Index: AQHVyieJJr3DU4NMDUiHtIM35/TqzKfozHmAgAAQNgCAAAXGAA==
-Date:   Mon, 13 Jan 2020 18:00:52 +0000
-Message-ID: <15C84CC9-3196-441D-94DE-F3FD7AC364F0@fb.com>
-References: <20200113153746.26654-1-willy@infradead.org>
- <6CA4CD96-0812-4261-8FF9-CD28AA2EC38A@fb.com>
- <20200113174008.GB332@bombadil.infradead.org>
-In-Reply-To: <20200113174008.GB332@bombadil.infradead.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: MailMate (1.13.1r5671)
-x-clientproxiedby: MN2PR14CA0024.namprd14.prod.outlook.com
- (2603:10b6:208:23e::29) To SN6PR15MB2446.namprd15.prod.outlook.com
- (2603:10b6:805:22::25)
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [2620:10d:c091:480::1025]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 6752ab99-e401-4ffa-20dc-08d798528734
-x-ms-traffictypediagnostic: SN6PR15MB2432:
-x-microsoft-antispam-prvs: <SN6PR15MB2432D576856B5E6F5216B3CAD3350@SN6PR15MB2432.namprd15.prod.outlook.com>
-x-fb-source: Internal
-x-ms-oob-tlc-oobclassifiers: OLM:4714;
-x-forefront-prvs: 028166BF91
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(396003)(136003)(346002)(366004)(376002)(39860400002)(199004)(189003)(86362001)(4326008)(478600001)(5660300002)(81156014)(81166006)(8936002)(8676002)(36756003)(6486002)(33656002)(66946007)(66556008)(66446008)(66476007)(64756008)(6916009)(2906002)(53546011)(71200400001)(52116002)(2616005)(16526019)(186003)(54906003)(316002);DIR:OUT;SFP:1102;SCL:1;SRVR:SN6PR15MB2432;H:SN6PR15MB2446.namprd15.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: fb.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: VyIuF3+r+sfLZiROhh2Fp4z0mJ8Bq/f+1+cg/aDGNYEufAoEpL9xjnJ7P0ZtLDKVLsXFHdrIw4YthkHg/v7DXkR8oM2/CdXe6FluazYMHjBdrMWbd209T9g//7hHkK5AapMHBnjZ+Po4lfhi+Nu0w1a1Em+RPJwiVu2shw2wkcqMnuNn30BY2oOY4egOWAuztHx9P+1gtCrgf4sXdkEHTE95PNNqrr6rN7lHuqAV7d98su5gCTNyxbFQMcMdkFx6EqRmD5wsxb+nlJyuE60sXXGVnYsdgixw12NNvoi6FlyGp6pPA7Gd4MqX2SXoDptPv2BehgE7zYodKjuporVjD1zZ/2dAsmTJESnv0G+5M7BfHgcq5xOoVcoyJYHScshZYIquvSuvL3B4GUjovqqaJZlJMrDFvCLivizeRcoDbQQd819dx5ieeTDMJQm79bII
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+        id S1726985AbgAMSJp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Jan 2020 13:09:45 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:43766 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726435AbgAMSJo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Jan 2020 13:09:44 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00DI89MU155402;
+        Mon, 13 Jan 2020 18:09:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=8CXIBTkMZKDmkj+GcKbThC8AhZgD4xXngtzKEVDhMGk=;
+ b=fpIgpHDc2wdcD+fS6+lhXVOYNN+YcSmorA1sIaWT0m2DVHmdGKEk/31VJf+sTrkvj0GS
+ mu+8oFuux60739PQBD98VM38W/MzzjAHwPChkfIReYh/WjNseMn/yOIYKQb5KnBXXrUn
+ k4rbcdZBCTJlKF+ABpR0N8a2oawsz/nMQ1X3gk/8RnHEiNCIVG/CpWsz0yXkOemfkV/1
+ GDpjIhE0GG1BycJbn21HlthkDm8U709KVeGGG8+5HKYE5ZZihbp3jwSFAjjb6SIFCZd1
+ DoBwNSot3l6y/ikc6N6xQD75o1GJ8YxhIe3WFn7iKLyRDYmCu9ESaEV1FW9J6YXuGay3 LA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 2xf73y8nrg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 13 Jan 2020 18:09:41 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00DI9K1v167096;
+        Mon, 13 Jan 2020 18:09:41 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 2xfqu4xv5u-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 13 Jan 2020 18:09:36 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00DI9FOU007514;
+        Mon, 13 Jan 2020 18:09:15 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 13 Jan 2020 10:09:15 -0800
+Date:   Mon, 13 Jan 2020 10:09:14 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Gionatan Danti <g.danti@assyoma.it>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: XFS reflink vs ThinLVM
+Message-ID: <20200113180914.GI8247@magnolia>
+References: <fe697fb6-cef6-2e06-de77-3530700852da@assyoma.it>
+ <20200113111025.liaargk3sf4wbngr@orion>
+ <703a6c17-cc02-2c2c-31ce-6cd12a888743@assyoma.it>
+ <20200113114356.midcgudwxpze3xfw@orion>
+ <627cb07f-9433-ddfd-37d7-27efedd89727@assyoma.it>
+ <39b50e2c-cb78-3bcd-0130-defa9c573b71@assyoma.it>
+ <20200113165341.GE8247@magnolia>
+ <f61995d7-9775-0035-8700-2b92c63bd23f@assyoma.it>
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6752ab99-e401-4ffa-20dc-08d798528734
-X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Jan 2020 18:00:52.0944
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: RoINcDA8ItYwxe8LOScqcr+Jwub00lTLYkh0XUIDLxOnpccN5ZuS02ASO+p0Reot
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR15MB2432
-X-OriginatorOrg: fb.com
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
- definitions=2020-01-13_06:2020-01-13,2020-01-13 signatures=0
-X-Proofpoint-Spam-Details: rule=fb_default_notspam policy=fb_default score=0 lowpriorityscore=0
- priorityscore=1501 malwarescore=0 impostorscore=0 bulkscore=0 adultscore=0
- clxscore=1015 suspectscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-1910280000 definitions=main-2001130144
-X-FB-Internal: deliver
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f61995d7-9775-0035-8700-2b92c63bd23f@assyoma.it>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9499 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=943
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-2001130146
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9499 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-2001130146
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 13 Jan 2020, at 12:40, Matthew Wilcox wrote:
+On Mon, Jan 13, 2020 at 06:00:15PM +0100, Gionatan Danti wrote:
+> On 13/01/20 17:53, Darrick J. Wong wrote:
+> > mkfs.xfs -d extszinherit=NNN is what you want here.
+> 
+> Hi Darrik, thank you, I missed that option.
+> 
+> > Right.
+> 
+> Ok
+> 
+> > xfs_bmap -c, but only if you have xfs debugging enabled.
+> 
+> [root@neutron xfs]# xfs_bmap -c test.img
+> /usr/sbin/xfs_bmap: illegal option -- c
+> Usage: xfs_bmap [-adelpvV] [-n nx] file...
+> 
+> Maybe my xfs_bmap version is too old:
 
-> On Mon, Jan 13, 2020 at 04:42:10PM +0000, Chris Mason wrote:
->
-> I did do a couple of helpers for lists for iomap before deciding the
-> whole thing was too painful.  I didn't look at btrfs until just now,=20
-> but, um ...
->
-> int extent_readpages(struct address_space *mapping, struct list_head=20
-> *pages,
->                      unsigned nr_pages)
-> ..
->         struct page *pagepool[16];
-> ..
->         while (!list_empty(pages)) {
-> ..
->                         list_del(&page->lru);
->                         if (add_to_page_cache_lru(page, mapping,=20
-> page->index,
-> ..
->                         pagepool[nr++] =3D page;
->
-> you're basically doing exactly what i'm proposing to be the new=20
-> interface!
-> OK, you get one extra page per batch ;-P
+Doh, sorry, thinko on my part.  -c is exposed in the raw xfs_io command
+but not in the xfs_bmap wrapper.
 
-This is true, I didn't explain that part well ;)  Depending on=20
-compression etc we might end up poking the xarray inside the actual IO=20
-functions, but the main difference is that btrfs is building a single=20
-bio.  You're moving the plug so you'll merge into single bio, but I'd=20
-rather build 2MB bios than merge them.
+xfs_io -c 'bmap -c -e -l -p -v <whatever>' test.img
 
-I guess it doesn't feel like enough of a win to justify the churn.  If=20
-we find a way to do much larger pagevecs, I think this makes more sense.
+> > If you happen to have rmap enabled, you can use the xfs_io fsmap command
+> > to look for 'cow reservation' blocks, since that 124k is (according to
+> > ondisk metadata, anyway) owned by the refcount btree until it gets
+> > remapped into the file on writeback.
+> 
+> I see. By default, on RHEL at least, rmapbt is disabled. As a side note, do
+> you suggest enabling it when creating a new fs?
 
--chris
+If you are interested in online scrub, then I'd say yes because it's the
+secret sauce that gives online metadata checking most of its power.  I
+confess, I haven't done a lot of performance analysis of rmap lately,
+the metadata ops overhead might still be in the ~10% range.
 
+The two issues preventing rmap from being turned on by default (at least
+in my head) are (1) scrub itself is still EXPERIMENTAL and (2) it's not
+100% clear that online fsck is such a killer app that everyone will want
+it, since you always pay the performance overhead of enabling rmap
+regardless of whether you use xfs_scrub.
+
+(If your workload is easily restored from backup/Docker and you need all
+the performance you can squeeze then perhaps don't enable this.)
+
+Note that I've been running with rmap=1 and scrub=1 on all systems since
+2016, and frankly I've noticed the system stumbling over broken
+writeback throttling much more than whatever the tracing tools attribute
+to rmap.
+
+--D
+
+> Thanks.
+> 
+> -- 
+> Danti Gionatan
+> Supporto Tecnico
+> Assyoma S.r.l. - www.assyoma.it
+> email: g.danti@assyoma.it - info@assyoma.it
+> GPG public key ID: FF5F32A8
