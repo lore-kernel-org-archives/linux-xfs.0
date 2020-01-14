@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A23DC33CB1
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 08:16:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCCDFC33CB1
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 08:16:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6FDE52075B
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 08:16:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 797FE206D5
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 08:16:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="sTSauKG2"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hBDTosOl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727083AbgANIQS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Jan 2020 03:16:18 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:42294 "EHLO
+        id S1726669AbgANIQV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Jan 2020 03:16:21 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:42302 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726669AbgANIQR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jan 2020 03:16:17 -0500
+        with ESMTP id S1725860AbgANIQU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jan 2020 03:16:20 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=HTrF1h/XwM5DdH1ju19/35T9rIq6bKtb2cePSBfhhKU=; b=sTSauKG27mBdd5R1EG6bokUkeK
-        eKJUyWgIJNCnm4GMkSecPdxUD0hAgcsYc2WPGmY+bekLo1YypzYmVho/svfBy+xk3loiUtkIoUtaq
-        yOmvyx/oCfoqbz7SRymtl7FmisDRLbWxatV9UlAQM/qvQkhSmpdy0BhnlEe3MGv0M+YZ4LefdtWeG
-        nBYJ20wl/c5fjJIkYhb5OStRQ02QBZBcPk1AwfNroqi8stwkFOdhy4hLVdXM0KESmhPqRMDQyeMw4
-        ML0IIXDYgM8tuS1sLRDgl+/YmPD1vXThxmfxUCcerNT+LhzYfgW37/+l24kqzjUuxSObwlPJK1upC
-        eprNxDEQ==;
+        bh=TvNjnMAv786ao7n9PuZCDYW6g8amPElvtnhT432kGCc=; b=hBDTosOlEh/xfKFaeyEB2X9KXM
+        lKtfp4UPp1Xp/Fgp5+ixs/e28MJq4M8w7UlYsztLzTHDfXTFRmuF/IOQYhSuslGdMutCziNVAGNX+
+        3hAh+r2fvim9r68SP9IutPxoTPsMbAgWlsEKIL4sB6U92hZWohaAeN+KOesS9rnrH7gyEhh7St3XB
+        Xh8Y7K+MchuOIdQ6hvEsQ1pmn1A/IQ5NAhNsuMUqeTuSYBVaDWJEZU92OHlD2UoA5upm3oZEJ1wUK
+        L8P1gUQZ0GdwI+sDv4T0EiGC8Y4DlMf8tqzhLe4nkv7tmzzslZQy6qf4p+Es8VXpOikpHI4I1W52R
+        IrFDinIg==;
 Received: from [2001:4bb8:18c:4f54:fcbb:a92b:61e1:719] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1irHN3-000744-AO; Tue, 14 Jan 2020 08:16:17 +0000
+        id 1irHN6-00074O-9P; Tue, 14 Jan 2020 08:16:20 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
 Cc:     Allison Collins <allison.henderson@oracle.com>
-Subject: [PATCH 21/29] xfs: rename xfs_attr_list_int to xfs_attr_list
-Date:   Tue, 14 Jan 2020 09:10:43 +0100
-Message-Id: <20200114081051.297488-22-hch@lst.de>
+Subject: [PATCH 22/29] xfs: lift common checks into xfs_ioc_attr_list
+Date:   Tue, 14 Jan 2020 09:10:44 +0100
+Message-Id: <20200114081051.297488-23-hch@lst.de>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200114081051.297488-1-hch@lst.de>
 References: <20200114081051.297488-1-hch@lst.de>
@@ -53,112 +53,72 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The version taking the context structure is the main interface to list
-attributes, so drop the _int postfix.
+Lift the flags and bufsize checks from both callers into the common code
+in xfs_ioc_attr_list.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_attr.h | 4 ++--
- fs/xfs/scrub/attr.c      | 4 ++--
- fs/xfs/xfs_attr_list.c   | 6 +++---
- fs/xfs/xfs_ioctl.c       | 2 +-
- fs/xfs/xfs_xattr.c       | 2 +-
- 5 files changed, 9 insertions(+), 9 deletions(-)
+ fs/xfs/xfs_ioctl.c   | 19 ++++++++++---------
+ fs/xfs/xfs_ioctl32.c |  9 ---------
+ 2 files changed, 10 insertions(+), 18 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-index 0e3c213f78ce..8d42f5782ff7 100644
---- a/fs/xfs/libxfs/xfs_attr.h
-+++ b/fs/xfs/libxfs/xfs_attr.h
-@@ -102,8 +102,8 @@ struct xfs_attr_list_context {
-  * Overall external interface routines.
-  */
- int xfs_attr_inactive(struct xfs_inode *dp);
--int xfs_attr_list_int_ilocked(struct xfs_attr_list_context *);
--int xfs_attr_list_int(struct xfs_attr_list_context *);
-+int xfs_attr_list_ilocked(struct xfs_attr_list_context *);
-+int xfs_attr_list(struct xfs_attr_list_context *);
- int xfs_inode_hasattr(struct xfs_inode *ip);
- int xfs_attr_get_ilocked(struct xfs_da_args *args);
- int xfs_attr_get(struct xfs_da_args *args);
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index 05537627211d..9e336d797616 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -98,7 +98,7 @@ struct xchk_xattr {
- /*
-  * Check that an extended attribute key can be looked up by hash.
-  *
-- * We use the XFS attribute list iterator (i.e. xfs_attr_list_int_ilocked)
-+ * We use the XFS attribute list iterator (i.e. xfs_attr_list_ilocked)
-  * to call this function for every attribute key in an inode.  Once
-  * we're here, we load the attribute value to see if any errors happen,
-  * or if we get more or less data than we expected.
-@@ -516,7 +516,7 @@ xchk_xattr(
- 	 * iteration, which doesn't really follow the usual buffer
- 	 * locking order.
- 	 */
--	error = xfs_attr_list_int_ilocked(&sx.context);
-+	error = xfs_attr_list_ilocked(&sx.context);
- 	if (!xchk_fblock_process_error(sc, XFS_ATTR_FORK, 0, &error))
- 		goto out;
- 
-diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-index 369ce1d3dd45..ea79219859a0 100644
---- a/fs/xfs/xfs_attr_list.c
-+++ b/fs/xfs/xfs_attr_list.c
-@@ -507,7 +507,7 @@ xfs_attr_leaf_list(
- }
- 
- int
--xfs_attr_list_int_ilocked(
-+xfs_attr_list_ilocked(
- 	struct xfs_attr_list_context	*context)
- {
- 	struct xfs_inode		*dp = context->dp;
-@@ -527,7 +527,7 @@ xfs_attr_list_int_ilocked(
- }
- 
- int
--xfs_attr_list_int(
-+xfs_attr_list(
- 	struct xfs_attr_list_context	*context)
- {
- 	struct xfs_inode		*dp = context->dp;
-@@ -540,7 +540,7 @@ xfs_attr_list_int(
- 		return -EIO;
- 
- 	lock_mode = xfs_ilock_attr_map_shared(dp);
--	error = xfs_attr_list_int_ilocked(context);
-+	error = xfs_attr_list_ilocked(context);
- 	xfs_iunlock(dp, lock_mode);
- 	return error;
- }
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 2e64dae3743f..639abd2bd723 100644
+index 639abd2bd723..a3a6c6882c6f 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -395,7 +395,7 @@ xfs_ioc_attr_list(
- 	alist->al_more = 0;
- 	alist->al_offset[0] = context.bufsize;
+@@ -362,6 +362,16 @@ xfs_ioc_attr_list(
+ 	struct xfs_attrlist		*alist;
+ 	int				error;
  
--	error = xfs_attr_list_int(&context);
-+	error = xfs_attr_list(&context);
- 	ASSERT(error <= 0);
- 	return error;
- }
-diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-index 8880dee3400f..e1951d2b878e 100644
---- a/fs/xfs/xfs_xattr.c
-+++ b/fs/xfs/xfs_xattr.c
-@@ -232,7 +232,7 @@ xfs_vn_listxattr(
- 	context.firstu = context.bufsize;
- 	context.put_listent = xfs_xattr_put_listent;
++	if (bufsize < sizeof(struct xfs_attrlist) ||
++	    bufsize > XFS_XATTR_LIST_MAX)
++		return -EINVAL;
++
++	/*
++	 * Reject flags, only allow namespaces.
++	 */
++	if (flags & ~(ATTR_ROOT | ATTR_SECURE))
++		return -EINVAL;
++
+ 	/*
+ 	 * Validate the cursor.
+ 	 */
+@@ -416,15 +426,6 @@ xfs_attrlist_by_handle(
+ 		return -EPERM;
+ 	if (copy_from_user(&al_hreq, arg, sizeof(xfs_fsop_attrlist_handlereq_t)))
+ 		return -EFAULT;
+-	if (al_hreq.buflen < sizeof(struct xfs_attrlist) ||
+-	    al_hreq.buflen > XFS_XATTR_LIST_MAX)
+-		return -EINVAL;
+-
+-	/*
+-	 * Reject flags, only allow namespaces.
+-	 */
+-	if (al_hreq.flags & ~(ATTR_ROOT | ATTR_SECURE))
+-		return -EINVAL;
  
--	error = xfs_attr_list_int(&context);
-+	error = xfs_attr_list(&context);
- 	if (error)
- 		return error;
- 	if (context.count < 0)
+ 	dentry = xfs_handlereq_to_dentry(parfilp, &al_hreq.hreq);
+ 	if (IS_ERR(dentry))
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index feb7bf07f315..840d17951407 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -366,15 +366,6 @@ xfs_compat_attrlist_by_handle(
+ 	if (copy_from_user(&al_hreq, arg,
+ 			   sizeof(compat_xfs_fsop_attrlist_handlereq_t)))
+ 		return -EFAULT;
+-	if (al_hreq.buflen < sizeof(struct xfs_attrlist) ||
+-	    al_hreq.buflen > XFS_XATTR_LIST_MAX)
+-		return -EINVAL;
+-
+-	/*
+-	 * Reject flags, only allow namespaces.
+-	 */
+-	if (al_hreq.flags & ~(ATTR_ROOT | ATTR_SECURE))
+-		return -EINVAL;
+ 
+ 	dentry = xfs_compat_handlereq_to_dentry(parfilp, &al_hreq.hreq);
+ 	if (IS_ERR(dentry))
 -- 
 2.24.1
 
