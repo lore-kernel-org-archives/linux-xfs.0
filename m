@@ -6,28 +6,29 @@ X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D4FFC33CA9
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 00:20:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1327C33CAF
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 00:35:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4C715214AF
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 00:20:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D1A6821556
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 00:35:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729235AbgANAUG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Jan 2020 19:20:06 -0500
-Received: from mga12.intel.com ([192.55.52.136]:23483 "EHLO mga12.intel.com"
+        id S1728894AbgANAfW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Jan 2020 19:35:22 -0500
+Received: from mga04.intel.com ([192.55.52.120]:18398 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728865AbgANAUG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Jan 2020 19:20:06 -0500
-X-Amp-Result: UNSCANNABLE
+        id S1728844AbgANAfW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 13 Jan 2020 19:35:22 -0500
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
 X-Amp-File-Uploaded: False
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 Jan 2020 16:20:05 -0800
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 Jan 2020 16:35:22 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.69,430,1571727600"; 
-   d="scan'208";a="422976956"
+   d="scan'208";a="218812609"
 Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
-  by fmsmga005.fm.intel.com with ESMTP; 13 Jan 2020 16:20:05 -0800
-Date:   Mon, 13 Jan 2020 16:20:05 -0800
+  by fmsmga007.fm.intel.com with ESMTP; 13 Jan 2020 16:35:21 -0800
+Date:   Mon, 13 Jan 2020 16:35:21 -0800
 From:   Ira Weiny <ira.weiny@intel.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-kernel@vger.kernel.org,
@@ -38,143 +39,91 @@ Cc:     linux-kernel@vger.kernel.org,
         "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: Re: [RFC PATCH V2 07/12] fs: Add locking for a dynamic inode 'mode'
-Message-ID: <20200114002005.GA29860@iweiny-DESK2.sc.intel.com>
+Subject: Re: [RFC PATCH V2 08/12] fs/xfs: Add lock/unlock mode to xfs
+Message-ID: <20200114003521.GB29860@iweiny-DESK2.sc.intel.com>
 References: <20200110192942.25021-1-ira.weiny@intel.com>
- <20200110192942.25021-8-ira.weiny@intel.com>
- <20200113221218.GM8247@magnolia>
+ <20200110192942.25021-9-ira.weiny@intel.com>
+ <20200113221957.GN8247@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200113221218.GM8247@magnolia>
+In-Reply-To: <20200113221957.GN8247@magnolia>
 User-Agent: Mutt/1.11.1 (2018-12-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 13, 2020 at 02:12:18PM -0800, Darrick J. Wong wrote:
-> On Fri, Jan 10, 2020 at 11:29:37AM -0800, ira.weiny@intel.com wrote:
+On Mon, Jan 13, 2020 at 02:19:57PM -0800, Darrick J. Wong wrote:
+> On Fri, Jan 10, 2020 at 11:29:38AM -0800, ira.weiny@intel.com wrote:
 > > From: Ira Weiny <ira.weiny@intel.com>
 
 [snip]
 
 > >  
-> >  The File Object
-> >  ---------------
-> > @@ -437,6 +459,8 @@ As of kernel 2.6.22, the following members are defined:
-> >  		int (*atomic_open)(struct inode *, struct dentry *, struct file *,
-> >  				   unsigned open_flag, umode_t create_mode);
-> >  		int (*tmpfile) (struct inode *, struct dentry *, umode_t);
-> > +		void (*lock_mode)(struct inode *);
-> > +		void (*unlock_mode)(struct inode *);
+> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > index 401da197f012..e8fd95b75e5b 100644
+> > --- a/fs/xfs/xfs_inode.c
+> > +++ b/fs/xfs/xfs_inode.c
+> > @@ -142,12 +142,12 @@ xfs_ilock_attr_map_shared(
+> >   *
+> >   * Basic locking order:
+> >   *
+> > - * i_rwsem -> i_mmap_lock -> page_lock -> i_ilock
+> > + * i_rwsem -> i_dax_sem -> i_mmap_lock -> page_lock -> i_ilock
 > 
-> Yikes.  "mode" has a specific meaning for inodes, and this lock isn't
-> related to i_mode.  This lock protects aops from changing while an
-> address space operation is in use.
+> Mmmmmm, more locks.  Can we skip the extra lock if CONFIG_FSDAX=n or if
+> the filesystem devices don't support DAX at all?
 
-Ah...  yea ok mode is a bad name.
-
-> 
-> >  	};
-> >  
-> >  Again, all methods are called without any locks being held, unless
-> > @@ -584,6 +608,12 @@ otherwise noted.
-> >  	atomically creating, opening and unlinking a file in given
-> >  	directory.
-> >  
-> > +``lock_mode``
-> > +	called to prevent operations which depend on the inode's mode from
-> > +        proceeding should a mode change be in progress
-> 
-> "Inodes can't change mode, because files do not suddenly become
-> directories". ;)
-
-Yea sorry.
+I'll look into it.
 
 > 
-> Oh, you meant "lock_XXXX is called to prevent a change in the pagecache
-> mode from proceeding while there are address space operations in
-> progress".  So these are really more aops get and put functions...
+> Also, I don't think we're actually following the i_rwsem -> i_daxsem
+> order in fallocate, and possibly elsewhere too?
 
-At first I actually did have aops get/put functions but this is really
-protecting more than the aops vector because as Christoph said there are file
-operations which need to be protected not just address space operations.
-
-But I agree "mode" is a bad name...  Sorry...
+I'll have to verify.  It took a lot of iterations to get the order working so
+I'm not going to claim perfection.
 
 > 
-> > +``unlock_mode``
-> > +	called when critical mode dependent operation is complete
-> >  
-> >  The Address Space Object
-> >  ========================
-> > diff --git a/fs/ioctl.c b/fs/ioctl.c
-> > index 7c9a5df5a597..ed6ab5303a24 100644
-> > --- a/fs/ioctl.c
-> > +++ b/fs/ioctl.c
-> > @@ -55,18 +55,29 @@ EXPORT_SYMBOL(vfs_ioctl);
-> >  static int ioctl_fibmap(struct file *filp, int __user *p)
-> >  {
-> >  	struct address_space *mapping = filp->f_mapping;
-> > +	struct inode *inode = filp->f_inode;
-> >  	int res, block;
-> >  
-> > +	lock_inode_mode(inode);
-> > +
-> >  	/* do we support this mess? */
-> > -	if (!mapping->a_ops->bmap)
-> > -		return -EINVAL;
-> > -	if (!capable(CAP_SYS_RAWIO))
-> > -		return -EPERM;
-> > +	if (!mapping->a_ops->bmap) {
-> > +		res = -EINVAL;
-> > +		goto out;
-> > +	}
-> > +	if (!capable(CAP_SYS_RAWIO)) {
-> > +		res = -EPERM;
-> > +		goto out;
-> 
-> Why does the order of these checks change here?
+> Does the vfs have to take the i_dax_sem to do remapping things like
+> reflink?  (Pretend that reflink and dax are compatible for the moment)
 
-I don't understand?  The order does not change we just can't return without
-releasing the lock.  And to protect against bmap changing the lock needs to be
-taken first.
+Honestly I can't say for sure.  For this series I was careful to exclude
+reflink from the locking requirement.
 
 [snip]
 
 > >  
-> > +static inline void lock_inode_mode(struct inode *inode)
+> >  #define XFS_LOCK_FLAGS \
+> >  	{ XFS_IOLOCK_EXCL,	"IOLOCK_EXCL" }, \
+> > @@ -289,7 +295,9 @@ static inline void xfs_ifunlock(struct xfs_inode *ip)
+> >  	{ XFS_ILOCK_EXCL,	"ILOCK_EXCL" }, \
+> >  	{ XFS_ILOCK_SHARED,	"ILOCK_SHARED" }, \
+> >  	{ XFS_MMAPLOCK_EXCL,	"MMAPLOCK_EXCL" }, \
+> > -	{ XFS_MMAPLOCK_SHARED,	"MMAPLOCK_SHARED" }
+> > +	{ XFS_MMAPLOCK_SHARED,	"MMAPLOCK_SHARED" }, \
+> > +	{ XFS_DAX_EXCL,   	"DAX_EXCL" }, \
 > 
-> inode_aops_get()?
+> Whitespace between the comma & string.
 
-Let me think on this.  This is not just getting a reference to the aops vector.
-It is more than that...  and inode_get is not right either!  ;-P
+Fixed.
 
-> 
-> > +{
-> > +	WARN_ON_ONCE(inode->i_op->lock_mode &&
-> > +		     !inode->i_op->unlock_mode);
-> > +	if (inode->i_op->lock_mode)
-> > +		inode->i_op->lock_mode(inode);
-> > +}
-> > +static inline void unlock_inode_mode(struct inode *inode)
-> > +{
-> > +	WARN_ON_ONCE(inode->i_op->unlock_mode &&
-> > +		     !inode->i_op->lock_mode);
-> > +	if (inode->i_op->unlock_mode)
-> > +		inode->i_op->unlock_mode(inode);
-> > +}
+[snip]
+
 > > +
-> >  static inline ssize_t call_read_iter(struct file *file, struct kiocb *kio,
-> >  				     struct iov_iter *iter)
+> >  static const struct inode_operations xfs_dir_inode_operations = {
+> >  	.create			= xfs_vn_create,
+> >  	.lookup			= xfs_vn_lookup,
+> > @@ -1372,7 +1394,7 @@ xfs_setup_iops(
+> >  
+> >  	switch (inode->i_mode & S_IFMT) {
+> >  	case S_IFREG:
+> > -		inode->i_op = &xfs_inode_operations;
+> > +		inode->i_op = &xfs_reg_inode_operations;
 > 
-> inode_aops_put()?
+> xfs_file_inode_operations?
 
-...  something like that but not 'aops'...
+Sounds better.  Fixed.
 
 Ira
 
-> 
-> --D
-> 
