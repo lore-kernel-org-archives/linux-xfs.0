@@ -2,112 +2,140 @@ Return-Path: <SRS0=8ZQd=3D=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE3EAC33CAE
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 00:46:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DA51C33CA9
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 00:59:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AA7312084D
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 00:46:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E205621569
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 00:59:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="W3E0uVrz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729254AbgANAqL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Jan 2020 19:46:11 -0500
-Received: from mga01.intel.com ([192.55.52.88]:44320 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726536AbgANAqL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Jan 2020 19:46:11 -0500
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 Jan 2020 16:46:10 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.69,431,1571727600"; 
-   d="scan'208";a="247869908"
-Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
-  by fmsmga004.fm.intel.com with ESMTP; 13 Jan 2020 16:46:10 -0800
-Date:   Mon, 13 Jan 2020 16:46:10 -0800
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-kernel@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [RFC PATCH V2 09/12] fs: Prevent mode change if file is mmap'ed
-Message-ID: <20200114004610.GD29860@iweiny-DESK2.sc.intel.com>
-References: <20200110192942.25021-1-ira.weiny@intel.com>
- <20200110192942.25021-10-ira.weiny@intel.com>
- <20200113222212.GO8247@magnolia>
+        id S1729095AbgANA7t (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Jan 2020 19:59:49 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:56646 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728733AbgANA7t (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Jan 2020 19:59:49 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00E0w0tq117438;
+        Tue, 14 Jan 2020 00:59:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=+uksYo3JL46igpo9HEkpQGmlz0jK3W+RQFNdqtBFL1Q=;
+ b=W3E0uVrz7QG9E3JQpOYjJFV091p+dZx07dF4oO4I3hjwVToW+/J62UHQUlrLuDJK8+j+
+ EOvGPNurDo5MHYKaD0ITA5U5/eZY/PefnAz7I1sHO3cP0UpP1SBwNQKhv1u6QVY9kHjv
+ GTtt/aLaqoO9mVVADT6dlv1Oihm7i4FS015BaFtcccyxo118BDmU8lzltdPKA41S7ari
+ Zd6eS745IwfPcxry2z9ouxiR0b7F5eR09XJBik2uN22ZrYyiNNCTnGdT40xZiP+0Rj7k
+ ZWWHU/MlMjTNZ3nm/TKVxE37sMLqk2zMDZzNvsw9T1g1T9gOzqWtM6kBWlBok+AD47pi xw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2xf74s2krw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 14 Jan 2020 00:59:43 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00E0xDAi150764;
+        Tue, 14 Jan 2020 00:59:42 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 2xh30xdrcw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 14 Jan 2020 00:59:42 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00E0xgUl014878;
+        Tue, 14 Jan 2020 00:59:42 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 13 Jan 2020 16:59:41 -0800
+Date:   Mon, 13 Jan 2020 16:59:41 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/5] xfs: fix memory corruption during remote attr value
+ buffer invalidation
+Message-ID: <20200114005941.GR8247@magnolia>
+References: <157859548029.164065.5207227581806532577.stgit@magnolia>
+ <157859549406.164065.17179006268680393660.stgit@magnolia>
+ <20200110115742.GD19577@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200113222212.GO8247@magnolia>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+In-Reply-To: <20200110115742.GD19577@infradead.org>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9499 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-2001140006
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9499 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-2001140006
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 13, 2020 at 02:22:12PM -0800, Darrick J. Wong wrote:
-> On Fri, Jan 10, 2020 at 11:29:39AM -0800, ira.weiny@intel.com wrote:
-> > From: Ira Weiny <ira.weiny@intel.com>
+On Fri, Jan 10, 2020 at 03:57:42AM -0800, Christoph Hellwig wrote:
+> > While running generic/103, I observed what looks like memory corruption
+> > and (with slub debugging turned on) a slub redzone warning on i386 when
+> > inactivating an inode with a 64k remote attr value.
 > > 
-
-[snip]
-
-> >  
-> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > index bc3654fe3b5d..1ab0906c6c7f 100644
-> > --- a/fs/xfs/xfs_ioctl.c
-> > +++ b/fs/xfs/xfs_ioctl.c
-> > @@ -1200,6 +1200,14 @@ xfs_ioctl_setattr_dax_invalidate(
-> >  		goto out_unlock;
-> >  	}
-> >  
-> > +	/*
-> > +	 * If there is a mapping in place we must remain in our current mode.
-> > +	 */
-> > +	if (atomic64_read(&inode->i_mapped)) {
+> > On a v5 filesystem, maximally sized remote attr values require one block
+> > more than 64k worth of space to hold both the remote attribute value
+> > header (64 bytes).  On a 4k block filesystem this results in a 68k
+> > buffer; on a 64k block filesystem, this would be a 128k buffer.  Note
+> > that even though we'll never use more than 65,600 bytes of this buffer,
+> > XFS_MAX_BLOCKSIZE is 64k.
+> > 
+> > This is a problem because the definition of struct xfs_buf_log_format
+> > allows for XFS_MAX_BLOCKSIZE worth of dirty bitmap (64k).  On i386 when we
+> > invalidate a remote attribute, xfs_trans_binval zeroes all 68k worth of
+> > the dirty map, writing right off the end of the log item and corrupting
+> > memory.  We've gotten away with this on x86_64 for years because the
+> > compiler inserts a u32 padding on the end of struct xfs_buf_log_format.
+> > 
+> > Fortunately for us, remote attribute values are written to disk with
+> > xfs_bwrite(), which is to say that they are not logged.  Fix the problem
+> > by removing all places where we could end up creating a buffer log item
+> > for a remote attribute value and leave a note explaining why.
 > 
-> Urk, should we really be messing around with the address space
-> internals?
+> I think this changelog needs an explanation why using
+> xfs_attr_rmtval_stale which just trylock and checks if the buffers are
+> in core only in xfs_attr3_leaf_freextent is fine.
 
-I contemplated a function call instead of checking i_mapped directly?  Is that
-what you mean?
+Hmm, maybe the *function* needs an explanation for why it's valid to use
+rmtval_stale here:
 
+/*
+ * Invalidate any incore buffers associated with this remote attribute
+ * value extent.   We never log remote attribute value buffers, which
+ * means that they won't be attached to a transaction and are therefore
+ * safe to mark stale.  The actual bunmapi will be taken care of later.
+ */
+STATIC int
+xfs_attr3_rmt_inactive(
+	struct xfs_inode	*dp,
+	struct xfs_attr_inactive_list *lp)
 
-> 
-> > +		error = -EBUSY;
-> > +		goto out_unlock;
-> > +	}
-> > +
-> >  	error = filemap_write_and_wait(inode->i_mapping);
-> >  	if (error)
-> >  		goto out_unlock;
-> > diff --git a/include/linux/fs.h b/include/linux/fs.h
-> > index 631f11d6246e..6e7dc626b657 100644
-> > --- a/include/linux/fs.h
-> > +++ b/include/linux/fs.h
-> > @@ -740,6 +740,7 @@ struct inode {
-> >  #endif
-> >  
-> >  	void			*i_private; /* fs or device private pointer */
-> > +	atomic64_t               i_mapped;
-> 
-> I would have expected to find this in struct address_space since the
-> mapping count is a function of the address space, right?
+I say the function is also confusingly named and could have its
+arguments list trimmed.
 
-I suppose but the only external call (above) would be passing an inode.  So to
-me it seemed better here.
+> And while the incore
+> part looks sane to me, I think the trylock is wrong and we need to pass
+> the locking flag to xfs_attr_rmtval_stale.
 
-Ira
+Hmm, yeah, it's definitely wrong for the inactivation case -- the
+inactivation thread holds the only incore reference to this unlinked
+inode, so the buffer had better not be locked by another thread.
 
-> 
-> --D
-> 
+I'm not even all that sure why XBF_TRYLOCK is necessary in the remove
+case, since we hold ILOCK_EXCL and there shouldn't be anyone else
+messing around inside the xattr data.
+
+--D
