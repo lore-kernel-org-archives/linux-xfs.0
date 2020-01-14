@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18B6CC33CB1
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 08:15:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06EF9C33CB1
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 08:15:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DF9A2207FF
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 08:15:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C5FE62084D
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 08:15:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jAD/uLqx"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lL5A5QDW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725842AbgANIP2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Jan 2020 03:15:28 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:42136 "EHLO
+        id S1725904AbgANIPb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Jan 2020 03:15:31 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:42144 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725820AbgANIP2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jan 2020 03:15:28 -0500
+        with ESMTP id S1725860AbgANIPb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jan 2020 03:15:31 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=qyMdmNAw3LtAU8NfqsXJWbiHH/5dM77veTKhWSwqros=; b=jAD/uLqxZBLlhXGchEmPRLMxrm
-        Y8+51NclOwM1vS4MKABqnpdEWasLsBnBy4Hao5g+Nt9NOwz+q9GRDMOHgOOU2PfIGcZF3ETmEXo4U
-        UNlTb+eYk/W2W++d58z1wCpZhegL8sWvk4qfIAUYSxZP12738ZgXSep9FstFxy20bKHmRld/MjD3h
-        h8cOVmwDYI7vgtQzIiTt4ALlr98Ycs1Ep+pEO6NW38yMCoUaKCLQXCdq3zwOJsTVF5eJMEO1scr20
-        hnoYgmRMNvVjm4tMh6qKyf4yZ3mSTSvAAiQcTv4G6nkNv2e1mv/BGoNYL15TtWGQsW4ky70iNQ5mF
-        c5s5XZIQ==;
+        bh=qtcZjQkyp6Uxp88VuDw0lxcHP7Ys1z/CuxPbleS0fKA=; b=lL5A5QDW51EXYpmguAINA1aAMT
+        8WpC2OsHw3GNmixth30e6iuCCP6ZUZBFXfErLWN8V93JSmRCLyMmUmZV5WgDjECYsZlhgjkhsPj44
+        aOKu9NMvaVPB5+497xiDdDikZUANG4Dk9nGErPgHSwkcHtk4VP5zLbiOxdia9aOFzPiRjTMBoRBu0
+        utcwvMxrOlN7GIzsvN2DhsyaLkEPa/RKxG+mh9JzfWjusQe5pEaXZnJtDLt3GxsJHQ8Y28DlnyHhr
+        wEBOcVDILBAKmQlS181SVlLd1JO1LclfdjDTe7Hb+0j5LP8HxPzN7dvn7lDdBc7JNNEP1S2C3Xy+4
+        uspRFlVg==;
 Received: from [2001:4bb8:18c:4f54:fcbb:a92b:61e1:719] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1irHMF-0006x5-OB; Tue, 14 Jan 2020 08:15:28 +0000
+        id 1irHMI-0006xY-K0; Tue, 14 Jan 2020 08:15:31 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
 Cc:     Allison Collins <allison.henderson@oracle.com>
-Subject: [PATCH 04/29] xfs: use strndup_user in XFS_IOC_ATTRMULTI_BY_HANDLE
-Date:   Tue, 14 Jan 2020 09:10:26 +0100
-Message-Id: <20200114081051.297488-5-hch@lst.de>
+Subject: [PATCH 05/29] xfs: factor out a helper for a single XFS_IOC_ATTRMULTI_BY_HANDLE op
+Date:   Tue, 14 Jan 2020 09:10:27 +0100
+Message-Id: <20200114081051.297488-6-hch@lst.de>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200114081051.297488-1-hch@lst.de>
 References: <20200114081051.297488-1-hch@lst.de>
@@ -53,114 +53,254 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Simplify the user copy code by using strndup_user.  This means that we
-now do one memory allocation per operation instead of one per ioctl,
-but memory allocations are cheap compared to the actual file system
-operations.
+Add a new helper to handle a single attr multi ioctl operation that
+can be shared between the native and compat ioctl implementation.
+
+There is a slight change in heavior in that we don't break out of the
+loop when copying in the attribute name fails.  The previous behavior
+was rather inconsistent here as it continued for any other kind of
+error.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_ioctl.c   | 17 +++++------------
- fs/xfs/xfs_ioctl32.c | 17 +++++------------
- 2 files changed, 10 insertions(+), 24 deletions(-)
+ fs/xfs/xfs_ioctl.c   | 97 +++++++++++++++++++++++---------------------
+ fs/xfs/xfs_ioctl.h   | 18 ++------
+ fs/xfs/xfs_ioctl32.c | 50 +++--------------------
+ 3 files changed, 59 insertions(+), 106 deletions(-)
 
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 6bd0684a3528..f4d5c865e29e 100644
+index f4d5c865e29e..3dbbc1099375 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -446,11 +446,6 @@ xfs_attrmulti_by_handle(
- 		goto out_dput;
- 	}
+@@ -347,7 +347,7 @@ xfs_attrlist_by_handle(
+ 	return error;
+ }
  
--	error = -ENOMEM;
--	attr_name = kmalloc(MAXNAMELEN, GFP_KERNEL);
--	if (!attr_name)
--		goto out_kfree_ops;
--
+-int
++static int
+ xfs_attrmulti_attr_get(
+ 	struct inode		*inode,
+ 	unsigned char		*name,
+@@ -379,7 +379,7 @@ xfs_attrmulti_attr_get(
+ 	return error;
+ }
+ 
+-int
++static int
+ xfs_attrmulti_attr_set(
+ 	struct inode		*inode,
+ 	unsigned char		*name,
+@@ -410,6 +410,51 @@ xfs_attrmulti_attr_set(
+ 	return error;
+ }
+ 
++int
++xfs_ioc_attrmulti_one(
++	struct file		*parfilp,
++	struct inode		*inode,
++	uint32_t		opcode,
++	void __user		*uname,
++	void __user		*value,
++	uint32_t		*len,
++	uint32_t		flags)
++{
++	unsigned char		*name;
++	int			error;
++
++	if ((flags & ATTR_ROOT) && (flags & ATTR_SECURE))
++		return -EINVAL;
++	flags &= ~ATTR_KERNEL_FLAGS;
++
++	name = strndup_user(uname, MAXNAMELEN);
++	if (IS_ERR(name))
++		return PTR_ERR(name);
++
++	switch (opcode) {
++	case ATTR_OP_GET:
++		error = xfs_attrmulti_attr_get(inode, name, value, len, flags);
++		break;
++	case ATTR_OP_REMOVE:
++		value = NULL;
++		*len = 0;
++		/*FALLTHRU*/
++	case ATTR_OP_SET:
++		error = mnt_want_write_file(parfilp);
++		if (error)
++			break;
++		error = xfs_attrmulti_attr_set(inode, name, value, *len, flags);
++		mnt_drop_write_file(parfilp);
++		break;
++	default:
++		error = -EINVAL;
++		break;
++	}
++
++	kfree(name);
++	return error;
++}
++
+ STATIC int
+ xfs_attrmulti_by_handle(
+ 	struct file		*parfilp,
+@@ -420,7 +465,6 @@ xfs_attrmulti_by_handle(
+ 	xfs_fsop_attrmulti_handlereq_t am_hreq;
+ 	struct dentry		*dentry;
+ 	unsigned int		i, size;
+-	unsigned char		*attr_name;
+ 
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EPERM;
+@@ -448,49 +492,10 @@ xfs_attrmulti_by_handle(
+ 
  	error = 0;
  	for (i = 0; i < am_hreq.opcount; i++) {
- 		if ((ops[i].am_flags & ATTR_ROOT) &&
-@@ -460,12 +455,11 @@ xfs_attrmulti_by_handle(
- 		}
- 		ops[i].am_flags &= ~ATTR_KERNEL_FLAGS;
- 
--		ops[i].am_error = strncpy_from_user((char *)attr_name,
--				ops[i].am_attrname, MAXNAMELEN);
--		if (ops[i].am_error == 0 || ops[i].am_error == MAXNAMELEN)
--			error = -ERANGE;
--		if (ops[i].am_error < 0)
-+		attr_name = strndup_user(ops[i].am_attrname, MAXNAMELEN);
-+		if (IS_ERR(attr_name)) {
-+			ops[i].am_error = PTR_ERR(attr_name);
- 			break;
-+		}
- 
- 		switch (ops[i].am_opcode) {
- 		case ATTR_OP_GET:
-@@ -496,13 +490,12 @@ xfs_attrmulti_by_handle(
- 		default:
- 			ops[i].am_error = -EINVAL;
- 		}
-+		kfree(attr_name);
+-		if ((ops[i].am_flags & ATTR_ROOT) &&
+-		    (ops[i].am_flags & ATTR_SECURE)) {
+-			ops[i].am_error = -EINVAL;
+-			continue;
+-		}
+-		ops[i].am_flags &= ~ATTR_KERNEL_FLAGS;
+-
+-		attr_name = strndup_user(ops[i].am_attrname, MAXNAMELEN);
+-		if (IS_ERR(attr_name)) {
+-			ops[i].am_error = PTR_ERR(attr_name);
+-			break;
+-		}
+-
+-		switch (ops[i].am_opcode) {
+-		case ATTR_OP_GET:
+-			ops[i].am_error = xfs_attrmulti_attr_get(
+-					d_inode(dentry), attr_name,
+-					ops[i].am_attrvalue, &ops[i].am_length,
+-					ops[i].am_flags);
+-			break;
+-		case ATTR_OP_SET:
+-			ops[i].am_error = mnt_want_write_file(parfilp);
+-			if (ops[i].am_error)
+-				break;
+-			ops[i].am_error = xfs_attrmulti_attr_set(
+-					d_inode(dentry), attr_name,
+-					ops[i].am_attrvalue, ops[i].am_length,
+-					ops[i].am_flags);
+-			mnt_drop_write_file(parfilp);
+-			break;
+-		case ATTR_OP_REMOVE:
+-			ops[i].am_error = mnt_want_write_file(parfilp);
+-			if (ops[i].am_error)
+-				break;
+-			ops[i].am_error = xfs_attrmulti_attr_set(
+-					d_inode(dentry), attr_name, NULL, 0,
+-					ops[i].am_flags);
+-			mnt_drop_write_file(parfilp);
+-			break;
+-		default:
+-			ops[i].am_error = -EINVAL;
+-		}
+-		kfree(attr_name);
++		ops[i].am_error = xfs_ioc_attrmulti_one(parfilp,
++				d_inode(dentry), ops[i].am_opcode,
++				ops[i].am_attrname, ops[i].am_attrvalue,
++				&ops[i].am_length, ops[i].am_flags);
  	}
  
  	if (copy_to_user(am_hreq.ops, ops, size))
- 		error = -EFAULT;
+diff --git a/fs/xfs/xfs_ioctl.h b/fs/xfs/xfs_ioctl.h
+index 819504df00ae..bb50cb3dc61f 100644
+--- a/fs/xfs/xfs_ioctl.h
++++ b/fs/xfs/xfs_ioctl.h
+@@ -30,21 +30,9 @@ xfs_readlink_by_handle(
+ 	struct file		*parfilp,
+ 	xfs_fsop_handlereq_t	*hreq);
  
--	kfree(attr_name);
-- out_kfree_ops:
- 	kfree(ops);
-  out_dput:
- 	dput(dentry);
+-extern int
+-xfs_attrmulti_attr_get(
+-	struct inode		*inode,
+-	unsigned char		*name,
+-	unsigned char		__user *ubuf,
+-	uint32_t		*len,
+-	uint32_t		flags);
+-
+-extern int
+-xfs_attrmulti_attr_set(
+-	struct inode		*inode,
+-	unsigned char		*name,
+-	const unsigned char	__user *ubuf,
+-	uint32_t		len,
+-	uint32_t		flags);
++int xfs_ioc_attrmulti_one(struct file *parfilp, struct inode *inode,
++		uint32_t opcode, void __user *uname, void __user *value,
++		uint32_t *len, uint32_t flags);
+ 
+ extern struct dentry *
+ xfs_handle_to_dentry(
 diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index 1092c66e48d6..e6a7f619a54c 100644
+index e6a7f619a54c..ee428ddf51e5 100644
 --- a/fs/xfs/xfs_ioctl32.c
 +++ b/fs/xfs/xfs_ioctl32.c
-@@ -443,11 +443,6 @@ xfs_compat_attrmulti_by_handle(
- 		goto out_dput;
- 	}
+@@ -416,7 +416,6 @@ xfs_compat_attrmulti_by_handle(
+ 	compat_xfs_fsop_attrmulti_handlereq_t	am_hreq;
+ 	struct dentry				*dentry;
+ 	unsigned int				i, size;
+-	unsigned char				*attr_name;
  
--	error = -ENOMEM;
--	attr_name = kmalloc(MAXNAMELEN, GFP_KERNEL);
--	if (!attr_name)
--		goto out_kfree_ops;
--
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EPERM;
+@@ -445,50 +444,11 @@ xfs_compat_attrmulti_by_handle(
+ 
  	error = 0;
  	for (i = 0; i < am_hreq.opcount; i++) {
- 		if ((ops[i].am_flags & ATTR_ROOT) &&
-@@ -457,13 +452,12 @@ xfs_compat_attrmulti_by_handle(
- 		}
- 		ops[i].am_flags &= ~ATTR_KERNEL_FLAGS;
- 
--		ops[i].am_error = strncpy_from_user((char *)attr_name,
--				compat_ptr(ops[i].am_attrname),
-+		attr_name = strndup_user(compat_ptr(ops[i].am_attrname),
- 				MAXNAMELEN);
--		if (ops[i].am_error == 0 || ops[i].am_error == MAXNAMELEN)
--			error = -ERANGE;
--		if (ops[i].am_error < 0)
-+		if (IS_ERR(attr_name)) {
-+			ops[i].am_error = PTR_ERR(attr_name);
- 			break;
-+		}
- 
- 		switch (ops[i].am_opcode) {
- 		case ATTR_OP_GET:
-@@ -494,13 +488,12 @@ xfs_compat_attrmulti_by_handle(
- 		default:
- 			ops[i].am_error = -EINVAL;
- 		}
-+		kfree(attr_name);
+-		if ((ops[i].am_flags & ATTR_ROOT) &&
+-		    (ops[i].am_flags & ATTR_SECURE)) {
+-			ops[i].am_error = -EINVAL;
+-			continue;
+-		}
+-		ops[i].am_flags &= ~ATTR_KERNEL_FLAGS;
+-
+-		attr_name = strndup_user(compat_ptr(ops[i].am_attrname),
+-				MAXNAMELEN);
+-		if (IS_ERR(attr_name)) {
+-			ops[i].am_error = PTR_ERR(attr_name);
+-			break;
+-		}
+-
+-		switch (ops[i].am_opcode) {
+-		case ATTR_OP_GET:
+-			ops[i].am_error = xfs_attrmulti_attr_get(
+-					d_inode(dentry), attr_name,
+-					compat_ptr(ops[i].am_attrvalue),
+-					&ops[i].am_length, ops[i].am_flags);
+-			break;
+-		case ATTR_OP_SET:
+-			ops[i].am_error = mnt_want_write_file(parfilp);
+-			if (ops[i].am_error)
+-				break;
+-			ops[i].am_error = xfs_attrmulti_attr_set(
+-					d_inode(dentry), attr_name,
+-					compat_ptr(ops[i].am_attrvalue),
+-					ops[i].am_length, ops[i].am_flags);
+-			mnt_drop_write_file(parfilp);
+-			break;
+-		case ATTR_OP_REMOVE:
+-			ops[i].am_error = mnt_want_write_file(parfilp);
+-			if (ops[i].am_error)
+-				break;
+-			ops[i].am_error = xfs_attrmulti_attr_set(
+-					d_inode(dentry), attr_name, NULL, 0,
+-					ops[i].am_flags);
+-			mnt_drop_write_file(parfilp);
+-			break;
+-		default:
+-			ops[i].am_error = -EINVAL;
+-		}
+-		kfree(attr_name);
++		ops[i].am_error = xfs_ioc_attrmulti_one(parfilp,
++				d_inode(dentry), ops[i].am_opcode,
++				compat_ptr(ops[i].am_attrname),
++				compat_ptr(ops[i].am_attrvalue),
++				&ops[i].am_length, ops[i].am_flags);
  	}
  
  	if (copy_to_user(compat_ptr(am_hreq.ops), ops, size))
- 		error = -EFAULT;
- 
--	kfree(attr_name);
-- out_kfree_ops:
- 	kfree(ops);
-  out_dput:
- 	dput(dentry);
 -- 
 2.24.1
 
