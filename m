@@ -2,83 +2,95 @@ Return-Path: <SRS0=8ZQd=3D=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B150C33CB2
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 16:13:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF233C33C9E
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 16:34:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 47B6D24655
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 16:13:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B895224658
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 16:34:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hZ2uCty8"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VtvOr6YF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728757AbgANQMb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Jan 2020 11:12:31 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:43352 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726053AbgANQMb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jan 2020 11:12:31 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
-        :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=qvys4y5BuENtlHq/fQJ5HpYZJz7aH8HDgIfuuwBY89Q=; b=hZ2uCty81+cLZZ+AsRSBc8RzcG
-        kC15Kg6m7XjWGXt8bZwI3hFaj/SqYbm/8p3j7EuKhk/rJCCyXz7IoovhUGraWUO/P7TvsGWnYCwm9
-        D8mmmN/0rqoay7ZV2O/4AxayCcPF41tBPGAXRySkvtmkorPeP9n+3KUZwDnMogNsudXoZFlEUTdF/
-        a5QKf9ajqV5tgHOeo+IVo0cqkhwkqF+QX8Ay9IhuNEGb6SxJe0O9IFxQYXB0xmJVKK8EJSgFINc4f
-        5aAkHc3tOjML58DMTOlXPrFqR2DhdRp6/Vf4K6W1SJZMZvNid2zZazualtOvqFH0qifjtLd7pI/mb
-        i98/ibWg==;
-Received: from [2001:4bb8:18c:4f54:fcbb:a92b:61e1:719] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1irOnu-00007I-4k; Tue, 14 Jan 2020 16:12:30 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Waiman Long <longman@redhat.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-ext4@vger.kernel.org, cluster-devel@redhat.com
-Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org
-Subject: [PATCH 01/12] mm: fix a comment in sys_swapon
-Date:   Tue, 14 Jan 2020 17:12:14 +0100
-Message-Id: <20200114161225.309792-2-hch@lst.de>
-X-Mailer: git-send-email 2.24.1
-In-Reply-To: <20200114161225.309792-1-hch@lst.de>
-References: <20200114161225.309792-1-hch@lst.de>
+        id S1728779AbgANQef (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Jan 2020 11:34:35 -0500
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:48217 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728761AbgANQef (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jan 2020 11:34:35 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1579019674;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=A61MDN9On2l+D0CHOHwV8RQgKf/LW4H2brHB54z57mg=;
+        b=VtvOr6YF8lpN48BLT7s49eylbLLaKlhlyW3033dI4WxlWPBu95K82WcwvNQcWaJmsxkSRA
+        vL/pPAlLMWSVNUxfbyrjvWxE6mCtRW8zFRdRkG7KuoXMpe/dLzyjWnkStSY4HuAyCvwz5j
+        4O3HiPZbjkaUbvkiDF0BP4tf/gAjKM0=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-272-0Z8kJG3eO2Csx02l0D7gRA-1; Tue, 14 Jan 2020 11:34:30 -0500
+X-MC-Unique: 0Z8kJG3eO2Csx02l0D7gRA-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id BA5A0150153;
+        Tue, 14 Jan 2020 16:34:28 +0000 (UTC)
+Received: from warthog.procyon.org.uk (ovpn-120-52.rdu2.redhat.com [10.10.120.52])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 53BA780A48;
+        Tue, 14 Jan 2020 16:34:26 +0000 (UTC)
+Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
+        Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
+        Kingdom.
+        Registered in England and Wales under Company Registration No. 3798903
+From:   David Howells <dhowells@redhat.com>
+To:     linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk, hch@lst.de,
+        tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com,
+        clm@fb.com, josef@toxicpanda.com, dsterba@suse.com
+cc:     dhowells@redhat.com, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Making linkat() able to overwrite the target
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <3325.1579019665.1@warthog.procyon.org.uk>
+Content-Transfer-Encoding: quoted-printable
+Date:   Tue, 14 Jan 2020 16:34:25 +0000
+Message-ID: <3326.1579019665@warthog.procyon.org.uk>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-claim_swapfile now always takes i_rwsem.
+With my rewrite of fscache and cachefiles:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- mm/swapfile.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+	https://git.kernel.org/pub/scm/linux/kernel/git/dhowells/linux-fs.git/log=
+/?h=3Dfscache-iter
 
-diff --git a/mm/swapfile.c b/mm/swapfile.c
-index bb3261d45b6a..fe6e4c1add0b 100644
---- a/mm/swapfile.c
-+++ b/mm/swapfile.c
-@@ -3157,7 +3157,7 @@ SYSCALL_DEFINE2(swapon, const char __user *, specialfile, int, swap_flags)
- 	mapping = swap_file->f_mapping;
- 	inode = mapping->host;
- 
--	/* If S_ISREG(inode->i_mode) will do inode_lock(inode); */
-+	/* will take i_rwsem; */
- 	error = claim_swapfile(p, inode);
- 	if (unlikely(error))
- 		goto bad_swap;
--- 
-2.24.1
+when a file gets invalidated by the server - and, under some circumstances=
+,
+modified locally - I have the cache create a temporary file with vfs_tmpfi=
+le()
+that I'd like to just link into place over the old one - but I can't becau=
+se
+vfs_link() doesn't allow you to do that.  Instead I have to either unlink =
+the
+old one and then link the new one in or create it elsewhere and rename acr=
+oss.
+
+Would it be possible to make linkat() take a flag, say AT_LINK_REPLACE, th=
+at
+causes the target to be replaced and not give EEXIST?  Or make it so that
+rename() can take a tmpfile as the source and replace the target with that=
+.  I
+presume that, either way, this would require journal changes on ext4, xfs =
+and
+btrfs.
+
+Thanks,
+David
 
