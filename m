@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F199BC33CB1
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 08:16:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 043CAC33CB1
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 08:16:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C812A2075B
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 08:16:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CA83F2075B
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 08:16:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="kGRwTBmr"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gr/qMyIQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726335AbgANIQA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Jan 2020 03:16:00 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:42246 "EHLO
+        id S1726365AbgANIQD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Jan 2020 03:16:03 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:42254 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725820AbgANIQA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jan 2020 03:16:00 -0500
+        with ESMTP id S1725820AbgANIQD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jan 2020 03:16:03 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=PR6+3xpbdSfNBivNEmqJD+LvsJuCkrsQ9pO0wMyE0ys=; b=kGRwTBmrsk1Eoyh0MeAPir9mAZ
-        ZD3pETQ6dIqPM3iKpruC9vevX9iXUmrym7+uSy/epYCYSVehuANjzcyWxWhnKNUWlZvhw7oV2TLUf
-        m930faiEy1Jlv4dWKai2/m2Fd9iyVab5MwSvuvC/PfNYbnLAJgM3sKb640XYSTGhhD0vgKj6I01k9
-        yUdG4rAfyegNHqbsBJ4HEpt0brL32o6E3IhKzAyHiuxsyd0a9dCyRyyAThG8SuLzlytMFCjETXnJG
-        4VcVUdzXmCK8uYjq6pMeLNwHZBLZgEvDahi6rtJAu8HlizySZrZKej3ak/Q+T7IC2kmdZtbib3Tgr
-        UWchSLQQ==;
+        bh=itsBBfSKxo6EJlUOtj+JK5YBag9V9stKYejlWTo2BNY=; b=gr/qMyIQv1WvttRDnu9qTwnbD+
+        dbrTGlkX+NRgjNGcNPfacyKvQ694KLsosCUj/+S5pP8lJUmstJDiQc7+kf6kzQCw1wOlZCiZ9Xvvq
+        j5HwvMnNINnRYdRTpkjVsHf26ZVmAkbrMHPPOz6r9O14boNCC1D4dEKUObZMITLb6nVIdW6UOpAPn
+        o8CBSa2IIHAe9gbElh3HtsR8C02mhAfDenEbYrBrYN0QxBH+C30YqM8YmJ4Kjd5dyzU4OCOv5tgvp
+        X1rDkGsmXIYz5EQfB+8CERhO0TDZVEVGolAn9dz/lHRVqsNsRs7hTdkEIsb6Rvw9compTasotbYbT
+        XNcrFjBQ==;
 Received: from [2001:4bb8:18c:4f54:fcbb:a92b:61e1:719] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1irHMl-00071s-Mv; Tue, 14 Jan 2020 08:16:00 +0000
+        id 1irHMo-00072I-Ih; Tue, 14 Jan 2020 08:16:03 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
 Cc:     Allison Collins <allison.henderson@oracle.com>
-Subject: [PATCH 15/29] xfs: replace ATTR_KERNOTIME with XFS_DA_OP_NOTIME
-Date:   Tue, 14 Jan 2020 09:10:37 +0100
-Message-Id: <20200114081051.297488-16-hch@lst.de>
+Subject: [PATCH 16/29] xfs: factor out a xfs_attr_match helper
+Date:   Tue, 14 Jan 2020 09:10:38 +0100
+Message-Id: <20200114081051.297488-17-hch@lst.de>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200114081051.297488-1-hch@lst.de>
 References: <20200114081051.297488-1-hch@lst.de>
@@ -53,110 +53,146 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-op_flags with the XFS_DA_OP_* flags is the usual place for in-kernel
-only flags, so move the notime flag there.
+Factor out a helper that compares an on-disk attr vs the name, length and
+flags specified in struct xfs_da_args.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_attr.c  | 4 ++--
- fs/xfs/libxfs/xfs_attr.h  | 8 +-------
- fs/xfs/libxfs/xfs_types.h | 2 ++
- fs/xfs/scrub/attr.c       | 2 +-
- fs/xfs/xfs_ioctl.c        | 1 -
- 5 files changed, 6 insertions(+), 11 deletions(-)
+ fs/xfs/libxfs/xfs_attr_leaf.c | 80 +++++++++++++----------------------
+ 1 file changed, 30 insertions(+), 50 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index c362dbab1a6a..fce4fd4a3370 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -186,7 +186,7 @@ xfs_attr_try_sf_addname(
- 	 * Commit the shortform mods, and we're done.
- 	 * NOTE: this is also the error path (EEXIST, etc).
- 	 */
--	if (!error && (args->flags & ATTR_KERNOTIME) == 0)
-+	if (!error && !(args->op_flags & XFS_DA_OP_NOTIME))
- 		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index b0658eb8fbcc..8852754153ba 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -445,14 +445,21 @@ xfs_attr3_leaf_read(
+  * Namespace helper routines
+  *========================================================================*/
  
- 	if (mp->m_flags & XFS_MOUNT_WSYNC)
-@@ -385,7 +385,7 @@ xfs_attr_set(
- 	if (mp->m_flags & XFS_MOUNT_WSYNC)
- 		xfs_trans_set_sync(args->trans);
+-/*
+- * If namespace bits don't match return 0.
+- * If all match then return 1.
+- */
+-STATIC int
+-xfs_attr_namesp_match(int arg_flags, int ondisk_flags)
++static bool
++xfs_attr_match(
++	struct xfs_da_args	*args,
++	uint8_t			namelen,
++	unsigned char		*name,
++	int			flags)
+ {
+-	return XFS_ATTR_NSP_ONDISK(ondisk_flags) == XFS_ATTR_NSP_ARGS_TO_ONDISK(arg_flags);
++	if (args->namelen != namelen)
++		return false;
++	if (memcmp(args->name, name, namelen) != 0)
++		return false;
++	if (XFS_ATTR_NSP_ARGS_TO_ONDISK(args->flags) !=
++	    XFS_ATTR_NSP_ONDISK(flags))
++		return false;
++	return true;
+ }
  
--	if ((args->flags & ATTR_KERNOTIME) == 0)
-+	if (!(args->op_flags & XFS_DA_OP_NOTIME))
- 		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
- 
- 	/*
-diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-index a6de050675c9..0f369399effd 100644
---- a/fs/xfs/libxfs/xfs_attr.h
-+++ b/fs/xfs/libxfs/xfs_attr.h
-@@ -33,19 +33,13 @@ struct xfs_attr_list_context;
- #define ATTR_CREATE	0x0010	/* pure create: fail if attr already exists */
- #define ATTR_REPLACE	0x0020	/* pure set: fail if attr does not exist */
- 
--#define ATTR_KERNOTIME	0x1000	/* [kernel] don't update inode timestamps */
--
--#define ATTR_KERNEL_FLAGS \
--	(ATTR_KERNOTIME)
--
- #define XFS_ATTR_FLAGS \
- 	{ ATTR_DONTFOLLOW, 	"DONTFOLLOW" }, \
- 	{ ATTR_ROOT,		"ROOT" }, \
- 	{ ATTR_TRUST,		"TRUST" }, \
- 	{ ATTR_SECURE,		"SECURE" }, \
- 	{ ATTR_CREATE,		"CREATE" }, \
--	{ ATTR_REPLACE,		"REPLACE" }, \
--	{ ATTR_KERNOTIME,	"KERNOTIME" }
-+	{ ATTR_REPLACE,		"REPLACE" }
- 
- /*
-  * The maximum size (into the kernel or returned from the kernel) of an
-diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-index 3379ebc0c7c5..1594325d7742 100644
---- a/fs/xfs/libxfs/xfs_types.h
-+++ b/fs/xfs/libxfs/xfs_types.h
-@@ -223,6 +223,7 @@ typedef struct xfs_da_args {
- #define XFS_DA_OP_ADDNAME	0x0004	/* this is an add operation */
- #define XFS_DA_OP_OKNOENT	0x0008	/* lookup/add op, ENOENT ok, else die */
- #define XFS_DA_OP_CILOOKUP	0x0010	/* lookup to return CI name if found */
-+#define XFS_DA_OP_NOTIME	0x0020	/* don't update inode timestamps */
- #define XFS_DA_OP_INCOMPLETE	0x0040	/* lookup INCOMPLETE attr keys */
- 
- #define XFS_DA_OP_FLAGS \
-@@ -231,6 +232,7 @@ typedef struct xfs_da_args {
- 	{ XFS_DA_OP_ADDNAME,	"ADDNAME" }, \
- 	{ XFS_DA_OP_OKNOENT,	"OKNOENT" }, \
- 	{ XFS_DA_OP_CILOOKUP,	"CILOOKUP" }, \
-+	{ XFS_DA_OP_NOTIME,	"NOTIME" }, \
- 	{ XFS_DA_OP_INCOMPLETE,	"INCOMPLETE" }
- 
- /*
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index f983c2b969e0..05537627211d 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -147,7 +147,7 @@ xchk_xattr_listent(
- 		return;
+ static int
+@@ -678,15 +685,8 @@ xfs_attr_shortform_add(xfs_da_args_t *args, int forkoff)
+ 	sf = (xfs_attr_shortform_t *)ifp->if_u1.if_data;
+ 	sfe = &sf->list[0];
+ 	for (i = 0; i < sf->hdr.count; sfe = XFS_ATTR_SF_NEXTENTRY(sfe), i++) {
+-#ifdef DEBUG
+-		if (sfe->namelen != args->namelen)
+-			continue;
+-		if (memcmp(args->name, sfe->nameval, args->namelen) != 0)
+-			continue;
+-		if (!xfs_attr_namesp_match(args->flags, sfe->flags))
+-			continue;
+-		ASSERT(0);
+-#endif
++		ASSERT(!xfs_attr_match(args, sfe->namelen, sfe->nameval,
++			sfe->flags));
  	}
  
--	args.flags = ATTR_KERNOTIME;
-+	args.op_flags = XFS_DA_OP_NOTIME;
- 	if (flags & XFS_ATTR_ROOT)
- 		args.flags |= ATTR_ROOT;
- 	else if (flags & XFS_ATTR_SECURE)
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 75b8fa7da1c9..9306cefa9e61 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -434,7 +434,6 @@ xfs_ioc_attrmulti_one(
- 
- 	if ((flags & ATTR_ROOT) && (flags & ATTR_SECURE))
- 		return -EINVAL;
--	flags &= ~ATTR_KERNEL_FLAGS;
- 
- 	name = strndup_user(uname, MAXNAMELEN);
- 	if (IS_ERR(name))
+ 	offset = (char *)sfe - (char *)sf;
+@@ -749,13 +749,9 @@ xfs_attr_shortform_remove(xfs_da_args_t *args)
+ 	for (i = 0; i < end; sfe = XFS_ATTR_SF_NEXTENTRY(sfe),
+ 					base += size, i++) {
+ 		size = XFS_ATTR_SF_ENTSIZE(sfe);
+-		if (sfe->namelen != args->namelen)
+-			continue;
+-		if (memcmp(sfe->nameval, args->name, args->namelen) != 0)
+-			continue;
+-		if (!xfs_attr_namesp_match(args->flags, sfe->flags))
+-			continue;
+-		break;
++		if (xfs_attr_match(args, sfe->namelen, sfe->nameval,
++				sfe->flags))
++			break;
+ 	}
+ 	if (i == end)
+ 		return -ENOATTR;
+@@ -816,13 +812,9 @@ xfs_attr_shortform_lookup(xfs_da_args_t *args)
+ 	sfe = &sf->list[0];
+ 	for (i = 0; i < sf->hdr.count;
+ 				sfe = XFS_ATTR_SF_NEXTENTRY(sfe), i++) {
+-		if (sfe->namelen != args->namelen)
+-			continue;
+-		if (memcmp(args->name, sfe->nameval, args->namelen) != 0)
+-			continue;
+-		if (!xfs_attr_namesp_match(args->flags, sfe->flags))
+-			continue;
+-		return -EEXIST;
++		if (xfs_attr_match(args, sfe->namelen, sfe->nameval,
++				sfe->flags))
++			return -EEXIST;
+ 	}
+ 	return -ENOATTR;
+ }
+@@ -847,14 +839,10 @@ xfs_attr_shortform_getvalue(
+ 	sfe = &sf->list[0];
+ 	for (i = 0; i < sf->hdr.count;
+ 				sfe = XFS_ATTR_SF_NEXTENTRY(sfe), i++) {
+-		if (sfe->namelen != args->namelen)
+-			continue;
+-		if (memcmp(args->name, sfe->nameval, args->namelen) != 0)
+-			continue;
+-		if (!xfs_attr_namesp_match(args->flags, sfe->flags))
+-			continue;
+-		return xfs_attr_copy_value(args, &sfe->nameval[args->namelen],
+-						sfe->valuelen);
++		if (xfs_attr_match(args, sfe->namelen, sfe->nameval,
++				sfe->flags))
++			return xfs_attr_copy_value(args,
++				&sfe->nameval[args->namelen], sfe->valuelen);
+ 	}
+ 	return -ENOATTR;
+ }
+@@ -2409,23 +2397,15 @@ xfs_attr3_leaf_lookup_int(
+ 		}
+ 		if (entry->flags & XFS_ATTR_LOCAL) {
+ 			name_loc = xfs_attr3_leaf_name_local(leaf, probe);
+-			if (name_loc->namelen != args->namelen)
+-				continue;
+-			if (memcmp(args->name, name_loc->nameval,
+-							args->namelen) != 0)
+-				continue;
+-			if (!xfs_attr_namesp_match(args->flags, entry->flags))
++			if (!xfs_attr_match(args, name_loc->namelen,
++					name_loc->nameval, entry->flags))
+ 				continue;
+ 			args->index = probe;
+ 			return -EEXIST;
+ 		} else {
+ 			name_rmt = xfs_attr3_leaf_name_remote(leaf, probe);
+-			if (name_rmt->namelen != args->namelen)
+-				continue;
+-			if (memcmp(args->name, name_rmt->name,
+-							args->namelen) != 0)
+-				continue;
+-			if (!xfs_attr_namesp_match(args->flags, entry->flags))
++			if (!xfs_attr_match(args, name_rmt->namelen,
++					name_rmt->name, entry->flags))
+ 				continue;
+ 			args->index = probe;
+ 			args->rmtvaluelen = be32_to_cpu(name_rmt->valuelen);
 -- 
 2.24.1
 
