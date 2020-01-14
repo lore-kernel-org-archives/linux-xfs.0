@@ -2,77 +2,94 @@ Return-Path: <SRS0=8ZQd=3D=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
+X-Spam-Status: No, score=-5.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 747F1C3F68F
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 21:51:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A811C33C9E
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 22:51:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5072624670
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 21:51:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C8822072B
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jan 2020 22:51:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728883AbgANVvD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Jan 2020 16:51:03 -0500
-Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:52545 "EHLO
+        id S1728656AbgANWvC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Jan 2020 17:51:02 -0500
+Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:33606 "EHLO
         outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727102AbgANVvD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jan 2020 16:51:03 -0500
+        with ESMTP id S1728746AbgANWvB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jan 2020 17:51:01 -0500
 Received: from callcc.thunk.org (guestnat-104-133-0-108.corp.google.com [104.133.0.108] (may be forged))
         (authenticated bits=0)
         (User authenticated as tytso@ATHENA.MIT.EDU)
-        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 00ELoN8O028997
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 00EMnH2t015142
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 14 Jan 2020 16:50:24 -0500
+        Tue, 14 Jan 2020 17:49:18 -0500
 Received: by callcc.thunk.org (Postfix, from userid 15806)
-        id 5833A4207DF; Tue, 14 Jan 2020 16:50:23 -0500 (EST)
-Date:   Tue, 14 Jan 2020 16:50:23 -0500
+        id 441C34207DF; Tue, 14 Jan 2020 17:49:17 -0500 (EST)
+Date:   Tue, 14 Jan 2020 17:49:17 -0500
 From:   "Theodore Y. Ts'o" <tytso@mit.edu>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Waiman Long <longman@redhat.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-ext4@vger.kernel.org, cluster-devel@redhat.com,
-        linux-kernel@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH 08/12] ext4: hold i_rwsem until AIO completes
-Message-ID: <20200114215023.GH140865@mit.edu>
-References: <20200114161225.309792-1-hch@lst.de>
- <20200114161225.309792-9-hch@lst.de>
+To:     David Howells <dhowells@redhat.com>
+Cc:     linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk, hch@lst.de,
+        adilger.kernel@dilger.ca, darrick.wong@oracle.com, clm@fb.com,
+        josef@toxicpanda.com, dsterba@suse.com, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: Problems with determining data presence by examining extents?
+Message-ID: <20200114224917.GA165687@mit.edu>
+References: <4467.1579020509@warthog.procyon.org.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200114161225.309792-9-hch@lst.de>
+In-Reply-To: <4467.1579020509@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 14, 2020 at 05:12:21PM +0100, Christoph Hellwig wrote:
-> diff --git a/fs/ext4/extents.c b/fs/ext4/extents.c
-> index 0e8708b77da6..b6aa2d249b30 100644
-> --- a/fs/ext4/extents.c
-> +++ b/fs/ext4/extents.c
-> @@ -4777,9 +4777,6 @@ static long ext4_zero_range(struct file *file, loff_t offset,
->  	if (mode & FALLOC_FL_KEEP_SIZE)
->  		flags |= EXT4_GET_BLOCKS_KEEP_SIZE;
->  
-> -	/* Wait all existing dio workers, newcomers will block on i_mutex */
-> -	inode_dio_wait(inode);
-> -
->  	/* Preallocate the range including the unaligned edges */
->  	if (partial_begin || partial_end) {
->  		ret = ext4_alloc_file_blocks(file,
+On Tue, Jan 14, 2020 at 04:48:29PM +0000, David Howells wrote:
+> Again with regard to my rewrite of fscache and cachefiles:
+> 
+> 	https://git.kernel.org/pub/scm/linux/kernel/git/dhowells/linux-fs.git/log/?h=fscache-iter
+> 
+> I've got rid of my use of bmap()!  Hooray!
+> 
+> However, I'm informed that I can't trust the extent map of a backing file to
+> tell me accurately whether content exists in a file because:
+> 
+>  (a) Not-quite-contiguous extents may be joined by insertion of blocks of
+>      zeros by the filesystem optimising itself.  This would give me a false
+>      positive when trying to detect the presence of data.
+> 
+>  (b) Blocks of zeros that I write into the file may get punched out by
+>      filesystem optimisation since a read back would be expected to read zeros
+>      there anyway, provided it's below the EOF.  This would give me a false
+>      negative.
+> 
+> Is there some setting I can use to prevent these scenarios on a file - or can
+> one be added?
 
-I note that you've dropped the inode_dio_wait() in ext4's ZERO_RANGE,
-COLLAPSE_RANGE, INSERT_RANGE, etc.  We had added these to avoid
-problems when various fallocate operations which modify the inode's
-logical->physical block mapping racing with direct I/O (both reads or
-writes).
+I don't think there's any way to do this in a portable way, at least
+today.  There is a hack we could be use that would work for ext4
+today, at least with respect to (a), but I'm not sure we would want to
+make any guarantees with respect to (b).
 
-I don't see a replacement protection in this patch series.  How does
-are file systems supported to protect against such races?
+I suspect I understand why you want this; I've fielded some requests
+for people wanting to do something very like this at $WORK, for what I
+assume to be for the same reason you're seeking to do this; to create
+do incremental caching of files and letting the file system track what
+has and hasn't been cached yet.
 
-    	 	 	      	      	      - Ted
+If we were going to add such a facility, what we could perhaps do is
+to define a new flag indicating that a particular file should have no
+extent mapping optimization applied, such that FIEMAP would return a
+mapping if and only if userspace had written to a particular block, or
+had requested that a block be preallocated using fallocate().  The
+flag could only be set on a zero-length file, and this might disable
+certain advanced file system features, such as reflink, at the file
+system's discretion; and there might be unspecified performance
+impacts if this flag is set on a file.
+
+File systems which do not support this feature would not allow this
+flag to be set.
+
+				- Ted
