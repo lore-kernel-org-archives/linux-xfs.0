@@ -2,51 +2,48 @@ Return-Path: <SRS0=S7Al=3E=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98CA1C35240
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 02:38:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 631A0C33C9E
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 02:39:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6FA132467A
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 02:38:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 35DBB222C3
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 02:39:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CSnVza/D"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="etdc3dH2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728879AbgAOCiu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Jan 2020 21:38:50 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:38842 "EHLO
+        id S1728928AbgAOCjK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Jan 2020 21:39:10 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:40148 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729010AbgAOCit (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jan 2020 21:38:49 -0500
+        with ESMTP id S1728904AbgAOCjK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jan 2020 21:39:10 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
-        :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=0Lf3LIidmtzhLradCtIzZCa/E4yScaYQG1zFtokMxyI=; b=CSnVza/DExA3BXgOaEyUvK2/Dt
-        ViA6C+SrfkrcgYYwc4eTyJzzHH8N4WaKAG30TZXiMZqRf00eU4lmJVDmpRXufq2R117ytYWDJ9hk+
-        wKtwV125l/dXdaeo0fV6R+BmMaXc40cxlO2vCZQlIQEe9HAmV2iIiXaE0Z5iiotNhLF2ysCU6Avvl
-        k+8f7XQGZ2bQ6QqJ6H/XEjtzWA8D92e8fsmrNjGY/bqIyJsv6YKhPc3cDRNJ1fhZZsnfcxg7Sym6a
-        nDFL2pNZrLrMc9/q3/rzd9xcr6Us64RYwJi9yFWrbNGV5tYYwzi2tzZ7N7UrRm4XUOzdYUWXZk5EX
-        4JcfTWzQ==;
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=dgVSjPiUW1SPVGvVVdOphNpP+4nkQOa7q3OECJziRBo=; b=etdc3dH2zGxPrx8fVOWxw3kEF
+        d4vTgZ7k/ntJ5a69XXQyRytwqzUFxwqSGLp++ckJsghZRNfNj35E8O3YjbO/HH79+bXmXIXp0eUvE
+        /J3UId9CWn++GN1Ee0wjKqPhfJWOceJIdhc6O+oEmmn/c1kcO3w+1Qof4AxrgUVWPOpN5tFzIX5q4
+        khVQ7u96RzM/WBezBgE/LeQ2p3g125Ll1vnX1aqXFOi/Bc3jvmIf0V+Mk4z4u9U1/PefbIC//cOrT
+        TJhzqgPZgjFaUQ+yVXstUIj663mmWV1/8ztF/THMsH7b+yrDSlr4L1fT6KRueW9uIm+GHT8Vt1VLY
+        ck7FjsewQ==;
 Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1irYZy-0008B3-8Z; Wed, 15 Jan 2020 02:38:46 +0000
+        id 1irYZx-0008AB-L4; Wed, 15 Jan 2020 02:38:45 +0000
 From:   Matthew Wilcox <willy@infradead.org>
 To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-mm@kvack.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         Jeff Layton <jlayton@kernel.org>,
         Christoph Hellwig <hch@infradead.org>, Chris Mason <clm@fb.com>
-Subject: [PATCH v2 8/9] mm: Remove add_to_page_cache_locked
-Date:   Tue, 14 Jan 2020 18:38:42 -0800
-Message-Id: <20200115023843.31325-9-willy@infradead.org>
+Subject: [RFC v2 0/9] Replacing the readpages a_op
+Date:   Tue, 14 Jan 2020 18:38:34 -0800
+Message-Id: <20200115023843.31325-1-willy@infradead.org>
 X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20200115023843.31325-1-willy@infradead.org>
-References: <20200115023843.31325-1-willy@infradead.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
@@ -56,92 +53,48 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
-The only remaining caller is add_to_page_cache(), and the only
-caller of that is hugetlbfs, so move add_to_page_cache() into
-filemap.c and call __add_to_page_cache_locked() directly.
+This is an attempt to add a ->readahead op to replace ->readpages.  I've
+converted two users, iomap/xfs and cifs.  The cifs conversion is lacking
+fscache support, and that's just because I didn't want to do that work;
+I don't believe there's anything fundamental to it.  But I wanted to do
+iomap because it is The Infrastructure Of The Future and cifs because it
+is the sole remaining user of add_to_page_cache_locked(), which enables
+the last two patches in the series.  By the way, that gives CIFS access
+to the workingset shadow infrastructure, which it had to ignore before
+because it couldn't put pages onto the lru list at the right time.
 
-Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
----
- include/linux/pagemap.h | 20 ++------------------
- mm/filemap.c            | 23 ++++++++---------------
- 2 files changed, 10 insertions(+), 33 deletions(-)
+v2: Chris asked me to show what this would look like if we just have
+the implementation look up the pages in the page cache, and I managed
+to figure out some things I'd done wrong last time.  It's even simpler
+than v1 (net 104 lines deleted).
 
-diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-index 0821f584c43c..75075065dd0b 100644
---- a/include/linux/pagemap.h
-+++ b/include/linux/pagemap.h
-@@ -604,8 +604,8 @@ static inline int fault_in_pages_readable(const char __user *uaddr, int size)
- 	return 0;
- }
- 
--int add_to_page_cache_locked(struct page *page, struct address_space *mapping,
--				pgoff_t index, gfp_t gfp_mask);
-+int add_to_page_cache(struct page *page, struct address_space *mapping,
-+				pgoff_t index, gfp_t gfp);
- int add_to_page_cache_lru(struct page *page, struct address_space *mapping,
- 				pgoff_t index, gfp_t gfp_mask);
- extern void delete_from_page_cache(struct page *page);
-@@ -614,22 +614,6 @@ int replace_page_cache_page(struct page *old, struct page *new, gfp_t gfp_mask);
- void delete_from_page_cache_batch(struct address_space *mapping,
- 				  struct pagevec *pvec);
- 
--/*
-- * Like add_to_page_cache_locked, but used to add newly allocated pages:
-- * the page is new, so we can just run __SetPageLocked() against it.
-- */
--static inline int add_to_page_cache(struct page *page,
--		struct address_space *mapping, pgoff_t offset, gfp_t gfp_mask)
--{
--	int error;
--
--	__SetPageLocked(page);
--	error = add_to_page_cache_locked(page, mapping, offset, gfp_mask);
--	if (unlikely(error))
--		__ClearPageLocked(page);
--	return error;
--}
--
- /*
-  * Only call this from a ->readahead implementation.
-  */
-diff --git a/mm/filemap.c b/mm/filemap.c
-index bf6aa30be58d..fb87f5fa75e6 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -913,25 +913,18 @@ static int __add_to_page_cache_locked(struct page *page,
- }
- ALLOW_ERROR_INJECTION(__add_to_page_cache_locked, ERRNO);
- 
--/**
-- * add_to_page_cache_locked - add a locked page to the pagecache
-- * @page:	page to add
-- * @mapping:	the page's address_space
-- * @offset:	page index
-- * @gfp_mask:	page allocation mode
-- *
-- * This function is used to add a page to the pagecache. It must be locked.
-- * This function does not add the page to the LRU.  The caller must do that.
-- *
-- * Return: %0 on success, negative error code otherwise.
-- */
--int add_to_page_cache_locked(struct page *page, struct address_space *mapping,
-+int add_to_page_cache(struct page *page, struct address_space *mapping,
- 		pgoff_t offset, gfp_t gfp_mask)
- {
--	return __add_to_page_cache_locked(page, mapping, offset,
-+	int err;
-+
-+	__SetPageLocked(page);
-+	err = __add_to_page_cache_locked(page, mapping, offset,
- 					  gfp_mask, NULL);
-+	if (unlikely(err))
-+		__ClearPageLocked(page);
-+	return err;
- }
--EXPORT_SYMBOL(add_to_page_cache_locked);
- 
- int add_to_page_cache_lru(struct page *page, struct address_space *mapping,
- 				pgoff_t offset, gfp_t gfp_mask)
+Matthew Wilcox (Oracle) (9):
+  mm: Fix the return type of __do_page_cache_readahead
+  readahead: Ignore return value of ->readpages
+  XArray: Add xarray_for_each_range
+  readahead: Put pages in cache earlier
+  mm: Add readahead address space operation
+  iomap,xfs: Convert from readpages to readahead
+  cifs: Convert from readpages to readahead
+  mm: Remove add_to_page_cache_locked
+  mm: Unify all add_to_page_cache variants
+
+ Documentation/core-api/xarray.rst     |  10 +-
+ Documentation/filesystems/locking.rst |   7 +-
+ Documentation/filesystems/vfs.rst     |  11 ++
+ fs/cifs/file.c                        | 143 +++++---------------------
+ fs/iomap/buffered-io.c                |  72 +++----------
+ fs/iomap/trace.h                      |   2 +-
+ fs/xfs/xfs_aops.c                     |  10 +-
+ include/linux/fs.h                    |   2 +
+ include/linux/iomap.h                 |   2 +-
+ include/linux/pagemap.h               |  25 ++---
+ include/linux/xarray.h                |  30 ++++++
+ mm/filemap.c                          |  72 ++++---------
+ mm/internal.h                         |   2 +-
+ mm/readahead.c                        |  76 +++++++++-----
+ 14 files changed, 180 insertions(+), 284 deletions(-)
+
 -- 
 2.24.1
 
