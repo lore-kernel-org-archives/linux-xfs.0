@@ -2,97 +2,287 @@ Return-Path: <SRS0=S7Al=3E=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F869C33CB1
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 12:04:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 223A3C33CB2
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 12:46:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2CCC522522
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 12:04:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DF9D220728
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 12:46:23 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=dilger-ca.20150623.gappssmtp.com header.i=@dilger-ca.20150623.gappssmtp.com header.b="ZV4lQu1b"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730126AbgAOMEG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Jan 2020 07:04:06 -0500
-Received: from mr012msb.fastweb.it ([85.18.95.109]:46000 "EHLO
-        mr012msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726165AbgAOMEG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jan 2020 07:04:06 -0500
-Received-SPF: pass (mr012msb.fastweb.it: domain assyoma.it designates
- 93.63.55.57 as permitted sender) identity=mailfrom;
- receiver=mr012msb.fastweb.it; client-ip=93.63.55.57;
- envelope-from=g.danti@assyoma.it; helo=ceres.assyoma.it;
-X-RazorGate-Vade: gggruggvucftvghtrhhoucdtuddrgedugedrtdefgdeftdcutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfhtefuvfghgfeupdcuqfgfvfenuceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhepuffhvfhfohfkffgfgggjtgfgsehtjeertddtfeejnecuhfhrohhmpefiihhonhgrthgrnhcuffgrnhhtihcuoehgrdgurghnthhisegrshhshihomhgrrdhitheqnecuffhomhgrihhnpegrshhshihomhgrrdhithenucfkphepleefrdeifedrheehrdehjeenucfrrghrrghmpehhvghloheptggvrhgvshdrrghsshihohhmrgdrihhtpdhinhgvthepleefrdeifedrheehrdehjedpmhgrihhlfhhrohhmpeeoghdruggrnhhtihesrghsshihohhmrgdrihhtqecuuefqffgjpeekuefkvffokffogfdprhgtphhtthhopeeouggrrhhrihgtkhdrfihonhhgsehorhgrtghlvgdrtghomhequcfqtfevrffvpehrfhgtkedvvdenuggrrhhrihgtkhdrfihonhhgsehorhgrtghlvgdrtghomhdprhgtphhtthhopeeolhhinhhugidqgihfshesvhhgvghrrdhkvghrnhgvlhdrohhrghequcfqtfevrffvpehrfhgtkedvvdenlhhinhhugidqgihfshesvhhgvghrrdhkvghrnhgvlhdrohhrghenucevlhhushhtvghrufhiiigvpedt
-X-RazorGate-Vade-Verdict: clean 0
-X-RazorGate-Vade-Classification: clean
-Received: from ceres.assyoma.it (93.63.55.57) by mr012msb.fastweb.it (5.8.208)
-        id 5E19B4C2004A415E; Wed, 15 Jan 2020 12:37:52 +0100
-Received: from gdanti-lenovo.assyoma.it (unknown [172.31.255.5])
-        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        by ceres.assyoma.it (Postfix) with ESMTPSA id 79D8126646E;
-        Wed, 15 Jan 2020 12:37:52 +0100 (CET)
-Subject: Re: XFS reflink vs ThinLVM
-From:   Gionatan Danti <g.danti@assyoma.it>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <fe697fb6-cef6-2e06-de77-3530700852da@assyoma.it>
- <20200113111025.liaargk3sf4wbngr@orion>
- <703a6c17-cc02-2c2c-31ce-6cd12a888743@assyoma.it>
- <20200113114356.midcgudwxpze3xfw@orion>
- <627cb07f-9433-ddfd-37d7-27efedd89727@assyoma.it>
- <39b50e2c-cb78-3bcd-0130-defa9c573b71@assyoma.it>
- <20200113165341.GE8247@magnolia>
- <f61995d7-9775-0035-8700-2b92c63bd23f@assyoma.it>
- <20200113180914.GI8247@magnolia>
- <8e96231f-8fc6-b178-9e83-84cbb9af6d2e@assyoma.it>
-Organization: Assyoma s.r.l.
-Message-ID: <9d8e8614-9ae1-30ee-f2b4-1e45b90b27f8@assyoma.it>
-Date:   Wed, 15 Jan 2020 12:37:52 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.0
-MIME-Version: 1.0
-In-Reply-To: <8e96231f-8fc6-b178-9e83-84cbb9af6d2e@assyoma.it>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        id S1729275AbgAOMqW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Jan 2020 07:46:22 -0500
+Received: from mail-pj1-f68.google.com ([209.85.216.68]:38759 "EHLO
+        mail-pj1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729251AbgAOMqP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jan 2020 07:46:15 -0500
+Received: by mail-pj1-f68.google.com with SMTP id l35so7664016pje.3
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Jan 2020 04:46:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=dilger-ca.20150623.gappssmtp.com; s=20150623;
+        h=from:message-id:mime-version:subject:date:in-reply-to:cc:to
+         :references;
+        bh=gmoQ2haBcdZ66ZDAcejuAD/SWwNHe0hv7/dpuVRBEMA=;
+        b=ZV4lQu1bHo4asCHiL7ozMJpG/aEIGXOcgzjC/kEDUUZsdau0d9QRTdOQ30HzQuDYrV
+         b41qPBXQtb8i3tlzlIXPXVz83Q2mensnr7ehTLBKYfYzkxqGhU4Pya07R2XawdaDQ7CU
+         UM5VdJoDNVdjCuWnhyvmTm71oKafu/NPZlGMzsK7sq2ipah7itvwMWw4ZkpVn89065se
+         P4nisLUT7hFX2ENj1YAnbmC1dYoq0i73Pt94XA4ZXgsv2xSSa4g097q/zOGM+1fzhMQt
+         45Mi0/rP2wrjrYryo4Cah0ID66q7fFpqmDwHufPxEtnTeOteJV57X+d9YKXQob5UJd19
+         toLg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:message-id:mime-version:subject:date
+         :in-reply-to:cc:to:references;
+        bh=gmoQ2haBcdZ66ZDAcejuAD/SWwNHe0hv7/dpuVRBEMA=;
+        b=g/WHdxTQ5nAe3ud7HP5ZuEklwkBMDH8+rWHVPRMTtq7D9gge22za4hl+EuJxBsmc5J
+         fhgHPTHr5hXdaBnZWA3kZXa6z4iP7V+CnbR/VQX4ZV+3/wYcw4qplwJsRZ2DRVaXpA6F
+         8VUQDemcIzZN01H0JxMKB/QUaD3UWL9lBFNipf3tgjB30L4XcJboJWT8H03lrxhtPZC/
+         yNO2rqjhnPEGoctbP7WS5+2+W7Rw1fBLCbjq8j/6pW6PmuJ5ML9pYQD31OKuv8GptNBK
+         /+yPbVbPJWDsC8XUDumkNJK6mw1sHRfcS8e+fDgUfZ6w3kTJ1m193CTWXdp+4dPzlbTk
+         ytrQ==
+X-Gm-Message-State: APjAAAXVyP7BC104MrnSnqe65HVQkxFBeXegsy9VlNBKN9hkGZpo0jpo
+        pGmBbjeD7aq7+yWMhcptTCgxIw==
+X-Google-Smtp-Source: APXvYqzUxA7fFBZl1bJC5jmBI/c13+6jszL7qbSUfqyyg4cn3067Iuv26XRPqcfguDmjvZLqzdo6VQ==
+X-Received: by 2002:a17:90b:30c8:: with SMTP id hi8mr35620232pjb.73.1579092374824;
+        Wed, 15 Jan 2020 04:46:14 -0800 (PST)
+Received: from cabot-wlan.adilger.int (S0106a84e3fe4b223.cg.shawcable.net. [70.77.216.213])
+        by smtp.gmail.com with ESMTPSA id e19sm20348397pjr.10.2020.01.15.04.46.13
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 15 Jan 2020 04:46:14 -0800 (PST)
+From:   Andreas Dilger <adilger@dilger.ca>
+Message-Id: <27181AE2-C63F-4932-A022-8B0563C72539@dilger.ca>
+Content-Type: multipart/signed;
+ boundary="Apple-Mail=_28ADC79E-8B49-4CCD-92BE-382545043A5C";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: Problems with determining data presence by examining extents?
+Date:   Wed, 15 Jan 2020 05:46:10 -0700
+In-Reply-To: <00fc7691-77d5-5947-5493-5c97f262da81@gmx.com>
+Cc:     David Howells <dhowells@redhat.com>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-btrfs <linux-btrfs@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To:     Qu Wenruo <quwenruo.btrfs@gmx.com>
+References: <4467.1579020509@warthog.procyon.org.uk>
+ <00fc7691-77d5-5947-5493-5c97f262da81@gmx.com>
+X-Mailer: Apple Mail (2.3273)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 14/01/20 09:45, Gionatan Danti wrote:
-> On 13/01/20 19:09, Darrick J. Wong wrote:
->> xfs_io -c 'bmap -c -e -l -p -v <whatever>' test.img
-> 
-> Ok, good to know. Thanks.
 
-Hi all, I have an additional question about extszinherit/extsize.
+--Apple-Mail=_28ADC79E-8B49-4CCD-92BE-382545043A5C
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=utf-8
 
-If I understand it correctly, by default it is 0: any non-EOF writes on 
-a sparse file will allocate how much space it needs. If these writes are 
-random and small enough (ie: 4k random writes), a subsequent sequential 
-read of the same file will have much lower performance (because 
-sequential IO are transformed in random accesses by the logical/physical 
-block remapping).
+On Jan 14, 2020, at 8:54 PM, Qu Wenruo <quwenruo.btrfs@gmx.com> wrote:
+>=20
+> On 2020/1/15 =E4=B8=8A=E5=8D=8812:48, David Howells wrote:
+>> Again with regard to my rewrite of fscache and cachefiles:
+>>=20
+>> 	=
+https://git.kernel.org/pub/scm/linux/kernel/git/dhowells/linux-fs.git/log/=
+?h=3Dfscache-iter
+>>=20
+>> I've got rid of my use of bmap()!  Hooray!
+>>=20
+>> However, I'm informed that I can't trust the extent map of a backing =
+file to
+>> tell me accurately whether content exists in a file because:
+>=20
+>>=20
+>> (b) Blocks of zeros that I write into the file may get punched out by
+>>     filesystem optimisation since a read back would be expected to =
+read zeros
+>>     there anyway, provided it's below the EOF.  This would give me a =
+false
+>>     negative.
+>=20
+> I know some qemu disk backend has such zero detection.
+> But not btrfs. So this is another per-fs based behavior.
+>=20
+> And problem (c):
+>=20
+> (c): A multi-device fs (btrfs) can have their own logical address =
+mapping.
+> Meaning the bytenr returned makes no sense to end user, unless used =
+for
+> that fs specific address space.
 
-Setting a 128K extszinherit (for the entire filesystem) or extsize (for 
-a file/dir) will markedly improve the situation, as much bigger 
-contiguous LBA regions can be read for each IO (note: I know SSD and 
-NVME disks are much less impacted by fragmentation, but I am mainly 
-speaking about HDD here).
+It would be useful to implement the multi-device extension for FIEMAP, =
+adding
+the fe_device field to indicate which device the extent is resident on:
 
-So, my question: there is anything wrong and/or I should be aware when 
-using a 128K extsize, so setting it the same as cowextsize? The only 
-possible drawback I can think is a coarse granularity when allocating 
-from the sparse file (ie: a 4k write will allocate the full 128k extent).
++ #define FIEMAP_EXTENT_DEVICE		0x00008000 /* fe_device is =
+valid, non-
++						    * local with =
+EXTENT_NET */
++ #define FIEMAP_EXTENT_NET		0x80000000 /* Data stored =
+remotely. */
 
-Am I missing something?
-Thanks.
+ struct fiemap_extent {
+ 	__u64 fe_logical;  /* logical offset in bytes for the start of
+ 			    * the extent from the beginning of the file =
+*/
+ 	__u64 fe_physical; /* physical offset in bytes for the start
+ 			    * of the extent from the beginning of the =
+disk */
+ 	__u64 fe_length;   /* length in bytes for this extent */
+ 	__u64 fe_reserved64[2];
+ 	__u32 fe_flags;    /* FIEMAP_EXTENT_* flags for this extent */
+-	__u32 fe_reserved[3];
++	__u32 fe_device;   /* device number (fs-specific if =
+FIEMAP_EXTENT_NET)*/
++	__u32 fe_reserved[2];
+ };
 
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+That allows userspace to distinguish fe_physical addresses that may be
+on different devices.  This isn't in the kernel yet, since it is mostly
+useful only for Btrfs and nobody has implemented it there.  I can give
+you details if working on this for Btrfs is of interest to you.
+
+> This is even more trickier when considering single device btrfs.
+> It still utilize the same logical address space, just like all =
+multiple
+> disks btrfs.
+>=20
+> And it completely possible for a single 1T btrfs has logical address
+> mapped beyond 10T or even more. (Any aligned bytenr in the range [0,
+> U64_MAX) is valid for btrfs logical address).
+>=20
+>=20
+> You won't like this case either.
+> (d): Compressed extents
+> One compressed extent can represents more data than its on-disk size.
+>=20
+> Furthermore, current fiemap interface hasn't considered this case, =
+thus
+> there it only reports in-memory size (aka, file size), no way to
+> represent on-disk size.
+
+There was a prototype patch to add compressed extent support to FIEMAP
+for btrfs, but it was never landed:
+
+[PATCH 0/5 v4] fiemap: introduce EXTENT_DATA_COMPRESSED flag David =
+Sterba
+https://www.mail-archive.com/linux-btrfs@vger.kernel.org/msg35837.html
+
+This adds a separate "fe_phys_length" field for each extent:
+
++#define FIEMAP_EXTENT_DATA_COMPRESSED  0x00000040 /* Data is compressed =
+by fs.
++                                                   * Sets =
+EXTENT_ENCODED and
++                                                   * the compressed =
+size is
++                                                   * stored in =
+fe_phys_length */
+
+ struct fiemap_extent {
+ 	__u64 fe_physical;    /* physical offset in bytes for the start
+			       * of the extent from the beginning of the =
+disk */
+ 	__u64 fe_length;      /* length in bytes for this extent */
+-	__u64 fe_reserved64[2];
++	__u64 fe_phys_length; /* physical length in bytes, may be =
+different from
++			       * fe_length and sets additional extent =
+flags */
++	__u64 fe_reserved64;
+ 	__u32 fe_flags;	      /* FIEMAP_EXTENT_* flags for this extent =
+*/
+ 	__u32 fe_reserved[3];
+ };
+
+
+> And even more bad news:
+> (e): write time dedupe
+> Although no fs known has implemented it yet (btrfs used to try to
+> support that, and I guess XFS could do it in theory too), you won't
+> known when a fs could get such "awesome" feature.
+>=20
+> Where your write may be checked and never reach disk if it matches =
+with
+> existing extents.
+>=20
+> This is a little like the zero-detection-auto-punch.
+>=20
+>> Is there some setting I can use to prevent these scenarios on a file =
+- or can
+>> one be added?
+>=20
+> I guess no.
+>=20
+>> Without being able to trust the filesystem to tell me accurately what =
+I've
+>> written into it, I have to use some other mechanism.  Currently, I've =
+switched
+>> to storing a map in an xattr with 1 bit per 256k block, but that gets =
+hard to
+>> use if the file grows particularly large and also has integrity =
+consequences -
+>> though those are hopefully limited as I'm now using DIO to store data =
+into the
+>> cache.
+>=20
+> Would you like to explain why you want to know such fs internal info?
+
+I believe David wants it to store sparse files as an cache and use =
+FIEMAP to
+determine if the blocks are cached locally, or if they need to be =
+fetched from
+the server.  If the filesystem doesn't store the written blocks =
+accurately,
+there is no way for the local cache to know whether it is holding valid =
+data
+or not.
+
+
+Cheers, Andreas
+
+
+
+
+
+
+--Apple-Mail=_28ADC79E-8B49-4CCD-92BE-382545043A5C
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEDb73u6ZejP5ZMprvcqXauRfMH+AFAl4fCZIACgkQcqXauRfM
+H+B94hAAq/hGq+KM2EW4oM8Xq5qSFfrwDIPyyRLbCXbSfeZGLWbpHlWbaD9RXEIf
+p/FBpXupxq8ihBMQEjbtbary5fyEHgpRAircigQ5AHkRj0QZlzftiXgYrsN1u6UQ
+UZAsP8P7JuFBC3nwD9gPJOcwtLMuIsWFVk/1hCbYs5EkG75LNNzBM4uBCskzwB/e
+p1TKmAgjzkO2JiGUo4iwHoZUzoFOgnLLeTXvDC5qqDvbqmW0MaG+wFbkYpb3lln3
+W5JN63xrQ83epKfl1VrLu8YMqc6ZNldJst0CeNf3wF2PHtHiM1aIh8vv1E5AraDu
+5JL8hdsIi5/EnhHlExZkQDi54zKMDF9tr9SvjON9kxmH148m6WVOEivnv5aG69ui
+xso3+qjoRsi3WhNKnW8LgjnPTVaEGkAbDYDZd/nsB6IcPlTjRI+gExhRtqR76hIj
+UVLlL0adfBVM+cvNoXh+2sdMrI5BGA6sIhesQdYKlIOyRKBHHmlDghpXVIz+ePHK
+OsOD0rh28NGTbVhT2rnXOPdCyW1+Btp0gVUaq46oz2XCr6o0HYNUp4iCQtauNKvo
+Mr9gy7oRv+64PAsjOazbWUUs65eRVIwCYaLUzLuFkfFIHbAoFjyb+Zaagz8EbOrn
+KdgWCUCo0PDg76uzaIA2XSHKQpoPDeC5fDZmBlpcfIY5YHeWmrI=
+=pzA/
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_28ADC79E-8B49-4CCD-92BE-382545043A5C--
