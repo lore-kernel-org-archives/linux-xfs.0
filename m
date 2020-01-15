@@ -2,90 +2,126 @@ Return-Path: <SRS0=S7Al=3E=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 301E8C33CB1
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 10:21:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4698C33CB2
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 11:37:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0336A2075B
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 10:21:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B46342073A
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 11:37:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729652AbgAOKVs convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Jan 2020 05:21:48 -0500
-Received: from eu-smtp-delivery-151.mimecast.com ([207.82.80.151]:43913 "EHLO
-        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729640AbgAOKVs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jan 2020 05:21:48 -0500
-Received: from AcuMS.aculab.com (156.67.243.126 [156.67.243.126]) (Using
- TLS) by relay.mimecast.com with ESMTP id
- uk-mta-224-1qiFO4UbN9aTPeO6iSwoTA-1; Wed, 15 Jan 2020 10:21:46 +0000
-Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) by
- AcuMS.aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) with Microsoft SMTP
- Server (TLS) id 15.0.1347.2; Wed, 15 Jan 2020 10:21:45 +0000
-Received: from AcuMS.Aculab.com ([fe80::43c:695e:880f:8750]) by
- AcuMS.aculab.com ([fe80::43c:695e:880f:8750%12]) with mapi id 15.00.1347.000;
- Wed, 15 Jan 2020 10:21:45 +0000
-From:   David Laight <David.Laight@ACULAB.COM>
-To:     "'ira.weiny@intel.com'" <ira.weiny@intel.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        id S1730038AbgAOLhU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Jan 2020 06:37:20 -0500
+Received: from mx2.suse.de ([195.135.220.15]:39188 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729900AbgAOLhT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Jan 2020 06:37:19 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay1.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 10DC6AEEE;
+        Wed, 15 Jan 2020 11:37:16 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id 5B5171E0D08; Wed, 15 Jan 2020 12:37:15 +0100 (CET)
+Date:   Wed, 15 Jan 2020 12:37:15 +0100
+From:   Jan Kara <jack@suse.cz>
+To:     ira.weiny@intel.com
+Cc:     linux-kernel@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
         Dan Williams <dan.j.williams@intel.com>,
-        "Dave Chinner" <david@fromorbit.com>,
+        Dave Chinner <david@fromorbit.com>,
         Christoph Hellwig <hch@lst.de>,
         "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
-Subject: RE: [RFC PATCH V2 09/12] fs: Prevent mode change if file is mmap'ed
-Thread-Topic: [RFC PATCH V2 09/12] fs: Prevent mode change if file is mmap'ed
-Thread-Index: AQHVx+xw3fI16+EnrkucPW5Ge+vrG6frihyw
-Date:   Wed, 15 Jan 2020 10:21:45 +0000
-Message-ID: <06258747f6824a35adfaa999ab4c2261@AcuMS.aculab.com>
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [RFC PATCH V2 01/12] fs/stat: Define DAX statx attribute
+Message-ID: <20200115113715.GB2595@quack2.suse.cz>
 References: <20200110192942.25021-1-ira.weiny@intel.com>
- <20200110192942.25021-10-ira.weiny@intel.com>
-In-Reply-To: <20200110192942.25021-10-ira.weiny@intel.com>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.202.205.107]
+ <20200110192942.25021-2-ira.weiny@intel.com>
 MIME-Version: 1.0
-X-MC-Unique: 1qiFO4UbN9aTPeO6iSwoTA-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200110192942.25021-2-ira.weiny@intel.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From ira.weiny@intel.com
-> Sent: 10 January 2020 19:30
+On Fri 10-01-20 11:29:31, ira.weiny@intel.com wrote:
+> From: Ira Weiny <ira.weiny@intel.com>
 > 
-> Page faults need to ensure the inode mode is correct and consistent with
-> the vmf information at the time of the fault.  There is no easy way to
-> ensure the vmf information is correct if a mode change is in progress.
-> Furthermore, there is no good use case to require a mode change while
-> the file is mmap'ed.
+> In order for users to determine if a file is currently operating in DAX
+> mode (effective DAX).  Define a statx attribute value and set that
+> attribute if the effective DAX flag is set.
 > 
-> Track mmap's of the file and fail the mode change if the file is
-> mmap'ed.
+> To go along with this we propose the following addition to the statx man
+> page:
+> 
+> STATX_ATTR_DAX
+> 
+> 	DAX (cpu direct access) is a file mode that attempts to minimize
+> 	software cache effects for both I/O and memory mappings of this
+> 	file.  It requires a capable device, a compatible filesystem
+> 	block size, and filesystem opt-in. It generally assumes all
+> 	accesses are via cpu load / store instructions which can
+> 	minimize overhead for small accesses, but adversely affect cpu
+> 	utilization for large transfers. File I/O is done directly
+> 	to/from user-space buffers. While the DAX property tends to
+> 	result in data being transferred synchronously it does not give
+> 	the guarantees of synchronous I/O that data and necessary
+> 	metadata are transferred. Memory mapped I/O may be performed
+> 	with direct mappings that bypass system memory buffering. Again
+> 	while memory-mapped I/O tends to result in data being
+> 	transferred synchronously it does not guarantee synchronous
+> 	metadata updates. A dax file may optionally support being mapped
+> 	with the MAP_SYNC flag which does allow cpu store operations to
+> 	be considered synchronous modulo cpu cache effects.
+> 
+> Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 
-This seems wrong to me.
-I presume the 'mode changes' are from things like 'chmod -w ...'.
-mmap() should be no different to open().
-Only the permissions set when the file is opened count.
+This looks good to me. You can add:
 
-Next you'll be stopping unlink() when a file is open :-)
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-	David
+								Honza
 
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
-
+> ---
+>  fs/stat.c                 | 3 +++
+>  include/uapi/linux/stat.h | 1 +
+>  2 files changed, 4 insertions(+)
+> 
+> diff --git a/fs/stat.c b/fs/stat.c
+> index 030008796479..894699c74dde 100644
+> --- a/fs/stat.c
+> +++ b/fs/stat.c
+> @@ -79,6 +79,9 @@ int vfs_getattr_nosec(const struct path *path, struct kstat *stat,
+>  	if (IS_AUTOMOUNT(inode))
+>  		stat->attributes |= STATX_ATTR_AUTOMOUNT;
+>  
+> +	if (IS_DAX(inode))
+> +		stat->attributes |= STATX_ATTR_DAX;
+> +
+>  	if (inode->i_op->getattr)
+>  		return inode->i_op->getattr(path, stat, request_mask,
+>  					    query_flags);
+> diff --git a/include/uapi/linux/stat.h b/include/uapi/linux/stat.h
+> index ad80a5c885d5..e5f9d5517f6b 100644
+> --- a/include/uapi/linux/stat.h
+> +++ b/include/uapi/linux/stat.h
+> @@ -169,6 +169,7 @@ struct statx {
+>  #define STATX_ATTR_ENCRYPTED		0x00000800 /* [I] File requires key to decrypt in fs */
+>  #define STATX_ATTR_AUTOMOUNT		0x00001000 /* Dir: Automount trigger */
+>  #define STATX_ATTR_VERITY		0x00100000 /* [I] Verity protected file */
+> +#define STATX_ATTR_DAX			0x00002000 /* [I] File is DAX */
+>  
+>  
+>  #endif /* _UAPI_LINUX_STAT_H */
+> -- 
+> 2.21.0
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
