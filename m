@@ -2,123 +2,73 @@ Return-Path: <SRS0=S7Al=3E=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3287C33CB3
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 14:59:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B60FC33CB2
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 15:08:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8A0012084D
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 14:59:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CBC36222C3
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 15:08:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SA5VVeJt"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nL2vP1tC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729085AbgAOO7x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Jan 2020 09:59:53 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:24812 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729058AbgAOO7x (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jan 2020 09:59:53 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1579100392;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=IdF3CR86PjR3/icqlGPbxgEESDkiaecNDA80gTmcK8Q=;
-        b=SA5VVeJtfthjY/Ol15ZJib82R0beCMUjLtW7DUI5wtamXkM4mA9BGhaJkORJh+nnFxEyRm
-        mgrYvfspZ8bKu9knr/bVe2mwnmsT/oV1Acz73MmlzT/186Rbm1AFmdMIwyUwkPBWpJmGbC
-        Bhxr+SVu6aumKujPEtSWSg84kianrhw=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-227-1uLPKIN8M2aufcEay_IGjQ-1; Wed, 15 Jan 2020 09:59:46 -0500
-X-MC-Unique: 1uLPKIN8M2aufcEay_IGjQ-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 40F5F100E722;
-        Wed, 15 Jan 2020 14:59:42 +0000 (UTC)
-Received: from warthog.procyon.org.uk (ovpn-120-52.rdu2.redhat.com [10.10.120.52])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 86B68675AE;
-        Wed, 15 Jan 2020 14:59:39 +0000 (UTC)
-Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
-        Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
-        Kingdom.
-        Registered in England and Wales under Company Registration No. 3798903
-From:   David Howells <dhowells@redhat.com>
-In-Reply-To: <20200115144839.GA30301@lst.de>
-References: <20200115144839.GA30301@lst.de> <20200115133101.GA28583@lst.de> <4467.1579020509@warthog.procyon.org.uk> <00fc7691-77d5-5947-5493-5c97f262da81@gmx.com> <27181AE2-C63F-4932-A022-8B0563C72539@dilger.ca> <afa71c13-4f99-747a-54ec-579f11f066a0@gmx.com> <26093.1579098922@warthog.procyon.org.uk>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     dhowells@redhat.com, Qu Wenruo <quwenruo.btrfs@gmx.com>,
-        Andreas Dilger <adilger@dilger.ca>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-btrfs <linux-btrfs@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: Problems with determining data presence by examining extents?
+        id S1726474AbgAOPIF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Jan 2020 10:08:05 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:38420 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726132AbgAOPIF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jan 2020 10:08:05 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Type:MIME-Version:Message-ID:
+        Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=796tKAbK6j2ghTsXjLBQJuDUm5b41Shs0TtRfi9nngY=; b=nL2vP1tCUdIM8lzWSFrK6/7sCE
+        LvdNvaTpoDTK4jgnvLJ/qL6J0WKz1EVZXIeh/RW+1YlaxWyKOBJXNdjVbiGs9x1BFR2MwZy6CuHI1
+        wMijvrqzuBpDK6wTMR5WIEnnKJZem5xwY8xw1asRhi8X7CupridhNeUFBFPbCF15NUZ0F2tb7GNJI
+        1lZ0ccEtZ7+ccA2daeUr1SXIO+pcJ7qB2kyPcdtWxxad3kHHELiygk4UEx0mUov/JvltvR3N0uX5s
+        orJ0M+xB+l4ZwATqUzHMpvAbWeS2LWGzZaV4M8mkFW/FpGpTuq82yMXdTmil6LkJMaTJGs6qgg3Ar
+        w0JfdSLw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1irkH4-0000NY-1V; Wed, 15 Jan 2020 15:08:02 +0000
+Date:   Wed, 15 Jan 2020 07:08:02 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Jan Tulak <jtulak@redhat.com>, Baihua Lu <lubaihua0331@gmail.com>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: xfs/191 failures?
+Message-ID: <20200115150802.GA425@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <28754.1579100378.1@warthog.procyon.org.uk>
-Content-Transfer-Encoding: quoted-printable
-Date:   Wed, 15 Jan 2020 14:59:38 +0000
-Message-ID: <28755.1579100378@warthog.procyon.org.uk>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Christoph Hellwig <hch@lst.de> wrote:
+Hi Jan and Baihua,
 
-> > Another thread could be writing to the file, and the raciness matters =
-if I
-> > want to cache the result of calling SEEK_HOLE - though it might be pos=
-sible
-> > just to mask it off.
-> =
+the xfs/191 test case has been failing for me basically since it
+was added.  Does it succeed for anyone with an upstream kernel
+and xfsprogs?  Here is my diff between the golden and the actual
+output:
 
-> Well, if you have other threads changing the file (writing, punching hol=
-es,
-> truncating, etc) you have lost with any interface that isn't an atomic
-> give me that data or tell me its a hole.  And even if that if you allow
-> threads that aren't part of your fscache implementation to do the
-> modifications you have lost.  If on the other hand they are part of
-> fscache you should be able to synchronize your threads somehow.
-
-Another thread could be writing to the file at the same time, but not in t=
-he
-same block.  That's managed by netfs, most likely based on the pages and p=
-age
-flags attached to the netfs inode being cached in this particular file[*].
-
-What I was more thinking of is that SEEK_HOLE might run past the block of
-interest and into a block that's currently being written and see a partial=
-ly
-written block.
-
-[*] For AFS, this is only true of regular files; dirs and symlinks are cac=
-hed
-    as monoliths and are there entirely or not at all.
-
-> > However, SEEK_HOLE doesn't help with the issue of the filesystem 'alte=
-ring'
-> > the content of the file by adding or removing blocks of zeros.
-> =
-
-> As does any other method.  If you need that fine grained control you
-> need to track the information yourself.
-
-So, basically, I can't.  Okay.  I was hoping it might be possible to add a=
-n
-ioctl or something to tell filesystems not to do that with particular file=
-s.
-
-David
-
+--- /root/xfstests/tests/xfs/191-input-validation.out	2016-09-21 20:34:14.961574921 +0000
++++ /root/xfstests/results//xfs/191-input-validation.out.bad	2020-01-15 15:05:25.580935340 +0000
+@@ -1,2 +1,13 @@
+ QA output created by 191-input-validation
+ silence is golden
++pass -n size=2b /dev/vdc
++pass -d agsize=8192b /dev/vdc
++pass -d agsize=65536s /dev/vdc
++pass -d su=0,sw=64 /dev/vdc
++pass -d su=4096s,sw=64 /dev/vdc
++pass -d su=4096b,sw=64 /dev/vdc
++pass -l su=10b /dev/vdc
++fail -n log=15 /dev/vdc
++fail -r rtdev=/mnt/test/191-input-validation.img /dev/vdc
++fail -r size=65536,rtdev=/mnt/test/191-input-validation.img /dev/vdc
++fail -i log=10 /dev/vdc
