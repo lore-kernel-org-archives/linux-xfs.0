@@ -7,55 +7,56 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF8F3C32771
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 17:04:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE5CFC32771
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 17:04:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7072124656
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 17:04:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A8E90214AF
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 17:04:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IU/y/Qfa"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="c1MQ87Yy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728909AbgAOREn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Jan 2020 12:04:43 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:46580 "EHLO
+        id S1728988AbgAOREs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Jan 2020 12:04:48 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:46658 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728904AbgAOREm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jan 2020 12:04:42 -0500
+        with ESMTP id S1728904AbgAOREs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jan 2020 12:04:48 -0500
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00FGhPx8012377;
-        Wed, 15 Jan 2020 17:04:34 GMT
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00FGhOAw012327;
+        Wed, 15 Jan 2020 17:04:41 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=q9dAdV3azHQChlD6pTvNBsfzdMrc+t+uXmKAvi92N9k=;
- b=IU/y/QfabrZoOKq+7o6UwG6eT7Ji9cBrlX7f3NxB3YlRVE79M2vvUFzgdjYWGFYFASgy
- XSxNmmJPu8ZSVkwjv4ZEDR+cm1EQrOiYlIjuqJH5FL3dnUH7C5+AKXOVHqAB294LQGHU
- OVQ9MRAwcXKdrieO9LwHSNqqAvozk+jNLQObPINot+yysH1NL6L3Dzy0Yx3EkZnMBEOO
- HlVBLiyRh9pAjJ4++YTrSiLJC4id39isYdHwxZmEBLvBRBSQvRN0Q8G87RIeIv448+1/
- BcMrxP+8KdujayXkFZvtxEXaJh3a/W3HZwZ3dMiHwASIPCugnC5zQ8rMQ195PMV4aY8H Pw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2xf73yne5b-1
+ bh=16ucMzSCkirqk334GdhKB86M4CnqPEYUJL0SbF9A520=;
+ b=c1MQ87Yy0SUsGYuoDwcQaSreHD+UwrMzZ1CckPISkLV7J70RShCvZyVwsqitY/RV69s2
+ 2fRoTsu7bYPpVme+PFmYL5pOiN55nqnbJ6zJz/H4Lh9l2F6UvKJnsGAnTXsrlPNl8maD
+ kcHoA7k+v/O/qxvT7L7liU68+OL5y62cnLon0WwR13Zpm9nKU6yHKxeSJegHcLI+S9xB
+ nEXVJIA/VzkdGYaYBCkd/ePjM4SfifOsMg7p4iKlPZyudx8ausyoxveOHINv2K494RUr
+ XU6MKCaSfhxa7cGpZthzK1xk748T29l+kXBA0nm+aNbAEgfJgWQVaUOUafyPCds9GXkU yw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 2xf73yne5v-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 15 Jan 2020 17:04:34 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00FGhwgm021597;
-        Wed, 15 Jan 2020 17:04:33 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2xj1prgq1e-1
+        Wed, 15 Jan 2020 17:04:40 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00FGiXws183122;
+        Wed, 15 Jan 2020 17:04:40 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 2xj1apwss6-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 15 Jan 2020 17:04:33 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00FH4Xjn012359;
-        Wed, 15 Jan 2020 17:04:33 GMT
+        Wed, 15 Jan 2020 17:04:39 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00FH4dRf024282;
+        Wed, 15 Jan 2020 17:04:39 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 15 Jan 2020 09:04:32 -0800
-Subject: [PATCH 8/9] xfs: make xfs_trans_get_buf return an error code
+        with ESMTP ; Wed, 15 Jan 2020 09:04:39 -0800
+Subject: [PATCH 9/9] xfs: make xfs_btree_get_buf functions return an error
+ code
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
-Date:   Wed, 15 Jan 2020 09:04:31 -0800
-Message-ID: <157910787174.2028217.6154423239671718522.stgit@magnolia>
+Date:   Wed, 15 Jan 2020 09:04:38 -0800
+Message-ID: <157910787821.2028217.9307411154179566922.stgit@magnolia>
 In-Reply-To: <157910781961.2028217.1250106765923436515.stgit@magnolia>
 References: <157910781961.2028217.1250106765923436515.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -63,13 +64,13 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9501 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=4 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1911140001 definitions=main-2001150129
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9501 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=4 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
  definitions=main-2001150129
@@ -80,331 +81,174 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Convert xfs_trans_get_buf() to return numeric error codes like most
-everywhere else in xfs.
+Convert both xfs_btree_get_buf() functions to return numeric error codes
+like most everywhere else in xfs.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_btree.c  |   23 ++++++++++++++++-------
- fs/xfs/libxfs/xfs_ialloc.c |   12 ++++++------
- fs/xfs/libxfs/xfs_sb.c     |    9 +++++----
- fs/xfs/scrub/repair.c      |    8 ++++++--
- fs/xfs/xfs_attr_inactive.c |   17 +++++++++--------
- fs/xfs/xfs_dquot.c         |    8 ++++----
- fs/xfs/xfs_inode.c         |   12 ++++++------
- fs/xfs/xfs_rtalloc.c       |    8 +++-----
- fs/xfs/xfs_symlink.c       |   19 ++++++++-----------
- fs/xfs/xfs_trans.h         |   13 ++++---------
- 10 files changed, 67 insertions(+), 62 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c |   13 ++++++-------
+ fs/xfs/libxfs/xfs_bmap.c  |   10 +++++-----
+ fs/xfs/libxfs/xfs_btree.c |   36 ++++++++++++++----------------------
+ fs/xfs/libxfs/xfs_btree.h |   16 +++++-----------
+ 4 files changed, 30 insertions(+), 45 deletions(-)
 
 
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 53410819691b..542f6ad7e5b4 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -1070,11 +1070,10 @@ xfs_alloc_ag_vextent_small(
+ 	if (args->datatype & XFS_ALLOC_USERDATA) {
+ 		struct xfs_buf	*bp;
+ 
+-		bp = xfs_btree_get_bufs(args->mp, args->tp, args->agno, fbno);
+-		if (XFS_IS_CORRUPT(args->mp, !bp)) {
+-			error = -EFSCORRUPTED;
++		error = xfs_btree_get_bufs(args->mp, args->tp, args->agno,
++				fbno, &bp);
++		if (error)
+ 			goto error;
+-		}
+ 		xfs_trans_binval(args->tp, bp);
+ 	}
+ 	*fbnop = args->agbno = fbno;
+@@ -2347,9 +2346,9 @@ xfs_free_agfl_block(
+ 	if (error)
+ 		return error;
+ 
+-	bp = xfs_btree_get_bufs(tp->t_mountp, tp, agno, agbno);
+-	if (XFS_IS_CORRUPT(tp->t_mountp, !bp))
+-		return -EFSCORRUPTED;
++	error = xfs_btree_get_bufs(tp->t_mountp, tp, agno, agbno, &bp);
++	if (error)
++		return error;
+ 	xfs_trans_binval(tp, bp);
+ 
+ 	return 0;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 4c2e046fbfad..4544732d09a5 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -730,11 +730,9 @@ xfs_bmap_extents_to_btree(
+ 	cur->bc_private.b.allocated++;
+ 	ip->i_d.di_nblocks++;
+ 	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, 1L);
+-	abp = xfs_btree_get_bufl(mp, tp, args.fsbno);
+-	if (XFS_IS_CORRUPT(mp, !abp)) {
+-		error = -EFSCORRUPTED;
++	error = xfs_btree_get_bufl(mp, tp, args.fsbno, &abp);
++	if (error)
+ 		goto out_unreserve_dquot;
+-	}
+ 
+ 	/*
+ 	 * Fill in the child block.
+@@ -878,7 +876,9 @@ xfs_bmap_local_to_extents(
+ 	ASSERT(args.fsbno != NULLFSBLOCK);
+ 	ASSERT(args.len == 1);
+ 	tp->t_firstblock = args.fsbno;
+-	bp = xfs_btree_get_bufl(args.mp, tp, args.fsbno);
++	error = xfs_btree_get_bufl(args.mp, tp, args.fsbno, &bp);
++	if (error)
++		goto done;
+ 
+ 	/*
+ 	 * Initialize the block, copy the data and log the remote buffer.
 diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index b22c7e928eb1..2d53e5fdff70 100644
+index 2d53e5fdff70..0a7e2265dec1 100644
 --- a/fs/xfs/libxfs/xfs_btree.c
 +++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -688,11 +688,16 @@ xfs_btree_get_bufl(
- 	xfs_trans_t	*tp,		/* transaction pointer */
- 	xfs_fsblock_t	fsbno)		/* file system block number */
+@@ -682,46 +682,38 @@ xfs_btree_get_block(
+  * Get a buffer for the block, return it with no data read.
+  * Long-form addressing.
+  */
+-xfs_buf_t *				/* buffer for fsbno */
++int
+ xfs_btree_get_bufl(
+-	xfs_mount_t	*mp,		/* file system mount point */
+-	xfs_trans_t	*tp,		/* transaction pointer */
+-	xfs_fsblock_t	fsbno)		/* file system block number */
++	struct xfs_mount	*mp,
++	struct xfs_trans	*tp,
++	xfs_fsblock_t		fsbno,
++	struct xfs_buf		**bpp)
  {
-+	struct xfs_buf		*bp;
+-	struct xfs_buf		*bp;
  	xfs_daddr_t		d;		/* real disk block address */
-+	int			error;
+-	int			error;
  
  	ASSERT(fsbno != NULLFSBLOCK);
  	d = XFS_FSB_TO_DADDR(mp, fsbno);
--	return xfs_trans_get_buf(tp, mp->m_ddev_targp, d, mp->m_bsize, 0);
-+	error = xfs_trans_get_buf(tp, mp->m_ddev_targp, d, mp->m_bsize, 0, &bp);
-+	if (error)
-+		return NULL;
-+	return bp;
+-	error = xfs_trans_get_buf(tp, mp->m_ddev_targp, d, mp->m_bsize, 0, &bp);
+-	if (error)
+-		return NULL;
+-	return bp;
++	return xfs_trans_get_buf(tp, mp->m_ddev_targp, d, mp->m_bsize, 0, bpp);
  }
  
  /*
-@@ -706,12 +711,17 @@ xfs_btree_get_bufs(
- 	xfs_agnumber_t	agno,		/* allocation group number */
- 	xfs_agblock_t	agbno)		/* allocation group block number */
+  * Get a buffer for the block, return it with no data read.
+  * Short-form addressing.
+  */
+-xfs_buf_t *				/* buffer for agno/agbno */
++int
+ xfs_btree_get_bufs(
+-	xfs_mount_t	*mp,		/* file system mount point */
+-	xfs_trans_t	*tp,		/* transaction pointer */
+-	xfs_agnumber_t	agno,		/* allocation group number */
+-	xfs_agblock_t	agbno)		/* allocation group block number */
++	struct xfs_mount	*mp,
++	struct xfs_trans	*tp,
++	xfs_agnumber_t		agno,
++	xfs_agblock_t		agbno,
++	struct xfs_buf		**bpp)
  {
-+	struct xfs_buf		*bp;
- 	xfs_daddr_t		d;		/* real disk block address */
-+	int			error;
+-	struct xfs_buf		*bp;
+-	xfs_daddr_t		d;		/* real disk block address */
+-	int			error;
++	xfs_daddr_t		d;
  
  	ASSERT(agno != NULLAGNUMBER);
  	ASSERT(agbno != NULLAGBLOCK);
  	d = XFS_AGB_TO_DADDR(mp, agno, agbno);
--	return xfs_trans_get_buf(tp, mp->m_ddev_targp, d, mp->m_bsize, 0);
-+	error = xfs_trans_get_buf(tp, mp->m_ddev_targp, d, mp->m_bsize, 0, &bp);
-+	if (error)
-+		return NULL;
-+	return bp;
- }
- 
- /*
-@@ -1270,11 +1280,10 @@ xfs_btree_get_buf_block(
- 	error = xfs_btree_ptr_to_daddr(cur, ptr, &d);
- 	if (error)
- 		return error;
--	*bpp = xfs_trans_get_buf(cur->bc_tp, mp->m_ddev_targp, d,
--				 mp->m_bsize, 0);
--
--	if (!*bpp)
--		return -ENOMEM;
-+	error = xfs_trans_get_buf(cur->bc_tp, mp->m_ddev_targp, d, mp->m_bsize,
-+			0, bpp);
-+	if (error)
-+		return error;
- 
- 	(*bpp)->b_ops = cur->bc_ops->buf_ops;
- 	*block = XFS_BUF_TO_BLOCK(*bpp);
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 5b759af4d165..bf161e930f1d 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -276,6 +276,7 @@ xfs_ialloc_inode_init(
- 	int			i, j;
- 	xfs_daddr_t		d;
- 	xfs_ino_t		ino = 0;
-+	int			error;
- 
- 	/*
- 	 * Loop over the new block(s), filling in the inodes.  For small block
-@@ -327,12 +328,11 @@ xfs_ialloc_inode_init(
- 		 */
- 		d = XFS_AGB_TO_DADDR(mp, agno, agbno +
- 				(j * M_IGEO(mp)->blocks_per_cluster));
--		fbuf = xfs_trans_get_buf(tp, mp->m_ddev_targp, d,
--					 mp->m_bsize *
--					 M_IGEO(mp)->blocks_per_cluster,
--					 XBF_UNMAPPED);
--		if (!fbuf)
--			return -ENOMEM;
-+		error = xfs_trans_get_buf(tp, mp->m_ddev_targp, d,
-+				mp->m_bsize * M_IGEO(mp)->blocks_per_cluster,
-+				XBF_UNMAPPED, &fbuf);
-+		if (error)
-+			return error;
- 
- 		/* Initialize the inode buffers and log them appropriately. */
- 		fbuf->b_ops = &xfs_inode_buf_ops;
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index 28763c283851..d671dd4b80c2 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -1186,13 +1186,14 @@ xfs_sb_get_secondary(
- 	struct xfs_buf		**bpp)
- {
- 	struct xfs_buf		*bp;
-+	int			error;
- 
- 	ASSERT(agno != 0 && agno != NULLAGNUMBER);
--	bp = xfs_trans_get_buf(tp, mp->m_ddev_targp,
-+	error = xfs_trans_get_buf(tp, mp->m_ddev_targp,
- 			XFS_AG_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
--			XFS_FSS_TO_BB(mp, 1), 0);
--	if (!bp)
--		return -ENOMEM;
-+			XFS_FSS_TO_BB(mp, 1), 0, &bp);
-+	if (error)
-+		return error;
- 	bp->b_ops = &xfs_sb_buf_ops;
- 	xfs_buf_oneshot(bp);
- 	*bpp = bp;
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index b70a88bc975e..3df49d487940 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -341,13 +341,17 @@ xrep_init_btblock(
- 	struct xfs_trans		*tp = sc->tp;
- 	struct xfs_mount		*mp = sc->mp;
- 	struct xfs_buf			*bp;
-+	int				error;
- 
- 	trace_xrep_init_btblock(mp, XFS_FSB_TO_AGNO(mp, fsb),
- 			XFS_FSB_TO_AGBNO(mp, fsb), btnum);
- 
- 	ASSERT(XFS_FSB_TO_AGNO(mp, fsb) == sc->sa.agno);
--	bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, XFS_FSB_TO_DADDR(mp, fsb),
--			XFS_FSB_TO_BB(mp, 1), 0);
-+	error = xfs_trans_get_buf(tp, mp->m_ddev_targp,
-+			XFS_FSB_TO_DADDR(mp, fsb), XFS_FSB_TO_BB(mp, 1), 0,
-+			&bp);
-+	if (error)
-+		return error;
- 	xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
- 	xfs_btree_init_block(mp, bp, btnum, 0, 0, sc->sa.agno);
- 	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_BTREE_BUF);
-diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
-index 27cb6bf614c5..4dd0c8b4d0a6 100644
---- a/fs/xfs/xfs_attr_inactive.c
-+++ b/fs/xfs/xfs_attr_inactive.c
-@@ -207,11 +207,12 @@ xfs_attr3_node_inactive(
- 		/*
- 		 * Remove the subsidiary block from the cache and from the log.
- 		 */
--		child_bp = xfs_trans_get_buf(*trans, mp->m_ddev_targp,
-+		error = xfs_trans_get_buf(*trans, mp->m_ddev_targp,
- 				child_blkno,
--				XFS_FSB_TO_BB(mp, mp->m_attr_geo->fsbcount), 0);
--		if (!child_bp)
--			return -EIO;
-+				XFS_FSB_TO_BB(mp, mp->m_attr_geo->fsbcount), 0,
-+				&child_bp);
-+		if (error)
-+			return error;
- 		error = bp->b_error;
- 		if (error) {
- 			xfs_trans_brelse(*trans, child_bp);
-@@ -300,10 +301,10 @@ xfs_attr3_root_inactive(
- 	/*
- 	 * Invalidate the incore copy of the root block.
- 	 */
--	bp = xfs_trans_get_buf(*trans, mp->m_ddev_targp, blkno,
--			XFS_FSB_TO_BB(mp, mp->m_attr_geo->fsbcount), 0);
--	if (!bp)
--		return -EIO;
-+	error = xfs_trans_get_buf(*trans, mp->m_ddev_targp, blkno,
-+			XFS_FSB_TO_BB(mp, mp->m_attr_geo->fsbcount), 0, &bp);
-+	if (error)
-+		return error;
- 	error = bp->b_error;
- 	if (error) {
- 		xfs_trans_brelse(*trans, bp);
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 9cfd3209f52b..d223e1ae90a6 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -320,10 +320,10 @@ xfs_dquot_disk_alloc(
- 	dqp->q_blkno = XFS_FSB_TO_DADDR(mp, map.br_startblock);
- 
- 	/* now we can just get the buffer (there's nothing to read yet) */
--	bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, dqp->q_blkno,
--			mp->m_quotainfo->qi_dqchunklen, 0);
--	if (!bp)
--		return -ENOMEM;
-+	error = xfs_trans_get_buf(tp, mp->m_ddev_targp, dqp->q_blkno,
-+			mp->m_quotainfo->qi_dqchunklen, 0, &bp);
-+	if (error)
-+		return error;
- 	bp->b_ops = &xfs_dquot_buf_ops;
- 
- 	/*
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 1979a0055763..c5077e6326c7 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2546,6 +2546,7 @@ xfs_ifree_cluster(
- 	struct xfs_perag	*pag;
- 	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
- 	xfs_ino_t		inum;
-+	int			error;
- 
- 	inum = xic->first_ino;
- 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, inum));
-@@ -2574,12 +2575,11 @@ xfs_ifree_cluster(
- 		 * complete before we get a lock on it, and hence we may fail
- 		 * to mark all the active inodes on the buffer stale.
- 		 */
--		bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, blkno,
--					mp->m_bsize * igeo->blocks_per_cluster,
--					XBF_UNMAPPED);
--
--		if (!bp)
--			return -ENOMEM;
-+		error = xfs_trans_get_buf(tp, mp->m_ddev_targp, blkno,
-+				mp->m_bsize * igeo->blocks_per_cluster,
-+				XBF_UNMAPPED, &bp);
-+		if (error)
-+			return error;
- 
- 		/*
- 		 * This buffer may not have been correctly initialised as we
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index d42b5a2047e0..6209e7b6b895 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -826,12 +826,10 @@ xfs_growfs_rt_alloc(
- 			 * Get a buffer for the block.
- 			 */
- 			d = XFS_FSB_TO_DADDR(mp, fsbno);
--			bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, d,
--				mp->m_bsize, 0);
--			if (bp == NULL) {
--				error = -EIO;
-+			error = xfs_trans_get_buf(tp, mp->m_ddev_targp, d,
-+					mp->m_bsize, 0, &bp);
-+			if (error)
- 				goto out_trans_cancel;
--			}
- 			memset(bp->b_addr, 0, mp->m_sb.sb_blocksize);
- 			xfs_trans_log_buf(tp, bp, 0, mp->m_sb.sb_blocksize - 1);
- 			/*
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index f4b14569039f..2c879d0948e6 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -281,12 +281,10 @@ xfs_symlink(
- 
- 			d = XFS_FSB_TO_DADDR(mp, mval[n].br_startblock);
- 			byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
--			bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, d,
--					       BTOBB(byte_cnt), 0);
--			if (!bp) {
--				error = -ENOMEM;
-+			error = xfs_trans_get_buf(tp, mp->m_ddev_targp, d,
-+					       BTOBB(byte_cnt), 0, &bp);
-+			if (error)
- 				goto out_trans_cancel;
--			}
- 			bp->b_ops = &xfs_symlink_buf_ops;
- 
- 			byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
-@@ -424,13 +422,12 @@ xfs_inactive_symlink_rmt(
- 	 * Invalidate the block(s). No validation is done.
- 	 */
- 	for (i = 0; i < nmaps; i++) {
--		bp = xfs_trans_get_buf(tp, mp->m_ddev_targp,
--			XFS_FSB_TO_DADDR(mp, mval[i].br_startblock),
--			XFS_FSB_TO_BB(mp, mval[i].br_blockcount), 0);
--		if (!bp) {
--			error = -ENOMEM;
-+		error = xfs_trans_get_buf(tp, mp->m_ddev_targp,
-+				XFS_FSB_TO_DADDR(mp, mval[i].br_startblock),
-+				XFS_FSB_TO_BB(mp, mval[i].br_blockcount), 0,
-+				&bp);
-+		if (error)
- 			goto error_trans_cancel;
--		}
- 		xfs_trans_binval(tp, bp);
- 	}
- 	/*
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index a0be934ec811..752c7fef9de7 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -173,22 +173,17 @@ int xfs_trans_get_buf_map(struct xfs_trans *tp, struct xfs_buftarg *target,
- 		struct xfs_buf_map *map, int nmaps, xfs_buf_flags_t flags,
- 		struct xfs_buf **bpp);
- 
--static inline struct xfs_buf *
-+static inline int
- xfs_trans_get_buf(
- 	struct xfs_trans	*tp,
- 	struct xfs_buftarg	*target,
- 	xfs_daddr_t		blkno,
- 	int			numblks,
--	uint			flags)
-+	uint			flags,
-+	struct xfs_buf		**bpp)
- {
--	struct xfs_buf		*bp;
--	int			error;
--
- 	DEFINE_SINGLE_BUF_MAP(map, blkno, numblks);
--	error = xfs_trans_get_buf_map(tp, target, &map, 1, flags, &bp);
+-	error = xfs_trans_get_buf(tp, mp->m_ddev_targp, d, mp->m_bsize, 0, &bp);
 -	if (error)
 -		return NULL;
 -	return bp;
-+	return xfs_trans_get_buf_map(tp, target, &map, 1, flags, bpp);
++	return xfs_trans_get_buf(tp, mp->m_ddev_targp, d, mp->m_bsize, 0, bpp);
  }
  
- int		xfs_trans_read_buf_map(struct xfs_mount *mp,
+ /*
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index fb9b2121c628..97c2b5e75210 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -300,22 +300,16 @@ xfs_btree_dup_cursor(
+  * Get a buffer for the block, return it with no data read.
+  * Long-form addressing.
+  */
+-struct xfs_buf *				/* buffer for fsbno */
+-xfs_btree_get_bufl(
+-	struct xfs_mount	*mp,	/* file system mount point */
+-	struct xfs_trans	*tp,	/* transaction pointer */
+-	xfs_fsblock_t		fsbno);	/* file system block number */
++int xfs_btree_get_bufl(struct xfs_mount *mp, struct xfs_trans *tp,
++		xfs_fsblock_t fsbno, struct xfs_buf **bpp);
+ 
+ /*
+  * Get a buffer for the block, return it with no data read.
+  * Short-form addressing.
+  */
+-struct xfs_buf *				/* buffer for agno/agbno */
+-xfs_btree_get_bufs(
+-	struct xfs_mount	*mp,	/* file system mount point */
+-	struct xfs_trans	*tp,	/* transaction pointer */
+-	xfs_agnumber_t		agno,	/* allocation group number */
+-	xfs_agblock_t		agbno);	/* allocation group block number */
++int xfs_btree_get_bufs(struct xfs_mount *mp, struct xfs_trans *tp,
++		xfs_agnumber_t agno, xfs_agblock_t agbno,
++		struct xfs_buf **bpp);
+ 
+ /*
+  * Compute first and last byte offsets for the fields given.
 
