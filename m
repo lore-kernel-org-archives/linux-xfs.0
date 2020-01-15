@@ -2,287 +2,245 @@ Return-Path: <SRS0=S7Al=3E=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
+	FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 223A3C33CB2
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 12:46:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F546C33CB3
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 12:52:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DF9D220728
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 12:46:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=dilger-ca.20150623.gappssmtp.com header.i=@dilger-ca.20150623.gappssmtp.com header.b="ZV4lQu1b"
+	by mail.kernel.org (Postfix) with ESMTP id 65CEF206D7
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 12:52:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729275AbgAOMqW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Jan 2020 07:46:22 -0500
-Received: from mail-pj1-f68.google.com ([209.85.216.68]:38759 "EHLO
-        mail-pj1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729251AbgAOMqP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jan 2020 07:46:15 -0500
-Received: by mail-pj1-f68.google.com with SMTP id l35so7664016pje.3
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Jan 2020 04:46:15 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=dilger-ca.20150623.gappssmtp.com; s=20150623;
-        h=from:message-id:mime-version:subject:date:in-reply-to:cc:to
-         :references;
-        bh=gmoQ2haBcdZ66ZDAcejuAD/SWwNHe0hv7/dpuVRBEMA=;
-        b=ZV4lQu1bHo4asCHiL7ozMJpG/aEIGXOcgzjC/kEDUUZsdau0d9QRTdOQ30HzQuDYrV
-         b41qPBXQtb8i3tlzlIXPXVz83Q2mensnr7ehTLBKYfYzkxqGhU4Pya07R2XawdaDQ7CU
-         UM5VdJoDNVdjCuWnhyvmTm71oKafu/NPZlGMzsK7sq2ipah7itvwMWw4ZkpVn89065se
-         P4nisLUT7hFX2ENj1YAnbmC1dYoq0i73Pt94XA4ZXgsv2xSSa4g097q/zOGM+1fzhMQt
-         45Mi0/rP2wrjrYryo4Cah0ID66q7fFpqmDwHufPxEtnTeOteJV57X+d9YKXQob5UJd19
-         toLg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:message-id:mime-version:subject:date
-         :in-reply-to:cc:to:references;
-        bh=gmoQ2haBcdZ66ZDAcejuAD/SWwNHe0hv7/dpuVRBEMA=;
-        b=g/WHdxTQ5nAe3ud7HP5ZuEklwkBMDH8+rWHVPRMTtq7D9gge22za4hl+EuJxBsmc5J
-         fhgHPTHr5hXdaBnZWA3kZXa6z4iP7V+CnbR/VQX4ZV+3/wYcw4qplwJsRZ2DRVaXpA6F
-         8VUQDemcIzZN01H0JxMKB/QUaD3UWL9lBFNipf3tgjB30L4XcJboJWT8H03lrxhtPZC/
-         yNO2rqjhnPEGoctbP7WS5+2+W7Rw1fBLCbjq8j/6pW6PmuJ5ML9pYQD31OKuv8GptNBK
-         /+yPbVbPJWDsC8XUDumkNJK6mw1sHRfcS8e+fDgUfZ6w3kTJ1m193CTWXdp+4dPzlbTk
-         ytrQ==
-X-Gm-Message-State: APjAAAXVyP7BC104MrnSnqe65HVQkxFBeXegsy9VlNBKN9hkGZpo0jpo
-        pGmBbjeD7aq7+yWMhcptTCgxIw==
-X-Google-Smtp-Source: APXvYqzUxA7fFBZl1bJC5jmBI/c13+6jszL7qbSUfqyyg4cn3067Iuv26XRPqcfguDmjvZLqzdo6VQ==
-X-Received: by 2002:a17:90b:30c8:: with SMTP id hi8mr35620232pjb.73.1579092374824;
-        Wed, 15 Jan 2020 04:46:14 -0800 (PST)
-Received: from cabot-wlan.adilger.int (S0106a84e3fe4b223.cg.shawcable.net. [70.77.216.213])
-        by smtp.gmail.com with ESMTPSA id e19sm20348397pjr.10.2020.01.15.04.46.13
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 15 Jan 2020 04:46:14 -0800 (PST)
-From:   Andreas Dilger <adilger@dilger.ca>
-Message-Id: <27181AE2-C63F-4932-A022-8B0563C72539@dilger.ca>
-Content-Type: multipart/signed;
- boundary="Apple-Mail=_28ADC79E-8B49-4CCD-92BE-382545043A5C";
- protocol="application/pgp-signature"; micalg=pgp-sha256
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: Problems with determining data presence by examining extents?
-Date:   Wed, 15 Jan 2020 05:46:10 -0700
-In-Reply-To: <00fc7691-77d5-5947-5493-5c97f262da81@gmx.com>
-Cc:     David Howells <dhowells@redhat.com>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-btrfs <linux-btrfs@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-To:     Qu Wenruo <quwenruo.btrfs@gmx.com>
-References: <4467.1579020509@warthog.procyon.org.uk>
- <00fc7691-77d5-5947-5493-5c97f262da81@gmx.com>
-X-Mailer: Apple Mail (2.3273)
+        id S1726071AbgAOMwV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Jan 2020 07:52:21 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:27044 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726088AbgAOMwU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jan 2020 07:52:20 -0500
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00FCqFwB028501;
+        Wed, 15 Jan 2020 07:52:18 -0500
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2xhy3urcv7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 15 Jan 2020 07:52:17 -0500
+Received: from m0098393.ppops.net (m0098393.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 00FCqG2e028642;
+        Wed, 15 Jan 2020 07:52:16 -0500
+Received: from ppma02dal.us.ibm.com (a.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.10])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2xhy3urcnv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 15 Jan 2020 07:52:16 -0500
+Received: from pps.filterd (ppma02dal.us.ibm.com [127.0.0.1])
+        by ppma02dal.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id 00FCoLcW019456;
+        Wed, 15 Jan 2020 12:52:00 GMT
+Received: from b01cxnp22034.gho.pok.ibm.com (b01cxnp22034.gho.pok.ibm.com [9.57.198.24])
+        by ppma02dal.us.ibm.com with ESMTP id 2xf74pe5fg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 15 Jan 2020 12:52:00 +0000
+Received: from b01ledav005.gho.pok.ibm.com (b01ledav005.gho.pok.ibm.com [9.57.199.110])
+        by b01cxnp22034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 00FCpxZC11010512
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 15 Jan 2020 12:51:59 GMT
+Received: from b01ledav005.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id BECC6AE05F;
+        Wed, 15 Jan 2020 12:51:59 +0000 (GMT)
+Received: from b01ledav005.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 9E771AE05C;
+        Wed, 15 Jan 2020 12:51:57 +0000 (GMT)
+Received: from localhost.localdomain.com (unknown [9.85.70.7])
+        by b01ledav005.gho.pok.ibm.com (Postfix) with ESMTP;
+        Wed, 15 Jan 2020 12:51:57 +0000 (GMT)
+From:   Chandan Rajendra <chandanrlinux@gmail.com>
+Cc:     Chandan Rajendra <chandanrlinux@gmail.com>, david@fromorbit.com,
+        chandan@linux.ibm.com, darrick.wong@oracle.com,
+        linux-xfs@vger.kernel.org
+Subject: [PATCH V2 1/2] xfs: Pass xattr name and value length explicitly to xfs_attr_leaf_newentsize
+Date:   Wed, 15 Jan 2020 18:24:20 +0530
+Message-Id: <20200115125421.22719-1-chandanrlinux@gmail.com>
+X-Mailer: git-send-email 2.19.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
+ definitions=2020-01-15_02:2020-01-15,2020-01-14 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 clxscore=1034
+ malwarescore=0 adultscore=0 priorityscore=1501 mlxscore=0 spamscore=0
+ lowpriorityscore=0 bulkscore=0 phishscore=0 mlxlogscore=999
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-1910280000 definitions=main-2001150104
+To:     unlisted-recipients:; (no To-header on input)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+This commit changes xfs_attr_leaf_newentsize() to explicitly accept name and
+value length instead of a pointer to struct xfs_da_args. The next commit will
+need to invoke xfs_attr_leaf_newentsize() from functions that do not have
+a struct xfs_da_args to pass in.
 
---Apple-Mail=_28ADC79E-8B49-4CCD-92BE-382545043A5C
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=utf-8
+Signed-off-by: Chandan Rajendra <chandanrlinux@gmail.com>
+---
+Changelog:
+V1 -> V2:
+1. Use convenience variables to reduce indentation of code.
 
-On Jan 14, 2020, at 8:54 PM, Qu Wenruo <quwenruo.btrfs@gmx.com> wrote:
->=20
-> On 2020/1/15 =E4=B8=8A=E5=8D=8812:48, David Howells wrote:
->> Again with regard to my rewrite of fscache and cachefiles:
->>=20
->> 	=
-https://git.kernel.org/pub/scm/linux/kernel/git/dhowells/linux-fs.git/log/=
-?h=3Dfscache-iter
->>=20
->> I've got rid of my use of bmap()!  Hooray!
->>=20
->> However, I'm informed that I can't trust the extent map of a backing =
-file to
->> tell me accurately whether content exists in a file because:
->=20
->>=20
->> (b) Blocks of zeros that I write into the file may get punched out by
->>     filesystem optimisation since a read back would be expected to =
-read zeros
->>     there anyway, provided it's below the EOF.  This would give me a =
-false
->>     negative.
->=20
-> I know some qemu disk backend has such zero detection.
-> But not btrfs. So this is another per-fs based behavior.
->=20
-> And problem (c):
->=20
-> (c): A multi-device fs (btrfs) can have their own logical address =
-mapping.
-> Meaning the bytenr returned makes no sense to end user, unless used =
-for
-> that fs specific address space.
+ fs/xfs/libxfs/xfs_attr.c      |  3 ++-
+ fs/xfs/libxfs/xfs_attr_leaf.c | 41 ++++++++++++++++++++++++-----------
+ fs/xfs/libxfs/xfs_attr_leaf.h |  3 ++-
+ 3 files changed, 32 insertions(+), 15 deletions(-)
 
-It would be useful to implement the multi-device extension for FIEMAP, =
-adding
-the fe_device field to indicate which device the extent is resident on:
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 0d7fcc983b3d..1eae1db74f6c 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -199,7 +199,8 @@ xfs_attr_calc_size(
+ 	 * Determine space new attribute will use, and if it would be
+ 	 * "local" or "remote" (note: local != inline).
+ 	 */
+-	size = xfs_attr_leaf_newentsize(args, local);
++	size = xfs_attr_leaf_newentsize(mp, args->namelen, args->valuelen,
++					local);
+ 	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
+ 	if (*local) {
+ 		if (size > (args->geo->blksize / 2)) {
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 08d4b10ae2d5..7cd57e5844d8 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -1338,7 +1338,8 @@ xfs_attr3_leaf_add(
+ 	leaf = bp->b_addr;
+ 	xfs_attr3_leaf_hdr_from_disk(args->geo, &ichdr, leaf);
+ 	ASSERT(args->index >= 0 && args->index <= ichdr.count);
+-	entsize = xfs_attr_leaf_newentsize(args, NULL);
++	entsize = xfs_attr_leaf_newentsize(args->dp->i_mount, args->namelen,
++					args->valuelen, NULL);
+ 
+ 	/*
+ 	 * Search through freemap for first-fit on new name length.
+@@ -1411,6 +1412,7 @@ xfs_attr3_leaf_add_work(
+ 	struct xfs_attr_leaf_name_local *name_loc;
+ 	struct xfs_attr_leaf_name_remote *name_rmt;
+ 	struct xfs_mount	*mp;
++	int			entsize;
+ 	int			tmp;
+ 	int			i;
+ 
+@@ -1440,11 +1442,14 @@ xfs_attr3_leaf_add_work(
+ 	ASSERT(ichdr->freemap[mapindex].base < args->geo->blksize);
+ 	ASSERT((ichdr->freemap[mapindex].base & 0x3) == 0);
+ 	ASSERT(ichdr->freemap[mapindex].size >=
+-		xfs_attr_leaf_newentsize(args, NULL));
++		xfs_attr_leaf_newentsize(mp, args->namelen,
++					args->valuelen, NULL));
+ 	ASSERT(ichdr->freemap[mapindex].size < args->geo->blksize);
+ 	ASSERT((ichdr->freemap[mapindex].size & 0x3) == 0);
+ 
+-	ichdr->freemap[mapindex].size -= xfs_attr_leaf_newentsize(args, &tmp);
++	entsize = xfs_attr_leaf_newentsize(mp, args->namelen, args->valuelen,
++					&tmp);
++	ichdr->freemap[mapindex].size -= entsize;
+ 
+ 	entry->nameidx = cpu_to_be16(ichdr->freemap[mapindex].base +
+ 				     ichdr->freemap[mapindex].size);
+@@ -1831,6 +1836,8 @@ xfs_attr3_leaf_figure_balance(
+ 	struct xfs_attr_leafblock	*leaf1 = blk1->bp->b_addr;
+ 	struct xfs_attr_leafblock	*leaf2 = blk2->bp->b_addr;
+ 	struct xfs_attr_leaf_entry	*entry;
++	struct xfs_da_args		*args;
++	int				entsize;
+ 	int				count;
+ 	int				max;
+ 	int				index;
+@@ -1840,14 +1847,16 @@ xfs_attr3_leaf_figure_balance(
+ 	int				foundit = 0;
+ 	int				tmp;
+ 
++	args = state->args;
+ 	/*
+ 	 * Examine entries until we reduce the absolute difference in
+ 	 * byte usage between the two blocks to a minimum.
+ 	 */
+ 	max = ichdr1->count + ichdr2->count;
+ 	half = (max + 1) * sizeof(*entry);
+-	half += ichdr1->usedbytes + ichdr2->usedbytes +
+-			xfs_attr_leaf_newentsize(state->args, NULL);
++	entsize = xfs_attr_leaf_newentsize(state->mp, args->namelen,
++					args->valuelen, NULL);
++	half += ichdr1->usedbytes + ichdr2->usedbytes + entsize;
+ 	half /= 2;
+ 	lastdelta = state->args->geo->blksize;
+ 	entry = xfs_attr3_leaf_entryp(leaf1);
+@@ -1858,8 +1867,11 @@ xfs_attr3_leaf_figure_balance(
+ 		 * The new entry is in the first block, account for it.
+ 		 */
+ 		if (count == blk1->index) {
+-			tmp = totallen + sizeof(*entry) +
+-				xfs_attr_leaf_newentsize(state->args, NULL);
++			entsize = xfs_attr_leaf_newentsize(state->mp,
++							args->namelen,
++							args->valuelen,
++							NULL);
++			tmp = totallen + sizeof(*entry) + entsize;
+ 			if (XFS_ATTR_ABS(half - tmp) > lastdelta)
+ 				break;
+ 			lastdelta = XFS_ATTR_ABS(half - tmp);
+@@ -1894,8 +1906,9 @@ xfs_attr3_leaf_figure_balance(
+ 	 */
+ 	totallen -= count * sizeof(*entry);
+ 	if (foundit) {
+-		totallen -= sizeof(*entry) +
+-				xfs_attr_leaf_newentsize(state->args, NULL);
++		entsize = xfs_attr_leaf_newentsize(state->mp, args->namelen,
++						args->valuelen, NULL);
++		totallen -= sizeof(*entry) + entsize;
+ 	}
+ 
+ 	*countarg = count;
+@@ -2687,20 +2700,22 @@ xfs_attr_leaf_entsize(xfs_attr_leafblock_t *leaf, int index)
+  */
+ int
+ xfs_attr_leaf_newentsize(
+-	struct xfs_da_args	*args,
++	struct xfs_mount	*mp,
++	int			namelen,
++	int			valuelen,
+ 	int			*local)
+ {
+ 	int			size;
+ 
+-	size = xfs_attr_leaf_entsize_local(args->namelen, args->valuelen);
+-	if (size < xfs_attr_leaf_entsize_local_max(args->geo->blksize)) {
++	size = xfs_attr_leaf_entsize_local(namelen, valuelen);
++	if (size < xfs_attr_leaf_entsize_local_max(mp->m_attr_geo->blksize)) {
+ 		if (local)
+ 			*local = 1;
+ 		return size;
+ 	}
+ 	if (local)
+ 		*local = 0;
+-	return xfs_attr_leaf_entsize_remote(args->namelen);
++	return xfs_attr_leaf_entsize_remote(namelen);
+ }
+ 
+ 
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+index f4a188e28b7b..0ce1f9301157 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.h
++++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+@@ -106,7 +106,8 @@ void	xfs_attr3_leaf_unbalance(struct xfs_da_state *state,
+ xfs_dahash_t	xfs_attr_leaf_lasthash(struct xfs_buf *bp, int *count);
+ int	xfs_attr_leaf_order(struct xfs_buf *leaf1_bp,
+ 				   struct xfs_buf *leaf2_bp);
+-int	xfs_attr_leaf_newentsize(struct xfs_da_args *args, int *local);
++int	xfs_attr_leaf_newentsize(struct xfs_mount *mp, int namelen,
++			int valuelen, int *local);
+ int	xfs_attr3_leaf_read(struct xfs_trans *tp, struct xfs_inode *dp,
+ 			xfs_dablk_t bno, struct xfs_buf **bpp);
+ void	xfs_attr3_leaf_hdr_from_disk(struct xfs_da_geometry *geo,
+-- 
+2.19.1
 
-+ #define FIEMAP_EXTENT_DEVICE		0x00008000 /* fe_device is =
-valid, non-
-+						    * local with =
-EXTENT_NET */
-+ #define FIEMAP_EXTENT_NET		0x80000000 /* Data stored =
-remotely. */
-
- struct fiemap_extent {
- 	__u64 fe_logical;  /* logical offset in bytes for the start of
- 			    * the extent from the beginning of the file =
-*/
- 	__u64 fe_physical; /* physical offset in bytes for the start
- 			    * of the extent from the beginning of the =
-disk */
- 	__u64 fe_length;   /* length in bytes for this extent */
- 	__u64 fe_reserved64[2];
- 	__u32 fe_flags;    /* FIEMAP_EXTENT_* flags for this extent */
--	__u32 fe_reserved[3];
-+	__u32 fe_device;   /* device number (fs-specific if =
-FIEMAP_EXTENT_NET)*/
-+	__u32 fe_reserved[2];
- };
-
-That allows userspace to distinguish fe_physical addresses that may be
-on different devices.  This isn't in the kernel yet, since it is mostly
-useful only for Btrfs and nobody has implemented it there.  I can give
-you details if working on this for Btrfs is of interest to you.
-
-> This is even more trickier when considering single device btrfs.
-> It still utilize the same logical address space, just like all =
-multiple
-> disks btrfs.
->=20
-> And it completely possible for a single 1T btrfs has logical address
-> mapped beyond 10T or even more. (Any aligned bytenr in the range [0,
-> U64_MAX) is valid for btrfs logical address).
->=20
->=20
-> You won't like this case either.
-> (d): Compressed extents
-> One compressed extent can represents more data than its on-disk size.
->=20
-> Furthermore, current fiemap interface hasn't considered this case, =
-thus
-> there it only reports in-memory size (aka, file size), no way to
-> represent on-disk size.
-
-There was a prototype patch to add compressed extent support to FIEMAP
-for btrfs, but it was never landed:
-
-[PATCH 0/5 v4] fiemap: introduce EXTENT_DATA_COMPRESSED flag David =
-Sterba
-https://www.mail-archive.com/linux-btrfs@vger.kernel.org/msg35837.html
-
-This adds a separate "fe_phys_length" field for each extent:
-
-+#define FIEMAP_EXTENT_DATA_COMPRESSED  0x00000040 /* Data is compressed =
-by fs.
-+                                                   * Sets =
-EXTENT_ENCODED and
-+                                                   * the compressed =
-size is
-+                                                   * stored in =
-fe_phys_length */
-
- struct fiemap_extent {
- 	__u64 fe_physical;    /* physical offset in bytes for the start
-			       * of the extent from the beginning of the =
-disk */
- 	__u64 fe_length;      /* length in bytes for this extent */
--	__u64 fe_reserved64[2];
-+	__u64 fe_phys_length; /* physical length in bytes, may be =
-different from
-+			       * fe_length and sets additional extent =
-flags */
-+	__u64 fe_reserved64;
- 	__u32 fe_flags;	      /* FIEMAP_EXTENT_* flags for this extent =
-*/
- 	__u32 fe_reserved[3];
- };
-
-
-> And even more bad news:
-> (e): write time dedupe
-> Although no fs known has implemented it yet (btrfs used to try to
-> support that, and I guess XFS could do it in theory too), you won't
-> known when a fs could get such "awesome" feature.
->=20
-> Where your write may be checked and never reach disk if it matches =
-with
-> existing extents.
->=20
-> This is a little like the zero-detection-auto-punch.
->=20
->> Is there some setting I can use to prevent these scenarios on a file =
-- or can
->> one be added?
->=20
-> I guess no.
->=20
->> Without being able to trust the filesystem to tell me accurately what =
-I've
->> written into it, I have to use some other mechanism.  Currently, I've =
-switched
->> to storing a map in an xattr with 1 bit per 256k block, but that gets =
-hard to
->> use if the file grows particularly large and also has integrity =
-consequences -
->> though those are hopefully limited as I'm now using DIO to store data =
-into the
->> cache.
->=20
-> Would you like to explain why you want to know such fs internal info?
-
-I believe David wants it to store sparse files as an cache and use =
-FIEMAP to
-determine if the blocks are cached locally, or if they need to be =
-fetched from
-the server.  If the filesystem doesn't store the written blocks =
-accurately,
-there is no way for the local cache to know whether it is holding valid =
-data
-or not.
-
-
-Cheers, Andreas
-
-
-
-
-
-
---Apple-Mail=_28ADC79E-8B49-4CCD-92BE-382545043A5C
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=signature.asc
-Content-Type: application/pgp-signature;
-	name=signature.asc
-Content-Description: Message signed with OpenPGP
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEDb73u6ZejP5ZMprvcqXauRfMH+AFAl4fCZIACgkQcqXauRfM
-H+B94hAAq/hGq+KM2EW4oM8Xq5qSFfrwDIPyyRLbCXbSfeZGLWbpHlWbaD9RXEIf
-p/FBpXupxq8ihBMQEjbtbary5fyEHgpRAircigQ5AHkRj0QZlzftiXgYrsN1u6UQ
-UZAsP8P7JuFBC3nwD9gPJOcwtLMuIsWFVk/1hCbYs5EkG75LNNzBM4uBCskzwB/e
-p1TKmAgjzkO2JiGUo4iwHoZUzoFOgnLLeTXvDC5qqDvbqmW0MaG+wFbkYpb3lln3
-W5JN63xrQ83epKfl1VrLu8YMqc6ZNldJst0CeNf3wF2PHtHiM1aIh8vv1E5AraDu
-5JL8hdsIi5/EnhHlExZkQDi54zKMDF9tr9SvjON9kxmH148m6WVOEivnv5aG69ui
-xso3+qjoRsi3WhNKnW8LgjnPTVaEGkAbDYDZd/nsB6IcPlTjRI+gExhRtqR76hIj
-UVLlL0adfBVM+cvNoXh+2sdMrI5BGA6sIhesQdYKlIOyRKBHHmlDghpXVIz+ePHK
-OsOD0rh28NGTbVhT2rnXOPdCyW1+Btp0gVUaq46oz2XCr6o0HYNUp4iCQtauNKvo
-Mr9gy7oRv+64PAsjOazbWUUs65eRVIwCYaLUzLuFkfFIHbAoFjyb+Zaagz8EbOrn
-KdgWCUCo0PDg76uzaIA2XSHKQpoPDeC5fDZmBlpcfIY5YHeWmrI=
-=pzA/
------END PGP SIGNATURE-----
-
---Apple-Mail=_28ADC79E-8B49-4CCD-92BE-382545043A5C--
