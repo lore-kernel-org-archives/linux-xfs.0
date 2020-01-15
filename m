@@ -2,94 +2,176 @@ Return-Path: <SRS0=S7Al=3E=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 068C4C33CB3
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 22:12:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4F42C33CB2
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 22:38:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C491F22522
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 22:12:51 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="trCS9XoU"
+	by mail.kernel.org (Postfix) with ESMTP id A15BD2081E
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 22:38:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729112AbgAOWMv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Jan 2020 17:12:51 -0500
-Received: from bilbo.ozlabs.org ([203.11.71.1]:43989 "EHLO ozlabs.org"
+        id S1729532AbgAOWiW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Jan 2020 17:38:22 -0500
+Received: from mga01.intel.com ([192.55.52.88]:62536 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728899AbgAOWMu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Jan 2020 17:12:50 -0500
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 47yhQm1bqvz9sR4;
-        Thu, 16 Jan 2020 09:12:48 +1100 (AEDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=canb.auug.org.au;
-        s=201702; t=1579126368;
-        bh=VwvnsRF5QyUYzsy7hKl2SwdTNWpbDKTxHWiuRJ/KUU0=;
-        h=Date:From:To:Cc:Subject:From;
-        b=trCS9XoUbj2orwWa1DRQMMu8nasf2lh6PxVys0jL9R8tpfvZQCI8vzhZnyvvkL8x0
-         nNFwrQnsggHhT9pjE6izo7/9pvMgG+D7Ywf0FmKXuSql3tDvvULc7yVdkf3d6EkEug
-         6hzwDOPEMf0YfLFQ7fRfn4driTm0Xj0qEj/57r5+K7rssQFsFSf1TfkQQXiqKIKqhO
-         ewR/VozV/CKjGhwGkfWM9UlZMTUTYnqrt9DEV8yPlgi77ve8VUqi2NGC3Tb4SKaHBy
-         mX0LnO7ZpcEMjEZwKtHONAIUU4yMQc2OV92lmUdLEe+9Iap+p59frL3fbtlitgOLi0
-         aX5y16EUHvFYQ==
-Date:   Thu, 16 Jan 2020 09:12:42 +1100
-From:   Stephen Rothwell <sfr@canb.auug.org.au>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Cc:     Linux Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: linux-next: build warning after merge of the xfs tree
-Message-ID: <20200116091242.087b425e@canb.auug.org.au>
+        id S1728939AbgAOWiW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Jan 2020 17:38:22 -0500
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 15 Jan 2020 14:38:21 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.70,323,1574150400"; 
+   d="scan'208";a="423770541"
+Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
+  by fmsmga005.fm.intel.com with ESMTP; 15 Jan 2020 14:38:21 -0800
+Date:   Wed, 15 Jan 2020 14:38:21 -0800
+From:   Ira Weiny <ira.weiny@intel.com>
+To:     Dan Williams <dan.j.williams@intel.com>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Jan Kara <jack@suse.cz>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Subject: Re: [RFC PATCH V2 01/12] fs/stat: Define DAX statx attribute
+Message-ID: <20200115223821.GG23311@iweiny-DESK2.sc.intel.com>
+References: <20200110192942.25021-1-ira.weiny@intel.com>
+ <20200110192942.25021-2-ira.weiny@intel.com>
+ <20200115113715.GB2595@quack2.suse.cz>
+ <20200115173834.GD8247@magnolia>
+ <20200115194512.GF23311@iweiny-DESK2.sc.intel.com>
+ <CAPcyv4hwefzruFj02YHYiy8nOpHJFGLKksjiXoRUGpT3C2rDag@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/tB5K.FQed=J=16rHUY7Q0_c";
- protocol="application/pgp-signature"; micalg=pgp-sha256
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4hwefzruFj02YHYiy8nOpHJFGLKksjiXoRUGpT3C2rDag@mail.gmail.com>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
---Sig_/tB5K.FQed=J=16rHUY7Q0_c
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Wed, Jan 15, 2020 at 12:10:50PM -0800, Dan Williams wrote:
+> On Wed, Jan 15, 2020 at 11:45 AM Ira Weiny <ira.weiny@intel.com> wrote:
+> >
+> > On Wed, Jan 15, 2020 at 09:38:34AM -0800, Darrick J. Wong wrote:
+> > > On Wed, Jan 15, 2020 at 12:37:15PM +0100, Jan Kara wrote:
+> > > > On Fri 10-01-20 11:29:31, ira.weiny@intel.com wrote:
+> > > > > From: Ira Weiny <ira.weiny@intel.com>
+> > > > >
 
-Hi all,
+[snip]
 
-After merging the xfs tree, today's linux-next build
-(powerpppc64_defconfig) produced this warning:
+> > Ok I changed a couple of things as well.  How does this sound?
+> >
+> >
+> > STATX_ATTR_DAX
+> >
+> >         DAX (cpu direct access) is a file mode that attempts to minimize
+> 
+> s/mode/state/?
 
-fs/xfs/xfs_inode.c: In function 'xfs_itruncate_extents_flags':
-fs/xfs/xfs_inode.c:1523:8: warning: unused variable 'done' [-Wunused-variab=
-le]
- 1523 |  int   done =3D 0;
-      |        ^~~~
+DOH!  yes state...  ;-)
 
-Introduced by commit
+> 
+> >         software cache effects for both I/O and memory mappings of this
+> >         file.  It requires a block device and file system which have
+> >         been configured to support DAX.
+> 
+> It may not require a block device in the future.
 
-  4bbb04abb4ee ("xfs: truncate should remove all blocks, not just to the en=
-d of the page cache")
+Ok:
 
---=20
-Cheers,
-Stephen Rothwell
+"It requires a file system which has been configured to support DAX." ?
 
---Sig_/tB5K.FQed=J=16rHUY7Q0_c
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+I'm trying to separate the user of the individual STATX DAX flag from the Admin
+details of configuring the file system and/or devices which supports it.
 
------BEGIN PGP SIGNATURE-----
+Also, I just realized that we should follow the format of the other STATX_*
+attributes.  They all read something like "the file is..."
 
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAl4fjloACgkQAVBC80lX
-0GyFbgf/SIwCXuZtZ2ZSV9E8IC+eVzezoHsE8WZu5CVL4ryy20oS769RhR1EHc1H
-LYh9P0lz/SEAYMKWEY+f+ubbQCergd6afMuvslD4ZHBGllxnQ8XAjOfUjOouHKwP
-qhBwFkw72B6fFxxG3I/cRJHXrIR1BqR4R5Ojiqa8r7vOje2LKVGY5AhiVOJYsp58
-zM1k+c7r5aivAilTQzhSxo+jfRfPLrnC4xOkGPhTQFF1MjYGAtVhMgrdMKh1JuFS
-up9L0mARr8sgvBsjSWljvSlBE4F5/+nIiRw6RF4lAqLXKUJz+ol8Ie2A6pfOe7OM
-AT4XutEInIkqyGLqR2qHf2Yq49tYFQ==
-=Bzn/
------END PGP SIGNATURE-----
+So I'm adding that text as well.
 
---Sig_/tB5K.FQed=J=16rHUY7Q0_c--
+> 
+> >
+> >         DAX generally assumes all accesses are via cpu load / store
+> >         instructions which can minimize overhead for small accesses, but
+> >         may adversely affect cpu utilization for large transfers.
+> >
+> >         File I/O is done directly to/from user-space buffers and memory
+> >         mapped I/O may be performed with direct memory mappings that
+> >         bypass kernel page cache.
+> >
+> >         While the DAX property tends to result in data being transferred
+> >         synchronously, it does not give the same guarantees of
+> >         synchronous I/O where data and the necessary metadata are
+> 
+> Maybe use "O_SYNC I/O" explicitly to further differentiate the 2
+> meanings of "synchronous" in this sentence?
+
+Done.
+
+> 
+> >         transferred together.
+> >
+> >         A DAX file may support being mapped with the MAP_SYNC flag,
+> >         which enables a program to use CPU cache flush operations to
+> 
+> s/operations/instructions/
+
+Done.
+
+> 
+> >         persist CPU store operations without an explicit fsync(2).  See
+> >         mmap(2) for more information.
+> 
+> I think this also wants a reference to the Linux interpretation of
+> platform "persistence domains" we were discussing that here [1], but
+> maybe it should be part of a "pmem" manpage that can be referenced
+> from this man page.
+
+Sure, but for now I think referencing mmap for details on MAP_SYNC works.
+
+I suspect that we may have some word smithing once I get this series in and we
+submit a change to the statx man page itself.  Can I move forward with the
+following for this patch?
+
+<quote>
+STATX_ATTR_DAX
+
+        The file is in the DAX (cpu direct access) state.  DAX state
+        attempts to minimize software cache effects for both I/O and
+        memory mappings of this file.  It requires a file system which
+        has been configured to support DAX.
+
+        DAX generally assumes all accesses are via cpu load / store
+        instructions which can minimize overhead for small accesses, but
+        may adversely affect cpu utilization for large transfers.
+
+        File I/O is done directly to/from user-space buffers and memory
+        mapped I/O may be performed with direct memory mappings that
+        bypass kernel page cache.
+
+        While the DAX property tends to result in data being transferred
+        synchronously, it does not give the same guarantees of
+        synchronous I/O where data and the necessary metadata are
+        transferred together.
+
+        A DAX file may support being mapped with the MAP_SYNC flag,
+        which enables a program to use CPU cache flush instructions to
+        persist CPU store operations without an explicit fsync(2).  See
+        mmap(2) for more information.
+</quote>
+
+Ira
+
+> 
+> [1]: http://lore.kernel.org/r/20200108064905.170394-1-aneesh.kumar@linux.ibm.com
