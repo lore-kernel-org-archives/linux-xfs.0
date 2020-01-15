@@ -2,109 +2,97 @@ Return-Path: <SRS0=S7Al=3E=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5781C33CB3
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 11:42:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F869C33CB1
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 12:04:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C5F1B2073A
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 11:42:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2CCC522522
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 12:04:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730090AbgAOLmK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Jan 2020 06:42:10 -0500
-Received: from mx2.suse.de ([195.135.220.15]:41998 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729900AbgAOLmK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Jan 2020 06:42:10 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 641C1AEEE;
-        Wed, 15 Jan 2020 11:42:08 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 9817D1E0CBC; Wed, 15 Jan 2020 12:34:55 +0100 (CET)
-Date:   Wed, 15 Jan 2020 12:34:55 +0100
-From:   Jan Kara <jack@suse.cz>
-To:     Ira Weiny <ira.weiny@intel.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-kernel@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [RFC PATCH V2 09/12] fs: Prevent mode change if file is mmap'ed
-Message-ID: <20200115113455.GA2595@quack2.suse.cz>
-References: <20200110192942.25021-1-ira.weiny@intel.com>
- <20200110192942.25021-10-ira.weiny@intel.com>
- <20200113222212.GO8247@magnolia>
- <20200114004610.GD29860@iweiny-DESK2.sc.intel.com>
- <20200114013004.GU8247@magnolia>
- <20200114175353.GA7871@iweiny-DESK2.sc.intel.com>
+        id S1730126AbgAOMEG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Jan 2020 07:04:06 -0500
+Received: from mr012msb.fastweb.it ([85.18.95.109]:46000 "EHLO
+        mr012msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726165AbgAOMEG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jan 2020 07:04:06 -0500
+Received-SPF: pass (mr012msb.fastweb.it: domain assyoma.it designates
+ 93.63.55.57 as permitted sender) identity=mailfrom;
+ receiver=mr012msb.fastweb.it; client-ip=93.63.55.57;
+ envelope-from=g.danti@assyoma.it; helo=ceres.assyoma.it;
+X-RazorGate-Vade: gggruggvucftvghtrhhoucdtuddrgedugedrtdefgdeftdcutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfhtefuvfghgfeupdcuqfgfvfenuceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhepuffhvfhfohfkffgfgggjtgfgsehtjeertddtfeejnecuhfhrohhmpefiihhonhgrthgrnhcuffgrnhhtihcuoehgrdgurghnthhisegrshhshihomhgrrdhitheqnecuffhomhgrihhnpegrshhshihomhgrrdhithenucfkphepleefrdeifedrheehrdehjeenucfrrghrrghmpehhvghloheptggvrhgvshdrrghsshihohhmrgdrihhtpdhinhgvthepleefrdeifedrheehrdehjedpmhgrihhlfhhrohhmpeeoghdruggrnhhtihesrghsshihohhmrgdrihhtqecuuefqffgjpeekuefkvffokffogfdprhgtphhtthhopeeouggrrhhrihgtkhdrfihonhhgsehorhgrtghlvgdrtghomhequcfqtfevrffvpehrfhgtkedvvdenuggrrhhrihgtkhdrfihonhhgsehorhgrtghlvgdrtghomhdprhgtphhtthhopeeolhhinhhugidqgihfshesvhhgvghrrdhkvghrnhgvlhdrohhrghequcfqtfevrffvpehrfhgtkedvvdenlhhinhhugidqgihfshesvhhgvghrrdhkvghrnhgvlhdrohhrghenucevlhhushhtvghrufhiiigvpedt
+X-RazorGate-Vade-Verdict: clean 0
+X-RazorGate-Vade-Classification: clean
+Received: from ceres.assyoma.it (93.63.55.57) by mr012msb.fastweb.it (5.8.208)
+        id 5E19B4C2004A415E; Wed, 15 Jan 2020 12:37:52 +0100
+Received: from gdanti-lenovo.assyoma.it (unknown [172.31.255.5])
+        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        by ceres.assyoma.it (Postfix) with ESMTPSA id 79D8126646E;
+        Wed, 15 Jan 2020 12:37:52 +0100 (CET)
+Subject: Re: XFS reflink vs ThinLVM
+From:   Gionatan Danti <g.danti@assyoma.it>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <fe697fb6-cef6-2e06-de77-3530700852da@assyoma.it>
+ <20200113111025.liaargk3sf4wbngr@orion>
+ <703a6c17-cc02-2c2c-31ce-6cd12a888743@assyoma.it>
+ <20200113114356.midcgudwxpze3xfw@orion>
+ <627cb07f-9433-ddfd-37d7-27efedd89727@assyoma.it>
+ <39b50e2c-cb78-3bcd-0130-defa9c573b71@assyoma.it>
+ <20200113165341.GE8247@magnolia>
+ <f61995d7-9775-0035-8700-2b92c63bd23f@assyoma.it>
+ <20200113180914.GI8247@magnolia>
+ <8e96231f-8fc6-b178-9e83-84cbb9af6d2e@assyoma.it>
+Organization: Assyoma s.r.l.
+Message-ID: <9d8e8614-9ae1-30ee-f2b4-1e45b90b27f8@assyoma.it>
+Date:   Wed, 15 Jan 2020 12:37:52 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200114175353.GA7871@iweiny-DESK2.sc.intel.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <8e96231f-8fc6-b178-9e83-84cbb9af6d2e@assyoma.it>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue 14-01-20 09:53:54, Ira Weiny wrote:
-> On Mon, Jan 13, 2020 at 05:30:04PM -0800, Darrick J. Wong wrote:
-> > > > > +		error = -EBUSY;
-> > > > > +		goto out_unlock;
-> > > > > +	}
-> > > > > +
-> > > > >  	error = filemap_write_and_wait(inode->i_mapping);
-> > > > >  	if (error)
-> > > > >  		goto out_unlock;
-> > > > > diff --git a/include/linux/fs.h b/include/linux/fs.h
-> > > > > index 631f11d6246e..6e7dc626b657 100644
-> > > > > --- a/include/linux/fs.h
-> > > > > +++ b/include/linux/fs.h
-> > > > > @@ -740,6 +740,7 @@ struct inode {
-> > > > >  #endif
-> > > > >  
-> > > > >  	void			*i_private; /* fs or device private pointer */
-> > > > > +	atomic64_t               i_mapped;
-> > > > 
-> > > > I would have expected to find this in struct address_space since the
-> > > > mapping count is a function of the address space, right?
-> > > 
-> > > I suppose but the only external call (above) would be passing an inode.  So to
-> > > me it seemed better here.
-> > 
-> > But the number of memory mappings reflects the state of the address
-> > space, not the inode.  Or maybe put another way, if I were an mm
-> > developer I would not expect to look in struct inode for mm state.
+On 14/01/20 09:45, Gionatan Danti wrote:
+> On 13/01/20 19:09, Darrick J. Wong wrote:
+>> xfs_io -c 'bmap -c -e -l -p -v <whatever>' test.img
 > 
-> This is a good point...
-> 
-> > 
-> > static inline bool inode_has_mappings(struct inode *inode)
-> > {
-> > 	return atomic64_read(&inode->i_mapping->mapcount) > 0;
-> > }
-> > 
-> > OTOH if there exist other mm developers who /do/ find that storing the
-> > mmap count in struct inode is more logical, please let me know. :)
-> 
-> ...  My thinking was that the number of mappings does not matters to the mm
-> system...  However, I'm starting to think you are correct...  ;-)
-> 
-> I've made a note of it and we will see what others think.
+> Ok, good to know. Thanks.
 
-Well, more importantly mapping != inode. There can be multiple inodes
-pointing to the same mapping (struct address_space) as is the case for
-example for block devices. So this counter definitely belongs into struct
-address_space.
+Hi all, I have an additional question about extszinherit/extsize.
 
-								Honza
+If I understand it correctly, by default it is 0: any non-EOF writes on 
+a sparse file will allocate how much space it needs. If these writes are 
+random and small enough (ie: 4k random writes), a subsequent sequential 
+read of the same file will have much lower performance (because 
+sequential IO are transformed in random accesses by the logical/physical 
+block remapping).
+
+Setting a 128K extszinherit (for the entire filesystem) or extsize (for 
+a file/dir) will markedly improve the situation, as much bigger 
+contiguous LBA regions can be read for each IO (note: I know SSD and 
+NVME disks are much less impacted by fragmentation, but I am mainly 
+speaking about HDD here).
+
+So, my question: there is anything wrong and/or I should be aware when 
+using a 128K extsize, so setting it the same as cowextsize? The only 
+possible drawback I can think is a coarse granularity when allocating 
+from the sparse file (ie: a 4k write will allocate the full 128k extent).
+
+Am I missing something?
+Thanks.
+
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
