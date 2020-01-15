@@ -4,46 +4,46 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C9B9C33CB2
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 02:39:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 802EEC33CB2
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 02:39:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 05F442467A
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 02:39:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 56AD924679
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 02:39:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="C7dCiUqb"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fNsMdZDD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728904AbgAOCjL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Jan 2020 21:39:11 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:40140 "EHLO
+        id S1728896AbgAOCjN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Jan 2020 21:39:13 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:40378 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728890AbgAOCjK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jan 2020 21:39:10 -0500
+        with ESMTP id S1728890AbgAOCjN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jan 2020 21:39:13 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=7T6itBiApRciaky4TlalX8Xey/dXpsbhmN7GfbwBCQQ=; b=C7dCiUqbTcbM+1b4sh4Da3dz+4
-        rqA/maqZX2JjPOQIST8LCdPLjCgMR8uQtk+abFns8RVqwRERzb9xlJCNTYRf1xTbW1Zhmup5OCxGF
-        BqbiDR9WB+efdTttuNSWmEtIGay5yA/1xz5rXoxu72wu6aO1r+24L956VPb4xga8GDxyV8U4Bie4B
-        /q9BVbW4+Tj6Xbs3SvKTUMD/UPg3xPbLiiZlPqBvD0Pn3nWbQvnhXltjlkph3VfBOlHSu833lTcxx
-        b4VpHWNaR29xWtMZ5sBvMSs5GC2a6uNl/Iw8qTtUuJl7s4IfLBpgPJS0dIpGIAfjqC5i3AkWu3K9M
-        yxkOtwdg==;
+        bh=Jnl/1wWGv1qKEBLHgKybzlxexpnxYVaV1z0LZYLTylg=; b=fNsMdZDDDhAxaEf0S5ZbQhtNbp
+        ck5GXITH0c/I/yAiRxCPJbzo63MhyMhJhzU1be8Im3AienbE6KGmJi+ZKsXSLRnrsnzhvpClwB3Zv
+        MRBwZhZx9dyTKOkawc+gD7lpb4re71ROQLaFy48H+DtWwSEi3/dimRkMzHiXHLVkOoxp8zOT0yW7E
+        euCKIlxjmoU9QLU7I/L/LntRGRhficSYXtBbWeaXj+scxxexJ+8rr8L1w1RiC3gbpKhH33ubXFhqo
+        wkcO5m1MoHrjWJmW12sNVfu5GP12rfT89te61rBUNeeLlJoPq5y9ZyW4NSh+euQbBi80jqbrm0PJo
+        GKj/mpUQ==;
 Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1irYZx-0008AH-Vg; Wed, 15 Jan 2020 02:38:45 +0000
+        id 1irYZy-0008Al-3l; Wed, 15 Jan 2020 02:38:46 +0000
 From:   Matthew Wilcox <willy@infradead.org>
 To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-mm@kvack.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         Jeff Layton <jlayton@kernel.org>,
         Christoph Hellwig <hch@infradead.org>, Chris Mason <clm@fb.com>
-Subject: [PATCH v2 1/9] mm: Fix the return type of __do_page_cache_readahead
-Date:   Tue, 14 Jan 2020 18:38:35 -0800
-Message-Id: <20200115023843.31325-2-willy@infradead.org>
+Subject: [PATCH v2 4/9] readahead: Put pages in cache earlier
+Date:   Tue, 14 Jan 2020 18:38:38 -0800
+Message-Id: <20200115023843.31325-5-willy@infradead.org>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20200115023843.31325-1-willy@infradead.org>
 References: <20200115023843.31325-1-willy@infradead.org>
@@ -56,53 +56,129 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
-ra_submit() which is a wrapper around __do_page_cache_readahead() already
-returns an unsigned long, and the 'nr_to_read' parameter is an unsigned
-long, so fix __do_page_cache_readahead() to return an unsigned long,
-even though I'm pretty sure we're not going to readahead more than 2^32
-pages ever.
+At allocation time, put the pages in the cache unless we're using
+->readpages.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 ---
- mm/internal.h  | 2 +-
- mm/readahead.c | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ mm/readahead.c | 51 +++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 32 insertions(+), 19 deletions(-)
 
-diff --git a/mm/internal.h b/mm/internal.h
-index 3cf20ab3ca01..41b93c4b3ab7 100644
---- a/mm/internal.h
-+++ b/mm/internal.h
-@@ -49,7 +49,7 @@ void unmap_page_range(struct mmu_gather *tlb,
- 			     unsigned long addr, unsigned long end,
- 			     struct zap_details *details);
- 
--extern unsigned int __do_page_cache_readahead(struct address_space *mapping,
-+extern unsigned long __do_page_cache_readahead(struct address_space *mapping,
- 		struct file *filp, pgoff_t offset, unsigned long nr_to_read,
- 		unsigned long lookahead_size);
- 
 diff --git a/mm/readahead.c b/mm/readahead.c
-index 2fe72cd29b47..6bf73ef33b7e 100644
+index fc77d13af556..5a6676640f20 100644
 --- a/mm/readahead.c
 +++ b/mm/readahead.c
-@@ -152,7 +152,7 @@ static int read_pages(struct address_space *mapping, struct file *filp,
-  *
-  * Returns the number of pages requested, or the maximum amount of I/O allowed.
-  */
--unsigned int __do_page_cache_readahead(struct address_space *mapping,
-+unsigned long __do_page_cache_readahead(struct address_space *mapping,
- 		struct file *filp, pgoff_t offset, unsigned long nr_to_read,
- 		unsigned long lookahead_size)
+@@ -114,10 +114,10 @@ int read_cache_pages(struct address_space *mapping, struct list_head *pages,
+ EXPORT_SYMBOL(read_cache_pages);
+ 
+ static void read_pages(struct address_space *mapping, struct file *filp,
+-		struct list_head *pages, unsigned int nr_pages, gfp_t gfp)
++		struct list_head *pages, pgoff_t start,
++		unsigned int nr_pages)
  {
-@@ -161,7 +161,7 @@ unsigned int __do_page_cache_readahead(struct address_space *mapping,
+ 	struct blk_plug plug;
+-	unsigned page_idx;
+ 
+ 	blk_start_plug(&plug);
+ 
+@@ -125,18 +125,17 @@ static void read_pages(struct address_space *mapping, struct file *filp,
+ 		mapping->a_ops->readpages(filp, mapping, pages, nr_pages);
+ 		/* Clean up the remaining pages */
+ 		put_pages_list(pages);
+-		goto out;
+-	}
++	} else {
++		struct page *page;
++		unsigned long index;
+ 
+-	for (page_idx = 0; page_idx < nr_pages; page_idx++) {
+-		struct page *page = lru_to_page(pages);
+-		list_del(&page->lru);
+-		if (!add_to_page_cache_lru(page, mapping, page->index, gfp))
++		xa_for_each_range(&mapping->i_pages, index, page, start,
++				start + nr_pages - 1) {
+ 			mapping->a_ops->readpage(filp, page);
+-		put_page(page);
++			put_page(page);
++		}
+ 	}
+ 
+-out:
+ 	blk_finish_plug(&plug);
+ }
+ 
+@@ -157,9 +156,11 @@ unsigned long __do_page_cache_readahead(struct address_space *mapping,
  	unsigned long end_index;	/* The last page we want to read */
  	LIST_HEAD(page_pool);
  	int page_idx;
--	unsigned int nr_pages = 0;
-+	unsigned long nr_pages = 0;
++	pgoff_t page_offset;
+ 	unsigned long nr_pages = 0;
  	loff_t isize = i_size_read(inode);
  	gfp_t gfp_mask = readahead_gfp_mask(mapping);
++	bool use_list = mapping->a_ops->readpages;
  
+ 	if (isize == 0)
+ 		goto out;
+@@ -170,7 +171,7 @@ unsigned long __do_page_cache_readahead(struct address_space *mapping,
+ 	 * Preallocate as many pages as we will need.
+ 	 */
+ 	for (page_idx = 0; page_idx < nr_to_read; page_idx++) {
+-		pgoff_t page_offset = offset + page_idx;
++		page_offset = offset + page_idx;
+ 
+ 		if (page_offset > end_index)
+ 			break;
+@@ -178,13 +179,14 @@ unsigned long __do_page_cache_readahead(struct address_space *mapping,
+ 		page = xa_load(&mapping->i_pages, page_offset);
+ 		if (page && !xa_is_value(page)) {
+ 			/*
+-			 * Page already present?  Kick off the current batch of
+-			 * contiguous pages before continuing with the next
+-			 * batch.
++			 * Page already present?  Kick off the current batch
++			 * of contiguous pages before continuing with the
++			 * next batch.
+ 			 */
+ 			if (nr_pages)
+-				read_pages(mapping, filp, &page_pool, nr_pages,
+-						gfp_mask);
++				read_pages(mapping, filp, &page_pool,
++						page_offset - nr_pages,
++						nr_pages);
+ 			nr_pages = 0;
+ 			continue;
+ 		}
+@@ -192,8 +194,18 @@ unsigned long __do_page_cache_readahead(struct address_space *mapping,
+ 		page = __page_cache_alloc(gfp_mask);
+ 		if (!page)
+ 			break;
+-		page->index = page_offset;
+-		list_add(&page->lru, &page_pool);
++		if (use_list) {
++			page->index = page_offset;
++			list_add(&page->lru, &page_pool);
++		} else if (!add_to_page_cache_lru(page, mapping, page_offset,
++					gfp_mask)) {
++			if (nr_pages)
++				read_pages(mapping, filp, &page_pool,
++						page_offset - nr_pages,
++						nr_pages);
++			nr_pages = 0;
++			continue;
++		}
+ 		if (page_idx == nr_to_read - lookahead_size)
+ 			SetPageReadahead(page);
+ 		nr_pages++;
+@@ -205,7 +217,8 @@ unsigned long __do_page_cache_readahead(struct address_space *mapping,
+ 	 * will then handle the error.
+ 	 */
+ 	if (nr_pages)
+-		read_pages(mapping, filp, &page_pool, nr_pages, gfp_mask);
++		read_pages(mapping, filp, &page_pool, page_offset - nr_pages,
++				nr_pages);
+ 	BUG_ON(!list_empty(&page_pool));
+ out:
+ 	return nr_pages;
 -- 
 2.24.1
 
