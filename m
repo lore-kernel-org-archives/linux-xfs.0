@@ -2,183 +2,236 @@ Return-Path: <SRS0=S7Al=3E=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 802EEC33CB2
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 02:39:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BAF2C32771
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 03:54:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 56AD924679
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 02:39:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5A6FC24679
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 03:54:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fNsMdZDD"
+	dkim=pass (1024-bit key) header.d=gmx.net header.i=@gmx.net header.b="VFRDFhJc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728896AbgAOCjN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Jan 2020 21:39:13 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:40378 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728890AbgAOCjN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jan 2020 21:39:13 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
-        :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=Jnl/1wWGv1qKEBLHgKybzlxexpnxYVaV1z0LZYLTylg=; b=fNsMdZDDDhAxaEf0S5ZbQhtNbp
-        ck5GXITH0c/I/yAiRxCPJbzo63MhyMhJhzU1be8Im3AienbE6KGmJi+ZKsXSLRnrsnzhvpClwB3Zv
-        MRBwZhZx9dyTKOkawc+gD7lpb4re71ROQLaFy48H+DtWwSEi3/dimRkMzHiXHLVkOoxp8zOT0yW7E
-        euCKIlxjmoU9QLU7I/L/LntRGRhficSYXtBbWeaXj+scxxexJ+8rr8L1w1RiC3gbpKhH33ubXFhqo
-        wkcO5m1MoHrjWJmW12sNVfu5GP12rfT89te61rBUNeeLlJoPq5y9ZyW4NSh+euQbBi80jqbrm0PJo
-        GKj/mpUQ==;
-Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1irYZy-0008Al-3l; Wed, 15 Jan 2020 02:38:46 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org
-Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Jeff Layton <jlayton@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>, Chris Mason <clm@fb.com>
-Subject: [PATCH v2 4/9] readahead: Put pages in cache earlier
-Date:   Tue, 14 Jan 2020 18:38:38 -0800
-Message-Id: <20200115023843.31325-5-willy@infradead.org>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20200115023843.31325-1-willy@infradead.org>
-References: <20200115023843.31325-1-willy@infradead.org>
+        id S1729052AbgAODyw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Jan 2020 22:54:52 -0500
+Received: from mout.gmx.net ([212.227.17.20]:49063 "EHLO mout.gmx.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728884AbgAODyw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 14 Jan 2020 22:54:52 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
+        s=badeba3b8450; t=1579060470;
+        bh=oey+bGSDZcVc39amlD39i3yaZnQJybVfefztiUwy6VA=;
+        h=X-UI-Sender-Class:Subject:To:Cc:References:From:Date:In-Reply-To;
+        b=VFRDFhJcuQoc8OrCcX1QvqTq65LqESpPeMaJFYnq2UwiyY7hnPN06Xhyzmj4qnqUQ
+         qLdlobMtryqxfd2aHWLNaCZ+FBvOkJu4OUzNWJDkXNhg0simH2efPxQkaeMe8WaeRS
+         xlBqIKCBu5IGqq6otjeDoxsoWM3X6Cea3pzGxAeI=
+X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
+Received: from [0.0.0.0] ([149.28.201.231]) by mail.gmx.com (mrgmx105
+ [212.227.17.174]) with ESMTPSA (Nemesis) id 1MtfJX-1jeiba0coR-00v6Fp; Wed, 15
+ Jan 2020 04:54:29 +0100
+Subject: Re: Problems with determining data presence by examining extents?
+To:     David Howells <dhowells@redhat.com>, linux-fsdevel@vger.kernel.org,
+        viro@zeniv.linux.org.uk, hch@lst.de, tytso@mit.edu,
+        adilger.kernel@dilger.ca, darrick.wong@oracle.com, clm@fb.com,
+        josef@toxicpanda.com, dsterba@suse.com
+Cc:     linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <4467.1579020509@warthog.procyon.org.uk>
+From:   Qu Wenruo <quwenruo.btrfs@gmx.com>
+Autocrypt: addr=quwenruo.btrfs@gmx.com; prefer-encrypt=mutual; keydata=
+ mQENBFnVga8BCACyhFP3ExcTIuB73jDIBA/vSoYcTyysFQzPvez64TUSCv1SgXEByR7fju3o
+ 8RfaWuHCnkkea5luuTZMqfgTXrun2dqNVYDNOV6RIVrc4YuG20yhC1epnV55fJCThqij0MRL
+ 1NxPKXIlEdHvN0Kov3CtWA+R1iNN0RCeVun7rmOrrjBK573aWC5sgP7YsBOLK79H3tmUtz6b
+ 9Imuj0ZyEsa76Xg9PX9Hn2myKj1hfWGS+5og9Va4hrwQC8ipjXik6NKR5GDV+hOZkktU81G5
+ gkQtGB9jOAYRs86QG/b7PtIlbd3+pppT0gaS+wvwMs8cuNG+Pu6KO1oC4jgdseFLu7NpABEB
+ AAG0IlF1IFdlbnJ1byA8cXV3ZW5ydW8uYnRyZnNAZ214LmNvbT6JAU4EEwEIADgCGwMFCwkI
+ BwIGFQgJCgsCBBYCAwECHgECF4AWIQQt33LlpaVbqJ2qQuHCPZHzoSX+qAUCXZw1oQAKCRDC
+ PZHzoSX+qCY6CACd+mWu3okGwRKXju6bou+7VkqCaHTdyXwWFTsr+/0ly5nUdDtT3yEVggPJ
+ 3VP70wjlrxUjNjFb6iIvGYxiPOrop1NGwGYvQktgRhaIhALG6rPoSSAhGNjwGVRw0km0PlIN
+ D29BTj/lYEk+jVM1YL0QLgAE1AI3krihg/lp/fQT53wLhR8YZIF8ETXbClQG1vJ0cllPuEEv
+ efKxRyiTSjB+PsozSvYWhXsPeJ+KKjFen7ebE5reQTPFzSHctCdPnoR/4jSPlnTlnEvLeqcD
+ ZTuKfQe1gWrPeevQzgCtgBF/WjIOeJs41klnYzC3DymuQlmFubss0jShLOW8eSOOWhLRuQEN
+ BFnVga8BCACqU+th4Esy/c8BnvliFAjAfpzhI1wH76FD1MJPmAhA3DnX5JDORcgaCbPEwhLj
+ 1xlwTgpeT+QfDmGJ5B5BlrrQFZVE1fChEjiJvyiSAO4yQPkrPVYTI7Xj34FnscPj/IrRUUka
+ 68MlHxPtFnAHr25VIuOS41lmYKYNwPNLRz9Ik6DmeTG3WJO2BQRNvXA0pXrJH1fNGSsRb+pK
+ EKHKtL1803x71zQxCwLh+zLP1iXHVM5j8gX9zqupigQR/Cel2XPS44zWcDW8r7B0q1eW4Jrv
+ 0x19p4P923voqn+joIAostyNTUjCeSrUdKth9jcdlam9X2DziA/DHDFfS5eq4fEvABEBAAGJ
+ ATwEGAEIACYCGwwWIQQt33LlpaVbqJ2qQuHCPZHzoSX+qAUCXZw1rgUJCWpOfwAKCRDCPZHz
+ oSX+qFcEB/95cs8cM1OQdE/GgOfCGxwgckMeWyzOR7bkAWW0lDVp2hpgJuxBW/gyfmtBnUai
+ fnggx3EE3ev8HTysZU9q0h+TJwwJKGv6sUc8qcTGFDtavnnl+r6xDUY7A6GvXEsSoCEEynby
+ 72byGeSovfq/4AWGNPBG1L61Exl+gbqfvbECP3ziXnob009+z9I4qXodHSYINfAkZkA523JG
+ ap12LndJeLk3gfWNZfXEWyGnuciRGbqESkhIRav8ootsCIops/SqXm0/k+Kcl4gGUO/iD/T5
+ oagaDh0QtOd8RWSMwLxwn8uIhpH84Q4X1LadJ5NCgGa6xPP5qqRuiC+9gZqbq4Nj
+Message-ID: <00fc7691-77d5-5947-5493-5c97f262da81@gmx.com>
+Date:   Wed, 15 Jan 2020 11:54:20 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.3.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <4467.1579020509@warthog.procyon.org.uk>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="kyNX94pNiUDmTOWGi0FWq7UFShlh1konR"
+X-Provags-ID: V03:K1:YanSqm2m59hj7+6ra6X2fxbXpjUZaC3KWEnNHzka+qrSJSma/IU
+ TQs3ptC0Vc9ePSm56fm7+8pn7S/hdc8UOOiOxNAXwk4DGJQUJpk0pRuuix7HnxNnup72wRU
+ EgblHFYF7BDyZGtPoabwgmQDWxT3r6O/QS++2f/vLB2QGr83nIMEEYKF5ZCd37Dv7vSud/P
+ rmC7giU3Qbr6haav5i3qg==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:lApdwue0YmM=:EFi2hCpnRZJ2rpKSD/k3sO
+ Lhydjj+Wroj/6Manswk++sZuQPEh4+erKeoV/t+UZpfma5EdP6opOuU8AOnzrQ99YR4jBgpfF
+ iaVW87V7UakMs6DaFRykGC2A7Eat+fm/Lb9KhMN9s8ibQ8VQssx0615rYVI6GsqwpXLAZhZke
+ mb8t+OFGtXDAgN1oX7WJtTvPgb15RibJCwGsSBfxr0jIEDm5rEaxp2fbEdwaNtWVBRpNBwyGH
+ EZuz7/ExYkTmp2PJbuGG9UJoCpVSy6X3oZ+R9hfTZZSc658mKwDZWbOfMIbuMeWTJ9mu7uAmF
+ dN2CgPrJhiGw9QC0+vHE+l2n4n12lHk57jV8t7zqHdi1t8TonF4JWCevZ34IBs/32YIc9y3uh
+ SlF2LPNT6qBMxVP8+z9uV9Mgs7wf1ZbH+ViRN0MogNRgY/B79AegRwfDUodjOpyEiTRmKuO3E
+ r18YUso/A2B0mi5g7WXYEojmeGjKn3CVTJBPYZfhO/7hxMBumRspzuRJ5g7zMk5lZRIRjxx03
+ nk+tvY2ucFmXx9vfR+ntG/Z/FAzBFlJJaW6eGzMC2C6Lo07b0mVdxjrCqLJVvSwATK9mNnu84
+ XeF/Vj5LToQVsHc1CBDvpdon41+b+7QgoLVXwiL8LaDErx+Wd/p/nSSAo9aYOJdxq5vkwYKK1
+ JrqyfDyyX4spvZcLUB79wtIO662jotaE2Xgw0VFwbVT+ZvrmRFMCPa98PA75LCWzQdlifQ94A
+ RNPmJGHrftCyBL+a5jZ3raSc9iCDR275WNyNb1+mAHOhOES5A4IvKPUz5dFaL6CgTenkKR5zu
+ 2UcGgVIDYmxBzSPiKu9oHpp8atGBuOIftI6Mt9b1SN9TPZEGJdStpB3QyxS+iqPxTcrd1hi5a
+ +bBvQG9h/H352okWhAkjR7f806+o7KkM2rae1SF/ELWQrw2aprJWFfUH5fRff00W0EKBZ8BYL
+ n63NtvbDh7kw+MYCqaWs2HNCk5caqbTRqJ9PQrQzns6FagsoUtGiFdFsMYKKDN7x522A9mLmV
+ pSoAOdyD2kDic/OS4CSccUkdUYQV7elBFd3/l1uwvPoRMv/XZwGHBrh7XNzqF/hJnKTHemivo
+ BD/MggCw/KgZ/CpHs5f4RldoH40j6hLXe4sGEbicsFIT8WBS+agQ0/DfkTaRAppt2zX+o3R2r
+ cfng8k5JlM+Xm9olkUrGfDWqoZg+5h4nbJDTmWZkPE0LgKdeU1n7qEJo1qblLn8IoWQCsolrA
+ 6dceJcoMv1OMzEquRz9wmrgr1lstGIv/RpF4pNvVXdFXqKxIRNaqcwen9mvc=
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--kyNX94pNiUDmTOWGi0FWq7UFShlh1konR
+Content-Type: multipart/mixed; boundary="gB6on3XvgIO0Qk510JqOC9SbshhQFMe5S"
 
-At allocation time, put the pages in the cache unless we're using
-->readpages.
+--gB6on3XvgIO0Qk510JqOC9SbshhQFMe5S
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
----
- mm/readahead.c | 51 +++++++++++++++++++++++++++++++-------------------
- 1 file changed, 32 insertions(+), 19 deletions(-)
 
-diff --git a/mm/readahead.c b/mm/readahead.c
-index fc77d13af556..5a6676640f20 100644
---- a/mm/readahead.c
-+++ b/mm/readahead.c
-@@ -114,10 +114,10 @@ int read_cache_pages(struct address_space *mapping, struct list_head *pages,
- EXPORT_SYMBOL(read_cache_pages);
- 
- static void read_pages(struct address_space *mapping, struct file *filp,
--		struct list_head *pages, unsigned int nr_pages, gfp_t gfp)
-+		struct list_head *pages, pgoff_t start,
-+		unsigned int nr_pages)
- {
- 	struct blk_plug plug;
--	unsigned page_idx;
- 
- 	blk_start_plug(&plug);
- 
-@@ -125,18 +125,17 @@ static void read_pages(struct address_space *mapping, struct file *filp,
- 		mapping->a_ops->readpages(filp, mapping, pages, nr_pages);
- 		/* Clean up the remaining pages */
- 		put_pages_list(pages);
--		goto out;
--	}
-+	} else {
-+		struct page *page;
-+		unsigned long index;
- 
--	for (page_idx = 0; page_idx < nr_pages; page_idx++) {
--		struct page *page = lru_to_page(pages);
--		list_del(&page->lru);
--		if (!add_to_page_cache_lru(page, mapping, page->index, gfp))
-+		xa_for_each_range(&mapping->i_pages, index, page, start,
-+				start + nr_pages - 1) {
- 			mapping->a_ops->readpage(filp, page);
--		put_page(page);
-+			put_page(page);
-+		}
- 	}
- 
--out:
- 	blk_finish_plug(&plug);
- }
- 
-@@ -157,9 +156,11 @@ unsigned long __do_page_cache_readahead(struct address_space *mapping,
- 	unsigned long end_index;	/* The last page we want to read */
- 	LIST_HEAD(page_pool);
- 	int page_idx;
-+	pgoff_t page_offset;
- 	unsigned long nr_pages = 0;
- 	loff_t isize = i_size_read(inode);
- 	gfp_t gfp_mask = readahead_gfp_mask(mapping);
-+	bool use_list = mapping->a_ops->readpages;
- 
- 	if (isize == 0)
- 		goto out;
-@@ -170,7 +171,7 @@ unsigned long __do_page_cache_readahead(struct address_space *mapping,
- 	 * Preallocate as many pages as we will need.
- 	 */
- 	for (page_idx = 0; page_idx < nr_to_read; page_idx++) {
--		pgoff_t page_offset = offset + page_idx;
-+		page_offset = offset + page_idx;
- 
- 		if (page_offset > end_index)
- 			break;
-@@ -178,13 +179,14 @@ unsigned long __do_page_cache_readahead(struct address_space *mapping,
- 		page = xa_load(&mapping->i_pages, page_offset);
- 		if (page && !xa_is_value(page)) {
- 			/*
--			 * Page already present?  Kick off the current batch of
--			 * contiguous pages before continuing with the next
--			 * batch.
-+			 * Page already present?  Kick off the current batch
-+			 * of contiguous pages before continuing with the
-+			 * next batch.
- 			 */
- 			if (nr_pages)
--				read_pages(mapping, filp, &page_pool, nr_pages,
--						gfp_mask);
-+				read_pages(mapping, filp, &page_pool,
-+						page_offset - nr_pages,
-+						nr_pages);
- 			nr_pages = 0;
- 			continue;
- 		}
-@@ -192,8 +194,18 @@ unsigned long __do_page_cache_readahead(struct address_space *mapping,
- 		page = __page_cache_alloc(gfp_mask);
- 		if (!page)
- 			break;
--		page->index = page_offset;
--		list_add(&page->lru, &page_pool);
-+		if (use_list) {
-+			page->index = page_offset;
-+			list_add(&page->lru, &page_pool);
-+		} else if (!add_to_page_cache_lru(page, mapping, page_offset,
-+					gfp_mask)) {
-+			if (nr_pages)
-+				read_pages(mapping, filp, &page_pool,
-+						page_offset - nr_pages,
-+						nr_pages);
-+			nr_pages = 0;
-+			continue;
-+		}
- 		if (page_idx == nr_to_read - lookahead_size)
- 			SetPageReadahead(page);
- 		nr_pages++;
-@@ -205,7 +217,8 @@ unsigned long __do_page_cache_readahead(struct address_space *mapping,
- 	 * will then handle the error.
- 	 */
- 	if (nr_pages)
--		read_pages(mapping, filp, &page_pool, nr_pages, gfp_mask);
-+		read_pages(mapping, filp, &page_pool, page_offset - nr_pages,
-+				nr_pages);
- 	BUG_ON(!list_empty(&page_pool));
- out:
- 	return nr_pages;
--- 
-2.24.1
 
+On 2020/1/15 =E4=B8=8A=E5=8D=8812:48, David Howells wrote:
+> Again with regard to my rewrite of fscache and cachefiles:
+>=20
+> 	https://git.kernel.org/pub/scm/linux/kernel/git/dhowells/linux-fs.git/=
+log/?h=3Dfscache-iter
+>=20
+> I've got rid of my use of bmap()!  Hooray!
+>=20
+> However, I'm informed that I can't trust the extent map of a backing fi=
+le to
+> tell me accurately whether content exists in a file because:
+>=20
+>  (a) Not-quite-contiguous extents may be joined by insertion of blocks =
+of
+>      zeros by the filesystem optimising itself.  This would give me a f=
+alse
+>      positive when trying to detect the presence of data.
+
+At least for btrfs, only unaligned extents get padding zeros.
+
+But I guess other fs could do whatever they want to optimize themselves.
+
+>=20
+>  (b) Blocks of zeros that I write into the file may get punched out by
+>      filesystem optimisation since a read back would be expected to rea=
+d zeros
+>      there anyway, provided it's below the EOF.  This would give me a f=
+alse
+>      negative.
+
+I know some qemu disk backend has such zero detection.
+But not btrfs. So this is another per-fs based behavior.
+
+And problem (c):
+
+(c): A multi-device fs (btrfs) can have their own logical address mapping=
+=2E
+Meaning the bytenr returned makes no sense to end user, unless used for
+that fs specific address space.
+
+This is even more trickier when considering single device btrfs.
+It still utilize the same logical address space, just like all multiple
+disks btrfs.
+
+And it completely possible for a single 1T btrfs has logical address
+mapped beyond 10T or even more. (Any aligned bytenr in the range [0,
+U64_MAX) is valid for btrfs logical address).
+
+
+You won't like this case either.
+(d): Compressed extents
+One compressed extent can represents more data than its on-disk size.
+
+Furthermore, current fiemap interface hasn't considered this case, thus
+there it only reports in-memory size (aka, file size), no way to
+represent on-disk size.
+
+
+And even more bad news:
+(e): write time dedupe
+Although no fs known has implemented it yet (btrfs used to try to
+support that, and I guess XFS could do it in theory too), you won't
+known when a fs could get such "awesome" feature.
+
+Where your write may be checked and never reach disk if it matches with
+existing extents.
+
+This is a little like the zero-detection-auto-punch.
+
+>=20
+> Is there some setting I can use to prevent these scenarios on a file - =
+or can
+> one be added?
+
+I guess no.
+
+>=20
+> Without being able to trust the filesystem to tell me accurately what I=
+'ve
+> written into it, I have to use some other mechanism.  Currently, I've s=
+witched
+> to storing a map in an xattr with 1 bit per 256k block, but that gets h=
+ard to
+> use if the file grows particularly large and also has integrity consequ=
+ences -
+> though those are hopefully limited as I'm now using DIO to store data i=
+nto the
+> cache.
+
+Would you like to explain why you want to know such fs internal info?
+
+Thanks,
+Qu
+>=20
+> If it helps, I'm downloading data in aligned 256k blocks and storing da=
+ta in
+> those same aligned 256k blocks, so if that makes it easier...
+>=20
+> David
+>=20
+
+
+--gB6on3XvgIO0Qk510JqOC9SbshhQFMe5S--
+
+--kyNX94pNiUDmTOWGi0FWq7UFShlh1konR
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEELd9y5aWlW6idqkLhwj2R86El/qgFAl4ejOwACgkQwj2R86El
+/qgA9QgAoVjIxeQRumpojy6W5vF6GGlMm/M+IKi83tAOPWnYDP4OIVhiqL/7f1fG
+hxue8/hEQW737NImsOQlQvsqD1n8YNg0XEi/zQB6YN5tgtS2s14RzMTPFBlkFosC
+ky6DJbseDFAKDvHebodfUxZsL9ibE/YwiOUcrITp155mpVbnYTT+LF2C7a8Emmo2
+Sh+7IEWwRDy00TYQ+7lQKzTdD4zj74AvHutpuuMJ/8rstb0y2SS6pkB5EQAno1yS
+81owvjgp2EiaZdWJpunBHIhvROfF6nIzZP1czxOAr0T648PBYtE0EcZpOkKH+PHe
+Ni8Ucj5vI0r7m6Y3yqZJ5Y8dBTPTYg==
+=SBbx
+-----END PGP SIGNATURE-----
+
+--kyNX94pNiUDmTOWGi0FWq7UFShlh1konR--
