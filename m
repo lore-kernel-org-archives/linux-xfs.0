@@ -7,55 +7,56 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE126C32771
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 17:03:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7BB9C32771
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 17:03:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8CDD7214AF
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 17:03:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D45D214AF
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 17:03:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="EVMrY7ij"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="krb4DKF8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728961AbgAORDX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Jan 2020 12:03:23 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:44976 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728904AbgAORDX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jan 2020 12:03:23 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00FGhZRF012447;
-        Wed, 15 Jan 2020 17:03:15 GMT
+        id S1728904AbgAORDc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Jan 2020 12:03:32 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:41032 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728899AbgAORDc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jan 2020 12:03:32 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00FGhP7Y037021;
+        Wed, 15 Jan 2020 17:03:21 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=rbBHXyRdv2H/+J3fF45TfcHBPdoZPkekaNFh5UJUezo=;
- b=EVMrY7ijd25ivhDZrwG+StpsMBZ888th5NEZVfyPZXzBtUj0iK6QsN1SkYi8DLuCyo60
- qR05w2ZnFG6lLAdql4YPhaseEs8Fwt7StCWXnElZniwfT4JvvhlIrHQ65N7CUHHdu3FO
- 1uRZvFHkb87SCJ+dWiTlilasBq2a0VcJG/xXSxeWeNx8tr1uMCVo1pLAyUvnrhWsUKKp
- rEmt0oLBvLyWYHn3Nwl+p2NBtW0nR2N+peSrSMkOyKZy1gOOqn8flmherCGkX1/FM4E2
- /WT0gjZfDcYpjwdNKejvCjGQmZ7VnXFuyKPWnqdNqr5ulrqykOFgvcb21BxFtu9uoKL4 6w== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2xf73yndsu-1
+ bh=k9B1QmUDoYWo6SDL+gs3SMjhcGc51z4ptVAODp6aLhg=;
+ b=krb4DKF8mXzLgJ1HcZzEUlSYROTIKzE9ffpFdWY+VWKiNK4CtsLtN+Qz3OVKacFgMHr7
+ EcYyVUfTU/4OtXKwkvUMmYaVklOU1dTk3BGpn93NZIAWJ9pQrTjj+WNU2XtQOVQdo34A
+ +YAYrEUlxHlraz2nJTzCxpjj3HLNij2+XDGxKEyfj9emfCKKmycICNaofmBmaIrvZp4o
+ M2eAzHkOcqrf6sCPnCvVtKeAuQSP6GooIk4QGYmvM3x9wtU+kUh8TcOuzzO8ZJ8kWM7z
+ N2mO0DUyeFbm3MkDGdSu7HYULM0X8RfjPLf/XCMzcZHSe4SaeoOs8S+OThcJllvw9IO7 +A== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2xf74sde8p-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 15 Jan 2020 17:03:14 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00FGiMXd056790;
-        Wed, 15 Jan 2020 17:03:14 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2xhy21r2uc-1
+        Wed, 15 Jan 2020 17:03:21 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00FGicSA183352;
+        Wed, 15 Jan 2020 17:03:20 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 2xj1apwqke-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 15 Jan 2020 17:03:14 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00FH3D5L023459;
-        Wed, 15 Jan 2020 17:03:13 GMT
+        Wed, 15 Jan 2020 17:03:20 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00FH3Jwo028898;
+        Wed, 15 Jan 2020 17:03:19 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 15 Jan 2020 09:03:13 -0800
-Subject: [PATCH 3/7] xfs: streamline xfs_attr3_leaf_inactive
+        with ESMTP ; Wed, 15 Jan 2020 09:03:19 -0800
+Subject: [PATCH 4/7] xfs: clean up xfs_buf_item_get_format return value
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
-Date:   Wed, 15 Jan 2020 09:03:12 -0800
-Message-ID: <157910779242.2028015.12106623745208393495.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, hch@infradead.org,
+        Christoph Hellwig <hch@lst.de>
+Date:   Wed, 15 Jan 2020 09:03:18 -0800
+Message-ID: <157910779863.2028015.13882323129750373731.stgit@magnolia>
 In-Reply-To: <157910777330.2028015.5017943601641757827.stgit@magnolia>
 References: <157910777330.2028015.5017943601641757827.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,164 +81,67 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Now that we know we don't have to take a transaction to stale the incore
-buffers for a remote value, get rid of the unnecessary memory allocation
-in the leaf walker and call the rmt_stale function directly.  Flatten
-the loop while we're at it.
+The only thing that can cause a nonzero return from
+xfs_buf_item_get_format is if the kmem_alloc fails, which it can't.
+Get rid of all the unnecessary error handling.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_attr_leaf.h |    9 ----
- fs/xfs/xfs_attr_inactive.c    |   83 ++++++++++-------------------------------
- 2 files changed, 21 insertions(+), 71 deletions(-)
+ fs/xfs/xfs_buf_item.c |   16 +++-------------
+ 1 file changed, 3 insertions(+), 13 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
-index f4a188e28b7b..73615b1dd1a8 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.h
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.h
-@@ -39,15 +39,6 @@ struct xfs_attr3_icleaf_hdr {
- 	} freemap[XFS_ATTR_LEAF_MAPSIZE];
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 3984779e5911..9737f177a49b 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -688,7 +688,7 @@ static const struct xfs_item_ops xfs_buf_item_ops = {
+ 	.iop_push	= xfs_buf_item_push,
  };
  
--/*
-- * Used to keep a list of "remote value" extents when unlinking an inode.
-- */
--typedef struct xfs_attr_inactive_list {
--	xfs_dablk_t	valueblk;	/* block number of value bytes */
--	int		valuelen;	/* number of bytes in value */
--} xfs_attr_inactive_list_t;
--
--
- /*========================================================================
-  * Function prototypes for the kernel.
-  *========================================================================*/
-diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
-index edb079087a0c..27cb6bf614c5 100644
---- a/fs/xfs/xfs_attr_inactive.c
-+++ b/fs/xfs/xfs_attr_inactive.c
-@@ -33,12 +33,10 @@
- STATIC int
- xfs_attr3_rmt_stale(
- 	struct xfs_inode	*dp,
--	xfs_dablk_t		blkno,
--	int			blkcnt)
-+	xfs_dablk_t		tblkno,
-+	int			tblkcnt)
- {
- 	struct xfs_bmbt_irec	map;
--	xfs_dablk_t		tblkno;
--	int			tblkcnt;
- 	int			nmap;
- 	int			error;
+-STATIC int
++STATIC void
+ xfs_buf_item_get_format(
+ 	struct xfs_buf_log_item	*bip,
+ 	int			count)
+@@ -698,14 +698,11 @@ xfs_buf_item_get_format(
  
-@@ -46,8 +44,6 @@ xfs_attr3_rmt_stale(
- 	 * Roll through the "value", invalidating the attribute value's
- 	 * blocks.
- 	 */
--	tblkno = blkno;
--	tblkcnt = blkcnt;
- 	while (tblkcnt > 0) {
- 		/*
- 		 * Try to remember where we decided to put the value.
-@@ -88,80 +84,43 @@ xfs_attr3_leaf_inactive(
- 	struct xfs_inode	*dp,
- 	struct xfs_buf		*bp)
- {
--	struct xfs_attr_leafblock *leaf;
- 	struct xfs_attr3_icleaf_hdr ichdr;
-+	struct xfs_mount	*mp = bp->b_mount;
-+	struct xfs_attr_leafblock *leaf;
- 	struct xfs_attr_leaf_entry *entry;
- 	struct xfs_attr_leaf_name_remote *name_rmt;
--	struct xfs_attr_inactive_list *list;
--	struct xfs_attr_inactive_list *lp;
- 	int			error;
--	int			count;
--	int			size;
--	int			tmp;
- 	int			i;
--	struct xfs_mount	*mp = bp->b_mount;
- 
- 	leaf = bp->b_addr;
- 	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
- 
- 	/*
--	 * Count the number of "remote" value extents.
-+	 * Find the remote value extents for this leaf and invalidate their
-+	 * incore buffers.
- 	 */
--	count = 0;
- 	entry = xfs_attr3_leaf_entryp(leaf);
- 	for (i = 0; i < ichdr.count; entry++, i++) {
--		if (be16_to_cpu(entry->nameidx) &&
--		    ((entry->flags & XFS_ATTR_LOCAL) == 0)) {
--			name_rmt = xfs_attr3_leaf_name_remote(leaf, i);
--			if (name_rmt->valueblk)
--				count++;
--		}
--	}
-+		int		blkcnt;
- 
--	/*
--	 * If there are no "remote" values, we're done.
--	 */
--	if (count == 0) {
--		xfs_trans_brelse(*trans, bp);
+ 	if (count == 1) {
+ 		bip->bli_formats = &bip->__bli_format;
 -		return 0;
--	}
-+		if (!be16_to_cpu(entry->nameidx) ||
-+		    (entry->flags & XFS_ATTR_LOCAL))
-+			continue;
- 
--	/*
--	 * Allocate storage for a list of all the "remote" value extents.
--	 */
--	size = count * sizeof(xfs_attr_inactive_list_t);
--	list = kmem_alloc(size, 0);
-+		name_rmt = xfs_attr3_leaf_name_remote(leaf, i);
-+		if (!name_rmt->valueblk)
-+			continue;
- 
--	/*
--	 * Identify each of the "remote" value extents.
--	 */
--	lp = list;
--	entry = xfs_attr3_leaf_entryp(leaf);
--	for (i = 0; i < ichdr.count; entry++, i++) {
--		if (be16_to_cpu(entry->nameidx) &&
--		    ((entry->flags & XFS_ATTR_LOCAL) == 0)) {
--			name_rmt = xfs_attr3_leaf_name_remote(leaf, i);
--			if (name_rmt->valueblk) {
--				lp->valueblk = be32_to_cpu(name_rmt->valueblk);
--				lp->valuelen = xfs_attr3_rmt_blocks(dp->i_mount,
--						    be32_to_cpu(name_rmt->valuelen));
--				lp++;
--			}
--		}
--	}
--	xfs_trans_brelse(*trans, bp);	/* unlock for trans. in freextent() */
--
--	/*
--	 * Invalidate each of the "remote" value extents.
--	 */
--	error = 0;
--	for (lp = list, i = 0; i < count; i++, lp++) {
--		tmp = xfs_attr3_rmt_stale(dp, lp->valueblk, lp->valuelen);
--		if (error == 0)
--			error = tmp;	/* save only the 1st errno */
-+		blkcnt = xfs_attr3_rmt_blocks(dp->i_mount,
-+				be32_to_cpu(name_rmt->valuelen));
-+		error = xfs_attr3_rmt_stale(dp,
-+				be32_to_cpu(name_rmt->valueblk), blkcnt);
-+		if (error)
-+			goto err;
++		return;
  	}
  
--	kmem_free(list);
-+	xfs_trans_brelse(*trans, bp);
-+err:
- 	return error;
+ 	bip->bli_formats = kmem_zalloc(count * sizeof(struct xfs_buf_log_format),
+ 				0);
+-	if (!bip->bli_formats)
+-		return -ENOMEM;
+-	return 0;
  }
  
+ STATIC void
+@@ -731,7 +728,6 @@ xfs_buf_item_init(
+ 	struct xfs_buf_log_item	*bip = bp->b_log_item;
+ 	int			chunks;
+ 	int			map_size;
+-	int			error;
+ 	int			i;
+ 
+ 	/*
+@@ -760,13 +756,7 @@ xfs_buf_item_init(
+ 	 * Discontiguous buffer support follows the layout of the underlying
+ 	 * buffer. This makes the implementation as simple as possible.
+ 	 */
+-	error = xfs_buf_item_get_format(bip, bp->b_map_count);
+-	ASSERT(error == 0);
+-	if (error) {	/* to stop gcc throwing set-but-unused warnings */
+-		kmem_cache_free(xfs_buf_item_zone, bip);
+-		return error;
+-	}
+-
++	xfs_buf_item_get_format(bip, bp->b_map_count);
+ 
+ 	for (i = 0; i < bip->bli_format_count; i++) {
+ 		chunks = DIV_ROUND_UP(BBTOB(bp->b_maps[i].bm_len),
 
