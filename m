@@ -2,102 +2,114 @@ Return-Path: <SRS0=S7Al=3E=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7F5CC32771
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 18:10:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AEABC32771
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 18:24:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C9C2A2187F
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 18:10:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A30B214AF
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 18:24:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728928AbgAOSKo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Jan 2020 13:10:44 -0500
-Received: from mr014msb.fastweb.it ([85.18.95.103]:60427 "EHLO
-        mr014msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728921AbgAOSKo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jan 2020 13:10:44 -0500
-Received-SPF: pass (mr014msb.fastweb.it: domain assyoma.it designates
- 93.63.55.57 as permitted sender) identity=mailfrom;
- receiver=mr014msb.fastweb.it; client-ip=93.63.55.57;
- envelope-from=g.danti@assyoma.it; helo=ceres.assyoma.it;
-X-RazorGate-Vade: gggruggvucftvghtrhhoucdtuddrgedugedrtdefgddutddvucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuhfetuffvhgfguedpucfqfgfvnecuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefvufggtgfgfffhohgjfhfkgigfsehtjehjtddtredvnecuhfhrohhmpefiihhonhgrthgrnhcuffgrnhhtihcuoehgrdgurghnthhisegrshhshihomhgrrdhitheqnecuffhomhgrihhnpegrshhshihomhgrrdhithenucfkphepleefrdeifedrheehrdehjeenucfrrghrrghmpehhvghloheptggvrhgvshdrrghsshihohhmrgdrihhtpdhinhgvthepleefrdeifedrheehrdehjedpmhgrihhlfhhrohhmpeeoghdruggrnhhtihesrghsshihohhmrgdrihhtqedprhgtphhtthhopeeouggrrhhrihgtkhdrfihonhhgsehorhgrtghlvgdrtghomhequcfqtfevrffvpehrfhgtkedvvdenuggrrhhrihgtkhdrfihonhhgsehorhgrtghlvgdrtghomhdprhgtphhtthhopeeolhhinhhugidqgihfshesvhhgvghrrdhkvghrnhgvlhdrohhrghequcfqtfevrffvpehrfhgtkedvvdenlhhinhhugidqgihfshesvhhgvghrrdhkvghrnhgvlhdrohhrghenucevlhhushhtvghrufhiiigvpedt
-X-RazorGate-Vade-Verdict: clean 0
-X-RazorGate-Vade-Classification: clean
-Received: from ceres.assyoma.it (93.63.55.57) by mr014msb.fastweb.it (5.8.208)
-        id 5E19B471004F8843; Wed, 15 Jan 2020 18:45:09 +0100
-Received: by ceres.assyoma.it (Postfix, from userid 48)
-        id 1C48E2664CD; Wed, 15 Jan 2020 18:45:09 +0100 (CET)
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: XFS reflink vs ThinLVM
-X-PHP-Originating-Script: 0:rcube.php
+        id S1729043AbgAOSYr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Jan 2020 13:24:47 -0500
+Received: from mga01.intel.com ([192.55.52.88]:40076 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729014AbgAOSYr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Jan 2020 13:24:47 -0500
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 15 Jan 2020 10:24:46 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.70,323,1574150400"; 
+   d="scan'208";a="248498688"
+Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
+  by fmsmga004.fm.intel.com with ESMTP; 15 Jan 2020 10:24:46 -0800
+Date:   Wed, 15 Jan 2020 10:24:46 -0800
+From:   Ira Weiny <ira.weiny@intel.com>
+To:     Jan Kara <jack@suse.cz>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-kernel@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [RFC PATCH V2 09/12] fs: Prevent mode change if file is mmap'ed
+Message-ID: <20200115182446.GD23311@iweiny-DESK2.sc.intel.com>
+References: <20200110192942.25021-1-ira.weiny@intel.com>
+ <20200110192942.25021-10-ira.weiny@intel.com>
+ <20200113222212.GO8247@magnolia>
+ <20200114004610.GD29860@iweiny-DESK2.sc.intel.com>
+ <20200114013004.GU8247@magnolia>
+ <20200114175353.GA7871@iweiny-DESK2.sc.intel.com>
+ <20200115113455.GA2595@quack2.suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 15 Jan 2020 18:45:09 +0100
-From:   Gionatan Danti <g.danti@assyoma.it>
-Cc:     linux-xfs@vger.kernel.org, g.danti@assyoma.it
-Organization: Assyoma s.r.l.
-In-Reply-To: <20200115163948.GF8257@magnolia>
-References: <20200113111025.liaargk3sf4wbngr@orion>
- <703a6c17-cc02-2c2c-31ce-6cd12a888743@assyoma.it>
- <20200113114356.midcgudwxpze3xfw@orion>
- <627cb07f-9433-ddfd-37d7-27efedd89727@assyoma.it>
- <39b50e2c-cb78-3bcd-0130-defa9c573b71@assyoma.it>
- <20200113165341.GE8247@magnolia>
- <f61995d7-9775-0035-8700-2b92c63bd23f@assyoma.it>
- <20200113180914.GI8247@magnolia>
- <8e96231f-8fc6-b178-9e83-84cbb9af6d2e@assyoma.it>
- <9d8e8614-9ae1-30ee-f2b4-1e45b90b27f8@assyoma.it>
- <20200115163948.GF8257@magnolia>
-Message-ID: <761fcf8f9d68ee221a35d15c1a7120c5@assyoma.it>
-X-Sender: g.danti@assyoma.it
-User-Agent: Roundcube Webmail/1.0.12
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200115113455.GA2595@quack2.suse.cz>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Il 15-01-2020 17:39 Darrick J. Wong ha scritto:
-> extszinherit > 0 disables delayed allocation, which means that (in your
-> case above) if you wrote 1G to a file (using the pagecache) you'd get
-> 8192x 128K calls to the allocator instead of making a single 1G
-> allocation during writeback.
+On Wed, Jan 15, 2020 at 12:34:55PM +0100, Jan Kara wrote:
+> On Tue 14-01-20 09:53:54, Ira Weiny wrote:
+> > On Mon, Jan 13, 2020 at 05:30:04PM -0800, Darrick J. Wong wrote:
+> > > > > > +		error = -EBUSY;
+> > > > > > +		goto out_unlock;
+> > > > > > +	}
+> > > > > > +
+> > > > > >  	error = filemap_write_and_wait(inode->i_mapping);
+> > > > > >  	if (error)
+> > > > > >  		goto out_unlock;
+> > > > > > diff --git a/include/linux/fs.h b/include/linux/fs.h
+> > > > > > index 631f11d6246e..6e7dc626b657 100644
+> > > > > > --- a/include/linux/fs.h
+> > > > > > +++ b/include/linux/fs.h
+> > > > > > @@ -740,6 +740,7 @@ struct inode {
+> > > > > >  #endif
+> > > > > >  
+> > > > > >  	void			*i_private; /* fs or device private pointer */
+> > > > > > +	atomic64_t               i_mapped;
+> > > > > 
+> > > > > I would have expected to find this in struct address_space since the
+> > > > > mapping count is a function of the address space, right?
+> > > > 
+> > > > I suppose but the only external call (above) would be passing an inode.  So to
+> > > > me it seemed better here.
+> > > 
+> > > But the number of memory mappings reflects the state of the address
+> > > space, not the inode.  Or maybe put another way, if I were an mm
+> > > developer I would not expect to look in struct inode for mm state.
+> > 
+> > This is a good point...
+> > 
+> > > 
+> > > static inline bool inode_has_mappings(struct inode *inode)
+> > > {
+> > > 	return atomic64_read(&inode->i_mapping->mapcount) > 0;
+> > > }
+> > > 
+> > > OTOH if there exist other mm developers who /do/ find that storing the
+> > > mmap count in struct inode is more logical, please let me know. :)
+> > 
+> > ...  My thinking was that the number of mappings does not matters to the mm
+> > system...  However, I'm starting to think you are correct...  ;-)
+> > 
+> > I've made a note of it and we will see what others think.
+> 
+> Well, more importantly mapping != inode. There can be multiple inodes
+> pointing to the same mapping (struct address_space) as is the case for
+> example for block devices. So this counter definitely belongs into struct
+> address_space.
 
-Thanks for the valuable information, I did not know that specific 
-interaction between extsize and delalloc.
+Ah Yes, great point.  Done.
 
-> If you have a lot of memory (or a high vmm
-> dirty ratio) then you want delalloc over extsize.  Most of the time you
-> want delalloc, frankly.
+Ira
 
-Let me briefly describe the expected workload: thinly provisioned 
-virtual image storage. The problem with "plain" sparse file (ie: without 
-extsize hint) is that, after some time, the underlying vdisk file will 
-be very fragmented: consecutive physical blocks will be assigned to very 
-different logical blocks, leading to sub-par performance when reading 
-back the whole file (eg: for backup purpose).
-
-I can easily simulate a worst-case scenario with fio, issuing random 
-write to a pre-created sparse file. While the random writes complete 
-very fast (because they are more-or-less sequentially written inside the 
-sparse file), reading back that file will have very low performance: 10 
-MB/s vs 600+ MB/s for a preallocated file.
-
-Using a 128k extsize brings sequential read to ~100 MB/s (which is 
-reasonable on that old hardware), and a 16M extsize is in the range of 
-500+ MB/s.
-
-Given that use case, do you suggest sticking with delalloc or setting an 
-appropriate extsize?
-
-Thanks.
-
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
