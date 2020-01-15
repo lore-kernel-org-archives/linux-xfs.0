@@ -4,46 +4,46 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B393C47409
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 02:38:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D8F4C33C9E
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 02:38:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 52F402467A
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 02:38:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15C2F24680
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 02:38:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gjPmbmyh"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="B8m47kZ4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729017AbgAOCir (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Jan 2020 21:38:47 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:38788 "EHLO
+        id S1729030AbgAOCiu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Jan 2020 21:38:50 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:38840 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728862AbgAOCiq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jan 2020 21:38:46 -0500
+        with ESMTP id S1728879AbgAOCit (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jan 2020 21:38:49 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=DylBmngUm5zkbhQxU3yncnTrsHanHBApne+CYo1JZUc=; b=gjPmbmyhS3zmvAS7pVCbBARoiu
-        575g/8UosIM8ZxYcU5V0YFcQDZG4gsmpRUtGZfvZLaQytJLxbdqCY+23sHa34cHoGfSN+Yb84GkCJ
-        yg9aiuRvUQ2ReX8j1DvVtk+h6kwee43+htmiMdSrRNbAUqb1dXD+qb3NG8SJ16ssg2Qq26V277Y64
-        BlylH2J56oQiOTs+g5c8VW9vkAd8y6Kju7P5aWxKwh/2L4MF1NxFEDRVzJ3mYKzkyoLqjoLw7QGJc
-        6qX7Nh7/iMBu6FAxDUgFciX6vmT9QomJT8Bej9Dl3SycDkWhScqpuGxf8t09MQYEmJBS7eJiK94Ix
-        AeIJl2nA==;
+        bh=t2MsvrgFyKMklh8a9GSQdPemnFwCPtSVERkAiF6+ogA=; b=B8m47kZ4X+h0DMHQn1K+2rOHkY
+        hwLKteFLytNaxEKnzlCSBDAJz0fJXaVd/spdpfgD0HTWbcfet0LZg+hZP4G1sqBZaNQwr4R8vvEzZ
+        o3Dv6Ei3shJPPTdAqLbFiXyNvlj5/VrpfNTgt4xD0uBSu63frPzORfwhbgpYRVDfuvGTNCORNmu63
+        Q6hT/xWyrtBntiw54OYBsTjk2J7buSZ/I6G6vvtTzXrbzW1rCypYEonPrY9wKI4I45WI1TMi8rp2W
+        WLz8zHyQwCFyXamXHDqJ/NSvq/OmfNQiqOPKz2C2S0GDsUQW+cyQO3VQe+cPw/2uYQnCOA07g5pVL
+        EiuVVrOg==;
 Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1irYZy-0008B7-9Y; Wed, 15 Jan 2020 02:38:46 +0000
+        id 1irYZy-0008AY-2O; Wed, 15 Jan 2020 02:38:46 +0000
 From:   Matthew Wilcox <willy@infradead.org>
 To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-mm@kvack.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         Jeff Layton <jlayton@kernel.org>,
         Christoph Hellwig <hch@infradead.org>, Chris Mason <clm@fb.com>
-Subject: [PATCH v2 9/9] mm: Unify all add_to_page_cache variants
-Date:   Tue, 14 Jan 2020 18:38:43 -0800
-Message-Id: <20200115023843.31325-10-willy@infradead.org>
+Subject: [PATCH v2 3/9] XArray: Add xarray_for_each_range
+Date:   Tue, 14 Jan 2020 18:38:37 -0800
+Message-Id: <20200115023843.31325-4-willy@infradead.org>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20200115023843.31325-1-willy@infradead.org>
 References: <20200115023843.31325-1-willy@infradead.org>
@@ -56,148 +56,84 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
-We already have various bits of add_to_page_cache() executed conditionally
-on !PageHuge(page); add the add_to_page_cache_lru() pieces as some
-more code which isn't executed for huge pages.  This lets us remove
-the old add_to_page_cache() and rename __add_to_page_cache_locked() to
-add_to_page_cache().  Include a compatibility define so we don't have
-to change all 20+ callers of add_to_page_cache_lru().
+This function supports iterating over a range of an array.  Also add
+documentation links for xarray_for_each_start().
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 ---
- include/linux/pagemap.h |  5 ++--
- mm/filemap.c            | 65 ++++++++++++-----------------------------
- 2 files changed, 21 insertions(+), 49 deletions(-)
+ Documentation/core-api/xarray.rst | 10 ++++++----
+ include/linux/xarray.h            | 30 ++++++++++++++++++++++++++++++
+ 2 files changed, 36 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-index 75075065dd0b..637770fa283f 100644
---- a/include/linux/pagemap.h
-+++ b/include/linux/pagemap.h
-@@ -606,14 +606,15 @@ static inline int fault_in_pages_readable(const char __user *uaddr, int size)
+diff --git a/Documentation/core-api/xarray.rst b/Documentation/core-api/xarray.rst
+index fcedc5349ace..95a732b5c848 100644
+--- a/Documentation/core-api/xarray.rst
++++ b/Documentation/core-api/xarray.rst
+@@ -94,10 +94,10 @@ calling xa_clear_mark().  You can ask whether any entry in the
+ XArray has a particular mark set by calling xa_marked().
  
- int add_to_page_cache(struct page *page, struct address_space *mapping,
- 				pgoff_t index, gfp_t gfp);
--int add_to_page_cache_lru(struct page *page, struct address_space *mapping,
--				pgoff_t index, gfp_t gfp_mask);
- extern void delete_from_page_cache(struct page *page);
- extern void __delete_from_page_cache(struct page *page, void *shadow);
- int replace_page_cache_page(struct page *old, struct page *new, gfp_t gfp_mask);
- void delete_from_page_cache_batch(struct address_space *mapping,
- 				  struct pagevec *pvec);
+ You can copy entries out of the XArray into a plain array by calling
+-xa_extract().  Or you can iterate over the present entries in
+-the XArray by calling xa_for_each().  You may prefer to use
+-xa_find() or xa_find_after() to move to the next present
+-entry in the XArray.
++xa_extract().  Or you can iterate over the present entries in the XArray
++by calling xa_for_each(), xa_for_each_start() or xa_for_each_range().
++You may prefer to use xa_find() or xa_find_after() to move to the next
++present entry in the XArray.
  
-+#define add_to_page_cache_lru(page, mapping, index, gfp) \
-+	add_to_page_cache(page, mapping, index, gfp)
+ Calling xa_store_range() stores the same entry in a range
+ of indices.  If you do this, some of the other operations will behave
+@@ -180,6 +180,8 @@ No lock needed:
+ Takes RCU read lock:
+  * xa_load()
+  * xa_for_each()
++ * xa_for_each_start()
++ * xa_for_each_range()
+  * xa_find()
+  * xa_find_after()
+  * xa_extract()
+diff --git a/include/linux/xarray.h b/include/linux/xarray.h
+index 86eecbd98e84..a06cb555fe23 100644
+--- a/include/linux/xarray.h
++++ b/include/linux/xarray.h
+@@ -445,6 +445,36 @@ static inline bool xa_marked(const struct xarray *xa, xa_mark_t mark)
+ 	     entry;							\
+ 	     entry = xa_find_after(xa, &index, ULONG_MAX, XA_PRESENT))
+ 
++/**
++ * xa_for_each_range() - Iterate over a portion of an XArray.
++ * @xa: XArray.
++ * @index: Index of @entry.
++ * @entry: Entry retrieved from array.
++ * @start: First index to retrieve from array.
++ * @last: Last index to retrieve from array.
++ *
++ * During the iteration, @entry will have the value of the entry stored
++ * in @xa at @index.  You may modify @index during the iteration if you
++ * want to skip or reprocess indices.  It is safe to modify the array
++ * during the iteration.  At the end of the iteration, @entry will be set
++ * to NULL and @index will have a value less than or equal to max.
++ *
++ * xa_for_each_range() is O(n.log(n)) while xas_for_each() is O(n).  You have
++ * to handle your own locking with xas_for_each(), and if you have to unlock
++ * after each iteration, it will also end up being O(n.log(n)).
++ * xa_for_each_range() will spin if it hits a retry entry; if you intend to
++ * see retry entries, you should use the xas_for_each() iterator instead.
++ * The xas_for_each() iterator will expand into more inline code than
++ * xa_for_each_range().
++ *
++ * Context: Any context.  Takes and releases the RCU lock.
++ */
++#define xa_for_each_range(xa, index, entry, start, last)		\
++	for (index = start,						\
++	     entry = xa_find(xa, &index, last, XA_PRESENT);		\
++	     entry;							\
++	     entry = xa_find_after(xa, &index, last, XA_PRESENT))
 +
- /*
-  * Only call this from a ->readahead implementation.
-  */
-diff --git a/mm/filemap.c b/mm/filemap.c
-index fb87f5fa75e6..83f45f31a00a 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -847,19 +847,18 @@ int replace_page_cache_page(struct page *old, struct page *new, gfp_t gfp_mask)
- }
- EXPORT_SYMBOL_GPL(replace_page_cache_page);
- 
--static int __add_to_page_cache_locked(struct page *page,
--				      struct address_space *mapping,
--				      pgoff_t offset, gfp_t gfp_mask,
--				      void **shadowp)
-+int add_to_page_cache(struct page *page, struct address_space *mapping,
-+		pgoff_t offset, gfp_t gfp_mask)
- {
- 	XA_STATE(xas, &mapping->i_pages, offset);
- 	int huge = PageHuge(page);
- 	struct mem_cgroup *memcg;
- 	int error;
--	void *old;
-+	void *old, *shadow = NULL;
- 
- 	VM_BUG_ON_PAGE(!PageLocked(page), page);
- 	VM_BUG_ON_PAGE(PageSwapBacked(page), page);
-+	__SetPageLocked(page);
- 	mapping_set_update(&xas, mapping);
- 
- 	if (!huge) {
-@@ -884,8 +883,7 @@ static int __add_to_page_cache_locked(struct page *page,
- 
- 		if (xa_is_value(old)) {
- 			mapping->nrexceptional--;
--			if (shadowp)
--				*shadowp = old;
-+			shadow = old;
- 		}
- 		mapping->nrpages++;
- 
-@@ -899,45 +897,8 @@ static int __add_to_page_cache_locked(struct page *page,
- 	if (xas_error(&xas))
- 		goto error;
- 
--	if (!huge)
-+	if (!huge) {
- 		mem_cgroup_commit_charge(page, memcg, false, false);
--	trace_mm_filemap_add_to_page_cache(page);
--	return 0;
--error:
--	page->mapping = NULL;
--	/* Leave page->index set: truncation relies upon it */
--	if (!huge)
--		mem_cgroup_cancel_charge(page, memcg, false);
--	put_page(page);
--	return xas_error(&xas);
--}
--ALLOW_ERROR_INJECTION(__add_to_page_cache_locked, ERRNO);
--
--int add_to_page_cache(struct page *page, struct address_space *mapping,
--		pgoff_t offset, gfp_t gfp_mask)
--{
--	int err;
--
--	__SetPageLocked(page);
--	err = __add_to_page_cache_locked(page, mapping, offset,
--					  gfp_mask, NULL);
--	if (unlikely(err))
--		__ClearPageLocked(page);
--	return err;
--}
--
--int add_to_page_cache_lru(struct page *page, struct address_space *mapping,
--				pgoff_t offset, gfp_t gfp_mask)
--{
--	void *shadow = NULL;
--	int ret;
--
--	__SetPageLocked(page);
--	ret = __add_to_page_cache_locked(page, mapping, offset,
--					 gfp_mask, &shadow);
--	if (unlikely(ret))
--		__ClearPageLocked(page);
--	else {
- 		/*
- 		 * The page might have been evicted from cache only
- 		 * recently, in which case it should be activated like
-@@ -951,9 +912,19 @@ int add_to_page_cache_lru(struct page *page, struct address_space *mapping,
- 			workingset_refault(page, shadow);
- 		lru_cache_add(page);
- 	}
--	return ret;
-+	trace_mm_filemap_add_to_page_cache(page);
-+	return 0;
-+error:
-+	page->mapping = NULL;
-+	/* Leave page->index set: truncation relies upon it */
-+	if (!huge)
-+		mem_cgroup_cancel_charge(page, memcg, false);
-+	put_page(page);
-+	__ClearPageLocked(page);
-+	return xas_error(&xas);
- }
--EXPORT_SYMBOL_GPL(add_to_page_cache_lru);
-+ALLOW_ERROR_INJECTION(add_to_page_cache, ERRNO);
-+EXPORT_SYMBOL_GPL(add_to_page_cache);
- 
- #ifdef CONFIG_NUMA
- struct page *__page_cache_alloc(gfp_t gfp)
+ /**
+  * xa_for_each() - Iterate over present entries in an XArray.
+  * @xa: XArray.
 -- 
 2.24.1
 
