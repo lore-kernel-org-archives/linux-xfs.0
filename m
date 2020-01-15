@@ -2,84 +2,120 @@ Return-Path: <SRS0=S7Al=3E=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84185C33CB1
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 13:46:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D4EFC33CB1
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 13:50:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5708D222C3
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 13:46:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D6C7224656
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 13:50:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mopz2QEO"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CE5Gv8Oj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726085AbgAONq5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Jan 2020 08:46:57 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:36126 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726071AbgAONq5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jan 2020 08:46:57 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=2jtXTDke+BrXIybk6dSMNeMSL+k8ECu2JOk9wYP0qFI=; b=mopz2QEOPGy01VvNH/647UhCC
-        9PhpUQqT9C1LUNfJngAmejVOBY1m8MF46Y9HxtKYu59EnCV0z/D4GkFN5n7Bp3+/oUq6ySGSI4/Hx
-        Gy5vFRjrQrMoopf0o3psK+YiN2ypYl3GuMfFFsoQKPW3l6NkLIbgzbV52NzCvnCnfSBimX+79CCcN
-        RcEdPfJPr+vyRmxzAgdo8bcudFG0k+OLt9jvFUjCK3ITHeG0opm1A6Sly1KW1G5tZbfivUOmzB38H
-        VilBMkfto3VMeK00P6ahAz7x6memvsdm+7basheR3sp8Lj/BBJSnt6WmKQU96wBDpudW11ZUhkZWg
-        sWYuOzziA==;
-Received: from clnet-p19-102.ikbnet.co.at ([83.175.77.102] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1irj0b-0005ce-33
-        for linux-xfs@vger.kernel.org; Wed, 15 Jan 2020 13:46:57 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: fix IOCB_NOWAIT handling in xfs_file_dio_aio_read
-Date:   Wed, 15 Jan 2020 14:46:53 +0100
-Message-Id: <20200115134653.433559-1-hch@lst.de>
-X-Mailer: git-send-email 2.24.1
+        id S1728988AbgAONuV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Jan 2020 08:50:21 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:26580 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728978AbgAONuV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jan 2020 08:50:21 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1579096220;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=w+swK9osAIFZi3cI9plfEPgc0HcD0yrb1cBEuZ3PWuI=;
+        b=CE5Gv8OjqLpwR9x9G/v76Xqsw0JqrzhccwgY88x6gdAN0WaRJQ1VdgeGQcXRwPWACULl2v
+        oNtIL+FQwUKOArNC8LmAiGj4u4p8kQxT43j+P6eBP7asPoRTuO4vC+s1Ko0YZIUIE2nBNd
+        pVVMWJeBj15pTcbdfH0lU2r3IJJoQjk=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-15-GOHqpJ9cNSinEYjPiomTzw-1; Wed, 15 Jan 2020 08:50:16 -0500
+X-MC-Unique: GOHqpJ9cNSinEYjPiomTzw-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 837421005502;
+        Wed, 15 Jan 2020 13:50:14 +0000 (UTC)
+Received: from warthog.procyon.org.uk (ovpn-120-52.rdu2.redhat.com [10.10.120.52])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 142CC19C5B;
+        Wed, 15 Jan 2020 13:50:11 +0000 (UTC)
+Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
+        Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
+        Kingdom.
+        Registered in England and Wales under Company Registration No. 3798903
+From:   David Howells <dhowells@redhat.com>
+In-Reply-To: <20200114224917.GA165687@mit.edu>
+References: <20200114224917.GA165687@mit.edu> <4467.1579020509@warthog.procyon.org.uk>
+To:     "Theodore Y. Ts'o" <tytso@mit.edu>
+Cc:     dhowells@redhat.com, linux-fsdevel@vger.kernel.org,
+        viro@zeniv.linux.org.uk, hch@lst.de, adilger.kernel@dilger.ca,
+        darrick.wong@oracle.com, clm@fb.com, josef@toxicpanda.com,
+        dsterba@suse.com, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: Problems with determining data presence by examining extents?
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <22055.1579096211.1@warthog.procyon.org.uk>
+Date:   Wed, 15 Jan 2020 13:50:11 +0000
+Message-ID: <22056.1579096211@warthog.procyon.org.uk>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Direct I/O reads can also be used with RWF_NOWAIT & co.  Fix the inode
-locking in xfs_file_dio_aio_read to take IOCB_NOWAIT into account.
+Theodore Y. Ts'o <tytso@mit.edu> wrote:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
+> but I'm not sure we would want to make any guarantees with respect to (b).
 
-Resending standalone to get a little more attention.
+Um.  That would potentially make disconnected operation problematic.  Now,
+it's unlikely that I'll want to store a 256KiB block of zeros, but not
+impossible.
 
- fs/xfs/xfs_file.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+> I suspect I understand why you want this; I've fielded some requests
+> for people wanting to do something very like this at $WORK, for what I
+> assume to be for the same reason you're seeking to do this; to create
+> do incremental caching of files and letting the file system track what
+> has and hasn't been cached yet.
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index c93250108952..b8a4a3f29b36 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -187,7 +187,12 @@ xfs_file_dio_aio_read(
- 
- 	file_accessed(iocb->ki_filp);
- 
--	xfs_ilock(ip, XFS_IOLOCK_SHARED);
-+	if (iocb->ki_flags & IOCB_NOWAIT) {
-+		if (!xfs_ilock_nowait(ip, XFS_IOLOCK_SHARED))
-+			return -EAGAIN;
-+	} else {
-+		xfs_ilock(ip, XFS_IOLOCK_SHARED);
-+	}
- 	ret = iomap_dio_rw(iocb, to, &xfs_read_iomap_ops, NULL,
- 			is_sync_kiocb(iocb));
- 	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
--- 
-2.24.1
+Exactly so.  If I can't tap in to the filesystem's own map of what data is
+present in a file, then I have to do it myself in parallel.  Keeping my own
+list or map has a number of issues:
+
+ (1) It's redundant.  I have to maintain a second copy of what the filesystem
+     already maintains.  This uses extra space.
+
+ (2) My map may get out of step with the filesystem after a crash.  The
+     filesystem has tools to deal with this in its own structures.
+
+ (3) If the file is very large and sparse, then keeping a bit-per-block map in
+     a single xattr may not suffice or may become unmanageable.  There's a
+     limit of 64k, which for bit-per-256k limits the maximum mappable size to
+     1TiB (I could use multiple xattrs, but some filesystems may have total
+     xattr limits) and whatever the size, I need a single buffer big enough to
+     hold it.
+
+     I could use a second file as a metadata cache - but that has worse
+     coherency properties.  (As I understand it, setxattr is synchronous and
+     journalled.)
+
+> If we were going to add such a facility, what we could perhaps do is
+> to define a new flag indicating that a particular file should have no
+> extent mapping optimization applied, such that FIEMAP would return a
+> mapping if and only if userspace had written to a particular block, or
+> had requested that a block be preallocated using fallocate().  The
+> flag could only be set on a zero-length file, and this might disable
+> certain advanced file system features, such as reflink, at the file
+> system's discretion; and there might be unspecified performance
+> impacts if this flag is set on a file.
+
+That would be fine for cachefiles.
+
+Also, I don't need to know *where* the data is, only that the first byte of my
+block exists - if a DIO read returns short when it reaches a hole.
+
+David
 
