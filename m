@@ -2,236 +2,160 @@ Return-Path: <SRS0=S7Al=3E=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BAF2C32771
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 03:54:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48C44C33CB1
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 06:23:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5A6FC24679
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 03:54:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1167E2467E
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 06:23:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=gmx.net header.i=@gmx.net header.b="VFRDFhJc"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="m3c5MLG4";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="KdmrF0bz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729052AbgAODyw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Jan 2020 22:54:52 -0500
-Received: from mout.gmx.net ([212.227.17.20]:49063 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728884AbgAODyw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 14 Jan 2020 22:54:52 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
-        s=badeba3b8450; t=1579060470;
-        bh=oey+bGSDZcVc39amlD39i3yaZnQJybVfefztiUwy6VA=;
-        h=X-UI-Sender-Class:Subject:To:Cc:References:From:Date:In-Reply-To;
-        b=VFRDFhJcuQoc8OrCcX1QvqTq65LqESpPeMaJFYnq2UwiyY7hnPN06Xhyzmj4qnqUQ
-         qLdlobMtryqxfd2aHWLNaCZ+FBvOkJu4OUzNWJDkXNhg0simH2efPxQkaeMe8WaeRS
-         xlBqIKCBu5IGqq6otjeDoxsoWM3X6Cea3pzGxAeI=
-X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
-Received: from [0.0.0.0] ([149.28.201.231]) by mail.gmx.com (mrgmx105
- [212.227.17.174]) with ESMTPSA (Nemesis) id 1MtfJX-1jeiba0coR-00v6Fp; Wed, 15
- Jan 2020 04:54:29 +0100
-Subject: Re: Problems with determining data presence by examining extents?
-To:     David Howells <dhowells@redhat.com>, linux-fsdevel@vger.kernel.org,
-        viro@zeniv.linux.org.uk, hch@lst.de, tytso@mit.edu,
-        adilger.kernel@dilger.ca, darrick.wong@oracle.com, clm@fb.com,
-        josef@toxicpanda.com, dsterba@suse.com
-Cc:     linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <4467.1579020509@warthog.procyon.org.uk>
-From:   Qu Wenruo <quwenruo.btrfs@gmx.com>
-Autocrypt: addr=quwenruo.btrfs@gmx.com; prefer-encrypt=mutual; keydata=
- mQENBFnVga8BCACyhFP3ExcTIuB73jDIBA/vSoYcTyysFQzPvez64TUSCv1SgXEByR7fju3o
- 8RfaWuHCnkkea5luuTZMqfgTXrun2dqNVYDNOV6RIVrc4YuG20yhC1epnV55fJCThqij0MRL
- 1NxPKXIlEdHvN0Kov3CtWA+R1iNN0RCeVun7rmOrrjBK573aWC5sgP7YsBOLK79H3tmUtz6b
- 9Imuj0ZyEsa76Xg9PX9Hn2myKj1hfWGS+5og9Va4hrwQC8ipjXik6NKR5GDV+hOZkktU81G5
- gkQtGB9jOAYRs86QG/b7PtIlbd3+pppT0gaS+wvwMs8cuNG+Pu6KO1oC4jgdseFLu7NpABEB
- AAG0IlF1IFdlbnJ1byA8cXV3ZW5ydW8uYnRyZnNAZ214LmNvbT6JAU4EEwEIADgCGwMFCwkI
- BwIGFQgJCgsCBBYCAwECHgECF4AWIQQt33LlpaVbqJ2qQuHCPZHzoSX+qAUCXZw1oQAKCRDC
- PZHzoSX+qCY6CACd+mWu3okGwRKXju6bou+7VkqCaHTdyXwWFTsr+/0ly5nUdDtT3yEVggPJ
- 3VP70wjlrxUjNjFb6iIvGYxiPOrop1NGwGYvQktgRhaIhALG6rPoSSAhGNjwGVRw0km0PlIN
- D29BTj/lYEk+jVM1YL0QLgAE1AI3krihg/lp/fQT53wLhR8YZIF8ETXbClQG1vJ0cllPuEEv
- efKxRyiTSjB+PsozSvYWhXsPeJ+KKjFen7ebE5reQTPFzSHctCdPnoR/4jSPlnTlnEvLeqcD
- ZTuKfQe1gWrPeevQzgCtgBF/WjIOeJs41klnYzC3DymuQlmFubss0jShLOW8eSOOWhLRuQEN
- BFnVga8BCACqU+th4Esy/c8BnvliFAjAfpzhI1wH76FD1MJPmAhA3DnX5JDORcgaCbPEwhLj
- 1xlwTgpeT+QfDmGJ5B5BlrrQFZVE1fChEjiJvyiSAO4yQPkrPVYTI7Xj34FnscPj/IrRUUka
- 68MlHxPtFnAHr25VIuOS41lmYKYNwPNLRz9Ik6DmeTG3WJO2BQRNvXA0pXrJH1fNGSsRb+pK
- EKHKtL1803x71zQxCwLh+zLP1iXHVM5j8gX9zqupigQR/Cel2XPS44zWcDW8r7B0q1eW4Jrv
- 0x19p4P923voqn+joIAostyNTUjCeSrUdKth9jcdlam9X2DziA/DHDFfS5eq4fEvABEBAAGJ
- ATwEGAEIACYCGwwWIQQt33LlpaVbqJ2qQuHCPZHzoSX+qAUCXZw1rgUJCWpOfwAKCRDCPZHz
- oSX+qFcEB/95cs8cM1OQdE/GgOfCGxwgckMeWyzOR7bkAWW0lDVp2hpgJuxBW/gyfmtBnUai
- fnggx3EE3ev8HTysZU9q0h+TJwwJKGv6sUc8qcTGFDtavnnl+r6xDUY7A6GvXEsSoCEEynby
- 72byGeSovfq/4AWGNPBG1L61Exl+gbqfvbECP3ziXnob009+z9I4qXodHSYINfAkZkA523JG
- ap12LndJeLk3gfWNZfXEWyGnuciRGbqESkhIRav8ootsCIops/SqXm0/k+Kcl4gGUO/iD/T5
- oagaDh0QtOd8RWSMwLxwn8uIhpH84Q4X1LadJ5NCgGa6xPP5qqRuiC+9gZqbq4Nj
-Message-ID: <00fc7691-77d5-5947-5493-5c97f262da81@gmx.com>
-Date:   Wed, 15 Jan 2020 11:54:20 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.3.1
+        id S1726473AbgAOGXX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Jan 2020 01:23:23 -0500
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:10159 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726100AbgAOGXX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jan 2020 01:23:23 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1579069403; x=1610605403;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=sBz5yEynQN18sd3/+XWiGtBHqrV9RWd5M+5NMRde7aQ=;
+  b=m3c5MLG4XOJfs1j7jHz1Brdzgw54YuoSA99w8/PCDQY2Ul0r6w/cfOyd
+   0ynBH7VLCe824Z/uw/g5Oj919t82H4qM7HgfNOntpXoA7CpN/YnWk5Ia+
+   tgvjdko25et9WpLqjabD5or5CJhThqw9NUdOV1nz+R/mZbKYWOaAW/qG+
+   XdDCZ/90OE+1x99nilthGGdPKlDQXSHEEJvgQrJdLhU1mUh/MsLfUzz6W
+   yhjjUrnnBVtq9I3MPcMrZqM5dcNYOMoEeq00rLwAjjRwRXQ5BdURfuvw5
+   BOBvd3pLivD838tzFuSSW/ZU3KccpIKfQQZ3llkS4zCDY1IepT8qWTafb
+   Q==;
+IronPort-SDR: DGmXEaYf4p71WlXzu8rl3JiLxVtqmrWsyTa35Vut3X37Ohodte4KpOydOIEkpq4cf6UjGE6xxm
+ OW+JiT6KgVlsi/nJRlyQmp9OXxV8JP0jVbwywT1pSJ4KK5gRxhmCDDzFO6We7/0yjXk8ANhFpw
+ z6Z4pVQfWH4KrDnhENrBfpPIBmfwW1ZJW4mjnhRpbfJgJg7z1kNU0G5WVO8+1KzE7ECUEjb7Pt
+ hd2df+DyoV5/b2KKEW0GvP37O5gskaSvuoS6nkRyE4rVSZ1QteR5XFvTRsRhWCk7tNX34+B0S6
+ glY=
+X-IronPort-AV: E=Sophos;i="5.70,321,1574092800"; 
+   d="scan'208";a="128189428"
+Received: from mail-mw2nam10lp2104.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.104])
+  by ob1.hgst.iphmx.com with ESMTP; 15 Jan 2020 14:23:22 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=T5dxsWU9IFeipfT5r8D4UWQYXxQNqTntD/IE1ZUUkd+2Qc2KJZXBb0ydAMT6qY1J19YF7w2WZkPep/GVyKRZwlHUo7LV4c4Bo5duV5JUCdKteLNlEQ+pG5gr8/c/DtvmJQthKd4rIuXyDrhMQ+UAO5oH1p9hDiEuIGtJNUTwpDyLRT4J5dcr3JFt8EKBA34rRQeHoia7+Bvv6lIW+IEOT9Fija7D3s5ZHphv5P2l5IG+3SfTju8gLGq7jxv7HxqiIjB0u6XqPL97wPhfRAM+MJqmKAaUqzbtXgWjz65CWqfD6yIq45FykvxUpqpdY6mXCxxCCbXeTPXaZO2E5ayTyw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=IWE/mkm7IsUVt0WVYaEldwnjKiX+h8hPPDaLiRrFU38=;
+ b=fEWt9lx/ShjLMP671Y5LAfZ4u2AmO+Zvt2+rpSZ+lmoP+Alj4g2o0TX7gmmrNsB+RhM36faopx2ftUYRaUJEgCAoQmWz4Uzvzda6GLVSx3Hqx/AuSvkMUV3HXkspxXyda4nyc5WwiPagi1sukTMlMgR9sNxNN2ex8Zm8m4mGkTxR2LwfZqmE4s8kICK24G4NWFN5CBklwNtOhE8BWxw6EPTN2gQIlu2frd/xQQYTnqU+C6ZqiwnSwewpqxzdXtwJR32K3Q/cTlDFRUEXoSZHV6E9xyLXt2dEIv1Var6np+K/JYNveXAekEAXftUVc1YDHy3wYkRf1fH4Q3bYsgjOzA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=IWE/mkm7IsUVt0WVYaEldwnjKiX+h8hPPDaLiRrFU38=;
+ b=KdmrF0bzG7/DIvt2Lngj1dK+Vrfp2Y4oFqPLOiqvB55h8czfTK+ZvitO2Qfcu5jgbMWJ1imrlgBgmXSnv2HG4IcFgodxgKb8HI2OdYev56MM/8V98bLhve0W7jU1mRSNqoS51Wr0ajvNo++UwiQGay5ZX+ARA/Dw/gyxsG9SOL8=
+Received: from BYAPR04MB5816.namprd04.prod.outlook.com (20.179.59.16) by
+ BYAPR04MB4261.namprd04.prod.outlook.com (20.176.251.12) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2623.9; Wed, 15 Jan 2020 06:23:21 +0000
+Received: from BYAPR04MB5816.namprd04.prod.outlook.com
+ ([fe80::cd8e:d1de:e661:a61]) by BYAPR04MB5816.namprd04.prod.outlook.com
+ ([fe80::cd8e:d1de:e661:a61%5]) with mapi id 15.20.2644.015; Wed, 15 Jan 2020
+ 06:23:21 +0000
+From:   Damien Le Moal <Damien.LeMoal@wdc.com>
+To:     Randy Dunlap <rdunlap@infradead.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+CC:     Johannes Thumshirn <jth@kernel.org>,
+        Naohiro Aota <Naohiro.Aota@wdc.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v6 2/2] zonefs: Add documentation
+Thread-Topic: [PATCH v6 2/2] zonefs: Add documentation
+Thread-Index: AQHVxf7Snqi2k881OEaR6BUy1rYblA==
+Date:   Wed, 15 Jan 2020 06:23:21 +0000
+Message-ID: <BYAPR04MB5816BB7B5946E4E8643F9DC3E7370@BYAPR04MB5816.namprd04.prod.outlook.com>
+References: <20200108083649.450834-1-damien.lemoal@wdc.com>
+ <20200108083649.450834-3-damien.lemoal@wdc.com>
+ <c9f37661-03a0-22e3-4b99-b97c47917b5d@infradead.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Damien.LeMoal@wdc.com; 
+x-originating-ip: [129.253.180.115]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: b5750383-3455-400d-8d64-08d799836b22
+x-ms-traffictypediagnostic: BYAPR04MB4261:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <BYAPR04MB4261246BAF8E83DF2DE0D2B9E7370@BYAPR04MB4261.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:3631;
+x-forefront-prvs: 02830F0362
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(346002)(136003)(39860400002)(376002)(366004)(396003)(189003)(199004)(64756008)(2906002)(54906003)(71200400001)(66476007)(76116006)(66556008)(110136005)(186003)(66946007)(66446008)(26005)(316002)(4326008)(91956017)(478600001)(9686003)(8676002)(33656002)(86362001)(81166006)(81156014)(4744005)(6506007)(8936002)(7696005)(53546011)(52536014)(55016002)(5660300002);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR04MB4261;H:BYAPR04MB5816.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: DV6clk8ANvLBaYd2uOWu83DX5+SV1gq4hzDFLuf/AIoV8a6Vn4AcbALaVCuYtV9Su4Rf46i23I0UuEei2IPrLox2U6l2enav/EpiBwazbYpMD0X+z6y0TMLKvWqewqaSxpQSxF9ObNt5QGT5vhVQOLW1Xx6FAivQsxFtOwQUdNFHPzvSU72SDVEG7Q4GVwzps/gh3N4A10o2i/AgBO9fmINd8F4xnwPTZ5Uc0abqctVyFP4rDPdGbZTTDwLYCJGWULss0hwFfla1OMeI7/I29U2a4d0fKvPDgNxWO8FBlS6ty9TSYJ65J0cqRIb30/MPsA7S8PfbtIyJxZkRJBv5DNQ2NMGP8p/zsv3SPt4jN5Du8CWsGj0JVeALKvCgSYott7Mco96vYibab2q6fiOIJo6vuCyvAh19vlQThKA+ra26ndGsYbYNuhHM6aTsu/Jd
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-In-Reply-To: <4467.1579020509@warthog.procyon.org.uk>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="kyNX94pNiUDmTOWGi0FWq7UFShlh1konR"
-X-Provags-ID: V03:K1:YanSqm2m59hj7+6ra6X2fxbXpjUZaC3KWEnNHzka+qrSJSma/IU
- TQs3ptC0Vc9ePSm56fm7+8pn7S/hdc8UOOiOxNAXwk4DGJQUJpk0pRuuix7HnxNnup72wRU
- EgblHFYF7BDyZGtPoabwgmQDWxT3r6O/QS++2f/vLB2QGr83nIMEEYKF5ZCd37Dv7vSud/P
- rmC7giU3Qbr6haav5i3qg==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:lApdwue0YmM=:EFi2hCpnRZJ2rpKSD/k3sO
- Lhydjj+Wroj/6Manswk++sZuQPEh4+erKeoV/t+UZpfma5EdP6opOuU8AOnzrQ99YR4jBgpfF
- iaVW87V7UakMs6DaFRykGC2A7Eat+fm/Lb9KhMN9s8ibQ8VQssx0615rYVI6GsqwpXLAZhZke
- mb8t+OFGtXDAgN1oX7WJtTvPgb15RibJCwGsSBfxr0jIEDm5rEaxp2fbEdwaNtWVBRpNBwyGH
- EZuz7/ExYkTmp2PJbuGG9UJoCpVSy6X3oZ+R9hfTZZSc658mKwDZWbOfMIbuMeWTJ9mu7uAmF
- dN2CgPrJhiGw9QC0+vHE+l2n4n12lHk57jV8t7zqHdi1t8TonF4JWCevZ34IBs/32YIc9y3uh
- SlF2LPNT6qBMxVP8+z9uV9Mgs7wf1ZbH+ViRN0MogNRgY/B79AegRwfDUodjOpyEiTRmKuO3E
- r18YUso/A2B0mi5g7WXYEojmeGjKn3CVTJBPYZfhO/7hxMBumRspzuRJ5g7zMk5lZRIRjxx03
- nk+tvY2ucFmXx9vfR+ntG/Z/FAzBFlJJaW6eGzMC2C6Lo07b0mVdxjrCqLJVvSwATK9mNnu84
- XeF/Vj5LToQVsHc1CBDvpdon41+b+7QgoLVXwiL8LaDErx+Wd/p/nSSAo9aYOJdxq5vkwYKK1
- JrqyfDyyX4spvZcLUB79wtIO662jotaE2Xgw0VFwbVT+ZvrmRFMCPa98PA75LCWzQdlifQ94A
- RNPmJGHrftCyBL+a5jZ3raSc9iCDR275WNyNb1+mAHOhOES5A4IvKPUz5dFaL6CgTenkKR5zu
- 2UcGgVIDYmxBzSPiKu9oHpp8atGBuOIftI6Mt9b1SN9TPZEGJdStpB3QyxS+iqPxTcrd1hi5a
- +bBvQG9h/H352okWhAkjR7f806+o7KkM2rae1SF/ELWQrw2aprJWFfUH5fRff00W0EKBZ8BYL
- n63NtvbDh7kw+MYCqaWs2HNCk5caqbTRqJ9PQrQzns6FagsoUtGiFdFsMYKKDN7x522A9mLmV
- pSoAOdyD2kDic/OS4CSccUkdUYQV7elBFd3/l1uwvPoRMv/XZwGHBrh7XNzqF/hJnKTHemivo
- BD/MggCw/KgZ/CpHs5f4RldoH40j6hLXe4sGEbicsFIT8WBS+agQ0/DfkTaRAppt2zX+o3R2r
- cfng8k5JlM+Xm9olkUrGfDWqoZg+5h4nbJDTmWZkPE0LgKdeU1n7qEJo1qblLn8IoWQCsolrA
- 6dceJcoMv1OMzEquRz9wmrgr1lstGIv/RpF4pNvVXdFXqKxIRNaqcwen9mvc=
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: b5750383-3455-400d-8d64-08d799836b22
+X-MS-Exchange-CrossTenant-originalarrivaltime: 15 Jan 2020 06:23:21.1997
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: O9HhkHjoBRXwaPm+ObpjtZxSBuuzCpRiNjotPvx5d/8h6Oe7UnVNO0Qu6058vlA7wteEOvipo8OCmNkfGp3Z4A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB4261
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---kyNX94pNiUDmTOWGi0FWq7UFShlh1konR
-Content-Type: multipart/mixed; boundary="gB6on3XvgIO0Qk510JqOC9SbshhQFMe5S"
-
---gB6on3XvgIO0Qk510JqOC9SbshhQFMe5S
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
-
-
-
-On 2020/1/15 =E4=B8=8A=E5=8D=8812:48, David Howells wrote:
-> Again with regard to my rewrite of fscache and cachefiles:
->=20
-> 	https://git.kernel.org/pub/scm/linux/kernel/git/dhowells/linux-fs.git/=
-log/?h=3Dfscache-iter
->=20
-> I've got rid of my use of bmap()!  Hooray!
->=20
-> However, I'm informed that I can't trust the extent map of a backing fi=
-le to
-> tell me accurately whether content exists in a file because:
->=20
->  (a) Not-quite-contiguous extents may be joined by insertion of blocks =
-of
->      zeros by the filesystem optimising itself.  This would give me a f=
-alse
->      positive when trying to detect the presence of data.
-
-At least for btrfs, only unaligned extents get padding zeros.
-
-But I guess other fs could do whatever they want to optimize themselves.
-
->=20
->  (b) Blocks of zeros that I write into the file may get punched out by
->      filesystem optimisation since a read back would be expected to rea=
-d zeros
->      there anyway, provided it's below the EOF.  This would give me a f=
-alse
->      negative.
-
-I know some qemu disk backend has such zero detection.
-But not btrfs. So this is another per-fs based behavior.
-
-And problem (c):
-
-(c): A multi-device fs (btrfs) can have their own logical address mapping=
-=2E
-Meaning the bytenr returned makes no sense to end user, unless used for
-that fs specific address space.
-
-This is even more trickier when considering single device btrfs.
-It still utilize the same logical address space, just like all multiple
-disks btrfs.
-
-And it completely possible for a single 1T btrfs has logical address
-mapped beyond 10T or even more. (Any aligned bytenr in the range [0,
-U64_MAX) is valid for btrfs logical address).
-
-
-You won't like this case either.
-(d): Compressed extents
-One compressed extent can represents more data than its on-disk size.
-
-Furthermore, current fiemap interface hasn't considered this case, thus
-there it only reports in-memory size (aka, file size), no way to
-represent on-disk size.
-
-
-And even more bad news:
-(e): write time dedupe
-Although no fs known has implemented it yet (btrfs used to try to
-support that, and I guess XFS could do it in theory too), you won't
-known when a fs could get such "awesome" feature.
-
-Where your write may be checked and never reach disk if it matches with
-existing extents.
-
-This is a little like the zero-detection-auto-punch.
-
->=20
-> Is there some setting I can use to prevent these scenarios on a file - =
-or can
-> one be added?
-
-I guess no.
-
->=20
-> Without being able to trust the filesystem to tell me accurately what I=
-'ve
-> written into it, I have to use some other mechanism.  Currently, I've s=
-witched
-> to storing a map in an xattr with 1 bit per 256k block, but that gets h=
-ard to
-> use if the file grows particularly large and also has integrity consequ=
-ences -
-> though those are hopefully limited as I'm now using DIO to store data i=
-nto the
-> cache.
-
-Would you like to explain why you want to know such fs internal info?
-
-Thanks,
-Qu
->=20
-> If it helps, I'm downloading data in aligned 256k blocks and storing da=
-ta in
-> those same aligned 256k blocks, so if that makes it easier...
->=20
-> David
->=20
-
-
---gB6on3XvgIO0Qk510JqOC9SbshhQFMe5S--
-
---kyNX94pNiUDmTOWGi0FWq7UFShlh1konR
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEELd9y5aWlW6idqkLhwj2R86El/qgFAl4ejOwACgkQwj2R86El
-/qgA9QgAoVjIxeQRumpojy6W5vF6GGlMm/M+IKi83tAOPWnYDP4OIVhiqL/7f1fG
-hxue8/hEQW737NImsOQlQvsqD1n8YNg0XEi/zQB6YN5tgtS2s14RzMTPFBlkFosC
-ky6DJbseDFAKDvHebodfUxZsL9ibE/YwiOUcrITp155mpVbnYTT+LF2C7a8Emmo2
-Sh+7IEWwRDy00TYQ+7lQKzTdD4zj74AvHutpuuMJ/8rstb0y2SS6pkB5EQAno1yS
-81owvjgp2EiaZdWJpunBHIhvROfF6nIzZP1czxOAr0T648PBYtE0EcZpOkKH+PHe
-Ni8Ucj5vI0r7m6Y3yqZJ5Y8dBTPTYg==
-=SBbx
------END PGP SIGNATURE-----
-
---kyNX94pNiUDmTOWGi0FWq7UFShlh1konR--
+Randy,=0A=
+=0A=
+On 2020/01/15 3:25, Randy Dunlap wrote:=0A=
+> Hi Damien,=0A=
+> =0A=
+> Here are a few editorial comments for you...=0A=
+=0A=
+Thanks ! All fixed.=0A=
+=0A=
+[...]=0A=
+>> +For sequential write zone files, the file size changes as data is appen=
+ded at=0A=
+>> +the end of the file, similarly to any regular file system.=0A=
+>> +=0A=
+>> +# dd if=3D/dev/zero of=3D/mnt/seq/0 bs=3D4096 count=3D1 conv=3Dnotrunc =
+oflag=3Ddirect=0A=
+>> +1+0 records in=0A=
+>> +1+0 records out=0A=
+>> +4096 bytes (4.1 kB, 4.0 KiB) copied, 1.05112 s, 3.9 kB/s=0A=
+> =0A=
+> Still slow.  You don't want to change that?=0A=
+=0A=
+Good catch. I thought I had fixed that. Here is the updated dd run,=0A=
+after making sure that the disk has woken up from low power state before=0A=
+running:=0A=
+=0A=
+dd if=3D/dev/zero of=3D/mnt/seq/0 bs=3D4096 count=3D1 conv=3Dnotrunc oflag=
+=3Ddirect=0A=
+1+0 records in=0A=
+1+0 records out=0A=
+4096 bytes (4.1 kB, 4.0 KiB) copied, 0.00044121 s, 9.3 MB/s=0A=
+=0A=
+The HDD write cache is on and empty at the time of running this, which=0A=
+explains the much lower I/O time.=0A=
+=0A=
+-- =0A=
+Damien Le Moal=0A=
+Western Digital Research=0A=
