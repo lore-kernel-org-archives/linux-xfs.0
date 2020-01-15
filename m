@@ -2,72 +2,84 @@ Return-Path: <SRS0=S7Al=3E=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9409EC33CB1
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 13:31:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84185C33CB1
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 13:46:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 68C532084D
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 13:31:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5708D222C3
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 13:46:58 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mopz2QEO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729076AbgAONbH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Jan 2020 08:31:07 -0500
-Received: from verein.lst.de ([213.95.11.211]:50875 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729057AbgAONbG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Jan 2020 08:31:06 -0500
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 4D61968BE1; Wed, 15 Jan 2020 14:31:02 +0100 (CET)
-Date:   Wed, 15 Jan 2020 14:31:01 +0100
+        id S1726085AbgAONq5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Jan 2020 08:46:57 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:36126 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726071AbgAONq5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jan 2020 08:46:57 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=2jtXTDke+BrXIybk6dSMNeMSL+k8ECu2JOk9wYP0qFI=; b=mopz2QEOPGy01VvNH/647UhCC
+        9PhpUQqT9C1LUNfJngAmejVOBY1m8MF46Y9HxtKYu59EnCV0z/D4GkFN5n7Bp3+/oUq6ySGSI4/Hx
+        Gy5vFRjrQrMoopf0o3psK+YiN2ypYl3GuMfFFsoQKPW3l6NkLIbgzbV52NzCvnCnfSBimX+79CCcN
+        RcEdPfJPr+vyRmxzAgdo8bcudFG0k+OLt9jvFUjCK3ITHeG0opm1A6Sly1KW1G5tZbfivUOmzB38H
+        VilBMkfto3VMeK00P6ahAz7x6memvsdm+7basheR3sp8Lj/BBJSnt6WmKQU96wBDpudW11ZUhkZWg
+        sWYuOzziA==;
+Received: from clnet-p19-102.ikbnet.co.at ([83.175.77.102] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1irj0b-0005ce-33
+        for linux-xfs@vger.kernel.org; Wed, 15 Jan 2020 13:46:57 +0000
 From:   Christoph Hellwig <hch@lst.de>
-To:     Qu Wenruo <quwenruo.btrfs@gmx.com>
-Cc:     Andreas Dilger <adilger@dilger.ca>,
-        David Howells <dhowells@redhat.com>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-btrfs <linux-btrfs@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: Problems with determining data presence by examining extents?
-Message-ID: <20200115133101.GA28583@lst.de>
-References: <4467.1579020509@warthog.procyon.org.uk> <00fc7691-77d5-5947-5493-5c97f262da81@gmx.com> <27181AE2-C63F-4932-A022-8B0563C72539@dilger.ca> <afa71c13-4f99-747a-54ec-579f11f066a0@gmx.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: fix IOCB_NOWAIT handling in xfs_file_dio_aio_read
+Date:   Wed, 15 Jan 2020 14:46:53 +0100
+Message-Id: <20200115134653.433559-1-hch@lst.de>
+X-Mailer: git-send-email 2.24.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <afa71c13-4f99-747a-54ec-579f11f066a0@gmx.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 15, 2020 at 09:10:44PM +0800, Qu Wenruo wrote:
-> > That allows userspace to distinguish fe_physical addresses that may be
-> > on different devices.  This isn't in the kernel yet, since it is mostly
-> > useful only for Btrfs and nobody has implemented it there.  I can give
-> > you details if working on this for Btrfs is of interest to you.
-> 
-> IMHO it's not good enough.
-> 
-> The concern is, one extent can exist on multiple devices (mirrors for
-> RAID1/RAID10/RAID1C2/RAID1C3, or stripes for RAID5/6).
-> I didn't see how it can be easily implemented even with extra fields.
-> 
-> And even we implement it, it can be too complex or bug prune to fill
-> per-device info.
+Direct I/O reads can also be used with RWF_NOWAIT & co.  Fix the inode
+locking in xfs_file_dio_aio_read to take IOCB_NOWAIT into account.
 
-It's also completely bogus for the use cases to start with.  fiemap
-is a debug tool reporting the file system layout.  Using it for anything
-related to actual data storage and data integrity is a receipe for
-disaster.  As said the right thing for the use case would be something
-like the NFS READ_PLUS operation.  If we can't get that easily it can
-be emulated using lseek SEEK_DATA / SEEK_HOLE assuming no other thread
-could be writing to the file, or the raciness doesn't matter.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+
+Resending standalone to get a little more attention.
+
+ fs/xfs/xfs_file.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index c93250108952..b8a4a3f29b36 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -187,7 +187,12 @@ xfs_file_dio_aio_read(
+ 
+ 	file_accessed(iocb->ki_filp);
+ 
+-	xfs_ilock(ip, XFS_IOLOCK_SHARED);
++	if (iocb->ki_flags & IOCB_NOWAIT) {
++		if (!xfs_ilock_nowait(ip, XFS_IOLOCK_SHARED))
++			return -EAGAIN;
++	} else {
++		xfs_ilock(ip, XFS_IOLOCK_SHARED);
++	}
+ 	ret = iomap_dio_rw(iocb, to, &xfs_read_iomap_ops, NULL,
+ 			is_sync_kiocb(iocb));
+ 	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+-- 
+2.24.1
+
