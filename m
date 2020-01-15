@@ -2,132 +2,160 @@ Return-Path: <SRS0=S7Al=3E=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08668C33C9E
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 00:44:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6005FC33CB3
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 00:57:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CBD9A24658
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 00:44:11 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="FvkWcFhd"
+	by mail.kernel.org (Postfix) with ESMTP id 4013824671
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 00:57:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728791AbgAOAoL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Jan 2020 19:44:11 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:58072 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728774AbgAOAoL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jan 2020 19:44:11 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00F0cB4e094838;
-        Wed, 15 Jan 2020 00:44:01 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- content-transfer-encoding : in-reply-to; s=corp-2019-08-05;
- bh=dMM6cB6N2/2q/GMJ9/bh185cN65XzXsqykH1AXgKeoc=;
- b=FvkWcFhdEcbbLDUHTuq4NwqXO7eQaJh8R9WeqK0FZ5u3m22WGn2eE51xIM65a6umo32C
- GXal6DDDTwvazy5oxwo7CbaZLOET6JcJ097f7P7BdimpT8FiNSvSq2NpUi2iYM64yav/
- au7+LnFkFxA3eY2E6aDrp1fO8PyuNpdGQSm4xDDureVSI1aj0OJ4mWLNprtVis9/W0MH
- KX6MZR2doEI5JuCuRaUaexY8xCao7yuMaTpXK1O1KJY/k0C2KAwY30K/eIHuyUX6wpSo
- pmestUO2L8YE3M43jwsIpuBM8V+AP41vF2m6bHI3Lzkk/4K7lF/MwBDnZh+13s3bE7kX 1w== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2xf74s9ep3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 15 Jan 2020 00:44:01 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00F0dQK6147575;
-        Wed, 15 Jan 2020 00:44:01 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2xh2sdhmsk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 15 Jan 2020 00:44:01 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00F0hshW017576;
-        Wed, 15 Jan 2020 00:43:55 GMT
-Received: from localhost (/10.159.156.8)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 14 Jan 2020 16:43:54 -0800
-Date:   Tue, 14 Jan 2020 16:43:53 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Vincenzo Frascino <vincenzo.frascino@arm.com>
-Cc:     hch@lst.de, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] xfs: Add __packed to xfs_dir2_sf_entry_t definition
-Message-ID: <20200115004353.GX8247@magnolia>
-References: <20200114120352.53111-1-vincenzo.frascino@arm.com>
+        id S1728862AbgAOA53 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Jan 2020 19:57:29 -0500
+Received: from mga09.intel.com ([134.134.136.24]:41193 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728795AbgAOA53 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 14 Jan 2020 19:57:29 -0500
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 14 Jan 2020 16:57:28 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.70,320,1574150400"; 
+   d="scan'208";a="225393056"
+Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
+  by orsmga003.jf.intel.com with ESMTP; 14 Jan 2020 16:57:28 -0800
+Date:   Tue, 14 Jan 2020 16:57:28 -0800
+From:   Ira Weiny <ira.weiny@intel.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-kernel@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [RFC PATCH V2 08/12] fs/xfs: Add lock/unlock mode to xfs
+Message-ID: <20200115005727.GB23311@iweiny-DESK2.sc.intel.com>
+References: <20200110192942.25021-1-ira.weiny@intel.com>
+ <20200110192942.25021-9-ira.weiny@intel.com>
+ <20200113221957.GN8247@magnolia>
+ <20200114003521.GB29860@iweiny-DESK2.sc.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200114120352.53111-1-vincenzo.frascino@arm.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9500 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2001150004
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9500 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2001150004
+In-Reply-To: <20200114003521.GB29860@iweiny-DESK2.sc.intel.com>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 14, 2020 at 12:03:52PM +0000, Vincenzo Frascino wrote:
-> xfs_check_ondisk_structs() verifies that the sizes of the data types
-> used by xfs are correct via the XFS_CHECK_STRUCT_SIZE() macro.
+On Mon, Jan 13, 2020 at 04:35:21PM -0800, 'Ira Weiny' wrote:
+> On Mon, Jan 13, 2020 at 02:19:57PM -0800, Darrick J. Wong wrote:
+> > On Fri, Jan 10, 2020 at 11:29:38AM -0800, ira.weiny@intel.com wrote:
+> > > From: Ira Weiny <ira.weiny@intel.com>
 > 
-> Since the structures padding can vary depending on the ABI (e.g. on
-> ARM OABI structures are padded to multiple of 32 bits), it may happen
-> that xfs_dir2_sf_entry_t size check breaks the compilation with the
-> assertion below:
+> [snip]
 > 
-> In file included from linux/include/linux/string.h:6,
->                  from linux/include/linux/uuid.h:12,
->                  from linux/fs/xfs/xfs_linux.h:10,
->                  from linux/fs/xfs/xfs.h:22,
->                  from linux/fs/xfs/xfs_super.c:7:
-> In function ‘xfs_check_ondisk_structs’,
->     inlined from ‘init_xfs_fs’ at linux/fs/xfs/xfs_super.c:2025:2:
-> linux/include/linux/compiler.h:350:38:
->     error: call to ‘__compiletime_assert_107’ declared with attribute
->     error: XFS: sizeof(xfs_dir2_sf_entry_t) is wrong, expected 3
->     _compiletime_assert(condition, msg, __compiletime_assert_, __LINE__)
+> > >  
+> > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > > index 401da197f012..e8fd95b75e5b 100644
+> > > --- a/fs/xfs/xfs_inode.c
+> > > +++ b/fs/xfs/xfs_inode.c
+> > > @@ -142,12 +142,12 @@ xfs_ilock_attr_map_shared(
+> > >   *
+> > >   * Basic locking order:
+> > >   *
+> > > - * i_rwsem -> i_mmap_lock -> page_lock -> i_ilock
+> > > + * i_rwsem -> i_dax_sem -> i_mmap_lock -> page_lock -> i_ilock
+> > 
+> > Mmmmmm, more locks.  Can we skip the extra lock if CONFIG_FSDAX=n or if
+> > the filesystem devices don't support DAX at all?
 > 
-> Restore the correct behavior adding __packed to the structure definition.
+> I'll look into it.
 > 
-> Cc: Darrick J. Wong <darrick.wong@oracle.com>
-> Suggested-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Vincenzo Frascino <vincenzo.frascino@arm.com>
+> > 
+> > Also, I don't think we're actually following the i_rwsem -> i_daxsem
+> > order in fallocate, and possibly elsewhere too?
+> 
+> I'll have to verify.  It took a lot of iterations to get the order working so
+> I'm not going to claim perfection.
 
-Will give this a spin,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Yes this was inconsistent.  The code was right WRT i_rwsem.
 
---D
+mmap_sem may have issues:
 
-> ---
->  fs/xfs/libxfs/xfs_da_format.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-> index 3dee33043e09..60db25f30430 100644
-> --- a/fs/xfs/libxfs/xfs_da_format.h
-> +++ b/fs/xfs/libxfs/xfs_da_format.h
-> @@ -217,7 +217,7 @@ typedef struct xfs_dir2_sf_entry {
->  	 * A 64-bit or 32-bit inode number follows here, at a variable offset
->  	 * after the name.
->  	 */
-> -} xfs_dir2_sf_entry_t;
-> +} __packed xfs_dir2_sf_entry_t;
->  
->  static inline int xfs_dir2_sf_hdr_size(int i8count)
->  {
-> -- 
-> 2.24.1
-> 
+What about this?
+
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index c5d11b70d067..8808782a085e 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -142,12 +142,12 @@ xfs_ilock_attr_map_shared(
+  *
+  * Basic locking order:
+  *
+- * i_rwsem -> i_dax_sem -> i_mmap_lock -> page_lock -> i_ilock
++ * i_dax_sem -> i_rwsem -> i_mmap_lock -> page_lock -> i_ilock
+  *
+  * mmap_sem locking order:
+  *
+  * i_rwsem -> page lock -> mmap_sem
+- * mmap_sem -> i_dax_sem -> i_mmap_lock -> page_lock
++ * i_dax_sem -> mmap_sem -> i_mmap_lock -> page_lock
+  *
+  * The difference in mmap_sem locking order mean that we cannot hold the
+  * i_mmap_lock over syscall based read(2)/write(2) based IO. These IO paths can
+diff --git a/mm/mmap.c b/mm/mmap.c
+index e6b68924b7ca..b500aef30b27 100644
+--- a/mm/mmap.c
++++ b/mm/mmap.c
+@@ -1547,18 +1547,12 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
+                        vm_flags |= VM_NORESERVE;
+        }
+ 
+-       if (file)
+-               lock_inode_mode(file_inode(file));
+-
+        addr = mmap_region(file, addr, len, vm_flags, pgoff, uf);
+        if (!IS_ERR_VALUE(addr) &&
+            ((vm_flags & VM_LOCKED) ||
+             (flags & (MAP_POPULATE | MAP_NONBLOCK)) == MAP_POPULATE))
+                *populate = len;
+ 
+-       if (file)
+-               unlock_inode_mode(file_inode(file));
+-
+        return addr;
+ }
+ 
+diff --git a/mm/util.c b/mm/util.c
+index 988d11e6c17c..1cfead8cd1ce 100644
+--- a/mm/util.c
++++ b/mm/util.c
+@@ -501,11 +501,18 @@ unsigned long vm_mmap_pgoff(struct file *file, unsigned long addr,
+ 
+        ret = security_mmap_file(file, prot, flag);
+        if (!ret) {
+-               if (down_write_killable(&mm->mmap_sem))
++               if (file)
++                       lock_inode_mode(file_inode(file));
++               if (down_write_killable(&mm->mmap_sem)) {
++                       if (file)
++                               unlock_inode_mode(file_inode(file));
+                        return -EINTR;
++               }
+                ret = do_mmap_pgoff(file, addr, len, prot, flag, pgoff,
+                                    &populate, &uf);
+                up_write(&mm->mmap_sem);
++               if (file)
++                       unlock_inode_mode(file_inode(file));
+                userfaultfd_unmap_complete(mm, &uf);
+                if (populate)
+                        mm_populate(ret, populate);
+
