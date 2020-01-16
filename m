@@ -2,67 +2,92 @@ Return-Path: <SRS0=yxE5=3F=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDC3AC33CB6
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 09:25:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9CB3C33CB1
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 09:38:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AB1CC2075B
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 09:25:53 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="btnJuxQf"
+	by mail.kernel.org (Postfix) with ESMTP id AC49920748
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 09:38:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729472AbgAPJZx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Jan 2020 04:25:53 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:40890 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729138AbgAPJZx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jan 2020 04:25:53 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=qqde28v6Yl8tgqmJFo8axzaCudNy6IvA2+Xi7kUi6X8=; b=btnJuxQfL4dRTSdWx/fvGouxP
-        XINBDelzV1M9VuzQann9edLjRRmgmp63QpMbcqozfxMtH/BVK02NmrGYO1w65Pb99cF6HM81Wx3cN
-        aLQO2ev3e6NjgvH6KbmYBJKYBivvnn77ykcNhzAXU+y/0xdMHK6FtkUrZxfdb0S3q4zgoZ6txPDG0
-        xCmYEfCwAMFU1Gqg7rWbwuBquxfWFf3LblAhPX6EBxfyrGRmG9+9Y2MTNAqLLaiS1Z8Dc52M7j/f4
-        XbAwbgMHWMP2iwmNssfuTa+VtS0H2tcs4JCRiQSOLqHQciE3MZiv8v9dzJxGxdoPkeVO6slL/0IfF
-        d0XFIUeUA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1is1PU-0007cr-DU; Thu, 16 Jan 2020 09:25:52 +0000
-Date:   Thu, 16 Jan 2020 01:25:52 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org
-Subject: Re: [PATCH 7/7] xfs/020: call _notrun if we can't create a 60t
- sparse image
-Message-ID: <20200116092552.GG21601@infradead.org>
-References: <157915143549.2374854.7759901526137960493.stgit@magnolia>
- <157915147960.2374854.2067220014390694914.stgit@magnolia>
+        id S1729504AbgAPJiJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Jan 2020 04:38:09 -0500
+Received: from mx2.suse.de ([195.135.220.15]:34458 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726864AbgAPJiJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 16 Jan 2020 04:38:09 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 7D042B1AB;
+        Thu, 16 Jan 2020 09:38:07 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id 213631E0CBC; Thu, 16 Jan 2020 10:38:07 +0100 (CET)
+Date:   Thu, 16 Jan 2020 10:38:07 +0100
+From:   Jan Kara <jack@suse.cz>
+To:     ira.weiny@intel.com
+Cc:     linux-kernel@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [RFC PATCH V2 05/12] fs: remove unneeded IS_DAX() check
+Message-ID: <20200116093807.GB8446@quack2.suse.cz>
+References: <20200110192942.25021-1-ira.weiny@intel.com>
+ <20200110192942.25021-6-ira.weiny@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <157915147960.2374854.2067220014390694914.stgit@magnolia>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200110192942.25021-6-ira.weiny@intel.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 15, 2020 at 09:11:19PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri 10-01-20 11:29:35, ira.weiny@intel.com wrote:
+> From: Ira Weiny <ira.weiny@intel.com>
 > 
-> If we can't create the 60T sparse image for testing repair on a large fs
-> (such as when running on 32-bit), don't bother running the rest of the
-> test.
+> The IS_DAX() check in io_is_direct() causes a race between changing the
+> DAX mode and creating the iocb flags.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Remove the check because DAX now emulates the page cache API and
+> therefore it does not matter if the file mode is DAX or not when the
+> iocb flags are created.
+> 
+> Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 
-Looks good,
+The patch looks good to me. You can add:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+								Honza
+
+> ---
+>  include/linux/fs.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index d7584bcef5d3..e11989502eac 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -3365,7 +3365,7 @@ extern int file_update_time(struct file *file);
+>  
+>  static inline bool io_is_direct(struct file *filp)
+>  {
+> -	return (filp->f_flags & O_DIRECT) || IS_DAX(filp->f_mapping->host);
+> +	return (filp->f_flags & O_DIRECT);
+>  }
+>  
+>  static inline bool vma_is_dax(struct vm_area_struct *vma)
+> -- 
+> 2.21.0
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
