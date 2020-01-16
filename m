@@ -2,261 +2,221 @@ Return-Path: <SRS0=yxE5=3F=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F1FAC33CB6
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 05:13:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8FC4C33CB7
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 05:40:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 450D7208C3
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 05:13:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B061D2081E
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 05:40:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Gs/KMN7Y"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Xwz8WLjs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727003AbgAPFNr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Jan 2020 00:13:47 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:49414 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726984AbgAPFNr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jan 2020 00:13:47 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00G5DAV1173172;
-        Thu, 16 Jan 2020 05:13:45 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=sBxCc7zlXvHTS4R6nVhRZR8sYDfaNlzvU6VqknYBivw=;
- b=Gs/KMN7YbMWCnTXdegCx+NNzE/8IPsM0gKDfGk4hEt3plscsYUUSV3JosEqN/Bj9LjLA
- 70MRtWsF5fAk/O99m0/lytHmOkkiyIj3Lq4+vrpqizZqdzWiGWuaiopA+DLOeNeFc4Ro
- dP4AB2jJ6ZAW16w6KfUKER4iw/qOPY8V2kCOf7aot5I1pOuxPnQlrgfEjd/Icrihw+HT
- KyPvNtB41zBxjteaGlIJJzy8hhV0e5IwK9OD+javFrCbhb5VTuOcOiG5Az1md4rz0Ai7
- xxz6DsuPIerWyGAGqqI40Tn4/FH5TCEefwi6/HvA6yqcPJruU6lVudCrk2eTBoQRgDWy tw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2xf73yr7fx-1
+        id S1726371AbgAPFkE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Jan 2020 00:40:04 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:37862 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726082AbgAPFkE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jan 2020 00:40:04 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00G5d5VM174531;
+        Thu, 16 Jan 2020 05:39:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=ZvhUMad29Q7lSqgVCA5o0Rvkn84v5bmJgkpac83lhOw=;
+ b=Xwz8WLjsjRYhW7x+YlXoHgXJ1rLTWNix812/W9nXlfXTwm/gMJoMyfoO0hO0pe+sOQea
+ 3yjMk2iw+MVORoBxt30KWwzlMr7bqH0hmoo9vyvC1SWnRbW9pB3kXcAiEgbix1Yu65HR
+ xLLd+Z30bDonOev13PvgbLHzqy9/Iwv5nSTcCpVVo/QAX/oGRPyvHsbYu0daPGI+/9su
+ PzAWtRJ/bGr9Pt77spupAQ5FjBYqtPyyI82xZ2FS8H47+mmo6l5zRJq+mklQ/o9b3J4k
+ F06qGYgtdT8PquY+zR3x4S3qluI9Lv1BJQg2Z5Q9vrdRq1FeDuVhz7tysitrbgo9i/AU rQ== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 2xf73u0706-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 16 Jan 2020 05:13:45 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00G59DQg085357;
-        Thu, 16 Jan 2020 05:11:44 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2xj1psd1mv-1
+        Thu, 16 Jan 2020 05:39:42 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00G5d1te153489;
+        Thu, 16 Jan 2020 05:39:42 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 2xhy22nqg1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 16 Jan 2020 05:11:44 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00G5Bisl024449;
-        Thu, 16 Jan 2020 05:11:44 GMT
+        Thu, 16 Jan 2020 05:39:41 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00G5dbMg027086;
+        Thu, 16 Jan 2020 05:39:37 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 15 Jan 2020 21:11:43 -0800
-Subject: [PATCH 2/2] xfs: test setting labels with xfs_admin
+        with ESMTP ; Wed, 15 Jan 2020 21:39:37 -0800
+Date:   Wed, 15 Jan 2020 21:39:35 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     guaneryu@gmail.com, darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Date:   Wed, 15 Jan 2020 21:11:42 -0800
-Message-ID: <157915150275.2375135.12157351351400702116.stgit@magnolia>
-In-Reply-To: <157915149017.2375135.14166864164575311878.stgit@magnolia>
-References: <157915149017.2375135.14166864164575311878.stgit@magnolia>
-User-Agent: StGit/0.17.1-dirty
+To:     Ira Weiny <ira.weiny@intel.com>
+Cc:     Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Subject: Re: [RFC PATCH V2 01/12] fs/stat: Define DAX statx attribute
+Message-ID: <20200116053935.GB8235@magnolia>
+References: <20200110192942.25021-1-ira.weiny@intel.com>
+ <20200110192942.25021-2-ira.weiny@intel.com>
+ <20200115113715.GB2595@quack2.suse.cz>
+ <20200115173834.GD8247@magnolia>
+ <20200115194512.GF23311@iweiny-DESK2.sc.intel.com>
+ <CAPcyv4hwefzruFj02YHYiy8nOpHJFGLKksjiXoRUGpT3C2rDag@mail.gmail.com>
+ <20200115223821.GG23311@iweiny-DESK2.sc.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200115223821.GG23311@iweiny-DESK2.sc.intel.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9501 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2001160042
+ engine=8.0.1-1911140001 definitions=main-2001160047
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9501 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2001160043
+ definitions=main-2001160047
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Jan 15, 2020 at 02:38:21PM -0800, Ira Weiny wrote:
+> On Wed, Jan 15, 2020 at 12:10:50PM -0800, Dan Williams wrote:
+> > On Wed, Jan 15, 2020 at 11:45 AM Ira Weiny <ira.weiny@intel.com> wrote:
+> > >
+> > > On Wed, Jan 15, 2020 at 09:38:34AM -0800, Darrick J. Wong wrote:
+> > > > On Wed, Jan 15, 2020 at 12:37:15PM +0100, Jan Kara wrote:
+> > > > > On Fri 10-01-20 11:29:31, ira.weiny@intel.com wrote:
+> > > > > > From: Ira Weiny <ira.weiny@intel.com>
+> > > > > >
+> 
+> [snip]
+> 
+> > > Ok I changed a couple of things as well.  How does this sound?
+> > >
+> > >
+> > > STATX_ATTR_DAX
+> > >
+> > >         DAX (cpu direct access) is a file mode that attempts to minimize
+> > 
+> > s/mode/state/?
+> 
+> DOH!  yes state...  ;-)
+> 
+> > 
+> > >         software cache effects for both I/O and memory mappings of this
+> > >         file.  It requires a block device and file system which have
+> > >         been configured to support DAX.
+> > 
+> > It may not require a block device in the future.
+> 
+> Ok:
+> 
+> "It requires a file system which has been configured to support DAX." ?
+> 
+> I'm trying to separate the user of the individual STATX DAX flag from the Admin
+> details of configuring the file system and/or devices which supports it.
+> 
+> Also, I just realized that we should follow the format of the other STATX_*
+> attributes.  They all read something like "the file is..."
+> 
+> So I'm adding that text as well.
+> 
+> > 
+> > >
+> > >         DAX generally assumes all accesses are via cpu load / store
+> > >         instructions which can minimize overhead for small accesses, but
+> > >         may adversely affect cpu utilization for large transfers.
+> > >
+> > >         File I/O is done directly to/from user-space buffers and memory
+> > >         mapped I/O may be performed with direct memory mappings that
+> > >         bypass kernel page cache.
+> > >
+> > >         While the DAX property tends to result in data being transferred
+> > >         synchronously, it does not give the same guarantees of
+> > >         synchronous I/O where data and the necessary metadata are
+> > 
+> > Maybe use "O_SYNC I/O" explicitly to further differentiate the 2
+> > meanings of "synchronous" in this sentence?
+> 
+> Done.
+> 
+> > 
+> > >         transferred together.
+> > >
+> > >         A DAX file may support being mapped with the MAP_SYNC flag,
+> > >         which enables a program to use CPU cache flush operations to
+> > 
+> > s/operations/instructions/
+> 
+> Done.
+> 
+> > 
+> > >         persist CPU store operations without an explicit fsync(2).  See
+> > >         mmap(2) for more information.
+> > 
+> > I think this also wants a reference to the Linux interpretation of
+> > platform "persistence domains" we were discussing that here [1], but
+> > maybe it should be part of a "pmem" manpage that can be referenced
+> > from this man page.
+> 
+> Sure, but for now I think referencing mmap for details on MAP_SYNC works.
+> 
+> I suspect that we may have some word smithing once I get this series in and we
+> submit a change to the statx man page itself.  Can I move forward with the
+> following for this patch?
+> 
+> <quote>
+> STATX_ATTR_DAX
+> 
+>         The file is in the DAX (cpu direct access) state.  DAX state
 
-Test setting filesystem labels with xfs_admin.
+Hmm, now that I see it written out, I <cough> kind of like "DAX mode"
+better now. :/
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/xfs/912     |  103 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/912.out |   43 ++++++++++++++++++++++
- tests/xfs/group   |    1 +
- 3 files changed, 147 insertions(+)
- create mode 100755 tests/xfs/912
- create mode 100644 tests/xfs/912.out
+"The file is in DAX (CPU direct access) mode.  DAX mode attempts..."
 
+>         attempts to minimize software cache effects for both I/O and
+>         memory mappings of this file.  It requires a file system which
+>         has been configured to support DAX.
+> 
+>         DAX generally assumes all accesses are via cpu load / store
+>         instructions which can minimize overhead for small accesses, but
+>         may adversely affect cpu utilization for large transfers.
+> 
+>         File I/O is done directly to/from user-space buffers and memory
+>         mapped I/O may be performed with direct memory mappings that
+>         bypass kernel page cache.
+> 
+>         While the DAX property tends to result in data being transferred
+>         synchronously, it does not give the same guarantees of
+>         synchronous I/O where data and the necessary metadata are
+>         transferred together.
 
-diff --git a/tests/xfs/912 b/tests/xfs/912
-new file mode 100755
-index 00000000..1eef36cd
---- /dev/null
-+++ b/tests/xfs/912
-@@ -0,0 +1,103 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2020, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# FS QA Test No. 912
-+#
-+# Check that xfs_admin can set and clear filesystem labels offline and online.
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os Linux
-+_require_scratch
-+_require_xfs_db_command label
-+_require_xfs_io_command label
-+grep -q "xfs_io" "$(which xfs_admin)" || \
-+	_notrun "xfs_admin does not support online label setting of any kind"
-+
-+rm -f $seqres.full
-+
-+echo
-+echo "Format with label"
-+_scratch_mkfs -L "label0" > $seqres.full
-+
-+echo "Read label offline"
-+_scratch_xfs_admin -l
-+
-+echo "Read label online"
-+_scratch_mount
-+_scratch_xfs_admin -l
-+
-+echo
-+echo "Set label offline"
-+_scratch_unmount
-+_scratch_xfs_admin -L "label1"
-+
-+echo "Read label offline"
-+_scratch_xfs_admin -l
-+
-+echo "Read label online"
-+_scratch_mount
-+_scratch_xfs_admin -l
-+
-+echo
-+echo "Set label online"
-+_scratch_xfs_admin -L "label2"
-+
-+echo "Read label online"
-+_scratch_xfs_admin -l
-+
-+echo "Read label offline"
-+_scratch_unmount
-+_scratch_xfs_admin -l
-+
-+echo
-+echo "Clear label online"
-+_scratch_mount
-+_scratch_xfs_admin -L "--"
-+
-+echo "Read label online"
-+_scratch_xfs_admin -l
-+
-+echo "Read label offline"
-+_scratch_unmount
-+_scratch_xfs_admin -l
-+
-+echo
-+echo "Set label offline"
-+_scratch_xfs_admin -L "label3"
-+
-+echo "Read label offline"
-+_scratch_xfs_admin -l
-+
-+echo
-+echo "Clear label offline"
-+_scratch_xfs_admin -L "--"
-+
-+echo "Read label offline"
-+_scratch_xfs_admin -l
-+
-+echo "Read label online"
-+_scratch_mount
-+_scratch_xfs_admin -l
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/912.out b/tests/xfs/912.out
-new file mode 100644
-index 00000000..186d827f
---- /dev/null
-+++ b/tests/xfs/912.out
-@@ -0,0 +1,43 @@
-+QA output created by 912
-+
-+Format with label
-+Read label offline
-+label = "label0"
-+Read label online
-+label = "label0"
-+
-+Set label offline
-+writing all SBs
-+new label = "label1"
-+Read label offline
-+label = "label1"
-+Read label online
-+label = "label1"
-+
-+Set label online
-+label = "label2"
-+Read label online
-+label = "label2"
-+Read label offline
-+label = "label2"
-+
-+Clear label online
-+label = ""
-+Read label online
-+label = ""
-+Read label offline
-+label = ""
-+
-+Set label offline
-+writing all SBs
-+new label = "label3"
-+Read label offline
-+label = "label3"
-+
-+Clear label offline
-+writing all SBs
-+new label = ""
-+Read label offline
-+label = ""
-+Read label online
-+label = ""
-diff --git a/tests/xfs/group b/tests/xfs/group
-index a6c9ef08..cc1d122a 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -511,3 +511,4 @@
- 511 auto quick quota
- 747 auto quick scrub
- 748 auto quick scrub
-+912 auto quick label
+(I'm frankly not sure that synchronous I/O actually guarantees that the
+metadata has hit stable storage...)
 
+--D
+
+>         A DAX file may support being mapped with the MAP_SYNC flag,
+>         which enables a program to use CPU cache flush instructions to
+>         persist CPU store operations without an explicit fsync(2).  See
+>         mmap(2) for more information.
+> </quote>
+> 
+> Ira
+> 
+> > 
+> > [1]: http://lore.kernel.org/r/20200108064905.170394-1-aneesh.kumar@linux.ibm.com
