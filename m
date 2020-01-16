@@ -2,99 +2,106 @@ Return-Path: <SRS0=yxE5=3F=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24DECC33CB1
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 06:05:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C3E2C33CB1
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 06:15:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C751020748
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 06:05:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4A54320661
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 06:15:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="fsNlBtGF"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BcCacUaC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729858AbgAPGFM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Jan 2020 01:05:12 -0500
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:45050 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729850AbgAPGFM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jan 2020 01:05:12 -0500
-Received: by mail-ot1-f67.google.com with SMTP id h9so18302785otj.11
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Jan 2020 22:05:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=vKEanVLYKixbIE4jpjng52Wg/z0Mh1eAfP4hJSdIQE0=;
-        b=fsNlBtGFziQY0A8zQejjqkkTuvqiwdIiAM7NACeEOxrAaoxzDd4fUjk9pwpqAIUvXJ
-         cdDCKjUTJGaZHkHv0G5ee/JsbwsslnTNyPu9bqoswts39/75GIb/59yCbwuO1xPlgi3c
-         f+VW6u6TSpKsnTkYP5lrw9eMUS+qyf9nS8llrLCzHtqnC0A8+9WP1s1jpoFVC48zw4nR
-         NVsWjZ5qsu9jZPsaq387+XdtKQjAobHkTTamKsz9df6VShLY/jSMaIKhT//gj04wSyQB
-         dgjbIZWVcmuv6zDtMtLARK6RBcjdJGnJuT7/m4Mi0K92sfnfQrOSyoSUt8DpH3L7o5oD
-         9Oyw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=vKEanVLYKixbIE4jpjng52Wg/z0Mh1eAfP4hJSdIQE0=;
-        b=Zrgg2/tUloUG/+cgbj4OT3cIsHenUKO50xKi1HFtwRTFVL46MkNJjy4OrVtftBnSS/
-         39cFpIQcE75qP8AVBZ477GuQJ86waPiQoO4UPgNUS4I15zS7Ya2+C9Dl8zjrJr3mRQ/x
-         p7hGFu+rJXzVZJnNH7NnQzabGOm6xX02rxImCg0t6YDouMGFE/1UW1DOp2J5x823zZs9
-         4C3y+o846ekAs6kH0Ge5gfn7kwMJal6/QT/EBW05aibj9HQt+MSaXfit8Iu20I+9uZl8
-         GMVmqsvDuGoP7ir0FlCQWFpubCbSQ/5esf/qjFYL2tShIDFr1gkFro0A0LMRZvvZVHYq
-         UPlg==
-X-Gm-Message-State: APjAAAXV+5OduYqO16wm5vH5Fu16fQD0G2gXrgxIMumIcBFEJN/wLaGP
-        niXrwV0GCsJMa+8jBlptWzeCYa8ny7z20GedefbVxQ==
-X-Google-Smtp-Source: APXvYqzEy+pngv/HMRf0P3fZnf1I8EeAbKVY4SqM8e/rzz5VxvD8FVTh6UXXEgSv+bh5N1RhUnQGLNyaWJI9Xe8L7mc=
-X-Received: by 2002:a9d:68d3:: with SMTP id i19mr740541oto.71.1579154711112;
- Wed, 15 Jan 2020 22:05:11 -0800 (PST)
+        id S1729213AbgAPGP6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Jan 2020 01:15:58 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:43732 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729221AbgAPGP6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jan 2020 01:15:58 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00G6EKHx022318;
+        Thu, 16 Jan 2020 06:15:50 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=corp-2019-08-05;
+ bh=+vaspq5CkDs2g7j98XuFelypMj1b+RMHICEBxqoXmBI=;
+ b=BcCacUaC4Fq8Xje0ghOF/kyNMf09RV/6SYYHh/eW2k0JOxwgkhLqxEHu6ZjyPKNQF9LE
+ TRp55xxhAG7QFdEp/SBB9ufjxXQqkppaErm9zmzHmCeG0lYc9m4A6juH0z820iYvCF55
+ WLzO9ei2NfQkUzZvJxQ+vMMQr1wmnH2RU7nuGC60yi+jfkSy5IxlpJcMlCCOD4GsVqcX
+ ueuc4hnmNIYumlB6k1WfgrQtOUu//lfllQKFQ6KOVwO49zlZi7bVJvM7umpLDiOGnOO8
+ s5dZ9xl6hSoDM6ud8Mj0Fueu+2J4rhPMq2rNmN/1b5u31SkJ+OlOXJynOsATDFcrwx5O cg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 2xf73yrf9k-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 16 Jan 2020 06:15:50 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00G6DcLn038151;
+        Thu, 16 Jan 2020 06:15:49 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 2xhy22qdtn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 16 Jan 2020 06:15:49 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00G6FjQK026470;
+        Thu, 16 Jan 2020 06:15:45 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 15 Jan 2020 22:15:45 -0800
+Subject: [PATCH 0/2] xfs: fix stale disk exposure after crash
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     darrick.wong@oracle.com
+Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
+Date:   Wed, 15 Jan 2020 22:15:44 -0800
+Message-ID: <157915534429.2406747.2688273938645013888.stgit@magnolia>
+User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
-References: <20200110192942.25021-1-ira.weiny@intel.com> <20200110192942.25021-2-ira.weiny@intel.com>
- <20200115113715.GB2595@quack2.suse.cz> <20200115173834.GD8247@magnolia>
- <20200115194512.GF23311@iweiny-DESK2.sc.intel.com> <CAPcyv4hwefzruFj02YHYiy8nOpHJFGLKksjiXoRUGpT3C2rDag@mail.gmail.com>
- <20200115223821.GG23311@iweiny-DESK2.sc.intel.com> <20200116053935.GB8235@magnolia>
-In-Reply-To: <20200116053935.GB8235@magnolia>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Wed, 15 Jan 2020 22:05:00 -0800
-Message-ID: <CAPcyv4jDMsPj_vZwDOgPkfHLELZWqeJugKgKNVKbpiZ9th683g@mail.gmail.com>
-Subject: Re: [RFC PATCH V2 01/12] fs/stat: Define DAX statx attribute
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9501 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-2001160052
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9501 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-2001160052
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 15, 2020 at 9:39 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-[..]
-> >         attempts to minimize software cache effects for both I/O and
-> >         memory mappings of this file.  It requires a file system which
-> >         has been configured to support DAX.
-> >
-> >         DAX generally assumes all accesses are via cpu load / store
-> >         instructions which can minimize overhead for small accesses, but
-> >         may adversely affect cpu utilization for large transfers.
-> >
-> >         File I/O is done directly to/from user-space buffers and memory
-> >         mapped I/O may be performed with direct memory mappings that
-> >         bypass kernel page cache.
-> >
-> >         While the DAX property tends to result in data being transferred
-> >         synchronously, it does not give the same guarantees of
-> >         synchronous I/O where data and the necessary metadata are
-> >         transferred together.
->
-> (I'm frankly not sure that synchronous I/O actually guarantees that the
-> metadata has hit stable storage...)
+Hi all,
 
-Oh? That text was motivated by the open(2) man page description of O_SYNC.
+These two patches try to shrink the window during which a crash during
+writeback can expose stale disk contents.  The first patch causes
+delalloc reservations to be converted to unwritten extents for any
+writeback that's going on within EOF.
+
+The second patch selectively relaxes the unwritten writeout requirement
+when the entire file is being flushed (ala fsync) and ensures that
+writeback of a range after the ondisk EOF is expanded downwards to the
+old EOF to ensure that increasing a file's size doesn't leave us
+vulnerable to exposure of stale disk contents from a previous
+speculative allocation.
+
+This solves the regressions in generic/536 and generic/042.
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This has been lightly tested with fstests.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=stale-exposure
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=stale-exposure
