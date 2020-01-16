@@ -6,63 +6,80 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA24AC33CB6
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 12:22:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 263E6C33CB6
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 14:00:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9AEEB21582
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 12:22:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F13B12075B
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 14:00:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726084AbgAPMWO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Jan 2020 07:22:14 -0500
-Received: from szxga07-in.huawei.com ([45.249.212.35]:55684 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726018AbgAPMWO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 16 Jan 2020 07:22:14 -0500
-Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id 3D94B96F6DDE0750BD2E;
-        Thu, 16 Jan 2020 20:22:08 +0800 (CST)
-Received: from [127.0.0.1] (10.173.220.96) by DGGEMS406-HUB.china.huawei.com
- (10.3.19.206) with Microsoft SMTP Server id 14.3.439.0; Thu, 16 Jan 2020
- 20:22:01 +0800
-Subject: Re: [PATCH] xfs/126: fix that corrupt xattr might fail with a small
- probability
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-CC:     <guaneryu@gmail.com>, <jbacik@fusionio.com>,
-        <fstests@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <zhengbin13@huawei.com>, <yi.zhang@huawei.com>
-References: <20200108092758.41363-1-yukuai3@huawei.com>
- <20200108162227.GD5552@magnolia>
- <3c7e9497-e0ed-23e4-ff9c-4b1c1a77c9fa@huawei.com>
- <20200109164615.GA8247@magnolia>
-From:   "yukuai (C)" <yukuai3@huawei.com>
-Message-ID: <51e99fd5-617f-6558-7a04-c4a198139cdd@huawei.com>
-Date:   Thu, 16 Jan 2020 20:22:00 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1727047AbgAPOAH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Jan 2020 09:00:07 -0500
+Received: from mx2.suse.de ([195.135.220.15]:42742 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726189AbgAPOAH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 16 Jan 2020 09:00:07 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 1341EAD5E;
+        Thu, 16 Jan 2020 14:00:04 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id 62CD91E06F1; Thu, 16 Jan 2020 15:00:04 +0100 (CET)
+Date:   Thu, 16 Jan 2020 15:00:04 +0100
+From:   Jan Kara <jack@suse.cz>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Waiman Long <longman@redhat.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-ext4@vger.kernel.org, cluster-devel@redhat.com,
+        linux-kernel@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: RFC: hold i_rwsem until aio completes
+Message-ID: <20200116140004.GE8446@quack2.suse.cz>
+References: <20200114161225.309792-1-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20200109164615.GA8247@magnolia>
-Content-Type: text/plain; charset="gbk"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.173.220.96]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200114161225.309792-1-hch@lst.de>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+Hello!
+
+On Tue 14-01-20 17:12:13, Christoph Hellwig wrote:
+> Asynchronous read/write operations currently use a rather magic locking
+> scheme, were access to file data is normally protected using a rw_semaphore,
+> but if we are doing aio where the syscall returns to userspace before the
+> I/O has completed we also use an atomic_t to track the outstanding aio
+> ops.  This scheme has lead to lots of subtle bugs in file systems where
+> didn't wait to the count to reach zero, and due to its adhoc nature also
+> means we have to serialize direct I/O writes that are smaller than the
+> file system block size.
+> 
+> All this is solved by releasing i_rwsem only when the I/O has actually
+> completed, but doings so is against to mantras of Linux locking primites:
+> 
+>  (1) no unlocking by another process than the one that acquired it
+>  (2) no return to userspace with locks held
+
+I'd like to note that using i_dio_count has also one advantage you didn't
+mention. For AIO case, if you need to hold i_rwsem in exclusive mode,
+holding the i_rwsem just for submission part is a significant performance
+advantage (shorter lock hold times allow for higher IO parallelism). I
+guess this could be mitigated by downgrading the lock to shared mode
+once the IO is submitted. But there will be still some degradation visible
+for the cases of mixed exclusive and shared acquisitions because shared
+holders will be blocking exclusive ones for longer time.
+
+This may be especially painful for filesystems that don't implement DIO
+overwrites with i_rwsem in shared mode...
 
 
-ON 2020/1/10 0:46, Darrick J. Wong wrote:
-> It sounds like a reasonable idea, though I was suggesting doing the
-> snapshot-and-check in the xfs_db source, not fstests.
-
-The problem is that blocktrash do changed some bits of the attr block,
-however, corrupt will still fail if the change is only inside the 'zero'
-range.
-
-So, I think it's hard to fix the problem by doing the snapshot-and-check
-in the xfs_db source.
-
-Thanks!
-Yu Kuai
-
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
