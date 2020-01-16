@@ -6,79 +6,86 @@ X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D011EC33CB1
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 16:21:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 316C4C33CB1
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 16:28:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A267A206D9
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 16:21:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED7AF2077C
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 16:28:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="aTOC4+iM"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LNk6NpVG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729149AbgAPQVt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Jan 2020 11:21:49 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:38006 "EHLO
+        id S1726566AbgAPQ24 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Jan 2020 11:28:56 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:41224 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726867AbgAPQVs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jan 2020 11:21:48 -0500
+        with ESMTP id S1726370AbgAPQ24 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jan 2020 11:28:56 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=7uyMSUe5fGIx3kNEng+GBAerC2MVr0RSfeDuPe7xDyw=; b=aTOC4+iMSmOa4o4NFTmhGyWBx
-        abE6yMgGRDBGt9zyanpuT5ADQecEMc6v+US0nQEHSG34tWIecSyS31cVhZbx7aRe1n6UpI1/dIfwr
-        VNgzwGR50rsqln5R1q/xGiSbmWaKNFeu5j5Wce6Nt45nt4s1sdiewM3rihtHgbyg9nWA4BE0YSC4O
-        UGskI1nBCMsITdxTrsdb6j3UmjCR3/1hCqUyFmdSh02Qy/5gjcHK3ThSS6JjGc8eRoVz/gVBwutCp
-        md6+tRiYL6nAZXgyLYp6BUf3ERavcsY2Yv+GuDU2/ZhnzrcJxkCsbU91aEZAJzfca/X49MBqZdl/A
-        swr+b86bQ==;
+         bh=+QlsK9oAT5vA9wNid3L0KEavCrCh7Y+o0oSvfZkTels=; b=LNk6NpVGS3+lZABjQZD2S9tmO
+        //NhpjejXL8F9BSSTBGkaFw2MHhuVI/UYW5xjPs+h/bdy+kxySdickE5LoVjsk0wrAXgAOewfYlDA
+        7T7l9aGWp/kkUIcEqoxyf7tSSuSMBwtqlN0nCWX46MiaPSLScnwdhE+cGuETKI15fwl2ASjJ6V8ls
+        Z93lpnr2W2IGwLnjVcIXauc05sJU13onw83pjfDYK/VpyQrPOcHddxrxiVSt4LYPEd/a7gkHOOd6/
+        GFQLGUeyhR+NGYUEqs588Q4Cfsui1dD0dEu9f7oGZik5t1Ya5CEiSpn4AJMvknmyXSOtsjmh3ksae
+        JVgdY9xYg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1is7u0-0005vu-G8; Thu, 16 Jan 2020 16:21:48 +0000
-Date:   Thu, 16 Jan 2020 08:21:48 -0800
+        id 1is80u-0000J8-4Q; Thu, 16 Jan 2020 16:28:56 +0000
+Date:   Thu, 16 Jan 2020 08:28:56 -0800
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
-Subject: Re: [PATCH 5/9] xfs: make xfs_buf_read_map return an error code
-Message-ID: <20200116162148.GE3802@infradead.org>
+Subject: Re: [PATCH 6/9] xfs: make xfs_buf_get_map return an error code
+Message-ID: <20200116162856.GF3802@infradead.org>
 References: <157910781961.2028217.1250106765923436515.stgit@magnolia>
- <157910785108.2028217.14921731819456574224.stgit@magnolia>
+ <157910785745.2028217.13992797354402280050.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <157910785108.2028217.14921731819456574224.stgit@magnolia>
+In-Reply-To: <157910785745.2028217.13992797354402280050.stgit@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> @@ -2960,6 +2960,10 @@ xfs_read_agf(
->  			mp, tp, mp->m_ddev_targp,
->  			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
->  			XFS_FSS_TO_BB(mp, 1), flags, bpp, &xfs_agf_buf_ops);
-> +	if (error == -EAGAIN && (flags & XBF_TRYLOCK)) {
-
-Given that EAGAIN is only returned in the XBF_TRYLOCK case the check
-for XBF_TRYLOCK should not be required.
-
-> +		*bpp = NULL;
-> +		return 0;
-
-Also we should make sure in the lowest layers to never return a
-non-NULL bpp if returning an error to avoid this boilerplate code.
-
-> -	if (!bp)
-> -		return -ENOMEM;
-> +	error = xfs_buf_read_map(target, &map, 1, flags, &bp, ops);
-> +	if (error)
+>  	error = xfs_buf_find(target, map, nmaps, flags, NULL, &bp);
+> -
+>  	switch (error) {
+>  	case 0:
+>  		/* cache hit */
+>  		goto found;
+> -	case -EAGAIN:
+> -		/* cache hit, trylock failure, caller handles failure */
+> -		ASSERT(flags & XBF_TRYLOCK);
+> -		return NULL;
+>  	case -ENOENT:
+>  		/* cache miss, go for insert */
+>  		break;
+> +	case -EAGAIN:
+> +		/* cache hit, trylock failure, caller handles failure */
+> +		ASSERT(flags & XBF_TRYLOCK);
+> +		/* fall through */
+>  	case -EFSCORRUPTED:
+>  	default:
+> -		/*
+> -		 * None of the higher layers understand failure types
+> -		 * yet, so return NULL to signal a fatal lookup error.
+> -		 */
+> -		return NULL;
 > +		return error;
->  	error = bp->b_error;
->  	if (error) {
->  		xfs_buf_ioerror_alert(bp, __func__);
 
-The extra checking of bp->b_error shoudn't be required now.  That almost
-means we might have to move the xfs_buf_ioerror_alert into
-xfs_buf_read_map.
+I think two little if statements would be cleaner with two ifs instead
+of the switch statement:
 
-That also means xfs_buf_read can be turned into a simple inline
-function again.
+	if (!error)
+		goto found;
+	if (error != -ENOENT)
+		return error;
+
+Otherwise looks good:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
