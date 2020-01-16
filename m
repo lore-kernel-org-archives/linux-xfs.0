@@ -1,103 +1,97 @@
-Return-Path: <SRS0=S7Al=3E=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=yxE5=3F=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 712DBC32771
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 23:52:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C082C32771
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 00:37:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3C60C2187F
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jan 2020 23:52:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33C1C222C3
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 00:37:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="Q1y7+qBr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731173AbgAOXws (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Jan 2020 18:52:48 -0500
-Received: from mga06.intel.com ([134.134.136.31]:54823 "EHLO mga06.intel.com"
+        id S1729347AbgAPAh2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Jan 2020 19:37:28 -0500
+Received: from bilbo.ozlabs.org ([203.11.71.1]:57531 "EHLO ozlabs.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730572AbgAOXws (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Jan 2020 18:52:48 -0500
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by orsmga104.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 15 Jan 2020 15:52:38 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.70,323,1574150400"; 
-   d="scan'208";a="373102555"
-Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
-  by orsmga004.jf.intel.com with ESMTP; 15 Jan 2020 15:52:38 -0800
-Date:   Wed, 15 Jan 2020 15:52:37 -0800
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-kernel@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [RFC PATCH V2 08/12] fs/xfs: Add lock/unlock mode to xfs
-Message-ID: <20200115235237.GA24522@iweiny-DESK2.sc.intel.com>
-References: <20200110192942.25021-1-ira.weiny@intel.com>
- <20200110192942.25021-9-ira.weiny@intel.com>
- <20200113221957.GN8247@magnolia>
+        id S1729110AbgAPAh2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Jan 2020 19:37:28 -0500
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 47yldd5QYKz9sR0;
+        Thu, 16 Jan 2020 11:37:25 +1100 (AEDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=canb.auug.org.au;
+        s=201702; t=1579135045;
+        bh=GbTt+rKa0V2mpaEa87nv0cC/Exer67Ry1d8s0Ahz1w0=;
+        h=Date:From:To:Cc:Subject:From;
+        b=Q1y7+qBrzUIndY2aaSQNZkTDMed3sC37GDZKbSeXuzT8/r3GG5/g8JyQhfho78X38
+         3PLd3mRPcYSX/+esXQ9awFbjh+Xex9dvOL5srLf8TYA/eMkW3qZEQ2n3OClEB8MMFn
+         HCBEpL59medOPPWMIdL40Y/n801lEMItsjSwp4wUsRPIay5Sw+U4cq7O6kVvnz/kDN
+         /d54N8SI+2VNQ0gKOkDSHlK7pK1eGUD5qjQ/FSWrzmeSoue7ec66MqTmfQPrCxXWOa
+         dBA6iILQsTOtTAGdMbAVRPfwseMNb2+BNlVkoBlueE50x1YIyVaQAHgl8ry2t2/Jr/
+         +VpsuO4VzKKlg==
+Date:   Thu, 16 Jan 2020 11:37:25 +1100
+From:   Stephen Rothwell <sfr@canb.auug.org.au>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Cc:     Linux Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: linux-next: build warning after merge of the xfs tree
+Message-ID: <20200116113725.0223f18c@canb.auug.org.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200113221957.GN8247@magnolia>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+Content-Type: multipart/signed; boundary="Sig_/fzDzLL6F/gLixfTVWdm9Y72";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 13, 2020 at 02:19:57PM -0800, Darrick J. Wong wrote:
-> On Fri, Jan 10, 2020 at 11:29:38AM -0800, ira.weiny@intel.com wrote:
-> > From: Ira Weiny <ira.weiny@intel.com>
-> > 
+--Sig_/fzDzLL6F/gLixfTVWdm9Y72
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-[snip]
+Hi all,
 
-> >  
-> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > index 401da197f012..e8fd95b75e5b 100644
-> > --- a/fs/xfs/xfs_inode.c
-> > +++ b/fs/xfs/xfs_inode.c
-> > @@ -142,12 +142,12 @@ xfs_ilock_attr_map_shared(
-> >   *
-> >   * Basic locking order:
-> >   *
-> > - * i_rwsem -> i_mmap_lock -> page_lock -> i_ilock
-> > + * i_rwsem -> i_dax_sem -> i_mmap_lock -> page_lock -> i_ilock
-> 
-> Mmmmmm, more locks.  Can we skip the extra lock if CONFIG_FSDAX=n or if
-> the filesystem devices don't support DAX at all?
+After merging the xfs tree, today's linux-next build
+(powerpppc64_defconfig) produced this warning:
 
-I've looked into this a bit more and I think skipping on CONFIG_FSDAX=n is ok
-but doing so on individual devices is not going to be possible because we don't
-have that information at the vfs layer.
+fs/xfs/xfs_inode.c: In function 'xfs_itruncate_extents_flags':
+fs/xfs/xfs_inode.c:1523:8: warning: unused variable 'done' [-Wunused-variab=
+le]
+ 1523 |  int   done =3D 0;
+      |        ^~~~
 
-I'll continue to think about how to mitigate this more while I add CONFIG_FSDAX
-checks before rolling out a new patch set.
+Introduced by commit
 
-> 
-> Also, I don't think we're actually following the i_rwsem -> i_daxsem
-> order in fallocate, and possibly elsewhere too?
-> 
-> Does the vfs have to take the i_dax_sem to do remapping things like
-> reflink?  (Pretend that reflink and dax are compatible for the moment)
-> 
+  4bbb04abb4ee ("xfs: truncate should remove all blocks, not just to the en=
+d of the page cache")
 
-I spoke with Dan today about this and we believe the answer is going to be yes.
-However, not until the code is added to support DAX in reflink.  Because
-currently this is only required for places which use "IS_DAX()" to see the
-state of the inode.
 
-Currently the vfs layer does not have any IS_DAX() checks in the reflink path.
-But when they are added they will be required to take this sem.
 
-Ira
+--=20
+Cheers,
+Stephen Rothwell
 
+--Sig_/fzDzLL6F/gLixfTVWdm9Y72
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAl4fsEUACgkQAVBC80lX
+0GySSQf8CfAFnI3m7FiUt+ghaT7pAAinT5QZxeWmF/OD3jULbGZmtvFnDIhwMLXx
+pat7wO4rb0NK46aCuDqJR5+1UpbHbG+kMofImfuFWBdkUAxDpeOjgFpg1hgZpQDq
+GFG72BD/Xp4Ggfwq64K1nvNxyD5ujzjHNYFGUeC+uExda4u8DSFBKMU0XNIcatKo
+obOkvEx7mz7IRLqhHlpRBilyoBXT5qRDRYieUYrdw827Exm/vRhKxd97TJUC3u9K
+snbiRabSQKUSKjjvbAidUWmHMylodYZp/AIB5PNGUaioCsz+4YY3l4vdWKHPmRV2
+2pfobsgBzAkh0c5ktruLnQe1c59aig==
+=BD0u
+-----END PGP SIGNATURE-----
+
+--Sig_/fzDzLL6F/gLixfTVWdm9Y72--
