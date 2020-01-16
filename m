@@ -6,60 +6,60 @@ X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CEFBC33CB6
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 09:25:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 988B1C33CB6
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 09:25:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 69B86207FF
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 09:25:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 62CAE2075B
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 09:25:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="TmzNAWhi"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pv0jJnWM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730639AbgAPJZI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Jan 2020 04:25:08 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:40846 "EHLO
+        id S1729210AbgAPJZg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Jan 2020 04:25:36 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:40874 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729138AbgAPJZH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jan 2020 04:25:07 -0500
+        with ESMTP id S1729138AbgAPJZg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jan 2020 04:25:36 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=sbKG23v2crouUVJ+NHySAIRBE17s5tM5boJR1h+kGwY=; b=TmzNAWhiFe/uU2pBXGyXGMhIR
-        UE1HKCVmZ6Bl1KxlBCb5s8NEkLfoOhzthX/Xm1+sJdkeBwMMfBCJjXHciamlj2VJEeSSBTOid/uyq
-        q3UayMghcWjRFJbHLkckQF/iF2HxE5HiTCwS1hkTaETHKHqM6D4MDVsPynzKRpVTU/alGIY/g50cZ
-        GCkBqiLoxpCZpd4rzW0H1OTxK3Djhx1GGoo+09nIgfFetTInsIuZt97d0EqkxJ6Q5W2wkk51ZK4Ms
-        CcFgn60G394CJ1wNVJyV3uBfGbAh96oXOAjwn8cJ71kbc8zIrAdxkAE8DXCMl0RQVfE11zwtma/1s
-        Ol38hjylA==;
+         bh=UqOcPUSXJ7lwNXiesuUVJjA2O+I6z8lyJiCSpRxSNFw=; b=pv0jJnWMeLYDJWYCJ/Pq9yeaT
+        P+Wj0aqJl3kA1ZgepXdKQXAx6zLSTFh9+y6y4EViWmPyINhX96veaq0D5pZOtzwPhdqPA3xVgRmlJ
+        bTU0zI6tvXwCMGU1b4RuX4RGGY49OpFIVozExp65wVsaO8+FxAHQA9kYy7BAtQOSdLQ2YKRZNvvI7
+        aL/+vr9BNm0csTq5/7sFFLgAag/pYT9iYcQ5a80oNK6DYe7pSFl8tui4R9O/ppi0RKMzvcQPTcg3v
+        MtnOsFST2wnIWbIXnP0V7gpyyJyM9plL1d7ie2qMCNOX+0gYfOk7WM+JZRyvaKqakoO6WLMTYEoAn
+        VplFmxDCA==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1is1Ok-0006vR-9v; Thu, 16 Jan 2020 09:25:06 +0000
-Date:   Thu, 16 Jan 2020 01:25:06 -0800
+        id 1is1PD-0007R5-Vp; Thu, 16 Jan 2020 09:25:35 +0000
+Date:   Thu, 16 Jan 2020 01:25:35 -0800
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
         fstests@vger.kernel.org
-Subject: Re: [PATCH 5/7] rc: fix _get_max_lfs_filesize on 32-bit platforms
-Message-ID: <20200116092506.GE21601@infradead.org>
+Subject: Re: [PATCH 6/7] generic/108: skip test if we can't initialize
+ scsi_debug
+Message-ID: <20200116092535.GF21601@infradead.org>
 References: <157915143549.2374854.7759901526137960493.stgit@magnolia>
- <157915146694.2374854.4708773619544238610.stgit@magnolia>
+ <157915147326.2374854.964133120890777930.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <157915146694.2374854.4708773619544238610.stgit@magnolia>
+In-Reply-To: <157915147326.2374854.964133120890777930.stgit@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 15, 2020 at 09:11:07PM -0800, Darrick J. Wong wrote:
+On Wed, Jan 15, 2020 at 09:11:13PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> The 32-bit calculation of the maximum filesize is incorrect.  Replace it
-> with the formula that the kernel has used since commit 0cc3b0ec23ce
-> ("Clarify (and fix) MAX_LFS_FILESIZE macros").  This fixes a regression
-> in generic/351 on 32-bit kernels.
+> Correct the logic in this test that detects failed scsi_debug
+> initializations.  Downgrade the reaction to _notrun since the filesystem
+> under test did not fail, just our mockup disk.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
