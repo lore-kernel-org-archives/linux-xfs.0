@@ -7,70 +7,71 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB210C33CB6
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 05:11:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F21B7C33CB1
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 05:13:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9195A2081E
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 05:11:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C8AA12087E
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jan 2020 05:13:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="NKVIqWgh"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="mG/+dHvl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726871AbgAPFLm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Jan 2020 00:11:42 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:47794 "EHLO
+        id S1726991AbgAPFNF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Jan 2020 00:13:05 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:48824 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726827AbgAPFLm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jan 2020 00:11:42 -0500
+        with ESMTP id S1726984AbgAPFNF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jan 2020 00:13:05 -0500
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00G59A3G170199;
-        Thu, 16 Jan 2020 05:11:39 GMT
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00G58N30169843;
+        Thu, 16 Jan 2020 05:13:03 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=kcNU8w5IkR57m7sytjdxTjauP66DhWVeXLbvEV1iWQo=;
- b=NKVIqWghyS/27skzL7m/RtyqtojAUgBxkl401jGIV0h8oFIBPu0H/KZak1N4UUzcj5PQ
- cjrS6II3lywg+NkPxhmkJYPDgemKs0dna+AP3VcJKXVx6/SqSkY+HXX7pUC+X3T3CmvA
- 4OQgQgi5KYlkeKrDuMdMr1K053muts6crYe0uTRnXFkiDHqDOtPElVblXf++rHGl4oJ2
- 90+kdVEl56Zh44WGMUDXA3aMhlSPBznCHNaqNRcfeHzXt5OvHsYrLYJrLgw6ZeZiSGQs
- 9Qa6oi6WAzpIh7vsUFN3N606tcUYg5UjkdOkJ1OavLdjUgb8Fxx5YVeEPOV7r89xdcp/ Zg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2xf73yr7af-1
+ bh=+WmB4UFMFOUh2LovplU5sy9FMiyIRQjaFmm991JqX3A=;
+ b=mG/+dHvlpg5nJtGa0wgkC2YzI1gtSwutff1KpGFfRPIdo8rJoYMmaNqSoebmkG+/XQMj
+ EkfJFiM92oOux9GtyUG8hZcHEEJLkv8npLASokPUK5dZ8linamVephiJMMg+BP7uPN4l
+ D6KcCRpaKhsikPsoMdpKpXOXRYBICPrbK2jkhMGTWfGjnjr7pRQOJkjsGlsB0hvour3D
+ 7guRtwYO1np809Gcy7liN6rbsDg/UfLzkT3xDvCZnlu+0x5cFOd8MELrBnkNzPoQ774p
+ z/dto9giz3LQ6kM7JVMqCaT1oN5FnOkByWLJPe4dxXgoXIcd+PoI6P12+TP8EZ+YqReb HA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2xf73yr7eq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 16 Jan 2020 05:11:39 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00G58Mub185637;
-        Thu, 16 Jan 2020 05:11:38 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2xj1at7ryc-1
+        Thu, 16 Jan 2020 05:13:03 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00G59Em8085423;
+        Thu, 16 Jan 2020 05:11:02 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2xj1psd0x5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 16 Jan 2020 05:11:38 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00G5Bbju001043;
-        Thu, 16 Jan 2020 05:11:37 GMT
+        Thu, 16 Jan 2020 05:11:02 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00G5B1CD023964;
+        Thu, 16 Jan 2020 05:11:02 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 15 Jan 2020 21:11:37 -0800
-Subject: [PATCH 1/2] xfs: refactor calls to xfs_admin
+        with ESMTP ; Wed, 15 Jan 2020 21:11:01 -0800
+Subject: [PATCH 4/7] xfs/279: skip test if we can't allocate scsi_debug
+ device
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     guaneryu@gmail.com, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Date:   Wed, 15 Jan 2020 21:11:36 -0800
-Message-ID: <157915149642.2375135.15091840835027007949.stgit@magnolia>
-In-Reply-To: <157915149017.2375135.14166864164575311878.stgit@magnolia>
-References: <157915149017.2375135.14166864164575311878.stgit@magnolia>
+Date:   Wed, 15 Jan 2020 21:11:00 -0800
+Message-ID: <157915146054.2374854.14308605711454193767.stgit@magnolia>
+In-Reply-To: <157915143549.2374854.7759901526137960493.stgit@magnolia>
+References: <157915143549.2374854.7759901526137960493.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9501 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=863
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1911140001 definitions=main-2001160042
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9501 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=909 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
  definitions=main-2001160042
 Sender: linux-xfs-owner@vger.kernel.org
@@ -80,59 +81,45 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create a helper to run xfs_admin on the scratch device, then refactor
-all tests to use it.
+Due to the unique structure of xfs/279 running _get_scsi_debug_dev from
+a backtick from inside subshell, the "could not get scsi_debug device"
+checks do not actually stop the test when modprobe scsi_debug fails.
+
+Therefore, check the value of SCSI_DEBUG_DEV from the subshell and
+_notrun the test if we couldn't get memory.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- common/config |    1 +
- common/xfs    |    8 ++++++++
- tests/xfs/287 |    2 +-
- 3 files changed, 10 insertions(+), 1 deletion(-)
+ tests/xfs/279 |    3 +++
+ 1 file changed, 3 insertions(+)
 
 
-diff --git a/common/config b/common/config
-index 9a9c7760..1116cb99 100644
---- a/common/config
-+++ b/common/config
-@@ -154,6 +154,7 @@ MKSWAP_PROG="$MKSWAP_PROG -f"
- export XFS_LOGPRINT_PROG="$(type -P xfs_logprint)"
- export XFS_REPAIR_PROG="$(type -P xfs_repair)"
- export XFS_DB_PROG="$(type -P xfs_db)"
-+export XFS_ADMIN_PROG="$(type -P xfs_admin)"
- export XFS_GROWFS_PROG=$(type -P xfs_growfs)
- export XFS_SPACEMAN_PROG="$(type -P xfs_spaceman)"
- export XFS_SCRUB_PROG="$(type -P xfs_scrub)"
-diff --git a/common/xfs b/common/xfs
-index 706ddf85..d9a9784f 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -218,6 +218,14 @@ _scratch_xfs_db()
- 	$XFS_DB_PROG "$@" $(_scratch_xfs_db_options)
- }
- 
-+_scratch_xfs_admin()
-+{
-+	local options=("$SCRATCH_DEV")
-+	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
-+		options+=("$SCRATCH_LOGDEV")
-+	$XFS_ADMIN_PROG "$@" "${options[@]}"
-+}
-+
- _scratch_xfs_logprint()
- {
- 	SCRATCH_OPTIONS=""
-diff --git a/tests/xfs/287 b/tests/xfs/287
-index 8dc754a5..f77ed2f1 100755
---- a/tests/xfs/287
-+++ b/tests/xfs/287
-@@ -70,7 +70,7 @@ $XFS_IO_PROG -r -c "lsproj" $dir/32bit
- _scratch_unmount
- 
- # Now, enable projid32bit support by xfs_admin
--xfs_admin -p $SCRATCH_DEV >> $seqres.full 2>&1 || _fail "xfs_admin failed"
-+_scratch_xfs_admin -p >> $seqres.full 2>&1 || _fail "xfs_admin failed"
- 
- # Now mount the fs, 32bit project quotas shall be supported, now
- _qmount_option "pquota"
+diff --git a/tests/xfs/279 b/tests/xfs/279
+index 7ab8bdd5..0ddc6a00 100755
+--- a/tests/xfs/279
++++ b/tests/xfs/279
+@@ -65,6 +65,7 @@ _check_mkfs()
+ echo "==================="
+ echo "4k physical 512b logical aligned"
+ SCSI_DEBUG_DEV=`_get_scsi_debug_dev 4096 512 0 128`
++test -b "$SCSI_DEBUG_DEV" || _notrun "Could not get scsi_debug device"
+ # sector size should default to 4k
+ _check_mkfs $SCSI_DEBUG_DEV
+ # blocksize smaller than physical sectorsize should revert to logical sectorsize
+@@ -77,6 +78,7 @@ _put_scsi_debug_dev
+ echo "==================="
+ echo "4k physical 512b logical unaligned"
+ SCSI_DEBUG_DEV=`_get_scsi_debug_dev 4096 512 1 128`
++test -b "$SCSI_DEBUG_DEV" || _notrun "Could not get scsi_debug device"
+ # should fail on misalignment
+ _check_mkfs $SCSI_DEBUG_DEV
+ # should fall back to logical sector size with force
+@@ -93,6 +95,7 @@ _put_scsi_debug_dev
+ echo "==================="
+ echo "hard 4k physical / 4k logical"
+ SCSI_DEBUG_DEV=`_get_scsi_debug_dev 4096 4096 0 128`
++test -b "$SCSI_DEBUG_DEV" || _notrun "Could not get scsi_debug device"
+ # block size smaller than sector size should fail 
+ _check_mkfs -b size=2048 $SCSI_DEBUG_DEV
+ # sector size smaller than physical sector size should fail
 
