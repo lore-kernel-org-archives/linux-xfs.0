@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7007CC33CB1
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jan 2020 06:24:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FE54C33CB1
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jan 2020 06:24:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 41F9A20748
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jan 2020 06:24:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 32BE320748
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jan 2020 06:24:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="UwsK4HGm"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WavIIGh7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726991AbgAQGYt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Jan 2020 01:24:49 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:34680 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726151AbgAQGYt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jan 2020 01:24:49 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00H68Nvc186711;
-        Fri, 17 Jan 2020 06:24:45 GMT
+        id S1726975AbgAQGYz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Jan 2020 01:24:55 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:54382 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726151AbgAQGYz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jan 2020 01:24:55 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00H68wPH166978;
+        Fri, 17 Jan 2020 06:24:51 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=C9fPbpnzozdNVl0IiXjVVOgaElKWb1gjepTxmBr8sLQ=;
- b=UwsK4HGmORoqkLDGCHz8/6ycgqlIQpMFNg8nAVoDBYSkvkJa/pdjMsLDjtddqiQ+iOXi
- 9akHkgYVwFz9yh9w1yav+IkQArPB7JGVmhv6rAD62nJn9vHRtIQ7Xj/G9nHPA+qZEf8x
- twiX5uNBrhfJD8xBVjbIoJ6rC2/Yc5dfGiNm90tGu/NWhjk+SkYlpHdS9l3nWxb3lcMN
- ZDhCGnrLAKJWMuz/b5pMYBjlCNjuQmtTVjz1F6P2WMDUasQLMHW06hE9QweFx3MjPwtr
- 5yn/Sm3LcFJGybF2W+6/7u5YoFl8dEKg+8t7PyFgvNBprGVTkUQVdz6j2QdfnGMXGHbn dg== 
+ bh=uiIGukNQUkdfFPUiXsk1VG08rcpGArxf9Yn1/vV7pMM=;
+ b=WavIIGh7tGASormn8n+ImZPU6ki3glgh6UvESBve26MVUvWMZwhTm9IjVZTbDoPp3kfM
+ F6p7Bil2GltUrtRd26DnllgvtIqxE+gV8q+8y3VobE8iaBP1mY+j7nIu8NLdAf3Bf+ps
+ z3/h5cs8LgTOef/61IS0xEDK9VCRnAxVhNOvF6JY11FDHwXYiGs7QNHkJwITCsv+hxK3
+ h9r7ipDT49XJWsSrA7gXFxpU+2ipRdv8MJSv6CbxZuVVf4A8XFDUbaeMoUQajKhfsP7R
+ d5/oekWrLPZsr2ivzVnMNlE2ToMG4ZIxWZITCXdFdqRILQy7+Q6gOuzMotKgQJs+WEFg Ww== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2xf74spt7h-1
+        by userp2120.oracle.com with ESMTP id 2xf73yxu9d-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 17 Jan 2020 06:24:45 +0000
+        Fri, 17 Jan 2020 06:24:51 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00H68U6s129423;
-        Fri, 17 Jan 2020 06:24:44 GMT
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00H68UGc129413;
+        Fri, 17 Jan 2020 06:24:51 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 2xjxp4hj3a-1
+        by userp3020.oracle.com with ESMTP id 2xjxp4hj6v-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 17 Jan 2020 06:24:44 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00H6OhWi005386;
-        Fri, 17 Jan 2020 06:24:43 GMT
+        Fri, 17 Jan 2020 06:24:50 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00H6Oo6W005410;
+        Fri, 17 Jan 2020 06:24:50 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 16 Jan 2020 22:24:43 -0800
-Subject: [PATCH 10/11] xfs: make xfs_*read_agf return EAGAIN to
- ALLOC_FLAG_TRYLOCK callers
+        with ESMTP ; Thu, 16 Jan 2020 22:24:49 -0800
+Subject: [PATCH 11/11] xfs: remove unnecessary null pointer checks from
+ _read_agf callers
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
-Date:   Thu, 16 Jan 2020 22:24:41 -0800
-Message-ID: <157924228165.3029431.1835481566077971155.stgit@magnolia>
+Date:   Thu, 16 Jan 2020 22:24:47 -0800
+Message-ID: <157924228789.3029431.3716642922130140199.stgit@magnolia>
 In-Reply-To: <157924221149.3029431.1461924548648810370.stgit@magnolia>
 References: <157924221149.3029431.1461924548648810370.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -64,13 +64,13 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9502 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=3 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1911140001 definitions=main-2001170048
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9502 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=3 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
  definitions=main-2001170048
@@ -81,146 +81,118 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Refactor xfs_read_agf and xfs_alloc_read_agf to return EAGAIN if the
-caller passed TRYLOCK and we weren't able to get the lock; and change
-the callers to recognize this.
+Drop the null buffer pointer checks in all code that calls
+xfs_alloc_read_agf and doesn't pass XFS_ALLOC_FLAG_TRYLOCK because
+they're no longer necessary.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c |   31 +++++++++++++++----------------
- fs/xfs/libxfs/xfs_bmap.c  |    9 +++++----
- fs/xfs/xfs_filestream.c   |   11 ++++++-----
- 3 files changed, 26 insertions(+), 25 deletions(-)
+ fs/xfs/libxfs/xfs_refcount.c   |    6 ------
+ fs/xfs/scrub/agheader_repair.c |    4 ----
+ fs/xfs/scrub/fscounters.c      |    3 ---
+ fs/xfs/scrub/repair.c          |    2 --
+ fs/xfs/xfs_discard.c           |    2 +-
+ fs/xfs/xfs_reflink.c           |    2 --
+ 6 files changed, 1 insertion(+), 18 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 83273975df77..26f3e4db84e0 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2502,13 +2502,15 @@ xfs_alloc_fix_freelist(
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index d7d702ee4d1a..6e1665f2cb67 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -1177,8 +1177,6 @@ xfs_refcount_finish_one(
+ 				XFS_ALLOC_FLAG_FREEING, &agbp);
+ 		if (error)
+ 			return error;
+-		if (XFS_IS_CORRUPT(tp->t_mountp, !agbp))
+-			return -EFSCORRUPTED;
  
- 	if (!pag->pagf_init) {
- 		error = xfs_alloc_read_agf(mp, tp, args->agno, flags, &agbp);
--		if (error)
--			goto out_no_agbp;
--		if (!pag->pagf_init) {
-+		if (error == -EAGAIN) {
-+			/* Couldn't lock the AGF so skip this AG. */
- 			ASSERT(flags & XFS_ALLOC_FLAG_TRYLOCK);
- 			ASSERT(!(flags & XFS_ALLOC_FLAG_FREEING));
--			goto out_agbp_relse;
-+			error = 0;
-+			goto out_no_agbp;
- 		}
-+		if (error)
-+			goto out_no_agbp;
- 	}
+ 		rcur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno);
+ 		if (!rcur) {
+@@ -1718,10 +1716,6 @@ xfs_refcount_recover_cow_leftovers(
+ 	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
+ 	if (error)
+ 		goto out_trans;
+-	if (!agbp) {
+-		error = -ENOMEM;
+-		goto out_trans;
+-	}
+ 	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno);
+ 
+ 	/* Find all the leftover CoW staging extents. */
+diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+index 7a1a38b636a9..d5e6db9af434 100644
+--- a/fs/xfs/scrub/agheader_repair.c
++++ b/fs/xfs/scrub/agheader_repair.c
+@@ -659,8 +659,6 @@ xrep_agfl(
+ 	error = xfs_alloc_read_agf(mp, sc->tp, sc->sa.agno, 0, &agf_bp);
+ 	if (error)
+ 		return error;
+-	if (!agf_bp)
+-		return -ENOMEM;
  
  	/*
-@@ -2533,13 +2535,15 @@ xfs_alloc_fix_freelist(
- 	 */
- 	if (!agbp) {
- 		error = xfs_alloc_read_agf(mp, tp, args->agno, flags, &agbp);
--		if (error)
--			goto out_no_agbp;
--		if (!agbp) {
-+		if (error == -EAGAIN) {
-+			/* Couldn't lock the AGF so skip this AG. */
- 			ASSERT(flags & XFS_ALLOC_FLAG_TRYLOCK);
- 			ASSERT(!(flags & XFS_ALLOC_FLAG_FREEING));
-+			error = 0;
- 			goto out_no_agbp;
- 		}
-+		if (error)
-+			goto out_no_agbp;
+ 	 * Make sure we have the AGFL buffer, as scrub might have decided it
+@@ -735,8 +733,6 @@ xrep_agi_find_btrees(
+ 	error = xfs_alloc_read_agf(mp, sc->tp, sc->sa.agno, 0, &agf_bp);
+ 	if (error)
+ 		return error;
+-	if (!agf_bp)
+-		return -ENOMEM;
+ 
+ 	/* Find the btree roots. */
+ 	error = xrep_find_ag_btree_roots(sc, agf_bp, fab, NULL);
+diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
+index 7251c66a82c9..ec2064ed3c30 100644
+--- a/fs/xfs/scrub/fscounters.c
++++ b/fs/xfs/scrub/fscounters.c
+@@ -83,9 +83,6 @@ xchk_fscount_warmup(
+ 		error = xfs_alloc_read_agf(mp, sc->tp, agno, 0, &agf_bp);
+ 		if (error)
+ 			break;
+-		error = -ENOMEM;
+-		if (!agf_bp || !agi_bp)
+-			break;
+ 
+ 		/*
+ 		 * These are supposed to be initialized by the header read
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index 3df49d487940..e489d7a8446a 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -546,8 +546,6 @@ xrep_reap_block(
+ 		error = xfs_alloc_read_agf(sc->mp, sc->tp, agno, 0, &agf_bp);
+ 		if (error)
+ 			return error;
+-		if (!agf_bp)
+-			return -ENOMEM;
+ 	} else {
+ 		agf_bp = sc->sa.agf_bp;
  	}
+diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+index cae613620175..0b8350e84d28 100644
+--- a/fs/xfs/xfs_discard.c
++++ b/fs/xfs/xfs_discard.c
+@@ -45,7 +45,7 @@ xfs_trim_extents(
+ 	xfs_log_force(mp, XFS_LOG_SYNC);
  
- 	/* reset a padding mismatched agfl before final free space check */
-@@ -2768,10 +2772,10 @@ xfs_alloc_pagf_init(
- 	xfs_buf_t		*bp;
- 	int			error;
- 
--	if ((error = xfs_alloc_read_agf(mp, tp, agno, flags, &bp)))
-+	error = xfs_alloc_read_agf(mp, tp, agno, flags, &bp);
+ 	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
+-	if (error || !agbp)
 +	if (error)
- 		return error;
--	if (bp)
--		xfs_trans_brelse(tp, bp);
-+	xfs_trans_brelse(tp, bp);
- 	return 0;
- }
+ 		goto out_put_perag;
  
-@@ -2958,12 +2962,9 @@ xfs_read_agf(
- 	trace_xfs_read_agf(mp, agno);
- 
- 	ASSERT(agno != NULLAGNUMBER);
--	error = xfs_trans_read_buf(
--			mp, tp, mp->m_ddev_targp,
-+	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
- 			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
- 			XFS_FSS_TO_BB(mp, 1), flags, bpp, &xfs_agf_buf_ops);
--	if (error == -EAGAIN)
--		return 0;
+ 	cur = xfs_allocbt_init_cursor(mp, NULL, agbp, agno, XFS_BTNUM_CNT);
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 7a6c94295b8a..89483d1f262c 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -143,8 +143,6 @@ xfs_reflink_find_shared(
+ 	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
  	if (error)
  		return error;
+-	if (!agbp)
+-		return -ENOMEM;
  
-@@ -2995,8 +2996,6 @@ xfs_alloc_read_agf(
- 			bpp);
- 	if (error)
- 		return error;
--	if (!*bpp)
--		return 0;
- 	ASSERT(!(*bpp)->b_error);
+ 	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno);
  
- 	agf = XFS_BUF_TO_AGF(*bpp);
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index cfcef076c72f..10b7284cac35 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3311,13 +3311,14 @@ xfs_bmap_longest_free_extent(
- 	pag = xfs_perag_get(mp, ag);
- 	if (!pag->pagf_init) {
- 		error = xfs_alloc_pagf_init(mp, tp, ag, XFS_ALLOC_FLAG_TRYLOCK);
--		if (error)
--			goto out;
--
--		if (!pag->pagf_init) {
-+		if (error == -EAGAIN) {
-+			/* Couldn't lock the AGF, so skip this AG. */
- 			*notinit = 1;
-+			error = 0;
- 			goto out;
- 		}
-+		if (error)
-+			goto out;
- 	}
- 
- 	longest = xfs_alloc_longest_free_extent(pag,
-diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-index 5f12b5d8527a..3ccdab463359 100644
---- a/fs/xfs/xfs_filestream.c
-+++ b/fs/xfs/xfs_filestream.c
-@@ -159,16 +159,17 @@ xfs_filestream_pick_ag(
- 
- 		if (!pag->pagf_init) {
- 			err = xfs_alloc_pagf_init(mp, NULL, ag, trylock);
--			if (err && !trylock) {
-+			if (err == -EAGAIN) {
-+				/* Couldn't lock the AGF, skip this AG. */
-+				xfs_perag_put(pag);
-+				continue;
-+			}
-+			if (err) {
- 				xfs_perag_put(pag);
- 				return err;
- 			}
- 		}
- 
--		/* Might fail sometimes during the 1st pass with trylock set. */
--		if (!pag->pagf_init)
--			goto next_ag;
--
- 		/* Keep track of the AG with the most free blocks. */
- 		if (pag->pagf_freeblks > maxfree) {
- 			maxfree = pag->pagf_freeblks;
 
