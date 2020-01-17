@@ -6,38 +6,36 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 770D1C33CB1
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jan 2020 09:04:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DF76C33CB1
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jan 2020 09:04:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4DA3A217F4
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jan 2020 09:04:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2DFB72082F
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jan 2020 09:04:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726603AbgAQJEr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Jan 2020 04:04:47 -0500
-Received: from buxtehude.debian.org ([209.87.16.39]:60188 "EHLO
+        id S1726479AbgAQJEt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Jan 2020 04:04:49 -0500
+Received: from buxtehude.debian.org ([209.87.16.39]:60192 "EHLO
         buxtehude.debian.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726479AbgAQJEr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jan 2020 04:04:47 -0500
-X-Greylist: delayed 1714 seconds by postgrey-1.27 at vger.kernel.org; Fri, 17 Jan 2020 04:04:46 EST
+        with ESMTP id S1726908AbgAQJEt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jan 2020 04:04:49 -0500
 Received: from debbugs by buxtehude.debian.org with local (Exim 4.92)
         (envelope-from <debbugs@buxtehude.debian.org>)
-        id 1isN6v-0002zT-Gi; Fri, 17 Jan 2020 08:36:09 +0000
+        id 1isN6w-0002zk-2T; Fri, 17 Jan 2020 08:36:10 +0000
 MIME-Version: 1.0
 X-Mailer: MIME-tools 5.509 (Entity 5.509)
 X-Loop: owner@bugs.debian.org
 From:   "Debian Bug Tracking System" <owner@bugs.debian.org>
 To:     =?UTF-8?Q?G=C3=BCrkan?= Myczko <gurkan@phys.ethz.ch>
-Subject: Bug#144876: marked as done (xfsprogs: Please don't package it as
- a native package)
-Message-ID: <handler.144876.D144876.157925012211064.ackdone@bugs.debian.org>
+Subject: Bug#510516: marked as done (is not a native package)
+Message-ID: <handler.510516.D144876.157925012211064.ackdone@bugs.debian.org>
 References: <d99ff6bb9a3f9f1774358e10a61f8717@phys.ethz.ch>
- <E171s17-0004hD-00@r063144.stusta.swh.mhn.de>
-X-Debian-PR-Message: closed 144876
+ <20090102182138.17804.88243.reportbug@intrepid.palfrader.org>
+X-Debian-PR-Message: closed 510516
 X-Debian-PR-Package: xfsprogs
 X-Debian-PR-Source: xfsprogs
-Reply-To: 144876@bugs.debian.org
-Date:   Fri, 17 Jan 2020 08:36:09 +0000
-Content-Type: multipart/mixed; boundary="----------=_1579250169-11489-0"
+Reply-To: 510516@bugs.debian.org
+Date:   Fri, 17 Jan 2020 08:36:10 +0000
+Content-Type: multipart/mixed; boundary="----------=_1579250170-11489-2"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -45,7 +43,7 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 This is a multi-part message in MIME format...
 
-------------=_1579250169-11489-0
+------------=_1579250170-11489-2
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset="utf-8"
@@ -54,7 +52,7 @@ Your message dated Fri, 17 Jan 2020 09:35:20 +0100
 with message-id <d99ff6bb9a3f9f1774358e10a61f8717@phys.ethz.ch>
 and subject line non-native package
 has caused the Debian Bug report #144876,
-regarding xfsprogs: Please don't package it as a native package
+regarding is not a native package
 to be marked as done.
 
 This means that you claim that the problem has been dealt with.
@@ -72,44 +70,63 @@ immediately.)
 Debian Bug Tracking System
 Contact owner@bugs.debian.org with problems
 
-------------=_1579250169-11489-0
+------------=_1579250170-11489-2
 Content-Type: message/rfc822
 Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
 
-Received: (at submit) by bugs.debian.org; 28 Apr 2002 17:01:35 +0000
-Return-path: <bunk@fs.tum.de>
-Received: from emailhub.stusta.mhn.de (mailhub.stusta.mhn.de) [141.84.69.5] 
-	by master.debian.org with smtp (Exim 3.12 1 (Debian))
-	id 171s3K-0001vv-00; Sun, 28 Apr 2002 12:01:34 -0500
-Received: (qmail 1721 invoked from network); 28 Apr 2002 17:01:32 -0000
-Received: from r063144.stusta.swh.mhn.de (10.150.63.144)
-  by mailhub.stusta.mhn.de with SMTP; 28 Apr 2002 17:01:32 -0000
-Received: from bunk by r063144.stusta.swh.mhn.de with local (Exim 3.35 #1 (Debian))
-	id 171s17-0004hD-00; Sun, 28 Apr 2002 18:59:17 +0200
-From: Adrian Bunk <bunk@fs.tum.de>
+Received: (at submit) by bugs.debian.org; 2 Jan 2009 18:21:41 +0000
+X-Spam-Checker-Version: SpamAssassin 3.2.3-bugs.debian.org_2005_01_02
+	(2007-08-08) on rietz.debian.org
+X-Spam-Level: 
+X-Spam-Bayes: score:0.0000 Tokens: new, 21; hammy, 70; neutral, 30; spammy, 0.
+	spammytokens: hammytokens:0.000-+--H*M:reportbug, 0.000-+--H*MI:reportbug,
+	0.000-+--H*x:reportbug, 0.000-+--Severity, 0.000-+--H*UA:reportbug
+X-Spam-Status: No, score=-14.4 required=4.0 tests=AWL,BAYES_00,FROMDEVELOPER,
+	HAS_PACKAGE,XMAILER_REPORTBUG autolearn=ham
+	version=3.2.3-bugs.debian.org_2005_01_02
+Return-path: <weasel@debian.org>
+Received: from anguilla.debian.or.at ([86.59.21.37])
+	by rietz.debian.org with esmtp (Exim 4.63)
+	(envelope-from <weasel@debian.org>)
+	id 1LIoeT-0005jg-Fj
+	for submit@bugs.debian.org; Fri, 02 Jan 2009 18:21:41 +0000
+Received: from intrepid.palfrader.org (argos.campus-sbg.at [62.99.152.178])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client CN "intrepid.palfrader.org", Issuer "Peter Palfrader" (verified OK))
+	by anguilla.debian.or.at (Postfix) with ESMTP id 9FDBD10F9C1;
+	Fri,  2 Jan 2009 19:21:39 +0100 (CET)
+Received: by intrepid.palfrader.org (Postfix, from userid 1000)
+	id 155CD1620B8; Fri,  2 Jan 2009 19:21:39 +0100 (CET)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+From: Peter Palfrader <weasel@debian.org>
 To: Debian Bug Tracking System <submit@bugs.debian.org>
-Subject: xfsprogs: Please don't package it as a native package
-X-Mailer: reportbug 1.50
-Date: Sun, 28 Apr 2002 18:59:17 +0200
-Message-Id: <E171s17-0004hD-00@r063144.stusta.swh.mhn.de>
+Subject: is not a native package
+Message-ID: <20090102182138.17804.88243.reportbug@intrepid.palfrader.org>
+X-Mailer: reportbug 3.47
+Date: Fri, 02 Jan 2009 19:21:38 +0100
 Delivered-To: submit@bugs.debian.org
 
 Package: xfsprogs
-Version: 2.0.3-1
+Version: 2.10.2-1
 Severity: normal
 
+Hi,
 
-xfsprogs is not a native Debian package. Please change the packaging to
-a non-native packaging (.orig.tar.gz + .diff.gz + .dsc).
+2.10.2-1 indicates that this is a non-native package, but it's not
+uploaded like that:
 
-TIA
-Adrian
+-rw-r--r--  1 root root    924 Dec 20 00:47 xfsprogs_2.10.2-1.dsc
+-rw-r--r--  1 root root 971568 Dec 20 00:47 xfsprogs_2.10.2-1.tar.gz
+
+Cheers,
+Peter
 
 
 
-
-------------=_1579250169-11489-0
+------------=_1579250170-11489-2
 Content-Type: message/rfc822
 Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
@@ -157,4 +174,4 @@ Message-ID: <d99ff6bb9a3f9f1774358e10a61f8717@phys.ethz.ch>
 X-Sender: gurkan@phys.ethz.ch
 
 for many months, it's been a non-native debian package again
-------------=_1579250169-11489-0--
+------------=_1579250170-11489-2--
