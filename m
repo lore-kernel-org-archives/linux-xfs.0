@@ -2,137 +2,136 @@ Return-Path: <SRS0=oH8U=3G=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E96BC33C9E
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jan 2020 23:17:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79929C33C9E
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jan 2020 23:44:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 51DDC21835
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jan 2020 23:17:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4935B22464
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jan 2020 23:44:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="F/1ZFc6l"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="pF6jokDf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730075AbgAQXRR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Jan 2020 18:17:17 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:52078 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729354AbgAQXRR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jan 2020 18:17:17 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1579303036;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=o/hX7r4uphLExHqKzCfInfCt8YS9WeLH9TTy3KHKtGM=;
-        b=F/1ZFc6lDR2SrA5k0x4ch7F/aVGWlwmXqp+2OXwNMSXHPgd5+1STCwaoBW7oYrEPWVD5tX
-        x5rjOFH+nHSaYJHO8/9XugNFpkHtE9k+VIVq0NzoDSeUKozr4Cte1QgDLZmIuLBzoqQqwi
-        8YpgH3Oxgx0NdusCGIKJGpMM88FdlgU=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-132-FZp0ulVLNJ2X0E0wSuQGbw-1; Fri, 17 Jan 2020 18:17:13 -0500
-X-MC-Unique: FZp0ulVLNJ2X0E0wSuQGbw-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1DCB418C35A1;
-        Fri, 17 Jan 2020 23:17:12 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id D88461A7E3;
-        Fri, 17 Jan 2020 23:17:11 +0000 (UTC)
-To:     linux-xfs <linux-xfs@vger.kernel.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>
-From:   Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs_repair: stop using ->data_entry_p()
-Message-ID: <2cf1f45b-b3b2-f630-50d5-ff34c000b0c8@redhat.com>
-Date:   Fri, 17 Jan 2020 17:17:11 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.4.1
+        id S1730117AbgAQXo1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Jan 2020 18:44:27 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:49496 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729798AbgAQXo1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jan 2020 18:44:27 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00HNSwKO008683;
+        Fri, 17 Jan 2020 23:44:24 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=i5kw4raycYbiJFke8q0cTHo1fPhqi6TbVMxw3BpJEuY=;
+ b=pF6jokDf0x7zageCGEgILeh5WMRVVdEpQIPVIGC7nFZe7H93J7cItqZpIqEv1yMePTvI
+ NyUvxDHaAqij58M1jYSeIYgowglL4UczkpipdlLjVGcTFSpD+9NLUcQfL0QdVHNvhZV0
+ pZqgIoZUWMxpOEMV6ljXoqYcZAYfo5T7C/Dolw3eU7IMprE3TlvO8C9D6UjsO50w4Dlx
+ IinEehikXdak3r9+9tSVA35MC7qyA2VpZL8ictE+3p5tx9o5Z3BFd04Ktuw/93VqZoyD
+ FE90VGesTeYWRL/h4RDwnvZowwroL1jYXPu+/iMgKYSDdrosXxrezgltYJYwsmjOyB9u Pw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2xf7403fjb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 17 Jan 2020 23:44:24 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00HNSutW064040;
+        Fri, 17 Jan 2020 23:42:23 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2xjxp60t1x-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 17 Jan 2020 23:42:23 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00HNgKRR019255;
+        Fri, 17 Jan 2020 23:42:22 GMT
+Received: from localhost (/10.145.179.16)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 17 Jan 2020 15:42:20 -0800
+Date:   Fri, 17 Jan 2020 15:42:19 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Gionatan Danti <g.danti@assyoma.it>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: XFS reflink vs ThinLVM
+Message-ID: <20200117234219.GM8257@magnolia>
+References: <627cb07f-9433-ddfd-37d7-27efedd89727@assyoma.it>
+ <39b50e2c-cb78-3bcd-0130-defa9c573b71@assyoma.it>
+ <20200113165341.GE8247@magnolia>
+ <f61995d7-9775-0035-8700-2b92c63bd23f@assyoma.it>
+ <20200113180914.GI8247@magnolia>
+ <8e96231f-8fc6-b178-9e83-84cbb9af6d2e@assyoma.it>
+ <9d8e8614-9ae1-30ee-f2b4-1e45b90b27f8@assyoma.it>
+ <20200115163948.GF8257@magnolia>
+ <761fcf8f9d68ee221a35d15c1a7120c5@assyoma.it>
+ <e3dd598260d9f92c3b2c91cb81540e37@assyoma.it>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e3dd598260d9f92c3b2c91cb81540e37@assyoma.it>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9503 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-2001170178
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9503 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-2001170178
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The ->data_entry_p() op went away in v5.5 kernelspace, so rework
-xfs_repair to use ->data_entry_offset instead, in preparation
-for the v5.5 libxfs backport.
+On Fri, Jan 17, 2020 at 10:58:15PM +0100, Gionatan Danti wrote:
+> Il 15-01-2020 18:45 Gionatan Danti ha scritto:
+> > Let me briefly describe the expected workload: thinly provisioned
+> > virtual image storage. The problem with "plain" sparse file (ie:
+> > without extsize hint) is that, after some time, the underlying vdisk
+> > file will be very fragmented: consecutive physical blocks will be
+> > assigned to very different logical blocks, leading to sub-par
+> > performance when reading back the whole file (eg: for backup purpose).
+> > 
+> > I can easily simulate a worst-case scenario with fio, issuing random
+> > write to a pre-created sparse file. While the random writes complete
+> > very fast (because they are more-or-less sequentially written inside
+> > the sparse file), reading back that file will have very low
+> > performance: 10 MB/s vs 600+ MB/s for a preallocated file.
+> 
+> I would like to share some other observation/results, which I hope can be
+> useful for other peoples.
+> 
+> Further testing shows that "cp --reflink" an highly fragmented files is a
+> relatively long operation, easily in the range of 30s or more, during which
+> the guest virtual machine is basically denied any access to the underlying
+> virtual disk file.
 
-This could later be cleaned up to use offsets as was done
-in kernel commit 8073af5153c for example.
+How many fragments, and how big of a sparse file?
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+--D
 
-I'll munge this patch in mid-libxfs-sync, just before the
-->data_entry_p removal patch.
-
-diff --git a/repair/dir2.c b/repair/dir2.c
-index 4ac0084e..2494f3c4 100644
---- a/repair/dir2.c
-+++ b/repair/dir2.c
-@@ -580,7 +580,7 @@ process_dir2_data(
- 
- 	d = bp->b_addr;
- 	bf = M_DIROPS(mp)->data_bestfree_p(d);
--	ptr = (char *)M_DIROPS(mp)->data_entry_p(d);
-+	ptr = (char *)d + M_DIROPS(mp)->data_entry_offset;
- 	badbest = lastfree = freeseen = 0;
- 	if (be16_to_cpu(bf[0].length) == 0) {
- 		badbest |= be16_to_cpu(bf[0].offset) != 0;
-@@ -646,7 +646,7 @@ process_dir2_data(
- 			do_warn(_("\twould junk block\n"));
- 		return 1;
- 	}
--	ptr = (char *)M_DIROPS(mp)->data_entry_p(d);
-+	ptr = (char *)d + M_DIROPS(mp)->data_entry_offset;
- 	/*
- 	 * Process the entries now.
- 	 */
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 91d208a6..d61b2ae7 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -1530,7 +1530,7 @@ longform_dir2_entry_check_data(
- 
- 	bp = *bpp;
- 	d = bp->b_addr;
--	ptr = (char *)M_DIROPS(mp)->data_entry_p(d);
-+	ptr = (char *)d + M_DIROPS(mp)->data_entry_offset;
- 	nbad = 0;
- 	needscan = needlog = 0;
- 	junkit = 0;
-@@ -1590,7 +1590,7 @@ longform_dir2_entry_check_data(
- 				break;
- 
- 			/* check for block with no data entries */
--			if ((ptr == (char *)M_DIROPS(mp)->data_entry_p(d)) &&
-+			if ((ptr == (char *)d + M_DIROPS(mp)->data_entry_offset) &&
- 			    (ptr + be16_to_cpu(dup->length) >= endptr)) {
- 				junkit = 1;
- 				*num_illegal += 1;
-@@ -1659,7 +1659,7 @@ longform_dir2_entry_check_data(
- 			do_warn(_("would fix magic # to %#x\n"), wantmagic);
- 	}
- 	lastfree = 0;
--	ptr = (char *)M_DIROPS(mp)->data_entry_p(d);
-+	ptr = (char *)d + M_DIROPS(mp)->data_entry_offset;
- 	/*
- 	 * look at each entry.  reference inode pointed to by each
- 	 * entry in the incore inode tree.
-@@ -1834,7 +1834,7 @@ longform_dir2_entry_check_data(
- 			       (dep->name[0] == '.' && dep->namelen == 1));
- 			add_inode_ref(current_irec, current_ino_offset);
- 			if (da_bno != 0 ||
--			    dep != M_DIROPS(mp)->data_entry_p(d)) {
-+			    dep != (void *)d + M_DIROPS(mp)->data_entry_offset) {
- 				/* "." should be the first entry */
- 				nbad++;
- 				if (entry_junked(
-
+> While the number of fragments required to reach reflink time of 30+ seconds
+> is very high, this would be a quite common case when using thinly
+> provisioned virtual disk files. With sparse file, any write done at guest OS
+> level has a very good chance to create its own fragment (ie: allocating a
+> discontiguous chunk as seen by logical/physical block mapping), leading to
+> very fragmented files.
+> 
+> So, back to main topic: reflink is an invaluable tool, to be used *with*
+> (rather than instead of) thin lvm:
+> - thinlvm is the right tool for taking rolling volume snapshot;
+> - reflink is extremely useful for "on-demand" snapshot of key files.
+> 
+> Thank you all for the very detailed and useful information you provided.
+> Regards.
+> 
+> -- 
+> Danti Gionatan
+> Supporto Tecnico
+> Assyoma S.r.l. - www.assyoma.it
+> email: g.danti@assyoma.it - info@assyoma.it
+> GPG public key ID: FF5F32A8
