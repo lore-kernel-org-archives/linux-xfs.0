@@ -2,69 +2,79 @@ Return-Path: <SRS0=oH8U=3G=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA6E3C33CB1
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jan 2020 06:17:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CFDAC33CB6
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jan 2020 06:18:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B32B22082F
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jan 2020 06:17:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E6D8F2072B
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jan 2020 06:18:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ciYbDhSN"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VyKQ5/0p"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726312AbgAQGRC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Jan 2020 01:17:02 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:56638 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726189AbgAQGRC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jan 2020 01:17:02 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00H68VoP186719;
-        Fri, 17 Jan 2020 06:16:52 GMT
+        id S1726917AbgAQGSH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Jan 2020 01:18:07 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:40408 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726189AbgAQGSG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jan 2020 01:18:06 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00H68w4h150414;
+        Fri, 17 Jan 2020 06:17:57 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=4TOKhipqmrCsgvCLGU5jhoCV7/t8LwEnDe/T9FY/bdY=;
- b=ciYbDhSNXaZI4kmd62VzISKNQqEwMNgub4uKinaEjmjtRlDpo9+DIIw3ookHr+Z/ZFDT
- bJh/+MdDIQ8dQ/BwKZN3Sc95pAlELceNMdmlmJsXkuapi9UyL9wDzSowuBcDBSk+AZpw
- JG0XiRBy9vo+oNriDRkeAotnRGLknYa8tHs1GsR6tiLSTg8rqyfKzt9r7LTZUEFTc3Q/
- eOzSP+DegprTi7M/UgRvu6zm+zrJ26XYM0K7Ts5rikFxt/A1P1INIOhZAYwwJy2Q2Liy
- /VmoOi2NBUf9KnbhUjac6iD8YZQyMQWwX8emFG4dAWPPafsyKhW2HtBUr5euAKvua2yr /Q== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2xf74spsg2-1
+ bh=HBNLcSeaD/W5hfvXizZReTomydmFa2dESINNThPsAeM=;
+ b=VyKQ5/0priy3kME076gJm/plIURa2UsYI59kYEj0aSN71p6KBz1NMRqaKeWvl5JGK7pH
+ s5y/I+DjyzVjz0a/jDxTIodEmzvJBrahMsCmS0eo835uUKtvozOCeiV5fY123C0eOyoE
+ yGTsuYPaw/O0ZYUqoBv0OCEfHzynaPXujZQlEA99vkswEjIHNBcfxXLX1SPWOiu8jOWU
+ k1TlOeBDwMU5E5fapD2+i79cIiqhCnZv1f5k5wtGzqpNEgTZQUrNqp6sR+wOU7zUWstL
+ L/+i6fX+ahhC/H9ol322Td7CdfyzUfGeLoQk8S0nTs7+KJploo1ytftp1sGUmRW1sG/0 SQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2xf73u6qtx-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 17 Jan 2020 06:16:52 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00H69HnS076237;
-        Fri, 17 Jan 2020 06:16:51 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 2xk2309qtt-1
+        Fri, 17 Jan 2020 06:17:57 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00H68U3Z129423;
+        Fri, 17 Jan 2020 06:15:56 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2xjxp4h725-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 17 Jan 2020 06:16:51 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00H6Gn32031289;
-        Fri, 17 Jan 2020 06:16:49 GMT
+        Fri, 17 Jan 2020 06:15:56 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00H6FtcJ032100;
+        Fri, 17 Jan 2020 06:15:55 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 16 Jan 2020 22:16:49 -0800
-Date:   Thu, 16 Jan 2020 22:16:47 -0800
+        with ESMTP ; Thu, 16 Jan 2020 22:15:55 -0800
+Date:   Thu, 16 Jan 2020 22:15:52 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     YueHaibing <yuehaibing@huawei.com>
-Cc:     linux-xfs@vger.kernel.org, hch@lst.de, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH -next] xfs: remove unused variable 'done'
-Message-ID: <20200117061647.GR8247@magnolia>
-References: <20200117015011.50412-1-yuehaibing@huawei.com>
+To:     "yukuai (C)" <yukuai3@huawei.com>
+Cc:     guaneryu@gmail.com, jbacik@fusionio.com, fstests@vger.kernel.org,
+        linux-xfs@vger.kernel.org, zhengbin13@huawei.com,
+        yi.zhang@huawei.com
+Subject: Re: [PATCH] xfs/126: fix that corrupt xattr might fail with a small
+ probability
+Message-ID: <20200117061552.GQ8247@magnolia>
+References: <20200108092758.41363-1-yukuai3@huawei.com>
+ <20200108162227.GD5552@magnolia>
+ <3c7e9497-e0ed-23e4-ff9c-4b1c1a77c9fa@huawei.com>
+ <20200109164615.GA8247@magnolia>
+ <51e99fd5-617f-6558-7a04-c4a198139cdd@huawei.com>
+ <20200116160323.GC2149943@magnolia>
+ <bc9afd0d-91e5-ef0a-94cb-599b8a57b136@huawei.com>
+ <da1c7dd8-b036-73fb-3a55-d2800f3f650e@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200117015011.50412-1-yuehaibing@huawei.com>
+In-Reply-To: <da1c7dd8-b036-73fb-3a55-d2800f3f650e@huawei.com>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9502 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=988
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1911140001 definitions=main-2001170048
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9502 signatures=668685
@@ -78,39 +88,49 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 17, 2020 at 09:50:11AM +0800, YueHaibing wrote:
-> fs/xfs/xfs_inode.c: In function 'xfs_itruncate_extents_flags':
-> fs/xfs/xfs_inode.c:1523:8: warning: unused variable 'done' [-Wunused-variable]
+On Fri, Jan 17, 2020 at 11:10:45AM +0800, yukuai (C) wrote:
 > 
-> commit 4bbb04abb4ee ("xfs: truncate should remove
-> all blocks, not just to the end of the page cache")
-> left behind this, so remove it.
 > 
-> Reported-by: Hulk Robot <hulkci@huawei.com>
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+> On 2020/1/17 10:20, yukuai (C) wrote:
+> > After adding "-o 4", I tested over 200 times, and blocktrash never
+> > failed to corrupt xattr anymore.
+> 
+> Unfortunately, test failed with more attempts:
+> 
+> _check_dmesg: something found in dmesg (see
+> /root/xfstests-dev/results//xfs/126.dmesg)
+> 
+> [ 4597.649086] BUG: MAX_LOCKDEP_CHAIN_HLOCKS too low!
+> [ 4597.649709] turning off the locking correctness validator.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+That's a deficiency in lockdep not being able to follow XFS crazy
+locking.  It's not a bug in XFS itself.
 
 --D
 
-> ---
->  fs/xfs/xfs_inode.c | 1 -
->  1 file changed, 1 deletion(-)
+> [ 4597.650363] CPU: 4 PID: 377 Comm: kworker/4:1H Not tainted 5.5.0-rc6 #197
+> [ 4597.651027] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
+> ?-20180531_142017-buildhw-08.phx2.fedoraproject.org-1.fc28 04/01/2014
+> [ 4597.652276] Workqueue: xfs-log/sdb xlog_ioend_work
+> [ 4597.652803] Call Trace:
+> [ 4597.653109]  dump_stack+0xdd/0x13f
+> [ 4597.653573]  __lock_acquire.cold.46+0x7a/0x409
+> [ 4597.654000]  lock_acquire+0xf6/0x270
+> [ 4597.654487]  ? xlog_state_do_callback+0x1eb/0x4e0
+> [ 4597.654921]  _raw_spin_lock+0x45/0x70
+> [ 4597.655250]  ? xlog_state_do_callback+0x1eb/0x4e0
+> [ 4597.655666]  xlog_state_do_callback+0x1eb/0x4e0
+> [ 4597.656123]  xlog_state_done_syncing+0x8b/0x110
+> [ 4597.656727]  xlog_ioend_work+0x94/0x150
+> [ 4597.657210]  process_one_work+0x346/0x910
+> [ 4597.657714]  worker_thread+0x284/0x6d0
+> [ 4597.658125]  ? rescuer_thread+0x550/0x550
+> [ 4597.658647]  kthread+0x168/0x1a0
+> [ 4597.658931]  ? kthread_unpark+0xb0/0xb0
+> [ 4597.659470]  ret_from_fork+0x24/0x30
 > 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 1309f25..1979a00 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1520,7 +1520,6 @@ xfs_itruncate_extents_flags(
->  	xfs_fileoff_t		first_unmap_block;
->  	xfs_filblks_t		unmap_len;
->  	int			error = 0;
-> -	int			done = 0;
->  
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
->  	ASSERT(!atomic_read(&VFS_I(ip)->i_count) ||
-> -- 
-> 2.7.4
+> I wonder, could we increase the number of "-o 4" to fix this?
 > 
+> Thanks!
+> Yu Kuai
 > 
