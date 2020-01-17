@@ -2,65 +2,95 @@ Return-Path: <SRS0=oH8U=3G=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C653C33CB1
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jan 2020 09:39:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3395C33CB1
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jan 2020 09:57:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1A789214AF
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jan 2020 09:39:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B4FCC2083E
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jan 2020 09:57:36 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lEKhV452"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726861AbgAQJjR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Jan 2020 04:39:17 -0500
-Received: from szxga06-in.huawei.com ([45.249.212.32]:40380 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726596AbgAQJjQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 17 Jan 2020 04:39:16 -0500
-Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id DF6A24FE3E33B497B782;
-        Fri, 17 Jan 2020 17:39:13 +0800 (CST)
-Received: from [127.0.0.1] (10.173.220.96) by DGGEMS402-HUB.china.huawei.com
- (10.3.19.202) with Microsoft SMTP Server id 14.3.439.0; Fri, 17 Jan 2020
- 17:39:04 +0800
-Subject: Re: [RFC] iomap: fix race between readahead and direct write
-To:     Jan Kara <jack@suse.cz>
-CC:     <hch@infradead.org>, <darrick.wong@oracle.com>,
-        <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <houtao1@huawei.com>,
-        <zhengbin13@huawei.com>, <yi.zhang@huawei.com>
-References: <20200116063601.39201-1-yukuai3@huawei.com>
- <20200116153206.GF8446@quack2.suse.cz>
-From:   "yukuai (C)" <yukuai3@huawei.com>
-Message-ID: <ce4bc2f3-a23e-f6ba-0ef1-66231cd1057d@huawei.com>
-Date:   Fri, 17 Jan 2020 17:39:03 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1726954AbgAQJ5g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Jan 2020 04:57:36 -0500
+Received: from mail-il1-f196.google.com ([209.85.166.196]:44934 "EHLO
+        mail-il1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726053AbgAQJ5g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jan 2020 04:57:36 -0500
+Received: by mail-il1-f196.google.com with SMTP id z12so20794122iln.11;
+        Fri, 17 Jan 2020 01:57:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=D2iv/H6UUaNNB2wpyKUhzLnF/ZjtEziCyO0ynW904oU=;
+        b=lEKhV452mvESziCXpI+s4sMxPGiIoDNhNNtdO1u5G1u6Icw8sIy3JYP9kJPMF8+jiB
+         2We/A/aGTdin03iiVhMN7lDtBO+NJ66fmGPFykAKxZVW8Q1+hvCr6cDYOgvFlnhPUs/Z
+         iTb22gF9mqbLaS4r80j0brQL6frUI3onep4R5St9MDwHrpzmJv9MDisyS46ql7Yi+mSt
+         NzhtirvbOj0her2XJeuglRWTIwSmFFXME+3qFOHTXkTpnIctje4BMv2fMnMN7ytwffjJ
+         qQ4uhKJO7ub6f5ip0ui1vulLZtZvYMXFn+oY7t4+5ROwDYswfD5Q/EmY3dxcPH4oeqzi
+         M+Ig==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=D2iv/H6UUaNNB2wpyKUhzLnF/ZjtEziCyO0ynW904oU=;
+        b=eRJB5CsxPHvxnDJBplevyE6+JQEkFzR8k+hmJotbs7DbVhUREvrVSr/VBUD4JQhQkv
+         V3r2cxQC1ZWo9foMEM/CiWJgbIzzAI6x9JwMxU+vaEV9ZkXa+fO5Ka2rNtd9u60Koq5L
+         DdXmLwWGGyuYcXSGh9wBXezZnon3Vo8GKeioD4GMLI8LUBZ4RLRZzajzPP+sNvr39paH
+         Ev7gc5pZdk62rAa0gV++Bn6CfW/k6J/LsC+NwAtSF007jO5i71bIcgn76BuFg7R6ImLF
+         I7xaUpL9U4XU0OF8/3GvcK9UFGx9u7vGWdi4rwmj2/LIwtfecwQXjzF5THS48FUt7Dx5
+         82Aw==
+X-Gm-Message-State: APjAAAXjkZlLafjE1zfsDU0hbht1oKb0RLs70prxeSpyEJowPPIX3/0F
+        5F72ecVQ9RQtPLaP4eauq5ycSg3FOqb+Vrypio2xUA==
+X-Google-Smtp-Source: APXvYqwXlxCPM800tjJKMn9q0fTbt1G6E+pDLkKp14cOzG84ftedeRJt5gDSF1/VZifpKyNkSjSA0GITpbV3zIY02Ws=
+X-Received: by 2002:a92:d5c3:: with SMTP id d3mr2295902ilq.250.1579255055251;
+ Fri, 17 Jan 2020 01:57:35 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20200116153206.GF8446@quack2.suse.cz>
-Content-Type: text/plain; charset="gbk"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.173.220.96]
-X-CFilter-Loop: Reflected
+References: <20200114170250.GA8904@ZenIV.linux.org.uk> <3326.1579019665@warthog.procyon.org.uk>
+ <9351.1579025170@warthog.procyon.org.uk> <2397bb4a-2ca2-4b44-8c79-64efba9aa04d@www.fastmail.com>
+In-Reply-To: <2397bb4a-2ca2-4b44-8c79-64efba9aa04d@www.fastmail.com>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Fri, 17 Jan 2020 11:57:24 +0200
+Message-ID: <CAOQ4uxgxOzJ+ptExNAJvTJmeW6HNcg7h6siqRzMjYjw3sMYqmQ@mail.gmail.com>
+Subject: Re: Making linkat() able to overwrite the target
+To:     Colin Walters <walters@verbum.org>,
+        David Howells <dhowells@redhat.com>
+Cc:     Al Viro <viro@zeniv.linux.org.uk>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Ts'o" <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>,
+        Linux Btrfs <linux-btrfs@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Fri, Jan 17, 2020 at 5:52 AM Colin Walters <walters@verbum.org> wrote:
+>
+> On Tue, Jan 14, 2020, at 1:06 PM, David Howells wrote:
+>
+> > Yes, I suggested AT_LINK_REPLACE as said magical flag.
+>
+> This came up before right?
+>
+> https://lore.kernel.org/linux-fsdevel/cover.1524549513.git.osandov@fb.com/
 
+David,
 
-On 2020/1/16 23:32, Jan Kara wrote:
-> Thanks for the report and the patch. But the data integrity when mixing
-> buffered and direct IO like this is best effort only. We definitely do not
-> want to sacrifice performance of common cases or code complexity to make
-> cases like this work reliably.
+This sounds like a good topic to be discussed at LSF/MM (hint hint)
 
-In the patch, the only thing that is diffrent is that iomap_begin() will
-be called for each page. However, it seems the performance in sequential
-read didn't get worse. Is there a specific case that the performance
-will get worse?
-
-Thanks!
-Yu Kuai!
-
+Thanks,
+Amir.
