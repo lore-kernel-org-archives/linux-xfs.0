@@ -2,85 +2,121 @@ Return-Path: <SRS0=0TO6=3H=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F15BC33CB6
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Jan 2020 22:41:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB63DC32771
+	for <linux-xfs@archiver.kernel.org>; Sat, 18 Jan 2020 22:46:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DE5AE2469D
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Jan 2020 22:41:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B6A06246A9
+	for <linux-xfs@archiver.kernel.org>; Sat, 18 Jan 2020 22:46:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="i3JtNAjS"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="C90TD/n4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727029AbgARWlQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 18 Jan 2020 17:41:16 -0500
-Received: from [198.137.202.133] ([198.137.202.133]:36394 "EHLO
-        bombadil.infradead.org" rhost-flags-FAIL-FAIL-OK-OK)
-        by vger.kernel.org with ESMTP id S1727008AbgARWlP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Jan 2020 17:41:15 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=vyYDHKvf8gCiisBHbQ1RzC91plzB3US9sNYD80kKiaU=; b=i3JtNAjSE6Cmh9ec2614Kqpaz
-        pDvpbDSOyBvB5PYbf5RdTTHw3IkY3UyZpv7p/iS4hp7Y9znPQfJD+m39U6zVkL2DauuWgBMqi5L6k
-        jvo3y72b8rppMJdJ9NaEy2r18bFFClCbtPYjg0xMA5nzaIgtIVvgdNLXmKIc1jPPF82YEO5Ii+1fL
-        FhaMWUP32RjrC/UzIS+KZorvqO8WST7q8Kq+EYPnVo+qmSfEk4WccgUg1LwSLoXPiz5WFq72ByCpC
-        lGnF3ASEkbw8TAr/Ofw/A25tEeIt+ePR+ef3xIYFoGgSnA9SMJOOGREbOVuP2NsjmBYp+dgSBicrR
-        dCE+PeD2g==;
-Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iswlg-0001Y2-1d; Sat, 18 Jan 2020 22:40:36 +0000
-Date:   Sat, 18 Jan 2020 14:40:35 -0800
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Peter Zijlstra <peterz@infradead.org>
-Cc:     Jason Gunthorpe <jgg@ziepe.ca>, Christoph Hellwig <hch@lst.de>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Waiman Long <longman@redhat.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-ext4@vger.kernel.org, cluster-devel@redhat.com,
-        linux-kernel@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: RFC: hold i_rwsem until aio completes
-Message-ID: <20200118224035.GA26801@bombadil.infradead.org>
-References: <20200114161225.309792-1-hch@lst.de>
- <20200114192700.GC22037@ziepe.ca>
- <20200115065614.GC21219@lst.de>
- <20200115132428.GA25201@ziepe.ca>
- <20200115143347.GL2827@hirez.programming.kicks-ass.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200115143347.GL2827@hirez.programming.kicks-ass.net>
+        id S1727008AbgARWqO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 18 Jan 2020 17:46:14 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:50246 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726960AbgARWqN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Jan 2020 17:46:13 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00IMcxQa072194
+        for <linux-xfs@vger.kernel.org>; Sat, 18 Jan 2020 22:46:12 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
+ date : message-id; s=corp-2019-08-05;
+ bh=BSNzOoLC1petU0NoTiKYr4jdzAmMz0LKP71SIoSNTLY=;
+ b=C90TD/n4TH7nU1pgc6rXSZfh7GkPQL3jjetmQ80ebdHVVTv/i3KBb/tvQUO3FSFN7Pj7
+ be0/tJIC1MsER3btnIMleucUefZyL9bTar8hIe1mjznjPRnvsZ6H1orjowMNbhRU2f3A
+ 62AcrIcl9006bBxRyCjcnNVYxMW8pksnRw7cFT4d4JnjYmL82mdapq0Ewny4QS35Makx
+ 6PzTwwTPaICSVihx/Qjw1RMtAx8poXG9Zsg6xzmLE+sB2wjjl+pBwll9fUs08GoYk5nu
+ 2BTmferYfWKMsZmOXsx6KX6exJJ1y2bWeeJuNZybc2za1hnqhgdPyABc5YmvPdvtsnqT sQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 2xktnqsvtn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 18 Jan 2020 22:46:11 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00IMcqOj125861
+        for <linux-xfs@vger.kernel.org>; Sat, 18 Jan 2020 22:46:11 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 2xkr2danky-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 18 Jan 2020 22:46:11 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00IMkAsT028985
+        for <linux-xfs@vger.kernel.org>; Sat, 18 Jan 2020 22:46:10 GMT
+Received: from localhost.localdomain (/67.1.3.112)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sat, 18 Jan 2020 14:46:10 -0800
+From:   Allison Collins <allison.henderson@oracle.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH v6 00/17] xfsprogs: Delayed Ready Attributes
+Date:   Sat, 18 Jan 2020 15:45:41 -0700
+Message-Id: <20200118224558.19382-1-allison.henderson@oracle.com>
+X-Mailer: git-send-email 2.17.1
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9504 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=930
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-2001180185
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9504 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=991 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-2001180185
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 15, 2020 at 03:33:47PM +0100, Peter Zijlstra wrote:
-> On Wed, Jan 15, 2020 at 09:24:28AM -0400, Jason Gunthorpe wrote:
-> 
-> > I was interested because you are talking about allowing the read/write side
-> > of a rw sem to be held across a return to user space/etc, which is the
-> > same basic problem.
-> 
-> No it is not; allowing the lock to be held across userspace doesn't
-> change the owner. This is a crucial difference, PI depends on there
-> being a distinct owner. That said, allowing the lock to be held across
-> userspace still breaks PI in that it completely wrecks the ability to
-> analyze the critical section.
+This set applies the corresponding changes for delayed ready attributes to
+xfsprogs. I will pick up the reviews from the kernel side series and mirror
+them here.  
 
-Thinking about this from a PI point of view, the problem is not that we
-returned to userspace still holding the lock, it's that boosting this
-process's priority will not help release the lock faster because this
-process no longer owns the lock.
+Thanks all!
+Allison
 
-If we had a lock owner handoff API (ie I can donate my lock to another
-owner), that would solve this problem.  We'd want to have special owners
-to denote "RCU" "bottom halves" or "irq" so we know what we can do about
-PI.  I don't think we need a "I have stolen this lock from somebody else"
-API, but maybe I'm wrong there.
+Allison Collins (17):
+  xfsprogs: Remove all strlen in all xfs_attr_* functions for attr
+    names.
+  xfsprogs: Replace attribute parameters with struct xfs_name
+  xfsprogs: Embed struct xfs_name in xfs_da_args
+  xfsprogs: Add xfs_has_attr and subroutines
+  xfsprogs: Factor out new helper functions xfs_attr_rmtval_set
+  xfsprogs: Factor out trans handling in xfs_attr3_leaf_flipflags
+  xfsprogs: Factor out xfs_attr_leaf_addname helper
+  xfsprogs: Refactor xfs_attr_try_sf_addname
+  xfsprogs: Factor out trans roll from xfs_attr3_leaf_setflag
+  xfsprogs: Factor out xfs_attr_rmtval_invalidate
+  xfsprogs: Factor out trans roll in xfs_attr3_leaf_clearflag
+  xfsprogs: Check for -ENOATTR or -EEXIST
+  xfsprogs: Add helper function xfs_attr_init_unmapstate
+  xfsprogs: Add helper function xfs_attr_rmtval_unmap
+  xfsprogs: Simplify xfs_attr_set_args
+  xfsprogs: Add delay ready attr remove routines
+  xfsprogs: Add delay ready attr set routines
+
+ db/attrset.c             |  11 +-
+ libxfs/libxfs_priv.h     |  11 +-
+ libxfs/xfs_attr.c        | 859 ++++++++++++++++++++++++++++++++---------------
+ libxfs/xfs_attr.h        |   9 +-
+ libxfs/xfs_attr_leaf.c   | 222 ++++++------
+ libxfs/xfs_attr_leaf.h   |   3 +
+ libxfs/xfs_attr_remote.c | 265 +++++++++++----
+ libxfs/xfs_attr_remote.h |   7 +-
+ libxfs/xfs_da_btree.c    |   6 +-
+ libxfs/xfs_da_btree.h    |  41 ++-
+ libxfs/xfs_dir2.c        |  18 +-
+ libxfs/xfs_dir2_block.c  |   6 +-
+ libxfs/xfs_dir2_leaf.c   |   6 +-
+ libxfs/xfs_dir2_node.c   |   8 +-
+ libxfs/xfs_dir2_sf.c     |  30 +-
+ libxfs/xfs_types.c       |  11 +
+ libxfs/xfs_types.h       |   1 +
+ 17 files changed, 1033 insertions(+), 481 deletions(-)
+
+-- 
+2.7.4
+
