@@ -1,86 +1,67 @@
-Return-Path: <SRS0=0TO6=3H=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=5eVt=3I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A98A8C32771
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Jan 2020 23:14:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14EC0C32771
+	for <linux-xfs@archiver.kernel.org>; Sun, 19 Jan 2020 01:17:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 72CB22469C
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Jan 2020 23:14:22 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="PbuQjafa"
+	by mail.kernel.org (Postfix) with ESMTP id D9EC5246AE
+	for <linux-xfs@archiver.kernel.org>; Sun, 19 Jan 2020 01:17:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727031AbgARXOW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 18 Jan 2020 18:14:22 -0500
-Received: from [198.137.202.133] ([198.137.202.133]:45566 "EHLO
-        bombadil.infradead.org" rhost-flags-FAIL-FAIL-OK-OK)
-        by vger.kernel.org with ESMTP id S1727012AbgARXOV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Jan 2020 18:14:21 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=Iv6n9Q/k1eXFbCcvnuAFYhME6UiPb/gjtwI6FiGWHlY=; b=PbuQjafa6FNb0jf4Leo51n0ze
-        PRmlAVl5z1ZdMKXv7G8WzQDLeUx/NSuFGo+MqwXrG7HDkYae1p4oEnh9x7xaIytKodpSdON+QIXGk
-        9aB/4BmlrVDjiiodkKRX1BmVIQc9QLwaqHJn2icSGn22l1FGl8Jj41EPmXavE7FPgg2opgnWOUBdX
-        gIRaoh1MtoSVcJ90zGhhlZ5jYqyNLBFA4AgSEUM+NpmAvD5c7emnIgUgTOZWjNxrGl9yg7fNbj50A
-        p9IN4Rmv3GUcOq+C5+7YvaL/ykoedA+kmUKT74Jm2Ills78XY1DyZWKIYJn9p6h7CEpNwGp+IKDcT
-        tfYpGlzOQ==;
-Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1isxHm-0005Lx-Tp; Sat, 18 Jan 2020 23:13:46 +0000
-Date:   Sat, 18 Jan 2020 15:13:46 -0800
-From:   Matthew Wilcox <willy@infradead.org>
-To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org
-Cc:     Jeff Layton <jlayton@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>, Chris Mason <clm@fb.com>
-Subject: Re: [RFC v2 0/9] Replacing the readpages a_op
-Message-ID: <20200118231346.GB5583@bombadil.infradead.org>
-References: <20200115023843.31325-1-willy@infradead.org>
+        id S1727106AbgASBRM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 18 Jan 2020 20:17:12 -0500
+Received: from szxga07-in.huawei.com ([45.249.212.35]:51814 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727070AbgASBRM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 18 Jan 2020 20:17:12 -0500
+Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id EC87ACED00AE71D06D4D;
+        Sun, 19 Jan 2020 09:17:07 +0800 (CST)
+Received: from [127.0.0.1] (10.173.220.96) by DGGEMS414-HUB.china.huawei.com
+ (10.3.19.214) with Microsoft SMTP Server id 14.3.439.0; Sun, 19 Jan 2020
+ 09:17:01 +0800
+Subject: Re: [RFC] iomap: fix race between readahead and direct write
+To:     Jan Kara <jack@suse.cz>
+CC:     <hch@infradead.org>, <darrick.wong@oracle.com>,
+        <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <houtao1@huawei.com>,
+        <zhengbin13@huawei.com>, <yi.zhang@huawei.com>
+References: <20200116063601.39201-1-yukuai3@huawei.com>
+ <20200116153206.GF8446@quack2.suse.cz>
+ <ce4bc2f3-a23e-f6ba-0ef1-66231cd1057d@huawei.com>
+ <20200117110536.GE17141@quack2.suse.cz>
+From:   "yukuai (C)" <yukuai3@huawei.com>
+Message-ID: <976d09e1-e3b5-a6a6-d159-9bdac3a7dc84@huawei.com>
+Date:   Sun, 19 Jan 2020 09:17:00 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200115023843.31325-1-willy@infradead.org>
+In-Reply-To: <20200117110536.GE17141@quack2.suse.cz>
+Content-Type: text/plain; charset="gbk"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.173.220.96]
+X-CFilter-Loop: Reflected
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 14, 2020 at 06:38:34PM -0800, Matthew Wilcox wrote:
-> This is an attempt to add a ->readahead op to replace ->readpages.  I've
-> converted two users, iomap/xfs and cifs.  The cifs conversion is lacking
-> fscache support, and that's just because I didn't want to do that work;
-> I don't believe there's anything fundamental to it.  But I wanted to do
-> iomap because it is The Infrastructure Of The Future and cifs because it
-> is the sole remaining user of add_to_page_cache_locked(), which enables
-> the last two patches in the series.  By the way, that gives CIFS access
-> to the workingset shadow infrastructure, which it had to ignore before
-> because it couldn't put pages onto the lru list at the right time.
-> 
-> v2: Chris asked me to show what this would look like if we just have
-> the implementation look up the pages in the page cache, and I managed
-> to figure out some things I'd done wrong last time.  It's even simpler
-> than v1 (net 104 lines deleted).
 
-I want to discuss whether to change the page refcount guarantees while we're
-changing the API.  Currently,
 
-page is allocated with a refcount of 1
-page is locked, and inserted into page cache and refcount is bumped to 2
-->readahead is called
-callee is supposed to call put_page() after submitting I/O
-I/O completion will unlock the page after I/O completes, leaving the refcount at 1.
+On 2020/1/17 19:05, Jan Kara wrote:
+> provide
+> allocation for each page separately
 
-So, what if we leave the refcount at 1 throughout the submission process,
-saving ourselves two atomic ops per page?  We have to ensure that after
-the page is submitted for I/O, the submission path no longer touches
-the page.  So the process of converting a filesystem to ->readahead
-becomes slightly more complex, but there's a bugger win as a result.
+Thank you for your response!
 
-Opinions?
+I do understand there will be additional CPU overhead. But page is 
+allocated in __do_page_cache_readahead(), which is called before
+iomap_begin(). And I did not change that.
+
+Thanks!
+Yu Kuai
+
