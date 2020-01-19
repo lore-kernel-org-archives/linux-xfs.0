@@ -2,101 +2,106 @@ Return-Path: <SRS0=5eVt=3I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F4D5C33CB1
-	for <linux-xfs@archiver.kernel.org>; Sun, 19 Jan 2020 08:45:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90BFDC33CB1
+	for <linux-xfs@archiver.kernel.org>; Sun, 19 Jan 2020 09:04:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 737B520730
-	for <linux-xfs@archiver.kernel.org>; Sun, 19 Jan 2020 08:45:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6E3692073A
+	for <linux-xfs@archiver.kernel.org>; Sun, 19 Jan 2020 09:04:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726538AbgASIpo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 19 Jan 2020 03:45:44 -0500
-Received: from mr013msb.fastweb.it ([85.18.95.104]:60373 "EHLO
-        mr013msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726444AbgASIpo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 19 Jan 2020 03:45:44 -0500
-Received-SPF: pass (mr013msb.fastweb.it: domain assyoma.it designates
- 93.63.55.57 as permitted sender) identity=mailfrom;
- receiver=mr013msb.fastweb.it; client-ip=93.63.55.57;
- envelope-from=g.danti@assyoma.it; helo=ceres.assyoma.it;
-X-RazorGate-Vade: gggruggvucftvghtrhhoucdtuddrgedugedruddvgddvjecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfhtefuvfghgfeupdcuqfgfvfenuceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhepvffugggtgfffhfhojghfkfigfgesthejjhdttdervdenucfhrhhomhepifhiohhnrghtrghnucffrghnthhiuceoghdruggrnhhtihesrghsshihohhmrgdrihhtqeenucffohhmrghinheprghsshihohhmrgdrihhtnecukfhppeelfedrieefrdehhedrheejnecurfgrrhgrmhephhgvlhhopegtvghrvghsrdgrshhshihomhgrrdhithdpihhnvghtpeelfedrieefrdehhedrheejpdhmrghilhhfrhhomhepoehgrdgurghnthhisegrshhshihomhgrrdhitheqpdhrtghpthhtohepoegurghrrhhitghkrdifohhnghesohhrrggtlhgvrdgtohhmqecuqfftvefrvfeprhhftgekvddvnegurghrrhhitghkrdifohhnghesohhrrggtlhgvrdgtohhmpdhrtghpthhtohepoehlihhnuhigqdigfhhssehvghgvrhdrkhgvrhhnvghlrdhorhhgqecuqfftvefrvfeprhhftgekvddvnehlihhnuhigqdigfhhssehvghgvrhdrkhgvrhhnvghlrdhorhhgnecuvehluhhsthgvrhfuihiivgeptd
-X-RazorGate-Vade-Verdict: clean 0
-X-RazorGate-Vade-Classification: clean
-Received: from ceres.assyoma.it (93.63.55.57) by mr013msb.fastweb.it (5.8.208)
-        id 5E19B49F009205B2; Sun, 19 Jan 2020 09:45:34 +0100
-Received: by ceres.assyoma.it (Postfix, from userid 48)
-        id 0E7C8268237; Sun, 19 Jan 2020 09:45:34 +0100 (CET)
+        id S1726538AbgASJE6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 19 Jan 2020 04:04:58 -0500
+Received: from szxga05-in.huawei.com ([45.249.212.191]:9193 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726444AbgASJE6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 19 Jan 2020 04:04:58 -0500
+Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 65999C3FD4E6F8F52505;
+        Sun, 19 Jan 2020 17:04:53 +0800 (CST)
+Received: from [127.0.0.1] (10.184.213.217) by DGGEMS407-HUB.china.huawei.com
+ (10.3.19.207) with Microsoft SMTP Server id 14.3.439.0; Sun, 19 Jan 2020
+ 17:04:39 +0800
+Subject: Re: [PATCH] xfs: change return value of xfs_inode_need_cow to int
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: XFS reflink vs ThinLVM
-X-PHP-Originating-Script: 0:rcube.php
+CC:     <linux-xfs@vger.kernel.org>
+References: <1577087776-59093-1-git-send-email-zhengbin13@huawei.com>
+ <20191223173246.GU7489@magnolia>
+From:   "zhengbin (A)" <zhengbin13@huawei.com>
+Message-ID: <6f3d3a92-8e12-6ff6-0e08-71fd9ed3bfa7@huawei.com>
+Date:   Sun, 19 Jan 2020 17:04:38 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.3.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+In-Reply-To: <20191223173246.GU7489@magnolia>
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Date:   Sun, 19 Jan 2020 09:45:34 +0100
-From:   Gionatan Danti <g.danti@assyoma.it>
-Cc:     linux-xfs@vger.kernel.org, g.danti@assyoma.it
-Organization: Assyoma s.r.l.
-In-Reply-To: <20200118230631.GX8247@magnolia>
-References: <20200113165341.GE8247@magnolia>
- <f61995d7-9775-0035-8700-2b92c63bd23f@assyoma.it>
- <20200113180914.GI8247@magnolia>
- <8e96231f-8fc6-b178-9e83-84cbb9af6d2e@assyoma.it>
- <9d8e8614-9ae1-30ee-f2b4-1e45b90b27f8@assyoma.it>
- <20200115163948.GF8257@magnolia>
- <761fcf8f9d68ee221a35d15c1a7120c5@assyoma.it>
- <e3dd598260d9f92c3b2c91cb81540e37@assyoma.it>
- <20200117234219.GM8257@magnolia>
- <cc3d0819966d2d3f5b8512ed0f6b1de1@assyoma.it>
- <20200118230631.GX8247@magnolia>
-Message-ID: <9ca7a7f18ef7fe2e7c32ea6a6cd4ef35@assyoma.it>
-X-Sender: g.danti@assyoma.it
-User-Agent: Roundcube Webmail/1.0.12
+Content-Language: en-US
+X-Originating-IP: [10.184.213.217]
+X-CFilter-Loop: Reflected
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Il 19-01-2020 00:06 Darrick J. Wong ha scritto:
-> 4GB / 1M extents == 4096, which is probably the fs blocksize :)
 
-Yes, it did the same observation: due to random allocation, the 
-underlying vdisk had block-sized extents.
+On 2019/12/24 1:32, Darrick J. Wong wrote:
+> On Mon, Dec 23, 2019 at 03:56:16PM +0800, zhengbin wrote:
+>> Fixes coccicheck warning:
+>>
+>> fs/xfs/xfs_reflink.c:236:9-10: WARNING: return of 0/1 in function 'xfs_inode_need_cow' with return type bool
+>>
+>> Reported-by: Hulk Robot <hulkci@huawei.com>
+>> Signed-off-by: zhengbin <zhengbin13@huawei.com>
+>> ---
+>>  fs/xfs/xfs_reflink.c | 2 +-
+>>  fs/xfs/xfs_reflink.h | 2 +-
+>>  2 files changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+>> index de45123..21eeb94 100644
+>> --- a/fs/xfs/xfs_reflink.c
+>> +++ b/fs/xfs/xfs_reflink.c
+>> @@ -223,7 +223,7 @@ xfs_reflink_trim_around_shared(
+>>  	}
+>>  }
+>>
+>> -bool
+>> +int
+>>  xfs_inode_need_cow(
+> I started to think "just fix this predicate so it doesn't return 1--"
+>
+> But then I realized that this is /not/ an inode predicate, it's a
+> reflink trim wrapper for block mappings.  "xfs_bmap_trim_cow" is a
+> somewhat better name, so I'll commit this with a name change.
+>
+> And yeah, we turned negative errno into bool and back to int.  Wow.
+>
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Does this apply? I do not see it in linux-next
+>
+> --D
+>
+>>  	struct xfs_inode	*ip,
+>>  	struct xfs_bmbt_irec	*imap,
+>> diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+>> index d18ad7f..9a288b2 100644
+>> --- a/fs/xfs/xfs_reflink.h
+>> +++ b/fs/xfs/xfs_reflink.h
+>> @@ -22,7 +22,7 @@ extern int xfs_reflink_find_shared(struct xfs_mount *mp, struct xfs_trans *tp,
+>>  		xfs_agblock_t *fbno, xfs_extlen_t *flen, bool find_maximal);
+>>  extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
+>>  		struct xfs_bmbt_irec *irec, bool *shared);
+>> -bool xfs_inode_need_cow(struct xfs_inode *ip, struct xfs_bmbt_irec *imap,
+>> +int xfs_inode_need_cow(struct xfs_inode *ip, struct xfs_bmbt_irec *imap,
+>>  		bool *shared);
+>>
+>>  int xfs_reflink_allocate_cow(struct xfs_inode *ip, struct xfs_bmbt_irec *imap,
+>> --
+>> 2.7.4
+>>
+> .
+>
 
-> I wonder, do you get different results if you set an extent size hint
-> on the dir before running fio?
-
-Yes: setting extsize at 128K strongly reduces the amount of allocated 
-extents (eg: 4M / 128K = 32K extents). A similar results can be obtained 
-tapping in cowextsize, by cp --reflink the original file. Any subsequent 
-4K write inside the guest will cause a 128K CoW allocation (with default 
-setting) on the backing file.
-
-However, while *much* better, it is my understanding that XFS reflink is 
-a variable-length process: as any extents had to be scanned/reflinked, 
-the reflink time is not constant. Meanwhile it is impossible to 
-read/write from the reflinked file. Am I right?
-
-On the other side thinlvm snapshots, operating on block level, are a 
-(more-or-less) constant-time operation, causing much less disruption in 
-the normal IO flow of the guest volumes.
-
-I don't absolutely want to lessen reflink usefulnes; rather, it is an 
-extremely useful feature which can be put to very good use.
-
-> I forgot(?) to mention that if you're mostly dealing with sparse VM
-> images then you might as well set a extent size hint and forego delayed
-> allocation because it won't help you much.
-
-This was my conclusion as well.
-Thanks.
-
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
