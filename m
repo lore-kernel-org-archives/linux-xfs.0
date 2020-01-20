@@ -2,95 +2,112 @@ Return-Path: <SRS0=roPR=3J=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1397C2D0DB
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Jan 2020 14:29:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3A49C33CA1
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Jan 2020 17:04:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 93B5020678
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Jan 2020 14:29:24 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QhA7l619"
+	by mail.kernel.org (Postfix) with ESMTP id C4B8E20882
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Jan 2020 17:04:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726876AbgATO3Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Jan 2020 09:29:24 -0500
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:29750 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726626AbgATO3X (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Jan 2020 09:29:23 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1579530562;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Sj01dYQGgtKILxU7DgDsGTEYv8tsP6S3m20/J3HxK7E=;
-        b=QhA7l619beVvGGc0/4XNonPOFLjvH1o4JajVFQvOxtcVpyVlGWWMviabOJULxUZ3deDYh6
-        mw8NolQytaxM/w66TV9Y1Lt2LyyHeP+aBmIF4eay4uTHvSa48tI5EiCYvs/e1QmFZTSNHU
-        BTJP6xuGMM/26CgBNyK9y8HjeXDAqnM=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-333-7AL_AECFMaOyE1-Ta_xf4A-1; Mon, 20 Jan 2020 09:29:19 -0500
-X-MC-Unique: 7AL_AECFMaOyE1-Ta_xf4A-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8D79BDB62;
-        Mon, 20 Jan 2020 14:29:18 +0000 (UTC)
-Received: from Liberator.local (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 516217DB5D;
-        Mon, 20 Jan 2020 14:29:18 +0000 (UTC)
-Subject: Re: [PATCH] xfs_repair: stop using ->data_entry_p()
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>
-References: <2cf1f45b-b3b2-f630-50d5-ff34c000b0c8@redhat.com>
- <20200118043947.GO8257@magnolia>
-From:   Eric Sandeen <sandeen@redhat.com>
-Message-ID: <57ab702d-0a66-8323-5e87-08aa315cf9c7@redhat.com>
-Date:   Mon, 20 Jan 2020 08:29:17 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.4.1
+        id S1729174AbgATREM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Jan 2020 12:04:12 -0500
+Received: from mx2.suse.de ([195.135.220.15]:58862 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726642AbgATREM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 20 Jan 2020 12:04:12 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 594B1ABED;
+        Mon, 20 Jan 2020 17:04:09 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id 2A2191E0D08; Mon, 20 Jan 2020 17:58:30 +0100 (CET)
+Date:   Mon, 20 Jan 2020 17:58:30 +0100
+From:   Jan Kara <jack@suse.cz>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     Jan Kara <jack@suse.cz>, linux-xfs <linux-xfs@vger.kernel.org>,
+        Linux MM <linux-mm@kvack.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Boaz Harrosh <boaz@plexistor.com>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        Kent Overstreet <kent.overstreet@gmail.com>
+Subject: Re: [PATCH 0/3 v2] xfs: Fix races between readahead and hole punching
+Message-ID: <20200120165830.GB28285@quack2.suse.cz>
+References: <20190829131034.10563-1-jack@suse.cz>
+ <CAOQ4uxiDqtpsH_Ot5N+Avq0h5MBXsXwgDdNbdRC0QDZ-e+zefg@mail.gmail.com>
+ <20200120120333.GG19861@quack2.suse.cz>
+ <CAOQ4uxhhsxaO61HwMvRGP=5duFsY6Nvv+vCutVZXWXWA2pu2KA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20200118043947.GO8257@magnolia>
-Content-Type: text/plain; charset=windows-1252
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxhhsxaO61HwMvRGP=5duFsY6Nvv+vCutVZXWXWA2pu2KA@mail.gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 1/17/20 10:39 PM, Darrick J. Wong wrote:
-> On Fri, Jan 17, 2020 at 05:17:11PM -0600, Eric Sandeen wrote:
->> The ->data_entry_p() op went away in v5.5 kernelspace, so rework
->> xfs_repair to use ->data_entry_offset instead, in preparation
->> for the v5.5 libxfs backport.
->>
->> This could later be cleaned up to use offsets as was done
->> in kernel commit 8073af5153c for example.
+On Mon 20-01-20 15:54:28, Amir Goldstein wrote:
+> On Mon, Jan 20, 2020 at 2:03 PM Jan Kara <jack@suse.cz> wrote:
+> > On Fri 17-01-20 12:50:58, Amir Goldstein wrote:
+> > > On Thu, Aug 29, 2019 at 4:10 PM Jan Kara <jack@suse.cz> wrote:
+> > > >
+> > > > Hello,
+> > > >
+> > > > this is a patch series that addresses a possible race between readahead and
+> > > > hole punching Amir has discovered [1]. The first patch makes madvise(2) to
+> > > > handle readahead requests through fadvise infrastructure, the third patch
+> > > > then adds necessary locking to XFS to protect against the race. Note that
+> > > > other filesystems need similar protections but e.g. in case of ext4 it isn't
+> > > > so simple without seriously regressing mixed rw workload performance so
+> > > > I'm pushing just xfs fix at this moment which is simple.
+> > > >
+> > >
+> > > Could you give a quick status update about the state of this issue for
+> > > ext4 and other fs. I remember some solutions were discussed.
+> >
+> > Shortly: I didn't get to this. I'm sorry :-|. I'll bump up a priority but I
+> > can't promise anything at the moment.
+> >
+> > > Perhaps this could be a good topic for a cross track session in LSF/MM?
+> >
+> > Maybe although this is one of the cases where it's easy to chat about
+> > possible solutions but somewhat tedious to write one so I'm not sure how
+> > productive that would be. BTW my discussion with Kent [1] is in fact very
+> > related to this problem (the interval lock he has is to stop exactly races
+> > like this).
+> >
 > 
-> See, now that you've said that, I start wondering why not do that?
+> Well, I was mostly interested to know if there is an agreement on the way to
+> solve the problem. If we need to discuss it to reach consensus than it might
+> be a good topic for LSF/MM. If you already know what needs to be done,
+> there is no need for a discussion.
 
-Because this is the fast/safe path to getting the libxfs merge done IMHO ;)
+So I have an idea how it could be solved: Change calling convention for
+->readpage() so that it gets called without page locked and take
+i_mmap_sem there (and in ->readpages()) to protect from the race. But
+I wanted to present it in the form of patches as the devil here is in the
+details and it may prove to be too ugly to be bearable.
 
-...
+If I won't get to writing the patches, you're right it may be sensible to
+present the idea to people at LSF/MM what they think about it.
 
-
->> @@ -1834,7 +1834,7 @@ longform_dir2_entry_check_data(
->>  			       (dep->name[0] == '.' && dep->namelen == 1));
->>  			add_inode_ref(current_irec, current_ino_offset);
->>  			if (da_bno != 0 ||
->> -			    dep != M_DIROPS(mp)->data_entry_p(d)) {
->> +			    dep != (void *)d + M_DIROPS(mp)->data_entry_offset) {
+> > > Aren't the challenges posed by this race also relevant for RWF_UNCACHED?
+> >
+> > Do you have anything particular in mind? I don't see how RWF_UNCACHED would
+> > make this any better or worse than DIO / readahead...
+> >
 > 
-> Er.... void pointer arithmetic?
+> Not better nor worse. I meant that RFW_UNCACHED is another case that
+> would suffer the same races.
 
-er, let me take another look at that.
+Yes, that's right.
 
--eric
-
-
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
