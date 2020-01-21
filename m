@@ -2,170 +2,104 @@ Return-Path: <SRS0=uPG+=3K=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 162B4C2D0CE
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jan 2020 19:45:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFAA1C2D0CE
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jan 2020 21:48:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D669721835
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jan 2020 19:45:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B177A24125
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jan 2020 21:48:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="dJ2/nqDs"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="cr2FofCm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727383AbgAUTpx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Jan 2020 14:45:53 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:39102 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726229AbgAUTpx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Jan 2020 14:45:53 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00LJcrkU052001;
-        Tue, 21 Jan 2020 19:45:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=e+uM/WtV1tlUrk2dihHhrJMKhRLBZLopMCPC4rFDWOs=;
- b=dJ2/nqDsQtLnlWREQaQxNU6xoC1iroJWgZJ9Yc7wBY9r/y/ZqSyyL8Wu/ThFd+uhVbrH
- ULmomW+4ePsb2njdOr/R9HrOUmevTQZj33GbQ53QYRAx/tkA4Nb7anHkogI2OOGG/SCb
- f5sZtueFuJwEg0kCkZ7ImjWWhwx1ef4oXAnzBDqSsRTF7IK2nfILHpNxHq+iW8gymz20
- iQnNJmjQuVoIa99rAHoSE6/KL2jpCRAaOSakDvtFU+y4UqTGRErWsejkVQ8j21tMinVl
- VPFznGf969elfRA/6zr43IyOq2xTh3F652yUq/eTiRKllnrIvkL9zlUZVEa7grESpgwP hA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2xktnr77xv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 21 Jan 2020 19:45:49 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00LJdfwx087233;
-        Tue, 21 Jan 2020 19:45:49 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2xnsa99fyp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 21 Jan 2020 19:45:48 +0000
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00LJjmQp016375;
-        Tue, 21 Jan 2020 19:45:48 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 21 Jan 2020 11:45:47 -0800
-Date:   Tue, 21 Jan 2020 11:45:45 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org,
-        Allison Collins <allison.henderson@oracle.com>
-Subject: Re: [PATCH 28/29] xfs: remove XFS_DA_OP_INCOMPLETE
-Message-ID: <20200121194545.GD8247@magnolia>
-References: <20200114081051.297488-1-hch@lst.de>
- <20200114081051.297488-29-hch@lst.de>
+        id S1728827AbgAUVsr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 21 Jan 2020 16:48:47 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:54128 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728799AbgAUVsq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Jan 2020 16:48:46 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=SMmHzOoK0zKqRyOSPuGbNVZWUnoYfq46L99pnmVsOJY=; b=cr2FofCm1rbjNUQwnzKjOwtMP
+        xA961TLZPVEYU8+eWACuJWMuD2n07mNuFScfR6fedEPpCTeLS+W9mnTYswY4kOtWQkMBkAvp0Pvk/
+        sxLHdNXougXbWpwIFVB+aJrUQcfI43aqbBXePORygHCDSOUGEoVSVJwj3K8DPylNy3xm39WPZu8nD
+        FuUkOrAAK0ZZh+gbc9RWec0zGkdsyTqY/U/YsuVfdFUK4qEULwUat+ABuWcF9TPs91Xx4hRnUeSac
+        MW4raF8S4K3L3VPAMxsVGf061X7jKyig0w6H64zFNz01FQxkzxHcl68Ikc3OACeJtcUmMJb1byE7e
+        3DeuMQ9lQ==;
+Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1iu1O9-0000L5-VA; Tue, 21 Jan 2020 21:48:45 +0000
+Date:   Tue, 21 Jan 2020 13:48:45 -0800
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org, Jeff Layton <jlayton@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>, Chris Mason <clm@fb.com>
+Subject: Re: [RFC v2 0/9] Replacing the readpages a_op
+Message-ID: <20200121214845.GA14467@bombadil.infradead.org>
+References: <20200115023843.31325-1-willy@infradead.org>
+ <20200121113627.GA1746@quack2.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200114081051.297488-29-hch@lst.de>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9507 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2001210146
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9507 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2001210146
+In-Reply-To: <20200121113627.GA1746@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 14, 2020 at 09:10:50AM +0100, Christoph Hellwig wrote:
-> Now that we use the on-disk flags field also for the interface to the
-> lower level attr routines we can use the XFS_ATTR_INCOMPLETE definition
-> from the on-disk format directly instead.
+On Tue, Jan 21, 2020 at 12:36:27PM +0100, Jan Kara wrote:
+> > v2: Chris asked me to show what this would look like if we just have
+> > the implementation look up the pages in the page cache, and I managed
+> > to figure out some things I'd done wrong last time.  It's even simpler
+> > than v1 (net 104 lines deleted).
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-FWIW I think this looks right but I'll wait for you to confirm which
-flagset go in which fields in the da_args structure.
-
---D
-
-> ---
->  fs/xfs/libxfs/xfs_attr.c      |  2 +-
->  fs/xfs/libxfs/xfs_attr_leaf.c | 15 ++++++---------
->  fs/xfs/libxfs/xfs_types.h     |  4 +---
->  3 files changed, 8 insertions(+), 13 deletions(-)
+> I have an unfinished patch series laying around that pulls the ->readpage
+> / ->readpages API in somewhat different direction so I'd like to discuss
+> whether it's possible to solve my problem using your API. The problem I
+> have is that currently some operations such as hole punching can race with
+> ->readpage / ->readpages like:
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 2b9c0aa5af4a..20f791ea0aa3 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -894,7 +894,7 @@ xfs_attr_node_addname(
->  		 * The INCOMPLETE flag means that we will find the "old"
->  		 * attr, not the "new" one.
->  		 */
-> -		args->op_flags |= XFS_DA_OP_INCOMPLETE;
-> +		args->attr_namespace |= XFS_ATTR_INCOMPLETE;
->  		state = xfs_da_state_alloc();
->  		state->args = args;
->  		state->mp = mp;
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index 9081ba7af90a..fae322105457 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -456,7 +456,12 @@ xfs_attr_match(
->  		return false;
->  	if (memcmp(args->name, name, namelen) != 0)
->  		return false;
-> -	if (args->attr_namespace != (flags & XFS_ATTR_NSP_ONDISK_MASK))
-> +	/*
-> +	 * If we are looking for incomplete entries, show only those, else only
-> +	 * show complete entries.
-> +	 */
-> +	if (args->attr_namespace !=
-> +	    (flags & (XFS_ATTR_NSP_ONDISK_MASK | XFS_ATTR_INCOMPLETE)))
->  		return false;
->  	return true;
->  }
-> @@ -2387,14 +2392,6 @@ xfs_attr3_leaf_lookup_int(
->  /*
->   * GROT: Add code to remove incomplete entries.
->   */
-> -		/*
-> -		 * If we are looking for INCOMPLETE entries, show only those.
-> -		 * If we are looking for complete entries, show only those.
-> -		 */
-> -		if (!!(args->op_flags & XFS_DA_OP_INCOMPLETE) !=
-> -		    !!(entry->flags & XFS_ATTR_INCOMPLETE)) {
-> -			continue;
-> -		}
->  		if (entry->flags & XFS_ATTR_LOCAL) {
->  			name_loc = xfs_attr3_leaf_name_local(leaf, probe);
->  			if (!xfs_attr_match(args, name_loc->namelen,
-> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-> index 1bf84488d34c..1aec335dac92 100644
-> --- a/fs/xfs/libxfs/xfs_types.h
-> +++ b/fs/xfs/libxfs/xfs_types.h
-> @@ -225,7 +225,6 @@ typedef struct xfs_da_args {
->  #define XFS_DA_OP_OKNOENT	0x0008	/* lookup/add op, ENOENT ok, else die */
->  #define XFS_DA_OP_CILOOKUP	0x0010	/* lookup to return CI name if found */
->  #define XFS_DA_OP_NOTIME	0x0020	/* don't update inode timestamps */
-> -#define XFS_DA_OP_INCOMPLETE	0x0040	/* lookup INCOMPLETE attr keys */
->  
->  #define XFS_DA_OP_FLAGS \
->  	{ XFS_DA_OP_JUSTCHECK,	"JUSTCHECK" }, \
-> @@ -233,8 +232,7 @@ typedef struct xfs_da_args {
->  	{ XFS_DA_OP_ADDNAME,	"ADDNAME" }, \
->  	{ XFS_DA_OP_OKNOENT,	"OKNOENT" }, \
->  	{ XFS_DA_OP_CILOOKUP,	"CILOOKUP" }, \
-> -	{ XFS_DA_OP_NOTIME,	"NOTIME" }, \
-> -	{ XFS_DA_OP_INCOMPLETE,	"INCOMPLETE" }
-> +	{ XFS_DA_OP_NOTIME,	"NOTIME" }
->  
->  /*
->   * Type verifier functions
-> -- 
-> 2.24.1
+> CPU0						CPU1
+> fallocate(fd, FALLOC_FL_PUNCH_HOLE, off, len)
+>   filemap_write_and_wait_range()
+>   down_write(inode->i_rwsem);
+>   truncate_pagecache_range();
+> 						readahead(fd, off, len)
+> 						  creates pages in page cache
+> 						  looks up block mapping
+>   removes blocks from inode and frees them
+> 						  issues bio
+> 						    - reads stale data -
+> 						      potential security
+> 						      issue
 > 
+> Now how I wanted to address this is that I'd change the API convention for
+> ->readpage() so that we call it with the page unlocked and the function
+> would lock the page, check it's still OK, and do what it needs. And this
+> will allow ->readpage() and also ->readpages() to grab lock
+> (EXT4_I(inode)->i_mmap_sem in case of ext4) to synchronize with hole punching
+> while we are adding pages to page cache and mapping underlying blocks.
+> 
+> Now your API makes even ->readpages() (actually ->readahead) called with
+> pages locked so that makes this approach problematic because of lock
+> inversions. So I'd prefer if we could keep the situation that ->readpages /
+> ->readahead gets called without any pages in page cache locked...
+
+I'm not a huge fan of that approach because it increases the number of
+atomic ops (right now, we __SetPageLocked on the page before adding it
+to i_pages).  Holepunch is a rather rare operation while readpage and
+readpages/readahead are extremely common, so can we make holepunch take
+a lock that will prevent new readpage(s) succeeding?
+
+I have an idea to move the lock entries from DAX to being a generic page
+cache concept.  That way, holepunch could insert lock entries into the
+pagecache to cover the range being punched, and readpage(s) would either
+skip lock entries or block on them.
+
+Maybe there's a better approach though.
