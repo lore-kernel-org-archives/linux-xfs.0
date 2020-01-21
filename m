@@ -1,287 +1,143 @@
-Return-Path: <SRS0=roPR=3J=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=uPG+=3K=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F82FC33CAA
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Jan 2020 22:59:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAF99C32771
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jan 2020 00:56:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DBA9B22522
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Jan 2020 22:59:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A97F02253D
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jan 2020 00:56:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IP2mSNQp"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lq3pSIbP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726867AbgATW7z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Jan 2020 17:59:55 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:38356 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726607AbgATW7z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Jan 2020 17:59:55 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00KMwNwh079560;
-        Mon, 20 Jan 2020 22:59:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=o102+i9Opcuf7KV9VgsfzVJ0av3ssihGaBtgNDvGwpU=;
- b=IP2mSNQpoblUwlqWkSlMu9HVsacoqWPljY+/NYzFaD1LVSvbxs8Gt0zXlvOHDhIc2jlF
- bLLb+ZdpIFWmhjmqj17yMLuIJX2uCEhaT1gz/UwWuxN923BAAECS66C67wxunCt54n4/
- 4G8PJcyCqrh1p0jnvSj5vnhKM42c9qZ0B05f+EyGfnQGi5dafjiuHGU0x1ozLUOLIBWE
- mMIxRS0jqYCEJvyuVNGxeb+Ml+Yn4LfVIt1CHA6aOWO6zqWz6WqOKrKEYeVYqsFS08+e
- uwBSi0gDXYwlUocY3I3Z2xSh6r9y9tPAlkxAos6Fg8mpS+/3XwJdNCwZZL6UIuGlKe/x Kg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2xkseu9uau-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 20 Jan 2020 22:59:49 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00KMnBtl169388;
-        Mon, 20 Jan 2020 22:57:49 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2xmbj4m956-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 20 Jan 2020 22:57:48 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00KMvlBb012477;
-        Mon, 20 Jan 2020 22:57:47 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 20 Jan 2020 14:57:47 -0800
-Subject: [PATCH 12/13] xfs: move buffer read io error logging to
- xfs_buf_read_map
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, hch@infradead.org, david@fromorbit.com
-Date:   Mon, 20 Jan 2020 14:57:46 -0800
-Message-ID: <157956106624.1166689.13426769287670717867.stgit@magnolia>
-In-Reply-To: <157956098906.1166689.13651975861399490259.stgit@magnolia>
-References: <157956098906.1166689.13651975861399490259.stgit@magnolia>
-User-Agent: StGit/0.17.1-dirty
+        id S1728853AbgAUA4f (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Jan 2020 19:56:35 -0500
+Received: from mail-il1-f196.google.com ([209.85.166.196]:38220 "EHLO
+        mail-il1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727829AbgAUA4f (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Jan 2020 19:56:35 -0500
+Received: by mail-il1-f196.google.com with SMTP id f5so996284ilq.5;
+        Mon, 20 Jan 2020 16:56:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=DSU92DS/yk36ylsfrVTivyXxIB5DGgZzKoQw5FMazZY=;
+        b=lq3pSIbPrnnnlke+/4iOv3idDrtKaxngImB5W4zXOYg1EKO6Pp/w7whzo54rLNLeXD
+         +upd7lCyLeHSvzSyTGOEZ71HRLKodR6Vq6Y+YZDRrqxQY6FpB2JSqglWu3jYaue8ENEF
+         KVlRJxNOLvZvEVdMFQyQsqQsNkHhSowq+YUp9GmtW99GGM6pTonzZVhMoIzr0+I9PgT1
+         LHLkw3uXhT5pCCltzzyFk9YEGZuHNt0PgobNHpEXDqdkB9j9GIx1MFBmPfzi7lEZusgc
+         trp5oxFAdOiZz4/VNfWdeu6+/xXPge3HxZ120zDU1x/Tc0n5mhiGTxLpvL7KElejcARN
+         q7Eg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=DSU92DS/yk36ylsfrVTivyXxIB5DGgZzKoQw5FMazZY=;
+        b=K/+h40DHTBmtVNg5FwebVBscKsXm8M3odUGi2HZUge8mxVsP6UmMaYiqC6Y9xVARgB
+         uoHpmO4FV2GjYGlZTgT+LUmEHWxYT9nlIjTDrv24MFOB7sMwzjCXLLHLLeFWRVjuRy5Q
+         NSJi6L/i9ljgF9D3epIScf8BZIe5s/dzKMeueLK4PlXO+8BH+i+ylkgqq2hJfaJ3F4yb
+         2JrNIqvzBFYKW8UeHj7btk3HWTx1mgVTXDqEkE29kZLBinY8waNc2Cqi7REgD4fZ+m8M
+         PjrLMAqMRmyTbULOHi6u8CLOEAHIm3UmuJk0Kqo6S1M6z1YYiGzyrN38QtxoP4FR5X0M
+         9wGw==
+X-Gm-Message-State: APjAAAXoen+CAgju1+EWWCUjRxJXEJllfVj3oBumGzTNoxRFtRmHq0xA
+        C0mY9fSE7tUor13fS9OP5Zk7wKedRyK93wbcn1A=
+X-Google-Smtp-Source: APXvYqw9x3JAIzpZdG5I877D51seRujGg/PdSB1zVxtbiLT765Kfy8muncBvKsCU7feAIIHxlvYj1DUTZ+EL8c5IAF4=
+X-Received: by 2002:a92:d642:: with SMTP id x2mr1533285ilp.169.1579568194666;
+ Mon, 20 Jan 2020 16:56:34 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9506 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2001200192
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9506 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2001200193
+References: <20190923190853.GA3781@iweiny-DESK2.sc.intel.com>
+ <5d5a93637934867e1b3352763da8e3d9f9e6d683.camel@kernel.org>
+ <20191001181659.GA5500@iweiny-DESK2.sc.intel.com> <2b42cf4ae669cedd061c937103674babad758712.camel@kernel.org>
+ <20191002192711.GA21386@fieldses.org> <df9022f0f5d18d71f37ed494a05eaa4509cf0a68.camel@kernel.org>
+ <20191003153743.GA24657@fieldses.org>
+In-Reply-To: <20191003153743.GA24657@fieldses.org>
+From:   Steve French <smfrench@gmail.com>
+Date:   Mon, 20 Jan 2020 18:56:24 -0600
+Message-ID: <CAH2r5msqzPnL=-Vm5F_MCc64pfCdMg0UXw8qkmp6zK1cph-_ZQ@mail.gmail.com>
+Subject: Re: Lease semantic proposal
+To:     "J. Bruce Fields" <bfields@fieldses.org>
+Cc:     Jeff Layton <jlayton@kernel.org>, Ira Weiny <ira.weiny@intel.com>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-ext4@vger.kernel.org, linux-rdma@vger.kernel.org,
+        LKML <linux-kernel@vger.kernel.org>, linux-nvdimm@lists.01.org,
+        linux-mm <linux-mm@kvack.org>,
+        Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>,
+        "Theodore Ts'o" <tytso@mit.edu>,
+        John Hubbard <jhubbard@nvidia.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Two common complaints about the current lease API is that for some of the
+common protocols like SMB3 there is the need to be able to pass in
+the lease request on open itself, and also to
+upgrade and downgrade leases (in SMB3 lease keys can be
+passed over the wire) and of course it would be helpful if
+information about whether a lease was aquired were returned on open
+(and create) to minimize syscalls.
 
-Move the open-coded logic that reports metadata IO read / corruption
-errors and stales the buffer into xfs_buf_read_map so that it's all
-consistent.
+On Thu, Oct 3, 2019 at 11:00 AM J. Bruce Fields <bfields@fieldses.org> wrot=
+e:
+>
+> On Wed, Oct 02, 2019 at 04:35:55PM -0400, Jeff Layton wrote:
+> > On Wed, 2019-10-02 at 15:27 -0400, J. Bruce Fields wrote:
+> > > On Wed, Oct 02, 2019 at 08:28:40AM -0400, Jeff Layton wrote:
+> > > > For the byte ranges, the catch there is that extending the userland
+> > > > interface for that later will be difficult.
+> > >
+> > > Why would it be difficult?
+> >
+> > Legacy userland code that wanted to use byte range enabled layouts woul=
+d
+> > have to be rebuilt to take advantage of them. If we require a range fro=
+m
+> > the get-go, then they will get the benefit of them once they're
+> > available.
+>
+> I can't see writing byte-range code for a kernel that doesn't support
+> that yet.  How would I test it?
+>
+> > > > What I'd probably suggest
+> > > > (and what would jive with the way pNFS works) would be to go ahead =
+and
+> > > > add an offset and length to the arguments and result (maybe also
+> > > > whence?).
+> > >
+> > > Why not add new commands with range arguments later if it turns out t=
+o
+> > > be necessary?
+> >
+> > We could do that. It'd be a little ugly, IMO, simply because then we'd
+> > end up with two interfaces that do almost the exact same thing.
+> >
+> > Should byte-range layouts at that point conflict with non-byte range
+> > layouts, or should they be in different "spaces" (a'la POSIX and flock
+> > locks)? When it's all one interface, those sorts of questions sort of
+> > answer themselves. When they aren't we'll have to document them clearly
+> > and I think the result will be more confusing for userland programmers.
+> I was hoping they'd be in the same space, with the old interface just
+> defined to deal in locks with range [0,=E2=88=9E).
+>
+> I'm just worried about getting the interface wrong if it's specified
+> without being implemented.  Maybe this is straightforward enough that
+> there's not a risk, I don't know.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_attr_remote.c |   10 -------
- fs/xfs/xfs_buf.c                |   53 +++++++++++++++++++++++++++++----------
- fs/xfs/xfs_log_recover.c        |   10 -------
- fs/xfs/xfs_symlink.c            |   10 -------
- fs/xfs/xfs_trans_buf.c          |   34 +++++++------------------
- 5 files changed, 49 insertions(+), 68 deletions(-)
+Yes
 
 
-diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-index 46f055804433..8b7f74b3bea2 100644
---- a/fs/xfs/libxfs/xfs_attr_remote.c
-+++ b/fs/xfs/libxfs/xfs_attr_remote.c
-@@ -422,16 +422,6 @@ xfs_attr_rmtval_get(
- 					0, &bp, &xfs_attr3_rmt_buf_ops);
- 			if (error)
- 				return error;
--			error = bp->b_error;
--			if (error) {
--				xfs_buf_ioerror_alert(bp, __func__);
--				xfs_buf_relse(bp);
--
--				/* bad CRC means corrupted metadata */
--				if (error == -EFSBADCRC)
--					error = -EFSCORRUPTED;
--				return error;
--			}
- 
- 			error = xfs_attr_rmtval_copyout(mp, bp, args->dp->i_ino,
- 							&offset, &valuelen,
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 306394300863..c0b4d516fa2c 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -817,28 +817,55 @@ xfs_buf_read_map(
- 
- 	trace_xfs_buf_read(bp, flags, _RET_IP_);
- 
--	if (!(bp->b_flags & XBF_DONE)) {
-+	if (bp->b_flags & XBF_DONE) {
-+		/* Buffer already read; all we need to do is check it. */
-+		xfs_buf_reverify(bp, ops);
-+
-+		/* Readahead already finished; drop the buffer and exit. */
-+		if (flags & XBF_ASYNC) {
-+			xfs_buf_relse(bp);
-+			return 0;
-+		}
-+
-+		/* We do not want read in the flags */
-+		bp->b_flags &= ~XBF_READ;
-+		ASSERT(bp->b_ops != NULL || ops == NULL);
-+	} else {
-+		/* Initiate the buffer read and wait. */
- 		XFS_STATS_INC(target->bt_mount, xb_get_read);
- 		bp->b_ops = ops;
- 		_xfs_buf_read(bp, flags);
--		*bpp = bp;
--		return 0;
-+
-+		/* Readahead iodone already dropped the buffer, so exit. */
-+		if (flags & XBF_ASYNC)
-+			return 0;
- 	}
- 
--	xfs_buf_reverify(bp, ops);
-+	/*
-+	 * If we've had a read error, then the contents of the buffer are
-+	 * invalid and should not be used. To ensure that a followup read tries
-+	 * to pull the buffer from disk again, we clear the XBF_DONE flag and
-+	 * mark the buffer stale. This ensures that anyone who has a current
-+	 * reference to the buffer will interpret it's contents correctly and
-+	 * future cache lookups will also treat it as an empty, uninitialised
-+	 * buffer.
-+	 */
-+	if (bp->b_error) {
-+		error = bp->b_error;
- 
--	if (flags & XBF_ASYNC) {
--		/*
--		 * Read ahead call which is already satisfied,
--		 * drop the buffer
--		 */
-+		if (!XFS_FORCED_SHUTDOWN(target->bt_mount))
-+			xfs_buf_ioerror_alert(bp, __func__);
-+
-+		bp->b_flags &= ~XBF_DONE;
-+		xfs_buf_stale(bp);
- 		xfs_buf_relse(bp);
--		return 0;
-+
-+		/* bad CRC means corrupted metadata */
-+		if (error == -EFSBADCRC)
-+			error = -EFSCORRUPTED;
-+		return error;
- 	}
- 
--	/* We do not want read in the flags */
--	bp->b_flags &= ~XBF_READ;
--	ASSERT(bp->b_ops != NULL || ops == NULL);
- 	*bpp = bp;
- 	return 0;
- }
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index b29806846916..ac79537d3275 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2749,11 +2749,6 @@ xlog_recover_buffer_pass2(
- 			  buf_flags, &bp, NULL);
- 	if (error)
- 		return error;
--	error = bp->b_error;
--	if (error) {
--		xfs_buf_ioerror_alert(bp, "xlog_recover_do..(read#1)");
--		goto out_release;
--	}
- 
- 	/*
- 	 * Recover the buffer only if we get an LSN from it and it's less than
-@@ -2954,11 +2949,6 @@ xlog_recover_inode_pass2(
- 			0, &bp, &xfs_inode_buf_ops);
- 	if (error)
- 		goto error;
--	error = bp->b_error;
--	if (error) {
--		xfs_buf_ioerror_alert(bp, "xlog_recover_do..(read#2)");
--		goto out_release;
--	}
- 	ASSERT(in_f->ilf_fields & XFS_ILOG_CORE);
- 	dip = xfs_buf_offset(bp, in_f->ilf_boffset);
- 
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index a283d6d6fb46..d762d42ed0ff 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -57,16 +57,6 @@ xfs_readlink_bmap_ilocked(
- 				&bp, &xfs_symlink_buf_ops);
- 		if (error)
- 			return error;
--		error = bp->b_error;
--		if (error) {
--			xfs_buf_ioerror_alert(bp, __func__);
--			xfs_buf_relse(bp);
--
--			/* bad CRC means corrupted metadata */
--			if (error == -EFSBADCRC)
--				error = -EFSCORRUPTED;
--			goto out;
--		}
- 		byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
- 		if (pathlen < byte_cnt)
- 			byte_cnt = pathlen;
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index babbfddbe505..449be0f8c10f 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -303,32 +303,16 @@ xfs_trans_read_buf_map(
- 	}
- 
- 	error = xfs_buf_read_map(target, map, nmaps, flags, &bp, ops);
--	if (error)
--		return error;
--
--	/*
--	 * If we've had a read error, then the contents of the buffer are
--	 * invalid and should not be used. To ensure that a followup read tries
--	 * to pull the buffer from disk again, we clear the XBF_DONE flag and
--	 * mark the buffer stale. This ensures that anyone who has a current
--	 * reference to the buffer will interpret it's contents correctly and
--	 * future cache lookups will also treat it as an empty, uninitialised
--	 * buffer.
--	 */
--	if (bp->b_error) {
--		error = bp->b_error;
--		if (!XFS_FORCED_SHUTDOWN(mp))
--			xfs_buf_ioerror_alert(bp, __func__);
--		bp->b_flags &= ~XBF_DONE;
--		xfs_buf_stale(bp);
--
-+	switch (error) {
-+	case 0:
-+		break;
-+	case -EFSCORRUPTED:
-+	case -EIO:
- 		if (tp && (tp->t_flags & XFS_TRANS_DIRTY))
--			xfs_force_shutdown(tp->t_mountp, SHUTDOWN_META_IO_ERROR);
--		xfs_buf_relse(bp);
--
--		/* bad CRC means corrupted metadata */
--		if (error == -EFSBADCRC)
--			error = -EFSCORRUPTED;
-+			xfs_force_shutdown(tp->t_mountp,
-+					SHUTDOWN_META_IO_ERROR);
-+		/* fall through */
-+	default:
- 		return error;
- 	}
- 
+--=20
+Thanks,
 
+Steve
