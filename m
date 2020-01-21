@@ -7,62 +7,62 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88A67C2D0CE
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jan 2020 18:49:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74B2BC2D0CE
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jan 2020 18:52:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5620420678
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jan 2020 18:49:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C2DB24655
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jan 2020 18:52:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ZqDuJIOr"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="dit1Me3l"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729271AbgAUStT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Jan 2020 13:49:19 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:57626 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729190AbgAUStT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Jan 2020 13:49:19 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00LImZ5J188055;
-        Tue, 21 Jan 2020 18:49:16 GMT
+        id S1728901AbgAUSwx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 21 Jan 2020 13:52:53 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:58850 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728186AbgAUSwx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Jan 2020 13:52:53 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00LImQ4S030499;
+        Tue, 21 Jan 2020 18:52:49 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=0+2L12W07a5hOt9rK+aiMk1bLP3s9UWrF1evvpZ23l8=;
- b=ZqDuJIOrzLWt9e5A7+6I+0ShZT8+e+Sc5a2+Eec7W61vb06lVHdiDfrvqod3jmPHHxEQ
- HPT20IHwC1O9PMbmzBg5AHCEHUHMlyYAyobocAwS5ShddDLCOVY2cAX/Ma7rUyLVlNye
- jp87xF65LTM08ULRLsEUoXOUNOSKKWCLVJylQ9pIYjA6QdDXff+uo8jThiiNsKPNSPuf
- 86eIY02QaBlNRFyI9HeQqvIYc5csdAwHVuFnobFpiDny1lv4hmTAa+wSTsvw3/hbujwT
- V6Bl21R6wuFexYiuP+GYWe1c5JRypRvpDQyBXB2LEHd+FEmRxdL0ELLNTeIF4sp7UG10 +A== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2xksyq719k-1
+ bh=m8t/KDwIjV5K48VkHICTeJbrpP/mVlqmV7CDsPIkQCE=;
+ b=dit1Me3lRm0Rx6Hlh7BZMDbwMPq9eB5jJ2gsdk0bv9f0i/jMTnD8vhiyJM1+5pwkarqA
+ YtSxQxUWu89fwLgZIuL0QIrqoPhjqSAAuPPdGkIIShMH5bI3PNLPHPKMse1sx4T6R6os
+ s8Xofy1PVe/mrPt2sSZd9tb621fBaDDpUwhOi1VjG5gdL1Ig2TRbwPutj3bVe0K/egjJ
+ hH4pS1BeEBYdU1INc++uCstmSl7D8RnVxE/7Jpyzr5m23XUDIcg5ubQaCygRySuv5+WK
+ Cmh6zjo9eunMmbyPBcVpNIA8CYMUNDS79t+puRamUVF5T4QldEOke0U4CiOWQv39beGF sg== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2xkseuf6v8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 21 Jan 2020 18:49:15 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00LImbnK034873;
-        Tue, 21 Jan 2020 18:49:15 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 2xnsj559we-1
+        Tue, 21 Jan 2020 18:52:49 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00LImIOA029574;
+        Tue, 21 Jan 2020 18:52:48 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 2xnpfpje6e-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 21 Jan 2020 18:49:15 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00LInEQo012010;
-        Tue, 21 Jan 2020 18:49:14 GMT
+        Tue, 21 Jan 2020 18:52:48 +0000
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00LIqlb5021318;
+        Tue, 21 Jan 2020 18:52:47 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 21 Jan 2020 10:49:14 -0800
-Date:   Tue, 21 Jan 2020 10:49:12 -0800
+        with ESMTP ; Tue, 21 Jan 2020 10:52:46 -0800
+Date:   Tue, 21 Jan 2020 10:52:45 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org,
         Allison Collins <allison.henderson@oracle.com>
-Subject: Re: [PATCH 23/29] xfs: lift buffer allocation into xfs_ioc_attr_list
-Message-ID: <20200121184912.GX8247@magnolia>
+Subject: Re: [PATCH 24/29] xfs: lift cursor copy in/out into xfs_ioc_attr_list
+Message-ID: <20200121185245.GY8247@magnolia>
 References: <20200114081051.297488-1-hch@lst.de>
- <20200114081051.297488-24-hch@lst.de>
+ <20200114081051.297488-25-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200114081051.297488-24-hch@lst.de>
+In-Reply-To: <20200114081051.297488-25-hch@lst.de>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9507 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
@@ -80,8 +80,12 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 14, 2020 at 09:10:45AM +0100, Christoph Hellwig wrote:
-> Lift the buffer allocation from the two callers into xfs_ioc_attr_list.
+On Tue, Jan 14, 2020 at 09:10:46AM +0100, Christoph Hellwig wrote:
+> Lift the common code to copy the cursor from and to user space into
+> xfs_ioc_attr_list.  Note that this means we copy in twice now as
+> the cursor is in the middle of the conaining structure, but we never
+> touch the memory for the original copy.  Doing so keeps the cursor
+> handling isolated in the common helper.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
@@ -91,158 +95,158 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 --D
 
 > ---
->  fs/xfs/xfs_ioctl.c   | 39 ++++++++++++++++-----------------------
+>  fs/xfs/xfs_ioctl.c   | 36 +++++++++++++++---------------------
 >  fs/xfs/xfs_ioctl.h   |  2 +-
->  fs/xfs/xfs_ioctl32.c | 22 +++++-----------------
->  3 files changed, 22 insertions(+), 41 deletions(-)
+>  fs/xfs/xfs_ioctl32.c | 19 ++++---------------
+>  3 files changed, 20 insertions(+), 37 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index a3a6c6882c6f..8d7b8ad21d9e 100644
+> index 8d7b8ad21d9e..899a3b41fa91 100644
 > --- a/fs/xfs/xfs_ioctl.c
 > +++ b/fs/xfs/xfs_ioctl.c
-> @@ -353,13 +353,14 @@ xfs_ioc_attr_put_listent(
->  int
->  xfs_ioc_attr_list(
->  	struct xfs_inode		*dp,
-> -	char				*buffer,
-> +	void __user			*ubuf,
+> @@ -356,9 +356,10 @@ xfs_ioc_attr_list(
+>  	void __user			*ubuf,
 >  	int				bufsize,
 >  	int				flags,
->  	struct attrlist_cursor_kern	*cursor)
+> -	struct attrlist_cursor_kern	*cursor)
+> +	struct xfs_attrlist_cursor __user *ucursor)
 >  {
 >  	struct xfs_attr_list_context	context;
+> +	struct attrlist_cursor_kern	cursor;
 >  	struct xfs_attrlist		*alist;
-> +	void				*buffer;
+>  	void				*buffer;
 >  	int				error;
->  
->  	if (bufsize < sizeof(struct xfs_attrlist) ||
-> @@ -381,11 +382,9 @@ xfs_ioc_attr_list(
->  	    (cursor->hashval || cursor->blkno || cursor->offset))
+> @@ -376,10 +377,12 @@ xfs_ioc_attr_list(
+>  	/*
+>  	 * Validate the cursor.
+>  	 */
+> -	if (cursor->pad1 || cursor->pad2)
+> +	if (copy_from_user(&cursor, ucursor, sizeof(cursor)))
+> +		return -EFAULT;
+> +	if (cursor.pad1 || cursor.pad2)
+>  		return -EINVAL;
+> -	if ((cursor->initted == 0) &&
+> -	    (cursor->hashval || cursor->blkno || cursor->offset))
+> +	if ((cursor.initted == 0) &&
+> +	    (cursor.hashval || cursor.blkno || cursor.offset))
 >  		return -EINVAL;
 >  
-> -	/*
-> -	 * Check for a properly aligned buffer.
-> -	 */
-> -	if (((long)buffer) & (sizeof(int)-1))
-> -		return -EFAULT;
-> +	buffer = kmem_zalloc_large(bufsize, 0);
-> +	if (!buffer)
-> +		return -ENOMEM;
+>  	buffer = kmem_zalloc_large(bufsize, 0);
+> @@ -391,7 +394,7 @@ xfs_ioc_attr_list(
+>  	 */
+>  	memset(&context, 0, sizeof(context));
+>  	context.dp = dp;
+> -	context.cursor = cursor;
+> +	context.cursor = &cursor;
+>  	context.resynch = 1;
+>  	context.flags = flags;
+>  	context.buffer = buffer;
+> @@ -408,7 +411,8 @@ xfs_ioc_attr_list(
+>  	if (error)
+>  		goto out_free;
 >  
->  	/*
->  	 * Initialize the output buffer.
-> @@ -406,7 +405,13 @@ xfs_ioc_attr_list(
->  	alist->al_offset[0] = context.bufsize;
+> -	if (copy_to_user(ubuf, buffer, bufsize))
+> +	if (copy_to_user(ubuf, buffer, bufsize) ||
+> +	    copy_to_user(ucursor, &cursor, sizeof(cursor)))
+>  		error = -EFAULT;
+>  out_free:
+>  	kmem_free(buffer);
+> @@ -418,33 +422,23 @@ xfs_ioc_attr_list(
+>  STATIC int
+>  xfs_attrlist_by_handle(
+>  	struct file		*parfilp,
+> -	void			__user *arg)
+> +	struct xfs_fsop_attrlist_handlereq __user *p)
+>  {
+> -	int			error = -ENOMEM;
+> -	attrlist_cursor_kern_t	*cursor;
+> -	struct xfs_fsop_attrlist_handlereq __user	*p = arg;
+> -	xfs_fsop_attrlist_handlereq_t al_hreq;
+> +	struct xfs_fsop_attrlist_handlereq al_hreq;
+>  	struct dentry		*dentry;
+> +	int			error = -ENOMEM;
 >  
->  	error = xfs_attr_list(&context);
-> -	ASSERT(error <= 0);
-> +	if (error)
-> +		goto out_free;
-> +
-> +	if (copy_to_user(ubuf, buffer, bufsize))
-> +		error = -EFAULT;
-> +out_free:
-> +	kmem_free(buffer);
+>  	if (!capable(CAP_SYS_ADMIN))
+>  		return -EPERM;
+> -	if (copy_from_user(&al_hreq, arg, sizeof(xfs_fsop_attrlist_handlereq_t)))
+> +	if (copy_from_user(&al_hreq, p, sizeof(al_hreq)))
+>  		return -EFAULT;
+>  
+>  	dentry = xfs_handlereq_to_dentry(parfilp, &al_hreq.hreq);
+>  	if (IS_ERR(dentry))
+>  		return PTR_ERR(dentry);
+>  
+> -	cursor = (attrlist_cursor_kern_t *)&al_hreq.pos;
+>  	error = xfs_ioc_attr_list(XFS_I(d_inode(dentry)), al_hreq.buffer,
+> -				  al_hreq.buflen, al_hreq.flags, cursor);
+> -	if (error)
+> -		goto out_dput;
+> -
+> -	if (copy_to_user(&p->pos, cursor, sizeof(attrlist_cursor_kern_t)))
+> -		error = -EFAULT;
+> -
+> -out_dput:
+> +				  al_hreq.buflen, al_hreq.flags, &p->pos);
+>  	dput(dentry);
 >  	return error;
 >  }
->  
-> @@ -420,7 +425,6 @@ xfs_attrlist_by_handle(
->  	struct xfs_fsop_attrlist_handlereq __user	*p = arg;
->  	xfs_fsop_attrlist_handlereq_t al_hreq;
->  	struct dentry		*dentry;
-> -	char			*kbuf;
->  
->  	if (!capable(CAP_SYS_ADMIN))
->  		return -EPERM;
-> @@ -431,26 +435,15 @@ xfs_attrlist_by_handle(
->  	if (IS_ERR(dentry))
->  		return PTR_ERR(dentry);
->  
-> -	kbuf = kmem_zalloc_large(al_hreq.buflen, 0);
-> -	if (!kbuf)
-> -		goto out_dput;
-> -
->  	cursor = (attrlist_cursor_kern_t *)&al_hreq.pos;
-> -	error = xfs_ioc_attr_list(XFS_I(d_inode(dentry)), kbuf, al_hreq.buflen,
-> -					al_hreq.flags, cursor);
-> +	error = xfs_ioc_attr_list(XFS_I(d_inode(dentry)), al_hreq.buffer,
-> +				  al_hreq.buflen, al_hreq.flags, cursor);
->  	if (error)
-> -		goto out_kfree;
-> -
-> -	if (copy_to_user(&p->pos, cursor, sizeof(attrlist_cursor_kern_t))) {
-> -		error = -EFAULT;
-> -		goto out_kfree;
-> -	}
-> +		goto out_dput;
->  
-> -	if (copy_to_user(al_hreq.buffer, kbuf, al_hreq.buflen))
-> +	if (copy_to_user(&p->pos, cursor, sizeof(attrlist_cursor_kern_t)))
->  		error = -EFAULT;
->  
-> -out_kfree:
-> -	kmem_free(kbuf);
->  out_dput:
->  	dput(dentry);
->  	return error;
 > diff --git a/fs/xfs/xfs_ioctl.h b/fs/xfs/xfs_ioctl.h
-> index cb7b94c576a7..ec6448b259fb 100644
+> index ec6448b259fb..d6e8000ad825 100644
 > --- a/fs/xfs/xfs_ioctl.h
 > +++ b/fs/xfs/xfs_ioctl.h
-> @@ -39,7 +39,7 @@ xfs_readlink_by_handle(
->  int xfs_ioc_attrmulti_one(struct file *parfilp, struct inode *inode,
+> @@ -40,7 +40,7 @@ int xfs_ioc_attrmulti_one(struct file *parfilp, struct inode *inode,
 >  		uint32_t opcode, void __user *uname, void __user *value,
 >  		uint32_t *len, uint32_t flags);
-> -int xfs_ioc_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
-> +int xfs_ioc_attr_list(struct xfs_inode *dp, void __user *ubuf, int bufsize,
->  	int flags, struct attrlist_cursor_kern *cursor);
+>  int xfs_ioc_attr_list(struct xfs_inode *dp, void __user *ubuf, int bufsize,
+> -	int flags, struct attrlist_cursor_kern *cursor);
+> +	int flags, struct xfs_attrlist_cursor __user *ucursor);
 >  
 >  extern struct dentry *
+>  xfs_handle_to_dentry(
 > diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-> index 840d17951407..17e14916757b 100644
+> index 17e14916757b..c1771e728117 100644
 > --- a/fs/xfs/xfs_ioctl32.c
 > +++ b/fs/xfs/xfs_ioctl32.c
-> @@ -359,7 +359,6 @@ xfs_compat_attrlist_by_handle(
->  	compat_xfs_fsop_attrlist_handlereq_t __user *p = arg;
+> @@ -352,35 +352,24 @@ xfs_compat_handlereq_to_dentry(
+>  STATIC int
+>  xfs_compat_attrlist_by_handle(
+>  	struct file		*parfilp,
+> -	void			__user *arg)
+> +	compat_xfs_fsop_attrlist_handlereq_t __user *p)
+>  {
+> -	int			error;
+> -	attrlist_cursor_kern_t	*cursor;
+> -	compat_xfs_fsop_attrlist_handlereq_t __user *p = arg;
 >  	compat_xfs_fsop_attrlist_handlereq_t al_hreq;
 >  	struct dentry		*dentry;
-> -	char			*kbuf;
+> +	int			error;
 >  
 >  	if (!capable(CAP_SYS_ADMIN))
 >  		return -EPERM;
-> @@ -371,27 +370,16 @@ xfs_compat_attrlist_by_handle(
+> -	if (copy_from_user(&al_hreq, arg,
+> -			   sizeof(compat_xfs_fsop_attrlist_handlereq_t)))
+> +	if (copy_from_user(&al_hreq, p, sizeof(al_hreq)))
+>  		return -EFAULT;
+>  
+>  	dentry = xfs_compat_handlereq_to_dentry(parfilp, &al_hreq.hreq);
 >  	if (IS_ERR(dentry))
 >  		return PTR_ERR(dentry);
 >  
-> -	error = -ENOMEM;
-> -	kbuf = kmem_zalloc_large(al_hreq.buflen, 0);
-> -	if (!kbuf)
+> -	cursor = (attrlist_cursor_kern_t *)&al_hreq.pos;
+>  	error = xfs_ioc_attr_list(XFS_I(d_inode(dentry)),
+>  			compat_ptr(al_hreq.buffer), al_hreq.buflen,
+> -			al_hreq.flags, cursor);
+> -	if (error)
 > -		goto out_dput;
 > -
->  	cursor = (attrlist_cursor_kern_t *)&al_hreq.pos;
-> -	error = xfs_ioc_attr_list(XFS_I(d_inode(dentry)), kbuf, al_hreq.buflen,
-> -					al_hreq.flags, cursor);
-> +	error = xfs_ioc_attr_list(XFS_I(d_inode(dentry)),
-> +			compat_ptr(al_hreq.buffer), al_hreq.buflen,
-> +			al_hreq.flags, cursor);
->  	if (error)
-> -		goto out_kfree;
-> -
-> -	if (copy_to_user(&p->pos, cursor, sizeof(attrlist_cursor_kern_t))) {
+> -	if (copy_to_user(&p->pos, cursor, sizeof(attrlist_cursor_kern_t)))
 > -		error = -EFAULT;
-> -		goto out_kfree;
-> -	}
-> +		goto out_dput;
->  
-> -	if (copy_to_user(compat_ptr(al_hreq.buffer), kbuf, al_hreq.buflen))
-> +	if (copy_to_user(&p->pos, cursor, sizeof(attrlist_cursor_kern_t)))
->  		error = -EFAULT;
->  
-> -out_kfree:
-> -	kmem_free(kbuf);
->  out_dput:
+> -
+> -out_dput:
+> +			al_hreq.flags, &p->pos);
 >  	dput(dentry);
 >  	return error;
+>  }
 > -- 
 > 2.24.1
 > 
