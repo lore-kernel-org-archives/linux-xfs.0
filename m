@@ -7,62 +7,62 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6CB8C2D0CE
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jan 2020 18:22:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41BE4C2D0CE
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jan 2020 18:27:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 717EE2087E
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jan 2020 18:22:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0CC0524655
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jan 2020 18:27:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="YbuyeJqM"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="JyUCpokd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729174AbgAUSW6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Jan 2020 13:22:58 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:56274 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728186AbgAUSW5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Jan 2020 13:22:57 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00LI7q1b191333;
-        Tue, 21 Jan 2020 18:22:54 GMT
+        id S1728901AbgAUS1t (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 21 Jan 2020 13:27:49 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:34526 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728186AbgAUS1t (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Jan 2020 13:27:49 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00LI8Fxw153865;
+        Tue, 21 Jan 2020 18:27:46 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=2u9N+wj7YUcaSqA+tp3AGGZVTbZYy2jRhyjkwWJIThE=;
- b=YbuyeJqMHWCPSEYGlB5dhXcD16VvrxiC6vXNzfyvfLnURfn2rCa9PU5q5SMWpECs7dS8
- HAQS6ZBU+kBN/fxXJygzxmVMKVHax3B0NC0Djc2z5/hCgpPsmO2WucClLDMMxe9E/gM9
- wr+TwqyG8aBiKnrw9l7DISXJuENFsSF2MSXDA7CG9GQPwVf1RqiRW4CGRwUEpnZ4olsE
- piPdSN5rqQH/IiWs5nSutC1anRyVITA07Ah1cZUV18Z8J6Xr9uUqzf/kRRLpxwQrSWUu
- gR6JHJKVpMBd9viV67NHLDA9py3vED6NYT9aXLelqOGryp5u7MNHBfGbk/PTT4CX0hDV /g== 
+ bh=BPmsP+IDqWFWXZQMlhakvGWJ23v+H2ne1Z5/RKb4/l8=;
+ b=JyUCpokdEPJy+y+8OWiCDjz/cgGYDpn0sdmHw6eu0lrAUf7TGIqenvFPXVZ0YjMVVdjK
+ Cg+WmQvjpFZtKYmYMQFNgdh7KovftBDjqo2xq+yjv9fwUcPSAlG8twIfZkW222+IFGD0
+ Z+vBPiwQRW0D5s3wE85Kt70g6IZ8aWCcPVzJYA1Lqfcvqdn44iuJPJnrZDVo2C2RQ6l0
+ tx3zU4qNvvkTBpSIlZL2hRf7lJOmKm8KYWkDUqttk3J8OVPfB2CRLdsXr2kyEsTCztFe
+ RR6AYDMdhcYTzq3iT2lnTvjA/GRJjdmGHmgPt84IV1DUDBy1uhhjjprr/3Bx1jmgn63J WA== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2xkseuf1ac-1
+        by aserp2120.oracle.com with ESMTP id 2xksyq6w7r-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 21 Jan 2020 18:22:53 +0000
+        Tue, 21 Jan 2020 18:27:46 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00LI7waA113225;
-        Tue, 21 Jan 2020 18:20:53 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 2xnpfpgmmy-1
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00LI7wg1113173;
+        Tue, 21 Jan 2020 18:27:45 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 2xnpfph0y0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 21 Jan 2020 18:20:53 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00LIKqjf023273;
-        Tue, 21 Jan 2020 18:20:52 GMT
+        Tue, 21 Jan 2020 18:27:45 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00LIRiTg006869;
+        Tue, 21 Jan 2020 18:27:44 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 21 Jan 2020 10:20:52 -0800
-Date:   Tue, 21 Jan 2020 10:20:51 -0800
+        with ESMTP ; Tue, 21 Jan 2020 10:27:44 -0800
+Date:   Tue, 21 Jan 2020 10:27:43 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org,
         Allison Collins <allison.henderson@oracle.com>
-Subject: Re: [PATCH 15/29] xfs: replace ATTR_KERNOTIME with XFS_DA_OP_NOTIME
-Message-ID: <20200121182051.GO8247@magnolia>
+Subject: Re: [PATCH 16/29] xfs: factor out a xfs_attr_match helper
+Message-ID: <20200121182743.GP8247@magnolia>
 References: <20200114081051.297488-1-hch@lst.de>
- <20200114081051.297488-16-hch@lst.de>
+ <20200114081051.297488-17-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200114081051.297488-16-hch@lst.de>
+In-Reply-To: <20200114081051.297488-17-hch@lst.de>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9507 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
@@ -80,121 +80,154 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 14, 2020 at 09:10:37AM +0100, Christoph Hellwig wrote:
-> op_flags with the XFS_DA_OP_* flags is the usual place for in-kernel
-> only flags, so move the notime flag there.
+On Tue, Jan 14, 2020 at 09:10:38AM +0100, Christoph Hellwig wrote:
+> Factor out a helper that compares an on-disk attr vs the name, length and
+> flags specified in struct xfs_da_args.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_attr_leaf.c | 80 +++++++++++++----------------------
+>  1 file changed, 30 insertions(+), 50 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index b0658eb8fbcc..8852754153ba 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -445,14 +445,21 @@ xfs_attr3_leaf_read(
+>   * Namespace helper routines
+>   *========================================================================*/
+>  
+> -/*
+> - * If namespace bits don't match return 0.
+> - * If all match then return 1.
+> - */
+> -STATIC int
+> -xfs_attr_namesp_match(int arg_flags, int ondisk_flags)
+> +static bool
 
-Whenever we're done removing the kernel-internal flags from
-xfs_da_args.flags, I think it's worth amending the comments for @flags
-and @op_flags noting that the first one is for argument flags from
-userspace and the second one is for internal flags.
+/me wonders if this ought to be static inline but otherwise,
 
-Otherwise this looks good,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_attr.c  | 4 ++--
->  fs/xfs/libxfs/xfs_attr.h  | 8 +-------
->  fs/xfs/libxfs/xfs_types.h | 2 ++
->  fs/xfs/scrub/attr.c       | 2 +-
->  fs/xfs/xfs_ioctl.c        | 1 -
->  5 files changed, 6 insertions(+), 11 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index c362dbab1a6a..fce4fd4a3370 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -186,7 +186,7 @@ xfs_attr_try_sf_addname(
->  	 * Commit the shortform mods, and we're done.
->  	 * NOTE: this is also the error path (EEXIST, etc).
->  	 */
-> -	if (!error && (args->flags & ATTR_KERNOTIME) == 0)
-> +	if (!error && !(args->op_flags & XFS_DA_OP_NOTIME))
->  		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
+> +xfs_attr_match(
+> +	struct xfs_da_args	*args,
+> +	uint8_t			namelen,
+> +	unsigned char		*name,
+> +	int			flags)
+>  {
+> -	return XFS_ATTR_NSP_ONDISK(ondisk_flags) == XFS_ATTR_NSP_ARGS_TO_ONDISK(arg_flags);
+> +	if (args->namelen != namelen)
+> +		return false;
+> +	if (memcmp(args->name, name, namelen) != 0)
+> +		return false;
+> +	if (XFS_ATTR_NSP_ARGS_TO_ONDISK(args->flags) !=
+> +	    XFS_ATTR_NSP_ONDISK(flags))
+> +		return false;
+> +	return true;
+>  }
 >  
->  	if (mp->m_flags & XFS_MOUNT_WSYNC)
-> @@ -385,7 +385,7 @@ xfs_attr_set(
->  	if (mp->m_flags & XFS_MOUNT_WSYNC)
->  		xfs_trans_set_sync(args->trans);
->  
-> -	if ((args->flags & ATTR_KERNOTIME) == 0)
-> +	if (!(args->op_flags & XFS_DA_OP_NOTIME))
->  		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
->  
->  	/*
-> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-> index a6de050675c9..0f369399effd 100644
-> --- a/fs/xfs/libxfs/xfs_attr.h
-> +++ b/fs/xfs/libxfs/xfs_attr.h
-> @@ -33,19 +33,13 @@ struct xfs_attr_list_context;
->  #define ATTR_CREATE	0x0010	/* pure create: fail if attr already exists */
->  #define ATTR_REPLACE	0x0020	/* pure set: fail if attr does not exist */
->  
-> -#define ATTR_KERNOTIME	0x1000	/* [kernel] don't update inode timestamps */
-> -
-> -#define ATTR_KERNEL_FLAGS \
-> -	(ATTR_KERNOTIME)
-> -
->  #define XFS_ATTR_FLAGS \
->  	{ ATTR_DONTFOLLOW, 	"DONTFOLLOW" }, \
->  	{ ATTR_ROOT,		"ROOT" }, \
->  	{ ATTR_TRUST,		"TRUST" }, \
->  	{ ATTR_SECURE,		"SECURE" }, \
->  	{ ATTR_CREATE,		"CREATE" }, \
-> -	{ ATTR_REPLACE,		"REPLACE" }, \
-> -	{ ATTR_KERNOTIME,	"KERNOTIME" }
-> +	{ ATTR_REPLACE,		"REPLACE" }
->  
->  /*
->   * The maximum size (into the kernel or returned from the kernel) of an
-> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-> index 3379ebc0c7c5..1594325d7742 100644
-> --- a/fs/xfs/libxfs/xfs_types.h
-> +++ b/fs/xfs/libxfs/xfs_types.h
-> @@ -223,6 +223,7 @@ typedef struct xfs_da_args {
->  #define XFS_DA_OP_ADDNAME	0x0004	/* this is an add operation */
->  #define XFS_DA_OP_OKNOENT	0x0008	/* lookup/add op, ENOENT ok, else die */
->  #define XFS_DA_OP_CILOOKUP	0x0010	/* lookup to return CI name if found */
-> +#define XFS_DA_OP_NOTIME	0x0020	/* don't update inode timestamps */
->  #define XFS_DA_OP_INCOMPLETE	0x0040	/* lookup INCOMPLETE attr keys */
->  
->  #define XFS_DA_OP_FLAGS \
-> @@ -231,6 +232,7 @@ typedef struct xfs_da_args {
->  	{ XFS_DA_OP_ADDNAME,	"ADDNAME" }, \
->  	{ XFS_DA_OP_OKNOENT,	"OKNOENT" }, \
->  	{ XFS_DA_OP_CILOOKUP,	"CILOOKUP" }, \
-> +	{ XFS_DA_OP_NOTIME,	"NOTIME" }, \
->  	{ XFS_DA_OP_INCOMPLETE,	"INCOMPLETE" }
->  
->  /*
-> diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-> index f983c2b969e0..05537627211d 100644
-> --- a/fs/xfs/scrub/attr.c
-> +++ b/fs/xfs/scrub/attr.c
-> @@ -147,7 +147,7 @@ xchk_xattr_listent(
->  		return;
+>  static int
+> @@ -678,15 +685,8 @@ xfs_attr_shortform_add(xfs_da_args_t *args, int forkoff)
+>  	sf = (xfs_attr_shortform_t *)ifp->if_u1.if_data;
+>  	sfe = &sf->list[0];
+>  	for (i = 0; i < sf->hdr.count; sfe = XFS_ATTR_SF_NEXTENTRY(sfe), i++) {
+> -#ifdef DEBUG
+> -		if (sfe->namelen != args->namelen)
+> -			continue;
+> -		if (memcmp(args->name, sfe->nameval, args->namelen) != 0)
+> -			continue;
+> -		if (!xfs_attr_namesp_match(args->flags, sfe->flags))
+> -			continue;
+> -		ASSERT(0);
+> -#endif
+> +		ASSERT(!xfs_attr_match(args, sfe->namelen, sfe->nameval,
+> +			sfe->flags));
 >  	}
 >  
-> -	args.flags = ATTR_KERNOTIME;
-> +	args.op_flags = XFS_DA_OP_NOTIME;
->  	if (flags & XFS_ATTR_ROOT)
->  		args.flags |= ATTR_ROOT;
->  	else if (flags & XFS_ATTR_SECURE)
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 75b8fa7da1c9..9306cefa9e61 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -434,7 +434,6 @@ xfs_ioc_attrmulti_one(
->  
->  	if ((flags & ATTR_ROOT) && (flags & ATTR_SECURE))
->  		return -EINVAL;
-> -	flags &= ~ATTR_KERNEL_FLAGS;
->  
->  	name = strndup_user(uname, MAXNAMELEN);
->  	if (IS_ERR(name))
+>  	offset = (char *)sfe - (char *)sf;
+> @@ -749,13 +749,9 @@ xfs_attr_shortform_remove(xfs_da_args_t *args)
+>  	for (i = 0; i < end; sfe = XFS_ATTR_SF_NEXTENTRY(sfe),
+>  					base += size, i++) {
+>  		size = XFS_ATTR_SF_ENTSIZE(sfe);
+> -		if (sfe->namelen != args->namelen)
+> -			continue;
+> -		if (memcmp(sfe->nameval, args->name, args->namelen) != 0)
+> -			continue;
+> -		if (!xfs_attr_namesp_match(args->flags, sfe->flags))
+> -			continue;
+> -		break;
+> +		if (xfs_attr_match(args, sfe->namelen, sfe->nameval,
+> +				sfe->flags))
+> +			break;
+>  	}
+>  	if (i == end)
+>  		return -ENOATTR;
+> @@ -816,13 +812,9 @@ xfs_attr_shortform_lookup(xfs_da_args_t *args)
+>  	sfe = &sf->list[0];
+>  	for (i = 0; i < sf->hdr.count;
+>  				sfe = XFS_ATTR_SF_NEXTENTRY(sfe), i++) {
+> -		if (sfe->namelen != args->namelen)
+> -			continue;
+> -		if (memcmp(args->name, sfe->nameval, args->namelen) != 0)
+> -			continue;
+> -		if (!xfs_attr_namesp_match(args->flags, sfe->flags))
+> -			continue;
+> -		return -EEXIST;
+> +		if (xfs_attr_match(args, sfe->namelen, sfe->nameval,
+> +				sfe->flags))
+> +			return -EEXIST;
+>  	}
+>  	return -ENOATTR;
+>  }
+> @@ -847,14 +839,10 @@ xfs_attr_shortform_getvalue(
+>  	sfe = &sf->list[0];
+>  	for (i = 0; i < sf->hdr.count;
+>  				sfe = XFS_ATTR_SF_NEXTENTRY(sfe), i++) {
+> -		if (sfe->namelen != args->namelen)
+> -			continue;
+> -		if (memcmp(args->name, sfe->nameval, args->namelen) != 0)
+> -			continue;
+> -		if (!xfs_attr_namesp_match(args->flags, sfe->flags))
+> -			continue;
+> -		return xfs_attr_copy_value(args, &sfe->nameval[args->namelen],
+> -						sfe->valuelen);
+> +		if (xfs_attr_match(args, sfe->namelen, sfe->nameval,
+> +				sfe->flags))
+> +			return xfs_attr_copy_value(args,
+> +				&sfe->nameval[args->namelen], sfe->valuelen);
+>  	}
+>  	return -ENOATTR;
+>  }
+> @@ -2409,23 +2397,15 @@ xfs_attr3_leaf_lookup_int(
+>  		}
+>  		if (entry->flags & XFS_ATTR_LOCAL) {
+>  			name_loc = xfs_attr3_leaf_name_local(leaf, probe);
+> -			if (name_loc->namelen != args->namelen)
+> -				continue;
+> -			if (memcmp(args->name, name_loc->nameval,
+> -							args->namelen) != 0)
+> -				continue;
+> -			if (!xfs_attr_namesp_match(args->flags, entry->flags))
+> +			if (!xfs_attr_match(args, name_loc->namelen,
+> +					name_loc->nameval, entry->flags))
+>  				continue;
+>  			args->index = probe;
+>  			return -EEXIST;
+>  		} else {
+>  			name_rmt = xfs_attr3_leaf_name_remote(leaf, probe);
+> -			if (name_rmt->namelen != args->namelen)
+> -				continue;
+> -			if (memcmp(args->name, name_rmt->name,
+> -							args->namelen) != 0)
+> -				continue;
+> -			if (!xfs_attr_namesp_match(args->flags, entry->flags))
+> +			if (!xfs_attr_match(args, name_rmt->namelen,
+> +					name_rmt->name, entry->flags))
+>  				continue;
+>  			args->index = probe;
+>  			args->rmtvaluelen = be32_to_cpu(name_rmt->valuelen);
 > -- 
 > 2.24.1
 > 
