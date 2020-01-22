@@ -7,63 +7,62 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61CE2C32771
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jan 2020 05:05:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BE59C32771
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jan 2020 05:23:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 34C1121835
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jan 2020 05:05:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E40121569
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jan 2020 05:23:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kMZ9G8B9"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BUkpopGE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725861AbgAVFF5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Jan 2020 00:05:57 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:49086 "EHLO
+        id S1725856AbgAVFXL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Jan 2020 00:23:11 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:35594 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725796AbgAVFF5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jan 2020 00:05:57 -0500
+        with ESMTP id S1725730AbgAVFXL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jan 2020 00:23:11 -0500
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00M4w2B1061142
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2020 05:05:56 GMT
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00M5IMQu075548
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2020 05:23:09 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
  references : from : message-id : date : mime-version : in-reply-to :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=BGjRrER/Cp8HIwYFJXb8bJg+t60zuTFHf5BO0w1MAfk=;
- b=kMZ9G8B9QCkohuaua2ElhvIHaShrOR6vNzkwYAWbJKhrUYxqxUzcQzvUdZPSh+4GRKeC
- 43tLP9KmLt6ilVdslv09YF669OOu9q9E5JGQ8v9Et7meltUh+e71V8d2g3D7uB9Srkua
- AeNv9aK/4S0d7U8ugE0Vl22aXYEougtVQ/pCZlw6dRQAi+NIFR+pSjuxCrh1olnM2LDW
- aR5FwQXaKZaw9unLEtXkBBvwR2RfMyQp0fseFCYDU3ovYBAu9ElREjduQpqzi6lCxXT5
- suaYLzu8IYoBYPSCGvhK9Xt9mFqj+y0a6gdCTKuQaLqC+Fp4KP3kNk/AQpQ1bu5siurx vg== 
+ bh=0+TMihsb33xvZhBhKBShvqWlpbuRtjVGLThFeFbwO2U=;
+ b=BUkpopGEbW77kLTlcx8Apa3su/xm+qSCVNANUdYlESChxqXFHmYBRztocTOzZb3eUs3x
+ abTNAU34kE76GfaS7X0A2R8NB0vP5Up+nX733uWp0e76XV1MkBrfffQ7ipwTq9yEsaoF
+ i/FW3Q0wmlR62/HOyDPELpZDs3VjmK2Fl2Pb0L7ucWCABH0kt0DSXLz4YP0EJiIQ1G5N
+ J7tW8+bK1vsb5OyHYp9r03E09KGDN5fUyfWZ407DdoSHeJc6AtP6v4FxOen9+RP1tkev
+ v+wZDWYQgVd9KnlTOo2RyWt9i2BniuooFww1f4UBA5F6a8QV0q3OVO7+C9IRBezu1zi9 mQ== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2xktnr95sy-1
+        by userp2120.oracle.com with ESMTP id 2xktnr97ch-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2020 05:05:55 +0000
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2020 05:23:09 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00M4xRFY063597
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2020 05:05:55 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 2xnpejf1jv-1
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00M5Itc2104616
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2020 05:23:08 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 2xnpejhhpe-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2020 05:05:55 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00M55sUA014405
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2020 05:05:54 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2020 05:23:08 +0000
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00M5N7Cm020142
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2020 05:23:07 GMT
 Received: from [192.168.1.223] (/67.1.3.112)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 21 Jan 2020 21:05:54 -0800
-Subject: Re: [PATCH v6 12/16] xfs: Add helper function
- xfs_attr_init_unmapstate
+        with ESMTP ; Tue, 21 Jan 2020 21:23:07 -0800
+Subject: Re: [PATCH v6 13/16] xfs: Add helper function xfs_attr_rmtval_unmap
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <20200118225035.19503-1-allison.henderson@oracle.com>
- <20200118225035.19503-13-allison.henderson@oracle.com>
- <20200121232139.GL8247@magnolia>
+ <20200118225035.19503-14-allison.henderson@oracle.com>
+ <20200121232408.GM8247@magnolia>
 From:   Allison Collins <allison.henderson@oracle.com>
-Message-ID: <e2e17731-85e5-1010-4259-5a9fe46a6deb@oracle.com>
-Date:   Tue, 21 Jan 2020 22:05:53 -0700
+Message-ID: <04af001b-2189-05e5-60ca-10d6b91291f8@oracle.com>
+Date:   Tue, 21 Jan 2020 22:23:06 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20200121232139.GL8247@magnolia>
+In-Reply-To: <20200121232408.GM8247@magnolia>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -71,137 +70,103 @@ X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9507 signatures=6
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2001220043
+ engine=8.0.1-1911140001 definitions=main-2001220046
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9507 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2001220043
+ definitions=main-2001220046
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 1/21/20 4:21 PM, Darrick J. Wong wrote:
-> On Sat, Jan 18, 2020 at 03:50:31PM -0700, Allison Collins wrote:
->> This patch helps to pre-simplify xfs_attr_node_removename by modularizing
->> the code around the transactions into helper functions.  This will make
->> the function easier to follow when we introduce delayed attributes.
+On 1/21/20 4:24 PM, Darrick J. Wong wrote:
+> On Sat, Jan 18, 2020 at 03:50:32PM -0700, Allison Collins wrote:
+>> This function is similar to xfs_attr_rmtval_remove, but adapted to
+>> return. EAGAIN for new transactions. We will use this later when we
+> 
+> "..to return -EAGAIN"?
+yees, I noticed that after I sent it... will fix :-)
+> 
+>> introduce delayed attributes
 >>
 >> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
 >> ---
->>   fs/xfs/libxfs/xfs_attr.c | 45 +++++++++++++++++++++++++++++++--------------
->>   1 file changed, 31 insertions(+), 14 deletions(-)
+>>   fs/xfs/libxfs/xfs_attr_remote.c | 27 +++++++++++++++++++++++++++
+>>   fs/xfs/libxfs/xfs_attr_remote.h |  1 +
+>>   2 files changed, 28 insertions(+)
 >>
->> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
->> index e9d22c1..453ea59 100644
->> --- a/fs/xfs/libxfs/xfs_attr.c
->> +++ b/fs/xfs/libxfs/xfs_attr.c
->> @@ -1202,6 +1202,36 @@ xfs_attr_node_addname(
+>> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+>> index 9b4fa2a..f2ee0b8 100644
+>> --- a/fs/xfs/libxfs/xfs_attr_remote.c
+>> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
+>> @@ -684,3 +684,30 @@ xfs_attr_rmtval_remove(
+>>   	}
+>>   	return 0;
 >>   }
->>   
->>   /*
->> + * Set up the state for unmap and set the incomplete flag
+>> +
+>> +/*
+>> + * Unmap value blocks for this attr.  This is similar to
+>> + * xfs_attr_rmtval_remove, but adapted to to return EAGAIN for new transactions
+note to self: fix too many to's
+
 > 
-> "Mark an attribute entry INCOMPLETE and save pointers to the relevant
-> buffers for later deletion of the entry." ?
-I am fine with that if folks prefer.
+> Do you have to scan for and invalidate any incore buffers for the remote
+> value?  Or will that be performed by another step?  Hard to tell because
+> this function doesn't have any callers.
+Yes, that happens in xfs_attr_rmtval_invalidate.  Right after we mark 
+incomplete, and before we fall into the bunmapi loop I mentioned in the 
+last patch.  Basically this function becomes the inside of that loop.
+
 
 > 
 >> + */
->> +STATIC int
->> +xfs_attr_init_unmapstate(
-> 
-> I'm hung up on this name -- it marks the entry incomplete and saves some
-> breadcrumbs for erasing data later, which I guess is "unmap state"?
-> What do you think of:
-> 
-> xfs_attr_leaf_mark_incomplete()
-
-I actually struggled a bit with what to call it.  I called it an init 
-because in the immediately proceeding code we fall into a loop of 
-bunmapi and refilling the state, rolling the transaction in between. 
-But we only make this initial call once before we start doing that. 
-Later when we get into the state machine this turns into multiple 
-iterations of jumping in and out of this region of code.  Even though 
-the while() syntax is gone, it still ends up functioning very much like 
-a loop.
-
-This helper function isnt so much necessary as much as it is an effort 
-to cut down on the size of xfs_attr_node_removename which was getting 
-quite lengthy.
-
-In anycase, xfs_attr_leaf_mark_incomplete is fine with me :-)
-
-> 
->> +	struct xfs_da_args	*args,
->> +	struct xfs_da_state	*state)
+>> +int
+>> +xfs_attr_rmtval_unmap(
+>> +	struct xfs_da_args	*args)
 >> +{
->> +	int error;
+>> +	int	error, done;
 >> +
 >> +	/*
->> +	 * Fill in disk block numbers in the state structure
->> +	 * so that we can get the buffers back after we commit
->> +	 * several transactions in the following calls.
+>> +	 * Unmap value blocks for this attr.  This is similar to
+>> +	 * xfs_attr_rmtval_remove, but open coded here to return EAGAIN
+>> +	 * for new transactions
 >> +	 */
->> +	error = xfs_attr_fillstate(state);
+>> +	error = xfs_bunmapi(args->trans, args->dp,
+>> +		    args->rmtblkno, args->rmtblkcnt,
+>> +		    XFS_BMAPI_ATTRFORK, 1, &done);
 >> +	if (error)
 >> +		return error;
 >> +
->> +	/*
->> +	 * Mark the attribute as INCOMPLETE
+>> +	if (!done)
+>> +		return -EAGAIN;
 > 
-> Has this stopped doing the bunmapi call, or was the comment inaccurate?
-> I'm guessing the second if it's necessary to save state to recover
-> buffer pointers later...?
-Right, I clipped off the comment because we dont do the bunmapi in this 
-function scope.  That happens later in the loop behavior described above.
-
-Hope that helps!
+> return done ? 0 : -EAGAIN; ?
+I believe Christoph asked for the return 0;  I am not particular about 
+it as long a people are in agreement.  If people feel strongly one way 
+or another please chime in.
 
 Allison
-
 > 
 > --D
 > 
->> +	 */
->> +	error = xfs_attr3_leaf_setflag(args);
->> +	if (error)
->> +		return error;
+
+
 >> +
 >> +	return 0;
 >> +}
->> +
->> +
->> +/*
->>    * Remove a name from a B-tree attribute list.
->>    *
->>    * This will involve walking down the Btree, and may involve joining
->> @@ -1233,20 +1263,7 @@ xfs_attr_node_removename(
->>   	ASSERT(blk->bp != NULL);
->>   	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
->>   	if (args->rmtblkno > 0) {
->> -		/*
->> -		 * Fill in disk block numbers in the state structure
->> -		 * so that we can get the buffers back after we commit
->> -		 * several transactions in the following calls.
->> -		 */
->> -		error = xfs_attr_fillstate(state);
->> -		if (error)
->> -			goto out;
->> -
->> -		/*
->> -		 * Mark the attribute as INCOMPLETE, then bunmapi() the
->> -		 * remote value.
->> -		 */
->> -		error = xfs_attr3_leaf_setflag(args);
->> +		error = xfs_attr_init_unmapstate(args, state);
->>   		if (error)
->>   			goto out;
->>   
+>> diff --git a/fs/xfs/libxfs/xfs_attr_remote.h b/fs/xfs/libxfs/xfs_attr_remote.h
+>> index 85f2593..7ab3770 100644
+>> --- a/fs/xfs/libxfs/xfs_attr_remote.h
+>> +++ b/fs/xfs/libxfs/xfs_attr_remote.h
+>> @@ -12,4 +12,5 @@ int xfs_attr_rmtval_get(struct xfs_da_args *args);
+>>   int xfs_attr_rmtval_set(struct xfs_da_args *args);
+>>   int xfs_attr_rmtval_remove(struct xfs_da_args *args);
+>>   int xfs_attr_rmtval_invalidate(struct xfs_da_args *args);
+>> +int xfs_attr_rmtval_unmap(struct xfs_da_args *args);
+>>   #endif /* __XFS_ATTR_REMOTE_H__ */
 >> -- 
 >> 2.7.4
 >>
