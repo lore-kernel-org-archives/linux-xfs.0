@@ -6,458 +6,173 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13C52C32771
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jan 2020 23:11:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFFAFC33CB6
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jan 2020 23:47:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C4B1524676
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jan 2020 23:11:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A8DEC21835
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jan 2020 23:47:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726101AbgAVXLq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Jan 2020 18:11:46 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:49147 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725884AbgAVXLq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jan 2020 18:11:46 -0500
+        id S1725972AbgAVXrr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Jan 2020 18:47:47 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:38071 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725911AbgAVXrr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jan 2020 18:47:47 -0500
 Received: from dread.disaster.area (pa49-181-218-253.pa.nsw.optusnet.com.au [49.181.218.253])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 7C8D43A1955;
-        Thu, 23 Jan 2020 10:11:38 +1100 (AEDT)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id CB804820810;
+        Thu, 23 Jan 2020 10:47:41 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1iuP9u-000876-3J; Thu, 23 Jan 2020 10:11:38 +1100
-Date:   Thu, 23 Jan 2020 10:11:38 +1100
+        id 1iuPim-0008IT-9C; Thu, 23 Jan 2020 10:47:40 +1100
+Date:   Thu, 23 Jan 2020 10:47:40 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Damien Le Moal <Damien.LeMoal@wdc.com>
-Cc:     "hare@suse.de" <hare@suse.de>, Naohiro Aota <Naohiro.Aota@wdc.com>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-        "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
-        "jth@kernel.org" <jth@kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH v8 1/2] fs: New zonefs file system
-Message-ID: <20200122231138.GH9407@dread.disaster.area>
-References: <20200121065846.216538-1-damien.lemoal@wdc.com>
- <20200121065846.216538-2-damien.lemoal@wdc.com>
- <20200122015757.GG9407@dread.disaster.area>
- <63dbc880d4748c5f7f9dc91f80525ec01933370f.camel@wdc.com>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        Jeff Layton <jlayton@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>, Chris Mason <clm@fb.com>
+Subject: Re: [RFC v2 0/9] Replacing the readpages a_op
+Message-ID: <20200122234740.GI9407@dread.disaster.area>
+References: <20200115023843.31325-1-willy@infradead.org>
+ <20200121113627.GA1746@quack2.suse.cz>
+ <20200121214845.GA14467@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <63dbc880d4748c5f7f9dc91f80525ec01933370f.camel@wdc.com>
+In-Reply-To: <20200121214845.GA14467@bombadil.infradead.org>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
         a=TU0PeEMO9XNyODJ+pEfdLw==:117 a=TU0PeEMO9XNyODJ+pEfdLw==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=Jdjhy38mL1oA:10
-        a=7-415B0cAAAA:8 a=C8PisHbqREvtqrBXf9oA:9 a=-iGcd2G-_d87knI5:21
-        a=i2gGs6wJv-NuZrnf:21 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=7-415B0cAAAA:8 a=CFKjfQyiDWdJtrgseoEA:9 a=Q-uMpcMcfA-1AsPR:21
+        a=OG3NL3sTsLLd4Dzs:21 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 22, 2020 at 10:07:07AM +0000, Damien Le Moal wrote:
-> Dave,
+On Tue, Jan 21, 2020 at 01:48:45PM -0800, Matthew Wilcox wrote:
+> On Tue, Jan 21, 2020 at 12:36:27PM +0100, Jan Kara wrote:
+> > > v2: Chris asked me to show what this would look like if we just have
+> > > the implementation look up the pages in the page cache, and I managed
+> > > to figure out some things I'd done wrong last time.  It's even simpler
+> > > than v1 (net 104 lines deleted).
+> > 
+> > I have an unfinished patch series laying around that pulls the ->readpage
+> > / ->readpages API in somewhat different direction so I'd like to discuss
+> > whether it's possible to solve my problem using your API. The problem I
+> > have is that currently some operations such as hole punching can race with
+> > ->readpage / ->readpages like:
+> > 
+> > CPU0						CPU1
+> > fallocate(fd, FALLOC_FL_PUNCH_HOLE, off, len)
+> >   filemap_write_and_wait_range()
+> >   down_write(inode->i_rwsem);
+> >   truncate_pagecache_range();
+
+shouldn't fallocate be holding EXT4_I(inode)->i_mmap_sem before it
+truncates the page cache? Otherwise it's not serialised against
+page faults. Looks at code ... oh, it does hold the i_mmap_sem in
+write mode, so....
+
+> > 						readahead(fd, off, len)
+> > 						  creates pages in page cache
+> > 						  looks up block mapping
+> >   removes blocks from inode and frees them
+> > 						  issues bio
+> > 						    - reads stale data -
+> > 						      potential security
+> > 						      issue
+
+.... I'm not sure that this race condition should exist anymore
+as readahead should not run until the filesystem drops it's inode
+and mmap locks after the entire extent freeing operation is
+complete...
+
+> > Now how I wanted to address this is that I'd change the API convention for
+> > ->readpage() so that we call it with the page unlocked and the function
+> > would lock the page, check it's still OK, and do what it needs. And this
+> > will allow ->readpage() and also ->readpages() to grab lock
+> > (EXT4_I(inode)->i_mmap_sem in case of ext4) to synchronize with hole punching
+> > while we are adding pages to page cache and mapping underlying blocks.
+> > 
+> > Now your API makes even ->readpages() (actually ->readahead) called with
+> > pages locked so that makes this approach problematic because of lock
+> > inversions. So I'd prefer if we could keep the situation that ->readpages /
+> > ->readahead gets called without any pages in page cache locked...
 > 
-> On Wed, 2020-01-22 at 12:57 +1100, Dave Chinner wrote:
-> > [...]
-> > > +static int zonefs_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
-> > > +			      unsigned int flags, struct iomap *iomap,
-> > > +			      struct iomap *srcmap)
-> > > +{
-> > > +	struct zonefs_sb_info *sbi = ZONEFS_SB(inode->i_sb);
-> > > +	struct zonefs_inode_info *zi = ZONEFS_I(inode);
-> > > +	loff_t max_isize = zi->i_max_size;
-> > > +	loff_t isize;
-> > > +
-> > > +	/*
-> > > +	 * For sequential zones, enforce direct IO writes. This is already
-> > > +	 * checked when writes are issued, so warn about this here if we
-> > > +	 * get buffered write to a sequential file inode.
-> > > +	 */
-> > > +	if (WARN_ON_ONCE(zi->i_ztype == ZONEFS_ZTYPE_SEQ &&
-> > > +			 (flags & IOMAP_WRITE) && !(flags & IOMAP_DIRECT)))
-> > > +		return -EIO;
-> > > +
-> > > +	/*
-> > > +	 * For all zones, all blocks are always mapped. For sequential zones,
-> > > +	 * all blocks after the write pointer (inode size) are always unwritten.
-> > > +	 */
-> > > +	mutex_lock(&zi->i_truncate_mutex);
-> > > +	isize = i_size_read(inode);
-> > > +	if (offset >= isize) {
-> > > +		length = min(length, max_isize - offset);
-> > > +		if (zi->i_ztype == ZONEFS_ZTYPE_CNV)
-> > > +			iomap->type = IOMAP_MAPPED;
-> > > +		else
-> > > +			iomap->type = IOMAP_UNWRITTEN;
-> > > +	} else {
-> > > +		length = min(length, isize - offset);
-> > > +		iomap->type = IOMAP_MAPPED;
-> > > +	}
-> > 
-> > Something was bugging me about this, and reading the rest of the
-> > patch it finally triggered. For conventional zones, inode->i_size =
-> > zi->i_max_size, and so if offset >= isize for a conventional
-> > zone then this:
-> > 
-> > 	length = min(length, max_isize - offset);
-> > 
-> > is going to result in length <= 0 and we return a negative length
-> > iomap.
-> > 
-> > IOWs, this case should only trigger for IO into sequential zones,
-> > as it appears to be prevented at higher layers for conventional
-> > zones by explicit checks against i_max_size and/or
-> > iov_iter_truncate() calls to ensure user IOs are limited to within
-> > i_max_size.
-> > 
-> > Hence it looks to me that triggering the (offset >= isize) case here
-> > for conventional zones is a WARN_ON_ONCE() and return -EIO
-> > situation...
-> > 
-> > SO, perhaps:
-> > 
-> > 	isize = i_size_read(inode);
-> > 	if (offset >= isize) {
-> > 		if (WARN_ON_ONCE(i->i_ztype == ZONEFS_ZTYPE_CNV)) {
-> > 			/* drop locks */
-> > 			return -EIO;
-> > 		}
-> > 		length = min(length, max_isize - offset);
-> > 		iomap->type = IOMAP_UNWRITTEN;
-> > 	} else {
-> > 		length = min(length, isize - offset);
-> > 		iomap->type = IOMAP_MAPPED;
-> > 	}
+> I'm not a huge fan of that approach because it increases the number of
+> atomic ops (right now, we __SetPageLocked on the page before adding it
+> to i_pages).  Holepunch is a rather rare operation while readpage and
+> readpages/readahead are extremely common, so can we make holepunch take
+> a lock that will prevent new readpage(s) succeeding?
 > 
-> Yes, that is much better indeed. I will change this.
+> I have an idea to move the lock entries from DAX to being a generic page
+> cache concept.  That way, holepunch could insert lock entries into the
+> pagecache to cover the range being punched, and readpage(s) would either
+> skip lock entries or block on them.
 > 
-> > This also seems tailored around the call from zonefs_map_blocks()
-> > which tries to map the entire zone (length = zi->i_max_size) for
-> > writeback mappings. Hence the length in this case always requires
-> > clamping to zi->i_max_size - offset. Again, there's an issue here:
-> > 
-> > > +static int zonefs_map_blocks(struct iomap_writepage_ctx *wpc,
-> > > +			     struct inode *inode, loff_t offset)
-> > > +{
-> > > +	if (offset >= wpc->iomap.offset &&
-> > > +	    offset < wpc->iomap.offset + wpc->iomap.length)
-> > > +		return 0;
-> > > +
-> > > +	memset(&wpc->iomap, 0, sizeof(wpc->iomap));
-> > > +	return zonefs_iomap_begin(inode, offset, ZONEFS_I(inode)->i_max_size,
-> > > +				  0, &wpc->iomap, NULL);
-> > 
-> > Where we pass flags = 0 into zonefs_iomap_begin(), and so there is
-> > no checking that this writeback code path is only executing against
-> > a conventional zone. I.e. the comments and checks in
-> > zonefs_iomap_begin() relate only to user IO call paths, but don't
-> > validate or comment on the writeback path callers, and there's no
-> > comments or checks here that the inode points at a conventional
-> > zone, either....
-> 
-> I do not understand your point here. Since all blocks are always
-> allocated for both conventional and sequential files, I think that
-> using i_max_size for calling zonefs_iomap_begin is OK:
+> Maybe there's a better approach though.
 
-Yes, it is, but that wasn't really the point I was trying to make.
-My comments around passing in the max size here means that
-zonefs_iomap_begin() has to do clamping (i.e. the length = min(length,
-max_isize - offset) calls) just for this caller, as all the other
-callers from the user IO path already have their offset/lengths
-clamped to isize/max_isize. Hence if zonefs_map_blocks() clamped
-the length it passed to (i_max_size - offset) like all other callers
-do, then code in zonefs_iomap_begin() would be simpler.
+Can we step back for a moment and look at how we already serialise
+readahead against truncate/hole punch? While the readahead code
+itself doesn't serialise against truncate, in all cases we should be
+running through the filesystem at a higher layer and provides the
+truncate/holepunch serialisation before we get to the readahead
+code.
 
+The read() syscall IO path:
 
-> for conventional
-> zone files, any of these blocks can be written, both user direct or
-> through the page cache. No distinction is I think necessary. For
-> sequential zone files, only the blocks at "offset" can be written, and
-> that value must be equal to zi->i_wpoffset (which account for in-
-> flights writes). In both cases, exceeding the max file size is not
-> allowed so this check is common in zonefs_iomap_begin() to cover all
-> users and not just zonefs_map_blocks(). Did I get something wrong with
-> iomap workings ?
+  read()
+    ->read_iter()
+      filesystem takes truncate serialisation lock
+      generic_file_read_iter()
+        generic_file_buffered_read()
+	  page_cache_sync_readahead()
+	    ....
+	  page_cache_async_readahead()
+	    ....
+      .....
+      filesystem drops truncate serialisation lock
 
-No, the point I was trying to make (unsucessfully!) is that
-zonefs_map_blocks() is only called from buffered writeback, and
-so it only called on conventional zone writes. Neither
-zonefs_map_blocks() or zonefs_iomap_begin() check this, and
-zonefs_iomap_begin() can't because it doesn't have any flags passed
-into it to tell it that a mapping for a write is being done.
+The page fault IO path:
 
-i.e. somewhere in this zonefs_map_blocks() codepath there needs to
-be a check like:
+page fault
+  ->fault
+    xfs_vm_filemap_fault
+      filesystem takes mmap truncate serialisation lock
+	filemap_fault
+	  do_async_mmap_readahead
+	    page_cache_async_readahead
+	  ....
+	  do_sync_mmap_readahead
+	    page_cache_sync_readahead
+	.....
+      filesystem drops mmap truncate serialisation lock
 
-	WARN_ON_ONCE(zi->zi_type != ZONEFS_ZTYPE_CNV);
+Then there is fadvise(WILLNEED) which calls
+force_page_cache_readahead() directly. We now have ->fadvise for
+filesystems to add locking around this:
 
-because we should never get here for sequential zones.
+fadvise64
+  vfs_fadvise
+    ->fadvise
+      xfs_file_fadvise
+        filesystem takes truncate serialisation lock
+	generic_fadvise()
+        filesystem drops truncate serialisation lock
 
-And that then raises the question - if we can only get here for
-conventional zones, then wouldn't the code read better using
-the inode->i_size rather that the zi->i_max_size as all IO to
-conventional zones must be within the inode size?
+XFS and overlay both have ->fadvise methods to provide this
+serialisation of readahead, but ext4 does not so users could trigger
+the stated race condition through fadvise(WILLNEED) or readahead()
+syscalls.
 
-> > > +	pos = (zone->wp - zone->start) << SECTOR_SHIFT;
-> > > +	zi->i_wpoffset = pos;
-> > > +	if (i_size_read(inode) != pos) {
-> > > +		zonefs_update_stats(inode, pos);
-> > > +		i_size_write(inode, pos);
-> > > +	}
-> > 
-> > What happens if this decreases the size of the zone? don't we need
-> > to invalidate the page cache beyond the new EOF in this case (i.e.
-> > it's a truncate operation)?
-> 
-> This is called only for direct write errors into sequential zones.
-> Since for that case we only deal with append direct writes, there is no
-> possibility of having any of the written data cached already. So even
-> if we get a short write or complete failure, no invalidation is needed.
-
-Ah, there's a undocumented assumption that a write error never
-resets the zone write pointer completely, but only remains unchanged
-from where it was prior to the write that failed. My concern is what
-happens if the device decides that the error has caused the zone to
-be completely lost and so resets the write pointer back to zero?
-
-And the other concern here is what if the hardware write pointer
-still moves forward and exposes stale data because the write failed?
-
-> Compared to errors for read operations in any zone, or conventional
-> zone files read/write errors, this error handling adds processing of
-> zone condition changes (error due to a zone going offline or read-
-> only). I could add the same treatment for all IO errors. I did not
-> since if we start seeing these zone conditions, it is likely that the
-> drive is about to die.
-
-Ok, so it's not expected, but it sounds like in extreme
-circumstances it can still occur, and hence we still should try to
-handle such errors in a sane manner.
-
-> So conventional zone writes and all read errors
-> are treated like on any other FS: only return the error to the user
-> without any drive-specific forensic done.
-
-Sure, but they don't go through this new error path :)
-
-> > > +	/*
-> > > +	 * blkdev_report_zones() uses GFP_KERNEL by default. Force execution as
-> > > +	 * if GFP_NOFS was specified so that it will not end up recursing into
-> > > +	 * the FS on memory allocation.
-> > > +	 */
-> > > +	nofs_flag = memalloc_nofs_save();
-> > > +	ret = blkdev_report_zones(sb->s_bdev, sector, 1,
-> > > +				  zonefs_report_zones_err_cb, inode);
-> > > +	memalloc_nofs_restore(nofs_flag);
-> > 
-> > The comment is kinda redundant - it's explaining exactly what the
-> > code does rather than why it needs this protection. i.e. the comment
-> > should explain the recursion vector/deadlock that we are avoiding
-> > here...
-> 
-> Yes. Changed it to:
-> 
-> /*
->  * Report zones memory allocation could trigger a recursion into zonefs
->  * due to memory reclaim. Since this is always called with the inode
->  * truncate mutex lock being held, avoid the potential recursion
->  * deadlock using a GFP_NOFS allocation.
->  */
-> 
-> > 
-> > > +static int zonefs_file_dio_write_end(struct kiocb *iocb, ssize_t size, int ret,
-> > > +				     unsigned int flags)
-> > > +{
-> > > +	struct inode *inode = file_inode(iocb->ki_filp);
-> > > +	struct zonefs_inode_info *zi = ZONEFS_I(inode);
-> > > +
-> > > +	if (ret)
-> > > +		return ret;
-> > > +
-> > > +	/*
-> > > +	 * Conventional zone file size is fixed to the zone size so there
-> > > +	 * is no need to do anything.
-> > > +	 */
-> > > +	if (zi->i_ztype == ZONEFS_ZTYPE_CNV)
-> > > +		return 0;
-> > > +
-> > > +	mutex_lock(&zi->i_truncate_mutex);
-> > > +
-> > > +	if (size < 0) {
-> > > +		ret = zonefs_seq_file_write_failed(inode, size);
-> > 
-> > Ok, so I see it is being called from IO completion context, whcih
-> > means we'd want memalloc_noio_save() because the underlying bio
-> > doesn't get freed until this whole completion runs, right?
-> 
-> Yes, the failed BIO is freed only after the report zone is done. But
-> more than GFP_NOIO, we want GFP_NOFS for the reason stated above.
-
-Yes, I can see that GFP_NOFS is needed to avoid truncate lock
-recursion. However, we are in an IO completion routine here holding
-a bio, so what I'm asking is whether reclaim recursion back into the
-block layer and allocating more bios (e.g.  for swap to a
-conventional zone within the same zoned block device) is safe to do
-while we hold a bio from the same bioset that swap bios will be
-allocated from...
-
-i.e. doesn't this violate the forwards progress guarantee we need
-for bioset mempools? i.e. we now can't free a bio if nested
-allocation of a bio blocks waiting for a bio to be freed...
-
-> > > +static ssize_t zonefs_file_dio_write(struct kiocb *iocb, struct iov_iter *from)
-> > > +{
-> > > +	struct inode *inode = file_inode(iocb->ki_filp);
-> > > +	struct zonefs_sb_info *sbi = ZONEFS_SB(inode->i_sb);
-> > > +	struct zonefs_inode_info *zi = ZONEFS_I(inode);
-> > > +	size_t count;
-> > > +	ssize_t ret;
-> > > +
-> > > +	if (iocb->ki_flags & IOCB_NOWAIT) {
-> > > +		if (!inode_trylock(inode))
-> > > +			return -EAGAIN;
-> > > +	} else {
-> > > +		inode_lock(inode);
-> > > +	}
-> > > +
-> > > +	ret = generic_write_checks(iocb, from);
-> > > +	if (ret <= 0)
-> > > +		goto out;
-> > > +
-> > > +	iov_iter_truncate(from, zi->i_max_size - iocb->ki_pos);
-> > > +	count = iov_iter_count(from);
-> > 
-> > So count is initialised to the entire IO length....
-> 
-> Well, yes, count reflects the truncated iov_iter size. This is
-> necessary for the AIO case when iomap_dio_rw() returns -EIOCBQUEUED so
-> that we can account for the inflight AIOs for an eventual subsequent
-> AIO submission by the user (see next comment below). For sync writes
-> (or AIOs that completed very quickly), the final value for count is
-> updated using iomap_dio_rw() return value.
-
-Sure.
-
-> > > +	/*
-> > > +	 * Direct writes must be aligned to the block size, that is, the device
-> > > +	 * physical sector size, to avoid errors when writing sequential zones
-> > > +	 * on 512e devices (512B logical sector, 4KB physical sectors).
-> > > +	 */
-> > > +	if ((iocb->ki_pos | count) & sbi->s_blocksize_mask) {
-> > > +		ret = -EINVAL;
-> > > +		goto out;
-> > > +	}
-> > > +
-> > > +	/*
-> > > +	 * Enforce sequential writes (append only) in sequential zones.
-> > > +	 */
-> > > +	mutex_lock(&zi->i_truncate_mutex);
-> > > +	if (zi->i_ztype == ZONEFS_ZTYPE_SEQ &&
-> > > +	    iocb->ki_pos != zi->i_wpoffset) {
-> > > +		zonefs_err(inode->i_sb,
-> > > +			   "Unaligned write at %llu + %zu (wp %llu)\n",
-> > > +			   iocb->ki_pos, count,
-> > > +			   zi->i_wpoffset);
-> > > +		mutex_unlock(&zi->i_truncate_mutex);
-> > > +		ret = -EINVAL;
-> > > +		goto out;
-> > > +	}
-> > > +	mutex_unlock(&zi->i_truncate_mutex);
-> > > +
-> > > +	ret = iomap_dio_rw(iocb, from, &zonefs_iomap_ops, &zonefs_dio_ops,
-> > > +			   is_sync_kiocb(iocb));
-> > > +	if (zi->i_ztype == ZONEFS_ZTYPE_SEQ &&
-> > > +	    (ret > 0 || ret == -EIOCBQUEUED)) {
-> > > +		if (ret > 0)
-> > > +			count = ret;
-> > > +		mutex_lock(&zi->i_truncate_mutex);
-> > > +		zi->i_wpoffset += count;
-> > > +		mutex_unlock(&zi->i_truncate_mutex);
-> > 
-> > Hmmmm. This looks problematic w.r.t. AIO. If we get -EIOCBQUEUED it
-> > means the IO has been queued but not necessarily submitted, but
-> > we update zi->i_wpoffset as though the entire AIO has laready
-> > completed. ANd then we drop the inode_lock() and return, allowing
-> > another AIO+DIO to be started.
-> > 
-> > Hence another concurrent sequential AIO+DIO write could now be
-> > submitted and pass the above iocb->ki_pos != zi->i_wpoffset check.
-> > Now we have two independent IOs in flight - one that is at the
-> > current hardware write pointer offset, and one that is beyond it.
-> > 
-> > What happens if the block layer now re-orders these two IOs?
-> 
-> If the correct block scheduler is used, that is mq-deadline, there is
-> no possibility of write reordering.
-
-Oh, my.
-
-That needs a great big warning in the code. This assumes the block
-layer functions in a specific manner, and there is no way to
-guarantee that it does at the filesystem layer. Hence if the block
-layer is subtly broken (which has happened far too many times in the
-past couple of years for me to just trust it anymore) then this code
-can result in spurious write failures for applications that use
-AIO+DIO...
-
-> mq-deadline is now the default IO
-> scheduler for zoned block devices and the only one that is allowed
-> (beside "none"). mq-deadline uses a zone write locking mechanism to
-> ensure that there is no reordering of write requests, either by the
-> block layer itself or by bad hardware (SATA AHCI adapters are
-> notoriously bad and silently reorder requests all the time, even for
-> SMR disks).
->
-> With this mechanism, the user can safely use io_submit() beyond a
-> single IO and zonefs check that the set of AIOs being submitted are all
-> sequential starting from the zi->i_wpoffset "soft" write pointer that
-> reflects the already in-flight AIOs. Multiple io_submit() of multiple
-> AIOs can be executed in sequence without needing to limit to a single
-> AIO at a time.
-
-I can see lots of potential problems with AIO on a filesystem that
-assumes sequential, ordered AIO submission. e.g. RWF_NOWAIT and
-submitting multiple sequential IOs at a time. First IO gets EAGAIN
-because a lock is held by something else, second IO gets the lock
-and now returns -EINVAL because it's offset no longer matches the
-write pointer because the first IO got -EAGAIN and punted back to
-userspace.
-
-Or worse, it's io_uring, and it punts that IO to a worker thread to
-resubmit. Now that IO will be issued out of order to all the others,
-and so userspace will see that it succeeds, but all the other IOs in
-the sequential batch get -EINVAL because of IO reordering long
-before the IO even gets to the block layer....
-
-> If a disk error occurs along the way, the seq file size and zi-
-> >i_wpoffset are updated using the report zone result. All in-flight or
-> submitted AIOs after the failed one will be failed by the disk itself
-> due to the their now unaligned position. These failures will not change
-> again the file size or zi->i_wpoffset since the zone information will
-> be the same after all failures. The user only has to look at the file
-> size again to know were to restart writing from without even needing to
-> wait for all in-flight AIO to complete with an error (but that would of
-> course be the recommended practice).
-
-So I'm guessing that the same failure condition will return
-different errors based on where the failure is detected. e.g. EINVAL
-if it's at the write submission layer and EIO if it is reported by
-the hardware?
-
-> In other word, we assume here that all write succeed and allow high-
-> queue depth submission using zi->i_wpoffset as a "soft" write pointer.
-
-I'm starting to wonder whether it is a good idea to even support AIO
-on sequential zones because there are some really messy spurious
-failure cases that userspace will not be able to distinguish from
-real write errors. That's not a very nice API for applications to
-have to deal with...
-
-At minimum, this needs extensive documentation both for users and
-for kernel filesystem people that need to maintain this code forever
-more...
+Hence, AFAICT, ext4 only needs to implement ->fadvise and the stated
+readahead vs truncate_pagecache_range() race condition goes away.
+Unless, of course, I've missed some other entry point into the
+readahead code that does not vector through the filesystem first.
+What have I missed?
 
 Cheers,
 
