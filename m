@@ -2,70 +2,67 @@ Return-Path: <SRS0=lPx5=3L=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD02AC2D0DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jan 2020 16:58:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE80BC2D0DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jan 2020 17:02:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 679A621569
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jan 2020 16:58:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9E6A62465B
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jan 2020 17:02:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="iZrYxPSs"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="R56y/A7h"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725989AbgAVQ6g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Jan 2020 11:58:36 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:59300 "EHLO
+        id S1726118AbgAVRCa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Jan 2020 12:02:30 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:35368 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726083AbgAVQ6f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jan 2020 11:58:35 -0500
+        with ESMTP id S1726083AbgAVRCa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jan 2020 12:02:30 -0500
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00MGwK5t078362
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2020 16:58:32 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=TA+Rkbq678/le9WQvt/taVLQAHpJE88cqbogXuPZ48E=;
- b=iZrYxPSsungpcrsSRkDeTwaCHb0SPa6lT5Fc/vZiXPqJd+mnmhlHpsaH7b6kbLxmZ236
- Wdh3fwsteYYVgNM5Ra6UPDLqoCGx4v6ujHH4kdfXNvk6i/wXftCR8u17kLCzYaZ81ogQ
- 8aYfYlASLMFx31vGm4ZzF4Ux8F7pG/SwQXLLwYDg/fWNEZsyKbwcQmaSHqYUBQ1ox+Sw
- 3YfM6gqzCDn7S3Al6PsOCR0HR1NZNGuN388zLZg3OY+O24gwRTCs2XMYSDMLjWb1sEel
- 4EqADaVlo2DjCYko+kOFYJfTh0g96Nmh5Lx4vMZSERuPI+1j/IKBeY/gsXq9AU7CDfY8 aw== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2xktnrcwuv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2020 16:58:31 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00MGwVUl089235
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2020 16:58:31 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 2xpq0udt1k-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2020 16:57:15 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00MGvEs8023992
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2020 16:57:14 GMT
-Received: from [192.168.1.223] (/67.1.3.112)
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00MGwjlt078568;
+        Wed, 22 Jan 2020 17:02:24 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=xGK6xRJsl2hVUKmpcAHvdK3/hsRDoCNSkD/n5h2SX5o=;
+ b=R56y/A7h7AqYEWjhtp72XHt1f1cenD6ow3Cz7i4jV7Z+mS+L0F8bqtVdX0X6lrG1p3Ci
+ jK/iKWWLf/KTFcSPMZB5Ko8+CM4Y0SZNZPlr7vuTbC/jmNgB4uu9PoZSpFqffOu6I4LJ
+ OjHAXpN41nIq7x0BP5nTZbK2FJHiY/gpD/XbhoYHC8gtTeP3cxdlS/6V9lDZj53LDMc9
+ tMHshrDFZP7z9XduKJwcutnMuCzPJF0ZUUoeaioc9WVmEY4k82sm2BDCKI6M7JXGd1DS
+ 8hQWCWXTWIg2b03Xh6SJM89T9UbkR0sIE/9fvpDJVnnGLVZWuPNiMFyKi1XiC5u4OSgf 3A== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 2xktnrcxt2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 22 Jan 2020 17:02:23 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00MGwAPj009014;
+        Wed, 22 Jan 2020 17:02:23 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 2xpq7jnexy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 22 Jan 2020 17:02:23 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00MH2MYk000588;
+        Wed, 22 Jan 2020 17:02:22 GMT
+Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 22 Jan 2020 08:57:14 -0800
-Subject: Re: [PATCH v6 16/16] xfs: Add delay ready attr set routines
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <20200118225035.19503-1-allison.henderson@oracle.com>
- <20200118225035.19503-17-allison.henderson@oracle.com>
- <20200122001237.GP8247@magnolia>
-From:   Allison Collins <allison.henderson@oracle.com>
-Message-ID: <6bbbd8f7-28ca-9d32-bcc3-372d4701452a@oracle.com>
-Date:   Wed, 22 Jan 2020 09:57:13 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP ; Wed, 22 Jan 2020 09:02:22 -0800
+Date:   Wed, 22 Jan 2020 09:02:21 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Eric Sandeen <sandeen@redhat.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 1/2] xfsprogs: alphabetize libxfs_api_defs.h
+Message-ID: <20200122170221.GS8247@magnolia>
+References: <e0f6e0e5-d5e0-1829-f08c-0ec6e6095fb0@redhat.com>
+ <5660a718-54b8-2139-8bcf-ae362d09ee5e@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20200122001237.GP8247@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5660a718-54b8-2139-8bcf-ae362d09ee5e@redhat.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9508 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
@@ -82,758 +79,311 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Wed, Jan 22, 2020 at 10:41:05AM -0600, Eric Sandeen wrote:
+> Rather than randomly choosing locations for new #defines in the
+> future, alphabetize the file now for consistency.
 
+LOLWUT, sanity??
 
-On 1/21/20 5:12 PM, Darrick J. Wong wrote:
-> On Sat, Jan 18, 2020 at 03:50:35PM -0700, Allison Collins wrote:
->> This patch modifies the attr set routines to be delay ready. This means
->> they no longer roll or commit transactions, but instead return -EAGAIN
->> to have the calling routine roll and refresh the transaction.  In this
->> series, xfs_attr_set_args has become xfs_attr_set_iter, which uses a
->> state machine like switch to keep track of where it was when EAGAIN was
->> returned.
->>
->> Part of xfs_attr_leaf_addname has been factored out into a new helper
->> function xfs_attr_leaf_try_add to allow transaction cycling between the
->> two routines.
->>
->> Two new helper functions have been added: xfs_attr_rmtval_set_init and
->> xfs_attr_rmtval_set_blk.  They provide a subset of logic similar to
->> xfs_attr_rmtval_set, but they store the current block in the delay attr
->> context to allow the caller to roll the transaction between allocations.
->> This helps to simplify and consolidate code used by
->> xfs_attr_leaf_addname and xfs_attr_node_addname
->>
->> Finally, xfs_attr_set_args has become a simple loop to refresh the
->> transaction until the operation is completed.
->>
->> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
->> ---
->>   fs/xfs/libxfs/xfs_attr.c        | 347 +++++++++++++++++++++++++---------------
->>   fs/xfs/libxfs/xfs_attr.h        |   1 +
->>   fs/xfs/libxfs/xfs_attr_remote.c |  67 +++++++-
->>   fs/xfs/libxfs/xfs_attr_remote.h |   4 +
->>   fs/xfs/libxfs/xfs_da_btree.h    |  13 ++
->>   5 files changed, 301 insertions(+), 131 deletions(-)
->>
->> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
->> index 92929ad..02a7f55 100644
->> --- a/fs/xfs/libxfs/xfs_attr.c
->> +++ b/fs/xfs/libxfs/xfs_attr.c
->> @@ -58,6 +58,7 @@ STATIC int xfs_attr_node_hasname(xfs_da_args_t *args,
->>   				 struct xfs_da_state **state);
->>   STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
->>   STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
->> +STATIC int xfs_attr_leaf_try_add(struct xfs_da_args *args, struct xfs_buf *bp);
->>   
->>   
->>   STATIC int
->> @@ -259,9 +260,86 @@ int
->>   xfs_attr_set_args(
->>   	struct xfs_da_args	*args)
->>   {
->> +	int			error = 0;
->> +	int			err2 = 0;
->> +	struct xfs_buf		*leaf_bp = NULL;
->> +
->> +	do {
->> +		error = xfs_attr_set_iter(args, &leaf_bp);
->> +		if (error && error != -EAGAIN)
->> +			goto out;
->> +
->> +		if (args->dac.flags & XFS_DAC_FINISH_TRANS) {
->> +			args->dac.flags &= ~XFS_DAC_FINISH_TRANS;
->> +
->> +			err2 = xfs_defer_finish(&args->trans);
->> +			if (err2) {
->> +				error = err2;
->> +				goto out;
->> +			}
->> +		}
->> +
->> +		err2 = xfs_trans_roll_inode(&args->trans, args->dp);
->> +		if (err2) {
->> +			error = err2;
->> +			goto out;
->> +		}
->> +
->> +		if (leaf_bp) {
->> +			xfs_trans_bjoin(args->trans, leaf_bp);
->> +			xfs_trans_bhold(args->trans, leaf_bp);
->> +		}
->> +
->> +	} while (error == -EAGAIN);
->> +
->> +out:
->> +	return error;
->> +}
->> +
->> +/*
->> + * Set the attribute specified in @args.
->> + * This routine is meant to function as a delayed operation, and may return
->> + * -EAGAIN when the transaction needs to be rolled.  Calling functions will need
->> + * to handle this, and recall the function until a successful error code is
->> + * returned.
->> + */
->> +int
->> +xfs_attr_set_iter(
->> +	struct xfs_da_args	*args,
->> +	struct xfs_buf          **leaf_bp)
->> +{
->>   	struct xfs_inode	*dp = args->dp;
->> -	struct xfs_buf          *leaf_bp = NULL;
->> -	int			error, error2 = 0;
->> +	int			error = 0;
->> +	int			sf_size;
->> +
->> +	/* State machine switch */
->> +	switch (args->dac.dela_state) {
->> +	case XFS_DAS_SF_TO_LEAF:
->> +		goto sf_to_leaf;
->> +	case XFS_DAS_ALLOC_LEAF:
->> +	case XFS_DAS_FLIP_LFLAG:
->> +	case XFS_DAS_FOUND_LBLK:
->> +		goto leaf;
->> +	case XFS_DAS_FOUND_NBLK:
->> +	case XFS_DAS_FLIP_NFLAG:
->> +	case XFS_DAS_ALLOC_NODE:
->> +	case XFS_DAS_LEAF_TO_NODE:
->> +		goto node;
->> +	default:
-> 
-> Er... do these need to ASSERT on invalid states?  e.g. if somehow we end
-> up with XFS_DAS_RM_SHRINK, we ought to blow up loudly, right?
-> 
-> 
->> +		break;
->> +	}
->> +
->> +	/*
->> +	 * New inodes may not have an attribute fork yet. So set the attribute
->> +	 * fork appropriately
->> +	 */
->> +	if (XFS_IFORK_Q((args->dp)) == 0) {
->> +		sf_size = sizeof(struct xfs_attr_sf_hdr) +
->> +		     XFS_ATTR_SF_ENTSIZE_BYNAME(args->name.len, args->valuelen);
->> +		xfs_bmap_set_attrforkoff(args->dp, sf_size, NULL);
->> +		args->dp->i_afp = kmem_zone_zalloc(xfs_ifork_zone, 0);
->> +		args->dp->i_afp->if_flags = XFS_IFEXTENTS;
->> +	}
->>   
->>   	/*
->>   	 * If the attribute list is non-existent or a shortform list, proceed to
->> @@ -272,22 +350,20 @@ xfs_attr_set_args(
->>   	    (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
->>   	     dp->i_d.di_anextents == 0)))
->>   		goto sf_to_leaf;
->> -
->>   	/*
->>   	 * Try to add the attr to the attribute list in the inode.
->>   	 */
->>   	error = xfs_attr_try_sf_addname(dp, args);
->> -	if (error != -ENOSPC) {
->> -		error2 = xfs_trans_commit(args->trans);
->> -		args->trans = NULL;
->> -		return error ? error : error2;
-> 
-> Where does this commit go?
-> 
->> -	}
->> +
->> +	/* Should only be 0, -EEXIST or ENOSPC */
->> +	if (error != -ENOSPC)
->> +		return error;
->>   
->>   	/*
->>   	 * It won't fit in the shortform, transform to a leaf block.
->>   	 * GROT: another possible req'mt for a double-split btree op.
->>   	 */
->> -	error = xfs_attr_shortform_to_leaf(args, &leaf_bp);
->> +	error = xfs_attr_shortform_to_leaf(args, leaf_bp);
->>   	if (error)
->>   		return error;
->>   
->> @@ -295,42 +371,47 @@ xfs_attr_set_args(
->>   	 * Prevent the leaf buffer from being unlocked so that a
->>   	 * concurrent AIL push cannot grab the half-baked leaf
->>   	 * buffer and run into problems with the write verifier.
->> -	 * Once we're done rolling the transaction we can release
->> -	 * the hold and add the attr to the leaf.
->>   	 */
->> -	xfs_trans_bhold(args->trans, leaf_bp);
->> -	error = xfs_defer_finish(&args->trans);
->> -	xfs_trans_bhold_release(args->trans, leaf_bp);
->> -	if (error) {
->> -		xfs_trans_brelse(args->trans, leaf_bp);
->> -		return error;
->> -	}
->> +	xfs_trans_bhold(args->trans, *leaf_bp);
->> +	args->dac.flags |= XFS_DAC_FINISH_TRANS;
->> +	args->dac.dela_state = XFS_DAS_SF_TO_LEAF;
->> +	return -EAGAIN;
->>   
->>   sf_to_leaf:
->>   
->> -	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
->> -		error = xfs_attr_leaf_addname(args);
->> -		if (error != -ENOSPC)
->> -			return error;
->> -
->> -		/*
->> -		 * Commit that transaction so that the node_addname()
->> -		 * call can manage its own transactions.
->> -		 */
->> -		error = xfs_defer_finish(&args->trans);
->> -		if (error)
->> -			return error;
->> +	/*
->> +	 * After a shortform to leaf conversion, we need to hold the leaf and
->> +	 * cylce out the transaction.  When we get back, we need to release
->> +	 * the leaf.
->> +	 */
->> +	if (*leaf_bp != NULL) {
->> +		xfs_trans_brelse(args->trans, *leaf_bp);
->> +		*leaf_bp = NULL;
->> +	}
->>   
->> -		/*
->> -		 * Commit the current trans (including the inode) and
->> -		 * start a new one.
->> -		 */
->> -		error = xfs_trans_roll_inode(&args->trans, dp);
->> -		if (error)
->> +	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
->> +		error = xfs_attr_leaf_try_add(args, *leaf_bp);
->> +		switch (error) {
->> +		case -ENOSPC:
->> +			args->dac.flags |= XFS_DAC_FINISH_TRANS;
->> +			args->dac.dela_state = XFS_DAS_LEAF_TO_NODE;
->> +			return -EAGAIN;
->> +		case 0:
->> +			args->dac.dela_state = XFS_DAS_FOUND_LBLK;
->> +			return -EAGAIN;
->> +		default:
->>   			return error;
->> -
->> +		}
->> +leaf:
->> +		error = xfs_attr_leaf_addname(args);
->> +		if (error == -ENOSPC) {
->> +			args->dac.dela_state = XFS_DAS_LEAF_TO_NODE;
->> +			return -EAGAIN;
->> +		}
->> +		return error;
->>   	}
->> -
->> +	args->dac.dela_state = XFS_DAS_LEAF_TO_NODE;
->> +node:
->>   	error = xfs_attr_node_addname(args);
->>   	return error;
->>   }
->> @@ -759,27 +840,28 @@ xfs_attr_leaf_try_add(
->>    *
->>    * This leaf block cannot have a "remote" value, we only call this routine
->>    * if bmap_one_block() says there is only one block (ie: no remote blks).
->> + *
->> + * This routine is meant to function as a delayed operation, and may return
->> + * -EAGAIN when the transaction needs to be rolled.  Calling functions will need
->> + * to handle this, and recall the function until a successful error code is
->> + * returned.
->>    */
->>   STATIC int
->>   xfs_attr_leaf_addname(struct xfs_da_args	*args)
->>   {
->> -	int			error, forkoff;
->>   	struct xfs_buf		*bp = NULL;
->> +	int			error, forkoff;
->>   	struct xfs_inode	*dp = args->dp;
->>   
->> -	trace_xfs_attr_leaf_addname(args);
->> -
->> -	error = xfs_attr_leaf_try_add(args, bp);
->> -	if (error)
->> -		return error;
->> -
->> -	/*
->> -	 * Commit the transaction that added the attr name so that
->> -	 * later routines can manage their own transactions.
->> -	 */
->> -	error = xfs_trans_roll_inode(&args->trans, dp);
->> -	if (error)
->> -		return error;
->> +	/* State machine switch */
->> +	switch (args->dac.dela_state) {
->> +	case XFS_DAS_FLIP_LFLAG:
->> +		goto flip_flag;
->> +	case XFS_DAS_ALLOC_LEAF:
->> +		goto alloc_leaf;
->> +	default:
->> +		break;
->> +	}
->>   
->>   	/*
->>   	 * If there was an out-of-line value, allocate the blocks we
->> @@ -788,7 +870,28 @@ xfs_attr_leaf_addname(struct xfs_da_args	*args)
->>   	 * maximum size of a transaction and/or hit a deadlock.
->>   	 */
->>   	if (args->rmtblkno > 0) {
->> -		error = xfs_attr_rmtval_set(args);
->> +
->> +		/* Open coded xfs_attr_rmtval_set without trans handling */
->> +		error = xfs_attr_rmtval_set_init(args);
->> +		if (error)
->> +			return error;
->> +
->> +		/*
->> +		 * Roll through the "value", allocating blocks on disk as
->> +		 * required.
->> +		 */
->> +alloc_leaf:
->> +		while (args->dac.blkcnt > 0) {
->> +			error = xfs_attr_rmtval_set_blk(args);
->> +			if (error)
->> +				return error;
->> +
->> +			args->dac.flags |= XFS_DAC_FINISH_TRANS;
->> +			args->dac.dela_state = XFS_DAS_ALLOC_LEAF;
->> +			return -EAGAIN;
->> +		}
->> +
->> +		error = xfs_attr_rmtval_set_value(args);
->>   		if (error)
->>   			return error;
->>   	}
->> @@ -807,13 +910,10 @@ xfs_attr_leaf_addname(struct xfs_da_args	*args)
->>   		error = xfs_attr3_leaf_flipflags(args);
->>   		if (error)
->>   			return error;
->> -		/*
->> -		 * Commit the flag value change and start the next trans in
->> -		 * series.
->> -		 */
->> -		error = xfs_trans_roll_inode(&args->trans, args->dp);
->> -		if (error)
->> -			return error;
->> +
->> +		args->dac.dela_state = XFS_DAS_FLIP_LFLAG;
->> +		return -EAGAIN;
->> +flip_flag:
->>   
->>   		/*
->>   		 * Dismantle the "old" attribute/value pair by removing
->> @@ -844,34 +944,17 @@ xfs_attr_leaf_addname(struct xfs_da_args	*args)
->>   		/*
->>   		 * If the result is small enough, shrink it all into the inode.
->>   		 */
->> -		if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
->> +		forkoff = xfs_attr_shortform_allfit(bp, dp);
->> +		if (forkoff)
->>   			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
->> -			/* bp is gone due to xfs_da_shrink_inode */
->> -			if (error)
->> -				return error;
->> -			error = xfs_defer_finish(&args->trans);
->> -			if (error)
->> -				return error;
->> -		}
->>   
->> -		/*
->> -		 * Commit the remove and start the next trans in series.
->> -		 */
->> -		error = xfs_trans_roll_inode(&args->trans, dp);
->> +		args->dac.flags |= XFS_DAC_FINISH_TRANS;
->>   
->>   	} else if (args->rmtblkno > 0) {
->>   		/*
->>   		 * Added a "remote" value, just clear the incomplete flag.
->>   		 */
->>   		error = xfs_attr3_leaf_clearflag(args);
->> -		if (error)
->> -			return error;
->> -
->> -		/*
->> -		 * Commit the flag value change and start the next trans in
->> -		 * series.
->> -		 */
->> -		error = xfs_trans_roll_inode(&args->trans, args->dp);
->>   	}
->>   	return error;
->>   }
->> @@ -1020,16 +1103,22 @@ xfs_attr_node_hasname(
->>    *
->>    * "Remote" attribute values confuse the issue and atomic rename operations
->>    * add a whole extra layer of confusion on top of that.
->> + *
->> + * This routine is meant to function as a delayed operation, and may return
->> + * -EAGAIN when the transaction needs to be rolled.  Calling functions will need
->> + * to handle this, and recall the function until a successful error code is
->> + *returned.
->>    */
->>   STATIC int
->>   xfs_attr_node_addname(
->>   	struct xfs_da_args	*args)
->>   {
->> -	struct xfs_da_state	*state;
->> +	struct xfs_da_state	*state = NULL;
->>   	struct xfs_da_state_blk	*blk;
->>   	struct xfs_inode	*dp;
->>   	struct xfs_mount	*mp;
->> -	int			retval, error;
->> +	int			retval = 0;
->> +	int			error = 0;
->>   
->>   	trace_xfs_attr_node_addname(args);
->>   
->> @@ -1038,7 +1127,19 @@ xfs_attr_node_addname(
->>   	 */
->>   	dp = args->dp;
->>   	mp = dp->i_mount;
->> -restart:
->> +
->> +	/* State machine switch */
->> +	switch (args->dac.dela_state) {
->> +	case XFS_DAS_FLIP_NFLAG:
->> +		goto flip_flag;
->> +	case XFS_DAS_FOUND_NBLK:
->> +		goto found_nblk;
->> +	case XFS_DAS_ALLOC_NODE:
->> +		goto alloc_node;
->> +	default:
->> +		break;
->> +	}
->> +
->>   	/*
->>   	 * Search to see if name already exists, and get back a pointer
->>   	 * to where it should go.
->> @@ -1088,19 +1189,13 @@ xfs_attr_node_addname(
->>   			error = xfs_attr3_leaf_to_node(args);
->>   			if (error)
->>   				goto out;
->> -			error = xfs_defer_finish(&args->trans);
->> -			if (error)
->> -				goto out;
->>   
->>   			/*
->> -			 * Commit the node conversion and start the next
->> -			 * trans in the chain.
->> +			 * Restart routine from the top.  No need to set  the
->> +			 * state
-> 
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-I think I missed responding to this comment in my last email:
+--D
 
-> *OH*, dela_state == 0 does not mean "do not use delayed attrs", we're
-> switching /all/ users to delayed attrs.  Urk.
-
-Not quite.  While both inline and delayed operations go through this 
-same dance of EAGAIN ping pong, it's not a delayed operation until we 
-package it into an intent and log it.  And then the intent pops back out 
-during defer finish, and the ping pong starts from 
-xfs_defer_finish_noroll instead of xfs_attr_set_iter.
-
-We still need to support in line operations for older versions that do 
-not support the attr log item.  Later when we get into delayed attrs, we 
-use a feature bit to control this, and toggle as needed.
-
-Hope that helps!
-
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 > 
->>   			 */
->> -			error = xfs_trans_roll_inode(&args->trans, dp);
->> -			if (error)
->> -				goto out;
->> -
->> -			goto restart;
->> +			args->dac.flags |= XFS_DAC_FINISH_TRANS;
->> +			return -EAGAIN;
->>   		}
->>   
->>   		/*
->> @@ -1112,9 +1207,7 @@ xfs_attr_node_addname(
->>   		error = xfs_da3_split(state);
->>   		if (error)
->>   			goto out;
->> -		error = xfs_defer_finish(&args->trans);
->> -		if (error)
->> -			goto out;
->> +		args->dac.flags |= XFS_DAC_FINISH_TRANS;
->>   	} else {
->>   		/*
->>   		 * Addition succeeded, update Btree hashvals.
->> @@ -1129,13 +1222,9 @@ xfs_attr_node_addname(
->>   	xfs_da_state_free(state);
->>   	state = NULL;
->>   
->> -	/*
->> -	 * Commit the leaf addition or btree split and start the next
->> -	 * trans in the chain.
->> -	 */
->> -	error = xfs_trans_roll_inode(&args->trans, dp);
->> -	if (error)
->> -		goto out;
->> +	args->dac.dela_state = XFS_DAS_FOUND_NBLK;
->> +	return -EAGAIN;
->> +found_nblk:
->>   
->>   	/*
->>   	 * If there was an out-of-line value, allocate the blocks we
->> @@ -1144,7 +1233,27 @@ xfs_attr_node_addname(
->>   	 * maximum size of a transaction and/or hit a deadlock.
->>   	 */
->>   	if (args->rmtblkno > 0) {
->> -		error = xfs_attr_rmtval_set(args);
->> +		/* Open coded xfs_attr_rmtval_set without trans handling */
->> +		error = xfs_attr_rmtval_set_init(args);
->> +		if (error)
->> +			return error;
->> +
->> +		/*
->> +		 * Roll through the "value", allocating blocks on disk as
->> +		 * required.
->> +		 */
->> +alloc_node:
->> +		while (args->dac.blkcnt > 0) {
->> +			error = xfs_attr_rmtval_set_blk(args);
->> +			if (error)
->> +				return error;
->> +
->> +			args->dac.flags |= XFS_DAC_FINISH_TRANS;
->> +			args->dac.dela_state = XFS_DAS_ALLOC_NODE;
->> +			return -EAGAIN;
->> +		}
->> +
->> +		error = xfs_attr_rmtval_set_value(args);
->>   		if (error)
->>   			return error;
->>   	}
->> @@ -1167,10 +1276,9 @@ xfs_attr_node_addname(
->>   		 * Commit the flag value change and start the next trans in
->>   		 * series
->>   		 */
->> -		error = xfs_trans_roll_inode(&args->trans, args->dp);
->> -		if (error)
->> -			goto out;
->> -
->> +		args->dac.dela_state = XFS_DAS_FLIP_NFLAG;
->> +		return -EAGAIN;
->> +flip_flag:
->>   		/*
->>   		 * Dismantle the "old" attribute/value pair by removing
->>   		 * a "remote" value (if it exists).
->> @@ -1199,7 +1307,6 @@ xfs_attr_node_addname(
->>   		error = xfs_da3_node_lookup_int(state, &retval);
->>   		if (error)
->>   			goto out;
->> -
->>   		/*
->>   		 * Remove the name and update the hashvals in the tree.
->>   		 */
->> @@ -1207,7 +1314,6 @@ xfs_attr_node_addname(
->>   		ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
->>   		error = xfs_attr3_leaf_remove(blk->bp, args);
->>   		xfs_da3_fixhashpath(state, &state->path);
->> -
->>   		/*
->>   		 * Check to see if the tree needs to be collapsed.
->>   		 */
->> @@ -1215,18 +1321,9 @@ xfs_attr_node_addname(
->>   			error = xfs_da3_join(state);
->>   			if (error)
->>   				goto out;
->> -			error = xfs_defer_finish(&args->trans);
->> -			if (error)
->> -				goto out;
->> -		}
->> -
->> -		/*
->> -		 * Commit and start the next trans in the chain.
->> -		 */
->> -		error = xfs_trans_roll_inode(&args->trans, dp);
->> -		if (error)
->> -			goto out;
->>   
->> +			args->dac.flags |= XFS_DAC_FINISH_TRANS;
->> +		}
->>   	} else if (args->rmtblkno > 0) {
->>   		/*
->>   		 * Added a "remote" value, just clear the incomplete flag.
->> @@ -1234,14 +1331,6 @@ xfs_attr_node_addname(
->>   		error = xfs_attr3_leaf_clearflag(args);
->>   		if (error)
->>   			goto out;
->> -
->> -		 /*
->> -		  * Commit the flag value change and start the next trans in
->> -		  * series.
->> -		  */
->> -		error = xfs_trans_roll_inode(&args->trans, args->dp);
->> -		if (error)
->> -			goto out;
->>   	}
->>   	retval = error = 0;
->>   
->> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
->> index ea873a5..f450d8c 100644
->> --- a/fs/xfs/libxfs/xfs_attr.h
->> +++ b/fs/xfs/libxfs/xfs_attr.h
->> @@ -152,6 +152,7 @@ int xfs_attr_get(struct xfs_inode *ip, struct xfs_name *name,
->>   int xfs_attr_set(struct xfs_inode *dp, struct xfs_name *name,
->>   		 unsigned char *value, int valuelen, int flags);
->>   int xfs_attr_set_args(struct xfs_da_args *args);
->> +int xfs_attr_set_iter(struct xfs_da_args *args, struct xfs_buf **leaf_bp);
->>   int xfs_attr_remove(struct xfs_inode *dp, struct xfs_name *name, int flags);
->>   int xfs_has_attr(struct xfs_da_args *args);
->>   int xfs_attr_remove_args(struct xfs_da_args *args);
->> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
->> index f2ee0b8..ad4f14a 100644
->> --- a/fs/xfs/libxfs/xfs_attr_remote.c
->> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
->> @@ -428,7 +428,7 @@ xfs_attr_rmtval_get(
->>    * Find a "hole" in the attribute address space large enough for us to drop the
->>    * new attribute's value into
->>    */
->> -STATIC int
->> +int
->>   xfs_attr_rmt_find_hole(
->>   	struct xfs_da_args	*args)
->>   {
->> @@ -455,7 +455,7 @@ xfs_attr_rmt_find_hole(
->>   	return 0;
->>   }
->>   
->> -STATIC int
->> +int
->>   xfs_attr_rmtval_set_value(
->>   	struct xfs_da_args	*args)
->>   {
->> @@ -588,6 +588,69 @@ xfs_attr_rmtval_set(
->>   }
->>   
->>   /*
->> + * Find a hole for the attr and store it in the delayed attr context.  This
->> + * initializes the context to roll through allocating an attr extent for a
->> + * delayed attr operation
->> + */
->> +int
->> +xfs_attr_rmtval_set_init(
->> +	struct xfs_da_args	*args)
->> +{
->> +	struct xfs_bmbt_irec	*map = &args->dac.map;
->> +	int error;
->> +
->> +	args->dac.lblkno = 0;
->> +	args->dac.lfileoff = 0;
->> +	args->dac.blkcnt = 0;
->> +	args->rmtblkcnt = 0;
->> +	args->rmtblkno = 0;
->> +	memset(map, 0, sizeof(struct xfs_bmbt_irec));
->> +
->> +	error = xfs_attr_rmt_find_hole(args);
->> +	if (error)
->> +		return error;
->> +
->> +	args->dac.blkcnt = args->rmtblkcnt;
->> +	args->dac.lblkno = args->rmtblkno;
->> +
->> +	return error;
->> +}
->> +
->> +/*
->> + * Write one block of the value associated with an attribute into the
->> + * out-of-line buffer that we have defined for it. This is similar to a subset
->> + * of xfs_attr_rmtval_set, but records the current block to the delayed attr
->> + * context, and leaves transaction handling to the caller.
->> + */
->> +int
->> +xfs_attr_rmtval_set_blk(
->> +	struct xfs_da_args	*args)
->> +{
->> +	struct xfs_inode	*dp = args->dp;
->> +	struct xfs_bmbt_irec	*map = &args->dac.map;
->> +	int nmap;
->> +	int error;
->> +
->> +	nmap = 1;
->> +	error = xfs_bmapi_write(args->trans, dp,
->> +		  (xfs_fileoff_t)args->dac.lblkno,
->> +		  args->dac.blkcnt, XFS_BMAPI_ATTRFORK,
->> +		  args->total, map, &nmap);
->> +	if (error)
->> +		return error;
->> +
->> +	ASSERT(nmap == 1);
->> +	ASSERT((map->br_startblock != DELAYSTARTBLOCK) &&
->> +	       (map->br_startblock != HOLESTARTBLOCK));
->> +
->> +	/* roll attribute extent map forwards */
->> +	args->dac.lblkno += map->br_blockcount;
->> +	args->dac.blkcnt -= map->br_blockcount;
->> +
->> +	return 0;
->> +}
->> +
->> +/*
->>    * Remove the value associated with an attribute by deleting the
->>    * out-of-line buffer that it is stored on.
->>    */
->> diff --git a/fs/xfs/libxfs/xfs_attr_remote.h b/fs/xfs/libxfs/xfs_attr_remote.h
->> index 7ab3770..ab03519 100644
->> --- a/fs/xfs/libxfs/xfs_attr_remote.h
->> +++ b/fs/xfs/libxfs/xfs_attr_remote.h
->> @@ -13,4 +13,8 @@ int xfs_attr_rmtval_set(struct xfs_da_args *args);
->>   int xfs_attr_rmtval_remove(struct xfs_da_args *args);
->>   int xfs_attr_rmtval_invalidate(struct xfs_da_args *args);
->>   int xfs_attr_rmtval_unmap(struct xfs_da_args *args);
->> +int xfs_attr_rmt_find_hole(struct xfs_da_args *args);
->> +int xfs_attr_rmtval_set_value(struct xfs_da_args *args);
->> +int xfs_attr_rmtval_set_blk(struct xfs_da_args *args);
->> +int xfs_attr_rmtval_set_init(struct xfs_da_args *args);
->>   #endif /* __XFS_ATTR_REMOTE_H__ */
->> diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
->> index 7fc87da..9943062 100644
->> --- a/fs/xfs/libxfs/xfs_da_btree.h
->> +++ b/fs/xfs/libxfs/xfs_da_btree.h
->> @@ -55,6 +55,14 @@ enum xfs_dacmp {
->>   enum xfs_delattr_state {
->>   	XFS_DAS_RM_SHRINK	= 1, /* We are shrinking the tree */
->>   	XFS_DAS_RM_NODE_BLKS	= 2, /* We are removing node blocks */
->> +	XFS_DAS_SF_TO_LEAF	= 3, /* Converted short form to leaf */
->> +	XFS_DAS_FOUND_LBLK	= 4, /* We found leaf blk for attr */
->> +	XFS_DAS_LEAF_TO_NODE	= 5, /* Converted leaf to node */
->> +	XFS_DAS_FOUND_NBLK	= 6, /* We found node blk for attr */
->> +	XFS_DAS_ALLOC_LEAF	= 7, /* We are allocating leaf blocks */
->> +	XFS_DAS_FLIP_LFLAG	= 8, /* Flipped leaf INCOMPLETE attr flag */
->> +	XFS_DAS_ALLOC_NODE	= 9, /* We are allocating node blocks */
->> +	XFS_DAS_FLIP_NFLAG	= 10,/* Flipped node INCOMPLETE attr flag */
+> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+> index eed63ace..33e52926 100644
+> --- a/libxfs/libxfs_api_defs.h
+> +++ b/libxfs/libxfs_api_defs.h
+> @@ -13,164 +13,167 @@
+>   * it can be included in both the internal and external libxfs header files
+>   * without introducing any depenencies between the two.
+>   */
+> -#define xfs_highbit32			libxfs_highbit32
+> -#define xfs_highbit64			libxfs_highbit64
+> -
+> -#define xfs_trans_alloc			libxfs_trans_alloc
+> -#define xfs_trans_alloc_empty		libxfs_trans_alloc_empty
+> -#define xfs_trans_add_item		libxfs_trans_add_item
+> -#define xfs_trans_bhold			libxfs_trans_bhold
+> -#define xfs_trans_bhold_release		libxfs_trans_bhold_release
+> -#define xfs_trans_binval		libxfs_trans_binval
+> -#define xfs_trans_bjoin			libxfs_trans_bjoin
+> -#define xfs_trans_brelse		libxfs_trans_brelse
+> -#define xfs_trans_commit		libxfs_trans_commit
+> -#define xfs_trans_cancel		libxfs_trans_cancel
+> -#define xfs_trans_del_item		libxfs_trans_del_item
+> -#define xfs_trans_get_buf		libxfs_trans_get_buf
+> -#define xfs_trans_getsb			libxfs_trans_getsb
+> -#define xfs_trans_ichgtime		libxfs_trans_ichgtime
+> -#define xfs_trans_ijoin			libxfs_trans_ijoin
+> -#define xfs_trans_init			libxfs_trans_init
+> -#define xfs_trans_inode_alloc_buf	libxfs_trans_inode_alloc_buf
+> -#define xfs_trans_dirty_buf		libxfs_trans_dirty_buf
+> -#define xfs_trans_log_buf		libxfs_trans_log_buf
+> -#define xfs_trans_ordered_buf		libxfs_trans_ordered_buf
+> -#define xfs_trans_log_inode		libxfs_trans_log_inode
+> -#define xfs_trans_roll_inode		libxfs_trans_roll_inode
+> -#define xfs_trans_mod_sb		libxfs_trans_mod_sb
+> -#define xfs_trans_read_buf		libxfs_trans_read_buf
+> -#define xfs_trans_read_buf_map		libxfs_trans_read_buf_map
+> -#define xfs_trans_roll			libxfs_trans_roll
+> -#define xfs_trans_get_buf_map		libxfs_trans_get_buf_map
+> -#define xfs_trans_resv_calc		libxfs_trans_resv_calc
+> -#define xfs_log_get_max_trans_res	libxfs_log_get_max_trans_res
+> -#define xfs_attr_get			libxfs_attr_get
+> -#define xfs_attr_set			libxfs_attr_set
+> -#define xfs_attr_remove			libxfs_attr_remove
+> -#define xfs_attr_leaf_newentsize	libxfs_attr_leaf_newentsize
+> +#define LIBXFS_ATTR_CREATE		ATTR_CREATE
+> +#define LIBXFS_ATTR_REPLACE		ATTR_REPLACE
+> +#define LIBXFS_ATTR_ROOT		ATTR_ROOT
+> +#define LIBXFS_ATTR_SECURE		ATTR_SECURE
+>  
+> +#define xfs_agfl_size			libxfs_agfl_size
+>  #define xfs_agfl_walk			libxfs_agfl_walk
+> +
+> +#define xfs_ag_init_headers		libxfs_ag_init_headers
+> +
+> +#define xfs_alloc_ag_max_usable		libxfs_alloc_ag_max_usable
+> +#define xfs_allocbt_maxrecs		libxfs_allocbt_maxrecs
+>  #define xfs_alloc_fix_freelist		libxfs_alloc_fix_freelist
+>  #define xfs_alloc_min_freelist		libxfs_alloc_min_freelist
+>  #define xfs_alloc_read_agf		libxfs_alloc_read_agf
+> -#define xfs_bmap_last_offset		libxfs_bmap_last_offset
+> -#define xfs_iext_lookup_extent		libxfs_iext_lookup_extent
+> -#define xfs_bmapi_write			libxfs_bmapi_write
+> -#define xfs_bmapi_read			libxfs_bmapi_read
+> -#define xfs_bunmapi			libxfs_bunmapi
+> -#define xfs_rtfree_extent		libxfs_rtfree_extent
+> -#define xfs_verify_rtbno		libxfs_verify_rtbno
+> -#define xfs_verify_ino			libxfs_verify_ino
+> -#define xfs_zero_extent			libxfs_zero_extent
+>  
+> -#define xfs_defer_finish		libxfs_defer_finish
+> -#define xfs_defer_cancel		libxfs_defer_cancel
+> +#define xfs_attr_get			libxfs_attr_get
+> +#define xfs_attr_leaf_newentsize	libxfs_attr_leaf_newentsize
+> +#define xfs_attr_namecheck		libxfs_attr_namecheck
+> +#define xfs_attr_remove			libxfs_attr_remove
+> +#define xfs_attr_set			libxfs_attr_set
+>  
+> +#define xfs_bmapi_read			libxfs_bmapi_read
+> +#define xfs_bmapi_write			libxfs_bmapi_write
+> +#define xfs_bmap_last_offset		libxfs_bmap_last_offset
+> +#define xfs_bmbt_maxrecs		libxfs_bmbt_maxrecs
+> +#define xfs_bmdr_maxrecs		libxfs_bmdr_maxrecs
+> +
+> +#define xfs_btree_del_cursor		libxfs_btree_del_cursor
+> +#define xfs_btree_init_block		libxfs_btree_init_block
+> +#define xfs_buf_delwri_submit		libxfs_buf_delwri_submit
+> +#define xfs_bunmapi			libxfs_bunmapi
+> +#define xfs_calc_dquots_per_chunk	libxfs_calc_dquots_per_chunk
+> +#define xfs_da3_node_hdr_from_disk	libxfs_da3_node_hdr_from_disk
+> +#define xfs_da_get_buf			libxfs_da_get_buf
+>  #define xfs_da_hashname			libxfs_da_hashname
+> -#define xfs_da_shrink_inode		libxfs_da_shrink_inode
+>  #define xfs_da_read_buf			libxfs_da_read_buf
+> -#define xfs_da3_node_hdr_from_disk	libxfs_da3_node_hdr_from_disk
+> -#define xfs_dir_createname		libxfs_dir_createname
+> -#define xfs_dir_init			libxfs_dir_init
+> -#define xfs_dir_lookup			libxfs_dir_lookup
+> -#define xfs_dir_replace			libxfs_dir_replace
+> +#define xfs_da_shrink_inode		libxfs_da_shrink_inode
+> +#define xfs_default_ifork_ops		libxfs_default_ifork_ops
+> +#define xfs_defer_cancel		libxfs_defer_cancel
+> +#define xfs_defer_finish		libxfs_defer_finish
+> +#define xfs_dinode_calc_crc		libxfs_dinode_calc_crc
+> +#define xfs_dinode_good_version		libxfs_dinode_good_version
+> +#define xfs_dinode_verify		libxfs_dinode_verify
+> +
+>  #define xfs_dir2_data_bestfree_p	libxfs_dir2_data_bestfree_p
+> -#define xfs_dir2_data_get_ftype		libxfs_dir2_data_get_ftype
+> -#define xfs_dir2_data_put_ftype		libxfs_dir2_data_put_ftype
+> -#define xfs_dir2_leaf_hdr_from_disk	libxfs_dir2_leaf_hdr_from_disk
+> -#define xfs_dir2_free_hdr_from_disk	libxfs_dir2_free_hdr_from_disk
+> -#define xfs_dir2_isblock		libxfs_dir2_isblock
+> -#define xfs_dir2_isleaf			libxfs_dir2_isleaf
+> +#define xfs_dir2_data_entry_tag_p	libxfs_dir2_data_entry_tag_p
+> +#define xfs_dir2_data_entsize		libxfs_dir2_data_entsize
+>  #define xfs_dir2_data_freescan		libxfs_dir2_data_freescan
+> +#define xfs_dir2_data_get_ftype		libxfs_dir2_data_get_ftype
+>  #define xfs_dir2_data_log_entry		libxfs_dir2_data_log_entry
+>  #define xfs_dir2_data_log_header	libxfs_dir2_data_log_header
+>  #define xfs_dir2_data_make_free		libxfs_dir2_data_make_free
+> +#define xfs_dir2_data_put_ftype		libxfs_dir2_data_put_ftype
+>  #define xfs_dir2_data_use_free		libxfs_dir2_data_use_free
+> -#define xfs_dir2_data_entsize		libxfs_dir2_data_entsize
+> -#define xfs_dir2_data_entry_tag_p	libxfs_dir2_data_entry_tag_p
+> +#define xfs_dir2_free_hdr_from_disk	libxfs_dir2_free_hdr_from_disk
+>  #define xfs_dir2_hashname		libxfs_dir2_hashname
+> -#define xfs_dir2_shrink_inode		libxfs_dir2_shrink_inode
+> -#define xfs_dir2_sf_get_parent_ino	libxfs_dir2_sf_get_parent_ino
+> -#define xfs_dir2_sf_put_parent_ino	libxfs_dir2_sf_put_parent_ino
+> +#define xfs_dir2_isblock		libxfs_dir2_isblock
+> +#define xfs_dir2_isleaf			libxfs_dir2_isleaf
+> +#define xfs_dir2_leaf_hdr_from_disk	libxfs_dir2_leaf_hdr_from_disk
+> +#define xfs_dir2_namecheck		libxfs_dir2_namecheck
+>  #define xfs_dir2_sf_entsize		libxfs_dir2_sf_entsize
+> -#define xfs_dir2_sf_nextentry		libxfs_dir2_sf_nextentry
+>  #define xfs_dir2_sf_get_ftype		libxfs_dir2_sf_get_ftype
+> -#define xfs_dir2_sf_put_ftype		libxfs_dir2_sf_put_ftype
+>  #define xfs_dir2_sf_get_ino		libxfs_dir2_sf_get_ino
+> +#define xfs_dir2_sf_get_parent_ino	libxfs_dir2_sf_get_parent_ino
+> +#define xfs_dir2_sf_nextentry		libxfs_dir2_sf_nextentry
+> +#define xfs_dir2_sf_put_ftype		libxfs_dir2_sf_put_ftype
+>  #define xfs_dir2_sf_put_ino		libxfs_dir2_sf_put_ino
+> -#define xfs_dir2_namecheck		libxfs_dir2_namecheck
+> -#define xfs_da_get_buf			libxfs_da_get_buf
+> -
+> -#define xfs_inode_from_disk		libxfs_inode_from_disk
+> -#define xfs_inode_to_disk		libxfs_inode_to_disk
+> -#define xfs_dinode_calc_crc		libxfs_dinode_calc_crc
+> -#define xfs_idata_realloc		libxfs_idata_realloc
+> -#define xfs_idestroy_fork		libxfs_idestroy_fork
+> -#define xfs_inode_validate_extsize	libxfs_inode_validate_extsize
+> -#define xfs_inode_validate_cowextsize	libxfs_inode_validate_cowextsize
+> -
+> -#define xfs_rmap_alloc			libxfs_rmap_alloc
+> -#define xfs_rmap_query_range		libxfs_rmap_query_range
+> -#define xfs_rmap_lookup_le		libxfs_rmap_lookup_le
+> -#define xfs_rmap_get_rec		libxfs_rmap_get_rec
+> -#define xfs_rmap_irec_offset_pack	libxfs_rmap_irec_offset_pack
+> -#define xfs_rmap_irec_offset_unpack	libxfs_rmap_irec_offset_unpack
+> -#define xfs_rmapbt_init_cursor		libxfs_rmapbt_init_cursor
+> -#define xfs_btree_del_cursor		libxfs_btree_del_cursor
+> -#define xfs_mode_to_ftype		libxfs_mode_to_ftype
+> +#define xfs_dir2_sf_put_parent_ino	libxfs_dir2_sf_put_parent_ino
+> +#define xfs_dir2_shrink_inode		libxfs_dir2_shrink_inode
+>  
+> -#define xfs_log_sb			libxfs_log_sb
+> -#define xfs_sb_from_disk		libxfs_sb_from_disk
+> -#define xfs_sb_quota_from_disk		libxfs_sb_quota_from_disk
+> -#define xfs_sb_to_disk			libxfs_sb_to_disk
+> +#define xfs_dir_createname		libxfs_dir_createname
+> +#define xfs_dir_init			libxfs_dir_init
+> +#define xfs_dir_ino_validate		libxfs_dir_ino_validate
+> +#define xfs_dir_lookup			libxfs_dir_lookup
+> +#define xfs_dir_replace			libxfs_dir_replace
+>  
+> -#define xfs_calc_dquots_per_chunk	libxfs_calc_dquots_per_chunk
+> -#define xfs_dquot_verify		libxfs_dquot_verify
+>  #define xfs_dqblk_repair		libxfs_dqblk_repair
+> +#define xfs_dquot_verify		libxfs_dquot_verify
+>  
+> -#define xfs_symlink_blocks		libxfs_symlink_blocks
+> -#define xfs_symlink_hdr_ok		libxfs_symlink_hdr_ok
+> -
+> -#define xfs_verify_cksum		libxfs_verify_cksum
+> -#define xfs_dinode_verify		libxfs_dinode_verify
+> -
+> -#define xfs_alloc_ag_max_usable		libxfs_alloc_ag_max_usable
+> -#define xfs_allocbt_maxrecs		libxfs_allocbt_maxrecs
+> -#define xfs_bmbt_maxrecs		libxfs_bmbt_maxrecs
+> -#define xfs_bmdr_maxrecs		libxfs_bmdr_maxrecs
+> -#define xfs_btree_init_block		libxfs_btree_init_block
+> -#define xfs_dir_ino_validate		libxfs_dir_ino_validate
+> +#define xfs_free_extent			libxfs_free_extent
+> +#define xfs_fs_geometry			libxfs_fs_geometry
+> +#define xfs_highbit32			libxfs_highbit32
+> +#define xfs_highbit64			libxfs_highbit64
+> +#define xfs_idata_realloc		libxfs_idata_realloc
+> +#define xfs_idestroy_fork		libxfs_idestroy_fork
+> +#define xfs_iext_lookup_extent		libxfs_iext_lookup_extent
+>  #define xfs_initialize_perag_data	libxfs_initialize_perag_data
+> +#define xfs_init_local_fork		libxfs_init_local_fork
+> +
+>  #define xfs_inobt_maxrecs		libxfs_inobt_maxrecs
+> -#define xfs_rmapbt_maxrecs		libxfs_rmapbt_maxrecs
+> -#define xfs_refcountbt_maxrecs		libxfs_refcountbt_maxrecs
+> +#define xfs_inode_from_disk		libxfs_inode_from_disk
+> +#define xfs_inode_to_disk		libxfs_inode_to_disk
+> +#define xfs_inode_validate_cowextsize	libxfs_inode_validate_cowextsize
+> +#define xfs_inode_validate_extsize	libxfs_inode_validate_extsize
+> +
+>  #define xfs_iread_extents		libxfs_iread_extents
+>  #define xfs_log_calc_minimum_size	libxfs_log_calc_minimum_size
+> +#define xfs_log_get_max_trans_res	libxfs_log_get_max_trans_res
+> +#define xfs_log_sb			libxfs_log_sb
+> +#define xfs_mode_to_ftype		libxfs_mode_to_ftype
+>  #define xfs_perag_get			libxfs_perag_get
+>  #define xfs_perag_put			libxfs_perag_put
+>  #define xfs_prealloc_blocks		libxfs_prealloc_blocks
+> -#define xfs_dinode_good_version		libxfs_dinode_good_version
+> -#define xfs_free_extent			libxfs_free_extent
+>  
+> +#define xfs_refc_block			libxfs_refc_block
+>  #define xfs_refcountbt_init_cursor	libxfs_refcountbt_init_cursor
+> -#define xfs_refcount_lookup_le		libxfs_refcount_lookup_le
+> +#define xfs_refcountbt_maxrecs		libxfs_refcountbt_maxrecs
+>  #define xfs_refcount_get_rec		libxfs_refcount_get_rec
+> -#define xfs_rmap_lookup_le_range	libxfs_rmap_lookup_le_range
+> -#define xfs_agfl_size			libxfs_agfl_size
+> -#define xfs_refc_block			libxfs_refc_block
+> +#define xfs_refcount_lookup_le		libxfs_refcount_lookup_le
+> +
+> +#define xfs_rmap_alloc			libxfs_rmap_alloc
+> +#define xfs_rmapbt_init_cursor		libxfs_rmapbt_init_cursor
+> +#define xfs_rmapbt_maxrecs		libxfs_rmapbt_maxrecs
+>  #define xfs_rmap_compare		libxfs_rmap_compare
+> -#define xfs_default_ifork_ops		libxfs_default_ifork_ops
+> -#define xfs_fs_geometry			libxfs_fs_geometry
+> -#define xfs_init_local_fork		libxfs_init_local_fork
+> -#define xfs_attr_namecheck		libxfs_attr_namecheck
+> +#define xfs_rmap_get_rec		libxfs_rmap_get_rec
+> +#define xfs_rmap_irec_offset_pack	libxfs_rmap_irec_offset_pack
+> +#define xfs_rmap_irec_offset_unpack	libxfs_rmap_irec_offset_unpack
+> +#define xfs_rmap_lookup_le		libxfs_rmap_lookup_le
+> +#define xfs_rmap_lookup_le_range	libxfs_rmap_lookup_le_range
+> +#define xfs_rmap_query_range		libxfs_rmap_query_range
+>  
+> -#define LIBXFS_ATTR_ROOT		ATTR_ROOT
+> -#define LIBXFS_ATTR_SECURE		ATTR_SECURE
+> -#define LIBXFS_ATTR_CREATE		ATTR_CREATE
+> -#define LIBXFS_ATTR_REPLACE		ATTR_REPLACE
+> +#define xfs_rtfree_extent		libxfs_rtfree_extent
+> +#define xfs_sb_from_disk		libxfs_sb_from_disk
+> +#define xfs_sb_quota_from_disk		libxfs_sb_quota_from_disk
+> +#define xfs_sb_to_disk			libxfs_sb_to_disk
+> +#define xfs_symlink_blocks		libxfs_symlink_blocks
+> +#define xfs_symlink_hdr_ok		libxfs_symlink_hdr_ok
+>  
+> -#define xfs_ag_init_headers		libxfs_ag_init_headers
+> -#define xfs_buf_delwri_submit		libxfs_buf_delwri_submit
+> +#define xfs_trans_add_item		libxfs_trans_add_item
+> +#define xfs_trans_alloc_empty		libxfs_trans_alloc_empty
+> +#define xfs_trans_alloc			libxfs_trans_alloc
+> +#define xfs_trans_bhold			libxfs_trans_bhold
+> +#define xfs_trans_bhold_release		libxfs_trans_bhold_release
+> +#define xfs_trans_binval		libxfs_trans_binval
+> +#define xfs_trans_bjoin			libxfs_trans_bjoin
+> +#define xfs_trans_brelse		libxfs_trans_brelse
+> +#define xfs_trans_cancel		libxfs_trans_cancel
+> +#define xfs_trans_commit		libxfs_trans_commit
+> +#define xfs_trans_del_item		libxfs_trans_del_item
+> +#define xfs_trans_dirty_buf		libxfs_trans_dirty_buf
+> +#define xfs_trans_get_buf		libxfs_trans_get_buf
+> +#define xfs_trans_get_buf_map		libxfs_trans_get_buf_map
+> +#define xfs_trans_getsb			libxfs_trans_getsb
+> +#define xfs_trans_ichgtime		libxfs_trans_ichgtime
+> +#define xfs_trans_ijoin			libxfs_trans_ijoin
+> +#define xfs_trans_init			libxfs_trans_init
+> +#define xfs_trans_inode_alloc_buf	libxfs_trans_inode_alloc_buf
+> +#define xfs_trans_log_buf		libxfs_trans_log_buf
+> +#define xfs_trans_log_inode		libxfs_trans_log_inode
+> +#define xfs_trans_mod_sb		libxfs_trans_mod_sb
+> +#define xfs_trans_ordered_buf		libxfs_trans_ordered_buf
+> +#define xfs_trans_read_buf		libxfs_trans_read_buf
+> +#define xfs_trans_read_buf_map		libxfs_trans_read_buf_map
+> +#define xfs_trans_resv_calc		libxfs_trans_resv_calc
+> +#define xfs_trans_roll_inode		libxfs_trans_roll_inode
+> +#define xfs_trans_roll			libxfs_trans_roll
+> +
+> +#define xfs_verify_cksum		libxfs_verify_cksum
+> +#define xfs_verify_ino			libxfs_verify_ino
+> +#define xfs_verify_rtbno		libxfs_verify_rtbno
+> +#define xfs_zero_extent			libxfs_zero_extent
+>  
+>  #endif /* __LIBXFS_API_DEFS_H__ */
 > 
-> We've definitely reached the point where a state diagram would be
-> helpful.  Can you go from any of the RM_ states to the ones that you've
-> just added?
-> 
-> The new state machine code in last two patches would be a lot easier to
-> review if I could look down from above instead of up from the XFS_DAS
-> values and goto labels.  I /think/ it looks sane, but I'm only 20%
-> confident of that statement.
-> 
-> --D
-> 
->>   };
->>   
->>   /*
->> @@ -66,8 +74,13 @@ enum xfs_delattr_state {
->>    * Context used for keeping track of delayed attribute operations
->>    */
->>   struct xfs_delattr_context {
->> +	struct xfs_bmbt_irec	map;
->> +	struct xfs_buf		*leaf_bp;
->> +	xfs_fileoff_t		lfileoff;
->>   	struct xfs_da_state	*da_state;
->>   	struct xfs_da_state_blk *blk;
->> +	xfs_dablk_t		lblkno;
->> +	int			blkcnt;
->>   	int			flags;
->>   	enum xfs_delattr_state	dela_state;
->>   };
->> -- 
->> 2.7.4
->>
