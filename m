@@ -2,680 +2,445 @@ Return-Path: <SRS0=lPx5=3L=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC117C2D0DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jan 2020 09:55:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6E69C2D0DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jan 2020 10:07:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6D6252467B
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jan 2020 09:55:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 869122467A
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jan 2020 10:07:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PX0xF4tX"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="dMfLL2Lo";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="RjUt0A6l"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729635AbgAVJz6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Jan 2020 04:55:58 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:41900 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730066AbgAVJcY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jan 2020 04:32:24 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00M9Rn5e073764
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2020 09:32:22 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=ofkCOnSAk4tWwHN7soXzcLLaNAfNlKJXyDuOW618Af0=;
- b=PX0xF4tXCJlCESJWx4xX5WuREjpwh3E02Pj9QysxzlvBdO1HWHACplnM64+l8ub9c+oH
- lBrymu6NEiabcqdDEjAjEOwBh/+TUv6UsuLqZUQvhtztp9bx/ECea2O9Xz7q+6U7ENiI
- mzdXFEOEPh2WYFEWMRYm+egZEb/8pCs3hFQEa0jkebTIs3xuTqzSkO4TiWl1tBRQ5wSJ
- MV6DxDVee072SeoP9gnOYciCsaYKgmjA8iadi9KcS8i7UI8MJCuhTAQF/71GfPuqf+TA
- HK5JWRJ0xumgnP+2COkEe+fsLwmLbgSEJPrfovtr8Q2j7VEhThbqVCY45TWhYqGPkXDb aQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2xktnraag6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2020 09:32:21 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00M9TUSu109711
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2020 09:32:21 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 2xnpekr8tj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2020 09:32:20 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00M9WKSJ014477
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Jan 2020 09:32:20 GMT
-Received: from [192.168.1.223] (/67.1.3.112)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 22 Jan 2020 01:32:20 -0800
-Subject: Re: [PATCH v6 15/16] xfs: Add delay ready attr remove routines
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <20200118225035.19503-1-allison.henderson@oracle.com>
- <20200118225035.19503-16-allison.henderson@oracle.com>
- <20200122000207.GO8247@magnolia>
-From:   Allison Collins <allison.henderson@oracle.com>
-Message-ID: <7d5d5ce0-532c-c07a-6b19-16360e41c703@oracle.com>
-Date:   Wed, 22 Jan 2020 02:32:18 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
-MIME-Version: 1.0
-In-Reply-To: <20200122000207.GO8247@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        id S1726605AbgAVKH2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Jan 2020 05:07:28 -0500
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:40723 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725911AbgAVKH1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jan 2020 05:07:27 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1579687657; x=1611223657;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=BxxVGpTfll+hZEjIzklff+dwwBw9Ch7bZGPRrBm9zBs=;
+  b=dMfLL2LobM8y/KJpjSWOqX+pH+YV1dZhPG2ccIhRQEs0l3KBt3GD8cn1
+   yiyJgbdro9pHns83XyPUplsCmo/CkY8KWpKZrvntJcSd5zkQaoBGmH+mk
+   GgsaXgUM3BaBTtQ+lmKSw+9Fwh0ndu/DydqI2y4eg+Ci5crmAHmXD36Cd
+   HQHnhHSHiabak7ZPiFaeicjfnrB+F9Pv2G+n5YZyf6LUq8FQFwcYjD0Mz
+   vckEkkvO1SN/ooA15TkvadBHvZzN1VLIE6wTVRPEwj5E/K7FBzAgrBwdq
+   /nnrc6I5/gNtsnMTkU4oR/36a1ei/0hVY1EnAsxzx868RnUR4yqXnaWUZ
+   A==;
+IronPort-SDR: WYu8hq0hcucaPuZC/5EcZHhugqc9CNfjIGYTAZjnFsc1cFw67prIxOiJbH41C2OaT0UKIrjYkW
+ vZjA/vD11/vsTSJdeD2OFmgxDPatw3y6UqkGi4qcrrBa+RbG6ax9PZCXjICaDH5cmAhqtmxmKV
+ ydP0rTQyQuWmhHtgQUbU6v+BmC3JYB9TNg5LT3WTyPhvuOU08tnZCdQyMpOyqfSwGWxuaO2auv
+ xYQrWDnPzylOeWYsCgtK7QMllOz6yS2yF8IkfZZ8vQaMnvoaNIV/69GOwVa3nOT7BD8mRs3TOs
+ vBo=
+X-IronPort-AV: E=Sophos;i="5.70,349,1574092800"; 
+   d="scan'208";a="229839195"
+Received: from mail-dm6nam12lp2174.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.174])
+  by ob1.hgst.iphmx.com with ESMTP; 22 Jan 2020 18:07:12 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=M5mN6YdmjiQeO4kwZBZEHrm84nkCPl7Ea94ARzSPVjD+zZRGk0daU/H9djgnKlYL92GtN64N2oN1iqwEYghCyGtdxjwouhDEdMal2KNS6l+9DtWt/rQ0RVC7ojFEfcAwJAJgal5As6PJ1C+M9thTE5nTYHwynUjpak7kRTM+VEjKO1CRlOUfCGXfhQJ8B2x9319nBEJ85WPYk4OcPiCbf4D02RS+P7KT6z0+OB0JrnXknFRcR18defSt6CVQjw5JEKU2EQ4KD3MlEolavND1MPfXO07yVXRBunsQPv2qcza2QYHGZIQVNjOVhHNwuA3xH0ha4YoL8sMqLDnTt7hmBg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=BxxVGpTfll+hZEjIzklff+dwwBw9Ch7bZGPRrBm9zBs=;
+ b=kl65eMsRwQhHzu8gKU4TzeB8MlbrTKHq4h5KHJmO1niunUeQXQeYIAjJr9ekpkePlTIxjvuvbxWl8w7nQ9ZxJfvDxPECXWpgauMqgObRu/zw9RAPxAVJXz8iOI8YOTbYVhd2jXeZvuol/UhE8sv7HLj2APR3lKCk3BTBpAXM0ZhQMVh19lhCSZuFQr0xojciX7qvQ90Yg15pp7qt/0Jrp8Cmkv7HORSNikFqZ+RYF7lCeXUCZwAIPBv+LoGHj/jwiViEG7Oxvhekgle/YLlBVqWd8Q+BMTiN3QKX277kU8pnnx7VMJCOr0W81EzlYiWzFrnOO7xq+/8aW8LzS+vXPA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=BxxVGpTfll+hZEjIzklff+dwwBw9Ch7bZGPRrBm9zBs=;
+ b=RjUt0A6l5/s5yyz+61t5WSf0W3DBZY7TgpuL9GppRx/e2gx6hgD5LPsleqEyfzTGQqnvXU1dBeRZxxK9bICbElVuYR8TNQd8XwPpByJJ7ZQhzYbHZWoN5LYVtXXYqcbkT1kzUqsz+uksOEpYKTlFjhIpBM+XcHAtt0+wcjZYVpk=
+Received: from BYAPR04MB5816.namprd04.prod.outlook.com (20.179.59.16) by
+ BYAPR04MB5061.namprd04.prod.outlook.com (52.135.232.11) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2644.24; Wed, 22 Jan 2020 10:07:08 +0000
+Received: from BYAPR04MB5816.namprd04.prod.outlook.com
+ ([fe80::cd8e:d1de:e661:a61]) by BYAPR04MB5816.namprd04.prod.outlook.com
+ ([fe80::cd8e:d1de:e661:a61%5]) with mapi id 15.20.2644.028; Wed, 22 Jan 2020
+ 10:07:08 +0000
+From:   Damien Le Moal <Damien.LeMoal@wdc.com>
+To:     "david@fromorbit.com" <david@fromorbit.com>
+CC:     "hare@suse.de" <hare@suse.de>, Naohiro Aota <Naohiro.Aota@wdc.com>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+        "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
+        "jth@kernel.org" <jth@kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH v8 1/2] fs: New zonefs file system
+Thread-Topic: [PATCH v8 1/2] fs: New zonefs file system
+Thread-Index: AQHV0ChCqtOWPBQjzEWITWcaTW/1Tqf17muAgACIqwA=
+Date:   Wed, 22 Jan 2020 10:07:07 +0000
+Message-ID: <63dbc880d4748c5f7f9dc91f80525ec01933370f.camel@wdc.com>
+References: <20200121065846.216538-1-damien.lemoal@wdc.com>
+         <20200121065846.216538-2-damien.lemoal@wdc.com>
+         <20200122015757.GG9407@dread.disaster.area>
+In-Reply-To: <20200122015757.GG9407@dread.disaster.area>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9507 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2001220086
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9507 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2001220086
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Evolution 3.34.3 (3.34.3-1.fc31) 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Damien.LeMoal@wdc.com; 
+x-originating-ip: [199.255.47.11]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 40780739-b254-4123-df90-08d79f22d707
+x-ms-traffictypediagnostic: BYAPR04MB5061:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <BYAPR04MB50614F73FFBAB9977CB0C702E70C0@BYAPR04MB5061.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:8273;
+x-forefront-prvs: 029097202E
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(376002)(346002)(366004)(396003)(39860400002)(136003)(189003)(199004)(6916009)(6486002)(316002)(26005)(2616005)(2906002)(478600001)(54906003)(81156014)(81166006)(4326008)(64756008)(66946007)(66556008)(66446008)(76116006)(66476007)(91956017)(8936002)(86362001)(36756003)(71200400001)(6506007)(8676002)(186003)(6512007)(5660300002)(30864003);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR04MB5061;H:BYAPR04MB5816.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: WzdnpPPhFuc/mmPFr1XlCnC/S8nn2PR++nkRWGYqawKdBsa0itTW/gT62+2hqEzPdKzvFT78BjACeflFboBmGyjjvZhk7KxyH+tOAJIaw8aMlqhowfhUqQbZrTHJoQmF4pXOMCTTavPEPmq2eNRoIWval6mL6a8sJ9m08BSRPrcAI7x1n/htqHX/KLosfhxEjejApLwg+M42H3LyAfvBtHwGJlsAqKYyDB6mpvtfdHNRE6X7aEy9yzYGZvkzkJIc4Z6+IV1rBxbKYj3JS1LkqTT3xg6REDwSz0BRQi1luHmB7DaJvXHimZtZ7Yc8lBdZM8FT8prR9nnXlWthisI57sLVKeXiWXIJiY33Pzv2Zts3A/dFEtStjjCPlF258ZAqVkPEhw6uxf2mqJ8smk3h8K2/j7DQgp8o0fAWR0U3qmpB95mtRLiBvackbM1G3wTo
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <1814B2369D1CA148B84DA3D15B45E24E@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 40780739-b254-4123-df90-08d79f22d707
+X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Jan 2020 10:07:07.9357
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: /l9OTRxWJOaYTRo1bDWeXxXYMq3L1ze8sUqdhPoM95WaLywcmQyba5y5zCPU08WWX1ha9EdyGvxObTdjooItjA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB5061
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 1/21/20 5:02 PM, Darrick J. Wong wrote:
-> On Sat, Jan 18, 2020 at 03:50:34PM -0700, Allison Collins wrote:
->> This patch modifies the attr remove routines to be delay ready. This
->> means they no longer roll or commit transactions, but instead return
->> -EAGAIN to have the calling routine roll and refresh the transaction.
->> In this series, xfs_attr_remove_args has become xfs_attr_remove_iter,
->> which uses a sort of state machine like switch to keep track of where it
->> was when EAGAIN was returned. xfs_attr_node_removename has also been
->> modified to use the switch, and a  new version of xfs_attr_remove_args
->> consists of a simple loop to refresh the transaction until the operation
->> is completed.  A helper function xfs_attr_node_shrink has also been
->> added to help simplify xfs_attr_node_removename and reduce length.
->>
->> This patch also adds a new struct xfs_delattr_context, which we will use
->> to keep track of the current state of an attribute operation. The new
->> xfs_delattr_state enum is used to track various operations that are in
->> progress so that we know not to repeat them, and resume where we left
->> off before EAGAIN was returned to cycle out the transaction. Other
->> members take the place of local variables that need to retain their
->> values across multiple function recalls.
->>
->> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
->> ---
->>   fs/xfs/libxfs/xfs_attr.c     | 181 +++++++++++++++++++++++++++++++++----------
->>   fs/xfs/libxfs/xfs_attr.h     |   1 +
->>   fs/xfs/libxfs/xfs_da_btree.h |  24 ++++++
->>   fs/xfs/scrub/common.c        |   2 +
->>   fs/xfs/xfs_acl.c             |   2 +
->>   fs/xfs/xfs_attr_list.c       |   1 +
->>   fs/xfs/xfs_ioctl.c           |   2 +
->>   fs/xfs/xfs_ioctl32.c         |   2 +
->>   fs/xfs/xfs_iops.c            |   2 +
->>   fs/xfs/xfs_xattr.c           |   1 +
->>   10 files changed, 176 insertions(+), 42 deletions(-)
->>
->> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
->> index 90e0b2d..92929ad 100644
->> --- a/fs/xfs/libxfs/xfs_attr.c
->> +++ b/fs/xfs/libxfs/xfs_attr.c
->> @@ -371,11 +371,60 @@ xfs_has_attr(
->>    */
->>   int
->>   xfs_attr_remove_args(
->> +	struct xfs_da_args	*args)
->> +{
->> +	int			error = 0;
->> +	int			err2 = 0;
->> +
->> +	do {
->> +		error = xfs_attr_remove_iter(args);
->> +		if (error && error != -EAGAIN)
->> +			goto out;
->> +
->> +		if (args->dac.flags & XFS_DAC_FINISH_TRANS) {
->> +			args->dac.flags &= ~XFS_DAC_FINISH_TRANS;
-> 
-> Won't rolling the transaction take care of calling defer_finish?
-> 
-> (Granted, I think you started this patch set long before we actually
-> introduced that behavior...)
-
-I actually plumbed in this extra flag field because folks has asked me 
-to preserve the finish calls where they appeared in the last review. 
-Reason being that this changes behavior in that the transaction roll 
-doesn't complete pending deferred operations.
-
-https://www.spinics.net/lists/linux-xfs/msg35096.html
-
-> 
->> +			err2 = xfs_defer_finish(&args->trans);
->> +			if (err2) {
->> +				error = err2;
->> +				goto out;
->> +			}
->> +		}
->> +
->> +		err2 = xfs_trans_roll_inode(&args->trans, args->dp);
->> +		if (err2) {
->> +			error = err2;
->> +			goto out;
->> +		}
->> +
->> +	} while (error == -EAGAIN);
-> 
-> /me suspects this could be compressed down to:
-> 
-> do {
-> 	error = xfs_attr_remove_iter(args);
-> 	if (error == -EAGAIN) {
-> 		error = 0;
-> 		break;
-?? if error is EAGAIN, we want to roll and continue, right?
-And if it's 0 we roll and break.
-
-> 	}
-> 	if (error)
-> 		break;
-> 
-> 	error = xfs_trans_roll_inode(...);
-> } while (error == 0);
-Logic bugs aside, I think you meant something pretty close to the v5 
-version.
-
-> 
-> return error;
-> 
->> +out:
->> +	return error;
->> +}
->> +
->> +/*
->> + * Remove the attribute specified in @args.
->> + * This routine is meant to function as a delayed operation, and may return
->> + * -EGAIN when the transaction needs to be rolled.  Calling functions will need
->> + * to handle this, and recall the function until a successful error code is
->> + * returned.
-> 
-> "This function may return -EAGAIN to signal that the transaction needs
-> to be rolled.  Callers should continue calling this function until they
-> receive a return value other than -EAGAIN." ?
-Sure that's fine if folks think that is more clear.  At this point I 
-feel like I have enough of it in my head, it's more about whether it 
-makes sense to other people.  I agree the paraphrasing it equivalent.
-
-> 
->> + */
->> +int
->> +xfs_attr_remove_iter(
->>   	struct xfs_da_args      *args)
->>   {
->>   	struct xfs_inode	*dp = args->dp;
->>   	int			error;
->>   
->> +	/* State machine switch */
->> +	switch (args->dac.dela_state) {
->> +	case XFS_DAS_RM_SHRINK:
->> +	case XFS_DAS_RM_NODE_BLKS:
->> +		goto node;
->> +	default:
->> +		break;
->> +	}
->> +
->>   	if (!xfs_inode_hasattr(dp)) {
->>   		error = -ENOATTR;
->>   	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
->> @@ -384,6 +433,7 @@ xfs_attr_remove_args(
->>   	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
->>   		error = xfs_attr_leaf_removename(args);
->>   	} else {
->> +node:
->>   		error = xfs_attr_node_removename(args);
->>   	}
->>   
->> @@ -887,9 +937,8 @@ xfs_attr_leaf_removename(
->>   		/* bp is gone due to xfs_da_shrink_inode */
->>   		if (error)
->>   			return error;
->> -		error = xfs_defer_finish(&args->trans);
->> -		if (error)
->> -			return error;
->> +
->> +		args->dac.flags |= XFS_DAC_FINISH_TRANS;
->>   	}
->>   	return 0;
->>   }
->> @@ -1233,6 +1282,42 @@ xfs_attr_init_unmapstate(
->>   	return 0;
->>   }
->>   
->> +/*
->> + * Shrink an attribute from leaf to shortform
->> + */
->> +STATIC int
->> +xfs_attr_node_shrink(
->> +	struct xfs_da_args	*args,
->> +	struct xfs_da_state     *state)
->> +{
->> +	struct xfs_inode	*dp = args->dp;
->> +	int			error, forkoff;
->> +	struct xfs_buf		*bp;
->> +
->> +	/*
->> +	 * Have to get rid of the copy of this dabuf in the state.
->> +	 */
->> +	ASSERT(state->path.active == 1);
->> +	ASSERT(state->path.blk[0].bp);
->> +	state->path.blk[0].bp = NULL;
->> +
->> +	error = xfs_attr3_leaf_read(args->trans, args->dp, 0, &bp);
->> +	if (error)
->> +		return error;
->> +
->> +	forkoff = xfs_attr_shortform_allfit(bp, dp);
->> +	if (forkoff) {
->> +		error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
->> +		/* bp is gone due to xfs_da_shrink_inode */
->> +		if (error)
->> +			return error;
->> +
->> +		args->dac.flags |= XFS_DAC_FINISH_TRANS;
->> +	} else
->> +		xfs_trans_brelse(args->trans, bp);
->> +
->> +	return 0;
->> +}
->>   
->>   /*
->>    * Remove a name from a B-tree attribute list.
->> @@ -1240,6 +1325,11 @@ xfs_attr_init_unmapstate(
->>    * This will involve walking down the Btree, and may involve joining
->>    * leaf nodes and even joining intermediate nodes up to and including
->>    * the root node (a special case of an intermediate node).
->> + *
->> + * This routine is meant to function as either an inline or delayed operation,
->> + * and may return -EAGAIN when the transaction needs to be rolled.  Calling
->> + * functions will need to handle this, and recall the function until a
->> + * successful error code is returned.
->>    */
->>   STATIC int
->>   xfs_attr_node_removename(
->> @@ -1247,15 +1337,28 @@ xfs_attr_node_removename(
->>   {
->>   	struct xfs_da_state	*state;
->>   	struct xfs_da_state_blk	*blk;
->> -	struct xfs_buf		*bp;
->> -	int			retval, error, forkoff;
->> +	int			retval, error;
->>   	struct xfs_inode	*dp = args->dp;
->>   
->>   	trace_xfs_attr_node_removename(args);
->> +	state = args->dac.da_state;
->> +	blk = args->dac.blk;
->> +
->> +	/* State machine switch */
->> +	switch (args->dac.dela_state) {
->> +	case XFS_DAS_RM_NODE_BLKS:
->> +		goto rm_node_blks;
->> +	case XFS_DAS_RM_SHRINK:
->> +		goto rm_shrink;
->> +	default:
->> +		break;
->> +	}
->>   
->>   	error = xfs_attr_node_hasname(args, &state);
->>   	if (error != -EEXIST)
->>   		goto out;
->> +	else
->> +		error = 0;
->>   
->>   	/*
->>   	 * If there is an out-of-line value, de-allocate the blocks.
->> @@ -1265,18 +1368,36 @@ xfs_attr_node_removename(
->>   	blk = &state->path.blk[ state->path.active-1 ];
->>   	ASSERT(blk->bp != NULL);
->>   	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
->> +
->> +	/*
->> +	 * Store blk and state in the context incase we need to cycle out the
->> +	 * transaction
->> +	 */
->> +	args->dac.blk = blk;
->> +	args->dac.da_state = state;
->> +
->>   	if (args->rmtblkno > 0) {
->>   		error = xfs_attr_init_unmapstate(args, state);
->>   		if (error)
->>   			goto out;
->>   
->> -		error = xfs_trans_roll_inode(&args->trans, args->dp);
->> +		error = xfs_attr_rmtval_invalidate(args);
->>   		if (error)
->>   			goto out;
->> +	}
->>   
->> -		error = xfs_attr_rmtval_remove(args);
->> -		if (error)
->> -			goto out;
->> +rm_node_blks:
->> +
->> +	args->dac.dela_state = XFS_DAS_RM_NODE_BLKS;
-> 
-> That's odd -- we jumped here if dela_state == RM_NODE_BLKS, so why do we
-> need to set dela_state?  Does that put us at risk of jumping back here
-> by accident?
-It would if there was a subroutine using the state machine, but we dont 
-have that in this case, so it actually doesn't have an effect.  It was 
-asked for in one of the reviews, I assumed because people found it 
-appropriate to set it at that time, sort of like a witness mark.  It 
-doesnt hurt anything to do so, but you are right in that it is a 
-duplicate.
-
-> 
-> Oh, maybe this is supposed to make sure we keep coming back for more
-> bunmapi if the the remote value blocks were backed by multiple extents.
-> 
-> Perhaps this would be better named DAS_RMTVAL_REMOVE?
-xfs_attr_rmtval_unmap is the association in this case. 
-DAS_RMTVAL_REMOVE is appropriate if folks prefer.
-
-> 
->> +
->> +	if (args->rmtblkno > 0) {
->> +		error = xfs_attr_rmtval_unmap(args);
->> +
->> +		if (error) {
->> +			if (error == -EAGAIN)
->> +				args->dac.dela_state = XFS_DAS_RM_NODE_BLKS;
-> 
-> (Didn't we already set this state?)
-It is.  If you prefer to only keep one, I would stick with this one 
-because this is the specific case that really needs it.  Also I think 
-having them there helps to mark which of the returns are sort of the 
-"jump out" points
-
-> 
->> +			return error;
->> +		}
->>   
->>   		/*
->>   		 * Refill the state structure with buffers, the prior calls
->> @@ -1302,44 +1423,20 @@ xfs_attr_node_removename(
->>   		error = xfs_da3_join(state);
->>   		if (error)
->>   			goto out;
->> -		error = xfs_defer_finish(&args->trans);
->> -		if (error)
->> -			goto out;
->> -		/*
->> -		 * Commit the Btree join operation and start a new trans.
->> -		 */
->> -		error = xfs_trans_roll_inode(&args->trans, dp);
->> -		if (error)
->> -			goto out;
->> +
->> +		args->dac.flags |= XFS_DAC_FINISH_TRANS;
->> +		args->dac.dela_state = XFS_DAS_RM_SHRINK;
->> +		return -EAGAIN;
->>   	}
->>   
->> +rm_shrink:
->> +	args->dac.dela_state = XFS_DAS_RM_SHRINK;
->> +
->>   	/*
->>   	 * If the result is small enough, push it all into the inode.
->>   	 */
->> -	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
->> -		/*
->> -		 * Have to get rid of the copy of this dabuf in the state.
->> -		 */
->> -		ASSERT(state->path.active == 1);
->> -		ASSERT(state->path.blk[0].bp);
->> -		state->path.blk[0].bp = NULL;
->> -
->> -		error = xfs_attr3_leaf_read(args->trans, args->dp, 0, &bp);
->> -		if (error)
->> -			goto out;
->> -
->> -		if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
->> -			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
->> -			/* bp is gone due to xfs_da_shrink_inode */
->> -			if (error)
->> -				goto out;
->> -			error = xfs_defer_finish(&args->trans);
->> -			if (error)
->> -				goto out;
->> -		} else
->> -			xfs_trans_brelse(args->trans, bp);
->> -	}
->> -	error = 0;
->> +	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
->> +		error = xfs_attr_node_shrink(args, state);
->>   
->>   out:
->>   	if (state)
->> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
->> index ce7b039..ea873a5 100644
->> --- a/fs/xfs/libxfs/xfs_attr.h
->> +++ b/fs/xfs/libxfs/xfs_attr.h
->> @@ -155,6 +155,7 @@ int xfs_attr_set_args(struct xfs_da_args *args);
->>   int xfs_attr_remove(struct xfs_inode *dp, struct xfs_name *name, int flags);
->>   int xfs_has_attr(struct xfs_da_args *args);
->>   int xfs_attr_remove_args(struct xfs_da_args *args);
->> +int xfs_attr_remove_iter(struct xfs_da_args *args);
->>   int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
->>   		  int flags, struct attrlist_cursor_kern *cursor);
->>   bool xfs_attr_namecheck(const void *name, size_t length);
->> diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
->> index 14f1be3..7fc87da 100644
->> --- a/fs/xfs/libxfs/xfs_da_btree.h
->> +++ b/fs/xfs/libxfs/xfs_da_btree.h
->> @@ -50,9 +50,33 @@ enum xfs_dacmp {
->>   };
->>   
->>   /*
->> + * Enum values for xfs_delattr_context.da_state
->> + */
-> 
-> I can tell this is an enum. ;)
-> 
-> Could you have this comment explain a little more about how states are
-> managed?  I /think/ these state values mark where we were in the attr
-> code when something decided it was time to roll a transaction, right?
-> 
-> In other words, dela_state is a save point where we jump back to after
-> hopping out to roll a transaction?
-> 
-> (The parts of the code we jump somewhere based on dela_state and
-> immediately set dela_state confused me, so I don't know if I've
-> understood how the state machine works correctly.)
-It sounds like you're pretty much understanding it.  If that extra state 
-set was confusing, then perhaps it should go.  Anyway, how about the 
-following commentary:
-
-/*
-  * Enum values for xfs_delattr_context.da_state
-  *
-  * These values are used by delayed attribute operations to keep track
-  * of where they were before they returned -EAGAIN.  A return code of
-  * -EAGAIN signals the calling function to roll the transaction, and
-  * then recall the subroutine to finish the operation.  The enum
-  * is then used by the subroutine to jump back to where it was and
-  * resume executing where it left off.
-  */
-
-> 
->> +enum xfs_delattr_state {
->> +	XFS_DAS_RM_SHRINK	= 1, /* We are shrinking the tree */
-> 
-> This means that dela_state == 0 means "do not use delayed attributes",
-> right?  We might want to make the meaning of zero more explicit.
-No, at this point a value of 0 does not mean anything.  It will later 
-when we get into delayed attrs.  Delayed attrs are slightly different in 
-that args (and the state machine) need to get set up after the "ping 
-pong" has already started.  So we initialize on a state of 0, and have 
-one more extra state (XFS_DAS_INIT) just to say that we did it, so dont 
-initialize it again.  (See xfs_attr_finish_item from the git branch I 
-sent earlier)
-
-To further comment your interpretation, no, the routines do not execute 
-any differently when the state is zero, or any other value they do not 
-reconize.  They simply assume to "start from the begining" (ie: they 
-simply fall through the switch statement) and over write the state as 
-needed.
-
-In fact, there are a few spots in the next patch when a child function 
-gets a state reminicent of it's parent.  This condidtion is not an 
-error.  It just means that the parent function was using it up until 
-this point when it choose  to surrender the statemachine to the child 
-function.  The child function has no notion of what its parents states 
-even mean and pay no mind.  It is however the parents responsibility to 
-reconize states of its child, and jump back to the child function to 
-allow it to finish its tasks.
-
-Hope that helps some :-)
-
-> 
->> +	XFS_DAS_RM_NODE_BLKS	= 2, /* We are removing node blocks */
-> 
-> Also, the C compiler will auto-increment this for you if you don't
-> assign an explicit value.
-Ok, do you prefer them not to be explicitly assigned?
-
-> 
->> +};
->> +
->> +/*
->> + * Defines for xfs_delattr_context.flags
->> + */
->> +#define	XFS_DAC_FINISH_TRANS	0x1 /* indicates to finish the transaction */
->> +
->> +/*
->> + * Context used for keeping track of delayed attribute operations
->> + */
->> +struct xfs_delattr_context {
->> +	struct xfs_da_state	*da_state;
->> +	struct xfs_da_state_blk *blk;
->> +	int			flags;
-> 
-> unsigned int, assuming FINISH_TRANS doesn't just disappear.
-Sure, will fix
-
-> 
->> +	enum xfs_delattr_state	dela_state;
->> +};
->> +
->> +/*
->>    * Structure to ease passing around component names.
->>    */
->>   typedef struct xfs_da_args {
->> +	struct xfs_delattr_context dac; /* context used for delay attr ops */
->>   	struct xfs_da_geometry *geo;	/* da block geometry */
->>   	struct xfs_name	name;		/* name, length and argument  flags*/
->>   	uint8_t		filetype;	/* filetype of inode for directories */
->> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
->> index 1887605..9a649d1 100644
->> --- a/fs/xfs/scrub/common.c
->> +++ b/fs/xfs/scrub/common.c
->> @@ -24,6 +24,8 @@
->>   #include "xfs_rmap_btree.h"
->>   #include "xfs_log.h"
->>   #include "xfs_trans_priv.h"
->> +#include "xfs_da_format.h"
->> +#include "xfs_da_btree.h"
-> 
-> Are these necessary if all the da_args stuff moves to xfs_types.h?
-That may remedy some of this.  I'll see if I can move it over.  Thanks 
-for the review.
-
-Allison
-
-> 
-> --D
-> 
->>   #include "xfs_attr.h"
->>   #include "xfs_reflink.h"
->>   #include "scrub/scrub.h"
->> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
->> index 42ac847..d65e6d8 100644
->> --- a/fs/xfs/xfs_acl.c
->> +++ b/fs/xfs/xfs_acl.c
->> @@ -10,6 +10,8 @@
->>   #include "xfs_trans_resv.h"
->>   #include "xfs_mount.h"
->>   #include "xfs_inode.h"
->> +#include "xfs_da_format.h"
->> +#include "xfs_da_btree.h"
->>   #include "xfs_attr.h"
->>   #include "xfs_trace.h"
->>   #include "xfs_error.h"
->> diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
->> index d37743b..881b9a4 100644
->> --- a/fs/xfs/xfs_attr_list.c
->> +++ b/fs/xfs/xfs_attr_list.c
->> @@ -12,6 +12,7 @@
->>   #include "xfs_trans_resv.h"
->>   #include "xfs_mount.h"
->>   #include "xfs_da_format.h"
->> +#include "xfs_da_btree.h"
->>   #include "xfs_inode.h"
->>   #include "xfs_trans.h"
->>   #include "xfs_bmap.h"
->> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
->> index 28c07c9..7c1d9da 100644
->> --- a/fs/xfs/xfs_ioctl.c
->> +++ b/fs/xfs/xfs_ioctl.c
->> @@ -15,6 +15,8 @@
->>   #include "xfs_iwalk.h"
->>   #include "xfs_itable.h"
->>   #include "xfs_error.h"
->> +#include "xfs_da_format.h"
->> +#include "xfs_da_btree.h"
->>   #include "xfs_attr.h"
->>   #include "xfs_bmap.h"
->>   #include "xfs_bmap_util.h"
->> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
->> index 769581a..d504f8f 100644
->> --- a/fs/xfs/xfs_ioctl32.c
->> +++ b/fs/xfs/xfs_ioctl32.c
->> @@ -17,6 +17,8 @@
->>   #include "xfs_itable.h"
->>   #include "xfs_fsops.h"
->>   #include "xfs_rtalloc.h"
->> +#include "xfs_da_format.h"
->> +#include "xfs_da_btree.h"
->>   #include "xfs_attr.h"
->>   #include "xfs_ioctl.h"
->>   #include "xfs_ioctl32.h"
->> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
->> index e85bbf5..a2d299f 100644
->> --- a/fs/xfs/xfs_iops.c
->> +++ b/fs/xfs/xfs_iops.c
->> @@ -13,6 +13,8 @@
->>   #include "xfs_inode.h"
->>   #include "xfs_acl.h"
->>   #include "xfs_quota.h"
->> +#include "xfs_da_format.h"
->> +#include "xfs_da_btree.h"
->>   #include "xfs_attr.h"
->>   #include "xfs_trans.h"
->>   #include "xfs_trace.h"
->> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
->> index 74133a5..d8dc72d 100644
->> --- a/fs/xfs/xfs_xattr.c
->> +++ b/fs/xfs/xfs_xattr.c
->> @@ -10,6 +10,7 @@
->>   #include "xfs_log_format.h"
->>   #include "xfs_da_format.h"
->>   #include "xfs_inode.h"
->> +#include "xfs_da_btree.h"
->>   #include "xfs_attr.h"
->>   #include "xfs_acl.h"
->>   
->> -- 
->> 2.7.4
->>
+RGF2ZSwNCg0KT24gV2VkLCAyMDIwLTAxLTIyIGF0IDEyOjU3ICsxMTAwLCBEYXZlIENoaW5uZXIg
+d3JvdGU6DQo+IFsuLi5dDQo+ID4gK3N0YXRpYyBpbnQgem9uZWZzX2lvbWFwX2JlZ2luKHN0cnVj
+dCBpbm9kZSAqaW5vZGUsIGxvZmZfdCBvZmZzZXQsIGxvZmZfdCBsZW5ndGgsDQo+ID4gKwkJCSAg
+ICAgIHVuc2lnbmVkIGludCBmbGFncywgc3RydWN0IGlvbWFwICppb21hcCwNCj4gPiArCQkJICAg
+ICAgc3RydWN0IGlvbWFwICpzcmNtYXApDQo+ID4gK3sNCj4gPiArCXN0cnVjdCB6b25lZnNfc2Jf
+aW5mbyAqc2JpID0gWk9ORUZTX1NCKGlub2RlLT5pX3NiKTsNCj4gPiArCXN0cnVjdCB6b25lZnNf
+aW5vZGVfaW5mbyAqemkgPSBaT05FRlNfSShpbm9kZSk7DQo+ID4gKwlsb2ZmX3QgbWF4X2lzaXpl
+ID0gemktPmlfbWF4X3NpemU7DQo+ID4gKwlsb2ZmX3QgaXNpemU7DQo+ID4gKw0KPiA+ICsJLyoN
+Cj4gPiArCSAqIEZvciBzZXF1ZW50aWFsIHpvbmVzLCBlbmZvcmNlIGRpcmVjdCBJTyB3cml0ZXMu
+IFRoaXMgaXMgYWxyZWFkeQ0KPiA+ICsJICogY2hlY2tlZCB3aGVuIHdyaXRlcyBhcmUgaXNzdWVk
+LCBzbyB3YXJuIGFib3V0IHRoaXMgaGVyZSBpZiB3ZQ0KPiA+ICsJICogZ2V0IGJ1ZmZlcmVkIHdy
+aXRlIHRvIGEgc2VxdWVudGlhbCBmaWxlIGlub2RlLg0KPiA+ICsJICovDQo+ID4gKwlpZiAoV0FS
+Tl9PTl9PTkNFKHppLT5pX3p0eXBlID09IFpPTkVGU19aVFlQRV9TRVEgJiYNCj4gPiArCQkJIChm
+bGFncyAmIElPTUFQX1dSSVRFKSAmJiAhKGZsYWdzICYgSU9NQVBfRElSRUNUKSkpDQo+ID4gKwkJ
+cmV0dXJuIC1FSU87DQo+ID4gKw0KPiA+ICsJLyoNCj4gPiArCSAqIEZvciBhbGwgem9uZXMsIGFs
+bCBibG9ja3MgYXJlIGFsd2F5cyBtYXBwZWQuIEZvciBzZXF1ZW50aWFsIHpvbmVzLA0KPiA+ICsJ
+ICogYWxsIGJsb2NrcyBhZnRlciB0aGUgd3JpdGUgcG9pbnRlciAoaW5vZGUgc2l6ZSkgYXJlIGFs
+d2F5cyB1bndyaXR0ZW4uDQo+ID4gKwkgKi8NCj4gPiArCW11dGV4X2xvY2soJnppLT5pX3RydW5j
+YXRlX211dGV4KTsNCj4gPiArCWlzaXplID0gaV9zaXplX3JlYWQoaW5vZGUpOw0KPiA+ICsJaWYg
+KG9mZnNldCA+PSBpc2l6ZSkgew0KPiA+ICsJCWxlbmd0aCA9IG1pbihsZW5ndGgsIG1heF9pc2l6
+ZSAtIG9mZnNldCk7DQo+ID4gKwkJaWYgKHppLT5pX3p0eXBlID09IFpPTkVGU19aVFlQRV9DTlYp
+DQo+ID4gKwkJCWlvbWFwLT50eXBlID0gSU9NQVBfTUFQUEVEOw0KPiA+ICsJCWVsc2UNCj4gPiAr
+CQkJaW9tYXAtPnR5cGUgPSBJT01BUF9VTldSSVRURU47DQo+ID4gKwl9IGVsc2Ugew0KPiA+ICsJ
+CWxlbmd0aCA9IG1pbihsZW5ndGgsIGlzaXplIC0gb2Zmc2V0KTsNCj4gPiArCQlpb21hcC0+dHlw
+ZSA9IElPTUFQX01BUFBFRDsNCj4gPiArCX0NCj4gDQo+IFNvbWV0aGluZyB3YXMgYnVnZ2luZyBt
+ZSBhYm91dCB0aGlzLCBhbmQgcmVhZGluZyB0aGUgcmVzdCBvZiB0aGUNCj4gcGF0Y2ggaXQgZmlu
+YWxseSB0cmlnZ2VyZWQuIEZvciBjb252ZW50aW9uYWwgem9uZXMsIGlub2RlLT5pX3NpemUgPQ0K
+PiB6aS0+aV9tYXhfc2l6ZSwgYW5kIHNvIGlmIG9mZnNldCA+PSBpc2l6ZSBmb3IgYSBjb252ZW50
+aW9uYWwNCj4gem9uZSB0aGVuIHRoaXM6DQo+IA0KPiAJbGVuZ3RoID0gbWluKGxlbmd0aCwgbWF4
+X2lzaXplIC0gb2Zmc2V0KTsNCj4gDQo+IGlzIGdvaW5nIHRvIHJlc3VsdCBpbiBsZW5ndGggPD0g
+MCBhbmQgd2UgcmV0dXJuIGEgbmVnYXRpdmUgbGVuZ3RoDQo+IGlvbWFwLg0KPiANCj4gSU9Xcywg
+dGhpcyBjYXNlIHNob3VsZCBvbmx5IHRyaWdnZXIgZm9yIElPIGludG8gc2VxdWVudGlhbCB6b25l
+cywNCj4gYXMgaXQgYXBwZWFycyB0byBiZSBwcmV2ZW50ZWQgYXQgaGlnaGVyIGxheWVycyBmb3Ig
+Y29udmVudGlvbmFsDQo+IHpvbmVzIGJ5IGV4cGxpY2l0IGNoZWNrcyBhZ2FpbnN0IGlfbWF4X3Np
+emUgYW5kL29yDQo+IGlvdl9pdGVyX3RydW5jYXRlKCkgY2FsbHMgdG8gZW5zdXJlIHVzZXIgSU9z
+IGFyZSBsaW1pdGVkIHRvIHdpdGhpbg0KPiBpX21heF9zaXplLg0KPiANCj4gSGVuY2UgaXQgbG9v
+a3MgdG8gbWUgdGhhdCB0cmlnZ2VyaW5nIHRoZSAob2Zmc2V0ID49IGlzaXplKSBjYXNlIGhlcmUN
+Cj4gZm9yIGNvbnZlbnRpb25hbCB6b25lcyBpcyBhIFdBUk5fT05fT05DRSgpIGFuZCByZXR1cm4g
+LUVJTw0KPiBzaXR1YXRpb24uLi4NCj4gDQo+IFNPLCBwZXJoYXBzOg0KPiANCj4gCWlzaXplID0g
+aV9zaXplX3JlYWQoaW5vZGUpOw0KPiAJaWYgKG9mZnNldCA+PSBpc2l6ZSkgew0KPiAJCWlmIChX
+QVJOX09OX09OQ0UoaS0+aV96dHlwZSA9PSBaT05FRlNfWlRZUEVfQ05WKSkgew0KPiAJCQkvKiBk
+cm9wIGxvY2tzICovDQo+IAkJCXJldHVybiAtRUlPOw0KPiAJCX0NCj4gCQlsZW5ndGggPSBtaW4o
+bGVuZ3RoLCBtYXhfaXNpemUgLSBvZmZzZXQpOw0KPiAJCWlvbWFwLT50eXBlID0gSU9NQVBfVU5X
+UklUVEVOOw0KPiAJfSBlbHNlIHsNCj4gCQlsZW5ndGggPSBtaW4obGVuZ3RoLCBpc2l6ZSAtIG9m
+ZnNldCk7DQo+IAkJaW9tYXAtPnR5cGUgPSBJT01BUF9NQVBQRUQ7DQo+IAl9DQoNClllcywgdGhh
+dCBpcyBtdWNoIGJldHRlciBpbmRlZWQuIEkgd2lsbCBjaGFuZ2UgdGhpcy4NCg0KPiBUaGlzIGFs
+c28gc2VlbXMgdGFpbG9yZWQgYXJvdW5kIHRoZSBjYWxsIGZyb20gem9uZWZzX21hcF9ibG9ja3Mo
+KQ0KPiB3aGljaCB0cmllcyB0byBtYXAgdGhlIGVudGlyZSB6b25lIChsZW5ndGggPSB6aS0+aV9t
+YXhfc2l6ZSkgZm9yDQo+IHdyaXRlYmFjayBtYXBwaW5ncy4gSGVuY2UgdGhlIGxlbmd0aCBpbiB0
+aGlzIGNhc2UgYWx3YXlzIHJlcXVpcmVzDQo+IGNsYW1waW5nIHRvIHppLT5pX21heF9zaXplIC0g
+b2Zmc2V0LiBBZ2FpbiwgdGhlcmUncyBhbiBpc3N1ZSBoZXJlOg0KPiANCj4gPiArc3RhdGljIGlu
+dCB6b25lZnNfbWFwX2Jsb2NrcyhzdHJ1Y3QgaW9tYXBfd3JpdGVwYWdlX2N0eCAqd3BjLA0KPiA+
+ICsJCQkgICAgIHN0cnVjdCBpbm9kZSAqaW5vZGUsIGxvZmZfdCBvZmZzZXQpDQo+ID4gK3sNCj4g
+PiArCWlmIChvZmZzZXQgPj0gd3BjLT5pb21hcC5vZmZzZXQgJiYNCj4gPiArCSAgICBvZmZzZXQg
+PCB3cGMtPmlvbWFwLm9mZnNldCArIHdwYy0+aW9tYXAubGVuZ3RoKQ0KPiA+ICsJCXJldHVybiAw
+Ow0KPiA+ICsNCj4gPiArCW1lbXNldCgmd3BjLT5pb21hcCwgMCwgc2l6ZW9mKHdwYy0+aW9tYXAp
+KTsNCj4gPiArCXJldHVybiB6b25lZnNfaW9tYXBfYmVnaW4oaW5vZGUsIG9mZnNldCwgWk9ORUZT
+X0koaW5vZGUpLT5pX21heF9zaXplLA0KPiA+ICsJCQkJICAwLCAmd3BjLT5pb21hcCwgTlVMTCk7
+DQo+IA0KPiBXaGVyZSB3ZSBwYXNzIGZsYWdzID0gMCBpbnRvIHpvbmVmc19pb21hcF9iZWdpbigp
+LCBhbmQgc28gdGhlcmUgaXMNCj4gbm8gY2hlY2tpbmcgdGhhdCB0aGlzIHdyaXRlYmFjayBjb2Rl
+IHBhdGggaXMgb25seSBleGVjdXRpbmcgYWdhaW5zdA0KPiBhIGNvbnZlbnRpb25hbCB6b25lLiBJ
+LmUuIHRoZSBjb21tZW50cyBhbmQgY2hlY2tzIGluDQo+IHpvbmVmc19pb21hcF9iZWdpbigpIHJl
+bGF0ZSBvbmx5IHRvIHVzZXIgSU8gY2FsbCBwYXRocywgYnV0IGRvbid0DQo+IHZhbGlkYXRlIG9y
+IGNvbW1lbnQgb24gdGhlIHdyaXRlYmFjayBwYXRoIGNhbGxlcnMsIGFuZCB0aGVyZSdzIG5vDQo+
+IGNvbW1lbnRzIG9yIGNoZWNrcyBoZXJlIHRoYXQgdGhlIGlub2RlIHBvaW50cyBhdCBhIGNvbnZl
+bnRpb25hbA0KPiB6b25lLCBlaXRoZXIuLi4uDQoNCkkgZG8gbm90IHVuZGVyc3RhbmQgeW91ciBw
+b2ludCBoZXJlLiBTaW5jZSBhbGwgYmxvY2tzIGFyZSBhbHdheXMNCmFsbG9jYXRlZCBmb3IgYm90
+aCBjb252ZW50aW9uYWwgYW5kIHNlcXVlbnRpYWwgZmlsZXMsIEkgdGhpbmsgdGhhdA0KdXNpbmcg
+aV9tYXhfc2l6ZSBmb3IgY2FsbGluZyB6b25lZnNfaW9tYXBfYmVnaW4gaXMgT0s6IGZvciBjb252
+ZW50aW9uYWwNCnpvbmUgZmlsZXMsIGFueSBvZiB0aGVzZSBibG9ja3MgY2FuIGJlIHdyaXR0ZW4s
+IGJvdGggdXNlciBkaXJlY3Qgb3INCnRocm91Z2ggdGhlIHBhZ2UgY2FjaGUuIE5vIGRpc3RpbmN0
+aW9uIGlzIEkgdGhpbmsgbmVjZXNzYXJ5LiBGb3INCnNlcXVlbnRpYWwgem9uZSBmaWxlcywgb25s
+eSB0aGUgYmxvY2tzIGF0ICJvZmZzZXQiIGNhbiBiZSB3cml0dGVuLCBhbmQNCnRoYXQgdmFsdWUg
+bXVzdCBiZSBlcXVhbCB0byB6aS0+aV93cG9mZnNldCAod2hpY2ggYWNjb3VudCBmb3IgaW4tDQpm
+bGlnaHRzIHdyaXRlcykuIEluIGJvdGggY2FzZXMsIGV4Y2VlZGluZyB0aGUgbWF4IGZpbGUgc2l6
+ZSBpcyBub3QNCmFsbG93ZWQgc28gdGhpcyBjaGVjayBpcyBjb21tb24gaW4gem9uZWZzX2lvbWFw
+X2JlZ2luKCkgdG8gY292ZXIgYWxsDQp1c2VycyBhbmQgbm90IGp1c3Qgem9uZWZzX21hcF9ibG9j
+a3MoKS4gRGlkIEkgZ2V0IHNvbWV0aGluZyB3cm9uZyB3aXRoDQppb21hcCB3b3JraW5ncyA/DQoN
+Cj4gDQo+ID4gK3N0YXRpYyB2bV9mYXVsdF90IHpvbmVmc19maWxlbWFwX2ZhdWx0KHN0cnVjdCB2
+bV9mYXVsdCAqdm1mKQ0KPiA+ICt7DQo+ID4gKwlzdHJ1Y3Qgem9uZWZzX2lub2RlX2luZm8gKnpp
+ID0gWk9ORUZTX0koZmlsZV9pbm9kZSh2bWYtPnZtYS0+dm1fZmlsZSkpOw0KPiA+ICsJdm1fZmF1
+bHRfdCByZXQ7DQo+ID4gKw0KPiA+ICsJZG93bl9yZWFkKCZ6aS0+aV9tbWFwX3NlbSk7DQo+ID4g
+KwlyZXQgPSBmaWxlbWFwX2ZhdWx0KHZtZik7DQo+ID4gKwl1cF9yZWFkKCZ6aS0+aV9tbWFwX3Nl
+bSk7DQo+ID4gKw0KPiA+ICsJcmV0dXJuIHJldDsNCj4gPiArfQ0KPiA+ICsNCj4gPiArc3RhdGlj
+IHZtX2ZhdWx0X3Qgem9uZWZzX2ZpbGVtYXBfcGFnZV9ta3dyaXRlKHN0cnVjdCB2bV9mYXVsdCAq
+dm1mKQ0KPiA+ICt7DQo+ID4gKwlzdHJ1Y3QgaW5vZGUgKmlub2RlID0gZmlsZV9pbm9kZSh2bWYt
+PnZtYS0+dm1fZmlsZSk7DQo+ID4gKwlzdHJ1Y3Qgem9uZWZzX2lub2RlX2luZm8gKnppID0gWk9O
+RUZTX0koaW5vZGUpOw0KPiA+ICsJdm1fZmF1bHRfdCByZXQ7DQo+ID4gKw0KPiA+ICsJc2Jfc3Rh
+cnRfcGFnZWZhdWx0KGlub2RlLT5pX3NiKTsNCj4gPiArCWZpbGVfdXBkYXRlX3RpbWUodm1mLT52
+bWEtPnZtX2ZpbGUpOw0KPiA+ICsNCj4gPiArCS8qIFNlcmlhbGl6ZSBhZ2FpbnN0IHRydW5jYXRl
+cyAqLw0KPiA+ICsJZG93bl9yZWFkKCZ6aS0+aV9tbWFwX3NlbSk7DQo+ID4gKwlyZXQgPSBpb21h
+cF9wYWdlX21rd3JpdGUodm1mLCAmem9uZWZzX2lvbWFwX29wcyk7DQo+ID4gKwl1cF9yZWFkKCZ6
+aS0+aV9tbWFwX3NlbSk7DQo+ID4gKw0KPiA+ICsJc2JfZW5kX3BhZ2VmYXVsdChpbm9kZS0+aV9z
+Yik7DQo+ID4gKwlyZXR1cm4gcmV0Ow0KPiA+ICt9DQo+IA0KPiBTaG91bGQgdGhlcmUgYmUgYSBX
+QVJOX09OX09OQ0UoemktPnppX3R5cGUgIT0gWk9ORUZTX1pUWVBFX0NOVikgaW4NCj4gaGVyZT8N
+Cg0KWWVzLCB0aGF0IHdvdWxkIGJlIHVzZWZ1bC4gSSB3aWxsIGFkZCB0aGF0Lg0KDQo+IA0KPiA+
+ICtzdGF0aWMgc3NpemVfdCB6b25lZnNfZmlsZV9yZWFkX2l0ZXIoc3RydWN0IGtpb2NiICppb2Ni
+LCBzdHJ1Y3QgaW92X2l0ZXIgKnRvKQ0KPiA+ICt7DQo+ID4gKwlzdHJ1Y3QgaW5vZGUgKmlub2Rl
+ID0gZmlsZV9pbm9kZShpb2NiLT5raV9maWxwKTsNCj4gPiArCXN0cnVjdCB6b25lZnNfc2JfaW5m
+byAqc2JpID0gWk9ORUZTX1NCKGlub2RlLT5pX3NiKTsNCj4gPiArCXN0cnVjdCB6b25lZnNfaW5v
+ZGVfaW5mbyAqemkgPSBaT05FRlNfSShpbm9kZSk7DQo+ID4gKwlsb2ZmX3QgbWF4X3BvczsNCj4g
+PiArCXNpemVfdCBjb3VudDsNCj4gPiArCXNzaXplX3QgcmV0Ow0KPiA+ICsNCj4gPiArCWlmIChp
+b2NiLT5raV9wb3MgPj0gemktPmlfbWF4X3NpemUpDQo+ID4gKwkJcmV0dXJuIDA7DQo+ID4gKw0K
+PiA+ICsJaWYgKGlvY2ItPmtpX2ZsYWdzICYgSU9DQl9OT1dBSVQpIHsNCj4gPiArCQlpZiAoIWlu
+b2RlX3RyeWxvY2tfc2hhcmVkKGlub2RlKSkNCj4gPiArCQkJcmV0dXJuIC1FQUdBSU47DQo+ID4g
+Kwl9IGVsc2Ugew0KPiA+ICsJCWlub2RlX2xvY2tfc2hhcmVkKGlub2RlKTsNCj4gPiArCX0NCj4g
+DQo+IFdlIHNob3VsZCByZWFsbHkgdHVybiB0aGF0IGludG8gYSBnZW5lcmljIGhlbHBlci4gVGhp
+cyBwYXR0ZXJuIGlzDQo+IGJlaW5nIHJlcGxpY2F0ZWQgYWxsIG92ZXIgdGhlIHBsYWNlLiBOb3Qg
+aW4gdGhpcyBwYXRjaHNldCwgdGhvdWdoLi4uDQoNClllcywgSSBzYXcgdGhhdCB0b28uIFdpbGwg
+d29yayBvbiBzb21ldGhpbmcgbGF0ZXIuDQoNCj4gPiArc3RhdGljIGludCB6b25lZnNfcmVwb3J0
+X3pvbmVzX2Vycl9jYihzdHJ1Y3QgYmxrX3pvbmUgKnpvbmUsIHVuc2lnbmVkIGludCBpZHgsDQo+
+ID4gKwkJCQkgICAgICB2b2lkICpkYXRhKQ0KPiA+ICt7DQo+ID4gKwlzdHJ1Y3QgaW5vZGUgKmlu
+b2RlID0gZGF0YTsNCj4gPiArCXN0cnVjdCB6b25lZnNfaW5vZGVfaW5mbyAqemkgPSBaT05FRlNf
+SShpbm9kZSk7DQo+ID4gKwlsb2ZmX3QgcG9zOw0KPiA+ICsNCj4gPiArCS8qDQo+ID4gKwkgKiBU
+aGUgY29uZGl0aW9uIG9mIHRoZSB6b25lIG1heSBoYXZlIGNoYW5nZS4gQ2hlY2sgaXQgYW5kIGFk
+anVzdCB0aGUNCj4gPiArCSAqIGlub2RlIGluZm9ybWF0aW9uIGFzIG5lZWRlZCwgc2ltaWxhcmx5
+IHRvIHpvbmVmc19pbml0X2ZpbGVfaW5vZGUoKS4NCj4gPiArCSAqLw0KPiA+ICsJaWYgKHpvbmUt
+PmNvbmQgPT0gQkxLX1pPTkVfQ09ORF9PRkZMSU5FKSB7DQo+ID4gKwkJaW5vZGUtPmlfZmxhZ3Mg
+fD0gU19JTU1VVEFCTEU7DQo+ID4gKwkJaW5vZGUtPmlfbW9kZSAmPSB+MDc3NzsNCj4gPiArCQl6
+b25lLT53cCA9IHpvbmUtPnN0YXJ0Ow0KPiA+ICsJfSBlbHNlIGlmICh6b25lLT5jb25kID09IEJM
+S19aT05FX0NPTkRfUkVBRE9OTFkpIHsNCj4gPiArCQlpbm9kZS0+aV9mbGFncyB8PSBTX0lNTVVU
+QUJMRTsNCj4gPiArCQlpbm9kZS0+aV9tb2RlICY9IH4wMjIyOw0KPiA+ICsJfQ0KPiANCj4gVGhp
+cyBleGFjdCBjb2RlIGlzIHJlcGVhdGVkIGluIHpvbmVmc19pbml0X2ZpbGVfaW5vZGUoKS4gTWF5
+YmUgaXQNCj4gc2hvdWxkIGJlIGEgaGVscGVyIGZ1bmN0aW9uPw0KDQpZZXMsIGdvb2QgaWRlYS4N
+Cg0KPiANCj4gPiArDQo+ID4gKwlwb3MgPSAoem9uZS0+d3AgLSB6b25lLT5zdGFydCkgPDwgU0VD
+VE9SX1NISUZUOw0KPiA+ICsJemktPmlfd3BvZmZzZXQgPSBwb3M7DQo+ID4gKwlpZiAoaV9zaXpl
+X3JlYWQoaW5vZGUpICE9IHBvcykgew0KPiA+ICsJCXpvbmVmc191cGRhdGVfc3RhdHMoaW5vZGUs
+IHBvcyk7DQo+ID4gKwkJaV9zaXplX3dyaXRlKGlub2RlLCBwb3MpOw0KPiA+ICsJfQ0KPiANCj4g
+V2hhdCBoYXBwZW5zIGlmIHRoaXMgZGVjcmVhc2VzIHRoZSBzaXplIG9mIHRoZSB6b25lPyBkb24n
+dCB3ZSBuZWVkDQo+IHRvIGludmFsaWRhdGUgdGhlIHBhZ2UgY2FjaGUgYmV5b25kIHRoZSBuZXcg
+RU9GIGluIHRoaXMgY2FzZSAoaS5lLg0KPiBpdCdzIGEgdHJ1bmNhdGUgb3BlcmF0aW9uKT8NCg0K
+VGhpcyBpcyBjYWxsZWQgb25seSBmb3IgZGlyZWN0IHdyaXRlIGVycm9ycyBpbnRvIHNlcXVlbnRp
+YWwgem9uZXMuDQpTaW5jZSBmb3IgdGhhdCBjYXNlIHdlIG9ubHkgZGVhbCB3aXRoIGFwcGVuZCBk
+aXJlY3Qgd3JpdGVzLCB0aGVyZSBpcyBubw0KcG9zc2liaWxpdHkgb2YgaGF2aW5nIGFueSBvZiB0
+aGUgd3JpdHRlbiBkYXRhIGNhY2hlZCBhbHJlYWR5LiBTbyBldmVuDQppZiB3ZSBnZXQgYSBzaG9y
+dCB3cml0ZSBvciBjb21wbGV0ZSBmYWlsdXJlLCBubyBpbnZhbGlkYXRpb24gaXMgbmVlZGVkLg0K
+DQpDb21wYXJlZCB0byBlcnJvcnMgZm9yIHJlYWQgb3BlcmF0aW9ucyBpbiBhbnkgem9uZSwgb3Ig
+Y29udmVudGlvbmFsDQp6b25lIGZpbGVzIHJlYWQvd3JpdGUgZXJyb3JzLCB0aGlzIGVycm9yIGhh
+bmRsaW5nIGFkZHMgcHJvY2Vzc2luZyBvZg0Kem9uZSBjb25kaXRpb24gY2hhbmdlcyAoZXJyb3Ig
+ZHVlIHRvIGEgem9uZSBnb2luZyBvZmZsaW5lIG9yIHJlYWQtDQpvbmx5KS4gSSBjb3VsZCBhZGQg
+dGhlIHNhbWUgdHJlYXRtZW50IGZvciBhbGwgSU8gZXJyb3JzLiBJIGRpZCBub3QNCnNpbmNlIGlm
+IHdlIHN0YXJ0IHNlZWluZyB0aGVzZSB6b25lIGNvbmRpdGlvbnMsIGl0IGlzIGxpa2VseSB0aGF0
+IHRoZQ0KZHJpdmUgaXMgYWJvdXQgdG8gZGllLiBTbyBjb252ZW50aW9uYWwgem9uZSB3cml0ZXMg
+YW5kIGFsbCByZWFkIGVycm9ycw0KYXJlIHRyZWF0ZWQgbGlrZSBvbiBhbnkgb3RoZXIgRlM6IG9u
+bHkgcmV0dXJuIHRoZSBlcnJvciB0byB0aGUgdXNlcg0Kd2l0aG91dCBhbnkgZHJpdmUtc3BlY2lm
+aWMgZm9yZW5zaWMgZG9uZS4NCg0KPiANCj4gPiArc3RhdGljIGludCB6b25lZnNfc2VxX2ZpbGVf
+d3JpdGVfZmFpbGVkKHN0cnVjdCBpbm9kZSAqaW5vZGUsIGludCBlcnJvcikNCj4gPiArew0KPiA+
+ICsJc3RydWN0IHpvbmVmc19pbm9kZV9pbmZvICp6aSA9IFpPTkVGU19JKGlub2RlKTsNCj4gPiAr
+CXN0cnVjdCBzdXBlcl9ibG9jayAqc2IgPSBpbm9kZS0+aV9zYjsNCj4gPiArCXNlY3Rvcl90IHNl
+Y3RvciA9IHppLT5pX3pzZWN0b3I7DQo+ID4gKwl1bnNpZ25lZCBpbnQgbm9mc19mbGFnOw0KPiA+
+ICsJaW50IHJldDsNCj4gPiArDQo+ID4gKwl6b25lZnNfd2FybihzYiwgIlVwZGF0aW5nIGlub2Rl
+IHpvbmUgJWxsdSBpbmZvXG4iLCBzZWN0b3IpOw0KPiA+ICsNCj4gPiArCS8qDQo+ID4gKwkgKiBi
+bGtkZXZfcmVwb3J0X3pvbmVzKCkgdXNlcyBHRlBfS0VSTkVMIGJ5IGRlZmF1bHQuIEZvcmNlIGV4
+ZWN1dGlvbiBhcw0KPiA+ICsJICogaWYgR0ZQX05PRlMgd2FzIHNwZWNpZmllZCBzbyB0aGF0IGl0
+IHdpbGwgbm90IGVuZCB1cCByZWN1cnNpbmcgaW50bw0KPiA+ICsJICogdGhlIEZTIG9uIG1lbW9y
+eSBhbGxvY2F0aW9uLg0KPiA+ICsJICovDQo+ID4gKwlub2ZzX2ZsYWcgPSBtZW1hbGxvY19ub2Zz
+X3NhdmUoKTsNCj4gPiArCXJldCA9IGJsa2Rldl9yZXBvcnRfem9uZXMoc2ItPnNfYmRldiwgc2Vj
+dG9yLCAxLA0KPiA+ICsJCQkJICB6b25lZnNfcmVwb3J0X3pvbmVzX2Vycl9jYiwgaW5vZGUpOw0K
+PiA+ICsJbWVtYWxsb2Nfbm9mc19yZXN0b3JlKG5vZnNfZmxhZyk7DQo+IA0KPiBUaGUgY29tbWVu
+dCBpcyBraW5kYSByZWR1bmRhbnQgLSBpdCdzIGV4cGxhaW5pbmcgZXhhY3RseSB3aGF0IHRoZQ0K
+PiBjb2RlIGRvZXMgcmF0aGVyIHRoYW4gd2h5IGl0IG5lZWRzIHRoaXMgcHJvdGVjdGlvbi4gaS5l
+LiB0aGUgY29tbWVudA0KPiBzaG91bGQgZXhwbGFpbiB0aGUgcmVjdXJzaW9uIHZlY3Rvci9kZWFk
+bG9jayB0aGF0IHdlIGFyZSBhdm9pZGluZw0KPiBoZXJlLi4uDQoNClllcy4gQ2hhbmdlZCBpdCB0
+bzoNCg0KLyoNCiAqIFJlcG9ydCB6b25lcyBtZW1vcnkgYWxsb2NhdGlvbiBjb3VsZCB0cmlnZ2Vy
+IGEgcmVjdXJzaW9uIGludG8gem9uZWZzDQogKiBkdWUgdG8gbWVtb3J5IHJlY2xhaW0uIFNpbmNl
+IHRoaXMgaXMgYWx3YXlzIGNhbGxlZCB3aXRoIHRoZSBpbm9kZQ0KICogdHJ1bmNhdGUgbXV0ZXgg
+bG9jayBiZWluZyBoZWxkLCBhdm9pZCB0aGUgcG90ZW50aWFsIHJlY3Vyc2lvbg0KICogZGVhZGxv
+Y2sgdXNpbmcgYSBHRlBfTk9GUyBhbGxvY2F0aW9uLg0KICovDQoNCj4gDQo+ID4gK3N0YXRpYyBp
+bnQgem9uZWZzX2ZpbGVfZGlvX3dyaXRlX2VuZChzdHJ1Y3Qga2lvY2IgKmlvY2IsIHNzaXplX3Qg
+c2l6ZSwgaW50IHJldCwNCj4gPiArCQkJCSAgICAgdW5zaWduZWQgaW50IGZsYWdzKQ0KPiA+ICt7
+DQo+ID4gKwlzdHJ1Y3QgaW5vZGUgKmlub2RlID0gZmlsZV9pbm9kZShpb2NiLT5raV9maWxwKTsN
+Cj4gPiArCXN0cnVjdCB6b25lZnNfaW5vZGVfaW5mbyAqemkgPSBaT05FRlNfSShpbm9kZSk7DQo+
+ID4gKw0KPiA+ICsJaWYgKHJldCkNCj4gPiArCQlyZXR1cm4gcmV0Ow0KPiA+ICsNCj4gPiArCS8q
+DQo+ID4gKwkgKiBDb252ZW50aW9uYWwgem9uZSBmaWxlIHNpemUgaXMgZml4ZWQgdG8gdGhlIHpv
+bmUgc2l6ZSBzbyB0aGVyZQ0KPiA+ICsJICogaXMgbm8gbmVlZCB0byBkbyBhbnl0aGluZy4NCj4g
+PiArCSAqLw0KPiA+ICsJaWYgKHppLT5pX3p0eXBlID09IFpPTkVGU19aVFlQRV9DTlYpDQo+ID4g
+KwkJcmV0dXJuIDA7DQo+ID4gKw0KPiA+ICsJbXV0ZXhfbG9jaygmemktPmlfdHJ1bmNhdGVfbXV0
+ZXgpOw0KPiA+ICsNCj4gPiArCWlmIChzaXplIDwgMCkgew0KPiA+ICsJCXJldCA9IHpvbmVmc19z
+ZXFfZmlsZV93cml0ZV9mYWlsZWQoaW5vZGUsIHNpemUpOw0KPiANCj4gT2ssIHNvIEkgc2VlIGl0
+IGlzIGJlaW5nIGNhbGxlZCBmcm9tIElPIGNvbXBsZXRpb24gY29udGV4dCwgd2hjaWgNCj4gbWVh
+bnMgd2UnZCB3YW50IG1lbWFsbG9jX25vaW9fc2F2ZSgpIGJlY2F1c2UgdGhlIHVuZGVybHlpbmcg
+YmlvDQo+IGRvZXNuJ3QgZ2V0IGZyZWVkIHVudGlsIHRoaXMgd2hvbGUgY29tcGxldGlvbiBydW5z
+LCByaWdodD8NCg0KWWVzLCB0aGUgZmFpbGVkIEJJTyBpcyBmcmVlZCBvbmx5IGFmdGVyIHRoZSBy
+ZXBvcnQgem9uZSBpcyBkb25lLiBCdXQNCm1vcmUgdGhhbiBHRlBfTk9JTywgd2Ugd2FudCBHRlBf
+Tk9GUyBmb3IgdGhlIHJlYXNvbiBzdGF0ZWQgYWJvdmUuDQoNCj4gDQo+ID4gK3N0YXRpYyBzc2l6
+ZV90IHpvbmVmc19maWxlX2Rpb193cml0ZShzdHJ1Y3Qga2lvY2IgKmlvY2IsIHN0cnVjdCBpb3Zf
+aXRlciAqZnJvbSkNCj4gPiArew0KPiA+ICsJc3RydWN0IGlub2RlICppbm9kZSA9IGZpbGVfaW5v
+ZGUoaW9jYi0+a2lfZmlscCk7DQo+ID4gKwlzdHJ1Y3Qgem9uZWZzX3NiX2luZm8gKnNiaSA9IFpP
+TkVGU19TQihpbm9kZS0+aV9zYik7DQo+ID4gKwlzdHJ1Y3Qgem9uZWZzX2lub2RlX2luZm8gKnpp
+ID0gWk9ORUZTX0koaW5vZGUpOw0KPiA+ICsJc2l6ZV90IGNvdW50Ow0KPiA+ICsJc3NpemVfdCBy
+ZXQ7DQo+ID4gKw0KPiA+ICsJaWYgKGlvY2ItPmtpX2ZsYWdzICYgSU9DQl9OT1dBSVQpIHsNCj4g
+PiArCQlpZiAoIWlub2RlX3RyeWxvY2soaW5vZGUpKQ0KPiA+ICsJCQlyZXR1cm4gLUVBR0FJTjsN
+Cj4gPiArCX0gZWxzZSB7DQo+ID4gKwkJaW5vZGVfbG9jayhpbm9kZSk7DQo+ID4gKwl9DQo+ID4g
+Kw0KPiA+ICsJcmV0ID0gZ2VuZXJpY193cml0ZV9jaGVja3MoaW9jYiwgZnJvbSk7DQo+ID4gKwlp
+ZiAocmV0IDw9IDApDQo+ID4gKwkJZ290byBvdXQ7DQo+ID4gKw0KPiA+ICsJaW92X2l0ZXJfdHJ1
+bmNhdGUoZnJvbSwgemktPmlfbWF4X3NpemUgLSBpb2NiLT5raV9wb3MpOw0KPiA+ICsJY291bnQg
+PSBpb3ZfaXRlcl9jb3VudChmcm9tKTsNCj4gDQo+IFNvIGNvdW50IGlzIGluaXRpYWxpc2VkIHRv
+IHRoZSBlbnRpcmUgSU8gbGVuZ3RoLi4uLg0KDQpXZWxsLCB5ZXMsIGNvdW50IHJlZmxlY3RzIHRo
+ZSB0cnVuY2F0ZWQgaW92X2l0ZXIgc2l6ZS4gVGhpcyBpcw0KbmVjZXNzYXJ5IGZvciB0aGUgQUlP
+IGNhc2Ugd2hlbiBpb21hcF9kaW9fcncoKSByZXR1cm5zIC1FSU9DQlFVRVVFRCBzbw0KdGhhdCB3
+ZSBjYW4gYWNjb3VudCBmb3IgdGhlIGluZmxpZ2h0IEFJT3MgZm9yIGFuIGV2ZW50dWFsIHN1YnNl
+cXVlbnQNCkFJTyBzdWJtaXNzaW9uIGJ5IHRoZSB1c2VyIChzZWUgbmV4dCBjb21tZW50IGJlbG93
+KS4gRm9yIHN5bmMgd3JpdGVzDQoob3IgQUlPcyB0aGF0IGNvbXBsZXRlZCB2ZXJ5IHF1aWNrbHkp
+LCB0aGUgZmluYWwgdmFsdWUgZm9yIGNvdW50IGlzDQp1cGRhdGVkIHVzaW5nIGlvbWFwX2Rpb19y
+dygpIHJldHVybiB2YWx1ZS4NCg0KPiA+ICsNCj4gPiArCS8qDQo+ID4gKwkgKiBEaXJlY3Qgd3Jp
+dGVzIG11c3QgYmUgYWxpZ25lZCB0byB0aGUgYmxvY2sgc2l6ZSwgdGhhdCBpcywgdGhlIGRldmlj
+ZQ0KPiA+ICsJICogcGh5c2ljYWwgc2VjdG9yIHNpemUsIHRvIGF2b2lkIGVycm9ycyB3aGVuIHdy
+aXRpbmcgc2VxdWVudGlhbCB6b25lcw0KPiA+ICsJICogb24gNTEyZSBkZXZpY2VzICg1MTJCIGxv
+Z2ljYWwgc2VjdG9yLCA0S0IgcGh5c2ljYWwgc2VjdG9ycykuDQo+ID4gKwkgKi8NCj4gPiArCWlm
+ICgoaW9jYi0+a2lfcG9zIHwgY291bnQpICYgc2JpLT5zX2Jsb2Nrc2l6ZV9tYXNrKSB7DQo+ID4g
+KwkJcmV0ID0gLUVJTlZBTDsNCj4gPiArCQlnb3RvIG91dDsNCj4gPiArCX0NCj4gPiArDQo+ID4g
+KwkvKg0KPiA+ICsJICogRW5mb3JjZSBzZXF1ZW50aWFsIHdyaXRlcyAoYXBwZW5kIG9ubHkpIGlu
+IHNlcXVlbnRpYWwgem9uZXMuDQo+ID4gKwkgKi8NCj4gPiArCW11dGV4X2xvY2soJnppLT5pX3Ry
+dW5jYXRlX211dGV4KTsNCj4gPiArCWlmICh6aS0+aV96dHlwZSA9PSBaT05FRlNfWlRZUEVfU0VR
+ICYmDQo+ID4gKwkgICAgaW9jYi0+a2lfcG9zICE9IHppLT5pX3dwb2Zmc2V0KSB7DQo+ID4gKwkJ
+em9uZWZzX2Vycihpbm9kZS0+aV9zYiwNCj4gPiArCQkJICAgIlVuYWxpZ25lZCB3cml0ZSBhdCAl
+bGx1ICsgJXp1ICh3cCAlbGx1KVxuIiwNCj4gPiArCQkJICAgaW9jYi0+a2lfcG9zLCBjb3VudCwN
+Cj4gPiArCQkJICAgemktPmlfd3BvZmZzZXQpOw0KPiA+ICsJCW11dGV4X3VubG9jaygmemktPmlf
+dHJ1bmNhdGVfbXV0ZXgpOw0KPiA+ICsJCXJldCA9IC1FSU5WQUw7DQo+ID4gKwkJZ290byBvdXQ7
+DQo+ID4gKwl9DQo+ID4gKwltdXRleF91bmxvY2soJnppLT5pX3RydW5jYXRlX211dGV4KTsNCj4g
+PiArDQo+ID4gKwlyZXQgPSBpb21hcF9kaW9fcncoaW9jYiwgZnJvbSwgJnpvbmVmc19pb21hcF9v
+cHMsICZ6b25lZnNfZGlvX29wcywNCj4gPiArCQkJICAgaXNfc3luY19raW9jYihpb2NiKSk7DQo+
+ID4gKwlpZiAoemktPmlfenR5cGUgPT0gWk9ORUZTX1pUWVBFX1NFUSAmJg0KPiA+ICsJICAgIChy
+ZXQgPiAwIHx8IHJldCA9PSAtRUlPQ0JRVUVVRUQpKSB7DQo+ID4gKwkJaWYgKHJldCA+IDApDQo+
+ID4gKwkJCWNvdW50ID0gcmV0Ow0KPiA+ICsJCW11dGV4X2xvY2soJnppLT5pX3RydW5jYXRlX211
+dGV4KTsNCj4gPiArCQl6aS0+aV93cG9mZnNldCArPSBjb3VudDsNCj4gPiArCQltdXRleF91bmxv
+Y2soJnppLT5pX3RydW5jYXRlX211dGV4KTsNCj4gDQo+IEhtbW1tLiBUaGlzIGxvb2tzIHByb2Js
+ZW1hdGljIHcuci50LiBBSU8uIElmIHdlIGdldCAtRUlPQ0JRVUVVRUQgaXQNCj4gbWVhbnMgdGhl
+IElPIGhhcyBiZWVuIHF1ZXVlZCBidXQgbm90IG5lY2Vzc2FyaWx5IHN1Ym1pdHRlZCwgYnV0DQo+
+IHdlIHVwZGF0ZSB6aS0+aV93cG9mZnNldCBhcyB0aG91Z2ggdGhlIGVudGlyZSBBSU8gaGFzIGxh
+cmVhZHkNCj4gY29tcGxldGVkLiBBTmQgdGhlbiB3ZSBkcm9wIHRoZSBpbm9kZV9sb2NrKCkgYW5k
+IHJldHVybiwgYWxsb3dpbmcNCj4gYW5vdGhlciBBSU8rRElPIHRvIGJlIHN0YXJ0ZWQuDQo+IA0K
+PiBIZW5jZSBhbm90aGVyIGNvbmN1cnJlbnQgc2VxdWVudGlhbCBBSU8rRElPIHdyaXRlIGNvdWxk
+IG5vdyBiZQ0KPiBzdWJtaXR0ZWQgYW5kIHBhc3MgdGhlIGFib3ZlIGlvY2ItPmtpX3BvcyAhPSB6
+aS0+aV93cG9mZnNldCBjaGVjay4NCj4gTm93IHdlIGhhdmUgdHdvIGluZGVwZW5kZW50IElPcyBp
+biBmbGlnaHQgLSBvbmUgdGhhdCBpcyBhdCB0aGUNCj4gY3VycmVudCBoYXJkd2FyZSB3cml0ZSBw
+b2ludGVyIG9mZnNldCwgYW5kIG9uZSB0aGF0IGlzIGJleW9uZCBpdC4NCj4gDQo+IFdoYXQgaGFw
+cGVucyBpZiB0aGUgYmxvY2sgbGF5ZXIgbm93IHJlLW9yZGVycyB0aGVzZSB0d28gSU9zPw0KDQpJ
+ZiB0aGUgY29ycmVjdCBibG9jayBzY2hlZHVsZXIgaXMgdXNlZCwgdGhhdCBpcyBtcS1kZWFkbGlu
+ZSwgdGhlcmUgaXMNCm5vIHBvc3NpYmlsaXR5IG9mIHdyaXRlIHJlb3JkZXJpbmcuIG1xLWRlYWRs
+aW5lIGlzIG5vdyB0aGUgZGVmYXVsdCBJTw0Kc2NoZWR1bGVyIGZvciB6b25lZCBibG9jayBkZXZp
+Y2VzIGFuZCB0aGUgb25seSBvbmUgdGhhdCBpcyBhbGxvd2VkDQooYmVzaWRlICJub25lIikuIG1x
+LWRlYWRsaW5lIHVzZXMgYSB6b25lIHdyaXRlIGxvY2tpbmcgbWVjaGFuaXNtIHRvDQplbnN1cmUg
+dGhhdCB0aGVyZSBpcyBubyByZW9yZGVyaW5nIG9mIHdyaXRlIHJlcXVlc3RzLCBlaXRoZXIgYnkg
+dGhlDQpibG9jayBsYXllciBpdHNlbGYgb3IgYnkgYmFkIGhhcmR3YXJlIChTQVRBIEFIQ0kgYWRh
+cHRlcnMgYXJlDQpub3RvcmlvdXNseSBiYWQgYW5kIHNpbGVudGx5IHJlb3JkZXIgcmVxdWVzdHMg
+YWxsIHRoZSB0aW1lLCBldmVuIGZvcg0KU01SIGRpc2tzKS4NCg0KV2l0aCB0aGlzIG1lY2hhbmlz
+bSwgdGhlIHVzZXIgY2FuIHNhZmVseSB1c2UgaW9fc3VibWl0KCkgYmV5b25kIGENCnNpbmdsZSBJ
+TyBhbmQgem9uZWZzIGNoZWNrIHRoYXQgdGhlIHNldCBvZiBBSU9zIGJlaW5nIHN1Ym1pdHRlZCBh
+cmUgYWxsDQpzZXF1ZW50aWFsIHN0YXJ0aW5nIGZyb20gdGhlIHppLT5pX3dwb2Zmc2V0ICJzb2Z0
+IiB3cml0ZSBwb2ludGVyIHRoYXQNCnJlZmxlY3RzIHRoZSBhbHJlYWR5IGluLWZsaWdodCBBSU9z
+LiBNdWx0aXBsZSBpb19zdWJtaXQoKSBvZiBtdWx0aXBsZQ0KQUlPcyBjYW4gYmUgZXhlY3V0ZWQg
+aW4gc2VxdWVuY2Ugd2l0aG91dCBuZWVkaW5nIHRvIGxpbWl0IHRvIGEgc2luZ2xlDQpBSU8gYXQg
+YSB0aW1lLg0KDQpJZiBhIGRpc2sgZXJyb3Igb2NjdXJzIGFsb25nIHRoZSB3YXksIHRoZSBzZXEg
+ZmlsZSBzaXplIGFuZCB6aS0NCj5pX3dwb2Zmc2V0IGFyZSB1cGRhdGVkIHVzaW5nIHRoZSByZXBv
+cnQgem9uZSByZXN1bHQuIEFsbCBpbi1mbGlnaHQgb3INCnN1Ym1pdHRlZCBBSU9zIGFmdGVyIHRo
+ZSBmYWlsZWQgb25lIHdpbGwgYmUgZmFpbGVkIGJ5IHRoZSBkaXNrIGl0c2VsZg0KZHVlIHRvIHRo
+ZSB0aGVpciBub3cgdW5hbGlnbmVkIHBvc2l0aW9uLiBUaGVzZSBmYWlsdXJlcyB3aWxsIG5vdCBj
+aGFuZ2UNCmFnYWluIHRoZSBmaWxlIHNpemUgb3IgemktPmlfd3BvZmZzZXQgc2luY2UgdGhlIHpv
+bmUgaW5mb3JtYXRpb24gd2lsbA0KYmUgdGhlIHNhbWUgYWZ0ZXIgYWxsIGZhaWx1cmVzLiBUaGUg
+dXNlciBvbmx5IGhhcyB0byBsb29rIGF0IHRoZSBmaWxlDQpzaXplIGFnYWluIHRvIGtub3cgd2Vy
+ZSB0byByZXN0YXJ0IHdyaXRpbmcgZnJvbSB3aXRob3V0IGV2ZW4gbmVlZGluZyB0bw0Kd2FpdCBm
+b3IgYWxsIGluLWZsaWdodCBBSU8gdG8gY29tcGxldGUgd2l0aCBhbiBlcnJvciAoYnV0IHRoYXQg
+d291bGQgb2YNCmNvdXJzZSBiZSB0aGUgcmVjb21tZW5kZWQgcHJhY3RpY2UpLg0KDQpJbiBvdGhl
+ciB3b3JkLCB3ZSBhc3N1bWUgaGVyZSB0aGF0IGFsbCB3cml0ZSBzdWNjZWVkIGFuZCBhbGxvdyBo
+aWdoLQ0KcXVldWUgZGVwdGggc3VibWlzc2lvbiB1c2luZyB6aS0+aV93cG9mZnNldCBhcyBhICJz
+b2Z0IiB3cml0ZSBwb2ludGVyLg0KDQo+ID4gK3N0YXRpYyBzdHJ1Y3QgZGVudHJ5ICp6b25lZnNf
+Y3JlYXRlX2lub2RlKHN0cnVjdCBkZW50cnkgKnBhcmVudCwNCj4gPiArCQkJCQljb25zdCBjaGFy
+ICpuYW1lLCBzdHJ1Y3QgYmxrX3pvbmUgKnpvbmUpDQo+ID4gK3sNCj4gPiArCXN0cnVjdCBpbm9k
+ZSAqZGlyID0gZF9pbm9kZShwYXJlbnQpOw0KPiA+ICsJc3RydWN0IGRlbnRyeSAqZGVudHJ5Ow0K
+PiA+ICsJc3RydWN0IGlub2RlICppbm9kZTsNCj4gPiArDQo+ID4gKwlkZW50cnkgPSBkX2FsbG9j
+X25hbWUocGFyZW50LCBuYW1lKTsNCj4gPiArCWlmICghZGVudHJ5KQ0KPiA+ICsJCXJldHVybiBO
+VUxMOw0KPiA+ICsNCj4gPiArCWlub2RlID0gbmV3X2lub2RlKHBhcmVudC0+ZF9zYik7DQo+ID4g
+KwlpZiAoIWlub2RlKQ0KPiA+ICsJCWdvdG8gb3V0Ow0KPiA+ICsNCj4gPiArCWlub2RlLT5pX2lu
+byA9IGdldF9uZXh0X2lubygpOw0KPiANCj4gZ2V0X25leHRfaW5vKCkgZG9lc24ndCBndWFyYW50
+ZWUgaW5vZGUgbnVtYmVyIHVuaXF1ZW5lc3MgKGl0J3MgMzINCj4gYml0IGFuZCBnbG9iYWwgYWNy
+b3NzIGFsbCBmaWxlc3lzdGVtcyBzbyBpdCBjYW4gb3ZlcmZsb3cpLiBBcmUNCj4gZHVwbGljYXRl
+IGlub2RlIG51bWJlcnMgb24gdGhpcyBzdXBlcmJsb2NrIGFuIGlzc3VlPw0KDQpIYWEuIEluZGVl
+ZC4gSSBtaXNzZWQgdGhhdCBwb2ludC4gSXQgd291bGQgYmUgbmljZXIgdG8gaGF2ZSB1bmlxdWUg
+YW5kDQptb3VudCBwZXJzaXN0ZW50IHBlci12b2x1bWUgaW5vZGUgbnVtYmVycywgZXNwZWNpYWxs
+eSBjb25zaWRlcmluZyB0aGUNCmFtb3VudCBvZiBpbm9kZXMgdGhhdCBhIGxhcmdlIHNlcnZlciB3
+aXRoIGh1bmRyZWRzIG9mIGRyaXZlcyB3b3VsZA0KZ2VuZXJhdGUuIEl0IGlzIHRyaXZpYWwgdG8g
+Y3JlYXRlIHVuaXF1ZSBpbm9kZSBudW1iZXJzIHVzaW5nIGVhY2ggZmlsZQ0Kem9uZSBudW1iZXIg
+b24gdGhlIGRpc2sgKG9yZGVyZWQgYnkgc3RhcnQgc2VjdG9yKSBhbmQgdXNpbmcgbnVtYmVycw0K
+YWZ0ZXIgdGhhdCBmb3IgdGhlIHJvb3QgZGlyZWN0b3J5IGFuZCBwZXIgem9uZSB0eXBlIHN1Yi1k
+aXJlY3Rvcmllcy4NClRoYXQgbWFrZXMgdGhlIGlub2RlIG51bWJlcnMgcGVyc2lzdGVudCBhY3Jv
+c3MgcmVtb3VudHMuIEkgd2lsbCBjaGFuZ2UNCnRoZSBjb2RlIHRvIGRvIHRoYXQuIEhhdmluZyB0
+aGUgZmlsZSBpbm9kZSBudW1iZXJzIGxpbmtlZCB0byB0aGUgb24tDQpkaXNrIHpvbmVzIHdpbGwg
+YWxzbyBiZSBhIHVzZWZ1bCBpbmZvcm1hdGlvbiBmb3IgZGVidWdnaW5nIGFueSBwcm9ibGVtLg0K
+DQo+IA0KPiA+ICsvKg0KPiA+ICsgKiBSZWFkIHN1cGVyIGJsb2NrIGluZm9ybWF0aW9uIGZyb20g
+dGhlIGRldmljZS4NCj4gPiArICovDQo+ID4gK3N0YXRpYyBpbnQgem9uZWZzX3JlYWRfc3VwZXIo
+c3RydWN0IHN1cGVyX2Jsb2NrICpzYikNCj4gPiArew0KPiA+ICsJc3RydWN0IHpvbmVmc19zYl9p
+bmZvICpzYmkgPSBaT05FRlNfU0Ioc2IpOw0KPiA+ICsJc3RydWN0IHpvbmVmc19zdXBlciAqc3Vw
+ZXI7DQo+ID4gKwl1MzIgY3JjLCBzdG9yZWRfY3JjOw0KPiA+ICsJc3RydWN0IHBhZ2UgKnBhZ2U7
+DQo+ID4gKwlzdHJ1Y3QgYmlvX3ZlYyBiaW9fdmVjOw0KPiA+ICsJc3RydWN0IGJpbyBiaW87DQo+
+ID4gKwlpbnQgcmV0Ow0KPiA+ICsNCj4gPiArCXBhZ2UgPSBhbGxvY19wYWdlKEdGUF9LRVJORUwp
+Ow0KPiA+ICsJaWYgKCFwYWdlKQ0KPiA+ICsJCXJldHVybiAtRU5PTUVNOw0KPiA+ICsNCj4gPiAr
+CWJpb19pbml0KCZiaW8sICZiaW9fdmVjLCAxKTsNCj4gPiArCWJpby5iaV9pdGVyLmJpX3NlY3Rv
+ciA9IDA7DQo+ID4gKwliaW9fc2V0X2RldigmYmlvLCBzYi0+c19iZGV2KTsNCj4gPiArCWJpb19z
+ZXRfb3BfYXR0cnMoJmJpbywgUkVRX09QX1JFQUQsIDApOw0KPiA+ICsJYmlvX2FkZF9wYWdlKCZi
+aW8sIHBhZ2UsIFBBR0VfU0laRSwgMCk7DQo+ID4gKw0KPiA+ICsJcmV0ID0gc3VibWl0X2Jpb193
+YWl0KCZiaW8pOw0KPiA+ICsJaWYgKHJldCkNCj4gPiArCQlnb3RvIG91dDsNCj4gPiArDQo+ID4g
+KwlzdXBlciA9IHBhZ2VfYWRkcmVzcyhwYWdlKTsNCj4gPiArDQo+ID4gKwlzdG9yZWRfY3JjID0g
+bGUzMl90b19jcHUoc3VwZXItPnNfY3JjKTsNCj4gPiArCXN1cGVyLT5zX2NyYyA9IDA7DQo+ID4g
+KwljcmMgPSBjcmMzMih+MFUsICh1bnNpZ25lZCBjaGFyICopc3VwZXIsIHNpemVvZihzdHJ1Y3Qg
+em9uZWZzX3N1cGVyKSk7DQo+ID4gKwlpZiAoY3JjICE9IHN0b3JlZF9jcmMpIHsNCj4gPiArCQl6
+b25lZnNfZXJyKHNiLCAiSW52YWxpZCBjaGVja3N1bSAoRXhwZWN0ZWQgMHglMDh4LCBnb3QgMHgl
+MDh4KSIsDQo+ID4gKwkJCSAgIGNyYywgc3RvcmVkX2NyYyk7DQo+ID4gKwkJcmV0ID0gLUVJTzsN
+Cj4gPiArCQlnb3RvIG91dDsNCj4gPiArCX0NCj4gDQo+IERvZXMgdGhpcyBtZWFuIGlmIG1vdW50
+IG9yIHRoZSBrZXJuZWwgdHJpZXMgdG8gYXV0b3Byb2JlIHRoZQ0KPiBmaWxlc3lzdGVtIHR5cGUg
+b24gYSBkZXZpY2UgaXQgd2lsbCBnZXQgLUVJTyBhbmQgYW4gIkludmFsaWQNCj4gY2hlY2tzdW0i
+IGVycm9yIG1lc3NhZ2UgcmF0aGVyIHRoYW4ganVzdCBzaWxlbnRseSByZXR1cm5pbmcgLUVJTlZB
+TA0KPiBiZWNhdXNlLi4uLg0KPiANCj4gPiArCXJldCA9IC1FSU5WQUw7DQo+ID4gKwlpZiAobGUz
+Ml90b19jcHUoc3VwZXItPnNfbWFnaWMpICE9IFpPTkVGU19NQUdJQykNCj4gPiArCQlnb3RvIG91
+dDsNCj4gDQo+IC4uLiBpdCBpc24ndCBhY3R1YWxseSBhIHpvbmVmcyBmaWxlc3lzdGVtPw0KPiAN
+Cj4gaS5lLiBzaG91bGRuJ3QgdGhlc2UgY2hlY2tzIGJlIHRoZSBvdGhlciB3YXkgYXJvdW5kPw0K
+DQpHb29kIGNhdGNoLiBZZXMsIHRoZSBvdGhlciB3YXkgYXJvdW5kIGRlZmluaXRlbHkgbWFrZXMg
+bW9yZSBzZW5zZS4NCg0KVGhhbmsgeW91IGZvciBhbGwgeW91ciBjb21tZW50cy4gUG9zdGluZyBh
+biB1cGRhdGUgYXNhcC4NCg0KQmVzdCByZWdhcmRzLg0KDQotLSANCkRhbWllbiBMZSBNb2FsDQpX
+ZXN0ZXJuIERpZ2l0YWwgUmVzZWFyY2gNCg==
