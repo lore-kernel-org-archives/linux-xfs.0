@@ -1,182 +1,132 @@
-Return-Path: <SRS0=lPx5=3L=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=OHiL=3M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFFAFC33CB6
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jan 2020 23:47:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07AE3C33CAA
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 04:51:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A8DEC21835
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jan 2020 23:47:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C7ECE24673
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 04:51:55 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ikjcqCFi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725972AbgAVXrr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Jan 2020 18:47:47 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:38071 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725911AbgAVXrr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jan 2020 18:47:47 -0500
-Received: from dread.disaster.area (pa49-181-218-253.pa.nsw.optusnet.com.au [49.181.218.253])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id CB804820810;
-        Thu, 23 Jan 2020 10:47:41 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1iuPim-0008IT-9C; Thu, 23 Jan 2020 10:47:40 +1100
-Date:   Thu, 23 Jan 2020 10:47:40 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        Jeff Layton <jlayton@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>, Chris Mason <clm@fb.com>
-Subject: Re: [RFC v2 0/9] Replacing the readpages a_op
-Message-ID: <20200122234740.GI9407@dread.disaster.area>
-References: <20200115023843.31325-1-willy@infradead.org>
- <20200121113627.GA1746@quack2.suse.cz>
- <20200121214845.GA14467@bombadil.infradead.org>
+        id S1726049AbgAWEvz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Jan 2020 23:51:55 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:42542 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726004AbgAWEvy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jan 2020 23:51:54 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00N4mmdM009253
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Jan 2020 04:51:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
+ bh=A3Ckpq/oNUi1W39970WQBW2eyu//2XE+D54Pnewd+V0=;
+ b=ikjcqCFimg3tjGGcxLs55279QGNXez3X7TcMHwzzg5kPJtkEuYHn8bjS3Y8th/Ec7fHg
+ lnk00f/i6f5VUcC8nQh2uIOHbU6LfxGFMOlb2lAmzH8gCIYEj/UV3YuwJ45WfgmDgQE0
+ ftA3hLNoTvTgSN8elMmFef4lMgB93BtfM/+/oLV80NFOW+NjpGqDgEMyrvi7ekfx/+DL
+ zmqtDp4Ss9vFmwKUaYRejAOy7/BYggebWpmMCa7/iJYvQJsEo4KTGwym3N06uQ/Uc/s5
+ eiWSEbQdovZPwni9aBhwiO9Don4k+hefAPkEPsevK7EJfgn5FvVz+DQarOeNeHXZsd3p Mw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2xksyqfuwd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Jan 2020 04:51:53 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00N4mjAQ087006
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Jan 2020 04:51:52 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2xpt6ndpem-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Jan 2020 04:51:52 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00N4ppcx028553
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Jan 2020 04:51:51 GMT
+Received: from kili.mountain (/129.205.23.165)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 22 Jan 2020 20:51:51 -0800
+Date:   Thu, 23 Jan 2020 07:51:44 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     darrick.wong@oracle.com
+Cc:     linux-xfs@vger.kernel.org
+Subject: [bug report] xfs: streamline xfs_attr3_leaf_inactive
+Message-ID: <20200123045144.ue4mbfoswd4xj3ua@kili.mountain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200121214845.GA14467@bombadil.infradead.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
-        a=TU0PeEMO9XNyODJ+pEfdLw==:117 a=TU0PeEMO9XNyODJ+pEfdLw==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=Jdjhy38mL1oA:10
-        a=7-415B0cAAAA:8 a=CFKjfQyiDWdJtrgseoEA:9 a=Q-uMpcMcfA-1AsPR:21
-        a=OG3NL3sTsLLd4Dzs:21 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+User-Agent: NeoMutt/20170113 (1.7.2)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9508 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=670
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-2001230040
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9508 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=726 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-2001230040
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 21, 2020 at 01:48:45PM -0800, Matthew Wilcox wrote:
-> On Tue, Jan 21, 2020 at 12:36:27PM +0100, Jan Kara wrote:
-> > > v2: Chris asked me to show what this would look like if we just have
-> > > the implementation look up the pages in the page cache, and I managed
-> > > to figure out some things I'd done wrong last time.  It's even simpler
-> > > than v1 (net 104 lines deleted).
-> > 
-> > I have an unfinished patch series laying around that pulls the ->readpage
-> > / ->readpages API in somewhat different direction so I'd like to discuss
-> > whether it's possible to solve my problem using your API. The problem I
-> > have is that currently some operations such as hole punching can race with
-> > ->readpage / ->readpages like:
-> > 
-> > CPU0						CPU1
-> > fallocate(fd, FALLOC_FL_PUNCH_HOLE, off, len)
-> >   filemap_write_and_wait_range()
-> >   down_write(inode->i_rwsem);
-> >   truncate_pagecache_range();
+Hello Darrick J. Wong,
 
-shouldn't fallocate be holding EXT4_I(inode)->i_mmap_sem before it
-truncates the page cache? Otherwise it's not serialised against
-page faults. Looks at code ... oh, it does hold the i_mmap_sem in
-write mode, so....
+The patch 0bb9d159bd01: "xfs: streamline xfs_attr3_leaf_inactive"
+from Jan 14, 2020, leads to the following static checker warning:
 
-> > 						readahead(fd, off, len)
-> > 						  creates pages in page cache
-> > 						  looks up block mapping
-> >   removes blocks from inode and frees them
-> > 						  issues bio
-> > 						    - reads stale data -
-> > 						      potential security
-> > 						      issue
+	fs/xfs/xfs_attr_inactive.c:122 xfs_attr3_leaf_inactive()
+	error: uninitialized symbol 'error'.
 
-.... I'm not sure that this race condition should exist anymore
-as readahead should not run until the filesystem drops it's inode
-and mmap locks after the entire extent freeing operation is
-complete...
+fs/xfs/xfs_attr_inactive.c
+    90          struct xfs_attr_leaf_entry      *entry;
+    91          struct xfs_attr_leaf_name_remote *name_rmt;
+    92          int                             error;
+                                                ^^^^^
 
-> > Now how I wanted to address this is that I'd change the API convention for
-> > ->readpage() so that we call it with the page unlocked and the function
-> > would lock the page, check it's still OK, and do what it needs. And this
-> > will allow ->readpage() and also ->readpages() to grab lock
-> > (EXT4_I(inode)->i_mmap_sem in case of ext4) to synchronize with hole punching
-> > while we are adding pages to page cache and mapping underlying blocks.
-> > 
-> > Now your API makes even ->readpages() (actually ->readahead) called with
-> > pages locked so that makes this approach problematic because of lock
-> > inversions. So I'd prefer if we could keep the situation that ->readpages /
-> > ->readahead gets called without any pages in page cache locked...
-> 
-> I'm not a huge fan of that approach because it increases the number of
-> atomic ops (right now, we __SetPageLocked on the page before adding it
-> to i_pages).  Holepunch is a rather rare operation while readpage and
-> readpages/readahead are extremely common, so can we make holepunch take
-> a lock that will prevent new readpage(s) succeeding?
-> 
-> I have an idea to move the lock entries from DAX to being a generic page
-> cache concept.  That way, holepunch could insert lock entries into the
-> pagecache to cover the range being punched, and readpage(s) would either
-> skip lock entries or block on them.
-> 
-> Maybe there's a better approach though.
+    93          int                             i;
+    94  
+    95          xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
+    96  
+    97          /*
+    98           * Find the remote value extents for this leaf and invalidate their
+    99           * incore buffers.
+   100           */
+   101          entry = xfs_attr3_leaf_entryp(leaf);
+   102          for (i = 0; i < ichdr.count; entry++, i++) {
 
-Can we step back for a moment and look at how we already serialise
-readahead against truncate/hole punch? While the readahead code
-itself doesn't serialise against truncate, in all cases we should be
-running through the filesystem at a higher layer and provides the
-truncate/holepunch serialisation before we get to the readahead
-code.
+Smatch complains that we might not enter this loop or maybe we always
+hit a continue statement.
 
-The read() syscall IO path:
+   103                  int             blkcnt;
+   104  
+   105                  if (!entry->nameidx || (entry->flags & XFS_ATTR_LOCAL))
+   106                          continue;
+   107  
+   108                  name_rmt = xfs_attr3_leaf_name_remote(leaf, i);
+   109                  if (!name_rmt->valueblk)
+   110                          continue;
+   111  
+   112                  blkcnt = xfs_attr3_rmt_blocks(dp->i_mount,
+   113                                  be32_to_cpu(name_rmt->valuelen));
+   114                  error = xfs_attr3_rmt_stale(dp,
+   115                                  be32_to_cpu(name_rmt->valueblk), blkcnt);
+   116                  if (error)
+   117                          goto err;
+   118          }
+   119  
+   120          xfs_trans_brelse(*trans, bp);
+   121  err:
+   122          return error;
 
-  read()
-    ->read_iter()
-      filesystem takes truncate serialisation lock
-      generic_file_read_iter()
-        generic_file_buffered_read()
-	  page_cache_sync_readahead()
-	    ....
-	  page_cache_async_readahead()
-	    ....
-      .....
-      filesystem drops truncate serialisation lock
+Possibly uninitialized
 
-The page fault IO path:
+   123  }
 
-page fault
-  ->fault
-    xfs_vm_filemap_fault
-      filesystem takes mmap truncate serialisation lock
-	filemap_fault
-	  do_async_mmap_readahead
-	    page_cache_async_readahead
-	  ....
-	  do_sync_mmap_readahead
-	    page_cache_sync_readahead
-	.....
-      filesystem drops mmap truncate serialisation lock
-
-Then there is fadvise(WILLNEED) which calls
-force_page_cache_readahead() directly. We now have ->fadvise for
-filesystems to add locking around this:
-
-fadvise64
-  vfs_fadvise
-    ->fadvise
-      xfs_file_fadvise
-        filesystem takes truncate serialisation lock
-	generic_fadvise()
-        filesystem drops truncate serialisation lock
-
-XFS and overlay both have ->fadvise methods to provide this
-serialisation of readahead, but ext4 does not so users could trigger
-the stated race condition through fadvise(WILLNEED) or readahead()
-syscalls.
-
-Hence, AFAICT, ext4 only needs to implement ->fadvise and the stated
-readahead vs truncate_pagecache_range() race condition goes away.
-Unless, of course, I've missed some other entry point into the
-readahead code that does not vector through the filesystem first.
-What have I missed?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+regards,
+dan carpenter
