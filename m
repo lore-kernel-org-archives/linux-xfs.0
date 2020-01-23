@@ -2,84 +2,191 @@ Return-Path: <SRS0=OHiL=3M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0AB2C33CAF
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 17:38:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1DC5C2D0DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 19:00:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8A1DE214AF
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 17:38:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD5E721569
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 19:00:27 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hl/QHk5i"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726605AbgAWRiD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Jan 2020 12:38:03 -0500
-Received: from mx2.suse.de ([195.135.220.15]:40452 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727022AbgAWRiC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 23 Jan 2020 12:38:02 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 8F80CAE46;
-        Thu, 23 Jan 2020 17:38:00 +0000 (UTC)
-Received: by ds.suse.cz (Postfix, from userid 10065)
-        id E0910DA730; Thu, 23 Jan 2020 18:37:43 +0100 (CET)
-Date:   Thu, 23 Jan 2020 18:37:43 +0100
-From:   David Sterba <dsterba@suse.cz>
-To:     fdmanana@kernel.org
-Cc:     linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-xfs@vger.kernel.org, darrick.wong@oracle.com,
-        Filipe Manana <fdmanana@suse.com>
-Subject: Re: [PATCH 0/2] Allow deduplication of the eof block when it is safe
- to do so
-Message-ID: <20200123173742.GF3929@twin.jikos.cz>
-Reply-To: dsterba@suse.cz
-Mail-Followup-To: dsterba@suse.cz, fdmanana@kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-xfs@vger.kernel.org, darrick.wong@oracle.com,
-        Filipe Manana <fdmanana@suse.com>
-References: <20191216182656.15624-1-fdmanana@kernel.org>
+        id S1728913AbgAWTAW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Jan 2020 14:00:22 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:48374 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727022AbgAWTAV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jan 2020 14:00:21 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        Content-Type:MIME-Version:Date:Message-ID:Subject:From:Cc:To:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=8HR2OlxtYSb8VdzQerDMMYUwatLK4APc/+QQpvP3lEg=; b=hl/QHk5iTlsDRKCfY+NHVGyfL
+        qgqj7dYv7pKzurBROUVNuwRXpgmtf5xN3yRceVvnxS/eNW6WGHi95QfEo03tR4rTgkcR9wKIpjOmb
+        81jLRVHYNsnKtfnjooWbbrFPxwX56OTZ63ybhx80bRhENoVrRLtGFmp5a9OL1jd8EGj42zKv99+eB
+        JwtSr7fZ7Cz//tDfqUVR3E5tPEXA9q0ngG2/f56cyWSgnmbgWjx3we2vtNWgdwVb329LgskVc333M
+        J503k7JhpQBbDcV/o75dUqL1juPCeAu+WcLSbMe1/lmAGA9E3WwrLYl6CMt5DUF3qozC89SWC/IFK
+        whdtZUgpw==;
+Received: from [2601:1c0:6280:3f0::ed68]
+        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1iuhiE-0003BI-Ui; Thu, 23 Jan 2020 19:00:19 +0000
+To:     "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Jonathan Corbet <corbet@lwn.net>
+Cc:     Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        linux-ext4@vger.kernel.org,
+        Pablo Neira Ayuso <pablo@netfilter.org>,
+        Jozsef Kadlecsik <kadlec@netfilter.org>,
+        Florian Westphal <fw@strlen.de>,
+        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
+        Paul Mackerras <paulus@samba.org>, linux-ppp@vger.kernel.org,
+        Jan Kara <jack@suse.com>, reiserfs-devel@vger.kernel.org,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+From:   Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH] Documentation: changes.rst: update several outdated project
+ URLs
+Message-ID: <efb1f518-9e66-c472-d124-4b7d91e56639@infradead.org>
+Date:   Thu, 23 Jan 2020 11:00:12 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.3.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191216182656.15624-1-fdmanana@kernel.org>
-User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Dec 16, 2019 at 06:26:54PM +0000, fdmanana@kernel.org wrote:
-> From: Filipe Manana <fdmanana@suse.com>
-> 
-> Hi,
-> 
-> This short series allows deduplication of the last block of a file when
-> the eof is not aligned to the sector size, as long as the range's end
-> offset matches the eof of the destination file.
-> 
-> This is a safe case unlike the case where we attempt to clone the block in
-> the middle of a file (which results in a corruption I found last year and
-> affected both btrfs and xfs).
-> 
-> This is motivated by btrfs users reporting lower deduplication scores
-> starting with kernel 5.0, which was the kernel release where btrfs was
-> changed to use the generic VFS helper generic_remap_file_range_prep().
-> Users observed that the last block was no longer deduplicated when a
-> file's size is not block size aligned.  For btrfs this is specially
-> important because references are kept per extent and not per block, so
-> not having the last block deduplicated means the entire extent is kept
-> allocated, making the deduplication not effective and often pointless in
-> many cases.
-> 
-> Thanks.
-> 
-> Filipe Manana (2):
->   fs: allow deduplication of eof block into the end of the destination
->     file
->   Btrfs: make deduplication with range including the last block work
+From: Randy Dunlap <rdunlap@infradead.org>
 
-I'm going to send pull request with these two patches once the merge
-window opens.
+Update projects URLs in the changes.rst file.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/kdave/linux.git fs-dedupe-last-block
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: linux-doc@vger.kernel.org
+Cc: Jan Kara <jack@suse.com>
+Cc: "Theodore Ts'o" <tytso@mit.edu>
+Cc: Andreas Dilger <adilger.kernel@dilger.ca>
+Cc: linux-ext4@vger.kernel.org
+Cc: Pablo Neira Ayuso <pablo@netfilter.org>
+Cc: Jozsef Kadlecsik <kadlec@netfilter.org>
+Cc: Florian Westphal <fw@strlen.de>
+Cc: netfilter-devel@vger.kernel.org
+Cc: coreteam@netfilter.org
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: linux-ppp@vger.kernel.org
+Cc: Jan Kara <jack@suse.com>
+Cc: reiserfs-devel@vger.kernel.org
+Cc: Darrick J. Wong <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
+---
+
+ Documentation/process/changes.rst                    |   12 ++++++----
+ Documentation/translations/it_IT/process/changes.rst |   12 ++++++----
+ 2 files changed, 16 insertions(+), 8 deletions(-)
+
+diff -Naurp linux-next-20200123/Documentation/translations/it_IT/process/changes.rst%WWW linux-next-20200123/Documentation/translations/it_IT/process/changes.rst
+--- linux-next-20200123/Documentation/translations/it_IT/process/changes.rst%WWW	2019-11-24 16:32:01.000000000 -0800
++++ linux-next-20200123/Documentation/translations/it_IT/process/changes.rst	2020-01-23 10:47:56.226457425 -0800
+@@ -391,6 +391,8 @@ E2fsprogs
+ ---------
+ 
+ - <http://prdownloads.sourceforge.net/e2fsprogs/e2fsprogs-1.29.tar.gz>
++- <https://www.kernel.org/pub/linux/kernel/people/tytso/e2fsprogs/>
++- <https://git.kernel.org/pub/scm/fs/ext2/e2fsprogs.git/>
+ 
+ JFSutils
+ --------
+@@ -400,12 +402,12 @@ JFSutils
+ Reiserfsprogs
+ -------------
+ 
+-- <http://www.kernel.org/pub/linux/utils/fs/reiserfs/>
++- <https://git.kernel.org/pub/scm/linux/kernel/git/jeffm/reiserfsprogs.git/>
+ 
+ Xfsprogs
+ --------
+ 
+-- <ftp://oss.sgi.com/projects/xfs/>
++- <https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git>
+ 
+ Pcmciautils
+ -----------
+@@ -444,7 +446,9 @@ Rete
+ PPP
+ ---
+ 
+-- <ftp://ftp.samba.org/pub/ppp/>
++- <https://download.samba.org/pub/ppp/>
++- <https://git.ozlabs.org/?p=ppp.git>
++- <https://github.com/paulusmack/ppp/>
+ 
+ 
+ NFS-utils
+@@ -455,7 +459,7 @@ NFS-utils
+ Iptables
+ --------
+ 
+-- <http://www.iptables.org/downloads.html>
++- <https://netfilter.org/projects/iptables/index.html>
+ 
+ Ip-route2
+ ---------
+diff -Naurp linux-next-20200123/Documentation/process/changes.rst%WWW linux-next-20200123/Documentation/process/changes.rst
+--- linux-next-20200123/Documentation/process/changes.rst%WWW	2019-11-24 16:32:01.000000000 -0800
++++ linux-next-20200123/Documentation/process/changes.rst	2020-01-23 10:47:56.226457425 -0800
+@@ -384,6 +384,8 @@ E2fsprogs
+ ---------
+ 
+ - <http://prdownloads.sourceforge.net/e2fsprogs/e2fsprogs-1.29.tar.gz>
++- <https://www.kernel.org/pub/linux/kernel/people/tytso/e2fsprogs/>
++- <https://git.kernel.org/pub/scm/fs/ext2/e2fsprogs.git/>
+ 
+ JFSutils
+ --------
+@@ -393,12 +395,12 @@ JFSutils
+ Reiserfsprogs
+ -------------
+ 
+-- <http://www.kernel.org/pub/linux/utils/fs/reiserfs/>
++- <https://git.kernel.org/pub/scm/linux/kernel/git/jeffm/reiserfsprogs.git/>
+ 
+ Xfsprogs
+ --------
+ 
+-- <ftp://oss.sgi.com/projects/xfs/>
++- <https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git>
+ 
+ Pcmciautils
+ -----------
+@@ -437,7 +439,9 @@ Networking
+ PPP
+ ---
+ 
+-- <ftp://ftp.samba.org/pub/ppp/>
++- <https://download.samba.org/pub/ppp/>
++- <https://git.ozlabs.org/?p=ppp.git>
++- <https://github.com/paulusmack/ppp/>
+ 
+ NFS-utils
+ ---------
+@@ -447,7 +451,7 @@ NFS-utils
+ Iptables
+ --------
+ 
+-- <http://www.iptables.org/downloads.html>
++- <https://netfilter.org/projects/iptables/index.html>
+ 
+ Ip-route2
+ ---------
+
+
