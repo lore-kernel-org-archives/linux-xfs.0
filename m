@@ -2,74 +2,71 @@ Return-Path: <SRS0=OHiL=3M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8F70C2D0DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 15:54:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A452C2D0DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 15:55:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AD7A4214AF
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 15:54:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3DC28214AF
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 15:55:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ZnyEvygv"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="mxhvPbYC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726590AbgAWPya (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Jan 2020 10:54:30 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:34148 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726231AbgAWPy3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jan 2020 10:54:29 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00NFn7GU195019
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Jan 2020 15:54:28 GMT
+        id S1728811AbgAWPzz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Jan 2020 10:55:55 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:53516 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729095AbgAWPzy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jan 2020 10:55:54 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00NFmhaC170544
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Jan 2020 15:55:53 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=9xZ5nQ6SKoARTa4wmg7gA/k7zbynJeOPFGACIfdqti0=;
- b=ZnyEvygvQA+Vkh2sYGO5ro7rQyX9SvBNIxcHiOmjKcN4bKZ8NI0N3PWBULXjPjk2FLxb
- RPKnEOJIQaI21YBAizENQSRYgwNbnY5Cj3ClkOAqNJmHan2SOcCj/KgI5gdeFUc1fRpf
- SUNlEQ1ujAFNQWGVfsQf6oCav9xOyAd1t4mpkxYrCHSTH3CPoSQGktYGPNGtT+bGGmAw
- VWYT3G1cxUUMYEkPNdzfaxHgWzavywFg8DnBLNtG91b6r4kwrsDL7xTDXEhoRuAwn9Qv
- rkmSTJz62cUN7gsqhqR5RvgV0d8m66e4NtspcTHcCd7O10cpSntjbZqF2Uy9gEnVuVHg Ng== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2xkseuu9mc-1
+ : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
+ bh=mYqGwDyypbktos28hyk221ssnJs4szvIySBQdpKPpdc=;
+ b=mxhvPbYCqD/r8PZe28Uu9DZMuJqGTNlSYy5GtpWjFtd4jDT4uz+7bQWASRqjSAYJPNpe
+ y5DT0Z4OAPaU6bm93dKbSXqHr5u0UWKtUNjxmPI1bf1dHHgP4Q83Gn2oDxEeb1AfI5m6
+ qVW89ZPIogYpOedxCgBUodi6Ky5ci26GYj6kNwYQ8hpBttHKyXgEciAAsvEhVF2fVyQj
+ Gs43ssbIM3BRp070GzlIdPRR+zUUOi37kNmTWce5Zk76kVXkYuMlTxTMbZEyOm2MJyL8
+ 1ZLgJnaTvXIRuFT4+9/RwQxTE/k4tRxryCGqM12HbSlUjrLBhqlHpB9T8MfPOFkK4K1N Zw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 2xktnrk16x-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Jan 2020 15:54:28 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00NFnJag126299
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Jan 2020 15:54:27 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 2xppq7hhvj-1
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Jan 2020 15:55:52 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00NFnFvm044283
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Jan 2020 15:55:52 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 2xpq7n1p6f-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Jan 2020 15:54:27 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00NFsQnP022129
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Jan 2020 15:54:26 GMT
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Jan 2020 15:55:52 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00NFtpcN021051
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Jan 2020 15:55:51 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 23 Jan 2020 07:54:25 -0800
-Date:   Thu, 23 Jan 2020 07:54:26 -0800
+        with ESMTP ; Thu, 23 Jan 2020 07:55:51 -0800
+Date:   Thu, 23 Jan 2020 07:55:52 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Dan Carpenter <dan.carpenter@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [bug report] xfs: streamline xfs_attr3_leaf_inactive
-Message-ID: <20200123155426.GT8257@magnolia>
-References: <20200123045144.ue4mbfoswd4xj3ua@kili.mountain>
+To:     linux-xfs@vger.kernel.org
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [PATCH] xfs: fix uninitialized variable in xfs_attr3_leaf_inactive
+Message-ID: <20200123155552.GV8247@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200123045144.ue4mbfoswd4xj3ua@kili.mountain>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9508 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1911140001 definitions=main-2001230129
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9508 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
  definitions=main-2001230129
@@ -78,64 +75,28 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 23, 2020 at 07:51:44AM +0300, Dan Carpenter wrote:
-> Hello Darrick J. Wong,
-> 
-> The patch 0bb9d159bd01: "xfs: streamline xfs_attr3_leaf_inactive"
-> from Jan 14, 2020, leads to the following static checker warning:
-> 
-> 	fs/xfs/xfs_attr_inactive.c:122 xfs_attr3_leaf_inactive()
-> 	error: uninitialized symbol 'error'.
-> 
-> fs/xfs/xfs_attr_inactive.c
->     90          struct xfs_attr_leaf_entry      *entry;
->     91          struct xfs_attr_leaf_name_remote *name_rmt;
->     92          int                             error;
->                                                 ^^^^^
-> 
->     93          int                             i;
->     94  
->     95          xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
->     96  
->     97          /*
->     98           * Find the remote value extents for this leaf and invalidate their
->     99           * incore buffers.
->    100           */
->    101          entry = xfs_attr3_leaf_entryp(leaf);
->    102          for (i = 0; i < ichdr.count; entry++, i++) {
-> 
-> Smatch complains that we might not enter this loop or maybe we always
-> hit a continue statement.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-In theory there should never be an attr leaf block with zero entries,
-but let's fix this anyway.  Patch soon; thanks for the bug report. :)
+Dan Carpenter pointed out that error is uninitialized.  While there
+never should be an attr leaf block with zero entries, let's not leave
+that logic bomb there.
 
---D
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_attr_inactive.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->    103                  int             blkcnt;
->    104  
->    105                  if (!entry->nameidx || (entry->flags & XFS_ATTR_LOCAL))
->    106                          continue;
->    107  
->    108                  name_rmt = xfs_attr3_leaf_name_remote(leaf, i);
->    109                  if (!name_rmt->valueblk)
->    110                          continue;
->    111  
->    112                  blkcnt = xfs_attr3_rmt_blocks(dp->i_mount,
->    113                                  be32_to_cpu(name_rmt->valuelen));
->    114                  error = xfs_attr3_rmt_stale(dp,
->    115                                  be32_to_cpu(name_rmt->valueblk), blkcnt);
->    116                  if (error)
->    117                          goto err;
->    118          }
->    119  
->    120          xfs_trans_brelse(*trans, bp);
->    121  err:
->    122          return error;
-> 
-> Possibly uninitialized
-> 
->    123  }
-> 
-> regards,
-> dan carpenter
+diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+index eddd5d311b0c..bbfa6ba84dcd 100644
+--- a/fs/xfs/xfs_attr_inactive.c
++++ b/fs/xfs/xfs_attr_inactive.c
+@@ -89,7 +89,7 @@ xfs_attr3_leaf_inactive(
+ 	struct xfs_attr_leafblock	*leaf = bp->b_addr;
+ 	struct xfs_attr_leaf_entry	*entry;
+ 	struct xfs_attr_leaf_name_remote *name_rmt;
+-	int				error;
++	int				error = 0;
+ 	int				i;
+ 
+ 	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
