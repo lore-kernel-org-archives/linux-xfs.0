@@ -2,208 +2,151 @@ Return-Path: <SRS0=OHiL=3M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A63A2C33CAA
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 07:44:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A202C33CB6
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 08:14:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 78885206D4
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 07:44:48 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ZWlOZWhS"
+	by mail.kernel.org (Postfix) with ESMTP id 5A92C24673
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 08:14:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726054AbgAWHos (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Jan 2020 02:44:48 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:55736 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725785AbgAWHos (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jan 2020 02:44:48 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00N7cHJs131410;
-        Thu, 23 Jan 2020 07:42:37 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=/bDOLOlMBXjAmuqkmFP4Gymf/brKJEQ8X3d8Wj7fP8s=;
- b=ZWlOZWhSC+oOXukKGJzKI//rwnZky48Di5LfRPGswEYgQSwarXz9GMbRNHsF8OYYzFtY
- 4PM3N74tcU4Zgx5cySxO1QgGJ8oslieYyHF0DkLs6b2mkPzXl2yV4TMNkYsyHdJE3X4F
- /CtQAGh5epaeggbpe9yqeI4qsMls7b82w/blVXr4mwaoOBR5/2cNP8PtVlJ09WY9y1Hj
- /1trAt9oQAVoOE3j3LRVHuln/uynhvmw2tzCJb9A5ssl/+3xo5E0gzV05Dz237KrMZPw
- Oe5mH4RmeWjYFROAoZfPHY/r0xZSNBFNiog1kaSa1GSweIY0eYeEt+idk6vql991eAWy zA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 2xksyqgf4w-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 23 Jan 2020 07:42:37 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00N7d7xi036019;
-        Thu, 23 Jan 2020 07:42:36 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 2xpq0vv1sw-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 23 Jan 2020 07:42:36 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00N7gadj031598;
-        Thu, 23 Jan 2020 07:42:36 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 22 Jan 2020 23:42:36 -0800
-Subject: [PATCH 07/12] xfs: make xfs_trans_get_buf_map return an error code
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, hch@infradead.org, david@fromorbit.com,
-        Christoph Hellwig <hch@lst.de>
-Date:   Wed, 22 Jan 2020 23:42:35 -0800
-Message-ID: <157976535530.2388944.2188310126880057324.stgit@magnolia>
-In-Reply-To: <157976531016.2388944.3654360225810285604.stgit@magnolia>
-References: <157976531016.2388944.3654360225810285604.stgit@magnolia>
-User-Agent: StGit/0.17.1-dirty
+        id S1726092AbgAWIO2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Jan 2020 03:14:28 -0500
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:52446 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725785AbgAWIO1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jan 2020 03:14:27 -0500
+Received: by mail-wm1-f67.google.com with SMTP id p9so1533259wmc.2;
+        Thu, 23 Jan 2020 00:14:24 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=hMetq05ahE3/VlZ36EO7t0o08RZOdKUBr1lWl/7z4lM=;
+        b=IhvxioSt+YtVkF6fJdpl+hl3IN74WXS0iqWWeWJ34CRfa2fbnuk3mCSCNefDvL+kgT
+         CiiRNQO2QeHt46PemPGhY/bNi4Qq0WKeukWtsqfxLpSS06IMDsNVBfGbL6eFqeTKlRrx
+         nB6NzIPiN2wkkT6q2wCRSB874MrUfJ/dMYCHM7LkmJarnHA2Qc6vkCMtDmQZLc2I9v//
+         +/ME2vRtNfPqzMjfWd4aq9LSBgCNV5OiW5v+tKenB3MDsM8IcUsUbEyvXtaf0s4JrCR/
+         REjyElA+9zTmcEYL9DpuHdr1w8lGNpdEb7mNwwyK0/BOJ0IpwSQd3q3N1athzBFi/Dku
+         FPcA==
+X-Gm-Message-State: APjAAAV3BZQ7PKLYVmC+IoTBz2PZyGj3RGTdUKdFCLBtMxO7N8ZEcfHa
+        BZ3i8MNT0bnrSFTfEB1y/0yVfh/L8QUgJw==
+X-Google-Smtp-Source: APXvYqzjQ3n9r4UHA6R7ndK6wkS7cGwTUj9Rt8LtpkScsKU8JWHDud5M9O9TmXPC3wD7X34l9EH/XQ==
+X-Received: by 2002:a7b:cb46:: with SMTP id v6mr2956731wmj.117.1579767264210;
+        Thu, 23 Jan 2020 00:14:24 -0800 (PST)
+Received: from ?IPv6:2a0b:e7c0:0:107::70f? ([2a0b:e7c0:0:107::70f])
+        by smtp.gmail.com with ESMTPSA id a5sm1626869wmb.37.2020.01.23.00.14.21
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 23 Jan 2020 00:14:23 -0800 (PST)
+Subject: Re: [kernel-hardening] [PATCH 09/38] usercopy: Mark kmalloc caches as
+ usercopy caches
+To:     Kees Cook <keescook@chromium.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>
+Cc:     linux-kernel@vger.kernel.org, David Windsor <dave@nullcore.net>,
+        Pekka Enberg <penberg@kernel.org>,
+        David Rientjes <rientjes@google.com>,
+        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
+        Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Andy Lutomirski <luto@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Christoph Lameter <cl@linux.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Laura Abbott <labbott@redhat.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Christoffer Dall <christoffer.dall@linaro.org>,
+        Dave Kleikamp <dave.kleikamp@oracle.com>,
+        Jan Kara <jack@suse.cz>,
+        Luis de Bethencourt <luisbg@kernel.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Rik van Riel <riel@redhat.com>,
+        Matthew Garrett <mjg59@google.com>,
+        linux-fsdevel@vger.kernel.org, linux-arch@vger.kernel.org,
+        netdev@vger.kernel.org, kernel-hardening@lists.openwall.com,
+        Vlastimil Babka <vbabka@suse.cz>,
+        Michal Kubecek <mkubecek@suse.cz>
+References: <1515636190-24061-1-git-send-email-keescook@chromium.org>
+ <1515636190-24061-10-git-send-email-keescook@chromium.org>
+ <9519edb7-456a-a2fa-659e-3e5a1ff89466@suse.cz>
+ <201911121313.1097D6EE@keescook> <201911141327.4DE6510@keescook>
+From:   Jiri Slaby <jslaby@suse.cz>
+Autocrypt: addr=jslaby@suse.cz; prefer-encrypt=mutual; keydata=
+ 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
+Message-ID: <bfca96db-bbd0-d958-7732-76e36c667c68@suse.cz>
+Date:   Thu, 23 Jan 2020 09:14:20 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <201911141327.4DE6510@keescook>
+Content-Type: text/plain; charset=iso-8859-2
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9508 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=3 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2001230065
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9508 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=3 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2001230065
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 14. 11. 19, 22:27, Kees Cook wrote:
+> On Tue, Nov 12, 2019 at 01:21:54PM -0800, Kees Cook wrote:
+>> How is iucv the only network protocol that has run into this? Do others
+>> use a bounce buffer?
+> 
+> Another solution would be to use a dedicated kmem cache (instead of the
+> shared kmalloc dma one)?
 
-Convert xfs_trans_get_buf_map() to return numeric error codes like most
-everywhere else in xfs.
+Has there been any conclusion to this thread yet? For the time being, we
+disabled HARDENED_USERCOPY on s390...
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_da_btree.c |    8 ++------
- fs/xfs/xfs_trans.h           |   15 ++++++++++-----
- fs/xfs/xfs_trans_buf.c       |   22 +++++++++++-----------
- 3 files changed, 23 insertions(+), 22 deletions(-)
+https://lore.kernel.org/kernel-hardening/9519edb7-456a-a2fa-659e-3e5a1ff89466@suse.cz/
 
-
-diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index 8c3eafe280ed..875e04f82541 100644
---- a/fs/xfs/libxfs/xfs_da_btree.c
-+++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -2591,13 +2591,9 @@ xfs_da_get_buf(
- 	if (error || nmap == 0)
- 		goto out_free;
- 
--	bp = xfs_trans_get_buf_map(tp, mp->m_ddev_targp, mapp, nmap, 0);
--	error = bp ? bp->b_error : -EIO;
--	if (error) {
--		if (bp)
--			xfs_trans_brelse(tp, bp);
-+	error = xfs_trans_get_buf_map(tp, mp->m_ddev_targp, mapp, nmap, 0, &bp);
-+	if (error)
- 		goto out_free;
--	}
- 
- 	*bpp = bp;
- 
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 64d7f171ebd3..a0be934ec811 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -169,10 +169,9 @@ int		xfs_trans_alloc_empty(struct xfs_mount *mp,
- 			struct xfs_trans **tpp);
- void		xfs_trans_mod_sb(xfs_trans_t *, uint, int64_t);
- 
--struct xfs_buf	*xfs_trans_get_buf_map(struct xfs_trans *tp,
--				       struct xfs_buftarg *target,
--				       struct xfs_buf_map *map, int nmaps,
--				       uint flags);
-+int xfs_trans_get_buf_map(struct xfs_trans *tp, struct xfs_buftarg *target,
-+		struct xfs_buf_map *map, int nmaps, xfs_buf_flags_t flags,
-+		struct xfs_buf **bpp);
- 
- static inline struct xfs_buf *
- xfs_trans_get_buf(
-@@ -182,8 +181,14 @@ xfs_trans_get_buf(
- 	int			numblks,
- 	uint			flags)
- {
-+	struct xfs_buf		*bp;
-+	int			error;
-+
- 	DEFINE_SINGLE_BUF_MAP(map, blkno, numblks);
--	return xfs_trans_get_buf_map(tp, target, &map, 1, flags);
-+	error = xfs_trans_get_buf_map(tp, target, &map, 1, flags, &bp);
-+	if (error)
-+		return NULL;
-+	return bp;
- }
- 
- int		xfs_trans_read_buf_map(struct xfs_mount *mp,
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index 6b7ef9dc167d..449be0f8c10f 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -112,24 +112,22 @@ xfs_trans_bjoin(
-  * If the transaction pointer is NULL, make this just a normal
-  * get_buf() call.
-  */
--struct xfs_buf *
-+int
- xfs_trans_get_buf_map(
- 	struct xfs_trans	*tp,
- 	struct xfs_buftarg	*target,
- 	struct xfs_buf_map	*map,
- 	int			nmaps,
--	xfs_buf_flags_t		flags)
-+	xfs_buf_flags_t		flags,
-+	struct xfs_buf		**bpp)
- {
- 	xfs_buf_t		*bp;
- 	struct xfs_buf_log_item	*bip;
- 	int			error;
- 
--	if (!tp) {
--		error = xfs_buf_get_map(target, map, nmaps, flags, &bp);
--		if (error)
--			return NULL;
--		return bp;
--	}
-+	*bpp = NULL;
-+	if (!tp)
-+		return xfs_buf_get_map(target, map, nmaps, flags, bpp);
- 
- 	/*
- 	 * If we find the buffer in the cache with this transaction
-@@ -151,18 +149,20 @@ xfs_trans_get_buf_map(
- 		ASSERT(atomic_read(&bip->bli_refcount) > 0);
- 		bip->bli_recur++;
- 		trace_xfs_trans_get_buf_recur(bip);
--		return bp;
-+		*bpp = bp;
-+		return 0;
- 	}
- 
- 	error = xfs_buf_get_map(target, map, nmaps, flags, &bp);
- 	if (error)
--		return NULL;
-+		return error;
- 
- 	ASSERT(!bp->b_error);
- 
- 	_xfs_trans_bjoin(tp, bp, 1);
- 	trace_xfs_trans_get_buf(bp->b_log_item);
--	return bp;
-+	*bpp = bp;
-+	return 0;
- }
- 
- /*
-
+thanks,
+-- 
+js
+suse labs
