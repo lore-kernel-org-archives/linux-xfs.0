@@ -7,55 +7,56 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56813C3F68F
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 07:42:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B51DDC33CAA
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 07:42:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2CD01206D4
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 07:42:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 88076206D4
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 07:42:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="YnPrpoVG"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ENdGYzHh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725930AbgAWHmL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Jan 2020 02:42:11 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:56458 "EHLO
+        id S1725777AbgAWHmW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Jan 2020 02:42:22 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:56584 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725777AbgAWHmL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jan 2020 02:42:11 -0500
+        with ESMTP id S1725985AbgAWHmW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jan 2020 02:42:22 -0500
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00N7cEUq170841;
-        Thu, 23 Jan 2020 07:42:06 GMT
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00N7c9Mf170827;
+        Thu, 23 Jan 2020 07:42:13 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=vEZZotY7oxD2cVE02rd6xA1oV/uTeBOlCilya5pdcao=;
- b=YnPrpoVGo9s4/Vnc2Kt3F/BJFRp0x1ZamSlI2NlYOtEX4T2WhLxi0klm0aDQe+mnqvJ7
- ipTADYYaQdU1XmjqTXZR7Dn0X/rwePm42vctFYPNQsvCZrULeoIAzbD/9TetAsATkiYw
- 0MSCaJRMddrEuRtbcADYVXmybIjH5G6tyWXC6nCJRtpvnjiAjtTi/Gxf7pLXQHRX3cZa
- Pdsq6TDqqdKMgasN2jfqKHxAPKS6b4SUoUNxpPARN5BWdP53fO5UZ+XpXxTztGm1qKvU
- +/n1iX7iqIWOmPGecNkmIG+x1sKJ13yXaOGwUeNaHeX4LXof6J0SngICTax6HmSFgd+a jA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2xkseurkta-1
+ bh=et8lW1JOka48oBbQTEjqgFBumDWhZMK+CkpRSJH6LO4=;
+ b=ENdGYzHhqotzeZqeYJHvThK0XmyRG6tlkrIGxfhGimamELY0QPFgDvg0An09xgC45vFG
+ dmXBMHbNb6buY1ZFxzcBtlbBf85Rk1hGCdS+z2MQEohTlISGBx3h8XPrqmKHxGCesAKz
+ x3DHXbDwnxPwFe0Pc/XfEN7ven4bkOK/PVFNqD2I0bAb8dmP1zOccg1lIO60MTu/nBT1
+ 9PiIhdjtsjAkvmNbRSM57uC+BnT+45SE1HpbePbGFIjyGjD/M3KoAO19L9MmEd/LR3Fo
+ p3xOxiPS/5A6dPKenhg7rcYxC7GWADaSnyxh0Nj58SOIBApkZY7L7jUVY4/4nJrUbYf+ MQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2xkseurkty-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 23 Jan 2020 07:42:06 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00N7cWDl062330;
-        Thu, 23 Jan 2020 07:42:05 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2xppq50mbp-1
+        Thu, 23 Jan 2020 07:42:13 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00N7d7RM035947;
+        Thu, 23 Jan 2020 07:42:12 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 2xpq0vv17s-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 23 Jan 2020 07:42:05 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00N7g4FN010049;
-        Thu, 23 Jan 2020 07:42:04 GMT
+        Thu, 23 Jan 2020 07:42:12 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00N7gA46017998;
+        Thu, 23 Jan 2020 07:42:10 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 22 Jan 2020 23:42:03 -0800
-Subject: [PATCH 02/12] xfs: make xfs_buf_read return an error code
+        with ESMTP ; Wed, 22 Jan 2020 23:42:10 -0800
+Subject: [PATCH 03/12] xfs: make xfs_buf_get return an error code
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, hch@infradead.org, david@fromorbit.com
-Date:   Wed, 22 Jan 2020 23:42:03 -0800
-Message-ID: <157976532333.2388944.17938500318924937596.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, hch@infradead.org, david@fromorbit.com,
+        Christoph Hellwig <hch@lst.de>
+Date:   Wed, 22 Jan 2020 23:42:09 -0800
+Message-ID: <157976532968.2388944.18228178704570234587.stgit@magnolia>
 In-Reply-To: <157976531016.2388944.3654360225810285604.stgit@magnolia>
 References: <157976531016.2388944.3654360225810285604.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,61 +81,89 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Convert xfs_buf_read() to return numeric error codes like most
+Convert xfs_buf_get() to return numeric error codes like most
 everywhere else in xfs.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_attr_remote.c |    8 ++++----
- fs/xfs/xfs_buf.h                |   13 +++++++++++--
- fs/xfs/xfs_log_recover.c        |   16 +++++++---------
- fs/xfs/xfs_symlink.c            |    8 ++++----
- 4 files changed, 26 insertions(+), 19 deletions(-)
+ fs/xfs/libxfs/xfs_attr_remote.c |    6 +++---
+ fs/xfs/libxfs/xfs_sb.c          |    8 ++++----
+ fs/xfs/xfs_buf.h                |   15 ++++++++++++---
+ 3 files changed, 19 insertions(+), 10 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-index a266d05df146..d82985571a5f 100644
+index d82985571a5f..46f055804433 100644
 --- a/fs/xfs/libxfs/xfs_attr_remote.c
 +++ b/fs/xfs/libxfs/xfs_attr_remote.c
-@@ -418,10 +418,10 @@ xfs_attr_rmtval_get(
- 			       (map[i].br_startblock != HOLESTARTBLOCK));
- 			dblkno = XFS_FSB_TO_DADDR(mp, map[i].br_startblock);
- 			dblkcnt = XFS_FSB_TO_BB(mp, map[i].br_blockcount);
--			bp = xfs_buf_read(mp->m_ddev_targp, dblkno, dblkcnt, 0,
--					&xfs_attr3_rmt_buf_ops);
--			if (!bp)
--				return -ENOMEM;
-+			error = xfs_buf_read(mp->m_ddev_targp, dblkno, dblkcnt,
-+					0, &bp, &xfs_attr3_rmt_buf_ops);
-+			if (error)
-+				return error;
- 			error = bp->b_error;
- 			if (error) {
- 				xfs_buf_ioerror_alert(bp, __func__);
+@@ -555,9 +555,9 @@ xfs_attr_rmtval_set(
+ 		dblkno = XFS_FSB_TO_DADDR(mp, map.br_startblock),
+ 		dblkcnt = XFS_FSB_TO_BB(mp, map.br_blockcount);
+ 
+-		bp = xfs_buf_get(mp->m_ddev_targp, dblkno, dblkcnt);
+-		if (!bp)
+-			return -ENOMEM;
++		error = xfs_buf_get(mp->m_ddev_targp, dblkno, dblkcnt, &bp);
++		if (error)
++			return error;
+ 		bp->b_ops = &xfs_attr3_rmt_buf_ops;
+ 
+ 		xfs_attr_rmtval_copyin(mp, bp, args->dp->i_ino, &offset,
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 0ac69751fe85..6fdd007f81ab 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -985,9 +985,9 @@ xfs_update_secondary_sbs(
+ 	for (agno = 1; agno < mp->m_sb.sb_agcount; agno++) {
+ 		struct xfs_buf		*bp;
+ 
+-		bp = xfs_buf_get(mp->m_ddev_targp,
++		error = xfs_buf_get(mp->m_ddev_targp,
+ 				 XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
+-				 XFS_FSS_TO_BB(mp, 1));
++				 XFS_FSS_TO_BB(mp, 1), &bp);
+ 		/*
+ 		 * If we get an error reading or writing alternate superblocks,
+ 		 * continue.  xfs_repair chooses the "best" superblock based
+@@ -995,12 +995,12 @@ xfs_update_secondary_sbs(
+ 		 * superblocks un-updated than updated, and xfs_repair may
+ 		 * pick them over the properly-updated primary.
+ 		 */
+-		if (!bp) {
++		if (error) {
+ 			xfs_warn(mp,
+ 		"error allocating secondary superblock for ag %d",
+ 				agno);
+ 			if (!saved_error)
+-				saved_error = -ENOMEM;
++				saved_error = error;
+ 			continue;
+ 		}
+ 
 diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 56e081dd1d96..fb60c36a8a5b 100644
+index fb60c36a8a5b..fe9ad8ee4eea 100644
 --- a/fs/xfs/xfs_buf.h
 +++ b/fs/xfs/xfs_buf.h
-@@ -213,16 +213,25 @@ xfs_buf_get(
- 	return xfs_buf_get_map(target, &map, 1, 0);
- }
+@@ -203,14 +203,23 @@ void xfs_buf_readahead_map(struct xfs_buftarg *target,
+ 			       struct xfs_buf_map *map, int nmaps,
+ 			       const struct xfs_buf_ops *ops);
  
 -static inline struct xfs_buf *
 +static inline int
- xfs_buf_read(
+ xfs_buf_get(
  	struct xfs_buftarg	*target,
  	xfs_daddr_t		blkno,
- 	size_t			numblks,
- 	xfs_buf_flags_t		flags,
-+	struct xfs_buf		**bpp,
- 	const struct xfs_buf_ops *ops)
+-	size_t			numblks)
++	size_t			numblks,
++	struct xfs_buf		**bpp)
  {
 +	struct xfs_buf		*bp;
  	DEFINE_SINGLE_BUF_MAP(map, blkno, numblks);
--	return xfs_buf_read_map(target, &map, 1, flags, ops);
+-	return xfs_buf_get_map(target, &map, 1, 0);
 +
 +	*bpp = NULL;
-+	bp = xfs_buf_read_map(target, &map, 1, flags, ops);
++	bp = xfs_buf_get_map(target, &map, 1, 0);
 +	if (!bp)
 +		return -ENOMEM;
 +
@@ -142,59 +171,5 @@ index 56e081dd1d96..fb60c36a8a5b 100644
 +	return 0;
  }
  
- static inline void
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 0d683fb96396..b29806846916 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2745,10 +2745,10 @@ xlog_recover_buffer_pass2(
- 	if (buf_f->blf_flags & XFS_BLF_INODE_BUF)
- 		buf_flags |= XBF_UNMAPPED;
- 
--	bp = xfs_buf_read(mp->m_ddev_targp, buf_f->blf_blkno, buf_f->blf_len,
--			  buf_flags, NULL);
--	if (!bp)
--		return -ENOMEM;
-+	error = xfs_buf_read(mp->m_ddev_targp, buf_f->blf_blkno, buf_f->blf_len,
-+			  buf_flags, &bp, NULL);
-+	if (error)
-+		return error;
- 	error = bp->b_error;
- 	if (error) {
- 		xfs_buf_ioerror_alert(bp, "xlog_recover_do..(read#1)");
-@@ -2950,12 +2950,10 @@ xlog_recover_inode_pass2(
- 	}
- 	trace_xfs_log_recover_inode_recover(log, in_f);
- 
--	bp = xfs_buf_read(mp->m_ddev_targp, in_f->ilf_blkno, in_f->ilf_len, 0,
--			  &xfs_inode_buf_ops);
--	if (!bp) {
--		error = -ENOMEM;
-+	error = xfs_buf_read(mp->m_ddev_targp, in_f->ilf_blkno, in_f->ilf_len,
-+			0, &bp, &xfs_inode_buf_ops);
-+	if (error)
- 		goto error;
--	}
- 	error = bp->b_error;
- 	if (error) {
- 		xfs_buf_ioerror_alert(bp, "xlog_recover_do..(read#2)");
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index a25502bc2071..4f10d764163b 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -53,10 +53,10 @@ xfs_readlink_bmap_ilocked(
- 		d = XFS_FSB_TO_DADDR(mp, mval[n].br_startblock);
- 		byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
- 
--		bp = xfs_buf_read(mp->m_ddev_targp, d, BTOBB(byte_cnt), 0,
--				  &xfs_symlink_buf_ops);
--		if (!bp)
--			return -ENOMEM;
-+		error = xfs_buf_read(mp->m_ddev_targp, d, BTOBB(byte_cnt), 0,
-+				&bp, &xfs_symlink_buf_ops);
-+		if (error)
-+			return error;
- 		error = bp->b_error;
- 		if (error) {
- 			xfs_buf_ioerror_alert(bp, __func__);
+ static inline int
 
