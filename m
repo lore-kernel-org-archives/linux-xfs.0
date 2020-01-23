@@ -6,57 +6,70 @@ X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38D3EC33CAA
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 22:33:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31FE7C33CAA
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 22:34:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EBABB21734
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 22:33:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F094321835
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 22:34:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CXuEAoep"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="adNswL9C"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728709AbgAWWdp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Jan 2020 17:33:45 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:53018 "EHLO
+        id S1728760AbgAWWe5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Jan 2020 17:34:57 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:53036 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728057AbgAWWdp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jan 2020 17:33:45 -0500
+        with ESMTP id S1728057AbgAWWe5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jan 2020 17:34:57 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=GdUWebdOzBG1VFxN0MYmAkWhKEDT5oznZUTu6ALvPFo=; b=CXuEAoepTyc5kp7702UTCSGUU
-        2yQsqLPzcweZE67zGwjQMXXzmwtXhBvlnv33sJNh5Cudn71YLYNid0iAl/2kaovqMjUf4o4Xrl+Zn
-        MmljGnlF0JLOc6Gr6daqRPQQIUP0B6tSQY4uf8RCaJyiicSkZ/r9cj7UN7fTVDagDBgOg6oc/P+x2
-        2T6EwxnXJGI6scg59sP+TgQg7BuW0m5sL+LkS10Ue8aljjSdE0lMAOMaXqy6ylAtO0KNN8T6U1bfm
-        88TjoMPDnztbWVzavGxU8F2lO3PkoBiEKUT+NsDxFshxsW/HfXCUGRGAzMUEyH4ZkW/EdLPk66UM1
-        uEt7abMhw==;
+         bh=JYuhWZ8vlgZ5QvDa3e3oQ9gphZ5lsEiqMWVQ44QmhTo=; b=adNswL9CL2fkc6pqlO4d6//ZF
+        sWtYaDmmZKq+fvEkpVG9ioRro//ONbNbfBH88YoFlSj+yGHIrvOe2LVxu8Es2JFnlRlRrovduCdUd
+        Wa8hhfQ/gaua9xZ25LixkrKFCoYhUi3fzlpv1ULIpCZUh1oXSw6ZES/NQxkcV31WS13dFgh9LAV1h
+        0/md6IeeeZPWcyEOlEg1xoYu/C7idyHcodeYEfK+mtMVwdi1DLFz/aB2xI6i8bxzyr6j9ucP3c8Ys
+        Wp+aWC2LoRBQb1btq9WOsIwshdRJcnJ6jyPgv954yxPZZ+bS/5ROIk9PFstRRqI+1Hxcr6ajWZ1pZ
+        5c52sXQEQ==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iul2l-00025X-Bi; Thu, 23 Jan 2020 22:33:43 +0000
-Date:   Thu, 23 Jan 2020 14:33:43 -0800
+        id 1iul3v-000287-1b; Thu, 23 Jan 2020 22:34:55 +0000
+Date:   Thu, 23 Jan 2020 14:34:55 -0800
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
         Allison Collins <allison.henderson@oracle.com>
-Subject: Re: [PATCH 03/29] xfs: merge xfs_attrmulti_attr_remove into
- xfs_attrmulti_attr_set
-Message-ID: <20200123223343.GA2669@infradead.org>
+Subject: Re: [PATCH 05/29] xfs: factor out a helper for a single
+ XFS_IOC_ATTRMULTI_BY_HANDLE op
+Message-ID: <20200123223455.GB2669@infradead.org>
 References: <20200114081051.297488-1-hch@lst.de>
- <20200114081051.297488-4-hch@lst.de>
- <20200121174145.GD8247@magnolia>
+ <20200114081051.297488-6-hch@lst.de>
+ <20200121175453.GF8247@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200121174145.GD8247@magnolia>
+In-Reply-To: <20200121175453.GF8247@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 21, 2020 at 09:41:45AM -0800, Darrick J. Wong wrote:
-> Does /any/ of this have a testcase?  I couldn't find anywhere that uses
-> attrmulti, not even xfsdump.
+On Tue, Jan 21, 2020 at 09:54:53AM -0800, Darrick J. Wong wrote:
+> >  
+> > +int
+> > +xfs_ioc_attrmulti_one(
+> > +	struct file		*parfilp,
+> > +	struct inode		*inode,
+> > +	uint32_t		opcode,
+> > +	void __user		*uname,
+> > +	void __user		*value,
+> > +	uint32_t		*len,
+> > +	uint32_t		flags)
+> 
+> That's a lot of arguments.  Any chance you could change the ioctl32
+> handler to convert the compat_xfs_attr_multiop to a xfs_attr_multiop and
+> pass that into this function?
 
-xfsdump uses it through the jdm_attr_multi wrapper in libhandle.
+We could, but it would be painful.  The interface also isn't really
+that different from the normal xattr one, so I don't find it too bad.
