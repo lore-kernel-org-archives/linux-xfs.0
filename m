@@ -7,57 +7,56 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA73BC33CAA
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 07:44:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A63A2C33CAA
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 07:44:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AAD27206D4
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 07:44:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 78885206D4
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jan 2020 07:44:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="SawNAjkB"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ZWlOZWhS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725938AbgAWHoT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Jan 2020 02:44:19 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:58214 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725785AbgAWHoT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jan 2020 02:44:19 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00N7i3ZD175033;
-        Thu, 23 Jan 2020 07:44:12 GMT
+        id S1726054AbgAWHos (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Jan 2020 02:44:48 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:55736 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725785AbgAWHos (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jan 2020 02:44:48 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00N7cHJs131410;
+        Thu, 23 Jan 2020 07:42:37 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=nZsvjhc+j9nW0RaRqDlKu2iVCRJnk+svpiF7YhNDveE=;
- b=SawNAjkBHlCpET30XUVbCW46J9P+fCdWqr161BiDoFvjgLPOGCRAlOE1tZzYei7pETvJ
- rQnlevC/7HbqAduZTf3+4GTngZ68dCsDlWoi70D9zGhJuM9Y01+p5qB+JN3AJi8YQ+gq
- HTyn2n/PHh4uP32QbR6EF6laRNdg6hO3kqZPoETHul/MFJ6H9b95Yr8hGBZyk2L6Fy9Y
- 4/3YWt0DtLiFL7ICOYduD22bZvWVOE1SSUrkcYTOXAATF1Gc7GJWviGH3cGMQejMBuYK
- rWjFPlxSc3K5Q9gWqv5Ny8JrLCGD2bUiIAFbZTQf5cWXCAdfc3bmy5ynKrlGUWmBV4w+ 1A== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2xkseurm19-1
+ bh=/bDOLOlMBXjAmuqkmFP4Gymf/brKJEQ8X3d8Wj7fP8s=;
+ b=ZWlOZWhSC+oOXukKGJzKI//rwnZky48Di5LfRPGswEYgQSwarXz9GMbRNHsF8OYYzFtY
+ 4PM3N74tcU4Zgx5cySxO1QgGJ8oslieYyHF0DkLs6b2mkPzXl2yV4TMNkYsyHdJE3X4F
+ /CtQAGh5epaeggbpe9yqeI4qsMls7b82w/blVXr4mwaoOBR5/2cNP8PtVlJ09WY9y1Hj
+ /1trAt9oQAVoOE3j3LRVHuln/uynhvmw2tzCJb9A5ssl/+3xo5E0gzV05Dz237KrMZPw
+ Oe5mH4RmeWjYFROAoZfPHY/r0xZSNBFNiog1kaSa1GSweIY0eYeEt+idk6vql991eAWy zA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 2xksyqgf4w-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 23 Jan 2020 07:44:12 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00N7i5Y0073043;
-        Thu, 23 Jan 2020 07:44:11 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 2xpt6nprxw-1
+        Thu, 23 Jan 2020 07:42:37 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00N7d7xi036019;
+        Thu, 23 Jan 2020 07:42:36 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 2xpq0vv1sw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 23 Jan 2020 07:44:05 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00N7h1q5018078;
-        Thu, 23 Jan 2020 07:43:01 GMT
+        Thu, 23 Jan 2020 07:42:36 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00N7gadj031598;
+        Thu, 23 Jan 2020 07:42:36 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 22 Jan 2020 23:43:01 -0800
-Subject: [PATCH 11/12] xfs: remove unnecessary null pointer checks from
- _read_agf callers
+        with ESMTP ; Wed, 22 Jan 2020 23:42:36 -0800
+Subject: [PATCH 07/12] xfs: make xfs_trans_get_buf_map return an error code
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org, hch@infradead.org, david@fromorbit.com,
         Christoph Hellwig <hch@lst.de>
-Date:   Wed, 22 Jan 2020 23:43:01 -0800
-Message-ID: <157976538103.2388944.15185862740410550762.stgit@magnolia>
+Date:   Wed, 22 Jan 2020 23:42:35 -0800
+Message-ID: <157976535530.2388944.2188310126880057324.stgit@magnolia>
 In-Reply-To: <157976531016.2388944.3654360225810285604.stgit@magnolia>
 References: <157976531016.2388944.3654360225810285604.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -65,16 +64,16 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9508 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=3 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2001230066
+ engine=8.0.1-1911140001 definitions=main-2001230065
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9508 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=3 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2001230066
+ definitions=main-2001230065
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -82,119 +81,129 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Drop the null buffer pointer checks in all code that calls
-xfs_alloc_read_agf and doesn't pass XFS_ALLOC_FLAG_TRYLOCK because
-they're no longer necessary.
+Convert xfs_trans_get_buf_map() to return numeric error codes like most
+everywhere else in xfs.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_refcount.c   |    6 ------
- fs/xfs/scrub/agheader_repair.c |    4 ----
- fs/xfs/scrub/fscounters.c      |    3 ---
- fs/xfs/scrub/repair.c          |    2 --
- fs/xfs/xfs_discard.c           |    2 +-
- fs/xfs/xfs_reflink.c           |    2 --
- 6 files changed, 1 insertion(+), 18 deletions(-)
+ fs/xfs/libxfs/xfs_da_btree.c |    8 ++------
+ fs/xfs/xfs_trans.h           |   15 ++++++++++-----
+ fs/xfs/xfs_trans_buf.c       |   22 +++++++++++-----------
+ 3 files changed, 23 insertions(+), 22 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index d7d702ee4d1a..6e1665f2cb67 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -1177,8 +1177,6 @@ xfs_refcount_finish_one(
- 				XFS_ALLOC_FLAG_FREEING, &agbp);
- 		if (error)
- 			return error;
--		if (XFS_IS_CORRUPT(tp->t_mountp, !agbp))
--			return -EFSCORRUPTED;
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index 8c3eafe280ed..875e04f82541 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -2591,13 +2591,9 @@ xfs_da_get_buf(
+ 	if (error || nmap == 0)
+ 		goto out_free;
  
- 		rcur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno);
- 		if (!rcur) {
-@@ -1718,10 +1716,6 @@ xfs_refcount_recover_cow_leftovers(
- 	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
- 	if (error)
- 		goto out_trans;
--	if (!agbp) {
--		error = -ENOMEM;
--		goto out_trans;
+-	bp = xfs_trans_get_buf_map(tp, mp->m_ddev_targp, mapp, nmap, 0);
+-	error = bp ? bp->b_error : -EIO;
+-	if (error) {
+-		if (bp)
+-			xfs_trans_brelse(tp, bp);
++	error = xfs_trans_get_buf_map(tp, mp->m_ddev_targp, mapp, nmap, 0, &bp);
++	if (error)
+ 		goto out_free;
 -	}
- 	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno);
  
- 	/* Find all the leftover CoW staging extents. */
-diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-index 7a1a38b636a9..d5e6db9af434 100644
---- a/fs/xfs/scrub/agheader_repair.c
-+++ b/fs/xfs/scrub/agheader_repair.c
-@@ -659,8 +659,6 @@ xrep_agfl(
- 	error = xfs_alloc_read_agf(mp, sc->tp, sc->sa.agno, 0, &agf_bp);
- 	if (error)
- 		return error;
--	if (!agf_bp)
--		return -ENOMEM;
+ 	*bpp = bp;
+ 
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 64d7f171ebd3..a0be934ec811 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -169,10 +169,9 @@ int		xfs_trans_alloc_empty(struct xfs_mount *mp,
+ 			struct xfs_trans **tpp);
+ void		xfs_trans_mod_sb(xfs_trans_t *, uint, int64_t);
+ 
+-struct xfs_buf	*xfs_trans_get_buf_map(struct xfs_trans *tp,
+-				       struct xfs_buftarg *target,
+-				       struct xfs_buf_map *map, int nmaps,
+-				       uint flags);
++int xfs_trans_get_buf_map(struct xfs_trans *tp, struct xfs_buftarg *target,
++		struct xfs_buf_map *map, int nmaps, xfs_buf_flags_t flags,
++		struct xfs_buf **bpp);
+ 
+ static inline struct xfs_buf *
+ xfs_trans_get_buf(
+@@ -182,8 +181,14 @@ xfs_trans_get_buf(
+ 	int			numblks,
+ 	uint			flags)
+ {
++	struct xfs_buf		*bp;
++	int			error;
++
+ 	DEFINE_SINGLE_BUF_MAP(map, blkno, numblks);
+-	return xfs_trans_get_buf_map(tp, target, &map, 1, flags);
++	error = xfs_trans_get_buf_map(tp, target, &map, 1, flags, &bp);
++	if (error)
++		return NULL;
++	return bp;
+ }
+ 
+ int		xfs_trans_read_buf_map(struct xfs_mount *mp,
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 6b7ef9dc167d..449be0f8c10f 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -112,24 +112,22 @@ xfs_trans_bjoin(
+  * If the transaction pointer is NULL, make this just a normal
+  * get_buf() call.
+  */
+-struct xfs_buf *
++int
+ xfs_trans_get_buf_map(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_buftarg	*target,
+ 	struct xfs_buf_map	*map,
+ 	int			nmaps,
+-	xfs_buf_flags_t		flags)
++	xfs_buf_flags_t		flags,
++	struct xfs_buf		**bpp)
+ {
+ 	xfs_buf_t		*bp;
+ 	struct xfs_buf_log_item	*bip;
+ 	int			error;
+ 
+-	if (!tp) {
+-		error = xfs_buf_get_map(target, map, nmaps, flags, &bp);
+-		if (error)
+-			return NULL;
+-		return bp;
+-	}
++	*bpp = NULL;
++	if (!tp)
++		return xfs_buf_get_map(target, map, nmaps, flags, bpp);
  
  	/*
- 	 * Make sure we have the AGFL buffer, as scrub might have decided it
-@@ -735,8 +733,6 @@ xrep_agi_find_btrees(
- 	error = xfs_alloc_read_agf(mp, sc->tp, sc->sa.agno, 0, &agf_bp);
- 	if (error)
- 		return error;
--	if (!agf_bp)
--		return -ENOMEM;
- 
- 	/* Find the btree roots. */
- 	error = xrep_find_ag_btree_roots(sc, agf_bp, fab, NULL);
-diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
-index 7251c66a82c9..ec2064ed3c30 100644
---- a/fs/xfs/scrub/fscounters.c
-+++ b/fs/xfs/scrub/fscounters.c
-@@ -83,9 +83,6 @@ xchk_fscount_warmup(
- 		error = xfs_alloc_read_agf(mp, sc->tp, agno, 0, &agf_bp);
- 		if (error)
- 			break;
--		error = -ENOMEM;
--		if (!agf_bp || !agi_bp)
--			break;
- 
- 		/*
- 		 * These are supposed to be initialized by the header read
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index 3df49d487940..e489d7a8446a 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -546,8 +546,6 @@ xrep_reap_block(
- 		error = xfs_alloc_read_agf(sc->mp, sc->tp, agno, 0, &agf_bp);
- 		if (error)
- 			return error;
--		if (!agf_bp)
--			return -ENOMEM;
- 	} else {
- 		agf_bp = sc->sa.agf_bp;
+ 	 * If we find the buffer in the cache with this transaction
+@@ -151,18 +149,20 @@ xfs_trans_get_buf_map(
+ 		ASSERT(atomic_read(&bip->bli_refcount) > 0);
+ 		bip->bli_recur++;
+ 		trace_xfs_trans_get_buf_recur(bip);
+-		return bp;
++		*bpp = bp;
++		return 0;
  	}
-diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index cae613620175..0b8350e84d28 100644
---- a/fs/xfs/xfs_discard.c
-+++ b/fs/xfs/xfs_discard.c
-@@ -45,7 +45,7 @@ xfs_trim_extents(
- 	xfs_log_force(mp, XFS_LOG_SYNC);
  
- 	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
--	if (error || !agbp)
-+	if (error)
- 		goto out_put_perag;
- 
- 	cur = xfs_allocbt_init_cursor(mp, NULL, agbp, agno, XFS_BTNUM_CNT);
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index e723b267a247..b0ce04ffd3cd 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -143,8 +143,6 @@ xfs_reflink_find_shared(
- 	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
+ 	error = xfs_buf_get_map(target, map, nmaps, flags, &bp);
  	if (error)
- 		return error;
--	if (!agbp)
--		return -ENOMEM;
+-		return NULL;
++		return error;
  
- 	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno);
+ 	ASSERT(!bp->b_error);
  
+ 	_xfs_trans_bjoin(tp, bp, 1);
+ 	trace_xfs_trans_get_buf(bp->b_log_item);
+-	return bp;
++	*bpp = bp;
++	return 0;
+ }
+ 
+ /*
 
