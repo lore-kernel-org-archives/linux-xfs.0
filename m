@@ -7,55 +7,56 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6372EC35240
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 00:17:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BBEDC35240
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 00:17:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 31AEC2071E
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 00:17:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE56021569
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 00:17:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jlfblQI3"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="oTa9zYIH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729600AbgAXARi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Jan 2020 19:17:38 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:33182 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727056AbgAXARi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jan 2020 19:17:38 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00O09MsX183357;
-        Fri, 24 Jan 2020 00:17:36 GMT
+        id S1729625AbgAXARr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Jan 2020 19:17:47 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:34712 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729616AbgAXARr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jan 2020 19:17:47 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00O08mbf024614;
+        Fri, 24 Jan 2020 00:17:44 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=grYQK3PXfdhZe9HX4XjWffOEhxMbJCu5gI0+JOkVNnA=;
- b=jlfblQI3S+EzAZbtw4z9f9wVCigC1DdvIgxtUkhaEO7calqtKlGecAEy7ARHRqOGgaTY
- G/YlKNmV1Qn09oBnjwx36Qy0YH4Bv8QARynkFQRXZTNDqF8av+gVARlYMMBkkJh1hWfP
- 2vrSjF9fu7AUwrjmgi603/MArMqSD6844Ml0jTSgKevxkSpLlgUjIiQXqFs1Wf+2aQgz
- 6iin6/7/TdFtbKDD0s5ohanZb+biMu91ZmPWVBEHRvKpDb08uV9MYYyIETu2fvMFy5q2
- wE2ACZtgEgvdNe1sh8IBgF+S2Rfc3+wA8+6Q+aIXMC+WGPHwG9zZRBN5Dp9M3VX67QJT Lg== 
+ bh=GpHvEWcZReaWylEgfeiVILojJZeJJoOInPnYwY6LYPU=;
+ b=oTa9zYIH8705UskBllg6W0oeZY01dABBDgb+fgkFVTYSNAhwopoMLhnxCMV+Z6bptBPs
+ moFWx7VNhNhnuH2smSvuolHT9drGd94VW4TSQmGjrDljpoe5XAskmEP0MtmwnvrR9qWj
+ Ay4ejKySyAGIQ2XqIJfI+b+GtuCqmTPfQxe06KfT8TlMI0AoS4SrY2c73gTJuwiaz8CK
+ WfHN7V7GRoN7NRfSQcETbhfVNziR9mp5gzK8yVJflFXdjQQ4z0y6zej069NZjfQyR7gl
+ VCpyuyOBQMOUFspS9tvb1f6XhE7jgCY0QKr5SFdCCkOZ5U/TFiSc+zrl5437qz/O0kG0 cw== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 2xksyqns3y-1
+        by userp2130.oracle.com with ESMTP id 2xkseuwvxt-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 24 Jan 2020 00:17:36 +0000
+        Fri, 24 Jan 2020 00:17:44 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00O0E6Ym111069;
-        Fri, 24 Jan 2020 00:17:35 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 2xqmwb1h5f-1
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00O0E7Mc111177;
+        Fri, 24 Jan 2020 00:17:43 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 2xqmwb1j3y-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 24 Jan 2020 00:17:35 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00O0HZ9r020321;
-        Fri, 24 Jan 2020 00:17:35 GMT
+        Fri, 24 Jan 2020 00:17:43 +0000
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00O0Hf7v031002;
+        Fri, 24 Jan 2020 00:17:41 GMT
 Received: from localhost (/10.145.179.16)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 23 Jan 2020 16:17:35 -0800
-Subject: [PATCH 1/6] mkfs: check root inode location
+        with ESMTP ; Thu, 23 Jan 2020 16:17:41 -0800
+Subject: [PATCH 2/6] xfs_repair: enforce that inode btree chunks can't point
+ to AG headers
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org, alex@zadara.com
-Date:   Thu, 23 Jan 2020 16:17:32 -0800
-Message-ID: <157982505230.2765631.2328249334657581135.stgit@magnolia>
+Date:   Thu, 23 Jan 2020 16:17:39 -0800
+Message-ID: <157982505923.2765631.10587375380960098225.stgit@magnolia>
 In-Reply-To: <157982504556.2765631.630298760136626647.stgit@magnolia>
 References: <157982504556.2765631.630298760136626647.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,83 +81,98 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Make sure the root inode gets created where repair thinks it should be
-created.
+xfs_repair has a very old check that evidently excuses the AG 0 inode
+btrees pointing to blocks that are already marked XR_E_INUSE_FS* (e.g.
+AG headers).  mkfs never formats filesystems that way and it looks like
+an error, so purge the check.  After this, we always complain if inodes
+overlap with AG headers because that should never happen.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/libxfs_api_defs.h |    1 +
- mkfs/xfs_mkfs.c          |   39 +++++++++++++++++++++++++++++++++------
- 2 files changed, 34 insertions(+), 6 deletions(-)
+ repair/globals.c    |    1 -
+ repair/globals.h    |    1 -
+ repair/scan.c       |   19 -------------------
+ repair/xfs_repair.c |    7 -------
+ 4 files changed, 28 deletions(-)
 
 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index cc7304ad..9ede0125 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -172,6 +172,7 @@
+diff --git a/repair/globals.c b/repair/globals.c
+index dcd79ea4..8a60e706 100644
+--- a/repair/globals.c
++++ b/repair/globals.c
+@@ -73,7 +73,6 @@ int	lost_gquotino;
+ int	lost_pquotino;
  
- #define xfs_ag_init_headers		libxfs_ag_init_headers
- #define xfs_buf_delwri_submit		libxfs_buf_delwri_submit
-+#define xfs_ialloc_calc_rootino		libxfs_ialloc_calc_rootino
+ xfs_agino_t	first_prealloc_ino;
+-xfs_agino_t	last_prealloc_ino;
+ xfs_agblock_t	bnobt_root;
+ xfs_agblock_t	bcntbt_root;
+ xfs_agblock_t	inobt_root;
+diff --git a/repair/globals.h b/repair/globals.h
+index 008bdd90..2ed5c894 100644
+--- a/repair/globals.h
++++ b/repair/globals.h
+@@ -114,7 +114,6 @@ extern int		lost_gquotino;
+ extern int		lost_pquotino;
  
- #define xfs_refcountbt_calc_reserves	libxfs_refcountbt_calc_reserves
- #define xfs_finobt_calc_reserves	libxfs_finobt_calc_reserves
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 784fe6a9..91a25bf5 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -3549,6 +3549,38 @@ rewrite_secondary_superblocks(
- 	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
- }
+ extern xfs_agino_t	first_prealloc_ino;
+-extern xfs_agino_t	last_prealloc_ino;
+ extern xfs_agblock_t	bnobt_root;
+ extern xfs_agblock_t	bcntbt_root;
+ extern xfs_agblock_t	inobt_root;
+diff --git a/repair/scan.c b/repair/scan.c
+index c383f3aa..05707dd2 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -1645,13 +1645,6 @@ scan_single_ino_chunk(
+ 				break;
+ 			case XR_E_INUSE_FS:
+ 			case XR_E_INUSE_FS1:
+-				if (agno == 0 &&
+-				    ino + j >= first_prealloc_ino &&
+-				    ino + j < last_prealloc_ino) {
+-					set_bmap(agno, agbno, XR_E_INO);
+-					break;
+-				}
+-				/* fall through */
+ 			default:
+ 				/* XXX - maybe should mark block a duplicate */
+ 				do_warn(
+@@ -1782,18 +1775,6 @@ _("inode chunk claims untracked block, finobt block - agno %d, bno %d, inopb %d\
+ 				break;
+ 			case XR_E_INUSE_FS:
+ 			case XR_E_INUSE_FS1:
+-				if (agno == 0 &&
+-				    ino + j >= first_prealloc_ino &&
+-				    ino + j < last_prealloc_ino) {
+-					do_warn(
+-_("inode chunk claims untracked block, finobt block - agno %d, bno %d, inopb %d\n"),
+-						agno, agbno, mp->m_sb.sb_inopblock);
+-
+-					set_bmap(agno, agbno, XR_E_INO);
+-					suspect++;
+-					break;
+-				}
+-				/* fall through */
+ 			default:
+ 				do_warn(
+ _("inode chunk claims used block, finobt block - agno %d, bno %d, inopb %d\n"),
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 9295673d..3e9059f3 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -460,13 +460,6 @@ calc_mkfs(xfs_mount_t *mp)
+ 		first_prealloc_ino = XFS_AGB_TO_AGINO(mp, fino_bno);
+ 	}
  
-+static void
-+check_root_ino(
-+	struct xfs_mount	*mp)
-+{
-+	xfs_ino_t		ino;
-+
-+	if (XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino) != 0) {
-+		fprintf(stderr,
-+			_("%s: root inode created in AG %u, not AG 0\n"),
-+			progname, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino));
-+		exit(1);
-+	}
-+
-+	/*
-+	 * The superblock points to the root directory inode, but xfs_repair
-+	 * expects to find the root inode in a very specific location computed
-+	 * from the filesystem geometry for an extra level of verification.
-+	 *
-+	 * Fail the format immediately if those assumptions ever break, because
-+	 * repair will toss the root directory.
-+	 */
-+	ino = libxfs_ialloc_calc_rootino(mp, mp->m_sb.sb_unit);
-+	if (mp->m_sb.sb_rootino != ino) {
-+		fprintf(stderr,
-+	_("%s: root inode (%llu) not allocated in expected location (%llu)\n"),
-+			progname,
-+			(unsigned long long)mp->m_sb.sb_rootino,
-+			(unsigned long long)ino);
-+		exit(1);
-+	}
-+}
-+
- int
- main(
- 	int			argc,
-@@ -3835,12 +3867,7 @@ main(
+-	ASSERT(M_IGEO(mp)->ialloc_blks > 0);
+-
+-	if (M_IGEO(mp)->ialloc_blks > 1)
+-		last_prealloc_ino = first_prealloc_ino + XFS_INODES_PER_CHUNK;
+-	else
+-		last_prealloc_ino = XFS_AGB_TO_AGINO(mp, fino_bno + 1);
+-
  	/*
- 	 * Protect ourselves against possible stupidity
+ 	 * now the first 3 inodes in the system
  	 */
--	if (XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino) != 0) {
--		fprintf(stderr,
--			_("%s: root inode created in AG %u, not AG 0\n"),
--			progname, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino));
--		exit(1);
--	}
-+	check_root_ino(mp);
- 
- 	/*
- 	 * Re-write multiple secondary superblocks with rootinode field set
 
