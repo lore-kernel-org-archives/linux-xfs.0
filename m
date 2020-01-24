@@ -6,37 +6,37 @@ X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EC3EC35240
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 00:50:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD44BC35240
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 00:53:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 27693206D4
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 00:50:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A63EC2071E
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 00:53:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729762AbgAXAuh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Jan 2020 19:50:37 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:40002 "EHLO
+        id S1729162AbgAXAxm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Jan 2020 19:53:42 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:60286 "EHLO
         mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729425AbgAXAuh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jan 2020 19:50:37 -0500
+        by vger.kernel.org with ESMTP id S1729153AbgAXAxm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jan 2020 19:53:42 -0500
 Received: from dread.disaster.area (pa49-195-162-125.pa.nsw.optusnet.com.au [49.195.162.125])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id C5D9C3A2406;
-        Fri, 24 Jan 2020 11:50:35 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id E91CC3A4466;
+        Fri, 24 Jan 2020 11:53:39 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1iunBD-0008Oz-Ad; Fri, 24 Jan 2020 11:50:35 +1100
-Date:   Fri, 24 Jan 2020 11:50:35 +1100
+        id 1iunEA-0008PN-8c; Fri, 24 Jan 2020 11:53:38 +1100
+Date:   Fri, 24 Jan 2020 11:53:38 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org, hch@infradead.org,
         Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 03/12] xfs: make xfs_buf_get return an error code
-Message-ID: <20200124005035.GD7090@dread.disaster.area>
+Subject: Re: [PATCH 04/12] xfs: make xfs_buf_get_uncached return an error code
+Message-ID: <20200124005338.GE7090@dread.disaster.area>
 References: <157976531016.2388944.3654360225810285604.stgit@magnolia>
- <157976532968.2388944.18228178704570234587.stgit@magnolia>
+ <157976533613.2388944.1351398727913366535.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <157976532968.2388944.18228178704570234587.stgit@magnolia>
+In-Reply-To: <157976533613.2388944.1351398727913366535.stgit@magnolia>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
@@ -49,16 +49,16 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 22, 2020 at 11:42:09PM -0800, Darrick J. Wong wrote:
+On Wed, Jan 22, 2020 at 11:42:16PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Convert xfs_buf_get() to return numeric error codes like most
+> Convert xfs_buf_get_uncached() to return numeric error codes like most
 > everywhere else in xfs.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Same API change as xfs_buf_read(), makes sense.
+looks good,
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 -- 
