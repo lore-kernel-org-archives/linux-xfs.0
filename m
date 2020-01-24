@@ -7,58 +7,57 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA773C35240
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 00:18:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4AC6C35240
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 00:18:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B763E21569
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 00:18:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 909BA2071E
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 00:18:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IMZw5GRe"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ffDgloUW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729149AbgAXASK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Jan 2020 19:18:10 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:56252 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726584AbgAXASK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jan 2020 19:18:10 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00O08mQ8002813;
-        Fri, 24 Jan 2020 00:18:08 GMT
+        id S1729277AbgAXASo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Jan 2020 19:18:44 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:34340 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726584AbgAXASo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jan 2020 19:18:44 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00O08r6p182936;
+        Fri, 24 Jan 2020 00:18:42 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=tfb+mOaTHUDN4882XgkvjbPShz2zxmMV461ap3Y6Qos=;
- b=IMZw5GRe/HDSyIt38FTENP0zJZkuYfd4KXvLl2ArnVNsOGq8XcpSalDQYdqif2ZDhO9s
- JWocCGobD297P/J05TqRFJxmimbA6lDUVdhSmCR4q7b99TYiTS5a7yfrx+O24uPnCBBc
- 0zPyjtKwHzrtc3oKAbQS2FXvCgvkN+6y+bLqsoMuSPgidJ0re0Wl4VQsYQcFh54ECnk5
- DU8gf0igK4OGlcvk3WJX9RhWVXXBbCAT1HOwNC7ooHaQrRHu2Q9EJdarEdTSZNRIV+LU
- mFcBa16qm1KJJ/FZWGUnDfElrcP8KLdacIVX34TEdWZgqIl1bsLyWYa4cXqooR8NKRfY bA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2xktnrnn4t-1
+ bh=l6YttYBI5+Vagm6LiwE+vW/MFl/6//TJhcXrZU9Q204=;
+ b=ffDgloUW53vgV7yF639ku9qFgLrvc+bRJTPRBLCMTgjOCFRzTA/PbF095seSsQDw3cw0
+ PhSHBxRIx21LFH4nbh1Oy4B63N46ITrzxInt0kY+iRYJ4z3xhrSND8xAFpdaee3oQjzN
+ HPmwOV2OPFuOEzjeIPvHCir8CWEvU3eeoV0+3SDqu/XnS5RypcjaCzeJeuLsabmPGr4k
+ em/ESwP3VraepDa5DhVPObwJwiS79T2zSMszFRR2A7OQAj6qBDHgv+Eb+cHzH/rEM7ns
+ SCu8olu34SSdLSv2geTYSqNXgScJ0xwaGanXHFn6IehXRE2Z69GtkdzRXdVJIHmNVZzz Rw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 2xksyqns9p-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 24 Jan 2020 00:18:08 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00O0Eb2N145960;
-        Fri, 24 Jan 2020 00:18:07 GMT
+        Fri, 24 Jan 2020 00:18:42 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00O0DWQA037212;
+        Fri, 24 Jan 2020 00:16:41 GMT
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 2xqmudkvrs-1
+        by userp3030.oracle.com with ESMTP id 2xqmuxkgwq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 24 Jan 2020 00:18:07 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00O0I6D2031252;
-        Fri, 24 Jan 2020 00:18:06 GMT
+        Fri, 24 Jan 2020 00:16:41 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00O0GeMB030363;
+        Fri, 24 Jan 2020 00:16:40 GMT
 Received: from localhost (/10.145.179.16)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 23 Jan 2020 16:18:05 -0800
-Subject: [PATCH 6/6] xfs_repair: try to correct sb_unit value from
- secondaries
+        with ESMTP ; Thu, 23 Jan 2020 16:16:40 -0800
+Subject: [PATCH 1/8] man: list xfs_io lsattr inode flag letters
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, alex@zadara.com
-Date:   Thu, 23 Jan 2020 16:18:03 -0800
-Message-ID: <157982508365.2765631.12815545024134566792.stgit@magnolia>
-In-Reply-To: <157982504556.2765631.630298760136626647.stgit@magnolia>
-References: <157982504556.2765631.630298760136626647.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org
+Date:   Thu, 23 Jan 2020 16:16:38 -0800
+Message-ID: <157982499817.2765410.16336840066253160007.stgit@magnolia>
+In-Reply-To: <157982499185.2765410.18206322669640988643.stgit@magnolia>
+References: <157982499185.2765410.18206322669640988643.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -81,123 +80,122 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-If the primary superblock's sb_unit leads to a rootino calculation that
-doesn't match sb_rootino /but/ we can find a secondary superblock whose
-sb_unit does match, fix the primary.
+The section of the xfs_io manpage for the 'chattr' command says to refer
+to xfsctl(3) for information on the flags.  The inode flag information
+was moved to ioctl_xfs_fssetxattr(2) ages ago, and it never actually
+mapped the inode flag letters to inode flag bits, so fix the link and
+add such a mapping to the xfs_io manpage.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/libxfs_api_defs.h |    1 +
- repair/xfs_repair.c      |   79 ++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 80 insertions(+)
+ man/man8/xfs_io.8 |   89 +++++++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 83 insertions(+), 6 deletions(-)
 
 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index 9ede0125..d9f497e0 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -178,5 +178,6 @@
- #define xfs_finobt_calc_reserves	libxfs_finobt_calc_reserves
- #define xfs_rmapbt_calc_reserves	libxfs_rmapbt_calc_reserves
- #define xfs_read_agf			libxfs_read_agf
-+#define xfs_sb_read_secondary		libxfs_sb_read_secondary
- 
- #endif /* __LIBXFS_API_DEFS_H__ */
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 372616c4..66e2c335 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -457,6 +457,84 @@ has_plausible_rootdir(
- 	return ret;
- }
- 
-+/*
-+ * If any of the secondary SBs contain a *correct* value for sunit, write that
-+ * back to the primary superblock.
-+ */
-+static void
-+guess_correct_sunit(
-+	struct xfs_mount	*mp)
-+{
-+	struct xfs_sb		sb;
-+	struct xfs_buf		*bp;
-+	xfs_ino_t		calc_rootino = NULLFSINO;
-+	xfs_agnumber_t		agno;
-+	unsigned int		new_sunit;
-+	unsigned int		sunit_guess;
-+	int			error;
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index c69b295d..f5431a8c 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -794,18 +794,95 @@ for all directory entries below the currently open file
+ can be used to restrict the output to directories only).
+ This is a depth first descent, it does not follow symlinks and
+ it also does not cross mount points.
 +
-+	/* Try reading secondary supers to see if we find a good sb_unit. */
-+	for (agno = 1; agno < mp->m_sb.sb_agcount; agno++) {
-+		error = -libxfs_sb_read_secondary(mp, NULL, agno, &bp);
-+		if (error)
-+			continue;
-+		libxfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp));
-+		libxfs_putbuf(bp);
++The current inode flag letters are documented below.
++Please refer to the
++.BR ioctl_xfs_fsgetxattr "(2)"
++documentation for more details about what they mean.
 +
-+		calc_rootino = libxfs_ialloc_calc_rootino(mp, sb.sb_unit);
-+		if (calc_rootino == mp->m_sb.sb_rootino)
-+			break;
-+	}
++.PD 0
++.RS
++.TP 0.5i
++.B r
++realtime file (XFS_XFLAG_REALTIME)
 +
-+	/* If we found a reasonable value, log where we found it. */
-+	if (calc_rootino == mp->m_sb.sb_rootino) {
-+		do_warn(_("AG %u superblock contains plausible sb_unit value\n"),
-+				agno);
-+		new_sunit = sb.sb_unit;
-+		goto fix;
-+	}
++.TP
++.B p
++prealloc (XFS_XFLAG_PREALLOC)
 +
-+	/* Try successive powers of two. */
-+	for (sunit_guess = 1;
-+	     sunit_guess <= XFS_AG_MAX_BLOCKS(mp->m_sb.sb_blocklog);
-+	     sunit_guess *= 2) {
-+		calc_rootino = libxfs_ialloc_calc_rootino(mp, sunit_guess);
-+		if (calc_rootino == mp->m_sb.sb_rootino)
-+			break;
-+	}
++.TP
++.B i
++immutable (XFS_XFLAG_IMMUTABLE)
 +
-+	/* If we found a reasonable value, log where we found it. */
-+	if (calc_rootino == mp->m_sb.sb_rootino) {
-+		do_warn(_("Found an sb_unit value that looks plausible\n"));
-+		new_sunit = sunit_guess;
-+		goto fix;
-+	}
++.TP
++.B a
++append only (XFS_XFLAG_APPEND)
 +
-+	do_warn(_("Could not estimate a plausible sb_unit value\n"));
-+	return;
++.TP
++.B s
++synchronous file writes (XFS_XFLAG_SYNC)
 +
-+fix:
-+	if (!no_modify)
-+		do_warn(_("Resetting sb_unit to %u\n"), new_sunit);
-+	else
-+		do_warn(_("Would reset sb_unit to %u\n"), new_sunit);
++.TP
++.B A
++noatime (XFS_XFLAG_NOATIME)
 +
-+	/*
-+	 * Just set the value -- safe since the superblock doesn't get flushed
-+	 * out if no_modify is set.
-+	 */
-+	mp->m_sb.sb_unit = new_sunit;
++.TP
++.B d
++nodump (XFS_XFLAG_NODUMP)
 +
-+	/* Make sure that swidth is still a multiple of sunit. */
-+	if (mp->m_sb.sb_width % mp->m_sb.sb_unit == 0)
-+		return;
++.TP
++.B t
++inherit realtime flag (XFS_XFLAG_RTINHERIT)"
 +
-+	if (!no_modify)
-+		do_warn(_("Resetting sb_width to %u\n"), new_sunit);
-+	else
-+		do_warn(_("Would reset sb_width to %u\n"), new_sunit);
-+}
++.TP
++.B P
++inherit project id (XFS_XFLAG_PROJINHERIT)
 +
- /*
-  * Make sure that the first 3 inodes in the filesystem are the root directory,
-  * the realtime bitmap, and the realtime summary, in that order.
-@@ -480,6 +558,7 @@ calc_mkfs(
- 		do_warn(
- _("sb root inode value %" PRIu64 " inconsistent with alignment (expected %"PRIu64")\n"),
- 			mp->m_sb.sb_rootino, rootino);
-+		guess_correct_sunit(mp);
- 		rootino = mp->m_sb.sb_rootino;
- 	}
- 
++.TP
++.B n
++no symlink creation (XFS_XFLAG_NOSYMLINKS)
++
++.TP
++.B e
++extent size hint (XFS_XFLAG_EXTSIZE)
++
++.TP
++.B E
++inherit extent size hint (XFS_XFLAG_EXTSZINHERIT)
++
++.TP
++.B f
++nodefrag (XFS_XFLAG_NODEFRAG)
++
++.TP
++.B S
++filestream allocator (XFS_XFLAG_FILESTREAM)
++
++.TP
++.B x
++direct access persistent memory (XFS_XFLAG_DAX)
++
++.TP
++.B C
++copy on write extent hint (XFS_XFLAG_COWEXTSIZE)
++
++.TP
++.B X
++has extended attributes (XFS_XFLAG_HASATTR)
++.RE
++
+ .TP
+ .BR chattr " [ " \-R " | " \-D " ] [ " + / \-riasAdtPneEfSxC " ]"
+ Change extended inode flags on the currently open file. The
+ .B \-R
+ and
+ .B \-D
+-options have the same meaning as above. The mapping between each
+-letter and the inode flags (refer to
+-.BR xfsctl (3)
+-for the full list) is available via the
+-.B help
+-command.
++options have the same meaning as above.
++
++See the
++.B lsattr
++command above for the list of inode flag letters.
++
+ .TP
+ .BI "flink " path
+ Link the currently open file descriptor into the filesystem namespace.
 
