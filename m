@@ -2,74 +2,76 @@ Return-Path: <SRS0=JklA=3N=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 481E6C35240
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 00:17:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE13DC35240
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 00:17:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0A61B214AF
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 00:17:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE2BF2071E
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 00:17:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Qf6wgEpj"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="oxMjmvYJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729470AbgAXARL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Jan 2020 19:17:11 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:34122 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727056AbgAXARL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jan 2020 19:17:11 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00O0935v024877;
-        Fri, 24 Jan 2020 00:17:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=vQYVkEaYryusdXge9Qv1MuafSuAS/FAZpkViHXYIrl4=;
- b=Qf6wgEpjuwq/U12ozPsSpbs+OpHKXPRVG0eHoMr/wTXaLRBCeUxPjNY553nIDgZOCSLO
- k12A3J+fL3ptbAc2e0fyfYiBA0hDD0DtSQ2bZScPlm0Yqacu0JjzUytEkhwEWLgrHZ6U
- ij/Mb9EvUMw9pE9iIWNbu3B/n4wv3o8j7JU9sjHgW2fgIQYCJuewkKipo57H0DbAzx56
- onGXMeLAspPqrhwSJRqVhhTfGKp+QlunoLe0h71P51uHt4rwfBOiXFoL7IxpdszulpoL
- abMb7PsRyRqnJDTsUum0KA9h38U3fbY3FWE3ggMAMS3sAvR/6HHngblUUqL3Rhj0Ob8E GQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2xkseuwvv8-1
+        id S1729534AbgAXARN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Jan 2020 19:17:13 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:55358 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727056AbgAXARN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jan 2020 19:17:13 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00O09ADE002995;
+        Fri, 24 Jan 2020 00:17:04 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=q+Tujqdp9AWsXjVag5QItddq8EVuFuYRcSwkIJKEjPA=;
+ b=oxMjmvYJ33+OLJqC18QBwO/JeVEH/0dHY3/8I7PQFaMvHvxFRgP/SfqNYiaexECboHpO
+ y90ci37nyz0BWuwt4gwzfeYfP6VkDqfSBgC7R+H73LJUK/roY2F5BZ4mwVnX6YFZF23X
+ L/5Kc3Is30mwlrQyLol18Vo0kMOYIAM9Blr6z7BpGgp3J9cKMBDUmfd2OcV/EqEpXAXO
+ /mIty1cWnERa0tUP7q8UWf8BpYRMNlDmwtw4SI1M9BJL7GfGyDk0p+doDo51A/aVjCQo
+ r19N7stI7v24VlhA0IhwUuNxqD5gV2n0y6yFKtITqWZSuxnzFnDj+oZrxuh96rh3QiQ+ EQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 2xktnrnn0n-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 24 Jan 2020 00:17:08 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00O0Eafv156543;
-        Fri, 24 Jan 2020 00:17:08 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 2xqnrs0avq-1
+        Fri, 24 Jan 2020 00:17:03 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00O0E6WI111085;
+        Fri, 24 Jan 2020 00:17:03 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 2xqmwb1cwr-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 24 Jan 2020 00:17:08 +0000
+        Fri, 24 Jan 2020 00:17:03 +0000
 Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00O0H7XH007678;
-        Fri, 24 Jan 2020 00:17:07 GMT
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00O0H1n0030601;
+        Fri, 24 Jan 2020 00:17:01 GMT
 Received: from localhost (/10.145.179.16)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 23 Jan 2020 16:17:07 -0800
-Subject: [PATCH 5/8] xfs_db: dump per-AG reservations
+        with ESMTP ; Thu, 23 Jan 2020 16:17:01 -0800
+Date:   Thu, 23 Jan 2020 16:16:58 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     sandeen@sandeen.net, darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 23 Jan 2020 16:17:05 -0800
-Message-ID: <157982502518.2765410.15232492114026905479.stgit@magnolia>
-In-Reply-To: <157982499185.2765410.18206322669640988643.stgit@magnolia>
-References: <157982499185.2765410.18206322669640988643.stgit@magnolia>
-User-Agent: StGit/0.17.1-dirty
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH 02/12] xfs: make xfs_buf_read return an error code
+Message-ID: <20200124001658.GX8247@magnolia>
+References: <157976531016.2388944.3654360225810285604.stgit@magnolia>
+ <157976532333.2388944.17938500318924937596.stgit@magnolia>
+ <20200123222015.GA15904@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200123222015.GA15904@infradead.org>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9509 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1911140001 definitions=main-2001240000
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9509 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
  definitions=main-2001240000
@@ -78,174 +80,87 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Jan 23, 2020 at 02:20:15PM -0800, Christoph Hellwig wrote:
+> On Wed, Jan 22, 2020 at 11:42:03PM -0800, Darrick J. Wong wrote:
+> > -				return -ENOMEM;
+> > +			error = xfs_buf_read(mp->m_ddev_targp, dblkno, dblkcnt,
+> > +					0, &bp, &xfs_attr3_rmt_buf_ops);
+> > +			if (error)
+> > +				return error;
+> >  			error = bp->b_error;
+> >  			if (error) {
+> >  				xfs_buf_ioerror_alert(bp, __func__);
+> 
+> This still has the bogus b_error check where it should just check the
+> error and report it based on the return value.
 
-Add a new 'agresv' command to print the size and free blocks count of an
-AG along with the size and usage of the per-AG reservation.  This
-command can be used to aid in diagnosing why a particular filesystem
-fails the mount time per-AG space reservation, and to figure out how
-much space needs to be freed from a given AG to fix the problem.
+Yes, because at this point midway through the series xfs_buf_read only
+knows how to return -ENOMEM.  I'm changing the *interfaces* here, saving
+most of the behavior changes for the xfs_buf_read_map change...
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- db/info.c                |  104 ++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/libxfs_api_defs.h |    5 ++
- man/man8/xfs_db.8        |    5 ++
- 3 files changed, 114 insertions(+)
+> > diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> > index 56e081dd1d96..fb60c36a8a5b 100644
+> > --- a/fs/xfs/xfs_buf.h
+> > +++ b/fs/xfs/xfs_buf.h
+> > @@ -213,16 +213,25 @@ xfs_buf_get(
+> >  	return xfs_buf_get_map(target, &map, 1, 0);
+> >  }
+> >  
+> > -static inline struct xfs_buf *
+> > +static inline int
+> >  xfs_buf_read(
+> >  	struct xfs_buftarg	*target,
+> >  	xfs_daddr_t		blkno,
+> >  	size_t			numblks,
+> >  	xfs_buf_flags_t		flags,
+> > +	struct xfs_buf		**bpp,
+> >  	const struct xfs_buf_ops *ops)
+> >  {
+> > +	struct xfs_buf		*bp;
+> >  	DEFINE_SINGLE_BUF_MAP(map, blkno, numblks);
+> > -	return xfs_buf_read_map(target, &map, 1, flags, ops);
+> > +
+> > +	*bpp = NULL;
+> > +	bp = xfs_buf_read_map(target, &map, 1, flags, ops);
+> > +	if (!bp)
+> > +		return -ENOMEM;
+> > +
+> > +	*bpp = bp;
 
+...because otherwise I end having to migrate all the bp->b_error
+checking into this static inline function, which causes compile errors.
 
-diff --git a/db/info.c b/db/info.c
-index e5f1c2dd..fc5ccfe7 100644
---- a/db/info.c
-+++ b/db/info.c
-@@ -8,6 +8,7 @@
- #include "init.h"
- #include "output.h"
- #include "libfrog/fsgeom.h"
-+#include "libfrog/logging.h"
- 
- static void
- info_help(void)
-@@ -45,8 +46,111 @@ static const struct cmdinfo info_cmd = {
- 	.help =		info_help,
- };
- 
-+static void
-+agresv_help(void)
-+{
-+	dbprintf(_(
-+"\n"
-+" Print the size and per-AG reservation information some allocation groups.\n"
-+"\n"
-+" Specific allocation group numbers can be provided as command line arguments.\n"
-+" If no arguments are provided, all allocation groups are iterated.\n"
-+"\n"
-+));
-+
-+}
-+
-+static void
-+print_agresv_info(
-+	xfs_agnumber_t	agno)
-+{
-+	struct xfs_buf	*bp;
-+	struct xfs_agf	*agf;
-+	xfs_extlen_t	ask = 0;
-+	xfs_extlen_t	used = 0;
-+	xfs_extlen_t	free = 0;
-+	xfs_extlen_t	length = 0;
-+	int		error;
-+
-+	error = -libxfs_refcountbt_calc_reserves(mp, NULL, agno, &ask, &used);
-+	if (error)
-+		xfrog_perror(error, "refcountbt");
-+	error = -libxfs_finobt_calc_reserves(mp, NULL, agno, &ask, &used);
-+	if (error)
-+		xfrog_perror(error, "finobt");
-+	error = -libxfs_rmapbt_calc_reserves(mp, NULL, agno, &ask, &used);
-+	if (error)
-+		xfrog_perror(error, "rmapbt");
-+
-+	error = -libxfs_read_agf(mp, NULL, agno, 0, &bp);
-+	if (error)
-+		xfrog_perror(error, "AGF");
-+	agf = XFS_BUF_TO_AGF(bp);
-+	length = be32_to_cpu(agf->agf_length);
-+	free = be32_to_cpu(agf->agf_freeblks) +
-+	       be32_to_cpu(agf->agf_flcount);
-+	libxfs_putbuf(bp);
-+
-+	printf("AG %d: length: %u free: %u reserved: %u used: %u",
-+			agno, length, free, ask, used);
-+	if (ask - used > free)
-+		printf(" <not enough space>");
-+	printf("\n");
-+}
-+
-+static int
-+agresv_f(
-+	int			argc,
-+	char			**argv)
-+{
-+	xfs_agnumber_t		agno;
-+	int			i;
-+
-+	if (argc > 1) {
-+		for (i = 1; i < argc; i++) {
-+			long	a;
-+			char	*p;
-+
-+			errno = 0;
-+			a = strtol(argv[i], &p, 0);
-+			if (p == argv[i])
-+				errno = ERANGE;
-+			if (errno) {
-+				perror(argv[i]);
-+				continue;
-+			}
-+
-+			if (a < 0 || a >= mp->m_sb.sb_agcount) {
-+				fprintf(stderr, "%ld: Not a AG.\n", a);
-+				continue;
-+			}
-+
-+			print_agresv_info(a);
-+		}
-+		return 0;
-+	}
-+
-+	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++)
-+		print_agresv_info(agno);
-+
-+	return 0;
-+}
-+
-+static const struct cmdinfo agresv_cmd = {
-+	.name =		"agresv",
-+	.altname =	NULL,
-+	.cfunc =	agresv_f,
-+	.argmin =	0,
-+	.argmax =	-1,
-+	.canpush =	0,
-+	.args =		NULL,
-+	.oneline =	N_("print AG reservation stats"),
-+	.help =		agresv_help,
-+};
-+
- void
- info_init(void)
- {
- 	add_command(&info_cmd);
-+	add_command(&agresv_cmd);
- }
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index eed63ace..cc7304ad 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -173,4 +173,9 @@
- #define xfs_ag_init_headers		libxfs_ag_init_headers
- #define xfs_buf_delwri_submit		libxfs_buf_delwri_submit
- 
-+#define xfs_refcountbt_calc_reserves	libxfs_refcountbt_calc_reserves
-+#define xfs_finobt_calc_reserves	libxfs_finobt_calc_reserves
-+#define xfs_rmapbt_calc_reserves	libxfs_rmapbt_calc_reserves
-+#define xfs_read_agf			libxfs_read_agf
-+
- #endif /* __LIBXFS_API_DEFS_H__ */
-diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index 9f1ff761..7f73d458 100644
---- a/man/man8/xfs_db.8
-+++ b/man/man8/xfs_db.8
-@@ -179,6 +179,11 @@ Set current address to the AGI block for allocation group
- .IR agno .
- If no argument is given, use the current allocation group.
- .TP
-+.BI "agresv [" agno ]
-+Displays the length, free block count, per-AG reservation size, and per-AG
-+reservation usage for a given AG.
-+If no argument is given, display information for all AGs.
-+.TP
- .BI "attr_remove [\-r|\-u|\-s] [\-n] " name
- Remove the specified extended attribute from the current file.
- .RS 1.0i
+I could work around /that/ by moving the xfs_buf_read_map conversion
+earlier in the series, but I'd have to rebase the whole series to
+achieve the same end result, which seems pointless.
 
+But I guess I could go mess around with it and see just how much of a
+pain doing that /actually/ is...
+
+--D
+
+> > +	return 0;
+> >  }
+> >  
+> >  static inline void
+> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> > index 0d683fb96396..b29806846916 100644
+> > --- a/fs/xfs/xfs_log_recover.c
+> > +++ b/fs/xfs/xfs_log_recover.c
+> > @@ -2745,10 +2745,10 @@ xlog_recover_buffer_pass2(
+> >  	if (buf_f->blf_flags & XFS_BLF_INODE_BUF)
+> >  		buf_flags |= XBF_UNMAPPED;
+> >  
+> > -	bp = xfs_buf_read(mp->m_ddev_targp, buf_f->blf_blkno, buf_f->blf_len,
+> > -			  buf_flags, NULL);
+> > -	if (!bp)
+> > -		return -ENOMEM;
+> > +	error = xfs_buf_read(mp->m_ddev_targp, buf_f->blf_blkno, buf_f->blf_len,
+> > +			  buf_flags, &bp, NULL);
+> > +	if (error)
+> > +		return error;
+> >  	error = bp->b_error;
+> >  	if (error) {
+> 
+> .. and same here.
+> 
