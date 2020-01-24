@@ -2,109 +2,171 @@ Return-Path: <SRS0=JklA=3N=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+X-Spam-Status: No, score=-7.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D32BC2D0CE
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 05:24:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23B6FC2D0DB
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 19:52:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C555320718
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 05:24:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E57A920702
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 19:52:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="XhTGPZVC"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="TXdGCjTH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729659AbgAXFYj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Jan 2020 00:24:39 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:60850 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727384AbgAXFYj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Jan 2020 00:24:39 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00O5IW0W059460;
-        Fri, 24 Jan 2020 05:24:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=rLcMyfNrY7uJF+Ux81aRZApbQoVaorKWRTXHRXiTtJc=;
- b=XhTGPZVC/sxKfQ2pptWMi4F4ZSg3CjxA9X7wlntT0/YK6Gz+c7cGSMgtvIzsFm4XTWNx
- d7FdJbroUTA7q49UySJHKOJkXjwCF68qHrQaWWoX9j6HuoEqN9kkU9r1jpcwT+dViZq3
- 5jWVnMH0+WcdXIOIQQEDllTH70bcykn6ryoFWNIHEfRQqw1ldo1F9FZaSaaqdX2UgK7c
- DgTw9sjzOnzLShtPVLSWlASnlFamnuS5y3qaPPB+5BApcqN5cYbGPK0IblKSCYZw03ng
- MiD8NXF6aGl5ci7ZFHv2V1PW88MIEDOvPkV0nAFZ1jFBj32Amd083sJxfXUvjypA6j+c hg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2xkseuy386-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 24 Jan 2020 05:24:35 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00O5IJPw156108;
-        Fri, 24 Jan 2020 05:24:34 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2xqmuy3p4m-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 24 Jan 2020 05:24:34 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00O5OXV1007037;
-        Fri, 24 Jan 2020 05:24:34 GMT
+        id S2391688AbgAXTww (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Jan 2020 14:52:52 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:35276 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2391581AbgAXTww (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Jan 2020 14:52:52 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00OJmCWL118880
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Jan 2020 19:52:50 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : mime-version : content-type; s=corp-2019-08-05;
+ bh=PTw0481zXKgOwxMTotGtpuDh1EDml7rbFDbN0M21itI=;
+ b=TXdGCjTHDlm8Qa98vAtKesfOZncWlLj3/dY2v6CUrGOP8uZehBCYS2dJDbokJsvDku8D
+ 4lhGFN4+6qu7rG4vrnmQhjYeGpr4vbjGjErn3vwqAApdvSKlq3ZCh3MFMR6Mku+eGV2N
+ 8iLZMnDgTwhszw3s21z/B8C+ceBKM3LO4s2G9JyTU0POpnJaUWIwFhwuzT9VW6M4QrKX
+ BnIbsXBxLkApdmo+pdXnJnn4FpLKxTYVH/zzZhvYEbRRY6aV4oXjY2mb0hOHzNe1FGAO
+ CijuUtCAQvutzkEsmxQov0C5n6YqCWrZU5URyghxSlk6SKOMQCQie4wba8dbouHGsR8n NQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2xksyqu28x-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Jan 2020 19:52:50 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00OJmACW054075
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Jan 2020 19:52:50 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 2xqmwh4en2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Jan 2020 19:52:50 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00OJqnOl004904
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Jan 2020 19:52:49 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 23 Jan 2020 21:24:33 -0800
-Date:   Thu, 23 Jan 2020 21:24:32 -0800
+        with ESMTP ; Fri, 24 Jan 2020 11:52:49 -0800
+Date:   Fri, 24 Jan 2020 11:52:48 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     xfs <linux-xfs@vger.kernel.org>
-Cc:     Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH] xfs: remove unnecessary variable
-Message-ID: <20200124052432.GF8247@magnolia>
-References: <20200124052210.GV8257@magnolia>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to b3531f5fc16d
+Message-ID: <20200124195248.GG8247@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200124052210.GV8257@magnolia>
 User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9509 signatures=668685
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9510 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2001240042
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9509 signatures=668685
+ engine=8.0.1-1911140001 definitions=main-2001240162
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9510 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2001240042
+ definitions=main-2001240162
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 23, 2020 at 09:22:10PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Stephen Rothwell reported an unused variable.  Remove it.
-> 
-> Fixes: 4bbb04abb4ee ("xfs: truncate should remove all blocks, not just to the end of the page cache")
-> Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Hi folks,
 
-self NAK, YueHaibing already sent this, which going through bash history
-I evidently misapplied and ... yeah.  I've lost my marbles. :(
+The for-next branch of the xfs-linux repository at:
 
---D
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-> ---
->  fs/xfs/xfs_inode.c |    1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 1309f25c0d2b..1979a0055763 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1520,7 +1520,6 @@ xfs_itruncate_extents_flags(
->  	xfs_fileoff_t		first_unmap_block;
->  	xfs_filblks_t		unmap_len;
->  	int			error = 0;
-> -	int			done = 0;
->  
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
->  	ASSERT(!atomic_read(&VFS_I(ip)->i_count) ||
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+b3531f5fc16d xfs: remove unused variable 'done'
+
+New Commits:
+
+Allison Henderson (1):
+      [d29f781c32b1] xfs: Remove all strlen in all xfs_attr_* functions for attr names.
+
+Arnd Bergmann (2):
+      [3b62f000c86a] xfs: rename compat_time_t to old_time32_t
+      [b8a0880a37e2] xfs: quota: move to time64_t interfaces
+
+Christoph Hellwig (5):
+      [953aa9d136f5] xfs: clear kernel only flags in XFS_IOC_ATTRMULTI_BY_HANDLE
+      [84fd081f8ae9] xfs: reject invalid flags combinations in XFS_IOC_ATTRMULTI_BY_HANDLE
+      [8cde9f259c7d] xfs: also remove cached ACLs when removing the underlying attr
+      [780d29057781] xfs: fix misuse of the XFS_ATTR_INCOMPLETE flag
+      [7b53b868a181] xfs: fix IOCB_NOWAIT handling in xfs_file_dio_aio_read
+
+Darrick J. Wong (12):
+      [7cb41b1d14e1] xfs: remove bogus assertion when online repair isn't enabled
+      [a5084865524d] xfs: introduce XFS_MAX_FILEOFF
+      [4bbb04abb4ee] xfs: truncate should remove all blocks, not just to the end of the page cache
+      [932befe39dde] xfs: fix s_maxbytes computation on 32-bit kernels
+      [8edbb26b0602] xfs: refactor remote attr value buffer invalidation
+      [e8db2aafcedb] xfs: fix memory corruption during remote attr value buffer invalidation
+      [0bb9d159bd01] xfs: streamline xfs_attr3_leaf_inactive
+      [c64dd49b5112] xfs: clean up xfs_buf_item_get_format return value
+      [c3d5f0c2fb85] xfs: complain if anyone tries to create a too-large buffer log item
+      [b7df5e92055c] xfs: make struct xfs_buf_log_format have a consistent size
+      [8a6453a89dc1] xfs: check log iovec size to make sure it's plausibly a buffer log format
+      [54027a49938b] xfs: fix uninitialized variable in xfs_attr3_leaf_inactive
+
+Eric Sandeen (1):
+      [5a57c05b56b6] xfs: remove shadow variable in xfs_btree_lshift
+
+Vincenzo Frascino (1):
+      [ca78eee7b4ac] xfs: Add __packed to xfs_dir2_sf_entry_t definition
+
+YueHaibing (1):
+      [b3531f5fc16d] xfs: remove unused variable 'done'
+
+zhengbin (1):
+      [aa124436f329] xfs: change return value of xfs_inode_need_cow to int
+
+
+Code Diffstat:
+
+ fs/xfs/libxfs/xfs_attr.c        |  14 ++--
+ fs/xfs/libxfs/xfs_attr.h        |  15 ++--
+ fs/xfs/libxfs/xfs_attr_leaf.c   |   4 +-
+ fs/xfs/libxfs/xfs_attr_leaf.h   |   9 ---
+ fs/xfs/libxfs/xfs_attr_remote.c |  89 +++++++++++++++++-------
+ fs/xfs/libxfs/xfs_attr_remote.h |   2 +
+ fs/xfs/libxfs/xfs_btree.c       |   2 -
+ fs/xfs/libxfs/xfs_da_btree.h    |   4 +-
+ fs/xfs/libxfs/xfs_da_format.h   |   4 +-
+ fs/xfs/libxfs/xfs_format.h      |   7 ++
+ fs/xfs/libxfs/xfs_log_format.h  |  19 +++--
+ fs/xfs/scrub/repair.h           |   1 -
+ fs/xfs/xfs_acl.c                |  11 +--
+ fs/xfs/xfs_attr_inactive.c      | 149 ++++++++++++----------------------------
+ fs/xfs/xfs_buf_item.c           |  45 ++++++++----
+ fs/xfs/xfs_buf_item.h           |   1 +
+ fs/xfs/xfs_dquot.c              |   6 +-
+ fs/xfs/xfs_file.c               |   7 +-
+ fs/xfs/xfs_inode.c              |  25 ++++---
+ fs/xfs/xfs_ioctl.c              |  20 +++++-
+ fs/xfs/xfs_ioctl32.c            |   9 ++-
+ fs/xfs/xfs_ioctl32.h            |   2 +-
+ fs/xfs/xfs_iomap.c              |   2 +-
+ fs/xfs/xfs_iops.c               |   6 +-
+ fs/xfs/xfs_log_recover.c        |   6 ++
+ fs/xfs/xfs_ondisk.h             |   1 +
+ fs/xfs/xfs_qm.h                 |   6 +-
+ fs/xfs/xfs_quotaops.c           |   6 +-
+ fs/xfs/xfs_reflink.c            |   9 +--
+ fs/xfs/xfs_reflink.h            |   2 +-
+ fs/xfs/xfs_super.c              |  48 ++++++-------
+ fs/xfs/xfs_trans_dquot.c        |   8 ++-
+ fs/xfs/xfs_xattr.c              |  14 ++--
+ 33 files changed, 300 insertions(+), 253 deletions(-)
