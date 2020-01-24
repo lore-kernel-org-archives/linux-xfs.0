@@ -2,78 +2,102 @@ Return-Path: <SRS0=JklA=3N=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF194C35240
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 02:07:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61C04C35242
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 02:47:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 989F821D7E
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 02:07:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B84A22464
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 02:47:26 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="gv4AeN+x"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730158AbgAXCHa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Jan 2020 21:07:30 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:43459 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729340AbgAXCHa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jan 2020 21:07:30 -0500
-Received: from dread.disaster.area (pa49-195-162-125.pa.nsw.optusnet.com.au [49.195.162.125])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id CBEBE3A32CD;
-        Fri, 24 Jan 2020 13:07:28 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1iuoNb-0000Wu-RG; Fri, 24 Jan 2020 13:07:27 +1100
-Date:   Fri, 24 Jan 2020 13:07:27 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
-Subject: Re: [PATCH 12/12] xfs: fix xfs_buf_ioerror_alert location reporting
-Message-ID: <20200124020727.GM7090@dread.disaster.area>
-References: <157976531016.2388944.3654360225810285604.stgit@magnolia>
- <157976538741.2388944.8089997383572416484.stgit@magnolia>
+        id S1730357AbgAXCrZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Jan 2020 21:47:25 -0500
+Received: from ozlabs.org ([203.11.71.1]:55203 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730335AbgAXCrZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 23 Jan 2020 21:47:25 -0500
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 483k7t6jNYz9sRY;
+        Fri, 24 Jan 2020 13:47:22 +1100 (AEDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=canb.auug.org.au;
+        s=201702; t=1579834043;
+        bh=dj8Iwj87VCWiUtesjaynCNfCKhgwaWRaTCOP3C4hc4Y=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=gv4AeN+xDmceb4bu8CxcW4GFpKRp9nDryHv7MuOxom6vI2cjW0kvXp5t69PXeTZ05
+         9h/8YVOniuWxgGhAxC/d+OwIZnspZR2ji1ac7V8z19/2b9/GXMUqHv8xBF7zOSbIJw
+         5ZGPJYFhRgcsSPSQ9IdP+2ez1NVZA2gRWnpxKg9vz9V7PFbLvQ3Wu8aN7BSnNoTzYD
+         67tk07aAbSJravq60KVA0EDpWwyecI+bS5qwP+f1uB9Bw3UJaMHTwq+6sCHqap9X1P
+         PpoYiawXNI8XTjIVWrOnhEyv6RmTLJrQ9EWNgsC5DUc1tmCkK3O7/OUKF56X/ek1Wq
+         USjhe7K62SH/Q==
+Date:   Fri, 24 Jan 2020 13:47:22 +1100
+From:   Stephen Rothwell <sfr@canb.auug.org.au>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Cc:     Linux Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: linux-next: build warning after merge of the xfs tree
+Message-ID: <20200124134722.728032e6@canb.auug.org.au>
+In-Reply-To: <20200116091242.087b425e@canb.auug.org.au>
+References: <20200116091242.087b425e@canb.auug.org.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <157976538741.2388944.8089997383572416484.stgit@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
-        a=eqEhQ2W7mF93FbYHClaXRw==:117 a=eqEhQ2W7mF93FbYHClaXRw==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=Jdjhy38mL1oA:10
-        a=yPCof4ZbAAAA:8 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=wMuAIHmlbTaK4TqVxD4A:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: multipart/signed; boundary="Sig_/qouaCh+c4GtccEDBtAbqf3f";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 22, 2020 at 11:43:07PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Instead of passing __func__ to the error reporting function, let's use
-> the return address builtins so that the messages actually tell you which
-> higher level function called the buffer functions.  This was previously
-> true for the xfs_buf_read callers, but not for the xfs_trans_read_buf
-> callers.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_buf.c         |   12 +++++++-----
->  fs/xfs/xfs_buf.h         |    7 ++++---
->  fs/xfs/xfs_buf_item.c    |    2 +-
->  fs/xfs/xfs_log_recover.c |    4 ++--
->  fs/xfs/xfs_trans_buf.c   |    5 +++--
->  5 files changed, 17 insertions(+), 13 deletions(-)
+--Sig_/qouaCh+c4GtccEDBtAbqf3f
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Makes sense, but I have a concern that this series now has added two
-new parameters to the buffer read functions. Perhaps we should consider
-wrapping this all up in an args structure? That's a separate piece
-of work, not for this patchset.
+Hi all
 
-So far this patch,
+On Thu, 16 Jan 2020 09:12:42 +1100 Stephen Rothwell <sfr@canb.auug.org.au> =
+wrote:
+>
+> After merging the xfs tree, today's linux-next build
+> (powerpppc64_defconfig) produced this warning:
+>=20
+> fs/xfs/xfs_inode.c: In function 'xfs_itruncate_extents_flags':
+> fs/xfs/xfs_inode.c:1523:8: warning: unused variable 'done' [-Wunused-vari=
+able]
+>  1523 |  int   done =3D 0;
+>       |        ^~~~
+>=20
+> Introduced by commit
+>=20
+>   4bbb04abb4ee ("xfs: truncate should remove all blocks, not just to the =
+end of the page cache")
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+I am still getting this warning.
+
+
+--=20
+Cheers,
+Stephen Rothwell
+
+--Sig_/qouaCh+c4GtccEDBtAbqf3f
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAl4qWroACgkQAVBC80lX
+0Gz54gf9ExiarEO4lO0WaH0iMdpn0NfB7+5tWK/aJfIQ4coJYqCkszvofEfiagj1
+rBFJ+dV9Pd6jBq8dRUdupGBZ3ia0rkOSPIa0SJPsgHejpv499KBfjb4gSHEbkwMz
+Bb1BabDbhaq1D/4zzDw9uamim/ViIKvvXoMDv9tzgLWT9zuRCcexYCmw3tr6DiPM
+s+nIA1FTnLHRUzaQ4ji3nEeCZFcbGNzo7qwiNU09J0Nvh9VgxUjBTZ65yBNH9OqG
+LBvHAwdHwMquZRLU2QsNHBNVp6ZXJv8lbfKLXk7uAAe+CQX9f438XjDMub4Vw1Nd
+vu5UrmLoh5pGxUicLFt5FRN5N+vPfw==
+=iZ6P
+-----END PGP SIGNATURE-----
+
+--Sig_/qouaCh+c4GtccEDBtAbqf3f--
