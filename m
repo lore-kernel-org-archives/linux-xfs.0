@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F58CC35240
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 00:16:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C437C35240
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 00:17:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7071E21569
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 00:16:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C12132071E
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 00:17:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="I20c5Mou"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BjTTmnod"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729274AbgAXAQv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Jan 2020 19:16:51 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:33826 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729017AbgAXAQv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jan 2020 19:16:51 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00O08kNg024609;
-        Fri, 24 Jan 2020 00:16:49 GMT
+        id S1729505AbgAXARF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Jan 2020 19:17:05 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:60802 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727056AbgAXARF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jan 2020 19:17:05 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00O09MsV183357;
+        Fri, 24 Jan 2020 00:17:02 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=p5WWCQS9/YJVevyQmkRpMF99yu8gjZyqdYBNJMzya7o=;
- b=I20c5MouIybbeifocL7FesRhtMR68ic3nHSwN4OeOM5P42My321aFWC7twmttNGL6hlm
- bei5Rp38t3LcDnq9SQschDeMT6+wr3PGPMe7w/CxJxC2l0Ia+q9Wd/oCoHw8FM9aTNV5
- 9Y+WNoEkKFuJutlbTg48f3W6XDz0Ofj3ek2Uv/b7V+povMzsGv5x5oP+pBvv/Nz6lhcO
- qNSYXe7CtrpCvC6DOxKSn7AgEwhCg26WOpWyWay//xu8W80hk/0FGdH6KZLePBlek2Dw
- Ww1GiGVvrDOABeg3My95z2ZMkeyqAajSOLxC49B48ZYzTCZtMnzcWjW05BmknM+tf6/K 7Q== 
+ bh=C5ipKU4BVGYGQAU07YPaghijI6NUrnGUdQM1nzVPMhE=;
+ b=BjTTmnod3P7MSaQNRqDZ9vLTCMC6j/BdvJgiZT1ccqjsuNmb4f/iWz0Om6+emqgbJdVv
+ zIYpXhicNHSLqaDlQl5MfldmXn2vbTKQbuWxOlZBFuDoNyvIgbnYolDwYYGGMN1VMQKU
+ jGpdCWjJjVUwb7eaTisQegY8Lt9q+JJXRooPiZWsqwjBgNkFV+AgiMiSqQCAdRPzOyWo
+ CYXIzVx1xoxjdAk6dl/bZzHPSVbvfegaeLFs/E0qu/jZ3Fq4JHBR+0MgAPb+mnLtzpfg
+ 1nqGDMqmbcaKins/lItjX/NM9P47qF9qQkyPucgaLOvTf81sfHF/rKmElvbR2FPf+P2q 2g== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2xkseuwvtd-1
+        by aserp2120.oracle.com with ESMTP id 2xksyqns17-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 24 Jan 2020 00:16:49 +0000
+        Fri, 24 Jan 2020 00:17:02 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00O0E65X111077;
-        Fri, 24 Jan 2020 00:16:48 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 2xqmwb1b0r-1
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00O0E4ch110960;
+        Fri, 24 Jan 2020 00:17:02 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 2xqmwb1cup-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 24 Jan 2020 00:16:48 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00O0GlEj030419;
-        Fri, 24 Jan 2020 00:16:47 GMT
+        Fri, 24 Jan 2020 00:17:02 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00O0H1HM020047;
+        Fri, 24 Jan 2020 00:17:01 GMT
 Received: from localhost (/10.145.179.16)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 23 Jan 2020 16:16:46 -0800
-Subject: [PATCH 2/8] man: document the xfs_db btheight command
+        with ESMTP ; Thu, 23 Jan 2020 16:17:00 -0800
+Subject: [PATCH 4/8] man: document some missing xfs_db commands
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 23 Jan 2020 16:16:44 -0800
-Message-ID: <157982500443.2765410.17401149852075835578.stgit@magnolia>
+Date:   Thu, 23 Jan 2020 16:16:56 -0800
+Message-ID: <157982501686.2765410.2779527901724988940.stgit@magnolia>
 In-Reply-To: <157982499185.2765410.18206322669640988643.stgit@magnolia>
 References: <157982499185.2765410.18206322669640988643.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,62 +80,108 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Document the btheight command in xfs_db.
+The 'attr_set', 'attr_remove', and 'logformat' commands in xfs_db were
+not documented.  Add sections about them to the manpage.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- man/man8/xfs_db.8 |   39 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+ db/attrset.c      |    4 ++--
+ man/man8/xfs_db.8 |   58 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 60 insertions(+), 2 deletions(-)
 
 
+diff --git a/db/attrset.c b/db/attrset.c
+index 56972506..8eecf465 100644
+--- a/db/attrset.c
++++ b/db/attrset.c
+@@ -23,11 +23,11 @@ static void		attrset_help(void);
+ 
+ static const cmdinfo_t	attr_set_cmd =
+ 	{ "attr_set", "aset", attr_set_f, 1, -1, 0,
+-	  N_("[-r|-s|-p|-u] [-n] [-R|-C] [-v n] name"),
++	  N_("[-r|-s|-u] [-n] [-R|-C] [-v n] name"),
+ 	  N_("set the named attribute on the current inode"), attrset_help };
+ static const cmdinfo_t	attr_remove_cmd =
+ 	{ "attr_remove", "aremove", attr_remove_f, 1, -1, 0,
+-	  N_("[-r|-s|-p|-u] [-n] name"),
++	  N_("[-r|-s|-u] [-n] name"),
+ 	  N_("remove the named attribute from the current inode"), attrset_help };
+ 
+ static void
 diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index a1ee3514..53e34983 100644
+index 53e34983..9f1ff761 100644
 --- a/man/man8/xfs_db.8
 +++ b/man/man8/xfs_db.8
-@@ -346,6 +346,45 @@ If the cursor points at an inode, dump the extended attribute block mapping btre
- Dump all keys and pointers in intermediate btree nodes, and all records in leaf btree nodes.
- .RE
+@@ -179,6 +179,57 @@ Set current address to the AGI block for allocation group
+ .IR agno .
+ If no argument is given, use the current allocation group.
  .TP
-+.BI "btheight [\-b " blksz "] [\-n " recs "] [\-w " max "|\-w " min "] btree types..."
-+For a given number of btree records and a btree type, report the number of
-+records and blocks for each level of the btree, and the total number of blocks.
-+The btree type must be given after the options.
-+
-+A raw btree geometry can be provided in the format
-+"record_bytes:key_bytes:ptr_bytes:header_type", where header_type is one of
-+"short", "long", "shortcrc", or "longcrc".
-+
-+The supported btree types are:
-+.IR bnobt ,
-+.IR cntbt ,
-+.IR inobt ,
-+.IR finobt ,
-+.IR bmapbt ,
-+.IR refcountbt ,
-+and
-+.IR rmapbt .
-+
-+Options are as follows:
++.BI "attr_remove [\-r|\-u|\-s] [\-n] " name
++Remove the specified extended attribute from the current file.
 +.RS 1.0i
 +.TP 0.4i
-+.B \-b
-+is used to override the btree block size.
-+The default is the filesystem block size.
++.B \-r
++Sets the attribute in the root namespace.
++Only one namespace option can be specified.
++.TP
++.B \-u
++Sets the attribute in the user namespace.
++Only one namespace option can be specified.
++.TP
++.B \-s
++Sets the attribute in the secure namespace.
++Only one namespace option can be specified.
 +.TP
 +.B \-n
-+is used to specify the number of records to store.
-+This argument is required.
-+.TP
-+.B \-w max
-+shows only the best case scenario, which is when the btree blocks are
-+maximally loaded.
-+.TP
-+.B \-w min
-+shows only the worst case scenario, which is when the btree blocks are
-+half full.
++Do not enable 'noattr2' mode on V4 filesystems.
 +.RE
 +.TP
- .B check
++.BI "attr_set [\-r|\-u|\-s] [\-n] [\-R|\-C] [\-v " namelen "] " name
++Sets an extended attribute on the current file with the given name.
++.RS 1.0i
++.TP 0.4i
++.B \-r
++Sets the attribute in the root namespace.
++Only one namespace option can be specified.
++.TP
++.B \-u
++Sets the attribute in the user namespace.
++Only one namespace option can be specified.
++.TP
++.B \-s
++Sets the attribute in the secure namespace.
++Only one namespace option can be specified.
++.TP
++.B \-n
++Do not enable 'noattr2' mode on V4 filesystems.
++.TP
++.B \-R
++Replace the attribute.
++The command will fail if the attribute does not already exist.
++.TP
++.B \-C
++Create the attribute.
++The command will fail if the attribute already exists.
++.TP
++.B \-v
++Set the attribute value to a string of this length containing the letter 'v'.
++.RE
++.TP
+ .B b
  See the
- .B blockget
+ .B back
+@@ -737,6 +788,13 @@ Start logging output to
+ .IR filename ,
+ stop logging, or print the current logging status.
+ .TP
++.BI "logformat [\-c " cycle "] [\-s " sunit "]"
++Reformats the log to the specified log cycle and log stripe unit.
++This has the effect of clearing the log destructively.
++If the log cycle is not specified, the log is reformatted to the current cycle.
++If the log stripe unit is not specified, the stripe unit from the filesystem
++superblock is used.
++.TP
+ .B logres
+ Print transaction reservation size information for each transaction type.
+ This makes it easier to find discrepancies in the reservation calculations
 
