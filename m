@@ -7,57 +7,57 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13F8AC2D0CE
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 05:19:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C89F9C2D0CE
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 05:19:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D50F62071A
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 05:19:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 951E22071A
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 05:19:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="KT3ghPam"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IWaPuz5C"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729144AbgAXFT1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Jan 2020 00:19:27 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:56822 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726296AbgAXFT1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Jan 2020 00:19:27 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00O5IKxH059360;
-        Fri, 24 Jan 2020 05:19:10 GMT
+        id S1729232AbgAXFTh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Jan 2020 00:19:37 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:54600 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726296AbgAXFTh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Jan 2020 00:19:37 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00O5IFGS021867;
+        Fri, 24 Jan 2020 05:19:27 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=lVc9cS9A1jpVeoyEHKptvbvQdC4CXSkIcdclNqQN85E=;
- b=KT3ghPamyeW3u03JwobkNSQzYY/gJcTITIFkD+HF5pacX+ZwkAgTMQKUc59Z50aZ5ND4
- 22Vf8s7IGRwwUVy1DhtklGd184yYFVglHOJwAB+ut/5tJCc1lLiG2b+9Kld9Y1II193L
- nBpyZDIA/8w5bnwxLIC0a/Q7GvvgnZLOUSviQ56BOY+vCOuugzqYEmmSgA75JqxfBfq8
- EoSxXSNjrgOGpO1inz8CqW0B2HDZLEzCw/Wp//FrQsL3ObH5k4/k+b59FBeMMHnkpckI
- AInBnbTfRBFosusd70xWDoVYxAr8ghmwmd2FpULU3Pp+yl6ttLkn2OKy8EIlLU0RHwRV BA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2xkseuy2ra-1
+ bh=o3I9BV+iV6FwksGbnGDSGC+d7wHYbVgAs5L34X1n5FM=;
+ b=IWaPuz5CzAeG679AfL58IHmmfhWRRD9ST0MYT4YrYoovd89OjYxrnAwNv9/5cpq8jq3m
+ 4oSzdXOXpp+9SU9/ux/aL4hr/2hlp/jlZucNu7DqYJRnY1SScCqze3duqy7l0nu1ulZe
+ mgjQ1FzPziNYUvdAy35z0h7/b3UcHehjWocZAzDS1bTJy4MVBXD9bkpE61SzSYxgD0vd
+ NYVkxsNs8CAtI/rrGKPM8UPovqDBkFe+Yzraary3CZ4yAqJqZQfvDkGqpCw5MTCXPzab
+ YWlU+wT6PKCBzpO5xMfKER2ZaqBErIH77KyakGg1FEfCApsGwCAp5bKroewJIxTFXLyF DQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2xksyqpxp1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 24 Jan 2020 05:19:10 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00O5IJjq156043;
-        Fri, 24 Jan 2020 05:19:10 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 2xqmuy38y1-1
+        Fri, 24 Jan 2020 05:19:26 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00O5IB2j081960;
+        Fri, 24 Jan 2020 05:19:26 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 2xqnrsgnuw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 24 Jan 2020 05:19:09 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00O5J397023851;
-        Fri, 24 Jan 2020 05:19:03 GMT
+        Fri, 24 Jan 2020 05:19:25 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00O5JNMn002524;
+        Fri, 24 Jan 2020 05:19:25 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 23 Jan 2020 21:19:03 -0800
-Subject: [PATCH 01/12] xfs: make xfs_buf_alloc return an error code
+        with ESMTP ; Thu, 23 Jan 2020 21:19:23 -0800
+Subject: [PATCH 04/12] xfs: make xfs_buf_get return an error code
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org, hch@infradead.org, david@fromorbit.com,
         Christoph Hellwig <hch@lst.de>,
         Dave Chinner <dchinner@redhat.com>
-Date:   Thu, 23 Jan 2020 21:19:02 -0800
-Message-ID: <157984314232.3139258.11239289713324831090.stgit@magnolia>
+Date:   Thu, 23 Jan 2020 21:19:22 -0800
+Message-ID: <157984316231.3139258.6341693453291427106.stgit@magnolia>
 In-Reply-To: <157984313582.3139258.1136501362141645797.stgit@magnolia>
 References: <157984313582.3139258.1136501362141645797.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -65,13 +65,13 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9509 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=3 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1911140001 definitions=main-2001240042
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9509 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=3 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
  definitions=main-2001240042
@@ -82,86 +82,94 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Convert _xfs_buf_alloc() to return numeric error codes like most
+Convert xfs_buf_get() to return numeric error codes like most
 everywhere else in xfs.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf.c |   21 ++++++++++++---------
- 1 file changed, 12 insertions(+), 9 deletions(-)
+ fs/xfs/libxfs/xfs_attr_remote.c |    6 +++---
+ fs/xfs/libxfs/xfs_sb.c          |    8 ++++----
+ fs/xfs/xfs_buf.h                |   12 ++++--------
+ 3 files changed, 11 insertions(+), 15 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index a0229c368e78..f9a6cf71f4ab 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -198,20 +198,22 @@ xfs_buf_free_maps(
- 	}
- }
+diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+index 88e50e904436..7266e280b3e8 100644
+--- a/fs/xfs/libxfs/xfs_attr_remote.c
++++ b/fs/xfs/libxfs/xfs_attr_remote.c
+@@ -545,9 +545,9 @@ xfs_attr_rmtval_set(
+ 		dblkno = XFS_FSB_TO_DADDR(mp, map.br_startblock),
+ 		dblkcnt = XFS_FSB_TO_BB(mp, map.br_blockcount);
  
--static struct xfs_buf *
-+static int
- _xfs_buf_alloc(
+-		bp = xfs_buf_get(mp->m_ddev_targp, dblkno, dblkcnt);
+-		if (!bp)
+-			return -ENOMEM;
++		error = xfs_buf_get(mp->m_ddev_targp, dblkno, dblkcnt, &bp);
++		if (error)
++			return error;
+ 		bp->b_ops = &xfs_attr3_rmt_buf_ops;
+ 
+ 		xfs_attr_rmtval_copyin(mp, bp, args->dp->i_ino, &offset,
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 0ac69751fe85..6fdd007f81ab 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -985,9 +985,9 @@ xfs_update_secondary_sbs(
+ 	for (agno = 1; agno < mp->m_sb.sb_agcount; agno++) {
+ 		struct xfs_buf		*bp;
+ 
+-		bp = xfs_buf_get(mp->m_ddev_targp,
++		error = xfs_buf_get(mp->m_ddev_targp,
+ 				 XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
+-				 XFS_FSS_TO_BB(mp, 1));
++				 XFS_FSS_TO_BB(mp, 1), &bp);
+ 		/*
+ 		 * If we get an error reading or writing alternate superblocks,
+ 		 * continue.  xfs_repair chooses the "best" superblock based
+@@ -995,12 +995,12 @@ xfs_update_secondary_sbs(
+ 		 * superblocks un-updated than updated, and xfs_repair may
+ 		 * pick them over the properly-updated primary.
+ 		 */
+-		if (!bp) {
++		if (error) {
+ 			xfs_warn(mp,
+ 		"error allocating secondary superblock for ag %d",
+ 				agno);
+ 			if (!saved_error)
+-				saved_error = -ENOMEM;
++				saved_error = error;
+ 			continue;
+ 		}
+ 
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index f58147354b02..c3aa4e322243 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -201,20 +201,16 @@ void xfs_buf_readahead_map(struct xfs_buftarg *target,
+ 			       struct xfs_buf_map *map, int nmaps,
+ 			       const struct xfs_buf_ops *ops);
+ 
+-static inline struct xfs_buf *
++static inline int
+ xfs_buf_get(
  	struct xfs_buftarg	*target,
- 	struct xfs_buf_map	*map,
- 	int			nmaps,
--	xfs_buf_flags_t		flags)
-+	xfs_buf_flags_t		flags,
+ 	xfs_daddr_t		blkno,
+-	size_t			numblks)
++	size_t			numblks,
 +	struct xfs_buf		**bpp)
  {
- 	struct xfs_buf		*bp;
- 	int			error;
- 	int			i;
+-	struct xfs_buf		*bp;
+-	int			error;
+ 	DEFINE_SINGLE_BUF_MAP(map, blkno, numblks);
  
-+	*bpp = NULL;
- 	bp = kmem_zone_zalloc(xfs_buf_zone, KM_NOFS);
- 	if (unlikely(!bp))
+-	error = xfs_buf_get_map(target, &map, 1, 0, &bp);
+-	if (error)
 -		return NULL;
-+		return -ENOMEM;
- 
- 	/*
- 	 * We don't want certain flags to appear in b_flags unless they are
-@@ -239,7 +241,7 @@ _xfs_buf_alloc(
- 	error = xfs_buf_get_maps(bp, nmaps);
- 	if (error)  {
- 		kmem_cache_free(xfs_buf_zone, bp);
--		return NULL;
-+		return error;
- 	}
- 
- 	bp->b_bn = map[0].bm_bn;
-@@ -256,7 +258,8 @@ _xfs_buf_alloc(
- 	XFS_STATS_INC(bp->b_mount, xb_create);
- 	trace_xfs_buf_init(bp, _RET_IP_);
- 
 -	return bp;
-+	*bpp = bp;
-+	return 0;
++	return xfs_buf_get_map(target, &map, 1, 0, bpp);
  }
  
- /*
-@@ -715,8 +718,8 @@ xfs_buf_get_map(
- 		return NULL;
- 	}
- 
--	new_bp = _xfs_buf_alloc(target, map, nmaps, flags);
--	if (unlikely(!new_bp))
-+	error = _xfs_buf_alloc(target, map, nmaps, flags, &new_bp);
-+	if (error)
- 		return NULL;
- 
- 	error = xfs_buf_allocate_memory(new_bp, flags);
-@@ -917,8 +920,8 @@ xfs_buf_get_uncached(
- 	DEFINE_SINGLE_BUF_MAP(map, XFS_BUF_DADDR_NULL, numblks);
- 
- 	/* flags might contain irrelevant bits, pass only what we care about */
--	bp = _xfs_buf_alloc(target, &map, 1, flags & XBF_NO_IOACCT);
--	if (unlikely(bp == NULL))
-+	error = _xfs_buf_alloc(target, &map, 1, flags & XBF_NO_IOACCT, &bp);
-+	if (error)
- 		goto fail;
- 
- 	page_count = PAGE_ALIGN(numblks << BBSHIFT) >> PAGE_SHIFT;
+ static inline struct xfs_buf *
 
