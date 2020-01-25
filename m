@@ -1,152 +1,125 @@
-Return-Path: <SRS0=JklA=3N=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=/U9k=3O=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4712EC2D0CE
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 23:24:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62A3FC2D0CE
+	for <linux-xfs@archiver.kernel.org>; Sat, 25 Jan 2020 01:36:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 175712075D
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jan 2020 23:24:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2CC75222D9
+	for <linux-xfs@archiver.kernel.org>; Sat, 25 Jan 2020 01:36:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="sUs/s7zq"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="u/qkoarH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729346AbgAXXYP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Jan 2020 18:24:15 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:57792 "EHLO
+        id S1729827AbgAYBgA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Jan 2020 20:36:00 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:36760 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729299AbgAXXYP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Jan 2020 18:24:15 -0500
+        with ESMTP id S2387678AbgAYBf7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Jan 2020 20:35:59 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=8RYa4tWJ0hmXteJiscjflORIgOigPAMHYNYzxKBJudM=; b=sUs/s7zqf/pwAeL14SBrl3Fte
-        /baexIql0musXn6xY/Rd/TlIuz98mm8fyujDcW1xwYG67PzvQvoUH6kTbutHFkeRISzh2do/qWZOm
-        5xV5hXX+PgclY+zk1Vl9gHKHcjsVoGoxQ18CFv70LitzjS7iZHdu4nzzUjchW4aIMOmI4HbUAwQzr
-        s2oEqJO3YYd2yV1+T3rNW7IU6qs7VyQYyL+NI94WXojZQTfOMtKOp46pQ9mUSOg1WjcowA4isvmIZ
-        mhlaH2DYUcozRs4yf+zzszn2uS6MMVsABdKNUIpWy39yr7jD8/v3xBzBLSg8SotpYflJx4n9fcnBM
-        Ny7vW7Qtw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iv8JB-00042P-Iy; Fri, 24 Jan 2020 23:24:13 +0000
-Date:   Fri, 24 Jan 2020 15:24:13 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        Allison Collins <allison.henderson@oracle.com>
-Subject: Re: [PATCH 27/29] xfs: clean up the attr flag confusion
-Message-ID: <20200124232413.GB22102@infradead.org>
-References: <20200114081051.297488-1-hch@lst.de>
- <20200114081051.297488-28-hch@lst.de>
- <20200121194440.GC8247@magnolia>
+         bh=r6GOkDmHzXzhSVqOAD8xlLIM6J6vOicE1/PE/yHNhJg=; b=u/qkoarH8z0iijq33ZVQ9301v
+        9Rwk5QUWYJuir0JRz2g3gAvmwfEk2dveuO6cp6kOah1H+gU5RcgFpZyz8DOTwcq4u41wsYNesptA0
+        DXWwxdfd621h81YVmJJ6QyYt9XLzBwRj4Jjxdi+im2s9zwR/Mdkn5Xy9ag9DkFKXzAcHngeQJznAY
+        IH/oeFxaS/lqVzfpSuTithOrftDc8EsfLSUsRuMvpblcWkatJapDh1LX+b0NnrjN3vpcLlh3vxdyB
+        4FxYQxNjeDWA6ghvaA058mgMgNJpasVgaPd45I3lX1j0F1vfqg5aArs0bf9j0xFTI4zgAeO6rnM94
+        yjHIU1COw==;
+Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1ivAMd-0006VA-6E; Sat, 25 Jan 2020 01:35:55 +0000
+From:   Matthew Wilcox <willy@infradead.org>
+To:     linux-fsdevel@vger.kernel.org
+Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-erofs@lists.ozlabs.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        linux-xfs@vger.kernel.org, cluster-devel@redhat.com,
+        ocfs2-devel@oss.oracle.com
+Subject: [PATCH 00/12] Change readahead API
+Date:   Fri, 24 Jan 2020 17:35:41 -0800
+Message-Id: <20200125013553.24899-1-willy@infradead.org>
+X-Mailer: git-send-email 2.21.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200121194440.GC8247@magnolia>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 21, 2020 at 11:44:40AM -0800, Darrick J. Wong wrote:
-> Clean up?  This whole XATTR_/ATTR_/XFS_ATTR_/XFS_IOC_ATTR_ quadrality is
-> /still/ confusing to me.
+From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
-> >  	struct xfs_mount	*mp = dp->i_mount;
-> >  	struct xfs_trans_res	tres;
-> > -	int			rsvd = (args->flags & ATTR_ROOT) != 0;
-> > +	int			rsvd = (args->attr_namespace & XFS_ATTR_ROOT);
-> 
-> bool?
+This series adds a readahead address_space operation to eventually
+replace the readpages operation.  The key difference is that
+pages are added to the page cache as they are allocated (and
+then looked up by the filesystem) instead of passing them on a
+list to the readpages operation and having the filesystem add
+them to the page cache.  It's a net reduction in code for each
+implementation, more efficient than walking a list, and solves
+the direct-write vs buffered-read problem reported by yu kuai at
+https://lore.kernel.org/linux-fsdevel/20200116063601.39201-1-yukuai3@huawei.com/
 
-Ok.
+Matthew Wilcox (Oracle) (12):
+  mm: Fix the return type of __do_page_cache_readahead
+  readahead: Ignore return value of ->readpages
+  readahead: Put pages in cache earlier
+  mm: Add readahead address space operation
+  fs: Convert mpage_readpages to mpage_readahead
+  btrfs: Convert from readpages to readahead
+  erofs: Convert uncompressed files from readpages to readahead
+  erofs: Convert compressed files from readpages to readahead
+  ext4: Convert from readpages to readahead
+  f2fs: Convert from readpages to readahead
+  fuse: Convert from readpages to readahead
+  iomap: Convert from readpages to readahead
 
-> > @@ -87,7 +67,7 @@ struct xfs_attr_list_context {
-> >  	int			dupcnt;		/* count dup hashvals seen */
-> >  	int			bufsize;	/* total buffer size */
-> >  	int			firstu;		/* first used byte in buffer */
-> > -	int			flags;		/* from VOP call */
-> > +	unsigned int		attr_namespace;
-> 
-> What flags go with this attr_namespace field?  XFS_ATTR_{ROOT,SECURE}?
+ Documentation/filesystems/locking.rst |  7 ++-
+ Documentation/filesystems/vfs.rst     | 11 ++++
+ drivers/staging/exfat/exfat_super.c   |  9 ++--
+ fs/block_dev.c                        |  9 ++--
+ fs/btrfs/extent_io.c                  | 15 ++----
+ fs/btrfs/extent_io.h                  |  2 +-
+ fs/btrfs/inode.c                      | 18 +++----
+ fs/erofs/data.c                       | 34 +++++-------
+ fs/erofs/zdata.c                      | 21 +++-----
+ fs/ext2/inode.c                       | 12 ++---
+ fs/ext4/ext4.h                        |  2 +-
+ fs/ext4/inode.c                       | 24 ++++-----
+ fs/ext4/readpage.c                    | 20 +++----
+ fs/f2fs/data.c                        | 33 +++++-------
+ fs/fat/inode.c                        |  8 +--
+ fs/fuse/file.c                        | 35 ++++++------
+ fs/gfs2/aops.c                        | 20 ++++---
+ fs/hpfs/file.c                        |  8 +--
+ fs/iomap/buffered-io.c                | 74 ++++++--------------------
+ fs/iomap/trace.h                      |  2 +-
+ fs/isofs/inode.c                      |  9 ++--
+ fs/jfs/inode.c                        |  8 +--
+ fs/mpage.c                            | 38 +++++---------
+ fs/nilfs2/inode.c                     | 13 ++---
+ fs/ocfs2/aops.c                       | 32 +++++------
+ fs/omfs/file.c                        |  8 +--
+ fs/qnx6/inode.c                       |  8 +--
+ fs/reiserfs/inode.c                   | 10 ++--
+ fs/udf/inode.c                        |  8 +--
+ fs/xfs/xfs_aops.c                     | 10 ++--
+ include/linux/fs.h                    |  2 +
+ include/linux/iomap.h                 |  2 +-
+ include/linux/mpage.h                 |  2 +-
+ include/linux/pagemap.h               | 12 +++++
+ include/trace/events/erofs.h          |  6 +--
+ include/trace/events/f2fs.h           |  6 +--
+ mm/internal.h                         |  2 +-
+ mm/migrate.c                          |  2 +-
+ mm/readahead.c                        | 76 +++++++++++++++++----------
+ 39 files changed, 289 insertions(+), 329 deletions(-)
 
-Yes.. I'll add a comment.
+-- 
+2.24.1
 
-> > +/*
-> > + * Flags for the attr ioctl interface.
-> > + * NOTE: Must match the values declared in libattr without the XFS_IOC_ prefix.
-> > + */
-> > +#define XFS_IOC_ATTR_ROOT	0x0002	/* use attrs in root namespace */
-> > +#define XFS_IOC_ATTR_SECURE	0x0008	/* use attrs in security namespace */
-> > +#define XFS_IOC_ATTR_CREATE	0x0010	/* fail if attr already exists */
-> > +#define XFS_IOC_ATTR_REPLACE	0x0020	/* fail if attr does not exist */
-> 
-> I think it's worth nothing that these flags are supposed to be passed in
-> via am_flags in the attrmulti structure.
-
-Done.
-
-> > +++ b/fs/xfs/libxfs/xfs_types.h
-> > @@ -194,7 +194,8 @@ typedef struct xfs_da_args {
-> >  	uint8_t		filetype;	/* filetype of inode for directories */
-> >  	void		*value;		/* set of bytes (maybe contain NULLs) */
-> >  	int		valuelen;	/* length of value */
-> > -	int		flags;		/* argument flags (eg: ATTR_NOCREATE) */
-> > +	unsigned int	attr_namespace;
-> > +	unsigned int	attr_flags;
-> 
-> Please add comments to both of these fields explaining which flags go
-> with which field.
-
-Ok.
-
-> AFAICT, xfs_da_args.attr_namespace holds the two ondisk namespace flags?
-
-Yes.
-
-> Which are XFS_ATTR_{ROOT,SECURE}?
-
-Yes.
-
-> And ... I think the next patch makes
-> it so that people can pass XFS_ATTR_INCOMPLETE for lookups, too?
-
-Yes.  Internal lookups at least.
-
-> 
-> vs. xfs_da_args.attr_flags, which contains the XATTR_{CREATE,REPLACE}
-> flags, which are the attr operation flags that we got from userspace?
-
-Yes.
-
-> And what goes in xfs_attr_list_context.attr_namespace?  Same values as
-> xfs_da_args.attr_namespace?
-
-Yes.
-
-> > +static unsigned int
-> > +xfs_attr_namespace(
-> > +	u32			ioc_flags)
-> > +{
-> > +	unsigned int		namespace = 0;
-> > +
-> > +	if (ioc_flags & XFS_IOC_ATTR_ROOT)
-> > +		namespace |= XFS_ATTR_ROOT;
-> > +	if (ioc_flags & XFS_IOC_ATTR_SECURE)
-> > +		namespace |= XFS_ATTR_SECURE;
-> 
-> Seeing as these are mutually exclusive options, I'm a little surprised
-> there isn't more checking that both of these flags aren't set at the
-> same time.
-> 
-> (Or I've been reading this series too long and missed that it does...)
-
-XFS never rejected the combination.  It just won't find anything in that
-case.  Let me see if I could throw in another patch to add more checks
-there.
