@@ -2,184 +2,132 @@ Return-Path: <SRS0=svvY=3P=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB022C2D0DB
-	for <linux-xfs@archiver.kernel.org>; Sun, 26 Jan 2020 11:36:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31D3DC35246
+	for <linux-xfs@archiver.kernel.org>; Sun, 26 Jan 2020 18:20:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7E9E42071A
-	for <linux-xfs@archiver.kernel.org>; Sun, 26 Jan 2020 11:36:47 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WaupjP/w"
+	by mail.kernel.org (Postfix) with ESMTP id 1217020708
+	for <linux-xfs@archiver.kernel.org>; Sun, 26 Jan 2020 18:20:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387419AbgAZLgr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 26 Jan 2020 06:36:47 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:47286 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387416AbgAZLgr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Jan 2020 06:36:47 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
-        Reply-To:Cc:Content-Type:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=tI1xgn2vFOX75YS0soWfkrXVuxM6BsCw9IYdmDtTH1Q=; b=WaupjP/w6sm5ZpUx88qnFhI1L
-        J75A37fs9aemQ9c+VxmSsM++t32Xu4gYmwg2/asuI/wnYK+yn5upADfZyRk2E9HyNoliSZR94jiYe
-        aQPWseLFCOn+dOHwKOpvc5uX6waYi+sGhJsR7PCarfS75WzR+gZYsWGvKj/UGfRaKEFR9du3IfMK+
-        8sgpM7OCXswvvR4dyn2XyflAftbikE8B+dL13OH5MtjHUfWRvG2nGMVqQH9FBR2kWVcBdsYtrO5Cl
-        CyjgS0qVfXn99NW6bJb8gBGP8MT3eap4vpk47Y/HmTCR17ADVbvNaihhc4mHecctrw1rXjB0bMG7X
-        ZnrbpkZaw==;
-Received: from [46.189.28.128] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1ivgDd-0008Cy-47
-        for linux-xfs@vger.kernel.org; Sun, 26 Jan 2020 11:36:46 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 5/5] xfsprogs: stop generating platform_defs.h
-Date:   Sun, 26 Jan 2020 12:35:41 +0100
-Message-Id: <20200126113541.787884-6-hch@lst.de>
-X-Mailer: git-send-email 2.24.1
-In-Reply-To: <20200126113541.787884-1-hch@lst.de>
-References: <20200126113541.787884-1-hch@lst.de>
+        id S1726771AbgAZST7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 26 Jan 2020 13:19:59 -0500
+Received: from james.kirk.hungrycats.org ([174.142.39.145]:34528 "EHLO
+        james.kirk.hungrycats.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725838AbgAZST7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Jan 2020 13:19:59 -0500
+Received: by james.kirk.hungrycats.org (Postfix, from userid 1002)
+        id 484FD58FB25; Sun, 26 Jan 2020 13:19:58 -0500 (EST)
+Date:   Sun, 26 Jan 2020 13:19:58 -0500
+From:   Zygo Blaxell <ce3g8jdj@umail.furryterror.org>
+To:     David Howells <dhowells@redhat.com>
+Cc:     Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@lst.de>,
+        Qu Wenruo <quwenruo.btrfs@gmx.com>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-btrfs <linux-btrfs@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: Problems with determining data presence by examining extents?
+Message-ID: <20200126181958.GP13306@hungrycats.org>
+References: <7233E240-8EE5-4CD1-B8A4-A90925F51A1B@dilger.ca>
+ <C0F67EC5-7B5D-4179-9F28-95B84D9CC326@dilger.ca>
+ <4467.1579020509@warthog.procyon.org.uk>
+ <00fc7691-77d5-5947-5493-5c97f262da81@gmx.com>
+ <27181AE2-C63F-4932-A022-8B0563C72539@dilger.ca>
+ <afa71c13-4f99-747a-54ec-579f11f066a0@gmx.com>
+ <20200115133101.GA28583@lst.de>
+ <23762.1579121702@warthog.procyon.org.uk>
+ <7026.1579129743@warthog.procyon.org.uk>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="MWF3YmTHhoLNIVQC"
+Content-Disposition: inline
+In-Reply-To: <7026.1579129743@warthog.procyon.org.uk>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Now that all the autoconf substituations are gone, there is no need
-to generate this (and thus any) header.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- .gitignore                                      |  1 -
- Makefile                                        | 15 ++++-----------
- configure.ac                                    |  1 -
- debian/rules                                    |  2 --
- include/Makefile                                |  2 +-
- include/{platform_defs.h.in => platform_defs.h} |  0
- 6 files changed, 5 insertions(+), 16 deletions(-)
- rename include/{platform_defs.h.in => platform_defs.h} (100%)
+--MWF3YmTHhoLNIVQC
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/.gitignore b/.gitignore
-index fd131b6f..20d033ae 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -6,7 +6,6 @@
- # build system
- .census
- .gitcensus
--/include/platform_defs.h
- /include/builddefs
- /install-sh
- 
-diff --git a/Makefile b/Makefile
-index 0edc2700..ff6a977d 100644
---- a/Makefile
-+++ b/Makefile
-@@ -49,7 +49,7 @@ SRCTARINC = m4/libtool.m4 m4/lt~obsolete.m4 m4/ltoptions.m4 m4/ltsugar.m4 \
-            m4/ltversion.m4 po/xfsprogs.pot .gitcensus $(CONFIGURE)
- LDIRT = config.log .ltdep .dep config.status config.cache confdefs.h \
- 	conftest* built .census install.* install-dev.* *.gz *.xz \
--	autom4te.cache/* libtool include/builddefs include/platform_defs.h
-+	autom4te.cache/* libtool include/builddefs
- 
- ifeq ($(HAVE_BUILDDEFS), yes)
- LDIRDIRT = $(SRCDIR)
-@@ -84,7 +84,7 @@ endif
- # include is listed last so it is processed last in clean rules.
- SUBDIRS = $(LIBFROG_SUBDIR) $(LIB_SUBDIRS) $(TOOL_SUBDIRS) include
- 
--default: include/builddefs include/platform_defs.h
-+default: include/builddefs
- ifeq ($(HAVE_BUILDDEFS), no)
- 	$(Q)$(MAKE) $(MAKEOPTS) -C . $@
- else
-@@ -130,13 +130,6 @@ configure: configure.ac
- include/builddefs: configure
- 	./configure $$LOCAL_CONFIGURE_OPTIONS
- 
--include/platform_defs.h: include/builddefs
--## Recover from the removal of $@
--	@if test -f $@; then :; else \
--		rm -f include/builddefs; \
--		$(MAKE) $(MAKEOPTS) $(AM_MAKEFLAGS) include/builddefs; \
--	fi
--
- install: $(addsuffix -install,$(SUBDIRS))
- 	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
- 	$(INSTALL) -m 644 README $(PKG_DOC_DIR)
-@@ -160,14 +153,14 @@ realclean: distclean
- #
- # All this gunk is to allow for a make dist on an unconfigured tree
- #
--dist: include/builddefs include/platform_defs.h default
-+dist: include/builddefs default
- ifeq ($(HAVE_BUILDDEFS), no)
- 	$(Q)$(MAKE) $(MAKEOPTS) -C . $@
- else
- 	$(Q)$(MAKE) $(MAKEOPTS) $(SRCTAR)
- endif
- 
--deb: include/builddefs include/platform_defs.h
-+deb: include/builddefs
- ifeq ($(HAVE_BUILDDEFS), no)
- 	$(Q)$(MAKE) $(MAKEOPTS) -C . $@
- else
-diff --git a/configure.ac b/configure.ac
-index 5eb7c14b..49c3a466 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -3,7 +3,6 @@ AC_PREREQ(2.50)
- AC_CONFIG_AUX_DIR([.])
- AC_CONFIG_MACRO_DIR([m4])
- AC_CONFIG_SRCDIR([include/libxfs.h])
--AC_CONFIG_HEADER(include/platform_defs.h)
- AC_PREFIX_DEFAULT(/usr)
- 
- AC_PROG_INSTALL
-diff --git a/debian/rules b/debian/rules
-index e8509fb3..41c0c004 100755
---- a/debian/rules
-+++ b/debian/rules
-@@ -43,14 +43,12 @@ config: .census
- 	@echo "== dpkg-buildpackage: configure" 1>&2
- 	$(checkdir)
- 	AUTOHEADER=/bin/true dh_autoreconf
--	$(options) $(MAKE) $(PMAKEFLAGS) include/platform_defs.h
- 	touch .census
- 
- dibuild:
- 	$(checkdir)
- 	@echo "== dpkg-buildpackage: installer" 1>&2
- 	if [ ! -f mkfs/mkfs.xfs-$(bootpkg) ]; then \
--		$(diopts) $(MAKE) include/platform_defs.h; \
- 		mkdir -p include/xfs; \
- 		for dir in include libxfs; do \
- 			$(MAKE) $(PMAKEFLAGS) -C $$dir NODEP=1 install-headers; \
-diff --git a/include/Makefile b/include/Makefile
-index a80867e4..c92ecbd5 100644
---- a/include/Makefile
-+++ b/include/Makefile
-@@ -37,7 +37,7 @@ HFILES = handle.h \
- 	xqm.h \
- 	xfs_arch.h
- 
--LSRCFILES = platform_defs.h.in builddefs.in buildmacros buildrules install-sh
-+LSRCFILES = builddefs.in buildmacros buildrules install-sh
- LSRCFILES += $(DKHFILES) $(LIBHFILES)
- LDIRT = disk
- LDIRDIRT = xfs
-diff --git a/include/platform_defs.h.in b/include/platform_defs.h
-similarity index 100%
-rename from include/platform_defs.h.in
-rename to include/platform_defs.h
--- 
-2.24.1
+On Wed, Jan 15, 2020 at 11:09:03PM +0000, David Howells wrote:
+> Andreas Dilger <adilger@dilger.ca> wrote:
+>=20
+> > > It would also have to say that blocks of zeros shouldn't be optimised=
+ away.
+> >=20
+> > I don't necessarily see that as a requirement, so long as the filesystem
+> > stores a "block" at that offset, but it could dedupe all zero-filled bl=
+ocks
+> > to the same "zero block".  That still allows saving storage space, while
+> > keeping the semantics of "this block was written into the file" rather =
+than
+> > "there is a hole at this offset".
+>=20
+> Yeah, that's more what I was thinking of.  Provided I can find out that
+> something is present, it should be fine.
 
+I'm curious how this proposal handles an application punching a hole
+through the cache?  Does that get cached, or does that operation have
+to be synchronous with the server?  Or is it a moot point because no
+server supports hole punching, so it gets replaced with equivalent zero
+block data writes?
+
+Zero blocks are stupidly common on typical user data corpuses, and a
+naive block-oriented deduper can create monster extents with millions
+or even billions of references if it doesn't have some special handling
+for zero blocks.  Even if they don't trigger filesystem performance bugs
+or hit RAM or other implementation limits, it's still bigger and slower
+to use zero-filled data blocks than just using holes for zero blocks.
+
+In the bees deduper for btrfs, zero blocks get replaced with holes
+unconditionally in uncompressed extents, and in compressed extents if the
+extent consists entirely of zeros (a long run of zero bytes is compressed
+to a few bits by all supported compression algorithms, and hole metdata
+is much larger than a few bits, so no gain is possible if anything less
+than the entire compressed extent is eliminated).  That behavior could
+be adjusted to support this use case, as a non-default user option.
+
+For defrag a similar optimization is possible:  read a long run of
+consecutive zero data blocks, write a prealloc extent.  I don't know of
+anyone doing that in real life, but it would play havoc with anything
+trying to store information in FIEMAP data (or related ioctls like
+GETFSMAP or TREE_SEARCH).
+
+I think an explicit dirty-cache-data metadata structure is a good idea
+despite implementation complexity.  It would eliminate dependencies on
+non-portable filesystem behavior, and not abuse a facility that might
+already be in active (ab)use by other existing things.  If you have
+a writeback cache, you need to properly control write ordering with a
+purpose-built metadata structure, or fsync() will be meaningless through
+your caching layer, and after a crash you'll upload whatever confused,
+delalloc-reordered, torn-written steaming crap is on the local disk to
+the backing store.
+
+> David
+>=20
+
+--MWF3YmTHhoLNIVQC
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iF0EABECAB0WIQSnOVjcfGcC/+em7H2B+YsaVrMbnAUCXi3YRQAKCRCB+YsaVrMb
+nLh/AKCKROfCfR3bfjq2IRp4N8QY4UV7mACg5qRzLwLGYnW9Jw7yYndPU4v2i58=
+=St1d
+-----END PGP SIGNATURE-----
+
+--MWF3YmTHhoLNIVQC--
