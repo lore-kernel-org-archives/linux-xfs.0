@@ -2,132 +2,124 @@ Return-Path: <SRS0=svvY=3P=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31D3DC35246
-	for <linux-xfs@archiver.kernel.org>; Sun, 26 Jan 2020 18:20:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AF11C2D0DB
+	for <linux-xfs@archiver.kernel.org>; Sun, 26 Jan 2020 21:24:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1217020708
-	for <linux-xfs@archiver.kernel.org>; Sun, 26 Jan 2020 18:20:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D7B64206F0
+	for <linux-xfs@archiver.kernel.org>; Sun, 26 Jan 2020 21:24:21 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="N8hjiwqn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726771AbgAZST7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 26 Jan 2020 13:19:59 -0500
-Received: from james.kirk.hungrycats.org ([174.142.39.145]:34528 "EHLO
-        james.kirk.hungrycats.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725838AbgAZST7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Jan 2020 13:19:59 -0500
-Received: by james.kirk.hungrycats.org (Postfix, from userid 1002)
-        id 484FD58FB25; Sun, 26 Jan 2020 13:19:58 -0500 (EST)
-Date:   Sun, 26 Jan 2020 13:19:58 -0500
-From:   Zygo Blaxell <ce3g8jdj@umail.furryterror.org>
-To:     David Howells <dhowells@redhat.com>
-Cc:     Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@lst.de>,
-        Qu Wenruo <quwenruo.btrfs@gmx.com>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-btrfs <linux-btrfs@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: Problems with determining data presence by examining extents?
-Message-ID: <20200126181958.GP13306@hungrycats.org>
-References: <7233E240-8EE5-4CD1-B8A4-A90925F51A1B@dilger.ca>
- <C0F67EC5-7B5D-4179-9F28-95B84D9CC326@dilger.ca>
- <4467.1579020509@warthog.procyon.org.uk>
- <00fc7691-77d5-5947-5493-5c97f262da81@gmx.com>
- <27181AE2-C63F-4932-A022-8B0563C72539@dilger.ca>
- <afa71c13-4f99-747a-54ec-579f11f066a0@gmx.com>
- <20200115133101.GA28583@lst.de>
- <23762.1579121702@warthog.procyon.org.uk>
- <7026.1579129743@warthog.procyon.org.uk>
+        id S1726155AbgAZVYV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 26 Jan 2020 16:24:21 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:49134 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726144AbgAZVYV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Jan 2020 16:24:21 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00QLB3GR007000;
+        Sun, 26 Jan 2020 21:24:16 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=GWUGCD0+mHk42ck+2XTRwWOErLiItM0BlznOPgZlPXU=;
+ b=N8hjiwqn9UWdRuEf5bmSWxAyk8uRfNULWAewjmN/TLK3uqXKImNPSDVqUvAWzDPyCwYY
+ MQmlnMqx8FXpx00AAn7io4eXdP7UcAUxMhGKbx3fX3Lod0SBzdLSEHZ1Eh4QOGHmhwod
+ OekZ2+5GCWOj/q95InEskrkjcdue7yHLhPuJQVB3gBKTeyKLKYEpHuGaR4wJT95x5xjA
+ NGn9mCRERTJqvX/rpF6M+/phSIVtHn1szND8ej+QXdE9SPB9P547i6oNvgO/Rg3fMJsQ
+ ZUMdQ/ops5W1dwBIDRsTlew3BZvxMJN3BowN6aarA2tCbZOsVd7NetZUbs6ZD2Da0vFb Ow== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 2xreaqva31-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 26 Jan 2020 21:24:16 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00QL8u4I173837;
+        Sun, 26 Jan 2020 21:24:16 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 2xry4sxh35-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 26 Jan 2020 21:24:16 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00QLOAMC029606;
+        Sun, 26 Jan 2020 21:24:10 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sun, 26 Jan 2020 13:24:10 -0800
+Date:   Sun, 26 Jan 2020 13:24:09 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] libxfs: turn the xfs_buf_incore stub into an inline
+ function
+Message-ID: <20200126212409.GA3447196@magnolia>
+References: <20200126091717.516904-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="MWF3YmTHhoLNIVQC"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <7026.1579129743@warthog.procyon.org.uk>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20200126091717.516904-1-hch@lst.de>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9512 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-2001260185
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9512 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-2001260185
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Sun, Jan 26, 2020 at 10:17:17AM +0100, Christoph Hellwig wrote:
+> Replace the macro with an inline function to avoid compiler warnings with new
+> backports of kernel code.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
---MWF3YmTHhoLNIVQC
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+HAH YES, thank you!!!  <giddy dance>
 
-On Wed, Jan 15, 2020 at 11:09:03PM +0000, David Howells wrote:
-> Andreas Dilger <adilger@dilger.ca> wrote:
->=20
-> > > It would also have to say that blocks of zeros shouldn't be optimised=
- away.
-> >=20
-> > I don't necessarily see that as a requirement, so long as the filesystem
-> > stores a "block" at that offset, but it could dedupe all zero-filled bl=
-ocks
-> > to the same "zero block".  That still allows saving storage space, while
-> > keeping the semantics of "this block was written into the file" rather =
-than
-> > "there is a hole at this offset".
->=20
-> Yeah, that's more what I was thinking of.  Provided I can find out that
-> something is present, it should be fine.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-I'm curious how this proposal handles an application punching a hole
-through the cache?  Does that get cached, or does that operation have
-to be synchronous with the server?  Or is it a moot point because no
-server supports hole punching, so it gets replaced with equivalent zero
-block data writes?
+--D
 
-Zero blocks are stupidly common on typical user data corpuses, and a
-naive block-oriented deduper can create monster extents with millions
-or even billions of references if it doesn't have some special handling
-for zero blocks.  Even if they don't trigger filesystem performance bugs
-or hit RAM or other implementation limits, it's still bigger and slower
-to use zero-filled data blocks than just using holes for zero blocks.
-
-In the bees deduper for btrfs, zero blocks get replaced with holes
-unconditionally in uncompressed extents, and in compressed extents if the
-extent consists entirely of zeros (a long run of zero bytes is compressed
-to a few bits by all supported compression algorithms, and hole metdata
-is much larger than a few bits, so no gain is possible if anything less
-than the entire compressed extent is eliminated).  That behavior could
-be adjusted to support this use case, as a non-default user option.
-
-For defrag a similar optimization is possible:  read a long run of
-consecutive zero data blocks, write a prealloc extent.  I don't know of
-anyone doing that in real life, but it would play havoc with anything
-trying to store information in FIEMAP data (or related ioctls like
-GETFSMAP or TREE_SEARCH).
-
-I think an explicit dirty-cache-data metadata structure is a good idea
-despite implementation complexity.  It would eliminate dependencies on
-non-portable filesystem behavior, and not abuse a facility that might
-already be in active (ab)use by other existing things.  If you have
-a writeback cache, you need to properly control write ordering with a
-purpose-built metadata structure, or fsync() will be meaningless through
-your caching layer, and after a crash you'll upload whatever confused,
-delalloc-reordered, torn-written steaming crap is on the local disk to
-the backing store.
-
-> David
->=20
-
---MWF3YmTHhoLNIVQC
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iF0EABECAB0WIQSnOVjcfGcC/+em7H2B+YsaVrMbnAUCXi3YRQAKCRCB+YsaVrMb
-nLh/AKCKROfCfR3bfjq2IRp4N8QY4UV7mACg5qRzLwLGYnW9Jw7yYndPU4v2i58=
-=St1d
------END PGP SIGNATURE-----
-
---MWF3YmTHhoLNIVQC--
+> ---
+>  libxfs/libxfs_priv.h | 14 ++++++--------
+>  1 file changed, 6 insertions(+), 8 deletions(-)
+> 
+> diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+> index 03edf0d3..2b73963c 100644
+> --- a/libxfs/libxfs_priv.h
+> +++ b/libxfs/libxfs_priv.h
+> @@ -369,14 +369,12 @@ roundup_64(uint64_t x, uint32_t y)
+>  #define XFS_BUF_UNDELAYWRITE(bp)	((bp)->b_flags &= ~LIBXFS_B_DIRTY)
+>  #define XFS_BUF_SET_BDSTRAT_FUNC(a,b)	((void) 0)
+>  
+> -/* avoid gcc warning */
+> -#define xfs_buf_incore(bt,blkno,len,lockit) ({		\
+> -	typeof(blkno) __foo = (blkno);			\
+> -	typeof(len) __bar = (len);			\
+> -	(blkno) = __foo;				\
+> -	(len) = __bar; /* no set-but-unused warning */	\
+> -	NULL;						\
+> -})
+> +static inline struct xfs_buf *xfs_buf_incore(struct xfs_buftarg *target,
+> +		xfs_daddr_t blkno, size_t numblks, xfs_buf_flags_t flags)
+> +{
+> +	return NULL;
+> +}
+> +
+>  #define xfs_buf_relse(bp)		libxfs_putbuf(bp)
+>  #define xfs_buf_get(devp,blkno,len)	(libxfs_getbuf((devp), (blkno), (len)))
+>  #define xfs_bwrite(bp)			libxfs_writebuf((bp), 0)
+> -- 
+> 2.24.1
+> 
