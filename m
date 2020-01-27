@@ -2,119 +2,114 @@ Return-Path: <SRS0=drEG=3Q=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7291C2D0DB
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jan 2020 23:20:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D39C6C32771
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jan 2020 23:56:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BC6052467B
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jan 2020 23:20:06 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="XawkCOgE"
+	by mail.kernel.org (Postfix) with ESMTP id AFFD3206BF
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jan 2020 23:56:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726173AbgA0XUC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Jan 2020 18:20:02 -0500
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:35203 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726164AbgA0XUC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Jan 2020 18:20:02 -0500
-Received: by mail-pf1-f194.google.com with SMTP id i23so5644420pfo.2
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Jan 2020 15:20:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=QT8O29qq6UX2ERtfMZtIcpjsnZ2zWwc1vGjIRRz0cAI=;
-        b=XawkCOgE5DXMC5T4UMCWjNatVuCxPXGElKDJzkypz39qHzpJzBQm4Kjg2Wyc74N8XU
-         ae0RNb4v9jld0zCxnKtoZyL8qTh3A+57E2UqJ/UgP52rejOuyEYKSTX+2MbIBdIK8wvO
-         WFe7hDDB9CBICJzlBnEvr5cP0Jna4twh3KH9c=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=QT8O29qq6UX2ERtfMZtIcpjsnZ2zWwc1vGjIRRz0cAI=;
-        b=BidJM65FNf2d8wygcHT5gNmGByngApnXTOhSYqh7mzW4l3MGxxQDvI8vA3uhq/awwL
-         CiDbBLzyoyT9uQ+PqSlzFgfMqCX26rYKLkZQfoc7KH2TGmvYC9wZfhMtY+J2zX5vczwN
-         YTcwYH53j9+8E0Ejacr0RtzrLK4f818Wlew+g2LfTuc27TTNi6R4SxvsQ+Yy9Jgf/reN
-         ONuuSyqWlYVj9YvewzdwiuP5Cl9t5uGfPAxgmh4erFCAtDSIWOo2xJwKpnsZmdgGk2Kk
-         uNqqoS/mxJwltDyXs9s68KeiqEN7K8LYc6nM9B/CImAiWH6uc0Y4l4+T8FZBvYLvRje1
-         cQog==
-X-Gm-Message-State: APjAAAXoM12pdAIvO7of6qLmtHB+iGwBWhS7dM3KDJixlzMJF1hBIZYg
-        hGEmxOCsHOqTzxWkFtzIff6Ugw==
-X-Google-Smtp-Source: APXvYqyXDQEpPXM0xicaJgXWD5GwCMvtHrO2YWSFefSzTu/QuqyGJhGs+kmBUEZGJW1pcHmWRN4ELQ==
-X-Received: by 2002:aa7:934a:: with SMTP id 10mr1028171pfn.233.1580167201197;
-        Mon, 27 Jan 2020 15:20:01 -0800 (PST)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id m12sm3509886pfh.37.2020.01.27.15.19.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 27 Jan 2020 15:20:00 -0800 (PST)
-Date:   Mon, 27 Jan 2020 15:19:59 -0800
-From:   Kees Cook <keescook@chromium.org>
-To:     Jiri Slaby <jslaby@suse.cz>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        linux-kernel@vger.kernel.org, David Windsor <dave@nullcore.net>,
-        Pekka Enberg <penberg@kernel.org>,
-        David Rientjes <rientjes@google.com>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Andy Lutomirski <luto@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Christoph Lameter <cl@linux.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Laura Abbott <labbott@redhat.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        Christoffer Dall <christoffer.dall@linaro.org>,
-        Dave Kleikamp <dave.kleikamp@oracle.com>,
-        Jan Kara <jack@suse.cz>,
-        Luis de Bethencourt <luisbg@kernel.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Rik van Riel <riel@redhat.com>,
-        Matthew Garrett <mjg59@google.com>,
-        linux-fsdevel@vger.kernel.org, linux-arch@vger.kernel.org,
-        netdev@vger.kernel.org, kernel-hardening@lists.openwall.com,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Michal Kubecek <mkubecek@suse.cz>
-Subject: Re: [kernel-hardening] [PATCH 09/38] usercopy: Mark kmalloc caches
- as usercopy caches
-Message-ID: <202001271519.AA6ADEACF0@keescook>
-References: <1515636190-24061-1-git-send-email-keescook@chromium.org>
- <1515636190-24061-10-git-send-email-keescook@chromium.org>
- <9519edb7-456a-a2fa-659e-3e5a1ff89466@suse.cz>
- <201911121313.1097D6EE@keescook>
- <201911141327.4DE6510@keescook>
- <bfca96db-bbd0-d958-7732-76e36c667c68@suse.cz>
+        id S1726599AbgA0X4V (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Jan 2020 18:56:21 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:38122 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726191AbgA0X4V (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Jan 2020 18:56:21 -0500
+Received: from dread.disaster.area (pa49-195-111-217.pa.nsw.optusnet.com.au [49.195.111.217])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 245C13A1F01;
+        Tue, 28 Jan 2020 10:56:19 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1iwEEr-0005bi-9v; Tue, 28 Jan 2020 10:56:17 +1100
+Date:   Tue, 28 Jan 2020 10:56:17 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Murphy Zhou <jencce.kernel@gmail.com>, linux-xfs@vger.kernel.org,
+        linux-nfs@vger.kernel.org
+Subject: Re: A NFS, xfs, reflink and rmapbt story
+Message-ID: <20200127235617.GB18610@dread.disaster.area>
+References: <20200123083217.flkl6tkyr4b7zwuk@xzhoux.usersys.redhat.com>
+ <20200124011019.GA8247@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <bfca96db-bbd0-d958-7732-76e36c667c68@suse.cz>
+In-Reply-To: <20200124011019.GA8247@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+        a=0OveGI8p3fsTA6FL6ss4ZQ==:117 a=0OveGI8p3fsTA6FL6ss4ZQ==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=Jdjhy38mL1oA:10
+        a=7-415B0cAAAA:8 a=DKXhrarefucG-zT5zuIA:9 a=VFtz45cXcEUkXO3f:21
+        a=2Tythr-q2aEXjZyO:21 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 23, 2020 at 09:14:20AM +0100, Jiri Slaby wrote:
-> On 14. 11. 19, 22:27, Kees Cook wrote:
-> > On Tue, Nov 12, 2019 at 01:21:54PM -0800, Kees Cook wrote:
-> >> How is iucv the only network protocol that has run into this? Do others
-> >> use a bounce buffer?
+On Thu, Jan 23, 2020 at 05:10:19PM -0800, Darrick J. Wong wrote:
+> On Thu, Jan 23, 2020 at 04:32:17PM +0800, Murphy Zhou wrote:
+> > Hi,
 > > 
-> > Another solution would be to use a dedicated kmem cache (instead of the
-> > shared kmalloc dma one)?
+> > Deleting the files left by generic/175 costs too much time when testing
+> > on NFSv4.2 exporting xfs with rmapbt=1.
+> > 
+> > "./check -nfs generic/175 generic/176" should reproduce it.
+> > 
+> > My test bed is a 16c8G vm.
 > 
-> Has there been any conclusion to this thread yet? For the time being, we
-> disabled HARDENED_USERCOPY on s390...
+> What kind of storage?
+
+Is the NFS server the same machine as what the local XFS tests were
+run on?
+
+> > NFSv4.2  rmapbt=1   24h+
 > 
-> https://lore.kernel.org/kernel-hardening/9519edb7-456a-a2fa-659e-3e5a1ff89466@suse.cz/
+> <URK> Wow.  I wonder what about NFS makes us so slow now?  Synchronous
+> transactions on the inactivation?  (speculates wildly at the end of the
+> workday)
 
-I haven't heard anything new. What did people think of a separate kmem
-cache?
+Doubt it - NFS server uses ->commit_metadata after the async
+operation to ensure that it is completed and on stable storage, so
+the truncate on inactivation should run at pretty much the same
+speed as on a local filesystem as it's still all async commits. i.e.
+the only difference on the NFS server is the log force that follows
+the inode inactivation...
 
+> I'll have a look in the morning.  It might take me a while to remember
+> how to set up NFS42 :)
+> 
+> --D
+> 
+> > NFSv4.2  rmapbt=0   1h-2h
+> > xfs      rmapbt=1   10m+
+> > 
+> > At first I thought it hung, turns out it was just slow when deleting
+> > 2 massive reflined files.
+
+Both tests run on the scratch device, so I don't see where there is
+a large file unlink in either of these tests.
+
+In which case, I'd expect that all the time is consumed in
+generic/176 running punch_alternating to create a million extents
+as that will effectively run a synchronous server-side hole punch
+half a million times.
+
+However, I'm guessing that the server side filesystem has a very
+small log and is on spinning rust, hence the ->commit_metadata log
+forces are preventing in-memory aggregation of modifications. This
+results in the working set of metadata not fitting in the log and so
+each new hole punch transaction ends up waiting on log tail pushing
+(i.e. metadata writeback IO).  i.e. it's thrashing the disk, and
+that's why it is slow.....
+
+Storage details, please!
+
+Cheers,
+
+Dave.
 -- 
-Kees Cook
+Dave Chinner
+david@fromorbit.com
