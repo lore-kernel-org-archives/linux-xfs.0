@@ -2,166 +2,174 @@ Return-Path: <SRS0=drEG=3Q=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AB9DC32771
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jan 2020 03:38:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46C0EC32771
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jan 2020 10:05:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CEA6720720
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jan 2020 03:38:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 19116207FD
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jan 2020 10:05:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="t6dZGErS"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="HZF2gJMo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726703AbgA0DiJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 26 Jan 2020 22:38:09 -0500
-Received: from mail-lj1-f195.google.com ([209.85.208.195]:36054 "EHLO
-        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726670AbgA0DiI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Jan 2020 22:38:08 -0500
-Received: by mail-lj1-f195.google.com with SMTP id r19so9127508ljg.3
-        for <linux-xfs@vger.kernel.org>; Sun, 26 Jan 2020 19:38:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=j3XYm9HinwTieKJswZ7Z0EF9eoO6dCPKGQ4C34ekCH8=;
-        b=t6dZGErS8/YfF77zaF/OzVeZ8UrjW5wdaBFfbK6SrGwEJVJr9EwEGuU0pP6nGTCr9h
-         ovG7xP0kTWKBxB8r895PKrA/xrzMaazjqCl3z2k34yEt9AhqJWQEEe20lC91JOjSZUp8
-         s4uoulyQKmmS9WrNdeMRuVjhZ75KtYGTlle6al9FFSdR5B3PpV9QtUZ4wuyl10DR2ns4
-         GiuiWXRbL15U+PbfCWoXIeWQKeGR8K7wwGOE351s+2g3tH9bDkhVLpYPhkdjht8yoPnD
-         J4Pl5n15q97ZnGL1lkSsnrlGqNdf/0j/ZbQQtvf29uAWSgf4q1MX6gbw21JxiSMmkI3f
-         ELMQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
-        bh=j3XYm9HinwTieKJswZ7Z0EF9eoO6dCPKGQ4C34ekCH8=;
-        b=h3rD7C+rvl2ryEgT+7kMC4grDYlEtFsveVB1J2BhqLDlAZvrXpfSf3fqLScmHd3b1C
-         6HPfkLDQ6xaqf3Be2KXI4Z79yqGipEhLybixU9WcYZ0Z4GQisWPDtzXYeHjQE6d7DAp3
-         9kWAGttzLhAaBVwOqlnT1eisp4AOa7hGEjUN5bXsE6UFOEO6LnZtPfQmqFhbWbsyLPIe
-         +wxn6AdvV8rxp3/ayca09QHxoo23o6cADlRWxs817/gFy0NkjVAWB2Vwym90JWgdIBp1
-         sCSlwzHKmh55U1Nyy7bgOVezV77kk1Wqp+pzNOMXOCJNmGsp+vlH13bjsoNpcfWPDKhL
-         bQEg==
-X-Gm-Message-State: APjAAAWpz8+MnwXVo1bpRVDDCEnZAlfEF1oIMEPm5mtuxlOqDmseXjb/
-        0mqsG1SC+wt5vWUckdY2gPb+quyNF37ElVNIJPxD9mQx
-X-Google-Smtp-Source: APXvYqwe8trxYm1Bl7FgvuREupRhXchLXI2SoGJakIaf2DfO9xVjpq4/pCLOzhmaptn9F4DU1vLl2ap+j58HCTFa2Co=
-X-Received: by 2002:a2e:88c5:: with SMTP id a5mr9071553ljk.201.1580096286499;
- Sun, 26 Jan 2020 19:38:06 -0800 (PST)
+        id S1726181AbgA0KFY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Jan 2020 05:05:24 -0500
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:51835 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725907AbgA0KFY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Jan 2020 05:05:24 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1580119524; x=1611655524;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=pEiBy0/1gxtwKsVjJCWqnNuQe23b5IP2jxA7ZCDT+Z4=;
+  b=HZF2gJMo7WQUNNh92a+FWB/48ngcp3yhRbBa2t50itqNzKcMjB738nsO
+   Q4KW5/rPPFKWgnRUuKqllN5QjzYUMf1rVBcK03Jzw5EL0xa+FYF2kfAbd
+   PzsuC+vzkW2nuq11YsN8ssTTvQKqJHrzDA2EUG0Mum89Z2a4yXVRzIRZp
+   2U0BS1NpCsoRuNyP3cZZMn338XLEQCAM8/f3Mm/fWtuGd7zXqPLBglsAf
+   CEVmXAeiELLh98Ym0ySWozSJ6gPdQYPVuUISCDs5uUvNe1EMzNu/gIfXO
+   M0UeoNwfPjYKz/SLIpgbzgrGKRCPU7gL7pRmwwQ1J62PcYpv/APHGwsLm
+   A==;
+IronPort-SDR: 86VdYkwchWFRCVhc5pYZP0F7x+ESzaVYp4vrGSSDOKu3S6xZC24igmdZIiHPlln4YZXh0c/QKy
+ nAAKxDwi3TNYUDbWpyj6LBUFMm+z1lEVjKJSF5KeDXCVWietRPUFYA0agW+o2Hqu532tGBZR46
+ HQE/+12XjI5gE1tARyTmqBNwfhVDreF41GPZTa2G0hTFWMpB7sSr3xFtBZiIKqPOaXZUVhw56O
+ Hnxk/iGeHCoOhH4GVcf0vo/7aHyY2nbkhyEzJ4ELAPGUzxVQ91fShiH9tzj+4LUeqkjnD1HXRM
+ uMA=
+X-IronPort-AV: E=Sophos;i="5.70,369,1574092800"; 
+   d="scan'208";a="236370278"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 27 Jan 2020 18:05:23 +0800
+IronPort-SDR: F+I4MwcEstzyjXXCAAbm4mg0aze0UeF9AwQwYHQqW4Qbch9V3FEwbXyvOZtat0z46BG1wQBQv1
+ D7kCe/aG+7hhTW+3iuUyJapACA/shBaZqFJ3Q1h2JC4CB9ODcezgW+loDZTDWZeKCOKgPXWeFb
+ R8Q7b4+Rmjrhs9gZGDnY6C9o7zDE/XLZltO0JniTKoIXw5Hbf6wGobuKpS0nbCBrzuV1EmZQfB
+ poFFDNia3gyrTsMvgaqXi5Xf6e2+6jjxzP/s6e5YrhClOyPXFvdOlSIoYIe0wXIrBlwbT2N0A/
+ aSA1svQt/xHF5lia8t7FFGb6
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2020 01:58:39 -0800
+IronPort-SDR: nSL08Pnm1XKeZY4BMmzJQ8RhxMi7j0wi7gACcOOCZWMcMxDr8Ggv8z1Xt2yR9TSTbA2CLJtOT5
+ VrkDXeJ58OIyNpJJpIAt29bUPaZl4WLnNm8T4TbiPt4WixoiOdz6uS+V9pt0xao6RVKThbrGV0
+ PtUWJ7gAvuWQXLGo3mGpYDf8Nluj9PTAjKqGRugHnyXKtSeR1mj7jWTykCJQB/nggKdaKEeSW/
+ zI89dHpgtGyFMa4zjZqsIg7HFTfd9xFdLPZzld5d8kgF5U13nroq/nF0YCwMLmtuS+d9j0pGAW
+ 8GQ=
+WDCIronportException: Internal
+Received: from washi.fujisawa.hgst.com ([10.149.53.254])
+  by uls-op-cesaip02.wdc.com with ESMTP; 27 Jan 2020 02:05:22 -0800
+From:   Damien Le Moal <damien.lemoal@wdc.com>
+To:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     Johannes Thumshirn <jth@kernel.org>,
+        Naohiro Aota <naohiro.aota@wdc.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Hannes Reinecke <hare@suse.de>
+Subject: [PATCH v9 0/2] New zonefs file system
+Date:   Mon, 27 Jan 2020 19:05:19 +0900
+Message-Id: <20200127100521.53899-1-damien.lemoal@wdc.com>
+X-Mailer: git-send-email 2.24.1
 MIME-Version: 1.0
-From:   Satoru Takeuchi <satoru.takeuchi@gmail.com>
-Date:   Mon, 27 Jan 2020 12:37:55 +0900
-Message-ID: <CAMym5wu+ypVDQbyFRrjpqCRKyovpT=nitF4O8VNuspDv5rsd-g@mail.gmail.com>
-Subject: Some tasks got to hang_task in XFS
-To:     linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-In Rook(*1)/Ceph community, some users encountered hang_task in XFS.
-Although we've not reproduced this problem in the newest kernel, could anyone
-give us any hint about this problem, if possible?
+zonefs is a very simple file system exposing each zone of a zoned block
+device as a file. Unlike a regular file system with zoned block device
+support (e.g. f2fs or the on-going btrfs effort), zonefs does not hide
+the sequential write constraint of zoned block devices to the user.
+Files representing sequential write zones of the device must be written
+sequentially starting from the end of the file (append only writes).
 
-*1) An Ceph orchestration in Kubernetes
+zonefs is not a POSIX compliant file system. It's goal is to simplify
+the implementation of zoned block devices support in applications by
+replacing raw block device file accesses with a richer file based API,
+avoiding relying on direct block device file ioctls which may
+be more obscure to developers. One example of this approach is the
+implementation of LSM (log-structured merge) tree structures (such as
+used in RocksDB and LevelDB) on zoned block devices by allowing SSTables
+to be stored in a zone file similarly to a regular file system rather
+than as a range of sectors of a zoned device. The introduction of the
+higher level construct "one file is one zone" can help reducing the
+amount of changes needed in the application while at the same time
+allowing the use of zoned block devices with various programming
+languages other than C.
 
-Here is the detail.
+zonefs IO management implementation uses the new iomap generic code.
 
-Under some workload in Ceph, many processes got to hang_task. We found
-that there
-are two kinds of processes.
+Changes from v8:
+* Comments typos fixes and improvements as suggested by Darrick and
+  Dave.
+* Improved IO error handling:
+  - Better sequential file write pointer checks on write IO error
+  - Extended zone condition checks on IO error to all types of IOs
+  - Added mount options for controlling the FS behavior when a zone
+    write pointer corruption is detected.
+* Cleanup zonefs_iomap_begin() and its use in zonefs_map_blocks()
+* Ignore RWF_NOWAIT to avoid out of order writes on sequential zone
+  files.
+* Improved documentation file
 
-a) In very high CPU load
-b) Encountered hang_task in the XFS
+Changes from v7:
+* Fixed static checker warnings:
+  - Set-but-not-used variable in zonefs_file_buffered_write()
+  - Use S_ISDIR() in zonefs_inode_setattr()
 
-In addition,a user got the following two kernel traces.
+Changes from v6:
+* Fixed documentation as suggested by Randy.
 
-A (b) process's backtrace with `hung_task_panic=1`.
+Changes from v5:
+* Added simple description of zoned block devices to the documentation,
+  as suggested by Johannes.
+* Added a 64-char max label field to the super block to allow label
+  based identification of volumes using libblkid (checked with a patch
+  to libblkid).
 
-```
-[51717.039319] INFO: task kworker/2:1:5938 blocked for more than 120 seconds.
-[51717.039361]       Not tainted 4.15.0-72-generic #81-Ubuntu
-[51717.039388] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
-disables this message.
-[51717.039426] kworker/2:1     D    0  5938      2 0x80000000
-[51717.039471] Workqueue: xfs-sync/rbd0 xfs_log_worker [xfs]
-[51717.039472] Call Trace:
-[51717.039478]  __schedule+0x24e/0x880
-[51717.039504]  ? xlog_sync+0x2d5/0x3c0 [xfs]
-[51717.039506]  schedule+0x2c/0x80
-[51717.039530]  _xfs_log_force_lsn+0x20e/0x350 [xfs]
-[51717.039533]  ? wake_up_q+0x80/0x80
-[51717.039556]  __xfs_trans_commit+0x20b/0x280 [xfs]
-[51717.039577]  xfs_trans_commit+0x10/0x20 [xfs]
-[51717.039600]  xfs_sync_sb+0x6d/0x80 [xfs]
-[51717.039623]  xfs_log_worker+0xe7/0x100 [xfs]
-[51717.039626]  process_one_work+0x1de/0x420
-[51717.039627]  worker_thread+0x32/0x410
-[51717.039628]  kthread+0x121/0x140
-[51717.039630]  ? process_one_work+0x420/0x420
-[51717.039631]  ? kthread_create_worker_on_cpu+0x70/0x70
-[51717.039633]  ret_from_fork+0x35/0x40
-```
+Changes from v4:
+* Use octal values for file and directory permissions
+* Set initial directory permissions to 0555 (no write permission)
+* Prevent setting write permissions for directories
 
-A (b) process's backtrace that is got by `sudo cat /proc/<PID of a D
-process>/stack`
+Changes from v3:
+* Fixed many typos in the documentation
+* Use symbolic file permission macros instead of octal values
+  (checkpatch.pl complains about this)
 
-```
-[<0>] _xfs_log_force_lsn+0x20e/0x350 [xfs]
-[<0>] __xfs_trans_commit+0x20b/0x280 [xfs]
-[<0>] xfs_trans_commit+0x10/0x20 [xfs]
-[<0>] xfs_sync_sb+0x6d/0x80 [xfs]
-[<0>] xfs_log_sbcount+0x4b/0x60 [xfs]
-[<0>] xfs_unmountfs+0xe7/0x200 [xfs]
-[<0>] xfs_fs_put_super+0x3e/0xb0 [xfs]
-[<0>] generic_shutdown_super+0x72/0x120
-[<0>] kill_block_super+0x2c/0x80
-[<0>] deactivate_locked_super+0x48/0x80
-[<0>] deactivate_super+0x40/0x60
-[<0>] cleanup_mnt+0x3f/0x80
-[<0>] __cleanup_mnt+0x12/0x20
-[<0>] task_work_run+0x9d/0xc0
-[<0>] exit_to_usermode_loop+0xc0/0xd0
-[<0>] do_syscall_64+0x121/0x130
-[<0>] entry_SYSCALL_64_after_hwframe+0x3d/0xa2
-[<0>] 0xffffffffffffffff
-```
+Changes from v2:
+* Address comments and suggestions from Darrick:
+  - Make the inode of OFFLINE and READONLY zones immutable when
+    mounting. Also do this during zone information check after an IO
+    error.
+  - Change super block CRC seed to ~0.
+  - Avoid potential compiler warning in zonefs_create_zgroup().
+* Fixed endianness related compilation warning detected by kbuild bot.
 
-Here is the result of my investigation:
+Changes from v1:
+* Fixed comment typo
+* Improved documentation as suggested by Hannes
 
-- I couldn't find any commit that would be related to this problem,
-both in the upstream
-  master and master and XFS's for-next
-- I couldn't find any discussions that would be related to the
-above-mentioned backtrace
-  in linux-xfs ML
-- There would be a problem in the transaction commit of XFS. In both
-of two traces,
-  (b) processes hung in _xfs_log_force_lsn+0x20e/0x350 [xfs]. This
-code is one of
-  the following two xlog_wait().
+Damien Le Moal (2):
+  fs: New zonefs file system
+  zonefs: Add documentation
 
-  https://github.com/torvalds/linux/blob/master/fs/xfs/xfs_log.c#L3366
-  https://github.com/torvalds/linux/blob/master/fs/xfs/xfs_log.c#L3387
+ Documentation/filesystems/zonefs.txt |  258 +++++
+ MAINTAINERS                          |   10 +
+ fs/Kconfig                           |    1 +
+ fs/Makefile                          |    1 +
+ fs/zonefs/Kconfig                    |    9 +
+ fs/zonefs/Makefile                   |    4 +
+ fs/zonefs/super.c                    | 1366 ++++++++++++++++++++++++++
+ fs/zonefs/zonefs.h                   |  187 ++++
+ include/uapi/linux/magic.h           |    1 +
+ 9 files changed, 1837 insertions(+)
+ create mode 100644 Documentation/filesystems/zonefs.txt
+ create mode 100644 fs/zonefs/Kconfig
+ create mode 100644 fs/zonefs/Makefile
+ create mode 100644 fs/zonefs/super.c
+ create mode 100644 fs/zonefs/zonefs.h
 
-  These processes released CPU voluntarily in the following line.
+-- 
+2.24.1
 
-  https://github.com/torvalds/linux/blob/master/fs/xfs/xfs_log_priv.h#L549
-
-  These two processes should be woken by the other process after that.
-  However, unfortunately, it didn't happen.
-
-Test environment:
-- kernel: 4.15.0-<x>-generic
-- XFS # Anyone hasn't reported this problem with other filesystems yet.
-
-Related discussions:
-- Issue of Rook:
-  https://github.com/rook/rook/issues/3132
-- Issue of Ceph
-  https://tracker.ceph.com/issues/40068
-
-Thanks,
-Satoru
