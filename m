@@ -2,110 +2,103 @@ Return-Path: <SRS0=drEG=3Q=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2F46C33CB1
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jan 2020 22:36:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BF0EC2D0DB
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jan 2020 22:56:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A8FC124656
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jan 2020 22:36:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 770B42087F
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jan 2020 22:56:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726267AbgA0Wge (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Jan 2020 17:36:34 -0500
-Received: from fieldses.org ([173.255.197.46]:43896 "EHLO fieldses.org"
+        id S1726205AbgA0W4E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Jan 2020 17:56:04 -0500
+Received: from sandeen.net ([63.231.237.45]:42082 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726101AbgA0Wge (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 27 Jan 2020 17:36:34 -0500
-Received: by fieldses.org (Postfix, from userid 2815)
-        id D13241C95; Mon, 27 Jan 2020 17:36:31 -0500 (EST)
-Date:   Mon, 27 Jan 2020 17:36:31 -0500
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Murphy Zhou <jencce.kernel@gmail.com>, linux-xfs@vger.kernel.org,
-        linux-nfs@vger.kernel.org
-Subject: Re: A NFS, xfs, reflink and rmapbt story
-Message-ID: <20200127223631.GA28982@fieldses.org>
-References: <20200123083217.flkl6tkyr4b7zwuk@xzhoux.usersys.redhat.com>
- <20200124011019.GA8247@magnolia>
+        id S1726164AbgA0W4E (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 27 Jan 2020 17:56:04 -0500
+Received: from [10.0.0.3] (lucys-air [10.0.0.3])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 2CE0B5EDAE
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Jan 2020 16:56:04 -0600 (CST)
+To:     linux-xfs <linux-xfs@vger.kernel.org>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: [PATCH] xfsprogs: do not redeclare globals provided by libraries
+Message-ID: <0892b951-ac99-9f84-9c65-421798daa547@sandeen.net>
+Date:   Mon, 27 Jan 2020 16:56:02 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0)
+ Gecko/20100101 Thunderbird/68.4.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200124011019.GA8247@magnolia>
-User-Agent: Mutt/1.5.21 (2010-09-15)
-From:   bfields@fieldses.org (J. Bruce Fields)
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 23, 2020 at 05:10:19PM -0800, Darrick J. Wong wrote:
-> On Thu, Jan 23, 2020 at 04:32:17PM +0800, Murphy Zhou wrote:
-> > Hi,
-> > 
-> > Deleting the files left by generic/175 costs too much time when testing
-> > on NFSv4.2 exporting xfs with rmapbt=1.
-> > 
-> > "./check -nfs generic/175 generic/176" should reproduce it.
-> > 
-> > My test bed is a 16c8G vm.
-> 
-> What kind of storage?
-> 
-> > NFSv4.2  rmapbt=1   24h+
-> 
-> <URK> Wow.  I wonder what about NFS makes us so slow now?  Synchronous
-> transactions on the inactivation?  (speculates wildly at the end of the
-> workday)
-> 
-> I'll have a look in the morning.  It might take me a while to remember
-> how to set up NFS42 :)
+From: Eric Sandeen <sandeen@redhat.com>
 
-It may just be the default on a recent enough distro.
+In each of these cases, db, logprint, and mdrestore are redeclaring
+as a global variable something which was already provided by a
+library they link with.
 
-Though I'd be a little surprised if this behavior is specific to the
-protocol version.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-nfsd_unlink() is basically just vfs_unlink() followed by
-commit_metadata().
+diff --git a/db/init.c b/db/init.c
+index 455220a..0ac3736 100644
+--- a/db/init.c
++++ b/db/init.c
+@@ -27,7 +27,6 @@ static int		force;
+  static struct xfs_mount	xmount;
+  struct xfs_mount	*mp;
+  static struct xlog	xlog;
+-libxfs_init_t		x;
+  xfs_agnumber_t		cur_agno = NULLAGNUMBER;
 
---b.
+  static void
+diff --git a/logprint/logprint.c b/logprint/logprint.c
+index 7754a2a..511a32a 100644
+--- a/logprint/logprint.c
++++ b/logprint/logprint.c
+@@ -24,7 +24,6 @@ int	print_buffer;
+  int	print_overwrite;
+  int     print_no_data;
+  int     print_no_print;
+-int     print_exit = 1; /* -e is now default. specify -c to override */
+  static int	print_operation = OP_PRINT;
 
-> 
-> --D
-> 
-> > NFSv4.2  rmapbt=0   1h-2h
-> > xfs      rmapbt=1   10m+
-> > 
-> > At first I thought it hung, turns out it was just slow when deleting
-> > 2 massive reflined files.
-> > 
-> > It's reproducible using latest Linus tree, and Darrick's deferred-inactivation
-> > branch. Run latest for-next branch xfsprogs.
-> > 
-> > I'm not sure it's something wrong, just sharing with you guys. I don't
-> > remember I have identified this as a regression. It should be there for
-> > a long time.
-> > 
-> > Sending to xfs and nfs because it looks like all related. :)
-> > 
-> > This almost gets lost in my list. Not much information recorded, some
-> > trace-cmd outputs for your info. It's easy to reproduce. If it's
-> > interesting to you and need any info, feel free to ask.
-> > 
-> > Thanks,
-> > 
-> > 
-> > 7)   0.279 us    |  xfs_btree_get_block [xfs]();
-> > 7)   0.303 us    |  xfs_btree_rec_offset [xfs]();
-> > 7)   0.301 us    |  xfs_rmapbt_init_high_key_from_rec [xfs]();
-> > 7)   0.356 us    |  xfs_rmapbt_diff_two_keys [xfs]();
-> > 7)   0.305 us    |  xfs_rmapbt_init_key_from_rec [xfs]();
-> > 7)   0.306 us    |  xfs_rmapbt_diff_two_keys [xfs]();
-> > 7)               |  xfs_rmap_query_range_helper [xfs]() {
-> > 7)   0.279 us    |    xfs_rmap_btrec_to_irec [xfs]();
-> > 7)               |    xfs_rmap_lookup_le_range_helper [xfs]() {
-> > 1)   0.786 us    |  _raw_spin_lock_irqsave();
-> > 7)               |      /* xfs_rmap_lookup_le_range_candidate: dev 8:34 agno 2 agbno 6416 len 256 owner 67160161 offset 99284480 flags 0x0 */
-> > 7)   0.506 us    |    }
-> > 7)   1.680 us    |  }
+  static void
+@@ -132,6 +131,7 @@ main(int argc, char **argv)
+  	bindtextdomain(PACKAGE, LOCALEDIR);
+  	textdomain(PACKAGE);
+  	memset(&mount, 0, sizeof(mount));
++	print_exit = 1; /* -e is now default. specify -c to override */
+
+  	progname = basename(argv[0]);
+  	while ((c = getopt(argc, argv, "bC:cdefl:iqnors:tDVv")) != EOF) {
+@@ -152,7 +152,7 @@ main(int argc, char **argv)
+  			case 'e':
+  			    /* -e is now default
+  			     */
+-				print_exit++;
++				print_exit = 1;
+  				break;
+  			case 'C':
+  				print_operation = OP_COPY;
+diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
+index 3375e08..1cd399d 100644
+--- a/mdrestore/xfs_mdrestore.c
++++ b/mdrestore/xfs_mdrestore.c
+@@ -7,7 +7,6 @@
+  #include "libxfs.h"
+  #include "xfs_metadump.h"
+
+-char 		*progname;
+  static int	show_progress = 0;
+  static int	show_info = 0;
+  static int	progress_since_warning = 0;
+
