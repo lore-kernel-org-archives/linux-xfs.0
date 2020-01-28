@@ -2,277 +2,147 @@ Return-Path: <SRS0=UJS8=3R=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E47BC2D0DB
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jan 2020 14:56:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42F11C2D0DB
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jan 2020 15:34:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 69B03214AF
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jan 2020 14:56:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C4D4207FD
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jan 2020 15:34:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Tlz8dgGy"
+	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="magfzL/L"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726618AbgA1O4C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Jan 2020 09:56:02 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:24258 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726497AbgA1O4B (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jan 2020 09:56:01 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1580223360;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=TWboZqW3VINuafp7zIAqRVFxTqG2UygmPXqzURkJ23o=;
-        b=Tlz8dgGyBFBogOiQwlAsxYRcBQB9kN27rAZlrzopnu8Gl+npmt9LPS/Odk8Ia2W62V/Zrx
-        ATUWRIelibR+DqE0nSTlHYcWWqqWuTQER4a+LxvZRfEZqmQXvwzLpKYDkvalP1n9adgAvD
-        2DhD4gWE3G9po4uzCdY+rdlu55SrJ/k=
-Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
- [209.85.128.69]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-31-_xMRPlnVMxCe4xU7R75Nkw-1; Tue, 28 Jan 2020 09:55:59 -0500
-X-MC-Unique: _xMRPlnVMxCe4xU7R75Nkw-1
-Received: by mail-wm1-f69.google.com with SMTP id g26so1020818wmk.6
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Jan 2020 06:55:59 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=TWboZqW3VINuafp7zIAqRVFxTqG2UygmPXqzURkJ23o=;
-        b=hAXvx6ORKusPd9HrQ5h0DU9owLe+xd5lLRmj7YbdOypjqwtj0VkerHw6RIGyURPwyl
-         lG9K20lBIHawjNDqVtavAq3bW3WsnBLX3K7fXqUHDggwJyZ6oS6wIkydaOZysDeT7Mh4
-         ylLGqG49Lt2wH2uIvIRzcjHdy1abkwuuepE3TbEC++zq0ygU7nAmDFVFDdmHB0JHsXdl
-         Tu3iZOmJZYA7NgPs0t+Vixao3kCcoAB9Tc1dLE74Cy0uhp4y/HjJTl1ZCkHVikRZemc2
-         pqImfJiazkx5O1tfbcfvKHZfcXkXOWQbFsk30EeDJOtSSZNj9zg6DS/+aq45R2i5vpgF
-         K1Pg==
-X-Gm-Message-State: APjAAAUcZTYzzAvEhRIWdnJQyP9kQuFTv4x0BLb6UxR4rUNe80TJb/Fn
-        xDe+ltmIKY1i8wOfh84DxOzFkYxhtvFJ/+hamdJh/vgiAPQLDDf6FPq6ZRuKl2se4l6LurxrcB9
-        kxuZEwPGjqoUH+Ep4Yr54
-X-Received: by 2002:adf:f789:: with SMTP id q9mr30922417wrp.103.1580223356428;
-        Tue, 28 Jan 2020 06:55:56 -0800 (PST)
-X-Google-Smtp-Source: APXvYqy+1cnTm92JkZUNOwiwW7Iek2u0wFgfuatNcETYrlwx5tgkLjbHzxy/FMnLfYSvseD2nS+A+Q==
-X-Received: by 2002:adf:f789:: with SMTP id q9mr30922400wrp.103.1580223356179;
-        Tue, 28 Jan 2020 06:55:56 -0800 (PST)
-Received: from localhost.localdomain.com (243.206.broadband12.iol.cz. [90.179.206.243])
-        by smtp.gmail.com with ESMTPSA id q130sm3325939wme.19.2020.01.28.06.55.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Jan 2020 06:55:52 -0800 (PST)
-From:   Pavel Reichl <preichl@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     Pavel Reichl <preichl@redhat.com>
-Subject: [PATCH 4/4] xfs: replace mr*() functions with native rwsem calls
-Date:   Tue, 28 Jan 2020 15:55:28 +0100
-Message-Id: <20200128145528.2093039-5-preichl@redhat.com>
-X-Mailer: git-send-email 2.24.1
-In-Reply-To: <20200128145528.2093039-1-preichl@redhat.com>
-References: <20200128145528.2093039-1-preichl@redhat.com>
+        id S1726383AbgA1Pes (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Jan 2020 10:34:48 -0500
+Received: from mout.web.de ([212.227.15.4]:34821 "EHLO mout.web.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725881AbgA1Pes (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 28 Jan 2020 10:34:48 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
+        s=dbaedf251592; t=1580225673;
+        bh=kuan1BB3+eA9PIxqt53EP+BCiRzVeDYljJVoZy/dbB4=;
+        h=X-UI-Sender-Class:To:Cc:Subject:From:Date;
+        b=magfzL/LCejCnF1m+eOTktCEcrMZ0Sccs2LKTLKcshRS8xnFvkdDs3F6dMYGnxgAc
+         UHfQJetNEDt5lX3PHJRL7SNv5Glo85HfDSKrGoFtP9EKjgUixgbdmfXlyghTA/cNOJ
+         GfmzauQbHh4Z08Bj2Snu06/yiQgeO2H04wIlmz5s=
+X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
+Received: from [192.168.1.2] ([2.244.131.179]) by smtp.web.de (mrweb003
+ [213.165.67.108]) with ESMTPSA (Nemesis) id 0MZDQ4-1jHIcW3rR6-00KwnK; Tue, 28
+ Jan 2020 16:34:33 +0100
+To:     Damien Le Moal <damien.lemoal@wdc.com>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Johannes Thumshirn <jth@kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Naohiro Aota <naohiro.aota@wdc.com>
+Subject: Re: [PATCH v9 1/2] fs: New zonefs file system
+From:   Markus Elfring <Markus.Elfring@web.de>
+Autocrypt: addr=Markus.Elfring@web.de; prefer-encrypt=mutual; keydata=
+ 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 FEE=
+Message-ID: <23bf669d-b75f-ed94-478d-06bddd357919@web.de>
+Date:   Tue, 28 Jan 2020 16:34:25 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:AMoCxb91IWXlMPlqQqprS6vWSIadti+uj2r/Tk1/AQ8k/fKeo/W
+ QOubQuhASzet5qZO4vapjEzmlAPd66/2mdV9tkLT0mRoap5QLRcg/8nViFipRtrbg4eszVB
+ kZwKu2aCzWJSXmrfoB/YVnVWRQIEqfc84RnxXB2WUEzPvwHhsdAi67eilmdllQ3y7yK+Adk
+ Rro8yhvkrtCIADf3m2U1w==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:9mcCpnmjlE0=:RVG8+faCUcL+O1EKqG5NoQ
+ AXaimUFMOCmLy+tB7qyj1igpwbmecyAcrInUnT8huaM2zLT4O+Op0DGqkiY7D7OYf4Klzrrw1
+ w/SGWjhthcFAH9stj5r57pCIkXwV3fFimdcOZckZMu5Hl3w7ZuaYr/WXGyo5D+p28qKemJt5J
+ DC2ASySNdtB1e9Ffq4HdOXXKarZQvPaHf+RmXqH/kNepGmMOOhIgV6aro4Ajs8jgLnc2+vslW
+ M0YHY1yFCOa8+GDgq3CknoBQl1zyihFu1MsAE7L7PzYpBO02XeDCntdK1mAJkTbUSUc/m1Alk
+ iQB+wJ5jC6+FAu5tBOcmYf/C4/msx2Tg3f/p36/LQ7i1P6q0UHKMc3srI9SXoBzNYdcS3n6up
+ W3k2E93QMyejEZ4MdDmPXeeKBHTTHSfo3VLPZSHso0r1Vw9UT7AD6GjFXMYzhnjZNjGr6o5GF
+ 4y2xIY/Qvmj6H62cBLFdWp8jN5rReN2lu3GCTkrN2BDE+Risa3naBT4TYOvCeLfahSj3ol+Xm
+ hoJQGG4t5Xrgtmh2QUWbD+7xHUgm/LkWK6FtGvfcvYCzbiutODCKntyet15alPl9Myg3RtUyR
+ NbHNDsHYV0xeM7VmcfI5W2Xam0jsRCGBAFEp3Vttn+0b0aCXXKh/fhpht4MJmJErT/1OZl0BK
+ rJikj2YEpMn/tg5L+TZp+lwBgWIPsxlEV4ZwU3z0Kqa67nAcYD/6/lM4ccZvbheOj5qmCMUwQ
+ RUNu2JjnSDbaEtqB+KNvg3u2b8IkJ9Wr7CzhSd4WKCtlTW8s+1mdDimzqt48LIGJjDSafzjgI
+ SaN4fIJ9YpSkAI6nZqXQqTiCmnJKD4OOMkOG3D/+p6q+2ZhKm6NqpxSkHQEcDofg0CKAUALGA
+ E/qYVm9MKNZniPxBv//lWQbWJIPcGZBzGseCIlvhY7iBEap3xkZfEIE9zZQPuzaEdEkfcc5wJ
+ P8R5V0+LeKOmnrMyhMGX2bcJS5PkRz7FzBLi5vSxKN7JNn9ioZNP9FFgeW9wRkN39Wjm1k1JJ
+ BCeiKdGNxVWqmvKymH7jxkEEpE7Dms6pLO4fWcvNWO62+5upB2Iyu90Fl502aOSFBcQH3D9ST
+ YKRkQhtAtClf8lGC2BIFZh6sAZWVycdXa7o0nWrmnLxGwWAuVcNgIOcnZ8Tl3qBrmDhsQmiFZ
+ rdHv9LA63gX1H9p6fjVxvkaEaLSmabieRnizkSM60rFziYSCtUc+dm4noMz9JY7aMsQzhY86k
+ 0F8TfqQrV4vGvY7EF
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Remove mr*() functions as they only wrap the standard kernel functions
-for kernel manimulation.
+=E2=80=A6
+> +++ b/fs/zonefs/super.c
+=E2=80=A6
+> +out:
+> +	kunmap(page);
+> +out_free:
+> +	__free_page(page);
 
-Signed-off-by: Pavel Reichl <preichl@redhat.com>
----
- fs/xfs/mrlock.h    | 61 ----------------------------------------------
- fs/xfs/xfs_inode.c | 33 +++++++++++++------------
- fs/xfs/xfs_linux.h |  1 -
- fs/xfs/xfs_super.c |  6 ++---
- 4 files changed, 19 insertions(+), 82 deletions(-)
- delete mode 100644 fs/xfs/mrlock.h
 
-diff --git a/fs/xfs/mrlock.h b/fs/xfs/mrlock.h
-deleted file mode 100644
-index 245f417a7ffe..000000000000
---- a/fs/xfs/mrlock.h
-+++ /dev/null
-@@ -1,61 +0,0 @@
--// SPDX-License-Identifier: GPL-2.0
--/*
-- * Copyright (c) 2000-2006 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- */
--#ifndef __XFS_SUPPORT_MRLOCK_H__
--#define __XFS_SUPPORT_MRLOCK_H__
--
--#include <linux/rwsem.h>
--
--typedef struct {
--	struct rw_semaphore	mr_lock;
--} mrlock_t;
--
--#if defined(DEBUG) || defined(XFS_WARN)
--#define mrinit(smp, name)	init_rwsem(smp)
--#else
--#define mrinit(smp, name)	init_rwsem(smp)
--#endif
--
--#define mrlock_init(smp, t, n, s)	mrinit(smp, n)
--#define mrfree(smp)		do { } while (0)
--
--static inline void mraccess_nested(struct rw_semaphore *s, int subclass)
--{
--	down_read_nested(s, subclass);
--}
--
--static inline void mrupdate_nested(struct rw_semaphore *s, int subclass)
--{
--	down_write_nested(s, subclass);
--}
--
--static inline int mrtryaccess(struct rw_semaphore *s)
--{
--	return down_read_trylock(s);
--}
--
--static inline int mrtryupdate(struct rw_semaphore *s)
--{
--	if (!down_write_trylock(s))
--		return 0;
--	return 1;
--}
--
--static inline void mrunlock_excl(struct rw_semaphore *s)
--{
--	up_write(s);
--}
--
--static inline void mrunlock_shared(struct rw_semaphore *s)
--{
--	up_read(s);
--}
--
--static inline void mrdemote(struct rw_semaphore *s)
--{
--	downgrade_write(s);
--}
--
--#endif /* __XFS_SUPPORT_MRLOCK_H__ */
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 567dae69cfac..01bca957e305 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -191,14 +191,15 @@ xfs_ilock(
- 	}
- 
- 	if (lock_flags & XFS_MMAPLOCK_EXCL)
--		mrupdate_nested(&ip->i_mmaplock, XFS_MMAPLOCK_DEP(lock_flags));
-+		down_write_nested(&ip->i_mmaplock,
-+				XFS_MMAPLOCK_DEP(lock_flags));
- 	else if (lock_flags & XFS_MMAPLOCK_SHARED)
--		mraccess_nested(&ip->i_mmaplock, XFS_MMAPLOCK_DEP(lock_flags));
-+		down_read_nested(&ip->i_mmaplock, XFS_MMAPLOCK_DEP(lock_flags));
- 
- 	if (lock_flags & XFS_ILOCK_EXCL)
--		mrupdate_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
-+		down_write_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
- 	else if (lock_flags & XFS_ILOCK_SHARED)
--		mraccess_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
-+		down_read_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
- }
- 
- /*
-@@ -242,27 +243,27 @@ xfs_ilock_nowait(
- 	}
- 
- 	if (lock_flags & XFS_MMAPLOCK_EXCL) {
--		if (!mrtryupdate(&ip->i_mmaplock))
-+		if (!down_write_trylock(&ip->i_mmaplock))
- 			goto out_undo_iolock;
- 	} else if (lock_flags & XFS_MMAPLOCK_SHARED) {
--		if (!mrtryaccess(&ip->i_mmaplock))
-+		if (!down_read_trylock(&ip->i_mmaplock))
- 			goto out_undo_iolock;
- 	}
- 
- 	if (lock_flags & XFS_ILOCK_EXCL) {
--		if (!mrtryupdate(&ip->i_lock))
-+		if (!down_write_trylock(&ip->i_lock))
- 			goto out_undo_mmaplock;
- 	} else if (lock_flags & XFS_ILOCK_SHARED) {
--		if (!mrtryaccess(&ip->i_lock))
-+		if (!down_read_trylock(&ip->i_lock))
- 			goto out_undo_mmaplock;
- 	}
- 	return 1;
- 
- out_undo_mmaplock:
- 	if (lock_flags & XFS_MMAPLOCK_EXCL)
--		mrunlock_excl(&ip->i_mmaplock);
-+		up_write(&ip->i_mmaplock);
- 	else if (lock_flags & XFS_MMAPLOCK_SHARED)
--		mrunlock_shared(&ip->i_mmaplock);
-+		up_read(&ip->i_mmaplock);
- out_undo_iolock:
- 	if (lock_flags & XFS_IOLOCK_EXCL)
- 		up_write(&VFS_I(ip)->i_rwsem);
-@@ -309,14 +310,14 @@ xfs_iunlock(
- 		up_read(&VFS_I(ip)->i_rwsem);
- 
- 	if (lock_flags & XFS_MMAPLOCK_EXCL)
--		mrunlock_excl(&ip->i_mmaplock);
-+		up_write(&ip->i_mmaplock);
- 	else if (lock_flags & XFS_MMAPLOCK_SHARED)
--		mrunlock_shared(&ip->i_mmaplock);
-+		up_read(&ip->i_mmaplock);
- 
- 	if (lock_flags & XFS_ILOCK_EXCL)
--		mrunlock_excl(&ip->i_lock);
-+		up_write(&ip->i_lock);
- 	else if (lock_flags & XFS_ILOCK_SHARED)
--		mrunlock_shared(&ip->i_lock);
-+		up_read(&ip->i_lock);
- 
- 	trace_xfs_iunlock(ip, lock_flags, _RET_IP_);
- }
-@@ -335,9 +336,9 @@ xfs_ilock_demote(
- 		~(XFS_IOLOCK_EXCL|XFS_MMAPLOCK_EXCL|XFS_ILOCK_EXCL)) == 0);
- 
- 	if (lock_flags & XFS_ILOCK_EXCL)
--		mrdemote(&ip->i_lock);
-+		downgrade_write(&ip->i_lock);
- 	if (lock_flags & XFS_MMAPLOCK_EXCL)
--		mrdemote(&ip->i_mmaplock);
-+		downgrade_write(&ip->i_mmaplock);
- 	if (lock_flags & XFS_IOLOCK_EXCL)
- 		downgrade_write(&VFS_I(ip)->i_rwsem);
- 
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index 8738bb03f253..921a3eb093ed 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -22,7 +22,6 @@ typedef __u32			xfs_nlink_t;
- #include "xfs_types.h"
- 
- #include "kmem.h"
--#include "mrlock.h"
- 
- #include <linux/semaphore.h>
- #include <linux/mm.h>
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 760901783944..1289ce1f4e9e 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -661,10 +661,8 @@ xfs_fs_inode_init_once(
- 	atomic_set(&ip->i_pincount, 0);
- 	spin_lock_init(&ip->i_flags_lock);
- 
--	mrlock_init(&ip->i_mmaplock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
--		     "xfsino", ip->i_ino);
--	mrlock_init(&ip->i_lock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
--		     "xfsino", ip->i_ino);
-+	init_rwsem(&ip->i_mmaplock);
-+	init_rwsem(&ip->i_lock);
- }
- 
- /*
--- 
-2.24.1
+Would you like to reconsider your name selection for such labels?
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Do=
+cumentation/process/coding-style.rst?id=3Db0be0eff1a5ab77d588b76bd8b1c92d5=
+d17b3f73#n460
 
+Change possibility:
+
++unmap:
++	kunmap(page);
++free_page:
++	__free_page(page);
+
+
+Regards,
+Markus
