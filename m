@@ -2,163 +2,151 @@ Return-Path: <SRS0=UJS8=3R=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEB37C33CB3
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jan 2020 14:34:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDF4EC2D0DB
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jan 2020 14:48:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A5CF8207FD
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jan 2020 14:34:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ABF5B207FD
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jan 2020 14:48:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728117AbgA1OeF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Jan 2020 09:34:05 -0500
-Received: from outbound-smtp28.blacknight.com ([81.17.249.11]:47216 "EHLO
-        outbound-smtp28.blacknight.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728696AbgA1OYc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jan 2020 09:24:32 -0500
-Received: from mail.blacknight.com (unknown [81.17.254.16])
-        by outbound-smtp28.blacknight.com (Postfix) with ESMTPS id 59388D01C5
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Jan 2020 14:24:30 +0000 (GMT)
-Received: (qmail 7133 invoked from network); 28 Jan 2020 14:24:30 -0000
-Received: from unknown (HELO techsingularity.net) (mgorman@techsingularity.net@[84.203.18.57])
-  by 81.17.254.9 with ESMTPSA (AES256-SHA encrypted, authenticated); 28 Jan 2020 14:24:30 -0000
-Date:   Tue, 28 Jan 2020 14:24:27 +0000
-From:   Mel Gorman <mgorman@techsingularity.net>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
-        Jan Kara <jack@suse.cz>,
-        Vincent Guittot <vincent.guittot@linaro.org>,
-        Phil Auld <pauld@redhat.com>, Ming Lei <ming.lei@redhat.com>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] sched, fair: Allow a per-cpu kthread waking a task to
- stack on the same CPU
-Message-ID: <20200128142427.GC3466@techsingularity.net>
-References: <20200127143608.GX3466@techsingularity.net>
- <20200127223256.GA18610@dread.disaster.area>
+        id S1727322AbgA1Oso (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Jan 2020 09:48:44 -0500
+Received: from sandeen.net ([63.231.237.45]:35314 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726715AbgA1Osn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 28 Jan 2020 09:48:43 -0500
+Received: from Lucys-MacBook-Air.local (erlite [10.0.0.1])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 3460F2542;
+        Tue, 28 Jan 2020 08:48:42 -0600 (CST)
+Subject: Re: [PATCH] xfsprogs: do not redeclare globals provided by libraries
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>
+References: <0892b951-ac99-9f84-9c65-421798daa547@sandeen.net>
+ <20200128032907.GM3447196@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <332e4c3a-ddac-4e48-b236-e4c2248163a5@sandeen.net>
+Date:   Tue, 28 Jan 2020 08:48:40 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0)
+ Gecko/20100101 Thunderbird/68.4.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Disposition: inline
-In-Reply-To: <20200127223256.GA18610@dread.disaster.area>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20200128032907.GM3447196@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-I'm adding Jan Kara to the cc as he was looking into the workqueue
-implemention in depth this morning and helped me better understand what
-is going on.
-
-Phil and Ming are still cc'd as an independent test would still be nice.
-
-> <light bulb illumination>
+On 1/27/20 9:29 PM, Darrick J. Wong wrote:
+> On Mon, Jan 27, 2020 at 04:56:02PM -0600, Eric Sandeen wrote:
+>> From: Eric Sandeen <sandeen@redhat.com>
+>>
+>> In each of these cases, db, logprint, and mdrestore are redeclaring
+>> as a global variable something which was already provided by a
+>> library they link with.
 > 
-> Is this actually ping-ponging the CIL flush and journal IO
-> completion because xlog_bio_end_io() always punts journal IO
-> completion to the log workqueue, which is:
+> Er... which library?
+
+libxfs and libxlog ...
+
+
+   File                Line
+0 libxlog/util.c      10 int print_exit;
+1 logprint/logprint.c 27 int print_exit = 1;
+
+   File           Line
+0 db/init.c      30 libxfs_init_t x;
+1 libxlog/util.c 13 libxfs_init_t x;
+
+   File                      Line
+0 fsr/xfs_fsr.c              31 char *progname;
+1 io/init.c                  14 char *progname;
+2 libxfs/init.c              28 char *progname = "libxfs";
+3 mdrestore/xfs_mdrestore.c  10 char *progname;
+
+(fsr & io don't link w/ libxfs; mdrestore does)
+
+
 > 
-> 	log->l_ioend_workqueue = alloc_workqueue("xfs-log/%s",
-> 			WQ_MEM_RECLAIM | WQ_FREEZABLE | WQ_HIGHPRI, 0,
-> 			mp->m_super->s_id);
+> Also, uh...maybe we shouldn't be exporting globals across libraries?
 > 
-> i.e. it uses per-cpu kthreads for processing journal IO completion
-> similar to DIO io completion and thereby provides a vector for
-> the same issue?
+> (He says having not looked for how many there are lurki... ye gods)
+
+Well, it's ugly for sure.
+
+We could either try to re-architect this to
+
+1) pass stuff like progname all over the place, or
+2) consistently make the library provide it as a global, or
+3) consistently make utils provide it to the library as a global (?)
+
+choose your poison?
+
+> 
+> --D
+> 
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>> ---
+>>
+>> diff --git a/db/init.c b/db/init.c
+>> index 455220a..0ac3736 100644
+>> --- a/db/init.c
+>> +++ b/db/init.c
+>> @@ -27,7 +27,6 @@ static int		force;
+>>   static struct xfs_mount	xmount;
+>>   struct xfs_mount	*mp;
+>>   static struct xlog	xlog;
+>> -libxfs_init_t		x;
+>>   xfs_agnumber_t		cur_agno = NULLAGNUMBER;
+>>
+>>   static void
+>> diff --git a/logprint/logprint.c b/logprint/logprint.c
+>> index 7754a2a..511a32a 100644
+>> --- a/logprint/logprint.c
+>> +++ b/logprint/logprint.c
+>> @@ -24,7 +24,6 @@ int	print_buffer;
+>>   int	print_overwrite;
+>>   int     print_no_data;
+>>   int     print_no_print;
+>> -int     print_exit = 1; /* -e is now default. specify -c to override */
+>>   static int	print_operation = OP_PRINT;
+>>
+>>   static void
+>> @@ -132,6 +131,7 @@ main(int argc, char **argv)
+>>   	bindtextdomain(PACKAGE, LOCALEDIR);
+>>   	textdomain(PACKAGE);
+>>   	memset(&mount, 0, sizeof(mount));
+>> +	print_exit = 1; /* -e is now default. specify -c to override */
+>>
+>>   	progname = basename(argv[0]);
+>>   	while ((c = getopt(argc, argv, "bC:cdefl:iqnors:tDVv")) != EOF) {
+>> @@ -152,7 +152,7 @@ main(int argc, char **argv)
+>>   			case 'e':
+>>   			    /* -e is now default
+>>   			     */
+>> -				print_exit++;
+>> +				print_exit = 1;
+>>   				break;
+>>   			case 'C':
+>>   				print_operation = OP_COPY;
+>> diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
+>> index 3375e08..1cd399d 100644
+>> --- a/mdrestore/xfs_mdrestore.c
+>> +++ b/mdrestore/xfs_mdrestore.c
+>> @@ -7,7 +7,6 @@
+>>   #include "libxfs.h"
+>>   #include "xfs_metadump.h"
+>>
+>> -char 		*progname;
+>>   static int	show_progress = 0;
+>>   static int	show_info = 0;
+>>   static int	progress_since_warning = 0;
+>>
 > 
 
-Your light bulb is on point. The XFS unbound workqueue does run near the
-task and does not directly cause the migration but the IO completions
-matter. As it turned out, it was the IO completions I was looking at
-in the old traces but there was insufficient detail to see the exact
-sequence. I only observed that a bound wq at the end was causing the
-migration and it was a consistent pattern.
-
-I did a more detailed trace that included workqueue tracepoints. I limited
-the run to 1 and 2 dbench clients and compared with and without the
-patch. I still did not dig deep into the specifics of how XFS interacts
-with workqueues because I'm focused on how the scheduler reacts.
-
-The patch is still having an impact with bound workqueues as expected
-because;
-
-# zgrep sched_migrate_task 5.5.0-rc7-tipsched-20200124/iter-0/ftrace-dbench4.gz | wc -l
-556259
-# zgrep sched_migrate_task 5.5.0-rc7-kworkerstack-v1r2/iter-0/ftrace-dbench4.gz | wc -l
-11736
-
-There are still migrations happening but there also was a lot of logging
-going on for this run so it's not directly comparable what I originally
-reported.
-
-This is an example sequence of what's happening from a scheduler
-perspective on the vanilla kernel. It's editted a bit because there
-were a lot of other IOs going on, mostly logging related which confuse
-the picture.
-
-          dbench-25633 [004] d...   194.998648: workqueue_queue_work: work struct=000000001cccdc2d function=xlog_cil_push_work [xfs] workqueue=00000000d90239c9 req_cpu=512 cpu=4294967295
-          dbench-25633 [004] d...   194.998650: sched_waking: comm=kworker/u161:6 pid=718 prio=120 target_cpu=006
-          dbench-25633 [004] d...   194.998655: sched_wakeup: comm=kworker/u161:6 pid=718 prio=120 target_cpu=006
-  kworker/u161:6-718   [006] ....   194.998692: workqueue_execute_start: work struct 000000001cccdc2d: function xlog_cil_push_work [xfs]
-  kworker/u161:6-718   [006] ....   194.998706: workqueue_execute_end: work struct 000000001cccdc2d
-
-Dbench is on CPU 4, it queues xlog_cil_push_work on an UNBOUND
-workqueue. An unbound kworker wakes on CPU 6 and finishes quickly.
-
-  kworker/u161:6-718   [006] ....   194.998707: workqueue_execute_start: work struct 0000000046fbf8d5: function wq_barrier_func
-  kworker/u161:6-718   [006] d...   194.998708: sched_waking: comm=dbench pid=25633 prio=120 target_cpu=004
-  kworker/u161:6-718   [006] d...   194.998712: sched_wakeup: comm=dbench pid=25633 prio=120 target_cpu=004
-  kworker/u161:6-718   [006] ....   194.998713: workqueue_execute_end: work struct 0000000046fbf8d5
-
-The kworker wakes dbench and finding that CPU 4 is still free, dbench
-uses its previous CPU and no migration occurs.
-
-          dbench-25633 [004] d...   194.998727: workqueue_queue_work: work struct=00000000442434a7 function=blk_mq_requeue_work workqueue=00000000df918933 req_cpu=512 cpu=4
-          dbench-25633 [004] d...   194.998728: sched_waking: comm=kworker/4:1H pid=991 prio=100 target_cpu=004
-          dbench-25633 [004] dN..   194.998731: sched_wakeup: comm=kworker/4:1H pid=991 prio=100 target_cpu=004
-
-Dbench queues blk_mq_requeue_work. This is a BOUND workqueue with a
-mandatory CPU target of 4 so no migration..
-
-    kworker/4:1H-991   [004] ....   194.998736: workqueue_execute_start: work struct 00000000442434a7: function blk_mq_requeue_work
-    kworker/4:1H-991   [004] ....   194.998742: workqueue_execute_end: work struct 00000000442434a7
-
-blk_mq_requeue_work is done
-
-          <idle>-0     [004] d.s.   194.998859: workqueue_queue_work: work struct=00000000442434a7 function=blk_mq_requeue_work workqueue=00000000df918933 req_cpu=512 cpu=4
-          <idle>-0     [004] d.s.   194.998861: sched_waking: comm=kworker/4:1H pid=991 prio=100 target_cpu=004
-          <idle>-0     [004] dNs.   194.998862: sched_wakeup: comm=kworker/4:1H pid=991 prio=100 target_cpu=004
-    kworker/4:1H-991   [004] ....   194.998866: workqueue_execute_start: work struct 00000000442434a7: function blk_mq_requeue_work
-    kworker/4:1H-991   [004] ....   194.998870: workqueue_execute_end: work struct 00000000442434a7
-          <idle>-0     [004] d.s.   194.998911: workqueue_queue_work: work struct=0000000072f39adb function=xlog_ioend_work [xfs] workqueue=00000000008f3d7f req_cpu=512 cpu=4
-          <idle>-0     [004] d.s.   194.998912: sched_waking: comm=kworker/4:1H pid=991 prio=100 target_cpu=004
-          <idle>-0     [004] dNs.   194.998913: sched_wakeup: comm=kworker/4:1H pid=991 prio=100 target_cpu=004
-
-Ok, this looks like an IRQ delivered for IO completion and the
-xlog_ioend_work is reached. The BOUND kworker is woken again by the IRQ
-handler on CPU 4 because it has no choice.
-
-    kworker/4:1H-991   [004] ....   194.998918: workqueue_execute_start: work struct 0000000072f39adb: function xlog_ioend_work [xfs]
-    kworker/4:1H-991   [004] d...   194.998943: sched_waking: comm=dbench pid=25633 prio=120 target_cpu=004
-    kworker/4:1H-991   [004] d...   194.998945: sched_migrate_task: comm=dbench pid=25633 prio=120 orig_cpu=4 dest_cpu=5
-    kworker/4:1H-991   [004] d...   194.998947: sched_wakeup: comm=dbench pid=25633 prio=120 target_cpu=005
-    kworker/4:1H-991   [004] ....   194.998948: workqueue_execute_end: work struct 0000000072f39adb
-
-The IO completion handler finishes, the bound workqueue tries to wake
-dbench on its old CPU. The BOUND kworker is on CPU 4, the task wants
-CPU 4 but the CPU is busy with the kworker so the scheduler function
-select_idle_sibling picks CPU 5 instead and now the task is migrated
-and we have started our round-trip of all CPUs sharing a LLC. It's not a
-perfect round-robin because p->recent_used_cpu often works.  Looking at
-the traces, dbench bounces back and forth between CPUs 4 and 5 for 7 IO
-completions before bouncing between CPUs 6/7 and so on.
-
-The patch alters the very last stage. The IO completion is a bound kworker
-and allows the wakee task to use the same CPU and avoid the migration.
-
--- 
-Mel Gorman
-SUSE Labs
