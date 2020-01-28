@@ -6,179 +6,105 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3080FC33CB3
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jan 2020 07:58:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62989C33CB3
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jan 2020 09:10:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F070824682
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jan 2020 07:58:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A35A2467E
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jan 2020 09:10:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725848AbgA1H6r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Jan 2020 02:58:47 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:38870 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725844AbgA1H6q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jan 2020 02:58:46 -0500
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00S7rp2V109083
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Jan 2020 02:58:46 -0500
-Received: from e06smtp01.uk.ibm.com (e06smtp01.uk.ibm.com [195.75.94.97])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2xrgvmuyk0-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Jan 2020 02:58:45 -0500
-Received: from localhost
-        by e06smtp01.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <borntraeger@de.ibm.com>;
-        Tue, 28 Jan 2020 07:58:43 -0000
-Received: from b06cxnps4075.portsmouth.uk.ibm.com (9.149.109.197)
-        by e06smtp01.uk.ibm.com (192.168.101.131) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
-        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Tue, 28 Jan 2020 07:58:34 -0000
-Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
-        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 00S7wWmZ48627784
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 28 Jan 2020 07:58:32 GMT
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id A0E85A4040;
-        Tue, 28 Jan 2020 07:58:32 +0000 (GMT)
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id BC979A404D;
-        Tue, 28 Jan 2020 07:58:31 +0000 (GMT)
-Received: from oc7455500831.ibm.com (unknown [9.152.224.41])
-        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Tue, 28 Jan 2020 07:58:31 +0000 (GMT)
-Subject: Re: [kernel-hardening] [PATCH 09/38] usercopy: Mark kmalloc caches as
- usercopy caches
-To:     Kees Cook <keescook@chromium.org>, Jiri Slaby <jslaby@suse.cz>,
-        Julian Wiedmann <jwi@linux.ibm.com>,
-        Ursula Braun <ubraun@linux.ibm.com>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        linux-kernel@vger.kernel.org, David Windsor <dave@nullcore.net>,
-        Pekka Enberg <penberg@kernel.org>,
-        David Rientjes <rientjes@google.com>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Andy Lutomirski <luto@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Christoph Lameter <cl@linux.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Laura Abbott <labbott@redhat.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Christoffer Dall <christoffer.dall@linaro.org>,
-        Dave Kleikamp <dave.kleikamp@oracle.com>,
-        Jan Kara <jack@suse.cz>,
-        Luis de Bethencourt <luisbg@kernel.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Rik van Riel <riel@redhat.com>,
-        Matthew Garrett <mjg59@google.com>,
-        linux-fsdevel@vger.kernel.org, linux-arch@vger.kernel.org,
-        netdev@vger.kernel.org, kernel-hardening@lists.openwall.com,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Michal Kubecek <mkubecek@suse.cz>
-References: <1515636190-24061-1-git-send-email-keescook@chromium.org>
- <1515636190-24061-10-git-send-email-keescook@chromium.org>
- <9519edb7-456a-a2fa-659e-3e5a1ff89466@suse.cz>
- <201911121313.1097D6EE@keescook> <201911141327.4DE6510@keescook>
- <bfca96db-bbd0-d958-7732-76e36c667c68@suse.cz>
- <202001271519.AA6ADEACF0@keescook>
-From:   Christian Borntraeger <borntraeger@de.ibm.com>
-Autocrypt: addr=borntraeger@de.ibm.com; prefer-encrypt=mutual; keydata=
- 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
- nS4h0HDFPrrp1C2EMVYIQrMokWvlFZbCpsdYbBI=
-Date:   Tue, 28 Jan 2020 08:58:31 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.3.0
+        id S1725901AbgA1JKQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Jan 2020 04:10:16 -0500
+Received: from outbound-smtp16.blacknight.com ([46.22.139.233]:36205 "EHLO
+        outbound-smtp16.blacknight.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725882AbgA1JKQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jan 2020 04:10:16 -0500
+Received: from mail.blacknight.com (pemlinmail01.blacknight.ie [81.17.254.10])
+        by outbound-smtp16.blacknight.com (Postfix) with ESMTPS id 27B881C3375
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Jan 2020 09:10:14 +0000 (GMT)
+Received: (qmail 20507 invoked from network); 28 Jan 2020 09:10:14 -0000
+Received: from unknown (HELO techsingularity.net) (mgorman@techsingularity.net@[84.203.18.57])
+  by 81.17.254.9 with ESMTPSA (AES256-SHA encrypted, authenticated); 28 Jan 2020 09:10:14 -0000
+Date:   Tue, 28 Jan 2020 09:10:12 +0000
+From:   Mel Gorman <mgorman@techsingularity.net>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Peter Zijlstra <peterz@infradead.org>,
+        Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+        Phil Auld <pauld@redhat.com>, Ming Lei <ming.lei@redhat.com>,
+        Vincent Guittot <vincent.guittot@linaro.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] sched, fair: Allow a per-cpu kthread waking a task to
+ stack on the same CPU
+Message-ID: <20200128091012.GZ3466@techsingularity.net>
+References: <20200127143608.GX3466@techsingularity.net>
+ <20200127223256.GA18610@dread.disaster.area>
+ <20200128011936.GY3466@techsingularity.net>
 MIME-Version: 1.0
-In-Reply-To: <202001271519.AA6ADEACF0@keescook>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-x-cbid: 20012807-4275-0000-0000-0000039B95C8
-X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 20012807-4276-0000-0000-000038AFAC92
-Message-Id: <5861936c-1fe1-4c44-d012-26efa0c8b6e7@de.ibm.com>
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
- definitions=2020-01-28_02:2020-01-24,2020-01-28 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 suspectscore=0
- mlxlogscore=999 impostorscore=0 bulkscore=0 priorityscore=1501
- clxscore=1011 spamscore=0 phishscore=0 lowpriorityscore=0 mlxscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-1911200001 definitions=main-2001280065
+Content-Type: text/plain; charset=iso-8859-15
+Content-Disposition: inline
+In-Reply-To: <20200128011936.GY3466@techsingularity.net>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 28.01.20 00:19, Kees Cook wrote:
-> On Thu, Jan 23, 2020 at 09:14:20AM +0100, Jiri Slaby wrote:
->> On 14. 11. 19, 22:27, Kees Cook wrote:
->>> On Tue, Nov 12, 2019 at 01:21:54PM -0800, Kees Cook wrote:
->>>> How is iucv the only network protocol that has run into this? Do others
->>>> use a bounce buffer?
->>>
->>> Another solution would be to use a dedicated kmem cache (instead of the
->>> shared kmalloc dma one)?
->>
->> Has there been any conclusion to this thread yet? For the time being, we
->> disabled HARDENED_USERCOPY on s390...
->>
->> https://lore.kernel.org/kernel-hardening/9519edb7-456a-a2fa-659e-3e5a1ff89466@suse.cz/
+On Tue, Jan 28, 2020 at 01:19:36AM +0000, Mel Gorman wrote:
+> > <SNIP>
+> > After all this, I have two questions that would help me understand
+> > if this is what you are seeing:
+> > 
+> > 1. to confirm: does removing just the WQ_UNBOUND from the CIL push
+> > workqueue (as added in 8ab39f11d974) make the regression go away?
+> > 
 > 
-> I haven't heard anything new. What did people think of a separate kmem
-> cache?
+> I'll have to check in the morning. Around the v5.4 development timeframe,
+> I'm definite that reverting the patch helped but that was not an option
+> given that it's fixing a correctness issue.
 > 
 
-Adding Julian and Ursula. A separate kmem cache for iucv might be indeed
-a solution for the user hardening issue.
-On the other hand not marking the DMA caches still seems questionable.
+This is a comparison of the baseline kernel (tip at the time I started),
+the proposed fix and a revert. The revert was not clean but I do not
+believe it matters
 
-For reference
-https://bugzilla.suse.com/show_bug.cgi?id=1156053
-the kernel hardening now triggers a warning.
+dbench4 Loadfile Execution Time
+                           5.5.0-rc7              5.5.0-rc7              5.5.0-rc7
+                   tipsched-20200124      kworkerstack-v1r2     revert-XFS-wq-v1r2
+Amean     1         58.69 (   0.00%)       30.21 *  48.53%*       47.48 *  19.10%*
+Amean     2         60.90 (   0.00%)       35.29 *  42.05%*       51.13 *  16.04%*
+Amean     4         66.77 (   0.00%)       46.55 *  30.28%*       59.54 *  10.82%*
+Amean     8         81.41 (   0.00%)       68.46 *  15.91%*       77.25 *   5.11%*
+Amean     16       113.29 (   0.00%)      107.79 *   4.85%*      112.33 *   0.85%*
+Amean     32       199.10 (   0.00%)      198.22 *   0.44%*      200.31 *  -0.61%*
+Amean     64       478.99 (   0.00%)      477.06 *   0.40%*      482.17 *  -0.66%*
+Amean     128     1345.26 (   0.00%)     1372.64 *  -2.04%*     1368.94 *  -1.76%*
+Stddev    1          2.64 (   0.00%)        4.17 ( -58.08%)        5.01 ( -89.89%)
+Stddev    2          4.35 (   0.00%)        5.38 ( -23.73%)        4.48 (  -2.90%)
+Stddev    4          6.77 (   0.00%)        6.56 (   3.00%)        7.40 (  -9.40%)
+Stddev    8         11.61 (   0.00%)       10.91 (   6.04%)       11.62 (  -0.05%)
+Stddev    16        18.63 (   0.00%)       19.19 (  -3.01%)       19.12 (  -2.66%)
+Stddev    32        38.71 (   0.00%)       38.30 (   1.06%)       38.82 (  -0.28%)
+Stddev    64       100.28 (   0.00%)       91.24 (   9.02%)       95.68 (   4.59%)
+Stddev    128      186.87 (   0.00%)      160.34 (  14.20%)      170.85 (   8.57%)
 
+According to this, commit 8ab39f11d974 ("xfs: prevent CIL push holdoff
+in log recovery") did introduce some unintended behaviour. The fix
+actually performs better than a revert with the obvious benefit that it
+does not reintroduce the functional breakage (log starvation) that the
+commit originally fixed.
+
+I still think that XFS is not the problem here, it's just the
+messenger. The functional fix, delegating work to kworkers running on the
+same CPU and blk-mq delivering IO completions to the same CPU as the IO
+issuer are all sane decisions IMO. I do not think that adjusting any of
+them to wakeup the task on a new CPU is sensible due to the loss of data
+cache locality and potential snags with power management when waking a
+CPU from idle state.
+
+Peter, Ingo and Vincent -- I know the timing is bad due to the merge
+window but do you have any thoughts on allowing select_idle_sibling to
+stack a wakee task on the same CPU as a waker in this specific case?
+
+-- 
+Mel Gorman
+SUSE Labs
