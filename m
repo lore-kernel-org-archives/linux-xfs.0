@@ -2,151 +2,99 @@ Return-Path: <SRS0=UJS8=3R=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDF4EC2D0DB
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jan 2020 14:48:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AC8BC2D0DB
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jan 2020 14:55:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ABF5B207FD
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jan 2020 14:48:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F3AC22467E
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jan 2020 14:55:42 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Bmwq7AZM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727322AbgA1Oso (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Jan 2020 09:48:44 -0500
-Received: from sandeen.net ([63.231.237.45]:35314 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726715AbgA1Osn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 28 Jan 2020 09:48:43 -0500
-Received: from Lucys-MacBook-Air.local (erlite [10.0.0.1])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 3460F2542;
-        Tue, 28 Jan 2020 08:48:42 -0600 (CST)
-Subject: Re: [PATCH] xfsprogs: do not redeclare globals provided by libraries
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>
-References: <0892b951-ac99-9f84-9c65-421798daa547@sandeen.net>
- <20200128032907.GM3447196@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <332e4c3a-ddac-4e48-b236-e4c2248163a5@sandeen.net>
-Date:   Tue, 28 Jan 2020 08:48:40 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0)
- Gecko/20100101 Thunderbird/68.4.1
+        id S1726617AbgA1Ozm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Jan 2020 09:55:42 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:48241 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726162AbgA1Ozm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jan 2020 09:55:42 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1580223341;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=wdNY+1f+3lYUyGjiH4w8du73JtCcWum4o5Zuxld4Eac=;
+        b=Bmwq7AZMCarm+yS9nlJudtpopi/xEnTv+Tc3iEKSQ3Bs7ABQlDhQEocn2ze9iBkswXFJJL
+        7wj5KNJcOnLyb76P1G1OcFEpqVsWWD3seVa8U3a6lPmGZRpAbSqN5mrokkZJfoCVk7jGnU
+        XiY+ipGweKa6ud4j6w3cx1eD3QTpTnI=
+Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
+ [209.85.221.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-193-pK1F1eEQMLWAXDYjGFOOyw-1; Tue, 28 Jan 2020 09:55:39 -0500
+X-MC-Unique: pK1F1eEQMLWAXDYjGFOOyw-1
+Received: by mail-wr1-f70.google.com with SMTP id u18so8041256wrn.11
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Jan 2020 06:55:39 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=wdNY+1f+3lYUyGjiH4w8du73JtCcWum4o5Zuxld4Eac=;
+        b=WNJBDws/Da0Gtk8C4hcNqRn8WV1al8TUBhi/xJSYRSenM0oScjK50a/gt25n255a80
+         Tl0LbMidZjfFZOh72JyRxuD2rNwAHzj4fB1I4g+UcDkjghYO5clmYCtkGKwYXThD7kJS
+         Bvi0oHzC+rHaOaPmDOftb6ao3y3fYnLLm/f1qQGXMiavtNxqEdlFFdY6YaIE1lGJ7aHe
+         5DxTqs2h/v+hY+KfZwnqRkvMee6BU1SJPsPxk2J9/IQ+kG1zMx2IjqT5WvzuA56KnlTY
+         c781IqykyYuEK9zwZKYnN8kb0GC2FEH2lnwEwf4AUb3p5tQh2ECPYymG1TQD2W5H1CCM
+         l5jQ==
+X-Gm-Message-State: APjAAAXADVWNqeKsffZAHIfB8pHwXLfQwz/OxDcdIbaV6fvhHCMP7AJK
+        HV4A3HqFXtp8SyH9LS+fClzy4MT8gU3MM7Ndg7xIZi1QSFBeZ+PzdXuylYnyFviw6F+8PXpw5r9
+        pJoapyD+hBqnjl7EXMWpv
+X-Received: by 2002:adf:e641:: with SMTP id b1mr29135637wrn.34.1580223337329;
+        Tue, 28 Jan 2020 06:55:37 -0800 (PST)
+X-Google-Smtp-Source: APXvYqw5EAYIJwj32HayLnQY4M3dBvUVo6WZ7bfyCewKb9KVGT4QUT8x73UQncJUxXOqly7GxRfv1g==
+X-Received: by 2002:adf:e641:: with SMTP id b1mr29135626wrn.34.1580223337183;
+        Tue, 28 Jan 2020 06:55:37 -0800 (PST)
+Received: from localhost.localdomain.com (243.206.broadband12.iol.cz. [90.179.206.243])
+        by smtp.gmail.com with ESMTPSA id q130sm3325939wme.19.2020.01.28.06.55.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 28 Jan 2020 06:55:35 -0800 (PST)
+From:   Pavel Reichl <preichl@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Pavel Reichl <preichl@redhat.com>
+Subject: [PATCH 0/4] xfs: Remove wrappers for some semaphores
+Date:   Tue, 28 Jan 2020 15:55:24 +0100
+Message-Id: <20200128145528.2093039-1-preichl@redhat.com>
+X-Mailer: git-send-email 2.24.1
 MIME-Version: 1.0
-In-Reply-To: <20200128032907.GM3447196@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 1/27/20 9:29 PM, Darrick J. Wong wrote:
-> On Mon, Jan 27, 2020 at 04:56:02PM -0600, Eric Sandeen wrote:
->> From: Eric Sandeen <sandeen@redhat.com>
->>
->> In each of these cases, db, logprint, and mdrestore are redeclaring
->> as a global variable something which was already provided by a
->> library they link with.
-> 
-> Er... which library?
+Remove some wrappers that we have in XFS around the read-write semaphore
+locks.
 
-libxfs and libxlog ...
+The goal of cleanup is to remove mrlock_t structure and its mr*()
+wrapper functions and replace it with native rw_semaphore type and its
+native calls.
 
+Pavel Reichl (4):
+  xfs: change xfs_isilocked() to always use lockdep()
+  xfs: Remove mr_writer field from mrlock_t
+  xfs: Make i_lock and i_mmap native rwsems
+  xfs: replace mr*() functions with native rwsem calls
 
-   File                Line
-0 libxlog/util.c      10 int print_exit;
-1 logprint/logprint.c 27 int print_exit = 1;
+ fs/xfs/mrlock.h    | 78 ----------------------------------------------
+ fs/xfs/xfs_inode.c | 43 ++++++++++++++-----------
+ fs/xfs/xfs_inode.h |  6 ++--
+ fs/xfs/xfs_iops.c  |  4 +--
+ fs/xfs/xfs_linux.h |  1 -
+ fs/xfs/xfs_super.c |  6 ++--
+ 6 files changed, 32 insertions(+), 106 deletions(-)
+ delete mode 100644 fs/xfs/mrlock.h
 
-   File           Line
-0 db/init.c      30 libxfs_init_t x;
-1 libxlog/util.c 13 libxfs_init_t x;
-
-   File                      Line
-0 fsr/xfs_fsr.c              31 char *progname;
-1 io/init.c                  14 char *progname;
-2 libxfs/init.c              28 char *progname = "libxfs";
-3 mdrestore/xfs_mdrestore.c  10 char *progname;
-
-(fsr & io don't link w/ libxfs; mdrestore does)
-
-
-> 
-> Also, uh...maybe we shouldn't be exporting globals across libraries?
-> 
-> (He says having not looked for how many there are lurki... ye gods)
-
-Well, it's ugly for sure.
-
-We could either try to re-architect this to
-
-1) pass stuff like progname all over the place, or
-2) consistently make the library provide it as a global, or
-3) consistently make utils provide it to the library as a global (?)
-
-choose your poison?
-
-> 
-> --D
-> 
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->> diff --git a/db/init.c b/db/init.c
->> index 455220a..0ac3736 100644
->> --- a/db/init.c
->> +++ b/db/init.c
->> @@ -27,7 +27,6 @@ static int		force;
->>   static struct xfs_mount	xmount;
->>   struct xfs_mount	*mp;
->>   static struct xlog	xlog;
->> -libxfs_init_t		x;
->>   xfs_agnumber_t		cur_agno = NULLAGNUMBER;
->>
->>   static void
->> diff --git a/logprint/logprint.c b/logprint/logprint.c
->> index 7754a2a..511a32a 100644
->> --- a/logprint/logprint.c
->> +++ b/logprint/logprint.c
->> @@ -24,7 +24,6 @@ int	print_buffer;
->>   int	print_overwrite;
->>   int     print_no_data;
->>   int     print_no_print;
->> -int     print_exit = 1; /* -e is now default. specify -c to override */
->>   static int	print_operation = OP_PRINT;
->>
->>   static void
->> @@ -132,6 +131,7 @@ main(int argc, char **argv)
->>   	bindtextdomain(PACKAGE, LOCALEDIR);
->>   	textdomain(PACKAGE);
->>   	memset(&mount, 0, sizeof(mount));
->> +	print_exit = 1; /* -e is now default. specify -c to override */
->>
->>   	progname = basename(argv[0]);
->>   	while ((c = getopt(argc, argv, "bC:cdefl:iqnors:tDVv")) != EOF) {
->> @@ -152,7 +152,7 @@ main(int argc, char **argv)
->>   			case 'e':
->>   			    /* -e is now default
->>   			     */
->> -				print_exit++;
->> +				print_exit = 1;
->>   				break;
->>   			case 'C':
->>   				print_operation = OP_COPY;
->> diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
->> index 3375e08..1cd399d 100644
->> --- a/mdrestore/xfs_mdrestore.c
->> +++ b/mdrestore/xfs_mdrestore.c
->> @@ -7,7 +7,6 @@
->>   #include "libxfs.h"
->>   #include "xfs_metadump.h"
->>
->> -char 		*progname;
->>   static int	show_progress = 0;
->>   static int	show_info = 0;
->>   static int	progress_since_warning = 0;
->>
-> 
+-- 
+2.24.1
 
