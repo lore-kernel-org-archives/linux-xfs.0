@@ -2,132 +2,99 @@ Return-Path: <SRS0=UJS8=3R=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F250C2D0DB
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jan 2020 15:58:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13AD8C2D0DB
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jan 2020 16:07:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 20C6321739
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jan 2020 15:58:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D3F9424685
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jan 2020 16:07:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="cUEZK4XW"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SZSi8ztu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726561AbgA1P6y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Jan 2020 10:58:54 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:49246 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725959AbgA1P6y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jan 2020 10:58:54 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00SFrUZl191012;
-        Tue, 28 Jan 2020 15:58:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=kgbbU7HvCQ+tvQrxBqKvQFDKm9fXl+i7pBdyH/568T8=;
- b=cUEZK4XW82Frq1ePkCunB5PY5l9f03NHZhRHazQxC1rvSR/69bTxiyErJ0T5YmpJx5I8
- 46CeKNLqhY2X0XVoxsHJWMWX5RfotG5Jdd0F9VFXRlvDBkslfXhjNK0F5AxZVU80KN97
- e9AT1yd5tbsyn+h7qmgvKgH4roFTtEZ9BVFxGaN6W8eop6Se9GPZy5+YAHRTifGkV7tY
- HUQxEdps4S79rDi8v9rv9nuM2PMoHz/OQFT9R+PUU4I9Mm0qmN+cMSd+Q9K/92B0Blry
- rJDzxboTnFj2rY5U+xcUjdsOVlf6/nF9V6RCRQKmtD6O+ALeXHFFuME0aN12z2SMWATt /Q== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2xrear747g-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 28 Jan 2020 15:58:51 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00SFsfa2008128;
-        Tue, 28 Jan 2020 15:56:50 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2xtmr2q2t0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 28 Jan 2020 15:56:50 +0000
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00SFuntm007157;
-        Tue, 28 Jan 2020 15:56:49 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 28 Jan 2020 07:56:49 -0800
-Date:   Tue, 28 Jan 2020 07:56:48 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     sandeen@sandeen.net
-Cc:     linux-xfs@vger.kernel.org
-Subject: [PATCH 9/8] xfs_io: fix integer over/underflow handling in
- timespec_from_string
-Message-ID: <20200128155648.GN3447196@magnolia>
-References: <157982499185.2765410.18206322669640988643.stgit@magnolia>
+        id S1726338AbgA1QHK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Jan 2020 11:07:10 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:41369 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726107AbgA1QHK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jan 2020 11:07:10 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1580227628;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type;
+        bh=MvUxM16Pq/3hxkzaymxdIrXJhhitfrqPhjLdvdr+DrA=;
+        b=SZSi8ztu0Hup7zLjc5+VhuTFTO6QSWrhbvaGC/vp4RZT1OoH0qQXpQEyxYfuvJmCApv38N
+        Fob4rN6jskjcDBbQm8SgPKBoTxABiuh8pyRv7XJTakAFSatISnyBcYdc/Ssoz0zbHNoLoA
+        YKNsUWEZoPLRVdUEx3+coK3RTS6QDyI=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-88--LX_rsvlNV6g1HRbztcubg-1; Tue, 28 Jan 2020 11:07:03 -0500
+X-MC-Unique: -LX_rsvlNV6g1HRbztcubg-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D36E910054E3
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Jan 2020 16:07:02 +0000 (UTC)
+Received: from segfault.boston.devel.redhat.com (segfault.boston.devel.redhat.com [10.19.60.26])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 92E1E5C1D8
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Jan 2020 16:07:02 +0000 (UTC)
+From:   Jeff Moyer <jmoyer@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH] xfsprogs: mkfs: don't default to the physical sector size if it's bigger than XFS_MAX_SECTORSIZE
+X-PGP-KeyID: 1F78E1B4
+X-PGP-CertKey: F6FE 280D 8293 F72C 65FD  5A58 1FF8 A7CA 1F78 E1B4
+Date:   Tue, 28 Jan 2020 11:07:01 -0500
+Message-ID: <x49h80ftviy.fsf@segfault.boston.devel.redhat.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <157982499185.2765410.18206322669640988643.stgit@magnolia>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9514 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2001280124
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9514 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2001280124
+Content-Type: text/plain
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi,
 
-When we're filling out the struct timespec, make sure we detect when the
-string value cannot be represented by a (potentially 32-bit) seconds
-field in struct timespec.
+In testing on ppc64, I ran into the following error when making a file
+system:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- libxcmd/input.c |   23 +++++++++++++++++------
- 1 file changed, 17 insertions(+), 6 deletions(-)
+# ./mkfs.xfs -b size=65536 -f /dev/ram0
+illegal sector size 65536
 
-diff --git a/libxcmd/input.c b/libxcmd/input.c
-index d232d4f3..137856e3 100644
---- a/libxcmd/input.c
-+++ b/libxcmd/input.c
-@@ -183,19 +183,30 @@ timestr(
+Which is odd, because I didn't specify a sector size!  The problem is
+that validate_sectorsize defaults to the physical sector size, but in
+this case, the physical sector size is bigger than XFS_MAX_SECTORSIZE.
+
+# cat /sys/block/ram0/queue/physical_block_size 
+65536
+
+Fall back to the default (logical sector size) if the physical sector
+size is greater than XFS_MAX_SECTORSIZE.
+
+Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
+
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 606f79da..dc9858af 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -1803,8 +1803,13 @@ validate_sectorsize(
+ 		if (!ft->lsectorsize)
+ 			ft->lsectorsize = XFS_MIN_SECTORSIZE;
  
- int
- timespec_from_string(
--	const char	* secs,
--	const char	* nsecs,
--	struct timespec	* ts)
-+	const char		*secs,
-+	const char		*nsecs,
-+	struct timespec		*ts)
- {
--	char* p;
-+	char			*p;
-+	unsigned long long int	ll;
-+
- 	if (!secs || !nsecs || !ts)
- 		return 1;
--	ts->tv_sec = strtoull(secs, &p, 0);
-+
-+	ll = strtoull(secs, &p, 0);
- 	if (*p)
- 		return 1;
--	ts->tv_nsec = strtoull(nsecs, &p, 0);
-+	ts->tv_sec = ll;
-+	if ((unsigned long long int)ts->tv_sec != ll)
-+		return 1;
-+
-+	ll = strtoull(nsecs, &p, 0);
- 	if (*p)
- 		return 1;
-+	ts->tv_nsec = ll;
-+	if ((unsigned long long int)ts->tv_nsec != ll)
-+		return 1;
-+
- 	return 0;
- }
+-		/* Older kernels may not have physical/logical distinction */
+-		if (!ft->psectorsize)
++		/*
++		 * Older kernels may not have physical/logical distinction.
++		 * Some architectures have a page size > XFS_MAX_SECTORSIZE.
++		 * In that case, a ramdisk or persistent memory device may
++		 * advertise a physical sector size that is too big to use.
++		 */
++		if (!ft->psectorsize || ft->psectorsize > XFS_MAX_SECTORSIZE)
+ 			ft->psectorsize = ft->lsectorsize;
  
+ 		cfg->sectorsize = ft->psectorsize;
+
