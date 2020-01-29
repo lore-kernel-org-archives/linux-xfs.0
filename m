@@ -7,43 +7,43 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E94B0C2D0DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 17:43:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F3F9C2D0DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 17:45:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C1D0F206F0
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 17:43:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD313206F0
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 17:45:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HQ1bVfIh"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CR3T1CDC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727233AbgA2RnT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jan 2020 12:43:19 -0500
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:35840 "EHLO
+        id S1726733AbgA2RpL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jan 2020 12:45:11 -0500
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:50211 "EHLO
         us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727119AbgA2RnS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jan 2020 12:43:18 -0500
+        by vger.kernel.org with ESMTP id S1726679AbgA2RpL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jan 2020 12:45:11 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1580319797;
+        s=mimecast20190719; t=1580319910;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-        bh=mIGY59pBe8YhOwrSGwmkKo7gPCIk/W8TmSzFlNKCSH4=;
-        b=HQ1bVfIhMgbbg9L4ybS6aLllgt/ajdO+uKaTt+rwvMe3aE5BuRmeTHPjdyEY6vyqp5sptO
-        nBRrq1K9YmOf96vK7wfwgKRBK92fYSVSka77dr+juAC6IboqGporuxPZ+x09BLUyEN2PiJ
-        b+cOILuPfGGA6vzhgS98uGfDn6LCVLU=
+        bh=kdqybZKcxwMA4KMr+QuFPvY9G63aOCa/7OUWnFq6Jg0=;
+        b=CR3T1CDCG/8JyEzel4ejl64jKRWkAfVMFOGlbwKhr4nKeFwEd+Lug19/2/6PpLoqIggZpE
+        rACrmYkHhkeKabM66SAp/kc+/ginihi+So7ZSzuIohmsnkeb04Y59Xgi36FMSG5GwcIxGi
+        8ohm/x++fp8Z+O2YDw5d/CyJ+I76vnE=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-430-1HmM7FomP5yYE-QWdHxprQ-1; Wed, 29 Jan 2020 12:43:14 -0500
-X-MC-Unique: 1HmM7FomP5yYE-QWdHxprQ-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+ us-mta-411-thuqqLGMN4eyWk8hOcA7sQ-1; Wed, 29 Jan 2020 12:45:07 -0500
+X-MC-Unique: thuqqLGMN4eyWk8hOcA7sQ-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 078D08017CC
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jan 2020 17:43:14 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9BEB08B78B0
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jan 2020 17:45:06 +0000 (UTC)
 Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id D4B5284BC5
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jan 2020 17:43:13 +0000 (UTC)
-Subject: [PATCH 1/2] xfs: don't take addresses of packed xfs_agfl_t member
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6727A1001920
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jan 2020 17:45:06 +0000 (UTC)
+Subject: [PATCH 2/2] xfs: don't take addresses of packed xfs_rmap_key
 From:   Eric Sandeen <sandeen@redhat.com>
 To:     linux-xfs <linux-xfs@vger.kernel.org>
 References: <65e48930-96ae-7307-ba65-6b7528bb2fb5@redhat.com>
@@ -89,8 +89,8 @@ Autocrypt: addr=sandeen@redhat.com; prefer-encrypt=mutual; keydata=
  XQLj5HUlzt3JSwqSwx+++FFfWFMheG2HzkfXrvTpud5NrJkGGVn+ErXy6pNf6zSicb+bUXe9
  i92UTina2zWaaLEwXspqM338TlFC2JICu8pNt+wHpPCjgy2Ei4u5/4zSYjiA+X1I+V99YJhU
  +FpT2jzfLUoVsP/6WHWmM/tsS79i50G/PsXYzKOHj/0ZQCKOsJM14NMMCC8gkONe4tek
-Message-ID: <09382ee9-8539-2f1d-bd4d-7256daf38a40@redhat.com>
-Date:   Wed, 29 Jan 2020 11:43:13 -0600
+Message-ID: <89743aba-ca7f-340c-c813-b8d73cb25cd7@redhat.com>
+Date:   Wed, 29 Jan 2020 11:45:05 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.4.1
 MIME-Version: 1.0
@@ -98,7 +98,7 @@ In-Reply-To: <65e48930-96ae-7307-ba65-6b7528bb2fb5@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -106,25 +106,31 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 gcc now warns about taking an address of a packed structure member.
 
-Work around this by using offsetof() instead.
-
-Thanks to bfoster for the suggestion and djwong for reiterating it.
+This happens here because of how be32_add_cpu() works; just open-code
+the modification using a temporary variable instead.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 1b7dcbae051c..7bfc8e2437e9 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -787,7 +787,8 @@ typedef struct xfs_agi {
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+index fc78efa52c94..ad5ead62c992 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+@@ -182,12 +182,14 @@ xfs_rmapbt_init_high_key_from_rec(
+ 	union xfs_btree_rec	*rec)
+ {
+ 	uint64_t		off;
++	xfs_agblock_t		start;
+ 	int			adj;
  
- #define XFS_BUF_TO_AGFL_BNO(mp, bp) \
- 	(xfs_sb_version_hascrc(&((mp)->m_sb)) ? \
--		&(XFS_BUF_TO_AGFL(bp)->agfl_bno[0]) : \
-+		(__be32 *)((char *)(bp)->b_addr + \
-+			offsetof(struct xfs_agfl, agfl_bno)) : \
- 		(__be32 *)(bp)->b_addr)
+ 	adj = be32_to_cpu(rec->rmap.rm_blockcount) - 1;
  
- typedef struct xfs_agfl {
+ 	key->rmap.rm_startblock = rec->rmap.rm_startblock;
+-	be32_add_cpu(&key->rmap.rm_startblock, adj);
++	start = be32_to_cpu(rec->rmap.rm_startblock) - adj;
++	rec->rmap.rm_startblock = cpu_to_be32(start);
+ 	key->rmap.rm_owner = rec->rmap.rm_owner;
+ 	key->rmap.rm_offset = rec->rmap.rm_offset;
+ 	if (XFS_RMAP_NON_INODE_OWNER(be64_to_cpu(rec->rmap.rm_owner)) ||
+
 
