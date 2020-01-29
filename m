@@ -2,195 +2,214 @@ Return-Path: <SRS0=zOuE=3S=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,URIBL_DBL_ABUSE_MALW,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 781BEC35246
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 23:15:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFC33C2D0DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 23:20:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4DF17206F0
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 23:15:21 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hxaoehU7"
+	by mail.kernel.org (Postfix) with ESMTP id 99B6420678
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 23:20:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727074AbgA2XPT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jan 2020 18:15:19 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:52452 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727024AbgA2XPT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jan 2020 18:15:19 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        Content-Type:MIME-Version:Date:Message-ID:Subject:From:Cc:To:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=YE5ymmg/Qoh5EFK9pVvYeClJYE682bbCQnrC66d+TOc=; b=hxaoehU77S1fZAy677mOd1sm1
-        JjfnFRlZxbzaUUX53Ti75TXmkGdG7ltwdyqeib0jlXtiXKYLAqubtBIyQh9RF9pmtRUuvMoQhx4ON
-        lZDuGYZNIdASkaBwDckHywVVyTOkSmI6rgb4VCbHm8cusVXnFx5zmAQFMMhbyrKyCXsZRMmlyhio5
-        yXOc5zcqDiGjp3VZJHkF0/1i9A5i9i61s+4oayNZRySecQKFeNMUiPRvQHpg2TJ6Zl7ssEpLFrLgD
-        wu3x2p4pbdKNN4Zi6AQRLwS5/IuCzWi5nCDhRX/Jk5hX/7YkSgCEnm0noXgupWgg91QCoQWp/d5R3
-        qPFjnIM/A==;
-Received: from [2601:1c0:6280:3f0:897c:6038:c71d:ecac]
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iwwYH-0007Ig-Te; Wed, 29 Jan 2020 23:15:18 +0000
-To:     "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>
-Cc:     Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        linux-ext4@vger.kernel.org,
-        Pablo Neira Ayuso <pablo@netfilter.org>,
-        Jozsef Kadlecsik <kadlec@netfilter.org>,
-        Florian Westphal <fw@strlen.de>,
-        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
-        Paul Mackerras <paulus@samba.org>, linux-ppp@vger.kernel.org,
-        reiserfs-devel@vger.kernel.org,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-From:   Randy Dunlap <rdunlap@infradead.org>
-Subject: [PATCH v2] Documentation: changes.rst: update several outdated
- project URLs
-Message-ID: <a9c3c509-8f30-fcc4-d9e0-b53aeaa89e4f@infradead.org>
-Date:   Wed, 29 Jan 2020 15:15:15 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
+        id S1726646AbgA2XUK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jan 2020 18:20:10 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:42232 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726618AbgA2XUK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jan 2020 18:20:10 -0500
+Received: from dread.disaster.area (pa49-195-111-217.pa.nsw.optusnet.com.au [49.195.111.217])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id D0F2D3A15D4;
+        Thu, 30 Jan 2020 10:20:06 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1iwwcv-0005MF-M1; Thu, 30 Jan 2020 10:20:05 +1100
+Date:   Thu, 30 Jan 2020 10:20:05 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Pavel Reichl <preichl@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/4] xfs: change xfs_isilocked() to always use lockdep()
+Message-ID: <20200129232005.GP18610@dread.disaster.area>
+References: <20200128145528.2093039-1-preichl@redhat.com>
+ <20200128145528.2093039-2-preichl@redhat.com>
+ <20200129221819.GO18610@dread.disaster.area>
+ <20200129222532.GW3447196@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200129222532.GW3447196@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+        a=0OveGI8p3fsTA6FL6ss4ZQ==:117 a=0OveGI8p3fsTA6FL6ss4ZQ==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=Jdjhy38mL1oA:10
+        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=2v7RYwIjjYj12rUPZWoA:9
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Randy Dunlap <rdunlap@infradead.org>
+On Wed, Jan 29, 2020 at 02:25:32PM -0800, Darrick J. Wong wrote:
+> On Thu, Jan 30, 2020 at 09:18:19AM +1100, Dave Chinner wrote:
+> > On Tue, Jan 28, 2020 at 03:55:25PM +0100, Pavel Reichl wrote:
+> > > mr_writer is obsolete and the information it contains is accesible
+> > > from mr_lock.
+> > > 
+> > > Signed-off-by: Pavel Reichl <preichl@redhat.com>
+> > > ---
+> > >  fs/xfs/xfs_inode.c | 8 ++++++--
+> > >  1 file changed, 6 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > > index c5077e6326c7..32fac6152dc3 100644
+> > > --- a/fs/xfs/xfs_inode.c
+> > > +++ b/fs/xfs/xfs_inode.c
+> > > @@ -352,13 +352,17 @@ xfs_isilocked(
+> > >  {
+> > >  	if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) {
+> > >  		if (!(lock_flags & XFS_ILOCK_SHARED))
+> > > -			return !!ip->i_lock.mr_writer;
+> > > +			return !debug_locks ||
+> > > +				lockdep_is_held_type(&ip->i_lock.mr_lock, 0);
+> > >  		return rwsem_is_locked(&ip->i_lock.mr_lock);
+> > >  	}
+> > >  
+> > >  	if (lock_flags & (XFS_MMAPLOCK_EXCL|XFS_MMAPLOCK_SHARED)) {
+> > >  		if (!(lock_flags & XFS_MMAPLOCK_SHARED))
+> > > -			return !!ip->i_mmaplock.mr_writer;
+> > > +			return !debug_locks ||
+> > > +				lockdep_is_held_type(
+> > > +					&ip->i_mmaplock.mr_lock,
+> > > +					0);
+> > >  		return rwsem_is_locked(&ip->i_mmaplock.mr_lock);
+> > >  	}
+> > 
+> > Ok, so this code is only called from ASSERT() statements, which
+> > means this turns off write lock checking for XFS debug kernels if
+> > lockdep is not enabled. Hence I think these checks need to be
+> > restructured to be based around rwsem_is_locked() first and lockdep
+> > second.
+> > 
+> > That is:
+> > 
+> > /* In all implementations count != 0 means locked */
+> > static inline int rwsem_is_locked(struct rw_semaphore *sem)
+> > {
+> >         return atomic_long_read(&sem->count) != 0;
+> > }
+> > 
+> > This captures both read and write locks on the rwsem, and doesn't
+> > discriminate at all. Now we don't have explicit writer lock checking
+> > in CONFIG_XFS_DEBUG=y kernels, I think we need to at least check
+> > that the rwsem is locked in all cases to catch cases where we are
+> > calling a function without the lock held. That will ctach most
+> > programming mistakes, and then lockdep will provide the
+> > read-vs-write discrimination to catch the "hold the wrong lock type"
+> > mistakes.
+> > 
+> > Hence I think this code should end up looking like this:
+> > 
+> > 	if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) {
+> > 		bool locked = false;
+> > 
+> > 		if (!rwsem_is_locked(&ip->i_lock))
+> > 			return false;
+> > 		if (!debug_locks)
+> > 			return true;
+> > 		if (lock_flags & XFS_ILOCK_EXCL)
+> > 			locked = lockdep_is_held_type(&ip->i_lock, 0);
+> > 		if (lock_flags & XFS_ILOCK_SHARED)
+> > 			locked |= lockdep_is_held_type(&ip->i_lock, 1);
+> > 		return locked;
+> > 	}
+> > 
+> > Thoughts?
+> 
+> I like that a lot better, though perhaps the if body should be factored
+> into a separate static inline so we don't repeat that 3x.
 
-Update projects URLs in the changes.rst file.
+Yup, I had thoughts along those lines, too, but each lock type uses
+different flags and that makes it more verbose than it could be.
+Maybe something like this?
 
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: Jonathan Corbet <corbet@lwn.net>
-Cc: linux-doc@vger.kernel.org
-Cc: Jan Kara <jack@suse.com>
-Cc: "Theodore Ts'o" <tytso@mit.edu>
-Cc: Andreas Dilger <adilger.kernel@dilger.ca>
-Cc: linux-ext4@vger.kernel.org
-Cc: Pablo Neira Ayuso <pablo@netfilter.org>
-Cc: Jozsef Kadlecsik <kadlec@netfilter.org>
-Cc: Florian Westphal <fw@strlen.de>
-Cc: netfilter-devel@vger.kernel.org
-Cc: coreteam@netfilter.org
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: linux-ppp@vger.kernel.org
-Cc: reiserfs-devel@vger.kernel.org
-Cc: Darrick J. Wong <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Acked-by: Theodore Ts'o <tytso@mit.edu>
----
-v2 changes:
-. add Ack and Review tags;
-. update as requested by Darrick and Ted;
+static inline bool
+__xfs_is_ilocked(
+	struct rwsem	*rwsem,
+	bool		shared,
+	bool		excl)
+{
+	bool locked = false;
 
- Documentation/process/changes.rst                    |   14 ++++++----
- Documentation/translations/it_IT/process/changes.rst |   14 ++++++----
- 2 files changed, 18 insertions(+), 10 deletions(-)
+	if (!rwsem_is_locked(rwsem))
+		return false;
+	if (!debug_locks)
+		return true;
+	if (shared)
+		locked = lockdep_is_held_type(&ip->i_lock, 0);
+	if (excl)
+		locked |= lockdep_is_held_type(&ip->i_lock, 1);
+	return locked;
+}
 
---- linux-next-20200129.orig/Documentation/translations/it_IT/process/changes.rst
-+++ linux-next-20200129/Documentation/translations/it_IT/process/changes.rst
-@@ -390,7 +390,8 @@ Mkinitrd
- E2fsprogs
- ---------
- 
--- <http://prdownloads.sourceforge.net/e2fsprogs/e2fsprogs-1.29.tar.gz>
-+- <https://www.kernel.org/pub/linux/kernel/people/tytso/e2fsprogs/>
-+- <https://git.kernel.org/pub/scm/fs/ext2/e2fsprogs.git/>
- 
- JFSutils
- --------
-@@ -400,12 +401,13 @@ JFSutils
- Reiserfsprogs
- -------------
- 
--- <http://www.kernel.org/pub/linux/utils/fs/reiserfs/>
-+- <https://git.kernel.org/pub/scm/linux/kernel/git/jeffm/reiserfsprogs.git/>
- 
- Xfsprogs
- --------
- 
--- <ftp://oss.sgi.com/projects/xfs/>
-+- <https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git>
-+- <https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/>
- 
- Pcmciautils
- -----------
-@@ -444,7 +446,9 @@ Rete
- PPP
- ---
- 
--- <ftp://ftp.samba.org/pub/ppp/>
-+- <https://download.samba.org/pub/ppp/>
-+- <https://git.ozlabs.org/?p=ppp.git>
-+- <https://github.com/paulusmack/ppp/>
- 
- 
- NFS-utils
-@@ -455,7 +459,7 @@ NFS-utils
- Iptables
- --------
- 
--- <http://www.iptables.org/downloads.html>
-+- <https://netfilter.org/projects/iptables/index.html>
- 
- Ip-route2
- ---------
---- linux-next-20200129.orig/Documentation/process/changes.rst
-+++ linux-next-20200129/Documentation/process/changes.rst
-@@ -383,7 +383,8 @@ Mkinitrd
- E2fsprogs
- ---------
- 
--- <http://prdownloads.sourceforge.net/e2fsprogs/e2fsprogs-1.29.tar.gz>
-+- <https://www.kernel.org/pub/linux/kernel/people/tytso/e2fsprogs/>
-+- <https://git.kernel.org/pub/scm/fs/ext2/e2fsprogs.git/>
- 
- JFSutils
- --------
-@@ -393,12 +394,13 @@ JFSutils
- Reiserfsprogs
- -------------
- 
--- <http://www.kernel.org/pub/linux/utils/fs/reiserfs/>
-+- <https://git.kernel.org/pub/scm/linux/kernel/git/jeffm/reiserfsprogs.git/>
- 
- Xfsprogs
- --------
- 
--- <ftp://oss.sgi.com/projects/xfs/>
-+- <https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git>
-+- <https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/>
- 
- Pcmciautils
- -----------
-@@ -437,7 +439,9 @@ Networking
- PPP
- ---
- 
--- <ftp://ftp.samba.org/pub/ppp/>
-+- <https://download.samba.org/pub/ppp/>
-+- <https://git.ozlabs.org/?p=ppp.git>
-+- <https://github.com/paulusmack/ppp/>
- 
- NFS-utils
- ---------
-@@ -447,7 +451,7 @@ NFS-utils
- Iptables
- --------
- 
--- <http://www.iptables.org/downloads.html>
-+- <https://netfilter.org/projects/iptables/index.html>
- 
- Ip-route2
- ---------
+bool
+xfs_isilocked(
+	struct xfs_inode	*ip,
+	int			lock_flags)
+{
+	if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED))
+		return __xfs_is_ilocked(&ip->i_lock,
+				(lock_flags & XFS_ILOCK_SHARED),
+				(lock_flags & XFS_ILOCK_EXCL));
 
+	if (lock_flags & (XFS_MMAPLOCK_EXCL|XFS_MMAPLOCK_SHARED))
+		return __xfs_is_ilocked(&ip->i_mmaplock,
+				(lock_flags & XFS_MMAPLOCK_SHARED),
+				(lock_flags & XFS_MMAPLOCK_EXCL));
+
+	if (lock_flags & (XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED))
+		return __xfs_is_ilocked(&VFS_I(ip)->i_rwsem,
+				(lock_flags & XFS_IOLOCK_SHARED),
+				(lock_flags & XFS_IOLOCK_EXCL));
+
+	ASSERT(0);
+	return false;
+}
+
+At which point I wonder if it would simply be better to have:
+
+bool
+xfs_is_ilocked(
+	struct xfs_inode	*ip,
+	int			lock_flags)
+{
+	return __xfs_is_ilocked(&ip->i_lock, (lock_flags & XFS_ILOCK_SHARED),
+				(lock_flags & XFS_ILOCK_EXCL));
+}
+
+bool
+xfs_is_mmaplocked(
+	struct xfs_inode	*ip,
+	int			lock_flags)
+{
+	return __xfs_is_ilocked(&ip->i_mmaplock,
+				(lock_flags & XFS_MMAPLOCK_SHARED),
+				(lock_flags & XFS_MMAPLOCK_EXCL));
+}
+
+bool
+xfs_is_iolocked(
+	struct xfs_inode	*ip,
+	int			lock_flags)
+{
+	return __xfs_is_ilocked(&VFS_I(ip)->i_rwsem,
+				(lock_flags & XFS_IOLOCK_SHARED),
+				(lock_flags & XFS_IOLOCK_EXCL));
+}
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
