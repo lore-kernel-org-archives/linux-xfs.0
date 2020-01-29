@@ -2,145 +2,180 @@ Return-Path: <SRS0=zOuE=3S=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E931FC35240
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 08:24:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 364FDC33CB2
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 09:26:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B23F02071E
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 08:24:22 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="CyOGcL6l";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="txuhSFxl"
+	by mail.kernel.org (Postfix) with ESMTP id 09816214D8
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 09:26:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726116AbgA2IYW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jan 2020 03:24:22 -0500
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:61074 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726091AbgA2IYW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jan 2020 03:24:22 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1580286261; x=1611822261;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=OGBRfRD20xGWhXPt5PAz1WeTGLrC0eQ7galj7ndjLaQ=;
-  b=CyOGcL6lZcmbJQqWY+gzer3aGh4c3eyioCV7+Rebs1XVtO0I5Nnu5YL3
-   Tv3weoIKsHA0C/J4Dsg6Px12WbhIqSYqOjeeRL2IydwRvdYut8ogo3laC
-   k2uBBbJZe3IejQXogYElWsPkZrzRHxGEYwbxmsy+s+yn6eNSes2V4/ELi
-   +nkBusTDhVl/ExHggcP2HKOIOEAsZG5mRxapqDOxP8CVdjpi27GlP17XR
-   6nDX/rdoMfpEpnsGFS50pEydwkhwDx3Adsyt+oZlND91Hq6BcevxEilUB
-   6t8nrc+Wqq42vE531f0czRXGt2XYRVU72aSNrQKL0c/mlS25BjPG3hIQL
-   g==;
-IronPort-SDR: Ml7ebd8/t3Acx5MNPBkJ/58C7xxxAyL2gMzj6zJlShOcsa/bhmhHBrdA2mFsY72TftA5qSrHVi
- E25r02pP9R/2N72Vx7MJGKkCWOyOjjqCaxHCv7nmIwVI4d3S4KLAGc0O8/SNdbcbwI2Mh0L8wr
- NHAeaMmkZPNZLnePJKlKondO6dVaWD7367AugRy3FxyXbOVKdGbelvhghi833V8FFsyxvntsh/
- hcxevJm59q+tMSoOS9xdym3UCyABCnUrM0gx+VyfdDPvObfgZHbO41iUzbpnv+mJDWhcADWRux
- hyU=
-X-IronPort-AV: E=Sophos;i="5.70,377,1574092800"; 
-   d="scan'208";a="236568456"
-Received: from mail-sn1nam02lp2053.outbound.protection.outlook.com (HELO NAM02-SN1-obe.outbound.protection.outlook.com) ([104.47.36.53])
-  by ob1.hgst.iphmx.com with ESMTP; 29 Jan 2020 16:24:20 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=BRUK0+x4ozOLfTHlnvC/pOhZKXMySfYwSygCUikxrebk5fdZs7p9ILeZdq+AhbO2PaUYVzAP+FbrifB58wa19zn/D1C41iVFBI17JuvNLELFTXFEWgEbGcKGOkaZnIzyZt6XxR3ORjm13dH3Ap99+lLRrBKa3+fg682vSkUNmpDK9PegRw3aXmOSjV0Prw5Hx86iifbloGZb3OhXSNAn/icou85cwn9oEG0cPnNwhhZ9/FTNc1/bpFyiHjlx43ZtZAD/kO95UBsrByu13RUoskMAcJCYjfEWEFDcjzrDm8bDQC4jaXmHfTRwyLGQAqR41Ip7aBkbtY+Rm/eYK1lUbg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=OGBRfRD20xGWhXPt5PAz1WeTGLrC0eQ7galj7ndjLaQ=;
- b=GQo/ez/FEie8cgyTmOa5oWZeRMfs5ngaYvjOq7GYfANLUq/g+I8pC9fsNtjOkn3XZGct/rtGBxI3Z8tjdS/OpMjcP+qd5AtQbp6MbDDgcL3SR0Ar206XknfEmZgq3YmeADVyuynXYd7vcBP5n9pNdFHVt+3PVbx3VEXCjL4XcWi74JKU/hoovBdUJptKdVRHH3xZZHLYndAuVfjMXgpq9kH8eKYVtdnn8F9o7T2rZX3wHFcQuLPbChky6KLC3k+5J6c5KkL3HHILsK5JnG6QqmFG89IPKK+VFCwxE/G7EW3racv7IRTTDojnnDY9WzsxYr7/SYGkyKcXUqxXpb4nsg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=OGBRfRD20xGWhXPt5PAz1WeTGLrC0eQ7galj7ndjLaQ=;
- b=txuhSFxlXRA4NA3NtSLITshvJTRJ3NQpMe/9Yd7LmT+qU2iAKCzzuemyNgAO88INmfNCPRfw6Si2Pf8+X7mZq4hhoViLVgJ6EuocqbWcm16Bc/3YeHz+f93tP9HZJARHCSiqCgzeb1x92eLDFDBlO5jt7BLu234XqlS4KT5OZ+c=
-Received: from BYAPR04MB5816.namprd04.prod.outlook.com (20.179.59.16) by
- BYAPR04MB5877.namprd04.prod.outlook.com (20.179.58.91) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2665.24; Wed, 29 Jan 2020 08:24:18 +0000
-Received: from BYAPR04MB5816.namprd04.prod.outlook.com
- ([fe80::cd8e:d1de:e661:a61]) by BYAPR04MB5816.namprd04.prod.outlook.com
- ([fe80::cd8e:d1de:e661:a61%5]) with mapi id 15.20.2665.027; Wed, 29 Jan 2020
- 08:24:18 +0000
-From:   Damien Le Moal <Damien.LeMoal@wdc.com>
-To:     Markus Elfring <Markus.Elfring@web.de>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Johannes Thumshirn <jth@kernel.org>,
+        id S1726339AbgA2J0X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jan 2020 04:26:23 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:22356 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726010AbgA2J0X (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jan 2020 04:26:23 -0500
+Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00T9Ag1x174069
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jan 2020 04:26:22 -0500
+Received: from e06smtp03.uk.ibm.com (e06smtp03.uk.ibm.com [195.75.94.99])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2xtfh0hqg3-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jan 2020 04:26:22 -0500
+Received: from localhost
+        by e06smtp03.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <ubraun@linux.ibm.com>;
+        Wed, 29 Jan 2020 09:26:19 -0000
+Received: from b06cxnps4074.portsmouth.uk.ibm.com (9.149.109.196)
+        by e06smtp03.uk.ibm.com (192.168.101.133) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
+        Wed, 29 Jan 2020 09:26:10 -0000
+Received: from d06av21.portsmouth.uk.ibm.com (d06av21.portsmouth.uk.ibm.com [9.149.105.232])
+        by b06cxnps4074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 00T9Q94X54919184
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 29 Jan 2020 09:26:09 GMT
+Received: from d06av21.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 25FA05204E;
+        Wed, 29 Jan 2020 09:26:09 +0000 (GMT)
+Received: from oc5311105230.ibm.com (unknown [9.152.224.222])
+        by d06av21.portsmouth.uk.ibm.com (Postfix) with ESMTP id 14F875204F;
+        Wed, 29 Jan 2020 09:26:08 +0000 (GMT)
+Subject: Re: [kernel-hardening] [PATCH 09/38] usercopy: Mark kmalloc caches as
+ usercopy caches
+To:     Kees Cook <keescook@chromium.org>,
+        Christian Borntraeger <borntraeger@de.ibm.com>
+Cc:     Jiri Slaby <jslaby@suse.cz>, Julian Wiedmann <jwi@linux.ibm.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        linux-kernel@vger.kernel.org, David Windsor <dave@nullcore.net>,
+        Pekka Enberg <penberg@kernel.org>,
+        David Rientjes <rientjes@google.com>,
+        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
+        Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org,
         Linus Torvalds <torvalds@linux-foundation.org>,
-        Naohiro Aota <Naohiro.Aota@wdc.com>
-Subject: Re: [v9 1/2] fs: New zonefs file system
-Thread-Topic: [v9 1/2] fs: New zonefs file system
-Thread-Index: AQHV1nz4VgmI+ONs6EuOARHWsE8vTA==
-Date:   Wed, 29 Jan 2020 08:24:18 +0000
-Message-ID: <BYAPR04MB581624B1EFB13DEEA299C699E7050@BYAPR04MB5816.namprd04.prod.outlook.com>
-References: <23bf669d-b75f-ed94-478d-06bddd357919@web.de>
- <5fe2d31c2f798b0768eec3ebc35bc973bc07ba1c.camel@wdc.com>
- <938e70e3-0f45-2858-a4fc-dd90371e4e90@web.de>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Damien.LeMoal@wdc.com; 
-x-originating-ip: [199.255.47.12]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: d5f2a73b-3fdb-4e00-95f9-08d7a494a2a2
-x-ms-traffictypediagnostic: BYAPR04MB5877:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BYAPR04MB5877AC5DD40D7101CA306E6AE7050@BYAPR04MB5877.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:6430;
-x-forefront-prvs: 02973C87BC
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(346002)(39860400002)(396003)(366004)(136003)(376002)(189003)(199004)(86362001)(8676002)(66556008)(7696005)(64756008)(186003)(66446008)(6506007)(71200400001)(53546011)(4326008)(2906002)(76116006)(8936002)(91956017)(66946007)(81156014)(81166006)(66476007)(316002)(4744005)(55016002)(52536014)(478600001)(54906003)(110136005)(26005)(33656002)(5660300002)(9686003);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR04MB5877;H:BYAPR04MB5816.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: SLsEfDK+Mb757vcByhg5xONfdLwKn92A5QCewhResgVRmWHZ1BWhtK5XnVrNn4vg0HrELMyWkL2q+OTkZBSnzzrPfItLGwQIZgnxU1mGSeZwsrq46PXEsBaNTzlh2RFDx6UewN5KTDJJLlvIyKqGEyPall1zFxuKaCVUSrzpR6jTRpKK1e4yoK9DQfW8b0FKczzdu7ybXLjGcQ9bOp2ohpbvrX9tBWjBkSWQZ+rxMU9BQC7QSbkodQ8U7WE2j/1r7mYIiAt6o+YnlgogQwHpLKkK/sBMZBEMt7s/hyzDjOOkw0ejgVaTT4fmIS3YoercsLuulx/hHscNOV4btqqOO7Sri4yErHZPMXq7mdbp+3X6M0Veo+NLEDabU0386Alqb2z3eZmQwqzK4aRAfbcERYLSutLaJLISpuNLsNXfDxJ1phx0lx/O5pjvCXkL6zu3
-x-ms-exchange-antispam-messagedata: vD5u3RIqisPX8UNHkLkld5bKZECqcX1rJtXbcji0Zc6qkIkv6394011ycKib81jCfZdnzv9PIwiHOQrK3ikMo6ethATHhKXRrFMzNfyogd7iK5M3lMRTJMqGRyK/XP8ACH3QXcPhxnJGGAt+dX0iPw==
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: quoted-printable
+        Andy Lutomirski <luto@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Christoph Lameter <cl@linux.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Laura Abbott <labbott@redhat.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Christoffer Dall <christoffer.dall@linaro.org>,
+        Dave Kleikamp <dave.kleikamp@oracle.com>,
+        Jan Kara <jack@suse.cz>,
+        Luis de Bethencourt <luisbg@kernel.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Rik van Riel <riel@redhat.com>,
+        Matthew Garrett <mjg59@google.com>,
+        linux-fsdevel@vger.kernel.org, linux-arch@vger.kernel.org,
+        netdev@vger.kernel.org, kernel-hardening@lists.openwall.com,
+        Vlastimil Babka <vbabka@suse.cz>,
+        Michal Kubecek <mkubecek@suse.cz>
+References: <1515636190-24061-1-git-send-email-keescook@chromium.org>
+ <1515636190-24061-10-git-send-email-keescook@chromium.org>
+ <9519edb7-456a-a2fa-659e-3e5a1ff89466@suse.cz>
+ <201911121313.1097D6EE@keescook> <201911141327.4DE6510@keescook>
+ <bfca96db-bbd0-d958-7732-76e36c667c68@suse.cz>
+ <202001271519.AA6ADEACF0@keescook>
+ <5861936c-1fe1-4c44-d012-26efa0c8b6e7@de.ibm.com>
+ <202001281457.FA11CC313A@keescook>
+From:   Ursula Braun <ubraun@linux.ibm.com>
+Date:   Wed, 29 Jan 2020 10:26:07 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.3.0
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d5f2a73b-3fdb-4e00-95f9-08d7a494a2a2
-X-MS-Exchange-CrossTenant-originalarrivaltime: 29 Jan 2020 08:24:18.5374
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: wl4AinB/jwRUkzX3jW7CllQjS/2F9fm8ycgcogCKz9Pfa3ORSs2vc4mjehK3mz2Vn8Cc7dauPfrseakLDirm9g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB5877
+In-Reply-To: <202001281457.FA11CC313A@keescook>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+x-cbid: 20012909-0012-0000-0000-00000381AD82
+X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
+x-cbparentid: 20012909-0013-0000-0000-000021BE0418
+Message-Id: <009da641-175c-4a50-d658-a40ac0ca7bc6@linux.ibm.com>
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
+ definitions=2020-01-29_01:2020-01-28,2020-01-29 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 mlxscore=0
+ lowpriorityscore=0 suspectscore=0 mlxlogscore=999 bulkscore=0
+ malwarescore=0 spamscore=0 phishscore=0 priorityscore=1501 clxscore=1011
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-1911200001 definitions=main-2001290076
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2020/01/29 17:20, Markus Elfring wrote:=0A=
->>> Would you like to reconsider your name selection for such labels?=0A=
-> =85=0A=
->> Fixed. Thanks !=0A=
-> =0A=
-> Will a different identifier be occasionally more helpful than the label =
-=93out=94=0A=
-> also at other source code places?=0A=
-=0A=
-I am addressing all comments I got for v10 right now and reviewing all the=
-=0A=
-goto labels too. Thanks.=0A=
-=0A=
-> =0A=
-> Regards,=0A=
-> Markus=0A=
-> =0A=
-=0A=
-=0A=
--- =0A=
-Damien Le Moal=0A=
-Western Digital Research=0A=
+
+
+On 1/29/20 12:01 AM, Kees Cook wrote:
+> On Tue, Jan 28, 2020 at 08:58:31AM +0100, Christian Borntraeger wrote:
+>>
+>>
+>> On 28.01.20 00:19, Kees Cook wrote:
+>>> On Thu, Jan 23, 2020 at 09:14:20AM +0100, Jiri Slaby wrote:
+>>>> On 14. 11. 19, 22:27, Kees Cook wrote:
+>>>>> On Tue, Nov 12, 2019 at 01:21:54PM -0800, Kees Cook wrote:
+>>>>>> How is iucv the only network protocol that has run into this? Do others
+>>>>>> use a bounce buffer?
+>>>>>
+>>>>> Another solution would be to use a dedicated kmem cache (instead of the
+>>>>> shared kmalloc dma one)?
+>>>>
+>>>> Has there been any conclusion to this thread yet? For the time being, we
+>>>> disabled HARDENED_USERCOPY on s390...
+>>>>
+>>>> https://lore.kernel.org/kernel-hardening/9519edb7-456a-a2fa-659e-3e5a1ff89466@suse.cz/
+>>>
+>>> I haven't heard anything new. What did people think of a separate kmem
+>>> cache?
+>>>
+>>
+>> Adding Julian and Ursula. A separate kmem cache for iucv might be indeed
+>> a solution for the user hardening issue.
+> 
+> It should be very clean -- any existing kmallocs already have to be
+> "special" in the sense that they're marked with the DMA flag. So
+> converting these to a separate cache should be mostly mechanical.
+> 
+
+Linux on System z can run within a guest hosted by the IBM mainframe operating system
+z/VM. z/VM offers a transport called Inter-User Communications Vehicle (short IUCV).
+It is limited to 4-byte-addresses when sending and receiving data.
+One base transport for AF_IUCV sockets in the Linux kernel is this Inter-User
+Communications Vehicle of z/VM. AF_IUCV sockets exist for s390 only. 
+
+AF_IUCV sockets make use of the base socket layer, and work with sk_buffs for sending
+and receiving data of variable length.
+Storage for sk_buffs is allocated with __alloc_skb(), which invokes
+   data = kmalloc_reserve(size, gfp_mask, node, &pfmemalloc);
+For IUCV transport the "data"-address should fit into 4 bytes. That's the reason why
+we work with GFP_DMA here.
+
+kmem_caches manage memory of fixed size. This does not fit well for sk_buff memory
+of variable length. Do you propose to add a kmem_cache solution for sk_buff memory here?
+
+>> On the other hand not marking the DMA caches still seems questionable.
+> 
+> My understanding is that exposing DMA memory to userspace copies can
+> lead to unexpected results, especially for misbehaving hardware, so I'm
+> not convinced this is a generically bad hardening choice.
+> 
+
+We have not yet been reported a memory problem here. Do you have more details, if
+this is really a problem for the s390 architecture?
+
+Kind regards, Ursula 
+
+> -Kees
+> 
+>>
+>> For reference
+>> https://bugzilla.suse.com/show_bug.cgi?id=1156053
+>> the kernel hardening now triggers a warning.
+>>
+> 
+
