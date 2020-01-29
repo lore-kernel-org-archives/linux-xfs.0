@@ -2,165 +2,195 @@ Return-Path: <SRS0=zOuE=3S=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,URIBL_DBL_ABUSE_MALW,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1F67C2D0DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 22:25:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 781BEC35246
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 23:15:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 72755206F0
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 22:25:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4DF17206F0
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 23:15:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="odm7oRJL"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hxaoehU7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726339AbgA2WZl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jan 2020 17:25:41 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:60832 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726283AbgA2WZk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jan 2020 17:25:40 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00TMNAx7147125;
-        Wed, 29 Jan 2020 22:25:36 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=8ap9izTjE8HxkmJjC/lgOXzZMyHK8M2z7MWsbJ4hmIk=;
- b=odm7oRJL+eUQf42z7WXxd0dAsn6131lSSaKdxEF51qo7gmSkZG20oXsWWUHCxcMTIsu0
- oUG8FQEICuOQnJKlVO+5yRJ7U5vwoUzJxQgvxWNM46+k+wp916I11P5myT4++Yn+qQV+
- EvuIqFYck7A3XAzNN69odrqT5v8WsiR/Ubvd7Gk9tKwr4P0tpKaMYS0/uM3iKVM/oFJr
- hW7DtC6YXWCGAhLRS8wY8wHBD3ETduHe/PwT7N2E0lp1SriLxtasMWqxYgQJClKYOmwk
- 0JdOl3pbOizjLaBaqkMeJ+ZxVBlIzD5psayCEeW9Ix98AJHCdFzGBDYSRYa9XCbizYbg IQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2xreargedu-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 29 Jan 2020 22:25:36 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00TMOawd115179;
-        Wed, 29 Jan 2020 22:25:35 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 2xuhejg3xu-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 29 Jan 2020 22:25:35 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00TMPXRF031495;
-        Wed, 29 Jan 2020 22:25:33 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 29 Jan 2020 14:25:33 -0800
-Date:   Wed, 29 Jan 2020 14:25:32 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Pavel Reichl <preichl@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/4] xfs: change xfs_isilocked() to always use lockdep()
-Message-ID: <20200129222532.GW3447196@magnolia>
-References: <20200128145528.2093039-1-preichl@redhat.com>
- <20200128145528.2093039-2-preichl@redhat.com>
- <20200129221819.GO18610@dread.disaster.area>
+        id S1727074AbgA2XPT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jan 2020 18:15:19 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:52452 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727024AbgA2XPT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jan 2020 18:15:19 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        Content-Type:MIME-Version:Date:Message-ID:Subject:From:Cc:To:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=YE5ymmg/Qoh5EFK9pVvYeClJYE682bbCQnrC66d+TOc=; b=hxaoehU77S1fZAy677mOd1sm1
+        JjfnFRlZxbzaUUX53Ti75TXmkGdG7ltwdyqeib0jlXtiXKYLAqubtBIyQh9RF9pmtRUuvMoQhx4ON
+        lZDuGYZNIdASkaBwDckHywVVyTOkSmI6rgb4VCbHm8cusVXnFx5zmAQFMMhbyrKyCXsZRMmlyhio5
+        yXOc5zcqDiGjp3VZJHkF0/1i9A5i9i61s+4oayNZRySecQKFeNMUiPRvQHpg2TJ6Zl7ssEpLFrLgD
+        wu3x2p4pbdKNN4Zi6AQRLwS5/IuCzWi5nCDhRX/Jk5hX/7YkSgCEnm0noXgupWgg91QCoQWp/d5R3
+        qPFjnIM/A==;
+Received: from [2601:1c0:6280:3f0:897c:6038:c71d:ecac]
+        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1iwwYH-0007Ig-Te; Wed, 29 Jan 2020 23:15:18 +0000
+To:     "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        Jonathan Corbet <corbet@lwn.net>
+Cc:     Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        linux-ext4@vger.kernel.org,
+        Pablo Neira Ayuso <pablo@netfilter.org>,
+        Jozsef Kadlecsik <kadlec@netfilter.org>,
+        Florian Westphal <fw@strlen.de>,
+        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
+        Paul Mackerras <paulus@samba.org>, linux-ppp@vger.kernel.org,
+        reiserfs-devel@vger.kernel.org,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+From:   Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH v2] Documentation: changes.rst: update several outdated
+ project URLs
+Message-ID: <a9c3c509-8f30-fcc4-d9e0-b53aeaa89e4f@infradead.org>
+Date:   Wed, 29 Jan 2020 15:15:15 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200129221819.GO18610@dread.disaster.area>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9515 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2001290172
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9515 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2001290172
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 30, 2020 at 09:18:19AM +1100, Dave Chinner wrote:
-> On Tue, Jan 28, 2020 at 03:55:25PM +0100, Pavel Reichl wrote:
-> > mr_writer is obsolete and the information it contains is accesible
-> > from mr_lock.
-> > 
-> > Signed-off-by: Pavel Reichl <preichl@redhat.com>
-> > ---
-> >  fs/xfs/xfs_inode.c | 8 ++++++--
-> >  1 file changed, 6 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > index c5077e6326c7..32fac6152dc3 100644
-> > --- a/fs/xfs/xfs_inode.c
-> > +++ b/fs/xfs/xfs_inode.c
-> > @@ -352,13 +352,17 @@ xfs_isilocked(
-> >  {
-> >  	if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) {
-> >  		if (!(lock_flags & XFS_ILOCK_SHARED))
-> > -			return !!ip->i_lock.mr_writer;
-> > +			return !debug_locks ||
-> > +				lockdep_is_held_type(&ip->i_lock.mr_lock, 0);
-> >  		return rwsem_is_locked(&ip->i_lock.mr_lock);
-> >  	}
-> >  
-> >  	if (lock_flags & (XFS_MMAPLOCK_EXCL|XFS_MMAPLOCK_SHARED)) {
-> >  		if (!(lock_flags & XFS_MMAPLOCK_SHARED))
-> > -			return !!ip->i_mmaplock.mr_writer;
-> > +			return !debug_locks ||
-> > +				lockdep_is_held_type(
-> > +					&ip->i_mmaplock.mr_lock,
-> > +					0);
-> >  		return rwsem_is_locked(&ip->i_mmaplock.mr_lock);
-> >  	}
-> 
-> Ok, so this code is only called from ASSERT() statements, which
-> means this turns off write lock checking for XFS debug kernels if
-> lockdep is not enabled. Hence I think these checks need to be
-> restructured to be based around rwsem_is_locked() first and lockdep
-> second.
-> 
-> That is:
-> 
-> /* In all implementations count != 0 means locked */
-> static inline int rwsem_is_locked(struct rw_semaphore *sem)
-> {
->         return atomic_long_read(&sem->count) != 0;
-> }
-> 
-> This captures both read and write locks on the rwsem, and doesn't
-> discriminate at all. Now we don't have explicit writer lock checking
-> in CONFIG_XFS_DEBUG=y kernels, I think we need to at least check
-> that the rwsem is locked in all cases to catch cases where we are
-> calling a function without the lock held. That will ctach most
-> programming mistakes, and then lockdep will provide the
-> read-vs-write discrimination to catch the "hold the wrong lock type"
-> mistakes.
-> 
-> Hence I think this code should end up looking like this:
-> 
-> 	if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) {
-> 		bool locked = false;
-> 
-> 		if (!rwsem_is_locked(&ip->i_lock))
-> 			return false;
-> 		if (!debug_locks)
-> 			return true;
-> 		if (lock_flags & XFS_ILOCK_EXCL)
-> 			locked = lockdep_is_held_type(&ip->i_lock, 0);
-> 		if (lock_flags & XFS_ILOCK_SHARED)
-> 			locked |= lockdep_is_held_type(&ip->i_lock, 1);
-> 		return locked;
-> 	}
-> 
-> Thoughts?
+From: Randy Dunlap <rdunlap@infradead.org>
 
-I like that a lot better, though perhaps the if body should be factored
-into a separate static inline so we don't repeat that 3x.
+Update projects URLs in the changes.rst file.
 
---D
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: linux-doc@vger.kernel.org
+Cc: Jan Kara <jack@suse.com>
+Cc: "Theodore Ts'o" <tytso@mit.edu>
+Cc: Andreas Dilger <adilger.kernel@dilger.ca>
+Cc: linux-ext4@vger.kernel.org
+Cc: Pablo Neira Ayuso <pablo@netfilter.org>
+Cc: Jozsef Kadlecsik <kadlec@netfilter.org>
+Cc: Florian Westphal <fw@strlen.de>
+Cc: netfilter-devel@vger.kernel.org
+Cc: coreteam@netfilter.org
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: linux-ppp@vger.kernel.org
+Cc: reiserfs-devel@vger.kernel.org
+Cc: Darrick J. Wong <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Acked-by: Theodore Ts'o <tytso@mit.edu>
+---
+v2 changes:
+. add Ack and Review tags;
+. update as requested by Darrick and Ted;
 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+ Documentation/process/changes.rst                    |   14 ++++++----
+ Documentation/translations/it_IT/process/changes.rst |   14 ++++++----
+ 2 files changed, 18 insertions(+), 10 deletions(-)
+
+--- linux-next-20200129.orig/Documentation/translations/it_IT/process/changes.rst
++++ linux-next-20200129/Documentation/translations/it_IT/process/changes.rst
+@@ -390,7 +390,8 @@ Mkinitrd
+ E2fsprogs
+ ---------
+ 
+-- <http://prdownloads.sourceforge.net/e2fsprogs/e2fsprogs-1.29.tar.gz>
++- <https://www.kernel.org/pub/linux/kernel/people/tytso/e2fsprogs/>
++- <https://git.kernel.org/pub/scm/fs/ext2/e2fsprogs.git/>
+ 
+ JFSutils
+ --------
+@@ -400,12 +401,13 @@ JFSutils
+ Reiserfsprogs
+ -------------
+ 
+-- <http://www.kernel.org/pub/linux/utils/fs/reiserfs/>
++- <https://git.kernel.org/pub/scm/linux/kernel/git/jeffm/reiserfsprogs.git/>
+ 
+ Xfsprogs
+ --------
+ 
+-- <ftp://oss.sgi.com/projects/xfs/>
++- <https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git>
++- <https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/>
+ 
+ Pcmciautils
+ -----------
+@@ -444,7 +446,9 @@ Rete
+ PPP
+ ---
+ 
+-- <ftp://ftp.samba.org/pub/ppp/>
++- <https://download.samba.org/pub/ppp/>
++- <https://git.ozlabs.org/?p=ppp.git>
++- <https://github.com/paulusmack/ppp/>
+ 
+ 
+ NFS-utils
+@@ -455,7 +459,7 @@ NFS-utils
+ Iptables
+ --------
+ 
+-- <http://www.iptables.org/downloads.html>
++- <https://netfilter.org/projects/iptables/index.html>
+ 
+ Ip-route2
+ ---------
+--- linux-next-20200129.orig/Documentation/process/changes.rst
++++ linux-next-20200129/Documentation/process/changes.rst
+@@ -383,7 +383,8 @@ Mkinitrd
+ E2fsprogs
+ ---------
+ 
+-- <http://prdownloads.sourceforge.net/e2fsprogs/e2fsprogs-1.29.tar.gz>
++- <https://www.kernel.org/pub/linux/kernel/people/tytso/e2fsprogs/>
++- <https://git.kernel.org/pub/scm/fs/ext2/e2fsprogs.git/>
+ 
+ JFSutils
+ --------
+@@ -393,12 +394,13 @@ JFSutils
+ Reiserfsprogs
+ -------------
+ 
+-- <http://www.kernel.org/pub/linux/utils/fs/reiserfs/>
++- <https://git.kernel.org/pub/scm/linux/kernel/git/jeffm/reiserfsprogs.git/>
+ 
+ Xfsprogs
+ --------
+ 
+-- <ftp://oss.sgi.com/projects/xfs/>
++- <https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git>
++- <https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/>
+ 
+ Pcmciautils
+ -----------
+@@ -437,7 +439,9 @@ Networking
+ PPP
+ ---
+ 
+-- <ftp://ftp.samba.org/pub/ppp/>
++- <https://download.samba.org/pub/ppp/>
++- <https://git.ozlabs.org/?p=ppp.git>
++- <https://github.com/paulusmack/ppp/>
+ 
+ NFS-utils
+ ---------
+@@ -447,7 +451,7 @@ NFS-utils
+ Iptables
+ --------
+ 
+-- <http://www.iptables.org/downloads.html>
++- <https://netfilter.org/projects/iptables/index.html>
+ 
+ Ip-route2
+ ---------
+
