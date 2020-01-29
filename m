@@ -2,123 +2,67 @@ Return-Path: <SRS0=zOuE=3S=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+X-Spam-Status: No, score=-6.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,URIBL_DBL_ABUSE_MALW,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 178DEC2D0DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 16:57:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98EF1C2D0DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 17:03:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E496F2070E
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 16:57:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F8822070E
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 17:03:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="eaHLyxGh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726733AbgA2Q5u (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jan 2020 11:57:50 -0500
-Received: from sandeen.net ([63.231.237.45]:60932 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726683AbgA2Q5u (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 29 Jan 2020 11:57:50 -0500
-Received: from Liberator.local (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 4BF1E22C5;
-        Wed, 29 Jan 2020 10:57:49 -0600 (CST)
-Subject: Re: [PATCH V2] xfsprogs: do not redeclare globals provided by
- libraries
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>
-References: <0892b951-ac99-9f84-9c65-421798daa547@sandeen.net>
- <a2b9920e-8f65-31d8-8809-a862213117df@sandeen.net>
- <20200129160121.GS3447196@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <d9dd895f-8f16-ab11-b913-bf095c2b8071@sandeen.net>
-Date:   Wed, 29 Jan 2020 10:57:48 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.4.1
+        id S1726671AbgA2RDN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jan 2020 12:03:13 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:46544 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726647AbgA2RDM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jan 2020 12:03:12 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=wRoWpm9kQz2Qg9hfLGlpFn/iZ6ybSkJL/iFvGLbuu8M=; b=eaHLyxGhHpSyRtTrSckBCO5FV
+        2TTapzqkL0Muq/E4LwBCwrmWs37pMJj3LSAAmx/px+hM5iEGW6cM7SgUYvBta3phgkcVZwHvED28h
+        1kGtzxCVlwW/iSiEEi+t82ZlKzzbLGU7quS8qYR1TJNw2sgSnSdK+SR28yIuTyuAu8TYge46V9+cA
+        OHVHjCHWl82NPJUpibxZ0Ou7dqujDu7cFWRxvdUesYGuDoIJhRN01VR/04S80nCW6BCzt+2IilRLr
+        gyCkimzthXMdsAxZlhpxcxxVPE5uo33LG3QkSrUvTdTXBZBvOLuihJiKpydAW5FWHH8fxPm6cTqdr
+        6r/pjPL3w==;
+Received: from [2001:4bb8:18c:3335:c19:50e8:dbcf:dcc6] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1iwqkC-0006qJ-4v; Wed, 29 Jan 2020 17:03:12 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     linux-xfs@vger.kernel.org
+Cc:     Allison Collins <allison.henderson@oracle.com>
+Subject: clean up the attr interface v3
+Date:   Wed, 29 Jan 2020 18:02:39 +0100
+Message-Id: <20200129170310.51370-1-hch@lst.de>
+X-Mailer: git-send-email 2.24.1
 MIME-Version: 1.0
-In-Reply-To: <20200129160121.GS3447196@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 1/29/20 10:01 AM, Darrick J. Wong wrote:
-> On Wed, Jan 29, 2020 at 09:16:58AM -0600, Eric Sandeen wrote:
->> In each of these cases, db, logprint, and mdrestore are redeclaring
->> as a global variable something which was already provided by a
->> library they link with. 
->>
->> gcc now defaults to -fno-common and trips over these global variables
->> which are declared in utilities as well as in libxfs and libxlog, and
->> it causes the build to fail.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com> 
->> ---
+xfsprogs patches porting over the libxfs changes are available here:
 
-...
+    http://git.infradead.org/users/hch/xfsprogs.git/shortlog/refs/heads/attr-cleanup
 
->> +	print_exit = 1; /* -e is now default. specify -c to override */ 
-> 
-> With the trailing whitespace after the comment fixed,
+Changes since v2:
+ - add more comments
+ - fix up an error handling corner case in __xfs_set_acl
+ - add more cowbell^H^H^H^H^H^H^Hbool
+ - add a new patch to reject invalid namespaces flags in
+   XFS_IOC_ATTRLIST_BY_HANDLE
+ - remove ATTR_ENTSIZE entirely
 
-oh burn. ;)
-
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Though given your earlier comment on IRC, maybe we should investigate
-> why -fno-common would be useful (since Fedora turned it on??) or if it
-> should be in the regular build to catch multiply defined global vars?
-
-That's a good idea.  FWIW my understanding is that it's a new default in
-gcc10.
-
-Docs say w.r.t. -fcommon: "This behavior is inconsistent with C++, and on many targets implies a speed and code size penalty on global variable references. It is mainly useful to enable legacy code to link without errors."
-
-Want me to send a V3 w/ -fno-common explicitly set?
-
--Eric
+Changes since v1:
+ - rebased to for-next, which includes the fixes from the first
+   version
