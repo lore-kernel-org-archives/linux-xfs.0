@@ -2,99 +2,77 @@ Return-Path: <SRS0=zOuE=3S=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F2B2C2D0DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 17:38:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E48CC2D0DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 17:41:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 75EA820720
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 17:38:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6648A206F0
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 17:41:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="DrEnxIvC"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="B1eyt11B"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726733AbgA2Ri7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jan 2020 12:38:59 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:54192 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726679AbgA2Ri6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jan 2020 12:38:58 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=Gc3ks24OG6X76f+yAGA45eM4fknNEyoh+zvpOec4XLI=; b=DrEnxIvCOx0T33JROVafFekwY
-        od8NQOjAsF4gsSr7L8yMUUamw6VwZ1Wyft5tj9oxTzG4tggqa6ey8DL49jQvhTQdsFvPDBmIU/KVG
-        PB0J9pjy9pJ3BfdksVsr8Zld0Yko146sw5ph/We4CMg3DxBh6Tak08DBYSCF9azbKb+GNy5nbpR7V
-        HwRqrp2IREayDQEteLRQ5hopWzdUMdrI1uQZ5bOZVdHvtlmqXcERa+8H20vpXLPZLXdcC8iEjvK7R
-        WS/hdcvcFX7FO0SUm/yYqkFvg/RMAyGc43DOlfjjB4jqWqVYT3OboKwHOkv9ywOFKlONZAFB2auMs
-        EmC7jW0gg==;
-Received: from j217100.upc-j.chello.nl ([24.132.217.100] helo=noisy.programming.kicks-ass.net)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iwrIk-0003Xh-JK; Wed, 29 Jan 2020 17:38:54 +0000
-Received: from hirez.programming.kicks-ass.net (hirez.programming.kicks-ass.net [192.168.1.225])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client did not present a certificate)
-        by noisy.programming.kicks-ass.net (Postfix) with ESMTPS id 52E533035D4;
-        Wed, 29 Jan 2020 18:37:09 +0100 (CET)
-Received: by hirez.programming.kicks-ass.net (Postfix, from userid 1000)
-        id 3BFEA2B7334C0; Wed, 29 Jan 2020 18:38:52 +0100 (CET)
-Date:   Wed, 29 Jan 2020 18:38:52 +0100
-From:   Peter Zijlstra <peterz@infradead.org>
-To:     Mel Gorman <mgorman@techsingularity.net>
-Cc:     Dave Chinner <david@fromorbit.com>, Ingo Molnar <mingo@redhat.com>,
-        Tejun Heo <tj@kernel.org>, Phil Auld <pauld@redhat.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        Vincent Guittot <vincent.guittot@linaro.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] sched, fair: Allow a per-cpu kthread waking a task to
- stack on the same CPU
-Message-ID: <20200129173852.GP14914@hirez.programming.kicks-ass.net>
-References: <20200127143608.GX3466@techsingularity.net>
- <20200127223256.GA18610@dread.disaster.area>
- <20200128011936.GY3466@techsingularity.net>
- <20200128091012.GZ3466@techsingularity.net>
+        id S1727174AbgA2Rlf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jan 2020 12:41:35 -0500
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:41382 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726679AbgA2Rlf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jan 2020 12:41:35 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1580319694;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=9MDYM6N2zx4TYEoR98U2s08TtT/6vb23+O0IFJIOheQ=;
+        b=B1eyt11BAamsCT9jGDNA68EauM7wy5lxh2QWwsAo8gm+xT4uN9V1A0gw6arsv7oPHW5cCo
+        oAMbXnpRtNNY3KiRJK7IECPDZFXKhizg5fSn0ObMk0OvrJzqIQfijmwir7mfTLp06+0wg5
+        lJBSOV8C0n5/SrNF+b7TcPhmuZBcRDM=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-326-UuBk3iwWNmeROsiS5AaxHA-1; Wed, 29 Jan 2020 12:41:32 -0500
+X-MC-Unique: UuBk3iwWNmeROsiS5AaxHA-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2300E18C43E4
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jan 2020 17:41:32 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id EF03E60BF3
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jan 2020 17:41:31 +0000 (UTC)
+To:     linux-xfs <linux-xfs@vger.kernel.org>
+From:   Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH 0/2] xfs: don't take addresses of packed structures
+Message-ID: <65e48930-96ae-7307-ba65-6b7528bb2fb5@redhat.com>
+Date:   Wed, 29 Jan 2020 11:41:31 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.4.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200128091012.GZ3466@techsingularity.net>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 28, 2020 at 09:10:12AM +0000, Mel Gorman wrote:
-> Peter, Ingo and Vincent -- I know the timing is bad due to the merge
-> window but do you have any thoughts on allowing select_idle_sibling to
-> stack a wakee task on the same CPU as a waker in this specific case?
+newer gcc complains when we try to get the address of a packed structure:
 
-I sort of see, but *groan*...
+xfs_format.h:790:3: warning: taking address of packed member of =E2=80=98=
+struct xfs_agfl=E2=80=99 may result in an unaligned pointer value [-Waddr=
+ess-of-packed-member]
 
-so if the kworker unlocks a contended mutex/rwsem/completion...
+xfs_rmap_btree.c:188:15: warning: taking address of packed member of =E2=80=
+=98struct xfs_rmap_key=E2=80=99 may result in an unaligned pointer value =
+[-Waddress-of-packed-member]
 
-I suppose the fact that it limits it to tasks that were running on the
-same CPU limits the impact if we do get it wrong.
 
-Elsewhere you write:
+Dave had sent a patch to turn the warning off globally, but that seems
+like a big hammer, I dunno.  Here are 2 patches to work around it instead=
+.
 
-> I would prefer the wakeup code did not have to signal that it's a
-> synchronous wakeup. Sync wakeups so exist but callers got it wrong many
-> times where stacking was allowed and then the waker did not go to sleep.
-> While the chain of events are related, they are not related in a very
-> obvious way. I think it's much safer to keep this as a scheduler
-> heuristic instead of depending on callers to have sufficient knowledge
-> of the scheduler implementation.
+Not tested yet, just seeing how loud people may scream at the ideas.
 
-That is true; the existing WF_SYNC has caused many issues for maybe
-being too strong.
-
-But what if we create a new hint that combines both these ideas? Say
-WF_COMPLETE and subject that to these same criteria. This way we can
-eliminate wakeups from locks and such (they won't have this set).
-
-Or am I just making things complicated again?
