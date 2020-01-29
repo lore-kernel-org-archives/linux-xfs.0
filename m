@@ -2,464 +2,162 @@ Return-Path: <SRS0=zOuE=3S=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
-	FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF296C33CB2
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 04:57:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81500C3F68F
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 05:13:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 98E07206F0
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 04:57:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 594D822522
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 05:13:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="RN255lr7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726620AbgA2E5f (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Jan 2020 23:57:35 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:43308 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726518AbgA2E5f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jan 2020 23:57:35 -0500
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00T4s1lf004901;
-        Tue, 28 Jan 2020 23:57:30 -0500
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2xsqa52k0x-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 28 Jan 2020 23:57:30 -0500
-Received: from m0098414.ppops.net (m0098414.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 00T4tPmg008678;
-        Tue, 28 Jan 2020 23:57:29 -0500
-Received: from ppma02dal.us.ibm.com (a.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.10])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2xsqa52k0p-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 28 Jan 2020 23:57:29 -0500
-Received: from pps.filterd (ppma02dal.us.ibm.com [127.0.0.1])
-        by ppma02dal.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id 00T4o90V015008;
-        Wed, 29 Jan 2020 04:57:29 GMT
-Received: from b01cxnp23034.gho.pok.ibm.com (b01cxnp23034.gho.pok.ibm.com [9.57.198.29])
-        by ppma02dal.us.ibm.com with ESMTP id 2xrda6pv9p-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 29 Jan 2020 04:57:28 +0000
-Received: from b01ledav001.gho.pok.ibm.com (b01ledav001.gho.pok.ibm.com [9.57.199.106])
-        by b01cxnp23034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 00T4vSnX51053034
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 29 Jan 2020 04:57:28 GMT
-Received: from b01ledav001.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 2B2ED2805E;
-        Wed, 29 Jan 2020 04:57:28 +0000 (GMT)
-Received: from b01ledav001.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 204B92805C;
-        Wed, 29 Jan 2020 04:57:26 +0000 (GMT)
-Received: from localhost.localdomain.com (unknown [9.85.75.4])
-        by b01ledav001.gho.pok.ibm.com (Postfix) with ESMTP;
-        Wed, 29 Jan 2020 04:57:25 +0000 (GMT)
-From:   Chandan Rajendra <chandanrlinux@gmail.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     Chandan Rajendra <chandanrlinux@gmail.com>, david@fromorbit.com,
-        chandan@linux.ibm.com, darrick.wong@oracle.com
-Subject: [PATCH V3 2/2] xfs: Fix log reservation calculation for xattr insert operation
-Date:   Wed, 29 Jan 2020 10:30:00 +0530
-Message-Id: <20200129050000.10439-2-chandanrlinux@gmail.com>
-X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20200129050000.10439-1-chandanrlinux@gmail.com>
-References: <20200129050000.10439-1-chandanrlinux@gmail.com>
+        id S1725208AbgA2FNk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jan 2020 00:13:40 -0500
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:57783 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725816AbgA2FNk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jan 2020 00:13:40 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1580274819;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=1eoXCykABiQhAP1um5/47/S0PtyaiYlY7/O7HoAVb88=;
+        b=RN255lr7IVrFMcRaFaQ+ne6bcR5frW4JJGrrwJTZX9KAyJfN44vwCutypms1iV5AXDVSZ9
+        bSwsQ0QECDlPCD0axP1kqs02VGXnthnTBtCfYFoWBM3bFzFy0hX3jpvMF4ECTcodFLywjT
+        E0h0hLrdHaJSQTl6wHtQPNGgzVxIt6Y=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-228-0ZApfu1lMu6xi8LLggBIAg-1; Wed, 29 Jan 2020 00:13:35 -0500
+X-MC-Unique: 0ZApfu1lMu6xi8LLggBIAg-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 530DE107ACC5;
+        Wed, 29 Jan 2020 05:13:34 +0000 (UTC)
+Received: from localhost (dhcp-12-102.nay.redhat.com [10.66.12.102])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id BBEC860BE0;
+        Wed, 29 Jan 2020 05:13:33 +0000 (UTC)
+Date:   Wed, 29 Jan 2020 13:23:10 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v3] xfstests: xfs mount option sanity test
+Message-ID: <20200129052310.GJ14282@dhcp-12-102.nay.redhat.com>
+Mail-Followup-To: "Darrick J. Wong" <darrick.wong@oracle.com>,
+        fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+References: <20200115081132.22710-1-zlang@redhat.com>
+ <20200118172330.GE2149943@magnolia>
+ <20200119072342.GH14282@dhcp-12-102.nay.redhat.com>
+ <20200127165728.GA3448165@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
- definitions=2020-01-28_09:2020-01-28,2020-01-28 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
- suspectscore=4 priorityscore=1501 impostorscore=0 adultscore=0
- clxscore=1034 spamscore=0 lowpriorityscore=0 phishscore=0 mlxscore=0
- bulkscore=0 malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-1911200001 definitions=main-2001290038
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200127165728.GA3448165@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Log space reservation for xattr insert operation can be divided into two
-parts,
-1. Mount time
-   - Inode
-   - Superblock for accounting space allocations
-   - AGF for accounting space used be count, block number, rmapbt and refcnt
-     btrees.
+On Mon, Jan 27, 2020 at 08:57:28AM -0800, Darrick J. Wong wrote:
+> On Sun, Jan 19, 2020 at 03:23:42PM +0800, Zorro Lang wrote:
+> > On Sat, Jan 18, 2020 at 09:23:30AM -0800, Darrick J. Wong wrote:
+> > > On Wed, Jan 15, 2020 at 04:11:32PM +0800, Zorro Lang wrote:
+> > > > XFS is changing to suit the new mount API, so add this case to make
+> > > > sure the changing won't bring in regression issue on xfs mount option
+> > > > parse phase, and won't change some default behaviors either.
+> > > > 
+> > > > Signed-off-by: Zorro Lang <zlang@redhat.com>
+> > > > ---
+> > > > 
+> > > > Hi,
+> > > > 
+> > > > Thanks the suggestions from Darrick, v3 did below changes:
+> > > > 1) Add more debug info output in do_mkfs and do_test.
+> > > > 2) A new function filter_loop.
+> > > > 3) Update .out file content
+> > > > 
+> > > > I've simply run this case on RHEL-7, RHEL-8 and upstream 5.5-rc4 kernel,
+> > > > all passed.
+> > > 
+> > > Something else I noticed -- if for whatever reason the mount fails due
+> > > to log size checks, the kernel logs things like:
+> > > 
+> > > xfs: Bad value for 'logbufs'
+> > > XFS (loop0): Mounting V5 Filesystem
+> > > XFS (loop0): Log size 3273 blocks too small, minimum size is 3299 blocks
+> > > XFS (loop0): AAIEEE! Log failed size checks. Abort!
+> > > XFS: Assertion failed: 0, file: fs/xfs/xfs_log.c, line: 706
+> > 
+> > Thanks Darrick, you always can find exceptions:) BTW, how to reproduce this
+> > error?
+> 
+> It's the same problem as last time -- I run upstream xfsprogs (with the
+> patch turning on rmap by default); and when this test runs apparently
+> there are logbufs options that increase the kernel's view of the minimum
+> log size to the point that we fail the mount time log size checks.
+> 
+> I observed that changing the LOOP_IMG creation code to make a 32G sparse
+> file results in an fs with a larger log area:
 
-2. The remaining log space can only be calculated at run time because,
-   - A local xattr can be large enough to cause a double split of the dabtree.
-   - The value of the xattr can be large enough to be stored in remote
-     blocks. The contents of the remote blocks are not logged.
+Thanks, that's a good idea, sparse file helps to get larger log space!
 
-   The log space reservation could be,
-   - 2 * XFS_DA_NODE_MAXDEPTH number of blocks. Additional XFS_DA_NODE_MAXDEPTH
-     number of blocks are required if xattr is large enough to cause another
-     split of the dabtree path from root to leaf block.
-   - BMBT blocks for storing (2 * XFS_DA_NODE_MAXDEPTH) record
-     entries. Additional XFS_DA_NODE_MAXDEPTH number of blocks are required in
-     case of a double split of the dabtree path from root to leaf blocks.
-   - Space for logging blocks of count, block number, rmap and refcnt btrees.
+> 
+> 	$XFS_IO_PROG -f -c "truncate 32g" $LOOP_IMG
+> 
+> fixes all of these problems.  See diff below.
+> 
+> > Looks like I touched too many things in one case, cause I have a long way to
+> > make it "no exception" ;)
+> > 
+> > > 
+> > > Which is then picked up by the dmesg scanner in fstests.  Maybe we need
+> > > (a) _check_dmesg between each _do_test iteration, and/or (b) filter that
+> > > particular assertion so we don't fail the test?
+> > 
+> > I can add _check_dmesg between each _do_test iteration, but I have to exit
+> > directly if _check_dmesg returns 1, or we need a way to save each failed
+> > $seqres.dmesg (maybe just cat $seqres.dmesg ?)
+> > 
+> > About the dmesg filter, each _do_test can have its own filter if it need.
+> > For example, "logbufs" test filter "Assertion failed: 0, file: fs/xfs/xfs_log.c".
+> > But might that filter out useful kernel warning?
+> > 
+> > What do you think?
+> 
+> Eh, now that I've taken a second look at this, I don't think there's a
+> good way to filter this particular ASSERT vs. any other that could pop
+> up.
 
-Presently, mount time log reservation includes block count required for a
-single split of the dabtree. The dabtree block count is also taken into
-account by xfs_attr_calc_size().
+Sure, I'm afraid to filter more real bugs, if there's not a good way to
+filter it.
 
-Also, AGF log space reservation isn't accounted for. Hence log reservation
-calculation for xattr insert operation gives an incorrect value.
-
-Apart from the above, xfs_log_calc_max_attrsetm_res() passes byte count as
-an argument to XFS_NEXTENTADD_SPACE_RES() instead of block count.
-
-To fix these issues, this commit refactors xfs_attr_calc_size() to calculate,
-1. The number of dabtree blocks that need to be logged.
-2. The number of remote blocks that need to be allocated.
-3. The number of dabtree blocks that need to be allocated.
-4. The number of bmbt blocks that need to be allocated.
-5. The total number of blocks that need to be allocated.
-
-xfs_attr_set() uses this information to compute number of bytes that needs to
-be reserved in the log.
-
-This commit also modifies xfs_log_calc_max_attrsetm_res() to invoke
-xfs_attr_calc_size() to obtain the number of blocks to be logged which it uses
-to figure out the total number of bytes to be logged.
-
-Signed-off-by: Chandan Rajendra <chandanrlinux@gmail.com>
----
-Changelog:
-V1 -> V2:
-1. Use convenience variables to reduce indentation of code.
-
-V2 -> V3:
-1. Introduce 'struct xfs_attr_set_resv' to be used an as out parameter
-   holding xattr reservation values.
-2. Calculate number of bmbt blocks and total allocation blocks within
-   xfs_attr_calc_size().
-   
- libxfs/xfs_attr.c       | 93 +++++++++++++++++++++++------------------
- libxfs/xfs_attr.h       | 20 ++++++++-
- libxfs/xfs_log_rlimit.c | 14 +++----
- libxfs/xfs_trans_resv.c | 52 +++++++++++------------
- libxfs/xfs_trans_resv.h |  2 +
- 5 files changed, 107 insertions(+), 74 deletions(-)
-
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index 2a0050f4..60e1ac2e 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -182,43 +182,6 @@ xfs_attr_get(
- 	return 0;
- }
- 
--/*
-- * Calculate how many blocks we need for the new attribute,
-- */
--STATIC int
--xfs_attr_calc_size(
--	struct xfs_da_args	*args,
--	int			*local)
--{
--	struct xfs_mount	*mp = args->dp->i_mount;
--	int			size;
--	int			nblks;
--
--	/*
--	 * Determine space new attribute will use, and if it would be
--	 * "local" or "remote" (note: local != inline).
--	 */
--	size = xfs_attr_leaf_newentsize(mp, args->namelen, args->valuelen,
--					local);
--	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
--	if (*local) {
--		if (size > (args->geo->blksize / 2)) {
--			/* Double split possible */
--			nblks *= 2;
--		}
--	} else {
--		/*
--		 * Out of line attribute, cannot double split, but
--		 * make room for the attribute value itself.
--		 */
--		uint	dblocks = xfs_attr3_rmt_blocks(mp, args->valuelen);
--		nblks += dblocks;
--		nblks += XFS_NEXTENTADD_SPACE_RES(mp, dblocks, XFS_ATTR_FORK);
--	}
--
--	return nblks;
--}
--
- STATIC int
- xfs_attr_try_sf_addname(
- 	struct xfs_inode	*dp,
-@@ -247,6 +210,53 @@ xfs_attr_try_sf_addname(
- 	return error ? error : error2;
- }
- 
-+/*
-+ * Calculate how many blocks we need for the new attribute,
-+ */
-+void
-+xfs_attr_calc_size(
-+	struct xfs_mount		*mp,
-+	struct xfs_attr_set_resv	*resv,
-+	int				namelen,
-+	int				valuelen,
-+	int				*local)
-+{
-+	unsigned int		blksize;
-+	int			size;
-+
-+	blksize = mp->m_dir_geo->blksize;
-+
-+	/*
-+	 * Determine space new attribute will use, and if it would be
-+	 * "local" or "remote" (note: local != inline).
-+	 */
-+	size = xfs_attr_leaf_newentsize(mp, namelen, valuelen, local);
-+
-+	resv->total_dablks = XFS_DAENTER_BLOCKS(mp, XFS_ATTR_FORK);
-+	resv->log_dablks = 2 * resv->total_dablks;
-+
-+	if (*local) {
-+		if (size > (blksize / 2)) {
-+			/* Double split possible */
-+			resv->log_dablks += resv->total_dablks;
-+			resv->total_dablks *= 2;
-+		}
-+	} else {
-+		/*
-+		 * Out of line attribute, cannot double split, but
-+		 * make room for the attribute value itself.
-+		 */
-+		resv->rmt_blks = xfs_attr3_rmt_blocks(mp, valuelen);
-+	}
-+
-+	resv->bmbt_blks = XFS_NEXTENTADD_SPACE_RES(mp,
-+					resv->total_dablks + resv->rmt_blks,
-+					XFS_ATTR_FORK);
-+
-+	resv->alloc_blks = resv->total_dablks + resv->rmt_blks +
-+		resv->bmbt_blks;
-+}
-+
- /*
-  * Set the attribute specified in @args.
-  */
-@@ -343,6 +353,7 @@ xfs_attr_set(
- 	int			flags)
- {
- 	struct xfs_mount	*mp = dp->i_mount;
-+	struct xfs_attr_set_resv resv = { 0 };
- 	struct xfs_da_args	args;
- 	struct xfs_trans_res	tres;
- 	int			rsvd = (flags & ATTR_ROOT) != 0;
-@@ -360,7 +371,10 @@ xfs_attr_set(
- 	args.value = value;
- 	args.valuelen = valuelen;
- 	args.op_flags = XFS_DA_OP_ADDNAME | XFS_DA_OP_OKNOENT;
--	args.total = xfs_attr_calc_size(&args, &local);
-+
-+	xfs_attr_calc_size(mp, &resv, args.namelen, args.valuelen, &local);
-+
-+	args.total = resv.alloc_blks;
- 
- 	error = xfs_qm_dqattach(dp);
- 	if (error)
-@@ -379,8 +393,7 @@ xfs_attr_set(
- 			return error;
- 	}
- 
--	tres.tr_logres = M_RES(mp)->tr_attrsetm.tr_logres +
--			 M_RES(mp)->tr_attrsetrt.tr_logres * args.total;
-+	tres.tr_logres = xfs_calc_attr_res(mp, &resv);
- 	tres.tr_logcount = XFS_ATTRSET_LOG_COUNT;
- 	tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
- 
-diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
-index 94badfa1..0b42faf7 100644
---- a/libxfs/xfs_attr.h
-+++ b/libxfs/xfs_attr.h
-@@ -131,6 +131,22 @@ typedef struct xfs_attr_list_context {
- 	int				index;		/* index into output buffer */
- } xfs_attr_list_context_t;
- 
-+struct xfs_attr_set_resv {
-+	/* Number of blocks in the da btree that we might need to log. */
-+	unsigned int		log_dablks;
-+
-+	/* Number of unlogged blocks needed to store the remote attr value. */
-+	unsigned int		rmt_blks;
-+
-+	/* Number of blocks to allocate for the da btree. */
-+	unsigned int		total_dablks;
-+
-+	/* Blocks we might need to create all the new attr fork mappings. */
-+	unsigned int		bmbt_blks;
-+
-+	/* Total number of blocks we might have to allocate. */
-+	unsigned int		alloc_blks;
-+};
- 
- /*========================================================================
-  * Function prototypes for the kernel.
-@@ -154,5 +170,7 @@ int xfs_attr_remove_args(struct xfs_da_args *args);
- int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
- 		  int flags, struct attrlist_cursor_kern *cursor);
- bool xfs_attr_namecheck(const void *name, size_t length);
--
-+void xfs_attr_calc_size(struct xfs_mount *mp,
-+			struct xfs_attr_set_resv *resv,
-+			int namelen, int valuelen, int *local);
- #endif	/* __XFS_ATTR_H__ */
-diff --git a/libxfs/xfs_log_rlimit.c b/libxfs/xfs_log_rlimit.c
-index c8398b7d..81188ea0 100644
---- a/libxfs/xfs_log_rlimit.c
-+++ b/libxfs/xfs_log_rlimit.c
-@@ -10,6 +10,7 @@
- #include "xfs_log_format.h"
- #include "xfs_trans_resv.h"
- #include "xfs_mount.h"
-+#include "xfs_attr.h"
- #include "xfs_da_format.h"
- #include "xfs_trans_space.h"
- #include "xfs_da_btree.h"
-@@ -23,17 +24,16 @@ STATIC int
- xfs_log_calc_max_attrsetm_res(
- 	struct xfs_mount	*mp)
- {
--	int			size;
--	int			nblks;
-+	struct xfs_attr_set_resv resv = { 0 };
-+	int		size;
-+	int		local;
- 
- 	size = xfs_attr_leaf_entsize_local_max(mp->m_attr_geo->blksize) -
- 	       MAXNAMELEN - 1;
--	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
--	nblks += XFS_B_TO_FSB(mp, size);
--	nblks += XFS_NEXTENTADD_SPACE_RES(mp, size, XFS_ATTR_FORK);
-+	xfs_attr_calc_size(mp, &resv, size, 0, &local);
-+	ASSERT(local == 1);
- 
--	return  M_RES(mp)->tr_attrsetm.tr_logres +
--		M_RES(mp)->tr_attrsetrt.tr_logres * nblks;
-+	return xfs_calc_attr_res(mp, &resv);
- }
- 
- /*
-diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
-index 270e92a3..925691fe 100644
---- a/libxfs/xfs_trans_resv.c
-+++ b/libxfs/xfs_trans_resv.c
-@@ -17,6 +17,7 @@
- #include "xfs_trans.h"
- #include "xfs_trans_space.h"
- #include "xfs_quota_defs.h"
-+#include "xfs_attr.h"
- 
- #define _ALLOC	true
- #define _FREE	false
-@@ -641,12 +642,10 @@ xfs_calc_attrinval_reservation(
-  * Setting an attribute at mount time.
-  *	the inode getting the attribute
-  *	the superblock for allocations
-- *	the agfs extents are allocated from
-- *	the attribute btree * max depth
-- *	the inode allocation btree
-+ *	the agf extents are allocated from
-  * Since attribute transaction space is dependent on the size of the attribute,
-  * the calculation is done partially at mount time and partially at runtime(see
-- * below).
-+ * xfs_attr_calc_size()).
-  */
- STATIC uint
- xfs_calc_attrsetm_reservation(
-@@ -654,27 +653,7 @@ xfs_calc_attrsetm_reservation(
- {
- 	return XFS_DQUOT_LOGRES(mp) +
- 		xfs_calc_inode_res(mp, 1) +
--		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
--		xfs_calc_buf_res(XFS_DA_NODE_MAXDEPTH, XFS_FSB_TO_B(mp, 1));
--}
--
--/*
-- * Setting an attribute at runtime, transaction space unit per block.
-- * 	the superblock for allocations: sector size
-- *	the inode bmap btree could join or split: max depth * block size
-- * Since the runtime attribute transaction space is dependent on the total
-- * blocks needed for the 1st bmap, here we calculate out the space unit for
-- * one block so that the caller could figure out the total space according
-- * to the attibute extent length in blocks by:
-- *	ext * M_RES(mp)->tr_attrsetrt.tr_logres
-- */
--STATIC uint
--xfs_calc_attrsetrt_reservation(
--	struct xfs_mount	*mp)
--{
--	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
--		xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK),
--				 XFS_FSB_TO_B(mp, 1));
-+		xfs_calc_buf_res(2, mp->m_sb.sb_sectsize);
- }
- 
- /*
-@@ -772,6 +751,27 @@ xfs_calc_sb_reservation(
- 	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
- }
- 
-+uint
-+xfs_calc_attr_res(
-+	struct xfs_mount		*mp,
-+	struct xfs_attr_set_resv	*resv)
-+{
-+	unsigned int		space_blks;
-+	unsigned int		attr_res;
-+
-+	space_blks = xfs_allocfree_log_count(mp,
-+			resv->total_dablks + resv->bmbt_blks);
-+
-+	attr_res = M_RES(mp)->tr_attrsetm.tr_logres +
-+		xfs_calc_buf_res(resv->log_dablks,
-+				mp->m_attr_geo->blksize) +
-+		xfs_calc_buf_res(resv->bmbt_blks,
-+				mp->m_sb.sb_blocksize) +
-+		xfs_calc_buf_res(space_blks, mp->m_sb.sb_blocksize);
-+
-+	return attr_res;
-+}
-+
- void
- xfs_trans_resv_calc(
- 	struct xfs_mount	*mp,
-@@ -882,7 +882,7 @@ xfs_trans_resv_calc(
- 	resp->tr_ichange.tr_logres = xfs_calc_ichange_reservation(mp);
- 	resp->tr_fsyncts.tr_logres = xfs_calc_swrite_reservation(mp);
- 	resp->tr_writeid.tr_logres = xfs_calc_writeid_reservation(mp);
--	resp->tr_attrsetrt.tr_logres = xfs_calc_attrsetrt_reservation(mp);
-+	resp->tr_attrsetrt.tr_logres = 0;
- 	resp->tr_clearagi.tr_logres = xfs_calc_clear_agi_bucket_reservation(mp);
- 	resp->tr_growrtzero.tr_logres = xfs_calc_growrtzero_reservation(mp);
- 	resp->tr_growrtfree.tr_logres = xfs_calc_growrtfree_reservation(mp);
-diff --git a/libxfs/xfs_trans_resv.h b/libxfs/xfs_trans_resv.h
-index 7241ab28..3a6a0bf2 100644
---- a/libxfs/xfs_trans_resv.h
-+++ b/libxfs/xfs_trans_resv.h
-@@ -7,6 +7,7 @@
- #define	__XFS_TRANS_RESV_H__
- 
- struct xfs_mount;
-+struct xfs_attr_set_resv;
- 
- /*
-  * structure for maintaining pre-calculated transaction reservations.
-@@ -91,6 +92,7 @@ struct xfs_trans_resv {
- #define	XFS_ATTRSET_LOG_COUNT		3
- #define	XFS_ATTRRM_LOG_COUNT		3
- 
-+uint xfs_calc_attr_res(struct xfs_mount *mp, struct xfs_attr_set_resv *resv);
- void xfs_trans_resv_calc(struct xfs_mount *mp, struct xfs_trans_resv *resp);
- uint xfs_allocfree_log_count(struct xfs_mount *mp, uint num_ops);
- 
--- 
-2.19.1
+> 
+> --D
+> 
+> diff --git a/tests/xfs/997 b/tests/xfs/997
+> index 6b7235dd..c5bb0e51 100755
+> --- a/tests/xfs/997
+> +++ b/tests/xfs/997
+> @@ -50,11 +50,11 @@ LOOP_SPARE_IMG=$TEST_DIR/$seq.logdev
+>  LOOP_MNT=$TEST_DIR/$seq.mnt
+>  
+>  echo "** create loop device"
+> -$XFS_IO_PROG -f -c "falloc 0 1g" $LOOP_IMG
+> +$XFS_IO_PROG -f -c "truncate 32g" $LOOP_IMG
+>  LOOP_DEV=`_create_loop_device $LOOP_IMG`
+>  
+>  echo "** create loop log device"
+> -$XFS_IO_PROG -f -c "falloc 0 512m" $LOOP_SPARE_IMG
+> +$XFS_IO_PROG -f -c "truncate 512m" $LOOP_SPARE_IMG
+>  LOOP_SPARE_DEV=`_create_loop_device $LOOP_SPARE_IMG`
+>  
+>  echo "** create loop mount point"
+> 
 
