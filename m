@@ -2,132 +2,240 @@ Return-Path: <SRS0=zOuE=3S=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
+	FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6298BC33CB2
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 04:14:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05CBFC33CB2
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 04:57:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 241B121739
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 04:14:51 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="N6fRgC+p";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="X9ZSBAq5"
+	by mail.kernel.org (Postfix) with ESMTP id CD27A206F0
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 04:57:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726620AbgA2EOu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Jan 2020 23:14:50 -0500
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:36399 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726518AbgA2EOu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jan 2020 23:14:50 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1580271289; x=1611807289;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=qjsyCoxG6mLlHWnY6zuONNNyOTqJcTzN3zMQRH6b/gA=;
-  b=N6fRgC+pXoKeT+YcAh1u1i8BoiQr9eK9bcR2YreTrVLAIFLqj7UncDX7
-   y1DOZ16w7y+Nzs5vS1uf+6IiTIso1BH+mGyx/gNZKmXRQ2ydc8h428Ert
-   uE8eryGcWBvY2QLhS+lulvzdmtcCSPUQL8SpSB3sJFeH2cs3T2VDaMC95
-   9gOxyzwr1KDmnP/6iiEWovN3/+VBHb5EC7p3nVyEqHYMG6L6JO65sZDti
-   Ym+ot7Ur0qRHUlSd8RR0V/SV2uQdXDWMh/TR7w6uHLd/SQmGZyj4zHtQS
-   rUtf3DNEqY2fedRTYZ+/677p60caXBvqPiC3zidmFpKJ+GCy/JT4gAefq
-   g==;
-IronPort-SDR: 3WsYMa5IumcFpPnow5w/Ut4M5nF1kzmmyAk38ZrUxBsDMbyUHWmO9MQ8q/T8TJoj31ZEpwKBwl
- gR5FMa8Z5q4LT1HsJFG7r5rtbgy+b+xpMCQDa/UMhWaVPwbmWzNd7rJBvLGgdDV52vq2oydhEe
- lPzdYAV+f+d/kz5kExasgTmjgoI8MjUg8FcE0CLbpcyg9UnvLNi5dX/YbhjW4t4kQEM17TuCIx
- dSLAff13borQy7P9JCQLkwxBNwrqtQtgd95RsHWOXWru31dlIlE9QH7Evx/qQWRlhdKyZz33Xu
- cNc=
-X-IronPort-AV: E=Sophos;i="5.70,376,1574092800"; 
-   d="scan'208";a="128626886"
-Received: from mail-dm6nam12lp2171.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.171])
-  by ob1.hgst.iphmx.com with ESMTP; 29 Jan 2020 12:14:48 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=nBOEYfmCIBD/GAWk4ewZgEwGxm4TSI4h0MP2cCHSWW1pm0hFJyrNrVJBEL4gxIjqJWavdZD0m4HTiJn1P1EY7sjYop07WxbB91rVNaP2yzVXil2p/i437+tb0J2JJVoAmxiZPseu0TvHpHNoCe8usAf+nwq/qhdnoPLSqB0W0GuYQZ0ShBE3pQv1iXmExwcyPiJDhgqFEMgyYhArsOsxMVRTCWXENfhRiQVA1JWvFu4QcoTlVSjsIcgQvHEI8yDj6sWxFMD/wSXMhHggCohcQfu5CSmB4YgomUmepchUs+vTzaJ4L63+VHNt/N07/HutjX8MP1UwsDULI4p9r/qn8g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qjsyCoxG6mLlHWnY6zuONNNyOTqJcTzN3zMQRH6b/gA=;
- b=NK8cozeFbKjMfrc2i44l/PYZN7XlANJ4iiS0J3XCK9NrCGkBw8wLVxEx2/69ahuuoJYjL+XLOmjPIsLB5uFdf6As9CI9DTl/G573JfLb9OC++DWd/gQf0vd1fQYECl/kInf2lnzYJUTmx23GoxNnAVqIdqGD+FRQDHGnKPSEfK316uAPq3N7Eg9tfC7rxZ0gsdITB7fx2fHwPHkKAFEY+qD1GdMqrcQBSoJq4iyXpATviZrhbGqn9ZD/zA8niW/eNOv8bHeZig2seRoYk26/n7K/qCjGT0SirZWndV1ErNdjdeXhFQ8VuLdn7V1wyEfQxHeUMk3+zzEz9ubXpOZM4Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qjsyCoxG6mLlHWnY6zuONNNyOTqJcTzN3zMQRH6b/gA=;
- b=X9ZSBAq5xnf1LZUBLwRRowIYHFhVcIUkY8x9IhuhthRqm02VkyVixgV6tSsHGWT0ThOA90A5WjEdbLueZ4v1203g/9lIl52A6XVjO+M7IJoKtIOnuZRnU5O0UkdOybCYLiHkaac98MX2muuDmlhxAPRicHz73xTZqVN3v7h4v20=
-Received: from BYAPR04MB5816.namprd04.prod.outlook.com (20.179.59.16) by
- BYAPR04MB4934.namprd04.prod.outlook.com (52.135.232.215) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2665.22; Wed, 29 Jan 2020 04:14:47 +0000
-Received: from BYAPR04MB5816.namprd04.prod.outlook.com
- ([fe80::cd8e:d1de:e661:a61]) by BYAPR04MB5816.namprd04.prod.outlook.com
- ([fe80::cd8e:d1de:e661:a61%5]) with mapi id 15.20.2665.027; Wed, 29 Jan 2020
- 04:14:47 +0000
-From:   Damien Le Moal <Damien.LeMoal@wdc.com>
-To:     "Markus.Elfring@web.de" <Markus.Elfring@web.de>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-CC:     "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
-        "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-        "jth@kernel.org" <jth@kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "hare@suse.de" <hare@suse.de>, Naohiro Aota <Naohiro.Aota@wdc.com>
-Subject: Re: [PATCH v9 1/2] fs: New zonefs file system
-Thread-Topic: [PATCH v9 1/2] fs: New zonefs file system
-Thread-Index: AQHV1fd+i8cexmeU+kuMtjmzEb+Ao6gBCVeA
-Date:   Wed, 29 Jan 2020 04:14:47 +0000
-Message-ID: <66069013676fc49042b3cf96d30d98963c57f79d.camel@wdc.com>
-References: <1928f213-f6c8-156f-a968-6d0603a7656c@web.de>
-In-Reply-To: <1928f213-f6c8-156f-a968-6d0603a7656c@web.de>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Evolution 3.34.3 (3.34.3-1.fc31) 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Damien.LeMoal@wdc.com; 
-x-originating-ip: [199.255.47.11]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 16d50590-0b93-4a9c-2690-08d7a471c727
-x-ms-traffictypediagnostic: BYAPR04MB4934:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BYAPR04MB49349F616329B2C068A44DE2E7050@BYAPR04MB4934.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:5797;
-x-forefront-prvs: 02973C87BC
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(396003)(136003)(366004)(376002)(346002)(39860400002)(189003)(199004)(81156014)(81166006)(66556008)(186003)(8936002)(6486002)(8676002)(6506007)(4326008)(91956017)(66946007)(76116006)(316002)(2906002)(66476007)(64756008)(66446008)(86362001)(36756003)(110136005)(478600001)(6512007)(26005)(71200400001)(4744005)(2616005)(54906003)(5660300002);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR04MB4934;H:BYAPR04MB5816.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: iQnAsMKlh2N0Q+BY89BDitaIcs2fL2f/YksB0kwSvWPXqSZ5hJrImRi6mCTNgYlMXVOXzKHIyMfLH39siLyUpBXeqV9CS7U6je89OC2o0lhCaNIhfWKC8fsWJxSuiwGRB5zene6j/hiMl3sinKbLi16Gk5R6HwLhc9JCH1hmQ0SiTUsAmj+Y8agYCqUkXMxMImilOshTcpTzplDnX9QacDNSIUpKNGmM6NKAyGRs5uXmZT5oBdyli/UWuegIzcAVZBaYferTn/G++SL7bEGdgwcjaiYWstra4jC081ZYmRj5++1H/6JjKO0s9a0hWjvuYPefe0asJNQ6VbOxUOXCSur1dn6u70UDpwKz6vnFToCh5+/SWeRJx8XeqUv8YxQHlLg5hM81BuECG9TCWEak9hUuipHPVKA1RlpmpIbW9trWaN/IjQZNhC92x0FeQhEZ
-x-ms-exchange-antispam-messagedata: 7VON7aadz975f9avE8p6PZiUnEPRdlhh+ts1xbJ0r+x8FzjgpGbMZpnacsVFiCq89x5nUwsDeFPeN30nXLa33k+Ojk2toFTXu4E49clGViJsg2Dvl/ZKxjJ79ubRWTZX8Io7DVAivKhoz/Sz6MZfHA==
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <C24DD951B3303E4691B32FFC1F1A714F@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        id S1726541AbgA2E5M (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Jan 2020 23:57:12 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:57766 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726401AbgA2E5M (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jan 2020 23:57:12 -0500
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00T4tEQZ010995;
+        Tue, 28 Jan 2020 23:57:08 -0500
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2xttnt6eq4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 28 Jan 2020 23:57:08 -0500
+Received: from m0098421.ppops.net (m0098421.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 00T4tEsb010918;
+        Tue, 28 Jan 2020 23:57:07 -0500
+Received: from ppma03dal.us.ibm.com (b.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.11])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2xttnt6eps-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 28 Jan 2020 23:57:07 -0500
+Received: from pps.filterd (ppma03dal.us.ibm.com [127.0.0.1])
+        by ppma03dal.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id 00T4pNkd014297;
+        Wed, 29 Jan 2020 04:57:07 GMT
+Received: from b01cxnp22035.gho.pok.ibm.com (b01cxnp22035.gho.pok.ibm.com [9.57.198.25])
+        by ppma03dal.us.ibm.com with ESMTP id 2xrda6pwy3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 29 Jan 2020 04:57:07 +0000
+Received: from b01ledav002.gho.pok.ibm.com (b01ledav002.gho.pok.ibm.com [9.57.199.107])
+        by b01cxnp22035.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 00T4v6nP54657438
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 29 Jan 2020 04:57:06 GMT
+Received: from b01ledav002.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 3FA90124052;
+        Wed, 29 Jan 2020 04:57:06 +0000 (GMT)
+Received: from b01ledav002.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 1E596124054;
+        Wed, 29 Jan 2020 04:57:04 +0000 (GMT)
+Received: from localhost.localdomain.com (unknown [9.85.75.4])
+        by b01ledav002.gho.pok.ibm.com (Postfix) with ESMTP;
+        Wed, 29 Jan 2020 04:57:03 +0000 (GMT)
+From:   Chandan Rajendra <chandanrlinux@gmail.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Chandan Rajendra <chandanrlinux@gmail.com>, david@fromorbit.com,
+        chandan@linux.ibm.com, darrick.wong@oracle.com
+Subject: [PATCH V3 1/2] xfs: Pass xattr name and value length explicitly to xfs_attr_leaf_newentsize
+Date:   Wed, 29 Jan 2020 10:29:38 +0530
+Message-Id: <20200129045939.10380-1-chandanrlinux@gmail.com>
+X-Mailer: git-send-email 2.19.1
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 16d50590-0b93-4a9c-2690-08d7a471c727
-X-MS-Exchange-CrossTenant-originalarrivaltime: 29 Jan 2020 04:14:47.3737
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: uEPY+SKFSMRbw5Nu+uQf2nl3z6kAyhPQqSY2SadUJRxNJLF06vr/IMRvhwc7AigFii8Z55IveQ0U5ElJuyijTQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB4934
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
+ definitions=2020-01-28_09:2020-01-28,2020-01-28 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 malwarescore=0
+ spamscore=0 impostorscore=0 phishscore=0 bulkscore=0 suspectscore=1
+ adultscore=0 priorityscore=1501 mlxlogscore=999 lowpriorityscore=0
+ clxscore=1034 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-1911200001 definitions=main-2001290038
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-T24gVHVlLCAyMDIwLTAxLTI4IGF0IDE3OjI0ICswMTAwLCBNYXJrdXMgRWxmcmluZyB3cm90ZToN
-Cj4g4oCmDQo+ID4gKysrIGIvZnMvem9uZWZzL0tjb25maWcNCj4g4oCmDQo+ID4gKwloZWxwDQo+
-ID4gKwkgIHpvbmVmcyBpcyBhIHNpbXBsZSBGaWxlIFN5c3RlbSB3aGljaCBleHBvc2VzIHpvbmVz
-IG9mIGEgem9uZWQgYmxvY2sNCj4gDQo+IERvZXMgdGhlIGNhcGl0YWxpc2F0aW9uIG1hdHRlciBo
-ZXJlPw0KPiBXb3VsZCB0aGUgc3BlbGxpbmcg4oCcWm9uZWZzIGlzIGEgc2ltcGxlIGZpbGUgc3lz
-dGVtIHdoaWNoIOKApuKAnSBiZSBhcHByb3ByaWF0ZT8NCg0KRml4ZWQuIFRoYW5rcyAhDQoNCj4g
-DQo+IFJlZ2FyZHMsDQo+IE1hcmt1cw0KDQotLSANCkRhbWllbiBMZSBNb2FsDQpXZXN0ZXJuIERp
-Z2l0YWwgUmVzZWFyY2gNCg==
+This commit changes xfs_attr_leaf_newentsize() to explicitly accept name and
+value length instead of a pointer to struct xfs_da_args. The next commit will
+need to invoke xfs_attr_leaf_newentsize() from functions that do not have
+a struct xfs_da_args to pass in.
+
+Signed-off-by: Chandan Rajendra <chandanrlinux@gmail.com>
+---
+ fs/xfs/libxfs/xfs_attr.c      |  3 ++-
+ fs/xfs/libxfs/xfs_attr_leaf.c | 41 ++++++++++++++++++++++++-----------
+ fs/xfs/libxfs/xfs_attr_leaf.h |  3 ++-
+ 3 files changed, 32 insertions(+), 15 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 0d7fcc983b3da..1eae1db74f6cd 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -199,7 +199,8 @@ xfs_attr_calc_size(
+ 	 * Determine space new attribute will use, and if it would be
+ 	 * "local" or "remote" (note: local != inline).
+ 	 */
+-	size = xfs_attr_leaf_newentsize(args, local);
++	size = xfs_attr_leaf_newentsize(mp, args->namelen, args->valuelen,
++					local);
+ 	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
+ 	if (*local) {
+ 		if (size > (args->geo->blksize / 2)) {
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 08d4b10ae2d53..7cd57e5844d80 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -1338,7 +1338,8 @@ xfs_attr3_leaf_add(
+ 	leaf = bp->b_addr;
+ 	xfs_attr3_leaf_hdr_from_disk(args->geo, &ichdr, leaf);
+ 	ASSERT(args->index >= 0 && args->index <= ichdr.count);
+-	entsize = xfs_attr_leaf_newentsize(args, NULL);
++	entsize = xfs_attr_leaf_newentsize(args->dp->i_mount, args->namelen,
++					args->valuelen, NULL);
+ 
+ 	/*
+ 	 * Search through freemap for first-fit on new name length.
+@@ -1411,6 +1412,7 @@ xfs_attr3_leaf_add_work(
+ 	struct xfs_attr_leaf_name_local *name_loc;
+ 	struct xfs_attr_leaf_name_remote *name_rmt;
+ 	struct xfs_mount	*mp;
++	int			entsize;
+ 	int			tmp;
+ 	int			i;
+ 
+@@ -1440,11 +1442,14 @@ xfs_attr3_leaf_add_work(
+ 	ASSERT(ichdr->freemap[mapindex].base < args->geo->blksize);
+ 	ASSERT((ichdr->freemap[mapindex].base & 0x3) == 0);
+ 	ASSERT(ichdr->freemap[mapindex].size >=
+-		xfs_attr_leaf_newentsize(args, NULL));
++		xfs_attr_leaf_newentsize(mp, args->namelen,
++					args->valuelen, NULL));
+ 	ASSERT(ichdr->freemap[mapindex].size < args->geo->blksize);
+ 	ASSERT((ichdr->freemap[mapindex].size & 0x3) == 0);
+ 
+-	ichdr->freemap[mapindex].size -= xfs_attr_leaf_newentsize(args, &tmp);
++	entsize = xfs_attr_leaf_newentsize(mp, args->namelen, args->valuelen,
++					&tmp);
++	ichdr->freemap[mapindex].size -= entsize;
+ 
+ 	entry->nameidx = cpu_to_be16(ichdr->freemap[mapindex].base +
+ 				     ichdr->freemap[mapindex].size);
+@@ -1831,6 +1836,8 @@ xfs_attr3_leaf_figure_balance(
+ 	struct xfs_attr_leafblock	*leaf1 = blk1->bp->b_addr;
+ 	struct xfs_attr_leafblock	*leaf2 = blk2->bp->b_addr;
+ 	struct xfs_attr_leaf_entry	*entry;
++	struct xfs_da_args		*args;
++	int				entsize;
+ 	int				count;
+ 	int				max;
+ 	int				index;
+@@ -1840,14 +1847,16 @@ xfs_attr3_leaf_figure_balance(
+ 	int				foundit = 0;
+ 	int				tmp;
+ 
++	args = state->args;
+ 	/*
+ 	 * Examine entries until we reduce the absolute difference in
+ 	 * byte usage between the two blocks to a minimum.
+ 	 */
+ 	max = ichdr1->count + ichdr2->count;
+ 	half = (max + 1) * sizeof(*entry);
+-	half += ichdr1->usedbytes + ichdr2->usedbytes +
+-			xfs_attr_leaf_newentsize(state->args, NULL);
++	entsize = xfs_attr_leaf_newentsize(state->mp, args->namelen,
++					args->valuelen, NULL);
++	half += ichdr1->usedbytes + ichdr2->usedbytes + entsize;
+ 	half /= 2;
+ 	lastdelta = state->args->geo->blksize;
+ 	entry = xfs_attr3_leaf_entryp(leaf1);
+@@ -1858,8 +1867,11 @@ xfs_attr3_leaf_figure_balance(
+ 		 * The new entry is in the first block, account for it.
+ 		 */
+ 		if (count == blk1->index) {
+-			tmp = totallen + sizeof(*entry) +
+-				xfs_attr_leaf_newentsize(state->args, NULL);
++			entsize = xfs_attr_leaf_newentsize(state->mp,
++							args->namelen,
++							args->valuelen,
++							NULL);
++			tmp = totallen + sizeof(*entry) + entsize;
+ 			if (XFS_ATTR_ABS(half - tmp) > lastdelta)
+ 				break;
+ 			lastdelta = XFS_ATTR_ABS(half - tmp);
+@@ -1894,8 +1906,9 @@ xfs_attr3_leaf_figure_balance(
+ 	 */
+ 	totallen -= count * sizeof(*entry);
+ 	if (foundit) {
+-		totallen -= sizeof(*entry) +
+-				xfs_attr_leaf_newentsize(state->args, NULL);
++		entsize = xfs_attr_leaf_newentsize(state->mp, args->namelen,
++						args->valuelen, NULL);
++		totallen -= sizeof(*entry) + entsize;
+ 	}
+ 
+ 	*countarg = count;
+@@ -2687,20 +2700,22 @@ xfs_attr_leaf_entsize(xfs_attr_leafblock_t *leaf, int index)
+  */
+ int
+ xfs_attr_leaf_newentsize(
+-	struct xfs_da_args	*args,
++	struct xfs_mount	*mp,
++	int			namelen,
++	int			valuelen,
+ 	int			*local)
+ {
+ 	int			size;
+ 
+-	size = xfs_attr_leaf_entsize_local(args->namelen, args->valuelen);
+-	if (size < xfs_attr_leaf_entsize_local_max(args->geo->blksize)) {
++	size = xfs_attr_leaf_entsize_local(namelen, valuelen);
++	if (size < xfs_attr_leaf_entsize_local_max(mp->m_attr_geo->blksize)) {
+ 		if (local)
+ 			*local = 1;
+ 		return size;
+ 	}
+ 	if (local)
+ 		*local = 0;
+-	return xfs_attr_leaf_entsize_remote(args->namelen);
++	return xfs_attr_leaf_entsize_remote(namelen);
+ }
+ 
+ 
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+index f4a188e28b7b6..0ce1f9301157e 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.h
++++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+@@ -106,7 +106,8 @@ void	xfs_attr3_leaf_unbalance(struct xfs_da_state *state,
+ xfs_dahash_t	xfs_attr_leaf_lasthash(struct xfs_buf *bp, int *count);
+ int	xfs_attr_leaf_order(struct xfs_buf *leaf1_bp,
+ 				   struct xfs_buf *leaf2_bp);
+-int	xfs_attr_leaf_newentsize(struct xfs_da_args *args, int *local);
++int	xfs_attr_leaf_newentsize(struct xfs_mount *mp, int namelen,
++			int valuelen, int *local);
+ int	xfs_attr3_leaf_read(struct xfs_trans *tp, struct xfs_inode *dp,
+ 			xfs_dablk_t bno, struct xfs_buf **bpp);
+ void	xfs_attr3_leaf_hdr_from_disk(struct xfs_da_geometry *geo,
+-- 
+2.19.1
+
