@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36469C2D0DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 17:03:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EC8FC2D0DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 17:03:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0134920720
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 17:03:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6192E2070E
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 17:03:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UGd324uJ"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="MlYjkDwt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727078AbgA2RDn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jan 2020 12:03:43 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:46642 "EHLO
+        id S1727080AbgA2RDq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jan 2020 12:03:46 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:46650 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726847AbgA2RDn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jan 2020 12:03:43 -0500
+        with ESMTP id S1726847AbgA2RDp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jan 2020 12:03:45 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=q3Z6e2xP8l3VLpnP9Q8753mjaViK8gpcqnSWfga51w8=; b=UGd324uJWuZLVCwTInZG8lOFHR
-        /qZi5Uo2q2onMXnqUpgL+uHdZLVnmRKL4sW1cmT7O6fF6vZuMm0tGRSLWk2yAL1+JgGi+gfNG+VST
-        ulOILL5nHiz5/Q5te+HHVg1Axtz9h5e52l9hFL9QeMVX1Xr0qxwE0IgOzowqdW11VUXTlcbrM/30I
-        lRToaxH+5UgOKuTUxhDmTLI+AizD1pR+o70GfSH+gksLKajis4WdHtl1q+wC07CSHgA1RP+Ap2wDd
-        vBJRti1Fe/xXit/Jp1EhW0k+yBf0cZ9YqrEdCF1IyflG+15f6b9WBYL/WJyHymoBSavYonyslejJt
-        UlTru63w==;
+        bh=KBIZv3hJC0kr0SzTlzLsrsMWIoHXQV+ObAprMce+wO8=; b=MlYjkDwteN9YgT9xnSPf+TVyBQ
+        J2v1DnRxJiQB3fw/wNLMVJxN5ZLlVhorYgFMr8voaiEugzG0VuLvZOBxfQ2xdNVqlzeigg7ody4bu
+        Ipt6P+oegLChCv7gZWmU7CnwdblVmEPYOAfhB7h7SZ8WKv7Ybr4JBgtqzn8TnaVG8F3m1NhMe2fHe
+        keojKOFWqLFa0ZF0wHn3YKj2sTx4GNiRaOIhJfg6f5/heNwEZDZJouEWJWsD/D+MVk6fEIfHIAR/z
+        6XeSKQwqmTI9adIH5dw5GQU+XgnGhPSzr27m3pa2/7v1iwOnHHcwSDk2dys4sXf0zBZ12WmIeNeyI
+        QFHIjd2A==;
 Received: from [2001:4bb8:18c:3335:c19:50e8:dbcf:dcc6] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iwqkg-0006uP-NL; Wed, 29 Jan 2020 17:03:43 +0000
+        id 1iwqkj-0006ug-8X; Wed, 29 Jan 2020 17:03:45 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
 Cc:     Allison Collins <allison.henderson@oracle.com>,
         "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 12/30] xfs: pass an initialized xfs_da_args to xfs_attr_get
-Date:   Wed, 29 Jan 2020 18:02:51 +0100
-Message-Id: <20200129170310.51370-13-hch@lst.de>
+Subject: [PATCH 13/30] xfs: remove the xfs_inode argument to xfs_attr_get_ilocked
+Date:   Wed, 29 Jan 2020 18:02:52 +0100
+Message-Id: <20200129170310.51370-14-hch@lst.de>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200129170310.51370-1-hch@lst.de>
 References: <20200129170310.51370-1-hch@lst.de>
@@ -54,308 +54,82 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Instead of converting from one style of arguments to another in
-xfs_attr_set, pass the structure from higher up in the call chain.
+The inode can easily be derived from the args structure.  Also
+don't bother with else statements after early returns.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr.c | 80 ++++++++++++----------------------------
- fs/xfs/libxfs/xfs_attr.h |  4 +-
- fs/xfs/xfs_acl.c         | 35 ++++++++----------
- fs/xfs/xfs_ioctl.c       | 25 ++++++++-----
- fs/xfs/xfs_xattr.c       | 24 ++++++------
- 5 files changed, 68 insertions(+), 100 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c | 15 +++++++--------
+ fs/xfs/libxfs/xfs_attr.h |  2 +-
+ fs/xfs/scrub/attr.c      |  2 +-
+ 3 files changed, 9 insertions(+), 10 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index eea6d90af276..288b39e81efd 100644
+index 288b39e81efd..fd095e3d4a9a 100644
 --- a/fs/xfs/libxfs/xfs_attr.c
 +++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -56,26 +56,6 @@ STATIC int xfs_attr_node_removename(xfs_da_args_t *args);
- STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
- STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
- 
--
--STATIC int
--xfs_attr_args_init(
--	struct xfs_da_args	*args,
--	struct xfs_inode	*dp,
--	const unsigned char	*name,
--	size_t			namelen,
--	int			flags)
--{
--	memset(args, 0, sizeof(*args));
--	args->geo = dp->i_mount->m_attr_geo;
--	args->whichfork = XFS_ATTR_FORK;
--	args->dp = dp;
--	args->flags = flags;
--	args->name = name;
--	args->namelen = namelen;
--	args->hashval = xfs_da_hashname(args->name, args->namelen);
--	return 0;
--}
--
- int
- xfs_inode_hasattr(
- 	struct xfs_inode	*ip)
-@@ -115,15 +95,15 @@ xfs_attr_get_ilocked(
- /*
-  * Retrieve an extended attribute by name, and its value if requested.
-  *
-- * If ATTR_KERNOVAL is set in @flags, then the caller does not want the value,
-- * just an indication whether the attribute exists and the size of the value if
-- * it exists. The size is returned in @valuelenp,
-+ * If ATTR_KERNOVAL is set in args->flags, then the caller does not want the
-+ * value, just an indication whether the attribute exists and the size of the
-+ * value if it exists. The size is returned in args.valuelen.
-  *
-  * If the attribute is found, but exceeds the size limit set by the caller in
-- * @valuelenp, return -ERANGE with the size of the attribute that was found in
-- * @valuelenp.
-+ * args->valuelen, return -ERANGE with the size of the attribute that was found
-+ * in args->valuelen.
-  *
-- * If ATTR_ALLOC is set in @flags, allocate the buffer for the value after
-+ * If ATTR_ALLOC is set in args->flags, allocate the buffer for the value after
-  * existence of the attribute has been determined. On success, return that
-  * buffer to the caller and leave them to free it. On failure, free any
-  * allocated buffer and ensure the buffer pointer returned to the caller is
-@@ -131,51 +111,37 @@ xfs_attr_get_ilocked(
+@@ -77,19 +77,18 @@ xfs_inode_hasattr(
   */
  int
- xfs_attr_get(
+ xfs_attr_get_ilocked(
 -	struct xfs_inode	*ip,
--	const unsigned char	*name,
--	size_t			namelen,
--	unsigned char		**value,
--	int			*valuelenp,
--	int			flags)
-+	struct xfs_da_args	*args)
+ 	struct xfs_da_args	*args)
  {
--	struct xfs_da_args	args;
- 	uint			lock_mode;
- 	int			error;
+-	ASSERT(xfs_isilocked(ip, XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
++	ASSERT(xfs_isilocked(args->dp, XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
  
--	ASSERT((flags & (ATTR_ALLOC | ATTR_KERNOVAL)) || *value);
-+	ASSERT((args->flags & (ATTR_ALLOC | ATTR_KERNOVAL)) || args->value);
- 
--	XFS_STATS_INC(ip->i_mount, xs_attr_get);
-+	XFS_STATS_INC(args->dp->i_mount, xs_attr_get);
- 
--	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
-+	if (XFS_FORCED_SHUTDOWN(args->dp->i_mount))
- 		return -EIO;
- 
--	error = xfs_attr_args_init(&args, ip, name, namelen, flags);
--	if (error)
--		return error;
-+	args->geo = args->dp->i_mount->m_attr_geo;
-+	args->whichfork = XFS_ATTR_FORK;
-+	args->hashval = xfs_da_hashname(args->name, args->namelen);
- 
- 	/* Entirely possible to look up a name which doesn't exist */
--	args.op_flags = XFS_DA_OP_OKNOENT;
--	if (flags & ATTR_ALLOC)
--		args.op_flags |= XFS_DA_OP_ALLOCVAL;
+-	if (!xfs_inode_hasattr(ip))
++	if (!xfs_inode_hasattr(args->dp))
+ 		return -ENOATTR;
+-	else if (ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL)
++
++	if (args->dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL)
+ 		return xfs_attr_shortform_getvalue(args);
+-	else if (xfs_bmap_one_block(ip, XFS_ATTR_FORK))
++	if (xfs_bmap_one_block(args->dp, XFS_ATTR_FORK))
+ 		return xfs_attr_leaf_get(args);
 -	else
--		args.value = *value;
--	args.valuelen = *valuelenp;
-+	args->op_flags = XFS_DA_OP_OKNOENT;
-+	if (args->flags & ATTR_ALLOC)
-+		args->op_flags |= XFS_DA_OP_ALLOCVAL;
- 
--	lock_mode = xfs_ilock_attr_map_shared(ip);
--	error = xfs_attr_get_ilocked(ip, &args);
--	xfs_iunlock(ip, lock_mode);
--	*valuelenp = args.valuelen;
-+	lock_mode = xfs_ilock_attr_map_shared(args->dp);
-+	error = xfs_attr_get_ilocked(args->dp, args);
-+	xfs_iunlock(args->dp, lock_mode);
- 
- 	/* on error, we have to clean up allocated value buffers */
--	if (error) {
--		if (flags & ATTR_ALLOC) {
--			kmem_free(args.value);
--			*value = NULL;
--		}
--		return error;
-+	if (error && (args->flags & ATTR_ALLOC)) {
-+		kmem_free(args->value);
-+		args->value = NULL;
- 	}
--	*value = args.value;
--	return 0;
-+	return error;
+-		return xfs_attr_node_get(args);
++	return xfs_attr_node_get(args);
  }
  
  /*
+@@ -133,7 +132,7 @@ xfs_attr_get(
+ 		args->op_flags |= XFS_DA_OP_ALLOCVAL;
+ 
+ 	lock_mode = xfs_ilock_attr_map_shared(args->dp);
+-	error = xfs_attr_get_ilocked(args->dp, args);
++	error = xfs_attr_get_ilocked(args);
+ 	xfs_iunlock(args->dp, lock_mode);
+ 
+ 	/* on error, we have to clean up allocated value buffers */
 diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-index 07ca543db831..be77d13a2902 100644
+index be77d13a2902..b8c4ed27f626 100644
 --- a/fs/xfs/libxfs/xfs_attr.h
 +++ b/fs/xfs/libxfs/xfs_attr.h
-@@ -146,9 +146,7 @@ int xfs_attr_list_int_ilocked(struct xfs_attr_list_context *);
+@@ -145,7 +145,7 @@ int xfs_attr_inactive(struct xfs_inode *dp);
+ int xfs_attr_list_int_ilocked(struct xfs_attr_list_context *);
  int xfs_attr_list_int(struct xfs_attr_list_context *);
  int xfs_inode_hasattr(struct xfs_inode *ip);
- int xfs_attr_get_ilocked(struct xfs_inode *ip, struct xfs_da_args *args);
--int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
--		 size_t namelen, unsigned char **value, int *valuelenp,
--		 int flags);
-+int xfs_attr_get(struct xfs_da_args *args);
+-int xfs_attr_get_ilocked(struct xfs_inode *ip, struct xfs_da_args *args);
++int xfs_attr_get_ilocked(struct xfs_da_args *args);
+ int xfs_attr_get(struct xfs_da_args *args);
  int xfs_attr_set(struct xfs_da_args *args);
  int xfs_attr_set_args(struct xfs_da_args *args);
- int xfs_attr_remove_args(struct xfs_da_args *args);
-diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-index e9ae7cbe1973..780924984492 100644
---- a/fs/xfs/xfs_acl.c
-+++ b/fs/xfs/xfs_acl.c
-@@ -120,34 +120,31 @@ xfs_acl_to_disk(struct xfs_acl *aclp, const struct posix_acl *acl)
- struct posix_acl *
- xfs_get_acl(struct inode *inode, int type)
- {
--	struct xfs_inode *ip = XFS_I(inode);
--	struct posix_acl *acl = NULL;
--	struct xfs_acl *xfs_acl = NULL;
--	unsigned char *ea_name;
--	int error;
--	int len;
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct posix_acl	*acl = NULL;
-+	struct xfs_da_args	args = {
-+		.dp		= ip,
-+		.flags		= ATTR_ALLOC | ATTR_ROOT,
-+		.valuelen	= XFS_ACL_MAX_SIZE(mp),
-+	};
-+	int			error;
+diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+index d804558cdbca..f983c2b969e0 100644
+--- a/fs/xfs/scrub/attr.c
++++ b/fs/xfs/scrub/attr.c
+@@ -162,7 +162,7 @@ xchk_xattr_listent(
+ 	args.value = xchk_xattr_valuebuf(sx->sc);
+ 	args.valuelen = valuelen;
  
- 	trace_xfs_get_acl(ip);
- 
- 	switch (type) {
- 	case ACL_TYPE_ACCESS:
--		ea_name = SGI_ACL_FILE;
-+		args.name = SGI_ACL_FILE;
- 		break;
- 	case ACL_TYPE_DEFAULT:
--		ea_name = SGI_ACL_DEFAULT;
-+		args.name = SGI_ACL_DEFAULT;
- 		break;
- 	default:
- 		BUG();
- 	}
-+	args.namelen = strlen(args.name);
- 
--	/*
--	 * If we have a cached ACLs value just return it, not need to
--	 * go out to the disk.
--	 */
--	len = XFS_ACL_MAX_SIZE(ip->i_mount);
--	error = xfs_attr_get(ip, ea_name, strlen(ea_name),
--				(unsigned char **)&xfs_acl, &len,
--				ATTR_ALLOC | ATTR_ROOT);
-+	error = xfs_attr_get(&args);
- 	if (error) {
- 		/*
- 		 * If the attribute doesn't exist make sure we have a negative
-@@ -156,9 +153,9 @@ xfs_get_acl(struct inode *inode, int type)
- 		if (error != -ENOATTR)
- 			acl = ERR_PTR(error);
- 	} else  {
--		acl = xfs_acl_from_disk(ip->i_mount, xfs_acl, len,
--					XFS_ACL_MAX_ENTRIES(ip->i_mount));
--		kmem_free(xfs_acl);
-+		acl = xfs_acl_from_disk(mp, args.value, args.valuelen,
-+					XFS_ACL_MAX_ENTRIES(mp));
-+		kmem_free(args.value);
- 	}
- 	return acl;
- }
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 47a88b5cfa63..2da22595f828 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -357,27 +357,32 @@ xfs_attrmulti_attr_get(
- 	uint32_t		*len,
- 	uint32_t		flags)
- {
--	unsigned char		*kbuf;
--	int			error = -EFAULT;
--	size_t			namelen;
-+	struct xfs_da_args	args = {
-+		.dp		= XFS_I(inode),
-+		.flags		= flags,
-+		.name		= name,
-+		.namelen	= strlen(name),
-+		.valuelen	= *len,
-+	};
-+	int			error;
- 
- 	if (*len > XFS_XATTR_SIZE_MAX)
- 		return -EINVAL;
--	kbuf = kmem_zalloc_large(*len, 0);
--	if (!kbuf)
-+
-+	args.value = kmem_zalloc_large(*len, 0);
-+	if (!args.value)
- 		return -ENOMEM;
- 
--	namelen = strlen(name);
--	error = xfs_attr_get(XFS_I(inode), name, namelen, &kbuf, (int *)len,
--			     flags);
-+	error = xfs_attr_get(&args);
- 	if (error)
- 		goto out_kfree;
- 
--	if (copy_to_user(ubuf, kbuf, *len))
-+	*len = args.valuelen;
-+	if (copy_to_user(ubuf, args.value, args.valuelen))
- 		error = -EFAULT;
- 
- out_kfree:
--	kmem_free(kbuf);
-+	kmem_free(args.value);
- 	return error;
- }
- 
-diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-index 09f967f97699..b3ce5e8777f9 100644
---- a/fs/xfs/xfs_xattr.c
-+++ b/fs/xfs/xfs_xattr.c
-@@ -21,22 +21,24 @@ static int
- xfs_xattr_get(const struct xattr_handler *handler, struct dentry *unused,
- 		struct inode *inode, const char *name, void *value, size_t size)
- {
--	int xflags = handler->flags;
--	struct xfs_inode *ip = XFS_I(inode);
--	int error, asize = size;
--	size_t namelen = strlen(name);
-+	struct xfs_da_args	args = {
-+		.dp		= XFS_I(inode),
-+		.flags		= handler->flags,
-+		.name		= name,
-+		.namelen	= strlen(name),
-+		.value		= value,
-+		.valuelen	= size,
-+	};
-+	int			error;
- 
- 	/* Convert Linux syscall to XFS internal ATTR flags */
--	if (!size) {
--		xflags |= ATTR_KERNOVAL;
--		value = NULL;
--	}
-+	if (!size)
-+		args.flags |= ATTR_KERNOVAL;
- 
--	error = xfs_attr_get(ip, name, namelen, (unsigned char **)&value,
--			     &asize, xflags);
-+	error = xfs_attr_get(&args);
- 	if (error)
- 		return error;
--	return asize;
-+	return args.valuelen;
- }
- 
- void
+-	error = xfs_attr_get_ilocked(context->dp, &args);
++	error = xfs_attr_get_ilocked(&args);
+ 	if (!xchk_fblock_process_error(sx->sc, XFS_ATTR_FORK, args.blkno,
+ 			&error))
+ 		goto fail_xref;
 -- 
 2.24.1
 
