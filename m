@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33A62C35240
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 17:03:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4D77C2D0DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 17:03:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 001612070E
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 17:03:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B0B22070E
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 17:03:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lC5aN3ax"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="k0jH8vGG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726851AbgA2RDW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jan 2020 12:03:22 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:46576 "EHLO
+        id S1726871AbgA2RDZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jan 2020 12:03:25 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:46584 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726847AbgA2RDW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jan 2020 12:03:22 -0500
+        with ESMTP id S1726847AbgA2RDZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jan 2020 12:03:25 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=Ck0ZRAC1ra13jqDIKSJYNQmS0LxWh3MQVS6Radjo2Kg=; b=lC5aN3axVLo64/+cpmWFzlkj7x
-        p+rHltxTLWJ5Kr37hZhMkzV72RXe8df47xXnol+wUH09/iswjWZWnosbrHnhF8Q6k/Wc/L6vMOr2U
-        sv82ORzWQT81N1ydFepR94tF/8ZR+8S94oQZ6o54ZYMT3kQiCJtvIwlMpK6veB2arwIdGzvkzomtM
-        H/V6H/3DYVtn3xTfVSWu6v5OZNph1btE0/PnX3KlqE9AmpOagIjXEe2cgDGeo8YmKXVr3UB0Nbxbb
-        DwSz++fzGzmIIuI1FXcOTfvHGW3M8hzFLTPCpBhGY21ddcNRZuzFRRk5qWylg/w4isvzXZK+4H/Ey
-        PpNaLIVQ==;
+        bh=Fff2GxW9CqOqho6yBGCNeY65UQ2SGygmUZ0DJ0DeWDU=; b=k0jH8vGGXt1Oe2/ZauLFdz+Fke
+        7Ll5P9xFAoxqlsV7zbPvFEDGCxedQHheQ81YQ02BB1cd4PuX+8noME5rcVaS4IylHHUnAHRWnhMcS
+        MG+BpL+uTKlPXmO01fDEZlFAGCL/Wn6tv+YEodeBai+QCV/cRFihRD1v3EqdmaCg7zEVvnI2PvgIF
+        LDw7HqowTgKTIRNEtSKjhbhE0BgD1GvCzEYXXY6VR1bB/B9tFWM1egRfIUlVhDGdbgq3KyQcZWPoM
+        Dqcug0+81HBwsfefmIQ8o9obdexmYWJ1lIKiVpkh5EwXYttpzE0uTP2Ig3+tEhcI3434PegXYvnv2
+        T9rMLdlw==;
 Received: from [2001:4bb8:18c:3335:c19:50e8:dbcf:dcc6] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iwqkL-0006rg-UE; Wed, 29 Jan 2020 17:03:22 +0000
+        id 1iwqkO-0006s2-EN; Wed, 29 Jan 2020 17:03:24 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
 Cc:     Allison Collins <allison.henderson@oracle.com>,
         "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 04/30] xfs: merge xfs_attrmulti_attr_remove into xfs_attrmulti_attr_set
-Date:   Wed, 29 Jan 2020 18:02:43 +0100
-Message-Id: <20200129170310.51370-5-hch@lst.de>
+Subject: [PATCH 05/30] xfs: use strndup_user in XFS_IOC_ATTRMULTI_BY_HANDLE
+Date:   Wed, 29 Jan 2020 18:02:44 +0100
+Message-Id: <20200129170310.51370-6-hch@lst.de>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200129170310.51370-1-hch@lst.de>
 References: <20200129170310.51370-1-hch@lst.de>
@@ -54,113 +54,115 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Merge the ioctl handlers just like the low-level xfs_attr_set function.
+Simplify the user copy code by using strndup_user.  This means that we
+now do one memory allocation per operation instead of one per ioctl,
+but memory allocations are cheap compared to the actual file system
+operations.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_ioctl.c   | 34 ++++++++++------------------------
- fs/xfs/xfs_ioctl.h   |  6 ------
- fs/xfs/xfs_ioctl32.c |  4 ++--
- 3 files changed, 12 insertions(+), 32 deletions(-)
+ fs/xfs/xfs_ioctl.c   | 17 +++++------------
+ fs/xfs/xfs_ioctl32.c | 17 +++++------------
+ 2 files changed, 10 insertions(+), 24 deletions(-)
 
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 79c418888e9a..b806003caacd 100644
+index b806003caacd..bb490a954c0b 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -389,18 +389,20 @@ xfs_attrmulti_attr_set(
- 	uint32_t		len,
- 	uint32_t		flags)
- {
--	unsigned char		*kbuf;
-+	unsigned char		*kbuf = NULL;
- 	int			error;
- 	size_t			namelen;
+@@ -448,11 +448,6 @@ xfs_attrmulti_by_handle(
+ 		goto out_dput;
+ 	}
  
- 	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
- 		return -EPERM;
--	if (len > XFS_XATTR_SIZE_MAX)
--		return -EINVAL;
- 
--	kbuf = memdup_user(ubuf, len);
--	if (IS_ERR(kbuf))
--		return PTR_ERR(kbuf);
-+	if (ubuf) {
-+		if (len > XFS_XATTR_SIZE_MAX)
-+			return -EINVAL;
-+		kbuf = memdup_user(ubuf, len);
-+		if (IS_ERR(kbuf))
-+			return PTR_ERR(kbuf);
-+	}
- 
- 	namelen = strlen(name);
- 	error = xfs_attr_set(XFS_I(inode), name, namelen, kbuf, len, flags);
-@@ -410,22 +412,6 @@ xfs_attrmulti_attr_set(
- 	return error;
- }
- 
--int
--xfs_attrmulti_attr_remove(
--	struct inode		*inode,
--	unsigned char		*name,
--	uint32_t		flags)
--{
--	int			error;
+-	error = -ENOMEM;
+-	attr_name = kmalloc(MAXNAMELEN, GFP_KERNEL);
+-	if (!attr_name)
+-		goto out_kfree_ops;
 -
--	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
--		return -EPERM;
--	error = xfs_attr_set(XFS_I(inode), name, strlen(name), NULL, 0, flags);
--	if (!error)
--		xfs_forget_acl(inode, name, flags);
--	return error;
--}
--
- STATIC int
- xfs_attrmulti_by_handle(
- 	struct file		*parfilp,
-@@ -504,8 +490,8 @@ xfs_attrmulti_by_handle(
- 			ops[i].am_error = mnt_want_write_file(parfilp);
- 			if (ops[i].am_error)
- 				break;
--			ops[i].am_error = xfs_attrmulti_attr_remove(
--					d_inode(dentry), attr_name,
-+			ops[i].am_error = xfs_attrmulti_attr_set(
-+					d_inode(dentry), attr_name, NULL, 0,
- 					ops[i].am_flags);
- 			mnt_drop_write_file(parfilp);
+ 	error = 0;
+ 	for (i = 0; i < am_hreq.opcount; i++) {
+ 		if ((ops[i].am_flags & ATTR_ROOT) &&
+@@ -462,12 +457,11 @@ xfs_attrmulti_by_handle(
+ 		}
+ 		ops[i].am_flags &= ~ATTR_KERNEL_FLAGS;
+ 
+-		ops[i].am_error = strncpy_from_user((char *)attr_name,
+-				ops[i].am_attrname, MAXNAMELEN);
+-		if (ops[i].am_error == 0 || ops[i].am_error == MAXNAMELEN)
+-			error = -ERANGE;
+-		if (ops[i].am_error < 0)
++		attr_name = strndup_user(ops[i].am_attrname, MAXNAMELEN);
++		if (IS_ERR(attr_name)) {
++			ops[i].am_error = PTR_ERR(attr_name);
  			break;
-diff --git a/fs/xfs/xfs_ioctl.h b/fs/xfs/xfs_ioctl.h
-index 420bd95dc326..819504df00ae 100644
---- a/fs/xfs/xfs_ioctl.h
-+++ b/fs/xfs/xfs_ioctl.h
-@@ -46,12 +46,6 @@ xfs_attrmulti_attr_set(
- 	uint32_t		len,
- 	uint32_t		flags);
++		}
  
--extern int
--xfs_attrmulti_attr_remove(
--	struct inode		*inode,
--	unsigned char		*name,
--	uint32_t		flags);
--
- extern struct dentry *
- xfs_handle_to_dentry(
- 	struct file		*parfilp,
+ 		switch (ops[i].am_opcode) {
+ 		case ATTR_OP_GET:
+@@ -498,13 +492,12 @@ xfs_attrmulti_by_handle(
+ 		default:
+ 			ops[i].am_error = -EINVAL;
+ 		}
++		kfree(attr_name);
+ 	}
+ 
+ 	if (copy_to_user(am_hreq.ops, ops, size))
+ 		error = -EFAULT;
+ 
+-	kfree(attr_name);
+- out_kfree_ops:
+ 	kfree(ops);
+  out_dput:
+ 	dput(dentry);
 diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index 9705172e5410..e085f304e539 100644
+index e085f304e539..936c2f62fb6c 100644
 --- a/fs/xfs/xfs_ioctl32.c
 +++ b/fs/xfs/xfs_ioctl32.c
-@@ -488,8 +488,8 @@ xfs_compat_attrmulti_by_handle(
- 			ops[i].am_error = mnt_want_write_file(parfilp);
- 			if (ops[i].am_error)
- 				break;
--			ops[i].am_error = xfs_attrmulti_attr_remove(
--					d_inode(dentry), attr_name,
-+			ops[i].am_error = xfs_attrmulti_attr_set(
-+					d_inode(dentry), attr_name, NULL, 0,
- 					ops[i].am_flags);
- 			mnt_drop_write_file(parfilp);
+@@ -445,11 +445,6 @@ xfs_compat_attrmulti_by_handle(
+ 		goto out_dput;
+ 	}
+ 
+-	error = -ENOMEM;
+-	attr_name = kmalloc(MAXNAMELEN, GFP_KERNEL);
+-	if (!attr_name)
+-		goto out_kfree_ops;
+-
+ 	error = 0;
+ 	for (i = 0; i < am_hreq.opcount; i++) {
+ 		if ((ops[i].am_flags & ATTR_ROOT) &&
+@@ -459,13 +454,12 @@ xfs_compat_attrmulti_by_handle(
+ 		}
+ 		ops[i].am_flags &= ~ATTR_KERNEL_FLAGS;
+ 
+-		ops[i].am_error = strncpy_from_user((char *)attr_name,
+-				compat_ptr(ops[i].am_attrname),
++		attr_name = strndup_user(compat_ptr(ops[i].am_attrname),
+ 				MAXNAMELEN);
+-		if (ops[i].am_error == 0 || ops[i].am_error == MAXNAMELEN)
+-			error = -ERANGE;
+-		if (ops[i].am_error < 0)
++		if (IS_ERR(attr_name)) {
++			ops[i].am_error = PTR_ERR(attr_name);
  			break;
++		}
+ 
+ 		switch (ops[i].am_opcode) {
+ 		case ATTR_OP_GET:
+@@ -496,13 +490,12 @@ xfs_compat_attrmulti_by_handle(
+ 		default:
+ 			ops[i].am_error = -EINVAL;
+ 		}
++		kfree(attr_name);
+ 	}
+ 
+ 	if (copy_to_user(compat_ptr(am_hreq.ops), ops, size))
+ 		error = -EFAULT;
+ 
+-	kfree(attr_name);
+- out_kfree_ops:
+ 	kfree(ops);
+  out_dput:
+ 	dput(dentry);
 -- 
 2.24.1
 
