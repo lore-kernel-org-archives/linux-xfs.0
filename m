@@ -3,86 +3,127 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-2.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	URIBL_DBL_ABUSE_MALW,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBD1AC33C9E
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 00:25:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FCA4C33CB3
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 01:38:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 997F82467E
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 00:25:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E46C921739
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 01:38:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726437AbgA2AZB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Jan 2020 19:25:01 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:40046 "EHLO
+        id S1726389AbgA2Bio (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Jan 2020 20:38:44 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:33395 "EHLO
         mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726293AbgA2AZB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jan 2020 19:25:01 -0500
+        by vger.kernel.org with ESMTP id S1726363AbgA2Bio (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jan 2020 20:38:44 -0500
 Received: from dread.disaster.area (pa49-195-111-217.pa.nsw.optusnet.com.au [49.195.111.217])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 32C487E9A77;
-        Wed, 29 Jan 2020 11:24:56 +1100 (AEDT)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 423E27EA451;
+        Wed, 29 Jan 2020 12:38:40 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1iwbA8-0005eI-Bd; Wed, 29 Jan 2020 11:24:56 +1100
-Date:   Wed, 29 Jan 2020 11:24:56 +1100
+        id 1iwcJT-0006Af-LC; Wed, 29 Jan 2020 12:38:39 +1100
+Date:   Wed, 29 Jan 2020 12:38:39 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     Matthew Wilcox <willy@infradead.org>
 Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com
-Subject: Re: [PATCH 04/12] mm: Add readahead address space operation
-Message-ID: <20200129002456.GH18610@dread.disaster.area>
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 12/12] iomap: Convert from readpages to readahead
+Message-ID: <20200129013839.GL18610@dread.disaster.area>
 References: <20200125013553.24899-1-willy@infradead.org>
- <20200125013553.24899-5-willy@infradead.org>
+ <20200125013553.24899-13-willy@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200125013553.24899-5-willy@infradead.org>
+In-Reply-To: <20200125013553.24899-13-willy@infradead.org>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
         a=0OveGI8p3fsTA6FL6ss4ZQ==:117 a=0OveGI8p3fsTA6FL6ss4ZQ==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=Jdjhy38mL1oA:10
-        a=JfrnYn6hAAAA:8 a=7-415B0cAAAA:8 a=bQT49A20HjYUhGx6rhoA:9
-        a=UEMyszIiLG9v0jT0:21 a=UWfWf6Z2s6wDmKyN:21 a=CjuIK1q_8ugA:10
-        a=1CNFftbPRP8L7MoqJWF3:22 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=JfrnYn6hAAAA:8 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8 a=rbi3LzHp19PN_Qk40xAA:9
+        a=PRpOWFZumF8D-HGV:21 a=3BwcHNtil7AkR3Nb:21 a=CjuIK1q_8ugA:10
+        a=1CNFftbPRP8L7MoqJWF3:22 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 24, 2020 at 05:35:45PM -0800, Matthew Wilcox wrote:
+On Fri, Jan 24, 2020 at 05:35:53PM -0800, Matthew Wilcox wrote:
 > From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 > 
-> This replaces ->readpages with a saner interface:
->  - Return the number of pages not read instead of an ignored error code.
->  - Pages are already in the page cache when ->readahead is called.
->  - Implementation looks up the pages in the page cache instead of
->    having them passed in a linked list.
-....
-> diff --git a/mm/readahead.c b/mm/readahead.c
-> index 5a6676640f20..6d65dae6dad0 100644
-> --- a/mm/readahead.c
-> +++ b/mm/readahead.c
-> @@ -121,7 +121,18 @@ static void read_pages(struct address_space *mapping, struct file *filp,
->  
->  	blk_start_plug(&plug);
->  
-> -	if (mapping->a_ops->readpages) {
-> +	if (mapping->a_ops->readahead) {
-> +		unsigned left = mapping->a_ops->readahead(filp, mapping,
-> +				start, nr_pages);
-> +
-> +		while (left) {
-> +			struct page *page = readahead_page(mapping,
-> +					start + nr_pages - left - 1);
+> Use the new readahead operation in XFS and iomap.
+> 
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> Cc: linux-xfs@vger.kernel.org
 
-Off by one? start = 2, nr_pages = 2, left = 1, this looks up the
-page at index 2, which is the one we issued IO on, not the one we
-"left behind" which is at index 3.
+....
+> +unsigned
+> +iomap_readahead(struct address_space *mapping, pgoff_t start,
+>  		unsigned nr_pages, const struct iomap_ops *ops)
+>  {
+>  	struct iomap_readpage_ctx ctx = {
+> -		.pages		= pages,
+>  		.is_readahead	= true,
+>  	};
+> -	loff_t pos = page_offset(list_entry(pages->prev, struct page, lru));
+> -	loff_t last = page_offset(list_entry(pages->next, struct page, lru));
+> -	loff_t length = last - pos + PAGE_SIZE, ret = 0;
+> +	loff_t pos = start * PAGE_SIZE;
+> +	loff_t length = nr_pages * PAGE_SIZE;
+>  
+> -	trace_iomap_readpages(mapping->host, nr_pages);
+> +	trace_iomap_readahead(mapping->host, nr_pages);
+>  
+>  	while (length > 0) {
+> -		ret = iomap_apply(mapping->host, pos, length, 0, ops,
+> -				&ctx, iomap_readpages_actor);
+> +		loff_t ret = iomap_apply(mapping->host, pos, length, 0, ops,
+> +				&ctx, iomap_readahead_actor);
+>  		if (ret <= 0) {
+>  			WARN_ON_ONCE(ret == 0);
+> -			goto done;
+> +			break;
+>  		}
+>  		pos += ret;
+>  		length -= ret;
+>  	}
+> -	ret = 0;
+> -done:
+> +
+>  	if (ctx.bio)
+>  		submit_bio(ctx.bio);
+> -	if (ctx.cur_page) {
+> -		if (!ctx.cur_page_in_bio)
+> -			unlock_page(ctx.cur_page);
+> +	if (ctx.cur_page && ctx.cur_page_in_bio)
+>  		put_page(ctx.cur_page);
+> -	}
+>  
+> -	/*
+> -	 * Check that we didn't lose a page due to the arcance calling
+> -	 * conventions..
+> -	 */
+> -	WARN_ON_ONCE(!ret && !list_empty(ctx.pages));
+> -	return ret;
+> +	return length / PAGE_SIZE;
+
+Took me quite some time to get my head around whether this was
+correct or not.
+
+I'm still not certain in the cases where block size != page size and
+we've got an extent boundary in the middle of the page and had a
+read error on the second extent in the page. In this case,
+ctx.cur_page_in_bio is true so we drop the readahead reference to
+the page. Also, length is not a multiple of page size, and so the
+nr_pages value returned includes the partial page that we have IO
+underway on.
+
+That, I think, leads to both a double unlock and a double put_page()
+of the partial page in question.
 
 Cheers,
 
