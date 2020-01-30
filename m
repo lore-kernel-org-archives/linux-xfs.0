@@ -2,33 +2,32 @@ Return-Path: <SRS0=Xde3=3T=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69F12C2D0DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 19:38:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD4FBC2D0DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 19:45:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3D97220CC7
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 19:38:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99BFC20CC7
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 19:45:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727089AbgA3Tix (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 30 Jan 2020 14:38:53 -0500
-Received: from sandeen.net ([63.231.237.45]:60078 "EHLO sandeen.net"
+        id S1726679AbgA3TpG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Jan 2020 14:45:06 -0500
+Received: from sandeen.net ([63.231.237.45]:60428 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726679AbgA3Tix (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 30 Jan 2020 14:38:53 -0500
+        id S1726267AbgA3TpG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 30 Jan 2020 14:45:06 -0500
 Received: from Liberator.local (erlite [10.0.0.1])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id C78CC11665;
-        Thu, 30 Jan 2020 13:38:52 -0600 (CST)
-Subject: Re: [PATCH 2/6] xfs_repair: enforce that inode btree chunks can't
- point to AG headers
+        by sandeen.net (Postfix) with ESMTPSA id D8BC85EDB4;
+        Thu, 30 Jan 2020 13:45:04 -0600 (CST)
+Subject: Re: [PATCH 3/6] xfs_repair: refactor fixed inode location checks
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org, alex@zadara.com
 References: <157982504556.2765631.630298760136626647.stgit@magnolia>
- <157982505923.2765631.10587375380960098225.stgit@magnolia>
+ <157982506534.2765631.12930539731426168994.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -72,15 +71,15 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <eb2b3973-0301-5b96-58e9-7f754a58d0f6@sandeen.net>
-Date:   Thu, 30 Jan 2020 13:38:52 -0600
+Message-ID: <eb751e4d-aaea-2c47-4297-d844abfac75b@sandeen.net>
+Date:   Thu, 30 Jan 2020 13:45:03 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.4.1
 MIME-Version: 1.0
-In-Reply-To: <157982505923.2765631.10587375380960098225.stgit@magnolia>
+In-Reply-To: <157982506534.2765631.12930539731426168994.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -89,108 +88,11 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 1/23/20 6:17 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> xfs_repair has a very old check that evidently excuses the AG 0 inode
-> btrees pointing to blocks that are already marked XR_E_INUSE_FS* (e.g.
-> AG headers).  mkfs never formats filesystems that way and it looks like
-> an error, so purge the check.  After this, we always complain if inodes
-> overlap with AG headers because that should never happen.
-
-I peered back into the mists of time to see if I could find any reason for
-this exception, and I couldn't.
-
-Only question is why you removed the
-
--	ASSERT(M_IGEO(mp)->ialloc_blks > 0);
-
-assert, that's still a valid assert, no?
-
-
+> Refactor the checking and resetting of fixed-location inodes (root,
+> rbmino, rsumino) into a helper function.
+> 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  repair/globals.c    |    1 -
->  repair/globals.h    |    1 -
->  repair/scan.c       |   19 -------------------
->  repair/xfs_repair.c |    7 -------
->  4 files changed, 28 deletions(-)
-> 
-> 
-> diff --git a/repair/globals.c b/repair/globals.c
-> index dcd79ea4..8a60e706 100644
-> --- a/repair/globals.c
-> +++ b/repair/globals.c
-> @@ -73,7 +73,6 @@ int	lost_gquotino;
->  int	lost_pquotino;
->  
->  xfs_agino_t	first_prealloc_ino;
-> -xfs_agino_t	last_prealloc_ino;
->  xfs_agblock_t	bnobt_root;
->  xfs_agblock_t	bcntbt_root;
->  xfs_agblock_t	inobt_root;
-> diff --git a/repair/globals.h b/repair/globals.h
-> index 008bdd90..2ed5c894 100644
-> --- a/repair/globals.h
-> +++ b/repair/globals.h
-> @@ -114,7 +114,6 @@ extern int		lost_gquotino;
->  extern int		lost_pquotino;
->  
->  extern xfs_agino_t	first_prealloc_ino;
-> -extern xfs_agino_t	last_prealloc_ino;
->  extern xfs_agblock_t	bnobt_root;
->  extern xfs_agblock_t	bcntbt_root;
->  extern xfs_agblock_t	inobt_root;
-> diff --git a/repair/scan.c b/repair/scan.c
-> index c383f3aa..05707dd2 100644
-> --- a/repair/scan.c
-> +++ b/repair/scan.c
-> @@ -1645,13 +1645,6 @@ scan_single_ino_chunk(
->  				break;
->  			case XR_E_INUSE_FS:
->  			case XR_E_INUSE_FS1:
-> -				if (agno == 0 &&
-> -				    ino + j >= first_prealloc_ino &&
-> -				    ino + j < last_prealloc_ino) {
-> -					set_bmap(agno, agbno, XR_E_INO);
-> -					break;
-> -				}
-> -				/* fall through */
->  			default:
->  				/* XXX - maybe should mark block a duplicate */
->  				do_warn(
-> @@ -1782,18 +1775,6 @@ _("inode chunk claims untracked block, finobt block - agno %d, bno %d, inopb %d\
->  				break;
->  			case XR_E_INUSE_FS:
->  			case XR_E_INUSE_FS1:
-> -				if (agno == 0 &&
-> -				    ino + j >= first_prealloc_ino &&
-> -				    ino + j < last_prealloc_ino) {
-> -					do_warn(
-> -_("inode chunk claims untracked block, finobt block - agno %d, bno %d, inopb %d\n"),
-> -						agno, agbno, mp->m_sb.sb_inopblock);
-> -
-> -					set_bmap(agno, agbno, XR_E_INO);
-> -					suspect++;
-> -					break;
-> -				}
-> -				/* fall through */
->  			default:
->  				do_warn(
->  _("inode chunk claims used block, finobt block - agno %d, bno %d, inopb %d\n"),
-> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> index 9295673d..3e9059f3 100644
-> --- a/repair/xfs_repair.c
-> +++ b/repair/xfs_repair.c
-> @@ -460,13 +460,6 @@ calc_mkfs(xfs_mount_t *mp)
->  		first_prealloc_ino = XFS_AGB_TO_AGINO(mp, fino_bno);
->  	}
->  
-> -	ASSERT(M_IGEO(mp)->ialloc_blks > 0);
-> -
-> -	if (M_IGEO(mp)->ialloc_blks > 1)
-> -		last_prealloc_ino = first_prealloc_ino + XFS_INODES_PER_CHUNK;
-> -	else
-> -		last_prealloc_ino = XFS_AGB_TO_AGINO(mp, fino_bno + 1);
-> -
->  	/*
->  	 * now the first 3 inodes in the system
->  	 */
-> 
+
+Looks good, though it might mess with translations a bit?
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
