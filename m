@@ -1,86 +1,93 @@
 Return-Path: <SRS0=Xde3=3T=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
-X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Level: *
+X-Spam-Status: No, score=1.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_DBL_ABUSE_MALW autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C5D4C33C9E
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 08:55:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C608EC33C9E
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 08:57:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1E08C2082E
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 08:55:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 97732206F0
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 08:57:17 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="i7vKC3M2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727001AbgA3IzR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 30 Jan 2020 03:55:17 -0500
-Received: from outbound-smtp39.blacknight.com ([46.22.139.222]:35050 "EHLO
-        outbound-smtp39.blacknight.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726927AbgA3IzR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Jan 2020 03:55:17 -0500
-Received: from mail.blacknight.com (unknown [81.17.254.16])
-        by outbound-smtp39.blacknight.com (Postfix) with ESMTPS id B0AD315C5
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Jan 2020 08:55:15 +0000 (GMT)
-Received: (qmail 3857 invoked from network); 30 Jan 2020 08:55:15 -0000
-Received: from unknown (HELO techsingularity.net) (mgorman@techsingularity.net@[84.203.18.57])
-  by 81.17.254.9 with ESMTPSA (AES256-SHA encrypted, authenticated); 30 Jan 2020 08:55:15 -0000
-Date:   Thu, 30 Jan 2020 08:55:13 +0000
-From:   Mel Gorman <mgorman@techsingularity.net>
-To:     Peter Zijlstra <peterz@infradead.org>
-Cc:     Dave Chinner <david@fromorbit.com>, Ingo Molnar <mingo@redhat.com>,
-        Tejun Heo <tj@kernel.org>, Phil Auld <pauld@redhat.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        Vincent Guittot <vincent.guittot@linaro.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] sched, fair: Allow a per-cpu kthread waking a task to
- stack on the same CPU
-Message-ID: <20200130085513.GH3466@techsingularity.net>
-References: <20200127143608.GX3466@techsingularity.net>
- <20200127223256.GA18610@dread.disaster.area>
- <20200128011936.GY3466@techsingularity.net>
- <20200128091012.GZ3466@techsingularity.net>
- <20200129173852.GP14914@hirez.programming.kicks-ass.net>
- <20200130004334.GF3466@techsingularity.net>
- <20200130080653.GV14879@hirez.programming.kicks-ass.net>
+        id S1726879AbgA3I5R (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Jan 2020 03:57:17 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:55578 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726865AbgA3I5R (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Jan 2020 03:57:17 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1580374636;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=qsWLoaxkUIcF5kAivWwk37VIzI8qmACwhbfUamdQCIE=;
+        b=i7vKC3M277gFWfhtKB7xyD9piTjyEmeJC2vAJjLh7RY8borSMxWXhzXJXkJGut2/BCG6Sv
+        KVsPq6IILzJW63x2WdAryIM408nvoPxjWwlxKBK0EEVOkJtZl6YE3ccti8kzV6FTwNK6pT
+        5bsVhD+3F6NDbTMljsSITHp7JM/GHXA=
+Received: from mail-vk1-f197.google.com (mail-vk1-f197.google.com
+ [209.85.221.197]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-25-pmjLx5RsMKef9Sq-28Vwog-1; Thu, 30 Jan 2020 03:57:14 -0500
+X-MC-Unique: pmjLx5RsMKef9Sq-28Vwog-1
+Received: by mail-vk1-f197.google.com with SMTP id v134so496581vkd.16
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Jan 2020 00:57:14 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=qsWLoaxkUIcF5kAivWwk37VIzI8qmACwhbfUamdQCIE=;
+        b=k2LZIhYxBAyM+bg//5MpNU1nS/XxcsE0FIVQ5KmgshlfguCOND3+p0/VjMoqUcC2DY
+         0zSIzO5APpCCzbN5LIvHOB+4EqURoUANxNo1/UnmQtN7KDikAKYo5dUTrSv322zzog2i
+         tZTZgNeeUQiVmCEYD0P/kmKoWx9SNXf3LUk8xlpcKUHtjzuK8TZdkpVFK+kcUj9wbWiG
+         7m41R+ZfYU9H2W0MMNAOqPaTd4wMcfgaAYgxbtp+zrnMjul0YwZlfM1eSMIcOm5wjwdB
+         xJ88O/94lRe891FFfV5yqu8pCeUrlRudknsx3qLsU2/81xEjRRfaVV+Cf95XC9EqbVuG
+         tWeQ==
+X-Gm-Message-State: APjAAAXxFl9wTnHf05x+d9CwY2zd9Q8Vn+8zfzVdY6qijU3VPoqhXC6H
+        d9/NMragaplwNGnkmCUqGAO0o3JnMvqzeJLpPUF844z9wOY+OoVGZH4wusDFiW3pzT6NEMLxn9e
+        IFLceZ5xK6jecVhg3JwD4vzy+nqMelk/rWQMF
+X-Received: by 2002:a67:e954:: with SMTP id p20mr2585413vso.3.1580374633827;
+        Thu, 30 Jan 2020 00:57:13 -0800 (PST)
+X-Google-Smtp-Source: APXvYqxptQK4mMIn45KzWYiIxWhdX4yiUFLpUmcSoZ+C/EDItfeBJ3Fdm+ItCYbLn990hUHFqdBb1WfZ64faHtiMOGA=
+X-Received: by 2002:a67:e954:: with SMTP id p20mr2585405vso.3.1580374633598;
+ Thu, 30 Jan 2020 00:57:13 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Disposition: inline
-In-Reply-To: <20200130080653.GV14879@hirez.programming.kicks-ass.net>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+References: <20200128145528.2093039-1-preichl@redhat.com> <20200128145528.2093039-5-preichl@redhat.com>
+ <20200130074503.GB26672@infradead.org>
+In-Reply-To: <20200130074503.GB26672@infradead.org>
+From:   Pavel Reichl <preichl@redhat.com>
+Date:   Thu, 30 Jan 2020 09:57:02 +0100
+Message-ID: <CAJc7PzUmpRP0-MG49kO5XqZKfM-o4SpYtUKpXC3LC_3Yi2htZg@mail.gmail.com>
+Subject: Re: [PATCH 4/4] xfs: replace mr*() functions with native rwsem calls
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 30, 2020 at 09:06:53AM +0100, Peter Zijlstra wrote:
-> On Thu, Jan 30, 2020 at 12:43:34AM +0000, Mel Gorman wrote:
-> > On Wed, Jan 29, 2020 at 06:38:52PM +0100, Peter Zijlstra wrote:
-> 
-> > > I suppose the fact that it limits it to tasks that were running on the
-> > > same CPU limits the impact if we do get it wrong.
-> > > 
-> > 
-> > And it's limited to no other task currently running on the
-> > CPU. Now, potentially multiple sleepers are on that CPU waiting for
-> > a mutex/rwsem/completion but it's very unlikely and mostly likely due
-> > to the machine being saturated in which case searching for an idle CPU
-> > will probably fail. It would also be bound by a small window after the
-> > first wakeup before the task becomes runnable before the nr_running check
-> > mitigages the problem. Besides, if the sleeping task is waiting on the
-> > lock, it *is* related to the kworker which is probably finished.
-> > 
-> > In other words, even this patches worst-case behaviour does not seem
-> > that bad.
-> 
-> OK; let's just stick it in and see what, if anything, falls over :-)
-> 
-> I saw there is a v2 out (although I didn't see what changed in a hurry),
-> let me queue that one.
+On Thu, Jan 30, 2020 at 8:45 AM Christoph Hellwig <hch@infradead.org> wrote:
+>
+> On Tue, Jan 28, 2020 at 03:55:28PM +0100, Pavel Reichl wrote:
+> > Remove mr*() functions as they only wrap the standard kernel functions
+> > for kernel manimulation.
+>
+> I think patches 2, 3 and 4 make more sense if merged into a single
+> patch to replace the mrlocks with rw_sempahores.
+>
 
-Only the changelog and comments changed in light of the discussion
-with Dave.
+Hello Christoph,
 
--- 
-Mel Gorman
-SUSE Labs
+the changes are divided into three patches so the changes are really
+obvious and each patch does just one thing...it was actually an extra
+effort to separate the changes but if there's an agreement that it
+does not add any value then I can squash them into one - no problem
+;-)
+
+Bye
+
