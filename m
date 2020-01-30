@@ -6,31 +6,31 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C284C2D0DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 20:41:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A8BEC2D0DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 20:46:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E584B20674
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 20:41:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 796A820674
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 20:46:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727319AbgA3Ulb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 30 Jan 2020 15:41:31 -0500
-Received: from sandeen.net ([63.231.237.45]:35160 "EHLO sandeen.net"
+        id S1727217AbgA3Uqm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Jan 2020 15:46:42 -0500
+Received: from sandeen.net ([63.231.237.45]:35432 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727089AbgA3Ulb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 30 Jan 2020 15:41:31 -0500
+        id S1727201AbgA3Uql (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 30 Jan 2020 15:46:41 -0500
 Received: from [10.0.0.4] (erlite [10.0.0.1])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 0F310EF9;
-        Thu, 30 Jan 2020 14:41:29 -0600 (CST)
-Subject: Re: [PATCH 5/6] xfs_repair: check plausibility of root dir pointer
- before trashing it
+        by sandeen.net (Postfix) with ESMTPSA id D8D3B14A18;
+        Thu, 30 Jan 2020 14:46:40 -0600 (CST)
+Subject: Re: [PATCH 2/6] xfs_repair: enforce that inode btree chunks can't
+ point to AG headers
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org, alex@zadara.com
 References: <157982504556.2765631.630298760136626647.stgit@magnolia>
- <157982507752.2765631.16955377241063712365.stgit@magnolia>
- <4fb8e608-959e-813a-2424-865a765a2b92@sandeen.net>
- <20200130203448.GF3447196@magnolia>
+ <157982505923.2765631.10587375380960098225.stgit@magnolia>
+ <eb2b3973-0301-5b96-58e9-7f754a58d0f6@sandeen.net>
+ <20200130202600.GE3447196@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -74,58 +74,54 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <38318182-e132-3814-f10b-fdf7201dba28@sandeen.net>
-Date:   Thu, 30 Jan 2020 14:41:29 -0600
+Message-ID: <aa80935f-7f52-e559-8cb5-6800fe61b9f8@sandeen.net>
+Date:   Thu, 30 Jan 2020 14:46:40 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.4.1
 MIME-Version: 1.0
-In-Reply-To: <20200130203448.GF3447196@magnolia>
+In-Reply-To: <20200130202600.GE3447196@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 1/30/20 2:34 PM, Darrick J. Wong wrote:
-> On Thu, Jan 30, 2020 at 02:18:52PM -0600, Eric Sandeen wrote:
+
+
+On 1/30/20 2:26 PM, Darrick J. Wong wrote:
+> On Thu, Jan 30, 2020 at 01:38:52PM -0600, Eric Sandeen wrote:
 >> On 1/23/20 6:17 PM, Darrick J. Wong wrote:
 >>> From: Darrick J. Wong <darrick.wong@oracle.com>
 >>>
->>> If sb_rootino doesn't point to where we think mkfs should have allocated
->>> the root directory, check to see if the alleged root directory actually
->>> looks like a root directory.  If so, we'll let it live because someone
->>> could have changed sunit since formatting time, and that changes the
->>> root directory inode estimate.
+>>> xfs_repair has a very old check that evidently excuses the AG 0 inode
+>>> btrees pointing to blocks that are already marked XR_E_INUSE_FS* (e.g.
+>>> AG headers).  mkfs never formats filesystems that way and it looks like
+>>> an error, so purge the check.  After this, we always complain if inodes
+>>> overlap with AG headers because that should never happen.
 >>
->> I forget, is there an fstest for this?
-> 
-> https://lore.kernel.org/linux-xfs/20191218041831.GK12765@magnolia/
-
-of course :)
-
-...
-
->>> +	if (mp->m_sb.sb_rootino != rootino && has_plausible_rootdir(mp)) {
->>> +		do_warn(
->>> +_("sb root inode value %" PRIu64 " inconsistent with alignment (expected %"PRIu64")\n"),
->>> +			mp->m_sb.sb_rootino, rootino);
+>> I peered back into the mists of time to see if I could find any reason for
+>> this exception, and I couldn't.
 >>
->> what would a user do with this warning?  Is there any value in emitting it?
+>> Only question is why you removed the
 >>
->> Otherwise this looks good.
+>> -	ASSERT(M_IGEO(mp)->ialloc_blks > 0);
+>>
+>> assert, that's still a valid assert, no?
 > 
-> I dunno -- on the one hand, I understand that nobody wants to deal with
-> the support calls that will erupt from that message.  On the other hand,
-> it's an indication that this filesystem isn't /quite/ the way we
-> expected it to be, and that would be a helpful hint if you were
-> debugging some other weird problem with an xfs filesystem.
+> The superblock validation routines are supposed to reject all the
+> combinations that can result in ialloc_blks being zero.
 > 
-> What if this were a do_log()?
+> That said, I can't think of a reason to remove the assert.  If you want
+> me to put it back, it I can... or pretty-please put it back in for me?
+> :)
 
-how about something that's less indicative of a problem and more informational,
 
-"sb root inode validated in unaligned location possibly due to sunit change"
+Sure, I'll try to remember to do that with your blessing.
+
+It just didn't seem related to the rest of the patch, is all.  If it's only
+there to protect the next calculations, and this is a spot that makes no
+sense to test it, I'm ok with dropping it too.  Was just looking for a reason.
 
 -Eric
