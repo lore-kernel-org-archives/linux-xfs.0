@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 061C4C2D0DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 19:48:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C8C9C2D0DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 19:52:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D235C20CC7
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 19:48:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7D3BE20708
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 19:52:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727089AbgA3Tso (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 30 Jan 2020 14:48:44 -0500
-Received: from sandeen.net ([63.231.237.45]:60596 "EHLO sandeen.net"
+        id S1727558AbgA3Tww (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Jan 2020 14:52:52 -0500
+Received: from sandeen.net ([63.231.237.45]:60828 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726267AbgA3Tso (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 30 Jan 2020 14:48:44 -0500
+        id S1727089AbgA3Tww (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 30 Jan 2020 14:52:52 -0500
 Received: from Liberator.local (erlite [10.0.0.1])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 752E211665;
-        Thu, 30 Jan 2020 13:48:43 -0600 (CST)
-Subject: Re: [PATCH 4/6] xfs_repair: use libxfs function to calculate root
- inode location
+        by sandeen.net (Postfix) with ESMTPSA id E61825EDB3;
+        Thu, 30 Jan 2020 13:52:50 -0600 (CST)
+Subject: Re: [PATCH 3/6] xfs_repair: refactor fixed inode location checks
+From:   Eric Sandeen <sandeen@sandeen.net>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org, alex@zadara.com
 References: <157982504556.2765631.630298760136626647.stgit@magnolia>
- <157982507143.2765631.5497851947437763176.stgit@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
+ <157982506534.2765631.12930539731426168994.stgit@magnolia>
+ <eb751e4d-aaea-2c47-4297-d844abfac75b@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
  nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
@@ -72,12 +72,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <95cecf76-c6ff-9c48-03a1-770ec1fbe2f9@sandeen.net>
-Date:   Thu, 30 Jan 2020 13:48:38 -0600
+Message-ID: <e218b1e2-37a1-4730-7ec4-897d1f275c9e@sandeen.net>
+Date:   Thu, 30 Jan 2020 13:52:49 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.4.1
 MIME-Version: 1.0
-In-Reply-To: <157982507143.2765631.5497851947437763176.stgit@magnolia>
+In-Reply-To: <eb751e4d-aaea-2c47-4297-d844abfac75b@sandeen.net>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -86,12 +86,24 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 1/23/20 6:17 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On 1/30/20 1:45 PM, Eric Sandeen wrote:
+> On 1/23/20 6:17 PM, Darrick J. Wong wrote:
+>> From: Darrick J. Wong <darrick.wong@oracle.com>
+>>
+>> Refactor the checking and resetting of fixed-location inodes (root,
+>> rbmino, rsumino) into a helper function.
+>>
+>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Use libxfs_ialloc_calc_rootino to compute the location of the root
-> inode, and improve the function comments while we're at it.
+> Looks good, though it might mess with translations a bit?
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Actually, would you mind if I changed "ensure_fixed_ino" to something
+like "check_inode_loc" or "validate_inode_nr" ... I don't know what
+it means to "ensure" an inode.  :)
+
+Not a huge deal but if there's something more descriptive, let's use
+it.
+
+-Eric
