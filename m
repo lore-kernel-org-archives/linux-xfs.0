@@ -2,162 +2,87 @@ Return-Path: <SRS0=Xde3=3T=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF283C33C9E
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 04:33:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9417EC33C9E
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 07:44:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9500420707
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 04:33:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E195206F0
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 07:44:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OslseKr1"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KtQkGdIj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726823AbgA3EdU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jan 2020 23:33:20 -0500
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:30565 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726771AbgA3EdU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jan 2020 23:33:20 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1580358799;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=FOaFQL6Nzm8OiPjWEUa02hgCjlBIo20DODkhhF5ZVIo=;
-        b=OslseKr16Szbo4jM6/5Xd5WuXfjApGTFX+IHLR24wJcyeR5269jxKYi3Y1mQCU4Kfuf9zl
-        UX3OjF8/XG5bj+o+vH7Ec4W0MomNmrxL7YUKZW38Sz4++082cq+QcM7wyt30I5o7vfHZ5T
-        Tej43FVJpydFUCOZDMGHA7DoPncRDho=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-9-NtIM4A5uM4icka3YrZ0dGA-1; Wed, 29 Jan 2020 23:33:15 -0500
-X-MC-Unique: NtIM4A5uM4icka3YrZ0dGA-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2CA9CA0CBF;
-        Thu, 30 Jan 2020 04:33:14 +0000 (UTC)
-Received: from localhost (dhcp-12-102.nay.redhat.com [10.66.12.102])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 976EA19756;
-        Thu, 30 Jan 2020 04:33:13 +0000 (UTC)
-Date:   Thu, 30 Jan 2020 12:42:51 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     Omar Sandoval <osandov@osandov.com>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH xfsprogs] xfs_io: add support for linkat()
- AT_LINK_REPLACE
-Message-ID: <20200130044251.GL14282@dhcp-12-102.nay.redhat.com>
-Mail-Followup-To: Omar Sandoval <osandov@osandov.com>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-References: <cover.1580251857.git.osandov@fb.com>
- <ff4b873f356ed8ff63ee582bc57c4babea947159.1580253398.git.osandov@fb.com>
+        id S1726397AbgA3Ho0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Jan 2020 02:44:26 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:41326 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726339AbgA3Ho0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Jan 2020 02:44:26 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=mkZpFICk6JHjdkqn5t4Eq8WtAKhDPwVpkuEBpmbna80=; b=KtQkGdIj1DWdWLBkiXF+9hiOT
+        ymfFUFsGljTC3qTn48hETOBEoILkTIvW85ru9c2dn+t9TljS+Ke+9EWG9m5dgOIlQ9TzH2w0+Nre+
+        q2TbUvNp/34aF25HJCNFsbjqRbebye6SBqCe1jqKhwO2St5pG+qJxwbvpLnrQfdkFdfYx9NMMQF0j
+        qDOMQPV30T3dPeB6ZTNZqAl/JShsJva3YSj0eQbqqdWx7PzWzexfP1ArLZlD0vYKPwmZUP4DlDhXZ
+        wUMk7EMATNilibG7Q4TErEMuzoNgZkr6hmZksJw02MnzIwt2zO3DQCBGlSd3laEqjaxXh0Cfixj+j
+        4lMPEh57g==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1ix4Uy-00076e-Uk; Thu, 30 Jan 2020 07:44:24 +0000
+Date:   Wed, 29 Jan 2020 23:44:24 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Pavel Reichl <preichl@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/4] xfs: change xfs_isilocked() to always use lockdep()
+Message-ID: <20200130074424.GA26672@infradead.org>
+References: <20200128145528.2093039-1-preichl@redhat.com>
+ <20200128145528.2093039-2-preichl@redhat.com>
+ <20200129221819.GO18610@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ff4b873f356ed8ff63ee582bc57c4babea947159.1580253398.git.osandov@fb.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+In-Reply-To: <20200129221819.GO18610@dread.disaster.area>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 29, 2020 at 12:58:29AM -0800, Omar Sandoval wrote:
-> From: Omar Sandoval <osandov@fb.com>
+On Thu, Jan 30, 2020 at 09:18:19AM +1100, Dave Chinner wrote:
+> This captures both read and write locks on the rwsem, and doesn't
+> discriminate at all. Now we don't have explicit writer lock checking
+> in CONFIG_XFS_DEBUG=y kernels, I think we need to at least check
+> that the rwsem is locked in all cases to catch cases where we are
+> calling a function without the lock held. That will ctach most
+> programming mistakes, and then lockdep will provide the
+> read-vs-write discrimination to catch the "hold the wrong lock type"
+> mistakes.
 > 
-> Signed-off-by: Omar Sandoval <osandov@fb.com>
-> ---
-
-And this patch would be better to send to/cc linux-xfs@vger.kernel.org to get
-xfsprogs maintainers/developers review.
-
->  io/link.c         | 24 ++++++++++++++++++++----
->  man/man8/xfs_io.8 |  9 ++++++++-
->  2 files changed, 28 insertions(+), 5 deletions(-)
+> Hence I think this code should end up looking like this:
 > 
-> diff --git a/io/link.c b/io/link.c
-> index f4f4b139..3fc3e24d 100644
-> --- a/io/link.c
-> +++ b/io/link.c
-> @@ -12,6 +12,9 @@
->  #ifndef AT_EMPTY_PATH
->  #define AT_EMPTY_PATH	0x1000
->  #endif
-> +#ifndef AT_LINK_REPLACE
-> +#define AT_LINK_REPLACE	0x10000
-> +#endif
->  
->  static cmdinfo_t flink_cmd;
->  
-> @@ -22,6 +25,7 @@ flink_help(void)
->  "\n"
->  "link the open file descriptor to the supplied filename\n"
->  "\n"
-> +" -f -- overwrite the target filename if it exists (AT_LINK_REPLACE)\n"
->  "\n"));
->  }
->  
-> @@ -30,10 +34,22 @@ flink_f(
->  	int		argc,
->  	char		**argv)
->  {
-> -	if (argc != 2)
-> +	int		flags = AT_EMPTY_PATH;
-> +	int		c;
-> +
-> +	while ((c = getopt(argc, argv, "f")) != EOF) {
-> +		switch (c) {
-> +		case 'f':
-> +			flags |= AT_LINK_REPLACE;
-> +			break;
-> +		default:
-> +			return command_usage(&flink_cmd);
-> +		}
-> +	}
-> +	if (optind != argc - 1)
->  		return command_usage(&flink_cmd);
->  
-> -	if (linkat(file->fd, "", AT_FDCWD, argv[1], AT_EMPTY_PATH) < 0) {
-> +	if (linkat(file->fd, "", AT_FDCWD, argv[optind], flags) < 0) {
->  		perror("flink");
->  		return 0;
->  	}
-> @@ -46,9 +62,9 @@ flink_init(void)
->  	flink_cmd.name = "flink";
->  	flink_cmd.cfunc = flink_f;
->  	flink_cmd.argmin = 1;
-> -	flink_cmd.argmax = 1;
-> +	flink_cmd.argmax = -1;
->  	flink_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK | CMD_FLAG_ONESHOT;
-> -	flink_cmd.args = _("filename");
-> +	flink_cmd.args = _("[-f] filename");
->  	flink_cmd.oneline =
->  		_("link the open file descriptor to the supplied filename");
->  	flink_cmd.help = flink_help;
-> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-> index c69b295d..f79b3a59 100644
-> --- a/man/man8/xfs_io.8
-> +++ b/man/man8/xfs_io.8
-> @@ -807,8 +807,15 @@ for the full list) is available via the
->  .B help
->  command.
->  .TP
-> -.BI "flink " path
-> +.BI "flink [ \-f ]" " path"
->  Link the currently open file descriptor into the filesystem namespace.
-> +.RS 1.0i
-> +.PD 0
-> +.TP 0.4i
-> +.B \-f
-> +overwrite the target path if it exists (AT_LINK_REPLACE).
-> +.PD
-> +.RE
->  .TP
->  .BR stat " [ " \-v "|" \-r " ]"
->  Selected statistics from
-> -- 
-> 2.25.0
+> 	if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) {
+> 		bool locked = false;
 > 
+> 		if (!rwsem_is_locked(&ip->i_lock))
+> 			return false;
+> 		if (!debug_locks)
+> 			return true;
+> 		if (lock_flags & XFS_ILOCK_EXCL)
+> 			locked = lockdep_is_held_type(&ip->i_lock, 0);
+> 		if (lock_flags & XFS_ILOCK_SHARED)
+> 			locked |= lockdep_is_held_type(&ip->i_lock, 1);
+> 		return locked;
+> 	}
+> 
+> Thoughts?
 
+I like the idea, but I really think that this does not belong into XFS,
+but into the core rwsem code.  That means replacing the lock_flags with
+a bool exclusive, picking a good name for it (can't think of one right
+now, except for re-using rwsem_is_locked), and adding a kerneldoc
+comment explaining the semantics and use cases in detail.
