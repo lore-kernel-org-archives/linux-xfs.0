@@ -7,55 +7,56 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAE93C2D0DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 18:15:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1395DC2D0DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 18:15:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9EC7620658
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 18:15:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE32F20658
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 18:15:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VFAa7Iia"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VDEx2ZNc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728584AbgA3SPB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 30 Jan 2020 13:15:01 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:54506 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727089AbgA3SPB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Jan 2020 13:15:01 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00UIDoiV126000;
-        Thu, 30 Jan 2020 18:14:57 GMT
+        id S1728607AbgA3SPS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Jan 2020 13:15:18 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:36856 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728610AbgA3SPS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Jan 2020 13:15:18 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00UIDT3I102841;
+        Thu, 30 Jan 2020 18:15:15 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=ae5dFRCzp00v23Dfkj30VaCoRhZLGY92LypEbvdj6xo=;
- b=VFAa7IiaXRtpV7+AbJt2sJEqqL5w+6ESs0S0EyKt8VOknR2Rwk4OXECEODc0vUsfShBN
- f40jUgf8YCo3K3xXJdmoEmKlde5N043HUV84z6g2R16xjgPwe+veV3yc4E6tKcZE1KoK
- Y5x3GhT1nqWpndVwvReWH66nMVLWjfJ+O7pKxJMP5TOlDF+lp0J7wqesE5fJmgZBPPpl
- RU0AjkXylKNmUmhFumlPGfqazoom3ZHzYEBl5PLrySJxvRICFoQKOyg9GayrZYjKHiI3
- LUTPfqH9VXg0xqTSQXYXTaRp15pribgu0ay0VnIzmoeoZNpRI1xKhIdRGEA+7+rnK3Ut qw== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2xrd3unvn7-1
+ bh=62dWQq+nGO+TmwnM1T27wnlI+zmx6AjE096PwrckVZA=;
+ b=VDEx2ZNc+6ah8pbXVI1IvzLNEbL+PYwLcfjh6+qspmRrP2yM61NlGoMvIf0WUsgdWxy/
+ RJsJxoFF0LKxoqj9N7i+3o1OFP72XDX2pEgeT0q86pIWBSTJxlONqhgNwzP/St+98Ynp
+ Uedt693DT1tXfruPWuTC8VFX9Qef/Lzh3jAGR1+Zw3WvLvHIdOWS8xiDJJAGmqxYtc+P
+ UpBEqADl509OG/JusgOUU0o/Ce4Xo2mBWJlgg3V0ZhFcspI4N2rCYDX5h3z3Xb/5UzRS
+ /NFEh7e+aJX7XVUPq2wyQSuRw5xopfGnWwtCxt6zwZorhxEux2vFLKNFJ4ZRorh+nnFb Lg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 2xrearnre9-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 30 Jan 2020 18:14:57 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00UIEWPe105850;
-        Thu, 30 Jan 2020 18:14:56 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 2xuc30k88m-1
+        Thu, 30 Jan 2020 18:15:15 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00UIEPuU024435;
+        Thu, 30 Jan 2020 18:15:15 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 2xuemwwgfw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 30 Jan 2020 18:14:55 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00UIDVed010922;
-        Thu, 30 Jan 2020 18:13:32 GMT
+        Thu, 30 Jan 2020 18:15:15 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00UIFDJ3024182;
+        Thu, 30 Jan 2020 18:15:14 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 30 Jan 2020 10:13:31 -0800
-Date:   Thu, 30 Jan 2020 10:13:30 -0800
+        with ESMTP ; Thu, 30 Jan 2020 10:15:12 -0800
+Date:   Thu, 30 Jan 2020 10:15:12 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net
 Cc:     linux-xfs@vger.kernel.org
-Subject: [PATCH 10/8] libxfs: remove duplicate attr function declarations
-Message-ID: <20200130181330.GY3447196@magnolia>
+Subject: [PATCH 11/8] xfs_repair: don't corrupt a attr fork da3 node when
+ clearing forw/back
+Message-ID: <20200130181512.GZ3447196@magnolia>
 References: <157982499185.2765410.18206322669640988643.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -80,30 +81,70 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Remove these function declarations since they're in libxfs/xfs_attr.h
-and are therefore redundant.
+In process_longform_attr, we enforce that the root block of the
+attribute index must have both forw or back pointers set to zero.
+Unfortunately, the code that nulls out the pointers is not aware that
+the root block could be in da3 node format.
+
+This leads to corruption of da3 root node blocks because the functions
+that convert attr3 leaf headers to and from the ondisk structures
+perform some interpretation of firstused on what they think is an attr1
+leaf block.
+
+Found by using xfs/402 to fuzz hdr.info.hdr.forw.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/libxfs_priv.h |    8 --------
- 1 file changed, 8 deletions(-)
+ repair/attr_repair.c |   32 ++++++++++++++++++++++++++++----
+ 1 file changed, 28 insertions(+), 4 deletions(-)
 
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index 03edf0d3..fe08f96b 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -607,14 +607,6 @@ static inline int test_and_set_bit(int nr, volatile unsigned long *addr)
+diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+index 9a44f610..9d2a40f7 100644
+--- a/repair/attr_repair.c
++++ b/repair/attr_repair.c
+@@ -952,6 +952,33 @@ _("wrong FS UUID, inode %" PRIu64 " attr block %" PRIu64 "\n"),
+ 	return 0;
  }
  
- /* Keep static checkers quiet about nonstatic functions by exporting */
--int xfs_inode_hasattr(struct xfs_inode *ip);
--int xfs_attr_get_ilocked(struct xfs_inode *ip, struct xfs_da_args *args);
--int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
--                unsigned char **value, int *valuelenp, int flags);
--int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
--                 unsigned char *value, int valuelen, int flags);
--int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
--
- int xfs_rtbuf_get(struct xfs_mount *mp, struct xfs_trans *tp,
- 		  xfs_rtblock_t block, int issum, struct xfs_buf **bpp);
- int xfs_rtcheck_range(struct xfs_mount *mp, struct xfs_trans *tp,
++/*
++ * Zap the forw/back links in an attribute block.  Be careful, because the
++ * root block could be an attr leaf block or a da node block.
++ */
++static inline void
++clear_attr_forw_back(
++	struct xfs_buf			*bp,
++	struct xfs_attr3_icleaf_hdr	*leafhdr)
++{
++	struct xfs_mount		*mp = bp->b_mount;
++
++	if (leafhdr->magic == XFS_DA_NODE_MAGIC ||
++	    leafhdr->magic == XFS_DA3_NODE_MAGIC) {
++		struct xfs_da3_icnode_hdr	da3_hdr;
++
++		xfs_da3_node_hdr_from_disk(mp, &da3_hdr, bp->b_addr);
++		da3_hdr.forw = 0;
++		da3_hdr.back = 0;
++		xfs_da3_node_hdr_to_disk(mp, bp->b_addr, &da3_hdr);
++		return;
++	}
++
++	leafhdr->forw = 0;
++	leafhdr->back = 0;
++	xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, bp->b_addr, leafhdr);
++}
++
+ /*
+  * Start processing for a leaf or fuller btree.
+  * A leaf directory is one where the attribute fork is too big for
+@@ -1028,10 +1055,7 @@ process_longform_attr(
+ 	_("clearing forw/back pointers in block 0 for attributes in inode %" PRIu64 "\n"),
+ 				ino);
+ 			repairlinks = 1;
+-			leafhdr.forw = 0;
+-			leafhdr.back = 0;
+-			xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo,
+-						   leaf, &leafhdr);
++			clear_attr_forw_back(bp, &leafhdr);
+ 		} else  {
+ 			do_warn(
+ 	_("would clear forw/back pointers in block 0 for attributes in inode %" PRIu64 "\n"), ino);
