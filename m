@@ -6,83 +6,55 @@ X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9417EC33C9E
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 07:44:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFC27C33C9E
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 07:45:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5E195206F0
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 07:44:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 82063206F0
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 07:45:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KtQkGdIj"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="L7eM6TwO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726397AbgA3Ho0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 30 Jan 2020 02:44:26 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:41326 "EHLO
+        id S1726721AbgA3HpE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Jan 2020 02:45:04 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:41352 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726339AbgA3Ho0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Jan 2020 02:44:26 -0500
+        with ESMTP id S1726415AbgA3HpD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Jan 2020 02:45:03 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=mkZpFICk6JHjdkqn5t4Eq8WtAKhDPwVpkuEBpmbna80=; b=KtQkGdIj1DWdWLBkiXF+9hiOT
-        ymfFUFsGljTC3qTn48hETOBEoILkTIvW85ru9c2dn+t9TljS+Ke+9EWG9m5dgOIlQ9TzH2w0+Nre+
-        q2TbUvNp/34aF25HJCNFsbjqRbebye6SBqCe1jqKhwO2St5pG+qJxwbvpLnrQfdkFdfYx9NMMQF0j
-        qDOMQPV30T3dPeB6ZTNZqAl/JShsJva3YSj0eQbqqdWx7PzWzexfP1ArLZlD0vYKPwmZUP4DlDhXZ
-        wUMk7EMATNilibG7Q4TErEMuzoNgZkr6hmZksJw02MnzIwt2zO3DQCBGlSd3laEqjaxXh0Cfixj+j
-        4lMPEh57g==;
+         bh=xtxC9/f59fGPSXsGOpdnQklLQ2l1L3h4aXSHI+6lWrU=; b=L7eM6TwOGNyLTmrgXGWuOxYUg
+        YhW0D5TRmf5tzso4Ejd8vbMLtkbm7OXokg9PDVFHzZWPv00fjwef8AkNYMOd4Th77V8g3lJfB8+Mf
+        sDDE5NOhfr2cCb4kS+RZ7UztF6ikiWVerNMadmEneQoW2B5iG2ByK623QY+Ucjj8GN2oDYSKSqLWb
+        9cWCU8awoDcoH807ztvhToMFaWjWdKpdWCuMqT7SRUZIS0ZNGucuBIILEMfuXuORv62yxxvyfvr0E
+        uSzdYHuJYPTLybRilumJigenXpoqUmtHIFbfclMU0RzmKlYvKYHzk80/UoCgc3/sOgbH/fScL4fI+
+        yNXFiBzGw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1ix4Uy-00076e-Uk; Thu, 30 Jan 2020 07:44:24 +0000
-Date:   Wed, 29 Jan 2020 23:44:24 -0800
+        id 1ix4Vb-0007QS-NO; Thu, 30 Jan 2020 07:45:03 +0000
+Date:   Wed, 29 Jan 2020 23:45:03 -0800
 From:   Christoph Hellwig <hch@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Pavel Reichl <preichl@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/4] xfs: change xfs_isilocked() to always use lockdep()
-Message-ID: <20200130074424.GA26672@infradead.org>
+To:     Pavel Reichl <preichl@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/4] xfs: replace mr*() functions with native rwsem calls
+Message-ID: <20200130074503.GB26672@infradead.org>
 References: <20200128145528.2093039-1-preichl@redhat.com>
- <20200128145528.2093039-2-preichl@redhat.com>
- <20200129221819.GO18610@dread.disaster.area>
+ <20200128145528.2093039-5-preichl@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200129221819.GO18610@dread.disaster.area>
+In-Reply-To: <20200128145528.2093039-5-preichl@redhat.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 30, 2020 at 09:18:19AM +1100, Dave Chinner wrote:
-> This captures both read and write locks on the rwsem, and doesn't
-> discriminate at all. Now we don't have explicit writer lock checking
-> in CONFIG_XFS_DEBUG=y kernels, I think we need to at least check
-> that the rwsem is locked in all cases to catch cases where we are
-> calling a function without the lock held. That will ctach most
-> programming mistakes, and then lockdep will provide the
-> read-vs-write discrimination to catch the "hold the wrong lock type"
-> mistakes.
-> 
-> Hence I think this code should end up looking like this:
-> 
-> 	if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) {
-> 		bool locked = false;
-> 
-> 		if (!rwsem_is_locked(&ip->i_lock))
-> 			return false;
-> 		if (!debug_locks)
-> 			return true;
-> 		if (lock_flags & XFS_ILOCK_EXCL)
-> 			locked = lockdep_is_held_type(&ip->i_lock, 0);
-> 		if (lock_flags & XFS_ILOCK_SHARED)
-> 			locked |= lockdep_is_held_type(&ip->i_lock, 1);
-> 		return locked;
-> 	}
-> 
-> Thoughts?
+On Tue, Jan 28, 2020 at 03:55:28PM +0100, Pavel Reichl wrote:
+> Remove mr*() functions as they only wrap the standard kernel functions
+> for kernel manimulation.
 
-I like the idea, but I really think that this does not belong into XFS,
-but into the core rwsem code.  That means replacing the lock_flags with
-a bool exclusive, picking a good name for it (can't think of one right
-now, except for re-using rwsem_is_locked), and adding a kerneldoc
-comment explaining the semantics and use cases in detail.
+I think patches 2, 3 and 4 make more sense if merged into a single
+patch to replace the mrlocks with rw_sempahores.
