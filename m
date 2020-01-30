@@ -6,28 +6,29 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CA8FC2D0DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 19:32:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69F12C2D0DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 19:38:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4B5D720CC7
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 19:32:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D97220CC7
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 19:38:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727506AbgA3Tcc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 30 Jan 2020 14:32:32 -0500
-Received: from sandeen.net ([63.231.237.45]:59782 "EHLO sandeen.net"
+        id S1727089AbgA3Tix (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Jan 2020 14:38:53 -0500
+Received: from sandeen.net ([63.231.237.45]:60078 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726267AbgA3Tcc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 30 Jan 2020 14:32:32 -0500
+        id S1726679AbgA3Tix (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 30 Jan 2020 14:38:53 -0500
 Received: from Liberator.local (erlite [10.0.0.1])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 808F117DCB;
-        Thu, 30 Jan 2020 13:32:31 -0600 (CST)
-Subject: Re: [PATCH 1/6] mkfs: check root inode location
+        by sandeen.net (Postfix) with ESMTPSA id C78CC11665;
+        Thu, 30 Jan 2020 13:38:52 -0600 (CST)
+Subject: Re: [PATCH 2/6] xfs_repair: enforce that inode btree chunks can't
+ point to AG headers
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org, alex@zadara.com
 References: <157982504556.2765631.630298760136626647.stgit@magnolia>
- <157982505230.2765631.2328249334657581135.stgit@magnolia>
+ <157982505923.2765631.10587375380960098225.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -71,12 +72,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <226f970e-2368-9e68-cb1b-4de92414d043@sandeen.net>
-Date:   Thu, 30 Jan 2020 13:32:30 -0600
+Message-ID: <eb2b3973-0301-5b96-58e9-7f754a58d0f6@sandeen.net>
+Date:   Thu, 30 Jan 2020 13:38:52 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.4.1
 MIME-Version: 1.0
-In-Reply-To: <157982505230.2765631.2328249334657581135.stgit@magnolia>
+In-Reply-To: <157982505923.2765631.10587375380960098225.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -88,95 +89,108 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 1/23/20 6:17 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Make sure the root inode gets created where repair thinks it should be
-> created.
+> xfs_repair has a very old check that evidently excuses the AG 0 inode
+> btrees pointing to blocks that are already marked XR_E_INUSE_FS* (e.g.
+> AG headers).  mkfs never formats filesystems that way and it looks like
+> an error, so purge the check.  After this, we always complain if inodes
+> overlap with AG headers because that should never happen.
 
-Actual mkfs-time location calculation is still completely separate from 
-the code in xfs_ialloc_calc_rootino though, right?  Maybe there's nothing
-to do about that.
+I peered back into the mists of time to see if I could find any reason for
+this exception, and I couldn't.
 
-I mostly find myself wondering what a user will do next if this check fails.
+Only question is why you removed the
 
-Assuming we trust xfs_ialloc_calc_rootino though, this seems fine.
+-	ASSERT(M_IGEO(mp)->ialloc_blks > 0);
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+assert, that's still a valid assert, no?
 
--Eric
 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  libxfs/libxfs_api_defs.h |    1 +
->  mkfs/xfs_mkfs.c          |   39 +++++++++++++++++++++++++++++++++------
->  2 files changed, 34 insertions(+), 6 deletions(-)
+>  repair/globals.c    |    1 -
+>  repair/globals.h    |    1 -
+>  repair/scan.c       |   19 -------------------
+>  repair/xfs_repair.c |    7 -------
+>  4 files changed, 28 deletions(-)
 > 
 > 
-> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-> index cc7304ad..9ede0125 100644
-> --- a/libxfs/libxfs_api_defs.h
-> +++ b/libxfs/libxfs_api_defs.h
-> @@ -172,6 +172,7 @@
+> diff --git a/repair/globals.c b/repair/globals.c
+> index dcd79ea4..8a60e706 100644
+> --- a/repair/globals.c
+> +++ b/repair/globals.c
+> @@ -73,7 +73,6 @@ int	lost_gquotino;
+>  int	lost_pquotino;
 >  
->  #define xfs_ag_init_headers		libxfs_ag_init_headers
->  #define xfs_buf_delwri_submit		libxfs_buf_delwri_submit
-> +#define xfs_ialloc_calc_rootino		libxfs_ialloc_calc_rootino
+>  xfs_agino_t	first_prealloc_ino;
+> -xfs_agino_t	last_prealloc_ino;
+>  xfs_agblock_t	bnobt_root;
+>  xfs_agblock_t	bcntbt_root;
+>  xfs_agblock_t	inobt_root;
+> diff --git a/repair/globals.h b/repair/globals.h
+> index 008bdd90..2ed5c894 100644
+> --- a/repair/globals.h
+> +++ b/repair/globals.h
+> @@ -114,7 +114,6 @@ extern int		lost_gquotino;
+>  extern int		lost_pquotino;
 >  
->  #define xfs_refcountbt_calc_reserves	libxfs_refcountbt_calc_reserves
->  #define xfs_finobt_calc_reserves	libxfs_finobt_calc_reserves
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 784fe6a9..91a25bf5 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -3549,6 +3549,38 @@ rewrite_secondary_superblocks(
->  	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
->  }
+>  extern xfs_agino_t	first_prealloc_ino;
+> -extern xfs_agino_t	last_prealloc_ino;
+>  extern xfs_agblock_t	bnobt_root;
+>  extern xfs_agblock_t	bcntbt_root;
+>  extern xfs_agblock_t	inobt_root;
+> diff --git a/repair/scan.c b/repair/scan.c
+> index c383f3aa..05707dd2 100644
+> --- a/repair/scan.c
+> +++ b/repair/scan.c
+> @@ -1645,13 +1645,6 @@ scan_single_ino_chunk(
+>  				break;
+>  			case XR_E_INUSE_FS:
+>  			case XR_E_INUSE_FS1:
+> -				if (agno == 0 &&
+> -				    ino + j >= first_prealloc_ino &&
+> -				    ino + j < last_prealloc_ino) {
+> -					set_bmap(agno, agbno, XR_E_INO);
+> -					break;
+> -				}
+> -				/* fall through */
+>  			default:
+>  				/* XXX - maybe should mark block a duplicate */
+>  				do_warn(
+> @@ -1782,18 +1775,6 @@ _("inode chunk claims untracked block, finobt block - agno %d, bno %d, inopb %d\
+>  				break;
+>  			case XR_E_INUSE_FS:
+>  			case XR_E_INUSE_FS1:
+> -				if (agno == 0 &&
+> -				    ino + j >= first_prealloc_ino &&
+> -				    ino + j < last_prealloc_ino) {
+> -					do_warn(
+> -_("inode chunk claims untracked block, finobt block - agno %d, bno %d, inopb %d\n"),
+> -						agno, agbno, mp->m_sb.sb_inopblock);
+> -
+> -					set_bmap(agno, agbno, XR_E_INO);
+> -					suspect++;
+> -					break;
+> -				}
+> -				/* fall through */
+>  			default:
+>  				do_warn(
+>  _("inode chunk claims used block, finobt block - agno %d, bno %d, inopb %d\n"),
+> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+> index 9295673d..3e9059f3 100644
+> --- a/repair/xfs_repair.c
+> +++ b/repair/xfs_repair.c
+> @@ -460,13 +460,6 @@ calc_mkfs(xfs_mount_t *mp)
+>  		first_prealloc_ino = XFS_AGB_TO_AGINO(mp, fino_bno);
+>  	}
 >  
-> +static void
-> +check_root_ino(
-> +	struct xfs_mount	*mp)
-> +{
-> +	xfs_ino_t		ino;
-> +
-> +	if (XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino) != 0) {
-> +		fprintf(stderr,
-> +			_("%s: root inode created in AG %u, not AG 0\n"),
-> +			progname, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino));
-> +		exit(1);
-> +	}
-> +
-> +	/*
-> +	 * The superblock points to the root directory inode, but xfs_repair
-> +	 * expects to find the root inode in a very specific location computed
-> +	 * from the filesystem geometry for an extra level of verification.
-> +	 *
-> +	 * Fail the format immediately if those assumptions ever break, because
-> +	 * repair will toss the root directory.
-> +	 */
-> +	ino = libxfs_ialloc_calc_rootino(mp, mp->m_sb.sb_unit);
-> +	if (mp->m_sb.sb_rootino != ino) {
-> +		fprintf(stderr,
-> +	_("%s: root inode (%llu) not allocated in expected location (%llu)\n"),
-> +			progname,
-> +			(unsigned long long)mp->m_sb.sb_rootino,
-> +			(unsigned long long)ino);
-> +		exit(1);
-> +	}
-> +}
-> +
->  int
->  main(
->  	int			argc,
-> @@ -3835,12 +3867,7 @@ main(
+> -	ASSERT(M_IGEO(mp)->ialloc_blks > 0);
+> -
+> -	if (M_IGEO(mp)->ialloc_blks > 1)
+> -		last_prealloc_ino = first_prealloc_ino + XFS_INODES_PER_CHUNK;
+> -	else
+> -		last_prealloc_ino = XFS_AGB_TO_AGINO(mp, fino_bno + 1);
+> -
 >  	/*
->  	 * Protect ourselves against possible stupidity
+>  	 * now the first 3 inodes in the system
 >  	 */
-> -	if (XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino) != 0) {
-> -		fprintf(stderr,
-> -			_("%s: root inode created in AG %u, not AG 0\n"),
-> -			progname, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino));
-> -		exit(1);
-> -	}
-> +	check_root_ino(mp);
->  
->  	/*
->  	 * Re-write multiple secondary superblocks with rootinode field set
 > 
