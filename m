@@ -1,215 +1,126 @@
-Return-Path: <SRS0=zOuE=3S=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=Xde3=3T=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFC33C2D0DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 23:20:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF8BFC33CB2
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 00:50:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 99B6420678
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jan 2020 23:20:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B26D220661
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 00:50:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726646AbgA2XUK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jan 2020 18:20:10 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:42232 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726618AbgA2XUK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jan 2020 18:20:10 -0500
-Received: from dread.disaster.area (pa49-195-111-217.pa.nsw.optusnet.com.au [49.195.111.217])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id D0F2D3A15D4;
-        Thu, 30 Jan 2020 10:20:06 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1iwwcv-0005MF-M1; Thu, 30 Jan 2020 10:20:05 +1100
-Date:   Thu, 30 Jan 2020 10:20:05 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Pavel Reichl <preichl@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/4] xfs: change xfs_isilocked() to always use lockdep()
-Message-ID: <20200129232005.GP18610@dread.disaster.area>
-References: <20200128145528.2093039-1-preichl@redhat.com>
- <20200128145528.2093039-2-preichl@redhat.com>
- <20200129221819.GO18610@dread.disaster.area>
- <20200129222532.GW3447196@magnolia>
+        id S1726401AbgA3AuI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jan 2020 19:50:08 -0500
+Received: from outbound-smtp45.blacknight.com ([46.22.136.57]:55149 "EHLO
+        outbound-smtp45.blacknight.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727304AbgA3AuH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jan 2020 19:50:07 -0500
+X-Greylist: delayed 388 seconds by postgrey-1.27 at vger.kernel.org; Wed, 29 Jan 2020 19:50:06 EST
+Received: from mail.blacknight.com (pemlinmail02.blacknight.ie [81.17.254.11])
+        by outbound-smtp45.blacknight.com (Postfix) with ESMTPS id 1641DFA844
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Jan 2020 00:50:05 +0000 (GMT)
+Received: (qmail 8490 invoked from network); 30 Jan 2020 00:50:04 -0000
+Received: from unknown (HELO techsingularity.net) (mgorman@techsingularity.net@[84.203.18.57])
+  by 81.17.254.9 with ESMTPSA (AES256-SHA encrypted, authenticated); 30 Jan 2020 00:50:04 -0000
+Date:   Thu, 30 Jan 2020 00:50:02 +0000
+From:   Mel Gorman <mgorman@techsingularity.net>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Peter Zijlstra <peterz@infradead.org>,
+        Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>,
+        Phil Auld <pauld@redhat.com>, Ming Lei <ming.lei@redhat.com>,
+        Vincent Guittot <vincent.guittot@linaro.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] sched, fair: Allow a per-cpu kthread waking a task to
+ stack on the same CPU
+Message-ID: <20200130005002.GG3466@techsingularity.net>
+References: <20200127143608.GX3466@techsingularity.net>
+ <20200127223256.GA18610@dread.disaster.area>
+ <20200128011936.GY3466@techsingularity.net>
+ <20200128091012.GZ3466@techsingularity.net>
+ <20200129173852.GP14914@hirez.programming.kicks-ass.net>
+ <20200129220021.GN18610@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-15
 Content-Disposition: inline
-In-Reply-To: <20200129222532.GW3447196@magnolia>
+In-Reply-To: <20200129220021.GN18610@dread.disaster.area>
 User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
-        a=0OveGI8p3fsTA6FL6ss4ZQ==:117 a=0OveGI8p3fsTA6FL6ss4ZQ==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=Jdjhy38mL1oA:10
-        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=2v7RYwIjjYj12rUPZWoA:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 29, 2020 at 02:25:32PM -0800, Darrick J. Wong wrote:
-> On Thu, Jan 30, 2020 at 09:18:19AM +1100, Dave Chinner wrote:
-> > On Tue, Jan 28, 2020 at 03:55:25PM +0100, Pavel Reichl wrote:
-> > > mr_writer is obsolete and the information it contains is accesible
-> > > from mr_lock.
-> > > 
-> > > Signed-off-by: Pavel Reichl <preichl@redhat.com>
-> > > ---
-> > >  fs/xfs/xfs_inode.c | 8 ++++++--
-> > >  1 file changed, 6 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > > index c5077e6326c7..32fac6152dc3 100644
-> > > --- a/fs/xfs/xfs_inode.c
-> > > +++ b/fs/xfs/xfs_inode.c
-> > > @@ -352,13 +352,17 @@ xfs_isilocked(
-> > >  {
-> > >  	if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) {
-> > >  		if (!(lock_flags & XFS_ILOCK_SHARED))
-> > > -			return !!ip->i_lock.mr_writer;
-> > > +			return !debug_locks ||
-> > > +				lockdep_is_held_type(&ip->i_lock.mr_lock, 0);
-> > >  		return rwsem_is_locked(&ip->i_lock.mr_lock);
-> > >  	}
-> > >  
-> > >  	if (lock_flags & (XFS_MMAPLOCK_EXCL|XFS_MMAPLOCK_SHARED)) {
-> > >  		if (!(lock_flags & XFS_MMAPLOCK_SHARED))
-> > > -			return !!ip->i_mmaplock.mr_writer;
-> > > +			return !debug_locks ||
-> > > +				lockdep_is_held_type(
-> > > +					&ip->i_mmaplock.mr_lock,
-> > > +					0);
-> > >  		return rwsem_is_locked(&ip->i_mmaplock.mr_lock);
-> > >  	}
+On Thu, Jan 30, 2020 at 09:00:21AM +1100, Dave Chinner wrote:
+> On Wed, Jan 29, 2020 at 06:38:52PM +0100, Peter Zijlstra wrote:
+> > On Tue, Jan 28, 2020 at 09:10:12AM +0000, Mel Gorman wrote:
+> > > Peter, Ingo and Vincent -- I know the timing is bad due to the merge
+> > > window but do you have any thoughts on allowing select_idle_sibling to
+> > > stack a wakee task on the same CPU as a waker in this specific case?
 > > 
-> > Ok, so this code is only called from ASSERT() statements, which
-> > means this turns off write lock checking for XFS debug kernels if
-> > lockdep is not enabled. Hence I think these checks need to be
-> > restructured to be based around rwsem_is_locked() first and lockdep
-> > second.
+> > I sort of see, but *groan*...
 > > 
-> > That is:
+> > so if the kworker unlocks a contended mutex/rwsem/completion...
 > > 
-> > /* In all implementations count != 0 means locked */
-> > static inline int rwsem_is_locked(struct rw_semaphore *sem)
-> > {
-> >         return atomic_long_read(&sem->count) != 0;
-> > }
+> > I suppose the fact that it limits it to tasks that were running on the
+> > same CPU limits the impact if we do get it wrong.
 > > 
-> > This captures both read and write locks on the rwsem, and doesn't
-> > discriminate at all. Now we don't have explicit writer lock checking
-> > in CONFIG_XFS_DEBUG=y kernels, I think we need to at least check
-> > that the rwsem is locked in all cases to catch cases where we are
-> > calling a function without the lock held. That will ctach most
-> > programming mistakes, and then lockdep will provide the
-> > read-vs-write discrimination to catch the "hold the wrong lock type"
-> > mistakes.
+> > Elsewhere you write:
 > > 
-> > Hence I think this code should end up looking like this:
+> > > I would prefer the wakeup code did not have to signal that it's a
+> > > synchronous wakeup. Sync wakeups so exist but callers got it wrong many
+> > > times where stacking was allowed and then the waker did not go to sleep.
+> > > While the chain of events are related, they are not related in a very
+> > > obvious way. I think it's much safer to keep this as a scheduler
+> > > heuristic instead of depending on callers to have sufficient knowledge
+> > > of the scheduler implementation.
 > > 
-> > 	if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) {
-> > 		bool locked = false;
+> > That is true; the existing WF_SYNC has caused many issues for maybe
+> > being too strong.
 > > 
-> > 		if (!rwsem_is_locked(&ip->i_lock))
-> > 			return false;
-> > 		if (!debug_locks)
-> > 			return true;
-> > 		if (lock_flags & XFS_ILOCK_EXCL)
-> > 			locked = lockdep_is_held_type(&ip->i_lock, 0);
-> > 		if (lock_flags & XFS_ILOCK_SHARED)
-> > 			locked |= lockdep_is_held_type(&ip->i_lock, 1);
-> > 		return locked;
-> > 	}
+> > But what if we create a new hint that combines both these ideas? Say
+> > WF_COMPLETE and subject that to these same criteria. This way we can
+> > eliminate wakeups from locks and such (they won't have this set).
 > > 
-> > Thoughts?
+> > Or am I just making things complicated again?
 > 
-> I like that a lot better, though perhaps the if body should be factored
-> into a separate static inline so we don't repeat that 3x.
+> I suspect this is making it complicated again, because it requires
+> the people who maintain the code that is using workqueues to
+> understand when they might need to use a special wakeup interface in
+> the work function. And that includes code that currently calls
+> wake_up_all() because there can be hundreds of independent tasks
+> waiting on the IO completion (e.g all the wait queues in the XFS
+> journal code can (and do) have multiple threads waiting on them).
+> 
+> IOWs, requiring a special flag just to optimise this specific case
+> (i.e. single dependent waiter on same CPU as the kworker) when the
+> adverse behaviour is both hardware and workload dependent means it
+> just won't get used correctly or reliably.
+> 
 
-Yup, I had thoughts along those lines, too, but each lock type uses
-different flags and that makes it more verbose than it could be.
-Maybe something like this?
+I agree. Pick any of Rusty's rules from "-2 Read the implementation
+and you'll get it wrong" all the way down to "-10 It's impossible to
+get right.".
 
-static inline bool
-__xfs_is_ilocked(
-	struct rwsem	*rwsem,
-	bool		shared,
-	bool		excl)
-{
-	bool locked = false;
+> Hence I'd much prefer the kernel detects and dynamically handles
+> this situation at runtime, because this pattern of workqueue usage
+> is already quite common and will only become more widespread as we
+> progress towards async processing of syscalls.
+> 
 
-	if (!rwsem_is_locked(rwsem))
-		return false;
-	if (!debug_locks)
-		return true;
-	if (shared)
-		locked = lockdep_is_held_type(&ip->i_lock, 0);
-	if (excl)
-		locked |= lockdep_is_held_type(&ip->i_lock, 1);
-	return locked;
-}
+To be fair, as Peter says, the kernel patch may not detect this
+properly. There are corner cases where it will get it wrong. My thinking is
+that *at the moment* when the heuristic is wrong, it's almost certainly
+because the machine was so over-saturated such that multiple related
+tasks are stacking anyway.
 
-bool
-xfs_isilocked(
-	struct xfs_inode	*ip,
-	int			lock_flags)
-{
-	if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED))
-		return __xfs_is_ilocked(&ip->i_lock,
-				(lock_flags & XFS_ILOCK_SHARED),
-				(lock_flags & XFS_ILOCK_EXCL));
+Depending on how async syscalls proceeds, this might get turn out to the
+the wrong heuristic and an API change will be required. At least if that
+happens, we'll have a few use cases to help guide what the API change
+should look like so we do not end up in WF_SYNC hell again.
 
-	if (lock_flags & (XFS_MMAPLOCK_EXCL|XFS_MMAPLOCK_SHARED))
-		return __xfs_is_ilocked(&ip->i_mmaplock,
-				(lock_flags & XFS_MMAPLOCK_SHARED),
-				(lock_flags & XFS_MMAPLOCK_EXCL));
-
-	if (lock_flags & (XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED))
-		return __xfs_is_ilocked(&VFS_I(ip)->i_rwsem,
-				(lock_flags & XFS_IOLOCK_SHARED),
-				(lock_flags & XFS_IOLOCK_EXCL));
-
-	ASSERT(0);
-	return false;
-}
-
-At which point I wonder if it would simply be better to have:
-
-bool
-xfs_is_ilocked(
-	struct xfs_inode	*ip,
-	int			lock_flags)
-{
-	return __xfs_is_ilocked(&ip->i_lock, (lock_flags & XFS_ILOCK_SHARED),
-				(lock_flags & XFS_ILOCK_EXCL));
-}
-
-bool
-xfs_is_mmaplocked(
-	struct xfs_inode	*ip,
-	int			lock_flags)
-{
-	return __xfs_is_ilocked(&ip->i_mmaplock,
-				(lock_flags & XFS_MMAPLOCK_SHARED),
-				(lock_flags & XFS_MMAPLOCK_EXCL));
-}
-
-bool
-xfs_is_iolocked(
-	struct xfs_inode	*ip,
-	int			lock_flags)
-{
-	return __xfs_is_ilocked(&VFS_I(ip)->i_rwsem,
-				(lock_flags & XFS_IOLOCK_SHARED),
-				(lock_flags & XFS_IOLOCK_EXCL));
-}
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Mel Gorman
+SUSE Labs
