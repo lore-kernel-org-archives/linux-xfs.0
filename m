@@ -2,124 +2,138 @@ Return-Path: <SRS0=Xde3=3T=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1B85C3F68F
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 20:34:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06E6BC2D0DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 20:34:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A5F46214DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 20:34:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB6AC214AF
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 20:34:56 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jdlNW7Cc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727697AbgA3UeR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 30 Jan 2020 15:34:17 -0500
-Received: from sandeen.net ([63.231.237.45]:34816 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727644AbgA3UeQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 30 Jan 2020 15:34:16 -0500
-Received: from [10.0.0.4] (erlite [10.0.0.1])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 7F6797903;
-        Thu, 30 Jan 2020 14:34:15 -0600 (CST)
-Subject: Re: [PATCH 1/6] mkfs: check root inode location
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+        id S1727751AbgA3Ue4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Jan 2020 15:34:56 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:43684 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727618AbgA3Ue4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Jan 2020 15:34:56 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00UKSvaE010492;
+        Thu, 30 Jan 2020 20:34:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=aRXXZJ3S/gBsbNLFGNDZBhrD0oDvfUT91kFFEar4Zu8=;
+ b=jdlNW7Cc8EBusRVyVJrNBpsbeVl/Xn8uJalR5EbO0gTnEFEmoPL/Z4VmMQxL+m2qkfXU
+ BW7ocvBSWNlChM2DU37JKHpOZMG5jUKYg6yQX2CyXWjMGsqGnzKdpGwnyQ3cwIa1TAKH
+ 1j/AJ+hDpyFMv/nW8KRbAXXN0DeLx2XPf+B+OG3UeiiDkKTEPB9nyNwWCAThPNfO2dsK
+ pjmprbdeQT+spj5/yPP+iWCQUDx02Ty28SdG8U/LD2QITOYzBlD79T9YQ0UkJvlIC4bJ
+ 0MUP8tcrJIZG7NoPqJLb7oX/D273tIjHUXx0FL+Tw06LU9eA3cGoYdufHDmw4nJrm7rB 7Q== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2xrdmqxnwy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 30 Jan 2020 20:34:53 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00UKTAej162525;
+        Thu, 30 Jan 2020 20:34:53 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 2xuhes1kj8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 30 Jan 2020 20:34:53 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00UKYpQC003154;
+        Thu, 30 Jan 2020 20:34:51 GMT
+Received: from localhost (/10.145.179.16)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 30 Jan 2020 12:34:51 -0800
+Date:   Thu, 30 Jan 2020 12:34:48 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Eric Sandeen <sandeen@sandeen.net>
 Cc:     linux-xfs@vger.kernel.org, alex@zadara.com
+Subject: Re: [PATCH 5/6] xfs_repair: check plausibility of root dir pointer
+ before trashing it
+Message-ID: <20200130203448.GF3447196@magnolia>
 References: <157982504556.2765631.630298760136626647.stgit@magnolia>
- <157982505230.2765631.2328249334657581135.stgit@magnolia>
- <226f970e-2368-9e68-cb1b-4de92414d043@sandeen.net>
- <20200130201917.GD3447196@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <6863f2cf-1c97-c024-e18c-25bbe4205ceb@sandeen.net>
-Date:   Thu, 30 Jan 2020 14:34:14 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.4.1
+ <157982507752.2765631.16955377241063712365.stgit@magnolia>
+ <4fb8e608-959e-813a-2424-865a765a2b92@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20200130201917.GD3447196@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4fb8e608-959e-813a-2424-865a765a2b92@sandeen.net>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9516 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-2001300137
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9516 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-2001300137
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 1/30/20 2:19 PM, Darrick J. Wong wrote:
-> On Thu, Jan 30, 2020 at 01:32:30PM -0600, Eric Sandeen wrote:
->> On 1/23/20 6:17 PM, Darrick J. Wong wrote:
->>> From: Darrick J. Wong <darrick.wong@oracle.com>
->>>
->>> Make sure the root inode gets created where repair thinks it should be
->>> created.
->>
->> Actual mkfs-time location calculation is still completely separate from 
->> the code in xfs_ialloc_calc_rootino though, right?  Maybe there's nothing
->> to do about that.
+On Thu, Jan 30, 2020 at 02:18:52PM -0600, Eric Sandeen wrote:
+> On 1/23/20 6:17 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > If sb_rootino doesn't point to where we think mkfs should have allocated
+> > the root directory, check to see if the alleged root directory actually
+> > looks like a root directory.  If so, we'll let it live because someone
+> > could have changed sunit since formatting time, and that changes the
+> > root directory inode estimate.
 > 
-> Correct, because proto.c uses the regular inode allocation routines to
-> create the root inode, and mkfs doesn't have the ability to compute the
-> root inode and Make It So.
+> I forget, is there an fstest for this?
+
+https://lore.kernel.org/linux-xfs/20191218041831.GK12765@magnolia/
+
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
->> I mostly find myself wondering what a user will do next if this check fails.
+> ...
 > 
-> Complain. :)
+> > @@ -438,6 +469,20 @@ calc_mkfs(
+> >  
+> >  	rootino = libxfs_ialloc_calc_rootino(mp, mp->m_sb.sb_unit);
+> >  
+> > +	/*
+> > +	 * If the root inode isn't where we think it is, check its plausibility
+> > +	 * as a root directory.  It's possible that somebody changed sunit
+> > +	 * since the filesystem was created, which can change the value of the
+> > +	 * above computation.  Don't blow up the root directory if this is the
+> > +	 * case.
+> > +	 */
+> > +	if (mp->m_sb.sb_rootino != rootino && has_plausible_rootdir(mp)) {
+> > +		do_warn(
+> > +_("sb root inode value %" PRIu64 " inconsistent with alignment (expected %"PRIu64")\n"),
+> > +			mp->m_sb.sb_rootino, rootino);
 > 
-> To be fair, if there was a mismatch prior to this patch, the user would
-> end up with a filesystem that formats fine, mounts ok, and explodes in
-> xfs_repair.  Better we fail early than have repair shred the filesystem
-> after they've loaded up their production data and deleted the backups.
+> what would a user do with this warning?  Is there any value in emitting it?
+> 
+> Otherwise this looks good.
 
-Oh, for sure.  But it's still:
+I dunno -- on the one hand, I understand that nobody wants to deal with
+the support calls that will erupt from that message.  On the other hand,
+it's an indication that this filesystem isn't /quite/ the way we
+expected it to be, and that would be a helpful hint if you were
+debugging some other weird problem with an xfs filesystem.
 
-"haha something went wrong, HAND PLONK"
+What if this were a do_log()?
 
-I guess the savvy user would come to the list or file a bug.
-
-(Hm, you know, a routine to dump cfg-> out for debugging would be neat.)
-
--Eric
+--D
+> 
+> 
+> > +		rootino = mp->m_sb.sb_rootino;
+> > +	}
+> > +
+> >  	ensure_fixed_ino(&mp->m_sb.sb_rootino, rootino,
+> >  			_("root"));
+> >  	ensure_fixed_ino(&mp->m_sb.sb_rbmino, rootino + 1,
+> > 
