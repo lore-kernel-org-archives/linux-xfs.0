@@ -2,176 +2,163 @@ Return-Path: <SRS0=Xde3=3T=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DF56C33CB3
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 16:13:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49F1DC2D0DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 16:59:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0E0E7217BA
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 16:13:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1580400821;
-	bh=y4LBdyNzad+FYy/0/jvCYzeA/hoqHIJ23g5XmjtmHmc=;
-	h=Date:From:To:Cc:Subject:List-ID:From;
-	b=2bc0RMUchrHRp9mktVd325PAVHPIXKo8AKIofSkLInwYZfKSnMcjYPvHq1YHJBZnx
-	 OFiq9HCq42mq78VrTjcbvEvnF7PldmSLFlXCJk2Wm+XXJROSHQE652W0Yexcf6kJOB
-	 sPX5NQ5puORfrqMfe4iJpEiTqFx5/AeOTo5Xiyfc=
+	by mail.kernel.org (Postfix) with ESMTP id 28002214AF
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 16:59:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727409AbgA3QNk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 30 Jan 2020 11:13:40 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59282 "EHLO mail.kernel.org"
+        id S1727413AbgA3Q7Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Jan 2020 11:59:24 -0500
+Received: from sandeen.net ([63.231.237.45]:51656 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727158AbgA3QNk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 30 Jan 2020 11:13:40 -0500
-Received: from localhost (c-67-169-218-210.hsd1.or.comcast.net [67.169.218.210])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1727191AbgA3Q7Y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 30 Jan 2020 11:59:24 -0500
+Received: from Liberator.local (erlite [10.0.0.1])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 16E4220CC7;
-        Thu, 30 Jan 2020 16:13:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1580400819;
-        bh=y4LBdyNzad+FYy/0/jvCYzeA/hoqHIJ23g5XmjtmHmc=;
-        h=Date:From:To:Cc:Subject:From;
-        b=u54hoVK5cla26Fm6lwxRF3kHM4Mr3otCKEToeqgwzWW3F5FT2uh1+saXT3Ku6lOji
-         A5X7HbquEMdxMHcW/Tl8DgHFCwK3O9SqFySvQ0ug3rJbqUsFZy5hNbSH/XormOBxcE
-         Vve76VqcUywa1XY3opfVr3w97gEs5j1cfbVMjPLY=
-Date:   Thu, 30 Jan 2020 08:13:38 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, linux-kernel@vger.kernel.org,
-        sandeen@sandeen.net, hch@lst.de
-Subject: [GIT PULL] xfs: new code for 5.6
-Message-ID: <20200130161338.GX3447196@magnolia>
+        by sandeen.net (Postfix) with ESMTPSA id 8CB0B14A18;
+        Thu, 30 Jan 2020 10:59:23 -0600 (CST)
+Subject: Re: [PATCH 00/11] xfsprogs: remove unneeded #includes
+To:     Dave Chinner <david@fromorbit.com>,
+        Eric Sandeen <sandeen@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <1561066174-13144-1-git-send-email-sandeen@redhat.com>
+ <20190620220614.GE26375@dread.disaster.area>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <58a0f2df-988d-ce88-9c53-fd39ff703661@sandeen.net>
+Date:   Thu, 30 Jan 2020 10:59:22 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.4.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <20190620220614.GE26375@dread.disaster.area>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
+On 6/20/19 5:06 PM, Dave Chinner wrote:
+> On Thu, Jun 20, 2019 at 04:29:23PM -0500, Eric Sandeen wrote:
+>> This is the result of a mechanical process and ... may have a few
+>> oddities, for example removing "init.h" from some utils made me
+>> realize that we inherit it from libxfs and also have it in local
+> 
+> We do? That'd be really, really broken if we did - including local
+> header files from a global header files is not a good idea.
+> 
+> /me goes looking, can't find where libxfs.h includes init.h
+> 
+> libxfs/init.h is private to libxfs/, it's not a global include file,
+> and it is included directly in all the libxfs/*.c files that need
+> it, which is 3 files - init.c, rdwr.c and util.c. 
+> 
+>> headers; libxfs has a global but so does scrub, etc.  So that stuff
+>> can/should be fixed up, but in the meantime, this zaps out a ton
+>> of header dependencies, and seems worthwhile.
+> 
+> IMO, this doesn't improve the tangle of header files in userspace.
+> All it does is make the include patterns inconsistent across files
+> because of the tangled mess of the libxfs/ vs include/ header files
+> that was never completely resolved when libxfs was created as a
+> shared kernel library....
+> 
+> IOWs, the include pattern I was originally aiming for with the
+> libxfs/ shared userspace/kernel library was:
+> 
+> #include "libxfs_priv.h"
+> <include shared kernel header files>
+> 
+> And for things outside libxfs/ that use libxfs:
+> 
+> #include "libxfs.h"
+> <include local header files>
+> 
+> IOWs, "libxfs_priv.h" contained the includes for all the local
+> userspace libxfs includes and defines and non-shared support
+> structures, and it would export on build all the header files that
+> external code needs to build into include/ via symlinks. This is
+> incomplete - stuff like include/xfs_mount.h, xfs_inode.h, etc needs
+> to move into libxfs as private header files (similar to how they are
+> private in the kernel) and then exported at build time.
+> 
+> Likewise, "libxfs.h" should only contain global include files and
+> those exported from libxfs, and that's all the external code should
+> include to use /anything/ from libxfs. i.e.  a single include forms
+> the external interface to libxfs.
+> 
+> AFAIC, nothing should be including platform or build dependent
+> things like platform_defs.h, because that should be pulled in by
+> libxfs.h or libxfs_priv.h. And nothing external should need to pull
+> in, say, xfs_format.h or xfs_mount.h, because they are all pulled in
+> by include/libxfs.h (which it mostly does already).
+> 
+> Hence I'd prefer we finish untangling the header file include mess
+> before we cull unneceesary includes. Otherwise we are going to end
+> up culling the wrong includes and then have to clean up that mess as
+> well to bring the code back to being clean and consistent....
 
-Please pull this first batch of new changes for 5.6-rc1.  In this
-release we clean out the last of the old 32-bit timestamp code, fix a
-number of bugs and memory corruptions on 32-bit platforms, and a
-refactoring of some of the extended attribute code.
+Dave, what if I reworked this to only remove unneeded system include files
+for now.  Would you be more comfortable with that?  I assume there's no
+argument with i.e.
 
-I think I'll be back next week with some refactoring of how the XFS
-buffer code returns error codes, however I prefer to hold onto that for
-another week to let it soak a while longer.
+diff --git a/estimate/xfs_estimate.c b/estimate/xfs_estimate.c
+index 9e01cce..189bb6c 100644
+--- a/estimate/xfs_estimate.c
++++ b/estimate/xfs_estimate.c
+@@ -10,7 +10,6 @@
+  * XXX: assumes dirv1 format.
+  */
+ #include "libxfs.h"
+-#include <sys/stat.h>
+ #include <ftw.h>
 
---D
-
-The following changes since commit fd6988496e79a6a4bdb514a4655d2920209eb85d:
-
-  Linux 5.5-rc4 (2019-12-29 15:29:16 -0800)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.6-merge-6
-
-for you to fetch changes up to b3531f5fc16d4df2b12567bce48cd9f3ab5f9131:
-
-  xfs: remove unused variable 'done' (2020-01-23 21:24:50 -0800)
-
-----------------------------------------------------------------
-New code for 5.6:
-- Get rid of compat_time_t
-- Convert time_t to time64_t in quota code
-- Remove shadow variables
-- Prevent ATTR_ flag misuse in the attrmulti ioctls
-- Clean out strlen in the attr code
-- Remove some bogus asserts
-- Fix various file size limit calculation errors with 32-bit kernels
-- Pack xfs_dir2_sf_entry_t to fix build errors on arm oabi
-- Fix nowait inode locking calls for directio aio reads.
-- Fix memory corruption bugs when invalidating remote xattr value
-  buffers.
-- Streamline remote attr value removal.
-- Make the buffer log format size consistent across platforms.
-- Strengthen buffer log format size checking.
-- Fix messed up return types of xfs_inode_need_cow.
-- Fix some unused variable warnings.
-
-----------------------------------------------------------------
-Allison Henderson (1):
-      xfs: Remove all strlen in all xfs_attr_* functions for attr names.
-
-Arnd Bergmann (2):
-      xfs: rename compat_time_t to old_time32_t
-      xfs: quota: move to time64_t interfaces
-
-Christoph Hellwig (5):
-      xfs: clear kernel only flags in XFS_IOC_ATTRMULTI_BY_HANDLE
-      xfs: reject invalid flags combinations in XFS_IOC_ATTRMULTI_BY_HANDLE
-      xfs: also remove cached ACLs when removing the underlying attr
-      xfs: fix misuse of the XFS_ATTR_INCOMPLETE flag
-      xfs: fix IOCB_NOWAIT handling in xfs_file_dio_aio_read
-
-Darrick J. Wong (12):
-      xfs: remove bogus assertion when online repair isn't enabled
-      xfs: introduce XFS_MAX_FILEOFF
-      xfs: truncate should remove all blocks, not just to the end of the page cache
-      xfs: fix s_maxbytes computation on 32-bit kernels
-      xfs: refactor remote attr value buffer invalidation
-      xfs: fix memory corruption during remote attr value buffer invalidation
-      xfs: streamline xfs_attr3_leaf_inactive
-      xfs: clean up xfs_buf_item_get_format return value
-      xfs: complain if anyone tries to create a too-large buffer log item
-      xfs: make struct xfs_buf_log_format have a consistent size
-      xfs: check log iovec size to make sure it's plausibly a buffer log format
-      xfs: fix uninitialized variable in xfs_attr3_leaf_inactive
-
-Eric Sandeen (1):
-      xfs: remove shadow variable in xfs_btree_lshift
-
-Vincenzo Frascino (1):
-      xfs: Add __packed to xfs_dir2_sf_entry_t definition
-
-YueHaibing (1):
-      xfs: remove unused variable 'done'
-
-zhengbin (1):
-      xfs: change return value of xfs_inode_need_cow to int
-
- fs/xfs/libxfs/xfs_attr.c        |  14 ++--
- fs/xfs/libxfs/xfs_attr.h        |  15 ++--
- fs/xfs/libxfs/xfs_attr_leaf.c   |   4 +-
- fs/xfs/libxfs/xfs_attr_leaf.h   |   9 ---
- fs/xfs/libxfs/xfs_attr_remote.c |  89 +++++++++++++++++-------
- fs/xfs/libxfs/xfs_attr_remote.h |   2 +
- fs/xfs/libxfs/xfs_btree.c       |   2 -
- fs/xfs/libxfs/xfs_da_btree.h    |   4 +-
- fs/xfs/libxfs/xfs_da_format.h   |   4 +-
- fs/xfs/libxfs/xfs_format.h      |   7 ++
- fs/xfs/libxfs/xfs_log_format.h  |  19 +++--
- fs/xfs/scrub/repair.h           |   1 -
- fs/xfs/xfs_acl.c                |  11 +--
- fs/xfs/xfs_attr_inactive.c      | 149 ++++++++++++----------------------------
- fs/xfs/xfs_buf_item.c           |  45 ++++++++----
- fs/xfs/xfs_buf_item.h           |   1 +
- fs/xfs/xfs_dquot.c              |   6 +-
- fs/xfs/xfs_file.c               |   7 +-
- fs/xfs/xfs_inode.c              |  25 ++++---
- fs/xfs/xfs_ioctl.c              |  20 +++++-
- fs/xfs/xfs_ioctl32.c            |   9 ++-
- fs/xfs/xfs_ioctl32.h            |   2 +-
- fs/xfs/xfs_iomap.c              |   2 +-
- fs/xfs/xfs_iops.c               |   6 +-
- fs/xfs/xfs_log_recover.c        |   6 ++
- fs/xfs/xfs_ondisk.h             |   1 +
- fs/xfs/xfs_qm.h                 |   6 +-
- fs/xfs/xfs_quotaops.c           |   6 +-
- fs/xfs/xfs_reflink.c            |   9 +--
- fs/xfs/xfs_reflink.h            |   2 +-
- fs/xfs/xfs_super.c              |  48 ++++++-------
- fs/xfs/xfs_trans_dquot.c        |   8 ++-
- fs/xfs/xfs_xattr.c              |  14 ++--
- 33 files changed, 300 insertions(+), 253 deletions(-)
+right?
