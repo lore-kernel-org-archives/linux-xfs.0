@@ -2,209 +2,153 @@ Return-Path: <SRS0=Xde3=3T=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8506C2D0DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 22:59:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2184C35240
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 22:59:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6FECE2063A
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 22:59:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="iwTj4Oln"
+	by mail.kernel.org (Postfix) with ESMTP id 91CA0214D8
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 22:59:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726633AbgA3W7N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 30 Jan 2020 17:59:13 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:43380 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726294AbgA3W7M (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Jan 2020 17:59:12 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00UMhH2f146152
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Jan 2020 22:59:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- content-transfer-encoding : in-reply-to; s=corp-2019-08-05;
- bh=oqTbASuQqMuhqVpFtLy5KCAWCabYW79vXl95IZKoa9s=;
- b=iwTj4OlnExaQ9vGKT8AMdjaZQbxipZz2roVm7GYXXxuWpxa1yLj4l58M2stMn5ahLCRj
- oigjf/w8W6WXZ7DZHx7Mkxi8C+GuJnU2d065vgyh4lp3ku9jp0X2mIoLEZ6wkmVs4vIU
- JrZIx/Tt0CXHDsZ2lq2VuV3Mhtwx0xkdTzc0wVXwG94uo/ZCL9kzfzVK1ufQNyHk2BUO
- Xv+5nf/PwfvajxBZ8dxDMbCPuzGTcpwLHSAQ8YToGQE6RAl+G8vARUrGSHZD/+hcUnkk
- d2UPsutOgiV7TQUrZU1nfPchjxxWGEkd7JiU3XIbPSutaGZmSWdhZ/bFi8HEu0vxrrNo 1Q== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2xrd3uq82w-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Jan 2020 22:59:11 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00UMxAqn154573
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Jan 2020 22:59:10 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2xuemxfrw6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Jan 2020 22:59:10 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00UMwPxg002357
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Jan 2020 22:58:25 GMT
-Received: from localhost (/10.145.179.16)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 30 Jan 2020 14:58:24 -0800
-Date:   Thu, 30 Jan 2020 14:58:22 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Allison Collins <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v6 11/16] xfs: Check for -ENOATTR or -EEXIST
-Message-ID: <20200130225822.GD3445353@magnolia>
-References: <20200118225035.19503-1-allison.henderson@oracle.com>
- <20200118225035.19503-12-allison.henderson@oracle.com>
- <20200121231530.GK8247@magnolia>
- <68dcf7a7-9e10-2d64-9c5c-d520d2372c2b@oracle.com>
- <26a49cf4-52df-55bd-67bb-9c0c981a860d@oracle.com>
- <20200126222820.GL3447196@magnolia>
- <10d3b982-bbf6-1eac-f95a-644b31e0df61@oracle.com>
+        id S1727735AbgA3W7f (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Jan 2020 17:59:35 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:60534 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727656AbgA3W7f (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Jan 2020 17:59:35 -0500
+Received: from dread.disaster.area (pa49-195-111-217.pa.nsw.optusnet.com.au [49.195.111.217])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 180C43A3C38;
+        Fri, 31 Jan 2020 09:59:22 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1ixImP-0005Mg-7O; Fri, 31 Jan 2020 09:59:21 +1100
+Date:   Fri, 31 Jan 2020 09:59:21 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>
+Cc:     "hare@suse.de" <hare@suse.de>, Naohiro Aota <Naohiro.Aota@wdc.com>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+        "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
+        "jth@kernel.org" <jth@kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH v9 1/2] fs: New zonefs file system
+Message-ID: <20200130225921.GR18610@dread.disaster.area>
+References: <20200127100521.53899-1-damien.lemoal@wdc.com>
+ <20200127100521.53899-2-damien.lemoal@wdc.com>
+ <20200128174608.GR3447196@magnolia>
+ <b404c1cd7a0c8ccbabcbd3c8aed440542750706e.camel@wdc.com>
+ <20200129213318.GM18610@dread.disaster.area>
+ <069a9841bc2a6fc9baee05847812720eb1f6517e.camel@wdc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <10d3b982-bbf6-1eac-f95a-644b31e0df61@oracle.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9516 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2001300152
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9516 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2001300151
+In-Reply-To: <069a9841bc2a6fc9baee05847812720eb1f6517e.camel@wdc.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+        a=0OveGI8p3fsTA6FL6ss4ZQ==:117 a=0OveGI8p3fsTA6FL6ss4ZQ==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=Jdjhy38mL1oA:10
+        a=7-415B0cAAAA:8 a=x1mIa0GL801llPKVRlUA:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Jan 26, 2020 at 05:20:16PM -0700, Allison Collins wrote:
-> 
-> 
-> On 1/26/20 3:28 PM, Darrick J. Wong wrote:
-> > On Sat, Jan 25, 2020 at 09:41:47AM -0700, Allison Collins wrote:
-> > > On 1/21/20 9:29 PM, Allison Collins wrote:
-> > > > 
-> > > > 
-> > > > On 1/21/20 4:15 PM, Darrick J. Wong wrote:
-> > > > > On Sat, Jan 18, 2020 at 03:50:30PM -0700, Allison Collins wrote:
-> > > > > > Delayed operations cannot return error codes.  So we must check for
-> > > > > > these conditions first before starting set or remove operations
-> > > > > 
-> > > > > Answering my own question from earlier -- I see here you actually /are/
-> > > > > checking the attr existence w.r.t. ATTR_{CREATE,REPLACE} right after we
-> > > > > allocate a transaction and ILOCK the inode, so
-> > > > > 
-> > > > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > Alrighty, thank you!
-> > > > 
-> > > > > 
-> > > > > Though I am wondering if you could discard the predicates from the
-> > > > > second patch in favor of doing a normal lookup of the attr with a zero
-> > > > > valuelen to determine if there's already an attribute?
-> > > > I think I likely answered this in the response to that patch.  Because
-> > > > it's used as part of the remove procedures, we still need it.  We could
-> > > > make a simpler version just for this application I suppose, but it seems
-> > > > like it'd just be extra code since we still need the former.
-> > > > 
-> > > > Thank you for the reviews!
-> > > > Allison
-> > > > 
-> > > > > 
-> > > > > --D
-> > > > > 
-> > > > > > Signed-off-by: Allison Collins <allison.henderson@oracle.com>
-> > > > > > ---
-> > > > > >    fs/xfs/libxfs/xfs_attr.c | 12 ++++++++++++
-> > > > > >    1 file changed, 12 insertions(+)
-> > > > > > 
-> > > > > > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> > > > > > index a2673fe..e9d22c1 100644
-> > > > > > --- a/fs/xfs/libxfs/xfs_attr.c
-> > > > > > +++ b/fs/xfs/libxfs/xfs_attr.c
-> > > > > > @@ -457,6 +457,14 @@ xfs_attr_set(
-> > > > > >            goto out_trans_cancel;
-> > > > > >        xfs_trans_ijoin(args.trans, dp, 0);
-> > > > > > +
-> > > > > > +    error = xfs_has_attr(&args);
-> > > > > > +    if (error == -EEXIST && (name->type & ATTR_CREATE))
-> > > > > > +        goto out_trans_cancel;
-> > > > > > +
-> > > > > > +    if (error == -ENOATTR && (name->type & ATTR_REPLACE))
-> > > > > > +        goto out_trans_cancel;
-> > > > > > +
-> > > > > >        error = xfs_attr_set_args(&args);
-> > > So I was thinking of adding this one to a smaller 3 patch series I mentioned
-> > > earlier.  I was also thinking of adding in some asserts here:
-> > > 
-> > > ASSERT(error != -EEXIST)
-> > > ASSERT(error != -ENOATTR)
-> > > 
-> > > Just to make sure the changes are enforcing the behavioral changes that we
-> > > want.  I thought this might be a good stabilizer to the rest of the delayed
-> > > attr series.  Because chasing this bug back up through the log replay is a
-> > > much bigger PITA than catching it here.  Thoughts?
+On Thu, Jan 30, 2020 at 03:00:32AM +0000, Damien Le Moal wrote:
+> On Thu, 2020-01-30 at 08:33 +1100, Dave Chinner wrote:
+> > On Wed, Jan 29, 2020 at 01:06:29PM +0000, Damien Le Moal wrote:
+> > > Exactly. This is how the ZBC & ZAC (and upcoming ZNS) specifications
+> > > define the write pointer behavior. That makes error recovery a lot
+> > > easier and does not result in stale data accesses. Just notice the one-
+> > > off difference for the WP position from your example as WP will be
+> > > pointing at the error location, not the last written location. Indexing
+> > > from 0, we get (wp - zone start) always being isize with all written
+> > > and readable data in the sector range between zone start and zone write
+> > > pointer.
 > > 
-> > Er, are the asserts to check that xfs_attr_set_args never returns
-> > EEXIST/ENOATTR?  I'm not sure why you'd have to chase this through log
-> > replay?
-> 
-> Yes, the idea is that EEXIST and ENOATTR are supposed to be found and
-> returned by the xfs_has_attr routine above. If they happen at this point, it
-> would actually be more of an internal error.  For example: if we're renaming
-> an attr, and xfs_has_attr finds that it exists, but then xfs_attr_set_args
-> comes back with ENOATTR, clearly something unexpected happened.
-> 
-> The motivation for this is just that if it does happen, it's easier to work
-> out this out now rather than later when we bring in the rest of the delayed
-> attribute code.  Because in that case, the error wont happen here, it will
-> happen later as part of a finish_item (or a log replay).
-> 
-> It's not a requirement I suppose, just more of a pro-active check really.
-
-Ok, it's purely a defensive check so that you'll notice problems early
-before the fs goes bonkers, not a problem that mysteriously appears but
-only after some random unexpected shutdown.
-
+> > Ok, I'm going throw a curve ball here: volatile device caches.
 > > 
-> > /me is in this funny place where he thinks that in general adding
-> > asserts (or WARN_ON) to check assumptions is a good idea, but not sure
-> > what's going on here.
-> Did that answer your question then?
-
-Yep.
-
---D
-
+> > How does the write pointer updates interact with device write
+> > caches? i.e.  the first write could be sitting in the device write
+> > cache, and the OS write pointer has been advanced. Then another write
+> > occurs, the device decides to write both to physical media, and it
+> > gets a write error in the area of the first write that only hit the
+> > volatile cache.
 > > 
-> > --D
+> > So does this mean that, from the POV of the OS, the device zone
+> > write pointer has gone backwards?
+> 
+> You are absolutely correct. Forgot to consider this case.
+> Nice pitching :)
+
+Potentially adverse IO ordering interactions with volatile device
+caches are never that far from the mind of filesystem engineers...
+:)
+
+> > Unless there's some other magic that ensures device cached writes
+> > that have been signalled as successfully completed to the OS
+> > can never fail or that sequential zone writes are never cached in
+> > volatile memory in drives, I can't see how the above guarantees
+> > can be provided.
+> 
+> There not, at least from the standards point of view. Such guarantees
+> would be device implementation dependent and so we cannot rely on
+> anything in this regard. The write pointer ending up below the position
+> of the last issue direct IO is thus a possibility and not necessarily
+> indicative of an external action (and we actually cannot distinguish
+> which case it really is).
+
+*nod*
+
+> > > It is hard to decide on the best action to take here considering the
+> > > simple nature of zonefs (i.e. another better interface to do raw block
+> > > device file accesses). Including your comments on mount options, I cam
+> > > up with these actions that the user can choose with mount options:
+> > > * repair: Truncate the inode size only, nothing else
+> > > * remount-ro (default): Truncate the inode size and remount read-only
+> > > * zone-ro: Truncate the inode size and set the inode read-only
+> > > * zone-offline: Truncate the inode size to 0 and assume that its zone 
+> > > is offline (no reads nor writes possible).
+> > > 
+> > > This gives I think a good range of possible behaviors that the user may
+> > > want, from almost nothing (repair) to extreme to avoid accessing bad
+> > > data (zone-offline).
 > > 
-> > > > > >        if (error)
-> > > > > >            goto out_trans_cancel;
-> > > > > > @@ -545,6 +553,10 @@ xfs_attr_remove(
-> > > > > >         */
-> > > > > >        xfs_trans_ijoin(args.trans, dp, 0);
-> > > > > > +    error = xfs_has_attr(&args);
-> > > > > > +    if (error != -EEXIST)
-> > > > > > +        goto out;
-> > > > > > +
-> > > Here too:
-> > > ASSERT(error != -EEXIST)
-> > > 
-> > > Let me know what folks think.  Thanks!
-> > > 
-> > > Allison
-> > > 
-> > > > > >        error = xfs_attr_remove_args(&args);
-> > > > > >        if (error)
-> > > > > >            goto out;
-> > > > > > -- 
-> > > > > > 2.7.4
-> > > > > > 
+> > I would suggest that this is something that can be added later as it
+> > is not critical to supporting the underlying functionality.  Right
+> > now I'd just pick the safest option: shutdown to protect what data
+> > is on the storage right now and then let the user take action to
+> > recover/fix the issue.
+> 
+> By shutdown, do you mean remounting read-only ? Or do you mean
+> something more aggressive like preventing all accesses and changes to
+> files, i.e. assuming all zones are offline ? The former is already
+> there and is the default.
+
+"shutdown" in this context means "do whatever is necessary to
+prevent the problem getting worse". So, at minimum, it would be to
+prevent further writes to the zone that has gone bad.
+
+If there's potential for other zones to be affected, then moving to
+a global read-only state is the right thing to do.
+
+If there's potential for the error to expose stale data, propagate
+the error further into currently good on-disk structures, or walk
+off the end of corrupt structures (kernel crash and/or memory
+corruption), then an aggressive "error out as early as possible"
+shutdown is the right solution....
+
+I suspect that zonefs really only needs to go as far as remounting
+read-only as long as the hardware write pointers prevent reading the
+zone beyond that point....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
