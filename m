@@ -2,163 +2,108 @@ Return-Path: <SRS0=Xde3=3T=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49F1DC2D0DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 16:59:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAE93C2D0DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 18:15:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 28002214AF
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 16:59:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9EC7620658
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jan 2020 18:15:01 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VFAa7Iia"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727413AbgA3Q7Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 30 Jan 2020 11:59:24 -0500
-Received: from sandeen.net ([63.231.237.45]:51656 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727191AbgA3Q7Y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 30 Jan 2020 11:59:24 -0500
-Received: from Liberator.local (erlite [10.0.0.1])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 8CB0B14A18;
-        Thu, 30 Jan 2020 10:59:23 -0600 (CST)
-Subject: Re: [PATCH 00/11] xfsprogs: remove unneeded #includes
-To:     Dave Chinner <david@fromorbit.com>,
-        Eric Sandeen <sandeen@redhat.com>
+        id S1728584AbgA3SPB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Jan 2020 13:15:01 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:54506 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727089AbgA3SPB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Jan 2020 13:15:01 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00UIDoiV126000;
+        Thu, 30 Jan 2020 18:14:57 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=ae5dFRCzp00v23Dfkj30VaCoRhZLGY92LypEbvdj6xo=;
+ b=VFAa7IiaXRtpV7+AbJt2sJEqqL5w+6ESs0S0EyKt8VOknR2Rwk4OXECEODc0vUsfShBN
+ f40jUgf8YCo3K3xXJdmoEmKlde5N043HUV84z6g2R16xjgPwe+veV3yc4E6tKcZE1KoK
+ Y5x3GhT1nqWpndVwvReWH66nMVLWjfJ+O7pKxJMP5TOlDF+lp0J7wqesE5fJmgZBPPpl
+ RU0AjkXylKNmUmhFumlPGfqazoom3ZHzYEBl5PLrySJxvRICFoQKOyg9GayrZYjKHiI3
+ LUTPfqH9VXg0xqTSQXYXTaRp15pribgu0ay0VnIzmoeoZNpRI1xKhIdRGEA+7+rnK3Ut qw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2xrd3unvn7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 30 Jan 2020 18:14:57 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00UIEWPe105850;
+        Thu, 30 Jan 2020 18:14:56 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 2xuc30k88m-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 30 Jan 2020 18:14:55 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00UIDVed010922;
+        Thu, 30 Jan 2020 18:13:32 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 30 Jan 2020 10:13:31 -0800
+Date:   Thu, 30 Jan 2020 10:13:30 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     sandeen@sandeen.net
 Cc:     linux-xfs@vger.kernel.org
-References: <1561066174-13144-1-git-send-email-sandeen@redhat.com>
- <20190620220614.GE26375@dread.disaster.area>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <58a0f2df-988d-ce88-9c53-fd39ff703661@sandeen.net>
-Date:   Thu, 30 Jan 2020 10:59:22 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.4.1
+Subject: [PATCH 10/8] libxfs: remove duplicate attr function declarations
+Message-ID: <20200130181330.GY3447196@magnolia>
+References: <157982499185.2765410.18206322669640988643.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20190620220614.GE26375@dread.disaster.area>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <157982499185.2765410.18206322669640988643.stgit@magnolia>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9516 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-2001300127
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9516 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-2001300127
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 6/20/19 5:06 PM, Dave Chinner wrote:
-> On Thu, Jun 20, 2019 at 04:29:23PM -0500, Eric Sandeen wrote:
->> This is the result of a mechanical process and ... may have a few
->> oddities, for example removing "init.h" from some utils made me
->> realize that we inherit it from libxfs and also have it in local
-> 
-> We do? That'd be really, really broken if we did - including local
-> header files from a global header files is not a good idea.
-> 
-> /me goes looking, can't find where libxfs.h includes init.h
-> 
-> libxfs/init.h is private to libxfs/, it's not a global include file,
-> and it is included directly in all the libxfs/*.c files that need
-> it, which is 3 files - init.c, rdwr.c and util.c. 
-> 
->> headers; libxfs has a global but so does scrub, etc.  So that stuff
->> can/should be fixed up, but in the meantime, this zaps out a ton
->> of header dependencies, and seems worthwhile.
-> 
-> IMO, this doesn't improve the tangle of header files in userspace.
-> All it does is make the include patterns inconsistent across files
-> because of the tangled mess of the libxfs/ vs include/ header files
-> that was never completely resolved when libxfs was created as a
-> shared kernel library....
-> 
-> IOWs, the include pattern I was originally aiming for with the
-> libxfs/ shared userspace/kernel library was:
-> 
-> #include "libxfs_priv.h"
-> <include shared kernel header files>
-> 
-> And for things outside libxfs/ that use libxfs:
-> 
-> #include "libxfs.h"
-> <include local header files>
-> 
-> IOWs, "libxfs_priv.h" contained the includes for all the local
-> userspace libxfs includes and defines and non-shared support
-> structures, and it would export on build all the header files that
-> external code needs to build into include/ via symlinks. This is
-> incomplete - stuff like include/xfs_mount.h, xfs_inode.h, etc needs
-> to move into libxfs as private header files (similar to how they are
-> private in the kernel) and then exported at build time.
-> 
-> Likewise, "libxfs.h" should only contain global include files and
-> those exported from libxfs, and that's all the external code should
-> include to use /anything/ from libxfs. i.e.  a single include forms
-> the external interface to libxfs.
-> 
-> AFAIC, nothing should be including platform or build dependent
-> things like platform_defs.h, because that should be pulled in by
-> libxfs.h or libxfs_priv.h. And nothing external should need to pull
-> in, say, xfs_format.h or xfs_mount.h, because they are all pulled in
-> by include/libxfs.h (which it mostly does already).
-> 
-> Hence I'd prefer we finish untangling the header file include mess
-> before we cull unneceesary includes. Otherwise we are going to end
-> up culling the wrong includes and then have to clean up that mess as
-> well to bring the code back to being clean and consistent....
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Dave, what if I reworked this to only remove unneeded system include files
-for now.  Would you be more comfortable with that?  I assume there's no
-argument with i.e.
+Remove these function declarations since they're in libxfs/xfs_attr.h
+and are therefore redundant.
 
-diff --git a/estimate/xfs_estimate.c b/estimate/xfs_estimate.c
-index 9e01cce..189bb6c 100644
---- a/estimate/xfs_estimate.c
-+++ b/estimate/xfs_estimate.c
-@@ -10,7 +10,6 @@
-  * XXX: assumes dirv1 format.
-  */
- #include "libxfs.h"
--#include <sys/stat.h>
- #include <ftw.h>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ libxfs/libxfs_priv.h |    8 --------
+ 1 file changed, 8 deletions(-)
 
-right?
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index 03edf0d3..fe08f96b 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -607,14 +607,6 @@ static inline int test_and_set_bit(int nr, volatile unsigned long *addr)
+ }
+ 
+ /* Keep static checkers quiet about nonstatic functions by exporting */
+-int xfs_inode_hasattr(struct xfs_inode *ip);
+-int xfs_attr_get_ilocked(struct xfs_inode *ip, struct xfs_da_args *args);
+-int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
+-                unsigned char **value, int *valuelenp, int flags);
+-int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
+-                 unsigned char *value, int valuelen, int flags);
+-int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
+-
+ int xfs_rtbuf_get(struct xfs_mount *mp, struct xfs_trans *tp,
+ 		  xfs_rtblock_t block, int issum, struct xfs_buf **bpp);
+ int xfs_rtcheck_range(struct xfs_mount *mp, struct xfs_trans *tp,
