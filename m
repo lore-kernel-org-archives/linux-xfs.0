@@ -2,210 +2,152 @@ Return-Path: <SRS0=/Bg7=3U=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_IN_DEF_DKIM_WL
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC430C33CB2
-	for <linux-xfs@archiver.kernel.org>; Fri, 31 Jan 2020 12:04:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9124CC2D0DB
+	for <linux-xfs@archiver.kernel.org>; Fri, 31 Jan 2020 17:43:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B7EDC20CC7
-	for <linux-xfs@archiver.kernel.org>; Fri, 31 Jan 2020 12:04:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="InWWajXp"
+	by mail.kernel.org (Postfix) with ESMTP id 6C5BE214D8
+	for <linux-xfs@archiver.kernel.org>; Fri, 31 Jan 2020 17:43:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728571AbgAaMEI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 31 Jan 2020 07:04:08 -0500
-Received: from mail-ot1-f65.google.com ([209.85.210.65]:41030 "EHLO
-        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728570AbgAaMEI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Jan 2020 07:04:08 -0500
-Received: by mail-ot1-f65.google.com with SMTP id r27so6305595otc.8
-        for <linux-xfs@vger.kernel.org>; Fri, 31 Jan 2020 04:04:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=bPZYbEHgT8QqWy65RuP2LwO/ekDNyecnlbDtriR+rAY=;
-        b=InWWajXpKjo8nIUsFLbd3+gXkRiyQwKrsN3SuyxJtIAV+5mvx5jWLI+32kU4GxZqH0
-         RL3AB4Duh8Nu54vbn6Muxq8c7ddYI2vv1j7nsgV4hvKBOc2ykYv8yJY6xRCulQ68HJ9n
-         iMi+kRfnObu5vSYzqNBr6p9OyWwUMYtfZw8chuNpE5PrP9ihITkeTb6GRpUv11oX15Gx
-         hKLXcS74O2uqJiYEjhy6o05QCFBK6KK6y1VA4haWcWqrRWsb+K6OeBV3e3AiqLuW6rBp
-         N4hqHrI7+oEEVCExwmrVqpD/5Cb0z1bSEqvHGmen9xNTQ9Sn5kSIhznFRsrTIHBgnN/y
-         BP4Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=bPZYbEHgT8QqWy65RuP2LwO/ekDNyecnlbDtriR+rAY=;
-        b=h7JlNqNwv4fYZRybUZPZ0r0isjmxwmu0As39DXjuq4TPTwMb8MxCULNKiVsG3fJGW4
-         1qqSU2kHi39QagDQGIPYqjKCB2kbpImqeejOxyexDFxmtdKPiLDosIi5zBIlNCKJcslc
-         BBSdwuJhHOzWJwsJV3of/CWLlGsVNWl3H4wtHXd7bihUp6BX0GvhQupvi+6cGpWApDhp
-         CRYAteXJu6u2lWPTO3HpiN9iMJcjHEhfXnINsJBTTuj2oqd+69j/pppfKSGkGAl470qX
-         +NutYA9m750KYZA7OSeBLtSFt4bQsOoL4BdIFc1YWEi4SnuNStL3Y/CfH1J6djcM/h14
-         +j/A==
-X-Gm-Message-State: APjAAAWjiP8mNXBhHJoW4hOW4vHAlOQqTyAYCYS+7HhMllofrHoQgkcT
-        G6ZWNJxh3Uxn2KAx4+M8SRvkp+gvUY6G+ObZGnfo1g==
-X-Google-Smtp-Source: APXvYqxX4kvjJgrVd0xsJAPveBUs527WZZheCaEcNR7VaN+pr2nJJe9jO88RJTZyjdW6BmhGD/zGL14X4MmAFHztlf4=
-X-Received: by 2002:a05:6830:22cc:: with SMTP id q12mr7537510otc.110.1580472246617;
- Fri, 31 Jan 2020 04:04:06 -0800 (PST)
+        id S1726803AbgAaRnI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 31 Jan 2020 12:43:08 -0500
+Received: from sandeen.net ([63.231.237.45]:44682 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726749AbgAaRnH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 31 Jan 2020 12:43:07 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id C3B6978BB
+        for <linux-xfs@vger.kernel.org>; Fri, 31 Jan 2020 11:43:06 -0600 (CST)
+To:     linux-xfs <linux-xfs@vger.kernel.org>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfspdump v3.1.9 released
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <b6342ed2-60de-34b1-3e73-2360d7dd9775@sandeen.net>
+Date:   Fri, 31 Jan 2020 11:43:03 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.4.2
 MIME-Version: 1.0
-References: <201911121313.1097D6EE@keescook> <201911141327.4DE6510@keescook>
- <bfca96db-bbd0-d958-7732-76e36c667c68@suse.cz> <202001271519.AA6ADEACF0@keescook>
- <5861936c-1fe1-4c44-d012-26efa0c8b6e7@de.ibm.com> <202001281457.FA11CC313A@keescook>
- <alpine.DEB.2.21.2001291640350.1546@www.lameter.com> <6844ea47-8e0e-4fb7-d86f-68046995a749@de.ibm.com>
- <20200129170939.GA4277@infradead.org> <771c5511-c5ab-3dd1-d938-5dbc40396daa@de.ibm.com>
- <202001300945.7D465B5F5@keescook>
-In-Reply-To: <202001300945.7D465B5F5@keescook>
-From:   Jann Horn <jannh@google.com>
-Date:   Fri, 31 Jan 2020 13:03:40 +0100
-Message-ID: <CAG48ez1a4waGk9kB0WLaSbs4muSoK0AYAVk8=XYaKj4_+6e6Hg@mail.gmail.com>
-Subject: Re: [kernel-hardening] [PATCH 09/38] usercopy: Mark kmalloc caches as
- usercopy caches
-To:     Kees Cook <keescook@chromium.org>
-Cc:     Christian Borntraeger <borntraeger@de.ibm.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Christopher Lameter <cl@linux.com>,
-        Jiri Slaby <jslaby@suse.cz>,
-        Julian Wiedmann <jwi@linux.ibm.com>,
-        Ursula Braun <ubraun@linux.ibm.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        kernel list <linux-kernel@vger.kernel.org>,
-        David Windsor <dave@nullcore.net>,
-        Pekka Enberg <penberg@kernel.org>,
-        David Rientjes <rientjes@google.com>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Linux-MM <linux-mm@kvack.org>, linux-xfs@vger.kernel.org,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Andy Lutomirski <luto@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Laura Abbott <labbott@redhat.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Christoffer Dall <christoffer.dall@linaro.org>,
-        Dave Kleikamp <dave.kleikamp@oracle.com>,
-        Jan Kara <jack@suse.cz>,
-        Luis de Bethencourt <luisbg@kernel.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Rik van Riel <riel@redhat.com>,
-        Matthew Garrett <mjg59@google.com>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        Kernel Hardening <kernel-hardening@lists.openwall.com>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Michal Kubecek <mkubecek@suse.cz>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="AnzNNV6wLgcBv6zT9Z0xskdsxYxiVqkKn"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 30, 2020 at 8:23 PM Kees Cook <keescook@chromium.org> wrote:
-> On Wed, Jan 29, 2020 at 06:19:56PM +0100, Christian Borntraeger wrote:
-> > On 29.01.20 18:09, Christoph Hellwig wrote:
-> > > On Wed, Jan 29, 2020 at 06:07:14PM +0100, Christian Borntraeger wrote:
-> > >>> DMA can be done to NORMAL memory as well.
-> > >>
-> > >> Exactly.
-> > >> I think iucv uses GFP_DMA because z/VM needs those buffers to reside below 2GB (which is ZONA_DMA for s390).
-> > >
-> > > The normal way to allocate memory with addressing limits would be to
-> > > use dma_alloc_coherent and friends.  Any chance to switch iucv over to
-> > > that?  Or is there no device associated with it?
-> >
-> > There is not necessarily a device for that. It is a hypervisor interface (an
-> > instruction that is interpreted by z/VM). We do have the netiucv driver that
-> > creates a virtual nic, but there is also AF_IUCV which works without a device.
-> >
-> > But back to the original question: If we mark kmalloc caches as usercopy caches,
-> > we should do the same for DMA kmalloc caches. As outlined by Christoph, this has
-> > nothing to do with device DMA.
->
-> Hm, looks like it's allocated from the low 16MB. Seems like poor naming!
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--AnzNNV6wLgcBv6zT9Z0xskdsxYxiVqkKn
+Content-Type: multipart/mixed; boundary="lD4beF3YPtTIPyqrTHTmniJ8kPQ9dADnh"
 
-The physical address limit of the DMA zone depends on the architecture
-(and the kernel version); e.g. on Linux 4.4 on arm64 (which is used on
-the Pixel 2), the DMA zone goes up to 4GiB. Later, arm64 started using
-the DMA32 zone for that instead (as was already the case on e.g.
-X86-64); but recently (commit 1a8e1cef7603), arm64 started using the
-DMA zone again, but now for up to 1GiB. (AFAICS the DMA32 zone can't
-be used with kmalloc at all, that only works with the DMA zone.)
+--lD4beF3YPtTIPyqrTHTmniJ8kPQ9dADnh
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-> :) There seems to be a LOT of stuff using GFP_DMA, and it seems unlikely
-> those are all expecting low addresses?
+There are still some pending fixes, but it's well past time to at least
+get a buildable release out there after the typedef removals from
+xfs headers, so I pushed what we've got for now.
 
-I think there's a bunch of (especially really old) hardware where the
-hardware can only talk to low physical addresses, e.g. stuff that uses
-the ISA bus.
+https://www.kernel.org/pub/linux/utils/fs/xfs/xfsdump/xfsdump-3.1.9.tar.g=
+z
+https://www.kernel.org/pub/linux/utils/fs/xfs/xfsdump/xfsdump-3.1.9.tar.x=
+z
+https://www.kernel.org/pub/linux/utils/fs/xfs/xfsdump/xfsdump-3.1.9.tar.s=
+ign
 
-However, there aren't *that* many users of GFP_DMA that actually cause
-kmalloc allocations with GFP_DMA - many of the users of GFP_DMA
-actually just pass that flag to dma_alloc_coherent()/dma_pool_alloc(),
-where it is filtered away and the allocation ultimately doesn't go
-through the slab allocator AFAICS, or they pass it directly to the
-page allocator, where it has no effect on the usercopy stuff. Looking
-on my workstation, there are zero objects allocated in dma-kmalloc-*
-slabs:
+xfsdump-3.1.9 (31 Jan 2020)
+        - Fix build due to removed typedefs in xfsprogs (Darrick Wong)
+        - Support fallocate in xfs_restore (Darrick Wong)
+        - Many cosmetic cleanups (Jan Tulak)
 
-/sys/kernel/slab# for name in dma-kmalloc-*; do echo "$name: $(cat
-$name/objects)"; done
-dma-kmalloc-128: 0
-dma-kmalloc-16: 0
-dma-kmalloc-192: 0
-dma-kmalloc-1k: 0
-dma-kmalloc-256: 0
-dma-kmalloc-2k: 0
-dma-kmalloc-32: 0
-dma-kmalloc-4k: 0
-dma-kmalloc-512: 0
-dma-kmalloc-64: 0
-dma-kmalloc-8: 0
-dma-kmalloc-8k: 0
-dma-kmalloc-96: 0
+8fe534e (HEAD -> master, tag: v3.1.9, origin/master, origin/HEAD) xfsdump=
+: Release v3.1.9
+5058a6b common: remove old ioctl typedef usage
+1b1ecda xfs_restore: support fallocate when reserving space for a file
+6a89650 xfs_restore: fix unsupported ioctl detection
+f2f90c6 xfs_restore: check return value
+36b5cf9 xfs_restore: refactor open-coded file creation code
+46a0d93 xfsdump: add a space after commas and semicolons where was none
+ef3a1e2 xfsdump: (style) remove spaces for pointers and negations
+cbe6e30 xfsdump: (style) remove spaces in front of commas/semicolons
+dae8f55 xfsdump: (style) remove spaces from parentheses
+db93af5 xfsdump: don't fail installation if /sbin is symlink of  /usr/sbi=
+n
+8866703 common/drive.c: include stdlib.h
+6ff49bf common/types.h: Wrap #define UUID_STR_LEN 36 in #ifndef
+fc342f7 xfsdump: do not split function call with ifdef
+354d07d xsfsdump: (style) remove trailing whitespaces
 
-On a Pixel 2, there are a whole five objects allocated across the DMA
-zone kmalloc caches:
 
-walleye:/sys/kernel/slab # for name in dma-kmalloc-*; do echo "$name:
-$(cat $name/objects)"; done
-dma-kmalloc-1024: 0
-dma-kmalloc-128: 0
-dma-kmalloc-2048: 2
-dma-kmalloc-256: 0
-dma-kmalloc-4096: 3
-dma-kmalloc-512: 0
-dma-kmalloc-8192: 0
+--lD4beF3YPtTIPyqrTHTmniJ8kPQ9dADnh--
 
-> Since this has only been a problem on s390, should just s390 gain the
-> weakening of the usercopy restriction?  Something like:
->
->
-> diff --git a/mm/slab_common.c b/mm/slab_common.c
-> index 1907cb2903c7..c5bbc141f20b 100644
-> --- a/mm/slab_common.c
-> +++ b/mm/slab_common.c
-> @@ -1303,7 +1303,9 @@ void __init create_kmalloc_caches(slab_flags_t flags)
->                         kmalloc_caches[KMALLOC_DMA][i] = create_kmalloc_cache(
->                                 kmalloc_info[i].name[KMALLOC_DMA],
->                                 kmalloc_info[i].size,
-> -                               SLAB_CACHE_DMA | flags, 0, 0);
-> +                               SLAB_CACHE_DMA | flags, 0,
-> +                               IS_ENABLED(CONFIG_S390) ?
-> +                                       kmalloc_info[i].size : 0);
->                 }
->         }
->  #endif
+--AnzNNV6wLgcBv6zT9Z0xskdsxYxiVqkKn
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
-I think dma-kmalloc slabs should be handled the same way as normal
-kmalloc slabs. When a dma-kmalloc allocation is freshly created, it is
-just normal kernel memory - even if it might later be used for DMA -,
-and it should be perfectly fine to copy_from_user() into such
-allocations at that point, and to copy_to_user() out of them at the
-end. If you look at the places where such allocations are created, you
-can see things like kmemdup(), memcpy() and so on - all normal
-operations that shouldn't conceptually be different from usercopy in
-any relevant way.
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl40ZycACgkQIK4WkuE9
+3uAgug//QojDo+BoXgWs7QeYBQgUjUz1j4qw1bSeHwOKSZHtEmgYojISCu6QnO6+
+8rvsZl/VUDkJnbIfKuEWkNF6u11QRKebvyqE+d6cAXOmon81tncw9VhPaW4x3FT/
+isethvAxBwAA5R9/MgyWLxyr2Jx2eDXM1j3Ok4Sj45zzhR7AN4Dd8jrishpkz7mE
+ckKyttk4IHk7AVzVCI90vygXZvqOWc9xW0sOlKdx3JcgV2hK7NMnjHJSjBvlcDzo
+TQ0xqBnAD12AgbNTidK8M33KqbvVyC5gND4TfT6x9ZJVdcwihgSrNBB4YycpNr8e
+Mk14GbJXrAGU96odEg4bM6iwptaqYNzpZZfTiQ7IyMXGKkLQVVlgIZWqLZcDuNvn
+L9uwghCC7dfPhUDOQhOtpzrxDR2mdzMUulM/o24aREpvMv6telNnI2QSxRF7t/ra
+gvFOAW3+gcwSUksyJE8E1SFnop9COFgtQe79BL05N1jzxGEM/FYwe9gxy65n+gq9
+8VtJdltf0LPma5LDChZob9xEdUaINMQhS69yZCoPU8LsLph3BUh+dSevue/2dDft
+y5GcpANYQQcXHIIlXBvJHmgXSzmxlnu2xZkgdEhCr1tu+SGdx1RMoubQ7FeKtfHi
+9/tFhZkCV0n72ld55/g3NtmBckaHeDwawKyv9IXyrW4ghwfqxAQ=
+=MjvP
+-----END PGP SIGNATURE-----
+
+--AnzNNV6wLgcBv6zT9Z0xskdsxYxiVqkKn--
