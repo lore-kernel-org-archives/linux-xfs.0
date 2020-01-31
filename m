@@ -7,111 +7,113 @@ X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0C13C2D0DB
-	for <linux-xfs@archiver.kernel.org>; Fri, 31 Jan 2020 00:24:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A04BC2D0DB
+	for <linux-xfs@archiver.kernel.org>; Fri, 31 Jan 2020 00:45:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 92F7E21734
-	for <linux-xfs@archiver.kernel.org>; Fri, 31 Jan 2020 00:24:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 076B320708
+	for <linux-xfs@archiver.kernel.org>; Fri, 31 Jan 2020 00:45:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="hLxxiWGJ"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="A95ia+q/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727709AbgAaAYm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 30 Jan 2020 19:24:42 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:49338 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727614AbgAaAYm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Jan 2020 19:24:42 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00V0DS5n013696;
-        Fri, 31 Jan 2020 00:24:37 GMT
+        id S1727628AbgAaApF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Jan 2020 19:45:05 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:41404 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727610AbgAaApF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Jan 2020 19:45:05 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00V0dXd9194591;
+        Fri, 31 Jan 2020 00:45:01 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type :
- content-transfer-encoding; s=corp-2019-08-05;
- bh=PHHFJnHdUF//GSXlXFHlwA3WfQxHtImAPZuJXTssNqY=;
- b=hLxxiWGJC3dwuAiuoTgjziWsoLp4SKpihiHt838a3pqqhkX+rMJAlgdnjYfE08qXMUYx
- iYq9iUQ6JKHwpOOMtuC2omMkOgClGEoitfn4KYnftVN5EHJtwYTcuBKvP8Hz/DgQFHAG
- opeNs/Q7Wt6SJtuczal1KqIeKCI/jacPURHpvSqQ0DWw37PWiy/MuSNGz0cDZrO3p9w5
- GUXNu5p0xTH1iJWG9DMh6UwUIn3i1UsV3ZkO17iUkfczGdwzbQTZCxDJ5wsuVGvVv2ue
- b4zTZqyD4Cn3XWY+z8IuAQj0GCEFVlxcLQVOM5b3Vjl+hVkh9UZj7iwtqp2zly8WKNiN Ww== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2xrd3uqg27-1
+ : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
+ bh=QO49yaLlTpavEKGg3qkRs5wkh1oOD1x0YDVwidst4aE=;
+ b=A95ia+q/Yzkg6emKpSixNPs0ejz5Ztah+2+nH5EJwmc+RAQ5tQ/Jkoi2j9iNUND6LunF
+ T7z2DSK5zTHTC364XB6blAsvrAS2ZB1rJhbFxIGY2LCL7NBY4HJOyALpVtsRqfY/dQML
+ r+FxcfM2UNtdjkbXAKCY1fowYrEMvxd3ZceHLz30i2NiRR4ZVhVzjgb4Q7c/izgOY7wz
+ 7INeEnlM3B6zveIoujcZIgmpLXdfLC1k8nfdR6AUs8UUvHLsYrzotpjA7zm5rIvGLKmq
+ W8jinwfdJrwzHnC9zy18Gc193zla4+sTWBJ405Al/CRR5rIcDbwuI4//UI128kqd1WCv dA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2xrdmqykmh-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 31 Jan 2020 00:24:37 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00V0DvoF091397;
-        Fri, 31 Jan 2020 00:24:36 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 2xv8npk8r1-1
+        Fri, 31 Jan 2020 00:45:01 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00V0dOxZ140921;
+        Fri, 31 Jan 2020 00:45:00 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 2xu8e9x1xk-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 31 Jan 2020 00:24:36 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00V0OZLD009238;
-        Fri, 31 Jan 2020 00:24:35 GMT
+        Fri, 31 Jan 2020 00:45:00 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00V0ixH8024004;
+        Fri, 31 Jan 2020 00:45:00 GMT
 Received: from localhost (/10.145.179.16)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 30 Jan 2020 16:24:34 -0800
-Date:   Thu, 30 Jan 2020 16:24:32 -0800
+        with ESMTP ; Thu, 30 Jan 2020 16:44:48 -0800
+Date:   Thu, 30 Jan 2020 16:44:47 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     lsf-pc@lists.linux-foundation.org
 Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>, linux-mm@kvack.org
-Subject: [LSF/MM/BPF TOPIC] shrinker changes for non-blocking inode reclaim
-Message-ID: <20200131002432.GA6874@magnolia>
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-block@vger.kernel.org, martin.petersen@oracle.com,
+        Allison Collins <allison.henderson@oracle.com>,
+        bob.liu@oracle.com
+Subject: [LSF/MM/BPF TOPIC] selectively cramming things onto struct bio
+Message-ID: <20200131004447.GA6869@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9516 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2001310000
+ engine=8.0.1-1911140001 definitions=main-2001310002
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9516 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2001310000
+ definitions=main-2001310002
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+Hi everyone,
 
-Dave Chinner sent a big long patchset[1] that changes the behavior of mm
-shrinker which will make it easier for us to make reclaim of xfs inodes
-not block on IO.  I don't want to lead this discussion and nominate Dave
-to do so, but if he cannot make it to LSF then I will take over.
+Several months ago, there was a discussion[1] about enhancing XFS to
+take a more active role in recoverying damaged blocks from a redundant
+storage device when the block device doesn't signal an error but the
+filesystem can tell that something is wrong.
 
----
+Yes, we (XFS) would like to be able to exhaust all available storage
+redundancy before we resort to rebuilding lost metadata, and we'd like
+to do that without implementing our own RAID layer.
 
-In a nutshell, we actually can make XFS inode reclaim mostly nonblocking
-right now by shifting responsibility for doing one last flush of the
-ondisk metadata to the XFS log.  After that, memory reclaim "merely" has
-to poke the log ... but doing this naïvely causes IO storms issued from
-log pokes started during direct reclaim.  Shifting that to kswapd
-results in unnecessary OOMs in direct reclaim because we failed to free
-enough resources even though we're on our way to being able to free
-resources.
+In the end, the largest stumbling block seems to be how to attach
+additional instructions to struct bio.  Jens rejected the idea of adding
+more pointers or more bytes to a struct bio since we'd be forcing
+everyone to pay the extra memory price for a feature that in the ideal
+situation will be used infrequently.
 
-What we need are some fairly minor changes to how the shrinkers work --
-first, XFS needs to be able to communicate to a caller of its shrinker
-that we freed X items, but we can free another Y items from another
-context (e.g. kswapd).  Second, we need a way to actually do that work
-from a less-restrictive context (kswapd) and to have direct reclaim
-throttle itself if kswapd is busy actually doing the work that it can't
-do.  Third, we need to teach kswapd how to discover that we're running
-IO as fast as we can and that it needs to wait a little while to let us
-catch up.
+I think Martin Petersen tried to introduce separate bio pools so that we
+only end up using larger bios for devices that really need it, but ran
+into some difficulty with the usage model for how that would work.  (We
+could, in theory, need to attach integrity data *and* retry attributes
+to the same disk access).
 
-So the question(s) are: What do people think of these changes to
-shrinker behavior?  Are they acceptable to the mm and fs communities?
-If so, how do we stage these changes in tandem with the XFS changes so
-that we can commit these new features and a user of them in the same
-kernel cycle?
+So I propose a discussion of what exactly are the combinations of bio
+attributes that are needed by block layer callers.  IIRC, the DIF/DIX
+support code need to be able to attach the integrity data on its own;
+whereas XFS already knows which device and which replica it would like
+to try.  If the storage isn't total crap it shouldn't need to use the
+feature all that often.
+
+While we're on the topic of replica selection and discovery, let's also
+bikeshed how to figure out how many replicas are even available.
+
+(Yes, yes, the crazydragon rears his head again...;)
 
 --D
 
-[1] https://lore.kernel.org/linux-xfs/20191031234618.15403-1-david@fromorbit.com/
+[1] https://lore.kernel.org/linux-block/1543376991-5764-1-git-send-email-allison.henderson@oracle.com/
