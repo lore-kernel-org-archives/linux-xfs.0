@@ -2,116 +2,237 @@ Return-Path: <SRS0=0PGo=3W=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B96B5C3524C
-	for <linux-xfs@archiver.kernel.org>; Sun,  2 Feb 2020 19:54:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AD82C35249
+	for <linux-xfs@archiver.kernel.org>; Sun,  2 Feb 2020 21:46:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 887C72082F
-	for <linux-xfs@archiver.kernel.org>; Sun,  2 Feb 2020 19:54:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="DjdJlW7a"
+	by mail.kernel.org (Postfix) with ESMTP id 00DB920679
+	for <linux-xfs@archiver.kernel.org>; Sun,  2 Feb 2020 21:46:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726912AbgBBTyX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 2 Feb 2020 14:54:23 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:51444 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726290AbgBBTyW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Feb 2020 14:54:22 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 012JrEH4169747;
-        Sun, 2 Feb 2020 19:54:20 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=xCvVKNyTbCLiVMZlZ/qKKWNLLwXtm0FuE7phomgC3wA=;
- b=DjdJlW7aOVCieSjOFRQO2Ds8Jti6qBT8E8M+beTt4Ezk14rh5VGUh+vrt88pQcPh4YRt
- rj7FXGT7SGQajQGvxaTevnXO7WHqSOiEX2MMDfhVWlOnC5QDva37HczHvXnqOML16mzu
- X6ZjgpA+uCdFeKcPBnxRR5Nh/1SmKBopesGOTMsDoX1sqLw7X4PVwaq66g0NBywryv6X
- 9fdo/htvUc6/4U813bBZ7WWuhKRRKBgFV1Hgi2JUWNY+vIsF7I4xE2sNCsexZ5PV/9NU
- xmiJCDN0Lj2ovYgufL1ndVHUyv11FrQovwnE/g+C6EfIUd5+J28uZXYFh/x7PW6CDnlj mw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2xwyg98k1j-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 02 Feb 2020 19:54:20 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 012JjYdW047838;
-        Sun, 2 Feb 2020 19:54:19 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 2xwjt1ttyv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 02 Feb 2020 19:54:19 +0000
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 012JsIa2011662;
-        Sun, 2 Feb 2020 19:54:18 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sun, 02 Feb 2020 11:54:18 -0800
-Date:   Sun, 2 Feb 2020 11:54:18 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     guaneryu@gmail.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 7/7] xfs/020: call _notrun if we can't create a 60t
- sparse image
-Message-ID: <20200202195418.GD6869@magnolia>
-References: <157915143549.2374854.7759901526137960493.stgit@magnolia>
- <157915147960.2374854.2067220014390694914.stgit@magnolia>
+        id S1726971AbgBBVq3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 2 Feb 2020 16:46:29 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:57025 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726967AbgBBVq3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Feb 2020 16:46:29 -0500
+Received: from dread.disaster.area (pa49-181-161-120.pa.nsw.optusnet.com.au [49.181.161.120])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 757227EA635;
+        Mon,  3 Feb 2020 08:46:22 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1iyN4O-0005tx-MD; Mon, 03 Feb 2020 08:46:20 +1100
+Date:   Mon, 3 Feb 2020 08:46:20 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Allison Collins <allison.henderson@oracle.com>
+Cc:     Amir Goldstein <amir73il@gmail.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        lsf-pc@lists.linux-foundation.org,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>, Eryu Guan <guaneryu@gmail.com>,
+        Eric Sandeen <sandeen@redhat.com>
+Subject: Re: [Lsf-pc] [LSF/MM/BPF TOPIC] FS Maintainers Don't Scale
+Message-ID: <20200202214620.GA20628@dread.disaster.area>
+References: <20200131052520.GC6869@magnolia>
+ <CAOQ4uxh=4DrH_dL3TULcFa+pGk0YhS=TobuGk_+Z0oRWvw63rg@mail.gmail.com>
+ <8983ceaa-1fda-f9cc-73c9-8764d010d3e2@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <157915147960.2374854.2067220014390694914.stgit@magnolia>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9519 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2002020158
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9519 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2002020159
+In-Reply-To: <8983ceaa-1fda-f9cc-73c9-8764d010d3e2@oracle.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+        a=SkgQWeG3jiSQFIjTo4+liA==:117 a=SkgQWeG3jiSQFIjTo4+liA==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=l697ptgUJYAA:10
+        a=yPCof4ZbAAAA:8 a=VlmzTjhvAAAA:8 a=7-415B0cAAAA:8 a=fJ0nBAgzBULzsgNbrLIA:9
+        a=5Y_2ujE4nDxRVm0g:21 a=9x76spwRDswDgojx:21 a=CjuIK1q_8ugA:10
+        a=DWPK8KkkzkCXmqKYfE4-:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 15, 2020 at 09:11:19PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> If we can't create the 60T sparse image for testing repair on a large fs
-> (such as when running on 32-bit), don't bother running the rest of the
-> test.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  tests/xfs/020 |    2 ++
->  1 file changed, 2 insertions(+)
+On Fri, Jan 31, 2020 at 08:20:37PM -0700, Allison Collins wrote:
 > 
 > 
-> diff --git a/tests/xfs/020 b/tests/xfs/020
-> index 61da4101..e39c3482 100755
-> --- a/tests/xfs/020
-> +++ b/tests/xfs/020
-> @@ -42,6 +42,8 @@ echo "Silence is golden"
->  
->  fsfile=$TEST_DIR/fsfile.$seq
->  rm -f $fsfile
-> +truncate -s 60t $fsfile || _notrun "Cannot create 60T sparse file for test."
+> On 1/31/20 12:30 AM, Amir Goldstein wrote:
+> > On Fri, Jan 31, 2020 at 7:25 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> > > 
+> > > Hi everyone,
+> > > 
+> > > I would like to discuss how to improve the process of shepherding code
+> > > into the kernel to make it more enjoyable for maintainers, reviewers,
+> > > and code authors.  Here is a brief summary of how we got here:
+> > > 
+> > > Years ago, XFS had one maintainer tending to all four key git repos
+> > > (kernel, userspace, documentation, testing).  Like most subsystems, the
+> > > maintainer did a lot of review and porting code between the kernel and
+> > > userspace, though with help from others.
+> > > 
+> > > It turns out that this didn't scale very well, so we split the
+> > > responsibilities into three maintainers.  Like most subsystems, the
+> > > maintainers still did a lot of review and porting work, though with help
+> > > from others.
+> > > 
+> > > It turns out that this system doesn't scale very well either.  Even with
+> > > three maintainers sharing access to the git trees and working together
+> > > to get reviews done, mailing list traffic has been trending upwards for
+> > > years, and we still can't keep up.  I fear that many maintainers are
+> > > burning out.  For XFS, the biggest pain point (AFAICT) is not assembly and
+> > > testing of the git trees, but keeping up with the mail and the reviews.
+> > > 
+> > > So what do we do about this?  I think we (the XFS project, anyway)
+> > > should increase the amount of organizing in our review process.  For
+> > > large patchsets, I would like to improve informal communication about
+> > > who the author might like to have conduct a review, who might be
+> > > interested in conducting a review, estimates of how much time a reviewer
+> > > has to spend on a patchset, and of course, feedback about how it went.
+> > > This of course is to lay the groundwork for making a case to our bosses
+> > > for growing our community, allocating time for reviews and for growing
+> > > our skills as reviewers.
+> > > 
+> > 
+> > Interesting.
+> > 
+> > Eryu usually posts a weekly status of xfstests review queue, often with
+> > a call for reviewers, sometimes with specific patch series mentioned.
+> > That helps me as a developer to monitor the status of my own work
+> > and it helps me as a reviewer to put the efforts where the maintainer
+> > needs me the most.
+> > 
+> > For xfs kernel patches, I can represent the voice of "new blood".
+> > Getting new people to join the review effort is quite a hard barrier.
+> > I have taken a few stabs at doing review for xfs patch series over the
+> > year, but it mostly ends up feeling like it helped me (get to know xfs code
+> > better) more than it helped the maintainer, because the chances of a
+> > new reviewer to catch meaningful bugs are very low and if another reviewer
+> > is going to go over the same patch series, the chances of new reviewer to
+> > catch bugs that novice reviewer will not catch are extremely low.
+> That sounds like a familiar experience.  Lots of times I'll start a review,
+> but then someone else will finish it before I do, and catch more things
+> along the way.  So I sort of feel like if it's not something I can get
+> through quickly, then it's not a very good distribution of work effort and I
+> should shift to something else. Most of the time, I'll study it until I feel
+> like I understand what the person is trying to do, and I might catch stuff
+> that appears like it may not align with that pursuit, but I don't
+> necessarily feel I can deem it void of all unforeseen bugs.
 
-Um, this got committed with "xfs_io -x -c 'truncate 60t' and not as
-written, which means that this test does not work on i386 because xfs_io
-doesn't return nonzero when the truncate syscall fails.  Will send
-patch.
+I think you are both underselling yourselves. Imposter syndrome and
+all that jazz.
 
---D
+The reality is that we don't need more people doing the sorts of
+"how does this work with the rest of XFS" reviews that people like
+Darricki or Christoph do. What we really need is more people looking
+at whether loops are correctly terminated, the right variable types
+are used, we don't have signed vs unsigned issues, 32 bit overflows,
+use the right 32/64 bit division functions, the error handling logic
+is correct, etc.
 
-> +rm -f $fsfile
->  
->  $MKFS_PROG -t xfs -d size=60t,file,name=$fsfile >/dev/null
->  $XFS_REPAIR_PROG -f -o ag_stride=32 -t 1 $fsfile >/dev/null 2>&1
-> 
+It's those sorts of little details that lead to most bugs, and
+that's precisely the sort of thing that is typically missed by an
+experienced developer doing a "is this the best possible
+implemenation of this functionality" review.
+
+A recent personal example: look at the review of Matthew Wilcox's
+->readahead() series that I recently did. I noticed problems in the
+core change and the erofs and btfrs implementations not because I
+knew anything about those filesystems, but because I was checking
+whether the new loops iterated the pages in the page cache
+correctly. i.e. all I was really looking at was variable counting
+and loop initialisation and termination conditions. Experience tells
+me this stuff is notoriously difficult to get right, so that's what
+I looked at....
+
+IOWs, you don't need to know anything about the subsystem to
+perform such a useful review, and a lot of the time you won't find a
+problem. But it's still a very useful review to perform, and in
+doing so you've validated, to the best of your ability, that the
+change is sound. Put simply:
+
+	"I've checked <all these things> and it looks good to me.
+
+	Reviewed-by: Joe Bloggs <joe@blogg.com>"
+
+This is a very useful, valid review, regardless of whether you find
+anything. It's also a method of review that you can use when you
+have limited time - rather than trying to check everything and
+spending hours on a pathset, pick one thing and get the entire
+review done in 15 minutes. Then do the same thing for the next patch
+set. You'll be surprised how many things you notice that aren't what
+you are looking for when you do this.
+
+Hence the fact that other people find (different) issues is
+irrelevant - they'll be looking at different things to you, and
+there may not even be any overlap in the focus/scope of the reviews
+that have been performed. You may find the same things, but that is
+also not a bad thing - I intentionally don't read other reviews
+before I review a patch series, so that I don't taint my view of the
+code before I look at it (e.g., darrick found a bug in this code, so
+I don't need to look at it...).
+
+IOWs, if you are starting from the premise that "I don't know this
+code well enough to perform a useful review" then you are setting
+yourself up for failure right at the start. Read the series
+description, think about the change being made, use your experience
+to answer the question "what's a mistake I could make performing
+this change". Then go looking for that mistake through the
+patch(es). In the process of performing this review, more than
+likely, you'll notice bugs other than what you are actually looking
+for...
+
+This does not require any deep subsystem specific knowledge, but in
+doing this sort of review you're going to notice things and learn
+about the code and slowly build your knowledge and experience about
+that subsystem.
+
+> > However, there are quite a few cleanup and refactoring patch series,
+> > especially on the xfs list, where a review from an "outsider" could still
+> > be of value to the xfs community. OTOH, for xfs maintainer, those are
+> > the easy patches to review, so is there a gain in offloading those reviews?
+> > 
+> > Bottom line - a report of the subsystem review queue status, call for
+> > reviewers and highlighting specific areas in need of review is a good idea.
+> > Developers responding to that report publicly with availability for review,
+> > intention and expected time frame for taking on a review would be helpful
+> > for both maintainers and potential reviewers.
+> I definitely think that would help delegate review efforts a little more.
+> That way it's clear what people are working on, and what still needs
+> attention.
+
+It is not the maintainer's repsonsibility to gather reviewers. That
+is entirely the responsibility of the patch submitter. That is, if
+the code has gone unreviewed, it is up to the submitter to find
+people to review the code, not the maintainer. If you, as a
+developer, are unable to find people willing to review your code
+then it's a sign you haven't been reviewing enough code yourself.
+
+Good reviewers are a valuable resource - as a developer I rely on
+reviewers to get my code merged, so if I don't review code and
+everyone else behaves the same way, how can I possibly get my code
+merged? IOWs, review is something every developer should be spending
+a significant chunk of their time on. IMO, if you are not spending
+*at least* a whole day a week reviewing code, you're not actually
+doing enough code review to allow other developers to be as
+productive as you are.
+
+The more you review other people's code, the more you learn about
+the code and the more likely other people will be to review your
+code because they know you'll review their code in turn.  It's a
+positive reinforcement cycle that benefits both the individual
+developers personally and the wider community.
+
+But this positive reinforcemnt cycle just doesn't happen if people
+avoid reviewing code because they think "I don't know anything so my
+review is not going to be worth anything".  Constructive review, not
+matter whether it's performed at a simple or complex level, is
+always valuable.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
