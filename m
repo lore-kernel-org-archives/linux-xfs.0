@@ -2,101 +2,156 @@ Return-Path: <SRS0=dEjd=3X=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25A0FC35247
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 Feb 2020 23:35:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2824BC35247
+	for <linux-xfs@archiver.kernel.org>; Mon,  3 Feb 2020 23:45:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ED8E420720
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 Feb 2020 23:35:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 046D120674
+	for <linux-xfs@archiver.kernel.org>; Mon,  3 Feb 2020 23:45:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726928AbgBCXfH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 3 Feb 2020 18:35:07 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:33890 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726287AbgBCXfH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Feb 2020 18:35:07 -0500
-Received: from dread.disaster.area (pa49-181-161-120.pa.nsw.optusnet.com.au [49.181.161.120])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 41F5C3A286E;
-        Tue,  4 Feb 2020 10:35:05 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1iylFA-0006eI-J6; Tue, 04 Feb 2020 10:35:04 +1100
-Date:   Tue, 4 Feb 2020 10:35:04 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Pavel Reichl <preichl@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH v2 6/7] xfs: update excl. lock check for IOLOCK and ILOCK
-Message-ID: <20200203233504.GI20628@dread.disaster.area>
+        id S1726331AbgBCXpM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 3 Feb 2020 18:45:12 -0500
+Received: from sandeen.net ([63.231.237.45]:33652 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726287AbgBCXpM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 3 Feb 2020 18:45:12 -0500
+Received: from Liberator.local (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id AC6F8F8B4C;
+        Mon,  3 Feb 2020 17:45:11 -0600 (CST)
+Subject: Re: [PATCH v2 1/7] xfs: Add xfs_is_{i,io,mmap}locked functions
+To:     Pavel Reichl <preichl@redhat.com>, linux-xfs@vger.kernel.org
+Cc:     Dave Chinner <dchinner@redhat.com>
 References: <20200203175850.171689-1-preichl@redhat.com>
- <20200203175850.171689-7-preichl@redhat.com>
+ <20200203175850.171689-2-preichl@redhat.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <bce2f4bd-c580-3b3a-274a-d9cb0c54e232@sandeen.net>
+Date:   Mon, 3 Feb 2020 17:45:10 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.4.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200203175850.171689-7-preichl@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
-        a=SkgQWeG3jiSQFIjTo4+liA==:117 a=SkgQWeG3jiSQFIjTo4+liA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=l697ptgUJYAA:10
-        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=tJt1dGW8nmEQuiws8H0A:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20200203175850.171689-2-preichl@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 03, 2020 at 06:58:49PM +0100, Pavel Reichl wrote:
+On 2/3/20 11:58 AM, Pavel Reichl wrote:
+> Add xfs_is_ilocked(), xfs_is_iolocked() and xfs_is_mmaplocked()
+> 
 > Signed-off-by: Pavel Reichl <preichl@redhat.com>
 > Suggested-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/libxfs/xfs_bmap.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
+>  fs/xfs/xfs_inode.c | 53 ++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_inode.h |  3 +++
+>  2 files changed, 56 insertions(+)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index c3638552b3c0..2d371f87e890 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -5829,7 +5829,8 @@ xfs_bmap_collapse_extents(
->  	if (XFS_FORCED_SHUTDOWN(mp))
->  		return -EIO;
->  
-> -	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL));
-> +	ASSERT(xfs_is_iolocked(ip, XFS_IOLOCK_EXCL) ||
-> +		xfs_is_ilocked(ip, XFS_ILOCK_EXCL));
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index c5077e6326c7..80874c80df6d 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -372,6 +372,59 @@ xfs_isilocked(
+>  	ASSERT(0);
+>  	return 0;
+>  }
+> +
+> +static inline bool
+> +__xfs_is_ilocked(
+> +	struct rw_semaphore	*rwsem,
+> +	bool			shared,
+> +	bool			excl)
+> +{
+> +	bool locked = false;
+> +
+> +	if (!rwsem_is_locked(rwsem))
+> +		return false;
+> +
+> +	if (!debug_locks)
+> +		return true;
+> +
+> +	if (shared)
+> +		locked = lockdep_is_held_type(rwsem, 0);
+> +
+> +	if (excl)
+> +		locked |= lockdep_is_held_type(rwsem, 1);
+> +
+> +	return locked;
+> +}
+> +
+> +bool
+> +xfs_is_ilocked(
+> +	struct xfs_inode	*ip,
+> +	int			lock_flags)
+> +{
+> +	return __xfs_is_ilocked(&ip->i_lock.mr_lock,
+> +			(lock_flags & XFS_ILOCK_SHARED),
+> +			(lock_flags & XFS_ILOCK_EXCL));
+> +}
 
-Hmmm. I think this is incorrect - a bug in the original code in that
-xfs_isilocked() will only check one lock type and so this never
-worked as intended.
+Apologies for not following or chiming in sooner on the prior discussion.
 
-That is, we should have both the IOLOCK and the ILOCK held here.
-The IOLOCK is taken by the high level xfs_file_fallocate() code to
-lock out IO, while ILOCK is taken cwinside the transaction to make
-the metadata changes atomic.
+It seems a little odd that we must specify the lock type to test to
+each of these 3 functions which are already named after a specific lock type.
 
-Hence I think this should actually end up as:
+i.e.:
 
-	ASSERT(xfs_is_iolocked(ip, XFS_IOLOCK_EXCL));
-	ASSERT(xfs_is_ilocked(ip, XFS_ILOCK_EXCL));
+xfs_is_mmaplocked(XFS_MMAPLOCK_EXCL);
 
->  
->  	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
->  		error = xfs_iread_extents(tp, ip, whichfork);
-> @@ -5946,7 +5947,8 @@ xfs_bmap_insert_extents(
->  	if (XFS_FORCED_SHUTDOWN(mp))
->  		return -EIO;
->  
-> -	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL));
-> +	ASSERT(xfs_is_iolocked(ip, XFS_IOLOCK_EXCL) ||
-> +		xfs_is_ilocked(ip, XFS_ILOCK_EXCL));
+seems a little redundant, but more problematic:
 
-Same here.
+xfs_is_mmaplocked(XFS_ILOCK_SHARED);
 
-Cheers,
+would be accepted and silently return false.  I think that at least an
+ASSERT() in each of the 3 functions to be sure we didn't pass in nonsense
+flags would be wise.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-Eric
