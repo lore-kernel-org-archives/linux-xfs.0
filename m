@@ -6,28 +6,28 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76CEAC35247
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 Feb 2020 18:28:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03F23C35247
+	for <linux-xfs@archiver.kernel.org>; Mon,  3 Feb 2020 18:30:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5528F2082E
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 Feb 2020 18:28:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB2442082E
+	for <linux-xfs@archiver.kernel.org>; Mon,  3 Feb 2020 18:30:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728239AbgBCS2x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 3 Feb 2020 13:28:53 -0500
-Received: from sandeen.net ([63.231.237.45]:45326 "EHLO sandeen.net"
+        id S1728356AbgBCSae (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 3 Feb 2020 13:30:34 -0500
+Received: from sandeen.net ([63.231.237.45]:45476 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729682AbgBCS2x (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 3 Feb 2020 13:28:53 -0500
+        id S1727934AbgBCSae (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 3 Feb 2020 13:30:34 -0500
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 0CC9FF8B44;
-        Mon,  3 Feb 2020 12:28:53 -0600 (CST)
-Subject: Re: [PATCH 3/6] xfs: remove XFS_BUF_TO_AGFL
+        by sandeen.net (Postfix) with ESMTPSA id B9171F8B45;
+        Mon,  3 Feb 2020 12:30:33 -0600 (CST)
+Subject: Re: [PATCH 4/6] xfs: remove XFS_BUF_TO_AGI
 To:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 Cc:     Eric Sandeen <sandeen@redhat.com>
 References: <20200130133343.225818-1-hch@lst.de>
- <20200130133343.225818-4-hch@lst.de>
+ <20200130133343.225818-5-hch@lst.de>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -71,15 +71,15 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <67de220c-cf07-9a25-f24c-4ee3c4289671@sandeen.net>
-Date:   Mon, 3 Feb 2020 12:28:52 -0600
+Message-ID: <007b0c1f-ce12-2a3f-b476-3b7fe3d5b725@sandeen.net>
+Date:   Mon, 3 Feb 2020 12:30:33 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.4.2
 MIME-Version: 1.0
-In-Reply-To: <20200130133343.225818-4-hch@lst.de>
+In-Reply-To: <20200130133343.225818-5-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -89,6 +89,7 @@ On 1/30/20 7:33 AM, Christoph Hellwig wrote:
 > Just dereference bp->b_addr directly and make the code a little
 > simpler and more clear.
 
-Yeah, there was really no need for that.
+This is so much clearer <heart emoji> ;)
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
