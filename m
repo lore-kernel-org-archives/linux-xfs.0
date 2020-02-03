@@ -2,118 +2,93 @@ Return-Path: <SRS0=dEjd=3X=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D29E6C3F68F
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 Feb 2020 07:46:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1422C3524D
+	for <linux-xfs@archiver.kernel.org>; Mon,  3 Feb 2020 09:10:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A9DD52082E
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 Feb 2020 07:46:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tIPQmbMB"
+	by mail.kernel.org (Postfix) with ESMTP id 7E6752070A
+	for <linux-xfs@archiver.kernel.org>; Mon,  3 Feb 2020 09:10:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727703AbgBCHqw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 3 Feb 2020 02:46:52 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:58872 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727652AbgBCHqw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Feb 2020 02:46:52 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=1OnLUtccVxzRGy3H6tEuURVA5Cw1eDsrX9HvO+XJeD4=; b=tIPQmbMBJJkyM1EUffKpQ6t8+
-        6fwTSe6r4ihL5NqNlss4BtnMRFyaJcEPiVZ64i/7LitZrfYs81oZ1L69NyPjMREv3zXAuPxvS0bI2
-        eMLUSHfCDe+Uhbh/03f2I/93N1FOLazKz82/5pZp0ZjY/ieytY6YhoUGFolkmaBRB9ehsBDiIZHK+
-        bkuV60ig9MmsNyEVGt8E0ZhQVk6ERJlJE/YSTpSCBFbCtPNtYKIiwbs9X9JfUX2DCkFMoZJyTbNcM
-        L+Sm7T5i2/9zTP8/s+1LrDkKFqoSf7iPfX+6fv7NwwWoLbf8UowsIMPpObCqY5IZs9aWtvn+JjE0x
-        uAmUP6+mA==;
-Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iyWRQ-0001Y1-VE; Mon, 03 Feb 2020 07:46:44 +0000
-Date:   Sun, 2 Feb 2020 23:46:44 -0800
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Jann Horn <jannh@google.com>
-Cc:     Kees Cook <keescook@chromium.org>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Christopher Lameter <cl@linux.com>,
-        Jiri Slaby <jslaby@suse.cz>,
-        Julian Wiedmann <jwi@linux.ibm.com>,
-        Ursula Braun <ubraun@linux.ibm.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        kernel list <linux-kernel@vger.kernel.org>,
-        David Windsor <dave@nullcore.net>,
-        Pekka Enberg <penberg@kernel.org>,
-        David Rientjes <rientjes@google.com>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Linux-MM <linux-mm@kvack.org>, linux-xfs@vger.kernel.org,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Andy Lutomirski <luto@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Laura Abbott <labbott@redhat.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Dave Kleikamp <dave.kleikamp@oracle.com>,
-        Jan Kara <jack@suse.cz>, Marc Zyngier <marc.zyngier@arm.com>,
-        Matthew Garrett <mjg59@google.com>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        Kernel Hardening <kernel-hardening@lists.openwall.com>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Michal Kubecek <mkubecek@suse.cz>
-Subject: Re: [kernel-hardening] [PATCH 09/38] usercopy: Mark kmalloc caches
- as usercopy caches
-Message-ID: <20200203074644.GD8731@bombadil.infradead.org>
-References: <5861936c-1fe1-4c44-d012-26efa0c8b6e7@de.ibm.com>
- <202001281457.FA11CC313A@keescook>
- <alpine.DEB.2.21.2001291640350.1546@www.lameter.com>
- <6844ea47-8e0e-4fb7-d86f-68046995a749@de.ibm.com>
- <20200129170939.GA4277@infradead.org>
- <771c5511-c5ab-3dd1-d938-5dbc40396daa@de.ibm.com>
- <202001300945.7D465B5F5@keescook>
- <CAG48ez1a4waGk9kB0WLaSbs4muSoK0AYAVk8=XYaKj4_+6e6Hg@mail.gmail.com>
- <202002010952.ACDA7A81@keescook>
- <CAG48ez2ms+TDEXQdDONuQ1GG0K20E69nV1r_yjKxxYjYKv1VCg@mail.gmail.com>
+        id S1727618AbgBCJKT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 3 Feb 2020 04:10:19 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:3156 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727611AbgBCJKS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Feb 2020 04:10:18 -0500
+Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01397Rsr076052
+        for <linux-xfs@vger.kernel.org>; Mon, 3 Feb 2020 04:10:18 -0500
+Received: from e06smtp05.uk.ibm.com (e06smtp05.uk.ibm.com [195.75.94.101])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2xxehnbwmm-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Mon, 03 Feb 2020 04:10:17 -0500
+Received: from localhost
+        by e06smtp05.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.ibm.com>;
+        Mon, 3 Feb 2020 09:10:15 -0000
+Received: from b06cxnps4075.portsmouth.uk.ibm.com (9.149.109.197)
+        by e06smtp05.uk.ibm.com (192.168.101.135) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
+        Mon, 3 Feb 2020 09:10:13 -0000
+Received: from d06av26.portsmouth.uk.ibm.com (d06av26.portsmouth.uk.ibm.com [9.149.105.62])
+        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0139ACD732505864
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 3 Feb 2020 09:10:12 GMT
+Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 3E447AE059;
+        Mon,  3 Feb 2020 09:10:12 +0000 (GMT)
+Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 994B0AE045;
+        Mon,  3 Feb 2020 09:10:10 +0000 (GMT)
+Received: from localhost.localdomain (unknown [9.102.20.99])
+        by d06av26.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Mon,  3 Feb 2020 09:10:10 +0000 (GMT)
+From:   Chandan Rajendra <chandan@linux.ibm.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
+Subject: Re: agfl and related cleanups
+Date:   Mon, 03 Feb 2020 14:42:52 +0530
+Organization: IBM
+In-Reply-To: <20200130133343.225818-1-hch@lst.de>
+References: <20200130133343.225818-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAG48ez2ms+TDEXQdDONuQ1GG0K20E69nV1r_yjKxxYjYKv1VCg@mail.gmail.com>
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+X-TM-AS-GCONF: 00
+x-cbid: 20020309-0020-0000-0000-000003A67EEF
+X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
+x-cbparentid: 20020309-0021-0000-0000-000021FE3EEB
+Message-Id: <2707889.gtkk1GV9Bd@localhost.localdomain>
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
+ definitions=2020-02-03_02:2020-02-02,2020-02-03 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 mlxscore=0
+ impostorscore=0 lowpriorityscore=0 spamscore=0 priorityscore=1501
+ clxscore=1015 adultscore=0 mlxlogscore=705 phishscore=0 suspectscore=1
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-1911200001 definitions=main-2002030073
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Feb 01, 2020 at 08:27:49PM +0100, Jann Horn wrote:
-> FWIW, as far as I understand, usercopy doesn't actually have any
-> effect on drivers that use the modern, proper APIs, since those don't
-> use the slab allocator at all - as I pointed out in my last mail, the
-> dma-kmalloc* slabs are used very rarely. (Which is good, because
-> putting objects from less-than-page-size slabs into iommu entries is a
-> terrible idea from a security and reliability perspective because it
-> gives the hardware access to completely unrelated memory.) Instead,
-> they get pages from the page allocator, and these pages may e.g. be
-> allocated from the DMA, DMA32 or NORMAL zones depending on the
-> restrictions imposed by hardware. So I think the usercopy restriction
-> only affects a few oddball drivers (like this s390 stuff), which is
-> why you're not seeing more bug reports caused by this.
+On Thursday, January 30, 2020 7:03 PM Christoph Hellwig wrote: 
 
-Getting pages from the page allocator is true for dma_alloc_coherent()
-and friends.  But it's not true for streaming DMA mappings (dma_map_*)
-for which the memory usually comes from kmalloc().  If this is something
-we want to fix (and I have an awful feeling we're going to regret it
-if we say "no, we trust the hardware"), we're going to have to come up
-with a new memory allocation API for these cases.  Or bounce bugger the
-memory for devices we don't trust.
+> Hi all,
+> 
+> patch 1 is the interesting one that changes the struct agfl definition
+> so that we avoid warnings from new gcc versions about taking the address
+> of a member of a packed structure.  The rest is random cleanups in
+> related areas.
 
-The problem with the dma_map_* API is that memory might end up being
-allocated once and then used multiple times by different drivers.  eg if
-I allocate an NFS packet, it might get sent first to eth0, then (when the
-route fails) sent to eth1.  Similarly in storage, a RAID-5 driver might
-map the same memory several times to send to different disk controllers.
+The changes look good  to me,
+
+Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
+
+-- 
+chandan
+
+
+
