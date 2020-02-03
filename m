@@ -2,32 +2,32 @@ Return-Path: <SRS0=dEjd=3X=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03F23C35247
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 Feb 2020 18:30:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55926C35247
+	for <linux-xfs@archiver.kernel.org>; Mon,  3 Feb 2020 18:35:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DB2442082E
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 Feb 2020 18:30:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 36E7D2082E
+	for <linux-xfs@archiver.kernel.org>; Mon,  3 Feb 2020 18:35:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728356AbgBCSae (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 3 Feb 2020 13:30:34 -0500
-Received: from sandeen.net ([63.231.237.45]:45476 "EHLO sandeen.net"
+        id S1729164AbgBCSff (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 3 Feb 2020 13:35:35 -0500
+Received: from sandeen.net ([63.231.237.45]:45726 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727934AbgBCSae (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 3 Feb 2020 13:30:34 -0500
+        id S1729257AbgBCSff (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 3 Feb 2020 13:35:35 -0500
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id B9171F8B45;
-        Mon,  3 Feb 2020 12:30:33 -0600 (CST)
-Subject: Re: [PATCH 4/6] xfs: remove XFS_BUF_TO_AGI
+        by sandeen.net (Postfix) with ESMTPSA id AB3E1F8B1F;
+        Mon,  3 Feb 2020 12:35:34 -0600 (CST)
+Subject: Re: [PATCH 5/6] xfs: remove XFS_BUF_TO_AGF
 To:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 Cc:     Eric Sandeen <sandeen@redhat.com>
 References: <20200130133343.225818-1-hch@lst.de>
- <20200130133343.225818-5-hch@lst.de>
+ <20200130133343.225818-6-hch@lst.de>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -71,12 +71,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <007b0c1f-ce12-2a3f-b476-3b7fe3d5b725@sandeen.net>
-Date:   Mon, 3 Feb 2020 12:30:33 -0600
+Message-ID: <2c98cece-6a88-b6e7-eded-c991e1921953@sandeen.net>
+Date:   Mon, 3 Feb 2020 12:35:34 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.4.2
 MIME-Version: 1.0
-In-Reply-To: <20200130133343.225818-5-hch@lst.de>
+In-Reply-To: <20200130133343.225818-6-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -88,8 +88,17 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 1/30/20 7:33 AM, Christoph Hellwig wrote:
 > Just dereference bp->b_addr directly and make the code a little
 > simpler and more clear.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-This is so much clearer <heart emoji> ;)
+...
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> @@ -2747,7 +2744,7 @@ xfs_alloc_log_agf(
+>  		sizeof(xfs_agf_t)
+>  	};
+>  
+> -	trace_xfs_agf(tp->t_mountp, XFS_BUF_TO_AGF(bp), fields, _RET_IP_);
+> +	trace_xfs_agf(tp->t_mountp, bp->b_addr, fields, _RET_IP_);
+
+Why is this not passing in agf?
 
