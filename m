@@ -2,90 +2,94 @@ Return-Path: <SRS0=dEjd=3X=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E8D5C3524D
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 Feb 2020 23:02:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44B2AC35247
+	for <linux-xfs@archiver.kernel.org>; Mon,  3 Feb 2020 23:04:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E04CD20732
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 Feb 2020 23:02:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 14CEA20838
+	for <linux-xfs@archiver.kernel.org>; Mon,  3 Feb 2020 23:04:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727154AbgBCXCQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 3 Feb 2020 18:02:16 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:46218 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726872AbgBCXCP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Feb 2020 18:02:15 -0500
-Received: from dread.disaster.area (pa49-181-161-120.pa.nsw.optusnet.com.au [49.181.161.120])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 77ADE3A2A22;
-        Tue,  4 Feb 2020 10:02:10 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1iykjJ-0006Rf-AX; Tue, 04 Feb 2020 10:02:09 +1100
-Date:   Tue, 4 Feb 2020 10:02:09 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Waiman Long <longman@redhat.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-ext4@vger.kernel.org, cluster-devel@redhat.com,
-        linux-kernel@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: RFC: hold i_rwsem until aio completes
-Message-ID: <20200203230209.GC20628@dread.disaster.area>
-References: <20200114161225.309792-1-hch@lst.de>
- <20200118092838.GB9407@dread.disaster.area>
- <20200203174641.GA20035@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200203174641.GA20035@lst.de>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
-        a=SkgQWeG3jiSQFIjTo4+liA==:117 a=SkgQWeG3jiSQFIjTo4+liA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=l697ptgUJYAA:10
-        a=7-415B0cAAAA:8 a=4rX9TS273XGzNsaKJp0A:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+        id S1726331AbgBCXEV convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 3 Feb 2020 18:04:21 -0500
+Received: from p3plmtsmtp04.prod.phx3.secureserver.net ([184.168.131.18]:59662
+        "EHLO p3plmtsmtp04.prod.phx3.secureserver.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726369AbgBCXEV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Feb 2020 18:04:21 -0500
+Received: from n64.mail01.mtsvc.net ([216.70.64.196])
+        by :MT-SMTP: with ESMTP
+        id ykkwibSXwwYhEykkwiS0if; Mon, 03 Feb 2020 16:03:50 -0700
+X-SID:  ykkwibSXwwYhE
+Received: from [162.248.116.186] (port=54109 helo=[192.168.101.29])
+        by n64.mail01.mtsvc.net with esmtpsa (TLSv1.2:ECDHE-RSA-AES256-GCM-SHA384:256)
+        (Exim 4.92.3)
+        (envelope-from <alan@instinctualsoftware.com>)
+        id 1iykkw-0007nS-8S; Mon, 03 Feb 2020 18:03:50 -0500
+Content-Type: text/plain;
+        charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 13.0 \(3608.40.2.2.4\))
+Subject: Re: su & sw for HW-RAID60
+From:   Alan Latteri <alan@instinctualsoftware.com>
+In-Reply-To: <20200203225914.GB20628@dread.disaster.area>
+Date:   Mon, 3 Feb 2020 15:03:47 -0800
+Cc:     linux-xfs@vger.kernel.org
+Content-Transfer-Encoding: 8BIT
+Message-Id: <03E9DDCF-9395-4E8A-A228-E8E5B004B111@instinctualsoftware.com>
+References: <2CE21042-5F18-4642-BF48-AF8416FB9199@instinctualsoftware.com>
+ <20200203225914.GB20628@dread.disaster.area>
+To:     Dave Chinner <david@fromorbit.com>
+X-Mailer: Apple Mail (2.3608.40.2.2.4)
+X-Authenticated-User: 1434467 alan@instinctualsoftware.com
+X-MT-ID: 9DCC79A4E204102198399334CA945B5BD229B688
+X-CMAE-Envelope: MS4wfDZi9UuZeJIO2GODnVhm0f13c4mz4vgwRhaNOpE0X0Cqn4zReLaH0ZOKR+EXf+WQMEMgd/jWsZnkzyHqcOJJgzrXiakYYefbaBLKw6sA0zl3QFVuI2Fr
+ RkTwQeU5bc98SrA2c7RQ6s87JB8XDlptlgIQO2VYHe0vxEbk9FQ3riJyjFfuWHjacRcOFJrCHlY6kBHN0pCrO3hJdyFKSAHAf9vlUgJZT5hgueDGzXIZMl3U
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 03, 2020 at 06:46:41PM +0100, Christoph Hellwig wrote:
-> On Sat, Jan 18, 2020 at 08:28:38PM +1100, Dave Chinner wrote:
-> > I think it's pretty gross, actually. It  makes the same mistake made
-> > with locking in the old direct IO code - it encodes specific lock
-> > operations via flags into random locations in the DIO path. This is
-> > a very slippery slope, and IMO it is an layering violation to encode
-> > specific filesystem locking smeantics into a layer that is supposed
-> > to be generic and completely filesystem agnostic. i.e.  this
-> > mechanism breaks if a filesystem moves to a different type of lock
-> > (e.g. range locks), and history teaches us that we'll end up making
-> > a horrible, unmaintainable mess to support different locking
-> > mechanisms and contexts.
-> > 
-> > I think that we should be moving to a model where the filesystem
-> > provides an unlock method in the iomap operations structure, and if
-> > the method is present in iomap_dio_complete() it gets called for the
-> > filesystem to unlock the inode at the appropriate point. This also
-> > allows the filesystem to provide a different method for read or
-> > write unlock, depending on what type of lock it held at submission.
-> > This gets rid of the need for the iomap code to know what type of
-> > lock the caller holds, too.
+Hi Dave,
+
+Thank you for the response.  Is this still the case even though the raid card is presenting the raid60 array as a large single 723TB drive?
+
+Thanks,
+Alan
+
+
+> On Feb 3, 2020, at 2:59 PM, Dave Chinner <david@fromorbit.com> wrote:
 > 
-> I'd rather avoid yet another method.  But I think with a little
-> tweaking we can move the unlock into the ->end_io method.
+> On Mon, Feb 03, 2020 at 01:48:20PM -0800, Alan Latteri wrote:
+>> Hello,
+>> 
+>> In an environment with an LSI 3108 based HW-RAID60, 256k stripe size on controller, 5 spans of (10data+2parity) disks.  What is the proper su & sw to use?  Do I do sw to the underlying 10 data disks per span? The top level 5 spans or all 50 data disks with the array?   Use case is as a file server for 20-60 MB per frame image sequences.
+>> 
+>> i.e
+>> 
+>> 1) sw=256k,sw=10
+>> 2) sw=256k,sw=5
+>> 3) sw=256k,sw=50
+> 
+> A HW RAID6 lun in this configuration behaves (and performs) like a
+> single disk, so you're actually putting together a 5-disk raid-0
+> stripe with a stripe unit of 2560kB.
+> 
+> i.e. for consistent performance and allocation alignment for large
+> files, you want to do full RAID-6 stripe writes to each lun. Hence
+> you want the filesytsem aligned to the first disk in each of the
+> RAID-6 luns and to size allocations to full RAID6 lun width, not
+> random individual drives in the RAID-6 luns.
+> 
+> IOWs:
+> 
+> sw=2560k,sw=5
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
-That would work, too :)
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
