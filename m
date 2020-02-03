@@ -2,334 +2,93 @@ Return-Path: <SRS0=dEjd=3X=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01611C35249
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 Feb 2020 18:20:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76CEAC35247
+	for <linux-xfs@archiver.kernel.org>; Mon,  3 Feb 2020 18:28:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D18F02166E
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 Feb 2020 18:20:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1580754033;
-	bh=8NerwRjN3S6Sxxz+XUxY9Y5QuccEf9rDfoNHoKxPLrY=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=foFftKldOxG1MwnLXYpMvM6UHhBU3pm9krBJRTAYbfxN8yNbQFkStfgDvmXfgC6jj
-	 cCv/38ICjEnyK7uH9CK0wjc1+AZ1q0O93/vYhkqFb1X53rzpOrDas7hW5r2Kzz/3We
-	 WupfGU5x1ioMi8BQ6vmHDZzRR9SJKr3ZteARc7QA=
+	by mail.kernel.org (Postfix) with ESMTP id 5528F2082E
+	for <linux-xfs@archiver.kernel.org>; Mon,  3 Feb 2020 18:28:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728822AbgBCSUd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 3 Feb 2020 13:20:33 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33786 "EHLO mail.kernel.org"
+        id S1728239AbgBCS2x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 3 Feb 2020 13:28:53 -0500
+Received: from sandeen.net ([63.231.237.45]:45326 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727309AbgBCSUd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 3 Feb 2020 13:20:33 -0500
-Received: from ebiggers-linuxstation.mtv.corp.google.com (unknown [104.132.1.77])
+        id S1729682AbgBCS2x (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 3 Feb 2020 13:28:53 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D4EEF20838;
-        Mon,  3 Feb 2020 18:20:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1580754032;
-        bh=8NerwRjN3S6Sxxz+XUxY9Y5QuccEf9rDfoNHoKxPLrY=;
-        h=From:To:Cc:Subject:Date:From;
-        b=fNVKUJZQynSYfMzkB6ViMhy5hKpJixtuZMymZRmmWGsGVXa4Grw9lZUvhp/MUrgCd
-         Z4yL4UdDczrotn9ZAzeZ8FBCI2u8wXv2ZUe57e9y40gz3Tv28z3ohmOcHfr4NvCCeh
-         Fs3md7X1HlPKTiS/YpOlFBW9kC7yXSvZGwz8V4Zo=
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     linux-xfs@vger.kernel.org
-Cc:     fstests@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        keyrings@vger.kernel.org
-Subject: [PATCH v2] xfs_io/encrypt: support passing a keyring key to add_enckey
-Date:   Mon,  3 Feb 2020 10:20:13 -0800
-Message-Id: <20200203182013.43474-1-ebiggers@kernel.org>
-X-Mailer: git-send-email 2.25.0.341.g760bfbb309-goog
+        by sandeen.net (Postfix) with ESMTPSA id 0CC9FF8B44;
+        Mon,  3 Feb 2020 12:28:53 -0600 (CST)
+Subject: Re: [PATCH 3/6] xfs: remove XFS_BUF_TO_AGFL
+To:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Cc:     Eric Sandeen <sandeen@redhat.com>
+References: <20200130133343.225818-1-hch@lst.de>
+ <20200130133343.225818-4-hch@lst.de>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <67de220c-cf07-9a25-f24c-4ee3c4289671@sandeen.net>
+Date:   Mon, 3 Feb 2020 12:28:52 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.4.2
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200130133343.225818-4-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Eric Biggers <ebiggers@google.com>
+On 1/30/20 7:33 AM, Christoph Hellwig wrote:
+> Just dereference bp->b_addr directly and make the code a little
+> simpler and more clear.
 
-Add a '-k' option to the 'add_enckey' xfs_io command to allow exercising
-the key_id field that is being added to struct fscrypt_add_key_arg.
+Yeah, there was really no need for that.
 
-This is needed for the corresponding test in xfstests.
-
-For more details, see the corresponding xfstests patches as well as
-kernel commit 93edd392cad7 ("fscrypt: support passing a keyring key to
-FS_IOC_ADD_ENCRYPTION_KEY").
-
-Signed-off-by: Eric Biggers <ebiggers@google.com>
----
-
-No changes since v1.
-
-This applies to the for-next branch of xfsprogs.
-
- configure.ac          |  1 +
- include/builddefs.in  |  4 ++
- io/encrypt.c          | 90 +++++++++++++++++++++++++++++++------------
- m4/package_libcdev.m4 | 21 ++++++++++
- man/man8/xfs_io.8     | 10 +++--
- 5 files changed, 98 insertions(+), 28 deletions(-)
-
-diff --git a/configure.ac b/configure.ac
-index 5eb7c14b..f9348a0c 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -176,6 +176,7 @@ AC_HAVE_READDIR
- AC_HAVE_FSETXATTR
- AC_HAVE_MREMAP
- AC_NEED_INTERNAL_FSXATTR
-+AC_NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG
- AC_HAVE_GETFSMAP
- AC_HAVE_STATFS_FLAGS
- AC_HAVE_MAP_SYNC
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 4700b527..3b6b1c1b 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -102,6 +102,7 @@ HAVE_FLS = @have_fls@
- HAVE_FSETXATTR = @have_fsetxattr@
- HAVE_MREMAP = @have_mremap@
- NEED_INTERNAL_FSXATTR = @need_internal_fsxattr@
-+NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG = @need_internal_fscrypt_add_key_arg@
- HAVE_GETFSMAP = @have_getfsmap@
- HAVE_STATFS_FLAGS = @have_statfs_flags@
- HAVE_MAP_SYNC = @have_map_sync@
-@@ -141,6 +142,9 @@ endif
- ifeq ($(NEED_INTERNAL_FSXATTR),yes)
- PCFLAGS+= -DOVERRIDE_SYSTEM_FSXATTR
- endif
-+ifeq ($(NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG),yes)
-+PCFLAGS+= -DOVERRIDE_SYSTEM_FSCRYPT_ADD_KEY_ARG
-+endif
- ifeq ($(HAVE_GETFSMAP),yes)
- PCFLAGS+= -DHAVE_GETFSMAP
- endif
-diff --git a/io/encrypt.c b/io/encrypt.c
-index de48c50c..01b7e0df 100644
---- a/io/encrypt.c
-+++ b/io/encrypt.c
-@@ -4,6 +4,9 @@
-  * Author: Eric Biggers <ebiggers@google.com>
-  */
- 
-+#ifdef OVERRIDE_SYSTEM_FSCRYPT_ADD_KEY_ARG
-+#  define fscrypt_add_key_arg sys_fscrypt_add_key_arg
-+#endif
- #include "platform_defs.h"
- #include "command.h"
- #include "init.h"
-@@ -99,13 +102,7 @@ struct fscrypt_key_specifier {
- 	} u;
- };
- 
--#define FS_IOC_ADD_ENCRYPTION_KEY		_IOWR('f', 23, struct fscrypt_add_key_arg)
--struct fscrypt_add_key_arg {
--	struct fscrypt_key_specifier key_spec;
--	__u32 raw_size;
--	__u32 __reserved[9];
--	__u8 raw[];
--};
-+/* FS_IOC_ADD_ENCRYPTION_KEY is defined later */
- 
- #define FS_IOC_REMOVE_ENCRYPTION_KEY		_IOWR('f', 24, struct fscrypt_remove_key_arg)
- #define FS_IOC_REMOVE_ENCRYPTION_KEY_ALL_USERS	_IOWR('f', 25, struct fscrypt_remove_key_arg)
-@@ -136,6 +133,26 @@ struct fscrypt_get_key_status_arg {
- 
- #endif /* !FS_IOC_GET_ENCRYPTION_POLICY_EX */
- 
-+/*
-+ * Since the key_id field was added later than struct fscrypt_add_key_arg
-+ * itself, we may need to override the system definition to get that field.
-+ */
-+#if !defined(FS_IOC_ADD_ENCRYPTION_KEY) || \
-+	defined(OVERRIDE_SYSTEM_FSCRYPT_ADD_KEY_ARG)
-+#undef fscrypt_add_key_arg
-+struct fscrypt_add_key_arg {
-+	struct fscrypt_key_specifier key_spec;
-+	__u32 raw_size;
-+	__u32 key_id;
-+	__u32 __reserved[8];
-+	__u8 raw[];
-+};
-+#endif
-+
-+#ifndef FS_IOC_ADD_ENCRYPTION_KEY
-+#  define FS_IOC_ADD_ENCRYPTION_KEY		_IOWR('f', 23, struct fscrypt_add_key_arg)
-+#endif
-+
- static const struct {
- 	__u8 mode;
- 	const char *name;
-@@ -217,8 +234,9 @@ add_enckey_help(void)
- " 'add_enckey' - add key for v2 policies\n"
- " 'add_enckey -d 0000111122223333' - add key for v1 policies w/ given descriptor\n"
- "\n"
--"The key in binary is read from standard input.\n"
-+"Unless -k is given, the key in binary is read from standard input.\n"
- " -d DESCRIPTOR -- master_key_descriptor\n"
-+" -k KEY_ID -- ID of fscrypt-provisioning key containing the raw key\n"
- "\n"));
- }
- 
-@@ -431,6 +449,21 @@ str2keyspec(const char *str, int policy_version,
- 	return policy_version;
- }
- 
-+static int
-+parse_key_id(const char *arg)
-+{
-+	long value;
-+	char *tmp;
-+
-+	value = strtol(arg, &tmp, 0);
-+	if (value <= 0 || value > INT_MAX || tmp == arg || *tmp != '\0') {
-+		fprintf(stderr, _("invalid key ID: %s\n"), arg);
-+		/* 0 is never a valid Linux key ID. */
-+		return 0;
-+	}
-+	return value;
-+}
-+
- static void
- test_for_v2_policy_support(void)
- {
-@@ -689,13 +722,18 @@ add_enckey_f(int argc, char **argv)
- 
- 	arg->key_spec.type = FSCRYPT_KEY_SPEC_TYPE_IDENTIFIER;
- 
--	while ((c = getopt(argc, argv, "d:")) != EOF) {
-+	while ((c = getopt(argc, argv, "d:k:")) != EOF) {
- 		switch (c) {
- 		case 'd':
- 			arg->key_spec.type = FSCRYPT_KEY_SPEC_TYPE_DESCRIPTOR;
- 			if (!str2keydesc(optarg, arg->key_spec.u.descriptor))
- 				goto out;
- 			break;
-+		case 'k':
-+			arg->key_id = parse_key_id(optarg);
-+			if (arg->key_id == 0)
-+				goto out;
-+			break;
- 		default:
- 			retval = command_usage(&add_enckey_cmd);
- 			goto out;
-@@ -709,21 +747,23 @@ add_enckey_f(int argc, char **argv)
- 		goto out;
- 	}
- 
--	raw_size = read_until_limit_or_eof(STDIN_FILENO, arg->raw,
--					   FSCRYPT_MAX_KEY_SIZE + 1);
--	if (raw_size < 0) {
--		fprintf(stderr, _("Error reading key from stdin: %s\n"),
--			strerror(errno));
--		exitcode = 1;
--		goto out;
--	}
--	if (raw_size > FSCRYPT_MAX_KEY_SIZE) {
--		fprintf(stderr,
--			_("Invalid key; got > FSCRYPT_MAX_KEY_SIZE (%d) bytes on stdin!\n"),
--			FSCRYPT_MAX_KEY_SIZE);
--		goto out;
--	}
--	arg->raw_size = raw_size;
-+	if (arg->key_id == 0) {
-+		raw_size = read_until_limit_or_eof(STDIN_FILENO, arg->raw,
-+						   FSCRYPT_MAX_KEY_SIZE + 1);
-+		if (raw_size < 0) {
-+			fprintf(stderr, _("Error reading key from stdin: %s\n"),
-+				strerror(errno));
-+			exitcode = 1;
-+			goto out;
-+		}
-+		if (raw_size > FSCRYPT_MAX_KEY_SIZE) {
-+			fprintf(stderr,
-+				_("Invalid key; got > FSCRYPT_MAX_KEY_SIZE (%d) bytes on stdin!\n"),
-+				FSCRYPT_MAX_KEY_SIZE);
-+			goto out;
-+		}
-+		arg->raw_size = raw_size;
-+	} /* else, raw key is given via key with ID 'key_id' */
- 
- 	if (ioctl(file->fd, FS_IOC_ADD_ENCRYPTION_KEY, arg) != 0) {
- 		fprintf(stderr, _("Error adding encryption key: %s\n"),
-@@ -859,7 +899,7 @@ encrypt_init(void)
- 
- 	add_enckey_cmd.name = "add_enckey";
- 	add_enckey_cmd.cfunc = add_enckey_f;
--	add_enckey_cmd.args = _("[-d descriptor]");
-+	add_enckey_cmd.args = _("[-d descriptor] [-k key_id]");
- 	add_enckey_cmd.argmin = 0;
- 	add_enckey_cmd.argmax = -1;
- 	add_enckey_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index 2c0c72ce..adab9bb9 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -278,6 +278,27 @@ AC_DEFUN([AC_NEED_INTERNAL_FSXATTR],
-     AC_SUBST(need_internal_fsxattr)
-   ])
- 
-+#
-+# Check if we need to override the system struct fscrypt_add_key_arg
-+# with the internal definition.  This /only/ happens if the system
-+# actually defines struct fscrypt_add_key_arg /and/ the system
-+# definition is missing certain fields.
-+#
-+AC_DEFUN([AC_NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG],
-+  [
-+    AC_CHECK_TYPE(struct fscrypt_add_key_arg,
-+      [
-+        AC_CHECK_MEMBER(struct fscrypt_add_key_arg.key_id,
-+          ,
-+          need_internal_fscrypt_add_key_arg=yes,
-+          [#include <linux/fs.h>]
-+        )
-+      ],,
-+      [#include <linux/fs.h>]
-+    )
-+    AC_SUBST(need_internal_fscrypt_add_key_arg)
-+  ])
-+
- #
- # Check if we have a FS_IOC_GETFSMAP ioctl (Linux)
- #
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index f5431a8c..b9dcc312 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -749,10 +749,10 @@ Test whether v2 encryption policies are supported.  Prints "supported",
- .RE
- .PD
- .TP
--.BI "add_enckey [ \-d " descriptor " ]"
-+.BI "add_enckey [ \-d " descriptor " ] [ \-k " key_id " ]"
- On filesystems that support encryption, add an encryption key to the filesystem
--containing the currently open file.  The key in binary (typically 64 bytes long)
--is read from standard input.
-+containing the currently open file.  By default, the raw key in binary
-+(typically 64 bytes long) is read from standard input.
- .RS 1.0i
- .PD 0
- .TP 0.4i
-@@ -761,6 +761,10 @@ key descriptor, as a 16-character hex string (8 bytes).  If given, the key will
- be available for use by v1 encryption policies that use this descriptor.
- Otherwise, the key is added as a v2 policy key, and on success the resulting
- "key identifier" will be printed.
-+.TP
-+.BI \-k " key_id"
-+ID of kernel keyring key of type "fscrypt-provisioning".  If given, the raw key
-+will be taken from here rather than from standard input.
- .RE
- .PD
- .TP
--- 
-2.25.0.341.g760bfbb309-goog
-
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
