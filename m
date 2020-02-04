@@ -2,158 +2,114 @@ Return-Path: <SRS0=4Qc2=3Y=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=0.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_DBL_ABUSE_MALW,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7288EC35247
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Feb 2020 15:32:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46A4CC35247
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Feb 2020 16:08:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3CCBF20730
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Feb 2020 15:32:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 23EB021582
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Feb 2020 16:08:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727320AbgBDPco (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Feb 2020 10:32:44 -0500
-Received: from mx2.suse.de ([195.135.220.15]:56290 "EHLO mx2.suse.de"
+        id S1727317AbgBDQIr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Feb 2020 11:08:47 -0500
+Received: from sandeen.net ([63.231.237.45]:56584 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727310AbgBDPco (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 4 Feb 2020 10:32:44 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 06D4EAF21;
-        Tue,  4 Feb 2020 15:32:41 +0000 (UTC)
-Received: by ds.suse.cz (Postfix, from userid 10065)
-        id C3975DA80D; Tue,  4 Feb 2020 16:32:27 +0100 (CET)
-Date:   Tue, 4 Feb 2020 16:32:27 +0100
-From:   David Sterba <dsterba@suse.cz>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com
-Subject: Re: [PATCH v4 00/12] Change readahead API
-Message-ID: <20200204153227.GF2654@twin.jikos.cz>
-Reply-To: dsterba@suse.cz
-Mail-Followup-To: dsterba@suse.cz, Matthew Wilcox <willy@infradead.org>,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com
-References: <20200201151240.24082-1-willy@infradead.org>
+        id S1727297AbgBDQIr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 4 Feb 2020 11:08:47 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id BC2812542;
+        Tue,  4 Feb 2020 10:08:46 -0600 (CST)
+Subject: Re: [PATCH v2 2/7] xfs: Update checking excl. locks for ilock
+To:     Christoph Hellwig <hch@infradead.org>,
+        Pavel Reichl <preichl@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+References: <20200203175850.171689-1-preichl@redhat.com>
+ <20200203175850.171689-3-preichl@redhat.com>
+ <20200204062118.GB2910@infradead.org>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <80f1173e-9181-c8cc-c06f-cbbfaa46a138@sandeen.net>
+Date:   Tue, 4 Feb 2020 10:08:45 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.4.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200201151240.24082-1-willy@infradead.org>
-User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
+In-Reply-To: <20200204062118.GB2910@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Feb 01, 2020 at 07:12:28AM -0800, Matthew Wilcox wrote:
-> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+On 2/4/20 12:21 AM, Christoph Hellwig wrote:
+>> -	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+>> +	ASSERT(xfs_is_ilocked(ip, XFS_ILOCK_EXCL));
 > 
-> I would particularly value feedback on this from the gfs2 and ocfs2
-> maintainers.  They have non-trivial changes, and a review on patch 5
-> would be greatly appreciated.
-> 
-> This series adds a readahead address_space operation to eventually
-> replace the readpages operation.  The key difference is that
-> pages are added to the page cache as they are allocated (and
-> then looked up by the filesystem) instead of passing them on a
-> list to the readpages operation and having the filesystem add
-> them to the page cache.  It's a net reduction in code for each
-> implementation, more efficient than walking a list, and solves
-> the direct-write vs buffered-read problem reported by yu kuai at
-> https://lore.kernel.org/linux-fsdevel/20200116063601.39201-1-yukuai3@huawei.com/
-> 
-> v4:
->  - Rebase on current Linus (a62aa6f7f50a ("Merge tag 'gfs2-for-5.6'"))
+> I think this is a very bad interface.  Either we keep our good old
+> xfs_isilocked that just operates on the inode and lock flags, or
+> we use something that gets the actual lock passed.  But an interface
+> that encodes the lock in both the function called and the flags, and
+> one that doesn't follow neither the XFS lock flags conventions nor
+> the core kernel convention is just not very useful.
 
-I've tried to test the patchset but haven't got very far, it crashes at boot
-ritht after VFS mounts the root. The patches are from mailinglist, applied on
-current master, bug I saw the same crash with the git branch in your
-repo (probably v1).
+I think this came out of Dave's suggestion on the previous patchset,
+but I agree with you Chrisoph.  Even if there is a future reason to
+split it out into a function for each type, I don't see a reason to
+do it now, and this interface is awkward.
 
-(gdb) l *(ext4_mpage_readpages+0x1da/0xc20)
-0xffffffff813753f0 is in ext4_mpage_readpages (fs/ext4/readpage.c:226).
-221             return i_size_read(inode);
-222     }
-223
-224     int ext4_mpage_readpages(struct address_space *mapping, pgoff_t start,
-225                     struct page *page, unsigned nr_pages, bool is_readahead)
-226     {
-227             struct bio *bio = NULL;
-228             sector_t last_block_in_bio = 0;
-229
-230             struct inode *inode = mapping->host;
+I'd prefer to keep xfs_isilocked() with the current calling convention and
+just change its internals to use lockdep.  Dave spotted a bug in the
+current implementation, but I think that can be fixed.
 
-[    8.008531] BUG: kernel NULL pointer dereference, address: 0000000000000000
-[    8.011482] #PF: supervisor read access in kernel mode
-[    8.014121] #PF: error_code(0x0000) - not-present page
-[    8.016767] PGD 0 P4D 0
-[    8.018352] Oops: 0000 [#1] SMP
-[    8.019716] CPU: 2 PID: 1 Comm: swapper/0 Not tainted 5.5.0-default+ #955
-[    8.021746] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.12.0-59-gc9ba527-rebuilt.opensuse.org 04/01/2014
-[    8.025244] RIP: 0010:ext4_mpage_readpages+0x1da/0xc20
-[    8.026817] Code: 7c 24 4e 00 0f 85 23 04 00 00 44 29 74 24 3c 83 6c 24 48 01 0f 84 4d 04 00 00 80 7c 24 4e 00 0f 85 fc 05 00 00 48 8b 4c 24 18 <48> 8b 01 f6 c4 20 75 89 4c 8b 69 20 b9 0c 00 00 00 2b 4c 24 38 83
-[    8.031957] RSP: 0000:ffffb34f40013988 EFLAGS: 00010292
-[    8.033691] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
-[    8.035533] RDX: 0000000000000001 RSI: ffffffff960934c0 RDI: ffffffff9681a080
-[    8.036900] RBP: 0000000000000001 R08: ffffb34f40013a68 R09: 0000000000000000
-[    8.038461] R10: 0000000000000038 R11: 0000000000000000 R12: 0000000000000004
-[    8.040698] R13: ffff9668ba4e18e0 R14: 0000000000000001 R15: 0000000000000000
-[    8.042805] FS:  0000000000000000(0000) GS:ffff9668bda00000(0000) knlGS:0000000000000000
-[    8.045396] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[    8.047233] CR2: 0000000000000000 CR3: 000000002e011001 CR4: 0000000000160ee0
-[    8.049337] Call Trace:
-[    8.050435]  ? __lock_acquire+0xee0/0x1320
-[    8.051833]  ? release_pages+0x310/0x380
-[    8.053265]  ? mark_held_locks+0x50/0x80
-[    8.054468]  ext4_readahead+0x3b/0x50
-[    8.055877]  read_pages+0x65/0x1a0
-[    8.057167]  ? put_pages_list+0x90/0x90
-[    8.058689]  __do_page_cache_readahead+0x24b/0x2a0
-[    8.060394]  generic_file_buffered_read+0x7cf/0x9f0
-[    8.062137]  ? sched_clock+0x5/0x10
-[    8.063451]  ? up_read+0x18/0x240
-[    8.064774]  ? ext4_xattr_get+0x97/0x2c0
-[    8.066178]  new_sync_read+0x111/0x1a0
-[    8.067423]  vfs_read+0xc5/0x180
-[    8.068572]  kernel_read+0x2c/0x40
-[    8.069788]  prepare_binprm+0x171/0x1b0
-[    8.071311]  load_script+0x1c1/0x250
-[    8.072643]  search_binary_handler+0x5f/0x210
-[    8.074135]  exec_binprm+0xd7/0x290
-[    8.075463]  __do_execve_file.isra.0+0x570/0x800
-[    8.077400]  ? rest_init+0x2f1/0x2f5
-[    8.078979]  do_execve+0x21/0x30
-[    8.080420]  kernel_init+0xa4/0x11b
-[    8.081856]  ? rest_init+0x2f5/0x2f5
-[    8.083173]  ret_from_fork+0x24/0x30
-[    8.084695] Modules linked in:
-[    8.086055] CR2: 0000000000000000
-[    8.087572] ---[ end trace 0890c371a706b34a ]---
-[    8.089417] RIP: 0010:ext4_mpage_readpages+0x1da/0xc20
-[    8.116836] BUG: sleeping function called from invalid context at include/linux/percpu-rwsem.h:38
-[    8.119626] in_atomic(): 0, irqs_disabled(): 1, non_block: 0, pid: 1, name: swapper/0
-[    8.122392] INFO: lockdep is turned off.
-[    8.123694] irq event stamp: 18341344
-[    8.124735] hardirqs last  enabled at (18341343): [<ffffffff95230c42>] free_unref_page_list+0x232/0x270
-[    8.127918] hardirqs last disabled at (18341344): [<ffffffff95002b4b>] trace_hardirqs_off_thunk+0x1a/0x1c
-[    8.131145] softirqs last  enabled at (18341250): [<ffffffff95a00358>] __do_softirq+0x358/0x52b
-[    8.143060] softirqs last disabled at (18341243): [<ffffffff9508ae3d>] irq_exit+0x9d/0xb0
-[    8.145603] CPU: 2 PID: 1 Comm: swapper/0 Tainted: G      D           5.5.0-default+ #955
-[    8.148474] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.12.0-59-gc9ba527-rebuilt.opensuse.org 04/01/2014
-[    8.152440] Call Trace:
-[    8.153747]  dump_stack+0x71/0xa0
-[    8.155238]  ___might_sleep.cold+0xa6/0xf9
-[    8.156903]  exit_signals+0x31/0x310
-[    8.158431]  ? __do_execve_file.isra.0+0x570/0x800
-[    8.160179]  do_exit+0xa8/0xd60
-[    8.161632]  ? rest_init+0x2f1/0x2f5
-[    8.163204]  rewind_stack_do_exit+0x17/0x20
-[    8.164931] Kernel panic - not syncing: Attempted to kill init! exitcode=0x00000009
-[    8.167575] Kernel Offset: 0x14000000 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffffbfffffff)
+Splitting out the 3 lock testing functions seems to me like complexity
+creep that doesn't need to be in this series.
+
+Dave, thoughts?
+
+-Eric
