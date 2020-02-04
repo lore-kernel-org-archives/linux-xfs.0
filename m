@@ -7,38 +7,40 @@ X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8751C2D0B1
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Feb 2020 09:23:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4EE6C2D0B1
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Feb 2020 09:46:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BB77E2166E
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Feb 2020 09:23:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A1F2021927
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Feb 2020 09:46:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="se0qgK5+"
+	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="HmSfxKcj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726578AbgBDJXw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Feb 2020 04:23:52 -0500
-Received: from mout.web.de ([212.227.15.3]:45405 "EHLO mout.web.de"
+        id S1726596AbgBDJqu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Feb 2020 04:46:50 -0500
+Received: from mout.web.de ([212.227.15.14]:58417 "EHLO mout.web.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726151AbgBDJXw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 4 Feb 2020 04:23:52 -0500
+        id S1726362AbgBDJqu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 4 Feb 2020 04:46:50 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1580808219;
-        bh=qFFodg6FjTAzmbOWPLdYdtgK3Q2ItN0dlxBnaNp4kvI=;
-        h=X-UI-Sender-Class:Cc:Subject:From:To:Date;
-        b=se0qgK5+LmvblxexiNDDoSl0sw+7Rl8PdHfSdGWYt22hViNTSxa8cwWIDMywFAxG6
-         HlqEqKHhyysbFxW9zUmW6gzstx/vBvMVNhF4DMOzzvb1JqgCrhPH2unENmhQ0CuH0t
-         ov3NwOxpjfjBTuBgBGv2fFWKuMvrvGTBvjp1kCuU=
+        s=dbaedf251592; t=1580809592;
+        bh=jF927DB3VXu5u5mQAoMf32fiOBhmu/Dc8LoZF5IpWMk=;
+        h=X-UI-Sender-Class:To:Cc:Subject:From:Date;
+        b=HmSfxKcjH5Ix30bUhLY1GnIdE0ZeliZCnddWmaPnaWNioOm6xRSbrTEGEdY0s0/0j
+         k3T7RzuTFfETLfh1vCSCsNOADeoGnj3Z8RSt9s00gEUIoUBupUjLrO5siwrmHbercD
+         JbjDkAGMGSGiNibr6RfiIDSAydwI7VHLPlfSWq8Q=
 X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
-Received: from [192.168.1.2] ([78.48.133.16]) by smtp.web.de (mrweb004
- [213.165.67.108]) with ESMTPSA (Nemesis) id 0LyOuM-1jeJoL23GQ-015nVB; Tue, 04
- Feb 2020 10:23:39 +0100
+Received: from [192.168.1.2] ([78.48.133.16]) by smtp.web.de (mrweb001
+ [213.165.67.108]) with ESMTPSA (Nemesis) id 0MFtKQ-1inJOQ0hIk-00EuiX; Tue, 04
+ Feb 2020 10:46:32 +0100
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 Cc:     linux-kernel@vger.kernel.org,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
         Hannes Reinecke <hare@suse.de>,
         Johannes Thumshirn <jth@kernel.org>,
         Linus Torvalds <torvalds@linux-foundation.org>,
         Naohiro Aota <Naohiro.Aota@wdc.com>
-Subject: Re: [PATCH v10 0/2] New zonefs file system
+Subject: Re: [PATCH v10 1/2] fs: New zonefs file system
 From:   Markus Elfring <Markus.Elfring@web.de>
 Autocrypt: addr=Markus.Elfring@web.de; prefer-encrypt=mutual; keydata=
  mQINBFg2+xABEADBJW2hoUoFXVFWTeKbqqif8VjszdMkriilx90WB5c0ddWQX14h6w5bT/A8
@@ -83,53 +85,52 @@ Autocrypt: addr=Markus.Elfring@web.de; prefer-encrypt=mutual; keydata=
  Z/wsLiWTgKlih2QYULvW61XU+mWsK8+ZlYUrRMpkauN4CJ5yTpvp+Orcz5KixHQmc5tbkLWf
  x0n1QFc1xxJhbzN+r9djSGGN/5IBDfUqSANC8cWzHpWaHmSuU3JSAMB/N+yQjIad2ztTckZY
  pwT6oxng29LzZspTYUEzMz3wK2jQHw+U66qBFk8whA7B2uAU1QdGyPgahLYSOa4XAEGb6wbI FEE=
-To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <b6046f64-89a0-faba-bbd8-f82c8809ee8f@web.de>
-Date:   Tue, 4 Feb 2020 10:23:35 +0100
+Message-ID: <68ef8614-87f8-1b6e-7f55-f9d53a0f1e1c@web.de>
+Date:   Tue, 4 Feb 2020 10:46:31 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.4.1
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:pBoBB0tJqYGsVZuhA/IDWsJadO7GINgG5gK4Dkiw+MtUYmS1OBX
- XD+l3lhJuAK29e7GC64rvtizCPgSXNJh2P4Zf+svu14dNWTjxm70ih/uGS3ivWcljaVtLyY
- jyzOFjgahV6iaTHWk3WiinLUNplkAiPwapyJ9ilXGTK7QBmt8Y3My6SsHg3AjJ50Y3KAd1P
- +yuH5ohNoDjF579nLb0Jw==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:YZpg5oH4O8I=:5OQtx9akIUkZIctJbfbZas
- 5JmPnBS6NwqedSpwTj8YYy8GKfpWdqLFaKewV29Pn3N4aLMSwxN8Oh7ZkzTpeGQF4FWPp5VCE
- ftWiaQk3QMQepvCF1VGuRaO8goYHFu0+WQZmttU+CrqNhiZHjA231/nMmN6L75raX/Fs9HFm9
- 9lEdr8CiHlxw8VtoZw2uQS8HJgGuKaozPJMRWy4G1SXNWtJ2MG6kHG804U2UT1yKt/y0oycvM
- w/PDKxB6wxgoKwKgC8j+fRBQgvMYNwVkgZH6H0Wv5Aa/oCOUsI726nstaHa8n8kuOxvcUrrEw
- XYlPw9ps3XGVrbBRR+pjU7WEwU9ZycvsnRRa/QKlk0LbqqHpBRCEnSl0p/P9DQb7jVDZH9RPr
- PnGgn7/pAi5K0nfOwmPr5e0enu9dSq9fCuBt1JD5hCbpewL71ERkw6hqjQCi1Fkqjewwt5G5m
- BQYYueGJ6GDx8B26j/4uZ2uCdLaOv9/jS3XKxq4l+Xn+MBVcxqI9duxByeXr7TFPCbPPegiBy
- DzvjhGHzjmJtuZCVPb5+6IU8cHl24iKhXH4GRa+23E99dyumfT1JKjwGUWKiJx+apx+VgSLtj
- NYnS609Iz4nlhKljGCe21BgUu/2c1xoICOq1zgyHZtPa3u6UQBgkBDnsduSbQWD+kTLjFRhGn
- Gu3e+uQVjADPEcGYVf8CE8vOEBhmP8GyWuj1JEKK0s/IsJHVn94kn9u5XQ21T6am1/KNPl+CH
- WuG89qF+rih3o4jnkfrO30Bt5WAnP+E+9NxV0DuJSpkh6jHTWzMP5pHxaIFiQk0lc956pGWOc
- aFieQy6krWAB6EK6zvEVCnAAlv/xGrW9hxvC+xq7GI2kBIWqf6T2gbWEmwSF2dFXIbke8xDnN
- jWwauZBwxtYNQJto/sxufsji+VVZDOoPJ07bMASv0I0JIpGIVvLxNI3oYGWKh1tmeuSiHyK2b
- 2Bh+huHzg/AYhrXRXLQs95cAwDqWR87aCKAsD8FqjsUYSAufNjocPE8z3Drpnub3P36KO4iST
- K67FHp3sRnsiDTKuMmjRSFqizC5y0UljeFjcAjVIkgi4BoabroJu4hWTxYFOGmikUF5Qn8S84
- Upr822LhisdKn5rpYzWInAWQtbSYC9qJs8jbT+ZPaS5fGJX3U4aKYYiyl1/UZmDwr9mn2JE+O
- EzwgtxjEDMB2C8IOG8pJILtAecmoLrWqTD2RM+I3KBUYtpQsqJtnF5pTE88Zklpqokcp6REgJ
- CEULoREhe4rSwWciF
+X-Provags-ID: V03:K1:txhbm/UPmnTz4d/SeuQXHMWgaT8T58QatEzaJtJkUMHbnGSc4/V
+ nqPOd+OZ7xwjI5DJTgXWYAjPWtKeQcJgPYpzSohJY0ZAJCNuMnvMeG8j1coi9GRXu/AhsUk
+ vnTyYkz/g4ff55OSQGg/eY6BCkC6ggubqKzFndie26F8XEMMUncr7B+97uMn2F9IuYxVmA9
+ WphnYiI2zBb8/x5T4V7VQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:Fw5ETYDBrTE=:wYtIFUdwcLSbAPNiGv7gsi
+ yNyAHrwIxzrFhfjasgunc96GCnw5Ktu5H36rKjP+29C8W/U3aRjFAYR1XGQUNbENfxLFlEzIX
+ a6oBn2ZyhZLz8m11iwl5DDkSDV6wmwxEjQW+GAQh0WQEtOhcBAIAYfS93Wu6HdDv6cwQBzi02
+ PUD4HSdw8CqLpcv/pASePV+z/+8lZOCmmgP8BCifpuWB8E8VszAM2RspZoRgVhVuHl16uk1lc
+ fbEp/Kt7zi2wZah1dqKyKIDbOjp+dp3rRQ2VcjNVeftIZfg0wNfMo7XmObfcZ7SXnYsrPcPT2
+ 6lnriNph1Y7lFUMs+GZecau0DRo6XLbGufjDayVzJvegDfLSqd9eLWo0f6o8I+tz5iHRzWVaL
+ 75kr4aebeEoeeq1xKb1zv/d1aHE+6U6supNyXXJnDk/c4KJ3LwvVuVDgFDEZew61yV7DaAR91
+ rvqGCRxrKpJAj219xRXdd/kUmWrsajxPB1/Mv4F5Yvq+OFFm6H+SBLyE2JXvYuKb2GLupSXdJ
+ W416zBvkn0IO87e/2evZj5cwRIympLtzZ+4Ab0Q/6lwmnpj6o121Vd6pY6HhZgqRkMiv0+vqN
+ q+swQIWFGI0RgbY5LK3YQL2DnbY9SkDzDBGRkdEmWTf4SEsUNBBCVxCMhkyG6I4J/izjwFG1A
+ DutFTaBRv01zfAhaqJFJuB5DLOQxO6iKpryp0w4qvdXoWDU1ukp5tA7ndh7E3UL6vC4+snhYf
+ 1pyb8RleVQXn1zSmQ0SSgp+oc9oXo0xdIV3qv4ehlWglT7tXz08elolE+nNUpcWumj6rOJeHS
+ K2Ci+uJOuXiR7bMK0ze2ZOllj/ZScATF1TJD4PPSj5vHHTgj+DM3AwW292tS7Nt7NzM51hmag
+ LdGMuw8Vb2y+365WmxH8UrxDxlpf4EbQavBMBBAO4jzJ30Def1lH03BTnCHRNK6ciGw0/F2GJ
+ eAW+/wxmU2d+KSMcpIeyuho2M2+5yWI7jsY8fOrLh/+v+RTUhkdpgVMXDp1h5m/Pp9ixmXFAm
+ XEcTJcOw2BHhMbQ9co/FsUTutgSzFepFBRkAfEMWHtaTGbqwA1cfVx3AvxRHGBLIcbpS4aYYp
+ XORxK0c/44HSIXzEo0n/UhsqqDyZN/MFoy6aqHz1TBH+T+QgCTXWsd3qZb5XQ2gDIHREknZHw
+ F5LYL1w76I1q04Pi3mkcVdl2lj7c5wz7lDPGR7t37wMJR0YpOXgseEwR2SCfTNKr56ZIJx1ye
+ oBqlXqKCw57gKzQ0V
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> zonefs IO management implementation uses the new iomap generic code.
+=E2=80=A6
+> +++ b/fs/zonefs/super.c
+=E2=80=A6
+> +static const char *zgroups_name[ZONEFS_ZTYPE_MAX] =3D { "cnv", "seq" };
 
-Can it matter to begin such sentences with the capital letter =E2=80=9CZ=
-=E2=80=9D?
+Can this array be treated as immutable?
+How do you think about to use the following code variant?
 
-
-> Changes from v9:
-
-Are any more adjustments worth to be mentioned here?
++static const char const *zgroups_name[ZONEFS_ZTYPE_MAX] =3D { "cnv", "seq=
+" };
 
 Regards,
 Markus
