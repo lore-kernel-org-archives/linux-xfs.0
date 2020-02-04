@@ -2,97 +2,90 @@ Return-Path: <SRS0=4Qc2=3Y=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08A41C35247
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Feb 2020 18:38:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE89BC35247
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Feb 2020 21:06:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C2C9D2084E
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Feb 2020 18:38:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ezkaz9ZY"
+	by mail.kernel.org (Postfix) with ESMTP id 987C52082E
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Feb 2020 21:06:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727331AbgBDSiN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Feb 2020 13:38:13 -0500
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:24405 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727308AbgBDSiN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Feb 2020 13:38:13 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1580841492;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=sPOWjs8UQdIupics/bzSdG2x1PB/kyOBhzzZKyHS4nY=;
-        b=Ezkaz9ZY1NifF7lB15EjUc/hJw3JGSrTFbQMDPzDRm28JlrnPnqIuF/aTKauDCatfs7fbM
-        GsP7Yv0XQEv/wTv6L0sC8OKCdMb0KMdh0B4/Tq/XP3xv4yzGnBNS+GnRXyt1DieSh0mKJa
-        DOWjG/gOH6sG5EO8RPmRuu3gIKxyQOc=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-100-B0VvljFYNei0U9Vs04RiAQ-1; Tue, 04 Feb 2020 13:38:09 -0500
-X-MC-Unique: B0VvljFYNei0U9Vs04RiAQ-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 07FDD8010F8;
-        Tue,  4 Feb 2020 18:38:09 +0000 (UTC)
-Received: from segfault.boston.devel.redhat.com (segfault.boston.devel.redhat.com [10.19.60.26])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id A20FE1A7E3;
-        Tue,  4 Feb 2020 18:38:08 +0000 (UTC)
-From:   Jeff Moyer <jmoyer@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfsprogs: mkfs: don't default to the physical sector size if it's bigger than XFS_MAX_SECTORSIZE
-References: <x49h80ftviy.fsf@segfault.boston.devel.redhat.com>
-        <20200128161423.GO3447196@magnolia>
-X-PGP-KeyID: 1F78E1B4
-X-PGP-CertKey: F6FE 280D 8293 F72C 65FD  5A58 1FF8 A7CA 1F78 E1B4
-Date:   Tue, 04 Feb 2020 13:38:07 -0500
-In-Reply-To: <20200128161423.GO3447196@magnolia> (Darrick J. Wong's message of
-        "Tue, 28 Jan 2020 08:14:23 -0800")
-Message-ID: <x49r1zayz8w.fsf@segfault.boston.devel.redhat.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        id S1727483AbgBDVGi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Feb 2020 16:06:38 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:49958 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727537AbgBDVGh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Feb 2020 16:06:37 -0500
+Received: from dread.disaster.area (pa49-181-161-120.pa.nsw.optusnet.com.au [49.181.161.120])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id A8F8A3A1896;
+        Wed,  5 Feb 2020 08:06:33 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1iz5Oy-0005gw-2Z; Wed, 05 Feb 2020 08:06:32 +1100
+Date:   Wed, 5 Feb 2020 08:06:32 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Pavel Reichl <preichl@redhat.com>, linux-xfs@vger.kernel.org,
+        Dave Chinner <dchinner@redhat.com>
+Subject: Re: [PATCH v2 2/7] xfs: Update checking excl. locks for ilock
+Message-ID: <20200204210632.GL20628@dread.disaster.area>
+References: <20200203175850.171689-1-preichl@redhat.com>
+ <20200203175850.171689-3-preichl@redhat.com>
+ <20200204062118.GB2910@infradead.org>
+ <80f1173e-9181-c8cc-c06f-cbbfaa46a138@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <80f1173e-9181-c8cc-c06f-cbbfaa46a138@sandeen.net>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+        a=SkgQWeG3jiSQFIjTo4+liA==:117 a=SkgQWeG3jiSQFIjTo4+liA==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=l697ptgUJYAA:10
+        a=7-415B0cAAAA:8 a=wjrQEC2q8vSFFpZmR8QA:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-"Darrick J. Wong" <darrick.wong@oracle.com> writes:
+On Tue, Feb 04, 2020 at 10:08:45AM -0600, Eric Sandeen wrote:
+> On 2/4/20 12:21 AM, Christoph Hellwig wrote:
+> >> -	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+> >> +	ASSERT(xfs_is_ilocked(ip, XFS_ILOCK_EXCL));
+> > 
+> > I think this is a very bad interface.  Either we keep our good old
+> > xfs_isilocked that just operates on the inode and lock flags, or
+> > we use something that gets the actual lock passed.  But an interface
+> > that encodes the lock in both the function called and the flags, and
+> > one that doesn't follow neither the XFS lock flags conventions nor
+> > the core kernel convention is just not very useful.
+> 
+> I think this came out of Dave's suggestion on the previous patchset,
+> but I agree with you Chrisoph.  Even if there is a future reason to
+> split it out into a function for each type, I don't see a reason to
+> do it now, and this interface is awkward.
+> 
+> I'd prefer to keep xfs_isilocked() with the current calling convention and
+> just change its internals to use lockdep.  Dave spotted a bug in the
+> current implementation, but I think that can be fixed.
+> 
+> Splitting out the 3 lock testing functions seems to me like complexity
+> creep that doesn't need to be in this series.
+> 
+> Dave, thoughts?
 
-> On Tue, Jan 28, 2020 at 11:07:01AM -0500, Jeff Moyer wrote:
->> Hi,
->> 
->> In testing on ppc64, I ran into the following error when making a file
->> system:
->> 
->> # ./mkfs.xfs -b size=65536 -f /dev/ram0
->> illegal sector size 65536
->> 
->> Which is odd, because I didn't specify a sector size!  The problem is
->> that validate_sectorsize defaults to the physical sector size, but in
->> this case, the physical sector size is bigger than XFS_MAX_SECTORSIZE.
->> 
->> # cat /sys/block/ram0/queue/physical_block_size 
->> 65536
->> 
->> Fall back to the default (logical sector size) if the physical sector
->> size is greater than XFS_MAX_SECTORSIZE.
->
-> Do we need to check that ft->lsectorsize <= XFS_MAX_SECTORSIZE too?
+All I care about is that we get rid of the mrlock_t. I'm not
+interested in bikeshedding the details to death. I've put my 2c
+worth in, if you don't like it, then that's fine and I'm not going
+to get upset about that.
 
-Actually, that's done later in the same function:
+Cheers,
 
-        /* validate specified/probed sector size */
-        if (cfg->sectorsize < XFS_MIN_SECTORSIZE ||
-            cfg->sectorsize > XFS_MAX_SECTORSIZE) {
-                fprintf(stderr, _("illegal sector size %d\n"), cfg->sectorsize);
-                usage();
-        }
-
--Jeff
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
