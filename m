@@ -5,24 +5,24 @@ X-Spam-Level:
 X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AA2FC3524A
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Feb 2020 03:44:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 006D1C3524A
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Feb 2020 06:13:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0DF482080D
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Feb 2020 03:44:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B95002086A
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Feb 2020 06:13:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726924AbgBDDox convert rfc822-to-8bit (ORCPT
+        id S1726053AbgBDGNS convert rfc822-to-8bit (ORCPT
         <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 3 Feb 2020 22:44:53 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55504 "EHLO mail.kernel.org"
+        Tue, 4 Feb 2020 01:13:18 -0500
+Received: from mail.kernel.org ([198.145.29.99]:46328 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726694AbgBDDox (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 3 Feb 2020 22:44:53 -0500
+        id S1725834AbgBDGNR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 4 Feb 2020 01:13:17 -0500
 From:   bugzilla-daemon@bugzilla.kernel.org
 To:     linux-xfs@vger.kernel.org
-Subject: [Bug 206397] New: [xfstests generic/475] XFS: Assertion failed:
- iclog->ic_state == XLOG_STATE_ACTIVE, file: fs/xfs/xfs_log.c, line: 572
-Date:   Tue, 04 Feb 2020 03:44:50 +0000
+Subject: [Bug 206399] New: [xfstests xfs/433] BUG: KASAN: use-after-free in
+ xfs_attr3_node_inactive+0x6c8/0x7b0 [xfs]
+Date:   Tue, 04 Feb 2020 06:13:15 +0000
 X-Bugzilla-Reason: None
 X-Bugzilla-Type: new
 X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
@@ -40,7 +40,7 @@ X-Bugzilla-Flags:
 X-Bugzilla-Changed-Fields: bug_id short_desc product version
  cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
  priority component assigned_to reporter cf_regression
-Message-ID: <bug-206397-201763@https.bugzilla.kernel.org/>
+Message-ID: <bug-206399-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8BIT
 X-Bugzilla-URL: https://bugzilla.kernel.org/
@@ -51,12 +51,11 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=206397
+https://bugzilla.kernel.org/show_bug.cgi?id=206399
 
-            Bug ID: 206397
-           Summary: [xfstests generic/475] XFS: Assertion failed:
-                    iclog->ic_state == XLOG_STATE_ACTIVE, file:
-                    fs/xfs/xfs_log.c, line: 572
+            Bug ID: 206399
+           Summary: [xfstests xfs/433] BUG: KASAN: use-after-free in
+                    xfs_attr3_node_inactive+0x6c8/0x7b0 [xfs]
            Product: File System
            Version: 2.5
     Kernel Version: linux 5.5+ with xfs-linux xfs-5.6-merge-7
@@ -71,146 +70,178 @@ https://bugzilla.kernel.org/show_bug.cgi?id=206397
           Reporter: zlang@redhat.com
         Regression: No
 
-XFS hit below assertion, when ran generic/475 on XFS:
+xfs/443 always hit below KASAN BUG:
 FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/ppc64le ibm-p9b-37 5.5.0+ #1 SMP Wed Jan 29 06:02:24 EST
-2020
-MKFS_OPTIONS  -- -f -bsize=4096 /dev/sda5
-MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/sda5
+PLATFORM      -- Linux/x86_64 hpe-tm200-01 5.5.0+ #1 SMP Wed Jan 29 06:10:18
+EST 2020
+MKFS_OPTIONS  -- -f -m crc=1,finobt=1,rmapbt=1,reflink=1 -i sparse=1 /dev/sda4
+MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/sda4
 /mnt/xfstests/mnt2
 
-generic/475 279s ... 
+xfs/433 _check_dmesg: something found in dmesg (see
+/var/lib/xfstests/results//xfs/433.dmesg)
+
+Ran: xfs/433
+Failures: xfs/433
+Failed 1 of 1 tests
 
 
-# dmesg
-[22437.735364] XFS (dm-0): Unmounting Filesystem 
-[22438.165496] XFS (dm-0): Mounting V5 Filesystem 
-[22438.344531] XFS (dm-0): Starting recovery (logdev: internal) 
-[22439.524024] XFS (dm-0): Ending recovery (logdev: internal) 
-[22439.554451] xfs filesystem being mounted at /mnt/xfstests/mnt2 supports
-timestamps until 2038 (0x7fffffff) 
-[22441.618632] iomap_finish_ioend: 12 callbacks suppressed 
-[22441.618634] dm-0: writeback error on inode 89598, offset 20430848, sector
-78472 
-[22441.618641] dm-0: writeback error on inode 89598, offset 28454912, sector
-323640 
-[22441.618700] dm-0: writeback error on inode 89598, offset 33587200, sector
-324712 
-[22441.618718] dm-0: writeback error on inode 89598, offset 47378432, sector
-322808 
-[22441.618770] dm-0: writeback error on inode 8430874, offset 1048576, sector
-8115320 
-[22441.618830] dm-0: writeback error on inode 25183579, offset 16080896, sector
-23830120 
-[22441.618863] dm-0: writeback error on inode 25227916, offset 53960704, sector
-23864864 
-[22441.618902] dm-0: writeback error on inode 25227916, offset 70787072, sector
-23830224 
-[22441.618948] dm-0: writeback error on inode 25257187, offset 9568256, sector
-23913872 
-[22441.618971] XFS (dm-0): log I/O error -5 
-[22441.618991] dm-0: writeback error on inode 25183496, offset 32112640, sector
-23950744 
-[22441.619022] XFS (dm-0): log I/O error -5 
-[22441.619027] XFS: Assertion failed: iclog->ic_state == XLOG_STATE_ACTIVE,
-file: fs/xfs/xfs_log.c, line: 572 
-[22441.619198] ------------[ cut here ]------------ 
-[22441.619220] kernel BUG at fs/xfs/xfs_message.c:110! 
-[22441.619253] Oops: Exception in kernel mode, sig: 5 [#1] 
-[22441.619284] LE PAGE_SIZE=64K MMU=Radix SMP NR_CPUS=2048 NUMA PowerNV 
-[22441.619317] Modules linked in: dm_mod rfkill i2c_dev sunrpc ses at24
-enclosure ipmi_powernv scsi_transport_sas ofpart ipmi_devintf powernv_flash
-uio_pdrv_genirq ipmi_msghandler xts uio mtd opal_prd vmx_crypto ibmpowernv
-ip_tables xfs libcrc32c sd_mod ast t10_pi i2c_algo_bit drm_vram_helper
-drm_ttm_helper ttm drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops
-drm i40e sg aacraid drm_panel_orientation_quirks 
-[22441.619461] CPU: 104 PID: 20682 Comm: kworker/u322:6 Tainted: G        W    
-    5.5.0+ #1 
-[22441.619580] Workqueue: xfs-cil/dm-0 xlog_cil_push_work [xfs] 
-[22441.619603] NIP:  c00800000da00ed0 LR: c00800000da00e80 CTR:
-c000000000898970 
-[22441.619636] REGS: c000201baaadf7b0 TRAP: 0700   Tainted: G        W         
-(5.5.0+) 
-[22441.619670] MSR:  9000000000029033 <SF,HV,EE,ME,IR,DR,RI,LE>  CR: 48002482 
-XER: 00000000 
-[22441.619708] CFAR: c00800000da00eb4 IRQMASK: 0  
-[22441.619708] GPR00: c00800000da00e80 c000201baaadfa40 c00800000db3d300
-ffffffffffffffea  
-[22441.619708] GPR04: 000000000000000a c000201baaadf940 c00800000dabbaa0
-0000000000000000  
-[22441.619708] GPR08: ffffffffffffffc0 0000000000000001 0000000000000000
-0000000000000000  
-[22441.619708] GPR12: c000000000898970 c000201fff682800 c0000000001c1468
-c000201bbfea3cc0  
-[22441.619708] GPR16: 0000000000000000 0000000000000000 0000000000000000
-0000000000000000  
-[22441.619708] GPR20: 0000000000000000 c000201b76e18808 c000201b76e18880
-c000201b76e1e148  
-[22441.619708] GPR24: 0000000200003bd2 c000201c074f5800 c000201b76e18980
-c000201cb2f95bc8  
-[22441.619708] GPR28: c000201cb2f95b80 c000201c074f5800 0000000000000000
-0000000000000001  
-[22441.619955] NIP [c00800000da00ed0] assfail+0x88/0xb0 [xfs] 
-[22441.620018] LR [c00800000da00e80] assfail+0x38/0xb0 [xfs] 
-[22441.620037] Call Trace: 
-[22441.620086] [c000201baaadfa40] [c00800000da00e80] assfail+0x38/0xb0 [xfs]
-(unreliable) 
-[22441.620154] [c000201baaadfab0] [c00800000da1fce4]
-__xlog_state_release_iclog+0x14c/0x170 [xfs] 
-[22441.620223] [c000201baaadfaf0] [c00800000da20610]
-xfs_log_release_iclog+0x88/0x100 [xfs] 
-[22441.620289] [c000201baaadfb30] [c00800000da261f8] xlog_cil_push+0x430/0x5e0
-[xfs] 
-[22441.620324] [c000201baaadfc20] [c0000000001b394c]
-process_one_work+0x32c/0x920 
-[22441.620358] [c000201baaadfd20] [c0000000001b4190] worker_thread+0x250/0x530 
-[22441.620393] [c000201baaadfdb0] [c0000000001c1614] kthread+0x1b4/0x1c0 
-[22441.620430] [c000201baaadfe20] [c00000000000b848]
-ret_from_kernel_thread+0x5c/0x74 
-[22441.620464] Instruction dump: 
-[22441.620483] 38630010 4808f60d e8410018 60000000 73e90001 4082001c 0fe00000
-38210070  
-[22441.620521] e8010010 ebe1fff8 7c0803a6 4e800020 <0fe00000> 3c620000 e863db30
-38630028  
-[22441.620562] ---[ end trace e3618eb7d076a593 ]--- 
-[22441.834060]  
-[22441.834079] BUG: sleeping function called from invalid context at
-include/linux/percpu-rwsem.h:38 
-[22441.834104] in_atomic(): 1, irqs_disabled(): 1, non_block: 0, pid: 20682,
-name: kworker/u322:6 
-[22441.834119] INFO: lockdep is turned off. 
-[22441.834126] irq event stamp: 0 
-[22441.834149] hardirqs last  enabled at (0): [<0000000000000000>] 0x0 
-[22441.834175] hardirqs last disabled at (0): [<c000000000175260>]
-copy_process+0x7d0/0x1c70 
-[22441.834198] softirqs last  enabled at (0): [<c000000000175260>]
-copy_process+0x7d0/0x1c70 
-[22441.834233] softirqs last disabled at (0): [<0000000000000000>] 0x0 
 
+[75618.288080] run fstests xfs/433 at 2020-01-30 04:00:53
+[75620.394755] XFS (sda5): Mounting V5 Filesystem
+[75620.488847] XFS (sda5): Ending clean mount
+[75620.522825] xfs filesystem being mounted at /mnt/xfstests/mnt2 supports
+timestamps until 2038 (0x7fffffff)
+[75625.506275] XFS (sda5): Unmounting Filesystem
+[75625.680838] XFS (sda5): Mounting V5 Filesystem
+[75625.834275] XFS (sda5): Ending clean mount
+[75625.885694] xfs filesystem being mounted at /mnt/xfstests/mnt2 supports
+timestamps until 2038 (0x7fffffff)
+[75625.985258] XFS (sda5): Injecting error (false) at file fs/xfs/xfs_buf.c,
+line 2119, on filesystem "sda5"
+[75626.029242] XFS (sda5): Injecting error (false) at file fs/xfs/xfs_buf.c,
+line 2119, on filesystem "sda5"
+[75626.078339] XFS (sda5): Injecting error (false) at file fs/xfs/xfs_buf.c,
+line 2119, on filesystem "sda5"
+[75626.124795] XFS (sda5): Injecting error (false) at file fs/xfs/xfs_buf.c,
+line 2119, on filesystem "sda5"
+[75626.169098] XFS (sda5): Injecting error (false) at file fs/xfs/xfs_buf.c,
+line 2119, on filesystem "sda5"
+[75626.212549]
+==================================================================
+[75626.245606] BUG: KASAN: use-after-free in
+xfs_attr3_node_inactive+0x61e/0x8a0 [xfs]
+[75626.280164] Read of size 4 at addr ffff88881ffab004 by task rm/30390
 
-The assertion failure on this line:
+[75626.315595] CPU: 13 PID: 30390 Comm: rm Tainted: G        W         5.5.0+
+#1
+[75626.347856] Hardware name: HP ProLiant DL380p Gen8, BIOS P70 08/02/2014
+[75626.377864] Call Trace:
+[75626.388868]  dump_stack+0x96/0xe0
+[75626.403778]  print_address_description.constprop.4+0x1f/0x300
+[75626.429656]  __kasan_report.cold.8+0x76/0xb0
+[75626.448950]  ? xfs_trans_ordered_buf+0x410/0x440 [xfs]
+[75626.472393]  ? xfs_attr3_node_inactive+0x61e/0x8a0 [xfs]
+[75626.496705]  kasan_report+0xe/0x20
+[75626.512134]  xfs_attr3_node_inactive+0x61e/0x8a0 [xfs]
+[75626.535328]  ? xfs_da_read_buf+0x235/0x2c0 [xfs]
+[75626.557270]  ? xfs_attr3_leaf_inactive+0x470/0x470 [xfs]
+[75626.583199]  ? xfs_da3_root_split+0x1050/0x1050 [xfs]
+[75626.607952]  ? lock_contended+0xd20/0xd20
+[75626.626615]  ? xfs_ilock+0x149/0x4c0 [xfs]
+[75626.644661]  ? down_write_nested+0x187/0x3c0
+[75626.663892]  ? down_write_trylock+0x2f0/0x2f0
+[75626.683496]  ? __sb_start_write+0x1c4/0x310
+[75626.702389]  ? down_read_trylock+0x360/0x360
+[75626.721669]  ? xfs_trans_buf_set_type+0x90/0x1e0 [xfs]
+[75626.745171]  xfs_attr_inactive+0x3e5/0x7b0 [xfs]
+[75626.766097]  ? xfs_attr3_node_inactive+0x8a0/0x8a0 [xfs]
+[75626.790101]  ? lock_downgrade+0x6d0/0x6d0
+[75626.808122]  ? do_raw_spin_trylock+0xb2/0x180
+[75626.827859]  ? lock_contended+0xd20/0xd20
+[75626.846154]  xfs_inactive+0x4b8/0x5b0 [xfs]
+[75626.865504]  xfs_fs_destroy_inode+0x3dc/0xb80 [xfs]
+[75626.887615]  destroy_inode+0xbc/0x1a0
+[75626.904172]  do_unlinkat+0x451/0x5d0
+[75626.920325]  ? __ia32_sys_rmdir+0x40/0x40
+[75626.938485]  ? __check_object_size+0x275/0x324
+[75626.958819]  ? strncpy_from_user+0x7d/0x350
+[75626.977848]  do_syscall_64+0x9f/0x4f0
+[75626.994333]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+[75627.017173] RIP: 0033:0x7f968239567b
+[75627.033260] Code: 73 01 c3 48 8b 0d 0d d8 2c 00 f7 d8 64 89 01 48 83 c8 ff
+c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa b8 07 01 00 00 0f 05 <48> 3d 01
+f0 ff ff 73 01 c3 48 8b 0d dd d7 2c 00 f7 d8 64 89 01 48
+[75627.123796] RSP: 002b:00007ffcdf66ad38 EFLAGS: 00000246 ORIG_RAX:
+0000000000000107
+[75627.158521] RAX: ffffffffffffffda RBX: 0000562cd8b5d5b0 RCX:
+00007f968239567b
+[75627.190764] RDX: 0000000000000000 RSI: 0000562cd8b5c380 RDI:
+00000000ffffff9c
+[75627.222921] RBP: 0000562cd8b5c2f0 R08: 0000000000000003 R09:
+0000000000000000
+[75627.255236] R10: 0000000000000000 R11: 0000000000000246 R12:
+00007ffcdf66af20
+[75627.287435] R13: 0000000000000000 R14: 0000562cd8b5d5b0 R15:
+0000000000000000
 
-static bool
-__xlog_state_release_iclog(
-        struct xlog             *log,
-        struct xlog_in_core     *iclog)
-{
-        lockdep_assert_held(&log->l_icloglock);
+[75627.326616] Allocated by task 30390:
+[75627.342780]  save_stack+0x19/0x80
+[75627.357980]  __kasan_kmalloc.constprop.7+0xc1/0xd0
+[75627.379553]  kmem_cache_alloc+0xc8/0x300
+[75627.397288]  kmem_zone_alloc+0x10a/0x3f0 [xfs]
+[75627.417376]  _xfs_buf_alloc+0x56/0x1140 [xfs]
+[75627.437051]  xfs_buf_get_map+0x126/0x7c0 [xfs]
+[75627.457103]  xfs_buf_read_map+0xb2/0xaa0 [xfs]
+[75627.477180]  xfs_trans_read_buf_map+0x6c8/0x12d0 [xfs]
+[75627.500420]  xfs_da_read_buf+0x1d9/0x2c0 [xfs]
+[75627.520579]  xfs_da3_node_read+0x23/0x80 [xfs]
+[75627.540620]  xfs_attr_inactive+0x5c5/0x7b0 [xfs]
+[75627.561609]  xfs_inactive+0x4b8/0x5b0 [xfs]
+[75627.581541]  xfs_fs_destroy_inode+0x3dc/0xb80 [xfs]
+[75627.605628]  destroy_inode+0xbc/0x1a0
+[75627.624025]  do_unlinkat+0x451/0x5d0
+[75627.641629]  do_syscall_64+0x9f/0x4f0
+[75627.658156]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
 
-        if (iclog->ic_state == XLOG_STATE_WANT_SYNC) {
-                /* update tail before writing to iclog */
-                xfs_lsn_t tail_lsn = xlog_assign_tail_lsn(log->l_mp);
+[75627.687232] Freed by task 30390:
+[75627.701882]  save_stack+0x19/0x80
+[75627.716821]  __kasan_slab_free+0x125/0x170
+[75627.735329]  kmem_cache_free+0xcd/0x400
+[75627.752745]  xfs_buf_rele+0x30a/0xcb0 [xfs]
+[75627.772731]  xfs_attr3_node_inactive+0x1c7/0x8a0 [xfs]
+[75627.797384]  xfs_attr_inactive+0x3e5/0x7b0 [xfs]
+[75627.818450]  xfs_inactive+0x4b8/0x5b0 [xfs]
+[75627.837455]  xfs_fs_destroy_inode+0x3dc/0xb80 [xfs]
+[75627.859765]  destroy_inode+0xbc/0x1a0
+[75627.876296]  do_unlinkat+0x451/0x5d0
+[75627.892466]  do_syscall_64+0x9f/0x4f0
+[75627.909015]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
 
-                iclog->ic_state = XLOG_STATE_SYNCING;
-                iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
-                xlog_verify_tail_lsn(log, iclog, tail_lsn);
-                /* cycle incremented when incrementing curr_block */
-                return true;
-        }
+[75627.938572] The buggy address belongs to the object at ffff88881ffaad80
+                which belongs to the cache xfs_buf of size 680
+[75627.994075] The buggy address is located 644 bytes inside of
+                680-byte region [ffff88881ffaad80, ffff88881ffab028)
+[75628.047015] The buggy address belongs to the page:
+[75628.069056] page:ffffea00207fea00 refcount:1 mapcount:0
+mapping:ffff888098515400 index:0xffff88881ffa9d40 compound_mapcount: 0
+[75628.124539] raw: 0057ffffc0010200 dead000000000100 dead000000000122
+ffff888098515400
+[75628.162598] raw: ffff88881ffa9d40 0000000080270025 00000001ffffffff
+0000000000000000
+[75628.197491] page dumped because: kasan: bad access detected
 
---->    ASSERT(iclog->ic_state == XLOG_STATE_ACTIVE);
-        return false;
-}
+[75628.230389] Memory state around the buggy address:
+[75628.252072]  ffff88881ffaaf00: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+fb
+[75628.284801]  ffff88881ffaaf80: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+fb
+[75628.317587] >ffff88881ffab000: fb fb fb fb fb fc fc fc fc fc fc fc fc fc fc
+fc
+[75628.350592]                    ^
+[75628.364746]  ffff88881ffab080: fc fc fc fc fc fc fc fc fb fb fb fb fb fb fb
+fb
+[75628.397289]  ffff88881ffab100: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+fb
+[75628.429955]
+==================================================================
+[75628.463111] XFS (sda5): Injecting error (false) at file fs/xfs/xfs_buf.c,
+line 2119, on filesystem "sda5"
+[75628.507525] XFS (sda5): Injecting error (false) at file fs/xfs/xfs_buf.c,
+line 2119, on filesystem "sda5"
+[75628.551292] XFS (sda5): Injecting error (false) at file fs/xfs/xfs_buf.c,
+line 2119, on filesystem "sda5"
+[75628.595229] XFS (sda5): Injecting error (false) at file fs/xfs/xfs_buf.c,
+line 2119, on filesystem "sda5"
+[75628.642924] XFS (sda5): Injecting error (false) at file fs/xfs/xfs_buf.c,
+line 2119, on filesystem "sda5"
+[75628.814284] XFS (sda3): Unmounting Filesystem
+[75629.252213] XFS (sda5): Unmounting Filesystem
+[75630.354563] XFS (sda5): Mounting V5 Filesystem
+[75630.502015] XFS (sda5): Ending clean mount
+[75630.551753] xfs filesystem being mounted at /mnt/xfstests/mnt2 supports
+timestamps until 2038 (0x7fffffff)
+[75630.629204] XFS (sda5): Unmounting Filesystem
 
 -- 
 You are receiving this mail because:
