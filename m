@@ -2,182 +2,307 @@ Return-Path: <SRS0=4Qc2=3Y=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AED6C35247
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Feb 2020 22:20:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BF41C35247
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Feb 2020 23:15:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EC63721582
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Feb 2020 22:20:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 429A42087E
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Feb 2020 23:15:54 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="dVQ3M2UC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727562AbgBDWUe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Feb 2020 17:20:34 -0500
-Received: from sandeen.net ([63.231.237.45]:47926 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727534AbgBDWUe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 4 Feb 2020 17:20:34 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id E21342542;
-        Tue,  4 Feb 2020 16:20:32 -0600 (CST)
-Subject: Re: [PATCH v2 2/7] xfs: Update checking excl. locks for ilock
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Pavel Reichl <preichl@redhat.com>, linux-xfs@vger.kernel.org,
-        Dave Chinner <dchinner@redhat.com>
-References: <20200203175850.171689-1-preichl@redhat.com>
- <20200203175850.171689-3-preichl@redhat.com>
- <20200204062118.GB2910@infradead.org>
- <80f1173e-9181-c8cc-c06f-cbbfaa46a138@sandeen.net>
- <20200204210632.GL20628@dread.disaster.area>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <352ab46c-f5ed-33f4-9dfd-ecf540fb1017@sandeen.net>
-Date:   Tue, 4 Feb 2020 16:20:32 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.4.2
+        id S1727654AbgBDXPx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Feb 2020 18:15:53 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:35242 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727522AbgBDXPx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Feb 2020 18:15:53 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 014NEBrq066816;
+        Tue, 4 Feb 2020 23:14:45 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=hFrekGjJCQPPD/ycmhpFS48G3WlS5enZvj/4V+ln+dA=;
+ b=dVQ3M2UCmhd+TPb2kYOsmHp54Qv4ky1uvrpZ0uLF2Q+FHXLS8VND76gCl/FaCrniiqmx
+ UpHQ5OHvYIzs3IZP+1lI1XWi4dZ0GSS4Ev8t/NpQqbJ3Y/dCX6lqnOcg2MxaLKVfNOM8
+ +j+34uaKV6q7YvUrRnMlzuAAn8dQ0BdEas4cfrTkFB54OxepLIyyNE581NZiw3ZROwFC
+ Y9z72ZY3phMrd6XyKaDsswW7i/ZpCgl3TXLcoRX0QnOWMYpf98z2PiLC2gNsL+/Y+Vly
+ iVV4rHm6s9+L6mECdHIHlirefnQpDhXQUAp8yoa66vGMY5x6YFpCcYah2kQ+MsbAc+Ps aA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2xyhkfg3v4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 04 Feb 2020 23:14:45 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 014ND9YZ160297;
+        Tue, 4 Feb 2020 23:14:44 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 2xyhmesp3t-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 04 Feb 2020 23:14:44 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 014NEhhr032466;
+        Tue, 4 Feb 2020 23:14:43 GMT
+Received: from localhost (/10.159.250.52)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 04 Feb 2020 15:14:43 -0800
+Date:   Tue, 4 Feb 2020 15:14:42 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2 11/8] xfs_repair: don't corrupt a attr fork da3 node
+ when clearing forw/back
+Message-ID: <20200204231442.GE6874@magnolia>
+References: <157982499185.2765410.18206322669640988643.stgit@magnolia>
+ <20200130181512.GZ3447196@magnolia>
+ <20200130184606.GC3447196@magnolia>
+ <20200131060315.GA26786@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20200204210632.GL20628@dread.disaster.area>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200131060315.GA26786@infradead.org>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9521 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-2001150001 definitions=main-2002040158
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9521 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-2001150001
+ definitions=main-2002040158
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/4/20 3:06 PM, Dave Chinner wrote:
-> On Tue, Feb 04, 2020 at 10:08:45AM -0600, Eric Sandeen wrote:
->> On 2/4/20 12:21 AM, Christoph Hellwig wrote:
->>>> -	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
->>>> +	ASSERT(xfs_is_ilocked(ip, XFS_ILOCK_EXCL));
->>>
->>> I think this is a very bad interface.  Either we keep our good old
->>> xfs_isilocked that just operates on the inode and lock flags, or
->>> we use something that gets the actual lock passed.  But an interface
->>> that encodes the lock in both the function called and the flags, and
->>> one that doesn't follow neither the XFS lock flags conventions nor
->>> the core kernel convention is just not very useful.
->>
->> I think this came out of Dave's suggestion on the previous patchset,
->> but I agree with you Chrisoph.  Even if there is a future reason to
->> split it out into a function for each type, I don't see a reason to
->> do it now, and this interface is awkward.
->>
->> I'd prefer to keep xfs_isilocked() with the current calling convention and
->> just change its internals to use lockdep.  Dave spotted a bug in the
->> current implementation, but I think that can be fixed.
->>
->> Splitting out the 3 lock testing functions seems to me like complexity
->> creep that doesn't need to be in this series.
->>
->> Dave, thoughts?
-> 
-> All I care about is that we get rid of the mrlock_t. I'm not
-> interested in bikeshedding the details to death. I've put my 2c
-> worth in, if you don't like it, then that's fine and I'm not going
-> to get upset about that.
+On Thu, Jan 30, 2020 at 10:03:15PM -0800, Christoph Hellwig wrote:
+> Looks sensible, but I think we want the helpers for both the node and
+> leaf case, something like this untested patch:
 
-In the short term I'd suggest something like this. It keeps the helper,
-but we don't have to change the callsites, and breaking out separate types
-etc can be done after the mrlock removal patchset is done - in a separate
-series if/when needed.
+Ok, I was about to repost with more or less the same code.
 
-static inline bool
-__xfs_rwsem_islocked(
-        struct rw_semaphore     *rwsem,
-        bool                    shared,
-        bool                    excl)
-{
-        bool locked = false;
+--D
 
-        if (!rwsem_is_locked(rwsem))
-                return false;
-
-        if (!debug_locks)
-                return true;
-
-        if (shared)
-                locked = lockdep_is_held_type(rwsem, 0);
-
-        if (excl)
-                locked |= lockdep_is_held_type(rwsem, 1);
-
-        return locked;
-}
-
-bool
-xfs_isilocked(
-        struct xfs_inode        *ip,
-        uint                    lock_flags)
-{       
-        if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) {
-                return __xfs_rwsem_islocked(&ip->i_lock.mr_lock,
-                                (lock_flags & XFS_ILOCK_SHARED),
-                                (lock_flags & XFS_ILOCK_EXCL));
-        }
-        if (lock_flags & (XFS_MMAPLOCK_EXCL|XFS_MMAPLOCK_SHARED)) {
-                return __xfs_rwsem_islocked(&ip->i_mmlock.mr_lock,
-                                (lock_flags & XFS_MMAPLOCK_SHARED),
-                                (lock_flags & XFS_MMAPLOCK_EXCL));
-        }
-        if (lock_flags & (XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED)) {
-                return __xfs_rwsem_islocked(&VFS_I(ip)->i_rwsem,
-                                (lock_flags & XFS_IOLOCK_SHARED),
-                                (lock_flags & XFS_IOLOCK_EXCL));
-        }
-}
-
-That still has the problem/bug with the existing
-
-	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL));
-
-callsite since it doesn't actually test both types but again that is a separate
-bugfix - it could be changed to accumulate a true/false state for all the flags
-in the lock_flags argument in another bugfix patch.
-
--Eric
+> diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+> index 9a44f610..0c26f0e6 100644
+> --- a/repair/attr_repair.c
+> +++ b/repair/attr_repair.c
+> @@ -952,6 +952,98 @@ _("wrong FS UUID, inode %" PRIu64 " attr block %" PRIu64 "\n"),
+>  	return 0;
+>  }
+>  
+> +static int
+> +process_leaf_da_root(
+> +	struct xfs_mount	*mp,
+> +	xfs_ino_t		ino,
+> +	struct xfs_dinode	*dip,
+> +	struct blkmap		*blkmap,
+> +	int			*repair,
+> +	struct xfs_buf		*bp)
+> +{
+> +	struct xfs_attr3_icleaf_hdr leafhdr;
+> +	xfs_dahash_t		next_hashval;
+> +	int			repairlinks = 0;
+> +
+> +	/*
+> +	 * Check sibling pointers in block 0 before we have to release the btree
+> +	 * block.
+> +	 */
+> +	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, bp->b_addr);
+> +	if (leafhdr.forw != 0 || leafhdr.back != 0)  {
+> +		if (!no_modify)  {
+> +			do_warn(
+> +	_("clearing forw/back pointers in block 0 for attributes in inode %" PRIu64 "\n"),
+> +				ino);
+> +			repairlinks = 1;
+> +			leafhdr.forw = 0;
+> +			leafhdr.back = 0;
+> +			xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, bp->b_addr,
+> +					&leafhdr);
+> +		} else  {
+> +			do_warn(
+> +	_("would clear forw/back pointers in block 0 for attributes in inode %" PRIu64 "\n"), ino);
+> +		}
+> +	}
+> +
+> +	if (process_leaf_attr_block(mp, bp->b_addr, 0, ino, blkmap, 0,
+> +			&next_hashval, repair)) {
+> +		*repair = 0;
+> +		/* the block is bad.  lose the attribute fork. */
+> +		libxfs_putbuf(bp);
+> +		return 1;
+> +	}
+> +
+> +	*repair = *repair || repairlinks;
+> +	return 0;
+> +}
+> +
+> +static int
+> +process_node_da_root(
+> +	struct xfs_mount	*mp,
+> +	xfs_ino_t		ino,
+> +	struct xfs_dinode	*dip,
+> +	struct blkmap		*blkmap,
+> +	int			*repair,
+> +	struct xfs_buf		*bp)
+> +{
+> +	struct xfs_da3_icnode_hdr	da3_hdr;
+> +	int			repairlinks = 0;
+> +	int			error;
+> +
+> +	/*
+> +	 * Check sibling pointers in block 0 before we have to release the btree
+> +	 * block.
+> +	 */
+> +	xfs_da3_node_hdr_from_disk(mp, &da3_hdr, bp->b_addr);
+> +	if (da3_hdr.forw != 0 || da3_hdr.back != 0)  {
+> +		if (!no_modify)  {
+> +			do_warn(
+> +_("clearing forw/back pointers in block 0 for attributes in inode %" PRIu64 "\n"),
+> +				ino);
+> +
+> +			repairlinks = 1;
+> +			da3_hdr.forw = 0;
+> +			da3_hdr.back = 0;
+> +			xfs_da3_node_hdr_to_disk(mp, bp->b_addr, &da3_hdr);
+> +		} else  {
+> +			do_warn(
+> +_("would clear forw/back pointers in block 0 for attributes in inode %" PRIu64 "\n"), ino);
+> +		}
+> +	}
+> +
+> +	/* must do this now, to release block 0 before the traversal */
+> +	if ((*repair || repairlinks) && !no_modify) {
+> +		*repair = 1;
+> +		libxfs_writebuf(bp, 0);
+> +	} else
+> +		libxfs_putbuf(bp);
+> +	error = process_node_attr(mp, ino, dip, blkmap); /* + repair */
+> +	if (error)
+> +		*repair = 0;
+> +	return error;
+> +}
+> +
+>  /*
+>   * Start processing for a leaf or fuller btree.
+>   * A leaf directory is one where the attribute fork is too big for
+> @@ -963,19 +1055,15 @@ _("wrong FS UUID, inode %" PRIu64 " attr block %" PRIu64 "\n"),
+>   */
+>  static int
+>  process_longform_attr(
+> -	xfs_mount_t	*mp,
+> -	xfs_ino_t	ino,
+> -	xfs_dinode_t	*dip,
+> -	blkmap_t	*blkmap,
+> -	int		*repair)	/* out - 1 if something was fixed */
+> +	struct xfs_mount	*mp,
+> +	xfs_ino_t		ino,
+> +	struct xfs_dinode	*dip,
+> +	blkmap_t		*blkmap,
+> +	int			*repair) /* out - 1 if something was fixed */
+>  {
+> -	xfs_attr_leafblock_t	*leaf;
+> -	xfs_fsblock_t	bno;
+> -	xfs_buf_t	*bp;
+> -	xfs_dahash_t	next_hashval;
+> -	int		repairlinks = 0;
+> -	struct xfs_attr3_icleaf_hdr leafhdr;
+> -	int		error;
+> +	xfs_fsblock_t		bno;
+> +	struct xfs_buf		*bp;
+> +	struct xfs_da_blkinfo   *info;
+>  
+>  	*repair = 0;
+>  
+> @@ -1015,77 +1103,35 @@ process_longform_attr(
+>  		return 1;
+>  	}
+>  
+> -	/* verify leaf block */
+> -	leaf = bp->b_addr;
+> -	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
+> -
+> -	/* check sibling pointers in leaf block or root block 0 before
+> -	* we have to release the btree block
+> -	*/
+> -	if (leafhdr.forw != 0 || leafhdr.back != 0)  {
+> -		if (!no_modify)  {
+> -			do_warn(
+> -	_("clearing forw/back pointers in block 0 for attributes in inode %" PRIu64 "\n"),
+> -				ino);
+> -			repairlinks = 1;
+> -			leafhdr.forw = 0;
+> -			leafhdr.back = 0;
+> -			xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo,
+> -						   leaf, &leafhdr);
+> -		} else  {
+> -			do_warn(
+> -	_("would clear forw/back pointers in block 0 for attributes in inode %" PRIu64 "\n"), ino);
+> -		}
+> -	}
+> -
+>  	/*
+>  	 * use magic number to tell us what type of attribute this is.
+>  	 * it's possible to have a node or leaf attribute in either an
+>  	 * extent format or btree format attribute fork.
+>  	 */
+> -	switch (leafhdr.magic) {
+> +	info = bp->b_addr;
+> +	switch (be16_to_cpu(info->magic)) {
+>  	case XFS_ATTR_LEAF_MAGIC:	/* leaf-form attribute */
+>  	case XFS_ATTR3_LEAF_MAGIC:
+> -		if (process_leaf_attr_block(mp, leaf, 0, ino, blkmap,
+> -				0, &next_hashval, repair)) {
+> -			*repair = 0;
+> -			/* the block is bad.  lose the attribute fork. */
+> -			libxfs_putbuf(bp);
+> -			return(1);
+> -		}
+> -		*repair = *repair || repairlinks;
+> -		break;
+> -
+> +		return process_leaf_da_root(mp, ino, dip, blkmap, repair, bp);
+>  	case XFS_DA_NODE_MAGIC:		/* btree-form attribute */
+>  	case XFS_DA3_NODE_MAGIC:
+> -		/* must do this now, to release block 0 before the traversal */
+> -		if ((*repair || repairlinks) && !no_modify) {
+> -			*repair = 1;
+> -			libxfs_writebuf(bp, 0);
+> -		} else
+> -			libxfs_putbuf(bp);
+> -		error = process_node_attr(mp, ino, dip, blkmap); /* + repair */
+> -		if (error)
+> -			*repair = 0;
+> -		return error;
+> +		return process_node_da_root(mp, ino, dip, blkmap, repair, bp);
+>  	default:
+>  		do_warn(
+>  	_("bad attribute leaf magic # %#x for dir ino %" PRIu64 "\n"),
+> -			be16_to_cpu(leaf->hdr.info.magic), ino);
+> +			be16_to_cpu(info->magic), ino);
+>  		libxfs_putbuf(bp);
+>  		*repair = 0;
+> -		return(1);
+> +		return 1;
+>  	}
+>  
+>  	if (*repair && !no_modify)
+>  		libxfs_writebuf(bp, 0);
+>  	else
+>  		libxfs_putbuf(bp);
+> -
+> -	return(0);  /* repair may be set */
+> +	return 0;  /* repair may be set */
+>  }
+>  
+> -
+>  static int
+>  xfs_acl_from_disk(
+>  	struct xfs_mount	*mp,
