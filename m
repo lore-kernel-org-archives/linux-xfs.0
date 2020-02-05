@@ -2,132 +2,210 @@ Return-Path: <SRS0=QxtL=3Z=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNWANTED_LANGUAGE_BODY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFED1C35247
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 22:43:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11512C352A1
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 22:48:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 91812218AC
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 22:43:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1580942586;
-	bh=nn5r09JSEA69HqCVsbRn5ZRAKkatyDwlsdVsj6TXSvg=;
-	h=Date:From:To:Cc:Subject:List-ID:From;
-	b=qmd8R+C+4uydH+HePYckIAiH3uGEFhY9WgIEes7JuP3OftQcEsrYcgW4szGrO46n7
-	 +Ap02CZwyRG04m1eMYf8KlonI0SaklmNd2b4bNAzXgetLr61bHuxvplXzQXPtbFpb0
-	 /+wBaq6oSiG8qeE54RnrRhq/rJJ+WH0IDw9rFBPU=
+	by mail.kernel.org (Postfix) with ESMTP id D1BDA2082E
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 22:48:25 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bZDFkHnP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727491AbgBEWnG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Feb 2020 17:43:06 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59120 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727493AbgBEWnF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 5 Feb 2020 17:43:05 -0500
-Received: from localhost (c-67-169-218-210.hsd1.or.comcast.net [67.169.218.210])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1727501AbgBEWsZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Feb 2020 17:48:25 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:44112 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727307AbgBEWsZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Feb 2020 17:48:25 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1580942904;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=iiv+hFypyOtyHQ75Ev+LMGFV0c8VrCNpawf4WxNY7Yw=;
+        b=bZDFkHnPoNfdnnViBzQXSaYjM+yvc+oL61ITmmGLnpqkDPb+AgBSZzu4H2BGcSdHkll6tV
+        7C6GKjQuRMFeB34ebuZhKFjSo1AdG2HaxM2xsXL3O9Nqc97RWTIxu5TYQvVZYPC/RmJqQr
+        /0Gi8wLnAODDAyw/wRsqtsfnEnaP53o=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-346-Arg-gos3NIq1Mp_hcL-EvA-1; Wed, 05 Feb 2020 17:48:22 -0500
+X-MC-Unique: Arg-gos3NIq1Mp_hcL-EvA-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 65D72214AF;
-        Wed,  5 Feb 2020 22:43:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1580942584;
-        bh=nn5r09JSEA69HqCVsbRn5ZRAKkatyDwlsdVsj6TXSvg=;
-        h=Date:From:To:Cc:Subject:From;
-        b=v+bTsd3SYSOG83+82drqx4QCsD7STR7LWPil9yz8osY3LqRWEK7Xn4uw3r87HI2ib
-         JC7qWCSMlB6+ZxzIkB79R3eGP4IZ+MSSpijveIabqAbwd3sbBy+ODSLE8R3q4sxdjo
-         BhB3Wreljh++Fzh07OMNhpp5qn9InM8a999FMkYs=
-Date:   Wed, 5 Feb 2020 14:43:04 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, linux-kernel@vger.kernel.org,
-        sandeen@sandeen.net, hch@lst.de
-Subject: [GIT PULL] xfs: moar new code for 5.6
-Message-ID: <20200205224303.GF6870@magnolia>
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 65D911081FA2;
+        Wed,  5 Feb 2020 22:48:21 +0000 (UTC)
+Received: from segfault.boston.devel.redhat.com (segfault.boston.devel.redhat.com [10.19.60.26])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 49B7284DB8;
+        Wed,  5 Feb 2020 22:48:21 +0000 (UTC)
+Received: by segfault.boston.devel.redhat.com (Postfix, from userid 3734)
+        id 4B4A3208CD11; Wed,  5 Feb 2020 17:48:20 -0500 (EST)
+From:   Jeff Moyer <jmoyer@redhat.com>
+To:     linux-fsdevel@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>
+Subject: [PATCH 2/3] t_mmap_collision: fix hard-coded page size
+Date:   Wed,  5 Feb 2020 17:48:17 -0500
+Message-Id: <20200205224818.18707-3-jmoyer@redhat.com>
+In-Reply-To: <20200205224818.18707-1-jmoyer@redhat.com>
+References: <20200205224818.18707-1-jmoyer@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
+Fix the test to run on non-4k page size systems.
 
-Please pull this second batch of new changes for 5.6-rc1.  This contains
-the buffer error code refactoring I mentioned last week, now that it has
-had extra time to complete the full xfs fuzz testing suite to make sure
-there aren't any obvious new bugs.
+Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
+---
+ src/t_mmap_collision.c | 40 +++++++++++++++++++++-------------------
+ 1 file changed, 21 insertions(+), 19 deletions(-)
 
-This merges cleanly against upstream as of about 15 minutes ago.  Note
-that the -merge-7 and -merge-8 tags both point to the same ten day old
-commit; the message attached to -8 reflects only the changes since last
-week's pull.  Please let me know if anything odd happens during the
-merge, though it should be clean.
+diff --git a/src/t_mmap_collision.c b/src/t_mmap_collision.c
+index d547bc05..c872f4e2 100644
+--- a/src/t_mmap_collision.c
++++ b/src/t_mmap_collision.c
+@@ -25,13 +25,12 @@
+ #include <sys/types.h>
+ #include <unistd.h>
+=20
+-#define PAGE(a) ((a)*0x1000)
+-#define FILE_SIZE PAGE(4)
+-
+ void *dax_data;
+ int nodax_fd;
+ int dax_fd;
+ bool done;
++static int pagesize;
++static int file_size;
+=20
+ #define err_exit(op)                                                    =
+      \
+ {                                                                       =
+      \
+@@ -49,18 +48,18 @@ void punch_hole_fn(void *ptr)
+ 		read =3D 0;
+=20
+ 		do {
+-			rc =3D pread(nodax_fd, dax_data + read, FILE_SIZE - read,
++			rc =3D pread(nodax_fd, dax_data + read, file_size - read,
+ 					read);
+ 			if (rc > 0)
+ 				read +=3D rc;
+ 		} while (rc > 0);
+=20
+-		if (read !=3D FILE_SIZE || rc !=3D 0)
++		if (read !=3D file_size || rc !=3D 0)
+ 			err_exit("pread");
+=20
+ 		rc =3D fallocate(dax_fd,
+ 				FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE,
+-				0, FILE_SIZE);
++				0, file_size);
+ 		if (rc < 0)
+ 			err_exit("fallocate");
+=20
+@@ -81,18 +80,18 @@ void zero_range_fn(void *ptr)
+ 		read =3D 0;
+=20
+ 		do {
+-			rc =3D pread(nodax_fd, dax_data + read, FILE_SIZE - read,
++			rc =3D pread(nodax_fd, dax_data + read, file_size - read,
+ 					read);
+ 			if (rc > 0)
+ 				read +=3D rc;
+ 		} while (rc > 0);
+=20
+-		if (read !=3D FILE_SIZE || rc !=3D 0)
++		if (read !=3D file_size || rc !=3D 0)
+ 			err_exit("pread");
+=20
+ 		rc =3D fallocate(dax_fd,
+ 				FALLOC_FL_ZERO_RANGE | FALLOC_FL_KEEP_SIZE,
+-				0, FILE_SIZE);
++				0, file_size);
+ 		if (rc < 0)
+ 			err_exit("fallocate");
+=20
+@@ -113,11 +112,11 @@ void truncate_down_fn(void *ptr)
+=20
+ 		if (ftruncate(dax_fd, 0) < 0)
+ 			err_exit("ftruncate");
+-		if (fallocate(dax_fd, 0, 0, FILE_SIZE) < 0)
++		if (fallocate(dax_fd, 0, 0, file_size) < 0)
+ 			err_exit("fallocate");
+=20
+ 		do {
+-			rc =3D pread(nodax_fd, dax_data + read, FILE_SIZE - read,
++			rc =3D pread(nodax_fd, dax_data + read, file_size - read,
+ 					read);
+ 			if (rc > 0)
+ 				read +=3D rc;
+@@ -142,15 +141,15 @@ void collapse_range_fn(void *ptr)
+ 	while (!done) {
+ 		read =3D 0;
+=20
+-		if (fallocate(dax_fd, 0, 0, FILE_SIZE) < 0)
++		if (fallocate(dax_fd, 0, 0, file_size) < 0)
+ 			err_exit("fallocate 1");
+-		if (fallocate(dax_fd, FALLOC_FL_COLLAPSE_RANGE, 0, PAGE(1)) < 0)
++		if (fallocate(dax_fd, FALLOC_FL_COLLAPSE_RANGE, 0, pagesize) < 0)
+ 			err_exit("fallocate 2");
+-		if (fallocate(dax_fd, 0, 0, FILE_SIZE) < 0)
++		if (fallocate(dax_fd, 0, 0, file_size) < 0)
+ 			err_exit("fallocate 3");
+=20
+ 		do {
+-			rc =3D pread(nodax_fd, dax_data + read, FILE_SIZE - read,
++			rc =3D pread(nodax_fd, dax_data + read, file_size - read,
+ 					read);
+ 			if (rc > 0)
+ 				read +=3D rc;
+@@ -192,6 +191,9 @@ int main(int argc, char *argv[])
+ 		exit(0);
+ 	}
+=20
++	pagesize =3D getpagesize();
++	file_size =3D 4 * pagesize;
++
+ 	dax_fd =3D open(argv[1], O_RDWR|O_CREAT, S_IRUSR|S_IWUSR);
+ 	if (dax_fd < 0)
+ 		err_exit("dax_fd open");
+@@ -202,15 +204,15 @@ int main(int argc, char *argv[])
+=20
+ 	if (ftruncate(dax_fd, 0) < 0)
+ 		err_exit("dax_fd ftruncate");
+-	if (fallocate(dax_fd, 0, 0, FILE_SIZE) < 0)
++	if (fallocate(dax_fd, 0, 0, file_size) < 0)
+ 		err_exit("dax_fd fallocate");
+=20
+ 	if (ftruncate(nodax_fd, 0) < 0)
+ 		err_exit("nodax_fd ftruncate");
+-	if (fallocate(nodax_fd, 0, 0, FILE_SIZE) < 0)
++	if (fallocate(nodax_fd, 0, 0, file_size) < 0)
+ 		err_exit("nodax_fd fallocate");
+=20
+-	dax_data =3D mmap(NULL, FILE_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED,
++	dax_data =3D mmap(NULL, file_size, PROT_READ|PROT_WRITE, MAP_SHARED,
+ 			dax_fd, 0);
+ 	if (dax_data =3D=3D MAP_FAILED)
+ 		err_exit("mmap");
+@@ -220,7 +222,7 @@ int main(int argc, char *argv[])
+ 	run_test(&truncate_down_fn);
+ 	run_test(&collapse_range_fn);
+=20
+-	if (munmap(dax_data, FILE_SIZE) !=3D 0)
++	if (munmap(dax_data, file_size) !=3D 0)
+ 		err_exit("munmap");
+=20
+ 	err =3D close(dax_fd);
+--=20
+2.19.1
 
---D
-
-The following changes since commit b3531f5fc16d4df2b12567bce48cd9f3ab5f9131:
-
-  xfs: remove unused variable 'done' (2020-01-23 21:24:50 -0800)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.6-merge-8
-
-for you to fetch changes up to cdbcf82b86ea24aa942991b4233cd8ddf13f590c:
-
-  xfs: fix xfs_buf_ioerror_alert location reporting (2020-01-26 14:32:27 -0800)
-
-----------------------------------------------------------------
-(More) new code for 5.6:
-- Refactor the metadata buffer functions to return the usual int error
-value instead of the open coded error checking mess we have now.
-
-----------------------------------------------------------------
-Darrick J. Wong (12):
-      xfs: make xfs_buf_alloc return an error code
-      xfs: make xfs_buf_get_map return an error code
-      xfs: make xfs_buf_read_map return an error code
-      xfs: make xfs_buf_get return an error code
-      xfs: make xfs_buf_get_uncached return an error code
-      xfs: make xfs_buf_read return an error code
-      xfs: make xfs_trans_get_buf_map return an error code
-      xfs: make xfs_trans_get_buf return an error code
-      xfs: remove the xfs_btree_get_buf[ls] functions
-      xfs: make xfs_*read_agf return EAGAIN to ALLOC_FLAG_TRYLOCK callers
-      xfs: remove unnecessary null pointer checks from _read_agf callers
-      xfs: fix xfs_buf_ioerror_alert location reporting
-
- fs/xfs/libxfs/xfs_ag.c          |  21 +++---
- fs/xfs/libxfs/xfs_alloc.c       |  51 ++++++-------
- fs/xfs/libxfs/xfs_attr_remote.c |  22 ++----
- fs/xfs/libxfs/xfs_bmap.c        |  25 ++++---
- fs/xfs/libxfs/xfs_btree.c       |  45 +----------
- fs/xfs/libxfs/xfs_btree.h       |  21 ------
- fs/xfs/libxfs/xfs_da_btree.c    |   8 +-
- fs/xfs/libxfs/xfs_ialloc.c      |  12 +--
- fs/xfs/libxfs/xfs_refcount.c    |   6 --
- fs/xfs/libxfs/xfs_sb.c          |  17 +++--
- fs/xfs/scrub/agheader_repair.c  |   4 -
- fs/xfs/scrub/fscounters.c       |   3 -
- fs/xfs/scrub/repair.c           |  10 ++-
- fs/xfs/xfs_attr_inactive.c      |  17 +++--
- fs/xfs/xfs_buf.c                | 161 ++++++++++++++++++++++++----------------
- fs/xfs/xfs_buf.h                |  33 ++++----
- fs/xfs/xfs_buf_item.c           |   2 +-
- fs/xfs/xfs_discard.c            |   2 +-
- fs/xfs/xfs_dquot.c              |   8 +-
- fs/xfs/xfs_filestream.c         |  11 ++-
- fs/xfs/xfs_inode.c              |  12 +--
- fs/xfs/xfs_log_recover.c        |  30 +++-----
- fs/xfs/xfs_reflink.c            |   2 -
- fs/xfs/xfs_rtalloc.c            |   8 +-
- fs/xfs/xfs_symlink.c            |  37 +++------
- fs/xfs/xfs_trans.h              |  14 ++--
- fs/xfs/xfs_trans_buf.c          |  61 ++++++---------
- 27 files changed, 278 insertions(+), 365 deletions(-)
