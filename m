@@ -2,306 +2,141 @@ Return-Path: <SRS0=QxtL=3Z=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E78AC35247
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 00:50:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6289C35247
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 01:36:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C351421582
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 00:50:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C318217BA
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 01:36:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="XHrz55Qi"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="jq1Uyprw";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="r6gjIFdL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727627AbgBEAui (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Feb 2020 19:50:38 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:36732 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727753AbgBEAui (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Feb 2020 19:50:38 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0150mACH109097;
-        Wed, 5 Feb 2020 00:50:36 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=GQGZM3R32OejC6De2GI0TRV+3NJUH14VFnH6WCUrKYc=;
- b=XHrz55Qi4gfZHOF/rRJaeHITipjRX8Cs7ezpx1WmCkZi9nVCY+tL9zO58YFqjLkEMZAd
- FImAOj0sZVbVkKFP+yFIdlTJ4cZc+za46kQRIH6nB3EgH+r7q+Mxe1be1Kh1OYFZNG3p
- 8oXd0A7gsX6CFnXoGAS9hboDZL6b/UHPLoQfEa3iJeiJbQm0iViVVG9EDk/pAdsWw6J2
- kl9kb0DS3smrqy/eY3O4LyOlMPIHGhjiJSosbKWZt5VZORLJOrqlENcv6afa2YNfPAV6
- UYTI7GlTUi2CrjARDaOpGGmpAyXtuH9UYjYFJowodASvmsEoEnziu6pQZDyad8PNaJd8 lA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2xykbp00xm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 05 Feb 2020 00:50:36 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0150nWTa141503;
-        Wed, 5 Feb 2020 00:50:35 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2xykc1gkny-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 05 Feb 2020 00:50:35 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0150oY7t012104;
-        Wed, 5 Feb 2020 00:50:35 GMT
-Received: from localhost (/10.159.250.52)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 04 Feb 2020 16:50:34 -0800
-Date:   Tue, 4 Feb 2020 16:50:33 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     sandeen@sandeen.net
-Cc:     linux-xfs@vger.kernel.org, alex@zadara.com
-Subject: Re: [PATCH 1/7] xfs_repair: replace verify_inum with libxfs inode
- validators
-Message-ID: <20200205005033.GC6870@magnolia>
-References: <158086359783.2079685.9581209719946834913.stgit@magnolia>
- <158086360402.2079685.8627541630086580270.stgit@magnolia>
+        id S1727745AbgBEBgH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Feb 2020 20:36:07 -0500
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:8169 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727674AbgBEBgH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Feb 2020 20:36:07 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1580866567; x=1612402567;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=tUC/weLluA4zXkbVMM90kQ+DAn1nk78q9gJFp8I1CZo=;
+  b=jq1UyprwC+8oohI/ZNkH3eK5dKBUl4kXeD5fL/iyX43BeGsMBxU6CXx+
+   GBmNHZ4m/NAMHKVVvcb02/hiP+i69uv69axba/eL/MHKY7EFf79e0W1Y7
+   2JSHFX8sChSk37eKwO3lUM3NOY6I8o5hMXQ18Tq7+2dSmA7VzLrNxnXbU
+   c9ly8rx8187hPfVnRtWBUSEnspwOLUABCFbpqgRXTFNvIY0EWiYFqpZcT
+   im3dlTdUFpZ+D1egmd37AgksKEHq3pgUVCbiRCU0tE0EUBE6IOn37ptjN
+   6htAqLqXyKYLGUjg8jkmCAVnE2i71KUQUUxY2kjMuDfdmCbaoE/cDqKI6
+   w==;
+IronPort-SDR: gl/Lvve5G3/Q9R5ysR/YOXX+4gk86dvU64gLXguj1OIKqqXNbjKR8oeOrCzxIOn+jl2OELeGf4
+ bWYzOyMtT+6FzjLM5KjBINGpePlKyUOcd0D1mCaw01Z2TKHcjSSvAT2OAmlXknrpiRNAYk4KE+
+ jBLcdtgupdZ/ZpHZix2UV1fHEp+dBOrm3PmqwpbUbocbL3l5NXbPR6tfEyjEga18JoObSxvbHQ
+ nTHzW+3HD/tID+45PRQf1gaCfaM8N7ZpQF0JLNVI/v+zV1ps2PYt2XwQUuvkhTDfI9hnszU8iy
+ w5M=
+X-IronPort-AV: E=Sophos;i="5.70,404,1574092800"; 
+   d="scan'208";a="133465936"
+Received: from mail-mw2nam10lp2102.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.102])
+  by ob1.hgst.iphmx.com with ESMTP; 05 Feb 2020 09:36:01 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ZMFmIXqKOaoKecaZVy2Rg59AXnIYfgG0rsKkT090zBirUmmhhJNBwPD/7c4MkUJ00h6OetePPb+rL1CTbxoK80T9yxFbz/PfhqZNc626IKli4i9VGvc7piQccJCun8CViVPkbQLn3JVPxQFQkGD3NV9waBUOauS08FIJj2MaV142gZ6Xg0TayTlSXN32Ccm1SJq+aEhK5kNKaJ9mRecDplxxeWSJg8RjLSmaAs/+wQRmTxaDacsQevARzNgkntytIuPl/LXLdvtPV3A+caONtWpshK+yC6u+pxjutvfXwy7W2rJOhPU7dbxcnYeeq/W4mAC4pDyRrZkrXtWPUzoylg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=tUC/weLluA4zXkbVMM90kQ+DAn1nk78q9gJFp8I1CZo=;
+ b=KRtJbPe4V2nQSbf+KoH4jDhkfvIPZ328uyLbLTegPdmIFb5f4Kam8+0mjdIJDxjJLGn9vUKQrFt6ztedNNxiwPejK93k8BcoN1rPvB7B9NpqMgdRGu5PrFYGKG7NtdxdlaTBSt8h4H7LzfEz85uOeROezf8jmbMRlcRZy9rsCcrzO3hki6ixgDDZCArmUxkX9EKqQj0khL3nkRF9JeTPWMpP6EqE0W8/+feAuTVWk0hgYOn7/B+7gbvzy0m4uMejtac3MeaQt4sLBolVSHEdyf7NGn2pdH/DWPkPIvqW0K9ReQiXX2lq8F48nmDiKPIRTQjs3nB3t4Zg169lvlocLA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=tUC/weLluA4zXkbVMM90kQ+DAn1nk78q9gJFp8I1CZo=;
+ b=r6gjIFdLSFiXK2ZbXtWqbkY8EA5OXhgai5jBe66rCUH8XM7IbD+NPxZ0QXQ9aBw3LzSxU0JoIf+m2MDGeUIkg0LB6GqH8dh8e3dnaq5eXtIeKYCd5Kjo2EIvOTN2VPvG6dAdYJwCqnFmTh1ZaTXcUpttorHBtUn87Zkz2/PFZec=
+Received: from BYAPR04MB5816.namprd04.prod.outlook.com (20.179.59.16) by
+ BYAPR04MB4677.namprd04.prod.outlook.com (52.135.240.146) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2686.32; Wed, 5 Feb 2020 01:35:59 +0000
+Received: from BYAPR04MB5816.namprd04.prod.outlook.com
+ ([fe80::cd8e:d1de:e661:a61]) by BYAPR04MB5816.namprd04.prod.outlook.com
+ ([fe80::cd8e:d1de:e661:a61%5]) with mapi id 15.20.2686.034; Wed, 5 Feb 2020
+ 01:35:59 +0000
+From:   Damien Le Moal <Damien.LeMoal@wdc.com>
+To:     "Markus.Elfring@web.de" <Markus.Elfring@web.de>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+CC:     "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
+        "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+        "jth@kernel.org" <jth@kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "hare@suse.de" <hare@suse.de>, Naohiro Aota <Naohiro.Aota@wdc.com>
+Subject: Re: [PATCH v10 1/2] fs: New zonefs file system
+Thread-Topic: [PATCH v10 1/2] fs: New zonefs file system
+Thread-Index: AQHV20ADF3+Bss54OkKg7zGNiqEfb6gL0rsA
+Date:   Wed, 5 Feb 2020 01:35:58 +0000
+Message-ID: <cfb36fa5dcf97113198848874c0ca9ba215e26fa.camel@wdc.com>
+References: <68ef8614-87f8-1b6e-7f55-f9d53a0f1e1c@web.de>
+In-Reply-To: <68ef8614-87f8-1b6e-7f55-f9d53a0f1e1c@web.de>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Evolution 3.34.3 (3.34.3-1.fc31) 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Damien.LeMoal@wdc.com; 
+x-originating-ip: [199.255.47.11]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 8b146daf-3c4e-488d-f797-08d7a9dbc0ba
+x-ms-traffictypediagnostic: BYAPR04MB4677:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <BYAPR04MB4677EC039B4C1DF503A2C46CE7020@BYAPR04MB4677.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:9508;
+x-forefront-prvs: 0304E36CA3
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(396003)(39860400002)(366004)(346002)(376002)(136003)(199004)(189003)(2616005)(2906002)(66946007)(86362001)(26005)(91956017)(71200400001)(6506007)(4744005)(64756008)(66556008)(66476007)(66446008)(186003)(76116006)(5660300002)(36756003)(54906003)(110136005)(316002)(6486002)(81166006)(8936002)(81156014)(8676002)(478600001)(4326008)(6512007);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR04MB4677;H:BYAPR04MB5816.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 9VAv2uQPzNVfj+4T5Hd+snEB/MiXOYQobuh+mWHSPpFFqVLgquvm1S5siO62JOedJlbnv8yJs6XQbSjaVZyoDfIFKXVOqIaVrmEeRYm445ZgskyPVIocHWpHoo4VHb7DoF28eVNS0gxr7e0K6jCdlbhUZstvJw7HUOUU2yxbaGh+T3T+DqD+eWVkptTX92tx9BNhhxtwUbsjfuEXvGtXJ7xRquQ7YWnEjDhM2soNQRWERzx44xQqtYutwk0rivQHf63B0ql/aYnyOUyY+v/EHJsLYO1K/dgOdY5tAwcAvWjPfgATSQoEabDFo/ODJYWHt3RUGqwJpoFQFXw6CGAHjCLHtx27VKlLjzcsUdpMhlfwxqIycirP+5UIby5QE7VnDo6QVcLLH78YiUXpT7GAKxdThKvV6jO43VQtVzB9IB9jHsL7KaE/rIR8suoavqsh
+x-ms-exchange-antispam-messagedata: O4nrtYeU14SgElbRC4lalGR5k2t77hG7AyA3wKdKvq3fGu8mnS9wrUGmnK94WD3InqGkvgwfhl7mXgK5Hv7KldazABWFpn5B+4UxKEpBC0ywPtC5W0TuJ84Z2sxiY0/eZ8EuutboNsNCwwRNwi/aHg==
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <81DEECF8680B74498D7C673139051F4C@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <158086360402.2079685.8627541630086580270.stgit@magnolia>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9521 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2002050003
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9521 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2002050003
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8b146daf-3c4e-488d-f797-08d7a9dbc0ba
+X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Feb 2020 01:35:58.9496
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: rxqawQQGdnwogqDULz6cKu8mf4g0orCFCLfbWmrOJDPF4R9O+zrABKundvf5ipealnd6xayQL2Nq2fx0fuQpRg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB4677
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 04, 2020 at 04:46:44PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Repair uses the verify_inum function to validate inode numbers that it
-> finds in the superblock and in directories.  libxfs now has validator
-> functions to cover that kind of thing, so remove verify_inum().  As a
-> side bonus, this means that we will flag directories that point to the
-> quota/realtime metadata inodes.
-> 
-> This fixes a regression found by fuzzing u3.sfdir3.hdr.parent.i4 to
-> lastbit (aka making a directory's .. point to the user quota inode) in
-> xfs/384.
-
-Whoops, this was supposed to be in the previous series, not this one.
-
---D
-
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  libxfs/libxfs_api_defs.h |    1 +
->  repair/dino_chunks.c     |    2 +-
->  repair/dinode.c          |   29 -----------------------------
->  repair/dinode.h          |    4 ----
->  repair/dir2.c            |    7 +++----
->  repair/phase4.c          |   12 ++++++------
->  repair/phase6.c          |    8 ++++----
->  7 files changed, 15 insertions(+), 48 deletions(-)
-> 
-> 
-> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-> index 6e09685b..9daf2635 100644
-> --- a/libxfs/libxfs_api_defs.h
-> +++ b/libxfs/libxfs_api_defs.h
-> @@ -176,6 +176,7 @@
->  #define xfs_trans_roll			libxfs_trans_roll
->  
->  #define xfs_verify_cksum		libxfs_verify_cksum
-> +#define xfs_verify_dir_ino		libxfs_verify_dir_ino
->  #define xfs_verify_ino			libxfs_verify_ino
->  #define xfs_verify_rtbno		libxfs_verify_rtbno
->  #define xfs_zero_extent			libxfs_zero_extent
-> diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
-> index 00b67468..dbf3d37a 100644
-> --- a/repair/dino_chunks.c
-> +++ b/repair/dino_chunks.c
-> @@ -65,7 +65,7 @@ check_aginode_block(xfs_mount_t	*mp,
->   * inode chunk.  returns number of new inodes if things are good
->   * and 0 if bad.  start is the start of the discovered inode chunk.
->   * routine assumes that ino is a legal inode number
-> - * (verified by verify_inum()).  If the inode chunk turns out
-> + * (verified by libxfs_verify_ino()).  If the inode chunk turns out
->   * to be good, this routine will put the inode chunk into
->   * the good inode chunk tree if required.
->   *
-> diff --git a/repair/dinode.c b/repair/dinode.c
-> index 8af2cb25..0d9c96be 100644
-> --- a/repair/dinode.c
-> +++ b/repair/dinode.c
-> @@ -171,35 +171,6 @@ verify_ag_bno(xfs_sb_t *sbp,
->  	return 1;
->  }
->  
-> -/*
-> - * returns 0 if inode number is valid, 1 if bogus
-> - */
-> -int
-> -verify_inum(xfs_mount_t		*mp,
-> -		xfs_ino_t	ino)
-> -{
-> -	xfs_agnumber_t	agno;
-> -	xfs_agino_t	agino;
-> -	xfs_agblock_t	agbno;
-> -	xfs_sb_t	*sbp = &mp->m_sb;;
-> -
-> -	/* range check ag #, ag block.  range-checking offset is pointless */
-> -
-> -	agno = XFS_INO_TO_AGNO(mp, ino);
-> -	agino = XFS_INO_TO_AGINO(mp, ino);
-> -	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
-> -	if (agbno == 0)
-> -		return 1;
-> -
-> -	if (ino == 0 || ino == NULLFSINO)
-> -		return(1);
-> -
-> -	if (ino != XFS_AGINO_TO_INO(mp, agno, agino))
-> -		return(1);
-> -
-> -	return verify_ag_bno(sbp, agno, agbno);
-> -}
-> -
->  /*
->   * have a separate routine to ensure that we don't accidentally
->   * lose illegally set bits in the agino by turning it into an FSINO
-> diff --git a/repair/dinode.h b/repair/dinode.h
-> index aa177465..98238357 100644
-> --- a/repair/dinode.h
-> +++ b/repair/dinode.h
-> @@ -77,10 +77,6 @@ verify_uncertain_dinode(xfs_mount_t *mp,
->  		xfs_agnumber_t agno,
->  		xfs_agino_t ino);
->  
-> -int
-> -verify_inum(xfs_mount_t		*mp,
-> -		xfs_ino_t	ino);
-> -
->  int
->  verify_aginum(xfs_mount_t	*mp,
->  		xfs_agnumber_t	agno,
-> diff --git a/repair/dir2.c b/repair/dir2.c
-> index e43a9732..723aee1f 100644
-> --- a/repair/dir2.c
-> +++ b/repair/dir2.c
-> @@ -215,7 +215,7 @@ process_sf_dir2(
->  		if (lino == ino) {
->  			junkit = 1;
->  			junkreason = _("current");
-> -		} else if (verify_inum(mp, lino)) {
-> +		} else if (!libxfs_verify_dir_ino(mp, lino)) {
->  			junkit = 1;
->  			junkreason = _("invalid");
->  		} else if (lino == mp->m_sb.sb_rbmino)  {
-> @@ -486,8 +486,7 @@ _("corrected entry offsets in directory %" PRIu64 "\n"),
->  	 * If the validation fails for the root inode we fix it in
->  	 * the next else case.
->  	 */
-> -	if (verify_inum(mp, *parent) && ino != mp->m_sb.sb_rootino)  {
-> -
-> +	if (!libxfs_verify_dir_ino(mp, *parent) && ino != mp->m_sb.sb_rootino) {
->  		do_warn(
->  _("bogus .. inode number (%" PRIu64 ") in directory inode %" PRIu64 ", "),
->  				*parent, ino);
-> @@ -674,7 +673,7 @@ process_dir2_data(
->  			 * (or did it ourselves) during phase 3.
->  			 */
->  			clearino = 0;
-> -		} else if (verify_inum(mp, ent_ino)) {
-> +		} else if (!libxfs_verify_dir_ino(mp, ent_ino)) {
->  			/*
->  			 * Bad inode number.  Clear the inode number and the
->  			 * entry will get removed later.  We don't trash the
-> diff --git a/repair/phase4.c b/repair/phase4.c
-> index e1ba778f..8197db06 100644
-> --- a/repair/phase4.c
-> +++ b/repair/phase4.c
-> @@ -36,7 +36,7 @@ quotino_check(xfs_mount_t *mp)
->  	ino_tree_node_t *irec;
->  
->  	if (mp->m_sb.sb_uquotino != NULLFSINO && mp->m_sb.sb_uquotino != 0)  {
-> -		if (verify_inum(mp, mp->m_sb.sb_uquotino))
-> +		if (!libxfs_verify_ino(mp, mp->m_sb.sb_uquotino))
->  			irec = NULL;
->  		else
->  			irec = find_inode_rec(mp,
-> @@ -52,7 +52,7 @@ quotino_check(xfs_mount_t *mp)
->  	}
->  
->  	if (mp->m_sb.sb_gquotino != NULLFSINO && mp->m_sb.sb_gquotino != 0)  {
-> -		if (verify_inum(mp, mp->m_sb.sb_gquotino))
-> +		if (!libxfs_verify_ino(mp, mp->m_sb.sb_gquotino))
->  			irec = NULL;
->  		else
->  			irec = find_inode_rec(mp,
-> @@ -68,7 +68,7 @@ quotino_check(xfs_mount_t *mp)
->  	}
->  
->  	if (mp->m_sb.sb_pquotino != NULLFSINO && mp->m_sb.sb_pquotino != 0)  {
-> -		if (verify_inum(mp, mp->m_sb.sb_pquotino))
-> +		if (!libxfs_verify_ino(mp, mp->m_sb.sb_pquotino))
->  			irec = NULL;
->  		else
->  			irec = find_inode_rec(mp,
-> @@ -112,9 +112,9 @@ quota_sb_check(xfs_mount_t *mp)
->  	    (mp->m_sb.sb_pquotino == NULLFSINO || mp->m_sb.sb_pquotino == 0))  {
->  		lost_quotas = 1;
->  		fs_quotas = 0;
-> -	} else if (!verify_inum(mp, mp->m_sb.sb_uquotino) &&
-> -			!verify_inum(mp, mp->m_sb.sb_gquotino) &&
-> -			!verify_inum(mp, mp->m_sb.sb_pquotino)) {
-> +	} else if (libxfs_verify_ino(mp, mp->m_sb.sb_uquotino) &&
-> +		   libxfs_verify_ino(mp, mp->m_sb.sb_gquotino) &&
-> +		   libxfs_verify_ino(mp, mp->m_sb.sb_pquotino)) {
->  		fs_quotas = 1;
->  	}
->  }
-> diff --git a/repair/phase6.c b/repair/phase6.c
-> index 0874b649..70135694 100644
-> --- a/repair/phase6.c
-> +++ b/repair/phase6.c
-> @@ -1814,7 +1814,7 @@ longform_dir2_entry_check_data(
->  			}
->  			continue;
->  		}
-> -		ASSERT(no_modify || !verify_inum(mp, inum));
-> +		ASSERT(no_modify || libxfs_verify_dir_ino(mp, inum));
->  		/*
->  		 * special case the . entry.  we know there's only one
->  		 * '.' and only '.' points to itself because bogus entries
-> @@ -1845,7 +1845,7 @@ longform_dir2_entry_check_data(
->  		/*
->  		 * skip entries with bogus inumbers if we're in no modify mode
->  		 */
-> -		if (no_modify && verify_inum(mp, inum))
-> +		if (no_modify && !libxfs_verify_dir_ino(mp, inum))
->  			continue;
->  
->  		/* validate ftype field if supported */
-> @@ -2634,14 +2634,14 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
->  		fname[sfep->namelen] = '\0';
->  
->  		ASSERT(no_modify || (lino != NULLFSINO && lino != 0));
-> -		ASSERT(no_modify || !verify_inum(mp, lino));
-> +		ASSERT(no_modify || libxfs_verify_dir_ino(mp, lino));
->  
->  		/*
->  		 * Also skip entries with bogus inode numbers if we're
->  		 * in no modify mode.
->  		 */
->  
-> -		if (no_modify && verify_inum(mp, lino))  {
-> +		if (no_modify && !libxfs_verify_dir_ino(mp, lino))  {
->  			next_sfep = libxfs_dir2_sf_nextentry(mp, sfp, sfep);
->  			continue;
->  		}
-> 
+T24gVHVlLCAyMDIwLTAyLTA0IGF0IDEwOjQ2ICswMTAwLCBNYXJrdXMgRWxmcmluZyB3cm90ZToN
+Cj4g4oCmDQo+ID4gKysrIGIvZnMvem9uZWZzL3N1cGVyLmMNCj4g4oCmDQo+ID4gK3N0YXRpYyBj
+b25zdCBjaGFyICp6Z3JvdXBzX25hbWVbWk9ORUZTX1pUWVBFX01BWF0gPSB7ICJjbnYiLCAic2Vx
+IiB9Ow0KPiANCj4gQ2FuIHRoaXMgYXJyYXkgYmUgdHJlYXRlZCBhcyBpbW11dGFibGU/DQo+IEhv
+dyBkbyB5b3UgdGhpbmsgYWJvdXQgdG8gdXNlIHRoZSBmb2xsb3dpbmcgY29kZSB2YXJpYW50Pw0K
+PiANCj4gK3N0YXRpYyBjb25zdCBjaGFyIGNvbnN0ICp6Z3JvdXBzX25hbWVbWk9ORUZTX1pUWVBF
+X01BWF0gPSB7ICJjbnYiLCAic2VxIiB9Ow0KDQpUaGF0IGRvZXMgbm90IGNvbXBpbGU6IGR1cGxp
+Y2F0ZWQgY29uc3QuDQpJbiBhbnkgY2FzZSwgSSBhbSBub3Qgc3VyZSB3aGF0IHRoaXMgd291bGQg
+YWNoaWV2ZSBzaW5jZSBzdHJpbmcNCmxpdGVyYWxzIGFyZSBjb25zdGFudHMgYnkgZGVmYXVsdCBh
+bmQgdGhlIHBvaW50ZXIgdG8gdGhlIGFycmF5IGlzDQpkZWNsYXJlZCBhcyBhIGNvbnN0YW50IHRv
+by4gVGhpcyBlbmRzIHVwIGNvbXBsZXRlbHkgd2l0aCByZWFkLW9ubHkgdGV4dA0Kc2VjdGlvbi4N
+Cg0KRGVjbGFyaW5nIGl0IGFzDQoNCnN0YXRpYyBjb25zdCBjaGFyICogY29uc3Qgemdyb3Vwc19u
+YW1lW10gPSB7ICJjbnYiLCAic2VxIiB9Ow0KDQppcyBwcm9iYWJseSB3aGF0IHlvdSBhcmUgc3Vn
+Z2VzdGluZywgYnV0IHNpbmNlIHRoZSBzdHJpbmcgbGl0ZXJhbHMgYXJlDQphbHJlYWR5IGNvbnN0
+YW50cyBieSBkZWZhdWx0LCBJIGRvIG5vdCB0aGluayB0aGVyZSBpcyBhbnkgZGlmZmVyZW5jZS4N
+Cg0KPiANCj4gUmVnYXJkcywNCj4gTWFya3VzDQoNCi0tIA0KRGFtaWVuIExlIE1vYWwNCldlc3Rl
+cm4gRGlnaXRhbCBSZXNlYXJjaA0K
