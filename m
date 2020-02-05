@@ -7,72 +7,73 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FCDFC35249
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 05:28:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 371DEC35249
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 05:29:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 20DEF2085B
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 05:28:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0604021927
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 05:29:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="HsE5G0gu"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="e+d95x8Z"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725468AbgBEF2z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Feb 2020 00:28:55 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:45100 "EHLO
+        id S1725497AbgBEF3B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Feb 2020 00:29:01 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:45216 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725385AbgBEF2z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Feb 2020 00:28:55 -0500
+        with ESMTP id S1725770AbgBEF3B (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Feb 2020 00:29:01 -0500
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0155SoHm122030;
-        Wed, 5 Feb 2020 05:28:52 GMT
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0155SnrL122020;
+        Wed, 5 Feb 2020 05:28:55 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
  references : from : message-id : date : mime-version : in-reply-to :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=tIXYbiQ+yxoNT4Aa6VSSyiUhWA6aNQyRCaSNG54vC64=;
- b=HsE5G0gu1zEk6NYnJ295OPCRCyLF/YZIA0ADCJ3DuuIWtvVkV6KeRqPvzmIa99vQZNd3
- yOqWkfKz73rMoLImWrM56O9u3mUXxljtzldtKvIgPMW4y9kfNQqYSfu9qcj+ZGlj0ETJ
- ATdYb9X9UdANzUzVskyytOhDOA4RzQPDQ3mli881zyuBA6fndOTcZVp8F7c/DeUiomPR
- 6yl+LMGI79sQhZBpZpSiK/h0fKz7/R08n1d4TUtZ/NOj7qKun0Nq84EW7rMpyZeM7DZQ
- YajKEpbs4xACl2GzIjLBIEwGrYPWKBp3vthdcE1CsW1EUHboe7u1altdv3P5VB9kVA4K MA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2xykbp0s4g-1
+ bh=kOPrxQIhCLhFEfI6vTWUDHPrEpUc1Q71MRlqnWIeQQ4=;
+ b=e+d95x8ZDU3v9q0e67tgOjgmyt6ndXPYRvI2fRaXVdfWzM15mmaybex+VaRQx3fVAz/3
+ iD9ZDjQI7lT0NT3C08o2xY5SjhrTIA9p5YZQcyIunJtyD3yhp2BZGDbS0mQtmarIpx4N
+ Oj1goql5L/nLP81Ag8KzHF01Jn764CMlrxTT3EBNQ81NkfS4JEmfSk9y42fyEaJCZXC+
+ YCAs5lT6/1GBKHt8SnJmqi4H0kMIupJp7LhSHvMd2JnLNGN4qDKEWvlDDMTSpDH+bvOF
+ ypnjQFKa3HLNO8aOjf+ALAA9Ylpx8mF7TU+9AFSpEVA9qB5HX0H09EwONulOivHv915b Tw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2xykbp0s4r-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 05 Feb 2020 05:28:52 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0155Smgr068532;
-        Wed, 5 Feb 2020 05:28:51 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 2xykc43ch3-1
+        Wed, 05 Feb 2020 05:28:55 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0155SkL2084438;
+        Wed, 5 Feb 2020 05:28:55 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 2xykc1wue2-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 05 Feb 2020 05:28:51 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0155SibN029121;
-        Wed, 5 Feb 2020 05:28:45 GMT
+        Wed, 05 Feb 2020 05:28:54 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0155Ss5q011148;
+        Wed, 5 Feb 2020 05:28:54 GMT
 Received: from [192.168.1.9] (/67.1.3.112)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 04 Feb 2020 21:28:44 -0800
-Subject: Re: [PATCH 1/4] libxfs: re-sort libxfs_api_defs.h defines
+        with ESMTP ; Tue, 04 Feb 2020 21:28:54 -0800
+Subject: Re: [PATCH 2/4] libfrog: remove libxfs.h dependencies in fsgeom.c and
+ linux.c
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@sandeen.net
-Cc:     linux-xfs@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
 References: <158086356778.2079557.17601708483399404544.stgit@magnolia>
- <158086357391.2079557.7271114884346251108.stgit@magnolia>
+ <158086358002.2079557.9233731246621270812.stgit@magnolia>
 From:   Allison Collins <allison.henderson@oracle.com>
-Message-ID: <82b5ccf7-c147-8df6-5c03-ef5dc6db341a@oracle.com>
-Date:   Tue, 4 Feb 2020 22:28:43 -0700
+Message-ID: <a6b6bb58-e5c2-eab4-d952-d4b02126fd69@oracle.com>
+Date:   Tue, 4 Feb 2020 22:28:53 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <158086357391.2079557.7271114884346251108.stgit@magnolia>
+In-Reply-To: <158086358002.2079557.9233731246621270812.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9521 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1911140001 definitions=main-2002050045
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9521 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
  definitions=main-2002050045
@@ -82,58 +83,53 @@ List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 
+
 On 2/4/20 5:46 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Re-fix the sorting in this file.
+> libfrog isn't supposed to depend on libxfs, so don't include the header
+> file in the libfrog source code.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Looks ok to me
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+Looks ok
 Reviewed-by: Allison Collins <allison.henderson@oracle.com>
 
 > ---
->   libxfs/libxfs_api_defs.h |    9 +++++----
->   1 file changed, 5 insertions(+), 4 deletions(-)
+>   libfrog/fsgeom.c |    4 +++-
+>   libfrog/linux.c  |    4 ++--
+>   2 files changed, 5 insertions(+), 3 deletions(-)
 > 
 > 
-> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-> index c7fa1607..6e09685b 100644
-> --- a/libxfs/libxfs_api_defs.h
-> +++ b/libxfs/libxfs_api_defs.h
-> @@ -93,6 +93,7 @@
->   #define xfs_dqblk_repair		libxfs_dqblk_repair
->   #define xfs_dquot_verify		libxfs_dquot_verify
+> diff --git a/libfrog/fsgeom.c b/libfrog/fsgeom.c
+> index 19a4911f..bd93924e 100644
+> --- a/libfrog/fsgeom.c
+> +++ b/libfrog/fsgeom.c
+> @@ -2,7 +2,9 @@
+>   /*
+>    * Copyright (c) 2000-2005 Silicon Graphics, Inc. All Rights Reserved.
+>    */
+> -#include "libxfs.h"
+> +#include "platform_defs.h"
+> +#include "xfs.h"
+> +#include "bitops.h"
+>   #include "fsgeom.h"
+>   #include "util.h"
 >   
-> +#define xfs_finobt_calc_reserves	libxfs_finobt_calc_reserves
->   #define xfs_free_extent			libxfs_free_extent
->   #define xfs_fs_geometry			libxfs_fs_geometry
->   #define xfs_highbit32			libxfs_highbit32
-> @@ -118,13 +119,16 @@
->   #define xfs_perag_put			libxfs_perag_put
->   #define xfs_prealloc_blocks		libxfs_prealloc_blocks
+> diff --git a/libfrog/linux.c b/libfrog/linux.c
+> index 79bd79eb..41a168b4 100644
+> --- a/libfrog/linux.c
+> +++ b/libfrog/linux.c
+> @@ -9,8 +9,8 @@
+>   #include <sys/ioctl.h>
+>   #include <sys/sysinfo.h>
 >   
-> +#define xfs_read_agf			libxfs_read_agf
->   #define xfs_refc_block			libxfs_refc_block
-> +#define xfs_refcountbt_calc_reserves	libxfs_refcountbt_calc_reserves
->   #define xfs_refcountbt_init_cursor	libxfs_refcountbt_init_cursor
->   #define xfs_refcountbt_maxrecs		libxfs_refcountbt_maxrecs
->   #define xfs_refcount_get_rec		libxfs_refcount_get_rec
->   #define xfs_refcount_lookup_le		libxfs_refcount_lookup_le
+> -#include "libxfs_priv.h"
+> -#include "xfs_fs.h"
+> +#include "platform_defs.h"
+> +#include "xfs.h"
+>   #include "init.h"
 >   
->   #define xfs_rmap_alloc			libxfs_rmap_alloc
-> +#define xfs_rmapbt_calc_reserves	libxfs_rmapbt_calc_reserves
->   #define xfs_rmapbt_init_cursor		libxfs_rmapbt_init_cursor
->   #define xfs_rmapbt_maxrecs		libxfs_rmapbt_maxrecs
->   #define xfs_rmap_compare		libxfs_rmap_compare
-> @@ -176,9 +180,6 @@
->   #define xfs_verify_rtbno		libxfs_verify_rtbno
->   #define xfs_zero_extent			libxfs_zero_extent
->   
-> -#define xfs_refcountbt_calc_reserves	libxfs_refcountbt_calc_reserves
-> -#define xfs_finobt_calc_reserves	libxfs_finobt_calc_reserves
-> -#define xfs_rmapbt_calc_reserves	libxfs_rmapbt_calc_reserves
-> -#define xfs_read_agf			libxfs_read_agf
-> +/* Please keep this list alphabetized. */
->   
->   #endif /* __LIBXFS_API_DEFS_H__ */
+>   extern char *progname;
 > 
