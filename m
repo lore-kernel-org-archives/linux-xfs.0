@@ -2,127 +2,142 @@ Return-Path: <SRS0=QxtL=3Z=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DA08C3524F
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 06:55:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80E5DC3524F
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 07:17:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 04B7421927
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 06:55:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5186520730
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 07:17:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ltjZNNWX"
+	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="QGphYcNV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725385AbgBEGzS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Feb 2020 01:55:18 -0500
-Received: from mail-il1-f193.google.com ([209.85.166.193]:40724 "EHLO
-        mail-il1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726277AbgBEGzS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Feb 2020 01:55:18 -0500
-Received: by mail-il1-f193.google.com with SMTP id i7so961451ilr.7;
-        Tue, 04 Feb 2020 22:55:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=4AA1F5TWGVsxveJtsuc5HZZRZPRGGdeZZ+73WmC7wtE=;
-        b=ltjZNNWX1hRxH/ymxgCm+t8L3LTwkVp3PjnbB+ZcB2uZMsb50k2hw8E2QNbBpmfmiI
-         I0s5ksV2pIOrKcw+vhm1MxrAY2ix+GmbIRUv8JTs7rLeJchhOnAaNIPAFEHeUPoIKiUF
-         12PE879HODkvAlEAmQdvwZXjkjxritUynE2OxdBiO4uohp6BAD4TLJ2r53qRPV72CFaI
-         7SltJce83fpXPdB6I61eyoAFf2R891VVVAfMlXFOb+a4pJLr+tQuOjXA5C5TQwBCsomP
-         cchRWBtV6rmEepwWXOajTUpp7plIDqFNp5djhkn3Bggnwka9g9tu6My0Q47rGZslynKi
-         3suA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=4AA1F5TWGVsxveJtsuc5HZZRZPRGGdeZZ+73WmC7wtE=;
-        b=SPLLp9Mh5iHeLJT2Ur6uBfn5O1ReIQxceWH0uNq03ozivxVy4wVy3/BkWjpzNTOGWG
-         eJXqKOdqnV+QI8sAd2cX3GbfyihTadvP0Z4PrraCdIiYJ49zwW70M6crvPyR+grxlJJj
-         a03d1QYQfk/EAMpkL/DW2BDEOBrF27DKKSAdaB5zdGC8iq+hCDNnzA/ZPbF+1eyDHEaa
-         g1grqZiNqqfMQDJnb7GsB3rINXWjnOfSHBRV3eY45oO43H/eH24BJLouL4hM5PlgM1xq
-         hvcp0bGFXVbDOBTnAKhK0R9nf9vXVSn2Xz9/XacT7WFtf6ta5wi6pnSlIloMJAaAZiN2
-         LH0g==
-X-Gm-Message-State: APjAAAU6IjTQGjmPmQgTTuyl0U2UwChJnDmpDdy5VKE46elbaEppI2eD
-        I11Bfk0LM0F4szs256feZxdfqt8NTAK8831776k=
-X-Google-Smtp-Source: APXvYqzdljwWOahm5VBi7+srRJXHWl5qbAYsb0csgxnSXsDOW4PKtcMcAt8gY/gmxZkWqvvxByOPZLEsEMIlRXI2n0k=
-X-Received: by 2002:a92:8656:: with SMTP id g83mr25504865ild.9.1580885717689;
- Tue, 04 Feb 2020 22:55:17 -0800 (PST)
+        id S1726997AbgBEHRX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Feb 2020 02:17:23 -0500
+Received: from mout.web.de ([212.227.17.11]:43989 "EHLO mout.web.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725906AbgBEHRX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Feb 2020 02:17:23 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
+        s=dbaedf251592; t=1580887019;
+        bh=SkuXuMRSS5wsjmW1Km6FqhwvLA7kjZhl46ps8ER7LZs=;
+        h=X-UI-Sender-Class:Subject:To:Cc:References:From:Date:In-Reply-To;
+        b=QGphYcNVzzD1KNUVIpoWJrFuoHWciBzd+KDuDMdRiqpGHHcj/+5hwCoOaVzDS8kWX
+         s2Cv5G8gADm1cgf7J2Bed9G7HnwMfJ5+plfYWXbZ8tnAtGOp/fuGUnwAMJkW6lmz96
+         4dZ3wV0HgKD4fdjyFc9hsIaJJDrglHdTxK0yS1t8=
+X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
+Received: from [192.168.1.2] ([93.132.89.156]) by smtp.web.de (mrweb103
+ [213.165.67.124]) with ESMTPSA (Nemesis) id 0M5OUd-1jkL6i01OB-00zTRR; Wed, 05
+ Feb 2020 08:16:59 +0100
+Subject: Re: [v10 1/2] fs: New zonefs file system
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Johannes Thumshirn <jth@kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Naohiro Aota <Naohiro.Aota@wdc.com>
+References: <68ef8614-87f8-1b6e-7f55-f9d53a0f1e1c@web.de>
+ <cfb36fa5dcf97113198848874c0ca9ba215e26fa.camel@wdc.com>
+From:   Markus Elfring <Markus.Elfring@web.de>
+Autocrypt: addr=Markus.Elfring@web.de; prefer-encrypt=mutual; keydata=
+ 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 FEE=
+Message-ID: <b1336be5-16f1-cb46-3469-46974406de14@web.de>
+Date:   Wed, 5 Feb 2020 08:16:51 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.1
 MIME-Version: 1.0
-References: <158086090225.1989378.6869317139530865842.stgit@magnolia> <158086092087.1989378.18220785148122680849.stgit@magnolia>
-In-Reply-To: <158086092087.1989378.18220785148122680849.stgit@magnolia>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Wed, 5 Feb 2020 08:55:06 +0200
-Message-ID: <CAOQ4uxi7eDjzjxOU=2_w=putAErKTCTNUqJA-JKef3X9LLZOvQ@mail.gmail.com>
-Subject: Re: [PATCH 3/5] generic/402: skip test if xfs_io can't parse the date value
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Eryu Guan <guaneryu@gmail.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>,
-        Deepa Dinamani <deepa.kernel@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <cfb36fa5dcf97113198848874c0ca9ba215e26fa.camel@wdc.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:Hetht0YPM+njC+iNeb/3vZBWo6z7O1KizW6idhhrNAHpkNW0Bjf
+ NojFku8iaOHFkMzfa/OICv/wZDyWCXAq8THVaoYNeulIJmMa+huTvq/50W9eIFCAF/NanlG
+ aaWegDyR2FXt96aRnjYXt2UnUQl7Umog5MdAO6HaQwfaSV3s73s9MnO2IcAjMra1W/6x2jo
+ I7oGdgJRb+F6PghnzMa5w==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:AuR4KCRsJnQ=:prAEqST1n1TWRnf08QXBRh
+ zw4qO7m/ZRyzI3FGcbnQBbA0VfivoME5CUrJgxCbIinjWhBFkylsNtsJe8y/UDh+cSsV04kMb
+ Fns6yXxT0O/YmGy9AXWqw3CtLpv2RsxU9vdcx/H85rqF6LKGtLyoiOHxsB1ApWjLNzfnYUeAU
+ /aMlpB9ZzlUcKPadtP/snap9yTRWJZ0lzBrLnAeAG7wxh891MebqoPjObx2e4Ke4BqWcPYf0n
+ PMtiCBwcplBHsb1cqUxAnUOmTjldp+BTH1aqZWenbp0zGmg2EwN5ibuCtbpgexB44xsJ0uo5S
+ koFT4KtxsR4djZVqdz4Ti42ldY+okH3gVtUcM90ggPLTS57QcTPbVdGhJThmja/ACE8A0lJfH
+ OFyvCp3l3Pwr+VykSkFwmO1MB15qV6T/HvlNIS5HTtsfu1DpBj+piDtPbV3kh3DPCJmuLK36q
+ 81zWzzROoup9OKVHxIQSbKR2avXWP51z/RdxgfGiGLPSVhR67WLLa+hoIe3eRKo16/6KYY+Wk
+ DyC2kI+QuOWpKEsR7lc560zVW9+7fIRkSl0MJQw/k7Erm3sF9uLf5EjzmRN6E2uy9JH7Kr9A9
+ D+YfmkOrS6kp+IKS6ivighZ8Kn6gBBDdWs0WAYwifz66Z46MuyVn6dvHM7/fro0c7Mi+UW3M/
+ 9dYCn37yo6sHrDBEtdtvxphM00sdo8A70X0DrT6AuWmft5DRSGuwjaQVutWaNnl/Pq90+D8Bt
+ bRXJ66505mwnbl5zLJ0KknyklGR5tp3DZfbCmtpjm1eK6VdXO/yZ5HvRm1NAbG4fk/EKvpyGT
+ V2OPszPyHwFRkGdLx4x+dkQJ3JdJjSuHhIFad7Q4cStGVDA4q9wS1TplE9IaBcDZNp2mChppa
+ vmDobyd/yMczmpjWFYuKY4REyUEpAUUjmeCfhAkgxC6H//10EdkSljMGbT/nq845oX12kTskn
+ PpRWqwN2kuzN1F33FJB7oL7ZUCeLowrVviJCmEUQyt0amPK3qWf5Hxkc7UMiRwqVuB3NFef6K
+ XohDyusB1QQSrmohgKCt1i3+YewmKTDb7pk725FgPV2ueDyPrsNgInMwesK1MOVU8x+Kunltk
+ yib/v4oCJ1RxkUisO6nrWB+rNhEeTe49sARrC42fdG80vrHm8xGxmBuqKP2gvic3/kwUpfJlc
+ qVZPQcTHfqqvx9YRdw4ZPWVXMNVv3rT3ywXr7ttN/qbUTP1dtkQ2M2LCL9WKJPJHBAX6za63P
+ lEue8od3ihiMUtbVo
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 5, 2020 at 2:02 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> Declaring it as
 >
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+> static const char * const zgroups_name[] =3D { "cnv", "seq" };
 >
-> If xfs_io's utimes command cannot interpret the arguments that are given
-> to it, it will print out "Bad value for [am]time".  Detect when this
-> happens and drop the file out of the test entirely.
->
-> This is particularly noticeable on 32-bit platforms and the largest
-> timestamp seconds supported by the filesystem is INT_MAX.  In this case,
-> the maximum value we can cram into tv_sec is INT_MAX, and there is no
-> way to actually test setting a timestamp of INT_MAX + 1 to test the
-> clamping.
->
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  tests/generic/402 |   11 ++++++++++-
->  1 file changed, 10 insertions(+), 1 deletion(-)
->
->
-> diff --git a/tests/generic/402 b/tests/generic/402
-> index 2a34d127..32988866 100755
-> --- a/tests/generic/402
-> +++ b/tests/generic/402
-> @@ -63,10 +63,19 @@ run_test_individual()
->         # check if the time needs update
->         if [ $update_time -eq 1 ]; then
->                 echo "Updating file: $file to timestamp $timestamp"  >> $seqres.full
-> -               $XFS_IO_PROG -f -c "utimes $timestamp 0 $timestamp 0" $file
-> +               $XFS_IO_PROG -f -c "utimes $timestamp 0 $timestamp 0" $file >> $tmp.utimes 2>&1
+> is probably what you are suggesting,
 
-Maybe use > instead of >> to be safe.
-
-Also I would feel more comfortable if we special case the 0 timestamp
-against being skipped, to be safe that we don't have a silent regression
-in xfs_io or something causing all files to be skipped.
-
-Otherwise:
-
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+Yes.
 
 
-> +               cat $tmp.utimes >> $seqres.full
-> +               if grep -q "Bad value" "$tmp.utimes"; then
-> +                       rm -f $file $tmp.utimes
-> +                       return
-> +               fi
-> +               cat $tmp.utimes
-> +               rm $tmp.utimes
->                 if [ $? -ne 0 ]; then
->                         echo "Failed to update times on $file" | tee -a $seqres.full
->                 fi
-> +       else
-> +               test -f $file || return
->         fi
->
->         tsclamp=$((timestamp<tsmin?tsmin:timestamp>tsmax?tsmax:timestamp))
->
+> but since the string literals are already constants by default,
+> I do not think there is any difference.
+
+I propose to define this array also as a completely immutable data structu=
+re.
+
+Regards,
+Markus
