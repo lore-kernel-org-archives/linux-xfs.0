@@ -2,72 +2,76 @@ Return-Path: <SRS0=QxtL=3Z=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD981C35247
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 00:49:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E78AC35247
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 00:50:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 90AAB214AF
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 00:49:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C351421582
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 00:50:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LacLZ7kD"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="XHrz55Qi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727619AbgBEAta (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Feb 2020 19:49:30 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:47152 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727494AbgBEAta (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Feb 2020 19:49:30 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0150mAr7129622;
-        Wed, 5 Feb 2020 00:49:27 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : mime-version : content-type :
- content-transfer-encoding; s=corp-2019-08-05;
- bh=/UCGI5boFXiKeRq60MxlceY6XCNMwqfhGgl7nxmFRz0=;
- b=LacLZ7kDhq1Zhqyx4HC5t3RW2F/rVYZ6QXf4IJIPhaZqUrCU5dk4Pv0vy8lJDx3x+MB0
- o/y3nluLqMrjKuQ2/9Q7I9EqHi1OCp/oT+GtAjkHL/WXeVKDBl1HsvvlOJ9vh94puiiW
- bAimPvG0iaXPz9h5kZNL63C+CJv8ZxHLuSg9Qt/J+53jpTjJfpA294kQ2ahP6AKFiNPB
- yt5jTbhwecP1ieVO+m8kwBGSjGDawDkCcm6CpgzwxzVKmjPWXfr7fI/eI2kwg5wOGde/
- B2GM3FJuU6FHqrHuQTM8IPg7Nc2FrYXgXY4WZJRtX5Nbr3chyPo+eDWo0DmqVj37QU6s 6Q== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2xykbp00r2-1
+        id S1727627AbgBEAui (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Feb 2020 19:50:38 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:36732 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727753AbgBEAui (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Feb 2020 19:50:38 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0150mACH109097;
+        Wed, 5 Feb 2020 00:50:36 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=GQGZM3R32OejC6De2GI0TRV+3NJUH14VFnH6WCUrKYc=;
+ b=XHrz55Qi4gfZHOF/rRJaeHITipjRX8Cs7ezpx1WmCkZi9nVCY+tL9zO58YFqjLkEMZAd
+ FImAOj0sZVbVkKFP+yFIdlTJ4cZc+za46kQRIH6nB3EgH+r7q+Mxe1be1Kh1OYFZNG3p
+ 8oXd0A7gsX6CFnXoGAS9hboDZL6b/UHPLoQfEa3iJeiJbQm0iViVVG9EDk/pAdsWw6J2
+ kl9kb0DS3smrqy/eY3O4LyOlMPIHGhjiJSosbKWZt5VZORLJOrqlENcv6afa2YNfPAV6
+ UYTI7GlTUi2CrjARDaOpGGmpAyXtuH9UYjYFJowodASvmsEoEnziu6pQZDyad8PNaJd8 lA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2xykbp00xm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 05 Feb 2020 00:49:27 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0150cvKO165952;
-        Wed, 5 Feb 2020 00:47:26 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 2xykbqgdvq-1
+        Wed, 05 Feb 2020 00:50:36 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0150nWTa141503;
+        Wed, 5 Feb 2020 00:50:35 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2xykc1gkny-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 05 Feb 2020 00:47:26 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0150lQcc011273;
-        Wed, 5 Feb 2020 00:47:26 GMT
+        Wed, 05 Feb 2020 00:50:35 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0150oY7t012104;
+        Wed, 5 Feb 2020 00:50:35 GMT
 Received: from localhost (/10.159.250.52)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 04 Feb 2020 16:47:25 -0800
-Subject: [PATCH 0/4] libxfs: actually check that writes succeeded
+        with ESMTP ; Tue, 04 Feb 2020 16:50:34 -0800
+Date:   Tue, 4 Feb 2020 16:50:33 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     sandeen@sandeen.net, darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 04 Feb 2020 16:47:25 -0800
-Message-ID: <158086364511.2079905.3531505051831183875.stgit@magnolia>
-User-Agent: StGit/0.17.1-dirty
+To:     sandeen@sandeen.net
+Cc:     linux-xfs@vger.kernel.org, alex@zadara.com
+Subject: Re: [PATCH 1/7] xfs_repair: replace verify_inum with libxfs inode
+ validators
+Message-ID: <20200205005033.GC6870@magnolia>
+References: <158086359783.2079685.9581209719946834913.stgit@magnolia>
+ <158086360402.2079685.8627541630086580270.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <158086360402.2079685.8627541630086580270.stgit@magnolia>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9521 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2002050001
+ engine=8.0.1-1911140001 definitions=main-2002050003
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9521 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
  definitions=main-2002050003
@@ -76,36 +80,228 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+On Tue, Feb 04, 2020 at 04:46:44PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Repair uses the verify_inum function to validate inode numbers that it
+> finds in the superblock and in directories.  libxfs now has validator
+> functions to cover that kind of thing, so remove verify_inum().  As a
+> side bonus, this means that we will flag directories that point to the
+> quota/realtime metadata inodes.
+> 
+> This fixes a regression found by fuzzing u3.sfdir3.hdr.parent.i4 to
+> lastbit (aka making a directory's .. point to the user quota inode) in
+> xfs/384.
 
-A code audit demonstrated that many xfsprogs utilities do not check that
-the buffers they write actually make it to disk.  While the userspace
-buffer cache has a means to check that a buffer was written (which is to
-reread the buffer after the write), most utilities mark a buffer dirty
-and release it to the MRU and do not re-check the buffer.
-
-Worse yet, the MRU will retain the buffers for all failed writes until
-the buffer cache is torn down, but it in turn has no way to communicate
-that writes were lost due to IO errors.  libxfs will flush the device
-when it is unmounted, but as there is no return value, we again fail to
-notice that writes have been lost.  Most likely this leads to a corrupt
-filesystem, which makes it all the more surprising that xfs_repair can
-lose writes yet still return 0!
-
-Fix all this by making delwri_submit a synchronous write operation like
-its kernel counterpart; teaching the buffer cache to mark the buftarg
-when it knows it's losing writes; teaching the device flush functions to
-return error codes; and adding a new "flush filesystem" API that user
-programs can call to check for lost writes or IO errors.  Then teach all
-the userspace programs to flush the fs at exit and report errors.
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
+Whoops, this was supposed to be in the previous series, not this one.
 
 --D
 
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=buffer-write-fixes
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  libxfs/libxfs_api_defs.h |    1 +
+>  repair/dino_chunks.c     |    2 +-
+>  repair/dinode.c          |   29 -----------------------------
+>  repair/dinode.h          |    4 ----
+>  repair/dir2.c            |    7 +++----
+>  repair/phase4.c          |   12 ++++++------
+>  repair/phase6.c          |    8 ++++----
+>  7 files changed, 15 insertions(+), 48 deletions(-)
+> 
+> 
+> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+> index 6e09685b..9daf2635 100644
+> --- a/libxfs/libxfs_api_defs.h
+> +++ b/libxfs/libxfs_api_defs.h
+> @@ -176,6 +176,7 @@
+>  #define xfs_trans_roll			libxfs_trans_roll
+>  
+>  #define xfs_verify_cksum		libxfs_verify_cksum
+> +#define xfs_verify_dir_ino		libxfs_verify_dir_ino
+>  #define xfs_verify_ino			libxfs_verify_ino
+>  #define xfs_verify_rtbno		libxfs_verify_rtbno
+>  #define xfs_zero_extent			libxfs_zero_extent
+> diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
+> index 00b67468..dbf3d37a 100644
+> --- a/repair/dino_chunks.c
+> +++ b/repair/dino_chunks.c
+> @@ -65,7 +65,7 @@ check_aginode_block(xfs_mount_t	*mp,
+>   * inode chunk.  returns number of new inodes if things are good
+>   * and 0 if bad.  start is the start of the discovered inode chunk.
+>   * routine assumes that ino is a legal inode number
+> - * (verified by verify_inum()).  If the inode chunk turns out
+> + * (verified by libxfs_verify_ino()).  If the inode chunk turns out
+>   * to be good, this routine will put the inode chunk into
+>   * the good inode chunk tree if required.
+>   *
+> diff --git a/repair/dinode.c b/repair/dinode.c
+> index 8af2cb25..0d9c96be 100644
+> --- a/repair/dinode.c
+> +++ b/repair/dinode.c
+> @@ -171,35 +171,6 @@ verify_ag_bno(xfs_sb_t *sbp,
+>  	return 1;
+>  }
+>  
+> -/*
+> - * returns 0 if inode number is valid, 1 if bogus
+> - */
+> -int
+> -verify_inum(xfs_mount_t		*mp,
+> -		xfs_ino_t	ino)
+> -{
+> -	xfs_agnumber_t	agno;
+> -	xfs_agino_t	agino;
+> -	xfs_agblock_t	agbno;
+> -	xfs_sb_t	*sbp = &mp->m_sb;;
+> -
+> -	/* range check ag #, ag block.  range-checking offset is pointless */
+> -
+> -	agno = XFS_INO_TO_AGNO(mp, ino);
+> -	agino = XFS_INO_TO_AGINO(mp, ino);
+> -	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
+> -	if (agbno == 0)
+> -		return 1;
+> -
+> -	if (ino == 0 || ino == NULLFSINO)
+> -		return(1);
+> -
+> -	if (ino != XFS_AGINO_TO_INO(mp, agno, agino))
+> -		return(1);
+> -
+> -	return verify_ag_bno(sbp, agno, agbno);
+> -}
+> -
+>  /*
+>   * have a separate routine to ensure that we don't accidentally
+>   * lose illegally set bits in the agino by turning it into an FSINO
+> diff --git a/repair/dinode.h b/repair/dinode.h
+> index aa177465..98238357 100644
+> --- a/repair/dinode.h
+> +++ b/repair/dinode.h
+> @@ -77,10 +77,6 @@ verify_uncertain_dinode(xfs_mount_t *mp,
+>  		xfs_agnumber_t agno,
+>  		xfs_agino_t ino);
+>  
+> -int
+> -verify_inum(xfs_mount_t		*mp,
+> -		xfs_ino_t	ino);
+> -
+>  int
+>  verify_aginum(xfs_mount_t	*mp,
+>  		xfs_agnumber_t	agno,
+> diff --git a/repair/dir2.c b/repair/dir2.c
+> index e43a9732..723aee1f 100644
+> --- a/repair/dir2.c
+> +++ b/repair/dir2.c
+> @@ -215,7 +215,7 @@ process_sf_dir2(
+>  		if (lino == ino) {
+>  			junkit = 1;
+>  			junkreason = _("current");
+> -		} else if (verify_inum(mp, lino)) {
+> +		} else if (!libxfs_verify_dir_ino(mp, lino)) {
+>  			junkit = 1;
+>  			junkreason = _("invalid");
+>  		} else if (lino == mp->m_sb.sb_rbmino)  {
+> @@ -486,8 +486,7 @@ _("corrected entry offsets in directory %" PRIu64 "\n"),
+>  	 * If the validation fails for the root inode we fix it in
+>  	 * the next else case.
+>  	 */
+> -	if (verify_inum(mp, *parent) && ino != mp->m_sb.sb_rootino)  {
+> -
+> +	if (!libxfs_verify_dir_ino(mp, *parent) && ino != mp->m_sb.sb_rootino) {
+>  		do_warn(
+>  _("bogus .. inode number (%" PRIu64 ") in directory inode %" PRIu64 ", "),
+>  				*parent, ino);
+> @@ -674,7 +673,7 @@ process_dir2_data(
+>  			 * (or did it ourselves) during phase 3.
+>  			 */
+>  			clearino = 0;
+> -		} else if (verify_inum(mp, ent_ino)) {
+> +		} else if (!libxfs_verify_dir_ino(mp, ent_ino)) {
+>  			/*
+>  			 * Bad inode number.  Clear the inode number and the
+>  			 * entry will get removed later.  We don't trash the
+> diff --git a/repair/phase4.c b/repair/phase4.c
+> index e1ba778f..8197db06 100644
+> --- a/repair/phase4.c
+> +++ b/repair/phase4.c
+> @@ -36,7 +36,7 @@ quotino_check(xfs_mount_t *mp)
+>  	ino_tree_node_t *irec;
+>  
+>  	if (mp->m_sb.sb_uquotino != NULLFSINO && mp->m_sb.sb_uquotino != 0)  {
+> -		if (verify_inum(mp, mp->m_sb.sb_uquotino))
+> +		if (!libxfs_verify_ino(mp, mp->m_sb.sb_uquotino))
+>  			irec = NULL;
+>  		else
+>  			irec = find_inode_rec(mp,
+> @@ -52,7 +52,7 @@ quotino_check(xfs_mount_t *mp)
+>  	}
+>  
+>  	if (mp->m_sb.sb_gquotino != NULLFSINO && mp->m_sb.sb_gquotino != 0)  {
+> -		if (verify_inum(mp, mp->m_sb.sb_gquotino))
+> +		if (!libxfs_verify_ino(mp, mp->m_sb.sb_gquotino))
+>  			irec = NULL;
+>  		else
+>  			irec = find_inode_rec(mp,
+> @@ -68,7 +68,7 @@ quotino_check(xfs_mount_t *mp)
+>  	}
+>  
+>  	if (mp->m_sb.sb_pquotino != NULLFSINO && mp->m_sb.sb_pquotino != 0)  {
+> -		if (verify_inum(mp, mp->m_sb.sb_pquotino))
+> +		if (!libxfs_verify_ino(mp, mp->m_sb.sb_pquotino))
+>  			irec = NULL;
+>  		else
+>  			irec = find_inode_rec(mp,
+> @@ -112,9 +112,9 @@ quota_sb_check(xfs_mount_t *mp)
+>  	    (mp->m_sb.sb_pquotino == NULLFSINO || mp->m_sb.sb_pquotino == 0))  {
+>  		lost_quotas = 1;
+>  		fs_quotas = 0;
+> -	} else if (!verify_inum(mp, mp->m_sb.sb_uquotino) &&
+> -			!verify_inum(mp, mp->m_sb.sb_gquotino) &&
+> -			!verify_inum(mp, mp->m_sb.sb_pquotino)) {
+> +	} else if (libxfs_verify_ino(mp, mp->m_sb.sb_uquotino) &&
+> +		   libxfs_verify_ino(mp, mp->m_sb.sb_gquotino) &&
+> +		   libxfs_verify_ino(mp, mp->m_sb.sb_pquotino)) {
+>  		fs_quotas = 1;
+>  	}
+>  }
+> diff --git a/repair/phase6.c b/repair/phase6.c
+> index 0874b649..70135694 100644
+> --- a/repair/phase6.c
+> +++ b/repair/phase6.c
+> @@ -1814,7 +1814,7 @@ longform_dir2_entry_check_data(
+>  			}
+>  			continue;
+>  		}
+> -		ASSERT(no_modify || !verify_inum(mp, inum));
+> +		ASSERT(no_modify || libxfs_verify_dir_ino(mp, inum));
+>  		/*
+>  		 * special case the . entry.  we know there's only one
+>  		 * '.' and only '.' points to itself because bogus entries
+> @@ -1845,7 +1845,7 @@ longform_dir2_entry_check_data(
+>  		/*
+>  		 * skip entries with bogus inumbers if we're in no modify mode
+>  		 */
+> -		if (no_modify && verify_inum(mp, inum))
+> +		if (no_modify && !libxfs_verify_dir_ino(mp, inum))
+>  			continue;
+>  
+>  		/* validate ftype field if supported */
+> @@ -2634,14 +2634,14 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
+>  		fname[sfep->namelen] = '\0';
+>  
+>  		ASSERT(no_modify || (lino != NULLFSINO && lino != 0));
+> -		ASSERT(no_modify || !verify_inum(mp, lino));
+> +		ASSERT(no_modify || libxfs_verify_dir_ino(mp, lino));
+>  
+>  		/*
+>  		 * Also skip entries with bogus inode numbers if we're
+>  		 * in no modify mode.
+>  		 */
+>  
+> -		if (no_modify && verify_inum(mp, lino))  {
+> +		if (no_modify && !libxfs_verify_dir_ino(mp, lino))  {
+>  			next_sfep = libxfs_dir2_sf_nextentry(mp, sfp, sfep);
+>  			continue;
+>  		}
+> 
