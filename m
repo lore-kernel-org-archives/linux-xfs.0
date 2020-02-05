@@ -2,68 +2,67 @@ Return-Path: <SRS0=QxtL=3Z=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39E86C35249
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 05:59:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1A48C35249
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 06:02:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DE96321927
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 05:59:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7FC6421927
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 06:02:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MiP+AliN"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="UZ88FKus"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725468AbgBEF7W (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Feb 2020 00:59:22 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:39002 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725385AbgBEF7W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Feb 2020 00:59:22 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0155xISL142977;
-        Wed, 5 Feb 2020 05:59:18 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
+        id S1725468AbgBEGC3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Feb 2020 01:02:29 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:54546 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725385AbgBEGC2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Feb 2020 01:02:28 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0155x2rr121759;
+        Wed, 5 Feb 2020 06:02:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=zDN+qd4GcN9taJGxXDAm8eJ1KwhkWGdBf8qDegdqzW8=;
- b=MiP+AliNDjIPuLhL+ebGa8Ew550bl+YmrEnSxxLmUEYbFHcTetUpnzkKwIr+hTfHhyzZ
- XEXfe5TtDcF302ZDvEcv9fkfC6tOAZd/rgkOP2wWozVkSYEvSmIMDb4t8vjMd7CGCg1K
- aBwYUNyMpoZ/bPn8ToxMs0ROSd3iG0jGedOnX5ljJHky+B/4Pg0MM8N+cRwzeWypERXW
- oz8W7YMhDMFb2yADupRpBoEIwYuxH4Ya2tFh5PqdNZnTvX6jARluDlIimGiLrLU9dFWQ
- KjgpwOiWf35kOhvToD0dmXR5TQcCxzl1Q+evyKeVrx+vg3m4+PB5G5teikxStz/utBtj Jg== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2xykbp0v51-1
+ bh=Np/HyAlB4S2dwxndsm1Wltkr4yVMBikePwpgjefWQOs=;
+ b=UZ88FKusm8NuKJbAZj+EUK5i5ID062480BPohhSg+3VcOJlCfYPAw2g8G8PgBmGanN5N
+ rhA7/P3NfIofpcdqn3gay184MuTjOByAm496NjQ6PY7gL4WoBasmi/iP90rSr2SJeWJZ
+ S9gCZ6dAaNaqHmgt/4/6+e9jM/4jlGgenHsMbJ+bNUJl0H/Y5OPC5l7YA1mpLqh1awRy
+ 0YIeSaExSj0b4t5nAGNN0/00VOvCzuBVTiuVbq+6ZX0HYNp9Gbwz7vh/wri/Hi3a1C6m
+ 9var+OyKGeAlmNBqbA1mtF8GcFfUXY6KlWRquV8NEAXcnsW/u0nlhet5t15h9Neu9lrK HA== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2xykbp0vj8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 05 Feb 2020 05:59:18 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0155xGHK147248;
-        Wed, 5 Feb 2020 05:59:18 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 2xykc1yfby-1
+        Wed, 05 Feb 2020 06:02:25 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0155x3ak132599;
+        Wed, 5 Feb 2020 06:02:25 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 2xykc47kgk-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 05 Feb 2020 05:59:17 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0155xEaM013246;
-        Wed, 5 Feb 2020 05:59:15 GMT
+        Wed, 05 Feb 2020 06:02:24 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01562NAk013398;
+        Wed, 5 Feb 2020 06:02:23 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 04 Feb 2020 21:59:14 -0800
-Date:   Tue, 4 Feb 2020 21:59:13 -0800
+        with ESMTP ; Tue, 04 Feb 2020 22:02:22 -0800
+Date:   Tue, 4 Feb 2020 22:02:22 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Allison Collins <allison.henderson@oracle.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfs_repair: don't corrupt a attr fork da3 node when
- clearing forw/back
-Message-ID: <20200205055913.GD6870@magnolia>
-References: <158086356778.2079557.17601708483399404544.stgit@magnolia>
- <158086359417.2079557.4428155306169446299.stgit@magnolia>
- <7baaea32-91dc-353d-6de2-ccae5bd79a52@oracle.com>
+To:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix invalid pointer dereference in
+ xfs_attr3_node_inactive
+Message-ID: <20200205060222.GE6870@magnolia>
+References: <20200204070636.25572-1-zlang@redhat.com>
+ <20200204213932.GM20628@dread.disaster.area>
+ <20200205035830.GN14282@dhcp-12-102.nay.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <7baaea32-91dc-353d-6de2-ccae5bd79a52@oracle.com>
+In-Reply-To: <20200205035830.GN14282@dhcp-12-102.nay.redhat.com>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9521 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
@@ -81,270 +80,72 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 04, 2020 at 10:29:26PM -0700, Allison Collins wrote:
+On Wed, Feb 05, 2020 at 11:58:30AM +0800, Zorro Lang wrote:
+> On Wed, Feb 05, 2020 at 08:39:32AM +1100, Dave Chinner wrote:
+> > On Tue, Feb 04, 2020 at 03:06:36PM +0800, Zorro Lang wrote:
+> > > This patch fixes below KASAN report. The xfs_attr3_node_inactive()
+> > > gets 'child_bp' at there:
+> > >   error = xfs_trans_get_buf(*trans, mp->m_ddev_targp,
+> > >                             child_blkno,
+> > >                             XFS_FSB_TO_BB(mp, mp->m_attr_geo->fsbcount), 0,
+> > >                             &child_bp);
+> > >   if (error)
+> > >           return error;
+> > >   error = bp->b_error;
+> > > 
+> > > But it turns to use 'bp', not 'child_bp'. And the 'bp' has been freed by:
+> > >   xfs_trans_brelse(*trans, bp);
+> > 
+> > ....
+> > > ---
+> > >  fs/xfs/xfs_attr_inactive.c | 2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > 
+> > > diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+> > > index bbfa6ba84dcd..26230d150bf2 100644
+> > > --- a/fs/xfs/xfs_attr_inactive.c
+> > > +++ b/fs/xfs/xfs_attr_inactive.c
+> > > @@ -211,7 +211,7 @@ xfs_attr3_node_inactive(
+> > >  				&child_bp);
+> > >  		if (error)
+> > >  			return error;
+> > > -		error = bp->b_error;
+> > > +		error = child_bp->b_error;
+> > >  		if (error) {
+> > >  			xfs_trans_brelse(*trans, child_bp);
+> > >  			return error;
+> > 
+> > Isn't this dead code now? i.e. any error that occurs on the buffer
+> > during a xfs_trans_get_buf() call is returned directly and so it's
+> > caught by the "if (error)" check. Hence this whole child_bp->b_error
+> > check can be removed, right?
 > 
+> Thanks, by looking into the xfs_trans_get_buf() code, I think you're right. Sorry
+> I didn't recognise that before.
 > 
-> On 2/4/20 5:46 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > In process_longform_attr, we enforce that the root block of the
-> > attribute index must have both forw or back pointers set to zero.
-> > Unfortunately, the code that nulls out the pointers is not aware that
-> > the root block could be in da3 node format.
-> > 
-> > This leads to corruption of da3 root node blocks because the functions
-> > that convert attr3 leaf headers to and from the ondisk structures
-> > perform some interpretation of firstused on what they think is an attr1
-> > leaf block.
-> > 
-> > Found by using xfs/402 to fuzz hdr.info.hdr.forw.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >   repair/attr_repair.c |  181 ++++++++++++++++++++++++++++++++------------------
-> >   1 file changed, 117 insertions(+), 64 deletions(-)
-> > 
-> > 
-> > diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-> > index 7b26df33..535fcfbb 100644
-> > --- a/repair/attr_repair.c
-> > +++ b/repair/attr_repair.c
-> > @@ -952,6 +952,106 @@ _("wrong FS UUID, inode %" PRIu64 " attr block %" PRIu64 "\n"),
-> >   	return 0;
-> >   }
-> > +static int
-> > +process_longform_leaf_root(
-> > +	struct xfs_mount	*mp,
-> > +	xfs_ino_t		ino,
-> > +	struct xfs_dinode	*dip,
-> > +	struct blkmap		*blkmap,
-> > +	int			*repair,
-> > +	struct xfs_buf		*bp)
-> > +{
-> > +	struct xfs_attr3_icleaf_hdr leafhdr;
-> > +	xfs_dahash_t		next_hashval;
-> > +	int			badness;
-> "badness" pretty much just looks like "error" here?  Or is it different in
-> some way?
+> But when should we check the bp->b_error? and when's it not necessary?
+> In other words, when XFS set the bp->b_error? Looks like it's set in some *verify*
+> functions and ioend time?
 
-The return value for process_leaf_attr_block is 1 if the attr block is
-bad and 0 for the attr block is ok.  It's not the usual -EFUBAR error
-codes that we use in many other parts of xfs.
+"Always check b_error after reading."
 
-> > +	int			repairlinks = 0;
-> > +
-> > +	/*
-> > +	 * check sibling pointers in leaf block or root block 0 before
-> > +	 * we have to release the btree block
-> > +	 */
-> > +	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, bp->b_addr);
-> > +	if (leafhdr.forw != 0 || leafhdr.back != 0)  {
-> > +		if (!no_modify)  {
-> > +			do_warn(
-> > +_("clearing forw/back pointers in block 0 for attributes in inode %" PRIu64 "\n"),
-> > +				ino);
-> > +			repairlinks = 1;
-> > +			leafhdr.forw = 0;
-> > +			leafhdr.back = 0;
-> > +			xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo, bp->b_addr,
-> > +					&leafhdr);
-> > +		} else  {
-> > +			do_warn(
-> > +_("would clear forw/back pointers in block 0 for attributes in inode %" PRIu64 "\n"), ino);
-> > +		}
-> > +	}
-> > +
-> > +	badness = process_leaf_attr_block(mp, bp->b_addr, 0, ino, blkmap, 0,
-> > +			&next_hashval, repair);
-> > +	if (badness) {
-> > +		*repair = 0;
-> > +		/* the block is bad.  lose the attribute fork. */
-> > +		libxfs_putbuf(bp);
-> > +		return 1;
-> > +	}
-> > +
-> > +	*repair = *repair || repairlinks;
-> > +
-> > +	if (*repair && !no_modify)
-> > +		libxfs_writebuf(bp, 0);
-> > +	else
-> > +		libxfs_putbuf(bp);
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +static int
-> > +process_longform_da_root(
-> > +	struct xfs_mount	*mp,
-> > +	xfs_ino_t		ino,
-> > +	struct xfs_dinode	*dip,
-> > +	struct blkmap		*blkmap,
-> > +	int			*repair,
-> > +	struct xfs_buf		*bp)
-> > +{
-> > +	struct xfs_da3_icnode_hdr	da3_hdr;
-> > +	int			repairlinks = 0;
-> > +	int			error;
-> > +
-> > +	libxfs_da3_node_hdr_from_disk(mp, &da3_hdr, bp->b_addr);
-> > +	/*
-> > +	 * check sibling pointers in leaf block or root block 0 before
-> > +	 * we have to release the btree block
-> > +	 */
-> > +	if (da3_hdr.forw != 0 || da3_hdr.back != 0)  {
-> > +		if (!no_modify)  {
-> > +			do_warn(
-> > +_("clearing forw/back pointers in block 0 for attributes in inode %" PRIu64 "\n"),
-> > +				ino);
-> > +
-> > +			repairlinks = 1;
-> > +			da3_hdr.forw = 0;
-> > +			da3_hdr.back = 0;
-> > +			xfs_da3_node_hdr_to_disk(mp, bp->b_addr, &da3_hdr);
-> > +		} else  {
-> > +			do_warn(
-> > +_("would clear forw/back pointers in block 0 for attributes in inode %" PRIu64 "\n"), ino);
-> > +		}
-> > +	}
-> > +
-> > +	/* must do this now, to release block 0 before the traversal */
-> Did you mean to reference *repair here without setting it?  I guess it was
-> like that from the code it was taken from, but it makes it looks like repair
-> is both an in and an out.  I wonder if it's really needed in the check
-> below?
+But please do note that the the buffer read functions will return it for
+you now, so you don't have to check it separately in those cases.
 
-*repair is passed from a stack variable in process_inode_attr_fork ->
-process_attributes -> process_longform_attr.  It's initialized properly,
-but the code doesn't make it easy to figure that out since that's three
-functions up in the call stack and anyone is allowed to mess with it.
-
-One of the grottier bits of xfs_repair is that the return values for
-those functions also have meaning...I think return 1 means "zap this
-whole thing" vs. *repair ==1 means "we fixed it".
+(The verifiers and ioend functions are lower level and have to check it
+explicitly.)
 
 --D
 
+> Thanks,
+> Zorro
 > 
-> Allison
-> 
-> > +	if ((*repair || repairlinks) && !no_modify) {
-> > +		*repair = 1;
-> > +		libxfs_writebuf(bp, 0);
-> > +	} else
-> > +		libxfs_putbuf(bp);
-> > +	error = process_node_attr(mp, ino, dip, blkmap); /* + repair */
-> > +	if (error)
-> > +		*repair = 0;
-> > +	return error;
-> > +}
-> > +
-> >   /*
-> >    * Start processing for a leaf or fuller btree.
-> >    * A leaf directory is one where the attribute fork is too big for
-> > @@ -963,19 +1063,15 @@ _("wrong FS UUID, inode %" PRIu64 " attr block %" PRIu64 "\n"),
-> >    */
-> >   static int
-> >   process_longform_attr(
-> > -	xfs_mount_t	*mp,
-> > -	xfs_ino_t	ino,
-> > -	xfs_dinode_t	*dip,
-> > -	blkmap_t	*blkmap,
-> > -	int		*repair)	/* out - 1 if something was fixed */
-> > +	struct xfs_mount	*mp,
-> > +	xfs_ino_t		ino,
-> > +	struct xfs_dinode	*dip,
-> > +	struct blkmap		*blkmap,
-> > +	int			*repair) /* out - 1 if something was fixed */
-> >   {
-> > -	xfs_attr_leafblock_t	*leaf;
-> > -	xfs_fsblock_t	bno;
-> > -	xfs_buf_t	*bp;
-> > -	xfs_dahash_t	next_hashval;
-> > -	int		repairlinks = 0;
-> > -	struct xfs_attr3_icleaf_hdr leafhdr;
-> > -	int		error;
-> > +	xfs_fsblock_t		bno;
-> > +	struct xfs_buf		*bp;
-> > +	struct xfs_da_blkinfo	*info;
-> >   	*repair = 0;
-> > @@ -1015,74 +1111,31 @@ process_longform_attr(
-> >   		return 1;
-> >   	}
-> > -	/* verify leaf block */
-> > -	leaf = bp->b_addr;
-> > -	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
-> > -
-> > -	/* check sibling pointers in leaf block or root block 0 before
-> > -	* we have to release the btree block
-> > -	*/
-> > -	if (leafhdr.forw != 0 || leafhdr.back != 0)  {
-> > -		if (!no_modify)  {
-> > -			do_warn(
-> > -	_("clearing forw/back pointers in block 0 for attributes in inode %" PRIu64 "\n"),
-> > -				ino);
-> > -			repairlinks = 1;
-> > -			leafhdr.forw = 0;
-> > -			leafhdr.back = 0;
-> > -			xfs_attr3_leaf_hdr_to_disk(mp->m_attr_geo,
-> > -						   leaf, &leafhdr);
-> > -		} else  {
-> > -			do_warn(
-> > -	_("would clear forw/back pointers in block 0 for attributes in inode %" PRIu64 "\n"), ino);
-> > -		}
-> > -	}
-> > -
-> >   	/*
-> >   	 * use magic number to tell us what type of attribute this is.
-> >   	 * it's possible to have a node or leaf attribute in either an
-> >   	 * extent format or btree format attribute fork.
-> >   	 */
-> > -	switch (leafhdr.magic) {
-> > +	info = bp->b_addr;
-> > +	switch (be16_to_cpu(info->magic)) {
-> >   	case XFS_ATTR_LEAF_MAGIC:	/* leaf-form attribute */
-> >   	case XFS_ATTR3_LEAF_MAGIC:
-> > -		if (process_leaf_attr_block(mp, leaf, 0, ino, blkmap,
-> > -				0, &next_hashval, repair)) {
-> > -			*repair = 0;
-> > -			/* the block is bad.  lose the attribute fork. */
-> > -			libxfs_putbuf(bp);
-> > -			return(1);
-> > -		}
-> > -		*repair = *repair || repairlinks;
-> > -		break;
-> > -
-> > +		return process_longform_leaf_root(mp, ino, dip, blkmap, repair,
-> > +				bp);
-> >   	case XFS_DA_NODE_MAGIC:		/* btree-form attribute */
-> >   	case XFS_DA3_NODE_MAGIC:
-> > -		/* must do this now, to release block 0 before the traversal */
-> > -		if ((*repair || repairlinks) && !no_modify) {
-> > -			*repair = 1;
-> > -			libxfs_writebuf(bp, 0);
-> > -		} else
-> > -			libxfs_putbuf(bp);
-> > -		error = process_node_attr(mp, ino, dip, blkmap); /* + repair */
-> > -		if (error)
-> > -			*repair = 0;
-> > -		return error;
-> > +		return process_longform_da_root(mp, ino, dip, blkmap, repair,
-> > +				bp);
-> >   	default:
-> >   		do_warn(
-> >   	_("bad attribute leaf magic # %#x for dir ino %" PRIu64 "\n"),
-> > -			be16_to_cpu(leaf->hdr.info.magic), ino);
-> > +			be16_to_cpu(info->magic), ino);
-> >   		libxfs_putbuf(bp);
-> >   		*repair = 0;
-> > -		return(1);
-> > +		return 1;
-> >   	}
-> > -	if (*repair && !no_modify)
-> > -		libxfs_writebuf(bp, 0);
-> > -	else
-> > -		libxfs_putbuf(bp);
-> > -
-> > -	return(0);  /* repair may be set */
-> > +	return 0; /* should never get here */
-> >   }
 > > 
+> > Cheers,
+> > 
+> > Dave.
+> > -- 
+> > Dave Chinner
+> > david@fromorbit.com
+> > 
+> 
