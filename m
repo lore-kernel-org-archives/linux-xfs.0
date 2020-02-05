@@ -2,153 +2,147 @@ Return-Path: <SRS0=QxtL=3Z=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51FC0C35249
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 07:46:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A06E2C35254
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 10:45:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 14597217F4
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 07:46:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 760AE2072B
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 10:45:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="SRP8TdlM";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="OFg0OWWN"
+	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="Hu1kOwty"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727861AbgBEHqK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Feb 2020 02:46:10 -0500
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:1526 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725468AbgBEHqK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Feb 2020 02:46:10 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1580888769; x=1612424769;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=p/ClQnwFPwIp+T8T7HU4ovsqIaqoYOktEulDnkWQsQE=;
-  b=SRP8TdlM5+bsLy/PSgrNrZGm4HJQYSGb2vW/GYTj7ChiZKSqil1hPu2K
-   GsK0RxVVtPf1vv+T2ZYDRK/AJvP+v2Lv3QrR2XcvBHg8G7yyo0GobHjvr
-   eD5PF2N072hLtXspRcjX+3uE8kUz49syMrTsSxCzcvzAzPa/RCPGrHHea
-   klZVQQ2zuWEaVNF3C/dWKMlHV3zxJJDL9roqFW+P03JgUGyr9T8+32ihW
-   2ugBD6Q57GCjYz/eHBP+X7D1WrdJHpRLs7ko6rJ8SQPRJ04nKC8i45jTm
-   95dPp1K0xfmkSF2oEJC84mpq5eesToI09MPG6dyRkaQAu7J3yfqlHWfS3
-   g==;
-IronPort-SDR: hMHDa0sdaXV946BFq9fxX7wDTBq4GrdJXaUGrLCRux+ImhwnuNMsDyDUJgNGJRSpHNA8tqw/ME
- zTdFgZPX+C3NUoMtpaJ5oS32/95Okrm4IanyehJrBbYwMJq466+FQeIGNtebLK/lWAsASo01E0
- kS0xGy/hNu2My/+dSTldsmW1BgW0MDbR1KxypFKJj+13B/QvVi+FdpJDq6cfo4H6X2nf5xNDqB
- soFc02NeYRJjQ6rYI8dBSO3coC/oJOPA6fdDvuZUMNVAAztIlNYGPpHeT15OywGGM6eIgDoj6n
- 0Xw=
-X-IronPort-AV: E=Sophos;i="5.70,404,1574092800"; 
-   d="scan'208";a="237097059"
-Received: from mail-sn1nam02lp2057.outbound.protection.outlook.com (HELO NAM02-SN1-obe.outbound.protection.outlook.com) ([104.47.36.57])
-  by ob1.hgst.iphmx.com with ESMTP; 05 Feb 2020 15:46:08 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=frI8m8przWOJEcO2hYtfqGKo1/iB7LGXSrl/ZYeh5+QwJhcN0FE09ZDJHG9ThDjr5QrEk5RLuml1+HgszqvwU1E1fWIBETbREBOptuKeRBEAVteuQ5j9V0io+8clawe4TVFs00rNMwiVo6ISihp9VmJ3QNMnQZag7jbBvNQjLyfBukU+3urAeW37qjr/QiqFXIzrZPjWHK82V/h1HCcIeuqnSyOnpiWpzXDOvhcu9e+2E+zm90Ssvn0TgxYGV5rHRduC7F99bK116dvHtR5iY2+eK9F3rcxH3DR+nhJfyKiEolvOpFOqQ2Sb/bNBntsg2jt8mByPlhw0qhLstcIJdg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=p/ClQnwFPwIp+T8T7HU4ovsqIaqoYOktEulDnkWQsQE=;
- b=BVcR+PIUZDjETRE5dsJ70zzXZ47NaMkjmaiyQ6e5h53OUKBLXIjxfoDbeT6+gaZFFpgHjFXEet+Rh9VHWRKT6lyrqfRLltdTY/OfxyKHpyjHX39CA+vpLgL669hlobeG57XLamRe+LochW/ylOr5RlsVAmEukUW1PzYKwqiVcJjrhF3WvaGR3EaWDBY28OYRJUvb9LNZwEylKd9JGOw5CbR4sHa0DDYYk0DlW7nDqX2eVaqkxusmgv91WckCd+8bbZPY9GoZSOTz5AOsAkW1+RyCREjlJwlz+c0x0HaOtZ7qqgp18URpgy2BjlZn+z2vty0jIS4lOQblfWAhTD6VrQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=p/ClQnwFPwIp+T8T7HU4ovsqIaqoYOktEulDnkWQsQE=;
- b=OFg0OWWNgARA7guV2fd0xqKVPHMJUBSNpWspMYtZ8g7i/XaSSWBirAD0pYphGFIuUodazLhCphbJYOed0Eq4MJC3VLYfWs8l6FbXnOGzLNCyKQH/dlUkHoTfIRM7EhJAmbkfeVJFQHVfj9fi2hS8k+vi10ypMzG5KTU80i9o57o=
-Received: from BYAPR04MB5816.namprd04.prod.outlook.com (20.179.59.16) by
- BYAPR04MB4374.namprd04.prod.outlook.com (20.176.251.153) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2686.27; Wed, 5 Feb 2020 07:46:07 +0000
-Received: from BYAPR04MB5816.namprd04.prod.outlook.com
- ([fe80::cd8e:d1de:e661:a61]) by BYAPR04MB5816.namprd04.prod.outlook.com
- ([fe80::cd8e:d1de:e661:a61%5]) with mapi id 15.20.2707.020; Wed, 5 Feb 2020
- 07:46:07 +0000
-From:   Damien Le Moal <Damien.LeMoal@wdc.com>
-To:     Markus Elfring <Markus.Elfring@web.de>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        id S1727367AbgBEKpS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Feb 2020 05:45:18 -0500
+Received: from mout.web.de ([212.227.17.12]:58085 "EHLO mout.web.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727234AbgBEKpR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Feb 2020 05:45:17 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
+        s=dbaedf251592; t=1580899504;
+        bh=zP+pcu3LniuuN2pWuLFHiwLtLmL564R2Tg32R9YiNQQ=;
+        h=X-UI-Sender-Class:Subject:To:Cc:References:From:Date:In-Reply-To;
+        b=Hu1kOwtyxGh9cAOiUa42ci2YY8bkRf9VnPPVwBTKSqtQq49py+XWVzsKiej6Dl+Ga
+         7oFnIJeNVE91ZoDZVdCDQ50QmxJVTvcu7s4YolfW4svCtzium6JKehTZMZAUReoC5d
+         QcoDtmjxI38fzpVnTYDve7bP8fqzzQoVB8/DnkhE=
+X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
+Received: from [192.168.1.2] ([93.132.89.156]) by smtp.web.de (mrweb102
+ [213.165.67.124]) with ESMTPSA (Nemesis) id 0MBkLb-1irLol1Leh-00Aqcp; Wed, 05
+ Feb 2020 11:45:04 +0100
+Subject: Re: [v10 1/2] fs: New zonefs file system
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
         Hannes Reinecke <hare@suse.de>,
         Johannes Thumshirn <jth@kernel.org>,
         Linus Torvalds <torvalds@linux-foundation.org>,
         Naohiro Aota <Naohiro.Aota@wdc.com>
-Subject: Re: [v10 1/2] fs: New zonefs file system
-Thread-Topic: [v10 1/2] fs: New zonefs file system
-Thread-Index: AQHV2/RFr2J5n95mjEGmHUAr5fmH0A==
-Date:   Wed, 5 Feb 2020 07:46:07 +0000
-Message-ID: <BYAPR04MB5816A4CD15C760D0E5768285E7020@BYAPR04MB5816.namprd04.prod.outlook.com>
 References: <68ef8614-87f8-1b6e-7f55-f9d53a0f1e1c@web.de>
  <cfb36fa5dcf97113198848874c0ca9ba215e26fa.camel@wdc.com>
  <b1336be5-16f1-cb46-3469-46974406de14@web.de>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Damien.LeMoal@wdc.com; 
-x-originating-ip: [199.255.47.9]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: d5a7a924-5c2d-4db1-ebe2-08d7aa0f7610
-x-ms-traffictypediagnostic: BYAPR04MB4374:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BYAPR04MB437480C39547485D006D9F8BE7020@BYAPR04MB4374.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:8273;
-x-forefront-prvs: 0304E36CA3
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(39860400002)(346002)(396003)(376002)(366004)(136003)(199004)(189003)(86362001)(81166006)(6506007)(4326008)(81156014)(8936002)(5660300002)(8676002)(53546011)(110136005)(316002)(4744005)(33656002)(54906003)(7696005)(26005)(2906002)(71200400001)(186003)(64756008)(66556008)(66476007)(478600001)(55016002)(76116006)(66946007)(91956017)(9686003)(66446008)(52536014);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR04MB4374;H:BYAPR04MB5816.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: Y4eG/J5Fj7zhZS++HsirRsesMs8SrW5E5Vc0hv/7g6hQAiZWshQNCVrcoRo9fCuwKilaVlwfNsewdygwHrtDyWpMMxktMTepi9H9iECLhtU+vu9+MKzVp+EI/0/6Wm34uqFSRpFC1mV1w26whgMxcyxFhnbp6GwmBD8BKO2IPA/tJzr7BYcQyfA65w+W/lUPYh73bun3WptT4vbau7ZIhXbVVrd3WVvUZeztwwUuINli61Lwc3snpWfznUoFNW9SfsYUjymw12CEhhZjn9+iO1xlm711LSCEr4ATqgihY1ASU9K5PE8qctmkJQUJGt7WoHv0YsDx8VnVrj+XuOGFimxAvBKcZS2gBri77ewwMnvYs/WZKd/DhvKQ8O+SkVe4VaiDjpBSuzd4IBsFiFEkYw/72gYcxcO1uGAgp9SnGG6pJhjeg+mkdFIPnF66jWob
-x-ms-exchange-antispam-messagedata: ueBDVAkJDevAlExAwfa6WkTt4qs/M+5MBSSGCIcDnNdb+sWKf0T4lyEUnYJrgdLzXAxYW2U/zIPe4bGxPLJhzcuAJA4GpLOk/OpvhE98TbBQccbqlc6AVlRJD2Gv3zKiDW0IzIQTvtMGbAL93k4Scg==
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+ <BYAPR04MB5816A4CD15C760D0E5768285E7020@BYAPR04MB5816.namprd04.prod.outlook.com>
+From:   Markus Elfring <Markus.Elfring@web.de>
+Autocrypt: addr=Markus.Elfring@web.de; prefer-encrypt=mutual; keydata=
+ mQINBFg2+xABEADBJW2hoUoFXVFWTeKbqqif8VjszdMkriilx90WB5c0ddWQX14h6w5bT/A8
+ +v43YoGpDNyhgA0w9CEhuwfZrE91GocMtjLO67TAc2i2nxMc/FJRDI0OemO4VJ9RwID6ltwt
+ mpVJgXGKkNJ1ey+QOXouzlErVvE2fRh+KXXN1Q7fSmTJlAW9XJYHS3BDHb0uRpymRSX3O+E2
+ lA87C7R8qAigPDZi6Z7UmwIA83ZMKXQ5stA0lhPyYgQcM7fh7V4ZYhnR0I5/qkUoxKpqaYLp
+ YHBczVP+Zx/zHOM0KQphOMbU7X3c1pmMruoe6ti9uZzqZSLsF+NKXFEPBS665tQr66HJvZvY
+ GMDlntZFAZ6xQvCC1r3MGoxEC1tuEa24vPCC9RZ9wk2sY5Csbva0WwYv3WKRZZBv8eIhGMxs
+ rcpeGShRFyZ/0BYO53wZAPV1pEhGLLxd8eLN/nEWjJE0ejakPC1H/mt5F+yQBJAzz9JzbToU
+ 5jKLu0SugNI18MspJut8AiA1M44CIWrNHXvWsQ+nnBKHDHHYZu7MoXlOmB32ndsfPthR3GSv
+ jN7YD4Ad724H8fhRijmC1+RpuSce7w2JLj5cYj4MlccmNb8YUxsE8brY2WkXQYS8Ivse39MX
+ BE66MQN0r5DQ6oqgoJ4gHIVBUv/ZwgcmUNS5gQkNCFA0dWXznQARAQABtCZNYXJrdXMgRWxm
+ cmluZyA8TWFya3VzLkVsZnJpbmdAd2ViLmRlPokCVAQTAQgAPhYhBHDP0hzibeXjwQ/ITuU9
+ Figxg9azBQJYNvsQAhsjBQkJZgGABQsJCAcCBhUICQoLAgQWAgMBAh4BAheAAAoJEOU9Figx
+ g9azcyMP/iVihZkZ4VyH3/wlV3nRiXvSreqg+pGPI3c8J6DjP9zvz7QHN35zWM++1yNek7Ar
+ OVXwuKBo18ASlYzZPTFJZwQQdkZSV+atwIzG3US50ZZ4p7VyUuDuQQVVqFlaf6qZOkwHSnk+
+ CeGxlDz1POSHY17VbJG2CzPuqMfgBtqIU1dODFLpFq4oIAwEOG6fxRa59qbsTLXxyw+PzRaR
+ LIjVOit28raM83Efk07JKow8URb4u1n7k9RGAcnsM5/WMLRbDYjWTx0lJ2WO9zYwPgRykhn2
+ sOyJVXk9xVESGTwEPbTtfHM+4x0n0gC6GzfTMvwvZ9G6xoM0S4/+lgbaaa9t5tT/PrsvJiob
+ kfqDrPbmSwr2G5mHnSM9M7B+w8odjmQFOwAjfcxoVIHxC4Cl/GAAKsX3KNKTspCHR0Yag78w
+ i8duH/eEd4tB8twcqCi3aCgWoIrhjNS0myusmuA89kAWFFW5z26qNCOefovCx8drdMXQfMYv
+ g5lRk821ZCNBosfRUvcMXoY6lTwHLIDrEfkJQtjxfdTlWQdwr0mM5ye7vd83AManSQwutgpI
+ q+wE8CNY2VN9xAlE7OhcmWXlnAw3MJLW863SXdGlnkA3N+U4BoKQSIToGuXARQ14IMNvfeKX
+ NphLPpUUnUNdfxAHu/S3tPTc/E/oePbHo794dnEm57LuuQINBFg2+xABEADZg/T+4o5qj4cw
+ nd0G5pFy7ACxk28mSrLuva9tyzqPgRZ2bdPiwNXJUvBg1es2u81urekeUvGvnERB/TKekp25
+ 4wU3I2lEhIXj5NVdLc6eU5czZQs4YEZbu1U5iqhhZmKhlLrhLlZv2whLOXRlLwi4jAzXIZAu
+ 76mT813jbczl2dwxFxcT8XRzk9+dwzNTdOg75683uinMgskiiul+dzd6sumdOhRZR7YBT+xC
+ wzfykOgBKnzfFscMwKR0iuHNB+VdEnZw80XGZi4N1ku81DHxmo2HG3icg7CwO1ih2jx8ik0r
+ riIyMhJrTXgR1hF6kQnX7p2mXe6K0s8tQFK0ZZmYpZuGYYsV05OvU8yqrRVL/GYvy4Xgplm3
+ DuMuC7/A9/BfmxZVEPAS1gW6QQ8vSO4zf60zREKoSNYeiv+tURM2KOEj8tCMZN3k3sNASfoG
+ fMvTvOjT0yzMbJsI1jwLwy5uA2JVdSLoWzBD8awZ2X/eCU9YDZeGuWmxzIHvkuMj8FfX8cK/
+ 2m437UA877eqmcgiEy/3B7XeHUipOL83gjfq4ETzVmxVswkVvZvR6j2blQVr+MhCZPq83Ota
+ xNB7QptPxJuNRZ49gtT6uQkyGI+2daXqkj/Mot5tKxNKtM1Vbr/3b+AEMA7qLz7QjhgGJcie
+ qp4b0gELjY1Oe9dBAXMiDwARAQABiQI8BBgBCAAmFiEEcM/SHOJt5ePBD8hO5T0WKDGD1rMF
+ Alg2+xACGwwFCQlmAYAACgkQ5T0WKDGD1rOYSw/+P6fYSZjTJDAl9XNfXRjRRyJSfaw6N1pA
+ Ahuu0MIa3djFRuFCrAHUaaFZf5V2iW5xhGnrhDwE1Ksf7tlstSne/G0a+Ef7vhUyeTn6U/0m
+ +/BrsCsBUXhqeNuraGUtaleatQijXfuemUwgB+mE3B0SobE601XLo6MYIhPh8MG32MKO5kOY
+ hB5jzyor7WoN3ETVNQoGgMzPVWIRElwpcXr+yGoTLAOpG7nkAUBBj9n9TPpSdt/npfok9ZfL
+ /Q+ranrxb2Cy4tvOPxeVfR58XveX85ICrW9VHPVq9sJf/a24bMm6+qEg1V/G7u/AM3fM8U2m
+ tdrTqOrfxklZ7beppGKzC1/WLrcr072vrdiN0icyOHQlfWmaPv0pUnW3AwtiMYngT96BevfA
+ qlwaymjPTvH+cTXScnbydfOQW8220JQwykUe+sHRZfAF5TS2YCkQvsyf7vIpSqo/ttDk4+xc
+ Z/wsLiWTgKlih2QYULvW61XU+mWsK8+ZlYUrRMpkauN4CJ5yTpvp+Orcz5KixHQmc5tbkLWf
+ x0n1QFc1xxJhbzN+r9djSGGN/5IBDfUqSANC8cWzHpWaHmSuU3JSAMB/N+yQjIad2ztTckZY
+ pwT6oxng29LzZspTYUEzMz3wK2jQHw+U66qBFk8whA7B2uAU1QdGyPgahLYSOa4XAEGb6wbI FEE=
+Message-ID: <827e50c9-c847-0398-2820-46e210f0fc4d@web.de>
+Date:   Wed, 5 Feb 2020 11:44:54 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.1
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d5a7a924-5c2d-4db1-ebe2-08d7aa0f7610
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Feb 2020 07:46:07.7416
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: iYCTp/ERaeFVzsabZFxyZv4FqTzSfHRlbDEI1wmCe0tjsgsqz+bS9yLHCQpsmxXLKKaPnw42taOdrN4l250LTQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB4374
+In-Reply-To: <BYAPR04MB5816A4CD15C760D0E5768285E7020@BYAPR04MB5816.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:UUgvIhy+4P8ikAPaapv318Bzz+OBbbCmPy0QoThJEh/xGvxoxoz
+ 3ujbaURXPQ1bRQp8bEqw16vFeQlbSPTAxYMK3cHHGgHTZGaEsuNDZ9kkSiIv2O79q/3S3Kv
+ 3vGIPL4IG60bmzneg2JtOdSKlguxu6z5Pc0Dg+fJy6ryOq9bDQJbvZXJOCoeNejKrFEWuOT
+ lzHUwvWRWrAhdxbdAifBg==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:vuQHiFUAGT0=:yoAm55Xorssu3mL8YmeO9m
+ SunO96UdgcSDjsR+wF1zxA65MNmkU2cF+BoR7JN+VgCSUB0i9Z+BYcuPSyAkap1qs4AULED63
+ rWQYNQ6hO/1DHCNeTDnk86UTCWLD8X3Bv+dnk+/As8bLBE5MCHbx260TWUh77sqqnGdMlq0Y+
+ nzoJWRhSd9LeUCtFKMeqDTo7n/WO2riRWHYbRW0a/2PN3JeBZTgJrmgOubTPfdgnR7KbcqwLW
+ SfB2POvidn0fTkIuCOEckVSe6LT9pgMM8PLyOpXfzg1mlozkZjWQtX7kb/Z82IQOmHU6hhD7Y
+ VDpxSG0ct8ll1tXjceaQzyOIKUy2jrMSiGuGQbztc4BRr56guUN/sKKa7RbU7p/PUTKLB1rb7
+ 72UfDTKDQ+RzLPY1vDD/nl9tv8YmnHFmibCgPHeOgEVqh4JSrqpREPm2TnFkNzam1AEMzqUvI
+ DmueuHQxBo6/fpmqMcRSagUNNeyWJZq1ZCCwFdo9Abt18X9Jr4PHq5a+wOM/7Bzh8gegikF1E
+ uK0PBR7apCl94argMp9SJeyyMbsYkRmwNcX2lspmiIDryc1IY+Dt0C5zre1mG/dLXN/73uCDX
+ yJHDAPgYFzqMtq23aEto81prhTnz3vo2zynw/wJSEKyu7hAhJSjisbosag0g5R9EotyPyabk6
+ KChlQq5UQzg+7Naau14B3LSD3SHqVHd96X/271it4ZVrye19Jw/JX9YYEbgJZ1qWCZfWzNBgm
+ 6CUWb20D90FhjBVsugFFTB4ks5eGRYDQyZGe6pLp3wQckHVkCkROopq6VrnnwccRf0Fig4cwj
+ s4Mk5PQ9qw/SwiWYgaNaUcHaaRTw1U0xiDfJYyX0XmAbWvJryZPc9lC9FSLNqsKw4yt0tJDyp
+ 0D8m9RQ7hE/ECgmBdL9mTfZjZGFSVoEnIDcmWvEFKjRstxRxeDyMaZSgKvrr/1Rw1DqlS2hOQ
+ JMGtCljjIGPZ7y7nF8cM/0jKBK7mLnP8Zi3/kZPX+F///i6bQqbyTandyM2xJ5kXL2O4loI76
+ mqVpWXmH5BZ0hOQkbK/v6IkjgMuxCITjwMHJ1LN02vNy5Ueim/5WW5NUl1e9OT3F3BKrOgLBn
+ grh0z+2w0invYCCojvw7j+oevpoLDCv0YgqQkBopkx+OIcUZctVrU1BRc4M761MJHyTXesVN2
+ 4fszyBi04hzW4wzJS7RW63OYmxJ7n61P358TvU2AwG/9KjM3lRiIctDc6b2vxD6ZaUGUKfGAM
+ UEpOskK1VhEaZk2+G
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2020/02/05 16:17, Markus Elfring wrote:=0A=
->> Declaring it as=0A=
->>=0A=
->> static const char * const zgroups_name[] =3D { "cnv", "seq" };=0A=
->>=0A=
->> is probably what you are suggesting,=0A=
-> =0A=
-> Yes.=0A=
-> =0A=
-> =0A=
->> but since the string literals are already constants by default,=0A=
->> I do not think there is any difference.=0A=
-> =0A=
-> I propose to define this array also as a completely immutable data struct=
-ure.=0A=
-=0A=
-I understood that and pointed out that the added "const" does not change a=
-=0A=
-thing. I think that as is, it already is immutable. But sure, I can add=0A=
-that const, no problem.=0A=
-=0A=
-> =0A=
-> Regards,=0A=
-> Markus=0A=
-> =0A=
-=0A=
-=0A=
--- =0A=
-Damien Le Moal=0A=
-Western Digital Research=0A=
+>> I propose to define this array also as a completely immutable data stru=
+cture.
+>
+> I understood that and pointed out that the added "const" does not change=
+ a thing.
+
+Should the stored pointers be constants (besides the corresponding string =
+literals)?
+
+
+> I think that as is, it already is immutable.
+
+Would you like to distinguish the scope for items in this variable a bit m=
+ore?
+
+
+Are any other software components similarly affected?
+
+Regards,
+Markus
