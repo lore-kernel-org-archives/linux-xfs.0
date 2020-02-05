@@ -2,147 +2,190 @@ Return-Path: <SRS0=QxtL=3Z=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A06E2C35254
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 10:45:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 396BEC35254
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 12:08:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 760AE2072B
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 10:45:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F3E8B218AC
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 12:08:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="Hu1kOwty"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="YTTPEslj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727367AbgBEKpS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Feb 2020 05:45:18 -0500
-Received: from mout.web.de ([212.227.17.12]:58085 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727234AbgBEKpR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 5 Feb 2020 05:45:17 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1580899504;
-        bh=zP+pcu3LniuuN2pWuLFHiwLtLmL564R2Tg32R9YiNQQ=;
-        h=X-UI-Sender-Class:Subject:To:Cc:References:From:Date:In-Reply-To;
-        b=Hu1kOwtyxGh9cAOiUa42ci2YY8bkRf9VnPPVwBTKSqtQq49py+XWVzsKiej6Dl+Ga
-         7oFnIJeNVE91ZoDZVdCDQ50QmxJVTvcu7s4YolfW4svCtzium6JKehTZMZAUReoC5d
-         QcoDtmjxI38fzpVnTYDve7bP8fqzzQoVB8/DnkhE=
-X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
-Received: from [192.168.1.2] ([93.132.89.156]) by smtp.web.de (mrweb102
- [213.165.67.124]) with ESMTPSA (Nemesis) id 0MBkLb-1irLol1Leh-00Aqcp; Wed, 05
- Feb 2020 11:45:04 +0100
-Subject: Re: [v10 1/2] fs: New zonefs file system
-To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Johannes Thumshirn <jth@kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Naohiro Aota <Naohiro.Aota@wdc.com>
-References: <68ef8614-87f8-1b6e-7f55-f9d53a0f1e1c@web.de>
- <cfb36fa5dcf97113198848874c0ca9ba215e26fa.camel@wdc.com>
- <b1336be5-16f1-cb46-3469-46974406de14@web.de>
- <BYAPR04MB5816A4CD15C760D0E5768285E7020@BYAPR04MB5816.namprd04.prod.outlook.com>
-From:   Markus Elfring <Markus.Elfring@web.de>
-Autocrypt: addr=Markus.Elfring@web.de; prefer-encrypt=mutual; keydata=
- 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 FEE=
-Message-ID: <827e50c9-c847-0398-2820-46e210f0fc4d@web.de>
-Date:   Wed, 5 Feb 2020 11:44:54 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
+        id S1726575AbgBEMIn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Feb 2020 07:08:43 -0500
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:60741 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726308AbgBEMIn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Feb 2020 07:08:43 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1580904546; x=1612440546;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=5nseEPYtjLdM+sI7lpq+YtHxkIrsbNc4+ej5OZqdF0k=;
+  b=YTTPEsljbscykbfzo5ZzYR3TSleCUOnLnKajRLabsEN5UIxG82iGYVqN
+   QoHF1vOErfz6fySuTdvWNySIZY0jD6N64FRCOAps3lum3lm9Pe6jgnyXH
+   ssuv66gckYQoX4Do3e4GZk5xEQkK4EThI/zwT6A+rDkwH5YelJ9WycqYs
+   63PJkeveOgO7QHJ21XHGyO7aUuJPSSTbeB8W56Z3a1vPFVAKmefuLY5rT
+   dQp52meRtHGbG2hFPrMlmQoOHibCW6SnqAgag8w0msR3LwyDWzGFxdF64
+   1mESCFxcgtHxFRc26Q9BeOl+i7cC2KBEX8tbTX8A+ZI9nUIXnRw+ZfC4x
+   g==;
+IronPort-SDR: m6yz31Nk9Du/2L+KJAZHHRJ1rvcsQOeCzi5/HF83B0Y0BpDm48pua+U64Ml0iUuFn7GCx8HNhp
+ m7cbFFW0yWGkeiWj13DWQyv8ivUdoZZd9ctwY1PcMyB1xxA3s2/fmtLOmXovAv8Ahd601IyWEm
+ NObvWJpZjfkyNatW9+HRPnDGnBxXXQIpXPpX/XAynRIex0yZ+YZijlufNpPKR90squjuM6z/Sh
+ n1+eaVaERBFbCKWHuOWNJZPnC2wrH3hpNc3RmYAfUYYzM/KMnOvXVnJK/eVWuTthP4n5rAAIyP
+ lbg=
+X-IronPort-AV: E=Sophos;i="5.70,405,1574092800"; 
+   d="scan'208";a="230892086"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 05 Feb 2020 20:09:03 +0800
+IronPort-SDR: v2sJLRXzR0OrLOG3Mvx7pBcpyY7qVASqWI9wFsjt9F5AIC6CChYtFPutY7wbiWnFJT9sD/hdAE
+ UvxLMP//9PDDUN6eaNzn6MnpyG2kSqSrTcV45tEsTpPLTw13d3LVPSGS3AMBvH5dIW/1mBeSim
+ O1RIdaEpVp5KZ5FR2FVZC74JGvz/XCR4bkS/AXieXkNeB0gV440jXnUREIWv2XuhcZN95GwyFd
+ cVF3lYL1HWP320uMi0Acbm5z46rTJCusK4Mavg0YeFn3VnLTtlbHQ/qjCLSO4MJ6x+sCp8GVHp
+ ozFkRnCk9OD4tcXDR8bUDG6Q
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Feb 2020 04:01:40 -0800
+IronPort-SDR: iZx9L3wIvhBoCUDs3UXDHpLyOjsVnhi60mL6W2G4Mh5RCenJoeiWlqRDns7S0yfT+JudNePC3c
+ 1psd7p4KuS5JYSbVLgycki9Rp4NDmKcnJQkOvwjJY9aCSNDhv6S+Xj4lIrDi1HaZVPfsTOPYga
+ 9fVLITuodEMUF+EeMFFse0fT5mfQ77eBA84YvIKARmoLV3Amqxg9mW2YILoDpdlFB66+yb/mEK
+ 3uu4zQ3/jczt+saOWLyHoPSFXp2QE/x9xAOgIZCSYxiv2UtiUdSUUY9H0R6Y3CpnS0M8XT/oi2
+ 5Yw=
+WDCIronportException: Internal
+Received: from washi.fujisawa.hgst.com ([10.149.53.254])
+  by uls-op-cesaip01.wdc.com with ESMTP; 05 Feb 2020 04:08:38 -0800
+From:   Damien Le Moal <damien.lemoal@wdc.com>
+To:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     Johannes Thumshirn <jth@kernel.org>,
+        Naohiro Aota <naohiro.aota@wdc.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Hannes Reinecke <hare@suse.de>
+Subject: [PATCH v11 0/2] New zonefs file system
+Date:   Wed,  5 Feb 2020 21:08:35 +0900
+Message-Id: <20200205120837.67798-1-damien.lemoal@wdc.com>
+X-Mailer: git-send-email 2.24.1
 MIME-Version: 1.0
-In-Reply-To: <BYAPR04MB5816A4CD15C760D0E5768285E7020@BYAPR04MB5816.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:UUgvIhy+4P8ikAPaapv318Bzz+OBbbCmPy0QoThJEh/xGvxoxoz
- 3ujbaURXPQ1bRQp8bEqw16vFeQlbSPTAxYMK3cHHGgHTZGaEsuNDZ9kkSiIv2O79q/3S3Kv
- 3vGIPL4IG60bmzneg2JtOdSKlguxu6z5Pc0Dg+fJy6ryOq9bDQJbvZXJOCoeNejKrFEWuOT
- lzHUwvWRWrAhdxbdAifBg==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:vuQHiFUAGT0=:yoAm55Xorssu3mL8YmeO9m
- SunO96UdgcSDjsR+wF1zxA65MNmkU2cF+BoR7JN+VgCSUB0i9Z+BYcuPSyAkap1qs4AULED63
- rWQYNQ6hO/1DHCNeTDnk86UTCWLD8X3Bv+dnk+/As8bLBE5MCHbx260TWUh77sqqnGdMlq0Y+
- nzoJWRhSd9LeUCtFKMeqDTo7n/WO2riRWHYbRW0a/2PN3JeBZTgJrmgOubTPfdgnR7KbcqwLW
- SfB2POvidn0fTkIuCOEckVSe6LT9pgMM8PLyOpXfzg1mlozkZjWQtX7kb/Z82IQOmHU6hhD7Y
- VDpxSG0ct8ll1tXjceaQzyOIKUy2jrMSiGuGQbztc4BRr56guUN/sKKa7RbU7p/PUTKLB1rb7
- 72UfDTKDQ+RzLPY1vDD/nl9tv8YmnHFmibCgPHeOgEVqh4JSrqpREPm2TnFkNzam1AEMzqUvI
- DmueuHQxBo6/fpmqMcRSagUNNeyWJZq1ZCCwFdo9Abt18X9Jr4PHq5a+wOM/7Bzh8gegikF1E
- uK0PBR7apCl94argMp9SJeyyMbsYkRmwNcX2lspmiIDryc1IY+Dt0C5zre1mG/dLXN/73uCDX
- yJHDAPgYFzqMtq23aEto81prhTnz3vo2zynw/wJSEKyu7hAhJSjisbosag0g5R9EotyPyabk6
- KChlQq5UQzg+7Naau14B3LSD3SHqVHd96X/271it4ZVrye19Jw/JX9YYEbgJZ1qWCZfWzNBgm
- 6CUWb20D90FhjBVsugFFTB4ks5eGRYDQyZGe6pLp3wQckHVkCkROopq6VrnnwccRf0Fig4cwj
- s4Mk5PQ9qw/SwiWYgaNaUcHaaRTw1U0xiDfJYyX0XmAbWvJryZPc9lC9FSLNqsKw4yt0tJDyp
- 0D8m9RQ7hE/ECgmBdL9mTfZjZGFSVoEnIDcmWvEFKjRstxRxeDyMaZSgKvrr/1Rw1DqlS2hOQ
- JMGtCljjIGPZ7y7nF8cM/0jKBK7mLnP8Zi3/kZPX+F///i6bQqbyTandyM2xJ5kXL2O4loI76
- mqVpWXmH5BZ0hOQkbK/v6IkjgMuxCITjwMHJ1LN02vNy5Ueim/5WW5NUl1e9OT3F3BKrOgLBn
- grh0z+2w0invYCCojvw7j+oevpoLDCv0YgqQkBopkx+OIcUZctVrU1BRc4M761MJHyTXesVN2
- 4fszyBi04hzW4wzJS7RW63OYmxJ7n61P358TvU2AwG/9KjM3lRiIctDc6b2vxD6ZaUGUKfGAM
- UEpOskK1VhEaZk2+G
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
->> I propose to define this array also as a completely immutable data stru=
-cture.
->
-> I understood that and pointed out that the added "const" does not change=
- a thing.
+Zonefs is a very simple file system exposing each zone of a zoned block
+device as a file. Unlike a regular file system with zoned block device
+support (e.g. f2fs or the on-going btrfs effort), zonefs does not hide
+the sequential write constraint of zoned block devices to the user.
+Files representing sequential write zones of the device must be written
+sequentially starting from the end of the file (append only writes).
 
-Should the stored pointers be constants (besides the corresponding string =
-literals)?
+Zonefs is not a POSIX compliant file system. It's goal is to simplify
+the implementation of zoned block devices support in applications by
+replacing raw block device file accesses with a richer file based API,
+avoiding relying on direct block device file ioctls which may
+be more obscure to developers. One example of this approach is the
+implementation of LSM (log-structured merge) tree structures (such as
+used in RocksDB and LevelDB) on zoned block devices by allowing SSTables
+to be stored in a zone file similarly to a regular file system rather
+than as a range of sectors of a zoned device. The introduction of the
+higher level construct "one file is one zone" can help reducing the
+amount of changes needed in the application while at the same time
+allowing the use of zoned block devices with various programming
+languages other than C.
 
+Zonefs IO management implementation uses the new iomap generic code.
 
-> I think that as is, it already is immutable.
+Changes from v10:
+* Simplify zonefs_io_error() while extending I/O error and corruption
+  types coverage.
+* Reworked zonefs_create_zgroup() to avoid the use of on-stack file
+  name string and the need for the array of zone group names.
+* Fixed a bug in zonefs_file_buffered_write() (incorrect call to
+  zonefs_io_error).
+* Improved comments throughout the code.
+* Fixed documentation to describe I/O error handling as implemented.
 
-Would you like to distinguish the scope for items in this variable a bit m=
-ore?
+Changes from v9:
+* Changed mount options to a more useful set of possible actions for
+  zone corruption handling: repair, remount-ro, zone-ro or zone-offline
+* Check IMMUTABLE inodes to prevent write operations
+* Documented mount options
 
+Changes from v8:
+* Comments typos fixes and improvements as suggested by Darrick and
+  Dave.
+* Improved IO error handling:
+  - Better sequential file write pointer checks on write IO error
+  - Extended zone condition checks on IO error to all types of IOs
+  - Added mount options for controlling the FS behavior when a zone
+    write pointer corruption is detected.
+* Cleanup zonefs_iomap_begin() and its use in zonefs_map_blocks()
+* Ignore RWF_NOWAIT to avoid out of order writes on sequential zone
+  files.
+* Improved documentation file
 
-Are any other software components similarly affected?
+Changes from v7:
+* Fixed static checker warnings:
+  - Set-but-not-used variable in zonefs_file_buffered_write()
+  - Use S_ISDIR() in zonefs_inode_setattr()
 
-Regards,
-Markus
+Changes from v6:
+* Fixed documentation as suggested by Randy.
+
+Changes from v5:
+* Added simple description of zoned block devices to the documentation,
+  as suggested by Johannes.
+* Added a 64-char max label field to the super block to allow label
+  based identification of volumes using libblkid (checked with a patch
+  to libblkid).
+
+Changes from v4:
+* Use octal values for file and directory permissions
+* Set initial directory permissions to 0555 (no write permission)
+* Prevent setting write permissions for directories
+
+Changes from v3:
+* Fixed many typos in the documentation
+* Use symbolic file permission macros instead of octal values
+  (checkpatch.pl complains about this)
+
+Changes from v2:
+* Address comments and suggestions from Darrick:
+  - Make the inode of OFFLINE and READONLY zones immutable when
+    mounting. Also do this during zone information check after an IO
+    error.
+  - Change super block CRC seed to ~0.
+  - Avoid potential compiler warning in zonefs_create_zgroup().
+* Fixed endianness related compilation warning detected by kbuild bot.
+
+Changes from v1:
+* Fixed comment typo
+* Improved documentation as suggested by Hannes
+
+Damien Le Moal (2):
+  fs: New zonefs file system
+  zonefs: Add documentation
+
+ Documentation/filesystems/zonefs.txt |  310 ++++++
+ MAINTAINERS                          |   10 +
+ fs/Kconfig                           |    1 +
+ fs/Makefile                          |    1 +
+ fs/zonefs/Kconfig                    |    9 +
+ fs/zonefs/Makefile                   |    4 +
+ fs/zonefs/super.c                    | 1441 ++++++++++++++++++++++++++
+ fs/zonefs/zonefs.h                   |  190 ++++
+ include/uapi/linux/magic.h           |    1 +
+ 9 files changed, 1967 insertions(+)
+ create mode 100644 Documentation/filesystems/zonefs.txt
+ create mode 100644 fs/zonefs/Kconfig
+ create mode 100644 fs/zonefs/Makefile
+ create mode 100644 fs/zonefs/super.c
+ create mode 100644 fs/zonefs/zonefs.h
+
+-- 
+2.24.1
+
