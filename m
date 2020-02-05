@@ -2,152 +2,138 @@ Return-Path: <SRS0=QxtL=3Z=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BC94C35249
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 06:22:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1EABC3524F
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 06:35:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 33CAC2085B
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 06:22:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8C7321741
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 06:35:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SYXh5L3A"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Cp2Zmdm1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725906AbgBEGW6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Feb 2020 01:22:58 -0500
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:43633 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725385AbgBEGW6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Feb 2020 01:22:58 -0500
-Received: by mail-pl1-f195.google.com with SMTP id p11so432563plq.10;
-        Tue, 04 Feb 2020 22:22:58 -0800 (PST)
+        id S1725913AbgBEGfR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Feb 2020 01:35:17 -0500
+Received: from mail-io1-f67.google.com ([209.85.166.67]:34766 "EHLO
+        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725793AbgBEGfQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Feb 2020 01:35:16 -0500
+Received: by mail-io1-f67.google.com with SMTP id z193so901283iof.1;
+        Tue, 04 Feb 2020 22:35:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=mauBHH5fUIpPlsDT5bUwCSAsDlzxuBk0qO1ZAB/P2Pk=;
-        b=SYXh5L3ABhf6rmXur68fhQQxu8VUkfUrCb65JU1gfrP50fnCsOcG/Z2cuM1pGEh0Nh
-         MPRhS+Az+AocAQygbGKICPdbr7fBJOh0mvQvoCrk8X6/j/99Qvrhtwc/NysLdaeLW2LA
-         NWmg5iixX93p5QWWYoNlfXDLdJYp0oWcq8BAp5TzMFfqamKz97JMsgkdEmtb6QUkpjP5
-         1zGJMcQ6N5Pyt6BEGwCbZHD7QshkWMs8e5BS2xvpIAuZwVreTgrEc2M8jFqLQvhS/WtX
-         mY7XC5KlldEqc/1LC5MdJ7E1AAua1+nnKb++RFmUWTYvo3foljTcvlAulHphtSXO3TxS
-         4pSg==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=2W/TQUS2r3/q1tQU8U4tb9k4OFU4GnATVNsAlJ6eoSo=;
+        b=Cp2Zmdm1LNXBVV6ZQw6XAgoCeYO4F/VL+PZMkzeu0h0clY+JckTyFE22rT6+0Q0fhj
+         SdF5MNIrI7gEMjZyg7IPNxEiqFXTdtMShs49p64gnSYnSvQCOkFgbzhVMwplXeOr1iwd
+         7w48dBajCnM0E7j5QxMlD/gRXwDzWUzu5Tt1y/xGmMfg2XSyLQmMFK02teuf+Dk85i7q
+         sjA7IBIwp6CF4SJICiOuWagYfXcaKjcYNzasowRPTGnGjqqBmVmIuHmksPhBqf6Pn2hr
+         mLVHCRFMWBoGoZTaLea5n2F8Qh4nUP7BGRp1acM/kiwJFukjMaOczfgERVtwBCSKudkN
+         6yYQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=mauBHH5fUIpPlsDT5bUwCSAsDlzxuBk0qO1ZAB/P2Pk=;
-        b=Wr5PoblElcl4j2mW8BYH+A7VBfSsFdEmbS2CnYUOyDGv5zZhwVxXJDzmSk14+YJNYp
-         3zaI+1CrxqvzcNeoPN4FVrMgtKUCUDWfCSI3V66IRgxgvhe/5AZW1kq6Rv1UpkJDH19U
-         QJNSa3P2rwfLLaofMccPxAAEizryBRldJv7bZ+P670JYJOXkN7f4eY/ezIOREi0LrH/f
-         IMR+CZaSXBCNhBxPXMZBEW9nTTppAWzaiUkxpekMHEoJSOQ/iP9hyjW+NA/JbJr8R9/w
-         MbtK32s38tpqQxq5FMhZfCDIfRlj8Xc1ALrwdN4/+XRFt3SYPLKHmtnEuhnDT3VjZYsg
-         r6Cg==
-X-Gm-Message-State: APjAAAUdYtyQJ28DccGU8KCg9CVRSpCWQOmn6zWDZTJoSuyEifBhhAYL
-        BlGFJ9/+Ms8rAMqmIejy0Ok=
-X-Google-Smtp-Source: APXvYqyw75a2O3A7oMNLhRYXBgnIVA4Hse+jQyQWpe7d08uMZXmRw2u7RFExZDhTeK05fJ39AhFz2w==
-X-Received: by 2002:a17:902:6944:: with SMTP id k4mr19691878plt.214.1580883777686;
-        Tue, 04 Feb 2020 22:22:57 -0800 (PST)
-Received: from localhost ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id ev5sm5783095pjb.4.2020.02.04.22.22.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Feb 2020 22:22:57 -0800 (PST)
-Date:   Wed, 5 Feb 2020 14:22:49 +0800
-From:   Murphy Zhou <jencce.kernel@gmail.com>
-To:     "J. Bruce Fields" <bfields@fieldses.org>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Murphy Zhou <jencce.kernel@gmail.com>,
-        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org
-Subject: Re: A NFS, xfs, reflink and rmapbt story
-Message-ID: <20200205062249.pwqcg5nlghcuy5lg@xzhoux.usersys.redhat.com>
-References: <20200123083217.flkl6tkyr4b7zwuk@xzhoux.usersys.redhat.com>
- <20200124011019.GA8247@magnolia>
- <20200127223631.GA28982@fieldses.org>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=2W/TQUS2r3/q1tQU8U4tb9k4OFU4GnATVNsAlJ6eoSo=;
+        b=TuYN2Y4Ze1VXEBMjcG5VowGFBC2HbHDB/qkXexmHwzyG2RwSc3RlohTOdp40zhVU9L
+         uyav2lv4c3fiOmLVjUrWWoogKUGaGGkI8OuRaTiZIZoRWeWWt/hyAt5ub1A0TEUZyXFM
+         kZAXJO6u09R8hMmdO5MHi0H4mCDveK3E+9FTSFxYDC7eqGOCHD3QARwa/TwJESBzIiNL
+         nNd+EBSkRJwC/flHZzN4GjxA3hot5WPSsGwt4ZdYiXnM08EXVyfqbX40w5nXWSDJH4Rq
+         1rxYWFgxPCkLk5HiZnvvjEMSSl6zdYQH0dp5c4QOQ+APj+eEs9Yj7vQPjHHemhnqFXZ5
+         ou4g==
+X-Gm-Message-State: APjAAAWCNAXVSkBtrfoNzrd0nsSBO+8x1Nm1QATKAHN9JPw3OBUpfbUD
+        4oj+3pbhoWi2ulVTfCOuXHvsZArQ+e3XZxclO0w=
+X-Google-Smtp-Source: APXvYqwhuovg4oyH0u5e/JySsRezJvoRXfkDd2Ro+HQk3YMsephL5vt4JshyXfF8KwxrcKPx36UoWH6u4qeq+myks8c=
+X-Received: by 2002:a6b:f214:: with SMTP id q20mr28089826ioh.137.1580884516151;
+ Tue, 04 Feb 2020 22:35:16 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200127223631.GA28982@fieldses.org>
+References: <158086094707.1990521.17646841467136148296.stgit@magnolia> <158086095320.1990521.15734406558551927388.stgit@magnolia>
+In-Reply-To: <158086095320.1990521.15734406558551927388.stgit@magnolia>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Wed, 5 Feb 2020 08:35:05 +0200
+Message-ID: <CAOQ4uxjYZGAMXy+PVpyCr9+hiWt7BrmruLgsG7s2w7Z-4pfpAg@mail.gmail.com>
+Subject: Re: [PATCH 1/2] xfs: refactor calls to xfs_admin
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Eryu Guan <guaneryu@gmail.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 27, 2020 at 05:36:31PM -0500, J. Bruce Fields wrote:
-> On Thu, Jan 23, 2020 at 05:10:19PM -0800, Darrick J. Wong wrote:
-> > On Thu, Jan 23, 2020 at 04:32:17PM +0800, Murphy Zhou wrote:
-> > > Hi,
-> > > 
-> > > Deleting the files left by generic/175 costs too much time when testing
-> > > on NFSv4.2 exporting xfs with rmapbt=1.
-> > > 
-> > > "./check -nfs generic/175 generic/176" should reproduce it.
-> > > 
-> > > My test bed is a 16c8G vm.
-> > 
-> > What kind of storage?
-> > 
-> > > NFSv4.2  rmapbt=1   24h+
-> > 
-> > <URK> Wow.  I wonder what about NFS makes us so slow now?  Synchronous
-> > transactions on the inactivation?  (speculates wildly at the end of the
-> > workday)
-> > 
-> > I'll have a look in the morning.  It might take me a while to remember
-> > how to set up NFS42 :)
-> 
-> It may just be the default on a recent enough distro.
-> 
-> Though I'd be a little surprised if this behavior is specific to the
-> protocol version.
+On Wed, Feb 5, 2020 at 2:02 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> Create a helper to run xfs_admin on the scratch device, then refactor
+> all tests to use it.
 
-This testcase requires reflink, which is only available in v4.2.
-On other protocols, this testase does not run.
+all tests... heh overstatement :)
 
-Murphy
+Maybe say something about how logdev is needed as argument and
+supported only since recent v5.4 xfsprogs.
+Does older xfsprogs cope well with the extra argument?
 
-> 
-> nfsd_unlink() is basically just vfs_unlink() followed by
-> commit_metadata().
-> 
-> --b.
-> 
-> > 
-> > --D
-> > 
-> > > NFSv4.2  rmapbt=0   1h-2h
-> > > xfs      rmapbt=1   10m+
-> > > 
-> > > At first I thought it hung, turns out it was just slow when deleting
-> > > 2 massive reflined files.
-> > > 
-> > > It's reproducible using latest Linus tree, and Darrick's deferred-inactivation
-> > > branch. Run latest for-next branch xfsprogs.
-> > > 
-> > > I'm not sure it's something wrong, just sharing with you guys. I don't
-> > > remember I have identified this as a regression. It should be there for
-> > > a long time.
-> > > 
-> > > Sending to xfs and nfs because it looks like all related. :)
-> > > 
-> > > This almost gets lost in my list. Not much information recorded, some
-> > > trace-cmd outputs for your info. It's easy to reproduce. If it's
-> > > interesting to you and need any info, feel free to ask.
-> > > 
-> > > Thanks,
-> > > 
-> > > 
-> > > 7)   0.279 us    |  xfs_btree_get_block [xfs]();
-> > > 7)   0.303 us    |  xfs_btree_rec_offset [xfs]();
-> > > 7)   0.301 us    |  xfs_rmapbt_init_high_key_from_rec [xfs]();
-> > > 7)   0.356 us    |  xfs_rmapbt_diff_two_keys [xfs]();
-> > > 7)   0.305 us    |  xfs_rmapbt_init_key_from_rec [xfs]();
-> > > 7)   0.306 us    |  xfs_rmapbt_diff_two_keys [xfs]();
-> > > 7)               |  xfs_rmap_query_range_helper [xfs]() {
-> > > 7)   0.279 us    |    xfs_rmap_btrec_to_irec [xfs]();
-> > > 7)               |    xfs_rmap_lookup_le_range_helper [xfs]() {
-> > > 1)   0.786 us    |  _raw_spin_lock_irqsave();
-> > > 7)               |      /* xfs_rmap_lookup_le_range_candidate: dev 8:34 agno 2 agbno 6416 len 256 owner 67160161 offset 99284480 flags 0x0 */
-> > > 7)   0.506 us    |    }
-> > > 7)   1.680 us    |  }
+Thanks,
+Amir.
+
+>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  common/config |    1 +
+>  common/xfs    |    8 ++++++++
+>  tests/xfs/287 |    2 +-
+>  3 files changed, 10 insertions(+), 1 deletion(-)
+>
+>
+> diff --git a/common/config b/common/config
+> index 9a9c7760..1116cb99 100644
+> --- a/common/config
+> +++ b/common/config
+> @@ -154,6 +154,7 @@ MKSWAP_PROG="$MKSWAP_PROG -f"
+>  export XFS_LOGPRINT_PROG="$(type -P xfs_logprint)"
+>  export XFS_REPAIR_PROG="$(type -P xfs_repair)"
+>  export XFS_DB_PROG="$(type -P xfs_db)"
+> +export XFS_ADMIN_PROG="$(type -P xfs_admin)"
+>  export XFS_GROWFS_PROG=$(type -P xfs_growfs)
+>  export XFS_SPACEMAN_PROG="$(type -P xfs_spaceman)"
+>  export XFS_SCRUB_PROG="$(type -P xfs_scrub)"
+> diff --git a/common/xfs b/common/xfs
+> index 706ddf85..d9a9784f 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -218,6 +218,14 @@ _scratch_xfs_db()
+>         $XFS_DB_PROG "$@" $(_scratch_xfs_db_options)
+>  }
+>
+> +_scratch_xfs_admin()
+> +{
+> +       local options=("$SCRATCH_DEV")
+> +       [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+> +               options+=("$SCRATCH_LOGDEV")
+> +       $XFS_ADMIN_PROG "$@" "${options[@]}"
+> +}
+> +
+>  _scratch_xfs_logprint()
+>  {
+>         SCRATCH_OPTIONS=""
+> diff --git a/tests/xfs/287 b/tests/xfs/287
+> index 8dc754a5..f77ed2f1 100755
+> --- a/tests/xfs/287
+> +++ b/tests/xfs/287
+> @@ -70,7 +70,7 @@ $XFS_IO_PROG -r -c "lsproj" $dir/32bit
+>  _scratch_unmount
+>
+>  # Now, enable projid32bit support by xfs_admin
+> -xfs_admin -p $SCRATCH_DEV >> $seqres.full 2>&1 || _fail "xfs_admin failed"
+> +_scratch_xfs_admin -p >> $seqres.full 2>&1 || _fail "xfs_admin failed"
+>
+>  # Now mount the fs, 32bit project quotas shall be supported, now
+>  _qmount_option "pquota"
+>
