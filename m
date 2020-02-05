@@ -1,64 +1,85 @@
 Return-Path: <SRS0=QxtL=3Z=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
-X-Spam-Level: *
-X-Spam-Status: No, score=1.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,URIBL_DBL_ABUSE_MALW
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Level: 
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25BA7C35247
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 17:32:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BBA4C35247
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 19:05:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 02B6720659
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 17:32:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D2CA821741
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 19:05:01 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JerHrKhD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727083AbgBERcz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Feb 2020 12:32:55 -0500
-Received: from ms.lwn.net ([45.79.88.28]:52624 "EHLO ms.lwn.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726957AbgBERcz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 5 Feb 2020 12:32:55 -0500
-Received: from lwn.net (localhost [127.0.0.1])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1726822AbgBETFB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Feb 2020 14:05:01 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:48456 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727478AbgBETFB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Feb 2020 14:05:01 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1580929500;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=C3weXlvUoGKt40kPvHk0XiV4P9cVo6G9WmHDJh5T/fE=;
+        b=JerHrKhDWLCPrbwXoHBbqiGatQSbe4dyE9nDtPDrtwLGTMzfobwCQyesN5P4tg8S9xx1h4
+        7TijFJrUTaiIfVdkemkp7Ef8amrV1ORIUdf4Lx2oNVN51rmbXMvius2NhCultVh8FInc+3
+        Q8SGGJQe+SRXM49ve061FYeBKZ9UPB0=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-355-JFtaoK2_Oxyw3O2J6zuliA-1; Wed, 05 Feb 2020 14:04:57 -0500
+X-MC-Unique: JFtaoK2_Oxyw3O2J6zuliA-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by ms.lwn.net (Postfix) with ESMTPSA id D2D306E5;
-        Wed,  5 Feb 2020 17:32:53 +0000 (UTC)
-Date:   Wed, 5 Feb 2020 10:32:52 -0700
-From:   Jonathan Corbet <corbet@lwn.net>
-To:     Randy Dunlap <rdunlap@infradead.org>
-Cc:     "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        linux-ext4@vger.kernel.org,
-        Pablo Neira Ayuso <pablo@netfilter.org>,
-        Jozsef Kadlecsik <kadlec@netfilter.org>,
-        Florian Westphal <fw@strlen.de>,
-        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
-        Paul Mackerras <paulus@samba.org>, linux-ppp@vger.kernel.org,
-        reiserfs-devel@vger.kernel.org,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH v2] Documentation: changes.rst: update several outdated
- project URLs
-Message-ID: <20200205103252.539f65e8@lwn.net>
-In-Reply-To: <a9c3c509-8f30-fcc4-d9e0-b53aeaa89e4f@infradead.org>
-References: <a9c3c509-8f30-fcc4-d9e0-b53aeaa89e4f@infradead.org>
-Organization: LWN.net
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DDD1C1083E83
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Feb 2020 19:04:56 +0000 (UTC)
+Received: from localhost.localdomain.com (ovpn-123-99.rdu2.redhat.com [10.10.123.99])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 9473D5C1B2
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Feb 2020 19:04:56 +0000 (UTC)
+From:   Bill O'Donnell <billodo@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: xchk_xattr_listent() fix context->seen_enough to -ECANCELED
+Date:   Wed,  5 Feb 2020 13:04:55 -0600
+Message-Id: <20200205190455.1834330-1-billodo@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, 29 Jan 2020 15:15:15 -0800
-Randy Dunlap <rdunlap@infradead.org> wrote:
+Commit e7ee96dfb8c (xfs: remove all *_ITER_ABORT values)
+replaced *_ITER_ABORT values with -ECANCELED. The replacement
+in the case of scrub/attr.c xchk_xattr_listent() is in
+error (context->seen_enough =3D 1;). Instead of '1', use
+the intended -ECANCELED.
 
-> From: Randy Dunlap <rdunlap@infradead.org>
-> 
-> Update projects URLs in the changes.rst file.
+Fixes: e7ee96dfb8c (xfs: remove all *_ITER_ABORT values)
+Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+---
+ fs/xfs/scrub/attr.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Applied, thanks.
+diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+index d9f0dd444b80..5d0590f78973 100644
+--- a/fs/xfs/scrub/attr.c
++++ b/fs/xfs/scrub/attr.c
+@@ -171,7 +171,7 @@ xchk_xattr_listent(
+ 					     args.blkno);
+ fail_xref:
+ 	if (sx->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+-		context->seen_enough =3D 1;
++		context->seen_enough =3D -ECANCELED;
+ 	return;
+ }
+=20
+--=20
+2.24.1
 
-jon
