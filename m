@@ -4,53 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A6BEC35247
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 22:48:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0078DC352A2
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 22:48:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C7675217F4
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 22:48:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C9857218AC
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 22:48:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MNjlhtt/"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aU/RCYNa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727609AbgBEWs0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Feb 2020 17:48:26 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:34144 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727604AbgBEWsZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Feb 2020 17:48:25 -0500
+        id S1727389AbgBEWs2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Feb 2020 17:48:28 -0500
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:37489 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727562AbgBEWs2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Feb 2020 17:48:28 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1580942904;
+        s=mimecast20190719; t=1580942907;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=wR5HRYcM5uIHBhBeX4VTBixBrxH10MbVv1tab5F2B7Y=;
-        b=MNjlhtt/alMa2Mu3QkQR02vVR2uYPqIBcRpKslVHNEkCPQHlPFEhQLBDg8wH+WqNh5qvqA
-        LRAte+Y6rZhz/rwpfC2I671snqvOW8wK7VQdtPh1rr/QOoNbhFk++bHIHtx+IVxgdrJC0F
-        1fNdNseeh3ejkSSR3alqMoM4gbnHl74=
+        bh=ZEYBcodEQheuhpFfEN+YUYsb4nlhPnB2q7hb4r/C62E=;
+        b=aU/RCYNaPNoUHFEjgXjgdy5CWfN/ux5AzI+RW7vpF6/qukQFol/aZtV7oND+gm4munvW5+
+        P0hDTDYzMM/7HjfiCbTP/II3AY0VsZ2FOC1cLgL8DC93iEoFn0dyp5c5oqwFG2/b2hzkh+
+        z9z87hA+kIYnwC1KQLXw2w1N9pti6Vo=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-40-wdQJQxF3NOyPxJUEGsh1cQ-1; Wed, 05 Feb 2020 17:48:22 -0500
-X-MC-Unique: wdQJQxF3NOyPxJUEGsh1cQ-1
+ us-mta-336-LpAcnSVCMFS29N8Prp6DAA-1; Wed, 05 Feb 2020 17:48:22 -0500
+X-MC-Unique: LpAcnSVCMFS29N8Prp6DAA-1
 Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 64592190D341;
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6444E190D340;
         Wed,  5 Feb 2020 22:48:21 +0000 (UTC)
 Received: from segfault.boston.devel.redhat.com (segfault.boston.devel.redhat.com [10.19.60.26])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 498075DA7C;
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 497C45DA75;
         Wed,  5 Feb 2020 22:48:21 +0000 (UTC)
 Received: by segfault.boston.devel.redhat.com (Postfix, from userid 3734)
-        id 4F927208D0E6; Wed,  5 Feb 2020 17:48:20 -0500 (EST)
+        id 4841520675C6; Wed,  5 Feb 2020 17:48:20 -0500 (EST)
 From:   Jeff Moyer <jmoyer@redhat.com>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>
-Subject: [PATCH 3/3] xfs/300: modify test to work on any fs block size
-Date:   Wed,  5 Feb 2020 17:48:18 -0500
-Message-Id: <20200205224818.18707-4-jmoyer@redhat.com>
+Subject: [PATCH 1/3] dax/dm: disable testing on devices that don't support dax
+Date:   Wed,  5 Feb 2020 17:48:16 -0500
+Message-Id: <20200205224818.18707-2-jmoyer@redhat.com>
 In-Reply-To: <20200205224818.18707-1-jmoyer@redhat.com>
 References: <20200205224818.18707-1-jmoyer@redhat.com>
 MIME-Version: 1.0
@@ -61,31 +61,54 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The test currently assumes a file system block size of 4k.  It will
-work just fine on any user-specified block size, though.
+Move the hack out of dmflakey and put it into _require_dm_target.  This
+fixes up a lot of missed tests that are failing due to the lack of dax
+support (such as tests on dm-thin, snapshot, etc).
 
 Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
 ---
- tests/xfs/300 | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ common/dmflakey |  5 -----
+ common/rc       | 11 +++++++++++
+ 2 files changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/tests/xfs/300 b/tests/xfs/300
-index 28608b81..4f1c927a 100755
---- a/tests/xfs/300
-+++ b/tests/xfs/300
-@@ -50,8 +50,9 @@ $XFS_IO_PROG -f -c "pwrite -S 0x63 0 4096" $SCRATCH_MNT=
-/attrvals >> $seqres.full
- cat $SCRATCH_MNT/attrvals | attr -s name $SCRATCH_MNT/$seq.test >> $seqr=
-es.full 2>&1
+diff --git a/common/dmflakey b/common/dmflakey
+index 2af3924d..b4e11ae9 100644
+--- a/common/dmflakey
++++ b/common/dmflakey
+@@ -8,11 +8,6 @@ FLAKEY_ALLOW_WRITES=3D0
+ FLAKEY_DROP_WRITES=3D1
+ FLAKEY_ERROR_WRITES=3D2
 =20
- # Fragment the file by writing backwards
-+bs=3D$(_get_file_block_size $SCRATCH_MNT)
- for I in `seq 6 -1 0`; do
--	dd if=3D/dev/zero of=3D$SCRATCH_MNT/$seq.test seek=3D$I bs=3D4k \
-+	dd if=3D/dev/zero of=3D$SCRATCH_MNT/$seq.test seek=3D$I bs=3D${bs} \
- 	   oflag=3Ddirect count=3D1 conv=3Dnotrunc >> $seqres.full 2>&1
- done
+-echo $MOUNT_OPTIONS | grep -q dax
+-if [ $? -eq 0 ]; then
+-	_notrun "Cannot run tests with DAX on dmflakey devices"
+-fi
+-
+ _init_flakey()
+ {
+ 	local BLK_DEV_SIZE=3D`blockdev --getsz $SCRATCH_DEV`
+diff --git a/common/rc b/common/rc
+index eeac1355..785f34c6 100644
+--- a/common/rc
++++ b/common/rc
+@@ -1874,6 +1874,17 @@ _require_dm_target()
+ 	_require_sane_bdev_flush $SCRATCH_DEV
+ 	_require_command "$DMSETUP_PROG" dmsetup
 =20
++	echo $MOUNT_OPTIONS | grep -q dax
++	if [ $? -eq 0 ]; then
++		case $target in
++		stripe|linear|error)
++			;;
++		*)
++			_notrun "Cannot run tests with DAX on $target devices."
++			;;
++		esac
++	fi
++
+ 	modprobe dm-$target >/dev/null 2>&1
+=20
+ 	$DMSETUP_PROG targets 2>&1 | grep -q ^$target
 --=20
 2.19.1
 
