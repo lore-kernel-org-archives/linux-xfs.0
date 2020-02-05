@@ -2,84 +2,203 @@ Return-Path: <SRS0=QxtL=3Z=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BBA4C35247
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 19:05:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F259C35247
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 22:29:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D2CA821741
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 19:05:01 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JerHrKhD"
+	by mail.kernel.org (Postfix) with ESMTP id 0E9B421927
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 22:29:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726822AbgBETFB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Feb 2020 14:05:01 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:48456 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727478AbgBETFB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Feb 2020 14:05:01 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1580929500;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=C3weXlvUoGKt40kPvHk0XiV4P9cVo6G9WmHDJh5T/fE=;
-        b=JerHrKhDWLCPrbwXoHBbqiGatQSbe4dyE9nDtPDrtwLGTMzfobwCQyesN5P4tg8S9xx1h4
-        7TijFJrUTaiIfVdkemkp7Ef8amrV1ORIUdf4Lx2oNVN51rmbXMvius2NhCultVh8FInc+3
-        Q8SGGJQe+SRXM49ve061FYeBKZ9UPB0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-355-JFtaoK2_Oxyw3O2J6zuliA-1; Wed, 05 Feb 2020 14:04:57 -0500
-X-MC-Unique: JFtaoK2_Oxyw3O2J6zuliA-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DDD1C1083E83
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Feb 2020 19:04:56 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-123-99.rdu2.redhat.com [10.10.123.99])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 9473D5C1B2
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Feb 2020 19:04:56 +0000 (UTC)
-From:   Bill O'Donnell <billodo@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: xchk_xattr_listent() fix context->seen_enough to -ECANCELED
-Date:   Wed,  5 Feb 2020 13:04:55 -0600
-Message-Id: <20200205190455.1834330-1-billodo@redhat.com>
+        id S1727450AbgBEW3y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Feb 2020 17:29:54 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:38729 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727109AbgBEW3y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Feb 2020 17:29:54 -0500
+Received: from dread.disaster.area (pa49-181-161-120.pa.nsw.optusnet.com.au [49.181.161.120])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 67A8E3A406C;
+        Thu,  6 Feb 2020 09:29:48 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1izTB5-0006D4-AP; Thu, 06 Feb 2020 09:29:47 +1100
+Date:   Thu, 6 Feb 2020 09:29:47 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Damien Le Moal <damien.lemoal@wdc.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Johannes Thumshirn <jth@kernel.org>,
+        Naohiro Aota <naohiro.aota@wdc.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v11 2/2] zonefs: Add documentation
+Message-ID: <20200205222947.GN20628@dread.disaster.area>
+References: <20200205120837.67798-1-damien.lemoal@wdc.com>
+ <20200205120837.67798-3-damien.lemoal@wdc.com>
 MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200205120837.67798-3-damien.lemoal@wdc.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
+        a=SkgQWeG3jiSQFIjTo4+liA==:117 a=SkgQWeG3jiSQFIjTo4+liA==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=l697ptgUJYAA:10
+        a=JF9118EUAAAA:8 a=7-415B0cAAAA:8 a=nyWtIYOtnHeH4J-rdD4A:9
+        a=CjuIK1q_8ugA:10 a=xVlTc564ipvMDusKsbsT:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Commit e7ee96dfb8c (xfs: remove all *_ITER_ABORT values)
-replaced *_ITER_ABORT values with -ECANCELED. The replacement
-in the case of scrub/attr.c xchk_xattr_listent() is in
-error (context->seen_enough =3D 1;). Instead of '1', use
-the intended -ECANCELED.
+On Wed, Feb 05, 2020 at 09:08:37PM +0900, Damien Le Moal wrote:
+> Add the new file Documentation/filesystems/zonefs.txt to document
+> zonefs principles and user-space tool usage.
+> 
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+.....
 
-Fixes: e7ee96dfb8c (xfs: remove all *_ITER_ABORT values)
-Signed-off-by: Bill O'Donnell <billodo@redhat.com>
----
- fs/xfs/scrub/attr.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Just looking at the error handling text...
 
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index d9f0dd444b80..5d0590f78973 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -171,7 +171,7 @@ xchk_xattr_listent(
- 					     args.blkno);
- fail_xref:
- 	if (sx->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
--		context->seen_enough =3D 1;
-+		context->seen_enough =3D -ECANCELED;
- 	return;
- }
-=20
---=20
-2.24.1
+> +Several optional features of zonefs can be enabled at format time.
+> +* Conventional zone aggregation: ranges of contiguous conventional zones can be
+> +  aggregated into a single larger file instead of the default one file per zone.
+> +* File ownership: The owner UID and GID of zone files is by default 0 (root)
+> +  but can be changed to any valid UID/GID.
+> +* File access permissions: the default 640 access permissions can be changed.
+> +
+> +zonefs mount options
+> +--------------------
 
+This section is really all about error handling, not so much mount
+options in general...
+
+> +
+> +zonefs defines several mount options allowing the user to control the file
+> +system behavior when write I/O errors occur and when inconsistencies between a
+> +file size and its zone write pointer position are discovered. The handling of
+> +read I/O errors is not changed by these options as long as no inode size
+> +corruption is detected.
+> +
+> +These options are as follows.
+> +* errors=remount-ro (default)
+> +  All write IO errors and errors due to a zone of the device going "bad"
+> +  (condition changed to offline or read-only), the file system is remounted
+> +  read-only after fixing the size and access permissions of the inode that
+> +  suffered the IO error.
+
+What does "fixing the size and access permissions of the inode"
+mean?
+
+> +* errors=zone-ro
+> +  Any write IO error to a file zone result in the zone being considered as in a
+> +  read-only condition, preventing any further modification to the file. This
+> +  option does not affect the handling of errors due to offline zones. For these
+> +  zones, all accesses (read and write) are disabled.
+
+If the zone is marked RO, then shouldn't reads still work?. Oh, hold
+on, you're now talking about errors that take the zone oflfine at
+the device level?
+
+Perhaps a table describing what IO can be done to a zone vs the
+device once an error occurs would be a clearer way of describing the
+behaviour.
+
+
+It seems to me that a table might be a better way of decribing all
+the different conditions
+
+				Post error access permissions
+				   zone		    device
+mountopt	zone state	read	write	read	write
+--------	----------	----	-----	----	-----
+remount-ro	good		yes	no	yes	no
+		RO		yes	no	yes	no
+		Offline		no	no	yes	no
+
+zone-ro		good		yes	no	yes	yes
+		RO		yes	no	yes	yes
+		Offline		no	no	yes	yes
+
+zone-offline	good		no	no	yes	yes
+		RO		no	no	yes	yes
+		Offline		no	no	yes	yes
+
+repair		good		yes	yes	yes	yes
+		RO		yes	no	yes	yes
+		Offline		no	no	yes	yes
+
+And then you can document that an offline zone will always appear to
+have a size of 0, be immutable, etc, while a read-only zone will
+have a size that reflects the amount of valid data in the zone that
+can be read.
+
+IOWs, you don't need to mix the definitions of zone state appearence
+and behaviour with descriptions of what actions the different mount
+options take when a write error occurs.
+
+> +* errors=zone-offline
+> +  Any write IO error to a file zone result in the zone being considered as in
+> +  an offline condition. This implies that the file size is changed to 0 and all
+> +  read/write accesses to the file disabled, preventing all accesses by the user.
+> +* errors=repair
+> +  Any inconsistency between an inode size and its zone amount of written data
+> +  due to IO errors or external corruption are fixed without any change to file
+> +  access rights. This option does not affect the processing of zones that were
+> +  signaled as read-only or offline by the device. For read-only zones, the file
+> +  read accesses are disabled and for offline zones, all access permissions are
+> +  removed.
+> +
+> +For sequential zone files, inconsistencies between an inode size and the amount
+> +of data writen in its zone, that is, the position of the file zone write
+> +pointer, can result from different events:
+> +* When the device write cache is enabled, a differed write error can occur
+
+"a different write error"?
+
+> +  resulting in the amount of data written in the zone being less than the inode
+> +  size.
+
+Though I suspect that what you really mean to say is that errors can
+occur in ranges of previously completed writes can occur when the
+cache is flushed, hence less data being physically written than the
+OS has previously be told was written by the hardware. i.e. visible
+inode size goes backwards.
+
+> +* Partial failures of large write I/O operations (e.g. one BIO of a multi-bio
+> +  large direct write fails) can result in the amount of data written in the
+> +  zone being larger than the inode size.
+> +* External action on the disk such as write, zone reset or zone finish
+> +  operations will change a file zone write pointer position resulting in a
+> +  reported amount of written data being different from the file inode size.
+
+*nod*
+
+> +Finally, defective drives may change the condition of any zone to offline (zone
+> +dead) or read-only. Such changes, when discovered with the IO errors they can
+> +cause, are handled automatically regardless of the options specified at mount
+> +time. For offline zones, the action taken is similar to the action defined by
+> +the errors=zone-offline mount option. For read-only zones, the action used is
+> +as defined by the errors=zone-ro mount option.
+
+Hmmmm. I think that's over-complicating things and takes control of
+error handling away from the user. That is, regardless of the reason
+for the error, if we get a write error and the user specified
+errors=remount-ro, the entire device should go read-only because
+that's what the user has told the filesystem to do on write error.
+
+This seems pretty user-unfriendly - giving them a way to control
+error handling behaviour and then ignoring it for specific errors
+despite the fact they mean exactly the same thing to the user: the
+write failed because a zone has gone bad since the last time that
+zone was accessed by the application....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
