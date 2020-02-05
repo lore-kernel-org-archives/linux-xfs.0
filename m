@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7006C3524D
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 00:01:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31A40C3524D
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 00:02:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8B7D721744
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 00:01:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 08427214AF
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 00:02:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="YNchd+7u"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="M21JkgmE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727673AbgBEABx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Feb 2020 19:01:53 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:42398 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727534AbgBEABw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Feb 2020 19:01:52 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 014NwqQP086013;
-        Wed, 5 Feb 2020 00:01:51 GMT
+        id S1727534AbgBEACA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Feb 2020 19:02:00 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:41746 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727522AbgBEACA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Feb 2020 19:02:00 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 014Nx4Lm096861;
+        Wed, 5 Feb 2020 00:01:58 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=yoHjzEoLeU4OqrWJ4cCJO0a5dvQ9kLQmXeRaDfXK/vo=;
- b=YNchd+7ui8SReqXT0AuG+GrzwXkdzfufU5luZy5uCG6scDHrzWQBopEoa3DMylsIeGs/
- bpLdo2SsZ9dDgjPTpZv+tJuL++P3qMzU5RRg6OXFf9bIQfUSRsMhx1vA6MabwI3cz3ww
- cTre5PoHeZD5zCtrvG2+NnJi/uzGhYINe/XWRb5ljq1fDQ4/M0LxJFj2jEdxg0aoir+F
- nMPTWx68eKatRlYbUE21UsAhVxCcYnMAtnMhLNV1AgwOkO1kJmTv6cQNER34h/KyX+k7
- 60+2FlYEBBu+rX1L0/FxtHowRf1QGbd6a3PTM7IKkaCdtKia1fxM0hv5WneTa08CQ1OR Sw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2xyhkf88a1-1
+ bh=pbbDtoYXRJuh38ts3Orjrn9Kiqx/Skv8mtJchaS0ThE=;
+ b=M21JkgmEycNlhHahna6WsCWEk1wRyyp+DysyUiSEBFzlxiqxStu4IsY9uH1JpcWT63h6
+ G2zAAHsXPX6Wo3wLF+3mVfWC0zE1sSwOzeSJWUfgPFFo9GaeZQavtxKuzvuNe+nXeJHi
+ YzCge0BCOQvbW6v9ISwRHZfbEhWGy4ESjLYEPbPtXB0VkL4fZD1KGdhvjrJPY7xrDv1g
+ 4nZY8CohlxpdjTPWnyoIusRQOfNyT5J6iDSErWdXf3HoYuS7oAH/lpf+5CBzLp3/IJJI
+ YYFk5fn6+88C5Uje69O3obxgkZUHy/VWomjOqrgAxyZdbLQJaNhjuSw/hHxKkaq4gHWO SA== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2xyhkfg87q-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 05 Feb 2020 00:01:50 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 014NwrJ1059200;
-        Wed, 5 Feb 2020 00:01:50 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2xyhmq3gmu-1
+        Wed, 05 Feb 2020 00:01:57 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 014NwNHj016139;
+        Wed, 5 Feb 2020 00:01:57 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 2xyhmvhwqa-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 05 Feb 2020 00:01:50 +0000
+        Wed, 05 Feb 2020 00:01:57 +0000
 Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01501nwr022436;
-        Wed, 5 Feb 2020 00:01:49 GMT
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01501trW021792;
+        Wed, 5 Feb 2020 00:01:56 GMT
 Received: from localhost (/10.159.250.52)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 04 Feb 2020 16:01:49 -0800
-Subject: [PATCH 1/5] xfs/449: filter out "Discarding..." from output
+        with ESMTP ; Tue, 04 Feb 2020 16:01:55 -0800
+Subject: [PATCH 2/5] xfs/020: fix truncation test
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     guaneryu@gmail.com, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Date:   Tue, 04 Feb 2020 16:01:48 -0800
-Message-ID: <158086090849.1989378.625300470019425718.stgit@magnolia>
+Date:   Tue, 04 Feb 2020 16:01:54 -0800
+Message-ID: <158086091464.1989378.4282506455041445127.stgit@magnolia>
 In-Reply-To: <158086090225.1989378.6869317139530865842.stgit@magnolia>
 References: <158086090225.1989378.6869317139530865842.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -64,13 +64,13 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9521 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=910
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-2001150001 definitions=main-2002040164
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9521 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=960 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-2001150001
  definitions=main-2002040164
 Sender: linux-xfs-owner@vger.kernel.org
@@ -80,27 +80,30 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-xfsprogs 5.4 prints "Discarding..." if the disk supports the trim
-command.  Filter this out of the output because xfs_info and friends
-won't print that out.
+If we can't create the 60T sparse image for testing repair on a large fs
+(such as when running on 32-bit), don't bother running the rest of the
+test.  This requires the actual truncate(1) command, because it returns
+nonzero if the system call fails.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/xfs/449 |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ tests/xfs/020 |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
 
-diff --git a/tests/xfs/449 b/tests/xfs/449
-index 7aae1545..83c3c493 100755
---- a/tests/xfs/449
-+++ b/tests/xfs/449
-@@ -39,7 +39,7 @@ _require_scratch_nocheck
- _require_xfs_spaceman_command "info"
- _require_command "$XFS_GROWFS_PROG" xfs_growfs
+diff --git a/tests/xfs/020 b/tests/xfs/020
+index 66433b0a..4f617379 100755
+--- a/tests/xfs/020
++++ b/tests/xfs/020
+@@ -42,7 +42,9 @@ echo "Silence is golden"
  
--_scratch_mkfs > $tmp.mkfs
-+_scratch_mkfs | sed -e '/Discarding/d' > $tmp.mkfs
- echo MKFS >> $seqres.full
- cat $tmp.mkfs >> $seqres.full
+ fsfile=$TEST_DIR/fsfile.$seq
+ rm -f $fsfile
+-$XFS_IO_PROG -f -c "truncate 60t" $fsfile || _notrun "Cannot create 60T sparse file for test."
++# The actual truncate command is required here (and not xfs_io) because it
++# returns nonzero if the operation fails.
++truncate -s 60t $fsfile || _notrun "Cannot create 60T sparse file for test."
+ rm -f $fsfile
  
+ $MKFS_PROG -t xfs -d size=60t,file,name=$fsfile >/dev/null
 
