@@ -2,201 +2,130 @@ Return-Path: <SRS0=lRpT=32=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE4F6C2D0B1
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Feb 2020 10:31:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1481C2D0B1
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Feb 2020 14:35:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9104B214AF
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Feb 2020 10:31:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A647F217BA
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Feb 2020 14:35:42 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NZeY3KO8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728389AbgBFKbV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 Feb 2020 05:31:21 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:4720 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728261AbgBFKbU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Feb 2020 05:31:20 -0500
-Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 016AG3cB070899
-        for <linux-xfs@vger.kernel.org>; Thu, 6 Feb 2020 05:31:19 -0500
-Received: from e06smtp01.uk.ibm.com (e06smtp01.uk.ibm.com [195.75.94.97])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2xyhmyq10g-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Thu, 06 Feb 2020 05:31:19 -0500
-Received: from localhost
-        by e06smtp01.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.ibm.com>;
-        Thu, 6 Feb 2020 10:31:15 -0000
-Received: from b06avi18626390.portsmouth.uk.ibm.com (9.149.26.192)
-        by e06smtp01.uk.ibm.com (192.168.101.131) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
-        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Thu, 6 Feb 2020 10:31:12 -0000
-Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
-        by b06avi18626390.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 016AUIO648169348
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 6 Feb 2020 10:30:18 GMT
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 990F7A405B;
-        Thu,  6 Feb 2020 10:31:11 +0000 (GMT)
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 71171A4057;
-        Thu,  6 Feb 2020 10:31:10 +0000 (GMT)
-Received: from localhost.localdomain (unknown [9.102.2.200])
-        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Thu,  6 Feb 2020 10:31:10 +0000 (GMT)
-From:   Chandan Rajendra <chandan@linux.ibm.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org,
-        Allison Collins <allison.henderson@oracle.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 05/30] xfs: use strndup_user in XFS_IOC_ATTRMULTI_BY_HANDLE
-Date:   Thu, 06 Feb 2020 16:03:55 +0530
-Organization: IBM
-In-Reply-To: <20200129170310.51370-6-hch@lst.de>
-References: <20200129170310.51370-1-hch@lst.de> <20200129170310.51370-6-hch@lst.de>
+        id S1728071AbgBFOfm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Feb 2020 09:35:42 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:57186 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727918AbgBFOfm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Feb 2020 09:35:42 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1580999741;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=qttFRxOZZqx+r0Bk1kgnDygwg7qvJj32AfnURV7qM28=;
+        b=NZeY3KO8V/lAlz1xdYFDCA7gtgZfj7giclK2K1ZOq67LeU/vFjxsXaIovM6m2c2NTIT45D
+        8HSSpbicKxbs73C3IPHVYc91au7MxgvYb8wRHk1Z/9vlEmMFcwZ7givENzGdsUcAajk57i
+        vztpVVHTj91pVbW1TfRpqqPHNTZg78Y=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-367-QgsrF0W2ObWhqYl32dv4nw-1; Thu, 06 Feb 2020 09:35:39 -0500
+X-MC-Unique: QgsrF0W2ObWhqYl32dv4nw-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 94145185734C;
+        Thu,  6 Feb 2020 14:35:38 +0000 (UTC)
+Received: from segfault.boston.devel.redhat.com (segfault.boston.devel.redhat.com [10.19.60.26])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 24AFA26E43;
+        Thu,  6 Feb 2020 14:35:38 +0000 (UTC)
+From:   Jeff Moyer <jmoyer@redhat.com>
+To:     zlang@redhat.com, linux-xfs@vger.kernel.org
+Cc:     fstests@vger.kernel.org
+Subject: Re: [PATCH 1/3] dax/dm: disable testing on devices that don't support dax
+References: <20200205224818.18707-1-jmoyer@redhat.com>
+        <20200205224818.18707-2-jmoyer@redhat.com>
+        <20200206050821.GT14282@dhcp-12-102.nay.redhat.com>
+X-PGP-KeyID: 1F78E1B4
+X-PGP-CertKey: F6FE 280D 8293 F72C 65FD  5A58 1FF8 A7CA 1F78 E1B4
+Date:   Thu, 06 Feb 2020 09:35:37 -0500
+In-Reply-To: <20200206050821.GT14282@dhcp-12-102.nay.redhat.com> (Zorro Lang's
+        message of "Thu, 6 Feb 2020 13:08:21 +0800")
+Message-ID: <x49pnerlr5y.fsf@segfault.boston.devel.redhat.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-X-TM-AS-GCONF: 00
-x-cbid: 20020610-4275-0000-0000-0000039E7CB3
-X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 20020610-4276-0000-0000-000038B2A987
-Message-Id: <3011142.zga9gAiKYx@localhost.localdomain>
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
- definitions=2020-02-06_01:2020-02-06,2020-02-05 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 mlxscore=0
- spamscore=0 priorityscore=1501 mlxlogscore=999 phishscore=0
- impostorscore=0 malwarescore=0 suspectscore=1 adultscore=0
- lowpriorityscore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2001150001 definitions=main-2002060080
+Content-Type: text/plain
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wednesday, January 29, 2020 10:32 PM Christoph Hellwig wrote: 
+Zorro Lang <zlang@redhat.com> writes:
 
-> Simplify the user copy code by using strndup_user.  This means that we
-> now do one memory allocation per operation instead of one per ioctl,
-> but memory allocations are cheap compared to the actual file system
-> operations.
+> On Wed, Feb 05, 2020 at 05:48:16PM -0500, Jeff Moyer wrote:
+>> Move the hack out of dmflakey and put it into _require_dm_target.  This
+>> fixes up a lot of missed tests that are failing due to the lack of dax
+>> support (such as tests on dm-thin, snapshot, etc).
+>> 
+>> Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
+>> ---
+>>  common/dmflakey |  5 -----
+>>  common/rc       | 11 +++++++++++
+>>  2 files changed, 11 insertions(+), 5 deletions(-)
+>> 
+>> diff --git a/common/dmflakey b/common/dmflakey
+>> index 2af3924d..b4e11ae9 100644
+>> --- a/common/dmflakey
+>> +++ b/common/dmflakey
+>> @@ -8,11 +8,6 @@ FLAKEY_ALLOW_WRITES=0
+>>  FLAKEY_DROP_WRITES=1
+>>  FLAKEY_ERROR_WRITES=2
+>>  
+>> -echo $MOUNT_OPTIONS | grep -q dax
+>> -if [ $? -eq 0 ]; then
+>> -	_notrun "Cannot run tests with DAX on dmflakey devices"
+>> -fi
 >
+> If we need to remove this for common/dmflakey, why not do the same thing
+> in common/dmthin and common/dmdelay etc ?
 
-The newly introduced changes logically match with the code flow that existed
-earlier.
+I didn't realize they had this same code.  I'll make that change,
+thanks!
 
-Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
+-Jeff
 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_ioctl.c   | 17 +++++------------
->  fs/xfs/xfs_ioctl32.c | 17 +++++------------
->  2 files changed, 10 insertions(+), 24 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index b806003caacd..bb490a954c0b 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -448,11 +448,6 @@ xfs_attrmulti_by_handle(
->  		goto out_dput;
->  	}
-> 
-> -	error = -ENOMEM;
-> -	attr_name = kmalloc(MAXNAMELEN, GFP_KERNEL);
-> -	if (!attr_name)
-> -		goto out_kfree_ops;
-> -
->  	error = 0;
->  	for (i = 0; i < am_hreq.opcount; i++) {
->  		if ((ops[i].am_flags & ATTR_ROOT) &&
-> @@ -462,12 +457,11 @@ xfs_attrmulti_by_handle(
->  		}
->  		ops[i].am_flags &= ~ATTR_KERNEL_FLAGS;
-> 
-> -		ops[i].am_error = strncpy_from_user((char *)attr_name,
-> -				ops[i].am_attrname, MAXNAMELEN);
-> -		if (ops[i].am_error == 0 || ops[i].am_error == MAXNAMELEN)
-> -			error = -ERANGE;
-> -		if (ops[i].am_error < 0)
-> +		attr_name = strndup_user(ops[i].am_attrname, MAXNAMELEN);
-> +		if (IS_ERR(attr_name)) {
-> +			ops[i].am_error = PTR_ERR(attr_name);
->  			break;
-> +		}
-> 
->  		switch (ops[i].am_opcode) {
->  		case ATTR_OP_GET:
-> @@ -498,13 +492,12 @@ xfs_attrmulti_by_handle(
->  		default:
->  			ops[i].am_error = -EINVAL;
->  		}
-> +		kfree(attr_name);
->  	}
-> 
->  	if (copy_to_user(am_hreq.ops, ops, size))
->  		error = -EFAULT;
-> 
-> -	kfree(attr_name);
-> - out_kfree_ops:
->  	kfree(ops);
->   out_dput:
->  	dput(dentry);
-> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-> index e085f304e539..936c2f62fb6c 100644
-> --- a/fs/xfs/xfs_ioctl32.c
-> +++ b/fs/xfs/xfs_ioctl32.c
-> @@ -445,11 +445,6 @@ xfs_compat_attrmulti_by_handle(
->  		goto out_dput;
->  	}
-> 
-> -	error = -ENOMEM;
-> -	attr_name = kmalloc(MAXNAMELEN, GFP_KERNEL);
-> -	if (!attr_name)
-> -		goto out_kfree_ops;
-> -
->  	error = 0;
->  	for (i = 0; i < am_hreq.opcount; i++) {
->  		if ((ops[i].am_flags & ATTR_ROOT) &&
-> @@ -459,13 +454,12 @@ xfs_compat_attrmulti_by_handle(
->  		}
->  		ops[i].am_flags &= ~ATTR_KERNEL_FLAGS;
-> 
-> -		ops[i].am_error = strncpy_from_user((char *)attr_name,
-> -				compat_ptr(ops[i].am_attrname),
-> +		attr_name = strndup_user(compat_ptr(ops[i].am_attrname),
->  				MAXNAMELEN);
-> -		if (ops[i].am_error == 0 || ops[i].am_error == MAXNAMELEN)
-> -			error = -ERANGE;
-> -		if (ops[i].am_error < 0)
-> +		if (IS_ERR(attr_name)) {
-> +			ops[i].am_error = PTR_ERR(attr_name);
->  			break;
-> +		}
-> 
->  		switch (ops[i].am_opcode) {
->  		case ATTR_OP_GET:
-> @@ -496,13 +490,12 @@ xfs_compat_attrmulti_by_handle(
->  		default:
->  			ops[i].am_error = -EINVAL;
->  		}
-> +		kfree(attr_name);
->  	}
-> 
->  	if (copy_to_user(compat_ptr(am_hreq.ops), ops, size))
->  		error = -EFAULT;
-> 
-> -	kfree(attr_name);
-> - out_kfree_ops:
->  	kfree(ops);
->   out_dput:
->  	dput(dentry);
-> 
-
--- 
-chandan
-
-
+>
+>> -
+>>  _init_flakey()
+>>  {
+>>  	local BLK_DEV_SIZE=`blockdev --getsz $SCRATCH_DEV`
+>> diff --git a/common/rc b/common/rc
+>> index eeac1355..785f34c6 100644
+>> --- a/common/rc
+>> +++ b/common/rc
+>> @@ -1874,6 +1874,17 @@ _require_dm_target()
+>>  	_require_sane_bdev_flush $SCRATCH_DEV
+>>  	_require_command "$DMSETUP_PROG" dmsetup
+>>  
+>> +	echo $MOUNT_OPTIONS | grep -q dax
+>> +	if [ $? -eq 0 ]; then
+>> +		case $target in
+>> +		stripe|linear|error)
+>> +			;;
+>> +		*)
+>> +			_notrun "Cannot run tests with DAX on $target devices."
+>> +			;;
+>> +		esac
+>> +	fi
+>> +
+>>  	modprobe dm-$target >/dev/null 2>&1
+>>  
+>>  	$DMSETUP_PROG targets 2>&1 | grep -q ^$target
+>> -- 
+>> 2.19.1
+>> 
 
