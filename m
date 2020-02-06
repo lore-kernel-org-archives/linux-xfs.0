@@ -1,328 +1,333 @@
-Return-Path: <SRS0=QxtL=3Z=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=lRpT=32=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 324C3C35247
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 23:07:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F84DC35247
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Feb 2020 01:42:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E1DDF214AF
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Feb 2020 23:07:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0DCAE214AF
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Feb 2020 01:42:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="svz+/tSP";
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="U3zXppCp"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="RKZueekk";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="OBjyWh7b"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727474AbgBEXHm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Feb 2020 18:07:42 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:56990 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727170AbgBEXHm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Feb 2020 18:07:42 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 015N3HHr004490
-        for <linux-xfs@vger.kernel.org>; Wed, 5 Feb 2020 23:07:40 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : references : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=g7alu0WwEyihLOsd/c+261BH1t8IM8fdAiPIekos0mk=;
- b=svz+/tSPWyvIeVDh864gvIzGrrcSUhNOAKbstERNljSAPdUZpaBo+q8Ky5OpOATvCg+7
- jzbp1SqpiZHM6K/wFAS/TsHSm3iwH4fJWUQQDe6E4Xp/IAkh2yhEebDqAREK6zLY19PT
- q0jOb7eUVGn+ilOFnYvDbUA2OCiQeTedFfqjky91Ef9Xu7/rcOpCAaUfsF7NW+slmR80
- 4ZN7KTuqw0CHmhBXd3R/bYsRDx2A/zCk5rBNp1f8vfZdQe9EiIcJu7dFM1diWMY2hR3T
- bxwrw+Xjk5euCDMrNnezDMAYsKSeOkcmQUzy1SM8bzAzb0sEvZozzlF/Rp6BxGqi7ESl 2Q== 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : references : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=g7alu0WwEyihLOsd/c+261BH1t8IM8fdAiPIekos0mk=;
- b=U3zXppCpgaaBmkgSJh+VXhOlvoC51vbPGeaf1Y4Mn1MONa//6AU5NaJZQq3ko+kCPhD0
- 2Q/JzeeW01LeMdOKJqqi5astJycCmJ81BSsKF/4fn6d9F+Cv2qWkUbBTQHDZVWSKtcSe
- 8Os1hS4OwVUlFH1uOwEP3L/nLlFE48Y1Xa/L8yeZzaDKrhvh0oykqC8M9ptuO3mD8pc1
- OQ+4FpDcvEnFV0WSwFULzS/H12Ml8O36CDArSHLh5yhCNryIw/QR6evJ5+wdo7bJNOFM
- /UdsaStJMs++hJSCD17QfdvuaL+k5/Pgw9BuElgm1aogqeffmwWojtFw7GXz+D4BfqPf xg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2xykbpe89w-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 05 Feb 2020 23:07:40 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 015N4JeO130931
-        for <linux-xfs@vger.kernel.org>; Wed, 5 Feb 2020 23:07:39 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 2xymutvd71-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 05 Feb 2020 23:07:39 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 015N7cDm005607
-        for <linux-xfs@vger.kernel.org>; Wed, 5 Feb 2020 23:07:38 GMT
-Received: from [192.168.1.223] (/67.1.3.112)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 05 Feb 2020 15:07:38 -0800
-Subject: Re: [PATCH v6 16/16] xfs: Add delay ready attr set routines
-From:   Allison Collins <allison.henderson@oracle.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <20200118225035.19503-1-allison.henderson@oracle.com>
- <20200118225035.19503-17-allison.henderson@oracle.com>
- <20200122001237.GP8247@magnolia>
- <23b9c16b-dcf7-de47-bfae-5e03adb81703@oracle.com>
-Message-ID: <738cb956-f44b-12cd-6f57-feca617d5c6a@oracle.com>
-Date:   Wed, 5 Feb 2020 16:07:37 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
-MIME-Version: 1.0
-In-Reply-To: <23b9c16b-dcf7-de47-bfae-5e03adb81703@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        id S1727628AbgBFBml (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Feb 2020 20:42:41 -0500
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:31611 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727170AbgBFBml (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Feb 2020 20:42:41 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1580953360; x=1612489360;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=DxbbsjgNnLy00FUtc9tdPN17Hp3kvpINf1l+70fFIxo=;
+  b=RKZueekk1sbit7KhppBDscxmCp5V55tExqyNvrMBHZ4K3BCywS9qK6w6
+   8YlEmgCc10jKYu3fL2iYzvTn+rHsLAbomCxo0sr4c/ObDoRMzdR9DCd1g
+   vg7rNgeznOEyLhPfWcfD5R7JPMI1M5Ei6CuYZuxiVtvYwRbfgMdEdJgef
+   W7j9OYerv71PNiubjG31Tls0rhNNokDz3M72cL9ogkhjRiAwDRjbr0aus
+   WuQGJh+tfWqKQrXft1a32YiaywN2hX5aiDqm0Ip/EydFLwGLR0ePjiS5h
+   zr8mTXF431+P+CYAkggZKOYAmbHelZcNo3bpHcTeizEp3hTR1n5y5sLua
+   Q==;
+IronPort-SDR: idu9VomdfDjeBwo/hO1pOHkpMTgWYvU435+iwnj/BlqoeGHdAQidqi9tiDrSBQgqd4rp3jTW8U
+ wppAOoNkofKpjLiR8V/CipOSe27Rliv3+9/b60s4aEpMdKuqDKjcb/ADtPcb/Rch2sbU4A54mr
+ 9Z50HYP13GxO2AeF58kfeYz3hRjVE7XFTpi+fy+3hPXhpquxDbqyiH521+ar7wtDgopbA7CINk
+ dpQPW1VEvCZoUW3sy57CFy6mYq/lK1GH/UC1OotgmUyin97D6Yg+GN7h5AxxAqRVcS6y2fSRTD
+ d0k=
+X-IronPort-AV: E=Sophos;i="5.70,407,1574092800"; 
+   d="scan'208";a="130667458"
+Received: from mail-dm6nam10lp2105.outbound.protection.outlook.com (HELO NAM10-DM6-obe.outbound.protection.outlook.com) ([104.47.58.105])
+  by ob1.hgst.iphmx.com with ESMTP; 06 Feb 2020 09:42:38 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=iAfBnBrdxzBKCNR+U7Hs0LsJHWmbxswWdHPRumgKsiKNUAa7H1DN613BuIKaGS5ofqVwTojX6OC0ouuJCifZJhNGgUGwleFisvKKIp5HEz6fwoAupMn9bvV009M4pmYuF0rJrG0mIKbK6pp9j69JN3lV4F2xnruCACqO68phlDtZxAySCzftosJY64hLBionWffPwBhgDTKXOZp+yOZSIpqW/hiNpd5JE98K5dCrS0DTRVOAJaq4FXFkMSqPtQ0CXTAFqbYTASD42o0AR87coWzvLa3HjbLW0MAWAsUOOHMShGykOKlmYz53cpNh9Etujt9otLMo34ikKKaakDZUyg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=F+V2Jl+fVbtlMy6MEYgrkzjolTefVfWtyyJuhTLJ56M=;
+ b=ZvO8K/A8oquRzUJE8BRhEgcqvyZ1AYW+zb7m1HXNpIfQcyGoJRU6YNAH0cAZVU8KfSU5BSK6TssHu7Cl3S/ecScMP3SSm0M3qz1VwxB7YRya/jb7LAgSkAk8RLqaMjtRiYuGIhBFl5ALtJysU6ZFcudDvr/i8CmDtzuSQJ7KDwpCeqrSObJb/E5QaEz3NHTgqE5ac99/L42F/R3Eq5Q5kC961XP1spNou6SCYVclSypp4T2jo41quOt8+VPzgbIOsCn4ztR1SVxzpqeidjs/Jm1EUrELpmCnTJx9NBgZ7ybntajLHnCB8PH1uwxAq2GeqfXTLCSlYYZ3dcE0DjTp7A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=F+V2Jl+fVbtlMy6MEYgrkzjolTefVfWtyyJuhTLJ56M=;
+ b=OBjyWh7bEXHPIcjR+GC9s5Gf7gTPLTJGCabHHyfikPADHiQFDZPPRIsY2cIfmSOEf7nOIIjzOhyeqCwoehb56cutNb/H6nz1Ujs5mhsfKDI96uHOaAT7V+eqLJlEpBYi88QnWpWBQHpf98LNgMiQlENE5NvTOxO8LySQzw4kdn8=
+Received: from BYAPR04MB5816.namprd04.prod.outlook.com (20.179.59.16) by
+ BYAPR04MB4486.namprd04.prod.outlook.com (52.135.237.223) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2686.27; Thu, 6 Feb 2020 01:42:37 +0000
+Received: from BYAPR04MB5816.namprd04.prod.outlook.com
+ ([fe80::cd8e:d1de:e661:a61]) by BYAPR04MB5816.namprd04.prod.outlook.com
+ ([fe80::cd8e:d1de:e661:a61%5]) with mapi id 15.20.2707.023; Thu, 6 Feb 2020
+ 01:42:37 +0000
+From:   Damien Le Moal <Damien.LeMoal@wdc.com>
+To:     Dave Chinner <david@fromorbit.com>
+CC:     "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Johannes Thumshirn <jth@kernel.org>,
+        Naohiro Aota <Naohiro.Aota@wdc.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v11 2/2] zonefs: Add documentation
+Thread-Topic: [PATCH v11 2/2] zonefs: Add documentation
+Thread-Index: AQHV3B0L5p2DldaRKE+TK2eBqinZNw==
+Date:   Thu, 6 Feb 2020 01:42:37 +0000
+Message-ID: <BYAPR04MB58166109650A2DC8D61FB6DDE71D0@BYAPR04MB5816.namprd04.prod.outlook.com>
+References: <20200205120837.67798-1-damien.lemoal@wdc.com>
+ <20200205120837.67798-3-damien.lemoal@wdc.com>
+ <20200205222947.GN20628@dread.disaster.area>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9522 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2002050178
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9522 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2002050178
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Damien.LeMoal@wdc.com; 
+x-originating-ip: [199.255.47.9]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 921eb00d-5185-4cd6-7725-08d7aaa5d87b
+x-ms-traffictypediagnostic: BYAPR04MB4486:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <BYAPR04MB44869F5ABB2EFD66ADB7DAB3E71D0@BYAPR04MB4486.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:10000;
+x-forefront-prvs: 0305463112
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(346002)(376002)(39860400002)(136003)(396003)(366004)(199004)(189003)(4326008)(76116006)(7696005)(91956017)(6916009)(8936002)(86362001)(8676002)(81156014)(81166006)(9686003)(55016002)(33656002)(71200400001)(478600001)(54906003)(316002)(66476007)(66446008)(66946007)(2906002)(64756008)(66556008)(52536014)(53546011)(26005)(5660300002)(186003)(6506007);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR04MB4486;H:BYAPR04MB5816.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: S+pQaUumLixdWo0jOl4VNL08fQ+6TGgQ/uMvrtUcxDEsa5iD0Uvz1KjAQHT8jCcqOWzm19ReJxhoTOEdKp8pRFSohNq6OrClgh1fYYYMd6Cl3JVBwnBCy3xgOY8p7XYQkNSf+zkN1kIN0TAaH07kxWb19SveoUVCamUVGyegyKSOhLDECKvpi9S7lXNIit/lsxMDdMvzodKuQBX2SVqYCKO1mJSpof1vOkWEfFNtoAkp2dofz+NfZ7fNTPQdC5LP0sWmexV1j3vJEfzCpFJ/xssUkJsrhoe8t0W061HM3FMHUHoHj3w/MhN4nTluqVcU+hbzoX3gVvJ2hoCBsShBV6flT+u/pVWhXMCeW4EgI5TYqHPsNcWcv36LtI3lZEBnMA2iUkFw6aHtR8UrvxfM0HuGTIxOiDZWIGfrCicscvRfbgRwp4KqUNNkziAbf6tV
+x-ms-exchange-antispam-messagedata: yPLLiSSxcUSbZaNP44DmPq3KzACRMBnu2vIg+i/rxV58QJgeHs3aSu8Ppm7ZthbFo9tzOxaf10Daf/4tlF7WNp/wgLqNXF5HLpwKGZEI6gxNPUQjz2cC3pKj52o3pdWx3kc5OcmVZYZMw+EHLVASVA==
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 921eb00d-5185-4cd6-7725-08d7aaa5d87b
+X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Feb 2020 01:42:37.3650
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: vh76iZreMT9vI/fiywdpzbVYY7uSkVaOqz7fhqGsn5omb7MseKr7CN6XFYBY9ExiAtAaRgNfIi+16jPr2PMcQQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB4486
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 1/22/20 3:30 AM, Allison Collins wrote:
-> 
-> 
-> On 1/21/20 5:12 PM, Darrick J. Wong wrote:
->> On Sat, Jan 18, 2020 at 03:50:35PM -0700, Allison Collins wrote:
-
-<snip>
-
->>> diff --git a/fs/xfs/libxfs/xfs_attr_remote.h 
->>> b/fs/xfs/libxfs/xfs_attr_remote.h
->>> index 7ab3770..ab03519 100644
->>> --- a/fs/xfs/libxfs/xfs_attr_remote.h
->>> +++ b/fs/xfs/libxfs/xfs_attr_remote.h
->>> @@ -13,4 +13,8 @@ int xfs_attr_rmtval_set(struct xfs_da_args *args);
->>>   int xfs_attr_rmtval_remove(struct xfs_da_args *args);
->>>   int xfs_attr_rmtval_invalidate(struct xfs_da_args *args);
->>>   int xfs_attr_rmtval_unmap(struct xfs_da_args *args);
->>> +int xfs_attr_rmt_find_hole(struct xfs_da_args *args);
->>> +int xfs_attr_rmtval_set_value(struct xfs_da_args *args);
->>> +int xfs_attr_rmtval_set_blk(struct xfs_da_args *args);
->>> +int xfs_attr_rmtval_set_init(struct xfs_da_args *args);
->>>   #endif /* __XFS_ATTR_REMOTE_H__ */
->>> diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
->>> index 7fc87da..9943062 100644
->>> --- a/fs/xfs/libxfs/xfs_da_btree.h
->>> +++ b/fs/xfs/libxfs/xfs_da_btree.h
->>> @@ -55,6 +55,14 @@ enum xfs_dacmp {
->>>   enum xfs_delattr_state {
->>>       XFS_DAS_RM_SHRINK    = 1, /* We are shrinking the tree */
->>>       XFS_DAS_RM_NODE_BLKS    = 2, /* We are removing node blocks */
->>> +    XFS_DAS_SF_TO_LEAF    = 3, /* Converted short form to leaf */
->>> +    XFS_DAS_FOUND_LBLK    = 4, /* We found leaf blk for attr */
->>> +    XFS_DAS_LEAF_TO_NODE    = 5, /* Converted leaf to node */
->>> +    XFS_DAS_FOUND_NBLK    = 6, /* We found node blk for attr */
->>> +    XFS_DAS_ALLOC_LEAF    = 7, /* We are allocating leaf blocks */
->>> +    XFS_DAS_FLIP_LFLAG    = 8, /* Flipped leaf INCOMPLETE attr flag */
->>> +    XFS_DAS_ALLOC_NODE    = 9, /* We are allocating node blocks */
->>> +    XFS_DAS_FLIP_NFLAG    = 10,/* Flipped node INCOMPLETE attr flag */
->>
->> We've definitely reached the point where a state diagram would be
->> helpful.  Can you go from any of the RM_ states to the ones that you've
->> just added?
-> No.  And if they did, they would have to show up in the calling 
-> functions state switches.  Because the calling function has to manage 
-> jumping straight back to the subroutine when ever the state belongs to 
-> the subroutine.  Kind of like how you see XFS_DAS_ALLOC_LEAF and 
-> XFS_DAS_FLIP_LFLAG in the state switch for xfs_attr_set_iter, even 
-> though those states only apply to xfs_attr_leaf_addname.
-> 
->>
->> The new state machine code in last two patches would be a lot easier to
->> review if I could look down from above instead of up from the XFS_DAS
->> values and goto labels.  I /think/ it looks sane, but I'm only 20%
->> confident of that statement.
->>
-> Sure, I'll see if I can put together a diagram to help folks out a bit.
-> 
-> Thanks for the reviews!
-> Allison
-> 
->> --D
->>
-
-Ok, so I've put together some quick high level diagrams, and I wanted to 
-run it by you to see what you thought.
-
-These diagrams illustrate the state machine logic as it appears in the 
-current set. The XFS_DAS_* states indicate places where the function 
-would return -EAGAIN, and then immediately resume from after being 
-recalled by the calling function.  States marked as a "subroutine state" 
-indicate that they belong to a subroutine, and so the calling function 
-needs to pass them back to that subroutine to allow it to finish where 
-it left off.  But they otherwise do not have a role in the calling 
-function other than just passing through.
-
-Hope this helps!  Let me know if you have any questions or if there's 
-anything that would help make things more clear.  Thanks!
-
-Allison
-
-/*
-  * State machine diagram for attr remove operations
-  *
-  * xfs_attr_remove_iter()
-  *         XFS_DAS_RM_SHRINK     ─┐
-  *         (subroutine state)     │
-  *                                │
-  *         XFS_DAS_RMTVAL_REMOVE ─┤
-  *         (subroutine state)     │
-  *                                └─>xfs_attr_node_removename()
-  *                                                 │
-  *                                                 v
-  *                                         need to remove
-  *                                   ┌─n──  rmt blocks?
-  *                                   │             │
-  *                                   │             y
-  *                                   │             │
-  *                                   │             v
-  *                                   │  ┌─>XFS_DAS_RMTVAL_REMOVE
-  *                                   │  │          │
-  *                                   │  │          v
-  *                                   │  └──y── more blks
-  *                                   │         to remove?
-  *                                   │             │
-  *                                   │             n
-  *                                   │             │
-  *                                   │             v
-  *                                   │         need to
-  *                                   └─────> shrink tree? ─n─┐
-  *                                                 │         │
-  *                                                 y         │
-  *                                                 │         │
-  *                                                 v         │
-  *                                         XFS_DAS_RM_SHRINK │
-  *                                                 │         │
-  *                                                 v         │
-  *                                                done <─────┘
-  */
-
-/*
-  * State machine diagram for attr set operations
-  *
-  * xfs_attr_set_iter()
-  *                 │
-  *                 v
-  *           need to upgrade
-  *          from sf to leaf? ──n─┐
-  *                 │             │
-  *                 y             │
-  *                 │             │
-  *                 V             │
-  *          XFS_DAS_ADD_LEAF     │
-  *                 │             │
-  *                 v             │
-  *  ┌──────n── fork has   <──────┘
-  *  │         only 1 blk?
-  *  │              │
-  *  │              y
-  *  │              │
-  *  │              v
-  *  │     xfs_attr_leaf_try_add()
-  *  │              │
-  *  │              v
-  *  │          had enough
-  *  ├──────n──   space?
-  *  │              │
-  *  │              y
-  *  │              │
-  *  │              v
-  *  │      XFS_DAS_FOUND_LBLK  ──┐
-  *  │                            │
-  *  │      XFS_DAS_FLIP_LFLAG  ──┤
-  *  │      (subroutine state)    │
-  *  │                            │
-  *  │      XFS_DAS_ALLOC_LEAF  ──┤
-  *  │      (subroutine state)    │
-  *  │                            └─>xfs_attr_leaf_addname()
-  *  │                                              │
-  *  │                                              v
-  *  │                                ┌─────n──  need to
-  *  │                                │        alloc blks?
-  *  │                                │             │
-  *  │                                │             y
-  *  │                                │             │
-  *  │                                │             v
-  *  │                                │  ┌─>XFS_DAS_ALLOC_LEAF
-  *  │                                │  │          │
-  *  │                                │  │          v
-  *  │                                │  └──y── need to alloc
-  *  │                                │         more blocks?
-  *  │                                │             │
-  *  │                                │             n
-  *  │                                │             │
-  *  │                                │             v
-  *  │                                │          was this
-  *  │                                └────────> a rename? ──n─┐
-  *  │                                              │          │
-  *  │                                              y          │
-  *  │                                              │          │
-  *  │                                              v          │
-  *  │                                      XFS_DAS_FLIP_LFLAG │
-  *  │                                              │          │
-  *  │                                              v          │
-  *  │                                             done <──────┘
-  *  └────> XFS_DAS_LEAF_TO_NODE ─┐
-  *                               │
-  *         XFS_DAS_FOUND_NBLK  ──┤
-  *         (subroutine state)    │
-  *                               │
-  *         XFS_DAS_ALLOC_NODE  ──┤
-  *         (subroutine state)    │
-  *                               │
-  *         XFS_DAS_FLIP_NFLAG  ──┤
-  *         (subroutine state)    │
-  *                               │
-  *                               └─>xfs_attr_node_addname()
-  *                                                 │
-  *                                                 v
-  *                                         find space to store
-  *                                        attr. Split if needed
-  *                                                 │
-  *                                                 v
-  *                                         XFS_DAS_FOUND_NBLK
-  *                                                 │
-  *                                                 v
-  *                                   ┌─────n──  need to
-  *                                   │        alloc blks?
-  *                                   │             │
-  *                                   │             y
-  *                                   │             │
-  *                                   │             v
-  *                                   │  ┌─>XFS_DAS_ALLOC_NODE
-  *                                   │  │          │
-  *                                   │  │          v
-  *                                   │  └──y── need to alloc
-  *                                   │         more blocks?
-  *                                   │             │
-  *                                   │             n
-  *                                   │             │
-  *                                   │             v
-  *                                   │          was this
-  *                                   └────────> a rename? ──n─┐
-  *                                                 │          │
-  *                                                 y          │
-  *                                                 │          │
-  *                                                 v          │
-  *                                         XFS_DAS_FLIP_NFLAG │
-  *                                                 │          │
-  *                                                 v          │
-  *                                                done <──────┘
-  */
+On 2020/02/06 7:29, Dave Chinner wrote:=0A=
+> On Wed, Feb 05, 2020 at 09:08:37PM +0900, Damien Le Moal wrote:=0A=
+>> Add the new file Documentation/filesystems/zonefs.txt to document=0A=
+>> zonefs principles and user-space tool usage.=0A=
+>>=0A=
+>> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>=0A=
+> .....=0A=
+> =0A=
+> Just looking at the error handling text...=0A=
+> =0A=
+>> +Several optional features of zonefs can be enabled at format time.=0A=
+>> +* Conventional zone aggregation: ranges of contiguous conventional zone=
+s can be=0A=
+>> +  aggregated into a single larger file instead of the default one file =
+per zone.=0A=
+>> +* File ownership: The owner UID and GID of zone files is by default 0 (=
+root)=0A=
+>> +  but can be changed to any valid UID/GID.=0A=
+>> +* File access permissions: the default 640 access permissions can be ch=
+anged.=0A=
+>> +=0A=
+>> +zonefs mount options=0A=
+>> +--------------------=0A=
+> =0A=
+> This section is really all about error handling, not so much mount=0A=
+> options in general...=0A=
+=0A=
+Indeed. Section title fix is needed.=0A=
+=0A=
+> =0A=
+>> +=0A=
+>> +zonefs defines several mount options allowing the user to control the f=
+ile=0A=
+>> +system behavior when write I/O errors occur and when inconsistencies be=
+tween a=0A=
+>> +file size and its zone write pointer position are discovered. The handl=
+ing of=0A=
+>> +read I/O errors is not changed by these options as long as no inode siz=
+e=0A=
+>> +corruption is detected.=0A=
+>> +=0A=
+>> +These options are as follows.=0A=
+>> +* errors=3Dremount-ro (default)=0A=
+>> +  All write IO errors and errors due to a zone of the device going "bad=
+"=0A=
+>> +  (condition changed to offline or read-only), the file system is remou=
+nted=0A=
+>> +  read-only after fixing the size and access permissions of the inode t=
+hat=0A=
+>> +  suffered the IO error.=0A=
+> =0A=
+> What does "fixing the size and access permissions of the inode"=0A=
+> mean?=0A=
+> =0A=
+>> +* errors=3Dzone-ro=0A=
+>> +  Any write IO error to a file zone result in the zone being considered=
+ as in a=0A=
+>> +  read-only condition, preventing any further modification to the file.=
+ This=0A=
+>> +  option does not affect the handling of errors due to offline zones. F=
+or these=0A=
+>> +  zones, all accesses (read and write) are disabled.=0A=
+> =0A=
+> If the zone is marked RO, then shouldn't reads still work?. Oh, hold=0A=
+> on, you're now talking about errors that take the zone oflfine at=0A=
+> the device level?=0A=
+> =0A=
+> Perhaps a table describing what IO can be done to a zone vs the=0A=
+> device once an error occurs would be a clearer way of describing the=0A=
+> behaviour.=0A=
+> =0A=
+> =0A=
+> It seems to me that a table might be a better way of decribing all=0A=
+> the different conditions=0A=
+> =0A=
+> 				Post error access permissions=0A=
+> 				   zone		    device=0A=
+> mountopt	zone state	read	write	read	write=0A=
+> --------	----------	----	-----	----	-----=0A=
+> remount-ro	good		yes	no	yes	no=0A=
+> 		RO		yes	no	yes	no=0A=
+> 		Offline		no	no	yes	no=0A=
+> =0A=
+> zone-ro		good		yes	no	yes	yes=0A=
+> 		RO		yes	no	yes	yes=0A=
+> 		Offline		no	no	yes	yes=0A=
+> =0A=
+> zone-offline	good		no	no	yes	yes=0A=
+> 		RO		no	no	yes	yes=0A=
+> 		Offline		no	no	yes	yes=0A=
+> =0A=
+> repair		good		yes	yes	yes	yes=0A=
+> 		RO		yes	no	yes	yes=0A=
+> 		Offline		no	no	yes	yes=0A=
+> =0A=
+> And then you can document that an offline zone will always appear to=0A=
+> have a size of 0, be immutable, etc, while a read-only zone will=0A=
+> have a size that reflects the amount of valid data in the zone that=0A=
+> can be read.=0A=
+> =0A=
+> IOWs, you don't need to mix the definitions of zone state appearence=0A=
+> and behaviour with descriptions of what actions the different mount=0A=
+> options take when a write error occurs.=0A=
+=0A=
+Excellent idea ! That will clarify things a lot.=0A=
+=0A=
+>> +* errors=3Dzone-offline=0A=
+>> +  Any write IO error to a file zone result in the zone being considered=
+ as in=0A=
+>> +  an offline condition. This implies that the file size is changed to 0=
+ and all=0A=
+>> +  read/write accesses to the file disabled, preventing all accesses by =
+the user.=0A=
+>> +* errors=3Drepair=0A=
+>> +  Any inconsistency between an inode size and its zone amount of writte=
+n data=0A=
+>> +  due to IO errors or external corruption are fixed without any change =
+to file=0A=
+>> +  access rights. This option does not affect the processing of zones th=
+at were=0A=
+>> +  signaled as read-only or offline by the device. For read-only zones, =
+the file=0A=
+>> +  read accesses are disabled and for offline zones, all access permissi=
+ons are=0A=
+>> +  removed.=0A=
+>> +=0A=
+>> +For sequential zone files, inconsistencies between an inode size and th=
+e amount=0A=
+>> +of data writen in its zone, that is, the position of the file zone writ=
+e=0A=
+>> +pointer, can result from different events:=0A=
+>> +* When the device write cache is enabled, a differed write error can oc=
+cur=0A=
+> =0A=
+> "a different write error"?=0A=
+=0A=
+Nope. I really meant differed, as in "delayed" since the write command=0A=
+succeeded but the cache flush for the data passed by the already completed=
+=0A=
+write command fails later. The sentence is not clear. I will clarify this=
+=0A=
+error pattern.=0A=
+=0A=
+> =0A=
+>> +  resulting in the amount of data written in the zone being less than t=
+he inode=0A=
+>> +  size.=0A=
+> =0A=
+> Though I suspect that what you really mean to say is that errors can=0A=
+> occur in ranges of previously completed writes can occur when the=0A=
+> cache is flushed, hence less data being physically written than the=0A=
+> OS has previously be told was written by the hardware. i.e. visible=0A=
+> inode size goes backwards.=0A=
+=0A=
+Yes, exactly. I will copy-paste this very clear explanation :)=0A=
+=0A=
+>> +Finally, defective drives may change the condition of any zone to offli=
+ne (zone=0A=
+>> +dead) or read-only. Such changes, when discovered with the IO errors th=
+ey can=0A=
+>> +cause, are handled automatically regardless of the options specified at=
+ mount=0A=
+>> +time. For offline zones, the action taken is similar to the action defi=
+ned by=0A=
+>> +the errors=3Dzone-offline mount option. For read-only zones, the action=
+ used is=0A=
+>> +as defined by the errors=3Dzone-ro mount option.=0A=
+> =0A=
+> Hmmmm. I think that's over-complicating things and takes control of=0A=
+> error handling away from the user. That is, regardless of the reason=0A=
+> for the error, if we get a write error and the user specified=0A=
+> errors=3Dremount-ro, the entire device should go read-only because=0A=
+> that's what the user has told the filesystem to do on write error.=0A=
+=0A=
+Yes, and that is the case. Any IO error with errors=3Dremount-ro will turn=
+=0A=
+the FS read-only. What I tried to say here is that this option will not=0A=
+affect the handling of zones that went offline (done by the device). For=0A=
+these, the file will not even be read-only. The table will clarify that. I=
+=0A=
+also need to clarify the different causes for errors, e.g. "regular"=0A=
+read-write errors due to bad sectors, excessive vibrations, etc, which are=
+=0A=
+generally recoverable (rewrite over bad sectors fixes the sector most of=0A=
+the time) and the ones due to the device changing zones condition, which=0A=
+are not recoverable (no condition can get these zones out of their bad stat=
+e).=0A=
+=0A=
+> This seems pretty user-unfriendly - giving them a way to control=0A=
+> error handling behaviour and then ignoring it for specific errors=0A=
+> despite the fact they mean exactly the same thing to the user: the=0A=
+> write failed because a zone has gone bad since the last time that=0A=
+> zone was accessed by the application....=0A=
+=0A=
+I think it is only the explanation that is bad. The error control mount=0A=
+options are enforced correctly as defined.=0A=
+=0A=
+Thanks !=0A=
+=0A=
+> =0A=
+> Cheers,=0A=
+> =0A=
+> Dave.=0A=
+> =0A=
+=0A=
+=0A=
+-- =0A=
+Damien Le Moal=0A=
+Western Digital Research=0A=
