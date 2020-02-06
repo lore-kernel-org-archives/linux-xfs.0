@@ -7,71 +7,72 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3586C35247
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Feb 2020 19:38:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63F97C352A3
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Feb 2020 19:38:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C61D521927
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Feb 2020 19:38:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3AFD5218AC
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Feb 2020 19:38:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bEUASc4s";
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PKwHkY3j"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LnOdOHIe";
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="fV8EFM7k"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727773AbgBFTiH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1727698AbgBFTiH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Thu, 6 Feb 2020 14:38:07 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:48534 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:48544 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727698AbgBFTiH (ORCPT
+        with ESMTP id S1727703AbgBFTiH (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Feb 2020 14:38:07 -0500
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 016Jc4Et001869;
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 016Jc4aY001897;
         Thu, 6 Feb 2020 19:38:04 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
  references : from : message-id : date : mime-version : in-reply-to :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=YILBPqkZwSXYG8Ji552u99jCZsh61MKM+wlO6ROxl5c=;
- b=bEUASc4sR/IpNjsnc5X/6K9NnZXVIxnKX4KXGO6la102xO6gO5ETwz6EGIgW8ud7oEr+
- BrpE4aF44X6o7yU7gow2bjA8Q5jhoh/kMIlLaXDmxlGAQm0kWO5RZZMxJtJkBSWQZO5o
- t+W3nf9sguEIV9XT8pFC0f2xmApAS7/21+DsIfiHQ6DxKy1spsZ1IqdtC7XTizeth4ER
- /gfiIqc1G9BLRz0KsS0LUJ18IvZX01DpQPArTDjrZkcijNRqFCxIOitAVnrtFnUh+5gq
- 9SVYqiDosozmLa43+KO5cuIAqHfAyMkSTk7GxJ4+yf95XsG8/LxpoqEUpgxRzDiI4RgO Dg== 
+ bh=H+PadwFD+pUFBPq67rmSOEisC2mS8BwPulOB1fnxIC8=;
+ b=LnOdOHIefADGEawU8i5iBuFNncF8ta6I1mhFlGIR17CHAbyIjJEWXOM7ZNG/DLgMo1cw
+ FQFb8R9El8QTXFILxxGg3Z/KNugFZ6nspB2cvE+d2fsTioIFGumOt+Kd0U/FitckzEmA
+ zN6rXOQm72SbPk/urxPKaV8Y23h+5Be3UwCupsGmEOzcuFXb7CgpMXqaUbgwj4hO3bCx
+ /UA/hrvB8YDim1Kki0AinIYieIRtL2T2hwkzOGawkE6GOjxSWUB8XS1TeaNY+mNAhh0J
+ BQTJqzM+HvGcPkS+lpbyira5FPgv/axieMSfoRd5xgzYfD4kUi7tOtyz1oDxEFb4um30 iw== 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
  references : from : message-id : date : mime-version : in-reply-to :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=YILBPqkZwSXYG8Ji552u99jCZsh61MKM+wlO6ROxl5c=;
- b=PKwHkY3jgDgRvLacmW+vHH0KWmdh6eQxH0JN0ZweP1u3rVOs6nyDX93d+pMMRQNhMXWO
- 18l5RrorD/iSEbsS5sre+6eZ8Axb1WUx/DQB0vVFF4I9IImAErbVookTO9JiM13QfLgL
- GdTB91581ML8bURwom8MGhwoAJQxZhZXEgsHNpQYW27XE7CgK9iRzCD0IolXRIyPjMHz
- JwuHoKdQa4v98SGiktX49/hOgJ9ieb+i1cD8TuSpEtWgGS36OLTwWUSqQmJy50rpXTtR
- 63vIS4wKHoDOgk1e/E8aTWpf6nAiCdgDblfwJdlROcxFQVFzCSG5JWFE1A64ov4Mgbtr 5g== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2xykbpkxhx-1
+ bh=H+PadwFD+pUFBPq67rmSOEisC2mS8BwPulOB1fnxIC8=;
+ b=fV8EFM7kp3X/0Ex6TTA36lVNBDX2wgBW33ktoYhxmmgt4CTzzs7l6CdUtM42KZDyzpO/
+ oOZBq8iwew6MmX/jDKKSNNTGjuDjxCcpkJAOQNOUVHtuSsXrCi+2MNhrTtgYDKVeN1oE
+ gg9YUnI6yA5qwfnvlEMVkjjqH4tSZMeE35Anly8UtSm2w4qrkYUYuSIQ+imdCfOah+Fx
+ xDQJgnYC9S2uZgJ9mrPqEWkA2xc88OjT9EWEThLxFSQQzu4MKgyrMYE7i1jm9hEkLXef
+ VtjUzlRkZzqCPrqJ9NXnAWhooaRWpKXKyP8k4oFpr7fZ3m2KXhtWHfuiEUr/k3N8l4Tz uA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 2xykbpkxhb-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
         Thu, 06 Feb 2020 19:38:04 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 016JSnIp138833;
-        Thu, 6 Feb 2020 19:38:03 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2y0mnkbk8b-1
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 016JTDQA063916;
+        Thu, 6 Feb 2020 19:38:00 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 2y080dxfku-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 06 Feb 2020 19:38:03 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 016Jc3QS023108;
-        Thu, 6 Feb 2020 19:38:03 GMT
+        Thu, 06 Feb 2020 19:38:00 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 016JbxJj021940;
+        Thu, 6 Feb 2020 19:37:59 GMT
 Received: from [192.168.1.223] (/67.1.3.112)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 06 Feb 2020 11:38:03 -0800
-Subject: Re: [PATCH 2/4] libxfs: complain when write IOs fail
+        with ESMTP ; Thu, 06 Feb 2020 11:37:59 -0800
+Subject: Re: [PATCH 1/4] libxfs: libxfs_buf_delwri_submit should write buffers
+ immediately
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@sandeen.net
 Cc:     linux-xfs@vger.kernel.org
 References: <158086364511.2079905.3531505051831183875.stgit@magnolia>
- <158086365728.2079905.9556999948179065078.stgit@magnolia>
+ <158086365123.2079905.12151913907904621987.stgit@magnolia>
 From:   Allison Collins <allison.henderson@oracle.com>
-Message-ID: <b3746c06-9269-cad2-360d-26d3aec23d91@oracle.com>
-Date:   Thu, 6 Feb 2020 12:38:02 -0700
+Message-ID: <15d22de3-79a2-2a6d-2453-c9ecb82fee92@oracle.com>
+Date:   Thu, 6 Feb 2020 12:37:58 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <158086365728.2079905.9556999948179065078.stgit@magnolia>
+In-Reply-To: <158086365123.2079905.12151913907904621987.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -94,33 +95,74 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 2/4/20 5:47 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Complain whenever a metadata write fails.
+> The whole point of libxfs_buf_delwri_submit is to submit a bunch of
+> buffers for write and wait for the response.  Unfortunately, while it
+> does mark the buffers dirty, it doesn't actually flush them and lets the
+> cache mru flusher do it.  This is inconsistent with the kernel API,
+> which actually writes the buffers and returns any IO errors.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Looks good:
+Looks ok to me:
 Reviewed-by: Allison Collins <allison.henderson@oracle.com>
 
 > ---
->   libxfs/rdwr.c |    7 ++++++-
->   1 file changed, 6 insertions(+), 1 deletion(-)
+>   libxfs/rdwr.c   |    3 ++-
+>   mkfs/xfs_mkfs.c |   16 ++++++++++------
+>   2 files changed, 12 insertions(+), 7 deletions(-)
 > 
 > 
 > diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-> index 2e9f66cc..8b47d438 100644
+> index 0d9d7202..2e9f66cc 100644
 > --- a/libxfs/rdwr.c
 > +++ b/libxfs/rdwr.c
-> @@ -1149,7 +1149,12 @@ libxfs_writebufr(xfs_buf_t *bp)
->   			(long long)LIBXFS_BBTOOFF64(bp->b_bn),
->   			(long long)bp->b_bn, bp, bp->b_error);
->   #endif
-> -	if (!bp->b_error) {
-> +	if (bp->b_error) {
-> +		fprintf(stderr,
-> +	_("%s: write failed on %s bno 0x%llx/0x%x, err=%d\n"),
-> +			__func__, bp->b_ops->name,
-> +			(long long)bp->b_bn, bp->b_bcount, -bp->b_error);
-> +	} else {
->   		bp->b_flags |= LIBXFS_B_UPTODATE;
->   		bp->b_flags &= ~(LIBXFS_B_DIRTY | LIBXFS_B_EXIT |
->   				 LIBXFS_B_UNCHECKED);
+> @@ -1491,9 +1491,10 @@ xfs_buf_delwri_submit(
+>   
+>   	list_for_each_entry_safe(bp, n, buffer_list, b_list) {
+>   		list_del_init(&bp->b_list);
+> -		error2 = libxfs_writebuf(bp, 0);
+> +		error2 = libxfs_writebufr(bp);
+>   		if (!error)
+>   			error = error2;
+> +		libxfs_putbuf(bp);
+>   	}
+>   
+>   	return error;
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 5a042917..1f5d2105 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -3685,6 +3685,7 @@ main(
+>   	};
+>   
+>   	struct list_head	buffer_list;
+> +	int			error;
+>   
+>   	platform_uuid_generate(&cli.uuid);
+>   	progname = basename(argv[0]);
+> @@ -3885,16 +3886,19 @@ main(
+>   		if (agno % 16)
+>   			continue;
+>   
+> -		if (libxfs_buf_delwri_submit(&buffer_list)) {
+> -			fprintf(stderr, _("%s: writing AG headers failed\n"),
+> -					progname);
+> +		error = -libxfs_buf_delwri_submit(&buffer_list);
+> +		if (error) {
+> +			fprintf(stderr,
+> +	_("%s: writing AG headers failed, err=%d\n"),
+> +					progname, error);
+>   			exit(1);
+>   		}
+>   	}
+>   
+> -	if (libxfs_buf_delwri_submit(&buffer_list)) {
+> -		fprintf(stderr, _("%s: writing AG headers failed\n"),
+> -				progname);
+> +	error = -libxfs_buf_delwri_submit(&buffer_list);
+> +	if (error) {
+> +		fprintf(stderr, _("%s: writing AG headers failed, err=%d\n"),
+> +				progname, error);
+>   		exit(1);
+>   	}
+>   
 > 
