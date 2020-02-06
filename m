@@ -2,123 +2,100 @@ Return-Path: <SRS0=lRpT=32=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4DB6C33CAC
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Feb 2020 14:36:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98433C352A3
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Feb 2020 15:32:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AC3022082E
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Feb 2020 14:36:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6EFBF222C2
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Feb 2020 15:32:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Qy33kAiW"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AqdlXmru"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726765AbgBFOgv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 Feb 2020 09:36:51 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:50257 "EHLO
+        id S1727588AbgBFPcO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Feb 2020 10:32:14 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:33869 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727918AbgBFOgv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Feb 2020 09:36:51 -0500
+        with ESMTP id S1725535AbgBFPcO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Feb 2020 10:32:14 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1580999810;
+        s=mimecast20190719; t=1581003132;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=M6ywBgEyecB7i6tCl7rBaaIJ1nlHocqQsOpoi6h5WDY=;
-        b=Qy33kAiWd1ijCrnEagSeXtJ4gee8lDF+3VuMiiVbFG0BBtcN2r/9e1tzwfhBw7+YOSD0h8
-        1qwt16sUSEGyb01L892d0qzL6FTz54WFP1vvQBQ0N16xvWgNyUI9x3SVKXU5+QTpTiuutW
-        0sKoCm3zPi/mkBHTsAub3vDwp3FK9Qo=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-90-acILuq70MVCP-rDbn0K-rg-1; Thu, 06 Feb 2020 09:36:46 -0500
-X-MC-Unique: acILuq70MVCP-rDbn0K-rg-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CA275800D54;
-        Thu,  6 Feb 2020 14:36:44 +0000 (UTC)
-Received: from segfault.boston.devel.redhat.com (segfault.boston.devel.redhat.com [10.19.60.26])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 4302B790EE;
-        Thu,  6 Feb 2020 14:36:44 +0000 (UTC)
-From:   Jeff Moyer <jmoyer@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org
-Subject: Re: [PATCH 0/3] fstests: fixes for 64k pages and dax
-References: <20200205224818.18707-1-jmoyer@redhat.com>
-        <20200205230626.GO20628@dread.disaster.area>
-X-PGP-KeyID: 1F78E1B4
-X-PGP-CertKey: F6FE 280D 8293 F72C 65FD  5A58 1FF8 A7CA 1F78 E1B4
-Date:   Thu, 06 Feb 2020 09:36:43 -0500
-In-Reply-To: <20200205230626.GO20628@dread.disaster.area> (Dave Chinner's
-        message of "Thu, 6 Feb 2020 10:06:26 +1100")
-Message-ID: <x49lfpflr44.fsf@segfault.boston.devel.redhat.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        bh=JkkJGmIOTY9azTSJOAyBmE/D2+0ai1ViZFBb2hElwXY=;
+        b=AqdlXmrukIN1dSjBGLgl0WWXYapV9ibPs0KMy28+CHasnKPW+uJQj0YBECl5fnxZ/8uZVA
+        5WiBYCIjpxIq04f1TF4Laa9aubDLrF0l1Ac75gCxYIo8S2L4bVQ0UD8Fz3m/qZ+8Tk0sX6
+        Eo11lJ8+tzGckpkTGCGqiBk2ibbFqQw=
+Received: from mail-oi1-f199.google.com (mail-oi1-f199.google.com
+ [209.85.167.199]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-295-zdKzGFmjPmKDKVvow6M-Sw-1; Thu, 06 Feb 2020 10:32:11 -0500
+X-MC-Unique: zdKzGFmjPmKDKVvow6M-Sw-1
+Received: by mail-oi1-f199.google.com with SMTP id n4so2985581oih.12
+        for <linux-xfs@vger.kernel.org>; Thu, 06 Feb 2020 07:32:11 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=JkkJGmIOTY9azTSJOAyBmE/D2+0ai1ViZFBb2hElwXY=;
+        b=kVkqvzxe9PDeI1hyvif+6cYUS+TpJnp0f+t2bfevU5Bc9YF7K7UfrhfFmnvU8fLsc4
+         8JjS693guSGTAmPUtFsNaOh4T6MwU6GjK+tnCA2eKJsKl7VOXBUBDV4JZfHX2fzaJpoG
+         cakRsgT1xCQYwFsURhBTFo1fLISNwcrdp0uutEwQ1g4r09kapn3Ka8F+bdpwYfvykJ+X
+         JeNYWSZAUoqfX5YD4+OBVfewHkeG2Uw0J5EG+k/F62dFeUwk/D0IVpxnVS1OIZakf4lk
+         VhxA40pGr7VQFQGx0Xo1rYVFf/KLoyyNMZxK8IaWLkagexW27ZN+qsfHGstGwYJaZ/0v
+         JbZg==
+X-Gm-Message-State: APjAAAXTNR1T1q7P6Z4u7O3xgerFp+sUlYlxz+jwwsIRj1JwQaaCpdrW
+        sWHVbL93Bq1ZPN6sA31TA/w7Evbkrr8T+CyGcNDRTF93QWjlkW0p1Z8v4w170BzWyX4FeKj7Zqr
+        0ovbwCatNlZ4MnBPljEYiI7kbOUalwz/rOEWS
+X-Received: by 2002:aca:48d0:: with SMTP id v199mr7121508oia.10.1581003130604;
+        Thu, 06 Feb 2020 07:32:10 -0800 (PST)
+X-Google-Smtp-Source: APXvYqz63b3BCvjFz9bZiKofXwlA69pEYM2GvuAIssv4co0has6j21zg9p8DSROFpl+t1g3/AiFAiFF1ObcmOqpV8Jw=
+X-Received: by 2002:aca:48d0:: with SMTP id v199mr7121485oia.10.1581003130363;
+ Thu, 06 Feb 2020 07:32:10 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+References: <20200114161225.309792-1-hch@lst.de> <20200114161225.309792-6-hch@lst.de>
+In-Reply-To: <20200114161225.309792-6-hch@lst.de>
+From:   Andreas Gruenbacher <agruenba@redhat.com>
+Date:   Thu, 6 Feb 2020 16:31:58 +0100
+Message-ID: <CAHc6FU45m59PjBWWO=F740_jyOtKSwc__XfYhP84WkpK0uqcWQ@mail.gmail.com>
+Subject: Re: [Cluster-devel] [PATCH 05/12] gfs2: fix O_SYNC write handling
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Waiman Long <longman@redhat.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        cluster-devel <cluster-devel@redhat.com>,
+        Linux-MM <linux-mm@kvack.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Dave Chinner <david@fromorbit.com> writes:
+Hi Christoph,
 
-> [cc fstests@vger.kernel.org]
->
-> On Wed, Feb 05, 2020 at 05:48:15PM -0500, Jeff Moyer wrote:
->> This set of patches fixes a few false positives I encountered when
->> testing DAX on ppc64le (which has a 64k page size).
->> 
->> Patch 1 is actually not specific to non-4k page sizes.  Right now we
->> only test for dax incompatibility in the dm flakey target.  This means
->> that tests that use dm-thin or the snapshot target will still try to
->> run.  Moving the check to _require_dm_target fixes that problem.
->> 
->> Patches 2 and 3 get rid of hard coded block/page sizes in the tests.
->> They run just fine on 64k pages and 64k block sizes.
->> 
->> Even after these patches, there are many more tests that fail in the
->> following configuration:
->> 
->> MKFS_OPTIONS="-b size=65536 -m reflink=0" MOUNT_OPTIONS="-o dax"
->> 
->> One class of failures is tests that create a really small file system
->> size.  Some of those tests seem to require the very small size, but
->> others seem like they could live with a slightly bigger size that
->> would then fit the log (the typical failure is a mkfs failure due to
->> not enough blocks for the log).  For the former case, I'm tempted to
->> send patches to _notrun those tests, and for the latter, I'd like to
->> bump the file system sizes up.  300MB seems to be large enough to
->> accommodate the log.  Would folks be opposed to those approaches?
->> 
->> Another class of failure is tests that either hard-code a block size
->> to trigger a specific error case, or that test a multitude of block
->> sizes.  I'd like to send a patch to _notrun those tests if there is
->> a user-specified block size.  That will require parsing the MKFS_OPTIONS
->> based on the fs type, of course.  Is that something that seems
->> reasonable?
->> 
->> I will follow up with a series of patches to implement those changes
->> if there is consensus on the approach.  These first three seemed
->> straight-forward to me, so that's where I'm starting.
->> 
->> Thanks!
->> Jeff
->> 
->> [PATCH 1/3] dax/dm: disable testing on devices that don't support dax
->> [PATCH 2/3] t_mmap_collision: fix hard-coded page size
->> [PATCH 3/3] xfs/300: modify test to work on any fs block size
->
-> Hi Jeff,
->
-> You probably should be sending fstests patches to
-> fstests@vger.kernel.org, otherwise they probably won't get noticed
-> by the fstests maintainer...
+thanks for this patch, and sorry for taking so long to react.
 
-Hm, somehow I didn't know about that list.  I'll send v2 there, thanks!
+On Tue, Jan 14, 2020 at 5:54 PM Christoph Hellwig <hch@lst.de> wrote:
+> Don't ignore the return value from generic_write_sync for the direct to
+> buffered I/O callback case when written is non-zero.  Also don't bother
+> to call generic_write_sync for the pure direct I/O case, as iomap_dio_rw
+> already takes care of that.
 
--Jeff
+I like the idea, but the patch as is doesn't quite work: iomap_dio_rw
+already bumps iocb->ki_pos, so we end up with the wrong value by
+adding the (direct + buffered) write size again.
+We'd probably also be better served by replacing
+filemap_write_and_wait_range with generic_write_sync + IOCB_DSYNC in
+the buffered fallback case. I'll send an update that you'll hopefully
+like.
+
+Andreas
 
