@@ -2,155 +2,160 @@ Return-Path: <SRS0=lRpT=32=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99B14C35247
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Feb 2020 23:07:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FF6DC35247
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Feb 2020 23:42:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 64DAA214AF
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Feb 2020 23:07:39 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="vPe6jNK/";
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="F1qJRWxS"
+	by mail.kernel.org (Postfix) with ESMTP id 2B1D221775
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Feb 2020 23:42:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726509AbgBFXHi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 Feb 2020 18:07:38 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:43808 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727468AbgBFXHi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Feb 2020 18:07:38 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 016N4Uth176396;
-        Thu, 6 Feb 2020 23:07:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=RK6RpRqjucm2pjs4voGfBUrIPmvFnYFOde/7aj5v5bw=;
- b=vPe6jNK/1lG6j1uVyCox86uQFgCw9gfpT10lis6F/GdxrnB9sVHa7/TSkoJK3ir91cVd
- 9rEskoqXeDxkx7gcbnf2BTo6xIzKlVKCMQ6Sd3FoL32lgvCdsWARljFKMGxO3i9CBceV
- 1RzQ5CMSV7iZY8F6ZV8DCIfawWEMswAAB2CyurCPuMUDud8AyCzASgu0Iu/hB6NxPsFD
- LWa1TCtY2RLnNJzHtUd0IFFQR/0XFjfouaOIeryq8Sv43zmmtciNP1pmaHT4x59Zs83d
- eH++qkemcbK+edSDQgiFTK1LIzRf/UOUX/aDJvYcXHjDLc125ASusf3sSKu5AfJDWTv9 Ng== 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=RK6RpRqjucm2pjs4voGfBUrIPmvFnYFOde/7aj5v5bw=;
- b=F1qJRWxS8u0OVVg2+fQAy07GrgoAN65IInjzSlhevoTI2837dsUvhB1iFSVoZI8HUlNN
- cRzLKJ5BimTWGRMuG75Yo7l4X9UfUoAaG6X2m3Iutq33MinSaVyFi/jVNnCSw3RL5oFY
- l4TdYQyGrup5t7XX7+xObomhAFM28PpRY+au/ix228JVoTU2XJz6gMrsTur/B/H5KMD4
- rMGcW8y1vTC5kobnmPV7RxJttD4y7DM83kOotFq3M4OaCR66Fnrx4q2XLFfFOOJjY/SD
- zGThkaXrVpZlr4k2Fdm3FeAY0C23Y+4rJXIS2Idp4LLwq3253BkrijI9B9kW4Hy41Qdd AA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2xykbpcvfn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 06 Feb 2020 23:07:34 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 016N4Rve079244;
-        Thu, 6 Feb 2020 23:07:34 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2y0jfyvmtc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 06 Feb 2020 23:07:33 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 016N7XXe017064;
-        Thu, 6 Feb 2020 23:07:33 GMT
-Received: from localhost (/10.145.179.117)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 06 Feb 2020 15:07:32 -0800
-Date:   Thu, 6 Feb 2020 15:07:31 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     "Bill O'Donnell" <billodo@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: xchk_xattr_listent() fix context->seen_enough to
- -ECANCELED
-Message-ID: <20200206230731.GH6870@magnolia>
-References: <20200205190455.1834330-1-billodo@redhat.com>
+        id S1726628AbgBFXmD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Feb 2020 18:42:03 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:34574 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726502AbgBFXmD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Feb 2020 18:42:03 -0500
+Received: from dread.disaster.area (pa49-181-161-120.pa.nsw.optusnet.com.au [49.181.161.120])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 59C658214F9;
+        Fri,  7 Feb 2020 10:41:59 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1izqmU-0006dw-Gc; Fri, 07 Feb 2020 10:41:58 +1100
+Date:   Fri, 7 Feb 2020 10:41:58 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Damien Le Moal <damien.lemoal@wdc.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Johannes Thumshirn <jth@kernel.org>,
+        Naohiro Aota <naohiro.aota@wdc.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v12 2/2] zonefs: Add documentation
+Message-ID: <20200206234158.GB21953@dread.disaster.area>
+References: <20200206052631.111586-1-damien.lemoal@wdc.com>
+ <20200206052631.111586-3-damien.lemoal@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200205190455.1834330-1-billodo@redhat.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9523 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2002060166
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9523 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2002060166
+In-Reply-To: <20200206052631.111586-3-damien.lemoal@wdc.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+        a=SkgQWeG3jiSQFIjTo4+liA==:117 a=SkgQWeG3jiSQFIjTo4+liA==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=l697ptgUJYAA:10
+        a=JF9118EUAAAA:8 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=pdmCJgB9B0VxgstGLv4A:9
+        a=CjuIK1q_8ugA:10 a=xVlTc564ipvMDusKsbsT:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 05, 2020 at 01:04:55PM -0600, Bill O'Donnell wrote:
-> Commit e7ee96dfb8c (xfs: remove all *_ITER_ABORT values)
-> replaced *_ITER_ABORT values with -ECANCELED. The replacement
-> in the case of scrub/attr.c xchk_xattr_listent() is in
-> error (context->seen_enough = 1;). Instead of '1', use
-> the intended -ECANCELED.
+On Thu, Feb 06, 2020 at 02:26:31PM +0900, Damien Le Moal wrote:
+> Add the new file Documentation/filesystems/zonefs.txt to document
+> zonefs principles and user-space tool usage.
 > 
-> Fixes: e7ee96dfb8c (xfs: remove all *_ITER_ABORT values)
-> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 > ---
->  fs/xfs/scrub/attr.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-> index d9f0dd444b80..5d0590f78973 100644
-> --- a/fs/xfs/scrub/attr.c
-> +++ b/fs/xfs/scrub/attr.c
-> @@ -171,7 +171,7 @@ xchk_xattr_listent(
->  					     args.blkno);
->  fail_xref:
->  	if (sx->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-> -		context->seen_enough = 1;
+>  Documentation/filesystems/zonefs.txt | 404 +++++++++++++++++++++++++++
+>  MAINTAINERS                          |   1 +
+>  2 files changed, 405 insertions(+)
+>  create mode 100644 Documentation/filesystems/zonefs.txt
 
-Hmm.  The attr list functions do:
+Looks largely OK to me. A few small nits below in the new error handling text,
+but otherwise
 
-	if (context->seen_enough)
-		break;
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-to stop iteration of the attributes.  Any nonzero value will work,
-positive or negative.  Further down in the scrub/attr.c, xchk_xattr
-does:
+> +IO error handling
+> +-----------------
+> +
+> +Zoned block devices may fail I/O requests for reasons similar to regular block
+> +devices, e.g. due to bad sectors. However, in addition to such known I/O
+> +failure pattern, the standards governing zoned block devices behavior define
+> +additional conditions that result in I/O errors.
+> +
+> +* A zone may transition to the read-only condition (BLK_ZONE_COND_READONLY):
+> +  While the data already written in the zone is still readable, the zone can
+> +  no longer be written. No user action on the zone (zone management command or
+> +  read/write access) can change the zone condition back to a normal read/write
+> +  state. While the reasons for the device to transition a zone to read-only
+> +  state are not defined by the standards, a typical cause for such transition
+> +  would be a defective write head on an HDD (all zones under this head are
+> +  changed to read-only).
+> +
+> +* A zone may transition to the offline condition (BLK_ZONE_COND_OFFLINE):
+> +  An offline zone cannot be read nor written. No user action can transition an
+> +  offline zone back to an operational good state. Similarly to zone read-only
+> +  transitions, the reasons for a drive to transition a zone to the offline
+> +  condition are undefined. A typical cause would be a defective read-write head
+> +  on an HDD causing all zones on the platter under the broken head to be
+> +  inaccessible.
+> +
+> +* Unaligned write errors: These errors result from the host issuing write
+> +  requests with a start sector that does not correspond to a zone write pointer
+> +  position when the write request is executed by the device. Even though zonefs
+> +  enforces sequential file write for sequential zones, unaligned write errors
+> +  may still happen in the case of a partial failure of a very large direct I/O
+> +  operation split into multiple BIOs/requests or asynchronous I/O operations.
+> +  If one of the write request within the set of sequential write requests
+> +  issued to the device fails, all write requests after queued after it will
+> +  become unaligned and fail.
+> +
+> +* Delayed write errors: similarly to regular block devices, if the device side
+> +  write cache is enabled, write errors may occur in ranges of previously
+> +  completed writes when the device write cache is flushed, e.g. on fsync().
+> +  Similarly to the previous immediate unaligned write error case, delayed write
+> +  errors can propagate through a stream of cached sequential data for a zone
+> +  causing all data to be dropped after the sector that caused the error.
+> +
+> +All I/O errors detected by zonefs are always notified to the user with an error
 
-	/* Did our listent function try to return any errors? */
-	if (sx.context.seen_enough < 0)
-		error = sx.context.seen_enough;
+s/always//
 
-Which means that if seen_enough is set to a negative value, we'll return
-that negative value all the way back to userspace, which means that the
-userspace buffer is not updated and xfs_scrub will think there was a
-runtime error.
+> +code return for the system call that trigered or detected the error. The
+> +recovery actions taken by zonefs in response to I/O errors depend on the I/O
+> +type (read vs write) and on the reason for the error (bad sector, unaligned
+> +writes or zone condition change).
+> +
+> +* For read I/O errors, zonefs does not execute any particular recovery action,
+> +  but only if the file zone is still in a good condition and there is no
+> +  inconsistency between the file inode size and its zone write pointer position.
+> +  If a problem is detected, I/O error recovery is executed (see below table).
+> +
+> +* For write I/O errors, zonefs I/O error recovery is always executed.
+> +
+> +* A zone condition change to read-only or offline also always triggers zonefs
+> +  I/O error recovery.
+> +
+> +Zonefs minimal I/O error recovery may change a file size and a file access
+> +permissions.
+> +
+> +* File size changes:
+> +  Immediate or delayed write errors in a sequential zone file may cause the file
+> +  inode size to be inconsistent with the amount of data successfully written in
+> +  the file zone. For instance, the partial failure of a multi-BIO large write
+> +  operation will cause the zone write pointer to advance partially, eventhough
 
-> +		context->seen_enough = -ECANCELED;
+"even though"
 
-So this will cause xfs_scrub to abort with "Operation Canceled" if it
-found a corruption error.  The patch I sent to the list had -ECANCELED,
-but then I noticed the scrub breakage and changed it to 1 before
-committing.  Other parts of the attr code use 1 to stop an attr walk
-without returning errors to userspace.
+> +  the entire write operation will be reported as failed to the user. In such
+> +  case, the file inode size must be advanced to reflect the zone write pointer
+> +  change and eventually allow the user to restart writing at the end of the
+> +  file.
+> +  A file size may also be reduced to reflect a delayed write error detected on
+> +  fsync(): in this case, the amount of data effectively written in the zone may
+> +  be less than originally indicated by the file inode size. After such I/O
+> +  error zonefs always fixes a file inode size to reflect the amount of data
 
-Perhaps it's time to replace that novel use of "1" (and audit all the
-branching and whatnot) with -ECANCELED so that we can go on cargoculting
-negative int errors in peace.
+"error, zonefs" ?
 
-(*UGH* I remembered that I was the one who applied negative int error
-semantics to seen_enough in the first place; before that, its meaning
-was purely boolean.  It's still screaming for a cleanup though...)
+Cheers,
 
---D
-
->  	return;
->  }
->  
-> -- 
-> 2.24.1
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
