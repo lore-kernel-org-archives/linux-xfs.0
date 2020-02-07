@@ -2,115 +2,146 @@ Return-Path: <SRS0=0es8=33=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC5A9C2D0B1
-	for <linux-xfs@archiver.kernel.org>; Fri,  7 Feb 2020 06:54:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9306CC2D0B1
+	for <linux-xfs@archiver.kernel.org>; Fri,  7 Feb 2020 07:18:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A53CF20726
-	for <linux-xfs@archiver.kernel.org>; Fri,  7 Feb 2020 06:54:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 56AA920838
+	for <linux-xfs@archiver.kernel.org>; Fri,  7 Feb 2020 07:18:28 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="GFzF8AZM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726451AbgBGGyR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 7 Feb 2020 01:54:17 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:33942 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726136AbgBGGyQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Feb 2020 01:54:16 -0500
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0176mxPl013609
-        for <linux-xfs@vger.kernel.org>; Fri, 7 Feb 2020 01:54:15 -0500
-Received: from e06smtp05.uk.ibm.com (e06smtp05.uk.ibm.com [195.75.94.101])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2y0kts42bj-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Fri, 07 Feb 2020 01:54:15 -0500
-Received: from localhost
-        by e06smtp05.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.ibm.com>;
-        Fri, 7 Feb 2020 06:54:13 -0000
-Received: from b06cxnps4074.portsmouth.uk.ibm.com (9.149.109.196)
-        by e06smtp05.uk.ibm.com (192.168.101.135) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
-        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Fri, 7 Feb 2020 06:54:10 -0000
-Received: from b06wcsmtp001.portsmouth.uk.ibm.com (b06wcsmtp001.portsmouth.uk.ibm.com [9.149.105.160])
-        by b06cxnps4074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0176s9ab48496772
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 7 Feb 2020 06:54:10 GMT
-Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id D67A0A4062;
-        Fri,  7 Feb 2020 06:54:09 +0000 (GMT)
-Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 205D3A405B;
-        Fri,  7 Feb 2020 06:54:09 +0000 (GMT)
-Received: from localhost.localdomain (unknown [9.124.35.73])
-        by b06wcsmtp001.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Fri,  7 Feb 2020 06:54:08 +0000 (GMT)
-From:   Chandan Rajendra <chandan@linux.ibm.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org,
-        Allison Collins <allison.henderson@oracle.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 08/30] xfs: remove the MAXNAMELEN check from xfs_attr_args_init
-Date:   Fri, 07 Feb 2020 12:26:54 +0530
-Organization: IBM
-In-Reply-To: <20200129170310.51370-9-hch@lst.de>
-References: <20200129170310.51370-1-hch@lst.de> <20200129170310.51370-9-hch@lst.de>
+        id S1726586AbgBGHS1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 7 Feb 2020 02:18:27 -0500
+Received: from mout.web.de ([212.227.15.4]:37465 "EHLO mout.web.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726130AbgBGHS1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Feb 2020 02:18:27 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
+        s=dbaedf251592; t=1581059891;
+        bh=miGt9Qp5X287HT9kScwGTcZaVamZNwQjWmskx3gp8cs=;
+        h=X-UI-Sender-Class:To:Cc:Subject:From:Date;
+        b=GFzF8AZM95D78trnL3UHSaeL3SiKRoHhufj4SnbgDunMRqdTiUXYSt1IKzGmJeMhv
+         n+0LC7EhrZJvKikfD14KzN7q7zs240yJUxAbA+CPiTmphX8rGtXxxPDWnV4I1PJ2Mm
+         zzALM+M6ZSVEydgxATNcN6RhJrgc+YSStVBMvaN8=
+X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
+Received: from [192.168.1.2] ([93.131.120.50]) by smtp.web.de (mrweb001
+ [213.165.67.108]) with ESMTPSA (Nemesis) id 0ML8F7-1izgmo0bpJ-000ND8; Fri, 07
+ Feb 2020 08:18:11 +0100
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Dave Chinner <david@fromorbit.com>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Johannes Thumshirn <jth@kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Naohiro Aota <Naohiro.Aota@wdc.com>
+Subject: Re: [v12 1/2] fs: New zonefs file system
+From:   Markus Elfring <Markus.Elfring@web.de>
+Autocrypt: addr=Markus.Elfring@web.de; prefer-encrypt=mutual; keydata=
+ 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 FEE=
+Message-ID: <97fc31e3-94a7-406b-6264-42da5d5b5d0f@web.de>
+Date:   Fri, 7 Feb 2020 08:18:09 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.2
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-X-TM-AS-GCONF: 00
-x-cbid: 20020706-0020-0000-0000-000003A7D66B
-X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 20020706-0021-0000-0000-000021FFA880
-Message-Id: <1935701.lBhOYFhPeo@localhost.localdomain>
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
- definitions=2020-02-06_04:2020-02-06,2020-02-06 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 mlxlogscore=999
- impostorscore=0 malwarescore=0 suspectscore=1 phishscore=0 adultscore=0
- lowpriorityscore=0 priorityscore=1501 spamscore=0 clxscore=1015
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002070050
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:rgDWy9vtNV4rdpU8vQ/zfhAP9RKnOJLlapSK0SwBOBApmKgVacT
+ liAu9nRJkMElIHkOiZvIpfrkYDEBMUBn+Kb0NLw1WbBGMO8BCiB8ykU2V0N+g8UP/2GMQcT
+ kLAxxL0Cr2/u/fVcHOSqkk8tpJKGB7ULS+U3c/5jAdfmAAcBNj8Ui+HxiXLK9wnpSWMfiO4
+ 47XdCeznrmAJsuHX08vNw==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:hZyKktlnhzE=:Uy4EpbqWp9dwf6Lxt2WI8c
+ eMMgk5FEArvi3qn0X3eCVpLYLR6qXBH9fmmfXACQLcIP8B8PbofLTnvgmFOR8reguYGycDudm
+ eAMLBIFUN1xy4MD9pEiFeucyqseCQVycyDiyqpw8bpADHXfzFyt/8uyDKMnJgDztbI3mMHSJW
+ w7hmbuKVSbOXwYu8eG1oAkRS4Gp+ADgSrHArg/UOrsw1eB/CPdl47A96pHXg6pGmdvS+QP8uj
+ eZ7so1ySAYtt3Ykh5yCgZ/LrBDZkV+36nbYfRK7npscTx30MS1FqtSujBMYIBlG+blrGse4r0
+ SRAyCXt4OJS9BSErRexFy25Wn45z/U5DCABO6KJy47A607r20DkEuHoOLXYY7iqE7RoRyLNYC
+ 7GWryTrsxh8G/wmCooWwibtf8ohGISkHxMU5cr5VQBUabMLxEYTIXsxCJGo9EZ0nlcuCHanAd
+ oRGaKEXYTmbdGnPK3T25XEb9YwURZdA/yvqTeXc2OYoWO45UjsvgmGBVa5SGS3qDg9lz+UJuT
+ MkpJOkBN+SIFOTino189N8/WTQw9Exa3+FOrkbmK7AccBbOM+RUZ1x7nGFs+EMK4/pCTMd+Pf
+ l55QyYGKZrArAkY3vwmDcT9mp84mk5EOqdp+hsEyP+iet5ipYDw3aIs5s/0XRHWabWZs0Yx/J
+ hNLNlHZXQF8WcxPV8e1Mkg/xgSC5aTl7J8RTCVXc6Unrg6zJ4Mz0o3zOY16BSa870Nie1F3Xt
+ 7pPA+fgrQleruga/3/pJJbzvAFADLteZXu3BHgSLFUTgQMHZeDICOP3eaG+G5mq6818UZwIFh
+ cuxhf97ykXkrCFsKs92+Uc8j5N8Ri8VAQ3yhc6ItUbqAwCsBBoBFeD+BpA3gGBOrZdSY5AIkb
+ WXgM/zqot6Y7chCFWBa8X0+zD8LE2+2/jK0NKMGFwBQ4++yjWZ4NqF9IGmeu0T0gLiA9fmU6u
+ 0HmwvMJWzA5isuuRLFrZ6ctnsH+t8COE5yMnyud3IWRLB0EAkZ6A1UvnfkY3heUzi7+bgLpYc
+ nnYDhNX/sXkyVu/GfYhcVzV4QAladrjHN0KFj640IWm97VK5EHTRB3vJhSI4C2q44jcqEd6G3
+ ywIfN1gKCBL2CCvaYD0qq0q3tzjhTa0YbOwsqtVIm+ceMxVAZzD+GlAsyggtMXFMtHzbpN3Dy
+ ZfFNgiv+pV5zMJIXeJ/GzOwaZcnuCGvJfh5r6L/09EHUrxClngMz/37sTo94TdL6w+mKbNDOf
+ EGa8JL3sKzApIOWWe
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wednesday, January 29, 2020 10:32 PM Christoph Hellwig wrote: 
-> All the callers already check the length when allocating the
-> in-kernel xattrs buffers.
+> > Hmmm. I'm wondering if it would be better to return -EOPNOTSUPP here
+> > so that the application knows it can't do non-blocking write AIO to
+> > this file.
 >
+> I wondered the same too. In the end, I decided to go with silently ignor=
+ing
+> the flag (for now) since raw block device accesses do the same (the NOWA=
+IT
+> support is not complete and IOs may wait on free tags). I have an idea f=
+or
+> fixing simply the out-of-order issuing that may result from using nowait=
+.
 
-I checked all the callers apart from xfs_init_security(). For the ones I
-checked,
-
-Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_attr.c | 3 ---
->  1 file changed, 3 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index a968158b9bb1..f887d62e0956 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -72,9 +72,6 @@ xfs_attr_args_init(
->  	args->flags = flags;
->  	args->name = name;
->  	args->namelen = namelen;
-> -	if (args->namelen >= MAXNAMELEN)
-> -		return -EFAULT;		/* match IRIX behaviour */
-> -
->  	args->hashval = xfs_da_hashname(args->name, args->namelen);
->  	return 0;
->  }
-> 
+I find this aspect interesting for further clarification.
 
 
--- 
-chandan
+> I will send a patch for that later and can then remove this.
 
+Should another software improvement be integrated into the initial proposa=
+l?
 
-
+Regards,
+Markus
