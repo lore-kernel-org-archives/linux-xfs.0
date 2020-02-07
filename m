@@ -2,142 +2,153 @@ Return-Path: <SRS0=0es8=33=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F655C04EB5
-	for <linux-xfs@archiver.kernel.org>; Fri,  7 Feb 2020 15:02:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00525C2BA83
+	for <linux-xfs@archiver.kernel.org>; Fri,  7 Feb 2020 19:25:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 62DB9214AF
-	for <linux-xfs@archiver.kernel.org>; Fri,  7 Feb 2020 15:02:42 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="rg4MRj0G"
+	by mail.kernel.org (Postfix) with ESMTP id CD01E20715
+	for <linux-xfs@archiver.kernel.org>; Fri,  7 Feb 2020 19:25:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726867AbgBGPCl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 7 Feb 2020 10:02:41 -0500
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:38460 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726674AbgBGPCl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Feb 2020 10:02:41 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1581087782; x=1612623782;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=QBmqK2hyrPjWSUot57VLilJic6MFv9RxkAql0uiJdCI=;
-  b=rg4MRj0GYhnk8DGlSdjKVmJ4YhktBFBqfnxF4vpSSwztcJfXChBNA/GL
-   KR0NJQhWxXEyO36g+fGv76YKzW8LBc0MFtVqZuInG2wLK2za49MBB9c7g
-   epIwzFxLq6gnU2K2DM9KI681jcsZp8OGOXSy1PhptQpUL+i9/Ju7sA9cO
-   HaXmw2sxC+tqSTb5CRu0Uik77X0VKNlS6tnBiLBbgm7AgwP/9xR5/LDqO
-   1pMUgoHAZ1PdFYYRh0f0F8S3W0X4U8mMkC14+VoyF5rfjm1yWWa3WfWFl
-   bta7Vahw+PEIF5vLd+PLss786WqQTveUFRhggkw/Zsmvyv2CmvcPTgmRw
-   Q==;
-IronPort-SDR: 39FJecUJquQzy0wMu/FtrGnyf22gz5/SUfuVFiahNPjBXOtCo9YFGQx9ZZ64kYjJTOljZJ356Q
- ddNYaYEj8LjcRdzk3sUTZRU6EBcJCH20lNq1CdKNdqWn2Z2EEIbiJbkUuz0laFd2ME3V4GroA+
- IofAcfxqGVSNYWfwEp3DRYjsbGh00I/36N6wD8oDRSbyUVlTos9fRr0k/Ic0d0D0RzulX+IvKo
- Mcf2Wk19t3lOVpZ/c1jVmpoX0WPKrluwpSK8wfi6qzJViGPJ0OwfNcY00LwHVAJlNabT8kBCuQ
- TFA=
-X-IronPort-AV: E=Sophos;i="5.70,413,1574092800"; 
-   d="scan'208";a="231121353"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 07 Feb 2020 23:03:01 +0800
-IronPort-SDR: 1TATuoZvowSkMJe0Mjha74okqJgM+4O4li0OzJKr+i/Ymji/7uTunfdvgERarGBhRYyqwrt0y2
- BhOiDCLuM6HLbPabm236ytvAMtM4Sx80VXv3MXygbz3ISaQh4lusb+js8tmXGu/CV58TAz30B0
- pMhE0h3iO2W8WfN9N2fpQQselCa3iegsJlBj5FIxXFtGq04lj5X7j+CcWUMZTuMD8+jc8wozP3
- dUFU0REuwguovhwW7efKrlBrrxfkuL7nODPCFRO1gxZN2XUNZIeb/uVqU1WOWQ8xVOhX4Ey5Co
- LY2BgQecv/F8ibktMoDchZ08
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Feb 2020 06:55:38 -0800
-IronPort-SDR: 7eA1ie392Lcte+/6ZPFOwctwO3j8F7JxO/Dji0HmJLsH4xvr6Go6bUS5Kt1MV5am3dk8fjDiEJ
- Wohtpk+5mM4bLjrTEcr/WMHRPigY5zcH3PdTGb4LJcQ1UehucIlarcNon4bUChAbVDZByxs2ZJ
- 7li1SywOcx7tHhupuWnmMDpBIsTcVSSv2e76Jp0rWIYkxYwtbyKN2923XhaMF7fbVVmStWGy2I
- pRjYvCc2MP0EBpgpPrSglr4YW3vCo81UJ2t6eTp19uGc9UZrSSCmAbZv4VfOnli9t7eZxSKgh/
- ego=
-WDCIronportException: Internal
-Received: from washi.fujisawa.hgst.com ([10.149.53.254])
-  by uls-op-cesaip02.wdc.com with ESMTP; 07 Feb 2020 07:02:41 -0800
-From:   Damien Le Moal <damien.lemoal@wdc.com>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [GIT PULL] New zonefs file system for 5.6-rc1
-Date:   Sat,  8 Feb 2020 00:02:39 +0900
-Message-Id: <20200207150239.685712-1-damien.lemoal@wdc.com>
-X-Mailer: git-send-email 2.24.1
+        id S1727005AbgBGTZI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 7 Feb 2020 14:25:08 -0500
+Received: from sandeen.net ([63.231.237.45]:39710 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726988AbgBGTZI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Feb 2020 14:25:08 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 49CD911664;
+        Fri,  7 Feb 2020 13:25:07 -0600 (CST)
+Subject: Re: [PATCH v3 3/4] xfs: Fix bug when checking diff. locks
+To:     Pavel Reichl <preichl@redhat.com>, linux-xfs@vger.kernel.org
+References: <20200206190502.389139-1-preichl@redhat.com>
+ <20200206190502.389139-4-preichl@redhat.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <1f09e8f2-06b8-2c3e-c1f4-d63e508bb465@sandeen.net>
+Date:   Fri, 7 Feb 2020 13:25:06 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.4.2
 MIME-Version: 1.0
+In-Reply-To: <20200206190502.389139-4-preichl@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
+On 2/6/20 1:05 PM, Pavel Reichl wrote:
+> xfs_isilocked() will only check one lock type so it's needed to split
+> the check into 2 calls.
 
-Here is a pull request for the new zonefs file system (described briefly
-below). Please consider it for addition to kernel 5.6.
+I think it's worth documenting the apparent intent of these calls;
+did the old call mean one or the other is locked?  (given the '|')
+or does it mean to test both?
 
-The following changes since commit d5226fa6dbae0569ee43ecfc08bdcd6770fc4755:
+Testing both individually does seem legit.  The single caller of each
+of these functions has already asserted:
 
-  Linux 5.5 (2020-01-26 16:23:03 -0800)
+ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
 
-are available in the Git repository at:
+and then each also does:
 
-  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/zonefs.git/ tags/zonefs-5.6-rc1
+xfs_ilock(ip, XFS_ILOCK_EXCL);
 
-for you to fetch changes up to fcb9c24bef3d1d0942c50fb25fbb8ab45c7c3753:
+before calling these functions, so it is safe and reasonable to assume
+that both locks are held, and the intent is to test each one.
 
-  zonefs: Add documentation (2020-02-07 14:40:13 +0900)
+Oh, and if we look at when the old form got introduced, git blame says 
+ecfea3f0c8c64ce7375f4be4506996968958bd01, and it did:
 
-----------------------------------------------------------------
-fs: New zonefs file system
+-       ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+-       ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+-       ASSERT(direction == SHIFT_LEFT || direction == SHIFT_RIGHT);
++       ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL));
 
-Zonefs is a very simple file system exposing each zone of a zoned block
-device as a file.
+so really, this is just reverting that invalid change back to
+valid individual ASSERTs.
 
-Unlike a regular file system with native zoned block device support
-(e.g. f2fs or the on-going btrfs effort), zonefs does not hide the
-sequential write constraint of zoned block devices to the user. As a
-result, zonefs is not a POSIX compliant file system. Its goal is to
-simplify the implementation of zoned block devices support in
-applications by replacing raw block device file accesses with a richer
-file based API, avoiding relying on direct block device file ioctls
-which may be more obscure to developers.
+I'll leave it up to Darrick whether he wants to massage the commit
+log I guess, but please at least add a :
 
-One example of this approach is the implementation of LSM
-(log-structured merge) tree structures (such as used in RocksDB and
-LevelDB) on zoned block devices by allowing SSTables to be stored in a
-zone file similarly to a regular file system rather than as a range of
-sectors of a zoned device. The introduction of the higher level
-construct "one file is one zone" can help reducing the amount of changes
-needed in the application while at the same time allowing the use of
-zoned block devices with various programming languages other than C.
+Fixes: ecfea3f0c8c6 ("xfs: split xfs_bmap_shift_extents")
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-Zonefs IO management implementation uses the new iomap generic code.
-Zonefs has been successfully tested using a functional test suite
-(available with zonefs userland format tool on github) and a prototype
-implementation of LevelDB on top of zonefs.
-
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-
-----------------------------------------------------------------
-Damien Le Moal (2):
-      fs: New zonefs file system
-      zonefs: Add documentation
-
- Documentation/filesystems/zonefs.txt |  404 ++++++++++
- MAINTAINERS                          |   10 +
- fs/Kconfig                           |    1 +
- fs/Makefile                          |    1 +
- fs/zonefs/Kconfig                    |    9 +
- fs/zonefs/Makefile                   |    4 +
- fs/zonefs/super.c                    | 1439 ++++++++++++++++++++++++++++++++++
- fs/zonefs/zonefs.h                   |  189 +++++
- include/uapi/linux/magic.h           |    1 +
- 9 files changed, 2058 insertions(+)
- create mode 100644 Documentation/filesystems/zonefs.txt
- create mode 100644 fs/zonefs/Kconfig
- create mode 100644 fs/zonefs/Makefile
- create mode 100644 fs/zonefs/super.c
- create mode 100644 fs/zonefs/zonefs.h
+> Suggested-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Pavel Reichl <preichl@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index bc2be29193aa..c9dc94f114ed 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -5829,7 +5829,8 @@ xfs_bmap_collapse_extents(
+>  	if (XFS_FORCED_SHUTDOWN(mp))
+>  		return -EIO;
+>  
+> -	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL));
+> +	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+> +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+>  
+>  	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+>  		error = xfs_iread_extents(tp, ip, whichfork);
+> @@ -5946,7 +5947,8 @@ xfs_bmap_insert_extents(
+>  	if (XFS_FORCED_SHUTDOWN(mp))
+>  		return -EIO;
+>  
+> -	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL));
+> +	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+> +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+>  
+>  	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+>  		error = xfs_iread_extents(tp, ip, whichfork);
+> 
