@@ -2,207 +2,201 @@ Return-Path: <SRS0=0es8=33=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBEACC35247
-	for <linux-xfs@archiver.kernel.org>; Fri,  7 Feb 2020 02:29:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38602C35247
+	for <linux-xfs@archiver.kernel.org>; Fri,  7 Feb 2020 03:16:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7D21A21D7D
-	for <linux-xfs@archiver.kernel.org>; Fri,  7 Feb 2020 02:29:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 05C4A21D7D
+	for <linux-xfs@archiver.kernel.org>; Fri,  7 Feb 2020 03:16:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="H0bGvpVL";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="ztwgH8Z7"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="NNiVUrQt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727000AbgBGC3j (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 Feb 2020 21:29:39 -0500
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:23062 "EHLO
+        id S1726709AbgBGDQb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Feb 2020 22:16:31 -0500
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:60812 "EHLO
         esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726597AbgBGC3j (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Feb 2020 21:29:39 -0500
+        with ESMTP id S1726628AbgBGDQb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Feb 2020 22:16:31 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1581042580; x=1612578580;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=xlgsiNmAXCQknG3KctrzbuxmlUuMraOjGmCWNsrlvGQ=;
-  b=H0bGvpVLumiOMRYSXVr8msp6OttkeiPrUmmx/+sYhuK7ZK4IxNpnTrLB
-   j4kWw9kc/u7pHWZVqK9laK5U9jFMHwbAPatHVifZchpK8OkaIyEsai1fq
-   CSh4tIGmi/Br+B/07rUdJFKi8zo8tdznjeqKpWtTwbU/ferscQatU9gjA
-   VGESoQRlOHCGmTX7smRe2z9Czr5TUnY8q3RBTOM7xaVDUVN4uwOP6FjfB
-   CFXVhTmxn3xgv/NXBlwVPm+B8TH4tK/6+L03eHK/ZgtphQGHkrAKOC939
-   sZtQpOqLx4VTRtj8zSDgalclF3iWxtyVQlnybmItNbS60MOwpiMRvL+pi
-   w==;
-IronPort-SDR: fDlO3/WhObSr26UbiFnnkSFtEOFA58TNbqAH4iubqM2jGjh3PgP4my6BwpVssAC6614P5JmzQM
- JkiqInwZ+t9yAY6CNb4rp/af7Ki7SqTG6DRj/sOFq5RjbvN/JeHFm2EeBpM1RPmAYEhXv3WnQs
- EWl3fkuuBV6J4xfJZPM+sTQe7JQ1SG+QFaTarpamGH7xXdtakNDHfas/WVxDmiTqPfiTKB6CCm
- hBW90ccLMobK4qGnYZtFLRdw/WJFIGasSQ9Y3Q+PjN2VC+i6ATaxRMmUSeiYa8Lg7K3zPZRJbo
- yn4=
+  t=1581045391; x=1612581391;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=+2WThEHHt7KIj3oLeCAAyyJaZ7DMkUYjvDAOAA8HZAk=;
+  b=NNiVUrQt7bTJKqpSZht0O1nGX/oVCfTBNfMqL7u5XHDtcmQySeoEOlkE
+   dR8s3/wWLarOfzvSYgVT7wjc4HQqDPAQ/Inoci8ICYMNbexo3ACGM+q/8
+   Bt+No1B9WYw0xnRckvNrYHhLOsddnN4BEp2K168/q1dYKliIcLUG6uCYy
+   qqfagcHmgyBMyLFEwFKrIE5gf5Et3PRa9PE2wbVihuunl+iRrOy/gbcv6
+   sESDTyJe2W+8hOxPuSHT4BeJV5PO/RaXT8MbQ2y1nE4sGvgsLmPNuiSYy
+   UxmOhmm+hq3UTFmgZ2xKI7ANwJ9VdOirPDUL/7oNjTIco4EPlMTGrAfc2
+   g==;
+IronPort-SDR: io1EHGFE89rsDYAKAV9j+NBMXhFhrEoovalbjbqjm/mbX/x2vRNx4kNzCYDNxBCXt+uYCJRwba
+ SDtbAREEdhSxb5nyTv984sQF+x7Nznd2yo4YQL/r4pzkQb27aT4erMCWrU2ZrgLKJ4q3R6jwKT
+ OiQKxv6QZ44K3PrGfaotu15kbY5rbGFH/Q15U3me6x8/Er2nlr6g8gEFFs0HqLPO2nkuEVdP2v
+ v0h+mf6sq5K9CTWkEO/3xSzhbfx3OPZ6/LUjJeWFkmowvDVpnluMY2MXC5QBy/X3FI2Jz0xiq3
+ x7k=
 X-IronPort-AV: E=Sophos;i="5.70,411,1574092800"; 
-   d="scan'208";a="129869106"
-Received: from mail-dm6nam12lp2172.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.172])
-  by ob1.hgst.iphmx.com with ESMTP; 07 Feb 2020 10:29:39 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=D/QTx7Ruu0FJcAk3nU+gU7Ea3UNjG9aXYfmIKvdrXq0SbjR2zYOtC6d7e+Nd+KmPfjdBSSkfHSKnsIGEy//flYxDaXPTtdcJDW8PcsXXHCyXI3SZM0dP4f/so9ZRCo4n27789h7zWVq/4mEoYqP7g8Wlqs7i8UvjwHQ82OZ2kucB1gijqQonxeSpK4TM4tGLYZLH5wtr0TZFCNtxm5CmxHbXSAuLg71+PT+PHYQPWemJYh24T+pOmtx99Lib5QZYBG9OQiy58PzKEDZbEIiR3WSAYaZu5gxmTsx22gh+L11JP+OFuFxVre6xNms4sOqVegcIAb+dp/tR27rYwDNnZg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BXRmTNIkSQO1ZRswauLRQrSz7D5OD/EwBE11fpPU588=;
- b=NX2qGPqQeuoeUKXgLwpvMUzt790irOSSMl9rQ7bMmg7jYCovdYQ6tnwSnYaH2rI4vO5TZ7s2v12ASXqMX6/vcoBwXWToVSLXIKuAJKMqOliI33u/wMDrbScTaHLiFFYoa29TzgtFmU0x3pj/YabBxr6sEadI+DCL4bQAKXaExsNmnyj7iSNOYihvpFEIGLjFny5XNjmGzMX4iTUwdj8Biwpi1W1yLohk29djYiQfO/XjwoglJAngqAHG2HmochZZseD6rqm+up69Ck1joqUriy4mZhjkiepp+3ILWjl1HSQJLe5nDVuKeI5iDNwfoqo+PUNW3MLa1rh0IXrfPb+zCg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BXRmTNIkSQO1ZRswauLRQrSz7D5OD/EwBE11fpPU588=;
- b=ztwgH8Z7IyY/2tqrVaqD1K1tGhcc4rsicj6ENlEAeNw3MVeufHfkN+ICzfdj5lZsl46HA7F6Uj1mHlTnDAbwspapbMrcVYo46R8yaMySwj7yUZV7dH58Jewg0gT+nUzPPj2unhkRZqxDkMEMLBMCTrGWjPaRh2K2GClL97Zot20=
-Received: from BYAPR04MB5816.namprd04.prod.outlook.com (20.179.59.16) by
- BYAPR04MB5301.namprd04.prod.outlook.com (20.178.49.146) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2686.32; Fri, 7 Feb 2020 02:29:37 +0000
-Received: from BYAPR04MB5816.namprd04.prod.outlook.com
- ([fe80::cd8e:d1de:e661:a61]) by BYAPR04MB5816.namprd04.prod.outlook.com
- ([fe80::cd8e:d1de:e661:a61%5]) with mapi id 15.20.2707.024; Fri, 7 Feb 2020
- 02:29:37 +0000
-From:   Damien Le Moal <Damien.LeMoal@wdc.com>
-To:     Dave Chinner <david@fromorbit.com>
-CC:     "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Johannes Thumshirn <jth@kernel.org>,
-        Naohiro Aota <Naohiro.Aota@wdc.com>,
+   d="scan'208";a="129872400"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 07 Feb 2020 11:16:09 +0800
+IronPort-SDR: aAiAO+4dawkc+vhw2b2mCGGrDe8aI3v6QCBuiKD1R9eM50TP5W9eowcWHVVbBcTZv/MsKwbmh+
+ eZWilZy3FIKdGsYUzK6bbC9Bvm5iVxT/RChjaykhjBzXGsKGgLic0BW4J9v6DuRuTcl+KLoj+H
+ bs6tGkzvcmcaUy16IIlhs3omn9Tk17eU+GoCvWnAvhsVU4RSXQQBarQ9L+SdDmEgDCAK1pvqeo
+ 2+c2igj+/bERAT75XGwvLA7zebd/DgJab9bU+EPV8e168zM//GZRyv7LVz/FZoWEGkU838nPG9
+ cqMoXmsNGIZSkLhaORDKkKMl
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Feb 2020 19:09:06 -0800
+IronPort-SDR: if/YQ/NuTEIOUnUVY7azHUN7FU8kpnJ4jJp6ioyJkgElM6L2CG0xlp1Dlka11OL2PyDQAjok/R
+ 01urtmcrMd0+Jvoqs1og6HzatK2l873zRACy6b6YnfDNAq+YpVAPF9T2tEa6WJNUDCm0gLVRvE
+ ZTdDeqyzktxCy3dKFZhdgv4+oX2TZRNsZp6qmexaZo1CGsiCOAakKYbVMIju1hJp+P12ezezv6
+ +ByUNqCYGka54YWIZ5NbnPs5Hkk3ozY8QFN4Raiv7dtirBhGTdz32dEJERYIyPgw/fv7fujPw8
+ 9tA=
+WDCIronportException: Internal
+Received: from washi.fujisawa.hgst.com ([10.149.53.254])
+  by uls-op-cesaip02.wdc.com with ESMTP; 06 Feb 2020 19:16:05 -0800
+From:   Damien Le Moal <damien.lemoal@wdc.com>
+To:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     Johannes Thumshirn <jth@kernel.org>,
+        Naohiro Aota <naohiro.aota@wdc.com>,
         "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v12 1/2] fs: New zonefs file system
-Thread-Topic: [PATCH v12 1/2] fs: New zonefs file system
-Thread-Index: AQHV3K4LaCqwddoPX0OmBZrk+QgByg==
-Date:   Fri, 7 Feb 2020 02:29:37 +0000
-Message-ID: <BYAPR04MB58165F4D55724B03EDED8E0DE71C0@BYAPR04MB5816.namprd04.prod.outlook.com>
-References: <20200206052631.111586-1-damien.lemoal@wdc.com>
- <20200206052631.111586-2-damien.lemoal@wdc.com>
- <20200207002948.GC21953@dread.disaster.area>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Damien.LeMoal@wdc.com; 
-x-originating-ip: [2400:2411:43c0:6000:e0ca:929b:5db5:1772]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: f29bb6a6-4fcc-450c-a6d1-08d7ab7593ac
-x-ms-traffictypediagnostic: BYAPR04MB5301:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BYAPR04MB530177F77DD7DDDF414FA0ACE71C0@BYAPR04MB5301.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:6108;
-x-forefront-prvs: 0306EE2ED4
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(376002)(39860400002)(346002)(366004)(396003)(136003)(199004)(189003)(55016002)(316002)(71200400001)(54906003)(186003)(33656002)(86362001)(2906002)(6916009)(76116006)(6506007)(66476007)(66946007)(66556008)(66446008)(64756008)(8936002)(7696005)(9686003)(52536014)(4326008)(478600001)(81156014)(81166006)(8676002)(53546011)(5660300002);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR04MB5301;H:BYAPR04MB5816.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: EilaFZ6+ZfIqduXqblKVxvO4FMztcH4vx3NuWVP/u0aMupKp7JIvcDJbB2NBWqQrizN0GL6MbiNfQJFiZKAsmvIt++RJxjLF3q1ctQPo9WxsHAXPegz7DdytAT6mHohnuca3XuytpTEaUvfIqmAZyqpbBl5fQjDsc/nIuW3vZIuRW4ab6o+NvU0ZRZyT3qqk6sCjPN5wKzmmodcJjIHnqGw40pBkGrXMubBAlvxOOkB/JmuBnd479NWO7yez2pQcGDmPc2+d2KMBg3mQ1LWnyZPbfKHNk0NaJEE7dlfM43vbFtdPORag7mi68aas9kVMQ6LYYw+PybAkd415W+BbJjfGjdx3LGv/GEGW71lWdmdfJzsRGXbt8dLILcI0ZAYSK7ZkLnn+2ZUdWCb+9Hsg0kgqjwUlyWQLq3xB2AqWP7ELFwT3jXg4dXCfmEmmf9oZ
-x-ms-exchange-antispam-messagedata: G1fi7JiTW0QQv7Yicse1Y3yqzw8MIlVzRChxue6LkEb01b5IFX7LYGpifK4iwCvRpGhBVuNKp4gO1cX6DnffRLcGmMEM46pLXidb4P/AS3OICLjOZPjuQ6Vz/KEZdgo2ag1dMRv8sWDmYuJOp1EYnyFnLI300tJS7Qfyw8LwlxRohGUufNo4Vsee/pZ/kDUexN9klnGTmeLK5LAgCPxwqw==
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        Hannes Reinecke <hare@suse.de>,
+        Dave Chinner <david@fromorbit.com>
+Subject: [PATCH v13 0/2] New zonefs file system
+Date:   Fri,  7 Feb 2020 12:16:04 +0900
+Message-Id: <20200207031606.641231-1-damien.lemoal@wdc.com>
+X-Mailer: git-send-email 2.24.1
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f29bb6a6-4fcc-450c-a6d1-08d7ab7593ac
-X-MS-Exchange-CrossTenant-originalarrivaltime: 07 Feb 2020 02:29:37.0914
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: /nQGe0n0vrco47UV4S6wEVH5ajreoVC7sy4CwVy5U/7etCH8yhAZNyqbW7l79PrPzFQEme9JbziH2eT6QEagrA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB5301
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2020/02/07 9:29, Dave Chinner wrote:=0A=
-> On Thu, Feb 06, 2020 at 02:26:30PM +0900, Damien Le Moal wrote:=0A=
->> zonefs is a very simple file system exposing each zone of a zoned block=
-=0A=
->> device as a file. Unlike a regular file system with zoned block device=
-=0A=
->> support (e.g. f2fs), zonefs does not hide the sequential write=0A=
->> constraint of zoned block devices to the user. Files representing=0A=
->> sequential write zones of the device must be written sequentially=0A=
->> starting from the end of the file (append only writes).=0A=
-> =0A=
-> ....=0A=
->> +	if (flags & IOMAP_WRITE)=0A=
->> +		length =3D zi->i_max_size - offset;=0A=
->> +	else=0A=
->> +		length =3D min(length, isize - offset);=0A=
->> +	mutex_unlock(&zi->i_truncate_mutex);=0A=
->> +=0A=
->> +	iomap->offset =3D offset & (~sbi->s_blocksize_mask);=0A=
->> +	iomap->length =3D ((offset + length + sbi->s_blocksize_mask) &=0A=
->> +			 (~sbi->s_blocksize_mask)) - iomap->offset;=0A=
-> =0A=
-> 	iomap->length =3D __ALIGN_MASK(offset + length, sbi->s_blocksize_mask) -=
-=0A=
-> 			iomap->offset;=0A=
-> =0A=
-> or it could just use ALIGN(..., sb->s_blocksize) and not need=0A=
-> pre-calculation of the mask value...=0A=
-=0A=
-Yes, that is cleaner. Fixed.=0A=
-=0A=
->> +static ssize_t zonefs_file_dio_write(struct kiocb *iocb, struct iov_ite=
-r *from)=0A=
->> +{=0A=
->> +	struct inode *inode =3D file_inode(iocb->ki_filp);=0A=
->> +	struct zonefs_sb_info *sbi =3D ZONEFS_SB(inode->i_sb);=0A=
->> +	struct zonefs_inode_info *zi =3D ZONEFS_I(inode);=0A=
->> +	size_t count;=0A=
->> +	ssize_t ret;=0A=
->> +=0A=
->> +	/*=0A=
->> +	 * For async direct IOs to sequential zone files, ignore IOCB_NOWAIT=
-=0A=
->> +	 * as this can cause write reordering (e.g. the first aio gets EAGAIN=
-=0A=
->> +	 * on the inode lock but the second goes through but is now unaligned)=
-.=0A=
->> +	 */=0A=
->> +	if (zi->i_ztype =3D=3D ZONEFS_ZTYPE_SEQ && !is_sync_kiocb(iocb)=0A=
->> +	    && (iocb->ki_flags & IOCB_NOWAIT))=0A=
->> +		iocb->ki_flags &=3D ~IOCB_NOWAIT;=0A=
-> =0A=
-> Hmmm. I'm wondering if it would be better to return -EOPNOTSUPP here=0A=
-> so that the application knows it can't do non-blocking write AIO to=0A=
-> this file.=0A=
-=0A=
-I wondered the same too. In the end, I decided to go with silently ignoring=
-=0A=
-the flag (for now) since raw block device accesses do the same (the NOWAIT=
-=0A=
-support is not complete and IOs may wait on free tags). I have an idea for=
-=0A=
-fixing simply the out-of-order issuing that may result from using nowait. I=
-=0A=
-will send a patch for that later and can then remove this.=0A=
-But if zonefs does not make it to 5.6 (looking really tight), I will send=
-=0A=
-add that patch to a new zonefs series rebased for 5.7.=0A=
-=0A=
-> =0A=
-> Everything else looks OK to me.=0A=
-=0A=
-Thanks !=0A=
-=0A=
-> =0A=
-> Cheers,=0A=
-> =0A=
-> Dave.=0A=
-> =0A=
-=0A=
-=0A=
--- =0A=
-Damien Le Moal=0A=
-Western Digital Research=0A=
+Zonefs is a very simple file system exposing each zone of a zoned block
+device as a file. Unlike a regular file system with zoned block device
+support (e.g. f2fs or the on-going btrfs effort), zonefs does not hide
+the sequential write constraint of zoned block devices to the user.
+Files representing sequential write zones of the device must be written
+sequentially starting from the end of the file (append only writes).
+
+Zonefs is not a POSIX compliant file system. It's goal is to simplify
+the implementation of zoned block devices support in applications by
+replacing raw block device file accesses with a richer file based API,
+avoiding relying on direct block device file ioctls which may
+be more obscure to developers. One example of this approach is the
+implementation of LSM (log-structured merge) tree structures (such as
+used in RocksDB and LevelDB) on zoned block devices by allowing SSTables
+to be stored in a zone file similarly to a regular file system rather
+than as a range of sectors of a zoned device. The introduction of the
+higher level construct "one file is one zone" can help reducing the
+amount of changes needed in the application while at the same time
+allowing the use of zoned block devices with various programming
+languages other than C.
+
+Zonefs IO management implementation uses the new iomap generic code.
+
+Changes from v12:
+* Removed sbi->s_blocksize_mask and use ALIGN/ALIGN_DOWN macros instead
+  of open coding alignment to blocks.
+* Small documentation fixes from Dave
+* Added documentation patch review tag
+
+Changes from v11:
+* Improved I/O error handling description in the documentation (thanks
+  to Dave Chinner for the suggestions).
+
+Changes from v10:
+* Simplify zonefs_io_error() while extending I/O error and corruption
+  types coverage.
+* Reworked zonefs_create_zgroup() to avoid the use of on-stack file
+  name string and the need for the array of zone group names.
+* Fixed a bug in zonefs_file_buffered_write() (incorrect call to
+  zonefs_io_error).
+* Improved comments throughout the code.
+* Fixed documentation to describe I/O error handling as implemented.
+
+Changes from v9:
+* Changed mount options to a more useful set of possible actions for
+  zone corruption handling: repair, remount-ro, zone-ro or zone-offline
+* Check IMMUTABLE inodes to prevent write operations
+* Documented mount options
+
+Changes from v8:
+* Comments typos fixes and improvements as suggested by Darrick and
+  Dave.
+* Improved IO error handling:
+  - Better sequential file write pointer checks on write IO error
+  - Extended zone condition checks on IO error to all types of IOs
+  - Added mount options for controlling the FS behavior when a zone
+    write pointer corruption is detected.
+* Cleanup zonefs_iomap_begin() and its use in zonefs_map_blocks()
+* Ignore RWF_NOWAIT to avoid out of order writes on sequential zone
+  files.
+* Improved documentation file
+
+Changes from v7:
+* Fixed static checker warnings:
+  - Set-but-not-used variable in zonefs_file_buffered_write()
+  - Use S_ISDIR() in zonefs_inode_setattr()
+
+Changes from v6:
+* Fixed documentation as suggested by Randy.
+
+Changes from v5:
+* Added simple description of zoned block devices to the documentation,
+  as suggested by Johannes.
+* Added a 64-char max label field to the super block to allow label
+  based identification of volumes using libblkid (checked with a patch
+  to libblkid).
+
+Changes from v4:
+* Use octal values for file and directory permissions
+* Set initial directory permissions to 0555 (no write permission)
+* Prevent setting write permissions for directories
+
+Changes from v3:
+* Fixed many typos in the documentation
+* Use symbolic file permission macros instead of octal values
+  (checkpatch.pl complains about this)
+
+Changes from v2:
+* Address comments and suggestions from Darrick:
+  - Make the inode of OFFLINE and READONLY zones immutable when
+    mounting. Also do this during zone information check after an IO
+    error.
+  - Change super block CRC seed to ~0.
+  - Avoid potential compiler warning in zonefs_create_zgroup().
+* Fixed endianness related compilation warning detected by kbuild bot.
+
+Changes from v1:
+* Fixed comment typo
+* Improved documentation as suggested by Hannes
+
+Damien Le Moal (2):
+  fs: New zonefs file system
+  zonefs: Add documentation
+
+ Documentation/filesystems/zonefs.txt |  404 ++++++++
+ MAINTAINERS                          |   10 +
+ fs/Kconfig                           |    1 +
+ fs/Makefile                          |    1 +
+ fs/zonefs/Kconfig                    |    9 +
+ fs/zonefs/Makefile                   |    4 +
+ fs/zonefs/super.c                    | 1439 ++++++++++++++++++++++++++
+ fs/zonefs/zonefs.h                   |  189 ++++
+ include/uapi/linux/magic.h           |    1 +
+ 9 files changed, 2058 insertions(+)
+ create mode 100644 Documentation/filesystems/zonefs.txt
+ create mode 100644 fs/zonefs/Kconfig
+ create mode 100644 fs/zonefs/Makefile
+ create mode 100644 fs/zonefs/super.c
+ create mode 100644 fs/zonefs/zonefs.h
+
+-- 
+2.24.1
+
