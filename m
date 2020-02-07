@@ -1,138 +1,111 @@
-Return-Path: <SRS0=lRpT=32=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=0es8=33=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6F57C35247
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Feb 2020 23:51:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8927AC35247
+	for <linux-xfs@archiver.kernel.org>; Fri,  7 Feb 2020 00:29:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9A1C320730
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Feb 2020 23:51:32 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XfNFXf00"
+	by mail.kernel.org (Postfix) with ESMTP id 666642064C
+	for <linux-xfs@archiver.kernel.org>; Fri,  7 Feb 2020 00:29:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726509AbgBFXvc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 Feb 2020 18:51:32 -0500
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:26942 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726502AbgBFXvb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Feb 2020 18:51:31 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1581033090;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=0W0LWfWw/WGgN81jT5NiZ2GMI7OKNdKdktAwrck/540=;
-        b=XfNFXf00xg19M7/efWy/WEj5WbZDN6gctEYgm7L28n35OhNir28NQxmhlASzUk0KIeriRR
-        xozVO8KRFXETTh+hM+6HLtexWvqC1/woVglADV7R7/+aUurEPcVN6xj1TKti9oqc3H5gJs
-        3yh7GHqGpoYvMKqPM1JZqZbr/Wvhabc=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-90-rZI0o3eiPNypt2IrunH6sQ-1; Thu, 06 Feb 2020 18:51:28 -0500
-X-MC-Unique: rZI0o3eiPNypt2IrunH6sQ-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 827DE1007270;
-        Thu,  6 Feb 2020 23:51:27 +0000 (UTC)
-Received: from redhat.com (ovpn-123-99.rdu2.redhat.com [10.10.123.99])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2C9B45C1D8;
-        Thu,  6 Feb 2020 23:51:27 +0000 (UTC)
-Date:   Thu, 6 Feb 2020 17:51:25 -0600
-From:   Bill O'Donnell <billodo@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: xchk_xattr_listent() fix context->seen_enough to
- -ECANCELED
-Message-ID: <20200206235125.GA3570914@redhat.com>
-References: <20200205190455.1834330-1-billodo@redhat.com>
- <20200206230731.GH6870@magnolia>
+        id S1727138AbgBGA3y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Feb 2020 19:29:54 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:47705 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726509AbgBGA3y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Feb 2020 19:29:54 -0500
+Received: from dread.disaster.area (pa49-181-161-120.pa.nsw.optusnet.com.au [49.181.161.120])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id CECD43A497D;
+        Fri,  7 Feb 2020 11:29:50 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1izrWm-0006xk-Tc; Fri, 07 Feb 2020 11:29:48 +1100
+Date:   Fri, 7 Feb 2020 11:29:48 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Damien Le Moal <damien.lemoal@wdc.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Johannes Thumshirn <jth@kernel.org>,
+        Naohiro Aota <naohiro.aota@wdc.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v12 1/2] fs: New zonefs file system
+Message-ID: <20200207002948.GC21953@dread.disaster.area>
+References: <20200206052631.111586-1-damien.lemoal@wdc.com>
+ <20200206052631.111586-2-damien.lemoal@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200206230731.GH6870@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+In-Reply-To: <20200206052631.111586-2-damien.lemoal@wdc.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+        a=SkgQWeG3jiSQFIjTo4+liA==:117 a=SkgQWeG3jiSQFIjTo4+liA==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=l697ptgUJYAA:10
+        a=7-415B0cAAAA:8 a=NXwXW5gbVE1O_1ho6owA:9 a=NUhwtb2oAqvidNHn:21
+        a=lSNHsdPPTDXGtUOn:21 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 06, 2020 at 03:07:31PM -0800, Darrick J. Wong wrote:
-> On Wed, Feb 05, 2020 at 01:04:55PM -0600, Bill O'Donnell wrote:
-> > Commit e7ee96dfb8c (xfs: remove all *_ITER_ABORT values)
-> > replaced *_ITER_ABORT values with -ECANCELED. The replacement
-> > in the case of scrub/attr.c xchk_xattr_listent() is in
-> > error (context->seen_enough = 1;). Instead of '1', use
-> > the intended -ECANCELED.
-> > 
-> > Fixes: e7ee96dfb8c (xfs: remove all *_ITER_ABORT values)
-> > Signed-off-by: Bill O'Donnell <billodo@redhat.com>
-> > ---
-> >  fs/xfs/scrub/attr.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-> > index d9f0dd444b80..5d0590f78973 100644
-> > --- a/fs/xfs/scrub/attr.c
-> > +++ b/fs/xfs/scrub/attr.c
-> > @@ -171,7 +171,7 @@ xchk_xattr_listent(
-> >  					     args.blkno);
-> >  fail_xref:
-> >  	if (sx->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-> > -		context->seen_enough = 1;
-> 
-> Hmm.  The attr list functions do:
-> 
-> 	if (context->seen_enough)
-> 		break;
-> 
-> to stop iteration of the attributes.  Any nonzero value will work,
-> positive or negative.  Further down in the scrub/attr.c, xchk_xattr
-> does:
-> 
-> 	/* Did our listent function try to return any errors? */
-> 	if (sx.context.seen_enough < 0)
-> 		error = sx.context.seen_enough;
-> 
-> Which means that if seen_enough is set to a negative value, we'll return
-> that negative value all the way back to userspace, which means that the
-> userspace buffer is not updated and xfs_scrub will think there was a
-> runtime error.
-> 
-> > +		context->seen_enough = -ECANCELED;
-> 
-> So this will cause xfs_scrub to abort with "Operation Canceled" if it
-> found a corruption error.  The patch I sent to the list had -ECANCELED,
-> but then I noticed the scrub breakage and changed it to 1 before
-> committing.  Other parts of the attr code use 1 to stop an attr walk
-> without returning errors to userspace.
+On Thu, Feb 06, 2020 at 02:26:30PM +0900, Damien Le Moal wrote:
+> zonefs is a very simple file system exposing each zone of a zoned block
+> device as a file. Unlike a regular file system with zoned block device
+> support (e.g. f2fs), zonefs does not hide the sequential write
+> constraint of zoned block devices to the user. Files representing
+> sequential write zones of the device must be written sequentially
+> starting from the end of the file (append only writes).
 
-That is what had me confused. 
+....
+> +	if (flags & IOMAP_WRITE)
+> +		length = zi->i_max_size - offset;
+> +	else
+> +		length = min(length, isize - offset);
+> +	mutex_unlock(&zi->i_truncate_mutex);
+> +
+> +	iomap->offset = offset & (~sbi->s_blocksize_mask);
+> +	iomap->length = ((offset + length + sbi->s_blocksize_mask) &
+> +			 (~sbi->s_blocksize_mask)) - iomap->offset;
 
-> 
-> Perhaps it's time to replace that novel use of "1" (and audit all the
-> branching and whatnot) with -ECANCELED so that we can go on cargoculting
-> negative int errors in peace.
-> 
-> (*UGH* I remembered that I was the one who applied negative int error
-> semantics to seen_enough in the first place; before that, its meaning
-> was purely boolean.  It's still screaming for a cleanup though...)
+	iomap->length = __ALIGN_MASK(offset + length, sbi->s_blocksize_mask) -
+			iomap->offset;
 
-Agreed.
-Thanks-
-Bill
+or it could just use ALIGN(..., sb->s_blocksize) and not need
+pre-calculation of the mask value...
 
-> --D
-> 
-> >  	return;
-> >  }
-> >  
-> > -- 
-> > 2.24.1
-> > 
-> 
 
+> +static ssize_t zonefs_file_dio_write(struct kiocb *iocb, struct iov_iter *from)
+> +{
+> +	struct inode *inode = file_inode(iocb->ki_filp);
+> +	struct zonefs_sb_info *sbi = ZONEFS_SB(inode->i_sb);
+> +	struct zonefs_inode_info *zi = ZONEFS_I(inode);
+> +	size_t count;
+> +	ssize_t ret;
+> +
+> +	/*
+> +	 * For async direct IOs to sequential zone files, ignore IOCB_NOWAIT
+> +	 * as this can cause write reordering (e.g. the first aio gets EAGAIN
+> +	 * on the inode lock but the second goes through but is now unaligned).
+> +	 */
+> +	if (zi->i_ztype == ZONEFS_ZTYPE_SEQ && !is_sync_kiocb(iocb)
+> +	    && (iocb->ki_flags & IOCB_NOWAIT))
+> +		iocb->ki_flags &= ~IOCB_NOWAIT;
+
+Hmmm. I'm wondering if it would be better to return -EOPNOTSUPP here
+so that the application knows it can't do non-blocking write AIO to
+this file.
+
+Everything else looks OK to me.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
