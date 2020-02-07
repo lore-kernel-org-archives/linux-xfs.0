@@ -2,146 +2,447 @@ Return-Path: <SRS0=0es8=33=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9306CC2D0B1
-	for <linux-xfs@archiver.kernel.org>; Fri,  7 Feb 2020 07:18:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67A85C352A3
+	for <linux-xfs@archiver.kernel.org>; Fri,  7 Feb 2020 09:39:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 56AA920838
-	for <linux-xfs@archiver.kernel.org>; Fri,  7 Feb 2020 07:18:28 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="GFzF8AZM"
+	by mail.kernel.org (Postfix) with ESMTP id 31DAC24691
+	for <linux-xfs@archiver.kernel.org>; Fri,  7 Feb 2020 09:39:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726586AbgBGHS1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 7 Feb 2020 02:18:27 -0500
-Received: from mout.web.de ([212.227.15.4]:37465 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726130AbgBGHS1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 7 Feb 2020 02:18:27 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1581059891;
-        bh=miGt9Qp5X287HT9kScwGTcZaVamZNwQjWmskx3gp8cs=;
-        h=X-UI-Sender-Class:To:Cc:Subject:From:Date;
-        b=GFzF8AZM95D78trnL3UHSaeL3SiKRoHhufj4SnbgDunMRqdTiUXYSt1IKzGmJeMhv
-         n+0LC7EhrZJvKikfD14KzN7q7zs240yJUxAbA+CPiTmphX8rGtXxxPDWnV4I1PJ2Mm
-         zzALM+M6ZSVEydgxATNcN6RhJrgc+YSStVBMvaN8=
-X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
-Received: from [192.168.1.2] ([93.131.120.50]) by smtp.web.de (mrweb001
- [213.165.67.108]) with ESMTPSA (Nemesis) id 0ML8F7-1izgmo0bpJ-000ND8; Fri, 07
- Feb 2020 08:18:11 +0100
-To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Dave Chinner <david@fromorbit.com>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Johannes Thumshirn <jth@kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Naohiro Aota <Naohiro.Aota@wdc.com>
-Subject: Re: [v12 1/2] fs: New zonefs file system
-From:   Markus Elfring <Markus.Elfring@web.de>
-Autocrypt: addr=Markus.Elfring@web.de; prefer-encrypt=mutual; keydata=
- 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 FEE=
-Message-ID: <97fc31e3-94a7-406b-6264-42da5d5b5d0f@web.de>
-Date:   Fri, 7 Feb 2020 08:18:09 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.2
+        id S1726954AbgBGJjc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 7 Feb 2020 04:39:32 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:63042 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726874AbgBGJjc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Feb 2020 04:39:32 -0500
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0179buKf002192
+        for <linux-xfs@vger.kernel.org>; Fri, 7 Feb 2020 04:39:31 -0500
+Received: from e06smtp03.uk.ibm.com (e06smtp03.uk.ibm.com [195.75.94.99])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2y0knes5ew-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Fri, 07 Feb 2020 04:39:31 -0500
+Received: from localhost
+        by e06smtp03.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.ibm.com>;
+        Fri, 7 Feb 2020 09:39:28 -0000
+Received: from b06avi18626390.portsmouth.uk.ibm.com (9.149.26.192)
+        by e06smtp03.uk.ibm.com (192.168.101.133) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
+        Fri, 7 Feb 2020 09:39:25 -0000
+Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
+        by b06avi18626390.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0179cVXd42992036
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 7 Feb 2020 09:38:31 GMT
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 5927FA4040;
+        Fri,  7 Feb 2020 09:39:24 +0000 (GMT)
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 59176A404D;
+        Fri,  7 Feb 2020 09:39:21 +0000 (GMT)
+Received: from localhost.localdomain (unknown [9.85.125.39])
+        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Fri,  7 Feb 2020 09:39:20 +0000 (GMT)
+From:   Chandan Rajendra <chandan@linux.ibm.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org,
+        Allison Collins <allison.henderson@oracle.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 11/30] xfs: pass an initialized xfs_da_args structure to xfs_attr_set
+Date:   Fri, 07 Feb 2020 15:12:06 +0530
+Organization: IBM
+In-Reply-To: <20200129170310.51370-12-hch@lst.de>
+References: <20200129170310.51370-1-hch@lst.de> <20200129170310.51370-12-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:rgDWy9vtNV4rdpU8vQ/zfhAP9RKnOJLlapSK0SwBOBApmKgVacT
- liAu9nRJkMElIHkOiZvIpfrkYDEBMUBn+Kb0NLw1WbBGMO8BCiB8ykU2V0N+g8UP/2GMQcT
- kLAxxL0Cr2/u/fVcHOSqkk8tpJKGB7ULS+U3c/5jAdfmAAcBNj8Ui+HxiXLK9wnpSWMfiO4
- 47XdCeznrmAJsuHX08vNw==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:hZyKktlnhzE=:Uy4EpbqWp9dwf6Lxt2WI8c
- eMMgk5FEArvi3qn0X3eCVpLYLR6qXBH9fmmfXACQLcIP8B8PbofLTnvgmFOR8reguYGycDudm
- eAMLBIFUN1xy4MD9pEiFeucyqseCQVycyDiyqpw8bpADHXfzFyt/8uyDKMnJgDztbI3mMHSJW
- w7hmbuKVSbOXwYu8eG1oAkRS4Gp+ADgSrHArg/UOrsw1eB/CPdl47A96pHXg6pGmdvS+QP8uj
- eZ7so1ySAYtt3Ykh5yCgZ/LrBDZkV+36nbYfRK7npscTx30MS1FqtSujBMYIBlG+blrGse4r0
- SRAyCXt4OJS9BSErRexFy25Wn45z/U5DCABO6KJy47A607r20DkEuHoOLXYY7iqE7RoRyLNYC
- 7GWryTrsxh8G/wmCooWwibtf8ohGISkHxMU5cr5VQBUabMLxEYTIXsxCJGo9EZ0nlcuCHanAd
- oRGaKEXYTmbdGnPK3T25XEb9YwURZdA/yvqTeXc2OYoWO45UjsvgmGBVa5SGS3qDg9lz+UJuT
- MkpJOkBN+SIFOTino189N8/WTQw9Exa3+FOrkbmK7AccBbOM+RUZ1x7nGFs+EMK4/pCTMd+Pf
- l55QyYGKZrArAkY3vwmDcT9mp84mk5EOqdp+hsEyP+iet5ipYDw3aIs5s/0XRHWabWZs0Yx/J
- hNLNlHZXQF8WcxPV8e1Mkg/xgSC5aTl7J8RTCVXc6Unrg6zJ4Mz0o3zOY16BSa870Nie1F3Xt
- 7pPA+fgrQleruga/3/pJJbzvAFADLteZXu3BHgSLFUTgQMHZeDICOP3eaG+G5mq6818UZwIFh
- cuxhf97ykXkrCFsKs92+Uc8j5N8Ri8VAQ3yhc6ItUbqAwCsBBoBFeD+BpA3gGBOrZdSY5AIkb
- WXgM/zqot6Y7chCFWBa8X0+zD8LE2+2/jK0NKMGFwBQ4++yjWZ4NqF9IGmeu0T0gLiA9fmU6u
- 0HmwvMJWzA5isuuRLFrZ6ctnsH+t8COE5yMnyud3IWRLB0EAkZ6A1UvnfkY3heUzi7+bgLpYc
- nnYDhNX/sXkyVu/GfYhcVzV4QAladrjHN0KFj640IWm97VK5EHTRB3vJhSI4C2q44jcqEd6G3
- ywIfN1gKCBL2CCvaYD0qq0q3tzjhTa0YbOwsqtVIm+ceMxVAZzD+GlAsyggtMXFMtHzbpN3Dy
- ZfFNgiv+pV5zMJIXeJ/GzOwaZcnuCGvJfh5r6L/09EHUrxClngMz/37sTo94TdL6w+mKbNDOf
- EGa8JL3sKzApIOWWe
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+X-TM-AS-GCONF: 00
+x-cbid: 20020709-0012-0000-0000-000003849794
+X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
+x-cbparentid: 20020709-0013-0000-0000-000021C10833
+Message-Id: <3555829.Ga2YY0DfQR@localhost.localdomain>
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
+ definitions=2020-02-07_01:2020-02-07,2020-02-06 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 spamscore=0
+ malwarescore=0 suspectscore=7 mlxlogscore=999 adultscore=0 impostorscore=0
+ phishscore=0 lowpriorityscore=0 priorityscore=1501 bulkscore=0
+ clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2002070072
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> > Hmmm. I'm wondering if it would be better to return -EOPNOTSUPP here
-> > so that the application knows it can't do non-blocking write AIO to
-> > this file.
->
-> I wondered the same too. In the end, I decided to go with silently ignor=
-ing
-> the flag (for now) since raw block device accesses do the same (the NOWA=
-IT
-> support is not complete and IOs may wait on free tags). I have an idea f=
-or
-> fixing simply the out-of-order issuing that may result from using nowait=
-.
+On Wednesday, January 29, 2020 10:32 PM Christoph Hellwig wrote: 
+> Instead of converting from one style of arguments to another in
+> xfs_attr_set, pass the structure from higher up in the call chain.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr.c | 69 ++++++++++++++++++----------------------
+>  fs/xfs/libxfs/xfs_attr.h |  3 +-
+>  fs/xfs/xfs_acl.c         | 31 +++++++++---------
+>  fs/xfs/xfs_ioctl.c       | 20 +++++++-----
+>  fs/xfs/xfs_iops.c        | 13 +++++---
+>  fs/xfs/xfs_xattr.c       | 19 +++++++----
+>  6 files changed, 81 insertions(+), 74 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index f887d62e0956..eea6d90af276 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -330,22 +330,17 @@ xfs_attr_remove_args(
+>  }
+> 
+>  /*
+> - * Note: If value is NULL the attribute will be removed, just like the
+> + * Note: If args->value is NULL the attribute will be removed, just like the
+>   * Linux ->setattr API.
+>   */
+>  int
+>  xfs_attr_set(
+> -	struct xfs_inode	*dp,
+> -	const unsigned char	*name,
+> -	size_t			namelen,
+> -	unsigned char		*value,
+> -	int			valuelen,
+> -	int			flags)
+> +	struct xfs_da_args	*args)
+>  {
+> +	struct xfs_inode	*dp = args->dp;
+>  	struct xfs_mount	*mp = dp->i_mount;
+> -	struct xfs_da_args	args;
+>  	struct xfs_trans_res	tres;
+> -	int			rsvd = (flags & ATTR_ROOT) != 0;
+> +	int			rsvd = (args->flags & ATTR_ROOT) != 0;
+>  	int			error, local;
+>  	unsigned int		total;
+> 
+> @@ -356,25 +351,22 @@ xfs_attr_set(
+>  	if (error)
+>  		return error;
+> 
+> -	error = xfs_attr_args_init(&args, dp, name, namelen, flags);
+> -	if (error)
+> -		return error;
+> -
+> -	args.value = value;
+> -	args.valuelen = valuelen;
+> +	args->geo = mp->m_attr_geo;
+> +	args->whichfork = XFS_ATTR_FORK;
+> +	args->hashval = xfs_da_hashname(args->name, args->namelen);
+> 
+>  	/*
+>  	 * We have no control over the attribute names that userspace passes us
+>  	 * to remove, so we have to allow the name lookup prior to attribute
+>  	 * removal to fail as well.
+>  	 */
+> -	args.op_flags = XFS_DA_OP_OKNOENT;
+> +	args->op_flags = XFS_DA_OP_OKNOENT;
+> 
+> -	if (value) {
+> +	if (args->value) {
+>  		XFS_STATS_INC(mp, xs_attr_set);
+> 
+> -		args.op_flags |= XFS_DA_OP_ADDNAME;
+> -		args.total = xfs_attr_calc_size(&args, &local);
+> +		args->op_flags |= XFS_DA_OP_ADDNAME;
+> +		args->total = xfs_attr_calc_size(args, &local);
+> 
+>  		/*
+>  		 * If the inode doesn't have an attribute fork, add one.
+> @@ -382,8 +374,8 @@ xfs_attr_set(
+>  		 */
+>  		if (XFS_IFORK_Q(dp) == 0) {
+>  			int sf_size = sizeof(struct xfs_attr_sf_hdr) +
+> -				XFS_ATTR_SF_ENTSIZE_BYNAME(args.namelen,
+> -						valuelen);
+> +				XFS_ATTR_SF_ENTSIZE_BYNAME(args->namelen,
+> +						args->valuelen);
+> 
+>  			error = xfs_bmap_add_attrfork(dp, sf_size, rsvd);
+>  			if (error)
+> @@ -391,10 +383,11 @@ xfs_attr_set(
+>  		}
+> 
+>  		tres.tr_logres = M_RES(mp)->tr_attrsetm.tr_logres +
+> -				 M_RES(mp)->tr_attrsetrt.tr_logres * args.total;
+> +				 M_RES(mp)->tr_attrsetrt.tr_logres *
+> +					args->total;
+>  		tres.tr_logcount = XFS_ATTRSET_LOG_COUNT;
+>  		tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
+> -		total = args.total;
+> +		total = args->total;
+>  	} else {
+>  		XFS_STATS_INC(mp, xs_attr_remove);
+> 
+> @@ -407,29 +400,29 @@ xfs_attr_set(
+>  	 * operation if necessary
+>  	 */
+>  	error = xfs_trans_alloc(mp, &tres, total, 0,
+> -			rsvd ? XFS_TRANS_RESERVE : 0, &args.trans);
+> +			rsvd ? XFS_TRANS_RESERVE : 0, &args->trans);
+>  	if (error)
+>  		return error;
+> 
+>  	xfs_ilock(dp, XFS_ILOCK_EXCL);
+> -	xfs_trans_ijoin(args.trans, dp, 0);
+> -	if (value) {
+> +	xfs_trans_ijoin(args->trans, dp, 0);
+> +	if (args->value) {
+>  		unsigned int	quota_flags = XFS_QMOPT_RES_REGBLKS;
+> 
+>  		if (rsvd)
+>  			quota_flags |= XFS_QMOPT_FORCE_RES;
+> -		error = xfs_trans_reserve_quota_nblks(args.trans, dp,
+> -				args.total, 0, quota_flags);
+> +		error = xfs_trans_reserve_quota_nblks(args->trans, dp,
+> +				args->total, 0, quota_flags);
+>  		if (error)
+>  			goto out_trans_cancel;
+> -		error = xfs_attr_set_args(&args);
+> +		error = xfs_attr_set_args(args);
+>  		if (error)
+>  			goto out_trans_cancel;
+>  		/* shortform attribute has already been committed */
+> -		if (!args.trans)
+> +		if (!args->trans)
+>  			goto out_unlock;
+>  	} else {
+> -		error = xfs_attr_remove_args(&args);
+> +		error = xfs_attr_remove_args(args);
+>  		if (error)
+>  			goto out_trans_cancel;
+>  	}
+> @@ -439,23 +432,23 @@ xfs_attr_set(
+>  	 * transaction goes to disk before returning to the user.
+>  	 */
+>  	if (mp->m_flags & XFS_MOUNT_WSYNC)
+> -		xfs_trans_set_sync(args.trans);
+> +		xfs_trans_set_sync(args->trans);
+> 
+> -	if ((flags & ATTR_KERNOTIME) == 0)
+> -		xfs_trans_ichgtime(args.trans, dp, XFS_ICHGTIME_CHG);
+> +	if ((args->flags & ATTR_KERNOTIME) == 0)
+> +		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
+> 
+>  	/*
+>  	 * Commit the last in the sequence of transactions.
+>  	 */
+> -	xfs_trans_log_inode(args.trans, dp, XFS_ILOG_CORE);
+> -	error = xfs_trans_commit(args.trans);
+> +	xfs_trans_log_inode(args->trans, dp, XFS_ILOG_CORE);
+> +	error = xfs_trans_commit(args->trans);
+>  out_unlock:
+>  	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+>  	return error;
+> 
+>  out_trans_cancel:
+> -	if (args.trans)
+> -		xfs_trans_cancel(args.trans);
+> +	if (args->trans)
+> +		xfs_trans_cancel(args->trans);
+>  	goto out_unlock;
+>  }
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+> index db58a6c7dea5..07ca543db831 100644
+> --- a/fs/xfs/libxfs/xfs_attr.h
+> +++ b/fs/xfs/libxfs/xfs_attr.h
+> @@ -149,8 +149,7 @@ int xfs_attr_get_ilocked(struct xfs_inode *ip, struct xfs_da_args *args);
+>  int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
+>  		 size_t namelen, unsigned char **value, int *valuelenp,
+>  		 int flags);
+> -int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
+> -		 size_t namelen, unsigned char *value, int valuelen, int flags);
+> +int xfs_attr_set(struct xfs_da_args *args);
+>  int xfs_attr_set_args(struct xfs_da_args *args);
+>  int xfs_attr_remove_args(struct xfs_da_args *args);
+>  int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+> index 4e76063ff956..e9ae7cbe1973 100644
+> --- a/fs/xfs/xfs_acl.c
+> +++ b/fs/xfs/xfs_acl.c
+> @@ -166,41 +166,42 @@ xfs_get_acl(struct inode *inode, int type)
+>  int
+>  __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+>  {
+> -	struct xfs_inode *ip = XFS_I(inode);
+> -	unsigned char *ea_name;
+> -	struct xfs_acl *xfs_acl = NULL;
+> -	int len = 0;
+> -	int error;
+> +	struct xfs_inode	*ip = XFS_I(inode);
+> +	struct xfs_da_args	args = {
+> +		.dp		= ip,
+> +		.flags		= ATTR_ROOT,
+> +	};
+> +	int			error;
+> 
+>  	switch (type) {
+>  	case ACL_TYPE_ACCESS:
+> -		ea_name = SGI_ACL_FILE;
+> +		args.name = SGI_ACL_FILE;
+>  		break;
+>  	case ACL_TYPE_DEFAULT:
+>  		if (!S_ISDIR(inode->i_mode))
+>  			return acl ? -EACCES : 0;
+> -		ea_name = SGI_ACL_DEFAULT;
+> +		args.name = SGI_ACL_DEFAULT;
+>  		break;
+>  	default:
+>  		return -EINVAL;
+>  	}
+> +	args.namelen = strlen(args.name);
+> 
+>  	if (acl) {
+> -		len = XFS_ACL_MAX_SIZE(ip->i_mount);
+> -		xfs_acl = kmem_zalloc_large(len, 0);
+> -		if (!xfs_acl)
+> +		args.valuelen = XFS_ACL_MAX_SIZE(ip->i_mount);
+> +		args.value = kmem_zalloc_large(args.valuelen, 0);
+> +		if (!args.value)
+>  			return -ENOMEM;
+> 
+> -		xfs_acl_to_disk(xfs_acl, acl);
+> +		xfs_acl_to_disk(args.value, acl);
+> 
+>  		/* subtract away the unused acl entries */
+> -		len -= sizeof(struct xfs_acl_entry) *
+> +		args.valuelen -= sizeof(struct xfs_acl_entry) *
+>  			 (XFS_ACL_MAX_ENTRIES(ip->i_mount) - acl->a_count);
+>  	}
+> 
+> -	error = xfs_attr_set(ip, ea_name, strlen(ea_name),
+> -			(unsigned char *)xfs_acl, len, ATTR_ROOT);
+> -	kmem_free(xfs_acl);
+> +	error = xfs_attr_set(&args);
+> +	kmem_free(args.value);
+> 
+>  	/*
+>  	 * If the attribute didn't exist to start with that's fine.
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index cfdd80b4ea2d..47a88b5cfa63 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -389,9 +389,13 @@ xfs_attrmulti_attr_set(
+>  	uint32_t		len,
+>  	uint32_t		flags)
+>  {
+> -	unsigned char		*kbuf = NULL;
+> +	struct xfs_da_args	args = {
+> +		.dp		= XFS_I(inode),
+> +		.flags		= flags,
+> +		.name		= name,
+> +		.namelen	= strlen(name),
+> +	};
+>  	int			error;
+> -	size_t			namelen;
+> 
+>  	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
+>  		return -EPERM;
+> @@ -399,16 +403,16 @@ xfs_attrmulti_attr_set(
+>  	if (ubuf) {
+>  		if (len > XFS_XATTR_SIZE_MAX)
+>  			return -EINVAL;
+> -		kbuf = memdup_user(ubuf, len);
+> -		if (IS_ERR(kbuf))
+> -			return PTR_ERR(kbuf);
+> +		args.value = memdup_user(ubuf, len);
+> +		if (IS_ERR(args.value))
+> +			return PTR_ERR(args.value);
+> +		args.valuelen = len;
+>  	}
+> 
+> -	namelen = strlen(name);
+> -	error = xfs_attr_set(XFS_I(inode), name, namelen, kbuf, len, flags);
+> +	error = xfs_attr_set(&args);
+>  	if (!error)
+>  		xfs_forget_acl(inode, name, flags);
+> -	kfree(kbuf);
+> +	kfree(args.value);
+>  	return error;
+>  }
+> 
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 81f2f93caec0..94cd4254656c 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -50,10 +50,15 @@ xfs_initxattrs(
+>  	int			error = 0;
+> 
+>  	for (xattr = xattr_array; xattr->name != NULL; xattr++) {
+> -		error = xfs_attr_set(ip, xattr->name,
+> -				     strlen(xattr->name),
+> -				     xattr->value, xattr->value_len,
+> -				     ATTR_SECURE);
+> +		struct xfs_da_args	args = {
+> +			.dp		= ip,
+> +			.flags		= ATTR_SECURE,
+> +			.name		= xattr->name,
+> +			.namelen	= strlen(xattr->name),
+> +			.value		= xattr->value,
+> +			.valuelen	= xattr->value_len,
+> +		};
+> +		error = xfs_attr_set(&args);
+>  		if (error < 0)
+>  			break;
+>  	}
+> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+> index 1670bfbc9ad2..09f967f97699 100644
+> --- a/fs/xfs/xfs_xattr.c
+> +++ b/fs/xfs/xfs_xattr.c
+> @@ -66,20 +66,25 @@ xfs_xattr_set(const struct xattr_handler *handler, struct dentry *unused,
+>  		struct inode *inode, const char *name, const void *value,
+>  		size_t size, int flags)
+>  {
+> -	int			xflags = handler->flags;
+> -	struct xfs_inode	*ip = XFS_I(inode);
+> +	struct xfs_da_args	args = {
+> +		.dp		= XFS_I(inode),
+> +		.flags		= handler->flags,
+> +		.name		= name,
+> +		.namelen	= strlen(name),
+> +		.value		= (unsigned char *)value,
 
-I find this aspect interesting for further clarification.
+Since xfs_da_args.value is of type "void *', Wouldn't it be more uniform if
+'value' is typecasted with (void *)? 
+
+Apart from the above very trival nit, the changes look good to me,
+
+Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
+
+> +		.valuelen	= size,
+> +	};
+>  	int			error;
+> 
+>  	/* Convert Linux syscall to XFS internal ATTR flags */
+>  	if (flags & XATTR_CREATE)
+> -		xflags |= ATTR_CREATE;
+> +		args.flags |= ATTR_CREATE;
+>  	if (flags & XATTR_REPLACE)
+> -		xflags |= ATTR_REPLACE;
+> +		args.flags |= ATTR_REPLACE;
+> 
+> -	error = xfs_attr_set(ip, (unsigned char *)name, strlen(name),
+> -				(void *)value, size, xflags);
+> +	error = xfs_attr_set(&args);
+>  	if (!error)
+> -		xfs_forget_acl(inode, name, xflags);
+> +		xfs_forget_acl(inode, name, args.flags);
+>  	return error;
+>  }
+> 
+> 
 
 
-> I will send a patch for that later and can then remove this.
+-- 
+chandan
 
-Should another software improvement be integrated into the initial proposa=
-l?
 
-Regards,
-Markus
+
