@@ -6,186 +6,224 @@ X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25189C35250
-	for <linux-xfs@archiver.kernel.org>; Sat,  8 Feb 2020 11:32:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B100CC35250
+	for <linux-xfs@archiver.kernel.org>; Sat,  8 Feb 2020 12:45:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E806220715
-	for <linux-xfs@archiver.kernel.org>; Sat,  8 Feb 2020 11:32:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 873BE217BA
+	for <linux-xfs@archiver.kernel.org>; Sat,  8 Feb 2020 12:45:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726998AbgBHLcq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 8 Feb 2020 06:32:46 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:17690 "EHLO
+        id S1727131AbgBHMpu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 8 Feb 2020 07:45:50 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:39012 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726970AbgBHLcq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 8 Feb 2020 06:32:46 -0500
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 018BIgW1072975
-        for <linux-xfs@vger.kernel.org>; Sat, 8 Feb 2020 06:32:45 -0500
-Received: from e06smtp05.uk.ibm.com (e06smtp05.uk.ibm.com [195.75.94.101])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2y1tnstkab-1
+        by vger.kernel.org with ESMTP id S1727118AbgBHMpu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 8 Feb 2020 07:45:50 -0500
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 018CceKn129954
+        for <linux-xfs@vger.kernel.org>; Sat, 8 Feb 2020 07:45:49 -0500
+Received: from e06smtp04.uk.ibm.com (e06smtp04.uk.ibm.com [195.75.94.100])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2y1tp9m3v3-1
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Sat, 08 Feb 2020 06:32:44 -0500
+        for <linux-xfs@vger.kernel.org>; Sat, 08 Feb 2020 07:45:49 -0500
 Received: from localhost
-        by e06smtp05.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e06smtp04.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-xfs@vger.kernel.org> from <chandan@linux.ibm.com>;
-        Sat, 8 Feb 2020 11:32:42 -0000
+        Sat, 8 Feb 2020 12:45:47 -0000
 Received: from b06cxnps4075.portsmouth.uk.ibm.com (9.149.109.197)
-        by e06smtp05.uk.ibm.com (192.168.101.135) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        by e06smtp04.uk.ibm.com (192.168.101.134) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
         (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Sat, 8 Feb 2020 11:32:41 -0000
-Received: from d06av25.portsmouth.uk.ibm.com (d06av25.portsmouth.uk.ibm.com [9.149.105.61])
-        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 018BWelS60293284
+        Sat, 8 Feb 2020 12:45:45 -0000
+Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
+        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 018Cjikj51970224
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 8 Feb 2020 11:32:40 GMT
-Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 2ABEA11C050;
-        Sat,  8 Feb 2020 11:32:40 +0000 (GMT)
-Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 0497911C04A;
-        Sat,  8 Feb 2020 11:32:39 +0000 (GMT)
+        Sat, 8 Feb 2020 12:45:44 GMT
+Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 73F164C040;
+        Sat,  8 Feb 2020 12:45:44 +0000 (GMT)
+Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 4D67C4C04A;
+        Sat,  8 Feb 2020 12:45:43 +0000 (GMT)
 Received: from localhost.localdomain (unknown [9.85.68.130])
-        by d06av25.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Sat,  8 Feb 2020 11:32:38 +0000 (GMT)
+        by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Sat,  8 Feb 2020 12:45:43 +0000 (GMT)
 From:   Chandan Rajendra <chandan@linux.ibm.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org,
         Allison Collins <allison.henderson@oracle.com>,
         "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 16/30] xfs: replace ATTR_KERNOTIME with XFS_DA_OP_NOTIME
-Date:   Sat, 08 Feb 2020 17:05:25 +0530
+Subject: Re: [PATCH 17/30] xfs: factor out a xfs_attr_match helper
+Date:   Sat, 08 Feb 2020 18:18:29 +0530
 Organization: IBM
-In-Reply-To: <20200129170310.51370-17-hch@lst.de>
-References: <20200129170310.51370-1-hch@lst.de> <20200129170310.51370-17-hch@lst.de>
+In-Reply-To: <20200129170310.51370-18-hch@lst.de>
+References: <20200129170310.51370-1-hch@lst.de> <20200129170310.51370-18-hch@lst.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7Bit
 Content-Type: text/plain; charset="us-ascii"
 X-TM-AS-GCONF: 00
-x-cbid: 20020811-0020-0000-0000-000003A8464B
+x-cbid: 20020812-0016-0000-0000-000002E4F7A0
 X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 20020811-0021-0000-0000-000022001C1E
-Message-Id: <9195667.EHZHh7sMLN@localhost.localdomain>
+x-cbparentid: 20020812-0017-0000-0000-00003347E45C
+Message-Id: <1773489.ADBAkTHOFr@localhost.localdomain>
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
- definitions=2020-02-07_06:2020-02-07,2020-02-07 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- mlxlogscore=999 adultscore=0 phishscore=0 clxscore=1015 spamscore=0
- impostorscore=0 priorityscore=1501 malwarescore=0 suspectscore=1
- bulkscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002080092
+ definitions=2020-02-08_02:2020-02-07,2020-02-08 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ spamscore=0 impostorscore=0 lowpriorityscore=0 malwarescore=0 bulkscore=0
+ clxscore=1015 mlxlogscore=999 mlxscore=0 suspectscore=1 adultscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2002080100
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 On Wednesday, January 29, 2020 10:32 PM Christoph Hellwig wrote: 
-> op_flags with the XFS_DA_OP_* flags is the usual place for in-kernel
-> only flags, so move the notime flag there.
+> Factor out a helper that compares an on-disk attr vs the name, length and
+> flags specified in struct xfs_da_args.
 >
 
-The changes look good to me,
+The newly introduced changes logically match with the code flow that existed
+earlier.
+
 Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_attr.c  | 4 ++--
->  fs/xfs/libxfs/xfs_attr.h  | 8 +-------
->  fs/xfs/libxfs/xfs_types.h | 2 ++
->  fs/xfs/scrub/attr.c       | 2 +-
->  fs/xfs/xfs_ioctl.c        | 1 -
->  5 files changed, 6 insertions(+), 11 deletions(-)
+>  fs/xfs/libxfs/xfs_attr_leaf.c | 80 +++++++++++++----------------------
+>  1 file changed, 30 insertions(+), 50 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 1382e51ef85e..3b1db2afb104 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -186,7 +186,7 @@ xfs_attr_try_sf_addname(
->  	 * Commit the shortform mods, and we're done.
->  	 * NOTE: this is also the error path (EEXIST, etc).
->  	 */
-> -	if (!error && (args->flags & ATTR_KERNOTIME) == 0)
-> +	if (!error && !(args->op_flags & XFS_DA_OP_NOTIME))
->  		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index b0658eb8fbcc..8852754153ba 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -445,14 +445,21 @@ xfs_attr3_leaf_read(
+>   * Namespace helper routines
+>   *========================================================================*/
 > 
->  	if (mp->m_flags & XFS_MOUNT_WSYNC)
-> @@ -389,7 +389,7 @@ xfs_attr_set(
->  	if (mp->m_flags & XFS_MOUNT_WSYNC)
->  		xfs_trans_set_sync(args->trans);
+> -/*
+> - * If namespace bits don't match return 0.
+> - * If all match then return 1.
+> - */
+> -STATIC int
+> -xfs_attr_namesp_match(int arg_flags, int ondisk_flags)
+> +static bool
+> +xfs_attr_match(
+> +	struct xfs_da_args	*args,
+> +	uint8_t			namelen,
+> +	unsigned char		*name,
+> +	int			flags)
+>  {
+> -	return XFS_ATTR_NSP_ONDISK(ondisk_flags) == XFS_ATTR_NSP_ARGS_TO_ONDISK(arg_flags);
+> +	if (args->namelen != namelen)
+> +		return false;
+> +	if (memcmp(args->name, name, namelen) != 0)
+> +		return false;
+> +	if (XFS_ATTR_NSP_ARGS_TO_ONDISK(args->flags) !=
+> +	    XFS_ATTR_NSP_ONDISK(flags))
+> +		return false;
+> +	return true;
+>  }
 > 
-> -	if ((args->flags & ATTR_KERNOTIME) == 0)
-> +	if (!(args->op_flags & XFS_DA_OP_NOTIME))
->  		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
-> 
->  	/*
-> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-> index a6de050675c9..0f369399effd 100644
-> --- a/fs/xfs/libxfs/xfs_attr.h
-> +++ b/fs/xfs/libxfs/xfs_attr.h
-> @@ -33,19 +33,13 @@ struct xfs_attr_list_context;
->  #define ATTR_CREATE	0x0010	/* pure create: fail if attr already exists */
->  #define ATTR_REPLACE	0x0020	/* pure set: fail if attr does not exist */
-> 
-> -#define ATTR_KERNOTIME	0x1000	/* [kernel] don't update inode timestamps */
-> -
-> -#define ATTR_KERNEL_FLAGS \
-> -	(ATTR_KERNOTIME)
-> -
->  #define XFS_ATTR_FLAGS \
->  	{ ATTR_DONTFOLLOW, 	"DONTFOLLOW" }, \
->  	{ ATTR_ROOT,		"ROOT" }, \
->  	{ ATTR_TRUST,		"TRUST" }, \
->  	{ ATTR_SECURE,		"SECURE" }, \
->  	{ ATTR_CREATE,		"CREATE" }, \
-> -	{ ATTR_REPLACE,		"REPLACE" }, \
-> -	{ ATTR_KERNOTIME,	"KERNOTIME" }
-> +	{ ATTR_REPLACE,		"REPLACE" }
-> 
->  /*
->   * The maximum size (into the kernel or returned from the kernel) of an
-> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-> index 3379ebc0c7c5..1594325d7742 100644
-> --- a/fs/xfs/libxfs/xfs_types.h
-> +++ b/fs/xfs/libxfs/xfs_types.h
-> @@ -223,6 +223,7 @@ typedef struct xfs_da_args {
->  #define XFS_DA_OP_ADDNAME	0x0004	/* this is an add operation */
->  #define XFS_DA_OP_OKNOENT	0x0008	/* lookup/add op, ENOENT ok, else die */
->  #define XFS_DA_OP_CILOOKUP	0x0010	/* lookup to return CI name if found */
-> +#define XFS_DA_OP_NOTIME	0x0020	/* don't update inode timestamps */
->  #define XFS_DA_OP_INCOMPLETE	0x0040	/* lookup INCOMPLETE attr keys */
-> 
->  #define XFS_DA_OP_FLAGS \
-> @@ -231,6 +232,7 @@ typedef struct xfs_da_args {
->  	{ XFS_DA_OP_ADDNAME,	"ADDNAME" }, \
->  	{ XFS_DA_OP_OKNOENT,	"OKNOENT" }, \
->  	{ XFS_DA_OP_CILOOKUP,	"CILOOKUP" }, \
-> +	{ XFS_DA_OP_NOTIME,	"NOTIME" }, \
->  	{ XFS_DA_OP_INCOMPLETE,	"INCOMPLETE" }
-> 
->  /*
-> diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-> index f983c2b969e0..05537627211d 100644
-> --- a/fs/xfs/scrub/attr.c
-> +++ b/fs/xfs/scrub/attr.c
-> @@ -147,7 +147,7 @@ xchk_xattr_listent(
->  		return;
+>  static int
+> @@ -678,15 +685,8 @@ xfs_attr_shortform_add(xfs_da_args_t *args, int forkoff)
+>  	sf = (xfs_attr_shortform_t *)ifp->if_u1.if_data;
+>  	sfe = &sf->list[0];
+>  	for (i = 0; i < sf->hdr.count; sfe = XFS_ATTR_SF_NEXTENTRY(sfe), i++) {
+> -#ifdef DEBUG
+> -		if (sfe->namelen != args->namelen)
+> -			continue;
+> -		if (memcmp(args->name, sfe->nameval, args->namelen) != 0)
+> -			continue;
+> -		if (!xfs_attr_namesp_match(args->flags, sfe->flags))
+> -			continue;
+> -		ASSERT(0);
+> -#endif
+> +		ASSERT(!xfs_attr_match(args, sfe->namelen, sfe->nameval,
+> +			sfe->flags));
 >  	}
 > 
-> -	args.flags = ATTR_KERNOTIME;
-> +	args.op_flags = XFS_DA_OP_NOTIME;
->  	if (flags & XFS_ATTR_ROOT)
->  		args.flags |= ATTR_ROOT;
->  	else if (flags & XFS_ATTR_SECURE)
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 2da22595f828..dd1cb8c50518 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -436,7 +436,6 @@ xfs_ioc_attrmulti_one(
-> 
->  	if ((flags & ATTR_ROOT) && (flags & ATTR_SECURE))
->  		return -EINVAL;
-> -	flags &= ~ATTR_KERNEL_FLAGS;
-> 
->  	name = strndup_user(uname, MAXNAMELEN);
->  	if (IS_ERR(name))
+>  	offset = (char *)sfe - (char *)sf;
+> @@ -749,13 +749,9 @@ xfs_attr_shortform_remove(xfs_da_args_t *args)
+>  	for (i = 0; i < end; sfe = XFS_ATTR_SF_NEXTENTRY(sfe),
+>  					base += size, i++) {
+>  		size = XFS_ATTR_SF_ENTSIZE(sfe);
+> -		if (sfe->namelen != args->namelen)
+> -			continue;
+> -		if (memcmp(sfe->nameval, args->name, args->namelen) != 0)
+> -			continue;
+> -		if (!xfs_attr_namesp_match(args->flags, sfe->flags))
+> -			continue;
+> -		break;
+> +		if (xfs_attr_match(args, sfe->namelen, sfe->nameval,
+> +				sfe->flags))
+> +			break;
+>  	}
+>  	if (i == end)
+>  		return -ENOATTR;
+> @@ -816,13 +812,9 @@ xfs_attr_shortform_lookup(xfs_da_args_t *args)
+>  	sfe = &sf->list[0];
+>  	for (i = 0; i < sf->hdr.count;
+>  				sfe = XFS_ATTR_SF_NEXTENTRY(sfe), i++) {
+> -		if (sfe->namelen != args->namelen)
+> -			continue;
+> -		if (memcmp(args->name, sfe->nameval, args->namelen) != 0)
+> -			continue;
+> -		if (!xfs_attr_namesp_match(args->flags, sfe->flags))
+> -			continue;
+> -		return -EEXIST;
+> +		if (xfs_attr_match(args, sfe->namelen, sfe->nameval,
+> +				sfe->flags))
+> +			return -EEXIST;
+>  	}
+>  	return -ENOATTR;
+>  }
+> @@ -847,14 +839,10 @@ xfs_attr_shortform_getvalue(
+>  	sfe = &sf->list[0];
+>  	for (i = 0; i < sf->hdr.count;
+>  				sfe = XFS_ATTR_SF_NEXTENTRY(sfe), i++) {
+> -		if (sfe->namelen != args->namelen)
+> -			continue;
+> -		if (memcmp(args->name, sfe->nameval, args->namelen) != 0)
+> -			continue;
+> -		if (!xfs_attr_namesp_match(args->flags, sfe->flags))
+> -			continue;
+> -		return xfs_attr_copy_value(args, &sfe->nameval[args->namelen],
+> -						sfe->valuelen);
+> +		if (xfs_attr_match(args, sfe->namelen, sfe->nameval,
+> +				sfe->flags))
+> +			return xfs_attr_copy_value(args,
+> +				&sfe->nameval[args->namelen], sfe->valuelen);
+>  	}
+>  	return -ENOATTR;
+>  }
+> @@ -2409,23 +2397,15 @@ xfs_attr3_leaf_lookup_int(
+>  		}
+>  		if (entry->flags & XFS_ATTR_LOCAL) {
+>  			name_loc = xfs_attr3_leaf_name_local(leaf, probe);
+> -			if (name_loc->namelen != args->namelen)
+> -				continue;
+> -			if (memcmp(args->name, name_loc->nameval,
+> -							args->namelen) != 0)
+> -				continue;
+> -			if (!xfs_attr_namesp_match(args->flags, entry->flags))
+> +			if (!xfs_attr_match(args, name_loc->namelen,
+> +					name_loc->nameval, entry->flags))
+>  				continue;
+>  			args->index = probe;
+>  			return -EEXIST;
+>  		} else {
+>  			name_rmt = xfs_attr3_leaf_name_remote(leaf, probe);
+> -			if (name_rmt->namelen != args->namelen)
+> -				continue;
+> -			if (memcmp(args->name, name_rmt->name,
+> -							args->namelen) != 0)
+> -				continue;
+> -			if (!xfs_attr_namesp_match(args->flags, entry->flags))
+> +			if (!xfs_attr_match(args, name_rmt->namelen,
+> +					name_rmt->name, entry->flags))
+>  				continue;
+>  			args->index = probe;
+>  			args->rmtvaluelen = be32_to_cpu(name_rmt->valuelen);
 > 
 
 
