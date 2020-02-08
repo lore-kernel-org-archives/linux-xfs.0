@@ -2,126 +2,80 @@ Return-Path: <SRS0=5CkV=34=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C61DC352A1
-	for <linux-xfs@archiver.kernel.org>; Sat,  8 Feb 2020 19:35:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82DE8C35242
+	for <linux-xfs@archiver.kernel.org>; Sat,  8 Feb 2020 21:09:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3EF182253D
-	for <linux-xfs@archiver.kernel.org>; Sat,  8 Feb 2020 19:35:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4CA6021775
+	for <linux-xfs@archiver.kernel.org>; Sat,  8 Feb 2020 21:09:24 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gEWgEMj3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727522AbgBHTet (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 8 Feb 2020 14:34:49 -0500
-Received: from mga14.intel.com ([192.55.52.115]:38679 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727478AbgBHTet (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 8 Feb 2020 14:34:49 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 08 Feb 2020 11:34:47 -0800
-X-IronPort-AV: E=Sophos;i="5.70,418,1574150400"; 
-   d="scan'208";a="250782575"
-Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.157])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 08 Feb 2020 11:34:48 -0800
-From:   ira.weiny@intel.com
-To:     linux-kernel@vger.kernel.org
-Cc:     Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH v3 01/12] fs/stat: Define DAX statx attribute
-Date:   Sat,  8 Feb 2020 11:34:34 -0800
-Message-Id: <20200208193445.27421-2-ira.weiny@intel.com>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20200208193445.27421-1-ira.weiny@intel.com>
-References: <20200208193445.27421-1-ira.weiny@intel.com>
+        id S1727517AbgBHVJX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 8 Feb 2020 16:09:23 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:42333 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727478AbgBHVJX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 8 Feb 2020 16:09:23 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1581196162;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=Yn2V6Sm3LlBqbLVmuxTKLZTGqmw5nMVmegmTzYhtlWU=;
+        b=gEWgEMj3Y67iGJimSK5gyicsygifFiBTt/NZYjNjQ0H93ZT+EqbcJrUAWHnCsc7O007gC7
+        Wn5r8OKDbb7Y1CZf67vbCtUXCRhLnVD9kBes1mLYiJdweoU/u7Y+K6ZyjLKrbHsxRxLeut
+        sHmYvlmM3zendpNQ8OHyhhjEzuAXbdg=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-252-1Nv0cO8vPUO4yWtz6hwq2g-1; Sat, 08 Feb 2020 16:09:20 -0500
+X-MC-Unique: 1Nv0cO8vPUO4yWtz6hwq2g-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D62BA8010E7
+        for <linux-xfs@vger.kernel.org>; Sat,  8 Feb 2020 21:09:19 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id AEE9F867E2
+        for <linux-xfs@vger.kernel.org>; Sat,  8 Feb 2020 21:09:19 +0000 (UTC)
+To:     linux-xfs <linux-xfs@vger.kernel.org>
+From:   Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH 0/4] xfs: enable per-type quota timers and warn limits
+Message-ID: <333ea747-8b45-52ae-006e-a1804e14de32@redhat.com>
+Date:   Sat, 8 Feb 2020 15:09:19 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.4.2
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Ira Weiny <ira.weiny@intel.com>
+Quota timers are currently a mess.  Right now, at mount time,
+we pick up the first enabled type and use that for the single
+timer in mp->m_quotainfo.
 
-In order for users to determine if a file is currently operating in DAX
-state (effective DAX).  Define a statx attribute value and set that
-attribute if the effective DAX flag is set.
+Interestingly, if we set a timer on a different type, /that/
+gets set into mp->m_quotainfo where it stays in effect until
+the next mount, when we pick the first enabled type again.
 
-To go along with this we propose the following addition to the statx man
-page:
+We actually write the timer values to each type of quota inode,
+but only one is ever in force, according to the interesting behavior
+described above.
 
-STATX_ATTR_DAX
+This series allows quota timers & warn limits to be independently
+set and enforced for each quota type.
 
-	The file is in the DAX (cpu direct access) state.  DAX state
-	attempts to minimize software cache effects for both I/O and
-	memory mappings of this file.  It requires a file system which
-	has been configured to support DAX.
+All the action is in the last patch, the first 3 are cleanups to
+help.
 
-	DAX generally assumes all accesses are via cpu load / store
-	instructions which can minimize overhead for small accesses, but
-	may adversely affect cpu utilization for large transfers.
-
-	File I/O is done directly to/from user-space buffers and memory
-	mapped I/O may be performed with direct memory mappings that
-	bypass kernel page cache.
-
-	While the DAX property tends to result in data being transferred
-	synchronously, it does not give the same guarantees of O_SYNC
-	where data and the necessary metadata are transferred together.
-
-	A DAX file may support being mapped with the MAP_SYNC flag,
-	which enables a program to use CPU cache flush instructions to
-	persist CPU store operations without an explicit fsync(2).  See
-	mmap(2) for more information.
-
-Reviewed-by: Jan Kara <jack@suse.cz>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-
----
-Changes from V2:
-	Update man page text with comments from Darrick, Jan, Dan, and
-	Dave.
-
- fs/stat.c                 | 3 +++
- include/uapi/linux/stat.h | 1 +
- 2 files changed, 4 insertions(+)
-
-diff --git a/fs/stat.c b/fs/stat.c
-index 030008796479..894699c74dde 100644
---- a/fs/stat.c
-+++ b/fs/stat.c
-@@ -79,6 +79,9 @@ int vfs_getattr_nosec(const struct path *path, struct kstat *stat,
- 	if (IS_AUTOMOUNT(inode))
- 		stat->attributes |= STATX_ATTR_AUTOMOUNT;
- 
-+	if (IS_DAX(inode))
-+		stat->attributes |= STATX_ATTR_DAX;
-+
- 	if (inode->i_op->getattr)
- 		return inode->i_op->getattr(path, stat, request_mask,
- 					    query_flags);
-diff --git a/include/uapi/linux/stat.h b/include/uapi/linux/stat.h
-index ad80a5c885d5..e5f9d5517f6b 100644
---- a/include/uapi/linux/stat.h
-+++ b/include/uapi/linux/stat.h
-@@ -169,6 +169,7 @@ struct statx {
- #define STATX_ATTR_ENCRYPTED		0x00000800 /* [I] File requires key to decrypt in fs */
- #define STATX_ATTR_AUTOMOUNT		0x00001000 /* Dir: Automount trigger */
- #define STATX_ATTR_VERITY		0x00100000 /* [I] Verity protected file */
-+#define STATX_ATTR_DAX			0x00002000 /* [I] File is DAX */
- 
- 
- #endif /* _UAPI_LINUX_STAT_H */
--- 
-2.21.0
+-Eric
 
