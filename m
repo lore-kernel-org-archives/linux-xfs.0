@@ -2,140 +2,91 @@ Return-Path: <SRS0=yyqk=36=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14D7EC352A3
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Feb 2020 15:54:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6236CC352A4
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Feb 2020 21:17:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DA64320714
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Feb 2020 15:54:24 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BpU28/m2"
+	by mail.kernel.org (Postfix) with ESMTP id 3273D2070A
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Feb 2020 21:17:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727430AbgBJPyY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Feb 2020 10:54:24 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:55870 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727143AbgBJPyY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Feb 2020 10:54:24 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01AFsGFm018753;
-        Mon, 10 Feb 2020 15:54:17 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=+tjCQQZAMseq09FLYQdZ6dxurwoGDIXMEWBw7hAS+8M=;
- b=BpU28/m23XBkd5dV9NTt4xvUdJU4Vj6rhFITUhWLC3j9El7efb3JwiuogyinYkSYSboa
- rXqn8h12NU0SzTQT1teCrtUMt2ur+RJ6enA3by3/lku1djlK+ph3Y/3mvuv/mQBPU7g3
- uebaL+vyaIMAaHTekY+y8tf+q5Qsy7KSQ7lXNrQ3D8DsVC22D2p0/2KGR1Sicp3GPB8/
- Xcfq/ttOnplB9B4+yI9+BhD80hKg173tFgWYXcICVkERA62AOs9sFx9yvRBKq3uGrbbp
- BH+HIWxF66rCa/ko0jDLXBhFDD2n7GgYQJpfgecnzRFgcqFWocXptDBvm5KJWYGchyQi CA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 2y2jx5wn4h-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 10 Feb 2020 15:54:17 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01AFq7wg020264;
-        Mon, 10 Feb 2020 15:54:16 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 2y26ht7aqw-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 10 Feb 2020 15:54:16 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01AFsFx7000781;
-        Mon, 10 Feb 2020 15:54:15 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 10 Feb 2020 07:54:14 -0800
-Date:   Mon, 10 Feb 2020 07:54:13 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@redhat.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>, John Jore <john@jore.no>
-Subject: Re: [PATCH] xfs_repair: fix bad next_unlinked field
-Message-ID: <20200210155413.GJ6870@magnolia>
-References: <f5b8a2a9-e691-3bf5-c2c7-f4986a933454@redhat.com>
+        id S1727121AbgBJVRT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Feb 2020 16:17:19 -0500
+Received: from xes-mad.com ([162.248.234.2]:7736 "EHLO mail.xes-mad.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727003AbgBJVRT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 10 Feb 2020 16:17:19 -0500
+X-Greylist: delayed 382 seconds by postgrey-1.27 at vger.kernel.org; Mon, 10 Feb 2020 16:17:19 EST
+Received: from vfazio1.xes-mad.com (vfazio1.xes-mad.com [10.52.16.140])
+        by mail.xes-mad.com (Postfix) with ESMTP id 072FB201D2;
+        Mon, 10 Feb 2020 15:10:57 -0600 (CST)
+From:   Vincent Fazio <vfazio@xes-inc.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Vincent Fazio <vfazio@xes-inc.com>,
+        Aaron Sierra <asierra@xes-inc.com>
+Subject: [PATCH 1/1] xfs: fallback to readonly during recovery
+Date:   Mon, 10 Feb 2020 15:10:37 -0600
+Message-Id: <20200210211037.1930-1-vfazio@xes-inc.com>
+X-Mailer: git-send-email 2.25.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f5b8a2a9-e691-3bf5-c2c7-f4986a933454@redhat.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9527 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
- bulkscore=0 adultscore=0 malwarescore=0 suspectscore=2 mlxscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002100120
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9527 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
- priorityscore=1501 adultscore=0 phishscore=0 impostorscore=0 spamscore=0
- bulkscore=0 lowpriorityscore=0 mlxscore=0 suspectscore=2 clxscore=1011
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002100120
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 10, 2020 at 09:42:28AM -0600, Eric Sandeen wrote:
-> As of xfsprogs-4.17 we started testing whether the di_next_unlinked field
-> on an inode is valid in the inode verifiers. However, this field is never
-> tested or repaired during inode processing.
-> 
-> So if, for example, we had a completely zeroed-out inode, we'd detect and
-> fix the broken magic and version, but the invalid di_next_unlinked field
-> would not be touched, fail the write verifier, and prevent the inode from
-> being properly repaired or even written out.
-> 
-> Fix this by checking the di_next_unlinked inode field for validity and
-> clearing it if it is invalid.
-> 
-> Reported-by: John Jore <john@jore.no>
-> Fixes: 2949b4677 ("xfs: don't accept inode buffers with suspicious unlinked chains")
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Previously, XFS would fail to mount if there was an error during log
+recovery. This can occur as a result of inevitable I/O errors when
+trying to apply the log on read-only ATA devices since the ATA layer
+does not support reporting a device as read-only.
 
-Seems reasonable,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Now, if there's an error during log recovery, fall back to norecovery
+mode and mark the filesystem as read-only in the XFS and VFS layers.
 
---D
+This roughly approximates the 'errors=remount-ro' mount option in ext4
+but is implicit and the scope only covers errors during log recovery.
+Since XFS is the default filesystem for some distributions, this change
+allows users to continue to use XFS on these read-only ATA devices.
 
-> ---
-> 
-> diff --git a/repair/dinode.c b/repair/dinode.c
-> index 8af2cb25..c5d2f350 100644
-> --- a/repair/dinode.c
-> +++ b/repair/dinode.c
-> @@ -2272,6 +2272,7 @@ process_dinode_int(xfs_mount_t *mp,
->  	const int		is_free = 0;
->  	const int		is_used = 1;
->  	blkmap_t		*dblkmap = NULL;
-> +	xfs_agino_t		unlinked_ino;
->  
->  	*dirty = *isa_dir = 0;
->  	*used = is_used;
-> @@ -2351,6 +2352,23 @@ process_dinode_int(xfs_mount_t *mp,
->  		}
->  	}
->  
-> +	unlinked_ino = be32_to_cpu(dino->di_next_unlinked);
-> +	if (!xfs_verify_agino_or_null(mp, agno, unlinked_ino)) {
-> +		retval = 1;
-> +		if (!uncertain)
-> +			do_warn(_("bad next_unlinked 0x%x on inode %" PRIu64 "%c"),
-> +				(__s32)dino->di_next_unlinked, lino,
-> +				verify_mode ? '\n' : ',');
-> +		if (!verify_mode) {
-> +			if (!no_modify) {
-> +				do_warn(_(" resetting next_unlinked\n"));
-> +				clear_dinode_unlinked(mp, dino);
-> +				*dirty = 1;
-> +			} else
-> +				do_warn(_(" would reset next_unlinked\n"));
-> +		}
-> +	}
-> +
->  	/*
->  	 * We don't bother checking the CRC here - we cannot guarantee that when
->  	 * we are called here that the inode has not already been modified in
-> 
+Reviewed-by: Aaron Sierra <asierra@xes-inc.com>
+Signed-off-by: Vincent Fazio <vfazio@xes-inc.com>
+---
+ fs/xfs/xfs_log.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index f6006d94a581..f5b3528ee028 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -739,7 +739,6 @@ xfs_log_mount(
+ 			xfs_warn(mp, "log mount/recovery failed: error %d",
+ 				error);
+ 			xlog_recover_cancel(mp->m_log);
+-			goto out_destroy_ail;
+ 		}
+ 	}
+ 
+@@ -3873,10 +3872,17 @@ xfs_log_force_umount(
+ 	/*
+ 	 * If this happens during log recovery, don't worry about
+ 	 * locking; the log isn't open for business yet.
++	 *
++	 * Attempt a read-only, norecovery mount. Ensure the VFS layer is updated.
+ 	 */
+ 	if (!log ||
+ 	    log->l_flags & XLOG_ACTIVE_RECOVERY) {
+-		mp->m_flags |= XFS_MOUNT_FS_SHUTDOWN;
++
++		xfs_notice(mp,
++"Falling back to no-recovery mode. Filesystem will be inconsistent.");
++		mp->m_flags |= (XFS_MOUNT_RDONLY | XFS_MOUNT_NORECOVERY);
++		mp->m_super->s_flags |= SB_RDONLY;
++
+ 		if (mp->m_sb_bp)
+ 			mp->m_sb_bp->b_flags |= XBF_DONE;
+ 		return 0;
+-- 
+2.25.0
+
