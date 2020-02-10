@@ -6,32 +6,30 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3176BC352A3
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Feb 2020 14:36:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B900C352A3
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Feb 2020 14:43:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 11E6A2080C
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Feb 2020 14:36:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F15F20838
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Feb 2020 14:43:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727567AbgBJOgD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Feb 2020 09:36:03 -0500
-Received: from sandeen.net ([63.231.237.45]:40790 "EHLO sandeen.net"
+        id S1728354AbgBJOnG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Feb 2020 09:43:06 -0500
+Received: from sandeen.net ([63.231.237.45]:41144 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727447AbgBJOgD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 10 Feb 2020 09:36:03 -0500
+        id S1727704AbgBJOnF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 10 Feb 2020 09:43:05 -0500
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 0DD772542;
-        Mon, 10 Feb 2020 08:35:59 -0600 (CST)
+        by sandeen.net (Postfix) with ESMTPSA id 5A7572542;
+        Mon, 10 Feb 2020 08:43:02 -0600 (CST)
 Subject: Re: Bug in xfs_repair 5..4.0 / Unable to repair metadata corruption
+From:   Eric Sandeen <sandeen@sandeen.net>
 To:     John Jore <john@jore.no>,
         "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 References: <186d30f217e645728ad1f34724cbe3e7@jore.no>
  <b2babb761ed24dc986abc3073c5c47fc@jore.no>
  <74152f80-3a42-eab5-a95f-e29f03db46a9@sandeen.net>
- <c04772bf-c1da-87f2-3070-52deb2afda06@sandeen.net>
- <60f32c031f4345a2b680fbc8531f7bd3@jore.no>
-From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
  nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
@@ -74,12 +72,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <a7d151ef-2971-63f5-8656-77e55e53a51e@sandeen.net>
-Date:   Mon, 10 Feb 2020 08:36:01 -0600
+Message-ID: <cc20b7f7-a8bf-2654-2609-4571ddb1992b@sandeen.net>
+Date:   Mon, 10 Feb 2020 08:43:04 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.4.2
 MIME-Version: 1.0
-In-Reply-To: <60f32c031f4345a2b680fbc8531f7bd3@jore.no>
+In-Reply-To: <74152f80-3a42-eab5-a95f-e29f03db46a9@sandeen.net>
 Content-Type: text/plain; charset=windows-1252
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -88,16 +86,57 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/10/20 4:17 AM, John Jore wrote:
-> Hi and no, that message appears when -d is used, even if the volume is not mounted (at least on the current version from git) 
-> 
-> 
-> The help page states this for -d, given that the metadata corruption could not be repaired without the option, I gave it a try (there is no mention that this supports mounted volumes?):
-> 
-> -d           Repair dangerously.
+> John Jore wrote:
 
-Man page:
+<inserting off-list replies to these questions back into the thread>
 
--d     Repair dangerously. Allow xfs_repair to repair an XFS filesystem mounted read only.
+> On 2/9/20 9:47 PM, Eric Sandeen wrote:
+>> On 2/9/20 12:19 AM, John Jore wrote:
+>>> Hi all,
+>>>
+>>> Not sure if this is the appropriate forum to reports xfs_repair bugs? If wrong, please point me in the appropriate direction?
+>> 
+>> This is the place.
+>> 
+>>> I have a corrupted XFS volume which mounts fine, but xfs_repair is unable to repair it and volume eventually shuts down due to metadata corruption if writes are performed.
+>> 
+>> what does dmesg say when it shuts down?
+
+> I dont really want to mount the volume and perform writes as I assume this could cause more corruption...? I initially thought the issue was benign as it mounted and all appeared ok, it was only when it went offline I realized it may not have been a good idea to continue to write to the volume.
+
+You said the filesystem shuts down.  When that happened, what log messages did the kernel
+emit?
+
+...
+
+>>>
+>>> Does not matter how many times, I've lost count, I re-run xfs_repair, with, or without -d,
+
+> -d is for repairing a filesystem while mounted.  I hope you are not doing that, are you?
+> 
+> 
+> Nope. The help page says its for dangerous repairs. I gave it a go. Multiple times.
+
+From the man page: 
+
+"-d  Repair dangerously. Allow xfs_repair to repair an XFS filesystem mounted read only."
+                                                                      ^^^^^^^^^^^^^^^^^
+ >> -d is for repairing a filesystem while mounted.  I hope you are not doing that, are you?
+>> 
+>>> it never does repair the volume.
+>>> Volume is a ~12GB LV build using 4x 4TB disks in RAID 5 using a 3Ware 9690SA controller. 
+>> 
+>> Just to double check, are there any storage errors reported in dmesg?
+>> 
+>>> Any suggestions or additional data I can provide?
+>> 
+>> If you are willing to provide an xfs_metadump to me (off-list) I will see if I can
+>> reproduce it from the metadump. 
+>> 
+>> # xfs_metadump /dev/$WHATEVER metadump.img
+>> # bzip2 metadump.img
+
+Thanks for providing this offline, I'll take a look.
 
 -Eric
+
