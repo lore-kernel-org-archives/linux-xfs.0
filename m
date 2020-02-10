@@ -6,30 +6,31 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EDA0C35254
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Feb 2020 03:49:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E61F7C35254
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Feb 2020 03:59:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5B42C206ED
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Feb 2020 03:49:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BA7B7208C4
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Feb 2020 03:59:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727122AbgBJDtH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 9 Feb 2020 22:49:07 -0500
-Received: from sandeen.net ([63.231.237.45]:35494 "EHLO sandeen.net"
+        id S1727041AbgBJD72 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 9 Feb 2020 22:59:28 -0500
+Received: from sandeen.net ([63.231.237.45]:36006 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726944AbgBJDtH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 9 Feb 2020 22:49:07 -0500
+        id S1727029AbgBJD72 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 9 Feb 2020 22:59:28 -0500
 Received: from Liberator.local (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id BC69E15D96;
-        Sun,  9 Feb 2020 21:49:04 -0600 (CST)
-Subject: Re: Bug in xfs_repair 5..4.0 / Unable to repair metadata corruption
+        by sandeen.net (Postfix) with ESMTPSA id 74BA02A9C;
+        Sun,  9 Feb 2020 21:59:25 -0600 (CST)
+Subject: Re: Questions about XFS abnormal img mount test
+To:     "zhengbin (A)" <zhengbin13@huawei.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dave Chinner <david@fromorbit.com>, sandeen@redhat.com,
+        linux-xfs@vger.kernel.org
+Cc:     renxudong1@huawei.com, "zhangyi (F)" <yi.zhang@huawei.com>
+References: <ea7db6e3-8a3a-a66d-710c-4854c4e5126c@huawei.com>
 From:   Eric Sandeen <sandeen@sandeen.net>
-To:     John Jore <john@jore.no>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-References: <186d30f217e645728ad1f34724cbe3e7@jore.no>
- <b2babb761ed24dc986abc3073c5c47fc@jore.no>
- <74152f80-3a42-eab5-a95f-e29f03db46a9@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
  nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
@@ -72,31 +73,86 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <c04772bf-c1da-87f2-3070-52deb2afda06@sandeen.net>
-Date:   Sun, 9 Feb 2020 21:49:05 -0600
+Message-ID: <e33d0416-5b2d-3b8e-1a5f-41c271b1b5d6@sandeen.net>
+Date:   Sun, 9 Feb 2020 21:59:26 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.4.2
 MIME-Version: 1.0
-In-Reply-To: <74152f80-3a42-eab5-a95f-e29f03db46a9@sandeen.net>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <ea7db6e3-8a3a-a66d-710c-4854c4e5126c@huawei.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/9/20 9:47 PM, Eric Sandeen wrote:
-> On 2/9/20 12:19 AM, John Jore wrote:
+On 2/9/20 9:02 PM, zhengbin (A) wrote:
+> ### question
+> We recently used fuzz(hydra) to test 4.19 stable XFS and automatically generate tmp.img (XFS v5 format, but some metadata is wrong)
 
-...
+Since you are testing a stable series kernel, the first thing to do
+would be to test an upstream kernel and see if the problem persists.
+If it does not you can bisect to the solution.
 
->> Does not matter how many times, I've lost count, I re-run xfs_repair, with, or without -d,
+If the problem persists in the current upstream kernel, please let us know
+and we can look into it further.
+
+> Test as follows:
+> mount tmp.img tmpdir
+> cp file tmpdir
+> sync  --> stuck
 > 
-> -d is for repairing a filesystem while mounted.  I hope you are not doing that, are you?
+> ### cause analysis
+> This is because tmp.img (only 1 AG) has some problems. Using xfs_repair detect information as follows:
+> 
+> agf_freeblks 0, counted 3224 in ag 0
+> agf_longest 536874136, counted 3224 in ag 0 
+> sb_fdblocks 613, counted 3228
+> 
+> The reason sync is blocked is :
+> xfs_vm_writepages(xfs_address_space_operations--writepages)
+>   write_cache_pages
+>     xfs_do_writepage
+>       xfs_writepage_map
+> 	xfs_map_blocks
+>           allocate_blocks:
+> 	    error = xfs_iomap_write_allocate
+> 			
+> xfs_iomap_write_allocate
+>   while (count_fsb != 0) {
+>     nimaps = 0;
+>       while (nimaps == 0) { --> endless loop
+> 	nimaps = 1;
+> 	error = xfs_bmapi_write(..., &nimaps) --> nimaps becomes 0 again
+> 
+> xfs_bmapi_write
+>   xfs_bmap_alloc
+>     xfs_bmap_btalloc
+>       xfs_alloc_vextent
+> 	xfs_alloc_fix_freelist
+>           xfs_alloc_space_available --> less space than needed
+> 
+> xfs_alloc_space_available
+>   alloc_len = args->minlen + (args->alignment - 1) + args->minalignslop;
+>     longest = xfs_alloc_longest_free_extent(pag, min_free, reservation);
+>     if (longest < alloc_len)
+>        return false;
+> 
+>     /* do we have enough free space remaining for the allocation? */
+>     available = (int)(pag->pagf_freeblks + pag->pagf_flcount -
+>                         reservation - min_free - args->minleft);
+>     if (available < (int)max(args->total, alloc_len))
+>       return false;
+> 
+> ### solve
+> 1. Detect the above metadata corruption when mounting XFS?
+>    agf_freeblks 0, counted 3224 in ag 0
+>    agf_longest 536874136, counted 3224 in ag 0 
+>    sb_fdblocks 613, counted 3228
+> 
+> 2. xfs_repair detection at system boot? If xfs_repair fails, refuse to mount XFS
 
-"Repair of readonly mount complete.  Immediate reboot encouraged."
-
-er, maybe you are.  Why?
+no, we won't be running repair at every boot.
 
 -Eric
