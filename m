@@ -2,157 +2,252 @@ Return-Path: <SRS0=yyqk=36=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E61F7C35254
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Feb 2020 03:59:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3344EC35250
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Feb 2020 06:00:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BA7B7208C4
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Feb 2020 03:59:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 06C2C20715
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Feb 2020 06:00:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727041AbgBJD72 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 9 Feb 2020 22:59:28 -0500
-Received: from sandeen.net ([63.231.237.45]:36006 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727029AbgBJD72 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 9 Feb 2020 22:59:28 -0500
-Received: from Liberator.local (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 74BA02A9C;
-        Sun,  9 Feb 2020 21:59:25 -0600 (CST)
-Subject: Re: Questions about XFS abnormal img mount test
-To:     "zhengbin (A)" <zhengbin13@huawei.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dave Chinner <david@fromorbit.com>, sandeen@redhat.com,
-        linux-xfs@vger.kernel.org
-Cc:     renxudong1@huawei.com, "zhangyi (F)" <yi.zhang@huawei.com>
-References: <ea7db6e3-8a3a-a66d-710c-4854c4e5126c@huawei.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <e33d0416-5b2d-3b8e-1a5f-41c271b1b5d6@sandeen.net>
-Date:   Sun, 9 Feb 2020 21:59:26 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.4.2
+        id S1726219AbgBJGAA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Feb 2020 01:00:00 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:28032 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726061AbgBJGAA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Feb 2020 01:00:00 -0500
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01A5x2b1042252
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Feb 2020 00:59:59 -0500
+Received: from e06smtp05.uk.ibm.com (e06smtp05.uk.ibm.com [195.75.94.101])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2y1umr75mc-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Feb 2020 00:59:59 -0500
+Received: from localhost
+        by e06smtp05.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.ibm.com>;
+        Mon, 10 Feb 2020 05:59:57 -0000
+Received: from b06cxnps4076.portsmouth.uk.ibm.com (9.149.109.198)
+        by e06smtp05.uk.ibm.com (192.168.101.135) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
+        Mon, 10 Feb 2020 05:59:54 -0000
+Received: from d06av25.portsmouth.uk.ibm.com (d06av25.portsmouth.uk.ibm.com [9.149.105.61])
+        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 01A5xrRO55181396
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 10 Feb 2020 05:59:53 GMT
+Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 6E2A011C04C;
+        Mon, 10 Feb 2020 05:59:53 +0000 (GMT)
+Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id B131011C058;
+        Mon, 10 Feb 2020 05:59:52 +0000 (GMT)
+Received: from localhost.localdomain (unknown [9.124.35.21])
+        by d06av25.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Mon, 10 Feb 2020 05:59:52 +0000 (GMT)
+From:   Chandan Rajendra <chandan@linux.ibm.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org,
+        Allison Collins <allison.henderson@oracle.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 25/30] xfs: lift cursor copy in/out into xfs_ioc_attr_list
+Date:   Mon, 10 Feb 2020 11:32:39 +0530
+Organization: IBM
+In-Reply-To: <20200129170310.51370-26-hch@lst.de>
+References: <20200129170310.51370-1-hch@lst.de> <20200129170310.51370-26-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <ea7db6e3-8a3a-a66d-710c-4854c4e5126c@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+X-TM-AS-GCONF: 00
+x-cbid: 20021005-0020-0000-0000-000003A8A963
+X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
+x-cbparentid: 20021005-0021-0000-0000-00002200826B
+Message-Id: <3888160.J6lqWWilKB@localhost.localdomain>
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
+ definitions=2020-02-10_01:2020-02-07,2020-02-10 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 bulkscore=0
+ spamscore=0 priorityscore=1501 clxscore=1015 impostorscore=0
+ malwarescore=0 phishscore=0 suspectscore=5 mlxscore=0 mlxlogscore=999
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2002100049
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/9/20 9:02 PM, zhengbin (A) wrote:
-> ### question
-> We recently used fuzz(hydra) to test 4.19 stable XFS and automatically generate tmp.img (XFS v5 format, but some metadata is wrong)
+On Wednesday, January 29, 2020 10:33 PM Christoph Hellwig wrote: 
+> Lift the common code to copy the cursor from and to user space into
+> xfs_ioc_attr_list.  Note that this means we copy in twice now as
+> the cursor is in the middle of the conaining structure, but we never
+> touch the memory for the original copy.  Doing so keeps the cursor
+> handling isolated in the common helper.
+>
 
-Since you are testing a stable series kernel, the first thing to do
-would be to test an upstream kernel and see if the problem persists.
-If it does not you can bisect to the solution.
+Logically, code flow remains the same.
 
-If the problem persists in the current upstream kernel, please let us know
-and we can look into it further.
+Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
 
-> Test as follows:
-> mount tmp.img tmpdir
-> cp file tmpdir
-> sync  --> stuck
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_ioctl.c   | 36 +++++++++++++++---------------------
+>  fs/xfs/xfs_ioctl.h   |  2 +-
+>  fs/xfs/xfs_ioctl32.c | 19 ++++---------------
+>  3 files changed, 20 insertions(+), 37 deletions(-)
 > 
-> ### cause analysis
-> This is because tmp.img (only 1 AG) has some problems. Using xfs_repair detect information as follows:
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index cdb3800dfcef..5d160e82778e 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -354,9 +354,10 @@ xfs_ioc_attr_list(
+>  	void __user			*ubuf,
+>  	int				bufsize,
+>  	int				flags,
+> -	struct attrlist_cursor_kern	*cursor)
+> +	struct xfs_attrlist_cursor __user *ucursor)
+>  {
+>  	struct xfs_attr_list_context	context;
+> +	struct attrlist_cursor_kern	cursor;
+>  	struct xfs_attrlist		*alist;
+>  	void				*buffer;
+>  	int				error;
+> @@ -376,10 +377,12 @@ xfs_ioc_attr_list(
+>  	/*
+>  	 * Validate the cursor.
+>  	 */
+> -	if (cursor->pad1 || cursor->pad2)
+> +	if (copy_from_user(&cursor, ucursor, sizeof(cursor)))
+> +		return -EFAULT;
+> +	if (cursor.pad1 || cursor.pad2)
+>  		return -EINVAL;
+> -	if ((cursor->initted == 0) &&
+> -	    (cursor->hashval || cursor->blkno || cursor->offset))
+> +	if ((cursor.initted == 0) &&
+> +	    (cursor.hashval || cursor.blkno || cursor.offset))
+>  		return -EINVAL;
 > 
-> agf_freeblks 0, counted 3224 in ag 0
-> agf_longest 536874136, counted 3224 in ag 0 
-> sb_fdblocks 613, counted 3228
+>  	buffer = kmem_zalloc_large(bufsize, 0);
+> @@ -391,7 +394,7 @@ xfs_ioc_attr_list(
+>  	 */
+>  	memset(&context, 0, sizeof(context));
+>  	context.dp = dp;
+> -	context.cursor = cursor;
+> +	context.cursor = &cursor;
+>  	context.resynch = 1;
+>  	context.flags = flags;
+>  	context.buffer = buffer;
+> @@ -408,7 +411,8 @@ xfs_ioc_attr_list(
+>  	if (error)
+>  		goto out_free;
 > 
-> The reason sync is blocked is :
-> xfs_vm_writepages(xfs_address_space_operations--writepages)
->   write_cache_pages
->     xfs_do_writepage
->       xfs_writepage_map
-> 	xfs_map_blocks
->           allocate_blocks:
-> 	    error = xfs_iomap_write_allocate
-> 			
-> xfs_iomap_write_allocate
->   while (count_fsb != 0) {
->     nimaps = 0;
->       while (nimaps == 0) { --> endless loop
-> 	nimaps = 1;
-> 	error = xfs_bmapi_write(..., &nimaps) --> nimaps becomes 0 again
+> -	if (copy_to_user(ubuf, buffer, bufsize))
+> +	if (copy_to_user(ubuf, buffer, bufsize) ||
+> +	    copy_to_user(ucursor, &cursor, sizeof(cursor)))
+>  		error = -EFAULT;
+>  out_free:
+>  	kmem_free(buffer);
+> @@ -418,33 +422,23 @@ xfs_ioc_attr_list(
+>  STATIC int
+>  xfs_attrlist_by_handle(
+>  	struct file		*parfilp,
+> -	void			__user *arg)
+> +	struct xfs_fsop_attrlist_handlereq __user *p)
+>  {
+> -	int			error = -ENOMEM;
+> -	attrlist_cursor_kern_t	*cursor;
+> -	struct xfs_fsop_attrlist_handlereq __user	*p = arg;
+> -	xfs_fsop_attrlist_handlereq_t al_hreq;
+> +	struct xfs_fsop_attrlist_handlereq al_hreq;
+>  	struct dentry		*dentry;
+> +	int			error = -ENOMEM;
 > 
-> xfs_bmapi_write
->   xfs_bmap_alloc
->     xfs_bmap_btalloc
->       xfs_alloc_vextent
-> 	xfs_alloc_fix_freelist
->           xfs_alloc_space_available --> less space than needed
+>  	if (!capable(CAP_SYS_ADMIN))
+>  		return -EPERM;
+> -	if (copy_from_user(&al_hreq, arg, sizeof(xfs_fsop_attrlist_handlereq_t)))
+> +	if (copy_from_user(&al_hreq, p, sizeof(al_hreq)))
+>  		return -EFAULT;
 > 
-> xfs_alloc_space_available
->   alloc_len = args->minlen + (args->alignment - 1) + args->minalignslop;
->     longest = xfs_alloc_longest_free_extent(pag, min_free, reservation);
->     if (longest < alloc_len)
->        return false;
+>  	dentry = xfs_handlereq_to_dentry(parfilp, &al_hreq.hreq);
+>  	if (IS_ERR(dentry))
+>  		return PTR_ERR(dentry);
 > 
->     /* do we have enough free space remaining for the allocation? */
->     available = (int)(pag->pagf_freeblks + pag->pagf_flcount -
->                         reservation - min_free - args->minleft);
->     if (available < (int)max(args->total, alloc_len))
->       return false;
+> -	cursor = (attrlist_cursor_kern_t *)&al_hreq.pos;
+>  	error = xfs_ioc_attr_list(XFS_I(d_inode(dentry)), al_hreq.buffer,
+> -				  al_hreq.buflen, al_hreq.flags, cursor);
+> -	if (error)
+> -		goto out_dput;
+> -
+> -	if (copy_to_user(&p->pos, cursor, sizeof(attrlist_cursor_kern_t)))
+> -		error = -EFAULT;
+> -
+> -out_dput:
+> +				  al_hreq.buflen, al_hreq.flags, &p->pos);
+>  	dput(dentry);
+>  	return error;
+>  }
+> diff --git a/fs/xfs/xfs_ioctl.h b/fs/xfs/xfs_ioctl.h
+> index ec6448b259fb..d6e8000ad825 100644
+> --- a/fs/xfs/xfs_ioctl.h
+> +++ b/fs/xfs/xfs_ioctl.h
+> @@ -40,7 +40,7 @@ int xfs_ioc_attrmulti_one(struct file *parfilp, struct inode *inode,
+>  		uint32_t opcode, void __user *uname, void __user *value,
+>  		uint32_t *len, uint32_t flags);
+>  int xfs_ioc_attr_list(struct xfs_inode *dp, void __user *ubuf, int bufsize,
+> -	int flags, struct attrlist_cursor_kern *cursor);
+> +	int flags, struct xfs_attrlist_cursor __user *ucursor);
 > 
-> ### solve
-> 1. Detect the above metadata corruption when mounting XFS?
->    agf_freeblks 0, counted 3224 in ag 0
->    agf_longest 536874136, counted 3224 in ag 0 
->    sb_fdblocks 613, counted 3228
+>  extern struct dentry *
+>  xfs_handle_to_dentry(
+> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+> index 17e14916757b..c1771e728117 100644
+> --- a/fs/xfs/xfs_ioctl32.c
+> +++ b/fs/xfs/xfs_ioctl32.c
+> @@ -352,35 +352,24 @@ xfs_compat_handlereq_to_dentry(
+>  STATIC int
+>  xfs_compat_attrlist_by_handle(
+>  	struct file		*parfilp,
+> -	void			__user *arg)
+> +	compat_xfs_fsop_attrlist_handlereq_t __user *p)
+>  {
+> -	int			error;
+> -	attrlist_cursor_kern_t	*cursor;
+> -	compat_xfs_fsop_attrlist_handlereq_t __user *p = arg;
+>  	compat_xfs_fsop_attrlist_handlereq_t al_hreq;
+>  	struct dentry		*dentry;
+> +	int			error;
 > 
-> 2. xfs_repair detection at system boot? If xfs_repair fails, refuse to mount XFS
+>  	if (!capable(CAP_SYS_ADMIN))
+>  		return -EPERM;
+> -	if (copy_from_user(&al_hreq, arg,
+> -			   sizeof(compat_xfs_fsop_attrlist_handlereq_t)))
+> +	if (copy_from_user(&al_hreq, p, sizeof(al_hreq)))
+>  		return -EFAULT;
+> 
+>  	dentry = xfs_compat_handlereq_to_dentry(parfilp, &al_hreq.hreq);
+>  	if (IS_ERR(dentry))
+>  		return PTR_ERR(dentry);
+> 
+> -	cursor = (attrlist_cursor_kern_t *)&al_hreq.pos;
+>  	error = xfs_ioc_attr_list(XFS_I(d_inode(dentry)),
+>  			compat_ptr(al_hreq.buffer), al_hreq.buflen,
+> -			al_hreq.flags, cursor);
+> -	if (error)
+> -		goto out_dput;
+> -
+> -	if (copy_to_user(&p->pos, cursor, sizeof(attrlist_cursor_kern_t)))
+> -		error = -EFAULT;
+> -
+> -out_dput:
+> +			al_hreq.flags, &p->pos);
+>  	dput(dentry);
+>  	return error;
+>  }
+> 
 
-no, we won't be running repair at every boot.
 
--Eric
+-- 
+chandan
+
+
+
