@@ -2,33 +2,34 @@ Return-Path: <SRS0=yyqk=36=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F64DC35254
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Feb 2020 03:47:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EDA0C35254
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Feb 2020 03:49:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1117D208C4
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Feb 2020 03:47:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B42C206ED
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Feb 2020 03:49:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726958AbgBJDrV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 9 Feb 2020 22:47:21 -0500
-Received: from sandeen.net ([63.231.237.45]:35398 "EHLO sandeen.net"
+        id S1727122AbgBJDtH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 9 Feb 2020 22:49:07 -0500
+Received: from sandeen.net ([63.231.237.45]:35494 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726944AbgBJDrV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 9 Feb 2020 22:47:21 -0500
+        id S1726944AbgBJDtH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 9 Feb 2020 22:49:07 -0500
 Received: from Liberator.local (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 652E615D96;
-        Sun,  9 Feb 2020 21:47:18 -0600 (CST)
+        by sandeen.net (Postfix) with ESMTPSA id BC69E15D96;
+        Sun,  9 Feb 2020 21:49:04 -0600 (CST)
 Subject: Re: Bug in xfs_repair 5..4.0 / Unable to repair metadata corruption
+From:   Eric Sandeen <sandeen@sandeen.net>
 To:     John Jore <john@jore.no>,
         "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 References: <186d30f217e645728ad1f34724cbe3e7@jore.no>
  <b2babb761ed24dc986abc3073c5c47fc@jore.no>
-From:   Eric Sandeen <sandeen@sandeen.net>
+ <74152f80-3a42-eab5-a95f-e29f03db46a9@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
  nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
@@ -71,111 +72,31 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <74152f80-3a42-eab5-a95f-e29f03db46a9@sandeen.net>
-Date:   Sun, 9 Feb 2020 21:47:18 -0600
+Message-ID: <c04772bf-c1da-87f2-3070-52deb2afda06@sandeen.net>
+Date:   Sun, 9 Feb 2020 21:49:05 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.4.2
 MIME-Version: 1.0
-In-Reply-To: <b2babb761ed24dc986abc3073c5c47fc@jore.no>
+In-Reply-To: <74152f80-3a42-eab5-a95f-e29f03db46a9@sandeen.net>
 Content-Type: text/plain; charset=windows-1252
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/9/20 12:19 AM, John Jore wrote:
-> Hi all,
+On 2/9/20 9:47 PM, Eric Sandeen wrote:
+> On 2/9/20 12:19 AM, John Jore wrote:
+
+...
+
+>> Does not matter how many times, I've lost count, I re-run xfs_repair, with, or without -d,
 > 
-> Not sure if this is the appropriate forum to reports xfs_repair bugs? If wrong, please point me in the appropriate direction?
+> -d is for repairing a filesystem while mounted.  I hope you are not doing that, are you?
 
-This is the place.
+"Repair of readonly mount complete.  Immediate reboot encouraged."
 
-> I have a corrupted XFS volume which mounts fine, but xfs_repair is unable to repair it and volume eventually shuts down due to metadata corruption if writes are performed.
-
-what does dmesg say when it shuts down?
-
-> 
-> Originally I used xfs_repair from CentOS 8.1.1911, but cloned latest xfs_repair from git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git (Today, Feb 9th, reports as version 5.4.0)
-> 
-> 
-> Phase 3 - for each AG...
->         - scan and clear agi unlinked lists...
->         - 16:08:04: scanning agi unlinked lists - 64 of 64 allocation groups done
->         - process known inodes and perform inode discovery...
->         - agno = 45
->         - agno = 15
->         - agno = 0
->         - agno = 30
->         - agno = 60
->         - agno = 46
->         - agno = 16
-> Metadata corruption detected at 0x4330e3, xfs_inode block 0x17312a3f0/0x2000
->         - agno = 61
->         - agno = 31
->         - agno = 47
->         - agno = 62
->         - agno = 48
->         - agno = 49
->         - agno = 32
->         - agno = 33
->         - agno = 17
->         - agno = 1
-> bad magic number 0x0 on inode 18253615584
-> bad version number 0x0 on inode 18253615584
-> bad magic number 0x0 on inode 18253615585
-> bad version number 0x0 on inode 18253615585
-> bad magic number 0x0 on inode 18253615586 
-> .....
-> bad magic number 0x0 on inode 18253615584, resetting magic number
-> bad version number 0x0 on inode 18253615584, resetting version number
-> bad magic number 0x0 on inode 18253615585, resetting magic number
-> bad version number 0x0 on inode 18253615585, resetting version number
-> bad magic number 0x0 on inode 18253615586, resetting magic number
-> bad version number 0x0 on inode 18253615586, resetting version number
-
-Looks like a whole chunk of inodes with at least 0 magic numbers.
-
-> ....
->         - agno = 16
->         - agno = 17
-> Metadata corruption detected at 0x4330e3, xfs_inode block 0x17312a3f0/0x2000
->         - agno = 18
->         - agno = 19
-> ...   
-> Phase 7 - verify and correct link counts...
->         - 16:10:41: verify and correct link counts - 64 of 64 allocation groups done
-> Metadata corruption detected at 0x433385, xfs_inode block 0x17312a3f0/0x2000
-> libxfs_writebufr: write verifier failed on xfs_inode bno 0x17312a3f0/0x2000
-
-This bit seems problematic, I guess it's unable to write the updated inode buffer,
-due to some corruption, which presumably is why you keep tripping over the same
-corruption each time.
-
-> releasing dirty buffer (bulk) to free list!
-> 
->  
-> 
-> Does not matter how many times, I've lost count, I re-run xfs_repair, with, or without -d,
-
--d is for repairing a filesystem while mounted.  I hope you are not doing that, are you?
-
-> it never does repair the volume.
-> Volume is a ~12GB LV build using 4x 4TB disks in RAID 5 using a 3Ware 9690SA controller. 
-
-Just to double check, are there any storage errors reported in dmesg?
-
-> Any suggestions or additional data I can provide?
-
-If you are willing to provide an xfs_metadump to me (off-list) I will see if I can
-reproduce it from the metadump. 
-
-# xfs_metadump /dev/$WHATEVER metadump.img
-# bzip2 metadump.img
+er, maybe you are.  Why?
 
 -Eric
-
-> 
-> John
-> 
