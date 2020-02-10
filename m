@@ -2,179 +2,102 @@ Return-Path: <SRS0=yyqk=36=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8245C352A3
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Feb 2020 13:56:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3176BC352A3
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Feb 2020 14:36:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9BE6D206ED
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Feb 2020 13:56:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 11E6A2080C
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Feb 2020 14:36:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728045AbgBJN45 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Feb 2020 08:56:57 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:38652 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727918AbgBJN45 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Feb 2020 08:56:57 -0500
-Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01ADsObb057430
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Feb 2020 08:56:56 -0500
-Received: from e06smtp05.uk.ibm.com (e06smtp05.uk.ibm.com [195.75.94.101])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2y1tp190nt-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Feb 2020 08:56:55 -0500
-Received: from localhost
-        by e06smtp05.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.ibm.com>;
-        Mon, 10 Feb 2020 13:56:54 -0000
-Received: from b06cxnps4075.portsmouth.uk.ibm.com (9.149.109.197)
-        by e06smtp05.uk.ibm.com (192.168.101.135) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
-        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Mon, 10 Feb 2020 13:56:52 -0000
-Received: from d06av24.portsmouth.uk.ibm.com (d06av24.portsmouth.uk.ibm.com [9.149.105.60])
-        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 01ADupoE59965672
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 10 Feb 2020 13:56:51 GMT
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 563954203F;
-        Mon, 10 Feb 2020 13:56:51 +0000 (GMT)
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 77EA842041;
-        Mon, 10 Feb 2020 13:56:50 +0000 (GMT)
-Received: from localhost.localdomain (unknown [9.85.94.7])
-        by d06av24.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Mon, 10 Feb 2020 13:56:50 +0000 (GMT)
-From:   Chandan Rajendra <chandan@linux.ibm.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org,
-        Allison Collins <allison.henderson@oracle.com>
-Subject: Re: [PATCH 29/30] xfs: remove XFS_DA_OP_INCOMPLETE
-Date:   Mon, 10 Feb 2020 19:29:37 +0530
-Organization: IBM
-In-Reply-To: <20200129170310.51370-30-hch@lst.de>
-References: <20200129170310.51370-1-hch@lst.de> <20200129170310.51370-30-hch@lst.de>
+        id S1727567AbgBJOgD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Feb 2020 09:36:03 -0500
+Received: from sandeen.net ([63.231.237.45]:40790 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727447AbgBJOgD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 10 Feb 2020 09:36:03 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 0DD772542;
+        Mon, 10 Feb 2020 08:35:59 -0600 (CST)
+Subject: Re: Bug in xfs_repair 5..4.0 / Unable to repair metadata corruption
+To:     John Jore <john@jore.no>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+References: <186d30f217e645728ad1f34724cbe3e7@jore.no>
+ <b2babb761ed24dc986abc3073c5c47fc@jore.no>
+ <74152f80-3a42-eab5-a95f-e29f03db46a9@sandeen.net>
+ <c04772bf-c1da-87f2-3070-52deb2afda06@sandeen.net>
+ <60f32c031f4345a2b680fbc8531f7bd3@jore.no>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <a7d151ef-2971-63f5-8656-77e55e53a51e@sandeen.net>
+Date:   Mon, 10 Feb 2020 08:36:01 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.4.2
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-X-TM-AS-GCONF: 00
-x-cbid: 20021013-0020-0000-0000-000003A8D0CD
-X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 20021013-0021-0000-0000-00002200ABA2
-Message-Id: <2409782.K6jDtV8EAe@localhost.localdomain>
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
- definitions=2020-02-10_04:2020-02-10,2020-02-10 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
- mlxlogscore=999 spamscore=0 clxscore=1015 bulkscore=0 phishscore=0
- mlxscore=0 lowpriorityscore=0 suspectscore=1 adultscore=0 impostorscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002100110
+In-Reply-To: <60f32c031f4345a2b680fbc8531f7bd3@jore.no>
+Content-Type: text/plain; charset=windows-1252
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wednesday, January 29, 2020 10:33 PM Christoph Hellwig wrote: 
-> Now that we use the on-disk flags field also for the interface to the
-> lower level attr routines we can use the XFS_ATTR_INCOMPLETE definition
-> from the on-disk format directly instead.
->
-
-The combination of args->attr_namespace and XFS_ATTR_INCOMPLETE correctly
-replaces that of args->op_flags and XFS_DA_OP_INCOMPLETE.
-
-Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_attr.c      |  2 +-
->  fs/xfs/libxfs/xfs_attr_leaf.c | 15 ++++++---------
->  fs/xfs/libxfs/xfs_types.h     |  6 ++----
->  3 files changed, 9 insertions(+), 14 deletions(-)
+On 2/10/20 4:17 AM, John Jore wrote:
+> Hi and no, that message appears when -d is used, even if the volume is not mounted (at least on the current version from git) 
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index d5c112b6dcdd..23e0d8ce39f8 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -898,7 +898,7 @@ xfs_attr_node_addname(
->  		 * The INCOMPLETE flag means that we will find the "old"
->  		 * attr, not the "new" one.
->  		 */
-> -		args->op_flags |= XFS_DA_OP_INCOMPLETE;
-> +		args->attr_namespace |= XFS_ATTR_INCOMPLETE;
->  		state = xfs_da_state_alloc();
->  		state->args = args;
->  		state->mp = mp;
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index 9081ba7af90a..fae322105457 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -456,7 +456,12 @@ xfs_attr_match(
->  		return false;
->  	if (memcmp(args->name, name, namelen) != 0)
->  		return false;
-> -	if (args->attr_namespace != (flags & XFS_ATTR_NSP_ONDISK_MASK))
-> +	/*
-> +	 * If we are looking for incomplete entries, show only those, else only
-> +	 * show complete entries.
-> +	 */
-> +	if (args->attr_namespace !=
-> +	    (flags & (XFS_ATTR_NSP_ONDISK_MASK | XFS_ATTR_INCOMPLETE)))
->  		return false;
->  	return true;
->  }
-> @@ -2387,14 +2392,6 @@ xfs_attr3_leaf_lookup_int(
->  /*
->   * GROT: Add code to remove incomplete entries.
->   */
-> -		/*
-> -		 * If we are looking for INCOMPLETE entries, show only those.
-> -		 * If we are looking for complete entries, show only those.
-> -		 */
-> -		if (!!(args->op_flags & XFS_DA_OP_INCOMPLETE) !=
-> -		    !!(entry->flags & XFS_ATTR_INCOMPLETE)) {
-> -			continue;
-> -		}
->  		if (entry->flags & XFS_ATTR_LOCAL) {
->  			name_loc = xfs_attr3_leaf_name_local(leaf, probe);
->  			if (!xfs_attr_match(args, name_loc->namelen,
-> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-> index 2b02f854ebaf..a2005e2d3baa 100644
-> --- a/fs/xfs/libxfs/xfs_types.h
-> +++ b/fs/xfs/libxfs/xfs_types.h
-> @@ -194,7 +194,7 @@ typedef struct xfs_da_args {
->  	uint8_t		filetype;	/* filetype of inode for directories */
->  	void		*value;		/* set of bytes (maybe contain NULLs) */
->  	int		valuelen;	/* length of value */
-> -	unsigned int	attr_namespace;	/* XFS_ATTR_{ROOT,SECURE} */
-> +	unsigned int	attr_namespace;	/* XFS_ATTR_{ROOT,SECURE,INCOMPLETE} */
->  	unsigned int	attr_flags;	/* XATTR_{CREATE,REPLACE} */
->  	xfs_dahash_t	hashval;	/* hash value of name */
->  	xfs_ino_t	inumber;	/* input/output inode number */
-> @@ -225,7 +225,6 @@ typedef struct xfs_da_args {
->  #define XFS_DA_OP_OKNOENT	0x0008	/* lookup/add op, ENOENT ok, else die */
->  #define XFS_DA_OP_CILOOKUP	0x0010	/* lookup to return CI name if found */
->  #define XFS_DA_OP_NOTIME	0x0020	/* don't update inode timestamps */
-> -#define XFS_DA_OP_INCOMPLETE	0x0040	/* lookup INCOMPLETE attr keys */
 > 
->  #define XFS_DA_OP_FLAGS \
->  	{ XFS_DA_OP_JUSTCHECK,	"JUSTCHECK" }, \
-> @@ -233,8 +232,7 @@ typedef struct xfs_da_args {
->  	{ XFS_DA_OP_ADDNAME,	"ADDNAME" }, \
->  	{ XFS_DA_OP_OKNOENT,	"OKNOENT" }, \
->  	{ XFS_DA_OP_CILOOKUP,	"CILOOKUP" }, \
-> -	{ XFS_DA_OP_NOTIME,	"NOTIME" }, \
-> -	{ XFS_DA_OP_INCOMPLETE,	"INCOMPLETE" }
-> +	{ XFS_DA_OP_NOTIME,	"NOTIME" }
+> The help page states this for -d, given that the metadata corruption could not be repaired without the option, I gave it a try (there is no mention that this supports mounted volumes?):
 > 
->  /*
->   * Type verifier functions
-> 
+> -d           Repair dangerously.
 
+Man page:
 
--- 
-chandan
+-d     Repair dangerously. Allow xfs_repair to repair an XFS filesystem mounted read only.
 
-
-
+-Eric
