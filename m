@@ -2,134 +2,96 @@ Return-Path: <SRS0=3qtu=37=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77E1BC352A3
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Feb 2020 08:19:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CECD8C352A3
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Feb 2020 09:08:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 403F620714
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Feb 2020 08:19:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 907FE20842
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Feb 2020 09:08:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="ii6MWg1H";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="IE59z5+q"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eJ7hUBti"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727762AbgBKITR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Feb 2020 03:19:17 -0500
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:27006 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727613AbgBKITR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Feb 2020 03:19:17 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1581409157; x=1612945157;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=FDQF7YmUbf7aiT8pwm9gfOrtDMSYksmXliNItnHvbJM=;
-  b=ii6MWg1HKZX+3NNN5/LQ0JC1jWrdLKgnKm0P3SAyC9CFyMKHUXKXLgIn
-   W0Xx7xCEuMUMaRMLD/DhNeEigBrEeN6+TNAYwggwbYpEJ6/5qbp3mCiOE
-   YdR/DVl2nrlU5shgxFn7N239YROdgPQ1HLFR2KXNxxcRf1oRE5WxcnRMd
-   b6ctcXE84bDt7OZEkblWo9/5McGjkXDLMoXPF7fi+Y2HD2I/gJCy+VjPh
-   rflejigzhd//R1d8bm3mUy2x5w4DDfPQWECLubsPQmVJDprBxY3aezhJO
-   U75hOZF+x4jZC+H0LaCgxiPCCXs/VDkqPyL2yXvGiQA0hoq+O5+J2L+8O
-   Q==;
-IronPort-SDR: TTpGiZ+CrPrMqQD08kY+UMnaQ1VC8AGR3aneqoIUUY8TfLa6+gcKWb/1LnnK2sf5VVJpNfwodD
- eprhvkWp2D1y/As6LgwFt3RkNXQxROHtkx4jMzzq2dBDB1cytEO8cGS3akB+WaKNt8yrJkbpj1
- zT0ezXDptkOTRqEcQHdOzE/cfAUd5swPx02ua+4uNLHkxGkhvTzn5PlkNbyziR0tAnVQudOrXx
- PQTfZviWsfowVKubfDgGAxm3k1l4SLnUaZ45XNsnA1nGNnC+rLBrqC2Xyf9me48/6WhV6Eh+5+
- wJY=
-X-IronPort-AV: E=Sophos;i="5.70,428,1574092800"; 
-   d="scan'208";a="130107720"
-Received: from mail-mw2nam12lp2049.outbound.protection.outlook.com (HELO NAM12-MW2-obe.outbound.protection.outlook.com) ([104.47.66.49])
-  by ob1.hgst.iphmx.com with ESMTP; 11 Feb 2020 16:19:16 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=DbOZ8PGX+pHGj8jZlYa7H686mXG5I5hjC92WnaqgN4AaL1gNhTtl9g7728BhIL67Pa0SEs1xZAyZAGhEQTofn5LAFhTdska0A0PzVs6pGyB1XgR/LCfyB6uGVWIuSGnL5qUFNBrtePvKSatxT9R3CdxPvlAvj40OFIEQYeF2Oo7BTj9ik96CBmVvuYLJiPOTyO7zaQhEHWp+ChZN9m6YA2j1WApo9+wqzAPG5cLPt7R4oSOCxigfzlOyrKE2dPYb4Syn/UBTKOOE7pTe2ZtcFP+rV5U8LLsnlfd7uswgujETcxbAq1xcN6PJboAI7yit67u/PIGryqHT4d6nivZY8g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=FDQF7YmUbf7aiT8pwm9gfOrtDMSYksmXliNItnHvbJM=;
- b=alcXa2EsGIL1Z1u/bimwyTA7Z1Gty5+WjaSIQpFBB4K9SRRxxKCP2vYM00yM+hHWb+rQEhkqX9Mm69yJdDGCIDH8Qq15nK31VXN73KaKL9u9gqbR7kEkBOmM852kPwJ/9T28xpwxHsiHXZahx5Ur+S5/SOIlrCtM2cmkVGYHl1ADIsMVFJahFmAJo51uFIAHT0QfeMSuaYrgJXFEgGc30FC9URtbi7lk6yddTRk2o/a3VGsopKE/9U/BC/O2/zjJL2VbgJp4JOo8wNq3qM0VBAAiLyziETvtJ6T54/vgOTszX0Qw9P5trPAli3mSLfXHlw7Y+6Iuo309lC5cCyFJ+A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=FDQF7YmUbf7aiT8pwm9gfOrtDMSYksmXliNItnHvbJM=;
- b=IE59z5+qfoiES6btuEYw/qK3SrBZJVRQBphYhK1Uw3zNftDlj6VNzH1BRJ/yIyu/BKfKxpJWUYdnjofN5YZFl0xUfRoZXWvJQ/sZzWWAakENjX/lLozVrqWiPsn83F7FeohsxPsQw6bb89DWHJS5tPdZl9XZr98kEnwJbxW5UG0=
-Received: from SN4PR0401MB3598.namprd04.prod.outlook.com (10.167.139.149) by
- SN4PR0401MB3600.namprd04.prod.outlook.com (10.167.133.31) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2707.23; Tue, 11 Feb 2020 08:19:14 +0000
-Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
- ([fe80::e5f5:84d2:cabc:da32]) by SN4PR0401MB3598.namprd04.prod.outlook.com
- ([fe80::e5f5:84d2:cabc:da32%5]) with mapi id 15.20.2707.030; Tue, 11 Feb 2020
- 08:19:14 +0000
-From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-To:     Matthew Wilcox <willy@infradead.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
-CC:     "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
-        "linux-erofs@lists.ozlabs.org" <linux-erofs@lists.ozlabs.org>,
-        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-        "linux-f2fs-devel@lists.sourceforge.net" 
-        <linux-f2fs-devel@lists.sourceforge.net>,
-        "cluster-devel@redhat.com" <cluster-devel@redhat.com>,
-        "ocfs2-devel@oss.oracle.com" <ocfs2-devel@oss.oracle.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH v5 01/13] mm: Fix the return type of
- __do_page_cache_readahead
-Thread-Topic: [PATCH v5 01/13] mm: Fix the return type of
- __do_page_cache_readahead
-Thread-Index: AQHV4HdLtCSr29ig40CbWBOKZ39/Iw==
-Date:   Tue, 11 Feb 2020 08:19:14 +0000
-Message-ID: <SN4PR0401MB3598602411B75B46F5267B829B180@SN4PR0401MB3598.namprd04.prod.outlook.com>
-References: <20200211010348.6872-1-willy@infradead.org>
- <20200211010348.6872-2-willy@infradead.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Johannes.Thumshirn@wdc.com; 
-x-originating-ip: [129.253.240.72]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 783a7c5e-dfd1-4f05-3ff8-08d7aecb14cd
-x-ms-traffictypediagnostic: SN4PR0401MB3600:
-x-microsoft-antispam-prvs: <SN4PR0401MB3600BE4DF5FBBC2A07AC38609B180@SN4PR0401MB3600.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:3383;
-x-forefront-prvs: 0310C78181
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(376002)(39860400002)(366004)(136003)(396003)(346002)(199004)(189003)(8936002)(9686003)(86362001)(110136005)(55016002)(52536014)(5660300002)(7416002)(66446008)(54906003)(8676002)(64756008)(66556008)(558084003)(81156014)(81166006)(316002)(76116006)(91956017)(66946007)(66476007)(26005)(33656002)(53546011)(6506007)(7696005)(71200400001)(478600001)(186003)(2906002)(4326008);DIR:OUT;SFP:1102;SCL:1;SRVR:SN4PR0401MB3600;H:SN4PR0401MB3598.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: J13A6ReA9TSTt1c6bdBpTxtzneb1Ofpyc3HHteWqvtuXD5BIp25wWX5Jj9rty+z8IuBPjt/gIuHTYUfEoYTkHZrnnDILfKSy45g6ryMvZTy61yO2Q+D6ULUDMigsCCjurNntAWZl0Xm/OPaC21h9Uhg9UsfGDU8yRR7pJp/4RtZPLu8Aa+pkHWfnddkRl+me9f0vLAAtyn91TZCvcIqa+pIWQqEAD41sQwhxTwrZ9YYK66o/AOKckkO5BFfhPOEMko2jHkIElHDKQ2xLih2gDaEWxDyXVbnwiNcDQ14fDOc61glpj0fPDXD9wLRF+uURWIoMWc/4/v/xEcylXlRAUCkkC3JGDfLGO5P1vDoTTsL8HhGcdLdCMRrLdg1L3yxaPXNcB6PpBTBIbmB1SpRGyXF5mmIccM3isWoZ/4rvj3nw9fQi+IKdlplFkQzhShVs
-x-ms-exchange-antispam-messagedata: gfEyOKrwkPk8qghET5Arq6HHfBJaC0LBjYfYag1yvJsZYT4ZAH1sGnViMxzNGt5I12U+7zjXvc7zduxy+tXWxZcvuxjY2ApX92T48YFRi0PQXQLlLzOjG4KsqnzrprU7tnMP+4Gc0+BVeUyg7Qnipg==
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1727566AbgBKJIn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Feb 2020 04:08:43 -0500
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:37768 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725787AbgBKJIn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Feb 2020 04:08:43 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1581412122;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=r5Qmrcm0vXYf+rMkk26UDWeUoUNnNuzer/IIUzBGlWM=;
+        b=eJ7hUBti84blaTczlh3KjHkOOUTFCH98FfQKdZMEg9UW2NbMH0CStn25nt+e6L8pSK7wAS
+        dPokYJ2P6kA4hkfWGF6Q/haVtpp5bvb6FteyhBx8Fh/20e1nNsQMsAKnoerx5D6d4AydFi
+        ZlqK55sRvRczNPDtw3gu+E7/zWTpzEE=
+Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
+ [209.85.128.69]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-191-4cXPsET9PD2cwwSq4j3wQw-1; Tue, 11 Feb 2020 04:08:40 -0500
+X-MC-Unique: 4cXPsET9PD2cwwSq4j3wQw-1
+Received: by mail-wm1-f69.google.com with SMTP id t17so1047671wmi.7
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Feb 2020 01:08:40 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to;
+        bh=r5Qmrcm0vXYf+rMkk26UDWeUoUNnNuzer/IIUzBGlWM=;
+        b=B2F+DxTgviY/bZma+eTzAgHQ3Xksv54EJsxtn1N8B+/7KRlILFsR38FhiWVNfk4f7R
+         sVEX3sYBjpO499cSC0naBym+Y6k04Fyz1JxLBLyTlCQIVZnvttwL39F65iX3ylyXRMa6
+         OhmVV1U7LCDys69OzBnUxYmV73bCENIUxmiJKfi1uBEdxRsGt0a926iB1HCmUhiL/fsf
+         yYRRTedzcj51WI5cM+UrLUq6Lbde4jAln/pE2ID+HxX711nxSZo/Tc7Zq1JfPf4YPMkT
+         UMaM/DM+o/PdYtyPAeJBDBZLGaXX95Y0/JiH7NvrowspJAC6WT7ydB8raQoEhoRh22ll
+         W6sg==
+X-Gm-Message-State: APjAAAV+PYSZWn0YAxhvtVBgckghHZgBo+xPhPxhCXO4GHAyenB6JfNl
+        zp+jesnapUzrFC70DweT3MDI0xcpvbK+vGXNo4gV0iUrPrsH17gsRz8wKCsKefplJjEe8nc1gtX
+        24xz2RG9ykgaYVXSloZLu
+X-Received: by 2002:adf:ea8a:: with SMTP id s10mr7108238wrm.278.1581412119279;
+        Tue, 11 Feb 2020 01:08:39 -0800 (PST)
+X-Google-Smtp-Source: APXvYqw7+XbPzelxIsY3f6HVMbA8H+9FdWT4mIDUqyL0+a/5elyfcX1tRVyrY9q/DdeGQYUJFrUaqg==
+X-Received: by 2002:adf:ea8a:: with SMTP id s10mr7108217wrm.278.1581412119121;
+        Tue, 11 Feb 2020 01:08:39 -0800 (PST)
+Received: from andromeda (ip-89-103-126-188.net.upcbroadband.cz. [89.103.126.188])
+        by smtp.gmail.com with ESMTPSA id 4sm2835123wmg.22.2020.02.11.01.08.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 11 Feb 2020 01:08:38 -0800 (PST)
+Date:   Tue, 11 Feb 2020 10:08:36 +0100
+From:   Carlos Maiolino <cmaiolino@redhat.com>
+To:     Eric Sandeen <sandeen@redhat.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>, John Jore <john@jore.no>
+Subject: Re: [PATCH] xfs_repair: fix bad next_unlinked field
+Message-ID: <20200211090836.cims7r4jvrds2e7w@andromeda>
+Mail-Followup-To: Eric Sandeen <sandeen@redhat.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>, John Jore <john@jore.no>
+References: <f5b8a2a9-e691-3bf5-c2c7-f4986a933454@redhat.com>
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 783a7c5e-dfd1-4f05-3ff8-08d7aecb14cd
-X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Feb 2020 08:19:14.6094
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: +UkunN43yImZCGMmfIBExV/09gy+m2seRDcVr8m/zRykHkafS94C2sa/Bp5+xgnFqs3xnQdRlYKfhKG8VEjtTHo39tQdr+ZsU+hlmizKQRg=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR0401MB3600
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f5b8a2a9-e691-3bf5-c2c7-f4986a933454@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 11/02/2020 02:05, Matthew Wilcox wrote:=0A=
-> even though I'm pretty sure we're not going to readahead more than 2^32=
-=0A=
-> pages ever.=0A=
-=0A=
-And 640K is more memory than anyone will ever need on a computer *scnr*=0A=
-=0A=
+> +	unlinked_ino = be32_to_cpu(dino->di_next_unlinked);
+> +	if (!xfs_verify_agino_or_null(mp, agno, unlinked_ino)) {
+> +		retval = 1;
+> +		if (!uncertain)
+> +			do_warn(_("bad next_unlinked 0x%x on inode %" PRIu64 "%c"),
+> +				(__s32)dino->di_next_unlinked, lino,
+				^^^^
+				shouldn't we be using be32_to_cpu()
+				here, instead of a direct casting to
+				__s32?
+
+
+
+Cheers.
+
+-- 
+Carlos
+
