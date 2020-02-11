@@ -2,115 +2,147 @@ Return-Path: <SRS0=3qtu=37=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3093C35242
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Feb 2020 20:59:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B3F7C35242
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Feb 2020 21:40:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9E6B120842
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Feb 2020 20:59:55 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="I1xwH6By"
+	by mail.kernel.org (Postfix) with ESMTP id 2B3FD206D6
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Feb 2020 21:40:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731931AbgBKU7w (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Feb 2020 15:59:52 -0500
-Received: from mail-oi1-f195.google.com ([209.85.167.195]:39495 "EHLO
-        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728624AbgBKU7w (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Feb 2020 15:59:52 -0500
-Received: by mail-oi1-f195.google.com with SMTP id z2so14209380oih.6
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Feb 2020 12:59:52 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=extxsRRjmkIJZEh/sTfq/VSUaht64zLviDFgNerAR0E=;
-        b=I1xwH6Byix/62gQ54cfQkAhK3Jz6DZUnPEusCbQQ20skEH7t7q1ersOxFM2h8eTjFq
-         W7bs4biU+p5p2rBb8nacmQ+AyuU973vMUnU/taHRlqpu4s2LfDLV9nh68R67/9IHN54V
-         Zh1uALOWVcrlvsNNTZj0JZWfKbx+OG02U4MDSQGMPZxKTRuUDEWL3k7FpR4YqEPKNedQ
-         mbTRld4FShJFNSCJLfhgOHJtcCGpyJIJ05CACfqm36E8Iq18xxlsLL5OWXDS1sXJ/AEq
-         eWX5eMKrKADz9NYuNYEImIqQzMkm5dSAeKK6nzyOMYNcJHbAsQb7Ua1pJrY91i0sa1G7
-         ooQA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=extxsRRjmkIJZEh/sTfq/VSUaht64zLviDFgNerAR0E=;
-        b=uZJK+qRBl5kUERo6vB1hy4dyhNc0nBBnF59FZA/mMPzqzFEi5CUhgw17b/8x76di5O
-         Rn6tWbAdZ0JD/+jbAFqsUitumSjNzGo8oBvWlQqJn21ND7VTTF34ifOxQbKrnYGgP3Ui
-         3buuQXfeTwYG5ysa+CI1/JQIzF5PkFQvEGfCasqJYv3r3IaSnG1+OqQ6XewRRfEOkaVK
-         281FV3joF3kqwYThHpoNZM5LogpEGPiqBqM+QrbVMedlrYEsb+wvFr3gDKeJqTjRcmGz
-         URhQUjIkdeQ7V0HuM/3+XpTDqE/Gsa+tn3qTrVdQUW/G1BfU97CMJ1RHounQy9W2M7yS
-         CXLA==
-X-Gm-Message-State: APjAAAUKkhQweQgS0b/oVn5h1G0cP2AbSzVZYSLt8XvPXm1Nq9x57vl8
-        N7g5DypFUbf1xrDz3c1L0pDwWKrD1tiFqzus4pUEJQ==
-X-Google-Smtp-Source: APXvYqy2e6QuQme8tks+nFn6MGTK47SXBGcqgqEabGAFW6zHHoWaB1wrKQLyHPWb+JU7T/jGznd8vWOuaKeaLDE7Ygk=
-X-Received: by 2002:aca:3f54:: with SMTP id m81mr3957419oia.73.1581454791852;
- Tue, 11 Feb 2020 12:59:51 -0800 (PST)
+        id S1727668AbgBKVkW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Feb 2020 16:40:22 -0500
+Received: from sandeen.net ([63.231.237.45]:53796 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727361AbgBKVkW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Feb 2020 16:40:22 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 58F042A76;
+        Tue, 11 Feb 2020 15:40:17 -0600 (CST)
+Subject: Re: [PATCH 0/4] xfs: enable per-type quota timers and warn limits
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Eric Sandeen <sandeen@redhat.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>
+References: <333ea747-8b45-52ae-006e-a1804e14de32@redhat.com>
+ <20200211154322.GN6870@magnolia>
+ <b88d8691-4368-4983-c118-a8e073a327b4@sandeen.net>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <8f2c084f-a8fd-f4ed-dc90-a439b13b191f@sandeen.net>
+Date:   Tue, 11 Feb 2020 15:40:20 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.4.2
 MIME-Version: 1.0
-References: <20200208193445.27421-1-ira.weiny@intel.com> <20200208193445.27421-8-ira.weiny@intel.com>
- <20200211080035.GI10776@dread.disaster.area> <20200211201430.GE12866@iweiny-DESK2.sc.intel.com>
-In-Reply-To: <20200211201430.GE12866@iweiny-DESK2.sc.intel.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Tue, 11 Feb 2020 12:59:40 -0800
-Message-ID: <CAPcyv4hLTg+1dx2bE2S7sLRK17EP_gT5kutwhyUfVB7Ad8khgw@mail.gmail.com>
-Subject: Re: [PATCH v3 07/12] fs: Add locking for a dynamic DAX state
-To:     Ira Weiny <ira.weiny@intel.com>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <b88d8691-4368-4983-c118-a8e073a327b4@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 11, 2020 at 12:14 PM Ira Weiny <ira.weiny@intel.com> wrote:
->
-> On Tue, Feb 11, 2020 at 07:00:35PM +1100, Dave Chinner wrote:
-> > On Sat, Feb 08, 2020 at 11:34:40AM -0800, ira.weiny@intel.com wrote:
-> > > From: Ira Weiny <ira.weiny@intel.com>
-> > >
-> > > DAX requires special address space operations but many other functions
-> > > check the IS_DAX() state.
-> > >
-> > > While DAX is a property of the inode we perfer a lock at the super block
-> > > level because of the overhead of a rwsem within the inode.
-> > >
-> > > Define a vfs per superblock percpu rs semaphore to lock the DAX state
-> >
-> > ????
->
-> oops...  I must have forgotten to update the commit message when I did the
-> global RW sem.  I implemented the per-SB, percpu rwsem first but it was
-> suggested that the percpu nature of the lock combined with the anticipated
-> infrequent use of the write side made using a global easier.
->
-> But before I proceed on V4 I'd like to get consensus on which of the 2 locking
-> models to go with.
->
->         1) percpu per superblock lock
->         2) per inode rwsem
->
-> Depending on my mood I can convince myself of both being performant but the
-> percpu is very attractive because I don't anticipate many changes of state
-> during run time.  OTOH concurrent threads accessing the same file at run time
-> may also be low so there is likely to be little read contention across CPU's on
-> the per-inode lock?
->
-> Opinions?
+On 2/11/20 9:52 AM, Eric Sandeen wrote:
+> 
+> 
+> On 2/11/20 9:43 AM, Darrick J. Wong wrote:
+>> On Sat, Feb 08, 2020 at 03:09:19PM -0600, Eric Sandeen wrote:
+>>> Quota timers are currently a mess.  Right now, at mount time,
+>>> we pick up the first enabled type and use that for the single
+>>> timer in mp->m_quotainfo.
+>>>
+>>> Interestingly, if we set a timer on a different type, /that/
+>>> gets set into mp->m_quotainfo where it stays in effect until
+>>> the next mount, when we pick the first enabled type again.
+>>>
+>>> We actually write the timer values to each type of quota inode,
+>>> but only one is ever in force, according to the interesting behavior
+>>> described above.
+>>>
+>>> This series allows quota timers & warn limits to be independently
+>>> set and enforced for each quota type.
+>>
+>> Is there a test case demonstrating this behavior?
+> 
+> I do still owe this a testcase.
+> Planned to do it yesterday and then life happened, as it does.
+> 
+>> Also, what do the other filesystems (well ok ext4) do?
+> 
+> I'll let you know after I write the testcase ;)
 
-As one who thought a global lock would be reasonable relative to how
-often dax address_space_operations are swapped out (on the order of
-taking cgroup_threadgroup_rwsem for write), I think a per-superblock
-lock is also an ok starting point. We can always go to finer grained
-locking in the future if we see evidence that the benefits of percpu
-are lost to stopping the world at the superblock level.
+Spoiler: it works as expected on ext4.
+
+set user  block & inode grace to 2 & 4 minutes;
+set group block & inode grace to 4 & 8 minutes:
+
+# setquota -t -u 120 240  mnt-ext4/
+# setquota -t -g 360 480  mnt-ext4/
+# setquota -t -u 120 240  mnt-xfs/
+# setquota -t -g 360 480  mnt-xfs/
+
+report user & group grace limits:
+
+# repquota -ug mnt-ext4/ | grep "Report\|^Block"
+*** Report for user quotas on device /dev/loop1
+Block grace time: 00:02; Inode grace time: 00:04
+*** Report for group quotas on device /dev/loop1
+Block grace time: 00:06; Inode grace time: 00:08
+
+ext4 shows all four different grace periods
+
+# repquota -ug mnt-xfs/ | grep "Report\|^Block"
+*** Report for user quotas on device /dev/loop2
+Block grace time: 00:02; Inode grace time: 00:04
+*** Report for group quotas on device /dev/loop2
+Block grace time: 00:02; Inode grace time: 00:04
+
+xfs shows the same grace periods for user & group, despite setting different
+values for each.
+
+-Eric
