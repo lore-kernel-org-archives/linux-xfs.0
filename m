@@ -1,205 +1,158 @@
-Return-Path: <SRS0=3qtu=37=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=V0Y3=4A=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1FC5C35242
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Feb 2020 22:27:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EF84C35242
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 00:21:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C783020708
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Feb 2020 22:27:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2BC15206D6
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 00:21:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727041AbgBKW1x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Feb 2020 17:27:53 -0500
-Received: from sandeen.net ([63.231.237.45]:56292 "EHLO sandeen.net"
+        id S1728018AbgBLAVS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Feb 2020 19:21:18 -0500
+Received: from mx2.suse.de ([195.135.220.15]:40864 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727029AbgBKW1x (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 11 Feb 2020 17:27:53 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id BF4D92A76;
-        Tue, 11 Feb 2020 16:27:47 -0600 (CST)
-Subject: Re: [PATCH v4 1/4] xfs: Refactor xfs_isilocked()
-To:     Pavel Reichl <preichl@redhat.com>, linux-xfs@vger.kernel.org
-References: <20200211221018.709125-1-preichl@redhat.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <f23e8fa9-2e41-e65f-0ff7-69205ce55e5b@sandeen.net>
-Date:   Tue, 11 Feb 2020 16:27:48 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.4.2
+        id S1727985AbgBLAVS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Feb 2020 19:21:18 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 2EA60AFF4;
+        Wed, 12 Feb 2020 00:21:16 +0000 (UTC)
+From:   NeilBrown <neilb@suse.de>
+To:     Allison Collins <allison.henderson@oracle.com>,
+        Dave Chinner <david@fromorbit.com>
+Date:   Wed, 12 Feb 2020 11:21:06 +1100
+Cc:     Amir Goldstein <amir73il@gmail.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        lsf-pc@lists.linux-foundation.org,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>, Eryu Guan <guaneryu@gmail.com>,
+        Eric Sandeen <sandeen@redhat.com>
+Subject: Re: [Lsf-pc] [LSF/MM/BPF TOPIC] FS Maintainers Don't Scale
+In-Reply-To: <fc430471-54d2-bb44-d084-a37e7ff9ef50@oracle.com>
+References: <20200131052520.GC6869@magnolia> <CAOQ4uxh=4DrH_dL3TULcFa+pGk0YhS=TobuGk_+Z0oRWvw63rg@mail.gmail.com> <8983ceaa-1fda-f9cc-73c9-8764d010d3e2@oracle.com> <20200202214620.GA20628@dread.disaster.area> <fc430471-54d2-bb44-d084-a37e7ff9ef50@oracle.com>
+Message-ID: <87sgjg7j0t.fsf@notabene.neil.brown.name>
 MIME-Version: 1.0
-In-Reply-To: <20200211221018.709125-1-preichl@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/11/20 4:10 PM, Pavel Reichl wrote:
-> Refactor xfs_isilocked() to use newly introduced __xfs_rwsem_islocked().
-> __xfs_rwsem_islocked() is a helper function which encapsulates checking
-> state of rw_semaphores hold by inode.
-> 
-> Signed-off-by: Pavel Reichl <preichl@redhat.com>
-> Suggested-by: Dave Chinner <dchinner@redhat.com>
-> Suggested-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> Changelog from V3:
-> Added ASSERTS() to isilocked() to make sure that only flags for a single
-> type of lock are passed 
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-So while I like the ASSERTs going forward, the problem here is that a bisect
-will now be broken between this and patch three.  Sorry to do this to you,
-but I think you should probably add the asserts in patch 3 so that you fix
-the wrong calls and add the protective asserts at the same time.
+On Sun, Feb 09 2020, Allison Collins wrote:
 
-Also, since your next patch fixes whitespace, I guess this:
+> Well, I can see the response is meant to be encouraging, and you are=20
+> right that everyone needs to give to receive :-)
+>
+> I have thought a lot about this, and I do have some opinions about it=20
+> how the process is described to work vs how it ends up working though.=20
+> There has quite been a few times I get conflicting reviews from multiple=
+=20
+> reviewers. I suspect either because reviewers are not seeing each others=
+=20
+> reviews, or because it is difficult for people to recall or even find=20
+> discussions on prior revisions.  And so at times, I find myself puzzling=
+=20
+> a bit trying to extrapolate what the community as a whole really wants.
 
-+		ASSERT(!(lock_flags & ~(XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)));
+The "community as a whole" is not a person and does not have a coherent
+opinion.  You will never please everyone and as you've suggested below,
+it can be hard to tell how strongly people really hold the opinions they
+reveal.
 
-should observe the same rules around " | "
- 
--Eric
+You need to give up trying to please "the community", but instead develop
+your own sense of taste that aligns with the concrete practice of the
+community, and then please yourself.
 
-> 
->  fs/xfs/xfs_inode.c | 51 ++++++++++++++++++++++++++++++++++------------
->  fs/xfs/xfs_inode.h |  2 +-
->  2 files changed, 39 insertions(+), 14 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index c5077e6326c7..cfefa7543b37 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -345,32 +345,57 @@ xfs_ilock_demote(
->  }
->  
->  #if defined(DEBUG) || defined(XFS_WARN)
-> -int
-> +static inline bool
-> +__xfs_rwsem_islocked(
-> +	struct rw_semaphore	*rwsem,
-> +	bool			shared,
-> +	bool			excl)
-> +{
-> +	bool locked = false;
-> +
-> +	if (!rwsem_is_locked(rwsem))
-> +		return false;
-> +
-> +	if (!debug_locks)
-> +		return true;
-> +
-> +	if (shared)
-> +		locked = lockdep_is_held_type(rwsem, 0);
-> +
-> +	if (excl)
-> +		locked |= lockdep_is_held_type(rwsem, 1);
-> +
-> +	return locked;
-> +}
-> +
-> +bool
->  xfs_isilocked(
-> -	xfs_inode_t		*ip,
-> +	struct xfs_inode	*ip,
->  	uint			lock_flags)
->  {
->  	if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) {
-> -		if (!(lock_flags & XFS_ILOCK_SHARED))
-> -			return !!ip->i_lock.mr_writer;
-> -		return rwsem_is_locked(&ip->i_lock.mr_lock);
-> +		ASSERT(!(lock_flags & ~(XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)));
-> +		return __xfs_rwsem_islocked(&ip->i_lock.mr_lock,
-> +				(lock_flags & XFS_ILOCK_SHARED),
-> +				(lock_flags & XFS_ILOCK_EXCL));
->  	}
->  
->  	if (lock_flags & (XFS_MMAPLOCK_EXCL|XFS_MMAPLOCK_SHARED)) {
-> -		if (!(lock_flags & XFS_MMAPLOCK_SHARED))
-> -			return !!ip->i_mmaplock.mr_writer;
-> -		return rwsem_is_locked(&ip->i_mmaplock.mr_lock);
-> +		ASSERT(!(lock_flags & ~(XFS_MMAPLOCK_EXCL|XFS_MMAPLOCK_SHARED)));
-> +		return __xfs_rwsem_islocked(&ip->i_mmaplock.mr_lock,
-> +				(lock_flags & XFS_MMAPLOCK_SHARED),
-> +				(lock_flags & XFS_MMAPLOCK_EXCL));
->  	}
->  
->  	if (lock_flags & (XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED)) {
-> -		if (!(lock_flags & XFS_IOLOCK_SHARED))
-> -			return !debug_locks ||
-> -				lockdep_is_held_type(&VFS_I(ip)->i_rwsem, 0);
-> -		return rwsem_is_locked(&VFS_I(ip)->i_rwsem);
-> +		ASSERT(!(lock_flags & ~(XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED)));
-> +		return __xfs_rwsem_islocked(&VFS_I(ip)->i_rwsem,
-> +				(lock_flags & XFS_IOLOCK_SHARED),
-> +				(lock_flags & XFS_IOLOCK_EXCL));
->  	}
->  
->  	ASSERT(0);
-> -	return 0;
-> +	return false;
->  }
->  #endif
->  
-> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> index 492e53992fa9..3d7ce355407d 100644
-> --- a/fs/xfs/xfs_inode.h
-> +++ b/fs/xfs/xfs_inode.h
-> @@ -416,7 +416,7 @@ void		xfs_ilock(xfs_inode_t *, uint);
->  int		xfs_ilock_nowait(xfs_inode_t *, uint);
->  void		xfs_iunlock(xfs_inode_t *, uint);
->  void		xfs_ilock_demote(xfs_inode_t *, uint);
-> -int		xfs_isilocked(xfs_inode_t *, uint);
-> +bool		xfs_isilocked(xfs_inode_t *, uint);
->  uint		xfs_ilock_data_map_shared(struct xfs_inode *);
->  uint		xfs_ilock_attr_map_shared(struct xfs_inode *);
->  
-> 
+Then when someone criticizes your code, you need to decide for yourself
+whether it is a useful criticism or not.  This might involve hunting
+through the existing body of code to see what patterns are most common.
+The end result is that either you defend your code, or you change your
+opinion (both can be quite appropriate).  If you change your opinion,
+then you probably change your code too.
+
+Your goal isn't to ensure everyone is happy, only to ensure that no-one
+is justifiably angry.
+
+NeilBrown
+
+>
+> For example: a reviewer may propose a minor change, perhaps a style=20
+> change, and as long as it's not terrible I assume this is just how=20
+> people are used to seeing things implemented.  So I amend it, and in the=
+=20
+> next revision someone expresses that they dislike it and makes a=20
+> different proposition.  Generally I'll mention that this change was=20
+> requested, but if anyone feels particularly strongly about it, to please=
+=20
+> chime in.  Most of the time I don't hear anything, I suspect because=20
+> either the first reviewer isn't around, or they don't have time to=20
+> revisit it?  Maybe they weren't strongly opinionated about it to begin=20
+> with?  It could have been they were feeling pressure to generate=20
+> reviews, or maybe an employer is measuring their engagement?  In any=20
+> case, if it goes around a third time, I'll usually start including links=
+=20
+> to prior reviews to try and get people on the same page, but most of the=
+=20
+> time I've found the result is that it just falls silent.
+>
+> At this point though it feels unclear to me if everyone is happy?  Did=20
+> we have a constructive review?  Maybe it's not a very big deal and I=20
+> should just move on.  And in many scenarios like the one above, the=20
+> exact outcome appears to be of little concern to people in the greater=20
+> scheme of things.  But this pattern does not always scale well in all=20
+> cases.  Complex issues that persist over time generally do so because no=
+=20
+> one yet has a clear idea of what a correct solution even looks like, or=20
+> perhaps cannot agree on one.  In my experience, getting people to come=20
+> together on a common goal requires a sort of exploratory coding effort.=20
+> Like a prototype that people can look at, learn from, share ideas, and=20
+> then adapt the model from there.  But for that to work, they need to=20
+> have been engaged with the history of it.  They need the common=20
+> experience of seeing what has worked and what hasn't.  It helps people=20
+> to let go of theories that have not performed well in practice, and=20
+> shift to alternate approaches that have.  In a way, reviewers that have=20
+> been historically more involved with a particular effort start to become=
+=20
+> a little integral to it as its reviewers.  Which I *think* is what=20
+> Darrick may be eluding to in his initial proposition.  People request=20
+> for certain reviewers, or perhaps the reviewers can volunteer to be sort=
+=20
+> of assigned to it in an effort to provide more constructive reviews.  In=
+=20
+> this way, reviewers allocate their efforts where they are most=20
+> effective, and in doing so better distribute the work load as well.  Did=
+=20
+> I get that about right?  Thoughts?
+>
+> Allison
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAl5DRPIACgkQOeye3VZi
+gblS/w/9G22cXKdF3gAdoK7fIqVMQh+iHtqwgRsIC7TjyJYBcUTz2yUy/5Io+pc6
+4hpYZu571QOF2rOBgUjS3MnWWfi+vpiBcV6LQm14ulvAFTKkdKYTCZx/3UV3acjX
+xaInjDJ5LIrluvO2H3SW9NZ/SP5BhFpRoCIE29X9+Skjw2KtLJRvz1JbM3ab7Lpv
+k0ZciQn9UIbB8B3bDI0LzqYGcj6F8euWClHWbi5ky+hVdxpMB5N6cFI027b6aMGZ
+g1tje4SiHxTy5Y3w4eLaS9q+71NnP4meIc1MDtYAa1Ue5Jrel7Bp3wxl2wMMWj8r
+gjEWzLyx9Jm7Yi85XDAqjk7mIC1pnHt3flEAvyk954cfE4DrSyDlA/pExJDmDiX5
+rMgssFzTb0F+xVbq/NLgP+CD4n86gi+ZxAmk+rVRAVN2VtZOYKzNK7f3a5nrLzCI
+bKoKnqGusPBRjalsF7ArVlrMvpefD5xWH4i9rkDXGVF0L2MDdmzL3z2R5vt5hnMy
+xHzkyyFd9FnD3R4zWJuQq9wT5S1RaPk87vRiR8PMQYb7xZaJCYSw7+LSj1NcY98J
+VJkKtdV09AAs4rWj55eQeiS7OhsNfju5l0DklkXL5a61xhHxRqDqF+xUWhA/4l3U
+AthJTMTHomkB8NrKJGlRZE75p2bCCrzmmsp8rjt7lejcgGnkBsE=
+=NQr4
+-----END PGP SIGNATURE-----
+--=-=-=--
