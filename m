@@ -2,126 +2,132 @@ Return-Path: <SRS0=V0Y3=4A=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A09FC2BA83
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 12:17:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55A0DC2BA83
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 15:11:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DB6B020714
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 12:17:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 257EA20658
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 15:11:24 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Rp+UsAC6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726728AbgBLMRX convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Feb 2020 07:17:23 -0500
-Received: from albireo.enyo.de ([37.24.231.21]:57912 "EHLO albireo.enyo.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726351AbgBLMRX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Feb 2020 07:17:23 -0500
-Received: from [172.17.203.2] (helo=deneb.enyo.de)
-        by albireo.enyo.de with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        id 1j1qxF-0001GA-Pu; Wed, 12 Feb 2020 12:17:21 +0000
-Received: from fw by deneb.enyo.de with local (Exim 4.92)
-        (envelope-from <fw@deneb.enyo.de>)
-        id 1j1qvu-0002k1-VG; Wed, 12 Feb 2020 13:15:58 +0100
-From:   Florian Weimer <fw@deneb.enyo.de>
-To:     linux-xfs@vger.kernel.org
-Cc:     libc-alpha@sourceware.org, linux-fsdevel@vger.kernel.org
-Subject: Re: XFS reports lchmod failure, but changes file system contents
-References: <874kvwowke.fsf@mid.deneb.enyo.de>
-Date:   Wed, 12 Feb 2020 13:15:58 +0100
-In-Reply-To: <874kvwowke.fsf@mid.deneb.enyo.de> (Florian Weimer's message of
-        "Wed, 12 Feb 2020 12:48:49 +0100")
-Message-ID: <87r1z0ngqp.fsf@mid.deneb.enyo.de>
+        id S1728388AbgBLPLX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Feb 2020 10:11:23 -0500
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:25315 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727698AbgBLPLX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Feb 2020 10:11:23 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1581520282;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=nvDjJ/Bmg0Ryix1uyH6V1CdmalGgVhE87UhnrmNdPPA=;
+        b=Rp+UsAC6S68jDkoN7f2mxeZeYDPkk6qLcGq4644vff+P0eOQ+GvK3HhLYHxeW7QP0TAQJT
+        Zszg0uPds2CnLUSeaBD0ygB6R3JschXbiwEamMsQLS+smQOvi3ojTw6TC/pCCZz5OyUCmY
+        sx7gF3lqjIzBecM9I7TJt+0AUtvo+DA=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-192-iFXwm0zLNEyRyI3gwAV_UQ-1; Wed, 12 Feb 2020 10:11:19 -0500
+X-MC-Unique: iFXwm0zLNEyRyI3gwAV_UQ-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 32FF8107ACC5;
+        Wed, 12 Feb 2020 15:11:18 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8F3C65C1B2;
+        Wed, 12 Feb 2020 15:11:17 +0000 (UTC)
+Date:   Wed, 12 Feb 2020 10:11:15 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Chandan Rajendra <chandanrlinux@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com,
+        chandan@linux.ibm.com, darrick.wong@oracle.com
+Subject: Re: [PATCH V3 1/2] xfs: Pass xattr name and value length explicitly
+ to xfs_attr_leaf_newentsize
+Message-ID: <20200212151115.GA17921@bfoster>
+References: <20200129045939.10380-1-chandanrlinux@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200129045939.10380-1-chandanrlinux@gmail.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-* Florian Weimer:
+On Wed, Jan 29, 2020 at 10:29:38AM +0530, Chandan Rajendra wrote:
+> This commit changes xfs_attr_leaf_newentsize() to explicitly accept name and
+> value length instead of a pointer to struct xfs_da_args. The next commit will
+> need to invoke xfs_attr_leaf_newentsize() from functions that do not have
+> a struct xfs_da_args to pass in.
+> 
+> Signed-off-by: Chandan Rajendra <chandanrlinux@gmail.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr.c      |  3 ++-
+>  fs/xfs/libxfs/xfs_attr_leaf.c | 41 ++++++++++++++++++++++++-----------
+>  fs/xfs/libxfs/xfs_attr_leaf.h |  3 ++-
+>  3 files changed, 32 insertions(+), 15 deletions(-)
+> 
+...
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index 08d4b10ae2d53..7cd57e5844d80 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+...
+> @@ -2687,20 +2700,22 @@ xfs_attr_leaf_entsize(xfs_attr_leafblock_t *leaf, int index)
+>   */
+>  int
+>  xfs_attr_leaf_newentsize(
+> -	struct xfs_da_args	*args,
+> +	struct xfs_mount	*mp,
 
-> In principle, Linux supports lchmod via O_PATH descriptors and chmod
-> on /proc/self/fd.  (lchmod is the non-symbolic-link-following variant
-> of chmod.)
->
-> This helper program can be used to do this:
->
-> #define _GNU_SOURCE
-> #include <err.h>
-> #include <fcntl.h>
-> #include <stdio.h>
-> #include <stdlib.h>
-> #include <sys/stat.h>
-> #include <unistd.h>
->
-> int
-> main (int argc, char **argv)
-> {
->   if (argc != 3)
->     {
->       fprintf (stderr, "usage: %s MODE FILE\n", argv[0]);
->       return 2;
->     }
->
->   unsigned int mode;
->   if (sscanf (argv[1], "%o", &mode) != 1
->       || mode != (mode_t) mode)
->     errx (1, "invalid mode: %s", argv[1]);
->
->   int fd = open (argv[2], O_PATH | O_NOFOLLOW);
->   if (fd < 0)
->     err (1, "open");
->
->   char *fd_path;
->   if (asprintf (&fd_path, "/proc/self/fd/%d", fd) < 0)
->     err (1, "asprintf");
->
->   if (chmod (fd_path, mode) != 0)
->     err (1, "chmod");
->
->   free (fd_path);
->   if (close (fd) != 0)
->     err (1, "close");
->
->   return 0;
-> }
->
-> When changing the permissions of on XFS in this way, the chmod
-> operation fails:
->
-> $ ln -s does-not-exist /var/tmp/symlink
-> $ ls -l /var/tmp/symlink 
-> lrwxrwxrwx. 1 fweimer fweimer 14 Feb 12 12:41 /var/tmp/symlink -> does-not-exist
-> $ strace ./lchmod 0 /var/tmp/symlink
-> […]
-> openat(AT_FDCWD, "/var/tmp/symlink", O_RDONLY|O_NOFOLLOW|O_PATH) = 3
-> […]
-> chmod("/proc/self/fd/3", 000)           = -1 EOPNOTSUPP (Operation not supported)
-> write(2, "lchmod: ", 8lchmod: )                 = 8
-> write(2, "chmod", 5chmod)                    = 5
-> write(2, ": Operation not supported\n", 26: Operation not supported
-> ) = 26
-> exit_group(1)                           = ?
->
-> But the file system contents has changed nevertheless:
->
-> $ ls -l /var/tmp/symlink 
-> l---------. 1 fweimer fweimer 14 Feb 12 12:41 /var/tmp/symlink -> does-not-exist
-> $ echo 3 | sudo tee /proc/sys/vm/drop_caches 
-> $ ls -l /var/tmp/symlink 
-> l---------. 1 fweimer fweimer 14 Feb 12 12:41 /var/tmp/symlink -> does-not-exist
->
-> This looks like an XFS bug to me.  With tmpfs, the chmod succeeds and
-> is reflected in the file system.
->
-> This bug also affects regular files, not just symbolic links.
->
-> It causes the io/tst-lchmod glibc test to fail (after it has been
-> fixed, the in-tree version has another bug).
+Any reason not to just pass the geo here rather than the mount?
+Otherwise looks fine to me.
 
-Sorry, I forgot to mention that I see this with Debian's
-4.19.67-2+deb10u2 kernel and Fedora's 5.4.17-200.fc31.x86_64 kernel.
+Brian
+
+> +	int			namelen,
+> +	int			valuelen,
+>  	int			*local)
+>  {
+>  	int			size;
+>  
+> -	size = xfs_attr_leaf_entsize_local(args->namelen, args->valuelen);
+> -	if (size < xfs_attr_leaf_entsize_local_max(args->geo->blksize)) {
+> +	size = xfs_attr_leaf_entsize_local(namelen, valuelen);
+> +	if (size < xfs_attr_leaf_entsize_local_max(mp->m_attr_geo->blksize)) {
+>  		if (local)
+>  			*local = 1;
+>  		return size;
+>  	}
+>  	if (local)
+>  		*local = 0;
+> -	return xfs_attr_leaf_entsize_remote(args->namelen);
+> +	return xfs_attr_leaf_entsize_remote(namelen);
+>  }
+>  
+>  
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+> index f4a188e28b7b6..0ce1f9301157e 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.h
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+> @@ -106,7 +106,8 @@ void	xfs_attr3_leaf_unbalance(struct xfs_da_state *state,
+>  xfs_dahash_t	xfs_attr_leaf_lasthash(struct xfs_buf *bp, int *count);
+>  int	xfs_attr_leaf_order(struct xfs_buf *leaf1_bp,
+>  				   struct xfs_buf *leaf2_bp);
+> -int	xfs_attr_leaf_newentsize(struct xfs_da_args *args, int *local);
+> +int	xfs_attr_leaf_newentsize(struct xfs_mount *mp, int namelen,
+> +			int valuelen, int *local);
+>  int	xfs_attr3_leaf_read(struct xfs_trans *tp, struct xfs_inode *dp,
+>  			xfs_dablk_t bno, struct xfs_buf **bpp);
+>  void	xfs_attr3_leaf_hdr_from_disk(struct xfs_da_geometry *geo,
+> -- 
+> 2.19.1
+> 
+
