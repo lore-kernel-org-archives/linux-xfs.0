@@ -6,28 +6,28 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33478C352A4
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 23:51:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84776C352A4
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 23:57:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0E42A206B6
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 23:51:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6277F206E5
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 23:57:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729176AbgBLXvU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Feb 2020 18:51:20 -0500
-Received: from sandeen.net ([63.231.237.45]:50540 "EHLO sandeen.net"
+        id S1729270AbgBLX50 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Feb 2020 18:57:26 -0500
+Received: from sandeen.net ([63.231.237.45]:50844 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727117AbgBLXvU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Feb 2020 18:51:20 -0500
+        id S1727117AbgBLX50 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Feb 2020 18:57:26 -0500
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id B9B3A22C5;
-        Wed, 12 Feb 2020 17:51:13 -0600 (CST)
-Subject: Re: [PATCH 03/14] xfs: refactor quota exceeded test
+        by sandeen.net (Postfix) with ESMTPSA id C6D9522C5;
+        Wed, 12 Feb 2020 17:57:19 -0600 (CST)
+Subject: Re: [PATCH 05/14] xfs: refactor quota expiration timer modification
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <157784106066.1364230.569420432829402226.stgit@magnolia>
- <157784108138.1364230.6221331077843589601.stgit@magnolia>
+ <157784109369.1364230.637677553755124721.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -71,12 +71,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <b979d33d-361b-88cd-699c-7e5f1c621698@sandeen.net>
-Date:   Wed, 12 Feb 2020 17:51:18 -0600
+Message-ID: <455264c4-435c-c2f7-4e2a-3f4614574050@sandeen.net>
+Date:   Wed, 12 Feb 2020 17:57:24 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.4.2
 MIME-Version: 1.0
-In-Reply-To: <157784108138.1364230.6221331077843589601.stgit@magnolia>
+In-Reply-To: <157784109369.1364230.637677553755124721.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -88,91 +88,92 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 12/31/19 7:11 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Refactor the open-coded test for whether or not we're over quota.
-
-Ooh, nice.  This was horrible.
-
+> Define explicit limits on the range of quota grace period expiration
+> timeouts and refactor the code that modifies the timeouts into helpers
+> that clamp the values appropriately.
+> 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_dquot.c |   61 +++++++++++++++++++++-------------------------------
->  1 file changed, 25 insertions(+), 36 deletions(-)
-> 
-> 
+
+...
+
 > diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index e50c75d9d788..54e7fdcd1d4d 100644
+> index ae7bb6361a99..44bae5f16b55 100644
 > --- a/fs/xfs/xfs_dquot.c
 > +++ b/fs/xfs/xfs_dquot.c
-> @@ -99,6 +99,17 @@ xfs_qm_adjust_dqlimits(
->  		xfs_dquot_set_prealloc_limits(dq);
+> @@ -113,6 +113,36 @@ xfs_quota_exceeded(
+>  	return *hardlimit && count > be64_to_cpup(hardlimit);
 >  }
 >  
-> +static inline bool
-> +xfs_quota_exceeded(
-> +	const __be64		*count,
-> +	const __be64		*softlimit,
-> +	const __be64		*hardlimit) {
-
-why pass these all as pointers?
-
+> +/*
+> + * Clamp a quota grace period expiration timer to the range that we support.
+> + */
+> +static inline time64_t
+> +xfs_dquot_clamp_timer(
+> +	time64_t			timer)
+> +{
+> +	return clamp_t(time64_t, timer, XFS_DQ_TIMEOUT_MIN, XFS_DQ_TIMEOUT_MAX);
+> +}
 > +
-> +	if (*softlimit && be64_to_cpup(count) > be64_to_cpup(softlimit))
-> +		return true;
-> +	return *hardlimit && be64_to_cpup(count) > be64_to_cpup(hardlimit);
+> +/* Set a quota grace period expiration timer. */
+> +static inline void
+> +xfs_quota_set_timer(
+> +	__be32			*dtimer,
+> +	time_t			limit)
+> +{
+> +	time64_t		new_timeout;
+> +
+> +	new_timeout = xfs_dquot_clamp_timer(get_seconds() + limit);
+> +	*dtimer = cpu_to_be32(new_timeout);
+> +}
+> +
+> +/* Clear a quota grace period expiration timer. */
+> +static inline void
+> +xfs_quota_clear_timer(
+> +	__be32			*dtimer)
+> +{
+> +	*dtimer = cpu_to_be32(0);
 
-The asymmetry bothers me a little but maybe that's just me.  Is
-
-> +	if ((*softlimit && be64_to_cpup(count) > be64_to_cpup(softlimit)) ||
-> +	    (*hardlimit && be64_to_cpup(count) > be64_to_cpup(hardlimit)))
-> +		return true;
-> +	return false;
-
-any better? *shrug*
+do we need to endian convert 0 to make sparse happy?  I don't see us doing
+that anywhere else.  TBH not really sure I see the reason for the function
+at all unless you really, really like the symmetry.
 
 > +}
 > +
 >  /*
 >   * Check the limits and timers of a dquot and start or reset timers
 >   * if necessary.
-> @@ -117,6 +128,8 @@ xfs_qm_adjust_dqtimers(
->  	struct xfs_mount	*mp,
->  	struct xfs_disk_dquot	*d)
->  {
-> +	bool			over;
-> +
->  	ASSERT(d->d_id);
->  
->  #ifdef DEBUG
-> @@ -131,71 +144,47 @@ xfs_qm_adjust_dqtimers(
->  		       be64_to_cpu(d->d_rtb_hardlimit));
->  #endif
->  
-> +	over = xfs_quota_exceeded(&d->d_bcount, &d->d_blk_softlimit,
-> +			&d->d_blk_hardlimit);
+> @@ -152,14 +182,14 @@ xfs_qm_adjust_dqtimers(
+>  			&d->d_blk_softlimit, &d->d_blk_hardlimit);
 >  	if (!d->d_btimer) {
-> -		if ((d->d_blk_softlimit && (be64_to_cpu(d->d_bcount) > be64_to_cpu(d->d_blk_softlimit))) ||
-> -		    (d->d_blk_hardlimit && (be64_to_cpu(d->d_bcount) > be64_to_cpu(d->d_blk_hardlimit)))) {
-> +		if (over) {
-
-I wonder why we check the hard limit.  Isn't exceeding the soft limit
-enough to start the timer?  Unrelated to the refactoring tho.
-
->  			d->d_btimer = cpu_to_be32(get_seconds() +
+>  		if (over) {
+> -			d->d_btimer = cpu_to_be32(get_seconds() +
+> +			xfs_quota_set_timer(&d->d_btimer,
 >  					mp->m_quotainfo->qi_btimelimit);
 >  		} else {
 >  			d->d_bwarns = 0;
 >  		}
 >  	} else {
-> -		if ((!d->d_blk_softlimit || (be64_to_cpu(d->d_bcount) <= be64_to_cpu(d->d_blk_softlimit))) &&
-> -		    (!d->d_blk_hardlimit || (be64_to_cpu(d->d_bcount) <= be64_to_cpu(d->d_blk_hardlimit)))) {
-> +		if (!over) {
->  			d->d_btimer = 0;
->  		}
+>  		if (!over) {
+> -			d->d_btimer = 0;
+> +			xfs_quota_clear_timer(&d->d_btimer);
 
-I guess that could be
+yeah that's a very fancy way to say "= 0" ;)
 
->  	} else if (!over) {
->  		d->d_btimer = 0;
->  	}
+...
 
-? but again *shrug* and that's beyond refactoring, isn't it.
+> diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
+> index f67f3645efcd..52dc5326b7bf 100644
+> --- a/fs/xfs/xfs_ondisk.h
+> +++ b/fs/xfs/xfs_ondisk.h
+> @@ -25,6 +25,8 @@ xfs_check_ondisk_structs(void)
+>  	/* make sure timestamp limits are correct */
+>  	XFS_CHECK_VALUE(XFS_INO_TIME_MIN, 			-2147483648LL);
+>  	XFS_CHECK_VALUE(XFS_INO_TIME_MAX,			2147483647LL);
+> +	XFS_CHECK_VALUE(XFS_DQ_TIMEOUT_MIN,			1LL);
+> +	XFS_CHECK_VALUE(XFS_DQ_TIMEOUT_MAX,			4294967295LL);
 
+again grumble grumble really not checking an ondisk structure.
+
+>  	/* ag/file structures */
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_acl,			4);
+> 
