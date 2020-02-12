@@ -2,95 +2,113 @@ Return-Path: <SRS0=V0Y3=4A=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D030C2BA83
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 15:57:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC245C3F68F
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 16:04:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 08227206D7
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 15:57:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BDF1524671
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 16:04:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728052AbgBLP5G convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Feb 2020 10:57:06 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50956 "EHLO mail.kernel.org"
+        id S1728712AbgBLQEb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Feb 2020 11:04:31 -0500
+Received: from mga09.intel.com ([134.134.136.24]:18375 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727026AbgBLP5G (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Feb 2020 10:57:06 -0500
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 206397] [xfstests generic/475] XFS: Assertion failed:
- iclog->ic_state == XLOG_STATE_ACTIVE, file: fs/xfs/xfs_log.c, line: 572
-Date:   Wed, 12 Feb 2020 15:57:05 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: bfoster@redhat.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-206397-201763-FUYphFEkBX@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-206397-201763@https.bugzilla.kernel.org/>
-References: <bug-206397-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        id S1728708AbgBLQEb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Feb 2020 11:04:31 -0500
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Feb 2020 08:04:30 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.70,433,1574150400"; 
+   d="scan'208";a="251951787"
+Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
+  by orsmga002.jf.intel.com with ESMTP; 12 Feb 2020 08:04:29 -0800
+Date:   Wed, 12 Feb 2020 08:04:29 -0800
+From:   Ira Weiny <ira.weiny@intel.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-kernel@vger.kernel.org, Jan Kara <jack@suse.cz>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v3 05/12] fs: remove unneeded IS_DAX() check
+Message-ID: <20200212160428.GD20214@iweiny-DESK2.sc.intel.com>
+References: <20200208193445.27421-1-ira.weiny@intel.com>
+ <20200208193445.27421-6-ira.weiny@intel.com>
+ <20200211053401.GE10776@dread.disaster.area>
+ <20200211163831.GC12866@iweiny-DESK2.sc.intel.com>
+ <20200211204107.GM10776@dread.disaster.area>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200211204107.GM10776@dread.disaster.area>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=206397
-
---- Comment #3 from bfoster@redhat.com ---
-On Tue, Feb 04, 2020 at 05:10:05PM +0000, bugzilla-daemon@bugzilla.kernel.org
-wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=206397
-> 
-> --- Comment #2 from Zorro Lang (zlang@redhat.com) ---
-> (In reply to Chandan Rajendra from comment #1)
-> > I was unable to recreate this issue on a ppc64le kvm guest. I used Linux
-> > v5.5 and xfsprogs' for-next branch.
+On Wed, Feb 12, 2020 at 07:41:07AM +1100, Dave Chinner wrote:
+> On Tue, Feb 11, 2020 at 08:38:31AM -0800, Ira Weiny wrote:
+> > On Tue, Feb 11, 2020 at 04:34:01PM +1100, Dave Chinner wrote:
+> > > On Sat, Feb 08, 2020 at 11:34:38AM -0800, ira.weiny@intel.com wrote:
+> > > > From: Ira Weiny <ira.weiny@intel.com>
+> > > > 
+> > > > The IS_DAX() check in io_is_direct() causes a race between changing the
+> > > > DAX state and creating the iocb flags.
+> > > > 
+> > > > Remove the check because DAX now emulates the page cache API and
+> > > > therefore it does not matter if the file state is DAX or not when the
+> > > > iocb flags are created.
+> > > 
+> > > This statement is ... weird.
+> > > 
+> > > DAX doesn't "emulate" the page cache API at all
 > > 
-> > Can you please share the kernel config file? Also, Can you please tell me
-> > how easy is it recreate this bug?
+> > ah...  yea emulate is a bad word here.
+> > 
+> > > - it has it's own
+> > > read/write methods that filesystems call based on the iomap
+> > > infrastructure (dax_iomap_rw()). i.e. there are 3 different IO paths
+> > > through the filesystems: the DAX IO path, the direct IO path, and
+> > > the buffered IO path.
+> > > 
+> > > Indeed, it seems like this works a bit by luck: Ext4 and XFS always
+> > > check IS_DAX(inode) in the read/write_iter methods before checking
+> > > for IOCB_DIRECT, and hence the IOCB_DIRECT flag is ignored by the
+> > > filesystems. i.e. when we got rid of the O_DIRECT paths from DAX, we
+> > > forgot to clean up io_is_direct() and it's only due to the ordering
+> > > of checks that we went down the DAX path correctly....
+> > > 
+> > > That said, the code change is good, but the commit message needs a
+> > > rewrite.
+> > 
+> > How about?
+> > 
+> > <commit msg>
+> >   fs: Remove unneeded IS_DAX() check
+> >   
+> >   The IS_DAX() check in io_is_direct() causes a race between changing the
+> >   DAX state and creating the iocb flags.
 > 
-> It's really hard to reproduce. The g/475 is a random test, it's helped us to
-> find many different issues. For this bug, this's the 1st time I hit it, and
-> can't reproduce it simply.
+> This is irrelevant - the check is simply wrong and has been since
+> ~2016 when we moved DAX to use the iomap infrastructure...
+
+Deleted.
+Ira
+
 > 
-
-Have you still been unable to reproduce (assuming you've been attempting
-to)? How many iterations were required before you reproduced the first
-time?
-
-I'm wondering if the XLOG_STATE_IOERROR check in xfs_log_release_iclog()
-is racy with respect to filesystem shutdown. There's an ASSERT_ALWAYS()
-earlier in this (xlog_cil_push()) codepath that checks for ACTIVE ||
-WANT_SYNC and it doesn't appear that has failed from your output
-snippet. The aforementioned IOERROR check occurs before we acquire
-->l_icloglock, however, which I think means xfs_log_force_umount() could
-jump in if called from another task and reset all of the iclogs while
-the release path waits on the lock.
-
-Brian
-
+> Cheers,
+> 
+> Dave.
+> 
 > -- 
-> You are receiving this mail because:
-> You are watching the assignee of the bug.
->
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+> Dave Chinner
+> david@fromorbit.com
