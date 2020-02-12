@@ -2,101 +2,143 @@ Return-Path: <SRS0=V0Y3=4A=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C966C35242
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 00:49:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1243C2BA83
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 03:51:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 64C7120724
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 00:49:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99C7A206D7
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 03:51:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728121AbgBLAtH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Feb 2020 19:49:07 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:49692 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728098AbgBLAtG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Feb 2020 19:49:06 -0500
-Received: from dread.disaster.area (pa49-179-138-28.pa.nsw.optusnet.com.au [49.179.138.28])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 8797C7EAABE;
-        Wed, 12 Feb 2020 11:49:03 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1j1gD8-0004M0-Oo; Wed, 12 Feb 2020 11:49:02 +1100
-Date:   Wed, 12 Feb 2020 11:49:02 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Pavel Reichl <preichl@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4 4/4] xfs: Replace mrlock_t by rw_semaphore
-Message-ID: <20200212004902.GR10776@dread.disaster.area>
-References: <20200211221018.709125-1-preichl@redhat.com>
- <20200211221018.709125-4-preichl@redhat.com>
+        id S1727939AbgBLDv5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Feb 2020 22:51:57 -0500
+Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:41756 "EHLO
+        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727784AbgBLDv4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Feb 2020 22:51:56 -0500
+Received: from callcc.thunk.org (pool-72-93-95-157.bstnma.fios.verizon.net [72.93.95.157])
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 01C3pdNK003917
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 11 Feb 2020 22:51:40 -0500
+Received: by callcc.thunk.org (Postfix, from userid 15806)
+        id 77450420324; Tue, 11 Feb 2020 22:51:39 -0500 (EST)
+Date:   Tue, 11 Feb 2020 22:51:39 -0500
+From:   "Theodore Y. Ts'o" <tytso@mit.edu>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
+        xfs <linux-xfs@vger.kernel.org>,
+        Eric Sandeen <sandeen@redhat.com>,
+        Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [LSF/MM/BPF TOPIC] FS Maintainers Don't Scale
+Message-ID: <20200212035139.GF3630@mit.edu>
+References: <20200131052520.GC6869@magnolia>
+ <20200207220333.GI8731@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200211221018.709125-4-preichl@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
-        a=zAxSp4fFY/GQY8/esVNjqw==:117 a=zAxSp4fFY/GQY8/esVNjqw==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=l697ptgUJYAA:10
-        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=PzM9fsMbPxSaN7tMo4cA:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20200207220333.GI8731@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 11, 2020 at 11:10:18PM +0100, Pavel Reichl wrote:
-> Remove mrlock_t as it does not provide any extra value over rw_semaphores.
-> Make i_lock and i_mmaplock native rw_semaphores and replace mr*() functions
-> with native rwsem calls.
+On Fri, Feb 07, 2020 at 02:03:33PM -0800, Matthew Wilcox wrote:
+> On Thu, Jan 30, 2020 at 09:25:20PM -0800, Darrick J. Wong wrote:
+> > It turns out that this system doesn't scale very well either.  Even with
+> > three maintainers sharing access to the git trees,,,
+>
+> I think the LSFMMBPF conference is part of the problem.  With the best of
+> intentions, we have set up a system which serves to keep all but the most
+> dedicated from having a voice at the premier conference for filesystems,
+> memory management, storage (and now networking).  It wasn't intended to
+> be that way, but that's what has happened, and it isn't serving us well
+> as a result.
+>
+> ...
+>
+> This kills me because LSFMM has been such a critically important part of
+> Linux development for over a decade, but I think at this point it is at
+> least not serving us the way we want it to, and may even be doing more
+> harm than good.  I think it needs to change, and more people need to
+> be welcomed to the conference.  Maybe it needs to not be invite-only.
+> Maybe it can stay invite-only, but be twice as large.  Maybe everybody
+> who's coming needs to front $100 to put towards the costs of a larger
+> meeting space with more rooms.
 
-wrapping at 68-72 columns.
+One of the things that I've trying to suggest for at least the last
+year or two is that we need colocate LSF/MM with a larger conference.
+In my mind, what would be great would be something sort of like
+Plumbers, but in the first half of year.  The general idea would be to
+have two major systems-level conferences about six months apart.
 
-> Signed-off-by: Pavel Reichl <preichl@redhat.com>
+The LSF/MM conference could still be invite only, much like we have
+had the Maintainer's Summit and the Networking Summit colocated with
+Plumbers in Lisbon in 2019 and Vancouver in 2018.  But it would be
+colocated with other topic specific workshops / summits, and there
+would be space for topics like what you described below:
 
-Subject "xfs: replace mrlock_t with rw_semaphores" or "xfs: remove
-mrlock_t wrappers"
+> There are 11 people on that list, plus Jason, plus three more than I
+> recommended.  That's 15, just for that one topic.  I think maybe half
+> of those people will get an invite anyway, but adding on an extra 5-10
+> people for (what I think is) a critically important topic at the very
+> nexus of storage, filesystems, memory management, networking and graphics
+> is almost certainly out of bounds for the scale of the current conference.
 
-> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> index 3d7ce355407d..8b30f82b9dc0 100644
-> --- a/fs/xfs/xfs_inode.h
-> +++ b/fs/xfs/xfs_inode.h
-> @@ -9,6 +9,8 @@
->  #include "xfs_inode_buf.h"
->  #include "xfs_inode_fork.h"
->  
-> +#include <linux/rwsem.h>
-> +
+After all, this is *precisely* the scaling problem that we had with
+the Kernel Summit.  The LSF/MM summit can really only deal with
+subjects that require high-level coordination between maintainers.
+For more focused topics, we will need a wider set of developers than
+can fit in size constraints of the LSF/MM venue.
 
-Linux specific includes belong in fs/xfs/xfs_linux.h, not random XFS
-header files.
+This also addresses Darrick's problem, in that most of us can probably
+point to more junior engineers that we would like to help to develop,
+which means they need to meet other Storage, File System, and MM
+developers --- both more senior ones, and other colleagues in the
+community.  Right now, we don't have a venue for this except for
+Plumbers, and it's suffering from bursting at the seams.  If we can
+encourage grow our more junior developers, it will help us delegate
+our work to a larger group of talent.  In other words, it will help us
+scale.
 
-Hmmm....
+There are some tradeoffs to doing this; if we are going to combine
+LSF/MM with other workshops and summits into a larger "systems-level"
+conference in the first half of the year, we're not going to be able
+to fit in some of the smaller, "fun" cities, such as Palm Springs, San
+Juan, Park City, etc.
 
-> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-> index 8738bb03f253..921a3eb093ed 100644
-> --- a/fs/xfs/xfs_linux.h
-> +++ b/fs/xfs/xfs_linux.h
-> @@ -22,7 +22,6 @@ typedef __u32			xfs_nlink_t;
->  #include "xfs_types.h"
->  
->  #include "kmem.h"
-> -#include "mrlock.h"
+One of the things that I had suggested for 2020 was to colocate
+LSF/MM/BPF, the Kernel Summit, Maintainer's Summit, and perhaps Linux
+Security Symposium to June, in Austin.  (Why Austin?  Because finding
+kernel hackers who are interested in planning a conference in a hands
+on fashion ala Plumbers is *hard*.  And if we're going to leverage the
+LF Events Staff on short notice, holding something in the same city as
+OSS was the only real option.)  I thought it made a lot of sense last
+year, but a lot of people *hated* Austin, and they didn't want to be
+anywhere near the Product Manager "fluff" talks that unfortunately,
+are in large supply at OSS.   So that idea fell through.
 
-.... that's where rwsem.h currently gets included (via mrlock.h)
-into the XFS codebase.
+In any case, this is a problem that has been recently discussed at the
+TAB, but this is not an issue where we can force anybody to do
+anything.  We need to get the stakeholders who plan all of these
+conferences to get together, and figure out something for 2021 or
+maybe 2022 that we can all live with.  It's going to require some
+compromising on all sides, and we all will have different things that
+we consider "must haves" versus "would be nice" as far as conference
+venues are concerned, and as well as dealing with financial
+constraints.
 
-IOWs, the "#include <linux/rwsem.h>" should replace this include,
-not get moved to xfs_inode.h.
-
-Otherwise the patch looks fine.
+Assuming I get an invite to LSF/MM (I guess they haven't gone out
+yet?), I'd like to have a chance to chat with anyone who has strong
+opinions on this issue in Palm Springs.  Maybe we could schedule a BOF
+slot to hear from the folks who attend LSF/MM/BPF and learn what
+things we all consider important vis-a-vis the technical conferences
+that we attend?
 
 Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+							- Ted
