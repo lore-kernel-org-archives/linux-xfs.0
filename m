@@ -6,28 +6,29 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C413DC352A4
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 23:01:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F607C352A4
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 23:35:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 96F61217F4
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 23:01:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F064F20578
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 23:35:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727692AbgBLXBC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Feb 2020 18:01:02 -0500
-Received: from sandeen.net ([63.231.237.45]:47854 "EHLO sandeen.net"
+        id S1727117AbgBLXfp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Feb 2020 18:35:45 -0500
+Received: from sandeen.net ([63.231.237.45]:49722 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729223AbgBLXBB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Feb 2020 18:01:01 -0500
+        id S1729132AbgBLXfp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Feb 2020 18:35:45 -0500
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 12F402A78;
-        Wed, 12 Feb 2020 17:00:55 -0600 (CST)
-Subject: Re: [PATCH 01/14] xfs: explicitly define inode timestamp range
+        by sandeen.net (Postfix) with ESMTPSA id 79CDA78D4;
+        Wed, 12 Feb 2020 17:35:38 -0600 (CST)
+Subject: Re: [PATCH 02/14] xfs: preserve default grace interval during
+ quotacheck
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <157784106066.1364230.569420432829402226.stgit@magnolia>
- <157784106702.1364230.14985571182679451055.stgit@magnolia>
+ <157784107520.1364230.49128863919644273.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -71,12 +72,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <639ba6e0-71b3-1d81-820e-ad49a56a032c@sandeen.net>
-Date:   Wed, 12 Feb 2020 17:00:59 -0600
+Message-ID: <1157c1cd-31d0-cb8a-90ae-c37d85c70835@sandeen.net>
+Date:   Wed, 12 Feb 2020 17:35:43 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.4.2
 MIME-Version: 1.0
-In-Reply-To: <157784106702.1364230.14985571182679451055.stgit@magnolia>
+In-Reply-To: <157784107520.1364230.49128863919644273.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -88,89 +89,110 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 12/31/19 7:11 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
+> When quotacheck runs, it zeroes all the timer fields in every dquot.
+> Unfortunately, it also does this to the root dquot, which erases any
+> preconfigured grace interval that the administrator may have set.  Worse
+> yet, the incore copies of those variables remain set.  This cache
+> coherence problem manifests itself as the grace interval mysteriously
+> being reset back to the defaults at the /next/ mount.
+
+woot that's kind of a theme in xfs quota code :/
+
+Is it my turn to ask for a testcase?
+
+so: "quotacheck" on xfs means "mount with quota accounting enabled" I think,
+just for clarity...
+
+> Fix it by resetting the root disk dquot's timer fields to the incore
+> values.
+> 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_format.h |   19 +++++++++++++++++++
->  fs/xfs/xfs_ondisk.h        |    8 ++++++++
->  fs/xfs/xfs_super.c         |    4 ++--
->  3 files changed, 29 insertions(+), 2 deletions(-)
+>  fs/xfs/xfs_qm.c |   19 +++++++++++++++++++
+>  1 file changed, 19 insertions(+)
 > 
 > 
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index 9ff373962d10..82b15832ba32 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -841,11 +841,30 @@ typedef struct xfs_agfl {
->  	    ASSERT(xfs_daddr_to_agno(mp, d) == \
->  		   xfs_daddr_to_agno(mp, (d) + (len) - 1)))
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index 0ce334c51d73..d4a9765c9502 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -842,6 +842,23 @@ xfs_qm_qino_alloc(
+>  	return error;
+>  }
 >  
-> +/*
-> + * XFS Timestamps
-> + * ==============
-> + *
-> + * Inode timestamps consist of signed 32-bit counters for seconds and
-> + * nanoseconds; time zero is the Unix epoch, Jan  1 00:00:00 UTC 1970.
-> + */
->  typedef struct xfs_timestamp {
->  	__be32		t_sec;		/* timestamp seconds */
->  	__be32		t_nsec;		/* timestamp nanoseconds */
->  } xfs_timestamp_t;
->  
-> +/*
-> + * Smallest possible timestamp with traditional timestamps, which is
-> + * Dec 13 20:45:52 UTC 1901.
-> + */
-> +#define XFS_INO_TIME_MIN	((int64_t)S32_MIN)
+> +/* Save the grace period intervals when zeroing dquots for quotacheck. */
+> +static inline void
+> +xfs_qm_reset_dqintervals(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_disk_dquot	*ddq)
+> +{
+> +	struct xfs_quotainfo	*qinf = mp->m_quotainfo;
 > +
-> +/*
-> + * Largest possible timestamp with traditional timestamps, which is
-> + * Jan 19 03:14:07 UTC 2038.
-> + */
-> +#define XFS_INO_TIME_MAX	((int64_t)S32_MAX)
+> +	if (qinf->qi_btimelimit != XFS_QM_BTIMELIMIT)
+> +		ddq->d_btimer = cpu_to_be32(qinf->qi_btimelimit);
 > +
->  /*
->   * On-disk inode structure.
->   *
-> diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-> index fa0ec2fae14a..f67f3645efcd 100644
-> --- a/fs/xfs/xfs_ondisk.h
-> +++ b/fs/xfs/xfs_ondisk.h
-> @@ -15,9 +15,17 @@
->  		"XFS: offsetof(" #structname ", " #member ") is wrong, " \
->  		"expected " #off)
->  
-> +#define XFS_CHECK_VALUE(value, expected) \
-> +	BUILD_BUG_ON_MSG((value) != (expected), \
-> +		"XFS: value of " #value " is wrong, expected " #expected)
+> +	if (qinf->qi_itimelimit != XFS_QM_ITIMELIMIT)
+> +		ddq->d_itimer = cpu_to_be32(qinf->qi_itimelimit);
 > +
->  static inline void __init
->  xfs_check_ondisk_structs(void)
->  {
-> +	/* make sure timestamp limits are correct */
-> +	XFS_CHECK_VALUE(XFS_INO_TIME_MIN, 			-2147483648LL);
-> +	XFS_CHECK_VALUE(XFS_INO_TIME_MAX,			2147483647LL);
+> +	if (qinf->qi_rtbtimelimit != XFS_QM_RTBTIMELIMIT)
+> +		ddq->d_rtbtimer = cpu_to_be32(qinf->qi_rtbtimelimit);
 
-IMHO this really shouldn't be in a function with this name, as it's not checking
-an ondisk struct.  And I'm not really sure what it's protecting against?
-Basically you put an integer in one #define and check it in another?
+Probably need to handle warning counters here too, but ...
 
-> +
->  	/* ag/file structures */
->  	XFS_CHECK_STRUCT_SIZE(struct xfs_acl,			4);
->  	XFS_CHECK_STRUCT_SIZE(struct xfs_acl_entry,		12);
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index f687181a2720..3bddf13cd8ea 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1582,8 +1582,8 @@ xfs_fc_fill_super(
->  	sb->s_maxbytes = xfs_max_file_offset(sb->s_blocksize_bits);
->  	sb->s_max_links = XFS_MAXLINK;
->  	sb->s_time_gran = 1;
-> -	sb->s_time_min = S32_MIN;
-> -	sb->s_time_max = S32_MAX;
-> +	sb->s_time_min = XFS_INO_TIME_MIN;
-> +	sb->s_time_max = XFS_INO_TIME_MAX;
->  	sb->s_iflags |= SB_I_CGROUPWB;
+> +}
 >  
->  	set_posix_acl_flag(sb);
+>  STATIC void
+>  xfs_qm_reset_dqcounts(
+> @@ -895,6 +912,8 @@ 	(
+>  		ddq->d_bwarns = 0;
+>  		ddq->d_iwarns = 0;
+>  		ddq->d_rtbwarns = 0;
+
+a comment about why !ddq->d_id (i.e. it's the default quota)
+would probably be good here.
+
+> +		if (!ddq->d_id)
+> +			xfs_qm_reset_dqintervals(mp, ddq);
+
+Isn't it a little weird to clear it for ID 0, then immediately reset it?
+
+Let's see, quotacheck only happens when we do a fresh mount where quota accounting
+was not on during the previous mount.
+
+The point of quotacheck is to get all of the block counters in sync with actual
+block usage.
+
+The timers (and warnings) for normal users are zero until they exceed soft limits,
+then reflect the time at which EDQUOT will appear.
+
+<aside: does quotacheck set timers for users who are already over soft limits
+at quotacheck time...?  Yes: see xfs_qm_quotacheck_dqadjust()>
+
+The timers (and warnings) for ID 0 (root/default) are where we store the default
+grace times & warning limits, there is no need for quotacheck to change them;
+they serve a different purpose.
+
+So quotacheck really should never be touching the default timers or warn limits
+on ID 0.  I'd suggest simply skipping them for id 0, as it is treated specially
+in several other places as well, i.e.
+
+-               ddq->d_btimer = 0;
+-               ddq->d_itimer = 0;
+-               ddq->d_rtbtimer = 0;
+-               ddq->d_bwarns = 0;
+-               ddq->d_iwarns = 0;
+-               ddq->d_rtbwarns = 0;
++               /* Don't reset default quota timers & counters in root dquot */
++               if (ddq->d_id) {
++                       ddq->d_btimer = 0;
++                       ddq->d_itimer = 0;
++                       ddq->d_rtbtimer = 0;
++                       ddq->d_bwarns = 0;
++                       ddq->d_iwarns = 0;
++                       ddq->d_rtbwarns = 0;
++               }
+
+>  
+>  		if (xfs_sb_version_hascrc(&mp->m_sb)) {
+>  			xfs_update_cksum((char *)&dqb[j],
 > 
