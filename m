@@ -2,69 +2,119 @@ Return-Path: <SRS0=V0Y3=4A=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4669C3B186
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 07:37:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8A25C2BA83
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 11:55:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 94CEB20724
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 07:37:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AE16F20848
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 11:55:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728280AbgBLHhV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Feb 2020 02:37:21 -0500
-Received: from verein.lst.de ([213.95.11.211]:36725 "EHLO verein.lst.de"
+        id S1727264AbgBLLzW convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Feb 2020 06:55:22 -0500
+Received: from albireo.enyo.de ([37.24.231.21]:57468 "EHLO albireo.enyo.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727669AbgBLHhU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Feb 2020 02:37:20 -0500
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id BD9B868B05; Wed, 12 Feb 2020 08:37:17 +0100 (CET)
-Date:   Wed, 12 Feb 2020 08:37:17 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     Andrew Morton <akpm@linux-foundation.org>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, Waiman Long <longman@redhat.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
-        linux-ext4@vger.kernel.org, cluster-devel@redhat.com,
-        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-        Naohiro Aota <naohiro.aota@wdc.com>
-Subject: Re: [PATCH 01/12] mm: fix a comment in sys_swapon
-Message-ID: <20200212073717.GB25555@lst.de>
-References: <20200114161225.309792-1-hch@lst.de> <20200114161225.309792-2-hch@lst.de> <20200210152942.2ec4d0b71851feccb7387266@linux-foundation.org>
+        id S1728098AbgBLLzW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Feb 2020 06:55:22 -0500
+X-Greylist: delayed 307 seconds by postgrey-1.27 at vger.kernel.org; Wed, 12 Feb 2020 06:55:20 EST
+Received: from [172.17.203.2] (helo=deneb.enyo.de)
+        by albireo.enyo.de with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        id 1j1qWy-0000MT-Hp; Wed, 12 Feb 2020 11:50:12 +0000
+Received: from fw by deneb.enyo.de with local (Exim 4.92)
+        (envelope-from <fw@deneb.enyo.de>)
+        id 1j1qVd-00029u-Nu; Wed, 12 Feb 2020 12:48:49 +0100
+From:   Florian Weimer <fw@deneb.enyo.de>
+To:     linux-xfs@vger.kernel.org
+Cc:     libc-alpha@sourceware.org, linux-fsdevel@vger.kernel.org
+Subject: XFS reports lchmod failure, but changes file system contents
+Date:   Wed, 12 Feb 2020 12:48:49 +0100
+Message-ID: <874kvwowke.fsf@mid.deneb.enyo.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200210152942.2ec4d0b71851feccb7387266@linux-foundation.org>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 10, 2020 at 03:29:42PM -0800, Andrew Morton wrote:
-> On Tue, 14 Jan 2020 17:12:14 +0100 Christoph Hellwig <hch@lst.de> wrote:
-> 
-> > claim_swapfile now always takes i_rwsem.
-> > 
-> > ...
-> >
-> > --- a/mm/swapfile.c
-> > +++ b/mm/swapfile.c
-> > @@ -3157,7 +3157,7 @@ SYSCALL_DEFINE2(swapon, const char __user *, specialfile, int, swap_flags)
-> >  	mapping = swap_file->f_mapping;
-> >  	inode = mapping->host;
-> >  
-> > -	/* If S_ISREG(inode->i_mode) will do inode_lock(inode); */
-> > +	/* will take i_rwsem; */
-> >  	error = claim_swapfile(p, inode);
-> >  	if (unlikely(error))
-> >  		goto bad_swap;
-> 
-> http://lkml.kernel.org/r/20200206090132.154869-1-naohiro.aota@wdc.com
-> removes this comment altogether.  Please check that this is OK?
+In principle, Linux supports lchmod via O_PATH descriptors and chmod
+on /proc/self/fd.  (lchmod is the non-symbolic-link-following variant
+of chmod.)
 
-Killing it is fine with me.  Just the fact that the comment was wrong
-while I did an audit of the area really thew me off.
+This helper program can be used to do this:
+
+#define _GNU_SOURCE
+#include <err.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+int
+main (int argc, char **argv)
+{
+  if (argc != 3)
+    {
+      fprintf (stderr, "usage: %s MODE FILE\n", argv[0]);
+      return 2;
+    }
+
+  unsigned int mode;
+  if (sscanf (argv[1], "%o", &mode) != 1
+      || mode != (mode_t) mode)
+    errx (1, "invalid mode: %s", argv[1]);
+
+  int fd = open (argv[2], O_PATH | O_NOFOLLOW);
+  if (fd < 0)
+    err (1, "open");
+
+  char *fd_path;
+  if (asprintf (&fd_path, "/proc/self/fd/%d", fd) < 0)
+    err (1, "asprintf");
+
+  if (chmod (fd_path, mode) != 0)
+    err (1, "chmod");
+
+  free (fd_path);
+  if (close (fd) != 0)
+    err (1, "close");
+
+  return 0;
+}
+
+When changing the permissions of on XFS in this way, the chmod
+operation fails:
+
+$ ln -s does-not-exist /var/tmp/symlink
+$ ls -l /var/tmp/symlink 
+lrwxrwxrwx. 1 fweimer fweimer 14 Feb 12 12:41 /var/tmp/symlink -> does-not-exist
+$ strace ./lchmod 0 /var/tmp/symlink
+[…]
+openat(AT_FDCWD, "/var/tmp/symlink", O_RDONLY|O_NOFOLLOW|O_PATH) = 3
+[…]
+chmod("/proc/self/fd/3", 000)           = -1 EOPNOTSUPP (Operation not supported)
+write(2, "lchmod: ", 8lchmod: )                 = 8
+write(2, "chmod", 5chmod)                    = 5
+write(2, ": Operation not supported\n", 26: Operation not supported
+) = 26
+exit_group(1)                           = ?
+
+But the file system contents has changed nevertheless:
+
+$ ls -l /var/tmp/symlink 
+l---------. 1 fweimer fweimer 14 Feb 12 12:41 /var/tmp/symlink -> does-not-exist
+$ echo 3 | sudo tee /proc/sys/vm/drop_caches 
+$ ls -l /var/tmp/symlink 
+l---------. 1 fweimer fweimer 14 Feb 12 12:41 /var/tmp/symlink -> does-not-exist
+
+This looks like an XFS bug to me.  With tmpfs, the chmod succeeds and
+is reflected in the file system.
+
+This bug also affects regular files, not just symbolic links.
+
+It causes the io/tst-lchmod glibc test to fail (after it has been
+fixed, the in-tree version has another bug).
