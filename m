@@ -2,187 +2,175 @@ Return-Path: <SRS0=V0Y3=4A=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7611C352A4
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 22:42:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C413DC352A4
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 23:01:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 90F8620848
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 22:42:43 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="CL1Yv2ow"
+	by mail.kernel.org (Postfix) with ESMTP id 96F61217F4
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 23:01:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728098AbgBLWmn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Feb 2020 17:42:43 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:45746 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727692AbgBLWmn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Feb 2020 17:42:43 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01CMgcfR069033;
-        Wed, 12 Feb 2020 22:42:38 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=Z0SHkkKVG+gs55qEd/RP/7rUFc+/POczqmO69ahQYMY=;
- b=CL1Yv2owQl9zfvWpMhq6lqqi6dahEQtOJMi31asm5l/BRhPx1v5kL8SByVCNfRMrIB3c
- dVW7iwbZ0be6mf1bItvb/VSm8c9mS3xht8S9kday3z7q2grPXsP1EObdmK3nYH695Qda
- SzU1egJK76ibHGNIh9FwI3UEDFzPhuuaqlQHe51L6bkIGcFxWdKZUrGJhrM/OKL+NN6N
- bawvWrfq8ywhfMPpuLsIRLwyyVZLCn60r+A9XuySfVLtwdvI8lzTNcStA+DWrFMRrhoB
- MQPAv2cxVJ1DlYOXwGsIafUNSNQg45weMBgpaHwaOeVb5/mAGF18eApzse3Cnghx5rSJ +Q== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2y2jx6ea8v-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 12 Feb 2020 22:42:38 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01CMXAV2073405;
-        Wed, 12 Feb 2020 22:42:37 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 2y4kah29bn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 12 Feb 2020 22:42:37 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01CMga0X003934;
-        Wed, 12 Feb 2020 22:42:36 GMT
-Received: from localhost (/10.159.151.237)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 12 Feb 2020 14:42:35 -0800
-Date:   Wed, 12 Feb 2020 14:42:34 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     lsf-pc@lists.linux-foundation.org,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>, Eryu Guan <guaneryu@gmail.com>,
-        Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [Lsf-pc] [LSF/MM/BPF TOPIC] FS Maintainers Don't Scale
-Message-ID: <20200212224234.GV6870@magnolia>
-References: <20200131052520.GC6869@magnolia>
- <CAOQ4uxh=4DrH_dL3TULcFa+pGk0YhS=TobuGk_+Z0oRWvw63rg@mail.gmail.com>
+        id S1727692AbgBLXBC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Feb 2020 18:01:02 -0500
+Received: from sandeen.net ([63.231.237.45]:47854 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729223AbgBLXBB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Feb 2020 18:01:01 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 12F402A78;
+        Wed, 12 Feb 2020 17:00:55 -0600 (CST)
+Subject: Re: [PATCH 01/14] xfs: explicitly define inode timestamp range
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <157784106066.1364230.569420432829402226.stgit@magnolia>
+ <157784106702.1364230.14985571182679451055.stgit@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <639ba6e0-71b3-1d81-820e-ad49a56a032c@sandeen.net>
+Date:   Wed, 12 Feb 2020 17:00:59 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.4.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxh=4DrH_dL3TULcFa+pGk0YhS=TobuGk_+Z0oRWvw63rg@mail.gmail.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9529 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 bulkscore=0
- suspectscore=0 mlxscore=0 malwarescore=0 adultscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002120154
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9529 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
- priorityscore=1501 adultscore=0 phishscore=0 impostorscore=0 spamscore=0
- bulkscore=0 lowpriorityscore=0 mlxscore=0 suspectscore=0 clxscore=1015
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002120155
+In-Reply-To: <157784106702.1364230.14985571182679451055.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 31, 2020 at 09:30:02AM +0200, Amir Goldstein wrote:
-> On Fri, Jan 31, 2020 at 7:25 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> >
-> > Hi everyone,
-> >
-> > I would like to discuss how to improve the process of shepherding code
-> > into the kernel to make it more enjoyable for maintainers, reviewers,
-> > and code authors.  Here is a brief summary of how we got here:
-> >
-> > Years ago, XFS had one maintainer tending to all four key git repos
-> > (kernel, userspace, documentation, testing).  Like most subsystems, the
-> > maintainer did a lot of review and porting code between the kernel and
-> > userspace, though with help from others.
-> >
-> > It turns out that this didn't scale very well, so we split the
-> > responsibilities into three maintainers.  Like most subsystems, the
-> > maintainers still did a lot of review and porting work, though with help
-> > from others.
-> >
-> > It turns out that this system doesn't scale very well either.  Even with
-> > three maintainers sharing access to the git trees and working together
-> > to get reviews done, mailing list traffic has been trending upwards for
-> > years, and we still can't keep up.  I fear that many maintainers are
-> > burning out.  For XFS, the biggest pain point (AFAICT) is not assembly and
-> > testing of the git trees, but keeping up with the mail and the reviews.
-> >
-> > So what do we do about this?  I think we (the XFS project, anyway)
-> > should increase the amount of organizing in our review process.  For
-> > large patchsets, I would like to improve informal communication about
-> > who the author might like to have conduct a review, who might be
-> > interested in conducting a review, estimates of how much time a reviewer
-> > has to spend on a patchset, and of course, feedback about how it went.
-> > This of course is to lay the groundwork for making a case to our bosses
-> > for growing our community, allocating time for reviews and for growing
-> > our skills as reviewers.
-> >
+On 12/31/19 7:11 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Interesting.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_format.h |   19 +++++++++++++++++++
+>  fs/xfs/xfs_ondisk.h        |    8 ++++++++
+>  fs/xfs/xfs_super.c         |    4 ++--
+>  3 files changed, 29 insertions(+), 2 deletions(-)
 > 
-> Eryu usually posts a weekly status of xfstests review queue, often with
-> a call for reviewers, sometimes with specific patch series mentioned.
-> That helps me as a developer to monitor the status of my own work
-> and it helps me as a reviewer to put the efforts where the maintainer
-> needs me the most.
-
-I wasn't aware of that, I'll ask him to put me on the list.
-
-> For xfs kernel patches, I can represent the voice of "new blood".
-> Getting new people to join the review effort is quite a hard barrier.
-> I have taken a few stabs at doing review for xfs patch series over the
-> year, but it mostly ends up feeling like it helped me (get to know xfs code
-> better) more than it helped the maintainer, because the chances of a
-> new reviewer to catch meaningful bugs are very low and if another reviewer
-> is going to go over the same patch series, the chances of new reviewer to
-> catch bugs that novice reviewer will not catch are extremely low.
-
-Probably not, I miss small things too. :)
-
-Especially if one has to twist through a bunch of different functions to
-figure out if there's really a bug there.
-
-> However, there are quite a few cleanup and refactoring patch series,
-> especially on the xfs list, where a review from an "outsider" could still
-> be of value to the xfs community. OTOH, for xfs maintainer, those are
-> the easy patches to review, so is there a gain in offloading those reviews?
-
-Yes, because there's still a ton of things I suck at -- running sparse
-and smatch on the git trees, figuring out how a given patch will affect
-xfsprogs, etc.
-
-> Bottom line - a report of the subsystem review queue status, call for
-> reviewers and highlighting specific areas in need of review is a good idea.
-> Developers responding to that report publicly with availability for review,
-> intention and expected time frame for taking on a review would be helpful
-> for both maintainers and potential reviewers.
-
-<nod>
-
---D
-
-> Thanks,
-> Amir.
 > 
-> > ---
-> >
-> > I want to spend the time between right now and whenever this discussion
-> > happens to make a list of everything that works and that could be made
-> > better about our development process.
-> >
-> > I want to spend five minutes at the start of the discussion to
-> > acknowledge everyone's feelings around that list that we will have
-> > compiled.
-> >
-> > Then I want to spend the rest of the session breaking up the problems
-> > into small enough pieces to solve, discussing solutions to those
-> > problems, and (ideally) pushing towards a consensus on what series of
-> > small adjustments we can make to arrive at something that works better
-> > for everyone.
-> >
-> > --D
-> > _______________________________________________
-> > Lsf-pc mailing list
-> > Lsf-pc@lists.linux-foundation.org
-> > https://lists.linuxfoundation.org/mailman/listinfo/lsf-pc
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index 9ff373962d10..82b15832ba32 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -841,11 +841,30 @@ typedef struct xfs_agfl {
+>  	    ASSERT(xfs_daddr_to_agno(mp, d) == \
+>  		   xfs_daddr_to_agno(mp, (d) + (len) - 1)))
+>  
+> +/*
+> + * XFS Timestamps
+> + * ==============
+> + *
+> + * Inode timestamps consist of signed 32-bit counters for seconds and
+> + * nanoseconds; time zero is the Unix epoch, Jan  1 00:00:00 UTC 1970.
+> + */
+>  typedef struct xfs_timestamp {
+>  	__be32		t_sec;		/* timestamp seconds */
+>  	__be32		t_nsec;		/* timestamp nanoseconds */
+>  } xfs_timestamp_t;
+>  
+> +/*
+> + * Smallest possible timestamp with traditional timestamps, which is
+> + * Dec 13 20:45:52 UTC 1901.
+> + */
+> +#define XFS_INO_TIME_MIN	((int64_t)S32_MIN)
+> +
+> +/*
+> + * Largest possible timestamp with traditional timestamps, which is
+> + * Jan 19 03:14:07 UTC 2038.
+> + */
+> +#define XFS_INO_TIME_MAX	((int64_t)S32_MAX)
+> +
+>  /*
+>   * On-disk inode structure.
+>   *
+> diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
+> index fa0ec2fae14a..f67f3645efcd 100644
+> --- a/fs/xfs/xfs_ondisk.h
+> +++ b/fs/xfs/xfs_ondisk.h
+> @@ -15,9 +15,17 @@
+>  		"XFS: offsetof(" #structname ", " #member ") is wrong, " \
+>  		"expected " #off)
+>  
+> +#define XFS_CHECK_VALUE(value, expected) \
+> +	BUILD_BUG_ON_MSG((value) != (expected), \
+> +		"XFS: value of " #value " is wrong, expected " #expected)
+> +
+>  static inline void __init
+>  xfs_check_ondisk_structs(void)
+>  {
+> +	/* make sure timestamp limits are correct */
+> +	XFS_CHECK_VALUE(XFS_INO_TIME_MIN, 			-2147483648LL);
+> +	XFS_CHECK_VALUE(XFS_INO_TIME_MAX,			2147483647LL);
+
+IMHO this really shouldn't be in a function with this name, as it's not checking
+an ondisk struct.  And I'm not really sure what it's protecting against?
+Basically you put an integer in one #define and check it in another?
+
+> +
+>  	/* ag/file structures */
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_acl,			4);
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_acl_entry,		12);
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index f687181a2720..3bddf13cd8ea 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1582,8 +1582,8 @@ xfs_fc_fill_super(
+>  	sb->s_maxbytes = xfs_max_file_offset(sb->s_blocksize_bits);
+>  	sb->s_max_links = XFS_MAXLINK;
+>  	sb->s_time_gran = 1;
+> -	sb->s_time_min = S32_MIN;
+> -	sb->s_time_max = S32_MAX;
+> +	sb->s_time_min = XFS_INO_TIME_MIN;
+> +	sb->s_time_max = XFS_INO_TIME_MAX;
+>  	sb->s_iflags |= SB_I_CGROUPWB;
+>  
+>  	set_posix_acl_flag(sb);
+> 
