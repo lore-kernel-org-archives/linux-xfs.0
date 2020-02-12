@@ -7,116 +7,182 @@ X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5432C352A4
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 22:36:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7611C352A4
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 22:42:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A928B21734
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 22:36:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 90F8620848
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 22:42:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="UP7DA0+D"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="CL1Yv2ow"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729119AbgBLWgT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Feb 2020 17:36:19 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:39444 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727947AbgBLWgT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Feb 2020 17:36:19 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01CMX9MJ158365;
-        Wed, 12 Feb 2020 22:36:11 GMT
+        id S1728098AbgBLWmn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Feb 2020 17:42:43 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:45746 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727692AbgBLWmn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Feb 2020 17:42:43 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01CMgcfR069033;
+        Wed, 12 Feb 2020 22:42:38 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=VFeSDsgSBvkQAC4z/Epd6NqlaYojuS+u2gfW5E/QwC4=;
- b=UP7DA0+DBjoniEOZ2unVe/1twDOMAmw35AUqi1AeAigPOI7kxNDRIhOSGcETQYEngE1p
- qtQgzGiCiedHq185FHlc1VWXbZkvP0fj9fzTuYpDlTv23TfeiY29OFGu9byfet8vGQfi
- zdQqFrsgUDJvXSQeZPpAUTWxiMvaG0BCnzB/xDUS+9kJceM8YBGpx4a4Jqr6qkIxJVNn
- 2aa5BltylYYbAJOkhZ5r0WTZjMsbUCUOy0IezgK8XHPWpB3HRvz2fH5ZddDFC932cag5
- XU16lYwR9JGKfsW83yBt510a8cx3Ai93V1AnG6itsUwKJ86xGAAOpN/epnDJ8CpGbK8f +w== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2y2p3snvhb-1
+ bh=Z0SHkkKVG+gs55qEd/RP/7rUFc+/POczqmO69ahQYMY=;
+ b=CL1Yv2owQl9zfvWpMhq6lqqi6dahEQtOJMi31asm5l/BRhPx1v5kL8SByVCNfRMrIB3c
+ dVW7iwbZ0be6mf1bItvb/VSm8c9mS3xht8S9kday3z7q2grPXsP1EObdmK3nYH695Qda
+ SzU1egJK76ibHGNIh9FwI3UEDFzPhuuaqlQHe51L6bkIGcFxWdKZUrGJhrM/OKL+NN6N
+ bawvWrfq8ywhfMPpuLsIRLwyyVZLCn60r+A9XuySfVLtwdvI8lzTNcStA+DWrFMRrhoB
+ MQPAv2cxVJ1DlYOXwGsIafUNSNQg45weMBgpaHwaOeVb5/mAGF18eApzse3Cnghx5rSJ +Q== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 2y2jx6ea8v-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 12 Feb 2020 22:36:11 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01CMVjtS085470;
-        Wed, 12 Feb 2020 22:36:10 GMT
+        Wed, 12 Feb 2020 22:42:38 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01CMXAV2073405;
+        Wed, 12 Feb 2020 22:42:37 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 2y4k7xh5d5-1
+        by userp3030.oracle.com with ESMTP id 2y4kah29bn-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 12 Feb 2020 22:36:10 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01CMa9ia000619;
-        Wed, 12 Feb 2020 22:36:09 GMT
+        Wed, 12 Feb 2020 22:42:37 +0000
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01CMga0X003934;
+        Wed, 12 Feb 2020 22:42:36 GMT
 Received: from localhost (/10.159.151.237)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 12 Feb 2020 14:36:08 -0800
-Date:   Wed, 12 Feb 2020 14:36:06 -0800
+        with ESMTP ; Wed, 12 Feb 2020 14:42:35 -0800
+Date:   Wed, 12 Feb 2020 14:42:34 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     Allison Collins <allison.henderson@oracle.com>,
-        Eric Sandeen <sandeen@redhat.com>,
-        Amir Goldstein <amir73il@gmail.com>,
-        Dave Chinner <david@fromorbit.com>,
-        xfs <linux-xfs@vger.kernel.org>, Eryu Guan <guaneryu@gmail.com>,
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     lsf-pc@lists.linux-foundation.org,
         linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        lsf-pc@lists.linux-foundation.org
+        xfs <linux-xfs@vger.kernel.org>, Eryu Guan <guaneryu@gmail.com>,
+        Eric Sandeen <sandeen@redhat.com>
 Subject: Re: [Lsf-pc] [LSF/MM/BPF TOPIC] FS Maintainers Don't Scale
-Message-ID: <20200212223606.GQ6874@magnolia>
+Message-ID: <20200212224234.GV6870@magnolia>
 References: <20200131052520.GC6869@magnolia>
  <CAOQ4uxh=4DrH_dL3TULcFa+pGk0YhS=TobuGk_+Z0oRWvw63rg@mail.gmail.com>
- <8983ceaa-1fda-f9cc-73c9-8764d010d3e2@oracle.com>
- <20200202214620.GA20628@dread.disaster.area>
- <fc430471-54d2-bb44-d084-a37e7ff9ef50@oracle.com>
- <20200212220600.GS6870@magnolia>
- <CAPcyv4gzGzgYxEDC-hjy9cy2M+V_t9VcALM3jmH=_K8XheOF-w@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4gzGzgYxEDC-hjy9cy2M+V_t9VcALM3jmH=_K8XheOF-w@mail.gmail.com>
+In-Reply-To: <CAOQ4uxh=4DrH_dL3TULcFa+pGk0YhS=TobuGk_+Z0oRWvw63rg@mail.gmail.com>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9529 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
- suspectscore=0 mlxscore=0 bulkscore=0 malwarescore=0 phishscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002120154
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9529 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 malwarescore=0
- suspectscore=0 mlxlogscore=999 priorityscore=1501 clxscore=1015
- impostorscore=0 lowpriorityscore=0 phishscore=0 adultscore=0 bulkscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 bulkscore=0
+ suspectscore=0 mlxscore=0 malwarescore=0 adultscore=0 mlxlogscore=999
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
  definitions=main-2002120154
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9529 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
+ priorityscore=1501 adultscore=0 phishscore=0 impostorscore=0 spamscore=0
+ bulkscore=0 lowpriorityscore=0 mlxscore=0 suspectscore=0 clxscore=1015
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002120155
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 12, 2020 at 02:19:40PM -0800, Dan Williams wrote:
-> On Wed, Feb 12, 2020 at 2:07 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> [..]
-> > I've really really wanted to be able to tell people to just send a pull
-> > request for large series and skip all the email patch review stuff, but
-> > I'm well aware that will start a popular revolt.  But maybe we can do
-> > both?  Is it legit to ask that if you're sending more than a simple
-> > quickfix, to please push a branch somewhere so that I can just yank it
-> > down and have a look?  I try to do that with every series that I send, I
-> > think Allison has been doing that, Christoph does it sometimes, etc.
+On Fri, Jan 31, 2020 at 09:30:02AM +0200, Amir Goldstein wrote:
+> On Fri, Jan 31, 2020 at 7:25 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> >
+> > Hi everyone,
+> >
+> > I would like to discuss how to improve the process of shepherding code
+> > into the kernel to make it more enjoyable for maintainers, reviewers,
+> > and code authors.  Here is a brief summary of how we got here:
+> >
+> > Years ago, XFS had one maintainer tending to all four key git repos
+> > (kernel, userspace, documentation, testing).  Like most subsystems, the
+> > maintainer did a lot of review and porting code between the kernel and
+> > userspace, though with help from others.
+> >
+> > It turns out that this didn't scale very well, so we split the
+> > responsibilities into three maintainers.  Like most subsystems, the
+> > maintainers still did a lot of review and porting work, though with help
+> > from others.
+> >
+> > It turns out that this system doesn't scale very well either.  Even with
+> > three maintainers sharing access to the git trees and working together
+> > to get reviews done, mailing list traffic has been trending upwards for
+> > years, and we still can't keep up.  I fear that many maintainers are
+> > burning out.  For XFS, the biggest pain point (AFAICT) is not assembly and
+> > testing of the git trees, but keeping up with the mail and the reviews.
+> >
+> > So what do we do about this?  I think we (the XFS project, anyway)
+> > should increase the amount of organizing in our review process.  For
+> > large patchsets, I would like to improve informal communication about
+> > who the author might like to have conduct a review, who might be
+> > interested in conducting a review, estimates of how much time a reviewer
+> > has to spend on a patchset, and of course, feedback about how it went.
+> > This of course is to lay the groundwork for making a case to our bosses
+> > for growing our community, allocating time for reviews and for growing
+> > our skills as reviewers.
+> >
 > 
-> This is begging me to point out that Konstantin has automated this
-> with his get-lore-mbox tool [1]. As long as the submitter uses "git
-> format-patch --base..." then the tool can automate recreating a local
-> branch from a mail series.
+> Interesting.
 > 
-> [1]: https://lore.kernel.org/workflows/20200201030105.k6akvbjpmlpcuiky@chatter.i7.local/
+> Eryu usually posts a weekly status of xfstests review queue, often with
+> a call for reviewers, sometimes with specific patch series mentioned.
+> That helps me as a developer to monitor the status of my own work
+> and it helps me as a reviewer to put the efforts where the maintainer
+> needs me the most.
 
-Yes, I'm aware of the development of git-lore-mbox, but I'd rather just
-pull directly from a developer's git repo than create branches on my
-computer.  I /already/ have my own script to extract patches and
-apply/paste/staple them onto a git tree, and xfsprogs already has
-scripts to automate porting of libxfs change from the kernel.
+I wasn't aware of that, I'll ask him to put me on the list.
 
-My goal here is more to change the balance of who does what work a
-little bit back towards patch authors, than it is to spend less time
-putting together git trees.  I mean, most of you already use git already
-anyway, right?  :)
+> For xfs kernel patches, I can represent the voice of "new blood".
+> Getting new people to join the review effort is quite a hard barrier.
+> I have taken a few stabs at doing review for xfs patch series over the
+> year, but it mostly ends up feeling like it helped me (get to know xfs code
+> better) more than it helped the maintainer, because the chances of a
+> new reviewer to catch meaningful bugs are very low and if another reviewer
+> is going to go over the same patch series, the chances of new reviewer to
+> catch bugs that novice reviewer will not catch are extremely low.
+
+Probably not, I miss small things too. :)
+
+Especially if one has to twist through a bunch of different functions to
+figure out if there's really a bug there.
+
+> However, there are quite a few cleanup and refactoring patch series,
+> especially on the xfs list, where a review from an "outsider" could still
+> be of value to the xfs community. OTOH, for xfs maintainer, those are
+> the easy patches to review, so is there a gain in offloading those reviews?
+
+Yes, because there's still a ton of things I suck at -- running sparse
+and smatch on the git trees, figuring out how a given patch will affect
+xfsprogs, etc.
+
+> Bottom line - a report of the subsystem review queue status, call for
+> reviewers and highlighting specific areas in need of review is a good idea.
+> Developers responding to that report publicly with availability for review,
+> intention and expected time frame for taking on a review would be helpful
+> for both maintainers and potential reviewers.
+
+<nod>
 
 --D
+
+> Thanks,
+> Amir.
+> 
+> > ---
+> >
+> > I want to spend the time between right now and whenever this discussion
+> > happens to make a list of everything that works and that could be made
+> > better about our development process.
+> >
+> > I want to spend five minutes at the start of the discussion to
+> > acknowledge everyone's feelings around that list that we will have
+> > compiled.
+> >
+> > Then I want to spend the rest of the session breaking up the problems
+> > into small enough pieces to solve, discussing solutions to those
+> > problems, and (ideally) pushing towards a consensus on what series of
+> > small adjustments we can make to arrive at something that works better
+> > for everyone.
+> >
+> > --D
+> > _______________________________________________
+> > Lsf-pc mailing list
+> > Lsf-pc@lists.linux-foundation.org
+> > https://lists.linuxfoundation.org/mailman/listinfo/lsf-pc
