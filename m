@@ -2,138 +2,97 @@ Return-Path: <SRS0=V0Y3=4A=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0DE3C2BA83
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 15:26:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4EF9C2BA83
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 15:57:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9ED4D21569
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 15:26:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A97D520873
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 15:57:04 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LMTuT+MV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728094AbgBLP0U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Feb 2020 10:26:20 -0500
-Received: from smtp.gentoo.org ([140.211.166.183]:56300 "EHLO smtp.gentoo.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727519AbgBLP0T (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Feb 2020 10:26:19 -0500
-Received: from [IPv6:2001:4dd4:2014:0:9098:2ad9:e5a1:caf4] (2001-4dd4-2014-0-9098-2ad9-e5a1-caf4.ipv6dyn.netcologne.de [IPv6:2001:4dd4:2014:0:9098:2ad9:e5a1:caf4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1727458AbgBLP5E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Feb 2020 10:57:04 -0500
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:56559 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727026AbgBLP5E (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Feb 2020 10:57:04 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1581523023;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=/mHK3YoSevia1D/vDXY6uwwCKZDuhlBb7bpDu4SpKnY=;
+        b=LMTuT+MVGqPoxEbyDtxX6EdMhuD7SBokRyg0izSEN6Pmms5okDTSbH+/3zBWxjZyuKLVXZ
+        F/oFAWb/lTkiwa1Wz+KcxBmosjH3XYruHWWwihhDViGoAif5k7kUA6BaMBAig8++0QpI6U
+        fXTbEG6vlxptm0hTKgCjQmMJymPIcFI=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-158-zjWJLb-pPjubDPGdVQXrYQ-1; Wed, 12 Feb 2020 10:55:13 -0500
+X-MC-Unique: zjWJLb-pPjubDPGdVQXrYQ-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: whissi)
-        by smtp.gentoo.org (Postfix) with ESMTPSA id 84F3934EBF8
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Feb 2020 15:26:17 +0000 (UTC)
-To:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-From:   Thomas Deutschmann <whissi@gentoo.org>
-Subject: xfsdump: Building inventory: gcc: fatal error: no input files
-Organization: Gentoo Foundation, Inc
-Message-ID: <ab3571df-40c1-dad8-800f-48c1a64355fe@gentoo.org>
-Date:   Wed, 12 Feb 2020 16:26:05 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/68.4.1
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B01C510054E3;
+        Wed, 12 Feb 2020 15:55:12 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5681B5C1B2;
+        Wed, 12 Feb 2020 15:55:12 +0000 (UTC)
+Date:   Wed, 12 Feb 2020 10:55:10 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     bugzilla-daemon@bugzilla.kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [Bug 206397] [xfstests generic/475] XFS: Assertion failed:
+ iclog->ic_state == XLOG_STATE_ACTIVE, file: fs/xfs/xfs_log.c, line: 572
+Message-ID: <20200212155510.GC17921@bfoster>
+References: <bug-206397-201763@https.bugzilla.kernel.org/>
+ <bug-206397-201763-9tX2Bll3tL@https.bugzilla.kernel.org/>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
- protocol="application/pgp-signature";
- boundary="mzdFUbvqHZqxYBG93esVEXhNl0U1Flp7t"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bug-206397-201763-9tX2Bll3tL@https.bugzilla.kernel.org/>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---mzdFUbvqHZqxYBG93esVEXhNl0U1Flp7t
-Content-Type: multipart/mixed; boundary="PFBGnmpRXzJ0YOBntYIsB0SsvvRYfefQV"
+On Tue, Feb 04, 2020 at 05:10:05PM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=206397
+> 
+> --- Comment #2 from Zorro Lang (zlang@redhat.com) ---
+> (In reply to Chandan Rajendra from comment #1)
+> > I was unable to recreate this issue on a ppc64le kvm guest. I used Linux
+> > v5.5 and xfsprogs' for-next branch.
+> > 
+> > Can you please share the kernel config file? Also, Can you please tell me
+> > how easy is it recreate this bug?
+> 
+> It's really hard to reproduce. The g/475 is a random test, it's helped us to
+> find many different issues. For this bug, this's the 1st time I hit it, and
+> can't reproduce it simply.
+> 
 
---PFBGnmpRXzJ0YOBntYIsB0SsvvRYfefQV
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+Have you still been unable to reproduce (assuming you've been attempting
+to)? How many iterations were required before you reproduced the first
+time?
 
-Hi,
+I'm wondering if the XLOG_STATE_IOERROR check in xfs_log_release_iclog()
+is racy with respect to filesystem shutdown. There's an ASSERT_ALWAYS()
+earlier in this (xlog_cil_push()) codepath that checks for ACTIVE ||
+WANT_SYNC and it doesn't appear that has failed from your output
+snippet. The aforementioned IOERROR check occurs before we acquire
+->l_icloglock, however, which I think means xfs_log_force_umount() could
+jump in if called from another task and reset all of the iclogs while
+the release path waits on the lock.
 
-not sure if anybody has noticed yet but when building xfsdump, there
-seems to be a non-fatal build error:
+Brian
 
-> Building inventory
->     [LTDEP]
-> gcc: fatal error: no input files
-> compilation terminated.
+> -- 
+> You are receiving this mail because:
+> You are watching the assignee of the bug.
+> 
 
-With remake I see
-
-> ~/sys-fs/xfsdump-3.1.9/work/xfsdump-3.1.9/inventory $ remake --trace=3D=
-read
-> Reading makefile 'Makefile'...
-> Reading makefile '../include/builddefs' (search path) (no ~ expansion).=
-=2E.
-> Reading makefile '../include/buildmacros' (search path) (no ~ expansion=
-)...
-> Reading makefile '../include/buildrules' (search path) (no ~ expansion)=
-=2E..
-> Reading makefile '../include/builddefs' (search path) (no ~ expansion).=
-=2E.
-> Reading makefile '.ltdep' (search path) (don't care) (no ~ expansion)..=
-=2E
->     [LTDEP]
-> x86_64-pc-linux-gnu-gcc -MM -O2 -pipe -march=3Divybridge -mtune=3Divybr=
-idge -mno-xsaveopt -Wno-error=3Dclobbered -Wno-error=3Dformat-overflow -W=
-no-error=3Dunused-function -Wno-error=3Dimplicit-function-declaration -Wn=
-o-error=3Dmaybe-uninitialized -frecord-gcc-switches -D_GNU_SOURCE  -O2 -p=
-ipe -march=3Divybridge -mtune=3Divybridge -mno-xsaveopt -Wno-error=3Dclob=
-bered -Wno-error=3Dformat-overflow -Wno-error=3Dunused-function -Wno-erro=
-r=3Dimplicit-function-declaration -Wno-error=3Dmaybe-uninitialized -freco=
-rd-gcc-switches -DNDEBUG -DVERSION=3D\"3.1.9\" -DLOCALEDIR=3D\"/usr/share=
-/locale\" -DPACKAGE=3D\"xfsdump\" -I../include -DENABLE_GETTEXT -D_GNU_SO=
-URCE -D_FILE_OFFSET_BITS=3D64 -funsigned-char -fno-strict-aliasing -Wall =
-   | /bin/sed -e 's,^\([^:]*\)\.o,\1.lo,' > .ltdep
-> x86_64-pc-linux-gnu-gcc: fatal error: no input files
-> compilation terminated.
-> Reading makefile 'Makefile'...
-> Reading makefile '../include/builddefs' (search path) (no ~ expansion).=
-=2E.
-> Reading makefile '../include/buildmacros' (search path) (no ~ expansion=
-)...
-> Reading makefile '../include/buildrules' (search path) (no ~ expansion)=
-=2E..
-> Reading makefile '../include/builddefs' (search path) (no ~ expansion).=
-=2E.
-> Reading makefile '.ltdep' (search path) (don't care) (no ~ expansion)..=
-=2E
-> remake: Nothing to be done for 'default'.
-
-Seen in xfsdump-3.1.6-3.1.9.
-
-Not just in Gentoo, it's also present in Debian, see
-https://buildd.debian.org/status/fetch.php?pkg=3Dxfsdump&arch=3Damd64&ver=
-=3D3.1.6%2Bnmu2%2Bb2&stamp=3D1526577413&raw=3D0
-
-
---=20
-Regards,
-Thomas Deutschmann / Gentoo Linux Developer
-C4DD 695F A713 8F24 2AA1 5638 5849 7EE5 1D5D 74A5
-
-
---PFBGnmpRXzJ0YOBntYIsB0SsvvRYfefQV--
-
---mzdFUbvqHZqxYBG93esVEXhNl0U1Flp7t
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQGTBAEBCgB9FiEEExKRzo+LDXJgXHuURObr3Jv2BVkFAl5EGRNfFIAAAAAALgAo
-aXNzdWVyLWZwckBub3RhdGlvbnMub3BlbnBncC5maWZ0aGhvcnNlbWFuLm5ldDEz
-MTI5MUNFOEY4QjBENzI2MDVDN0I5NDQ0RTZFQkRDOUJGNjA1NTkACgkQRObr3Jv2
-BVmcGwf9FmsLbfvyouzfbhSHC3RA3EYqaPofD/I4QrA2tnqBMEt9ZITRLXoWmS0d
-loY2R5YiiW65eY5FjeUeHzyvsAPHoQzzOTU4ff2DL6qEJfJCHOdJwjK0qW3tDCZZ
-bmgS4qHWJnwGNNWj5tU5nntLHif+h95WGgqSanVIsx9lhDfgYbKKDnYHJ18iGQ3q
-rNDiNqzmUCsk+X6wnEGjqjCFatQW4826HfytYahV4VHMUFkJsgPmX2UrHo/cSyeG
-25tCuFS2J8vX7nZW3q8474lGnk4Jt8zqrquMTxLNKXj5WTWpg/lyQMc8t1BQ0iTz
-xS/1I4x6b8c6mYNa2nrNhkV+Pka1sw==
-=wRCx
------END PGP SIGNATURE-----
-
---mzdFUbvqHZqxYBG93esVEXhNl0U1Flp7t--
