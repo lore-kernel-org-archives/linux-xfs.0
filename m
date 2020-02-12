@@ -2,99 +2,56 @@ Return-Path: <SRS0=V0Y3=4A=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D213C3B187
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 19:50:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF5A7C352A4
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 19:51:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 11C2824671
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 19:50:00 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fIM9sQtU"
+	by mail.kernel.org (Postfix) with ESMTP id B8C4421569
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 19:51:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727361AbgBLTt6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Feb 2020 14:49:58 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:36384 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728887AbgBLTt4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Feb 2020 14:49:56 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1581536994;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=U+GXIvAMcn/l9xGhAfn01B4ypUvtlhAuMLYkyfgVwcY=;
-        b=fIM9sQtUEZKNa9LeRJ7RIadgaOxd5lTIBt8v/Ag//QH56CpgKzcccMn+bv4hPlm05PAiPP
-        Sdk34PCTT4Zh+Bd7STF+51NzAAL6RWZSSwfLCsEWOhxuB6mURTuYCLqXrokw+tUxYXqr60
-        dtjeJbbxLBYRXzmSOJ/CL+hbGawRmJc=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-430-tJPaTru3NKio2wfOesUvGg-1; Wed, 12 Feb 2020 14:49:52 -0500
-X-MC-Unique: tJPaTru3NKio2wfOesUvGg-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 81E12800EB2;
-        Wed, 12 Feb 2020 19:49:50 +0000 (UTC)
-Received: from segfault.boston.devel.redhat.com (segfault.boston.devel.redhat.com [10.19.60.26])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 01CED60BF4;
-        Wed, 12 Feb 2020 19:49:48 +0000 (UTC)
-From:   Jeff Moyer <jmoyer@redhat.com>
-To:     Ira Weiny <ira.weiny@intel.com>
-Cc:     linux-kernel@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v3 00/12] Enable per-file/directory DAX operations V3
-References: <20200208193445.27421-1-ira.weiny@intel.com>
-        <x49imke1nj0.fsf@segfault.boston.devel.redhat.com>
-        <20200211201718.GF12866@iweiny-DESK2.sc.intel.com>
-X-PGP-KeyID: 1F78E1B4
-X-PGP-CertKey: F6FE 280D 8293 F72C 65FD  5A58 1FF8 A7CA 1F78 E1B4
-Date:   Wed, 12 Feb 2020 14:49:48 -0500
-In-Reply-To: <20200211201718.GF12866@iweiny-DESK2.sc.intel.com> (Ira Weiny's
-        message of "Tue, 11 Feb 2020 12:17:18 -0800")
-Message-ID: <x49sgjf1t7n.fsf@segfault.boston.devel.redhat.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        id S1727439AbgBLTva (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Feb 2020 14:51:30 -0500
+Received: from zeniv.linux.org.uk ([195.92.253.2]:42906 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727361AbgBLTva (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Feb 2020 14:51:30 -0500
+Received: from viro by ZenIV.linux.org.uk with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1j1y2Y-00BZG4-EI; Wed, 12 Feb 2020 19:51:18 +0000
+Date:   Wed, 12 Feb 2020 19:51:18 +0000
+From:   Al Viro <viro@zeniv.linux.org.uk>
+To:     Florian Weimer <fw@deneb.enyo.de>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        linux-xfs@vger.kernel.org, libc-alpha@sourceware.org,
+        linux-fsdevel@vger.kernel.org, Rich Felker <dalias@libc.org>
+Subject: Re: XFS reports lchmod failure, but changes file system contents
+Message-ID: <20200212195118.GN23230@ZenIV.linux.org.uk>
+References: <874kvwowke.fsf@mid.deneb.enyo.de>
+ <20200212161604.GP6870@magnolia>
+ <20200212181128.GA31394@infradead.org>
+ <20200212183718.GQ6870@magnolia>
+ <87d0ajmxc3.fsf@mid.deneb.enyo.de>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87d0ajmxc3.fsf@mid.deneb.enyo.de>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Ira Weiny <ira.weiny@intel.com> writes:
+On Wed, Feb 12, 2020 at 08:15:08PM +0100, Florian Weimer wrote:
 
-> On Mon, Feb 10, 2020 at 10:15:47AM -0500, Jeff Moyer wrote:
->> Hi, Ira,
->> 
->> Could you please include documentation patches as part of this series?
->
-> I do have an update to the vfs.rst doc in
->
-> 	fs: Add locking for a dynamic DAX state
->
-> I'm happy to do more but was there something specific you would like to see?
-> Or documentation in xfs perhaps?
+> | Further, I've found some inconsistent behavior with ext4: chmod on the
+> | magic symlink fails with EOPNOTSUPP as in Florian's test, but fchmod
+> | on the O_PATH fd succeeds and changes the symlink mode. This is with
+> | 5.4. Cany anyone else confirm this? Is it a problem?
+> 
+> It looks broken to me because fchmod (as an inode-changing operation)
+> is not supposed to work on O_PATH descriptors.
 
-Sorry, I was referring to your statx man page addition.  It would be
-nice if we could find a home for the information in your cover letter,
-too.  Right now, I'm not sure how application developers are supposed to
-figure out how to use the per-inode settings.
-
-If I read your cover letter correctly, the mount option overrides any
-on-disk setting.  Is that right?  Given that we document the dax mount
-option as "the way to get dax," it may be a good idea to allow for a
-user to selectively disable dax, even when -o dax is specified.  Is that
-possible?
-
--Jeff
-
+Why?  O_PATH does have an associated inode just fine; where does
+that "not supposed to" come from?
