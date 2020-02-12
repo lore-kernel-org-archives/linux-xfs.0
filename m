@@ -2,59 +2,73 @@ Return-Path: <SRS0=V0Y3=4A=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED1D4C352A4
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 18:51:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8648BC352A4
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 19:11:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CA68721569
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 18:51:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E453246CE
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 19:11:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="kb42Zo7M"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727231AbgBLSvb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Feb 2020 13:51:31 -0500
-Received: from albireo.enyo.de ([37.24.231.21]:36718 "EHLO albireo.enyo.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727054AbgBLSvb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Feb 2020 13:51:31 -0500
-Received: from [172.17.203.2] (helo=deneb.enyo.de)
-        by albireo.enyo.de with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        id 1j1x6Z-00041J-SJ; Wed, 12 Feb 2020 18:51:23 +0000
-Received: from fw by deneb.enyo.de with local (Exim 4.92)
-        (envelope-from <fw@deneb.enyo.de>)
-        id 1j1x5F-0004YG-Bi; Wed, 12 Feb 2020 19:50:01 +0100
-From:   Florian Weimer <fw@deneb.enyo.de>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        id S1728575AbgBLTLs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Feb 2020 14:11:48 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:42032 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727361AbgBLTLq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Feb 2020 14:11:46 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=PBqLp03iLEuifCxoohjgIL+G7nTfwMmO8s7fwfJBCos=; b=kb42Zo7MqnHboTKJHH8/xP6vNt
+        iF3IhtcZpD5Nt8JolYP81/846ukrortbm+fRSpT66GWuJPejtQCPvWRpr6kxDIEWu9A42Hz1MP3Is
+        /C8faLkggVBpiES0w7SI0IfgBON7QpEBAskFVmMCGH9irwpKzaPzDyHn7Kw83jEdX62humt6imp9e
+        CjhcvFFEo76dZnf4wwDAGZHqpy2aq7TIl7/idNM9fVrtEJhdx1RkrmSykpmorhMTMyRKFSsk7vZXx
+        uCKqGzxbpFyhVFT/OklAjoHFlxuSYDvQHkFdZJMvCnE5D4xpi0uQeMOe07TPqFzShEEAqvD1LqPER
+        FIQQ4Trw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1j1xAl-0004Ln-HU; Wed, 12 Feb 2020 18:55:43 +0000
+Date:   Wed, 12 Feb 2020 10:55:43 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Florian Weimer <fw@deneb.enyo.de>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
         linux-xfs@vger.kernel.org, libc-alpha@sourceware.org,
         linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk
 Subject: Re: XFS reports lchmod failure, but changes file system contents
+Message-ID: <20200212185543.GA12993@infradead.org>
 References: <874kvwowke.fsf@mid.deneb.enyo.de>
-        <20200212161604.GP6870@magnolia>
-        <20200212181128.GA31394@infradead.org>
-Date:   Wed, 12 Feb 2020 19:50:01 +0100
-In-Reply-To: <20200212181128.GA31394@infradead.org> (Christoph Hellwig's
-        message of "Wed, 12 Feb 2020 10:11:28 -0800")
-Message-ID: <87pnejmyhy.fsf@mid.deneb.enyo.de>
+ <20200212161604.GP6870@magnolia>
+ <20200212181128.GA31394@infradead.org>
+ <87pnejmyhy.fsf@mid.deneb.enyo.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87pnejmyhy.fsf@mid.deneb.enyo.de>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-* Christoph Hellwig:
+On Wed, Feb 12, 2020 at 07:50:01PM +0100, Florian Weimer wrote:
+> * Christoph Hellwig:
+> 
+> > xfs doesn't seem all that different from the other file systems,
+> > so I suspect you'll also see it with other on-disk file systems.
+> > We probably need a check high up in the chmod and co code to reject
+> > the operation early for O_PATH file descriptors pointing to symlinks.
+> 
+> We will change the glibc emulation to avoid trying to lchmod symbolic
+> links in this way.  This will avoid triggering the kernel bug.
 
-> xfs doesn't seem all that different from the other file systems,
-> so I suspect you'll also see it with other on-disk file systems.
-> We probably need a check high up in the chmod and co code to reject
-> the operation early for O_PATH file descriptors pointing to symlinks.
+We'll still need to fix it.
 
-We will change the glibc emulation to avoid trying to lchmod symbolic
-links in this way.  This will avoid triggering the kernel bug.
+> (We'd really like to get a proper fchmodat system call with a flags
+> argument, though, for AT_EMPTY_PATH and AT_SYMLINK_NOFOLLOW.)
 
-(We'd really like to get a proper fchmodat system call with a flags
-argument, though, for AT_EMPTY_PATH and AT_SYMLINK_NOFOLLOW.)
-
-And part of my testing was wrong, this is a symbolic-link-only issue.
+Send a patch (o find a minion to do so).
