@@ -2,138 +2,142 @@ Return-Path: <SRS0=EAe2=4B=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 982E4C352A3
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 23:14:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EE43C352A3
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 23:29:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7399A2168B
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 23:14:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 37770217BA
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 23:29:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727594AbgBMXO7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Feb 2020 18:14:59 -0500
-Received: from sandeen.net ([63.231.237.45]:38710 "EHLO sandeen.net"
+        id S1727594AbgBMX3Z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Feb 2020 18:29:25 -0500
+Received: from mga11.intel.com ([192.55.52.93]:62149 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726780AbgBMXO6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 13 Feb 2020 18:14:58 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id F11C02B25;
-        Thu, 13 Feb 2020 17:14:50 -0600 (CST)
-Subject: Re: [PATCH 3/4] xfs_repair: refactor attr root block pointer check
+        id S1727519AbgBMX3Z (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 13 Feb 2020 18:29:25 -0500
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 Feb 2020 15:29:24 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.70,438,1574150400"; 
+   d="scan'208";a="227412724"
+Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
+  by orsmga008.jf.intel.com with ESMTP; 13 Feb 2020 15:29:24 -0800
+Date:   Thu, 13 Feb 2020 15:29:24 -0800
+From:   Ira Weiny <ira.weiny@intel.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <158086356778.2079557.17601708483399404544.stgit@magnolia>
- <158086358798.2079557.6562544272527988911.stgit@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <dc1d5144-4438-2d3c-61b8-70ff80c0fa33@sandeen.net>
-Date:   Thu, 13 Feb 2020 17:14:57 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.4.2
+Cc:     Jeff Moyer <jmoyer@redhat.com>, linux-kernel@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v3 00/12] Enable per-file/directory DAX operations V3
+Message-ID: <20200213232923.GC22854@iweiny-DESK2.sc.intel.com>
+References: <20200208193445.27421-1-ira.weiny@intel.com>
+ <x49imke1nj0.fsf@segfault.boston.devel.redhat.com>
+ <20200211201718.GF12866@iweiny-DESK2.sc.intel.com>
+ <x49sgjf1t7n.fsf@segfault.boston.devel.redhat.com>
+ <20200213190156.GA22854@iweiny-DESK2.sc.intel.com>
+ <20200213190513.GB22854@iweiny-DESK2.sc.intel.com>
+ <20200213195839.GG6870@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <158086358798.2079557.6562544272527988911.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200213195839.GG6870@magnolia>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/4/20 6:46 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Feb 13, 2020 at 11:58:39AM -0800, Darrick J. Wong wrote:
+> On Thu, Feb 13, 2020 at 11:05:13AM -0800, Ira Weiny wrote:
+> > On Thu, Feb 13, 2020 at 11:01:57AM -0800, 'Ira Weiny' wrote:
+> > > On Wed, Feb 12, 2020 at 02:49:48PM -0500, Jeff Moyer wrote:
+> > > > Ira Weiny <ira.weiny@intel.com> writes:
+> > > > 
+> >  
+> > [snip]
+> > 
+> > > > Given that we document the dax mount
+> > > > option as "the way to get dax," it may be a good idea to allow for a
+> > > > user to selectively disable dax, even when -o dax is specified.  Is that
+> > > > possible?
+> > > 
+> > > Not with this patch set.  And I'm not sure how that would work.  The idea was
+> > > that -o dax was simply an override for users who were used to having their
+> > > entire FS be dax.  We wanted to depreciate the use of "-o dax" in general.  The
+> > > individual settings are saved so I don't think it makes sense to ignore the -o
+> > > dax in favor of those settings.  Basically that would IMO make the -o dax
+> > > useless.
+> > 
+> > Oh and I forgot to mention that setting 'dax' on the root of the FS basically
+> > provides '-o dax' functionality by default with the ability to "turn it off"
+> > for files.
 > 
-> In process_longform_attr, replace the agcount check with a call to the
-> fsblock verification function in libxfs.  Now we can also catch blocks
-> that point to static FS metadata.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  repair/attr_repair.c |   10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
-> 
-> 
-> diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-> index 9a44f610..7b26df33 100644
-> --- a/repair/attr_repair.c
-> +++ b/repair/attr_repair.c
-> @@ -980,21 +980,21 @@ process_longform_attr(
->  	*repair = 0;
->  
->  	bno = blkmap_get(blkmap, 0);
-> -
-> -	if ( bno == NULLFSBLOCK ) {
-> +	if (bno == NULLFSBLOCK) {
->  		if (dip->di_aformat == XFS_DINODE_FMT_EXTENTS &&
->  				be16_to_cpu(dip->di_anextents) == 0)
->  			return(0); /* the kernel can handle this state */
->  		do_warn(
->  	_("block 0 of inode %" PRIu64 " attribute fork is missing\n"),
->  			ino);
-> -		return(1);
-> +		return 1;
->  	}
-> +
->  	/* FIX FOR bug 653709 -- EKN */
-> -	if (mp->m_sb.sb_agcount < XFS_FSB_TO_AGNO(mp, bno)) {
-> +	if (!xfs_verify_fsbno(mp, bno)) {
->  		do_warn(
->  	_("agno of attribute fork of inode %" PRIu64 " out of regular partition\n"), ino);
+> Please don't further confuse FS_XFLAG_DAX and S_DAX.
 
-I'll change this to
+Yes...  the above text is wrong WRT statx.  But setting the physical
+XFS_DIFLAG2_DAX flag on the root directory will by default cause all files and
+directories created there to be XFS_DIFLAG2_DAX and so forth on down the tree
+unless explicitly changed.  This will be the same as mounting with '-o dax' but
+with the ability to turn off dax for individual files.  Which I think is the
+functionality Jeff is wanting.
 
-"block in attribute fork of inode %" PRIu64 " is not valid"
-
-ok?
-
-> -		return(1);
-> +		return 1;
->  	}
->  
->  	bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, bno),
+>
+> They are two
+> separate flags with two separate behaviors:
 > 
+> FS_XFLAG_DAX is a filesystem inode metadata flag.
+> 
+> Setting FS_XFLAG_DAX on a directory causes all files and directories
+> created within that directory to inherit FS_XFLAG_DAX.
+> 
+> Mounting with -o dax causes all files and directories created to have
+> FS_XFLAG_DAX set regardless of the parent's status.
+
+I don't believe this is true, either before _or_ after this patch set.
+
+'-o dax' only causes XFS_MOUNT_DAX to be set which then cause S_DAX to be set.
+It does not affect FS_XFLAG_DAX.  This is important because we don't want '-o
+dax' to suddenly convert all files to DAX if '-o dax' is not used.
+
+> 
+> The FS_XFLAG_DAX can be get and set via the fs[g]etxattr ioctl.
+
+Right statx was the wrong tool...
+
+fs[g|s]etattr via the xfs_io -c 'chatttr|lsattr' is the correct tool.
+
+> 
+> -------
+> 
+> S_DAX is the flag that controls the IO path in the kernel for a given
+> inode.
+> 
+> Loading a file inode into the kernel (via _iget) with FS_XFLAG_DAX set
+> or creating a file inode that inherits FS_XFLAG_DAX causes the incore
+> inode to have the S_DAX flag set if the storage device supports it.
+
+Yes after reworking "Clean up DAX support check" I believe I've got it correct
+now.  Soon to be in V4.
+
+> 
+> Files with S_DAX set use the dax IO paths through the kernel.
+> 
+> The S_DAX flag can be queried via statx.
+
+Yes as a verification that the file is at that moment operating as dax.  It
+will not return true for a directory ever.  My bad for saying that.  Sorry I
+got my tools flags mixed up...
+
+Ira
+
