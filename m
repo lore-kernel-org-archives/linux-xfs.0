@@ -6,31 +6,32 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5052EC352A4
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 03:27:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0A3BC352A3
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 03:32:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2E91D20724
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 03:27:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8470520724
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 03:32:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729440AbgBMD1q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Feb 2020 22:27:46 -0500
-Received: from sandeen.net ([63.231.237.45]:33444 "EHLO sandeen.net"
+        id S1729573AbgBMDcg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Feb 2020 22:32:36 -0500
+Received: from sandeen.net ([63.231.237.45]:33742 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729432AbgBMD1q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Feb 2020 22:27:46 -0500
+        id S1729467AbgBMDcf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Feb 2020 22:32:35 -0500
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 913A122C5;
-        Wed, 12 Feb 2020 21:27:39 -0600 (CST)
+        by sandeen.net (Postfix) with ESMTPSA id 9221722C5;
+        Wed, 12 Feb 2020 21:32:28 -0600 (CST)
 Subject: Re: [PATCH 05/14] xfs: refactor quota expiration timer modification
+From:   Eric Sandeen <sandeen@sandeen.net>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <157784106066.1364230.569420432829402226.stgit@magnolia>
  <157784109369.1364230.637677553755124721.stgit@magnolia>
  <455264c4-435c-c2f7-4e2a-3f4614574050@sandeen.net>
  <20200213014614.GY6870@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
+ <30ee43c7-543f-6dd7-f68c-bdd5fe01c19b@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
  nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
@@ -73,12 +74,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <30ee43c7-543f-6dd7-f68c-bdd5fe01c19b@sandeen.net>
-Date:   Wed, 12 Feb 2020 21:27:44 -0600
+Message-ID: <e8d6702c-9e39-6e5e-e910-739b9b4558a3@sandeen.net>
+Date:   Wed, 12 Feb 2020 21:32:33 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.4.2
 MIME-Version: 1.0
-In-Reply-To: <20200213014614.GY6870@magnolia>
+In-Reply-To: <30ee43c7-543f-6dd7-f68c-bdd5fe01c19b@sandeen.net>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -87,69 +88,96 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/12/20 7:46 PM, Darrick J. Wong wrote:
-> On Wed, Feb 12, 2020 at 05:57:24PM -0600, Eric Sandeen wrote:
->> On 12/31/19 7:11 PM, Darrick J. Wong wrote:
->>> From: Darrick J. Wong <darrick.wong@oracle.com>
 
-...
 
->>>  	} else {
->>>  		if (!over) {
->>> -			d->d_btimer = 0;
->>> +			xfs_quota_clear_timer(&d->d_btimer);
+On 2/12/20 9:27 PM, Eric Sandeen wrote:
+> On 2/12/20 7:46 PM, Darrick J. Wong wrote:
+>> On Wed, Feb 12, 2020 at 05:57:24PM -0600, Eric Sandeen wrote:
+>>> On 12/31/19 7:11 PM, Darrick J. Wong wrote:
+>>>> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> ...
+> 
+>>>>  	} else {
+>>>>  		if (!over) {
+>>>> -			d->d_btimer = 0;
+>>>> +			xfs_quota_clear_timer(&d->d_btimer);
+>>>
+>>> yeah that's a very fancy way to say "= 0" ;)
+>>>
+>>> ...
 >>
->> yeah that's a very fancy way to say "= 0" ;)
+>> Yes, that's a fancy way to assign zero.  However, consider that for
+>> bigtime support, I had to add an incore quota timer so that timers more
+>> or less fire when they're supposed to, and now there's a function to
+>> convert the incore timespec64 value to whatever is ondisk:
 >>
->> ...
+>> /* Clear a quota grace period expiration timer. */
+>> static inline void
+>> xfs_quota_clear_timer(
+>> 	struct xfs_disk_dquot	*ddq,
+>> 	time64_t		*itimer,
+>> 	__be32			*dtimer)
+>> {
+>> 	struct timespec64	tv = { 0 };
+>>
+>> 	*itimer = tv.tv_sec;
+>> 	xfs_dquot_to_disk_timestamp(ddq, dtimer, &tv);
+>> }
+>>
+>> It was at *that* point in the patchset that it seemed easier to call a
+>> small function three times than to open-code this three times.
 > 
-> Yes, that's a fancy way to assign zero.  However, consider that for
-> bigtime support, I had to add an incore quota timer so that timers more
-> or less fire when they're supposed to, and now there's a function to
-> convert the incore timespec64 value to whatever is ondisk:
+> +void
+> +xfs_dquot_to_disk_timestamp(
+> +	__be32			*dtimer,
+> +	const struct timespec64	*tv)
+> +{
+> +	*dtimer = cpu_to_be32(tv->tv_sec);
+> +}
 > 
-> /* Clear a quota grace period expiration timer. */
-> static inline void
-> xfs_quota_clear_timer(
-> 	struct xfs_disk_dquot	*ddq,
-> 	time64_t		*itimer,
-> 	__be32			*dtimer)
-> {
-> 	struct timespec64	tv = { 0 };
+>  static inline void
+>  xfs_quota_clear_timer(
+> +	time64_t		*itimer,
+>  	__be32			*dtimer)
+>  {
+> -	*dtimer = cpu_to_be32(0);
+> +	struct timespec64	tv = { 0 };
+> +
+> +	*itimer = tv.tv_sec;
+> +	xfs_dquot_to_disk_timestamp(dtimer, &tv);
+>  } 
 > 
-> 	*itimer = tv.tv_sec;
-> 	xfs_dquot_to_disk_timestamp(ddq, dtimer, &tv);
-> }
+> xfs_quota_clear_timer(&dqp->q_btimer, &d->d_btimer);
 > 
-> It was at *that* point in the patchset that it seemed easier to call a
-> small function three times than to open-code this three times.
+> That's still a very fancy way of saying:
+> 
+>         dqp->q_btimer = d->d_btimer = 0;
+> 
+> I think?  Can't really see what value the timespec64 adds here.
+> 
+> -Eric
+> 
 
-+void
-+xfs_dquot_to_disk_timestamp(
-+	__be32			*dtimer,
-+	const struct timespec64	*tv)
-+{
-+	*dtimer = cpu_to_be32(tv->tv_sec);
-+}
+Actually,
 
- static inline void
- xfs_quota_clear_timer(
+ xfs_quota_set_timer(
 +	time64_t		*itimer,
- 	__be32			*dtimer)
+ 	__be32			*dtimer,
+ 	time_t			limit)
  {
--	*dtimer = cpu_to_be32(0);
+-	time64_t		new_timeout;
 +	struct timespec64	tv = { 0 };
-+
+ 
+-	new_timeout = xfs_dquot_clamp_timer(get_seconds() + limit);
+-	*dtimer = cpu_to_be32(new_timeout);
++	tv.tv_sec = xfs_dquot_clamp_timer(ktime_get_real_seconds() + limit);
 +	*itimer = tv.tv_sec;
 +	xfs_dquot_to_disk_timestamp(dtimer, &tv);
- } 
+ }
 
-xfs_quota_clear_timer(&dqp->q_btimer, &d->d_btimer);
-
-That's still a very fancy way of saying:
-
-        dqp->q_btimer = d->d_btimer = 0;
-
-I think?  Can't really see what value the timespec64 adds here.
+I'm not sure why there's a timespec64 here either.  Isn't everything
+we're dealing with on timers in seconds, using only tv_sec, and time64_t would
+suffice instead of using a timespec64 just to carry around a seconds value?
 
 -Eric
