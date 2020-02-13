@@ -1,4 +1,4 @@
-Return-Path: <SRS0=V0Y3=4A=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=EAe2=4B=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
@@ -6,28 +6,29 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84776C352A4
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 23:57:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0B53C352A4
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 00:15:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6277F206E5
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Feb 2020 23:57:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7DEAB206DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 00:15:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729270AbgBLX50 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Feb 2020 18:57:26 -0500
-Received: from sandeen.net ([63.231.237.45]:50844 "EHLO sandeen.net"
+        id S1727117AbgBMAPV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Feb 2020 19:15:21 -0500
+Received: from sandeen.net ([63.231.237.45]:51806 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727117AbgBLX50 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Feb 2020 18:57:26 -0500
+        id S1727032AbgBMAPU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Feb 2020 19:15:20 -0500
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id C6D9522C5;
-        Wed, 12 Feb 2020 17:57:19 -0600 (CST)
-Subject: Re: [PATCH 05/14] xfs: refactor quota expiration timer modification
+        by sandeen.net (Postfix) with ESMTPSA id DBFE222C5;
+        Wed, 12 Feb 2020 18:15:13 -0600 (CST)
+Subject: Re: [PATCH 06/14] xfs: refactor default quota grace period setting
+ code
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <157784106066.1364230.569420432829402226.stgit@magnolia>
- <157784109369.1364230.637677553755124721.stgit@magnolia>
+ <157784110016.1364230.5024129406313355261.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -71,12 +72,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <455264c4-435c-c2f7-4e2a-3f4614574050@sandeen.net>
-Date:   Wed, 12 Feb 2020 17:57:24 -0600
+Message-ID: <2fde1e65-7ede-3c47-81bd-d39906a8dc77@sandeen.net>
+Date:   Wed, 12 Feb 2020 18:15:18 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.4.2
 MIME-Version: 1.0
-In-Reply-To: <157784109369.1364230.637677553755124721.stgit@magnolia>
+In-Reply-To: <157784110016.1364230.5024129406313355261.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -88,92 +89,195 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 12/31/19 7:11 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Define explicit limits on the range of quota grace period expiration
-> timeouts and refactor the code that modifies the timeouts into helpers
-> that clamp the values appropriately.
+> Refactor the code that sets the default quota grace period into a helper
+> function so that we can override the ondisk behavior later.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_format.h |    8 ++++++++
+>  fs/xfs/xfs_ondisk.h        |    2 ++
+>  fs/xfs/xfs_qm_syscalls.c   |   35 +++++++++++++++++++++++------------
+>  fs/xfs/xfs_trans_dquot.c   |   16 ++++++++++++----
+>  4 files changed, 45 insertions(+), 16 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index 95761b38fe86..557db5e51eec 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -1188,6 +1188,10 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
+>   * time zero is the Unix epoch, Jan  1 00:00:01 UTC 1970.  An expiration value
+>   * of zero means that the quota limit has not been reached, and therefore no
+>   * expiration has been set.
+> + *
+> + * The length of quota grace periods are unsigned 32-bit quantities in units of
+> + * seconds (which are stored in the root dquot).  A value of zero means to use
+> + * the default period.
 
-...
+Doesn't a value of zero mean that the soft limit has not been exceeded, and no
+timer is in force?  And when soft limit is exceeded, the timer starts ticking
+based on the value in the root dquot?
 
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index ae7bb6361a99..44bae5f16b55 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -113,6 +113,36 @@ xfs_quota_exceeded(
->  	return *hardlimit && count > be64_to_cpup(hardlimit);
+i.e. you can't set a custom per-user grace period, can you?
+
+Perhaps:
+
+* The length of quota grace periods are unsigned 32-bit quantities in units of
+* seconds.  The grace period for each quota type is stored in the root dquot
+* and is applied/transferred to a user quota when it exceeds a soft limit.
+
+>   */
+>  
+>  /*
+> @@ -1202,6 +1206,10 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
+>   */
+>  #define XFS_DQ_TIMEOUT_MAX	((int64_t)U32_MAX)
+>  
+> +/* Quota grace periods, ranging from zero (use the defaults) to ~136 years. */
+
+same thing.  The default can be set between 0 and ~136 years, that gets transferred
+to any user who exceeds soft quota, and it counts down from there.
+
+> +#define XFS_DQ_GRACE_MIN	((int64_t)0)
+> +#define XFS_DQ_GRACE_MAX	((int64_t)U32_MAX)
+> +
+>  /*
+>   * This is the main portion of the on-disk representation of quota
+>   * information for a user. This is the q_core of the struct xfs_dquot that
+> diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
+> index 52dc5326b7bf..b8811f927a3c 100644
+> --- a/fs/xfs/xfs_ondisk.h
+> +++ b/fs/xfs/xfs_ondisk.h
+> @@ -27,6 +27,8 @@ xfs_check_ondisk_structs(void)
+>  	XFS_CHECK_VALUE(XFS_INO_TIME_MAX,			2147483647LL);
+>  	XFS_CHECK_VALUE(XFS_DQ_TIMEOUT_MIN,			1LL);
+>  	XFS_CHECK_VALUE(XFS_DQ_TIMEOUT_MAX,			4294967295LL);
+> +	XFS_CHECK_VALUE(XFS_DQ_GRACE_MIN,			0LL);
+> +	XFS_CHECK_VALUE(XFS_DQ_GRACE_MAX,			4294967295LL);
+
+*cough* notondisk *cough*
+
+>  
+>  	/* ag/file structures */
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_acl,			4);
+> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+> index 74220948a360..20a6d304d1be 100644
+> --- a/fs/xfs/xfs_qm_syscalls.c
+> +++ b/fs/xfs/xfs_qm_syscalls.c
+> @@ -438,6 +438,20 @@ xfs_qm_scall_quotaon(
+>  	return 0;
 >  }
 >  
-> +/*
-> + * Clamp a quota grace period expiration timer to the range that we support.
-> + */
-> +static inline time64_t
-> +xfs_dquot_clamp_timer(
-> +	time64_t			timer)
-> +{
-> +	return clamp_t(time64_t, timer, XFS_DQ_TIMEOUT_MIN, XFS_DQ_TIMEOUT_MAX);
-> +}
-> +
-> +/* Set a quota grace period expiration timer. */
+> +/* Set a new quota grace period. */
 > +static inline void
-> +xfs_quota_set_timer(
+> +xfs_qm_set_grace(
+> +	time_t			*qi_limit,
+                                 ^ doesn't get used?
 > +	__be32			*dtimer,
-> +	time_t			limit)
+> +	const s64		grace)
 > +{
-> +	time64_t		new_timeout;
+> +	time64_t		new_grace;
 > +
-> +	new_timeout = xfs_dquot_clamp_timer(get_seconds() + limit);
-> +	*dtimer = cpu_to_be32(new_timeout);
+> +	new_grace = clamp_t(time64_t, grace, XFS_DQ_GRACE_MIN,
+> +					     XFS_DQ_GRACE_MAX);
+> +	*dtimer = cpu_to_be32(new_grace);
+
+You've lost setting the qi_limit here (q->qi_btimelimit etc)
+
 > +}
 > +
-> +/* Clear a quota grace period expiration timer. */
-> +static inline void
-> +xfs_quota_clear_timer(
-> +	__be32			*dtimer)
+>  #define XFS_QC_MASK \
+>  	(QC_LIMIT_MASK | QC_TIMER_MASK | QC_WARNS_MASK)
+>  
+> @@ -567,18 +581,15 @@ xfs_qm_scall_setqlim(
+>  		 * soft and hard limit values (already done, above), and
+>  		 * for warnings.
+>  		 */
+> -		if (newlim->d_fieldmask & QC_SPC_TIMER) {
+> -			q->qi_btimelimit = newlim->d_spc_timer;
+
+i.e. qi_btimelimit never gets set now, which is what actually controls
+the timers when a uid/gid/pid goes over softlimit.
+
+> -			ddq->d_btimer = cpu_to_be32(newlim->d_spc_timer);
+> -		}
+> -		if (newlim->d_fieldmask & QC_INO_TIMER) {
+> -			q->qi_itimelimit = newlim->d_ino_timer;
+> -			ddq->d_itimer = cpu_to_be32(newlim->d_ino_timer);
+> -		}
+> -		if (newlim->d_fieldmask & QC_RT_SPC_TIMER) {
+> -			q->qi_rtbtimelimit = newlim->d_rt_spc_timer;
+> -			ddq->d_rtbtimer = cpu_to_be32(newlim->d_rt_spc_timer);
+> -		}
+> +		if (newlim->d_fieldmask & QC_SPC_TIMER)
+> +			xfs_qm_set_grace(&q->qi_btimelimit, &ddq->d_btimer,
+> +					newlim->d_spc_timer);
+> +		if (newlim->d_fieldmask & QC_INO_TIMER)
+> +			xfs_qm_set_grace(&q->qi_itimelimit, &ddq->d_itimer,
+> +					newlim->d_ino_timer);
+> +		if (newlim->d_fieldmask & QC_RT_SPC_TIMER)
+> +			xfs_qm_set_grace(&q->qi_rtbtimelimit, &ddq->d_rtbtimer,
+> +					newlim->d_rt_spc_timer);
+>  		if (newlim->d_fieldmask & QC_SPC_WARNS)
+>  			q->qi_bwarnlimit = newlim->d_spc_warns;
+>  		if (newlim->d_fieldmask & QC_INO_WARNS)
+> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+> index 248cfc369efc..7a2a3bd11db9 100644
+> --- a/fs/xfs/xfs_trans_dquot.c
+> +++ b/fs/xfs/xfs_trans_dquot.c
+> @@ -563,6 +563,14 @@ xfs_quota_warn(
+>  			   mp->m_super->s_dev, type);
+>  }
+>  
+> +/* Has a quota grace period expired? */
+
+seems like this is not part of "quota grace period setting code"
+- needs to be in a separate patch?
+
+> +static inline bool
+> +xfs_quota_timer_exceeded(
+> +	time64_t		timer)
 > +{
-> +	*dtimer = cpu_to_be32(0);
-
-do we need to endian convert 0 to make sparse happy?  I don't see us doing
-that anywhere else.  TBH not really sure I see the reason for the function
-at all unless you really, really like the symmetry.
-
+> +	return timer != 0 && get_seconds() > timer;
 > +}
 > +
 >  /*
->   * Check the limits and timers of a dquot and start or reset timers
->   * if necessary.
-> @@ -152,14 +182,14 @@ xfs_qm_adjust_dqtimers(
->  			&d->d_blk_softlimit, &d->d_blk_hardlimit);
->  	if (!d->d_btimer) {
->  		if (over) {
-> -			d->d_btimer = cpu_to_be32(get_seconds() +
-> +			xfs_quota_set_timer(&d->d_btimer,
->  					mp->m_quotainfo->qi_btimelimit);
->  		} else {
->  			d->d_bwarns = 0;
->  		}
->  	} else {
->  		if (!over) {
-> -			d->d_btimer = 0;
-> +			xfs_quota_clear_timer(&d->d_btimer);
+>   * This reserves disk blocks and inodes against a dquot.
+>   * Flags indicate if the dquot is to be locked here and also
+> @@ -580,7 +588,7 @@ xfs_trans_dqresv(
+>  {
+>  	xfs_qcnt_t		hardlimit;
+>  	xfs_qcnt_t		softlimit;
+> -	time_t			timer;
+> +	time64_t		timer;
 
-yeah that's a very fancy way to say "= 0" ;)
+<this needs rebasing I guess, after b8a0880a37e2f43aa3bcd147182e95a4ebd82279>
 
-...
+>  	xfs_qwarncnt_t		warns;
+>  	xfs_qwarncnt_t		warnlimit;
+>  	xfs_qcnt_t		total_count;
+> @@ -635,7 +643,7 @@ xfs_trans_dqresv(
+>  				goto error_return;
+>  			}
+>  			if (softlimit && total_count > softlimit) {
+> -				if ((timer != 0 && get_seconds() > timer) ||
+> +				if (xfs_quota_timer_exceeded(timer) ||
+>  				    (warns != 0 && warns >= warnlimit)) {
+>  					xfs_quota_warn(mp, dqp,
+>  						       QUOTA_NL_BSOFTLONGWARN);
+> @@ -662,8 +670,8 @@ xfs_trans_dqresv(
+>  				goto error_return;
+>  			}
+>  			if (softlimit && total_count > softlimit) {
+> -				if  ((timer != 0 && get_seconds() > timer) ||
+> -				     (warns != 0 && warns >= warnlimit)) {
+> +				if (xfs_quota_timer_exceeded(timer) ||
+> +				    (warns != 0 && warns >= warnlimit)) {
 
-> diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-> index f67f3645efcd..52dc5326b7bf 100644
-> --- a/fs/xfs/xfs_ondisk.h
-> +++ b/fs/xfs/xfs_ondisk.h
-> @@ -25,6 +25,8 @@ xfs_check_ondisk_structs(void)
->  	/* make sure timestamp limits are correct */
->  	XFS_CHECK_VALUE(XFS_INO_TIME_MIN, 			-2147483648LL);
->  	XFS_CHECK_VALUE(XFS_INO_TIME_MAX,			2147483647LL);
-> +	XFS_CHECK_VALUE(XFS_DQ_TIMEOUT_MIN,			1LL);
-> +	XFS_CHECK_VALUE(XFS_DQ_TIMEOUT_MAX,			4294967295LL);
+TBH don't really see the point of this refactoring/helper, especially if not
+done for warns.  I think open coding is fine.
 
-again grumble grumble really not checking an ondisk structure.
-
->  	/* ag/file structures */
->  	XFS_CHECK_STRUCT_SIZE(struct xfs_acl,			4);
+>  					xfs_quota_warn(mp, dqp,
+>  						       QUOTA_NL_ISOFTLONGWARN);
+>  					goto error_return;
 > 
