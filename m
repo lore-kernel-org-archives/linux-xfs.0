@@ -2,87 +2,89 @@ Return-Path: <SRS0=EAe2=4B=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03014C2BA83
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 09:46:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA044C2BA83
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 10:21:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C720720848
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 09:46:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 70D9220848
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 10:21:53 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YPSEiQCJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729440AbgBMJq4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Feb 2020 04:46:56 -0500
-Received: from szxga07-in.huawei.com ([45.249.212.35]:59420 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729531AbgBMJq4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 13 Feb 2020 04:46:56 -0500
-Received: from DGGEMS401-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id E448CDD8D1D68E75F7FD;
-        Thu, 13 Feb 2020 17:46:51 +0800 (CST)
-Received: from huawei.com (10.90.53.225) by DGGEMS401-HUB.china.huawei.com
- (10.3.19.201) with Microsoft SMTP Server id 14.3.439.0; Thu, 13 Feb 2020
- 17:46:43 +0800
-From:   Zheng Bin <zhengbin13@huawei.com>
-To:     <david@fromorbit.com>, <darrick.wong@oracle.com>,
-        <sandeen@redhat.com>, <linux-xfs@vger.kernel.org>
-CC:     <renxudong1@huawei.com>
-Subject: [PATCH] xfs: add agf freeblocks verify in xfs_agf_verify
-Date:   Thu, 13 Feb 2020 17:53:59 +0800
-Message-ID: <1581587639-130771-1-git-send-email-zhengbin13@huawei.com>
-X-Mailer: git-send-email 2.7.4
+        id S1729685AbgBMKVx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Feb 2020 05:21:53 -0500
+Received: from mail-io1-f68.google.com ([209.85.166.68]:36628 "EHLO
+        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729662AbgBMKVx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Feb 2020 05:21:53 -0500
+Received: by mail-io1-f68.google.com with SMTP id d15so5870831iog.3;
+        Thu, 13 Feb 2020 02:21:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=QSvL+5phxy32YJK5uQRteesTVaa2PPbKzaoTbXUhlzM=;
+        b=YPSEiQCJMUNngVzlJJvKIBi3cfBrRXx/m8Pox/3aONguDpdMVvnlGalwbIPE7N38a1
+         3APjQ7Kam7hJ814w65Irskn3XYGOEjmGhgN2tJBk8NQBV1pSZxEiYswBET47H8kdCgCY
+         EvnlkBxLU/aZ85lgw4zsO5adVXpMd0bWkXugzEN3k2UpwcOsX9IYV0YzGOE0cYKbQHaz
+         deoeqH0JB1BkESmFTrdA1hM0wRedAcqLhUpvuUV5WrpS6JzdyHA7hWZmIp50befQ+JJ6
+         IiJkf71+s0Ntc/vWSApQbwPTsUOjkmj24q8BQYB575rrwMzDucsPi8qwYi3+BVersnQH
+         Y3rw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=QSvL+5phxy32YJK5uQRteesTVaa2PPbKzaoTbXUhlzM=;
+        b=HBgbE/PxkF7X2AX93n//gQSsfMSyBNLKWTtxw1lFqU3md0zX6qCI+TT8pBPnjCPQ1/
+         Y44gHPamdtwdkOMG2ouU98yeFZZTkEj6e0XYoF2tZgxPJm7I/+bacRQ154iq0wNl9JPv
+         XibRJ8RqMX+81BeizGhzKjdBYwqblVo4qHlGhzEutlSqbBFQLycoJ+YYdyGlfRrURBUP
+         Cvnkvr7EBpTCKxZE1c7BqQwydc3rd/omqHYJCXZagSG/fZidOsVYCZEyKtw4dK+WeIYa
+         hPGIyuuj6V37UzDdKFRkaugQq843c1DHSlN2VRatheXlkKrojlijvMNIW4y95BesUGLJ
+         qPEg==
+X-Gm-Message-State: APjAAAXxl951sr9J7yRW3JnuNOxMqfuYxsa7ymbMwuxLuB4Y37qlGpbR
+        pxWSSqGCkI36gcyoxAyhorDr4zYs6NP9QYab1WY=
+X-Google-Smtp-Source: APXvYqzSPy+3SjGPIrUXGx43QrVG8Fgwgvb9/7u5baa9dl+XWDCy6Hyf/dm9k9hXwInjoAzOrbhnyeYpzpR38MNXaBY=
+X-Received: by 2002:a02:c558:: with SMTP id g24mr22281827jaj.81.1581589312246;
+ Thu, 13 Feb 2020 02:21:52 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.90.53.225]
-X-CFilter-Loop: Reflected
+References: <20200131052520.GC6869@magnolia> <CAOQ4uxh=4DrH_dL3TULcFa+pGk0YhS=TobuGk_+Z0oRWvw63rg@mail.gmail.com>
+ <20200212224234.GV6870@magnolia>
+In-Reply-To: <20200212224234.GV6870@magnolia>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Thu, 13 Feb 2020 12:21:40 +0200
+Message-ID: <CAOQ4uxgH0os2t=jZezLqsz-Y01v=AsdDXWSYXLervdHVheXo2Q@mail.gmail.com>
+Subject: Re: [Lsf-pc] [LSF/MM/BPF TOPIC] FS Maintainers Don't Scale
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>,
+        lsf-pc@lists.linux-foundation.org,
+        Eric Sandeen <sandeen@redhat.com>,
+        Eryu Guan <guaneryu@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-We recently used fuzz(hydra) to test XFS and automatically generate
-tmp.img(XFS v5 format, but some metadata is wrong)
+> >
+> > Eryu usually posts a weekly status of xfstests review queue, often with
+> > a call for reviewers, sometimes with specific patch series mentioned.
+> > That helps me as a developer to monitor the status of my own work
+> > and it helps me as a reviewer to put the efforts where the maintainer
+> > needs me the most.
+>
+> I wasn't aware of that, I'll ask him to put me on the list.
+>
 
-Test as follows:
-mount tmp.img tmpdir
-cp file1M tmpdir
-sync
+I was talking about the weekly xfstests ANNOUNCE email.
+Most of the time, review information amounts to "there are still patches
+in my review backlog", but sometimes the information is more
+specific with call for specific reviews:
+https://lore.kernel.org/fstests/5ddaafc5.1c69fb81.7e284.ad99@mx.google.com/
 
-tmpdir/file1M size is 1M, but its data can not sync to disk.
-
-This is because tmp.img has some problems, using xfs_repair detect
-information as follows:
-
-agf_freeblks 0, counted 3224 in ag 0
-agf_longest 536874136, counted 3224 in ag 0
-sb_fdblocks 613, counted 3228
-
-Add these agf freeblocks checks:
-1. agf_longest < agf_freeblks
-2. agf_freeblks < sb_fdblocks
-
-Signed-off-by: Zheng Bin <zhengbin13@huawei.com>
-Signed-off-by: Ren Xudong <renxudong1@huawei.com>
----
- fs/xfs/libxfs/xfs_alloc.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index d8053bc..0f4b4d1 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2858,6 +2858,10 @@ xfs_agf_verify(
- 	      be32_to_cpu(agf->agf_flcount) <= xfs_agfl_size(mp)))
- 		return __this_address;
-
-+	if (be32_to_cpu(agf->agf_freeblks) < be32_to_cpu(agf->agf_longest) ||
-+	    be32_to_cpu(agf->agf_freeblks) >= mp->m_sb.sb_fdblocks)
-+		return __this_address;
-+
- 	if (be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]) < 1 ||
- 	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]) < 1 ||
- 	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]) > XFS_BTREE_MAXLEVELS ||
---
-2.7.4
-
+Thanks,
+Amir.
