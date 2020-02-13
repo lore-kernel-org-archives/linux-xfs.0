@@ -7,179 +7,178 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7EA3C352A4
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 01:26:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7882AC352A4
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 01:41:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 89A8120675
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 01:26:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 444E520873
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 01:41:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="OgDW3HtL"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bk7JmKw5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729391AbgBMB0Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Feb 2020 20:26:16 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:35372 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727071AbgBMB0Q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Feb 2020 20:26:16 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01D1MUWi156698;
-        Thu, 13 Feb 2020 01:26:12 GMT
+        id S1729413AbgBMBl2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Feb 2020 20:41:28 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:59592 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729285AbgBMBl2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Feb 2020 20:41:28 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01D1dEfN028511;
+        Thu, 13 Feb 2020 01:41:25 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=kTFj/U7lB9ceViLtlJcrDP0hh+iMuCH6D49Oyc3ZYfc=;
- b=OgDW3HtLstjpgQYNvfQZV4lyliDMIjFLpampUKvo+vWM2n351zgfqu2lPoOJOVN4VgBJ
- UcYBK6hn3/Vd6rPK7pEK+qh4roF+GNSFT1A9V5HJ0+GkYV0gfENGriX8w8VWyOe8JCrk
- fljtCuKnbJddjJk6yVkrOepsTaPPR0W24zO24yECRGEyNCgW0jj5brpT6/dGGK1Oz8Js
- LMnssBT2mbvNCENpZl3n9hMpy7OV6hI51EHHdh5lo8Zjzaw0mt3Fp5eGSaWaiMdZ8vdu
- f98puyt6PA/AH0reo6tpkAvJKUJoRvWF6AHp3b2bmJzqW8ugAy3cnB4URhv7v9hqfqGt PQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2y2k88emfe-1
+ bh=zUSfMMmyO6lx6xbzHm9vBaQnT8Fx7BHjTb+b4fS4jSo=;
+ b=bk7JmKw56HIG3L/BZQWwX9abntTtrT5ulr4mUhcJRx6mUS0fJ298/DndHx0zeklPNUCR
+ ARMQt3NzdrwrEKyn/1gxxYUt8Yf9Jl2hHd+2FTK0va3JsH1bDFFqYP+6GjGW6Zc3KQMj
+ QIbB6j/UqlrQ/32i3v+TfccNZrOY7JwfXwQxz0Bw2LVUhICLqH/5niAf2m7oLzz67bT0
+ rtRozOy6zAVq4lKJT0oq03eQaKbNaeDdc+HGPFP3YMb+0o1hSAzDJf7GRtHerzaLyNzZ
+ QKaF9N7GFaLJ+mQZQYZoxpVOqoRhevsmMVaFAvppsj/FDwMS39PQrNNbh7YiPv26nPus 2Q== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 2y2jx6euav-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 13 Feb 2020 01:26:12 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01D1NBdo174948;
-        Thu, 13 Feb 2020 01:26:12 GMT
+        Thu, 13 Feb 2020 01:41:25 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01D1bxIl157504;
+        Thu, 13 Feb 2020 01:41:25 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 2y4k9gsyqw-1
+        by aserp3030.oracle.com with ESMTP id 2y4k7xryan-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 13 Feb 2020 01:26:12 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01D1Q9eI001455;
-        Thu, 13 Feb 2020 01:26:11 GMT
+        Thu, 13 Feb 2020 01:41:25 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01D1fNqd011938;
+        Thu, 13 Feb 2020 01:41:24 GMT
 Received: from localhost (/10.159.151.237)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 12 Feb 2020 17:26:09 -0800
-Date:   Wed, 12 Feb 2020 17:26:07 -0800
+        with ESMTP ; Wed, 12 Feb 2020 17:41:23 -0800
+Date:   Wed, 12 Feb 2020 17:41:21 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Eric Sandeen <sandeen@sandeen.net>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 01/14] xfs: explicitly define inode timestamp range
-Message-ID: <20200213012607.GW6870@magnolia>
+Subject: Re: [PATCH 03/14] xfs: refactor quota exceeded test
+Message-ID: <20200213014121.GX6870@magnolia>
 References: <157784106066.1364230.569420432829402226.stgit@magnolia>
- <157784106702.1364230.14985571182679451055.stgit@magnolia>
- <639ba6e0-71b3-1d81-820e-ad49a56a032c@sandeen.net>
+ <157784108138.1364230.6221331077843589601.stgit@magnolia>
+ <b979d33d-361b-88cd-699c-7e5f1c621698@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <639ba6e0-71b3-1d81-820e-ad49a56a032c@sandeen.net>
+In-Reply-To: <b979d33d-361b-88cd-699c-7e5f1c621698@sandeen.net>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9529 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 suspectscore=0 spamscore=0
- adultscore=0 bulkscore=0 phishscore=0 malwarescore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002130009
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
+ suspectscore=0 mlxscore=0 bulkscore=0 malwarescore=0 phishscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2002130012
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9529 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 lowpriorityscore=0
- suspectscore=0 bulkscore=0 phishscore=0 mlxlogscore=999 mlxscore=0
- malwarescore=0 impostorscore=0 clxscore=1015 spamscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002130009
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
+ priorityscore=1501 adultscore=0 phishscore=0 impostorscore=0 spamscore=0
+ bulkscore=0 lowpriorityscore=0 mlxscore=0 suspectscore=0 clxscore=1015
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002130012
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 12, 2020 at 05:00:59PM -0600, Eric Sandeen wrote:
+On Wed, Feb 12, 2020 at 05:51:18PM -0600, Eric Sandeen wrote:
 > On 12/31/19 7:11 PM, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
+> > Refactor the open-coded test for whether or not we're over quota.
+> 
+> Ooh, nice.  This was horrible.
+> 
 > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > ---
-> >  fs/xfs/libxfs/xfs_format.h |   19 +++++++++++++++++++
-> >  fs/xfs/xfs_ondisk.h        |    8 ++++++++
-> >  fs/xfs/xfs_super.c         |    4 ++--
-> >  3 files changed, 29 insertions(+), 2 deletions(-)
+> >  fs/xfs/xfs_dquot.c |   61 +++++++++++++++++++++-------------------------------
+> >  1 file changed, 25 insertions(+), 36 deletions(-)
 > > 
 > > 
-> > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> > index 9ff373962d10..82b15832ba32 100644
-> > --- a/fs/xfs/libxfs/xfs_format.h
-> > +++ b/fs/xfs/libxfs/xfs_format.h
-> > @@ -841,11 +841,30 @@ typedef struct xfs_agfl {
-> >  	    ASSERT(xfs_daddr_to_agno(mp, d) == \
-> >  		   xfs_daddr_to_agno(mp, (d) + (len) - 1)))
+> > diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> > index e50c75d9d788..54e7fdcd1d4d 100644
+> > --- a/fs/xfs/xfs_dquot.c
+> > +++ b/fs/xfs/xfs_dquot.c
+> > @@ -99,6 +99,17 @@ xfs_qm_adjust_dqlimits(
+> >  		xfs_dquot_set_prealloc_limits(dq);
+> >  }
 > >  
-> > +/*
-> > + * XFS Timestamps
-> > + * ==============
-> > + *
-> > + * Inode timestamps consist of signed 32-bit counters for seconds and
-> > + * nanoseconds; time zero is the Unix epoch, Jan  1 00:00:00 UTC 1970.
-> > + */
-> >  typedef struct xfs_timestamp {
-> >  	__be32		t_sec;		/* timestamp seconds */
-> >  	__be32		t_nsec;		/* timestamp nanoseconds */
-> >  } xfs_timestamp_t;
-> >  
-> > +/*
-> > + * Smallest possible timestamp with traditional timestamps, which is
-> > + * Dec 13 20:45:52 UTC 1901.
-> > + */
-> > +#define XFS_INO_TIME_MIN	((int64_t)S32_MIN)
+> > +static inline bool
+> > +xfs_quota_exceeded(
+> > +	const __be64		*count,
+> > +	const __be64		*softlimit,
+> > +	const __be64		*hardlimit) {
+> 
+> why pass these all as pointers?
+
+I don't remember.  I think a previous iteration of bigtime had something
+to do with messing with the dquot directly?
+
 > > +
-> > +/*
-> > + * Largest possible timestamp with traditional timestamps, which is
-> > + * Jan 19 03:14:07 UTC 2038.
-> > + */
-> > +#define XFS_INO_TIME_MAX	((int64_t)S32_MAX)
+> > +	if (*softlimit && be64_to_cpup(count) > be64_to_cpup(softlimit))
+> > +		return true;
+> > +	return *hardlimit && be64_to_cpup(count) > be64_to_cpup(hardlimit);
+> 
+> The asymmetry bothers me a little but maybe that's just me.  Is
+> 
+> > +	if ((*softlimit && be64_to_cpup(count) > be64_to_cpup(softlimit)) ||
+> > +	    (*hardlimit && be64_to_cpup(count) > be64_to_cpup(hardlimit)))
+> > +		return true;
+> > +	return false;
+> 
+> any better? *shrug*
+
+Yeah, I could fix that function.
+
+> > +}
 > > +
 > >  /*
-> >   * On-disk inode structure.
-> >   *
-> > diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-> > index fa0ec2fae14a..f67f3645efcd 100644
-> > --- a/fs/xfs/xfs_ondisk.h
-> > +++ b/fs/xfs/xfs_ondisk.h
-> > @@ -15,9 +15,17 @@
-> >  		"XFS: offsetof(" #structname ", " #member ") is wrong, " \
-> >  		"expected " #off)
-> >  
-> > +#define XFS_CHECK_VALUE(value, expected) \
-> > +	BUILD_BUG_ON_MSG((value) != (expected), \
-> > +		"XFS: value of " #value " is wrong, expected " #expected)
-> > +
-> >  static inline void __init
-> >  xfs_check_ondisk_structs(void)
+> >   * Check the limits and timers of a dquot and start or reset timers
+> >   * if necessary.
+> > @@ -117,6 +128,8 @@ xfs_qm_adjust_dqtimers(
+> >  	struct xfs_mount	*mp,
+> >  	struct xfs_disk_dquot	*d)
 > >  {
-> > +	/* make sure timestamp limits are correct */
-> > +	XFS_CHECK_VALUE(XFS_INO_TIME_MIN, 			-2147483648LL);
-> > +	XFS_CHECK_VALUE(XFS_INO_TIME_MAX,			2147483647LL);
+> > +	bool			over;
+> > +
+> >  	ASSERT(d->d_id);
+> >  
+> >  #ifdef DEBUG
+> > @@ -131,71 +144,47 @@ xfs_qm_adjust_dqtimers(
+> >  		       be64_to_cpu(d->d_rtb_hardlimit));
+> >  #endif
+> >  
+> > +	over = xfs_quota_exceeded(&d->d_bcount, &d->d_blk_softlimit,
+> > +			&d->d_blk_hardlimit);
+> >  	if (!d->d_btimer) {
+> > -		if ((d->d_blk_softlimit && (be64_to_cpu(d->d_bcount) > be64_to_cpu(d->d_blk_softlimit))) ||
+> > -		    (d->d_blk_hardlimit && (be64_to_cpu(d->d_bcount) > be64_to_cpu(d->d_blk_hardlimit)))) {
+> > +		if (over) {
 > 
-> IMHO this really shouldn't be in a function with this name, as it's not checking
-> an ondisk struct.  And I'm not really sure what it's protecting against?
-> Basically you put an integer in one #define and check it in another?
+> I wonder why we check the hard limit.  Isn't exceeding the soft limit
+> enough to start the timer?  Unrelated to the refactoring tho.
 
-Admittedly /this/ part isn't so crucial, because S32_MAX is never going
-to be redefined.  However, I added this for completeness; notice that
-the patch that widens xfs_timestamp_t adds similar checks for the new
-minimum and maximum timestamp, whose values are not so straightforward.
+Suppose there's only a hard limit set?
 
-Also, I get that this isn't directly checking an ondisk structure, but
-given that we use these constants, there ought to be a check against
-incorrect computation *somewhere*.  The BUILD_BUG_ON macros don't
-produce any real code (and this function is called at __init time) so
-what's the harm?
+> >  			d->d_btimer = cpu_to_be32(get_seconds() +
+> >  					mp->m_quotainfo->qi_btimelimit);
+> >  		} else {
+> >  			d->d_bwarns = 0;
+> >  		}
+> >  	} else {
+> > -		if ((!d->d_blk_softlimit || (be64_to_cpu(d->d_bcount) <= be64_to_cpu(d->d_blk_softlimit))) &&
+> > -		    (!d->d_blk_hardlimit || (be64_to_cpu(d->d_bcount) <= be64_to_cpu(d->d_blk_hardlimit)))) {
+> > +		if (!over) {
+> >  			d->d_btimer = 0;
+> >  		}
+> 
+> I guess that could be
+> 
+> >  	} else if (!over) {
+> >  		d->d_btimer = 0;
+> >  	}
+> 
+> ? but again *shrug* and that's beyond refactoring, isn't it.
+
+Strictly speaking, yes, but I think they're logically equivalent.
 
 --D
-
-> > +
-> >  	/* ag/file structures */
-> >  	XFS_CHECK_STRUCT_SIZE(struct xfs_acl,			4);
-> >  	XFS_CHECK_STRUCT_SIZE(struct xfs_acl_entry,		12);
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index f687181a2720..3bddf13cd8ea 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> > @@ -1582,8 +1582,8 @@ xfs_fc_fill_super(
-> >  	sb->s_maxbytes = xfs_max_file_offset(sb->s_blocksize_bits);
-> >  	sb->s_max_links = XFS_MAXLINK;
-> >  	sb->s_time_gran = 1;
-> > -	sb->s_time_min = S32_MIN;
-> > -	sb->s_time_max = S32_MAX;
-> > +	sb->s_time_min = XFS_INO_TIME_MIN;
-> > +	sb->s_time_max = XFS_INO_TIME_MAX;
-> >  	sb->s_iflags |= SB_I_CGROUPWB;
-> >  
-> >  	set_posix_acl_flag(sb);
-> > 
