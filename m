@@ -2,182 +2,74 @@ Return-Path: <SRS0=EAe2=4B=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0A3BC352A3
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 03:32:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AE99C3B186
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 04:38:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8470520724
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 03:32:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DED162173E
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 04:38:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1581568738;
+	bh=bv+0VtaMuMuDtzLYPkieCdmd5QR4JDDM6y220mrx378=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
+	b=RrlcxObdr6JWI6/pkoU7HbABJJXDD6+PpU5+l0bEwYNRIXxVQ8LWPwuntlC0UP6DB
+	 /1uiQJZhPHfwoYdlCxc6Kw4bT10wNw8sinLoYECWLja9oXXBtjyOg77GpskfH3qHjl
+	 pPlZ5eIdT95mRG98vJwMKiS5odOr2qgZ914gaxMk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729573AbgBMDcg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Feb 2020 22:32:36 -0500
-Received: from sandeen.net ([63.231.237.45]:33742 "EHLO sandeen.net"
+        id S1729514AbgBMEiy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Feb 2020 23:38:54 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41758 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729467AbgBMDcf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Feb 2020 22:32:35 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1729482AbgBMEiy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Feb 2020 23:38:54 -0500
+Received: from localhost.localdomain (c-73-231-172-41.hsd1.ca.comcast.net [73.231.172.41])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 9221722C5;
-        Wed, 12 Feb 2020 21:32:28 -0600 (CST)
-Subject: Re: [PATCH 05/14] xfs: refactor quota expiration timer modification
-From:   Eric Sandeen <sandeen@sandeen.net>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <157784106066.1364230.569420432829402226.stgit@magnolia>
- <157784109369.1364230.637677553755124721.stgit@magnolia>
- <455264c4-435c-c2f7-4e2a-3f4614574050@sandeen.net>
- <20200213014614.GY6870@magnolia>
- <30ee43c7-543f-6dd7-f68c-bdd5fe01c19b@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <e8d6702c-9e39-6e5e-e910-739b9b4558a3@sandeen.net>
-Date:   Wed, 12 Feb 2020 21:32:33 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.4.2
-MIME-Version: 1.0
-In-Reply-To: <30ee43c7-543f-6dd7-f68c-bdd5fe01c19b@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        by mail.kernel.org (Postfix) with ESMTPSA id 18ED8206D7;
+        Thu, 13 Feb 2020 04:38:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1581568733;
+        bh=bv+0VtaMuMuDtzLYPkieCdmd5QR4JDDM6y220mrx378=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=tbYlCnFj7ggSwK4cyg70rWxQrzUahCW2yOeoE3sZ/LlJjzcrzNUchpk3R5qfHHiaz
+         SHB7larZ7765fztRfvP4xU4fKtp8W2fvEWd3ELQPm1bzbJvc27CPLFeH48zYRK25QU
+         yPUch6WEdYHhO2730Z2ntH6BUkthDgGeRFY+B2E4=
+Date:   Wed, 12 Feb 2020 20:38:52 -0800
+From:   Andrew Morton <akpm@linux-foundation.org>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com
+Subject: Re: [PATCH 00/12] Change readahead API
+Message-Id: <20200212203852.8b7e0b28974e41227bd97329@linux-foundation.org>
+In-Reply-To: <20200125013553.24899-1-willy@infradead.org>
+References: <20200125013553.24899-1-willy@infradead.org>
+X-Mailer: Sylpheed 3.5.1 (GTK+ 2.24.31; x86_64-pc-linux-gnu)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Fri, 24 Jan 2020 17:35:41 -0800 Matthew Wilcox <willy@infradead.org> wrote:
 
+> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+> 
+> This series adds a readahead address_space operation to eventually
+> replace the readpages operation.  The key difference is that
+> pages are added to the page cache as they are allocated (and
+> then looked up by the filesystem) instead of passing them on a
+> list to the readpages operation and having the filesystem add
+> them to the page cache.  It's a net reduction in code for each
+> implementation, more efficient than walking a list, and solves
+> the direct-write vs buffered-read problem reported by yu kuai at
+> https://lore.kernel.org/linux-fsdevel/20200116063601.39201-1-yukuai3@huawei.com/
 
-On 2/12/20 9:27 PM, Eric Sandeen wrote:
-> On 2/12/20 7:46 PM, Darrick J. Wong wrote:
->> On Wed, Feb 12, 2020 at 05:57:24PM -0600, Eric Sandeen wrote:
->>> On 12/31/19 7:11 PM, Darrick J. Wong wrote:
->>>> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> ...
-> 
->>>>  	} else {
->>>>  		if (!over) {
->>>> -			d->d_btimer = 0;
->>>> +			xfs_quota_clear_timer(&d->d_btimer);
->>>
->>> yeah that's a very fancy way to say "= 0" ;)
->>>
->>> ...
->>
->> Yes, that's a fancy way to assign zero.  However, consider that for
->> bigtime support, I had to add an incore quota timer so that timers more
->> or less fire when they're supposed to, and now there's a function to
->> convert the incore timespec64 value to whatever is ondisk:
->>
->> /* Clear a quota grace period expiration timer. */
->> static inline void
->> xfs_quota_clear_timer(
->> 	struct xfs_disk_dquot	*ddq,
->> 	time64_t		*itimer,
->> 	__be32			*dtimer)
->> {
->> 	struct timespec64	tv = { 0 };
->>
->> 	*itimer = tv.tv_sec;
->> 	xfs_dquot_to_disk_timestamp(ddq, dtimer, &tv);
->> }
->>
->> It was at *that* point in the patchset that it seemed easier to call a
->> small function three times than to open-code this three times.
-> 
-> +void
-> +xfs_dquot_to_disk_timestamp(
-> +	__be32			*dtimer,
-> +	const struct timespec64	*tv)
-> +{
-> +	*dtimer = cpu_to_be32(tv->tv_sec);
-> +}
-> 
->  static inline void
->  xfs_quota_clear_timer(
-> +	time64_t		*itimer,
->  	__be32			*dtimer)
->  {
-> -	*dtimer = cpu_to_be32(0);
-> +	struct timespec64	tv = { 0 };
-> +
-> +	*itimer = tv.tv_sec;
-> +	xfs_dquot_to_disk_timestamp(dtimer, &tv);
->  } 
-> 
-> xfs_quota_clear_timer(&dqp->q_btimer, &d->d_btimer);
-> 
-> That's still a very fancy way of saying:
-> 
->         dqp->q_btimer = d->d_btimer = 0;
-> 
-> I think?  Can't really see what value the timespec64 adds here.
-> 
-> -Eric
-> 
-
-Actually,
-
- xfs_quota_set_timer(
-+	time64_t		*itimer,
- 	__be32			*dtimer,
- 	time_t			limit)
- {
--	time64_t		new_timeout;
-+	struct timespec64	tv = { 0 };
- 
--	new_timeout = xfs_dquot_clamp_timer(get_seconds() + limit);
--	*dtimer = cpu_to_be32(new_timeout);
-+	tv.tv_sec = xfs_dquot_clamp_timer(ktime_get_real_seconds() + limit);
-+	*itimer = tv.tv_sec;
-+	xfs_dquot_to_disk_timestamp(dtimer, &tv);
- }
-
-I'm not sure why there's a timespec64 here either.  Isn't everything
-we're dealing with on timers in seconds, using only tv_sec, and time64_t would
-suffice instead of using a timespec64 just to carry around a seconds value?
-
--Eric
+Unclear which patch fixes this and how it did it?
