@@ -2,135 +2,134 @@ Return-Path: <SRS0=EAe2=4B=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDD28C2BA83
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 17:46:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D115C352A3
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 19:02:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CA238218AC
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 17:46:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="wIqs09io"
+	by mail.kernel.org (Postfix) with ESMTP id 4055F218AC
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Feb 2020 19:02:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727658AbgBMRqu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Feb 2020 12:46:50 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:54436 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725781AbgBMRqt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Feb 2020 12:46:49 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01DHVIo7156836;
-        Thu, 13 Feb 2020 17:46:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=IA8QPDgV651730kDP1WE96CZR8GoGgs0h7LEtbDw3HA=;
- b=wIqs09iow0mRbsI0OtynMW6u3eFALqPivl0n3hzJoqJ3eEq+n//HTUdhFoTjv8+1/zWv
- xNi+Tloy1TxqRrkYY7U+pbBdKTOPMRBWMSLgfKipfeQgexvemg/LEjc4N+rNV/ibkJWE
- IVjYngO+0wI7Jtxs4EBZVJOv6+WMbUCPbO+04efLcOs0FY58i98tOpfSjBeI3XuUdQY5
- gYqzEjLOLe9VD675O0V26VKk5tduxWDxM6clwJkUWkLwc1gKx2LD2TGKOhAFLmDpvciK
- lYzeXdJM2K6sKpoc5VPYjWzFVZqmDPXMwsdXvB6SZfm7iKmBONJ5cuud2VlkVShtBEft Lw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2y2p3sv12k-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 13 Feb 2020 17:46:33 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01DHRUG2082493;
-        Thu, 13 Feb 2020 17:44:33 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 2y4k37e5ck-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 13 Feb 2020 17:44:33 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01DHiVgp022206;
-        Thu, 13 Feb 2020 17:44:31 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 13 Feb 2020 09:44:31 -0800
-Date:   Thu, 13 Feb 2020 09:44:29 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Zheng Bin <zhengbin13@huawei.com>
-Cc:     david@fromorbit.com, sandeen@redhat.com, linux-xfs@vger.kernel.org,
-        renxudong1@huawei.com
-Subject: Re: [PATCH] xfs: add agf freeblocks verify in xfs_agf_verify
-Message-ID: <20200213174429.GE6870@magnolia>
-References: <1581587639-130771-1-git-send-email-zhengbin13@huawei.com>
+        id S1728222AbgBMTCU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Feb 2020 14:02:20 -0500
+Received: from mga17.intel.com ([192.55.52.151]:55974 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726282AbgBMTCU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 13 Feb 2020 14:02:20 -0500
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 Feb 2020 11:01:57 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.70,437,1574150400"; 
+   d="scan'208";a="381198093"
+Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
+  by orsmga004.jf.intel.com with ESMTP; 13 Feb 2020 11:01:57 -0800
+Date:   Thu, 13 Feb 2020 11:01:57 -0800
+From:   Ira Weiny <ira.weiny@intel.com>
+To:     Jeff Moyer <jmoyer@redhat.com>
+Cc:     linux-kernel@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v3 00/12] Enable per-file/directory DAX operations V3
+Message-ID: <20200213190156.GA22854@iweiny-DESK2.sc.intel.com>
+References: <20200208193445.27421-1-ira.weiny@intel.com>
+ <x49imke1nj0.fsf@segfault.boston.devel.redhat.com>
+ <20200211201718.GF12866@iweiny-DESK2.sc.intel.com>
+ <x49sgjf1t7n.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1581587639-130771-1-git-send-email-zhengbin13@huawei.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9530 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999 adultscore=0
- bulkscore=0 malwarescore=0 phishscore=0 suspectscore=0 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002130126
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9530 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 malwarescore=0
- suspectscore=0 mlxlogscore=999 priorityscore=1501 clxscore=1015
- impostorscore=0 lowpriorityscore=0 phishscore=0 adultscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002130126
+In-Reply-To: <x49sgjf1t7n.fsf@segfault.boston.devel.redhat.com>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 13, 2020 at 05:53:59PM +0800, Zheng Bin wrote:
-> We recently used fuzz(hydra) to test XFS and automatically generate
-> tmp.img(XFS v5 format, but some metadata is wrong)
+On Wed, Feb 12, 2020 at 02:49:48PM -0500, Jeff Moyer wrote:
+> Ira Weiny <ira.weiny@intel.com> writes:
 > 
-> Test as follows:
-> mount tmp.img tmpdir
-> cp file1M tmpdir
-> sync
+> > On Mon, Feb 10, 2020 at 10:15:47AM -0500, Jeff Moyer wrote:
+> >> Hi, Ira,
+> >> 
+> >> Could you please include documentation patches as part of this series?
+> >
+> > I do have an update to the vfs.rst doc in
+> >
+> > 	fs: Add locking for a dynamic DAX state
+> >
+> > I'm happy to do more but was there something specific you would like to see?
+> > Or documentation in xfs perhaps?
 > 
-> tmpdir/file1M size is 1M, but its data can not sync to disk.
-> 
-> This is because tmp.img has some problems, using xfs_repair detect
-> information as follows:
-> 
-> agf_freeblks 0, counted 3224 in ag 0
-> agf_longest 536874136, counted 3224 in ag 0
-> sb_fdblocks 613, counted 3228
-> 
-> Add these agf freeblocks checks:
-> 1. agf_longest < agf_freeblks
-> 2. agf_freeblks < sb_fdblocks
+> Sorry, I was referring to your statx man page addition.
 
-Uh... what problem did you encounter?  Did block allocation loop
-forever?  Did errors come pouring out of dmesg?  Did other strange
-behaviors erupt?  What is the smallest number of steps needed to go from
-a fresh format to ... whatever went wrong here?
+Ah yea I guess I could include that as a patch.  I just wanted to get buy off
+on the whole thing prior to setting documentation in.
 
-That's what this commit message ought to capture. :)
+> It would be
+> nice if we could find a home for the information in your cover letter,
+> too.  Right now, I'm not sure how application developers are supposed to
+> figure out how to use the per-inode settings.
 
---D
+I'm not sure either.  But this is probably a good start:
 
-> Signed-off-by: Zheng Bin <zhengbin13@huawei.com>
-> Signed-off-by: Ren Xudong <renxudong1@huawei.com>
-> ---
->  fs/xfs/libxfs/xfs_alloc.c | 4 ++++
->  1 file changed, 4 insertions(+)
+https://www.kernel.org/doc/Documentation/filesystems/dax.txt
+
+Something under the Usage section like:
+
+diff --git a/Documentation/filesystems/dax.txt b/Documentation/filesystems/dax.txt
+index 679729442fd2..1bab5d5d775b 100644
+--- a/Documentation/filesystems/dax.txt
++++ b/Documentation/filesystems/dax.txt
+@@ -20,8 +20,18 @@ Usage
+ If you have a block device which supports DAX, you can make a filesystem
+ on it as usual.  The DAX code currently only supports files with a block
+ size equal to your kernel's PAGE_SIZE, so you may need to specify a block
+-size when creating the filesystem.  When mounting it, use the "-o dax"
+-option on the command line or add 'dax' to the options in /etc/fstab.
++size when creating the filesystem.
++
++Files can then be enabled to use dax using the statx system call or an
++application using it like 'xfs_io'.  Directories can also be enabled for dax
++to have the file system automatically enable dax on all files within those
++directories.
++
++Alternately, when mounting it one can use the "-o dax" option on the command
++line or add 'dax' to the options in /etc/fstab to globaly override all files to
++use dax on that filesystem.  Using the "-o dax" does not change the state of
++individual files so remounting without "-o dax" will revert them to the state
++saved in the filesystem meta data.
+ 
+ 
+ Implementation Tips for Block Driver Writers
+
 > 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index d8053bc..0f4b4d1 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -2858,6 +2858,10 @@ xfs_agf_verify(
->  	      be32_to_cpu(agf->agf_flcount) <= xfs_agfl_size(mp)))
->  		return __this_address;
-> 
-> +	if (be32_to_cpu(agf->agf_freeblks) < be32_to_cpu(agf->agf_longest) ||
-> +	    be32_to_cpu(agf->agf_freeblks) >= mp->m_sb.sb_fdblocks)
-> +		return __this_address;
-> +
->  	if (be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]) < 1 ||
->  	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]) < 1 ||
->  	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]) > XFS_BTREE_MAXLEVELS ||
-> --
-> 2.7.4
-> 
+> If I read your cover letter correctly, the mount option overrides any
+> on-disk setting.  Is that right?
+
+Yes
+
+> Given that we document the dax mount
+> option as "the way to get dax," it may be a good idea to allow for a
+> user to selectively disable dax, even when -o dax is specified.  Is that
+> possible?
+
+Not with this patch set.  And I'm not sure how that would work.  The idea was
+that -o dax was simply an override for users who were used to having their
+entire FS be dax.  We wanted to depreciate the use of "-o dax" in general.  The
+individual settings are saved so I don't think it makes sense to ignore the -o
+dax in favor of those settings.  Basically that would IMO make the -o dax
+useless.
+
+Ira
+
