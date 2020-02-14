@@ -2,121 +2,237 @@ Return-Path: <SRS0=Ip4f=4C=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85896C3B18F
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 Feb 2020 00:16:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F330C352A3
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 Feb 2020 00:25:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5983020873
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 Feb 2020 00:16:33 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="WakEy6F3"
+	by mail.kernel.org (Postfix) with ESMTP id D5056217F4
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 Feb 2020 00:25:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727604AbgBNAQc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Feb 2020 19:16:32 -0500
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:38036 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727594AbgBNAQ3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Feb 2020 19:16:29 -0500
-Received: by mail-ot1-f67.google.com with SMTP id z9so7476107oth.5
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Feb 2020 16:16:29 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=rG1vX77YtWxx+qL8zmiC+QnNHHiP3NTzOqE4AoDqMAw=;
-        b=WakEy6F3ApIgrFEWOBecDIpNAJVCgyi10fdF/akTwcUGBT/IeipHX+cR+pausx7Txa
-         7UpvycLmRq/nijUulx4THHko9/h9P66nE9yegW2DJCw2lEvpbFoDPpSvlzVjjiK591cd
-         Rr8x4FzuhApsMQUcyzM7pwdPWH/+KQEHO4p6WX9coLltDx4n8+EjOgxAzocqEWD9Df9/
-         rPtRsNJJzJI1Py506R6OpDFKhaBhiR5AjgFkWd2SJsdLuIPHg1eM0z3wbdPTifRofxTb
-         2VGRsxRz3JGMjoX7iNlz5pPilqd3IezNtke3awlEFoLYQ2S5V+EoX29v6ejvmx44X62I
-         Wc7w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=rG1vX77YtWxx+qL8zmiC+QnNHHiP3NTzOqE4AoDqMAw=;
-        b=SGw6yQblaCIw0vPA1VTFif3lXtSabbS6x27CjwPP0WsP/HN1HMKAbVWyCDZjjE2XPw
-         LbI/u3xsX0aKJfK25vvUmvritm2UOwTSPqJY/Eg2a25cp0j3pwloSpBGwZqlVdmyJQTU
-         JR5gytLFl91gYIv3dBKBcxObaN35HWAk2biVtA+4EJ3dMPUnfOK9DHA1TFHScSyeEgMf
-         pjc+tGAjQXVJkI5qeMRVN2WRt1sZW0RyqRXsxub0Fq97fxyaCQcZr0dXFTZ/LWSH87d9
-         2cFnaUu9tfZ5hJ7937/HDFwSGrRXvWmpR7aB4eGctfGDKL2R6/veBK19oam4F9xLn999
-         bGvQ==
-X-Gm-Message-State: APjAAAUjEj65McPtQJ8InkWJRV1dBSgIkLdwtrc3LDelg7CLKdNAYqR1
-        u79Mq/alcVM39ERnby3KN7LhNRU1WqRKXWxSx00jBA==
-X-Google-Smtp-Source: APXvYqyUhkfNbR0RFLXIH6LAygeGDOeEqqLcdiUcZRMmfqVyLefKN3yOki9UTAHgFJxWwXRQBZtdbLe4rMpJWfAsWb0=
-X-Received: by 2002:a9d:7852:: with SMTP id c18mr89938otm.247.1581639389017;
- Thu, 13 Feb 2020 16:16:29 -0800 (PST)
+        id S1727595AbgBNAZn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Feb 2020 19:25:43 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:49312 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727594AbgBNAZn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Feb 2020 19:25:43 -0500
+Received: from dread.disaster.area (pa49-179-138-28.pa.nsw.optusnet.com.au [49.179.138.28])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 085F53A6096;
+        Fri, 14 Feb 2020 11:25:40 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1j2Onb-0004Rw-94; Fri, 14 Feb 2020 11:25:39 +1100
+Date:   Fri, 14 Feb 2020 11:25:39 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH, RFC] libxfs: use FALLOC_FL_ZERO_RANGE in
+ libxfs_device_zero
+Message-ID: <20200214002539.GW10776@dread.disaster.area>
+References: <4bc3be27-b09d-a708-f053-6f7240642667@sandeen.net>
+ <20200213234818.GV10776@dread.disaster.area>
+ <15f9a679-c83e-fede-25fe-2f2cdf940d86@sandeen.net>
 MIME-Version: 1.0
-References: <20200208193445.27421-1-ira.weiny@intel.com> <x49imke1nj0.fsf@segfault.boston.devel.redhat.com>
- <20200211201718.GF12866@iweiny-DESK2.sc.intel.com> <x49sgjf1t7n.fsf@segfault.boston.devel.redhat.com>
- <20200213190156.GA22854@iweiny-DESK2.sc.intel.com> <20200213190513.GB22854@iweiny-DESK2.sc.intel.com>
- <20200213195839.GG6870@magnolia> <20200213232923.GC22854@iweiny-DESK2.sc.intel.com>
-In-Reply-To: <20200213232923.GC22854@iweiny-DESK2.sc.intel.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Thu, 13 Feb 2020 16:16:17 -0800
-Message-ID: <CAPcyv4hkWoC+xCqicH1DWzmU2DcpY0at_A6HaBsrdLbZ6qzWow@mail.gmail.com>
-Subject: Re: [PATCH v3 00/12] Enable per-file/directory DAX operations V3
-To:     Ira Weiny <ira.weiny@intel.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Jeff Moyer <jmoyer@redhat.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <15f9a679-c83e-fede-25fe-2f2cdf940d86@sandeen.net>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
+        a=zAxSp4fFY/GQY8/esVNjqw==:117 a=zAxSp4fFY/GQY8/esVNjqw==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=l697ptgUJYAA:10
+        a=7-415B0cAAAA:8 a=6ywtPXZoFtxdahtW_SoA:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 13, 2020 at 3:29 PM Ira Weiny <ira.weiny@intel.com> wrote:
->
-> On Thu, Feb 13, 2020 at 11:58:39AM -0800, Darrick J. Wong wrote:
-> > On Thu, Feb 13, 2020 at 11:05:13AM -0800, Ira Weiny wrote:
-> > > On Thu, Feb 13, 2020 at 11:01:57AM -0800, 'Ira Weiny' wrote:
-> > > > On Wed, Feb 12, 2020 at 02:49:48PM -0500, Jeff Moyer wrote:
-> > > > > Ira Weiny <ira.weiny@intel.com> writes:
-> > > > >
-> > >
-> > > [snip]
-> > >
-> > > > > Given that we document the dax mount
-> > > > > option as "the way to get dax," it may be a good idea to allow for a
-> > > > > user to selectively disable dax, even when -o dax is specified.  Is that
-> > > > > possible?
-> > > >
-> > > > Not with this patch set.  And I'm not sure how that would work.  The idea was
-> > > > that -o dax was simply an override for users who were used to having their
-> > > > entire FS be dax.  We wanted to depreciate the use of "-o dax" in general.  The
-> > > > individual settings are saved so I don't think it makes sense to ignore the -o
-> > > > dax in favor of those settings.  Basically that would IMO make the -o dax
-> > > > useless.
-> > >
-> > > Oh and I forgot to mention that setting 'dax' on the root of the FS basically
-> > > provides '-o dax' functionality by default with the ability to "turn it off"
-> > > for files.
-> >
-> > Please don't further confuse FS_XFLAG_DAX and S_DAX.
->
-> Yes...  the above text is wrong WRT statx.  But setting the physical
-> XFS_DIFLAG2_DAX flag on the root directory will by default cause all files and
-> directories created there to be XFS_DIFLAG2_DAX and so forth on down the tree
-> unless explicitly changed.  This will be the same as mounting with '-o dax' but
-> with the ability to turn off dax for individual files.  Which I think is the
-> functionality Jeff is wanting.
+On Thu, Feb 13, 2020 at 05:57:17PM -0600, Eric Sandeen wrote:
+> On 2/13/20 5:48 PM, Dave Chinner wrote:
+> > On Thu, Feb 13, 2020 at 03:12:24PM -0600, Eric Sandeen wrote:
+> >> I had a request from someone who cared about mkfs speed(!)
+> >> over a slower network block device to look into using faster
+> >> zeroing methods, particularly for the log, during mkfs.xfs.
+> >>
+> >> e2fsprogs already does this, thanks to some guy named Darrick:
+> >>
+> >> /*
+> >>  * If we know about ZERO_RANGE, try that before we try PUNCH_HOLE because
+> >>  * ZERO_RANGE doesn't unmap preallocated blocks.  We prefer fallocate because
+> >>  * it always invalidates page cache, and libext2fs requires that reads after
+> >>  * ZERO_RANGE return zeroes.
+> >>  */
+> >> static int __unix_zeroout(int fd, off_t offset, off_t len)
+> >> {
+> >>         int ret = -1;
+> >>
+> >> #if defined(HAVE_FALLOCATE) && defined(FALLOC_FL_ZERO_RANGE)
+> >>         ret = fallocate(fd, FALLOC_FL_ZERO_RANGE, offset, len);
+> >>         if (ret == 0)
+> >>                 return 0;
+> >> #endif
+> >> #if defined(HAVE_FALLOCATE) && defined(FALLOC_FL_PUNCH_HOLE) && defined(FALLOC_FL_KEEP_SIZE)
+> >>         ret = fallocate(fd, FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE,
+> >>                         offset,  len);
+> >>         if (ret == 0)
+> >>                 return 0;
+> >> #endif
+> >>         errno = EOPNOTSUPP;
+> >>         return ret;
+> >> }
+> >>
+> >> and nobody has exploded so far, AFAIK.  :)  So, floating this idea
+> >> for xfsprogs.  I'm a little scared of the second #ifdef block above, but
+> >> if that's really ok/consistent/safe we could add it too.
+> > 
+> > If FALLOC_FL_PUNCH_HOLE is defined, then FALLOC_FL_KEEP_SIZE is
+> > guaranteed to be defined, so that condition check is somewhat
+> > redundant. See commit 79124f18b335 ("fs: add hole punching to
+> > fallocate")....
+> 
+> Style aside, is that 2nd zeroing method something we want to try?
 
-To be clear you mean turn off XFS_DIFLAG2_DAX, not mask S_DAX when you
-say "turn off dax", right?
+Oh, I misunderstood what you were asking.  I don't think we want to
+implement that.
 
-The mount option simply forces "S_DAX" on all regular files as long as
-the underlying device (or soon to be superblock for virtiofs) supports
-it. There is no method to mask S_DAX when the filesystem was mounted
-with -o dax. Otherwise we would seem to need yet another physical flag
-to "always disable" dax.
+e.g. If it's a pre-allocated image file or block device on
+sparse-capable storage being mkfs'd, then the user really doesn't
+want it punched out, do they?
+
+And it's for the journal: any ENOSPC error from the block device in
+the journal is immediately fatal to the filesystem. Hence I think
+we should not punch out the journal blocks that already are allocated
+in the storage.
+
+And, really, the space may have already been punched out via
+attempting to trim the device (i.e. "-K" mkfs option wasn't set), in
+which case punching here is redundant.
+
+Also, libxfs_device_zero() is called by xfs_repair: do we want
+xfs_repair to be punching out blocks for the realtime bitmap and
+summary storage? I don't think we want that to happen, either.
+
+Fast zeroing, yes. Punching out allocated storage, no.
+
+> >> +#define FALLOC_FL_COLLAPSE_RANGE 0x08
+> >> +#endif
+> >> +
+> >> +#ifndef FALLOC_FL_ZERO_RANGE
+> >> +#define FALLOC_FL_ZERO_RANGE 0x10
+> >> +#endif
+> >> +
+> >> +#ifndef FALLOC_FL_INSERT_RANGE
+> >> +#define FALLOC_FL_INSERT_RANGE 0x20
+> >> +#endif
+> >> +
+> >> +#ifndef FALLOC_FL_UNSHARE_RANGE
+> >> +#define FALLOC_FL_UNSHARE_RANGE 0x40
+> >> +#endif
+> > 
+> > These were added to allow xfs_io to test these operations before
+> > there was userspace support for them. I do not think we should
+> > propagate them outside of xfs_io - if they are not supported by the
+> > distro at build time, we shouldn't attempt to use them in mkfs.
+> > 
+> > i.e. xfs_io is test-enablement code for developers, mkfs.xfs is
+> > production code for users, so different rules kinda exist for
+> > them...
+> 
+> Fair enough.  people /could/ use newer xfsprogs on older kernels, but...
+> those defines are getting pretty old by now in any case.
+
+*nod*
+
+> It's probably not terrible to just fail the build on a system that doesn't
+> have falloc.h, by now?
+
+That might be going a bit far. fallocate() in most cases is not
+critical to the correct functioning of the production tools, so if
+it's not present it shouldn't break anything.
+
+> >> diff --git a/libxfs/Makefile b/libxfs/Makefile
+> >> index fbcc963a..b4e8864b 100644
+> >> --- a/libxfs/Makefile
+> >> +++ b/libxfs/Makefile
+> >> @@ -105,6 +105,10 @@ CFILES = cache.c \
+> >>  #
+> >>  #LCFLAGS +=
+> >>  
+> >> +ifeq ($(HAVE_FALLOCATE),yes)
+> >> +LCFLAGS += -DHAVE_FALLOCATE
+> >> +endif
+> > 
+> > HAVE_FALLOCATE comes from an autoconf test. I suspect that this
+> > needs to be made more finegrained, testing for fallocate() features,
+> > not just just whether the syscall exists. And the above should
+> > probably be in include/builddefs.in so that it's available to all
+> > of xfsprogs, not just libxfs code...
+> 
+> But that's testing the kernel on the build host, right?  What's the
+> point of that?  Or am I misunderstanding?
+
+Who builds their distro binaries on a userspace that doesn't contain
+the headers and libaries the distro is going to ship with?
+
+That's the whole point of "build-root" infrastructure, right? i.e.
+build against what you are going to ship, not what is installed on
+the build machine....
+
+> >> +	fd = libxfs_device_to_fd(btp->dev);
+> >> +	start_offset = LIBXFS_BBTOOFF64(start);
+> >> +	end_offset = LIBXFS_BBTOOFF64(start + len) - start_offset;
+> >> +
+> >> +#if defined(HAVE_FALLOCATE)
+> >> +	/* try to use special zeroing methods, fall back to writes if needed */
+> >> +	len_bytes = LIBXFS_BBTOOFF64(len);
+> >> +	ret = fallocate(fd, FALLOC_FL_ZERO_RANGE, start_offset, len_bytes);
+> >> +	if (ret == 0)
+> >> +		return 0;
+> >> +#endif
+> > 
+> > I kinda dislike the "return if success" hidden inside the ifdef -
+> > it's not a code pattern I'd expect to see. This is what I'd tend
+> > to expect in include/linux.h:
+> > 
+> > #if defined(HAVE_FALLOCATE_ZERO_RANGE)
+> > static inline int
+> > platform_zero_range(
+> > 	int		fd,
+> > 	xfs_off_t	start_offset,
+> > 	xfs_off_t	end_offset)
+> > {
+> > 	int		ret;
+> > 
+> > 	ret = fallocate(fd, FALLOC_FL_ZERO_RANGE, start_offset, len_bytes);
+> > 	if (!ret)
+> > 		return 0;
+> > 	return -errno;
+> > }
+> > #else
+> > #define platform_zero_range(fd, s, o)	(true)
+> > #endif
+> > 
+> > and then the code in libxfs_device_zero() does:
+> > 
+> > 	error = platform_zero_range(fd, start_offset, len_bytes);
+> > 	if (!error)
+> > 		return 0;
+> > 
+> > without adding nasty #defines...
+> 
+> Yeah that's much better.  Tho I hate adding more platform_* stuff when really
+> we're down to only one platform but maybe that's a project for another day.
+
+There's more than one linux "platform" we have to support, and this
+abstraction makes it easy to include new functionality in a clean
+and autoconf detection friendly way... :)
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
