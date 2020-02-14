@@ -2,115 +2,68 @@ Return-Path: <SRS0=Ip4f=4C=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C86D1C35242
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 Feb 2020 19:38:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D39AC47409
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 Feb 2020 19:50:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 977ED20873
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 Feb 2020 19:38:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD0E924654
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 Feb 2020 19:50:51 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mys1IIw2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387603AbgBNTi6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 14 Feb 2020 14:38:58 -0500
-Received: from sandeen.net ([63.231.237.45]:45644 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387557AbgBNTi6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 14 Feb 2020 14:38:58 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 1CD592AC5;
-        Fri, 14 Feb 2020 13:38:49 -0600 (CST)
-Subject: Re: [PATCH] xfs: fix iclog release error check race with shutdown
-To:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
-Cc:     Zorro Lang <zlang@redhat.com>
-References: <20200214181528.24046-1-bfoster@redhat.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <4dbad703-80ca-f101-ba11-501fba8bc336@sandeen.net>
-Date:   Fri, 14 Feb 2020 13:38:56 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.4.2
+        id S2388256AbgBNTur (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 14 Feb 2020 14:50:47 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:52166 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387508AbgBNTuq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Feb 2020 14:50:46 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=v3womVZzJfvJ/ZynJrzvKSuPFFEQ+5OZC1GleOd63lI=; b=mys1IIw2ciRDnnOg1+a/L/beW1
+        7357IOcpU71f4WaOx5BF1LNC2w+18SN0vPkn0BAx47JJT1ekmHmdX8FSwWkmEYlpgtTfg19s9Abjz
+        C63qA8m0b0CEy2AU9q7BlUDy99a16ZDwgMirXJrhg4DHrx0SPqZfihei8HMA11pjNBbVUpwLheoUP
+        jvjy8FNDkU4VCt+tgQUnXJCoHFertNTu6iJOjBK/+hVJcmhn8+NpTpozWdqIMq0dPCfOJZW/tcUNw
+        +8WmZZnCzebTqfb9kxxclwCAtZbdVOz7PFPt4fNiEzN9DwwuCPfQtrzfGXQYwl5+/DdizCTTOIeUg
+        sfUqC+fA==;
+Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1j2gz8-0001km-Ao; Fri, 14 Feb 2020 19:50:46 +0000
+Date:   Fri, 14 Feb 2020 11:50:46 -0800
+From:   Matthew Wilcox <willy@infradead.org>
+To:     linux-fsdevel@vger.kernel.org
+Cc:     linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-erofs@lists.ozlabs.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v5 01/13] mm: Fix the return type of
+ __do_page_cache_readahead
+Message-ID: <20200214195046.GC7778@bombadil.infradead.org>
+References: <20200211010348.6872-1-willy@infradead.org>
+ <20200211010348.6872-2-willy@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20200214181528.24046-1-bfoster@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200211010348.6872-2-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/14/20 12:15 PM, Brian Foster wrote:
-> Prior to commit df732b29c8 ("xfs: call xlog_state_release_iclog with
-> l_icloglock held"), xlog_state_release_iclog() always performed a
-> locked check of the iclog error state before proceeding into the
-> sync state processing code. As of this commit, part of
-> xlog_state_release_iclog() was open-coded into
-> xfs_log_release_iclog() and as a result the locked error state check
-> was lost.
+On Mon, Feb 10, 2020 at 05:03:36PM -0800, Matthew Wilcox wrote:
+> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 > 
-> The lockless check still exists, but this doesn't account for the
-> possibility of a race with a shutdown being performed by another
-> task causing the iclog state to change while the original task waits
-> on ->l_icloglock. This has reproduced very rarely via generic/475
-> and manifests as an assert failure in __xlog_state_release_iclog()
-> due to an unexpected iclog state.
-> 
-> Restore the locked error state check in xlog_state_release_iclog()
-> to ensure that an iclog state update via shutdown doesn't race with
-> the iclog release state processing code.
-> 
-> Reported-by: Zorro Lang <zlang@redhat.com>
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ra_submit() which is a wrapper around __do_page_cache_readahead() already
+> returns an unsigned long, and the 'nr_to_read' parameter is an unsigned
+> long, so fix __do_page_cache_readahead() to return an unsigned long,
+> even though I'm pretty sure we're not going to readahead more than 2^32
+> pages ever.
 
-On vacation* today so not thinking hard about reviews but if this goes in,
-Darrick can you please add a:
-
-Fixes: df732b29c8 ("xfs: call xlog_state_release_iclog with l_icloglock held")
-
-Thanks,
--Eric
+I was going through this and realised it's completely pointless -- the
+returned value from ra_submit() and __do_page_cache_readahead() is
+eventually ignored through all paths.  So I'm replacing this patch with
+one that makes everything return void.
