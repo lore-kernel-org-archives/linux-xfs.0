@@ -7,65 +7,65 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C590EC3B1BD
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 Feb 2020 18:59:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 123E8C2BA83
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 Feb 2020 18:59:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9243E22314
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 Feb 2020 18:59:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB0772168B
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 Feb 2020 18:59:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WE3p5pBM"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PfTWlDgU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387743AbgBNS7v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S2387767AbgBNS7v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Fri, 14 Feb 2020 13:59:51 -0500
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:38786 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2387767AbgBNS7u (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Feb 2020 13:59:50 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:54583 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S2387731AbgBNS7v (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Feb 2020 13:59:51 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1581706789;
+        s=mimecast20190719; t=1581706790;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=sBv4Jipw3BawSHTJNVeUQ7nSUhmAaRRQVV2vxLSW19I=;
-        b=WE3p5pBMZMa0FACHXAYddKHeucYBuwN02oPiZwNd3pT075uvYrjYzYpD5hlZ29JPvzhE1p
-        ysc9rz5AO2exTQb2rkRYPNBs+v8gAP6Sma0WoeF+EZzgirZAKwM+X0VwkMoop/eEiywII3
-        FnMHlYFRLVlmQirdJYP+VQviLs2GD9A=
-Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
- [209.85.221.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-178-Rl4QYaQsOWq3A73Q3GJhbg-1; Fri, 14 Feb 2020 13:59:46 -0500
-X-MC-Unique: Rl4QYaQsOWq3A73Q3GJhbg-1
-Received: by mail-wr1-f72.google.com with SMTP id p8so4528924wrw.5
-        for <linux-xfs@vger.kernel.org>; Fri, 14 Feb 2020 10:59:46 -0800 (PST)
+        bh=tIrC7IDah2W4xfXlfCZ/Yjz8JWpqqLLfruA5DcRjvLU=;
+        b=PfTWlDgUgQwSHr4lCxYkMmx9tP/3bwf+aZfRWLCrb7Cph3GuNhC/N3HMjGmq4n+RsSE8vN
+        VfQgjrbVyoFKnx/VqE0GMLBCvL6zZZel3+aqaE7W4y3uqGsvQb0K1Mb7lQ1VuJ59ELMx2f
+        uKdcxcdFVJOBLh1WSNBjNbE3reON4Kk=
+Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
+ [209.85.128.69]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-347-Ka6MFKW6N72LDr-yNeCFFQ-1; Fri, 14 Feb 2020 13:59:48 -0500
+X-MC-Unique: Ka6MFKW6N72LDr-yNeCFFQ-1
+Received: by mail-wm1-f69.google.com with SMTP id y7so4373543wmd.4
+        for <linux-xfs@vger.kernel.org>; Fri, 14 Feb 2020 10:59:48 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=sBv4Jipw3BawSHTJNVeUQ7nSUhmAaRRQVV2vxLSW19I=;
-        b=iG6eSbtSVORhVPncgqzZ0/8N7Js5egnvNamzlT1zc5LXR3RfXouj3f0ImGK9CTdr4+
-         N6N4jsIsnApl5LWrH3NeyURmbg29xapKJUDFjqaF1q/jwE4cN3K1ZN3UCYJY7fZejonz
-         BO+fo78rp1czRqREr+CMbyQAkDrP6PXt8+8VlZwquWVeGy9tE0EsszXB+fymQrm75w0i
-         SOLoixa3OywMgp+r2bBPsSyzK2dv6OSAJbpzwbNCBqanOe6zceUClW7TGLoSWWJqJTF9
-         6M7OnhbgZf6JrovVM5vipEGjG9B63acG+l9vI1NXn0gVJAU0wrJqBH1GFKgIE/B0iAws
-         sUqg==
-X-Gm-Message-State: APjAAAUroYI38tK8kyK2OJjNnvHuENG836bL3ZXfu4Li1XhI5BzpsJId
-        9E9tKOUaK3KMvNkJIauOD9gbLSh1cvj0ejgP4wKuzget2rldcNbLy+NB55IN/xFABKr57M2hEMZ
-        GZFL+26nxWLezUeFicIDx
-X-Received: by 2002:adf:a39a:: with SMTP id l26mr5320620wrb.211.1581706785412;
-        Fri, 14 Feb 2020 10:59:45 -0800 (PST)
-X-Google-Smtp-Source: APXvYqxPNRCl0aolDarL96IylxIg00eEubmRqVc4oWGE3UTd35UQI0G9S2X9eoAKRFNxp2iH3tBldw==
-X-Received: by 2002:adf:a39a:: with SMTP id l26mr5320607wrb.211.1581706785184;
-        Fri, 14 Feb 2020 10:59:45 -0800 (PST)
+        bh=tIrC7IDah2W4xfXlfCZ/Yjz8JWpqqLLfruA5DcRjvLU=;
+        b=aG41N1AunPJc2/08Z/dS2nadSq+rFmk3F1V88ISGpUiP+8kUmkKVxJIBKeANyp49ZO
+         GlKh/b3nnJj5cZxo0pqLYNXZPdwxpjElBoGWGhTJrxXWYjCSgpGccjB3xChZA0xZQnSO
+         iKzWr/5KIRqJUUcAWZFYm6jzvLP3Tq/W+i+JHcb0KU+6wwSz9wnWQaSxKRYYO439m8AJ
+         dSoU/vo3vBt2NpqY8vwR15xbw0Edyejh+6lD+wPVUtRhZBV26yfyOdoCnJLLFiFtApWr
+         sTjj/PaOk9Ue7uFKG03vIuusTXD/y+0y9vyiuTBjHy8Oznem4HiAHHM80R+OE7JaTs+b
+         DH5g==
+X-Gm-Message-State: APjAAAXFSm980j7Bcj7/3UxZoY/eS1+DzQVnYJgXUg1IwyPROzzQBpML
+        +6Mh40OyTLX/pT8RPJRw/ehVzM69U41QL/KM6f+gJI6ZeOHg/QlxB6RQ+8vNyMxskU+ZvrqZK62
+        3BsXzv73hSk0YohYB6IvV
+X-Received: by 2002:a5d:534b:: with SMTP id t11mr5366542wrv.120.1581706787136;
+        Fri, 14 Feb 2020 10:59:47 -0800 (PST)
+X-Google-Smtp-Source: APXvYqw35DRRs8ca45DsqmXP0KTw/MsN10xhy/xx6UBj37fcLBOHSIeCiJmRtlIowgmO59k7dP9KKw==
+X-Received: by 2002:a5d:534b:: with SMTP id t11mr5366526wrv.120.1581706786810;
+        Fri, 14 Feb 2020 10:59:46 -0800 (PST)
 Received: from localhost.localdomain.com (243.206.broadband12.iol.cz. [90.179.206.243])
-        by smtp.gmail.com with ESMTPSA id c9sm8287475wmc.47.2020.02.14.10.59.44
+        by smtp.gmail.com with ESMTPSA id c9sm8287475wmc.47.2020.02.14.10.59.46
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 Feb 2020 10:59:44 -0800 (PST)
+        Fri, 14 Feb 2020 10:59:46 -0800 (PST)
 From:   Pavel Reichl <preichl@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v5 2/4] xfs: clean up whitespace in xfs_isilocked() calls
-Date:   Fri, 14 Feb 2020 19:59:40 +0100
-Message-Id: <20200214185942.1147742-2-preichl@redhat.com>
+Subject: [PATCH v5 4/4] xfs: replace mrlock_t with rw_semaphores
+Date:   Fri, 14 Feb 2020 19:59:42 +0100
+Message-Id: <20200214185942.1147742-4-preichl@redhat.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200214185942.1147742-1-preichl@redhat.com>
 References: <20200214185942.1147742-1-preichl@redhat.com>
@@ -76,87 +76,281 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Make whitespace follow the same pattern in all xfs_isilocked() calls.
+Remove mrlock_t as it does not provide any extra value over
+rw_semaphores. Make i_lock and i_mmaplock native rw_semaphores and
+replace mr*() functions with native rwsem calls.
 
 Signed-off-by: Pavel Reichl <preichl@redhat.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 2 +-
- fs/xfs/xfs_file.c        | 3 ++-
- fs/xfs/xfs_inode.c       | 6 +++---
- fs/xfs/xfs_qm.c          | 2 +-
- 4 files changed, 7 insertions(+), 6 deletions(-)
+ fs/xfs/mrlock.h    | 78 ----------------------------------------------
+ fs/xfs/xfs_inode.c | 40 +++++++++++++-----------
+ fs/xfs/xfs_inode.h |  4 +--
+ fs/xfs/xfs_iops.c  |  4 +--
+ fs/xfs/xfs_linux.h |  2 +-
+ fs/xfs/xfs_super.c |  6 ++--
+ 6 files changed, 29 insertions(+), 105 deletions(-)
+ delete mode 100644 fs/xfs/mrlock.h
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 9a6d7a84689a..bc2be29193aa 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3906,7 +3906,7 @@ xfs_bmapi_read(
- 	ASSERT(*nmap >= 1);
- 	ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK|XFS_BMAPI_ENTIRE|
- 			   XFS_BMAPI_COWFORK)));
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_SHARED|XFS_ILOCK_EXCL));
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
- 
- 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(ip, whichfork)) ||
- 	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BMAPIFORMAT)) {
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index b8a4a3f29b36..6b65572bdb21 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -770,7 +770,8 @@ xfs_break_layouts(
- 	bool			retry;
- 	int			error;
- 
--	ASSERT(xfs_isilocked(XFS_I(inode), XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL));
-+	ASSERT(xfs_isilocked(XFS_I(inode),
-+			XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL));
- 
- 	do {
- 		retry = false;
+diff --git a/fs/xfs/mrlock.h b/fs/xfs/mrlock.h
+deleted file mode 100644
+index 79155eec341b..000000000000
+--- a/fs/xfs/mrlock.h
++++ /dev/null
+@@ -1,78 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0
+-/*
+- * Copyright (c) 2000-2006 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- */
+-#ifndef __XFS_SUPPORT_MRLOCK_H__
+-#define __XFS_SUPPORT_MRLOCK_H__
+-
+-#include <linux/rwsem.h>
+-
+-typedef struct {
+-	struct rw_semaphore	mr_lock;
+-#if defined(DEBUG) || defined(XFS_WARN)
+-	int			mr_writer;
+-#endif
+-} mrlock_t;
+-
+-#if defined(DEBUG) || defined(XFS_WARN)
+-#define mrinit(mrp, name)	\
+-	do { (mrp)->mr_writer = 0; init_rwsem(&(mrp)->mr_lock); } while (0)
+-#else
+-#define mrinit(mrp, name)	\
+-	do { init_rwsem(&(mrp)->mr_lock); } while (0)
+-#endif
+-
+-#define mrlock_init(mrp, t,n,s)	mrinit(mrp, n)
+-#define mrfree(mrp)		do { } while (0)
+-
+-static inline void mraccess_nested(mrlock_t *mrp, int subclass)
+-{
+-	down_read_nested(&mrp->mr_lock, subclass);
+-}
+-
+-static inline void mrupdate_nested(mrlock_t *mrp, int subclass)
+-{
+-	down_write_nested(&mrp->mr_lock, subclass);
+-#if defined(DEBUG) || defined(XFS_WARN)
+-	mrp->mr_writer = 1;
+-#endif
+-}
+-
+-static inline int mrtryaccess(mrlock_t *mrp)
+-{
+-	return down_read_trylock(&mrp->mr_lock);
+-}
+-
+-static inline int mrtryupdate(mrlock_t *mrp)
+-{
+-	if (!down_write_trylock(&mrp->mr_lock))
+-		return 0;
+-#if defined(DEBUG) || defined(XFS_WARN)
+-	mrp->mr_writer = 1;
+-#endif
+-	return 1;
+-}
+-
+-static inline void mrunlock_excl(mrlock_t *mrp)
+-{
+-#if defined(DEBUG) || defined(XFS_WARN)
+-	mrp->mr_writer = 0;
+-#endif
+-	up_write(&mrp->mr_lock);
+-}
+-
+-static inline void mrunlock_shared(mrlock_t *mrp)
+-{
+-	up_read(&mrp->mr_lock);
+-}
+-
+-static inline void mrdemote(mrlock_t *mrp)
+-{
+-#if defined(DEBUG) || defined(XFS_WARN)
+-	mrp->mr_writer = 0;
+-#endif
+-	downgrade_write(&mrp->mr_lock);
+-}
+-
+-#endif /* __XFS_SUPPORT_MRLOCK_H__ */
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 3d28c4790231..14f46f099470 100644
+index 14f46f099470..1f979e46c6bf 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -2828,7 +2828,7 @@ static void
- xfs_iunpin(
- 	struct xfs_inode	*ip)
+@@ -191,14 +191,15 @@ xfs_ilock(
+ 	}
+ 
+ 	if (lock_flags & XFS_MMAPLOCK_EXCL)
+-		mrupdate_nested(&ip->i_mmaplock, XFS_MMAPLOCK_DEP(lock_flags));
++		down_write_nested(&ip->i_mmaplock,
++				XFS_MMAPLOCK_DEP(lock_flags));
+ 	else if (lock_flags & XFS_MMAPLOCK_SHARED)
+-		mraccess_nested(&ip->i_mmaplock, XFS_MMAPLOCK_DEP(lock_flags));
++		down_read_nested(&ip->i_mmaplock, XFS_MMAPLOCK_DEP(lock_flags));
+ 
+ 	if (lock_flags & XFS_ILOCK_EXCL)
+-		mrupdate_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
++		down_write_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
+ 	else if (lock_flags & XFS_ILOCK_SHARED)
+-		mraccess_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
++		down_read_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
+ }
+ 
+ /*
+@@ -242,27 +243,27 @@ xfs_ilock_nowait(
+ 	}
+ 
+ 	if (lock_flags & XFS_MMAPLOCK_EXCL) {
+-		if (!mrtryupdate(&ip->i_mmaplock))
++		if (!down_write_trylock(&ip->i_mmaplock))
+ 			goto out_undo_iolock;
+ 	} else if (lock_flags & XFS_MMAPLOCK_SHARED) {
+-		if (!mrtryaccess(&ip->i_mmaplock))
++		if (!down_read_trylock(&ip->i_mmaplock))
+ 			goto out_undo_iolock;
+ 	}
+ 
+ 	if (lock_flags & XFS_ILOCK_EXCL) {
+-		if (!mrtryupdate(&ip->i_lock))
++		if (!down_write_trylock(&ip->i_lock))
+ 			goto out_undo_mmaplock;
+ 	} else if (lock_flags & XFS_ILOCK_SHARED) {
+-		if (!mrtryaccess(&ip->i_lock))
++		if (!down_read_trylock(&ip->i_lock))
+ 			goto out_undo_mmaplock;
+ 	}
+ 	return 1;
+ 
+ out_undo_mmaplock:
+ 	if (lock_flags & XFS_MMAPLOCK_EXCL)
+-		mrunlock_excl(&ip->i_mmaplock);
++		up_write(&ip->i_mmaplock);
+ 	else if (lock_flags & XFS_MMAPLOCK_SHARED)
+-		mrunlock_shared(&ip->i_mmaplock);
++		up_read(&ip->i_mmaplock);
+ out_undo_iolock:
+ 	if (lock_flags & XFS_IOLOCK_EXCL)
+ 		up_write(&VFS_I(ip)->i_rwsem);
+@@ -309,14 +310,14 @@ xfs_iunlock(
+ 		up_read(&VFS_I(ip)->i_rwsem);
+ 
+ 	if (lock_flags & XFS_MMAPLOCK_EXCL)
+-		mrunlock_excl(&ip->i_mmaplock);
++		up_write(&ip->i_mmaplock);
+ 	else if (lock_flags & XFS_MMAPLOCK_SHARED)
+-		mrunlock_shared(&ip->i_mmaplock);
++		up_read(&ip->i_mmaplock);
+ 
+ 	if (lock_flags & XFS_ILOCK_EXCL)
+-		mrunlock_excl(&ip->i_lock);
++		up_write(&ip->i_lock);
+ 	else if (lock_flags & XFS_ILOCK_SHARED)
+-		mrunlock_shared(&ip->i_lock);
++		up_read(&ip->i_lock);
+ 
+ 	trace_xfs_iunlock(ip, lock_flags, _RET_IP_);
+ }
+@@ -335,9 +336,9 @@ xfs_ilock_demote(
+ 		~(XFS_IOLOCK_EXCL|XFS_MMAPLOCK_EXCL|XFS_ILOCK_EXCL)) == 0);
+ 
+ 	if (lock_flags & XFS_ILOCK_EXCL)
+-		mrdemote(&ip->i_lock);
++		downgrade_write(&ip->i_lock);
+ 	if (lock_flags & XFS_MMAPLOCK_EXCL)
+-		mrdemote(&ip->i_mmaplock);
++		downgrade_write(&ip->i_mmaplock);
+ 	if (lock_flags & XFS_IOLOCK_EXCL)
+ 		downgrade_write(&VFS_I(ip)->i_rwsem);
+ 
+@@ -374,13 +375,16 @@ xfs_isilocked(
+ 	uint			lock_flags)
  {
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
+ 	if (lock_flags & (XFS_ILOCK_EXCL | XFS_ILOCK_SHARED)) {
+-		return __xfs_rwsem_islocked(&ip->i_lock.mr_lock,
++		ASSERT(!(lock_flags & ~(XFS_ILOCK_EXCL | XFS_ILOCK_SHARED)));
++		return __xfs_rwsem_islocked(&ip->i_lock,
+ 				(lock_flags & XFS_ILOCK_SHARED),
+ 				(lock_flags & XFS_ILOCK_EXCL));
+ 	}
  
- 	trace_xfs_inode_unpin_nowait(ip, _RET_IP_);
+ 	if (lock_flags & (XFS_MMAPLOCK_EXCL | XFS_MMAPLOCK_SHARED)) {
+-		return __xfs_rwsem_islocked(&ip->i_mmaplock.mr_lock,
++		ASSERT(!(lock_flags &
++			~(XFS_MMAPLOCK_EXCL | XFS_MMAPLOCK_SHARED)));
++		return __xfs_rwsem_islocked(&ip->i_mmaplock,
+ 				(lock_flags & XFS_MMAPLOCK_SHARED),
+ 				(lock_flags & XFS_MMAPLOCK_EXCL));
+ 	}
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 3d7ce355407d..a7cf112a9e4f 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -39,8 +39,8 @@ typedef struct xfs_inode {
  
-@@ -3692,7 +3692,7 @@ xfs_iflush(
+ 	/* Transaction and locking information. */
+ 	struct xfs_inode_log_item *i_itemp;	/* logging information */
+-	mrlock_t		i_lock;		/* inode lock */
+-	mrlock_t		i_mmaplock;	/* inode mmap IO lock */
++	struct rw_semaphore	i_lock;		/* inode lock */
++	struct rw_semaphore	i_mmaplock;	/* inode mmap IO lock */
+ 	atomic_t		i_pincount;	/* inode pin count */
  
- 	XFS_STATS_INC(mp, xs_iflush_count);
+ 	/*
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 81f2f93caec0..7c3df574cf4c 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1319,9 +1319,9 @@ xfs_setup_inode(
+ 		 */
+ 		lockdep_set_class(&inode->i_rwsem,
+ 				  &inode->i_sb->s_type->i_mutex_dir_key);
+-		lockdep_set_class(&ip->i_lock.mr_lock, &xfs_dir_ilock_class);
++		lockdep_set_class(&ip->i_lock, &xfs_dir_ilock_class);
+ 	} else {
+-		lockdep_set_class(&ip->i_lock.mr_lock, &xfs_nondir_ilock_class);
++		lockdep_set_class(&ip->i_lock, &xfs_nondir_ilock_class);
+ 	}
  
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
- 	ASSERT(xfs_isiflocked(ip));
- 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
- 	       ip->i_d.di_nextents > XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK));
-@@ -3824,7 +3824,7 @@ xfs_iflush_int(
- 	struct xfs_dinode	*dip;
- 	struct xfs_mount	*mp = ip->i_mount;
+ 	/*
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 8738bb03f253..8248744f1245 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -22,7 +22,6 @@ typedef __u32			xfs_nlink_t;
+ #include "xfs_types.h"
  
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
- 	ASSERT(xfs_isiflocked(ip));
- 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
- 	       ip->i_d.di_nextents > XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK));
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 0b0909657bad..d2896925b5ca 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1802,7 +1802,7 @@ xfs_qm_vop_chown_reserve(
- 	int			error;
+ #include "kmem.h"
+-#include "mrlock.h"
  
+ #include <linux/semaphore.h>
+ #include <linux/mm.h>
+@@ -60,6 +59,7 @@ typedef __u32			xfs_nlink_t;
+ #include <linux/list_sort.h>
+ #include <linux/ratelimit.h>
+ #include <linux/rhashtable.h>
++#include <linux/rwsem.h>
  
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
- 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
+ #include <asm/page.h>
+ #include <asm/div64.h>
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 760901783944..1289ce1f4e9e 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -661,10 +661,8 @@ xfs_fs_inode_init_once(
+ 	atomic_set(&ip->i_pincount, 0);
+ 	spin_lock_init(&ip->i_flags_lock);
  
- 	delblks = ip->i_delayed_blks;
+-	mrlock_init(&ip->i_mmaplock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
+-		     "xfsino", ip->i_ino);
+-	mrlock_init(&ip->i_lock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
+-		     "xfsino", ip->i_ino);
++	init_rwsem(&ip->i_mmaplock);
++	init_rwsem(&ip->i_lock);
+ }
+ 
+ /*
 -- 
 2.24.1
 
