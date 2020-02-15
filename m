@@ -2,127 +2,89 @@ Return-Path: <SRS0=i/dn=4D=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39C6BC35242
-	for <linux-xfs@archiver.kernel.org>; Sat, 15 Feb 2020 01:38:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1591C352A3
+	for <linux-xfs@archiver.kernel.org>; Sat, 15 Feb 2020 19:53:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EACC42073A
-	for <linux-xfs@archiver.kernel.org>; Sat, 15 Feb 2020 01:38:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7CC38206D6
+	for <linux-xfs@archiver.kernel.org>; Sat, 15 Feb 2020 19:53:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="kfkLpRUf";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="bY0+ISY5"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Vxhy9E/f"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727641AbgBOBiI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 14 Feb 2020 20:38:08 -0500
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:30072 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727572AbgBOBiI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Feb 2020 20:38:08 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1581730688; x=1613266688;
-  h=from:to:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=MkqYpaqrbCygOSIf59ishWw0kIMCJ1qXkGRXNihve7Q=;
-  b=kfkLpRUfhtYusUJGIx2jca0MlKcVFSp3AI15uqcw4IfXZDwD/42Fdhga
-   6iECdNrL7+2SBC28iCFD8V/kgipgcif6bJVC0XMalfEfM2WZMfsgVEYo3
-   +D7JaqT3nsrHy1QM4Zmj7SOhO9I0fxx9g8r7xQJuvuwX/m8U9Rs9Qf7bH
-   UJCGJ6Cpq94NZad3wRNh8tyUHAOYr1gixNh+6BcB2jiPIdwGoik0QzXyd
-   eIpsu/gcXn6XrU+abCcKAyvo7H6dCpKmINur/o5hdD4Zuvxjjkbjdg3V7
-   kBHew7FzNaXd4nIq352+QTA4aPXizzlo6jg4I7zKpHmsrOeiH13BSZCo0
-   Q==;
-IronPort-SDR: oufyciip3huUOf4aUMrWoaLMxwoNDuAQsIlpV91tOYRPhdJhMuYpnCOvU9L5v6V7BaRQVflZu1
- t/f5rzk++m6mI/saeMCqxkWUB//pV6DMBNvtQeG6kqrE+uAE2JvBu5Bg2oK00gBICogAZNT7vG
- SNvXXi1cnsodGDYFck3m+oTXR44whBwzwPFFrd+1BftqAam6vwKFjtskQqDHXn6tPDwPxSSV7c
- tnDBvEP3QCWz2kwNqopMbWWDy3Zsn7GPYf+z0HuTxZdp29wcTfc0jvc8ppsE4+hfQwYNcNmKpz
- RgY=
-X-IronPort-AV: E=Sophos;i="5.70,442,1574092800"; 
-   d="scan'208";a="131347632"
-Received: from mail-bn3nam04lp2053.outbound.protection.outlook.com (HELO NAM04-BN3-obe.outbound.protection.outlook.com) ([104.47.46.53])
-  by ob1.hgst.iphmx.com with ESMTP; 15 Feb 2020 09:38:07 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=jDBh16W39d2m/ne/PX2Tt5M90eU1oKIHMrSrIgcdBQkSetvYN7XejylLbyWQK6AGBcfuSN2wDRWRs8occmWOOaGSR2vjxu1EgUC+q9WEMpr4/0NgWaJCHd78PA7yf11kO/NcXaqHNVSkFh/0Iy1Ac336QUGKXfxEHklLMaHuQQtYBlpcmtGC42wOthjqLOarEeyN9iw3QS5iWKdq36bl4JqYBqaQq5C0fRq831FexQuRXQ9hJ9UAKwrXSQHIqMVniOfOx6C+uPIBKvHvuOE/4oMukNB03CNK3GfVsRlJSzojTFftHxXZ6nx57+HmVAS+1go8qHg8Kr+LuJ6CoVg78Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=MkqYpaqrbCygOSIf59ishWw0kIMCJ1qXkGRXNihve7Q=;
- b=mh1DeTMWPQtiCFz2Qb4/BCL3yWsSCr2EloAuWcu6xEM/l40jnfHlhlaTasHJeGXzfRPnkwdBX1r8lTk9jCtdOdaq3Fh93aG6ZZlB9S6yS7iHR8cIlaRGfk3/ZLb/vI21ukBF5f4MSFb9qG0i1d6XeOmmqVeFptrsCVARveCmn/DSPCWBKkl4FS5yBdTBMeSkzh72iZWq5iEg1yMBKaEJYG0vP2MLM+XSRbf6zVF6njBDuLP2su3pbjOgQIKiNHkh6+kMEFgVqnCsgqbrTBYFC3iWGHnhOlIEFQVbxhD4+OBROlccfCcKuMeDsy3UOicFCeFgItgZJsNfQ5TgcHaXkg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=MkqYpaqrbCygOSIf59ishWw0kIMCJ1qXkGRXNihve7Q=;
- b=bY0+ISY5nY38hRZuqiJlfhXpM2RfDMKNuSLJUZ9aYJ7CjxDbMXLvm9dD30lXhOjb21owCrGDZw0hpF+CFcEFsRNQesK7KFOgavgLFfdtKRsua+ycV+xxbnPrpA1sCRdq3fOR7PG0RRD1S3wCOa/uCfscS8iNmOPxiZ/L9JWHSwk=
-Received: from DM6PR04MB5754.namprd04.prod.outlook.com (20.179.51.24) by
- DM6PR04MB4170.namprd04.prod.outlook.com (20.176.78.25) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2729.25; Sat, 15 Feb 2020 01:38:04 +0000
-Received: from DM6PR04MB5754.namprd04.prod.outlook.com
- ([fe80::c0fb:7c35:bcd2:fd28]) by DM6PR04MB5754.namprd04.prod.outlook.com
- ([fe80::c0fb:7c35:bcd2:fd28%2]) with mapi id 15.20.2729.025; Sat, 15 Feb 2020
- 01:38:04 +0000
-From:   Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
-To:     Pavel Reichl <preichl@redhat.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH v5 1/4] xfs: Refactor xfs_isilocked()
-Thread-Topic: [PATCH v5 1/4] xfs: Refactor xfs_isilocked()
-Thread-Index: AQHV42kEDs8e/WrrJU6iifDPQ+S/cQ==
-Date:   Sat, 15 Feb 2020 01:38:04 +0000
-Message-ID: <DM6PR04MB57544CDC68D9DFAB48B61F1386140@DM6PR04MB5754.namprd04.prod.outlook.com>
-References: <20200214185942.1147742-1-preichl@redhat.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Chaitanya.Kulkarni@wdc.com; 
-x-originating-ip: [199.255.45.62]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 67115e9e-cf69-4b53-8a53-08d7b1b7b3a7
-x-ms-traffictypediagnostic: DM6PR04MB4170:
-x-microsoft-antispam-prvs: <DM6PR04MB417073F0BB4FF08E1CD4E41B86140@DM6PR04MB4170.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:2958;
-x-forefront-prvs: 03142412E2
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(136003)(39860400002)(366004)(346002)(376002)(396003)(189003)(199004)(6506007)(53546011)(26005)(4744005)(186003)(66556008)(55016002)(66446008)(478600001)(66946007)(76116006)(9686003)(52536014)(66476007)(5660300002)(316002)(91956017)(64756008)(71200400001)(81166006)(33656002)(86362001)(7696005)(81156014)(8676002)(8936002)(110136005)(2906002);DIR:OUT;SFP:1102;SCL:1;SRVR:DM6PR04MB4170;H:DM6PR04MB5754.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: lGwMxIHcdhyLmUwZitfiCNGQaRvGvOHi48LIQW0DlaRB01avbzvaiTjMAgSQrU5nxq+chcMabfrebIc5CdoIRHaK35bDq0773YYocIRJtGYUUZhLkkC6A5oP42bUgz3bL3cv6UPv9VH3uzURW0JbFdDWNgTkKYDkXMy7WcbVduryy+zQplBmyzqx0+r3YyV/OebnGq397rTjQTMW5YAj1pGxz5h/PrLlGyaWQ5eNU3Fv6t/ZEcBi8h5bv0U9Z5iQEjLXGOlvXw9gsWvRGUbmaJkoFPyglxWtZgL/qDU1zjWshoYv5YpXH9KyXETU2x0I65jRjcA5N4XAO37kFdZ5diUJJTNFBN6Lm87Q544hyPmceWLrhaPh/3UX2nt7zp4eEFcb0aeIJZiklUYFDp5ursAs3LBptvwpERa2TVIiKfh2G3uEgBQ07p0AsKmS3ZbT
-x-ms-exchange-antispam-messagedata: KSF5l2uYCXnjnrcdzqjb7CTQCUtifa3gvSQVzVnjSQxB8rU8C3G3Z9MQHM/hmCFLqCMWkMngaDMyia4I+3swwV1wPqU6Zk7Rpwm3Ai4eaSrU17RNJWf/gVK36Mc/mO3xy85ta94mUFSGlF7KEgFk0A==
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1726275AbgBOTxI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 15 Feb 2020 14:53:08 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:43226 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726254AbgBOTxH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 15 Feb 2020 14:53:07 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=BpDKtc5YdvqyWLynXykgKLWaF9sL2fROoHx5x/evTK0=; b=Vxhy9E/fi+Z7E4jyxUIC1eZezB
+        leCSOEmo0l5bNzoRNmuFF9D08GYbS8pxAS/IyXjE5auf4Sfdslr2Fj8ixSoNCppJADHagxfWwKA46
+        v4OorH6lvAWAIVpllsXwrrW5wWnWcg0vmvSifBRw/zVcKqXJyX5fP1yj6BieRX9ye00WLtEq1JTVf
+        tdczB9ncC4TDvwDWWI8KCMNAgxHbVzSSczUm/XWMMwj6azNLBGVbmL+f9CxG6EptOVrf8gJTTkg/K
+        cHSNS7Q6tfiPz+L627aMphGz5LP6qAaUwk9g7Ko42lxfVSL44JFWOUHltaY9xO0zn1USxQLTdePOY
+        1WymFetQ==;
+Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1j33Ux-0006H5-8C; Sat, 15 Feb 2020 19:53:07 +0000
+Date:   Sat, 15 Feb 2020 11:53:07 -0800
+From:   Matthew Wilcox <willy@infradead.org>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Allison Collins <allison.henderson@oracle.com>,
+        lsf-pc@lists.linux-foundation.org, xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Subject: Re: [Lsf-pc] [LSF/MM/BPF TOPIC] Atomic Writes
+Message-ID: <20200215195307.GI7778@bombadil.infradead.org>
+References: <e88c2f96-fdbb-efb5-d7e2-94bfefbe8bfa@oracle.com>
+ <20200214044242.GI6870@magnolia>
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 67115e9e-cf69-4b53-8a53-08d7b1b7b3a7
-X-MS-Exchange-CrossTenant-originalarrivaltime: 15 Feb 2020 01:38:04.6228
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: RIVC10Tl0gB+RTK34uKg0KiItXHFipozTXkQCKMNCW8q+sCSz1Ns+TU82Bok4ipc6GFRrRK5S7EulkbdHEum5JfsrUd1PrKsmb2j/VYa3Ms=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB4170
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200214044242.GI6870@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Since it has more than one patch and version 5,=0A=
-I couldn't find the cover-letter and a change log for this=0A=
-series, is there a particular reason why it is not present or I=0A=
-missed it?=0A=
-=0A=
-On 02/14/2020 11:00 AM, Pavel Reichl wrote:=0A=
-> Refactor xfs_isilocked() to use newly introduced __xfs_rwsem_islocked().=
-=0A=
-> __xfs_rwsem_islocked() is a helper function which encapsulates checking=
-=0A=
-> state of rw_semaphores hold by inode.=0A=
->=0A=
->=0A=
+On Thu, Feb 13, 2020 at 08:42:42PM -0800, Darrick J. Wong wrote:
+> On Thu, Feb 13, 2020 at 03:33:08PM -0700, Allison Collins wrote:
+> > I also understand there are multiple ways to solve this problem that people
+> > may have opinions on.  I've noticed some older patch sets trying to use a
+> > flag to control when dirty pages are flushed, though I think our customer
+> > would like to see a hardware solution via NVMe devices.  So I would like to
+> > see if others have similar interests as well and what their thoughts may be.
+> > Thanks everyone!
+> 
+> Hmmm well there are a number of different ways one could do this--
+
+Interesting.  Your answer implies a question of "How do we expose
+a filesystem's ability to do atomic writes to userspace", whereas I
+thought Allison's question was "What spec do we write to give to the
+NVMe vendors so that filesystems can optimise their atomic writes".
+
+I am very interested in the question of atomic writes, but I don't
+know that we're going to have the right people in the room to design
+a userspace API.  Maybe this is more of a Plumbers topic?  I think
+the two main users of a userspace API would be databases (sqlite,
+mysql, postgres, others) and package managers (dpkg, rpm, others?).
+Then there would be the miscellaneous users who just want things to work
+and don't really care about performance (writing a game's high score file,
+updating /etc/sudoers).
+
+That might argue in favour of having two independent APIs, one that's
+simple, probably quite slow, but safe, and one that's complex, fast
+and safe.  There's also an option for simple, fast and unsafe, but,
+y'know, we already have that ...
+
+Your response also implies that atomic writes are only done to a single
+file at a time, which isn't true for either databases or for package
+managers.  I wonder if the snapshot/reflink paradigm is the right one
+for multi-file atomic updates, or if we can use the same underlying
+mechanism to implement an API which better fits how userspace actually
+wants to do atomic updates.
+
