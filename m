@@ -6,104 +6,145 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17952C34022
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Feb 2020 22:15:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55352C34022
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Feb 2020 22:28:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EB51320801
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Feb 2020 22:15:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 302C12070B
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Feb 2020 22:28:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726069AbgBQWPm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 17 Feb 2020 17:15:42 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:55162 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725966AbgBQWPm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Feb 2020 17:15:42 -0500
+        id S1725987AbgBQW2O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 17 Feb 2020 17:28:14 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:45728 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725829AbgBQW2O (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Feb 2020 17:28:14 -0500
 Received: from dread.disaster.area (pa49-179-138-28.pa.nsw.optusnet.com.au [49.179.138.28])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 8AE837E9C6E;
-        Tue, 18 Feb 2020 09:15:39 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id C85603A1E4A;
+        Tue, 18 Feb 2020 09:28:09 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1j3ofz-0003Q2-0u; Tue, 18 Feb 2020 09:15:39 +1100
-Date:   Tue, 18 Feb 2020 09:15:39 +1100
+        id 1j3os5-0003Za-2N; Tue, 18 Feb 2020 09:28:09 +1100
+Date:   Tue, 18 Feb 2020 09:28:09 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org,
         Allison Collins <allison.henderson@oracle.com>,
-        Chandan Rajendra <chandanrlinux@gmail.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 05/31] xfs: use strndup_user in
- XFS_IOC_ATTRMULTI_BY_HANDLE
-Message-ID: <20200217221538.GJ10776@dread.disaster.area>
+        Chandan Rajendra <chandanrlinux@gmail.com>
+Subject: Re: [PATCH 06/31] xfs: factor out a helper for a single
+ XFS_IOC_ATTRMULTI_BY_HANDLE op
+Message-ID: <20200217222809.GK10776@dread.disaster.area>
 References: <20200217125957.263434-1-hch@lst.de>
- <20200217125957.263434-6-hch@lst.de>
+ <20200217125957.263434-7-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200217125957.263434-6-hch@lst.de>
+In-Reply-To: <20200217125957.263434-7-hch@lst.de>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
         a=zAxSp4fFY/GQY8/esVNjqw==:117 a=zAxSp4fFY/GQY8/esVNjqw==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=l697ptgUJYAA:10
-        a=pGLkceISAAAA:8 a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8 a=QMJNcwjdRDogb9IiVAAA:9
-        a=jgZg2VXXFmi3iGAR:21 a=btIgfXDAKQXfHWRP:21 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+        a=pGLkceISAAAA:8 a=7-415B0cAAAA:8 a=AmeXwgXc8m8_EU3lb0IA:9
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 17, 2020 at 01:59:31PM +0100, Christoph Hellwig wrote:
-> Simplify the user copy code by using strndup_user.  This means that we
-> now do one memory allocation per operation instead of one per ioctl,
-> but memory allocations are cheap compared to the actual file system
-> operations.
+On Mon, Feb 17, 2020 at 01:59:32PM +0100, Christoph Hellwig wrote:
+> Add a new helper to handle a single attr multi ioctl operation that
+> can be shared between the native and compat ioctl implementation.
 > 
+> There is a slight change in heavior in that we don't break out of the
+> loop when copying in the attribute name fails.  The previous behavior
+> was rather inconsistent here as it continued for any other kind of
+> error.
+
+Nice cleanup!
+
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/xfs_ioctl.c   | 17 +++++------------
->  fs/xfs/xfs_ioctl32.c | 17 +++++------------
->  2 files changed, 10 insertions(+), 24 deletions(-)
+>  fs/xfs/xfs_ioctl.c   | 97 +++++++++++++++++++++++---------------------
+>  fs/xfs/xfs_ioctl.h   | 18 ++------
+>  fs/xfs/xfs_ioctl32.c | 50 +++--------------------
+>  3 files changed, 59 insertions(+), 106 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index b806003caacd..bb490a954c0b 100644
+> index bb490a954c0b..cfdd80b4ea2d 100644
 > --- a/fs/xfs/xfs_ioctl.c
 > +++ b/fs/xfs/xfs_ioctl.c
-> @@ -448,11 +448,6 @@ xfs_attrmulti_by_handle(
->  		goto out_dput;
->  	}
+> @@ -349,7 +349,7 @@ xfs_attrlist_by_handle(
+>  	return error;
+>  }
 >  
-> -	error = -ENOMEM;
-> -	attr_name = kmalloc(MAXNAMELEN, GFP_KERNEL);
-> -	if (!attr_name)
-> -		goto out_kfree_ops;
-> -
->  	error = 0;
->  	for (i = 0; i < am_hreq.opcount; i++) {
->  		if ((ops[i].am_flags & ATTR_ROOT) &&
-> @@ -462,12 +457,11 @@ xfs_attrmulti_by_handle(
->  		}
->  		ops[i].am_flags &= ~ATTR_KERNEL_FLAGS;
+> -int
+> +static int
+>  xfs_attrmulti_attr_get(
+>  	struct inode		*inode,
+>  	unsigned char		*name,
+> @@ -381,7 +381,7 @@ xfs_attrmulti_attr_get(
+>  	return error;
+>  }
 >  
-> -		ops[i].am_error = strncpy_from_user((char *)attr_name,
-> -				ops[i].am_attrname, MAXNAMELEN);
-> -		if (ops[i].am_error == 0 || ops[i].am_error == MAXNAMELEN)
-> -			error = -ERANGE;
-> -		if (ops[i].am_error < 0)
-> +		attr_name = strndup_user(ops[i].am_attrname, MAXNAMELEN);
-> +		if (IS_ERR(attr_name)) {
-> +			ops[i].am_error = PTR_ERR(attr_name);
->  			break;
-> +		}
+> -int
+> +static int
+>  xfs_attrmulti_attr_set(
+>  	struct inode		*inode,
+>  	unsigned char		*name,
+> @@ -412,6 +412,51 @@ xfs_attrmulti_attr_set(
+>  	return error;
+>  }
+>  
+> +int
+> +xfs_ioc_attrmulti_one(
+> +	struct file		*parfilp,
 
-This changes the error returned for an invalid attr name length from
--ERANGE to either -EINVAL or -EFAULT. Can you please document that
-in the commit message. This change requires updates to the 
-path_to_handle(3) man page shipped in xfsprogs in the xfslibs-dev
-package (xfsprogs::man/man3/handle.3) to document the differences in
-return values.
+Weird name for the file pointer. It's just a file pointer in this
+context, similar to...
+
+> +	struct inode		*inode,
+
+... it just being an inode pointer in this context.
+
+> +	uint32_t		opcode,
+> +	void __user		*uname,
+> +	void __user		*value,
+> +	uint32_t		*len,
+> +	uint32_t		flags)
+> +{
+> +	unsigned char		*name;
+> +	int			error;
+> +
+> +	if ((flags & ATTR_ROOT) && (flags & ATTR_SECURE))
+> +		return -EINVAL;
+> +	flags &= ~ATTR_KERNEL_FLAGS;
+
+Ok, so this is a user ABI visible change - the old code would return
+to userspace with these flags cleared from ops[i].am_flags. Now that
+doesn't happen. I don't see this as a problem, but it needs to be
+documented in the commit message.
+
+> +
+> +	name = strndup_user(uname, MAXNAMELEN);
+> +	if (IS_ERR(name))
+> +		return PTR_ERR(name);
+> +
+> +	switch (opcode) {
+> +	case ATTR_OP_GET:
+> +		error = xfs_attrmulti_attr_get(inode, name, value, len, flags);
+> +		break;
+> +	case ATTR_OP_REMOVE:
+> +		value = NULL;
+> +		*len = 0;
+> +		/*FALLTHRU*/
+
+All the recent code we've added uses:
+
+		/* fall through */
+
+for this annotation - it's the most widely used variant in the
+XFS codebase, so it would be good to be consistent here...
 
 Cheers,
 
