@@ -2,127 +2,127 @@ Return-Path: <SRS0=xOwi=4F=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F453C34022
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Feb 2020 16:04:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C180C34021
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Feb 2020 18:06:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 224FA20679
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Feb 2020 16:04:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04E73207FD
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Feb 2020 18:06:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HhEV8nmW"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZKsaypoi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729636AbgBQQEF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 17 Feb 2020 11:04:05 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:52826 "EHLO
+        id S1729427AbgBQSGF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 17 Feb 2020 13:06:05 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:59794 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726492AbgBQQEF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Feb 2020 11:04:05 -0500
+        with ESMTP id S1726707AbgBQSGF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Feb 2020 13:06:05 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1581955444;
+        s=mimecast20190719; t=1581962764;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=RHtcXsfNh7Dn/qroVk5s59t2+IJxEuCb9pqy7WLEOdM=;
-        b=HhEV8nmWn69H2C1lxIm9p4lbRsxq267UQ0BT2WawQzzz9GwxZc1f5eQ+4T/NpSZCX82Ddx
-        MNo2d6zioKuywpzuZpKp8lhJG5takRADxJt9IC5jwoY9NwOfZ8PWgiMDRUJ9OpTu9zu5HC
-        CLG9jqcQL4nXnpfrN595ncY2RzM5Ccw=
+        bh=WSS4Sxlw5n7hDmXoWjoR2N+JQhCKjC5XqqPU0reRhLo=;
+        b=ZKsaypoiEPHFDtGuRU6xXWVCYongntL0t+RkLkbXKSnSl6gBikW+SzjRGO6WbbqTosh4uz
+        B0SZBQVjLGPKLGw3Imc9fsvZT1aGtHpRELgxcLN6bNZQCLwc+QEUpKilk9vAcO6052cEHl
+        G6Zah6UcGVwqZKngl/gCNHSLfbjPEXM=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-112-Lcsl-HsaPPS21yTFmsH3RA-1; Mon, 17 Feb 2020 11:04:01 -0500
-X-MC-Unique: Lcsl-HsaPPS21yTFmsH3RA-1
+ us-mta-239-RxZkqWmFPOCPP32liA5rVg-1; Mon, 17 Feb 2020 13:06:00 -0500
+X-MC-Unique: RxZkqWmFPOCPP32liA5rVg-1
 Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id EBEE118A8C86;
-        Mon, 17 Feb 2020 16:04:00 +0000 (UTC)
-Received: from [127.0.0.1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id AF7875C241;
-        Mon, 17 Feb 2020 16:04:00 +0000 (UTC)
-Subject: Re: [PATCH 4/4] xfs: per-type quota timers and warn limits
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>
-References: <333ea747-8b45-52ae-006e-a1804e14de32@redhat.com>
- <7a35e397-dbc7-b991-6277-5f9931d03950@redhat.com>
- <20200217134339.GI31012@infradead.org>
-From:   Eric Sandeen <sandeen@redhat.com>
-Message-ID: <0ed308e8-6a66-c43c-c94d-5ee782781aa3@redhat.com>
-Date:   Mon, 17 Feb 2020 10:03:59 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.4.2
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6A68D8017CC;
+        Mon, 17 Feb 2020 18:05:59 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id D8DB95C241;
+        Mon, 17 Feb 2020 18:05:58 +0000 (UTC)
+Date:   Mon, 17 Feb 2020 13:05:57 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: refactor calls to xfs_admin
+Message-ID: <20200217180557.GC6633@bfoster>
+References: <157915149017.2375135.14166864164575311878.stgit@magnolia>
+ <157915149642.2375135.15091840835027007949.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20200217134339.GI31012@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <157915149642.2375135.15091840835027007949.stgit@magnolia>
 X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/17/20 7:43 AM, Christoph Hellwig wrote:
->>  	struct xfs_disk_dquot	*d = &dq->q_core;
->> +	struct xfs_def_quota	*defq;
->> +
->>  	ASSERT(d->d_id);
->> +	defq = xfs_get_defquota(dq);
+On Wed, Jan 15, 2020 at 09:11:36PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Move up to the declaration line?
-
-*shrug* ok
-
->> +	switch (type) {
->> +	case XFS_DQ_USER:
->> +		defq = &qinf->qi_usr_default;
->> +		break;
->> +	case XFS_DQ_GROUP:
->> +		defq = &qinf->qi_grp_default;
->> +		break;
->> +	case XFS_DQ_PROJ:
->> +		defq = &qinf->qi_prj_default;
->> +		break;
->> +	default:
->> +		ASSERT(0);
->> +		/* fall through */
->> +	}
+> Create a helper to run xfs_admin on the scratch device, then refactor
+> all tests to use it.
 > 
-> Should this go into a helper?  Or even better replace the
-> qi_*default members with an array that the type can index into?
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-Like maybe xfs_get_defquota() ;)
+Looks Ok:
 
-Not sure what I was thinking here, whoops.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->> @@ -592,39 +609,31 @@ xfs_qm_init_timelimits(
->>  	 *
->>  	 * Since we may not have done a quotacheck by this point, just read
->>  	 * the dquot without attaching it to any hashtables or lists.
->> -	 *
->> -	 * Timers and warnings are globally set by the first timer found in
->> -	 * user/group/proj quota types, otherwise a default value is used.
->> -	 * This should be split into different fields per quota type.
->>  	 */
->> -	if (XFS_IS_UQUOTA_RUNNING(mp))
->> -		type = XFS_DQ_USER;
->> -	else if (XFS_IS_GQUOTA_RUNNING(mp))
->> -		type = XFS_DQ_GROUP;
->> -	else
->> -		type = XFS_DQ_PROJ;
->>  	error = xfs_qm_dqget_uncached(mp, 0, type, &dqp);
->>  	if (error)
->>  		return;
->>  
->>  	ddqp = &dqp->q_core;
->> +	defq = xfs_get_defquota(dqp);
+>  common/config |    1 +
+>  common/xfs    |    8 ++++++++
+>  tests/xfs/287 |    2 +-
+>  3 files changed, 10 insertions(+), 1 deletion(-)
 > 
-> Isn't the defq variable already initialized earlier in the function?
-
-Oh, uh ... whoops.  Not sure how I messed that up, thanks.
-
--Eric
+> 
+> diff --git a/common/config b/common/config
+> index 9a9c7760..1116cb99 100644
+> --- a/common/config
+> +++ b/common/config
+> @@ -154,6 +154,7 @@ MKSWAP_PROG="$MKSWAP_PROG -f"
+>  export XFS_LOGPRINT_PROG="$(type -P xfs_logprint)"
+>  export XFS_REPAIR_PROG="$(type -P xfs_repair)"
+>  export XFS_DB_PROG="$(type -P xfs_db)"
+> +export XFS_ADMIN_PROG="$(type -P xfs_admin)"
+>  export XFS_GROWFS_PROG=$(type -P xfs_growfs)
+>  export XFS_SPACEMAN_PROG="$(type -P xfs_spaceman)"
+>  export XFS_SCRUB_PROG="$(type -P xfs_scrub)"
+> diff --git a/common/xfs b/common/xfs
+> index 706ddf85..d9a9784f 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -218,6 +218,14 @@ _scratch_xfs_db()
+>  	$XFS_DB_PROG "$@" $(_scratch_xfs_db_options)
+>  }
+>  
+> +_scratch_xfs_admin()
+> +{
+> +	local options=("$SCRATCH_DEV")
+> +	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+> +		options+=("$SCRATCH_LOGDEV")
+> +	$XFS_ADMIN_PROG "$@" "${options[@]}"
+> +}
+> +
+>  _scratch_xfs_logprint()
+>  {
+>  	SCRATCH_OPTIONS=""
+> diff --git a/tests/xfs/287 b/tests/xfs/287
+> index 8dc754a5..f77ed2f1 100755
+> --- a/tests/xfs/287
+> +++ b/tests/xfs/287
+> @@ -70,7 +70,7 @@ $XFS_IO_PROG -r -c "lsproj" $dir/32bit
+>  _scratch_unmount
+>  
+>  # Now, enable projid32bit support by xfs_admin
+> -xfs_admin -p $SCRATCH_DEV >> $seqres.full 2>&1 || _fail "xfs_admin failed"
+> +_scratch_xfs_admin -p >> $seqres.full 2>&1 || _fail "xfs_admin failed"
+>  
+>  # Now mount the fs, 32bit project quotas shall be supported, now
+>  _qmount_option "pquota"
+> 
 
