@@ -2,170 +2,74 @@ Return-Path: <SRS0=xOwi=4F=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 407BFC34022
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Feb 2020 18:50:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BC01C34022
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Feb 2020 21:48:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1E0DD20836
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Feb 2020 18:50:02 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hhh1t6HV"
+	by mail.kernel.org (Postfix) with ESMTP id 5B83F207FD
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Feb 2020 21:48:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729483AbgBQSqR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 17 Feb 2020 13:46:17 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:47986 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728108AbgBQSqQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Feb 2020 13:46:16 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=TLN+MN9liFnLDsYo+PJ3gSWsvtLSIjBwcyOIhgoJ5VY=; b=hhh1t6HVNLsDCWt3MkQiEYSzre
-        hHWiRXNO+r8JdlNSSEGh0o8YrYXOSkS/gp9xDglMuFey74aPYgYuHG2Vw32WCqs2XINOBkEXUc04e
-        dNydvDlRbJXB9yrmAe6jgu25QNAScILW2omvBwbsW7wNsX82P1Rb3XgznMqiit9sLnMo/btfjrCD5
-        A5pPkGiNWrR7m/KYbChbtfL6nu/34I8dw1/vNm8C4jceWxh/XiSYSIlAOHr3sqBJeyStdcRlWY7zP
-        tRI1xVRaDxQsHjcT3MBSmGrHTevUmS7161Li+DqQn7IbfCuzGT/OQ03Av7NFbi9rxgQk8+/SE8kyH
-        Zp44q6kg==;
-Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j3lPM-0005Cb-8w; Mon, 17 Feb 2020 18:46:16 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     linux-fsdevel@vger.kernel.org
-Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        linux-mm@kvack.org, linux-kernel@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
-        linux-xfs@vger.kernel.org
-Subject: [PATCH v6 14/16] fuse: Convert from readpages to readahead
-Date:   Mon, 17 Feb 2020 10:46:06 -0800
-Message-Id: <20200217184613.19668-26-willy@infradead.org>
-X-Mailer: git-send-email 2.21.1
-In-Reply-To: <20200217184613.19668-1-willy@infradead.org>
-References: <20200217184613.19668-1-willy@infradead.org>
+        id S1729761AbgBQVsi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 17 Feb 2020 16:48:38 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:32985 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728935AbgBQVsh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Feb 2020 16:48:37 -0500
+Received: from dread.disaster.area (pa49-179-138-28.pa.nsw.optusnet.com.au [49.179.138.28])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 51F2B7E8B3C;
+        Tue, 18 Feb 2020 08:48:34 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1j3oFk-0003FU-6n; Tue, 18 Feb 2020 08:48:32 +1100
+Date:   Tue, 18 Feb 2020 08:48:32 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org,
+        Allison Collins <allison.henderson@oracle.com>,
+        Chandan Rajendra <chandanrlinux@gmail.com>
+Subject: Re: [PATCH 01/31] xfs: reject invalid flags combinations in
+ XFS_IOC_ATTRLIST_BY_HANDLE
+Message-ID: <20200217214832.GF10776@dread.disaster.area>
+References: <20200217125957.263434-1-hch@lst.de>
+ <20200217125957.263434-2-hch@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200217125957.263434-2-hch@lst.de>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+        a=zAxSp4fFY/GQY8/esVNjqw==:117 a=zAxSp4fFY/GQY8/esVNjqw==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=l697ptgUJYAA:10
+        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=PdgxoRXK51NFJEpSu0oA:9
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+On Mon, Feb 17, 2020 at 01:59:27PM +0100, Christoph Hellwig wrote:
+> While the flags field in the ABI and the on-disk format allows for
+> multiple namespace flags, that is a logically invalid combination and
+> listing multiple namespace flags will return no results as no attr
+> can have both set.  Reject this case early with -EINVAL.
 
-Use the new readahead operation in fuse.  Switching away from the
-read_cache_pages() helper gets rid of an implicit call to put_page(),
-so we can get rid of the get_page() call in fuse_readpages_fill().
+Had a bit of a hard time deciphering this. Perhaps:
 
-Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
----
- fs/fuse/file.c | 46 +++++++++++++++++++---------------------------
- 1 file changed, 19 insertions(+), 27 deletions(-)
+While the flags field in the ABI and the on-disk format allows for
+multiple namespace flags, an attribute can only exist in a single
+namespace at a time. Hence asking to list attributes that exist
+in multiple namespaces simultaneously is a logically invalid
+request and will return no results. Reject this case early with
+-EINVAL.
 
-diff --git a/fs/fuse/file.c b/fs/fuse/file.c
-index 9d67b830fb7a..f64f98708b5e 100644
---- a/fs/fuse/file.c
-+++ b/fs/fuse/file.c
-@@ -923,9 +923,8 @@ struct fuse_fill_data {
- 	unsigned int max_pages;
- };
- 
--static int fuse_readpages_fill(void *_data, struct page *page)
-+static int fuse_readpages_fill(struct fuse_fill_data *data, struct page *page)
- {
--	struct fuse_fill_data *data = _data;
- 	struct fuse_io_args *ia = data->ia;
- 	struct fuse_args_pages *ap = &ia->ap;
- 	struct inode *inode = data->inode;
-@@ -941,10 +940,8 @@ static int fuse_readpages_fill(void *_data, struct page *page)
- 					fc->max_pages);
- 		fuse_send_readpages(ia, data->file);
- 		data->ia = ia = fuse_io_alloc(NULL, data->max_pages);
--		if (!ia) {
--			unlock_page(page);
-+		if (!ia)
- 			return -ENOMEM;
--		}
- 		ap = &ia->ap;
- 	}
- 
-@@ -954,7 +951,6 @@ static int fuse_readpages_fill(void *_data, struct page *page)
- 		return -EIO;
- 	}
- 
--	get_page(page);
- 	ap->pages[ap->num_pages] = page;
- 	ap->descs[ap->num_pages].length = PAGE_SIZE;
- 	ap->num_pages++;
-@@ -962,37 +958,33 @@ static int fuse_readpages_fill(void *_data, struct page *page)
- 	return 0;
- }
- 
--static int fuse_readpages(struct file *file, struct address_space *mapping,
--			  struct list_head *pages, unsigned nr_pages)
-+static void fuse_readahead(struct readahead_control *rac)
- {
--	struct inode *inode = mapping->host;
-+	struct inode *inode = rac->mapping->host;
- 	struct fuse_conn *fc = get_fuse_conn(inode);
- 	struct fuse_fill_data data;
--	int err;
-+	struct page *page;
- 
--	err = -EIO;
- 	if (is_bad_inode(inode))
--		goto out;
-+		return;
- 
--	data.file = file;
-+	data.file = rac->file;
- 	data.inode = inode;
--	data.nr_pages = nr_pages;
--	data.max_pages = min_t(unsigned int, nr_pages, fc->max_pages);
--;
-+	data.nr_pages = readahead_count(rac);
-+	data.max_pages = min_t(unsigned int, data.nr_pages, fc->max_pages);
- 	data.ia = fuse_io_alloc(NULL, data.max_pages);
--	err = -ENOMEM;
- 	if (!data.ia)
--		goto out;
-+		return;
- 
--	err = read_cache_pages(mapping, pages, fuse_readpages_fill, &data);
--	if (!err) {
--		if (data.ia->ap.num_pages)
--			fuse_send_readpages(data.ia, file);
--		else
--			fuse_io_free(data.ia);
-+	readahead_for_each(rac, page) {
-+		if (fuse_readpages_fill(&data, page) != 0)
-+			return;
- 	}
--out:
--	return err;
-+
-+	if (data.ia->ap.num_pages)
-+		fuse_send_readpages(data.ia, rac->file);
-+	else
-+		fuse_io_free(data.ia);
- }
- 
- static ssize_t fuse_cache_read_iter(struct kiocb *iocb, struct iov_iter *to)
-@@ -3373,10 +3365,10 @@ static const struct file_operations fuse_file_operations = {
- 
- static const struct address_space_operations fuse_file_aops  = {
- 	.readpage	= fuse_readpage,
-+	.readahead	= fuse_readahead,
- 	.writepage	= fuse_writepage,
- 	.writepages	= fuse_writepages,
- 	.launder_page	= fuse_launder_page,
--	.readpages	= fuse_readpages,
- 	.set_page_dirty	= __set_page_dirty_nobuffers,
- 	.bmap		= fuse_bmap,
- 	.direct_IO	= fuse_direct_IO,
+Other than that, the code is good.
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
 -- 
-2.25.0
-
+Dave Chinner
+david@fromorbit.com
