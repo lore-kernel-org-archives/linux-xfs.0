@@ -7,41 +7,40 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85614C33FA0
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Feb 2020 13:00:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64910C761A6
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Feb 2020 13:00:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 52A5720578
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Feb 2020 13:00:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 302E0208C4
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Feb 2020 13:00:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KoFHmlc+"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="MfWNjMjJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728540AbgBQNAZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 17 Feb 2020 08:00:25 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:58834 "EHLO
+        id S1728763AbgBQNA1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 17 Feb 2020 08:00:27 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:58840 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728011AbgBQNAY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Feb 2020 08:00:24 -0500
+        with ESMTP id S1728011AbgBQNA1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Feb 2020 08:00:27 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=Zcpbqg/6b1RkiYgtGNkERvAEtchNX6XK/OH79EVXea4=; b=KoFHmlc+YRp2bIojKYaoOvMCsD
-        jLV6eZ1TtE5YOQcn6/scHeTtHMnQocxG6JWSDwtDJipjN/nTDBTgXzUnCXdx9PDulEF4pIcSKppfU
-        xZM0Lqk8f+rRdQ9IB8uGIe9nGwbxr+9NGb0+y4OIlnyCfLe1rdr1Z405sQzBj3aqjEOX2SdyR+kvn
-        DgyrzR2HK/QkXxTi1fyqkvprwKuM3limd/Zy1J6madEke4IUA3TiQI1LYnLsRYkMA+W6IWw1u9G+o
-        w06GYEB2LjX/RMzlmeNypsd3eFNgLbFohDAniQxVL/AoQxN0owMH6Q96AILeGadXwwi9J8sUMtNxT
-        +eQ96cCw==;
+        bh=1rGIouOWfJ0k2OvrMCdPkMucPRPBUfqTIZwYXAa+xAo=; b=MfWNjMjJA4PHBC/tPlcM+F3v5D
+        XKQ5Z5BkVEUQVQDAaOK6jws2CFN1exxYw8O6s9MwBaeMHmksonj+9hNya0MoIU4xWi71R25KOakFX
+        NSsdhZOiIfcBWaUJLz1tfIn+WFcjE0xv98QwHh8l0ZAs7yI9BJhcX4mnssdsRKJ8e3sbk+d4FVUA/
+        h4Vg623R25NMzOArOv3g6RQDxFJAJmgyl0OShM5KXiocQhkcPh1Y/sBJREpdYJ3tbix5dP02g0VGs
+        5wayqHkP8zgj+kB6UfwGF8CKEo0xOcaAG/qRYnd5wG/WZSpkboIHp99NijgoFrB5qOMu2DDb6Z4dT
+        ignGSqgg==;
 Received: from [88.128.92.35] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j3g0e-0001B7-3P; Mon, 17 Feb 2020 13:00:24 +0000
+        id 1j3g0g-0001BK-Ub; Mon, 17 Feb 2020 13:00:27 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
 Cc:     Allison Collins <allison.henderson@oracle.com>,
-        Chandan Rajendra <chandanrlinux@gmail.com>,
         "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 08/31] xfs: remove the MAXNAMELEN check from xfs_attr_args_init
-Date:   Mon, 17 Feb 2020 13:59:34 +0100
-Message-Id: <20200217125957.263434-9-hch@lst.de>
+Subject: [PATCH 09/31] xfs: move struct xfs_da_args to xfs_types.h
+Date:   Mon, 17 Feb 2020 13:59:35 +0100
+Message-Id: <20200217125957.263434-10-hch@lst.de>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200217125957.263434-1-hch@lst.de>
 References: <20200217125957.263434-1-hch@lst.de>
@@ -53,30 +52,163 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-All the callers already check the length when allocating the
-in-kernel xattrs buffers.
+To allow passing a struct xfs_da_args to the high-level attr helpers
+it needs to be easily includable by files like xfs_xattr.c.  Move the
+struct definition to xfs_types.h to allow for that.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr.c | 3 ---
- 1 file changed, 3 deletions(-)
+ fs/xfs/libxfs/xfs_da_btree.h | 64 ------------------------------------
+ fs/xfs/libxfs/xfs_types.h    | 60 +++++++++++++++++++++++++++++++++
+ 2 files changed, 60 insertions(+), 64 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index a968158b9bb1..f887d62e0956 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -72,9 +72,6 @@ xfs_attr_args_init(
- 	args->flags = flags;
- 	args->name = name;
- 	args->namelen = namelen;
--	if (args->namelen >= MAXNAMELEN)
--		return -EFAULT;		/* match IRIX behaviour */
+diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
+index 0f4fbb0889ff..dd2f48b8ee07 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.h
++++ b/fs/xfs/libxfs/xfs_da_btree.h
+@@ -36,70 +36,6 @@ struct xfs_da_geometry {
+ 	size_t		data_entry_offset;
+ };
+ 
+-/*========================================================================
+- * Btree searching and modification structure definitions.
+- *========================================================================*/
 -
- 	args->hashval = xfs_da_hashname(args->name, args->namelen);
- 	return 0;
- }
+-/*
+- * Search comparison results
+- */
+-enum xfs_dacmp {
+-	XFS_CMP_DIFFERENT,	/* names are completely different */
+-	XFS_CMP_EXACT,		/* names are exactly the same */
+-	XFS_CMP_CASE		/* names are same but differ in case */
+-};
+-
+-/*
+- * Structure to ease passing around component names.
+- */
+-typedef struct xfs_da_args {
+-	struct xfs_da_geometry *geo;	/* da block geometry */
+-	const uint8_t		*name;		/* string (maybe not NULL terminated) */
+-	int		namelen;	/* length of string (maybe no NULL) */
+-	uint8_t		filetype;	/* filetype of inode for directories */
+-	uint8_t		*value;		/* set of bytes (maybe contain NULLs) */
+-	int		valuelen;	/* length of value */
+-	int		flags;		/* argument flags (eg: ATTR_NOCREATE) */
+-	xfs_dahash_t	hashval;	/* hash value of name */
+-	xfs_ino_t	inumber;	/* input/output inode number */
+-	struct xfs_inode *dp;		/* directory inode to manipulate */
+-	struct xfs_trans *trans;	/* current trans (changes over time) */
+-	xfs_extlen_t	total;		/* total blocks needed, for 1st bmap */
+-	int		whichfork;	/* data or attribute fork */
+-	xfs_dablk_t	blkno;		/* blkno of attr leaf of interest */
+-	int		index;		/* index of attr of interest in blk */
+-	xfs_dablk_t	rmtblkno;	/* remote attr value starting blkno */
+-	int		rmtblkcnt;	/* remote attr value block count */
+-	int		rmtvaluelen;	/* remote attr value length in bytes */
+-	xfs_dablk_t	blkno2;		/* blkno of 2nd attr leaf of interest */
+-	int		index2;		/* index of 2nd attr in blk */
+-	xfs_dablk_t	rmtblkno2;	/* remote attr value starting blkno */
+-	int		rmtblkcnt2;	/* remote attr value block count */
+-	int		rmtvaluelen2;	/* remote attr value length in bytes */
+-	int		op_flags;	/* operation flags */
+-	enum xfs_dacmp	cmpresult;	/* name compare result for lookups */
+-} xfs_da_args_t;
+-
+-/*
+- * Operation flags:
+- */
+-#define XFS_DA_OP_JUSTCHECK	0x0001	/* check for ok with no space */
+-#define XFS_DA_OP_RENAME	0x0002	/* this is an atomic rename op */
+-#define XFS_DA_OP_ADDNAME	0x0004	/* this is an add operation */
+-#define XFS_DA_OP_OKNOENT	0x0008	/* lookup/add op, ENOENT ok, else die */
+-#define XFS_DA_OP_CILOOKUP	0x0010	/* lookup to return CI name if found */
+-#define XFS_DA_OP_ALLOCVAL	0x0020	/* lookup to alloc buffer if found  */
+-#define XFS_DA_OP_INCOMPLETE	0x0040	/* lookup INCOMPLETE attr keys */
+-
+-#define XFS_DA_OP_FLAGS \
+-	{ XFS_DA_OP_JUSTCHECK,	"JUSTCHECK" }, \
+-	{ XFS_DA_OP_RENAME,	"RENAME" }, \
+-	{ XFS_DA_OP_ADDNAME,	"ADDNAME" }, \
+-	{ XFS_DA_OP_OKNOENT,	"OKNOENT" }, \
+-	{ XFS_DA_OP_CILOOKUP,	"CILOOKUP" }, \
+-	{ XFS_DA_OP_ALLOCVAL,	"ALLOCVAL" }, \
+-	{ XFS_DA_OP_INCOMPLETE,	"INCOMPLETE" }
+-
+ /*
+  * Storage for holding state during Btree searches and split/join ops.
+  *
+diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+index 397d94775440..e2711d119665 100644
+--- a/fs/xfs/libxfs/xfs_types.h
++++ b/fs/xfs/libxfs/xfs_types.h
+@@ -175,6 +175,66 @@ enum xfs_ag_resv_type {
+ 	XFS_AG_RESV_RMAPBT,
+ };
+ 
++/*
++ * Dir/attr btree search comparison results.
++ */
++enum xfs_dacmp {
++	XFS_CMP_DIFFERENT,	/* names are completely different */
++	XFS_CMP_EXACT,		/* names are exactly the same */
++	XFS_CMP_CASE		/* names are same but differ in case */
++};
++
++/*
++ * Structure to ease passing around dir/attr component names.
++ */
++typedef struct xfs_da_args {
++	struct xfs_da_geometry *geo;	/* da block geometry */
++	const uint8_t	*name;		/* string (maybe not NULL terminated) */
++	int		namelen;	/* length of string (maybe no NULL) */
++	uint8_t		filetype;	/* filetype of inode for directories */
++	uint8_t		*value;		/* set of bytes (maybe contain NULLs) */
++	int		valuelen;	/* length of value */
++	int		flags;		/* argument flags (eg: ATTR_NOCREATE) */
++	xfs_dahash_t	hashval;	/* hash value of name */
++	xfs_ino_t	inumber;	/* input/output inode number */
++	struct xfs_inode *dp;		/* directory inode to manipulate */
++	struct xfs_trans *trans;	/* current trans (changes over time) */
++	xfs_extlen_t	total;		/* total blocks needed, for 1st bmap */
++	int		whichfork;	/* data or attribute fork */
++	xfs_dablk_t	blkno;		/* blkno of attr leaf of interest */
++	int		index;		/* index of attr of interest in blk */
++	xfs_dablk_t	rmtblkno;	/* remote attr value starting blkno */
++	int		rmtblkcnt;	/* remote attr value block count */
++	int		rmtvaluelen;	/* remote attr value length in bytes */
++	xfs_dablk_t	blkno2;		/* blkno of 2nd attr leaf of interest */
++	int		index2;		/* index of 2nd attr in blk */
++	xfs_dablk_t	rmtblkno2;	/* remote attr value starting blkno */
++	int		rmtblkcnt2;	/* remote attr value block count */
++	int		rmtvaluelen2;	/* remote attr value length in bytes */
++	int		op_flags;	/* operation flags */
++	enum xfs_dacmp	cmpresult;	/* name compare result for lookups */
++} xfs_da_args_t;
++
++/*
++ * Operation flags:
++ */
++#define XFS_DA_OP_JUSTCHECK	0x0001	/* check for ok with no space */
++#define XFS_DA_OP_RENAME	0x0002	/* this is an atomic rename op */
++#define XFS_DA_OP_ADDNAME	0x0004	/* this is an add operation */
++#define XFS_DA_OP_OKNOENT	0x0008	/* lookup/add op, ENOENT ok, else die */
++#define XFS_DA_OP_CILOOKUP	0x0010	/* lookup to return CI name if found */
++#define XFS_DA_OP_ALLOCVAL	0x0020	/* lookup to alloc buffer if found  */
++#define XFS_DA_OP_INCOMPLETE	0x0040	/* lookup INCOMPLETE attr keys */
++
++#define XFS_DA_OP_FLAGS \
++	{ XFS_DA_OP_JUSTCHECK,	"JUSTCHECK" }, \
++	{ XFS_DA_OP_RENAME,	"RENAME" }, \
++	{ XFS_DA_OP_ADDNAME,	"ADDNAME" }, \
++	{ XFS_DA_OP_OKNOENT,	"OKNOENT" }, \
++	{ XFS_DA_OP_CILOOKUP,	"CILOOKUP" }, \
++	{ XFS_DA_OP_ALLOCVAL,	"ALLOCVAL" }, \
++	{ XFS_DA_OP_INCOMPLETE,	"INCOMPLETE" }
++
+ /*
+  * Type verifier functions
+  */
 -- 
 2.24.1
 
