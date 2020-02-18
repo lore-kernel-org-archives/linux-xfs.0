@@ -2,77 +2,222 @@ Return-Path: <SRS0=Vmdp=4G=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00C8BC34031
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Feb 2020 21:01:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3E43C34049
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Feb 2020 21:05:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BDBD42070B
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Feb 2020 21:01:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C3FEE2070B
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Feb 2020 21:05:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="cAV210/g"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="hqloiqBq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726508AbgBRVBA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Feb 2020 16:01:00 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:46402 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726339AbgBRVBA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Feb 2020 16:01:00 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=vfcACA12k8kSB5vbO64+BOisPA60UchzMzgMeAxFjn0=; b=cAV210/g0U3eT5pfC5VlLXL8TQ
-        1CP+V9NzMeLcP/2u7dN9RNZaSHg1UavQESl464Eu4EZ8U1bEXzAFh1fB6ggIzReD3tUU51LCcI5ub
-        nBQz3r+LoffDyhG7OW9oSu/2mNzk3FtGqi9wYmd+Sf2KsIn3BuevTnffEIvlf+IkGGl0VoX6kYiza
-        jtImjkb47ufNfSJejeOsGhq5WqFln97Eq5efgPNogIvxiZrrMTj+5LHX+wicxo6zyrU89A8y3iEVA
-        K8+BagSDOCl9tILh6qyZiDsscLpYTh4uPvdAvs8Sv5gky8tuwzcCh4L+tLmHWbtNRNW0k+on9mGPW
-        oVPya9eg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j49zH-0007Pu-Fn; Tue, 18 Feb 2020 21:00:59 +0000
-Date:   Tue, 18 Feb 2020 13:00:59 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: fix iclog release error check race with shutdown
-Message-ID: <20200218210059.GA28343@infradead.org>
-References: <20200218175425.20598-1-bfoster@redhat.com>
+        id S1726548AbgBRVFb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Feb 2020 16:05:31 -0500
+Received: from hqnvemgate25.nvidia.com ([216.228.121.64]:4342 "EHLO
+        hqnvemgate25.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726482AbgBRVFb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Feb 2020 16:05:31 -0500
+Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate25.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5e4c517a0000>; Tue, 18 Feb 2020 13:04:58 -0800
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate102.nvidia.com (PGP Universal service);
+  Tue, 18 Feb 2020 13:05:30 -0800
+X-PGP-Universal: processed;
+        by hqpgpgate102.nvidia.com on Tue, 18 Feb 2020 13:05:30 -0800
+Received: from [10.110.48.28] (10.124.1.5) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 18 Feb
+ 2020 21:05:29 +0000
+Subject: Re: [PATCH v6 01/19] mm: Return void from various readahead functions
+To:     Matthew Wilcox <willy@infradead.org>,
+        <linux-fsdevel@vger.kernel.org>
+CC:     <linux-mm@kvack.org>, <linux-kernel@vger.kernel.org>,
+        <linux-btrfs@vger.kernel.org>, <linux-erofs@lists.ozlabs.org>,
+        <linux-ext4@vger.kernel.org>,
+        <linux-f2fs-devel@lists.sourceforge.net>,
+        <cluster-devel@redhat.com>, <ocfs2-devel@oss.oracle.com>,
+        <linux-xfs@vger.kernel.org>
+References: <20200217184613.19668-1-willy@infradead.org>
+ <20200217184613.19668-2-willy@infradead.org>
+X-Nvconfidentiality: public
+From:   John Hubbard <jhubbard@nvidia.com>
+Message-ID: <29d2d7ca-7f2b-7eb4-78bc-f2af36c4c426@nvidia.com>
+Date:   Tue, 18 Feb 2020 13:05:29 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.5.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200218175425.20598-1-bfoster@redhat.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200217184613.19668-2-willy@infradead.org>
+X-Originating-IP: [10.124.1.5]
+X-ClientProxiedBy: HQMAIL111.nvidia.com (172.20.187.18) To
+ HQMAIL107.nvidia.com (172.20.187.13)
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1582059898; bh=3Tzi4YVjiGJU778/orjIDa7TSGwRy5taBn2/82oa+aQ=;
+        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
+         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
+         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
+         Content-Transfer-Encoding;
+        b=hqloiqBqSuZGaYGkXI4y6uimyehARyGnYG70bfDk3yOB18R9uLM8BT6oDtBGecU3N
+         Lqh9rx/iPO8/U18g2E2WaBCVhqRRwzPmIxsQ4YC2mK2lo21KXP1fIEhVpBLHsqVF2u
+         +spNTSr0xUh2VFGuB3TbrYt/WmzmxtalFBYvXAWqVE5C7DowzCVSWA4uRMCnWv175V
+         kKKp/N0Kuc4S7BOtfyFTo9/gvcyiICIqWPfvulCk6nDeR68LOPk75LEKPAc8BezVTf
+         8/m4QzBRgIOBFNjb8rgcd5NrIT05x92/7JvGII/CGcNWKq5/Y9GhpYvAylBzuSi2WH
+         gxTDwXiR8jocQ==
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 18, 2020 at 12:54:25PM -0500, Brian Foster wrote:
-> Prior to commit df732b29c8 ("xfs: call xlog_state_release_iclog with
-> l_icloglock held"), xlog_state_release_iclog() always performed a
-> locked check of the iclog error state before proceeding into the
-> sync state processing code. As of this commit, part of
-> xlog_state_release_iclog() was open-coded into
-> xfs_log_release_iclog() and as a result the locked error state check
-> was lost.
+On 2/17/20 10:45 AM, Matthew Wilcox wrote:
+> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 > 
-> The lockless check still exists, but this doesn't account for the
-> possibility of a race with a shutdown being performed by another
-> task causing the iclog state to change while the original task waits
-> on ->l_icloglock. This has reproduced very rarely via generic/475
-> and manifests as an assert failure in __xlog_state_release_iclog()
-> due to an unexpected iclog state.
+> ondemand_readahead has two callers, neither of which use the return value.
+> That means that both ra_submit and __do_page_cache_readahead() can return
+> void, and we don't need to worry that a present page in the readahead
+> window causes us to return a smaller nr_pages than we ought to have.
 > 
-> Restore the locked error state check in xlog_state_release_iclog()
-> to ensure that an iclog state update via shutdown doesn't race with
-> the iclog release state processing code.
-> 
-> Fixes: df732b29c807 ("xfs: call xlog_state_release_iclog with l_icloglock held")
-> Reported-by: Zorro Lang <zlang@redhat.com>
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> ---
+>  mm/internal.h  |  8 ++++----
+>  mm/readahead.c | 24 ++++++++++--------------
+>  2 files changed, 14 insertions(+), 18 deletions(-)
 
-Looks good:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+This is an easy review and obviously correct, so:
+
+    Reviewed-by: John Hubbard <jhubbard@nvidia.com>
+
+
+Thoughts for the future of the API:
+
+I will add that I could envision another patchset that went in the
+opposite direction, and attempted to preserve the information about
+how many pages were successfully read ahead. And that would be nice
+to have (at least IMHO), even all the way out to the syscall level,
+especially for the readahead syscall.
+
+Of course, vague opinions about how the API might be improved are less
+pressing than cleaning up the code now--I'm just bringing this up because
+I suspect some people will wonder, "wouldn't it be helpful if I the 
+syscall would tell me what happened here? Success (returning 0) doesn't
+necessarily mean any pages were even read ahead." It just seems worth 
+mentioning.
+
+
+thanks,
+-- 
+John Hubbard
+NVIDIA
+
+> 
+> diff --git a/mm/internal.h b/mm/internal.h
+> index 3cf20ab3ca01..f779f058118b 100644
+> --- a/mm/internal.h
+> +++ b/mm/internal.h
+> @@ -49,18 +49,18 @@ void unmap_page_range(struct mmu_gather *tlb,
+>  			     unsigned long addr, unsigned long end,
+>  			     struct zap_details *details);
+>  
+> -extern unsigned int __do_page_cache_readahead(struct address_space *mapping,
+> +extern void __do_page_cache_readahead(struct address_space *mapping,
+>  		struct file *filp, pgoff_t offset, unsigned long nr_to_read,
+>  		unsigned long lookahead_size);
+>  
+>  /*
+>   * Submit IO for the read-ahead request in file_ra_state.
+>   */
+> -static inline unsigned long ra_submit(struct file_ra_state *ra,
+> +static inline void ra_submit(struct file_ra_state *ra,
+>  		struct address_space *mapping, struct file *filp)
+>  {
+> -	return __do_page_cache_readahead(mapping, filp,
+> -					ra->start, ra->size, ra->async_size);
+> +	__do_page_cache_readahead(mapping, filp,
+> +			ra->start, ra->size, ra->async_size);
+>  }
+>  
+>  /*
+> diff --git a/mm/readahead.c b/mm/readahead.c
+> index 2fe72cd29b47..8ce46d69e6ae 100644
+> --- a/mm/readahead.c
+> +++ b/mm/readahead.c
+> @@ -149,10 +149,8 @@ static int read_pages(struct address_space *mapping, struct file *filp,
+>   * the pages first, then submits them for I/O. This avoids the very bad
+>   * behaviour which would occur if page allocations are causing VM writeback.
+>   * We really don't want to intermingle reads and writes like that.
+> - *
+> - * Returns the number of pages requested, or the maximum amount of I/O allowed.
+>   */
+> -unsigned int __do_page_cache_readahead(struct address_space *mapping,
+> +void __do_page_cache_readahead(struct address_space *mapping,
+>  		struct file *filp, pgoff_t offset, unsigned long nr_to_read,
+>  		unsigned long lookahead_size)
+>  {
+> @@ -166,7 +164,7 @@ unsigned int __do_page_cache_readahead(struct address_space *mapping,
+>  	gfp_t gfp_mask = readahead_gfp_mask(mapping);
+>  
+>  	if (isize == 0)
+> -		goto out;
+> +		return;
+>  
+>  	end_index = ((isize - 1) >> PAGE_SHIFT);
+>  
+> @@ -211,8 +209,6 @@ unsigned int __do_page_cache_readahead(struct address_space *mapping,
+>  	if (nr_pages)
+>  		read_pages(mapping, filp, &page_pool, nr_pages, gfp_mask);
+>  	BUG_ON(!list_empty(&page_pool));
+> -out:
+> -	return nr_pages;
+>  }
+>  
+>  /*
+> @@ -378,11 +374,10 @@ static int try_context_readahead(struct address_space *mapping,
+>  /*
+>   * A minimal readahead algorithm for trivial sequential/random reads.
+>   */
+> -static unsigned long
+> -ondemand_readahead(struct address_space *mapping,
+> -		   struct file_ra_state *ra, struct file *filp,
+> -		   bool hit_readahead_marker, pgoff_t offset,
+> -		   unsigned long req_size)
+> +static void ondemand_readahead(struct address_space *mapping,
+> +		struct file_ra_state *ra, struct file *filp,
+> +		bool hit_readahead_marker, pgoff_t offset,
+> +		unsigned long req_size)
+>  {
+>  	struct backing_dev_info *bdi = inode_to_bdi(mapping->host);
+>  	unsigned long max_pages = ra->ra_pages;
+> @@ -428,7 +423,7 @@ ondemand_readahead(struct address_space *mapping,
+>  		rcu_read_unlock();
+>  
+>  		if (!start || start - offset > max_pages)
+> -			return 0;
+> +			return;
+>  
+>  		ra->start = start;
+>  		ra->size = start - offset;	/* old async_size */
+> @@ -464,7 +459,8 @@ ondemand_readahead(struct address_space *mapping,
+>  	 * standalone, small random read
+>  	 * Read as is, and do not pollute the readahead state.
+>  	 */
+> -	return __do_page_cache_readahead(mapping, filp, offset, req_size, 0);
+> +	__do_page_cache_readahead(mapping, filp, offset, req_size, 0);
+> +	return;
+>  
+>  initial_readahead:
+>  	ra->start = offset;
+> @@ -489,7 +485,7 @@ ondemand_readahead(struct address_space *mapping,
+>  		}
+>  	}
+>  
+> -	return ra_submit(ra, mapping, filp);
+> +	ra_submit(ra, mapping, filp);
+>  }
+>  
+>  /**
+> 
