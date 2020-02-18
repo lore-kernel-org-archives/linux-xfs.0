@@ -2,213 +2,86 @@ Return-Path: <SRS0=Vmdp=4G=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E7C8C34031
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Feb 2020 06:58:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5908FC34026
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Feb 2020 13:42:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7023F207FD
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Feb 2020 06:58:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 20DF02173E
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Feb 2020 13:42:32 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WiqMBzR3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726262AbgBRG6E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Feb 2020 01:58:04 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:33665 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726072AbgBRG6D (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Feb 2020 01:58:03 -0500
-Received: from dread.disaster.area (pa49-179-138-28.pa.nsw.optusnet.com.au [49.179.138.28])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 7C5BF3A2771;
-        Tue, 18 Feb 2020 17:57:59 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1j3wpS-0006Wf-5F; Tue, 18 Feb 2020 17:57:58 +1100
-Date:   Tue, 18 Feb 2020 17:57:58 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Matthew Wilcox <willy@infradead.org>
+        id S1726645AbgBRNmb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Feb 2020 08:42:31 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:49330 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726569AbgBRNmb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Feb 2020 08:42:31 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Transfer-Encoding
+        :Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+        Sender:Reply-To:Content-ID:Content-Description;
+        bh=sRRfkuIro3UJgk7ronBRbu9Qpl4FSkPX98/JT02cIzQ=; b=WiqMBzR3mGIQcEq161KXuYNNqn
+        oGEGsCAD1sh6ZxDHFnwWKQ2UwAbxLDKaVUSstZlvvZi3x4yIlHuLp2u6l7YrszKdgcpLhi972Q0/M
+        v2lPX/oCVktUYRubwI/oT4ULqsPrfYeqx1ppvykbJky0SIGyrQDEEKC6qeiOAZIZLEEa8fGbwzymS
+        SKIhK0eTvDnycS/K6GjH9DoFUk9lT4+Bh4Q7le4HVT8wkpD+696fuAoTeI+nAElAF/93gchu8m6kq
+        3yyLRS2ZUp2AAlJpuu2kf3UYi/qoxOxEhYzdrtFmaDyvoJBUAzp1grGpHZPuH40DCWRoboP4begWK
+        g4B3syeQ==;
+Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1j438w-0002EE-C5; Tue, 18 Feb 2020 13:42:30 +0000
+Date:   Tue, 18 Feb 2020 05:42:30 -0800
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
         linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
         linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
         linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
         ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v6 11/19] btrfs: Convert from readpages to readahead
-Message-ID: <20200218065758.GQ10776@dread.disaster.area>
+Subject: Re: [PATCH v6 00/19] Change readahead API
+Message-ID: <20200218134230.GN7778@bombadil.infradead.org>
 References: <20200217184613.19668-1-willy@infradead.org>
- <20200217184613.19668-19-willy@infradead.org>
+ <20200218045633.GH10776@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20200217184613.19668-19-willy@infradead.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
-        a=zAxSp4fFY/GQY8/esVNjqw==:117 a=zAxSp4fFY/GQY8/esVNjqw==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=l697ptgUJYAA:10
-        a=JfrnYn6hAAAA:8 a=7-415B0cAAAA:8 a=cHVu4ezWpKoVtZSsmu8A:9
-        a=a6t_wt_lAo5S5IOh:21 a=CcahuoPPjRgWG3dV:21 a=CjuIK1q_8ugA:10
-        a=1CNFftbPRP8L7MoqJWF3:22 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200218045633.GH10776@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 17, 2020 at 10:45:59AM -0800, Matthew Wilcox wrote:
-> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+On Tue, Feb 18, 2020 at 03:56:33PM +1100, Dave Chinner wrote:
+> Latest version in your git tree:
 > 
-> Use the new readahead operation in btrfs.  Add a
-> readahead_for_each_batch() iterator to optimise the loop in the XArray.
+> $ ▶ glo -n 5 willy/readahead
+> 4be497096c04 mm: Use memalloc_nofs_save in readahead path
+> ff63497fcb98 iomap: Convert from readpages to readahead
+> 26aee60e89b5 iomap: Restructure iomap_readpages_actor
+> 8115bcca7312 fuse: Convert from readpages to readahead
+> 3db3d10d9ea1 f2fs: Convert from readpages to readahead
+> $
 > 
-> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> ---
->  fs/btrfs/extent_io.c    | 46 +++++++++++++----------------------------
->  fs/btrfs/extent_io.h    |  3 +--
->  fs/btrfs/inode.c        | 16 +++++++-------
->  include/linux/pagemap.h | 27 ++++++++++++++++++++++++
->  4 files changed, 49 insertions(+), 43 deletions(-)
+> merged into a 5.6-rc2 tree fails at boot on my test vm:
 > 
-> diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
-> index c0f202741e09..e97a6acd6f5d 100644
-> --- a/fs/btrfs/extent_io.c
-> +++ b/fs/btrfs/extent_io.c
-> @@ -4278,52 +4278,34 @@ int extent_writepages(struct address_space *mapping,
->  	return ret;
->  }
->  
-> -int extent_readpages(struct address_space *mapping, struct list_head *pages,
-> -		     unsigned nr_pages)
-> +void extent_readahead(struct readahead_control *rac)
->  {
->  	struct bio *bio = NULL;
->  	unsigned long bio_flags = 0;
->  	struct page *pagepool[16];
->  	struct extent_map *em_cached = NULL;
-> -	struct extent_io_tree *tree = &BTRFS_I(mapping->host)->io_tree;
-> -	int nr = 0;
-> +	struct extent_io_tree *tree = &BTRFS_I(rac->mapping->host)->io_tree;
->  	u64 prev_em_start = (u64)-1;
-> +	int nr;
->  
-> -	while (!list_empty(pages)) {
-> -		u64 contig_end = 0;
-> -
-> -		for (nr = 0; nr < ARRAY_SIZE(pagepool) && !list_empty(pages);) {
-> -			struct page *page = lru_to_page(pages);
-> -
-> -			prefetchw(&page->flags);
-> -			list_del(&page->lru);
-> -			if (add_to_page_cache_lru(page, mapping, page->index,
-> -						readahead_gfp_mask(mapping))) {
-> -				put_page(page);
-> -				break;
-> -			}
-> -
-> -			pagepool[nr++] = page;
-> -			contig_end = page_offset(page) + PAGE_SIZE - 1;
-> -		}
-> +	readahead_for_each_batch(rac, pagepool, ARRAY_SIZE(pagepool), nr) {
-> +		u64 contig_start = page_offset(pagepool[0]);
-> +		u64 contig_end = page_offset(pagepool[nr - 1]) + PAGE_SIZE - 1;
+> [    2.423116] ------------[ cut here ]------------
+> [    2.424957] list_add double add: new=ffffea000efff4c8, prev=ffff8883bfffee60, next=ffffea000efff4c8.
+> [    2.428259] WARNING: CPU: 4 PID: 1 at lib/list_debug.c:29 __list_add_valid+0x67/0x70
+> [    2.457484] Call Trace:
+> [    2.458171]  __pagevec_lru_add_fn+0x15f/0x2c0
+> [    2.459376]  pagevec_lru_move_fn+0x87/0xd0
+> [    2.460500]  ? pagevec_move_tail_fn+0x2d0/0x2d0
+> [    2.461712]  lru_add_drain_cpu+0x8d/0x160
+> [    2.462787]  lru_add_drain+0x18/0x20
 
-So this assumes a contiguous page range is returned, right?
+Are you sure that was 4be497096c04 ?  I ask because there was a
+version pushed to that git tree that did contain a list double-add
+(due to a mismerge when shuffling patches).  I noticed it and fixed
+it, and 4be497096c04 doesn't have that problem.  I also test with
+CONFIG_DEBUG_LIST turned on, but this problem you hit is going to be
+probabilistic because it'll depend on the timing between whatever other
+list is being used and the page actually being added to the LRU.
 
->  
-> -		if (nr) {
-> -			u64 contig_start = page_offset(pagepool[0]);
-> +		ASSERT(contig_start + nr * PAGE_SIZE - 1 == contig_end);
-
-Ok, yes it does. :)
-
-I don't see how readahead_for_each_batch() guarantees that, though.
-
->  
-> -			ASSERT(contig_start + nr * PAGE_SIZE - 1 == contig_end);
-> -
-> -			contiguous_readpages(tree, pagepool, nr, contig_start,
-> -				     contig_end, &em_cached, &bio, &bio_flags,
-> -				     &prev_em_start);
-> -		}
-> +		contiguous_readpages(tree, pagepool, nr, contig_start,
-> +				contig_end, &em_cached, &bio, &bio_flags,
-> +				&prev_em_start);
->  	}
->  
->  	if (em_cached)
->  		free_extent_map(em_cached);
->  
-> -	if (bio)
-> -		return submit_one_bio(bio, 0, bio_flags);
-> -	return 0;
-> +	if (bio) {
-> +		if (submit_one_bio(bio, 0, bio_flags))
-> +			return;
-> +	}
->  }
-
-Shouldn't that just be
-
-	if (bio)
-		submit_one_bio(bio, 0, bio_flags);
-
-> diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-> index 4f36c06d064d..1bbb60a0bf16 100644
-> --- a/include/linux/pagemap.h
-> +++ b/include/linux/pagemap.h
-> @@ -669,6 +669,33 @@ static inline void readahead_next(struct readahead_control *rac)
->  #define readahead_for_each(rac, page)					\
->  	for (; (page = readahead_page(rac)); readahead_next(rac))
->  
-> +static inline unsigned int readahead_page_batch(struct readahead_control *rac,
-> +		struct page **array, unsigned int size)
-> +{
-> +	unsigned int batch = 0;
-
-Confusing when put alongside rac->_batch_count counting the number
-of pages in the batch, and "batch" being the index into the page
-array, and they aren't the same counts....
-
-> +	XA_STATE(xas, &rac->mapping->i_pages, rac->_start);
-> +	struct page *page;
-> +
-> +	rac->_batch_count = 0;
-> +	xas_for_each(&xas, page, rac->_start + rac->_nr_pages - 1) {
-
-That just iterates pages in the start,end doesn't it? What
-guarantees that this fills the array with a contiguous page range?
-
-> +		VM_BUG_ON_PAGE(!PageLocked(page), page);
-> +		VM_BUG_ON_PAGE(PageTail(page), page);
-> +		array[batch++] = page;
-> +		rac->_batch_count += hpage_nr_pages(page);
-> +		if (PageHead(page))
-> +			xas_set(&xas, rac->_start + rac->_batch_count);
-
-What on earth does this do? Comments please!
-
-> +
-> +		if (batch == size)
-> +			break;
-> +	}
-> +
-> +	return batch;
-> +}
-
-Seems a bit big for an inline function.
-
-> +
-> +#define readahead_for_each_batch(rac, array, size, nr)			\
-> +	for (; (nr = readahead_page_batch(rac, array, size));		\
-> +			readahead_next(rac))
-
-I had to go look at the caller to work out what "size" refered to
-here.
-
-This is complex enough that it needs proper API documentation.
-
-Cheers,
-
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
