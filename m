@@ -6,28 +6,29 @@ X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53551C3404B
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Feb 2020 21:41:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49174C3404D
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Feb 2020 21:44:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 359E72064C
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Feb 2020 21:41:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2ACF324125
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Feb 2020 21:44:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727901AbgBRVle (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Feb 2020 16:41:34 -0500
-Received: from sandeen.net ([63.231.237.45]:35646 "EHLO sandeen.net"
+        id S1727901AbgBRVop (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Feb 2020 16:44:45 -0500
+Received: from sandeen.net ([63.231.237.45]:35776 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727656AbgBRVle (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Feb 2020 16:41:34 -0500
+        id S1726481AbgBRVop (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Feb 2020 16:44:45 -0500
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id E59532A78;
-        Tue, 18 Feb 2020 15:41:18 -0600 (CST)
+        by sandeen.net (Postfix) with ESMTPSA id 40FE32A78;
+        Tue, 18 Feb 2020 15:44:30 -0600 (CST)
 Subject: Re: [PATCH 1/2] generic: per-type quota timers set/get test
+From:   Eric Sandeen <sandeen@sandeen.net>
 To:     Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org
 Cc:     linux-xfs@vger.kernel.org
 References: <20200216181631.22560-1-zlang@redhat.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
+ <01255cda-adee-1f0d-8e35-62d3b39813b5@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
  nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
@@ -70,68 +71,75 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <01255cda-adee-1f0d-8e35-62d3b39813b5@sandeen.net>
-Date:   Tue, 18 Feb 2020 15:41:31 -0600
+Message-ID: <af69203a-3e6f-31a3-d083-acd1f6654fbb@sandeen.net>
+Date:   Tue, 18 Feb 2020 15:44:43 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.5.0
 MIME-Version: 1.0
-In-Reply-To: <20200216181631.22560-1-zlang@redhat.com>
+In-Reply-To: <01255cda-adee-1f0d-8e35-62d3b39813b5@sandeen.net>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/16/20 12:16 PM, Zorro Lang wrote:
-> Set different grace time, make sure each of quota (user, group and
-> project) timers can be set (by setquota) and get (by repquota)
-> correctly.
+
+
+On 2/18/20 3:41 PM, Eric Sandeen wrote:
+> On 2/16/20 12:16 PM, Zorro Lang wrote:
+>> Set different grace time, make sure each of quota (user, group and
+>> project) timers can be set (by setquota) and get (by repquota)
+>> correctly.
+>>
+>> Signed-off-by: Zorro Lang <zlang@redhat.com>
+>> ---
+>>
+>> Hi,
+>>
+>> This case test passed on ext4, but on XFS (xfs-linux for-next branch with
+>> Eric's patchset: [PATCH 0/4] xfs: enable per-type quota timers and warn limits)
+>> I got below different output:
 > 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
-> ---
+> *sigh* I wish we didn't have so many different quota tools & interfaces.
 > 
-> Hi,
+> Behold:
 > 
-> This case test passed on ext4, but on XFS (xfs-linux for-next branch with
-> Eric's patchset: [PATCH 0/4] xfs: enable per-type quota timers and warn limits)
-> I got below different output:
+> # export MIN=60
+> # setquota -t -g $((30 * MIN)) $((40 * MIN)) /mnt/scratch
+> 
+> 
+> # ./repquota -g /mnt/scratch
+> *** Report for group quotas on device /dev/pmem0p2
+> Block grace time: 00:00; Inode grace time: 00:00
+> ...
+> 
+> 
+> # xfs_quota -x -c "state -g"  /mnt/scratch
+> Group quota state on /mnt/scratch (/dev/pmem0p2)
+>   Accounting: ON
+>   Enforcement: ON
+>   Inode: #132 (1 blocks, 1 extents)
+> Blocks grace time: [0 days 00:30:00]
+> Inodes grace time: [0 days 00:40:00]
+> Realtime Blocks grace time: [--------]
+> 
+> seems like this may actually be a bug in the quota/repquota code, trying to dig through
+> that now.
+> 
+> repquota actually calls & gets group quota grace, but perhaps it gets overwritten with the subsequent call for the (empty) user quota:
+> 
+> # strace -v -e quotactl ./repquota -g /mnt/scratch 2>&1 | grep "STAT|"
+> quotactl(Q_XGETQSTAT|USRQUOTA, "/dev/pmem0p2", 0, {version=1, flags=XFS_QUOTA_UDQ_ACCT|XFS_QUOTA_UDQ_ENFD|XFS_QUOTA_GDQ_ACCT|XFS_QUOTA_GDQ_ENFD, incoredqs=60, u_ino=131, u_nblks=1, u_nextents=1, g_ino=132, g_nblks=1, g_nextents=1, btimelimit=0, itimelimit=0, rtbtimelimit=0, bwarnlimit=0, iwarnlimit=0}) = 0
+> quotactl(Q_XGETQSTAT|GRPQUOTA, "/dev/pmem0p2", 0, {version=1, flags=XFS_QUOTA_UDQ_ACCT|XFS_QUOTA_UDQ_ENFD|XFS_QUOTA_GDQ_ACCT|XFS_QUOTA_GDQ_ENFD, incoredqs=60, u_ino=131, u_nblks=1, u_nextents=1, g_ino=132, g_nblks=1, g_nextents=1, btimelimit=1800, itimelimit=2400, rtbtimelimit=0, bwarnlimit=0, iwarnlimit=0}) = 0
+> quotactl(Q_XGETQSTAT|PRJQUOTA, "/dev/pmem0p2", 0, {version=1, flags=XFS_QUOTA_UDQ_ACCT|XFS_QUOTA_UDQ_ENFD|XFS_QUOTA_GDQ_ACCT|XFS_QUOTA_GDQ_ENFD, incoredqs=60, u_ino=131, u_nblks=1, u_nextents=1, g_ino=132, g_nblks=1, g_nextents=1, btimelimit=0, itimelimit=0, rtbtimelimit=0, bwarnlimit=0, iwarnlimit=0}) = 0
+> quotactl(Q_XGETQSTAT|USRQUOTA, "/dev/pmem0p2", 0, {version=1, flags=XFS_QUOTA_UDQ_ACCT|XFS_QUOTA_UDQ_ENFD|XFS_QUOTA_GDQ_ACCT|XFS_QUOTA_GDQ_ENFD, incoredqs=60, u_ino=131, u_nblks=1, u_nextents=1, g_ino=132, g_nblks=1, g_nextents=1, btimelimit=0, itimelimit=0, rtbtimelimit=0, bwarnlimit=0, iwarnlimit=0}) = 0
+> 
+> but why doesn't this happen for ext4 ...
 
-*sigh* I wish we didn't have so many different quota tools & interfaces.
+... because on ext4, it makes different quotactl calls... of course :( :
 
-Behold:
-
-# export MIN=60
-# setquota -t -g $((30 * MIN)) $((40 * MIN)) /mnt/scratch
-
-
-# ./repquota -g /mnt/scratch
-*** Report for group quotas on device /dev/pmem0p2
-Block grace time: 00:00; Inode grace time: 00:00
-...
-
-
-# xfs_quota -x -c "state -g"  /mnt/scratch
-Group quota state on /mnt/scratch (/dev/pmem0p2)
-  Accounting: ON
-  Enforcement: ON
-  Inode: #132 (1 blocks, 1 extents)
-Blocks grace time: [0 days 00:30:00]
-Inodes grace time: [0 days 00:40:00]
-Realtime Blocks grace time: [--------]
-
-seems like this may actually be a bug in the quota/repquota code, trying to dig through
-that now.
-
-repquota actually calls & gets group quota grace, but perhaps it gets overwritten with the subsequent call for the (empty) user quota:
-
-# strace -v -e quotactl ./repquota -g /mnt/scratch 2>&1 | grep "STAT|"
-quotactl(Q_XGETQSTAT|USRQUOTA, "/dev/pmem0p2", 0, {version=1, flags=XFS_QUOTA_UDQ_ACCT|XFS_QUOTA_UDQ_ENFD|XFS_QUOTA_GDQ_ACCT|XFS_QUOTA_GDQ_ENFD, incoredqs=60, u_ino=131, u_nblks=1, u_nextents=1, g_ino=132, g_nblks=1, g_nextents=1, btimelimit=0, itimelimit=0, rtbtimelimit=0, bwarnlimit=0, iwarnlimit=0}) = 0
-quotactl(Q_XGETQSTAT|GRPQUOTA, "/dev/pmem0p2", 0, {version=1, flags=XFS_QUOTA_UDQ_ACCT|XFS_QUOTA_UDQ_ENFD|XFS_QUOTA_GDQ_ACCT|XFS_QUOTA_GDQ_ENFD, incoredqs=60, u_ino=131, u_nblks=1, u_nextents=1, g_ino=132, g_nblks=1, g_nextents=1, btimelimit=1800, itimelimit=2400, rtbtimelimit=0, bwarnlimit=0, iwarnlimit=0}) = 0
-quotactl(Q_XGETQSTAT|PRJQUOTA, "/dev/pmem0p2", 0, {version=1, flags=XFS_QUOTA_UDQ_ACCT|XFS_QUOTA_UDQ_ENFD|XFS_QUOTA_GDQ_ACCT|XFS_QUOTA_GDQ_ENFD, incoredqs=60, u_ino=131, u_nblks=1, u_nextents=1, g_ino=132, g_nblks=1, g_nextents=1, btimelimit=0, itimelimit=0, rtbtimelimit=0, bwarnlimit=0, iwarnlimit=0}) = 0
-quotactl(Q_XGETQSTAT|USRQUOTA, "/dev/pmem0p2", 0, {version=1, flags=XFS_QUOTA_UDQ_ACCT|XFS_QUOTA_UDQ_ENFD|XFS_QUOTA_GDQ_ACCT|XFS_QUOTA_GDQ_ENFD, incoredqs=60, u_ino=131, u_nblks=1, u_nextents=1, g_ino=132, g_nblks=1, g_nextents=1, btimelimit=0, itimelimit=0, rtbtimelimit=0, bwarnlimit=0, iwarnlimit=0}) = 0
-
-but why doesn't this happen for ext4 ...
+quotactl(Q_GETINFO|GRPQUOTA, "/dev/pmem0p2", 0, {bgrace=1800, igrace=2400, flags=0, valid=IIF_BGRACE|IIF_IGRACE|IIF_FLAGS}) = 0
 
 -Eric
