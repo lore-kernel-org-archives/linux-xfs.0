@@ -2,150 +2,126 @@ Return-Path: <SRS0=Vmdp=4G=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B99CC34026
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Feb 2020 16:10:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7159EC34049
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Feb 2020 17:47:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 532F321D56
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Feb 2020 16:10:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 484F42464E
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Feb 2020 17:47:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ipLlBOxg"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DaIrrC4W"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726556AbgBRQKG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Feb 2020 11:10:06 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:44246 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726360AbgBRQKF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Feb 2020 11:10:05 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=5KDaFTW+pz8VfJMmd/150jcSlwmVWcMm/3HMnI/xfvg=; b=ipLlBOxgYKVfRZo7Sgo48aXcMn
-        g+YvOK1M9fWayNYCWbwGsZLPH92YapUqcU3V5/r6tbkb9ft/cqAo3wSGowvvZcx4rWcc7/FZqrjgU
-        C3Fut73k2NJ3qoka036sCPRkrwE5zKTESvinIrwcv+q0cgEnEAW9BFRIcBy7P/qW64o6xFymjBnd6
-        8c5ms/UIfeyFwZwXVtAUiNakXaQvESAYSksXwpI8XKuUP0K9NptGJs83qh5VWlLhzAz7zqZR5fA4t
-        Wop5PUNx/CWSP8yDQssgxeF8hMUqj5MF3HuUkauFwvDvTC8SaXnbvBgLZnpTizJzcd+E709oxa5QK
-        FdKMzcpg==;
-Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j45Rk-0001Tm-Vv; Tue, 18 Feb 2020 16:10:04 +0000
-Date:   Tue, 18 Feb 2020 08:10:04 -0800
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v6 08/19] mm: Add readahead address space operation
-Message-ID: <20200218161004.GR7778@bombadil.infradead.org>
-References: <20200217184613.19668-1-willy@infradead.org>
- <20200217184613.19668-14-willy@infradead.org>
- <20200218062147.GN10776@dread.disaster.area>
+        id S1726610AbgBRRrN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Feb 2020 12:47:13 -0500
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:44604 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726569AbgBRRrN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Feb 2020 12:47:13 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1582048032;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=uDz3Ys0z+l2bfNqiuxQ3DtN7PuLGy0qvvSR8HP9C2R4=;
+        b=DaIrrC4WbahBRy4HYDmfETW17c+H5q9rnw6bMZU98VQsRJCQ4OZ4Yk09V0mUn/c4Jrc0h4
+        TkVBXCcTc8MMEHEoRZDh1RXECb1TOZSPo8wM70d+8lpf592Mq/vR8NJQe5SSuDUrOqN/3m
+        zJkNgPCEG+KvfOoRKow+i10LeRhj0+E=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-86-3YHHkONkOJGijgne8pZ7RA-1; Tue, 18 Feb 2020 12:47:11 -0500
+X-MC-Unique: 3YHHkONkOJGijgne8pZ7RA-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 376BF801E66;
+        Tue, 18 Feb 2020 17:47:10 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id CF2D790F55;
+        Tue, 18 Feb 2020 17:47:09 +0000 (UTC)
+Date:   Tue, 18 Feb 2020 12:47:08 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, Zorro Lang <zlang@redhat.com>
+Subject: Re: [PATCH] xfs: fix iclog release error check race with shutdown
+Message-ID: <20200218174708.GB14734@bfoster>
+References: <20200214181528.24046-1-bfoster@redhat.com>
+ <20200217133314.GA31012@infradead.org>
+ <20200217152915.GA6633@bfoster>
+ <20200218155313.GA4772@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200218062147.GN10776@dread.disaster.area>
+In-Reply-To: <20200218155313.GA4772@infradead.org>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 18, 2020 at 05:21:47PM +1100, Dave Chinner wrote:
-> On Mon, Feb 17, 2020 at 10:45:54AM -0800, Matthew Wilcox wrote:
-> > From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+On Tue, Feb 18, 2020 at 07:53:13AM -0800, Christoph Hellwig wrote:
+> On Mon, Feb 17, 2020 at 10:29:15AM -0500, Brian Foster wrote:
+> > On Mon, Feb 17, 2020 at 05:33:14AM -0800, Christoph Hellwig wrote:
+> > > On Fri, Feb 14, 2020 at 01:15:28PM -0500, Brian Foster wrote:
+> > > > Prior to commit df732b29c8 ("xfs: call xlog_state_release_iclog with
+> > > > l_icloglock held"), xlog_state_release_iclog() always performed a
+> > > > locked check of the iclog error state before proceeding into the
+> > > > sync state processing code. As of this commit, part of
+> > > > xlog_state_release_iclog() was open-coded into
+> > > > xfs_log_release_iclog() and as a result the locked error state check
+> > > > was lost.
+> > > > 
+> > > > The lockless check still exists, but this doesn't account for the
+> > > > possibility of a race with a shutdown being performed by another
+> > > > task causing the iclog state to change while the original task waits
+> > > > on ->l_icloglock. This has reproduced very rarely via generic/475
+> > > > and manifests as an assert failure in __xlog_state_release_iclog()
+> > > > due to an unexpected iclog state.
+> > > > 
+> > > > Restore the locked error state check in xlog_state_release_iclog()
+> > > > to ensure that an iclog state update via shutdown doesn't race with
+> > > > the iclog release state processing code.
+> > > > 
+> > > > Reported-by: Zorro Lang <zlang@redhat.com>
+> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > > ---
+> > > >  fs/xfs/xfs_log.c | 4 ++++
+> > > >  1 file changed, 4 insertions(+)
+> > > > 
+> > > > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> > > > index f6006d94a581..f38fc492a14d 100644
+> > > > --- a/fs/xfs/xfs_log.c
+> > > > +++ b/fs/xfs/xfs_log.c
+> > > > @@ -611,6 +611,10 @@ xfs_log_release_iclog(
+> > > >  	}
+> > > >  
+> > > >  	if (atomic_dec_and_lock(&iclog->ic_refcnt, &log->l_icloglock)) {
+> > > > +		if (iclog->ic_state == XLOG_STATE_IOERROR) {
+> > > > +			spin_unlock(&log->l_icloglock);
+> > > > +			return -EIO;
+> > > > +		}
+> > > 
+> > > So the check just above also shuts the file system down.  Any reason to
+> > > do that in one case and not the other?
+> > > 
 > > 
-> > This replaces ->readpages with a saner interface:
-> >  - Return void instead of an ignored error code.
-> >  - Pages are already in the page cache when ->readahead is called.
+> > The initial check (with the shutdown) was originally associated with the
+> > return from xlog_state_release_iclog(). That covers both state checks,
+> > as they were both originally within that function. My impression was
+> > there isn't a need to shutdown in the second check because the only way
+> > the iclog state changes to IOERROR across that lock cycle is due to a
+> > shutdown already in progress.
 > 
-> Might read better as:
+> The original code did the force shutdown for both cases.  So unless we
+> have a good reason to do it differently I'd just add a goto label and
+> merge the two cases to restore the old behavior.
 > 
->  - Page cache is already populates with locked pages when
->    ->readahead is called.
 
-Will do.
+Ok. I'm not sure I see the point, but it's harmless and I can make
+Eric's fix as well so I'll post a v2..
 
-> >  - Implementation looks up the pages in the page cache instead of
-> >    having them passed in a linked list.
-> 
-> Add:
-> 
->  - cleanup of unused readahead handled by ->readahead caller, not
->    the method implementation.
+Brian
 
-The readpages caller does that cleanup too, so it's not an advantage
-to the readahead interface.
-
-        if (mapping->a_ops->readpages) {
-                ret = mapping->a_ops->readpages(filp, mapping, pages, nr_pages);
-                /* Clean up the remaining pages */
-                put_pages_list(pages);
-                goto out;
-        }
-
-> >  ``readpages``
-> >  	called by the VM to read pages associated with the address_space
-> >  	object.  This is essentially just a vector version of readpage.
-> >  	Instead of just one page, several pages are requested.
-> >  	readpages is only used for read-ahead, so read errors are
-> >  	ignored.  If anything goes wrong, feel free to give up.
-> > +	This interface is deprecated; implement readahead instead.
-> 
-> What is the removal schedule for the deprecated interface? 
-
-I mentioned that in the cover letter; once Dave Howells has the fscache
-branch merged, I'll do the remaining filesystems.  Should be within the
-next couple of merge windows.
-
-> > +/* The byte offset into the file of this readahead block */
-> > +static inline loff_t readahead_offset(struct readahead_control *rac)
-> > +{
-> > +	return (loff_t)rac->_start * PAGE_SIZE;
-> > +}
-> 
-> Urk. Didn't an early page use "offset" for the page index? That
-> was was "mm: Remove 'page_offset' from readahead loop" did, right?
-> 
-> That's just going to cause confusion to have different units for
-> readahead "offsets"....
-
-We are ... not consistent anywhere in the VM/VFS with our naming.
-Unfortunately.
-
-$ grep -n offset mm/filemap.c 
-391: * @start:	offset in bytes where the range starts
-...
-815:	pgoff_t offset = old->index;
-...
-2020:	unsigned long offset;      /* offset into pagecache page */
-...
-2257:	*ppos = ((loff_t)index << PAGE_SHIFT) + offset;
-
-That last one's my favourite.  Not to mention the fine distinction you
-and I discussed recently between offset_in_page() and page_offset().
-
-Best of all, even our types encode the ambiguity of an 'offset'.  We have
-pgoff_t and loff_t (replacing the earlier off_t).
-
-So, new rule.  'pos' is the number of bytes into a file.  'index' is the
-number of PAGE_SIZE pages into a file.  We don't use the word 'offset'
-at all.  'length' as a byte count and 'count' as a page count seem like
-fine names to me.
-
-> > -	if (aops->readpages) {
-> > +	if (aops->readahead) {
-> > +		aops->readahead(rac);
-> > +		readahead_for_each(rac, page) {
-> > +			unlock_page(page);
-> > +			put_page(page);
-> > +		}
-> 
-> This needs a comment to explain the unwinding that needs to be done
-> here. I'm not going to remember in a year's time that this is just
-> for the pages that weren't submitted by ->readahead....
-
-ACK.
