@@ -2,134 +2,136 @@ Return-Path: <SRS0=Vmdp=4G=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01B2FC3404C
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Feb 2020 21:33:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53551C3404B
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Feb 2020 21:41:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CA7DD22B48
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Feb 2020 21:33:21 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="f5Iuo6bl"
+	by mail.kernel.org (Postfix) with ESMTP id 359E72064C
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Feb 2020 21:41:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726339AbgBRVdV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Feb 2020 16:33:21 -0500
-Received: from hqnvemgate24.nvidia.com ([216.228.121.143]:15423 "EHLO
-        hqnvemgate24.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726481AbgBRVdV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Feb 2020 16:33:21 -0500
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate24.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5e4c57d90000>; Tue, 18 Feb 2020 13:32:09 -0800
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate101.nvidia.com (PGP Universal service);
-  Tue, 18 Feb 2020 13:33:20 -0800
-X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Tue, 18 Feb 2020 13:33:20 -0800
-Received: from [10.110.48.28] (10.124.1.5) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 18 Feb
- 2020 21:33:19 +0000
-Subject: Re: [PATCH v6 02/19] mm: Ignore return value of ->readpages
-To:     Matthew Wilcox <willy@infradead.org>,
-        <linux-fsdevel@vger.kernel.org>
-CC:     <linux-mm@kvack.org>, <linux-kernel@vger.kernel.org>,
-        <linux-btrfs@vger.kernel.org>, <linux-erofs@lists.ozlabs.org>,
-        <linux-ext4@vger.kernel.org>,
-        <linux-f2fs-devel@lists.sourceforge.net>,
-        <cluster-devel@redhat.com>, <ocfs2-devel@oss.oracle.com>,
-        <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
-References: <20200217184613.19668-1-willy@infradead.org>
- <20200217184613.19668-3-willy@infradead.org>
-From:   John Hubbard <jhubbard@nvidia.com>
-X-Nvconfidentiality: public
-Message-ID: <ed5b3635-be1b-c290-0e19-b516e7af2aca@nvidia.com>
-Date:   Tue, 18 Feb 2020 13:33:19 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
+        id S1727901AbgBRVle (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Feb 2020 16:41:34 -0500
+Received: from sandeen.net ([63.231.237.45]:35646 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727656AbgBRVle (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Feb 2020 16:41:34 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id E59532A78;
+        Tue, 18 Feb 2020 15:41:18 -0600 (CST)
+Subject: Re: [PATCH 1/2] generic: per-type quota timers set/get test
+To:     Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org
+References: <20200216181631.22560-1-zlang@redhat.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
+ nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
+ WL05ODFQ2cemDhx5uLghHEeOxuGj+1AI+kh/FCzMedHc6k87Yu2ZuaWF+Gh1W2ix6hikRJmQ
+ vj5BEeAx7xKkyBhzdbNIbbjV/iGi9b26B/dNcyd5w2My2gxMtxaiP7q5b6GM2rsQklHP8FtW
+ ZiYO7jsg/qIppR1C6Zr5jK1GQlMUIclYFeBbKggJ9mSwXJH7MIftilGQ8KDvNuV5AbkronGC
+ sEEHj2khs7GfVv4pmUUHf1MRIvV0x3WJkpmhuZaYg8AdJlyGKgp+TQ7B+wCjNTdVqMI1vDk2
+ BS6Rg851ay7AypbCPx2w4d8jIkQEgNjACHVDU89PNKAjScK1aTnW+HNUqg9BliCvuX5g4z2j
+ gJBs57loTWAGe2Ve3cMy3VoQ40Wt3yKK0Eno8jfgzgb48wyycINZgnseMRhxc2c8hd51tftK
+ LKhPj4c7uqjnBjrgOVaVBupGUmvLiePlnW56zJZ51BR5igWnILeOJ1ZIcf7KsaHyE6B1mG+X
+ dmYtjDhjf3NAcoBWJuj8euxMB6TcQN2MrSXy5wSKaw40evooGwARAQABtCVFcmljIFIuIFNh
+ bmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+iQI7BBMBAgAlAhsDBgsJCAcDAgYVCAIJCgsE
+ FgIDAQIeAQIXgAUCUzMzbAIZAQAKCRAgrhaS4T3e4Fr7D/wO+fenqVvHjq21SCjDCrt8HdVj
+ aJ28B1SqSU2toxyg5I160GllAxEHpLFGdbFAhQfBtnmlY9eMjwmJb0sCIrkrB6XNPSPA/B2B
+ UPISh0z2odJv35/euJF71qIFgWzp2czJHkHWwVZaZpMWWNvsLIroXoR+uA9c2V1hQFVAJZyk
+ EE4xzfm1+oVtjIC12B9tTCuS00pY3AUy21yzNowT6SSk7HAzmtG/PJ/uSB5wEkwldB6jVs2A
+ sjOg1wMwVvh/JHilsQg4HSmDfObmZj1d0RWlMWcUE7csRnCE0ZWBMp/ttTn+oosioGa09HAS
+ 9jAnauznmYg43oQ5Akd8iQRxz5I58F/+JsdKvWiyrPDfYZtFS+UIgWD7x+mHBZ53Qjazszox
+ gjwO9ehZpwUQxBm4I0lPDAKw3HJA+GwwiubTSlq5PS3P7QoCjaV8llH1bNFZMz2o8wPANiDx
+ 5FHgpRVgwLHakoCU1Gc+LXHXBzDXt7Cj02WYHdFzMm2hXaslRdhNGowLo1SXZFXa41KGTlNe
+ 4di53y9CK5ynV0z+YUa+5LR6RdHrHtgywdKnjeWdqhoVpsWIeORtwWGX8evNOiKJ7j0RsHha
+ WrePTubr5nuYTDsQqgc2r4aBIOpeSRR2brlT/UE3wGgy9LY78L4EwPR0MzzecfE1Ws60iSqw
+ Pu3vhb7h3bkCDQROsffUARAA0DrUifTrXQzqxO8aiQOC5p9Tz25Np/Tfpv1rofOwL8VPBMvJ
+ X4P5l1V2yd70MZRUVgjmCydEyxLJ6G2YyHO2IZTEajUY0Up+b3ErOpLpZwhvgWatjifpj6bB
+ SKuDXeThqFdkphF5kAmgfVAIkan5SxWK3+S0V2F/oxstIViBhMhDwI6XsRlnVBoLLYcEilxA
+ 2FlRUS7MOZGmRJkRtdGD5koVZSM6xVZQSmfEBaYQ/WJBGJQdPy94nnlAVn3lH3+N7pXvNUuC
+ GV+t4YUt3tLcRuIpYBCOWlc7bpgeCps5Xa0dIZgJ8Louu6OBJ5vVXjPxTlkFdT0S0/uerCG5
+ 1u8p6sGRLnUeAUGkQfIUqGUjW2rHaXgWNvzOV6i3tf9YaiXKl3avFaNW1kKBs0T5M1cnlWZU
+ Utl6k04lz5OjoNY9J/bGyV3DSlkblXRMK87iLYQSrcV6cFz9PRl4vW1LGff3xRQHngeN5fPx
+ ze8X5NE3hb+SSwyMSEqJxhVTXJVfQWWW0dQxP7HNwqmOWYF/6m+1gK/Y2gY3jAQnsWTru4RV
+ TZGnKwEPmOCpSUvsTRXsVHgsWJ70qd0yOSjWuiv4b8vmD3+QFgyvCBxPMdP3xsxN5etheLMO
+ gRwWpLn6yNFq/xtgs+ECgG+gR78yXQyA7iCs5tFs2OrMqV5juSMGmn0kxJUAEQEAAYkCHwQY
+ AQIACQUCTrH31AIbDAAKCRAgrhaS4T3e4BKwD/0ZOOmUNOZCSOLAMjZx3mtYtjYgfUNKi0ki
+ YPveGoRWTqbis8UitPtNrG4XxgzLOijSdOEzQwkdOIp/QnZhGNssMejCnsluK0GQd+RkFVWN
+ mcQT78hBeGcnEMAXZKq7bkIKzvc06GFmkMbX/gAl6DiNGv0UNAX+5FYh+ucCJZSyAp3sA+9/
+ LKjxnTedX0aygXA6rkpX0Y0FvN/9dfm47+LGq7WAqBOyYTU3E6/+Z72bZoG/cG7ANLxcPool
+ LOrU43oqFnD8QwcN56y4VfFj3/jDF2MX3xu4v2OjglVjMEYHTCxP3mpxesGHuqOit/FR+mF0
+ MP9JGfj6x+bj/9JMBtCW1bY/aPeMdPGTJvXjGtOVYblGZrSjXRn5++Uuy36CvkcrjuziSDG+
+ JEexGxczWwN4mrOQWhMT5Jyb+18CO+CWxJfHaYXiLEW7dI1AynL4jjn4W0MSiXpWDUw+fsBO
+ Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
+ m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
+ fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
+Message-ID: <01255cda-adee-1f0d-8e35-62d3b39813b5@sandeen.net>
+Date:   Tue, 18 Feb 2020 15:41:31 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.5.0
 MIME-Version: 1.0
-In-Reply-To: <20200217184613.19668-3-willy@infradead.org>
-X-Originating-IP: [10.124.1.5]
-X-ClientProxiedBy: HQMAIL105.nvidia.com (172.20.187.12) To
- HQMAIL107.nvidia.com (172.20.187.13)
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20200216181631.22560-1-zlang@redhat.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1582061529; bh=RXve5/fUA3oBILhUm8o+y+17c7pBmRijpBQPJAnmP80=;
-        h=X-PGP-Universal:Subject:To:CC:References:From:X-Nvconfidentiality:
-         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
-         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
-         Content-Transfer-Encoding;
-        b=f5Iuo6blIXbcDZrM05UIgCY8ANT5xW9HB6FXMMGQCfaHMfBnR1DfaWLTMAYIE7XBP
-         B9QOW8wSO4ij5j+4bCfhLlUR2LpeSTGJV0y8tnLGhP+d4at2LBMPXmcd1007q6GV+V
-         F6nXmc1d8pgAlmrCaaR8bklkj+n7DiCZH8Mj9XZsOl6SUYvt06XEAlqdCtbjrJAqsO
-         JEKRbCwBCkx6iNbCJyyfXN8/DDeOTx/qKgkY7yedkT+Pn0V+QFJNvk6ybzosDhS50D
-         pgn5lvAGlEV280+lBsRM1YfSDahNeoARNWUSdQ6PSTGWm5OdOjiCPRr9K7h5I26KXq
-         jvW6k1ji+T2MA==
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/17/20 10:45 AM, Matthew Wilcox wrote:
-> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+On 2/16/20 12:16 PM, Zorro Lang wrote:
+> Set different grace time, make sure each of quota (user, group and
+> project) timers can be set (by setquota) and get (by repquota)
+> correctly.
 > 
-> We used to assign the return value to a variable, which we then ignored.
-> Remove the pretence of caring.
-> 
-> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
 > ---
->  mm/readahead.c | 8 ++------
->  1 file changed, 2 insertions(+), 6 deletions(-)
-
-Looks good,
-
-    Reviewed-by: John Hubbard <jhubbard@nvidia.com>
-
-thanks,
--- 
-John Hubbard
-NVIDIA
-
 > 
-> diff --git a/mm/readahead.c b/mm/readahead.c
-> index 8ce46d69e6ae..12d13b7792da 100644
-> --- a/mm/readahead.c
-> +++ b/mm/readahead.c
-> @@ -113,17 +113,16 @@ int read_cache_pages(struct address_space *mapping, struct list_head *pages,
->  
->  EXPORT_SYMBOL(read_cache_pages);
->  
-> -static int read_pages(struct address_space *mapping, struct file *filp,
-> +static void read_pages(struct address_space *mapping, struct file *filp,
->  		struct list_head *pages, unsigned int nr_pages, gfp_t gfp)
->  {
->  	struct blk_plug plug;
->  	unsigned page_idx;
-> -	int ret;
->  
->  	blk_start_plug(&plug);
->  
->  	if (mapping->a_ops->readpages) {
-> -		ret = mapping->a_ops->readpages(filp, mapping, pages, nr_pages);
-> +		mapping->a_ops->readpages(filp, mapping, pages, nr_pages);
->  		/* Clean up the remaining pages */
->  		put_pages_list(pages);
->  		goto out;
-> @@ -136,12 +135,9 @@ static int read_pages(struct address_space *mapping, struct file *filp,
->  			mapping->a_ops->readpage(filp, page);
->  		put_page(page);
->  	}
-> -	ret = 0;
->  
->  out:
->  	blk_finish_plug(&plug);
-> -
-> -	return ret;
->  }
->  
->  /*
+> Hi,
 > 
+> This case test passed on ext4, but on XFS (xfs-linux for-next branch with
+> Eric's patchset: [PATCH 0/4] xfs: enable per-type quota timers and warn limits)
+> I got below different output:
+
+*sigh* I wish we didn't have so many different quota tools & interfaces.
+
+Behold:
+
+# export MIN=60
+# setquota -t -g $((30 * MIN)) $((40 * MIN)) /mnt/scratch
+
+
+# ./repquota -g /mnt/scratch
+*** Report for group quotas on device /dev/pmem0p2
+Block grace time: 00:00; Inode grace time: 00:00
+...
+
+
+# xfs_quota -x -c "state -g"  /mnt/scratch
+Group quota state on /mnt/scratch (/dev/pmem0p2)
+  Accounting: ON
+  Enforcement: ON
+  Inode: #132 (1 blocks, 1 extents)
+Blocks grace time: [0 days 00:30:00]
+Inodes grace time: [0 days 00:40:00]
+Realtime Blocks grace time: [--------]
+
+seems like this may actually be a bug in the quota/repquota code, trying to dig through
+that now.
+
+repquota actually calls & gets group quota grace, but perhaps it gets overwritten with the subsequent call for the (empty) user quota:
+
+# strace -v -e quotactl ./repquota -g /mnt/scratch 2>&1 | grep "STAT|"
+quotactl(Q_XGETQSTAT|USRQUOTA, "/dev/pmem0p2", 0, {version=1, flags=XFS_QUOTA_UDQ_ACCT|XFS_QUOTA_UDQ_ENFD|XFS_QUOTA_GDQ_ACCT|XFS_QUOTA_GDQ_ENFD, incoredqs=60, u_ino=131, u_nblks=1, u_nextents=1, g_ino=132, g_nblks=1, g_nextents=1, btimelimit=0, itimelimit=0, rtbtimelimit=0, bwarnlimit=0, iwarnlimit=0}) = 0
+quotactl(Q_XGETQSTAT|GRPQUOTA, "/dev/pmem0p2", 0, {version=1, flags=XFS_QUOTA_UDQ_ACCT|XFS_QUOTA_UDQ_ENFD|XFS_QUOTA_GDQ_ACCT|XFS_QUOTA_GDQ_ENFD, incoredqs=60, u_ino=131, u_nblks=1, u_nextents=1, g_ino=132, g_nblks=1, g_nextents=1, btimelimit=1800, itimelimit=2400, rtbtimelimit=0, bwarnlimit=0, iwarnlimit=0}) = 0
+quotactl(Q_XGETQSTAT|PRJQUOTA, "/dev/pmem0p2", 0, {version=1, flags=XFS_QUOTA_UDQ_ACCT|XFS_QUOTA_UDQ_ENFD|XFS_QUOTA_GDQ_ACCT|XFS_QUOTA_GDQ_ENFD, incoredqs=60, u_ino=131, u_nblks=1, u_nextents=1, g_ino=132, g_nblks=1, g_nextents=1, btimelimit=0, itimelimit=0, rtbtimelimit=0, bwarnlimit=0, iwarnlimit=0}) = 0
+quotactl(Q_XGETQSTAT|USRQUOTA, "/dev/pmem0p2", 0, {version=1, flags=XFS_QUOTA_UDQ_ACCT|XFS_QUOTA_UDQ_ENFD|XFS_QUOTA_GDQ_ACCT|XFS_QUOTA_GDQ_ENFD, incoredqs=60, u_ino=131, u_nblks=1, u_nextents=1, g_ino=132, g_nblks=1, g_nextents=1, btimelimit=0, itimelimit=0, rtbtimelimit=0, bwarnlimit=0, iwarnlimit=0}) = 0
+
+but why doesn't this happen for ext4 ...
+
+-Eric
