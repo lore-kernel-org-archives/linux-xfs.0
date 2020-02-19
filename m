@@ -2,68 +2,76 @@ Return-Path: <SRS0=TUUv=4H=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B836C3404D
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 00:34:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19B3DC34031
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 00:38:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1D2F12465A
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 00:34:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E03B82465A
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 00:38:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="g72jKpYg"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WzHGRFJd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726655AbgBSAec (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Feb 2020 19:34:32 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:52854 "EHLO
+        id S1726655AbgBSAiY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Feb 2020 19:38:24 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:56530 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726488AbgBSAec (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Feb 2020 19:34:32 -0500
+        with ESMTP id S1726641AbgBSAiY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Feb 2020 19:38:24 -0500
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01J0VMcL019821;
-        Wed, 19 Feb 2020 00:34:27 GMT
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01J0VljY019900;
+        Wed, 19 Feb 2020 00:38:18 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=UgN5NWw7nXSW1+2on8Flx5ZlSsQ6h7bcx2XTzNvgCv0=;
- b=g72jKpYgBXCXi6mh8s0PUlpRkUikqEX24dPE1Nb4sDvsOiMuXhfuwidK7t+7djvMVJJ2
- omoQ1mXvUlUUmjPE6DoYSckXX5hQJJqEE968Mzz/9fEKXUMsLKrYpAXySRpH191W+U5y
- PHAbyXRAgLtvupJYSrfuL8zvrcF9xDS+83d/VAlVxfg7U1NLYc1RLg2LmPXWsd+vYAyo
- /KYtfPkxcocR3w3KKjPxOXuSJ3k4p67kERKjQRLwZHKR1fxYeoJlFXhZAdlZIOQjwpX/
- z7E6fBvNnW3/HsF7hiiDjDiqlm+oLbak0e78Fo8VdCNDC5HLsiv9oQbPta5SSspt0RXV 7Q== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2y8e1hn7dt-1
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=LZYuixXjZKJ8hrpCivOER95mmtkbXBn9SZY+SNrC2Co=;
+ b=WzHGRFJd06cOititG5+AlHTKahcadv6dHhN43+qtp0XLbUhMrV5XVgdu123DLv0q1UBo
+ HdchCMx1ofmGR10sVh5hR9qgX6x7CmgZHizXiekYpGRaX4OIQ5wIU21SzCGFyTwa+JwR
+ OLIGSjhAcWc96y3PAj9jJ2FDE9QqA9+1b5qzh0PI3N1dbLtmFjX7opf1R3pjJZs0yErY
+ dUnkHiLXA0VwcfntkopWTzL6f6cEKOy/GN6hqSFLEZQuSqJHD+EhyA0TYxxbdPW+TOKv
+ BZO/6Pg/RHFKFSM3UX/8T0CJrSvsESEB5+bx2UXAdmhFTqzyYetPgwsgyhYLNZTvu6hM zw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 2y8e1hn7sa-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 19 Feb 2020 00:34:26 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01J0SkBC121501;
-        Wed, 19 Feb 2020 00:34:26 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2y6t4kc750-1
+        Wed, 19 Feb 2020 00:38:18 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01J0SSTn151998;
+        Wed, 19 Feb 2020 00:38:18 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 2y82c2dbc6-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 19 Feb 2020 00:34:26 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01J0YP01019478;
-        Wed, 19 Feb 2020 00:34:25 GMT
+        Wed, 19 Feb 2020 00:38:18 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01J0cHwS020704;
+        Wed, 19 Feb 2020 00:38:17 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 18 Feb 2020 16:34:25 -0800
-Date:   Tue, 18 Feb 2020 16:34:23 -0800
+        with ESMTP ; Tue, 18 Feb 2020 16:38:17 -0800
+Date:   Tue, 18 Feb 2020 16:38:16 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@redhat.com>, Eryu Guan <guaneryu@gmail.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
-Subject: [RFC PATCH] xfs: make sure our default quota warning limits and
- grace periods survive quotacheck
-Message-ID: <20200219003423.GB9511@magnolia>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
+        Allison Collins <allison.henderson@oracle.com>,
+        Chandan Rajendra <chandanrlinux@gmail.com>
+Subject: Re: [PATCH 05/31] xfs: use strndup_user in
+ XFS_IOC_ATTRMULTI_BY_HANDLE
+Message-ID: <20200219003816.GC9506@magnolia>
+References: <20200217125957.263434-1-hch@lst.de>
+ <20200217125957.263434-6-hch@lst.de>
+ <20200217221538.GJ10776@dread.disaster.area>
+ <20200218152432.GB21275@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20200218152432.GB21275@lst.de>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9535 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0
- mlxlogscore=999 phishscore=0 mlxscore=0 malwarescore=0 suspectscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 adultscore=0
+ phishscore=0 spamscore=0 suspectscore=0 mlxscore=0 mlxlogscore=964
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2001150001 definitions=main-2002190000
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9535 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 phishscore=0
@@ -76,125 +84,30 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Feb 18, 2020 at 04:24:32PM +0100, Christoph Hellwig wrote:
+> On Tue, Feb 18, 2020 at 09:15:39AM +1100, Dave Chinner wrote:
+> > >  
+> > > -		ops[i].am_error = strncpy_from_user((char *)attr_name,
+> > > -				ops[i].am_attrname, MAXNAMELEN);
+> > > -		if (ops[i].am_error == 0 || ops[i].am_error == MAXNAMELEN)
+> > > -			error = -ERANGE;
+> > > -		if (ops[i].am_error < 0)
+> > > +		attr_name = strndup_user(ops[i].am_attrname, MAXNAMELEN);
+> > > +		if (IS_ERR(attr_name)) {
+> > > +			ops[i].am_error = PTR_ERR(attr_name);
+> > >  			break;
+> > > +		}
+> > 
+> > This changes the error returned for an invalid attr name length from
+> > -ERANGE to either -EINVAL or -EFAULT. Can you please document that
+> > in the commit message. This change requires updates to the 
+> > path_to_handle(3) man page shipped in xfsprogs in the xfslibs-dev
+> > package (xfsprogs::man/man3/handle.3) to document the differences in
+> > return values.
+> 
+> I can't find that man page documenting -ERANGE at all..
 
-Make sure that the default quota grace period and maximum warning limits
-set by the administrator survive quotacheck.
+Should we add both to the errors list, then?  Seeing as (I think?) the
+kernel can actually return this...
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-This is the testcase to go with 'xfs: preserve default grace interval
-during quotacheck', though Eric and I haven't figured out how we're
-going to land that one...
----
- tests/xfs/913     |   69 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/913.out |   13 ++++++++++
- tests/xfs/group   |    1 +
- 3 files changed, 83 insertions(+)
- create mode 100755 tests/xfs/913
- create mode 100644 tests/xfs/913.out
-
-diff --git a/tests/xfs/913 b/tests/xfs/913
-new file mode 100755
-index 00000000..94681b02
---- /dev/null
-+++ b/tests/xfs/913
-@@ -0,0 +1,69 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2020, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# FS QA Test No. 913
-+#
-+# Make sure that the quota default grace period and maximum warning limits
-+# survive quotacheck.
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/quota
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os Linux
-+_require_quota
-+
-+rm -f $seqres.full
-+
-+# Format filesystem and set up quota limits
-+_scratch_mkfs > $seqres.full
-+_qmount_option "usrquota"
-+_scratch_mount >> $seqres.full
-+
-+$XFS_QUOTA_PROG -x -c 'timer -u 300m' $SCRATCH_MNT
-+$XFS_QUOTA_PROG -x -c 'state' $SCRATCH_MNT | grep 'grace time'
-+_scratch_unmount
-+
-+# Remount and check the limits
-+_scratch_mount >> $seqres.full
-+$XFS_QUOTA_PROG -x -c 'state' $SCRATCH_MNT | grep 'grace time'
-+_scratch_unmount
-+
-+# Run repair to force quota check
-+_scratch_xfs_repair >> $seqres.full 2>&1
-+
-+# Remount (this time to run quotacheck) and check the limits.  There's a bug
-+# in quotacheck where we would reset the ondisk default grace period to zero
-+# while the incore copy stays at whatever was read in prior to quotacheck.
-+# This will show up after the /next/ remount.
-+_scratch_mount >> $seqres.full
-+$XFS_QUOTA_PROG -x -c 'state' $SCRATCH_MNT | grep 'grace time'
-+_scratch_unmount
-+
-+# Remount and check the limits
-+_scratch_mount >> $seqres.full
-+$XFS_QUOTA_PROG -x -c 'state' $SCRATCH_MNT | grep 'grace time'
-+_scratch_unmount
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/913.out b/tests/xfs/913.out
-new file mode 100644
-index 00000000..ee989388
---- /dev/null
-+++ b/tests/xfs/913.out
-@@ -0,0 +1,13 @@
-+QA output created by 913
-+Blocks grace time: [0 days 05:00:00]
-+Inodes grace time: [0 days 05:00:00]
-+Realtime Blocks grace time: [0 days 05:00:00]
-+Blocks grace time: [0 days 05:00:00]
-+Inodes grace time: [0 days 05:00:00]
-+Realtime Blocks grace time: [0 days 05:00:00]
-+Blocks grace time: [0 days 05:00:00]
-+Inodes grace time: [0 days 05:00:00]
-+Realtime Blocks grace time: [0 days 05:00:00]
-+Blocks grace time: [0 days 05:00:00]
-+Inodes grace time: [0 days 05:00:00]
-+Realtime Blocks grace time: [0 days 05:00:00]
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 056072fb..87b3c75d 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -539,4 +539,5 @@
- 910 auto quick inobtcount
- 911 auto quick bigtime
- 912 auto quick label
-+913 auto quick quota
- 997 auto quick mount
+--D
