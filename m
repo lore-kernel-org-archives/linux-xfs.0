@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72D4CC3524E
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 21:03:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 001C2C3524E
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 21:03:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 467FA207FD
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 21:03:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C78EC24672
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 21:03:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="dxPiAHBJ"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="cIKU5Kpw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728055AbgBSVD3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1728002AbgBSVD3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Wed, 19 Feb 2020 16:03:29 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:35902 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:35878 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727497AbgBSVBF (ORCPT
+        with ESMTP id S1727326AbgBSVBF (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Feb 2020 16:01:05 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=evTY31DqHAylaVK14FCazUbyCyZrPs9uY1g9NsZBoKM=; b=dxPiAHBJehltKnpD8qKPNPHzgd
-        fDFY3ZJ2IfQ0BtnKgvMHHOni0kIjQacPkR9rBuMWuqOxtGE/x/IC96llEq83q89YOO+9VaZS7VRRJ
-        4Vw5duzFaIEZfSWVlIM0hQtG+JA7HNGfsVQog3sM/cgUn0oeRuSf9ZZjWAUWX4X30qbo7CTSdDpDT
-        2P5B+ia/SEIVJFRQgv5cnkZzp7+Evrvy2nWeVDyGE6vIC0OZyZIiwO3tpQMwTsUrBbB+446UvPJ0x
-        dz1QCHrOhH3IdM+NJH0386lk58gSIKsfezPebfCNm9JNiP2ITjLConCtSIY49Ifum+vaEhyAKJOLf
-        9DzUhs1A==;
+        bh=AGxKmS7KKU/Z5k56hEU84InQBf+iQs56/nj8mKasb1o=; b=cIKU5Kpwk9KlEscN5+Gci4tcco
+        8fMFrpvRO1llrlqdQvvSOB8mkMBDBnLacRPpiS5w/2OKm0SM3itVgEOsy32GFqgwD0qAalBAfMGtp
+        892Fh7q2TFf+HRQZMBqvy30yc/A03NbYuWqZsVPMT96O8/2I9DphDnpsQqJ9gaLpCQG5JcRma2aVE
+        FBV6wBWZajGvNNOZSac8JSYLYeM6H8T9pD5Uk/5J+NRNnXmY45F9EdhNj/SNL6CuaPvVxjN2rlkWH
+        Dr0yXdBHL0ft2mpFkhC3P9p130KZbQCvlyaN9xFgVakv2nHfpD/GAIG11j25ZEA401a1aWvvohV/l
+        QaSd9gNA==;
 Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j4WSv-0008Ur-D0; Wed, 19 Feb 2020 21:01:05 +0000
+        id 1j4WSu-0008TW-Tg; Wed, 19 Feb 2020 21:01:04 +0000
 From:   Matthew Wilcox <willy@infradead.org>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
@@ -40,10 +40,10 @@ Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         linux-btrfs@vger.kernel.org, linux-erofs@lists.ozlabs.org,
         linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
         cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
-        linux-xfs@vger.kernel.org
-Subject: [PATCH v7 18/24] ext4: Pass the inode to ext4_mpage_readpages
-Date:   Wed, 19 Feb 2020 13:00:57 -0800
-Message-Id: <20200219210103.32400-19-willy@infradead.org>
+        linux-xfs@vger.kernel.org, John Hubbard <jhubbard@nvidia.com>
+Subject: [PATCH v7 05/24] mm: Use readahead_control to pass arguments
+Date:   Wed, 19 Feb 2020 13:00:44 -0800
+Message-Id: <20200219210103.32400-6-willy@infradead.org>
 X-Mailer: git-send-email 2.21.1
 In-Reply-To: <20200219210103.32400-1-willy@infradead.org>
 References: <20200219210103.32400-1-willy@infradead.org>
@@ -56,71 +56,143 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
-This function now only uses the mapping argument to look up the inode,
-and both callers already have the inode, so just pass the inode instead
-of the mapping.
+In this patch, only between __do_page_cache_readahead() and
+read_pages(), but it will be extended in upcoming patches.  Also add
+the readahead_count() accessor.  The read_pages() function becomes aops
+centric, as this makes the most sense by the end of the patchset.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Reviewed-by: John Hubbard <jhubbard@nvidia.com>
 ---
- fs/ext4/ext4.h     | 2 +-
- fs/ext4/inode.c    | 4 ++--
- fs/ext4/readpage.c | 3 +--
- 3 files changed, 4 insertions(+), 5 deletions(-)
+ include/linux/pagemap.h | 17 +++++++++++++++++
+ mm/readahead.c          | 34 ++++++++++++++++++++--------------
+ 2 files changed, 37 insertions(+), 14 deletions(-)
 
-diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
-index 1570a0b51b73..bc1b34ba6eab 100644
---- a/fs/ext4/ext4.h
-+++ b/fs/ext4/ext4.h
-@@ -3278,7 +3278,7 @@ static inline void ext4_set_de_type(struct super_block *sb,
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index 24894b9b90c9..55fcea0249e6 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -638,6 +638,23 @@ static inline int add_to_page_cache(struct page *page,
+ 	return error;
  }
  
- /* readpages.c */
--extern int ext4_mpage_readpages(struct address_space *mapping,
-+extern int ext4_mpage_readpages(struct inode *inode,
- 		struct readahead_control *rac, struct page *page);
- extern int __init ext4_init_post_read_processing(void);
- extern void ext4_exit_post_read_processing(void);
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index d674c5f9066c..4f3703c1408d 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -3226,7 +3226,7 @@ static int ext4_readpage(struct file *file, struct page *page)
- 		ret = ext4_readpage_inline(inode, page);
++/*
++ * Readahead is of a block of consecutive pages.
++ */
++struct readahead_control {
++	struct file *file;
++	struct address_space *mapping;
++/* private: use the readahead_* accessors instead */
++	pgoff_t _index;
++	unsigned int _nr_pages;
++};
++
++/* The number of pages in this readahead block */
++static inline unsigned int readahead_count(struct readahead_control *rac)
++{
++	return rac->_nr_pages;
++}
++
+ static inline unsigned long dir_pages(struct inode *inode)
+ {
+ 	return (unsigned long)(inode->i_size + PAGE_SIZE - 1) >>
+diff --git a/mm/readahead.c b/mm/readahead.c
+index 9fcd4e32b62d..6a9d99229bd6 100644
+--- a/mm/readahead.c
++++ b/mm/readahead.c
+@@ -113,29 +113,32 @@ int read_cache_pages(struct address_space *mapping, struct list_head *pages,
  
- 	if (ret == -EAGAIN)
--		return ext4_mpage_readpages(page->mapping, NULL, page);
-+		return ext4_mpage_readpages(inode, NULL, page);
+ EXPORT_SYMBOL(read_cache_pages);
  
- 	return ret;
- }
-@@ -3239,7 +3239,7 @@ static void ext4_readahead(struct readahead_control *rac)
- 	if (ext4_has_inline_data(inode))
+-static void read_pages(struct address_space *mapping, struct file *filp,
+-		struct list_head *pages, unsigned int nr_pages, gfp_t gfp)
++static void read_pages(struct readahead_control *rac, struct list_head *pages,
++		gfp_t gfp)
+ {
++	const struct address_space_operations *aops = rac->mapping->a_ops;
+ 	struct blk_plug plug;
+ 	unsigned page_idx;
+ 
+-	if (!nr_pages)
++	if (!readahead_count(rac))
  		return;
  
--	ext4_mpage_readpages(rac->mapping, rac, NULL);
-+	ext4_mpage_readpages(inode, rac, NULL);
+ 	blk_start_plug(&plug);
+ 
+-	if (mapping->a_ops->readpages) {
+-		mapping->a_ops->readpages(filp, mapping, pages, nr_pages);
++	if (aops->readpages) {
++		aops->readpages(rac->file, rac->mapping, pages,
++				readahead_count(rac));
+ 		/* Clean up the remaining pages */
+ 		put_pages_list(pages);
+ 		goto out;
+ 	}
+ 
+-	for (page_idx = 0; page_idx < nr_pages; page_idx++) {
++	for (page_idx = 0; page_idx < readahead_count(rac); page_idx++) {
+ 		struct page *page = lru_to_page(pages);
+ 		list_del(&page->lru);
+-		if (!add_to_page_cache_lru(page, mapping, page->index, gfp))
+-			mapping->a_ops->readpage(filp, page);
++		if (!add_to_page_cache_lru(page, rac->mapping, page->index,
++				gfp))
++			aops->readpage(rac->file, page);
+ 		put_page(page);
+ 	}
+ 
+@@ -143,6 +146,7 @@ static void read_pages(struct address_space *mapping, struct file *filp,
+ 	blk_finish_plug(&plug);
+ 
+ 	BUG_ON(!list_empty(pages));
++	rac->_nr_pages = 0;
  }
  
- static void ext4_invalidatepage(struct page *page, unsigned int offset,
-diff --git a/fs/ext4/readpage.c b/fs/ext4/readpage.c
-index 66275f25235d..5761e9961682 100644
---- a/fs/ext4/readpage.c
-+++ b/fs/ext4/readpage.c
-@@ -221,13 +221,12 @@ static inline loff_t ext4_readpage_limit(struct inode *inode)
- 	return i_size_read(inode);
+ /*
+@@ -160,9 +164,13 @@ void __do_page_cache_readahead(struct address_space *mapping,
+ 	unsigned long end_index;	/* The last page we want to read */
+ 	LIST_HEAD(page_pool);
+ 	int page_idx;
+-	unsigned int nr_pages = 0;
+ 	loff_t isize = i_size_read(inode);
+ 	gfp_t gfp_mask = readahead_gfp_mask(mapping);
++	struct readahead_control rac = {
++		.mapping = mapping,
++		.file = filp,
++		._nr_pages = 0,
++	};
+ 
+ 	if (isize == 0)
+ 		return;
+@@ -185,9 +193,7 @@ void __do_page_cache_readahead(struct address_space *mapping,
+ 			 * contiguous pages before continuing with the next
+ 			 * batch.
+ 			 */
+-			read_pages(mapping, filp, &page_pool, nr_pages,
+-						gfp_mask);
+-			nr_pages = 0;
++			read_pages(&rac, &page_pool, gfp_mask);
+ 			continue;
+ 		}
+ 
+@@ -198,7 +204,7 @@ void __do_page_cache_readahead(struct address_space *mapping,
+ 		list_add(&page->lru, &page_pool);
+ 		if (page_idx == nr_to_read - lookahead_size)
+ 			SetPageReadahead(page);
+-		nr_pages++;
++		rac._nr_pages++;
+ 	}
+ 
+ 	/*
+@@ -206,7 +212,7 @@ void __do_page_cache_readahead(struct address_space *mapping,
+ 	 * uptodate then the caller will launch readpage again, and
+ 	 * will then handle the error.
+ 	 */
+-	read_pages(mapping, filp, &page_pool, nr_pages, gfp_mask);
++	read_pages(&rac, &page_pool, gfp_mask);
  }
  
--int ext4_mpage_readpages(struct address_space *mapping,
-+int ext4_mpage_readpages(struct inode *inode,
- 		struct readahead_control *rac, struct page *page)
- {
- 	struct bio *bio = NULL;
- 	sector_t last_block_in_bio = 0;
- 
--	struct inode *inode = mapping->host;
- 	const unsigned blkbits = inode->i_blkbits;
- 	const unsigned blocks_per_page = PAGE_SIZE >> blkbits;
- 	const unsigned blocksize = 1 << blkbits;
+ /*
 -- 
 2.25.0
 
