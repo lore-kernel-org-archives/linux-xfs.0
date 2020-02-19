@@ -2,71 +2,178 @@ Return-Path: <SRS0=u4TP=4I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.3 required=3.0 tests=DATE_IN_PAST_24_48,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92E62C11D05
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 15:10:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FD37C11D0B
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 15:14:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5B14A208CD
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 15:10:49 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rNJKV58k"
+	by mail.kernel.org (Postfix) with ESMTP id 23BB424670
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 15:14:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728359AbgBTPKt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Feb 2020 10:10:49 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:47078 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728176AbgBTPKs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Feb 2020 10:10:48 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=G2o7/2wQz4I2bSTa23Jz+2T7ehA7+Qh/DABLcJ7++Gg=; b=rNJKV58kH2Hi3xhQxkLMMzx8lV
-        RipoN223ZmXSatYqltHsRF6idpZbBmyf0GL9X+CH+Ks6Wc6k43+EjLitqhF4xF2b133YQH9ZG5EHi
-        9S2PEh7TBE1weivsELdxeyxuCZbNPOZ2MqqDqE2ZOhY+EIiIxbWx+hcdKp9lxQ0cgIgNcZkczih6K
-        9FdryOmrnuCo9AOOf+joSEfiifv0Cop4iRUq+zKJAofsbwZLBBoyX6i8M/2kx+6/2vGI/vLfIxQw1
-        2Ucmc3/Mow9vozyw390izexHNWNfoWyIucqRv+4NiQ+0nLq6AIcDZr0SBA/Y13JQUbUW+KN6Xz/8C
-        FKW5FgEA==;
-Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j4nTU-00007F-C8; Thu, 20 Feb 2020 15:10:48 +0000
-Date:   Thu, 20 Feb 2020 07:10:48 -0800
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Zi Yan <ziy@nvidia.com>
-Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v7 10/24] mm: Add readahead address space operation
-Message-ID: <20200220151048.GW24185@bombadil.infradead.org>
-References: <20200219210103.32400-1-willy@infradead.org>
- <20200219210103.32400-11-willy@infradead.org>
- <5D7CE6BD-FABD-4901-AEF0-E0F10FC00EB1@nvidia.com>
+        id S1728264AbgBTPOk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Feb 2020 10:14:40 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:10318 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728443AbgBTPOk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Feb 2020 10:14:40 -0500
+Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01KF98NP066741
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Feb 2020 10:14:39 -0500
+Received: from e06smtp05.uk.ibm.com (e06smtp05.uk.ibm.com [195.75.94.101])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2y8ubvamhe-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Feb 2020 10:14:38 -0500
+Received: from localhost
+        by e06smtp05.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.ibm.com>;
+        Thu, 20 Feb 2020 15:14:36 -0000
+Received: from b06cxnps4076.portsmouth.uk.ibm.com (9.149.109.198)
+        by e06smtp05.uk.ibm.com (192.168.101.135) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
+        Thu, 20 Feb 2020 15:14:35 -0000
+Received: from d06av25.portsmouth.uk.ibm.com (d06av25.portsmouth.uk.ibm.com [9.149.105.61])
+        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 01KFEYap53805128
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 20 Feb 2020 15:14:34 GMT
+Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 3C1B711C07B;
+        Thu, 20 Feb 2020 15:14:34 +0000 (GMT)
+Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 6242611C058;
+        Thu, 20 Feb 2020 15:14:33 +0000 (GMT)
+Received: from localhost.localdomain (unknown [9.199.61.89])
+        by d06av25.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Thu, 20 Feb 2020 15:14:33 +0000 (GMT)
+From:   Chandan Rajendra <chandan@linux.ibm.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs: ensure that the inode uid/gid match values match the icdinode ones
+Date:   Wed, 19 Feb 2020 20:17:59 +0530
+Organization: IBM
+In-Reply-To: <20200218210020.40846-2-hch@lst.de>
+References: <20200218210020.40846-1-hch@lst.de> <20200218210020.40846-2-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5D7CE6BD-FABD-4901-AEF0-E0F10FC00EB1@nvidia.com>
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+X-TM-AS-GCONF: 00
+x-cbid: 20022015-0020-0000-0000-000003ABF918
+X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
+x-cbparentid: 20022015-0021-0000-0000-00002203FF53
+Message-Id: <17408386.h8XSfVsPT9@localhost.localdomain>
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
+ definitions=2020-02-20_04:2020-02-19,2020-02-20 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 phishscore=0
+ spamscore=0 priorityscore=1501 mlxlogscore=626 bulkscore=0 malwarescore=0
+ lowpriorityscore=0 clxscore=1015 adultscore=0 mlxscore=0 suspectscore=1
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002200113
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 20, 2020 at 10:00:30AM -0500, Zi Yan wrote:
-> > +/* The index of the first page in this readahead block */
-> > +static inline unsigned int readahead_index(struct readahead_control *rac)
-> > +{
-> > +	return rac->_index;
-> > +}
+On Wednesday, February 19, 2020 2:30 AM Christoph Hellwig wrote: 
+> Instead of only synchronizing the uid/gid values in xfs_setup_inode,
+> ensure that they always match to prepare for removing the icdinode
+> fields.
+>
+
+The changes indeed keep the uid and gid values the same across icdinode and
+vfs inode.
+
+Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
+
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_inode_buf.c | 2 ++
+>  fs/xfs/xfs_icache.c           | 4 ++++
+>  fs/xfs/xfs_inode.c            | 8 ++++++--
+>  fs/xfs/xfs_iops.c             | 3 ---
+>  4 files changed, 12 insertions(+), 5 deletions(-)
 > 
-> rac->_index is pgoff_t, so readahead_index() should return the same type, right?
-> BTW, pgoff_t is unsigned long.
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index 8afacfe4be0a..cc4efd34843a 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -223,7 +223,9 @@ xfs_inode_from_disk(
+> 
+>  	to->di_format = from->di_format;
+>  	to->di_uid = be32_to_cpu(from->di_uid);
+> +	inode->i_uid = xfs_uid_to_kuid(to->di_uid);
+>  	to->di_gid = be32_to_cpu(from->di_gid);
+> +	inode->i_gid = xfs_gid_to_kgid(to->di_gid);
+>  	to->di_flushiter = be16_to_cpu(from->di_flushiter);
+> 
+>  	/*
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index 8dc2e5414276..a7be7a9e5c1a 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -289,6 +289,8 @@ xfs_reinit_inode(
+>  	uint64_t	version = inode_peek_iversion(inode);
+>  	umode_t		mode = inode->i_mode;
+>  	dev_t		dev = inode->i_rdev;
+> +	kuid_t		uid = inode->i_uid;
+> +	kgid_t		gid = inode->i_gid;
+> 
+>  	error = inode_init_always(mp->m_super, inode);
+> 
+> @@ -297,6 +299,8 @@ xfs_reinit_inode(
+>  	inode_set_iversion_queried(inode, version);
+>  	inode->i_mode = mode;
+>  	inode->i_rdev = dev;
+> +	inode->i_uid = uid;
+> +	inode->i_gid = gid;
+>  	return error;
+>  }
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index c5077e6326c7..938b0943bd95 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -812,15 +812,19 @@ xfs_ialloc(
+> 
+>  	inode->i_mode = mode;
+>  	set_nlink(inode, nlink);
+> -	ip->i_d.di_uid = xfs_kuid_to_uid(current_fsuid());
+> -	ip->i_d.di_gid = xfs_kgid_to_gid(current_fsgid());
+> +	inode->i_uid = current_fsuid();
+> +	ip->i_d.di_uid = xfs_kuid_to_uid(inode->i_uid);
+>  	inode->i_rdev = rdev;
+>  	ip->i_d.di_projid = prid;
+> 
+>  	if (pip && XFS_INHERIT_GID(pip)) {
+> +		inode->i_gid = VFS_I(pip)->i_gid;
+>  		ip->i_d.di_gid = pip->i_d.di_gid;
+>  		if ((VFS_I(pip)->i_mode & S_ISGID) && S_ISDIR(mode))
+>  			inode->i_mode |= S_ISGID;
+> +	} else {
+> +		inode->i_gid = current_fsgid();
+> +		ip->i_d.di_gid = xfs_kgid_to_gid(inode->i_gid);
+>  	}
+> 
+>  	/*
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 81f2f93caec0..b818b261918f 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -1304,9 +1304,6 @@ xfs_setup_inode(
+>  	/* make the inode look hashed for the writeback code */
+>  	inode_fake_hash(inode);
+> 
+> -	inode->i_uid    = xfs_uid_to_kuid(ip->i_d.di_uid);
+> -	inode->i_gid    = xfs_gid_to_kgid(ip->i_d.di_gid);
+> -
+>  	i_size_write(inode, ip->i_d.di_size);
+>  	xfs_diflags_to_iflags(inode, ip);
+> 
+> 
 
-Oh my goodness!  Thank you for spotting that.  Fortunately, it's only
-currently used by tracepoints, so it wasn't causing any trouble, but
-that's a nasty landmine to leave lying around.  Fixed:
 
-static inline pgoff_t readahead_index(struct readahead_control *rac)
+-- 
+chandan
+
+
 
