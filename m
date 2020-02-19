@@ -2,114 +2,147 @@ Return-Path: <SRS0=TUUv=4H=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C04CDC34056
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 17:11:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86F41C34047
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 17:32:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 996992465D
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 17:11:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5CD9C20801
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 17:32:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="S3YR9Fa9"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cW+nfZxb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726582AbgBSRL4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Feb 2020 12:11:56 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:44904 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726518AbgBSRL4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Feb 2020 12:11:56 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01JH9H9F040237;
-        Wed, 19 Feb 2020 17:11:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=zc5ALFd51qBvGVeDg4kRstYkwtJt2bDlZPl3iWWanck=;
- b=S3YR9Fa9MWJ60CYeLdg8oyfnFxcq63h6owUkGtTAMvYOfy0r6TE81DPEUHntJNINGllZ
- Fuj3qqm3D5kIchNDtl9Rs/ud5Z2TIBsEddJpDSiQB5QT8skC2brybXMl8AEzZdRNaR0e
- dVI2p4OyoflRT42QCkx8Xm00CwOrkcGJEXKhdITDPeh8HtaDxlDYmid8vdvA5igJjj3J
- ecUbCqMNgfzDxVdrtUhodJFSpvXJS5p06E/RZGjwLUa04D2OHPxy2U2hwCdfLQwOwKG1
- v3IQsxhNt9g7Be/YXGXXZTt2uJK2aMki0IKaPoaPQVnWknFwbgy+JyhyOMEEs1di7X2K lA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2y8udkcja3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 19 Feb 2020 17:11:50 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01JH7bNH098976;
-        Wed, 19 Feb 2020 17:09:49 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 2y8ud1jqqp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 19 Feb 2020 17:09:49 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01JH9l81024176;
-        Wed, 19 Feb 2020 17:09:47 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 19 Feb 2020 09:09:47 -0800
-Date:   Wed, 19 Feb 2020 09:09:45 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Luis Chamberlain <mcgrof@kernel.org>
-Cc:     Richard Wareing <rwareing@fb.com>, linux-xfs@vger.kernel.org,
-        Anthony Iliopoulos <ailiopoulos@suse.de>
-Subject: Re: Modern uses of CONFIG_XFS_RT
-Message-ID: <20200219170945.GN9506@magnolia>
-References: <20200219135715.GZ30113@42.do-not-panic.com>
- <20200219143227.aavgzkbuazttpwky@andromeda>
- <20200219143824.GR11244@42.do-not-panic.com>
+        id S1726558AbgBSRcT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Feb 2020 12:32:19 -0500
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:44511 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726551AbgBSRcS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Feb 2020 12:32:18 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1582133537;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=6EAIGhYQbY9GEvFaHNboMfRJuKFkwqgHovRFuDUE6uU=;
+        b=cW+nfZxbh1t0QgdHSQ96bIf7YUNFA4Pewh0S5xbRfY342dGutaEzON70Ju41XpREqJNSXQ
+        vURJ3OQQ1xlNfp2xJllC9kA46OucyIOq9x9eNE0u7tVV81nyjxowbcAjfLrgkDbe/05/lg
+        8jvGV4I23FAH1SQL1WFfA38v88G6pb4=
+Received: from mail-vs1-f69.google.com (mail-vs1-f69.google.com
+ [209.85.217.69]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-230-Sp8Q-kqHOZaAzyhuE2L4pw-1; Wed, 19 Feb 2020 12:32:12 -0500
+X-MC-Unique: Sp8Q-kqHOZaAzyhuE2L4pw-1
+Received: by mail-vs1-f69.google.com with SMTP id t3so228445vsa.18
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Feb 2020 09:32:12 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=6EAIGhYQbY9GEvFaHNboMfRJuKFkwqgHovRFuDUE6uU=;
+        b=YxzoHkkDofDPRZsRrt9m3xe75vvWkg3QHTlxTOhH5CHUVPH9qgpxi9PYiuRFUwK2yI
+         ajmTnZq5ds673qLi81wqEjzQO/KJEr9M/cQflysH3WnF1raICp2ak8/qmBuehSogqaWF
+         6jatxq8djDdX7oJbC0m3rBM9tedqbKLZy7tOn+g6lR6wituhSi+Lqsjd/3ICHjG3L8Wo
+         d3mCmlyCfmUKfDIhxRuXMawdxbL/urfmDtbj3Nbxj2PEnnEmBBMKhc+dHXwES9JJQxbB
+         l7Dy3U6NQBuS4eJJFPU/0iHG/bLuxgfAvX5IN32Qu0ilXqIwxuyIoe4jCGbniBPw0UtF
+         t40A==
+X-Gm-Message-State: APjAAAX437vGGGKOXIlB3RH6LRjF4/TWOxpspcgoxkYSM4qzDuHy1IrQ
+        9qqrvmIsMUAj4N8nGYwXwQntfuCSDhxTYlOHmn8HUFmmbAExHA2aSkaR1yHI8AeFwqXlJPx+zIQ
+        g+mg52uu6mvXVJmGkIV1oobGD1/bzTWsghiTu
+X-Received: by 2002:a05:6102:8f:: with SMTP id t15mr14138850vsp.77.1582133529680;
+        Wed, 19 Feb 2020 09:32:09 -0800 (PST)
+X-Google-Smtp-Source: APXvYqxRBkqHKBl0nWAPEZvvNNbeJsr9XEgAC3PcRdlR/Gm+M7CkYH8fP++LthIZEMayhAAw6pcoryIAc9a+VpDwnNo=
+X-Received: by 2002:a05:6102:8f:: with SMTP id t15mr14138830vsp.77.1582133529466;
+ Wed, 19 Feb 2020 09:32:09 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200219143824.GR11244@42.do-not-panic.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9536 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0
- mlxlogscore=999 suspectscore=0 adultscore=0 spamscore=0 mlxscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002190130
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9536 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 suspectscore=0
- spamscore=0 priorityscore=1501 adultscore=0 mlxscore=0 clxscore=1011
- malwarescore=0 mlxlogscore=999 phishscore=0 impostorscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002190130
+References: <20200214185942.1147742-1-preichl@redhat.com> <20200217133521.GD31012@infradead.org>
+ <20200219044821.GK9506@magnolia>
+In-Reply-To: <20200219044821.GK9506@magnolia>
+From:   Pavel Reichl <preichl@redhat.com>
+Date:   Wed, 19 Feb 2020 18:31:58 +0100
+Message-ID: <CAJc7PzU48krFoaDyovAAeTc4u_-GOhUVWABf-Tj4ZNFL_-+_fg@mail.gmail.com>
+Subject: Re: [PATCH v5 1/4] xfs: Refactor xfs_isilocked()
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 19, 2020 at 02:38:24PM +0000, Luis Chamberlain wrote:
-> On Wed, Feb 19, 2020 at 03:32:27PM +0100, Carlos Maiolino wrote:
-> > On Wed, Feb 19, 2020 at 01:57:15PM +0000, Luis Chamberlain wrote:
-> > > I hear some folks still use CONFIG_XFS_RT, I was curious what was the
-> > > actual modern typical use case for it. I thought this was somewhat
-> > > realted to DAX use but upon a quick code inspection I see direct
-> > > realtionship.
-> > 
-> > Hm, not sure if there is any other use other than it's original purpose of
-> > reducing latency jitters. Also XFS_RT dates way back from the day DAX was even a
-> > thing. But anyway, I don't have much experience using XFS_RT by myself, and I
-> > probably raised more questions than answers to yours :P
-> 
-> What about another question, this would certainly drive the users out of
-> the corners: can we remove it upstream?
+On Wed, Feb 19, 2020 at 5:48 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> On Mon, Feb 17, 2020 at 05:35:21AM -0800, Christoph Hellwig wrote:
+> > On Fri, Feb 14, 2020 at 07:59:39PM +0100, Pavel Reichl wrote:
+> > > Refactor xfs_isilocked() to use newly introduced __xfs_rwsem_islocked().
+> > > __xfs_rwsem_islocked() is a helper function which encapsulates checking
+> > > state of rw_semaphores hold by inode.
+> > >
+> > > Signed-off-by: Pavel Reichl <preichl@redhat.com>
+> > > Suggested-by: Dave Chinner <dchinner@redhat.com>
+> > > Suggested-by: Eric Sandeen <sandeen@redhat.com>
+> > > ---
+> > >  fs/xfs/xfs_inode.c | 54 ++++++++++++++++++++++++++++++++--------------
+> > >  fs/xfs/xfs_inode.h |  2 +-
+> > >  2 files changed, 39 insertions(+), 17 deletions(-)
+> > >
+> > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > > index c5077e6326c7..3d28c4790231 100644
+> > > --- a/fs/xfs/xfs_inode.c
+> > > +++ b/fs/xfs/xfs_inode.c
+> > > @@ -345,32 +345,54 @@ xfs_ilock_demote(
+> > >  }
+> > >
+> > >  #if defined(DEBUG) || defined(XFS_WARN)
+> > > -int
+> > > +static inline bool
+> > > +__xfs_rwsem_islocked(
+> > > +   struct rw_semaphore     *rwsem,
+> > > +   bool                    shared,
+> > > +   bool                    excl)
+> > > +{
+> > > +   bool locked = false;
+> > > +
+> > > +   if (!rwsem_is_locked(rwsem))
+> > > +           return false;
+> > > +
+> > > +   if (!debug_locks)
+> > > +           return true;
+> > > +
+> > > +   if (shared)
+> > > +           locked = lockdep_is_held_type(rwsem, 0);
+> > > +
+> > > +   if (excl)
+> > > +           locked |= lockdep_is_held_type(rwsem, 1);
+> > > +
+> > > +   return locked;
+> >
+> > This could use some comments explaining the logic, especially why we
+> > need the shared and excl flags, which seems very confusing given that
+> > a lock can be held either shared or exclusive, but not neither and not
+> > both.
+>
+> Yes, this predicate should document that callers are allowed to pass in
+> shared==true and excl==true when the caller wants to assert that either
+> lock type (shared or excl) of a given lock class (e.g. iolock) are held.
+>
+> --D
+>
 
-My DVR and TV still use it to record video data.
+Hello,
 
-I've also been pushing the realtime volume for persistent memory devices
-because you can guarantee that all the expensive pmem gets used for data
-storage, that the extents will always be perfectly aligned to large page
-sizes, and that fs metadata will never defeat that alignment guarantee.
+thanks for the comments.
 
-(Granted now they're arguing that having a separate storage device for
-metadata will inflate the BOM cost unacceptably, and wouldn't it be
-cheaper if we just redesigned XFS to have 2MB blocksize, but I'm not
-buying that because the next thing they'll want when pmem becomes cheap
-is 1GB blocksize for Big Data applications. :P)
+Would code comment preceding the definition of __xfs_rwsem_islocked()
+work for you?
 
---D
+Something like:
 
->   Luis
+/* This is a helper function that encapsulates checking the state of
+ * rw semaphores.
+ *
+ * if shared == true AND excl == true then function returns true if either
+ * lock type (shared or excl) of a given semaphore are held.
+ */
+
