@@ -2,357 +2,235 @@ Return-Path: <SRS0=TUUv=4H=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87235C3404C
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 01:32:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48E7FC3404D
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 02:02:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 569C72465D
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 01:32:38 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="D1CWU0QJ"
+	by mail.kernel.org (Postfix) with ESMTP id 2C0232465A
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 02:02:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727811AbgBSBcd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Feb 2020 20:32:33 -0500
-Received: from hqnvemgate25.nvidia.com ([216.228.121.64]:3956 "EHLO
-        hqnvemgate25.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726482AbgBSBcd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Feb 2020 20:32:33 -0500
-Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate25.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5e4c900f0000>; Tue, 18 Feb 2020 17:31:59 -0800
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate102.nvidia.com (PGP Universal service);
-  Tue, 18 Feb 2020 17:32:31 -0800
-X-PGP-Universal: processed;
-        by hqpgpgate102.nvidia.com on Tue, 18 Feb 2020 17:32:31 -0800
-Received: from [10.110.48.28] (10.124.1.5) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Wed, 19 Feb
- 2020 01:32:31 +0000
-Subject: Re: [PATCH v6 09/19] mm: Add page_cache_readahead_limit
-To:     Matthew Wilcox <willy@infradead.org>,
-        <linux-fsdevel@vger.kernel.org>
-CC:     <linux-mm@kvack.org>, <linux-kernel@vger.kernel.org>,
-        <linux-btrfs@vger.kernel.org>, <linux-erofs@lists.ozlabs.org>,
-        <linux-ext4@vger.kernel.org>,
-        <linux-f2fs-devel@lists.sourceforge.net>,
-        <cluster-devel@redhat.com>, <ocfs2-devel@oss.oracle.com>,
-        <linux-xfs@vger.kernel.org>
-References: <20200217184613.19668-1-willy@infradead.org>
- <20200217184613.19668-16-willy@infradead.org>
-X-Nvconfidentiality: public
-From:   John Hubbard <jhubbard@nvidia.com>
-Message-ID: <1263603d-f446-c447-2eac-697d105fa76c@nvidia.com>
-Date:   Tue, 18 Feb 2020 17:32:31 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
+        id S1728039AbgBSCCE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Feb 2020 21:02:04 -0500
+Received: from sandeen.net ([63.231.237.45]:49140 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727811AbgBSCCE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Feb 2020 21:02:04 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id A20772A76;
+        Tue, 18 Feb 2020 20:01:48 -0600 (CST)
+Subject: Re: [RFC PATCH] xfs: make sure our default quota warning limits and
+ grace periods survive quotacheck
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        Eryu Guan <guaneryu@gmail.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
+References: <20200219003423.GB9511@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <5fe8f366-3fdd-6a0e-b39c-e7e2753e7c6f@sandeen.net>
+Date:   Tue, 18 Feb 2020 20:02:02 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.5.0
 MIME-Version: 1.0
-In-Reply-To: <20200217184613.19668-16-willy@infradead.org>
-X-Originating-IP: [10.124.1.5]
-X-ClientProxiedBy: HQMAIL111.nvidia.com (172.20.187.18) To
- HQMAIL107.nvidia.com (172.20.187.13)
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20200219003423.GB9511@magnolia>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1582075919; bh=a8ZomntyDZQd4T0ETmKn7kyy8sPKQZmX4XFar/4v0t8=;
-        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
-         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
-         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
-         Content-Transfer-Encoding;
-        b=D1CWU0QJZ/vJUMktO/sgLa0NnHUxAzBi1kB3pVWooMjgO2jXs6q5zixf/wAqu/IOj
-         hr6pMYPnaPYV3Ou3y08ljYOt3n9jfzxdK6636RtEz2ipjrYs3b4hz65TVfyMrWizE8
-         BxPE/Qh4U52+XVl1w9Y1JqrHWmAs8zmb1n5IGtB0T/8XlxD4CpXKwc33AZc13ZXKhr
-         j3FFEWf0HWoIz+2Nn/3nFVgupnlhaFia1orj1/9DKmtEAFVKf0ZH9VZvLLwMWQNW7A
-         KAP7iN3AiTFahALL3seMXUw0/Tn+K2lQR+L66VGAqWlcnZtVglzmkuRCBxmUoAyDSr
-         JDYpNY+TxVunw==
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/17/20 10:45 AM, Matthew Wilcox wrote:
-> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+On 2/18/20 6:34 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> ext4 and f2fs have duplicated the guts of the readahead code so
-> they can read past i_size.  Instead, separate out the guts of the
-> readahead code so they can call it directly.
+> Make sure that the default quota grace period and maximum warning limits
+> set by the administrator survive quotacheck.
 > 
-> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/ext4/verity.c        | 35 ++---------------------
->  fs/f2fs/verity.c        | 35 ++---------------------
->  include/linux/pagemap.h |  4 +++
->  mm/readahead.c          | 61 +++++++++++++++++++++++++++++------------
->  4 files changed, 52 insertions(+), 83 deletions(-)
+> This is the testcase to go with 'xfs: preserve default grace interval
+> during quotacheck', though Eric and I haven't figured out how we're
+> going to land that one...
 
+This probably could be a generic test, though I don't know how we're supposed
+to handle the test matrix of all the different versions, types, and applications
+which can implement or manage quota... I guess since it's an xfs specific fix
+perhaps an xfs-specific test is reasonable.
 
-Just some minor ideas below, mostly documentation, so:
-
-    Reviewed-by: John Hubbard <jhubbard@nvidia.com>
-
+> ---
+>  tests/xfs/913     |   69 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/913.out |   13 ++++++++++
+>  tests/xfs/group   |    1 +
+>  3 files changed, 83 insertions(+)
+>  create mode 100755 tests/xfs/913
+>  create mode 100644 tests/xfs/913.out
 > 
-> diff --git a/fs/ext4/verity.c b/fs/ext4/verity.c
-> index dc5ec724d889..f6e0bf05933e 100644
-> --- a/fs/ext4/verity.c
-> +++ b/fs/ext4/verity.c
-> @@ -342,37 +342,6 @@ static int ext4_get_verity_descriptor(struct inode *inode, void *buf,
->  	return desc_size;
->  }
->  
-> -/*
-> - * Prefetch some pages from the file's Merkle tree.
-> - *
-> - * This is basically a stripped-down version of __do_page_cache_readahead()
-> - * which works on pages past i_size.
-> - */
-> -static void ext4_merkle_tree_readahead(struct address_space *mapping,
-> -				       pgoff_t start_index, unsigned long count)
-> -{
-> -	LIST_HEAD(pages);
-> -	unsigned int nr_pages = 0;
-> -	struct page *page;
-> -	pgoff_t index;
-> -	struct blk_plug plug;
-> -
-> -	for (index = start_index; index < start_index + count; index++) {
-> -		page = xa_load(&mapping->i_pages, index);
-> -		if (!page || xa_is_value(page)) {
-> -			page = __page_cache_alloc(readahead_gfp_mask(mapping));
-> -			if (!page)
-> -				break;
-> -			page->index = index;
-> -			list_add(&page->lru, &pages);
-> -			nr_pages++;
-> -		}
-> -	}
-> -	blk_start_plug(&plug);
-> -	ext4_mpage_readpages(mapping, &pages, NULL, nr_pages, true);
-> -	blk_finish_plug(&plug);
-> -}
-> -
->  static struct page *ext4_read_merkle_tree_page(struct inode *inode,
->  					       pgoff_t index,
->  					       unsigned long num_ra_pages)
-> @@ -386,8 +355,8 @@ static struct page *ext4_read_merkle_tree_page(struct inode *inode,
->  		if (page)
->  			put_page(page);
->  		else if (num_ra_pages > 1)
-> -			ext4_merkle_tree_readahead(inode->i_mapping, index,
-> -						   num_ra_pages);
-> +			page_cache_readahead_limit(inode->i_mapping, NULL,
-> +					index, LONG_MAX, num_ra_pages, 0);
-
-
-LONG_MAX seems bold at first, but then again I can't think of anything smaller 
-that makes any sense, and the previous code didn't have a limit either...OK.
-
-I also wondered about the NULL file parameter, and wonder if we're stripping out
-information that is needed for authentication, given that that's what the newly
-written kerneldoc says the "file" arg is for. But it seems that if we're this 
-deep in the fs code's read routines, file system authentication has long since 
-been addressed.
-
-Any actually I don't yet (still working through the patches) see any authentication,
-so maybe that parameter will turn out to be unnecessary.
-
-Anyway, It's nice to see this factored out into a single routine.
-
-
->  		page = read_mapping_page(inode->i_mapping, index, NULL);
->  	}
->  	return page;
-> diff --git a/fs/f2fs/verity.c b/fs/f2fs/verity.c
-> index d7d430a6f130..71a3e36721fa 100644
-> --- a/fs/f2fs/verity.c
-> +++ b/fs/f2fs/verity.c
-> @@ -222,37 +222,6 @@ static int f2fs_get_verity_descriptor(struct inode *inode, void *buf,
->  	return size;
->  }
->  
-> -/*
-> - * Prefetch some pages from the file's Merkle tree.
-> - *
-> - * This is basically a stripped-down version of __do_page_cache_readahead()
-> - * which works on pages past i_size.
-> - */
-> -static void f2fs_merkle_tree_readahead(struct address_space *mapping,
-> -				       pgoff_t start_index, unsigned long count)
-> -{
-> -	LIST_HEAD(pages);
-> -	unsigned int nr_pages = 0;
-> -	struct page *page;
-> -	pgoff_t index;
-> -	struct blk_plug plug;
-> -
-> -	for (index = start_index; index < start_index + count; index++) {
-> -		page = xa_load(&mapping->i_pages, index);
-> -		if (!page || xa_is_value(page)) {
-> -			page = __page_cache_alloc(readahead_gfp_mask(mapping));
-> -			if (!page)
-> -				break;
-> -			page->index = index;
-> -			list_add(&page->lru, &pages);
-> -			nr_pages++;
-> -		}
-> -	}
-> -	blk_start_plug(&plug);
-> -	f2fs_mpage_readpages(mapping, &pages, NULL, nr_pages, true);
-> -	blk_finish_plug(&plug);
-> -}
-> -
->  static struct page *f2fs_read_merkle_tree_page(struct inode *inode,
->  					       pgoff_t index,
->  					       unsigned long num_ra_pages)
-> @@ -266,8 +235,8 @@ static struct page *f2fs_read_merkle_tree_page(struct inode *inode,
->  		if (page)
->  			put_page(page);
->  		else if (num_ra_pages > 1)
-> -			f2fs_merkle_tree_readahead(inode->i_mapping, index,
-> -						   num_ra_pages);
-> +			page_cache_readahead_limit(inode->i_mapping, NULL,
-> +					index, LONG_MAX, num_ra_pages, 0);
->  		page = read_mapping_page(inode->i_mapping, index, NULL);
->  	}
->  	return page;
-> diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-> index bd4291f78f41..4f36c06d064d 100644
-> --- a/include/linux/pagemap.h
-> +++ b/include/linux/pagemap.h
-> @@ -389,6 +389,10 @@ extern struct page * read_cache_page_gfp(struct address_space *mapping,
->  				pgoff_t index, gfp_t gfp_mask);
->  extern int read_cache_pages(struct address_space *mapping,
->  		struct list_head *pages, filler_t *filler, void *data);
-> +void page_cache_readahead_limit(struct address_space *mapping,
-> +		struct file *file, pgoff_t offset, pgoff_t end_index,
-> +		unsigned long nr_to_read, unsigned long lookahead_size);
+> diff --git a/tests/xfs/913 b/tests/xfs/913
+> new file mode 100755
+> index 00000000..94681b02
+> --- /dev/null
+> +++ b/tests/xfs/913
+> @@ -0,0 +1,69 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0-or-later
+> +# Copyright (c) 2020, Oracle and/or its affiliates.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 913
+> +#
+> +# Make sure that the quota default grace period and maximum warning limits
+> +# survive quotacheck.
 > +
->  
->  static inline struct page *read_mapping_page(struct address_space *mapping,
->  				pgoff_t index, void *data)
-> diff --git a/mm/readahead.c b/mm/readahead.c
-> index 975ff5e387be..94d499cfb657 100644
-> --- a/mm/readahead.c
-> +++ b/mm/readahead.c
-> @@ -142,35 +142,38 @@ static void read_pages(struct readahead_control *rac, struct list_head *pages)
->  	blk_finish_plug(&plug);
->  }
->  
-> -/*
-> - * __do_page_cache_readahead() actually reads a chunk of disk.  It allocates
-> - * the pages first, then submits them for I/O. This avoids the very bad
-> - * behaviour which would occur if page allocations are causing VM writeback.
-> - * We really don't want to intermingle reads and writes like that.
-> +/**
-> + * page_cache_readahead_limit - Start readahead beyond a file's i_size.
-
-
-Maybe: 
-
-    "Start readahead to a caller-specified end point" ?
-
-(It's only *potentially* beyond files's i_size.)
-
-
-> + * @mapping: File address space.
-> + * @file: This instance of the open file; used for authentication.
-> + * @offset: First page index to read.
-> + * @end_index: The maximum page index to read.
-> + * @nr_to_read: The number of pages to read.
-
-
-How about:
-
-    "The number of pages to read, as long as end_index is not exceeded."
-
-
-> + * @lookahead_size: Where to start the next readahead.
-
-
-Pre-existing, but...it's hard to understand how a size is "where to start".
-Should we rename this arg?
-
-> + *
-> + * This function is for filesystems to call when they want to start
-> + * readahead potentially beyond a file's stated i_size.  If you want
-> + * to start readahead on a normal file, you probably want to call
-> + * page_cache_async_readahead() or page_cache_sync_readahead() instead.
-> + *
-> + * Context: File is referenced by caller.  Mutexes may be held by caller.
-> + * May sleep, but will not reenter filesystem to reclaim memory.
-
-
-In fact, can we say "must not reenter filesystem"? 
-
-
->   */
-> -void __do_page_cache_readahead(struct address_space *mapping,
-> -		struct file *filp, pgoff_t offset, unsigned long nr_to_read,
-> -		unsigned long lookahead_size)
-> +void page_cache_readahead_limit(struct address_space *mapping,
-> +		struct file *file, pgoff_t offset, pgoff_t end_index,
-> +		unsigned long nr_to_read, unsigned long lookahead_size)
->  {
-> -	struct inode *inode = mapping->host;
-> -	unsigned long end_index;	/* The last page we want to read */
->  	LIST_HEAD(page_pool);
->  	unsigned long i;
-> -	loff_t isize = i_size_read(inode);
->  	gfp_t gfp_mask = readahead_gfp_mask(mapping);
->  	bool use_list = mapping->a_ops->readpages;
->  	struct readahead_control rac = {
->  		.mapping = mapping,
-> -		.file = filp,
-> +		.file = file,
->  		._start = offset,
->  		._nr_pages = 0,
->  	};
->  
-> -	if (isize == 0)
-> -		return;
-> -
-> -	end_index = ((isize - 1) >> PAGE_SHIFT);
-> -
->  	/*
->  	 * Preallocate as many pages as we will need.
->  	 */
-> @@ -225,6 +228,30 @@ void __do_page_cache_readahead(struct address_space *mapping,
->  		read_pages(&rac, &page_pool);
->  	BUG_ON(!list_empty(&page_pool));
->  }
-> +EXPORT_SYMBOL_GPL(page_cache_readahead_limit);
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
 > +
-> +/*
-> + * __do_page_cache_readahead() actually reads a chunk of disk.  It allocates
-> + * the pages first, then submits them for I/O. This avoids the very bad
-> + * behaviour which would occur if page allocations are causing VM writeback.
-> + * We really don't want to intermingle reads and writes like that.
-> + */
-> +void __do_page_cache_readahead(struct address_space *mapping,
-> +		struct file *file, pgoff_t offset, unsigned long nr_to_read,
-> +		unsigned long lookahead_size)
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1    # failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
 > +{
-> +	struct inode *inode = mapping->host;
-> +	unsigned long end_index;	/* The last page we want to read */
-> +	loff_t isize = i_size_read(inode);
-> +
-> +	if (isize == 0)
-> +		return;
-> +
-> +	end_index = ((isize - 1) >> PAGE_SHIFT);
-> +
-> +	page_cache_readahead_limit(mapping, file, offset, end_index,
-> +			nr_to_read, lookahead_size);
+> +	cd /
+> +	rm -f $tmp.*
 > +}
->  
->  /*
->   * Chunk the readahead into 2 megabyte units, so that we don't pin too much
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +. ./common/quota
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_supported_os Linux
+> +_require_quota
+> +
+> +rm -f $seqres.full
+> +
+> +# Format filesystem and set up quota limits
+> +_scratch_mkfs > $seqres.full
+> +_qmount_option "usrquota"
+> +_scratch_mount >> $seqres.full
+> +
+> +$XFS_QUOTA_PROG -x -c 'timer -u 300m' $SCRATCH_MNT
+> +$XFS_QUOTA_PROG -x -c 'state' $SCRATCH_MNT | grep 'grace time'
+> +_scratch_unmount
+
+ok as long as you're only doing one quota type and it's the user
+quota type this should survive future changes.
+
+Hm, actually I wonder if it'd be best to explicitly call "state -u"
+because state_f() does:
+
+        if (!type)
+                type = XFS_USER_QUOTA | XFS_GROUP_QUOTA | XFS_PROJ_QUOTA;
+
+and that bitmask'd type(s) gets eventually fed to xfsquotactl -> xtype_to_qtype
+which really only handles one quota type, not a bitmask, and if more than
+one is set it gives up and returns zero which magically happens to be
+XFS_USER_QUOTA.  (whee!)
+
+tl;dr: "state -u" might be more deterministic in the long run.
+
+> +
+> +# Remount and check the limits
+> +_scratch_mount >> $seqres.full
+> +$XFS_QUOTA_PROG -x -c 'state' $SCRATCH_MNT | grep 'grace time'
+> +_scratch_unmount
+> +
+> +# Run repair to force quota check
+> +_scratch_xfs_repair >> $seqres.full 2>&1
+> +
+> +# Remount (this time to run quotacheck) and check the limits.  There's a bug
+> +# in quotacheck where we would reset the ondisk default grace period to zero
+> +# while the incore copy stays at whatever was read in prior to quotacheck.
+> +# This will show up after the /next/ remount.
+> +_scratch_mount >> $seqres.full
+> +$XFS_QUOTA_PROG -x -c 'state' $SCRATCH_MNT | grep 'grace time'
+> +_scratch_unmount
+> +
+> +# Remount and check the limits
+> +_scratch_mount >> $seqres.full
+> +$XFS_QUOTA_PROG -x -c 'state' $SCRATCH_MNT | grep 'grace time'
+> +_scratch_unmount
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/913.out b/tests/xfs/913.out
+> new file mode 100644
+> index 00000000..ee989388
+> --- /dev/null
+> +++ b/tests/xfs/913.out
+> @@ -0,0 +1,13 @@
+> +QA output created by 913
+> +Blocks grace time: [0 days 05:00:00]
+> +Inodes grace time: [0 days 05:00:00]
+> +Realtime Blocks grace time: [0 days 05:00:00]
+> +Blocks grace time: [0 days 05:00:00]
+> +Inodes grace time: [0 days 05:00:00]
+> +Realtime Blocks grace time: [0 days 05:00:00]
+> +Blocks grace time: [0 days 05:00:00]
+> +Inodes grace time: [0 days 05:00:00]
+> +Realtime Blocks grace time: [0 days 05:00:00]
+> +Blocks grace time: [0 days 05:00:00]
+> +Inodes grace time: [0 days 05:00:00]
+> +Realtime Blocks grace time: [0 days 05:00:00]
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index 056072fb..87b3c75d 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -539,4 +539,5 @@
+>  910 auto quick inobtcount
+>  911 auto quick bigtime
+>  912 auto quick label
+> +913 auto quick quota
+>  997 auto quick mount
 > 
-
-
-thanks,
--- 
-John Hubbard
-NVIDIA
