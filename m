@@ -6,63 +6,53 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE6F5C34056
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 18:43:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AA4AC34056
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 18:45:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8FFF524670
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 18:43:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B32724670
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 18:45:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726613AbgBSSnF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Feb 2020 13:43:05 -0500
-Received: from verein.lst.de ([213.95.11.211]:45846 "EHLO verein.lst.de"
+        id S1726613AbgBSSpX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Feb 2020 13:45:23 -0500
+Received: from verein.lst.de ([213.95.11.211]:45855 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726609AbgBSSnF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Feb 2020 13:43:05 -0500
+        id S1726609AbgBSSpW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Feb 2020 13:45:22 -0500
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id 552B368B20; Wed, 19 Feb 2020 19:43:02 +0100 (CET)
-Date:   Wed, 19 Feb 2020 19:43:02 +0100
+        id BD3AE68B20; Wed, 19 Feb 2020 19:45:19 +0100 (CET)
+Date:   Wed, 19 Feb 2020 19:45:19 +0100
 From:   Christoph Hellwig <hch@lst.de>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
         Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 Subject: Re: [PATCH] xfs: remove the di_version field from struct icdinode
-Message-ID: <20200219184302.GA22307@lst.de>
-References: <20200116104640.489259-1-hch@lst.de> <20200218210615.GA3142@infradead.org> <20200219001852.GA9506@magnolia>
+Message-ID: <20200219184519.GB22307@lst.de>
+References: <20200116104640.489259-1-hch@lst.de> <20200218210615.GA3142@infradead.org> <20200219001852.GA9506@magnolia> <20200219145234.GE24157@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200219001852.GA9506@magnolia>
+In-Reply-To: <20200219145234.GE24157@bfoster>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 18, 2020 at 04:18:52PM -0800, Darrick J. Wong wrote:
-> IIRC I started reading this last month, and tried to picture what will
-> happen when we introduce a v4 inode format -- will we have to revert all
-> of the tests that went from "is di_version == 3" to "if hascrc" in this
-> patch?  Or will we simply be adding more code, e.g.
-> 
-> 	if (hascrc(...)) {
-> 		/* do v3 stuff */
-> 	}
-> 
-> 	if (di_version == 4) {
-> 		/* do v4 stuff */
-> 	}
-> 
-> I think the answer is that the code for a v4 inode format would probably
-> end up doing that and it's probably ok...
+On Wed, Feb 19, 2020 at 09:52:34AM -0500, Brian Foster wrote:
+> FWIW, I don't really view this patch as a straightforward
+> simplification. IMO, this slightly sacrifices readability for slightly
+> less code and a smaller xfs_icdinode. That might be acceptable... I
 
-Depends on what a v4 inode format would really be.  v1 vs v2 was
-basically a few new fields, and more importantl increasing them and
-intended to be migrated on an as-needed basis without a reformat.
-In reality we would not really need a version number for anything
-but the larger fields, as new fields can just be added without
-new versions (and we've done that, and in fact done larger fields
-that way to by splitting them in case of the project id).
+I actually find it easier to read.  The per-inode versioning seems
+to suggest inodes could actually be different on the same fs, while
+the new one makes it clear that all inodes on the fs are the same.
 
-v3 is different in that it treats things different in logging, but
-more importantly they require a reformat and thus are file system
-wide.
+> don't feel terribly strongly against it, but to me the explicit version
+> checks are more clear in cases where the _hascrc() check is not used for
+> something that is obviously CRC related (which is a pattern I'm
+> generally not a fan of).
+
+xfs_sb_version_hascrc is rather misnamed unfortunately.  In fact I think
+just open coding it as 'XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5'
+would improve things quite a bit.
