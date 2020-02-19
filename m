@@ -2,106 +2,227 @@ Return-Path: <SRS0=TUUv=4H=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5364BC34056
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 20:24:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5CF0C5ACC5
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 21:01:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 19EC424654
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 20:24:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A1B04207FD
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 21:01:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="PoUTRdSy"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lpY8UU0a"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726713AbgBSUY2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Feb 2020 15:24:28 -0500
-Received: from hqnvemgate24.nvidia.com ([216.228.121.143]:3914 "EHLO
-        hqnvemgate24.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726645AbgBSUY2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Feb 2020 15:24:28 -0500
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate24.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5e4d99340000>; Wed, 19 Feb 2020 12:23:16 -0800
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate101.nvidia.com (PGP Universal service);
-  Wed, 19 Feb 2020 12:24:27 -0800
-X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Wed, 19 Feb 2020 12:24:27 -0800
-Received: from [10.110.48.28] (10.124.1.5) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Wed, 19 Feb
- 2020 20:24:27 +0000
-Subject: Re: [PATCH v6 07/19] mm: Put readahead pages in cache earlier
-To:     Matthew Wilcox <willy@infradead.org>,
-        Christoph Hellwig <hch@infradead.org>
-CC:     <linux-fsdevel@vger.kernel.org>, <linux-mm@kvack.org>,
-        <linux-kernel@vger.kernel.org>, <linux-btrfs@vger.kernel.org>,
-        <linux-erofs@lists.ozlabs.org>, <linux-ext4@vger.kernel.org>,
-        <linux-f2fs-devel@lists.sourceforge.net>,
-        <cluster-devel@redhat.com>, <ocfs2-devel@oss.oracle.com>,
-        <linux-xfs@vger.kernel.org>
-References: <20200217184613.19668-1-willy@infradead.org>
- <20200217184613.19668-12-willy@infradead.org>
- <e3671faa-dfb3-ceba-3120-a445b2982a95@nvidia.com>
- <20200219144117.GP24185@bombadil.infradead.org>
- <20200219145246.GA29869@infradead.org>
- <20200219150103.GQ24185@bombadil.infradead.org>
-From:   John Hubbard <jhubbard@nvidia.com>
-X-Nvconfidentiality: public
-Message-ID: <a5f8ba4c-8413-2633-9523-5b5941c0762b@nvidia.com>
-Date:   Wed, 19 Feb 2020 12:24:26 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
+        id S1728099AbgBSVBS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Feb 2020 16:01:18 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:36222 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727984AbgBSVBR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Feb 2020 16:01:17 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=0plDwDk1qrRVYfteD+bNdGxMrdBat4pqPVYwNSP5AJk=; b=lpY8UU0a27DYgPHNCDbqbfFeBu
+        j1zcJzrpWZV2gyZt1PaCbEW2Qv6LIii40DQ8lIy5HGw51I0MSbUNbKDx6lh4fwu2t9nVnfa31SRzT
+        dWvP5iWSGdZYTrkJk1OQrh4+T7n9UZ4lp/vG7MOUNS7NG1zS9eRIoc/C5n0ZPYxxLtaD/T8r/R+ZF
+        Wi1LokRB4GBbcL7remCQx7b+NQTeXraOEvy7/vC4oOo6pl52sKy2oEeue4OTNuwMjvymhX3YUYPGL
+        A+ac+TBjloZDc4+HDMhwSo3g0OZeTykQW5cpL+lZPrPQjQ3e6cvD5AZq+p3ObD79LvOXe37mbSqiX
+        GKe1Csrw==;
+Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1j4WSu-0008TK-QN; Wed, 19 Feb 2020 21:01:04 +0000
+From:   Matthew Wilcox <willy@infradead.org>
+To:     linux-fsdevel@vger.kernel.org
+Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-erofs@lists.ozlabs.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
+        linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>,
+        John Hubbard <jhubbard@nvidia.com>
+Subject: [PATCH v7 02/24] mm: Return void from various readahead functions
+Date:   Wed, 19 Feb 2020 13:00:41 -0800
+Message-Id: <20200219210103.32400-3-willy@infradead.org>
+X-Mailer: git-send-email 2.21.1
+In-Reply-To: <20200219210103.32400-1-willy@infradead.org>
+References: <20200219210103.32400-1-willy@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20200219150103.GQ24185@bombadil.infradead.org>
-X-Originating-IP: [10.124.1.5]
-X-ClientProxiedBy: HQMAIL105.nvidia.com (172.20.187.12) To
- HQMAIL107.nvidia.com (172.20.187.13)
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1582143796; bh=Stnn+zSSGNCFbZ988J4GuiCkm17Qbq44jVcYhuJTWJc=;
-        h=X-PGP-Universal:Subject:To:CC:References:From:X-Nvconfidentiality:
-         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
-         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
-         Content-Transfer-Encoding;
-        b=PoUTRdSyZJ3hX2dxzQISosJ/wVYoveMKl+7atg1sDrOWdAAaYMtdVxq7QyYHhh7xe
-         EvTmBI7/rq4HLGscXS8LPXNBnQ1Jix4flhNHGsxk201kSI8sMpgUmQGRpk7I9BpUhS
-         +KjQiwXIyu9koQoSyGAly8ElawI2qpwAoJWQDFM4pVRo/Z9yKmG/dGB+jg0mlia4Y2
-         aAY4dZzfwP+DRcHOuBWJl3IdIgHWxdpwgzTmZEfGVW+WOZbqKq5bU129bePvvI5bU1
-         dYKswZNLebiNLPAg01grHG4u36LomMBF2QsjP/hPLPNASaXyUhQMXbUJhq2V3Ktwp6
-         cwNUY5UNidflg==
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/19/20 7:01 AM, Matthew Wilcox wrote:
-> On Wed, Feb 19, 2020 at 06:52:46AM -0800, Christoph Hellwig wrote:
->> On Wed, Feb 19, 2020 at 06:41:17AM -0800, Matthew Wilcox wrote:
->>> #define readahead_for_each(rac, page)                                   \
->>>         while ((page = readahead_page(rac)))
->>>
->>> No more readahead_next() to forget to add to filesystems which don't use
->>> the readahead_for_each() iterator.  Ahem.
+From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
+ondemand_readahead has two callers, neither of which use the return value.
+That means that both ra_submit and __do_page_cache_readahead() can return
+void, and we don't need to worry that a present page in the readahead
+window causes us to return a smaller nr_pages than we ought to have.
 
-Yes, this looks very clean. And less error-prone, which I definitely
-appreciate too. :)
+Similarly, no caller uses the return value from force_page_cache_readahead().
 
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: John Hubbard <jhubbard@nvidia.com>
+---
+ mm/fadvise.c   |  4 ----
+ mm/internal.h  | 12 ++++++------
+ mm/readahead.c | 31 +++++++++++++------------------
+ 3 files changed, 19 insertions(+), 28 deletions(-)
 
->>
->> And then kill readahead_for_each and open code the above to make it
->> even more obvious?
-> 
-> Makes sense.
-> 
-
-Great!
-
-
-thanks,
+diff --git a/mm/fadvise.c b/mm/fadvise.c
+index 3efebfb9952c..0e66f2aaeea3 100644
+--- a/mm/fadvise.c
++++ b/mm/fadvise.c
+@@ -104,10 +104,6 @@ int generic_fadvise(struct file *file, loff_t offset, loff_t len, int advice)
+ 		if (!nrpages)
+ 			nrpages = ~0UL;
+ 
+-		/*
+-		 * Ignore return value because fadvise() shall return
+-		 * success even if filesystem can't retrieve a hint,
+-		 */
+ 		force_page_cache_readahead(mapping, file, start_index, nrpages);
+ 		break;
+ 	case POSIX_FADV_NOREUSE:
+diff --git a/mm/internal.h b/mm/internal.h
+index 83f353e74654..15aaebebd768 100644
+--- a/mm/internal.h
++++ b/mm/internal.h
+@@ -49,20 +49,20 @@ void unmap_page_range(struct mmu_gather *tlb,
+ 			     unsigned long addr, unsigned long end,
+ 			     struct zap_details *details);
+ 
+-int force_page_cache_readahead(struct address_space *, struct file *,
++void force_page_cache_readahead(struct address_space *, struct file *,
+ 		pgoff_t index, unsigned long nr_to_read);
+-extern unsigned int __do_page_cache_readahead(struct address_space *mapping,
+-		struct file *filp, pgoff_t offset, unsigned long nr_to_read,
++void __do_page_cache_readahead(struct address_space *, struct file *,
++		pgoff_t index, unsigned long nr_to_read,
+ 		unsigned long lookahead_size);
+ 
+ /*
+  * Submit IO for the read-ahead request in file_ra_state.
+  */
+-static inline unsigned long ra_submit(struct file_ra_state *ra,
++static inline void ra_submit(struct file_ra_state *ra,
+ 		struct address_space *mapping, struct file *filp)
+ {
+-	return __do_page_cache_readahead(mapping, filp,
+-					ra->start, ra->size, ra->async_size);
++	__do_page_cache_readahead(mapping, filp,
++			ra->start, ra->size, ra->async_size);
+ }
+ 
+ /*
+diff --git a/mm/readahead.c b/mm/readahead.c
+index 2fe72cd29b47..41a592886da7 100644
+--- a/mm/readahead.c
++++ b/mm/readahead.c
+@@ -149,10 +149,8 @@ static int read_pages(struct address_space *mapping, struct file *filp,
+  * the pages first, then submits them for I/O. This avoids the very bad
+  * behaviour which would occur if page allocations are causing VM writeback.
+  * We really don't want to intermingle reads and writes like that.
+- *
+- * Returns the number of pages requested, or the maximum amount of I/O allowed.
+  */
+-unsigned int __do_page_cache_readahead(struct address_space *mapping,
++void __do_page_cache_readahead(struct address_space *mapping,
+ 		struct file *filp, pgoff_t offset, unsigned long nr_to_read,
+ 		unsigned long lookahead_size)
+ {
+@@ -166,7 +164,7 @@ unsigned int __do_page_cache_readahead(struct address_space *mapping,
+ 	gfp_t gfp_mask = readahead_gfp_mask(mapping);
+ 
+ 	if (isize == 0)
+-		goto out;
++		return;
+ 
+ 	end_index = ((isize - 1) >> PAGE_SHIFT);
+ 
+@@ -211,23 +209,21 @@ unsigned int __do_page_cache_readahead(struct address_space *mapping,
+ 	if (nr_pages)
+ 		read_pages(mapping, filp, &page_pool, nr_pages, gfp_mask);
+ 	BUG_ON(!list_empty(&page_pool));
+-out:
+-	return nr_pages;
+ }
+ 
+ /*
+  * Chunk the readahead into 2 megabyte units, so that we don't pin too much
+  * memory at once.
+  */
+-int force_page_cache_readahead(struct address_space *mapping, struct file *filp,
+-			       pgoff_t offset, unsigned long nr_to_read)
++void force_page_cache_readahead(struct address_space *mapping,
++		struct file *filp, pgoff_t offset, unsigned long nr_to_read)
+ {
+ 	struct backing_dev_info *bdi = inode_to_bdi(mapping->host);
+ 	struct file_ra_state *ra = &filp->f_ra;
+ 	unsigned long max_pages;
+ 
+ 	if (unlikely(!mapping->a_ops->readpage && !mapping->a_ops->readpages))
+-		return -EINVAL;
++		return;
+ 
+ 	/*
+ 	 * If the request exceeds the readahead window, allow the read to
+@@ -245,7 +241,6 @@ int force_page_cache_readahead(struct address_space *mapping, struct file *filp,
+ 		offset += this_chunk;
+ 		nr_to_read -= this_chunk;
+ 	}
+-	return 0;
+ }
+ 
+ /*
+@@ -378,11 +373,10 @@ static int try_context_readahead(struct address_space *mapping,
+ /*
+  * A minimal readahead algorithm for trivial sequential/random reads.
+  */
+-static unsigned long
+-ondemand_readahead(struct address_space *mapping,
+-		   struct file_ra_state *ra, struct file *filp,
+-		   bool hit_readahead_marker, pgoff_t offset,
+-		   unsigned long req_size)
++static void ondemand_readahead(struct address_space *mapping,
++		struct file_ra_state *ra, struct file *filp,
++		bool hit_readahead_marker, pgoff_t offset,
++		unsigned long req_size)
+ {
+ 	struct backing_dev_info *bdi = inode_to_bdi(mapping->host);
+ 	unsigned long max_pages = ra->ra_pages;
+@@ -428,7 +422,7 @@ ondemand_readahead(struct address_space *mapping,
+ 		rcu_read_unlock();
+ 
+ 		if (!start || start - offset > max_pages)
+-			return 0;
++			return;
+ 
+ 		ra->start = start;
+ 		ra->size = start - offset;	/* old async_size */
+@@ -464,7 +458,8 @@ ondemand_readahead(struct address_space *mapping,
+ 	 * standalone, small random read
+ 	 * Read as is, and do not pollute the readahead state.
+ 	 */
+-	return __do_page_cache_readahead(mapping, filp, offset, req_size, 0);
++	__do_page_cache_readahead(mapping, filp, offset, req_size, 0);
++	return;
+ 
+ initial_readahead:
+ 	ra->start = offset;
+@@ -489,7 +484,7 @@ ondemand_readahead(struct address_space *mapping,
+ 		}
+ 	}
+ 
+-	return ra_submit(ra, mapping, filp);
++	ra_submit(ra, mapping, filp);
+ }
+ 
+ /**
 -- 
-John Hubbard
-NVIDIA
+2.25.0
+
