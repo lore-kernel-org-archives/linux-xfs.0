@@ -2,135 +2,116 @@ Return-Path: <SRS0=TUUv=4H=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B65CDC3404E
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 06:40:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06760C34022
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 06:53:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 980312176D
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 06:40:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D9E67208E4
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 06:53:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726175AbgBSGkM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Feb 2020 01:40:12 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:48643 "EHLO
+        id S1726156AbgBSGxK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Feb 2020 01:53:10 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:41410 "EHLO
         mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726156AbgBSGkL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Feb 2020 01:40:11 -0500
+        by vger.kernel.org with ESMTP id S1726121AbgBSGxK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Feb 2020 01:53:10 -0500
 Received: from dread.disaster.area (pa49-179-138-28.pa.nsw.optusnet.com.au [49.179.138.28])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 93B223A38C1;
-        Wed, 19 Feb 2020 17:40:06 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id A460A3A3748;
+        Wed, 19 Feb 2020 17:53:06 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1j4J1h-0006cP-MZ; Wed, 19 Feb 2020 17:40:05 +1100
-Date:   Wed, 19 Feb 2020 17:40:05 +1100
+        id 1j4JEG-0006cx-Gk; Wed, 19 Feb 2020 17:53:04 +1100
+Date:   Wed, 19 Feb 2020 17:53:04 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v6 17/19] iomap: Restructure iomap_readpages_actor
-Message-ID: <20200219064005.GL10776@dread.disaster.area>
-References: <20200217184613.19668-1-willy@infradead.org>
- <20200217184613.19668-31-willy@infradead.org>
- <20200219032900.GE10776@dread.disaster.area>
- <20200219060415.GO24185@bombadil.infradead.org>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        Allison Collins <allison.henderson@oracle.com>,
+        Chandan Rajendra <chandanrlinux@gmail.com>
+Subject: Re: [PATCH 30/31] xfs: remove XFS_DA_OP_INCOMPLETE
+Message-ID: <20200219065304.GM10776@dread.disaster.area>
+References: <20200217125957.263434-1-hch@lst.de>
+ <20200217125957.263434-31-hch@lst.de>
+ <20200218022334.GD10776@dread.disaster.area>
+ <20200218154856.GD21780@lst.de>
+ <20200219004729.GD9506@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200219060415.GO24185@bombadil.infradead.org>
+In-Reply-To: <20200219004729.GD9506@magnolia>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
         a=zAxSp4fFY/GQY8/esVNjqw==:117 a=zAxSp4fFY/GQY8/esVNjqw==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=l697ptgUJYAA:10
-        a=7-415B0cAAAA:8 a=r7nCFNou5KQKI5VhP1MA:9 a=-52OSV3k6aGjHW0a:21
-        a=qFaRso0K34Rwt0Du:21 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=7-415B0cAAAA:8 a=JLbkrko1uwvrcnX89RoA:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 18, 2020 at 10:04:15PM -0800, Matthew Wilcox wrote:
-> On Wed, Feb 19, 2020 at 02:29:00PM +1100, Dave Chinner wrote:
-> > On Mon, Feb 17, 2020 at 10:46:11AM -0800, Matthew Wilcox wrote:
-> > > @@ -418,6 +412,15 @@ iomap_readpages_actor(struct inode *inode, loff_t pos, loff_t length,
-> > >  		}
-> > >  		ret = iomap_readpage_actor(inode, pos + done, length - done,
-> > >  				ctx, iomap, srcmap);
-> > > +		if (WARN_ON(ret == 0))
-> > > +			break;
+On Tue, Feb 18, 2020 at 04:47:29PM -0800, Darrick J. Wong wrote:
+> On Tue, Feb 18, 2020 at 04:48:56PM +0100, Christoph Hellwig wrote:
+> > On Tue, Feb 18, 2020 at 01:23:34PM +1100, Dave Chinner wrote:
+> > > > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> > > > index d5c112b6dcdd..23e0d8ce39f8 100644
+> > > > --- a/fs/xfs/libxfs/xfs_attr.c
+> > > > +++ b/fs/xfs/libxfs/xfs_attr.c
+> > > > @@ -898,7 +898,7 @@ xfs_attr_node_addname(
+> > > >  		 * The INCOMPLETE flag means that we will find the "old"
+> > > >  		 * attr, not the "new" one.
+> > > >  		 */
+> > > > -		args->op_flags |= XFS_DA_OP_INCOMPLETE;
+> > > > +		args->attr_namespace |= XFS_ATTR_INCOMPLETE;
+> > > 
+> > > So args->attr_namespace is no longer an indication of what attribute
+> > > namespace to look up? Unless you are now defining incomplete
+> > > attributes to be in a namespace?
 > > 
-> > This error case now leaks ctx->cur_page....
-> 
-> Yes ... and I see the consequence.  I mean, this is a "shouldn't happen",
-> so do we want to put effort into cleanup here ...
+> > It is the same field on disk.
 
-Well, the normal thing for XFS is that a production kernel cleans up
-and handles the error gracefully with a WARN_ON_ONCE, while a debug
-kernel build will chuck a tanty and burn the house down so to make
-the developers aware that there is a "should not happen" situation
-occurring....
+Yes, but the INCOMPLETE flag is not indicating a user specified
+attribute namespace type like user.*, system.* or secure.*. We're just using
+the flag to store that prefix in as little space as possible.
 
-> > > @@ -451,11 +454,7 @@ iomap_readpages(struct address_space *mapping, struct list_head *pages,
-> > >  done:
-> > >  	if (ctx.bio)
-> > >  		submit_bio(ctx.bio);
-> > > -	if (ctx.cur_page) {
-> > > -		if (!ctx.cur_page_in_bio)
-> > > -			unlock_page(ctx.cur_page);
-> > > -		put_page(ctx.cur_page);
-> > > -	}
-> > > +	BUG_ON(ctx.cur_page);
+Indeed, we can have incomplete attributes in all the namespaces, so
+what we are really using this field and it's flags for is search
+filtering.
+
+> > > If so, I think this needs more explanation than "we can use the
+> > > on-disk format directly instead". That's just telling me what the
+> > > patch is doing and doesn't explain why we are considering this
+> > > specific on disk flag to indicate a new type of "namespace" for
+> > > attributes lookups. Hence I think this needs more documentation in
+> > > both the commit and the code as the definition of
+> > > XFS_ATTR_INCOMPLETE doesn't really make it clear that this is now
+> > > considered a namespace signifier...
 > > 
-> > And so will now trigger both a warn and a bug....
+> > Ok.  Also if anyone has a better name for the field, suggestions welcome..
 > 
-> ... or do we just want to run slap bang into this bug?
-> 
-> Option 1: Remove the check for 'ret == 0' altogether, as we had it before.
-> That puts us into endless loop territory for a failure mode, and it's not
-> parallel with iomap_readpage().
-> 
-> Option 2: Remove the WARN_ON from the check.  Then we just hit the BUG_ON,
-> but we don't know why we did it.
-> 
-> Option 3: Set cur_page to NULL.  We'll hit the WARN_ON, avoid the BUG_ON,
-> might end up with a page in the page cache which is never unlocked.
+> The bureaucrat part of my brain suggests "attr_flags", with a
+> XFS_ATTR_NAMESPACE() helper to extract just the namespace part by using
+> #define XFS_ATTR_NAMESPACE_MASK (XFS_ATTR_ROOT | XFS_ATTR_SECURE)
 
-None of these are appealing.
+If it's filtering, then attr_filter might be appropriate. We only
+return attributes that match the filter mask....
 
-> Option 4: Do the unlock/put page dance before setting the cur_page to NULL.
-> We might double-unlock the page.
+> I kind of dislike that idea because it seems like a lot of overkill to
+> keep the two namespace bits separate from the actual attr entry flags,
+> but maybe we need it...
 
-why would we double unlock the page?
+*nod*
 
-Oh, the readahead cursor doesn't handle the case of partial page
-submission, which would result in IO completion unlocking the page.
-
-Ok, that's what the ctx.cur_page_in_bio check is used to detect i.e.
-if we've got a page that the readahead cursor points at, and we
-haven't actually added it to a bio, then we can leave it to the
-read_pages() to unlock and clean up. If it's in a bio, then IO
-completion will unlock it and so we only have to drop the submission
-reference and move the readahead cursor forwards so read_pages()
-doesn't try to unlock this page. i.e:
-
-	/* clean up partial page submission failures */
-	if (ctx.cur_page && ctx.cur_page_in_bio) {
-		put_page(ctx.cur_page);
-		readahead_next(rac);
-	}
-
-looks to me like it will handle the case of "ret == 0" in the actor
-function just fine.
+I don't think we need all that jazz (waves jazz hands in the air) if
+we look at it from the point of view of it being a filter mask
+rather than a namespace specifier....
 
 Cheers,
 
 Dave.
-
 -- 
 Dave Chinner
 david@fromorbit.com
