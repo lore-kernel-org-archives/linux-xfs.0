@@ -2,90 +2,149 @@ Return-Path: <SRS0=TUUv=4H=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D512C34022
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 04:03:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 300A9C3402F
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 04:04:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 53C8424656
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 04:03:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B0DA24673
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 04:04:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=lca.pw header.i=@lca.pw header.b="knLDS9Ro"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726651AbgBSED4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Feb 2020 23:03:56 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:59266 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726439AbgBSED4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Feb 2020 23:03:56 -0500
-Received: from dread.disaster.area (pa49-179-138-28.pa.nsw.optusnet.com.au [49.179.138.28])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 9D76C7EB18D;
-        Wed, 19 Feb 2020 15:03:54 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1j4GaY-0005ja-2l; Wed, 19 Feb 2020 15:03:54 +1100
-Date:   Wed, 19 Feb 2020 15:03:54 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        Allison Collins <allison.henderson@oracle.com>,
-        Chandan Rajendra <chandanrlinux@gmail.com>
-Subject: Re: [PATCH 05/31] xfs: use strndup_user in
- XFS_IOC_ATTRMULTI_BY_HANDLE
-Message-ID: <20200219040354.GJ10776@dread.disaster.area>
-References: <20200217125957.263434-1-hch@lst.de>
- <20200217125957.263434-6-hch@lst.de>
- <20200217221538.GJ10776@dread.disaster.area>
- <20200218152432.GB21275@lst.de>
- <20200219003816.GC9506@magnolia>
+        id S1726725AbgBSEEt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Feb 2020 23:04:49 -0500
+Received: from mail-qt1-f195.google.com ([209.85.160.195]:43190 "EHLO
+        mail-qt1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726439AbgBSEEs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Feb 2020 23:04:48 -0500
+Received: by mail-qt1-f195.google.com with SMTP id g21so221888qtq.10
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Feb 2020 20:04:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=lca.pw; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=oP2MqxukizBRlPC9SfvqBAcpKQDQ39+MBV8Jn9d7IdU=;
+        b=knLDS9RoP4max5hfagxZux9hUSAX4uFXfIJOs4Pl2iD9XJS0gDytXhY535GWwyXKmN
+         GJGwl+8ma/bF3nRhUMOQSPTgsNO/7vN7ewM5h8CkBZnCKRxP101mDXAPZcn6FYdj448X
+         0inKFN/p2mRk2G19n6AB6ukXJyEI6j0DXLgym23pawd/vSoFtufYh7mTtUO6o+y/vjw2
+         e1USu3q3AkJyEWBUdYnDTdoEEfoz03ddfy9+SkuecdjATdIvFhRcOs1uXasqBzGjRHMR
+         vJ1UwDMKKfS0aJHfclnzQaWPADxOLlMObvWb9NCenfbbY11xlpkRGRjdmJZ2WfSEOgkl
+         6KFA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=oP2MqxukizBRlPC9SfvqBAcpKQDQ39+MBV8Jn9d7IdU=;
+        b=b5lA4sMFVqV2f5WYfeWEeMO3Vg7rjxzAAYaLZ0J4aB59xByGZJ6BqGAYR6rAmflkrW
+         2SRAFPnDhj9w4IPy0dAYXsU8XMeZ32hGtEZipoOaDT/6jDGENc6XNAEH4cBA9jL8w1TQ
+         cmJ15uf7dCaoQCgdEHE8OwL+D/BOtdMhXAteThH2bSy+tOPmSNv6YyoHnVsq+zWAMmqK
+         W0VxxdykFX85nfdoN3yOaXO32U7L3s7PbnUKcWyT8+S5N8k4toJiRq5jR5ANQJYcynl/
+         vd4UciKIb+fLL7lFiU0d6Jzyzg6KeRSm9EpLU2c0IcJ8/RPdJDAo/u5nrncR5kKzmYmh
+         cFzw==
+X-Gm-Message-State: APjAAAULKDqt2Vu71lebgRU0aRJdA2zfkzScT14b0aUvPx679RN9lb4q
+        tq7JiwiarwVB05nC73hVNLuPUg==
+X-Google-Smtp-Source: APXvYqyuVmcb2uQ0JQaLq7Vd7ocdcNzzYrdnVg8V+sqphizIq6oakYuSZVaek3e4KcMnvWva5NaWNA==
+X-Received: by 2002:ac8:1b18:: with SMTP id y24mr19970707qtj.158.1582085086153;
+        Tue, 18 Feb 2020 20:04:46 -0800 (PST)
+Received: from ovpn-121-44.rdu2.redhat.com (pool-71-184-117-43.bstnma.fios.verizon.net. [71.184.117.43])
+        by smtp.gmail.com with ESMTPSA id r6sm323671qtm.63.2020.02.18.20.04.45
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 18 Feb 2020 20:04:45 -0800 (PST)
+From:   Qian Cai <cai@lca.pw>
+To:     viro@zeniv.linux.org.uk
+Cc:     hch@infradead.org, darrick.wong@oracle.com, elver@google.com,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Qian Cai <cai@lca.pw>
+Subject: [PATCH] fs: fix a data race in i_size_write/i_size_read
+Date:   Tue, 18 Feb 2020 23:04:26 -0500
+Message-Id: <20200219040426.1140-1-cai@lca.pw>
+X-Mailer: git-send-email 2.21.0 (Apple Git-122.2)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200219003816.GC9506@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
-        a=zAxSp4fFY/GQY8/esVNjqw==:117 a=zAxSp4fFY/GQY8/esVNjqw==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=l697ptgUJYAA:10
-        a=7-415B0cAAAA:8 a=g7DWc3qY4QalcS12rlAA:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 18, 2020 at 04:38:16PM -0800, Darrick J. Wong wrote:
-> On Tue, Feb 18, 2020 at 04:24:32PM +0100, Christoph Hellwig wrote:
-> > On Tue, Feb 18, 2020 at 09:15:39AM +1100, Dave Chinner wrote:
-> > > >  
-> > > > -		ops[i].am_error = strncpy_from_user((char *)attr_name,
-> > > > -				ops[i].am_attrname, MAXNAMELEN);
-> > > > -		if (ops[i].am_error == 0 || ops[i].am_error == MAXNAMELEN)
-> > > > -			error = -ERANGE;
-> > > > -		if (ops[i].am_error < 0)
-> > > > +		attr_name = strndup_user(ops[i].am_attrname, MAXNAMELEN);
-> > > > +		if (IS_ERR(attr_name)) {
-> > > > +			ops[i].am_error = PTR_ERR(attr_name);
-> > > >  			break;
-> > > > +		}
-> > > 
-> > > This changes the error returned for an invalid attr name length from
-> > > -ERANGE to either -EINVAL or -EFAULT. Can you please document that
-> > > in the commit message. This change requires updates to the 
-> > > path_to_handle(3) man page shipped in xfsprogs in the xfslibs-dev
-> > > package (xfsprogs::man/man3/handle.3) to document the differences in
-> > > return values.
-> > 
-> > I can't find that man page documenting -ERANGE at all..
-> 
-> Should we add both to the errors list, then?  Seeing as (I think?) the
-> kernel can actually return this...
+inode::i_size could be accessed concurently as noticed by KCSAN,
 
-IMO, yes.
+ BUG: KCSAN: data-race in iomap_do_writepage / iomap_write_end
 
-Cheers,
+ write to 0xffff8bf68fc0cac0 of 8 bytes by task 7484 on cpu 71:
+  iomap_write_end+0xea/0x530
+  i_size_write at include/linux/fs.h:888
+  (inlined by) iomap_write_end at fs/iomap/buffered-io.c:782
+  iomap_write_actor+0x132/0x200
+  iomap_apply+0x245/0x8a5
+  iomap_file_buffered_write+0xbd/0xf0
+  xfs_file_buffered_aio_write+0x1c2/0x790 [xfs]
+  xfs_file_write_iter+0x232/0x2d0 [xfs]
+  new_sync_write+0x29c/0x3b0
+  __vfs_write+0x92/0xa0
+  vfs_write+0x103/0x260
+  ksys_write+0x9d/0x130
+  __x64_sys_write+0x4c/0x60
+  do_syscall_64+0x91/0xb05
+  entry_SYSCALL_64_after_hwframe+0x49/0xbe
 
-Dave.
+ read to 0xffff8bf68fc0cac0 of 8 bytes by task 5901 on cpu 70:
+  iomap_do_writepage+0xf4/0x450
+  i_size_read at include/linux/fs.h:866
+  (inlined by) iomap_do_writepage at fs/iomap/buffered-io.c:1558
+  write_cache_pages+0x523/0xb20
+  iomap_writepages+0x47/0x80
+  xfs_vm_writepages+0xc7/0x100 [xfs]
+  do_writepages+0x5e/0x130
+  __writeback_single_inode+0xd5/0xb20
+  writeback_sb_inodes+0x429/0x910
+  __writeback_inodes_wb+0xc4/0x150
+  wb_writeback+0x47b/0x830
+  wb_workfn+0x688/0x930
+  process_one_work+0x54f/0xb90
+  worker_thread+0x80/0x5f0
+  kthread+0x1cd/0x1f0
+  ret_from_fork+0x27/0x50
+
+ Reported by Kernel Concurrency Sanitizer on:
+ CPU: 70 PID: 5901 Comm: kworker/u257:2 Tainted: G             L    5.6.0-rc2-next-20200218+ #2
+ Hardware name: HPE ProLiant DL385 Gen10/ProLiant DL385 Gen10, BIOS A40 07/10/2019
+ Workqueue: writeback wb_workfn (flush-254:0)
+
+The write is protected by exclusive inode::i_rwsem (in
+xfs_file_buffered_aio_write()) but the read is not. A shattered value
+could introduce a logic bug. Fixed it using a pair of WRITE/READ_ONCE().
+
+Signed-off-by: Qian Cai <cai@lca.pw>
+---
+ include/linux/fs.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 3cd4fe6b845e..25f98da90cf3 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -863,7 +863,7 @@ static inline loff_t i_size_read(const struct inode *inode)
+ 	preempt_enable();
+ 	return i_size;
+ #else
+-	return inode->i_size;
++	return READ_ONCE(inode->i_size);
+ #endif
+ }
+ 
+@@ -885,7 +885,7 @@ static inline void i_size_write(struct inode *inode, loff_t i_size)
+ 	inode->i_size = i_size;
+ 	preempt_enable();
+ #else
+-	inode->i_size = i_size;
++	WRITE_ONCE(inode->i_size, i_size);
+ #endif
+ }
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.21.0 (Apple Git-122.2)
+
