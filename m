@@ -2,114 +2,170 @@ Return-Path: <SRS0=TUUv=4H=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB5ACC3404E
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 00:58:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04A29C3404D
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 00:59:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C1C0C24658
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 00:58:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="TO6Q/NYX"
+	by mail.kernel.org (Postfix) with ESMTP id DCA942173E
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 00:59:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726655AbgBSA64 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Feb 2020 19:58:56 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:47606 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726482AbgBSA6z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Feb 2020 19:58:55 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01J0rv0u178495;
-        Wed, 19 Feb 2020 00:58:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=46lZfCznpJFz+XpNW/8bsULWfOgeJ7V93HVO+dYMZEI=;
- b=TO6Q/NYXliwRQVw3fHQ5yWDiTEW1ZC8WGe/lE5A/EuEepRBEwGFExiDkWR+U4nT2N416
- +p0XMO3AAxwzOyYQ/umobMIIyoEXRCOaNqoIoL1R4oVH5IcOhvR/BABj0EhIphiin02k
- 3JZJJOVUCg8fd+YdMrVyY+sIHaSaK0c2MAosyrChB4U3UZ9eVRkRV8EsS6DM9nfhuMrH
- gWVAgQ8crUkFeLMPLodiK3YPp2w9eDlUfXZwAV04xqKPsBqacz0Apz9YGleeC30v+mR/
- DXJfrE//nmUklb3nl/aWDOt62x3HO29CnCqdO7ST4ZlWNptrKPQpT/FHNqh3R3yGfgSh QA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2y8e1hn9e9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 19 Feb 2020 00:58:50 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01J0wNS1077580;
-        Wed, 19 Feb 2020 00:58:49 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2y6t4kd9y7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 19 Feb 2020 00:58:49 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01J0wmKq013092;
-        Wed, 19 Feb 2020 00:58:48 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 18 Feb 2020 16:58:48 -0800
-Date:   Tue, 18 Feb 2020 16:58:47 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        Allison Collins <allison.henderson@oracle.com>
-Subject: Re: [PATCH 23/31] xfs: properly type the buffer field in struct
- xfs_fsop_attrlist_handlereq
-Message-ID: <20200219005847.GG9506@magnolia>
-References: <20200217125957.263434-1-hch@lst.de>
- <20200217125957.263434-24-hch@lst.de>
- <20200217235315.GY10776@dread.disaster.area>
- <20200218153924.GB21780@lst.de>
+        id S1727635AbgBSA7X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Feb 2020 19:59:23 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:53932 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726482AbgBSA7W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Feb 2020 19:59:22 -0500
+Received: from dread.disaster.area (pa49-179-138-28.pa.nsw.optusnet.com.au [49.179.138.28])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 368A83A2380;
+        Wed, 19 Feb 2020 11:59:16 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1j4Dhr-0004cn-HF; Wed, 19 Feb 2020 11:59:15 +1100
+Date:   Wed, 19 Feb 2020 11:59:15 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v6 07/19] mm: Put readahead pages in cache earlier
+Message-ID: <20200219005915.GV10776@dread.disaster.area>
+References: <20200217184613.19668-1-willy@infradead.org>
+ <20200217184613.19668-12-willy@infradead.org>
+ <20200218061459.GM10776@dread.disaster.area>
+ <20200218154222.GQ7778@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200218153924.GB21780@lst.de>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9535 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0
- mlxlogscore=999 phishscore=0 mlxscore=0 malwarescore=0 suspectscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002190001
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9535 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 phishscore=0
- mlxlogscore=999 mlxscore=0 malwarescore=0 clxscore=1015 adultscore=0
- lowpriorityscore=0 spamscore=0 bulkscore=0 priorityscore=1501
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002190001
+In-Reply-To: <20200218154222.GQ7778@bombadil.infradead.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+        a=zAxSp4fFY/GQY8/esVNjqw==:117 a=zAxSp4fFY/GQY8/esVNjqw==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=l697ptgUJYAA:10
+        a=JfrnYn6hAAAA:8 a=7-415B0cAAAA:8 a=vUdR-S3ouboEXt6xVngA:9
+        a=CjuIK1q_8ugA:10 a=1CNFftbPRP8L7MoqJWF3:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 18, 2020 at 04:39:24PM +0100, Christoph Hellwig wrote:
-> On Tue, Feb 18, 2020 at 10:53:16AM +1100, Dave Chinner wrote:
-> > > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> > > index ae77bcd8c05b..21920f613d42 100644
-> > > --- a/fs/xfs/libxfs/xfs_fs.h
-> > > +++ b/fs/xfs/libxfs/xfs_fs.h
-> > > @@ -597,7 +597,7 @@ typedef struct xfs_fsop_attrlist_handlereq {
-> > >  	struct xfs_attrlist_cursor	pos; /* opaque cookie, list offset */
-> > >  	__u32				flags;	/* which namespace to use */
-> > >  	__u32				buflen;	/* length of buffer supplied */
-> > > -	void				__user *buffer;	/* returned names */
-> > > +	struct xfs_attrlist __user	*buffer;/* returned names */
-> > >  } xfs_fsop_attrlist_handlereq_t;
+On Tue, Feb 18, 2020 at 07:42:22AM -0800, Matthew Wilcox wrote:
+> On Tue, Feb 18, 2020 at 05:14:59PM +1100, Dave Chinner wrote:
+> > On Mon, Feb 17, 2020 at 10:45:52AM -0800, Matthew Wilcox wrote:
+> > > From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+> > > 
+> > > At allocation time, put the pages in the cache unless we're using
+> > > ->readpages.  Add the readahead_for_each() iterator for the benefit of
+> > > the ->readpage fallback.  This iterator supports huge pages, even though
+> > > none of the filesystems to be converted do yet.
 > > 
-> > This changes the userspace API, right? So, in theory, it could break
-> > compilation of userspace applications that treat it as an attrlist_t
-> > and don't specifically cast the assignment because it's currently
-> > a void pointer?
+> > This could be better written - took me some time to get my head
+> > around it and the code.
+> > 
+> > "When populating the page cache for readahead, mappings that don't
+> > use ->readpages need to have their pages added to the page cache
+> > before ->readpage is called. Do this insertion earlier so that the
+> > pages can be looked up immediately prior to ->readpage calls rather
+> > than passing them on a linked list. This early insert functionality
+> > is also required by the upcoming ->readahead method that will
+> > replace ->readpages.
+> > 
+> > Optimise and simplify the readpage loop by adding a
+> > readahead_for_each() iterator to provide the pages we need to read.
+> > This iterator also supports huge pages, even though none of the
+> > filesystems have been converted to use them yet."
 > 
-> IFF userspace was using this header it would change the API.  But
-> userspace uses the libattr definition exclusively.
+> Thanks, I'll use that.
+> 
+> > > +static inline struct page *readahead_page(struct readahead_control *rac)
+> > > +{
+> > > +	struct page *page;
+> > > +
+> > > +	if (!rac->_nr_pages)
+> > > +		return NULL;
+> > 
+> > Hmmmm.
+> > 
+> > > +
+> > > +	page = xa_load(&rac->mapping->i_pages, rac->_start);
+> > > +	VM_BUG_ON_PAGE(!PageLocked(page), page);
+> > > +	rac->_batch_count = hpage_nr_pages(page);
+> > 
+> > So we could have rac->_nr_pages = 2, and then we get an order 2
+> > large page returned, and so rac->_batch_count = 4.
+> 
+> Well, no, we couldn't.  rac->_nr_pages is incremented by 4 when we add
+> an order-2 page to the readahead.
 
-Assuming most userspace will use libhandle (and not call the ioctl
-directly) then this "shouldn't" be a problem because libhandle treats
-the attrlist buffer as a void pointer.
+I don't see any code that does that. :)
 
-(I dunno, how difficult /is/ it to say "program to the library, not the
-kernel ABI" here?)
+i.e. we aren't actually putting high order pages into the page
+cache here - page_alloc() allocates order-0 pages) - so there's
+nothing in the patch that tells me how rac->_nr_pages behaves
+when allocating large pages...
 
---D
+IOWs, we have an undocumented assumption in the implementation...
+
+> I can put a
+> 	BUG_ON(rac->_batch_count > rac->_nr_pages)
+> in here to be sure to catch any logic error like that.
+
+Definitely necessary given that we don't insert large pages for
+readahead yet. A comment explaining the assumptions that the
+code makes for large pages is probably in order, too.
+
+> > > -		page->index = offset;
+> > > -		list_add(&page->lru, &page_pool);
+> > > +		if (use_list) {
+> > > +			page->index = offset;
+> > > +			list_add(&page->lru, &page_pool);
+> > > +		} else if (add_to_page_cache_lru(page, mapping, offset,
+> > > +					gfp_mask) < 0) {
+> > > +			put_page(page);
+> > > +			goto read;
+> > > +		}
+> > 
+> > Ok, so that's why you put read code at the end of the loop. To turn
+> > the code into spaghetti :/
+> > 
+> > How much does this simplify down when we get rid of ->readpages and
+> > can restructure the loop? This really seems like you're trying to
+> > flatten two nested loops into one by the use of goto....
+> 
+> I see it as having two failure cases in this loop.  One for "page is
+> already present" (which already existed) and one for "allocated a page,
+> but failed to add it to the page cache" (which used to be done later).
+> I didn't want to duplicate the "call read_pages()" code.  So I reshuffled
+> the code rather than add a nested loop.  I don't think the nested loop
+> is easier to read (we'll be at 5 levels of indentation for some statements).
+> Could do it this way ...
+
+Can we move the update of @rac inside read_pages()? The next
+start offset^Windex we start at is rac._start + rac._nr_pages, right?
+
+so read_pages() could do:
+
+{
+	if (readahead_count(rac)) {
+		/* do readahead */
+	}
+
+	/* advance the readahead cursor */
+	rac->_start += rac->_nr_pages;
+	rac._nr_pages = 0;
+}
+
+and then we only need to call read_pages() in these cases and so
+the requirement for avoiding duplicating code is avoided...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
