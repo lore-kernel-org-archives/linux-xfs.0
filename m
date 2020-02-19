@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 176C0C34056
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 21:03:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78F06C5ACC5
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 21:03:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DBA4C24672
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 21:03:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4EB1424673
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 21:03:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="F3kXDDpZ"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QLnU+TnA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728072AbgBSVCs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Feb 2020 16:02:48 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:35924 "EHLO
+        id S1728256AbgBSVDE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Feb 2020 16:03:04 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:35910 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727649AbgBSVBG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Feb 2020 16:01:06 -0500
+        with ESMTP id S1727545AbgBSVBF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Feb 2020 16:01:05 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=xVXe2mHxuFlpJauTFAREACgBtskK8JQqv16NulPdwMo=; b=F3kXDDpZ016zj77nzf3xs9HNhB
-        c39hgvEiXMXpDmXJJghRyVbQMd9bQMtSAzeQLHly/ybPqD2ydVSEI4rkiaB9n4MrV5lJMO5TAOHpT
-        LsA4+sqAh3sjH6idXLPtUndMdxvuT67kL2DMo4IotYTvlEvyNqU15dBP/gmtAHMJiYi1zlhefB+pQ
-        okljimRMCao3QCzBUAxBJQKIRfcethiQohvU/9XCsH/VS+Vpp+HAgX2+R1ONMyFmghwTrN6Tmau8B
-        beKkIxg+LolJhz+78XZwS7VZsuxlQ7gLLHa+AyMl78a/LXsGBf7EVWA8feUeASUtSsf4m1jAST6h0
-        JPdvTb6Q==;
+        bh=iTnbXsBsCMnw4G4jluaHETVOvwrUuF/JrDXgH8InvQQ=; b=QLnU+TnAJtozxCTAnM0JMY10lU
+        w3DlJ8PJJvrtNPKkg1MB4FIHQxWaOQ1rCvRK3gJlozkHzwXoazIS853rTTg+1a0+pPXkpHdu0yXZf
+        wVEjPoEzPlmmjZCt35G+9oNcuHpEYjLtn8GVFmIoaCNyVZtyr2tdqK7haVvST/yiicCVIDToR0rci
+        i0TJyk17Fxo0WC05Hy3lSEZzNQZmfIkiEAbu+33d3aKLL8Ynm9PKL+mMXBP5A9a5DHv+hDqjdheXz
+        6UGg4+LNawxKGz8F/fgvXUhlDwwP7hGqdw9PPbCZorXwRQUTscIhWfAxW54dNI8MD4iA7CjSkbyNn
+        Fu9CyCZw==;
 Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j4WSv-0008Ve-Kf; Wed, 19 Feb 2020 21:01:05 +0000
+        id 1j4WSv-0008VB-FV; Wed, 19 Feb 2020 21:01:05 +0000
 From:   Matthew Wilcox <willy@infradead.org>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
@@ -40,11 +40,10 @@ Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         linux-btrfs@vger.kernel.org, linux-erofs@lists.ozlabs.org,
         linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
         cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
-        linux-xfs@vger.kernel.org, Cong Wang <xiyou.wangcong@gmail.com>,
-        Michal Hocko <mhocko@suse.com>
-Subject: [PATCH v7 24/24] mm: Use memalloc_nofs_save in readahead path
-Date:   Wed, 19 Feb 2020 13:01:03 -0800
-Message-Id: <20200219210103.32400-25-willy@infradead.org>
+        linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+Subject: [PATCH v7 20/24] fuse: Convert from readpages to readahead
+Date:   Wed, 19 Feb 2020 13:00:59 -0800
+Message-Id: <20200219210103.32400-21-willy@infradead.org>
 X-Mailer: git-send-email 2.21.1
 In-Reply-To: <20200219210103.32400-1-willy@infradead.org>
 References: <20200219210103.32400-1-willy@infradead.org>
@@ -57,57 +56,117 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
-Ensure that memory allocations in the readahead path do not attempt to
-reclaim file-backed pages, which could lead to a deadlock.  It is
-possible, though unlikely this is the root cause of a problem observed
-by Cong Wang.
+Use the new readahead operation in fuse.  Switching away from the
+read_cache_pages() helper gets rid of an implicit call to put_page(),
+so we can get rid of the get_page() call in fuse_readpages_fill().
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-Reported-by: Cong Wang <xiyou.wangcong@gmail.com>
-Suggested-by: Michal Hocko <mhocko@suse.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- mm/readahead.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ fs/fuse/file.c | 46 +++++++++++++++++++---------------------------
+ 1 file changed, 19 insertions(+), 27 deletions(-)
 
-diff --git a/mm/readahead.c b/mm/readahead.c
-index bbe7208fcc2d..9fb5f77dcf69 100644
---- a/mm/readahead.c
-+++ b/mm/readahead.c
-@@ -22,6 +22,7 @@
- #include <linux/mm_inline.h>
- #include <linux/blk-cgroup.h>
- #include <linux/fadvise.h>
-+#include <linux/sched/mm.h>
+diff --git a/fs/fuse/file.c b/fs/fuse/file.c
+index 9d67b830fb7a..5749505bcff6 100644
+--- a/fs/fuse/file.c
++++ b/fs/fuse/file.c
+@@ -923,9 +923,8 @@ struct fuse_fill_data {
+ 	unsigned int max_pages;
+ };
  
- #include "internal.h"
+-static int fuse_readpages_fill(void *_data, struct page *page)
++static int fuse_readpages_fill(struct fuse_fill_data *data, struct page *page)
+ {
+-	struct fuse_fill_data *data = _data;
+ 	struct fuse_io_args *ia = data->ia;
+ 	struct fuse_args_pages *ap = &ia->ap;
+ 	struct inode *inode = data->inode;
+@@ -941,10 +940,8 @@ static int fuse_readpages_fill(void *_data, struct page *page)
+ 					fc->max_pages);
+ 		fuse_send_readpages(ia, data->file);
+ 		data->ia = ia = fuse_io_alloc(NULL, data->max_pages);
+-		if (!ia) {
+-			unlock_page(page);
++		if (!ia)
+ 			return -ENOMEM;
+-		}
+ 		ap = &ia->ap;
+ 	}
  
-@@ -186,6 +187,18 @@ void page_cache_readahead_unbounded(struct address_space *mapping,
- 	};
- 	unsigned long i;
+@@ -954,7 +951,6 @@ static int fuse_readpages_fill(void *_data, struct page *page)
+ 		return -EIO;
+ 	}
  
-+	/*
-+	 * Partway through the readahead operation, we will have added
-+	 * locked pages to the page cache, but will not yet have submitted
-+	 * them for I/O.  Adding another page may need to allocate memory,
-+	 * which can trigger memory reclaim.  Telling the VM we're in
-+	 * the middle of a filesystem operation will cause it to not
-+	 * touch file-backed pages, preventing a deadlock.  Most (all?)
-+	 * filesystems already specify __GFP_NOFS in their mapping's
-+	 * gfp_mask, but let's be explicit here.
-+	 */
-+	unsigned int nofs = memalloc_nofs_save();
-+
- 	/*
- 	 * Preallocate as many pages as we will need.
- 	 */
-@@ -230,6 +243,7 @@ void page_cache_readahead_unbounded(struct address_space *mapping,
- 	 * will then handle the error.
- 	 */
- 	read_pages(&rac, &page_pool);
-+	memalloc_nofs_restore(nofs);
+-	get_page(page);
+ 	ap->pages[ap->num_pages] = page;
+ 	ap->descs[ap->num_pages].length = PAGE_SIZE;
+ 	ap->num_pages++;
+@@ -962,37 +958,33 @@ static int fuse_readpages_fill(void *_data, struct page *page)
+ 	return 0;
  }
- EXPORT_SYMBOL_GPL(page_cache_readahead_unbounded);
  
+-static int fuse_readpages(struct file *file, struct address_space *mapping,
+-			  struct list_head *pages, unsigned nr_pages)
++static void fuse_readahead(struct readahead_control *rac)
+ {
+-	struct inode *inode = mapping->host;
++	struct inode *inode = rac->mapping->host;
+ 	struct fuse_conn *fc = get_fuse_conn(inode);
+ 	struct fuse_fill_data data;
+-	int err;
++	struct page *page;
+ 
+-	err = -EIO;
+ 	if (is_bad_inode(inode))
+-		goto out;
++		return;
+ 
+-	data.file = file;
++	data.file = rac->file;
+ 	data.inode = inode;
+-	data.nr_pages = nr_pages;
+-	data.max_pages = min_t(unsigned int, nr_pages, fc->max_pages);
+-;
++	data.nr_pages = readahead_count(rac);
++	data.max_pages = min_t(unsigned int, data.nr_pages, fc->max_pages);
+ 	data.ia = fuse_io_alloc(NULL, data.max_pages);
+-	err = -ENOMEM;
+ 	if (!data.ia)
+-		goto out;
++		return;
+ 
+-	err = read_cache_pages(mapping, pages, fuse_readpages_fill, &data);
+-	if (!err) {
+-		if (data.ia->ap.num_pages)
+-			fuse_send_readpages(data.ia, file);
+-		else
+-			fuse_io_free(data.ia);
++	while ((page = readahead_page(rac))) {
++		if (fuse_readpages_fill(&data, page) != 0)
++			return;
+ 	}
+-out:
+-	return err;
++
++	if (data.ia->ap.num_pages)
++		fuse_send_readpages(data.ia, rac->file);
++	else
++		fuse_io_free(data.ia);
+ }
+ 
+ static ssize_t fuse_cache_read_iter(struct kiocb *iocb, struct iov_iter *to)
+@@ -3373,10 +3365,10 @@ static const struct file_operations fuse_file_operations = {
+ 
+ static const struct address_space_operations fuse_file_aops  = {
+ 	.readpage	= fuse_readpage,
++	.readahead	= fuse_readahead,
+ 	.writepage	= fuse_writepage,
+ 	.writepages	= fuse_writepages,
+ 	.launder_page	= fuse_launder_page,
+-	.readpages	= fuse_readpages,
+ 	.set_page_dirty	= __set_page_dirty_nobuffers,
+ 	.bmap		= fuse_bmap,
+ 	.direct_IO	= fuse_direct_IO,
 -- 
 2.25.0
 
