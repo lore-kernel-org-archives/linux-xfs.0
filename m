@@ -7,173 +7,455 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B98BC34047
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 10:33:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AE6AC34047
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 10:51:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3CB63208E4
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 10:33:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E7B821D56
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 10:51:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QXZ0aQxh"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="W3OwH9Gw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726491AbgBSKc7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Feb 2020 05:32:59 -0500
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:27964 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726453AbgBSKc7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Feb 2020 05:32:59 -0500
+        id S1726514AbgBSKvX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Feb 2020 05:51:23 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:48129 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726487AbgBSKvW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Feb 2020 05:51:22 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1582108377;
+        s=mimecast20190719; t=1582109480;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=FueltgpkzAlhJDAhIe85WleMfHR8Az0odD0aapskUck=;
-        b=QXZ0aQxhN0S3D4sBJIoYMz9DBQALB494DK+aTzP/VNEVuGH/zsXjgLR7DbGGgHjGcrFZnk
-        7TxyU85oStBwfh8QUTztvINUpNFZXS4fBXl/kFslNDtgyoK8pcXAhFrQyaOyi8yGIsgZzg
-        admgl7+REK81FgKIBMWiXMOkQTbD3k4=
-Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
- [209.85.221.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-266-E3pdZds7NGKjEcf2z-R2jg-1; Wed, 19 Feb 2020 05:32:56 -0500
-X-MC-Unique: E3pdZds7NGKjEcf2z-R2jg-1
-Received: by mail-wr1-f72.google.com with SMTP id o6so12319406wrp.8
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Feb 2020 02:32:56 -0800 (PST)
+        bh=MzMvwdrBgtYID8g6KcuUt13eQUQdkMY7WmNY+uiPTVY=;
+        b=W3OwH9GwIdXajzWckbXUORrroqmHdmhWddj5sMvul6/pxYzrMVtFz3OZYCfC3C3FiJ+UAN
+        1QA9/xd48X8+TL7iMW4Y65TSqeAYfs+Fz1jK2/D0Ypts0rTRlDUST8dw5Lv+eDWJrDVhyi
+        28gborHk9MrSfyb8G+kwFlsU351tN7Y=
+Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
+ [209.85.128.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-24-4hEsskFEPoKiL16-H3MS3g-1; Wed, 19 Feb 2020 05:51:19 -0500
+X-MC-Unique: 4hEsskFEPoKiL16-H3MS3g-1
+Received: by mail-wm1-f71.google.com with SMTP id o24so27974wmh.0
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Feb 2020 02:51:19 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id
          :mail-followup-to:references:mime-version:content-disposition
          :in-reply-to;
-        bh=FueltgpkzAlhJDAhIe85WleMfHR8Az0odD0aapskUck=;
-        b=l5ui+OMMDc/P5d6g67xaimFL8iVJg3nPpq30icMwLYofTvC2HfP3rLsfQh+cH3vcZ+
-         awfyUsj0cazum+EtnyPFFde+YSodfJ7hJyDiBbymX1RuWW9892ZieJjZpFuiNKskiNgU
-         OzJsmsBUDJpaaQQUA48RYzo+BHtYLI842vasB8I3XQDBNIdlXdipt9C6b27TuMkyGVrV
-         jR+WDtxaB/+FX6SI/z1AqZztPRreVD4AgV7L2Z05RKi/4ng+BihWGI9Wk8zPIfGqUftB
-         xsdkRRIg9cSXwgzteH5dEL+jrLkXOsmWzf8QTdT8LGNQ42DrFEP/1e7Qfg6jY/RXki4N
-         3GTw==
-X-Gm-Message-State: APjAAAWE4ReSmJAA94sH7bInHmJj11iniFyo9RNE7Wspa/bLGkH3ZUcx
-        g4ov4NSu4coulQLus4IAK8ZnD84oSC57eiHcJ65Ip4uzlcsERsUXIWapsZ1ESBwrrotAF+n46Yj
-        ympd8R9TNsRXKCkbxWt+U
-X-Received: by 2002:a5d:6404:: with SMTP id z4mr8320151wru.262.1582108375038;
-        Wed, 19 Feb 2020 02:32:55 -0800 (PST)
-X-Google-Smtp-Source: APXvYqyEBmwVbQxdAuZuruB1+01qm7Mr8gSt9LDSMaBs8O3010RfxmbOPdx8dK+S+jon3Kw6tzm0PQ==
-X-Received: by 2002:a5d:6404:: with SMTP id z4mr8320131wru.262.1582108374780;
-        Wed, 19 Feb 2020 02:32:54 -0800 (PST)
+        bh=MzMvwdrBgtYID8g6KcuUt13eQUQdkMY7WmNY+uiPTVY=;
+        b=huusNorWCtV7uhcwKQZhbh2+1rB7SIT/S6Vm6DOEJv7674xhM+hgJgcBjtExPGfXx5
+         W4zCIC7rHRvsXLRcXmxIfP4GCBKjmU1jrzaUojOC0wZPvPfq/V/mHPIFP5gKRf+/gfHR
+         VZi+LaUvWaPvdOkaMm2pAEf92dnlEfdrNbOEL6ow9VCKSZHr8vMTZL7HWCH5A5mbQocY
+         s7IhvoCGzI3K7QBuelxsl3qnPBDkUs9gpSSSNQCX8OaQp701OFnh/IhWSPhL31r1Skyr
+         OV3R03XRk9bQLa8UIJ0zbDq+sbLZ5kyBT6IHTDwkD9KWby5cT9vww/6IPpEXijkToHPP
+         6UtQ==
+X-Gm-Message-State: APjAAAUUzK++2kyiJ2jQK6hKNfx/5T9WrvE05UZ/OD68sL2g6IJh1c/1
+        iSrp2hWwVg4DFyckLjtd3nE91YzfmgPgDn9UUNH/eOhYZsugb7W5TV+2C8WH/q/ccxl7ABSLfcz
+        LBGwdiVrGJVN1Lqqy/9Kd
+X-Received: by 2002:a7b:c152:: with SMTP id z18mr9244345wmi.70.1582109477631;
+        Wed, 19 Feb 2020 02:51:17 -0800 (PST)
+X-Google-Smtp-Source: APXvYqwueRhhmgy0u1UtdAncUH/xP27A66KA1kRjxl/8TxjTTNoOfQCU3cTNkVAGsOaZg3f4dd8KJA==
+X-Received: by 2002:a7b:c152:: with SMTP id z18mr9244304wmi.70.1582109477228;
+        Wed, 19 Feb 2020 02:51:17 -0800 (PST)
 Received: from andromeda (ip-89-103-126-188.net.upcbroadband.cz. [89.103.126.188])
-        by smtp.gmail.com with ESMTPSA id z6sm2370996wrw.36.2020.02.19.02.32.53
+        by smtp.gmail.com with ESMTPSA id h205sm2584979wmf.25.2020.02.19.02.51.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Feb 2020 02:32:54 -0800 (PST)
-Date:   Wed, 19 Feb 2020 11:32:52 +0100
+        Wed, 19 Feb 2020 02:51:16 -0800 (PST)
+Date:   Wed, 19 Feb 2020 11:51:14 +0100
 From:   Carlos Maiolino <cmaiolino@redhat.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs: ensure that the inode uid/gid match values
- match the icdinode ones
-Message-ID: <20200219103252.354iqhl2td7ekzdg@andromeda>
+Subject: Re: [PATCH 2/3] xfs: remove the icdinode di_uid/di_gid members
+Message-ID: <20200219105114.mzsmf7ksslhmfkix@andromeda>
 Mail-Followup-To: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
 References: <20200218210020.40846-1-hch@lst.de>
- <20200218210020.40846-2-hch@lst.de>
+ <20200218210020.40846-3-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200218210020.40846-2-hch@lst.de>
+In-Reply-To: <20200218210020.40846-3-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 18, 2020 at 01:00:18PM -0800, Christoph Hellwig wrote:
-> Instead of only synchronizing the uid/gid values in xfs_setup_inode,
-> ensure that they always match to prepare for removing the icdinode
-> fields.
+On Tue, Feb 18, 2020 at 01:00:19PM -0800, Christoph Hellwig wrote:
+> Use the Linux inode i_uid/i_gid members everywhere and just convert
+> from/to the scalar value when reading or writing the on-disk inode.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-
 
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
 
 > ---
->  fs/xfs/libxfs/xfs_inode_buf.c | 2 ++
->  fs/xfs/xfs_icache.c           | 4 ++++
->  fs/xfs/xfs_inode.c            | 8 ++++++--
->  fs/xfs/xfs_iops.c             | 3 ---
->  4 files changed, 12 insertions(+), 5 deletions(-)
+>  fs/xfs/libxfs/xfs_inode_buf.c | 10 ++++-----
+>  fs/xfs/libxfs/xfs_inode_buf.h |  2 --
+>  fs/xfs/xfs_dquot.c            |  4 ++--
+>  fs/xfs/xfs_inode.c            | 14 ++++--------
+>  fs/xfs/xfs_inode_item.c       |  4 ++--
+>  fs/xfs/xfs_ioctl.c            |  6 +++---
+>  fs/xfs/xfs_iops.c             |  6 +-----
+>  fs/xfs/xfs_itable.c           |  4 ++--
+>  fs/xfs/xfs_qm.c               | 40 ++++++++++++++++++++++-------------
+>  fs/xfs/xfs_quota.h            |  4 ++--
+>  fs/xfs/xfs_symlink.c          |  4 +---
+>  11 files changed, 46 insertions(+), 52 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index 8afacfe4be0a..cc4efd34843a 100644
+> index cc4efd34843a..bc72b575ceed 100644
 > --- a/fs/xfs/libxfs/xfs_inode_buf.c
 > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -223,7 +223,9 @@ xfs_inode_from_disk(
+> @@ -222,10 +222,8 @@ xfs_inode_from_disk(
+>  	}
 >  
 >  	to->di_format = from->di_format;
->  	to->di_uid = be32_to_cpu(from->di_uid);
-> +	inode->i_uid = xfs_uid_to_kuid(to->di_uid);
->  	to->di_gid = be32_to_cpu(from->di_gid);
-> +	inode->i_gid = xfs_gid_to_kgid(to->di_gid);
+> -	to->di_uid = be32_to_cpu(from->di_uid);
+> -	inode->i_uid = xfs_uid_to_kuid(to->di_uid);
+> -	to->di_gid = be32_to_cpu(from->di_gid);
+> -	inode->i_gid = xfs_gid_to_kgid(to->di_gid);
+> +	inode->i_uid = xfs_uid_to_kuid(be32_to_cpu(from->di_uid));
+> +	inode->i_gid = xfs_gid_to_kgid(be32_to_cpu(from->di_gid));
 >  	to->di_flushiter = be16_to_cpu(from->di_flushiter);
 >  
 >  	/*
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 8dc2e5414276..a7be7a9e5c1a 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -289,6 +289,8 @@ xfs_reinit_inode(
->  	uint64_t	version = inode_peek_iversion(inode);
->  	umode_t		mode = inode->i_mode;
->  	dev_t		dev = inode->i_rdev;
-> +	kuid_t		uid = inode->i_uid;
-> +	kgid_t		gid = inode->i_gid;
+> @@ -278,8 +276,8 @@ xfs_inode_to_disk(
 >  
->  	error = inode_init_always(mp->m_super, inode);
+>  	to->di_version = from->di_version;
+>  	to->di_format = from->di_format;
+> -	to->di_uid = cpu_to_be32(from->di_uid);
+> -	to->di_gid = cpu_to_be32(from->di_gid);
+> +	to->di_uid = cpu_to_be32(xfs_kuid_to_uid(inode->i_uid));
+> +	to->di_gid = cpu_to_be32(xfs_kgid_to_gid(inode->i_gid));
+>  	to->di_projid_lo = cpu_to_be16(from->di_projid & 0xffff);
+>  	to->di_projid_hi = cpu_to_be16(from->di_projid >> 16);
 >  
-> @@ -297,6 +299,8 @@ xfs_reinit_inode(
->  	inode_set_iversion_queried(inode, version);
->  	inode->i_mode = mode;
->  	inode->i_rdev = dev;
-> +	inode->i_uid = uid;
-> +	inode->i_gid = gid;
->  	return error;
->  }
->  
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
+> index fd94b1078722..2683e1e2c4a6 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.h
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.h
+> @@ -19,8 +19,6 @@ struct xfs_icdinode {
+>  	int8_t		di_version;	/* inode version */
+>  	int8_t		di_format;	/* format of di_c data */
+>  	uint16_t	di_flushiter;	/* incremented on flush */
+> -	uint32_t	di_uid;		/* owner's user id */
+> -	uint32_t	di_gid;		/* owner's group id */
+>  	uint32_t	di_projid;	/* owner's project id */
+>  	xfs_fsize_t	di_size;	/* number of bytes in file */
+>  	xfs_rfsblock_t	di_nblocks;	/* # of direct & btree blocks used */
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index d223e1ae90a6..3579de9306c1 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -829,9 +829,9 @@ xfs_qm_id_for_quotatype(
+>  {
+>  	switch (type) {
+>  	case XFS_DQ_USER:
+> -		return ip->i_d.di_uid;
+> +		return xfs_kuid_to_uid(VFS_I(ip)->i_uid);
+>  	case XFS_DQ_GROUP:
+> -		return ip->i_d.di_gid;
+> +		return xfs_kgid_to_gid(VFS_I(ip)->i_gid);
+>  	case XFS_DQ_PROJ:
+>  		return ip->i_d.di_projid;
+>  	}
 > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index c5077e6326c7..938b0943bd95 100644
+> index 938b0943bd95..3324e1696354 100644
 > --- a/fs/xfs/xfs_inode.c
 > +++ b/fs/xfs/xfs_inode.c
-> @@ -812,15 +812,19 @@ xfs_ialloc(
->  
+> @@ -813,18 +813,15 @@ xfs_ialloc(
 >  	inode->i_mode = mode;
 >  	set_nlink(inode, nlink);
-> -	ip->i_d.di_uid = xfs_kuid_to_uid(current_fsuid());
-> -	ip->i_d.di_gid = xfs_kgid_to_gid(current_fsgid());
-> +	inode->i_uid = current_fsuid();
-> +	ip->i_d.di_uid = xfs_kuid_to_uid(inode->i_uid);
+>  	inode->i_uid = current_fsuid();
+> -	ip->i_d.di_uid = xfs_kuid_to_uid(inode->i_uid);
 >  	inode->i_rdev = rdev;
 >  	ip->i_d.di_projid = prid;
 >  
 >  	if (pip && XFS_INHERIT_GID(pip)) {
-> +		inode->i_gid = VFS_I(pip)->i_gid;
->  		ip->i_d.di_gid = pip->i_d.di_gid;
+>  		inode->i_gid = VFS_I(pip)->i_gid;
+> -		ip->i_d.di_gid = pip->i_d.di_gid;
 >  		if ((VFS_I(pip)->i_mode & S_ISGID) && S_ISDIR(mode))
 >  			inode->i_mode |= S_ISGID;
-> +	} else {
-> +		inode->i_gid = current_fsgid();
-> +		ip->i_d.di_gid = xfs_kgid_to_gid(inode->i_gid);
+>  	} else {
+>  		inode->i_gid = current_fsgid();
+> -		ip->i_d.di_gid = xfs_kgid_to_gid(inode->i_gid);
 >  	}
 >  
 >  	/*
+> @@ -832,9 +829,8 @@ xfs_ialloc(
+>  	 * ID or one of the supplementary group IDs, the S_ISGID bit is cleared
+>  	 * (and only if the irix_sgid_inherit compatibility variable is set).
+>  	 */
+> -	if ((irix_sgid_inherit) &&
+> -	    (inode->i_mode & S_ISGID) &&
+> -	    (!in_group_p(xfs_gid_to_kgid(ip->i_d.di_gid))))
+> +	if (irix_sgid_inherit &&
+> +	    (inode->i_mode & S_ISGID) && !in_group_p(inode->i_gid))
+>  		inode->i_mode &= ~S_ISGID;
+>  
+>  	ip->i_d.di_size = 0;
+> @@ -1162,8 +1158,7 @@ xfs_create(
+>  	/*
+>  	 * Make sure that we have allocated dquot(s) on disk.
+>  	 */
+> -	error = xfs_qm_vop_dqalloc(dp, xfs_kuid_to_uid(current_fsuid()),
+> -					xfs_kgid_to_gid(current_fsgid()), prid,
+> +	error = xfs_qm_vop_dqalloc(dp, current_fsuid(), current_fsgid(), prid,
+>  					XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
+>  					&udqp, &gdqp, &pdqp);
+>  	if (error)
+> @@ -1313,8 +1308,7 @@ xfs_create_tmpfile(
+>  	/*
+>  	 * Make sure that we have allocated dquot(s) on disk.
+>  	 */
+> -	error = xfs_qm_vop_dqalloc(dp, xfs_kuid_to_uid(current_fsuid()),
+> -				xfs_kgid_to_gid(current_fsgid()), prid,
+> +	error = xfs_qm_vop_dqalloc(dp, current_fsuid(), current_fsgid(), prid,
+>  				XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
+>  				&udqp, &gdqp, &pdqp);
+>  	if (error)
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index 8bd5d0de6321..83d7914556ef 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -308,8 +308,8 @@ xfs_inode_to_log_dinode(
+>  
+>  	to->di_version = from->di_version;
+>  	to->di_format = from->di_format;
+> -	to->di_uid = from->di_uid;
+> -	to->di_gid = from->di_gid;
+> +	to->di_uid = xfs_kuid_to_uid(inode->i_uid);
+> +	to->di_gid = xfs_kgid_to_gid(inode->i_gid);
+>  	to->di_projid_lo = from->di_projid & 0xffff;
+>  	to->di_projid_hi = from->di_projid >> 16;
+>  
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index d42de92cb283..0f85bedc5977 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1434,9 +1434,9 @@ xfs_ioctl_setattr(
+>  	 * because the i_*dquot fields will get updated anyway.
+>  	 */
+>  	if (XFS_IS_QUOTA_ON(mp)) {
+> -		code = xfs_qm_vop_dqalloc(ip, ip->i_d.di_uid,
+> -					 ip->i_d.di_gid, fa->fsx_projid,
+> -					 XFS_QMOPT_PQUOTA, &udqp, NULL, &pdqp);
+> +		code = xfs_qm_vop_dqalloc(ip, VFS_I(ip)->i_uid,
+> +				VFS_I(ip)->i_gid, fa->fsx_projid,
+> +				XFS_QMOPT_PQUOTA, &udqp, NULL, &pdqp);
+>  		if (code)
+>  			return code;
+>  	}
 > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 81f2f93caec0..b818b261918f 100644
+> index b818b261918f..a5b7c3100a2f 100644
 > --- a/fs/xfs/xfs_iops.c
 > +++ b/fs/xfs/xfs_iops.c
-> @@ -1304,9 +1304,6 @@ xfs_setup_inode(
->  	/* make the inode look hashed for the writeback code */
->  	inode_fake_hash(inode);
+> @@ -692,9 +692,7 @@ xfs_setattr_nonsize(
+>  		 */
+>  		ASSERT(udqp == NULL);
+>  		ASSERT(gdqp == NULL);
+> -		error = xfs_qm_vop_dqalloc(ip, xfs_kuid_to_uid(uid),
+> -					   xfs_kgid_to_gid(gid),
+> -					   ip->i_d.di_projid,
+> +		error = xfs_qm_vop_dqalloc(ip, uid, gid, ip->i_d.di_projid,
+>  					   qflags, &udqp, &gdqp, NULL);
+>  		if (error)
+>  			return error;
+> @@ -763,7 +761,6 @@ xfs_setattr_nonsize(
+>  				olddquot1 = xfs_qm_vop_chown(tp, ip,
+>  							&ip->i_udquot, udqp);
+>  			}
+> -			ip->i_d.di_uid = xfs_kuid_to_uid(uid);
+>  			inode->i_uid = uid;
+>  		}
+>  		if (!gid_eq(igid, gid)) {
+> @@ -775,7 +772,6 @@ xfs_setattr_nonsize(
+>  				olddquot2 = xfs_qm_vop_chown(tp, ip,
+>  							&ip->i_gdquot, gdqp);
+>  			}
+> -			ip->i_d.di_gid = xfs_kgid_to_gid(gid);
+>  			inode->i_gid = gid;
+>  		}
+>  	}
+> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+> index 4b31c29b7e6b..497db4160283 100644
+> --- a/fs/xfs/xfs_itable.c
+> +++ b/fs/xfs/xfs_itable.c
+> @@ -86,8 +86,8 @@ xfs_bulkstat_one_int(
+>  	 */
+>  	buf->bs_projectid = ip->i_d.di_projid;
+>  	buf->bs_ino = ino;
+> -	buf->bs_uid = dic->di_uid;
+> -	buf->bs_gid = dic->di_gid;
+> +	buf->bs_uid = xfs_kuid_to_uid(inode->i_uid);
+> +	buf->bs_gid = xfs_kgid_to_gid(inode->i_gid);
+>  	buf->bs_size = dic->di_size;
 >  
-> -	inode->i_uid    = xfs_uid_to_kuid(ip->i_d.di_uid);
-> -	inode->i_gid    = xfs_gid_to_kgid(ip->i_d.di_gid);
-> -
->  	i_size_write(inode, ip->i_d.di_size);
->  	xfs_diflags_to_iflags(inode, ip);
+>  	buf->bs_nlink = inode->i_nlink;
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index 0b0909657bad..54dda7d982c9 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -326,16 +326,18 @@ xfs_qm_dqattach_locked(
+>  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
 >  
+>  	if (XFS_IS_UQUOTA_ON(mp) && !ip->i_udquot) {
+> -		error = xfs_qm_dqattach_one(ip, ip->i_d.di_uid, XFS_DQ_USER,
+> -				doalloc, &ip->i_udquot);
+> +		error = xfs_qm_dqattach_one(ip,
+> +				xfs_kuid_to_uid(VFS_I(ip)->i_uid),
+> +				XFS_DQ_USER, doalloc, &ip->i_udquot);
+>  		if (error)
+>  			goto done;
+>  		ASSERT(ip->i_udquot);
+>  	}
+>  
+>  	if (XFS_IS_GQUOTA_ON(mp) && !ip->i_gdquot) {
+> -		error = xfs_qm_dqattach_one(ip, ip->i_d.di_gid, XFS_DQ_GROUP,
+> -				doalloc, &ip->i_gdquot);
+> +		error = xfs_qm_dqattach_one(ip,
+> +				xfs_kgid_to_gid(VFS_I(ip)->i_gid),
+> +				XFS_DQ_GROUP, doalloc, &ip->i_gdquot);
+>  		if (error)
+>  			goto done;
+>  		ASSERT(ip->i_gdquot);
+> @@ -1613,8 +1615,8 @@ xfs_qm_dqfree_one(
+>  int
+>  xfs_qm_vop_dqalloc(
+>  	struct xfs_inode	*ip,
+> -	xfs_dqid_t		uid,
+> -	xfs_dqid_t		gid,
+> +	kuid_t			uid,
+> +	kgid_t			gid,
+>  	prid_t			prid,
+>  	uint			flags,
+>  	struct xfs_dquot	**O_udqpp,
+> @@ -1622,6 +1624,7 @@ xfs_qm_vop_dqalloc(
+>  	struct xfs_dquot	**O_pdqpp)
+>  {
+>  	struct xfs_mount	*mp = ip->i_mount;
+> +	struct inode		*inode = VFS_I(ip);
+>  	struct xfs_dquot	*uq = NULL;
+>  	struct xfs_dquot	*gq = NULL;
+>  	struct xfs_dquot	*pq = NULL;
+> @@ -1635,7 +1638,7 @@ xfs_qm_vop_dqalloc(
+>  	xfs_ilock(ip, lockflags);
+>  
+>  	if ((flags & XFS_QMOPT_INHERIT) && XFS_INHERIT_GID(ip))
+> -		gid = ip->i_d.di_gid;
+> +		gid = inode->i_gid;
+>  
+>  	/*
+>  	 * Attach the dquot(s) to this inode, doing a dquot allocation
+> @@ -1650,7 +1653,7 @@ xfs_qm_vop_dqalloc(
+>  	}
+>  
+>  	if ((flags & XFS_QMOPT_UQUOTA) && XFS_IS_UQUOTA_ON(mp)) {
+> -		if (ip->i_d.di_uid != uid) {
+> +		if (!uid_eq(inode->i_uid, uid)) {
+>  			/*
+>  			 * What we need is the dquot that has this uid, and
+>  			 * if we send the inode to dqget, the uid of the inode
+> @@ -1661,7 +1664,8 @@ xfs_qm_vop_dqalloc(
+>  			 * holding ilock.
+>  			 */
+>  			xfs_iunlock(ip, lockflags);
+> -			error = xfs_qm_dqget(mp, uid, XFS_DQ_USER, true, &uq);
+> +			error = xfs_qm_dqget(mp, xfs_kuid_to_uid(uid),
+> +					XFS_DQ_USER, true, &uq);
+>  			if (error) {
+>  				ASSERT(error != -ENOENT);
+>  				return error;
+> @@ -1682,9 +1686,10 @@ xfs_qm_vop_dqalloc(
+>  		}
+>  	}
+>  	if ((flags & XFS_QMOPT_GQUOTA) && XFS_IS_GQUOTA_ON(mp)) {
+> -		if (ip->i_d.di_gid != gid) {
+> +		if (!gid_eq(inode->i_gid, gid)) {
+>  			xfs_iunlock(ip, lockflags);
+> -			error = xfs_qm_dqget(mp, gid, XFS_DQ_GROUP, true, &gq);
+> +			error = xfs_qm_dqget(mp, xfs_kgid_to_gid(gid),
+> +					XFS_DQ_GROUP, true, &gq);
+>  			if (error) {
+>  				ASSERT(error != -ENOENT);
+>  				goto error_rele;
+> @@ -1810,7 +1815,8 @@ xfs_qm_vop_chown_reserve(
+>  			XFS_QMOPT_RES_RTBLKS : XFS_QMOPT_RES_REGBLKS;
+>  
+>  	if (XFS_IS_UQUOTA_ON(mp) && udqp &&
+> -	    ip->i_d.di_uid != be32_to_cpu(udqp->q_core.d_id)) {
+> +	    xfs_kuid_to_uid(VFS_I(ip)->i_uid) !=
+> +			be32_to_cpu(udqp->q_core.d_id)) {
+>  		udq_delblks = udqp;
+>  		/*
+>  		 * If there are delayed allocation blocks, then we have to
+> @@ -1823,7 +1829,8 @@ xfs_qm_vop_chown_reserve(
+>  		}
+>  	}
+>  	if (XFS_IS_GQUOTA_ON(ip->i_mount) && gdqp &&
+> -	    ip->i_d.di_gid != be32_to_cpu(gdqp->q_core.d_id)) {
+> +	    xfs_kgid_to_gid(VFS_I(ip)->i_gid) !=
+> +			be32_to_cpu(gdqp->q_core.d_id)) {
+>  		gdq_delblks = gdqp;
+>  		if (delblks) {
+>  			ASSERT(ip->i_gdquot);
+> @@ -1920,14 +1927,17 @@ xfs_qm_vop_create_dqattach(
+>  
+>  	if (udqp && XFS_IS_UQUOTA_ON(mp)) {
+>  		ASSERT(ip->i_udquot == NULL);
+> -		ASSERT(ip->i_d.di_uid == be32_to_cpu(udqp->q_core.d_id));
+> +		ASSERT(xfs_kuid_to_uid(VFS_I(ip)->i_uid) ==
+> +			be32_to_cpu(udqp->q_core.d_id));
+>  
+>  		ip->i_udquot = xfs_qm_dqhold(udqp);
+>  		xfs_trans_mod_dquot(tp, udqp, XFS_TRANS_DQ_ICOUNT, 1);
+>  	}
+>  	if (gdqp && XFS_IS_GQUOTA_ON(mp)) {
+>  		ASSERT(ip->i_gdquot == NULL);
+> -		ASSERT(ip->i_d.di_gid == be32_to_cpu(gdqp->q_core.d_id));
+> +		ASSERT(xfs_kgid_to_gid(VFS_I(ip)->i_gid) ==
+> +			be32_to_cpu(gdqp->q_core.d_id));
+> +
+>  		ip->i_gdquot = xfs_qm_dqhold(gdqp);
+>  		xfs_trans_mod_dquot(tp, gdqp, XFS_TRANS_DQ_ICOUNT, 1);
+>  	}
+> diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+> index efe42ae7a2f3..aa8fc1f55fbd 100644
+> --- a/fs/xfs/xfs_quota.h
+> +++ b/fs/xfs/xfs_quota.h
+> @@ -86,7 +86,7 @@ extern int xfs_trans_reserve_quota_bydquots(struct xfs_trans *,
+>  		struct xfs_mount *, struct xfs_dquot *,
+>  		struct xfs_dquot *, struct xfs_dquot *, int64_t, long, uint);
+>  
+> -extern int xfs_qm_vop_dqalloc(struct xfs_inode *, xfs_dqid_t, xfs_dqid_t,
+> +extern int xfs_qm_vop_dqalloc(struct xfs_inode *, kuid_t, kgid_t,
+>  		prid_t, uint, struct xfs_dquot **, struct xfs_dquot **,
+>  		struct xfs_dquot **);
+>  extern void xfs_qm_vop_create_dqattach(struct xfs_trans *, struct xfs_inode *,
+> @@ -109,7 +109,7 @@ extern void xfs_qm_unmount_quotas(struct xfs_mount *);
+>  
+>  #else
+>  static inline int
+> -xfs_qm_vop_dqalloc(struct xfs_inode *ip, xfs_dqid_t uid, xfs_dqid_t gid,
+> +xfs_qm_vop_dqalloc(struct xfs_inode *ip, kuid_t kuid, kgid_t kgid,
+>  		prid_t prid, uint flags, struct xfs_dquot **udqp,
+>  		struct xfs_dquot **gdqp, struct xfs_dquot **pdqp)
+>  {
+> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+> index d762d42ed0ff..ea42e25ec1bf 100644
+> --- a/fs/xfs/xfs_symlink.c
+> +++ b/fs/xfs/xfs_symlink.c
+> @@ -182,9 +182,7 @@ xfs_symlink(
+>  	/*
+>  	 * Make sure that we have allocated dquot(s) on disk.
+>  	 */
+> -	error = xfs_qm_vop_dqalloc(dp,
+> -			xfs_kuid_to_uid(current_fsuid()),
+> -			xfs_kgid_to_gid(current_fsgid()), prid,
+> +	error = xfs_qm_vop_dqalloc(dp, current_fsuid(), current_fsgid(), prid,
+>  			XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
+>  			&udqp, &gdqp, &pdqp);
+>  	if (error)
 > -- 
 > 2.24.1
 > 
