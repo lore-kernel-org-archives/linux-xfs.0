@@ -2,235 +2,133 @@ Return-Path: <SRS0=TUUv=4H=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48E7FC3404D
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 02:02:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F060C34031
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 02:23:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2C0232465A
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 02:02:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 73C4720801
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 02:23:02 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZnvNzleU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728039AbgBSCCE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Feb 2020 21:02:04 -0500
-Received: from sandeen.net ([63.231.237.45]:49140 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727811AbgBSCCE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Feb 2020 21:02:04 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id A20772A76;
-        Tue, 18 Feb 2020 20:01:48 -0600 (CST)
-Subject: Re: [RFC PATCH] xfs: make sure our default quota warning limits and
- grace periods survive quotacheck
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Eric Sandeen <sandeen@redhat.com>,
-        Eryu Guan <guaneryu@gmail.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
-References: <20200219003423.GB9511@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <5fe8f366-3fdd-6a0e-b39c-e7e2753e7c6f@sandeen.net>
-Date:   Tue, 18 Feb 2020 20:02:02 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.5.0
+        id S1726768AbgBSCXC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Feb 2020 21:23:02 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:46908 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726735AbgBSCXB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Feb 2020 21:23:01 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=AmBYu3mpTxz55oEbZdrXdPhOFuVVUVpBKAkDMjhC+bk=; b=ZnvNzleUFxBP7YT/XJ7y0Rz/bu
+        VkddBEMMXKNPUEPIHNmeV0img3eiMCgmTDLWhnmF0LgRkhumSClEFtJ8h9QNQ1gTWJ7cQ7oYl5y2T
+        LQq1+MXm3VWWly+rUeCiBOlqF7kPYFOalIjZFbqYzu76qbt0PLrQYATKJKLlxP1jWBvgL8vVEl1oK
+        PZK3QLY1XvI1RwzN3cfFLeaib3/PQmj6eNOnYQSQu+wNZ3jLp3NgdPPwpBmDQq/4dju6xWjfr9B1l
+        Je53RqtXvIb3d5xbLSBBBArNi+TgTTRpln+YO9xoRn4KQfP+zLPQhoOJyXxsL0Z4nCcXJHdASLsqc
+        D4fDP3AQ==;
+Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1j4F0v-0003R5-2P; Wed, 19 Feb 2020 02:23:01 +0000
+Date:   Tue, 18 Feb 2020 18:23:00 -0800
+From:   Matthew Wilcox <willy@infradead.org>
+To:     John Hubbard <jhubbard@nvidia.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v6 09/19] mm: Add page_cache_readahead_limit
+Message-ID: <20200219022300.GJ24185@bombadil.infradead.org>
+References: <20200217184613.19668-1-willy@infradead.org>
+ <20200217184613.19668-16-willy@infradead.org>
+ <1263603d-f446-c447-2eac-697d105fa76c@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <20200219003423.GB9511@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1263603d-f446-c447-2eac-697d105fa76c@nvidia.com>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/18/20 6:34 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Feb 18, 2020 at 05:32:31PM -0800, John Hubbard wrote:
+> > +			page_cache_readahead_limit(inode->i_mapping, NULL,
+> > +					index, LONG_MAX, num_ra_pages, 0);
 > 
-> Make sure that the default quota grace period and maximum warning limits
-> set by the administrator survive quotacheck.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> This is the testcase to go with 'xfs: preserve default grace interval
-> during quotacheck', though Eric and I haven't figured out how we're
-> going to land that one...
+> LONG_MAX seems bold at first, but then again I can't think of anything smaller 
+> that makes any sense, and the previous code didn't have a limit either...OK.
 
-This probably could be a generic test, though I don't know how we're supposed
-to handle the test matrix of all the different versions, types, and applications
-which can implement or manage quota... I guess since it's an xfs specific fix
-perhaps an xfs-specific test is reasonable.
+Probably worth looking at Dave's review of this and what we've just
+negotiated on the other subthread ... LONG_MAX is gone.
 
-> ---
->  tests/xfs/913     |   69 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/913.out |   13 ++++++++++
->  tests/xfs/group   |    1 +
->  3 files changed, 83 insertions(+)
->  create mode 100755 tests/xfs/913
->  create mode 100644 tests/xfs/913.out
+> I also wondered about the NULL file parameter, and wonder if we're stripping out
+> information that is needed for authentication, given that that's what the newly
+> written kerneldoc says the "file" arg is for. But it seems that if we're this 
+> deep in the fs code's read routines, file system authentication has long since 
+> been addressed.
+
+The authentication is for network filesystems.  Local filesystems
+generally don't use the 'file' parameter, and since we're going to be
+calling back into the filesystem's own readahead routine, we know it's
+not needed.
+
+> Any actually I don't yet (still working through the patches) see any authentication,
+> so maybe that parameter will turn out to be unnecessary.
 > 
-> diff --git a/tests/xfs/913 b/tests/xfs/913
-> new file mode 100755
-> index 00000000..94681b02
-> --- /dev/null
-> +++ b/tests/xfs/913
-> @@ -0,0 +1,69 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0-or-later
-> +# Copyright (c) 2020, Oracle and/or its affiliates.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 913
-> +#
-> +# Make sure that the quota default grace period and maximum warning limits
-> +# survive quotacheck.
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1    # failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/quota
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_quota
-> +
-> +rm -f $seqres.full
-> +
-> +# Format filesystem and set up quota limits
-> +_scratch_mkfs > $seqres.full
-> +_qmount_option "usrquota"
-> +_scratch_mount >> $seqres.full
-> +
-> +$XFS_QUOTA_PROG -x -c 'timer -u 300m' $SCRATCH_MNT
-> +$XFS_QUOTA_PROG -x -c 'state' $SCRATCH_MNT | grep 'grace time'
-> +_scratch_unmount
+> Anyway, It's nice to see this factored out into a single routine.
 
-ok as long as you're only doing one quota type and it's the user
-quota type this should survive future changes.
+I'm kind of thinking about pushing the rac in the other direction too,
+so page_cache_readahead_unlimited(rac, nr_to_read, lookahead_size).
 
-Hm, actually I wonder if it'd be best to explicitly call "state -u"
-because state_f() does:
-
-        if (!type)
-                type = XFS_USER_QUOTA | XFS_GROUP_QUOTA | XFS_PROJ_QUOTA;
-
-and that bitmask'd type(s) gets eventually fed to xfsquotactl -> xtype_to_qtype
-which really only handles one quota type, not a bitmask, and if more than
-one is set it gives up and returns zero which magically happens to be
-XFS_USER_QUOTA.  (whee!)
-
-tl;dr: "state -u" might be more deterministic in the long run.
-
-> +
-> +# Remount and check the limits
-> +_scratch_mount >> $seqres.full
-> +$XFS_QUOTA_PROG -x -c 'state' $SCRATCH_MNT | grep 'grace time'
-> +_scratch_unmount
-> +
-> +# Run repair to force quota check
-> +_scratch_xfs_repair >> $seqres.full 2>&1
-> +
-> +# Remount (this time to run quotacheck) and check the limits.  There's a bug
-> +# in quotacheck where we would reset the ondisk default grace period to zero
-> +# while the incore copy stays at whatever was read in prior to quotacheck.
-> +# This will show up after the /next/ remount.
-> +_scratch_mount >> $seqres.full
-> +$XFS_QUOTA_PROG -x -c 'state' $SCRATCH_MNT | grep 'grace time'
-> +_scratch_unmount
-> +
-> +# Remount and check the limits
-> +_scratch_mount >> $seqres.full
-> +$XFS_QUOTA_PROG -x -c 'state' $SCRATCH_MNT | grep 'grace time'
-> +_scratch_unmount
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/913.out b/tests/xfs/913.out
-> new file mode 100644
-> index 00000000..ee989388
-> --- /dev/null
-> +++ b/tests/xfs/913.out
-> @@ -0,0 +1,13 @@
-> +QA output created by 913
-> +Blocks grace time: [0 days 05:00:00]
-> +Inodes grace time: [0 days 05:00:00]
-> +Realtime Blocks grace time: [0 days 05:00:00]
-> +Blocks grace time: [0 days 05:00:00]
-> +Inodes grace time: [0 days 05:00:00]
-> +Realtime Blocks grace time: [0 days 05:00:00]
-> +Blocks grace time: [0 days 05:00:00]
-> +Inodes grace time: [0 days 05:00:00]
-> +Realtime Blocks grace time: [0 days 05:00:00]
-> +Blocks grace time: [0 days 05:00:00]
-> +Inodes grace time: [0 days 05:00:00]
-> +Realtime Blocks grace time: [0 days 05:00:00]
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index 056072fb..87b3c75d 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -539,4 +539,5 @@
->  910 auto quick inobtcount
->  911 auto quick bigtime
->  912 auto quick label
-> +913 auto quick quota
->  997 auto quick mount
+> > +/**
+> > + * page_cache_readahead_limit - Start readahead beyond a file's i_size.
 > 
+> 
+> Maybe: 
+> 
+>     "Start readahead to a caller-specified end point" ?
+> 
+> (It's only *potentially* beyond files's i_size.)
+
+My current tree has:
+ * page_cache_readahead_exceed - Start unchecked readahead.
+
+
+> > + * @mapping: File address space.
+> > + * @file: This instance of the open file; used for authentication.
+> > + * @offset: First page index to read.
+> > + * @end_index: The maximum page index to read.
+> > + * @nr_to_read: The number of pages to read.
+> 
+> 
+> How about:
+> 
+>     "The number of pages to read, as long as end_index is not exceeded."
+
+API change makes this irrelevant ;-)
+
+> > + * @lookahead_size: Where to start the next readahead.
+> 
+> Pre-existing, but...it's hard to understand how a size is "where to start".
+> Should we rename this arg?
+
+It should probably be lookahead_count.
+
+> > + *
+> > + * This function is for filesystems to call when they want to start
+> > + * readahead potentially beyond a file's stated i_size.  If you want
+> > + * to start readahead on a normal file, you probably want to call
+> > + * page_cache_async_readahead() or page_cache_sync_readahead() instead.
+> > + *
+> > + * Context: File is referenced by caller.  Mutexes may be held by caller.
+> > + * May sleep, but will not reenter filesystem to reclaim memory.
+> 
+> In fact, can we say "must not reenter filesystem"? 
+
+I think it depends which side of the API you're looking at which wording
+you prefer ;-)
+
