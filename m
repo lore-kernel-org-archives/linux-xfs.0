@@ -2,69 +2,76 @@ Return-Path: <SRS0=TUUv=4H=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6021C34022
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 05:23:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2448FC3404E
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 05:35:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 95766208E4
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 05:23:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E848721D56
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 05:35:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="DuVHuymB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726096AbgBSFXf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Feb 2020 00:23:35 -0500
-Received: from zeniv.linux.org.uk ([195.92.253.2]:36886 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725819AbgBSFXf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Feb 2020 00:23:35 -0500
-Received: from viro by ZenIV.linux.org.uk with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j4HpZ-00F4vo-LP; Wed, 19 Feb 2020 05:23:29 +0000
-Date:   Wed, 19 Feb 2020 05:23:29 +0000
-From:   Al Viro <viro@zeniv.linux.org.uk>
-To:     Qian Cai <cai@lca.pw>
-Cc:     hch@infradead.org, darrick.wong@oracle.com, elver@google.com,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] fs: fix a data race in i_size_write/i_size_read
-Message-ID: <20200219052329.GP23230@ZenIV.linux.org.uk>
-References: <20200219045228.GO23230@ZenIV.linux.org.uk>
- <EDCBB5B9-DEE4-4D4B-B2F4-F63179977D6C@lca.pw>
+        id S1726480AbgBSFfq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Feb 2020 00:35:46 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:44192 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725842AbgBSFfq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Feb 2020 00:35:46 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=i5jjRMxpChRQy+2J/xRxaZpOqmFrFWQR+xd6cg6u2PI=; b=DuVHuymBPWn5wDST1aeEelhfNM
+        /bXL88FT9MFQnHGtbK4rSNZ+luoUIXATKSnNmq0w0g+oFVWjyKpy66W6FFgRGnswoBOWQpscJbJQP
+        4VedcAPQbAlzmDR4kFU3J0Di3kgpR1We770va4VzU0v+3uU5Psu/vRRzwnfoiQqbwdrygPBoB0Acc
+        Kj/viayLIFCgDZTYuGeW41k0nXnLmWVc48ZXm+FRjozkqV+sHubRee661ywX49PCOT/E1uqhfX2Ny
+        D9csTE5YF0U7xa7/EP5Jtkli2RRKOHF+UMVo8N/d71C108g1DAP7O0iiHuaezDNJcoHL5lnGSyTJU
+        QRfWManA==;
+Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1j4I1Q-0004Jt-TF; Wed, 19 Feb 2020 05:35:44 +0000
+Date:   Tue, 18 Feb 2020 21:35:44 -0800
+From:   Matthew Wilcox <willy@infradead.org>
+To:     John Hubbard <jhubbard@nvidia.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v6 17/19] iomap: Restructure iomap_readpages_actor
+Message-ID: <20200219053544.GN24185@bombadil.infradead.org>
+References: <20200217184613.19668-1-willy@infradead.org>
+ <20200217184613.19668-31-willy@infradead.org>
+ <d4803ef9-7a2f-965f-8f0f-c5e15396d892@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <EDCBB5B9-DEE4-4D4B-B2F4-F63179977D6C@lca.pw>
+In-Reply-To: <d4803ef9-7a2f-965f-8f0f-c5e15396d892@nvidia.com>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 19, 2020 at 12:08:40AM -0500, Qian Cai wrote:
+On Tue, Feb 18, 2020 at 07:17:18PM -0800, John Hubbard wrote:
+> > -	for (done = 0; done < length; done += ret) {
 > 
+> nit: this "for" loop was perfect just the way it was. :) I'd vote here for reverting
+> the change to a "while" loop. Because with this change, now the code has to 
+> separately initialize "done", separately increment "done", and the beauty of a
+> for loop is that the loop init and control is all clearly in one place. For things
+> that follow that model (as in this case!), that's a Good Thing.
 > 
-> > On Feb 18, 2020, at 11:52 PM, Al Viro <viro@zeniv.linux.org.uk> wrote:
-> > 
-> > If aligned 64bit stores on 64bit host (note the BITS_PER_LONG ifdefs) end up
-> > being split, the kernel is FUBAR anyway.  Details, please - how could that
-> > end up happening?
-> 
-> My understanding is the compiler might decide to split the load into saying two 4-byte loads. Then, we might have,
-> 
-> Load1
-> Store
-> Load2
-> 
-> where the load value could be a garbage. Also, Marco (the KCSAN maintainer) who knew more of compiler than me mentioned that there is no guarantee that the store will not be split either. Thus, the WRITE_ONCE().
-> 
+> And I don't see any technical reason (even in the following patch) that requires 
+> this change.
 
-	I would suggest
-* if some compiler does that, ask the persons responsible for that
-"optimization" which flags should be used to disable it.
-* if they fail to provide such, educate them regarding the
-usefulness of their idea
-* if that does not help, don't use the bloody piece of garbage.
+It's doing the increment in the wrong place.  We want the increment done in
+the middle of the loop, before we check whether we've got to the end of
+the page.  Not at the end of the loop.
 
-	Again, is that pure theory (because I can't come up with
-any reason why splitting a 32bit load would be any less legitimate
-than doing the same to a 64bit one on a 64bit architecture),
-or is there anything that really would pull that off?
+> > +	BUG_ON(ctx.cur_page);
+> 
+> Is a full BUG_ON() definitely called for here? Seems like a WARN might suffice...
+
+Dave made a similar comment; I'll pick this up there.
