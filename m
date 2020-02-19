@@ -2,91 +2,152 @@ Return-Path: <SRS0=TUUv=4H=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24A9DC34022
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 04:52:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01932C34022
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 04:55:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EF64524656
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 04:52:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D588824658
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Feb 2020 04:55:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726508AbgBSEwi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Feb 2020 23:52:38 -0500
-Received: from zeniv.linux.org.uk ([195.92.253.2]:36514 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726477AbgBSEwi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Feb 2020 23:52:38 -0500
-Received: from viro by ZenIV.linux.org.uk with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j4HLY-00F4Ft-Q9; Wed, 19 Feb 2020 04:52:28 +0000
-Date:   Wed, 19 Feb 2020 04:52:28 +0000
-From:   Al Viro <viro@zeniv.linux.org.uk>
-To:     Qian Cai <cai@lca.pw>
-Cc:     hch@infradead.org, darrick.wong@oracle.com, elver@google.com,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] fs: fix a data race in i_size_write/i_size_read
-Message-ID: <20200219045228.GO23230@ZenIV.linux.org.uk>
-References: <20200219040426.1140-1-cai@lca.pw>
+        id S1726515AbgBSEzR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Feb 2020 23:55:17 -0500
+Received: from sandeen.net ([63.231.237.45]:58282 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726508AbgBSEzR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Feb 2020 23:55:17 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id E1F8F2A76;
+        Tue, 18 Feb 2020 22:55:01 -0600 (CST)
+Subject: Re: [PATCH 02/14] xfs: preserve default grace interval during
+ quotacheck
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <157784106066.1364230.569420432829402226.stgit@magnolia>
+ <157784107520.1364230.49128863919644273.stgit@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <ff58d07d-f6d7-647d-204e-59999b31dfba@sandeen.net>
+Date:   Tue, 18 Feb 2020 22:55:15 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.5.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200219040426.1140-1-cai@lca.pw>
+In-Reply-To: <157784107520.1364230.49128863919644273.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 18, 2020 at 11:04:26PM -0500, Qian Cai wrote:
-> inode::i_size could be accessed concurently as noticed by KCSAN,
+On 12/31/19 7:11 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
->  BUG: KCSAN: data-race in iomap_do_writepage / iomap_write_end
+> When quotacheck runs, it zeroes all the timer fields in every dquot.
+> Unfortunately, it also does this to the root dquot, which erases any
+> preconfigured grace interval that the administrator may have set.  Worse
+> yet, the incore copies of those variables remain set.  This cache
+> coherence problem manifests itself as the grace interval mysteriously
+> being reset back to the defaults at the /next/ mount.
 > 
->  write to 0xffff8bf68fc0cac0 of 8 bytes by task 7484 on cpu 71:
->   iomap_write_end+0xea/0x530
->   i_size_write at include/linux/fs.h:888
->   (inlined by) iomap_write_end at fs/iomap/buffered-io.c:782
->   iomap_write_actor+0x132/0x200
->   iomap_apply+0x245/0x8a5
->   iomap_file_buffered_write+0xbd/0xf0
->   xfs_file_buffered_aio_write+0x1c2/0x790 [xfs]
->   xfs_file_write_iter+0x232/0x2d0 [xfs]
->   new_sync_write+0x29c/0x3b0
->   __vfs_write+0x92/0xa0
->   vfs_write+0x103/0x260
->   ksys_write+0x9d/0x130
->   __x64_sys_write+0x4c/0x60
->   do_syscall_64+0x91/0xb05
->   entry_SYSCALL_64_after_hwframe+0x49/0xbe
-> 
->  read to 0xffff8bf68fc0cac0 of 8 bytes by task 5901 on cpu 70:
->   iomap_do_writepage+0xf4/0x450
->   i_size_read at include/linux/fs.h:866
->   (inlined by) iomap_do_writepage at fs/iomap/buffered-io.c:1558
->   write_cache_pages+0x523/0xb20
->   iomap_writepages+0x47/0x80
->   xfs_vm_writepages+0xc7/0x100 [xfs]
->   do_writepages+0x5e/0x130
->   __writeback_single_inode+0xd5/0xb20
->   writeback_sb_inodes+0x429/0x910
->   __writeback_inodes_wb+0xc4/0x150
->   wb_writeback+0x47b/0x830
->   wb_workfn+0x688/0x930
->   process_one_work+0x54f/0xb90
->   worker_thread+0x80/0x5f0
->   kthread+0x1cd/0x1f0
->   ret_from_fork+0x27/0x50
-> 
->  Reported by Kernel Concurrency Sanitizer on:
->  CPU: 70 PID: 5901 Comm: kworker/u257:2 Tainted: G             L    5.6.0-rc2-next-20200218+ #2
->  Hardware name: HPE ProLiant DL385 Gen10/ProLiant DL385 Gen10, BIOS A40 07/10/2019
->  Workqueue: writeback wb_workfn (flush-254:0)
-> 
-> The write is protected by exclusive inode::i_rwsem (in
-> xfs_file_buffered_aio_write()) but the read is not. A shattered value
-> could introduce a logic bug. Fixed it using a pair of WRITE/READ_ONCE().
+> Fix it by resetting the root disk dquot's timer fields to the incore
+> values.
 
-If aligned 64bit stores on 64bit host (note the BITS_PER_LONG ifdefs) end up
-being split, the kernel is FUBAR anyway.  Details, please - how could that
-end up happening?
+Uh, so, even with this, it seems that we don't properly set up default time
+limits on the first mount.  Looking into it...
+
+I think we need something like this but I need to look more closely.
+
+Otherwise, xfs_qm_dqget_uncached fails if run before quotacheck has initialized
+things, and so we fail to set up default quotas or timers.
+
+(also, not sure if there's any point to initializing timers if that quota
+is not enabled...)
+
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index f94f6c34ee35..f4ac69fd946e 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -663,17 +671,6 @@ xfs_qm_init_quotainfo(
+ 
+ 	mp->m_qflags |= (mp->m_sb.sb_qflags & XFS_ALL_QUOTA_CHKD);
+ 
+-	xfs_qm_init_timelimits(mp, XFS_DQ_USER);
+-	xfs_qm_init_timelimits(mp, XFS_DQ_GROUP);
+-	xfs_qm_init_timelimits(mp, XFS_DQ_PROJ);
+-
+-	if (XFS_IS_UQUOTA_RUNNING(mp))
+-		xfs_qm_set_defquota(mp, XFS_DQ_USER);
+-	if (XFS_IS_GQUOTA_RUNNING(mp))
+-		xfs_qm_set_defquota(mp, XFS_DQ_GROUP);
+-	if (XFS_IS_PQUOTA_RUNNING(mp))
+-		xfs_qm_set_defquota(mp, XFS_DQ_PROJ);
+-
+ 	qinf->qi_shrinker.count_objects = xfs_qm_shrink_count;
+ 	qinf->qi_shrinker.scan_objects = xfs_qm_shrink_scan;
+ 	qinf->qi_shrinker.seeks = DEFAULT_SEEKS;
+@@ -1423,6 +1420,18 @@ xfs_qm_mount_quotas(
+ 			return;
+ 		}
+ 	}
++
++	xfs_qm_init_timelimits(mp, XFS_DQ_USER);
++	xfs_qm_init_timelimits(mp, XFS_DQ_GROUP);
++	xfs_qm_init_timelimits(mp, XFS_DQ_PROJ);
++
++	if (XFS_IS_UQUOTA_RUNNING(mp))
++		xfs_qm_set_defquota(mp, XFS_DQ_USER);
++	if (XFS_IS_GQUOTA_RUNNING(mp))
++		xfs_qm_set_defquota(mp, XFS_DQ_GROUP);
++	if (XFS_IS_PQUOTA_RUNNING(mp))
++		xfs_qm_set_defquota(mp, XFS_DQ_PROJ);
++
+ 	/*
+ 	 * If one type of quotas is off, then it will lose its
+ 	 * quotachecked status, since we won't be doing accounting for
