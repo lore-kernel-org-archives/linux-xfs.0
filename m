@@ -2,137 +2,101 @@ Return-Path: <SRS0=u4TP=4I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6A4DC11D25
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 21:30:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A55E7C11D00
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 22:06:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7B32A208CD
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 21:30:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="spnIzN1l"
+	by mail.kernel.org (Postfix) with ESMTP id 814B620801
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 22:06:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729072AbgBTVaz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Feb 2020 16:30:55 -0500
-Received: from mail-io1-f68.google.com ([209.85.166.68]:33663 "EHLO
-        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728993AbgBTVaz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Feb 2020 16:30:55 -0500
-Received: by mail-io1-f68.google.com with SMTP id z8so94393ioh.0;
-        Thu, 20 Feb 2020 13:30:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=GbAVtHmxkPYTFEqIzqUxUT4jjajs4dhBUAXZ7917FMM=;
-        b=spnIzN1lczTskeCoM0VtvCL48OYjGv3fiaDwGz/cpccqFQoypntUQFceuRc6Pkpukv
-         MSH1dpjQd/oN6GXkXb3OnrVlKxtGYX3IyWyrshxqpoZhcGIywUO3jv6KpmGbGy64nhwq
-         OFs/Po45yEDLpUiG4439frxSNtXCHbghQ4cX47VxvuCZrSewYu+KEDQQJQmIo+Np5joS
-         MHlDdDD4D80X1+/SgjGR0AEFa03FwwN5loplEyqdjUhUpgm7b0TaEDgaVaK3wIU2Z/kw
-         7czyXm42cH2puCkrecsmRtHrXQpuyK2NChFLPdwFH2jCu7YYsDHqhCWJW5F6bciGHeUm
-         FYLA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=GbAVtHmxkPYTFEqIzqUxUT4jjajs4dhBUAXZ7917FMM=;
-        b=SlVdsnKSp2npDxFHbMVhKUxURS5j3mdDKw1y395oamrWEKpEe2+6sD71UXYQc8Y3tO
-         aLk4+0a3BxWqZQl0VtdCnDn9CQXL5kcZAFY1A8hmrAxMNwoJ53ShM48g9ZhpAoc216WU
-         O81/i1qIfuUDg0SlnFwXpirHJ/bihN9UqIMVzMHrUfN3f2dU64lcpCtMel0b26GA4r08
-         j7Sc/IMo+OF+5R4viRgxamSdKrwxxP3mLJu6T9Azks1J+PfkLXDdRrM3Hmnts6sRs21T
-         jh9XG+SBPb3T0wVIsEFlbgdoeCDA39M12oHK8udCO9OHPbUHX/JaM2wUhDkE0eH+zxIZ
-         xGQw==
-X-Gm-Message-State: APjAAAW8bxic4Yrb7qS2zl4Riw5bWrft7KyEbRFlWrM0oilc+70piqse
-        cB14q87K5m6VcN1zSPB3CLS6bN+SALJq9HTEgTx4Ew==
-X-Google-Smtp-Source: APXvYqw40LKIf/2R8xKZVZ4VXY6+pk6Cp7e8t1q0/vnMTGx8q7LxEVOIuXKXjVaM+N29QJgHnu73cU9jxhVNGHpz940=
-X-Received: by 2002:a5d:9419:: with SMTP id v25mr26035700ion.3.1582234253502;
- Thu, 20 Feb 2020 13:30:53 -0800 (PST)
+        id S1727786AbgBTWG6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Feb 2020 17:06:58 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:58429 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727656AbgBTWG5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Feb 2020 17:06:57 -0500
+Received: from dread.disaster.area (pa49-195-185-106.pa.nsw.optusnet.com.au [49.195.185.106])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 625CD3A4653;
+        Fri, 21 Feb 2020 09:06:54 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1j4ty8-0003xj-OY; Fri, 21 Feb 2020 09:06:52 +1100
+Date:   Fri, 21 Feb 2020 09:06:52 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Luis Chamberlain <mcgrof@kernel.org>,
+        Richard Wareing <rwareing@fb.com>, linux-xfs@vger.kernel.org,
+        Anthony Iliopoulos <ailiopoulos@suse.de>
+Subject: Re: Modern uses of CONFIG_XFS_RT
+Message-ID: <20200220220652.GP10776@dread.disaster.area>
+References: <20200219135715.GZ30113@42.do-not-panic.com>
+ <20200220034106.GO10776@dread.disaster.area>
+ <20200220142520.GF48977@bfoster>
 MIME-Version: 1.0
-References: <e88c2f96-fdbb-efb5-d7e2-94bfefbe8bfa@oracle.com> <20200214044242.GI6870@magnolia>
-In-Reply-To: <20200214044242.GI6870@magnolia>
-From:   Steve French <smfrench@gmail.com>
-Date:   Thu, 20 Feb 2020 15:30:42 -0600
-Message-ID: <CAH2r5mvGHbibnxzERepYqbG0+yacD+pfLanBz52j16WkNm6-1g@mail.gmail.com>
-Subject: Re: [Lsf-pc] [LSF/MM/BPF TOPIC] Atomic Writes
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Allison Collins <allison.henderson@oracle.com>,
-        lsf-pc@lists.linux-foundation.org, xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200220142520.GF48977@bfoster>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+        a=bkRQb8bsQZKWSSj4M57YXw==:117 a=bkRQb8bsQZKWSSj4M57YXw==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=l697ptgUJYAA:10
+        a=7-415B0cAAAA:8 a=2y6CqJFtbjmwZ1nhrgUA:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The idea of using O_TMPFILE is interesting ... but opening an
-O_TMPFILE is awkward for network file systems because it is not an
-atomic operation either ... (create/close then open)
+On Thu, Feb 20, 2020 at 09:25:20AM -0500, Brian Foster wrote:
+> On Thu, Feb 20, 2020 at 02:41:06PM +1100, Dave Chinner wrote:
+> > On Wed, Feb 19, 2020 at 01:57:15PM +0000, Luis Chamberlain wrote:
+> > > I hear some folks still use CONFIG_XFS_RT, I was curious what was the
+> > > actual modern typical use case for it. I thought this was somewhat
+> > > realted to DAX use but upon a quick code inspection I see direct
+> > > realtionship.
+> > 
+> > Facebook use it in production systems to separate large file data
+> > from metadata and small files. i.e. they use a small SSD based
+> > partition for the filesytem metadata and a spinning disk for
+> > the large scale data storage. Essentially simple teired storage.
+> > 
+> 
+> Didn't this involve custom functionality? I thought they had posted
+> something at one point that wasn't seen through to merge, but I could be
+> misremembering (or maybe that was something else RT related). It doesn't
 
-On Thu, Feb 13, 2020 at 10:43 PM Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
->
-> On Thu, Feb 13, 2020 at 03:33:08PM -0700, Allison Collins wrote:
-> > Hi all,
-> >
-> > I know there's a lot of discussion on the list right now, but I'd like to
-> > get this out before too much time gets away.  I would like to propose the
-> > topic of atomic writes.  I realize the topic has been discussed before, but
-> > I have not found much activity for it recently so perhaps we can revisit it.
-> > We do have a customer who may have an interest, so I would like to discuss
-> > the current state of things, and how we can move forward.  If efforts are in
-> > progress, and if not, what have we learned from the attempt.
-> >
-> > I also understand there are multiple ways to solve this problem that people
-> > may have opinions on.  I've noticed some older patch sets trying to use a
-> > flag to control when dirty pages are flushed, though I think our customer
-> > would like to see a hardware solution via NVMe devices.  So I would like to
-> > see if others have similar interests as well and what their thoughts may be.
-> > Thanks everyone!
->
-> Hmmm well there are a number of different ways one could do this--
->
-> 1) Userspace allocates an O_TMPFILE file, clones all the file data to
-> it, makes whatever changes it wants (thus invoking COW writes), and then
-> calls some ioctl to swap the differing extent maps atomically.  For XFS
-> we have most of those pieces, but we'd have to add a log intent item to
-> track the progress of the remap so that we can complete the remap if the
-> system goes down.  This has potentially the best flexibility (multiple
-> processes can coordinate to stage multiple updates to non-overlapping
-> ranges of the file) but is also a nice foot bazooka.
->
-> 2) Set O_ATOMIC on the file, ensure that all writes are staged via COW,
-> and defer the cow remap step until we hit the synchronization point.
-> When that happens, we persist the new mappings somewhere (e.g. well
-> beyond all possible EOF in the XFS case) and then start an atomic remap
-> operation to move the new blocks into place in the file.  (XFS would
-> still have to add a new log intent item here to finish the remapping if
-> the system goes down.)  Less foot bazooka but leaves lingering questions
-> like what do you do if multiple processes want to run their own atomic
-> updates?
->
-> (Note that I think you have some sort of higher level progress tracking
-> of the remap operation because we can't leave a torn write just because
-> the computer crashed.)
->
-> 3) Magic pwritev2 API that lets userspace talk directly to hardware
-> atomic writes, though I don't know how userspace discovers what the
-> hardware limits are.   I'm assuming the usual sysfs knobs?
->
-> Note that #1 and #2 are done entirely in software, which makes them less
-> performant but OTOH there's effectively no limit (besides available
-> physical space) on how much data or how many non-contiguous extents we
-> can stage and commit.
->
-> --D
->
-> > Allison
+Yes, but that is largely irrelevant. It requires the RT device to
+function, and the RT device functionality is entirely unchanged. All
+that changed was the initial data allocation policy to select
+whether the RT or data device would be used, and that really isn't
+that controversial as we've always suggested this is a potential use
+of the RT device (fast and slow storage in the one filesystem
+namespace).
 
+> matter that much as there are probably other users out there, but I'm
+> not sure this serves as a great example use case if it did require
+> downstream customizations
 
+There are almost always downstream modifications in private cloud
+storage kernels, even if it is just bug fixes. They aren't shipping
+the code to anyone, so they don't have to publish those changes.
+However, the presence of downstream changes doesn't mean the
+upstreram functionality should be considered unused and can be
+removed....
 
+> that aren't going to be generalized/supported
+> for the community.. Richard..?
+
+IIRC, we were simply waiting on an updated patchset to address
+review comments...
+
+Cheers,
+
+Dave.
 -- 
-Thanks,
-
-Steve
+Dave Chinner
+david@fromorbit.com
