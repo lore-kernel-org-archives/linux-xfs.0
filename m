@@ -2,70 +2,102 @@ Return-Path: <SRS0=u4TP=4I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6836DC11D0C
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 15:59:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F4C0C11D05
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 16:03:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 36CD824670
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 15:59:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7560320658
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 16:03:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="t4XBm0GT"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GKiY1M58"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728733AbgBTP7q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Feb 2020 10:59:46 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:57750 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728684AbgBTP7q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Feb 2020 10:59:46 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=4HSLoqTPrk9DoM6LQyotYg3QdLXV2nALBfwaYUbwPI4=; b=t4XBm0GTrQys+uGUSMwmgbrcc/
-        dDn5MCRhiizJeeMUvJUm6oBBhcjlujUd9+vqCi3cSc8SiTwou53ls7dbEZTRNLqPngKRqGrGXyl5D
-        fIBtl7+hNVIFMgwejKSU3Q55cBRhSuH6qW+iiECUW+cDbisj7o4lgMcb3wOz02BiHJyfXTILL+vY9
-        PI4JOFLNAhIhTy0pxiof0b/H384RocLAtXKndhrhvR5/GE7qrp994XczunQciN7BpGeqyZr0RGikt
-        eVmiyPRMn3r6Htg3LQHtjob0Bh6Y5JqsO0fFg7zzZDf55AmeYnSDrOCJCltfaRlWO+ZTEIDWS7MS0
-        AwV0+jiw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j4oEk-0000RZ-1o; Thu, 20 Feb 2020 15:59:38 +0000
-Date:   Thu, 20 Feb 2020 07:59:38 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Richard Haines <richard_c_haines@btinternet.com>,
-        sds@tycho.nsa.gov, paul@paul-moore.com, linux-xfs@vger.kernel.org,
-        selinux@vger.kernel.org
-Subject: Re: [PATCH 0/1] selinux: Add xfs quota command types
-Message-ID: <20200220155938.GA1306@infradead.org>
-References: <20200220153234.152426-1-richard_c_haines@btinternet.com>
- <20200220155731.GU9506@magnolia>
+        id S1728686AbgBTQDA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Feb 2020 11:03:00 -0500
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:59821 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728620AbgBTQC7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Feb 2020 11:02:59 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1582214578;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=3g8Z9IdhxZEUthDjiL2/cSDiIPZivLy1UjwDofPgr1g=;
+        b=GKiY1M58QkmtLpi9iZj53sLQSj9rnCDjMucVvfuY43NxTGbp8EfawjF6KGbSm/LqtGvn97
+        RXx7QC/lCcG9IIj4jwiXupJvPD8oUFEjaVj+3eN+joN2J5I/qVxHyPMryRXiBE8AHpdAja
+        gwo3rG6xQD877SitXMvAnE0+HRGoe+0=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-395-VFsjUTWKNY6MIbBF9c6BGw-1; Thu, 20 Feb 2020 11:02:54 -0500
+X-MC-Unique: VFsjUTWKNY6MIbBF9c6BGw-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2D87E18A6EC9;
+        Thu, 20 Feb 2020 16:02:53 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 960EF89F08;
+        Thu, 20 Feb 2020 16:02:52 +0000 (UTC)
+Date:   Thu, 20 Feb 2020 11:02:50 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: fix iclog release error check race with shutdown
+Message-ID: <20200220160250.GG48977@bfoster>
+References: <20200218175425.20598-1-bfoster@redhat.com>
+ <20200218215243.GS10776@dread.disaster.area>
+ <20200219131232.GA24157@bfoster>
+ <20200219215141.GP9506@magnolia>
+ <20200220124144.GA48977@bfoster>
+ <20200220154317.GB6870@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200220155731.GU9506@magnolia>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200220154317.GB6870@infradead.org>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 20, 2020 at 07:57:31AM -0800, Darrick J. Wong wrote:
-> On Thu, Feb 20, 2020 at 03:32:33PM +0000, Richard Haines wrote:
-> > Added these quota command types for SELinux checks on XFS quotas. I picked
-> > those I thought useful. The selinux-testsuite will have tests for these
-> > permission checks on XFS.
+On Thu, Feb 20, 2020 at 07:43:17AM -0800, Christoph Hellwig wrote:
+> On Thu, Feb 20, 2020 at 07:41:44AM -0500, Brian Foster wrote:
+> > I wasn't planning on a v3. The discussion to this point has been
+> > centered around the xfs_force_shutdown() call in the associated function
+> > (which is orthogonal to the bug). v1 is technically correct, but
+> > Christoph suggested to restore historical behavior wrt to the shutdown
+> > call. v2 does that, but is a bit superfluous in that the iclog error
+> > state with the lock held implies shutdown has already occurred. This is
+> > harmless (unless we're worried about shutdown performance or
+> > something..), but I think Dave indicated he preferred v1 based on that
+> > reasoning.
 > > 
-> > One point to note: XFS does not call dquot_quota_on() to trigger
-> > security_quota_on(), therefore the 'file quotaon' permission is not tested
-> > for SELinux
+> > Functionally I don't think it matters either way and at this point I
+> > have no preference between v1 or v2. They fix the same problem. Do note
+> > that v2 does have the Fixed: tag I missed with v1 (as well as a R-b)...
 > 
-> Is that a feature or a bug? :)
+> I'm fine with v1 after all this discussion, and volunteer to clean up
+> all the ioerr handling for the log code after this fix goes in.
 > 
-> (It sounds like a bug to me, but let's see if anyone complains...)
 
-The dquot_* routines are not generic quota code, but a specific
-implementation used by most non-XFS file systems.  So if there is a bug
-it is that the security call is not in the generic dispatch code.
+Ok.
+
+> That being said as noted in one of my replies I think we also need to
+> add the same check in the other caller of __xlog_state_release_iclog.
+> 
+
+That seems reasonable as a cleanup, but I'm not sure how critical it is
+otherwise. We've already handled the iclog at that point, so we're
+basically just changing the function to return an error code regardless
+of the fact that we ran xlog_sync() (which doesn't care about iclog
+state until we attempt to write, where it checks state again before bio
+submission) and that most callers have their own IOERROR state checks up
+the chain anyways because there is no other indication of I/O submission
+failure..
+
+Brian
+
