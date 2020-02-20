@@ -2,123 +2,157 @@ Return-Path: <SRS0=u4TP=4I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E96CC11D24
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 22:39:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 769B5C11D00
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 23:41:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 53E63208E4
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 22:39:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tRp/RfyO"
+	by mail.kernel.org (Postfix) with ESMTP id 5175E207FD
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 23:41:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729277AbgBTWjK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Feb 2020 17:39:10 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:49450 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728992AbgBTWjK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Feb 2020 17:39:10 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:To:From:Date:Sender:Reply-To:Cc:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=PJX15g/idnsbi9mBK4m/qgB4NAR6fjeo4oenehrzb84=; b=tRp/RfyOc8MMAOEnFbjVZPeWaN
-        2KkzEKXiN/S1p09Bqu90S2Z278xQaeJcCcxdgeXrdpytnUBFOLEh/tcVUgBOZ3WDQA1fyr25gzLyH
-        gRM7sCok3nV4KM0JhdGQW17PpL0/Q+08nFcey+vxgYObaAojcT6v9r7vvwC4L45gbM+E1ObajSRbu
-        9fqhh3Le7FzPdJj54Iv5P1uuGStaEN80lg311yLhBq1nMBvGvQ80nBsaseT/97o8elxjyPsMZtK46
-        3NBlICNdJTCPRvVzyFRBHETaOyBq9s1mCrpI3p5mh7mcYzLn6aixyJdO3+xKTmslXOd/sUkUMeqtP
-        kTySNnYQ==;
-Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j4uTN-0006hx-9M; Thu, 20 Feb 2020 22:39:09 +0000
-Date:   Thu, 20 Feb 2020 14:39:09 -0800
-From:   Matthew Wilcox <willy@infradead.org>
-To:     dsterba@suse.cz, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v7 00/23] Change readahead API
-Message-ID: <20200220223909.GB24185@bombadil.infradead.org>
-References: <20200219210103.32400-1-willy@infradead.org>
- <20200220175400.GB2902@twin.jikos.cz>
+        id S1729353AbgBTXlA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Feb 2020 18:41:00 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:60301 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729335AbgBTXlA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Feb 2020 18:41:00 -0500
+Received: from dread.disaster.area (pa49-195-185-106.pa.nsw.optusnet.com.au [49.195.185.106])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id CC0363A45E4;
+        Fri, 21 Feb 2020 10:40:56 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1j4vR9-0004V3-9U; Fri, 21 Feb 2020 10:40:55 +1100
+Date:   Fri, 21 Feb 2020 10:40:55 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/8] libxfs: enable tools to check that metadata updates
+ have been committed
+Message-ID: <20200220234055.GQ10776@dread.disaster.area>
+References: <158216290180.601264.5491208016048898068.stgit@magnolia>
+ <158216292664.601264.186457838279269618.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200220175400.GB2902@twin.jikos.cz>
+In-Reply-To: <158216292664.601264.186457838279269618.stgit@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
+        a=bkRQb8bsQZKWSSj4M57YXw==:117 a=bkRQb8bsQZKWSSj4M57YXw==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=l697ptgUJYAA:10
+        a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8 a=b3GJ-uZIL4zsjtRpJ9MA:9
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 20, 2020 at 06:54:00PM +0100, David Sterba wrote:
-> On Wed, Feb 19, 2020 at 01:00:39PM -0800, Matthew Wilcox wrote:
-> > From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-> > 
-> > This series adds a readahead address_space operation to eventually
-> > replace the readpages operation.  The key difference is that
-> > pages are added to the page cache as they are allocated (and
-> > then looked up by the filesystem) instead of passing them on a
-> > list to the readpages operation and having the filesystem add
-> > them to the page cache.  It's a net reduction in code for each
-> > implementation, more efficient than walking a list, and solves
-> > the direct-write vs buffered-read problem reported by yu kuai at
-> > https://lore.kernel.org/linux-fsdevel/20200116063601.39201-1-yukuai3@huawei.com/
-> > 
-> > The only unconverted filesystems are those which use fscache.
-> > Their conversion is pending Dave Howells' rewrite which will make the
-> > conversion substantially easier.
-> > 
-> > I want to thank the reviewers; Dave Chinner, John Hubbard and Christoph
-> > Hellwig have done a marvellous job of providing constructive criticism.
-> > Eric Biggers pointed out how I'd broken ext4 (which led to a substantial
-> > change).  I've tried to take it all on board, but I may have missed
-> > something simply because you've done such a thorough job.
-> > 
-> > This series can also be found at
-> > http://git.infradead.org/users/willy/linux-dax.git/shortlog/refs/tags/readahead_v7
-> > (I also pushed the readahead_v6 tag there in case anyone wants to diff, and
-> > they're both based on 5.6-rc2 so they're easy to diff)
-> > 
-> > v7:
-> >  - Now passes an xfstests run on ext4!
+On Wed, Feb 19, 2020 at 05:42:06PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> On btrfs it still chokes on the first test btrfs/001, with the following
-> warning, the test is stuck there.
+> Add a new function that will ensure that everything we changed has
+> landed on stable media, and report the results.  Subsequent commits will
+> teach the individual programs to report when things go wrong.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  include/xfs_mount.h |    3 +++
+>  libxfs/init.c       |   43 +++++++++++++++++++++++++++++++++++++++++++
+>  libxfs/libxfs_io.h  |    2 ++
+>  libxfs/rdwr.c       |   27 +++++++++++++++++++++++++--
+>  4 files changed, 73 insertions(+), 2 deletions(-)
+> 
+> 
+> diff --git a/include/xfs_mount.h b/include/xfs_mount.h
+> index 29b3cc1b..c80aaf69 100644
+> --- a/include/xfs_mount.h
+> +++ b/include/xfs_mount.h
+> @@ -187,4 +187,7 @@ extern xfs_mount_t	*libxfs_mount (xfs_mount_t *, xfs_sb_t *,
+>  extern void	libxfs_umount (xfs_mount_t *);
+>  extern void	libxfs_rtmount_destroy (xfs_mount_t *);
+>  
+> +void libxfs_flush_devices(struct xfs_mount *mp, int *datadev, int *logdev,
+> +		int *rtdev);
+> +
+>  #endif	/* __XFS_MOUNT_H__ */
+> diff --git a/libxfs/init.c b/libxfs/init.c
+> index a0d4b7f4..d1d3f4df 100644
+> --- a/libxfs/init.c
+> +++ b/libxfs/init.c
+> @@ -569,6 +569,8 @@ libxfs_buftarg_alloc(
+>  	}
+>  	btp->bt_mount = mp;
+>  	btp->dev = dev;
+> +	btp->lost_writes = false;
+> +
+>  	return btp;
+>  }
+>  
+> @@ -791,6 +793,47 @@ libxfs_rtmount_destroy(xfs_mount_t *mp)
+>  	mp->m_rsumip = mp->m_rbmip = NULL;
+>  }
+>  
+> +static inline int
+> +libxfs_flush_buftarg(
+> +	struct xfs_buftarg	*btp)
+> +{
+> +	if (btp->lost_writes)
+> +		return -ENOTRECOVERABLE;
+> +
+> +	return libxfs_blkdev_issue_flush(btp);
+> +}
+> +
+> +/*
+> + * Purge the buffer cache to write all dirty buffers to disk and free all
+> + * incore buffers.  Buffers that cannot be written will cause the lost_writes
+> + * flag to be set in the buftarg.  If there were no lost writes, flush the
+> + * device to make sure the writes made it to stable storage.
+> + *
+> + * For each device, the return code will be set to -ENOTRECOVERABLE if we
+> + * couldn't write something to disk; or the results of the block device flush
+> + * operation.
+> + */
+> +void
+> +libxfs_flush_devices(
+> +	struct xfs_mount	*mp,
+> +	int			*datadev,
+> +	int			*logdev,
+> +	int			*rtdev)
+> +{
+> +	*datadev = *logdev = *rtdev = 0;
+> +
+> +	libxfs_bcache_purge();
+> +
+> +	if (mp->m_ddev_targp)
+> +		*datadev = libxfs_flush_buftarg(mp->m_ddev_targp);
+> +
+> +	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp)
+> +		*logdev = libxfs_flush_buftarg(mp->m_logdev_targp);
+> +
+> +	if (mp->m_rtdev_targp)
+> +		*rtdev = libxfs_flush_buftarg(mp->m_rtdev_targp);
+> +}
 
-Thanks.  The warning actually wasn't the problem, but it did need to
-be addressed.  I got a test system up & running with btrfs, and it's
-currently on generic/027 with the following patch:
+So one of the things I'm trying to do is make this use similar code
+to the kernel. basically this close process is equivalent of
+xfs_wait_buftarg() which waits for all references to buffers to
+got away, and if any buffer it tagged with WRITE_FAIL then it issues
+and alert before it frees the buffer.
 
-diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-index 9c782c15f7f7..d23a224d2ad2 100644
---- a/include/linux/pagemap.h
-+++ b/include/linux/pagemap.h
-@@ -676,7 +676,7 @@ static inline unsigned int __readahead_batch(struct readahead_control *rac,
- 		struct page **array, unsigned int array_sz)
- {
- 	unsigned int i = 0;
--	XA_STATE(xas, &rac->mapping->i_pages, rac->_index);
-+	XA_STATE(xas, &rac->mapping->i_pages, 0);
- 	struct page *page;
- 
- 	BUG_ON(rac->_batch_count > rac->_nr_pages);
-@@ -684,6 +684,8 @@ static inline unsigned int __readahead_batch(struct readahead_control *rac,
- 	rac->_index += rac->_batch_count;
- 	rac->_batch_count = 0;
- 
-+	xas_set(&xas, rac->_index);
-+	rcu_read_lock();
- 	xas_for_each(&xas, page, rac->_index + rac->_nr_pages - 1) {
- 		VM_BUG_ON_PAGE(!PageLocked(page), page);
- 		VM_BUG_ON_PAGE(PageTail(page), page);
-@@ -702,6 +704,7 @@ static inline unsigned int __readahead_batch(struct readahead_control *rac,
- 		if (i == array_sz)
- 			break;
- 	}
-+	rcu_read_unlock();
- 
- 	return i;
- }
+IOWs, any sort of delayed/async write failure that hasn't been
+otherwise caught by the async/delwri code is caught by the device
+close code....
+
+Doing things like this (storing a "lost writes" flag on the buftarg)
+I think is just going to make it harder to switch to kernel
+equivalent code because it just introduces even more of an impedance
+mismatch between userspace and kernel code...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
