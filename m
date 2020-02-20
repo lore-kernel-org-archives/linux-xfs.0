@@ -2,74 +2,89 @@ Return-Path: <SRS0=u4TP=4I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35A7EC11D0C
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 16:58:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB8AEC11D13
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 17:01:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0507820722
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 16:58:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7AA012067D
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 17:01:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="wLFIC4hd"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="QBQdV8q+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728115AbgBTQ6s (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Feb 2020 11:58:48 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:46356 "EHLO
+        id S1728528AbgBTRA7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Feb 2020 12:00:59 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:49440 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728064AbgBTQ6s (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Feb 2020 11:58:48 -0500
+        with ESMTP id S1727915AbgBTRA7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Feb 2020 12:00:59 -0500
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01KGtQno034533;
-        Thu, 20 Feb 2020 16:58:43 GMT
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01KGtQPp034532;
+        Thu, 20 Feb 2020 17:00:39 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=5eX55A8BuJbogNBBAyGkhlbI4qJGz+3FyrWUvw+gdoU=;
- b=wLFIC4hdTCfQJCCUVRaTFOdCsVsrPTYVcdbxgN1HeryVJzezviuI3tVMcX57vrRjuQkX
- J/FZg8EJftiAew9njozWZ4fMpRqwMkmI/llHr/7hAADxhmvazOTK16cqUv71tfRuMefS
- z8D/w/7/TIV58bgLWFzvzlG0F6hd9GOTD+WBUmI4GBdCJslVIlFjLxWT9lQjN72+vIe3
- oY/iTkOOXaZZ3oe59uI2AEslzwYIuNS5J63ez8T1zKUYdzfrM0iH/Ntl0PGsei3Tkp+p
- FcO/C9udyTzt2J2fWTGGJXeGNba7+VkhenMZAzZwIpdp7Xyr/R+rSYplvQngLYKiWOQS Iw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2y8udkk46p-1
+ bh=OEQ8Sxa54D6VnD4JhJWJER8N7HEKh6e9JKT56rZDleE=;
+ b=QBQdV8q+xwhUQQ4QZzAVwG0KL3dPMu9uuKVM94+Ujg0HER7/QBiUcfYiDbKJ0Xm+ep09
+ ZpQkJLCgP273WVkvIbjWPOBmobhFZnSWnpVWvCMETYx25BUSjU/ynJli1rhCpU32RNIl
+ OnLBYqyDlLW0XU8kcSZAUacZaLYcpndbNgPXHMvLLskvDNjhi59YDVIUryBdRZyZr/XT
+ 2toggFLuD4atkvW3oicIJ7M+mgye7DHrbiT0SPBaQm14/EBmzEAU8heQTaWTYoMiRsFf
+ fNpKdtRcAaRVRess/Wfr9rGovbbMEQxthGY2es7coZzi5L0CYVvHApyjgI9XB2QbZc/m uA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 2y8udkk4j9-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 20 Feb 2020 16:58:43 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01KGvogF158350;
-        Thu, 20 Feb 2020 16:58:43 GMT
+        Thu, 20 Feb 2020 17:00:39 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01KGwPjn165758;
+        Thu, 20 Feb 2020 17:00:39 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 2y8ud48g0r-1
+        by aserp3030.oracle.com with ESMTP id 2y8udd650q-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 20 Feb 2020 16:58:42 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01KGwff2012796;
-        Thu, 20 Feb 2020 16:58:41 GMT
+        Thu, 20 Feb 2020 17:00:39 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01KH0bXN014803;
+        Thu, 20 Feb 2020 17:00:37 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 20 Feb 2020 08:58:41 -0800
-Date:   Thu, 20 Feb 2020 08:58:40 -0800
+        with ESMTP ; Thu, 20 Feb 2020 09:00:36 -0800
+Date:   Thu, 20 Feb 2020 09:00:35 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/8] xfs_db: check that metadata updates have been
- committed
-Message-ID: <20200220165840.GX9506@magnolia>
-References: <158216290180.601264.5491208016048898068.stgit@magnolia>
- <158216293385.601264.3202158027072387776.stgit@magnolia>
- <20200220140623.GC48977@bfoster>
+To:     Ira Weiny <ira.weiny@intel.com>
+Cc:     Jeff Moyer <jmoyer@redhat.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Subject: Re: [PATCH v3 00/12] Enable per-file/directory DAX operations V3
+Message-ID: <20200220170035.GY9506@magnolia>
+References: <x4936bcdfso.fsf@segfault.boston.devel.redhat.com>
+ <20200214215759.GA20548@iweiny-DESK2.sc.intel.com>
+ <x49y2t4bz8t.fsf@segfault.boston.devel.redhat.com>
+ <x49tv3sbwu5.fsf@segfault.boston.devel.redhat.com>
+ <20200218023535.GA14509@iweiny-DESK2.sc.intel.com>
+ <x49zhdgasal.fsf@segfault.boston.devel.redhat.com>
+ <20200218235429.GB14509@iweiny-DESK2.sc.intel.com>
+ <20200220162027.GA20772@iweiny-DESK2.sc.intel.com>
+ <20200220163024.GV9506@magnolia>
+ <20200220164957.GB20772@iweiny-DESK2.sc.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200220140623.GC48977@bfoster>
+In-Reply-To: <20200220164957.GB20772@iweiny-DESK2.sc.intel.com>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9537 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0
- mlxlogscore=999 suspectscore=0 adultscore=0 spamscore=0 mlxscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002200125
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 adultscore=0
+ mlxlogscore=999 malwarescore=0 bulkscore=0 suspectscore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002200125
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9537 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 suspectscore=0
  spamscore=0 priorityscore=1501 adultscore=0 mlxscore=0 clxscore=1015
@@ -81,90 +96,99 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 20, 2020 at 09:06:23AM -0500, Brian Foster wrote:
-> On Wed, Feb 19, 2020 at 05:42:13PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Feb 20, 2020 at 08:49:57AM -0800, Ira Weiny wrote:
+> On Thu, Feb 20, 2020 at 08:30:24AM -0800, Darrick J. Wong wrote:
+> > On Thu, Feb 20, 2020 at 08:20:28AM -0800, Ira Weiny wrote:
+> > > On Tue, Feb 18, 2020 at 03:54:30PM -0800, 'Ira Weiny' wrote:
+> > > > On Tue, Feb 18, 2020 at 09:22:58AM -0500, Jeff Moyer wrote:
+> > > > > Ira Weiny <ira.weiny@intel.com> writes:
+> > > > > > If my disassembly of read_pages is correct it looks like readpage is null which
+> > > > > > makes sense because all files should be IS_DAX() == true due to the mount option...
+> > > > > >
+> > > > > > But tracing code indicates that the patch:
+> > > > > >
+> > > > > > 	fs: remove unneeded IS_DAX() check
+> > > > > >
+> > > > > > ... may be the culprit and the following fix may work...
+> > > > > >
+> > > > > > diff --git a/mm/filemap.c b/mm/filemap.c
+> > > > > > index 3a7863ba51b9..7eaf74a2a39b 100644
+> > > > > > --- a/mm/filemap.c
+> > > > > > +++ b/mm/filemap.c
+> > > > > > @@ -2257,7 +2257,7 @@ generic_file_read_iter(struct kiocb *iocb, struct iov_iter *iter)
+> > > > > >         if (!count)
+> > > > > >                 goto out; /* skip atime */
+> > > > > >  
+> > > > > > -       if (iocb->ki_flags & IOCB_DIRECT) {
+> > > > > > +       if (iocb->ki_flags & IOCB_DIRECT || IS_DAX(inode)) {
+> > > > > >                 struct file *file = iocb->ki_filp;
+> > > > > >                 struct address_space *mapping = file->f_mapping;
+> > > > > >                 struct inode *inode = mapping->host;
+> > > > > 
+> > > > > Well, you'll have to up-level the inode variable instantiation,
+> > > > > obviously.  That solves this particular issue.
+> > > > 
+> > > > Well...  This seems to be a random issue.  I've had BMC issues with
+> > > > my server most of the day...  But even with this patch I still get the failure
+> > > > in read_pages().  :-/
+> > > > 
+> > > > And I have gotten it to both succeed and fail with qemu...  :-/
+> > > 
+> > > ... here is the fix.  I made the change in xfs_diflags_to_linux() early on with
+> > > out factoring in the flag logic changes we have agreed upon...
+> > > 
+> > > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> > > index 62d9f622bad1..d592949ad396 100644
+> > > --- a/fs/xfs/xfs_ioctl.c
+> > > +++ b/fs/xfs/xfs_ioctl.c
+> > > @@ -1123,11 +1123,11 @@ xfs_diflags_to_linux(
+> > >                 inode->i_flags |= S_NOATIME;
+> > >         else
+> > >                 inode->i_flags &= ~S_NOATIME;
+> > > -       if (xflags & FS_XFLAG_DAX)
+> > > +
+> > > +       if (xfs_inode_enable_dax(ip))
+> > >                 inode->i_flags |= S_DAX;
+> > >         else
+> > >                 inode->i_flags &= ~S_DAX;
+> > > -
+> > >  }
+> > > 
+> > > But the one thing which tripped me up, and concerns me, is we have 2 functions
+> > > which set the inode flags.
+> > > 
+> > > xfs_diflags_to_iflags()
+> > > xfs_diflags_to_linux()
+> > > 
+> > > xfs_diflags_to_iflags() is geared toward initialization but logically they do
+> > > the same thing.  I see no reason to keep them separate.  Does anyone?
+> > > 
+> > > Based on this find, the discussion on behavior in this thread, and the comments
+> > > from Dave I'm reworking the series because the flag check/set functions have
+> > > all changed and I really want to be as clear as possible with both the patches
+> > > and the resulting code.[*]  So v4 should be out today including attempting to
+> > > document what we have discussed here and being as clear as possible on the
+> > > behavior.  :-D
+> > > 
+> > > Thanks so much for testing this!
+> > > 
+> > > Ira
+> > > 
+> > > [*] I will probably throw in a patch to remove xfs_diflags_to_iflags() as I
+> > > really don't see a reason to keep it.
+> > > 
 > > 
-> > Add a new function that will ensure that everything we scribbled on has
-> > landed on stable media, and report the results.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  db/init.c |   14 ++++++++++++++
-> >  1 file changed, 14 insertions(+)
-> > 
-> > 
-> > diff --git a/db/init.c b/db/init.c
-> > index 0ac37368..e92de232 100644
-> > --- a/db/init.c
-> > +++ b/db/init.c
-> > @@ -184,6 +184,7 @@ main(
-> >  	char	*input;
-> >  	char	**v;
-> >  	int	start_iocur_sp;
-> > +	int	d, l, r;
-> >  
-> >  	init(argc, argv);
-> >  	start_iocur_sp = iocur_sp;
-> > @@ -216,6 +217,19 @@ main(
-> >  	 */
-> >  	while (iocur_sp > start_iocur_sp)
-> >  		pop_cur();
-> > +
-> > +	libxfs_flush_devices(mp, &d, &l, &r);
-> > +	if (d)
-> > +		fprintf(stderr, _("%s: cannot flush data device (%d).\n"),
-> > +				progname, d);
-> > +	if (l)
-> > +		fprintf(stderr, _("%s: cannot flush log device (%d).\n"),
-> > +				progname, l);
-> > +	if (r)
-> > +		fprintf(stderr, _("%s: cannot flush realtime device (%d).\n"),
-> > +				progname, r);
-> > +
-> > +
+> > I prefer you keep the one in xfs_iops.c since ioctls are a higher level
+> > function than general inode operations.
 > 
-> Seems like we could reduce some boilerplate by passing progname into
-> libxfs_flush_devices() and letting it dump out of the error messages,
-> unless there's some future code that cares about individual device error
-> state.
+> Makes sense.  Do you prefer the xfs_diflags_to_iflags() name as well?
 
-Such a program could call libxfs_flush_devices directly, as we do here.
-
-Also, progname is defined in libxfs so we don't even need to pass it as
-an argument.
-
-I had originally thought that we should try not to add fprintf calls to
-libxfs because libraries aren't really supposed to be doing things like
-that, but perhaps you're right that all of this should be melded into
-something else.
-
-> That said, it also seems the semantics of libxfs_flush_devices() are a
-> bit different from convention. Just below we invoke
-> libxfs_device_close() for each device (rather than for all three), and
-> device_close() also happens to call fsync() and platform_flush_device()
-> itself...
-
-Yeah, the division of responsibilities is a little hazy here -- I would
-think that unmounting a filesystem should flush all the memory caches
-and then the disk cache, but OTOH it's the utility that opens the
-devices and should therefore flush and close them.
-
-I dunno.  My current thinking is that libxfs_umount should call
-libxfs_flush_devices() and print error messages as necessary, and return
-error codes as appropriate.  xfs_repair can then check the umount return
-value and translate that into exit(1) as required.  The device_close
-functions will fsync a second time, but that shouldn't be a big deal
-because we haven't dirtied anything in the meantime.
-
-Thoughts?
+I don't really care one way or another, so ... iflags wins by arbitrary
+choice! 8)
 
 --D
 
-> Brian
+> Ira
 > 
-> >  	libxfs_umount(mp);
-> >  	if (x.ddev)
-> >  		libxfs_device_close(x.ddev);
 > > 
-> 
+> > --D
