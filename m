@@ -2,122 +2,310 @@ Return-Path: <SRS0=u4TP=4I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 283FDC11D1B
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 18:42:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A3B1C11D0C
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 18:51:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 04E472467C
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 18:42:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E7FE2467A
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 18:51:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kUYMZYzx"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="B0X14/FA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728336AbgBTSmO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Feb 2020 13:42:14 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:48828 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728237AbgBTSmO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Feb 2020 13:42:14 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01KIVT1Y039035;
-        Thu, 20 Feb 2020 18:42:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=a1asEzhbilF9Kwo+cqEtCdusoeP8zcYAj6pxvuwmcUI=;
- b=kUYMZYzxi3/nMDS06nkmblwmx591ZLNWe/yUrgxvcZfhgC2i+H2FV4CZ5+w3cF6qiurn
- DsZVpGnNj8D+qUj7WJnt0xwbFcCyBjmBpLXxXcNppVr+7jerevR4Sq2Zk5XwNlAUJk0R
- i4/ES1QXe1OF9lzHAD1ChIv4OzouL9Cs79BTq2mNhWhjfzvJ1j8hzSDcM0wcNrX1sgSE
- o+EH8r465/Mi32SpXh4dhK9OALdcc0BjIU6U6eno1LJZhUSMzF2gqWucuqO1mop/pGdE
- yGS9SByzwY92mSTWiopJYffAWpCqIxAW9ekn5YPjdgn/H4H4ytTBxKaZjLCS5SuWxN9m 0A== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 2y8udkkqpd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 20 Feb 2020 18:42:11 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01KISPSj061497;
-        Thu, 20 Feb 2020 18:42:11 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 2y8uddc5x9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 20 Feb 2020 18:42:11 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01KIg8BC007772;
-        Thu, 20 Feb 2020 18:42:10 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 20 Feb 2020 10:42:07 -0800
-Date:   Thu, 20 Feb 2020 10:42:06 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, keyrings@vger.kernel.org
-Subject: Re: [PATCH v2] xfs_io/encrypt: support passing a keyring key to
- add_enckey
-Message-ID: <20200220184206.GB9506@magnolia>
-References: <20200203182013.43474-1-ebiggers@kernel.org>
- <20200218214856.GA147283@gmail.com>
+        id S1728942AbgBTSvz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Feb 2020 13:51:55 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:47712 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728834AbgBTSvy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Feb 2020 13:51:54 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1582224713;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=DxSTvgpRsE3hWle9rgbkUf3InSs5QPtkr88Go04RGLM=;
+        b=B0X14/FAMvSdnZSLgonjs2mP87JpfKsPR//78r/MJ/tueVwwCucm1jldY/xRxr3tj1uKGA
+        HtC4+7xvbi5qh/+XqPjlB4ZfiaNXrTLqWzGlHjgbM/RVQZK5Ij0/0+M0Dv07YYW496Yl4r
+        oLi86tTJF5EX0P5wYzkIYfeiRPdq/24=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-460-cD45LQgwMce_y4tDMauNSg-1; Thu, 20 Feb 2020 13:50:25 -0500
+X-MC-Unique: cD45LQgwMce_y4tDMauNSg-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8469E18A6EFD;
+        Thu, 20 Feb 2020 18:50:24 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id F023838A;
+        Thu, 20 Feb 2020 18:50:23 +0000 (UTC)
+Date:   Thu, 20 Feb 2020 13:50:22 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/8] libxfs: enable tools to check that metadata updates
+ have been committed
+Message-ID: <20200220185022.GL48977@bfoster>
+References: <158216290180.601264.5491208016048898068.stgit@magnolia>
+ <158216292664.601264.186457838279269618.stgit@magnolia>
+ <20200220140612.GB48977@bfoster>
+ <20200220164638.GW9506@magnolia>
+ <20200220175850.GH48977@bfoster>
+ <20200220182642.GZ9506@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200218214856.GA147283@gmail.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9537 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 adultscore=0
- mlxlogscore=999 malwarescore=0 bulkscore=0 suspectscore=9 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002200136
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9537 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 suspectscore=9
- spamscore=0 priorityscore=1501 adultscore=0 mlxscore=0 clxscore=1011
- malwarescore=0 mlxlogscore=999 phishscore=0 impostorscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002200136
+In-Reply-To: <20200220182642.GZ9506@magnolia>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 18, 2020 at 01:48:57PM -0800, Eric Biggers wrote:
-> On Mon, Feb 03, 2020 at 10:20:13AM -0800, Eric Biggers wrote:
-> > From: Eric Biggers <ebiggers@google.com>
+On Thu, Feb 20, 2020 at 10:26:42AM -0800, Darrick J. Wong wrote:
+> On Thu, Feb 20, 2020 at 12:58:50PM -0500, Brian Foster wrote:
+> > On Thu, Feb 20, 2020 at 08:46:38AM -0800, Darrick J. Wong wrote:
+> > > On Thu, Feb 20, 2020 at 09:06:12AM -0500, Brian Foster wrote:
+> > > > On Wed, Feb 19, 2020 at 05:42:06PM -0800, Darrick J. Wong wrote:
+> > > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > 
+> > > > > Add a new function that will ensure that everything we changed has
+> > > > > landed on stable media, and report the results.  Subsequent commits will
+> > > > > teach the individual programs to report when things go wrong.
+> > > > > 
+> > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > ---
+> > > > >  include/xfs_mount.h |    3 +++
+> > > > >  libxfs/init.c       |   43 +++++++++++++++++++++++++++++++++++++++++++
+> > > > >  libxfs/libxfs_io.h  |    2 ++
+> > > > >  libxfs/rdwr.c       |   27 +++++++++++++++++++++++++--
+> > > > >  4 files changed, 73 insertions(+), 2 deletions(-)
+> > > > > 
+> > > > > 
+> > > > > diff --git a/include/xfs_mount.h b/include/xfs_mount.h
+> > > > > index 29b3cc1b..c80aaf69 100644
+> > > > > --- a/include/xfs_mount.h
+> > > > > +++ b/include/xfs_mount.h
+> > > > > @@ -187,4 +187,7 @@ extern xfs_mount_t	*libxfs_mount (xfs_mount_t *, xfs_sb_t *,
+> > > > >  extern void	libxfs_umount (xfs_mount_t *);
+> > > > >  extern void	libxfs_rtmount_destroy (xfs_mount_t *);
+> > > > >  
+> > > > > +void libxfs_flush_devices(struct xfs_mount *mp, int *datadev, int *logdev,
+> > > > > +		int *rtdev);
+> > > > > +
+> > > > >  #endif	/* __XFS_MOUNT_H__ */
+> > > > > diff --git a/libxfs/init.c b/libxfs/init.c
+> > > > > index a0d4b7f4..d1d3f4df 100644
+> > > > > --- a/libxfs/init.c
+> > > > > +++ b/libxfs/init.c
+> > > > > @@ -569,6 +569,8 @@ libxfs_buftarg_alloc(
+> > > > >  	}
+> > > > >  	btp->bt_mount = mp;
+> > > > >  	btp->dev = dev;
+> > > > > +	btp->lost_writes = false;
+> > > > > +
+> > > > >  	return btp;
+> > > > >  }
+> > > > >  
+> > > > > @@ -791,6 +793,47 @@ libxfs_rtmount_destroy(xfs_mount_t *mp)
+> > > > >  	mp->m_rsumip = mp->m_rbmip = NULL;
+> > > > >  }
+> > > > >  
+> > > > > +static inline int
+> > > > > +libxfs_flush_buftarg(
+> > > > > +	struct xfs_buftarg	*btp)
+> > > > > +{
+> > > > > +	if (btp->lost_writes)
+> > > > > +		return -ENOTRECOVERABLE;
+> > > > 
+> > > > I'm curious why we'd want to skip the flush just because some writes
+> > > > happened to fail..? I suppose the fs might be borked, but it seems a
+> > > > little strange to at least not try the flush, particularly since we
+> > > > might still flush any of the other two possible devices.
+> > > 
+> > > My thinking here was that if the write verifiers (or the pwrite() calls
+> > > themselves) failed then there's no point in telling the disk to flush
+> > > its write cache since we already know it's not in sync with the buffer
+> > > cache.
+> > > 
 > > 
-> > Add a '-k' option to the 'add_enckey' xfs_io command to allow exercising
-> > the key_id field that is being added to struct fscrypt_add_key_arg.
+> > I suppose, but it seems there is some value in flushing what we did
+> > write.. That's effectively historical behavior (since we ignored
+> > errors), right?
+> 
+> It's the historical behavior, yes.  I don't think it makes much sense,
+> but OTOH I'm not opposed to restoring that.
+> 
+
+The way I think about it is if repair or something happens to rewrite a
+bunch of metadata structures, etc. and then a particular I/O happens to
+fail, we'll still end up with a corrupted fs in the end, but I don't see
+that as a reason not to care about the integrity of the data that might
+have been successfully written. We're most likely borked either way,
+this just seems a bit less risky (and also less of a wart/landmine given
+that the close codepath is still going to do the flush anyways).
+
+> > > > > +
+> > > > > +	return libxfs_blkdev_issue_flush(btp);
+> > > > > +}
+> > > > > +
+> > > > > +/*
+> > > > > + * Purge the buffer cache to write all dirty buffers to disk and free all
+> > > > > + * incore buffers.  Buffers that cannot be written will cause the lost_writes
+> > > > > + * flag to be set in the buftarg.  If there were no lost writes, flush the
+> > > > > + * device to make sure the writes made it to stable storage.
+> > > > > + *
+> > > > > + * For each device, the return code will be set to -ENOTRECOVERABLE if we
+> > > > > + * couldn't write something to disk; or the results of the block device flush
+> > > > > + * operation.
+> > > > 
+> > > > Why not -EIO?
+> > > 
+> > > Originally I thought it might be useful to be able to distinguish
+> > > between "dirty buffers never even made it out of the buffer cache" vs.
+> > > "dirty buffers were sent to the disk but the disk sent back media
+> > > errors", though in the end the userspace tools don't make any
+> > > distinction.
+> > > 
+> > > That said, looking at this again, maybe I should track write verifier
+> > > failure separately so that we can return EFSCORRUPTED for that?
+> > > 
 > > 
-> > This is needed for the corresponding test in xfstests.
+> > It's not clear to me that anything application level would care much
+> > about verifier failure vs. I/O failure, but I've no objection to doing
+> > something like that either.
+> 
+> Yeah.  The single usecase I can think of is where repair trips over a
+> write verifier and we should make it really obvious to the sysadmin that
+> repair is buggy and needs either (a) an upgrade or (b) a complaint filed
+> on linux-xfs.
+> 
+
+We do have the write verifier failure messages, but yeah, I can see that
+being a more accurate distinction between -EIO and -EFSCORRUPTED.
+
+Brian
+
+> --D
+> 
+> > Brian
 > > 
-> > For more details, see the corresponding xfstests patches as well as
-> > kernel commit 93edd392cad7 ("fscrypt: support passing a keyring key to
-> > FS_IOC_ADD_ENCRYPTION_KEY").
-> > 
-> > Signed-off-by: Eric Biggers <ebiggers@google.com>
-> > ---
-> > 
-> > No changes since v1.
-> > 
-> > This applies to the for-next branch of xfsprogs.
-> > 
-> >  configure.ac          |  1 +
-> >  include/builddefs.in  |  4 ++
-> >  io/encrypt.c          | 90 +++++++++++++++++++++++++++++++------------
-> >  m4/package_libcdev.m4 | 21 ++++++++++
-> >  man/man8/xfs_io.8     | 10 +++--
-> >  5 files changed, 98 insertions(+), 28 deletions(-)
+> > > --D
+> > > 
+> > > > 
+> > > > Brian
+> > > > 
+> > > > > + */
+> > > > > +void
+> > > > > +libxfs_flush_devices(
+> > > > > +	struct xfs_mount	*mp,
+> > > > > +	int			*datadev,
+> > > > > +	int			*logdev,
+> > > > > +	int			*rtdev)
+> > > > > +{
+> > > > > +	*datadev = *logdev = *rtdev = 0;
+> > > > > +
+> > > > > +	libxfs_bcache_purge();
+> > > > > +
+> > > > > +	if (mp->m_ddev_targp)
+> > > > > +		*datadev = libxfs_flush_buftarg(mp->m_ddev_targp);
+> > > > > +
+> > > > > +	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp)
+> > > > > +		*logdev = libxfs_flush_buftarg(mp->m_logdev_targp);
+> > > > > +
+> > > > > +	if (mp->m_rtdev_targp)
+> > > > > +		*rtdev = libxfs_flush_buftarg(mp->m_rtdev_targp);
+> > > > > +}
+> > > > > +
+> > > > >  /*
+> > > > >   * Release any resource obtained during a mount.
+> > > > >   */
+> > > > > diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
+> > > > > index 579df52b..fc0fd060 100644
+> > > > > --- a/libxfs/libxfs_io.h
+> > > > > +++ b/libxfs/libxfs_io.h
+> > > > > @@ -23,10 +23,12 @@ struct xfs_perag;
+> > > > >  struct xfs_buftarg {
+> > > > >  	struct xfs_mount	*bt_mount;
+> > > > >  	dev_t			dev;
+> > > > > +	bool			lost_writes;
+> > > > >  };
+> > > > >  
+> > > > >  extern void	libxfs_buftarg_init(struct xfs_mount *mp, dev_t ddev,
+> > > > >  				    dev_t logdev, dev_t rtdev);
+> > > > > +int libxfs_blkdev_issue_flush(struct xfs_buftarg *btp);
+> > > > >  
+> > > > >  #define LIBXFS_BBTOOFF64(bbs)	(((xfs_off_t)(bbs)) << BBSHIFT)
+> > > > >  
+> > > > > diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+> > > > > index 8b47d438..92e497f9 100644
+> > > > > --- a/libxfs/rdwr.c
+> > > > > +++ b/libxfs/rdwr.c
+> > > > > @@ -17,6 +17,7 @@
+> > > > >  #include "xfs_inode_fork.h"
+> > > > >  #include "xfs_inode.h"
+> > > > >  #include "xfs_trans.h"
+> > > > > +#include "libfrog/platform.h"
+> > > > >  
+> > > > >  #include "libxfs.h"		/* for LIBXFS_EXIT_ON_FAILURE */
+> > > > >  
+> > > > > @@ -1227,9 +1228,11 @@ libxfs_brelse(
+> > > > >  
+> > > > >  	if (!bp)
+> > > > >  		return;
+> > > > > -	if (bp->b_flags & LIBXFS_B_DIRTY)
+> > > > > +	if (bp->b_flags & LIBXFS_B_DIRTY) {
+> > > > >  		fprintf(stderr,
+> > > > >  			"releasing dirty buffer to free list!\n");
+> > > > > +		bp->b_target->lost_writes = true;
+> > > > > +	}
+> > > > >  
+> > > > >  	pthread_mutex_lock(&xfs_buf_freelist.cm_mutex);
+> > > > >  	list_add(&bp->b_node.cn_mru, &xfs_buf_freelist.cm_list);
+> > > > > @@ -1248,9 +1251,11 @@ libxfs_bulkrelse(
+> > > > >  		return 0 ;
+> > > > >  
+> > > > >  	list_for_each_entry(bp, list, b_node.cn_mru) {
+> > > > > -		if (bp->b_flags & LIBXFS_B_DIRTY)
+> > > > > +		if (bp->b_flags & LIBXFS_B_DIRTY) {
+> > > > >  			fprintf(stderr,
+> > > > >  				"releasing dirty buffer (bulk) to free list!\n");
+> > > > > +			bp->b_target->lost_writes = true;
+> > > > > +		}
+> > > > >  		count++;
+> > > > >  	}
+> > > > >  
+> > > > > @@ -1479,6 +1484,24 @@ libxfs_irele(
+> > > > >  	kmem_cache_free(xfs_inode_zone, ip);
+> > > > >  }
+> > > > >  
+> > > > > +/*
+> > > > > + * Flush everything dirty in the kernel and disk write caches to stable media.
+> > > > > + * Returns 0 for success or a negative error code.
+> > > > > + */
+> > > > > +int
+> > > > > +libxfs_blkdev_issue_flush(
+> > > > > +	struct xfs_buftarg	*btp)
+> > > > > +{
+> > > > > +	int			fd, ret;
+> > > > > +
+> > > > > +	if (btp->dev == 0)
+> > > > > +		return 0;
+> > > > > +
+> > > > > +	fd = libxfs_device_to_fd(btp->dev);
+> > > > > +	ret = platform_flush_device(fd, btp->dev);
+> > > > > +	return ret ? -errno : 0;
+> > > > > +}
+> > > > > +
+> > > > >  /*
+> > > > >   * Write out a buffer list synchronously.
+> > > > >   *
+> > > > > 
+> > > > 
+> > > 
 > > 
 > 
-> Any comments on this patch?  The corresponding xfstests patches were merged.
 
-I didn't see any obvious bugs, though fwiw I'm not that familiar with
-fscrypt.  This looks like a pretty straightforward addition of a new
-field to a kernel call structure and some other plumbing to fill out the
-new field with CLI arguments / stdin.
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> - Eric
