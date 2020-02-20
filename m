@@ -2,108 +2,142 @@ Return-Path: <SRS0=u4TP=4I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3976C761A1
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 04:55:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E32D8C11D04
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 09:42:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 782DA24672
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 04:55:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B067324656
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 09:42:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bTZ1QZ6Q"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="MxA8YZ6n";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="LmPep1/S"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727806AbgBTEzq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Feb 2020 23:55:46 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:45542 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727576AbgBTEzq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Feb 2020 23:55:46 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1582174544;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=C+TC8LymXeVcDTwPt8PlE9k8EzpEuPGxT2dYTaHDh+Y=;
-        b=bTZ1QZ6QQ3DUbbdEOU/aKocwtNh+4edYTyuejArH5FulpaqanG4E5F2fH2RHsoJCY8tYs+
-        hdnw8bAiBczYr3CqWnZKO5+1SEPHGu6m8i2Clv6c5KvzJf5baGkL+G4SwHXfKba0Y5GHhW
-        87tXqqXH6d3mbOd615v9ZGoW44mF1Mc=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-186-SYaqTUDeNTKONnMu8Y73PQ-1; Wed, 19 Feb 2020 23:55:40 -0500
-X-MC-Unique: SYaqTUDeNTKONnMu8Y73PQ-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 02DDF107ACC4;
-        Thu, 20 Feb 2020 04:55:39 +0000 (UTC)
-Received: from localhost (dhcp-12-102.nay.redhat.com [10.66.12.102])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 73B435C28E;
-        Thu, 20 Feb 2020 04:55:38 +0000 (UTC)
-Date:   Thu, 20 Feb 2020 13:05:59 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] generic: per-type quota timers set/get test
-Message-ID: <20200220050559.GG14282@dhcp-12-102.nay.redhat.com>
-Mail-Followup-To: Eric Sandeen <sandeen@sandeen.net>,
-        fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-References: <20200216181631.22560-1-zlang@redhat.com>
- <e54ae15f-6363-4486-0546-030e45ed50bb@sandeen.net>
- <20200220041539.GD14282@dhcp-12-102.nay.redhat.com>
- <605d6c45-9f52-ec84-df01-d5b7665d16dc@sandeen.net>
+        id S1726805AbgBTJmY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Feb 2020 04:42:24 -0500
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:10305 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726501AbgBTJmX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Feb 2020 04:42:23 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1582191743; x=1613727743;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=M+nyCipJmvciHSc+ZIPSuyMPQeAWQ1q0jyK4A6QbyLM=;
+  b=MxA8YZ6n5WJZNnpXuaFRkbklr7qBXwrG9uYdCZTVfcsUe8u6y0eVeNu4
+   Oz27YpSy3dSogiOOArdVrkuSYVtLopDlJbUGSXJ6vU4tVVrAiYYiRBPQo
+   a/7zmFBuBnJXuIXfGRFWkxI24k5imt1xMSh2VHYdOpBNQaFmHvpiEBayT
+   6WrUDFh9Dj0C1QZPoZtGjY5DVnqPOpQFHbr7YZ4No2Sf+CA+Cl6sWzqhO
+   XxpqShJw+bJgOE4ecg/IYt4jJnM9QP/cYi93fVbd70EErLCbIENyUPKCJ
+   hLe9t2SJlnN/yXfTGYVuevjv8jryhIOAnLvg+3WbHkqHMtPSLHAq/7nE1
+   Q==;
+IronPort-SDR: rf4RZS02dfBh5eg/Ser8Jycy8iQvg+TkSSxAtv5u02Qd6aGnPcTczKHkApuFeUjmaa5Q0D4v/G
+ gX0lLZZLqzaJ2N11xxrUjesOhwiN8ouTd7EFeqblUXEPle5mjwlk7fG4A/QEIkZ73HcNmKtn/Z
+ gnntC3MWr6gkE+g7ayEIr8rHGlToGcK/GSOVSyztHtVHW73tASiB/Y7qk9ILAfg4C8S9iOwFb6
+ aLC/LSjsd8LXVHUAaV+FI9R6RzXyPa4+NTU6ldgPGl5OqVPAubABx9lnaLhotPdOwVx1PiEt6u
+ 1Z8=
+X-IronPort-AV: E=Sophos;i="5.70,463,1574092800"; 
+   d="scan'208";a="130254905"
+Received: from mail-mw2nam10lp2104.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.104])
+  by ob1.hgst.iphmx.com with ESMTP; 20 Feb 2020 17:42:21 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=jgSc1LVfCQE13N/I9GVLU5//QU9A9SBcOAG/111XTiYLiA0gBNQ+rJUj7oZyiIjWT0dBwnVbwwibtKbyuVGkyg7KsFeoMgKLXpC2t5BKsBO9D4EXhbhtH2yFdBCgujFBrhKc/3GA8S+fvjsA1dXuKH1jRhsIHP2EdObhEKJd6C6Z1snOL2Y8xMxjFZJmCKB9Y0nQsiMOabrt1cJYDmfCIbh8aOhN24Ce1QgjIU4S/G4zYotpMyZOOq0qrWh3V5yrxg5jNFS+8PJwZjgjqppH8TpzDpYz9fO1Sm6COxTilJGYOQUu4LLcR/XA948TT+D5SCMee+Soi2dorkiqQvEyNg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ChgseISPiUi/nxzwkkFQ1T9mWCaGRstOibBBGyDIMoA=;
+ b=iRU3W/MSmFD7bMtT+yBF3gwh8btxRMCFDcDaids8hbwnbBlGeXPTJgvM/AsSPkoAo6VuZpzpoUoA8LCiBSkcWNWaZlTjnjNil0kHAz9O3zfv2mlk5YpcIVAZC8wXnBAAN0zhvSkv1i5iWxhlKNT48zmyRqWzWZxu3vS52mxuIx9DZaRrJHv7bXn/o/ZY2oxeoS4ScX/H01nD06AV0/6nWdD+55KipWWKuOGz6jyt9c0Keu1tsKJkawlyiiJGRe6SOYv70EGLwGiLGLLMO4lZKMgpQvypOKZF2jGKYDCFg1TiVEC52w1dtODhhTKfNyG/OOrDiWifJqf24hUPm9zAmg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ChgseISPiUi/nxzwkkFQ1T9mWCaGRstOibBBGyDIMoA=;
+ b=LmPep1/SEnW8o3O23FL4cRjLFHAH3r4N0C/0nJT1EUMsvJ4UnUMx5yvajyJ096aOPjpPb99qoiaNKEpMJLyPr4f+JkSGPO/u9P3mMYTsunSVzBtnP6efqUGGAKGgoojhiwxqq5nMWjMUX+4fIZ7i5ndfD3HHtGD4JykF0OAmBeQ=
+Received: from SN4PR0401MB3598.namprd04.prod.outlook.com (10.167.139.149) by
+ SN4PR0401MB3712.namprd04.prod.outlook.com (10.167.140.147) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2729.34; Thu, 20 Feb 2020 09:42:19 +0000
+Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
+ ([fe80::e5f5:84d2:cabc:da32]) by SN4PR0401MB3598.namprd04.prod.outlook.com
+ ([fe80::e5f5:84d2:cabc:da32%5]) with mapi id 15.20.2729.032; Thu, 20 Feb 2020
+ 09:42:19 +0000
+From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+To:     Matthew Wilcox <willy@infradead.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+CC:     "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+        "linux-erofs@lists.ozlabs.org" <linux-erofs@lists.ozlabs.org>,
+        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
+        "linux-f2fs-devel@lists.sourceforge.net" 
+        <linux-f2fs-devel@lists.sourceforge.net>,
+        "cluster-devel@redhat.com" <cluster-devel@redhat.com>,
+        "ocfs2-devel@oss.oracle.com" <ocfs2-devel@oss.oracle.com>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH v7 14/24] btrfs: Convert from readpages to readahead
+Thread-Topic: [PATCH v7 14/24] btrfs: Convert from readpages to readahead
+Thread-Index: AQHV52gHXOnz3eutsEej0YiVm6PhQQ==
+Date:   Thu, 20 Feb 2020 09:42:19 +0000
+Message-ID: <SN4PR0401MB35987D7B76007B93B1C5CE5E9B130@SN4PR0401MB3598.namprd04.prod.outlook.com>
+References: <20200219210103.32400-1-willy@infradead.org>
+ <20200219210103.32400-15-willy@infradead.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Johannes.Thumshirn@wdc.com; 
+x-originating-ip: [129.253.240.72]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 1f9f36ad-9c2b-4615-8f76-08d7b5e92dbc
+x-ms-traffictypediagnostic: SN4PR0401MB3712:
+x-microsoft-antispam-prvs: <SN4PR0401MB371296C64FC8338D311C5EC19B130@SN4PR0401MB3712.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:7691;
+x-forefront-prvs: 031996B7EF
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(366004)(39860400002)(376002)(136003)(346002)(396003)(189003)(199004)(110136005)(316002)(54906003)(7696005)(71200400001)(81166006)(86362001)(81156014)(9686003)(8936002)(8676002)(55016002)(7416002)(478600001)(6506007)(5660300002)(91956017)(76116006)(52536014)(66556008)(64756008)(66446008)(66946007)(26005)(66476007)(2906002)(186003)(4744005)(53546011)(33656002)(4326008);DIR:OUT;SFP:1102;SCL:1;SRVR:SN4PR0401MB3712;H:SN4PR0401MB3598.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: jUs4EXsOJ1h6Mc+meDzlGUyOWASlmGwVcRYbusjWjnYc2N384jN2exjY0BSvFVN0FbrY2HTenQi6UygtEostQlmrd0SQAAIc+uInuE+BWUKNacWm/BEB+H6kMR8IRlR0YJLAKFjSPP0MBUtybF9JS9TKOrSEona/RB9DL3WntLiiqekNqk6BLRFRpG5vk7nKbUDtj9umYVstira3cCP8LCyzU0Huu8qbMYhjogdOcam/WXhBUNpm8gZsCkTtd1+vBlY5iNQ9lJTde0UYlnkuzIch3fxsi/cwtdUY+xKnDy3qiyoUrTq29Pt4gY70yPdOKHv5H1aYjOe/ZaXIqLRGQ/ZdEV1eDkLOgN2VdthJ8MZEMkOt8uPyS0M7mG9uJC0+wHaffPZcYnLWM8FDhnYOwBP7RLfmNgPAtoxsxLIiKlfCzyOjJUevNmnvJudHquy8
+x-ms-exchange-antispam-messagedata: vbv93IQYZbgJP1Z/hVNS1KpHjde+X2GbFSSagnVuEXilWwOZBJ/D3AfJnfwu/zHRERd0cukJswJ4JEgDtj3c7EzoUWFBzGEdzjVjFLKlPOOWx0C4WiG6CDu/hfH6ZouoA7OKc2KGtXg8hiDrQHZ73w==
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <605d6c45-9f52-ec84-df01-d5b7665d16dc@sandeen.net>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1f9f36ad-9c2b-4615-8f76-08d7b5e92dbc
+X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Feb 2020 09:42:19.3955
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: j4ODXpF6prvGYEa2v+nxNMmTpJxN8bgfI7Uj2C391EZvB7+MVwN/HINz4ExXRz1C9miRXVR5mYpe3HK7nZvA0+DRHnOHhAuot8u9Iw21FCQ=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR0401MB3712
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 19, 2020 at 10:23:29PM -0600, Eric Sandeen wrote:
-> 
-> 
-> On 2/19/20 10:15 PM, Zorro Lang wrote:
-> > On Wed, Feb 19, 2020 at 08:57:58PM -0600, Eric Sandeen wrote:
-> >> On 2/16/20 12:16 PM, Zorro Lang wrote:
-> >>> --- /dev/null
-> >>> +++ b/tests/generic/593.out
-> >>> @@ -0,0 +1,32 @@
-> >>> +QA output created by 593
-> >>> +1. set project quota timer
-> >>> +*** Report for user quotas on device SCRATCH_DEV
-> >>> +Block grace time: 7days; Inode grace time: 7days
-> >>> +*** Report for group quotas on device SCRATCH_DEV
-> >>> +Block grace time: 7days; Inode grace time: 7days
-> >>> +*** Report for project quotas on device SCRATCH_DEV
-> >>> +Block grace time: 00:10; Inode grace time: 00:20
-> >>
-> >> One other thing that might be an issue here, I'm not sure every
-> >> filesystem will default to 7 days if no other grace period is set ...?
-> > 
-> > Make sense:) I just hope to test the default grace time by pass.
-> > How about:
-> > 1) Get the default quota timer $string.
-> > 2) Filter above default timer "$string" to "default".
-> > to avoid defferent default timer breaks the golden output.
-> 
-> Makes sense to me, at least after I fix the other xfs bugs ;)
-
-Yeah, I just reviewed your patch:
-  [PATCH] xfs: test that default grace periods init on first mount
-
-I think my case hard to cover this situation, I have to filter the default
-value, but if the default value is bad from beginning, it can't help :)
-
-Thanks,
-Zorro
-
-> 
-> -Eric
-> 
-
+On 19/02/2020 22:03, Matthew Wilcox wrote:=0A=
+> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>=0A=
+> =0A=
+> Use the new readahead operation in btrfs.  Add a=0A=
+> readahead_for_each_batch() iterator to optimise the loop in the XArray.=
+=0A=
+=0A=
+=0A=
+OK I must admit I haven't followed this series closely, but what =0A=
+happened to said readahead_for_each_batch()?=0A=
+=0A=
+As far as I can see it's now:=0A=
+=0A=
+[...]=0A=
+> +	while ((nr =3D readahead_page_batch(rac, pagepool))) {=0A=
+=0A=
+=0A=
