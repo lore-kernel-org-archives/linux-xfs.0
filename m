@@ -2,88 +2,169 @@ Return-Path: <SRS0=u4TP=4I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5FCAC11D10
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 16:57:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35A7EC11D0C
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 16:58:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7E8322465D
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 16:57:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0507820722
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 16:58:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="XxNghq7r"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="wLFIC4hd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728384AbgBTQ5f (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Feb 2020 11:57:35 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:54092 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727709AbgBTQ5f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Feb 2020 11:57:35 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=qHvBZa6xH4q8QoO0XjztoHEsiwUeumDdhpQiwafJ4fA=; b=XxNghq7rFzqnKm0SVydd0tHTdn
-        n4s70eVOvmXv6xE4upQLTZABvYZeabWIKMlGk6r1YJRae6i8tpYXe5dtM9zo+Nvpbtu1wnMIhCRDY
-        nXaWx7ub/Z7OzeYS+E/BNUzS6JOhGzIvL1BAO8xZgolQ++p6TjxSiG17Yqf5R/+hI5Tk6WktBEQFl
-        ALA1Z2m00fN67lT/dRb+VmatCW5BfMt0zqFVJecwEgC4ipDl7wtLI+budHd68slvGKbN8MEQRduxB
-        hi02UijAGWWe/BHat9owg4eLO9dGnV9K9muMrZ8ZBwLUooYgWOvcD2lcfCIagHu0PZetNNM4A6azz
-        Ltap/rvQ==;
-Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j4p8p-0005KC-2B; Thu, 20 Feb 2020 16:57:35 +0000
-Date:   Thu, 20 Feb 2020 08:57:34 -0800
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v7 22/24] iomap: Convert from readpages to readahead
-Message-ID: <20200220165734.GZ24185@bombadil.infradead.org>
-References: <20200219210103.32400-1-willy@infradead.org>
- <20200219210103.32400-23-willy@infradead.org>
- <20200220154912.GC19577@infradead.org>
+        id S1728115AbgBTQ6s (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Feb 2020 11:58:48 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:46356 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728064AbgBTQ6s (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Feb 2020 11:58:48 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01KGtQno034533;
+        Thu, 20 Feb 2020 16:58:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=5eX55A8BuJbogNBBAyGkhlbI4qJGz+3FyrWUvw+gdoU=;
+ b=wLFIC4hdTCfQJCCUVRaTFOdCsVsrPTYVcdbxgN1HeryVJzezviuI3tVMcX57vrRjuQkX
+ J/FZg8EJftiAew9njozWZ4fMpRqwMkmI/llHr/7hAADxhmvazOTK16cqUv71tfRuMefS
+ z8D/w/7/TIV58bgLWFzvzlG0F6hd9GOTD+WBUmI4GBdCJslVIlFjLxWT9lQjN72+vIe3
+ oY/iTkOOXaZZ3oe59uI2AEslzwYIuNS5J63ez8T1zKUYdzfrM0iH/Ntl0PGsei3Tkp+p
+ FcO/C9udyTzt2J2fWTGGJXeGNba7+VkhenMZAzZwIpdp7Xyr/R+rSYplvQngLYKiWOQS Iw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2y8udkk46p-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 20 Feb 2020 16:58:43 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01KGvogF158350;
+        Thu, 20 Feb 2020 16:58:43 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2y8ud48g0r-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 20 Feb 2020 16:58:42 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01KGwff2012796;
+        Thu, 20 Feb 2020 16:58:41 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 20 Feb 2020 08:58:41 -0800
+Date:   Thu, 20 Feb 2020 08:58:40 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 5/8] xfs_db: check that metadata updates have been
+ committed
+Message-ID: <20200220165840.GX9506@magnolia>
+References: <158216290180.601264.5491208016048898068.stgit@magnolia>
+ <158216293385.601264.3202158027072387776.stgit@magnolia>
+ <20200220140623.GC48977@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200220154912.GC19577@infradead.org>
+In-Reply-To: <20200220140623.GC48977@bfoster>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9537 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0
+ mlxlogscore=999 suspectscore=0 adultscore=0 spamscore=0 mlxscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2002200125
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9537 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 suspectscore=0
+ spamscore=0 priorityscore=1501 adultscore=0 mlxscore=0 clxscore=1015
+ malwarescore=0 mlxlogscore=999 phishscore=0 impostorscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002200125
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 20, 2020 at 07:49:12AM -0800, Christoph Hellwig wrote:
-> > +/**
-> > + * iomap_readahead - Attempt to read pages from a file.
-> > + * @rac: Describes the pages to be read.
-> > + * @ops: The operations vector for the filesystem.
-> > + *
-> > + * This function is for filesystems to call to implement their readahead
-> > + * address_space operation.
-> > + *
-> > + * Context: The file is pinned by the caller, and the pages to be read are
-> > + * all locked and have an elevated refcount.  This function will unlock
-> > + * the pages (once I/O has completed on them, or I/O has been determined to
-> > + * not be necessary).  It will also decrease the refcount once the pages
-> > + * have been submitted for I/O.  After this point, the page may be removed
-> > + * from the page cache, and should not be referenced.
-> > + */
+On Thu, Feb 20, 2020 at 09:06:23AM -0500, Brian Foster wrote:
+> On Wed, Feb 19, 2020 at 05:42:13PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Add a new function that will ensure that everything we scribbled on has
+> > landed on stable media, and report the results.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  db/init.c |   14 ++++++++++++++
+> >  1 file changed, 14 insertions(+)
+> > 
+> > 
+> > diff --git a/db/init.c b/db/init.c
+> > index 0ac37368..e92de232 100644
+> > --- a/db/init.c
+> > +++ b/db/init.c
+> > @@ -184,6 +184,7 @@ main(
+> >  	char	*input;
+> >  	char	**v;
+> >  	int	start_iocur_sp;
+> > +	int	d, l, r;
+> >  
+> >  	init(argc, argv);
+> >  	start_iocur_sp = iocur_sp;
+> > @@ -216,6 +217,19 @@ main(
+> >  	 */
+> >  	while (iocur_sp > start_iocur_sp)
+> >  		pop_cur();
+> > +
+> > +	libxfs_flush_devices(mp, &d, &l, &r);
+> > +	if (d)
+> > +		fprintf(stderr, _("%s: cannot flush data device (%d).\n"),
+> > +				progname, d);
+> > +	if (l)
+> > +		fprintf(stderr, _("%s: cannot flush log device (%d).\n"),
+> > +				progname, l);
+> > +	if (r)
+> > +		fprintf(stderr, _("%s: cannot flush realtime device (%d).\n"),
+> > +				progname, r);
+> > +
+> > +
 > 
-> Isn't the context documentation something that belongs into the aop
-> documentation?  I've never really seen the value of duplicating this
-> information in method instances, as it is just bound to be out of date
-> rather sooner than later.
+> Seems like we could reduce some boilerplate by passing progname into
+> libxfs_flush_devices() and letting it dump out of the error messages,
+> unless there's some future code that cares about individual device error
+> state.
 
-I'm in two minds about it as well.  There's definitely no value in
-providing kernel-doc for implementations of a common interface ... so
-rather than fixing the nilfs2 kernel-doc, I just deleted it.  But this
-isn't just the implementation, like nilfs2_readahead() is, it's a library
-function for filesystems to call, so it deserves documentation.  On the
-other hand, there's no real thought to this on the part of the filesystem;
-the implementation just calls this with the appropriate ops pointer.
+Such a program could call libxfs_flush_devices directly, as we do here.
 
-Then again, I kind of feel like we need more documentation of iomap to
-help filesystems convert to using it.  But maybe kernel-doc isn't the
-mechanism to provide that.
+Also, progname is defined in libxfs so we don't even need to pass it as
+an argument.
+
+I had originally thought that we should try not to add fprintf calls to
+libxfs because libraries aren't really supposed to be doing things like
+that, but perhaps you're right that all of this should be melded into
+something else.
+
+> That said, it also seems the semantics of libxfs_flush_devices() are a
+> bit different from convention. Just below we invoke
+> libxfs_device_close() for each device (rather than for all three), and
+> device_close() also happens to call fsync() and platform_flush_device()
+> itself...
+
+Yeah, the division of responsibilities is a little hazy here -- I would
+think that unmounting a filesystem should flush all the memory caches
+and then the disk cache, but OTOH it's the utility that opens the
+devices and should therefore flush and close them.
+
+I dunno.  My current thinking is that libxfs_umount should call
+libxfs_flush_devices() and print error messages as necessary, and return
+error codes as appropriate.  xfs_repair can then check the umount return
+value and translate that into exit(1) as required.  The device_close
+functions will fsync a second time, but that shouldn't be a big deal
+because we haven't dirtied anything in the meantime.
+
+Thoughts?
+
+--D
+
+> Brian
+> 
+> >  	libxfs_umount(mp);
+> >  	if (x.ddev)
+> >  		libxfs_device_close(x.ddev);
+> > 
+> 
