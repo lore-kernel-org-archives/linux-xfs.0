@@ -2,152 +2,286 @@ Return-Path: <SRS0=u4TP=4I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 089DBC5ACC4
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 00:17:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50D31C5ACC4
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 00:55:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C55C4207FD
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 00:17:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1582157852;
-	bh=jM48Q8S80jNO8sEak38pj/s0s4TW2AmLgqOhvZ1fvgc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=y6TqZQgog+WljMF8eMSFxA7pQoVGvAXaK5PG8Bbj+xTNyMJNkMpoBalFHyiFHSArV
-	 wu0bCltbINt5mIXzZdiqxi4/bStUBYiahl8wBGAyCZHNKE5uRrAlDRH01rwTLkT6O1
-	 nIDySk/kbEe+t+z8fwTRLaMdiwwzAUHol/uJ7uys=
+	by mail.kernel.org (Postfix) with ESMTP id 13A4221D56
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Feb 2020 00:55:25 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="T8QSF4op"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726691AbgBTARc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Feb 2020 19:17:32 -0500
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:44594 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726677AbgBTARc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Feb 2020 19:17:32 -0500
-Received: by mail-pf1-f194.google.com with SMTP id y5so934217pfb.11
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Feb 2020 16:17:31 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=2xuGFeyyFc53TCt1xHINM1avjCVoIVtRCP71wJ8wRF0=;
-        b=YqJCd/7xKmeM1YiFe8pkkTWAvih+rH62ReVV1RlzKV6Ltw/XSyQWRwN7D7BMVcfc7W
-         /Hdy7cHENPE+F/CmLw1nltHIozpehIskVEcdcV3aQlon61A2rkfYiOCc7Nd7gNCNDui7
-         x9tXo0qTFs9H7dgbtVkmdUZjcl6Ts9XdYbY1hYawzQZloQcBmeotpwjfepuf/m8SSfbi
-         liHRVRhzSazs1UnZW3TTwcgfxGvWO17fErtZ8o2lZaKZZkkEIKw9GXprovdvF+WsIM+D
-         W2AEZcWoDhwf+MlO6Z7K9NxFiuE5omdFCaxDOFW/ABYfPeRmNpv2MLa6bjo/a+oxNFsO
-         qM4g==
-X-Gm-Message-State: APjAAAXmWCjp0TvecUJNneN7w6C52yXDfAAZ/DRFlQbvOr58v9iWulw2
-        uZ5G1FhsDBQ2o3d0sRf4Djk=
-X-Google-Smtp-Source: APXvYqwwzhwmlY+5M1i9mcPyowHI/4va4aq7OEGaT9lYF2dnG2BXUla50r7TkTZT1EFXhe9ui9mQVQ==
-X-Received: by 2002:a63:2f46:: with SMTP id v67mr31882029pgv.220.1582157851196;
-        Wed, 19 Feb 2020 16:17:31 -0800 (PST)
-Received: from 42.do-not-panic.com (42.do-not-panic.com. [157.230.128.187])
-        by smtp.gmail.com with ESMTPSA id y3sm793607pff.52.2020.02.19.16.17.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Feb 2020 16:17:30 -0800 (PST)
-Received: by 42.do-not-panic.com (Postfix, from userid 1000)
-        id 5BD00402D7; Thu, 20 Feb 2020 00:17:29 +0000 (UTC)
-Date:   Thu, 20 Feb 2020 00:17:29 +0000
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Richard Wareing <rwareing@fb.com>, linux-xfs@vger.kernel.org,
-        Anthony Iliopoulos <ailiopoulos@suse.de>,
-        Yong Sun <YoSun@suse.com>
-Subject: Re: Modern uses of CONFIG_XFS_RT
-Message-ID: <20200220001729.GT11244@42.do-not-panic.com>
-References: <20200219135715.GZ30113@42.do-not-panic.com>
- <20200219143227.aavgzkbuazttpwky@andromeda>
- <20200219143824.GR11244@42.do-not-panic.com>
- <20200219170945.GN9506@magnolia>
- <20200219175502.GS11244@42.do-not-panic.com>
- <20200219220104.GE9504@magnolia>
+        id S1727020AbgBTAzY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Feb 2020 19:55:24 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:37494 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726784AbgBTAzY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Feb 2020 19:55:24 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:
+        Subject:Sender:Reply-To:Content-ID:Content-Description;
+        bh=Ohb2InZKPvxlOicmdRvhyYCKfLB1DxvoDzY/kCt1K4s=; b=T8QSF4op0/rp9L38+C8q1g5ut5
+        dIzRuTyJsLjo1s7MHYOVnttoiBMOu18ZMR9nCrAc/3v6n0bUKbM7+CxeQ2c45NxYZEXzyq7BrGQc9
+        4+Er0bHhyLuyRtrLSPA23QZowPc6kmneaQFuNuR2+tJajx7V7lvqBhwrpnIpInQ/rzBNDj3Fq9LIi
+        XY63dCV+ea5NFbAlKOynKaP+IVAxVPCQfJHn9IBh3GF7o7P1TzPawymIlp0B6SA8GbLA56LE2Rmce
+        JFUBoks0X1tBf73MBYAPJ6xfkkVQTBZalie3+lRDInqxSukH+8HUeFlLPL+4ztK8qNo4YQfGURT7I
+        hq0T/FoQ==;
+Received: from [2603:3004:32:9a00::4074]
+        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1j4a7c-00019t-5V; Thu, 20 Feb 2020 00:55:20 +0000
+Subject: Re: [PATCH v13 2/2] zonefs: Add documentation
+To:     Damien Le Moal <damien.lemoal@wdc.com>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     Johannes Thumshirn <jth@kernel.org>,
+        Naohiro Aota <naohiro.aota@wdc.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Dave Chinner <david@fromorbit.com>
+References: <20200207031606.641231-1-damien.lemoal@wdc.com>
+ <20200207031606.641231-3-damien.lemoal@wdc.com>
+From:   Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <a6f0eaf4-933f-8c15-6f0c-18400204791f@infradead.org>
+Date:   Wed, 19 Feb 2020 16:55:17 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200219220104.GE9504@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20200207031606.641231-3-damien.lemoal@wdc.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 19, 2020 at 02:01:04PM -0800, Darrick J. Wong wrote:
-> On Wed, Feb 19, 2020 at 05:55:02PM +0000, Luis Chamberlain wrote:
-> > On Wed, Feb 19, 2020 at 09:09:45AM -0800, Darrick J. Wong wrote:
-> > > On Wed, Feb 19, 2020 at 02:38:24PM +0000, Luis Chamberlain wrote:
-> > > > On Wed, Feb 19, 2020 at 03:32:27PM +0100, Carlos Maiolino wrote:
-> > > > > On Wed, Feb 19, 2020 at 01:57:15PM +0000, Luis Chamberlain wrote:
-> > > > > > I hear some folks still use CONFIG_XFS_RT, I was curious what was the
-> > > > > > actual modern typical use case for it. I thought this was somewhat
-> > > > > > realted to DAX use but upon a quick code inspection I see direct
-> > > > > > realtionship.
-> > > > > 
-> > > > > Hm, not sure if there is any other use other than it's original purpose of
-> > > > > reducing latency jitters. Also XFS_RT dates way back from the day DAX was even a
-> > > > > thing. But anyway, I don't have much experience using XFS_RT by myself, and I
-> > > > > probably raised more questions than answers to yours :P
-> > > > 
-> > > > What about another question, this would certainly drive the users out of
-> > > > the corners: can we remove it upstream?
-> > > 
-> > > My DVR and TV still use it to record video data.
-> > 
-> > Is anyone productizing on that though?
-> > 
-> > I was curious since most distros are disabling CONFIG_XFS_RT so I was
-> > curious who was actually testing this stuff or caring about it.
+Hi Damien,
+
+Typo etc. corrections below:
+
+On 2/6/20 7:16 PM, Damien Le Moal wrote:
+> Add the new file Documentation/filesystems/zonefs.txt to document
+> zonefs principles and user-space tool usage.
 > 
-> Most != All.  We enabled it here, for development of future products.
-
-Ah great to know, thanks!
-
-> > > I've also been pushing the realtime volume for persistent memory devices
-> > > because you can guarantee that all the expensive pmem gets used for data
-> > > storage, that the extents will always be perfectly aligned to large page
-> > > sizes, and that fs metadata will never defeat that alignment guarantee.
-> > 
-> > For those that *are* using XFS in production with realtime volume with dax...
-> > I wonder whatcha doing about all these tests on fstests which we don't
-> > have a proper way to know if the test succeeded / failed [0] when an
-> > external logdev is used, this then applies to regular external log dev
-> > users as well [1].
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  Documentation/filesystems/zonefs.txt | 404 +++++++++++++++++++++++++++
+>  MAINTAINERS                          |   1 +
+>  2 files changed, 405 insertions(+)
+>  create mode 100644 Documentation/filesystems/zonefs.txt
 > 
-> Huh?  How did we jump from realtime devices to external log files?
+> diff --git a/Documentation/filesystems/zonefs.txt b/Documentation/filesystems/zonefs.txt
+> new file mode 100644
+> index 000000000000..935bf22031ca
+> --- /dev/null
+> +++ b/Documentation/filesystems/zonefs.txt
+> @@ -0,0 +1,404 @@
+> +ZoneFS - Zone filesystem for Zoned block devices
+> +
+> +Introduction
+> +============
+> +
+...
+> +
+> +Zoned block devices
+> +-------------------
+> +
+...
+> +
+> +Zonefs Overview
+> +===============
+> +
+...
 
-They share the same problem with fstests when using an alternative log
-device, which I pointed out on [0] and [1].
+> +
+> +On-disk metadata
+> +----------------
+> +
+...
 
-[0] https://github.com/mcgrof/oscheck/blob/master/expunges/linux-next-xfs/xfs/unassigned/xfs_realtimedev.txt
-[1] https://github.com/mcgrof/oscheck/blob/master/expunges/linux-next-xfs/xfs/unassigned/xfs_logdev.txt
+> +
+> +Zone type sub-directories
+> +-------------------------
+> +
+...
 
-> > Which makes me also wonder then, what are the typical big users of the
-> > regular external log device?
-> > 
-> > Reviewing a way to address this on fstests has been on my TODO for
-> > a while, but it begs the question of how much do we really care first.
-> > And that's what I was really trying to figure out.
-> > 
-> > Can / should we phase out external logdev / realtime dev? Who really is
-> > caring about this code these days?
-> 
-> Not many, I guess. :/
-> 
-> There seem to be a lot more tests these days that use dmflakey on the
-> data device to simulate a temporary disk failure... but those aren't
-> going to work for external log devices because they seem to assume that
-> what we call the data device is also the log device.
+> +
+> +Zone files
+> +----------
+> +
+...
 
-That goes to show that the fstests assumption on a shared data/log device was
-not only a thing of the past, its still present, and unless we address
-soon, the gap will only get bigger.
+> +
+> +Conventional zone files
+> +-----------------------
+> +
+...
 
-OK thanks for the feedback. The situation in terms of testing rtdev or
-external logs seems actually worse than I expected given the outlook for
-the future and no one seeming to really care too much right now. If the
-dax folks didn't care, then the code will likely just bit rot even more.
-Is it too nutty for us to consider removing it as a future goal?
+> +
+> +Sequential zone files
+> +---------------------
+> +
+> +The size of sequential zone files grouped in the "seq" sub-directory represents
+> +the file's zone write pointer position relative to the zone start sector.
+> +
+> +Sequential zone files can only be written sequentially, starting from the file
+> +end, that is, write operations can only be append writes. Zonefs makes no
+> +attempt at accepting random writes and will fail any write request that has a
+> +start offset not corresponding to the end of the file, or to the end of the last
+> +write issued and still in-flight (for asynchrnous I/O operations).
+                                         asynchronous
 
-  Luis
+> +
+> +Since dirty page writeback by the page cache does not guarantee a sequential
+> +write pattern, zonefs prevents buffered writes and writeable shared mappings
+> +on sequential files. Only direct I/O writes are accepted for these files.
+> +zonefs relies on the sequential delivery of write I/O requests to the device
+> +implemented by the block layer elevator. An elevator implementing the sequential
+> +write feature for zoned block device (ELEVATOR_F_ZBD_SEQ_WRITE elevator feature)
+> +must be used. This type of elevator (e.g. mq-deadline) is the set by default
+
+                                                          is set by default
+
+> +for zoned block devices on device initialization.
+> +
+...
+
+> +
+> +Format options
+> +--------------
+> +
+...
+
+> +
+> +IO error handling
+> +-----------------
+> +
+...
+
+> +
+> +
+> +* Unaligned write errors: These errors result from the host issuing write
+> +  requests with a start sector that does not correspond to a zone write pointer
+> +  position when the write request is executed by the device. Even though zonefs
+> +  enforces sequential file write for sequential zones, unaligned write errors
+> +  may still happen in the case of a partial failure of a very large direct I/O
+> +  operation split into multiple BIOs/requests or asynchronous I/O operations.
+> +  If one of the write request within the set of sequential write requests
+> +  issued to the device fails, all write requests after queued after it will
+
+                                           requests queued after it
+
+> +  become unaligned and fail.
+> +
+...
+
+> +
+> +All I/O errors detected by zonefs are notified to the user with an error code
+> +return for the system call that trigered or detected the error. The recovery
+
+                                   triggered
+
+> +actions taken by zonefs in response to I/O errors depend on the I/O type (read
+> +vs write) and on the reason for the error (bad sector, unaligned writes or zone
+> +condition change).
+> +
+...
+
+> +
+> +Zonefs minimal I/O error recovery may change a file size and a file access
+
+                                                            and file access
+
+> +permissions.
+> +
+> +* File size changes:
+> +  Immediate or delayed write errors in a sequential zone file may cause the file
+> +  inode size to be inconsistent with the amount of data successfully written in
+> +  the file zone. For instance, the partial failure of a multi-BIO large write
+> +  operation will cause the zone write pointer to advance partially, even though
+> +  the entire write operation will be reported as failed to the user. In such
+> +  case, the file inode size must be advanced to reflect the zone write pointer
+> +  change and eventually allow the user to restart writing at the end of the
+> +  file.
+> +  A file size may also be reduced to reflect a delayed write error detected on
+> +  fsync(): in this case, the amount of data effectively written in the zone may
+> +  be less than originally indicated by the file inode size. After such I/O
+> +  error, zonefs always fixes a file inode size to reflect the amount of data
+
+                          fixes the file inode size
+
+> +  persistently stored in the file zone.
+> +
+> +* Access permission changes:
+...
+
+> +
+> +Further notes:
+> +* The "errors=remount-ro" mount option is the default behavior of zonefs I/O
+> +  error processing if no errors mount option is specified.
+> +* With the "errors=remount-ro" mount option, the change of the file access
+> +  permissions to read-only applies to all files. The file system is remounted
+> +  read-only.
+> +* Access permission and file size changes due to the device transitioning zones
+> +  to the offline condition are permanent. Remounting or reformating the device
+
+                                             usually:      reformatting
+
+> +  with mkfs.zonefs (mkzonefs) will not change back offline zone files to a good
+> +  state.
+> +* File access permission changes to read-only due to the device transitioning
+> +  zones to the read-only condition are permanent. Remounting or reformating
+
+                                                                   reformatting
+
+> +  the device will not re-enable file write access.
+> +* File access permission changes implied by the remount-ro, zone-ro and
+> +  zone-offline mount options are temporary for zones in a good condition.
+> +  Unmounting and remounting the file system will restore the previous default
+> +  (format time values) access rights to the files affected.
+> +* The repair mount option triggers only the minimal set of I/O error recovery
+> +  actions, that is, file size fixes for zones in a good condition. Zones
+> +  indicated as being read-only or offline by the device still imply changes to
+> +  the zone file access permissions as noted in the table above.
+> +
+> +Mount options
+> +-------------
+> +
+> +zonefs define the "errors=<behavior>" mount option to allow the user to specify
+> +zonefs behavior in response to I/O errors, inode size inconsistencies or zone
+> +condition chages. The defined behaviors are as follow:
+
+             changes.
+
+> +* remount-ro (default)
+> +* zone-ro
+> +* zone-offline
+> +* repair
+> +
+> +The I/O error actions defined for each behavior is detailed in the previous
+
+                                                   are
+
+> +section.
+> +
+> +Zonefs User Space Tools
+> +=======================
+> +
+...
+> +
+> +Examples
+> +--------
+> +
+...
+
+
+HTH.
+-- 
+~Randy
