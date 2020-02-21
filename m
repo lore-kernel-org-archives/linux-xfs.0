@@ -2,100 +2,83 @@ Return-Path: <SRS0=UV4a=4J=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E190C35669
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 22:44:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFCD2C35669
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 22:57:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 51D182072C
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 22:44:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0C2620722
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 22:57:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727901AbgBUWo1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Feb 2020 17:44:27 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:39462 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726802AbgBUWo1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Feb 2020 17:44:27 -0500
+        id S1729179AbgBUW5d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Feb 2020 17:57:33 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:40110 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727822AbgBUW5d (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Feb 2020 17:57:33 -0500
 Received: from dread.disaster.area (pa49-195-185-106.pa.nsw.optusnet.com.au [49.195.185.106])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id D5E3782097C;
-        Sat, 22 Feb 2020 09:44:21 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id B54483A3FA3;
+        Sat, 22 Feb 2020 09:57:29 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1j5H1v-0004KQ-A8; Sat, 22 Feb 2020 09:44:19 +1100
-Date:   Sat, 22 Feb 2020 09:44:19 +1100
+        id 1j5HEe-0004RS-VG; Sat, 22 Feb 2020 09:57:28 +1100
+Date:   Sat, 22 Feb 2020 09:57:28 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     Christoph Hellwig <hch@lst.de>
-Cc:     ira.weiny@intel.com, linux-kernel@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH V4 07/13] fs: Add locking for a dynamic address space
- operations state
-Message-ID: <20200221224419.GW10776@dread.disaster.area>
-References: <20200221004134.30599-1-ira.weiny@intel.com>
- <20200221004134.30599-8-ira.weiny@intel.com>
- <20200221174449.GB11378@lst.de>
+Cc:     linux-xfs@vger.kernel.org,
+        Allison Collins <allison.henderson@oracle.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 09/31] xfs: move struct xfs_da_args to xfs_types.h
+Message-ID: <20200221225728.GX10776@dread.disaster.area>
+References: <20200221141154.476496-1-hch@lst.de>
+ <20200221141154.476496-10-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200221174449.GB11378@lst.de>
+In-Reply-To: <20200221141154.476496-10-hch@lst.de>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
         a=bkRQb8bsQZKWSSj4M57YXw==:117 a=bkRQb8bsQZKWSSj4M57YXw==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=l697ptgUJYAA:10
-        a=QyXUC8HyAAAA:8 a=7-415B0cAAAA:8 a=dh8Lkc1bKYycxuq4kUYA:9
+        a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8 a=yFrD9zFSM_CzhnQ0ApQA:9
         a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 21, 2020 at 06:44:49PM +0100, Christoph Hellwig wrote:
-> On Thu, Feb 20, 2020 at 04:41:28PM -0800, ira.weiny@intel.com wrote:
-> > From: Ira Weiny <ira.weiny@intel.com>
-> > 
-> > DAX requires special address space operations (aops).  Changing DAX
-> > state therefore requires changing those aops.
-> > 
-> > However, many functions require aops to remain consistent through a deep
-> > call stack.
-> > 
-> > Define a vfs level inode rwsem to protect aops throughout call stacks
-> > which require them.
-> > 
-> > Finally, define calls to be used in subsequent patches when aops usage
-> > needs to be quiesced by the file system.
+On Fri, Feb 21, 2020 at 06:11:32AM -0800, Christoph Hellwig wrote:
+> To allow passing a struct xfs_da_args to the high-level attr helpers
+> it needs to be easily includable by files like xfs_xattr.c.  Move the
+> struct definition to xfs_types.h to allow for that.
 > 
-> I am very much against this.  There is a reason why we don't support
-> changes of ops vectors at runtime anywhere else, because it is
-> horribly complicated and impossible to get right.  IFF we ever want
-> to change the DAX vs non-DAX mode (which I'm still not sold on) the
-> right way is to just add a few simple conditionals and merge the
-> aops, which is much easier to reason about, and less costly in overall
-> overhead.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_da_btree.h | 64 ------------------------------------
+>  fs/xfs/libxfs/xfs_types.h    | 60 +++++++++++++++++++++++++++++++++
+>  2 files changed, 60 insertions(+), 64 deletions(-)
 
-*cough*
+This seems way too broad. Stuff in fs/xfs/libxfs/xfs_types.h is
+really for fundamental XFS types, not for complex, subsystem
+specific API structures.
 
-That's exactly what the original code did. And it was broken
-because page faults call multiple aops that are dependent on the
-result of the previous aop calls setting up the state correctly for
-the latter calls. And when S_DAX changes between those calls, shit
-breaks.
+Why can't the xattr code simply include what it needs to get this
+structure from xfs_da_btree.h like everything else does?  Indeed,
+fs/xfs/xfs_xattr.c already includes xfs_da_format.h, so it should be
+able to directly include xfs_da_btree.h without much extra hassle.
 
-It's exactly the same problem as switching aops between two
-dependent aops method calls - we don't solve anything by merging
-aops and checking IS_DAX in each method because the race condition
-is still there.
+Hence I don't really see why making this structure globally visible
+is actually necessary, especially as the function prototypes in
+header files can simply use a forward declaration of struct
+xfs_da_args....
 
-/me throws his hands in the air and walks away
+Cheers,
 
--Dave.
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
