@@ -2,95 +2,100 @@ Return-Path: <SRS0=UV4a=4J=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_1
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B6DBC35669
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 22:13:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E190C35669
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 22:44:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3D2F724656
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 22:13:26 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="g7ke4hox"
+	by mail.kernel.org (Postfix) with ESMTP id 51D182072C
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 22:44:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726731AbgBUWNZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Feb 2020 17:13:25 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:46916 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726725AbgBUWNZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Feb 2020 17:13:25 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01LM8AUD077343;
-        Fri, 21 Feb 2020 22:13:19 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=otYAWifPLsf1ZaSO6GxqlzVY3N7Kiz3nF1ldHREt5k8=;
- b=g7ke4hoxrqYo23q7Th3tw7fqN0/E2GTkM4S/prwxXZrM1A/4/U36bn445/zR9AkwIOG8
- peIjTnF40OMdIN/1ckloai0END3nxAyL3eQGh3oLvm5x4hMCqL+PUsGyQ8NxHvoBX0iC
- xIGbefUzovOhj6V44zp8AqNQNDMyo5Ib03R9Rk2ppCg+CnC8yweTzw85PyAvBsLTyAAj
- XbU5LKh3raZeIoQ4lwEAlQIWTMFFHNQyCravlx03B2Bqg98CzM7LBaPvAfqvoTb2ehWg
- ymiVaPvLX5MPSqT6iadA+CdAQzQRgpaNEd53KgY/v2pA6+QU2tT+jLDqcO7EeRH9TWtf 7Q== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 2y8udku6ag-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 21 Feb 2020 22:13:19 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01LM8odF157900;
-        Fri, 21 Feb 2020 22:13:19 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 2y8udqqkd7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 21 Feb 2020 22:13:19 +0000
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01LMDIxg023642;
-        Fri, 21 Feb 2020 22:13:18 GMT
-Received: from localhost (/10.145.179.117)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 21 Feb 2020 14:13:18 -0800
-Date:   Fri, 21 Feb 2020 14:13:17 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 04/14] libxfs: refactor libxfs_readbuf out of existence
-Message-ID: <20200221221317.GC9506@magnolia>
-References: <158216306957.603628.16404096061228456718.stgit@magnolia>
- <158216309405.603628.3732022870551516081.stgit@magnolia>
- <20200221150001.GT15358@infradead.org>
+        id S1727901AbgBUWo1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Feb 2020 17:44:27 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:39462 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726802AbgBUWo1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Feb 2020 17:44:27 -0500
+Received: from dread.disaster.area (pa49-195-185-106.pa.nsw.optusnet.com.au [49.195.185.106])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id D5E3782097C;
+        Sat, 22 Feb 2020 09:44:21 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1j5H1v-0004KQ-A8; Sat, 22 Feb 2020 09:44:19 +1100
+Date:   Sat, 22 Feb 2020 09:44:19 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     ira.weiny@intel.com, linux-kernel@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH V4 07/13] fs: Add locking for a dynamic address space
+ operations state
+Message-ID: <20200221224419.GW10776@dread.disaster.area>
+References: <20200221004134.30599-1-ira.weiny@intel.com>
+ <20200221004134.30599-8-ira.weiny@intel.com>
+ <20200221174449.GB11378@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200221150001.GT15358@infradead.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9538 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=836
- phishscore=0 suspectscore=0 mlxscore=0 malwarescore=0 adultscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002210165
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9538 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 suspectscore=0
- spamscore=0 priorityscore=1501 adultscore=0 mlxscore=0 clxscore=1015
- malwarescore=0 mlxlogscore=910 phishscore=0 impostorscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002210165
+In-Reply-To: <20200221174449.GB11378@lst.de>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+        a=bkRQb8bsQZKWSSj4M57YXw==:117 a=bkRQb8bsQZKWSSj4M57YXw==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=l697ptgUJYAA:10
+        a=QyXUC8HyAAAA:8 a=7-415B0cAAAA:8 a=dh8Lkc1bKYycxuq4kUYA:9
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 21, 2020 at 07:00:01AM -0800, Christoph Hellwig wrote:
-> On Wed, Feb 19, 2020 at 05:44:54PM -0800, Darrick J. Wong wrote:
-> > +	/*
-> > +	 * if the buffer was prefetched, it is likely that it was not validated.
+On Fri, Feb 21, 2020 at 06:44:49PM +0100, Christoph Hellwig wrote:
+> On Thu, Feb 20, 2020 at 04:41:28PM -0800, ira.weiny@intel.com wrote:
+> > From: Ira Weiny <ira.weiny@intel.com>
+> > 
+> > DAX requires special address space operations (aops).  Changing DAX
+> > state therefore requires changing those aops.
+> > 
+> > However, many functions require aops to remain consistent through a deep
+> > call stack.
+> > 
+> > Define a vfs level inode rwsem to protect aops throughout call stacks
+> > which require them.
+> > 
+> > Finally, define calls to be used in subsequent patches when aops usage
+> > needs to be quiesced by the file system.
 > 
-> Please capitalize the first character in multi-line comments.
+> I am very much against this.  There is a reason why we don't support
+> changes of ops vectors at runtime anywhere else, because it is
+> horribly complicated and impossible to get right.  IFF we ever want
+> to change the DAX vs non-DAX mode (which I'm still not sold on) the
+> right way is to just add a few simple conditionals and merge the
+> aops, which is much easier to reason about, and less costly in overall
+> overhead.
 
-Will fix.
+*cough*
 
---D
+That's exactly what the original code did. And it was broken
+because page faults call multiple aops that are dependent on the
+result of the previous aop calls setting up the state correctly for
+the latter calls. And when S_DAX changes between those calls, shit
+breaks.
 
-> Otherwise looks good:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+It's exactly the same problem as switching aops between two
+dependent aops method calls - we don't solve anything by merging
+aops and checking IS_DAX in each method because the race condition
+is still there.
+
+/me throws his hands in the air and walks away
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
