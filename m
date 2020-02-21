@@ -7,39 +7,40 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B89DDC11D25
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 00:42:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 716E4C11D27
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 00:42:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8C045208E4
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 00:42:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 529DD207FD
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 00:42:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729601AbgBUAln (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Feb 2020 19:41:43 -0500
-Received: from mga02.intel.com ([134.134.136.20]:20199 "EHLO mga02.intel.com"
+        id S1729516AbgBUAml (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Feb 2020 19:42:41 -0500
+Received: from mga11.intel.com ([192.55.52.93]:31906 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729582AbgBUAll (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 Feb 2020 19:41:41 -0500
+        id S1729584AbgBUAlm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 20 Feb 2020 19:41:42 -0500
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga101.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 Feb 2020 16:41:41 -0800
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 Feb 2020 16:41:42 -0800
 X-IronPort-AV: E=Sophos;i="5.70,466,1574150400"; 
-   d="scan'208";a="315906277"
+   d="scan'208";a="229063093"
 Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.157])
-  by orsmga001-auth.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 Feb 2020 16:41:40 -0800
+  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 Feb 2020 16:41:41 -0800
 From:   ira.weiny@intel.com
 To:     linux-kernel@vger.kernel.org
-Cc:     Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>,
+Cc:     Ira Weiny <ira.weiny@intel.com>,
         Alexander Viro <viro@zeniv.linux.org.uk>,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
         Dan Williams <dan.j.williams@intel.com>,
         Dave Chinner <david@fromorbit.com>,
         Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH V4 03/13] fs: Remove unneeded IS_DAX() check
-Date:   Thu, 20 Feb 2020 16:41:24 -0800
-Message-Id: <20200221004134.30599-4-ira.weiny@intel.com>
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: [PATCH V4 05/13] fs/xfs: Isolate the physical DAX flag from enabled
+Date:   Thu, 20 Feb 2020 16:41:26 -0800
+Message-Id: <20200221004134.30599-6-ira.weiny@intel.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20200221004134.30599-1-ira.weiny@intel.com>
 References: <20200221004134.30599-1-ira.weiny@intel.com>
@@ -52,35 +53,69 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Ira Weiny <ira.weiny@intel.com>
 
-Remove the check because DAX now has it's own read/write methods and
-file systems which support DAX check IS_DAX() prior to IOCB_DIRECT on
-their own.  Therefore, it does not matter if the file state is DAX when
-the iocb flags are created.
+xfs_ioctl_setattr_dax_invalidate() currently checks if the DAX flag is
+changing as a quick check.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+But the implementation mixes the physical (XFS_DIFLAG2_DAX) and
+the enabled (S_DAX) DAX flags.
+
+Remove the use of the enabled flag when determining if a change of the
+physical flag is required.
+
+Furthermore, we want the physical flag, XFS_DIFLAG2_DAX, to be changed
+regardless of if the underlying storage can support DAX or not.
+
+The enabled flag, IS_DAX(), will be set later IFF the inode supports
+dax in a follow on patch.
+
 Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 
 ---
-Changes from v3:
-	Reword commit message.
-	Reordered to be a 'pre-cleanup' patch
+Changes from V3:
+	Remove the underlying storage support check
+	Rework commit message
+	Reorder patch
 ---
- include/linux/fs.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_ioctl.c | 20 ++++----------------
+ 1 file changed, 4 insertions(+), 16 deletions(-)
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 3cd4fe6b845e..63d1e533a07d 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -3388,7 +3388,7 @@ extern int file_update_time(struct file *file);
- 
- static inline bool io_is_direct(struct file *filp)
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index d42de92cb283..25e12ce85075 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1190,28 +1190,16 @@ xfs_ioctl_setattr_dax_invalidate(
+ 	int			*join_flags)
  {
--	return (filp->f_flags & O_DIRECT) || IS_DAX(filp->f_mapping->host);
-+	return (filp->f_flags & O_DIRECT);
- }
+ 	struct inode		*inode = VFS_I(ip);
+-	struct super_block	*sb = inode->i_sb;
+ 	int			error;
  
- static inline bool vma_is_dax(struct vm_area_struct *vma)
+ 	*join_flags = 0;
+ 
+-	/*
+-	 * It is only valid to set the DAX flag on regular files and
+-	 * directories on filesystems where the block size is equal to the page
+-	 * size. On directories it serves as an inherited hint so we don't
+-	 * have to check the device for dax support or flush pagecache.
+-	 */
+-	if (fa->fsx_xflags & FS_XFLAG_DAX) {
+-		struct xfs_buftarg	*target = xfs_inode_buftarg(ip);
+-
+-		if (!bdev_dax_supported(target->bt_bdev, sb->s_blocksize))
+-			return -EINVAL;
+-	}
+-
+ 	/* If the DAX state is not changing, we have nothing to do here. */
+-	if ((fa->fsx_xflags & FS_XFLAG_DAX) && IS_DAX(inode))
++	if ((fa->fsx_xflags & FS_XFLAG_DAX) &&
++	    (ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
+ 		return 0;
+-	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_DAX(inode))
++	if (!(fa->fsx_xflags & FS_XFLAG_DAX) &&
++	    !(ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
+ 		return 0;
+ 
+ 	if (S_ISDIR(inode->i_mode))
 -- 
 2.21.0
 
