@@ -2,112 +2,104 @@ Return-Path: <SRS0=UV4a=4J=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDC86C35666
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 20:59:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 367BAC35669
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 21:48:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9508424650
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 20:59:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0A58B206D7
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 21:48:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="KFaDdgPi"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="iCNdT0BZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726681AbgBUU7N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Feb 2020 15:59:13 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:33530 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726683AbgBUU7N (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Feb 2020 15:59:13 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01LKwx3U125524;
-        Fri, 21 Feb 2020 20:59:09 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=ughs9O0Qk7Bhl9ugaofqdlV9zP5qW3fqoWmD8mOlCUI=;
- b=KFaDdgPi5QR55ZyQIS3oPsaOJVxqc7+Tv+H2bv1E7ZHmfIGJQ9cjvFgh2biNJyG3wGBG
- Cw7bLnOugVYSBeHGkfEEpe6ZkL+v7INBdWZHuHT5b0kFsTgcbdk5K9Y7J8xCP1HM7slH
- K6ja/QkufgeviPcBJl58YqIuNwfWcZHmAV51uqOQ/fYDniJhc6D0xhwyys8TYtVkpImG
- C4l7KsQeMDerRPWKeC2WkGK7AAygtHnURaUc+/E7vUPyEYa4gFHZIwc7AaS9mB7Zcj2t
- HxMHSZEk6J8vixd7jSzrM533BZuW0FkUvrNVW3IpuJ9WMxRduB7GS7uFwPAgqTSW3ES8 Bg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2y8uddjvuy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 21 Feb 2020 20:59:09 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01LKw81E072054;
-        Fri, 21 Feb 2020 20:59:09 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2y8ud9nyq0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 21 Feb 2020 20:59:09 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01LKx85c005637;
-        Fri, 21 Feb 2020 20:59:08 GMT
-Received: from localhost (/10.145.179.117)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 21 Feb 2020 12:59:08 -0800
-Date:   Fri, 21 Feb 2020 12:59:07 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 10/18] libxfs: introduce libxfs_buf_read_uncached
-Message-ID: <20200221205907.GB9506@magnolia>
-References: <158216295405.602314.2094526611933874427.stgit@magnolia>
- <158216301746.602314.17789861786273491972.stgit@magnolia>
- <20200221144833.GH15358@infradead.org>
- <20200221205028.GA9506@magnolia>
+        id S1728894AbgBUVsz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Feb 2020 16:48:55 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:52348 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728135AbgBUVsz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Feb 2020 16:48:55 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=MjU0vaJ+i1WQ4UQpS8eKlaynh2uwVXzGNQNy57Q9C9k=; b=iCNdT0BZXgtTW3Fw9E7mV20LZ3
+        6bABfCOOFRCJ7uEiieuVoc7VQvPYz9c1AqPQS7RqHIO2SPtmECRCJ7fINKg3kWrEwzycOHzoI2EXq
+        gb8xBz4Q6YqdlmdYSYmNzPYMGLnkARpEro+4SyAMM0qv/bPjVCXcHHSSe2kepGwYnmLclyWoT72Ri
+        xVH+asjJnQ5gia6IN546JKq8u1xVU9xK4MZ7CcV53GDFQceXlwOtV+auqB/eJnS3NjFkIZuYn1p/U
+        bzlnG8k5S9m/fPbCpIe+WYxJl419e2ENRT98jQ6jjA5WKiplo70Ono1aN5F+tvL7N8eBzKyaRDymg
+        11ulvQcg==;
+Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1j5GAH-0001lk-Uz; Fri, 21 Feb 2020 21:48:53 +0000
+Date:   Fri, 21 Feb 2020 13:48:53 -0800
+From:   Matthew Wilcox <willy@infradead.org>
+To:     John Hubbard <jhubbard@nvidia.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v7 01/24] mm: Move readahead prototypes from mm.h
+Message-ID: <20200221214853.GF24185@bombadil.infradead.org>
+References: <20200219210103.32400-1-willy@infradead.org>
+ <20200219210103.32400-2-willy@infradead.org>
+ <e065679e-222f-7323-9782-0c4471bb9233@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200221205028.GA9506@magnolia>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9538 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxlogscore=999 mlxscore=0
- adultscore=0 spamscore=0 suspectscore=0 malwarescore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002210159
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9538 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 impostorscore=0
- mlxlogscore=999 malwarescore=0 mlxscore=0 suspectscore=0
- priorityscore=1501 bulkscore=0 adultscore=0 spamscore=0 lowpriorityscore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002210159
+In-Reply-To: <e065679e-222f-7323-9782-0c4471bb9233@nvidia.com>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 21, 2020 at 12:50:28PM -0800, Darrick J. Wong wrote:
-> On Fri, Feb 21, 2020 at 06:48:33AM -0800, Christoph Hellwig wrote:
-> > On Wed, Feb 19, 2020 at 05:43:37PM -0800, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Introduce an uncached read function so that userspace can handle them in
-> > > the same way as the kernel.  This also eliminates the need for some of
-> > > the libxfs_purgebuf calls (and two trips into the cache code).
-> > > 
-> > > Refactor the get/read uncached buffer functions to hide the details of
-> > > uncached buffer-ism in rdwr.c.
-> > 
-> > Split this into one patch adding the functionality to libxfs and
-> > one each to convert db and copy over with a good rationale for the
-> > switch in each case?
+On Thu, Feb 20, 2020 at 06:43:31PM -0800, John Hubbard wrote:
+> Yes. But I think these files also need a similar change:
 > 
-> Both programs use the uncached read for the same purpose, which is to
-> read the superblock without polluting the buffer cache when we haven't
-> yet established the filesystem sector size.
+>     fs/btrfs/disk-io.c
 
-HAH nope, despite the very similiar code, they do it for different
-reasons.  Separate patches it is.
+That gets pagemap.h through ctree.h, so I think it's fine.  It's
+already using mapping_set_gfp_mask(), so it already depends on pagemap.h.
 
---D
+>     fs/nfs/super.c
 
-> The only reason why repair doesn't need patching is that reaches into
-> the buffer cache internals to call lseek and read by hand.  I guess that
-> should be fixed, separately.
+That gets it through linux/nfs_fs.h.
+
+I was reluctant to not add it to blk-core.c because it doesn't seem
+necessarily intuitive that the block device core would include pagemap.h.
+
+That said, blkdev.h does include pagemap.h, so maybe I don't need to
+include it here.
+
+> ...because they also use VM_READAHEAD_PAGES, and do not directly include
+> pagemap.h yet.
+
+> > +#define VM_READAHEAD_PAGES	(SZ_128K / PAGE_SIZE)
+> > +
+> > +void page_cache_sync_readahead(struct address_space *, struct file_ra_state *,
+> > +		struct file *, pgoff_t index, unsigned long req_count);
 > 
-> --D
+> Yes, "struct address_space *mapping" is weird, but I don't know if it's
+> "misleading", given that it's actually one of the things you have to learn
+> right from the beginning, with linux-mm, right? Or is that about to change?
+> 
+> I'm not asking to restore this to "struct address_space *mapping", but I thought
+> it's worth mentioning out loud, especially if you or others are planning on
+> changing those names or something. Just curious.
+
+No plans (on my part) to change the name, although I have heard people
+grumbling that there's very little need for it to be a separate struct
+from inode, except for the benefit of coda, which is not exactly a
+filesystem with a lot of users ...
+
+Anyway, no plans to change it.  If there were something _special_ about
+it like a theoretical:
+
+void mapping_dedup(struct address_space *canonical,
+		struct address_space *victim);
+
+then that's useful information and shouldn't be deleted.  But I don't
+think the word 'mapping' there conveys anything useful (other than the
+convention is to call a 'struct address_space' a mapping, which you'll
+see soon enough once you look at any of the .c files).
