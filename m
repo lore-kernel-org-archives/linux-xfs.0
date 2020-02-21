@@ -2,65 +2,101 @@ Return-Path: <SRS0=UV4a=4J=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8474C35646
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 15:49:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85B02C35646
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 15:51:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B0299206E2
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 15:49:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 54697206EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 15:51:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="OG6Vt12T"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="C3E45d1m"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728684AbgBUPt5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Feb 2020 10:49:57 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:47974 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728550AbgBUPt5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Feb 2020 10:49:57 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=kesqpEYqZt+l8smLjhTzg5ddxFrlWN2gK+jo1J4Pjsk=; b=OG6Vt12TZLIHw2DtPT2K98nI6w
-        eYV/2Af08yjga9Zt5miPxIkI+IcH0XhcM1uM8kGroJdM1lSSz9FX+OkD+D1uVO1zFRBO0+d/iBEHS
-        1+RCYObjS9f2Wwj91ffDTD7ZIwegIqWcyffO/hXenU4JtwzNCY3aZZNAdtWOVhNqgYMAxBvZlPRan
-        VnWLfWs6x6pMtvgcvqQSGxTw42DTRmMZ5nvy0RWJRqQNmLY2Dfx9d4+wjAV0M3NFa0Im7XACscX5Q
-        relFYlMjaTpu91PonjZ2oLmYM5kIdD0eJHs/WpnuVHVFN2aRYer9LlToXsQsBQU5OvepOoyv87QnI
-        5rX2cMAA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j5AYu-0002gz-St; Fri, 21 Feb 2020 15:49:56 +0000
-Date:   Fri, 21 Feb 2020 07:49:56 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: improve error message when we can't allocate memory
- for xfs_buf
-Message-ID: <20200221154956.GA9866@infradead.org>
-References: <20200221154132.GQ9506@magnolia>
+        id S1728379AbgBUPvy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Feb 2020 10:51:54 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:58752 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728235AbgBUPvy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Feb 2020 10:51:54 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01LFhUEr106506;
+        Fri, 21 Feb 2020 15:51:49 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=WTS+WmIAeD+wLWwkAW6o6vZpM/h7nUa2W9tl1LuI3bs=;
+ b=C3E45d1mm9FHvgeJRq5kts/+klh8rU+Ud/gLKw9fl5bjdHfdl2cWz8Mm1q68vTiiWRot
+ 4FyELsm70+zs7NB2hHU6aXdaYik0MVqs6J16+lydbobhUPZLUfDeJK9EoiWdeVScQTSM
+ GYGcPMNrojDAIlk273U/Q2kD+fVPFoBNuRUGLd7NqVxGsHjOHdELY8EkRrxOr8eQwHv5
+ n7z+p/ep1imhohlcVwvMMBbdxoGhiP7a1YjMEp1PdJrn2LUKZ709dmCjOPZykv5biA55
+ BCaxEDVLs2iiV6OvtENLCXulWd6bnme7xSMxlyfi99DmerJgJl1xtIgNptQ8Tzt9Lk5B Zg== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2y8uddhbf5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 21 Feb 2020 15:51:49 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01LFgmBW126807;
+        Fri, 21 Feb 2020 15:51:48 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 2y8udfdcb4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 21 Feb 2020 15:51:48 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01LFpldj010587;
+        Fri, 21 Feb 2020 15:51:48 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 21 Feb 2020 07:51:47 -0800
+Date:   Fri, 21 Feb 2020 07:51:46 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 11/18] libxlog: use uncached buffers instead of
+ open-coding them
+Message-ID: <20200221155146.GR9506@magnolia>
+References: <158216295405.602314.2094526611933874427.stgit@magnolia>
+ <158216302373.602314.13809511355239867956.stgit@magnolia>
+ <20200221144959.GI15358@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200221154132.GQ9506@magnolia>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200221144959.GI15358@infradead.org>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9537 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 adultscore=0
+ mlxlogscore=999 malwarescore=0 bulkscore=0 suspectscore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002210119
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9537 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 impostorscore=0
+ mlxlogscore=999 malwarescore=0 mlxscore=0 suspectscore=0
+ priorityscore=1501 bulkscore=0 adultscore=0 spamscore=0 lowpriorityscore=0
+ clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2002210119
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 21, 2020 at 07:41:32AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Feb 21, 2020 at 06:49:59AM -0800, Christoph Hellwig wrote:
+> On Wed, Feb 19, 2020 at 05:43:43PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Use the new uncached buffer functions to manage buffers instead of
+> > open-coding the logic.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> If xfs_buf_get_map can't allocate enough memory for the buffer it's
-> trying to create, it'll cough up an error about not being able to
-> allocate "pagesn".  That's not particularly helpful (and if we're really
-> out of memory the message is very spammy) so change the message to tell
-> us how many pages were actually requested, and ratelimit it too.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Isn't xfs_log_recover.c supposed to be partially shared with the kernel?
+> I guess I need to port over my changes to the buffer handling there,
+> which would mean implementing xfs_rw_bdev using preadv/pwritev.
 
-Looks good,
+It ought to be, but the file has fallen very far out of sync with the
+kernel and I didn't want to launch a log recovery reconstruction
+project.  This patch is useful to get us to the point of having one
+buffer api and using it consistently, but that's about it...
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+--D
