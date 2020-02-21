@@ -7,42 +7,40 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9846BC35667
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 14:12:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67C04C3565B
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 14:12:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6E10F24653
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 14:12:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3234F24650
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 14:12:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="F99g53Q3"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="W4m35vHt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728715AbgBUOL7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Feb 2020 09:11:59 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:59370 "EHLO
+        id S1728814AbgBUOMD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Feb 2020 09:12:03 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:59594 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728745AbgBUOL6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Feb 2020 09:11:58 -0500
+        with ESMTP id S1728825AbgBUOMB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Feb 2020 09:12:01 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=6JM2Bym7Wi7EAVW7TK5XNsQeRam8mmoRpf9F/5cK3kM=; b=F99g53Q3rkEJiUeuG/Fn0S11+B
-        eHYPsrdPdCViC1gBBWZkNILA9ah9MPAr/ddpIe3TqpVnZLcvq+PPLHaXFNhtXXlQNJFzoUlMSP9Ph
-        c00yUbWkMLiTelV2Iua79AmWeQoRWqIaJhnqjG+OQ8lv+YHi8Jb1hV1jRWDIuOek8qhRpYTo6b14r
-        5qutf0f6MKDIWT62zqjNUPtb4PIReAm70dRyn+jutvy8xghJ0Xo7bDPZbIPswxbJWov1TQYnlymQ4
-        tNKRAb3YASR2nU7a2KoOWZfy1tF1qRAHWbJGB+K3U803WCIPj3YSMM/Pu91Xn1bPcxkDj+Oukr6i0
-        0eOv6qFw==;
+        bh=0HA864KCGBerK1+P6JX+PPAw3EHz5y/ZPy3g0lUZCIA=; b=W4m35vHtJ3rvryuujb3+L8ye2w
+        kbFNwAcUeW69hdncN86tfQCJH8hegQB4mrIAU2GnGGTvpQvxGx0K1So0J3DDMgvr1Ij8BWeixYxJ6
+        2MfBJEiqXNVj8Uibcg9G1UKyaSFp4LGS1V4uPhWB5vGVfHbEodgYFjJxK8rBZiVeAFPr7aEbmG2Gv
+        6U8CriUOML26bzNEQxVqUXCF7t6gktWoEq+uUEqqmby2GLqwkYx48Pw2KEOTtYenQigWCJZDglyEB
+        vCfcK6tC2bEgyKP8qtlrjrY+uzWIbed5oIcokYCrHSGJSNlC6J6o847SEXN62sMdiL37fsSBXSE2b
+        9cYA/tEw==;
 Received: from [38.126.112.138] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j5926-0000IS-DJ; Fri, 21 Feb 2020 14:11:58 +0000
+        id 1j5929-0000Lo-Ks; Fri, 21 Feb 2020 14:12:01 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
 Cc:     Allison Collins <allison.henderson@oracle.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Chandan Rajendra <chandanrlinux@gmail.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 16/31] xfs: replace ATTR_KERNOTIME with XFS_DA_OP_NOTIME
-Date:   Fri, 21 Feb 2020 06:11:39 -0800
-Message-Id: <20200221141154.476496-17-hch@lst.de>
+        Dave Chinner <dchinner@redhat.com>
+Subject: [PATCH 31/31] xfs: clean up bufsize alignment in xfs_ioc_attr_list
+Date:   Fri, 21 Feb 2020 06:11:54 -0800
+Message-Id: <20200221141154.476496-32-hch@lst.de>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200221141154.476496-1-hch@lst.de>
 References: <20200221141154.476496-1-hch@lst.de>
@@ -54,113 +52,30 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-op_flags with the XFS_DA_OP_* flags is the usual place for in-kernel
-only flags, so move the notime flag there.
+Use the round_down macro, and use the size of the uint32 type we
+use in the callback that fills the buffer to make the code a little
+more clear - the size of it is always the same as int for platforms
+that Linux runs on.
 
+Suggested-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr.c  | 4 ++--
- fs/xfs/libxfs/xfs_attr.h  | 8 +-------
- fs/xfs/libxfs/xfs_types.h | 2 ++
- fs/xfs/scrub/attr.c       | 2 +-
- fs/xfs/xfs_ioctl.c        | 1 -
- 5 files changed, 6 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_ioctl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 1382e51ef85e..3b1db2afb104 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -186,7 +186,7 @@ xfs_attr_try_sf_addname(
- 	 * Commit the shortform mods, and we're done.
- 	 * NOTE: this is also the error path (EEXIST, etc).
- 	 */
--	if (!error && (args->flags & ATTR_KERNOTIME) == 0)
-+	if (!error && !(args->op_flags & XFS_DA_OP_NOTIME))
- 		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
- 
- 	if (mp->m_flags & XFS_MOUNT_WSYNC)
-@@ -389,7 +389,7 @@ xfs_attr_set(
- 	if (mp->m_flags & XFS_MOUNT_WSYNC)
- 		xfs_trans_set_sync(args->trans);
- 
--	if ((args->flags & ATTR_KERNOTIME) == 0)
-+	if (!(args->op_flags & XFS_DA_OP_NOTIME))
- 		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
- 
- 	/*
-diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-index a6de050675c9..0f369399effd 100644
---- a/fs/xfs/libxfs/xfs_attr.h
-+++ b/fs/xfs/libxfs/xfs_attr.h
-@@ -33,19 +33,13 @@ struct xfs_attr_list_context;
- #define ATTR_CREATE	0x0010	/* pure create: fail if attr already exists */
- #define ATTR_REPLACE	0x0020	/* pure set: fail if attr does not exist */
- 
--#define ATTR_KERNOTIME	0x1000	/* [kernel] don't update inode timestamps */
--
--#define ATTR_KERNEL_FLAGS \
--	(ATTR_KERNOTIME)
--
- #define XFS_ATTR_FLAGS \
- 	{ ATTR_DONTFOLLOW, 	"DONTFOLLOW" }, \
- 	{ ATTR_ROOT,		"ROOT" }, \
- 	{ ATTR_TRUST,		"TRUST" }, \
- 	{ ATTR_SECURE,		"SECURE" }, \
- 	{ ATTR_CREATE,		"CREATE" }, \
--	{ ATTR_REPLACE,		"REPLACE" }, \
--	{ ATTR_KERNOTIME,	"KERNOTIME" }
-+	{ ATTR_REPLACE,		"REPLACE" }
- 
- /*
-  * The maximum size (into the kernel or returned from the kernel) of an
-diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-index 3379ebc0c7c5..1594325d7742 100644
---- a/fs/xfs/libxfs/xfs_types.h
-+++ b/fs/xfs/libxfs/xfs_types.h
-@@ -223,6 +223,7 @@ typedef struct xfs_da_args {
- #define XFS_DA_OP_ADDNAME	0x0004	/* this is an add operation */
- #define XFS_DA_OP_OKNOENT	0x0008	/* lookup/add op, ENOENT ok, else die */
- #define XFS_DA_OP_CILOOKUP	0x0010	/* lookup to return CI name if found */
-+#define XFS_DA_OP_NOTIME	0x0020	/* don't update inode timestamps */
- #define XFS_DA_OP_INCOMPLETE	0x0040	/* lookup INCOMPLETE attr keys */
- 
- #define XFS_DA_OP_FLAGS \
-@@ -231,6 +232,7 @@ typedef struct xfs_da_args {
- 	{ XFS_DA_OP_ADDNAME,	"ADDNAME" }, \
- 	{ XFS_DA_OP_OKNOENT,	"OKNOENT" }, \
- 	{ XFS_DA_OP_CILOOKUP,	"CILOOKUP" }, \
-+	{ XFS_DA_OP_NOTIME,	"NOTIME" }, \
- 	{ XFS_DA_OP_INCOMPLETE,	"INCOMPLETE" }
- 
- /*
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index f983c2b969e0..05537627211d 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -147,7 +147,7 @@ xchk_xattr_listent(
- 		return;
- 	}
- 
--	args.flags = ATTR_KERNOTIME;
-+	args.op_flags = XFS_DA_OP_NOTIME;
- 	if (flags & XFS_ATTR_ROOT)
- 		args.flags |= ATTR_ROOT;
- 	else if (flags & XFS_ATTR_SECURE)
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index ce393a97c85c..41f05a94fe51 100644
+index 4b126f5e9bed..0690e1a8ef1a 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -436,7 +436,6 @@ xfs_ioc_attrmulti_one(
+@@ -414,7 +414,7 @@ xfs_ioc_attr_list(
+ 	context.resynch = 1;
+ 	context.attr_filter = xfs_attr_filter(flags);
+ 	context.buffer = buffer;
+-	context.bufsize = (bufsize & ~(sizeof(int)-1));  /* align */
++	context.bufsize = round_down(bufsize, sizeof(uint32_t));
+ 	context.firstu = context.bufsize;
+ 	context.put_listent = xfs_ioc_attr_put_listent;
  
- 	if ((flags & ATTR_ROOT) && (flags & ATTR_SECURE))
- 		return -EINVAL;
--	flags &= ~ATTR_KERNEL_FLAGS;
- 
- 	name = strndup_user(uname, MAXNAMELEN);
- 	if (IS_ERR(name))
 -- 
 2.24.1
 
