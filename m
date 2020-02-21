@@ -2,69 +2,121 @@ Return-Path: <SRS0=UV4a=4J=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC7BAC35646
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 18:06:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1082C35646
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 19:44:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8644220722
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 18:06:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9835E24650
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 19:44:38 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="lYdo4NH8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726342AbgBUSGJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Feb 2020 13:06:09 -0500
-Received: from mga14.intel.com ([192.55.52.115]:40438 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725995AbgBUSGI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 21 Feb 2020 13:06:08 -0500
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 21 Feb 2020 10:06:08 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.70,469,1574150400"; 
-   d="scan'208";a="225289968"
-Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
-  by orsmga007.jf.intel.com with ESMTP; 21 Feb 2020 10:06:07 -0800
-Date:   Fri, 21 Feb 2020 10:06:07 -0800
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-kernel@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH V4 10/13] fs/xfs: Clean up locking in dax invalidate
-Message-ID: <20200221180607.GA4462@iweiny-DESK2.sc.intel.com>
-References: <20200221004134.30599-1-ira.weiny@intel.com>
- <20200221004134.30599-11-ira.weiny@intel.com>
- <20200221174522.GC11378@lst.de>
+        id S1726160AbgBUTod (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Feb 2020 14:44:33 -0500
+Received: from hqnvemgate26.nvidia.com ([216.228.121.65]:15668 "EHLO
+        hqnvemgate26.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726443AbgBUTod (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Feb 2020 14:44:33 -0500
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate26.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5e5033120000>; Fri, 21 Feb 2020 11:44:18 -0800
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Fri, 21 Feb 2020 11:44:32 -0800
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Fri, 21 Feb 2020 11:44:32 -0800
+Received: from [10.2.166.200] (10.124.1.5) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Fri, 21 Feb
+ 2020 19:44:32 +0000
+Subject: Re: [PATCH v7 11/24] mm: Move end_index check out of readahead loop
+To:     Matthew Wilcox <willy@infradead.org>
+CC:     <linux-fsdevel@vger.kernel.org>, <linux-mm@kvack.org>,
+        <linux-kernel@vger.kernel.org>, <linux-btrfs@vger.kernel.org>,
+        <linux-erofs@lists.ozlabs.org>, <linux-ext4@vger.kernel.org>,
+        <linux-f2fs-devel@lists.sourceforge.net>,
+        <cluster-devel@redhat.com>, <ocfs2-devel@oss.oracle.com>,
+        <linux-xfs@vger.kernel.org>
+References: <20200219210103.32400-1-willy@infradead.org>
+ <20200219210103.32400-12-willy@infradead.org>
+ <e6ef2075-b849-299e-0f11-c6ee82b0a3c7@nvidia.com>
+ <20200221153537.GE24185@bombadil.infradead.org>
+From:   John Hubbard <jhubbard@nvidia.com>
+X-Nvconfidentiality: public
+Message-ID: <1fd052ce-cd5e-60ce-e494-cbf6427d3ed3@nvidia.com>
+Date:   Fri, 21 Feb 2020 11:41:28 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.5.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200221174522.GC11378@lst.de>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+In-Reply-To: <20200221153537.GE24185@bombadil.infradead.org>
+X-Originating-IP: [10.124.1.5]
+X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
+ HQMAIL107.nvidia.com (172.20.187.13)
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1582314258; bh=pQKOwwEmNmp5lZ+eX1Ols5QNnW+OORTLQJDMCsPxtEc=;
+        h=X-PGP-Universal:Subject:To:CC:References:From:X-Nvconfidentiality:
+         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
+         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
+         Content-Transfer-Encoding;
+        b=lYdo4NH8M7SXphPat6doJg0oOA1V6kLXukQ7JIEh5FVkfFb0/CxKOhHQdMiRNYy87
+         Q6EhPR2Fph1xqpiZaGm+fIV8Ra4pJE8E5H2Ofj6LlTy0+Qb+/+y64EhZcbjIYXrOqI
+         IXR7s2kX4Yi3hnWXNuj2sU2+Joh83jXJxvw8pHXSeKQS/7ccswnLmpLkros2lxWTg/
+         2U8B/Ar6NYNMOQFqfCj3j5XpjUwSHVdi0BMHCh2YVMnazsUm42RddLEt+ZRAKHCaXa
+         IlYO+1WyQ2QxlFvwnZy2R5xtgMwusy7sT9ZlwHQi2bqndUATGT9KLiH14aMZETjP0i
+         ow4Jt857PEIiA==
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 21, 2020 at 06:45:22PM +0100, Christoph Hellwig wrote:
-> On Thu, Feb 20, 2020 at 04:41:31PM -0800, ira.weiny@intel.com wrote:
-> > From: Ira Weiny <ira.weiny@intel.com>
-> > 
-> > Define a variable to hold the lock flags to ensure that the correct
-> > locks are returned or released on error.
+On 2/21/20 7:35 AM, Matthew Wilcox wrote:
+> On Thu, Feb 20, 2020 at 07:50:39PM -0800, John Hubbard wrote:
+>> This tiny patch made me pause, because I wasn't sure at first of the exact
+>> intent of the lines above. Once I worked it out, it seemed like it might
+>> be helpful (or overkill??) to add a few hints for the reader, especially since
+>> there are no hints in the function's (minimal) documentation header. What
+>> do you think of this?
+>>
+>> 	/*
+>> 	 * If we can't read *any* pages without going past the inodes's isize
+>> 	 * limit, give up entirely:
+>> 	 */
+>> 	if (index > end_index)
+>> 		return;
+>>
+>> 	/* Cap nr_to_read, in order to avoid overflowing the ULONG type: */
+>> 	if (index + nr_to_read < index)
+>> 		nr_to_read = ULONG_MAX - index + 1;
+>>
+>> 	/* Cap nr_to_read, to avoid reading past the inode's isize limit: */
+>> 	if (index + nr_to_read >= end_index)
+>> 		nr_to_read = end_index - index + 1;
 > 
-> I don't see how this cleans up anything..
+> A little verbose for my taste ... How about this?
 
-It ensures the correct flags are released in the error path without having to
-add the flag in the next patch in 2 places.
 
-Ira
+Mine too, actually. :)  I think your version below looks good.
+
+
+thanks,
+-- 
+John Hubbard
+NVIDIA
+
+> 
+>          end_index = (isize - 1) >> PAGE_SHIFT;
+>          if (index > end_index)
+>                  return;
+>          /* Avoid wrapping to the beginning of the file */
+>          if (index + nr_to_read < index)
+>                  nr_to_read = ULONG_MAX - index + 1;
+>          /* Don't read past the page containing the last byte of the file */
+>          if (index + nr_to_read >= end_index)
+>                  nr_to_read = end_index - index + 1;
+> 
 
