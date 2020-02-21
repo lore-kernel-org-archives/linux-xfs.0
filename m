@@ -2,95 +2,67 @@ Return-Path: <SRS0=UV4a=4J=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D754EC11D24
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 04:41:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36FB5C11D24
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 05:02:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A9F93207FD
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 04:41:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="wxKIwQJS"
+	by mail.kernel.org (Postfix) with ESMTP id 0ABBF208C4
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 05:02:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729371AbgBUElR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Feb 2020 23:41:17 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:55382 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729229AbgBUElQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Feb 2020 23:41:16 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01L4bTw1092159;
-        Fri, 21 Feb 2020 04:41:14 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=CNikVF1F9aRj0qsSyGByTc5/A+gEGMmZ5eMAuTc6yPc=;
- b=wxKIwQJSlsGd6KApduQf6Qm6WS0GqVK4DlcvSiMD5Y0BEZsEc5RMGFqnRTDRjFNeN8hu
- 6eojKEHSkEGRUinM4G2fof0YLZa2KyJr29rfpfDpZgPDDVD21XSUIHMDKXVa07N3LLVV
- kHyyfVUjEpL6DjTcxOCmqqEzWzz9qLOrSyL7xSkRgL8nC+ICbx5BksFCQoMO1R+JbEtW
- uJuSmtz09rZXJDKDn0/O+eiiWyS0g8hyybWYEiuEe1snox0U5Xx6cpKyWDlIqUDtbW1I
- TsJ2vRPy/wYVqPSoFp+Ft3a+T4x0bL5+LaR4bzW7ocDPIUuP+VdEf+6rm+wrDiRFIvor 8g== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2y8udkpba1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 21 Feb 2020 04:41:13 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01L4bl20177913;
-        Fri, 21 Feb 2020 04:41:13 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 2y8ud5j7my-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 21 Feb 2020 04:41:12 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01L4f6Jt027771;
-        Fri, 21 Feb 2020 04:41:07 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 20 Feb 2020 20:41:05 -0800
-Date:   Thu, 20 Feb 2020 20:41:05 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: reduce dmesg spam v2
-Message-ID: <20200221044105.GG9506@magnolia>
-References: <20200220153921.383899-1-hch@lst.de>
+        id S1725768AbgBUFCU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Feb 2020 00:02:20 -0500
+Received: from zeniv.linux.org.uk ([195.92.253.2]:46384 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725372AbgBUFCU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Feb 2020 00:02:20 -0500
+Received: from viro by ZenIV.linux.org.uk with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1j50Rx-00GAaV-Pv; Fri, 21 Feb 2020 05:02:05 +0000
+Date:   Fri, 21 Feb 2020 05:02:05 +0000
+From:   Al Viro <viro@zeniv.linux.org.uk>
+To:     Aleksa Sarai <cyphar@cyphar.com>
+Cc:     Florian Weimer <fw@deneb.enyo.de>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        linux-xfs@vger.kernel.org, libc-alpha@sourceware.org,
+        linux-fsdevel@vger.kernel.org, Rich Felker <dalias@libc.org>
+Subject: Re: XFS reports lchmod failure, but changes file system contents
+Message-ID: <20200221050205.GW23230@ZenIV.linux.org.uk>
+References: <874kvwowke.fsf@mid.deneb.enyo.de>
+ <20200212161604.GP6870@magnolia>
+ <20200212181128.GA31394@infradead.org>
+ <20200212183718.GQ6870@magnolia>
+ <87d0ajmxc3.fsf@mid.deneb.enyo.de>
+ <20200212195118.GN23230@ZenIV.linux.org.uk>
+ <87wo8rlgml.fsf@mid.deneb.enyo.de>
+ <20200221040919.zmsayko3fnbdbmib@yavin.dot.cyphar.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200220153921.383899-1-hch@lst.de>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9537 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0
- mlxlogscore=835 suspectscore=0 adultscore=0 spamscore=0 mlxscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002210031
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9537 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 suspectscore=0
- spamscore=0 priorityscore=1501 adultscore=0 mlxscore=0 clxscore=1015
- malwarescore=0 mlxlogscore=910 phishscore=0 impostorscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002210031
+In-Reply-To: <20200221040919.zmsayko3fnbdbmib@yavin.dot.cyphar.com>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 20, 2020 at 07:39:19AM -0800, Christoph Hellwig wrote:
-> Hi all,
-> 
-> When a device keeps failing I/O (for example using dm-flakey in various
-> tests), we keep spamming the log for each I/O error, although the
-> messages are very much duplicates.  Use xfs_alert_ratelimited() to reduce
-> the number of logged lines.
-> 
+On Fri, Feb 21, 2020 at 03:09:19PM +1100, Aleksa Sarai wrote:
 
-This series looks ok to me,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+>  * open(/proc/self/fd/$n) failing with ELOOP might actually be a bug
+>    (the error is coming from may_open as though the lookup was done with
+>    O_NOFOLLOW) -- the nd_jump_link() jump takes the namei lookup to a
+>    the symlink but it looks like the normal link_path_walk et al
+>    handling doesn't actually try to continue resolving it. I'll look
+>    into this a bit more.
 
---D
+Not a bug.  Neither mount nor symlink traversal applies to destinations
+of pure jumps (be it a symlink to "/" or a procfs symlink).  Both are
+deliberate and both for very good reasons.  We'd discussed that last
+year (and I'm going to cover that on LSF); basically, there's no
+good semantics for symlink traversal in such situation.
 
-> Changes sinve v1:
->   - use xfs_alert_ratelimited
+Again, this is absolutely deliberate.  And for sanity sake, don't bother
+with link_path_walk() et.al. state in mainline - see #work.namei or
+#work.do_last in vfs.git; I'm going to repost that series tonight or
+tomorrow.  The logics is easier to follow there.
