@@ -7,26 +7,26 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DB82C11D25
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 00:42:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ECF2C11D29
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 00:42:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2D91524672
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 00:42:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7DED5208E4
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 00:42:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729727AbgBUAmX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Feb 2020 19:42:23 -0500
-Received: from mga04.intel.com ([192.55.52.120]:14516 "EHLO mga04.intel.com"
+        id S1729607AbgBUAln (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Feb 2020 19:41:43 -0500
+Received: from mga17.intel.com ([192.55.52.151]:38078 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729612AbgBUAlo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 Feb 2020 19:41:44 -0500
+        id S1729585AbgBUAlm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 20 Feb 2020 19:41:42 -0500
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 Feb 2020 16:41:43 -0800
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 Feb 2020 16:41:42 -0800
 X-IronPort-AV: E=Sophos;i="5.70,466,1574150400"; 
-   d="scan'208";a="259459605"
+   d="scan'208";a="436785042"
 Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.157])
-  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 Feb 2020 16:41:43 -0800
+  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 Feb 2020 16:41:42 -0800
 From:   ira.weiny@intel.com
 To:     linux-kernel@vger.kernel.org
 Cc:     Ira Weiny <ira.weiny@intel.com>,
@@ -38,9 +38,9 @@ Cc:     Ira Weiny <ira.weiny@intel.com>,
         "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: [PATCH V4 08/13] fs: Prevent DAX state change if file is mmap'ed
-Date:   Thu, 20 Feb 2020 16:41:29 -0800
-Message-Id: <20200221004134.30599-9-ira.weiny@intel.com>
+Subject: [PATCH V4 06/13] fs/xfs: Create function xfs_inode_enable_dax()
+Date:   Thu, 20 Feb 2020 16:41:27 -0800
+Message-Id: <20200221004134.30599-7-ira.weiny@intel.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20200221004134.30599-1-ira.weiny@intel.com>
 References: <20200221004134.30599-1-ira.weiny@intel.com>
@@ -53,139 +53,88 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Ira Weiny <ira.weiny@intel.com>
 
-Page faults need to ensure the inode DAX configuration is correct and
-consistent with the vmf information at the time of the fault.  There is
-no easy way to ensure the vmf information is correct if a DAX change is
-in progress.  Furthermore, there is no good use case to require changing
-DAX configs while the file is mmap'ed.
+xfs_inode_supports_dax() should reflect if the inode can support DAX not
+that it is enabled for DAX.
 
-Track mmap's of the file and fail the DAX change if the file is mmap'ed.
+Change the use of xfs_inode_supports_dax() to reflect only if the inode
+and underlying storage support dax.
+
+Add a new function xfs_inode_enable_dax() which reflects if the inode
+should be enabled for DAX.
 
 Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 
 ---
-Changes from V2:
-
-	move 'i_mapped' to struct address_space and rename mmap_count
-	Add inode_has_mappings() helper for FS's
-	Change reference to "mode" to "state"
+Changes from v3:
+	Update functions and names to be more clear
+	Update commit message
+	Merge with
+		'fs/xfs: Clean up DAX support check'
+		don't allow IS_DAX() on a directory
+		use STATIC macro for static
+		make xfs_inode_supports_dax() static
 ---
-Changes from V3:
-	Fix htmldoc error from the kbuild test robot.
-	Reported-by: kbuild test robot <lkp@intel.com>
-	Rebase cleanups
----
- fs/inode.c         |  1 +
- fs/xfs/xfs_ioctl.c |  9 +++++++++
- include/linux/fs.h |  7 +++++++
- mm/mmap.c          | 19 +++++++++++++++++--
- 4 files changed, 34 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_iops.c | 25 +++++++++++++++++++------
+ 1 file changed, 19 insertions(+), 6 deletions(-)
 
-diff --git a/fs/inode.c b/fs/inode.c
-index 6e4f1cc872f2..613a045075bd 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -372,6 +372,7 @@ static void __address_space_init_once(struct address_space *mapping)
- 	INIT_LIST_HEAD(&mapping->private_list);
- 	spin_lock_init(&mapping->private_lock);
- 	mapping->i_mmap = RB_ROOT_CACHED;
-+	atomic64_set(&mapping->mmap_count, 0);
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 81f2f93caec0..ff711efc5247 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1237,19 +1237,18 @@ static const struct inode_operations xfs_inline_symlink_inode_operations = {
+ };
+ 
+ /* Figure out if this file actually supports DAX. */
+-static bool
++STATIC bool
+ xfs_inode_supports_dax(
+ 	struct xfs_inode	*ip)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 
+ 	/* Only supported on non-reflinked files. */
+-	if (!S_ISREG(VFS_I(ip)->i_mode) || xfs_is_reflink_inode(ip))
++	if (xfs_is_reflink_inode(ip))
+ 		return false;
+ 
+-	/* DAX mount option or DAX iflag must be set. */
+-	if (!(mp->m_flags & XFS_MOUNT_DAX) &&
+-	    !(ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
++	/* Only supported on regular files. */
++	if (!S_ISREG(VFS_I(ip)->i_mode))
+ 		return false;
+ 
+ 	/* Block size must match page size */
+@@ -1260,6 +1259,20 @@ xfs_inode_supports_dax(
+ 	return xfs_inode_buftarg(ip)->bt_daxdev != NULL;
  }
  
- void address_space_init_once(struct address_space *mapping)
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 25e12ce85075..498fae2ef9f6 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1207,6 +1207,15 @@ xfs_ioctl_setattr_dax_invalidate(
- 
- 	/* lock, flush and invalidate mapping in preparation for flag change */
- 	xfs_ilock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
-+
-+	/*
-+	 * If there is a mapping in place we must remain in our current state.
-+	 */
-+	if (inode_has_mappings(inode)) {
-+		error = -EBUSY;
-+		goto out_unlock;
-+	}
-+
- 	error = filemap_write_and_wait(inode->i_mapping);
- 	if (error)
- 		goto out_unlock;
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index ad0f2368031b..971fb011d0f0 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -438,6 +438,7 @@ int pagecache_write_end(struct file *, struct address_space *mapping,
-  * @nr_thps: Number of THPs in the pagecache (non-shmem only).
-  * @i_mmap: Tree of private and shared mappings.
-  * @i_mmap_rwsem: Protects @i_mmap and @i_mmap_writable.
-+ * @mmap_count: The number of times this AS has been mmap'ed
-  * @nrpages: Number of page entries, protected by the i_pages lock.
-  * @nrexceptional: Shadow or DAX entries, protected by the i_pages lock.
-  * @writeback_index: Writeback starts here.
-@@ -459,6 +460,7 @@ struct address_space {
- #endif
- 	struct rb_root_cached	i_mmap;
- 	struct rw_semaphore	i_mmap_rwsem;
-+	atomic64_t              mmap_count;
- 	unsigned long		nrpages;
- 	unsigned long		nrexceptional;
- 	pgoff_t			writeback_index;
-@@ -1939,6 +1941,11 @@ static inline void inode_aops_up_write(struct inode *inode)
- #define inode_aops_up_write(inode) do { (void)(inode); } while (0)
- #endif /* CONFIG_FS_DAX */
- 
-+static inline bool inode_has_mappings(struct inode *inode)
++STATIC bool
++xfs_inode_enable_dax(
++	struct xfs_inode *ip)
 +{
-+	return (atomic64_read(&inode->i_mapping->mmap_count) != 0);
++	if (!xfs_inode_supports_dax(ip))
++		return false;
++
++	if (ip->i_d.di_flags2 & XFS_DIFLAG2_DAX)
++		return true;
++	if (ip->i_mount->m_flags & XFS_MOUNT_DAX)
++		return true;
++	return false;
 +}
 +
- static inline ssize_t call_read_iter(struct file *file, struct kiocb *kio,
- 				     struct iov_iter *iter)
- {
-diff --git a/mm/mmap.c b/mm/mmap.c
-index 7cc2562b99fd..6bb16a0996b5 100644
---- a/mm/mmap.c
-+++ b/mm/mmap.c
-@@ -171,12 +171,17 @@ void unlink_file_vma(struct vm_area_struct *vma)
- static struct vm_area_struct *remove_vma(struct vm_area_struct *vma)
- {
- 	struct vm_area_struct *next = vma->vm_next;
-+	struct file *f = vma->vm_file;
+ STATIC void
+ xfs_diflags_to_iflags(
+ 	struct inode		*inode,
+@@ -1278,7 +1291,7 @@ xfs_diflags_to_iflags(
+ 		inode->i_flags |= S_SYNC;
+ 	if (flags & XFS_DIFLAG_NOATIME)
+ 		inode->i_flags |= S_NOATIME;
+-	if (xfs_inode_supports_dax(ip))
++	if (xfs_inode_enable_dax(ip))
+ 		inode->i_flags |= S_DAX;
+ }
  
- 	might_sleep();
- 	if (vma->vm_ops && vma->vm_ops->close)
- 		vma->vm_ops->close(vma);
--	if (vma->vm_file)
--		fput(vma->vm_file);
-+	if (f) {
-+		struct inode *inode = file_inode(f);
-+		if (inode)
-+			atomic64_dec(&inode->i_mapping->mmap_count);
-+		fput(f);
-+	}
- 	mpol_put(vma_policy(vma));
- 	vm_area_free(vma);
- 	return next;
-@@ -1830,6 +1835,16 @@ unsigned long mmap_region(struct file *file, unsigned long addr,
- 
- 	vma_set_page_prot(vma);
- 
-+	/*
-+	 * Track if there is mapping in place such that a state change
-+	 * does not occur on a file which is mapped
-+	 */
-+	if (file) {
-+		struct inode		*inode = file_inode(file);
-+
-+		atomic64_inc(&inode->i_mapping->mmap_count);
-+	}
-+
- 	return addr;
- 
- unmap_and_free_vma:
 -- 
 2.21.0
 
