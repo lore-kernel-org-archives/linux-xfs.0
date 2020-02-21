@@ -2,247 +2,85 @@ Return-Path: <SRS0=UV4a=4J=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C957C35656
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 13:43:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2E45C35646
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 14:11:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0C8F9208C4
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 13:43:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D1102073A
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 14:11:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YN3/b0q6"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="P3IPABbF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727836AbgBUNnO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Feb 2020 08:43:14 -0500
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:41898 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727053AbgBUNnO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Feb 2020 08:43:14 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1582292593;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Y9BNANhEy4c+1esbB9J/yf/xmLZ2jQzY8NSIFrPEJSc=;
-        b=YN3/b0q6V+NBe7nk92V6PqCujTjZkAH0a4l4grvxDW5k6AY4hvI3OtlG+HF29i5ZtyopUd
-        y/XdfeNN5sr7LF1ZmqkNPlK7B/T+rQGyfqQ8AeVjmuQOkF4g0KwZtnoc9a8akHBFtdJ45I
-        QObuekie3I1Casc6n3XrX/nyeU5uLng=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-97-Xm1LPeLcO8WD4ldhzrpbpQ-1; Fri, 21 Feb 2020 08:43:09 -0500
-X-MC-Unique: Xm1LPeLcO8WD4ldhzrpbpQ-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6903A13E5;
-        Fri, 21 Feb 2020 13:43:08 +0000 (UTC)
-Received: from localhost (dhcp-12-102.nay.redhat.com [10.66.12.102])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id D24485D9C5;
-        Fri, 21 Feb 2020 13:43:07 +0000 (UTC)
-Date:   Fri, 21 Feb 2020 21:53:32 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     Jeff Moyer <jmoyer@redhat.com>
-Cc:     fstests@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V2 2/3] t_mmap_collision: fix hard-coded page size
-Message-ID: <20200221135332.GK14282@dhcp-12-102.nay.redhat.com>
-Mail-Followup-To: Jeff Moyer <jmoyer@redhat.com>, fstests@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-References: <20200220200632.14075-1-jmoyer@redhat.com>
- <20200220200632.14075-3-jmoyer@redhat.com>
+        id S1727876AbgBUOLz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Feb 2020 09:11:55 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:59254 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727851AbgBUOLz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Feb 2020 09:11:55 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=2BiIpatK+dZuW2zjP6EIk8sRgyGya9eA9Y60EBNq+ak=; b=P3IPABbFhupe8mlhRyWchvEhOV
+        b5C4kiLSaeoME4cNf9q3Jece2rYu0h/dhHbk08p/An7dR83AwJcVIuv9XS9DSMbZyooWaCVXwx0P1
+        +1zvAWOYUtF6kE7sl3QaTkEZbtvQfDfrFhI0t8iU6jn5UyXeYZg2pvZR1q2+IBYaOuswnwxxbGUnU
+        9QsCyYWfe8WNFruv3mHEn4j3QdF+GP7k/LO5/WamR3EvE6FU4xBL8p87BimT5wGYzy9IpRICrhMaE
+        ht6AQ2lJDiIdn+3tueY4NRiMqd+NW77EnTYkt/L6TDa8S9BJBvteAl6RUr2nj0cQEB1e5UWGtli4T
+        d++O5Y4A==;
+Received: from [38.126.112.138] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1j5922-0000G6-TG; Fri, 21 Feb 2020 14:11:54 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     linux-xfs@vger.kernel.org
+Cc:     Allison Collins <allison.henderson@oracle.com>
+Subject: clean up the attr interface v5
+Date:   Fri, 21 Feb 2020 06:11:23 -0800
+Message-Id: <20200221141154.476496-1-hch@lst.de>
+X-Mailer: git-send-email 2.24.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200220200632.14075-3-jmoyer@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 20, 2020 at 03:06:31PM -0500, Jeff Moyer wrote:
-> Fix the test to run on non-4k page size systems.
-> 
-> Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
-> ---
+Also available as a git tree here:
 
-This patch looks good to me, and it's really helpful.
+    http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-attr-cleanup.5
 
-Thanks,
-Zorro
+An xfsprogs tree porting over the libxfs changes is available here:
 
-Before patched:
+    http://git.infradead.org/users/hch/xfsprogs.git/shortlog/refs/heads/attr-cleanup
 
-FSTYP         -- xfs (non-debug)
-PLATFORM      -- Linux/aarch64
-MKFS_OPTIONS  -- -f -b size=65536 -m crc=1,finobt=1,reflink=1,rmapbt=1 -i sparse=1 /dev/sda5
-MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/sda5 /mnt/xfstests/mnt2
+Changes since v4:
+ - rename the attr_namespace field to attr_filter
+ - drop "properly type the buffer field in struct
+   xfs_fsop_attrlist_handlere", this was causing too much discussion for
+   a trivial cleanup
+ - improve a few commit messages and comments
+ - improve the ATTR_REPLACE checks a little more
+ - turn the xfs_forget_acl stub into an inline function
+ - fix a 0 vs NULL sparse warning in xfs_ioc_attr_list
 
-generic/503 14s ... - output mismatch (see /root/xfstests-dev/results//generic/503.out.bad)
-    --- tests/generic/503.out   2020-02-21 05:41:37.992675071 -0500
-    +++ /root/xfstests-dev/results//generic/503.out.bad 2020-02-21 08:20:19.736550319 -0500
-    @@ -1,2 +1,4 @@
-     QA output created by 503
-    +collapse_range_fn fallocate 2: Invalid argument
-    +collapse_range_fn fallocate 2: Invalid argument
-...
+Changes since v3:
+ - clean up a cast
+ - fixup a comment
+ - fix a flags check to use the right flags (bisection only)
+ - move a few hunks around to better spots in the series
 
-After patched:
+Changes since v2:
+ - add more comments
+ - fix up an error handling corner case in __xfs_set_acl
+ - add more cowbell^H^H^H^H^H^H^Hbool
+ - add a new patch to reject invalid namespaces flags in
+   XFS_IOC_ATTRLIST_BY_HANDLE
+ - remove ATTR_ENTSIZE entirely
 
-FSTYP         -- xfs (non-debug)
-PLATFORM      -- Linux/aarch64
-MKFS_OPTIONS  -- -f -b size=65536 -m crc=1,finobt=1,reflink=1,rmapbt=1 -i sparse=1 /dev/sda5
-MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/sda5 /mnt/xfstests/mnt2
-
-generic/503 16s ...  16s
-Ran: generic/503
-Passed all 1 tests
-
->  src/t_mmap_collision.c | 40 +++++++++++++++++++++-------------------
->  1 file changed, 21 insertions(+), 19 deletions(-)
-> 
-> diff --git a/src/t_mmap_collision.c b/src/t_mmap_collision.c
-> index d547bc05..c872f4e2 100644
-> --- a/src/t_mmap_collision.c
-> +++ b/src/t_mmap_collision.c
-> @@ -25,13 +25,12 @@
->  #include <sys/types.h>
->  #include <unistd.h>
->  
-> -#define PAGE(a) ((a)*0x1000)
-> -#define FILE_SIZE PAGE(4)
-> -
->  void *dax_data;
->  int nodax_fd;
->  int dax_fd;
->  bool done;
-> +static int pagesize;
-> +static int file_size;
->  
->  #define err_exit(op)                                                          \
->  {                                                                             \
-> @@ -49,18 +48,18 @@ void punch_hole_fn(void *ptr)
->  		read = 0;
->  
->  		do {
-> -			rc = pread(nodax_fd, dax_data + read, FILE_SIZE - read,
-> +			rc = pread(nodax_fd, dax_data + read, file_size - read,
->  					read);
->  			if (rc > 0)
->  				read += rc;
->  		} while (rc > 0);
->  
-> -		if (read != FILE_SIZE || rc != 0)
-> +		if (read != file_size || rc != 0)
->  			err_exit("pread");
->  
->  		rc = fallocate(dax_fd,
->  				FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE,
-> -				0, FILE_SIZE);
-> +				0, file_size);
->  		if (rc < 0)
->  			err_exit("fallocate");
->  
-> @@ -81,18 +80,18 @@ void zero_range_fn(void *ptr)
->  		read = 0;
->  
->  		do {
-> -			rc = pread(nodax_fd, dax_data + read, FILE_SIZE - read,
-> +			rc = pread(nodax_fd, dax_data + read, file_size - read,
->  					read);
->  			if (rc > 0)
->  				read += rc;
->  		} while (rc > 0);
->  
-> -		if (read != FILE_SIZE || rc != 0)
-> +		if (read != file_size || rc != 0)
->  			err_exit("pread");
->  
->  		rc = fallocate(dax_fd,
->  				FALLOC_FL_ZERO_RANGE | FALLOC_FL_KEEP_SIZE,
-> -				0, FILE_SIZE);
-> +				0, file_size);
->  		if (rc < 0)
->  			err_exit("fallocate");
->  
-> @@ -113,11 +112,11 @@ void truncate_down_fn(void *ptr)
->  
->  		if (ftruncate(dax_fd, 0) < 0)
->  			err_exit("ftruncate");
-> -		if (fallocate(dax_fd, 0, 0, FILE_SIZE) < 0)
-> +		if (fallocate(dax_fd, 0, 0, file_size) < 0)
->  			err_exit("fallocate");
->  
->  		do {
-> -			rc = pread(nodax_fd, dax_data + read, FILE_SIZE - read,
-> +			rc = pread(nodax_fd, dax_data + read, file_size - read,
->  					read);
->  			if (rc > 0)
->  				read += rc;
-> @@ -142,15 +141,15 @@ void collapse_range_fn(void *ptr)
->  	while (!done) {
->  		read = 0;
->  
-> -		if (fallocate(dax_fd, 0, 0, FILE_SIZE) < 0)
-> +		if (fallocate(dax_fd, 0, 0, file_size) < 0)
->  			err_exit("fallocate 1");
-> -		if (fallocate(dax_fd, FALLOC_FL_COLLAPSE_RANGE, 0, PAGE(1)) < 0)
-> +		if (fallocate(dax_fd, FALLOC_FL_COLLAPSE_RANGE, 0, pagesize) < 0)
->  			err_exit("fallocate 2");
-> -		if (fallocate(dax_fd, 0, 0, FILE_SIZE) < 0)
-> +		if (fallocate(dax_fd, 0, 0, file_size) < 0)
->  			err_exit("fallocate 3");
->  
->  		do {
-> -			rc = pread(nodax_fd, dax_data + read, FILE_SIZE - read,
-> +			rc = pread(nodax_fd, dax_data + read, file_size - read,
->  					read);
->  			if (rc > 0)
->  				read += rc;
-> @@ -192,6 +191,9 @@ int main(int argc, char *argv[])
->  		exit(0);
->  	}
->  
-> +	pagesize = getpagesize();
-> +	file_size = 4 * pagesize;
-> +
->  	dax_fd = open(argv[1], O_RDWR|O_CREAT, S_IRUSR|S_IWUSR);
->  	if (dax_fd < 0)
->  		err_exit("dax_fd open");
-> @@ -202,15 +204,15 @@ int main(int argc, char *argv[])
->  
->  	if (ftruncate(dax_fd, 0) < 0)
->  		err_exit("dax_fd ftruncate");
-> -	if (fallocate(dax_fd, 0, 0, FILE_SIZE) < 0)
-> +	if (fallocate(dax_fd, 0, 0, file_size) < 0)
->  		err_exit("dax_fd fallocate");
->  
->  	if (ftruncate(nodax_fd, 0) < 0)
->  		err_exit("nodax_fd ftruncate");
-> -	if (fallocate(nodax_fd, 0, 0, FILE_SIZE) < 0)
-> +	if (fallocate(nodax_fd, 0, 0, file_size) < 0)
->  		err_exit("nodax_fd fallocate");
->  
-> -	dax_data = mmap(NULL, FILE_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED,
-> +	dax_data = mmap(NULL, file_size, PROT_READ|PROT_WRITE, MAP_SHARED,
->  			dax_fd, 0);
->  	if (dax_data == MAP_FAILED)
->  		err_exit("mmap");
-> @@ -220,7 +222,7 @@ int main(int argc, char *argv[])
->  	run_test(&truncate_down_fn);
->  	run_test(&collapse_range_fn);
->  
-> -	if (munmap(dax_data, FILE_SIZE) != 0)
-> +	if (munmap(dax_data, file_size) != 0)
->  		err_exit("munmap");
->  
->  	err = close(dax_fd);
-> -- 
-> 2.19.1
-> 
-
+Changes since v1:
+ - rebased to for-next, which includes the fixes from the first
+   version
