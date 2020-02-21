@@ -7,26 +7,26 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4249DC11D00
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 00:42:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7C89C11D25
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 00:42:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2236E207FD
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 00:42:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 88AE724653
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 00:42:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729639AbgBUAlr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Feb 2020 19:41:47 -0500
-Received: from mga03.intel.com ([134.134.136.65]:42432 "EHLO mga03.intel.com"
+        id S1729610AbgBUAmL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Feb 2020 19:42:11 -0500
+Received: from mga02.intel.com ([134.134.136.20]:20210 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729631AbgBUAlq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 Feb 2020 19:41:46 -0500
+        id S1729621AbgBUAlo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 20 Feb 2020 19:41:44 -0500
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by orsmga103.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 Feb 2020 16:41:44 -0800
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by orsmga101.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 Feb 2020 16:41:44 -0800
 X-IronPort-AV: E=Sophos;i="5.70,466,1574150400"; 
-   d="scan'208";a="349277198"
+   d="scan'208";a="283566482"
 Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.157])
-  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 Feb 2020 16:41:44 -0800
+  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 Feb 2020 16:41:43 -0800
 From:   ira.weiny@intel.com
 To:     linux-kernel@vger.kernel.org
 Cc:     Ira Weiny <ira.weiny@intel.com>,
@@ -38,9 +38,9 @@ Cc:     Ira Weiny <ira.weiny@intel.com>,
         "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: [PATCH V4 11/13] fs/xfs: Allow toggle of effective DAX flag
-Date:   Thu, 20 Feb 2020 16:41:32 -0800
-Message-Id: <20200221004134.30599-12-ira.weiny@intel.com>
+Subject: [PATCH V4 09/13] fs/xfs: Add write aops lock to xfs layer
+Date:   Thu, 20 Feb 2020 16:41:30 -0800
+Message-Id: <20200221004134.30599-10-ira.weiny@intel.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20200221004134.30599-1-ira.weiny@intel.com>
 References: <20200221004134.30599-1-ira.weiny@intel.com>
@@ -53,157 +53,155 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Ira Weiny <ira.weiny@intel.com>
 
-Now that locking of the inode aops are in place we can allow a DAX state
-change.
+XFS requires the use of the aops of an inode to quiesced prior to
+changing it to/from the DAX aops vector.
 
-Also use the new xfs_inode_enable_dax() to set IS_DAX() as needed and
-update the aops vector after the enabled state change.
+Take the aops write lock while changing DAX state.
+
+We define a new XFS_DAX_EXCL lock type to carry the lock through to
+transaction completion.
 
 Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 
 ---
-Changes from V3:
-	Remove static branch stuff.
-	Fix bugs found by Jeff by using xfs_inode_enable_dax()
-	Condition xfs_ioctl_setattr_dax_invalidate() on CONFIG_FS_DAX
+Changes from v3:
+	Change locking function names to reflect changes in previous
+	patches.
 
 Changes from V2:
-	Add in lock_dax_state_static_key static branch enabling.
-	Rebase updates
----
- fs/xfs/xfs_inode.h |  2 ++
- fs/xfs/xfs_ioctl.c | 24 ++++++++++++++++++++----
- fs/xfs/xfs_iops.c  | 17 ++++++++++++-----
- 3 files changed, 34 insertions(+), 9 deletions(-)
+	Change name of patch (WAS: fs/xfs: Add lock/unlock state to xfs)
+	Remove the xfs specific lock and move to the vfs layer.
+		We still use XFS_LOCK_DAX_EXCL to be able to pass this
+		flag through to the transaction code.  But we no longer
+		have a lock specific to xfs.  This removes a lot of code
+		from the XFS layer, preps us for using this in ext4, and
+		is actually more straight forward now that all the
+		locking requirements are better known.
 
+	Fix locking order comment
+	Rework for new 'state' names
+	(Other comments on the previous patch are not applicable with
+	new patch as much of the code was removed in favor of the vfs
+	level lock)
+---
+ fs/xfs/xfs_inode.c | 22 ++++++++++++++++++++--
+ fs/xfs/xfs_inode.h |  7 +++++--
+ 2 files changed, 25 insertions(+), 4 deletions(-)
+
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 35df324875db..5b014c428f0f 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -142,12 +142,12 @@ xfs_ilock_attr_map_shared(
+  *
+  * Basic locking order:
+  *
+- * i_rwsem -> i_mmap_lock -> page_lock -> i_ilock
++ * s_dax_sem -> i_rwsem -> i_mmap_lock -> page_lock -> i_ilock
+  *
+  * mmap_sem locking order:
+  *
+  * i_rwsem -> page lock -> mmap_sem
+- * mmap_sem -> i_mmap_lock -> page_lock
++ * s_dax_sem -> mmap_sem -> i_mmap_lock -> page_lock
+  *
+  * The difference in mmap_sem locking order mean that we cannot hold the
+  * i_mmap_lock over syscall based read(2)/write(2) based IO. These IO paths can
+@@ -182,6 +182,9 @@ xfs_ilock(
+ 	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
+ 	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_SUBCLASS_MASK)) == 0);
+ 
++	if (lock_flags & XFS_DAX_EXCL)
++		inode_aops_down_write(VFS_I(ip));
++
+ 	if (lock_flags & XFS_IOLOCK_EXCL) {
+ 		down_write_nested(&VFS_I(ip)->i_rwsem,
+ 				  XFS_IOLOCK_DEP(lock_flags));
+@@ -224,6 +227,8 @@ xfs_ilock_nowait(
+ 	 * You can't set both SHARED and EXCL for the same lock,
+ 	 * and only XFS_IOLOCK_SHARED, XFS_IOLOCK_EXCL, XFS_ILOCK_SHARED,
+ 	 * and XFS_ILOCK_EXCL are valid values to set in lock_flags.
++	 *
++	 * XFS_DAX_* is not allowed
+ 	 */
+ 	ASSERT((lock_flags & (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL)) !=
+ 	       (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL));
+@@ -232,6 +237,7 @@ xfs_ilock_nowait(
+ 	ASSERT((lock_flags & (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL)) !=
+ 	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
+ 	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_SUBCLASS_MASK)) == 0);
++	ASSERT((lock_flags & XFS_DAX_EXCL) == 0);
+ 
+ 	if (lock_flags & XFS_IOLOCK_EXCL) {
+ 		if (!down_write_trylock(&VFS_I(ip)->i_rwsem))
+@@ -318,6 +324,9 @@ xfs_iunlock(
+ 	else if (lock_flags & XFS_ILOCK_SHARED)
+ 		mrunlock_shared(&ip->i_lock);
+ 
++	if (lock_flags & XFS_DAX_EXCL)
++		inode_aops_up_write(VFS_I(ip));
++
+ 	trace_xfs_iunlock(ip, lock_flags, _RET_IP_);
+ }
+ 
+@@ -333,6 +342,8 @@ xfs_ilock_demote(
+ 	ASSERT(lock_flags & (XFS_IOLOCK_EXCL|XFS_MMAPLOCK_EXCL|XFS_ILOCK_EXCL));
+ 	ASSERT((lock_flags &
+ 		~(XFS_IOLOCK_EXCL|XFS_MMAPLOCK_EXCL|XFS_ILOCK_EXCL)) == 0);
++	/* XFS_DAX_* is not allowed */
++	ASSERT((lock_flags & XFS_DAX_EXCL) == 0);
+ 
+ 	if (lock_flags & XFS_ILOCK_EXCL)
+ 		mrdemote(&ip->i_lock);
+@@ -465,6 +476,9 @@ xfs_lock_inodes(
+ 	ASSERT(!(lock_mode & XFS_ILOCK_EXCL) ||
+ 		inodes <= XFS_ILOCK_MAX_SUBCLASS + 1);
+ 
++	/* XFS_DAX_* is not allowed */
++	ASSERT((lock_mode & XFS_DAX_EXCL) == 0);
++
+ 	if (lock_mode & XFS_IOLOCK_EXCL) {
+ 		ASSERT(!(lock_mode & (XFS_MMAPLOCK_EXCL | XFS_ILOCK_EXCL)));
+ 	} else if (lock_mode & XFS_MMAPLOCK_EXCL)
+@@ -566,6 +580,10 @@ xfs_lock_two_inodes(
+ 	ASSERT(!(ip0_mode & (XFS_MMAPLOCK_SHARED|XFS_MMAPLOCK_EXCL)) ||
+ 	       !(ip1_mode & (XFS_ILOCK_SHARED|XFS_ILOCK_EXCL)));
+ 
++	/* XFS_DAX_* is not allowed */
++	ASSERT((ip0_mode & XFS_DAX_EXCL) == 0);
++	ASSERT((ip1_mode & XFS_DAX_EXCL) == 0);
++
+ 	ASSERT(ip0->i_ino != ip1->i_ino);
+ 
+ 	if (ip0->i_ino > ip1->i_ino) {
 diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 25fe20740bf7..12aa02461ee1 100644
+index 492e53992fa9..25fe20740bf7 100644
 --- a/fs/xfs/xfs_inode.h
 +++ b/fs/xfs/xfs_inode.h
-@@ -469,6 +469,8 @@ int	xfs_break_layouts(struct inode *inode, uint *iolock,
- /* from xfs_iops.c */
- extern void xfs_setup_inode(struct xfs_inode *ip);
- extern void xfs_setup_iops(struct xfs_inode *ip);
-+extern void xfs_setup_a_ops(struct xfs_inode *ip);
-+extern bool xfs_inode_enable_dax(struct xfs_inode *ip);
+@@ -278,10 +278,12 @@ static inline void xfs_ifunlock(struct xfs_inode *ip)
+ #define	XFS_ILOCK_SHARED	(1<<3)
+ #define	XFS_MMAPLOCK_EXCL	(1<<4)
+ #define	XFS_MMAPLOCK_SHARED	(1<<5)
++#define	XFS_DAX_EXCL		(1<<6)
+ 
+ #define XFS_LOCK_MASK		(XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED \
+ 				| XFS_ILOCK_EXCL | XFS_ILOCK_SHARED \
+-				| XFS_MMAPLOCK_EXCL | XFS_MMAPLOCK_SHARED)
++				| XFS_MMAPLOCK_EXCL | XFS_MMAPLOCK_SHARED \
++				| XFS_DAX_EXCL)
+ 
+ #define XFS_LOCK_FLAGS \
+ 	{ XFS_IOLOCK_EXCL,	"IOLOCK_EXCL" }, \
+@@ -289,7 +291,8 @@ static inline void xfs_ifunlock(struct xfs_inode *ip)
+ 	{ XFS_ILOCK_EXCL,	"ILOCK_EXCL" }, \
+ 	{ XFS_ILOCK_SHARED,	"ILOCK_SHARED" }, \
+ 	{ XFS_MMAPLOCK_EXCL,	"MMAPLOCK_EXCL" }, \
+-	{ XFS_MMAPLOCK_SHARED,	"MMAPLOCK_SHARED" }
++	{ XFS_MMAPLOCK_SHARED,	"MMAPLOCK_SHARED" }, \
++	{ XFS_DAX_EXCL,		"DAX_EXCL" }
+ 
  
  /*
-  * When setting up a newly allocated inode, we need to call
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 321f7789b667..42a1639c974f 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1123,12 +1123,11 @@ xfs_diflags_to_linux(
- 		inode->i_flags |= S_NOATIME;
- 	else
- 		inode->i_flags &= ~S_NOATIME;
--#if 0	/* disabled until the flag switching races are sorted out */
--	if (xflags & FS_XFLAG_DAX)
-+
-+	if (xfs_inode_enable_dax(ip))
- 		inode->i_flags |= S_DAX;
- 	else
- 		inode->i_flags &= ~S_DAX;
--#endif
- }
- 
- static int
-@@ -1183,6 +1182,7 @@ xfs_ioctl_setattr_xflags(
-  * so that the cache invalidation is atomic with respect to the DAX flag
-  * manipulation.
-  */
-+#if defined(CONFIG_FS_DAX)
- static int
- xfs_ioctl_setattr_dax_invalidate(
- 	struct xfs_inode	*ip,
-@@ -1205,7 +1205,7 @@ xfs_ioctl_setattr_dax_invalidate(
- 	if (S_ISDIR(inode->i_mode))
- 		return 0;
- 
--	flags = XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL;
-+	flags = XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL | XFS_DAX_EXCL;
- 
- 	/* lock, flush and invalidate mapping in preparation for flag change */
- 	xfs_ilock(ip, flags);
-@@ -1233,6 +1233,16 @@ xfs_ioctl_setattr_dax_invalidate(
- 	return error;
- 
- }
-+#else /* !CONFIG_FS_DAX */
-+static int
-+xfs_ioctl_setattr_dax_invalidate(
-+	struct xfs_inode	*ip,
-+	struct fsxattr		*fa,
-+	int			*join_flags)
-+{
-+	return 0;
-+}
-+#endif
- 
- /*
-  * Set up the transaction structure for the setattr operation, checking that we
-@@ -1520,6 +1530,9 @@ xfs_ioctl_setattr(
- 	else
- 		ip->i_d.di_cowextsize = 0;
- 
-+	if (join_flags & XFS_DAX_EXCL)
-+		xfs_setup_a_ops(ip);
-+
- 	code = xfs_trans_commit(tp);
- 
- 	/*
-@@ -1629,6 +1642,9 @@ xfs_ioc_setxflags(
- 		goto out_drop_write;
- 	}
- 
-+	if (join_flags & XFS_DAX_EXCL)
-+		xfs_setup_a_ops(ip);
-+
- 	error = xfs_trans_commit(tp);
- out_drop_write:
- 	mnt_drop_write_file(filp);
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index ff711efc5247..8f023be39705 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1259,7 +1259,7 @@ xfs_inode_supports_dax(
- 	return xfs_inode_buftarg(ip)->bt_daxdev != NULL;
- }
- 
--STATIC bool
-+bool
- xfs_inode_enable_dax(
- 	struct xfs_inode *ip)
- {
-@@ -1355,6 +1355,16 @@ xfs_setup_inode(
- 	}
- }
- 
-+void xfs_setup_a_ops(struct xfs_inode *ip)
-+{
-+	struct inode		*inode = &ip->i_vnode;
-+
-+	if (IS_DAX(inode))
-+		inode->i_mapping->a_ops = &xfs_dax_aops;
-+	else
-+		inode->i_mapping->a_ops = &xfs_address_space_operations;
-+}
-+
- void
- xfs_setup_iops(
- 	struct xfs_inode	*ip)
-@@ -1365,10 +1375,7 @@ xfs_setup_iops(
- 	case S_IFREG:
- 		inode->i_op = &xfs_inode_operations;
- 		inode->i_fop = &xfs_file_operations;
--		if (IS_DAX(inode))
--			inode->i_mapping->a_ops = &xfs_dax_aops;
--		else
--			inode->i_mapping->a_ops = &xfs_address_space_operations;
-+		xfs_setup_a_ops(ip);
- 		break;
- 	case S_IFDIR:
- 		if (xfs_sb_version_hasasciici(&XFS_M(inode->i_sb)->m_sb))
 -- 
 2.21.0
 
