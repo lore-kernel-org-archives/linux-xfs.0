@@ -6,39 +6,40 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE7E7C11D00
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 00:41:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A340C11D24
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 00:41:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CEFFA208CD
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 00:41:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A860208CD
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 00:41:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729610AbgBUAln (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Feb 2020 19:41:43 -0500
-Received: from mga02.intel.com ([134.134.136.20]:20199 "EHLO mga02.intel.com"
+        id S1729685AbgBUAl4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Feb 2020 19:41:56 -0500
+Received: from mga07.intel.com ([134.134.136.100]:25754 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729583AbgBUAlm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 Feb 2020 19:41:42 -0500
+        id S1729517AbgBUAl4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 20 Feb 2020 19:41:56 -0500
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga101.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 Feb 2020 16:41:42 -0800
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 Feb 2020 16:41:47 -0800
 X-IronPort-AV: E=Sophos;i="5.70,466,1574150400"; 
-   d="scan'208";a="230293572"
+   d="scan'208";a="225047247"
 Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.157])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 Feb 2020 16:41:41 -0800
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 Feb 2020 16:41:46 -0800
 From:   ira.weiny@intel.com
 To:     linux-kernel@vger.kernel.org
-Cc:     Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
+Cc:     Ira Weiny <ira.weiny@intel.com>,
         Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
         Dan Williams <dan.j.williams@intel.com>,
         Dave Chinner <david@fromorbit.com>,
         Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH V4 04/13] fs/stat: Define DAX statx attribute
-Date:   Thu, 20 Feb 2020 16:41:25 -0800
-Message-Id: <20200221004134.30599-5-ira.weiny@intel.com>
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: [PATCH V4 13/13] Documentation/dax: Update Usage section
+Date:   Thu, 20 Feb 2020 16:41:34 -0800
+Message-Id: <20200221004134.30599-14-ira.weiny@intel.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20200221004134.30599-1-ira.weiny@intel.com>
 References: <20200221004134.30599-1-ira.weiny@intel.com>
@@ -51,76 +52,109 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Ira Weiny <ira.weiny@intel.com>
 
-In order for users to determine if a file is currently operating in DAX
-state (effective DAX).  Define a statx attribute value and set that
-attribute if the effective DAX flag is set.
+Update the Usage section to reflect the new individual dax selection
+functionality.
 
-To go along with this we propose the following addition to the statx man
-page:
-
-STATX_ATTR_DAX
-
-	The file is in the DAX (cpu direct access) state.  DAX state
-	attempts to minimize software cache effects for both I/O and
-	memory mappings of this file.  It requires a file system which
-	has been configured to support DAX.
-
-	DAX generally assumes all accesses are via cpu load / store
-	instructions which can minimize overhead for small accesses, but
-	may adversely affect cpu utilization for large transfers.
-
-	File I/O is done directly to/from user-space buffers and memory
-	mapped I/O may be performed with direct memory mappings that
-	bypass kernel page cache.
-
-	While the DAX property tends to result in data being transferred
-	synchronously, it does not give the same guarantees of O_SYNC
-	where data and the necessary metadata are transferred together.
-
-	A DAX file may support being mapped with the MAP_SYNC flag,
-	which enables a program to use CPU cache flush instructions to
-	persist CPU store operations without an explicit fsync(2).  See
-	mmap(2) for more information.
-
-Reviewed-by: Jan Kara <jack@suse.cz>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-
 ---
-Changes from V2:
-	Update man page text with comments from Darrick, Jan, Dan, and
-	Dave.
----
- fs/stat.c                 | 3 +++
- include/uapi/linux/stat.h | 1 +
- 2 files changed, 4 insertions(+)
+ Documentation/filesystems/dax.txt | 84 ++++++++++++++++++++++++++++++-
+ 1 file changed, 82 insertions(+), 2 deletions(-)
 
-diff --git a/fs/stat.c b/fs/stat.c
-index 030008796479..894699c74dde 100644
---- a/fs/stat.c
-+++ b/fs/stat.c
-@@ -79,6 +79,9 @@ int vfs_getattr_nosec(const struct path *path, struct kstat *stat,
- 	if (IS_AUTOMOUNT(inode))
- 		stat->attributes |= STATX_ATTR_AUTOMOUNT;
- 
-+	if (IS_DAX(inode))
-+		stat->attributes |= STATX_ATTR_DAX;
+diff --git a/Documentation/filesystems/dax.txt b/Documentation/filesystems/dax.txt
+index 679729442fd2..32e37c550f76 100644
+--- a/Documentation/filesystems/dax.txt
++++ b/Documentation/filesystems/dax.txt
+@@ -20,8 +20,88 @@ Usage
+ If you have a block device which supports DAX, you can make a filesystem
+ on it as usual.  The DAX code currently only supports files with a block
+ size equal to your kernel's PAGE_SIZE, so you may need to specify a block
+-size when creating the filesystem.  When mounting it, use the "-o dax"
+-option on the command line or add 'dax' to the options in /etc/fstab.
++size when creating the filesystem.
 +
- 	if (inode->i_op->getattr)
- 		return inode->i_op->getattr(path, stat, request_mask,
- 					    query_flags);
-diff --git a/include/uapi/linux/stat.h b/include/uapi/linux/stat.h
-index ad80a5c885d5..e5f9d5517f6b 100644
---- a/include/uapi/linux/stat.h
-+++ b/include/uapi/linux/stat.h
-@@ -169,6 +169,7 @@ struct statx {
- #define STATX_ATTR_ENCRYPTED		0x00000800 /* [I] File requires key to decrypt in fs */
- #define STATX_ATTR_AUTOMOUNT		0x00001000 /* Dir: Automount trigger */
- #define STATX_ATTR_VERITY		0x00100000 /* [I] Verity protected file */
-+#define STATX_ATTR_DAX			0x00002000 /* [I] File is DAX */
++Enabling DAX on an individual file basis (XFS)
++----------------------------------------------
++
++There are 2 per file dax flags.  One is a physical configuration setting and
++the other a currently enabled state.
++
++The physical configuration setting is maintained on individual file and
++directory inodes.  It is preserved within the file system.  This 'physical'
++config setting can be set using an ioctl and/or an application such as "xfs_io
++-c 'chattr [-+]x'".  Files and directories automatically inherit their physical
++dax setting from their parent directory when created.  Therefore, setting the
++physical dax setting at directory creation time can be used to set a default
++behavior for that sub-tree.  Doing so on the root directory acts to set a
++default for the entire file system.
++
++To clarify inheritance here are 3 examples:
++
++Example A:
++
++mkdir -p a/b/c
++xfs_io 'chattr +x' a
++mkdir a/b/c/d
++mkdir a/e
++
++	dax: a,e
++	no dax: b,c,d
++
++Example B:
++
++mkdir a
++xfs_io 'chattr +x' a
++mkdir -p a/b/c/d
++
++	dax: a,b,c,d
++	no dax:
++
++Example C:
++
++mkdir -p a/b/c
++xfs_io 'chattr +x' c
++mkdir a/b/c/d
++
++	dax: c,d
++	no dax: a,b
++
++
++The current inode enabled state is set when a file inode is loaded and it is
++determined that the underlying media supports dax.
++
++statx can be used to query the file's current enabled state.  NOTE that a
++directory will never be operating in a dax state.  Therefore, the dax config
++state must be queried to see what config state a file or sub-directory will
++inherit from a directory.
++
++NOTE: Setting a file or directory's config state with xfs_io is possible even
++if the underlying media does not support dax.
++
++
++Enabling dax on a file system wide basis ('-o dax' mount option)
++----------------------------------------------------------------
++
++The physical dax configuration of all files can be overridden using a mount
++option.  In summary:
++
++	(physical flag || mount option) && capable device == dax in effect
++	(  <xfs_io>    ||  <'-o dax'> ) && capable device == <statx dax true>
++
++To enable the mount override, use "-o dax" on the command line or add
++'dax' to the options in /etc/fstab
++
++Using the mount option does not change the physical configured state of
++individual files.  Therefore, remounting _without_ the mount option will allow
++the file system to set file's enabled state directly based on their config
++setting.
++
++NOTE: Setting a file or directory's physical config state is possible while the
++file system is mounted with the dax override.  However, the file's enabled
++state will continue to be overridden and "dax enabled" until the mount option
++is removed and a remount performed.  At that point the file's physical config
++state dictates the enabled state.
  
  
- #endif /* _UAPI_LINUX_STAT_H */
+ Implementation Tips for Block Driver Writers
 -- 
 2.21.0
 
