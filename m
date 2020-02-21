@@ -7,41 +7,42 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F21FCC3565E
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 14:11:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09B2BC35665
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 14:12:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B73F82073A
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 14:11:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CBB4C24650
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Feb 2020 14:12:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="TTta92eC"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QfPzslMr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728749AbgBUOL7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Feb 2020 09:11:59 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:59358 "EHLO
+        id S1728690AbgBUOME (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Feb 2020 09:12:04 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:59460 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728715AbgBUOL6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Feb 2020 09:11:58 -0500
+        with ESMTP id S1728791AbgBUOMA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Feb 2020 09:12:00 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=wpU+2YNqoFgk/sp02qqBSIIAG7SM7XEEImCP8x9zSLA=; b=TTta92eCUHMaRM1X+rAS9k+Jp1
-        x6K0kqubbZke2XnBS5q+E1L3LFXHovHX+ivjnHTael9YkX7o6fZu00s6KfrB/GiirW27Eh/7iFFwL
-        DCjewNl27EPqSvAswss8CmGh0cHIY4Z6ex6vZvqy1MZ8rQPJQowpV1VU2a5r8poPO5XiY6x3iAX60
-        3tA51fTMX6use12Z7AF1dB2jqmmYUQIfsbtBSgdDPQwpTwScojfWY6sVUbKSvAg6KOjtaICvPQNmO
-        ijul3zxscykYqPO6GNlOcZlEa6n97ubH22IC3x02lDH+v/+Vaxi95yyCNFP0UgcTU8szrppSk1q+n
-        95VUYBXw==;
+        bh=QIfNXDiIpKBz9p84PcCL4bTEk3WJmbW4latxvpeHHC0=; b=QfPzslMrQoDwSnC1vox4tDGtFK
+        hNMCUnyHEXslA6oFyCwwC0qOKRttmRwddQoihOg69raEi7VAL3PbKIY9r9uBriYE3okCU+2mib7dG
+        9QoBGnztTXsJ02IMogHja0X6NUxYpfvwRPQZy3etBMEE1ESUr9fuh9Upr74vliErfcXqls8E3AbUu
+        XaldEO/Z6eAkgzQwsVYU4xXFlosu/PNhu8Bs2pN/jt8vJZymfMxcu154ij6bKMvqJkayR7Hw54Cvx
+        i7+37JdPTd7dpQW/szdj3oKVCPvfAfvzaVG6W4Fmy03cbukwy583e5mJ20ShOL6pv9Ryv+5RHOkrZ
+        RgJhwZOg==;
 Received: from [38.126.112.138] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j5926-0000Hw-6A; Fri, 21 Feb 2020 14:11:58 +0000
+        id 1j5927-0000KN-Tq; Fri, 21 Feb 2020 14:11:59 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
 Cc:     Allison Collins <allison.henderson@oracle.com>,
         Dave Chinner <dchinner@redhat.com>,
-        Chandan Rajendra <chandanrlinux@gmail.com>
-Subject: [PATCH 15/31] xfs: remove ATTR_ALLOC and XFS_DA_OP_ALLOCVAL
-Date:   Fri, 21 Feb 2020 06:11:38 -0800
-Message-Id: <20200221141154.476496-16-hch@lst.de>
+        Chandan Rajendra <chandanrlinux@gmail.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 23/31] xfs: lift common checks into xfs_ioc_attr_list
+Date:   Fri, 21 Feb 2020 06:11:46 -0800
+Message-Id: <20200221141154.476496-24-hch@lst.de>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200221141154.476496-1-hch@lst.de>
 References: <20200221141154.476496-1-hch@lst.de>
@@ -53,175 +54,81 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Use a NULL args->value as the indicator to lazily allocate a buffer
-instead, and let the caller always free args->value instead of
-duplicating the cleanup.
+Lift the flags and bufsize checks from both callers into the common code
+in xfs_ioc_attr_list.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr.c      | 20 +++++---------------
- fs/xfs/libxfs/xfs_attr.h      |  7 ++-----
- fs/xfs/libxfs/xfs_attr_leaf.c |  2 +-
- fs/xfs/libxfs/xfs_types.h     |  2 --
- fs/xfs/xfs_acl.c              | 20 ++++++++++----------
- 5 files changed, 18 insertions(+), 33 deletions(-)
+ fs/xfs/xfs_ioctl.c   | 23 ++++++++++++-----------
+ fs/xfs/xfs_ioctl32.c | 11 -----------
+ 2 files changed, 12 insertions(+), 22 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 469417786bfc..1382e51ef85e 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -98,15 +98,14 @@ xfs_attr_get_ilocked(
-  * indication whether the attribute exists and the size of the value if it
-  * exists. The size is returned in args.valuelen.
-  *
-+ * If args->value is NULL but args->valuelen is non-zero, allocate the buffer
-+ * for the value after existence of the attribute has been determined. The
-+ * caller always has to free args->value if it is set, no matter if this
-+ * function was successful or not.
-+ *
-  * If the attribute is found, but exceeds the size limit set by the caller in
-  * args->valuelen, return -ERANGE with the size of the attribute that was found
-  * in args->valuelen.
-- *
-- * If ATTR_ALLOC is set in args->flags, allocate the buffer for the value after
-- * existence of the attribute has been determined. On success, return that
-- * buffer to the caller and leave them to free it. On failure, free any
-- * allocated buffer and ensure the buffer pointer returned to the caller is
-- * null.
-  */
- int
- xfs_attr_get(
-@@ -115,8 +114,6 @@ xfs_attr_get(
- 	uint			lock_mode;
- 	int			error;
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 4304028d8837..e1cb86d9eb5f 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -360,6 +360,18 @@ xfs_ioc_attr_list(
+ 	struct xfs_attrlist		*alist;
+ 	int				error;
  
--	ASSERT((args->flags & ATTR_ALLOC) || !args->valuelen || args->value);
--
- 	XFS_STATS_INC(args->dp->i_mount, xs_attr_get);
- 
- 	if (XFS_FORCED_SHUTDOWN(args->dp->i_mount))
-@@ -128,18 +125,11 @@ xfs_attr_get(
- 
- 	/* Entirely possible to look up a name which doesn't exist */
- 	args->op_flags = XFS_DA_OP_OKNOENT;
--	if (args->flags & ATTR_ALLOC)
--		args->op_flags |= XFS_DA_OP_ALLOCVAL;
- 
- 	lock_mode = xfs_ilock_attr_map_shared(args->dp);
- 	error = xfs_attr_get_ilocked(args);
- 	xfs_iunlock(args->dp, lock_mode);
- 
--	/* on error, we have to clean up allocated value buffers */
--	if (error && (args->flags & ATTR_ALLOC)) {
--		kmem_free(args->value);
--		args->value = NULL;
--	}
- 	return error;
- }
- 
-diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-index fe064cd81747..a6de050675c9 100644
---- a/fs/xfs/libxfs/xfs_attr.h
-+++ b/fs/xfs/libxfs/xfs_attr.h
-@@ -35,10 +35,8 @@ struct xfs_attr_list_context;
- 
- #define ATTR_KERNOTIME	0x1000	/* [kernel] don't update inode timestamps */
- 
--#define ATTR_ALLOC	0x8000	/* [kernel] allocate xattr buffer on demand */
--
- #define ATTR_KERNEL_FLAGS \
--	(ATTR_KERNOTIME | ATTR_ALLOC)
-+	(ATTR_KERNOTIME)
- 
- #define XFS_ATTR_FLAGS \
- 	{ ATTR_DONTFOLLOW, 	"DONTFOLLOW" }, \
-@@ -47,8 +45,7 @@ struct xfs_attr_list_context;
- 	{ ATTR_SECURE,		"SECURE" }, \
- 	{ ATTR_CREATE,		"CREATE" }, \
- 	{ ATTR_REPLACE,		"REPLACE" }, \
--	{ ATTR_KERNOTIME,	"KERNOTIME" }, \
--	{ ATTR_ALLOC,		"ALLOC" }
-+	{ ATTR_KERNOTIME,	"KERNOTIME" }
- 
- /*
-  * The maximum size (into the kernel or returned from the kernel) of an
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index 5e700dfc48a9..b0658eb8fbcc 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -477,7 +477,7 @@ xfs_attr_copy_value(
- 		return -ERANGE;
- 	}
- 
--	if (args->op_flags & XFS_DA_OP_ALLOCVAL) {
-+	if (!args->value) {
- 		args->value = kmem_alloc_large(valuelen, 0);
- 		if (!args->value)
- 			return -ENOMEM;
-diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-index 634814dd1d10..3379ebc0c7c5 100644
---- a/fs/xfs/libxfs/xfs_types.h
-+++ b/fs/xfs/libxfs/xfs_types.h
-@@ -223,7 +223,6 @@ typedef struct xfs_da_args {
- #define XFS_DA_OP_ADDNAME	0x0004	/* this is an add operation */
- #define XFS_DA_OP_OKNOENT	0x0008	/* lookup/add op, ENOENT ok, else die */
- #define XFS_DA_OP_CILOOKUP	0x0010	/* lookup to return CI name if found */
--#define XFS_DA_OP_ALLOCVAL	0x0020	/* lookup to alloc buffer if found  */
- #define XFS_DA_OP_INCOMPLETE	0x0040	/* lookup INCOMPLETE attr keys */
- 
- #define XFS_DA_OP_FLAGS \
-@@ -232,7 +231,6 @@ typedef struct xfs_da_args {
- 	{ XFS_DA_OP_ADDNAME,	"ADDNAME" }, \
- 	{ XFS_DA_OP_OKNOENT,	"OKNOENT" }, \
- 	{ XFS_DA_OP_CILOOKUP,	"CILOOKUP" }, \
--	{ XFS_DA_OP_ALLOCVAL,	"ALLOCVAL" }, \
- 	{ XFS_DA_OP_INCOMPLETE,	"INCOMPLETE" }
- 
- /*
-diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-index 780924984492..bc78b7c33401 100644
---- a/fs/xfs/xfs_acl.c
-+++ b/fs/xfs/xfs_acl.c
-@@ -125,7 +125,7 @@ xfs_get_acl(struct inode *inode, int type)
- 	struct posix_acl	*acl = NULL;
- 	struct xfs_da_args	args = {
- 		.dp		= ip,
--		.flags		= ATTR_ALLOC | ATTR_ROOT,
-+		.flags		= ATTR_ROOT,
- 		.valuelen	= XFS_ACL_MAX_SIZE(mp),
- 	};
- 	int			error;
-@@ -144,19 +144,19 @@ xfs_get_acl(struct inode *inode, int type)
- 	}
- 	args.namelen = strlen(args.name);
- 
-+	/*
-+	 * If the attribute doesn't exist make sure we have a negative cache
-+	 * entry, for any other error assume it is transient.
-+	 */
- 	error = xfs_attr_get(&args);
--	if (error) {
--		/*
--		 * If the attribute doesn't exist make sure we have a negative
--		 * cache entry, for any other error assume it is transient.
--		 */
--		if (error != -ENOATTR)
--			acl = ERR_PTR(error);
--	} else  {
-+	if (!error) {
- 		acl = xfs_acl_from_disk(mp, args.value, args.valuelen,
- 					XFS_ACL_MAX_ENTRIES(mp));
--		kmem_free(args.value);
-+	} else if (error != -ENOATTR) {
-+		acl = ERR_PTR(error);
- 	}
++	if (bufsize < sizeof(struct xfs_attrlist) ||
++	    bufsize > XFS_XATTR_LIST_MAX)
++		return -EINVAL;
 +
-+	kmem_free(args.value);
- 	return acl;
- }
++	/*
++	 * Reject flags, only allow namespaces.
++	 */
++	if (flags & ~(ATTR_ROOT | ATTR_SECURE))
++		return -EINVAL;
++	if (flags == (ATTR_ROOT | ATTR_SECURE))
++		return -EINVAL;
++
+ 	/*
+ 	 * Validate the cursor.
+ 	 */
+@@ -414,17 +426,6 @@ xfs_attrlist_by_handle(
+ 		return -EPERM;
+ 	if (copy_from_user(&al_hreq, arg, sizeof(xfs_fsop_attrlist_handlereq_t)))
+ 		return -EFAULT;
+-	if (al_hreq.buflen < sizeof(struct xfs_attrlist) ||
+-	    al_hreq.buflen > XFS_XATTR_LIST_MAX)
+-		return -EINVAL;
+-
+-	/*
+-	 * Reject flags, only allow namespaces.
+-	 */
+-	if (al_hreq.flags & ~(ATTR_ROOT | ATTR_SECURE))
+-		return -EINVAL;
+-	if (al_hreq.flags == (ATTR_ROOT | ATTR_SECURE))
+-		return -EINVAL;
  
+ 	dentry = xfs_handlereq_to_dentry(parfilp, &al_hreq.hreq);
+ 	if (IS_ERR(dentry))
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index 10ea0222954c..840d17951407 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -366,17 +366,6 @@ xfs_compat_attrlist_by_handle(
+ 	if (copy_from_user(&al_hreq, arg,
+ 			   sizeof(compat_xfs_fsop_attrlist_handlereq_t)))
+ 		return -EFAULT;
+-	if (al_hreq.buflen < sizeof(struct xfs_attrlist) ||
+-	    al_hreq.buflen > XFS_XATTR_LIST_MAX)
+-		return -EINVAL;
+-
+-	/*
+-	 * Reject flags, only allow namespaces.
+-	 */
+-	if (al_hreq.flags & ~(ATTR_ROOT | ATTR_SECURE))
+-		return -EINVAL;
+-	if (al_hreq.flags == (ATTR_ROOT | ATTR_SECURE))
+-		return -EINVAL;
+ 
+ 	dentry = xfs_compat_handlereq_to_dentry(parfilp, &al_hreq.hreq);
+ 	if (IS_ERR(dentry))
 -- 
 2.24.1
 
