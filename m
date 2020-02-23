@@ -2,165 +2,131 @@ Return-Path: <SRS0=wjSb=4L=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4EC4C35666
-	for <linux-xfs@archiver.kernel.org>; Sun, 23 Feb 2020 15:07:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A3DDC35671
+	for <linux-xfs@archiver.kernel.org>; Sun, 23 Feb 2020 16:02:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 87C3C20637
-	for <linux-xfs@archiver.kernel.org>; Sun, 23 Feb 2020 15:07:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E9A3920836
+	for <linux-xfs@archiver.kernel.org>; Sun, 23 Feb 2020 16:02:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="fnxV53PJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727033AbgBWPHl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 23 Feb 2020 10:07:41 -0500
-Received: from mga03.intel.com ([134.134.136.65]:36914 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726534AbgBWPHl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 23 Feb 2020 10:07:41 -0500
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga103.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 23 Feb 2020 07:07:40 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.70,476,1574150400"; 
-   d="scan'208";a="229631897"
-Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
-  by fmsmga007.fm.intel.com with ESMTP; 23 Feb 2020 07:07:39 -0800
-Date:   Sun, 23 Feb 2020 07:07:39 -0800
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-kernel@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH V4 06/13] fs/xfs: Create function xfs_inode_enable_dax()
-Message-ID: <20200223150739.GE29607@iweiny-DESK2.sc.intel.com>
-References: <20200221004134.30599-1-ira.weiny@intel.com>
- <20200221004134.30599-7-ira.weiny@intel.com>
- <20200222002821.GD9506@magnolia>
+        id S1726534AbgBWQCf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 23 Feb 2020 11:02:35 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:47900 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726208AbgBWQCf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Feb 2020 11:02:35 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01NG2W4P144314;
+        Sun, 23 Feb 2020 16:02:32 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=pbjZFsJS0pAsdwB51TPHPMmXd9pXLmYdMSD7iHUPWzU=;
+ b=fnxV53PJaNzKnZmCnEP7yCoyoJSKDO852kYUY+cE1WlF/iTKELUZFGDZHws0VXxA61TI
+ CNp6/yV6uTCPJRuAiD4kmtpW23QsqMXOaCf2Y3wc4YPQV0ibIDtuYknFIFQPfV0R6aBB
+ T2Q+queWFPdXQDT89V/GtQUlVIp03kexOhuk24lgOoXof8KxDWcZctJECR+6xHAQFaDQ
+ DwRudx/jYW6h5MVlXZ+OSbbUrSa+n+6X+bzeKR5hWr4cUPKbNZo0b1iadF/bjNfoQ2sK
+ W4RB4rC2pvCdjbPb+F0o7TVO7q8N0Fo5LlU0iScGX+JW6remDNJ9vL0PIJvlXlwXyeax MA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2yavxrbnn1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 23 Feb 2020 16:02:32 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01NG2Wkj024945;
+        Sun, 23 Feb 2020 16:02:32 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2ybe0y2yx0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 23 Feb 2020 16:02:32 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01NG2Vs1017859;
+        Sun, 23 Feb 2020 16:02:31 GMT
+Received: from [192.168.1.223] (/67.1.3.112)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sun, 23 Feb 2020 08:02:31 -0800
+Subject: Re: [PATCH v7 00/19] xfs: Delayed Ready Attrs
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>
+References: <20200223020611.1802-1-allison.henderson@oracle.com>
+ <CAOQ4uxgvJOF6+jd9BuJfxxGQbiit6J7zVOVnigwLb-RWizRqfg@mail.gmail.com>
+From:   Allison Collins <allison.henderson@oracle.com>
+Message-ID: <5b2ade02-0f1b-b976-2b38-d10fcb41d317@oracle.com>
+Date:   Sun, 23 Feb 2020 09:02:30 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200222002821.GD9506@magnolia>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+In-Reply-To: <CAOQ4uxgvJOF6+jd9BuJfxxGQbiit6J7zVOVnigwLb-RWizRqfg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9540 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0
+ suspectscore=0 malwarescore=0 phishscore=0 bulkscore=0 mlxscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2002230132
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9540 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 lowpriorityscore=0
+ spamscore=0 clxscore=1015 suspectscore=0 bulkscore=0 mlxlogscore=999
+ malwarescore=0 phishscore=0 adultscore=0 priorityscore=1501 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002230132
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 21, 2020 at 04:28:21PM -0800, Darrick J. Wong wrote:
-> On Thu, Feb 20, 2020 at 04:41:27PM -0800, ira.weiny@intel.com wrote:
-> > From: Ira Weiny <ira.weiny@intel.com>
-> > 
-> > xfs_inode_supports_dax() should reflect if the inode can support DAX not
-> > that it is enabled for DAX.
-> > 
-> > Change the use of xfs_inode_supports_dax() to reflect only if the inode
-> > and underlying storage support dax.
-> > 
-> > Add a new function xfs_inode_enable_dax() which reflects if the inode
+
+
+On 2/23/20 12:55 AM, Amir Goldstein wrote:
+> On Sun, Feb 23, 2020 at 4:06 AM Allison Collins
+> <allison.henderson@oracle.com> wrote:
+>>
+>> Hi all,
+>>
+>> This set is a subset of a larger series for delayed attributes. Which is
+>> a subset of an even larger series, parent pointers. Delayed attributes
+>> allow attribute operations (set and remove) to be logged and committed
+>> in the same way that other delayed operations do. This allows more
+>> complex operations (like parent pointers) to be broken up into multiple
+>> smaller transactions. To do this, the existing attr operations must be
+>> modified to operate as either a delayed operation or a inline operation
+>> since older filesystems will not be able to use the new log entries.
 > 
-> Heavily into bikeshedding here, but "enable" sounds like a verb, but
-> this function doesn't actually turn dax on for a file, it merely decides
-> if we /should/ turn it on.
-
-heheheheh...  As Dave said "names are hard"...  :-/
-
+> High level question, before I dive into the series:
 > 
-> xfs_inode_wants_dax() ?
+> Which other "delayed operations" already exist?
+> I think delayed operations were added by Darrick to handle the growth of
+> translation size due to reflink. Right? So I assume the existing delayed
+> operations deal with block accounting.
+Gosh, quite a few I think, but I'm not solid on what they all do.  If we 
+take a peek at XFS_LI_TYPE_DESC, theres an identifier for each type, to 
+give you an idea.  A lot of them do look like they are part of reflink 
+operations though.
 
-I viewed this as a question as in "enable dax"?
-
-And I _think_ Dave actually suggested the name.
-
-I'll contemplate it some,
-Ira
-
+> When speaking of parent pointers, without having looked into the details yet,
+> it seem the delayed operations we would want to log are operations that deal
+> with namespace changes, i.e.: link,unlink,rename.
+> The information needed to be logged for these ops is minimal.
+> Why do we need a general infrastructure for delayed attr operations?
 > 
-> --D
+> Thanks,
+> Amir.
 > 
-> > should be enabled for DAX.
-> > 
-> > Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-> > 
-> > ---
-> > Changes from v3:
-> > 	Update functions and names to be more clear
-> > 	Update commit message
-> > 	Merge with
-> > 		'fs/xfs: Clean up DAX support check'
-> > 		don't allow IS_DAX() on a directory
-> > 		use STATIC macro for static
-> > 		make xfs_inode_supports_dax() static
-> > ---
-> >  fs/xfs/xfs_iops.c | 25 +++++++++++++++++++------
-> >  1 file changed, 19 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> > index 81f2f93caec0..ff711efc5247 100644
-> > --- a/fs/xfs/xfs_iops.c
-> > +++ b/fs/xfs/xfs_iops.c
-> > @@ -1237,19 +1237,18 @@ static const struct inode_operations xfs_inline_symlink_inode_operations = {
-> >  };
-> >  
-> >  /* Figure out if this file actually supports DAX. */
-> > -static bool
-> > +STATIC bool
-> >  xfs_inode_supports_dax(
-> >  	struct xfs_inode	*ip)
-> >  {
-> >  	struct xfs_mount	*mp = ip->i_mount;
-> >  
-> >  	/* Only supported on non-reflinked files. */
-> > -	if (!S_ISREG(VFS_I(ip)->i_mode) || xfs_is_reflink_inode(ip))
-> > +	if (xfs_is_reflink_inode(ip))
-> >  		return false;
-> >  
-> > -	/* DAX mount option or DAX iflag must be set. */
-> > -	if (!(mp->m_flags & XFS_MOUNT_DAX) &&
-> > -	    !(ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
-> > +	/* Only supported on regular files. */
-> > +	if (!S_ISREG(VFS_I(ip)->i_mode))
-> >  		return false;
-> >  
-> >  	/* Block size must match page size */
-> > @@ -1260,6 +1259,20 @@ xfs_inode_supports_dax(
-> >  	return xfs_inode_buftarg(ip)->bt_daxdev != NULL;
-> >  }
-> >  
-> > +STATIC bool
-> > +xfs_inode_enable_dax(
-> > +	struct xfs_inode *ip)
-> > +{
-> > +	if (!xfs_inode_supports_dax(ip))
-> > +		return false;
-> > +
-> > +	if (ip->i_d.di_flags2 & XFS_DIFLAG2_DAX)
-> > +		return true;
-> > +	if (ip->i_mount->m_flags & XFS_MOUNT_DAX)
-> > +		return true;
-> > +	return false;
-> > +}
-> > +
-> >  STATIC void
-> >  xfs_diflags_to_iflags(
-> >  	struct inode		*inode,
-> > @@ -1278,7 +1291,7 @@ xfs_diflags_to_iflags(
-> >  		inode->i_flags |= S_SYNC;
-> >  	if (flags & XFS_DIFLAG_NOATIME)
-> >  		inode->i_flags |= S_NOATIME;
-> > -	if (xfs_inode_supports_dax(ip))
-> > +	if (xfs_inode_enable_dax(ip))
-> >  		inode->i_flags |= S_DAX;
-> >  }
-> >  
-> > -- 
-> > 2.21.0
-> > 
+Great question, this one goes back a ways.  I believe the train of logic 
+we had is that because parent pointers also include the filename of the 
+parent, its possible we can end up with really big attributes.  Which 
+may run into a lot of block map/unmap activity for name space changes. 
+We didnt want to end up with overly large transactions in the log, so we 
+wanted to break them up by returning -EAGAIN where ever the transactions 
+used to be rolled.  I'm pretty sure that covers a quick high level 
+history of where we are now?  Did that answer your question?
+
+Allison
+
+
