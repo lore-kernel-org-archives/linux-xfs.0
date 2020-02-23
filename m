@@ -7,133 +7,127 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 533C3C35676
-	for <linux-xfs@archiver.kernel.org>; Sun, 23 Feb 2020 02:06:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26830C35677
+	for <linux-xfs@archiver.kernel.org>; Sun, 23 Feb 2020 02:06:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2C3A220702
+	by mail.kernel.org (Postfix) with ESMTP id E762D206EF
 	for <linux-xfs@archiver.kernel.org>; Sun, 23 Feb 2020 02:06:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="YgYViSbH"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="TIPOcEZQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727180AbgBWCGY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 22 Feb 2020 21:06:24 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:45850 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727185AbgBWCGX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 22 Feb 2020 21:06:23 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01N21A7u188928
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Feb 2020 02:06:22 GMT
+        id S1727202AbgBWCGZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 22 Feb 2020 21:06:25 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:46358 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727188AbgBWCGY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 22 Feb 2020 21:06:24 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01N22VC9180050
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Feb 2020 02:06:23 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
  date : message-id : in-reply-to : references; s=corp-2020-01-29;
- bh=pjPFKxHF8Y6S6eLu7Dcu/kbGR13Uo2v8HZYO3MkFzYo=;
- b=YgYViSbHX3bTua8GkuX02Ytdawz9ASUkojhO+eMxq9Xbjes2GrDUZw/DlPuGT1mfs0i7
- zkLtrcK2g97jXMEE2LtHydTYdvaf/A60FAOFTzHz0nElvs2cOtU5BzG6rvLmKhb5SKYE
- PyR/VD1g47v9vZGFdYqmib4IP/+xyrcQls8Y3kEANm387nFVkKSz3+8xdnnhlUh0jGer
- U1M6MaHkUHkglGfVs8Fl27qk3PGlordgleN/7oykqifd/DYrs6X+RwQCJ7+yofG/Ek48
- GYKVUBUg88XsFgispk6hwl3H73iMOrd2djdRvYCB/waSKzhWXjGIYfLo3rQrGSAlLEzz Dg== 
+ bh=8zf70sU61PUeMApGZyRaYif+XWBiWeYov3AYLPeFCqI=;
+ b=TIPOcEZQowrQskYUeTiwlCqdE/7W5Utjk9l7Mlo1ZBUYXDgt0GLgjOXypnN94JOqjPMl
+ Bn1pzsLNMxraUS5dhJJVurGKtOVfNdOPehn6RqeNAFhfI9gTBG0ZDzBdHSFMarxMUW6l
+ hEu55Dv79ikdlcXURFuKBjkC72wxWXKGhSKM/BLgNBGFS0jQhuFWOICLvMASbh6g8P1W
+ TeUNvtsdkJr0p95M5T5XwSVwfVTREtcP3kkbkyU2+4O91LWH+zeh8ewXDO+x5xQReMcX
+ du1FvxdPFPFM0eYvspGlQSKu4mI9C4HAHPHdsWoLQrK/dDP7r60nYlZujQ597r864cvQ OA== 
 Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2yauqu21xp-1
+        by userp2120.oracle.com with ESMTP id 2yavxra009-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
         for <linux-xfs@vger.kernel.org>; Sun, 23 Feb 2020 02:06:22 +0000
 Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01N1x6Ek147534
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01N1wLko146728
         for <linux-xfs@vger.kernel.org>; Sun, 23 Feb 2020 02:06:22 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2ybdsd6qb4-1
+        by userp3030.oracle.com with ESMTP id 2ybdsd6qb5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
         for <linux-xfs@vger.kernel.org>; Sun, 23 Feb 2020 02:06:22 +0000
 Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01N26LB9028955
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Feb 2020 02:06:21 GMT
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01N26MP9028958
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Feb 2020 02:06:22 GMT
 Received: from localhost.localdomain (/67.1.3.112)
         by default (Oracle Beehive Gateway v4.0)
         with ESMTP ; Sun, 23 Feb 2020 02:06:21 +0000
 From:   Allison Collins <allison.henderson@oracle.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v7 11/19] xfs: Factor out trans roll in xfs_attr3_leaf_clearflag
-Date:   Sat, 22 Feb 2020 19:06:03 -0700
-Message-Id: <20200223020611.1802-12-allison.henderson@oracle.com>
+Subject: [PATCH v7 12/19] xfs: Add helper function xfs_attr_rmtval_unmap
+Date:   Sat, 22 Feb 2020 19:06:04 -0700
+Message-Id: <20200223020611.1802-13-allison.henderson@oracle.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200223020611.1802-1-allison.henderson@oracle.com>
 References: <20200223020611.1802-1-allison.henderson@oracle.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9539 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=1 spamscore=0
- malwarescore=0 mlxscore=0 bulkscore=0 mlxlogscore=999 adultscore=0
+ malwarescore=0 mlxscore=0 bulkscore=0 mlxlogscore=968 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
  definitions=main-2002230014
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9539 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 bulkscore=0
- clxscore=1015 malwarescore=0 impostorscore=0 adultscore=0 phishscore=0
- priorityscore=1501 mlxlogscore=999 spamscore=0 mlxscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002230014
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 lowpriorityscore=0
+ spamscore=0 clxscore=1015 suspectscore=1 bulkscore=0 mlxlogscore=999
+ malwarescore=0 phishscore=0 adultscore=0 priorityscore=1501 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002230014
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-New delayed allocation routines cannot be handling transactions so factor them out
-into the calling functions
+This function is similar to xfs_attr_rmtval_remove, but adapted to return EAGAIN for
+new transactions. We will use this later when we introduce delayed attributes
 
 Signed-off-by: Allison Collins <allison.henderson@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr.c      | 16 ++++++++++++++++
- fs/xfs/libxfs/xfs_attr_leaf.c |  5 +----
- 2 files changed, 17 insertions(+), 4 deletions(-)
+ fs/xfs/libxfs/xfs_attr_remote.c | 28 ++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_attr_remote.h |  1 +
+ 2 files changed, 29 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 26412da..5d73bdf 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -822,6 +822,14 @@ xfs_attr_leaf_addname(
- 		 * Added a "remote" value, just clear the incomplete flag.
- 		 */
- 		error = xfs_attr3_leaf_clearflag(args);
-+		if (error)
-+			return error;
-+
-+		/*
-+		 * Commit the flag value change and start the next trans in
-+		 * series.
-+		 */
-+		error = xfs_trans_roll_inode(&args->trans, args->dp);
+diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+index 3de2eec..da40f85 100644
+--- a/fs/xfs/libxfs/xfs_attr_remote.c
++++ b/fs/xfs/libxfs/xfs_attr_remote.c
+@@ -711,3 +711,31 @@ xfs_attr_rmtval_remove(
  	}
- 	return error;
+ 	return 0;
  }
-@@ -1185,6 +1193,14 @@ xfs_attr_node_addname(
- 		error = xfs_attr3_leaf_clearflag(args);
- 		if (error)
- 			goto out;
 +
-+		 /*
-+		  * Commit the flag value change and start the next trans in
-+		  * series.
-+		  */
-+		error = xfs_trans_roll_inode(&args->trans, args->dp);
-+		if (error)
-+			goto out;
- 	}
- 	retval = error = 0;
- 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index 67339f0..1742f0a 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -2804,10 +2804,7 @@ xfs_attr3_leaf_clearflag(
- 			 XFS_DA_LOGRANGE(leaf, name_rmt, sizeof(*name_rmt)));
- 	}
- 
--	/*
--	 * Commit the flag value change and start the next trans in series.
--	 */
--	return xfs_trans_roll_inode(&args->trans, args->dp);
++/*
++ * Remove the value associated with an attribute by deleting the out-of-line
++ * buffer that it is stored on. Returns EAGAIN for the caller to refresh the
++ * transaction and recall the function
++ */
++int
++xfs_attr_rmtval_unmap(
++	struct xfs_da_args	*args)
++{
++	int	error, done;
++
++	/*
++	 * Unmap value blocks for this attr.  This is similar to
++	 * xfs_attr_rmtval_remove, but open coded here to return EAGAIN
++	 * for new transactions
++	 */
++	error = xfs_bunmapi(args->trans, args->dp,
++		    args->rmtblkno, args->rmtblkcnt,
++		    XFS_BMAPI_ATTRFORK, 1, &done);
++	if (error)
++		return error;
++
++	if (!done)
++		return -EAGAIN;
++
 +	return 0;
- }
- 
- /*
++}
+diff --git a/fs/xfs/libxfs/xfs_attr_remote.h b/fs/xfs/libxfs/xfs_attr_remote.h
+index eff5f95..e06299a 100644
+--- a/fs/xfs/libxfs/xfs_attr_remote.h
++++ b/fs/xfs/libxfs/xfs_attr_remote.h
+@@ -14,4 +14,5 @@ int xfs_attr_rmtval_remove(struct xfs_da_args *args);
+ int xfs_attr_rmtval_stale(struct xfs_inode *ip, struct xfs_bmbt_irec *map,
+ 		xfs_buf_flags_t incore_flags);
+ int xfs_attr_rmtval_invalidate(struct xfs_da_args *args);
++int xfs_attr_rmtval_unmap(struct xfs_da_args *args);
+ #endif /* __XFS_ATTR_REMOTE_H__ */
 -- 
 2.7.4
 
