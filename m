@@ -7,61 +7,61 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 201B1C3567D
-	for <linux-xfs@archiver.kernel.org>; Sun, 23 Feb 2020 02:06:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 305EDC35669
+	for <linux-xfs@archiver.kernel.org>; Sun, 23 Feb 2020 02:06:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EB2AA2071E
-	for <linux-xfs@archiver.kernel.org>; Sun, 23 Feb 2020 02:06:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F378E20707
+	for <linux-xfs@archiver.kernel.org>; Sun, 23 Feb 2020 02:06:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Ar4CQPVH"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="lF/I1CJZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727156AbgBWCGH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 22 Feb 2020 21:06:07 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:46024 "EHLO
+        id S1727177AbgBWCGK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 22 Feb 2020 21:06:10 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:46056 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727115AbgBWCGG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 22 Feb 2020 21:06:06 -0500
+        with ESMTP id S1727133AbgBWCGI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 22 Feb 2020 21:06:08 -0500
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01N22YSs180202
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Feb 2020 02:06:05 GMT
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01N22Ti4179973
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Feb 2020 02:06:07 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
  date : message-id : in-reply-to : references; s=corp-2020-01-29;
- bh=zdn0LOG4SWHO/VCZNY4VpXVEEHQxS8mFBUrEXZRbHKA=;
- b=Ar4CQPVHnO2bGNaRD3pyT6va7b21+oadiQhSjVZSRRh8y3jx0lqcPn55pE3LSDl7+raN
- J7tGUCIW0MktezVLzrAt5B6blgAQpCpYInlERwmTxfebeHRqdWuNqT8jiNvCcdbZ6qNe
- vX39WqWGov5wDl1dRn7WAxxFq8/5svXIo02v8xR2qkyk/ZX8HmGTSqPyVi3uIuC5uu6m
- yTLb3IxZgUW0BGkVSGMoC1l5ho2kgyVyLZnWmJf9oA/VMiCizpLJAOCfTIK/ApF7u62o
- eNawifaC754nvpkv6TuvV0avu8yoa5RkdQ4hivkFvFE0ozHfOwA8qLTu5+ON4eekdFUv xg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2yavxr9yyn-1
+ bh=BHXbWCEMHX8ukKpTmQAbJTj52lAvNCpXhJL2tA5euM0=;
+ b=lF/I1CJZlbfKbxYWUQF4U7b24iSprJhqen+ElO3k9+Bsj/lP5VQX6lqgABlOzuAqi0K2
+ QoglDBHslk9J7ZRCpdQz5jTcmJTdJpEru0jEaUVyfp32wxzd6RmH4u14k6wZNeAsyRRx
+ zwIYZy8m444m0adeJHFlS4fKKDaT1a5CVnLnWlRUQoju9y7JuBPRRzJ8OTGcuREplV0U
+ vvlfFjN73QXRBmkDgFkcEszRPtjG/LLoi+E6LgpzSHM2FOVP/IRtzr95rJQrucB3X+wE
+ 1KfO1YnKfb1KCxwZrNhlf9SLluuq1jKIsVFubXbIYrbMYcIV/yFeFVkTvx6xHPVfQcwj SA== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 2yavxr9yyv-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Feb 2020 02:06:05 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01N1w2hW146339
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Feb 2020 02:06:05 GMT
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Feb 2020 02:06:07 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01N1wP2H054410
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Feb 2020 02:06:06 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2ybdsd6q44-1
+        by aserp3020.oracle.com with ESMTP id 2ybe38md8n-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Feb 2020 02:06:05 +0000
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Feb 2020 02:06:06 +0000
 Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01N264e2028915
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Feb 2020 02:06:04 GMT
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01N2650R028919
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Feb 2020 02:06:05 GMT
 Received: from localhost.localdomain (/67.1.3.112)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sun, 23 Feb 2020 02:06:04 +0000
+        with ESMTP ; Sun, 23 Feb 2020 02:06:05 +0000
 From:   Allison Collins <allison.henderson@oracle.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v7 17/20] xfsprogs: Simplify xfs_attr_set_iter
-Date:   Sat, 22 Feb 2020 19:05:51 -0700
-Message-Id: <20200223020554.1731-18-allison.henderson@oracle.com>
+Subject: [PATCH v7 20/20] xfsprogs: Remove xfs_attr_rmtval_remove
+Date:   Sat, 22 Feb 2020 19:05:54 -0700
+Message-Id: <20200223020554.1731-21-allison.henderson@oracle.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200223020554.1731-1-allison.henderson@oracle.com>
 References: <20200223020554.1731-1-allison.henderson@oracle.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9539 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=1 spamscore=0
- malwarescore=0 mlxscore=0 bulkscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002230014
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0
+ mlxlogscore=999 spamscore=0 malwarescore=0 mlxscore=0 phishscore=0
+ suspectscore=1 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2002230014
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9539 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 lowpriorityscore=0
  spamscore=0 clxscore=1015 suspectscore=1 bulkscore=0 mlxlogscore=999
@@ -73,110 +73,66 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Delayed attribute mechanics make frequent use of goto statements.  We can use this
-to further simplify xfs_attr_set_iter.  Because states tend to fall between if
-conditions, we can invert the if logic and jump to the goto. This helps to reduce
-indentation and simplify things.
+xfs_attr_rmtval_remove is no longer used.  Clear it out now
 
 Signed-off-by: Allison Collins <allison.henderson@oracle.com>
 ---
- libxfs/xfs_attr.c | 72 +++++++++++++++++++++++++++++++++----------------------
- 1 file changed, 43 insertions(+), 29 deletions(-)
+ libxfs/xfs_attr_remote.c | 42 ------------------------------------------
+ 1 file changed, 42 deletions(-)
 
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index e71099c..0635d8b 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -253,6 +253,19 @@ xfs_attr_try_sf_addname(
+diff --git a/libxfs/xfs_attr_remote.c b/libxfs/xfs_attr_remote.c
+index 3ed27e0..b5cb21c 100644
+--- a/libxfs/xfs_attr_remote.c
++++ b/libxfs/xfs_attr_remote.c
+@@ -704,48 +704,6 @@ xfs_attr_rmtval_invalidate(
  }
  
  /*
-+ * Check to see if the attr should be upgraded from non-existent or shortform to
-+ * single-leaf-block attribute list.
-+ */
-+static inline bool
-+xfs_attr_fmt_needs_update(
-+	struct xfs_inode    *dp)
-+{
-+	return dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL ||
-+	      (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
-+	      dp->i_d.di_anextents == 0);
-+}
-+
-+/*
-  * Set the attribute specified in @args.
-  */
- int
-@@ -341,39 +354,40 @@ xfs_attr_set_iter(
- 	}
- 
- 	/*
--	 * If the attribute list is non-existent or a shortform list,
--	 * upgrade it to a single-leaf-block attribute list.
-+	 * If the attribute list is already in leaf format, jump straight to
-+	 * leaf handling.  Otherwise, try to add the attribute to the shortform
-+	 * list; if there's no room then convert the list to leaf format and try
-+	 * again.
- 	 */
--	if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL ||
--	    (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
--	     dp->i_d.di_anextents == 0)) {
--		/*
--		 * Try to add the attr to the attribute list in the inode.
--		 */
--		error = xfs_attr_try_sf_addname(dp, args);
-+	if (!xfs_attr_fmt_needs_update(dp))
-+		goto add_leaf;
- 
--		/* Should only be 0, -EEXIST or ENOSPC */
--		if (error != -ENOSPC)
--			return error;
-+	/*
-+	 * Try to add the attr to the attribute list in the inode.
-+	 */
-+	error = xfs_attr_try_sf_addname(dp, args);
- 
--		/*
--		 * It won't fit in the shortform, transform to a leaf block.
--		 * GROT: another possible req'mt for a double-split btree op.
--		 */
--		error = xfs_attr_shortform_to_leaf(args, leaf_bp);
+- * Remove the value associated with an attribute by deleting the
+- * out-of-line buffer that it is stored on.
+- */
+-int
+-xfs_attr_rmtval_remove(
+-	struct xfs_da_args      *args)
+-{
+-	xfs_dablk_t		lblkno;
+-	int			blkcnt;
+-	int			error = 0;
+-	int			done = 0;
+-
+-	trace_xfs_attr_rmtval_remove(args);
+-
+-	error = xfs_attr_rmtval_invalidate(args);
+-	if (error)
+-		return error;
+-	/*
+-	 * Keep de-allocating extents until the remote-value region is gone.
+-	 */
+-	lblkno = args->rmtblkno;
+-	blkcnt = args->rmtblkcnt;
+-	while (!done) {
+-		error = xfs_bunmapi(args->trans, args->dp, lblkno, blkcnt,
+-				    XFS_BMAPI_ATTRFORK, 1, &done);
 -		if (error)
 -			return error;
-+	/* Should only be 0, -EEXIST or ENOSPC */
-+	if (error != -ENOSPC)
-+		return error;
- 
+-		error = xfs_defer_finish(&args->trans);
+-		if (error)
+-			return error;
+-
 -		/*
--		 * Prevent the leaf buffer from being unlocked so that a
--		 * concurrent AIL push cannot grab the half-baked leaf
--		 * buffer and run into problems with the write verifier.
+-		 * Close out trans and start the next one in the chain.
 -		 */
--		xfs_trans_bhold(args->trans, *leaf_bp);
--		args->dac.flags |= XFS_DAC_FINISH_TRANS;
--		args->dac.dela_state = XFS_DAS_ADD_LEAF;
--		return -EAGAIN;
+-		error = xfs_trans_roll_inode(&args->trans, args->dp);
+-		if (error)
+-			return error;
 -	}
-+	/*
-+	 * It won't fit in the shortform, transform to a leaf block.
-+	 * GROT: another possible req'mt for a double-split btree op.
-+	 */
-+	error = xfs_attr_shortform_to_leaf(args, leaf_bp);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * Prevent the leaf buffer from being unlocked so that a
-+	 * concurrent AIL push cannot grab the half-baked leaf
-+	 * buffer and run into problems with the write verifier.
-+	 */
-+	xfs_trans_bhold(args->trans, *leaf_bp);
-+	args->dac.flags |= XFS_DAC_FINISH_TRANS;
-+	args->dac.dela_state = XFS_DAS_ADD_LEAF;
-+	return -EAGAIN;
- 
- add_leaf:
- 
+-	return 0;
+-}
+-
+-/*
+  * Remove the value associated with an attribute by deleting the out-of-line
+  * buffer that it is stored on. Returns EAGAIN for the caller to refresh the
+  * transaction and recall the function
 -- 
 2.7.4
 
