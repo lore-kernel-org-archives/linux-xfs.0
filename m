@@ -2,183 +2,122 @@ Return-Path: <SRS0=wjSb=4L=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3ADFC35671
-	for <linux-xfs@archiver.kernel.org>; Sun, 23 Feb 2020 17:58:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A712FC35666
+	for <linux-xfs@archiver.kernel.org>; Sun, 23 Feb 2020 18:38:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A354E206E0
-	for <linux-xfs@archiver.kernel.org>; Sun, 23 Feb 2020 17:58:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7CA8920836
+	for <linux-xfs@archiver.kernel.org>; Sun, 23 Feb 2020 18:38:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PakxXawg"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="mRxUU9Ez"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727163AbgBWR6O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 23 Feb 2020 12:58:14 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:58786 "EHLO
+        id S1726678AbgBWSiv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 23 Feb 2020 13:38:51 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:45888 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726302AbgBWR6O (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Feb 2020 12:58:14 -0500
+        with ESMTP id S1726208AbgBWSiu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Feb 2020 13:38:50 -0500
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01NHvWju073441;
-        Sun, 23 Feb 2020 17:57:32 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=LL53eGqGjRhh2FS0FiyzWSm5OLgF8ml4hem9pzFTyEA=;
- b=PakxXawgs/LSVhmYsY1+zuFHltffRjwbw3lP6hwl72y2PLEa8jNl5Ujy9gt6xfZOb6Mz
- pZe861TUQ4w4vRL9H8BDN/Ft61yUxW8ZBT4mCp1Nsu1+ZVxqNgCaBMfkolgljQ/nzIEm
- VO3l937hvjq7rdJRQatg9AN9IDP9fTPQ6OaBJMyOSZbxjNXA0Pa3NCTlr7d5UixoLlJV
- YrAW+AhpE2AJpG3fsJITXVfY9m9jcm9agVJeDdzcJ59kdJlQYXV/vdxaxGBdHC43mQUa
- BqvSk6611lS95oLYQySLRzScVf7fgUh60vjQJvd694prMF7sLeHaJsUvpLosCClFBjqK OQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2yavxrbtp0-1
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01NIcmQK159374;
+        Sun, 23 Feb 2020 18:38:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=jCrLbAT8PYrKMMLtel1OdVL8yg6oI2bLHP6UofqVvs4=;
+ b=mRxUU9EzY4cP/CIBZOCXdzVUw3xeQZYKX8VIV99SlTFRkWyQF56VUA/DjHJpcsxlugVb
+ PT1BdpQRLMPvh4UKvsAzxsoCCLabwcDe0+TXn+g4hZjOgIQ+cOwVXA29b211u7Ni053D
+ 2gnXNlHceQ7XEIPEIPH1vfpCJ66KJSATLpNmk4qUhR1OTl5kWKOTLSYtP+ZYRpT+s/m1
+ Rp52HrmACPq4XSaHAAteW6MpAYh+W0Q0QToUGiQQwANsGn1fS5f1xqZcN1t4sAXSzdMe
+ ssL79XB25YjVTk8hFpNXYLrytRuxpdGySlJN9U8+RLW7hgp8OAnt7GRJj3f6vzwnXpEg SQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2yavxrbvej-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 23 Feb 2020 17:57:32 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01NHq2br019936;
-        Sun, 23 Feb 2020 17:55:31 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by aserp3020.oracle.com with ESMTP id 2ybe3cnq93-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sun, 23 Feb 2020 17:55:31 +0000
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 01NHtVwC036442;
-        Sun, 23 Feb 2020 17:55:31 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 2ybe3cnq8s-1
+        Sun, 23 Feb 2020 18:38:48 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01NIcStd053049;
+        Sun, 23 Feb 2020 18:38:48 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 2ybe0ya4q1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 23 Feb 2020 17:55:31 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01NHtP55027269;
-        Sun, 23 Feb 2020 17:55:25 GMT
-Received: from localhost (/10.159.228.17)
+        Sun, 23 Feb 2020 18:38:47 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01NIclme018885;
+        Sun, 23 Feb 2020 18:38:47 GMT
+Received: from [192.168.1.223] (/67.1.3.112)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sun, 23 Feb 2020 09:55:25 -0800
-Date:   Sun, 23 Feb 2020 09:55:23 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v7 21/24] iomap: Restructure iomap_readpages_actor
-Message-ID: <20200223175523.GK9506@magnolia>
-References: <20200219210103.32400-1-willy@infradead.org>
- <20200219210103.32400-22-willy@infradead.org>
- <20200222004425.GG9506@magnolia>
- <20200222015435.GH24185@bombadil.infradead.org>
+        with ESMTP ; Sun, 23 Feb 2020 10:38:47 -0800
+Subject: Re: [PATCH v7 07/19] xfs: Factor out xfs_attr_leaf_addname helper
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>
+References: <20200223020611.1802-1-allison.henderson@oracle.com>
+ <20200223020611.1802-8-allison.henderson@oracle.com>
+ <CAOQ4uxj_X+Sm6A838CVsDqL8zkYy63G++RFuew1dYmLsXhOpQg@mail.gmail.com>
+From:   Allison Collins <allison.henderson@oracle.com>
+Message-ID: <2abd5db4-bf0e-7ed0-3777-700dbc2e379e@oracle.com>
+Date:   Sun, 23 Feb 2020 11:38:46 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200222015435.GH24185@bombadil.infradead.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <CAOQ4uxj_X+Sm6A838CVsDqL8zkYy63G++RFuew1dYmLsXhOpQg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9540 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0
+ suspectscore=0 malwarescore=0 phishscore=0 bulkscore=0 mlxscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2002230154
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9540 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 lowpriorityscore=0
  spamscore=0 clxscore=1015 suspectscore=0 bulkscore=0 mlxlogscore=999
  malwarescore=0 phishscore=0 adultscore=0 priorityscore=1501 mlxscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002230148
+ definitions=main-2002230154
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 21, 2020 at 05:54:35PM -0800, Matthew Wilcox wrote:
-> On Fri, Feb 21, 2020 at 04:44:25PM -0800, Darrick J. Wong wrote:
-> > On Wed, Feb 19, 2020 at 01:01:00PM -0800, Matthew Wilcox wrote:
-> > > From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-> > > 
-> > > By putting the 'have we reached the end of the page' condition at the end
-> > > of the loop instead of the beginning, we can remove the 'submit the last
-> > > page' code from iomap_readpages().  Also check that iomap_readpage_actor()
-> > > didn't return 0, which would lead to an endless loop.
-> > > 
-> > > Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> > > ---
-> > >  fs/iomap/buffered-io.c | 32 ++++++++++++++++++--------------
-> > >  1 file changed, 18 insertions(+), 14 deletions(-)
-> > > 
-> > > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > > index cb3511eb152a..31899e6cb0f8 100644
-> > > --- a/fs/iomap/buffered-io.c
-> > > +++ b/fs/iomap/buffered-io.c
-> > > @@ -400,15 +400,9 @@ iomap_readpages_actor(struct inode *inode, loff_t pos, loff_t length,
-> > >  		void *data, struct iomap *iomap, struct iomap *srcmap)
-> > >  {
-> > >  	struct iomap_readpage_ctx *ctx = data;
-> > > -	loff_t done, ret;
-> > > -
-> > > -	for (done = 0; done < length; done += ret) {
-> > > -		if (ctx->cur_page && offset_in_page(pos + done) == 0) {
-> > > -			if (!ctx->cur_page_in_bio)
-> > > -				unlock_page(ctx->cur_page);
-> > > -			put_page(ctx->cur_page);
-> > > -			ctx->cur_page = NULL;
-> > > -		}
-> > > +	loff_t ret, done = 0;
-> > > +
-> > > +	while (done < length) {
-> > >  		if (!ctx->cur_page) {
-> > >  			ctx->cur_page = iomap_next_page(inode, ctx->pages,
-> > >  					pos, length, &done);
-> > > @@ -418,6 +412,20 @@ iomap_readpages_actor(struct inode *inode, loff_t pos, loff_t length,
-> > >  		}
-> > >  		ret = iomap_readpage_actor(inode, pos + done, length - done,
-> > >  				ctx, iomap, srcmap);
-> > > +		done += ret;
-> > > +
-> > > +		/* Keep working on a partial page */
-> > > +		if (ret && offset_in_page(pos + done))
-> > > +			continue;
-> > > +
-> > > +		if (!ctx->cur_page_in_bio)
-> > > +			unlock_page(ctx->cur_page);
-> > > +		put_page(ctx->cur_page);
-> > > +		ctx->cur_page = NULL;
-> > > +
-> > > +		/* Don't loop forever if we made no progress */
-> > > +		if (WARN_ON(!ret))
-> > > +			break;
-> > >  	}
-> > >  
-> > >  	return done;
-> > > @@ -451,11 +459,7 @@ iomap_readpages(struct address_space *mapping, struct list_head *pages,
-> > >  done:
-> > >  	if (ctx.bio)
-> > >  		submit_bio(ctx.bio);
-> > > -	if (ctx.cur_page) {
-> > > -		if (!ctx.cur_page_in_bio)
-> > > -			unlock_page(ctx.cur_page);
-> > > -		put_page(ctx.cur_page);
-> > > -	}
-> > > +	BUG_ON(ctx.cur_page);
-> > 
-> > Whoah, is the system totally unrecoverably hosed at this point?
-> > 
-> > I get that this /shouldn't/ happen, but should we somehow end up with a
-> > page here, are we unable either to release it or even just leak it?  I'd
-> > have thought a WARN_ON would be just fine here.
+On 2/23/20 5:42 AM, Amir Goldstein wrote:
+> On Sun, Feb 23, 2020 at 4:07 AM Allison Collins
+> <allison.henderson@oracle.com> wrote:
+>>
+>> Factor out new helper function xfs_attr_leaf_try_add.
 > 
-> If we do find a page here, we don't actually know what to do with it.
-> It might be (currently) locked, it might have the wrong refcount.
-> Whatever is going on, it's probably better that we stop everything right
-> here rather than allow things to go further and possibly present bad
-> data to the application.  I mean, we could even be leaking the previous
-> contents of this page to userspace.  Or maybe the future contents of a
-> page which shouldn't be in the page cache any more, but userspace gets
-> a mapping to it.
+> Right. This should be the subject.
+> Not factor out xfs_attr_leaf_addname helper.
 > 
-> I'm not enthusiastic about putting in some code here to try to handle
-> a "can't happen" case, since it's never going to be tested, and might
-> end up causing more problems than it tries to solve.  Let's just stop.
+>> Because new delayed attribute
+>> routines cannot roll transactions, we carve off the parts of xfs_attr_leaf_addname
+>> that we can use, and move the commit into the calling function.
+> 
+> And that is a different change.
+> It is hard enough to review a pure factor out of a helper.
+> Adding changed inside a pure re-factor is not good.
+> 
+> Belongs to another change - move transaction commit to caller.
 
-Seeing how Linus (and others like myself) are a bit allergic to BUG
-these days, could you add the first paragraph of the above justification
-as a comment adjacent to the BUG_ON(), please? :)
+Yes, this came up in the last review, but the reason I avoid it is 
+because I think the transaction looks weird in either helper.  The 
+reason the roll is here is because there is no room to add the attr as a 
+leaf, and so we need to hand it off to the node subroutines.  But that 
+seems like something that should be managed by the caller, not leaf 
+helpers.  So I was concerned that separating the split and the hoist 
+would generate more weird looks from people trying to understand the 
+split until the see the hoist in the next patch.  If people really think 
+it looks better that way, I can split them up.  But I know folks have a 
+tough enough time trying to recall the discussion history, so I'm trying 
+to avoid confusion of another type :-)
 
---D
+Thoughts?
+
+Allison
+
+> 
+> Thanks,
+> Amir.
+> 
