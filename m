@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 262A0C35666
-	for <linux-xfs@archiver.kernel.org>; Sun, 23 Feb 2020 13:22:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC9C2C35671
+	for <linux-xfs@archiver.kernel.org>; Sun, 23 Feb 2020 13:26:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ED62A20637
-	for <linux-xfs@archiver.kernel.org>; Sun, 23 Feb 2020 13:22:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C18C820637
+	for <linux-xfs@archiver.kernel.org>; Sun, 23 Feb 2020 13:26:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="W+T1+psz"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TsIdCsj8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726302AbgBWNWm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 23 Feb 2020 08:22:42 -0500
-Received: from mail-il1-f193.google.com ([209.85.166.193]:46785 "EHLO
-        mail-il1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726678AbgBWNWm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Feb 2020 08:22:42 -0500
-Received: by mail-il1-f193.google.com with SMTP id t17so5493516ilm.13
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Feb 2020 05:22:42 -0800 (PST)
+        id S1726614AbgBWN0s (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 23 Feb 2020 08:26:48 -0500
+Received: from mail-io1-f68.google.com ([209.85.166.68]:40875 "EHLO
+        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726377AbgBWN0s (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Feb 2020 08:26:48 -0500
+Received: by mail-io1-f68.google.com with SMTP id x1so7483606iop.7
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Feb 2020 05:26:47 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=IW9hWTBsV0/lqj6cAcRAdo4UJD0RJNx/j/uhU1FjvR8=;
-        b=W+T1+pszDRuQfSOmw+HgvQjYjVftnUTlSNJiL77gpifyu8sOitIoIPAqi0WNA/MKcl
-         2ITewdrXSyDUoyzhqBUDBsdxyUtEV5HVWmhINXwgZPhT9SRsVdaNfgvUSIXK01GIMgTH
-         sWUTWjvjWzhME5KZD5aaqVCTjDZ4wvIDycdwlwis5RO37FD9moUdu80vPyeMI7rCgJYq
-         1B3V9fjz1EzaDM9Z+Iw/ZZxc6t77CnrHCbMq+YuCOy3MTEgzBUf2pkK2iQpKwAafUbIf
-         KujbYuhEGsIqk9lv0MAcMbyO8k96spmO2tb1dwkyCbaoq8nan8uvpejOrWFjg8i2GOpU
-         OUnw==
+        bh=leNHS3BGRZFQqGmHaMruKsZt+HXvGP3zsjECZyHvNfI=;
+        b=TsIdCsj8W/+JOVrDP5deM+MsBW0cDkLib46Xi465D0r5VS/VxeSXHNaAe89X7mN/HA
+         4oo6KUkTtQscQZ4yvfpb0dHSraG3Lp3pB1jxig9Flzh9b4yS6KkTDwqZzuxDRay44zY9
+         mFca3mL4vJ4Cig0zAJDzIhdKbLEsyIDA+S1L3HyZLSmXAg/1SITNJ/WWnGkOn70QDpFE
+         D/wq7drkgeZStGg6UwuNzDVLS3S2JsbiZaOCGtYyY0birTF3KAvi2V+YM2koBBlTNOu5
+         r6xo06tbxcnysS/S79LXQiR9N5jNwddCDfefHSTu9FT0AdPVmuUrFRJ79bZMWM43tPbN
+         ttew==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=IW9hWTBsV0/lqj6cAcRAdo4UJD0RJNx/j/uhU1FjvR8=;
-        b=EQcLOWPOFVz9eWxzYvxSK7AruQIr4v2Cc4IPsKQRgeh3TSfDyp0QaG5EUu9i9V1+6/
-         +lcQzpoXgDKeS/TaxyuCcsYNZ2gGPaN9sbzlzXOiTbJ7N4YkD6UN+lxXZjsQSaXadKWh
-         aQ8IlZA4X+BdpeOPsUOVZPx3bqupgs3UYL4eykagwtS1vs0QO44FjcSsTxceD23Nv/Bj
-         M8Du9SKu3LTLhVsVIap0f/QVjovYuqywKcbTzUSSVnkJ/7E9eWHAHinDlNSLbig1HimD
-         HZgm1lzX9bxWP3UkzmyJ+E48JWR9VB6VOYNPg6KXVYjh6xSWStU1RRVyvVqrhHVysCd2
-         N/pw==
-X-Gm-Message-State: APjAAAXGKIEkYun++LJvLu0L1Lvf1mfclTluysL02yFC20t3nLeXWn0l
-        jdM887/EnMNsKXB8VYZsLM6RzAWVUffBD9Eezax0rGXS
-X-Google-Smtp-Source: APXvYqzRajikonmDqyws3BSSqtjwyWU4lencQOPYjmVNwrEHX+OdG5riFpIWCU4Tb1qKQt4xjc+EqduElHEwpjgeXfU=
-X-Received: by 2002:a92:9f1a:: with SMTP id u26mr51157628ili.72.1582464161731;
- Sun, 23 Feb 2020 05:22:41 -0800 (PST)
+        bh=leNHS3BGRZFQqGmHaMruKsZt+HXvGP3zsjECZyHvNfI=;
+        b=X6IUZuwAWBRZU4vuoHvyaP9E9mW4MRHL8YOQofvyocOnCpQw+0YpppyqcsX5pFw3jU
+         k6Je6bxQDW4P2UTxHTXys9SHFSrdm8ZTOn02jyyJzEpRT2rXzCoRT15u6WmiGLFMtVAV
+         cASsbJikKYPUPMuaDk53HYy0KSyb6/aHKT6V+xtuWst+yNOJbz1GntEy3pZsjAPr7SBa
+         PbxrpYsvgPUQ11+V7FLDRgbNpNvSrizeDDtzcLlOVLzEWQdIzWcDcWltGbaE48sPAejk
+         9pySv5a2CREC5GOCDCS3auRrApnb3y1wcUVwg5JRjP6c0+WM7XBFCW1meUNC8bndvisx
+         FepQ==
+X-Gm-Message-State: APjAAAUC7X18rBg+ThRZ2KaMjxTuPboQp9DT1G06drY+4dZBjnDo5yG/
+        wkGHE9tBD2Dtmyazk/YwlfwMf12L5yRCp8DqKQ3wZ2zB
+X-Google-Smtp-Source: APXvYqwtAO4R5nw+dnAidcFLgXRhrvfSpMtL/7fev72EYmtjTUoWKmOWKHyJMtySqhV4ZS8aI8DYJl+qdXcdnOX4a0E=
+X-Received: by 2002:a02:cdd9:: with SMTP id m25mr43363422jap.123.1582464407053;
+ Sun, 23 Feb 2020 05:26:47 -0800 (PST)
 MIME-Version: 1.0
-References: <20200223020611.1802-1-allison.henderson@oracle.com> <20200223020611.1802-16-allison.henderson@oracle.com>
-In-Reply-To: <20200223020611.1802-16-allison.henderson@oracle.com>
+References: <20200223020611.1802-1-allison.henderson@oracle.com> <20200223020611.1802-17-allison.henderson@oracle.com>
+In-Reply-To: <20200223020611.1802-17-allison.henderson@oracle.com>
 From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Sun, 23 Feb 2020 15:22:30 +0200
-Message-ID: <CAOQ4uxhyhoKwBejwi96BM1EWgsFC7918S_ydY4c9MFEmML7iKQ@mail.gmail.com>
-Subject: Re: [PATCH v7 15/19] xfs: Add helper function xfs_attr_node_shrink
+Date:   Sun, 23 Feb 2020 15:26:36 +0200
+Message-ID: <CAOQ4uxhyz28N18tHUQpX_-RkYKip4go5MsuHmc5FJXxBZDM4nQ@mail.gmail.com>
+Subject: Re: [PATCH v7 16/19] xfs: Simplify xfs_attr_set_iter
 To:     Allison Collins <allison.henderson@oracle.com>
 Cc:     linux-xfs <linux-xfs@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
@@ -68,115 +68,115 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On Sun, Feb 23, 2020 at 4:07 AM Allison Collins
 <allison.henderson@oracle.com> wrote:
 >
-> This patch adds a new helper function xfs_attr_node_shrink used to shrink an
-> attr name into an inode if it is small enough.  This helps to modularize
-> the greater calling function xfs_attr_node_removename.
+> Delayed attribute mechanics make frequent use of goto statements.  We can use this
+> to further simplify xfs_attr_set_iter.  Because states tend to fall between if
+> conditions, we can invert the if logic and jump to the goto. This helps to reduce
+> indentation and simplify things.
 >
 > Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+
+Looks better IMO and doesn't change logic.
+
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+
 > ---
->  fs/xfs/libxfs/xfs_attr.c | 66 +++++++++++++++++++++++++++++-------------------
->  1 file changed, 40 insertions(+), 26 deletions(-)
+>  fs/xfs/libxfs/xfs_attr.c | 71 ++++++++++++++++++++++++++++--------------------
+>  1 file changed, 42 insertions(+), 29 deletions(-)
 >
 > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 4b788f2..30a16fe 100644
+> index 30a16fe..dd935ff 100644
 > --- a/fs/xfs/libxfs/xfs_attr.c
 > +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -1366,6 +1366,43 @@ xfs_attr_node_addname(
+> @@ -254,6 +254,19 @@ xfs_attr_try_sf_addname(
 >  }
 >
 >  /*
-> + * Shrink an attribute from leaf to shortform
+> + * Check to see if the attr should be upgraded from non-existent or shortform to
+> + * single-leaf-block attribute list.
 > + */
-> +STATIC int
-> +xfs_attr_node_shrink(
-> +       struct xfs_da_args      *args,
-> +       struct xfs_da_state     *state)
+> +static inline bool
+> +xfs_attr_fmt_needs_update(
+> +       struct xfs_inode    *dp)
 > +{
-> +       struct xfs_inode        *dp = args->dp;
-> +       int                     error, forkoff;
-> +       struct xfs_buf          *bp;
-> +
-> +       /*
-> +        * Have to get rid of the copy of this dabuf in the state.
-> +        */
-> +       ASSERT(state->path.active == 1);
-> +       ASSERT(state->path.blk[0].bp);
-> +       state->path.blk[0].bp = NULL;
-> +
-> +       error = xfs_attr3_leaf_read(args->trans, args->dp, 0, &bp);
-> +       if (error)
-> +               return error;
-> +
-> +       forkoff = xfs_attr_shortform_allfit(bp, dp);
-> +       if (forkoff) {
-> +               error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
-> +               /* bp is gone due to xfs_da_shrink_inode */
-> +               if (error)
-> +                       return error;
-> +
-> +               args->dac.flags |= XFS_DAC_FINISH_TRANS;
-
-Why did xfs_defer_finish(&args->trans); turn into the above?
-
-Are you testing reviewers alertness? ;-)
-Please keep logic preserving patches separate from logic change patches.
-
-Thanks,
-Amir.
-
-> +       } else
-> +               xfs_trans_brelse(args->trans, bp);
-> +
-> +       return 0;
+> +       return dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL ||
+> +             (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
+> +             dp->i_d.di_anextents == 0);
 > +}
 > +
 > +/*
->   * Remove a name from a B-tree attribute list.
->   *
->   * This will involve walking down the Btree, and may involve joining
-> @@ -1383,8 +1420,7 @@ xfs_attr_node_removename(
->  {
->         struct xfs_da_state     *state;
->         struct xfs_da_state_blk *blk;
-> -       struct xfs_buf          *bp;
-> -       int                     retval, error, forkoff;
-> +       int                     retval, error;
->         struct xfs_inode        *dp = args->dp;
+>   * Set the attribute specified in @args.
+>   */
+>  int
+> @@ -342,40 +355,40 @@ xfs_attr_set_iter(
+>         }
 >
->         trace_xfs_attr_node_removename(args);
-> @@ -1493,30 +1529,8 @@ xfs_attr_node_removename(
 >         /*
->          * If the result is small enough, push it all into the inode.
+> -        * If the attribute list is non-existent or a shortform list,
+> -        * upgrade it to a single-leaf-block attribute list.
+> +        * If the attribute list is already in leaf format, jump straight to
+> +        * leaf handling.  Otherwise, try to add the attribute to the shortform
+> +        * list; if there's no room then convert the list to leaf format and try
+> +        * again.
 >          */
-> -       if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
-> -               /*
-> -                * Have to get rid of the copy of this dabuf in the state.
-> -                */
-> -               ASSERT(state->path.active == 1);
-> -               ASSERT(state->path.blk[0].bp);
-> -               state->path.blk[0].bp = NULL;
-> -
-> -               error = xfs_attr3_leaf_read(args->trans, args->dp, 0, &bp);
-> -               if (error)
-> -                       goto out;
-> -
-> -               if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
-> -                       error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
-> -                       /* bp is gone due to xfs_da_shrink_inode */
-> -                       if (error)
-> -                               goto out;
-> -                       error = xfs_defer_finish(&args->trans);
-> -                       if (error)
-> -                               goto out;
-> -               } else
-> -                       xfs_trans_brelse(args->trans, bp);
-> -       }
-> -       error = 0;
-> +       if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
-> +               error = xfs_attr_node_shrink(args, state);
+> -       if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL ||
+> -           (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
+> -            dp->i_d.di_anextents == 0)) {
+> +       if (!xfs_attr_fmt_needs_update(dp))
+> +               goto add_leaf;
 >
->  out:
->         if (state)
+> -               /*
+> -                * Try to add the attr to the attribute list in the inode.
+> -                */
+> -               error = xfs_attr_try_sf_addname(dp, args);
+> +       /*
+> +        * Try to add the attr to the attribute list in the inode.
+> +        */
+> +       error = xfs_attr_try_sf_addname(dp, args);
+>
+> -               /* Should only be 0, -EEXIST or ENOSPC */
+> -               if (error != -ENOSPC)
+> -                       return error;
+> +       /* Should only be 0, -EEXIST or ENOSPC */
+> +       if (error != -ENOSPC)
+> +               return error;
+>
+> -               /*
+> -                * It won't fit in the shortform, transform to a leaf block.
+> -                * GROT: another possible req'mt for a double-split btree op.
+> -                */
+> -               error = xfs_attr_shortform_to_leaf(args, leaf_bp);
+> -               if (error)
+> -                       return error;
+> +       /*
+> +        * It won't fit in the shortform, transform to a leaf block.
+> +        * GROT: another possible req'mt for a double-split btree op.
+> +        */
+> +       error = xfs_attr_shortform_to_leaf(args, leaf_bp);
+> +       if (error)
+> +               return error;
+>
+> -               /*
+> -                * Prevent the leaf buffer from being unlocked so that a
+> -                * concurrent AIL push cannot grab the half-baked leaf
+> -                * buffer and run into problems with the write verifier.
+> -                */
+> -               xfs_trans_bhold(args->trans, *leaf_bp);
+> -               args->dac.flags |= XFS_DAC_FINISH_TRANS;
+> -               args->dac.dela_state = XFS_DAS_ADD_LEAF;
+> -               return -EAGAIN;
+> -       }
+> +       /*
+> +        * Prevent the leaf buffer from being unlocked so that a
+> +        * concurrent AIL push cannot grab the half-baked leaf
+> +        * buffer and run into problems with the write verifier.
+> +        */
+> +       xfs_trans_bhold(args->trans, *leaf_bp);
+> +       args->dac.flags |= XFS_DAC_FINISH_TRANS;
+> +       args->dac.dela_state = XFS_DAS_ADD_LEAF;
+> +       return -EAGAIN;
+>
+>  add_leaf:
+>
 > --
 > 2.7.4
 >
