@@ -7,63 +7,62 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F077AC35671
-	for <linux-xfs@archiver.kernel.org>; Sun, 23 Feb 2020 16:03:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAFF2C35671
+	for <linux-xfs@archiver.kernel.org>; Sun, 23 Feb 2020 16:51:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BB36C20836
-	for <linux-xfs@archiver.kernel.org>; Sun, 23 Feb 2020 16:03:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9EDE9206E2
+	for <linux-xfs@archiver.kernel.org>; Sun, 23 Feb 2020 16:51:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="yW/vI6ls"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="EhZvHpEv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727030AbgBWQDK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 23 Feb 2020 11:03:10 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:37844 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727027AbgBWQDK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Feb 2020 11:03:10 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01NG38S3118312;
-        Sun, 23 Feb 2020 16:03:08 GMT
+        id S1726302AbgBWQve (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 23 Feb 2020 11:51:34 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:44568 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726208AbgBWQvd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Feb 2020 11:51:33 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01NGmhOS148881;
+        Sun, 23 Feb 2020 16:51:32 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
  references : from : message-id : date : mime-version : in-reply-to :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=OR+05i2D6fWNUBqOWKW7vsloHKl2pPPMVchewC3wxQY=;
- b=yW/vI6lswkSUeE+nkgSp6RNjl+AMkuLxFuQOPEfJ5Ujx8ribIiklj0bZaB0fL7UJ5REX
- 1FO8Lgb6mT0xCOSaJnc+u6jHFsZoR5sqorrwd6Z+jNGo+QNvcIzYFpg6MW6VK96bOrGR
- CE/sInVmHNJq7CuDByM/dagPodHpJJjN+YtKzAYEIIc44IXQ0BkQQGNiKDeXQ86M4EXc
- 5YCMpoUmPqsfelv8K/Df892Qz1o0s/GiXLEgI9TwdbU/NQq2uW5DG5Plxx6TSfpECAol
- n0Vf5OY+RorDtW1Km/8YupOii2I+M5r5b8tmoTEcUVKvePYQTC1REpDJqgj8dDxXr7q8 nQ== 
+ bh=JPGyY0swOuBDY4AsqXiZPFi4Bh2r+NRyAHPdDqQZAVw=;
+ b=EhZvHpEvIa3YzX+w/8VuufAkfJGfjL8YdQEz24bSDVZKjZ9n8jn+IOCbgW/heXPG3zqh
+ dTqe46Jy0KuHgSfhYfK7fwRudRutYnBxcWBCzlhSKLkDDyAiZKnjyBfsQvvbKjU/xpfz
+ YudLDwSYkJJ747N5KLC2EQvRlUSnmSJQ9gDw4tV5IhQk1JDbtoDQ65s7GWyVEgYEm5hD
+ zelXKQzkMNJcWnnWJjeQ7Ym+piOj6B3rUvK8uaFx6Pocow9NSXIB9/W5lY43XiY/XR+Q
+ viS8wEBiYbKPDs/El03n4coen9qp0sOOpOp3kATenKZzHUijBKva0ZmuKPavF1Zw04Ju hQ== 
 Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2yauqu3q9q-1
+        by userp2120.oracle.com with ESMTP id 2yavxrbr1k-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 23 Feb 2020 16:03:07 +0000
+        Sun, 23 Feb 2020 16:51:32 +0000
 Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01NG20oP109510;
-        Sun, 23 Feb 2020 16:03:07 GMT
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01NGmZhg085245;
+        Sun, 23 Feb 2020 16:51:31 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2ybdsefeus-1
+        by userp3030.oracle.com with ESMTP id 2ybdsej63k-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 23 Feb 2020 16:03:07 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01NG36Nq006593;
-        Sun, 23 Feb 2020 16:03:06 GMT
+        Sun, 23 Feb 2020 16:51:31 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01NGpUcZ024748;
+        Sun, 23 Feb 2020 16:51:30 GMT
 Received: from [192.168.1.223] (/67.1.3.112)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sun, 23 Feb 2020 08:03:06 -0800
-Subject: Re: [PATCH v7 01/19] xfs: Replace attribute parameters with struct
- xfs_name
+        with ESMTP ; Sun, 23 Feb 2020 08:51:30 -0800
+Subject: Re: [PATCH v7 02/19] xfs: Embed struct xfs_name in xfs_da_args
 To:     Amir Goldstein <amir73il@gmail.com>
 Cc:     linux-xfs <linux-xfs@vger.kernel.org>
 References: <20200223020611.1802-1-allison.henderson@oracle.com>
- <20200223020611.1802-2-allison.henderson@oracle.com>
- <CAOQ4uxhmsq9aDPPofS=UPrfcate=h-Jj_Qp95_7-N8_WuDCBTw@mail.gmail.com>
+ <20200223020611.1802-3-allison.henderson@oracle.com>
+ <CAOQ4uxjnByzxLUsF6GL7-fOeiNwQR46vgt5nSgfUNfB8jdfqMA@mail.gmail.com>
 From:   Allison Collins <allison.henderson@oracle.com>
-Message-ID: <b7183c7e-e046-13f0-92a6-efa94e0ecfcc@oracle.com>
-Date:   Sun, 23 Feb 2020 09:03:05 -0700
+Message-ID: <0726eb62-c308-3c04-8e3b-ff1f6c76844a@oracle.com>
+Date:   Sun, 23 Feb 2020 09:51:29 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <CAOQ4uxhmsq9aDPPofS=UPrfcate=h-Jj_Qp95_7-N8_WuDCBTw@mail.gmail.com>
+In-Reply-To: <CAOQ4uxjnByzxLUsF6GL7-fOeiNwQR46vgt5nSgfUNfB8jdfqMA@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -71,13 +70,13 @@ X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9540 signatures=6
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=0 spamscore=0
  malwarescore=0 mlxscore=0 bulkscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002230132
+ definitions=main-2002230139
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9540 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 bulkscore=0
- clxscore=1015 malwarescore=0 impostorscore=0 adultscore=0 phishscore=0
- priorityscore=1501 mlxlogscore=999 spamscore=0 mlxscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002230132
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 lowpriorityscore=0
+ spamscore=0 clxscore=1015 suspectscore=0 bulkscore=0 mlxlogscore=999
+ malwarescore=0 phishscore=0 adultscore=0 priorityscore=1501 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002230139
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -85,114 +84,131 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 
 
-On 2/23/20 2:34 AM, Amir Goldstein wrote:
+On 2/23/20 4:54 AM, Amir Goldstein wrote:
 > On Sun, Feb 23, 2020 at 4:07 AM Allison Collins
 > <allison.henderson@oracle.com> wrote:
 >>
->> This patch replaces the attribute name and length parameters with a single struct
->> xfs_name parameter.  This helps to clean up the numbers of parameters being passed
->> around and pre-simplifies the code some.
+>> This patch embeds an xfs_name in xfs_da_args, replacing the name, namelen, and flags
+>> members.  This helps to clean up the xfs_da_args structure and make it more uniform
+>> with the new xfs_name parameter being passed around.
 >>
 >> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+>> Reviewed-by: Brian Foster <bfoster@redhat.com>
 >> ---
+>>   fs/xfs/libxfs/xfs_attr.c        |  37 +++++++-------
+>>   fs/xfs/libxfs/xfs_attr_leaf.c   | 104 +++++++++++++++++++++-------------------
+>>   fs/xfs/libxfs/xfs_attr_remote.c |   2 +-
+>>   fs/xfs/libxfs/xfs_da_btree.c    |   6 ++-
+>>   fs/xfs/libxfs/xfs_da_btree.h    |   4 +-
+>>   fs/xfs/libxfs/xfs_dir2.c        |  18 +++----
+>>   fs/xfs/libxfs/xfs_dir2_block.c  |   6 +--
+>>   fs/xfs/libxfs/xfs_dir2_leaf.c   |   6 +--
+>>   fs/xfs/libxfs/xfs_dir2_node.c   |   8 ++--
+>>   fs/xfs/libxfs/xfs_dir2_sf.c     |  30 ++++++------
+>>   fs/xfs/scrub/attr.c             |  12 ++---
+>>   fs/xfs/xfs_trace.h              |  20 ++++----
+>>   12 files changed, 130 insertions(+), 123 deletions(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+>> index 6717f47..9acdb23 100644
+>> --- a/fs/xfs/libxfs/xfs_attr.c
+>> +++ b/fs/xfs/libxfs/xfs_attr.c
+>> @@ -72,13 +72,12 @@ xfs_attr_args_init(
+>>          args->geo = dp->i_mount->m_attr_geo;
+>>          args->whichfork = XFS_ATTR_FORK;
+>>          args->dp = dp;
+>> -       args->flags = flags;
+>> -       args->name = name->name;
+>> -       args->namelen = name->len;
+>> -       if (args->namelen >= MAXNAMELEN)
+>> +       memcpy(&args->name, name, sizeof(struct xfs_name));
 > 
-> I realize I am joining very late with lots of reviewed-by already applied,
-> so unless I find anything big, please regard my comments and possible
-> future improvements for the extended series rather than objections to this
-> pretty much baked patch set.
-Sure, no worries, it has a lot of history to keep track of.
+> Maybe xfs_name_copy and xfs_name_equal are in order?
+You are suggesting to add xfs_name_copy and xfs_name_equal helpers?  I'm 
+not sure there's a use case yet for xfs_name_equal, at least not in this 
+set.  And I think people indicated that they preferred the memcpy in 
+past reviews rather than handling each member of the xfs_name struct. 
+Unless I misunderstood the question, I'm not sure there is much left for 
+a xfs_name_copy helper to cover that the memcpy does not?
 
 > 
-> [...]
-> 
->> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
->> index d42de92..28c07c9 100644
->> --- a/fs/xfs/xfs_ioctl.c
->> +++ b/fs/xfs/xfs_ioctl.c
->> @@ -357,7 +357,9 @@ xfs_attrmulti_attr_get(
->>   {
->>          unsigned char           *kbuf;
->>          int                     error = -EFAULT;
->> -       size_t                  namelen;
->> +       struct xfs_name         xname;
+>>
+>> +       /* Use name now stored in args */
+>> +       name = &args.name;
 >> +
->> +       xfs_name_init(&xname, name);
+> 
+> It seem that the context of these comments be clear in the future.
+You are asking to add more context to the comment?  How about:
+	/*
+	 * Use name now stored in args.  Abandon the local name 	
+	 * parameter as it will not be updated in the subroutines
+	 */
+
+Does that help some?
+
+> 
+>>          args.value = value;
+>>          args.valuelen = valuelen;
+>>          args.op_flags = XFS_DA_OP_ADDNAME | XFS_DA_OP_OKNOENT;
+>> @@ -372,7 +374,7 @@ xfs_attr_set(
+>>           */
+>>          if (XFS_IFORK_Q(dp) == 0) {
+>>                  int sf_size = sizeof(xfs_attr_sf_hdr_t) +
+>> -                       XFS_ATTR_SF_ENTSIZE_BYNAME(args.namelen, valuelen);
+>> +                       XFS_ATTR_SF_ENTSIZE_BYNAME(name->len, valuelen);
 >>
->>          if (*len > XFS_XATTR_SIZE_MAX)
->>                  return -EINVAL;
->> @@ -365,9 +367,7 @@ xfs_attrmulti_attr_get(
->>          if (!kbuf)
->>                  return -ENOMEM;
->>
->> -       namelen = strlen(name);
->> -       error = xfs_attr_get(XFS_I(inode), name, namelen, &kbuf, (int *)len,
->> -                            flags);
->> +       error = xfs_attr_get(XFS_I(inode), &xname, &kbuf, (int *)len, flags);
+>>                  error = xfs_bmap_add_attrfork(dp, sf_size, rsvd);
+>>                  if (error)
+>> @@ -457,6 +459,9 @@ xfs_attr_remove(
 >>          if (error)
->>                  goto out_kfree;
+>>                  return error;
 >>
->> @@ -389,7 +389,9 @@ xfs_attrmulti_attr_set(
->>   {
->>          unsigned char           *kbuf;
->>          int                     error;
->> -       size_t                  namelen;
->> +       struct xfs_name         xname;
+>> +       /* Use name now stored in args */
+>> +       name = &args.name;
 >> +
->> +       xfs_name_init(&xname, name);
+>>          /*
+>>           * we have no control over the attribute names that userspace passes us
+>>           * to remove, so we have to allow the name lookup prior to attribute
+>> @@ -532,10 +537,10 @@ xfs_attr_shortform_addname(xfs_da_args_t *args)
+>>          trace_xfs_attr_sf_addname(args);
 >>
->>          if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
->>                  return -EPERM;
->> @@ -400,8 +402,7 @@ xfs_attrmulti_attr_set(
->>          if (IS_ERR(kbuf))
->>                  return PTR_ERR(kbuf);
->>
->> -       namelen = strlen(name);
->> -       error = xfs_attr_set(XFS_I(inode), name, namelen, kbuf, len, flags);
->> +       error = xfs_attr_set(XFS_I(inode), &xname, kbuf, len, flags);
->>          if (!error)
->>                  xfs_forget_acl(inode, name, flags);
->>          kfree(kbuf);
->> @@ -415,12 +416,14 @@ xfs_attrmulti_attr_remove(
->>          uint32_t                flags)
->>   {
->>          int                     error;
->> -       size_t                  namelen;
->> +       struct xfs_name         xname;
->> +
->> +       xfs_name_init(&xname, name);
->>
->>          if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
->>                  return -EPERM;
->> -       namelen = strlen(name);
->> -       error = xfs_attr_remove(XFS_I(inode), name, namelen, flags);
->> +
->> +       error = xfs_attr_remove(XFS_I(inode), &xname, flags);
->>          if (!error)
->>                  xfs_forget_acl(inode, name, flags);
->>          return error;
+>>          retval = xfs_attr_shortform_lookup(args);
+>> -       if ((args->flags & ATTR_REPLACE) && (retval == -ENOATTR)) {
+>> +       if ((args->name.type & ATTR_REPLACE) && (retval == -ENOATTR)) {
+>>                  return retval;
+>>          } else if (retval == -EEXIST) {
+>> -               if (args->flags & ATTR_CREATE)
+>> +               if (args->name.type & ATTR_CREATE)
+>>                          return retval;
+>>                  retval = xfs_attr_shortform_remove(args);
+>>                  if (retval)
+>> @@ -545,15 +550,15 @@ xfs_attr_shortform_addname(xfs_da_args_t *args)
+>>                   * that the leaf format add routine won't trip over the attr
+>>                   * not being around.
+>>                   */
+>> -               args->flags &= ~ATTR_REPLACE;
+>> +               args->name.type &= ~ATTR_REPLACE;
 > 
 > 
-> A struct inititializer macro would have been nice, so code like this:
+> This doesn't look good it looks like a hack.
 > 
-> +       struct xfs_name         xname;
-> +
-> +       xfs_name_init(&xname, name);
+> Even if want to avoid growing struct xfs_name we can store two shorts instead
+> of overloading int type with flags.
+> type doesn't even need more than a single byte, because XFS_DIR3_FT_WHT
+> is not used and will never be used on-disk.
 > 
-> Would become:
-> +       struct xfs_name         xname = XFS_NAME_STR_INIT(name);
-> 
-> As a matter of fact, in most of the cases a named local variable is
-> not needed at
-> all and the code could be written with an anonymous local struct variable macro:
-> 
-> +       error = xfs_attr_remove(XFS_I(inode), XFS_NAME_STR(name), flags);
-> 
-The macro does look nice.  I would be the third iteration of 
-initializers that this patch has been through though.  Can I get a 
-consensus of how many people like the macro?
-
-Allison
-
 > Thanks,
 > Amir.
 > 
+The exact use of .type has gone around a few times since this patch 
+started, which was actually all the way back in parent pointers.  :-) 
+Initially the xfs_name struct replaced anything that passed all three 
+parameters, and then later we decided that flags should stay separate 
+for top level get/set/remove routines, but become integrated below the 
+*_args routines.  I don't recall people being concerned about growing 
+the struct, though a union seems reasonable to resolve the naming 
+weirdness.  I would like to have a little more feedback from folks 
+though just to make sure everyones in agreement since this one's gone 
+through quite few reviews already. Thanks all!
+
+Allison
