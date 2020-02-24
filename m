@@ -2,143 +2,153 @@ Return-Path: <SRS0=6RgE=4M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A65DC11D32
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 16:41:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 679A7C11D32
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 16:53:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5D32721744
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 16:41:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3DD4E20838
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 16:53:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=btinternet.com header.i=@btinternet.com header.b="pqZ+G8nm"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="SBdKy4Pk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727689AbgBXQlx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Feb 2020 11:41:53 -0500
-Received: from mailomta17-re.btinternet.com ([213.120.69.110]:35288 "EHLO
-        re-prd-fep-048.btinternet.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727636AbgBXQlx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Feb 2020 11:41:53 -0500
-Received: from re-prd-rgout-004.btmx-prd.synchronoss.net ([10.2.54.7])
-          by re-prd-fep-048.btinternet.com with ESMTP
-          id <20200224164149.CGRI13347.re-prd-fep-048.btinternet.com@re-prd-rgout-004.btmx-prd.synchronoss.net>;
-          Mon, 24 Feb 2020 16:41:49 +0000
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=btinternet.com; s=btmx201904; t=1582562509; 
-        bh=xVLo85Z1ALUuuCKO6W76fU8v3DGJ8qX3lHRFe03ek7M=;
-        h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:MIME-Version;
-        b=pqZ+G8nmzQrB06KsosvEJY7vmU/huwMudTNEgfV0xJrcwfXG9uBtr+JUfcvQH67qzntbyYADPvAYJuld4CnDmUb0e6f1QziT4dmy841lXcczi5zpjPNbV8zRZfdIcCjx3k4eu/VDGrWEz2hSKnApmPZqfnQagG44nd6vAneSP01MYSen+HEm0DoY7ej68/+heYBwhlN5ytchYFDAToGP1DxRAwTjj4M+qLjPsJjbxxOyNHSQ7l20nOV6VEU2pA5WjxM7903+oRss5PHF5mQucI0lDIWHQbQdrElZVl9nPYexHC2m0Y/zOShNca0XHatb3kMOvI5/G0+CkszWsPyr4g==
-Authentication-Results: btinternet.com;
-    auth=pass (PLAIN) smtp.auth=richard_c_haines@btinternet.com
-X-Originating-IP: [31.49.59.100]
-X-OWM-Source-IP: 31.49.59.100 (GB)
-X-OWM-Env-Sender: richard_c_haines@btinternet.com
-X-VadeSecure-score: verdict=clean score=0/300, class=clean
-X-RazorGate-Vade: gggruggvucftvghtrhhoucdtuddrgedugedrledtgdelfecutefuodetggdotefrodftvfcurfhrohhfihhlvgemuceutffkvffkuffjvffgnffgvefqofdpqfgfvfenuceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhepkffuhffvffgjfhgtfgggsehmtderredtreejnecuhfhrohhmpeftihgthhgrrhguucfjrghinhgvshcuoehrihgthhgrrhgupggtpghhrghinhgvshessghtihhnthgvrhhnvghtrdgtohhmqeenucfkphepfedurdegledrheelrddutddtnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehhvghloheplhhotggrlhhhohhsthdrlhhotggrlhguohhmrghinhdpihhnvghtpeefuddrgeelrdehledruddttddpmhgrihhlfhhrohhmpeeorhhitghhrghruggptggphhgrihhnvghssegsthhinhhtvghrnhgvthdrtghomhequceuqfffjgepkeeukffvoffkoffgpdhrtghpthhtohepoegurghrrhhitghkrdifohhnghesohhrrggtlhgvrdgtohhmqedprhgtphhtthhopeeohhgthhesihhnfhhrrgguvggrugdrohhrgheqpdhrtghpthhtohepoehlihhnuhigqdigfhhssehvghgvrhdrkhgvrhhnvghlrdhorhhgqedprhgtphhtthhopeeophgruhhlsehprghulhdqmhhoohhrvgdrtghomheqpdhrtghpthhtohepoehrihgthhgrrhgupggtpghhrghinhgvsheshhhothhmrghilhdrtghomheqpdhrtghpthhtohepoehs
-        ughssehthigthhhordhnshgrrdhgohhvqedprhgtphhtthhopeeoshgvlhhinhhugiesvhhgvghrrdhkvghrnhgvlhdrohhrgheq
-X-RazorGate-Vade-Verdict: clean 0
-X-RazorGate-Vade-Classification: clean
-Received: from localhost.localdomain (31.49.59.100) by re-prd-rgout-004.btmx-prd.synchronoss.net (5.8.340) (authenticated as richard_c_haines@btinternet.com)
-        id 5E3A181A03076442; Mon, 24 Feb 2020 16:41:49 +0000
-Message-ID: <5c1f2125a44006d7ff8bda6d9a1075d2177aeaf0.camel@btinternet.com>
-Subject: Re: [PATCH 0/1] selinux: Add xfs quota command types
-From:   Richard Haines <richard_c_haines@btinternet.com>
-To:     Paul Moore <paul@paul-moore.com>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     Stephen Smalley <sds@tycho.nsa.gov>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, selinux@vger.kernel.org
-Date:   Mon, 24 Feb 2020 16:41:17 +0000
-In-Reply-To: <CAHC9VhRXo=EZ4HbLa_W_waL4xtdE6M92em7aNh=wm_7hpozJ7g@mail.gmail.com>
-References: <20200220153234.152426-1-richard_c_haines@btinternet.com>
-         <20200220155731.GU9506@magnolia> <20200220155938.GA1306@infradead.org>
-         <2862d0b2-e0a9-149d-16e5-22c3f5f82e9e@tycho.nsa.gov>
-         <20200220160820.GA14640@infradead.org>
-         <CAHC9VhRXo=EZ4HbLa_W_waL4xtdE6M92em7aNh=wm_7hpozJ7g@mail.gmail.com>
-Content-Type: multipart/mixed; boundary="=-ryOXDiKEJiT4n91JJBtc"
-User-Agent: Evolution 3.34.3 (3.34.3-1.fc31) 
+        id S1727718AbgBXQxY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Feb 2020 11:53:24 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:42030 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727108AbgBXQxY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Feb 2020 11:53:24 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01OGXk6G161015;
+        Mon, 24 Feb 2020 16:52:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=qQvLoc3+jAuvV02vRfkJ9Yw1PdW1Bn0rhGLTddtKqpU=;
+ b=SBdKy4PkCyjA9p4DNjJcshIU3DwIMpNFsdE2tStj9Qp5FXU6ijiLTQcI/7LRWsIjYLHp
+ g+0gk8Z5TSTDk2s4zPmxpbnWOQvnveAUuWxvt/Z0AoORrNs51oBxkJVoarDM9RS9uJvV
+ vg5W6mivY42ZvhTqMuWEpRFgKI5RbgWnUrrsebAR5s3HuKLknCvQF/jQRGtfR/v4agqY
+ xdKIDafPDu/jgv6mKBsTccYFU48Uu8+kPAAP01C1IVt36VjRvxagd24M0Zp/MzxlOE3S
+ QPGGuQrkXYxRt1m4fPwQBsQHDD3O0hY7anZZGaWqHkPugsxrYY8jsrzCDvo3W2MQlrRC Hw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2ybvr4mwhb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 24 Feb 2020 16:52:48 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01OGW70l165513;
+        Mon, 24 Feb 2020 16:52:48 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by aserp3020.oracle.com with ESMTP id 2yby5cs488-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 24 Feb 2020 16:52:48 +0000
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 01OGq2Tj073644;
+        Mon, 24 Feb 2020 16:52:47 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 2yby5cs464-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 24 Feb 2020 16:52:47 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01OGqjpe019886;
+        Mon, 24 Feb 2020 16:52:45 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 24 Feb 2020 08:52:45 -0800
+Date:   Mon, 24 Feb 2020 08:52:44 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v7 22/24] iomap: Convert from readpages to readahead
+Message-ID: <20200224165244.GA6731@magnolia>
+References: <20200219210103.32400-1-willy@infradead.org>
+ <20200219210103.32400-23-willy@infradead.org>
+ <20200220154912.GC19577@infradead.org>
+ <20200220165734.GZ24185@bombadil.infradead.org>
+ <20200222010013.GH9506@magnolia>
+ <20200224043355.GL24185@bombadil.infradead.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200224043355.GL24185@bombadil.infradead.org>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9541 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0
+ clxscore=1015 adultscore=0 lowpriorityscore=0 malwarescore=0
+ priorityscore=1501 mlxscore=0 impostorscore=0 suspectscore=0 phishscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2002240129
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
---=-ryOXDiKEJiT4n91JJBtc
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-
-On Sat, 2020-02-22 at 14:49 -0500, Paul Moore wrote:
-> On Thu, Feb 20, 2020 at 11:08 AM Christoph Hellwig <hch@infradead.org
-> > wrote:
-> > On Thu, Feb 20, 2020 at 11:06:10AM -0500, Stephen Smalley wrote:
-> > > > The dquot_* routines are not generic quota code, but a specific
-> > > > implementation used by most non-XFS file systems.  So if there
-> > > > is a bug
-> > > > it is that the security call is not in the generic dispatch
-> > > > code.
+On Sun, Feb 23, 2020 at 08:33:55PM -0800, Matthew Wilcox wrote:
+> On Fri, Feb 21, 2020 at 05:00:13PM -0800, Darrick J. Wong wrote:
+> > On Thu, Feb 20, 2020 at 08:57:34AM -0800, Matthew Wilcox wrote:
+> > > On Thu, Feb 20, 2020 at 07:49:12AM -0800, Christoph Hellwig wrote:
+> > > +/**
+> > > + * iomap_readahead - Attempt to read pages from a file.
+> > > + * @rac: Describes the pages to be read.
+> > > + * @ops: The operations vector for the filesystem.
+> > > + *
+> > > + * This function is for filesystems to call to implement their readahead
+> > > + * address_space operation.
+> > > + *
+> > > + * Context: The file is pinned by the caller, and the pages to be read are
+> > > + * all locked and have an elevated refcount.  This function will unlock
+> > > + * the pages (once I/O has completed on them, or I/O has been determined to
+> > > + * not be necessary).  It will also decrease the refcount once the pages
+> > > + * have been submitted for I/O.  After this point, the page may be removed
+> > > + * from the page cache, and should not be referenced.
+> > > + */
 > > > 
-> > > Hmm...any reason the security hook call couldn't be taken to
-> > > quota_quotaon()?
+> > > > Isn't the context documentation something that belongs into the aop
+> > > > documentation?  I've never really seen the value of duplicating this
+> > > > information in method instances, as it is just bound to be out of date
+> > > > rather sooner than later.
+> > > 
+> > > I'm in two minds about it as well.  There's definitely no value in
+> > > providing kernel-doc for implementations of a common interface ... so
+> > > rather than fixing the nilfs2 kernel-doc, I just deleted it.  But this
+> > > isn't just the implementation, like nilfs2_readahead() is, it's a library
+> > > function for filesystems to call, so it deserves documentation.  On the
+> > > other hand, there's no real thought to this on the part of the filesystem;
+> > > the implementation just calls this with the appropriate ops pointer.
+> > > 
+> > > Then again, I kind of feel like we need more documentation of iomap to
+> > > help filesystems convert to using it.  But maybe kernel-doc isn't the
+> > > mechanism to provide that.
 > > 
-> > I haven't touched the quota code for a while, but yes, the existing
-> > calls should move to the quota_* routines in
-> > fs/quota/quota.c.  Note
-> > that you still need to add checks, e.g. for Q_XSETQLIM.
+> > I think we need more documentation of the parts of iomap where it can
+> > call back into the filesystem (looking at you, iomap_dio_ops).
+> > 
+> > I'm not opposed to letting this comment stay, though I don't see it as
+> > all that necessary since iomap_readahead implements a callout that's
+> > documented in vfs.rst and is thus subject to all the constraints listed
+> > in the (*readahead) documentation.
 > 
-> Who wanted to submit a patch for this?  Christoph were you planning
-> on
-> fixing this?  If not, Richard, do you want to give it a try?
+> Right.  And that's not currently in kernel-doc format, but should be.
+> Something for a different patchset, IMO.
 > 
+> What we need documenting _here_ is the conditions under which the
+> iomap_ops are called so the filesystem author doesn't need to piece them
+> together from three different places.  Here's what I currently have:
+> 
+>  * Context: The @ops callbacks may submit I/O (eg to read the addresses of
+>  * blocks from disc), and may wait for it.  The caller may be trying to
+>  * access a different page, and so sleeping excessively should be avoided.
+>  * It may allocate memory, but should avoid large allocations.  This
+>  * function is called with memalloc_nofs set, so allocations will not cause
+>  * the filesystem to be reentered.
 
-I've had a go at this and found I can (almost) get it working. I've
-attached a sample patch just in case anyone is interested.
+How large? :)
 
-However if the calls do need to move to fs/quota/quota.c, then I think
-the xfs team are best placed to do this (I've had my playtime).
-
-
-
---=-ryOXDiKEJiT4n91JJBtc
-Content-Disposition: attachment; filename="security-xfs-quota.diff"
-Content-Type: text/x-patch; name="security-xfs-quota.diff"; charset="UTF-8"
-Content-Transfer-Encoding: base64
-
-ZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfcXVvdGFvcHMuYyBiL2ZzL3hmcy94ZnNfcXVvdGFvcHMu
-YwppbmRleCAzODY2OWU4MjcuLmMwMmNmOWE2MyAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc19xdW90
-YW9wcy5jCisrKyBiL2ZzL3hmcy94ZnNfcXVvdGFvcHMuYwpAQCAtMTQsNyArMTQsNyBAQAogI2lu
-Y2x1ZGUgInhmc190cmFucy5oIgogI2luY2x1ZGUgInhmc19pY2FjaGUuaCIKICNpbmNsdWRlICJ4
-ZnNfcW0uaCIKLQorI2luY2x1ZGUgPGxpbnV4L3NlY3VyaXR5Lmg+CiAKIHN0YXRpYyB2b2lkCiB4
-ZnNfcW1fZmlsbF9zdGF0ZSgKQEAgLTE2MSwxMSArMTYxLDE1IEBAIHhmc19xdW90YV9lbmFibGUo
-CiAJdW5zaWduZWQgaW50CQl1ZmxhZ3MpCiB7CiAJc3RydWN0IHhmc19tb3VudAkqbXAgPSBYRlNf
-TShzYik7CisJc3RydWN0IGRlbnRyeQkJKmRlbnRyeSA9IG1wLT5tX3N1cGVyLT5zX3Jvb3Q7CiAK
-IAlpZiAoc2JfcmRvbmx5KHNiKSkKIAkJcmV0dXJuIC1FUk9GUzsKIAlpZiAoIVhGU19JU19RVU9U
-QV9SVU5OSU5HKG1wKSkKIAkJcmV0dXJuIC1FTk9TWVM7CisJLyogRW11bGF0ZXMgZHF1b3RfcXVv
-dGFfb24oKSBMYWJlbGVkIGNvcnJlY3RseSAqLworCWlmICghc2VjdXJpdHlfcXVvdGFfb24oZGVu
-dHJ5KSkKKwkJcmV0dXJuIC1FQUNDRVM7CiAKIAlyZXR1cm4geGZzX3FtX3NjYWxsX3F1b3Rhb24o
-bXAsIHhmc19xdW90YV9mbGFncyh1ZmxhZ3MpKTsKIH0KZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNf
-c3VwZXIuYyBiL2ZzL3hmcy94ZnNfc3VwZXIuYwppbmRleCAyMDk0Mzg2YWYuLjU5ODU1ZDA2MCAx
-MDA2NDQKLS0tIGEvZnMveGZzL3hmc19zdXBlci5jCisrKyBiL2ZzL3hmcy94ZnNfc3VwZXIuYwpA
-QCAtMzksNiArMzksNyBAQAogI2luY2x1ZGUgPGxpbnV4L21hZ2ljLmg+CiAjaW5jbHVkZSA8bGlu
-dXgvZnNfY29udGV4dC5oPgogI2luY2x1ZGUgPGxpbnV4L2ZzX3BhcnNlci5oPgorI2luY2x1ZGUg
-PGxpbnV4L3NlY3VyaXR5Lmg+CiAKIHN0YXRpYyBjb25zdCBzdHJ1Y3Qgc3VwZXJfb3BlcmF0aW9u
-cyB4ZnNfc3VwZXJfb3BlcmF0aW9uczsKIApAQCAtMTUwNyw2ICsxNTA4LDIyIEBAIHhmc19mY19m
-aWxsX3N1cGVyKAogCQlnb3RvIG91dF91bm1vdW50OwogCX0KIAorCS8qCisJICogRW11bGF0ZXMg
-ZHF1b3RfcXVvdGFfb25fbW91bnQoKSBhbmQgd29ya3MsIGhvd2V2ZXIgdGhlIGRlbnRyeQorCSAq
-IGlzIHVubGFiZWxlZDoKKwkgKiAgICBhbGxvdyB0ZXN0X2ZpbGVzeXN0ZW1fdCB1bmxhYmVsZWRf
-dDpkaXIgeyBxdW90YW9uIH07CisJICovCisJc3RydWN0IHhmc19tb3VudAkqbXB4ID0gWEZTX00o
-c2IpOworCXN0cnVjdCBkZW50cnkJCSpkZW50cnkgPSBtcHgtPm1fc3VwZXItPnNfcm9vdDsKKwlp
-ZiAoWEZTX0lTX1FVT1RBX1JVTk5JTkcobXApKSB7CisJCWVycm9yID0gc2VjdXJpdHlfcXVvdGFf
-b24oZGVudHJ5KTsKKwkJaWYgKGVycm9yKSB7CisJCQlkcHV0KHNiLT5zX3Jvb3QpOworCQkJc2It
-PnNfcm9vdCA9IE5VTEw7CisJCQlnb3RvIG91dF91bm1vdW50OworCQl9CisJfQorCiAJcmV0dXJu
-IDA7CiAKICBvdXRfZmlsZXN0cmVhbV91bm1vdW50OgpkaWZmIC0tZ2l0IGEvc2VjdXJpdHkvc2Vj
-dXJpdHkuYyBiL3NlY3VyaXR5L3NlY3VyaXR5LmMKaW5kZXggZGI3YjU3NGM5Li5hYzBjYzk4NzIg
-MTAwNjQ0Ci0tLSBhL3NlY3VyaXR5L3NlY3VyaXR5LmMKKysrIGIvc2VjdXJpdHkvc2VjdXJpdHku
-YwpAQCAtNzcwLDYgKzc3MCw3IEBAIGludCBzZWN1cml0eV9xdW90YV9vbihzdHJ1Y3QgZGVudHJ5
-ICpkZW50cnkpCiB7CiAJcmV0dXJuIGNhbGxfaW50X2hvb2socXVvdGFfb24sIDAsIGRlbnRyeSk7
-CiB9CitFWFBPUlRfU1lNQk9MKHNlY3VyaXR5X3F1b3RhX29uKTsKIAogaW50IHNlY3VyaXR5X3N5
-c2xvZyhpbnQgdHlwZSkKIHsK
-
-
---=-ryOXDiKEJiT4n91JJBtc--
-
+--D
