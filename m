@@ -7,60 +7,60 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21067C35641
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D2F2C35669
 	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 03:59:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F2ACC20675
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 03:59:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2AF8A20675
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 03:59:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727202AbgBXD7P (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1727168AbgBXD7P (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Sun, 23 Feb 2020 22:59:15 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:8212 "EHLO
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:55358 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727168AbgBXD7P (ORCPT
+        by vger.kernel.org with ESMTP id S1727215AbgBXD7P (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Feb 2020 22:59:15 -0500
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01O3sXR4103087;
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01O3xC8d081873;
         Sun, 23 Feb 2020 22:59:12 -0500
 Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2yb1aqyyf8-1
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2yb12a948f-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sun, 23 Feb 2020 22:59:11 -0500
-Received: from m0098414.ppops.net (m0098414.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 01O3teE5104943;
+        Sun, 23 Feb 2020 22:59:12 -0500
+Received: from m0098417.ppops.net (m0098417.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 01O3xBJq081809;
         Sun, 23 Feb 2020 22:59:11 -0500
 Received: from ppma02wdc.us.ibm.com (aa.5b.37a9.ip4.static.sl-reverse.com [169.55.91.170])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2yb1aqyyf1-1
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2yb12a946f-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
         Sun, 23 Feb 2020 22:59:11 -0500
 Received: from pps.filterd (ppma02wdc.us.ibm.com [127.0.0.1])
-        by ppma02wdc.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id 01O3tLL8018603;
-        Mon, 24 Feb 2020 03:59:11 GMT
-Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
-        by ppma02wdc.us.ibm.com with ESMTP id 2yaux688yw-1
+        by ppma02wdc.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id 01O3tL2T018600;
+        Mon, 24 Feb 2020 03:59:00 GMT
+Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
+        by ppma02wdc.us.ibm.com with ESMTP id 2yaux688y5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 24 Feb 2020 03:59:10 +0000
+        Mon, 24 Feb 2020 03:59:00 +0000
 Received: from b03ledav001.gho.boulder.ibm.com (b03ledav001.gho.boulder.ibm.com [9.17.130.232])
-        by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 01O3x95O37290266
+        by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 01O3wxAm65536436
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 24 Feb 2020 03:59:10 GMT
+        Mon, 24 Feb 2020 03:59:00 GMT
 Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id E08186E053;
-        Mon, 24 Feb 2020 03:59:09 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id D8B3D6E04E;
+        Mon, 24 Feb 2020 03:58:59 +0000 (GMT)
 Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 42CA76E04E;
-        Mon, 24 Feb 2020 03:59:07 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 1D2CA6E052;
+        Mon, 24 Feb 2020 03:58:57 +0000 (GMT)
 Received: from localhost.localdomain.com (unknown [9.85.91.136])
         by b03ledav001.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Mon, 24 Feb 2020 03:59:06 +0000 (GMT)
+        Mon, 24 Feb 2020 03:58:56 +0000 (GMT)
 From:   Chandan Rajendra <chandanrlinux@gmail.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     Chandan Rajendra <chandanrlinux@gmail.com>, david@fromorbit.com,
         chandan@linux.ibm.com, darrick.wong@oracle.com, bfoster@redhat.com,
         amir73il@gmail.com
-Subject: [PATCH V4 RESEND 6/7] xfsprogs: Make xfs_attr_calc_size() non-static
-Date:   Mon, 24 Feb 2020 09:31:35 +0530
-Message-Id: <20200224040136.31078-7-chandanrlinux@gmail.com>
+Subject: [PATCH V4 RESEND 3/7] xfsprogs: xfs_attr_calc_size: Calculate Bmbt blks only once
+Date:   Mon, 24 Feb 2020 09:31:32 +0530
+Message-Id: <20200224040136.31078-4-chandanrlinux@gmail.com>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20200224040136.31078-1-chandanrlinux@gmail.com>
 References: <20200224040136.31078-1-chandanrlinux@gmail.com>
@@ -69,117 +69,56 @@ Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
  definitions=2020-02-23_07:2020-02-21,2020-02-23 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- priorityscore=1501 mlxlogscore=999 malwarescore=0 mlxscore=0 adultscore=0
- phishscore=0 bulkscore=0 clxscore=1034 impostorscore=0 spamscore=0
- suspectscore=1 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002240032
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 bulkscore=0
+ clxscore=1034 priorityscore=1501 lowpriorityscore=0 suspectscore=1
+ adultscore=0 malwarescore=0 impostorscore=0 phishscore=0 mlxlogscore=857
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2002240033
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-A future commit will cause xfs_attr_calc_size() to be invoked from a function
-defined in another file. Hence this commit makes xfs_attr_calc_size() as
-non-static.
+The number of Bmbt blocks that is required can be calculated only once by
+passing the sum of total number of dabtree blocks and remote blocks to
+XFS_NEXTENTADD_SPACE_RES() macro.
 
 Signed-off-by: Chandan Rajendra <chandanrlinux@gmail.com>
 ---
- libxfs/xfs_attr.c | 58 +++++++++++++++++++++++------------------------
- libxfs/xfs_attr.h |  2 ++
- 2 files changed, 31 insertions(+), 29 deletions(-)
+ libxfs/xfs_attr.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
 diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index 78127dfc..343ae79f 100644
+index 6f60f718..967aac1d 100644
 --- a/libxfs/xfs_attr.c
 +++ b/libxfs/xfs_attr.c
-@@ -133,10 +133,38 @@ xfs_attr_get(
- 	return error;
+@@ -154,12 +154,10 @@ xfs_attr_calc_size(
+ 	size = xfs_attr_leaf_newentsize(args->geo, args->namelen,
+ 			args->valuelen, local);
+ 	total_dablks = XFS_DAENTER_BLOCKS(mp, XFS_ATTR_FORK);
+-	bmbt_blks = XFS_DAENTER_BMAPS(mp, XFS_ATTR_FORK);
+ 	if (*local) {
+ 		if (size > (args->geo->blksize / 2)) {
+ 			/* Double split possible */
+ 			total_dablks *= 2;
+-			bmbt_blks *= 2;
+ 		}
+ 		rmt_blks = 0;
+ 	} else {
+@@ -168,10 +166,11 @@ xfs_attr_calc_size(
+ 		 * make room for the attribute value itself.
+ 		 */
+ 		rmt_blks = xfs_attr3_rmt_blocks(mp, args->valuelen);
+-		bmbt_blks += XFS_NEXTENTADD_SPACE_RES(mp, rmt_blks,
+-				XFS_ATTR_FORK);
+ 	}
+ 
++	bmbt_blks = XFS_NEXTENTADD_SPACE_RES(mp, total_dablks + rmt_blks,
++			XFS_ATTR_FORK);
++
+ 	return total_dablks + rmt_blks + bmbt_blks;
  }
  
-+STATIC int
-+xfs_attr_try_sf_addname(
-+	struct xfs_inode	*dp,
-+	struct xfs_da_args	*args)
-+{
-+
-+	struct xfs_mount	*mp = dp->i_mount;
-+	int			error, error2;
-+
-+	error = xfs_attr_shortform_addname(args);
-+	if (error == -ENOSPC)
-+		return error;
-+
-+	/*
-+	 * Commit the shortform mods, and we're done.
-+	 * NOTE: this is also the error path (EEXIST, etc).
-+	 */
-+	if (!error && !(args->op_flags & XFS_DA_OP_NOTIME))
-+		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
-+
-+	if (mp->m_flags & XFS_MOUNT_WSYNC)
-+		xfs_trans_set_sync(args->trans);
-+
-+	error2 = xfs_trans_commit(args->trans);
-+	args->trans = NULL;
-+	return error ? error : error2;
-+}
-+
- /*
-  * Calculate how many blocks we need for the new attribute,
-  */
--STATIC void
-+void
- xfs_attr_calc_size(
- 	struct xfs_mount		*mp,
- 	struct xfs_attr_set_resv	*resv,
-@@ -176,34 +204,6 @@ xfs_attr_calc_size(
- 		resv->bmbt_blks;
- }
- 
--STATIC int
--xfs_attr_try_sf_addname(
--	struct xfs_inode	*dp,
--	struct xfs_da_args	*args)
--{
--
--	struct xfs_mount	*mp = dp->i_mount;
--	int			error, error2;
--
--	error = xfs_attr_shortform_addname(args);
--	if (error == -ENOSPC)
--		return error;
--
--	/*
--	 * Commit the shortform mods, and we're done.
--	 * NOTE: this is also the error path (EEXIST, etc).
--	 */
--	if (!error && !(args->op_flags & XFS_DA_OP_NOTIME))
--		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
--
--	if (mp->m_flags & XFS_MOUNT_WSYNC)
--		xfs_trans_set_sync(args->trans);
--
--	error2 = xfs_trans_commit(args->trans);
--	args->trans = NULL;
--	return error ? error : error2;
--}
--
- /*
-  * Set the attribute specified in @args.
-  */
-diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
-index dc08bdfb..0e387230 100644
---- a/libxfs/xfs_attr.h
-+++ b/libxfs/xfs_attr.h
-@@ -104,5 +104,7 @@ int xfs_attr_set(struct xfs_da_args *args);
- int xfs_attr_set_args(struct xfs_da_args *args);
- int xfs_attr_remove_args(struct xfs_da_args *args);
- bool xfs_attr_namecheck(const void *name, size_t length);
-+void xfs_attr_calc_size(struct xfs_mount *mp, struct xfs_attr_set_resv *resv,
-+		int namelen, int valuelen, int *local);
- 
- #endif	/* __XFS_ATTR_H__ */
 -- 
 2.19.1
 
