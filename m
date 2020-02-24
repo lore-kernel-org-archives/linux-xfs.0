@@ -2,59 +2,66 @@ Return-Path: <SRS0=6RgE=4M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAF5CC38BFA
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 21:33:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00E43C38BFF
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 21:34:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 96EEE218AC
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 21:33:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C1079222C2
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 21:34:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CiTwqnEv"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="SH4Zm1WN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728090AbgBXVdx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Feb 2020 16:33:53 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:60684 "EHLO
+        id S1728043AbgBXVeW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Feb 2020 16:34:22 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:60768 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728019AbgBXVdx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Feb 2020 16:33:53 -0500
+        with ESMTP id S1727957AbgBXVeW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Feb 2020 16:34:22 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=l2WBiCb5duYJRA9nKpihqrJOH1Qjg6utSrFiu8qAdtc=; b=CiTwqnEvciiAQat+oldK633lmg
-        zUawSauYqMaewNeZNVkeqnPK9Dhr87RX5DCkkld/HO7vh1OMCcSSpI6qklmXTtXeOk9AKTwRC3+kA
-        6pf3Pjk2PiFQ9J8Q+q9u93/j1yk2LCsyKVrXcjrWVTOSiNY8S+dka/Tg3TIfYq6mXxUUiYmadp/Qz
-        jrgn7KhcrwzLQshsGaCz1A8KpgR3cTw0cWajD7kDWH+IbtI99BCaafCuCvpMRoPJuUYxgKYyXgeLc
-        OIJmBvwaPjoGKLZqi0ywPLQaNkBXn7O0W6ogtLU4CqYsPBWE1o/YSi0+8TFNlNMRRoH7t7l6VNSZ5
-        luB/mO1Q==;
+        bh=h9cf10iCtPnLTwQuBkW69J+FxlKeKDa7FzCrtD5etU0=; b=SH4Zm1WNzfTYIq/DSOIWvy23AR
+        DPI2x856EKO69cJRpJCTmsHgo0z6UGzPyz8tuDkedAoWSDrmd0XLvyNGo0ZFn23cYKzgxrSIbnVPs
+        y+Dq9RA/hLxGChXr6yzrG/KoBeSqmn87OHIzV4YnKWpzMEuTbLGzyg3OlF6Q4W6VvIlLj/mkRqHZ3
+        pgfbWw+L5oQzWZ4yKnwYZlV3vdfGyNuccDRKRJWYeVANIZD9sqM66SjndKE/I0CLgxxmJluCB3AZg
+        Pkxzvi+K8MiCbR8OJgHI/Qj/Uxh1mGjYn/DviBficxtzsXL/izjjUx90L69WAIKw2tupIeOWUnpjz
+        3ONnfXdw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j6LMO-0004Ap-Do; Mon, 24 Feb 2020 21:33:52 +0000
-Date:   Mon, 24 Feb 2020 13:33:52 -0800
+        id 1j6LMr-0004Ee-Q4; Mon, 24 Feb 2020 21:34:21 +0000
+Date:   Mon, 24 Feb 2020 13:34:21 -0800
 From:   Christoph Hellwig <hch@infradead.org>
 To:     Matthew Wilcox <willy@infradead.org>
 Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
         linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
         linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
         linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org,
-        Dave Chinner <dchinner@redhat.com>,
-        John Hubbard <jhubbard@nvidia.com>
-Subject: Re: [PATCH v7 02/24] mm: Return void from various readahead functions
-Message-ID: <20200224213352.GB13895@infradead.org>
+        ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v7 04/24] mm: Move readahead nr_pages check into
+ read_pages
+Message-ID: <20200224213421.GC13895@infradead.org>
 References: <20200219210103.32400-1-willy@infradead.org>
- <20200219210103.32400-3-willy@infradead.org>
+ <20200219210103.32400-5-willy@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200219210103.32400-3-willy@infradead.org>
+In-Reply-To: <20200219210103.32400-5-willy@infradead.org>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
+
+On Wed, Feb 19, 2020 at 01:00:43PM -0800, Matthew Wilcox wrote:
+> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+> 
+> Simplify the callers by moving the check for nr_pages and the BUG_ON
+> into read_pages().
+> 
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 
 Looks good,
 
