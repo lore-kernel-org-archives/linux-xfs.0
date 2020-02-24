@@ -2,79 +2,103 @@ Return-Path: <SRS0=6RgE=4M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1CFDC38C00
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 22:17:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C919C38BFA
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 22:19:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 77A2221927
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 22:17:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E820218AC
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 22:19:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pB+5oZWV"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="fRlqH8N6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728116AbgBXWRu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Feb 2020 17:17:50 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:43178 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726651AbgBXWRu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Feb 2020 17:17:50 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=SD1yx0YoAU9Bzlni+o86AkG96/rc/8SSS4sRPjtuIYU=; b=pB+5oZWVTu+RlW3J/EESOvRbJB
-        BhenyWBT/6m8GOFdFElQJCxMbpx1xaeKthjka5pjD6jbGH4Yb4isWW678N/C1jEWJrUjOlo+gO3Wr
-        Fc+GPx4uW5jDWOEduKUpXye86IX3XAlQeX17eAH1O9MrALkq72vBwumB3SryCX1PQ21Cu5rjB+LH+
-        LFNujmpdrRUyH0LpGKYHkHsi54xutUiobEdAg4riDPA5mRYuMsyFoBP03wVQn0kFpk94BKaabAiRg
-        qtA4ThIZJjuV+zv0m358v08Y+jltVma43bg6qDq7T97btYMe7X25tdyvSveobCz77SFx4CC7cEIkX
-        lGoig/Dw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j6M2v-00087x-1f; Mon, 24 Feb 2020 22:17:49 +0000
-Date:   Mon, 24 Feb 2020 14:17:49 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v7 21/24] iomap: Restructure iomap_readpages_actor
-Message-ID: <20200224221749.GA22231@infradead.org>
-References: <20200219210103.32400-1-willy@infradead.org>
- <20200219210103.32400-22-willy@infradead.org>
- <20200220154741.GB19577@infradead.org>
- <20200220162404.GY24185@bombadil.infradead.org>
+        id S1727520AbgBXWTo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Feb 2020 17:19:44 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:41178 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726651AbgBXWTn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Feb 2020 17:19:43 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01OMHfuC102196;
+        Mon, 24 Feb 2020 22:19:35 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=qTA36Q7ulfD0km9+i5eSSXNWCvgFmRfON/1Zv3DMSWo=;
+ b=fRlqH8N6pggziS/GKqfsmD6/r+/8kE57hnLVRjJv7xpoy7oe1wmIOYIKOolhs6OAjRSv
+ XE0aqM30D/CPd1qL25YX4vb6/LDxCd4x7VPGz2EcsSyBjpaaIm0gy9h3xN9bjQAXC0GE
+ sPt6V7a9Ii45/srnCpXjhdb2AEZB2KN0P14FC399WK+to3fmuE6OzW9Z8Ho0y9/2aCoN
+ OcDyNR/uOneFbU6nzhsKdHJbjQ0Zk/fZSd3oQkasERJR4J0gXtecfS3gvtKZ8ajL276I
+ EVBBgcaVsgb7y6VsFdi1JLrXTjsxN9l8U9eEX21gq6LGpQ+eQaDxM7jK+vuqkJ5c5rzC fg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2ybvr4ppg5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 24 Feb 2020 22:19:35 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01OMI6gY181265;
+        Mon, 24 Feb 2020 22:19:34 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 2yby5dwkdw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 24 Feb 2020 22:19:34 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01OMJX3W004556;
+        Mon, 24 Feb 2020 22:19:33 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 24 Feb 2020 14:19:32 -0800
+Date:   Mon, 24 Feb 2020 14:19:31 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        Eric Sandeen <sandeen@redhat.com>
+Subject: Re: [PATCH 1/6] xfs: remove the agfl_bno member from struct xfs_agfl
+Message-ID: <20200224221931.GA6740@magnolia>
+References: <20200130133343.225818-1-hch@lst.de>
+ <20200130133343.225818-2-hch@lst.de>
+ <20200224220256.GA3446@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200220162404.GY24185@bombadil.infradead.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200224220256.GA3446@infradead.org>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9541 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0 bulkscore=0
+ suspectscore=0 mlxlogscore=999 phishscore=0 adultscore=0 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002240164
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9541 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0
+ clxscore=1015 adultscore=0 lowpriorityscore=0 malwarescore=0
+ priorityscore=1501 mlxscore=0 impostorscore=0 suspectscore=0 phishscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2002240164
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 20, 2020 at 08:24:04AM -0800, Matthew Wilcox wrote:
-> On Thu, Feb 20, 2020 at 07:47:41AM -0800, Christoph Hellwig wrote:
-> > On Wed, Feb 19, 2020 at 01:01:00PM -0800, Matthew Wilcox wrote:
-> > > From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-> > > 
-> > > By putting the 'have we reached the end of the page' condition at the end
-> > > of the loop instead of the beginning, we can remove the 'submit the last
-> > > page' code from iomap_readpages().  Also check that iomap_readpage_actor()
-> > > didn't return 0, which would lead to an endless loop.
+On Mon, Feb 24, 2020 at 02:02:56PM -0800, Christoph Hellwig wrote:
+> On Thu, Jan 30, 2020 at 02:33:38PM +0100, Christoph Hellwig wrote:
+> > struct xfs_agfl is a header in front of the AGFL entries that exists
+> > for CRC enabled file systems.  For not CRC enabled file systems the AGFL
+> > is simply a list of agbno.  Make the CRC case similar to that by just
+> > using the list behind the new header.  This indirectly solves a problem
+> > with modern gcc versions that warn about taking addresses of packed
+> > structures (and we have to pack the AGFL given that gcc rounds up
+> > structure sizes).  Also replace the helper macro to get from a buffer
+> > with an inline function in xfs_alloc.h to make the code easier to
+> > read.
 > > 
-> > I'm obviously biassed a I wrote the original code, but I find the new
-> > very much harder to understand (not that the previous one was easy, this
-> > is tricky code..).
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> Agreed, I found the original code hard to understand.  I think this is
-> easier because now cur_page doesn't leak outside this loop, so it has
-> an obvious lifecycle.
+> Any chance we can pick this up for 5.6 to unbreak arm OABI?
 
-I really don't like this patch, and would prefer if the series goes
-ahead without it, as the current sctructure works just fine even
-with the readahead changes.
+Yeah, I can do that.  Is there a Fixes: tag that goes with this?
+
+Also, will you have a chance to respin the last patch for 5.7?
+
+--D
