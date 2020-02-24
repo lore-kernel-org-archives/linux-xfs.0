@@ -7,60 +7,60 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37AEFC35669
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 03:59:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06CBEC35669
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 03:59:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1479A20675
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 03:59:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DCCBD20675
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 03:59:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727210AbgBXD7I (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1727213AbgBXD7M (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 23 Feb 2020 22:59:12 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:60674 "EHLO
+        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727168AbgBXD7M (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Feb 2020 22:59:12 -0500
+Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01O3wAwU092555;
         Sun, 23 Feb 2020 22:59:08 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:1488 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727168AbgBXD7I (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Feb 2020 22:59:08 -0500
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01O3sDMr076392;
-        Sun, 23 Feb 2020 22:58:59 -0500
 Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2yb1c5radc-1
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2yb008sugx-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sun, 23 Feb 2020 22:58:59 -0500
-Received: from m0098420.ppops.net (m0098420.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 01O3uAKn080232;
-        Sun, 23 Feb 2020 22:58:58 -0500
-Received: from ppma04dal.us.ibm.com (7a.29.35a9.ip4.static.sl-reverse.com [169.53.41.122])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2yb1c5rad5-1
+        Sun, 23 Feb 2020 22:59:08 -0500
+Received: from m0127361.ppops.net (m0127361.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 01O3wBMN092572;
+        Sun, 23 Feb 2020 22:59:08 -0500
+Received: from ppma01wdc.us.ibm.com (fd.55.37a9.ip4.static.sl-reverse.com [169.55.85.253])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2yb008sugr-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sun, 23 Feb 2020 22:58:58 -0500
-Received: from pps.filterd (ppma04dal.us.ibm.com [127.0.0.1])
-        by ppma04dal.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id 01O3tL95020351;
-        Mon, 24 Feb 2020 03:58:58 GMT
-Received: from b03cxnp07028.gho.boulder.ibm.com (b03cxnp07028.gho.boulder.ibm.com [9.17.130.15])
-        by ppma04dal.us.ibm.com with ESMTP id 2yaux6cau6-1
+        Sun, 23 Feb 2020 22:59:08 -0500
+Received: from pps.filterd (ppma01wdc.us.ibm.com [127.0.0.1])
+        by ppma01wdc.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id 01O3wsTb009996;
+        Mon, 24 Feb 2020 03:59:07 GMT
+Received: from b03cxnp07029.gho.boulder.ibm.com (b03cxnp07029.gho.boulder.ibm.com [9.17.130.16])
+        by ppma01wdc.us.ibm.com with ESMTP id 2yaux607wb-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 24 Feb 2020 03:58:57 +0000
+        Mon, 24 Feb 2020 03:59:07 +0000
 Received: from b03ledav001.gho.boulder.ibm.com (b03ledav001.gho.boulder.ibm.com [9.17.130.232])
-        by b03cxnp07028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 01O3wucV43974988
+        by b03cxnp07029.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 01O3x6ZC23724344
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 24 Feb 2020 03:58:56 GMT
+        Mon, 24 Feb 2020 03:59:06 GMT
 Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 7B9456E052;
-        Mon, 24 Feb 2020 03:58:56 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 9D31E6E052;
+        Mon, 24 Feb 2020 03:59:06 +0000 (GMT)
 Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id CD8DB6E04C;
-        Mon, 24 Feb 2020 03:58:53 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id D5C3B6E04C;
+        Mon, 24 Feb 2020 03:59:03 +0000 (GMT)
 Received: from localhost.localdomain.com (unknown [9.85.91.136])
         by b03ledav001.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Mon, 24 Feb 2020 03:58:53 +0000 (GMT)
+        Mon, 24 Feb 2020 03:59:03 +0000 (GMT)
 From:   Chandan Rajendra <chandanrlinux@gmail.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     Chandan Rajendra <chandanrlinux@gmail.com>, david@fromorbit.com,
         chandan@linux.ibm.com, darrick.wong@oracle.com, bfoster@redhat.com,
         amir73il@gmail.com
-Subject: [PATCH V4 RESEND 2/7] xfsprogs: xfs_attr_calc_size: Use local variables to track individual space components
-Date:   Mon, 24 Feb 2020 09:31:31 +0530
-Message-Id: <20200224040136.31078-3-chandanrlinux@gmail.com>
+Subject: [PATCH V4 RESEND 5/7] xfsprogs: xfs_attr_calc_size: Explicitly pass mp, namelen and valuelen args
+Date:   Mon, 24 Feb 2020 09:31:34 +0530
+Message-Id: <20200224040136.31078-6-chandanrlinux@gmail.com>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20200224040136.31078-1-chandanrlinux@gmail.com>
 References: <20200224040136.31078-1-chandanrlinux@gmail.com>
@@ -69,77 +69,79 @@ Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
  definitions=2020-02-23_07:2020-02-21,2020-02-23 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0
- priorityscore=1501 impostorscore=0 suspectscore=1 adultscore=0
- mlxlogscore=978 bulkscore=0 lowpriorityscore=0 malwarescore=0 mlxscore=0
- spamscore=0 clxscore=1034 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0
+ priorityscore=1501 lowpriorityscore=0 clxscore=1034 impostorscore=0
+ suspectscore=1 adultscore=0 phishscore=0 mlxlogscore=999 malwarescore=0
+ mlxscore=0 spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2001150001 definitions=main-2002240032
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The size calculated by xfs_attr_calc_size() is a sum of three components,
-1. Number of dabtree blocks
-2. Number of Bmbt blocks
-3. Number of remote blocks
-
-This commit introduces new local variables to track these numbers explicitly.
+In a future commit, xfs_attr_calc_size() will be invoked from a function that
+does not have a 'struct xfs_da_args' handy. Hence this commit changes
+xfs_attr_calc_size() to let invokers to explicitly pass 'struct xfs_mount *',
+namelen and valuelen arguments.
 
 Signed-off-by: Chandan Rajendra <chandanrlinux@gmail.com>
 ---
- libxfs/xfs_attr.c | 19 ++++++++++++-------
- 1 file changed, 12 insertions(+), 7 deletions(-)
+ libxfs/xfs_attr.c | 17 ++++++++++-------
+ 1 file changed, 10 insertions(+), 7 deletions(-)
 
 diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index e67d2eef..6f60f718 100644
+index 23fcb110..78127dfc 100644
 --- a/libxfs/xfs_attr.c
 +++ b/libxfs/xfs_attr.c
-@@ -142,8 +142,10 @@ xfs_attr_calc_size(
- 	int			*local)
+@@ -138,22 +138,24 @@ xfs_attr_get(
+  */
+ STATIC void
+ xfs_attr_calc_size(
+-	struct xfs_da_args		*args,
++	struct xfs_mount		*mp,
+ 	struct xfs_attr_set_resv	*resv,
++	int				namelen,
++	int				valuelen,
+ 	int				*local)
  {
- 	struct xfs_mount	*mp = args->dp->i_mount;
-+	unsigned int		total_dablks;
-+	unsigned int		bmbt_blks;
-+	unsigned int		rmt_blks;
- 	int			size;
--	int			nblks;
+-	struct xfs_mount		*mp = args->dp->i_mount;
++	unsigned int			blksize = mp->m_attr_geo->blksize;
+ 	int				size;
  
  	/*
  	 * Determine space new attribute will use, and if it would be
-@@ -151,23 +153,26 @@ xfs_attr_calc_size(
+ 	 * "local" or "remote" (note: local != inline).
  	 */
- 	size = xfs_attr_leaf_newentsize(args->geo, args->namelen,
- 			args->valuelen, local);
--	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
-+	total_dablks = XFS_DAENTER_BLOCKS(mp, XFS_ATTR_FORK);
-+	bmbt_blks = XFS_DAENTER_BMAPS(mp, XFS_ATTR_FORK);
+-	size = xfs_attr_leaf_newentsize(args->geo, args->namelen,
+-			args->valuelen, local);
++	size = xfs_attr_leaf_newentsize(mp->m_attr_geo, namelen, valuelen,
++			local);
+ 	resv->total_dablks = XFS_DAENTER_BLOCKS(mp, XFS_ATTR_FORK);
  	if (*local) {
- 		if (size > (args->geo->blksize / 2)) {
+-		if (size > (args->geo->blksize / 2)) {
++		if (size > (blksize / 2)) {
  			/* Double split possible */
--			nblks *= 2;
-+			total_dablks *= 2;
-+			bmbt_blks *= 2;
+ 			resv->total_dablks *= 2;
  		}
-+		rmt_blks = 0;
- 	} else {
- 		/*
+@@ -163,7 +165,7 @@ xfs_attr_calc_size(
  		 * Out of line attribute, cannot double split, but
  		 * make room for the attribute value itself.
  		 */
--		uint	dblocks = xfs_attr3_rmt_blocks(mp, args->valuelen);
--		nblks += dblocks;
--		nblks += XFS_NEXTENTADD_SPACE_RES(mp, dblocks, XFS_ATTR_FORK);
-+		rmt_blks = xfs_attr3_rmt_blocks(mp, args->valuelen);
-+		bmbt_blks += XFS_NEXTENTADD_SPACE_RES(mp, rmt_blks,
-+				XFS_ATTR_FORK);
+-		resv->rmt_blks = xfs_attr3_rmt_blocks(mp, args->valuelen);
++		resv->rmt_blks = xfs_attr3_rmt_blocks(mp, valuelen);
  	}
  
--	return nblks;
-+	return total_dablks + rmt_blks + bmbt_blks;
- }
+ 	resv->bmbt_blks = XFS_NEXTENTADD_SPACE_RES(mp,
+@@ -329,7 +331,8 @@ xfs_attr_set(
+ 		XFS_STATS_INC(mp, xs_attr_set);
  
- STATIC int
+ 		args->op_flags |= XFS_DA_OP_ADDNAME;
+-		xfs_attr_calc_size(args, &resv, &local);
++		xfs_attr_calc_size(mp, &resv, args->namelen, args->valuelen,
++				&local);
+ 		args->total = resv.alloc_blks;
+ 
+ 		/*
 -- 
 2.19.1
 
