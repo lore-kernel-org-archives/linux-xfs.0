@@ -2,108 +2,80 @@ Return-Path: <SRS0=6RgE=4M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14FF5C38BF9
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 22:27:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CE79C38BFA
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 22:30:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E4DE421927
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 22:27:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 08E1A21927
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 22:30:36 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="DOTQdzCP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727825AbgBXW14 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Feb 2020 17:27:56 -0500
-Received: from sandeen.net ([63.231.237.45]:51156 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727219AbgBXW14 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 24 Feb 2020 17:27:56 -0500
-Received: from Liberator.local (unknown [4.28.11.157])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 10E5217273;
-        Mon, 24 Feb 2020 16:27:30 -0600 (CST)
+        id S1727219AbgBXWaf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Feb 2020 17:30:35 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:47512 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726651AbgBXWaf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Feb 2020 17:30:35 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=Fn9V5GgkUSEJykW5ByAGH87sM8JqmW0aHUBa1JUkvfE=; b=DOTQdzCPEsEBRz+ZBfbTrXdrDQ
+        BKoavLNanfg3Si7S18JGTi8ExD+eIJaQ7AWs6IKqcXRHS1Nq5H3uD5JTNU1mPrNqLyW3d2XQnsCTk
+        EEO4W9MAHwR9rx1VI4izaZrHAnXzYYs+NqhTVwEa536Lm/v5Bl4Oq6lzKoQQTSzYsiQFd+zGx1dWK
+        vi1UzFjHME7KG71kDhaCh+F91OQ9JWSGorRXASxsB3am8sIZ1dvR1MeSCbaiC9LhIWYTW2nXByv2p
+        Gnclj4OgenB0ojRVPcusY6NUdlXwooHF4W+WD7wNGbkHqUtrHHMbBCchyrfVtSTxBZIBlH0Ev3itj
+        vefr+PDg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1j6MFG-0005HO-2s; Mon, 24 Feb 2020 22:30:34 +0000
+Date:   Mon, 24 Feb 2020 14:30:34 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        Eric Sandeen <sandeen@redhat.com>
 Subject: Re: [PATCH 1/6] xfs: remove the agfl_bno member from struct xfs_agfl
-To:     Christoph Hellwig <hch@infradead.org>,
-        Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
+Message-ID: <20200224223034.GA14361@infradead.org>
 References: <20200130133343.225818-1-hch@lst.de>
- <20200130133343.225818-2-hch@lst.de> <20200224220256.GA3446@infradead.org>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <75eb13f6-8f96-a07d-f6ee-c648f8a3b38e@sandeen.net>
-Date:   Mon, 24 Feb 2020 14:27:49 -0800
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.5.0
+ <20200130133343.225818-2-hch@lst.de>
+ <20200224220256.GA3446@infradead.org>
+ <75eb13f6-8f96-a07d-f6ee-c648f8a3b38e@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20200224220256.GA3446@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <75eb13f6-8f96-a07d-f6ee-c648f8a3b38e@sandeen.net>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/24/20 2:02 PM, Christoph Hellwig wrote:
-> On Thu, Jan 30, 2020 at 02:33:38PM +0100, Christoph Hellwig wrote:
->> struct xfs_agfl is a header in front of the AGFL entries that exists
->> for CRC enabled file systems.  For not CRC enabled file systems the AGFL
->> is simply a list of agbno.  Make the CRC case similar to that by just
->> using the list behind the new header.  This indirectly solves a problem
->> with modern gcc versions that warn about taking addresses of packed
->> structures (and we have to pack the AGFL given that gcc rounds up
->> structure sizes).  Also replace the helper macro to get from a buffer
->> with an inline function in xfs_alloc.h to make the code easier to
->> read.
->>
->> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Mon, Feb 24, 2020 at 02:27:49PM -0800, Eric Sandeen wrote:
+> On 2/24/20 2:02 PM, Christoph Hellwig wrote:
+> > On Thu, Jan 30, 2020 at 02:33:38PM +0100, Christoph Hellwig wrote:
+> >> struct xfs_agfl is a header in front of the AGFL entries that exists
+> >> for CRC enabled file systems.  For not CRC enabled file systems the AGFL
+> >> is simply a list of agbno.  Make the CRC case similar to that by just
+> >> using the list behind the new header.  This indirectly solves a problem
+> >> with modern gcc versions that warn about taking addresses of packed
+> >> structures (and we have to pack the AGFL given that gcc rounds up
+> >> structure sizes).  Also replace the helper macro to get from a buffer
+> >> with an inline function in xfs_alloc.h to make the code easier to
+> >> read.
+> >>
+> >> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > 
+> > Any chance we can pick this up for 5.6 to unbreak arm OABI?
+> > 
 > 
-> Any chance we can pick this up for 5.6 to unbreak arm OABI?
-> 
+> What did I miss, where's the report of actual breakage vs. 
+> (I thought) harmless GCC complaints?
 
-What did I miss, where's the report of actual breakage vs. 
-(I thought) harmless GCC complaints?
-
--Eric
+The "harmless" gcc complaint is that the kernel build errors out as
+soon as XFS is enabled on arm OABI.  Which is a good thing, as the
+file system would not be interoperable with other architectures if it
+didn't.
