@@ -2,133 +2,144 @@ Return-Path: <SRS0=6RgE=4M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
+	FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FC8AC35673
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 00:35:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB0CDC35669
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 03:58:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5224A206E0
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 00:35:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ACD9A20828
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 03:58:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727158AbgBXAfD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 23 Feb 2020 19:35:03 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:43679 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727151AbgBXAfD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Feb 2020 19:35:03 -0500
-Received: from dread.disaster.area (pa49-195-185-106.pa.nsw.optusnet.com.au [49.195.185.106])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id B52CD3A211E;
-        Mon, 24 Feb 2020 11:34:57 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1j61i4-0004s8-0Y; Mon, 24 Feb 2020 11:34:56 +1100
-Date:   Mon, 24 Feb 2020 11:34:55 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     ira.weiny@intel.com
-Cc:     linux-kernel@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH V4 09/13] fs/xfs: Add write aops lock to xfs layer
-Message-ID: <20200224003455.GY10776@dread.disaster.area>
-References: <20200221004134.30599-1-ira.weiny@intel.com>
- <20200221004134.30599-10-ira.weiny@intel.com>
+        id S1727202AbgBXD6M (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 23 Feb 2020 22:58:12 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:25550 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727168AbgBXD6L (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Feb 2020 22:58:11 -0500
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01O3nlUc137009;
+        Sun, 23 Feb 2020 22:58:08 -0500
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2yax43whpu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Sun, 23 Feb 2020 22:58:08 -0500
+Received: from m0098419.ppops.net (m0098419.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 01O3tvqM001107;
+        Sun, 23 Feb 2020 22:58:08 -0500
+Received: from ppma04dal.us.ibm.com (7a.29.35a9.ip4.static.sl-reverse.com [169.53.41.122])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2yax43whph-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Sun, 23 Feb 2020 22:58:08 -0500
+Received: from pps.filterd (ppma04dal.us.ibm.com [127.0.0.1])
+        by ppma04dal.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id 01O3tO27020378;
+        Mon, 24 Feb 2020 03:58:07 GMT
+Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
+        by ppma04dal.us.ibm.com with ESMTP id 2yaux6cap8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 24 Feb 2020 03:58:07 +0000
+Received: from b03ledav003.gho.boulder.ibm.com (b03ledav003.gho.boulder.ibm.com [9.17.130.234])
+        by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 01O3w5Vg66126164
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 24 Feb 2020 03:58:06 GMT
+Received: from b03ledav003.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id E09356A047;
+        Mon, 24 Feb 2020 03:58:05 +0000 (GMT)
+Received: from b03ledav003.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 30EB56A04D;
+        Mon, 24 Feb 2020 03:58:03 +0000 (GMT)
+Received: from localhost.localdomain.com (unknown [9.85.91.136])
+        by b03ledav003.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Mon, 24 Feb 2020 03:58:02 +0000 (GMT)
+From:   Chandan Rajendra <chandanrlinux@gmail.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Chandan Rajendra <chandanrlinux@gmail.com>, david@fromorbit.com,
+        chandan@linux.ibm.com, darrick.wong@oracle.com, bfoster@redhat.com,
+        amir73il@gmail.com
+Subject: [PATCH V4 RESEND 2/7] xfs: xfs_attr_calc_size: Use local variables to track individual space components
+Date:   Mon, 24 Feb 2020 09:30:39 +0530
+Message-Id: <20200224040044.30923-3-chandanrlinux@gmail.com>
+X-Mailer: git-send-email 2.19.1
+In-Reply-To: <20200224040044.30923-1-chandanrlinux@gmail.com>
+References: <20200224040044.30923-1-chandanrlinux@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200221004134.30599-10-ira.weiny@intel.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
-        a=bkRQb8bsQZKWSSj4M57YXw==:117 a=bkRQb8bsQZKWSSj4M57YXw==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=l697ptgUJYAA:10
-        a=QyXUC8HyAAAA:8 a=7-415B0cAAAA:8 a=jzfXMxHasCwLGlr9pT0A:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
+ definitions=2020-02-23_07:2020-02-21,2020-02-23 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ adultscore=0 mlxlogscore=978 suspectscore=1 spamscore=0 priorityscore=1501
+ impostorscore=0 mlxscore=0 malwarescore=0 phishscore=0 bulkscore=0
+ clxscore=1034 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2002240031
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 20, 2020 at 04:41:30PM -0800, ira.weiny@intel.com wrote:
-> From: Ira Weiny <ira.weiny@intel.com>
-> 
-> XFS requires the use of the aops of an inode to quiesced prior to
-> changing it to/from the DAX aops vector.
-> 
-> Take the aops write lock while changing DAX state.
-> 
-> We define a new XFS_DAX_EXCL lock type to carry the lock through to
-> transaction completion.
-> 
-> Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-> 
-> ---
-> Changes from v3:
-> 	Change locking function names to reflect changes in previous
-> 	patches.
-> 
-> Changes from V2:
-> 	Change name of patch (WAS: fs/xfs: Add lock/unlock state to xfs)
-> 	Remove the xfs specific lock and move to the vfs layer.
-> 		We still use XFS_LOCK_DAX_EXCL to be able to pass this
-> 		flag through to the transaction code.  But we no longer
-> 		have a lock specific to xfs.  This removes a lot of code
-> 		from the XFS layer, preps us for using this in ext4, and
-> 		is actually more straight forward now that all the
-> 		locking requirements are better known.
-> 
-> 	Fix locking order comment
-> 	Rework for new 'state' names
-> 	(Other comments on the previous patch are not applicable with
-> 	new patch as much of the code was removed in favor of the vfs
-> 	level lock)
-> ---
->  fs/xfs/xfs_inode.c | 22 ++++++++++++++++++++--
->  fs/xfs/xfs_inode.h |  7 +++++--
->  2 files changed, 25 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 35df324875db..5b014c428f0f 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -142,12 +142,12 @@ xfs_ilock_attr_map_shared(
->   *
->   * Basic locking order:
->   *
-> - * i_rwsem -> i_mmap_lock -> page_lock -> i_ilock
-> + * s_dax_sem -> i_rwsem -> i_mmap_lock -> page_lock -> i_ilock
->   *
->   * mmap_sem locking order:
->   *
->   * i_rwsem -> page lock -> mmap_sem
-> - * mmap_sem -> i_mmap_lock -> page_lock
-> + * s_dax_sem -> mmap_sem -> i_mmap_lock -> page_lock
->   *
->   * The difference in mmap_sem locking order mean that we cannot hold the
->   * i_mmap_lock over syscall based read(2)/write(2) based IO. These IO paths can
-> @@ -182,6 +182,9 @@ xfs_ilock(
->  	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
->  	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_SUBCLASS_MASK)) == 0);
->  
-> +	if (lock_flags & XFS_DAX_EXCL)
-> +		inode_aops_down_write(VFS_I(ip));
+The size calculated by xfs_attr_calc_size() is a sum of three components,
+1. Number of dabtree blocks
+2. Number of Bmbt blocks
+3. Number of remote blocks
 
-I largely don't see the point of adding this to xfs_ilock/iunlock.
+This commit introduces new local variables to track these numbers explicitly.
 
-It's only got one caller, so I don't see much point in adding it to
-an interface that has over a hundred other call sites that don't
-need or use this lock. just open code it where it is needed in the
-ioctl code.
+Signed-off-by: Chandan Rajendra <chandanrlinux@gmail.com>
+---
+ fs/xfs/libxfs/xfs_attr.c | 19 ++++++++++++-------
+ 1 file changed, 12 insertions(+), 7 deletions(-)
 
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 1875210cc8e40..942ba552e0bdd 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -142,8 +142,10 @@ xfs_attr_calc_size(
+ 	int			*local)
+ {
+ 	struct xfs_mount	*mp = args->dp->i_mount;
++	unsigned int		total_dablks;
++	unsigned int		bmbt_blks;
++	unsigned int		rmt_blks;
+ 	int			size;
+-	int			nblks;
+ 
+ 	/*
+ 	 * Determine space new attribute will use, and if it would be
+@@ -151,23 +153,26 @@ xfs_attr_calc_size(
+ 	 */
+ 	size = xfs_attr_leaf_newentsize(args->geo, args->namelen,
+ 			args->valuelen, local);
+-	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
++	total_dablks = XFS_DAENTER_BLOCKS(mp, XFS_ATTR_FORK);
++	bmbt_blks = XFS_DAENTER_BMAPS(mp, XFS_ATTR_FORK);
+ 	if (*local) {
+ 		if (size > (args->geo->blksize / 2)) {
+ 			/* Double split possible */
+-			nblks *= 2;
++			total_dablks *= 2;
++			bmbt_blks *= 2;
+ 		}
++		rmt_blks = 0;
+ 	} else {
+ 		/*
+ 		 * Out of line attribute, cannot double split, but
+ 		 * make room for the attribute value itself.
+ 		 */
+-		uint	dblocks = xfs_attr3_rmt_blocks(mp, args->valuelen);
+-		nblks += dblocks;
+-		nblks += XFS_NEXTENTADD_SPACE_RES(mp, dblocks, XFS_ATTR_FORK);
++		rmt_blks = xfs_attr3_rmt_blocks(mp, args->valuelen);
++		bmbt_blks += XFS_NEXTENTADD_SPACE_RES(mp, rmt_blks,
++				XFS_ATTR_FORK);
+ 	}
+ 
+-	return nblks;
++	return total_dablks + rmt_blks + bmbt_blks;
+ }
+ 
+ STATIC int
 -- 
-Dave Chinner
-david@fromorbit.com
+2.19.1
+
