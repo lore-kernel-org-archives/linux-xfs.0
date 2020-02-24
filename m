@@ -7,57 +7,58 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF945C3567B
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 06:30:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA866C3567B
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 06:38:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9D77A20828
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 06:30:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B13420714
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 06:38:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NLaDMSZR"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XofHD8Rt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726452AbgBXGaS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Feb 2020 01:30:18 -0500
-Received: from mail-io1-f66.google.com ([209.85.166.66]:41578 "EHLO
-        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726060AbgBXGaR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Feb 2020 01:30:17 -0500
-Received: by mail-io1-f66.google.com with SMTP id m25so9071892ioo.8
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Feb 2020 22:30:17 -0800 (PST)
+        id S1726997AbgBXGi0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Feb 2020 01:38:26 -0500
+Received: from mail-il1-f196.google.com ([209.85.166.196]:45014 "EHLO
+        mail-il1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726452AbgBXGi0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Feb 2020 01:38:26 -0500
+Received: by mail-il1-f196.google.com with SMTP id s85so6782293ill.11
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Feb 2020 22:38:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=/pLeoTKpEEUk6IC+B8atbm/ogMX6v431HNiZco9Aqf4=;
-        b=NLaDMSZRLiBo+cfDTKh25p6tLuc8cx7XsAnF7UQTsThNAv53q7e3zyhKMXsr1bwLQi
-         r6yz0GXDjlVxyfeVklpVl/KQWgadljznhKzmZ3LQQv0yqVXP7/ePitVu3n5ZYbmOtgjE
-         0vwOB43lYpjuC1wtfE9xSThoEJ32TOp3DbakVRnFhsT+V/gZ6bwnrFBwki4t4i0h3Qxx
-         m5uoejwYv22jgyW2UAIiBK6qyZduVFEQXj6nE/yFMuHPbWeTOPaP+QWLVSrmVd3tA3f7
-         MFxg+5vFPvCPjKDuhNHQ9QDrXm0S2JSIay/G4jLoIevxbuTR/YQO6fSDcfzD6Lz5GxVF
-         YOJw==
+        bh=7vkxhUaprIHy4bDGwpPikvwxxfjso7Os/BdVK/0VYTg=;
+        b=XofHD8RtwVSlhsmmFtIHOcJm5URa9OLJCdH5QodB6MK9JgmCOgg4cJ+QTrVrGcLwKS
+         Z+RoyGYaXi6hjsTmgXnGl43PBiaKam03ZYV5g60dRhrinfKYXNP67WRsptf3sklM6I4K
+         RhIYPprn6ZYHTtvT/V5Dg+6bzKQMhiHnYGyHDMhElzk1oR9kPli0Kzy8fbpgn3OTWMQF
+         ALXWz2JOTCVe0ZyuKz+vvdJLRB6TJ+d/zRx9kY0J2ZmX9XEdGeTjkqD0RuLjylJ4B7yg
+         vNMNcXnozw/wlrQgHyFCdu+1N3G+EiSWw50N+x1IMORmYhgwZKUCudUbRZSy+wtRCHxy
+         qlgQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=/pLeoTKpEEUk6IC+B8atbm/ogMX6v431HNiZco9Aqf4=;
-        b=IOMB0O3dmibAxjyXQJB+AGMLSOr6zEzTNBxFk2I0jAY30kdhOSSuVf4SBOMAgsFCj2
-         8vHCZfBmRpIV4kFop6+KKGQunAWTiOkw3sOzsPczw9dtrWc5pT41BcSW0MArRC6OYAEZ
-         1TbmDbkxFIgrngn5X2NDbMszPdv/E+sBc5r30lk7OE131X0KqwMVl1l9cCJa4VyiulTP
-         G5oMA5TjYBfcyBPmLh2OdtsYzV87mk2H+GbO+rMiLV6bG9deK4EK8OJD7qZI2htkVGCC
-         mnMj0fNC6uxhAtgraFDWqha1wSVscCF5nRIRxOt6tCPih3yyFbUoP6p15G2Gd1ptFobZ
-         Zv0w==
-X-Gm-Message-State: APjAAAVfTGLxo/JrxhP5X4l68vEuhxAv4RH46cgtDMVsLTpiKLg3vPps
-        0xKIaHwytYCR06waJJ6ptRM/UMeIsqAPaPn5dE0Zy766
-X-Google-Smtp-Source: APXvYqzO4VXk031IdVs4AVAMBYwsQQuNccjOixYJEbetG7I/qItXaIiXWAYC8eiW6FvM62SSQVcpKMU4nXLspmSnx0Y=
-X-Received: by 2002:a02:81cc:: with SMTP id r12mr47258122jag.93.1582525816931;
- Sun, 23 Feb 2020 22:30:16 -0800 (PST)
+        bh=7vkxhUaprIHy4bDGwpPikvwxxfjso7Os/BdVK/0VYTg=;
+        b=FmaB3sNrEmUG0k1HNdT4HQVRL4ScCznUB3D69PED9jzjCcFxbvZyI+jA0jgtvBmyaZ
+         /RENwsaDDEJncD1xfWKRX/hKvKheoimIzOZgbtltztzNP9NZKFVqzZNlhaWUS7n3YGtn
+         6Heg2I6bswIvQ0BlYKOaAZJUiedw6ShHvga3z0yyS96IWQXxNwDw2Wqy1wqzqIZ6d7vE
+         nEnL32rS+Z8us3W8mVc04HkSZWJTrwSEknqSEAwq/8thhEdIFtYcDHxtKsgmM/CN8V8i
+         OUvkmEFBlXbRm+A2EDR3JSodzXeiEky/oXdHtmhUpUVpmqGZ9qkBtrd74c7Qa6jh+tNy
+         w/Mw==
+X-Gm-Message-State: APjAAAVzQKX+//bAPmaqwM6KrNx7zN4WP4fOeAq17mQ/Tn/w8VbtFE8c
+        r77S2mvJo0CZDwi5OmENAm8UyFoSsDjDfvF0WQs=
+X-Google-Smtp-Source: APXvYqwH/xS5O9TOdNcFCn5tciKqo40938DWC9Z9mgJ63lhIYdYj4qjG+4ZQkIjStKxSZneUvv0nUzvkrKMVElCjPSQ=
+X-Received: by 2002:a92:5c8a:: with SMTP id d10mr59562557ilg.137.1582526304024;
+ Sun, 23 Feb 2020 22:38:24 -0800 (PST)
 MIME-Version: 1.0
 References: <20200223020611.1802-1-allison.henderson@oracle.com>
- <CAOQ4uxgvJOF6+jd9BuJfxxGQbiit6J7zVOVnigwLb-RWizRqfg@mail.gmail.com> <5b2ade02-0f1b-b976-2b38-d10fcb41d317@oracle.com>
-In-Reply-To: <5b2ade02-0f1b-b976-2b38-d10fcb41d317@oracle.com>
+ <20200223020611.1802-8-allison.henderson@oracle.com> <CAOQ4uxj_X+Sm6A838CVsDqL8zkYy63G++RFuew1dYmLsXhOpQg@mail.gmail.com>
+ <2abd5db4-bf0e-7ed0-3777-700dbc2e379e@oracle.com>
+In-Reply-To: <2abd5db4-bf0e-7ed0-3777-700dbc2e379e@oracle.com>
 From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Mon, 24 Feb 2020 08:30:05 +0200
-Message-ID: <CAOQ4uxhhW2ZMVdF8zvHRPk65wsJTMn55tnCrJ7BVQK1CSAu3gQ@mail.gmail.com>
-Subject: Re: [PATCH v7 00/19] xfs: Delayed Ready Attrs
+Date:   Mon, 24 Feb 2020 08:38:12 +0200
+Message-ID: <CAOQ4uxihN98SNE9SfHHc7Ajcs5siA-RXOYB5fgLqic+8ZDpGAQ@mail.gmail.com>
+Subject: Re: [PATCH v7 07/19] xfs: Factor out xfs_attr_leaf_addname helper
 To:     Allison Collins <allison.henderson@oracle.com>
 Cc:     linux-xfs <linux-xfs@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
@@ -66,78 +67,52 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Feb 23, 2020 at 6:02 PM Allison Collins
+On Sun, Feb 23, 2020 at 8:38 PM Allison Collins
 <allison.henderson@oracle.com> wrote:
 >
->
->
-> On 2/23/20 12:55 AM, Amir Goldstein wrote:
-> > On Sun, Feb 23, 2020 at 4:06 AM Allison Collins
+> On 2/23/20 5:42 AM, Amir Goldstein wrote:
+> > On Sun, Feb 23, 2020 at 4:07 AM Allison Collins
 > > <allison.henderson@oracle.com> wrote:
 > >>
-> >> Hi all,
-> >>
-> >> This set is a subset of a larger series for delayed attributes. Which is
-> >> a subset of an even larger series, parent pointers. Delayed attributes
-> >> allow attribute operations (set and remove) to be logged and committed
-> >> in the same way that other delayed operations do. This allows more
-> >> complex operations (like parent pointers) to be broken up into multiple
-> >> smaller transactions. To do this, the existing attr operations must be
-> >> modified to operate as either a delayed operation or a inline operation
-> >> since older filesystems will not be able to use the new log entries.
+> >> Factor out new helper function xfs_attr_leaf_try_add.
 > >
-> > High level question, before I dive into the series:
+> > Right. This should be the subject.
+> > Not factor out xfs_attr_leaf_addname helper.
 > >
-> > Which other "delayed operations" already exist?
-> > I think delayed operations were added by Darrick to handle the growth of
-> > translation size due to reflink. Right? So I assume the existing delayed
-> > operations deal with block accounting.
-> Gosh, quite a few I think, but I'm not solid on what they all do.  If we
-> take a peek at XFS_LI_TYPE_DESC, theres an identifier for each type, to
-> give you an idea.  A lot of them do look like they are part of reflink
-> operations though.
+> >> Because new delayed attribute
+> >> routines cannot roll transactions, we carve off the parts of xfs_attr_leaf_addname
+> >> that we can use, and move the commit into the calling function.
+> >
+> > And that is a different change.
+> > It is hard enough to review a pure factor out of a helper.
+> > Adding changed inside a pure re-factor is not good.
+> >
+> > Belongs to another change - move transaction commit to caller.
 >
-> > When speaking of parent pointers, without having looked into the details yet,
-> > it seem the delayed operations we would want to log are operations that deal
-> > with namespace changes, i.e.: link,unlink,rename.
-> > The information needed to be logged for these ops is minimal.
-> > Why do we need a general infrastructure for delayed attr operations?
-> >
-> > Thanks,
-> > Amir.
-> >
-> Great question, this one goes back a ways.  I believe the train of logic
-> we had is that because parent pointers also include the filename of the
-> parent, its possible we can end up with really big attributes.  Which
-> may run into a lot of block map/unmap activity for name space changes.
-> We didnt want to end up with overly large transactions in the log, so we
-> wanted to break them up by returning -EAGAIN where ever the transactions
-> used to be rolled.  I'm pretty sure that covers a quick high level
-> history of where we are now?  Did that answer your question?
+> Yes, this came up in the last review, but the reason I avoid it is
+> because I think the transaction looks weird in either helper.  The
+> reason the roll is here is because there is no room to add the attr as a
+> leaf, and so we need to hand it off to the node subroutines.  But that
+> seems like something that should be managed by the caller, not leaf
+> helpers.  So I was concerned that separating the split and the hoist
+> would generate more weird looks from people trying to understand the
+> split until the see the hoist in the next patch.  If people really think
+> it looks better that way, I can split them up.  But I know folks have a
+> tough enough time trying to recall the discussion history, so I'm trying
+> to avoid confusion of another type :-)
+>
+> Thoughts?
 >
 
-Partly.
-My question was like this:
-It seems that your work is about implementing:
-[intent to set xattr <new parent inode,gen,offset> <new name>]
-[intent to remove xattr <old parent inode,gen,offset> <old name>]
-
-While at a high level what the user really *intents* to do is:
-[intent to link <inode> to <new parent inode>;<new name>]
-[intent to unlink <inode> from <old parent inode>;<old name>]
-
-I guess the log item sizes of the two variants is quite similar, so it
-doesn't make much of a difference and deferred xattr ops are more
-generic and may be used for other things in the future.
-
-Another thing is that the transaction space required from directory
-entry changes is (probably) already taken into account correctly
-in the code, so there is no need to worry about deferred namespace
-operations from that aspect, but from a pure design perspective,
-if namespace operations become complex, *they* are the ones
-that should be made into deferred operations.
-
-Or maybe I am not reading the situations correctly at all...
+It's fine, so long as you document it properly in commit message.
+See, we are so bad in this review process, that we rely on humans
+to verify that logic preserving re-factoring patches are indeed logic
+preserving. This is so lame to begin with, because there are static
+checker bots out there that would gladly do that work for us :) ...
+if we only annotated the logic preserving patches as such.
+In the mean while, while we are substituting the review robots,
+the least a developer could do is not call out a patch "re-factoring"
+and sneak in a logic change without due notice to reviewers.
 
 Thanks,
 Amir.
