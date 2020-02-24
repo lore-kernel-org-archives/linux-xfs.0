@@ -3,72 +3,112 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16A59C38BE2
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 19:56:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7457BC38BE0
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 19:57:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EA30A21556
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 19:56:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C0A920838
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 19:57:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726722AbgBXT4S (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Feb 2020 14:56:18 -0500
-Received: from verein.lst.de ([213.95.11.211]:40054 "EHLO verein.lst.de"
+        id S1726786AbgBXT5i (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Feb 2020 14:57:38 -0500
+Received: from mga05.intel.com ([192.55.52.43]:14001 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726593AbgBXT4R (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 24 Feb 2020 14:56:17 -0500
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id BEB1A68B05; Mon, 24 Feb 2020 20:56:15 +0100 (CET)
-Date:   Mon, 24 Feb 2020 20:56:15 +0100
-From:   Christoph Hellwig <hch@lst.de>
+        id S1726593AbgBXT5h (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 24 Feb 2020 14:57:37 -0500
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 24 Feb 2020 11:57:37 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.70,481,1574150400"; 
+   d="scan'208";a="255695319"
+Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
+  by orsmga002.jf.intel.com with ESMTP; 24 Feb 2020 11:57:36 -0800
+Date:   Mon, 24 Feb 2020 11:57:36 -0800
+From:   Ira Weiny <ira.weiny@intel.com>
 To:     Dave Chinner <david@fromorbit.com>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        Allison Collins <allison.henderson@oracle.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 09/31] xfs: move struct xfs_da_args to xfs_types.h
-Message-ID: <20200224195615.GA10432@lst.de>
-References: <20200221141154.476496-1-hch@lst.de> <20200221141154.476496-10-hch@lst.de> <20200221225728.GX10776@dread.disaster.area>
+Cc:     linux-kernel@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH V4 09/13] fs/xfs: Add write aops lock to xfs layer
+Message-ID: <20200224195735.GA11565@iweiny-DESK2.sc.intel.com>
+References: <20200221004134.30599-1-ira.weiny@intel.com>
+ <20200221004134.30599-10-ira.weiny@intel.com>
+ <20200224003455.GY10776@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200221225728.GX10776@dread.disaster.area>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20200224003455.GY10776@dread.disaster.area>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Feb 22, 2020 at 09:57:28AM +1100, Dave Chinner wrote:
-> On Fri, Feb 21, 2020 at 06:11:32AM -0800, Christoph Hellwig wrote:
-> > To allow passing a struct xfs_da_args to the high-level attr helpers
-> > it needs to be easily includable by files like xfs_xattr.c.  Move the
-> > struct definition to xfs_types.h to allow for that.
+On Mon, Feb 24, 2020 at 11:34:55AM +1100, Dave Chinner wrote:
+> On Thu, Feb 20, 2020 at 04:41:30PM -0800, ira.weiny@intel.com wrote:
+> > From: Ira Weiny <ira.weiny@intel.com>
 > > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_da_btree.h | 64 ------------------------------------
-> >  fs/xfs/libxfs/xfs_types.h    | 60 +++++++++++++++++++++++++++++++++
-> >  2 files changed, 60 insertions(+), 64 deletions(-)
-> 
-> This seems way too broad. Stuff in fs/xfs/libxfs/xfs_types.h is
-> really for fundamental XFS types, not for complex, subsystem
-> specific API structures.
-> 
-> Why can't the xattr code simply include what it needs to get this
-> structure from xfs_da_btree.h like everything else does?  Indeed,
-> fs/xfs/xfs_xattr.c already includes xfs_da_format.h, so it should be
-> able to directly include xfs_da_btree.h without much extra hassle.
-> 
-> Hence I don't really see why making this structure globally visible
-> is actually necessary, especially as the function prototypes in
-> header files can simply use a forward declaration of struct
-> xfs_da_args....
 
-Forward declarations aren't the problem, but I wanted to avoid having
-to pull xfs_da_btree.h into all users of the external xattr API.  It
-turns out that is just three new files, so it probably isn't too bad.
+[snip]
 
-I have a new tree with this move dropped, but I'm going to wait a little
-before I resend to see if there are any other comments.
+> > 
+> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > index 35df324875db..5b014c428f0f 100644
+> > --- a/fs/xfs/xfs_inode.c
+> > +++ b/fs/xfs/xfs_inode.c
+> > @@ -142,12 +142,12 @@ xfs_ilock_attr_map_shared(
+> >   *
+> >   * Basic locking order:
+> >   *
+> > - * i_rwsem -> i_mmap_lock -> page_lock -> i_ilock
+> > + * s_dax_sem -> i_rwsem -> i_mmap_lock -> page_lock -> i_ilock
+> >   *
+> >   * mmap_sem locking order:
+> >   *
+> >   * i_rwsem -> page lock -> mmap_sem
+> > - * mmap_sem -> i_mmap_lock -> page_lock
+> > + * s_dax_sem -> mmap_sem -> i_mmap_lock -> page_lock
+> >   *
+> >   * The difference in mmap_sem locking order mean that we cannot hold the
+> >   * i_mmap_lock over syscall based read(2)/write(2) based IO. These IO paths can
+> > @@ -182,6 +182,9 @@ xfs_ilock(
+> >  	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
+> >  	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_SUBCLASS_MASK)) == 0);
+> >  
+> > +	if (lock_flags & XFS_DAX_EXCL)
+> > +		inode_aops_down_write(VFS_I(ip));
+> 
+> I largely don't see the point of adding this to xfs_ilock/iunlock.
+> 
+> It's only got one caller, so I don't see much point in adding it to
+> an interface that has over a hundred other call sites that don't
+> need or use this lock. just open code it where it is needed in the
+> ioctl code.
+
+I know it seems overkill but if we don't do this we need to code a flag to be
+returned from xfs_ioctl_setattr_dax_invalidate().  This flag is then used in
+xfs_ioctl_setattr_get_trans() to create the transaction log item which can then
+be properly used to unlock the lock in xfs_inode_item_release()
+
+I don't know of a cleaner way to communicate to xfs_inode_item_release() to
+unlock i_aops_sem after the transaction is complete.
+
+Ira
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
