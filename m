@@ -2,137 +2,180 @@ Return-Path: <SRS0=6RgE=4M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51BD5C3567B
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 07:27:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 442C5C35679
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 07:37:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2427420578
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 07:27:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 147DE2072D
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 07:37:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OMYl9C4m"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="umeMB2Jc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726628AbgBXH1M (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Feb 2020 02:27:12 -0500
-Received: from mail-il1-f193.google.com ([209.85.166.193]:40607 "EHLO
-        mail-il1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726216AbgBXH1M (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Feb 2020 02:27:12 -0500
-Received: by mail-il1-f193.google.com with SMTP id i7so6880812ilr.7
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Feb 2020 23:27:12 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=obCpQ6XZdQwr84gdqSWP440r94XMDfn/MSGqGVq1rxY=;
-        b=OMYl9C4m24zKvctCg1QYiwoXf6MF4LRlykAm52cq5Lutb3eHx9TjH479d5ZlmysUZp
-         7T8TQguIz5d5e67vLHZHggG3Vos/5CPQbfcdyuZcD5jJHr48SPC7P+6bb48UJ0lbzY8r
-         gEOvow8mqaX7I6Ss5sdtf/FkZ9X59ApwQ31jy0ygEgRC+GUNFAsaWX+8D9HXKd3/taDz
-         ctk5Nj+hGhVkDTVqtwL9bpGlah/JocxD8FACzLUjp6UwfjYaPAK3o8oahlV4GHmBaqTZ
-         OyHLigWNWPRb6VQSIoUEeGpB2sJWHEYhou1Wr5JujrjmtX+J792oYTcGLBBP+Oy35RFd
-         k50Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=obCpQ6XZdQwr84gdqSWP440r94XMDfn/MSGqGVq1rxY=;
-        b=D9Tc4+vFif8BnoNrJhfuISPnzMIgcsT3Uf2WQFWyjL4YoRbJKQP+/55mTi7PaArBd5
-         qnwIREbwuq3wdtz5hWeM3hQOPWUSbQ6FBpBSeHjirQOfSCKiDcxhPSGokp55sa+K5JNo
-         DgxZAGGVCtv74HaNrowJXYRrjFglWmQpXfzpf3Mo6csee+r3BD4XRv4Q8otY3vWN4HFT
-         OfnWrtZ/H/4PkhPVo34QxZ2IM+FBUyiMZJbMssHHCtu4rf8N109WHI8bZYz+HYV/wwJI
-         g2O8kWGZrMrS2nqnWGtIZzTdimUAxdYWxlgvRpb0njAyqwmKjkWOUt01ljcYJxdNSbtK
-         GkLg==
-X-Gm-Message-State: APjAAAW3wAYYQPHgmKGNJH9EEn5tWcGmQ/TWS6lH3ZZR9ki5492GP4p0
-        +dUdnS7WZRISz61BM1tTX6mW3KsGqpPy+qvuIghpVA==
-X-Google-Smtp-Source: APXvYqxcUUWulUOGsot2XKnL8vBqi4nBsw21mBB3txaClCZ/Hr1sJgOzZRkfkbcZyX4XIVjDp49t+tHNLVbI14MtpXQ=
-X-Received: by 2002:a92:d5c3:: with SMTP id d3mr55482568ilq.250.1582529231822;
- Sun, 23 Feb 2020 23:27:11 -0800 (PST)
-MIME-Version: 1.0
-References: <20200223020611.1802-1-allison.henderson@oracle.com>
- <20200223020611.1802-8-allison.henderson@oracle.com> <CAOQ4uxj_X+Sm6A838CVsDqL8zkYy63G++RFuew1dYmLsXhOpQg@mail.gmail.com>
- <2abd5db4-bf0e-7ed0-3777-700dbc2e379e@oracle.com> <CAOQ4uxihN98SNE9SfHHc7Ajcs5siA-RXOYB5fgLqic+8ZDpGAQ@mail.gmail.com>
- <0c916507-fd00-c767-62d9-305d6b22e252@oracle.com>
-In-Reply-To: <0c916507-fd00-c767-62d9-305d6b22e252@oracle.com>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Mon, 24 Feb 2020 09:27:00 +0200
-Message-ID: <CAOQ4uxi6=10T3AWSfvKj2q3zznD9VGhnaXrey-GGKU4i_OYFbw@mail.gmail.com>
-Subject: Re: [PATCH v7 07/19] xfs: Factor out xfs_attr_leaf_addname helper
-To:     Allison Collins <allison.henderson@oracle.com>
+        id S1726628AbgBXHhD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Feb 2020 02:37:03 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:35456 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725792AbgBXHhD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Feb 2020 02:37:03 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01O7XD51055006;
+        Mon, 24 Feb 2020 07:37:01 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=/IYHveXJXlT3eGsm6He594YhbZ/7WVL5rySn5t1MyOU=;
+ b=umeMB2JcRhWLSFz+5wWZORol41kY0JvXSvLSX4BvGhuCExiY+RlGEyAsN0SoPs5erqiG
+ 4s5vUnwWGEJ2vuSglrBNSQuFSNUsjZzNOOyiqFmXUWLniK3jJxsqKrGLh32OiFzELg5G
+ hjQ5lYULYXBJ3vUtke5oVwULOlswDEtK2EQ+uoaGqjkN0pYEj62unMxShENidtKu8wjV
+ dOk3wrULoeM+R0PR5Mz5lg+WECZbZ7u/qTYZmQGQERsdgsBI671lurAuqRQdNUFwSwzX
+ Mr4LA4pvGeeMLbcDB0dfErorxZyAiSY4PmdJpBtkTri2g/A9kMxJR2MVvUR2LunkCLmd vg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2yauqu5fvt-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 24 Feb 2020 07:37:01 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01O7RxA5053049;
+        Mon, 24 Feb 2020 07:37:00 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2ybe10kbus-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 24 Feb 2020 07:37:00 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01O7axbK006395;
+        Mon, 24 Feb 2020 07:37:00 GMT
+Received: from [192.168.1.223] (/67.1.3.112)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sun, 23 Feb 2020 23:36:59 -0800
+Subject: Re: [PATCH v7 02/19] xfs: Embed struct xfs_name in xfs_da_args
+To:     Amir Goldstein <amir73il@gmail.com>
 Cc:     linux-xfs <linux-xfs@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+References: <20200223020611.1802-1-allison.henderson@oracle.com>
+ <20200223020611.1802-3-allison.henderson@oracle.com>
+ <CAOQ4uxjnByzxLUsF6GL7-fOeiNwQR46vgt5nSgfUNfB8jdfqMA@mail.gmail.com>
+ <0726eb62-c308-3c04-8e3b-ff1f6c76844a@oracle.com>
+ <CAOQ4uxiDcaApzkrdL9NVGSgM35K8tc-ny-rta7tYJiQPiL_Dzg@mail.gmail.com>
+From:   Allison Collins <allison.henderson@oracle.com>
+Message-ID: <1bc9a981-8694-ebce-8243-8d79d7c3ba7f@oracle.com>
+Date:   Mon, 24 Feb 2020 00:36:59 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <CAOQ4uxiDcaApzkrdL9NVGSgM35K8tc-ny-rta7tYJiQPiL_Dzg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9540 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0
+ suspectscore=0 malwarescore=0 phishscore=0 bulkscore=0 mlxscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2002240065
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9540 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 bulkscore=0
+ clxscore=1015 malwarescore=0 impostorscore=0 adultscore=0 phishscore=0
+ priorityscore=1501 mlxlogscore=999 spamscore=0 mlxscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2002240066
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 24, 2020 at 9:09 AM Allison Collins
-<allison.henderson@oracle.com> wrote:
->
->
->
-> On 2/23/20 11:38 PM, Amir Goldstein wrote:
-> > On Sun, Feb 23, 2020 at 8:38 PM Allison Collins
-> > <allison.henderson@oracle.com> wrote:
-> >>
-> >> On 2/23/20 5:42 AM, Amir Goldstein wrote:
-> >>> On Sun, Feb 23, 2020 at 4:07 AM Allison Collins
-> >>> <allison.henderson@oracle.com> wrote:
-> >>>>
-> >>>> Factor out new helper function xfs_attr_leaf_try_add.
-> >>>
-> >>> Right. This should be the subject.
-> >>> Not factor out xfs_attr_leaf_addname helper.
-> >>>
-> >>>> Because new delayed attribute
-> >>>> routines cannot roll transactions, we carve off the parts of xfs_attr_leaf_addname
-> >>>> that we can use, and move the commit into the calling function.
-> >>>
-> >>> And that is a different change.
-> >>> It is hard enough to review a pure factor out of a helper.
-> >>> Adding changed inside a pure re-factor is not good.
-> >>>
-> >>> Belongs to another change - move transaction commit to caller.
-> >>
-> >> Yes, this came up in the last review, but the reason I avoid it is
-> >> because I think the transaction looks weird in either helper.  The
-> >> reason the roll is here is because there is no room to add the attr as a
-> >> leaf, and so we need to hand it off to the node subroutines.  But that
-> >> seems like something that should be managed by the caller, not leaf
-> >> helpers.  So I was concerned that separating the split and the hoist
-> >> would generate more weird looks from people trying to understand the
-> >> split until the see the hoist in the next patch.  If people really think
-> >> it looks better that way, I can split them up.  But I know folks have a
-> >> tough enough time trying to recall the discussion history, so I'm trying
-> >> to avoid confusion of another type :-)
-> >>
-> >> Thoughts?
-> >>
-> >
-> > It's fine, so long as you document it properly in commit message.
-> > See, we are so bad in this review process, that we rely on humans
-> > to verify that logic preserving re-factoring patches are indeed logic
-> > preserving. This is so lame to begin with, because there are static
-> > checker bots out there that would gladly do that work for us :) ...
-> I didnt know there were tools out there that did that.  They sound
-> helpful though!
->
-> > if we only annotated the logic preserving patches as such.
-> > In the mean while, while we are substituting the review robots,
-> > the least a developer could do is not call out a patch "re-factoring"
-> > and sneak in a logic change without due notice to reviewers.
-> Ok, what if the title were to say something like:
-> xfs: Split out node handling from xfs_attr_leaf_addname
->
-> Or maybe just "Split apart xfs_attr_leaf_addname"?  Does that sound like
-> it would be a better description here?
->
 
-Sure, both are fine.
-All I'm saying is that "factor out" is a well established keyword
-that shouldn't be abused.
 
-Thanks,
-Amir.
+On 2/23/20 11:50 PM, Amir Goldstein wrote:
+> On Sun, Feb 23, 2020 at 6:51 PM Allison Collins
+> <allison.henderson@oracle.com> wrote:
+>>
+>>
+>>
+>> On 2/23/20 4:54 AM, Amir Goldstein wrote:
+>>> On Sun, Feb 23, 2020 at 4:07 AM Allison Collins
+>>> <allison.henderson@oracle.com> wrote:
+>>>>
+>>>> This patch embeds an xfs_name in xfs_da_args, replacing the name, namelen, and flags
+>>>> members.  This helps to clean up the xfs_da_args structure and make it more uniform
+>>>> with the new xfs_name parameter being passed around.
+>>>>
+>>>> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+>>>> Reviewed-by: Brian Foster <bfoster@redhat.com>
+>>>> ---
+>>>>    fs/xfs/libxfs/xfs_attr.c        |  37 +++++++-------
+>>>>    fs/xfs/libxfs/xfs_attr_leaf.c   | 104 +++++++++++++++++++++-------------------
+>>>>    fs/xfs/libxfs/xfs_attr_remote.c |   2 +-
+>>>>    fs/xfs/libxfs/xfs_da_btree.c    |   6 ++-
+>>>>    fs/xfs/libxfs/xfs_da_btree.h    |   4 +-
+>>>>    fs/xfs/libxfs/xfs_dir2.c        |  18 +++----
+>>>>    fs/xfs/libxfs/xfs_dir2_block.c  |   6 +--
+>>>>    fs/xfs/libxfs/xfs_dir2_leaf.c   |   6 +--
+>>>>    fs/xfs/libxfs/xfs_dir2_node.c   |   8 ++--
+>>>>    fs/xfs/libxfs/xfs_dir2_sf.c     |  30 ++++++------
+>>>>    fs/xfs/scrub/attr.c             |  12 ++---
+>>>>    fs/xfs/xfs_trace.h              |  20 ++++----
+>>>>    12 files changed, 130 insertions(+), 123 deletions(-)
+>>>>
+>>>> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+>>>> index 6717f47..9acdb23 100644
+>>>> --- a/fs/xfs/libxfs/xfs_attr.c
+>>>> +++ b/fs/xfs/libxfs/xfs_attr.c
+>>>> @@ -72,13 +72,12 @@ xfs_attr_args_init(
+>>>>           args->geo = dp->i_mount->m_attr_geo;
+>>>>           args->whichfork = XFS_ATTR_FORK;
+>>>>           args->dp = dp;
+>>>> -       args->flags = flags;
+>>>> -       args->name = name->name;
+>>>> -       args->namelen = name->len;
+>>>> -       if (args->namelen >= MAXNAMELEN)
+>>>> +       memcpy(&args->name, name, sizeof(struct xfs_name));
+>>>
+>>> Maybe xfs_name_copy and xfs_name_equal are in order?
+>> You are suggesting to add xfs_name_copy and xfs_name_equal helpers?  I'm
+>> not sure there's a use case yet for xfs_name_equal, at least not in this
+>> set.  And I think people indicated that they preferred the memcpy in
+>> past reviews rather than handling each member of the xfs_name struct.
+>> Unless I misunderstood the question, I'm not sure there is much left for
+>> a xfs_name_copy helper to cover that the memcpy does not?
+>>
+> 
+> It's fine. The choice between xfs_name_copy and memcpy is
+> mostly personal taste. I did not read through past reviews.
+> 
+>>>
+>>>>
+>>>> +       /* Use name now stored in args */
+>>>> +       name = &args.name;
+>>>> +
+>>>
+>>> It seem that the context of these comments be clear in the future.
+>> You are asking to add more context to the comment?  How about:
+>>          /*
+>>           * Use name now stored in args.  Abandon the local name
+>>           * parameter as it will not be updated in the subroutines
+>>           */
+>>
+>> Does that help some?
+> 
+> Can't you just not use local name arg anymore?
+> Instead of re-assigning it and explaining why you do that.
+> Does that gain anything to code readability or anything else?
+Well, with out the set, you cannot use for example name->type anymore, 
+you need to use args->name->type.  In order to use the local name 
+variable again, it needs to be updated.  I stumbled across this myself 
+when working with it and thought it would be better to fix it right away 
+rather than let others run across the same mistake.  It seems like a 
+subtle and easy thing to overlook otherwise.
+
+I do think it's a bit of a wart that people may not have thought about 
+when we talked about adding this patch.  Though I don't know that it's a 
+big enough deal to drop it either.  But I did feel some motivation to at 
+least clean it up and make a comment about it.
+
+Allison
+
+> 
+> Thanks,
+> Amir.
+> 
