@@ -3,125 +3,124 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3462C38BFA
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 22:33:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B867AC38BF9
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 22:35:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 82B062176D
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 22:33:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9875121927
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 22:35:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727843AbgBXWc6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Feb 2020 17:32:58 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:60435 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727459AbgBXWc5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Feb 2020 17:32:57 -0500
-Received: from dread.disaster.area (pa49-195-202-68.pa.nsw.optusnet.com.au [49.195.202.68])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id C34DF7E9764;
-        Tue, 25 Feb 2020 09:32:47 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1j6MHN-0004Ek-4z; Tue, 25 Feb 2020 09:32:45 +1100
-Date:   Tue, 25 Feb 2020 09:32:45 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Ira Weiny <ira.weiny@intel.com>
-Cc:     linux-kernel@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH V4 09/13] fs/xfs: Add write aops lock to xfs layer
-Message-ID: <20200224223245.GZ10776@dread.disaster.area>
-References: <20200221004134.30599-1-ira.weiny@intel.com>
- <20200221004134.30599-10-ira.weiny@intel.com>
- <20200224003455.GY10776@dread.disaster.area>
- <20200224195735.GA11565@iweiny-DESK2.sc.intel.com>
+        id S1728258AbgBXWfM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Feb 2020 17:35:12 -0500
+Received: from sandeen.net ([63.231.237.45]:51594 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728257AbgBXWfL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 24 Feb 2020 17:35:11 -0500
+Received: from Liberator.local (unknown [4.28.11.157])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 9BEE02A78;
+        Mon, 24 Feb 2020 16:34:47 -0600 (CST)
+Subject: Re: [PATCH 1/6] xfs: remove the agfl_bno member from struct xfs_agfl
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        Eric Sandeen <sandeen@redhat.com>
+References: <20200130133343.225818-1-hch@lst.de>
+ <20200130133343.225818-2-hch@lst.de> <20200224220256.GA3446@infradead.org>
+ <75eb13f6-8f96-a07d-f6ee-c648f8a3b38e@sandeen.net>
+ <20200224223034.GA14361@infradead.org>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <61713cad-ea6c-6a0c-79eb-cf01105e1222@sandeen.net>
+Date:   Mon, 24 Feb 2020 14:35:08 -0800
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.5.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200224195735.GA11565@iweiny-DESK2.sc.intel.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
-        a=mqTaRPt+QsUAtUurwE173Q==:117 a=mqTaRPt+QsUAtUurwE173Q==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=l697ptgUJYAA:10
-        a=QyXUC8HyAAAA:8 a=7-415B0cAAAA:8 a=gnghuLLEDpD_sVzI300A:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20200224223034.GA14361@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 24, 2020 at 11:57:36AM -0800, Ira Weiny wrote:
-> On Mon, Feb 24, 2020 at 11:34:55AM +1100, Dave Chinner wrote:
-> > On Thu, Feb 20, 2020 at 04:41:30PM -0800, ira.weiny@intel.com wrote:
-> > > From: Ira Weiny <ira.weiny@intel.com>
-> > > 
+On 2/24/20 2:30 PM, Christoph Hellwig wrote:
+> On Mon, Feb 24, 2020 at 02:27:49PM -0800, Eric Sandeen wrote:
+>> On 2/24/20 2:02 PM, Christoph Hellwig wrote:
+>>> On Thu, Jan 30, 2020 at 02:33:38PM +0100, Christoph Hellwig wrote:
+>>>> struct xfs_agfl is a header in front of the AGFL entries that exists
+>>>> for CRC enabled file systems.  For not CRC enabled file systems the AGFL
+>>>> is simply a list of agbno.  Make the CRC case similar to that by just
+>>>> using the list behind the new header.  This indirectly solves a problem
+>>>> with modern gcc versions that warn about taking addresses of packed
+>>>> structures (and we have to pack the AGFL given that gcc rounds up
+>>>> structure sizes).  Also replace the helper macro to get from a buffer
+>>>> with an inline function in xfs_alloc.h to make the code easier to
+>>>> read.
+>>>>
+>>>> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>>>
+>>> Any chance we can pick this up for 5.6 to unbreak arm OABI?
+>>>
+>>
+>> What did I miss, where's the report of actual breakage vs. 
+>> (I thought) harmless GCC complaints?
 > 
-> [snip]
-> 
-> > > 
-> > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > > index 35df324875db..5b014c428f0f 100644
-> > > --- a/fs/xfs/xfs_inode.c
-> > > +++ b/fs/xfs/xfs_inode.c
-> > > @@ -142,12 +142,12 @@ xfs_ilock_attr_map_shared(
-> > >   *
-> > >   * Basic locking order:
-> > >   *
-> > > - * i_rwsem -> i_mmap_lock -> page_lock -> i_ilock
-> > > + * s_dax_sem -> i_rwsem -> i_mmap_lock -> page_lock -> i_ilock
-> > >   *
-> > >   * mmap_sem locking order:
-> > >   *
-> > >   * i_rwsem -> page lock -> mmap_sem
-> > > - * mmap_sem -> i_mmap_lock -> page_lock
-> > > + * s_dax_sem -> mmap_sem -> i_mmap_lock -> page_lock
-> > >   *
-> > >   * The difference in mmap_sem locking order mean that we cannot hold the
-> > >   * i_mmap_lock over syscall based read(2)/write(2) based IO. These IO paths can
-> > > @@ -182,6 +182,9 @@ xfs_ilock(
-> > >  	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
-> > >  	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_SUBCLASS_MASK)) == 0);
-> > >  
-> > > +	if (lock_flags & XFS_DAX_EXCL)
-> > > +		inode_aops_down_write(VFS_I(ip));
-> > 
-> > I largely don't see the point of adding this to xfs_ilock/iunlock.
-> > 
-> > It's only got one caller, so I don't see much point in adding it to
-> > an interface that has over a hundred other call sites that don't
-> > need or use this lock. just open code it where it is needed in the
-> > ioctl code.
-> 
-> I know it seems overkill but if we don't do this we need to code a flag to be
-> returned from xfs_ioctl_setattr_dax_invalidate().  This flag is then used in
-> xfs_ioctl_setattr_get_trans() to create the transaction log item which can then
-> be properly used to unlock the lock in xfs_inode_item_release()
-> 
-> I don't know of a cleaner way to communicate to xfs_inode_item_release() to
-> unlock i_aops_sem after the transaction is complete.
+> The "harmless" gcc complaint is that the kernel build errors out as
+> soon as XFS is enabled on arm OABI.  Which is a good thing, as the
+> file system would not be interoperable with other architectures if it
+> didn't.
 
-We manually unlock inodes after transactions in many cases -
-anywhere we do a rolling transaction, the inode locks do not get
-released by the transaction. Hence for a one-off case like this it
-doesn't really make sense to push all this infrastructure into the
-transaction subsystem. Especially as we can manually lock before and
-unlock after the transaction context without any real complexity.
+Not just on latest GCC?
 
-This also means that we can, if necessary, do aops manipulation work
-/after/ the transaction that changes on-disk state completes and we
-still hold the aops reference exclusively. While we don't do that
-now, I think it is worthwhile keeping our options open here....
+Ok, I just hadn't seen that reported (but, I miss lots).
 
-Cheers,
+And the commit log doesn't mention any actual breakage; it sounds
+like patch to work around a new gcc warning, not an actual fix
+for anything real.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-Eric
