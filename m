@@ -7,446 +7,431 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B029DC35671
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 13:06:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9955C35671
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 13:08:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 78AB520732
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 13:06:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 88E8420732
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Feb 2020 13:08:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="edAWu3ZE"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VpOem90o"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727310AbgBXNGm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Feb 2020 08:06:42 -0500
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:30765 "EHLO
+        id S1727668AbgBXNIM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Feb 2020 08:08:12 -0500
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:35570 "EHLO
         us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727299AbgBXNGl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Feb 2020 08:06:41 -0500
+        by vger.kernel.org with ESMTP id S1727393AbgBXNIM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Feb 2020 08:08:12 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1582549600;
+        s=mimecast20190719; t=1582549690;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=oah0i/vbgr0BqJ9gQWFT3/fK0/GSgl5Mx1voCiNhVIM=;
-        b=edAWu3ZEKQ15dtwbziMet+0GstbtJyDvgSojuNvjacpCVk3wqB0eIfIKTpy+8yabApx0Xe
-        xpwaIryT33LH1HbeRqtZCqz53/LtkIeXn2Qz4h07Z+MUjUeHiuvji2dAqmfuHdLkVWKlpK
-        tJXbQidd2sBYHGzEVC9oKCECei+wwQA=
+        bh=POQSphizpwtp11R4rGUj2zhUVExgPByErFVD5r8pKlI=;
+        b=VpOem90oSHmRTCDnoxgA5xddedcpQmNni2QFUY8oWP2OvgKiQChPIv2h40bCcNVgT5NtRT
+        00h1e9hHM/M9kQ6prlQWMX2oO8havPjvbsjlLvrT2xEx7u+gu78T3R6bXGTA6Y+ENC9+IL
+        wshxfYDTTrgMXiqhZcPivzLmKXHnPqQ=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-453-ZwZYsvV0ObOqmyGOdfSlLQ-1; Mon, 24 Feb 2020 08:06:36 -0500
-X-MC-Unique: ZwZYsvV0ObOqmyGOdfSlLQ-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+ us-mta-138-5bTo1YGHOYGpBwEQccJbiA-1; Mon, 24 Feb 2020 08:08:04 -0500
+X-MC-Unique: 5bTo1YGHOYGpBwEQccJbiA-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4E1C8800D5B;
-        Mon, 24 Feb 2020 13:06:35 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 44E9D13F5;
+        Mon, 24 Feb 2020 13:08:03 +0000 (UTC)
 Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id CFDDD60BF7;
-        Mon, 24 Feb 2020 13:06:34 +0000 (UTC)
-Date:   Mon, 24 Feb 2020 08:06:32 -0500
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id AD7471001B28;
+        Mon, 24 Feb 2020 13:08:02 +0000 (UTC)
+Date:   Mon, 24 Feb 2020 08:08:00 -0500
 From:   Brian Foster <bfoster@redhat.com>
 To:     Allison Collins <allison.henderson@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v7 01/19] xfs: Replace attribute parameters with struct
- xfs_name
-Message-ID: <20200224130632.GA15761@bfoster>
+Subject: Re: [PATCH v7 03/19] xfs: Add xfs_has_attr and subroutines
+Message-ID: <20200224130800.GB15761@bfoster>
 References: <20200223020611.1802-1-allison.henderson@oracle.com>
- <20200223020611.1802-2-allison.henderson@oracle.com>
+ <20200223020611.1802-4-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200223020611.1802-2-allison.henderson@oracle.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+In-Reply-To: <20200223020611.1802-4-allison.henderson@oracle.com>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Feb 22, 2020 at 07:05:53PM -0700, Allison Collins wrote:
-> This patch replaces the attribute name and length parameters with a single struct
-> xfs_name parameter.  This helps to clean up the numbers of parameters being passed
-> around and pre-simplifies the code some.
+On Sat, Feb 22, 2020 at 07:05:55PM -0700, Allison Collins wrote:
+> From: Allison Henderson <allison.henderson@oracle.com>
+> 
+> This patch adds a new functions to check for the existence of an attribute.
+> Subroutines are also added to handle the cases of leaf blocks, nodes or shortform.
+> Common code that appears in existing attr add and remove functions have been
+> factored out to help reduce the appearance of duplicated code.  We will need these
+> routines later for delayed attributes since delayed operations cannot return error
+> codes.
 > 
 > Signed-off-by: Allison Collins <allison.henderson@oracle.com>
 > ---
-
-Looks fine to me:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/libxfs/xfs_attr.c  | 22 +++++++++-------------
->  fs/xfs/libxfs/xfs_attr.h  | 12 +++++-------
->  fs/xfs/libxfs/xfs_types.c | 11 +++++++++++
->  fs/xfs/libxfs/xfs_types.h |  1 +
->  fs/xfs/xfs_acl.c          | 25 +++++++++++--------------
->  fs/xfs/xfs_ioctl.c        | 23 +++++++++++++----------
->  fs/xfs/xfs_iops.c         |  6 +++---
->  fs/xfs/xfs_xattr.c        | 28 ++++++++++++++++------------
->  8 files changed, 69 insertions(+), 59 deletions(-)
+>  fs/xfs/libxfs/xfs_attr.c      | 171 ++++++++++++++++++++++++++++--------------
+>  fs/xfs/libxfs/xfs_attr.h      |   1 +
+>  fs/xfs/libxfs/xfs_attr_leaf.c | 111 +++++++++++++++++----------
+>  fs/xfs/libxfs/xfs_attr_leaf.h |   3 +
+>  4 files changed, 188 insertions(+), 98 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index e614972..6717f47 100644
+> index 9acdb23..2255060 100644
 > --- a/fs/xfs/libxfs/xfs_attr.c
 > +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -61,8 +61,7 @@ STATIC int
->  xfs_attr_args_init(
->  	struct xfs_da_args	*args,
->  	struct xfs_inode	*dp,
-> -	const unsigned char	*name,
-> -	size_t			namelen,
-> +	struct xfs_name		*name,
->  	int			flags)
->  {
+...
+> @@ -310,6 +313,37 @@ xfs_attr_set_args(
+>  }
 >  
-> @@ -74,8 +73,8 @@ xfs_attr_args_init(
->  	args->whichfork = XFS_ATTR_FORK;
->  	args->dp = dp;
->  	args->flags = flags;
-> -	args->name = name;
-> -	args->namelen = namelen;
-> +	args->name = name->name;
-> +	args->namelen = name->len;
->  	if (args->namelen >= MAXNAMELEN)
->  		return -EFAULT;		/* match IRIX behaviour */
->  
-> @@ -139,8 +138,7 @@ xfs_attr_get_ilocked(
->  int
->  xfs_attr_get(
->  	struct xfs_inode	*ip,
-> -	const unsigned char	*name,
-> -	size_t			namelen,
-> +	struct xfs_name		*name,
->  	unsigned char		**value,
->  	int			*valuelenp,
->  	int			flags)
-> @@ -156,7 +154,7 @@ xfs_attr_get(
->  	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
->  		return -EIO;
->  
-> -	error = xfs_attr_args_init(&args, ip, name, namelen, flags);
-> +	error = xfs_attr_args_init(&args, ip, name, flags);
->  	if (error)
->  		return error;
->  
-> @@ -339,8 +337,7 @@ xfs_attr_remove_args(
->  int
->  xfs_attr_set(
->  	struct xfs_inode	*dp,
-> -	const unsigned char	*name,
-> -	size_t			namelen,
-> +	struct xfs_name		*name,
->  	unsigned char		*value,
->  	int			valuelen,
->  	int			flags)
-> @@ -356,7 +353,7 @@ xfs_attr_set(
->  	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
->  		return -EIO;
->  
-> -	error = xfs_attr_args_init(&args, dp, name, namelen, flags);
-> +	error = xfs_attr_args_init(&args, dp, name, flags);
->  	if (error)
->  		return error;
->  
-> @@ -444,8 +441,7 @@ xfs_attr_set(
->  int
->  xfs_attr_remove(
->  	struct xfs_inode	*dp,
-> -	const unsigned char	*name,
-> -	size_t			namelen,
-> +	struct xfs_name		*name,
->  	int			flags)
->  {
->  	struct xfs_mount	*mp = dp->i_mount;
-> @@ -457,7 +453,7 @@ xfs_attr_remove(
->  	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
->  		return -EIO;
->  
-> -	error = xfs_attr_args_init(&args, dp, name, namelen, flags);
-> +	error = xfs_attr_args_init(&args, dp, name, flags);
->  	if (error)
->  		return error;
->  
-> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-> index 4243b22..35043db 100644
-> --- a/fs/xfs/libxfs/xfs_attr.h
-> +++ b/fs/xfs/libxfs/xfs_attr.h
-> @@ -147,14 +147,12 @@ int xfs_attr_list_int_ilocked(struct xfs_attr_list_context *);
->  int xfs_attr_list_int(struct xfs_attr_list_context *);
->  int xfs_inode_hasattr(struct xfs_inode *ip);
->  int xfs_attr_get_ilocked(struct xfs_inode *ip, struct xfs_da_args *args);
-> -int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
-> -		 size_t namelen, unsigned char **value, int *valuelenp,
-> -		 int flags);
-> -int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
-> -		 size_t namelen, unsigned char *value, int valuelen, int flags);
-> +int xfs_attr_get(struct xfs_inode *ip, struct xfs_name *name,
-> +		 unsigned char **value, int *valuelenp, int flags);
-> +int xfs_attr_set(struct xfs_inode *dp, struct xfs_name *name,
-> +		 unsigned char *value, int valuelen, int flags);
->  int xfs_attr_set_args(struct xfs_da_args *args);
-> -int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name,
-> -		    size_t namelen, int flags);
-> +int xfs_attr_remove(struct xfs_inode *dp, struct xfs_name *name, int flags);
->  int xfs_attr_remove_args(struct xfs_da_args *args);
->  int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
->  		  int flags, struct attrlist_cursor_kern *cursor);
-> diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
-> index 4f59554..781a5a9 100644
-> --- a/fs/xfs/libxfs/xfs_types.c
-> +++ b/fs/xfs/libxfs/xfs_types.c
-> @@ -12,6 +12,17 @@
->  #include "xfs_bit.h"
->  #include "xfs_mount.h"
->  
-> +/* Initialize a struct xfs_name with a null terminated string name */
-> +void
-> +xfs_name_init(
-> +	struct xfs_name *xname,
-> +	const char *name)
+>  /*
+> + * Return EEXIST if attr is found, or ENOATTR if not
+> + */
+> +int
+> +xfs_has_attr(
+> +	struct xfs_da_args      *args)
 > +{
-> +	xname->name = (unsigned char *)name;
-> +	xname->len = strlen(name);
-> +	xname->type = 0;
+> +	struct xfs_inode	*dp = args->dp;
+> +	struct xfs_buf		*bp = NULL;
+> +	int			error;
+> +
+> +	if (!xfs_inode_hasattr(dp))
+> +		return -ENOATTR;
+> +
+> +	if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
+> +		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
+> +		return xfs_attr_sf_findname(args, NULL, NULL);
+
+Nit: any reason we use "findname" here and "hasname" for the other two
+variants?
+
+Just a few other nit level things..
+
+> +	}
+> +
+> +	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
+> +		error = xfs_attr_leaf_hasname(args, &bp);
+> +
+> +		if (bp)
+> +			xfs_trans_brelse(args->trans, bp);
+> +
+> +		return error;
+> +	}
+> +
+> +	return xfs_attr_node_hasname(args, NULL);
 > +}
 > +
->  /* Find the size of the AG, in blocks. */
->  xfs_agblock_t
->  xfs_ag_block_count(
-> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-> index 397d947..b94acb5 100644
-> --- a/fs/xfs/libxfs/xfs_types.h
-> +++ b/fs/xfs/libxfs/xfs_types.h
-> @@ -180,6 +180,7 @@ enum xfs_ag_resv_type {
+> +/*
+>   * Remove the attribute specified in @args.
 >   */
->  struct xfs_mount;
->  
-> +void xfs_name_init(struct xfs_name *xname, const char *name);
->  xfs_agblock_t xfs_ag_block_count(struct xfs_mount *mp, xfs_agnumber_t agno);
->  bool xfs_verify_agbno(struct xfs_mount *mp, xfs_agnumber_t agno,
->  		xfs_agblock_t agbno);
-> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-> index cd743fad..42ac847 100644
-> --- a/fs/xfs/xfs_acl.c
-> +++ b/fs/xfs/xfs_acl.c
-> @@ -123,7 +123,7 @@ xfs_get_acl(struct inode *inode, int type)
->  	struct xfs_inode *ip = XFS_I(inode);
->  	struct posix_acl *acl = NULL;
->  	struct xfs_acl *xfs_acl = NULL;
-> -	unsigned char *ea_name;
-> +	struct xfs_name name;
->  	int error;
->  	int len;
->  
-> @@ -131,10 +131,10 @@ xfs_get_acl(struct inode *inode, int type)
->  
->  	switch (type) {
->  	case ACL_TYPE_ACCESS:
-> -		ea_name = SGI_ACL_FILE;
-> +		xfs_name_init(&name, SGI_ACL_FILE);
->  		break;
->  	case ACL_TYPE_DEFAULT:
-> -		ea_name = SGI_ACL_DEFAULT;
-> +		xfs_name_init(&name, SGI_ACL_DEFAULT);
->  		break;
->  	default:
->  		BUG();
-> @@ -145,9 +145,8 @@ xfs_get_acl(struct inode *inode, int type)
->  	 * go out to the disk.
+>  int
+...
+> @@ -773,12 +822,11 @@ xfs_attr_leaf_removename(
+>  	 * Remove the attribute.
 >  	 */
->  	len = XFS_ACL_MAX_SIZE(ip->i_mount);
-> -	error = xfs_attr_get(ip, ea_name, strlen(ea_name),
-> -				(unsigned char **)&xfs_acl, &len,
-> -				ATTR_ALLOC | ATTR_ROOT);
-> +	error = xfs_attr_get(ip, &name, (unsigned char **)&xfs_acl, &len,
-> +			     ATTR_ALLOC | ATTR_ROOT);
->  	if (error) {
->  		/*
->  		 * If the attribute doesn't exist make sure we have a negative
-> @@ -167,17 +166,17 @@ int
->  __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
->  {
->  	struct xfs_inode *ip = XFS_I(inode);
-> -	unsigned char *ea_name;
-> +	struct xfs_name name;
->  	int error;
->  
->  	switch (type) {
->  	case ACL_TYPE_ACCESS:
-> -		ea_name = SGI_ACL_FILE;
-> +		xfs_name_init(&name, SGI_ACL_FILE);
->  		break;
->  	case ACL_TYPE_DEFAULT:
->  		if (!S_ISDIR(inode->i_mode))
->  			return acl ? -EACCES : 0;
-> -		ea_name = SGI_ACL_DEFAULT;
-> +		xfs_name_init(&name, SGI_ACL_DEFAULT);
->  		break;
->  	default:
->  		return -EINVAL;
-> @@ -197,17 +196,15 @@ __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
->  		len -= sizeof(struct xfs_acl_entry) *
->  			 (XFS_ACL_MAX_ENTRIES(ip->i_mount) - acl->a_count);
->  
-> -		error = xfs_attr_set(ip, ea_name, strlen(ea_name),
-> -				     (unsigned char *)xfs_acl, len, ATTR_ROOT);
-> +		error = xfs_attr_set(ip, &name, (unsigned char *)xfs_acl, len,
-> +				     ATTR_ROOT);
->  
->  		kmem_free(xfs_acl);
->  	} else {
->  		/*
->  		 * A NULL ACL argument means we want to remove the ACL.
->  		 */
-> -		error = xfs_attr_remove(ip, ea_name,
-> -					strlen(ea_name),
-> -					ATTR_ROOT);
-> +		error = xfs_attr_remove(ip, &name, ATTR_ROOT);
->  
->  		/*
->  		 * If the attribute didn't exist to start with that's fine.
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index d42de92..28c07c9 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -357,7 +357,9 @@ xfs_attrmulti_attr_get(
->  {
->  	unsigned char		*kbuf;
->  	int			error = -EFAULT;
-> -	size_t			namelen;
-> +	struct xfs_name		xname;
+>  	dp = args->dp;
+> -	args->blkno = 0;
+> -	error = xfs_attr3_leaf_read(args->trans, args->dp, args->blkno, &bp);
+> -	if (error)
 > +
-> +	xfs_name_init(&xname, name);
+> +	error = xfs_attr_leaf_hasname(args, &bp);
+> +	if (error != -ENOATTR && error != -EEXIST)
+>  		return error;
 >  
->  	if (*len > XFS_XATTR_SIZE_MAX)
->  		return -EINVAL;
-> @@ -365,9 +367,7 @@ xfs_attrmulti_attr_get(
->  	if (!kbuf)
->  		return -ENOMEM;
+> -	error = xfs_attr3_leaf_lookup_int(bp, args);
+>  	if (error == -ENOATTR) {
+
+It looks like some of these error checks could be cleaned up where the
+helper function is used. I.e., something like the following here:
+
+	if (error == -ENOATTR) {
+		xfs_trans_brelse(...);
+		return error;
+	} else if (error != -EEXIST)
+		return error;
+
+>  		xfs_trans_brelse(args->trans, bp);
+>  		return error;
+> @@ -817,12 +865,10 @@ xfs_attr_leaf_get(xfs_da_args_t *args)
 >  
-> -	namelen = strlen(name);
-> -	error = xfs_attr_get(XFS_I(inode), name, namelen, &kbuf, (int *)len,
-> -			     flags);
-> +	error = xfs_attr_get(XFS_I(inode), &xname, &kbuf, (int *)len, flags);
->  	if (error)
->  		goto out_kfree;
+>  	trace_xfs_attr_leaf_get(args);
 >  
-> @@ -389,7 +389,9 @@ xfs_attrmulti_attr_set(
->  {
->  	unsigned char		*kbuf;
->  	int			error;
-> -	size_t			namelen;
-> +	struct xfs_name		xname;
-> +
-> +	xfs_name_init(&xname, name);
+> -	args->blkno = 0;
+> -	error = xfs_attr3_leaf_read(args->trans, args->dp, args->blkno, &bp);
+> -	if (error)
+> +	error = xfs_attr_leaf_hasname(args, &bp);
+> +	if (error != -ENOATTR && error != -EEXIST)
+>  		return error;
 >  
->  	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
->  		return -EPERM;
-> @@ -400,8 +402,7 @@ xfs_attrmulti_attr_set(
->  	if (IS_ERR(kbuf))
->  		return PTR_ERR(kbuf);
->  
-> -	namelen = strlen(name);
-> -	error = xfs_attr_set(XFS_I(inode), name, namelen, kbuf, len, flags);
-> +	error = xfs_attr_set(XFS_I(inode), &xname, kbuf, len, flags);
->  	if (!error)
->  		xfs_forget_acl(inode, name, flags);
->  	kfree(kbuf);
-> @@ -415,12 +416,14 @@ xfs_attrmulti_attr_remove(
->  	uint32_t		flags)
->  {
->  	int			error;
-> -	size_t			namelen;
-> +	struct xfs_name		xname;
-> +
-> +	xfs_name_init(&xname, name);
->  
->  	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
->  		return -EPERM;
-> -	namelen = strlen(name);
-> -	error = xfs_attr_remove(XFS_I(inode), name, namelen, flags);
-> +
-> +	error = xfs_attr_remove(XFS_I(inode), &xname, flags);
->  	if (!error)
->  		xfs_forget_acl(inode, name, flags);
+> -	error = xfs_attr3_leaf_lookup_int(bp, args);
+>  	if (error != -EEXIST)  {
+>  		xfs_trans_brelse(args->trans, bp);
+>  		return error;
+
+Similar thing here, just reordering the checks simplifies the logic.
+
+> @@ -832,6 +878,41 @@ xfs_attr_leaf_get(xfs_da_args_t *args)
 >  	return error;
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 81f2f93..e85bbf5 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -48,11 +48,11 @@ xfs_initxattrs(
->  	const struct xattr	*xattr;
->  	struct xfs_inode	*ip = XFS_I(inode);
->  	int			error = 0;
-> +	struct xfs_name		name;
+>  }
 >  
->  	for (xattr = xattr_array; xattr->name != NULL; xattr++) {
-> -		error = xfs_attr_set(ip, xattr->name,
-> -				     strlen(xattr->name),
-> -				     xattr->value, xattr->value_len,
-> +		xfs_name_init(&name, xattr->name);
-> +		error = xfs_attr_set(ip, &name, xattr->value, xattr->value_len,
->  				     ATTR_SECURE);
->  		if (error < 0)
->  			break;
-> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-> index b0fedb5..74133a5 100644
-> --- a/fs/xfs/xfs_xattr.c
-> +++ b/fs/xfs/xfs_xattr.c
-> @@ -21,10 +21,12 @@ static int
->  xfs_xattr_get(const struct xattr_handler *handler, struct dentry *unused,
->  		struct inode *inode, const char *name, void *value, size_t size)
->  {
-> -	int xflags = handler->flags;
-> -	struct xfs_inode *ip = XFS_I(inode);
-> -	int error, asize = size;
-> -	size_t namelen = strlen(name);
-> +	int			xflags = handler->flags;
-> +	struct xfs_inode	*ip = XFS_I(inode);
-> +	int			error, asize = size;
-> +	struct xfs_name		xname;
+> +/*
+> + * Return EEXIST if attr is found, or ENOATTR if not
+> + * statep: If not null is set to point at the found state.  Caller will
+> + *         be responsible for freeing the state in this case.
+> + */
+> +STATIC int
+> +xfs_attr_node_hasname(
+> +	struct xfs_da_args	*args,
+> +	struct xfs_da_state	**statep)
+> +{
+> +	struct xfs_da_state	*state;
+> +	int			retval, error;
 > +
-> +	xfs_name_init(&xname, name);
+> +	state = xfs_da_state_alloc();
+> +	state->args = args;
+> +	state->mp = args->dp->i_mount;
+> +
+> +	if (statep != NULL)
+> +		*statep = NULL;
+> +
+> +	/*
+> +	 * Search to see if name exists, and get back a pointer to it.
+> +	 */
+> +	error = xfs_da3_node_lookup_int(state, &retval);
+> +	if (error == 0) {
+> +		if (statep != NULL)
+> +			*statep = state;
+> +		return retval;
+> +	}
+> +
+> +	xfs_da_state_free(state);
+> +
+> +	return error;
+> +}
+> +
+>  /*========================================================================
+>   * External routines when attribute list size > geo->blksize
+>   *========================================================================*/
+...
+> @@ -1316,31 +1381,23 @@ xfs_attr_node_get(xfs_da_args_t *args)
+>  {
+>  	xfs_da_state_t *state;
+>  	xfs_da_state_blk_t *blk;
+> -	int error, retval;
+> +	int error;
+>  	int i;
 >  
->  	/* Convert Linux syscall to XFS internal ATTR flags */
->  	if (!size) {
-> @@ -32,8 +34,8 @@ xfs_xattr_get(const struct xattr_handler *handler, struct dentry *unused,
->  		value = NULL;
+>  	trace_xfs_attr_node_get(args);
+>  
+> -	state = xfs_da_state_alloc();
+> -	state->args = args;
+> -	state->mp = args->dp->i_mount;
+> -
+>  	/*
+>  	 * Search to see if name exists, and get back a pointer to it.
+>  	 */
+> -	error = xfs_da3_node_lookup_int(state, &retval);
+> -	if (error) {
+> -		retval = error;
+> -		goto out_release;
+> -	}
+> -	if (retval != -EEXIST)
+> +	error = xfs_attr_node_hasname(args, &state);
+> +	if (error != -EEXIST)
+>  		goto out_release;
+>  
+>  	/*
+>  	 * Get the value, local or "remote"
+>  	 */
+>  	blk = &state->path.blk[state->path.active - 1];
+> -	retval = xfs_attr3_leaf_getvalue(blk->bp, args);
+> +	error = xfs_attr3_leaf_getvalue(blk->bp, args);
+>  
+>  	/*
+>  	 * If not in a transaction, we have to release all the buffers.
+> @@ -1352,7 +1409,7 @@ xfs_attr_node_get(xfs_da_args_t *args)
 >  	}
 >  
-> -	error = xfs_attr_get(ip, name, namelen, (unsigned char **)&value,
-> -			     &asize, xflags);
-> +	error = xfs_attr_get(ip, &xname, (unsigned char **)&value, &asize,
-> +			     xflags);
->  	if (error)
->  		return error;
->  	return asize;
-> @@ -69,7 +71,9 @@ xfs_xattr_set(const struct xattr_handler *handler, struct dentry *unused,
->  	int			xflags = handler->flags;
->  	struct xfs_inode	*ip = XFS_I(inode);
->  	int			error;
-> -	size_t			namelen = strlen(name);
-> +	struct xfs_name		xname;
+>  	xfs_da_state_free(state);
+
+Do we need an 'if (state)' check here like the other node funcs?
+
+> -	return retval;
+> +	return error;
+>  }
+>  
+>  /* Returns true if the attribute entry name is valid. */
+...
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index cb5ef66..9d6b68c 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -654,18 +654,66 @@ xfs_attr_shortform_create(xfs_da_args_t *args)
+>  }
+>  
+>  /*
+> + * Return -EEXIST if attr is found, or -ENOATTR if not
+> + * args:  args containing attribute name and namelen
+> + * sfep:  If not null, pointer will be set to the last attr entry found on
+> +	  -EEXIST.  On -ENOATTR pointer is left at the last entry in the list
+> + * basep: If not null, pointer is set to the byte offset of the entry in the
+> + *	  list on -EEXIST.  On -ENOATTR, pointer is left at the byte offset of
+> + *	  the last entry in the list
+> + */
+> +int
+> +xfs_attr_sf_findname(
+> +	struct xfs_da_args	 *args,
+> +	struct xfs_attr_sf_entry **sfep,
+> +	unsigned int		 *basep)
+> +{
+> +	struct xfs_attr_shortform *sf;
+> +	struct xfs_attr_sf_entry *sfe;
+> +	unsigned int		base = sizeof(struct xfs_attr_sf_hdr);
+> +	int			size = 0;
+> +	int			end;
+> +	int			i;
 > +
-> +	xfs_name_init(&xname, name);
->  
->  	/* Convert Linux syscall to XFS internal ATTR flags */
->  	if (flags & XATTR_CREATE)
-> @@ -77,11 +81,11 @@ xfs_xattr_set(const struct xattr_handler *handler, struct dentry *unused,
->  	if (flags & XATTR_REPLACE)
->  		xflags |= ATTR_REPLACE;
->  
-> -	if (value)
-> -		error = xfs_attr_set(ip, name, namelen, (void *)value, size,
-> -				xflags);
-> -	else
-> -		error = xfs_attr_remove(ip, name, namelen, xflags);
-> +        if (value)
-> +               error = xfs_attr_set(ip, &xname, (void *)value, size, xflags);
-> +        else
-> +               error = xfs_attr_remove(ip, &xname, xflags);
+> +	sf = (struct xfs_attr_shortform *)args->dp->i_afp->if_u1.if_data;
+> +	sfe = &sf->list[0];
+> +	end = sf->hdr.count;
+> +	for (i = 0; i < end; sfe = XFS_ATTR_SF_NEXTENTRY(sfe),
+> +			base += size, i++) {
+
+Slightly more readable to align indendation with the sfe assignment
+above.
+
+Brian
+
+> +		size = XFS_ATTR_SF_ENTSIZE(sfe);
+> +		if (sfe->namelen != args->name.len)
+> +			continue;
+> +		if (memcmp(sfe->nameval, args->name.name, args->name.len) != 0)
+> +			continue;
+> +		if (!xfs_attr_namesp_match(args->name.type, sfe->flags))
+> +			continue;
+> +		break;
+> +	}
 > +
->  	if (!error)
->  		xfs_forget_acl(inode, name, xflags);
+> +	if (sfep != NULL)
+> +		*sfep = sfe;
+> +
+> +	if (basep != NULL)
+> +		*basep = base;
+> +
+> +	if (i == end)
+> +		return -ENOATTR;
+> +	return -EEXIST;
+> +}
+> +
+> +/*
+>   * Add a name/value pair to the shortform attribute list.
+>   * Overflow from the inode has already been checked for.
+>   */
+>  void
+> -xfs_attr_shortform_add(xfs_da_args_t *args, int forkoff)
+> +xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff)
+>  {
+> -	xfs_attr_shortform_t *sf;
+> -	xfs_attr_sf_entry_t *sfe;
+> -	int i, offset, size;
+> -	xfs_mount_t *mp;
+> -	xfs_inode_t *dp;
+> -	struct xfs_ifork *ifp;
+> +	struct xfs_attr_shortform	*sf;
+> +	struct xfs_attr_sf_entry	*sfe;
+> +	int				offset, size, error;
+> +	struct xfs_mount		*mp;
+> +	struct xfs_inode		*dp;
+> +	struct xfs_ifork		*ifp;
 >  
+>  	trace_xfs_attr_sf_add(args);
+>  
+> @@ -676,18 +724,8 @@ xfs_attr_shortform_add(xfs_da_args_t *args, int forkoff)
+>  	ifp = dp->i_afp;
+>  	ASSERT(ifp->if_flags & XFS_IFINLINE);
+>  	sf = (xfs_attr_shortform_t *)ifp->if_u1.if_data;
+> -	sfe = &sf->list[0];
+> -	for (i = 0; i < sf->hdr.count; sfe = XFS_ATTR_SF_NEXTENTRY(sfe), i++) {
+> -#ifdef DEBUG
+> -		if (sfe->namelen != args->name.len)
+> -			continue;
+> -		if (memcmp(args->name.name, sfe->nameval, args->name.len) != 0)
+> -			continue;
+> -		if (!xfs_attr_namesp_match(args->name.type, sfe->flags))
+> -			continue;
+> -		ASSERT(0);
+> -#endif
+> -	}
+> +	error = xfs_attr_sf_findname(args, &sfe, NULL);
+> +	ASSERT(error != -EEXIST);
+>  
+>  	offset = (char *)sfe - (char *)sf;
+>  	size = XFS_ATTR_SF_ENTSIZE_BYNAME(args->name.len, args->valuelen);
+> @@ -730,35 +768,26 @@ xfs_attr_fork_remove(
+>   * Remove an attribute from the shortform attribute list structure.
+>   */
+>  int
+> -xfs_attr_shortform_remove(xfs_da_args_t *args)
+> +xfs_attr_shortform_remove(struct xfs_da_args *args)
+>  {
+> -	xfs_attr_shortform_t *sf;
+> -	xfs_attr_sf_entry_t *sfe;
+> -	int base, size=0, end, totsize, i;
+> -	xfs_mount_t *mp;
+> -	xfs_inode_t *dp;
+> +	struct xfs_attr_shortform	*sf;
+> +	struct xfs_attr_sf_entry	*sfe;
+> +	int				size = 0, end, totsize;
+> +	unsigned int			base;
+> +	struct xfs_mount		*mp;
+> +	struct xfs_inode		*dp;
+> +	int				error;
+>  
+>  	trace_xfs_attr_sf_remove(args);
+>  
+>  	dp = args->dp;
+>  	mp = dp->i_mount;
+> -	base = sizeof(xfs_attr_sf_hdr_t);
+>  	sf = (xfs_attr_shortform_t *)dp->i_afp->if_u1.if_data;
+> -	sfe = &sf->list[0];
+> -	end = sf->hdr.count;
+> -	for (i = 0; i < end; sfe = XFS_ATTR_SF_NEXTENTRY(sfe),
+> -					base += size, i++) {
+> -		size = XFS_ATTR_SF_ENTSIZE(sfe);
+> -		if (sfe->namelen != args->name.len)
+> -			continue;
+> -		if (memcmp(sfe->nameval, args->name.name, args->name.len) != 0)
+> -			continue;
+> -		if (!xfs_attr_namesp_match(args->name.type, sfe->flags))
+> -			continue;
+> -		break;
+> -	}
+> -	if (i == end)
+> -		return -ENOATTR;
+> +
+> +	error = xfs_attr_sf_findname(args, &sfe, &base);
+> +	if (error != -EEXIST)
+> +		return error;
+> +	size = XFS_ATTR_SF_ENTSIZE(sfe);
+>  
+>  	/*
+>  	 * Fix up the attribute fork data, covering the hole
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+> index 73615b1..0e9c87c 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.h
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+> @@ -53,6 +53,9 @@ int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
+>  int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
+>  			struct xfs_buf **leaf_bp);
+>  int	xfs_attr_shortform_remove(struct xfs_da_args *args);
+> +int	xfs_attr_sf_findname(struct xfs_da_args *args,
+> +			     struct xfs_attr_sf_entry **sfep,
+> +			     unsigned int *basep);
+>  int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
+>  int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
+>  xfs_failaddr_t xfs_attr_shortform_verify(struct xfs_inode *ip);
 > -- 
 > 2.7.4
 > 
