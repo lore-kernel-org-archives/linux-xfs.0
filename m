@@ -7,68 +7,69 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12524C35DEE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FBEDC35DF0
 	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 00:13:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D499820838
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 00:13:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 310C720838
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 00:13:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="aaEfygF3"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="KS9/1nVC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728529AbgBYANr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1728544AbgBYANr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Mon, 24 Feb 2020 19:13:47 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:50290 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:50294 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728544AbgBYANr (ORCPT
+        with ESMTP id S1728546AbgBYANr (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Feb 2020 19:13:47 -0500
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01P07brA050093;
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01P07bQt050103;
         Tue, 25 Feb 2020 00:13:45 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=mime-version :
- message-id : date : from : to : cc : subject : references : in-reply-to :
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=McyzXoNGP7D04VpAqACJuCsiuRwvfexo/En1DAhwXJM=;
- b=aaEfygF3+LSYtZ/OjHiGiTwkMcWB6AUzKa/49+oRf5eRlBchwPJeQo/fQ0sB0Yc+tPY8
- xENDiplbJIYTCuvM2/xYzoByMnnhWltY3POD2Mraldf3p+rmqZ5sEm7HQASNEzK6JRnf
- 0YWntOerwTl2+l4N/7ZX2r2nns7TTCD4JTfklXYje+UTbwRKDZ00QXVj3e/GpkLyCd7h
- NMsPLGsWRiFWhL2RzqZn5LddrJtosrH4rchvZiaXbDMJxrM/HiHzsjs1sRaCslMhb6cE
- gOdJwfVjWtL59tn8xw5/oVWAPRymbiksK5gsrBHspGcijMJZiGtqEKiwWsB/GUrxhAuI EA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 2ybvr4q3k5-1
+ bh=+iL0WDr2F57t3X2Grly3u8G+P/kADCPmR35VpEIIclo=;
+ b=KS9/1nVCcwXZUNrsbpdWSdevps/EZ4+xuQEBdMqWFBeEK0AaQhuVtvcGMfTkZ0dYtUtr
+ BTHI5aVCS5S3dbxKE8p6wBVJvsFo6YE4u9oauqtu5lpvQ6UsasCsuW1yY2kr+w1Rc+gU
+ tWw1qP1w4PfhtVu8OLk8uXFp6jjVr17AGim+v/rdv+7X1Qt19Fn7fRY3GZhZlu3M2mtA
+ 6Tq9CUMNbo94TQi5VOooXthDuGnOoyqNH2H3+KYjDAclVv4QS/v/4jOtT57uVIOcnKVf
+ 0qit1MvPhxSRkPYr1hehJTH6c3rlJGTA9zF+tL1GJVgWven6TkwB9GEAwCiQ6VwlmWwG PA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2ybvr4q3k4-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
         Tue, 25 Feb 2020 00:13:45 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01P06Wgg098039;
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01P07u8n109006;
         Tue, 25 Feb 2020 00:13:44 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 2ybduvg0tr-1
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2ybe12erdd-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
         Tue, 25 Feb 2020 00:13:44 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01P0DiW0032079;
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01P0Dhfk031783;
         Tue, 25 Feb 2020 00:13:44 GMT
-Received: from localhost (/67.169.218.210) by default (Oracle Beehive Gateway
- v4.0) with ESMTP ; Mon, 24 Feb 2020 16:12:59 -0800
-USER-AGENT: StGit/0.17.1-dirty
-MIME-Version: 1.0
-Message-ID: <158258957631.451378.6297312804413916157.stgit@magnolia>
-Date:   Mon, 24 Feb 2020 16:12:56 -0800 (PST)
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 24 Feb 2020 16:13:43 -0800
+Subject: [PATCH 21/25] libxfs: remove dangerous casting between cache_node
+ and xfs_buf
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Subject: [PATCH 14/25] libxfs: convert libxfs_log_clear to use uncached
- buffers
-References: <158258948821.451378.9298492251721116455.stgit@magnolia>
+Date:   Mon, 24 Feb 2020 16:13:42 -0800
+Message-ID: <158258962280.451378.14849100198209417801.stgit@magnolia>
 In-Reply-To: <158258948821.451378.9298492251721116455.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
+References: <158258948821.451378.9298492251721116455.stgit@magnolia>
+User-Agent: StGit/0.17.1-dirty
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9541 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=0
- mlxlogscore=506 malwarescore=0 mlxscore=0 spamscore=0 phishscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0
+ suspectscore=0 malwarescore=0 phishscore=0 bulkscore=0 mlxscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2001150001 definitions=main-2002240181
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9541 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=567 spamscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0
  clxscore=1015 adultscore=0 lowpriorityscore=0 malwarescore=0
  priorityscore=1501 mlxscore=0 impostorscore=0 suspectscore=0 phishscore=0
  bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
@@ -80,59 +81,49 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Convert the log clearing function to use uncached buffers like
-everything else, instead of using the raw buffer get/put functions.
-This will eventually enable us to hide them more effectively.
+Get rid of all the dangerous casting between cache_node and xfs_buf
+since we can use container_of now.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/rdwr.c |   16 ++++++----------
- 1 file changed, 6 insertions(+), 10 deletions(-)
+ libxfs/rdwr.c |   11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
 
 diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index d607a565..739f4aed 100644
+index 09a2a716..29c9dd68 100644
 --- a/libxfs/rdwr.c
 +++ b/libxfs/rdwr.c
-@@ -1413,15 +1413,13 @@ libxfs_log_clear(
- 	/* write out the first log record */
- 	ptr = dptr;
- 	if (btp) {
--		bp = libxfs_getbufr(btp, start, len);
-+		bp = libxfs_getbufr_uncached(btp, start, len);
- 		ptr = bp->b_addr;
- 	}
- 	libxfs_log_header(ptr, fs_uuid, version, sunit, fmt, lsn, tail_lsn,
- 			  next, bp);
--	if (bp) {
--		bp->b_flags |= LIBXFS_B_DIRTY;
--		libxfs_putbufr(bp);
--	}
-+	if (bp)
-+		libxfs_writebuf(bp, 0);
+@@ -294,8 +294,9 @@ libxfs_bhash(cache_key_t key, unsigned int hashsize, unsigned int hashshift)
+ static int
+ libxfs_bcompare(struct cache_node *node, cache_key_t key)
+ {
+-	struct xfs_buf	*bp = (struct xfs_buf *)node;
+-	struct xfs_bufkey *bkey = (struct xfs_bufkey *)key;
++	struct xfs_buf		*bp = container_of(node, struct xfs_buf,
++						   b_node);
++	struct xfs_bufkey	*bkey = (struct xfs_bufkey *)key;
  
- 	/*
- 	 * There's nothing else to do if this is a log reset. The kernel detects
-@@ -1461,7 +1459,7 @@ libxfs_log_clear(
+ 	if (bp->b_target->dev == bkey->buftarg->dev &&
+ 	    bp->b_bn == bkey->blkno) {
+@@ -1045,7 +1046,8 @@ static void
+ libxfs_brelse(
+ 	struct cache_node	*node)
+ {
+-	struct xfs_buf		*bp = (struct xfs_buf *)node;
++	struct xfs_buf		*bp = container_of(node, struct xfs_buf,
++						   b_node);
  
- 		ptr = dptr;
- 		if (btp) {
--			bp = libxfs_getbufr(btp, blk, len);
-+			bp = libxfs_getbufr_uncached(btp, blk, len);
- 			ptr = bp->b_addr;
- 		}
- 		/*
-@@ -1470,10 +1468,8 @@ libxfs_log_clear(
- 		 */
- 		libxfs_log_header(ptr, fs_uuid, version, BBTOB(len), fmt, lsn,
- 				  tail_lsn, next, bp);
--		if (bp) {
--			bp->b_flags |= LIBXFS_B_DIRTY;
--			libxfs_putbufr(bp);
--		}
-+		if (bp)
-+			libxfs_writebuf(bp, 0);
+ 	if (!bp)
+ 		return;
+@@ -1110,7 +1112,8 @@ static int
+ libxfs_bflush(
+ 	struct cache_node	*node)
+ {
+-	struct xfs_buf		*bp = (struct xfs_buf *)node;
++	struct xfs_buf		*bp = container_of(node, struct xfs_buf,
++						   b_node);
  
- 		blk += len;
- 		if (dptr)
+ 	if (!bp->b_error && bp->b_flags & LIBXFS_B_DIRTY)
+ 		return libxfs_bwrite(bp);
 
