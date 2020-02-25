@@ -2,119 +2,123 @@ Return-Path: <SRS0=ByWF=4N=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C4ADC35E04
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 19:19:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF01BC35E04
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 19:24:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 54E2D2082F
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 19:19:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B68B720CC7
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 19:24:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="j8jPEJOH"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="S6zb60Qf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728146AbgBYTTO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Feb 2020 14:19:14 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:36496 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727298AbgBYTTN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Feb 2020 14:19:13 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01PJ3dNg048858;
-        Tue, 25 Feb 2020 19:19:09 GMT
+        id S1728443AbgBYTYm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Feb 2020 14:24:42 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:57774 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728064AbgBYTYl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Feb 2020 14:24:41 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01PJNYVC038101;
+        Tue, 25 Feb 2020 19:24:35 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=1ONiwAn1aX4xiZeNjvOPPIbUiKn+5hRMrxAGr9c1YiQ=;
- b=j8jPEJOHZe45gV2L42Rsys0e9eGV8cEFHaimWvmoFQJzBI5c/98J4hCAPiY7QWaHJSiL
- LbUowoL2lzbAuGpJP+uYjyEpiLBj5mSehJa8JoNCmb259Cplv5vfxm+1NsJ4IBQZHTTZ
- KV197nP2TASzwpVlBafNmzmc251KsvMoj3qryyvz5FK9a2fdBftNy73zRrODEuzWb6vr
- iHNiO7s/dxIo/BACftt38FmGj5mPx2kXpihD7rOIXTgemtMNstwo+SgcDJGw8XTXB1FX
- g5pVxF8RbJTyQkmuk4SxWF+nGGxUVG4xFE5sV/CrouTa4OwxY/eLfiWRwHFxq4pmASTE gA== 
+ bh=Xsm2LlftUFDJFiBMuEwKYkj3C61ZXGg9UzwNSYaqbDo=;
+ b=S6zb60QfIonC1pgzqOUQ09n3J3TEpWZlmCX46oPwCWw+swk1jBIIvpsHG8YYw0PPHv36
+ 3GbSpCP/bVRqLQTsNRnCcSOaTOxcFdHBfCYMXpltbySNwMj4O+pAYBtM5rib//9Ov1en
+ rPgRrHlvOFuMfr6gOzXcNeu3GNVoL5b55eTT0CUeKRvBNb1F7nswFlAAppIEVw3yuRpI
+ a3xusmAJXPSOsjeFGnyYgiMTnIeL3LtE3RD5S63psF2OVVJnyPovekzvR2T1aiPcKa5z
+ ZSnzxwHBLkNSg+ftSofdysu94D5I1Vl1ldMTnk0P15nLButDS9rzbEpDBo/q8pmgPIBv 7A== 
 Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2yd093kpxj-1
+        by userp2130.oracle.com with ESMTP id 2yd0njkk2k-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Feb 2020 19:19:09 +0000
+        Tue, 25 Feb 2020 19:24:35 +0000
 Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01PJEHwX052870;
-        Tue, 25 Feb 2020 19:19:08 GMT
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01PJMArY105849;
+        Tue, 25 Feb 2020 19:24:35 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2yd09baets-1
+        by userp3030.oracle.com with ESMTP id 2yd09bapp1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Feb 2020 19:19:08 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01PJJ713011224;
-        Tue, 25 Feb 2020 19:19:07 GMT
+        Tue, 25 Feb 2020 19:24:35 +0000
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01PJOYME014498;
+        Tue, 25 Feb 2020 19:24:34 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 25 Feb 2020 11:19:07 -0800
-Date:   Tue, 25 Feb 2020 11:19:06 -0800
+        with ESMTP ; Tue, 25 Feb 2020 11:24:33 -0800
+Date:   Tue, 25 Feb 2020 11:24:32 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 01/25] libxfs: open-code "exit on buffer read failure" in
- upper level callers
-Message-ID: <20200225191906.GR6740@magnolia>
-References: <158258948821.451378.9298492251721116455.stgit@magnolia>
- <158258949476.451378.9569854305232356529.stgit@magnolia>
- <20200225174252.GG20570@infradead.org>
- <20200225184023.GJ6740@magnolia>
- <20200225184240.GA18626@infradead.org>
+To:     sandeen@sandeen.net
+Cc:     linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>,
+        Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH v2 6/7] xfs_repair: check that metadata updates have been
+ committed
+Message-ID: <20200225192432.GS6740@magnolia>
+References: <158258942838.451075.5401001111357771398.stgit@magnolia>
+ <158258946575.451075.126426300036283442.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200225184240.GA18626@infradead.org>
+In-Reply-To: <158258946575.451075.126426300036283442.stgit@magnolia>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9542 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 mlxlogscore=828
- spamscore=0 adultscore=0 malwarescore=0 bulkscore=0 suspectscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 mlxlogscore=999
+ spamscore=0 adultscore=0 malwarescore=0 bulkscore=0 suspectscore=1
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002250135
+ definitions=main-2002250136
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9542 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 lowpriorityscore=0
- malwarescore=0 impostorscore=0 suspectscore=0 priorityscore=1501
- phishscore=0 clxscore=1015 mlxlogscore=874 spamscore=0 adultscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002250135
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 adultscore=0 mlxscore=0
+ malwarescore=0 priorityscore=1501 impostorscore=0 mlxlogscore=999
+ suspectscore=1 bulkscore=0 spamscore=0 lowpriorityscore=0 clxscore=1015
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002250136
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 25, 2020 at 10:42:40AM -0800, Christoph Hellwig wrote:
-> On Tue, Feb 25, 2020 at 10:40:23AM -0800, Darrick J. Wong wrote:
-> > Prior to this patch, the "!(flags & DEBUGGER)" expressions in the call
-> > sites evaluate to 0 or 1, and this effectively results in libxfs_mount
-> > passing EXIT_ON_FAILURE to the buffer read functions as the flag value.
-> > The flag value is passed all the way down to __read_buf, and when it
-> > sees an IO failure, it exits.
-> > 
-> > After this patch, libxfs_mount passes flags==0, which means that we get
-> > a buffer back, possibly with b_error set.  If b_error is set, we log a
-> > warning about the screwed up filesystem and return a null mount if the
-> > libxfs_mount caller didn't indicate that it is a debugger.  Presumably
-> > the libxfs_mount caller will exit with error if we return a null mount.
-> > 
-> > IOWs, I'm doing exactly what the commit message says, but in a rather
-> > subtle way.  I'll clarify that, if you'd like.
-> 
-> Ok, with a proper commit message this looks good to me:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-The new commit message reads as follows:
+Make sure that any metadata that we repaired or regenerated has been
+written to disk.  If that fails, exit with 1 to signal that there are
+still errors in the filesystem.
 
-"libxfs: open-code "exit on buffer read failure" in upper level callers
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+v2: use the usual error reporting to log and exit
+---
+ repair/xfs_repair.c |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-"Make all functions that use LIBXFS_EXIT_ON_FAILURE to abort on buffer
-read errors implement that logic themselves.  This also removes places
-where libxfs can abort the program with no warning.
-
-"Note that in libxfs_mount, the "!(flags & DEBUGGER)" code would
-indirectly select LIBXFS_EXIT_ON_FAILURE, so we're replacing the hidden
-library exit(1) with a null xfs_mount return, which should cause the
-utilities to exit with an error."
-
---D
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index eb1ce546..2ebf6a5b 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -703,6 +703,7 @@ main(int argc, char **argv)
+ 	struct xfs_sb	psb;
+ 	int		rval;
+ 	struct xfs_ino_geometry	*igeo;
++	int		error;
+ 
+ 	progname = basename(argv[0]);
+ 	setlocale(LC_ALL, "");
+@@ -1104,7 +1105,13 @@ _("Note - stripe unit (%d) and width (%d) were copied from a backup superblock.\
+ 	 */
+ 	libxfs_bcache_flush();
+ 	format_log_max_lsn(mp);
+-	libxfs_umount(mp);
++
++	/* Report failure if anything failed to get written to our fs. */
++	error = -libxfs_umount(mp);
++	if (error)
++		do_error(
++	_("File system metadata writeout failed, err=%d.  Re-run xfs_repair."),
++				error);
+ 
+ 	if (x.rtdev)
+ 		libxfs_device_close(x.rtdev);
