@@ -2,100 +2,107 @@ Return-Path: <SRS0=ByWF=4N=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7DB5C35E04
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 18:47:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C69EC35E01
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 18:48:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AED372084E
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 18:47:09 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BRQZKFDQ"
+	by mail.kernel.org (Postfix) with ESMTP id 2C6762084E
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 18:48:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728753AbgBYSrJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Feb 2020 13:47:09 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:49036 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727983AbgBYSrJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Feb 2020 13:47:09 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01PIhdMF067205;
-        Tue, 25 Feb 2020 18:47:05 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=N3J97izCVdG3YGA5bo96YwtrlvHSchQweUI4gwUNZ7M=;
- b=BRQZKFDQ/xqHn4/U5OwFNo4LxXuVxkjm4xXaZirooZxhiBNSjPIk8VB/wLsrG/Zb8MgS
- nD6KaSNGbYbsLXMQPEComfTS2+RyRPndnqb+qOA3lIe0xqzCY1nzzz01Nj41V4D0mET3
- U+ouUlM15oOjSGLSwYnHyGLI/seSNqZDPLhvIjODh8cL8wqCg2qDZmeoiMtVT5z/mBZy
- DdqxChHhJt7n8543uJOuxyoB+xLEAYrRELUOqrZPkELaXA4I7IwRcEDH8KlcHrjSpkCY
- 9G410sO9ZhE41CHXYRdHEd36K0XVAVD0BHrrHPH4N7kaMCx4lHssvQmRig3x6hqFbdkj Hw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2yd093khnu-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Feb 2020 18:47:05 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01PIiGI4063281;
-        Tue, 25 Feb 2020 18:47:04 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 2yd09b7ser-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Feb 2020 18:47:04 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01PIl3qN019683;
-        Tue, 25 Feb 2020 18:47:03 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 25 Feb 2020 10:47:03 -0800
-Date:   Tue, 25 Feb 2020 10:47:02 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 13/25] libxfs: move log functions for convenience
-Message-ID: <20200225184702.GK6740@magnolia>
-References: <158258948821.451378.9298492251721116455.stgit@magnolia>
- <158258957007.451378.6015938096424691137.stgit@magnolia>
- <20200225174712.GN20570@infradead.org>
+        id S1731515AbgBYSsI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Feb 2020 13:48:08 -0500
+Received: from sandeen.net ([63.231.237.45]:56120 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728753AbgBYSsI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 Feb 2020 13:48:08 -0500
+Received: from Liberator.local (unknown [4.28.11.157])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 919DD2B25;
+        Tue, 25 Feb 2020 12:47:43 -0600 (CST)
+Subject: Re: [PATCH 1/2] libxfs: zero the struct xfs_mount when unmounting the
+ filesystem
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org
+References: <158258947401.451256.14269201133311837600.stgit@magnolia>
+ <158258948007.451256.11063346596276638956.stgit@magnolia>
+ <20200225174038.GE20570@infradead.org> <20200225182849.GI6740@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <9f20b3b8-3598-059a-2c1e-18f803ebb178@sandeen.net>
+Date:   Tue, 25 Feb 2020 10:48:06 -0800
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.5.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200225174712.GN20570@infradead.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9542 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 mlxlogscore=919
- spamscore=0 adultscore=0 malwarescore=0 bulkscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002250132
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9542 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 lowpriorityscore=0
- malwarescore=0 impostorscore=0 suspectscore=0 priorityscore=1501
- phishscore=0 clxscore=1015 mlxlogscore=968 spamscore=0 adultscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002250132
+In-Reply-To: <20200225182849.GI6740@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 25, 2020 at 09:47:12AM -0800, Christoph Hellwig wrote:
-> On Mon, Feb 24, 2020 at 04:12:50PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Move libxfs_log_clear and libxfs_log_header to the bottom of the file so
-> > that we avoid having to create advance declarations of static functions
-> > in the next patch.  No functional changes.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On 2/25/20 10:28 AM, Darrick J. Wong wrote:
+> On Tue, Feb 25, 2020 at 09:40:38AM -0800, Christoph Hellwig wrote:
+>> On Mon, Feb 24, 2020 at 04:11:20PM -0800, Darrick J. Wong wrote:
+>>> From: Darrick J. Wong <darrick.wong@oracle.com>
+>>>
+>>> Since libxfs doesn't allocate the struct xfs_mount *, we can't just free
+>>> it during unmount.  Zero its contents to prevent any use-after-free.
+>>
+>> I don't really this at all.  Seems to be cargo-cult style programming.
 > 
-> I'd be tempted to in fact just move them into a separate file, unless
-> that would mean marking too many functions non-static as none of this
-> is related to the normal read/write code.
+> Admittedly I'm not convinced it's necessary either, seeing as we control
+> all the callers, and none of them actually screw this up.  But I defer
+> to the maintainer. ;)
 
-<shrug> I wonder why not just move this whole thing to libxlog and
-rewire it to do its own IOs (like the kernel xfs log does now) but this
-series is already too long and that seems like its own neat cleanup...
+It struck me as odd as well, so despite my review I'll probably drop it,
+given that there's no clear reason given to do this.
 
---D
+-Eric
