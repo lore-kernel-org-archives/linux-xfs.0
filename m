@@ -2,106 +2,149 @@ Return-Path: <SRS0=ByWF=4N=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64B42C4BA01
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 22:07:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED8A9C4BA00
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 22:27:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3527F20838
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 22:07:36 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PZ00HG4u"
+	by mail.kernel.org (Postfix) with ESMTP id C692D2176D
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 22:27:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726827AbgBYWHf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Feb 2020 17:07:35 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:53438 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726607AbgBYWHf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Feb 2020 17:07:35 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01PLx7eg003863;
-        Tue, 25 Feb 2020 22:07:30 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=B0GGCh2XIGmqORJyjBDP7KACUGN3IAIqTyDSvWyLwz8=;
- b=PZ00HG4uYdKF4uNrW3hYCu4XCxxu+toXWHsgYoYxFDHwmbZlR6XDGv7tFPqh65lQ3sF8
- XEX356yjIlvMH63SCNztuvi1DAhZz5nZfUSZ3IWm1zEoaScC/OOzB/9LfY88BuHKDl/1
- dJfQWrq79j8RmqQO0cd7YtGDC2ep74xC5nB6hOcu3xIb22HTMiu3PvnvJITI8EvL2PpW
- 53mFk4Xn2yTiVMOyc9j7N6YV4jLK/3NH0kgcXL4NTSJcY0OR3/fe3UMPzUJDrWHdewss
- LA41vgGBHwNUsXuBbGv4Ycf02MxZVmJljCAbNd3te9YOrR86e+Jl635EBpNzeUa+smkZ yw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2yd0m1vd4s-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Feb 2020 22:07:30 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01PLwdZ0035660;
-        Tue, 25 Feb 2020 22:05:29 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2yd09bmf2v-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Feb 2020 22:05:29 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01PM5S0X006632;
-        Tue, 25 Feb 2020 22:05:28 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 25 Feb 2020 14:05:28 -0800
-Date:   Tue, 25 Feb 2020 14:05:27 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Qian Cai <cai@lca.pw>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: fix an undefined behaviour in _da3_path_shift
-Message-ID: <20200225220527.GX6740@magnolia>
-References: <20200225214045.GA14399@infradead.org>
- <F151ED18-55CF-482E-98BE-45A5A4D9A565@lca.pw>
+        id S1727778AbgBYW1a (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Feb 2020 17:27:30 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:58823 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727227AbgBYW1a (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Feb 2020 17:27:30 -0500
+Received: from dread.disaster.area (pa49-195-202-68.pa.nsw.optusnet.com.au [49.195.202.68])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 70C753A2B1E;
+        Wed, 26 Feb 2020 09:27:25 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1j6ifk-0004M9-DS; Wed, 26 Feb 2020 09:27:24 +1100
+Date:   Wed, 26 Feb 2020 09:27:24 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     Allison Collins <allison.henderson@oracle.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH v7 03/19] xfs: Add xfs_has_attr and subroutines
+Message-ID: <20200225222724.GN10776@dread.disaster.area>
+References: <20200223020611.1802-1-allison.henderson@oracle.com>
+ <20200223020611.1802-4-allison.henderson@oracle.com>
+ <CAOQ4uxiUVy3OfFsqx_KyirE6pD0XvnzNEehn7Vv4cxXw8kTSjQ@mail.gmail.com>
+ <20200225062612.GE10776@dread.disaster.area>
+ <CAOQ4uxh2K3Tee+KWtv+bU7xHHjRjrjw0BxmL5RuWc2uv2FVpHw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <F151ED18-55CF-482E-98BE-45A5A4D9A565@lca.pw>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9542 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 mlxlogscore=843
- spamscore=0 adultscore=0 malwarescore=0 bulkscore=0 suspectscore=31
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002250152
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9542 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 mlxscore=0
- suspectscore=31 bulkscore=0 adultscore=0 impostorscore=0 spamscore=0
- phishscore=0 clxscore=1015 priorityscore=1501 malwarescore=0
- mlxlogscore=892 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002250152
+In-Reply-To: <CAOQ4uxh2K3Tee+KWtv+bU7xHHjRjrjw0BxmL5RuWc2uv2FVpHw@mail.gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
+        a=mqTaRPt+QsUAtUurwE173Q==:117 a=mqTaRPt+QsUAtUurwE173Q==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=l697ptgUJYAA:10
+        a=7-415B0cAAAA:8 a=yPCof4ZbAAAA:8 a=Cb2sko6NMFlXZbRPq6sA:9
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 25, 2020 at 04:55:56PM -0500, Qian Cai wrote:
+On Tue, Feb 25, 2020 at 08:43:53AM +0200, Amir Goldstein wrote:
+> On Tue, Feb 25, 2020 at 8:26 AM Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > On Sun, Feb 23, 2020 at 02:20:32PM +0200, Amir Goldstein wrote:
+> > > On Sun, Feb 23, 2020 at 4:07 AM Allison Collins
+> > > <allison.henderson@oracle.com> wrote:
+> > > >
+> > > > From: Allison Henderson <allison.henderson@oracle.com>
+> > > >
+> > > > This patch adds a new functions to check for the existence of an attribute.
+> > > > Subroutines are also added to handle the cases of leaf blocks, nodes or shortform.
+> > > > Common code that appears in existing attr add and remove functions have been
+> > > > factored out to help reduce the appearance of duplicated code.  We will need these
+> > > > routines later for delayed attributes since delayed operations cannot return error
+> > > > codes.
+> > > >
+> > > > Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+> > > > ---
+> > > >  fs/xfs/libxfs/xfs_attr.c      | 171 ++++++++++++++++++++++++++++--------------
+> > > >  fs/xfs/libxfs/xfs_attr.h      |   1 +
+> > > >  fs/xfs/libxfs/xfs_attr_leaf.c | 111 +++++++++++++++++----------
+> > > >  fs/xfs/libxfs/xfs_attr_leaf.h |   3 +
+> > > >  4 files changed, 188 insertions(+), 98 deletions(-)
+> > > >
+> > > > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> > > > index 9acdb23..2255060 100644
+> > > > --- a/fs/xfs/libxfs/xfs_attr.c
+> > > > +++ b/fs/xfs/libxfs/xfs_attr.c
+> > > > @@ -46,6 +46,7 @@ STATIC int xfs_attr_shortform_addname(xfs_da_args_t *args);
+> > > >  STATIC int xfs_attr_leaf_get(xfs_da_args_t *args);
+> > > >  STATIC int xfs_attr_leaf_addname(xfs_da_args_t *args);
+> > > >  STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args);
+> > > > +STATIC int xfs_attr_leaf_hasname(struct xfs_da_args *args, struct xfs_buf **bp);
+> > > >
+> > > >  /*
+> > > >   * Internal routines when attribute list is more than one block.
+> > > > @@ -53,6 +54,8 @@ STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args);
+> > > >  STATIC int xfs_attr_node_get(xfs_da_args_t *args);
+> > > >  STATIC int xfs_attr_node_addname(xfs_da_args_t *args);
+> > > >  STATIC int xfs_attr_node_removename(xfs_da_args_t *args);
+> > > > +STATIC int xfs_attr_node_hasname(xfs_da_args_t *args,
+> > > > +                                struct xfs_da_state **state);
+> > > >  STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
+> > > >  STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
+> > > >
+> > > > @@ -310,6 +313,37 @@ xfs_attr_set_args(
+> > > >  }
+> > > >
+> > > >  /*
+> > > > + * Return EEXIST if attr is found, or ENOATTR if not
+> > >
+> > > This is a very silly return value for a function named has_attr in my taste.
+> > > I realize you inherited this interface from xfs_attr3_leaf_lookup_int(), but
+> > > IMO this change looks like a very good opportunity to change that internal
+> > > API:
+> >
+> > tl;dr Cleaning up this API is work for another patchset.
+> >
+> > >
+> > > xfs_has_attr?
+> > >
+> > > 0: NO
+> > > 1: YES (or stay with the syscall standard of -ENOATTR)
+> > > <0: error
+> >
+> > While I agree with your sentiment, Amir, the API you suggest is an
+> > anti-pattern. We've been removing ternary return value APIs like
+> > this from XFS and replacing them with an explicit error return value
+> > and an operational return parameter like so:
+> >
+> >         error = xfs_has_attr(&exists)
+> >         if (error)
+> >                 return error;
+> >
 > 
+> That would be neat and tidy.
 > 
-> > On Feb 25, 2020, at 4:40 PM, Christoph Hellwig <hch@infradead.org> wrote:
-> > 
-> > In xfs_da3_path_shift() blk can be assigned to state->path.blk[-1] if
-> > state->path.active is 1 (which is a valid state) when it tries to add an
-> > entry > to a single dir leaf block and then to shift forward to see if
-> > there's a sibling block that would be a better place to put the new
-> > entry.  This causes a KASAN warning given
-> 
-> s/KASAN/UBSAN/
-> 
-> > negative array indices are
-> > undefined behavior in C.  In practice the warning is entirely harmless
-> > given that blk is never dereference in this case, but it is still better
-> > to fix up the warning and slightly improve the code.
-> 
-> Agree. This is better.
-> 
-> Darrick, do you need me to send a v3 for it or you could squash this in?
+> One of the outcomes of new reviewers is comments on code unrelated
+> to the changes... I have no problem of keeping API as is for Allison's
+> change, but I did want to point out that the API became worse to read
+> due to the helper name change from _lookup_attr to _has_attr, which
+> really asks for a yes or no answer.
 
-Please send a v3.  The code in v2 looked fine to me.
+No argument from me on that. :P
 
---D
+But we really need to make progress on the new attribute features
+rather than get bogged down in completely rewriting the attribute
+code because it's a bit gross and smelly. The smell can be removed
+later...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
