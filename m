@@ -2,80 +2,118 @@ Return-Path: <SRS0=ByWF=4N=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE0D9C35DF2
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 05:53:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9F00C35DF2
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 05:57:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9F5E521744
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 05:53:38 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eBaJR7V+"
+	by mail.kernel.org (Postfix) with ESMTP id 9F4DC21556
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 05:57:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727005AbgBYFxi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Feb 2020 00:53:38 -0500
-Received: from mail-io1-f66.google.com ([209.85.166.66]:41281 "EHLO
-        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726956AbgBYFxh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Feb 2020 00:53:37 -0500
-Received: by mail-io1-f66.google.com with SMTP id m25so565204ioo.8
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Feb 2020 21:53:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=dCfzzwTgdVO/FVxHYz/BLmGFQ8B2u4JefNipnicYISA=;
-        b=eBaJR7V+fn5JwhrE2b75rjzEMj0SXODs/HnyM9SDXIZN7qhkKAnKstsBrDeXB74ItQ
-         Go2kebfBBrOOnIR1B1ggPbEg/+gCTvhoSDdbFLT5qnHDGGQPNQPD/Z1OTwD7nlvOttii
-         Jf7JZNaQUGIek7S07+iyapG2qhZ2cdC6aMWPNL3l1oaFZUd6/xeGDExE9RimsJcUO1b3
-         zL+YLaecyqFROfW0GAkguIT1suqQzMMDQAb+zJViXHiceM2//kaTRE03134rJx2T/cr2
-         AxNX9/wsIu3v5jK0bS3tqQ9kc1tKA3GhpozLktc9PgksyFndhtFGl+nHfcUiiohwr/5T
-         2X/w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=dCfzzwTgdVO/FVxHYz/BLmGFQ8B2u4JefNipnicYISA=;
-        b=V8UhJxBXyVQtu0uG+OFRWn2TX+q93UDBNTSc75kEJsm+grBwCCq3m3BLWY4bVCPUQi
-         e1QQrgY8X//pGAVhNwqltwvEzooxbefGvVNKv7yllP4oLxriPCX9vmAo9vi1GFKUAgQP
-         uMPWqu2sYgCsBPgyzBP6MTqPPeXhXlyadMPqu39eGt30F7R4vEF7nA8MT0nI8710/1IR
-         N5jPuCLP8QtzHE0t1UKq+ehhCGEbh1K/al7IPfLa9cuRqA6olzANJbXQEIb5ySp276ap
-         pwEp4UIsdqasPtyGgEsavKDRjDorQqvviDWQqT/9WwJj1/L8CGguckBiTLseZX+Kuhna
-         4njQ==
-X-Gm-Message-State: APjAAAU1Q9ECNtUNxCQYru80pD7L5RIJG/3BUZcVTN7YYyz0R1HbE6ba
-        jdPVNsedJ0K3+3yUa+3NS9/zeSj/8b/AKi8OhtrFeA==
-X-Google-Smtp-Source: APXvYqzr85kpWkXpAtfoqGULzJo0wlZKMUYTvdKj3iDEdqqNGaP9WASe3rqLXNVo5BmcvwtEN+eSvPDtEhv3RZiKGes=
-X-Received: by 2002:a02:8817:: with SMTP id r23mr56156926jai.120.1582610015849;
- Mon, 24 Feb 2020 21:53:35 -0800 (PST)
+        id S1725788AbgBYF5H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Feb 2020 00:57:07 -0500
+Received: from sandeen.net ([63.231.237.45]:45650 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725783AbgBYF5H (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 Feb 2020 00:57:07 -0500
+Received: from Liberator.local (unknown [4.28.11.157])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 7C3FD11664;
+        Mon, 24 Feb 2020 23:56:42 -0600 (CST)
+Subject: Re: [PATCH 1/2] libxfs: zero the struct xfs_mount when unmounting the
+ filesystem
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <158258947401.451256.14269201133311837600.stgit@magnolia>
+ <158258948007.451256.11063346596276638956.stgit@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <4dfc826f-5f46-1dd7-3232-a35bd7b16573@sandeen.net>
+Date:   Mon, 24 Feb 2020 21:57:03 -0800
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.5.0
 MIME-Version: 1.0
-References: <20200223020611.1802-1-allison.henderson@oracle.com>
- <CAOQ4uxgvJOF6+jd9BuJfxxGQbiit6J7zVOVnigwLb-RWizRqfg@mail.gmail.com>
- <5b2ade02-0f1b-b976-2b38-d10fcb41d317@oracle.com> <CAOQ4uxhhW2ZMVdF8zvHRPk65wsJTMn55tnCrJ7BVQK1CSAu3gQ@mail.gmail.com>
- <dedb52cd-fb96-2357-f29b-f2ae7813e83e@oracle.com>
-In-Reply-To: <dedb52cd-fb96-2357-f29b-f2ae7813e83e@oracle.com>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Tue, 25 Feb 2020 07:53:24 +0200
-Message-ID: <CAOQ4uxiWk5qdTu5MVYOECkNZPKX+Hp_WUh-RaxW19BvwXEoUWQ@mail.gmail.com>
-Subject: Re: [PATCH v7 00/19] xfs: Delayed Ready Attrs
-To:     Allison Collins <allison.henderson@oracle.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <158258948007.451256.11063346596276638956.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> Ok, I think I understand what you're trying to say.  Would it help to
-> explain then that setting or removing an attr becomes part of the
-> namespace operations later?  When we get up into the parent pointer set,
-> a lot of those patches add an attribute set or remove every time we
-> link, unlink, rename etc.  Did that help answer your question?
->
+On 2/24/20 4:11 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Since libxfs doesn't allocate the struct xfs_mount *, we can't just free
+> it during unmount.  Zero its contents to prevent any use-after-free.
 
-I will wait for the parent pointers series,
+seems fine but makes me wonder what prompted it.  Did we have a use
+after free?
 
-Thanks,
-Amir.
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  libxfs/init.c |    1 +
+>  1 file changed, 1 insertion(+)
+> 
+> 
+> diff --git a/libxfs/init.c b/libxfs/init.c
+> index d4804ead..197690df 100644
+> --- a/libxfs/init.c
+> +++ b/libxfs/init.c
+> @@ -904,6 +904,7 @@ libxfs_umount(
+>  	if (mp->m_logdev_targp != mp->m_ddev_targp)
+>  		kmem_free(mp->m_logdev_targp);
+>  	kmem_free(mp->m_ddev_targp);
+> +	memset(mp, 0, sizeof(struct xfs_mount));
+>  
+>  	return error;
+>  }
+> 
