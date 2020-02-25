@@ -2,180 +2,114 @@ Return-Path: <SRS0=ByWF=4N=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F14DFC35DEC
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 00:09:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0A05C35DEA
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 00:10:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D055A20732
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 00:09:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A13C121927
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 00:10:34 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="I0jxqkWC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728583AbgBYAJq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Feb 2020 19:09:46 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:54329 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728011AbgBYAJp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Feb 2020 19:09:45 -0500
-Received: from dread.disaster.area (pa49-195-202-68.pa.nsw.optusnet.com.au [49.195.202.68])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 899633A1961;
-        Tue, 25 Feb 2020 11:09:39 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1j6Nn7-0004kt-Lc; Tue, 25 Feb 2020 11:09:37 +1100
-Date:   Tue, 25 Feb 2020 11:09:37 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     ira.weiny@intel.com, linux-kernel@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH V4 07/13] fs: Add locking for a dynamic address space
- operations state
-Message-ID: <20200225000937.GA10776@dread.disaster.area>
-References: <20200221004134.30599-1-ira.weiny@intel.com>
- <20200221004134.30599-8-ira.weiny@intel.com>
- <20200221174449.GB11378@lst.de>
- <20200221224419.GW10776@dread.disaster.area>
- <20200224175603.GE7771@lst.de>
+        id S1728316AbgBYAKe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Feb 2020 19:10:34 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:45820 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728011AbgBYAKd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Feb 2020 19:10:33 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01P07bEg050100;
+        Tue, 25 Feb 2020 00:10:31 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=fchqRWVV0jgfFqife62aybJqMetc+a/4KN2LXAM0jgM=;
+ b=I0jxqkWCnSQkvX23BWg907TbhygsrA1tMvDW5/zIYHUYcx7mdZ5S1uBUVeIeMTpfdndT
+ d6jPVPmYSAPViXc4IbPpZuaJMo/RTwecw+2QQhpcGm4pLuU/rhItuB6Vo4yU0WHaqsk2
+ IuCHAV6X2O2u4D3g+b/aifWQiep98zqv0nCN7QmLVL2kdr9KmN10/d3/ZWicN05qsnCL
+ AYq/MQ5k5RnGs3BNVIXAXV2pVmjPE9NmzLfKDL3ARgGvbzExGl1TtctZir7sv/ATOorc
+ nBi2P6Xp3xsQ91mconaXTrTxasx5d5NpKYM8m0/iUoD2t88gJzfjjTTlivYCaBIKqXzu Zg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 2ybvr4q32s-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 25 Feb 2020 00:10:31 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01P08ASK014708;
+        Tue, 25 Feb 2020 00:10:30 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 2ybdshxurh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 25 Feb 2020 00:10:30 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01P0ATGo029768;
+        Tue, 25 Feb 2020 00:10:29 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 24 Feb 2020 16:10:29 -0800
+Subject: [PATCH v3 0/7] xfsprogs: actually check that writes succeeded
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     sandeen@sandeen.net, darrick.wong@oracle.com
+Cc:     linux-xfs@vger.kernel.org
+Date:   Mon, 24 Feb 2020 16:10:28 -0800
+Message-ID: <158258942838.451075.5401001111357771398.stgit@magnolia>
+User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200224175603.GE7771@lst.de>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
-        a=mqTaRPt+QsUAtUurwE173Q==:117 a=mqTaRPt+QsUAtUurwE173Q==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=l697ptgUJYAA:10
-        a=7-415B0cAAAA:8 a=Nhs22OFJWa-oc4Q03hQA:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9541 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=0 spamscore=0
+ malwarescore=0 mlxscore=0 bulkscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002240181
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9541 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0
+ clxscore=1015 adultscore=0 lowpriorityscore=0 malwarescore=0
+ priorityscore=1501 mlxscore=0 impostorscore=0 suspectscore=0 phishscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2002240181
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 24, 2020 at 06:56:03PM +0100, Christoph Hellwig wrote:
-> On Sat, Feb 22, 2020 at 09:44:19AM +1100, Dave Chinner wrote:
-> > > I am very much against this.  There is a reason why we don't support
-> > > changes of ops vectors at runtime anywhere else, because it is
-> > > horribly complicated and impossible to get right.  IFF we ever want
-> > > to change the DAX vs non-DAX mode (which I'm still not sold on) the
-> > > right way is to just add a few simple conditionals and merge the
-> > > aops, which is much easier to reason about, and less costly in overall
-> > > overhead.
-> > 
-> > *cough*
-> > 
-> > That's exactly what the original code did. And it was broken
-> > because page faults call multiple aops that are dependent on the
-> > result of the previous aop calls setting up the state correctly for
-> > the latter calls. And when S_DAX changes between those calls, shit
-> > breaks.
-> 
-> No, the original code was broken because it didn't serialize between
-> DAX and buffer access.
-> 
-> Take a step back and look where the problems are, and they are not
-> mostly with the aops.  In fact the only aop useful for DAX is
-> is ->writepages, and how it uses ->writepages is actually a bit of
-> an abuse of that interface.
+Hi all,
 
-The races are all through the fops, too, which is one of the reasons
-Darrick mentioned we should probably move this up to file ops
-level...
+A code audit demonstrated that many xfsprogs utilities do not check that
+the buffers they write actually make it to disk.  While the userspace
+buffer cache has a means to check that a buffer was written (which is to
+reread the buffer after the write), most utilities mark a buffer dirty
+and release it to the MRU and do not re-check the buffer.
 
-> So what we really need it just a way to prevent switching the flag
-> when a file is mapped,
+Worse yet, the MRU will retain the buffers for all failed writes until
+the buffer cache is torn down, but it in turn has no way to communicate
+that writes were lost due to IO errors.  libxfs will flush the device
+when it is unmounted, but as there is no return value, we again fail to
+notice that writes have been lost.  Most likely this leads to a corrupt
+filesystem, which makes it all the more surprising that xfs_repair can
+lose writes yet still return 0!
 
-That's not sufficient.
+Fix all this by making delwri_submit a synchronous write operation like
+its kernel counterpart; teaching the buffer cache to mark the buftarg
+when it knows it's losing writes; teaching the device flush functions to
+return error codes; and adding a new "flush filesystem" API that user
+programs can call to check for lost writes or IO errors.  Then teach all
+the userspace programs to flush the fs at exit and report errors.
 
-We also have to prevent the file from being mapped *while we are
-switching*. Nothing in the mmap() path actually serialises against
-filesystem operations, and the initial behavioural checks in the
-page fault path are similarly unserialised against changing the
-S_DAX flag.
+In v2 we split up some of the patches and make sure we always fsync when
+flushing a block device.  In v3 we move the buffer and disk flushing
+requests into the libxfs unmount function.
 
-e.g. there's a race against ->mmap() with switching the the S_DAX
-flag. In xfs_file_mmap():
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-        file_accessed(file);
-        vma->vm_ops = &xfs_file_vm_ops;
-        if (IS_DAX(inode))
-                vma->vm_flags |= VM_HUGEPAGE;
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
-So if this runs while a switch from true to false is occurring,
-we've got a non-dax VMA with huge pages enabled, and the non-dax
-page fault path doesn't support this.
+--D
 
-If we are really lucky, we'll have IS_DAX() set just long
-enough to get through this check in xfs_filemap_huge_fault():
-
-        if (!IS_DAX(file_inode(vmf->vma->vm_file)))
-                return VM_FAULT_FALLBACK;
-
-and then we'll get into __xfs_filemap_fault() and block on the
-MMAPLOCK. When we actually get that lock, S_DAX will now be false
-and we have a huge page fault running through a path (page cache IO)
-that doesn't support huge pages...
-
-This is the sort of landmine switching S_DAX without serialisation
-causes. The methods themselves look sane, but it's cross-method
-dependencies for a stable S_DAX flag that is the real problem.
-
-Yes, we can probably fix this by adding XFS_MMAPLOCK_SHARED here,
-but means every filesystem has to solve the same race conditions
-itself. That's hard to get right and easy to get wrong. If the
-VFS/mm subsystem provides the infrastructure needed to use this
-functionality safely, then that is hard for filesystem developers to
-get wrong.....
-
-> and in the normal read/write path ensure the
-> flag can't be switch while I/O is going on, which could either be
-> done by ensuring it is only switched under i_rwsem or equivalent
-> protection, or by setting the DAX flag once in the iocb similar to
-> IOCB_DIRECT.
-
-The iocb path is not the problem - that's entirely serialised
-against S_DAX changes by the i_rwsem. The problem is that we have no
-equivalent filesystem level serialisation for the entire mmap/page
-fault path, and it checks S_DAX all over the place.
-
-It's basically the same limitation that we have with mmap vs direct
-IO - we can't lock out mmap when we do direct IO, so we cannot
-guarantee coherency between the two. Similar here - we cannot
-lockout mmap in any sane way, so we cannot guarantee coherency
-between mmap and changing the S_DAX flag.
-
-That's the underlying problem we need to solve here.
-
-/me wonders if the best thing to do is to add a ->fault callout to
-tell the filesystem to lock/unlock the inode right up at the top of
-the page fault path, outside even the mmap_sem.  That means all the
-methods that the page fault calls are protected against S_DAX
-changes, and it gives us a low cost method of serialising page
-faults against DIO (e.g. via inode_dio_wait())....
-
-> And they easiest way to get all this done is as a first step to
-> just allowing switching the flag when no blocks are allocated at
-> all, similar to how the rt flag works.
-
-False equivalence - it is not similar because the RT flag changes
-and their associated state checks are *already fully serialised* by
-the XFS_ILOCK_EXCL. S_DAX accesses have no such serialisation, and
-that's the problem we need to solve...
-
-In reality, I don't really care how we solve this problem, but we've
-been down the path you are suggesting at least twice before and each
-time we've ended up in a "that doesn't work" corner and had to
-persue other solutions. I don't like going around in circles.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=buffer-write-fixes
