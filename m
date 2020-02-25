@@ -2,120 +2,166 @@ Return-Path: <SRS0=ByWF=4N=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 965B1C35E04
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 15:44:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95214C35E04
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 15:47:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 697D320CC7
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 15:44:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D94C2082F
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 15:47:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ja9V7UPI"
+	dkim=pass (2048-bit key) header.d=lca.pw header.i=@lca.pw header.b="rZtO+Qsr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729206AbgBYPoI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Feb 2020 10:44:08 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:50692 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726019AbgBYPoH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Feb 2020 10:44:07 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01PFhLDd146036;
-        Tue, 25 Feb 2020 15:44:05 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=4Wl6toVwSlhLu6MPwxzK75ksxa4IcslNBgkeMiswcaY=;
- b=ja9V7UPIiGVBhN41YW/onNGP5HmjrQiPRm350V0hnPK0PzMiIHBu957Dg4PQned7sqU4
- gKMDvt4KGRUfjGggrckvJ4TC0LZBL9/TOa62VbYQbtlg+Fk2UaBSC3tUXaSvmvtMTc3M
- BeaLU1QKHOdRpyMxQZMvtRx0PCrgmybHnkzFSuK1QC3hF+U9gj/QsCRG7xotEYeOWhp4
- ZGuo3B2hxFaQxR+6CgJqGjHM5uiT0CDt3cfeCn8vHcEhF1U1C2e4Kekm6bHh1qtiaq93
- Ax0E3Y1tP83dvsHv+5jr/YuwfhgmR49vs4vZDIEk5YNRNQ3xureOeQ3ckTISu1M0dmTw Xw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2yd0njj8cd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Feb 2020 15:44:05 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01PFg8F7051671;
-        Tue, 25 Feb 2020 15:44:04 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2yd09at6u5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Feb 2020 15:44:04 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01PFi3AJ014085;
-        Tue, 25 Feb 2020 15:44:03 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 25 Feb 2020 07:44:03 -0800
-Date:   Tue, 25 Feb 2020 07:44:02 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Jules Irenge <jbi.octave@gmail.com>
-Cc:     boqun.feng@gmail.com, linux-kernel@vger.kernel.org,
-        "supporter:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 03/30] xfs: Add missing annotation to xfs_ail_check()
-Message-ID: <20200225154402.GD6748@magnolia>
-References: <0/30>
- <20200223231711.157699-1-jbi.octave@gmail.com>
- <20200223231711.157699-4-jbi.octave@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200223231711.157699-4-jbi.octave@gmail.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9541 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 mlxlogscore=999
- spamscore=0 adultscore=0 malwarescore=0 bulkscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002250122
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9541 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 adultscore=0 mlxscore=0
- malwarescore=0 priorityscore=1501 impostorscore=0 mlxlogscore=999
- suspectscore=0 bulkscore=0 spamscore=0 lowpriorityscore=0 clxscore=1011
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002250122
+        id S1730708AbgBYPrA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Feb 2020 10:47:00 -0500
+Received: from mail-qt1-f196.google.com ([209.85.160.196]:38663 "EHLO
+        mail-qt1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730246AbgBYPrA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Feb 2020 10:47:00 -0500
+Received: by mail-qt1-f196.google.com with SMTP id i23so9332402qtr.5
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Feb 2020 07:46:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=lca.pw; s=google;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=jzzR6L46tUOZAhynuJXzNpU9O0uz0Bf0qECc4tNwkIg=;
+        b=rZtO+QsrE3oj/5lFyd8Y3/K8ZQ8r1IDNHDwGoDkgnrb/nVLhmTI9e2PI2ohrrbqfM0
+         bEAbu6R8+pp0LB650RskEjp8tbYMa6WPYQuDYX85AcR98/GXNnc00u6KaTULY1nh9R02
+         h7joh4MOE0qdRwEDRb8TqJ70ug4V87jrId+YRPAX8ueDWb/Ym9MDZ7D/uLar6DDJnzSe
+         7gxdHkG/x0RlId4D112NQs3qwtM3pseZOtHu76echkC3TSCquc+1k7kGtLaS9/7E71PE
+         N7ZguGElmb+5sB4xm3FmjEV1HJe/460Og7WXc3OiQ7B5Y+gj7L/7F2WlETxYgUl47m+m
+         xvEQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=jzzR6L46tUOZAhynuJXzNpU9O0uz0Bf0qECc4tNwkIg=;
+        b=sgOTxRsf977otFr9K681bZwJ3zfeENuDnR0cmQCC54jfXpF2WvGJYk5CrLnhK0Apab
+         hI4WiItMlul1RPFGkT8x/MHKpH1xZZjblm9c+okkRI5yYlpV8o5Im6ahf9LeRN3jvY4q
+         Q/etapsvUUMsxFWqktXRY5vQbicS4zZD724OGWQ9IYl1Y9tlPg+c8qAktcvD+X1AWjEo
+         83EDs2wlZpiu+gmplDL97SHjwfjtmPV7y0o4OypWD0OrJaibzdDV+fQaP2ZWn88NHoSb
+         bplWDlHwcGgL5LbweXM9UJ4lieKIleKI3A7vkLn5r98MfJOLgLYq9/4lFAnlIj+VxV6v
+         HGEg==
+X-Gm-Message-State: APjAAAVMGjIqKoZt0HwccIh/0nBanUtceVcy8kNc+/wQ0BnAHfOzv10f
+        R2PElaQf3hyuAPWkyWdw94Z3uzJ2cSM=
+X-Google-Smtp-Source: APXvYqxMu0HdQd0eLwWSBS5Bck4EomA2B40EfTWaFa15jcXKpXWpGw+8+C9hBtEIoLqlQabr5/n3uA==
+X-Received: by 2002:aed:2284:: with SMTP id p4mr53320481qtc.329.1582645619001;
+        Tue, 25 Feb 2020 07:46:59 -0800 (PST)
+Received: from dhcp-41-57.bos.redhat.com (nat-pool-bos-t.redhat.com. [66.187.233.206])
+        by smtp.gmail.com with ESMTPSA id o55sm7921809qtf.46.2020.02.25.07.46.57
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 25 Feb 2020 07:46:58 -0800 (PST)
+Message-ID: <1582645616.7365.118.camel@lca.pw>
+Subject: Re: [PATCH] xfs: fix an undefined behaviour in _da3_path_shift
+From:   Qian Cai <cai@lca.pw>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Date:   Tue, 25 Feb 2020 10:46:56 -0500
+In-Reply-To: <20200225152805.GG6740@magnolia>
+References: <1582641477-4011-1-git-send-email-cai@lca.pw>
+         <20200225152805.GG6740@magnolia>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.22.6 (3.22.6-10.el7) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Feb 23, 2020 at 11:16:44PM +0000, Jules Irenge wrote:
-> Sparse reports a warning at xfs_ail_check()
+On Tue, 2020-02-25 at 07:28 -0800, Darrick J. Wong wrote:
+> On Tue, Feb 25, 2020 at 09:37:57AM -0500, Qian Cai wrote:
+> > state->path.active could be 1 in xfs_da3_node_lookup_int() and then in
+> > xfs_da3_path_shift() could see state->path.blk[-1].
 > 
-> warning: context imbalance in xfs_ail_check() - unexpected unlock
-> 
-> The root cause is the missing annotation at xfs_ail_check()
-> 
-> Add the missing __must_hold(&ailp->ail_lock) annotation
-> 
-> Signed-off-by: Jules Irenge <jbi.octave@gmail.com>
+> Under what circumstancs can it be 1?  Is this a longstanding bug in XFS?
+> A corrupted filesystem?  A deliberately corrupted filesystem?
 
-Seems reasonable, though I'm wondering if this is a treewide change you
-seek to apply yourself, or merely a large patch series to merge through
-the individual subsystem maintainers?
+in xfs_da3_node_lookup_int(),
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+	for (blk = &state->path.blk[0], state->path.active = 1;
+			 state->path.active <= XFS_DA_NODE_MAXDEPTH;
+			 blk++, state->path.active++) {
+<snip>
+		if (magic == XFS_ATTR_LEAF_MAGIC ||
+		    magic == XFS_ATTR3_LEAF_MAGIC) {
+			blk->magic = XFS_ATTR_LEAF_MAGIC;
+			blk->hashval = xfs_attr_leaf_lasthash(blk->bp, NULL);
+			break;
+		}
 
---D
+		if (magic == XFS_DIR2_LEAFN_MAGIC ||
+		    magic == XFS_DIR3_LEAFN_MAGIC) {
+			blk->magic = XFS_DIR2_LEAFN_MAGIC;
+			blk->hashval = xfs_dir2_leaf_lasthash(args->dp,
+							      blk->bp, NULL);
+			break;
 
-> ---
->  fs/xfs/xfs_trans_ail.c | 1 +
->  1 file changed, 1 insertion(+)
+Isn't that if the first iteration in the loop calls any of those "break", it
+will have state->path.active = 1 ?
+
+I suppose this is a long-standing bug that need UBSAN (no obvious harm could be
+done later because it will bail out immediately in xfs_da3_path_shift()) and a
+set of specific conditions to met to trigger.
+
 > 
-> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-> index 00cc5b8734be..58d4ef1b4c05 100644
-> --- a/fs/xfs/xfs_trans_ail.c
-> +++ b/fs/xfs/xfs_trans_ail.c
-> @@ -32,6 +32,7 @@ STATIC void
->  xfs_ail_check(
->  	struct xfs_ail		*ailp,
->  	struct xfs_log_item	*lip)
-> +	__must_hold(&ailp->ail_lock)
->  {
->  	struct xfs_log_item	*prev_lip;
->  	struct xfs_log_item	*next_lip;
-> -- 
-> 2.24.1
+> > 
+> >  UBSAN: Undefined behaviour in fs/xfs/libxfs/xfs_da_btree.c:1989:14
+> >  index -1 is out of range for type 'xfs_da_state_blk_t [5]'
+> >  Call trace:
+> >   dump_backtrace+0x0/0x2c8
+> >   show_stack+0x20/0x2c
+> >   dump_stack+0xe8/0x150
+> >   __ubsan_handle_out_of_bounds+0xe4/0xfc
+> >   xfs_da3_path_shift+0x860/0x86c [xfs]
+> >   xfs_da3_node_lookup_int+0x7c8/0x934 [xfs]
+> >   xfs_dir2_node_addname+0x2c8/0xcd0 [xfs]
+> >   xfs_dir_createname+0x348/0x38c [xfs]
+> >   xfs_create+0x6b0/0x8b4 [xfs]
+> >   xfs_generic_create+0x12c/0x1f8 [xfs]
+> >   xfs_vn_mknod+0x3c/0x4c [xfs]
+> >   xfs_vn_create+0x34/0x44 [xfs]
+> >   do_last+0xd4c/0x10c8
+> >   path_openat+0xbc/0x2f4
+> >   do_filp_open+0x74/0xf4
+> >   do_sys_openat2+0x98/0x180
+> >   __arm64_sys_openat+0xf8/0x170
+> >   do_el0_svc+0x170/0x240
+> >   el0_sync_handler+0x150/0x250
+> >   el0_sync+0x164/0x180
+> > 
+> > Signed-off-by: Qian Cai <cai@lca.pw>
+> > ---
+> >  fs/xfs/libxfs/xfs_da_btree.c | 6 +++++-
+> >  1 file changed, 5 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+> > index 875e04f82541..0906b7748a3f 100644
+> > --- a/fs/xfs/libxfs/xfs_da_btree.c
+> > +++ b/fs/xfs/libxfs/xfs_da_btree.c
+> > @@ -1986,7 +1986,11 @@ static inline int xfs_dabuf_nfsb(struct xfs_mount *mp, int whichfork)
+> >  	ASSERT(path != NULL);
+> >  	ASSERT((path->active > 0) && (path->active < XFS_DA_NODE_MAXDEPTH));
+> >  	level = (path->active-1) - 1;	/* skip bottom layer in path */
+> > -	for (blk = &path->blk[level]; level >= 0; blk--, level--) {
+> > +
+> > +	if (level >= 0)
+> > +		blk = &path->blk[level];
 > 
+> ...because if the reason is "corrupt metadata" then perhaps this should
+> return -EFSCORRUPTED?  But I don't know enough about the context to know
+> the answer to that question.
+> 
+> --D
+> 
+> > +
+> > +	for (; level >= 0; blk--, level--) {
+> >  		xfs_da3_node_hdr_from_disk(dp->i_mount, &nodehdr,
+> >  					   blk->bp->b_addr);
+> >  
+> > -- 
+> > 1.8.3.1
+> > 
