@@ -2,68 +2,119 @@ Return-Path: <SRS0=ByWF=4N=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AE62C35E01
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 17:24:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E93E0C35E0C
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 17:36:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EC5132051A
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 17:24:15 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hHbVTXkX"
+	by mail.kernel.org (Postfix) with ESMTP id CD0592082F
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 17:36:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729939AbgBYRYP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Feb 2020 12:24:15 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:56522 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729817AbgBYRYP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Feb 2020 12:24:15 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Transfer-Encoding
-        :Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-        Sender:Reply-To:Content-ID:Content-Description;
-        bh=PzdWayaxS6ayq9I+GkTSYuRWsVr4frP3oUwE87uVxck=; b=hHbVTXkXRk3PcCDaPTh9IKMWxz
-        ZWG4/etkfs/l3Yyl7CjagY0OGswy+deg8oR1z5BDNr85jBysEF70Zp/jVrLTwx9SJp5WeexC7oPc1
-        BBvEZ6HaYg/EO5ordvZHuMLRrpmm24UofPpLfadu3nFsePrNqV06tm0+YpFU+i30aksAiM7I18Z7r
-        SgUrZdCVon9Sz+WXXBaTArY/M2ju0gGoYljVRrSw0m67gtkpdT50KEOl94ctyLICmR/XqCsj1LNWp
-        wvJMeW9XXMyJnJQLEN4ai6VODt8JytcaxB2wLC8fgHLvAFXNe9B4gQ4Wc8P+RRZPd3ICpxANQHfCD
-        bkJCyVxw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j6dwI-00039E-Ud; Tue, 25 Feb 2020 17:24:10 +0000
-Date:   Tue, 25 Feb 2020 09:24:10 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Eric Sandeen <sandeen@redhat.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/6] xfs: remove the agfl_bno member from struct xfs_agfl
-Message-ID: <20200225172410.GB2937@infradead.org>
-References: <20200130133343.225818-1-hch@lst.de>
- <20200130133343.225818-2-hch@lst.de>
- <20200224220256.GA3446@infradead.org>
- <75eb13f6-8f96-a07d-f6ee-c648f8a3b38e@sandeen.net>
- <20200224223034.GA14361@infradead.org>
- <61713cad-ea6c-6a0c-79eb-cf01105e1222@sandeen.net>
- <20200224224648.GB25075@infradead.org>
- <477af5b7-9973-1e4e-a8b4-8458e516f686@redhat.com>
+        id S1728515AbgBYRgh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Feb 2020 12:36:37 -0500
+Received: from verein.lst.de ([213.95.11.211]:44528 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728051AbgBYRgh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 Feb 2020 12:36:37 -0500
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 6F2B368BE1; Tue, 25 Feb 2020 18:36:33 +0100 (CET)
+Date:   Tue, 25 Feb 2020 18:36:33 +0100
+From:   Christoph Hellwig <hch@lst.de>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Christoph Hellwig <hch@lst.de>, ira.weiny@intel.com,
+        linux-kernel@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH V4 07/13] fs: Add locking for a dynamic address space
+ operations state
+Message-ID: <20200225173633.GA30843@lst.de>
+References: <20200221004134.30599-1-ira.weiny@intel.com> <20200221004134.30599-8-ira.weiny@intel.com> <20200221174449.GB11378@lst.de> <20200221224419.GW10776@dread.disaster.area> <20200224175603.GE7771@lst.de> <20200225000937.GA10776@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <477af5b7-9973-1e4e-a8b4-8458e516f686@redhat.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200225000937.GA10776@dread.disaster.area>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-So actually I think I was confused.  The BUILD_BUG_ON is what we had
-before adding the __packed.  What we fix here іs just a really silly
-warning from new gcc, which in fact only happens in xfsprogs as the
-kernel decided that the warning is so damn stupid that we won't enable
-it.  So no need for urgent treatment or a new commit message, sorry for
-the noise.
+On Tue, Feb 25, 2020 at 11:09:37AM +1100, Dave Chinner wrote:
+> > No, the original code was broken because it didn't serialize between
+> > DAX and buffer access.
+> > 
+> > Take a step back and look where the problems are, and they are not
+> > mostly with the aops.  In fact the only aop useful for DAX is
+> > is ->writepages, and how it uses ->writepages is actually a bit of
+> > an abuse of that interface.
+> 
+> The races are all through the fops, too, which is one of the reasons
+> Darrick mentioned we should probably move this up to file ops
+> level...
 
-I'll just resend the whole series with the review comments addressed.
+But the file ops are very simple to use.  Pass the flag in the iocb,
+and make sure the flag can only changed with i_rwsem held.  That part
+is pretty trivial, the interesting case is mmap because it is so
+spread out.
+
+> > So what we really need it just a way to prevent switching the flag
+> > when a file is mapped,
+> 
+> That's not sufficient.
+> 
+> We also have to prevent the file from being mapped *while we are
+> switching*. Nothing in the mmap() path actually serialises against
+> filesystem operations, and the initial behavioural checks in the
+> page fault path are similarly unserialised against changing the
+> S_DAX flag.
+
+And the important part here is ->mmap.  If ->mmap doesn't get through
+we are not going to see page faults.
+
+> > and in the normal read/write path ensure the
+> > flag can't be switch while I/O is going on, which could either be
+> > done by ensuring it is only switched under i_rwsem or equivalent
+> > protection, or by setting the DAX flag once in the iocb similar to
+> > IOCB_DIRECT.
+> 
+> The iocb path is not the problem - that's entirely serialised
+> against S_DAX changes by the i_rwsem. The problem is that we have no
+> equivalent filesystem level serialisation for the entire mmap/page
+> fault path, and it checks S_DAX all over the place.
+
+Not right now.  We have various IS_DAX checks outside it.  But it is
+easily fixable indeed.
+
+> /me wonders if the best thing to do is to add a ->fault callout to
+> tell the filesystem to lock/unlock the inode right up at the top of
+> the page fault path, outside even the mmap_sem.  That means all the
+> methods that the page fault calls are protected against S_DAX
+> changes, and it gives us a low cost method of serialising page
+> faults against DIO (e.g. via inode_dio_wait())....
+
+Maybe.  Especially if it solves real problems and isn't just new
+overhead to add an esoteric feature.
+
+> 
+> > And they easiest way to get all this done is as a first step to
+> > just allowing switching the flag when no blocks are allocated at
+> > all, similar to how the rt flag works.
+> 
+> False equivalence - it is not similar because the RT flag changes
+> and their associated state checks are *already fully serialised* by
+> the XFS_ILOCK_EXCL. S_DAX accesses have no such serialisation, and
+> that's the problem we need to solve...
+
+And my point is that if we ensure S_DAX can only be checked if there
+are no blocks on the file, is is fairly easy to provide the same
+guarantee.  And I've not heard any argument that we really need more
+flexibility than that.  In fact I think just being able to change it
+on the parent directory and inheriting the flag might be more than
+plenty, which would lead to a very simple implementation without any
+of the crazy overhead in this series.
