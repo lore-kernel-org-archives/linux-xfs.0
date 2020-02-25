@@ -5,75 +5,73 @@ X-Spam-Level:
 X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B1F2C35E04
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 19:08:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2434C35E01
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 19:16:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3477E2082F
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 19:08:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 794D12082F
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 19:16:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Igc+J9rE"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="yUE68T82"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731308AbgBYTIK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Feb 2020 14:08:10 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:36174 "EHLO
+        id S1729179AbgBYTQv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Feb 2020 14:16:51 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:47194 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728787AbgBYTIK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Feb 2020 14:08:10 -0500
+        with ESMTP id S1728756AbgBYTQv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Feb 2020 14:16:51 -0500
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01PJ3MAK010143;
-        Tue, 25 Feb 2020 19:08:08 GMT
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01PJ3MB1010143;
+        Tue, 25 Feb 2020 19:16:49 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
- content-transfer-encoding : in-reply-to; s=corp-2020-01-29;
- bh=NLjjaROJFUNToOjOL5le64tYJ0+s5GfAPzigtAlgZiU=;
- b=Igc+J9rEM6WCMJaE0Vw0YOs3TIt8PpGPC15tEOA95At3L4m/nn4Dpdy2wCh0xwNaLoLm
- SRCV2Vd6qJMGJSyCVN/3nHIZ1dw30bkWxeUgOquEz11wa1ij6MySppu/aKdh08p4nLA3
- MvYhljvUDhaLFua/JIL4zVLgTjlCNZM6uvA9pfO9pEiSs0d2yc67FlnmXezGmi/UfiDI
- tdAQTLrUq/W41ycQNsU9s4bkvMOEV85ZP39TX9BZZQkplMe3L+95xDHyeRZH16v2OOJP
- rWBfWc9LzkgDb7AQnXwihawjY0ZQd8baBDcxp2tg6tPGfOh1BQSUV4geLxyRc2gvDuui iw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2yd0njkgf7-1
+ in-reply-to; s=corp-2020-01-29;
+ bh=N7Y4rvo/6SK8FGbew7ka4QjSPWNZNEHx/5vsBXaC0go=;
+ b=yUE68T82xTlqpb/Bdxah5xwcRyWR6QEi6LzYisOtxefS1BMXJ5jLByWHuibBy6znaGZB
+ yrucJgFvXVhFNzxo8IdDIzDYBKf9cGn2Yr6tniGrwb1xzuCJ+GGb1697axsZf9c+6Mzf
+ YjXXX0HZNgBiT29TIacOM3D0U20JFUi9gALYkC3XtsT7+rPmGhsXAYo59/F2grovRMLm
+ 4Da+lUeu62GQ+PhuVKWar1umA6h3VFRSWeh+13mkz0HiUTrL2IUi50K0EMbiYXzow9tn
+ 6i6SgWaEfC6Uf9sCksSrz3Kl6PvslT2Sq208OPjPHCd4Kyg/guxtUmtr3LZ876H70VLt LA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2yd0njkhse-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Feb 2020 19:08:07 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01PJ295b164470;
-        Tue, 25 Feb 2020 19:08:07 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2yd09b9hqy-1
+        Tue, 25 Feb 2020 19:16:49 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01PJEAuL195091;
+        Tue, 25 Feb 2020 19:16:48 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2yd17qn45s-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Feb 2020 19:08:06 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01PJ8534007022;
-        Tue, 25 Feb 2020 19:08:05 GMT
+        Tue, 25 Feb 2020 19:16:48 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01PJGlmJ011423;
+        Tue, 25 Feb 2020 19:16:48 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 25 Feb 2020 11:08:05 -0800
-Date:   Tue, 25 Feb 2020 11:08:04 -0800
+        with ESMTP ; Tue, 25 Feb 2020 11:16:47 -0800
+Date:   Tue, 25 Feb 2020 11:16:46 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Qian Cai <cai@lca.pw>
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix an undefined behaviour in _da3_path_shift
-Message-ID: <20200225190804.GP6740@magnolia>
-References: <1582641477-4011-1-git-send-email-cai@lca.pw>
- <20200225152805.GG6740@magnolia>
- <1582645616.7365.118.camel@lca.pw>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH V4] libxfs: use FALLOC_FL_ZERO_RANGE in libxfs_device_zero
+Message-ID: <20200225191646.GQ6740@magnolia>
+References: <4bc3be27-b09d-a708-f053-6f7240642667@sandeen.net>
+ <1c7c39f7-91a7-be85-5906-e55180a91a5f@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <1582645616.7365.118.camel@lca.pw>
+In-Reply-To: <1c7c39f7-91a7-be85-5906-e55180a91a5f@sandeen.net>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9542 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 mlxlogscore=999
- spamscore=0 adultscore=0 malwarescore=0 bulkscore=0 suspectscore=31
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 mlxlogscore=999
+ malwarescore=0 adultscore=0 phishscore=0 suspectscore=9 mlxscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
  definitions=main-2002250135
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9542 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 adultscore=0 mlxscore=0
  malwarescore=0 priorityscore=1501 impostorscore=0 mlxlogscore=999
- suspectscore=31 bulkscore=0 spamscore=0 lowpriorityscore=0 clxscore=1011
+ suspectscore=9 bulkscore=0 spamscore=0 lowpriorityscore=0 clxscore=1015
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
  definitions=main-2002250135
 Sender: linux-xfs-owner@vger.kernel.org
@@ -81,108 +79,131 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 25, 2020 at 10:46:56AM -0500, Qian Cai wrote:
-> On Tue, 2020-02-25 at 07:28 -0800, Darrick J. Wong wrote:
-> > On Tue, Feb 25, 2020 at 09:37:57AM -0500, Qian Cai wrote:
-> > > state->path.active could be 1 in xfs_da3_node_lookup_int() and then in
-> > > xfs_da3_path_shift() could see state->path.blk[-1].
-> > 
-> > Under what circumstancs can it be 1?  Is this a longstanding bug in XFS?
-> > A corrupted filesystem?  A deliberately corrupted filesystem?
+On Tue, Feb 25, 2020 at 10:13:55AM -0800, Eric Sandeen wrote:
+> I had a request from someone who cared about mkfs speed over
+> a slower network block device to look into using faster zeroing
+> methods, particularly for the log, during mkfs.
 > 
-> in xfs_da3_node_lookup_int(),
+> Using FALLOC_FL_ZERO_RANGE is faster in this case than writing
+> a bunch of zeros across a wire.
 > 
-> 	for (blk = &state->path.blk[0], state->path.active = 1;
-> 			 state->path.active <= XFS_DA_NODE_MAXDEPTH;
-> 			 blk++, state->path.active++) {
-> <snip>
-> 		if (magic == XFS_ATTR_LEAF_MAGIC ||
-> 		    magic == XFS_ATTR3_LEAF_MAGIC) {
-> 			blk->magic = XFS_ATTR_LEAF_MAGIC;
-> 			blk->hashval = xfs_attr_leaf_lasthash(blk->bp, NULL);
-> 			break;
-> 		}
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 > 
-> 		if (magic == XFS_DIR2_LEAFN_MAGIC ||
-> 		    magic == XFS_DIR3_LEAFN_MAGIC) {
-> 			blk->magic = XFS_DIR2_LEAFN_MAGIC;
-> 			blk->hashval = xfs_dir2_leaf_lasthash(args->dp,
-> 							      blk->bp, NULL);
-> 			break;
+> V2: Clean up all the nasty stuff I'd flung out there as a wild first
+> cut, thanks Dave.
 > 
-> Isn't that if the first iteration in the loop calls any of those "break", it
-> will have state->path.active = 1 ?
+> V3: make len_bytes a size_t; leave "end_offset" where it is for the loop
+> use.  It's a bit odd but ... just don't mess with it for now, one patch
+> one change.
+> 
+> V4: Use EOPNOTSUPP not EOPNOTSUP (same on linux anyway but meh)
+> I ignored(tm) darrick's suggestion to make libxfs_device_zero accept
+> a longer length, for now - no callers need anything bigger at this time.
 
-Yes.  The commit message ought to state that active == 1 is a valid
-state when we're trying to add an entry to a single dir leaf block and
-are trying to shift forward to see if there's a sibling block that would
-be a better place to put the new entry.
+But... 
 
-This is to build confidence in future readers that we actually
-understood the circumstances of the UBSAN error and aren't just
-monkeypatching the code to shut up the automated checks.
+> diff --git a/include/builddefs.in b/include/builddefs.in
+> index 4700b527..1dd27f76 100644
+> --- a/include/builddefs.in
+> +++ b/include/builddefs.in
+> @@ -144,6 +144,9 @@ endif
+>  ifeq ($(HAVE_GETFSMAP),yes)
+>  PCFLAGS+= -DHAVE_GETFSMAP
+>  endif
+> +ifeq ($(HAVE_FALLOCATE),yes)
+> +PCFLAGS += -DHAVE_FALLOCATE
+> +endif
+>  
+>  LIBICU_LIBS = @libicu_LIBS@
+>  LIBICU_CFLAGS = @libicu_CFLAGS@
+> diff --git a/include/linux.h b/include/linux.h
+> index 8f3c32b0..8d5c4584 100644
+> --- a/include/linux.h
+> +++ b/include/linux.h
+> @@ -20,6 +20,10 @@
+>  #include <stdio.h>
+>  #include <asm/types.h>
+>  #include <mntent.h>
+> +#include <fcntl.h>
+> +#if defined(HAVE_FALLOCATE)
+> +#include <linux/falloc.h>
+> +#endif
+>  #ifdef OVERRIDE_SYSTEM_FSXATTR
+>  # define fsxattr sys_fsxattr
+>  #endif
+> @@ -164,6 +168,24 @@ static inline void platform_mntent_close(struct mntent_cursor * cursor)
+>  	endmntent(cursor->mtabp);
+>  }
+>  
+> +#if defined(FALLOC_FL_ZERO_RANGE)
+> +static inline int
+> +platform_zero_range(
+> +	int		fd,
+> +	xfs_off_t	start,
+> +	size_t		len)
+> +{
+> +	int ret;
+> +
+> +	ret = fallocate(fd, FALLOC_FL_ZERO_RANGE, start, len);
+> +	if (!ret)
+> +		return 0;
+> +	return -errno;
+> +}
+> +#else
+> +#define platform_zero_range(fd, s, l)	(-EOPNOTSUPP)
+> +#endif
+> +
+>  /*
+>   * Check whether we have to define FS_IOC_FS[GS]ETXATTR ourselves. These
+>   * are a copy of the definitions moved to linux/uapi/fs.h in the 4.5 kernel,
+> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+> index 0d9d7202..e2d9d790 100644
+> --- a/libxfs/rdwr.c
+> +++ b/libxfs/rdwr.c
+> @@ -61,8 +61,18 @@ libxfs_device_zero(struct xfs_buftarg *btp, xfs_daddr_t start, uint len)
+>  {
+>  	xfs_off_t	start_offset, end_offset, offset;
+>  	ssize_t		zsize, bytes;
+> +	size_t		len_bytes;
+>  	char		*z;
+> -	int		fd;
+> +	int		error, fd;
+> +
+> +	fd = libxfs_device_to_fd(btp->dev);
+> +	start_offset = LIBXFS_BBTOOFF64(start);
+> +
+> +	/* try to use special zeroing methods, fall back to writes if needed */
+> +	len_bytes = LIBXFS_BBTOOFF64(len);
 
---D
+...but if the caller passes in (say) 2^23 daddrs on a 32-bit system,
+this conversion will try to stuff 2^32 into a size_t (which is 32-bit),
+causing an integer overflow.  I grok that no callers currently try this,
+but this seems like leaving a logic bomb that could go off on what are
+becoming difficult-to-test architectures.
 
-> I suppose this is a long-standing bug that need UBSAN (no obvious harm could be
-> done later because it will bail out immediately in xfs_da3_path_shift()) and a
-> set of specific conditions to met to trigger.
+Granted the added overflow checking and whatnot required to convert that
+last parameter of libxfs_device_zero to unsigned long long could very
+well justify a separate patch for fixing the 64-bitness of the whole
+api.
+
+--D 
+
+> +	error = platform_zero_range(fd, start_offset, len_bytes);
+> +	if (!error)
+> +		return 0;
+>  
+>  	zsize = min(BDSTRAT_SIZE, BBTOB(len));
+>  	if ((z = memalign(libxfs_device_alignment(), zsize)) == NULL) {
+> @@ -73,9 +83,6 @@ libxfs_device_zero(struct xfs_buftarg *btp, xfs_daddr_t start, uint len)
+>  	}
+>  	memset(z, 0, zsize);
+>  
+> -	fd = libxfs_device_to_fd(btp->dev);
+> -	start_offset = LIBXFS_BBTOOFF64(start);
+> -
+>  	if ((lseek(fd, start_offset, SEEK_SET)) < 0) {
+>  		fprintf(stderr, _("%s: %s seek to offset %llu failed: %s\n"),
+>  			progname, __FUNCTION__,
 > 
-> > 
-> > > 
-> > >  UBSAN: Undefined behaviour in fs/xfs/libxfs/xfs_da_btree.c:1989:14
-> > >  index -1 is out of range for type 'xfs_da_state_blk_t [5]'
-> > >  Call trace:
-> > >   dump_backtrace+0x0/0x2c8
-> > >   show_stack+0x20/0x2c
-> > >   dump_stack+0xe8/0x150
-> > >   __ubsan_handle_out_of_bounds+0xe4/0xfc
-> > >   xfs_da3_path_shift+0x860/0x86c [xfs]
-> > >   xfs_da3_node_lookup_int+0x7c8/0x934 [xfs]
-> > >   xfs_dir2_node_addname+0x2c8/0xcd0 [xfs]
-> > >   xfs_dir_createname+0x348/0x38c [xfs]
-> > >   xfs_create+0x6b0/0x8b4 [xfs]
-> > >   xfs_generic_create+0x12c/0x1f8 [xfs]
-> > >   xfs_vn_mknod+0x3c/0x4c [xfs]
-> > >   xfs_vn_create+0x34/0x44 [xfs]
-> > >   do_last+0xd4c/0x10c8
-> > >   path_openat+0xbc/0x2f4
-> > >   do_filp_open+0x74/0xf4
-> > >   do_sys_openat2+0x98/0x180
-> > >   __arm64_sys_openat+0xf8/0x170
-> > >   do_el0_svc+0x170/0x240
-> > >   el0_sync_handler+0x150/0x250
-> > >   el0_sync+0x164/0x180
-> > > 
-> > > Signed-off-by: Qian Cai <cai@lca.pw>
-> > > ---
-> > >  fs/xfs/libxfs/xfs_da_btree.c | 6 +++++-
-> > >  1 file changed, 5 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> > > index 875e04f82541..0906b7748a3f 100644
-> > > --- a/fs/xfs/libxfs/xfs_da_btree.c
-> > > +++ b/fs/xfs/libxfs/xfs_da_btree.c
-> > > @@ -1986,7 +1986,11 @@ static inline int xfs_dabuf_nfsb(struct xfs_mount *mp, int whichfork)
-> > >  	ASSERT(path != NULL);
-> > >  	ASSERT((path->active > 0) && (path->active < XFS_DA_NODE_MAXDEPTH));
-> > >  	level = (path->active-1) - 1;	/* skip bottom layer in path */
-> > > -	for (blk = &path->blk[level]; level >= 0; blk--, level--) {
-> > > +
-> > > +	if (level >= 0)
-> > > +		blk = &path->blk[level];
-> > 
-> > ...because if the reason is "corrupt metadata" then perhaps this should
-> > return -EFSCORRUPTED?  But I don't know enough about the context to know
-> > the answer to that question.
-> > 
-> > --D
-> > 
-> > > +
-> > > +	for (; level >= 0; blk--, level--) {
-> > >  		xfs_da3_node_hdr_from_disk(dp->i_mount, &nodehdr,
-> > >  					   blk->bp->b_addr);
-> > >  
-> > > -- 
-> > > 1.8.3.1
-> > > 
+> 
