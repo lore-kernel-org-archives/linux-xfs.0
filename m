@@ -2,190 +2,80 @@ Return-Path: <SRS0=ByWF=4N=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 819B7C35DF2
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 04:27:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE0D9C35DF2
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 05:53:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 45AEB24673
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 04:27:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F5E521744
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 05:53:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="sgiC50Bf"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eBaJR7V+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728888AbgBYE1M (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Feb 2020 23:27:12 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:55344 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728880AbgBYE1M (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Feb 2020 23:27:12 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01P4NIcJ190319;
-        Tue, 25 Feb 2020 04:27:10 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=uUZuUDd7A9zV59uBvE8zy2TbLfLX1VyWNz9rVlKEV14=;
- b=sgiC50BfsslKlir83YEnFHUzUO/RUdL9mDgHTbxK4g6jP3nDLQbAF6tgKvryMhfjvidg
- Tk8ab4VMOrWJZbh3C0ijYsdl6XCkTw+/H3obXerUbFhnXSqqOwZBlffH28Qr8eND3sog
- QV6jgTsvuLAHn9lOet3IEgzTkvh4KlJa43v1EIIMNu8opAdplsFx7/ziIfxPTSDcJyWa
- 9S57Zva2NI6XabWTRv0SdJYD3RMzF75dr5cayiyW7Vr8WT6JngMZY7FEwrQXUV6xhgzE
- Mm8JZ7bp9KrHuSWbNukrzFGOF9hzG/ARAkTMTKDocDgSe/yKyL9kaKIggvpjbBs4m36S eQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2ycppr97dv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Feb 2020 04:27:10 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01P4M4vZ107024;
-        Tue, 25 Feb 2020 04:27:09 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2ybe12u960-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Feb 2020 04:27:09 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01P4R9ap018640;
-        Tue, 25 Feb 2020 04:27:09 GMT
-Received: from localhost (/10.159.137.222)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 24 Feb 2020 20:27:08 -0800
-Date:   Mon, 24 Feb 2020 20:27:07 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Allison Collins <allison.henderson@oracle.com>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v7 02/19] xfs: Embed struct xfs_name in xfs_da_args
-Message-ID: <20200225042707.GF6740@magnolia>
-References: <20200223020611.1802-1-allison.henderson@oracle.com>
- <20200223020611.1802-3-allison.henderson@oracle.com>
- <20200225005718.GC10776@dread.disaster.area>
- <5de019d4-d19f-315d-0299-3926c49cf150@oracle.com>
- <20200225040652.GD10776@dread.disaster.area>
- <d3fdea13-ff1d-ed69-8005-60193c2d2e53@oracle.com>
+        id S1727005AbgBYFxi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Feb 2020 00:53:38 -0500
+Received: from mail-io1-f66.google.com ([209.85.166.66]:41281 "EHLO
+        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726956AbgBYFxh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Feb 2020 00:53:37 -0500
+Received: by mail-io1-f66.google.com with SMTP id m25so565204ioo.8
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Feb 2020 21:53:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=dCfzzwTgdVO/FVxHYz/BLmGFQ8B2u4JefNipnicYISA=;
+        b=eBaJR7V+fn5JwhrE2b75rjzEMj0SXODs/HnyM9SDXIZN7qhkKAnKstsBrDeXB74ItQ
+         Go2kebfBBrOOnIR1B1ggPbEg/+gCTvhoSDdbFLT5qnHDGGQPNQPD/Z1OTwD7nlvOttii
+         Jf7JZNaQUGIek7S07+iyapG2qhZ2cdC6aMWPNL3l1oaFZUd6/xeGDExE9RimsJcUO1b3
+         zL+YLaecyqFROfW0GAkguIT1suqQzMMDQAb+zJViXHiceM2//kaTRE03134rJx2T/cr2
+         AxNX9/wsIu3v5jK0bS3tqQ9kc1tKA3GhpozLktc9PgksyFndhtFGl+nHfcUiiohwr/5T
+         2X/w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=dCfzzwTgdVO/FVxHYz/BLmGFQ8B2u4JefNipnicYISA=;
+        b=V8UhJxBXyVQtu0uG+OFRWn2TX+q93UDBNTSc75kEJsm+grBwCCq3m3BLWY4bVCPUQi
+         e1QQrgY8X//pGAVhNwqltwvEzooxbefGvVNKv7yllP4oLxriPCX9vmAo9vi1GFKUAgQP
+         uMPWqu2sYgCsBPgyzBP6MTqPPeXhXlyadMPqu39eGt30F7R4vEF7nA8MT0nI8710/1IR
+         N5jPuCLP8QtzHE0t1UKq+ehhCGEbh1K/al7IPfLa9cuRqA6olzANJbXQEIb5ySp276ap
+         pwEp4UIsdqasPtyGgEsavKDRjDorQqvviDWQqT/9WwJj1/L8CGguckBiTLseZX+Kuhna
+         4njQ==
+X-Gm-Message-State: APjAAAU1Q9ECNtUNxCQYru80pD7L5RIJG/3BUZcVTN7YYyz0R1HbE6ba
+        jdPVNsedJ0K3+3yUa+3NS9/zeSj/8b/AKi8OhtrFeA==
+X-Google-Smtp-Source: APXvYqzr85kpWkXpAtfoqGULzJo0wlZKMUYTvdKj3iDEdqqNGaP9WASe3rqLXNVo5BmcvwtEN+eSvPDtEhv3RZiKGes=
+X-Received: by 2002:a02:8817:: with SMTP id r23mr56156926jai.120.1582610015849;
+ Mon, 24 Feb 2020 21:53:35 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d3fdea13-ff1d-ed69-8005-60193c2d2e53@oracle.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9541 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0
- suspectscore=0 malwarescore=0 phishscore=0 bulkscore=0 mlxscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002250034
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9541 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999
- lowpriorityscore=0 malwarescore=0 suspectscore=0 impostorscore=0
- spamscore=0 phishscore=0 mlxscore=0 clxscore=1015 adultscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002250034
+References: <20200223020611.1802-1-allison.henderson@oracle.com>
+ <CAOQ4uxgvJOF6+jd9BuJfxxGQbiit6J7zVOVnigwLb-RWizRqfg@mail.gmail.com>
+ <5b2ade02-0f1b-b976-2b38-d10fcb41d317@oracle.com> <CAOQ4uxhhW2ZMVdF8zvHRPk65wsJTMn55tnCrJ7BVQK1CSAu3gQ@mail.gmail.com>
+ <dedb52cd-fb96-2357-f29b-f2ae7813e83e@oracle.com>
+In-Reply-To: <dedb52cd-fb96-2357-f29b-f2ae7813e83e@oracle.com>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Tue, 25 Feb 2020 07:53:24 +0200
+Message-ID: <CAOQ4uxiWk5qdTu5MVYOECkNZPKX+Hp_WUh-RaxW19BvwXEoUWQ@mail.gmail.com>
+Subject: Re: [PATCH v7 00/19] xfs: Delayed Ready Attrs
+To:     Allison Collins <allison.henderson@oracle.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 24, 2020 at 09:19:58PM -0700, Allison Collins wrote:
-> 
-> 
-> On 2/24/20 9:06 PM, Dave Chinner wrote:
-> > On Mon, Feb 24, 2020 at 07:00:35PM -0700, Allison Collins wrote:
-> > > 
-> > > 
-> > > On 2/24/20 5:57 PM, Dave Chinner wrote:
-> > > > On Sat, Feb 22, 2020 at 07:05:54PM -0700, Allison Collins wrote:
-> > > > > This patch embeds an xfs_name in xfs_da_args, replacing the name, namelen, and flags
-> > > > > members.  This helps to clean up the xfs_da_args structure and make it more uniform
-> > > > > with the new xfs_name parameter being passed around.
-> > > > 
-> > > > Commit message should wrap at 68-72 columns.
-> > > > 
-> > > > > 
-> > > > > Signed-off-by: Allison Collins <allison.henderson@oracle.com>
-> > > > > Reviewed-by: Brian Foster <bfoster@redhat.com>
-> > > > > ---
-> > > > >    fs/xfs/libxfs/xfs_attr.c        |  37 +++++++-------
-> > > > >    fs/xfs/libxfs/xfs_attr_leaf.c   | 104 +++++++++++++++++++++-------------------
-> > > > >    fs/xfs/libxfs/xfs_attr_remote.c |   2 +-
-> > > > >    fs/xfs/libxfs/xfs_da_btree.c    |   6 ++-
-> > > > >    fs/xfs/libxfs/xfs_da_btree.h    |   4 +-
-> > > > >    fs/xfs/libxfs/xfs_dir2.c        |  18 +++----
-> > > > >    fs/xfs/libxfs/xfs_dir2_block.c  |   6 +--
-> > > > >    fs/xfs/libxfs/xfs_dir2_leaf.c   |   6 +--
-> > > > >    fs/xfs/libxfs/xfs_dir2_node.c   |   8 ++--
-> > > > >    fs/xfs/libxfs/xfs_dir2_sf.c     |  30 ++++++------
-> > > > >    fs/xfs/scrub/attr.c             |  12 ++---
-> > > > >    fs/xfs/xfs_trace.h              |  20 ++++----
-> > > > >    12 files changed, 130 insertions(+), 123 deletions(-)
-> > > > > 
-> > > > > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> > > > > index 6717f47..9acdb23 100644
-> > > > > --- a/fs/xfs/libxfs/xfs_attr.c
-> > > > > +++ b/fs/xfs/libxfs/xfs_attr.c
-> > > > > @@ -72,13 +72,12 @@ xfs_attr_args_init(
-> > > > >    	args->geo = dp->i_mount->m_attr_geo;
-> > > > >    	args->whichfork = XFS_ATTR_FORK;
-> > > > >    	args->dp = dp;
-> > > > > -	args->flags = flags;
-> > > > > -	args->name = name->name;
-> > > > > -	args->namelen = name->len;
-> > > > > -	if (args->namelen >= MAXNAMELEN)
-> > > > > +	memcpy(&args->name, name, sizeof(struct xfs_name));
-> > > > > +	args->name.type = flags;
-> > > > 
-> > > > This doesn't play well with Christoph's cleanup series which fixes
-> > > > up all the confusion with internal versus API flags. I guess the
-> > > > namespace is part of the attribute name, but I think this would be a
-> > > > much clearer conversion when placed on top of the way Christoph
-> > > > cleaned all this up...
-> > > > 
-> > > > Have you looked at rebasing this on top of that cleanup series?
-> > > > 
-> > > > Cheers,
-> > > > 
-> > > Yes, there is some conflict between the sets here and there, but I think
-> > > folks wanted to keep them separate for now.
-> > 
-> > That makes it really hard to form a clear view of what the code
-> > looks like after both patchsets have been applied. :(
-> > 
-> > > Are you referring to
-> > > "[780d29057781] xfs: fix misuse of the XFS_ATTR_INCOMPLETE flag"?  I'm
-> > > pretty sure this set is already seated on top of that one.  This one is
-> > > based on the latest for-next.
-> > 
-> > No, I'm talking about the series that ends up undoing that commit
-> > (i.e. the DA_OP_INCOMPLETE flag goes away again) and turns
-> > args->flags into args->attr_filter as the namespace filter for
-> > lookups. THis also turn adds XFS_ATTR_INCOMPLETE into a lookup
-> > filter.
-> > 
-> > With this separation of ops vs lookup filters, moving the lookup
-> > filter into the xfs_name makes a bit more sense (i.e. the namespace
-> > filter is passed with the attribute name), but as a standalone
-> > movement it creates a bit of an impedence mismatch between the xname
-> > and the use of these flags.
-> > 
-> > I think the end result will be fine, but it's making it hard for me
-> > to reconcile the changes in the two patchsets...
-> > 
-> > Cheers,
-> 
-> I'd be happy to go through the sets and find the intersections. Or make a
-> big super set if you like.  I got the impression though that Christoph didnt
-> particularly like the delayed attr series or the idea of blending them.  But
-> I do think it would be a good idea to take into consideration what the
-> combination of them is going to look like.
+> Ok, I think I understand what you're trying to say.  Would it help to
+> explain then that setting or removing an attr becomes part of the
+> namespace operations later?  When we get up into the parent pointer set,
+> a lot of those patches add an attribute set or remove every time we
+> link, unlink, rename etc.  Did that help answer your question?
+>
 
-At this point you might as well wait for me to actually put hch's attr
-interface refactoring series into for-next (unless this series is
-already based off of that??) though Christoph might be a bit time
-constrained this week...
+I will wait for the parent pointers series,
 
---D
-
-> Allison
-> 
-> > 
-> > Dave.
-> > 
-> 
-> 
+Thanks,
+Amir.
