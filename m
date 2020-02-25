@@ -7,72 +7,72 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F65CC35DEA
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 00:18:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B755C35DEE
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 00:18:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 751B121927
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 00:18:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4CDF721927
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 00:18:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="aNcgNk9g"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="SnUgEzSv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728593AbgBYASD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Feb 2020 19:18:03 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:40448 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728011AbgBYASC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Feb 2020 19:18:02 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01P08iwQ130032;
-        Tue, 25 Feb 2020 00:15:58 GMT
+        id S1727976AbgBYAS2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Feb 2020 19:18:28 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:56500 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726651AbgBYAS2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Feb 2020 19:18:28 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01P07aIl050075;
+        Tue, 25 Feb 2020 00:16:24 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=ieTXA5CuoKKlwYe63POT7HQgx1WVPmUYHc2KXvhChtM=;
- b=aNcgNk9gA3B7bNEDTA0gUI3VBlkZGhAy/FTrfXM0nUw9T9qLxjCn5WmlRKF1SOcuPcvv
- 6PFgWvHbGYAAim2HT2fh/aVyAwTqozcTo7JfUcE+6zhSQEHrIV9fI6UqbRPWeDytNE8q
- VjNYMGxakhQhLtpEfCYW/jGro+fLKkkY6aLu7WQ9kX58ZRcGoK4B7P2gYCt3OlsO5STh
- q8y8ItCHu+LIAyEb62DjBXMgsoztVPJN6O5Ph2Jux160U6oyK9PXJFYaY+OdqGGXl0CY
- JElr9BG9ZcMw1uyh9MrtfixFzQt4mGREdR8uKXNqOOUahJcg03514VLltzd0B9L6q3t0 pA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2yavxrjs5w-1
+ bh=AhFUEL13vi5PW2uuFBkXy4yLv+BVpSQHSMRuqaYkXiw=;
+ b=SnUgEzSvqXYHUHoYldhrvg+6krrxxdhmsclLIMs7XrLTUxJKlM185sWqqmth1JbSVau3
+ gDrqfcm/Ia1egfXxYzlKXlcTWp2o7Ah4GAMglsgDQcp60TWCtaxbVViPFTC4bi7S3pfP
+ V2ZS7Q4twVvfcWO+Kg3L4WQIznP9ruPW7XQAADwwhWmIoi7kH/x9dOl4Ck0VtL/yCmT9
+ IisJSFTd9gVoBYDtshbwR8NrhOH8W0A5uHlsVTw/el/gfM3oOUm4W5r94Ud8rxjmy3zq
+ qIrYgw3orG0oPbtJcUH6apQtVPjnCoVMP95TqH4H7fVdts67zNNR5CeGhvBKl8ruuSOS Hw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2ybvr4q43b-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Feb 2020 00:15:58 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01P0887r158211;
-        Tue, 25 Feb 2020 00:13:57 GMT
+        Tue, 25 Feb 2020 00:16:24 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01P07vUI109346;
+        Tue, 25 Feb 2020 00:14:24 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2yby5e9peb-1
+        by userp3020.oracle.com with ESMTP id 2ybe12esc9-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Feb 2020 00:13:57 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01P0DueC000743;
-        Tue, 25 Feb 2020 00:13:56 GMT
+        Tue, 25 Feb 2020 00:14:23 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01P0ENHx001052;
+        Tue, 25 Feb 2020 00:14:23 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 24 Feb 2020 16:13:55 -0800
-Subject: [PATCH 23/25] libxfs: hide libxfs_getbuf_flags
+        with ESMTP ; Mon, 24 Feb 2020 16:14:22 -0800
+Subject: [PATCH 02/14] libxfs: make libxfs_getbuf_flags return an error code
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-Date:   Mon, 24 Feb 2020 16:13:55 -0800
-Message-ID: <158258963505.451378.4733113816526643723.stgit@magnolia>
-In-Reply-To: <158258948821.451378.9298492251721116455.stgit@magnolia>
-References: <158258948821.451378.9298492251721116455.stgit@magnolia>
+Date:   Mon, 24 Feb 2020 16:14:21 -0800
+Message-ID: <158258966171.453666.1345655269569262600.stgit@magnolia>
+In-Reply-To: <158258964941.453666.10913737544282124969.stgit@magnolia>
+References: <158258964941.453666.10913737544282124969.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9541 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0 bulkscore=0
- suspectscore=0 mlxlogscore=761 phishscore=0 adultscore=0 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002240181
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=687 spamscore=0
+ suspectscore=0 malwarescore=0 phishscore=0 bulkscore=0 mlxscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2002240181
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9541 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 lowpriorityscore=0
- spamscore=0 clxscore=1015 suspectscore=0 bulkscore=0 mlxlogscore=818
- malwarescore=0 phishscore=0 adultscore=0 priorityscore=1501 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002240181
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=739 spamscore=0
+ clxscore=1015 adultscore=0 lowpriorityscore=0 malwarescore=0
+ priorityscore=1501 mlxscore=0 impostorscore=0 suspectscore=0 phishscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2002240181
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -80,99 +80,76 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Hide this function since it's internal to rdwr.c.
+Convert libxfs_getbuf_flags() to return numeric error codes like most
+everywhere else in xfsprogs.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/libxfs_io.h |    7 -------
- libxfs/rdwr.c      |   21 ++++++---------------
- 2 files changed, 6 insertions(+), 22 deletions(-)
+ libxfs/rdwr.c |   26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
 
 
-diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
-index c69eea97..7f513d86 100644
---- a/libxfs/libxfs_io.h
-+++ b/libxfs/libxfs_io.h
-@@ -144,9 +144,6 @@ extern struct cache_operations	libxfs_bcache_operations;
- #define libxfs_getbuf_map(dev, map, nmaps, flags) \
- 	libxfs_trace_getbuf_map(__FUNCTION__, __FILE__, __LINE__, \
- 			    (dev), (map), (nmaps), (flags))
--#define libxfs_getbuf_flags(dev, daddr, len, flags) \
--	libxfs_trace_getbuf_flags(__FUNCTION__, __FILE__, __LINE__, \
--			    (dev), (daddr), (len), (flags))
- #define libxfs_buf_relse(buf) \
- 	libxfs_trace_putbuf(__FUNCTION__, __FILE__, __LINE__, (buf))
- 
-@@ -163,8 +160,6 @@ struct xfs_buf *libxfs_trace_getbuf(const char *func, const char *file,
- 			size_t len);
- extern xfs_buf_t *libxfs_trace_getbuf_map(const char *, const char *, int,
- 			struct xfs_buftarg *, struct xfs_buf_map *, int, int);
--extern xfs_buf_t *libxfs_trace_getbuf_flags(const char *, const char *, int,
--			struct xfs_buftarg *, xfs_daddr_t, int, unsigned int);
- extern void	libxfs_trace_putbuf (const char *, const char *, int,
- 			xfs_buf_t *);
- 
-@@ -175,8 +170,6 @@ extern xfs_buf_t *libxfs_readbuf_map(struct xfs_buftarg *, struct xfs_buf_map *,
- void libxfs_buf_mark_dirty(struct xfs_buf *bp);
- extern xfs_buf_t *libxfs_getbuf_map(struct xfs_buftarg *,
- 			struct xfs_buf_map *, int, int);
--extern xfs_buf_t *libxfs_getbuf_flags(struct xfs_buftarg *, xfs_daddr_t,
--			int, unsigned int);
- void	libxfs_buf_relse(struct xfs_buf *bp);
- 
- static inline struct xfs_buf*
 diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index e46f749c..4b33c20d 100644
+index 955284d0..ea9979a2 100644
 --- a/libxfs/rdwr.c
 +++ b/libxfs/rdwr.c
-@@ -150,7 +150,6 @@ static char *next(
- #undef libxfs_readbuf_map
- #undef libxfs_writebuf
- #undef libxfs_getbuf_map
--#undef libxfs_getbuf_flags
- 
- xfs_buf_t	*libxfs_readbuf_map(struct xfs_buftarg *, struct xfs_buf_map *,
- 				int, int, const struct xfs_buf_ops *);
-@@ -159,8 +158,6 @@ struct xfs_buf *libxfs_buf_get(struct xfs_buftarg *btp, xfs_daddr_t daddr,
- 				size_t len);
- xfs_buf_t	*libxfs_getbuf_map(struct xfs_buftarg *, struct xfs_buf_map *,
- 				int, int);
--xfs_buf_t	*libxfs_getbuf_flags(struct xfs_buftarg *, xfs_daddr_t, int,
--				unsigned int);
- void		libxfs_buf_relse(struct xfs_buf *bp);
- 
- #define	__add_trace(bp, func, file, line)	\
-@@ -229,15 +226,6 @@ libxfs_trace_getbuf_map(const char *func, const char *file, int line,
- 	return bp;
+@@ -538,25 +538,21 @@ __cache_lookup(
+ 	return 0;
  }
  
--xfs_buf_t *
--libxfs_trace_getbuf_flags(const char *func, const char *file, int line,
--		struct xfs_buftarg *btp, xfs_daddr_t blkno, int len, unsigned int flags)
--{
--	xfs_buf_t	*bp = libxfs_getbuf_flags(btp, blkno, len, flags);
--	__add_trace(bp, func, file, line);
+-static struct xfs_buf *
++static int
+ libxfs_getbuf_flags(
+ 	struct xfs_buftarg	*btp,
+ 	xfs_daddr_t		blkno,
+ 	int			len,
+-	unsigned int		flags)
++	unsigned int		flags,
++	struct xfs_buf		**bpp)
+ {
+ 	struct xfs_bufkey	key = {NULL};
+-	struct xfs_buf		*bp;
+-	int			error;
+ 
+ 	key.buftarg = btp;
+ 	key.blkno = blkno;
+ 	key.bblen = len;
+ 
+-	error = __cache_lookup(&key, flags, &bp);
+-	if (error)
+-		return NULL;
 -	return bp;
--}
--
- void
- libxfs_trace_putbuf(const char *func, const char *file, int line, xfs_buf_t *bp)
- {
-@@ -542,9 +530,12 @@ __cache_lookup(struct xfs_bufkey *key, unsigned int flags)
- 	return NULL;
++	return __cache_lookup(&key, flags, bpp);
  }
  
--struct xfs_buf *
--libxfs_getbuf_flags(struct xfs_buftarg *btp, xfs_daddr_t blkno, int len,
--		unsigned int flags)
-+static struct xfs_buf *
-+libxfs_getbuf_flags(
-+	struct xfs_buftarg	*btp,
-+	xfs_daddr_t		blkno,
-+	int			len,
-+	unsigned int		flags)
- {
- 	struct xfs_bufkey key = {NULL};
+ /*
+@@ -591,9 +587,13 @@ __libxfs_buf_get_map(
+ 	int			i;
+ 	int			error;
  
+-	if (nmaps == 1)
+-		return libxfs_getbuf_flags(btp, map[0].bm_bn, map[0].bm_len,
+-					   flags);
++	if (nmaps == 1) {
++		error = libxfs_getbuf_flags(btp, map[0].bm_bn, map[0].bm_len,
++				flags, &bp);
++		if (error)
++			return NULL;
++		return bp;
++	}
+ 
+ 	key.buftarg = btp;
+ 	key.blkno = map[0].bm_bn;
+@@ -741,8 +741,8 @@ libxfs_readbuf(
+ 	struct xfs_buf		*bp;
+ 	int			error;
+ 
+-	bp = libxfs_getbuf_flags(btp, blkno, len, 0);
+-	if (!bp)
++	error = libxfs_getbuf_flags(btp, blkno, len, 0, &bp);
++	if (error)
+ 		return NULL;
+ 
+ 	/*
 
