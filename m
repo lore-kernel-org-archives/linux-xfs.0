@@ -7,41 +7,40 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88DF8C4BA0B
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 23:10:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86C2FC4BA10
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 23:10:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 53ED221D7E
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 23:10:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59B062176D
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 23:10:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ohc83AW4"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="aFzh6X04"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729409AbgBYXK1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Feb 2020 18:10:27 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:53388 "EHLO
+        id S1729475AbgBYXK2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Feb 2020 18:10:28 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:53370 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729453AbgBYXK1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Feb 2020 18:10:27 -0500
+        with ESMTP id S1729426AbgBYXK0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Feb 2020 18:10:26 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=Kt+ak/msDDzKxaD1yZUazMt/Y7/snwxaymL9YIVW1zY=; b=ohc83AW4alXydfEcj7huAlZ9Ix
-        9xtCUdJ7ybr9otdmO2Fy1XikFv0WkrjoIIpBu1OuHZ57gyI6WQoHOPAqmU8kr0xnOfjGF9myTkJe+
-        awowiGc6ju/c9cJh0jqaBNqphDDNa5+E4JYSsHNTk9uKMswQe8n1rKndlIsXxqtUpRYbUbWxjEE+C
-        XMOe7gh7zO7L+EZF1dQp2S92F5bR9hlpfIzPpXDuW6fx/6OOnDkfqC0XdHcD9VwkbMtMuTdsY1ynY
-        fdjL7aXprqQi+8fNLfAdPBd5RIzXz8CLplW/QqYW2IHZPrvNOsF4iLNIdN00Vp1Xd8EChmRcSzEXI
-        PFuYdqkg==;
+        bh=EPUYC+s6pguYeMcjLej9GTQUeR8yhOlfX2zNBapNT5U=; b=aFzh6X04K4Af1QfGF3hz4zKxLp
+        5dh4u1o+/0cyBVK1o/bWVFBnRz3+ogVdbbl7B/I20soDfz00X5cZJfp1BfCGPbfYfYUoJnpXbQBIj
+        oL44cD0SVgMlQ/qCknxHlqrChjx9zgsClxHWLJgPp0uXr/lICZLslIr464rqFDIp6uGaMPssTjt7e
+        I+LOWoPPuXlslQDsnngk6p+vq7JvQBUjOgADauZN/GBb4OOhcKOAfLUs747Ez6gILh5SuEqnIJAJs
+        whaKyysNdSdKPR0xThK7ygqppYJY+iUrdrU3g2oBGfjaCirzYNZ/6QsKAIzhjxJMsIVL9T5hJuRrr
+        j09wtyEQ==;
 Received: from [4.28.11.157] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j6jLO-0003Ac-N2; Tue, 25 Feb 2020 23:10:26 +0000
+        id 1j6jLO-0003AG-74; Tue, 25 Feb 2020 23:10:26 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
 Cc:     Dave Chinner <dchinner@redhat.com>,
-        Chandan Rajendra <chandanrlinux@gmail.com>,
         "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 21/30] xfs: rename xfs_attr_list_int to xfs_attr_list
-Date:   Tue, 25 Feb 2020 15:10:03 -0800
-Message-Id: <20200225231012.735245-22-hch@lst.de>
+Subject: [PATCH 18/30] xfs: remove the unused ATTR_ENTRY macro
+Date:   Tue, 25 Feb 2020 15:10:00 -0800
+Message-Id: <20200225231012.735245-19-hch@lst.de>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200225231012.735245-1-hch@lst.de>
 References: <20200225231012.735245-1-hch@lst.de>
@@ -53,115 +52,32 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The version taking the context structure is the main interface to list
-attributes, so drop the _int postfix.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr.h | 4 ++--
- fs/xfs/scrub/attr.c      | 4 ++--
- fs/xfs/xfs_attr_list.c   | 6 +++---
- fs/xfs/xfs_ioctl.c       | 2 +-
- fs/xfs/xfs_xattr.c       | 2 +-
- 5 files changed, 9 insertions(+), 9 deletions(-)
+ fs/xfs/libxfs/xfs_attr.h | 8 --------
+ 1 file changed, 8 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-index 0e3c213f78ce..8d42f5782ff7 100644
+index 0c8f7c7a6b65..31c0ffde4f59 100644
 --- a/fs/xfs/libxfs/xfs_attr.h
 +++ b/fs/xfs/libxfs/xfs_attr.h
-@@ -102,8 +102,8 @@ struct xfs_attr_list_context {
-  * Overall external interface routines.
-  */
- int xfs_attr_inactive(struct xfs_inode *dp);
--int xfs_attr_list_int_ilocked(struct xfs_attr_list_context *);
--int xfs_attr_list_int(struct xfs_attr_list_context *);
-+int xfs_attr_list_ilocked(struct xfs_attr_list_context *);
-+int xfs_attr_list(struct xfs_attr_list_context *);
- int xfs_inode_hasattr(struct xfs_inode *ip);
- int xfs_attr_get_ilocked(struct xfs_da_args *args);
- int xfs_attr_get(struct xfs_da_args *args);
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index 05537627211d..9e336d797616 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -98,7 +98,7 @@ struct xchk_xattr {
+@@ -69,14 +69,6 @@ typedef struct attrlist_ent {	/* data from attr_list() */
+ 	char	a_name[1];	/* attr name (NULL terminated) */
+ } attrlist_ent_t;
+ 
+-/*
+- * Given a pointer to the (char*) buffer containing the attr_list() result,
+- * and an index, return a pointer to the indicated attribute in the buffer.
+- */
+-#define	ATTR_ENTRY(buffer, index)		\
+-	((attrlist_ent_t *)			\
+-	 &((char *)buffer)[ ((attrlist_t *)(buffer))->al_offset[index] ])
+-
  /*
-  * Check that an extended attribute key can be looked up by hash.
-  *
-- * We use the XFS attribute list iterator (i.e. xfs_attr_list_int_ilocked)
-+ * We use the XFS attribute list iterator (i.e. xfs_attr_list_ilocked)
-  * to call this function for every attribute key in an inode.  Once
-  * we're here, we load the attribute value to see if any errors happen,
-  * or if we get more or less data than we expected.
-@@ -516,7 +516,7 @@ xchk_xattr(
- 	 * iteration, which doesn't really follow the usual buffer
- 	 * locking order.
- 	 */
--	error = xfs_attr_list_int_ilocked(&sx.context);
-+	error = xfs_attr_list_ilocked(&sx.context);
- 	if (!xchk_fblock_process_error(sc, XFS_ATTR_FORK, 0, &error))
- 		goto out;
- 
-diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-index 09901aa4ad99..ba71bf4303f8 100644
---- a/fs/xfs/xfs_attr_list.c
-+++ b/fs/xfs/xfs_attr_list.c
-@@ -507,7 +507,7 @@ xfs_attr_leaf_list(
- }
- 
- int
--xfs_attr_list_int_ilocked(
-+xfs_attr_list_ilocked(
- 	struct xfs_attr_list_context	*context)
- {
- 	struct xfs_inode		*dp = context->dp;
-@@ -527,7 +527,7 @@ xfs_attr_list_int_ilocked(
- }
- 
- int
--xfs_attr_list_int(
-+xfs_attr_list(
- 	struct xfs_attr_list_context	*context)
- {
- 	struct xfs_inode		*dp = context->dp;
-@@ -540,7 +540,7 @@ xfs_attr_list_int(
- 		return -EIO;
- 
- 	lock_mode = xfs_ilock_attr_map_shared(dp);
--	error = xfs_attr_list_int_ilocked(context);
-+	error = xfs_attr_list_ilocked(context);
- 	xfs_iunlock(dp, lock_mode);
- 	return error;
- }
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index bafa47e36119..a8fe9553b432 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -394,7 +394,7 @@ xfs_ioc_attr_list(
- 	alist->al_more = 0;
- 	alist->al_offset[0] = context.bufsize;
- 
--	error = xfs_attr_list_int(&context);
-+	error = xfs_attr_list(&context);
- 	ASSERT(error <= 0);
- 	return error;
- }
-diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-index b5f2831fad95..260287552ad4 100644
---- a/fs/xfs/xfs_xattr.c
-+++ b/fs/xfs/xfs_xattr.c
-@@ -234,7 +234,7 @@ xfs_vn_listxattr(
- 	context.firstu = context.bufsize;
- 	context.put_listent = xfs_xattr_put_listent;
- 
--	error = xfs_attr_list_int(&context);
-+	error = xfs_attr_list(&context);
- 	if (error)
- 		return error;
- 	if (context.count < 0)
+  * Kernel-internal version of the attrlist cursor.
+  */
 -- 
 2.24.1
 
