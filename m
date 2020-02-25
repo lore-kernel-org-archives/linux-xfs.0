@@ -7,41 +7,40 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E67FC4BA0A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9804C4BA0C
 	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 23:10:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 329EA2176D
+	by mail.kernel.org (Postfix) with ESMTP id 8F04F22464
 	for <linux-xfs@archiver.kernel.org>; Tue, 25 Feb 2020 23:10:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="SYhGXLeg"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="aUEqHfyP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729336AbgBYXK0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1729326AbgBYXK0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Tue, 25 Feb 2020 18:10:26 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:53352 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:53346 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729326AbgBYXKZ (ORCPT
+        with ESMTP id S1729246AbgBYXKZ (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Feb 2020 18:10:25 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=g8YtrXXD78PC9Dm6YdhsXUxljwRTgYDr+kbxIKt2lec=; b=SYhGXLegqrD1q0ahSNw+mJWbcP
-        gcbDZ5em7zAk9cYTOvW8I/6H6G2fMnGSgaMdMauHhpAux+qzkmUTa8wnG2AgQWIQmsWIujWKveZo6
-        SeJD+UYnFfYaBpV9U7OiTfQRhzPAc9YAgorCTTz14rt7cyvIxj+Fi1kLJLHbW2zAgUVxuhwix9/+A
-        USRwpaJKCTMNYRAQxCB4SlnlHOmXcnixAXhRi/0ufdg5hC/gBotBLhBl8mNQz1sWozUzdFZO1Qt6W
-        WIO4rU+8rVY43ERV1rqgu0fxYZUejmVu1nV5YxrJ136Ra1OktdARtasOhK4puLO5ZS31B4/SPsUMS
-        j8c38cBA==;
+        bh=rt/RJxID45JbYZSqC8qMD8h6DQp9zXcOj5mX/apsRJk=; b=aUEqHfyPl+yfswczohEhjKf1wx
+        3+lALGiMv7XHnKR/976NMrNM7NL5PY1T3s3ZY9GmI1nCEst8KRIEXXQzEErWPQRNoIZOCio2tJVmJ
+        PgtC0xGdKa1j2KK89VGxbZr2LyeUI8oHeqoRR+HutLamEbeWEBJUJ/H1uw3F0VC4rPVQgK3fqjbzX
+        dFLeWrImO/yBJP0ycvSvi5NLIybqhaOtmCr3HL7gu0lr1fK9DQgXhpyszXRPgm9StT0X9LhNraIs7
+        YNGAj9sFARRZHUzGgArp7rHTAVnGJDH/XZc9J13poUdk1QYX6TlZ124Pecq6XnMyqI8KkkikFztxG
+        1m9buYFw==;
 Received: from [4.28.11.157] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j6jLN-00039m-LH; Tue, 25 Feb 2020 23:10:25 +0000
+        id 1j6jLN-00039e-Dc; Tue, 25 Feb 2020 23:10:25 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
 Cc:     Dave Chinner <dchinner@redhat.com>,
-        Chandan Rajendra <chandanrlinux@gmail.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 15/30] xfs: replace ATTR_KERNOTIME with XFS_DA_OP_NOTIME
-Date:   Tue, 25 Feb 2020 15:09:57 -0800
-Message-Id: <20200225231012.735245-16-hch@lst.de>
+        Chandan Rajendra <chandanrlinux@gmail.com>
+Subject: [PATCH 14/30] xfs: remove ATTR_ALLOC and XFS_DA_OP_ALLOCVAL
+Date:   Tue, 25 Feb 2020 15:09:56 -0800
+Message-Id: <20200225231012.735245-15-hch@lst.de>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200225231012.735245-1-hch@lst.de>
 References: <20200225231012.735245-1-hch@lst.de>
@@ -53,113 +52,175 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-op_flags with the XFS_DA_OP_* flags is the usual place for in-kernel
-only flags, so move the notime flag there.
+Use a NULL args->value as the indicator to lazily allocate a buffer
+instead, and let the caller always free args->value instead of
+duplicating the cleanup.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr.c     | 4 ++--
- fs/xfs/libxfs/xfs_attr.h     | 8 +-------
- fs/xfs/libxfs/xfs_da_btree.h | 2 ++
- fs/xfs/scrub/attr.c          | 2 +-
- fs/xfs/xfs_ioctl.c           | 1 -
- 5 files changed, 6 insertions(+), 11 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c      | 20 +++++---------------
+ fs/xfs/libxfs/xfs_attr.h      |  7 ++-----
+ fs/xfs/libxfs/xfs_attr_leaf.c |  2 +-
+ fs/xfs/libxfs/xfs_da_btree.h  |  2 --
+ fs/xfs/xfs_acl.c              | 20 ++++++++++----------
+ 5 files changed, 18 insertions(+), 33 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 1382e51ef85e..3b1db2afb104 100644
+index 469417786bfc..1382e51ef85e 100644
 --- a/fs/xfs/libxfs/xfs_attr.c
 +++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -186,7 +186,7 @@ xfs_attr_try_sf_addname(
- 	 * Commit the shortform mods, and we're done.
- 	 * NOTE: this is also the error path (EEXIST, etc).
- 	 */
--	if (!error && (args->flags & ATTR_KERNOTIME) == 0)
-+	if (!error && !(args->op_flags & XFS_DA_OP_NOTIME))
- 		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
+@@ -98,15 +98,14 @@ xfs_attr_get_ilocked(
+  * indication whether the attribute exists and the size of the value if it
+  * exists. The size is returned in args.valuelen.
+  *
++ * If args->value is NULL but args->valuelen is non-zero, allocate the buffer
++ * for the value after existence of the attribute has been determined. The
++ * caller always has to free args->value if it is set, no matter if this
++ * function was successful or not.
++ *
+  * If the attribute is found, but exceeds the size limit set by the caller in
+  * args->valuelen, return -ERANGE with the size of the attribute that was found
+  * in args->valuelen.
+- *
+- * If ATTR_ALLOC is set in args->flags, allocate the buffer for the value after
+- * existence of the attribute has been determined. On success, return that
+- * buffer to the caller and leave them to free it. On failure, free any
+- * allocated buffer and ensure the buffer pointer returned to the caller is
+- * null.
+  */
+ int
+ xfs_attr_get(
+@@ -115,8 +114,6 @@ xfs_attr_get(
+ 	uint			lock_mode;
+ 	int			error;
  
- 	if (mp->m_flags & XFS_MOUNT_WSYNC)
-@@ -389,7 +389,7 @@ xfs_attr_set(
- 	if (mp->m_flags & XFS_MOUNT_WSYNC)
- 		xfs_trans_set_sync(args->trans);
+-	ASSERT((args->flags & ATTR_ALLOC) || !args->valuelen || args->value);
+-
+ 	XFS_STATS_INC(args->dp->i_mount, xs_attr_get);
  
--	if ((args->flags & ATTR_KERNOTIME) == 0)
-+	if (!(args->op_flags & XFS_DA_OP_NOTIME))
- 		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
+ 	if (XFS_FORCED_SHUTDOWN(args->dp->i_mount))
+@@ -128,18 +125,11 @@ xfs_attr_get(
  
- 	/*
+ 	/* Entirely possible to look up a name which doesn't exist */
+ 	args->op_flags = XFS_DA_OP_OKNOENT;
+-	if (args->flags & ATTR_ALLOC)
+-		args->op_flags |= XFS_DA_OP_ALLOCVAL;
+ 
+ 	lock_mode = xfs_ilock_attr_map_shared(args->dp);
+ 	error = xfs_attr_get_ilocked(args);
+ 	xfs_iunlock(args->dp, lock_mode);
+ 
+-	/* on error, we have to clean up allocated value buffers */
+-	if (error && (args->flags & ATTR_ALLOC)) {
+-		kmem_free(args->value);
+-		args->value = NULL;
+-	}
+ 	return error;
+ }
+ 
 diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-index a6de050675c9..0f369399effd 100644
+index fe064cd81747..a6de050675c9 100644
 --- a/fs/xfs/libxfs/xfs_attr.h
 +++ b/fs/xfs/libxfs/xfs_attr.h
-@@ -33,19 +33,13 @@ struct xfs_attr_list_context;
- #define ATTR_CREATE	0x0010	/* pure create: fail if attr already exists */
- #define ATTR_REPLACE	0x0020	/* pure set: fail if attr does not exist */
+@@ -35,10 +35,8 @@ struct xfs_attr_list_context;
  
--#define ATTR_KERNOTIME	0x1000	/* [kernel] don't update inode timestamps */
+ #define ATTR_KERNOTIME	0x1000	/* [kernel] don't update inode timestamps */
+ 
+-#define ATTR_ALLOC	0x8000	/* [kernel] allocate xattr buffer on demand */
 -
--#define ATTR_KERNEL_FLAGS \
--	(ATTR_KERNOTIME)
--
+ #define ATTR_KERNEL_FLAGS \
+-	(ATTR_KERNOTIME | ATTR_ALLOC)
++	(ATTR_KERNOTIME)
+ 
  #define XFS_ATTR_FLAGS \
  	{ ATTR_DONTFOLLOW, 	"DONTFOLLOW" }, \
- 	{ ATTR_ROOT,		"ROOT" }, \
- 	{ ATTR_TRUST,		"TRUST" }, \
+@@ -47,8 +45,7 @@ struct xfs_attr_list_context;
  	{ ATTR_SECURE,		"SECURE" }, \
  	{ ATTR_CREATE,		"CREATE" }, \
--	{ ATTR_REPLACE,		"REPLACE" }, \
--	{ ATTR_KERNOTIME,	"KERNOTIME" }
-+	{ ATTR_REPLACE,		"REPLACE" }
+ 	{ ATTR_REPLACE,		"REPLACE" }, \
+-	{ ATTR_KERNOTIME,	"KERNOTIME" }, \
+-	{ ATTR_ALLOC,		"ALLOC" }
++	{ ATTR_KERNOTIME,	"KERNOTIME" }
  
  /*
   * The maximum size (into the kernel or returned from the kernel) of an
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 5e700dfc48a9..b0658eb8fbcc 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -477,7 +477,7 @@ xfs_attr_copy_value(
+ 		return -ERANGE;
+ 	}
+ 
+-	if (args->op_flags & XFS_DA_OP_ALLOCVAL) {
++	if (!args->value) {
+ 		args->value = kmem_alloc_large(valuelen, 0);
+ 		if (!args->value)
+ 			return -ENOMEM;
 diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
-index dd1ac522b3e8..d93cb8385b52 100644
+index 0967d1bd3ceb..dd1ac522b3e8 100644
 --- a/fs/xfs/libxfs/xfs_da_btree.h
 +++ b/fs/xfs/libxfs/xfs_da_btree.h
-@@ -88,6 +88,7 @@ typedef struct xfs_da_args {
+@@ -88,7 +88,6 @@ typedef struct xfs_da_args {
  #define XFS_DA_OP_ADDNAME	0x0004	/* this is an add operation */
  #define XFS_DA_OP_OKNOENT	0x0008	/* lookup/add op, ENOENT ok, else die */
  #define XFS_DA_OP_CILOOKUP	0x0010	/* lookup to return CI name if found */
-+#define XFS_DA_OP_NOTIME	0x0020	/* don't update inode timestamps */
+-#define XFS_DA_OP_ALLOCVAL	0x0020	/* lookup to alloc buffer if found  */
  #define XFS_DA_OP_INCOMPLETE	0x0040	/* lookup INCOMPLETE attr keys */
  
  #define XFS_DA_OP_FLAGS \
-@@ -96,6 +97,7 @@ typedef struct xfs_da_args {
+@@ -97,7 +96,6 @@ typedef struct xfs_da_args {
  	{ XFS_DA_OP_ADDNAME,	"ADDNAME" }, \
  	{ XFS_DA_OP_OKNOENT,	"OKNOENT" }, \
  	{ XFS_DA_OP_CILOOKUP,	"CILOOKUP" }, \
-+	{ XFS_DA_OP_NOTIME,	"NOTIME" }, \
+-	{ XFS_DA_OP_ALLOCVAL,	"ALLOCVAL" }, \
  	{ XFS_DA_OP_INCOMPLETE,	"INCOMPLETE" }
  
  /*
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index f983c2b969e0..05537627211d 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -147,7 +147,7 @@ xchk_xattr_listent(
- 		return;
+diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+index 468dd7c6b406..079656da3c18 100644
+--- a/fs/xfs/xfs_acl.c
++++ b/fs/xfs/xfs_acl.c
+@@ -127,7 +127,7 @@ xfs_get_acl(struct inode *inode, int type)
+ 	struct posix_acl	*acl = NULL;
+ 	struct xfs_da_args	args = {
+ 		.dp		= ip,
+-		.flags		= ATTR_ALLOC | ATTR_ROOT,
++		.flags		= ATTR_ROOT,
+ 		.valuelen	= XFS_ACL_MAX_SIZE(mp),
+ 	};
+ 	int			error;
+@@ -146,19 +146,19 @@ xfs_get_acl(struct inode *inode, int type)
  	}
+ 	args.namelen = strlen(args.name);
  
--	args.flags = ATTR_KERNOTIME;
-+	args.op_flags = XFS_DA_OP_NOTIME;
- 	if (flags & XFS_ATTR_ROOT)
- 		args.flags |= ATTR_ROOT;
- 	else if (flags & XFS_ATTR_SECURE)
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 13de4bcb8307..a19f6bb72d60 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -438,7 +438,6 @@ xfs_ioc_attrmulti_one(
++	/*
++	 * If the attribute doesn't exist make sure we have a negative cache
++	 * entry, for any other error assume it is transient.
++	 */
+ 	error = xfs_attr_get(&args);
+-	if (error) {
+-		/*
+-		 * If the attribute doesn't exist make sure we have a negative
+-		 * cache entry, for any other error assume it is transient.
+-		 */
+-		if (error != -ENOATTR)
+-			acl = ERR_PTR(error);
+-	} else  {
++	if (!error) {
+ 		acl = xfs_acl_from_disk(mp, args.value, args.valuelen,
+ 					XFS_ACL_MAX_ENTRIES(mp));
+-		kmem_free(args.value);
++	} else if (error != -ENOATTR) {
++		acl = ERR_PTR(error);
+ 	}
++
++	kmem_free(args.value);
+ 	return acl;
+ }
  
- 	if ((flags & ATTR_ROOT) && (flags & ATTR_SECURE))
- 		return -EINVAL;
--	flags &= ~ATTR_KERNEL_FLAGS;
- 
- 	name = strndup_user(uname, MAXNAMELEN);
- 	if (IS_ERR(name))
 -- 
 2.24.1
 
