@@ -2,174 +2,465 @@ Return-Path: <SRS0=HAJZ=4O=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75723C4BA12
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 16:10:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3C71C4BA13
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 16:24:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 58A4B2084E
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 16:10:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9DFA6206E6
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 16:24:52 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="EU80/Qo3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727102AbgBZQKF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 26 Feb 2020 11:10:05 -0500
-Received: from mga01.intel.com ([192.55.52.88]:25114 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726614AbgBZQKF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 26 Feb 2020 11:10:05 -0500
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 26 Feb 2020 08:10:04 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.70,488,1574150400"; 
-   d="scan'208";a="350419564"
-Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
-  by fmsmga001.fm.intel.com with ESMTP; 26 Feb 2020 08:10:04 -0800
-Date:   Wed, 26 Feb 2020 08:10:04 -0800
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     Jonathan Halliday <jonathan.halliday@redhat.com>
-Cc:     Jeff Moyer <jmoyer@redhat.com>, Christoph Hellwig <hch@lst.de>,
-        Dave Chinner <david@fromorbit.com>,
-        linux-kernel@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH V4 07/13] fs: Add locking for a dynamic address space
- operations state
-Message-ID: <20200226161004.GB22036@iweiny-DESK2.sc.intel.com>
-References: <20200221004134.30599-1-ira.weiny@intel.com>
- <20200221004134.30599-8-ira.weiny@intel.com>
- <20200221174449.GB11378@lst.de>
- <20200221224419.GW10776@dread.disaster.area>
- <20200224175603.GE7771@lst.de>
- <20200225000937.GA10776@dread.disaster.area>
- <20200225173633.GA30843@lst.de>
- <x49fteyh313.fsf@segfault.boston.devel.redhat.com>
- <a126276c-d252-6050-b6ee-4d6448d45fac@redhat.com>
+        id S1726764AbgBZQYw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 26 Feb 2020 11:24:52 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:43246 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726278AbgBZQYv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Feb 2020 11:24:51 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01QGNU4T078182;
+        Wed, 26 Feb 2020 16:24:42 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=NFWw4G+x6tdkuHH31iCMBO7oqTs389LoNEZIt84rDvE=;
+ b=EU80/Qo3Tl9nu0RhYvoyHEpuOjEAP/izyF/A+bf9UVm5Z7JGBAkjLDWQ27nTxhLpFypk
+ ba8b5RbA+wC7xMwpYQb3UCMixrTrGoSGKkosZXvrzIvUhZM1Cvvadx0hv4cDhNonGT0U
+ unmK/GUjGNhReFQ/ef/qtHxxifxgaygbu7N7yNGhd3ffoLDryE5TL5p5KHRLj77w7uSO
+ 8t9jNw5MocQ1cdm6PIhGCXYy+Ud5BVbx+wdAPCJvKcaCcgIkkaoiVhz6WTrHFayG2/0i
+ zMkKddcS7GDJSH2NcPqEW3ylx6GETO2g/1BBFwanL4NvvfUkB37a1oLfIjbfA/7OjGD5 iQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2ydcsncryq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 26 Feb 2020 16:24:41 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01QGMCtW028004;
+        Wed, 26 Feb 2020 16:24:41 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 2ydj4hvya9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 26 Feb 2020 16:24:41 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01QGOcdB002115;
+        Wed, 26 Feb 2020 16:24:38 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 26 Feb 2020 08:24:38 -0800
+Date:   Wed, 26 Feb 2020 08:24:36 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>,
+        Chandan Rajendra <chandanrlinux@gmail.com>
+Subject: Re: [PATCH 03/30] xfs: merge xfs_attr_remove into xfs_attr_set
+Message-ID: <20200226162436.GA8045@magnolia>
+References: <20200225231012.735245-1-hch@lst.de>
+ <20200225231012.735245-4-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <a126276c-d252-6050-b6ee-4d6448d45fac@redhat.com>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+In-Reply-To: <20200225231012.735245-4-hch@lst.de>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9543 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 suspectscore=2
+ spamscore=0 adultscore=0 malwarescore=0 mlxlogscore=999 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002260112
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9543 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 bulkscore=0
+ lowpriorityscore=0 mlxlogscore=999 phishscore=0 spamscore=0 adultscore=0
+ suspectscore=2 impostorscore=0 clxscore=1015 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002260112
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 26, 2020 at 09:28:57AM +0000, Jonathan Halliday wrote:
+On Tue, Feb 25, 2020 at 03:09:45PM -0800, Christoph Hellwig wrote:
+> The Linux xattr and acl APIs use a single call for set and remove.
+> Modify the high-level XFS API to match that and let xfs_attr_set handle
+> removing attributes as well.  With a little bit of reordering this
+> removes a lot of code.
 > 
-> Hi All
-> 
-> I'm a middleware developer, focused on how Java (JVM) workloads can benefit
-> from app-direct mode pmem. Initially the target is apps that need a fast
-> binary log for fault tolerance: the classic database WAL use case;
-> transaction coordination systems; enterprise message bus persistence and
-> suchlike. Critically, there are cases where we use log based storage, i.e.
-> it's not the strict 'read rarely, only on recovery' model that a classic db
-> may have, but more of a 'append only, read many times' event stream model.
-> 
-> Think of the log oriented data storage as having logical segments (let's
-> implement them as files), of which the most recent is being appended to
-> (read_write) and the remaining N-1 older segments are full and sealed, so
-> effectively immutable (read_only) until discarded. The tail segment needs to
-> be in DAX mode for optimal write performance, as the size of the append may
-> be sub-block and we don't want the overhead of the kernel call anyhow. So
-> that's clearly a good fit for putting on a DAX fs mount and using mmap with
-> MAP_SYNC.
-> 
-> However, we want fast read access into the segments, to retrieve stored
-> records. The small access index can be built in volatile RAM (assuming we're
-> willing to take the startup overhead of a full file scan at recovery time)
-> but the data itself is big and we don't want to move it all off pmem. Which
-> means the requirements are now different: we want the O/S cache to pull hot
-> data into fast volatile RAM for us, which DAX explicitly won't do.
-> Effectively a poor man's 'memory mode' pmem, rather than app-direct mode,
-> except here we're using the O/S rather than the hardware memory controller
-> to do the cache management for us.
-> 
-> Currently this requires closing the full (read_write) file, then copying it
-> to a non-DAX device and reopening it (read_only) there. Clearly that's
-> expensive and rather tedious. Instead, I'd like to close the MAP_SYNC mmap,
-> then, leaving the file where it is, reopen it in a mode that will instead go
-> via the O/S cache in the traditional manner.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
 
-This patch set implements this capability.
+Didn't I already review this...?
 
-> Bonus points if I can do it
-> over non-overlapping ranges in a file without closing the DAX mode mmap,
-> since then the segments are entirely logical instead of needing separate
-> physical files.
+--D
 
-But it is too hard to do so while an mmap is in place so it can't do this.  So
-no bonus points...
-
+> ---
+>  fs/xfs/libxfs/xfs_attr.c | 178 ++++++++++++++-------------------------
+>  fs/xfs/libxfs/xfs_attr.h |   2 -
+>  fs/xfs/xfs_acl.c         |  33 +++-----
+>  fs/xfs/xfs_ioctl.c       |   4 +-
+>  fs/xfs/xfs_xattr.c       |   9 +-
+>  5 files changed, 77 insertions(+), 149 deletions(-)
 > 
-> I note a comment below regarding a per-directly setting, but don't have the
-> background to fully understand what's being suggested. However, I'll note
-> here that I can live with a per-directory granularity, as relinking a file
-> into a new dir is a constant time operation, whilst the move described above
-> isn't. So if a per-directory granularity is easier than a per-file one
-> that's fine, though as a person with only passing knowledge of filesystem
-> design I don't see how having multiple links to a file can work cleanly in
-> that case.
-
-The more I think about it the more I'm not comfortable with a directory option.
-soft links and hard links complicate that IMO.  The current inheritance model
-is at file creation time and the file sticks with that state (mode).  That is
-easy enough and carry's with the file without having the complexity of possibly
-looking at the wrong parent directory.
-
-Ira
-
-
-> 
-> Hope that helps.
-> 
-> Jonathan
-> 
-> P.S. I'll cheekily take the opportunity of having your attention to tack on
-> one minor gripe about the current system: The only way to know if a mmap
-> with MAP_SYNC will work is to try it and catch the error. Which would be
-> reasonable if it were free of side effects.  However, the process requires
-> first expanding the file to at least the size of the desired map, which is
-> done non-atomically i.e. is user visible. There are thus nasty race
-> conditions in the cleanup, where after a failed mmap attempt (e.g the device
-> doesn't support DAX), we try to shrink the file back to its original size,
-> but something else has already opened it at its new, larger size. This is
-> not theoretical: I got caught by it whilst adapting some of our middleware
-> to use pmem.  Therefore, some way to probe the file path for its capability
-> would be nice, much the same as I can e.g. inspect file permissions to (more
-> or less) evaluate if I can write it without actually mutating it.  Thanks!
-> 
-> 
-> 
-> On 25/02/2020 19:37, Jeff Moyer wrote:
-> > Christoph Hellwig <hch@lst.de> writes:
-> > 
-> > > And my point is that if we ensure S_DAX can only be checked if there
-> > > are no blocks on the file, is is fairly easy to provide the same
-> > > guarantee.  And I've not heard any argument that we really need more
-> > > flexibility than that.  In fact I think just being able to change it
-> > > on the parent directory and inheriting the flag might be more than
-> > > plenty, which would lead to a very simple implementation without any
-> > > of the crazy overhead in this series.
-> > 
-> > I know of one user who had at least mentioned it to me, so I cc'd him.
-> > Jonathan, can you describe your use case for being able to change a
-> > file between dax and non-dax modes?  Or, if I'm misremembering, just
-> > correct me?
-> > 
-> > Thanks!
-> > Jeff
-> > 
-> 
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index e6149720ce02..bb391b96cd78 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -336,6 +336,10 @@ xfs_attr_remove_args(
+>  	return error;
+>  }
+>  
+> +/*
+> + * Note: If value is NULL the attribute will be removed, just like the
+> + * Linux ->setattr API.
+> + */
+>  int
+>  xfs_attr_set(
+>  	struct xfs_inode	*dp,
+> @@ -350,149 +354,92 @@ xfs_attr_set(
+>  	struct xfs_trans_res	tres;
+>  	int			rsvd = (flags & ATTR_ROOT) != 0;
+>  	int			error, local;
+> -
+> -	XFS_STATS_INC(mp, xs_attr_set);
+> +	unsigned int		total;
+>  
+>  	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
+>  		return -EIO;
+>  
+> -	error = xfs_attr_args_init(&args, dp, name, namelen, flags);
+> -	if (error)
+> -		return error;
+> -
+> -	args.value = value;
+> -	args.valuelen = valuelen;
+> -	args.op_flags = XFS_DA_OP_ADDNAME | XFS_DA_OP_OKNOENT;
+> -	args.total = xfs_attr_calc_size(&args, &local);
+> -
+>  	error = xfs_qm_dqattach(dp);
+>  	if (error)
+>  		return error;
+>  
+> -	/*
+> -	 * If the inode doesn't have an attribute fork, add one.
+> -	 * (inode must not be locked when we call this routine)
+> -	 */
+> -	if (XFS_IFORK_Q(dp) == 0) {
+> -		int sf_size = sizeof(xfs_attr_sf_hdr_t) +
+> -			XFS_ATTR_SF_ENTSIZE_BYNAME(args.namelen, valuelen);
+> -
+> -		error = xfs_bmap_add_attrfork(dp, sf_size, rsvd);
+> -		if (error)
+> -			return error;
+> -	}
+> -
+> -	tres.tr_logres = M_RES(mp)->tr_attrsetm.tr_logres +
+> -			 M_RES(mp)->tr_attrsetrt.tr_logres * args.total;
+> -	tres.tr_logcount = XFS_ATTRSET_LOG_COUNT;
+> -	tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
+> -
+> -	/*
+> -	 * Root fork attributes can use reserved data blocks for this
+> -	 * operation if necessary
+> -	 */
+> -	error = xfs_trans_alloc(mp, &tres, args.total, 0,
+> -			rsvd ? XFS_TRANS_RESERVE : 0, &args.trans);
+> +	error = xfs_attr_args_init(&args, dp, name, namelen, flags);
+>  	if (error)
+>  		return error;
+>  
+> -	xfs_ilock(dp, XFS_ILOCK_EXCL);
+> -	error = xfs_trans_reserve_quota_nblks(args.trans, dp, args.total, 0,
+> -				rsvd ? XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_FORCE_RES :
+> -				       XFS_QMOPT_RES_REGBLKS);
+> -	if (error)
+> -		goto out_trans_cancel;
+> -
+> -	xfs_trans_ijoin(args.trans, dp, 0);
+> -	error = xfs_attr_set_args(&args);
+> -	if (error)
+> -		goto out_trans_cancel;
+> -	if (!args.trans) {
+> -		/* shortform attribute has already been committed */
+> -		goto out_unlock;
+> -	}
+> -
+> -	/*
+> -	 * If this is a synchronous mount, make sure that the
+> -	 * transaction goes to disk before returning to the user.
+> -	 */
+> -	if (mp->m_flags & XFS_MOUNT_WSYNC)
+> -		xfs_trans_set_sync(args.trans);
+> -
+> -	if ((flags & ATTR_KERNOTIME) == 0)
+> -		xfs_trans_ichgtime(args.trans, dp, XFS_ICHGTIME_CHG);
+> +	args.value = value;
+> +	args.valuelen = valuelen;
+>  
+>  	/*
+> -	 * Commit the last in the sequence of transactions.
+> +	 * We have no control over the attribute names that userspace passes us
+> +	 * to remove, so we have to allow the name lookup prior to attribute
+> +	 * removal to fail as well.
+>  	 */
+> -	xfs_trans_log_inode(args.trans, dp, XFS_ILOG_CORE);
+> -	error = xfs_trans_commit(args.trans);
+> -out_unlock:
+> -	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+> -	return error;
+> -
+> -out_trans_cancel:
+> -	if (args.trans)
+> -		xfs_trans_cancel(args.trans);
+> -	goto out_unlock;
+> -}
+> +	args.op_flags = XFS_DA_OP_OKNOENT;
+>  
+> -/*
+> - * Generic handler routine to remove a name from an attribute list.
+> - * Transitions attribute list from Btree to shortform as necessary.
+> - */
+> -int
+> -xfs_attr_remove(
+> -	struct xfs_inode	*dp,
+> -	const unsigned char	*name,
+> -	size_t			namelen,
+> -	int			flags)
+> -{
+> -	struct xfs_mount	*mp = dp->i_mount;
+> -	struct xfs_da_args	args;
+> -	int			error;
+> +	if (value) {
+> +		XFS_STATS_INC(mp, xs_attr_set);
+>  
+> -	XFS_STATS_INC(mp, xs_attr_remove);
+> +		args.op_flags |= XFS_DA_OP_ADDNAME;
+> +		args.total = xfs_attr_calc_size(&args, &local);
+>  
+> -	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
+> -		return -EIO;
+> +		/*
+> +		 * If the inode doesn't have an attribute fork, add one.
+> +		 * (inode must not be locked when we call this routine)
+> +		 */
+> +		if (XFS_IFORK_Q(dp) == 0) {
+> +			int sf_size = sizeof(struct xfs_attr_sf_hdr) +
+> +				XFS_ATTR_SF_ENTSIZE_BYNAME(args.namelen,
+> +						valuelen);
+>  
+> -	error = xfs_attr_args_init(&args, dp, name, namelen, flags);
+> -	if (error)
+> -		return error;
+> +			error = xfs_bmap_add_attrfork(dp, sf_size, rsvd);
+> +			if (error)
+> +				return error;
+> +		}
+>  
+> -	/*
+> -	 * we have no control over the attribute names that userspace passes us
+> -	 * to remove, so we have to allow the name lookup prior to attribute
+> -	 * removal to fail.
+> -	 */
+> -	args.op_flags = XFS_DA_OP_OKNOENT;
+> +		tres.tr_logres = M_RES(mp)->tr_attrsetm.tr_logres +
+> +				 M_RES(mp)->tr_attrsetrt.tr_logres * args.total;
+> +		tres.tr_logcount = XFS_ATTRSET_LOG_COUNT;
+> +		tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
+> +		total = args.total;
+> +	} else {
+> +		XFS_STATS_INC(mp, xs_attr_remove);
+>  
+> -	error = xfs_qm_dqattach(dp);
+> -	if (error)
+> -		return error;
+> +		tres = M_RES(mp)->tr_attrrm;
+> +		total = XFS_ATTRRM_SPACE_RES(mp);
+> +	}
+>  
+>  	/*
+>  	 * Root fork attributes can use reserved data blocks for this
+>  	 * operation if necessary
+>  	 */
+> -	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_attrrm,
+> -			XFS_ATTRRM_SPACE_RES(mp), 0,
+> -			(flags & ATTR_ROOT) ? XFS_TRANS_RESERVE : 0,
+> -			&args.trans);
+> +	error = xfs_trans_alloc(mp, &tres, total, 0,
+> +			rsvd ? XFS_TRANS_RESERVE : 0, &args.trans);
+>  	if (error)
+>  		return error;
+>  
+>  	xfs_ilock(dp, XFS_ILOCK_EXCL);
+> -	/*
+> -	 * No need to make quota reservations here. We expect to release some
+> -	 * blocks not allocate in the common case.
+> -	 */
+>  	xfs_trans_ijoin(args.trans, dp, 0);
+> +	if (value) {
+> +		unsigned int	quota_flags = XFS_QMOPT_RES_REGBLKS;
+>  
+> -	error = xfs_attr_remove_args(&args);
+> -	if (error)
+> -		goto out;
+> +		if (rsvd)
+> +			quota_flags |= XFS_QMOPT_FORCE_RES;
+> +		error = xfs_trans_reserve_quota_nblks(args.trans, dp,
+> +				args.total, 0, quota_flags);
+> +		if (error)
+> +			goto out_trans_cancel;
+> +		error = xfs_attr_set_args(&args);
+> +		if (error)
+> +			goto out_trans_cancel;
+> +		/* shortform attribute has already been committed */
+> +		if (!args.trans)
+> +			goto out_unlock;
+> +	} else {
+> +		error = xfs_attr_remove_args(&args);
+> +		if (error)
+> +			goto out_trans_cancel;
+> +	}
+>  
+>  	/*
+>  	 * If this is a synchronous mount, make sure that the
+> @@ -509,15 +456,14 @@ xfs_attr_remove(
+>  	 */
+>  	xfs_trans_log_inode(args.trans, dp, XFS_ILOG_CORE);
+>  	error = xfs_trans_commit(args.trans);
+> +out_unlock:
+>  	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+> -
+>  	return error;
+>  
+> -out:
+> +out_trans_cancel:
+>  	if (args.trans)
+>  		xfs_trans_cancel(args.trans);
+> -	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+> -	return error;
+> +	goto out_unlock;
+>  }
+>  
+>  /*========================================================================
+> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+> index 71bcf1298e4c..db58a6c7dea5 100644
+> --- a/fs/xfs/libxfs/xfs_attr.h
+> +++ b/fs/xfs/libxfs/xfs_attr.h
+> @@ -152,8 +152,6 @@ int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
+>  int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
+>  		 size_t namelen, unsigned char *value, int valuelen, int flags);
+>  int xfs_attr_set_args(struct xfs_da_args *args);
+> -int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name,
+> -		    size_t namelen, int flags);
+>  int xfs_attr_remove_args(struct xfs_da_args *args);
+>  int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+>  		  int flags, struct attrlist_cursor_kern *cursor);
+> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+> index cd743fad8478..4e76063ff956 100644
+> --- a/fs/xfs/xfs_acl.c
+> +++ b/fs/xfs/xfs_acl.c
+> @@ -168,6 +168,8 @@ __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+>  {
+>  	struct xfs_inode *ip = XFS_I(inode);
+>  	unsigned char *ea_name;
+> +	struct xfs_acl *xfs_acl = NULL;
+> +	int len = 0;
+>  	int error;
+>  
+>  	switch (type) {
+> @@ -184,9 +186,7 @@ __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+>  	}
+>  
+>  	if (acl) {
+> -		struct xfs_acl *xfs_acl;
+> -		int len = XFS_ACL_MAX_SIZE(ip->i_mount);
+> -
+> +		len = XFS_ACL_MAX_SIZE(ip->i_mount);
+>  		xfs_acl = kmem_zalloc_large(len, 0);
+>  		if (!xfs_acl)
+>  			return -ENOMEM;
+> @@ -196,26 +196,17 @@ __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+>  		/* subtract away the unused acl entries */
+>  		len -= sizeof(struct xfs_acl_entry) *
+>  			 (XFS_ACL_MAX_ENTRIES(ip->i_mount) - acl->a_count);
+> -
+> -		error = xfs_attr_set(ip, ea_name, strlen(ea_name),
+> -				     (unsigned char *)xfs_acl, len, ATTR_ROOT);
+> -
+> -		kmem_free(xfs_acl);
+> -	} else {
+> -		/*
+> -		 * A NULL ACL argument means we want to remove the ACL.
+> -		 */
+> -		error = xfs_attr_remove(ip, ea_name,
+> -					strlen(ea_name),
+> -					ATTR_ROOT);
+> -
+> -		/*
+> -		 * If the attribute didn't exist to start with that's fine.
+> -		 */
+> -		if (error == -ENOATTR)
+> -			error = 0;
+>  	}
+>  
+> +	error = xfs_attr_set(ip, ea_name, strlen(ea_name),
+> +			(unsigned char *)xfs_acl, len, ATTR_ROOT);
+> +	kmem_free(xfs_acl);
+> +
+> +	/*
+> +	 * If the attribute didn't exist to start with that's fine.
+> +	 */
+> +	if (!acl && error == -ENOATTR)
+> +		error = 0;
+>  	if (!error)
+>  		set_cached_acl(inode, type, acl);
+>  	return error;
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index d974bf099d45..79c418888e9a 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -417,12 +417,10 @@ xfs_attrmulti_attr_remove(
+>  	uint32_t		flags)
+>  {
+>  	int			error;
+> -	size_t			namelen;
+>  
+>  	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
+>  		return -EPERM;
+> -	namelen = strlen(name);
+> -	error = xfs_attr_remove(XFS_I(inode), name, namelen, flags);
+> +	error = xfs_attr_set(XFS_I(inode), name, strlen(name), NULL, 0, flags);
+>  	if (!error)
+>  		xfs_forget_acl(inode, name, flags);
+>  	return error;
+> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+> index b0fedb543f97..1670bfbc9ad2 100644
+> --- a/fs/xfs/xfs_xattr.c
+> +++ b/fs/xfs/xfs_xattr.c
+> @@ -69,7 +69,6 @@ xfs_xattr_set(const struct xattr_handler *handler, struct dentry *unused,
+>  	int			xflags = handler->flags;
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	int			error;
+> -	size_t			namelen = strlen(name);
+>  
+>  	/* Convert Linux syscall to XFS internal ATTR flags */
+>  	if (flags & XATTR_CREATE)
+> @@ -77,14 +76,10 @@ xfs_xattr_set(const struct xattr_handler *handler, struct dentry *unused,
+>  	if (flags & XATTR_REPLACE)
+>  		xflags |= ATTR_REPLACE;
+>  
+> -	if (value)
+> -		error = xfs_attr_set(ip, name, namelen, (void *)value, size,
+> -				xflags);
+> -	else
+> -		error = xfs_attr_remove(ip, name, namelen, xflags);
+> +	error = xfs_attr_set(ip, (unsigned char *)name, strlen(name),
+> +				(void *)value, size, xflags);
+>  	if (!error)
+>  		xfs_forget_acl(inode, name, xflags);
+> -
+>  	return error;
+>  }
+>  
 > -- 
-> Registered in England and Wales under Company Registration No. 03798903
-> Directors: Michael Cunningham, Michael ("Mike") O'Neill, Eric Shander
+> 2.24.1
 > 
