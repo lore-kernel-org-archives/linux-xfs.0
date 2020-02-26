@@ -2,111 +2,101 @@ Return-Path: <SRS0=HAJZ=4O=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBF85C4BA12
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 15:19:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E90DC4BA17
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 15:58:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B3BF22467D
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 15:19:40 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mwUNC+9q"
+	by mail.kernel.org (Postfix) with ESMTP id 56FEF222C2
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 15:58:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727576AbgBZPTk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 26 Feb 2020 10:19:40 -0500
-Received: from mail-oi1-f194.google.com ([209.85.167.194]:36667 "EHLO
-        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727023AbgBZPTk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Feb 2020 10:19:40 -0500
-Received: by mail-oi1-f194.google.com with SMTP id c16so3388659oic.3;
-        Wed, 26 Feb 2020 07:19:39 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=HPLI71nQNjvEjndIWOMzn92Whnbzm/DTK7IrM4ZvySQ=;
-        b=mwUNC+9qhtuZtmscaGI33pnOTIVI9BGvuTVR8FRYkPWCCqkR/TdRPwIPZ6yjvMo5nv
-         DEpuv8q0Pj1KA8n9DcqKAoKAJbvFj4LM1GTp3H3sUm59xCHznnwDo/ot0pthb+4XdVMt
-         1qYENsfS65SmlAqkwPTe2gcKX1+AzHHMEU1zIhmNiSe8b0dICSXivarkDe15AhnA+bE5
-         SDtIm4LS+leYNfSTpCxggfRMb5U7MSjb0NXtUSsrYcukBz6j8JhKsvYmfIUcj3SGFLsV
-         IP3GrRPBLxpQtagjWTPE8uhjK9A843d2ynYB/JuYgMxsEuXlZAXqu7gw0rrQjuekCCFv
-         9B1w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=HPLI71nQNjvEjndIWOMzn92Whnbzm/DTK7IrM4ZvySQ=;
-        b=JFKXMGuPphYu1W7Pxa7oFZju6dmPVf9MPzNB65STpekdKrGks9D7VxyZQgJNEg58We
-         97FOvuYmuH2OrGywEZ8VHDrQN1r1chQ7UepCr8uGCXna/Cum3ovxhScyibEsdLdi2bSC
-         9aw7MoZmKsk/h0CV5HminpyJeTt4EqzkUJxtLrtOgGdyGFXoXVJcrsnI/0m+Rr/ZVMpa
-         vopb9P4N9s8eV+E22J8RSGwcDtvATVMofVX8uNdBTmQkg5I54gVzsLpBbsI4xX4y3Od4
-         a4+rrLZSfA4H6b8UFyDyfISOqAeJTILU0hpzUuaWWWCflkvpnI/lwXnkrL3osyzE0MbR
-         i4UA==
-X-Gm-Message-State: APjAAAXK5FtsD9iSGtShCi5NRMAdGLuw2QEcSmHBxOGYku+7/UiY0d+t
-        Z5oeaorY4+Zi275eOsA1Tyf9hVk0pZpyDyIBliw=
-X-Google-Smtp-Source: APXvYqyTM5+Hs5hflJiSWJxm2Y+HsmeaGuG1Pg1ulrWF/HjbV7pwkNnM0MroT9wMdEGr09pCh7ohEED/KZ9DICzTrEM=
-X-Received: by 2002:aca:f05:: with SMTP id 5mr3603942oip.140.1582730379191;
- Wed, 26 Feb 2020 07:19:39 -0800 (PST)
+        id S1728741AbgBZP5c (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 26 Feb 2020 10:57:32 -0500
+Received: from mga12.intel.com ([192.55.52.136]:20933 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728590AbgBZP53 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 26 Feb 2020 10:57:29 -0500
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 26 Feb 2020 07:57:29 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.70,488,1574150400"; 
+   d="scan'208";a="231443910"
+Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
+  by orsmga008.jf.intel.com with ESMTP; 26 Feb 2020 07:57:28 -0800
+Date:   Wed, 26 Feb 2020 07:57:28 -0800
+From:   Ira Weiny <ira.weiny@intel.com>
+To:     Jan Kara <jack@suse.cz>
+Cc:     Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>,
+        linux-kernel@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH V4 07/13] fs: Add locking for a dynamic address space
+ operations state
+Message-ID: <20200226155727.GA22036@iweiny-DESK2.sc.intel.com>
+References: <20200221004134.30599-1-ira.weiny@intel.com>
+ <20200221004134.30599-8-ira.weiny@intel.com>
+ <20200221174449.GB11378@lst.de>
+ <20200221224419.GW10776@dread.disaster.area>
+ <20200224175603.GE7771@lst.de>
+ <20200225000937.GA10776@dread.disaster.area>
+ <20200226111740.GF10728@quack2.suse.cz>
 MIME-Version: 1.0
-References: <20200220153234.152426-1-richard_c_haines@btinternet.com>
- <20200220155731.GU9506@magnolia> <20200220155938.GA1306@infradead.org>
- <2862d0b2-e0a9-149d-16e5-22c3f5f82e9e@tycho.nsa.gov> <20200220160820.GA14640@infradead.org>
- <CAHC9VhRXo=EZ4HbLa_W_waL4xtdE6M92em7aNh=wm_7hpozJ7g@mail.gmail.com>
- <5c1f2125a44006d7ff8bda6d9a1075d2177aeaf0.camel@btinternet.com>
- <20200225041327.GE6740@magnolia> <575bec416692e93b599520f34d625de8d46bfb07.camel@btinternet.com>
- <20200225213533.GW6740@magnolia>
-In-Reply-To: <20200225213533.GW6740@magnolia>
-From:   Stephen Smalley <stephen.smalley.work@gmail.com>
-Date:   Wed, 26 Feb 2020 10:21:19 -0500
-Message-ID: <CAEjxPJ4f44MX-MO3GiL+bBwq9nJbHArexTUeUe6HGPiGNyJP4g@mail.gmail.com>
-Subject: Re: [PATCH 0/1] selinux: Add xfs quota command types
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Richard Haines <richard_c_haines@btinternet.com>,
-        Paul Moore <paul@paul-moore.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Stephen Smalley <sds@tycho.nsa.gov>, linux-xfs@vger.kernel.org,
-        selinux@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200226111740.GF10728@quack2.suse.cz>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 25, 2020 at 4:36 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> Hmm, maybe let's back up a step here.  What's the purpose of being able
-> to set quota_on privileges on a file?  Is it so that sysadmins can
-> designate a particular file as a "quota" file and thereby prevent the
-> kernel from being tricked into loading some other file as the quota data
-> file?
+On Wed, Feb 26, 2020 at 12:17:40PM +0100, Jan Kara wrote:
+> On Tue 25-02-20 11:09:37, Dave Chinner wrote:
+> > /me wonders if the best thing to do is to add a ->fault callout to
+> > tell the filesystem to lock/unlock the inode right up at the top of
+> > the page fault path, outside even the mmap_sem.  That means all the
+> > methods that the page fault calls are protected against S_DAX
+> > changes, and it gives us a low cost method of serialising page
+> > faults against DIO (e.g. via inode_dio_wait())....
+> 
+> Well, that's going to be pretty hard. The main problem is: you cannot
+> lookup VMA until you hold mmap_sem and the inode is inside the VMA. And
+> this is a fundamental problem because until you hold mmap_sem, the address
+> space can change and thus the virtual address you are faulting can be
+> changing inode it is mapped to. So you would have to do some dance like:
+> 
+> lock mmap_sem
+> lookup vma
+> get inode reference
+> drop mmap_sem
+> tell fs about page fault
+> lock mmap_sem
+> is the vma still the same?
+> 
+> And I'm pretty confident the overhead will be visible in page fault
+> intensive workloads...
 
-Yes.
+I did not get to this level of detail...  Rather I looked at it from a high
+level perspective and thought "does the mode need to change while someone has
+the mmap?"  My thought is, that it does not make a lot of sense.  Generally the
+user has mmaped with some use case in mind (either DAX or non-DAX) and it seems
+reasonable to keep that mode consistent while the map is in place.
 
-> I ask this because AFAICT in ext4, the "usrjquota=<path>" mount options
-> are for the old quota system wherein quotas are files that are managed
-> separately from the filesystem.
->
-> The new ext4 quota system links the quota inode pointers only from the
-> superblock, and it calls dquot_load_quota_inode, which doesn't seem to
-> have a security callout.  Seeing as there's no user-visible file for new
-> style quotas, I don't see why you'd need a selinux hook either.
->
-> I guess it could be generally useful to be able to be able to apply the
-> same quota_on labels to root directories of filesystems that have new
-> style quotas that one can apply to quota files on fses with old style
-> quotas... but (a) I don't see that being the case right now, and (b) if
-> you're trying to /add/ that functionality then yes it ought to be in
-> fs/quota/... and yes xfs will have to play catch up once it's there.
->
-> Is there already a precedent for setting quota_on labels to the root
-> dir?  It's entirely possible that I'm simply unaware of what's going on
-> in fs/quota/ because xfs mostly does its own things wrt quota.
+So I punted and restricted the change.
 
-Ok, in that case I'd say we don't need the hook to be called at all in
-the cases where
-the quota inode is private to the superblock and not directly exposed
-to userspace.
-So no change required to xfs or fs/quota and we can skip/ignore the test when
-not using usrquota=...
+Ira
+
+> 
+> 								Honza
+> 
+> -- 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
