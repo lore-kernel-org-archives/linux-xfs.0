@@ -2,84 +2,105 @@ Return-Path: <SRS0=HAJZ=4O=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE688C4BA2F
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 22:39:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 575A9C4BA24
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 22:48:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 895B621D7E
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 22:39:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2ED5320658
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 22:48:54 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="S3nNs7hY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727841AbgBZWjh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 26 Feb 2020 17:39:37 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:33532 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727761AbgBZWjg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Feb 2020 17:39:36 -0500
-Received: from dread.disaster.area (pa49-195-202-68.pa.nsw.optusnet.com.au [49.195.202.68])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id BC0C47EAC37;
-        Thu, 27 Feb 2020 09:39:34 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1j75L3-0004c0-7R; Thu, 27 Feb 2020 09:39:33 +1100
-Date:   Thu, 27 Feb 2020 09:39:33 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Allison Collins <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v7 16/19] xfs: Simplify xfs_attr_set_iter
-Message-ID: <20200226223933.GB10776@dread.disaster.area>
-References: <20200223020611.1802-1-allison.henderson@oracle.com>
- <20200223020611.1802-17-allison.henderson@oracle.com>
- <20200225092122.GK10776@dread.disaster.area>
- <b0167c4e-7703-1805-7b58-42096fcee90a@oracle.com>
+        id S1727841AbgBZWsx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 26 Feb 2020 17:48:53 -0500
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:20401 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727846AbgBZWsx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Feb 2020 17:48:53 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1582757332;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=bl2QkrJDLwbDu4ZSTOfPGGOcOZ8+qVxS2i6Atb12Bik=;
+        b=S3nNs7hY3AnsXme63uwnNQIEXEvfj4yhHJoy95F8pxfUGcqzle0c9thvaIEtSw6JtTR8AC
+        PNCeWrYPfQLfMxSvoONaEM9EEvHisQYDiIwxPdbMwInloRqlyWO12o3AK+xvrjYfq2Zmuw
+        xeJam9daejScoAsCbmL/cDmv5pmaaBI=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-379-6ZcBhl4UPxmgSKsb3ltaFg-1; Wed, 26 Feb 2020 17:48:43 -0500
+X-MC-Unique: 6ZcBhl4UPxmgSKsb3ltaFg-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id F1AD0107ACC4;
+        Wed, 26 Feb 2020 22:48:40 +0000 (UTC)
+Received: from segfault.boston.devel.redhat.com (segfault.boston.devel.redhat.com [10.19.60.26])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id A9F695D9CD;
+        Wed, 26 Feb 2020 22:48:39 +0000 (UTC)
+From:   Jeff Moyer <jmoyer@redhat.com>
+To:     ira.weiny@intel.com
+Cc:     linux-kernel@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH V4 00/13] Enable per-file/per-directory DAX operations V4
+References: <20200221004134.30599-1-ira.weiny@intel.com>
+X-PGP-KeyID: 1F78E1B4
+X-PGP-CertKey: F6FE 280D 8293 F72C 65FD  5A58 1FF8 A7CA 1F78 E1B4
+Date:   Wed, 26 Feb 2020 17:48:38 -0500
+In-Reply-To: <20200221004134.30599-1-ira.weiny@intel.com> (ira weiny's message
+        of "Thu, 20 Feb 2020 16:41:21 -0800")
+Message-ID: <x49pne13qyh.fsf@segfault.boston.devel.redhat.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b0167c4e-7703-1805-7b58-42096fcee90a@oracle.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
-        a=mqTaRPt+QsUAtUurwE173Q==:117 a=mqTaRPt+QsUAtUurwE173Q==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=l697ptgUJYAA:10
-        a=7-415B0cAAAA:8 a=83F1_AdjyauxFyC8JW4A:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: text/plain
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 25, 2020 at 07:13:42PM -0700, Allison Collins wrote:
-> On 2/25/20 2:21 AM, Dave Chinner wrote:
-> > Heh. This is an example of exactly why I think this should be
-> > factored into functions first. Move all the code you just
-> > re-indented into xfs_attr_set_shortform(), and the goto disappears
-> > because this code becomes:
-> > 
-> > 	if (xfs_attr_is_shortform(dp))
-> > 		return xfs_attr_set_shortform(dp, args);
-> > 
-> > add_leaf:
-> > 
-> > That massively improves the readability of the code - it separates
-> > the operation implementation from the decision logic nice and
-> > cleanly, and lends itself to being implemented in the delayed attr
-> > state machine without needing gotos at all.
-> Sure, I actually had it more like that in the last version.  I flipped it
-> around because I thought it would help people understand what the
-> refactoring was for if they could see it in context with the states. But if
-> the other way is more helpful, its easy to put back.  Will move :-)
+Hi, Ira,
 
-In general, factoring first is best. Factoring should not change
-behaviour, nor change the actual code much. Then when the logic
-surrounding the new function gets changed later on, it's much easier
-to see and understand the logic changes as they aren't hidden
-amongst mass code movements (like re-indenting).
+ira.weiny@intel.com writes:
 
-Cheers,
+> From: Ira Weiny <ira.weiny@intel.com>
+>
+> https://github.com/weiny2/linux-kernel/pull/new/dax-file-state-change-v4
+>
+> Changes from V3: 
+> https://lore.kernel.org/lkml/20200208193445.27421-1-ira.weiny@intel.com/
+>
+> 	* Remove global locking...  :-D
+> 	* put back per inode locking and remove pre-mature optimizations
+> 	* Fix issues with Directories having IS_DAX() set
+> 	* Fix kernel crash issues reported by Jeff
+> 	* Add some clean up patches
+> 	* Consolidate diflags to iflags functions
+> 	* Update/add documentation
+> 	* Reorder/rename patches quite a bit
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I left out patches 1 and 2, but applied the rest and tested.  This
+passes xfs tests in the following configurations:
+1) MKFS_OPTIONS="-m reflink=0" MOUNT_OPTIONS="-o dax"
+2) MKFS_OPTIONS="-m reflink=0"
+   but with the added configuration step of setting the dax attribute on
+   the mounted test directory.
+
+I also tested to ensure that reflink fails when a file has the dax
+attribute set.  I've got more testing to do, but figured I'd at least
+let you know I've been looking at it.
+
+Thanks!
+Jeff
+
