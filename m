@@ -2,131 +2,150 @@ Return-Path: <SRS0=HAJZ=4O=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C51AC4BA13
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 17:20:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35495C4BA18
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 17:27:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 75616206E6
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 17:20:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B677222C2
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 17:27:01 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="CFhAczPi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726673AbgBZRUi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 26 Feb 2020 12:20:38 -0500
-Received: from mx2.suse.de ([195.135.220.15]:44932 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726151AbgBZRUh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 26 Feb 2020 12:20:37 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 214ECAD2B;
-        Wed, 26 Feb 2020 17:20:35 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 674331E0EA2; Wed, 26 Feb 2020 18:20:34 +0100 (CET)
-Date:   Wed, 26 Feb 2020 18:20:34 +0100
-From:   Jan Kara <jack@suse.cz>
-To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     Jonathan Halliday <jonathan.halliday@redhat.com>,
-        Jeff Moyer <jmoyer@redhat.com>, Christoph Hellwig <hch@lst.de>,
-        Dave Chinner <david@fromorbit.com>,
-        "Weiny, Ira" <ira.weiny@intel.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: Re: [PATCH V4 07/13] fs: Add locking for a dynamic address space
- operations state
-Message-ID: <20200226172034.GV10728@quack2.suse.cz>
-References: <20200221004134.30599-1-ira.weiny@intel.com>
- <20200221004134.30599-8-ira.weiny@intel.com>
- <20200221174449.GB11378@lst.de>
- <20200221224419.GW10776@dread.disaster.area>
- <20200224175603.GE7771@lst.de>
- <20200225000937.GA10776@dread.disaster.area>
- <20200225173633.GA30843@lst.de>
- <x49fteyh313.fsf@segfault.boston.devel.redhat.com>
- <a126276c-d252-6050-b6ee-4d6448d45fac@redhat.com>
- <CAPcyv4iuWpHi-0SK_HS0zmfH87=G64U47VhthhpTjDCw_BMG8A@mail.gmail.com>
+        id S1726687AbgBZR1A (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 26 Feb 2020 12:27:00 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:44804 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726714AbgBZR1A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Feb 2020 12:27:00 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01QHNX8j174281;
+        Wed, 26 Feb 2020 17:26:57 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=K/imnMIp0EmnfdX9++I+CS8fP4GijoFk8BLL3aA+tds=;
+ b=CFhAczPiDtZGaA1VKxwmGleTm0bh9/NUCXoTBv9x6bk8s5P6tkxmFfoNN3ixD+S049Nx
+ PkJWfq/5P+eSTrywu7PpEO6siKup16y6g9RZIa8BmTw5XkzWRBUlGiprMqTiQ8hhGodn
+ bV76LgAaGz5Ofjd+cjlk8iTTOZSRwYEjQbVBuE9/VlSmBlxzfIUEuK3kTPMhZzF7U7Qg
+ /2jQpOScNp1MMuCUYfwB2goTq75od/vC3YWs9uJHSffkRWyFj97e6ZVfxhaWtGr9HE4Q
+ PY9lb0hmyyg2+Cdt9mtun3NOgL1DUk3r5gLEypv0f0mXVLRum12R9hRTouRglGM//5fk vw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2ydcsnd77u-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 26 Feb 2020 17:26:57 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01QHEAvU125741;
+        Wed, 26 Feb 2020 17:24:57 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2ydj4j18f6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 26 Feb 2020 17:24:57 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01QHOtVF007979;
+        Wed, 26 Feb 2020 17:24:56 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 26 Feb 2020 09:24:55 -0800
+Date:   Wed, 26 Feb 2020 09:24:54 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     linux-xfs@vger.kernel.org, alex@zadara.com
+Subject: Re: [PATCH 3/7] xfs_repair: enforce that inode btree chunks can't
+ point to AG headers
+Message-ID: <20200226172454.GF8045@magnolia>
+References: <158086359783.2079685.9581209719946834913.stgit@magnolia>
+ <158086361666.2079685.8451949513769071894.stgit@magnolia>
+ <dd15d451-c745-0318-91b0-36864c0052f7@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4iuWpHi-0SK_HS0zmfH87=G64U47VhthhpTjDCw_BMG8A@mail.gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <dd15d451-c745-0318-91b0-36864c0052f7@sandeen.net>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9543 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 suspectscore=0
+ spamscore=0 adultscore=0 malwarescore=0 mlxlogscore=999 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002260114
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9543 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 bulkscore=0
+ lowpriorityscore=0 mlxlogscore=999 phishscore=0 spamscore=0 adultscore=0
+ suspectscore=0 impostorscore=0 clxscore=1015 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002260114
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed 26-02-20 08:46:42, Dan Williams wrote:
-> On Wed, Feb 26, 2020 at 1:29 AM Jonathan Halliday
-> <jonathan.halliday@redhat.com> wrote:
-> >
-> >
-> > Hi All
-> >
-> > I'm a middleware developer, focused on how Java (JVM) workloads can
-> > benefit from app-direct mode pmem. Initially the target is apps that
-> > need a fast binary log for fault tolerance: the classic database WAL use
-> > case; transaction coordination systems; enterprise message bus
-> > persistence and suchlike. Critically, there are cases where we use log
-> > based storage, i.e. it's not the strict 'read rarely, only on recovery'
-> > model that a classic db may have, but more of a 'append only, read many
-> > times' event stream model.
-> >
-> > Think of the log oriented data storage as having logical segments (let's
-> > implement them as files), of which the most recent is being appended to
-> > (read_write) and the remaining N-1 older segments are full and sealed,
-> > so effectively immutable (read_only) until discarded. The tail segment
-> > needs to be in DAX mode for optimal write performance, as the size of
-> > the append may be sub-block and we don't want the overhead of the kernel
-> > call anyhow. So that's clearly a good fit for putting on a DAX fs mount
-> > and using mmap with MAP_SYNC.
-> >
-> > However, we want fast read access into the segments, to retrieve stored
-> > records. The small access index can be built in volatile RAM (assuming
-> > we're willing to take the startup overhead of a full file scan at
-> > recovery time) but the data itself is big and we don't want to move it
-> > all off pmem. Which means the requirements are now different: we want
-> > the O/S cache to pull hot data into fast volatile RAM for us, which DAX
-> > explicitly won't do. Effectively a poor man's 'memory mode' pmem, rather
-> > than app-direct mode, except here we're using the O/S rather than the
-> > hardware memory controller to do the cache management for us.
-> >
-> > Currently this requires closing the full (read_write) file, then copying
-> > it to a non-DAX device and reopening it (read_only) there. Clearly
-> > that's expensive and rather tedious. Instead, I'd like to close the
-> > MAP_SYNC mmap, then, leaving the file where it is, reopen it in a mode
-> > that will instead go via the O/S cache in the traditional manner. Bonus
-> > points if I can do it over non-overlapping ranges in a file without
-> > closing the DAX mode mmap, since then the segments are entirely logical
-> > instead of needing separate physical files.
+On Wed, Feb 26, 2020 at 09:09:42AM -0800, Eric Sandeen wrote:
+> On 2/4/20 4:46 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > xfs_repair has a very old check that evidently excuses the AG 0 inode
+> > btrees pointing to blocks that are already marked XR_E_INUSE_FS* (e.g.
+> > AG headers).  mkfs never formats filesystems that way and it looks like
+> > an error, so purge the check.  After this, we always complain if inodes
+> > overlap with AG headers because that should never happen.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Hi John,
+> I know it's hard to keep track, but it'd be nice if
 > 
-> IIRC we chatted about this at PIRL, right?
+> > -	ASSERT(M_IGEO(mp)->ialloc_blks > 0);
 > 
-> At the time it sounded more like mixed mode dax, i.e. dax writes, but
-> cached reads. To me that's an optimization to optionally use dax for
-> direct-I/O writes, with its existing set of page-cache coherence
-> warts, and not a capability to dynamically switch the dax-mode.
-> mmap+MAP_SYNC seems the wrong interface for this. This writeup
-> mentions bypassing kernel call overhead, but I don't see how a
-> dax-write syscall is cheaper than an mmap syscall plus fault. If
-> direct-I/O to a dax capable file bypasses the block layer, isn't that
-> about the maximum of kernel overhead that can be cut out of this use
-> case? Otherwise MAP_SYNC is a facility to achieve efficient sub-block
-> update-in-place writes not append writes.
+> this line had been kept per the feedback on the last patchset...
 
-Well, even for appends you'll pay the cost only once per page (or maybe even
-once per huge page) when using MAP_SYNC. With a syscall you'll pay once per
-write. So although it would be good to check real numbers, the design isn't
-non-sensical to me.
+I've added that back.  For real this time.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+> This also lost my feedback the first time, re:
+> 
+> @@ -1782,18 +1775,6 @@ _("inode chunk claims untracked block, finobt block - agno %d, bno %d, inopb %d\
+>   				break;
+>   			case XR_E_INUSE_FS:
+>   			case XR_E_INUSE_FS1:
+> 
+> "I guess there's no real reason to list a couple cases that all fall through
+> to default:, I'd just remove them as well since they aren't any more special
+> than the other unmentioned cases."
+> 
+> -				if (agno == 0 &&
+> -				    ino + j >= first_prealloc_ino &&
+> -				    ino + j < last_prealloc_ino) {
+> -					do_warn(
+> -_("inode chunk claims untracked block, finobt block - agno %d, bno %d, inopb %d\n"),
+> -						agno, agbno, mp->m_sb.sb_inopblock);
+> -
+> -					set_bmap(agno, agbno, XR_E_INO);
+> -					suspect++;
+> -					break;
+> -				}
+> -				/* fall through */
+>  			default:
+> 
+> I guess I should stop saying "I'll do that on the way in" if 2 more
+> versions are going to hit the list, maybe it takes the feedback off
+> your radar.
+
+I (almost) always make the changes to my local tree even if you say
+you'll do it on the way in, because that makes it easier to compare the
+for-next tree vs. my about-to-be-rebased dev tree.
+
+Unfortunately, I do occasionally slip up and forget to make the changes,
+even if I've sent email assenting to the changes, because there's not
+anything linking "I will make this change" in the email thread to
+actually scribbling in the git tree.
+
+Add to that the fact that email clients don't maintain spatial locality
+between v3->v4->v5 of a patchset and that just makes it more difficult
+to stay on top of reviews as a developer, because I can't even
+self-check without having to scroll through hundreds of emails.
+
+So yeah, I guess I'll go review my reviews...  sorry for the crap.
+
+--D
+
+> -Eric
