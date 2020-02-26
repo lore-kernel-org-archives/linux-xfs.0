@@ -2,127 +2,180 @@ Return-Path: <SRS0=HAJZ=4O=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4CE5C4BA1E
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 17:55:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEBCCC4BA18
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 18:02:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 85BF621D7E
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 17:55:59 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="tKOLxfyi"
+	by mail.kernel.org (Postfix) with ESMTP id 88BBA20732
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 18:02:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726917AbgBZRz7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 26 Feb 2020 12:55:59 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:49756 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726688AbgBZRz7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Feb 2020 12:55:59 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01QHqgu0055346;
-        Wed, 26 Feb 2020 17:55:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=ocBJlg2hNFOaQmxqm0W4ZIkH6uaU8CY8uzlO/N7SSzc=;
- b=tKOLxfyiCJ6AC3wAp2tjqV/yASapKI9ylKcELDgEpyMO0OVLBQd0cvF9qq3o5pHyUszK
- CoqJ2EdnOSs59UVsyNJS3rpOh85jUQVGCiIp8yqxCxwYplGpyVVjOjJb+dFsAuMpbZ6Y
- uHUZRNgsSOE/1uWNFFMCSQ4wrBB5SEzKTH1flqR84eg6/YALXMFizNufIFDI3koX4ddu
- duVGGcuTXhhzrePSKc0HPM7DbmbTXUUPjU2XDy121cbD8gyMcyXF13qcyiQwsjLdwnY+
- IZ5wgBObFzyD4Zs79tgsRJTLYPEi4quN8Lo2kU+RozlXS/Bw0wPRfl7IwZMNnLMSHh0O MA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2ydct35bpx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 26 Feb 2020 17:55:56 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01QHiOjR116798;
-        Wed, 26 Feb 2020 17:55:55 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 2ydcs5pgnj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 26 Feb 2020 17:55:55 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01QHtsX5024059;
-        Wed, 26 Feb 2020 17:55:54 GMT
-Received: from localhost (/10.159.139.112)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 26 Feb 2020 09:55:53 -0800
-Date:   Wed, 26 Feb 2020 09:55:52 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     linux-xfs@vger.kernel.org, alex@zadara.com
-Subject: Re: [PATCH 7/7] xfs_repair: try to correct sb_unit value from
- secondaries
-Message-ID: <20200226175552.GH8045@magnolia>
-References: <158086359783.2079685.9581209719946834913.stgit@magnolia>
- <158086364145.2079685.5986767044268901944.stgit@magnolia>
- <e1830559-69bf-6302-dc85-e3994f680882@sandeen.net>
+        id S1726954AbgBZSCx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 26 Feb 2020 13:02:53 -0500
+Received: from mga02.intel.com ([134.134.136.20]:38096 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726787AbgBZSCx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 26 Feb 2020 13:02:53 -0500
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by orsmga101.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 26 Feb 2020 10:02:51 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.70,489,1574150400"; 
+   d="scan'208";a="256409560"
+Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
+  by orsmga002.jf.intel.com with ESMTP; 26 Feb 2020 10:02:51 -0800
+Date:   Wed, 26 Feb 2020 10:02:51 -0800
+From:   Ira Weiny <ira.weiny@intel.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-kernel@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH V4 09/13] fs/xfs: Add write aops lock to xfs layer
+Message-ID: <20200226180250.GC22036@iweiny-DESK2.sc.intel.com>
+References: <20200221004134.30599-1-ira.weiny@intel.com>
+ <20200221004134.30599-10-ira.weiny@intel.com>
+ <20200224003455.GY10776@dread.disaster.area>
+ <20200224195735.GA11565@iweiny-DESK2.sc.intel.com>
+ <20200224223245.GZ10776@dread.disaster.area>
+ <20200225211228.GB15810@iweiny-DESK2.sc.intel.com>
+ <20200225225941.GO10776@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <e1830559-69bf-6302-dc85-e3994f680882@sandeen.net>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9543 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 phishscore=0
- mlxlogscore=999 spamscore=0 suspectscore=0 mlxscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002260115
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9543 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 bulkscore=0
- impostorscore=0 spamscore=0 priorityscore=1501 malwarescore=0 adultscore=0
- phishscore=0 mlxlogscore=999 mlxscore=0 suspectscore=0 clxscore=1015
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002260115
+In-Reply-To: <20200225225941.GO10776@dread.disaster.area>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 26, 2020 at 09:42:01AM -0800, Eric Sandeen wrote:
-> On 2/4/20 4:47 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Feb 26, 2020 at 09:59:41AM +1100, Dave Chinner wrote:
+> On Tue, Feb 25, 2020 at 01:12:28PM -0800, Ira Weiny wrote:
+> > On Tue, Feb 25, 2020 at 09:32:45AM +1100, Dave Chinner wrote:
+> > > On Mon, Feb 24, 2020 at 11:57:36AM -0800, Ira Weiny wrote:
+> > > > On Mon, Feb 24, 2020 at 11:34:55AM +1100, Dave Chinner wrote:
+> > > > > On Thu, Feb 20, 2020 at 04:41:30PM -0800, ira.weiny@intel.com wrote:
+> > > > > > From: Ira Weiny <ira.weiny@intel.com>
+> > > > > > 
+> > > > 
+> > > > [snip]
+> > > > 
+> > > > > > 
+> > > > > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > > > > > index 35df324875db..5b014c428f0f 100644
+> > > > > > --- a/fs/xfs/xfs_inode.c
+> > > > > > +++ b/fs/xfs/xfs_inode.c
+> > > > > > @@ -142,12 +142,12 @@ xfs_ilock_attr_map_shared(
+> > > > > >   *
+> > > > > >   * Basic locking order:
+> > > > > >   *
+> > > > > > - * i_rwsem -> i_mmap_lock -> page_lock -> i_ilock
+> > > > > > + * s_dax_sem -> i_rwsem -> i_mmap_lock -> page_lock -> i_ilock
+> > > > > >   *
+> > > > > >   * mmap_sem locking order:
+> > > > > >   *
+> > > > > >   * i_rwsem -> page lock -> mmap_sem
+> > > > > > - * mmap_sem -> i_mmap_lock -> page_lock
+> > > > > > + * s_dax_sem -> mmap_sem -> i_mmap_lock -> page_lock
+> > > > > >   *
+> > > > > >   * The difference in mmap_sem locking order mean that we cannot hold the
+> > > > > >   * i_mmap_lock over syscall based read(2)/write(2) based IO. These IO paths can
+> > > > > > @@ -182,6 +182,9 @@ xfs_ilock(
+> > > > > >  	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
+> > > > > >  	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_SUBCLASS_MASK)) == 0);
+> > > > > >  
+> > > > > > +	if (lock_flags & XFS_DAX_EXCL)
+> > > > > > +		inode_aops_down_write(VFS_I(ip));
+> > > > > 
+> > > > > I largely don't see the point of adding this to xfs_ilock/iunlock.
+> > > > > 
+> > > > > It's only got one caller, so I don't see much point in adding it to
+> > > > > an interface that has over a hundred other call sites that don't
+> > > > > need or use this lock. just open code it where it is needed in the
+> > > > > ioctl code.
+> > > > 
+> > > > I know it seems overkill but if we don't do this we need to code a flag to be
+> > > > returned from xfs_ioctl_setattr_dax_invalidate().  This flag is then used in
+> > > > xfs_ioctl_setattr_get_trans() to create the transaction log item which can then
+> > > > be properly used to unlock the lock in xfs_inode_item_release()
+> > > > 
+> > > > I don't know of a cleaner way to communicate to xfs_inode_item_release() to
+> > > > unlock i_aops_sem after the transaction is complete.
+> > > 
+> > > We manually unlock inodes after transactions in many cases -
+> > > anywhere we do a rolling transaction, the inode locks do not get
+> > > released by the transaction. Hence for a one-off case like this it
+> > > doesn't really make sense to push all this infrastructure into the
+> > > transaction subsystem. Especially as we can manually lock before and
+> > > unlock after the transaction context without any real complexity.
 > > 
-> > If the primary superblock's sb_unit leads to a rootino calculation that
-> > doesn't match sb_rootino /but/ we can find a secondary superblock whose
-> > sb_unit does match, fix the primary.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
+> > So does xfs_trans_commit() operate synchronously?
 > 
-> With the previous patch issuing a warning
+> What do you mean by "synchronously", and what are you expecting to
+> occur (a)synchronously with respect to filesystem objects and/or
+> on-disk state?
 > 
-> +_("sb root inode value %" PRIu64 " valid but in unaligned location (expected %"PRIu64") possibly due to sunit change\n"),
+> Keep in mid that the xfs transaction subsystem is a complex
+> asynchronous IO engine full of feedback loops and resource
+> management,
+
+This is precisely why I added the lock to the transaction state.  So that I
+could guarantee that the lock will be released in the proper order when the
+complicated transaction subsystem was done with it.  I did not see any reason
+to allow operations to proceed before that time.  And so this seemed safe...
+
+> so asking if something is "synchronous" without any
+> other context is a difficult question to answer :)
+
+Or apparently it is difficult to even ask...  ;-)  (...not trying to be
+sarcastic.)  Seriously, I'm not an expert in this area so I did what I thought
+was most safe.  Which for me was the number 1 goal.
+
 > 
-> What does this do in the case where the user intentionally changed the
-> sunit, which is (I think) the situation launched this work in the first
-> place?
-
-[echoing what we just discussed on irc]
-
-repair will print the above warning, and then it'll try to find either a
-backup sb with a sunit value that makes the computation work, or guess
-at sunit values until it finds one that makes the computation work.  If
-it finds a reasonable sunit value it'll change it back to that.
-
-If the user mounts an old kernel with the same bad sunit value, the
-kernel will set it back to the bad value and we wash, rinse, and repeat.
-
-If the user mounts a new kernel with the same bad sunit value, it'll
-decline to change the sunit value.
-
-If the user runs the bad-sunit fs against an old xfs_repair it will
-descend into madness nuking the root directory, which is why we're
-trying to nudge ourselves away from the bad value.
-
-> Will that warning persist in the case of an intentional sunit change?
-
-Yes.
-
---D
-
-> Thanks,
-> -Eric
+> > I want to understand this better because I have fought with a lot of ABBA
+> > issues with these locks.  So...  can I hold the lock until after
+> > xfs_trans_commit() and safely unlock it there... because the XFS_MMAPLOCK_EXCL,
+> > XFS_IOLOCK_EXCL, and XFS_ILOCK_EXCL will be released at that point?  Thus
+> > preserving the following lock order.
 > 
+> See how operations like xfs_create, xfs_unlink, etc work. The don't
+> specify flags to xfs_ijoin(), and so the transaction commits don't
+> automatically unlock the inode.
+
+xfs_ijoin()?  Do you mean xfs_trans_ijoin()?
+
+> This is necessary so that rolling
+> transactions are executed atomically w.r.t. inode access - no-one
+> can lock and access the inode while a multi-commit rolling
+> transaction on the inode is on-going.
+> 
+> In this case it's just a single commit and we don't need to keep
+> it locked after the change is made, so we can unlock the inode
+> on commit. So for the XFS internal locks the code is fine and
+> doesn't need to change. We just need to wrap the VFS aops lock (if
+> we keep it) around the outside of all the XFS locking until the
+> transaction commits and unlocks the XFS locks...
+
+Ok, I went ahead and coded it up and it is testing now.  Everything looks good.
+I have to say that at this point I have to agree that I can't see how a
+deadlock could occur so...
+
+Thanks for the review,
+Ira
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
