@@ -2,131 +2,233 @@ Return-Path: <SRS0=HAJZ=4O=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ABD7C4BA06
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 02:06:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46D68C4BA09
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 02:13:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 25DAF21744
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 02:06:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 102B721744
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 02:13:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=lca.pw header.i=@lca.pw header.b="Rf+CVbYi"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="aOH0bGzI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729403AbgBZCGo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Feb 2020 21:06:44 -0500
-Received: from mail-qv1-f68.google.com ([209.85.219.68]:45538 "EHLO
-        mail-qv1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727809AbgBZCGo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Feb 2020 21:06:44 -0500
-Received: by mail-qv1-f68.google.com with SMTP id l14so608288qvu.12
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Feb 2020 18:06:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=lca.pw; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=NSkwZNOAHW8c739fmLnrfEAtdBwdaCvTO8Gg7YKI1a8=;
-        b=Rf+CVbYi5z8LNsUAgPb/YJeUfXPNLe4/iRX+Up3V3VHLLY2KxPkKFlCuqEh2zLwqrO
-         t2q7IVxnBeyRpDj3yJPm9d71aydf+FXdCkDWtpj1bUMeAg6RIQFjOhqC5rjkmY7izdjd
-         T3ds6ct/gdClzPmaG89AFYoNON9+rAw2qDdAkqTVa0ojnxIt567IODMwok7wbnQZnvu4
-         bhXurR4+z7IbsAM+t79v9VZDRekZfaj7AMdBDO7Uh195IFUW0vLkZyCWp1kUMc3qDNlC
-         IaX8OgE/34tU49jIOCiYqgLEREDNQOPusIXErXKBIGfokntQSqQG+OedlJJyfGLlWHxV
-         NHxg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=NSkwZNOAHW8c739fmLnrfEAtdBwdaCvTO8Gg7YKI1a8=;
-        b=LXdE0gtZIh+Ct/FhYfmKQUaHOqBk7Agpxq6dO86x3PDlwzWbWIWnLhSJdRdzdKssnW
-         IMbV5nKcYB5ltRoAqagtyA6PIK2LFoocCkmmAznx8DpNCtMtq8Qdqda/hKbFKCbSHF9g
-         weWhEw0qS5PokfXao6FDn7ZxLUWQvDoofLOfwx8Pdvv0WArSUyPWYwzvUgN8UF5AXsCL
-         kDNU+p3TzAuRy0EVKmNJVNT9MEk/O5EVTsMVcQUYgUHZLeaLeesu4wg4qmwj+5QV4NzX
-         yaxMSUyMwUJzVBmmdH2zl1CVAtaovhzGjNj6/fQRYsm0gYwjJ+UkqGsRp8b5acqiSKZR
-         4tHg==
-X-Gm-Message-State: APjAAAUyJ4esSymiZI3tGDuTW2KNO3AY5qG+Eem0RIVr14hjJGkmBfJ+
-        5aVDO89qNdwHkCRdwI5Eq0tnFw==
-X-Google-Smtp-Source: APXvYqyFkp00IAiNHBc2lKdiBE7KKll3+LIQTscMbLqIHkaNeczjw5hevunZRksLoakR7GI0I+XDOA==
-X-Received: by 2002:ad4:4e50:: with SMTP id eb16mr2386360qvb.34.1582682803407;
-        Tue, 25 Feb 2020 18:06:43 -0800 (PST)
-Received: from ovpn-121-122.rdu2.redhat.com (pool-71-184-117-43.bstnma.fios.verizon.net. [71.184.117.43])
-        by smtp.gmail.com with ESMTPSA id h12sm265718qtn.56.2020.02.25.18.06.42
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 25 Feb 2020 18:06:42 -0800 (PST)
-From:   Qian Cai <cai@lca.pw>
-To:     darrick.wong@oracle.com
-Cc:     hch@infradead.org, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Qian Cai <cai@lca.pw>
-Subject: [PATCH v3] xfs: fix an undefined behaviour in _da3_path_shift
-Date:   Tue, 25 Feb 2020 21:06:37 -0500
-Message-Id: <20200226020637.1065-1-cai@lca.pw>
-X-Mailer: git-send-email 2.21.0 (Apple Git-122.2)
+        id S1729498AbgBZCNs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Feb 2020 21:13:48 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:48808 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727809AbgBZCNs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Feb 2020 21:13:48 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01Q2CpJw104108;
+        Wed, 26 Feb 2020 02:13:45 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=qX225SgbfkdsBx6FtuyBV3atptpw+4NrlAKo1ohpRrE=;
+ b=aOH0bGzISHN0mIemuDH6p0VqthwLCQo97/9eeOawFiFYn93F2P1Rqqk0OWhkmltGFmvS
+ PzxCsyC24r6/Y2YdZBtvVwlnY44XwNt+Nt2WnJSyl4BxBZOUGMUnRHULjk+aDhRkHIeB
+ xE3332eCio54la/jdz9rO+BNDQQpcQ3JpeLnQ7XPgiXRtzMzoF7Nejm4/IGx2wU7J8g7
+ 67dJaBXoH1WmR5NIGRdS/y47mCFTqBEFOFB2yNa2Hl4POosKiS7YbGmwK2vWDd1/PAvG
+ rygpnl/T81PlULMlvKpYBR77U37qVU12DWtQp2hGOKtCythrTs+TZSCnDiAe+kixloZY 7g== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 2ydct30jbs-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 26 Feb 2020 02:13:45 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01Q2CM02016430;
+        Wed, 26 Feb 2020 02:13:45 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 2ydcs2nhes-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 26 Feb 2020 02:13:44 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01Q2DhHM023835;
+        Wed, 26 Feb 2020 02:13:43 GMT
+Received: from [192.168.1.9] (/67.1.3.112)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 25 Feb 2020 18:13:43 -0800
+Subject: Re: [PATCH v7 16/19] xfs: Simplify xfs_attr_set_iter
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <20200223020611.1802-1-allison.henderson@oracle.com>
+ <20200223020611.1802-17-allison.henderson@oracle.com>
+ <20200225092122.GK10776@dread.disaster.area>
+From:   Allison Collins <allison.henderson@oracle.com>
+Message-ID: <b0167c4e-7703-1805-7b58-42096fcee90a@oracle.com>
+Date:   Tue, 25 Feb 2020 19:13:42 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200225092122.GK10776@dread.disaster.area>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9542 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 phishscore=0
+ mlxlogscore=999 spamscore=0 suspectscore=0 mlxscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002260015
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9542 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 bulkscore=0
+ impostorscore=0 spamscore=0 priorityscore=1501 malwarescore=0 adultscore=0
+ phishscore=0 mlxlogscore=999 mlxscore=0 suspectscore=0 clxscore=1015
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002260015
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-In xfs_da3_path_shift() "blk" can be assigned to state->path.blk[-1] if
-state->path.active is 1 (which is a valid state) when it tries to add an
-entry to a single dir leaf block and then to shift forward to see if
-there's a sibling block that would be a better place to put the new
-entry. This causes a UBSAN warning given negative array indices are
-undefined behavior in C. In practice the warning is entirely harmless
-given that "blk" is never dereferenced in this case, but it is still
-better to fix up the warning and slightly improve the code.
 
- UBSAN: Undefined behaviour in fs/xfs/libxfs/xfs_da_btree.c:1989:14
- index -1 is out of range for type 'xfs_da_state_blk_t [5]'
- Call trace:
-  dump_backtrace+0x0/0x2c8
-  show_stack+0x20/0x2c
-  dump_stack+0xe8/0x150
-  __ubsan_handle_out_of_bounds+0xe4/0xfc
-  xfs_da3_path_shift+0x860/0x86c [xfs]
-  xfs_da3_node_lookup_int+0x7c8/0x934 [xfs]
-  xfs_dir2_node_addname+0x2c8/0xcd0 [xfs]
-  xfs_dir_createname+0x348/0x38c [xfs]
-  xfs_create+0x6b0/0x8b4 [xfs]
-  xfs_generic_create+0x12c/0x1f8 [xfs]
-  xfs_vn_mknod+0x3c/0x4c [xfs]
-  xfs_vn_create+0x34/0x44 [xfs]
-  do_last+0xd4c/0x10c8
-  path_openat+0xbc/0x2f4
-  do_filp_open+0x74/0xf4
-  do_sys_openat2+0x98/0x180
-  __arm64_sys_openat+0xf8/0x170
-  do_el0_svc+0x170/0x240
-  el0_sync_handler+0x150/0x250
-  el0_sync+0x164/0x180
 
-Suggested-by: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Qian Cai <cai@lca.pw>
----
+On 2/25/20 2:21 AM, Dave Chinner wrote:
+> On Sat, Feb 22, 2020 at 07:06:08PM -0700, Allison Collins wrote:
+>> Delayed attribute mechanics make frequent use of goto statements.  We can use this
+>> to further simplify xfs_attr_set_iter.  Because states tend to fall between if
+>> conditions, we can invert the if logic and jump to the goto. This helps to reduce
+>> indentation and simplify things.
+>>
+>> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+>> ---
+>>   fs/xfs/libxfs/xfs_attr.c | 71 ++++++++++++++++++++++++++++--------------------
+>>   1 file changed, 42 insertions(+), 29 deletions(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+>> index 30a16fe..dd935ff 100644
+>> --- a/fs/xfs/libxfs/xfs_attr.c
+>> +++ b/fs/xfs/libxfs/xfs_attr.c
+>> @@ -254,6 +254,19 @@ xfs_attr_try_sf_addname(
+>>   }
+>>   
+>>   /*
+>> + * Check to see if the attr should be upgraded from non-existent or shortform to
+>> + * single-leaf-block attribute list.
+>> + */
+>> +static inline bool
+>> +xfs_attr_fmt_needs_update(
+>> +	struct xfs_inode    *dp)
+> 
+> Can we use *ip for the inode in newly factored code helpers like
+> this?
 
- v3: Borrow the commit log from Christoph.
- v2: Update the commit log thanks to Darrick.
-     Simplify the code.
+Sure, will fix
 
- fs/xfs/libxfs/xfs_da_btree.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+>> +{
+>> +	return dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL ||
+>> +	      (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
+>> +	      dp->i_d.di_anextents == 0);
+>> +}
+>> +
+>> +/*
+>>    * Set the attribute specified in @args.
+>>    */
+>>   int
+>> @@ -342,40 +355,40 @@ xfs_attr_set_iter(
+>>   	}
+>>   
+>>   	/*
+>> -	 * If the attribute list is non-existent or a shortform list,
+>> -	 * upgrade it to a single-leaf-block attribute list.
+>> +	 * If the attribute list is already in leaf format, jump straight to
+>> +	 * leaf handling.  Otherwise, try to add the attribute to the shortform
+>> +	 * list; if there's no room then convert the list to leaf format and try
+>> +	 * again.
+>>   	 */
+>> -	if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL ||
+>> -	    (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
+>> -	     dp->i_d.di_anextents == 0)) {
+>> +	if (!xfs_attr_fmt_needs_update(dp))
+>> +		goto add_leaf;
+> 
+> The logic seems inverted to me here, but that really indicates a
+> sub-optimal function name. It's really checking if the attribute
+> fork is empty or in shortform format. Hence:
+> 
+> 	if (!xfs_attr_is_shortform(dp))
+> 		goto add_leaf;
+> 
+Ok, this had come up in the last review too, we had tried to simplify it 
+to an "is_leaf" helper, though it turned out the logic didnt quite work 
+the same functionally, so I put it back and renamed it "needs_update". 
+I think "is_shortform" is a closer description though.  Will update.
 
-diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index 875e04f82541..e864c3d47f60 100644
---- a/fs/xfs/libxfs/xfs_da_btree.c
-+++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -1986,7 +1986,8 @@ xfs_da3_path_shift(
- 	ASSERT(path != NULL);
- 	ASSERT((path->active > 0) && (path->active < XFS_DA_NODE_MAXDEPTH));
- 	level = (path->active-1) - 1;	/* skip bottom layer in path */
--	for (blk = &path->blk[level]; level >= 0; blk--, level--) {
-+	for (; level >= 0; level--) {
-+		blk = &path->blk[level];
- 		xfs_da3_node_hdr_from_disk(dp->i_mount, &nodehdr,
- 					   blk->bp->b_addr);
- 
--- 
-2.21.0 (Apple Git-122.2)
+>> -		/*
+>> -		 * Try to add the attr to the attribute list in the inode.
+>> -		 */
+>> -		error = xfs_attr_try_sf_addname(dp, args);
+>> +	/*
+>> +	 * Try to add the attr to the attribute list in the inode.
+>> +	 */
+>> +	error = xfs_attr_try_sf_addname(dp, args);
+>>   
+>> -		/* Should only be 0, -EEXIST or ENOSPC */
+>> -		if (error != -ENOSPC)
+>> -			return error;
+>> +	/* Should only be 0, -EEXIST or ENOSPC */
+>> +	if (error != -ENOSPC)
+>> +		return error;
+>>   
+>> -		/*
+>> -		 * It won't fit in the shortform, transform to a leaf block.
+>> -		 * GROT: another possible req'mt for a double-split btree op.
+>> -		 */
+>> -		error = xfs_attr_shortform_to_leaf(args, leaf_bp);
+>> -		if (error)
+>> -			return error;
+>> +	/*
+>> +	 * It won't fit in the shortform, transform to a leaf block.
+>> +	 * GROT: another possible req'mt for a double-split btree op.
+>> +	 */
+>> +	error = xfs_attr_shortform_to_leaf(args, leaf_bp);
+>> +	if (error)
+>> +		return error;
+>>   
+>> -		/*
+>> -		 * Prevent the leaf buffer from being unlocked so that a
+>> -		 * concurrent AIL push cannot grab the half-baked leaf
+>> -		 * buffer and run into problems with the write verifier.
+>> -		 */
+>> -		xfs_trans_bhold(args->trans, *leaf_bp);
+>> -		args->dac.flags |= XFS_DAC_FINISH_TRANS;
+>> -		args->dac.dela_state = XFS_DAS_ADD_LEAF;
+>> -		return -EAGAIN;
+>> -	}
+>> +	/*
+>> +	 * Prevent the leaf buffer from being unlocked so that a
+>> +	 * concurrent AIL push cannot grab the half-baked leaf
+>> +	 * buffer and run into problems with the write verifier.
+>> +	 */
+>> +	xfs_trans_bhold(args->trans, *leaf_bp);
+>> +	args->dac.flags |= XFS_DAC_FINISH_TRANS;
+>> +	args->dac.dela_state = XFS_DAS_ADD_LEAF;
+>> +	return -EAGAIN;
+> 
+> Heh. This is an example of exactly why I think this should be
+> factored into functions first. Move all the code you just
+> re-indented into xfs_attr_set_shortform(), and the goto disappears
+> because this code becomes:
+> 
+> 	if (xfs_attr_is_shortform(dp))
+> 		return xfs_attr_set_shortform(dp, args);
+> 
+> add_leaf:
+> 
+> That massively improves the readability of the code - it separates
+> the operation implementation from the decision logic nice and
+> cleanly, and lends itself to being implemented in the delayed attr
+> state machine without needing gotos at all.
+Sure, I actually had it more like that in the last version.  I flipped 
+it around because I thought it would help people understand what the 
+refactoring was for if they could see it in context with the states. 
+But if the other way is more helpful, its easy to put back.  Will move :-)
 
+Allison
+> 
+> Cheers,
+> 
+> Dave.
+> 
