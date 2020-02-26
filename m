@@ -6,23 +6,23 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25C38C4BA18
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 18:21:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F15C9C4BA21
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 18:45:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 040F524656
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 18:21:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB63524672
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 18:45:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726789AbgBZSVd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 26 Feb 2020 13:21:33 -0500
-Received: from sandeen.net ([63.231.237.45]:42976 "EHLO sandeen.net"
+        id S1727144AbgBZSp5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 26 Feb 2020 13:45:57 -0500
+Received: from sandeen.net ([63.231.237.45]:44210 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726416AbgBZSVd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 26 Feb 2020 13:21:33 -0500
+        id S1726878AbgBZSp4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 26 Feb 2020 13:45:56 -0500
 Received: from Liberator.local (unknown [208.115.86.65])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id D94C315D97;
-        Wed, 26 Feb 2020 12:21:06 -0600 (CST)
+        by sandeen.net (Postfix) with ESMTPSA id 5BB7815D97;
+        Wed, 26 Feb 2020 12:45:29 -0600 (CST)
 Subject: Re: [PATCH 2/2 V3] xfs: don't take addresses of packed xfs_rmap_key
  member
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
@@ -33,6 +33,7 @@ References: <65e48930-96ae-7307-ba65-6b7528bb2fb5@redhat.com>
  <b44b9c6e-4c40-2670-8c38-874a79e0d066@redhat.com>
  <06b937e3-afaf-41c0-3477-a4b1a88fee48@redhat.com>
  <20200226180608.GI8045@magnolia>
+ <8887d4c6-0dc7-93b3-9137-3e8de473ba5e@sandeen.net>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -76,12 +77,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <8887d4c6-0dc7-93b3-9137-3e8de473ba5e@sandeen.net>
-Date:   Wed, 26 Feb 2020 10:21:30 -0800
+Message-ID: <d0584dfe-35c7-71d0-13b4-c4513778b9d9@sandeen.net>
+Date:   Wed, 26 Feb 2020 10:45:53 -0800
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.5.0
 MIME-Version: 1.0
-In-Reply-To: <20200226180608.GI8045@magnolia>
+In-Reply-To: <8887d4c6-0dc7-93b3-9137-3e8de473ba5e@sandeen.net>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -90,25 +91,35 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/26/20 10:06 AM, Darrick J. Wong wrote:
-> On Wed, Jan 29, 2020 at 12:35:21PM -0600, Eric Sandeen wrote:
 
-...
 
->> @@ -187,7 +187,9 @@ xfs_rmapbt_init_high_key_from_rec(
->>  	adj = be32_to_cpu(rec->rmap.rm_blockcount) - 1;
->>  
->>  	key->rmap.rm_startblock = rec->rmap.rm_startblock;
->> -	be32_add_cpu(&key->rmap.rm_startblock, adj);
->> +	/* do this manually to avoid gcc warning about alignment */
->> +	key->rmap.rm_startblock =
->> +		cpu_to_be32(be32_to_cpu(key->rmap.rm_startblock) - adj);
+On 2/26/20 10:21 AM, Eric Sandeen wrote:
+> On 2/26/20 10:06 AM, Darrick J. Wong wrote:
+>> On Wed, Jan 29, 2020 at 12:35:21PM -0600, Eric Sandeen wrote:
 > 
-> <blink>
+> ...
 > 
-> This should be getting the value from rec->rmap, not key->rmap.
+>>> @@ -187,7 +187,9 @@ xfs_rmapbt_init_high_key_from_rec(
+>>>  	adj = be32_to_cpu(rec->rmap.rm_blockcount) - 1;
+>>>  
+>>>  	key->rmap.rm_startblock = rec->rmap.rm_startblock;
+>>> -	be32_add_cpu(&key->rmap.rm_startblock, adj);
+>>> +	/* do this manually to avoid gcc warning about alignment */
+>>> +	key->rmap.rm_startblock =
+>>> +		cpu_to_be32(be32_to_cpu(key->rmap.rm_startblock) - adj);
+>>
+>> <blink>
+>>
+>> This should be getting the value from rec->rmap, not key->rmap.
+>>
+>> This should be adding adj, not subtracting it, since that's what the
+>> original code did.
 > 
-> This should be adding adj, not subtracting it, since that's what the
-> original code did.
+> *sigh* I got nothin' here tbh.
+> 
 
-*sigh* I got nothin' here tbh.
+Let's just drop this patch.  The first patch in this series is obviated by
+hch's work and AFAIK the kernel just turned off this warning, we can do
+the same in userspace and make this 2nd issue go away.
+
+-Eric
