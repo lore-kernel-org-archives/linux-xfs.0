@@ -2,118 +2,106 @@ Return-Path: <SRS0=HAJZ=4O=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FE1BC4BA1F
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 17:13:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 672F1C4BA13
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 17:19:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EBC45206E2
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 17:13:40 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="M7uNS8Wb"
+	by mail.kernel.org (Postfix) with ESMTP id 4795F24680
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 17:19:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726822AbgBZRNf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 26 Feb 2020 12:13:35 -0500
-Received: from hqnvemgate24.nvidia.com ([216.228.121.143]:18005 "EHLO
-        hqnvemgate24.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726561AbgBZRNf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Feb 2020 12:13:35 -0500
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate24.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5e56a6ef0000>; Wed, 26 Feb 2020 09:12:16 -0800
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate101.nvidia.com (PGP Universal service);
-  Wed, 26 Feb 2020 09:13:34 -0800
-X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Wed, 26 Feb 2020 09:13:34 -0800
-Received: from [172.16.126.1] (10.124.1.5) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Wed, 26 Feb
- 2020 17:13:32 +0000
-From:   Zi Yan <ziy@nvidia.com>
-To:     Matthew Wilcox <willy@infradead.org>
-CC:     <linux-fsdevel@vger.kernel.org>, <linux-mm@kvack.org>,
-        <linux-kernel@vger.kernel.org>, <linux-btrfs@vger.kernel.org>,
-        <linux-erofs@lists.ozlabs.org>, <linux-ext4@vger.kernel.org>,
-        <linux-f2fs-devel@lists.sourceforge.net>,
-        <cluster-devel@redhat.com>, <ocfs2-devel@oss.oracle.com>,
-        <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH v8 07/25] mm: Rename various 'offset' parameters to
- 'index'
-Date:   Wed, 26 Feb 2020 12:13:30 -0500
-X-Mailer: MailMate (1.13.1r5676)
-Message-ID: <0681AC00-BFA7-4C1B-9E92-6B36FA906924@nvidia.com>
-In-Reply-To: <20200225214838.30017-8-willy@infradead.org>
-References: <20200225214838.30017-1-willy@infradead.org>
- <20200225214838.30017-8-willy@infradead.org>
+        id S1726148AbgBZRTz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 26 Feb 2020 12:19:55 -0500
+Received: from sandeen.net ([63.231.237.45]:39838 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726277AbgBZRTz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 26 Feb 2020 12:19:55 -0500
+Received: from Liberator.local (unknown [208.115.86.65])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 4EFDC15D97;
+        Wed, 26 Feb 2020 11:19:29 -0600 (CST)
+Subject: Re: [PATCH 3/7] xfs_repair: enforce that inode btree chunks can't
+ point to AG headers
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, alex@zadara.com
+References: <158086359783.2079685.9581209719946834913.stgit@magnolia>
+ <158086361666.2079685.8451949513769071894.stgit@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <402fd276-109a-3f46-8b9f-68bcf836c001@sandeen.net>
+Date:   Wed, 26 Feb 2020 09:19:53 -0800
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.5.0
 MIME-Version: 1.0
-X-Originating-IP: [10.124.1.5]
-X-ClientProxiedBy: HQMAIL105.nvidia.com (172.20.187.12) To
- HQMAIL107.nvidia.com (172.20.187.13)
-Content-Type: multipart/signed;
-        boundary="=_MailMate_07A99A6D-503B-4120-84DB-898871E175DC_=";
-        micalg=pgp-sha512; protocol="application/pgp-signature"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1582737136; bh=mg3n04aLS3/0aW0eyWChE9vpAgeCbiunpfGU7AghRnM=;
-        h=X-PGP-Universal:From:To:CC:Subject:Date:X-Mailer:Message-ID:
-         In-Reply-To:References:MIME-Version:X-Originating-IP:
-         X-ClientProxiedBy:Content-Type;
-        b=M7uNS8WbS5inK7ffF1gDGqi6BEnQKPsrcjMLXdvezxqm0AiTFvwllSVW/w8n59f9F
-         V34n2s9nEVY/4D6//i/EKK3lz0KuHjR3/AgLEuzhAH8zTRapedCwdzvdMzLgfssxVk
-         6uuoU0/a0CeBBeWlpM+GBiX4U36tZbBkrzY2AgMOcah+bFG40dbvC3bzNBqVuiQfnn
-         7B23COHktbG67CvYwyCLEeevESVB1M0ttcUXyjDxpyKQzFZ/o14kx7Vlnjp1Vl3kYh
-         QPNIQpY+qazBjfLuQS9hBZsPPYD+/0AGowk4y/Yrv7Es5gxHxuSBtcU0OCfz4sOxIR
-         54TA+M6T9wTUg==
+In-Reply-To: <158086361666.2079685.8451949513769071894.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
---=_MailMate_07A99A6D-503B-4120-84DB-898871E175DC_=
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+On 2/4/20 4:46 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> xfs_repair has a very old check that evidently excuses the AG 0 inode
+> btrees pointing to blocks that are already marked XR_E_INUSE_FS* (e.g.
+> AG headers).  mkfs never formats filesystems that way and it looks like
+> an error, so purge the check.  After this, we always complain if inodes
+> overlap with AG headers because that should never happen.
 
-On 25 Feb 2020, at 16:48, Matthew Wilcox wrote:
+On a previous version, you and Brian had a fairly long conversation about
+the warning this presents, and how it doesn't tell the user what to do
+about it, and how the warning will persist, and may generate bug reports
+or questions.
 
-> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
->
-> The word 'offset' is used ambiguously to mean 'byte offset within
-> a page', 'byte offset from the start of the file' and 'page offset
-> from the start of the file'.  Use 'index' to mean 'page offset
-> from the start of the file' throughout the readahead code.
->
-> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+It sounded like you had a plan to address that, which does not seem to be
+present in this patch? So I'm not sure Brian's concerns have been resolved
+yet.
 
-Looks good to me.
-
-Reviewed-by: Zi Yan <ziy@nvidia.com>
-
-=E2=80=94
-Best Regards,
-Yan Zi
-
---=_MailMate_07A99A6D-503B-4120-84DB-898871E175DC_=
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQJDBAEBCgAtFiEEh7yFAW3gwjwQ4C9anbJR82th+ooFAl5WpzoPHHppeUBudmlk
-aWEuY29tAAoJEJ2yUfNrYfqKV10P/3wdODr0Q7tZ/M8jMum6zEQU0MY220Wz5wz6
-/mYps3gNEW6eEhbFsQpnK4823yVMDfBih1WwZLdS/6HbJlXHjhTfcLtEFLdkxyPJ
-DuWVLGx0uTRwFpUI9Lafd/SpIKAYfnyNi82WlR85zfoFbD4aQSkH19hRScGERL0B
-sig3qcFbjLk9Ej7AbviIflLo7gvPaui2EgVjubLfWgUW66U0X7vnCu355fRnlkmK
-3Fa9Ipx8EoTp6CG4PWteDdp8lP8CvdJwZKfluaHj/NJjOqxpL/SUTuF9FXtr8nov
-l6pElk5cSwy4T4gvyhfmUIYSptxeU+KJSx3hA687R53i9gCQqLepFRwbhe03M87h
-2p63F1KGiqm4uzJSDTiKyRLBJOrpDQRjpZSSQ2XBQUOHd2tDHSN5l/2ADupYaF2Y
-zXvGbPgzVdHRVY0Ijsu6DqPk0aJfbvtOPZHWfZ9FEVoSj+viLH/AB/8l7OEEGS9M
-3h1dW2ghyuDEZfbTB6ow7XVEd2d1B8xxiGTlg13HU2KSuJQlkVGbEZV2Zw9Z/bQx
-sYt9io5U0tZ2Q4M8pBiuHeEK3LbKSdXf0kHj0Ovnxg+njzZlZgCfnn2mJOPSdBqs
-YksF5IfUgMM+j9I94cj8dJJIz1HyLGox6fq4DxluYIIBkOcVFfinqTqRjgr/AxX+
-P6tLcgNH
-=g1cC
------END PGP SIGNATURE-----
-
---=_MailMate_07A99A6D-503B-4120-84DB-898871E175DC_=--
+-Eric
