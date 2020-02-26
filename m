@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7912C4BA21
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 20:25:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52C2DC4BA21
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 20:26:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6FBDF20714
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 20:25:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 19F5524656
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 20:26:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tJ+Ft5TA"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="oUQ1t8dQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727350AbgBZUZ6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 26 Feb 2020 15:25:58 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:35932 "EHLO
+        id S1727405AbgBZU0C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 26 Feb 2020 15:26:02 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:36514 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727260AbgBZUZ5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Feb 2020 15:25:57 -0500
+        with ESMTP id S1727260AbgBZU0C (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Feb 2020 15:26:02 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=l5nIo65zNVUuRANK+XB/oBebCMOJCs5q82C/puyD9Ug=; b=tJ+Ft5TAJBJPdfm2DMlgeUbFVP
-        iYSlJca1KBnYd5qiFrlub1dA34HnpBX6UhKboX4HSsHKgiOSz8kLDZ7pKxN5P5q3Xh6YzjqqT4BIO
-        4hx/lMRFT46HXOjjLCCJK5svQ3IpVWSWu/Djszq7Ho+88byQlOygKM4K3+bF1uVRL6Alc9NQV4Pjn
-        iSu07lj+nl+8xt5x1lwHl4ilizCXXKQ9gidX4Zu896p2FAaNBcbBmX8Mig5lFp9OLofmbzE+FXKcy
-        MPDM00RJZAEW5iEhM1io7b0cdEsceZ/lL1ZmsK54jroXwJaroxbktUAaBUSjJBUbdzJmBlg9TGl0g
-        yL/puS3w==;
+        bh=FbTDfEku8X3sYEROnPmmi7MHgFo6VxbiNSURZ/ir73Y=; b=oUQ1t8dQUUweyoWB1zNTzKhZep
+        42AyF3doegAq31fyyBnxtuQDiEijel4Y77hBOUTTMTCbDHf7Uvrnxlp83zRW1cx4cFOg4xr2UC68e
+        IHy3bQD9Wjyd/Wn+7ovxYwpNV3ZrnmKi+wJlanGW45noQHiHb+ILMm/j1etO5YlrzS87W+sRrcrAI
+        CNHB7cXUI79Z0gf1QF22EhUC2XDXwfLerth2c5g9z1kLiuzcFmAJOfEUGmixDw/DxdOBPAlpyqsDD
+        zc0Zc8cyzrBa43QUc743QD2edq4B53DtmQvVPZMP0El9Mf2MVELr8X3Ux2oce1IMuIeP4t0NNVVzJ
+        gFynLBYA==;
 Received: from [199.255.44.128] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j73Fl-0001W2-0h; Wed, 26 Feb 2020 20:25:57 +0000
+        id 1j73Fq-0001cf-Bp; Wed, 26 Feb 2020 20:26:02 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
 Cc:     Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH 31/32] xfs: only allocate the buffer size actually needed in __xfs_set_acl
-Date:   Wed, 26 Feb 2020 12:23:05 -0800
-Message-Id: <20200226202306.871241-32-hch@lst.de>
+Subject: [PATCH 32/32] xfs: switch xfs_attrmulti_attr_get to lazy attr buffer allocation
+Date:   Wed, 26 Feb 2020 12:23:06 -0800
+Message-Id: <20200226202306.871241-33-hch@lst.de>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200226202306.871241-1-hch@lst.de>
 References: <20200226202306.871241-1-hch@lst.de>
@@ -51,37 +51,31 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-No need to allocate the max size if we can just allocate the easily
-known actual ACL size.
+Let the low-level attr code only allocate the needed buffer size
+for xfs_attrmulti_attr_get instead of allocating the upper bound
+at the top of the call chain.
 
 Suggested-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_acl.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+ fs/xfs/xfs_ioctl.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-index 552258399648..5807f11aed3e 100644
---- a/fs/xfs/xfs_acl.c
-+++ b/fs/xfs/xfs_acl.c
-@@ -187,16 +187,11 @@ __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
- 	args.namelen = strlen(args.name);
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index c805fdf4ea39..47a92400929b 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -481,10 +481,6 @@ xfs_attrmulti_attr_get(
+ 	if (*len > XFS_XATTR_SIZE_MAX)
+ 		return -EINVAL;
  
- 	if (acl) {
--		args.valuelen = XFS_ACL_MAX_SIZE(ip->i_mount);
-+		args.valuelen = XFS_ACL_SIZE(acl->a_count);
- 		args.value = kmem_zalloc_large(args.valuelen, 0);
- 		if (!args.value)
- 			return -ENOMEM;
+-	args.value = kmem_zalloc_large(*len, 0);
+-	if (!args.value)
+-		return -ENOMEM;
 -
- 		xfs_acl_to_disk(args.value, acl);
--
--		/* subtract away the unused acl entries */
--		args.valuelen -= sizeof(struct xfs_acl_entry) *
--			 (XFS_ACL_MAX_ENTRIES(ip->i_mount) - acl->a_count);
- 	}
- 
- 	error = xfs_attr_set(&args);
+ 	error = xfs_attr_get(&args);
+ 	if (error)
+ 		goto out_kfree;
 -- 
 2.24.1
 
