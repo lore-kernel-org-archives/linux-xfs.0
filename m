@@ -2,179 +2,249 @@ Return-Path: <SRS0=HAJZ=4O=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81C14C4BA0E
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 11:56:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F293C4BA12
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 13:48:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 53E9824656
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 11:56:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1CEEA24685
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Feb 2020 13:48:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iuRisaG0"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JfVZSpSL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726822AbgBZL4i (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 26 Feb 2020 06:56:38 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:50078 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726564AbgBZL4h (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Feb 2020 06:56:37 -0500
+        id S1726561AbgBZNsF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 26 Feb 2020 08:48:05 -0500
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:56231 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726555AbgBZNsF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Feb 2020 08:48:05 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1582718196;
+        s=mimecast20190719; t=1582724883;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Kes1Xqw+1cWrJLQG0qYyTWlY5Y7hTOalTGh/2tQIWrw=;
-        b=iuRisaG0xBxBJb3LjcnE3SM4nSQgPjpW+2t8t7GRGKIObVFxCwEjjqeue6zUBvVDtV/zA2
-        VWIowZIAPsB+BLwLpSo03DRrPWmqhWTIQKwy31/qyHRM0Rva6kKX7SQRmEzFQhn+XHkk5B
-        3d+8zSFdNppTXVMwf65BX1FwPhken+E=
+        bh=dqudIg5VfAUH+Ye1CEvssnF8luPqbUk2FdkE2tUcXso=;
+        b=JfVZSpSLXxK8ko5KG874PpO9wZwrrK8xT3UtBevi1Tbrbq6K0E3/t3jut+jUaR3yecszc+
+        3TbICiyslvquryQc1p8TdS+kYenCPK4PI/mTdS1jTZda03pRqQsIAD4IrQSzD+CtnkrwO7
+        KEUyMGXDA+V3sE9fZjYGMnH4SI3/PCk=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-215-sDzgd2KaPoCrKXXKjP6e-w-1; Wed, 26 Feb 2020 06:56:35 -0500
-X-MC-Unique: sDzgd2KaPoCrKXXKjP6e-w-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+ us-mta-37-qBd4qT_mPquPg3XyRPKteg-1; Wed, 26 Feb 2020 08:48:02 -0500
+X-MC-Unique: qBd4qT_mPquPg3XyRPKteg-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1816418FE860;
-        Wed, 26 Feb 2020 11:56:33 +0000 (UTC)
-Received: from mohegan.the-transcend.com (unknown [10.36.118.5])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 6453B10027AE;
-        Wed, 26 Feb 2020 11:56:30 +0000 (UTC)
-Subject: Re: [PATCH V4 07/13] fs: Add locking for a dynamic address space
- operations state
-To:     Jan Kara <jack@suse.cz>
-Cc:     Jeff Moyer <jmoyer@redhat.com>, Christoph Hellwig <hch@lst.de>,
-        Dave Chinner <david@fromorbit.com>, ira.weiny@intel.com,
-        linux-kernel@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-References: <20200221004134.30599-1-ira.weiny@intel.com>
- <20200221004134.30599-8-ira.weiny@intel.com> <20200221174449.GB11378@lst.de>
- <20200221224419.GW10776@dread.disaster.area> <20200224175603.GE7771@lst.de>
- <20200225000937.GA10776@dread.disaster.area> <20200225173633.GA30843@lst.de>
- <x49fteyh313.fsf@segfault.boston.devel.redhat.com>
- <a126276c-d252-6050-b6ee-4d6448d45fac@redhat.com>
- <20200226113130.GG10728@quack2.suse.cz>
-From:   Jonathan Halliday <jonathan.halliday@redhat.com>
-Message-ID: <95f5eaab-d961-bab6-e9c4-a14282f7f378@redhat.com>
-Date:   Wed, 26 Feb 2020 11:56:29 +0000
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DD571107ACC5;
+        Wed, 26 Feb 2020 13:48:00 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6BA3560BE1;
+        Wed, 26 Feb 2020 13:48:00 +0000 (UTC)
+Date:   Wed, 26 Feb 2020 08:47:58 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Allison Collins <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v7 12/19] xfs: Add helper function xfs_attr_rmtval_unmap
+Message-ID: <20200226134758.GA19695@bfoster>
+References: <20200223020611.1802-1-allison.henderson@oracle.com>
+ <20200223020611.1802-13-allison.henderson@oracle.com>
+ <20200224134022.GF15761@bfoster>
+ <f8aec2fb-09ef-f636-913c-41b8a5474a9b@oracle.com>
+ <20200225132710.GC21304@bfoster>
+ <bcb14769-5f5e-4983-9413-f4fa03e921dc@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <20200226113130.GG10728@quack2.suse.cz>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bcb14769-5f5e-4983-9413-f4fa03e921dc@oracle.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 26/02/2020 11:31, Jan Kara wrote:
-> Hello,
+On Tue, Feb 25, 2020 at 08:29:06PM -0700, Allison Collins wrote:
 > 
-> On Wed 26-02-20 09:28:57, Jonathan Halliday wrote:
->> I'm a middleware developer, focused on how Java (JVM) workloads can benefit
->> from app-direct mode pmem. Initially the target is apps that need a fast
->> binary log for fault tolerance: the classic database WAL use case;
->> transaction coordination systems; enterprise message bus persistence and
->> suchlike. Critically, there are cases where we use log based storage, i.e.
->> it's not the strict 'read rarely, only on recovery' model that a classic db
->> may have, but more of a 'append only, read many times' event stream model.
->>
->> Think of the log oriented data storage as having logical segments (let's
->> implement them as files), of which the most recent is being appended to
->> (read_write) and the remaining N-1 older segments are full and sealed, so
->> effectively immutable (read_only) until discarded. The tail segment needs to
->> be in DAX mode for optimal write performance, as the size of the append may
->> be sub-block and we don't want the overhead of the kernel call anyhow. So
->> that's clearly a good fit for putting on a DAX fs mount and using mmap with
->> MAP_SYNC.
->>
->> However, we want fast read access into the segments, to retrieve stored
->> records. The small access index can be built in volatile RAM (assuming we're
->> willing to take the startup overhead of a full file scan at recovery time)
->> but the data itself is big and we don't want to move it all off pmem. Which
->> means the requirements are now different: we want the O/S cache to pull hot
->> data into fast volatile RAM for us, which DAX explicitly won't do.
->> Effectively a poor man's 'memory mode' pmem, rather than app-direct mode,
->> except here we're using the O/S rather than the hardware memory controller
->> to do the cache management for us.
->>
->> Currently this requires closing the full (read_write) file, then copying it
->> to a non-DAX device and reopening it (read_only) there. Clearly that's
->> expensive and rather tedious. Instead, I'd like to close the MAP_SYNC mmap,
->> then, leaving the file where it is, reopen it in a mode that will instead go
->> via the O/S cache in the traditional manner. Bonus points if I can do it
->> over non-overlapping ranges in a file without closing the DAX mode mmap,
->> since then the segments are entirely logical instead of needing separate
->> physical files.
->>
->> I note a comment below regarding a per-directly setting, but don't have the
->> background to fully understand what's being suggested. However, I'll note
->> here that I can live with a per-directory granularity, as relinking a file
->> into a new dir is a constant time operation, whilst the move described above
->> isn't. So if a per-directory granularity is easier than a per-file one
->> that's fine, though as a person with only passing knowledge of filesystem
->> design I don't see how having multiple links to a file can work cleanly in
->> that case.
 > 
-> Well, with per-directory setting, relinking the file will not magically
-> make it stop using DAX. So your situation would be very similar to the
-> current one, except "copy to non-DAX device" can be replaced by "copy to
-> non-DAX directory". Maybe the "copy" part could be actually reflink which
-> would make it faster.
-
-Indeed. The requirement is for 'change mode in constant time' rather 
-than the current 'change mode in time proportional to file size'. That 
-seems to imply requiring the approach to just change fs metadata, 
-without relocating the file data bytes. Beyond that I'm largely 
-indifferent to the implementation details.
-
->> P.S. I'll cheekily take the opportunity of having your attention to tack on
->> one minor gripe about the current system: The only way to know if a mmap
->> with MAP_SYNC will work is to try it and catch the error. Which would be
->> reasonable if it were free of side effects.  However, the process requires
->> first expanding the file to at least the size of the desired map, which is
->> done non-atomically i.e. is user visible. There are thus nasty race
->> conditions in the cleanup, where after a failed mmap attempt (e.g the device
->> doesn't support DAX), we try to shrink the file back to its original size,
->> but something else has already opened it at its new, larger size. This is
->> not theoretical: I got caught by it whilst adapting some of our middleware
->> to use pmem.  Therefore, some way to probe the file path for its capability
->> would be nice, much the same as I can e.g. inspect file permissions to (more
->> or less) evaluate if I can write it without actually mutating it.  Thanks!
+> On 2/25/20 6:27 AM, Brian Foster wrote:
+> > On Mon, Feb 24, 2020 at 02:44:14PM -0700, Allison Collins wrote:
+> > > 
+> > > 
+> > > On 2/24/20 6:40 AM, Brian Foster wrote:
+> > > > On Sat, Feb 22, 2020 at 07:06:04PM -0700, Allison Collins wrote:
+> > > > > This function is similar to xfs_attr_rmtval_remove, but adapted to return EAGAIN for
+> > > > > new transactions. We will use this later when we introduce delayed attributes
+> > > > > 
+> > > > > Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+> > > > > ---
+> > > > >    fs/xfs/libxfs/xfs_attr_remote.c | 28 ++++++++++++++++++++++++++++
+> > > > >    fs/xfs/libxfs/xfs_attr_remote.h |  1 +
+> > > > >    2 files changed, 29 insertions(+)
+> > > > > 
+> > > > > diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+> > > > > index 3de2eec..da40f85 100644
+> > > > > --- a/fs/xfs/libxfs/xfs_attr_remote.c
+> > > > > +++ b/fs/xfs/libxfs/xfs_attr_remote.c
+> > > > > @@ -711,3 +711,31 @@ xfs_attr_rmtval_remove(
+> > > > >    	}
+> > > > >    	return 0;
+> > > > >    }
+> > > > > +
+> > > > > +/*
+> > > > > + * Remove the value associated with an attribute by deleting the out-of-line
+> > > > > + * buffer that it is stored on. Returns EAGAIN for the caller to refresh the
+> > > > > + * transaction and recall the function
+> > > > > + */
+> > > > > +int
+> > > > > +xfs_attr_rmtval_unmap(
+> > > > > +	struct xfs_da_args	*args)
+> > > > > +{
+> > > > > +	int	error, done;
+> > > > > +
+> > > > > +	/*
+> > > > > +	 * Unmap value blocks for this attr.  This is similar to
+> > > > > +	 * xfs_attr_rmtval_remove, but open coded here to return EAGAIN
+> > > > > +	 * for new transactions
+> > > > > +	 */
+> > > > > +	error = xfs_bunmapi(args->trans, args->dp,
+> > > > > +		    args->rmtblkno, args->rmtblkcnt,
+> > > > > +		    XFS_BMAPI_ATTRFORK, 1, &done);
+> > > > > +	if (error)
+> > > > > +		return error;
+> > > > > +
+> > > > > +	if (!done)
+> > > > > +		return -EAGAIN;
+> > > > > +
+> > > > > +	return 0;
+> > > > > +}
+> > > > 
+> > > > Hmm.. any reason this isn't a refactor of the existing remove function?
+> > > > Just skipping to the end of the series, I see we leave the reference to
+> > > > xfs_attr_rmtval_remove() (which no longer exists and so is not very
+> > > > useful) in this comment as well as a stale function declaration in
+> > > > xfs_attr_remote.h.
+> > > > 
+> > > > I haven't grokked how this is used yet, but it seems like it would be
+> > > > more appropriate to lift out the transaction handling from the original
+> > > > function as we have throughout the rest of the code. That could also
+> > > > mean creating a temporary wrapper (i.e., rmtval_remove() calls
+> > > > rmtval_unmap()) for the loop/transaction code that could be removed
+> > > > later if it ends up unused. Either way is much easier to follow than
+> > > > creating a (currently unused) replacement..
+> > > Yes, this came up in one of the other reviews.  I thought about it, but then
+> > > decided against it.  xfs_attr_rmtval_remove disappears across patches 13 and
+> > > 14.  The use of xfs_attr_rmtval_remove is replaced with
+> > > xfs_attr_rmtval_unmap when we finally yank out all the transaction code.
+> > > The reason I dont want to do it all at once is because that would mean
+> > > patches 12, 13, 14 and 19 would lump together to make the swap instantaneous
+> > > in once patch.
+> > > 
+> > 
+> > Hmm.. I don't think we're talking about the same thing. If
+> > xfs_attr_rmtval_remove() was broken down into two functions such that
+> > one of the two looks exactly like the _unmap() variant, can't we just
+> > remove the other half when it becomes unused and allow the _remove()
+> > variant to exist with the implementation of _unmap() proposed here? This
+> > seems fairly mechanical to me..
+> Oh, I see what you mean.  No, I had done a review of the uses of
+> xfs_attr_rmtval_remove and realized that it appears in both the set and
+> remove paths. We use it in the set path when we're doing a rename, and need
+> to remove the old attr.
 > 
-> Well, reporting error on mmap(2) is the only way how to avoid
-> time-to-check-time-to-use races. And these are very important when we are
-> speaking about data integrity guarantees. So that's not going to change.
-> But with Ira's patches you could use statx(2) to check whether file at
-> least supports DAX and so avoid doing mmap check with the side effects in
-> the common case where it's hopeless... I'd also think that you could
-> currently do mmap check with the current file size and if it succeeds,
-> expand the file to the desired size and mmap again. It's not ideal but it
-> should work.
+> So in patch 13, we replace xfs_attr_rmtval_remove with xfs_attr_rmtval_unmap
+> for the remove routines.  But it's still in the set routines.  So we cant
+> take it away yet.  Once we get through patch 14, it is no longer used and we
+> can remove it.  Did that make sense?
+> 
 
-Sure. Best effort is fine here, just as with looking at the permission 
-bits on a file example - even in the absence of racing permission 
-changes it's not definitive because of additional quota or selinux 
-checks, but it's a reasonable approximation. That's a sufficiently 
-useful improvement for my purposes, given the impractical nature of a 
-100% solution.
+I don't think you need to take it away in this patch. What I'm
+suggesting is breaking existing code into something like this:
 
-Jonathan
+int
+__xfs_attr_rmtval_remove()
+{
+	...
+	error = xfs_bunmapi(...);
+	...
 
+	if (!done)
+		return -EAGAIN;
 
--- 
-Registered in England and Wales under Company Registration No. 03798903 
-Directors: Michael Cunningham, Michael ("Mike") O'Neill, Eric Shander
+	...
+}
+
+int
+xfs_attr_rmtval_remove()
+{
+	error = xfs_attr_rmtval_invalidate();
+
+	do {
+		error = __xfs_attr_rmtval_remove();
+		...
+		xfs_defer_finish();
+		...
+		xfs_trans_roll_inode(...);
+	} while (-EAGAIN);
+
+	...
+}
+
+So we can continue to use both as needed without duplication and remove
+the bits that become unused as the series progresses. Eventually we
+could rename __xfs_attr_rmtval_remove() back to xfs_attr_rmtval_remove()
+to maintain that it's essentially the same function and only the
+transaction rolling bits are being factored out and eventually removed.
+
+Brian
+
+> > 
+> > > I've been getting feedback that the set is really complicated, so I've been
+> > > trying to find a way to organize it to help make it easier to review.  So I
+> > > thought isolating 13 and 14 to just the state machine would help.  Thus I
+> > > decided to keep patch 12 separate to take as much craziness out of 13 and 14
+> > > as possible.  Patches 12 and 19 seem like otherwise easy things for people
+> > > to look at.  Let me know your thoughts on this. :-)
+> > > 
+> > 
+> > I think doing as much refactoring of existing code as early as possible
+> > will go a long way towards simplifying the complexity around the
+> > introduction of the state bits.
+> 
+> Alrighty, I was thinking that if I reordered things such that modularizing
+> appeared at the end of the set, that it would help people to see it in
+> context with the states.  But it sounds like people like it the other way
+> around, it's easy enough to put back.  Though I think we may still be stuck
+> with 12 and 19 being apart unless 13 and 14 come together.  :-(
+> 
+> Allison
+> 
+> > 
+> > Brian
+> > 
+> > > You are right about the stale comment though, I missed it while going back
+> > > over the commentary at the top.  Will fix.
+> > > 
+> > > Allison
+> > > 
+> > > > 
+> > > > Brian
+> > > > 
+> > > > > diff --git a/fs/xfs/libxfs/xfs_attr_remote.h b/fs/xfs/libxfs/xfs_attr_remote.h
+> > > > > index eff5f95..e06299a 100644
+> > > > > --- a/fs/xfs/libxfs/xfs_attr_remote.h
+> > > > > +++ b/fs/xfs/libxfs/xfs_attr_remote.h
+> > > > > @@ -14,4 +14,5 @@ int xfs_attr_rmtval_remove(struct xfs_da_args *args);
+> > > > >    int xfs_attr_rmtval_stale(struct xfs_inode *ip, struct xfs_bmbt_irec *map,
+> > > > >    		xfs_buf_flags_t incore_flags);
+> > > > >    int xfs_attr_rmtval_invalidate(struct xfs_da_args *args);
+> > > > > +int xfs_attr_rmtval_unmap(struct xfs_da_args *args);
+> > > > >    #endif /* __XFS_ATTR_REMOTE_H__ */
+> > > > > -- 
+> > > > > 2.7.4
+> > > > > 
+> > > > 
+> > > 
+> > 
+> 
 
