@@ -2,395 +2,174 @@ Return-Path: <SRS0=C9JY=4P=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C3F1C4BA3B
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 05:38:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16054C4BA3B
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 09:24:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 145DD2084E
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 05:38:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E7C3E24688
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 09:24:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725928AbgB0Fiy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Feb 2020 00:38:54 -0500
-Received: from mga07.intel.com ([134.134.136.100]:22722 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725730AbgB0Fix (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 Feb 2020 00:38:53 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 26 Feb 2020 21:38:52 -0800
-X-IronPort-AV: E=Sophos;i="5.70,490,1574150400"; 
-   d="scan'208";a="241933233"
-Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.157])
-  by orsmga006-auth.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 26 Feb 2020 21:38:52 -0800
-From:   ira.weiny@intel.com
-To:     fstests@vger.kernel.org
-Cc:     Ira Weiny <ira.weiny@intel.com>, linux-kernel@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        Jeff Moyer <jmoyer@redhat.com>, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH] xfs/XXX: Add xfs/XXX
-Date:   Wed, 26 Feb 2020 21:38:47 -0800
-Message-Id: <20200227053847.1888-1-ira.weiny@intel.com>
-X-Mailer: git-send-email 2.21.0
+        id S1728454AbgB0JYY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Feb 2020 04:24:24 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:42716 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728614AbgB0JYY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Feb 2020 04:24:24 -0500
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01R9Jp6I115398
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Feb 2020 04:24:23 -0500
+Received: from e06smtp03.uk.ibm.com (e06smtp03.uk.ibm.com [195.75.94.99])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2ydqf8ejfj-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Feb 2020 04:24:22 -0500
+Received: from localhost
+        by e06smtp03.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.ibm.com>;
+        Thu, 27 Feb 2020 09:24:20 -0000
+Received: from b06cxnps3075.portsmouth.uk.ibm.com (9.149.109.195)
+        by e06smtp03.uk.ibm.com (192.168.101.133) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
+        Thu, 27 Feb 2020 09:24:17 -0000
+Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
+        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 01R9OGdU58523770
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 27 Feb 2020 09:24:16 GMT
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 7F84CA405D;
+        Thu, 27 Feb 2020 09:24:16 +0000 (GMT)
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 4E6F5A4055;
+        Thu, 27 Feb 2020 09:24:14 +0000 (GMT)
+Received: from localhost.localdomain (unknown [9.85.71.82])
+        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Thu, 27 Feb 2020 09:24:13 +0000 (GMT)
+From:   Chandan Rajendra <chandan@linux.ibm.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Chandan Rajendra <chandanrlinux@gmail.com>,
+        linux-xfs@vger.kernel.org, david@fromorbit.com,
+        darrick.wong@oracle.com, bfoster@redhat.com, amir73il@gmail.com
+Subject: Re: [PATCH V4 RESEND 1/7] xfs: Pass xattr name and value length explicitly to xfs_attr_leaf_newentsize
+Date:   Thu, 27 Feb 2020 14:57:07 +0530
+Organization: IBM
+In-Reply-To: <20200226165852.GA10529@infradead.org>
+References: <20200224040044.30923-1-chandanrlinux@gmail.com> <20200224040044.30923-2-chandanrlinux@gmail.com> <20200226165852.GA10529@infradead.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+X-TM-AS-GCONF: 00
+x-cbid: 20022709-0012-0000-0000-0000038AB9E3
+X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
+x-cbparentid: 20022709-0013-0000-0000-000021C76271
+Message-Id: <3674803.ahhNVcWJD3@localhost.localdomain>
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
+ definitions=2020-02-27_02:2020-02-26,2020-02-27 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 suspectscore=1
+ mlxlogscore=999 bulkscore=0 priorityscore=1501 impostorscore=0
+ phishscore=0 malwarescore=0 adultscore=0 clxscore=1015 lowpriorityscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2002270075
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Ira Weiny <ira.weiny@intel.com>
+On Wednesday, February 26, 2020 10:28 PM Christoph Hellwig wrote: 
+> > diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> > index fae322105457a..65a3bf40c4f9d 100644
+> > --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> > +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> > @@ -1403,6 +1404,7 @@ xfs_attr3_leaf_add_work(
+> >  	struct xfs_attr_leaf_name_local *name_loc;
+> >  	struct xfs_attr_leaf_name_remote *name_rmt;
+> >  	struct xfs_mount	*mp;
+> > +	int			entsize;
+> >  	int			tmp;
+> >  	int			i;
+> >  
+> > @@ -1432,11 +1434,14 @@ xfs_attr3_leaf_add_work(
+> >  	ASSERT(ichdr->freemap[mapindex].base < args->geo->blksize);
+> >  	ASSERT((ichdr->freemap[mapindex].base & 0x3) == 0);
+> >  	ASSERT(ichdr->freemap[mapindex].size >=
+> > -		xfs_attr_leaf_newentsize(args, NULL));
+> > +		xfs_attr_leaf_newentsize(args->geo, args->namelen,
+> > +				args->valuelen, NULL));
+> >  	ASSERT(ichdr->freemap[mapindex].size < args->geo->blksize);
+> >  	ASSERT((ichdr->freemap[mapindex].size & 0x3) == 0);
+> >  
+> > -	ichdr->freemap[mapindex].size -= xfs_attr_leaf_newentsize(args, &tmp);
+> > +	entsize = xfs_attr_leaf_newentsize(args->geo, args->namelen,
+> > +			args->valuelen, &tmp);
+> > +	ichdr->freemap[mapindex].size -= entsize;
+> 
+> As-is this entsize variable is a little pointless.  Please move the
+> assignment to it up and reuse it in the assert.
+> 
+> > @@ -1824,6 +1829,8 @@ xfs_attr3_leaf_figure_balance(
+> >  	struct xfs_attr_leafblock	*leaf1 = blk1->bp->b_addr;
+> >  	struct xfs_attr_leafblock	*leaf2 = blk2->bp->b_addr;
+> >  	struct xfs_attr_leaf_entry	*entry;
+> > +	struct xfs_da_args		*args;
+> > +	int				entsize;
+> >  	int				count;
+> >  	int				max;
+> >  	int				index;
+> > @@ -1833,14 +1840,16 @@ xfs_attr3_leaf_figure_balance(
+> >  	int				foundit = 0;
+> >  	int				tmp;
+> >  
+> > +	args = state->args;
+> 
+> Please assign the value to the variable at the time of declaration.
+> 
+> >  	/*
+> >  	 * Examine entries until we reduce the absolute difference in
+> >  	 * byte usage between the two blocks to a minimum.
+> >  	 */
+> >  	max = ichdr1->count + ichdr2->count;
+> >  	half = (max + 1) * sizeof(*entry);
+> > -	half += ichdr1->usedbytes + ichdr2->usedbytes +
+> > -			xfs_attr_leaf_newentsize(state->args, NULL);
+> > +	entsize = xfs_attr_leaf_newentsize(args->geo, args->namelen,
+> > +			args->valuelen, NULL);
+> > +	half += ichdr1->usedbytes + ichdr2->usedbytes + entsize;
+> >  	half /= 2;
+> >  	lastdelta = state->args->geo->blksize;
+> >  	entry = xfs_attr3_leaf_entryp(leaf1);
+> > @@ -1851,8 +1860,9 @@ xfs_attr3_leaf_figure_balance(
+> >  		 * The new entry is in the first block, account for it.
+> >  		 */
+> >  		if (count == blk1->index) {
+> > -			tmp = totallen + sizeof(*entry) +
+> > -				xfs_attr_leaf_newentsize(state->args, NULL);
+> > +			entsize = xfs_attr_leaf_newentsize(args->geo,
+> > +					args->namelen, args->valuelen, NULL);
+> > +			tmp = totallen + sizeof(*entry) + entsize;
+> >  			if (XFS_ATTR_ABS(half - tmp) > lastdelta)
+> >  				break;
+> >  			lastdelta = XFS_ATTR_ABS(half - tmp);
+> > @@ -1887,8 +1897,9 @@ xfs_attr3_leaf_figure_balance(
+> >  	 */
+> >  	totallen -= count * sizeof(*entry);
+> >  	if (foundit) {
+> > -		totallen -= sizeof(*entry) +
+> > -				xfs_attr_leaf_newentsize(state->args, NULL);
+> > +		entsize = xfs_attr_leaf_newentsize(args->geo, args->namelen,
+> > +				args->valuelen, NULL);
+> > +		totallen -= sizeof(*entry) + entsize;
+> 
+> AFAICS there is no need to assign the same value to entsize again and
+> again in this function.  It should be enough to assign to it once and
+> then reuse the value.
+> 
 
-Add XXX to test the various setting of dax flags on files.
+Sorry about those redundant function calls. I will include the changes
+suggested in the next version of the patchset.
 
-The final fsx test was derived from Christophs test here but I wanted
-more direct function tests as well so I bundled this together.
-
-https://www.spinics.net/lists/linux-xfs/msg10124.html
-
-Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-
----
-This tests against V4 and V5:
-https://lore.kernel.org/lkml/20200227052442.22524-1-ira.weiny@intel.com/
----
- tests/xfs/999     | 279 ++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/999.out |  21 ++++
- tests/xfs/group   |   1 +
- 3 files changed, 301 insertions(+)
- create mode 100755 tests/xfs/999
- create mode 100644 tests/xfs/999.out
-
-diff --git a/tests/xfs/999 b/tests/xfs/999
-new file mode 100755
-index 000000000000..b123f1f39894
---- /dev/null
-+++ b/tests/xfs/999
-@@ -0,0 +1,279 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2019 Intel, Corp.  All Rights Reserved.
-+#
-+# FSQA Test No. 999 (temporary)
-+#
-+# Test setting of DAX flag
-+#
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+status=1	# failure is the default!
-+
-+dax_dir=$TEST_DIR/dax-dir
-+dax_sub_dir=$TEST_DIR/dax-dir/dax-sub-dir
-+dax_inh_file=$dax_dir/dax-inh-file
-+dax_non_inh_file=$dax_dir/dax-non-inh-file
-+non_dax=$TEST_DIR/non-dax
-+dax_file=$TEST_DIR/dax-file
-+dax_file_copy=$TEST_DIR/dax-file-copy
-+dax_file_move=$TEST_DIR/dax-file-move
-+data_file=$TEST_DIR/data-file
-+
-+_cleanup() {
-+	rm -rf $TEST_DIR/*
-+}
-+
-+trap "_cleanup ; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+
-+# real QA test starts here
-+_supported_os Linux
-+_require_xfs_io_command "lsattr"
-+_require_xfs_io_command "chattr" "x"
-+_require_xfs_io_command "statx"
-+_require_test
-+
-+function mount_no_dax {
-+	# mount SCRATCH_DEV with dax option, TEST_DEV not
-+	export MOUNT_OPTIONS=""
-+	export TEST_FS_MOUNT_OPTS=""
-+	_test_unmount
-+	_test_mount
-+	_fs_options $TEST_DEV | grep -qw "dax"
-+	if [ "$?" == "0" ]; then
-+		_notrun "we need $TEST_DEV mount without dax"
-+	fi
-+}
-+
-+function mount_dax {
-+	# mount SCRATCH_DEV with dax option, TEST_DEV not
-+	export MOUNT_OPTIONS=""
-+	export TEST_FS_MOUNT_OPTS=""
-+	_test_unmount
-+	_test_mount "-o dax"
-+	_fs_options $TEST_DEV | grep -qw "dax"
-+	if [ "$?" != "0" ]; then
-+		_notrun "we need $TEST_DEV mount with dax"
-+	fi
-+}
-+
-+function check_phys_dax {
-+	xfs_io -c 'lsattr' $1 | awk -e '{ print $1 }' | grep 'x' &> /dev/null
-+	if [ "$?" != "0" ]; then
-+		echo "FAILED: Did NOT find DAX flag on $1"
-+		status=1; exit
-+	fi
-+}
-+
-+function check_effective_dax {
-+	attr=`xfs_io -c 'statx -r' $1 | grep 'stat.attributes' | awk -e '{ print $3 }'`
-+	masked=$(( $attr & 0x2000 ))
-+	if [ "$masked" != "8192" ]; then
-+		echo "FAILED: Did NOT find VFS DAX flag on $1"
-+		status=1; exit
-+	fi
-+}
-+
-+function check_phys_no_dax {
-+	xfs_io -c 'lsattr' $1 | awk -e '{ print $1 }' | grep 'x' &> /dev/null
-+	if [ "$?" == "0" ]; then
-+		echo "FAILED: Found DAX flag on $1"
-+		status=1; exit
-+	fi
-+}
-+
-+function check_effective_no_dax {
-+	attr=`xfs_io -c 'statx -r' $1 | grep 'stat.attributes' | awk -e '{ print $3 }'`
-+	masked=$(( $attr & 0x2000 ))
-+	if [ "$masked" == "8192" ]; then
-+		echo "FAILED: Found VFS DAX flag on $1"
-+		status=1; exit
-+	fi
-+}
-+
-+echo "running tests..."
-+
-+echo "   *** mount w/o dax flag."
-+mount_no_dax
-+
-+echo "   *** mark dax-dir as dax enabled"
-+mkdir $dax_dir
-+xfs_io -c 'chattr +x' $dax_dir
-+check_phys_dax $dax_dir
-+
-+echo "   *** check file inheritance"
-+touch $dax_inh_file
-+check_phys_dax $dax_inh_file
-+check_effective_dax $dax_inh_file
-+
-+echo "   *** check directory inheritance"
-+mkdir $dax_sub_dir
-+check_phys_dax $dax_sub_dir
-+
-+echo "   *** check changing directory"
-+xfs_io -c 'chattr -x' $dax_dir
-+check_phys_no_dax $dax_dir
-+check_effective_no_dax $dax_dir
-+
-+echo "   *** check non file inheritance"
-+touch $dax_non_inh_file
-+check_phys_no_dax $dax_non_inh_file
-+check_effective_no_dax $dax_non_inh_file
-+
-+echo "   *** check that previous file stays enabled"
-+check_phys_dax $dax_inh_file
-+check_effective_dax $dax_inh_file
-+
-+echo "   *** Reset the directory"
-+xfs_io -c 'chattr +x' $dax_dir
-+check_phys_dax $dax_dir
-+
-+
-+# check mount override
-+# ====================
-+
-+echo "   *** Remount fs with mount flag"
-+mount_dax
-+touch $non_dax
-+check_phys_no_dax $non_dax
-+check_effective_dax $non_dax
-+
-+echo "   *** Check for non-dax files to be dax with mount option"
-+check_effective_dax $dax_non_inh_file
-+
-+echo "   *** check for file dax flag 'sticky-ness' after remount"
-+touch $dax_file
-+xfs_io -c 'chattr +x' $dax_file
-+check_phys_dax $dax_file
-+check_effective_dax $dax_file
-+
-+echo "   *** remount w/o mount flag"
-+mount_no_dax
-+check_phys_dax $dax_file
-+check_effective_dax $dax_file
-+
-+check_phys_no_dax $non_dax
-+check_effective_no_dax $non_dax
-+
-+
-+# Check non-zero file operations
-+# ==============================
-+
-+echo "   *** file should change effective but page cache should be empty"
-+$XFS_IO_PROG -f -c "pwrite 0 10000" $data_file > /dev/null
-+xfs_io -c 'chattr +x' $data_file
-+check_phys_dax $data_file
-+check_effective_dax $data_file
-+
-+
-+# Check inheritance on cp, mv
-+# ===========================
-+
-+echo "   *** check inheritance on cp, mv"
-+cp $non_dax $dax_dir/conv-dax
-+check_phys_dax $dax_dir/conv-dax
-+check_effective_dax $dax_dir/conv-dax
-+
-+echo "   *** Moved files 'don't inherit'"
-+mv $non_dax $dax_dir/move-dax
-+check_phys_no_dax $dax_dir/move-dax
-+check_effective_no_dax $dax_dir/move-dax
-+
-+# Check preservation of phys on cp, mv
-+# ====================================
-+
-+mv $dax_file $dax_file_move
-+check_phys_dax $dax_file_move
-+check_effective_dax $dax_file_move
-+
-+cp $dax_file_move $dax_file_copy
-+check_phys_no_dax $dax_file_copy
-+check_effective_no_dax $dax_file_copy
-+
-+
-+# Verify no mode changes on mmap
-+# ==============================
-+
-+echo "   *** check no mode change when mmaped"
-+
-+dd if=/dev/zero of=$dax_file bs=4096 count=10 > $tmp.log 2>&1
-+
-+# set known state.
-+xfs_io -c 'chattr -x' $dax_file
-+check_phys_no_dax $dax_file
-+check_effective_no_dax $dax_file
-+
-+python3 - << EOF > $tmp.log 2>&1 &
-+import mmap
-+import time
-+print ('mmaping "$dax_file"')
-+f=open("$dax_file", "r+b")
-+mm = mmap.mmap(f.fileno(), 0)
-+print ('mmaped "$dax_file"')
-+while True:
-+	time.sleep(1)
-+EOF
-+pid=$!
-+
-+sleep 1
-+
-+# attempt to should fail
-+xfs_io -c 'chattr +x' $dax_file > /dev/null 2>&1
-+check_phys_no_dax $dax_file
-+check_effective_no_dax $dax_file
-+
-+kill -TERM $pid > /dev/null 2>&1
-+wait $pid > /dev/null 2>&1
-+
-+# after mmap released should work
-+xfs_io -c 'chattr +x' $dax_file
-+check_phys_dax $dax_file
-+check_effective_dax $dax_file
-+
-+
-+# Finally run the test stolen from Christoph Hellwig to test changing the mode
-+# while performing a series of operations
-+# =============================================================================
-+
-+function run_fsx {
-+	options=$1
-+
-+	echo "   *** run 'fsx $options' racing with setting/clearing the DAX flag"
-+	$here/ltp/fsx $options -N 20000 $dax_file > $tmp.log 2>&1 &
-+	pid=$!
-+
-+	if [ ! -n "$pid" ]; then
-+		echo "FAILED to start fsx"
-+		exit 255
-+	fi
-+
-+	# NOTE: fsx runs much faster than these mode changes.
-+	for i in `seq 1 500`; do
-+		xfs_io -c 'chattr +x' $dax_file > /dev/null 2>&1
-+		xfs_io -c 'chattr -x' $dax_file > /dev/null 2>&1
-+	done
-+
-+	wait $pid
-+	status=$?
-+	if [ "$status" != "0" ]; then
-+		cat /sys/kernel/debug/tracing/trace > trace_output
-+		echo "FAILED: fsx exited with status : $status"
-+		echo "        see trace_output"
-+		head $dax_file.fsxlog
-+		exit $status
-+	fi
-+	pid=""
-+}
-+
-+run_fsx ""
-+run_fsx "-A"
-+run_fsx "-Z -r 4096 -w 4096"
-+
-+
-+status=0 ; exit
-diff --git a/tests/xfs/999.out b/tests/xfs/999.out
-new file mode 100644
-index 000000000000..ccb13770ca4d
---- /dev/null
-+++ b/tests/xfs/999.out
-@@ -0,0 +1,21 @@
-+QA output created by 999
-+running tests...
-+   *** mount w/o dax flag.
-+   *** mark dax-dir as dax enabled
-+   *** check file inheritance
-+   *** check directory inheritance
-+   *** check changing directory
-+   *** check non file inheritance
-+   *** check that previous file stays enabled
-+   *** Reset the directory
-+   *** Remount fs with mount flag
-+   *** Check for non-dax files to be dax with mount option
-+   *** check for file dax flag 'sticky-ness' after remount
-+   *** remount w/o mount flag
-+   *** file should change effective but page cache should be empty
-+   *** check inheritance on cp, mv
-+   *** Moved files 'don't inherit'
-+   *** check no mode change when mmaped
-+   *** run 'fsx ' racing with setting/clearing the DAX flag
-+   *** run 'fsx -A' racing with setting/clearing the DAX flag
-+   *** run 'fsx -Z -r 4096 -w 4096' racing with setting/clearing the DAX flag
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 522d4bc44d1f..816883a268bf 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -511,3 +511,4 @@
- 511 auto quick quota
- 512 auto quick acl attr
- 513 auto mount
-+999 auto
 -- 
-2.21.0
+chandan
+
+
 
