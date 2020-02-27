@@ -6,26 +6,26 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 891FEC4BA3B
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 05:33:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46902C4BA24
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 05:33:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6575824656
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 05:33:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 271A92467B
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 05:33:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728476AbgB0FdY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Feb 2020 00:33:24 -0500
-Received: from mga05.intel.com ([192.55.52.43]:37515 "EHLO mga05.intel.com"
+        id S1727702AbgB0Fco (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Feb 2020 00:32:44 -0500
+Received: from mga11.intel.com ([192.55.52.93]:58414 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728416AbgB0Fcp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 Feb 2020 00:32:45 -0500
+        id S1727399AbgB0Fcn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 27 Feb 2020 00:32:43 -0500
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 26 Feb 2020 21:32:45 -0800
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 26 Feb 2020 21:32:42 -0800
 X-IronPort-AV: E=Sophos;i="5.70,490,1574150400"; 
-   d="scan'208";a="232052990"
+   d="scan'208";a="238289232"
 Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.157])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 26 Feb 2020 21:32:44 -0800
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 26 Feb 2020 21:32:42 -0800
 From:   ira.weiny@intel.com
 To:     linux-kernel@vger.kernel.org
 Cc:     Ira Weiny <ira.weiny@intel.com>,
@@ -37,9 +37,9 @@ Cc:     Ira Weiny <ira.weiny@intel.com>,
         "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: [PATCH V5 08/12] fs/xfs: Hold off aops users while changing DAX state
-Date:   Wed, 26 Feb 2020 21:24:38 -0800
-Message-Id: <20200227052442.22524-9-ira.weiny@intel.com>
+Subject: [PATCH V5 05/12] fs/xfs: Create function xfs_inode_enable_dax()
+Date:   Wed, 26 Feb 2020 21:24:35 -0800
+Message-Id: <20200227052442.22524-6-ira.weiny@intel.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20200227052442.22524-1-ira.weiny@intel.com>
 References: <20200227052442.22524-1-ira.weiny@intel.com>
@@ -52,92 +52,86 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Ira Weiny <ira.weiny@intel.com>
 
-XFS requires the use of the aops of an inode to be quiesced prior to
-changing the aops vector to/from the DAX vector.
+xfs_inode_supports_dax() should reflect if the inode can support DAX not
+that it is enabled for DAX.
 
-Take the aops write lock while changing DAX state.
+Change the use of xfs_inode_supports_dax() to reflect only if the inode
+and underlying storage support dax.
+
+Add a new function xfs_inode_enable_dax() which reflects if the inode
+should be enabled for DAX.
 
 Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 
 ---
-Changes from v4:
-	Open code the aops write lock
-	Obsolete: Clean up lock name in comments
-	Obsolete: Change #define: XFS_DAX_EXCL => XFS_AOPSLOCK_EXCL
-
 Changes from v3:
-	Change locking function names to reflect changes in previous
-	patches.
-
-Changes from V2:
-	Change name of patch (WAS: fs/xfs: Add lock/unlock state to xfs)
-	Remove the xfs specific lock and move to the vfs layer.
-		We still use XFS_LOCK_DAX_EXCL to be able to pass this
-		flag through to the transaction code.  But we no longer
-		have a lock specific to xfs.  This removes a lot of code
-		from the XFS layer, preps us for using this in ext4, and
-		is actually more straight forward now that all the
-		locking requirements are better known.
-
-	Fix locking order comment
-	Rework for new 'state' names
-	(Other comments on the previous patch are not applicable with
-	new patch as much of the code was removed in favor of the vfs
-	level lock)
+	Update functions and names to be more clear
+	Update commit message
+	Merge with
+		'fs/xfs: Clean up DAX support check'
+		don't allow IS_DAX() on a directory
+		use STATIC macro for static
+		make xfs_inode_supports_dax() static
 ---
- fs/xfs/xfs_ioctl.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ fs/xfs/xfs_iops.c | 25 +++++++++++++++++++------
+ 1 file changed, 19 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 498fae2ef9f6..6c4d4ea3b6b6 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1444,7 +1444,11 @@ xfs_ioctl_setattr(
- 	 * or cancel time, so need to be passed through to
- 	 * xfs_ioctl_setattr_get_trans() so it can apply them to the join call
- 	 * appropriately.
-+	 *
-+	 * Further we hold off aops users until we have completed any potential
-+	 * changing of aops due to attribute changes.
- 	 */
-+	inode_aops_down_write(VFS_I(ip));
- 	code = xfs_ioctl_setattr_dax_invalidate(ip, fa, &join_flags);
- 	if (code)
- 		goto error_free_dquots;
-@@ -1527,6 +1531,7 @@ xfs_ioctl_setattr(
- 	xfs_qm_dqrele(udqp);
- 	xfs_qm_dqrele(pdqp);
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 81f2f93caec0..ff711efc5247 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1237,19 +1237,18 @@ static const struct inode_operations xfs_inline_symlink_inode_operations = {
+ };
  
-+	inode_aops_up_write(VFS_I(ip));
- 	return code;
+ /* Figure out if this file actually supports DAX. */
+-static bool
++STATIC bool
+ xfs_inode_supports_dax(
+ 	struct xfs_inode	*ip)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
  
- error_trans_cancel:
-@@ -1534,6 +1539,7 @@ xfs_ioctl_setattr(
- error_free_dquots:
- 	xfs_qm_dqrele(udqp);
- 	xfs_qm_dqrele(pdqp);
-+	inode_aops_up_write(VFS_I(ip));
- 	return code;
+ 	/* Only supported on non-reflinked files. */
+-	if (!S_ISREG(VFS_I(ip)->i_mode) || xfs_is_reflink_inode(ip))
++	if (xfs_is_reflink_inode(ip))
+ 		return false;
+ 
+-	/* DAX mount option or DAX iflag must be set. */
+-	if (!(mp->m_flags & XFS_MOUNT_DAX) &&
+-	    !(ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
++	/* Only supported on regular files. */
++	if (!S_ISREG(VFS_I(ip)->i_mode))
+ 		return false;
+ 
+ 	/* Block size must match page size */
+@@ -1260,6 +1259,20 @@ xfs_inode_supports_dax(
+ 	return xfs_inode_buftarg(ip)->bt_daxdev != NULL;
  }
  
-@@ -1603,7 +1609,11 @@ xfs_ioc_setxflags(
- 	 * or cancel time, so need to be passed through to
- 	 * xfs_ioctl_setattr_get_trans() so it can apply them to the join call
- 	 * appropriately.
-+	 *
-+	 * Further we hold off aops users until we have completed any potential
-+	 * changing of aops due to attribute changes.
- 	 */
-+	inode_aops_down_write(VFS_I(ip));
- 	error = xfs_ioctl_setattr_dax_invalidate(ip, &fa, &join_flags);
- 	if (error)
- 		goto out_drop_write;
-@@ -1630,6 +1640,7 @@ xfs_ioc_setxflags(
- 	error = xfs_trans_commit(tp);
- out_drop_write:
- 	mnt_drop_write_file(filp);
-+	inode_aops_up_write(VFS_I(ip));
- 	return error;
++STATIC bool
++xfs_inode_enable_dax(
++	struct xfs_inode *ip)
++{
++	if (!xfs_inode_supports_dax(ip))
++		return false;
++
++	if (ip->i_d.di_flags2 & XFS_DIFLAG2_DAX)
++		return true;
++	if (ip->i_mount->m_flags & XFS_MOUNT_DAX)
++		return true;
++	return false;
++}
++
+ STATIC void
+ xfs_diflags_to_iflags(
+ 	struct inode		*inode,
+@@ -1278,7 +1291,7 @@ xfs_diflags_to_iflags(
+ 		inode->i_flags |= S_SYNC;
+ 	if (flags & XFS_DIFLAG_NOATIME)
+ 		inode->i_flags |= S_NOATIME;
+-	if (xfs_inode_supports_dax(ip))
++	if (xfs_inode_enable_dax(ip))
+ 		inode->i_flags |= S_DAX;
  }
  
 -- 
