@@ -7,19 +7,19 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6A97C11D3D
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 14:48:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACBFEC34022
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 14:48:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B4EC6246BF
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 14:48:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A7B2246A9
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 14:48:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WIEgpNF1"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WPleX09+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729703AbgB0OsK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Feb 2020 09:48:10 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:26860 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729969AbgB0Nn1 (ORCPT
+        id S1729625AbgB0OsL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Feb 2020 09:48:11 -0500
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:56947 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1729959AbgB0Nn1 (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Feb 2020 08:43:27 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
         s=mimecast20190719; t=1582811006;
@@ -27,27 +27,27 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=6xBO7XFaQ4Q2SAQVY0hNR9OS7IAuRDc8MaivqtJGyOY=;
-        b=WIEgpNF1rFXhh20ZtZ6UkG3g9/g0QwUNXKoP34D9bHIkL1aMUyGvtX3vv13VRa2apqATYB
-        0tqJLDz3fuBrCw88HlvCxAflgyM8hkCb/21YFKscRgFI0jJFM5nBe70DBQD5Y005UrDTGS
-        14IujU2sS+D7Nxd+X8gReTkLBL399T0=
+        bh=qcVU/Ad5k6xmcd73Mj8LD9ajLQszhmypF3+9/C+QKkc=;
+        b=WPleX09+xBQd+PpM5ag+EnJ4j8kjTQHMdJsF2cz3WMtBYXlMD8CF4kwPKqgf9zSoGLyQYv
+        ud1dkATE9TNyl3wyFh0ye/Ag9HUue21MV8Bl6tCQPM0yklN3Sy4559woc9OU2Z5KyyqlE8
+        nXTBGy379ruRcGw0aMAFFfttBlKkVbM=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-356-FubtAjoGPs68uPRq0rZ3aQ-1; Thu, 27 Feb 2020 08:43:25 -0500
-X-MC-Unique: FubtAjoGPs68uPRq0rZ3aQ-1
+ us-mta-363-kWg0Li0CM8yLDhA-GojiJw-1; Thu, 27 Feb 2020 08:43:24 -0500
+X-MC-Unique: kWg0Li0CM8yLDhA-GojiJw-1
 Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9FF6418A8C88
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Feb 2020 13:43:24 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id EC1FE1084437
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Feb 2020 13:43:23 +0000 (UTC)
 Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 67F975D9CD
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Feb 2020 13:43:24 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id B53FC5DA7E
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Feb 2020 13:43:23 +0000 (UTC)
 From:   Brian Foster <bfoster@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [RFC v5 PATCH 8/9] xfs: create an error tag for random relog reservation
-Date:   Thu, 27 Feb 2020 08:43:20 -0500
-Message-Id: <20200227134321.7238-9-bfoster@redhat.com>
+Subject: [RFC v5 PATCH 6/9] xfs: automatically relog the quotaoff start intent
+Date:   Thu, 27 Feb 2020 08:43:18 -0500
+Message-Id: <20200227134321.7238-7-bfoster@redhat.com>
 In-Reply-To: <20200227134321.7238-1-bfoster@redhat.com>
 References: <20200227134321.7238-1-bfoster@redhat.com>
 MIME-Version: 1.0
@@ -58,93 +58,121 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Create an errortag to randomly enable relogging on permanent
-transactions. This only stresses relog reservation management and
-does not enable relogging of any particular items. The tag will be
-reused in a subsequent patch to enable random item relogging.
+The quotaoff operation has a rare but longstanding deadlock vector
+in terms of how the operation is logged. A quotaoff start intent is
+logged (synchronously) at the onset to ensure recovery can handle
+the operation if interrupted before in-core changes are made. This
+quotaoff intent pins the log tail while the quotaoff sequence scans
+and purges dquots from all in-core inodes. While this operation
+generally doesn't generate much log traffic on its own, it can be
+time consuming. If unrelated, concurrent filesystem activity
+consumes remaining log space before quotaoff is able to acquire log
+reservation for the quotaoff end intent, the filesystem locks up
+indefinitely.
+
+quotaoff cannot allocate the end intent before the scan because the
+latter can result in transaction allocation itself in certain
+indirect cases (releasing an inode, for example). Further, rolling
+the original transaction is difficult because the scanning work
+occurs multiple layers down where caller context is lost and not
+much information is available to determine how often to roll the
+transaction.
+
+To address this problem, enable automatic relogging of the quotaoff
+start intent. This automatically relogs the intent whenever AIL
+pushing finds the item at the tail of the log. When quotaoff
+completes, wait for relogging to complete as the end intent expects
+to be able to permanently remove the start intent from the log
+subsystem. This ensures that the log tail is kept moving during a
+particularly long quotaoff operation and avoids the log reservation
+deadlock.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_errortag.h | 4 +++-
- fs/xfs/xfs_error.c           | 3 +++
- fs/xfs/xfs_trans.c           | 6 ++++++
- 3 files changed, 12 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_trans_resv.c |  3 ++-
+ fs/xfs/xfs_dquot_item.c        |  7 +++++++
+ fs/xfs/xfs_qm_syscalls.c       | 12 +++++++++++-
+ 3 files changed, 20 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
-index 79e6c4fb1d8a..ca7bcadb9455 100644
---- a/fs/xfs/libxfs/xfs_errortag.h
-+++ b/fs/xfs/libxfs/xfs_errortag.h
-@@ -55,7 +55,8 @@
- #define XFS_ERRTAG_FORCE_SCRUB_REPAIR			32
- #define XFS_ERRTAG_FORCE_SUMMARY_RECALC			33
- #define XFS_ERRTAG_IUNLINK_FALLBACK			34
--#define XFS_ERRTAG_MAX					35
-+#define XFS_ERRTAG_RELOG				35
-+#define XFS_ERRTAG_MAX					36
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_res=
+v.c
+index 1f5c9e6e1afc..f49b20c9ca33 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.c
++++ b/fs/xfs/libxfs/xfs_trans_resv.c
+@@ -935,7 +935,8 @@ xfs_trans_resv_calc(
+ 	resp->tr_qm_setqlim.tr_logcount =3D XFS_DEFAULT_LOG_COUNT;
 =20
- /*
-  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-@@ -95,5 +96,6 @@
- #define XFS_RANDOM_FORCE_SCRUB_REPAIR			1
- #define XFS_RANDOM_FORCE_SUMMARY_RECALC			1
- #define XFS_RANDOM_IUNLINK_FALLBACK			(XFS_RANDOM_DEFAULT/10)
-+#define XFS_RANDOM_RELOG				XFS_RANDOM_DEFAULT
+ 	resp->tr_qm_quotaoff.tr_logres =3D xfs_calc_qm_quotaoff_reservation(mp)=
+;
+-	resp->tr_qm_quotaoff.tr_logcount =3D XFS_DEFAULT_LOG_COUNT;
++	resp->tr_qm_quotaoff.tr_logcount =3D XFS_DEFAULT_PERM_LOG_COUNT;
++	resp->tr_qm_quotaoff.tr_logflags |=3D XFS_TRANS_PERM_LOG_RES;
 =20
- #endif /* __XFS_ERRORTAG_H_ */
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index 331765afc53e..2838b909287e 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -53,6 +53,7 @@ static unsigned int xfs_errortag_random_default[] =3D {
- 	XFS_RANDOM_FORCE_SCRUB_REPAIR,
- 	XFS_RANDOM_FORCE_SUMMARY_RECALC,
- 	XFS_RANDOM_IUNLINK_FALLBACK,
-+	XFS_RANDOM_RELOG,
- };
-=20
- struct xfs_errortag_attr {
-@@ -162,6 +163,7 @@ XFS_ERRORTAG_ATTR_RW(buf_lru_ref,	XFS_ERRTAG_BUF_LRU_=
-REF);
- XFS_ERRORTAG_ATTR_RW(force_repair,	XFS_ERRTAG_FORCE_SCRUB_REPAIR);
- XFS_ERRORTAG_ATTR_RW(bad_summary,	XFS_ERRTAG_FORCE_SUMMARY_RECALC);
- XFS_ERRORTAG_ATTR_RW(iunlink_fallback,	XFS_ERRTAG_IUNLINK_FALLBACK);
-+XFS_ERRORTAG_ATTR_RW(relog,		XFS_ERRTAG_RELOG);
-=20
- static struct attribute *xfs_errortag_attrs[] =3D {
- 	XFS_ERRORTAG_ATTR_LIST(noerror),
-@@ -199,6 +201,7 @@ static struct attribute *xfs_errortag_attrs[] =3D {
- 	XFS_ERRORTAG_ATTR_LIST(force_repair),
- 	XFS_ERRORTAG_ATTR_LIST(bad_summary),
- 	XFS_ERRORTAG_ATTR_LIST(iunlink_fallback),
-+	XFS_ERRORTAG_ATTR_LIST(relog),
- 	NULL,
- };
-=20
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index f7f2411ead4e..24e0208b74b8 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -19,6 +19,7 @@
- #include "xfs_trace.h"
- #include "xfs_error.h"
- #include "xfs_defer.h"
-+#include "xfs_errortag.h"
-=20
- kmem_zone_t	*xfs_trans_zone;
-=20
-@@ -263,6 +264,11 @@ xfs_trans_alloc(
- 	struct xfs_trans	*tp;
- 	int			error;
-=20
-+	/* relogging requires permanent transactions */
-+	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_RELOG) &&
-+	    resp->tr_logflags & XFS_TRANS_PERM_LOG_RES)
-+		flags |=3D XFS_TRANS_RELOG;
+ 	resp->tr_qm_equotaoff.tr_logres =3D
+ 		xfs_calc_qm_quotaoff_end_reservation();
+diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+index d60647d7197b..ea5123678466 100644
+--- a/fs/xfs/xfs_dquot_item.c
++++ b/fs/xfs/xfs_dquot_item.c
+@@ -297,6 +297,13 @@ xfs_qm_qoff_logitem_push(
+ 	struct xfs_log_item	*lip,
+ 	struct list_head	*buffer_list)
+ {
++	struct xfs_log_item	*mlip =3D xfs_ail_min(lip->li_ailp);
 +
- 	/*
- 	 * Allocate the handle before we do our freeze accounting and setting u=
-p
- 	 * GFP_NOFS allocation context so that we avoid lockdep false positives
++	if (test_bit(XFS_LI_RELOG, &lip->li_flags) &&
++	    !test_bit(XFS_LI_RELOGGED, &lip->li_flags) &&
++	    !XFS_LSN_CMP(lip->li_lsn, mlip->li_lsn))
++		return XFS_ITEM_RELOG;
++
+ 	return XFS_ITEM_LOCKED;
+ }
+=20
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index 1ea82764bf89..7b48d34da0f4 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -18,6 +18,7 @@
+ #include "xfs_quota.h"
+ #include "xfs_qm.h"
+ #include "xfs_icache.h"
++#include "xfs_trans_priv.h"
+=20
+ STATIC int
+ xfs_qm_log_quotaoff(
+@@ -31,12 +32,14 @@ xfs_qm_log_quotaoff(
+=20
+ 	*qoffstartp =3D NULL;
+=20
+-	error =3D xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_quotaoff, 0, 0, 0, &tp)=
+;
++	error =3D xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_quotaoff, 0, 0,
++				XFS_TRANS_RELOG, &tp);
+ 	if (error)
+ 		goto out;
+=20
+ 	qoffi =3D xfs_trans_get_qoff_item(tp, NULL, flags & XFS_ALL_QUOTA_ACCT)=
+;
+ 	xfs_trans_log_quotaoff_item(tp, qoffi);
++	xfs_trans_relog_item(&qoffi->qql_item);
+=20
+ 	spin_lock(&mp->m_sb_lock);
+ 	mp->m_sb.sb_qflags =3D (mp->m_qflags & ~(flags)) & XFS_MOUNT_QUOTA_ALL;
+@@ -69,6 +72,13 @@ xfs_qm_log_quotaoff_end(
+ 	int			error;
+ 	struct xfs_qoff_logitem	*qoffi;
+=20
++	/*
++	 * startqoff must be in the AIL and not the CIL when the end intent
++	 * commits to ensure it is not readded to the AIL out of order. Wait on
++	 * relog activity to drain to isolate startqoff to the AIL.
++	 */
++	xfs_trans_relog_item_cancel(&startqoff->qql_item, true);
++
+ 	error =3D xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_equotaoff, 0, 0, 0, &tp=
+);
+ 	if (error)
+ 		return error;
 --=20
 2.21.1
 
