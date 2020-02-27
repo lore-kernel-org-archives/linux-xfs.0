@@ -4,197 +4,136 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28D0BC3F2C6
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 23:19:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A8CEC3F2C6
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 23:28:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D5854246A6
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 23:19:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 51ACD246A5
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 23:28:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="J9BReB2F"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Ayshpnp3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729317AbgB0XTt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Feb 2020 18:19:49 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:40090 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728993AbgB0XTt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Feb 2020 18:19:49 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01RNJ9Lw031803;
-        Thu, 27 Feb 2020 23:19:45 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=u0GuybPE1bZKnd1Y659I8hcDhAGiGbzdqsMn2ma+yAc=;
- b=J9BReB2FHC6cBiXhKnPGxe982bAD41lQnrBurU++9SAgxxu16ZU/h/rCmjH9ce/Vha2d
- gHmFvhClcjpixmRC7luIhSNe65P3Xgd+4n2JAdd8zINHqpHzPbCfqy9pVs0SnRCKgW4B
- qF4jhPxre3pZh0cmrF7+ad8gRvGJStAtZHSn1T+dg96QxX2XReT9xPpjU+cxI5pNyT+n
- aat67rVHcpKWV9I589x5qF6Z8N+ba4hAHdQeX5QiPAg9Gw12r1WRB4Zt3n/m/D08tg6N
- E8nF2JE1JxQqNz0m/pNqE/wXm7dVl+QqYSrCCksiyp5kwq9Ke9ygM0HjHpujM3b/oJ5m Fw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2ydct3e69d-1
+        id S1729391AbgB0X26 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Feb 2020 18:28:58 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:48794 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729586AbgB0X26 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Feb 2020 18:28:58 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01RNRo1B042320;
+        Thu, 27 Feb 2020 23:28:55 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=AqW7lKIZS9Fz2dxToCtKm4H8qm+/i8OcvTuaSRxypQQ=;
+ b=Ayshpnp3jHC8cy9QRnwKO/khPuRmVzDzWdw+6ZihfDYrUv363vNsJqSZhp9GLtomRUsM
+ NjUddtHgPQGLHKOmzsbVEMeEEveBDuPj5pUhRW02vsG/0HgrdzLXtgCeaRsoZWdbPnM3
+ byLd2gHEpGK83dMamKuzCVm/sFG2VERganPJJKDtevhznOvyBO/jOb/CWQYQI+IJXx82
+ VLne6evelWNf6Ht0EwUj/3agAWQucnrTEddsScfOXAYgYbVqxb2txM1VWJIhLdomlamE
+ vWc9zErC7X76RPMGKm9GcRHDKW+Dbc3qUbTl3aRQ7FgKQIHvDhh3lBfWKdyMv5lYF9px qg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2ydcsnp89m-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 27 Feb 2020 23:19:45 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01RNJ9sX179444;
-        Thu, 27 Feb 2020 23:19:45 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2ydcs6kfm4-1
+        Thu, 27 Feb 2020 23:28:55 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01RNQKmW006204;
+        Thu, 27 Feb 2020 23:28:54 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 2ydcsb92cw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 27 Feb 2020 23:19:44 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01RNJh8e019250;
-        Thu, 27 Feb 2020 23:19:43 GMT
-Received: from [192.168.1.223] (/67.1.3.112)
+        Thu, 27 Feb 2020 23:28:54 +0000
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01RNSrD8019373;
+        Thu, 27 Feb 2020 23:28:53 GMT
+Received: from localhost (/10.145.179.117)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 27 Feb 2020 15:19:43 -0800
-Subject: Re: [RFC v5 PATCH 6/9] xfs: automatically relog the quotaoff start
- intent
-To:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+        with ESMTP ; Thu, 27 Feb 2020 15:28:53 -0800
+Date:   Thu, 27 Feb 2020 15:28:53 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [RFC v5 PATCH 1/9] xfs: set t_task at wait time instead of alloc
+ time
+Message-ID: <20200227232853.GP8045@magnolia>
 References: <20200227134321.7238-1-bfoster@redhat.com>
- <20200227134321.7238-7-bfoster@redhat.com>
-From:   Allison Collins <allison.henderson@oracle.com>
-Message-ID: <137e4060-5936-171d-802a-9bf72195663c@oracle.com>
-Date:   Thu, 27 Feb 2020 16:19:42 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+ <20200227134321.7238-2-bfoster@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20200227134321.7238-7-bfoster@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200227134321.7238-2-bfoster@redhat.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9544 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 malwarescore=0
- mlxlogscore=999 mlxscore=0 phishscore=0 suspectscore=0 spamscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 phishscore=0
+ mlxlogscore=999 spamscore=0 suspectscore=0 mlxscore=0 malwarescore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002270158
+ definitions=main-2002270159
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9544 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 bulkscore=0
- impostorscore=0 spamscore=0 priorityscore=1501 malwarescore=0 adultscore=0
- phishscore=0 mlxlogscore=999 mlxscore=0 suspectscore=0 clxscore=1015
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 bulkscore=0
+ lowpriorityscore=0 mlxlogscore=999 phishscore=0 spamscore=0 adultscore=0
+ suspectscore=0 impostorscore=0 clxscore=1015 priorityscore=1501
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002270158
+ definitions=main-2002270159
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 2/27/20 6:43 AM, Brian Foster wrote:
-> The quotaoff operation has a rare but longstanding deadlock vector
-> in terms of how the operation is logged. A quotaoff start intent is
-> logged (synchronously) at the onset to ensure recovery can handle
-> the operation if interrupted before in-core changes are made. This
-> quotaoff intent pins the log tail while the quotaoff sequence scans
-> and purges dquots from all in-core inodes. While this operation
-> generally doesn't generate much log traffic on its own, it can be
-> time consuming. If unrelated, concurrent filesystem activity
-> consumes remaining log space before quotaoff is able to acquire log
-> reservation for the quotaoff end intent, the filesystem locks up
-> indefinitely.
+On Thu, Feb 27, 2020 at 08:43:13AM -0500, Brian Foster wrote:
+> The xlog_ticket structure contains a task reference to support
+> blocking for available log reservation. This reference is assigned
+> at ticket allocation time, which assumes that the transaction
+> allocator will acquire reservation in the same context. This is
+> normally true, but will not always be the case with automatic
+> relogging.
 > 
-> quotaoff cannot allocate the end intent before the scan because the
-> latter can result in transaction allocation itself in certain
-> indirect cases (releasing an inode, for example). Further, rolling
-> the original transaction is difficult because the scanning work
-> occurs multiple layers down where caller context is lost and not
-> much information is available to determine how often to roll the
-> transaction.
-> 
-> To address this problem, enable automatic relogging of the quotaoff
-> start intent. This automatically relogs the intent whenever AIL
-> pushing finds the item at the tail of the log. When quotaoff
-> completes, wait for relogging to complete as the end intent expects
-> to be able to permanently remove the start intent from the log
-> subsystem. This ensures that the log tail is kept moving during a
-> particularly long quotaoff operation and avoids the log reservation
-> deadlock.
+> There is otherwise no fundamental reason log space cannot be
+> reserved for a ticket from a context different from the allocating
+> context. Move the task assignment to the log reservation blocking
+> code where it is used.
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > ---
->   fs/xfs/libxfs/xfs_trans_resv.c |  3 ++-
->   fs/xfs/xfs_dquot_item.c        |  7 +++++++
->   fs/xfs/xfs_qm_syscalls.c       | 12 +++++++++++-
->   3 files changed, 20 insertions(+), 2 deletions(-)
+>  fs/xfs/xfs_log.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-> index 1f5c9e6e1afc..f49b20c9ca33 100644
-> --- a/fs/xfs/libxfs/xfs_trans_resv.c
-> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
-> @@ -935,7 +935,8 @@ xfs_trans_resv_calc(
->   	resp->tr_qm_setqlim.tr_logcount = XFS_DEFAULT_LOG_COUNT;
->   
->   	resp->tr_qm_quotaoff.tr_logres = xfs_calc_qm_quotaoff_reservation(mp);
-> -	resp->tr_qm_quotaoff.tr_logcount = XFS_DEFAULT_LOG_COUNT;
-> +	resp->tr_qm_quotaoff.tr_logcount = XFS_DEFAULT_PERM_LOG_COUNT;
-> +	resp->tr_qm_quotaoff.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-What's the reason for the log count change here?  Otherwise looks ok.
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index f6006d94a581..df60942a9804 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -262,6 +262,7 @@ xlog_grant_head_wait(
+>  	int			need_bytes) __releases(&head->lock)
+>  					    __acquires(&head->lock)
+>  {
+> +	tic->t_task = current;
+>  	list_add_tail(&tic->t_queue, &head->waiters);
+>  
+>  	do {
+> @@ -3601,7 +3602,6 @@ xlog_ticket_alloc(
+>  	unit_res = xfs_log_calc_unit_res(log->l_mp, unit_bytes);
+>  
+>  	atomic_set(&tic->t_ref, 1);
+> -	tic->t_task		= current;
 
-Allison
->   
->   	resp->tr_qm_equotaoff.tr_logres =
->   		xfs_calc_qm_quotaoff_end_reservation();
-> diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
-> index d60647d7197b..ea5123678466 100644
-> --- a/fs/xfs/xfs_dquot_item.c
-> +++ b/fs/xfs/xfs_dquot_item.c
-> @@ -297,6 +297,13 @@ xfs_qm_qoff_logitem_push(
->   	struct xfs_log_item	*lip,
->   	struct list_head	*buffer_list)
->   {
-> +	struct xfs_log_item	*mlip = xfs_ail_min(lip->li_ailp);
-> +
-> +	if (test_bit(XFS_LI_RELOG, &lip->li_flags) &&
-> +	    !test_bit(XFS_LI_RELOGGED, &lip->li_flags) &&
-> +	    !XFS_LSN_CMP(lip->li_lsn, mlip->li_lsn))
-> +		return XFS_ITEM_RELOG;
-> +
->   	return XFS_ITEM_LOCKED;
->   }
->   
-> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-> index 1ea82764bf89..7b48d34da0f4 100644
-> --- a/fs/xfs/xfs_qm_syscalls.c
-> +++ b/fs/xfs/xfs_qm_syscalls.c
-> @@ -18,6 +18,7 @@
->   #include "xfs_quota.h"
->   #include "xfs_qm.h"
->   #include "xfs_icache.h"
-> +#include "xfs_trans_priv.h"
->   
->   STATIC int
->   xfs_qm_log_quotaoff(
-> @@ -31,12 +32,14 @@ xfs_qm_log_quotaoff(
->   
->   	*qoffstartp = NULL;
->   
-> -	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_quotaoff, 0, 0, 0, &tp);
-> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_quotaoff, 0, 0,
-> +				XFS_TRANS_RELOG, &tp);
->   	if (error)
->   		goto out;
->   
->   	qoffi = xfs_trans_get_qoff_item(tp, NULL, flags & XFS_ALL_QUOTA_ACCT);
->   	xfs_trans_log_quotaoff_item(tp, qoffi);
-> +	xfs_trans_relog_item(&qoffi->qql_item);
->   
->   	spin_lock(&mp->m_sb_lock);
->   	mp->m_sb.sb_qflags = (mp->m_qflags & ~(flags)) & XFS_MOUNT_QUOTA_ALL;
-> @@ -69,6 +72,13 @@ xfs_qm_log_quotaoff_end(
->   	int			error;
->   	struct xfs_qoff_logitem	*qoffi;
->   
-> +	/*
-> +	 * startqoff must be in the AIL and not the CIL when the end intent
-> +	 * commits to ensure it is not readded to the AIL out of order. Wait on
-> +	 * relog activity to drain to isolate startqoff to the AIL.
-> +	 */
-> +	xfs_trans_relog_item_cancel(&startqoff->qql_item, true);
-> +
->   	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_equotaoff, 0, 0, 0, &tp);
->   	if (error)
->   		return error;
+Hm.  So this leaves t_task set to NULL in the ticket constructor in
+favor of setting it in xlog_grant_head_wait.  I guess this implies that
+some future piece will be able to transfer a ticket to another process
+as part of a regrant or something?
+
+I've been wondering lately if you could transfer a dirty permanent
+transaction to a different task so that the front end could return to
+userspace as soon as the first transaction (with the intent items)
+commits, and then you could reduce the latency of front-end system
+calls.  That's probably a huge fantasy since you'd also have to transfer
+a whole ton of state to that worker and whatever you locked to do the
+operation remains locked...
+
+--D
+
+>  	INIT_LIST_HEAD(&tic->t_queue);
+>  	tic->t_unit_res		= unit_res;
+>  	tic->t_curr_res		= unit_res;
+> -- 
+> 2.21.1
 > 
