@@ -2,44 +2,44 @@ Return-Path: <SRS0=C9JY=4P=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1475C4BA3C
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 05:33:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C3F1C4BA3B
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 05:38:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CC0D72467B
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 05:33:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 145DD2084E
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 05:38:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725805AbgB0Fci (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Feb 2020 00:32:38 -0500
-Received: from mga07.intel.com ([134.134.136.100]:22354 "EHLO mga07.intel.com"
+        id S1725928AbgB0Fiy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Feb 2020 00:38:54 -0500
+Received: from mga07.intel.com ([134.134.136.100]:22722 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725769AbgB0Fci (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 Feb 2020 00:32:38 -0500
+        id S1725730AbgB0Fix (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 27 Feb 2020 00:38:53 -0500
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 26 Feb 2020 21:32:37 -0800
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 26 Feb 2020 21:38:52 -0800
 X-IronPort-AV: E=Sophos;i="5.70,490,1574150400"; 
-   d="scan'208";a="231696544"
+   d="scan'208";a="241933233"
 Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.157])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 26 Feb 2020 21:32:36 -0800
+  by orsmga006-auth.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 26 Feb 2020 21:38:52 -0800
 From:   ira.weiny@intel.com
-To:     linux-kernel@vger.kernel.org
-Cc:     Ira Weiny <ira.weiny@intel.com>,
+To:     fstests@vger.kernel.org
+Cc:     Ira Weiny <ira.weiny@intel.com>, linux-kernel@vger.kernel.org,
         Alexander Viro <viro@zeniv.linux.org.uk>,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
         Dan Williams <dan.j.williams@intel.com>,
         Dave Chinner <david@fromorbit.com>,
         Christoph Hellwig <hch@lst.de>,
         "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: [PATCH V5 00/12] Enable per-file/per-directory DAX operations V5
-Date:   Wed, 26 Feb 2020 21:24:30 -0800
-Message-Id: <20200227052442.22524-1-ira.weiny@intel.com>
+        Jeff Moyer <jmoyer@redhat.com>, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: [PATCH] xfs/XXX: Add xfs/XXX
+Date:   Wed, 26 Feb 2020 21:38:47 -0800
+Message-Id: <20200227053847.1888-1-ira.weiny@intel.com>
 X-Mailer: git-send-email 2.21.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -50,147 +50,347 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Ira Weiny <ira.weiny@intel.com>
 
-Changes from V4:
-	* Open code the aops lock rather than add it to the xfs_ilock()
-	  subsystem (Darrick's comments were obsoleted by this change)
-	* Fix lkp build suggestions and bugs
+Add XXX to test the various setting of dax flags on files.
 
-Changes from V3:
-	* Remove global locking...  :-D
-	* put back per inode locking and remove pre-mature optimizations
-	* Fix issues with Directories having IS_DAX() set
-	* Fix kernel crash issues reported by Jeff
-	* Add some clean up patches
-	* Consolidate diflags to iflags functions
-	* Update/add documentation
-	* Reorder/rename patches quite a bit
+The final fsx test was derived from Christophs test here but I wanted
+more direct function tests as well so I bundled this together.
 
-Changes from V2:
+https://www.spinics.net/lists/linux-xfs/msg10124.html
 
-	* Move i_dax_sem to be a global percpu_rw_sem rather than per inode
-		Internal discussions with Dan determined this would be easier,
-		just as performant, and slightly less overhead that having it
-		in the SB as suggested by Jan
-	* Fix locking order in comments and throughout code
-	* Change "mode" to "state" throughout commits
-	* Add CONFIG_FS_DAX wrapper to disable inode_[un]lock_state() when not
-		configured
-	* Add static branch for which is activated by a device which supports
-		DAX in XFS
-	* Change "lock/unlock" to up/down read/write as appropriate
-		Previous names were over simplified
-	* Update comments/documentation
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 
-	* Remove the xfs specific lock to the vfs (global) layer.
-	* Fix i_dax_sem locking order and comments
+---
+This tests against V4 and V5:
+https://lore.kernel.org/lkml/20200227052442.22524-1-ira.weiny@intel.com/
+---
+ tests/xfs/999     | 279 ++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/999.out |  21 ++++
+ tests/xfs/group   |   1 +
+ 3 files changed, 301 insertions(+)
+ create mode 100755 tests/xfs/999
+ create mode 100644 tests/xfs/999.out
 
-	* Move 'i_mapped' count from struct inode to struct address_space and
-		rename it to mmap_count
-	* Add inode_has_mappings() call
-
-	* Fix build issues
-	* Clean up syntax spacing and minor issues
-	* Update man page text for STATX_ATTR_DAX
-	* Add reviewed-by's
-	* Rebase to 5.6
-
-	Rename patch:
-		from: fs/xfs: Add lock/unlock state to xfs
-		to: fs/xfs: Add write DAX lock to xfs layer
-	Add patch:
-		fs/xfs: Clarify lockdep dependency for xfs_isilocked()
-	Drop patch:
-		fs/xfs: Fix truncate up
-
-
-At LSF/MM'19 [1] [2] we discussed applications that overestimate memory
-consumption due to their inability to detect whether the kernel will
-instantiate page cache for a file, and cases where a global dax enable via a
-mount option is too coarse.
-
-The following patch series enables selecting the use of DAX on individual files
-and/or directories on xfs, and lays some groundwork to do so in ext4.  In this
-scheme the dax mount option can be omitted to allow the per-file property to
-take effect.
-
-The insight at LSF/MM was to separate the per-mount or per-file "physical"
-capability switch from an "effective" attribute for the file.
-
-At LSF/MM we discussed the difficulties of switching the DAX state of a file
-with active mappings / page cache.  It was thought the races could be avoided
-by limiting DAX state flips to 0-length files.
-
-However, this turns out to not be true.[3] This is because address space
-operations (a_ops) may be in use at any time the inode is referenced and users
-have expressed a desire to be able to change the DAX state on a file with data
-in it.  For those reasons this patch set allows changing the DAX state flag on
-a file as long as it is not current mapped.
-
-Details of when and how DAX state can be changed on a file is included in a
-documentation patch.
-
-It should be noted that the physical DAX flag inheritance is not shown in this
-patch set as it was maintained from previous work on XFS.  The physical DAX
-flag and it's inheritance will need to be added to other file systems for user
-control. 
-
-As submitted this works on real hardware testing.
-
-
-[1] https://lwn.net/Articles/787973/
-[2] https://lwn.net/Articles/787233/
-[3] https://lkml.org/lkml/2019/10/20/96
-[4] https://patchwork.kernel.org/patch/11310511/
-
-
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "Theodore Y. Ts'o" <tytso@mit.edu>
-Cc: Jan Kara <jack@suse.cz>
-Cc: linux-ext4@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
-
-
-Ira Weiny (12):
-  fs/xfs: Remove unnecessary initialization of i_rwsem
-  fs: Remove unneeded IS_DAX() check
-  fs/stat: Define DAX statx attribute
-  fs/xfs: Isolate the physical DAX flag from enabled
-  fs/xfs: Create function xfs_inode_enable_dax()
-  fs: Add locking for a dynamic address space operations state
-  fs: Prevent DAX state change if file is mmap'ed
-  fs/xfs: Hold off aops users while changing DAX state
-  fs/xfs: Clean up locking in dax invalidate
-  fs/xfs: Allow toggle of effective DAX flag
-  fs/xfs: Remove xfs_diflags_to_linux()
-  Documentation/dax: Update Usage section
-
- Documentation/filesystems/dax.txt | 84 +++++++++++++++++++++++++-
- Documentation/filesystems/vfs.rst | 16 +++++
- fs/attr.c                         |  1 +
- fs/inode.c                        | 16 ++++-
- fs/iomap/buffered-io.c            |  1 +
- fs/open.c                         |  4 ++
- fs/stat.c                         |  5 ++
- fs/xfs/xfs_icache.c               |  5 +-
- fs/xfs/xfs_inode.h                |  2 +
- fs/xfs/xfs_ioctl.c                | 98 +++++++++++++++----------------
- fs/xfs/xfs_iops.c                 | 69 +++++++++++++++-------
- include/linux/fs.h                | 73 ++++++++++++++++++++++-
- include/uapi/linux/stat.h         |  1 +
- mm/fadvise.c                      |  7 ++-
- mm/filemap.c                      |  4 ++
- mm/huge_memory.c                  |  1 +
- mm/khugepaged.c                   |  2 +
- mm/mmap.c                         | 19 +++++-
- mm/util.c                         |  9 ++-
- 19 files changed, 328 insertions(+), 89 deletions(-)
-
+diff --git a/tests/xfs/999 b/tests/xfs/999
+new file mode 100755
+index 000000000000..b123f1f39894
+--- /dev/null
++++ b/tests/xfs/999
+@@ -0,0 +1,279 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2019 Intel, Corp.  All Rights Reserved.
++#
++# FSQA Test No. 999 (temporary)
++#
++# Test setting of DAX flag
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++status=1	# failure is the default!
++
++dax_dir=$TEST_DIR/dax-dir
++dax_sub_dir=$TEST_DIR/dax-dir/dax-sub-dir
++dax_inh_file=$dax_dir/dax-inh-file
++dax_non_inh_file=$dax_dir/dax-non-inh-file
++non_dax=$TEST_DIR/non-dax
++dax_file=$TEST_DIR/dax-file
++dax_file_copy=$TEST_DIR/dax-file-copy
++dax_file_move=$TEST_DIR/dax-file-move
++data_file=$TEST_DIR/data-file
++
++_cleanup() {
++	rm -rf $TEST_DIR/*
++}
++
++trap "_cleanup ; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common/rc
++
++# real QA test starts here
++_supported_os Linux
++_require_xfs_io_command "lsattr"
++_require_xfs_io_command "chattr" "x"
++_require_xfs_io_command "statx"
++_require_test
++
++function mount_no_dax {
++	# mount SCRATCH_DEV with dax option, TEST_DEV not
++	export MOUNT_OPTIONS=""
++	export TEST_FS_MOUNT_OPTS=""
++	_test_unmount
++	_test_mount
++	_fs_options $TEST_DEV | grep -qw "dax"
++	if [ "$?" == "0" ]; then
++		_notrun "we need $TEST_DEV mount without dax"
++	fi
++}
++
++function mount_dax {
++	# mount SCRATCH_DEV with dax option, TEST_DEV not
++	export MOUNT_OPTIONS=""
++	export TEST_FS_MOUNT_OPTS=""
++	_test_unmount
++	_test_mount "-o dax"
++	_fs_options $TEST_DEV | grep -qw "dax"
++	if [ "$?" != "0" ]; then
++		_notrun "we need $TEST_DEV mount with dax"
++	fi
++}
++
++function check_phys_dax {
++	xfs_io -c 'lsattr' $1 | awk -e '{ print $1 }' | grep 'x' &> /dev/null
++	if [ "$?" != "0" ]; then
++		echo "FAILED: Did NOT find DAX flag on $1"
++		status=1; exit
++	fi
++}
++
++function check_effective_dax {
++	attr=`xfs_io -c 'statx -r' $1 | grep 'stat.attributes' | awk -e '{ print $3 }'`
++	masked=$(( $attr & 0x2000 ))
++	if [ "$masked" != "8192" ]; then
++		echo "FAILED: Did NOT find VFS DAX flag on $1"
++		status=1; exit
++	fi
++}
++
++function check_phys_no_dax {
++	xfs_io -c 'lsattr' $1 | awk -e '{ print $1 }' | grep 'x' &> /dev/null
++	if [ "$?" == "0" ]; then
++		echo "FAILED: Found DAX flag on $1"
++		status=1; exit
++	fi
++}
++
++function check_effective_no_dax {
++	attr=`xfs_io -c 'statx -r' $1 | grep 'stat.attributes' | awk -e '{ print $3 }'`
++	masked=$(( $attr & 0x2000 ))
++	if [ "$masked" == "8192" ]; then
++		echo "FAILED: Found VFS DAX flag on $1"
++		status=1; exit
++	fi
++}
++
++echo "running tests..."
++
++echo "   *** mount w/o dax flag."
++mount_no_dax
++
++echo "   *** mark dax-dir as dax enabled"
++mkdir $dax_dir
++xfs_io -c 'chattr +x' $dax_dir
++check_phys_dax $dax_dir
++
++echo "   *** check file inheritance"
++touch $dax_inh_file
++check_phys_dax $dax_inh_file
++check_effective_dax $dax_inh_file
++
++echo "   *** check directory inheritance"
++mkdir $dax_sub_dir
++check_phys_dax $dax_sub_dir
++
++echo "   *** check changing directory"
++xfs_io -c 'chattr -x' $dax_dir
++check_phys_no_dax $dax_dir
++check_effective_no_dax $dax_dir
++
++echo "   *** check non file inheritance"
++touch $dax_non_inh_file
++check_phys_no_dax $dax_non_inh_file
++check_effective_no_dax $dax_non_inh_file
++
++echo "   *** check that previous file stays enabled"
++check_phys_dax $dax_inh_file
++check_effective_dax $dax_inh_file
++
++echo "   *** Reset the directory"
++xfs_io -c 'chattr +x' $dax_dir
++check_phys_dax $dax_dir
++
++
++# check mount override
++# ====================
++
++echo "   *** Remount fs with mount flag"
++mount_dax
++touch $non_dax
++check_phys_no_dax $non_dax
++check_effective_dax $non_dax
++
++echo "   *** Check for non-dax files to be dax with mount option"
++check_effective_dax $dax_non_inh_file
++
++echo "   *** check for file dax flag 'sticky-ness' after remount"
++touch $dax_file
++xfs_io -c 'chattr +x' $dax_file
++check_phys_dax $dax_file
++check_effective_dax $dax_file
++
++echo "   *** remount w/o mount flag"
++mount_no_dax
++check_phys_dax $dax_file
++check_effective_dax $dax_file
++
++check_phys_no_dax $non_dax
++check_effective_no_dax $non_dax
++
++
++# Check non-zero file operations
++# ==============================
++
++echo "   *** file should change effective but page cache should be empty"
++$XFS_IO_PROG -f -c "pwrite 0 10000" $data_file > /dev/null
++xfs_io -c 'chattr +x' $data_file
++check_phys_dax $data_file
++check_effective_dax $data_file
++
++
++# Check inheritance on cp, mv
++# ===========================
++
++echo "   *** check inheritance on cp, mv"
++cp $non_dax $dax_dir/conv-dax
++check_phys_dax $dax_dir/conv-dax
++check_effective_dax $dax_dir/conv-dax
++
++echo "   *** Moved files 'don't inherit'"
++mv $non_dax $dax_dir/move-dax
++check_phys_no_dax $dax_dir/move-dax
++check_effective_no_dax $dax_dir/move-dax
++
++# Check preservation of phys on cp, mv
++# ====================================
++
++mv $dax_file $dax_file_move
++check_phys_dax $dax_file_move
++check_effective_dax $dax_file_move
++
++cp $dax_file_move $dax_file_copy
++check_phys_no_dax $dax_file_copy
++check_effective_no_dax $dax_file_copy
++
++
++# Verify no mode changes on mmap
++# ==============================
++
++echo "   *** check no mode change when mmaped"
++
++dd if=/dev/zero of=$dax_file bs=4096 count=10 > $tmp.log 2>&1
++
++# set known state.
++xfs_io -c 'chattr -x' $dax_file
++check_phys_no_dax $dax_file
++check_effective_no_dax $dax_file
++
++python3 - << EOF > $tmp.log 2>&1 &
++import mmap
++import time
++print ('mmaping "$dax_file"')
++f=open("$dax_file", "r+b")
++mm = mmap.mmap(f.fileno(), 0)
++print ('mmaped "$dax_file"')
++while True:
++	time.sleep(1)
++EOF
++pid=$!
++
++sleep 1
++
++# attempt to should fail
++xfs_io -c 'chattr +x' $dax_file > /dev/null 2>&1
++check_phys_no_dax $dax_file
++check_effective_no_dax $dax_file
++
++kill -TERM $pid > /dev/null 2>&1
++wait $pid > /dev/null 2>&1
++
++# after mmap released should work
++xfs_io -c 'chattr +x' $dax_file
++check_phys_dax $dax_file
++check_effective_dax $dax_file
++
++
++# Finally run the test stolen from Christoph Hellwig to test changing the mode
++# while performing a series of operations
++# =============================================================================
++
++function run_fsx {
++	options=$1
++
++	echo "   *** run 'fsx $options' racing with setting/clearing the DAX flag"
++	$here/ltp/fsx $options -N 20000 $dax_file > $tmp.log 2>&1 &
++	pid=$!
++
++	if [ ! -n "$pid" ]; then
++		echo "FAILED to start fsx"
++		exit 255
++	fi
++
++	# NOTE: fsx runs much faster than these mode changes.
++	for i in `seq 1 500`; do
++		xfs_io -c 'chattr +x' $dax_file > /dev/null 2>&1
++		xfs_io -c 'chattr -x' $dax_file > /dev/null 2>&1
++	done
++
++	wait $pid
++	status=$?
++	if [ "$status" != "0" ]; then
++		cat /sys/kernel/debug/tracing/trace > trace_output
++		echo "FAILED: fsx exited with status : $status"
++		echo "        see trace_output"
++		head $dax_file.fsxlog
++		exit $status
++	fi
++	pid=""
++}
++
++run_fsx ""
++run_fsx "-A"
++run_fsx "-Z -r 4096 -w 4096"
++
++
++status=0 ; exit
+diff --git a/tests/xfs/999.out b/tests/xfs/999.out
+new file mode 100644
+index 000000000000..ccb13770ca4d
+--- /dev/null
++++ b/tests/xfs/999.out
+@@ -0,0 +1,21 @@
++QA output created by 999
++running tests...
++   *** mount w/o dax flag.
++   *** mark dax-dir as dax enabled
++   *** check file inheritance
++   *** check directory inheritance
++   *** check changing directory
++   *** check non file inheritance
++   *** check that previous file stays enabled
++   *** Reset the directory
++   *** Remount fs with mount flag
++   *** Check for non-dax files to be dax with mount option
++   *** check for file dax flag 'sticky-ness' after remount
++   *** remount w/o mount flag
++   *** file should change effective but page cache should be empty
++   *** check inheritance on cp, mv
++   *** Moved files 'don't inherit'
++   *** check no mode change when mmaped
++   *** run 'fsx ' racing with setting/clearing the DAX flag
++   *** run 'fsx -A' racing with setting/clearing the DAX flag
++   *** run 'fsx -Z -r 4096 -w 4096' racing with setting/clearing the DAX flag
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 522d4bc44d1f..816883a268bf 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -511,3 +511,4 @@
+ 511 auto quick quota
+ 512 auto quick acl attr
+ 513 auto mount
++999 auto
 -- 
 2.21.0
 
