@@ -7,209 +7,167 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB2DFC3F2C6
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 23:33:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3C02C3F2C6
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 23:36:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 97669246A4
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 23:33:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD2092469C
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 23:36:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="cNKWya0V"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="AncIhX8a"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730226AbgB0Xdc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Feb 2020 18:33:32 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:55352 "EHLO
+        id S1729317AbgB0XgE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Feb 2020 18:36:04 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:58412 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728993AbgB0Xdc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Feb 2020 18:33:32 -0500
+        with ESMTP id S1728993AbgB0XgE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Feb 2020 18:36:04 -0500
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01RNSapN104486;
-        Thu, 27 Feb 2020 23:33:28 GMT
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01RNXoKc021412;
+        Thu, 27 Feb 2020 23:36:00 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
  references : from : message-id : date : mime-version : in-reply-to :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=N+z/KfsBR6xlCh0eayXY5gW+IOAhtOALQffQ5ZSfCxI=;
- b=cNKWya0VoA98YKKKbp/CWvep1HhIXdLQxsa40+TXqNMEEwginnVjZ+zHgozQnWyXEHWN
- tCQB3GIWizr1dF12QgGHh47gDfyVbWInWSTZD7KZxfkzHFFmDoGBJ00t15FZj7agWe8X
- 3eNuAMS26zOWq9pKV6e4JVhCWSMjfQ/ZFDb0H51g1wsZw4DMXYG+oh1auJ4L/vHniZ17
- zv7OvN0OuU7ezPr50FcgZUsIKvofwcfFqYMEuOl0WAp/8UQHp8azPQ1vKPuuh1Qait3J
- vhWlSvwKKOsRX7qPVgBYYC/AkxyL8JgZqKnc0Qt8ZlxXwd7UbcF0WQpQtVmAoB2GPKSy 4A== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2yehxrssug-1
+ bh=dGxao21xyqU5kQSpA/r6djasx0GFZ3TqKtpRMdSVIjo=;
+ b=AncIhX8aCD4BDjst5LvJyOrbHW5lCca1bAAl323ThWKQUjsxRp75PShkq+sIMAXijWeQ
+ K4RAS9K2+7r0iG5OLufcNZXTgtlK3L2xN7ErxZF56AXDO24xMbeT90CcvRl7S5DMbFJW
+ demX3RcFbMoJyidDeYgCOfK5LY1aKo3zb0Ray9kZjpgoTMPXaVduBIgaiO4CVLRZrClI
+ T09qgV7pF+bu6gBF+pTxTRwo1goqWmYJRzEFAcvSe7gi3VKuMeip9eIGDoiaS0Sxjmyj
+ 41GEJAh3RtwWXbRQi0FLrmdBviLpD7prbK7Lx+Jmd4cbHgsXaMJSXo7Vti6nvEpKDRq8 LQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 2yehxrst3u-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 27 Feb 2020 23:33:28 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01RNW9gI178692;
-        Thu, 27 Feb 2020 23:33:27 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2ydj4nwsx4-1
+        Thu, 27 Feb 2020 23:36:00 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01RNWqaf120894;
+        Thu, 27 Feb 2020 23:36:00 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 2ydcsdn5rc-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 27 Feb 2020 23:33:27 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01RNXQW8027508;
-        Thu, 27 Feb 2020 23:33:27 GMT
+        Thu, 27 Feb 2020 23:36:00 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01RNZxqo027171;
+        Thu, 27 Feb 2020 23:35:59 GMT
 Received: from [192.168.1.223] (/67.1.3.112)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 27 Feb 2020 15:33:26 -0800
-Subject: Re: [RFC v5 PATCH 7/9] xfs: buffer relogging support prototype
+        with ESMTP ; Thu, 27 Feb 2020 15:35:59 -0800
+Subject: Re: [RFC v5 PATCH 8/9] xfs: create an error tag for random relog
+ reservation
 To:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 References: <20200227134321.7238-1-bfoster@redhat.com>
- <20200227134321.7238-8-bfoster@redhat.com>
+ <20200227134321.7238-9-bfoster@redhat.com>
 From:   Allison Collins <allison.henderson@oracle.com>
-Message-ID: <12e69f70-13e6-830c-83ef-9ad5b222301e@oracle.com>
-Date:   Thu, 27 Feb 2020 16:33:26 -0700
+Message-ID: <357287c8-420f-b854-33ae-c716eb6c138b@oracle.com>
+Date:   Thu, 27 Feb 2020 16:35:58 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20200227134321.7238-8-bfoster@redhat.com>
+In-Reply-To: <20200227134321.7238-9-bfoster@redhat.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9544 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 suspectscore=2
- spamscore=0 adultscore=0 malwarescore=0 mlxlogscore=999 mlxscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 bulkscore=0
+ spamscore=0 mlxlogscore=999 mlxscore=0 suspectscore=0 malwarescore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
  definitions=main-2002270160
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9544 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 priorityscore=1501
  bulkscore=0 phishscore=0 spamscore=0 clxscore=1015 lowpriorityscore=0
- adultscore=0 mlxlogscore=999 mlxscore=0 suspectscore=2 impostorscore=0
+ adultscore=0 mlxlogscore=999 mlxscore=0 suspectscore=0 impostorscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002270159
+ definitions=main-2002270160
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 On 2/27/20 6:43 AM, Brian Foster wrote:
-> Add a quick and dirty implementation of buffer relogging support.
-> There is currently no use case for buffer relogging. This is for
-> experimental use only and serves as an example to demonstrate the
-> ability to relog arbitrary items in the future, if necessary.
+> Create an errortag to randomly enable relogging on permanent
+> transactions. This only stresses relog reservation management and
+> does not enable relogging of any particular items. The tag will be
+> reused in a subsequent patch to enable random item relogging.
 > 
-> Add a hook to enable relogging a buffer in a transaction, update the
-> buffer log item handlers to support relogged BLIs and update the
-> relog handler to join the relogged buffer to the relog transaction.
-> 
-Alrighty, thanks for the example!  It sounds like it's meant more to be 
-a demo than to really be applied though?
-
-Allison
-
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
+Alrighty, looks ok:
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+
 > ---
->   fs/xfs/xfs_buf_item.c  |  5 +++++
->   fs/xfs/xfs_trans.h     |  1 +
->   fs/xfs/xfs_trans_ail.c | 19 ++++++++++++++++---
->   fs/xfs/xfs_trans_buf.c | 22 ++++++++++++++++++++++
->   4 files changed, 44 insertions(+), 3 deletions(-)
+>   fs/xfs/libxfs/xfs_errortag.h | 4 +++-
+>   fs/xfs/xfs_error.c           | 3 +++
+>   fs/xfs/xfs_trans.c           | 6 ++++++
+>   3 files changed, 12 insertions(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index 663810e6cd59..4ef2725fa8ce 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -463,6 +463,7 @@ xfs_buf_item_unpin(
->   			list_del_init(&bp->b_li_list);
->   			bp->b_iodone = NULL;
->   		} else {
-> +			xfs_trans_relog_item_cancel(lip, false);
->   			spin_lock(&ailp->ail_lock);
->   			xfs_trans_ail_delete(ailp, lip, SHUTDOWN_LOG_IO_ERROR);
->   			xfs_buf_item_relse(bp);
-> @@ -528,6 +529,9 @@ xfs_buf_item_push(
->   		return XFS_ITEM_LOCKED;
->   	}
+> diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
+> index 79e6c4fb1d8a..ca7bcadb9455 100644
+> --- a/fs/xfs/libxfs/xfs_errortag.h
+> +++ b/fs/xfs/libxfs/xfs_errortag.h
+> @@ -55,7 +55,8 @@
+>   #define XFS_ERRTAG_FORCE_SCRUB_REPAIR			32
+>   #define XFS_ERRTAG_FORCE_SUMMARY_RECALC			33
+>   #define XFS_ERRTAG_IUNLINK_FALLBACK			34
+> -#define XFS_ERRTAG_MAX					35
+> +#define XFS_ERRTAG_RELOG				35
+> +#define XFS_ERRTAG_MAX					36
 >   
-> +	if (test_bit(XFS_LI_RELOG, &lip->li_flags))
-> +		return XFS_ITEM_RELOG;
-> +
->   	ASSERT(!(bip->bli_flags & XFS_BLI_STALE));
->   
->   	trace_xfs_buf_item_push(bip);
-> @@ -956,6 +960,7 @@ STATIC void
->   xfs_buf_item_free(
->   	struct xfs_buf_log_item	*bip)
->   {
-> +	ASSERT(!test_bit(XFS_LI_RELOG, &bip->bli_item.li_flags));
->   	xfs_buf_item_free_format(bip);
->   	kmem_free(bip->bli_item.li_lv_shadow);
->   	kmem_cache_free(xfs_buf_item_zone, bip);
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index 1637df32c64c..81cb42f552d9 100644
-> --- a/fs/xfs/xfs_trans.h
-> +++ b/fs/xfs/xfs_trans.h
-> @@ -226,6 +226,7 @@ void		xfs_trans_inode_buf(xfs_trans_t *, struct xfs_buf *);
->   void		xfs_trans_stale_inode_buf(xfs_trans_t *, struct xfs_buf *);
->   bool		xfs_trans_ordered_buf(xfs_trans_t *, struct xfs_buf *);
->   void		xfs_trans_dquot_buf(xfs_trans_t *, struct xfs_buf *, uint);
-> +bool		xfs_trans_relog_buf(struct xfs_trans *, struct xfs_buf *);
->   void		xfs_trans_inode_alloc_buf(xfs_trans_t *, struct xfs_buf *);
->   void		xfs_trans_ichgtime(struct xfs_trans *, struct xfs_inode *, int);
->   void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
-> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-> index 71a47faeaae8..103ab62e61be 100644
-> --- a/fs/xfs/xfs_trans_ail.c
-> +++ b/fs/xfs/xfs_trans_ail.c
-> @@ -18,6 +18,7 @@
->   #include "xfs_error.h"
->   #include "xfs_log.h"
->   #include "xfs_log_priv.h"
-> +#include "xfs_buf_item.h"
->   
->   #ifdef DEBUG
 >   /*
-> @@ -187,9 +188,21 @@ xfs_ail_relog(
->   			xfs_log_ticket_put(ailp->ail_relog_tic);
->   		spin_unlock(&ailp->ail_lock);
+>    * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+> @@ -95,5 +96,6 @@
+>   #define XFS_RANDOM_FORCE_SCRUB_REPAIR			1
+>   #define XFS_RANDOM_FORCE_SUMMARY_RECALC			1
+>   #define XFS_RANDOM_IUNLINK_FALLBACK			(XFS_RANDOM_DEFAULT/10)
+> +#define XFS_RANDOM_RELOG				XFS_RANDOM_DEFAULT
 >   
-> -		xfs_trans_add_item(tp, lip);
-> -		set_bit(XFS_LI_DIRTY, &lip->li_flags);
-> -		tp->t_flags |= XFS_TRANS_DIRTY;
-> +		/*
-> +		 * TODO: Ideally, relog transaction management would be pushed
-> +		 * down into the ->iop_push() callbacks rather than playing
-> +		 * games with ->li_trans and looking at log item types here.
-> +		 */
-> +		if (lip->li_type == XFS_LI_BUF) {
-> +			struct xfs_buf_log_item	*bli = (struct xfs_buf_log_item *) lip;
-> +			xfs_buf_hold(bli->bli_buf);
-> +			xfs_trans_bjoin(tp, bli->bli_buf);
-> +			xfs_trans_dirty_buf(tp, bli->bli_buf);
-> +		} else {
-> +			xfs_trans_add_item(tp, lip);
-> +			set_bit(XFS_LI_DIRTY, &lip->li_flags);
-> +			tp->t_flags |= XFS_TRANS_DIRTY;
-> +		}
->   		/* XXX: include ticket owner task fix */
->   		error = xfs_trans_roll(&tp);
->   		ASSERT(!error);
-> diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-> index 08174ffa2118..e17715ac23fc 100644
-> --- a/fs/xfs/xfs_trans_buf.c
-> +++ b/fs/xfs/xfs_trans_buf.c
-> @@ -787,3 +787,25 @@ xfs_trans_dquot_buf(
+>   #endif /* __XFS_ERRORTAG_H_ */
+> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+> index 331765afc53e..2838b909287e 100644
+> --- a/fs/xfs/xfs_error.c
+> +++ b/fs/xfs/xfs_error.c
+> @@ -53,6 +53,7 @@ static unsigned int xfs_errortag_random_default[] = {
+>   	XFS_RANDOM_FORCE_SCRUB_REPAIR,
+>   	XFS_RANDOM_FORCE_SUMMARY_RECALC,
+>   	XFS_RANDOM_IUNLINK_FALLBACK,
+> +	XFS_RANDOM_RELOG,
+>   };
 >   
->   	xfs_trans_buf_set_type(tp, bp, type);
->   }
+>   struct xfs_errortag_attr {
+> @@ -162,6 +163,7 @@ XFS_ERRORTAG_ATTR_RW(buf_lru_ref,	XFS_ERRTAG_BUF_LRU_REF);
+>   XFS_ERRORTAG_ATTR_RW(force_repair,	XFS_ERRTAG_FORCE_SCRUB_REPAIR);
+>   XFS_ERRORTAG_ATTR_RW(bad_summary,	XFS_ERRTAG_FORCE_SUMMARY_RECALC);
+>   XFS_ERRORTAG_ATTR_RW(iunlink_fallback,	XFS_ERRTAG_IUNLINK_FALLBACK);
+> +XFS_ERRORTAG_ATTR_RW(relog,		XFS_ERRTAG_RELOG);
+>   
+>   static struct attribute *xfs_errortag_attrs[] = {
+>   	XFS_ERRORTAG_ATTR_LIST(noerror),
+> @@ -199,6 +201,7 @@ static struct attribute *xfs_errortag_attrs[] = {
+>   	XFS_ERRORTAG_ATTR_LIST(force_repair),
+>   	XFS_ERRORTAG_ATTR_LIST(bad_summary),
+>   	XFS_ERRORTAG_ATTR_LIST(iunlink_fallback),
+> +	XFS_ERRORTAG_ATTR_LIST(relog),
+>   	NULL,
+>   };
+>   
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index f7f2411ead4e..24e0208b74b8 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -19,6 +19,7 @@
+>   #include "xfs_trace.h"
+>   #include "xfs_error.h"
+>   #include "xfs_defer.h"
+> +#include "xfs_errortag.h"
+>   
+>   kmem_zone_t	*xfs_trans_zone;
+>   
+> @@ -263,6 +264,11 @@ xfs_trans_alloc(
+>   	struct xfs_trans	*tp;
+>   	int			error;
+>   
+> +	/* relogging requires permanent transactions */
+> +	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_RELOG) &&
+> +	    resp->tr_logflags & XFS_TRANS_PERM_LOG_RES)
+> +		flags |= XFS_TRANS_RELOG;
 > +
-> +/*
-> + * Enable automatic relogging on a buffer. This essentially pins a dirty buffer
-> + * in-core until relogging is disabled. Note that the buffer must not already be
-> + * queued for writeback.
-> + */
-> +bool
-> +xfs_trans_relog_buf(
-> +	struct xfs_trans	*tp,
-> +	struct xfs_buf		*bp)
-> +{
-> +	struct xfs_buf_log_item	*bip = bp->b_log_item;
-> +
-> +	ASSERT(tp->t_flags & XFS_TRANS_RELOG);
-> +	ASSERT(xfs_buf_islocked(bp));
-> +
-> +	if (bp->b_flags & _XBF_DELWRI_Q)
-> +		return false;
-> +
-> +	xfs_trans_relog_item(&bip->bli_item);
-> +	return true;
-> +}
+>   	/*
+>   	 * Allocate the handle before we do our freeze accounting and setting up
+>   	 * GFP_NOFS allocation context so that we avoid lockdep false positives
 > 
