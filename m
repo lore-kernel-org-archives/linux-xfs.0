@@ -2,182 +2,173 @@ Return-Path: <SRS0=C9JY=4P=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07948C35677
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 14:48:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A60CC11D3D
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 15:09:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C8C17246A9
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 14:48:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C68AC24688
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Feb 2020 15:09:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ehGvLIII"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="b+nI3yJ6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731701AbgB0OsQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Feb 2020 09:48:16 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:54557 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729970AbgB0Nn1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Feb 2020 08:43:27 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1582811006;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=AoQqqY3wn4EHZR/Bdqhd1nQQjld+kUALV2aa+N73378=;
-        b=ehGvLIIIoXVv75ahgvLP/Uw+pQiaIFwn3JH7I+oZ/GvYBRuH5VUw9ArQuMem2fEZL6wwBN
-        w0+Gq1luiarBD0Qv4wpNmImIYpRc1WUgViyOXlInkjcbc4gXl0hSiXaVEFYfrK2U9RiSjL
-        wuAJT17rYH2tkgjdAfDhK6W/efoWTzc=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-269-sKeIUis6NL6ckMWEjn1IwA-1; Thu, 27 Feb 2020 08:43:24 -0500
-X-MC-Unique: sKeIUis6NL6ckMWEjn1IwA-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 472931005512
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Feb 2020 13:43:23 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 0DBB65DA7C
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Feb 2020 13:43:22 +0000 (UTC)
-From:   Brian Foster <bfoster@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [RFC v5 PATCH 4/9] xfs: automatic relogging item management
-Date:   Thu, 27 Feb 2020 08:43:16 -0500
-Message-Id: <20200227134321.7238-5-bfoster@redhat.com>
-In-Reply-To: <20200227134321.7238-1-bfoster@redhat.com>
+        id S1729468AbgB0PJm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Feb 2020 10:09:42 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:40344 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729287AbgB0PJm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Feb 2020 10:09:42 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01RF3jkG059221;
+        Thu, 27 Feb 2020 15:09:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=24WfYHzCJ1mJieZuU8CXi6eUIoJcGENlb5i1CmmaQRE=;
+ b=b+nI3yJ6FCVwPnY2qwRMnrtL1kbyapwErSNwn8FTImmj6R1D5d1OqtbVwvbr2pKr1x6t
+ e0lhOY1+zO19fSMRrAj9B+MdJzmUtEGBexNi+JAu/GsSgwslux3uYX0LXjFB5BpSYRu+
+ 1jLaxiQiPUQLKJTlD4T9LKn3wqRbHR8R7oLQ4TY4ylul6Nl5oYS5xkGb4YFphmZ+/69G
+ y6KSFOc8Ec0uT5s7J0ko62qCo/rETbVBYkZyIBcUUV2bdbNUu21hoChJKMk1EYdV0w+F
+ VB1cbrN/uBAlVHn5r+JE9Vzjev2mhTD+Zoxflr0ldeeg0ajJmEH6BbpaCGfIqtU7CIXr fA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 2ydybcnh21-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 27 Feb 2020 15:09:38 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01RF2Fg0105172;
+        Thu, 27 Feb 2020 15:09:37 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 2ydcs5e59v-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 27 Feb 2020 15:09:37 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01RF9aiD029486;
+        Thu, 27 Feb 2020 15:09:36 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 27 Feb 2020 07:09:36 -0800
+Date:   Thu, 27 Feb 2020 07:09:36 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [RFC v5 PATCH 0/9] xfs: automatic relogging experiment
+Message-ID: <20200227150936.GL8045@magnolia>
 References: <20200227134321.7238-1-bfoster@redhat.com>
 MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200227134321.7238-1-bfoster@redhat.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9543 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 malwarescore=0
+ mlxlogscore=999 mlxscore=0 phishscore=0 suspectscore=0 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002270120
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9543 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 adultscore=0
+ priorityscore=1501 suspectscore=0 mlxlogscore=999 lowpriorityscore=0
+ phishscore=0 spamscore=0 clxscore=1015 malwarescore=0 mlxscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2002270120
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-As implemented by the previous patch, relogging can be enabled on
-any item via a relog enabled transaction (which holds a reference to
-an active relog ticket). Add a couple log item flags to track relog
-state of an arbitrary log item. The item holds a reference to the
-global relog ticket when relogging is enabled and releases the
-reference when relogging is disabled.
+On Thu, Feb 27, 2020 at 08:43:12AM -0500, Brian Foster wrote:
+> Hi all,
+> 
+> Here's a v5 RFC of the automatic item relogging experiment. Firstly,
+> note that this is still a POC and experimental code with various quirks.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_trace.h      |  2 ++
- fs/xfs/xfs_trans.c      | 36 ++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_trans.h      |  6 +++++-
- fs/xfs/xfs_trans_priv.h |  2 ++
- 4 files changed, 45 insertions(+), 1 deletion(-)
+Heh, funny, I was going to ask you if you might have time next week to
+review the latest iteration of the btree bulk loading series so that I
+could get closer to merging the rest of online repair and/or refactoring
+offline repair.  I'll take a closer look at this after I read through
+everything else that came in overnight.
 
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index a86be7f807ee..a066617ec54d 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -1063,6 +1063,8 @@ DEFINE_LOG_ITEM_EVENT(xfs_ail_push);
- DEFINE_LOG_ITEM_EVENT(xfs_ail_pinned);
- DEFINE_LOG_ITEM_EVENT(xfs_ail_locked);
- DEFINE_LOG_ITEM_EVENT(xfs_ail_flushing);
-+DEFINE_LOG_ITEM_EVENT(xfs_relog_item);
-+DEFINE_LOG_ITEM_EVENT(xfs_relog_item_cancel);
-=20
- DECLARE_EVENT_CLASS(xfs_ail_class,
- 	TP_PROTO(struct xfs_log_item *lip, xfs_lsn_t old_lsn, xfs_lsn_t new_lsn=
-),
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 8ac05ed8deda..f7f2411ead4e 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -778,6 +778,41 @@ xfs_trans_del_item(
- 	list_del_init(&lip->li_trans);
- }
-=20
-+void
-+xfs_trans_relog_item(
-+	struct xfs_log_item	*lip)
-+{
-+	if (!test_and_set_bit(XFS_LI_RELOG, &lip->li_flags)) {
-+		xfs_trans_ail_relog_get(lip->li_mountp);
-+		trace_xfs_relog_item(lip);
-+	}
-+}
-+
-+void
-+xfs_trans_relog_item_cancel(
-+	struct xfs_log_item	*lip,
-+	bool			drain) /* wait for relogging to cease */
-+{
-+	struct xfs_mount	*mp =3D lip->li_mountp;
-+
-+	if (!test_and_clear_bit(XFS_LI_RELOG, &lip->li_flags))
-+		return;
-+	xfs_trans_ail_relog_put(lip->li_mountp);
-+	trace_xfs_relog_item_cancel(lip);
-+
-+	if (!drain)
-+		return;
-+
-+	/*
-+	 * Some operations might require relog activity to cease before they ca=
-n
-+	 * proceed. For example, an operation must wait before including a
-+	 * non-lockable log item (i.e. intent) in another transaction.
-+	 */
-+	while (wait_on_bit_timeout(&lip->li_flags, XFS_LI_RELOGGED,
-+				   TASK_UNINTERRUPTIBLE, HZ))
-+		xfs_log_force(mp, XFS_LOG_SYNC);
-+}
-+
- /* Detach and unlock all of the items in a transaction */
- static void
- xfs_trans_free_items(
-@@ -863,6 +898,7 @@ xfs_trans_committed_bulk(
-=20
- 		if (aborted)
- 			set_bit(XFS_LI_ABORTED, &lip->li_flags);
-+		clear_and_wake_up_bit(XFS_LI_RELOGGED, &lip->li_flags);
-=20
- 		if (lip->li_ops->flags & XFS_ITEM_RELEASE_WHEN_COMMITTED) {
- 			lip->li_ops->iop_release(lip);
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index a032989943bd..fc4c25b6eee4 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -59,12 +59,16 @@ struct xfs_log_item {
- #define	XFS_LI_ABORTED	1
- #define	XFS_LI_FAILED	2
- #define	XFS_LI_DIRTY	3	/* log item dirty in transaction */
-+#define	XFS_LI_RELOG	4	/* automatically relog item */
-+#define	XFS_LI_RELOGGED	5	/* item relogged (not committed) */
-=20
- #define XFS_LI_FLAGS \
- 	{ (1 << XFS_LI_IN_AIL),		"IN_AIL" }, \
- 	{ (1 << XFS_LI_ABORTED),	"ABORTED" }, \
- 	{ (1 << XFS_LI_FAILED),		"FAILED" }, \
--	{ (1 << XFS_LI_DIRTY),		"DIRTY" }
-+	{ (1 << XFS_LI_DIRTY),		"DIRTY" }, \
-+	{ (1 << XFS_LI_RELOG),		"RELOG" }, \
-+	{ (1 << XFS_LI_RELOGGED),	"RELOGGED" }
-=20
- struct xfs_item_ops {
- 	unsigned flags;
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index 839df6559b9f..d1edec1cb8ad 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -16,6 +16,8 @@ struct xfs_log_vec;
- void	xfs_trans_init(struct xfs_mount *);
- void	xfs_trans_add_item(struct xfs_trans *, struct xfs_log_item *);
- void	xfs_trans_del_item(struct xfs_log_item *);
-+void	xfs_trans_relog_item(struct xfs_log_item *);
-+void	xfs_trans_relog_item_cancel(struct xfs_log_item *, bool);
- void	xfs_trans_unreserve_and_mod_sb(struct xfs_trans *tp);
-=20
- void	xfs_trans_committed_bulk(struct xfs_ail *ailp, struct xfs_log_vec *=
-lv,
---=20
-2.21.1
+--D
 
+> Some are documented in the code, others might not be (such as abusing
+> the AIL lock, etc.). The primary purpose of this series is still to
+> express and review a fundamental design. Based on discussion on the last
+> version, there is specific focus towards addressing log reservation and
+> pre-item locking deadlock vectors. While the code is still quite hacky,
+> I believe this design addresses both of those fundamental issues.
+> Further details on the design and approach are documented in the
+> individual commit logs.
+> 
+> In addition, the final few patches introduce buffer relogging capability
+> and test infrastructure, which currently has no use case other than to
+> demonstrate development flexibility and the ability to support arbitrary
+> log items in the future, if ever desired. If this approach is taken
+> forward, the current use cases are still centered around intent items
+> such as the quotaoff use case and extent freeing use case defined by
+> online repair of free space trees.
+> 
+> On somewhat of a tangent, another intent oriented use case idea crossed
+> my mind recently related to the long standing writeback stale data
+> exposure problem (i.e. if we crash after a delalloc extent is converted
+> but before writeback fully completes on the extent). The obvious
+> approach of using unwritten extents has been rebuffed due to performance
+> concerns over extent conversion. I wonder if we had the ability to log a
+> "writeback pending" intent on some reasonable level of granularity (i.e.
+> something between a block and extent), whether we could use that to
+> allow log recovery to zero (or convert) such extents in the event of a
+> crash. This is a whole separate design discussion, however, as it
+> involves tracking outstanding writeback, etc. In this context it simply
+> serves as a prospective use case for relogging, as such intents would
+> otherwise risk similar log subsystem deadlocks as the quotaoff use case.
+> 
+> Thoughts, reviews, flames appreciated.
+> 
+> Brian
+> 
+> rfcv5:
+> - More fleshed out design to prevent log reservation deadlock and
+>   locking problems.
+> - Split out core patches between pre-reservation management, relog item
+>   state management and relog mechanism.
+> - Added experimental buffer relogging capability.
+> rfcv4: https://lore.kernel.org/linux-xfs/20191205175037.52529-1-bfoster@redhat.com/
+> - AIL based approach.
+> rfcv3: https://lore.kernel.org/linux-xfs/20191125185523.47556-1-bfoster@redhat.com/
+> - CIL based approach.
+> rfcv2: https://lore.kernel.org/linux-xfs/20191122181927.32870-1-bfoster@redhat.com/
+> - Different approach based on workqueue and transaction rolling.
+> rfc: https://lore.kernel.org/linux-xfs/20191024172850.7698-1-bfoster@redhat.com/
+> 
+> Brian Foster (9):
+>   xfs: set t_task at wait time instead of alloc time
+>   xfs: introduce ->tr_relog transaction
+>   xfs: automatic relogging reservation management
+>   xfs: automatic relogging item management
+>   xfs: automatic log item relog mechanism
+>   xfs: automatically relog the quotaoff start intent
+>   xfs: buffer relogging support prototype
+>   xfs: create an error tag for random relog reservation
+>   xfs: relog random buffers based on errortag
+> 
+>  fs/xfs/libxfs/xfs_errortag.h   |   4 +-
+>  fs/xfs/libxfs/xfs_shared.h     |   1 +
+>  fs/xfs/libxfs/xfs_trans_resv.c |  24 +++-
+>  fs/xfs/libxfs/xfs_trans_resv.h |   1 +
+>  fs/xfs/xfs_buf_item.c          |   5 +
+>  fs/xfs/xfs_dquot_item.c        |   7 ++
+>  fs/xfs/xfs_error.c             |   3 +
+>  fs/xfs/xfs_log.c               |   2 +-
+>  fs/xfs/xfs_qm_syscalls.c       |  12 +-
+>  fs/xfs/xfs_trace.h             |   3 +
+>  fs/xfs/xfs_trans.c             |  79 +++++++++++-
+>  fs/xfs/xfs_trans.h             |  13 +-
+>  fs/xfs/xfs_trans_ail.c         | 216 ++++++++++++++++++++++++++++++++-
+>  fs/xfs/xfs_trans_buf.c         |  35 ++++++
+>  fs/xfs/xfs_trans_priv.h        |   6 +
+>  15 files changed, 399 insertions(+), 12 deletions(-)
+> 
+> -- 
+> 2.21.1
+> 
