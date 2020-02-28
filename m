@@ -7,365 +7,180 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB6A0C3F2CD
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Feb 2020 14:02:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E1E3C3F2D2
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Feb 2020 14:03:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A4F95246A8
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Feb 2020 14:02:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59AFE246AE
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Feb 2020 14:03:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UWTvp81Y"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IZwMFTt4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726838AbgB1OCK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 28 Feb 2020 09:02:10 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:42124 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726752AbgB1OCJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Feb 2020 09:02:09 -0500
+        id S1726151AbgB1ODR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 28 Feb 2020 09:03:17 -0500
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:34955 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725892AbgB1ODR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Feb 2020 09:03:17 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1582898527;
+        s=mimecast20190719; t=1582898596;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=p/SHR1ycYPv77VhLe17NvOx+bkMk/m3nGWCN1K3t7pw=;
-        b=UWTvp81YXxzw0bfSLtqCs/Phrkedzd8TEGU2R02tbL8c3G6vOdHRWBr/M2TMXyDbo9cX3b
-        kkpyXE4GldgqMJSSA/J218c4XkR/AKqAnmZLDhOwi2cfpngYV5JFmrJoySjfymB/yRnJNO
-        Ge8aq3MOOm6BmSH0nlHlqR87N+ZV624=
+        bh=Vxx5AQ2wUbmvb+kQOGbqq4GRkzst6imctRw+fDApFU0=;
+        b=IZwMFTt4fvZZLoJkzPgu9TJxZnKv02y2CD98YjNNCNY7ZMq2iW3ievg9EUJOEfvuGnbGoa
+        isKQzHaG1JjnsdJTFTWpfqzrVI4ZcKsfA3zuxHU1yrwouS5ZxXzbvGL1glG8YqelqTvT+W
+        Qe802sSZVN/YGfy2v9bKjI44EQeDbIQ=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-18-EnPBQCwcMW6RzchW3U946g-1; Fri, 28 Feb 2020 09:02:05 -0500
-X-MC-Unique: EnPBQCwcMW6RzchW3U946g-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+ us-mta-307-whDW31uoNGGwVUdFhyHSmQ-1; Fri, 28 Feb 2020 09:03:12 -0500
+X-MC-Unique: whDW31uoNGGwVUdFhyHSmQ-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4E8208017DF;
-        Fri, 28 Feb 2020 14:02:04 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 22C7A107ACCA;
+        Fri, 28 Feb 2020 14:03:11 +0000 (UTC)
 Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id CB2C41001B09;
-        Fri, 28 Feb 2020 14:02:03 +0000 (UTC)
-Date:   Fri, 28 Feb 2020 09:02:02 -0500
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id CD9658C066;
+        Fri, 28 Feb 2020 14:03:10 +0000 (UTC)
+Date:   Fri, 28 Feb 2020 09:03:09 -0500
 From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Allison Collins <allison.henderson@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [RFC v5 PATCH 5/9] xfs: automatic log item relog mechanism
-Message-ID: <20200228140202.GD2751@bfoster>
+Subject: Re: [RFC v5 PATCH 6/9] xfs: automatically relog the quotaoff start
+ intent
+Message-ID: <20200228140309.GE2751@bfoster>
 References: <20200227134321.7238-1-bfoster@redhat.com>
- <20200227134321.7238-6-bfoster@redhat.com>
- <20200228001345.GS8045@magnolia>
+ <20200227134321.7238-7-bfoster@redhat.com>
+ <137e4060-5936-171d-802a-9bf72195663c@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200228001345.GS8045@magnolia>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+In-Reply-To: <137e4060-5936-171d-802a-9bf72195663c@oracle.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 27, 2020 at 04:13:45PM -0800, Darrick J. Wong wrote:
-> On Thu, Feb 27, 2020 at 08:43:17AM -0500, Brian Foster wrote:
-> > Now that relog reservation is available and relog state tracking is
-> > in place, all that remains to automatically relog items is the relog
-> > mechanism itself. An item with relogging enabled is basically pinned
-> > from writeback until relog is disabled. Instead of being written
-> > back, the item must instead be periodically committed in a new
-> > transaction to move it in the physical log. The purpose of moving
-> > the item is to avoid long term tail pinning and thus avoid log
-> > deadlocks for long running operations.
-> > 
-> > The ideal time to relog an item is in response to tail pushing
-> > pressure. This accommodates the current workload at any given time
-> > as opposed to a fixed time interval or log reservation heuristic,
-> > which risks performance regression. This is essentially the same
-> > heuristic that drives metadata writeback. XFS already implements
-> > various log tail pushing heuristics that attempt to keep the log
-> > progressing on an active fileystem under various workloads.
-> > 
-> > The act of relogging an item simply requires to add it to a
-> > transaction and commit. This pushes the already dirty item into a
-> > subsequent log checkpoint and frees up its previous location in the
-> > on-disk log. Joining an item to a transaction of course requires
-> > locking the item first, which means we have to be aware of
-> > type-specific locks and lock ordering wherever the relog takes
-> > place.
-> > 
-> > Fundamentally, this points to xfsaild as the ideal location to
-> > process relog enabled items. xfsaild already processes log resident
-> > items, is driven by log tail pushing pressure, processes arbitrary
-> > log item types through callbacks, and is sensitive to type-specific
-> > locking rules by design. The fact that automatic relogging
-> > essentially diverts items between writeback or relog also suggests
-> > xfsaild as an ideal location to process items one way or the other.
-> > 
-> > Of course, we don't want xfsaild to process transactions as it is a
-> > critical component of the log subsystem for driving metadata
-> > writeback and freeing up log space. Therefore, similar to how
-> > xfsaild builds up a writeback queue of dirty items and queues writes
-> > asynchronously, make xfsaild responsible only for directing pending
-> > relog items into an appropriate queue and create an async
-> > (workqueue) context for processing the queue. The workqueue context
-> > utilizes the pre-reserved relog ticket to drain the queue by rolling
-> > a permanent transaction.
+On Thu, Feb 27, 2020 at 04:19:42PM -0700, Allison Collins wrote:
 > 
-> Aha!  I bet that's that workqueue I was musing about earlier.
 > 
-
-:)
-
-> > Update the AIL pushing infrastructure to support a new RELOG item
-> > state. If a log item push returns the relog state, queue the item
-> > for relog instead of writeback. On completion of a push cycle,
-> > schedule the relog task at the same point metadata buffer I/O is
-> > submitted. This allows items to be relogged automatically under the
-> > same locking rules and pressure heuristics that govern metadata
-> > writeback.
+> On 2/27/20 6:43 AM, Brian Foster wrote:
+> > The quotaoff operation has a rare but longstanding deadlock vector
+> > in terms of how the operation is logged. A quotaoff start intent is
+> > logged (synchronously) at the onset to ensure recovery can handle
+> > the operation if interrupted before in-core changes are made. This
+> > quotaoff intent pins the log tail while the quotaoff sequence scans
+> > and purges dquots from all in-core inodes. While this operation
+> > generally doesn't generate much log traffic on its own, it can be
+> > time consuming. If unrelated, concurrent filesystem activity
+> > consumes remaining log space before quotaoff is able to acquire log
+> > reservation for the quotaoff end intent, the filesystem locks up
+> > indefinitely.
+> > 
+> > quotaoff cannot allocate the end intent before the scan because the
+> > latter can result in transaction allocation itself in certain
+> > indirect cases (releasing an inode, for example). Further, rolling
+> > the original transaction is difficult because the scanning work
+> > occurs multiple layers down where caller context is lost and not
+> > much information is available to determine how often to roll the
+> > transaction.
+> > 
+> > To address this problem, enable automatic relogging of the quotaoff
+> > start intent. This automatically relogs the intent whenever AIL
+> > pushing finds the item at the tail of the log. When quotaoff
+> > completes, wait for relogging to complete as the end intent expects
+> > to be able to permanently remove the start intent from the log
+> > subsystem. This ensures that the log tail is kept moving during a
+> > particularly long quotaoff operation and avoids the log reservation
+> > deadlock.
 > > 
 > > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > > ---
-> >  fs/xfs/xfs_trace.h      |   1 +
-> >  fs/xfs/xfs_trans.h      |   1 +
-> >  fs/xfs/xfs_trans_ail.c  | 103 +++++++++++++++++++++++++++++++++++++++-
-> >  fs/xfs/xfs_trans_priv.h |   3 ++
-> >  4 files changed, 106 insertions(+), 2 deletions(-)
+> >   fs/xfs/libxfs/xfs_trans_resv.c |  3 ++-
+> >   fs/xfs/xfs_dquot_item.c        |  7 +++++++
+> >   fs/xfs/xfs_qm_syscalls.c       | 12 +++++++++++-
+> >   3 files changed, 20 insertions(+), 2 deletions(-)
 > > 
-> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > index a066617ec54d..df0114ec66f1 100644
-> > --- a/fs/xfs/xfs_trace.h
-> > +++ b/fs/xfs/xfs_trace.h
-> > @@ -1063,6 +1063,7 @@ DEFINE_LOG_ITEM_EVENT(xfs_ail_push);
-> >  DEFINE_LOG_ITEM_EVENT(xfs_ail_pinned);
-> >  DEFINE_LOG_ITEM_EVENT(xfs_ail_locked);
-> >  DEFINE_LOG_ITEM_EVENT(xfs_ail_flushing);
-> > +DEFINE_LOG_ITEM_EVENT(xfs_ail_relog);
-> >  DEFINE_LOG_ITEM_EVENT(xfs_relog_item);
-> >  DEFINE_LOG_ITEM_EVENT(xfs_relog_item_cancel);
-> >  
-> > diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> > index fc4c25b6eee4..1637df32c64c 100644
-> > --- a/fs/xfs/xfs_trans.h
-> > +++ b/fs/xfs/xfs_trans.h
-> > @@ -99,6 +99,7 @@ void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
-> >  #define XFS_ITEM_PINNED		1
-> >  #define XFS_ITEM_LOCKED		2
-> >  #define XFS_ITEM_FLUSHING	3
-> > +#define XFS_ITEM_RELOG		4
-> >  
-> >  /*
-> >   * Deferred operation item relogging limits.
-> > diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-> > index a3fb64275baa..71a47faeaae8 100644
-> > --- a/fs/xfs/xfs_trans_ail.c
-> > +++ b/fs/xfs/xfs_trans_ail.c
-> > @@ -144,6 +144,75 @@ xfs_ail_max_lsn(
-> >  	return lsn;
-> >  }
-> >  
-> > +/*
-> > + * Relog log items on the AIL relog queue.
-> > + */
-> > +static void
-> > +xfs_ail_relog(
-> > +	struct work_struct	*work)
-> > +{
-> > +	struct xfs_ail		*ailp = container_of(work, struct xfs_ail,
-> > +						     ail_relog_work);
-> > +	struct xfs_mount	*mp = ailp->ail_mount;
-> > +	struct xfs_trans_res	tres = {};
-> > +	struct xfs_trans	*tp;
-> > +	struct xfs_log_item	*lip;
-> > +	int			error;
-> > +
-> > +	/*
-> > +	 * The first transaction to submit a relog item contributed relog
-> > +	 * reservation to the relog ticket before committing. Create an empty
-> > +	 * transaction and manually associate the relog ticket.
-> > +	 */
-> > +	error = xfs_trans_alloc(mp, &tres, 0, 0, 0, &tp);
-> 
-> Ah, and I see that the work item actually does create its own
-> transaction to relog the items...
+> > diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+> > index 1f5c9e6e1afc..f49b20c9ca33 100644
+> > --- a/fs/xfs/libxfs/xfs_trans_resv.c
+> > +++ b/fs/xfs/libxfs/xfs_trans_resv.c
+> > @@ -935,7 +935,8 @@ xfs_trans_resv_calc(
+> >   	resp->tr_qm_setqlim.tr_logcount = XFS_DEFAULT_LOG_COUNT;
+> >   	resp->tr_qm_quotaoff.tr_logres = xfs_calc_qm_quotaoff_reservation(mp);
+> > -	resp->tr_qm_quotaoff.tr_logcount = XFS_DEFAULT_LOG_COUNT;
+> > +	resp->tr_qm_quotaoff.tr_logcount = XFS_DEFAULT_PERM_LOG_COUNT;
+> > +	resp->tr_qm_quotaoff.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> What's the reason for the log count change here?  Otherwise looks ok.
 > 
 
-Yeah, bit of a hack to allocate a shell transaction and attach the relog
-ticket managed by the earlier patch, but it ended up cleaner than having
-the transaction allocated and passed into this context.
-
-> > +	ASSERT(!error);
-> > +	if (error)
-> > +		return;
-> > +	tp->t_log_res = M_RES(mp)->tr_relog.tr_logres;
-> > +	tp->t_log_count = M_RES(mp)->tr_relog.tr_logcount;
-> > +	tp->t_flags |= M_RES(mp)->tr_relog.tr_logflags;
-> > +	tp->t_ticket = xfs_log_ticket_get(ailp->ail_relog_tic);
-> > +
-> > +	spin_lock(&ailp->ail_lock);
-> > +	while ((lip = list_first_entry_or_null(&ailp->ail_relog_list,
-> > +					       struct xfs_log_item,
-> > +					       li_trans)) != NULL) {
-> 
-> ...but this part really cranks up my curiosity about what happens when
-> there are more items to relog than there is actual reservation in this
-> transaction?  I think most transactions types reserve enough space that
-> we could attach hundreds of relogged intent items.
-> 
-
-See my earlier comment around batching. Right now we only relog one item
-at a time and the relog reservation is intended to be the max possible
-reloggable item in the fs. This needs to increase to support some kind
-of batching here, but I think the prospective reloggable items right now
-(i.e. 2 or 3 different intent types) allows a fixed calculation size to
-work well enough for our needs.
-
-Note that I think there's a whole separate ball of complexity we could
-delve into if we wanted to support something like arbitrary, per-item
-(set) relog tickets with different reservation values as opposed to one
-global, fixed size ticket. That would require some association between
-log items and tickets and perhaps other items covered by the same
-ticket, etc., but would provide a much more generic mechanism. As it is,
-I think that's hugely overkill for the current use cases, but maybe we
-find a reason to evolve this into something like that down the road..
-
-> > +		/*
-> > +		 * Drop the AIL processing ticket reference once the relog list
-> > +		 * is emptied. At this point it's possible for our transaction
-> > +		 * to hold the only reference.
-> > +		 */
-> > +		list_del_init(&lip->li_trans);
-> > +		if (list_empty(&ailp->ail_relog_list))
-> > +			xfs_log_ticket_put(ailp->ail_relog_tic);
-> > +		spin_unlock(&ailp->ail_lock);
-> > +
-> > +		xfs_trans_add_item(tp, lip);
-> > +		set_bit(XFS_LI_DIRTY, &lip->li_flags);
-> > +		tp->t_flags |= XFS_TRANS_DIRTY;
-> > +		/* XXX: include ticket owner task fix */
-> 
-> XXX?
-> 
-
-Oops, this refers to patch 1. I added the patch but forgot to remove the
-comment, so this can go away..
+Permanent transactions have a separate default log count (2 instead of
+1) because they are intended to be rolled (at least once). This
+basically means the initial allocation will acquire enough log
+reservation for the initial transaction and a subsequent roll, similar
+to how all other permanant transactions are initialized in this file.
+This is required for quotaoff because the transaction now uses
+XFS_TRANS_RELOG, which requires a roll up front.
 
 Brian
 
-> --D
-> 
-> > +		error = xfs_trans_roll(&tp);
-> > +		ASSERT(!error);
-> > +		if (error)
-> > +			goto out;
-> > +		spin_lock(&ailp->ail_lock);
-> > +	}
-> > +	spin_unlock(&ailp->ail_lock);
+> Allison
+> >   	resp->tr_qm_equotaoff.tr_logres =
+> >   		xfs_calc_qm_quotaoff_end_reservation();
+> > diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+> > index d60647d7197b..ea5123678466 100644
+> > --- a/fs/xfs/xfs_dquot_item.c
+> > +++ b/fs/xfs/xfs_dquot_item.c
+> > @@ -297,6 +297,13 @@ xfs_qm_qoff_logitem_push(
+> >   	struct xfs_log_item	*lip,
+> >   	struct list_head	*buffer_list)
+> >   {
+> > +	struct xfs_log_item	*mlip = xfs_ail_min(lip->li_ailp);
 > > +
-> > +out:
-> > +	/* XXX: handle shutdown scenario */
+> > +	if (test_bit(XFS_LI_RELOG, &lip->li_flags) &&
+> > +	    !test_bit(XFS_LI_RELOGGED, &lip->li_flags) &&
+> > +	    !XFS_LSN_CMP(lip->li_lsn, mlip->li_lsn))
+> > +		return XFS_ITEM_RELOG;
+> > +
+> >   	return XFS_ITEM_LOCKED;
+> >   }
+> > diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+> > index 1ea82764bf89..7b48d34da0f4 100644
+> > --- a/fs/xfs/xfs_qm_syscalls.c
+> > +++ b/fs/xfs/xfs_qm_syscalls.c
+> > @@ -18,6 +18,7 @@
+> >   #include "xfs_quota.h"
+> >   #include "xfs_qm.h"
+> >   #include "xfs_icache.h"
+> > +#include "xfs_trans_priv.h"
+> >   STATIC int
+> >   xfs_qm_log_quotaoff(
+> > @@ -31,12 +32,14 @@ xfs_qm_log_quotaoff(
+> >   	*qoffstartp = NULL;
+> > -	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_quotaoff, 0, 0, 0, &tp);
+> > +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_quotaoff, 0, 0,
+> > +				XFS_TRANS_RELOG, &tp);
+> >   	if (error)
+> >   		goto out;
+> >   	qoffi = xfs_trans_get_qoff_item(tp, NULL, flags & XFS_ALL_QUOTA_ACCT);
+> >   	xfs_trans_log_quotaoff_item(tp, qoffi);
+> > +	xfs_trans_relog_item(&qoffi->qql_item);
+> >   	spin_lock(&mp->m_sb_lock);
+> >   	mp->m_sb.sb_qflags = (mp->m_qflags & ~(flags)) & XFS_MOUNT_QUOTA_ALL;
+> > @@ -69,6 +72,13 @@ xfs_qm_log_quotaoff_end(
+> >   	int			error;
+> >   	struct xfs_qoff_logitem	*qoffi;
 > > +	/*
-> > +	 * Drop the relog reference owned by the transaction separately because
-> > +	 * we don't want the cancel to release reservation if this isn't the
-> > +	 * final reference. The relog ticket and associated reservation needs
-> > +	 * to persist so long as relog items are active in the log subsystem.
+> > +	 * startqoff must be in the AIL and not the CIL when the end intent
+> > +	 * commits to ensure it is not readded to the AIL out of order. Wait on
+> > +	 * relog activity to drain to isolate startqoff to the AIL.
 > > +	 */
-> > +	xfs_trans_ail_relog_put(mp);
+> > +	xfs_trans_relog_item_cancel(&startqoff->qql_item, true);
 > > +
-> > +	tp->t_ticket = NULL;
-> > +	xfs_trans_cancel(tp);
-> > +}
-> > +
-> >  /*
-> >   * The cursor keeps track of where our current traversal is up to by tracking
-> >   * the next item in the list for us. However, for this to be safe, removing an
-> > @@ -364,7 +433,7 @@ static long
-> >  xfsaild_push(
-> >  	struct xfs_ail		*ailp)
-> >  {
-> > -	xfs_mount_t		*mp = ailp->ail_mount;
-> > +	struct xfs_mount	*mp = ailp->ail_mount;
-> >  	struct xfs_ail_cursor	cur;
-> >  	struct xfs_log_item	*lip;
-> >  	xfs_lsn_t		lsn;
-> > @@ -426,6 +495,23 @@ xfsaild_push(
-> >  			ailp->ail_last_pushed_lsn = lsn;
-> >  			break;
-> >  
-> > +		case XFS_ITEM_RELOG:
-> > +			/*
-> > +			 * The item requires a relog. Add to the pending relog
-> > +			 * list and set the relogged bit to prevent further
-> > +			 * relog requests. The relog bit and ticket reference
-> > +			 * can be dropped from the item at any point, so hold a
-> > +			 * relog ticket reference for the pending relog list to
-> > +			 * ensure the ticket stays around.
-> > +			 */
-> > +			trace_xfs_ail_relog(lip);
-> > +			ASSERT(list_empty(&lip->li_trans));
-> > +			if (list_empty(&ailp->ail_relog_list))
-> > +				xfs_log_ticket_get(ailp->ail_relog_tic);
-> > +			list_add_tail(&lip->li_trans, &ailp->ail_relog_list);
-> > +			set_bit(XFS_LI_RELOGGED, &lip->li_flags);
-> > +			break;
-> > +
-> >  		case XFS_ITEM_FLUSHING:
-> >  			/*
-> >  			 * The item or its backing buffer is already being
-> > @@ -492,6 +578,9 @@ xfsaild_push(
-> >  	if (xfs_buf_delwri_submit_nowait(&ailp->ail_buf_list))
-> >  		ailp->ail_log_flush++;
-> >  
-> > +	if (!list_empty(&ailp->ail_relog_list))
-> > +		queue_work(ailp->ail_relog_wq, &ailp->ail_relog_work);
-> > +
-> >  	if (!count || XFS_LSN_CMP(lsn, target) >= 0) {
-> >  out_done:
-> >  		/*
-> > @@ -922,15 +1011,24 @@ xfs_trans_ail_init(
-> >  	spin_lock_init(&ailp->ail_lock);
-> >  	INIT_LIST_HEAD(&ailp->ail_buf_list);
-> >  	init_waitqueue_head(&ailp->ail_empty);
-> > +	INIT_LIST_HEAD(&ailp->ail_relog_list);
-> > +	INIT_WORK(&ailp->ail_relog_work, xfs_ail_relog);
-> > +
-> > +	ailp->ail_relog_wq = alloc_workqueue("xfs-relog/%s", WQ_FREEZABLE, 0,
-> > +					     mp->m_super->s_id);
-> > +	if (!ailp->ail_relog_wq)
-> > +		goto out_free_ailp;
-> >  
-> >  	ailp->ail_task = kthread_run(xfsaild, ailp, "xfsaild/%s",
-> >  			ailp->ail_mount->m_super->s_id);
-> >  	if (IS_ERR(ailp->ail_task))
-> > -		goto out_free_ailp;
-> > +		goto out_destroy_wq;
-> >  
-> >  	mp->m_ail = ailp;
-> >  	return 0;
-> >  
-> > +out_destroy_wq:
-> > +	destroy_workqueue(ailp->ail_relog_wq);
-> >  out_free_ailp:
-> >  	kmem_free(ailp);
-> >  	return -ENOMEM;
-> > @@ -944,5 +1042,6 @@ xfs_trans_ail_destroy(
-> >  
-> >  	ASSERT(ailp->ail_relog_tic == NULL);
-> >  	kthread_stop(ailp->ail_task);
-> > +	destroy_workqueue(ailp->ail_relog_wq);
-> >  	kmem_free(ailp);
-> >  }
-> > diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-> > index d1edec1cb8ad..33a724534869 100644
-> > --- a/fs/xfs/xfs_trans_priv.h
-> > +++ b/fs/xfs/xfs_trans_priv.h
-> > @@ -63,6 +63,9 @@ struct xfs_ail {
-> >  	int			ail_log_flush;
-> >  	struct list_head	ail_buf_list;
-> >  	wait_queue_head_t	ail_empty;
-> > +	struct work_struct	ail_relog_work;
-> > +	struct list_head	ail_relog_list;
-> > +	struct workqueue_struct	*ail_relog_wq;
-> >  	struct xlog_ticket	*ail_relog_tic;
-> >  };
-> >  
-> > -- 
-> > 2.21.1
+> >   	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_equotaoff, 0, 0, 0, &tp);
+> >   	if (error)
+> >   		return error;
 > > 
 > 
 
