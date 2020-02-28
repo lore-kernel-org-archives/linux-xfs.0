@@ -2,150 +2,147 @@ Return-Path: <SRS0=aYBA=4Q=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19B7DC3F2CD
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Feb 2020 13:12:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 670E3C3F2CD
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Feb 2020 13:47:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EE30724677
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Feb 2020 13:12:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C68124699
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Feb 2020 13:47:01 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YqGu6Paz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725796AbgB1NMn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 28 Feb 2020 08:12:43 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:39968 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725876AbgB1NMn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Feb 2020 08:12:43 -0500
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01SD3tuK043731
-        for <linux-xfs@vger.kernel.org>; Fri, 28 Feb 2020 08:12:42 -0500
-Received: from e06smtp03.uk.ibm.com (e06smtp03.uk.ibm.com [195.75.94.99])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2yepxb6p6h-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Fri, 28 Feb 2020 08:12:42 -0500
-Received: from localhost
-        by e06smtp03.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.ibm.com>;
-        Fri, 28 Feb 2020 13:12:40 -0000
-Received: from b06avi18878370.portsmouth.uk.ibm.com (9.149.26.194)
-        by e06smtp03.uk.ibm.com (192.168.101.133) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
-        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Fri, 28 Feb 2020 13:12:38 -0000
-Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
-        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 01SDCbEd42992030
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 28 Feb 2020 13:12:37 GMT
-Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 038D24C05A;
-        Fri, 28 Feb 2020 13:12:37 +0000 (GMT)
-Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 39CDC4C04E;
-        Fri, 28 Feb 2020 13:12:36 +0000 (GMT)
-Received: from localhost.localdomain (unknown [9.85.88.173])
-        by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Fri, 28 Feb 2020 13:12:35 +0000 (GMT)
-From:   Chandan Rajendra <chandan@linux.ibm.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     Allison Collins <allison.henderson@oracle.com>
-Subject: Re: [PATCH v7 11/19] xfs: Factor out trans roll in xfs_attr3_leaf_clearflag
-Date:   Fri, 28 Feb 2020 16:26:45 +0530
-Organization: IBM
-In-Reply-To: <20200223020611.1802-12-allison.henderson@oracle.com>
-References: <20200223020611.1802-1-allison.henderson@oracle.com> <20200223020611.1802-12-allison.henderson@oracle.com>
+        id S1726388AbgB1NrA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 28 Feb 2020 08:47:00 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:32049 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726151AbgB1NrA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Feb 2020 08:47:00 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1582897618;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=BwEqQAA3Lx65L/ux/vp1leT+T9lygVIoC1MveuHm2pQ=;
+        b=YqGu6Pazu5p5cTR39ZWS1IMH5B4ajk0d7buYmZBfoYpxJt+lONYbhCaShjaQchwbRTnYAZ
+        pjOfbb0WF0kmHyJG2Mp506MAfo9pWwoQGxy6F5Y0okvmWxGCh2M7qQgEgUunQ2078y2gX9
+        4QwZftDEnV17sDFoFgmfCs30XoLNsF4=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-111-E9HGLyUPOQqdeM2JCxhKAw-1; Fri, 28 Feb 2020 08:46:57 -0500
+X-MC-Unique: E9HGLyUPOQqdeM2JCxhKAw-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E3D09800D5C;
+        Fri, 28 Feb 2020 13:46:55 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 79A2587B08;
+        Fri, 28 Feb 2020 13:46:55 +0000 (UTC)
+Date:   Fri, 28 Feb 2020 08:46:53 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org
+Subject: Re: [RFC v5 PATCH 1/9] xfs: set t_task at wait time instead of alloc
+ time
+Message-ID: <20200228134653.GA2751@bfoster>
+References: <20200227134321.7238-1-bfoster@redhat.com>
+ <20200227134321.7238-2-bfoster@redhat.com>
+ <20200227232853.GP8045@magnolia>
+ <20200228001000.GC10776@dread.disaster.area>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-X-TM-AS-GCONF: 00
-x-cbid: 20022813-0012-0000-0000-0000038B27CB
-X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 20022813-0013-0000-0000-000021C7D496
-Message-Id: <2305153.mO9ejTnR4H@localhost.localdomain>
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
- definitions=2020-02-28_04:2020-02-26,2020-02-28 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=3 spamscore=0
- lowpriorityscore=0 malwarescore=0 bulkscore=0 mlxlogscore=999
- impostorscore=0 mlxscore=0 priorityscore=1501 adultscore=0 phishscore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002280106
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200228001000.GC10776@dread.disaster.area>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sunday, February 23, 2020 7:36 AM Allison Collins wrote: 
-> New delayed allocation routines cannot be handling transactions so factor them out
-> into the calling functions
->
+On Fri, Feb 28, 2020 at 11:10:00AM +1100, Dave Chinner wrote:
+> On Thu, Feb 27, 2020 at 03:28:53PM -0800, Darrick J. Wong wrote:
+> > On Thu, Feb 27, 2020 at 08:43:13AM -0500, Brian Foster wrote:
+> > > The xlog_ticket structure contains a task reference to support
+> > > blocking for available log reservation. This reference is assigned
+> > > at ticket allocation time, which assumes that the transaction
+> > > allocator will acquire reservation in the same context. This is
+> > > normally true, but will not always be the case with automatic
+> > > relogging.
+> > > 
+> > > There is otherwise no fundamental reason log space cannot be
+> > > reserved for a ticket from a context different from the allocating
+> > > context. Move the task assignment to the log reservation blocking
+> > > code where it is used.
+> > > 
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > ---
+> > >  fs/xfs/xfs_log.c | 2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > 
+> > > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> > > index f6006d94a581..df60942a9804 100644
+> > > --- a/fs/xfs/xfs_log.c
+> > > +++ b/fs/xfs/xfs_log.c
+> > > @@ -262,6 +262,7 @@ xlog_grant_head_wait(
+> > >  	int			need_bytes) __releases(&head->lock)
+> > >  					    __acquires(&head->lock)
+> > >  {
+> > > +	tic->t_task = current;
+> > >  	list_add_tail(&tic->t_queue, &head->waiters);
+> > >  
+> > >  	do {
+> > > @@ -3601,7 +3602,6 @@ xlog_ticket_alloc(
+> > >  	unit_res = xfs_log_calc_unit_res(log->l_mp, unit_bytes);
+> > >  
+> > >  	atomic_set(&tic->t_ref, 1);
+> > > -	tic->t_task		= current;
+> > 
+> > Hm.  So this leaves t_task set to NULL in the ticket constructor in
+> > favor of setting it in xlog_grant_head_wait.  I guess this implies that
+> > some future piece will be able to transfer a ticket to another process
+> > as part of a regrant or something?
+> > 
 
-I don't see any logical errors.
+Pretty much.. it's mostly just breaking the assumption that the task
+that allocates a log ticket is necessarily the one that acquires log
+reservation (or regrants it). The purpose of this change is so that any
+particular task could allocate (and reserve) a relog ticket and donate
+it to the relog mechanism (a separate task) for use (i.e. to roll it).
 
-Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
-
-> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_attr.c      | 16 ++++++++++++++++
->  fs/xfs/libxfs/xfs_attr_leaf.c |  5 +----
->  2 files changed, 17 insertions(+), 4 deletions(-)
+> > I've been wondering lately if you could transfer a dirty permanent
+> > transaction to a different task so that the front end could return to
+> > userspace as soon as the first transaction (with the intent items)
+> > commits, and then you could reduce the latency of front-end system
+> > calls.  That's probably a huge fantasy since you'd also have to transfer
+> > a whole ton of state to that worker and whatever you locked to do the
+> > operation remains locked...
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 26412da..5d73bdf 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -822,6 +822,14 @@ xfs_attr_leaf_addname(
->  		 * Added a "remote" value, just clear the incomplete flag.
->  		 */
->  		error = xfs_attr3_leaf_clearflag(args);
-> +		if (error)
-> +			return error;
-> +
-> +		/*
-> +		 * Commit the flag value change and start the next trans in
-> +		 * series.
-> +		 */
-> +		error = xfs_trans_roll_inode(&args->trans, args->dp);
->  	}
->  	return error;
->  }
-> @@ -1185,6 +1193,14 @@ xfs_attr_node_addname(
->  		error = xfs_attr3_leaf_clearflag(args);
->  		if (error)
->  			goto out;
-> +
-> +		 /*
-> +		  * Commit the flag value change and start the next trans in
-> +		  * series.
-> +		  */
-> +		error = xfs_trans_roll_inode(&args->trans, args->dp);
-> +		if (error)
-> +			goto out;
->  	}
->  	retval = error = 0;
->  
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index 67339f0..1742f0a 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -2804,10 +2804,7 @@ xfs_attr3_leaf_clearflag(
->  			 XFS_DA_LOGRANGE(leaf, name_rmt, sizeof(*name_rmt)));
->  	}
->  
-> -	/*
-> -	 * Commit the flag value change and start the next trans in series.
-> -	 */
-> -	return xfs_trans_roll_inode(&args->trans, args->dp);
-> +	return 0;
->  }
->  
->  /*
+> Yup, that's basically the idea I've raised in the past for "async
+> XFS" where the front end is completely detached from the back end
+> that does the internal work. i.e deferred ops are the basis for
+> turning XFS into a huge async processing machine.
 > 
 
+I think we've discussed this in the past, though I'm not clear on
+whether it rely on this sort of change. Either way, there's a big
+difference in scope between the tweak made by this patch and the design
+of a generic async XFS front-end. :)
 
--- 
-chandan
+Brian
 
-
+> This isn't a new idea - tux3 was based around this "async back end"
+> concept, too.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
 
