@@ -2,212 +2,115 @@ Return-Path: <SRS0=aYBA=4Q=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D110CC3F2CD
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Feb 2020 18:55:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEC04C3F2CD
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Feb 2020 23:35:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A13B32084E
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Feb 2020 18:55:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B08A92469C
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Feb 2020 23:35:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="FyVikA6F"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GHT22/Yh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725900AbgB1Sz5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 28 Feb 2020 13:55:57 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:57822 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725730AbgB1Sz5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Feb 2020 13:55:57 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01SIs0b0096522;
-        Fri, 28 Feb 2020 18:55:54 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=llsubKRSIJtW6HGn3TssduF8lmI3HzD7EFL2JVl1On0=;
- b=FyVikA6FNSQ3tqAEeGwZ658VgJyUjxr0M17zMn5FF7tRDnGM+CMo+uf6AfViESqcp5Nc
- pQVynLATyoeMN7BKPaA90TZtDlVX7iLKGx9eUATQYj6mWB8LpFefhPafV2d9PfqEWZej
- QiPUvZhHngDdKNJ0226g6getA0wZbudhYlz+mya8doCFvnCbV5KYX3Pu/08RwszuMFe1
- sSwi7fQzhr0v/ajSrE5ak+3i5Wld2cc20dDaj1juZztG05H5v60TrH+uH0U1lsBg/m7r
- JywwZUKvLipOVW3GeB2385cyxv9806BBwguXepHwuQcKi99QwAmlqEy0+FL8bktoNJFK mg== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2yf0dmb263-1
+        id S1726589AbgB1Xfd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 28 Feb 2020 18:35:33 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:39472 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726277AbgB1Xfd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Feb 2020 18:35:33 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01SNWmeK027898;
+        Fri, 28 Feb 2020 23:35:30 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=AudmKea6VvSxMnjbkANTgqVMvv5uDJSnP5TSKQwgQk0=;
+ b=GHT22/YhPrRIvOYbuCdeVDRgOoJTEdprK2KsHIcQnvtR/INfJ8RKsGluJOG0xGPwDmV3
+ 14gibYWtar+ZBFEMKzk0rd1/QANnvM3IPdsL3ZkUq7xWKK4DFS39CpyhMhi6nHkl65K6
+ Z/RGiObJCJewXPiJALntIi3V/D1HmVKPv+xrN654qrvpJs9aqUYvB0YUfJeH7VqkVxSo
+ vWYV0eFeB9sna/69GTXnkJsQZHBFiYpAwrEwFJNkaNqDhq7oihOHwzHcY/2jXGemQgks
+ brPYP8JJB87kd74JVZaRwETe2/I9VMbSfhwgNm8+B9wxPQPNUq47MGLxT3a4yzXAYK3V 7g== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 2ydct3nsxg-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 28 Feb 2020 18:55:54 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01SIiOTt178022;
-        Fri, 28 Feb 2020 18:55:53 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2ydj4rgj4n-1
+        Fri, 28 Feb 2020 23:35:30 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01SNWm5k097686;
+        Fri, 28 Feb 2020 23:35:29 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 2ydcsgeemh-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 28 Feb 2020 18:55:53 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01SItp9D007798;
-        Fri, 28 Feb 2020 18:55:52 GMT
-Received: from [192.168.1.223] (/67.1.3.112)
+        Fri, 28 Feb 2020 23:35:29 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01SNZSm7012041;
+        Fri, 28 Feb 2020 23:35:29 GMT
+Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 28 Feb 2020 10:55:12 -0800
-Subject: Re: [RFC v5 PATCH 6/9] xfs: automatically relog the quotaoff start
- intent
-To:     Brian Foster <bfoster@redhat.com>
+        with ESMTP ; Fri, 28 Feb 2020 15:35:28 -0800
+Subject: [PATCH v4 0/7] xfsprogs: actually check that writes succeeded
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-References: <20200227134321.7238-1-bfoster@redhat.com>
- <20200227134321.7238-7-bfoster@redhat.com>
- <137e4060-5936-171d-802a-9bf72195663c@oracle.com>
- <20200228140309.GE2751@bfoster>
-From:   Allison Collins <allison.henderson@oracle.com>
-Message-ID: <005fecc7-0fa9-e778-2810-c36e18873f68@oracle.com>
-Date:   Fri, 28 Feb 2020 11:55:08 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+Date:   Fri, 28 Feb 2020 15:35:27 -0800
+Message-ID: <158293292760.1548526.16432706349096704475.stgit@magnolia>
+User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
-In-Reply-To: <20200228140309.GE2751@bfoster>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9545 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 suspectscore=0
- spamscore=0 adultscore=0 malwarescore=0 mlxlogscore=999 mlxscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 bulkscore=0
+ spamscore=0 mlxlogscore=999 mlxscore=0 suspectscore=0 malwarescore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002280137
+ definitions=main-2002280170
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9545 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 clxscore=1015
- bulkscore=0 impostorscore=0 mlxscore=0 priorityscore=1501 phishscore=0
- spamscore=0 malwarescore=0 mlxlogscore=999 adultscore=0 suspectscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 bulkscore=0
+ impostorscore=0 spamscore=0 priorityscore=1501 malwarescore=0 adultscore=0
+ phishscore=0 mlxlogscore=999 mlxscore=0 suspectscore=0 clxscore=1015
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002280137
+ definitions=main-2002280170
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/28/20 7:03 AM, Brian Foster wrote:
-> On Thu, Feb 27, 2020 at 04:19:42PM -0700, Allison Collins wrote:
->>
->>
->> On 2/27/20 6:43 AM, Brian Foster wrote:
->>> The quotaoff operation has a rare but longstanding deadlock vector
->>> in terms of how the operation is logged. A quotaoff start intent is
->>> logged (synchronously) at the onset to ensure recovery can handle
->>> the operation if interrupted before in-core changes are made. This
->>> quotaoff intent pins the log tail while the quotaoff sequence scans
->>> and purges dquots from all in-core inodes. While this operation
->>> generally doesn't generate much log traffic on its own, it can be
->>> time consuming. If unrelated, concurrent filesystem activity
->>> consumes remaining log space before quotaoff is able to acquire log
->>> reservation for the quotaoff end intent, the filesystem locks up
->>> indefinitely.
->>>
->>> quotaoff cannot allocate the end intent before the scan because the
->>> latter can result in transaction allocation itself in certain
->>> indirect cases (releasing an inode, for example). Further, rolling
->>> the original transaction is difficult because the scanning work
->>> occurs multiple layers down where caller context is lost and not
->>> much information is available to determine how often to roll the
->>> transaction.
->>>
->>> To address this problem, enable automatic relogging of the quotaoff
->>> start intent. This automatically relogs the intent whenever AIL
->>> pushing finds the item at the tail of the log. When quotaoff
->>> completes, wait for relogging to complete as the end intent expects
->>> to be able to permanently remove the start intent from the log
->>> subsystem. This ensures that the log tail is kept moving during a
->>> particularly long quotaoff operation and avoids the log reservation
->>> deadlock.
->>>
->>> Signed-off-by: Brian Foster <bfoster@redhat.com>
->>> ---
->>>    fs/xfs/libxfs/xfs_trans_resv.c |  3 ++-
->>>    fs/xfs/xfs_dquot_item.c        |  7 +++++++
->>>    fs/xfs/xfs_qm_syscalls.c       | 12 +++++++++++-
->>>    3 files changed, 20 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
->>> index 1f5c9e6e1afc..f49b20c9ca33 100644
->>> --- a/fs/xfs/libxfs/xfs_trans_resv.c
->>> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
->>> @@ -935,7 +935,8 @@ xfs_trans_resv_calc(
->>>    	resp->tr_qm_setqlim.tr_logcount = XFS_DEFAULT_LOG_COUNT;
->>>    	resp->tr_qm_quotaoff.tr_logres = xfs_calc_qm_quotaoff_reservation(mp);
->>> -	resp->tr_qm_quotaoff.tr_logcount = XFS_DEFAULT_LOG_COUNT;
->>> +	resp->tr_qm_quotaoff.tr_logcount = XFS_DEFAULT_PERM_LOG_COUNT;
->>> +	resp->tr_qm_quotaoff.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->> What's the reason for the log count change here?  Otherwise looks ok.
->>
-> 
-> Permanent transactions have a separate default log count (2 instead of
-> 1) because they are intended to be rolled (at least once). This
-> basically means the initial allocation will acquire enough log
-> reservation for the initial transaction and a subsequent roll, similar
-> to how all other permanant transactions are initialized in this file.
-> This is required for quotaoff because the transaction now uses
-> XFS_TRANS_RELOG, which requires a roll up front.
-> 
-> Brian
+Hi all,
 
-Ok, I see.  Thank you for the explanation!
-Allison
+A code audit demonstrated that many xfsprogs utilities do not check that
+the buffers they write actually make it to disk.  While the userspace
+buffer cache has a means to check that a buffer was written (which is to
+reread the buffer after the write), most utilities mark a buffer dirty
+and release it to the MRU and do not re-check the buffer.
 
-> 
->> Allison
->>>    	resp->tr_qm_equotaoff.tr_logres =
->>>    		xfs_calc_qm_quotaoff_end_reservation();
->>> diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
->>> index d60647d7197b..ea5123678466 100644
->>> --- a/fs/xfs/xfs_dquot_item.c
->>> +++ b/fs/xfs/xfs_dquot_item.c
->>> @@ -297,6 +297,13 @@ xfs_qm_qoff_logitem_push(
->>>    	struct xfs_log_item	*lip,
->>>    	struct list_head	*buffer_list)
->>>    {
->>> +	struct xfs_log_item	*mlip = xfs_ail_min(lip->li_ailp);
->>> +
->>> +	if (test_bit(XFS_LI_RELOG, &lip->li_flags) &&
->>> +	    !test_bit(XFS_LI_RELOGGED, &lip->li_flags) &&
->>> +	    !XFS_LSN_CMP(lip->li_lsn, mlip->li_lsn))
->>> +		return XFS_ITEM_RELOG;
->>> +
->>>    	return XFS_ITEM_LOCKED;
->>>    }
->>> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
->>> index 1ea82764bf89..7b48d34da0f4 100644
->>> --- a/fs/xfs/xfs_qm_syscalls.c
->>> +++ b/fs/xfs/xfs_qm_syscalls.c
->>> @@ -18,6 +18,7 @@
->>>    #include "xfs_quota.h"
->>>    #include "xfs_qm.h"
->>>    #include "xfs_icache.h"
->>> +#include "xfs_trans_priv.h"
->>>    STATIC int
->>>    xfs_qm_log_quotaoff(
->>> @@ -31,12 +32,14 @@ xfs_qm_log_quotaoff(
->>>    	*qoffstartp = NULL;
->>> -	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_quotaoff, 0, 0, 0, &tp);
->>> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_quotaoff, 0, 0,
->>> +				XFS_TRANS_RELOG, &tp);
->>>    	if (error)
->>>    		goto out;
->>>    	qoffi = xfs_trans_get_qoff_item(tp, NULL, flags & XFS_ALL_QUOTA_ACCT);
->>>    	xfs_trans_log_quotaoff_item(tp, qoffi);
->>> +	xfs_trans_relog_item(&qoffi->qql_item);
->>>    	spin_lock(&mp->m_sb_lock);
->>>    	mp->m_sb.sb_qflags = (mp->m_qflags & ~(flags)) & XFS_MOUNT_QUOTA_ALL;
->>> @@ -69,6 +72,13 @@ xfs_qm_log_quotaoff_end(
->>>    	int			error;
->>>    	struct xfs_qoff_logitem	*qoffi;
->>> +	/*
->>> +	 * startqoff must be in the AIL and not the CIL when the end intent
->>> +	 * commits to ensure it is not readded to the AIL out of order. Wait on
->>> +	 * relog activity to drain to isolate startqoff to the AIL.
->>> +	 */
->>> +	xfs_trans_relog_item_cancel(&startqoff->qql_item, true);
->>> +
->>>    	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_equotaoff, 0, 0, 0, &tp);
->>>    	if (error)
->>>    		return error;
->>>
->>
-> 
+Worse yet, the MRU will retain the buffers for all failed writes until
+the buffer cache is torn down, but it in turn has no way to communicate
+that writes were lost due to IO errors.  libxfs will flush the device
+when it is unmounted, but as there is no return value, we again fail to
+notice that writes have been lost.  Most likely this leads to a corrupt
+filesystem, which makes it all the more surprising that xfs_repair can
+lose writes yet still return 0!
+
+Fix all this by making delwri_submit a synchronous write operation like
+its kernel counterpart; teaching the buffer cache to mark the buftarg
+when it knows it's losing writes; teaching the device flush functions to
+return error codes; and adding a new "flush filesystem" API that user
+programs can call to check for lost writes or IO errors.  Then teach all
+the userspace programs to flush the fs at exit and report errors.
+
+In v2 we split up some of the patches and make sure we always fsync when
+flushing a block device.  In v3 we move the buffer and disk flushing
+requests into the libxfs unmount function.  v4 added some extra messages
+when repair writes fail.
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=buffer-write-fixes
