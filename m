@@ -4,234 +4,174 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87B26C3F2D2
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Feb 2020 17:10:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C00E4C3F2CD
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Feb 2020 18:16:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 554082469C
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Feb 2020 17:10:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 992C1246AE
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Feb 2020 18:16:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VqkevkkO"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="X+7Uckoh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726118AbgB1RKW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 28 Feb 2020 12:10:22 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:48034 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725730AbgB1RKW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Feb 2020 12:10:22 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01SGvtHB169838;
-        Fri, 28 Feb 2020 17:10:19 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- content-transfer-encoding : in-reply-to; s=corp-2020-01-29;
- bh=tHh4IykYklDSXe+CFzNuxoKstdPt/Vd9+ZLonQkz4wQ=;
- b=VqkevkkOPBzIMZV6Yd9vRPa4BG76bj6QVDd9I+nKwVKDI2vYYuX/ShGCdQpLU6SV+ZhP
- f82JaZajZZ35IMo9CdinflkSiK92J+z42Anf7seTGvyxKxo46IotoSPFlQ9jfjybSmMr
- UO3pE8D6/gmBHOPP7czUzhg3lQbuLjvcI7b+ooF8EN4UwaPkiXjW0EcVL7eCrIc11Vz8
- d6Q8QBAvpLNR7chxNxSPyJW1RXE6h2wTfQA7sAVjU9LOx41srtj+bXKInz+BOc4qH3cj
- THY507zjjbcB8plYwRAUPMYp2UQWOlsOm785REHLHw//J6/kyohkhHxTZpHhqrGiGvHz 2w== 
+        id S1725877AbgB1SQG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 28 Feb 2020 13:16:06 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:34462 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725805AbgB1SQG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Feb 2020 13:16:06 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01SHtRnJ105738;
+        Fri, 28 Feb 2020 18:16:04 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=p+cWPpL6RheBOjI3yJNt7PGgTfKkSm8Y1yzrsAnmkIs=;
+ b=X+7UckohsV1+cFnfLvZ2L7Pcz11JpzFR7dE5sUYIpcn0h/ypBnfOVH+2QRqCNWqCdJUJ
+ gqjnaNSrs2/ttFX0PhELLxyPkYnXKericPzKIGUUWsr/boZh5XhFZEZqGVJ1Be3cRYcm
+ KfJNGs3AV16rEAcwOoois2KU2lWVdhyFhAG/EOY6KyVfiIkrTnvYHSq07IqDNx5flTPR
+ 1S42vjgDT860YYl/HY3JkFpgHts8lk46yovy6QASxMar8d4eMsnuVHza7+E5Q42j9UPn
+ ubKdjh0BRW3pVzmyFGoJpypOY+SB4dXDsrPP1cTLP3Gd8WWnZO9yQt93yMMDKwueBFuR 0A== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2yf0dmagcm-1
+        by userp2130.oracle.com with ESMTP id 2ydcsnvmjf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 28 Feb 2020 17:10:19 +0000
+        Fri, 28 Feb 2020 18:16:04 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01SGwIXA004611;
-        Fri, 28 Feb 2020 17:10:18 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 2ydj4r96ab-1
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01SHqEgi195316;
+        Fri, 28 Feb 2020 18:14:03 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2ydj4rdckq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 28 Feb 2020 17:10:18 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01SHAHY6029911;
-        Fri, 28 Feb 2020 17:10:17 GMT
-Received: from localhost (/10.159.226.243)
+        Fri, 28 Feb 2020 18:14:03 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01SIE2Ma016299;
+        Fri, 28 Feb 2020 18:14:03 GMT
+Received: from [192.168.1.223] (/67.1.3.112)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 28 Feb 2020 09:10:17 -0800
-Date:   Fri, 28 Feb 2020 09:10:14 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Pavel Reichl <preichl@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v6 1/4] xfs: Refactor xfs_isilocked()
-Message-ID: <20200228171014.GC8070@magnolia>
-References: <20200227203636.317790-1-preichl@redhat.com>
- <20200227203636.317790-2-preichl@redhat.com>
+        with ESMTP ; Fri, 28 Feb 2020 10:14:02 -0800
+Subject: Re: [PATCH v7 08/19] xfs: Refactor xfs_attr_try_sf_addname
+To:     Chandan Rajendra <chandan@linux.ibm.com>, linux-xfs@vger.kernel.org
+References: <20200223020611.1802-1-allison.henderson@oracle.com>
+ <20200223020611.1802-9-allison.henderson@oracle.com>
+ <1889824.mfX55q8Ynv@localhost.localdomain>
+From:   Allison Collins <allison.henderson@oracle.com>
+Message-ID: <7ed6e2fc-7593-468b-03a8-30944eb31949@oracle.com>
+Date:   Fri, 28 Feb 2020 11:14:01 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200227203636.317790-2-preichl@redhat.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <1889824.mfX55q8Ynv@localhost.localdomain>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9545 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 suspectscore=0
  spamscore=0 adultscore=0 malwarescore=0 mlxlogscore=999 mlxscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002280133
+ definitions=main-2002280135
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9545 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 clxscore=1015
- bulkscore=0 impostorscore=0 mlxscore=0 priorityscore=1501 phishscore=0
- spamscore=0 malwarescore=0 mlxlogscore=999 adultscore=0 suspectscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 bulkscore=0
+ lowpriorityscore=0 mlxlogscore=999 phishscore=0 spamscore=0 adultscore=0
+ suspectscore=0 impostorscore=0 clxscore=1015 priorityscore=1501
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002280133
+ definitions=main-2002280135
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 27, 2020 at 09:36:33PM +0100, Pavel Reichl wrote:
-> Refactor xfs_isilocked() to use newly introduced __xfs_rwsem_islocked().
-> __xfs_rwsem_islocked() is a helper function which encapsulates checking
-> state of rw_semaphores hold by inode.
+
+
+On 2/28/20 12:42 AM, Chandan Rajendra wrote:
+> On Sunday, February 23, 2020 7:36 AM Allison Collins wrote:
+>> To help pre-simplify xfs_attr_set_args, we need to hoist transacation handling up,
+>> while modularizing the adjacent code down into helpers. In this patch, hoist the
+>> commit in xfs_attr_try_sf_addname up into the calling function, and also pull the
+>> attr list creation down.
+>>
 > 
-> Signed-off-by: Pavel Reichl <preichl@redhat.com>
-> Suggested-by: Dave Chinner <dchinner@redhat.com>
-> Suggested-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> Changes from V5:
-> 	Drop shared flag from __xfs_rwsem_islocked()
+> I don't see any logical errors.
 > 
+> Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
+Alrighty, thank you!
+
+Allison
+
 > 
->  fs/xfs/xfs_inode.c | 42 ++++++++++++++++++++++++++----------------
->  fs/xfs/xfs_inode.h |  2 +-
->  2 files changed, 27 insertions(+), 17 deletions(-)
+>> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+>> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+>> ---
+>>   fs/xfs/libxfs/xfs_attr.c | 30 +++++++++++++++---------------
+>>   1 file changed, 15 insertions(+), 15 deletions(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+>> index b2f0780..71298b9 100644
+>> --- a/fs/xfs/libxfs/xfs_attr.c
+>> +++ b/fs/xfs/libxfs/xfs_attr.c
+>> @@ -227,8 +227,13 @@ xfs_attr_try_sf_addname(
+>>   	struct xfs_da_args	*args)
+>>   {
+>>   
+>> -	struct xfs_mount	*mp = dp->i_mount;
+>> -	int			error, error2;
+>> +	int			error;
+>> +
+>> +	/*
+>> +	 * Build initial attribute list (if required).
+>> +	 */
+>> +	if (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS)
+>> +		xfs_attr_shortform_create(args);
+>>   
+>>   	error = xfs_attr_shortform_addname(args);
+>>   	if (error == -ENOSPC)
+>> @@ -241,12 +246,10 @@ xfs_attr_try_sf_addname(
+>>   	if (!error && (args->name.type & ATTR_KERNOTIME) == 0)
+>>   		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
+>>   
+>> -	if (mp->m_flags & XFS_MOUNT_WSYNC)
+>> +	if (dp->i_mount->m_flags & XFS_MOUNT_WSYNC)
+>>   		xfs_trans_set_sync(args->trans);
+>>   
+>> -	error2 = xfs_trans_commit(args->trans);
+>> -	args->trans = NULL;
+>> -	return error ? error : error2;
+>> +	return error;
+>>   }
+>>   
+>>   /*
+>> @@ -258,7 +261,7 @@ xfs_attr_set_args(
+>>   {
+>>   	struct xfs_inode	*dp = args->dp;
+>>   	struct xfs_buf          *leaf_bp = NULL;
+>> -	int			error;
+>> +	int			error, error2 = 0;
+>>   
+>>   	/*
+>>   	 * If the attribute list is non-existent or a shortform list,
+>> @@ -269,17 +272,14 @@ xfs_attr_set_args(
+>>   	     dp->i_d.di_anextents == 0)) {
+>>   
+>>   		/*
+>> -		 * Build initial attribute list (if required).
+>> -		 */
+>> -		if (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS)
+>> -			xfs_attr_shortform_create(args);
+>> -
+>> -		/*
+>>   		 * Try to add the attr to the attribute list in the inode.
+>>   		 */
+>>   		error = xfs_attr_try_sf_addname(dp, args);
+>> -		if (error != -ENOSPC)
+>> -			return error;
+>> +		if (error != -ENOSPC) {
+>> +			error2 = xfs_trans_commit(args->trans);
+>> +			args->trans = NULL;
+>> +			return error ? error : error2;
+>> +		}
+>>   
+>>   		/*
+>>   		 * It won't fit in the shortform, transform to a leaf block.
+>>
 > 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index c5077e6326c7..4faf7827717b 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -345,32 +345,42 @@ xfs_ilock_demote(
->  }
->  
->  #if defined(DEBUG) || defined(XFS_WARN)
-> -int
-> +static inline bool
-> +__xfs_rwsem_islocked(
-> +	struct rw_semaphore	*rwsem,
-> +	bool			excl)
-> +{
-> +	if (!rwsem_is_locked(rwsem))
-> +		return false;
-
-So, uh, I finally made the time to dig through what exactly lockdep
-provides as far as testing functions, and came up with the following
-truth table for the old xfs_isilocked behavior w.r.t. IOLOCK:
-
-(nolockdep corresponds to debug_locks == 0)
-
-RWSEM STATE		PARAMETERS TO XFS_ISILOCKED:
-			SHARED	EXCL	SHARED | EXCL
-readlocked		y	n	y
-writelocked		y	y	y
-unlocked		n	n	n
-nolockdep readlocked	y	y	y
-nolockdep writelocked	y	y	y
-nolockdep unlocked	n	y	n
-
-Note that EXCL × nolockdep_unlocked returns an incorrect result, but
-because we only use it with ASSERTs there haven't been any failures
-reported.
-
-And here's your new version:
-
-readlocked		y	y	y
-writelocked		y	n	n
-unlocked		n	n	n
-nolockdep readlocked	y	y	y
-nolockdep writelocked	y	y	y
-nolockdep unlocked	n	n	n
-
-Thanks for fixing the false positive that I mentioned above.
-
-> +
-> +	if (debug_locks && excl)
-> +		return lockdep_is_held_type(rwsem, 1);
-
-This is wrong, the second parameter of lockdep_is_held_type is 0 to test
-if the rwsem is write-locked; 1 to test if it is read-locked; or -1 to
-test if the rwsem is read or write-locked.
-
-So, this function's call signature should change so that callers can
-communicate both _SHARED and _EXCL; and then you can pick the correct
-"r" parameter value for the lockdep_is_held_type() call.  Then all of
-this becomes:
-
-	if !debug_locks:
-		return rwsem_is_locked(rwsem)
-
-	if shared and excl:
-		r = -1
-	elif shared:
-		r = 1
-	else:
-		r = 0
-	return lockdep_is_held_type(rwsem, r)
-
-Note also that you don't necessarily need to pass shared and excl as
-separate parameters (as you did in v3); the XFS_*LOCK_{EXCL,SHARED}
-definitions enable you to take care of all that with some clever bit
-shifting and masking.
-
---D
-
-> +
-> +	return true;
-> +}
-> +
-> +bool
->  xfs_isilocked(
-> -	xfs_inode_t		*ip,
-> +	struct xfs_inode	*ip,
->  	uint			lock_flags)
->  {
-> -	if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) {
-> -		if (!(lock_flags & XFS_ILOCK_SHARED))
-> -			return !!ip->i_lock.mr_writer;
-> -		return rwsem_is_locked(&ip->i_lock.mr_lock);
-> +	if (lock_flags & (XFS_ILOCK_EXCL | XFS_ILOCK_SHARED)) {
-> +		return __xfs_rwsem_islocked(&ip->i_lock.mr_lock,
-> +				(lock_flags & XFS_ILOCK_EXCL));
->  	}
->  
-> -	if (lock_flags & (XFS_MMAPLOCK_EXCL|XFS_MMAPLOCK_SHARED)) {
-> -		if (!(lock_flags & XFS_MMAPLOCK_SHARED))
-> -			return !!ip->i_mmaplock.mr_writer;
-> -		return rwsem_is_locked(&ip->i_mmaplock.mr_lock);
-> +	if (lock_flags & (XFS_MMAPLOCK_EXCL | XFS_MMAPLOCK_SHARED)) {
-> +		return __xfs_rwsem_islocked(&ip->i_mmaplock.mr_lock,
-> +				(lock_flags & XFS_MMAPLOCK_EXCL));
->  	}
->  
-> -	if (lock_flags & (XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED)) {
-> -		if (!(lock_flags & XFS_IOLOCK_SHARED))
-> -			return !debug_locks ||
-> -				lockdep_is_held_type(&VFS_I(ip)->i_rwsem, 0);
-> -		return rwsem_is_locked(&VFS_I(ip)->i_rwsem);
-> +	if (lock_flags & (XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED)) {
-> +		return __xfs_rwsem_islocked(&VFS_I(ip)->i_rwsem,
-> +				(lock_flags & XFS_IOLOCK_EXCL));
->  	}
->  
->  	ASSERT(0);
-> -	return 0;
-> +	return false;
->  }
->  #endif
->  
-> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> index 492e53992fa9..3d7ce355407d 100644
-> --- a/fs/xfs/xfs_inode.h
-> +++ b/fs/xfs/xfs_inode.h
-> @@ -416,7 +416,7 @@ void		xfs_ilock(xfs_inode_t *, uint);
->  int		xfs_ilock_nowait(xfs_inode_t *, uint);
->  void		xfs_iunlock(xfs_inode_t *, uint);
->  void		xfs_ilock_demote(xfs_inode_t *, uint);
-> -int		xfs_isilocked(xfs_inode_t *, uint);
-> +bool		xfs_isilocked(xfs_inode_t *, uint);
->  uint		xfs_ilock_data_map_shared(struct xfs_inode *);
->  uint		xfs_ilock_attr_map_shared(struct xfs_inode *);
->  
-> -- 
-> 2.24.1
 > 
