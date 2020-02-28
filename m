@@ -7,61 +7,64 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C00E4C3F2CD
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Feb 2020 18:16:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D110CC3F2CD
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Feb 2020 18:55:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 992C1246AE
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Feb 2020 18:16:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A13B32084E
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Feb 2020 18:55:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="X+7Uckoh"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="FyVikA6F"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725877AbgB1SQG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 28 Feb 2020 13:16:06 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:34462 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725805AbgB1SQG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Feb 2020 13:16:06 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01SHtRnJ105738;
-        Fri, 28 Feb 2020 18:16:04 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
+        id S1725900AbgB1Sz5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 28 Feb 2020 13:55:57 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:57822 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725730AbgB1Sz5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Feb 2020 13:55:57 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01SIs0b0096522;
+        Fri, 28 Feb 2020 18:55:54 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
  references : from : message-id : date : mime-version : in-reply-to :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=p+cWPpL6RheBOjI3yJNt7PGgTfKkSm8Y1yzrsAnmkIs=;
- b=X+7UckohsV1+cFnfLvZ2L7Pcz11JpzFR7dE5sUYIpcn0h/ypBnfOVH+2QRqCNWqCdJUJ
- gqjnaNSrs2/ttFX0PhELLxyPkYnXKericPzKIGUUWsr/boZh5XhFZEZqGVJ1Be3cRYcm
- KfJNGs3AV16rEAcwOoois2KU2lWVdhyFhAG/EOY6KyVfiIkrTnvYHSq07IqDNx5flTPR
- 1S42vjgDT860YYl/HY3JkFpgHts8lk46yovy6QASxMar8d4eMsnuVHza7+E5Q42j9UPn
- ubKdjh0BRW3pVzmyFGoJpypOY+SB4dXDsrPP1cTLP3Gd8WWnZO9yQt93yMMDKwueBFuR 0A== 
+ bh=llsubKRSIJtW6HGn3TssduF8lmI3HzD7EFL2JVl1On0=;
+ b=FyVikA6FNSQ3tqAEeGwZ658VgJyUjxr0M17zMn5FF7tRDnGM+CMo+uf6AfViESqcp5Nc
+ pQVynLATyoeMN7BKPaA90TZtDlVX7iLKGx9eUATQYj6mWB8LpFefhPafV2d9PfqEWZej
+ QiPUvZhHngDdKNJ0226g6getA0wZbudhYlz+mya8doCFvnCbV5KYX3Pu/08RwszuMFe1
+ sSwi7fQzhr0v/ajSrE5ak+3i5Wld2cc20dDaj1juZztG05H5v60TrH+uH0U1lsBg/m7r
+ JywwZUKvLipOVW3GeB2385cyxv9806BBwguXepHwuQcKi99QwAmlqEy0+FL8bktoNJFK mg== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2ydcsnvmjf-1
+        by aserp2120.oracle.com with ESMTP id 2yf0dmb263-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 28 Feb 2020 18:16:04 +0000
+        Fri, 28 Feb 2020 18:55:54 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01SHqEgi195316;
-        Fri, 28 Feb 2020 18:14:03 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2ydj4rdckq-1
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01SIiOTt178022;
+        Fri, 28 Feb 2020 18:55:53 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 2ydj4rgj4n-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 28 Feb 2020 18:14:03 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01SIE2Ma016299;
-        Fri, 28 Feb 2020 18:14:03 GMT
+        Fri, 28 Feb 2020 18:55:53 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01SItp9D007798;
+        Fri, 28 Feb 2020 18:55:52 GMT
 Received: from [192.168.1.223] (/67.1.3.112)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 28 Feb 2020 10:14:02 -0800
-Subject: Re: [PATCH v7 08/19] xfs: Refactor xfs_attr_try_sf_addname
-To:     Chandan Rajendra <chandan@linux.ibm.com>, linux-xfs@vger.kernel.org
-References: <20200223020611.1802-1-allison.henderson@oracle.com>
- <20200223020611.1802-9-allison.henderson@oracle.com>
- <1889824.mfX55q8Ynv@localhost.localdomain>
+        with ESMTP ; Fri, 28 Feb 2020 10:55:12 -0800
+Subject: Re: [RFC v5 PATCH 6/9] xfs: automatically relog the quotaoff start
+ intent
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <20200227134321.7238-1-bfoster@redhat.com>
+ <20200227134321.7238-7-bfoster@redhat.com>
+ <137e4060-5936-171d-802a-9bf72195663c@oracle.com>
+ <20200228140309.GE2751@bfoster>
 From:   Allison Collins <allison.henderson@oracle.com>
-Message-ID: <7ed6e2fc-7593-468b-03a8-30944eb31949@oracle.com>
-Date:   Fri, 28 Feb 2020 11:14:01 -0700
+Message-ID: <005fecc7-0fa9-e778-2810-c36e18873f68@oracle.com>
+Date:   Fri, 28 Feb 2020 11:55:08 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <1889824.mfX55q8Ynv@localhost.localdomain>
+In-Reply-To: <20200228140309.GE2751@bfoster>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -69,109 +72,142 @@ X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9545 signatures=6
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 suspectscore=0
  spamscore=0 adultscore=0 malwarescore=0 mlxlogscore=999 mlxscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002280135
+ definitions=main-2002280137
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9545 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 bulkscore=0
- lowpriorityscore=0 mlxlogscore=999 phishscore=0 spamscore=0 adultscore=0
- suspectscore=0 impostorscore=0 clxscore=1015 priorityscore=1501
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 clxscore=1015
+ bulkscore=0 impostorscore=0 mlxscore=0 priorityscore=1501 phishscore=0
+ spamscore=0 malwarescore=0 mlxlogscore=999 adultscore=0 suspectscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002280135
+ definitions=main-2002280137
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 2/28/20 12:42 AM, Chandan Rajendra wrote:
-> On Sunday, February 23, 2020 7:36 AM Allison Collins wrote:
->> To help pre-simplify xfs_attr_set_args, we need to hoist transacation handling up,
->> while modularizing the adjacent code down into helpers. In this patch, hoist the
->> commit in xfs_attr_try_sf_addname up into the calling function, and also pull the
->> attr list creation down.
+On 2/28/20 7:03 AM, Brian Foster wrote:
+> On Thu, Feb 27, 2020 at 04:19:42PM -0700, Allison Collins wrote:
+>>
+>>
+>> On 2/27/20 6:43 AM, Brian Foster wrote:
+>>> The quotaoff operation has a rare but longstanding deadlock vector
+>>> in terms of how the operation is logged. A quotaoff start intent is
+>>> logged (synchronously) at the onset to ensure recovery can handle
+>>> the operation if interrupted before in-core changes are made. This
+>>> quotaoff intent pins the log tail while the quotaoff sequence scans
+>>> and purges dquots from all in-core inodes. While this operation
+>>> generally doesn't generate much log traffic on its own, it can be
+>>> time consuming. If unrelated, concurrent filesystem activity
+>>> consumes remaining log space before quotaoff is able to acquire log
+>>> reservation for the quotaoff end intent, the filesystem locks up
+>>> indefinitely.
+>>>
+>>> quotaoff cannot allocate the end intent before the scan because the
+>>> latter can result in transaction allocation itself in certain
+>>> indirect cases (releasing an inode, for example). Further, rolling
+>>> the original transaction is difficult because the scanning work
+>>> occurs multiple layers down where caller context is lost and not
+>>> much information is available to determine how often to roll the
+>>> transaction.
+>>>
+>>> To address this problem, enable automatic relogging of the quotaoff
+>>> start intent. This automatically relogs the intent whenever AIL
+>>> pushing finds the item at the tail of the log. When quotaoff
+>>> completes, wait for relogging to complete as the end intent expects
+>>> to be able to permanently remove the start intent from the log
+>>> subsystem. This ensures that the log tail is kept moving during a
+>>> particularly long quotaoff operation and avoids the log reservation
+>>> deadlock.
+>>>
+>>> Signed-off-by: Brian Foster <bfoster@redhat.com>
+>>> ---
+>>>    fs/xfs/libxfs/xfs_trans_resv.c |  3 ++-
+>>>    fs/xfs/xfs_dquot_item.c        |  7 +++++++
+>>>    fs/xfs/xfs_qm_syscalls.c       | 12 +++++++++++-
+>>>    3 files changed, 20 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+>>> index 1f5c9e6e1afc..f49b20c9ca33 100644
+>>> --- a/fs/xfs/libxfs/xfs_trans_resv.c
+>>> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
+>>> @@ -935,7 +935,8 @@ xfs_trans_resv_calc(
+>>>    	resp->tr_qm_setqlim.tr_logcount = XFS_DEFAULT_LOG_COUNT;
+>>>    	resp->tr_qm_quotaoff.tr_logres = xfs_calc_qm_quotaoff_reservation(mp);
+>>> -	resp->tr_qm_quotaoff.tr_logcount = XFS_DEFAULT_LOG_COUNT;
+>>> +	resp->tr_qm_quotaoff.tr_logcount = XFS_DEFAULT_PERM_LOG_COUNT;
+>>> +	resp->tr_qm_quotaoff.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>> What's the reason for the log count change here?  Otherwise looks ok.
 >>
 > 
-> I don't see any logical errors.
+> Permanent transactions have a separate default log count (2 instead of
+> 1) because they are intended to be rolled (at least once). This
+> basically means the initial allocation will acquire enough log
+> reservation for the initial transaction and a subsequent roll, similar
+> to how all other permanant transactions are initialized in this file.
+> This is required for quotaoff because the transaction now uses
+> XFS_TRANS_RELOG, which requires a roll up front.
 > 
-> Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
-Alrighty, thank you!
+> Brian
 
+Ok, I see.  Thank you for the explanation!
 Allison
 
 > 
->> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
->> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
->> ---
->>   fs/xfs/libxfs/xfs_attr.c | 30 +++++++++++++++---------------
->>   1 file changed, 15 insertions(+), 15 deletions(-)
+>> Allison
+>>>    	resp->tr_qm_equotaoff.tr_logres =
+>>>    		xfs_calc_qm_quotaoff_end_reservation();
+>>> diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+>>> index d60647d7197b..ea5123678466 100644
+>>> --- a/fs/xfs/xfs_dquot_item.c
+>>> +++ b/fs/xfs/xfs_dquot_item.c
+>>> @@ -297,6 +297,13 @@ xfs_qm_qoff_logitem_push(
+>>>    	struct xfs_log_item	*lip,
+>>>    	struct list_head	*buffer_list)
+>>>    {
+>>> +	struct xfs_log_item	*mlip = xfs_ail_min(lip->li_ailp);
+>>> +
+>>> +	if (test_bit(XFS_LI_RELOG, &lip->li_flags) &&
+>>> +	    !test_bit(XFS_LI_RELOGGED, &lip->li_flags) &&
+>>> +	    !XFS_LSN_CMP(lip->li_lsn, mlip->li_lsn))
+>>> +		return XFS_ITEM_RELOG;
+>>> +
+>>>    	return XFS_ITEM_LOCKED;
+>>>    }
+>>> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+>>> index 1ea82764bf89..7b48d34da0f4 100644
+>>> --- a/fs/xfs/xfs_qm_syscalls.c
+>>> +++ b/fs/xfs/xfs_qm_syscalls.c
+>>> @@ -18,6 +18,7 @@
+>>>    #include "xfs_quota.h"
+>>>    #include "xfs_qm.h"
+>>>    #include "xfs_icache.h"
+>>> +#include "xfs_trans_priv.h"
+>>>    STATIC int
+>>>    xfs_qm_log_quotaoff(
+>>> @@ -31,12 +32,14 @@ xfs_qm_log_quotaoff(
+>>>    	*qoffstartp = NULL;
+>>> -	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_quotaoff, 0, 0, 0, &tp);
+>>> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_quotaoff, 0, 0,
+>>> +				XFS_TRANS_RELOG, &tp);
+>>>    	if (error)
+>>>    		goto out;
+>>>    	qoffi = xfs_trans_get_qoff_item(tp, NULL, flags & XFS_ALL_QUOTA_ACCT);
+>>>    	xfs_trans_log_quotaoff_item(tp, qoffi);
+>>> +	xfs_trans_relog_item(&qoffi->qql_item);
+>>>    	spin_lock(&mp->m_sb_lock);
+>>>    	mp->m_sb.sb_qflags = (mp->m_qflags & ~(flags)) & XFS_MOUNT_QUOTA_ALL;
+>>> @@ -69,6 +72,13 @@ xfs_qm_log_quotaoff_end(
+>>>    	int			error;
+>>>    	struct xfs_qoff_logitem	*qoffi;
+>>> +	/*
+>>> +	 * startqoff must be in the AIL and not the CIL when the end intent
+>>> +	 * commits to ensure it is not readded to the AIL out of order. Wait on
+>>> +	 * relog activity to drain to isolate startqoff to the AIL.
+>>> +	 */
+>>> +	xfs_trans_relog_item_cancel(&startqoff->qql_item, true);
+>>> +
+>>>    	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_equotaoff, 0, 0, 0, &tp);
+>>>    	if (error)
+>>>    		return error;
+>>>
 >>
->> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
->> index b2f0780..71298b9 100644
->> --- a/fs/xfs/libxfs/xfs_attr.c
->> +++ b/fs/xfs/libxfs/xfs_attr.c
->> @@ -227,8 +227,13 @@ xfs_attr_try_sf_addname(
->>   	struct xfs_da_args	*args)
->>   {
->>   
->> -	struct xfs_mount	*mp = dp->i_mount;
->> -	int			error, error2;
->> +	int			error;
->> +
->> +	/*
->> +	 * Build initial attribute list (if required).
->> +	 */
->> +	if (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS)
->> +		xfs_attr_shortform_create(args);
->>   
->>   	error = xfs_attr_shortform_addname(args);
->>   	if (error == -ENOSPC)
->> @@ -241,12 +246,10 @@ xfs_attr_try_sf_addname(
->>   	if (!error && (args->name.type & ATTR_KERNOTIME) == 0)
->>   		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
->>   
->> -	if (mp->m_flags & XFS_MOUNT_WSYNC)
->> +	if (dp->i_mount->m_flags & XFS_MOUNT_WSYNC)
->>   		xfs_trans_set_sync(args->trans);
->>   
->> -	error2 = xfs_trans_commit(args->trans);
->> -	args->trans = NULL;
->> -	return error ? error : error2;
->> +	return error;
->>   }
->>   
->>   /*
->> @@ -258,7 +261,7 @@ xfs_attr_set_args(
->>   {
->>   	struct xfs_inode	*dp = args->dp;
->>   	struct xfs_buf          *leaf_bp = NULL;
->> -	int			error;
->> +	int			error, error2 = 0;
->>   
->>   	/*
->>   	 * If the attribute list is non-existent or a shortform list,
->> @@ -269,17 +272,14 @@ xfs_attr_set_args(
->>   	     dp->i_d.di_anextents == 0)) {
->>   
->>   		/*
->> -		 * Build initial attribute list (if required).
->> -		 */
->> -		if (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS)
->> -			xfs_attr_shortform_create(args);
->> -
->> -		/*
->>   		 * Try to add the attr to the attribute list in the inode.
->>   		 */
->>   		error = xfs_attr_try_sf_addname(dp, args);
->> -		if (error != -ENOSPC)
->> -			return error;
->> +		if (error != -ENOSPC) {
->> +			error2 = xfs_trans_commit(args->trans);
->> +			args->trans = NULL;
->> +			return error ? error : error2;
->> +		}
->>   
->>   		/*
->>   		 * It won't fit in the shortform, transform to a leaf block.
->>
-> 
 > 
