@@ -2,28 +2,31 @@ Return-Path: <SRS0=aYBA=4Q=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91A9AC3F2CF
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Feb 2020 04:23:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EB36C3F2CF
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Feb 2020 04:46:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 66A17246AA
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Feb 2020 04:23:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D9A3246A3
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Feb 2020 04:46:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730793AbgB1EXi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Feb 2020 23:23:38 -0500
-Received: from sandeen.net ([63.231.237.45]:33124 "EHLO sandeen.net"
+        id S1725900AbgB1EqV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Feb 2020 23:46:21 -0500
+Received: from sandeen.net ([63.231.237.45]:34204 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730780AbgB1EXi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 Feb 2020 23:23:38 -0500
+        id S1725730AbgB1EqV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 27 Feb 2020 23:46:21 -0500
 Received: from Liberator.local (unknown [4.28.11.152])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id D08AD11664
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Feb 2020 22:23:09 -0600 (CST)
+        by sandeen.net (Postfix) with ESMTPSA id 0117B11664
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Feb 2020 22:45:52 -0600 (CST)
+Subject: Re: [ANNOUNCE] xfsprogs for-next updated to fbbb184b
 From:   Eric Sandeen <sandeen@sandeen.net>
+To:     linux-xfs <linux-xfs@vger.kernel.org>
+References: <adc5d23f-92d2-2dcc-5957-adb69f87cf4b@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
  nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
@@ -66,111 +69,46 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-To:     linux-xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfsprogs for-next updated to fbbb184b
-Message-ID: <adc5d23f-92d2-2dcc-5957-adb69f87cf4b@sandeen.net>
-Date:   Thu, 27 Feb 2020 20:23:35 -0800
+Message-ID: <d923c538-f421-3716-0618-1516a5a4911a@sandeen.net>
+Date:   Thu, 27 Feb 2020 20:46:18 -0800
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.5.0
 MIME-Version: 1.0
+In-Reply-To: <adc5d23f-92d2-2dcc-5957-adb69f87cf4b@sandeen.net>
 Content-Type: multipart/signed; micalg=pgp-sha256;
  protocol="application/pgp-signature";
- boundary="iR2XZ5YDP7BTLaA3KybtbIujxN86FYaaV"
+ boundary="Jof7fK10a7Ob0FfUMxMPqS07PvI2gKjTo"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---iR2XZ5YDP7BTLaA3KybtbIujxN86FYaaV
-Content-Type: multipart/mixed; boundary="iV5jfGeO7ACiPQ6BCJSRar6JQ48ooDt72"
+--Jof7fK10a7Ob0FfUMxMPqS07PvI2gKjTo
+Content-Type: multipart/mixed; boundary="FLTBSHhTHIW9Y8NIjhPdN4VBcDNBvm4Wg"
 
---iV5jfGeO7ACiPQ6BCJSRar6JQ48ooDt72
+--FLTBSHhTHIW9Y8NIjhPdN4VBcDNBvm4Wg
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: quoted-printable
 
-Hi folks,
+A note on this push; it breaks at least xfs/030, xfs/033, and xfs/178 due=
 
-The for-next branch of the xfsprogs repository at:
+to some changes in expected output.  I'll work on that next, hopefully
+send a patch tonight.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+Also: Darrick, help me out on what makes sense to merge next.... :D
 
-has just been updated.
+and anyone else who got lost in the mega patch flurry of the past couple
+weeks, ping me if there's a patch I should pull in for 5.5.
 
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-The new head of the for-next branch is commit:
-
-fbbb184b (HEAD -> for-next) xfs_repair: join realtime inodes to transacti=
-on only once
-
-New Commits:
-
-Darrick J. Wong (13):
-      [8d6ce222] libxfs: re-sort libxfs_api_defs.h defines
-      [33c692a2] libfrog: remove libxfs.h dependencies in fsgeom.c and li=
-nux.c
-      [97282ffb] xfs_repair: refactor attr root block pointer check
-      [471f0ab6] xfs_repair: don't corrupt a attr fork da3 node when clea=
-ring forw/back
-      [017e979e] xfs_repair: replace verify_inum with libxfs inode valida=
-tors
-      [659a4358] mkfs: check root inode location
-      [b1f7ac05] xfs_repair: enforce that inode btree chunks can't point =
-to AG headers
-      [a3e126aa] xfs_repair: refactor fixed inode location checks
-      [90b2397e] xfs_repair: use libxfs function to calculate root inode =
-location
-      [ded6b558] xfs_repair: check plausibility of root dir pointer befor=
-e trashing it
-      [306b450b] xfs_repair: try to correct sb_unit value from secondarie=
-s
-      [a9468486] libxfs: clean up libxfs_destroy
-      [38abdcbd] xfs_scrub: fix reporting of EINVAL for online repairs
-
-Eric Sandeen (3):
-      [6bd73d16] xfs_repair: fix bad next_unlinked field
-      [9d6023a8] libxfs: use FALLOC_FL_ZERO_RANGE in libxfs_device_zero
-      [fbbb184b] xfs_repair: join realtime inodes to transaction only onc=
-e
+Thanks,
+-Eric
 
 
-Code Diffstat:
+--FLTBSHhTHIW9Y8NIjhPdN4VBcDNBvm4Wg--
 
- copy/xfs_copy.c          |   2 +-
- db/init.c                |   8 +-
- include/builddefs.in     |   3 +
- include/libxfs.h         |   2 +-
- include/linux.h          |  22 ++++
- libfrog/fsgeom.c         |   4 +-
- libfrog/linux.c          |   4 +-
- libxfs/init.c            |  31 ++++--
- libxfs/libxfs_api_defs.h |  12 ++-
- libxfs/rdwr.c            |  15 ++-
- mkfs/xfs_mkfs.c          |  46 +++++---
- repair/attr_repair.c     | 193 +++++++++++++++++++++------------
- repair/dino_chunks.c     |   2 +-
- repair/dinode.c          |  47 ++++----
- repair/dinode.h          |   4 -
- repair/dir2.c            |   7 +-
- repair/globals.c         |   6 --
- repair/globals.h         |   6 --
- repair/phase4.c          |  12 +--
- repair/phase6.c          |  12 +--
- repair/scan.c            |  23 ----
- repair/xfs_repair.c      | 272 ++++++++++++++++++++++++++---------------=
-------
- scrub/scrub.c            |   5 +-
- 23 files changed, 416 insertions(+), 322 deletions(-)
-
-
---iV5jfGeO7ACiPQ6BCJSRar6JQ48ooDt72--
-
---iR2XZ5YDP7BTLaA3KybtbIujxN86FYaaV
+--Jof7fK10a7Ob0FfUMxMPqS07PvI2gKjTo
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: OpenPGP digital signature
 Content-Disposition: attachment; filename="signature.asc"
@@ -178,19 +116,19 @@ Content-Disposition: attachment; filename="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Comment: GPGTools - http://gpgtools.org
 
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl5YlcgACgkQIK4WkuE9
-3uC5VA//ZesDP8WZAyMs/AfVJ+gpGjA+DkFJZDZ4VULBh5mFs2u6+S4DFHO65ep+
-M/qlzaIJNGyyYns4yjVuncban6gjsgN0yQ3350yl/SWN4iJgFu5c+qnDQHcDvtQM
-KmjtSPjjN1NIJWX8ye5kYGnIwru+7LuuMOgEeg0bIo4cKQm3htKFFoM0vttuzVMX
-7kt1NzMOZ847FNqt9OxBoGjJQn4jVGI+k8IzUsWaJj3+P1Q1F8sD4Kv5CBHPMQr3
-oHmwZjSCnCT973SrlMGPrhZsIQGzGEz7myZLAWa68rJPufwOXOYCeOcraWSSYTes
-EhciMx6oZ7pXMKZ5PtyPRSCW89Nv+uj4/Vv1iIOPuLLzUZMag3I1E3t0qDJ4pV2G
-+aWfTCJFGn8F5ZCTYksdgSM+xD5RxMWJ17F3mE1WN8Oo1llMZIj43N4ogEtzPZkK
-oicEHWp/n5xh9/vC6+Uu4azAzKQC/hQabCT/kjXIb6uZY2qUuShwvAxLbVaDVfBy
-EwtLzEKjxEnjqTXMASjTBHd0CzV/9vucPnY+ck9cUzr0qAWlfb8c/gNXiCxHRKUt
-6/AJxOXjMc7prxkt2xUE/S69Q26G92KkuYHIPU9jYkDJsMoNZDwJDly5b+hQgtKD
-G2thvojiOTfkdJXubhj4LKxYJvomTL4op3WMP6eNPXRpXWa58Ro=
-=tT+6
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl5YmxoACgkQIK4WkuE9
+3uC4pg//dUBj89vjKmGBGZg/iGWVX4jg5JXeZP3UjWeqD0kh752PHaoh4M/73Ele
+MElVtK3yOBkfMu7THqh5+Bu4q1aEHmWcQxTi07JyhRlazfcGdkM15RFnQN8dfX1x
+eYxbeQ5ub6olmt94B46YfwaiTSdwxdVlodE8YEkn+ZUxSiVctyv14zPvf6k1VoZ0
+rdZR1H3kRbOE76q1w1DTZWb64Y6DsbLEArD+JjdCz5dkoE53+Q1in5h3aB8zNcSA
+vdLNXw4cp2T2qJVIh/JdKCJyTxFGaICo3an2VKgyTd0B8GDVBRRofPDqEx8I32BM
+GOqa1RKMri6GwED3gk+bfwPLqe7IVq9hwmjWCGP5VTsiFEaVtNQnaLL0BTk2HSG9
++kwvZZm6vdOEpT1zwnlmN4/rJjhs6mns9SggYiRFKPnf2VBFip2MC1QvzoQlRNup
+RAFHtVS+pPDTAfJtogD7rxdLA6bdzi9xlFD2deBdKpROSFSBrP/x7C/SpmkiBcnd
+inJ9v6p8xXeN59ek18PT3wTDAQ9pzs191G41xd4EUO4JLkmkXytbc33qXeO+jpXi
+9JyivFJbgVtBLtyE0xVvRBXF7gmUCGIxQ3eT3aFqiRmXDbEnvjcSOCMi1VLyd6Bb
+c/pWk2iv3riSMZttsxqmgO2s4BeH0HhfjP04XsTfIVKoDubTup4=
+=rD2F
 -----END PGP SIGNATURE-----
 
---iR2XZ5YDP7BTLaA3KybtbIujxN86FYaaV--
+--Jof7fK10a7Ob0FfUMxMPqS07PvI2gKjTo--
