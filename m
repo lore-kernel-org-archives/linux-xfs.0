@@ -2,32 +2,36 @@ Return-Path: <SRS0=pdRq=4R=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A516C3F2CD
-	for <linux-xfs@archiver.kernel.org>; Sat, 29 Feb 2020 22:35:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF360C3F2C6
+	for <linux-xfs@archiver.kernel.org>; Sat, 29 Feb 2020 22:37:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 577572468E
-	for <linux-xfs@archiver.kernel.org>; Sat, 29 Feb 2020 22:35:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC9AF222C2
+	for <linux-xfs@archiver.kernel.org>; Sat, 29 Feb 2020 22:37:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727170AbgB2Wf3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 29 Feb 2020 17:35:29 -0500
-Received: from sandeen.net ([63.231.237.45]:47426 "EHLO sandeen.net"
+        id S1726786AbgB2WhD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 29 Feb 2020 17:37:03 -0500
+Received: from sandeen.net ([63.231.237.45]:47528 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726786AbgB2Wf3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 29 Feb 2020 17:35:29 -0500
+        id S1726722AbgB2WhD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 29 Feb 2020 17:37:03 -0500
 Received: from BonnieLsiPhone.countryinn.local (50-78-99-146-static.hfc.comcastbusiness.net [50.78.99.146])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 44BB417DC9;
-        Sat, 29 Feb 2020 16:34:57 -0600 (CST)
-Subject: Re: [PATCH 13/26] libxfs: move log functions for convenience
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <158293297395.1549542.18143701542461010748.stgit@magnolia>
- <158293305931.1549542.15554913817897978787.stgit@magnolia>
+        by sandeen.net (Postfix) with ESMTPSA id 0255815D97;
+        Sat, 29 Feb 2020 16:36:31 -0600 (CST)
+Subject: Re: [PATCH 6/7] xfs_repair: check that metadata updates have been
+ committed
+To:     Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+References: <158258942838.451075.5401001111357771398.stgit@magnolia>
+ <158258946575.451075.126426300036283442.stgit@magnolia>
+ <20200225150817.GC26938@bfoster> <20200225151426.GC6748@magnolia>
+ <20200225173828.GC20570@infradead.org>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -71,12 +75,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <c6705b06-c42c-fe71-b7c5-16a31c17903b@sandeen.net>
-Date:   Sat, 29 Feb 2020 14:35:26 -0800
+Message-ID: <ddc7b67f-7ea0-14dd-889a-7948eefecba7@sandeen.net>
+Date:   Sat, 29 Feb 2020 14:37:00 -0800
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.5.0
 MIME-Version: 1.0
-In-Reply-To: <158293305931.1549542.15554913817897978787.stgit@magnolia>
+In-Reply-To: <20200225173828.GC20570@infradead.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -85,16 +89,70 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/28/20 3:37 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On 2/25/20 9:38 AM, Christoph Hellwig wrote:
+> On Tue, Feb 25, 2020 at 07:14:27AM -0800, Darrick J. Wong wrote:
+>> On Tue, Feb 25, 2020 at 10:08:17AM -0500, Brian Foster wrote:
+>>> On Mon, Feb 24, 2020 at 04:11:05PM -0800, Darrick J. Wong wrote:
+>>>> From: Darrick J. Wong <darrick.wong@oracle.com>
+>>>>
+>>>> Make sure that any metadata that we repaired or regenerated has been
+>>>> written to disk.  If that fails, exit with 1 to signal that there are
+>>>> still errors in the filesystem.
+>>>>
+>>>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+>>>> ---
+>>>>  repair/xfs_repair.c |    7 ++++++-
+>>>>  1 file changed, 6 insertions(+), 1 deletion(-)
+>>>>
+>>>>
+>>>> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+>>>> index eb1ce546..ccb13f4a 100644
+>>>> --- a/repair/xfs_repair.c
+>>>> +++ b/repair/xfs_repair.c
+>>>> @@ -703,6 +703,7 @@ main(int argc, char **argv)
+>>>>  	struct xfs_sb	psb;
+>>>>  	int		rval;
+>>>>  	struct xfs_ino_geometry	*igeo;
+>>>> +	int		error;
+>>>>  
+>>>>  	progname = basename(argv[0]);
+>>>>  	setlocale(LC_ALL, "");
+>>>> @@ -1104,7 +1105,11 @@ _("Note - stripe unit (%d) and width (%d) were copied from a backup superblock.\
+>>>>  	 */
+>>>>  	libxfs_bcache_flush();
+>>>>  	format_log_max_lsn(mp);
+>>>> -	libxfs_umount(mp);
+>>>> +
+>>>> +	/* Report failure if anything failed to get written to our fs. */
+>>>> +	error = -libxfs_umount(mp);
+>>>> +	if (error)
+>>>> +		exit(1);
+>>>
+>>> I wonder a bit whether repair should really exit like this vs. report
+>>> the error as it does for most others, but I could go either way. I'll
+>>> defer to Eric:
+>>
+>> I suppose I could do:
+>>
+>> 	error = -libxfs_umount();
+>> 	if (error)
+>> 		do_error(_("fs unmount failed (err=%d), re-run repair!\n"),
+>> 				error);
+>>
+>> Though then you'd end up with:
+>>
+>> 	# xfs_repair /dev/fd0
+>> 	...
+>> 	Refusing to write corrupted metadata to the data device!
+>> 	fs unmount failed (err=117), re-run repair!
+>> 	# echo $?
+>> 	1
+>>
+>> Which seems a little redundant.  But let's see what Eric thinks.
 > 
-> Move libxfs_log_clear and libxfs_log_header to the bottom of the file so
-> that we avoid having to create advance declarations of static functions
-> in the next patch.  No functional changes.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> I think this message would be at last somewhat useful.
 
-Christoph had other suggestions but for now I won't argue with simply moving
-some code.
+I also think this is good, thank you guys for working it out while I'm
+half-traveling/half-working (as was hch but he's keeping up!)  :)
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+-Eric
