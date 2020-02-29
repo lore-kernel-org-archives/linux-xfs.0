@@ -2,75 +2,73 @@ Return-Path: <SRS0=pdRq=4R=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2524CC3F2D1
-	for <linux-xfs@archiver.kernel.org>; Sat, 29 Feb 2020 01:49:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB418C3F2D2
+	for <linux-xfs@archiver.kernel.org>; Sat, 29 Feb 2020 01:49:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EEB602468A
-	for <linux-xfs@archiver.kernel.org>; Sat, 29 Feb 2020 01:49:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B33AB2468A
+	for <linux-xfs@archiver.kernel.org>; Sat, 29 Feb 2020 01:49:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="XZVYE5+j"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="evywlBB2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726752AbgB2BtF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 28 Feb 2020 20:49:05 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:37580 "EHLO
+        id S1726788AbgB2BtH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 28 Feb 2020 20:49:07 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:37626 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726658AbgB2BtF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Feb 2020 20:49:05 -0500
+        with ESMTP id S1726658AbgB2BtH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Feb 2020 20:49:07 -0500
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01T1ilVV155001
-        for <linux-xfs@vger.kernel.org>; Sat, 29 Feb 2020 01:49:04 GMT
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01T1iJS7129716
+        for <linux-xfs@vger.kernel.org>; Sat, 29 Feb 2020 01:49:06 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=ve8cr643Py9mMl6uOVeRiN5F+itOJ+sLL/02ZJptSmY=;
- b=XZVYE5+jPVev236jPFyD5QFZvsFfWLn/PfBjexYN1o7se/0uAr+wMLI0l73eUSRg5fqJ
- PdU3qF3AxOWJadsqTJAsxwRWya7piCXUhivO8rvwyLuZoaeD7gjgAL3VbDPC6QOIW/vI
- 9PgfdQPdmVTHcEPgo7xXPms7q4aLUFmsjcf7NlaAPNOrOgiew4bAe2kc7IlaqqqhkIco
- 2S/lIT/rCZjL1xz7vvjSNyc2BD/t1IAI5spFiv5PVp+LokS+dgnOioNx6Ac/mGnLB3Nf
- VBabeD/xPZIQ0JzFpFMfXKIcU3sr43dMrNDMB6O7pEsbaVnlFn8NpXggh8dnE5ouN54N LA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2yf0dmcdxb-1
+ cc : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=9cXqm4OX7PWCvRUq0DIe1KKRm50WqKr3zOWMDcs1cPM=;
+ b=evywlBB2HFZnaqiNXQK8s7FRNht1SFL3I2lN2AhVQ9k0vsUq1ORtoYuFjLaw2zy9ac6u
+ lz2mIyEkt+e4YESbp2RXQn7gGuB8s7edY2Ge7IFKi/ffmQOeZsN3u7hGlFsLtxGYO+9m
+ g+P9wsq578F9Z70tl3iLaA3yhg42bEQBUQR9mTx7C5J3mfHo4lZRzFuwOGWMzxKKjsd+
+ SWB0PLcwwW/sSootlLnG5TfqlJXnKMZpNEgyQGFq1xk6V1DIh+5Gs6btBE0rPKdg0cMb
+ KB02wYTrPCNl6j09xWMYquNdi2iLVmIqjq3TJ5TqcgIWn1xg1mj59pYHu51Tr+UD7d70 lQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2yf0dmcdxe-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 29 Feb 2020 01:49:04 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01T1ihf6191048
-        for <linux-xfs@vger.kernel.org>; Sat, 29 Feb 2020 01:49:03 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2yfd2v5rx6-1
+        for <linux-xfs@vger.kernel.org>; Sat, 29 Feb 2020 01:49:06 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01T1j4j0107798
+        for <linux-xfs@vger.kernel.org>; Sat, 29 Feb 2020 01:49:06 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 2ydcsgssev-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 29 Feb 2020 01:49:03 +0000
+        for <linux-xfs@vger.kernel.org>; Sat, 29 Feb 2020 01:49:05 +0000
 Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01T1n215020505
-        for <linux-xfs@vger.kernel.org>; Sat, 29 Feb 2020 01:49:03 GMT
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01T1n4QX020563
+        for <linux-xfs@vger.kernel.org>; Sat, 29 Feb 2020 01:49:04 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 28 Feb 2020 17:49:02 -0800
-Subject: [PATCH 4/4] xfs: check owner of dir3 blocks
+        with ESMTP ; Fri, 28 Feb 2020 17:49:04 -0800
+Subject: [PATCH 0/3] xfs: fix errors in attr/directory scrubbers
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Fri, 28 Feb 2020 17:49:01 -0800
-Message-ID: <158294094178.1729975.1691061577157111397.stgit@magnolia>
-In-Reply-To: <158294091582.1729975.287494493433729349.stgit@magnolia>
-References: <158294091582.1729975.287494493433729349.stgit@magnolia>
+Date:   Fri, 28 Feb 2020 17:49:03 -0800
+Message-ID: <158294094367.1730101.10848559171120744339.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9545 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
- spamscore=0 phishscore=0 bulkscore=0 malwarescore=0 suspectscore=1
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002290008
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 phishscore=0
+ mlxlogscore=999 spamscore=0 suspectscore=0 mlxscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002290008
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9545 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 clxscore=1015
  bulkscore=0 impostorscore=0 mlxscore=0 priorityscore=1501 phishscore=0
- spamscore=0 malwarescore=0 mlxlogscore=999 adultscore=0 suspectscore=1
+ spamscore=0 malwarescore=0 mlxlogscore=999 adultscore=0 suspectscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
  definitions=main-2002290008
 Sender: linux-xfs-owner@vger.kernel.org
@@ -78,77 +76,23 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi all,
 
-Check the owner field of dir3 block headers.
+During a code audit of the effectiveness of the online repair code,
+several deficiencies were discovered in the extended attribute and
+directory scrubbing code.  The first two patches change both scrubbers
+to note corruption when the name-based lookups (which test the hash
+tree) fail to return any information.  The final patch amends the
+directory checker to note corruption the inode target of a directory
+entry points to an unallocated inode.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_dir2_block.c |   34 +++++++++++++++++++++++++++++++++-
- 1 file changed, 33 insertions(+), 1 deletion(-)
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
-diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-index d6ced59b9567..408a9d7c8c24 100644
---- a/fs/xfs/libxfs/xfs_dir2_block.c
-+++ b/fs/xfs/libxfs/xfs_dir2_block.c
-@@ -20,6 +20,7 @@
- #include "xfs_error.h"
- #include "xfs_trace.h"
- #include "xfs_log.h"
-+#include "xfs_health.h"
- 
- /*
-  * Local function prototypes.
-@@ -114,6 +115,23 @@ const struct xfs_buf_ops xfs_dir3_block_buf_ops = {
- 	.verify_struct = xfs_dir3_block_verify,
- };
- 
-+static xfs_failaddr_t
-+xfs_dir3_block_header_check(
-+	struct xfs_inode	*dp,
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_mount	*mp = dp->i_mount;
-+
-+	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-+		struct xfs_dir3_blk_hdr *hdr3 = bp->b_addr;
-+
-+		if (be64_to_cpu(hdr3->owner) != dp->i_ino)
-+			return __this_address;
-+	}
-+
-+	return NULL;
-+}
-+
- int
- xfs_dir3_block_read(
- 	struct xfs_trans	*tp,
-@@ -121,11 +139,25 @@ xfs_dir3_block_read(
- 	struct xfs_buf		**bpp)
- {
- 	struct xfs_mount	*mp = dp->i_mount;
-+	xfs_failaddr_t		fa;
- 	int			err;
- 
- 	err = xfs_da_read_buf(tp, dp, mp->m_dir_geo->datablk, 0, bpp,
- 				XFS_DATA_FORK, &xfs_dir3_block_buf_ops);
--	if (!err && tp && *bpp)
-+	if (err || !*bpp)
-+		return err;
-+
-+	/* Check things that we can't do in the verifier. */
-+	fa = xfs_dir3_block_header_check(dp, *bpp);
-+	if (fa) {
-+		xfs_verifier_error(*bpp, -EFSCORRUPTED, fa);
-+		(*bpp)->b_flags &= ~XBF_DONE;
-+		xfs_trans_brelse(tp, *bpp);
-+		*bpp = NULL;
-+		return -EFSCORRUPTED;
-+	}
-+
-+	if (tp)
- 		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_DIR_BLOCK_BUF);
- 	return err;
- }
+--D
 
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=scrub-fixes
