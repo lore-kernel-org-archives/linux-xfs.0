@@ -2,120 +2,80 @@ Return-Path: <SRS0=l9EO=4S=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 809FAC3F2CD
-	for <linux-xfs@archiver.kernel.org>; Sun,  1 Mar 2020 22:37:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EE20C3F2CD
+	for <linux-xfs@archiver.kernel.org>; Sun,  1 Mar 2020 22:56:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 606FF24699
-	for <linux-xfs@archiver.kernel.org>; Sun,  1 Mar 2020 22:37:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 22A082469C
+	for <linux-xfs@archiver.kernel.org>; Sun,  1 Mar 2020 22:56:16 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=axtens.net header.i=@axtens.net header.b="G5lSflCj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726621AbgCAWhw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 1 Mar 2020 17:37:52 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:56494 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726418AbgCAWhw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 1 Mar 2020 17:37:52 -0500
-Received: from dread.disaster.area (pa49-195-202-68.pa.nsw.optusnet.com.au [49.195.202.68])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id F069A3A1D80;
-        Mon,  2 Mar 2020 09:37:46 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1j8XDV-0004U5-FH; Mon, 02 Mar 2020 09:37:45 +1100
-Date:   Mon, 2 Mar 2020 09:37:45 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     ira.weiny@intel.com
-Cc:     linux-kernel@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH V5 05/12] fs/xfs: Create function xfs_inode_enable_dax()
-Message-ID: <20200301223745.GE10776@dread.disaster.area>
-References: <20200227052442.22524-1-ira.weiny@intel.com>
- <20200227052442.22524-6-ira.weiny@intel.com>
+        id S1726204AbgCAW4P (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 1 Mar 2020 17:56:15 -0500
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:37667 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726050AbgCAW4P (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 1 Mar 2020 17:56:15 -0500
+Received: by mail-pl1-f193.google.com with SMTP id q4so3430194pls.4
+        for <linux-xfs@vger.kernel.org>; Sun, 01 Mar 2020 14:56:14 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=axtens.net; s=google;
+        h=from:to:subject:in-reply-to:references:date:message-id:mime-version;
+        bh=YxgOqpgbQcmMoGMYAVFOXMchSBvpYzdR5unDu3ePoFE=;
+        b=G5lSflCjBdUdrdAVY9fbc6OD3WvuAgAM3O//ZXOSIk3koNGb5/F3+h7lTdnklngQB2
+         8vAAAWwrSP24AnXWhbwuMXXvTr8Xin4WORfUKhVoJIRli4h4YyIhPh5vK+WkgPry5Hj7
+         rhcYjsLyZi1XwLChKgxt5P5EdSXliR+zUMXNE=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:subject:in-reply-to:references:date
+         :message-id:mime-version;
+        bh=YxgOqpgbQcmMoGMYAVFOXMchSBvpYzdR5unDu3ePoFE=;
+        b=fZllGo7UNmuWsztKoab5oL+CRfZq4FLCSeuk0ltci4cQcBY0xKhkpWamqghjllVlNi
+         xgUaQlfmmkncszeb3zfRMmvVYDNaYuFSAy0b3p5kcWacJDHIvxUvqED5GPC2NvEl9ry/
+         z4Zlti0yqQpbWNbLEGexUSX5qB3CXvReQ7JkuoHBMeTQMJlCkK10t7lfn00CSx6G/tj3
+         VoN20QX5XE9sDeCql0+McTQaBy9BelbeTuu4lws2h1zW17J2xnsedmTItS1eAn22ramH
+         klXu35izjA5hXIpMCuG1QEmtKCXPAXfzwfY6CyHuxNf+or5uXELu4QMLCo9LLy3uF6Z7
+         pU2Q==
+X-Gm-Message-State: APjAAAXV9PnTn2NwNsUR+59JYTrLKDDTWnKHk8YciYK0DZ/g8Qlnw66c
+        /+OyuYKxRTe0Hlvpd4B0rvjBfQ==
+X-Google-Smtp-Source: APXvYqyyBTU85xhidIp99iBInbf+ZsI59IZB1CB3kU2N4bl9kH0fYn/V3d4kOT6OoWV5pjrbZchZ8A==
+X-Received: by 2002:a17:90a:928c:: with SMTP id n12mr18452305pjo.45.1583103374143;
+        Sun, 01 Mar 2020 14:56:14 -0800 (PST)
+Received: from localhost (2001-44b8-1113-6700-591b-db3f-06cb-776f.static.ipv6.internode.on.net. [2001:44b8:1113:6700:591b:db3f:6cb:776f])
+        by smtp.gmail.com with ESMTPSA id h7sm19357775pfq.36.2020.03.01.14.56.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 01 Mar 2020 14:56:13 -0800 (PST)
+From:   Daniel Axtens <dja@axtens.net>
+To:     syzbot <syzbot+6be2cbddaad2e32b47a0@syzkaller.appspotmail.com>,
+        allison.henderson@oracle.com, bfoster@redhat.com,
+        darrick.wong@oracle.com, dchinner@redhat.com, dvyukov@google.com,
+        kasan-dev@googlegroups.com, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, sandeen@redhat.com,
+        syzkaller-bugs@googlegroups.com
+Subject: Re: BUG: unable to handle kernel paging request in xfs_sb_read_verify
+In-Reply-To: <00000000000074eed3059f9e3d0a@google.com>
+References: <00000000000074eed3059f9e3d0a@google.com>
+Date:   Mon, 02 Mar 2020 09:56:10 +1100
+Message-ID: <87eeubr8fp.fsf@dja-thinkpad.axtens.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200227052442.22524-6-ira.weiny@intel.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
-        a=mqTaRPt+QsUAtUurwE173Q==:117 a=mqTaRPt+QsUAtUurwE173Q==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=SS2py6AdgQ4A:10
-        a=QyXUC8HyAAAA:8 a=7-415B0cAAAA:8 a=SBY6GoZAAwZHPrv_PwMA:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 26, 2020 at 09:24:35PM -0800, ira.weiny@intel.com wrote:
-> From: Ira Weiny <ira.weiny@intel.com>
-> 
-> xfs_inode_supports_dax() should reflect if the inode can support DAX not
-> that it is enabled for DAX.
-> 
-> Change the use of xfs_inode_supports_dax() to reflect only if the inode
-> and underlying storage support dax.
-> 
-> Add a new function xfs_inode_enable_dax() which reflects if the inode
-> should be enabled for DAX.
-> 
-> Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-> 
-> ---
-> Changes from v3:
-> 	Update functions and names to be more clear
-> 	Update commit message
-> 	Merge with
-> 		'fs/xfs: Clean up DAX support check'
-> 		don't allow IS_DAX() on a directory
-> 		use STATIC macro for static
-> 		make xfs_inode_supports_dax() static
-> ---
->  fs/xfs/xfs_iops.c | 25 +++++++++++++++++++------
->  1 file changed, 19 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 81f2f93caec0..ff711efc5247 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -1237,19 +1237,18 @@ static const struct inode_operations xfs_inline_symlink_inode_operations = {
->  };
->  
->  /* Figure out if this file actually supports DAX. */
-> -static bool
-> +STATIC bool
->  xfs_inode_supports_dax(
->  	struct xfs_inode	*ip)
->  {
->  	struct xfs_mount	*mp = ip->i_mount;
->  
->  	/* Only supported on non-reflinked files. */
-> -	if (!S_ISREG(VFS_I(ip)->i_mode) || xfs_is_reflink_inode(ip))
-> +	if (xfs_is_reflink_inode(ip))
->  		return false;
->  
-> -	/* DAX mount option or DAX iflag must be set. */
-> -	if (!(mp->m_flags & XFS_MOUNT_DAX) &&
-> -	    !(ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
-> +	/* Only supported on regular files. */
-> +	if (!S_ISREG(VFS_I(ip)->i_mode))
->  		return false;
+syzbot <syzbot+6be2cbddaad2e32b47a0@syzkaller.appspotmail.com> writes:
 
-Why split the initial check? The "non-reflinked files" comment is
-pretty explicit, so splitting it just to add a "only support on
-regular files" comment doesn't actually add any value here.
+#syz fix: kasan: fix crashes on access to memory mapped by vm_map_ram()
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> This bug is marked as fixed by commit:
+> kasan: support vmalloc backing of vm_map_ram()
+> But I can't find it in any tested tree for more than 90 days.
+> Is it a correct commit? Please update it by replying:
+> #syz fix: exact-commit-title
+> Until then the bug is still considered open and
+> new crashes with the same signature are ignored.
