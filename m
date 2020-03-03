@@ -2,110 +2,118 @@ Return-Path: <SRS0=TABv=4U=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4EA7C3F2D1
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Mar 2020 15:49:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1D42C3F2C6
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Mar 2020 15:52:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B9FCC20866
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Mar 2020 15:49:01 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="E4AiSd/w"
+	by mail.kernel.org (Postfix) with ESMTP id A07FF20CC7
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Mar 2020 15:52:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729793AbgCCPtB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Mar 2020 10:49:01 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:49864 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729249AbgCCPtB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Mar 2020 10:49:01 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 023FfIRo078612;
-        Tue, 3 Mar 2020 15:48:58 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=8+2x6VoDfGWE5qtPVMjPO+fEBpnfkQqx3CbzwLidRPY=;
- b=E4AiSd/wrNbOCIOdM70jFLq/YPpXDAdWZYKjN0bdcvlkWjrgc2pd0H6txkJ+bfrUTxtB
- cQPrZ5RY65iIERHwZJsLoYrrbY/RQs4A8h/yq/hP6gpbc0Gd8/DKuHFsP7ldRiqRaark
- pMQT7V/soRHL9Fa1qcYfC5B6/f5lko0c1N010/+9oOKbTrJ0HZpsvoz06VZc3zVa0/we
- CdQvxXQoYHKSmYyIKkpc1PfJiGf5XPE8iu+R7uZgHT409BMHAKvfKe6SwiPSbSQuM3ZR
- UpE+3GbWh177ubIlGtLt7XAOhIh3eX0Oazn3SKXZy0uWiNq3L3Bw+3blBZ7e0LXHERDS wg== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2yghn33xk0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 Mar 2020 15:48:58 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 023FibsJ027176;
-        Tue, 3 Mar 2020 15:48:58 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 2yg1p4qhby-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 Mar 2020 15:48:57 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 023FmuAV027377;
-        Tue, 3 Mar 2020 15:48:56 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 03 Mar 2020 07:48:56 -0800
-Date:   Tue, 3 Mar 2020 07:48:55 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     linux-xfs@vger.kernel.org
+        id S1729888AbgCCPwo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Mar 2020 10:52:44 -0500
+Received: from sandeen.net ([63.231.237.45]:45264 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729313AbgCCPwn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 3 Mar 2020 10:52:43 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 398D315D98;
+        Tue,  3 Mar 2020 09:52:08 -0600 (CST)
 Subject: Re: [PATCH 02/14] xfs: preserve default grace interval during
  quotacheck
-Message-ID: <20200303154854.GY8045@magnolia>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
 References: <157784106066.1364230.569420432829402226.stgit@magnolia>
  <157784107520.1364230.49128863919644273.stgit@magnolia>
  <ff58d07d-f6d7-647d-204e-59999b31dfba@sandeen.net>
  <13bd156b-3cf0-23d2-475e-9889156f284a@sandeen.net>
+ <20200303154854.GY8045@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <29ff89c0-6916-3a5f-9265-57a6bdbbe11c@sandeen.net>
+Date:   Tue, 3 Mar 2020 09:52:41 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.5.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <13bd156b-3cf0-23d2-475e-9889156f284a@sandeen.net>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9549 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 malwarescore=0
- mlxlogscore=999 mlxscore=0 spamscore=0 adultscore=0 bulkscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2003030113
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9549 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 phishscore=0 spamscore=0
- impostorscore=0 mlxscore=0 adultscore=0 mlxlogscore=999 lowpriorityscore=0
- priorityscore=1501 bulkscore=0 clxscore=1015 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2003030113
+In-Reply-To: <20200303154854.GY8045@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 02, 2020 at 09:03:37PM -0600, Eric Sandeen wrote:
-> On 2/18/20 8:55 PM, Eric Sandeen wrote:
-> > On 12/31/19 7:11 PM, Darrick J. Wong wrote:
-> >> From: Darrick J. Wong <darrick.wong@oracle.com>
-> >>
-> >> When quotacheck runs, it zeroes all the timer fields in every dquot.
-> >> Unfortunately, it also does this to the root dquot, which erases any
-> >> preconfigured grace interval that the administrator may have set.  Worse
-> >> yet, the incore copies of those variables remain set.  This cache
-> >> coherence problem manifests itself as the grace interval mysteriously
-> >> being reset back to the defaults at the /next/ mount.
-> >>
-> >> Fix it by resetting the root disk dquot's timer fields to the incore
-> >> values.
-> > 
-> > Uh, so, even with this, it seems that we don't properly set up default time
-> > limits on the first mount.  Looking into it...
+On 3/3/20 7:48 AM, Darrick J. Wong wrote:
+> On Mon, Mar 02, 2020 at 09:03:37PM -0600, Eric Sandeen wrote:
+>> On 2/18/20 8:55 PM, Eric Sandeen wrote:
+>>> On 12/31/19 7:11 PM, Darrick J. Wong wrote:
+>>>> From: Darrick J. Wong <darrick.wong@oracle.com>
+>>>>
+>>>> When quotacheck runs, it zeroes all the timer fields in every dquot.
+>>>> Unfortunately, it also does this to the root dquot, which erases any
+>>>> preconfigured grace interval that the administrator may have set.  Worse
+>>>> yet, the incore copies of those variables remain set.  This cache
+>>>> coherence problem manifests itself as the grace interval mysteriously
+>>>> being reset back to the defaults at the /next/ mount.
+>>>>
+>>>> Fix it by resetting the root disk dquot's timer fields to the incore
+>>>> values.
+>>>
+>>> Uh, so, even with this, it seems that we don't properly set up default time
+>>> limits on the first mount.  Looking into it...
+>>
+>> Sorry.  This was actually a regression from my timer-per-type series.  :(
+>>
+>> so ignore this critique, it's my fault. ;)
 > 
-> Sorry.  This was actually a regression from my timer-per-type series.  :(
-> 
-> so ignore this critique, it's my fault. ;)
+> But will you (or anyone really) please review this fix?
 
-But will you (or anyone really) please review this fix?
+I did; I have other comments on it up-thread.
 
---D
-
-> -Eric
+-Eric
