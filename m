@@ -2,201 +2,111 @@ Return-Path: <SRS0=TABv=4U=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B33C8C3F2C6
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Mar 2020 23:06:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26E35C3F2C6
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Mar 2020 23:45:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7B77820848
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Mar 2020 23:06:46 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="cN/wE/Q7"
+	by mail.kernel.org (Postfix) with ESMTP id F382C20828
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Mar 2020 23:45:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727459AbgCCXGq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Mar 2020 18:06:46 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:49638 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727274AbgCCXGp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Mar 2020 18:06:45 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 023MsB7L152676;
-        Tue, 3 Mar 2020 23:06:42 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=v8iJMTJrVlQBdjHfEY7YpRw7q9HiJvBdyZt8msxCLD0=;
- b=cN/wE/Q7Zo4wB1apIndHTM0z4c1m6qWLsMG7/W7cpJ3VEEX+Dx/41dFEquT56npM5xR8
- DdWYxBrTd0gP6s2u0xWBkBon5WimdcLO+0T1npJ2/19NVvv75p4bi+xG5iiaeTYI1gp0
- BHsCahA99c6S6HG53c/QLPWCrKmnpswedzqKf9feSGV1IiinCnkOqtp3oc+jlwIZeFAR
- pMMk0W5PEImyPJJ+nk9u5kwULdM2XfEEPAWxOr8UxMNNfQfnUZ0tH6DrlXY9H1WRlrwU
- EwCR+hOkMU0fQG+gK3NjqNlo+oADXp7SVXWVZJuTXzMyyLLmao4GMXUeDHfLWUivexb0 xg== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2yffcujkpa-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 Mar 2020 23:06:42 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 023MqV5Q117114;
-        Tue, 3 Mar 2020 23:06:42 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2yg1p5pg6q-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 Mar 2020 23:06:42 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 023N6e8o020305;
-        Tue, 3 Mar 2020 23:06:40 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 03 Mar 2020 15:06:40 -0800
-Date:   Tue, 3 Mar 2020 15:06:39 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: scrub should mark dir corrupt if entry points
- to unallocated inode
-Message-ID: <20200303230639.GI8045@magnolia>
-References: <158294094367.1730101.10848559171120744339.stgit@magnolia>
- <158294096213.1730101.1870315264682758950.stgit@magnolia>
- <20200303223907.GX10776@dread.disaster.area>
+        id S1728304AbgCCXph (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Mar 2020 18:45:37 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:53937 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727604AbgCCXph (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Mar 2020 18:45:37 -0500
+Received: from dread.disaster.area (pa49-195-202-68.pa.nsw.optusnet.com.au [49.195.202.68])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 354ED3A26F8;
+        Wed,  4 Mar 2020 10:45:34 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1j9HED-0004rN-Bn; Wed, 04 Mar 2020 10:45:33 +1100
+Date:   Wed, 4 Mar 2020 10:45:33 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/4] xfs: fix buffer state when we reject a corrupt dir
+ free block
+Message-ID: <20200303234533.GY10776@dread.disaster.area>
+References: <158294091582.1729975.287494493433729349.stgit@magnolia>
+ <158294092192.1729975.12710230360219661807.stgit@magnolia>
+ <e38b8334-6b64-71ed-62d6-527f0fe57f09@sandeen.net>
+ <20200303163853.GA8045@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200303223907.GX10776@dread.disaster.area>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9549 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 malwarescore=0
- mlxlogscore=999 mlxscore=0 spamscore=0 adultscore=0 bulkscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2003030148
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9549 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 bulkscore=0
- adultscore=0 suspectscore=0 spamscore=0 malwarescore=0 impostorscore=0
- priorityscore=1501 mlxlogscore=999 lowpriorityscore=0 clxscore=1015
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2003030148
+In-Reply-To: <20200303163853.GA8045@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+        a=mqTaRPt+QsUAtUurwE173Q==:117 a=mqTaRPt+QsUAtUurwE173Q==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=SS2py6AdgQ4A:10
+        a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8 a=4pnkVB2WtlmvbiU2uoAA:9
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 04, 2020 at 09:39:07AM +1100, Dave Chinner wrote:
-> On Fri, Feb 28, 2020 at 05:49:22PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Mar 03, 2020 at 08:38:53AM -0800, Darrick J. Wong wrote:
+> On Mon, Mar 02, 2020 at 05:54:07PM -0600, Eric Sandeen wrote:
+> > On 2/28/20 5:48 PM, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Fix two problems in the dir3 free block read routine when we want to
+> > > reject a corrupt free block.  First, buffers should never have DONE set
+> > > at the same time that b_error is EFSCORRUPTED.  Second, don't leak a
+> > > pointer back to the caller.
 > > 
-> > In xchk_dir_check_ftype, we should mark the directory corrupt if we try
-> > to _iget a directory entry's inode pointer and the inode btree says the
-> > inode is not allocated.  This involves changing the IGET call to force
-> > the inobt lookup to return EINVAL if the inode isn't allocated; and
-> > rearranging the code so that we always perform the iget.
+> > For both of these things I'm left wondering; why does this particular
+> > location need to have XBF_DONE cleared after the verifier error?  Most
+> > other locations that mark errors don't do this.
 > 
-> There's also a bug fix in this that isn't mentioned...
+> Read verifier functions don't need to clear XBF_DONE because
+> xfs_buf_reverify will notice b_error being set, and clear XBF_DONE for
+> us.
 > 
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/scrub/dir.c |   43 ++++++++++++++++++++++++++-----------------
-> >  1 file changed, 26 insertions(+), 17 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-> > index 54afa75c95d1..a775fbf49a0d 100644
-> > --- a/fs/xfs/scrub/dir.c
-> > +++ b/fs/xfs/scrub/dir.c
-> > @@ -39,9 +39,12 @@ struct xchk_dir_ctx {
-> >  	struct xfs_scrub	*sc;
-> >  };
-> >  
-> > -/* Check that an inode's mode matches a given DT_ type. */
-> > +/*
-> > + * Check that a directory entry's inode pointer directs us to an allocated
-> > + * inode and (if applicable) the inode mode matches the entry's DT_ type.
-> > + */
-> >  STATIC int
-> > -xchk_dir_check_ftype(
-> > +xchk_dir_check_iptr(
-> >  	struct xchk_dir_ctx	*sdc,
-> >  	xfs_fileoff_t		offset,
-> >  	xfs_ino_t		inum,
-> > @@ -52,13 +55,6 @@ xchk_dir_check_ftype(
-> >  	int			ino_dtype;
-> >  	int			error = 0;
-> >  
-> > -	if (!xfs_sb_version_hasftype(&mp->m_sb)) {
-> > -		if (dtype != DT_UNKNOWN && dtype != DT_DIR)
-> > -			xchk_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK,
-> > -					offset);
-> > -		goto out;
-> > -	}
-> > -
-> >  	/*
-> >  	 * Grab the inode pointed to by the dirent.  We release the
-> >  	 * inode before we cancel the scrub transaction.  Since we're
-> > @@ -66,17 +62,30 @@ xchk_dir_check_ftype(
-> >  	 * eofblocks cleanup (which allocates what would be a nested
-> >  	 * transaction), we can't use DONTCACHE here because DONTCACHE
-> >  	 * inodes can trigger immediate inactive cleanup of the inode.
-> > +	 *
-> > +	 * We use UNTRUSTED here so that iget will return EINVAL if we have an
-> > +	 * inode pointer that points to an unallocated inode.
-> 
-> "We use UNTRUSTED here to force validation of the inode number
-> before we look it up. If it fails validation for any reason we will
-> get -EINVAL returned and that indicates a corrupt directory entry."
+> __xfs_dir3_free_read calls _read_buf.  If the buffer read succeeds,
+> _free_read then has xfs_dir3_free_header_check do some more checking on
+> the buffer that we can't do in read verifiers.  This is *outside* the
+> regular read verifier (because we can't pass the owner into _read_buf)
+> so if we're going to use xfs_verifier_error() to set b_error then we
+> also have to clear XBF_DONE so that when we release the buffer a few
+> lines later the buffer will be in a state that the buffer code expects.
 
-Ok, changed.
+Actually, if the data in the buffer is bad after it has been
+successfully read and we want to make sure it never gets used, the
+buffer should be marked stale.
 
-> >  	 */
-> > -	error = xfs_iget(mp, sdc->sc->tp, inum, 0, 0, &ip);
-> > +	error = xfs_iget(mp, sdc->sc->tp, inum, XFS_IGET_UNTRUSTED, 0, &ip);
-> > +	if (error == -EINVAL) {
-> > +		xchk_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK, offset);
-> > +		return -EFSCORRUPTED;
-> > +	}
-> >  	if (!xchk_fblock_xref_process_error(sdc->sc, XFS_DATA_FORK, offset,
-> >  			&error))
-> >  		goto out;
-> 
-> Also:
-> 	if (error == -EINVAL)
-> 		error = -EFSCORRUPTED;
+That will prevent the buffer from being placed on the LRU when it is
+released, and if a lookup finds it in cache it will clear /all/ the
+flags on it
 
-Also changed.
+xfs_da_read_buf() has read the buffer successfully, and set up it's
+state so that it is cached via insertion into the LRU on release. We
+want to make sure that nothing uses this buffer again without a
+complete re-initialisation, and that's effectively what
+xfs_buf_stale() does.
 
-> 
-> >  
-> > -	/* Convert mode to the DT_* values that dir_emit uses. */
-> > -	ino_dtype = xfs_dir3_get_dtype(mp,
-> > -			xfs_mode_to_ftype(VFS_I(ip)->i_mode));
-> > -	if (ino_dtype != dtype)
-> > -		xchk_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK, offset);
-> > +	if (xfs_sb_version_hasftype(&mp->m_sb)) {
-> > +		/* Convert mode to the DT_* values that dir_emit uses. */
-> > +		ino_dtype = xfs_dir3_get_dtype(mp,
-> > +				xfs_mode_to_ftype(VFS_I(ip)->i_mode));
-> > +		if (ino_dtype != dtype)
-> > +			xchk_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK, offset);
-> > +	} else {
-> > +		if (dtype != DT_UNKNOWN && dtype != DT_DIR)
-> > +			xchk_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK,
-> > +					offset);
-> > +	}
-> 
-> What is this fixing? xfs_dir3_get_dtype() always returned DT_UNKNOWN
-> for !hasftype filesystems, so I'm guessing this fixes validation
-> against dtype == DT_DIR for "." and ".." entries, but didn't we
-> already check this in xchk_dir_actor() before it calls this
-> function?
+> This isn't theoretical, if the _header_check fails then we start
+> tripping the b_error assert the next time someone calls
+> xfs_buf_reverify.
 
-Oh, right, we already checked those, so we can get rid of the !hasftype
-code entirely.  Good catch!
+We shouldn't be trying to re-use a corrupt buffer - it should cycle
+out of memory immediately. Clearing the XBF_DONE flag doesn't
+accomplish that; it works for buffer read verifier failures because
+that results in the buffer being released before they are configured
+to be cached on the LRU by the caller...
 
---D
+Indeed, xfs_buf_read_map() already stales the buffer on read and
+reverify failure....
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
