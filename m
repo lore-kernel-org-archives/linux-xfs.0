@@ -1,4 +1,4 @@
-Return-Path: <SRS0=0zz6=4T=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=TABv=4U=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
@@ -6,29 +6,28 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB7D0C3F2D1
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Mar 2020 23:54:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 416CBC3F2D1
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Mar 2020 00:04:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B5AE82467B
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Mar 2020 23:54:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D9B3217F4
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Mar 2020 00:04:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726758AbgCBXyK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Mar 2020 18:54:10 -0500
-Received: from sandeen.net ([63.231.237.45]:53794 "EHLO sandeen.net"
+        id S1726758AbgCCAEJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 Mar 2020 19:04:09 -0500
+Received: from sandeen.net ([63.231.237.45]:54348 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726728AbgCBXyJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 2 Mar 2020 18:54:09 -0500
+        id S1726843AbgCCAEJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 2 Mar 2020 19:04:09 -0500
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id B2EAA7B8C;
-        Mon,  2 Mar 2020 17:53:35 -0600 (CST)
-Subject: Re: [PATCH 1/4] xfs: fix buffer state when we reject a corrupt dir
- free block
+        by sandeen.net (Postfix) with ESMTPSA id 96813F8B42;
+        Mon,  2 Mar 2020 18:03:35 -0600 (CST)
+Subject: Re: [PATCH 2/4] xfs: check owner of dir3 free blocks
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <158294091582.1729975.287494493433729349.stgit@magnolia>
- <158294092192.1729975.12710230360219661807.stgit@magnolia>
+ <158294092825.1729975.10937805307008830676.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -72,12 +71,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <e38b8334-6b64-71ed-62d6-527f0fe57f09@sandeen.net>
-Date:   Mon, 2 Mar 2020 17:54:07 -0600
+Message-ID: <3a1406aa-10c2-733c-2fa1-cc6d064f0849@sandeen.net>
+Date:   Mon, 2 Mar 2020 18:04:07 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.5.0
 MIME-Version: 1.0
-In-Reply-To: <158294092192.1729975.12710230360219661807.stgit@magnolia>
+In-Reply-To: <158294092825.1729975.10937805307008830676.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -89,41 +88,32 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 2/28/20 5:48 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Fix two problems in the dir3 free block read routine when we want to
-> reject a corrupt free block.  First, buffers should never have DONE set
-> at the same time that b_error is EFSCORRUPTED.  Second, don't leak a
-> pointer back to the caller.
-
-For both of these things I'm left wondering; why does this particular
-location need to have XBF_DONE cleared after the verifier error?  Most
-other locations that mark errors don't do this.
-
-xfs_inode_buf_verify does, but for readahead purposes:
-
- * If the readahead buffer is invalid, we need to mark it with an error and
- * clear the DONE status of the buffer so that a followup read will re-read it
- * from disk.
-
-Also, what problem does setting the pointer to NULL solve?
-
+> Check the owner field of dir3 free block headers.
+> 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+Do we need a similar check in xfs_repair?
+
+Should this also check
+
+hdr.blkno == bp->b_bn? ?
+
 > ---
 >  fs/xfs/libxfs/xfs_dir2_node.c |    2 ++
 >  1 file changed, 2 insertions(+)
 > 
 > 
 > diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-> index a0cc5e240306..f622ede7119e 100644
+> index f622ede7119e..79b917e62ac3 100644
 > --- a/fs/xfs/libxfs/xfs_dir2_node.c
 > +++ b/fs/xfs/libxfs/xfs_dir2_node.c
-> @@ -227,7 +227,9 @@ __xfs_dir3_free_read(
->  	fa = xfs_dir3_free_header_check(dp, fbno, *bpp);
->  	if (fa) {
->  		xfs_verifier_error(*bpp, -EFSCORRUPTED, fa);
-> +		(*bpp)->b_flags &= ~XBF_DONE;
->  		xfs_trans_brelse(tp, *bpp);
-> +		*bpp = NULL;
->  		return -EFSCORRUPTED;
->  	}
+> @@ -194,6 +194,8 @@ xfs_dir3_free_header_check(
+>  			return __this_address;
+>  		if (be32_to_cpu(hdr3->nvalid) < be32_to_cpu(hdr3->nused))
+>  			return __this_address;
+> +		if (be64_to_cpu(hdr3->hdr.owner) != dp->i_ino)
+> +			return __this_address;
+>  	} else {
+>  		struct xfs_dir2_free_hdr *hdr = bp->b_addr;
 >  
 > 
