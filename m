@@ -2,426 +2,227 @@ Return-Path: <SRS0=TABv=4U=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	TVD_PH_BODY_ACCOUNTS_PRE,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5583C3F2CD
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Mar 2020 04:07:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 759EFC3F2CD
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Mar 2020 05:00:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5FCD522B48
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Mar 2020 04:07:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 423DD21739
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Mar 2020 05:00:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726970AbgCCEHm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Mar 2020 23:07:42 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:52373 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726958AbgCCEHm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Mar 2020 23:07:42 -0500
-Received: from dread.disaster.area (pa49-195-202-68.pa.nsw.optusnet.com.au [49.195.202.68])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id B988F3A2450;
-        Tue,  3 Mar 2020 15:07:36 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1j8yqF-0006Lv-Rd; Tue, 03 Mar 2020 15:07:35 +1100
-Date:   Tue, 3 Mar 2020 15:07:35 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
+        id S1725838AbgCCFAx convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Mar 2020 00:00:53 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:42854 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725830AbgCCFAx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Mar 2020 00:00:53 -0500
+Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0234xWT0023157
+        for <linux-xfs@vger.kernel.org>; Tue, 3 Mar 2020 00:00:52 -0500
+Received: from e06smtp03.uk.ibm.com (e06smtp03.uk.ibm.com [195.75.94.99])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2yfk5mmj1e-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Tue, 03 Mar 2020 00:00:52 -0500
+Received: from localhost
+        by e06smtp03.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.ibm.com>;
+        Tue, 3 Mar 2020 05:00:50 -0000
+Received: from b06avi18878370.portsmouth.uk.ibm.com (9.149.26.194)
+        by e06smtp03.uk.ibm.com (192.168.101.133) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
+        Tue, 3 Mar 2020 05:00:48 -0000
+Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
+        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 02350lfj33685880
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 3 Mar 2020 05:00:47 GMT
+Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id A784A4C04E;
+        Tue,  3 Mar 2020 05:00:47 +0000 (GMT)
+Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 2A8144C046;
+        Tue,  3 Mar 2020 05:00:47 +0000 (GMT)
+Received: from localhost.localdomain (unknown [9.124.35.74])
+        by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Tue,  3 Mar 2020 05:00:46 +0000 (GMT)
+From:   Chandan Rajendra <chandan@linux.ibm.com>
+To:     Allison Collins <allison.henderson@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [RFC v5 PATCH 3/9] xfs: automatic relogging reservation
- management
-Message-ID: <20200303040735.GR10776@dread.disaster.area>
-References: <20200227134321.7238-1-bfoster@redhat.com>
- <20200227134321.7238-4-bfoster@redhat.com>
- <20200302030750.GH10776@dread.disaster.area>
- <20200302180650.GB10946@bfoster>
- <20200302232529.GN10776@dread.disaster.area>
+Subject: Re: [PATCH v7 13/19] xfs: Add delay ready attr remove routines
+Date:   Tue, 03 Mar 2020 10:33:43 +0530
+Organization: IBM
+In-Reply-To: <20200223020611.1802-14-allison.henderson@oracle.com>
+References: <20200223020611.1802-1-allison.henderson@oracle.com> <20200223020611.1802-14-allison.henderson@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200302232529.GN10776@dread.disaster.area>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
-        a=mqTaRPt+QsUAtUurwE173Q==:117 a=mqTaRPt+QsUAtUurwE173Q==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=SS2py6AdgQ4A:10
-        a=7-415B0cAAAA:8 a=20KFwNOVAAAA:8 a=48gLqm1qsMDSgp4xQlQA:9
-        a=o4Vezn4k5IxIexWm:21 a=GG4CmX3yZRfRCdhp:21 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="iso-8859-1"
+X-TM-AS-GCONF: 00
+x-cbid: 20030305-0012-0000-0000-0000038C8C72
+X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
+x-cbparentid: 20030305-0013-0000-0000-000021C94179
+Message-Id: <5805763.2Ij3A3caSj@localhost.localdomain>
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
+ definitions=2020-03-02_09:2020-03-02,2020-03-02 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 phishscore=0
+ mlxlogscore=999 clxscore=1015 impostorscore=0 spamscore=0 malwarescore=0
+ priorityscore=1501 lowpriorityscore=0 bulkscore=0 adultscore=0
+ suspectscore=1 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2003030038
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 03, 2020 at 10:25:29AM +1100, Dave Chinner wrote:
-> On Mon, Mar 02, 2020 at 01:06:50PM -0500, Brian Foster wrote:
-> OK, XLOG_TIC_INITED is redundant, and should be removed. And
-> xfs_log_done() needs to be split into two, one for releasing the
-> ticket, one for completing the xlog_write() call. Compile tested
-> only patch below for you :P
+On Sunday, February 23, 2020 7:36 AM Allison Collins wrote: 
+> This patch modifies the attr remove routines to be delay ready. This means they no
+> longer roll or commit transactions, but instead return -EAGAIN to have the calling
+> routine roll and refresh the transaction. In this series, xfs_attr_remove_args has
+> become xfs_attr_remove_iter, which uses a sort of state machine like switch to keep
+> track of where it was when EAGAIN was returned. xfs_attr_node_removename has also
+> been modified to use the switch, and a  new version of xfs_attr_remove_args
+> consists of a simple loop to refresh the transaction until the operation is
+> completed.
+> 
+> This patch also adds a new struct xfs_delattr_context, which we will use to keep
+> track of the current state of an attribute operation. The new xfs_delattr_state
+> enum is used to track various operations that are in progress so that we know not
+> to repeat them, and resume where we left off before EAGAIN was returned to cycle
+> out the transaction. Other members take the place of local variables that need
+> to retain their values across multiple function recalls.
+> 
+> Below is a state machine diagram for attr remove operations. The XFS_DAS_* states
+> indicate places where the function would return -EAGAIN, and then immediately
+> resume from after being recalled by the calling function.  States marked as a
+> "subroutine state" indicate that they belong to a subroutine, and so the calling
+> function needs to pass them back to that subroutine to allow it to finish where
+> it left off. But they otherwise do not have a role in the calling function other
+> than just passing through.
+> 
+>  xfs_attr_remove_iter()
+>          XFS_DAS_RM_SHRINK     ─┐
+>          (subroutine state)     │
+>                                 │
+>          XFS_DAS_RMTVAL_REMOVE ─┤
+>          (subroutine state)     │
+>                                 └─>xfs_attr_node_removename()
+>                                                  │
+>                                                  v
+>                                          need to remove
+>                                    ┌─n──  rmt blocks?
+>                                    │             │
+>                                    │             y
+>                                    │             │
+>                                    │             v
+>                                    │  ┌─>XFS_DAS_RMTVAL_REMOVE
+>                                    │  │          │
+>                                    │  │          v
+>                                    │  └──y── more blks
+>                                    │         to remove?
+>                                    │             │
+>                                    │             n
+>                                    │             │
+>                                    │             v
+>                                    │         need to
+>                                    └─────> shrink tree? ─n─┐
+>                                                  │         │
+>                                                  y         │
+>                                                  │         │
+>                                                  v         │
+>                                          XFS_DAS_RM_SHRINK │
+>                                                  │         │
+>                                                  v         │
+>                                                 done <─────┘
+> 
+> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr.c     | 114 +++++++++++++++++++++++++++++++++++++------
+>  fs/xfs/libxfs/xfs_attr.h     |   1 +
+>  fs/xfs/libxfs/xfs_da_btree.h |  30 ++++++++++++
+>  fs/xfs/scrub/common.c        |   2 +
+>  fs/xfs/xfs_acl.c             |   2 +
+>  fs/xfs/xfs_attr_list.c       |   1 +
+>  fs/xfs/xfs_ioctl.c           |   2 +
+>  fs/xfs/xfs_ioctl32.c         |   2 +
+>  fs/xfs/xfs_iops.c            |   2 +
+>  fs/xfs/xfs_xattr.c           |   1 +
+>  10 files changed, 141 insertions(+), 16 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 5d73bdf..cd3a3f7 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -368,11 +368,60 @@ xfs_has_attr(
+>   */
+>  int
+>  xfs_attr_remove_args(
+> +	struct xfs_da_args	*args)
+> +{
+> +	int			error = 0;
+> +	int			err2 = 0;
+> +
+> +	do {
+> +		error = xfs_attr_remove_iter(args);
+> +		if (error && error != -EAGAIN)
+> +			goto out;
+> +
+> +		if (args->dac.flags & XFS_DAC_FINISH_TRANS) {
+> +			args->dac.flags &= ~XFS_DAC_FINISH_TRANS;
+> +
+> +			err2 = xfs_defer_finish(&args->trans);
+> +			if (err2) {
+> +				error = err2;
+> +				goto out;
+> +			}
+> +		}
+> +
+> +		err2 = xfs_trans_roll_inode(&args->trans, args->dp);
+> +		if (err2) {
+> +			error = err2;
+> +			goto out;
+> +		}
+> +
+> +	} while (error == -EAGAIN);
+> +out:
+> +	return error;
+> +}
+> +
+> +/*
+> + * Remove the attribute specified in @args.
+> + *
+> + * This function may return -EAGAIN to signal that the transaction needs to be
+> + * rolled.  Callers should continue calling this function until they receive a
+> + * return value other than -EAGAIN.
+> + */
+> +int
+> +xfs_attr_remove_iter(
+>  	struct xfs_da_args      *args)
+>  {
+>  	struct xfs_inode	*dp = args->dp;
+>  	int			error;
+>  
+> +	/* State machine switch */
+> +	switch (args->dac.dela_state) {
+> +	case XFS_DAS_RM_SHRINK:
+> +	case XFS_DAS_RMTVAL_REMOVE:
+> +		goto node;
+> +	default:
+> +		break;
+> +	}
+> +
 
-And now with sample patch.
+On the very first invocation of xfs_attr_remote_iter() from
+xfs_attr_remove_args() (via a call from xfs_attr_remove()),
+args->dac.dela_state is set to a value of 0. This happens because
+xfs_attr_args_init() invokes memset() on args. A value of 0 for
+args->dac.dela_state maps to XFS_DAS_RM_SHRINK.
 
--Dave.
+If the xattr was stored in say local or leaf format we end up incorrectly
+invoking xfs_attr_node_removename() right?
+
 -- 
-Dave Chinner
-david@fromorbit.com
+chandan
 
-xfs: kill XLOG_TIC_INITED
 
-From: Dave Chinner <dchinner@redhat.com>
 
-Delayed logging made this redundant as we never directly write
-transactions to the log anymore. Hence we no longer make multiple
-xlog_write() calls for a transaction as we format individual items
-in a transaction, and hence don't need to keep track of whether we
-should be writing a start record for every xlog_write call.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_log.c      | 79 ++++++++++++++++++---------------------------------
- fs/xfs/xfs_log.h      |  4 ---
- fs/xfs/xfs_log_cil.c  | 13 +++++----
- fs/xfs/xfs_log_priv.h | 18 ++++++------
- fs/xfs/xfs_trans.c    | 24 ++++++++--------
- 5 files changed, 55 insertions(+), 83 deletions(-)
-
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index f6006d94a581..a45f3eefee39 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -496,8 +496,8 @@ xfs_log_reserve(
-  * This routine is called when a user of a log manager ticket is done with
-  * the reservation.  If the ticket was ever used, then a commit record for
-  * the associated transaction is written out as a log operation header with
-- * no data.  The flag XLOG_TIC_INITED is set when the first write occurs with
-- * a given ticket.  If the ticket was one with a permanent reservation, then
-+ * no data. 
-+ * If the ticket was one with a permanent reservation, then
-  * a few operations are done differently.  Permanent reservation tickets by
-  * default don't release the reservation.  They just commit the current
-  * transaction with the belief that the reservation is still needed.  A flag
-@@ -506,49 +506,38 @@ xfs_log_reserve(
-  * the inited state again.  By doing this, a start record will be written
-  * out when the next write occurs.
-  */
--xfs_lsn_t
--xfs_log_done(
--	struct xfs_mount	*mp,
-+int
-+xlog_write_done(
-+	struct xlog		*log,
- 	struct xlog_ticket	*ticket,
- 	struct xlog_in_core	**iclog,
--	bool			regrant)
-+	xfs_lsn_t		*lsn)
- {
--	struct xlog		*log = mp->m_log;
--	xfs_lsn_t		lsn = 0;
--
--	if (XLOG_FORCED_SHUTDOWN(log) ||
--	    /*
--	     * If nothing was ever written, don't write out commit record.
--	     * If we get an error, just continue and give back the log ticket.
--	     */
--	    (((ticket->t_flags & XLOG_TIC_INITED) == 0) &&
--	     (xlog_commit_record(log, ticket, iclog, &lsn)))) {
--		lsn = (xfs_lsn_t) -1;
--		regrant = false;
--	}
-+	if (XLOG_FORCED_SHUTDOWN(log))
-+		return -EIO;
- 
-+	return xlog_commit_record(log, ticket, iclog, lsn);
-+}
- 
-+/*
-+ * Release or regrant the ticket reservation now the transaction is done with
-+ * it depending on caller context. Rolling transactions need the ticket
-+ * regranted, otherwise we release it completely.
-+ */
-+void
-+xlog_ticket_done(
-+	struct xlog		*log,
-+	struct xlog_ticket	*ticket,
-+	bool			regrant)
-+{
- 	if (!regrant) {
- 		trace_xfs_log_done_nonperm(log, ticket);
--
--		/*
--		 * Release ticket if not permanent reservation or a specific
--		 * request has been made to release a permanent reservation.
--		 */
- 		xlog_ungrant_log_space(log, ticket);
- 	} else {
- 		trace_xfs_log_done_perm(log, ticket);
--
- 		xlog_regrant_reserve_log_space(log, ticket);
--		/* If this ticket was a permanent reservation and we aren't
--		 * trying to release it, reset the inited flags; so next time
--		 * we write, a start record will be written out.
--		 */
--		ticket->t_flags |= XLOG_TIC_INITED;
- 	}
--
- 	xfs_log_ticket_put(ticket);
--	return lsn;
- }
- 
- static bool
-@@ -2148,8 +2137,9 @@ xlog_print_trans(
- }
- 
- /*
-- * Calculate the potential space needed by the log vector.  Each region gets
-- * its own xlog_op_header_t and may need to be double word aligned.
-+ * Calculate the potential space needed by the log vector.  We always write a
-+ * start record, and each region gets its own xlog_op_header_t and may need to
-+ * be double word aligned.
-  */
- static int
- xlog_write_calc_vec_length(
-@@ -2157,14 +2147,10 @@ xlog_write_calc_vec_length(
- 	struct xfs_log_vec	*log_vector)
- {
- 	struct xfs_log_vec	*lv;
--	int			headers = 0;
-+	int			headers = 1;
- 	int			len = 0;
- 	int			i;
- 
--	/* acct for start rec of xact */
--	if (ticket->t_flags & XLOG_TIC_INITED)
--		headers++;
--
- 	for (lv = log_vector; lv; lv = lv->lv_next) {
- 		/* we don't write ordered log vectors */
- 		if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED)
-@@ -2195,17 +2181,11 @@ xlog_write_start_rec(
- 	struct xlog_op_header	*ophdr,
- 	struct xlog_ticket	*ticket)
- {
--	if (!(ticket->t_flags & XLOG_TIC_INITED))
--		return 0;
--
- 	ophdr->oh_tid	= cpu_to_be32(ticket->t_tid);
- 	ophdr->oh_clientid = ticket->t_clientid;
- 	ophdr->oh_len = 0;
- 	ophdr->oh_flags = XLOG_START_TRANS;
- 	ophdr->oh_res2 = 0;
--
--	ticket->t_flags &= ~XLOG_TIC_INITED;
--
- 	return sizeof(struct xlog_op_header);
- }
- 
-@@ -2410,12 +2390,10 @@ xlog_write(
- 	len = xlog_write_calc_vec_length(ticket, log_vector);
- 
- 	/*
--	 * Region headers and bytes are already accounted for.
--	 * We only need to take into account start records and
--	 * split regions in this function.
-+	 * Region headers and bytes are already accounted for.  We only need to
-+	 * take into account start records and split regions in this function.
- 	 */
--	if (ticket->t_flags & XLOG_TIC_INITED)
--		ticket->t_curr_res -= sizeof(xlog_op_header_t);
-+	ticket->t_curr_res -= sizeof(xlog_op_header_t);
- 
- 	/*
- 	 * Commit record headers need to be accounted for. These
-@@ -3609,7 +3587,6 @@ xlog_ticket_alloc(
- 	tic->t_ocnt		= cnt;
- 	tic->t_tid		= prandom_u32();
- 	tic->t_clientid		= client;
--	tic->t_flags		= XLOG_TIC_INITED;
- 	if (permanent)
- 		tic->t_flags |= XLOG_TIC_PERM_RESERV;
- 
-diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-index 84e06805160f..85f8d0966811 100644
---- a/fs/xfs/xfs_log.h
-+++ b/fs/xfs/xfs_log.h
-@@ -105,10 +105,6 @@ struct xfs_log_item;
- struct xfs_item_ops;
- struct xfs_trans;
- 
--xfs_lsn_t xfs_log_done(struct xfs_mount *mp,
--		       struct xlog_ticket *ticket,
--		       struct xlog_in_core **iclog,
--		       bool regrant);
- int	  xfs_log_force(struct xfs_mount *mp, uint flags);
- int	  xfs_log_force_lsn(struct xfs_mount *mp, xfs_lsn_t lsn, uint flags,
- 		int *log_forced);
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 48435cf2aa16..255065d276fc 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -841,10 +841,11 @@ xlog_cil_push(
- 	}
- 	spin_unlock(&cil->xc_push_lock);
- 
--	/* xfs_log_done always frees the ticket on error. */
--	commit_lsn = xfs_log_done(log->l_mp, tic, &commit_iclog, false);
--	if (commit_lsn == -1)
--		goto out_abort;
-+	error = xlog_write_done(log, tic, &commit_iclog, &commit_lsn);
-+	if (error)
-+		goto out_abort_free_ticket;
-+
-+	xlog_ticket_done(log, tic, false);
- 
- 	spin_lock(&commit_iclog->ic_callback_lock);
- 	if (commit_iclog->ic_state == XLOG_STATE_IOERROR) {
-@@ -876,7 +877,7 @@ xlog_cil_push(
- 	return 0;
- 
- out_abort_free_ticket:
--	xfs_log_ticket_put(tic);
-+	xlog_ticket_done(log, tic, false);
- out_abort:
- 	xlog_cil_committed(ctx, true);
- 	return -EIO;
-@@ -1017,7 +1018,7 @@ xfs_log_commit_cil(
- 	if (commit_lsn)
- 		*commit_lsn = xc_commit_lsn;
- 
--	xfs_log_done(mp, tp->t_ticket, NULL, regrant);
-+	xlog_ticket_done(log, tp->t_ticket, regrant);
- 	tp->t_ticket = NULL;
- 	xfs_trans_unreserve_and_mod_sb(tp);
- 
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index b192c5a9f9fd..6965d164ff45 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -53,11 +53,9 @@ enum xlog_iclog_state {
- /*
-  * Flags to log ticket
-  */
--#define XLOG_TIC_INITED		0x1	/* has been initialized */
- #define XLOG_TIC_PERM_RESERV	0x2	/* permanent reservation */
- 
- #define XLOG_TIC_FLAGS \
--	{ XLOG_TIC_INITED,	"XLOG_TIC_INITED" }, \
- 	{ XLOG_TIC_PERM_RESERV,	"XLOG_TIC_PERM_RESERV" }
- 
- /*
-@@ -438,14 +436,14 @@ xlog_write_adv_cnt(void **ptr, int *len, int *off, size_t bytes)
- 
- void	xlog_print_tic_res(struct xfs_mount *mp, struct xlog_ticket *ticket);
- void	xlog_print_trans(struct xfs_trans *);
--int
--xlog_write(
--	struct xlog		*log,
--	struct xfs_log_vec	*log_vector,
--	struct xlog_ticket	*tic,
--	xfs_lsn_t		*start_lsn,
--	struct xlog_in_core	**commit_iclog,
--	uint			flags);
-+
-+int xlog_write(struct xlog *log, struct xfs_log_vec *log_vector,
-+			struct xlog_ticket *tic, xfs_lsn_t *start_lsn,
-+			struct xlog_in_core **commit_iclog, uint flags);
-+int xlog_write_done(struct xlog *log, struct xlog_ticket *ticket,
-+			struct xlog_in_core **iclog, xfs_lsn_t *lsn);
-+void xlog_ticket_done(struct xlog *log, struct xlog_ticket *ticket,
-+			bool regrant);
- 
- /*
-  * When we crack an atomic LSN, we sample it first so that the value will not
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 3b208f9a865c..85ea3727878b 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -9,6 +9,7 @@
- #include "xfs_shared.h"
- #include "xfs_format.h"
- #include "xfs_log_format.h"
-+#include "xfs_log_priv.h"
- #include "xfs_trans_resv.h"
- #include "xfs_mount.h"
- #include "xfs_extent_busy.h"
-@@ -150,8 +151,9 @@ xfs_trans_reserve(
- 	uint			blocks,
- 	uint			rtextents)
- {
--	int		error = 0;
--	bool		rsvd = (tp->t_flags & XFS_TRANS_RESERVE) != 0;
-+	struct xfs_mount	*mp = tp->t_mountp;
-+	int			error = 0;
-+	bool			rsvd = (tp->t_flags & XFS_TRANS_RESERVE) != 0;
- 
- 	/* Mark this thread as being in a transaction */
- 	current_set_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
-@@ -162,7 +164,7 @@ xfs_trans_reserve(
- 	 * fail if the count would go below zero.
- 	 */
- 	if (blocks > 0) {
--		error = xfs_mod_fdblocks(tp->t_mountp, -((int64_t)blocks), rsvd);
-+		error = xfs_mod_fdblocks(mp, -((int64_t)blocks), rsvd);
- 		if (error != 0) {
- 			current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
- 			return -ENOSPC;
-@@ -191,9 +193,9 @@ xfs_trans_reserve(
- 
- 		if (tp->t_ticket != NULL) {
- 			ASSERT(resp->tr_logflags & XFS_TRANS_PERM_LOG_RES);
--			error = xfs_log_regrant(tp->t_mountp, tp->t_ticket);
-+			error = xfs_log_regrant(mp, tp->t_ticket);
- 		} else {
--			error = xfs_log_reserve(tp->t_mountp,
-+			error = xfs_log_reserve(mp,
- 						resp->tr_logres,
- 						resp->tr_logcount,
- 						&tp->t_ticket, XFS_TRANSACTION,
-@@ -213,7 +215,7 @@ xfs_trans_reserve(
- 	 * fail if the count would go below zero.
- 	 */
- 	if (rtextents > 0) {
--		error = xfs_mod_frextents(tp->t_mountp, -((int64_t)rtextents));
-+		error = xfs_mod_frextents(mp, -((int64_t)rtextents));
- 		if (error) {
- 			error = -ENOSPC;
- 			goto undo_log;
-@@ -229,7 +231,7 @@ xfs_trans_reserve(
- 	 */
- undo_log:
- 	if (resp->tr_logres > 0) {
--		xfs_log_done(tp->t_mountp, tp->t_ticket, NULL, false);
-+		xlog_ticket_done(mp->m_log, tp->t_ticket, false);
- 		tp->t_ticket = NULL;
- 		tp->t_log_res = 0;
- 		tp->t_flags &= ~XFS_TRANS_PERM_LOG_RES;
-@@ -237,7 +239,7 @@ xfs_trans_reserve(
- 
- undo_blocks:
- 	if (blocks > 0) {
--		xfs_mod_fdblocks(tp->t_mountp, (int64_t)blocks, rsvd);
-+		xfs_mod_fdblocks(mp, (int64_t)blocks, rsvd);
- 		tp->t_blk_res = 0;
- 	}
- 
-@@ -999,9 +1001,7 @@ __xfs_trans_commit(
- 	 */
- 	xfs_trans_unreserve_and_mod_dquots(tp);
- 	if (tp->t_ticket) {
--		commit_lsn = xfs_log_done(mp, tp->t_ticket, NULL, regrant);
--		if (commit_lsn == -1 && !error)
--			error = -EIO;
-+		xlog_ticket_done(mp->m_log, tp->t_ticket, regrant);
- 		tp->t_ticket = NULL;
- 	}
- 	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
-@@ -1060,7 +1060,7 @@ xfs_trans_cancel(
- 	xfs_trans_unreserve_and_mod_dquots(tp);
- 
- 	if (tp->t_ticket) {
--		xfs_log_done(mp, tp->t_ticket, NULL, false);
-+		xlog_ticket_done(mp->m_log, tp->t_ticket, false);
- 		tp->t_ticket = NULL;
- 	}
- 
