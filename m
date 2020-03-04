@@ -7,69 +7,68 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B197C3F2D1
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 03:30:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 106CCC3F2D1
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 03:30:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DBFE920836
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 03:30:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C15CE208C3
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 03:30:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="lrmWvFyV"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="H171pNYr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387640AbgCDDaD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Mar 2020 22:30:03 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:37996 "EHLO
+        id S2387553AbgCDDaN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Mar 2020 22:30:13 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:38144 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387624AbgCDDaD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Mar 2020 22:30:03 -0500
+        with ESMTP id S2387532AbgCDDaN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Mar 2020 22:30:13 -0500
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0243No52057336;
-        Wed, 4 Mar 2020 03:29:59 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : in-reply-to : references : mime-version :
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0243Nng6057235;
+        Wed, 4 Mar 2020 03:30:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=mime-version :
+ message-id : date : from : to : cc : subject : references : in-reply-to :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=m1k+hPMCtcijbqx3CdI+n79g1prmoU+8PpjPWa1wOVc=;
- b=lrmWvFyVUBYaNKY/DNtolUqkx20XelAUCepjQsjZwW4q9XxzttsjMb9wZ+b5uTLwenZq
- yOQAgMG48yaJhHlcKpIDB9zsxISRBUzJcb8JiNUWe2FkfUxhk7rS+ohVjr/wB8gv7PSN
- UdJHfW33MiZvegIJjPWAawnE9Y+O6Hzs5uAryTls/LO+D1SUy4qudui2sWr8x+KEjRNb
- od8RXvxlPBJ/DQr8PAEwyeFvksN6fOl26UG021g/V3V1d42hpqWDWODoUOy5xQPLZ9Ax
- 7qRNHvRAd/V/SuGZoCrJe6ZMt5RREX+6y6T7pD3Iw6rkHO8BJdGHtvuXBUs3aAdjK6Mo 2g== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2yffcukpru-1
+ bh=I7ZgjkN6f0piTUT1LOQqdXb4skwwT+XnPbMcRcCYzkQ=;
+ b=H171pNYr0eCQRSCMF9eFo3jo+tKlbKlo+glo9nD21ysj6H4kCBgEuYIHTdZ9LCogMApg
+ AonlTGMOFMtHM0E6tFMp7gWyRYRs27Fj7kdKjnbs68TcANic0tRc3uHdrZ2k7N4FjIku
+ 7UNSLaQOgfDpbqtZzpcgnxzvSzPXOeIEE40TeSOcnwT/UDBhivxBmrXh9Bts1NFxPUTn
+ rZvE7QIui0wQ/J/yz4P50SGb3Tr0NkhXVXBJJBOd/ULBap6Fm0R8KmzpJZ1FkRJ/l3WT
+ J0g7d1jMJgd1f4tRdZ1V3cX7WGC0kXTy/YOJAfQDmT6VjWki54I6eS8jwdvkkOHCVAU7 yw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2yffcukpt3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 04 Mar 2020 03:29:59 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0243GaPi106106;
-        Wed, 4 Mar 2020 03:29:59 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2yg1enk05d-1
+        Wed, 04 Mar 2020 03:30:07 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0243IolJ076409;
+        Wed, 4 Mar 2020 03:30:06 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2yg1p66ds8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 04 Mar 2020 03:29:58 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0243TwqR003632;
-        Wed, 4 Mar 2020 03:29:58 GMT
-Received: from localhost (/10.159.225.108)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 03 Mar 2020 19:29:57 -0800
-Subject: [PATCH 8/9] xfs_repair: remove old btree rebuild support code
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     sandeen@sandeen.net, darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com
-Date:   Tue, 03 Mar 2020 19:29:56 -0800
-Message-ID: <158329259685.2424103.3641968500354449852.stgit@magnolia>
-In-Reply-To: <158329254501.2424103.11001979654106437662.stgit@magnolia>
-References: <158329254501.2424103.11001979654106437662.stgit@magnolia>
-User-Agent: StGit/0.17.1-dirty
+        Wed, 04 Mar 2020 03:30:06 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0243U5j7006940;
+        Wed, 4 Mar 2020 03:30:05 GMT
+Received: from localhost (/10.159.225.108) by default (Oracle Beehive Gateway
+ v4.0) with ESMTP ; Wed, 04 Mar 2020 03:28:42 +0000
+USER-AGENT: StGit/0.17.1-dirty
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Message-ID: <158329252104.2423432.14412164596264053619.stgit@magnolia>
+Date:   Tue, 3 Mar 2020 19:28:41 -0800 (PST)
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     darrick.wong@oracle.com
+Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com
+Subject: [PATCH 3/4] xfs: support bulk loading of staged btrees
+References: <158329250190.2423432.16958662769192587982.stgit@magnolia>
+In-Reply-To: <158329250190.2423432.16958662769192587982.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9549 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=2 spamscore=0
- mlxlogscore=999 malwarescore=0 bulkscore=0 mlxscore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2003040022
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 malwarescore=0
+ mlxlogscore=999 mlxscore=0 spamscore=0 adultscore=0 bulkscore=0
+ suspectscore=3 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2003040022
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9549 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 bulkscore=0
- adultscore=0 suspectscore=2 spamscore=0 malwarescore=0 impostorscore=0
+ adultscore=0 suspectscore=3 spamscore=0 malwarescore=0 impostorscore=0
  priorityscore=1501 mlxlogscore=999 lowpriorityscore=0 clxscore=1015
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
  definitions=main-2003040022
@@ -80,286 +79,792 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-This code isn't needed anymore, so get rid of it.
+Add a new btree function that enables us to bulk load a btree cursor.
+This will be used by the upcoming online repair patches to generate new
+btrees.  This avoids the programmatic inefficiency of calling
+xfs_btree_insert in a loop (which generates a lot of log traffic) in
+favor of stamping out new btree blocks with ordered buffers, and then
+committing both the new root and scheduling the removal of the old btree
+blocks in a single transaction commit.
+
+The design of this new generic code is based off the btree rebuilding
+code in xfs_repair's phase 5 code, with the explicit goal of enabling us
+to share that code between scrub and repair.  It has the additional
+feature of being able to control btree block loading factors.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/phase5.c |  242 -------------------------------------------------------
- 1 file changed, 242 deletions(-)
+ fs/xfs/libxfs/xfs_btree.c |  581 +++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_btree.h |   46 ++++
+ fs/xfs/xfs_trace.c        |    1 
+ fs/xfs/xfs_trace.h        |   85 +++++++
+ 4 files changed, 712 insertions(+), 1 deletion(-)
 
 
-diff --git a/repair/phase5.c b/repair/phase5.c
-index c6062127..15358597 100644
---- a/repair/phase5.c
-+++ b/repair/phase5.c
-@@ -20,52 +20,6 @@
- #include "rmap.h"
- #include "bload.h"
- 
--/*
-- * we maintain the current slice (path from root to leaf)
-- * of the btree incore.  when we need a new block, we ask
-- * the block allocator for the address of a block on that
-- * level, map the block in, and set up the appropriate
-- * pointers (child, silbing, etc.) and keys that should
-- * point to the new block.
-- */
--typedef struct bt_stat_level  {
--	/*
--	 * set in setup_cursor routine and maintained in the tree-building
--	 * routines
--	 */
--	xfs_buf_t		*buf_p;		/* 2 buffer pointers to ... */
--	xfs_buf_t		*prev_buf_p;
--	xfs_agblock_t		agbno;		/* current block being filled */
--	xfs_agblock_t		prev_agbno;	/* previous block */
--	/*
--	 * set in calculate/init cursor routines for each btree level
--	 */
--	int			num_recs_tot;	/* # tree recs in level */
--	int			num_blocks;	/* # tree blocks in level */
--	int			num_recs_pb;	/* num_recs_tot / num_blocks */
--	int			modulo;		/* num_recs_tot % num_blocks */
--} bt_stat_level_t;
--
--typedef struct bt_status  {
--	int			init;		/* cursor set up once? */
--	int			num_levels;	/* # of levels in btree */
--	xfs_extlen_t		num_tot_blocks;	/* # blocks alloc'ed for tree */
--	xfs_extlen_t		num_free_blocks;/* # blocks currently unused */
--
--	xfs_agblock_t		root;		/* root block */
--	/*
--	 * list of blocks to be used to set up this tree
--	 * and pointer to the first unused block on the list
--	 */
--	xfs_agblock_t		*btree_blocks;		/* block list */
--	xfs_agblock_t		*free_btree_blocks;	/* first unused block */
--	/*
--	 * per-level status info
--	 */
--	bt_stat_level_t		level[XFS_BTREE_MAXLEVELS];
--	uint64_t		owner;		/* owner */
--} bt_status_t;
--
- struct bt_rebuild {
- 	struct xrep_newbt	newbt;
- 	struct xfs_btree_bload	bload;
-@@ -188,148 +142,6 @@ mk_incore_fstree(
- 	return(num_extents);
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 469e1e9053bb..c21db7ed8481 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -1324,7 +1324,7 @@ STATIC void
+ xfs_btree_copy_ptrs(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_ptr	*dst_ptr,
+-	union xfs_btree_ptr	*src_ptr,
++	const union xfs_btree_ptr *src_ptr,
+ 	int			numptrs)
+ {
+ 	ASSERT(numptrs >= 0);
+@@ -5099,3 +5099,582 @@ xfs_btree_commit_ifakeroot(
+ 	cur->bc_ops = ops;
+ 	cur->bc_flags &= ~XFS_BTREE_STAGING;
  }
++
++/*
++ * Bulk Loading of Staged Btrees
++ * =============================
++ *
++ * This interface is used with a staged btree cursor to create a totally new
++ * btree with a large number of records (i.e. more than what would fit in a
++ * single block).  When the creation is complete, the new root can be linked
++ * atomically into the filesystem by committing the staged cursor.
++ *
++ * The first step for the caller is to construct a fake btree root structure
++ * and a staged btree cursor.  A staging cursor contains all the geometry
++ * information for the btree type but will fail all operations that could have
++ * side effects in the filesystem (e.g. btree shape changes).  Regular
++ * operations will not work unless the staging cursor is committed and becomes
++ * a regular cursor.
++ *
++ * For a btree rooted in an AG header, use an xbtree_afakeroot structure.
++ * This should be initialized to zero.  For a btree rooted in an inode fork,
++ * use an xbtree_ifakeroot structure.  @if_fork_size field should be set to
++ * the number of bytes available to the fork in the inode; @if_fork should
++ * point to a freshly allocated xfs_inode_fork; and @if_format should be set
++ * to the appropriate fork type (e.g. XFS_DINODE_FMT_BTREE).
++ *
++ * The next step for the caller is to initialize a struct xfs_btree_bload
++ * context.  The @nr_records field is the number of records that are to be
++ * loaded into the btree.  The @leaf_slack and @node_slack fields are the
++ * number of records (or key/ptr) slots to leave empty in new btree blocks.
++ * If a caller sets a slack value to -1, the slack value will be computed to
++ * fill the block halfway between minrecs and maxrecs items per block.
++ *
++ * The number of items placed in each btree block is computed via the following
++ * algorithm: For leaf levels, the number of items for the level is nr_records.
++ * For node levels, the number of items for the level is the number of blocks
++ * in the next lower level of the tree.  For each level, the desired number of
++ * items per block is defined as:
++ *
++ * desired = max(minrecs, maxrecs - slack factor)
++ *
++ * The number of blocks for the level is defined to be:
++ *
++ * blocks = nr_items / desired
++ *
++ * Note this is rounded down so that the npb calculation below will never fall
++ * below minrecs.  The number of items that will actually be loaded into each
++ * btree block is defined as:
++ *
++ * npb =  nr_items / blocks
++ *
++ * Some of the leftmost blocks in the level will contain one extra record as
++ * needed to handle uneven division.  If the number of records in any block
++ * would exceed maxrecs for that level, blocks is incremented and npb is
++ * recalculated.
++ *
++ * In other words, we compute the number of blocks needed to satisfy a given
++ * loading level, then spread the items as evenly as possible.
++ *
++ * To complete this step, call xfs_btree_bload_compute_geometry, which uses
++ * those settings to compute the height of the btree and the number of blocks
++ * that will be needed to construct the btree.  These values are stored in the
++ * @btree_height and @nr_blocks fields.
++ *
++ * At this point, the caller must allocate @nr_blocks blocks and save them for
++ * later.  If space is to be allocated transactionally, the staging cursor
++ * must be deleted before and recreated after, which is why computing the
++ * geometry is a separate step.
++ *
++ * The fourth step in the bulk loading process is to set the function pointers
++ * in the bload context structure.  @get_data will be called for each record
++ * that will be loaded into the btree; it should set the cursor's bc_rec
++ * field, which will be converted to on-disk format and copied into the
++ * appropriate record slot.  @alloc_block should supply one of the blocks
++ * allocated in the previous step.  For btrees which are rooted in an inode
++ * fork, @iroot_size is called to compute the size of the incore btree root
++ * block.  Call xfs_btree_bload to start constructing the btree.
++ *
++ * The final step is to commit the staging cursor, which logs the new btree
++ * root and turns the btree into a regular btree cursor, and free the fake
++ * roots.
++ */
++
++/*
++ * Put a btree block that we're loading onto the ordered list and release it.
++ * The btree blocks will be written when the final transaction swapping the
++ * btree roots is committed.
++ */
++static void
++xfs_btree_bload_drop_buf(
++	struct xfs_btree_bload	*bbl,
++	struct xfs_trans	*tp,
++	struct xfs_buf		**bpp)
++{
++	if (*bpp == NULL)
++		return;
++
++	xfs_buf_delwri_queue(*bpp, &bbl->buffers_list);
++	xfs_trans_brelse(tp, *bpp);
++	*bpp = NULL;
++}
++
++/* Allocate and initialize one btree block for bulk loading. */
++STATIC int
++xfs_btree_bload_prep_block(
++	struct xfs_btree_cur		*cur,
++	struct xfs_btree_bload		*bbl,
++	unsigned int			level,
++	unsigned int			nr_this_block,
++	union xfs_btree_ptr		*ptrp,
++	struct xfs_buf			**bpp,
++	struct xfs_btree_block		**blockp,
++	void				*priv)
++{
++	union xfs_btree_ptr		new_ptr;
++	struct xfs_buf			*new_bp;
++	struct xfs_btree_block		*new_block;
++	int				ret;
++
++	if ((cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) &&
++	    level == cur->bc_nlevels - 1) {
++		struct xfs_ifork	*ifp = cur->bc_private.b.ifake->if_fork;
++		size_t			new_size;
++
++		/* Allocate a new incore btree root block. */
++		new_size = bbl->iroot_size(cur, nr_this_block, priv);
++		ifp->if_broot = kmem_zalloc(new_size, 0);
++		ifp->if_broot_bytes = (int)new_size;
++		ifp->if_flags |= XFS_IFBROOT;
++
++		/* Initialize it and send it out. */
++		xfs_btree_init_block_int(cur->bc_mp, ifp->if_broot,
++				XFS_BUF_DADDR_NULL, cur->bc_btnum, level,
++				nr_this_block, cur->bc_private.b.ip->i_ino,
++				cur->bc_flags);
++
++		*bpp = NULL;
++		*blockp = ifp->if_broot;
++		xfs_btree_set_ptr_null(cur, ptrp);
++		return 0;
++	}
++
++	/* Allocate a new leaf block. */
++	ret = bbl->alloc_block(cur, &new_ptr, priv);
++	if (ret)
++		return ret;
++
++	ASSERT(!xfs_btree_ptr_is_null(cur, &new_ptr));
++
++	ret = xfs_btree_get_buf_block(cur, &new_ptr, &new_block, &new_bp);
++	if (ret)
++		return ret;
++
++	/* Initialize the btree block. */
++	xfs_btree_init_block_cur(cur, new_bp, level, nr_this_block);
++	if (*blockp)
++		xfs_btree_set_sibling(cur, *blockp, &new_ptr, XFS_BB_RIGHTSIB);
++	xfs_btree_set_sibling(cur, new_block, ptrp, XFS_BB_LEFTSIB);
++	xfs_btree_set_numrecs(new_block, nr_this_block);
++
++	/* Release the old block and set the out parameters. */
++	xfs_btree_bload_drop_buf(bbl, cur->bc_tp, bpp);
++	*blockp = new_block;
++	*bpp = new_bp;
++	xfs_btree_copy_ptrs(cur, ptrp, &new_ptr, 1);
++	return 0;
++}
++
++/* Load one leaf block. */
++STATIC int
++xfs_btree_bload_leaf(
++	struct xfs_btree_cur		*cur,
++	unsigned int			recs_this_block,
++	xfs_btree_bload_get_fn		get_data,
++	struct xfs_btree_block		*block,
++	void				*priv)
++{
++	unsigned int			j;
++	int				ret;
++
++	/* Fill the leaf block with records. */
++	for (j = 1; j <= recs_this_block; j++) {
++		union xfs_btree_rec	*block_recs;
++
++		ret = get_data(cur, priv);
++		if (ret)
++			return ret;
++		block_recs = xfs_btree_rec_addr(cur, j, block);
++		cur->bc_ops->init_rec_from_cur(cur, block_recs);
++	}
++
++	return 0;
++}
++
++/* Load one node block. */
++STATIC int
++xfs_btree_bload_node(
++	struct xfs_btree_cur	*cur,
++	unsigned int		recs_this_block,
++	union xfs_btree_ptr	*child_ptr,
++	struct xfs_btree_block	*block)
++{
++	unsigned int		j;
++	int			ret;
++
++	/* Fill the node block with keys and pointers. */
++	for (j = 1; j <= recs_this_block; j++) {
++		union xfs_btree_key	child_key;
++		union xfs_btree_ptr	*block_ptr;
++		union xfs_btree_key	*block_key;
++		struct xfs_btree_block	*child_block;
++		struct xfs_buf		*child_bp;
++
++		ASSERT(!xfs_btree_ptr_is_null(cur, child_ptr));
++
++		ret = xfs_btree_get_buf_block(cur, child_ptr, &child_block,
++				&child_bp);
++		if (ret)
++			return ret;
++
++		xfs_btree_get_keys(cur, child_block, &child_key);
++
++		block_ptr = xfs_btree_ptr_addr(cur, j, block);
++		xfs_btree_copy_ptrs(cur, block_ptr, child_ptr, 1);
++
++		block_key = xfs_btree_key_addr(cur, j, block);
++		xfs_btree_copy_keys(cur, block_key, &child_key, 1);
++
++		xfs_btree_get_sibling(cur, child_block, child_ptr,
++				XFS_BB_RIGHTSIB);
++		xfs_trans_brelse(cur->bc_tp, child_bp);
++	}
++
++	return 0;
++}
++
++/*
++ * Compute the maximum number of records (or keyptrs) per block that we want to
++ * install at this level in the btree.  Caller is responsible for having set
++ * @cur->bc_private.b.forksize to the desired fork size, if appropriate.
++ */
++STATIC unsigned int
++xfs_btree_bload_max_npb(
++	struct xfs_btree_cur	*cur,
++	struct xfs_btree_bload	*bbl,
++	unsigned int		level)
++{
++	unsigned int		ret;
++
++	if (level == cur->bc_nlevels - 1 && cur->bc_ops->get_dmaxrecs)
++		return cur->bc_ops->get_dmaxrecs(cur, level);
++
++	ret = cur->bc_ops->get_maxrecs(cur, level);
++	if (level == 0)
++		ret -= bbl->leaf_slack;
++	else
++		ret -= bbl->node_slack;
++	return ret;
++}
++
++/*
++ * Compute the desired number of records (or keyptrs) per block that we want to
++ * install at this level in the btree, which must be somewhere between minrecs
++ * and max_npb.  The caller is free to install fewer records per block.
++ */
++STATIC unsigned int
++xfs_btree_bload_desired_npb(
++	struct xfs_btree_cur	*cur,
++	struct xfs_btree_bload	*bbl,
++	unsigned int		level)
++{
++	unsigned int		npb = xfs_btree_bload_max_npb(cur, bbl, level);
++
++	/* Root blocks are not subject to minrecs rules. */
++	if (level == cur->bc_nlevels - 1)
++		return max(1U, npb);
++
++	return max_t(unsigned int, cur->bc_ops->get_minrecs(cur, level), npb);
++}
++
++/*
++ * Compute the number of records to be stored in each block at this level and
++ * the number of blocks for this level.  For leaf levels, we must populate an
++ * empty root block even if there are no records, so we have to have at least
++ * one block.
++ */
++STATIC void
++xfs_btree_bload_level_geometry(
++	struct xfs_btree_cur	*cur,
++	struct xfs_btree_bload	*bbl,
++	unsigned int		level,
++	uint64_t		nr_this_level,
++	unsigned int		*avg_per_block,
++	uint64_t		*blocks,
++	uint64_t		*blocks_with_extra)
++{
++	uint64_t		npb;
++	uint64_t		dontcare;
++	unsigned int		desired_npb;
++	unsigned int		maxnr;
++
++	maxnr = cur->bc_ops->get_maxrecs(cur, level);
++
++	/*
++	 * Compute the number of blocks we need to fill each block with the
++	 * desired number of records/keyptrs per block.  Because desired_npb
++	 * could be minrecs, we use regular integer division (which rounds
++	 * the block count down) so that in the next step the effective # of
++	 * items per block will never be less than desired_npb.
++	 */
++	desired_npb = xfs_btree_bload_desired_npb(cur, bbl, level);
++	*blocks = div64_u64_rem(nr_this_level, desired_npb, &dontcare);
++	*blocks = max(1ULL, *blocks);
++
++	/*
++	 * Compute the number of records that we will actually put in each
++	 * block, assuming that we want to spread the records evenly between
++	 * the blocks.  Take care that the effective # of items per block (npb)
++	 * won't exceed maxrecs even for the blocks that get an extra record,
++	 * since desired_npb could be maxrecs, and in the previous step we
++	 * rounded the block count down.
++	 */
++	npb = div64_u64_rem(nr_this_level, *blocks, blocks_with_extra);
++	if (npb > maxnr || (npb == maxnr && *blocks_with_extra > 0)) {
++		(*blocks)++;
++		npb = div64_u64_rem(nr_this_level, *blocks, blocks_with_extra);
++	}
++
++	*avg_per_block = min_t(uint64_t, npb, nr_this_level);
++
++	trace_xfs_btree_bload_level_geometry(cur, level, nr_this_level,
++			*avg_per_block, desired_npb, *blocks,
++			*blocks_with_extra);
++}
++
++/*
++ * Ensure a slack value is appropriate for the btree.
++ *
++ * If the slack value is negative, set slack so that we fill the block to
++ * halfway between minrecs and maxrecs.  Make sure the slack is never so large
++ * that we can underflow minrecs.
++ */
++static void
++xfs_btree_bload_ensure_slack(
++	struct xfs_btree_cur	*cur,
++	int			*slack,
++	int			level)
++{
++	int			maxr;
++	int			minr;
++
++	/*
++	 * We only care about slack for btree blocks, so set the btree nlevels
++	 * to 3 so that level 0 is a leaf block and level 1 is a node block.
++	 * Avoid straying into inode roots, since we don't do slack there.
++	 */
++	cur->bc_nlevels = 3;
++	maxr = cur->bc_ops->get_maxrecs(cur, level);
++	minr = cur->bc_ops->get_minrecs(cur, level);
++
++	/*
++	 * If slack is negative, automatically set slack so that we load the
++	 * btree block approximately halfway between minrecs and maxrecs.
++	 * Generally, this will net us 75% loading.
++	 */
++	if (*slack < 0)
++		*slack = maxr - ((maxr + minr) >> 1);
++
++	*slack = min(*slack, maxr - minr);
++}
++
++/*
++ * Prepare a btree cursor for a bulk load operation by computing the geometry
++ * fields in @bbl.  Caller must ensure that the btree cursor is a staging
++ * cursor.  This function can be called multiple times.
++ */
++int
++xfs_btree_bload_compute_geometry(
++	struct xfs_btree_cur	*cur,
++	struct xfs_btree_bload	*bbl,
++	uint64_t		nr_records)
++{
++	uint64_t		nr_blocks = 0;
++	uint64_t		nr_this_level;
++
++	ASSERT(cur->bc_flags & XFS_BTREE_STAGING);
++
++	xfs_btree_bload_ensure_slack(cur, &bbl->leaf_slack, 0);
++	xfs_btree_bload_ensure_slack(cur, &bbl->node_slack, 1);
++
++	bbl->nr_records = nr_this_level = nr_records;
++	for (cur->bc_nlevels = 1; cur->bc_nlevels < XFS_BTREE_MAXLEVELS;) {
++		uint64_t	level_blocks;
++		uint64_t	dontcare64;
++		unsigned int	level = cur->bc_nlevels - 1;
++		unsigned int	avg_per_block;
++
++		/*
++		 * If all the things we want to store at this level would fit
++		 * in a single root block, then we have our btree root and are
++		 * done.  Note that bmap btrees do not allow records in the
++		 * root.
++		 */
++		if (!(cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) || level != 0) {
++			xfs_btree_bload_level_geometry(cur, bbl, level,
++					nr_this_level, &avg_per_block,
++					&level_blocks, &dontcare64);
++			if (nr_this_level <= avg_per_block) {
++				nr_blocks++;
++				break;
++			}
++		}
++
++		/*
++		 * Otherwise, we have to store all the records for this level
++		 * in blocks and therefore need another level of btree to point
++		 * to those blocks.  Increase the number of levels and
++		 * recompute the number of records we can store at this level
++		 * because that can change depending on whether or not a level
++		 * is the root level.
++		 */
++		cur->bc_nlevels++;
++		xfs_btree_bload_level_geometry(cur, bbl, level, nr_this_level,
++				&avg_per_block, &level_blocks, &dontcare64);
++		nr_blocks += level_blocks;
++		nr_this_level = level_blocks;
++	}
++
++	if (cur->bc_nlevels == XFS_BTREE_MAXLEVELS)
++		return -EOVERFLOW;
++
++	bbl->btree_height = cur->bc_nlevels;
++	if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)
++		bbl->nr_blocks = nr_blocks - 1;
++	else
++		bbl->nr_blocks = nr_blocks;
++	return 0;
++}
++
++/*
++ * Bulk load a btree.
++ *
++ * Load @bbl->nr_records quantity of records into a btree using the supplied
++ * empty and staging btree cursor @cur and a @bbl that has been filled out by
++ * the xfs_btree_bload_compute_geometry function.
++ *
++ * The @bbl->get_data function must populate the cursor's bc_rec every time it
++ * is called.  The @bbl->alloc_block function will be used to allocate new
++ * btree blocks.  @priv is passed to both functions.
++ *
++ * Caller must ensure that @cur is a staging cursor.  Any existing btree rooted
++ * in the fakeroot will be lost, so do not call this function twice.
++ */
++int
++xfs_btree_bload(
++	struct xfs_btree_cur		*cur,
++	struct xfs_btree_bload		*bbl,
++	void				*priv)
++{
++	union xfs_btree_ptr		child_ptr;
++	union xfs_btree_ptr		ptr;
++	struct xfs_buf			*bp = NULL;
++	struct xfs_btree_block		*block = NULL;
++	uint64_t			nr_this_level = bbl->nr_records;
++	uint64_t			blocks;
++	uint64_t			i;
++	uint64_t			blocks_with_extra;
++	uint64_t			total_blocks = 0;
++	unsigned int			avg_per_block;
++	unsigned int			level = 0;
++	int				ret;
++
++	ASSERT(cur->bc_flags & XFS_BTREE_STAGING);
++
++	INIT_LIST_HEAD(&bbl->buffers_list);
++	cur->bc_nlevels = bbl->btree_height;
++	xfs_btree_set_ptr_null(cur, &child_ptr);
++	xfs_btree_set_ptr_null(cur, &ptr);
++
++	xfs_btree_bload_level_geometry(cur, bbl, level, nr_this_level,
++			&avg_per_block, &blocks, &blocks_with_extra);
++
++	/* Load each leaf block. */
++	for (i = 0; i < blocks; i++) {
++		unsigned int		nr_this_block = avg_per_block;
++
++		if (i < blocks_with_extra)
++			nr_this_block++;
++
++		ret = xfs_btree_bload_prep_block(cur, bbl, level,
++				nr_this_block, &ptr, &bp, &block, priv);
++		if (ret)
++			return ret;
++
++		trace_xfs_btree_bload_block(cur, level, i, blocks, &ptr,
++				nr_this_block);
++
++		ret = xfs_btree_bload_leaf(cur, nr_this_block, bbl->get_data,
++				block, priv);
++		if (ret)
++			goto out;
++
++		/* Record the leftmost pointer to start the next level. */
++		if (i == 0)
++			xfs_btree_copy_ptrs(cur, &child_ptr, &ptr, 1);
++	}
++	total_blocks += blocks;
++	xfs_btree_bload_drop_buf(bbl, cur->bc_tp, &bp);
++
++	/* Populate the internal btree nodes. */
++	for (level = 1; level < cur->bc_nlevels; level++) {
++		union xfs_btree_ptr	first_ptr;
++
++		nr_this_level = blocks;
++		block = NULL;
++		xfs_btree_set_ptr_null(cur, &ptr);
++
++		xfs_btree_bload_level_geometry(cur, bbl, level, nr_this_level,
++				&avg_per_block, &blocks, &blocks_with_extra);
++
++		/* Load each node block. */
++		for (i = 0; i < blocks; i++) {
++			unsigned int	nr_this_block = avg_per_block;
++
++			if (i < blocks_with_extra)
++				nr_this_block++;
++
++			ret = xfs_btree_bload_prep_block(cur, bbl, level,
++					nr_this_block, &ptr, &bp, &block,
++					priv);
++			if (ret)
++				return ret;
++
++			trace_xfs_btree_bload_block(cur, level, i, blocks,
++					&ptr, nr_this_block);
++
++			ret = xfs_btree_bload_node(cur, nr_this_block,
++					&child_ptr, block);
++			if (ret)
++				goto out;
++
++			/*
++			 * Record the leftmost pointer to start the next level.
++			 */
++			if (i == 0)
++				xfs_btree_copy_ptrs(cur, &first_ptr, &ptr, 1);
++		}
++		total_blocks += blocks;
++		xfs_btree_bload_drop_buf(bbl, cur->bc_tp, &bp);
++		xfs_btree_copy_ptrs(cur, &child_ptr, &first_ptr, 1);
++	}
++
++	/* Initialize the new root. */
++	if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) {
++		ASSERT(xfs_btree_ptr_is_null(cur, &ptr));
++		cur->bc_private.b.ifake->if_levels = cur->bc_nlevels;
++		cur->bc_private.b.ifake->if_blocks = total_blocks - 1;
++	} else {
++		cur->bc_private.a.afake->af_root = be32_to_cpu(ptr.s);
++		cur->bc_private.a.afake->af_levels = cur->bc_nlevels;
++		cur->bc_private.a.afake->af_blocks = total_blocks;
++	}
++
++	/*
++	 * Write the new blocks to disk.  If the ordered list isn't empty after
++	 * that, then something went wrong and we have to fail.  This should
++	 * never happen, but we'll check anyway.
++	 */
++	ret = xfs_buf_delwri_submit(&bbl->buffers_list);
++	if (ret)
++		goto out;
++	if (!list_empty(&bbl->buffers_list)) {
++		ASSERT(list_empty(&bbl->buffers_list));
++		ret = -EIO;
++	}
++out:
++	xfs_buf_delwri_cancel(&bbl->buffers_list);
++	if (bp)
++		xfs_trans_brelse(cur->bc_tp, bp);
++	return ret;
++}
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 2965ed663418..51720de366ae 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -578,4 +578,50 @@ void xfs_btree_stage_ifakeroot(struct xfs_btree_cur *cur,
+ void xfs_btree_commit_ifakeroot(struct xfs_btree_cur *cur, int whichfork,
+ 		const struct xfs_btree_ops *ops);
  
--static xfs_agblock_t
--get_next_blockaddr(xfs_agnumber_t agno, int level, bt_status_t *curs)
--{
--	ASSERT(curs->free_btree_blocks < curs->btree_blocks +
--						curs->num_tot_blocks);
--	ASSERT(curs->num_free_blocks > 0);
--
--	curs->num_free_blocks--;
--	return(*curs->free_btree_blocks++);
--}
--
--/*
-- * set up the dynamically allocated block allocation data in the btree
-- * cursor that depends on the info in the static portion of the cursor.
-- * allocates space from the incore bno/bcnt extent trees and sets up
-- * the first path up the left side of the tree.  Also sets up the
-- * cursor pointer to the btree root.   called by init_freespace_cursor()
-- * and init_ino_cursor()
-- */
--static void
--setup_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *curs)
--{
--	int			j;
--	unsigned int		u;
--	xfs_extlen_t		big_extent_len;
--	xfs_agblock_t		big_extent_start;
--	extent_tree_node_t	*ext_ptr;
--	extent_tree_node_t	*bno_ext_ptr;
--	xfs_extlen_t		blocks_allocated;
--	xfs_agblock_t		*agb_ptr;
--	int			error;
--
--	/*
--	 * get the number of blocks we need to allocate, then
--	 * set up block number array, set the free block pointer
--	 * to the first block in the array, and null the array
--	 */
--	big_extent_len = curs->num_tot_blocks;
--	blocks_allocated = 0;
--
--	ASSERT(big_extent_len > 0);
--
--	if ((curs->btree_blocks = malloc(sizeof(xfs_agblock_t)
--					* big_extent_len)) == NULL)
--		do_error(_("could not set up btree block array\n"));
--
--	agb_ptr = curs->free_btree_blocks = curs->btree_blocks;
--
--	for (j = 0; j < curs->num_free_blocks; j++, agb_ptr++)
--		*agb_ptr = NULLAGBLOCK;
--
--	/*
--	 * grab the smallest extent and use it up, then get the
--	 * next smallest.  This mimics the init_*_cursor code.
--	 */
--	ext_ptr =  findfirst_bcnt_extent(agno);
--
--	agb_ptr = curs->btree_blocks;
--
--	/*
--	 * set up the free block array
--	 */
--	while (blocks_allocated < big_extent_len)  {
--		if (!ext_ptr)
--			do_error(
--_("error - not enough free space in filesystem\n"));
--		/*
--		 * use up the extent we've got
--		 */
--		for (u = 0; u < ext_ptr->ex_blockcount &&
--				blocks_allocated < big_extent_len; u++)  {
--			ASSERT(agb_ptr < curs->btree_blocks
--					+ curs->num_tot_blocks);
--			*agb_ptr++ = ext_ptr->ex_startblock + u;
--			blocks_allocated++;
--		}
--
--		error = rmap_add_ag_rec(mp, agno, ext_ptr->ex_startblock, u,
--				curs->owner);
--		if (error)
--			do_error(_("could not set up btree rmaps: %s\n"),
--				strerror(-error));
--
--		/*
--		 * if we only used part of this last extent, then we
--		 * need only to reset the extent in the extent
--		 * trees and we're done
--		 */
--		if (u < ext_ptr->ex_blockcount)  {
--			big_extent_start = ext_ptr->ex_startblock + u;
--			big_extent_len = ext_ptr->ex_blockcount - u;
--
--			ASSERT(big_extent_len > 0);
--
--			bno_ext_ptr = find_bno_extent(agno,
--						ext_ptr->ex_startblock);
--			ASSERT(bno_ext_ptr != NULL);
--			get_bno_extent(agno, bno_ext_ptr);
--			release_extent_tree_node(bno_ext_ptr);
--
--			ext_ptr = get_bcnt_extent(agno, ext_ptr->ex_startblock,
--					ext_ptr->ex_blockcount);
--			release_extent_tree_node(ext_ptr);
--#ifdef XR_BLD_FREE_TRACE
--			fprintf(stderr, "releasing extent: %u [%u %u]\n",
--				agno, ext_ptr->ex_startblock,
--				ext_ptr->ex_blockcount);
--			fprintf(stderr, "blocks_allocated = %d\n",
--				blocks_allocated);
--#endif
--
--			add_bno_extent(agno, big_extent_start, big_extent_len);
--			add_bcnt_extent(agno, big_extent_start, big_extent_len);
--
--			return;
--		}
--		/*
--		 * delete the used-up extent from both extent trees and
--		 * find next biggest extent
--		 */
--#ifdef XR_BLD_FREE_TRACE
--		fprintf(stderr, "releasing extent: %u [%u %u]\n",
--			agno, ext_ptr->ex_startblock, ext_ptr->ex_blockcount);
--#endif
--		bno_ext_ptr = find_bno_extent(agno, ext_ptr->ex_startblock);
--		ASSERT(bno_ext_ptr != NULL);
--		get_bno_extent(agno, bno_ext_ptr);
--		release_extent_tree_node(bno_ext_ptr);
--
--		ext_ptr = get_bcnt_extent(agno, ext_ptr->ex_startblock,
--				ext_ptr->ex_blockcount);
--		ASSERT(ext_ptr != NULL);
--		release_extent_tree_node(ext_ptr);
--
--		ext_ptr = findfirst_bcnt_extent(agno);
--	}
--#ifdef XR_BLD_FREE_TRACE
--	fprintf(stderr, "blocks_allocated = %d\n",
--		blocks_allocated);
--#endif
--}
--
- /*
-  * Estimate proper slack values for a btree that's being reloaded.
-  *
-@@ -481,36 +293,6 @@ rebuild_alloc_block(
- 	return xrep_newbt_alloc_block(cur, &btr->newbt, ptr);
- }
++typedef int (*xfs_btree_bload_get_fn)(struct xfs_btree_cur *cur, void *priv);
++typedef int (*xfs_btree_bload_alloc_block_fn)(struct xfs_btree_cur *cur,
++		union xfs_btree_ptr *ptr, void *priv);
++typedef size_t (*xfs_btree_bload_iroot_size_fn)(struct xfs_btree_cur *cur,
++		unsigned int nr_this_level, void *priv);
++
++/* Bulk loading of staged btrees. */
++struct xfs_btree_bload {
++	/* Buffer list for delwri_queue. */
++	struct list_head		buffers_list;
++
++	/* Function to store a record in the cursor. */
++	xfs_btree_bload_get_fn		get_data;
++
++	/* Function to allocate a block for the btree. */
++	xfs_btree_bload_alloc_block_fn	alloc_block;
++
++	/* Function to compute the size of the in-core btree root block. */
++	xfs_btree_bload_iroot_size_fn	iroot_size;
++
++	/* Number of records the caller wants to store. */
++	uint64_t			nr_records;
++
++	/* Number of btree blocks needed to store those records. */
++	uint64_t			nr_blocks;
++
++	/*
++	 * Number of free records to leave in each leaf block.  If this (or
++	 * any of the slack values) are negative, this will be computed to
++	 * be halfway between maxrecs and minrecs.  This typically leaves the
++	 * block 75% full.
++	 */
++	int				leaf_slack;
++
++	/* Number of free keyptrs to leave in each node block. */
++	int				node_slack;
++
++	/* Computed btree height. */
++	unsigned int			btree_height;
++};
++
++int xfs_btree_bload_compute_geometry(struct xfs_btree_cur *cur,
++		struct xfs_btree_bload *bbl, uint64_t nr_records);
++int xfs_btree_bload(struct xfs_btree_cur *cur, struct xfs_btree_bload *bbl,
++		void *priv);
++
+ #endif	/* __XFS_BTREE_H__ */
+diff --git a/fs/xfs/xfs_trace.c b/fs/xfs/xfs_trace.c
+index bc85b89f88ca..9b5e58a92381 100644
+--- a/fs/xfs/xfs_trace.c
++++ b/fs/xfs/xfs_trace.c
+@@ -6,6 +6,7 @@
+ #include "xfs.h"
+ #include "xfs_fs.h"
+ #include "xfs_shared.h"
++#include "xfs_bit.h"
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 7e162ca80c92..69e8605f9f97 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -35,6 +35,7 @@ struct xfs_icreate_log;
+ struct xfs_owner_info;
+ struct xfs_trans_res;
+ struct xfs_inobt_rec_incore;
++union xfs_btree_ptr;
  
--static void
--write_cursor(bt_status_t *curs)
--{
--	int i;
--
--	for (i = 0; i < curs->num_levels; i++)  {
--#if defined(XR_BLD_FREE_TRACE) || defined(XR_BLD_INO_TRACE)
--		fprintf(stderr, "writing bt block %u\n", curs->level[i].agbno);
--#endif
--		if (curs->level[i].prev_buf_p != NULL)  {
--			ASSERT(curs->level[i].prev_agbno != NULLAGBLOCK);
--#if defined(XR_BLD_FREE_TRACE) || defined(XR_BLD_INO_TRACE)
--			fprintf(stderr, "writing bt prev block %u\n",
--						curs->level[i].prev_agbno);
--#endif
--			libxfs_buf_mark_dirty(curs->level[i].prev_buf_p);
--			libxfs_buf_relse(curs->level[i].prev_buf_p);
--		}
--		libxfs_buf_mark_dirty(curs->level[i].buf_p);
--		libxfs_buf_relse(curs->level[i].buf_p);
--	}
--}
--
--static void
--finish_cursor(bt_status_t *curs)
--{
--	ASSERT(curs->num_free_blocks == 0);
--	free(curs->btree_blocks);
--}
--
- /*
-  * Scoop up leftovers from a rebuild cursor for later freeing, then free the
-  * rebuild context.
-@@ -539,30 +321,6 @@ _("Insufficient memory saving lost blocks.\n"));
- 	xrep_newbt_destroy(&btr->newbt, 0);
- }
+ DECLARE_EVENT_CLASS(xfs_attr_list_class,
+ 	TP_PROTO(struct xfs_attr_list_context *ctx),
+@@ -3655,6 +3656,90 @@ TRACE_EVENT(xfs_btree_commit_ifakeroot,
+ 		  __entry->blocks)
+ )
  
--/* Map btnum to buffer ops for the types that need it. */
--static const struct xfs_buf_ops *
--btnum_to_ops(
--	xfs_btnum_t	btnum)
--{
--	switch (btnum) {
--	case XFS_BTNUM_BNO:
--		return &xfs_bnobt_buf_ops;
--	case XFS_BTNUM_CNT:
--		return &xfs_cntbt_buf_ops;
--	case XFS_BTNUM_INO:
--		return &xfs_inobt_buf_ops;
--	case XFS_BTNUM_FINO:
--		return &xfs_finobt_buf_ops;
--	case XFS_BTNUM_RMAP:
--		return &xfs_rmapbt_buf_ops;
--	case XFS_BTNUM_REFC:
--		return &xfs_refcountbt_buf_ops;
--	default:
--		ASSERT(0);
--		return NULL;
--	}
--}
--
- /*
-  * Free Space Btrees
-  *
++TRACE_EVENT(xfs_btree_bload_level_geometry,
++	TP_PROTO(struct xfs_btree_cur *cur, unsigned int level,
++		 uint64_t nr_this_level, unsigned int nr_per_block,
++		 unsigned int desired_npb, uint64_t blocks,
++		 uint64_t blocks_with_extra),
++	TP_ARGS(cur, level, nr_this_level, nr_per_block, desired_npb, blocks,
++		blocks_with_extra),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_btnum_t, btnum)
++		__field(unsigned int, level)
++		__field(unsigned int, nlevels)
++		__field(uint64_t, nr_this_level)
++		__field(unsigned int, nr_per_block)
++		__field(unsigned int, desired_npb)
++		__field(unsigned long long, blocks)
++		__field(unsigned long long, blocks_with_extra)
++	),
++	TP_fast_assign(
++		__entry->dev = cur->bc_mp->m_super->s_dev;
++		__entry->btnum = cur->bc_btnum;
++		__entry->level = level;
++		__entry->nlevels = cur->bc_nlevels;
++		__entry->nr_this_level = nr_this_level;
++		__entry->nr_per_block = nr_per_block;
++		__entry->desired_npb = desired_npb;
++		__entry->blocks = blocks;
++		__entry->blocks_with_extra = blocks_with_extra;
++	),
++	TP_printk("dev %d:%d btree %s level %u/%u nr_this_level %llu nr_per_block %u desired_npb %u blocks %llu blocks_with_extra %llu",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
++		  __entry->level,
++		  __entry->nlevels,
++		  __entry->nr_this_level,
++		  __entry->nr_per_block,
++		  __entry->desired_npb,
++		  __entry->blocks,
++		  __entry->blocks_with_extra)
++)
++
++TRACE_EVENT(xfs_btree_bload_block,
++	TP_PROTO(struct xfs_btree_cur *cur, unsigned int level,
++		 uint64_t block_idx, uint64_t nr_blocks,
++		 union xfs_btree_ptr *ptr, unsigned int nr_records),
++	TP_ARGS(cur, level, block_idx, nr_blocks, ptr, nr_records),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_btnum_t, btnum)
++		__field(unsigned int, level)
++		__field(unsigned long long, block_idx)
++		__field(unsigned long long, nr_blocks)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, agbno)
++		__field(unsigned int, nr_records)
++	),
++	TP_fast_assign(
++		__entry->dev = cur->bc_mp->m_super->s_dev;
++		__entry->btnum = cur->bc_btnum;
++		__entry->level = level;
++		__entry->block_idx = block_idx;
++		__entry->nr_blocks = nr_blocks;
++		if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
++			xfs_fsblock_t	fsb = be64_to_cpu(ptr->l);
++
++			__entry->agno = XFS_FSB_TO_AGNO(cur->bc_mp, fsb);
++			__entry->agbno = XFS_FSB_TO_AGBNO(cur->bc_mp, fsb);
++		} else {
++			__entry->agno = cur->bc_private.a.agno;
++			__entry->agbno = be32_to_cpu(ptr->s);
++		}
++		__entry->nr_records = nr_records;
++	),
++	TP_printk("dev %d:%d btree %s level %u block %llu/%llu fsb (%u/%u) recs %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
++		  __entry->level,
++		  __entry->block_idx,
++		  __entry->nr_blocks,
++		  __entry->agno,
++		  __entry->agbno,
++		  __entry->nr_records)
++)
++
+ #endif /* _TRACE_XFS_H */
+ 
+ #undef TRACE_INCLUDE_PATH
 
