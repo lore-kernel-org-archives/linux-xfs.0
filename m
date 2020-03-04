@@ -7,70 +7,71 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 146F1C3F2D1
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 03:30:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A272C3F2D1
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 03:32:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D5AA020836
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 03:30:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5345220CC7
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 03:32:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="tqns08Os"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BAevQNF5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387535AbgCDDae (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Mar 2020 22:30:34 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:43878 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387532AbgCDDae (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Mar 2020 22:30:34 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0243N4mt024150;
-        Wed, 4 Mar 2020 03:30:31 GMT
+        id S2387535AbgCDDcK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Mar 2020 22:32:10 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:36880 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387397AbgCDDcK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Mar 2020 22:32:10 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0243OH7Q077293;
+        Wed, 4 Mar 2020 03:32:06 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=07wXY8sETWiU2mFQUBewF4PihEY1cvNN1sKwtbFP8DI=;
- b=tqns08Os4sd6Mehdrpih8C4f6LZJ29tWtR4PwcSYx6owprXoyTmRznNFGDy1KrVnaq5R
- FtZpDIyUngD2UES2MSZnOdotATzQZJA6gAIX+a0p6LI+xNbcED8lrkWOZfOrCqzDFOAP
- DZGsrXbH99TeZOPJAG9Ta8C1oiPqFfSjPvi/vp5o0qYqPblhBmGI2/JpBn4/YPkP4nyx
- bg81NDlPHiPNgBsyvy2g4ZgjF+W47qXwLJZely2gthQ6kFcCuUJMHqmPstMlAZF2Bftx
- gzBQtASZ9hTKNK1Bd2PgoknPxTZtrSlF/GqTiFpLrokBpBYC03/2maMs5/+pE51cBrrd Rg== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2yghn37eg3-1
+ bh=Nv05Ps6W1/36yuKH+8RkN65LvOAgLQ+llCQ8GfsSIQU=;
+ b=BAevQNF5T7CyC2Sx7aoIeXCr0xOyjF/QUmu8we9S8y0odLr6sO0iAOgRlF0tt0Fds4k4
+ UKvGyZ/UgYKD/+GpI5Z/m39sFbVGrOpdCgQPFuvqaU8YV+GnvtHd9gUaqHN66uA4C81o
+ 6gsAxJi32fJT99qffvPsSwPzembJuIM81EeTIkHDQkuAep9pw+vJV8aZL1n6aG80AvFt
+ GILbcf5IKL/lWaXZdSogeJ6WmoF0vltDZE6szZSONKCQl6Ir1zojXgH96R/YeBlJUa+N
+ +95y7iwWQEVu3uaZvDgdEyaJxjIb6ISk8tdnFk7HUjZ+fbu0gmlrp0YuhwqdexbPlnPU pQ== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 2yffwqukvj-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 04 Mar 2020 03:30:30 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0243IXmJ076118;
-        Wed, 4 Mar 2020 03:28:30 GMT
+        Wed, 04 Mar 2020 03:32:06 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0243GciI106430;
+        Wed, 4 Mar 2020 03:30:05 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 2yg1p669m6-1
+        by userp3030.oracle.com with ESMTP id 2yg1enk0e0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 04 Mar 2020 03:28:30 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0243ST7c031904;
-        Wed, 4 Mar 2020 03:28:29 GMT
+        Wed, 04 Mar 2020 03:30:05 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0243U44S000524;
+        Wed, 4 Mar 2020 03:30:04 GMT
 Received: from localhost (/10.159.225.108)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 03 Mar 2020 19:28:29 -0800
-Subject: [PATCH 1/4] xfs: introduce fake roots for ag-rooted btrees
+        with ESMTP ; Tue, 03 Mar 2020 19:30:04 -0800
+Subject: [PATCH 9/9] xfs_repair: track blocks lost during btree construction
+ via extents
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     darrick.wong@oracle.com
+To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com
-Date:   Tue, 03 Mar 2020 19:28:28 -0800
-Message-ID: <158329250827.2423432.18007812133503266256.stgit@magnolia>
-In-Reply-To: <158329250190.2423432.16958662769192587982.stgit@magnolia>
-References: <158329250190.2423432.16958662769192587982.stgit@magnolia>
+Date:   Tue, 03 Mar 2020 19:30:03 -0800
+Message-ID: <158329260320.2424103.6307844608711552371.stgit@magnolia>
+In-Reply-To: <158329254501.2424103.11001979654106437662.stgit@magnolia>
+References: <158329254501.2424103.11001979654106437662.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9549 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 malwarescore=0
- mlxlogscore=999 mlxscore=0 spamscore=0 adultscore=0 bulkscore=0
- suspectscore=3 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2003040022
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=2 spamscore=0
+ mlxlogscore=999 malwarescore=0 bulkscore=0 mlxscore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2003040022
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9549 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 phishscore=0 spamscore=0
- impostorscore=0 mlxscore=0 adultscore=0 mlxlogscore=999 lowpriorityscore=0
- priorityscore=1501 bulkscore=0 clxscore=1015 suspectscore=3
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 spamscore=0
+ impostorscore=0 malwarescore=0 mlxlogscore=999 mlxscore=0 suspectscore=2
+ phishscore=0 clxscore=1015 bulkscore=0 adultscore=0 priorityscore=1501
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
  definitions=main-2003040022
 Sender: linux-xfs-owner@vger.kernel.org
@@ -80,263 +81,172 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create an in-core fake root for AG-rooted btree types so that callers
-can generate a whole new btree using the upcoming btree bulk load
-function without making the new tree accessible from the rest of the
-filesystem.  It is up to the individual btree type to provide a function
-to create a staged cursor (presumably with the appropriate callouts to
-update the fakeroot) and then commit the staged root back into the
-filesystem.
+Use extent records (not just raw fsbs) to track blocks that were lost
+during btree construction.  This makes it somewhat more efficient.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_btree.c |  117 +++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_btree.h |   42 ++++++++++++++--
- fs/xfs/xfs_trace.h        |   28 +++++++++++
- 3 files changed, 182 insertions(+), 5 deletions(-)
+ repair/phase5.c |   60 +++++++++++++++++++++++++++++++------------------------
+ 1 file changed, 34 insertions(+), 26 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index e6f898bf3174..9a7c1a4d0423 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -382,6 +382,8 @@ xfs_btree_del_cursor(
- 	/*
- 	 * Free the cursor.
+diff --git a/repair/phase5.c b/repair/phase5.c
+index 15358597..4470f63a 100644
+--- a/repair/phase5.c
++++ b/repair/phase5.c
+@@ -20,6 +20,11 @@
+ #include "rmap.h"
+ #include "bload.h"
+ 
++struct lost_fsb {
++	xfs_fsblock_t		fsbno;
++	xfs_extlen_t		len;
++};
++
+ struct bt_rebuild {
+ 	struct xrep_newbt	newbt;
+ 	struct xfs_btree_bload	bload;
+@@ -301,21 +306,24 @@ static void
+ finish_rebuild(
+ 	struct xfs_mount	*mp,
+ 	struct bt_rebuild	*btr,
+-	struct xfs_slab		*lost_fsb)
++	struct xfs_slab		*lost_fsbs)
+ {
+ 	struct xrep_newbt_resv	*resv, *n;
+ 
+ 	for_each_xrep_newbt_reservation(&btr->newbt, resv, n) {
+-		while (resv->used < resv->len) {
+-			xfs_fsblock_t	fsb = resv->fsbno + resv->used;
+-			int		error;
++		struct lost_fsb	lost;
++		int		error;
+ 
+-			error = slab_add(lost_fsb, &fsb);
+-			if (error)
+-				do_error(
++		if (resv->used == resv->len)
++			continue;
++
++		lost.fsbno = resv->fsbno + resv->used;
++		lost.len = resv->len - resv->used;
++		error = slab_add(lost_fsbs, &lost);
++		if (error)
++			do_error(
+ _("Insufficient memory saving lost blocks.\n"));
+-			resv->used++;
+-		}
++		resv->used = resv->len;
+ 	}
+ 
+ 	xrep_newbt_destroy(&btr->newbt, 0);
+@@ -1044,7 +1052,7 @@ build_agf_agfl(
+ 	int			lostblocks,	/* # blocks that will be lost */
+ 	struct bt_rebuild	*btr_rmap,
+ 	struct bt_rebuild	*btr_refcount,
+-	struct xfs_slab		*lost_fsb)
++	struct xfs_slab		*lost_fsbs)
+ {
+ 	struct extent_tree_node	*ext_ptr;
+ 	struct xfs_buf		*agf_buf, *agfl_buf;
+@@ -1253,7 +1261,7 @@ static void
+ phase5_func(
+ 	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		agno,
+-	struct xfs_slab		*lost_fsb)
++	struct xfs_slab		*lost_fsbs)
+ {
+ 	struct repair_ctx	sc = { .mp = mp, };
+ 	struct agi_stat		agi_stat = {0,};
+@@ -1388,7 +1396,7 @@ phase5_func(
+ 	 * set up agf and agfl
  	 */
-+	if (unlikely(cur->bc_flags & XFS_BTREE_STAGING))
-+		kmem_free((void *)cur->bc_ops);
- 	kmem_cache_free(xfs_btree_cur_zone, cur);
- }
+ 	build_agf_agfl(mp, agno, &btr_bno, &btr_cnt, freeblks1, extra_blocks,
+-			&btr_rmap, &btr_refcount, lost_fsb);
++			&btr_rmap, &btr_refcount, lost_fsbs);
  
-@@ -4908,3 +4910,118 @@ xfs_btree_has_more_records(
- 	else
- 		return block->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK);
- }
-+
-+/* We don't allow staging cursors to be duplicated. */
-+STATIC struct xfs_btree_cur *
-+xfs_btree_fakeroot_dup_cursor(
-+	struct xfs_btree_cur	*cur)
-+{
-+	ASSERT(0);
-+	return NULL;
-+}
-+
-+/* Refuse to allow regular block allocation for a staging cursor. */
-+STATIC int
-+xfs_btree_fakeroot_alloc_block(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_ptr	*start_bno,
-+	union xfs_btree_ptr	*new_bno,
-+	int			*stat)
-+{
-+	ASSERT(0);
-+	return -EFSCORRUPTED;
-+}
-+
-+/* Refuse to allow block freeing for a staging cursor. */
-+STATIC int
-+xfs_btree_fakeroot_free_block(
-+	struct xfs_btree_cur	*cur,
-+	struct xfs_buf		*bp)
-+{
-+	ASSERT(0);
-+	return -EFSCORRUPTED;
-+}
-+
-+/* Initialize a pointer to the root block from the fakeroot. */
-+STATIC void
-+xfs_btree_fakeroot_init_ptr_from_cur(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_ptr	*ptr)
-+{
-+	struct xbtree_afakeroot	*afake;
-+
-+	ASSERT(cur->bc_flags & XFS_BTREE_STAGING);
-+
-+	afake = cur->bc_private.a.afake;
-+	ptr->s = cpu_to_be32(afake->af_root);
-+}
-+
-+/* Set the root block when our tree has a fakeroot. */
-+STATIC void
-+xfs_btree_afakeroot_set_root(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_ptr	*ptr,
-+	int			inc)
-+{
-+	struct xbtree_afakeroot	*afake = cur->bc_private.a.afake;
-+
-+	ASSERT(cur->bc_flags & XFS_BTREE_STAGING);
-+	afake->af_root = be32_to_cpu(ptr->s);
-+	afake->af_levels += inc;
-+}
-+
-+/*
-+ * Initialize a AG-rooted btree cursor with the given AG btree fake root.  The
-+ * btree cursor's @bc_ops will be overridden as needed to make the staging
-+ * functionality work.  If @new_ops is not NULL, these new ops will be passed
-+ * out to the caller for further overriding.
-+ */
-+void
-+xfs_btree_stage_afakeroot(
-+	struct xfs_btree_cur		*cur,
-+	struct xbtree_afakeroot		*afake,
-+	struct xfs_btree_ops		**new_ops)
-+{
-+	struct xfs_btree_ops		*nops;
-+
-+	ASSERT(!(cur->bc_flags & XFS_BTREE_STAGING));
-+	ASSERT(!(cur->bc_flags & XFS_BTREE_ROOT_IN_INODE));
-+
-+	nops = kmem_alloc(sizeof(struct xfs_btree_ops), KM_NOFS);
-+	memcpy(nops, cur->bc_ops, sizeof(struct xfs_btree_ops));
-+	nops->alloc_block = xfs_btree_fakeroot_alloc_block;
-+	nops->free_block = xfs_btree_fakeroot_free_block;
-+	nops->init_ptr_from_cur = xfs_btree_fakeroot_init_ptr_from_cur;
-+	nops->set_root = xfs_btree_afakeroot_set_root;
-+	nops->dup_cursor = xfs_btree_fakeroot_dup_cursor;
-+
-+	cur->bc_private.a.afake = afake;
-+	cur->bc_nlevels = afake->af_levels;
-+	cur->bc_ops = nops;
-+	cur->bc_flags |= XFS_BTREE_STAGING;
-+
-+	if (new_ops)
-+		*new_ops = nops;
-+}
-+
-+/*
-+ * Transform an AG-rooted staging btree cursor back into a regular cursor by
-+ * substituting a real btree root for the fake one and restoring normal btree
-+ * cursor ops.  The caller must log the btree root change prior to calling
-+ * this.
-+ */
-+void
-+xfs_btree_commit_afakeroot(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_buf			*agbp,
-+	const struct xfs_btree_ops	*ops)
-+{
-+	ASSERT(cur->bc_flags & XFS_BTREE_STAGING);
-+
-+	trace_xfs_btree_commit_afakeroot(cur);
-+
-+	kmem_free((void *)cur->bc_ops);
-+	cur->bc_private.a.agbp = agbp;
-+	cur->bc_ops = ops;
-+	cur->bc_flags &= ~XFS_BTREE_STAGING;
-+}
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index 3eff7c321d43..3ada085609a8 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -188,6 +188,16 @@ union xfs_btree_cur_private {
- 	} abt;
- };
+ 	/*
+ 	 * build inode allocation trees.
+@@ -1403,15 +1411,15 @@ phase5_func(
+ 	/*
+ 	 * tear down cursors
+ 	 */
+-	finish_rebuild(mp, &btr_bno, lost_fsb);
+-	finish_rebuild(mp, &btr_cnt, lost_fsb);
+-	finish_rebuild(mp, &btr_ino, lost_fsb);
++	finish_rebuild(mp, &btr_bno, lost_fsbs);
++	finish_rebuild(mp, &btr_cnt, lost_fsbs);
++	finish_rebuild(mp, &btr_ino, lost_fsbs);
+ 	if (xfs_sb_version_hasfinobt(&mp->m_sb))
+-		finish_rebuild(mp, &btr_fino, lost_fsb);
++		finish_rebuild(mp, &btr_fino, lost_fsbs);
+ 	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
+-		finish_rebuild(mp, &btr_rmap, lost_fsb);
++		finish_rebuild(mp, &btr_rmap, lost_fsbs);
+ 	if (xfs_sb_version_hasreflink(&mp->m_sb))
+-		finish_rebuild(mp, &btr_refcount, lost_fsb);
++		finish_rebuild(mp, &btr_refcount, lost_fsbs);
  
-+/* Private information for a AG-rooted btree. */
-+struct xfs_btree_priv_ag {			/* needed for BNO, CNT, INO */
-+	union {
-+		struct xfs_buf		*agbp;	/* agf/agi buffer pointer */
-+		struct xbtree_afakeroot	*afake;	/* fake ag header root */
-+	};
-+	xfs_agnumber_t			agno;	/* ag number */
-+	union xfs_btree_cur_private	priv;
-+};
-+
- /*
-  * Btree cursor structure.
-  * This collects all information needed by the btree code in one place.
-@@ -209,11 +219,7 @@ typedef struct xfs_btree_cur
- 	xfs_btnum_t	bc_btnum;	/* identifies which btree type */
- 	int		bc_statoff;	/* offset of btre stats array */
- 	union {
--		struct {			/* needed for BNO, CNT, INO */
--			struct xfs_buf	*agbp;	/* agf/agi buffer pointer */
--			xfs_agnumber_t	agno;	/* ag number */
--			union xfs_btree_cur_private	priv;
--		} a;
-+		struct xfs_btree_priv_ag a;
- 		struct {			/* needed for BMAP */
- 			struct xfs_inode *ip;	/* pointer to our inode */
- 			int		allocated;	/* count of alloced */
-@@ -232,6 +238,12 @@ typedef struct xfs_btree_cur
- #define XFS_BTREE_LASTREC_UPDATE	(1<<2)	/* track last rec externally */
- #define XFS_BTREE_CRC_BLOCKS		(1<<3)	/* uses extended btree blocks */
- #define XFS_BTREE_OVERLAPPING		(1<<4)	/* overlapping intervals */
-+/*
-+ * The root of this btree is a fakeroot structure so that we can stage a btree
-+ * rebuild without leaving it accessible via primary metadata.  The ops struct
-+ * is dynamically allocated and must be freed when the cursor is deleted.
-+ */
-+#define XFS_BTREE_STAGING		(1<<5)
+ 	/*
+ 	 * release the incore per-AG bno/bcnt trees so
+@@ -1431,19 +1439,19 @@ inject_lost_blocks(
+ {
+ 	struct xfs_trans	*tp = NULL;
+ 	struct xfs_slab_cursor	*cur = NULL;
+-	xfs_fsblock_t		*fsb;
++	struct lost_fsb		*lost;
+ 	int			error;
  
+ 	error = init_slab_cursor(lost_fsbs, NULL, &cur);
+ 	if (error)
+ 		return error;
  
- #define	XFS_BTREE_NOERROR	0
-@@ -512,4 +524,24 @@ xfs_btree_islastblock(
- 	return block->bb_u.s.bb_rightsib == cpu_to_be32(NULLAGBLOCK);
- }
+-	while ((fsb = pop_slab_cursor(cur)) != NULL) {
++	while ((lost = pop_slab_cursor(cur)) != NULL) {
+ 		error = -libxfs_trans_alloc_rollable(mp, 16, &tp);
+ 		if (error)
+ 			goto out_cancel;
  
-+/* Fake root for an AG-rooted btree. */
-+struct xbtree_afakeroot {
-+	/* AG block number of the new btree root. */
-+	xfs_agblock_t		af_root;
-+
-+	/* Height of the new btree. */
-+	unsigned int		af_levels;
-+
-+	/* Number of blocks used by the btree. */
-+	unsigned int		af_blocks;
-+};
-+
-+/* Cursor interactions with with fake roots for AG-rooted btrees. */
-+void xfs_btree_stage_afakeroot(struct xfs_btree_cur *cur,
-+		struct xbtree_afakeroot *afake,
-+		struct xfs_btree_ops **new_ops);
-+void xfs_btree_commit_afakeroot(struct xfs_btree_cur *cur,
-+		struct xfs_buf *agbp,
-+		const struct xfs_btree_ops *ops);
-+
- #endif	/* __XFS_BTREE_H__ */
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index e242988f57fb..57ff9f583b5f 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3594,6 +3594,34 @@ TRACE_EVENT(xfs_check_new_dalign,
- 		  __entry->calc_rootino)
- )
+-		error = -libxfs_free_extent(tp, *fsb, 1,
++		error = -libxfs_free_extent(tp, lost->fsbno, lost->len,
+ 				&XFS_RMAP_OINFO_ANY_OWNER, XFS_AG_RESV_NONE);
+ 		if (error)
+ 			goto out_cancel;
+@@ -1464,7 +1472,7 @@ inject_lost_blocks(
+ void
+ phase5(xfs_mount_t *mp)
+ {
+-	struct xfs_slab		*lost_fsb;
++	struct xfs_slab		*lost_fsbs;
+ 	xfs_agnumber_t		agno;
+ 	int			error;
  
-+TRACE_EVENT(xfs_btree_commit_afakeroot,
-+	TP_PROTO(struct xfs_btree_cur *cur),
-+	TP_ARGS(cur),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_btnum_t, btnum)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, agbno)
-+		__field(unsigned int, levels)
-+		__field(unsigned int, blocks)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = cur->bc_mp->m_super->s_dev;
-+		__entry->btnum = cur->bc_btnum;
-+		__entry->agno = cur->bc_private.a.agno;
-+		__entry->agbno = cur->bc_private.a.afake->af_root;
-+		__entry->levels = cur->bc_private.a.afake->af_levels;
-+		__entry->blocks = cur->bc_private.a.afake->af_blocks;
-+	),
-+	TP_printk("dev %d:%d btree %s ag %u levels %u blocks %u root %u",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
-+		  __entry->agno,
-+		  __entry->levels,
-+		  __entry->blocks,
-+		  __entry->agbno)
-+)
-+
- #endif /* _TRACE_XFS_H */
+@@ -1507,12 +1515,12 @@ phase5(xfs_mount_t *mp)
+ 	if (sb_fdblocks_ag == NULL)
+ 		do_error(_("cannot alloc sb_fdblocks_ag buffers\n"));
  
- #undef TRACE_INCLUDE_PATH
+-	error = init_slab(&lost_fsb, sizeof(xfs_fsblock_t));
++	error = init_slab(&lost_fsbs, sizeof(struct lost_fsb));
+ 	if (error)
+ 		do_error(_("cannot alloc lost block slab\n"));
+ 
+ 	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++)
+-		phase5_func(mp, agno, lost_fsb);
++		phase5_func(mp, agno, lost_fsbs);
+ 
+ 	print_final_rpt();
+ 
+@@ -1555,10 +1563,10 @@ _("unable to add AG %u reverse-mapping data to btree.\n"), agno);
+ 	 * Put blocks that were unnecessarily reserved for btree
+ 	 * reconstruction back into the filesystem free space data.
+ 	 */
+-	error = inject_lost_blocks(mp, lost_fsb);
++	error = inject_lost_blocks(mp, lost_fsbs);
+ 	if (error)
+ 		do_error(_("Unable to reinsert lost blocks into filesystem.\n"));
+-	free_slab(&lost_fsb);
++	free_slab(&lost_fsbs);
+ 
+ 	bad_ino_btree = 0;
+ 
 
