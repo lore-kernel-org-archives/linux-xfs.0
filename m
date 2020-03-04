@@ -2,60 +2,75 @@ Return-Path: <SRS0=37eZ=4V=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54B05C3F2D1
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 15:30:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2081C3F2CD
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 15:34:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 325E72166E
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 15:30:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B9691246F6
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 15:34:01 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="BuD4KHdd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727804AbgCDPaR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Mar 2020 10:30:17 -0500
-Received: from verein.lst.de ([213.95.11.211]:55075 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727024AbgCDPaR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Mar 2020 10:30:17 -0500
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 2728C68B20; Wed,  4 Mar 2020 16:30:14 +0100 (CET)
-Date:   Wed, 4 Mar 2020 16:30:13 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] iomap: don't override sis->bdev in
- xfs_iomap_swapfile_activate
-Message-ID: <20200304153013.GA10283@lst.de>
-References: <20200301144925.48343-1-hch@lst.de> <20200303165157.GC8045@magnolia>
+        id S1729501AbgCDPeB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Mar 2020 10:34:01 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:45772 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726764AbgCDPeB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Mar 2020 10:34:01 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=AnM84Lt4VRzYoXNtkX6eksI4bqOZSqh20o6IdsuWiew=; b=BuD4KHdd9KxV+XagASjNUyxfx8
+        aBjhqtDbYHpdch6wQ/cIcHejEC3wDHo9XWBknR0XlRGc4+S0FytzWooSZz+egQJZQbLehS3KgaS3H
+        V96a8w5NIfrbuVAfxM8q45Qb7Bzqs5lRK8kOReBme6o+7vz3omVCndxTav4XGWxfd2KDlI/TfB8v1
+        WPnfzQopOml9VwXZI/BhCn/21b+orFy3IQl88Miyw12kg1K96BiyZzQGghvrld424+Q1Kz0dwJI3M
+        UtKZltVI8b02DqOXeytBNRyo5wbFZ98IAEePC4T72B7xnxTYK9YjQoUP/0tZee3TakuGRPh7lWmln
+        Za/ckQ5Q==;
+Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1j9W24-0002PM-Nb; Wed, 04 Mar 2020 15:34:00 +0000
+Date:   Wed, 4 Mar 2020 07:34:00 -0800
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] iomap: Fix writepage tracepoint pgoff
+Message-ID: <20200304153400.GG29971@bombadil.infradead.org>
+References: <20200304142259.GF29971@bombadil.infradead.org>
+ <20200304152515.GA23148@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200303165157.GC8045@magnolia>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20200304152515.GA23148@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 03, 2020 at 08:51:57AM -0800, Darrick J. Wong wrote:
-> On Sun, Mar 01, 2020 at 07:49:25AM -0700, Christoph Hellwig wrote:
-> > The swapon code itself sets sis->bdev up early, and performs various check
-> > on the block devices.  Changing it later in the fact thus will cause a
-> > mismatch of capabilities and must be avoided.
+On Wed, Mar 04, 2020 at 07:25:15AM -0800, Christoph Hellwig wrote:
+> On Wed, Mar 04, 2020 at 06:22:59AM -0800, Matthew Wilcox wrote:
+> > From: Matthew Wilcox (Oracle) <willy@infradead.org>
+> > 
+> > page_offset() confusingly returns the number of bytes from the
+> > beginning of the file and not the pgoff, which the tracepoint claims
+> > to be returning.  We're already returning the number of bytes from the
+> > beginning of the file in the 'offset' parameter, so correct the pgoff
+> > to be what was apparently intended.
+> > 
+> > Fixes: 0b1b213fcf3a ("xfs: event tracing support")
+> > Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 > 
-> What kind of mismatch?  Are you talking about the bdi_cap_* and
-> blk_queue_nonrot() logic in swapon()?  I wonder how much of that could
-> be moved to after the ->swapfile_activate call.
+> I wonder if tracing the byte offset and just changing the name
+> might be more useful.  But I agree that we should fix it one way or
+> another.
 
-The thing I ran into is the zone check with my zoned XFS prototype
-code.  But when you look at the nonrot checks that will cause
-resource leaks due to the override, and thus is the main is the
-main issue for now.
+I covered that -- "We're already returning the number of bytes from the
+beginning of the file in the 'offset' parameter, so correct the pgoff
+to be what was apparently intended."
 
-I suspect much of this could be cleaned up one way or another, but
-the layering of this code is horrible, so it would be a bigger
-job.
+I mean, we could just delete the pgoff instead.  Apparently nobody's
+using it, or they would surely have noticed.
 
-btrfs hasn't picked up the iomap changes yet, but the next resend
-should drop the bdev assignment as well.
