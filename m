@@ -5,59 +5,57 @@ X-Spam-Level:
 X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2988FC3F2C6
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 02:46:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6FECC3F2C6
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 02:46:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 03E3420866
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 02:46:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80E7F20866
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 02:46:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="RpXixwfu"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VEKNJbAP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387432AbgCDCqj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Mar 2020 21:46:39 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:44916 "EHLO
+        id S2387469AbgCDCqq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Mar 2020 21:46:46 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:45034 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387411AbgCDCqj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Mar 2020 21:46:39 -0500
+        with ESMTP id S2387411AbgCDCqp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Mar 2020 21:46:45 -0500
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0242iNCS190181;
-        Wed, 4 Mar 2020 02:46:37 GMT
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0242iBFi180818;
+        Wed, 4 Mar 2020 02:46:43 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=K8fe4a4yZut3SyJTG8V6xLgjbfY3gs8iO0DeMbyzA2A=;
- b=RpXixwfudJx83RnU2b3YoXgYN4NZlVhW7Cg3v/pAGqp15mOPvdGoy4TmFDZ3gtWFtv+X
- kL3qbOALBlPiYrMRvkhBsBkPF8DwBo/mLon8/qadvsJAhLqeMax6xpSY5Caor1zrd4lg
- +E+F4wI7/aiWdLBC52uk3AI/uINKjx/eCSfKZuqknl7M/BRopRQb9h3ETRpqGIq4+/aE
- THTXhJQb92o5AFKFq2CuwRARI+PrXh6PNpnyz2o3MpvNLpmLyC3OTZd5ZV1fDiHZ1ZYk
- /fDRO85wGMcbUxK/gJtl6JKZDcuA2/3qULb/Tow6hgZQw4PkbZZ/8J10opsoUimTedew 0w== 
+ bh=kcNU8w5IkR57m7sytjdxTjauP66DhWVeXLbvEV1iWQo=;
+ b=VEKNJbAPJOW5clsUTP9Qj8/IV7lI/v39C34n+MH6EeExfWa6DtZqBPRLq1JO/QyhY6k2
+ BlLL5rib0OGDE6m1PRmAs9zP+2tpxMTV6qTognzfOMyB3Z4Brs/7baCQxFo5jUQw4B62
+ E15Gg36jwIjnRu6Rly8eV4Gi5W8rjkoHVJATdfj6jJnCuJxWDw4UFHtkuytMIxcq6sYz
+ CAfEEC3EC7dXIUs8BFPI5lTs43u/abC4o/OePXhJ6TCgmrS+GwSm+xjusdv4dhiwU3jM
+ vnQbAF6tDKWUy506Q9iF6T+ZfwtwOPNM6V3P7K7mjtV1EWvlVGrAQ523QQ4hrx8Fu2Gy Dg== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2yffwqucyy-1
+        by aserp2120.oracle.com with ESMTP id 2yffwqud0n-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 04 Mar 2020 02:46:37 +0000
+        Wed, 04 Mar 2020 02:46:43 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0242ieZ6104627;
-        Wed, 4 Mar 2020 02:46:36 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 2yg1p63rwj-1
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0242ifed104810;
+        Wed, 4 Mar 2020 02:46:42 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2yg1p63s3k-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 04 Mar 2020 02:46:36 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0242kZdr012388;
-        Wed, 4 Mar 2020 02:46:35 GMT
+        Wed, 04 Mar 2020 02:46:42 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0242kg73006524;
+        Wed, 4 Mar 2020 02:46:42 GMT
 Received: from localhost (/10.159.225.108)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 03 Mar 2020 18:46:35 -0800
-Subject: [PATCH 1/3] generic/402: skip test if xfs_io can't parse the date
- value
+        with ESMTP ; Tue, 03 Mar 2020 18:46:41 -0800
+Subject: [PATCH 2/3] xfs: refactor calls to xfs_admin
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     guaneryu@gmail.com, darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>,
-        fstests@vger.kernel.org
-Date:   Tue, 03 Mar 2020 18:46:34 -0800
-Message-ID: <158328999421.2374922.12052887381904972734.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Date:   Tue, 03 Mar 2020 18:46:40 -0800
+Message-ID: <158329000059.2374922.2321079684090223330.stgit@magnolia>
 In-Reply-To: <158328998787.2374922.4223951558305234252.stgit@magnolia>
 References: <158328998787.2374922.4223951558305234252.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -82,54 +80,59 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-If xfs_io's utimes command cannot interpret the arguments that are given
-to it, it will print out "Bad value for [am]time".  Detect when this
-happens and drop the file out of the test entirely.
-
-This is particularly noticeable on 32-bit platforms and the largest
-timestamp seconds supported by the filesystem is INT_MAX.  In this case,
-the maximum value we can cram into tv_sec is INT_MAX, and there is no
-way to actually test setting a timestamp of INT_MAX + 1 to test the
-clamping.
+Create a helper to run xfs_admin on the scratch device, then refactor
+all tests to use it.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 ---
- tests/generic/402 |   20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
+ common/config |    1 +
+ common/xfs    |    8 ++++++++
+ tests/xfs/287 |    2 +-
+ 3 files changed, 10 insertions(+), 1 deletion(-)
 
 
-diff --git a/tests/generic/402 b/tests/generic/402
-index 2a34d127..2481a5d2 100755
---- a/tests/generic/402
-+++ b/tests/generic/402
-@@ -63,10 +63,26 @@ run_test_individual()
- 	# check if the time needs update
- 	if [ $update_time -eq 1 ]; then
- 		echo "Updating file: $file to timestamp $timestamp"  >> $seqres.full
--		$XFS_IO_PROG -f -c "utimes $timestamp 0 $timestamp 0" $file
--		if [ $? -ne 0 ]; then
-+		rm -f $tmp.utimes
-+		$XFS_IO_PROG -f -c "utimes $timestamp 0 $timestamp 0" $file > $tmp.utimes 2>&1
-+		local res=$?
-+
-+		cat $tmp.utimes >> $seqres.full
-+		if [ "$timestamp" -ne 0 ] && grep -q "Bad value" "$tmp.utimes"; then
-+			echo "xfs_io could not interpret time value \"$timestamp\", skipping \"$file\" test." >> $seqres.full
-+			rm -f $file $tmp.utimes
-+			return
-+		fi
-+		cat $tmp.utimes
-+		rm -f $tmp.utimes
-+		if [ $res -ne 0 ]; then
- 			echo "Failed to update times on $file" | tee -a $seqres.full
- 		fi
-+	else
-+		if [ ! -f "$file" ]; then
-+			echo "xfs_io did not create file for time value \"$timestamp\", skipping test." >> $seqres.full
-+			return
-+		fi
- 	fi
+diff --git a/common/config b/common/config
+index 9a9c7760..1116cb99 100644
+--- a/common/config
++++ b/common/config
+@@ -154,6 +154,7 @@ MKSWAP_PROG="$MKSWAP_PROG -f"
+ export XFS_LOGPRINT_PROG="$(type -P xfs_logprint)"
+ export XFS_REPAIR_PROG="$(type -P xfs_repair)"
+ export XFS_DB_PROG="$(type -P xfs_db)"
++export XFS_ADMIN_PROG="$(type -P xfs_admin)"
+ export XFS_GROWFS_PROG=$(type -P xfs_growfs)
+ export XFS_SPACEMAN_PROG="$(type -P xfs_spaceman)"
+ export XFS_SCRUB_PROG="$(type -P xfs_scrub)"
+diff --git a/common/xfs b/common/xfs
+index 706ddf85..d9a9784f 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -218,6 +218,14 @@ _scratch_xfs_db()
+ 	$XFS_DB_PROG "$@" $(_scratch_xfs_db_options)
+ }
  
- 	tsclamp=$((timestamp<tsmin?tsmin:timestamp>tsmax?tsmax:timestamp))
++_scratch_xfs_admin()
++{
++	local options=("$SCRATCH_DEV")
++	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
++		options+=("$SCRATCH_LOGDEV")
++	$XFS_ADMIN_PROG "$@" "${options[@]}"
++}
++
+ _scratch_xfs_logprint()
+ {
+ 	SCRATCH_OPTIONS=""
+diff --git a/tests/xfs/287 b/tests/xfs/287
+index 8dc754a5..f77ed2f1 100755
+--- a/tests/xfs/287
++++ b/tests/xfs/287
+@@ -70,7 +70,7 @@ $XFS_IO_PROG -r -c "lsproj" $dir/32bit
+ _scratch_unmount
+ 
+ # Now, enable projid32bit support by xfs_admin
+-xfs_admin -p $SCRATCH_DEV >> $seqres.full 2>&1 || _fail "xfs_admin failed"
++_scratch_xfs_admin -p >> $seqres.full 2>&1 || _fail "xfs_admin failed"
+ 
+ # Now mount the fs, 32bit project quotas shall be supported, now
+ _qmount_option "pquota"
 
