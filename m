@@ -2,188 +2,93 @@ Return-Path: <SRS0=37eZ=4V=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54B9DC3F2CE
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 15:49:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B734C3F2D1
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 15:49:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 24134215A4
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 15:49:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5675E215A4
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 15:49:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="aiY01TbO"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="G3dE6ZtF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729704AbgCDPtK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Mar 2020 10:49:10 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:47368 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729573AbgCDPtK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Mar 2020 10:49:10 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 024Fm4Ia130486;
-        Wed, 4 Mar 2020 15:49:02 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=/ZcHpQN1+1pZpVy4wwwRZns65+S1+9FUcze507wKngg=;
- b=aiY01TbOsAyWVS3jZhXiIDqj4pCs8+0CtQouA9U1bG0y9jc7RzExEgCPTyOWaSabhp4z
- jxCTncWWVe+Mh/OjcND55AbzhAjoqlPmuwkKiA3YgrLo3gXnoy900Lp4uSLhwjXPgoio
- 6SSkNo0T9ikj05gyMbWuNojqKrwII3XkOld/btWIjWMscyGTLi6wPY2k3eGe/5nBozkW
- 1pfv4WbtcFjPd7UHKA7TcHCMex+cPvdHqKULYs4VtRGWBlSiTm0tnA5BZPHiShu6d5XK
- x32BRiRZnjFeoIrzglu0o6Ra/XZ7Id+NUi+ES+UGD5IsX4hP7Sql9mqnVUxzSuSZ6MLh kQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2yffwqy469-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 04 Mar 2020 15:49:02 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 024FmXrN097592;
-        Wed, 4 Mar 2020 15:49:01 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 2yg1p7s8vt-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 04 Mar 2020 15:49:01 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 024FmwRW006862;
-        Wed, 4 Mar 2020 15:48:58 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 04 Mar 2020 07:48:58 -0800
-Date:   Wed, 4 Mar 2020 07:48:57 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2] iomap: Remove pgoff from tracepoints
-Message-ID: <20200304154857.GF8037@magnolia>
-References: <20200304154706.GH29971@bombadil.infradead.org>
+        id S1726915AbgCDPt4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Mar 2020 10:49:56 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:51422 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726263AbgCDPtz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Mar 2020 10:49:55 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=pddle2KSFTtBqsDy7IuwlrjbpsLtzuCbl8rWNR+bdro=; b=G3dE6ZtFlp9VmtHhTP9pWClXzs
+        trY2sg59m/54uBj6xOMN2V6Dvv0CexYWEk67nE+XNvGxasjpZ07/GVypgL3TzABi5LaqRsA4IKDnA
+        Iv7kLY7iJvbbb/SLFuO4+FvYtgcBKkKF80V3C9kmAUswiMBJbtOa0r131A+rGXaLPG7xWZOurvDcB
+        Kv0OYgQKiPXCA9l9Ls8tPnIp9vSsKFioP2joW8lQDAcIHLQ6UYYgqwEP32HyeuKcjGXPxbq+JQxSB
+        vVL9Pw/cS1bL2U1aEheAtiLpXMHNbvM3SRJPPTCFZtQbjl77GzX/QcQri71wYtWwTJnwLUuGdj/bu
+        X+8/yt5g==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1j9WHT-0000Gr-79; Wed, 04 Mar 2020 15:49:55 +0000
+Date:   Wed, 4 Mar 2020 07:49:55 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 03/11] xfs: refactor and split xfs_log_done()
+Message-ID: <20200304154955.GB17565@infradead.org>
+References: <20200304075401.21558-1-david@fromorbit.com>
+ <20200304075401.21558-4-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200304154706.GH29971@bombadil.infradead.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9549 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 malwarescore=0
- mlxlogscore=999 mlxscore=0 spamscore=0 adultscore=0 bulkscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2003040116
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9549 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 spamscore=0
- impostorscore=0 malwarescore=0 mlxlogscore=999 mlxscore=0 suspectscore=0
- phishscore=0 clxscore=1015 bulkscore=0 adultscore=0 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2003040116
+In-Reply-To: <20200304075401.21558-4-david@fromorbit.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 04, 2020 at 07:47:06AM -0800, Matthew Wilcox wrote:
-> From: Matthew Wilcox (Oracle) <willy@infradead.org>
-> 
-> The 'pgoff' displayed by the tracepoints wasn't a pgoff at all; it
-> was a byte offset from the start of the file.  We already emit that in
-> the form of the 'offset', so we can just remove pgoff.  That means we
-> can remove 'page' as an argument to the tracepoint, and rename this
-> type of tracepoint from being a page class to being a range class.
-> 
-> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-
-Looks fine to me,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 7057ef155a29..cab29ffb2b40 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -487,7 +487,7 @@ EXPORT_SYMBOL_GPL(iomap_is_partially_uptodate);
->  int
->  iomap_releasepage(struct page *page, gfp_t gfp_mask)
+> +int
+> +xlog_write_done(
+> +	struct xlog		*log,
+>  	struct xlog_ticket	*ticket,
+>  	struct xlog_in_core	**iclog,
+> +	xfs_lsn_t		*lsn)
 >  {
-> -	trace_iomap_releasepage(page->mapping->host, page, 0, 0);
-> +	trace_iomap_releasepage(page->mapping->host, 0, 0);
+> +	if (XLOG_FORCED_SHUTDOWN(log))
+> +		return -EIO;
 >  
->  	/*
->  	 * mm accommodates an old ext3 case where clean pages might not have had
-> @@ -504,7 +504,7 @@ EXPORT_SYMBOL_GPL(iomap_releasepage);
->  void
->  iomap_invalidatepage(struct page *page, unsigned int offset, unsigned int len)
->  {
-> -	trace_iomap_invalidatepage(page->mapping->host, page, offset, len);
-> +	trace_iomap_invalidatepage(page->mapping->host, offset, len);
+> +	return xlog_commit_record(log, ticket, iclog, lsn);
+> +}
+
+Can we just move the XLOG_FORCED_SHUTDOWN check into xlog_commit_record
+and call xlog_commit_record directly?
+
 >  
->  	/*
->  	 * If we are invalidating the entire page, clear the dirty state from it
-> @@ -1503,7 +1503,7 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
->  	u64 end_offset;
->  	loff_t offset;
->  
-> -	trace_iomap_writepage(inode, page, 0, 0);
-> +	trace_iomap_writepage(inode, 0, 0);
->  
->  	/*
->  	 * Refuse to write the page out if we are called from reclaim context.
-> diff --git a/fs/iomap/trace.h b/fs/iomap/trace.h
-> index d6ba705f938a..5693a39d52fb 100644
-> --- a/fs/iomap/trace.h
-> +++ b/fs/iomap/trace.h
-> @@ -41,14 +41,12 @@ DEFINE_EVENT(iomap_readpage_class, name,	\
->  DEFINE_READPAGE_EVENT(iomap_readpage);
->  DEFINE_READPAGE_EVENT(iomap_readahead);
->  
-> -DECLARE_EVENT_CLASS(iomap_page_class,
-> -	TP_PROTO(struct inode *inode, struct page *page, unsigned long off,
-> -		 unsigned int len),
-> -	TP_ARGS(inode, page, off, len),
-> +DECLARE_EVENT_CLASS(iomap_range_class,
-> +	TP_PROTO(struct inode *inode, unsigned long off, unsigned int len),
-> +	TP_ARGS(inode, off, len),
->  	TP_STRUCT__entry(
->  		__field(dev_t, dev)
->  		__field(u64, ino)
-> -		__field(pgoff_t, pgoff)
->  		__field(loff_t, size)
->  		__field(unsigned long, offset)
->  		__field(unsigned int, length)
-> @@ -56,29 +54,26 @@ DECLARE_EVENT_CLASS(iomap_page_class,
->  	TP_fast_assign(
->  		__entry->dev = inode->i_sb->s_dev;
->  		__entry->ino = inode->i_ino;
-> -		__entry->pgoff = page_offset(page);
->  		__entry->size = i_size_read(inode);
->  		__entry->offset = off;
->  		__entry->length = len;
->  	),
-> -	TP_printk("dev %d:%d ino 0x%llx pgoff 0x%lx size 0x%llx offset %lx "
-> +	TP_printk("dev %d:%d ino 0x%llx size 0x%llx offset %lx "
->  		  "length %x",
->  		  MAJOR(__entry->dev), MINOR(__entry->dev),
->  		  __entry->ino,
-> -		  __entry->pgoff,
->  		  __entry->size,
->  		  __entry->offset,
->  		  __entry->length)
->  )
->  
-> -#define DEFINE_PAGE_EVENT(name)		\
-> -DEFINE_EVENT(iomap_page_class, name,	\
-> -	TP_PROTO(struct inode *inode, struct page *page, unsigned long off, \
-> -		 unsigned int len),	\
-> -	TP_ARGS(inode, page, off, len))
-> -DEFINE_PAGE_EVENT(iomap_writepage);
-> -DEFINE_PAGE_EVENT(iomap_releasepage);
-> -DEFINE_PAGE_EVENT(iomap_invalidatepage);
-> +#define DEFINE_RANGE_EVENT(name)		\
-> +DEFINE_EVENT(iomap_range_class, name,	\
-> +	TP_PROTO(struct inode *inode, unsigned long off, unsigned int len),\
-> +	TP_ARGS(inode, off, len))
-> +DEFINE_RANGE_EVENT(iomap_writepage);
-> +DEFINE_RANGE_EVENT(iomap_releasepage);
-> +DEFINE_RANGE_EVENT(iomap_invalidatepage);
->  
->  #define IOMAP_TYPE_STRINGS \
->  	{ IOMAP_HOLE,		"HOLE" }, \
+> +/*
+> + * Release or regrant the ticket reservation now the transaction is done with
+> + * it depending on caller context. Rolling transactions need the ticket
+> + * regranted, otherwise we release it completely.
+> + */
+> +void
+> +xlog_ticket_done(
+> +	struct xlog		*log,
+> +	struct xlog_ticket	*ticket,
+> +	bool			regrant)
+> +{
+>  	if (!regrant) {
+>  		trace_xfs_log_done_nonperm(log, ticket);
+>  		xlog_ungrant_log_space(log, ticket);
+>  	} else {
+>  		trace_xfs_log_done_perm(log, ticket);
+>  		xlog_regrant_reserve_log_space(log, ticket);
+>  	}
+
+>  	xfs_log_ticket_put(ticket);
+
+I'd move the trace points and the call to xfs_log_ticket_put into
+xlog_ungrant_log_space and xlog_regrant_reserve_log_space, and then call
+the two functions directly from the callers.  There is only a single
+place the ever regrants anyway.
