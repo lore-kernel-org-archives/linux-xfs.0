@@ -1,112 +1,100 @@
-Return-Path: <SRS0=TABv=4U=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=37eZ=4V=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26E35C3F2C6
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Mar 2020 23:45:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E013C3F2C6
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 02:46:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F382C20828
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Mar 2020 23:45:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 11F95214D8
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 02:46:34 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="B740zAbP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728304AbgCCXph (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Mar 2020 18:45:37 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:53937 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727604AbgCCXph (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Mar 2020 18:45:37 -0500
-Received: from dread.disaster.area (pa49-195-202-68.pa.nsw.optusnet.com.au [49.195.202.68])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 354ED3A26F8;
-        Wed,  4 Mar 2020 10:45:34 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1j9HED-0004rN-Bn; Wed, 04 Mar 2020 10:45:33 +1100
-Date:   Wed, 4 Mar 2020 10:45:33 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/4] xfs: fix buffer state when we reject a corrupt dir
- free block
-Message-ID: <20200303234533.GY10776@dread.disaster.area>
-References: <158294091582.1729975.287494493433729349.stgit@magnolia>
- <158294092192.1729975.12710230360219661807.stgit@magnolia>
- <e38b8334-6b64-71ed-62d6-527f0fe57f09@sandeen.net>
- <20200303163853.GA8045@magnolia>
+        id S2387400AbgCDCqd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Mar 2020 21:46:33 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:60142 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387397AbgCDCqd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Mar 2020 21:46:33 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0242hDUX106313;
+        Wed, 4 Mar 2020 02:46:31 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=N2IhoES9f3o0UwvgNwo3yMdttUx8ieA6z4H1nIdRnXc=;
+ b=B740zAbPkTSpUeyZff8HsfhBxMorke1OLjmza8S8MWAPfnKwgntLKr74wF2XPIhrKc5X
+ 7zEjgFnntwwbtDToPBQNgXavFa7jwjWElL9zCJYiDOKF+uqsb6D33LwZOsl9eE23Q9/0
+ f7e446c4sM5kLW4kP+MjGXhy9R0ZO5wVIihHIGIoGXVV8vvQZgHeAyW4ibaJ6qI0zwGZ
+ JQp0CjTEWsFPsDsVDtcuJYTdLH/ur+PrKIrrxS1KRZSiE3RDJ9H68pM7KFAXv0tNjnUi
+ xGmVOVJz/YvDGoa9sk9unz8nWVnT0AGwu0DZiJ/pPRAar0xrLHVxxGSUdf/RgDtKhfaa Fw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 2yghn37800-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 04 Mar 2020 02:46:31 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0242gkAe128013;
+        Wed, 4 Mar 2020 02:46:30 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 2yg1rp5se8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 04 Mar 2020 02:46:30 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0242kThY017719;
+        Wed, 4 Mar 2020 02:46:29 GMT
+Received: from localhost (/10.159.225.108)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 03 Mar 2020 18:46:29 -0800
+Subject: [PATCH 0/3] fstests: random stuff
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     guaneryu@gmail.com, darrick.wong@oracle.com
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Date:   Tue, 03 Mar 2020 18:46:27 -0800
+Message-ID: <158328998787.2374922.4223951558305234252.stgit@magnolia>
+User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200303163853.GA8045@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
-        a=mqTaRPt+QsUAtUurwE173Q==:117 a=mqTaRPt+QsUAtUurwE173Q==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=SS2py6AdgQ4A:10
-        a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8 a=4pnkVB2WtlmvbiU2uoAA:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9549 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=723
+ suspectscore=0 malwarescore=0 adultscore=0 spamscore=0 phishscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2003040019
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9549 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 phishscore=0 spamscore=0
+ impostorscore=0 mlxscore=0 adultscore=0 mlxlogscore=780 lowpriorityscore=0
+ priorityscore=1501 bulkscore=0 clxscore=1015 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2003040019
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 03, 2020 at 08:38:53AM -0800, Darrick J. Wong wrote:
-> On Mon, Mar 02, 2020 at 05:54:07PM -0600, Eric Sandeen wrote:
-> > On 2/28/20 5:48 PM, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Fix two problems in the dir3 free block read routine when we want to
-> > > reject a corrupt free block.  First, buffers should never have DONE set
-> > > at the same time that b_error is EFSCORRUPTED.  Second, don't leak a
-> > > pointer back to the caller.
-> > 
-> > For both of these things I'm left wondering; why does this particular
-> > location need to have XBF_DONE cleared after the verifier error?  Most
-> > other locations that mark errors don't do this.
-> 
-> Read verifier functions don't need to clear XBF_DONE because
-> xfs_buf_reverify will notice b_error being set, and clear XBF_DONE for
-> us.
-> 
-> __xfs_dir3_free_read calls _read_buf.  If the buffer read succeeds,
-> _free_read then has xfs_dir3_free_header_check do some more checking on
-> the buffer that we can't do in read verifiers.  This is *outside* the
-> regular read verifier (because we can't pass the owner into _read_buf)
-> so if we're going to use xfs_verifier_error() to set b_error then we
-> also have to clear XBF_DONE so that when we release the buffer a few
-> lines later the buffer will be in a state that the buffer code expects.
+Hi all,
 
-Actually, if the data in the buffer is bad after it has been
-successfully read and we want to make sure it never gets used, the
-buffer should be marked stale.
+Here's an odd assortment of things.  The first patch fixes generic/402
+to abort if userspace can't handle a (nonzero) time value.  The second
+patch refactors calls to xfs_admin into a helper so that it works
+correctly on scratch devices with external log devices.  The third patch
+adds a test to ensure that xfs_db and xfs_quota commands are documented
+in the manual pages.
 
-That will prevent the buffer from being placed on the LRU when it is
-released, and if a lookup finds it in cache it will clear /all/ the
-flags on it
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-xfs_da_read_buf() has read the buffer successfully, and set up it's
-state so that it is cached via insertion into the LRU on release. We
-want to make sure that nothing uses this buffer again without a
-complete re-initialisation, and that's effectively what
-xfs_buf_stale() does.
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
-> This isn't theoretical, if the _header_check fails then we start
-> tripping the b_error assert the next time someone calls
-> xfs_buf_reverify.
+--D
 
-We shouldn't be trying to re-use a corrupt buffer - it should cycle
-out of memory immediately. Clearing the XBF_DONE flag doesn't
-accomplish that; it works for buffer read verifier failures because
-that results in the buffer being released before they are configured
-to be cached on the LRU by the caller...
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
 
-Indeed, xfs_buf_read_map() already stales the buffer on read and
-reverify failure....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
