@@ -3,123 +3,96 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,TVD_PH_BODY_ACCOUNTS_PRE,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C8EDC3F2CE
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 21:26:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 706E0C3F2D1
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 21:28:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7131E20838
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 21:26:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 49F9620866
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Mar 2020 21:28:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388364AbgCDV0z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Mar 2020 16:26:55 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:43295 "EHLO
+        id S2387762AbgCDV2W (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Mar 2020 16:28:22 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:50321 "EHLO
         mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2387762AbgCDV0y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Mar 2020 16:26:54 -0500
+        by vger.kernel.org with ESMTP id S1726440AbgCDV2W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Mar 2020 16:28:22 -0500
 Received: from dread.disaster.area (pa49-195-202-68.pa.nsw.optusnet.com.au [49.195.202.68])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 7BC163A2923;
-        Thu,  5 Mar 2020 08:26:50 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 7BE253A27DF;
+        Thu,  5 Mar 2020 08:28:19 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1j9bXU-0004Jl-Ox; Thu, 05 Mar 2020 08:26:48 +1100
-Date:   Thu, 5 Mar 2020 08:26:48 +1100
+        id 1j9bYw-0004Ma-U5; Thu, 05 Mar 2020 08:28:18 +1100
+Date:   Thu, 5 Mar 2020 08:28:18 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     Christoph Hellwig <hch@infradead.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 01/11] xfs: don't try to write a start record into every
- iclog
-Message-ID: <20200304212648.GZ10776@dread.disaster.area>
+Subject: Re: [PATCH 03/11] xfs: refactor and split xfs_log_done()
+Message-ID: <20200304212818.GA10776@dread.disaster.area>
 References: <20200304075401.21558-1-david@fromorbit.com>
- <20200304075401.21558-2-david@fromorbit.com>
- <20200304154421.GA17565@infradead.org>
+ <20200304075401.21558-4-david@fromorbit.com>
+ <20200304154955.GB17565@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200304154421.GA17565@infradead.org>
+In-Reply-To: <20200304154955.GB17565@infradead.org>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
         a=mqTaRPt+QsUAtUurwE173Q==:117 a=mqTaRPt+QsUAtUurwE173Q==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=SS2py6AdgQ4A:10
-        a=7-415B0cAAAA:8 a=G4MrZ8rAqdhwFF6TXlIA:9 a=BXScohDqB2jR35AV:21
-        a=yPfBKcgCJXb-vl5D:21 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=7-415B0cAAAA:8 a=R0vMAowjBP_RU6CrpswA:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 04, 2020 at 07:44:21AM -0800, Christoph Hellwig wrote:
-> >  /*
-> > - * Calculate the potential space needed by the log vector.  Each region gets
-> > - * its own xlog_op_header_t and may need to be double word aligned.
-> > + * Calculate the potential space needed by the log vector.  We may need a
-> > + * start record, and each region gets its own xlog_op_header_t and may need to
-> > + * be double word aligned.
+On Wed, Mar 04, 2020 at 07:49:55AM -0800, Christoph Hellwig wrote:
+> > +int
+> > +xlog_write_done(
+> > +	struct xlog		*log,
+> >  	struct xlog_ticket	*ticket,
+> >  	struct xlog_in_core	**iclog,
+> > +	xfs_lsn_t		*lsn)
+> >  {
+> > +	if (XLOG_FORCED_SHUTDOWN(log))
+> > +		return -EIO;
+> >  
+> > +	return xlog_commit_record(log, ticket, iclog, lsn);
+> > +}
 > 
-> s/xlog_op_header_t/struct xlog_op_header/ while you're at it.
-> 
-> > @@ -2404,25 +2391,29 @@ xlog_write(
-> >  	int			record_cnt = 0;
-> >  	int			data_cnt = 0;
-> >  	int			error = 0;
-> > +	int			start_rec_size = sizeof(struct xlog_op_header);
-> >  
-> >  	*start_lsn = 0;
-> >  
-> > -	len = xlog_write_calc_vec_length(ticket, log_vector);
-> >  
-> >  	/*
-> >  	 * Region headers and bytes are already accounted for.
-> >  	 * We only need to take into account start records and
-> >  	 * split regions in this function.
-> >  	 */
-> > -	if (ticket->t_flags & XLOG_TIC_INITED)
-> > +	if (ticket->t_flags & XLOG_TIC_INITED) {
-> >  		ticket->t_curr_res -= sizeof(xlog_op_header_t);
-> > +		ticket->t_flags &= ~XLOG_TIC_INITED;
-> > +	}
-> >  
-> >  	/*
-> >  	 * Commit record headers need to be accounted for. These
-> >  	 * come in as separate writes so are easy to detect.
-> >  	 */
-> > -	if (flags & (XLOG_COMMIT_TRANS | XLOG_UNMOUNT_TRANS))
-> > +	if (flags & (XLOG_COMMIT_TRANS | XLOG_UNMOUNT_TRANS)) {
-> >  		ticket->t_curr_res -= sizeof(xlog_op_header_t);
-> > +		start_rec_size = 0;
-> > +	}
-> >  
-> >  	if (ticket->t_curr_res < 0) {
-> >  		xfs_alert_tag(log->l_mp, XFS_PTAG_LOGRES,
-> > @@ -2431,6 +2422,8 @@ xlog_write(
-> >  		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
+> Can we just move the XLOG_FORCED_SHUTDOWN check into xlog_commit_record
+> and call xlog_commit_record directly?
+
+Next patch, because merging isn't obvious until the split is done.
+
+> > +/*
+> > + * Release or regrant the ticket reservation now the transaction is done with
+> > + * it depending on caller context. Rolling transactions need the ticket
+> > + * regranted, otherwise we release it completely.
+> > + */
+> > +void
+> > +xlog_ticket_done(
+> > +	struct xlog		*log,
+> > +	struct xlog_ticket	*ticket,
+> > +	bool			regrant)
+> > +{
+> >  	if (!regrant) {
+> >  		trace_xfs_log_done_nonperm(log, ticket);
+> >  		xlog_ungrant_log_space(log, ticket);
+> >  	} else {
+> >  		trace_xfs_log_done_perm(log, ticket);
+> >  		xlog_regrant_reserve_log_space(log, ticket);
 > >  	}
-> >  
-> > +	len = xlog_write_calc_vec_length(ticket, log_vector, start_rec_size);
 > 
-> The last arg is used as a boolean in xlog_write_calc_vec_length. I
-> think it would make sense to have a need_start_rec boolean in this
-> function as well, and just hardcode the sizeof in the two places that
-> actually need the size.
-
-I originally had that and while the code looked kinda weird
-opencoding an ophdr everywhere we wanted the size of a start record,
-that wasn't an issue. The biggest problem was that using a boolean
-resulted in _several_ logic bugs that I only tracked down once I
-realised I'd forgotten to replace existing the start record size
-variable that now wasn't initialised inside the inner loop.
-
-So, yes, it gets converted to a boolean inside that function call,
-but I think the code in this set of nested loops is more reliable if
-it carries the size of the structure rather than open coding it
-everywhere. Making it a boolean doesn't improve the readability of
-the code at all.
-
-> > +			copy_len += sizeof(xlog_op_header_t);
+> >  	xfs_log_ticket_put(ticket);
 > 
-> s/xlog_op_header_t/struct xlog_op_header/
+> I'd move the trace points and the call to xfs_log_ticket_put into
+> xlog_ungrant_log_space and xlog_regrant_reserve_log_space, and then call
+> the two functions directly from the callers.  There is only a single
+> place the ever regrants anyway.
 
 Ok.
 
