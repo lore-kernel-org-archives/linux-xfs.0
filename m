@@ -2,118 +2,217 @@ Return-Path: <SRS0=4NJG=4W=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	TVD_PH_BODY_ACCOUNTS_PRE autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65EB4C3F2D1
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Mar 2020 17:49:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB351C3F2D1
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Mar 2020 18:05:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3D45620848
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Mar 2020 17:49:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B27E2072D
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Mar 2020 18:05:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MXgSoSV7"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="D5Atr4/y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726142AbgCERtA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Mar 2020 12:49:00 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:38418 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725938AbgCERtA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Mar 2020 12:49:00 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 025HT5mB026679;
-        Thu, 5 Mar 2020 17:48:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=gBSLuQTcG3pjwSSor/YnapvaCFcE9qt5HDcY0yWg8Kc=;
- b=MXgSoSV7PQVA2t4QKFGPr3cDe4QsNg37Aa5ZtCh3fNb+COJoh/mtA14zkX7V+XGhBP40
- MUGwjEzab42jdOabVFgkfztiroq98sn4OTkLG8SXgkvAR5NS8PUk34ZM7Req+aYm/N8Z
- ckVqrMAhw7o8a5kn/5vVSk974Asn/8OUpnDe1exxAeAGapgCLFhcw4+pbyqSLQ+I8UAc
- P5usQLNY/WjO/bhsbK8WC1czubsqGvTjDgGZphjXJqpdM3WiViD1USfjrnzmq7jxcSXN
- 0E6W8XfOtG4IOt6zAWO/ouP/SbqC2Ke4WQ2FDgdYrfo/y4OtP4nIy9gtpZ0ukPULWHUT SQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2yghn3jh32-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 05 Mar 2020 17:48:50 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 025Hka5o083594;
-        Thu, 5 Mar 2020 17:48:50 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 2yg1pb5rx7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 05 Mar 2020 17:48:50 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 025Hmn6I031803;
-        Thu, 5 Mar 2020 17:48:49 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 05 Mar 2020 09:48:49 -0800
-Date:   Thu, 5 Mar 2020 09:48:48 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
+        id S1726067AbgCESFi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Mar 2020 13:05:38 -0500
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:34191 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726049AbgCESFh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Mar 2020 13:05:37 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1583431535;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=WX1nYbtFAYpqdVwieVgYRevSAmWyJkwdlAk/to/+48M=;
+        b=D5Atr4/y3lw6s31DDd6wGz7xblVKvH4eTJ3cucRR92LX3LDO6j+iDini11Qqhx8rh2h7/5
+        JGI7a67AuplEfPlbcOfiWdvLutZM8EQ/5pzNfvrUwqMtOsDxSl4l/yR6Q6clsTzDe2bSAP
+        kxF3ts/pbrtU704R9Xw60OI7A7o6OEU=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-408-YUTPX9UjNBu6NHWFOADWSA-1; Thu, 05 Mar 2020 13:05:34 -0500
+X-MC-Unique: YUTPX9UjNBu6NHWFOADWSA-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 55B56184C805;
+        Thu,  5 Mar 2020 18:05:33 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 049E19CA3;
+        Thu,  5 Mar 2020 18:05:32 +0000 (UTC)
+Date:   Thu, 5 Mar 2020 13:05:31 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfs: check owner of dir3 blocks
-Message-ID: <20200305174848.GT8045@magnolia>
-References: <158294091582.1729975.287494493433729349.stgit@magnolia>
- <158294094178.1729975.1691061577157111397.stgit@magnolia>
- <20200305165128.GE7630@infradead.org>
+Subject: Re: [PATCH 01/11] xfs: don't try to write a start record into every
+ iclog
+Message-ID: <20200305180531.GA28340@bfoster>
+References: <20200304075401.21558-1-david@fromorbit.com>
+ <20200304075401.21558-2-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200305165128.GE7630@infradead.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9551 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 malwarescore=0
- mlxlogscore=999 mlxscore=0 spamscore=0 adultscore=0 bulkscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2003050109
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9551 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 phishscore=0 spamscore=0
- impostorscore=0 mlxscore=0 adultscore=0 mlxlogscore=999 lowpriorityscore=0
- priorityscore=1501 bulkscore=0 clxscore=1015 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2003050108
+In-Reply-To: <20200304075401.21558-2-david@fromorbit.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 05, 2020 at 08:51:28AM -0800, Christoph Hellwig wrote:
-> On Fri, Feb 28, 2020 at 05:49:01PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Check the owner field of dir3 block headers.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Mar 04, 2020 at 06:53:51PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Looks good,
+> The xlog_write() function iterates over iclogs until it completes
+> writing all the log vectors passed in. The ticket tracks whether
+> a start record has been written or not, so only the first iclog gets
+> a start record. We only ever pass single use tickets to
+> xlog_write() we only ever need to write a start record once per
+
+	      ^ "so we only ever ..." ?
+
+> xlog_write() call.
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Hence we don't need to store whether we should write a start record
+> in the ticket as the callers provide all the information we need to
+> determine if a start record should be written. For the moment, we
+> have to ensure that we clear the XLOG_TIC_INITED appropriately so
+> the code in xfs_log_done() still works correctly for committing
+> transactions.
 > 
-> > +		xfs_verifier_error(*bpp, -EFSCORRUPTED, fa);
-> > +		(*bpp)->b_flags &= ~XBF_DONE;
-> > +		xfs_trans_brelse(tp, *bpp);
-> > +		*bpp = NULL;
-> > +		return -EFSCORRUPTED;
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_log.c | 68 +++++++++++++++++++++++++-----------------------
+>  1 file changed, 35 insertions(+), 33 deletions(-)
 > 
-> Although I wonder if we should factor this repeated sniplet into a
-> helper..
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index f6006d94a581..5b0568a86c07 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+...
+> @@ -2404,25 +2391,29 @@ xlog_write(
+>  	int			record_cnt = 0;
+>  	int			data_cnt = 0;
+>  	int			error = 0;
+> +	int			start_rec_size = sizeof(struct xlog_op_header);
+>  
+>  	*start_lsn = 0;
+>  
+> -	len = xlog_write_calc_vec_length(ticket, log_vector);
+>  
+>  	/*
+>  	 * Region headers and bytes are already accounted for.
+>  	 * We only need to take into account start records and
+>  	 * split regions in this function.
+>  	 */
+> -	if (ticket->t_flags & XLOG_TIC_INITED)
+> +	if (ticket->t_flags & XLOG_TIC_INITED) {
+>  		ticket->t_curr_res -= sizeof(xlog_op_header_t);
+> +		ticket->t_flags &= ~XLOG_TIC_INITED;
+> +	}
+>  
+>  	/*
+>  	 * Commit record headers need to be accounted for. These
+>  	 * come in as separate writes so are easy to detect.
+>  	 */
+> -	if (flags & (XLOG_COMMIT_TRANS | XLOG_UNMOUNT_TRANS))
+> +	if (flags & (XLOG_COMMIT_TRANS | XLOG_UNMOUNT_TRANS)) {
+>  		ticket->t_curr_res -= sizeof(xlog_op_header_t);
+> +		start_rec_size = 0;
+> +	}
 
-Yes.  Dave and I were discussing in patch 1 that
-xfs_buf_corruption_error() is the correct function to call for a buffer
-that we've decided is corrupt outside of a read verifier, so this all
-becomes:
+This is more of a flaw in the existing code than this patch, but please
+update the comment to document why we reset start_rec_size here since
+it's not obvious from the context of the function. Otherwise looks Ok to
+me modulo Christoph's comments (in particular the data_cnt bit). My one
+nit is that I think start_rec might be a better name than start_rec_size
+given how it's used, but I don't care that much.
 
-if (fa) {
-	xfs_buf_corruption_error(*bpp...);
-	xfs_trans_brelse(tp, *bpp);
-	*bpp = NULL;
-	return -EFSCORRUPTED;
-}
+Brian
 
-(We also observed that xfs_buf_corruption_error ought to stale the
-corrupt buffer to get it out of the system asap.)
+>  
+>  	if (ticket->t_curr_res < 0) {
+>  		xfs_alert_tag(log->l_mp, XFS_PTAG_LOGRES,
+> @@ -2431,6 +2422,8 @@ xlog_write(
+>  		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
+>  	}
+>  
+> +	len = xlog_write_calc_vec_length(ticket, log_vector, start_rec_size);
+> +
+>  	index = 0;
+>  	lv = log_vector;
+>  	vecp = lv->lv_iovecp;
+> @@ -2446,9 +2439,20 @@ xlog_write(
+>  		ASSERT(log_offset <= iclog->ic_size - 1);
+>  		ptr = iclog->ic_datap + log_offset;
+>  
+> -		/* start_lsn is the first lsn written to. That's all we need. */
+> +		/*
+> +		 * Before we start formatting log vectors, we need to write a
+> +		 * start record and record the lsn of the iclog that we write
+> +		 * the start record into. Only do this for the first iclog we
+> +		 * write to.
+> +		 */
+>  		if (!*start_lsn)
+>  			*start_lsn = be64_to_cpu(iclog->ic_header.h_lsn);
+> +		if (start_rec_size) {
+> +			xlog_write_start_rec(ptr, ticket);
+> +			xlog_write_adv_cnt(&ptr, &len, &log_offset,
+> +					start_rec_size);
+> +			record_cnt++;
+> +		}
+>  
+>  		/*
+>  		 * This loop writes out as many regions as can fit in the amount
+> @@ -2457,7 +2461,6 @@ xlog_write(
+>  		while (lv && (!lv->lv_niovecs || index < lv->lv_niovecs)) {
+>  			struct xfs_log_iovec	*reg;
+>  			struct xlog_op_header	*ophdr;
+> -			int			start_rec_copy;
+>  			int			copy_len;
+>  			int			copy_off;
+>  			bool			ordered = false;
+> @@ -2473,13 +2476,6 @@ xlog_write(
+>  			ASSERT(reg->i_len % sizeof(int32_t) == 0);
+>  			ASSERT((unsigned long)ptr % sizeof(int32_t) == 0);
+>  
+> -			start_rec_copy = xlog_write_start_rec(ptr, ticket);
+> -			if (start_rec_copy) {
+> -				record_cnt++;
+> -				xlog_write_adv_cnt(&ptr, &len, &log_offset,
+> -						   start_rec_copy);
+> -			}
+> -
+>  			ophdr = xlog_write_setup_ophdr(log, ptr, ticket, flags);
+>  			if (!ophdr)
+>  				return -EIO;
+> @@ -2509,10 +2505,15 @@ xlog_write(
+>  				xlog_write_adv_cnt(&ptr, &len, &log_offset,
+>  						   copy_len);
+>  			}
+> -			copy_len += start_rec_copy + sizeof(xlog_op_header_t);
+> +			copy_len += sizeof(xlog_op_header_t);
+>  			record_cnt++;
+>  			data_cnt += contwr ? copy_len : 0;
+>  
+> +			if (start_rec_size) {
+> +				copy_len += start_rec_size;
+> +				start_rec_size = 0;
+> +			}
+> +
+>  			error = xlog_write_copy_finish(log, iclog, flags,
+>  						       &record_cnt, &data_cnt,
+>  						       &partial_copy,
+> @@ -2550,6 +2551,7 @@ xlog_write(
+>  				break;
+>  			}
+>  		}
+> +		start_rec_size = 0;
+>  	}
+>  
+>  	ASSERT(len == 0);
+> -- 
+> 2.24.0.rc0
+> 
 
---D
