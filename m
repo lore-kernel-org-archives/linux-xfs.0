@@ -6,61 +6,60 @@ X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE381C3F2D2
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Mar 2020 16:48:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C0A6C3F2D1
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Mar 2020 16:49:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BBD2120637
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Mar 2020 16:48:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 316932072D
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Mar 2020 16:49:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="m/Ig6TE/"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tH/eZtfC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726079AbgCEQs3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Mar 2020 11:48:29 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:60358 "EHLO
+        id S1725993AbgCEQtr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Mar 2020 11:49:47 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:60464 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726067AbgCEQs3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Mar 2020 11:48:29 -0500
+        with ESMTP id S1725989AbgCEQtr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Mar 2020 11:49:47 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=K+xBEDruGymbm+3ycrQz4pf8dy4pR3xtiaDdBCcv6b4=; b=m/Ig6TE/XYA1j0PUK9/PNrJ/ih
-        N0Xa3H0bE8vhaNZUKSkHSX/07ExMsVvjEB9yFIJuwETEPlriqhpptjAD9P6mdD1VJg+j1OAW5Feya
-        e27NAT0+4FfTwQbR8sXzcpt3r138SnCxcWYdryxRg5CDGSBvIBrO5GeaeJC6lEaOOKrYy5Qgzqp0s
-        HqmbLFBkz031GXVzbDo00Q/76Fi/GcjptmGe11N+AtDw5R3XIshQ7I1sta08H4nRb65KkFKRzO63+
-        Gten0XQrSs/1DyK/u0vuNerDyBXSaNxbiMzQsqZt/+enBEDnO9sB2hRirMH9UMWlc1xM8Im7l7Z0a
-        qFHSnn5Q==;
+        bh=Ooq+QeG0gNQEodBqpyLtepbX3bc28ULrJ2An20jhYYE=; b=tH/eZtfCW3Fh6SJw0NdhpZa9O2
+        a07skLTOwP7Zx+BV7p2roMWZ/WcyUS0iY31yeZgpgrQXYrzd4SIsTB4QErnHBbM1eY0qg9bnj5wlQ
+        etT14DE5vZlwYI2nCCqjpjHEB++5tzaUKt+bnjpQ/3eIazRmGlAwG/L1TJiVOfTP4yI7agHfywniN
+        7v3G932uMjsMSHbU14XS++UotAngyQRp8x1P0KKHlVRdauZGVuMM234yRA1p4oFqBe3E4x0YNjncV
+        i0H5BqazzkMaW2K8xRAjePKUE5DMN3fCH0Qn6o2yavXb9Lf5P+GkCLZKWln3bxtKOcjsNj107vw+q
+        ExbJ2NHw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j9tfd-000264-II; Thu, 05 Mar 2020 16:48:25 +0000
-Date:   Thu, 5 Mar 2020 08:48:25 -0800
+        id 1j9tgx-0002MU-8D; Thu, 05 Mar 2020 16:49:47 +0000
+Date:   Thu, 5 Mar 2020 08:49:47 -0800
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org,
-        Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 6/7] xfs_repair: check that metadata updates have been
- committed
-Message-ID: <20200305164825.GA7630@infradead.org>
-References: <158293292760.1548526.16432706349096704475.stgit@magnolia>
- <158293296528.1548526.15883438061985494121.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/4] xfs: fix buffer state when we reject a corrupt dir
+ free block
+Message-ID: <20200305164947.GB7630@infradead.org>
+References: <158294091582.1729975.287494493433729349.stgit@magnolia>
+ <158294092192.1729975.12710230360219661807.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <158293296528.1548526.15883438061985494121.stgit@magnolia>
+In-Reply-To: <158294092192.1729975.12710230360219661807.stgit@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 28, 2020 at 03:36:05PM -0800, Darrick J. Wong wrote:
+On Fri, Feb 28, 2020 at 05:48:41PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Make sure that any metadata that we repaired or regenerated has been
-> written to disk.  If that fails, exit with 1 to signal that there are
-> still errors in the filesystem.
+> Fix two problems in the dir3 free block read routine when we want to
+> reject a corrupt free block.  First, buffers should never have DONE set
+> at the same time that b_error is EFSCORRUPTED.  Second, don't leak a
+> pointer back to the caller.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
 
 Looks good,
 
