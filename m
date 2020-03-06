@@ -2,328 +2,174 @@ Return-Path: <SRS0=P3J0=4X=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B57CC10DCE
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Mar 2020 14:31:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99111C10DCE
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Mar 2020 14:35:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 07FCA20717
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Mar 2020 14:31:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 709F120848
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Mar 2020 14:35:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="K+lgLzJ0"
+	dkim=pass (2048-bit key) header.d=toxicpanda-com.20150623.gappssmtp.com header.i=@toxicpanda-com.20150623.gappssmtp.com header.b="R6D2fwgY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726788AbgCFObo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 Mar 2020 09:31:44 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:39450 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726650AbgCFObo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Mar 2020 09:31:44 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=6CSzyDMBsQeIwaawouhlHDnVyEJcEWAaqhajdOnU31w=; b=K+lgLzJ0L13U2/O9sz6wZnRF1G
-        Ps2Wl7LHvOWGFr/oBTjHWfgYCM2t56Sz7mNllOJebzc5sMtHMrl0FFi0PhgMD4r2piJlBfgpNuaRi
-        mD8mmJyuWaymxd9UBwyuNnYW8n0/o/fTtc39jxT2ZTiCfq8WWAVGOBVXZwSTc8w3IgVx9OT7inZiu
-        y8oukGKR+SZwoEWRzG+KFBpMBm86vv41Nvtj8enqIs+hcnv6PPAebBgIVYLLRLmcHUeU0CQmzcU0x
-        0eXRlkn2dyf8ZBsh7UHebD25iUKNXP5FIzdkYF6S3IDDM7wtpIwm2D+yHVKFdJvEyeuUUICw6sYVS
-        slGgLqbQ==;
-Received: from [162.248.129.185] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jAE0t-0008IY-SG; Fri, 06 Mar 2020 14:31:44 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     linux-xfs@vger.kernel.org
-Cc:     Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 7/7] xfs: kill XLOG_STATE_IOERROR
-Date:   Fri,  6 Mar 2020 07:31:37 -0700
-Message-Id: <20200306143137.236478-8-hch@lst.de>
-X-Mailer: git-send-email 2.24.1
-In-Reply-To: <20200306143137.236478-1-hch@lst.de>
-References: <20200306143137.236478-1-hch@lst.de>
+        id S1726307AbgCFOfp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 Mar 2020 09:35:45 -0500
+Received: from mail-qv1-f54.google.com ([209.85.219.54]:43516 "EHLO
+        mail-qv1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726090AbgCFOfo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Mar 2020 09:35:44 -0500
+Received: by mail-qv1-f54.google.com with SMTP id eb12so994004qvb.10
+        for <linux-xfs@vger.kernel.org>; Fri, 06 Mar 2020 06:35:44 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=toxicpanda-com.20150623.gappssmtp.com; s=20150623;
+        h=to:from:subject:message-id:date:user-agent:mime-version
+         :content-language:content-transfer-encoding;
+        bh=gPp/JOqSfFor2drm+SXytCIq/9gBWBTnvgG0JC6dgNM=;
+        b=R6D2fwgYCDJTLwCQ+Pv/dbaRa7A1QbxEYJ0FaGXrlUmQ0jE3K8WZZQ2+tGjrrmujzN
+         SSy0cbS/K5s9EbOvpYY+tuPSmNKsFKDYdL8jbgzxQBRWZBn3RRdpJ3kk4tvVlY6DOULE
+         nSB8pwI3jeTb7Phe1gUrVCG07Og1a7xsaUh9QuBhysVmGyRIMS96HDDBGSZCzj+mvEbo
+         qmh4WOhUeYUk5TMdC65+a7f5f8E+cbZOz5jaqlYJlZNJ71vMRGi5htZWUPvn0Zsm91Yx
+         MjFCxBtQ8deY5Y+57kwuvxdhumqCEff45QD4a7zc9VKE2UShFJXV1+ADY/u8mzaRYGKd
+         8UWA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:from:subject:message-id:date:user-agent
+         :mime-version:content-language:content-transfer-encoding;
+        bh=gPp/JOqSfFor2drm+SXytCIq/9gBWBTnvgG0JC6dgNM=;
+        b=gJomkXR1SSz0tghNkqXmRAEQieLGx4k2+K9qfMn+3s/HHOhsbWhAuPAQBlZL+ynTx7
+         TVzbPxb4uCCrfBQgjzWEYK12C1d6JgUTTdI9UDVl2G5iQzfOMZ9BzIw80h8KM079wJt1
+         tpkDAmbH/z/kxZpdqVAogwWNGhF9HqssIAC4IMnXgp/fOiWqAQZIHmS+rmL7Ma+DxrY1
+         DUb4d9SBXgVxXsugGiM2dSSxXamdfCdW4sGYn5vayTtA85A7koDb+7wA3LduossHXUSi
+         6X4pRa2ZLr7HYqtca91OApJm8PsvTgmfqv3vfGqpHtu9OzwX64h9nIpHBJCB62awNrex
+         e9ZA==
+X-Gm-Message-State: ANhLgQ2pDlmu4m8MyY8TnJmJLZ+aUftYRcz0neRpipAoJzFVPsS7+O9y
+        XZVXsI9uVUlkCUH8uEBK6vVDxLIN3Io=
+X-Google-Smtp-Source: ADFU+vuiL+duZGFstvBs9+qO3GxDUlu6yzHhQvnhTM1IVcevwWXdla3BuQCPBcBBX3IASwIQ5PjI6A==
+X-Received: by 2002:ad4:41cf:: with SMTP id a15mr3142478qvq.125.1583505343378;
+        Fri, 06 Mar 2020 06:35:43 -0800 (PST)
+Received: from [192.168.1.106] ([107.15.81.208])
+        by smtp.gmail.com with ESMTPSA id i1sm12426803qtg.31.2020.03.06.06.35.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 06 Mar 2020 06:35:42 -0800 (PST)
+To:     lsf-pc <lsf-pc@lists.linuxfoundation.org>,
+        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
+        linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+        Btrfs BTRFS <linux-btrfs@vger.kernel.org>, bpf@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-block@vger.kernel.org
+From:   Josef Bacik <josef@toxicpanda.com>
+Subject: [LSFMMBPF TOPIC] Killing LSFMMBPF
+Message-ID: <b506a373-c127-b92e-9824-16e8267fc910@toxicpanda.com>
+Date:   Fri, 6 Mar 2020 09:35:41 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0)
+ Gecko/20100101 Thunderbird/68.5.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Just check the shutdown flag in struct xlog, instead of replicating the
-information into each iclog and checking it there.
+Hello,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_log.c      | 95 +++++++++++++++----------------------------
- fs/xfs/xfs_log_cil.c  |  2 +-
- fs/xfs/xfs_log_priv.h |  1 -
- 3 files changed, 34 insertions(+), 64 deletions(-)
+This has been a topic that I've been thinking about a lot recently, mostly 
+because of the giant amount of work that has been organizing LSFMMBPF.  I was 
+going to wait until afterwards to bring it up, hoping that maybe it was just me 
+being done with the whole process and that time would give me a different 
+perspective, but recent discussions has made it clear I'm not the only one.
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index fae5107099b1..1bcd5c735d6b 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -583,7 +583,7 @@ xlog_state_release_iclog(
- {
- 	lockdep_assert_held(&log->l_icloglock);
- 
--	if (iclog->ic_state == XLOG_STATE_IOERROR)
-+	if (XLOG_FORCED_SHUTDOWN(log))
- 		return -EIO;
- 
- 	if (atomic_dec_and_test(&iclog->ic_refcnt) &&
-@@ -604,11 +604,11 @@ xfs_log_release_iclog(
- 	struct xlog		*log = mp->m_log;
- 	bool			sync;
- 
--	if (iclog->ic_state == XLOG_STATE_IOERROR)
-+	if (XLOG_FORCED_SHUTDOWN(log))
- 		goto error;
- 
- 	if (atomic_dec_and_lock(&iclog->ic_refcnt, &log->l_icloglock)) {
--		if (iclog->ic_state == XLOG_STATE_IOERROR) {
-+		if (XLOG_FORCED_SHUTDOWN(log)) {
- 			spin_unlock(&log->l_icloglock);
- 			goto error;
- 		}
-@@ -914,7 +914,7 @@ xfs_log_write_unmount_record(
- 	error = xlog_write(log, &vec, tic, &lsn, NULL, flags);
- 	/*
- 	 * At this point, we're umounting anyway, so there's no point in
--	 * transitioning log state to IOERROR. Just continue...
-+	 * transitioning log state to IO_ERROR. Just continue...
- 	 */
- out_err:
- 	if (error)
-@@ -1737,7 +1737,7 @@ xlog_write_iclog(
- 	 * across the log IO to archieve that.
- 	 */
- 	down(&iclog->ic_sema);
--	if (unlikely(iclog->ic_state == XLOG_STATE_IOERROR)) {
-+	if (unlikely(XLOG_FORCED_SHUTDOWN(log))) {
- 		/*
- 		 * It would seem logical to return EIO here, but we rely on
- 		 * the log state machine to propagate I/O errors instead of
-@@ -2721,6 +2721,17 @@ xlog_state_iodone_process_iclog(
- 	xfs_lsn_t		lowest_lsn;
- 	xfs_lsn_t		header_lsn;
- 
-+	/*
-+	 * Between marking a filesystem SHUTDOWN and stopping the log, we do
-+	 * flush all iclogs to disk (if there wasn't a log I/O error).  So, we
-+	 * do want things to go smoothly in case of just a SHUTDOWN w/o a
-+	 * LOG_IO_ERROR.
-+	 */
-+	if (XLOG_FORCED_SHUTDOWN(log)) {
-+		*ioerror = true;
-+		return false;
-+	}
-+
- 	switch (iclog->ic_state) {
- 	case XLOG_STATE_ACTIVE:
- 	case XLOG_STATE_DIRTY:
-@@ -2728,15 +2739,6 @@ xlog_state_iodone_process_iclog(
- 		 * Skip all iclogs in the ACTIVE & DIRTY states:
- 		 */
- 		return false;
--	case XLOG_STATE_IOERROR:
--		/*
--		 * Between marking a filesystem SHUTDOWN and stopping the log,
--		 * we do flush all iclogs to disk (if there wasn't a log I/O
--		 * error). So, we do want things to go smoothly in case of just
--		 * a SHUTDOWN w/o a LOG_IO_ERROR.
--		 */
--		*ioerror = true;
--		return false;
- 	case XLOG_STATE_DONE_SYNC:
- 		/*
- 		 * Now that we have an iclog that is in the DONE_SYNC state, do
-@@ -2830,7 +2832,7 @@ xlog_state_do_callback(
- 				break;
- 
- 			if (iclog->ic_state != XLOG_STATE_CALLBACK &&
--			    iclog->ic_state != XLOG_STATE_IOERROR) {
-+			    !XLOG_FORCED_SHUTDOWN(log)) {
- 				iclog = iclog->ic_next;
- 				continue;
- 			}
-@@ -2856,7 +2858,7 @@ xlog_state_do_callback(
- 	} while (!ioerror && cycled_icloglock);
- 
- 	if (log->l_iclog->ic_state == XLOG_STATE_ACTIVE ||
--	    log->l_iclog->ic_state == XLOG_STATE_IOERROR)
-+	    XLOG_FORCED_SHUTDOWN(log))
- 		wake_up_all(&log->l_flush_wait);
- 
- 	spin_unlock(&log->l_icloglock);
-@@ -3202,7 +3204,7 @@ xfs_log_force(
- 
- 	spin_lock(&log->l_icloglock);
- 	iclog = log->l_iclog;
--	if (iclog->ic_state == XLOG_STATE_IOERROR)
-+	if (XLOG_FORCED_SHUTDOWN(log))
- 		goto out_error;
- 
- 	if (iclog->ic_state == XLOG_STATE_DIRTY ||
-@@ -3259,11 +3261,11 @@ xfs_log_force(
- 	if (!(flags & XFS_LOG_SYNC))
- 		goto out_unlock;
- 
--	if (iclog->ic_state == XLOG_STATE_IOERROR)
-+	if (XLOG_FORCED_SHUTDOWN(log))
- 		goto out_error;
- 	XFS_STATS_INC(mp, xs_log_force_sleep);
- 	xlog_wait(&iclog->ic_force_wait, &log->l_icloglock);
--	if (iclog->ic_state == XLOG_STATE_IOERROR)
-+	if (XLOG_FORCED_SHUTDOWN(log))
- 		return -EIO;
- 	return 0;
- 
-@@ -3288,7 +3290,7 @@ __xfs_log_force_lsn(
- 
- 	spin_lock(&log->l_icloglock);
- 	iclog = log->l_iclog;
--	if (iclog->ic_state == XLOG_STATE_IOERROR)
-+	if (XLOG_FORCED_SHUTDOWN(log))
- 		goto out_error;
- 
- 	while (be64_to_cpu(iclog->ic_header.h_lsn) != lsn) {
-@@ -3338,12 +3340,12 @@ __xfs_log_force_lsn(
- 	     iclog->ic_state == XLOG_STATE_DIRTY))
- 		goto out_unlock;
- 
--	if (iclog->ic_state == XLOG_STATE_IOERROR)
-+	if (XLOG_FORCED_SHUTDOWN(log))
- 		goto out_error;
- 
- 	XFS_STATS_INC(mp, xs_log_force_sleep);
- 	xlog_wait(&iclog->ic_force_wait, &log->l_icloglock);
--	if (iclog->ic_state == XLOG_STATE_IOERROR)
-+	if (XLOG_FORCED_SHUTDOWN(log))
- 		return -EIO;
- 	return 0;
- 
-@@ -3407,7 +3409,7 @@ xlog_state_want_sync(
- 		xlog_state_switch_iclogs(log, iclog, 0);
- 	} else {
- 		ASSERT(iclog->ic_state == XLOG_STATE_WANT_SYNC ||
--		       iclog->ic_state == XLOG_STATE_IOERROR);
-+		       XLOG_FORCED_SHUTDOWN(log));
- 	}
- }
- 
-@@ -3774,34 +3776,6 @@ xlog_verify_iclog(
- }	/* xlog_verify_iclog */
- #endif
- 
--/*
-- * Mark all iclogs IOERROR. l_icloglock is held by the caller.
-- */
--STATIC int
--xlog_state_ioerror(
--	struct xlog	*log)
--{
--	xlog_in_core_t	*iclog, *ic;
--
--	iclog = log->l_iclog;
--	if (iclog->ic_state != XLOG_STATE_IOERROR) {
--		/*
--		 * Mark all the incore logs IOERROR.
--		 * From now on, no log flushes will result.
--		 */
--		ic = iclog;
--		do {
--			ic->ic_state = XLOG_STATE_IOERROR;
--			ic = ic->ic_next;
--		} while (ic != iclog);
--		return 0;
--	}
--	/*
--	 * Return non-zero, if state transition has already happened.
--	 */
--	return 1;
--}
--
- /*
-  * This is called from xfs_force_shutdown, when we're forcibly
-  * shutting down the filesystem, typically because of an IO error.
-@@ -3823,10 +3797,8 @@ xfs_log_force_umount(
- 	struct xfs_mount	*mp,
- 	int			logerror)
- {
--	struct xlog	*log;
--	int		retval;
--
--	log = mp->m_log;
-+	struct xlog		*log = mp->m_log;
-+	int			retval = 0;
- 
- 	/*
- 	 * If this happens during log recovery, don't worry about
-@@ -3844,10 +3816,8 @@ xfs_log_force_umount(
- 	 * Somebody could've already done the hard work for us.
- 	 * No need to get locks for this.
- 	 */
--	if (logerror && log->l_iclog->ic_state == XLOG_STATE_IOERROR) {
--		ASSERT(XLOG_FORCED_SHUTDOWN(log));
-+	if (logerror && XLOG_FORCED_SHUTDOWN(log))
- 		return 1;
--	}
- 
- 	/*
- 	 * Flush all the completed transactions to disk before marking the log
-@@ -3869,11 +3839,13 @@ xfs_log_force_umount(
- 		mp->m_sb_bp->b_flags |= XBF_DONE;
- 
- 	/*
--	 * Mark the log and the iclogs with IO error flags to prevent any
--	 * further log IO from being issued or completed.
-+	 * Mark the log as shut down to prevent any further log IO from being
-+	 * issued or completed.  Return non-zero if log IO_ERROR transition had
-+	 * already happened so that the caller can skip further processing.
- 	 */
-+	if (XLOG_FORCED_SHUTDOWN(log))
-+		retval = 1;
- 	log->l_flags |= XLOG_IO_ERROR;
--	retval = xlog_state_ioerror(log);
- 	spin_unlock(&log->l_icloglock);
- 
- 	/*
-@@ -3897,7 +3869,6 @@ xfs_log_force_umount(
- 	spin_unlock(&log->l_cilp->xc_push_lock);
- 	xlog_state_do_callback(log);
- 
--	/* return non-zero if log IOERROR transition had already happened */
- 	return retval;
- }
- 
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index b5c4a45c208c..41a45d75a2d0 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -846,7 +846,7 @@ xlog_cil_push(
- 		goto out_abort;
- 
- 	spin_lock(&commit_iclog->ic_callback_lock);
--	if (commit_iclog->ic_state == XLOG_STATE_IOERROR) {
-+	if (XLOG_FORCED_SHUTDOWN(log)) {
- 		spin_unlock(&commit_iclog->ic_callback_lock);
- 		goto out_abort;
- 	}
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index b192c5a9f9fd..fd4c913ee7e6 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -47,7 +47,6 @@ enum xlog_iclog_state {
- 	XLOG_STATE_DONE_SYNC,	/* Done syncing to disk */
- 	XLOG_STATE_CALLBACK,	/* Callback functions now */
- 	XLOG_STATE_DIRTY,	/* Dirty IC log, not ready for ACTIVE status */
--	XLOG_STATE_IOERROR,	/* IO error happened in sync'ing log */
- };
- 
- /*
--- 
-2.24.1
+LSFMMBPF is not useful to me personally, and not an optimal use of the 
+communities time.  The things that we want to get out of LSFMMBPF are (generally)
+
+1) Reach consensus on any multi-subsystem contentious changes that have come up 
+over the past year.
+
+2) Inform our fellow developers of new things that we are working on that we 
+would like help with, or need to think about for the upcoming year.
+
+3) "Hallway track".  We are after all a community, and I for one like spending 
+time with developers that I don't get to interact with on a daily basis.
+
+4) Provide a way to help integrate new developers into the community with face 
+time.  It is far easier to work with people once you can put a face to a name, 
+and this is especially valuable for new developers.
+
+These are all really good goals, and why we love the idea of LSFMMBPF.  But 
+having attended these things every year for the last 13 years, it has become 
+less and less of these things, at least from my perspective.  A few problems (as 
+I see them) are
+
+1) The invitation process.  We've tried many different things, and I think we 
+generally do a good job here, but the fact is if I don't know somebody I'm not 
+going to give them a very high rating, making it difficult to actually bring in 
+new people.
+
+2) There are so many of us.  Especially with the addition of the BPF crowd we 
+are now larger than ever.  This makes problem #1 even more apparent, even if I 
+weighted some of the new people higher who's slot should they take instead?  I 
+have 0 problems finding 20 people in the FS community who should absolutely be 
+in the room.  But now I'm trying to squeeze in 1-5 extra people.  Propagate that 
+across all the tracks and now we're at an extra 20ish people.
+
+3) Half the people I want to talk to aren't even in the room.  This may be a 
+uniquely file system track problem, but most of my work is in btrfs, and I want 
+to talk to my fellow btrfs developers.  But again, we're trying to invite an 
+entire community, so many of them simply don't request invitations, or just 
+don't get invited.
+
+3) Sponsorships.  This is still the best way to get to all of the core 
+developers, so we're getting more and more sponsors in order to buy their slots 
+to get access to people.  This is working as intended, and I'm not putting down 
+our awesome sponsors, but this again adds to the amount of people that are 
+showing up at what is supposed to be a working conference.
+
+4) Presentations.  90% of the conference is 1-2 people standing at the front of 
+the room, talking to a room of 20-100 people, with only a few people in the 
+audience who cares.  We do our best to curate the presentations so we're not 
+wasting peoples time, but in the end I don't care what David Howells is doing 
+with mount, I trust him to do the right thing and he really just needs to trap 
+Viro in a room to work it out, he doesn't need all of us.
+
+5) Actually planning this thing.  I have been on the PC for at least the last 5 
+years, and this year I'm running the whole thing.  We specifically laid out 
+plans to rotate in new blood so this sort of thing stopped happening, and this 
+year we've done a good job of that.  However it is a giant amount of work for 
+anybody involved, especially for the whole conference chair.  Add in something 
+like COVID-19 to the mix and now I just want to burn the whole thing to the 
+ground.  Planning this thing is not free, it does require work and effort.
+
+So what do I propose?  I propose we kill LSFMMBPF.
+
+Many people have suggested this elsewhere, but I think we really need to 
+seriously consider it.  Most of us all go to the Linux Plumbers conference.  We 
+could accomplish our main goals with Plumbers without having to deal with all of 
+the above problems.
+
+1) The invitation process.  This goes away.  The people/companies that want to 
+discuss things with the rest of us can all get to plumbers the normal way.  We 
+get new blood that we may miss through the invitation process because they can 
+simply register for Plumbers on their own.
+
+2) Presentations.  We can have track miniconfs where we still curate talks, but 
+there could be much less of them and we could just use the time to do what 
+LSFMMBPF was meant to do, put us all in a room so we can hack on things together.
+
+3) BOFs.  Now all of the xfs/btrfs/ext4 guys can show up, because again they 
+don't have to worry about some invitation process, and now real meetings can 
+happen between people that really want to talk to each other face to face.
+
+4) Planning becomes much simpler.  I've organized miniconf's at plumbers before, 
+it is far simpler than LSFMMBPF.  You only have to worry about one thing, is 
+this presentation useful.  I no longer have to worry about am I inviting the 
+right people, do we have enough money to cover the space.  Is there enough space 
+for everybody?  Etc.
+
+I think this is worth a discussion at the very least.  Maybe killing LSFMMBPF is 
+too drastic, maybe there are some other ideas that would address the same 
+problems.  I'd love to hear the whole communities thoughts on this, because 
+after all this is supposed to be a community event, and we should all be heard. 
+Thanks,
 
