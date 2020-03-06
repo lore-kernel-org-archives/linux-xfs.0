@@ -2,93 +2,144 @@ Return-Path: <SRS0=P3J0=4X=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 113EAC3F2D6
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Mar 2020 16:05:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A44FCC3F2D6
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Mar 2020 16:08:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DB6A3217F4
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Mar 2020 16:05:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7AB87217F4
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Mar 2020 16:08:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YPnYkRwD"
+	dkim=pass (2048-bit key) header.d=toxicpanda-com.20150623.gappssmtp.com header.i=@toxicpanda-com.20150623.gappssmtp.com header.b="suzTUJ0r"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726874AbgCFQFu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 Mar 2020 11:05:50 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:58650 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726271AbgCFQFu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Mar 2020 11:05:50 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=MCy5PVJA1LqfKEGKug6+vwwbKtmwegQjfwoCyvkuwpg=; b=YPnYkRwDxrIY7aX9Pks8yzBxq8
-        2348RSs0mYLJsknXKpJTxWp8tX7StRZl7C8HbKylSHWCgB8HeeOUo9jFtPvxq2UkO2JUmqj6ghf2R
-        cahDTKExYXg1h9VGurYFzeIOmKPvviU7iP7w2iQE9LHZi7libyjGMoFuBSGNA5ZX2W/WuEvMnf+vD
-        8Y2kvUZb605fCj00Z+BdWy0ilh6SFMwAIOgcbAVsFg9LgyFgI5/ndujzni7Pp1OgqXTRHul3429mh
-        ur363T6Ba+MObKLhB3NEV+CUgrHEmYhYpISEn99BgOTQ1J9QWw49qA/2IsQ7qS3rjuvDbfFvzg7bV
-        pT8C57Qw==;
-Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jAFTw-0004mS-Jr; Fri, 06 Mar 2020 16:05:48 +0000
-Date:   Fri, 6 Mar 2020 08:05:48 -0800
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Josef Bacik <josef@toxicpanda.com>
+        id S1726704AbgCFQIl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 Mar 2020 11:08:41 -0500
+Received: from mail-qt1-f196.google.com ([209.85.160.196]:43089 "EHLO
+        mail-qt1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726299AbgCFQIk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Mar 2020 11:08:40 -0500
+Received: by mail-qt1-f196.google.com with SMTP id v22so2051447qtp.10
+        for <linux-xfs@vger.kernel.org>; Fri, 06 Mar 2020 08:08:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=toxicpanda-com.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=bKjjoKS2T/q2pwOzdPEgk28ZK6vwf0Cp/W1ojk+aNxI=;
+        b=suzTUJ0rRf5960m06RBzjBCAnb4svatr0bn0EiS4JneAE0k5HF7YYx6h6I/G3u0zz7
+         m96ZG9h1Pd3ArvPVXZNxDOX6plQKDTFUja6qgm5dN7KLDiN/kgmTaZbCE/56xH0Ywn6E
+         cbYT95e/4A63SjcnU9EOAMIJKduLA9kwkZ8CBqJBG478VWdnD7kIs27f0HPnMnaIP7TS
+         BgZ/r2CISnPn+4LMMjcPwbXDKfJnsTiFlVc1r4+0xcGC1ZAgsoaC5bQH5Uu4ECKW/5uy
+         Z2/A7XopDa/7rCk5xu5WEGYxIGesVc8vZI7tQ248eHo2Ly6r48AO5tiKN8UP6W9Rjk8l
+         +F6A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=bKjjoKS2T/q2pwOzdPEgk28ZK6vwf0Cp/W1ojk+aNxI=;
+        b=Fd6Ex5xSOU2xzZZUc/tMKO6jskfm+a7pvdqNvPKbn8DjHreJCp5bUkXnYq3EPXXrqb
+         cuhN+OM/AWe7dLn/y45ua7h4ceHrTXx9rvnPtyEM4UKkAUgmdrnOZyQTHDRnw5DCaxGB
+         daLaBuPL8S42rR1bn9bKqFwz2QLV1ILw/xVF9KqYkMkBfL/dFEpuL7vvhakfA3j25BZP
+         nbtxeSLdmlLW130nj8s68/6kwimyYcdAxLfU18PGsUdP9iF/93MXY2gLhNCvr9gx+aF0
+         OFldixMXxoCDPj7dCyGdsKmMe8ArWo8SYTmaTYZs4Fvw9OaZXBcn8P2iCORFIK97aMFx
+         APgw==
+X-Gm-Message-State: ANhLgQ0FCWmnb1KPZGmRweMG/rwjHl4QpzClAevcKY3mO8TKq1NcV16t
+        vm7of0mfAc1QI4kmXuNXwhR54w==
+X-Google-Smtp-Source: ADFU+vtz2X7WRHc2rQE/mqPpG+Shd2ceCs6iuKNfvLRNmthFTpAKQGUMSM9LnAA3V0GzqXTOmroBUA==
+X-Received: by 2002:ac8:6ec1:: with SMTP id f1mr3636659qtv.378.1583510918016;
+        Fri, 06 Mar 2020 08:08:38 -0800 (PST)
+Received: from [192.168.1.106] ([107.15.81.208])
+        by smtp.gmail.com with ESMTPSA id p38sm1677376qtf.50.2020.03.06.08.08.36
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 06 Mar 2020 08:08:37 -0800 (PST)
+Subject: Re: [LSFMMBPF TOPIC] Killing LSFMMBPF
+To:     "Theodore Y. Ts'o" <tytso@mit.edu>
 Cc:     lsf-pc <lsf-pc@lists.linuxfoundation.org>,
         Linux FS Devel <linux-fsdevel@vger.kernel.org>,
         linux-mm@kvack.org, linux-xfs@vger.kernel.org,
         Btrfs BTRFS <linux-btrfs@vger.kernel.org>, bpf@vger.kernel.org,
         linux-ext4@vger.kernel.org, linux-block@vger.kernel.org
-Subject: Re: [LSFMMBPF TOPIC] Killing LSFMMBPF
-Message-ID: <20200306160548.GB25710@bombadil.infradead.org>
 References: <b506a373-c127-b92e-9824-16e8267fc910@toxicpanda.com>
+ <20200306155611.GA167883@mit.edu>
+From:   Josef Bacik <josef@toxicpanda.com>
+Message-ID: <72708005-0810-1957-1e58-5b70779ab6db@toxicpanda.com>
+Date:   Fri, 6 Mar 2020 11:08:36 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0)
+ Gecko/20100101 Thunderbird/68.5.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b506a373-c127-b92e-9824-16e8267fc910@toxicpanda.com>
+In-Reply-To: <20200306155611.GA167883@mit.edu>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Mar 06, 2020 at 09:35:41AM -0500, Josef Bacik wrote:
-> [a lot of stuff I agree with]
+On 3/6/20 10:56 AM, Theodore Y. Ts'o wrote:
+> On Fri, Mar 06, 2020 at 09:35:41AM -0500, Josef Bacik wrote:
+>> This has been a topic that I've been thinking about a lot recently, mostly
+>> because of the giant amount of work that has been organizing LSFMMBPF.  I
+>> was going to wait until afterwards to bring it up, hoping that maybe it was
+>> just me being done with the whole process and that time would give me a
+>> different perspective, but recent discussions has made it clear I'm not the
+>> only one.....
+> 
+> I suggest that we try to decouple the question of should we have
+> LSF/MM/BPF in 2020 and COVID-19, with the question of what should
+> LSF/MM/BPF (perhaps in some transfigured form) should look like in
+> 2021 and in the future.
+> 
 
-> 4) Presentations.  90% of the conference is 1-2 people standing at the front
-> of the room, talking to a room of 20-100 people, with only a few people in
-> the audience who cares.  We do our best to curate the presentations so we're
-> not wasting peoples time, but in the end I don't care what David Howells is
-> doing with mount, I trust him to do the right thing and he really just needs
-> to trap Viro in a room to work it out, he doesn't need all of us.
+Yes this is purely about 2021 and the future, not 2020.
 
-... and allow the other 3-5 people who're interested or affected the
-opportunity to sit in.  Like a mailing list, but higher bandwidth.
+> A lot of the the concerns expressed in this e-mails are ones that I
+> have been concerned about, especially:
+> 
+>> 2) There are so many of us....
+> 
+>> 3) Half the people I want to talk to aren't even in the room.  This may be a
+>> uniquely file system track problem, but most of my work is in btrfs, and I
+>> want to talk to my fellow btrfs developers....
+> 
+>> 4) Presentations....
+> 
+> These *exactly* mirror the dynamic that we saw with the Kernel Summit,
+> and how we've migrated to a the Maintainer's Summit with a Kernel
+> centric track which is currently colocated with Plumbers.
+> 
+> I think it is still useful to have something where we reach consensus
+> on multi-subsystem contentious changes.  But I think those topics
+> could probably fit within a day or maybe a half day.  Does that sound
+> familiar?  That's essentially what we now have with the Maintainer'st
+> Summit.
+> 
+> The problem with Plumbers is that it's really, really full.  Not
+> having invitations doesn't magically go away; Plumbers last year had
+> to deal with long waitlist, and strugglinig to make sure that all of
+> the critical people who need be present so that the various Miniconfs
+> could be successful.
 
-> So what do I propose?  I propose we kill LSFMMBPF.
+Ah ok, I haven't done plumbers in a few years, I knew they would get full but I 
+didn't think it was that bad.
 
-I come not to bury LSFMMBPF but to reform it.
+> 
+> This is why I've been pushing so hard for a second Linux systems
+> focused event in the first half of the year.  I think if we colocate
+> the set of topics which are currently in LSF/MM, the more file system
+> specific presentations, the ext4/xfs/btrfs mini-summits/working
+> sessions, and the maintainer's summit / kernel summit, we would have
+> critical mass.  And I am sure there will be *plenty* of topics left
+> over for Plumbers.
+>
 
-As Jason noted, Plumbers is already oversubscribed.  I think having two
-Plumbers conferences per year (one spring, one autumn), preferably on
-two different continents, would make a lot of sense.
+I'd be down for this.  Would you leave the thing open so anybody can register, 
+or would you still have an invitation system?  I really, really despise the 
+invitation system just because it's inherently self limiting.  However I do want 
+to make sure we are getting relevant people in the room, and not making it this 
+"oh shit, I forgot to register, and now the conference is full" sort of 
+situations.  Thanks,
 
-Here's my proposal, and obviously I'm not seeking _permission_ to do
-this, but constructive feedback would be useful.
-
-1. Engage an event organiser to manage the whole thing.  I have a friend
-who recently took up event organising as her full-time job, and I've
-started talking to her about this.  It's a rather different skill-set
-from writing kernel patches.
-
-2. Charge attendees $300 for a 3-day conference.  This seems to be the
-going rate (eg BSDCan, PGCon).  This allows the conference to be self-
-funding without sponsors, and any sponsorship can go towards evening
-events, food, travel bursaries, etc.
-
-3. Delegate organising the sessions to the track chairs.  Maybe get rid
-of shared sessions altogether -- while there are plenty of times where
-"I need fs and mm people in the room", it's rarely "I need everybody in
-the room", and scheduling BOFs opposite such a general session would be
-a good use of peoples time.
-
+Josef
