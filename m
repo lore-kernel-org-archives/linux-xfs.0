@@ -6,112 +6,54 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4184BC10F25
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Mar 2020 18:48:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BB9DC10DCE
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Mar 2020 18:54:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1EF5D207FD
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Mar 2020 18:48:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 51C2D20684
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Mar 2020 18:54:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726178AbgCFSsG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 Mar 2020 13:48:06 -0500
-Received: from shelob.surriel.com ([96.67.55.147]:42750 "EHLO
-        shelob.surriel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725922AbgCFSsG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Mar 2020 13:48:06 -0500
-X-Greylist: delayed 1057 seconds by postgrey-1.27 at vger.kernel.org; Fri, 06 Mar 2020 13:48:05 EST
-Received: from imladris.surriel.com ([96.67.55.152])
-        by shelob.surriel.com with esmtpsa (TLSv1.2:ECDHE-RSA-AES256-GCM-SHA384:256)
-        (Exim 4.92.3)
-        (envelope-from <riel@shelob.surriel.com>)
-        id 1jAHjr-0005Z9-Kq; Fri, 06 Mar 2020 13:30:23 -0500
-Message-ID: <96a0ba8151d76d14f1753ef25740fd02e6622bde.camel@surriel.com>
-Subject: Re: [LSFMMBPF TOPIC] Killing LSFMMBPF
-From:   Rik van Riel <riel@surriel.com>
-To:     "Theodore Y. Ts'o" <tytso@mit.edu>,
-        Josef Bacik <josef@toxicpanda.com>
-Cc:     lsf-pc <lsf-pc@lists.linuxfoundation.org>,
-        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
-        linux-mm@kvack.org, linux-xfs@vger.kernel.org,
-        Btrfs BTRFS <linux-btrfs@vger.kernel.org>, bpf@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-block@vger.kernel.org
-Date:   Fri, 06 Mar 2020 13:30:23 -0500
-In-Reply-To: <20200306155611.GA167883@mit.edu>
-References: <b506a373-c127-b92e-9824-16e8267fc910@toxicpanda.com>
-         <20200306155611.GA167883@mit.edu>
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-w/qZdMTI+1T3jriBWjjb"
-User-Agent: Evolution 3.34.3 (3.34.3-1.fc31) 
+        id S1726083AbgCFSy4 convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 Mar 2020 13:54:56 -0500
+Received: from buxtehude.debian.org ([209.87.16.39]:43078 "EHLO
+        buxtehude.debian.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725873AbgCFSy4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Mar 2020 13:54:56 -0500
+Received: from debbugs by buxtehude.debian.org with local (Exim 4.92)
+        (envelope-from <debbugs@buxtehude.debian.org>)
+        id 1jAHsF-0004B6-Hn; Fri, 06 Mar 2020 18:39:03 +0000
+X-Loop: owner@bugs.debian.org
+Content-Disposition: inline
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
+X-Mailer: MIME-tools 5.509 (Entity 5.509)
+Content-Type: text/plain; charset=utf-8
+From:   "Debian Bug Tracking System" <owner@bugs.debian.org>
+To:     Bastian Germann <bastiangermann@fishpost.de>
+CC:     linux-xfs@vger.kernel.org
+Subject: Processed: xfsprogs: Build with libedit rather than libreadline5
+Message-ID: <handler.s.C.158351982615085.transcript@bugs.debian.org>
+References: <b4886a1c-128e-d15b-e8f9-b873d7713571@fishpost.de>
+X-Debian-PR-Package: xfsprogs
+X-Debian-PR-Source: xfsprogs
+X-Debian-PR-Message: transcript
+X-Loop: owner@bugs.debian.org
+Date:   Fri, 06 Mar 2020 18:39:03 +0000
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+Processing commands for control@bugs.debian.org:
 
---=-w/qZdMTI+1T3jriBWjjb
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> retitle 695875 Build with libedit rather than libreadline5
+Bug #695875 [xfsprogs] xfsprogs: Build-Depend on libreadline6 rather than libreadline5
+Changed Bug title to 'Build with libedit rather than libreadline5' from 'xfsprogs: Build-Depend on libreadline6 rather than libreadline5'.
+> thanks
+Stopping processing here.
 
-On Fri, 2020-03-06 at 10:56 -0500, Theodore Y. Ts'o wrote:
-
-> The problem with Plumbers is that it's really, really full.  Not
-> having invitations doesn't magically go away; Plumbers last year had
-> to deal with long waitlist, and strugglinig to make sure that all of
-> the critical people who need be present so that the various Miniconfs
-> could be successful.
->=20
-> This is why I've been pushing so hard for a second Linux systems
-> focused event in the first half of the year.  I think if we colocate
-> the set of topics which are currently in LSF/MM, the more file system
-> specific presentations, the ext4/xfs/btrfs mini-summits/working
-> sessions, and the maintainer's summit / kernel summit, we would have
-> critical mass.  And I am sure there will be *plenty* of topics left
-> over for Plumbers.
-
-That sounds like a good idea to me, as well.
-
-Instead of trying to invite "all the useful people" on
-a few fixed topics, which LSF/MM did very well, but which
-the Linux community has long outgrown, resulting in us
-being unable to invite some very good people, we can turn
-things on its head a little organization wise.
-
-We can host a number of (half day?) mini conferences on
-various Linux kernel topics, maybe still with some focus
-around LSF/MM/IO, and have a small number of general track
-discussion sessions.
-
-Once the topics of the mini conferences have been chosen,
-people can figure out whether or not they want to attend
-that year.
-
-This could help us avoid the "oops, we couldn't invite two
-of the people who really should have been here for this=20
-discussion" issue that has been difficult to avoid with=20
-LSF/MM having more interest, and more topics, than available
-slots for people to attend.
-
-TL;DR: decide on topics, not invitees.
-
---=20
-All Rights Reversed.
-
---=-w/qZdMTI+1T3jriBWjjb
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCAAdFiEEKR73pCCtJ5Xj3yADznnekoTE3oMFAl5ilr8ACgkQznnekoTE
-3oMNGwgAvmBDEG2kfhjeMZ9/J7JXRyU/bnp9OdUm/NqLqP67Wv3imUaf7sA8FF1+
-6q0fOaiCUu458Ec+6zYB1PH4Kb+p1epyLc0cS6xA2lym+RoKE2wqHt0XazUyw4SU
-UanK1Hln0IQarvMgeW+iZBJesqmqlH/hBGFrp3HG1IHfIRpTCLnTRmVIrn6x0XGr
-cNVNQceVQRHAzJ/3CJAcjYedhbylLuWFOc49CGjrWVz5Q390UAyyLgr2QZVerhCO
-Fbqi5QmLuahR22KyHFrPCUrh8X/JpUloulRBhAsnr71xugzB29A/kS+pjb9vWzk3
-1EpVZ6mHCBb5t70F/rQdiQybxuFeaw==
-=f4H4
------END PGP SIGNATURE-----
-
---=-w/qZdMTI+1T3jriBWjjb--
-
+Please contact me if you need assistance.
+-- 
+695875: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=695875
+Debian Bug Tracking System
+Contact owner@bugs.debian.org with problems
