@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C732BC10F25
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Mar 2020 14:31:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B19EC10DCE
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Mar 2020 14:31:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9AEEF20717
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Mar 2020 14:31:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C960C20717
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Mar 2020 14:31:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KonF0eVH"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Q9Ldg5P2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726733AbgCFObh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 Mar 2020 09:31:37 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:39406 "EHLO
+        id S1726738AbgCFObi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 Mar 2020 09:31:38 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:39410 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726650AbgCFObh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Mar 2020 09:31:37 -0500
+        with ESMTP id S1726650AbgCFObi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Mar 2020 09:31:38 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=quvN83Iv0Rmc1Md4XSQ1Swg3IIsZIWdf7YeLJPuG3XU=; b=KonF0eVHg5SRdeigWZBB+nyg3M
-        WnB6ZIwULajAj1LB72HgZymMafdJ9ktpX5vXfs0+CqObb0JHA0IEzQRnNpnW46AWCKAjK1JABEAtU
-        hB1HxYYu7PunkcGXWKeXjEXPQiQUdL23EKalCvDlSvABl+3QbckxiNAOFI9kiLtoW9WxRQbmUHpkV
-        O8c+VRuDi3dpsRJhEoU3y6jPF02g+6RMSdb4ThBLuu+uoLQBMwP6vR6P53GRjDKObOkjjepWA0oaZ
-        mzxadB3tsA/nD9CRN8YN9iCTU3ERhGE0oNFwDPonBaEr9At1okiMyXd1FnmSjJ6RPxxsn9pwl0Z9o
-        jdFfcTrA==;
+        bh=ARbSQ59WsV2gqhk23CbSj4t5Gc5h+SfHwDpVXULTHqw=; b=Q9Ldg5P21Q+vkEyKeA6zZsa8Km
+        0kRbCZEtoDd93bjleBAdsAPGVIT6Doh4pAz16kwpvoKrgNcMcnoMnBrAuoS9eVEO0TMDyYr8IkaMX
+        FnWXqLiRQiltSJEoFlqmBn0av4QfSotEothbU5/ZKjnlDIuwhCkuAUFeeXgo50nQ4moq3F2mziEQe
+        8z5IAJRAYu/M3Yps7VJcOhEUKGaTA5KEVpQ6oZgPjwOX6edEcnaHj/G2pqHza55f6dNrtsU+8qTF6
+        9Lijm08rvTE7kFK//4odmRYgQYaTtMk6+JDXPWpP6wGiZnRf7NoD9U4KHIgndshU85JldXs/Bx7J7
+        MNwuTs+g==;
 Received: from [162.248.129.185] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jAE0m-0008H2-Nk; Fri, 06 Mar 2020 14:31:36 +0000
+        id 1jAE0n-0008H7-TC; Fri, 06 Mar 2020 14:31:38 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
 Cc:     Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/7] xfs: remove the unused return value from xfs_log_unmount_write
-Date:   Fri,  6 Mar 2020 07:31:31 -0700
-Message-Id: <20200306143137.236478-2-hch@lst.de>
+Subject: [PATCH 2/7] xfs: remove dead code from xfs_log_unmount_write
+Date:   Fri,  6 Mar 2020 07:31:32 -0700
+Message-Id: <20200306143137.236478-3-hch@lst.de>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200306143137.236478-1-hch@lst.de>
 References: <20200306143137.236478-1-hch@lst.de>
@@ -51,70 +51,61 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Remove the ignored return value from xfs_log_unmount_write, and also
-remove a rather pointless assert on the return value from xfs_log_force.
+When the log is shut down all iclogs are in the XLOG_STATE_IOERROR state,
+which means that xlog_state_want_sync and xlog_state_release_iclog are
+no-ops.  Remove the whole section of code.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_log.c | 15 +++++----------
- 1 file changed, 5 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_log.c | 35 +++--------------------------------
+ 1 file changed, 3 insertions(+), 32 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 796ff37d5bb5..fa499ddedb94 100644
+index fa499ddedb94..b56432d4a9b8 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -953,8 +953,7 @@ xfs_log_write_unmount_record(
-  * currently architecture converted and "Unmount" is a bit foo.
-  * As far as I know, there weren't any dependencies on the old behaviour.
-  */
--
--static int
-+static void
- xfs_log_unmount_write(xfs_mount_t *mp)
- {
- 	struct xlog	 *log = mp->m_log;
-@@ -962,7 +961,6 @@ xfs_log_unmount_write(xfs_mount_t *mp)
- #ifdef DEBUG
- 	xlog_in_core_t	 *first_iclog;
+@@ -984,38 +984,9 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+ 		iclog = iclog->ic_next;
+ 	} while (iclog != first_iclog);
  #endif
--	int		 error;
- 
- 	/*
- 	 * Don't write out unmount record on norecovery mounts or ro devices.
-@@ -971,11 +969,10 @@ xfs_log_unmount_write(xfs_mount_t *mp)
- 	if (mp->m_flags & XFS_MOUNT_NORECOVERY ||
- 	    xfs_readonly_buftarg(log->l_targ)) {
- 		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
--		return 0;
+-	if (! (XLOG_FORCED_SHUTDOWN(log))) {
+-		xfs_log_write_unmount_record(mp);
+-	} else {
+-		/*
+-		 * We're already in forced_shutdown mode, couldn't
+-		 * even attempt to write out the unmount transaction.
+-		 *
+-		 * Go through the motions of sync'ing and releasing
+-		 * the iclog, even though no I/O will actually happen,
+-		 * we need to wait for other log I/Os that may already
+-		 * be in progress.  Do this as a separate section of
+-		 * code so we'll know if we ever get stuck here that
+-		 * we're in this odd situation of trying to unmount
+-		 * a file system that went into forced_shutdown as
+-		 * the result of an unmount..
+-		 */
+-		spin_lock(&log->l_icloglock);
+-		iclog = log->l_iclog;
+-		atomic_inc(&iclog->ic_refcnt);
+-		xlog_state_want_sync(log, iclog);
+-		xlog_state_release_iclog(log, iclog);
+-		switch (iclog->ic_state) {
+-		case XLOG_STATE_ACTIVE:
+-		case XLOG_STATE_DIRTY:
+-		case XLOG_STATE_IOERROR:
+-			spin_unlock(&log->l_icloglock);
+-			break;
+-		default:
+-			xlog_wait(&iclog->ic_force_wait, &log->l_icloglock);
+-			break;
+-		}
+-	}
++	if (XLOG_FORCED_SHUTDOWN(log))
 +		return;
- 	}
- 
--	error = xfs_log_force(mp, XFS_LOG_SYNC);
--	ASSERT(error || !(XLOG_FORCED_SHUTDOWN(log)));
-+	xfs_log_force(mp, XFS_LOG_SYNC);
- 
- #ifdef DEBUG
- 	first_iclog = iclog = log->l_iclog;
-@@ -1007,7 +1004,7 @@ xfs_log_unmount_write(xfs_mount_t *mp)
- 		iclog = log->l_iclog;
- 		atomic_inc(&iclog->ic_refcnt);
- 		xlog_state_want_sync(log, iclog);
--		error =  xlog_state_release_iclog(log, iclog);
-+		xlog_state_release_iclog(log, iclog);
- 		switch (iclog->ic_state) {
- 		case XLOG_STATE_ACTIVE:
- 		case XLOG_STATE_DIRTY:
-@@ -1019,9 +1016,7 @@ xfs_log_unmount_write(xfs_mount_t *mp)
- 			break;
- 		}
- 	}
--
--	return error;
--}	/* xfs_log_unmount_write */
-+}
++	xfs_log_write_unmount_record(mp);
+ }
  
  /*
-  * Empty the log for unmount/freeze.
 -- 
 2.24.1
 
