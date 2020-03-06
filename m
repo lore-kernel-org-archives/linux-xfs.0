@@ -2,144 +2,138 @@ Return-Path: <SRS0=P3J0=4X=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A44FCC3F2D6
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Mar 2020 16:08:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 464AFC10DCE
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Mar 2020 16:09:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7AB87217F4
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Mar 2020 16:08:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C8612073B
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Mar 2020 16:09:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=toxicpanda-com.20150623.gappssmtp.com header.i=@toxicpanda-com.20150623.gappssmtp.com header.b="suzTUJ0r"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eQFH2eRC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726704AbgCFQIl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 Mar 2020 11:08:41 -0500
-Received: from mail-qt1-f196.google.com ([209.85.160.196]:43089 "EHLO
-        mail-qt1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726299AbgCFQIk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Mar 2020 11:08:40 -0500
-Received: by mail-qt1-f196.google.com with SMTP id v22so2051447qtp.10
-        for <linux-xfs@vger.kernel.org>; Fri, 06 Mar 2020 08:08:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=bKjjoKS2T/q2pwOzdPEgk28ZK6vwf0Cp/W1ojk+aNxI=;
-        b=suzTUJ0rRf5960m06RBzjBCAnb4svatr0bn0EiS4JneAE0k5HF7YYx6h6I/G3u0zz7
-         m96ZG9h1Pd3ArvPVXZNxDOX6plQKDTFUja6qgm5dN7KLDiN/kgmTaZbCE/56xH0Ywn6E
-         cbYT95e/4A63SjcnU9EOAMIJKduLA9kwkZ8CBqJBG478VWdnD7kIs27f0HPnMnaIP7TS
-         BgZ/r2CISnPn+4LMMjcPwbXDKfJnsTiFlVc1r4+0xcGC1ZAgsoaC5bQH5Uu4ECKW/5uy
-         Z2/A7XopDa/7rCk5xu5WEGYxIGesVc8vZI7tQ248eHo2Ly6r48AO5tiKN8UP6W9Rjk8l
-         +F6A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=bKjjoKS2T/q2pwOzdPEgk28ZK6vwf0Cp/W1ojk+aNxI=;
-        b=Fd6Ex5xSOU2xzZZUc/tMKO6jskfm+a7pvdqNvPKbn8DjHreJCp5bUkXnYq3EPXXrqb
-         cuhN+OM/AWe7dLn/y45ua7h4ceHrTXx9rvnPtyEM4UKkAUgmdrnOZyQTHDRnw5DCaxGB
-         daLaBuPL8S42rR1bn9bKqFwz2QLV1ILw/xVF9KqYkMkBfL/dFEpuL7vvhakfA3j25BZP
-         nbtxeSLdmlLW130nj8s68/6kwimyYcdAxLfU18PGsUdP9iF/93MXY2gLhNCvr9gx+aF0
-         OFldixMXxoCDPj7dCyGdsKmMe8ArWo8SYTmaTYZs4Fvw9OaZXBcn8P2iCORFIK97aMFx
-         APgw==
-X-Gm-Message-State: ANhLgQ0FCWmnb1KPZGmRweMG/rwjHl4QpzClAevcKY3mO8TKq1NcV16t
-        vm7of0mfAc1QI4kmXuNXwhR54w==
-X-Google-Smtp-Source: ADFU+vtz2X7WRHc2rQE/mqPpG+Shd2ceCs6iuKNfvLRNmthFTpAKQGUMSM9LnAA3V0GzqXTOmroBUA==
-X-Received: by 2002:ac8:6ec1:: with SMTP id f1mr3636659qtv.378.1583510918016;
-        Fri, 06 Mar 2020 08:08:38 -0800 (PST)
-Received: from [192.168.1.106] ([107.15.81.208])
-        by smtp.gmail.com with ESMTPSA id p38sm1677376qtf.50.2020.03.06.08.08.36
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 06 Mar 2020 08:08:37 -0800 (PST)
-Subject: Re: [LSFMMBPF TOPIC] Killing LSFMMBPF
-To:     "Theodore Y. Ts'o" <tytso@mit.edu>
-Cc:     lsf-pc <lsf-pc@lists.linuxfoundation.org>,
-        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
-        linux-mm@kvack.org, linux-xfs@vger.kernel.org,
-        Btrfs BTRFS <linux-btrfs@vger.kernel.org>, bpf@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-block@vger.kernel.org
-References: <b506a373-c127-b92e-9824-16e8267fc910@toxicpanda.com>
- <20200306155611.GA167883@mit.edu>
-From:   Josef Bacik <josef@toxicpanda.com>
-Message-ID: <72708005-0810-1957-1e58-5b70779ab6db@toxicpanda.com>
-Date:   Fri, 6 Mar 2020 11:08:36 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0)
- Gecko/20100101 Thunderbird/68.5.0
+        id S1726171AbgCFQJX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 Mar 2020 11:09:23 -0500
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:32160 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726162AbgCFQJX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Mar 2020 11:09:23 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1583510962;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=LmMGLBpRY2oEsJ3oeo+kwY+RweyNM5tK2z2o0GXmmT4=;
+        b=eQFH2eRCcJTMs+MCBSsgwxEY9wuvGFh+gH2LdEGfZ7p2YQmUaqh0ep3daGqVLivKvvJHfR
+        5RGIoDkkBbjV0sTaWn2ans6vmtRTlAgZ775lNvoru5N7guWVoNZ/EHV+KZrrRKDgKcBRqJ
+        s6EZp/JeQOO7sgvUxowPlMgai9faL0Q=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-143-lUX7nz3ePVmvR3RHLQQroQ-1; Fri, 06 Mar 2020 11:09:20 -0500
+X-MC-Unique: lUX7nz3ePVmvR3RHLQQroQ-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5897E1005509;
+        Fri,  6 Mar 2020 16:09:19 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id F371F5C28D;
+        Fri,  6 Mar 2020 16:09:18 +0000 (UTC)
+Date:   Fri, 6 Mar 2020 11:09:17 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/7] xfs: remove the unused return value from
+ xfs_log_unmount_write
+Message-ID: <20200306160917.GD2773@bfoster>
+References: <20200306143137.236478-1-hch@lst.de>
+ <20200306143137.236478-2-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20200306155611.GA167883@mit.edu>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200306143137.236478-2-hch@lst.de>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 3/6/20 10:56 AM, Theodore Y. Ts'o wrote:
-> On Fri, Mar 06, 2020 at 09:35:41AM -0500, Josef Bacik wrote:
->> This has been a topic that I've been thinking about a lot recently, mostly
->> because of the giant amount of work that has been organizing LSFMMBPF.  I
->> was going to wait until afterwards to bring it up, hoping that maybe it was
->> just me being done with the whole process and that time would give me a
->> different perspective, but recent discussions has made it clear I'm not the
->> only one.....
+On Fri, Mar 06, 2020 at 07:31:31AM -0700, Christoph Hellwig wrote:
+> Remove the ignored return value from xfs_log_unmount_write, and also
+> remove a rather pointless assert on the return value from xfs_log_force.
 > 
-> I suggest that we try to decouple the question of should we have
-> LSF/MM/BPF in 2020 and COVID-19, with the question of what should
-> LSF/MM/BPF (perhaps in some transfigured form) should look like in
-> 2021 and in the future.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+
+I guess there's going to be obvious conflicts with Dave's series and
+some of these changes. I'm just going to ignore that and you guys can
+figure it out. :)
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/xfs_log.c | 15 +++++----------
+>  1 file changed, 5 insertions(+), 10 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 796ff37d5bb5..fa499ddedb94 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -953,8 +953,7 @@ xfs_log_write_unmount_record(
+>   * currently architecture converted and "Unmount" is a bit foo.
+>   * As far as I know, there weren't any dependencies on the old behaviour.
+>   */
+> -
+> -static int
+> +static void
+>  xfs_log_unmount_write(xfs_mount_t *mp)
+>  {
+>  	struct xlog	 *log = mp->m_log;
+> @@ -962,7 +961,6 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+>  #ifdef DEBUG
+>  	xlog_in_core_t	 *first_iclog;
+>  #endif
+> -	int		 error;
+>  
+>  	/*
+>  	 * Don't write out unmount record on norecovery mounts or ro devices.
+> @@ -971,11 +969,10 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+>  	if (mp->m_flags & XFS_MOUNT_NORECOVERY ||
+>  	    xfs_readonly_buftarg(log->l_targ)) {
+>  		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
+> -		return 0;
+> +		return;
+>  	}
+>  
+> -	error = xfs_log_force(mp, XFS_LOG_SYNC);
+> -	ASSERT(error || !(XLOG_FORCED_SHUTDOWN(log)));
+> +	xfs_log_force(mp, XFS_LOG_SYNC);
+>  
+>  #ifdef DEBUG
+>  	first_iclog = iclog = log->l_iclog;
+> @@ -1007,7 +1004,7 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+>  		iclog = log->l_iclog;
+>  		atomic_inc(&iclog->ic_refcnt);
+>  		xlog_state_want_sync(log, iclog);
+> -		error =  xlog_state_release_iclog(log, iclog);
+> +		xlog_state_release_iclog(log, iclog);
+>  		switch (iclog->ic_state) {
+>  		case XLOG_STATE_ACTIVE:
+>  		case XLOG_STATE_DIRTY:
+> @@ -1019,9 +1016,7 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+>  			break;
+>  		}
+>  	}
+> -
+> -	return error;
+> -}	/* xfs_log_unmount_write */
+> +}
+>  
+>  /*
+>   * Empty the log for unmount/freeze.
+> -- 
+> 2.24.1
 > 
 
-Yes this is purely about 2021 and the future, not 2020.
-
-> A lot of the the concerns expressed in this e-mails are ones that I
-> have been concerned about, especially:
-> 
->> 2) There are so many of us....
-> 
->> 3) Half the people I want to talk to aren't even in the room.  This may be a
->> uniquely file system track problem, but most of my work is in btrfs, and I
->> want to talk to my fellow btrfs developers....
-> 
->> 4) Presentations....
-> 
-> These *exactly* mirror the dynamic that we saw with the Kernel Summit,
-> and how we've migrated to a the Maintainer's Summit with a Kernel
-> centric track which is currently colocated with Plumbers.
-> 
-> I think it is still useful to have something where we reach consensus
-> on multi-subsystem contentious changes.  But I think those topics
-> could probably fit within a day or maybe a half day.  Does that sound
-> familiar?  That's essentially what we now have with the Maintainer'st
-> Summit.
-> 
-> The problem with Plumbers is that it's really, really full.  Not
-> having invitations doesn't magically go away; Plumbers last year had
-> to deal with long waitlist, and strugglinig to make sure that all of
-> the critical people who need be present so that the various Miniconfs
-> could be successful.
-
-Ah ok, I haven't done plumbers in a few years, I knew they would get full but I 
-didn't think it was that bad.
-
-> 
-> This is why I've been pushing so hard for a second Linux systems
-> focused event in the first half of the year.  I think if we colocate
-> the set of topics which are currently in LSF/MM, the more file system
-> specific presentations, the ext4/xfs/btrfs mini-summits/working
-> sessions, and the maintainer's summit / kernel summit, we would have
-> critical mass.  And I am sure there will be *plenty* of topics left
-> over for Plumbers.
->
-
-I'd be down for this.  Would you leave the thing open so anybody can register, 
-or would you still have an invitation system?  I really, really despise the 
-invitation system just because it's inherently self limiting.  However I do want 
-to make sure we are getting relevant people in the room, and not making it this 
-"oh shit, I forgot to register, and now the conference is full" sort of 
-situations.  Thanks,
-
-Josef
