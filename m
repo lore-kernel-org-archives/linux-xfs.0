@@ -2,62 +2,122 @@ Return-Path: <SRS0=P3J0=4X=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AE2BC3F2D2
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Mar 2020 01:03:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC7D1C10F25
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Mar 2020 09:22:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4E9B32073B
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Mar 2020 01:03:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C557B20848
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Mar 2020 09:22:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ug+RzulA"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bxC8SFpm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726271AbgCFBDP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Mar 2020 20:03:15 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:48518 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726243AbgCFBDP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Mar 2020 20:03:15 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=yAqE1cEX1uAruAQ6OsL0vLb7sAZost3nasEsEZ8Dv5U=; b=ug+RzulA4QsdR885SxqKIsCwHJ
-        JS3IHuT4d+zQkhyv26XBFt29Yg23XVoAaB1TyA0yC41IoW4SyU+KSYUJSWnYO8+aGT0sQ0hQ2kZeX
-        jcvS7xi8fcyHv0gVQlB5/zMxBSQbrFaeyo+d2C2F3rSwU4Z5FGCcmqzMVpcqDYYLUY3XJuJ+Lrmp2
-        xxtwpqV+RkaMcm3jHB5GwE31NBNZ/+PdVjZjRY4QcsV/Zm6xj0ukbQZhD1G0H/Z5ThBE/Sj02dXCy
-        e2w1hMtTAvAGJo91PYKHLxpOVTAj8yshFce5/zjpgF3Sd3upRx1CbqYCw+2+OPGH/iDSRJ0/oGH7M
-        D5aylLcQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jA1OV-0006jd-GL; Fri, 06 Mar 2020 01:03:15 +0000
-Date:   Thu, 5 Mar 2020 17:03:15 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 00/11] xfs: clean up log tickets and record writes
-Message-ID: <20200306010315.GA23750@infradead.org>
-References: <20200304075401.21558-1-david@fromorbit.com>
- <20200305160522.GA4825@infradead.org>
- <20200305214224.GK10776@dread.disaster.area>
+        id S1725855AbgCFJWk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 Mar 2020 04:22:40 -0500
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:31726 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726162AbgCFJWk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Mar 2020 04:22:40 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1583486558;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=GqDzJrEnUL3t6EcmzutSGSoXkRGW9+zbh09QQ+zpyUk=;
+        b=bxC8SFpmOeehccfiDVe2/Ujt75zZus8dYuknoSv8mOwdSTihlsayLwjkXu9abZtuVxrvJX
+        XdobSdj5qFpwni5bJV/Jc0XpATT8DMxmY1kpRcdTvjMcmINFTQRnbSjXvHGOk6PM9xScOn
+        FnqvC2RBqz4FAlHA1TQP4C/Rza86/mU=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-269-PkOUhdKrOs-EhClK4fNZbQ-1; Fri, 06 Mar 2020 04:22:35 -0500
+X-MC-Unique: PkOUhdKrOs-EhClK4fNZbQ-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B00238017CC;
+        Fri,  6 Mar 2020 09:22:34 +0000 (UTC)
+Received: from localhost (dhcp-12-102.nay.redhat.com [10.66.12.102])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 25BB348;
+        Fri,  6 Mar 2020 09:22:33 +0000 (UTC)
+Date:   Fri, 6 Mar 2020 17:33:22 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     fstests@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] generic/402: skip test if xfs_io can't parse the
+ date value
+Message-ID: <20200306093322.GX14282@dhcp-12-102.nay.redhat.com>
+Mail-Followup-To: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+References: <158328998787.2374922.4223951558305234252.stgit@magnolia>
+ <158328999421.2374922.12052887381904972734.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200305214224.GK10776@dread.disaster.area>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <158328999421.2374922.12052887381904972734.stgit@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Mar 06, 2020 at 08:42:24AM +1100, Dave Chinner wrote:
-> On Thu, Mar 05, 2020 at 08:05:22AM -0800, Christoph Hellwig wrote:
-> > FYI, I'd prefer to just see the series without patches 6, 7 and 9 for
-> > now.  They aren't really related to the rest, and I think this series:
-> > 
-> >     http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-kill-XLOG_STATE_IOERROR
+On Tue, Mar 03, 2020 at 06:46:34PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> URL not found.
+> If xfs_io's utimes command cannot interpret the arguments that are given
+> to it, it will print out "Bad value for [am]time".  Detect when this
+> happens and drop the file out of the test entirely.
+> 
+> This is particularly noticeable on 32-bit platforms and the largest
+> timestamp seconds supported by the filesystem is INT_MAX.  In this case,
+> the maximum value we can cram into tv_sec is INT_MAX, and there is no
+> way to actually test setting a timestamp of INT_MAX + 1 to test the
+> clamping.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+> ---
 
-Weird, works for me.
+Looks good to me.
+
+>  tests/generic/402 |   20 ++++++++++++++++++--
+>  1 file changed, 18 insertions(+), 2 deletions(-)
+> 
+> 
+> diff --git a/tests/generic/402 b/tests/generic/402
+> index 2a34d127..2481a5d2 100755
+> --- a/tests/generic/402
+> +++ b/tests/generic/402
+> @@ -63,10 +63,26 @@ run_test_individual()
+>  	# check if the time needs update
+>  	if [ $update_time -eq 1 ]; then
+>  		echo "Updating file: $file to timestamp $timestamp"  >> $seqres.full
+> -		$XFS_IO_PROG -f -c "utimes $timestamp 0 $timestamp 0" $file
+> -		if [ $? -ne 0 ]; then
+> +		rm -f $tmp.utimes
+> +		$XFS_IO_PROG -f -c "utimes $timestamp 0 $timestamp 0" $file > $tmp.utimes 2>&1
+> +		local res=$?
+> +
+> +		cat $tmp.utimes >> $seqres.full
+> +		if [ "$timestamp" -ne 0 ] && grep -q "Bad value" "$tmp.utimes"; then
+> +			echo "xfs_io could not interpret time value \"$timestamp\", skipping \"$file\" test." >> $seqres.full
+> +			rm -f $file $tmp.utimes
+> +			return
+> +		fi
+> +		cat $tmp.utimes
+> +		rm -f $tmp.utimes
+> +		if [ $res -ne 0 ]; then
+>  			echo "Failed to update times on $file" | tee -a $seqres.full
+>  		fi
+> +	else
+> +		if [ ! -f "$file" ]; then
+> +			echo "xfs_io did not create file for time value \"$timestamp\", skipping test." >> $seqres.full
+> +			return
+> +		fi
+>  	fi
+>  
+>  	tsclamp=$((timestamp<tsmin?tsmin:timestamp>tsmax?tsmax:timestamp))
+> 
+
