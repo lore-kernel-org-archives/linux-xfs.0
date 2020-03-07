@@ -2,184 +2,698 @@ Return-Path: <SRS0=7fRB=4Y=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0E1EC10F27
-	for <linux-xfs@archiver.kernel.org>; Sat,  7 Mar 2020 03:14:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25721C10F00
+	for <linux-xfs@archiver.kernel.org>; Sat,  7 Mar 2020 12:40:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7997320705
-	for <linux-xfs@archiver.kernel.org>; Sat,  7 Mar 2020 03:14:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C936B2077B
+	for <linux-xfs@archiver.kernel.org>; Sat,  7 Mar 2020 12:40:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JWZbawBN"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LApBqmRa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726833AbgCGDOt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 Mar 2020 22:14:49 -0500
-Received: from mail-yw1-f48.google.com ([209.85.161.48]:37876 "EHLO
-        mail-yw1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726245AbgCGDOs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Mar 2020 22:14:48 -0500
-Received: by mail-yw1-f48.google.com with SMTP id i1so39350ywf.4;
-        Fri, 06 Mar 2020 19:14:47 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=aZEHHT6lAR6svoMasB13SgNuVP0MyXR1N2GanpY6GnE=;
-        b=JWZbawBN+AvkFClWdbF9gaYKLkGD+MiEj3bA/grN4IT7mezq5F8r8qyrWuvH6DJyAd
-         k1NpQCsqIzkRn9yPsH7Yt8jY6O+71AS5vYRqRTcjD9ZuSjjUa0Dq6pQ2H8laXyATOUn4
-         HDg3yOA6C1H/+qoRlczbbGnt8ThWPfmV7uou6jiw5aHaPE6PoI/3We+RpiizN1/ESjcL
-         r7hk4JX7OuGRu/yyiT8TsP3RACXbcBqTVhtszcj3LwEqlv5s0eyvNg9YlT8/gwkCK+g6
-         UX4A8E+EWrVbzDefMxHkx4JoOPQgmLWDNTMe/zVW6gO+T7/z4pQ43Od8UewolW59znzh
-         8SjQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=aZEHHT6lAR6svoMasB13SgNuVP0MyXR1N2GanpY6GnE=;
-        b=BNi/rN9ER2qDm+OaS7WiJgvRklTBDya5H/vIsEXFuDkDricUby8+Xfr57pjdYwggoV
-         Y3Pjvi4ov41834qmZ0HMx/YTvWT/DA0gimA+YM89tIluDsB8SPOuGb3Gq/RsvYBndcXQ
-         OM8BlMHtmI9itzZArvBCzyKgSoVPqH/iKU14IOfw20/DaAPMnPUKyapqtxIrNnUA52aR
-         s0p0ZvMzN3TyflEA3NqjOzWLwPIiZEpHmfa2RaDtkpARGddBY81goHze1RCzdsiJ1pIU
-         ROj9n1r5/B8dZ/9aGLhwHCFmLm1UJeG5p9nhtYwFfF34Zxtl7OG3+kRkqGXnCgQbrb/F
-         vrDw==
-X-Gm-Message-State: ANhLgQ146Nf20Tlal6AhQrE1UCmKOWfRKppLRA11HyGnpDdmupYmgP2m
-        p25oRVgVBXZ+He7fde1SnB5EHJbREEsMppgzDIgrnYNh
-X-Google-Smtp-Source: ADFU+vv1lbhShZquHVK69ApmFg8EyJmgI9xs6Kpib/27Oz8EplISUurSto5A/rirLzgeUMlkWQzIJWqDS4ECqgOsgQA=
-X-Received: by 2002:a25:e805:: with SMTP id k5mr7218096ybd.14.1583550886710;
- Fri, 06 Mar 2020 19:14:46 -0800 (PST)
+        id S1726312AbgCGMkt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 7 Mar 2020 07:40:49 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:35222 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726139AbgCGMks (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 7 Mar 2020 07:40:48 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1583584846;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=cDqG31PbUi4n6Ut0lsx9ITz2sbVbdHJnYzCEdcR1Jak=;
+        b=LApBqmRaXA8nVoA5VDiN1/GcCdt12cztq9Xfux0v6ilGunP1RSQ7QWRG+dS8TU7gOsCTdU
+        /xqn+3SukqFB4gwj+49n34h/RH/86/aoFxDUGn2KddcANbb91edLxEm7IT3Gv9CxlvTJKy
+        iHXr07yvcpUrcbd1TOhUTXaMCj22n2U=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-216-HAOgB4X6NlCpp0mydp1WgA-1; Sat, 07 Mar 2020 07:40:44 -0500
+X-MC-Unique: HAOgB4X6NlCpp0mydp1WgA-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 47C0818B6380;
+        Sat,  7 Mar 2020 12:40:43 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id D485173887;
+        Sat,  7 Mar 2020 12:40:42 +0000 (UTC)
+Date:   Sat, 7 Mar 2020 07:40:41 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/4] xfs: support bulk loading of staged btrees
+Message-ID: <20200307124041.GA27459@bfoster>
+References: <158329250190.2423432.16958662769192587982.stgit@magnolia>
+ <158329252104.2423432.14412164596264053619.stgit@magnolia>
+ <20200304182144.GC22037@bfoster>
+ <20200305012213.GL8045@magnolia>
+ <20200305143029.GB27418@bfoster>
+ <20200305181329.GU8045@magnolia>
+ <20200306142250.GB2773@bfoster>
+ <20200306162705.GX8045@magnolia>
+ <20200306172129.GK2773@bfoster>
+ <20200306201458.GA8045@magnolia>
 MIME-Version: 1.0
-References: <b506a373-c127-b92e-9824-16e8267fc910@toxicpanda.com>
-In-Reply-To: <b506a373-c127-b92e-9824-16e8267fc910@toxicpanda.com>
-From:   Steve French <smfrench@gmail.com>
-Date:   Fri, 6 Mar 2020 21:14:35 -0600
-Message-ID: <CAH2r5ms6epOL0sXRfNNTM_J=K-dnGYNS_wK1rgw1VBqipM6kxQ@mail.gmail.com>
-Subject: Re: [LSFMMBPF TOPIC] Killing LSFMMBPF
-To:     Josef Bacik <josef@toxicpanda.com>
-Cc:     lsf-pc <lsf-pc@lists.linuxfoundation.org>,
-        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
-        linux-mm <linux-mm@kvack.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Btrfs BTRFS <linux-btrfs@vger.kernel.org>, bpf@vger.kernel.org,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        linux-block@vger.kernel.org, CIFS <linux-cifs@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200306201458.GA8045@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Don't forget about Vault - there were some very useful hallway
-discussions at Vault this year as well ... even if a bit smaller than
-it should be ...
+On Fri, Mar 06, 2020 at 12:14:58PM -0800, Darrick J. Wong wrote:
+> On Fri, Mar 06, 2020 at 12:21:29PM -0500, Brian Foster wrote:
+> > On Fri, Mar 06, 2020 at 08:27:05AM -0800, Darrick J. Wong wrote:
+> > > On Fri, Mar 06, 2020 at 09:22:50AM -0500, Brian Foster wrote:
+> > > > On Thu, Mar 05, 2020 at 10:13:29AM -0800, Darrick J. Wong wrote:
+> > > > > On Thu, Mar 05, 2020 at 09:30:29AM -0500, Brian Foster wrote:
+> > > > > > On Wed, Mar 04, 2020 at 05:22:13PM -0800, Darrick J. Wong wrote:
+> > > > > > > On Wed, Mar 04, 2020 at 01:21:44PM -0500, Brian Foster wrote:
+> > > > > > > > On Tue, Mar 03, 2020 at 07:28:41PM -0800, Darrick J. Wong wrote:
+> > > > > > > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > > > > > 
+> > > > > > > > > Add a new btree function that enables us to bulk load a btree cursor.
+> > > > > > > > > This will be used by the upcoming online repair patches to generate new
+> > > > > > > > > btrees.  This avoids the programmatic inefficiency of calling
+> > > > > > > > > xfs_btree_insert in a loop (which generates a lot of log traffic) in
+> > > > > > > > > favor of stamping out new btree blocks with ordered buffers, and then
+> > > > > > > > > committing both the new root and scheduling the removal of the old btree
+> > > > > > > > > blocks in a single transaction commit.
+> > > > > > > > > 
+> > > > > > > > > The design of this new generic code is based off the btree rebuilding
+> > > > > > > > > code in xfs_repair's phase 5 code, with the explicit goal of enabling us
+> > > > > > > > > to share that code between scrub and repair.  It has the additional
+> > > > > > > > > feature of being able to control btree block loading factors.
+> > > > > > > > > 
+> > > > > > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > > > > > ---
+> > > > > > > > >  fs/xfs/libxfs/xfs_btree.c |  581 +++++++++++++++++++++++++++++++++++++++++++++
+> > > > > > > > >  fs/xfs/libxfs/xfs_btree.h |   46 ++++
+> > > > > > > > >  fs/xfs/xfs_trace.c        |    1 
+> > > > > > > > >  fs/xfs/xfs_trace.h        |   85 +++++++
+> > > > > > > > >  4 files changed, 712 insertions(+), 1 deletion(-)
+> > > > > > > > > 
+> > > > > > > > > 
+> > > > > > > > > diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> > > > > > > > > index 469e1e9053bb..c21db7ed8481 100644
+> > > > > > > > > --- a/fs/xfs/libxfs/xfs_btree.c
+> > > > > > > > > +++ b/fs/xfs/libxfs/xfs_btree.c
+> > > > ...
+> > > > > > > > > +	for (cur->bc_nlevels = 1; cur->bc_nlevels < XFS_BTREE_MAXLEVELS;) {
+> > > > > > > > > +		uint64_t	level_blocks;
+> > > > > > > > > +		uint64_t	dontcare64;
+> > > > > > > > > +		unsigned int	level = cur->bc_nlevels - 1;
+> > > > > > > > > +		unsigned int	avg_per_block;
+> > > > > > > > > +
+> > > > > > > > > +		/*
+> > > > > > > > > +		 * If all the things we want to store at this level would fit
+> > > > > > > > > +		 * in a single root block, then we have our btree root and are
+> > > > > > > > > +		 * done.  Note that bmap btrees do not allow records in the
+> > > > > > > > > +		 * root.
+> > > > > > > > > +		 */
+> > > > > > > > > +		if (!(cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) || level != 0) {
+> > > > > > > > > +			xfs_btree_bload_level_geometry(cur, bbl, level,
+> > > > > > > > > +					nr_this_level, &avg_per_block,
+> > > > > > > > > +					&level_blocks, &dontcare64);
+> > > > > > > > > +			if (nr_this_level <= avg_per_block) {
+> > > > > > > > > +				nr_blocks++;
+> > > > > > > > > +				break;
+> > > > > > > > > +			}
+> > > > > > > > > +		}
+> > > > > > > > > +
+> > > > > > > > > +		/*
+> > > > > > > > > +		 * Otherwise, we have to store all the records for this level
+> > > > > > > > > +		 * in blocks and therefore need another level of btree to point
+> > > > > > > > > +		 * to those blocks.  Increase the number of levels and
+> > > > > > > > > +		 * recompute the number of records we can store at this level
+> > > > > > > > > +		 * because that can change depending on whether or not a level
+> > > > > > > > > +		 * is the root level.
+> > > > > > > > > +		 */
+> > > > > > > > > +		cur->bc_nlevels++;
+> > > > > > > > 
+> > > > > > > > Hmm.. so does the ->bc_nlevels increment affect the
+> > > > > > > > _bload_level_geometry() call or is it just part of the loop iteration?
+> > > > > > > > If the latter, can these two _bload_level_geometry() calls be combined?
+> > > > > > > 
+> > > > > > > It affects the xfs_btree_bload_level_geometry call because that calls
+> > > > > > > ->get_maxrecs(), which returns a different answer for the root level
+> > > > > > > when the root is an inode fork.  Therefore, we cannot combine the calls.
+> > > > > > > 
+> > > > > > 
+> > > > > > Hmm.. but doesn't this cause double calls for other cases? I.e. for
+> > > > > > non-inode rooted trees it looks like we call the function once, check
+> > > > > > the avg_per_block and then potentially call it again until we get to the
+> > > > > > root block. Confused.. :/
+> > > > > 
+> > > > > Yes, we do end up computing the geometry twice per level, which frees
+> > > > > the bulkload code from having to know anything at all about the
+> > > > > relationship between bc_nlevels and specific behaviors of some of the
+> > > > > ->maxrecs functions.
+> > > > > 
+> > > > 
+> > > > Sort of.. I think the pattern is odd enough that the fact it needs to
+> > > > accommodate this special case kind of bleeds through even though it
+> > > > isn't explicit.
+> > > 
+> > > <nod>
+> > > 
+> > > > > I guess you could do:
+> > > > > 
+> > > > > 	xfs_btree_bload_level_geometry(...)
+> > > > > 
+> > > > > 	if ((!ROOT_IN_INODE || level != 0) ** nr_this_level <= avg_per_block) {
+> > > > > 		nr_blocks++
+> > > > > 		break
+> > > > > 	}
+> > > > > 
+> > > > > 	nlevels++
+> > > > > 
+> > > > > 	if (ROOT_IN_INODE) {
+> > > > > 		xfs_btree_bload_level_geometry(...)
+> > > > > 	}
+> > > > > 
+> > > > > 	nr_blocks += level_blocks
+> > > > > 	nr_this_level = level_blocks
+> > > > > 
+> > > > > ...which would be slightly more efficient for AG btrees, though my
+> > > > > crappy perf trace showed that the overhead for the _level_geometry()
+> > > > > calls is ~0.4% even for a huge ugly rmap btree because most of the time
+> > > > > gets spent in the delwri_submit_buffers at the end.
+> > > > > 
+> > > > 
+> > > > It wasn't primarily a performance concern rather than a "this sure looks
+> > > > like we call the function twice per loop for no reason" comment.
+> > > > Something like the above might be more clear, but I need to make sure I
+> > > > understand this loop first...
+> > > > 
+> > > > Having stared at this some more, I _think_ I understand why this is
+> > > > written as such. For the non-inode rooted case, the double call is
+> > > > basically unnecessary so the whole loop could look something like this
+> > > > (if we factored out the bmbt case):
+> > > > 
+> > > > 	for (cur->bc_nlevels = 1; ...) {
+> > > > 		xfs_btree_bload_level_geometry(...);
+> > > > 		if (nr_this_level <= avg_per_block) {
+> > > > 			nr_blocks++;
+> > > > 			break;
+> > > > 		}
+> > > > 		cur->bc_nlevels++;
+> > > > 		nr_this_level = level_blocks;
+> > > > 	}
+> > > > 
+> > > > Is that correct?
+> > > 
+> > > Yes, that is correct for inode-rooted ("non-bmbt") btrees.
+> > > 
+> > > > The bmbt case has these special cases where 1.) the bmbt root must be a
+> > > > node block (not a leaf) and 2.) the root block has different size rules
+> > > > than a typical node block because it's in the inode fork.
+> > > 
+> > > Right.
+> > > 
+> > > > The former
+> > > > seems straightforward and explains the level != 0 check. The latter is
+> > > > detected by the (level == ->bc_nlevels - 1) condition down in the
+> > > > maxrecs code, so that means the order of ->bc_nlevels++ increment with
+> > > > respect to the geometry call affects whether we check for a potential
+> > > > bmbt root or regular node block (assuming level != 0).
+> > > 
+> > > Right.
+> > > 
+> > > > Hence, the bottom
+> > > > part of the loop does the increment first and makes the geometry call
+> > > > again... Am I following that correctly?
+> > > 
+> > > Correct.
+> > > 
+> > > > If so, I think at the very least the existing comments should start by
+> > > > explaining the intentional construction of the loop and subtle ordering
+> > > > requirements between ->bc_nlevels and the geometry calls for the bmbt.
+> > > > In staring at it a bit more, I find something like the following more
+> > > > clear even though it is more verbose:
+> > > > 
+> > > >        for (cur->bc_nlevels = 1; cur->bc_nlevels < XFS_BTREE_MAXLEVELS;) {
+> > > >                 ...
+> > > >                 xfs_btree_bload_level_geometry(cur, bbl, level, nr_this_level,
+> > > >                                                &avg_per_block,&level_blocks,
+> > > >                                                &dontcare64);
+> > > >                 if (<inode rooted>) {
+> > > >                         /* bmbt root must be node format, skip check for level 0 */
+> > > >                         if (level != 0 && nr_this_level <= avg_per_block) {
+> > > >                                 nr_blocks++;
+> > > >                                 break;
+> > > >                         }
+> > > >                         /*
+> > > > 			 * We have to calculate geometry for each bmbt level
+> > > > 			 * twice because there is a distinction between a bmbt
+> > > > 			 * root in an inode fork and a traditional node block.
+> > > > 			 * This distinction is made in the btree code based on
+> > > > 			 * whether level == ->bc_nlevels - 1. We aren't yet at
+> > > > 			 * the root, so bump ->bc_nevels and recalculate
+> > > > 			 * geometry for a traditional node block tree level.
+> > > 
+> > > Oooh, I like this comment.  I'll put that in, with a bit of rewording?
+> > > 
+> > > 	/*
+> > > 	 * Otherwise, we have to store all the items for this
+> > > 	 * level in traditional btree blocks and therefore need
+> > > 	 * another level of btree to point to those blocks.
+> > > 	 *
+> > > 	 * We have to re-compute the geometry for each level of
+> > > 	 * an inode-rooted btree because the geometry differs
+> > > 	 * between a btree root in an inode fork and a
+> > > 	 * traditional btree block.
+> > > 	 *
+> > > 	 * This distinction is made in the btree code based on
+> > > 	 * whether level == ->bc_nlevels - 1.  We know that we
+> > > 	 * aren't yet ready to populate the root, so increment
+> > > 	 * ->bc_nevels and recalculate the geometry for a
+> > > 	 * traditional block-based btree level.
+> > > 	 */
+> > > 	cur->bc_nlevels++;
+> > > 	xfs_btree_bload_level_geometry(...);
+> > 
+> > One thing I would tweak (even when reading back my own comment) is to
+> > say something like "We aren't ready to populate the root based on the
+> > previous check ..." in that last sentence so it's clear the previous
+> > check was the "root check." Otherwise that looks good to me, thanks!
+> 
+> "This distinction is made in the btree code based on whether level ==
+> bc_nlevels - 1.  Based on the previous root block size check against the
+> root block geometry, we know that we aren't yet ready to populate the
+> root.  Increment bc_nlevels and recalculate the geometry for a
+> traditional block-based btree level."?
+> 
 
-On Fri, Mar 6, 2020 at 8:36 AM Josef Bacik <josef@toxicpanda.com> wrote:
->
-> Hello,
->
-> This has been a topic that I've been thinking about a lot recently, mostly
-> because of the giant amount of work that has been organizing LSFMMBPF.  I was
-> going to wait until afterwards to bring it up, hoping that maybe it was just me
-> being done with the whole process and that time would give me a different
-> perspective, but recent discussions has made it clear I'm not the only one.
->
-> LSFMMBPF is not useful to me personally, and not an optimal use of the
-> communities time.  The things that we want to get out of LSFMMBPF are (generally)
->
-> 1) Reach consensus on any multi-subsystem contentious changes that have come up
-> over the past year.
->
-> 2) Inform our fellow developers of new things that we are working on that we
-> would like help with, or need to think about for the upcoming year.
->
-> 3) "Hallway track".  We are after all a community, and I for one like spending
-> time with developers that I don't get to interact with on a daily basis.
->
-> 4) Provide a way to help integrate new developers into the community with face
-> time.  It is far easier to work with people once you can put a face to a name,
-> and this is especially valuable for new developers.
->
-> These are all really good goals, and why we love the idea of LSFMMBPF.  But
-> having attended these things every year for the last 13 years, it has become
-> less and less of these things, at least from my perspective.  A few problems (as
-> I see them) are
->
-> 1) The invitation process.  We've tried many different things, and I think we
-> generally do a good job here, but the fact is if I don't know somebody I'm not
-> going to give them a very high rating, making it difficult to actually bring in
-> new people.
->
-> 2) There are so many of us.  Especially with the addition of the BPF crowd we
-> are now larger than ever.  This makes problem #1 even more apparent, even if I
-> weighted some of the new people higher who's slot should they take instead?  I
-> have 0 problems finding 20 people in the FS community who should absolutely be
-> in the room.  But now I'm trying to squeeze in 1-5 extra people.  Propagate that
-> across all the tracks and now we're at an extra 20ish people.
->
-> 3) Half the people I want to talk to aren't even in the room.  This may be a
-> uniquely file system track problem, but most of my work is in btrfs, and I want
-> to talk to my fellow btrfs developers.  But again, we're trying to invite an
-> entire community, so many of them simply don't request invitations, or just
-> don't get invited.
->
-> 3) Sponsorships.  This is still the best way to get to all of the core
-> developers, so we're getting more and more sponsors in order to buy their slots
-> to get access to people.  This is working as intended, and I'm not putting down
-> our awesome sponsors, but this again adds to the amount of people that are
-> showing up at what is supposed to be a working conference.
->
-> 4) Presentations.  90% of the conference is 1-2 people standing at the front of
-> the room, talking to a room of 20-100 people, with only a few people in the
-> audience who cares.  We do our best to curate the presentations so we're not
-> wasting peoples time, but in the end I don't care what David Howells is doing
-> with mount, I trust him to do the right thing and he really just needs to trap
-> Viro in a room to work it out, he doesn't need all of us.
->
-> 5) Actually planning this thing.  I have been on the PC for at least the last 5
-> years, and this year I'm running the whole thing.  We specifically laid out
-> plans to rotate in new blood so this sort of thing stopped happening, and this
-> year we've done a good job of that.  However it is a giant amount of work for
-> anybody involved, especially for the whole conference chair.  Add in something
-> like COVID-19 to the mix and now I just want to burn the whole thing to the
-> ground.  Planning this thing is not free, it does require work and effort.
->
-> So what do I propose?  I propose we kill LSFMMBPF.
->
-> Many people have suggested this elsewhere, but I think we really need to
-> seriously consider it.  Most of us all go to the Linux Plumbers conference.  We
-> could accomplish our main goals with Plumbers without having to deal with all of
-> the above problems.
->
-> 1) The invitation process.  This goes away.  The people/companies that want to
-> discuss things with the rest of us can all get to plumbers the normal way.  We
-> get new blood that we may miss through the invitation process because they can
-> simply register for Plumbers on their own.
->
-> 2) Presentations.  We can have track miniconfs where we still curate talks, but
-> there could be much less of them and we could just use the time to do what
-> LSFMMBPF was meant to do, put us all in a room so we can hack on things together.
->
-> 3) BOFs.  Now all of the xfs/btrfs/ext4 guys can show up, because again they
-> don't have to worry about some invitation process, and now real meetings can
-> happen between people that really want to talk to each other face to face.
->
-> 4) Planning becomes much simpler.  I've organized miniconf's at plumbers before,
-> it is far simpler than LSFMMBPF.  You only have to worry about one thing, is
-> this presentation useful.  I no longer have to worry about am I inviting the
-> right people, do we have enough money to cover the space.  Is there enough space
-> for everybody?  Etc.
->
-> I think this is worth a discussion at the very least.  Maybe killing LSFMMBPF is
-> too drastic, maybe there are some other ideas that would address the same
-> problems.  I'd love to hear the whole communities thoughts on this, because
-> after all this is supposed to be a community event, and we should all be heard.
-> Thanks,
->
+ACK
 
+> --D
+> 
+> > Brian
+> > 
+> > > 
+> > > 
+> > > >                          */
+> > > >                         cur->bc_nlevels++;
+> > > >                         xfs_btree_bload_level_geometry();
+> > > >                 } else {
+> > > >                         if (nr_this_level <= avg_per_block) {
+> > > >                                 nr_blocks++;
+> > > >                                 break;
+> > > >                         }
+> > > >                         cur->bc_nlevels++;
+> > > >                 }
+> > > > 
+> > > >                 nr_blocks += level_blocks;
+> > > >                 nr_this_level = level_blocks;
+> > > >         }
+> > > > 
+> > > > The comments and whatnot could use massaging and perhaps it would still
+> > > > be fine to factor out the root block check from the if/else, but that
+> > > > illustrates the idea. Thoughts?
+> > > 
+> > > That structure (and the more verbose commenting) looks good to me.
+> > > Truth be told, it took me quite a while to work out all these weird
+> > > kinks vs. the phase5.c code which never had to deal with bmbts.
+> > > 
+> > > Onto the next email...
+> > > 
+> > > --D
+> > > 
+> > > > Brian
+> > > > 
+> > > > > --D
+> > > > > 
+> > > > > > Brian
+> > > > > > 
+> > > > > > > > 
+> > > > > > > > > +		xfs_btree_bload_level_geometry(cur, bbl, level, nr_this_level,
+> > > > > > > > > +				&avg_per_block, &level_blocks, &dontcare64);
+> > > > > > > > > +		nr_blocks += level_blocks;
+> > > > > > > > > +		nr_this_level = level_blocks;
+> > > > > > > > > +	}
+> > > > > > > > > +
+> > > > > > > > > +	if (cur->bc_nlevels == XFS_BTREE_MAXLEVELS)
+> > > > > > > > > +		return -EOVERFLOW;
+> > > > > > > > > +
+> > > > > > > > > +	bbl->btree_height = cur->bc_nlevels;
+> > > > > > > > > +	if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)
+> > > > > > > > > +		bbl->nr_blocks = nr_blocks - 1;
+> > > > > > > > > +	else
+> > > > > > > > > +		bbl->nr_blocks = nr_blocks;
+> > > > > > > > > +	return 0;
+> > > > > > > > > +}
+> > > > > > > > > +
+> > > > > > > > > +/*
+> > > > > > > > > + * Bulk load a btree.
+> > > > > > > > > + *
+> > > > > > > > > + * Load @bbl->nr_records quantity of records into a btree using the supplied
+> > > > > > > > > + * empty and staging btree cursor @cur and a @bbl that has been filled out by
+> > > > > > > > > + * the xfs_btree_bload_compute_geometry function.
+> > > > > > > > > + *
+> > > > > > > > > + * The @bbl->get_data function must populate the cursor's bc_rec every time it
+> > > > > > > > > + * is called.  The @bbl->alloc_block function will be used to allocate new
+> > > > > > > > > + * btree blocks.  @priv is passed to both functions.
+> > > > > > > > > + *
+> > > > > > > > > + * Caller must ensure that @cur is a staging cursor.  Any existing btree rooted
+> > > > > > > > > + * in the fakeroot will be lost, so do not call this function twice.
+> > > > > > > > > + */
+> > > > > > > > > +int
+> > > > > > > > > +xfs_btree_bload(
+> > > > > > > > > +	struct xfs_btree_cur		*cur,
+> > > > > > > > > +	struct xfs_btree_bload		*bbl,
+> > > > > > > > > +	void				*priv)
+> > > > > > > > > +{
+> > > > > > > > > +	union xfs_btree_ptr		child_ptr;
+> > > > > > > > > +	union xfs_btree_ptr		ptr;
+> > > > > > > > > +	struct xfs_buf			*bp = NULL;
+> > > > > > > > > +	struct xfs_btree_block		*block = NULL;
+> > > > > > > > > +	uint64_t			nr_this_level = bbl->nr_records;
+> > > > > > > > > +	uint64_t			blocks;
+> > > > > > > > > +	uint64_t			i;
+> > > > > > > > > +	uint64_t			blocks_with_extra;
+> > > > > > > > > +	uint64_t			total_blocks = 0;
+> > > > > > > > > +	unsigned int			avg_per_block;
+> > > > > > > > > +	unsigned int			level = 0;
+> > > > > > > > > +	int				ret;
+> > > > > > > > > +
+> > > > > > > > > +	ASSERT(cur->bc_flags & XFS_BTREE_STAGING);
+> > > > > > > > > +
+> > > > > > > > > +	INIT_LIST_HEAD(&bbl->buffers_list);
+> > > > > > > > > +	cur->bc_nlevels = bbl->btree_height;
+> > > > > > > > > +	xfs_btree_set_ptr_null(cur, &child_ptr);
+> > > > > > > > > +	xfs_btree_set_ptr_null(cur, &ptr);
+> > > > > > > > > +
+> > > > > > > > > +	xfs_btree_bload_level_geometry(cur, bbl, level, nr_this_level,
+> > > > > > > > > +			&avg_per_block, &blocks, &blocks_with_extra);
+> > > > > > > > > +
+> > > > > > > > > +	/* Load each leaf block. */
+> > > > > > > > > +	for (i = 0; i < blocks; i++) {
+> > > > > > > > > +		unsigned int		nr_this_block = avg_per_block;
+> > > > > > > > > +
+> > > > > > > > > +		if (i < blocks_with_extra)
+> > > > > > > > > +			nr_this_block++;
+> > > > > > > > > +
+> > > > > > > > > +		ret = xfs_btree_bload_prep_block(cur, bbl, level,
+> > > > > > > > > +				nr_this_block, &ptr, &bp, &block, priv);
+> > > > > > > > > +		if (ret)
+> > > > > > > > > +			return ret;
+> > > > > > > > > +
+> > > > > > > > > +		trace_xfs_btree_bload_block(cur, level, i, blocks, &ptr,
+> > > > > > > > > +				nr_this_block);
+> > > > > > > > > +
+> > > > > > > > > +		ret = xfs_btree_bload_leaf(cur, nr_this_block, bbl->get_data,
+> > > > > > > > > +				block, priv);
+> > > > > > > > > +		if (ret)
+> > > > > > > > > +			goto out;
+> > > > > > > > > +
+> > > > > > > > > +		/* Record the leftmost pointer to start the next level. */
+> > > > > > > > > +		if (i == 0)
+> > > > > > > > > +			xfs_btree_copy_ptrs(cur, &child_ptr, &ptr, 1);
+> > > > > > > > 
+> > > > > > > > "leftmost pointer" refers to the leftmost leaf block..?
+> > > > > > > 
+> > > > > > > Yes.  "Record the leftmost leaf pointer so we know where to start with
+> > > > > > > the first node level." ?
+> > > > > > > 
+> > > > > > > > > +	}
+> > > > > > > > > +	total_blocks += blocks;
+> > > > > > > > > +	xfs_btree_bload_drop_buf(bbl, cur->bc_tp, &bp);
+> > > > > > > > > +
+> > > > > > > > > +	/* Populate the internal btree nodes. */
+> > > > > > > > > +	for (level = 1; level < cur->bc_nlevels; level++) {
+> > > > > > > > > +		union xfs_btree_ptr	first_ptr;
+> > > > > > > > > +
+> > > > > > > > > +		nr_this_level = blocks;
+> > > > > > > > > +		block = NULL;
+> > > > > > > > > +		xfs_btree_set_ptr_null(cur, &ptr);
+> > > > > > > > > +
+> > > > > > > > > +		xfs_btree_bload_level_geometry(cur, bbl, level, nr_this_level,
+> > > > > > > > > +				&avg_per_block, &blocks, &blocks_with_extra);
+> > > > > > > > > +
+> > > > > > > > > +		/* Load each node block. */
+> > > > > > > > > +		for (i = 0; i < blocks; i++) {
+> > > > > > > > > +			unsigned int	nr_this_block = avg_per_block;
+> > > > > > > > > +
+> > > > > > > > > +			if (i < blocks_with_extra)
+> > > > > > > > > +				nr_this_block++;
+> > > > > > > > > +
+> > > > > > > > > +			ret = xfs_btree_bload_prep_block(cur, bbl, level,
+> > > > > > > > > +					nr_this_block, &ptr, &bp, &block,
+> > > > > > > > > +					priv);
+> > > > > > > > > +			if (ret)
+> > > > > > > > > +				return ret;
+> > > > > > > > > +
+> > > > > > > > > +			trace_xfs_btree_bload_block(cur, level, i, blocks,
+> > > > > > > > > +					&ptr, nr_this_block);
+> > > > > > > > > +
+> > > > > > > > > +			ret = xfs_btree_bload_node(cur, nr_this_block,
+> > > > > > > > > +					&child_ptr, block);
+> > > > > > > > > +			if (ret)
+> > > > > > > > > +				goto out;
+> > > > > > > > > +
+> > > > > > > > > +			/*
+> > > > > > > > > +			 * Record the leftmost pointer to start the next level.
+> > > > > > > > > +			 */
+> > > > > > > > 
+> > > > > > > > And the same thing here. I think the generic ptr name is a little
+> > > > > > > > confusing, though I don't have a better suggestion. I think it would
+> > > > > > > > help if the comments were more explicit to say something like: "ptr
+> > > > > > > > refers to the current block addr. Save the first block in the current
+> > > > > > > > level so the next level up knows where to start looking for keys."
+> > > > > > > 
+> > > > > > > Yes, I'll do that:
+> > > > > > > 
+> > > > > > > "Record the leftmost node pointer so that we know where to start the
+> > > > > > > next node level above this one."
+> > > > > > > 
+> > > > > > > Thanks for reviewing!
+> > > > > > > 
+> > > > > > > --D
+> > > > > > > 
+> > > > > > > > Brian
+> > > > > > > > 
+> > > > > > > > > +			if (i == 0)
+> > > > > > > > > +				xfs_btree_copy_ptrs(cur, &first_ptr, &ptr, 1);
+> > > > > > > > > +		}
+> > > > > > > > > +		total_blocks += blocks;
+> > > > > > > > > +		xfs_btree_bload_drop_buf(bbl, cur->bc_tp, &bp);
+> > > > > > > > > +		xfs_btree_copy_ptrs(cur, &child_ptr, &first_ptr, 1);
+> > > > > > > > > +	}
+> > > > > > > > > +
+> > > > > > > > > +	/* Initialize the new root. */
+> > > > > > > > > +	if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) {
+> > > > > > > > > +		ASSERT(xfs_btree_ptr_is_null(cur, &ptr));
+> > > > > > > > > +		cur->bc_private.b.ifake->if_levels = cur->bc_nlevels;
+> > > > > > > > > +		cur->bc_private.b.ifake->if_blocks = total_blocks - 1;
+> > > > > > > > > +	} else {
+> > > > > > > > > +		cur->bc_private.a.afake->af_root = be32_to_cpu(ptr.s);
+> > > > > > > > > +		cur->bc_private.a.afake->af_levels = cur->bc_nlevels;
+> > > > > > > > > +		cur->bc_private.a.afake->af_blocks = total_blocks;
+> > > > > > > > > +	}
+> > > > > > > > > +
+> > > > > > > > > +	/*
+> > > > > > > > > +	 * Write the new blocks to disk.  If the ordered list isn't empty after
+> > > > > > > > > +	 * that, then something went wrong and we have to fail.  This should
+> > > > > > > > > +	 * never happen, but we'll check anyway.
+> > > > > > > > > +	 */
+> > > > > > > > > +	ret = xfs_buf_delwri_submit(&bbl->buffers_list);
+> > > > > > > > > +	if (ret)
+> > > > > > > > > +		goto out;
+> > > > > > > > > +	if (!list_empty(&bbl->buffers_list)) {
+> > > > > > > > > +		ASSERT(list_empty(&bbl->buffers_list));
+> > > > > > > > > +		ret = -EIO;
+> > > > > > > > > +	}
+> > > > > > > > > +out:
+> > > > > > > > > +	xfs_buf_delwri_cancel(&bbl->buffers_list);
+> > > > > > > > > +	if (bp)
+> > > > > > > > > +		xfs_trans_brelse(cur->bc_tp, bp);
+> > > > > > > > > +	return ret;
+> > > > > > > > > +}
+> > > > > > > > > diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+> > > > > > > > > index 2965ed663418..51720de366ae 100644
+> > > > > > > > > --- a/fs/xfs/libxfs/xfs_btree.h
+> > > > > > > > > +++ b/fs/xfs/libxfs/xfs_btree.h
+> > > > > > > > > @@ -578,4 +578,50 @@ void xfs_btree_stage_ifakeroot(struct xfs_btree_cur *cur,
+> > > > > > > > >  void xfs_btree_commit_ifakeroot(struct xfs_btree_cur *cur, int whichfork,
+> > > > > > > > >  		const struct xfs_btree_ops *ops);
+> > > > > > > > >  
+> > > > > > > > > +typedef int (*xfs_btree_bload_get_fn)(struct xfs_btree_cur *cur, void *priv);
+> > > > > > > > > +typedef int (*xfs_btree_bload_alloc_block_fn)(struct xfs_btree_cur *cur,
+> > > > > > > > > +		union xfs_btree_ptr *ptr, void *priv);
+> > > > > > > > > +typedef size_t (*xfs_btree_bload_iroot_size_fn)(struct xfs_btree_cur *cur,
+> > > > > > > > > +		unsigned int nr_this_level, void *priv);
+> > > > > > > > > +
+> > > > > > > > > +/* Bulk loading of staged btrees. */
+> > > > > > > > > +struct xfs_btree_bload {
+> > > > > > > > > +	/* Buffer list for delwri_queue. */
+> > > > > > > > > +	struct list_head		buffers_list;
+> > > > > > > > > +
+> > > > > > > > > +	/* Function to store a record in the cursor. */
+> > > > > > > > > +	xfs_btree_bload_get_fn		get_data;
+> > > > > > > > > +
+> > > > > > > > > +	/* Function to allocate a block for the btree. */
+> > > > > > > > > +	xfs_btree_bload_alloc_block_fn	alloc_block;
+> > > > > > > > > +
+> > > > > > > > > +	/* Function to compute the size of the in-core btree root block. */
+> > > > > > > > > +	xfs_btree_bload_iroot_size_fn	iroot_size;
+> > > > > > > > > +
+> > > > > > > > > +	/* Number of records the caller wants to store. */
+> > > > > > > > > +	uint64_t			nr_records;
+> > > > > > > > > +
+> > > > > > > > > +	/* Number of btree blocks needed to store those records. */
+> > > > > > > > > +	uint64_t			nr_blocks;
+> > > > > > > > > +
+> > > > > > > > > +	/*
+> > > > > > > > > +	 * Number of free records to leave in each leaf block.  If this (or
+> > > > > > > > > +	 * any of the slack values) are negative, this will be computed to
+> > > > > > > > > +	 * be halfway between maxrecs and minrecs.  This typically leaves the
+> > > > > > > > > +	 * block 75% full.
+> > > > > > > > > +	 */
+> > > > > > > > > +	int				leaf_slack;
+> > > > > > > > > +
+> > > > > > > > > +	/* Number of free keyptrs to leave in each node block. */
+> > > > > > > > > +	int				node_slack;
+> > > > > > > > > +
+> > > > > > > > > +	/* Computed btree height. */
+> > > > > > > > > +	unsigned int			btree_height;
+> > > > > > > > > +};
+> > > > > > > > > +
+> > > > > > > > > +int xfs_btree_bload_compute_geometry(struct xfs_btree_cur *cur,
+> > > > > > > > > +		struct xfs_btree_bload *bbl, uint64_t nr_records);
+> > > > > > > > > +int xfs_btree_bload(struct xfs_btree_cur *cur, struct xfs_btree_bload *bbl,
+> > > > > > > > > +		void *priv);
+> > > > > > > > > +
+> > > > > > > > >  #endif	/* __XFS_BTREE_H__ */
+> > > > > > > > > diff --git a/fs/xfs/xfs_trace.c b/fs/xfs/xfs_trace.c
+> > > > > > > > > index bc85b89f88ca..9b5e58a92381 100644
+> > > > > > > > > --- a/fs/xfs/xfs_trace.c
+> > > > > > > > > +++ b/fs/xfs/xfs_trace.c
+> > > > > > > > > @@ -6,6 +6,7 @@
+> > > > > > > > >  #include "xfs.h"
+> > > > > > > > >  #include "xfs_fs.h"
+> > > > > > > > >  #include "xfs_shared.h"
+> > > > > > > > > +#include "xfs_bit.h"
+> > > > > > > > >  #include "xfs_format.h"
+> > > > > > > > >  #include "xfs_log_format.h"
+> > > > > > > > >  #include "xfs_trans_resv.h"
+> > > > > > > > > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> > > > > > > > > index 7e162ca80c92..69e8605f9f97 100644
+> > > > > > > > > --- a/fs/xfs/xfs_trace.h
+> > > > > > > > > +++ b/fs/xfs/xfs_trace.h
+> > > > > > > > > @@ -35,6 +35,7 @@ struct xfs_icreate_log;
+> > > > > > > > >  struct xfs_owner_info;
+> > > > > > > > >  struct xfs_trans_res;
+> > > > > > > > >  struct xfs_inobt_rec_incore;
+> > > > > > > > > +union xfs_btree_ptr;
+> > > > > > > > >  
+> > > > > > > > >  DECLARE_EVENT_CLASS(xfs_attr_list_class,
+> > > > > > > > >  	TP_PROTO(struct xfs_attr_list_context *ctx),
+> > > > > > > > > @@ -3655,6 +3656,90 @@ TRACE_EVENT(xfs_btree_commit_ifakeroot,
+> > > > > > > > >  		  __entry->blocks)
+> > > > > > > > >  )
+> > > > > > > > >  
+> > > > > > > > > +TRACE_EVENT(xfs_btree_bload_level_geometry,
+> > > > > > > > > +	TP_PROTO(struct xfs_btree_cur *cur, unsigned int level,
+> > > > > > > > > +		 uint64_t nr_this_level, unsigned int nr_per_block,
+> > > > > > > > > +		 unsigned int desired_npb, uint64_t blocks,
+> > > > > > > > > +		 uint64_t blocks_with_extra),
+> > > > > > > > > +	TP_ARGS(cur, level, nr_this_level, nr_per_block, desired_npb, blocks,
+> > > > > > > > > +		blocks_with_extra),
+> > > > > > > > > +	TP_STRUCT__entry(
+> > > > > > > > > +		__field(dev_t, dev)
+> > > > > > > > > +		__field(xfs_btnum_t, btnum)
+> > > > > > > > > +		__field(unsigned int, level)
+> > > > > > > > > +		__field(unsigned int, nlevels)
+> > > > > > > > > +		__field(uint64_t, nr_this_level)
+> > > > > > > > > +		__field(unsigned int, nr_per_block)
+> > > > > > > > > +		__field(unsigned int, desired_npb)
+> > > > > > > > > +		__field(unsigned long long, blocks)
+> > > > > > > > > +		__field(unsigned long long, blocks_with_extra)
+> > > > > > > > > +	),
+> > > > > > > > > +	TP_fast_assign(
+> > > > > > > > > +		__entry->dev = cur->bc_mp->m_super->s_dev;
+> > > > > > > > > +		__entry->btnum = cur->bc_btnum;
+> > > > > > > > > +		__entry->level = level;
+> > > > > > > > > +		__entry->nlevels = cur->bc_nlevels;
+> > > > > > > > > +		__entry->nr_this_level = nr_this_level;
+> > > > > > > > > +		__entry->nr_per_block = nr_per_block;
+> > > > > > > > > +		__entry->desired_npb = desired_npb;
+> > > > > > > > > +		__entry->blocks = blocks;
+> > > > > > > > > +		__entry->blocks_with_extra = blocks_with_extra;
+> > > > > > > > > +	),
+> > > > > > > > > +	TP_printk("dev %d:%d btree %s level %u/%u nr_this_level %llu nr_per_block %u desired_npb %u blocks %llu blocks_with_extra %llu",
+> > > > > > > > > +		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> > > > > > > > > +		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
+> > > > > > > > > +		  __entry->level,
+> > > > > > > > > +		  __entry->nlevels,
+> > > > > > > > > +		  __entry->nr_this_level,
+> > > > > > > > > +		  __entry->nr_per_block,
+> > > > > > > > > +		  __entry->desired_npb,
+> > > > > > > > > +		  __entry->blocks,
+> > > > > > > > > +		  __entry->blocks_with_extra)
+> > > > > > > > > +)
+> > > > > > > > > +
+> > > > > > > > > +TRACE_EVENT(xfs_btree_bload_block,
+> > > > > > > > > +	TP_PROTO(struct xfs_btree_cur *cur, unsigned int level,
+> > > > > > > > > +		 uint64_t block_idx, uint64_t nr_blocks,
+> > > > > > > > > +		 union xfs_btree_ptr *ptr, unsigned int nr_records),
+> > > > > > > > > +	TP_ARGS(cur, level, block_idx, nr_blocks, ptr, nr_records),
+> > > > > > > > > +	TP_STRUCT__entry(
+> > > > > > > > > +		__field(dev_t, dev)
+> > > > > > > > > +		__field(xfs_btnum_t, btnum)
+> > > > > > > > > +		__field(unsigned int, level)
+> > > > > > > > > +		__field(unsigned long long, block_idx)
+> > > > > > > > > +		__field(unsigned long long, nr_blocks)
+> > > > > > > > > +		__field(xfs_agnumber_t, agno)
+> > > > > > > > > +		__field(xfs_agblock_t, agbno)
+> > > > > > > > > +		__field(unsigned int, nr_records)
+> > > > > > > > > +	),
+> > > > > > > > > +	TP_fast_assign(
+> > > > > > > > > +		__entry->dev = cur->bc_mp->m_super->s_dev;
+> > > > > > > > > +		__entry->btnum = cur->bc_btnum;
+> > > > > > > > > +		__entry->level = level;
+> > > > > > > > > +		__entry->block_idx = block_idx;
+> > > > > > > > > +		__entry->nr_blocks = nr_blocks;
+> > > > > > > > > +		if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
+> > > > > > > > > +			xfs_fsblock_t	fsb = be64_to_cpu(ptr->l);
+> > > > > > > > > +
+> > > > > > > > > +			__entry->agno = XFS_FSB_TO_AGNO(cur->bc_mp, fsb);
+> > > > > > > > > +			__entry->agbno = XFS_FSB_TO_AGBNO(cur->bc_mp, fsb);
+> > > > > > > > > +		} else {
+> > > > > > > > > +			__entry->agno = cur->bc_private.a.agno;
+> > > > > > > > > +			__entry->agbno = be32_to_cpu(ptr->s);
+> > > > > > > > > +		}
+> > > > > > > > > +		__entry->nr_records = nr_records;
+> > > > > > > > > +	),
+> > > > > > > > > +	TP_printk("dev %d:%d btree %s level %u block %llu/%llu fsb (%u/%u) recs %u",
+> > > > > > > > > +		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> > > > > > > > > +		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
+> > > > > > > > > +		  __entry->level,
+> > > > > > > > > +		  __entry->block_idx,
+> > > > > > > > > +		  __entry->nr_blocks,
+> > > > > > > > > +		  __entry->agno,
+> > > > > > > > > +		  __entry->agbno,
+> > > > > > > > > +		  __entry->nr_records)
+> > > > > > > > > +)
+> > > > > > > > > +
+> > > > > > > > >  #endif /* _TRACE_XFS_H */
+> > > > > > > > >  
+> > > > > > > > >  #undef TRACE_INCLUDE_PATH
+> > > > > > > > > 
+> > > > > > > > 
+> > > > > > > 
+> > > > > > 
+> > > > > 
+> > > > 
+> > > 
+> > 
+> 
 
--- 
-Thanks,
-
-Steve
