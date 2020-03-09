@@ -2,146 +2,163 @@ Return-Path: <SRS0=zudJ=42=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A19FDC3F2C6
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Mar 2020 01:24:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3BA8C10DCE
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Mar 2020 01:32:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7B7272064A
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Mar 2020 01:24:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1583717071;
-	bh=72wt6abTXdZd2tpt0WJygez8l4q6+2mLPxpP0Bktgfg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=jpsnpKtvyT6Nj61eJTJ57UCxPdIezN7rCU6sJpvB3CZ5hm1BPHUBZ6ka2OmTYIQW2
-	 CSBcBxisSMzk7p2KGJtSycO4VV5ac9RvLBJ277FyLUcQgdK1DQWSXSTz+0LqA4bUdA
-	 yGEhHOQmw4Hvx5EJdIENh4aTrpN4XSPV021gxs3c=
+	by mail.kernel.org (Postfix) with ESMTP id 7873E206DB
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Mar 2020 01:32:56 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SZv+1Vp2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726464AbgCIBY1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 8 Mar 2020 21:24:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59350 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726346AbgCIBY1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 8 Mar 2020 21:24:27 -0400
-Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1D08D2064A;
-        Mon,  9 Mar 2020 01:24:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1583717066;
-        bh=72wt6abTXdZd2tpt0WJygez8l4q6+2mLPxpP0Bktgfg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=sY2+Le5tLiyDZnWmMEU3521ZHiJ+JtD4RRWsVmldqyDoY/2DSOYNmxBMMvOCWf1Qj
-         9SM2dDoueJkLxaSmrfFd/gv8Z7V1w8NlWeKluCtrMNhcPEKBuBijZd02ktJOV22lwl
-         xP1q+dVQRNJvGAEmWcHVA94mvngCpvMPsVu2Y83U=
-Date:   Sun, 8 Mar 2020 18:24:24 -0700
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-kernel@vger.kernel.org,
-        syzkaller-bugs@googlegroups.com
-Subject: Re: [PATCH] fs/direct-io.c: avoid workqueue allocation race
-Message-ID: <20200309012424.GB371527@sol.localdomain>
-References: <CACT4Y+Zt+fjBwJk-TcsccohBgxRNs37Hb4m6ZkZGy7u5P2+aaA@mail.gmail.com>
- <20200308055221.1088089-1-ebiggers@kernel.org>
- <20200308231253.GN10776@dread.disaster.area>
+        id S1726363AbgCIBcz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 8 Mar 2020 21:32:55 -0400
+Received: from mail-ot1-f49.google.com ([209.85.210.49]:46070 "EHLO
+        mail-ot1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726346AbgCIBcz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Mar 2020 21:32:55 -0400
+Received: by mail-ot1-f49.google.com with SMTP id f21so7989212otp.12
+        for <linux-xfs@vger.kernel.org>; Sun, 08 Mar 2020 18:32:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=NM+3yHHb1GYn71sq9okYNjTtppi1tsJhjgjnaUztLrQ=;
+        b=SZv+1Vp23plc5jC112QHuW2C9EyNuQ2nSiDq1GFJ3qRN3RMNcSMq4y+Wq8eeKkXwy3
+         +ckHtehMoQEJAHlGbSWYfNJEjtdd0LPFTGK/1oJcI7D+KZs/BQ+t+dLjaT5aaqK5/QDJ
+         JJfVbNps2sFyqbHRtzktyEtzlVnjsS3scXfS5SeB5sbC/w/FrcI+s7Px2QWZPE4CsnlG
+         Be6B2HZRCDcD4Lzc5Yu0DxhzoNsoVPOmf4n7xw226EIE1nQfZ/LhHL+61DG6qavOnymI
+         97JzqXFU6gL5vWP+b/PHKNy43Uby6dSH6rBLUb23KbSASPyFGDYUlShJYmyaCCAEQR7e
+         9hIw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=NM+3yHHb1GYn71sq9okYNjTtppi1tsJhjgjnaUztLrQ=;
+        b=BCadxE67Aaw9DdRNZsi14nmqov8Y1aGnNw4SE1IUSgfoJ/skKxDv3ou8aITTVtw3vL
+         NgEO3PwrVX6xBV7ba4ckjfNhGgnTbhm4SFBfN5pVJi8d0afy+d3DgBRILocXVmYV/rcN
+         KUZDxDedPQZzaAhykZNieNNOtaiBjPQO6cfRO0yNYHihRKLrP2FFQQZtx2IJWqwF7ke4
+         ZrYlsSeb93yhx5Q/+VFJNxZfwyBJr5wPtcD5dBs7LgvLJguJOvBU6D/WQt6BCIi6SJEB
+         fL5tDMMtZt7QEwrC/e9qfHj6o1Kkz7/jV6U9SBNqXkstnIMCGUatPyVpViNgGBeFiPP0
+         OY/w==
+X-Gm-Message-State: ANhLgQ1joIh7hefTvbsvX2vFqw/00M3ws1BNREZ0LS1yVCpo/RJfunLW
+        nxo7T9uCPTyzplXXW66KEwopj2yjjTngBy3zQuw=
+X-Google-Smtp-Source: ADFU+vsQJBWz+c+eR5P/WRtiCtb0mBQ05qpsWuz/Ab3wq9jj6Hkg47EydMLI6rjxI7/dZxHBUmDCtebshje0ykQgRp0=
+X-Received: by 2002:a05:6830:1645:: with SMTP id h5mr11699580otr.317.1583717574675;
+ Sun, 08 Mar 2020 18:32:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200308231253.GN10776@dread.disaster.area>
+References: <CAHgh4_+15tc6ekqBRHqZrdDmVSfUmMpOGyg_9kWYQ7XOs7D+eQ@mail.gmail.com>
+ <CAHgh4_+p0okyt3kC=6HOZb6dr8o3dxqQARoFB-LkR9x-tGuvSA@mail.gmail.com> <20200308222646.GL10776@dread.disaster.area>
+In-Reply-To: <20200308222646.GL10776@dread.disaster.area>
+From:   Bart Brashers <bart.brashers@gmail.com>
+Date:   Sun, 8 Mar 2020 18:32:41 -0700
+Message-ID: <CAHgh4_K_01dS2Z-2QwR2dc5ZDz9J2+tG6W-paOeneUa6G_h9Kw@mail.gmail.com>
+Subject: Re: mount before xfs_repair hangs
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 09, 2020 at 10:12:53AM +1100, Dave Chinner wrote:
-> On Sat, Mar 07, 2020 at 09:52:21PM -0800, Eric Biggers wrote:
-> > From: Eric Biggers <ebiggers@google.com>
-> > 
-> > When a thread loses the workqueue allocation race in
-> > sb_init_dio_done_wq(), lockdep reports that the call to
-> > destroy_workqueue() can deadlock waiting for work to complete.  This is
-> > a false positive since the workqueue is empty.  But we shouldn't simply
-> > skip the lockdep check for empty workqueues for everyone.
-> 
-> Why not? If the wq is empty, it can't deadlock, so this is a problem
-> with the workqueue lockdep annotations, not a problem with code that
-> is destroying an empty workqueue.
+Thanks Dave!
 
-Skipping the lockdep check when flushing an empty workqueue would reduce the
-ability of lockdep to detect deadlocks when flushing that workqueue.  I.e., it
-could cause lots of false negatives, since there are many cases where workqueues
-are *usually* empty when flushed/destroyed but it's still possible that they are
-nonempty.
+We had what I think was a power fluctuation, and several more drives
+went offline in my JBOD. I had to power-cycle the JBOD to make them
+show "online" again. I unmounted the arrays first, though.
 
-> 
-> > Just avoid this issue by using a mutex to serialize the workqueue
-> > allocation.  We still keep the preliminary check for ->s_dio_done_wq, so
-> > this doesn't affect direct I/O performance.
-> > 
-> > Also fix the preliminary check for ->s_dio_done_wq to use READ_ONCE(),
-> > since it's a data race.  (That part wasn't actually found by syzbot yet,
-> > but it could be detected by KCSAN in the future.)
-> > 
-> > Note: the lockdep false positive could alternatively be fixed by
-> > introducing a new function like "destroy_unused_workqueue()" to the
-> > workqueue API as previously suggested.  But I think it makes sense to
-> > avoid the double allocation anyway.
-> 
-> Fix the infrastructure, don't work around it be placing constraints
-> on how the callers can use the infrastructure to work around
-> problems internal to the infrastructure.
+After doing the "echo w > /proc/sysrq-trigger" I was able to mount the
+problematic filesystem directly, no having to read dmesg output. If
+that was due to the power cycling and forcing logicalvolumes to be
+"optimal" (online) again, I don't know.
 
-Well, it's also preferable not to make our debugging tools less effective to
-support people doing weird things that they shouldn't really be doing anyway.
+I was able to run xfs_repair on both filesystems, and have tons of
+files in lost+found to parse now, but at least I have most of my data
+back.
 
-(BTW, we need READ_ONCE() on ->sb_init_dio_done_wq anyway to properly annotate
-the data race.  That could be split into a separate patch though.)
+Thanks!
 
-Another idea that came up is to make each workqueue_struct track whether work
-has been queued on it or not yet, and make flush_workqueue() skip the lockdep
-check if the workqueue has always been empty.  (That could still cause lockdep
-false negatives, but not as many as if we checked if the workqueue is
-*currently* empty.)  Would you prefer that solution?  Adding more overhead to
-workqueues would be undesirable though, so I think it would have to be
-conditional on CONFIG_LOCKDEP, like (untested):
+Bart
 
-diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index 301db4406bc37..72222c09bcaeb 100644
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -263,6 +263,7 @@ struct workqueue_struct {
- 	char			*lock_name;
- 	struct lock_class_key	key;
- 	struct lockdep_map	lockdep_map;
-+	bool			used;
- #endif
- 	char			name[WQ_NAME_LEN]; /* I: workqueue name */
- 
-@@ -1404,6 +1405,9 @@ static void __queue_work(int cpu, struct workqueue_struct *wq,
- 	lockdep_assert_irqs_disabled();
- 
- 	debug_work_activate(work);
-+#ifdef CONFIG_LOCKDEP
-+	WRITE_ONCE(wq->used, true);
-+#endif
- 
- 	/* if draining, only works from the same workqueue are allowed */
- 	if (unlikely(wq->flags & __WQ_DRAINING) &&
-@@ -2772,8 +2776,12 @@ void flush_workqueue(struct workqueue_struct *wq)
- 	if (WARN_ON(!wq_online))
- 		return;
- 
--	lock_map_acquire(&wq->lockdep_map);
--	lock_map_release(&wq->lockdep_map);
-+#ifdef CONFIG_LOCKDEP
-+	if (READ_ONCE(wq->used)) {
-+		lock_map_acquire(&wq->lockdep_map);
-+		lock_map_release(&wq->lockdep_map);
-+	}
-+#endif
- 
- 	mutex_lock(&wq->mutex);
+
+Bart
+---
+Bart Brashers
+3039 NW 62nd St
+Seattle WA 98107
+206-789-1120 Home
+425-412-1812 Work
+206-550-2606 Mobile
+
+
+On Sun, Mar 8, 2020 at 3:26 PM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Sun, Mar 08, 2020 at 12:43:29PM -0700, Bart Brashers wrote:
+> > An update:
+> >
+> > Mounting the degraded xfs filesystem still hangs, so I can't replay
+> > the journal, so I don't yet want to run xfs_repair.
+>
+> echo w > /proc/sysrq-trigger
+>
+> and dump demsg to find where it is hung. If it is not hung and is
+> instead stuck in a loop, use 'echo l > /proc/sysrq-trigger'.
+>
+> > I can mount the degraded xfs filesystem like this:
+> >
+> > $ mount -t xfs -o ro,norecovery,inode64,logdev=/dev/md/nvme2
+> > /dev/volgrp4TB/lvol4TB /export/lvol4TB/
+> >
+> > If I do a "du" on the contents, I see 3822 files with either
+> > "Structure needs cleaning" or "No such file or directory".
+>
+> TO be expected - you mounted an inconsistent filesystem image and
+> it's falling off the end of structures that are incomplete and
+> require recovery to make consistent.
+>
+> > Is what I mounted what I would get if I used the xfs_repair -L option,
+> > and discarded the journal? Or would there be more corruption, e.g. to
+> > the directory structure?
+>
+> Maybe. Maybe more, maybe less. Maybe.
+>
+> > Some of the instances of "No such file or directory" are for files
+> > that are not in their correct directory - I can tell by the filetype
+> > and the directory name. Does that by itself imply directory
+> > corruption?
+>
+> Maybe.
+>
+> It also may imply log recovery has not been run and so things
+> like renames are not complete on disk, and recvoery would fix that.
+>
+> But keep in mind your array had a triple disk failure, so there is
+> going to be -something- lost and not recoverable. That may well be
+> in the journal, at which point repair is your only option...
+>
+> > At this point, can I do a backup, either using rsync or xfsdump or
+> > xfs_copy?
+>
+> Do it any way you want.
+>
+> > I have a separate RAID array on the same server where I
+> > could put the 7.8 TB of data, though the destination already has data
+> > on it - so I don't think xfs_copy is right. Is xfsdump to a directory
+> > faster/better than rsync? Or would it be best to use something like
+> >
+> > $ tar cf - /export/lvol4TB/directory | (cd /export/lvol6TB/ ; tar xfp -)
+>
+> Do it how ever you are confident the data gets copied reliably in
+> the face of filesystem traversal errors.
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
