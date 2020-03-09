@@ -2,218 +2,139 @@ Return-Path: <SRS0=zudJ=42=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 028E7C18E5A
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Mar 2020 17:04:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD71EC10F27
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Mar 2020 18:04:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D08A224671
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Mar 2020 17:04:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A8E0721655
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Mar 2020 18:04:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1583777095;
+	bh=Ptre7CW0SKo87QNNsafIdExhNEvOolW6MbLzvP3uyuo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=KcHdjHT4+iTKT/82kVrB1qrnVNs55JNZI87WWFg8jQ7xsHCu3VZuftVdmFcXOAjR+
+	 CUoruy8DgM7lsYd8Jysr3uWM8KoRiy1bgXPFNmeQ9KOqth5J/EbZUFnppGCvwRabzJ
+	 tQ/0DIBvb6RwH0gttb6zEIKvTH8qg6dV/ppobDw0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727173AbgCIREk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 Mar 2020 13:04:40 -0400
-Received: from mga04.intel.com ([192.55.52.120]:40257 "EHLO mga04.intel.com"
+        id S1726820AbgCISEz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 Mar 2020 14:04:55 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55954 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727101AbgCIREk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 9 Mar 2020 13:04:40 -0400
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 09 Mar 2020 10:04:38 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.70,534,1574150400"; 
-   d="scan'208";a="276593214"
-Received: from iweiny-desk2.sc.intel.com ([10.3.52.147])
-  by fmsmga002.fm.intel.com with ESMTP; 09 Mar 2020 10:04:38 -0700
-Date:   Mon, 9 Mar 2020 10:04:37 -0700
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-kernel@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, akpm@linux-foundation.org,
-        torvalds@linux-foundation.org
-Subject: Re: [PATCH V5 00/12] Enable per-file/per-directory DAX operations V5
-Message-ID: <20200309170437.GA271052@iweiny-DESK2.sc.intel.com>
-References: <20200227052442.22524-1-ira.weiny@intel.com>
- <20200305155144.GA5598@lst.de>
+        id S1726571AbgCISEz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 9 Mar 2020 14:04:55 -0400
+Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 30C3E215A4;
+        Mon,  9 Mar 2020 18:04:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1583777094;
+        bh=Ptre7CW0SKo87QNNsafIdExhNEvOolW6MbLzvP3uyuo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=V3hLucMxbfoBCLqQDU1+xW61P2qX2lGqX11VEdovINh3xVOtqIJrrf2bhlSJAFlAP
+         1xWj+LSgIOv4b6NVe3XcLHKSBQFxHqb/nBf9c0Xs5BmqXxDN1WfHn5hpQIUUsFBYOA
+         FlPdmuqXttMJw9mM9IY/cY7l7hsGczQfbg2IOlfg=
+Date:   Mon, 9 Mar 2020 11:04:52 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        syzkaller-bugs@googlegroups.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: clear PF_MEMALLOC before exiting xfsaild thread
+Message-ID: <20200309180452.GA1073@sol.localdomain>
+References: <20200309010410.GA371527@sol.localdomain>
+ <20200309043430.143206-1-ebiggers@kernel.org>
+ <20200309162439.GB8045@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200305155144.GA5598@lst.de>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+In-Reply-To: <20200309162439.GB8045@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 05, 2020 at 04:51:44PM +0100, Christoph Hellwig wrote:
-> FYI, I still will fully NAK any series that adds additional locks
-> and thus atomic instructions to basically every fs call, and grows
-> the inode by a rw_semaphore plus and atomic64_t.  I also think the
-> whole idea of switching operation vectors at runtime is fatally flawed
-> and we should never add such code, nevermind just for a fringe usecase
-> of a fringe feature.
-
-Being new to this area of the kernel I'm not clear on the history...
-
-It was my understanding that the per-file flag support was a requirement to
-removing the experimental designation from DAX.  Is this still the case?
-
-Ira
-
+On Mon, Mar 09, 2020 at 09:24:39AM -0700, Darrick J. Wong wrote:
+> On Sun, Mar 08, 2020 at 09:34:30PM -0700, Eric Biggers wrote:
+> > From: Eric Biggers <ebiggers@google.com>
+> > 
+> > Leaving PF_MEMALLOC set when exiting a kthread causes it to remain set
+> > during do_exit().  That can confuse things.  For example, if BSD process
+> > accounting is enabled and the accounting file has FS_SYNC_FL set and is
+> > located on an ext4 filesystem without a journal, then do_exit() ends up
+> > calling ext4_write_inode().  That triggers the
+> > WARN_ON_ONCE(current->flags & PF_MEMALLOC) there, as it assumes
+> > (appropriately) that inodes aren't written when allocating memory.
+> > 
+> > Fix this in xfsaild() by using the helper functions to save and restore
+> > PF_MEMALLOC.
+> > 
+> > This can be reproduced as follows in the kvm-xfstests test appliance
+> > modified to add the 'acct' Debian package, and with kvm-xfstests's
+> > recommended kconfig modified to add CONFIG_BSD_PROCESS_ACCT=y:
+> > 
+> > 	mkfs.ext2 -F /dev/vdb
+> > 	mount /vdb -t ext4
+> > 	touch /vdb/file
+> > 	chattr +S /vdb/file
 > 
-> On Wed, Feb 26, 2020 at 09:24:30PM -0800, ira.weiny@intel.com wrote:
-> > From: Ira Weiny <ira.weiny@intel.com>
-> > 
-> > Changes from V4:
-> > 	* Open code the aops lock rather than add it to the xfs_ilock()
-> > 	  subsystem (Darrick's comments were obsoleted by this change)
-> > 	* Fix lkp build suggestions and bugs
-> > 
-> > Changes from V3:
-> > 	* Remove global locking...  :-D
-> > 	* put back per inode locking and remove pre-mature optimizations
-> > 	* Fix issues with Directories having IS_DAX() set
-> > 	* Fix kernel crash issues reported by Jeff
-> > 	* Add some clean up patches
-> > 	* Consolidate diflags to iflags functions
-> > 	* Update/add documentation
-> > 	* Reorder/rename patches quite a bit
-> > 
-> > Changes from V2:
-> > 
-> > 	* Move i_dax_sem to be a global percpu_rw_sem rather than per inode
-> > 		Internal discussions with Dan determined this would be easier,
-> > 		just as performant, and slightly less overhead that having it
-> > 		in the SB as suggested by Jan
-> > 	* Fix locking order in comments and throughout code
-> > 	* Change "mode" to "state" throughout commits
-> > 	* Add CONFIG_FS_DAX wrapper to disable inode_[un]lock_state() when not
-> > 		configured
-> > 	* Add static branch for which is activated by a device which supports
-> > 		DAX in XFS
-> > 	* Change "lock/unlock" to up/down read/write as appropriate
-> > 		Previous names were over simplified
-> > 	* Update comments/documentation
-> > 
-> > 	* Remove the xfs specific lock to the vfs (global) layer.
-> > 	* Fix i_dax_sem locking order and comments
-> > 
-> > 	* Move 'i_mapped' count from struct inode to struct address_space and
-> > 		rename it to mmap_count
-> > 	* Add inode_has_mappings() call
-> > 
-> > 	* Fix build issues
-> > 	* Clean up syntax spacing and minor issues
-> > 	* Update man page text for STATX_ATTR_DAX
-> > 	* Add reviewed-by's
-> > 	* Rebase to 5.6
-> > 
-> > 	Rename patch:
-> > 		from: fs/xfs: Add lock/unlock state to xfs
-> > 		to: fs/xfs: Add write DAX lock to xfs layer
-> > 	Add patch:
-> > 		fs/xfs: Clarify lockdep dependency for xfs_isilocked()
-> > 	Drop patch:
-> > 		fs/xfs: Fix truncate up
-> > 
-> > 
-> > At LSF/MM'19 [1] [2] we discussed applications that overestimate memory
-> > consumption due to their inability to detect whether the kernel will
-> > instantiate page cache for a file, and cases where a global dax enable via a
-> > mount option is too coarse.
-> > 
-> > The following patch series enables selecting the use of DAX on individual files
-> > and/or directories on xfs, and lays some groundwork to do so in ext4.  In this
-> > scheme the dax mount option can be omitted to allow the per-file property to
-> > take effect.
-> > 
-> > The insight at LSF/MM was to separate the per-mount or per-file "physical"
-> > capability switch from an "effective" attribute for the file.
-> > 
-> > At LSF/MM we discussed the difficulties of switching the DAX state of a file
-> > with active mappings / page cache.  It was thought the races could be avoided
-> > by limiting DAX state flips to 0-length files.
-> > 
-> > However, this turns out to not be true.[3] This is because address space
-> > operations (a_ops) may be in use at any time the inode is referenced and users
-> > have expressed a desire to be able to change the DAX state on a file with data
-> > in it.  For those reasons this patch set allows changing the DAX state flag on
-> > a file as long as it is not current mapped.
-> > 
-> > Details of when and how DAX state can be changed on a file is included in a
-> > documentation patch.
-> > 
-> > It should be noted that the physical DAX flag inheritance is not shown in this
-> > patch set as it was maintained from previous work on XFS.  The physical DAX
-> > flag and it's inheritance will need to be added to other file systems for user
-> > control. 
-> > 
-> > As submitted this works on real hardware testing.
-> > 
-> > 
-> > [1] https://lwn.net/Articles/787973/
-> > [2] https://lwn.net/Articles/787233/
-> > [3] https://lkml.org/lkml/2019/10/20/96
-> > [4] https://patchwork.kernel.org/patch/11310511/
-> > 
-> > 
-> > To: linux-kernel@vger.kernel.org
-> > Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-> > Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-> > Cc: Dan Williams <dan.j.williams@intel.com>
-> > Cc: Dave Chinner <david@fromorbit.com>
-> > Cc: Christoph Hellwig <hch@lst.de>
-> > Cc: "Theodore Y. Ts'o" <tytso@mit.edu>
-> > Cc: Jan Kara <jack@suse.cz>
-> > Cc: linux-ext4@vger.kernel.org
-> > Cc: linux-xfs@vger.kernel.org
-> > Cc: linux-fsdevel@vger.kernel.org
-> > 
-> > 
-> > Ira Weiny (12):
-> >   fs/xfs: Remove unnecessary initialization of i_rwsem
-> >   fs: Remove unneeded IS_DAX() check
-> >   fs/stat: Define DAX statx attribute
-> >   fs/xfs: Isolate the physical DAX flag from enabled
-> >   fs/xfs: Create function xfs_inode_enable_dax()
-> >   fs: Add locking for a dynamic address space operations state
-> >   fs: Prevent DAX state change if file is mmap'ed
-> >   fs/xfs: Hold off aops users while changing DAX state
-> >   fs/xfs: Clean up locking in dax invalidate
-> >   fs/xfs: Allow toggle of effective DAX flag
-> >   fs/xfs: Remove xfs_diflags_to_linux()
-> >   Documentation/dax: Update Usage section
-> > 
-> >  Documentation/filesystems/dax.txt | 84 +++++++++++++++++++++++++-
-> >  Documentation/filesystems/vfs.rst | 16 +++++
-> >  fs/attr.c                         |  1 +
-> >  fs/inode.c                        | 16 ++++-
-> >  fs/iomap/buffered-io.c            |  1 +
-> >  fs/open.c                         |  4 ++
-> >  fs/stat.c                         |  5 ++
-> >  fs/xfs/xfs_icache.c               |  5 +-
-> >  fs/xfs/xfs_inode.h                |  2 +
-> >  fs/xfs/xfs_ioctl.c                | 98 +++++++++++++++----------------
-> >  fs/xfs/xfs_iops.c                 | 69 +++++++++++++++-------
-> >  include/linux/fs.h                | 73 ++++++++++++++++++++++-
-> >  include/uapi/linux/stat.h         |  1 +
-> >  mm/fadvise.c                      |  7 ++-
-> >  mm/filemap.c                      |  4 ++
-> >  mm/huge_memory.c                  |  1 +
-> >  mm/khugepaged.c                   |  2 +
-> >  mm/mmap.c                         | 19 +++++-
-> >  mm/util.c                         |  9 ++-
-> >  19 files changed, 328 insertions(+), 89 deletions(-)
-> > 
-> > -- 
-> > 2.21.0
-> ---end quoted text---
+> Does this trip if the process accounting file is also on an xfs
+> filesystem?
+> 
+> > 	accton /vdb/file
+> > 	mkfs.xfs -f /dev/vdc
+> > 	mount /vdc
+> > 	umount /vdc
+> 
+> ...and if so, can this be turned into an fstests case, please?
+
+I wasn't expecting it, but it turns out it does actually trip a similar warning
+in iomap_do_writepage():
+
+        mkfs.xfs -f /dev/vdb
+        mount /vdb
+        touch /vdb/file
+        chattr +S /vdb/file
+        accton /vdb/file
+        mkfs.xfs -f /dev/vdc
+        mount /vdc
+        umount /vdc
+
+causes...
+
+	WARNING: CPU: 1 PID: 336 at fs/iomap/buffered-io.c:1534
+	CPU: 1 PID: 336 Comm: xfsaild/vdc Not tainted 5.6.0-rc5 #3
+	Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20191223_100556-anatol 04/01/2014
+	RIP: 0010:iomap_do_writepage+0x16b/0x1f0 fs/iomap/buffered-io.c:1534
+	[...]
+	Call Trace:
+	 write_cache_pages+0x189/0x4d0 mm/page-writeback.c:2238
+	 iomap_writepages+0x1c/0x33 fs/iomap/buffered-io.c:1642
+	 xfs_vm_writepages+0x65/0x90 fs/xfs/xfs_aops.c:578
+	 do_writepages+0x41/0xe0 mm/page-writeback.c:2344
+	 __filemap_fdatawrite_range+0xd2/0x120 mm/filemap.c:421
+	 file_write_and_wait_range+0x71/0xc0 mm/filemap.c:760
+	 xfs_file_fsync+0x7a/0x2b0 fs/xfs/xfs_file.c:114
+	 generic_write_sync include/linux/fs.h:2867 [inline]
+	 xfs_file_buffered_aio_write+0x379/0x3b0 fs/xfs/xfs_file.c:691
+	 call_write_iter include/linux/fs.h:1901 [inline]
+	 new_sync_write+0x130/0x1d0 fs/read_write.c:483
+	 __kernel_write+0x54/0xe0 fs/read_write.c:515
+	 do_acct_process+0x122/0x170 kernel/acct.c:522
+	 slow_acct_process kernel/acct.c:581 [inline]
+	 acct_process+0x1d4/0x27c kernel/acct.c:607
+	 do_exit+0x83d/0xbc0 kernel/exit.c:791
+	 kthread+0xf1/0x140 kernel/kthread.c:257
+	 ret_from_fork+0x27/0x50 arch/x86/entry/entry_64.S:352
+
+So sure, since it's not necessarily a multi-filesystem thing, I can try to turn
+it into an xfstest.  There's currently no way to enable BSD process accounting
+in xfstests though, so we'll either need to make the test depend on the 'acct'
+program or add a helper test program.
+
+Also, do you want me to update the commit message again, to mention the above
+case?
+
+- Eric
