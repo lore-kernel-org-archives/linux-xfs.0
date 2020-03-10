@@ -2,156 +2,238 @@ Return-Path: <SRS0=iJk4=43=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20E93C18E5B
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Mar 2020 08:46:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 977B8C18E5B
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Mar 2020 09:26:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D9F9E24682
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Mar 2020 08:46:03 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nokia.onmicrosoft.com header.i=@nokia.onmicrosoft.com header.b="T+d5OGxT"
+	by mail.kernel.org (Postfix) with ESMTP id 65B372467F
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Mar 2020 09:26:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726512AbgCJIqD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Mar 2020 04:46:03 -0400
-Received: from mail-eopbgr70139.outbound.protection.outlook.com ([40.107.7.139]:9510
-        "EHLO EUR04-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726389AbgCJIqD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Mar 2020 04:46:03 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=CXEuYowL3W294zit2UjXTiHOLvWJbIVJfvPqqIEpFDRFdtIl5RNPHjFzKml3+6T+GhyagUO3del5sibo+eVav/cP1qRO+KV38sZiRAo1YDe3uPWxS05SGjnLzwr99KsPire5t+BDeQ2aKqzmX8PTP3OYJJRcgMewHtEn+MOuqbZ/3znlUTkgUhE64aSUH1OON8flZTPIN8PfMNs98gBRqgljW5aTvTERgGnXjZ+Qiq5FjeNfuXYR1JTKmd3m10L1pZqCql0nGTGOmlM1nDDwYu3ny4ifM8B0NflpBVkqAhd3OQfyptNgzJYDZMN9nBKzhgc2aZXUWMN5tOxrKiwTkw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=2IkS7XUdgiKnoSkgf/9Web2TVnQ0qLAiLcADE6Skdys=;
- b=ZwbJ6znNB02eBe5dXTTimLGIjDX5CReTQjfI36aaVzQ0BKIu+GG+T8wj5jogPtDV8Re45AhTCoGB1gqtJnCj98eBwvrU8VRZCtzXkDH2msrcDs7flZb266/IdIHDOkk7mcoqC3hMI4UFUa6nxecyx9WvV0EOPjzAhe9QB2NwzgwHGZo53sZxAqIH1Ai3hCFBvnRNXUiWU/pGZB9f2eqffmHfSC7vfFH/LKZUqimZO/7C6VOpPLKyAe2cPr1STQi5byTvWGNL2KJ3rG1+p86cGXyxZGJSZMLx4JVDd64dKZvXVszq9vSjPtNIeAti6SJ6KWGm3r5im01EAsWtULjLUA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nokia.com; dmarc=pass action=none header.from=nokia.com;
- dkim=pass header.d=nokia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nokia.onmicrosoft.com;
- s=selector1-nokia-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=2IkS7XUdgiKnoSkgf/9Web2TVnQ0qLAiLcADE6Skdys=;
- b=T+d5OGxTAluCAjU9uW5IuzN5xWoc5mVgsGN/f4KHofQ+vQk/ov6Xo7mLHI8CCs6zThbW3Mh7qWBwf59511Zd0eEwwoR1BUbSp2nIGjB4f1hwaOV7OHak+vvoJSdtIJpMaBJDcRVT2TO52AYSci408jfjSAQAqiogV/RQWQbqq+w=
-Received: from HE1PR0702MB3675.eurprd07.prod.outlook.com (10.167.127.12) by
- HE1PR0702MB3788.eurprd07.prod.outlook.com (52.133.5.25) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2814.9; Tue, 10 Mar 2020 08:45:58 +0000
-Received: from HE1PR0702MB3675.eurprd07.prod.outlook.com
- ([fe80::2806:c34c:d469:8e87]) by HE1PR0702MB3675.eurprd07.prod.outlook.com
- ([fe80::2806:c34c:d469:8e87%5]) with mapi id 15.20.2814.007; Tue, 10 Mar 2020
- 08:45:58 +0000
-From:   "Rantala, Tommi T. (Nokia - FI/Espoo)" <tommi.t.rantala@nokia.com>
-To:     "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC:     "hch@lst.de" <hch@lst.de>
-Subject: 5.5 XFS getdents regression?
-Thread-Topic: 5.5 XFS getdents regression?
-Thread-Index: AQHV9rhRbXPUS+vCVkG2reFy3jRV2w==
-Date:   Tue, 10 Mar 2020 08:45:58 +0000
-Message-ID: <72c5fd8e9a23dde619f70f21b8100752ec63e1d2.camel@nokia.com>
-Accept-Language: fi-FI, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=tommi.t.rantala@nokia.com; 
-x-originating-ip: [131.228.2.19]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 56673539-5c1c-4319-61c4-08d7c4cf7466
-x-ms-traffictypediagnostic: HE1PR0702MB3788:
-x-microsoft-antispam-prvs: <HE1PR0702MB3788DFD1F37347BED7250420B4FF0@HE1PR0702MB3788.eurprd07.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:569;
-x-forefront-prvs: 033857D0BD
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(346002)(39860400002)(136003)(376002)(366004)(396003)(199004)(189003)(76116006)(110136005)(26005)(2616005)(36756003)(186003)(316002)(8936002)(6486002)(66946007)(64756008)(66556008)(66446008)(81156014)(66476007)(81166006)(7116003)(6512007)(478600001)(2906002)(71200400001)(86362001)(966005)(8676002)(6506007)(5660300002)(4326008);DIR:OUT;SFP:1102;SCL:1;SRVR:HE1PR0702MB3788;H:HE1PR0702MB3675.eurprd07.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: nokia.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 2KedPC2wzCuOpXwa3951n1iu9vc/pa+qnm8itcZnxx/Rn5u8Mx2MSj1HwgMR4QGYvHxDCtC94bxatZLMQa77OR9Enaq8xWDwPwQbhQ8a7eWtcDz7M+45CHXS9NV5p1tCDaupY1KtfB/t/qicukL/fJVjOHfc1i0pvBD3YMfn3MUUNwLhQZ9sOY8vlR86C3U+XbQ8EDoerKaKLMPKR8r1tT/SmMmeaYoIq1dK3kRZnrkp9w5bq0Y4p3avjxjemJDRKKjoxSEFNiiTqgG4bMxXY7f8ysGnshqNsFhfGVWMHcG/p97Ls/1T/xcBXRlcEaSyRH/eO7GmqLrv8rMyTAL5QQjCHTSop2PB4cINBw4mj79QD0Nb/z9Y3rZhxS+4G2IEEqTP8hAKScS6mXjTrQe1HKoX1XkvCGoEPVITIqxlOdzq9+2cQKB6fLbWWLTyXKERrYch+hV4JoKb4x3onFhI2iECh99ZFU/1r70osR79oGlWsU24zBW92vhiI+5h+Bj/XIzjltsvJKFtocOv/eRN0A==
-x-ms-exchange-antispam-messagedata: /Mr9wwvKTzRqYxYjaMKek+VSu/RFYe8ILRPaY2ZEbAi+SMg8BtxTZUE2/82RbX9sz8bASH5NnsjqE7bl313rHdB3rCbF9IGrn8k4NGGqUXVa/Pv1MhpMptVVHkKIqoeTwlLdkMDejN2N9clhDHSp+A==
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <D76916B7F7D1BC40B415BD6D729B8BFD@eurprd07.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        id S1726437AbgCJJ0P convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Mar 2020 05:26:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57592 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726199AbgCJJ0O (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Mar 2020 05:26:14 -0400
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 206807] New: [xfstests generic/053]: WARNING: possible circular
+ locking between fs_reclaim_acquire.part and xfs_ilock_attr_map_shared
+Date:   Tue, 10 Mar 2020 09:26:11 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: new
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: zlang@redhat.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_id short_desc product version
+ cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
+ priority component assigned_to reporter cf_regression
+Message-ID: <bug-206807-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-X-OriginatorOrg: nokia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 56673539-5c1c-4319-61c4-08d7c4cf7466
-X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Mar 2020 08:45:58.5286
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 5d471751-9675-428d-917b-70f44f9630b0
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: JPPKi6wzrWtjDjsK2FQx7Ij9Tul4UOF1rn/Cpy8F/2YGPKIZIWPeXY91KVS32K9w4ZP1oUgKQQzYgOFR38J/k5DCHOrh5JxnbplCSslz+hQ=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: HE1PR0702MB3788
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-SGVsbG8sDQoNCk9uZSBvZiBteSBHaXRMYWIgQ0kgam9icyBzdG9wcGVkIHdvcmtpbmcgYWZ0ZXIg
-dXBncmFkaW5nIHNlcnZlciA1LjQuMTgtDQoxMDAuZmMzMC54ODZfNjQgLT4gNS41LjctMTAwLmZj
-MzAueDg2XzY0Lg0KKHRlc3RlZCA1LjUuOC0xMDAuZmMzMC54ODZfNjQgdG9vLCBubyBjaGFuZ2Up
-DQpUaGUgc2VydmVyIGlzIGZlZG9yYTMwIHdpdGggWEZTIHJvb3Rmcy4NClRoZSBwcm9ibGVtIHJl
-cHJvZHVjZXMgYWx3YXlzLCBhbmQgdGFrZXMgb25seSBjb3VwbGUgbWludXRlcyB0byBydW4uDQoN
-ClRoZSBDSSBqb2IgZmFpbHMgaW4gdGhlIGJlZ2lubmluZyB3aGVuIGRvaW5nICJnaXQgY2xlYW4i
-IGluIGRvY2tlcg0KY29udGFpbmVyLCBhbmQgZmFpbGluZyB0byBybWRpciBzb21lIGRpcmVjdG9y
-eToNCiJ3YXJuaW5nOiBmYWlsZWQgdG8gcmVtb3ZlIA0KLnZlbmRvci9wa2cvbW9kL2dvbGFuZy5v
-cmcveC9uZXRAdjAuMC4wLTIwMjAwMTE0MTU1NDEzLTZhZmI1MTk1ZTVhYS9pbnRlcm4NCmFsL3Nv
-Y2tldDogRGlyZWN0b3J5IG5vdCBlbXB0eSINCg0KUXVpY2sgZ29vZ2xlIHNlYXJjaCBmaW5kcyBz
-b21lIG90aGVyIHBlb3BsZSByZXBvcnRpbmcgc2ltaWxhciBwcm9ibGVtcw0Kd2l0aCA1LjUuMDoN
-Cmh0dHBzOi8vZ2l0bGFiLmNvbS9naXRsYWItb3JnL2dpdGxhYi1ydW5uZXIvaXNzdWVzLzMxODUN
-Cg0KDQpDb2xsZWN0ZWQgc29tZSBkYXRhIHdpdGggc3RyYWNlLCBhbmQgaXQgc2VlbXMgdGhhdCBn
-ZXRkZW50cyBpcyBub3QNCnJldHVybmluZyBhbGwgZW50cmllczoNCg0KNS40IGdldGRlbnRzNjQo
-KSByZXR1cm5zIDUyKzUwKzErMCBlbnRyaWVzIA0KPT4gYWxsIGZpbGVzIGluIGRpcmVjdG9yeSBh
-cmUgZGVsZXRlZCBhbmQgcm1kaXIoKSBpcyBPSw0KDQo1LjUgZ2V0ZGVudHM2NCgpIHJldHVybnMg
-NTIrNTArMCswIGVudHJpZXMNCj0+IHJtZGlyKCkgZmFpbHMgd2l0aCBFTk9URU1QVFkNCg0KDQpX
-b3JraW5nIDUuNCBzdHJhY2U6DQoxMDowMDoxMiBnZXRkZW50czY0KDEwPA0KL2J1aWxkcy94eXov
-LnZlbmRvci9wa2cvbW9kL2dvbGFuZy5vcmcveC9uZXRAdjAuMC4wLTIwMjAwMzAxMDIyMTMwLTI0
-NDQ5MmRmYTM3YQ0KL2ludGVybmFsL3NvY2tldD4sIC8qIDUyIGVudHJpZXMgKi8sIDIwNDgpID0g
-MjAyNCA8MC4wMDAwMjA+DQoxMDowMDoxMiB1bmxpbmsoIg0KLnZlbmRvci9wa2cvbW9kL2dvbGFu
-Zy5vcmcveC9uZXRAdjAuMC4wLTIwMjAwMzAxMDIyMTMwLTI0NDQ5MmRmYTM3YS9pbnRlcm4NCmFs
-L3NvY2tldC9jbXNnaGRyLmdvIikgPSAwIDwwLjAwMDA2OD4NCjEwOjAwOjEyIHVubGluaygiDQou
-dmVuZG9yL3BrZy9tb2QvZ29sYW5nLm9yZy94L25ldEB2MC4wLjAtMjAyMDAzMDEwMjIxMzAtMjQ0
-NDkyZGZhMzdhL2ludGVybg0KYWwvc29ja2V0L2Ntc2doZHJfYnNkLmdvIikgPSAwIDwwLjAwMDA0
-OD4NClsuLi5dDQoxMDowMDoxMiBnZXRkZW50czY0KDEwPA0KL2J1aWxkcy94eXovLnZlbmRvci9w
-a2cvbW9kL2dvbGFuZy5vcmcveC9uZXRAdjAuMC4wLTIwMjAwMzAxMDIyMTMwLTI0NDQ5MmRmYTM3
-YQ0KL2ludGVybmFsL3NvY2tldD4sIC8qIDUwIGVudHJpZXMgKi8sIDIwNDgpID0gMjA0OCA8MC4w
-MDAwMjM+DQoxMDowMDoxMiB1bmxpbmsoIg0KLnZlbmRvci9wa2cvbW9kL2dvbGFuZy5vcmcveC9u
-ZXRAdjAuMC4wLTIwMjAwMzAxMDIyMTMwLTI0NDQ5MmRmYTM3YS9pbnRlcm4NCmFsL3NvY2tldC9z
-eXNfbGludXhfMzg2LnMiKSA9IDAgPDAuMDAwMDYyPg0KWy4uLl0NCjEwOjAwOjEyIGdldGRlbnRz
-NjQoMTA8DQovYnVpbGRzL3h5ei8udmVuZG9yL3BrZy9tb2QvZ29sYW5nLm9yZy94L25ldEB2MC4w
-LjAtMjAyMDAzMDEwMjIxMzAtMjQ0NDkyZGZhMzdhDQovaW50ZXJuYWwvc29ja2V0PiwgLyogMSBl
-bnRyaWVzICovLCAyMDQ4KSA9IDQ4IDwwLjAwMDAxNz4NCjEwOjAwOjEyIHVubGluaygiDQoudmVu
-ZG9yL3BrZy9tb2QvZ29sYW5nLm9yZy94L25ldEB2MC4wLjAtMjAyMDAzMDEwMjIxMzAtMjQ0NDky
-ZGZhMzdhL2ludGVybg0KYWwvc29ja2V0L3pzeXNfc29sYXJpc19hbWQ2NC5nbyIpID0gMCA8MC4w
-MDAwMzk+DQoxMDowMDoxMiBnZXRkZW50czY0KDEwPA0KL2J1aWxkcy94eXovLnZlbmRvci9wa2cv
-bW9kL2dvbGFuZy5vcmcveC9uZXRAdjAuMC4wLTIwMjAwMzAxMDIyMTMwLTI0NDQ5MmRmYTM3YQ0K
-L2ludGVybmFsL3NvY2tldD4sIC8qIDAgZW50cmllcyAqLywgMjA0OCkgPSAwIDwwLjAwMDAxNT4N
-CjEwOjAwOjEyIHJtZGlyKCINCi52ZW5kb3IvcGtnL21vZC9nb2xhbmcub3JnL3gvbmV0QHYwLjAu
-MC0yMDIwMDMwMTAyMjEzMC0yNDQ0OTJkZmEzN2EvaW50ZXJuDQphbC9zb2NrZXQiKSA9IDAgPDAu
-MDAwMDU1Pg0KDQoNCkZhaWxpbmcgNS41IHN0cmFjZToNCjEwOjA5OjE1IGdldGRlbnRzNjQoMTA8
-DQovYnVpbGRzL3h5ei8udmVuZG9yL3BrZy9tb2QvZ29sYW5nLm9yZy94L25ldEB2MC4wLjAtMjAy
-MDAzMDEwMjIxMzAtMjQ0NDkyZGZhMzdhDQovaW50ZXJuYWwvc29ja2V0PiwgLyogNTIgZW50cmll
-cyAqLywgMjA0OCkgPSAyMDI0IDwwLjAwMDAzMT4NCjEwOjA5OjE1IHVubGluaygiDQoudmVuZG9y
-L3BrZy9tb2QvZ29sYW5nLm9yZy94L25ldEB2MC4wLjAtMjAyMDAzMDEwMjIxMzAtMjQ0NDkyZGZh
-MzdhL2ludGVybg0KYWwvc29ja2V0L2Ntc2doZHIuZ28iKSA9IDAgPDAuMDA2MTc0Pg0KWy4uLl0N
-CjEwOjA5OjE1IGdldGRlbnRzNjQoMTA8DQovYnVpbGRzL3h5ei8udmVuZG9yL3BrZy9tb2QvZ29s
-YW5nLm9yZy94L25ldEB2MC4wLjAtMjAyMDAzMDEwMjIxMzAtMjQ0NDkyZGZhMzdhDQovaW50ZXJu
-YWwvc29ja2V0PiwgLyogNTAgZW50cmllcyAqLywgMjA0OCkgPSAyMDQ4IDwwLjAwMDAzND4NCjEw
-OjA5OjE1IHVubGluaygiDQoudmVuZG9yL3BrZy9tb2QvZ29sYW5nLm9yZy94L25ldEB2MC4wLjAt
-MjAyMDAzMDEwMjIxMzAtMjQ0NDkyZGZhMzdhL2ludGVybg0KYWwvc29ja2V0L3N5c19saW51eF8z
-ODYucyIpID0gMCA8MC4wMDAwNTQ+DQpbLi4uXQ0KMTA6MDk6MTYgZ2V0ZGVudHM2NCgxMDwNCi9i
-dWlsZHMveHl6Ly52ZW5kb3IvcGtnL21vZC9nb2xhbmcub3JnL3gvbmV0QHYwLjAuMC0yMDIwMDMw
-MTAyMjEzMC0yNDQ0OTJkZmEzN2ENCi9pbnRlcm5hbC9zb2NrZXQ+LCAvKiAwIGVudHJpZXMgKi8s
-IDIwNDgpID0gMCA8MC4wMDAwMjA+DQoxMDowOToxNiBybWRpcigiDQoudmVuZG9yL3BrZy9tb2Qv
-Z29sYW5nLm9yZy94L25ldEB2MC4wLjAtMjAyMDAzMDEwMjIxMzAtMjQ0NDkyZGZhMzdhL2ludGVy
-bg0KYWwvc29ja2V0IikgPSAtMSBFTk9URU1QVFkgKERpcmVjdG9yeSBub3QgZW1wdHkpIDwwLjAw
-MDAyOT4NCg0KDQpBbnkgaWRlYXMgd2hhdCdzIGdvaW5nIHdyb25nIGhlcmU/DQoNCi1Ub21taQ0K
-DQo=
+https://bugzilla.kernel.org/show_bug.cgi?id=206807
+
+            Bug ID: 206807
+           Summary: [xfstests generic/053]: WARNING: possible circular
+                    locking between fs_reclaim_acquire.part and
+                    xfs_ilock_attr_map_shared
+           Product: File System
+           Version: 2.5
+    Kernel Version: xfs-5.7-merge-1
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: XFS
+          Assignee: filesystem_xfs@kernel-bugs.kernel.org
+          Reporter: zlang@redhat.com
+        Regression: No
+
+xfstests generic/053 always hit below warning. I'm not sure if it's a real
+issue, just due to it can be reproduced easily. So report this bug to get more
+xfs developer review.
+
+[ 4237.682652] run fstests generic/053 at 2020-03-08 08:59:40
+[ 4239.360186] XFS (sda3): Mounting V5 Filesystem
+[ 4239.407716] XFS (sda3): Ending clean mount
+[ 4239.419928] xfs filesystem being mounted at /mnt/xfstests/mnt2 supports
+timestamps until 2038 (0x7fffffff)
+[ 4240.158679] XFS (sda3): Unmounting Filesystem
+[ 4240.571304] XFS (sda3): Mounting V5 Filesystem
+[ 4240.599167] XFS (sda3): Ending clean mount
+[ 4240.611047] xfs filesystem being mounted at /mnt/xfstests/mnt2 supports
+timestamps until 2038 (0x7fffffff)
+
+[ 4240.709666] ======================================================
+[ 4240.715848] WARNING: possible circular locking dependency detected
+[ 4240.722028] 5.6.0-rc4+ #1 Not tainted
+[ 4240.725685] ------------------------------------------------------
+[ 4240.731863] chacl/376734 is trying to acquire lock:
+[ 4240.736733] ffffffff86ad3920 (fs_reclaim){+.+.}, at:
+fs_reclaim_acquire.part.55+0x5/0x30
+[ 4240.744846] 
+               but task is already holding lock:
+[ 4240.750668] ffff88800cedf8f0 (&xfs_nondir_ilock_class){++++}, at:
+xfs_ilock_attr_map_shared+0x4c/0xd0 [xfs]
+[ 4240.760457] 
+               which lock already depends on the new lock.
+
+[ 4240.768635] 
+               the existing dependency chain (in reverse order) is:
+[ 4240.776116] 
+               -> #1 (&xfs_nondir_ilock_class){++++}:
+[ 4240.782412]        down_write_nested+0xa4/0x3c0
+[ 4240.786986]        xfs_ilock+0x149/0x4c0 [xfs]
+[ 4240.791460]        xfs_reclaim_inode+0xe4/0x9e0 [xfs]
+[ 4240.796558]        xfs_reclaim_inodes_ag+0x50a/0xb10 [xfs]
+[ 4240.802077]        xfs_reclaim_inodes_nr+0x92/0xd0 [xfs]
+[ 4240.807370]        super_cache_scan+0x302/0x430
+[ 4240.811909]        do_shrink_slab+0x31c/0x9b0
+[ 4240.816256]        shrink_slab+0x3ad/0x4e0
+[ 4240.820378]        shrink_node+0x3d8/0x16b0
+[ 4240.824560]        balance_pgdat+0x5ba/0xf10
+[ 4240.828843]        kswapd+0x528/0xc30
+[ 4240.832507]        kthread+0x333/0x3f0
+[ 4240.836250]        ret_from_fork+0x3a/0x50
+[ 4240.840374] 
+               -> #0 (fs_reclaim){+.+.}:
+[ 4240.845499]        __lock_acquire+0x23f7/0x4030
+[ 4240.850026]        lock_acquire+0x15a/0x3d0
+[ 4240.854200]        fs_reclaim_acquire.part.55+0x29/0x30
+[ 4240.859411]        slab_pre_alloc_hook+0x14/0x80
+[ 4240.864033]        __kmalloc+0x58/0x380
+[ 4240.867939]        kmem_alloc+0xf0/0x3e0 [xfs]
+[ 4240.872419]        kmem_alloc_large+0x9f/0x2e0 [xfs]
+[ 4240.877405]        xfs_attr_copy_value+0x134/0x200 [xfs]
+[ 4240.882750]        xfs_attr_get+0x373/0x4f0 [xfs]
+[ 4240.887508]        xfs_get_acl+0x192/0x510 [xfs]
+[ 4240.892132]        get_acl+0x10e/0x260
+[ 4240.895896]        posix_acl_xattr_get+0xc6/0x1b0
+[ 4240.900597]        __vfs_getxattr+0xbb/0x110
+[ 4240.904849]        vfs_getxattr+0x185/0x1b0
+[ 4240.909038]        getxattr+0xea/0x220
+[ 4240.912809]        path_getxattr+0xae/0x110
+[ 4240.916985]        do_syscall_64+0x9f/0x4f0
+[ 4240.921150]        entry_SYSCALL_64_after_hwframe+0x49/0xbe
+[ 4240.926722] 
+               other info that might help us debug this:
+
+[ 4240.934729]  Possible unsafe locking scenario:
+
+[ 4240.940676]        CPU0                    CPU1
+[ 4240.945211]        ----                    ----
+[ 4240.949733]   lock(&xfs_nondir_ilock_class);
+[ 4240.954041]                                lock(fs_reclaim);
+[ 4240.959721]                                lock(&xfs_nondir_ilock_class);
+[ 4240.966500]   lock(fs_reclaim);
+[ 4240.969640] 
+                *** DEADLOCK ***
+
+[ 4240.975543] 1 lock held by chacl/376734:
+[ 4240.979461]  #0: ffff88800cedf8f0 (&xfs_nondir_ilock_class){++++}, at:
+xfs_ilock_attr_map_shared+0x4c/0xd0 [xfs]
+[ 4240.989667] 
+               stack backtrace:
+[ 4240.994042] CPU: 2 PID: 376734 Comm: chacl Not tainted 5.6.0-rc4+ #1
+[ 4241.000409] Hardware name: HP HP Z240 SFF Workstation/802E, BIOS N51 Ver.
+01.21 03/02/2016
+[ 4241.008674] Call Trace:
+[ 4241.011127]  dump_stack+0x96/0xe0
+[ 4241.014474]  check_noncircular+0x354/0x410
+[ 4241.018586]  ? sched_clock_cpu+0x18/0x1d0
+[ 4241.022591]  ? print_circular_bug+0x1e0/0x1e0
+[ 4241.026983]  ? __lock_acquire+0xf64/0x4030
+[ 4241.031064]  ? perf_trace_lock_acquire+0x5c0/0x5c0
+[ 4241.035849]  ? sched_clock+0x5/0x10
+[ 4241.039345]  ? sched_clock+0x5/0x10
+[ 4241.042860]  __lock_acquire+0x23f7/0x4030
+[ 4241.046899]  ? __lock_acquire+0xf64/0x4030
+[ 4241.051002]  ? lockdep_hardirqs_on+0x590/0x590
+[ 4241.055476]  lock_acquire+0x15a/0x3d0
+[ 4241.059140]  ? fs_reclaim_acquire.part.55+0x5/0x30
+[ 4241.063987]  ? kmem_alloc+0xf0/0x3e0 [xfs]
+[ 4241.068072]  fs_reclaim_acquire.part.55+0x29/0x30
+[ 4241.072766]  ? fs_reclaim_acquire.part.55+0x5/0x30
+[ 4241.077564]  slab_pre_alloc_hook+0x14/0x80
+[ 4241.081672]  __kmalloc+0x58/0x380
+[ 4241.085036]  kmem_alloc+0xf0/0x3e0 [xfs]
+[ 4241.089017]  ? kmem_alloc_large+0x9f/0x2e0 [xfs]
+[ 4241.093637]  ? rcu_read_lock_bh_held+0xd0/0xd0
+[ 4241.098123]  kmem_alloc_large+0x9f/0x2e0 [xfs]
+[ 4241.102588]  ? xfs_attr_copy_value+0x134/0x200 [xfs]
+[ 4241.107590]  xfs_attr_copy_value+0x134/0x200 [xfs]
+[ 4241.112412]  xfs_attr_get+0x373/0x4f0 [xfs]
+[ 4241.116628]  xfs_get_acl+0x192/0x510 [xfs]
+[ 4241.120725]  ? rcu_read_lock_held+0xaf/0xc0
+[ 4241.124987]  ? xfs_acl_from_disk+0x550/0x550 [xfs]
+[ 4241.129769]  get_acl+0x10e/0x260
+[ 4241.133002]  posix_acl_xattr_get+0xc6/0x1b0
+[ 4241.137203]  __vfs_getxattr+0xbb/0x110
+[ 4241.140947]  ? __vfs_setxattr+0x130/0x130
+[ 4241.144977]  vfs_getxattr+0x185/0x1b0
+[ 4241.148660]  ? __kasan_kmalloc.constprop.7+0xc1/0xd0
+[ 4241.153636]  ? xattr_permission+0x1f0/0x1f0
+[ 4241.157846]  ? __kmalloc_node+0x134/0x2c0
+[ 4241.161852]  ? strncpy_from_user+0x7d/0x350
+[ 4241.166044]  getxattr+0xea/0x220
+[ 4241.169287]  ? __ia32_sys_llistxattr+0xb0/0xb0
+[ 4241.173721]  ? __kasan_kmalloc.constprop.7+0xc1/0xd0
+[ 4241.178670]  ? strncpy_from_user+0x7d/0x350
+[ 4241.182867]  ? kmem_cache_alloc+0x34a/0x380
+[ 4241.187065]  ? getname_flags+0xf8/0x510
+[ 4241.190899]  ? syscall_trace_enter+0x549/0xcf0
+[ 4241.195333]  path_getxattr+0xae/0x110
+[ 4241.199000]  ? getxattr+0x220/0x220
+[ 4241.202493]  ? trace_hardirqs_on_thunk+0x1a/0x1c
+[ 4241.207116]  ? do_syscall_64+0x22/0x4f0
+[ 4241.210954]  do_syscall_64+0x9f/0x4f0
+[ 4241.214637]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+[ 4241.219686] RIP: 0033:0x7f04e21f1c5e
+[ 4241.223290] Code: 73 01 c3 48 8b 0d 2a 22 2c 00 f7 d8 64 89 01 48 83 c8 ff
+c3 0f 1f 84 00 00 00 00 00 f3 0f 1e fa 49 89 ca b8 bf 00 00 00 0f 05 <48> 3d 01
+f0 ff ff 73 01 c3 48 8b 0d fa 21 2c 00 f7 d8 64 89 01 48
+[ 4241.242030] RSP: 002b:00007ffd876ecd58 EFLAGS: 00000246 ORIG_RAX:
+00000000000000bf
+[ 4241.249586] RAX: ffffffffffffffda RBX: 0000000000008000 RCX:
+00007f04e21f1c5e
+[ 4241.256722] RDX: 00007ffd876ecd60 RSI: 00007f04e26c61ef RDI:
+00007ffd876ef351
+[ 4241.263868] RBP: 00007ffd876eceb0 R08: 0000000000000000 R09:
+0000000000000000
+[ 4241.271033] R10: 0000000000000084 R11: 0000000000000246 R12:
+00007ffd876ef351
+[ 4241.278148] R13: 00007ffd876ecd60 R14: 00007f04e26c61ef R15:
+0000000000000000
+[ 4241.341907] XFS (sda2): Unmounting Filesystem
+[ 4241.576470] XFS (sda3): Unmounting Filesystem
+[ 4241.845011] XFS (sda3): Mounting V5 Filesystem
+[ 4241.868871] XFS (sda3): Ending clean mount
+[ 4241.878933] xfs filesystem being mounted at /mnt/xfstests/mnt2 supports
+timestamps until 2038 (0x7fffffff)
+[ 4241.897754] XFS (sda3): Unmounting Filesystem
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
