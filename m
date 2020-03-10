@@ -2,258 +2,137 @@ Return-Path: <SRS0=iJk4=43=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 763E5C10F27
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Mar 2020 11:34:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2924C18E5B
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Mar 2020 13:16:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3F07924686
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Mar 2020 11:34:55 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="C8Tiya+G"
+	by mail.kernel.org (Postfix) with ESMTP id 86D8120873
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Mar 2020 13:16:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1583846168;
+	bh=krfbbm4woyZDGIjBFcmZSG17rETAwb5C8qIN6bgjN8w=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=ZNYNhgToQadHpWnDctbszOaj1+7ztTMNH3y5GaE8vr3Q49JT4DY4gwDEW3MarXmfi
+	 1ML8h7MTM+ywkYucoljySr54nYmHm6Xjq59ufhMQy6lS0bGpLb4TUu192bIMYCM63z
+	 NU7yxxf6AUBnSGTX3SdhrPlL8hjYC6lxBvpgMl5k=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726224AbgCJLez (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Mar 2020 07:34:55 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:45143 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726205AbgCJLey (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Mar 2020 07:34:54 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1583840094;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=ZOCwMpAMVE9wtaP/VHLmnpKjiqO3cM0OvoSFs/1p7KY=;
-        b=C8Tiya+GhiEdqkyUHi8bZKsD01NqIlRparow9EE9i0FGaVAifd5hKrNfSsNDq1H/PgCo59
-        cUkQFT6E4kwLiMTM2QCp9jqDdG6HBt0ng2k8cULjnplKw/DN8kBbYvpYvBw1NibTqsMtxO
-        GseKQ5/+OZXRYXvbXLmr1GfiFBFZdno=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-44-pMkAeRPyN42YtH7tuTjXiQ-1; Tue, 10 Mar 2020 07:34:52 -0400
-X-MC-Unique: pMkAeRPyN42YtH7tuTjXiQ-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 83EEA800D5A;
-        Tue, 10 Mar 2020 11:34:51 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 9612760C87;
-        Tue, 10 Mar 2020 11:34:48 +0000 (UTC)
-Date:   Tue, 10 Mar 2020 07:34:46 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [PATCH 6/6] xfs: remove XFS_BUF_TO_SBP
-Message-ID: <20200310113446.GF50276@bfoster>
-References: <20200306145220.242562-1-hch@lst.de>
- <20200306145220.242562-7-hch@lst.de>
+        id S1731767AbgCJNNo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Mar 2020 09:13:44 -0400
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:34638 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731754AbgCJNNo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Mar 2020 09:13:44 -0400
+Received: by mail-wr1-f65.google.com with SMTP id z15so15836251wrl.1;
+        Tue, 10 Mar 2020 06:13:42 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=Oa5g113veU2Vu4AlqhwVidAaDnTAra7gNy7bFO70rZc=;
+        b=GnIUrpQU/Sg7r8b+BedJ8CqwUlYG4xQ2Lo54cn98G0oZD/7TcNZKnVJDvT1FAMfcVY
+         U3SbiBvNca+R67nKlVdk9P4ZVWNnuT6CRdxrsYUOhWbG74AkEg+rxo1qTSE9DrlzlR5N
+         p1HkCTFNNHMvwd3s03CkzX+TEGLa1xqObZVUiBlioHNf81GSFQ5Gxc+MLF0iodhd/qsZ
+         t+H9xTeFZ3TVdN8Ux36lTosj+PnkQmo1kZxh7vZVvrS8vp17GGYuBjnJPzpjikoaKIc2
+         RzNkOr2OGaCk2AATfKBAUqBm1bbj85N5j2dpBvwDORMGu3Y1n5rYNa9YHRGKmoY4SHJH
+         a78w==
+X-Gm-Message-State: ANhLgQ00EKtXi9yYYkZp+12KuA9cK9EpP4PC82OuSWc5s0qaOSV4yxTG
+        m4Oo8sQO5vP2EnH61qIacCN5X/ZH5VE=
+X-Google-Smtp-Source: ADFU+vuoqLKuNCFV1S8JMIVLIpzM6ZHX7oSMYDAvFAe+RDvvRUTcPFeCW1aEmNfzgKcgFP+a7BaerA==
+X-Received: by 2002:a5d:4685:: with SMTP id u5mr26336545wrq.69.1583846022170;
+        Tue, 10 Mar 2020 06:13:42 -0700 (PDT)
+Received: from localhost (prg-ext-pat.suse.com. [213.151.95.130])
+        by smtp.gmail.com with ESMTPSA id l83sm4132454wmf.43.2020.03.10.06.13.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 10 Mar 2020 06:13:41 -0700 (PDT)
+Date:   Tue, 10 Mar 2020 14:13:39 +0100
+From:   Michal Hocko <mhocko@kernel.org>
+To:     Josef Bacik <josef@toxicpanda.com>
+Cc:     lsf-pc <lsf-pc@lists.linuxfoundation.org>,
+        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
+        linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+        Btrfs BTRFS <linux-btrfs@vger.kernel.org>, bpf@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-block@vger.kernel.org
+Subject: Re: [LSFMMBPF TOPIC] Killing LSFMMBPF
+Message-ID: <20200310131339.GJ8447@dhcp22.suse.cz>
+References: <b506a373-c127-b92e-9824-16e8267fc910@toxicpanda.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200306145220.242562-7-hch@lst.de>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+In-Reply-To: <b506a373-c127-b92e-9824-16e8267fc910@toxicpanda.com>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Mar 06, 2020 at 07:52:20AM -0700, Christoph Hellwig wrote:
-> Just dereference bp->b_addr directly and make the code a little
-> simpler and more clear.
+On Fri 06-03-20 09:35:41, Josef Bacik wrote:
+> Hello,
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+> This has been a topic that I've been thinking about a lot recently, mostly
+> because of the giant amount of work that has been organizing LSFMMBPF.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+There is undoubtedly a lot of work to make a great conference. I have hard
+time imagine this could be ever done without a lot of time and effort on
+the organizing side. I do not believe we can simply outsource a highly
+technical conference to somebody outside of the community. LF is doing a
+lot of great work to help with the venue and related stuff but content
+wise it is still on the community IMHO.
 
->  fs/xfs/libxfs/xfs_ag.c         |  2 +-
->  fs/xfs/libxfs/xfs_format.h     |  1 -
->  fs/xfs/libxfs/xfs_sb.c         | 17 +++++++++--------
->  fs/xfs/scrub/agheader.c        |  2 +-
->  fs/xfs/scrub/agheader_repair.c |  2 +-
->  fs/xfs/xfs_log_recover.c       |  2 +-
->  fs/xfs/xfs_mount.c             |  2 +-
->  fs/xfs/xfs_trans.c             |  2 +-
->  8 files changed, 15 insertions(+), 15 deletions(-)
+[...]
+> These are all really good goals, and why we love the idea of LSFMMBPF.  But
+> having attended these things every year for the last 13 years, it has become
+> less and less of these things, at least from my perspective.  A few problems
+> (as I see them) are
 > 
-> diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-> index 447e363d8468..f9b8c177ebc3 100644
-> --- a/fs/xfs/libxfs/xfs_ag.c
-> +++ b/fs/xfs/libxfs/xfs_ag.c
-> @@ -231,7 +231,7 @@ xfs_sbblock_init(
->  	struct xfs_buf		*bp,
->  	struct aghdr_init_data	*id)
->  {
-> -	struct xfs_dsb		*dsb = XFS_BUF_TO_SBP(bp);
-> +	struct xfs_dsb		*dsb = bp->b_addr;
->  
->  	xfs_sb_to_disk(dsb, &mp->m_sb);
->  	dsb->sb_inprogress = 1;
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index 03531f0f537a..81a1b7084008 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -560,7 +560,6 @@ xfs_is_quota_inode(struct xfs_sb *sbp, xfs_ino_t ino)
->  
->  #define XFS_SB_DADDR		((xfs_daddr_t)0) /* daddr in filesystem/ag */
->  #define	XFS_SB_BLOCK(mp)	XFS_HDR_BLOCK(mp, XFS_SB_DADDR)
-> -#define XFS_BUF_TO_SBP(bp)	((xfs_dsb_t *)((bp)->b_addr))
->  
->  #define	XFS_HDR_BLOCK(mp,d)	((xfs_agblock_t)XFS_BB_TO_FSBT(mp,d))
->  #define	XFS_DADDR_TO_FSB(mp,d)	XFS_AGB_TO_FSB(mp, \
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index 2f60fc3c99a0..00266de58954 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -220,7 +220,7 @@ xfs_validate_sb_common(
->  	struct xfs_buf		*bp,
->  	struct xfs_sb		*sbp)
->  {
-> -	struct xfs_dsb		*dsb = XFS_BUF_TO_SBP(bp);
-> +	struct xfs_dsb		*dsb = bp->b_addr;
->  	uint32_t		agcount = 0;
->  	uint32_t		rem;
->  
-> @@ -681,7 +681,7 @@ xfs_sb_read_verify(
->  {
->  	struct xfs_sb		sb;
->  	struct xfs_mount	*mp = bp->b_mount;
-> -	struct xfs_dsb		*dsb = XFS_BUF_TO_SBP(bp);
-> +	struct xfs_dsb		*dsb = bp->b_addr;
->  	int			error;
->  
->  	/*
-> @@ -707,7 +707,7 @@ xfs_sb_read_verify(
->  	 * Check all the superblock fields.  Don't byteswap the xquota flags
->  	 * because _verify_common checks the on-disk values.
->  	 */
-> -	__xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp), false);
-> +	__xfs_sb_from_disk(&sb, dsb, false);
->  	error = xfs_validate_sb_common(mp, bp, &sb);
->  	if (error)
->  		goto out_error;
-> @@ -730,7 +730,7 @@ static void
->  xfs_sb_quiet_read_verify(
->  	struct xfs_buf	*bp)
->  {
-> -	struct xfs_dsb	*dsb = XFS_BUF_TO_SBP(bp);
-> +	struct xfs_dsb	*dsb = bp->b_addr;
->  
->  	if (dsb->sb_magicnum == cpu_to_be32(XFS_SB_MAGIC)) {
->  		/* XFS filesystem, verify noisily! */
-> @@ -748,13 +748,14 @@ xfs_sb_write_verify(
->  	struct xfs_sb		sb;
->  	struct xfs_mount	*mp = bp->b_mount;
->  	struct xfs_buf_log_item	*bip = bp->b_log_item;
-> +	struct xfs_dsb		*dsb = bp->b_addr;
->  	int			error;
->  
->  	/*
->  	 * Check all the superblock fields.  Don't byteswap the xquota flags
->  	 * because _verify_common checks the on-disk values.
->  	 */
-> -	__xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp), false);
-> +	__xfs_sb_from_disk(&sb, dsb, false);
->  	error = xfs_validate_sb_common(mp, bp, &sb);
->  	if (error)
->  		goto out_error;
-> @@ -766,7 +767,7 @@ xfs_sb_write_verify(
->  		return;
->  
->  	if (bip)
-> -		XFS_BUF_TO_SBP(bp)->sb_lsn = cpu_to_be64(bip->bli_item.li_lsn);
-> +		dsb->sb_lsn = cpu_to_be64(bip->bli_item.li_lsn);
->  
->  	xfs_buf_update_cksum(bp, XFS_SB_CRC_OFF);
->  	return;
-> @@ -927,7 +928,7 @@ xfs_log_sb(
->  	mp->m_sb.sb_ifree = percpu_counter_sum(&mp->m_ifree);
->  	mp->m_sb.sb_fdblocks = percpu_counter_sum(&mp->m_fdblocks);
->  
-> -	xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb);
-> +	xfs_sb_to_disk(bp->b_addr, &mp->m_sb);
->  	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SB_BUF);
->  	xfs_trans_log_buf(tp, bp, 0, sizeof(struct xfs_dsb) - 1);
->  }
-> @@ -1007,7 +1008,7 @@ xfs_update_secondary_sbs(
->  		bp->b_ops = &xfs_sb_buf_ops;
->  		xfs_buf_oneshot(bp);
->  		xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
-> -		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb);
-> +		xfs_sb_to_disk(bp->b_addr, &mp->m_sb);
->  		xfs_buf_delwri_queue(bp, &buffer_list);
->  		xfs_buf_relse(bp);
->  
-> diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-> index 163478855e7b..e9bcf1faa183 100644
-> --- a/fs/xfs/scrub/agheader.c
-> +++ b/fs/xfs/scrub/agheader.c
-> @@ -92,7 +92,7 @@ xchk_superblock(
->  	if (!xchk_process_error(sc, agno, XFS_SB_BLOCK(mp), &error))
->  		return error;
->  
-> -	sb = XFS_BUF_TO_SBP(bp);
-> +	sb = bp->b_addr;
->  
->  	/*
->  	 * Verify the geometries match.  Fields that are permanently
-> diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-> index c801f5892210..31dbb5d556fd 100644
-> --- a/fs/xfs/scrub/agheader_repair.c
-> +++ b/fs/xfs/scrub/agheader_repair.c
-> @@ -49,7 +49,7 @@ xrep_superblock(
->  
->  	/* Copy AG 0's superblock to this one. */
->  	xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
-> -	xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb);
-> +	xfs_sb_to_disk(bp->b_addr, &mp->m_sb);
->  
->  	/* Write this to disk. */
->  	xfs_trans_buf_set_type(sc->tp, bp, XFS_BLFT_SB_BUF);
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index b6cf99f7153f..6abc0863c9c3 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -5636,7 +5636,7 @@ xlog_do_recover(
->  
->  	/* Convert superblock from on-disk format */
->  	sbp = &mp->m_sb;
-> -	xfs_sb_from_disk(sbp, XFS_BUF_TO_SBP(bp));
-> +	xfs_sb_from_disk(sbp, bp->b_addr);
->  	xfs_buf_relse(bp);
->  
->  	/* re-initialise in-core superblock and geometry structures */
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 56efe140c923..c5513e5a226a 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -310,7 +310,7 @@ xfs_readsb(
->  	/*
->  	 * Initialize the mount structure from the superblock.
->  	 */
-> -	xfs_sb_from_disk(sbp, XFS_BUF_TO_SBP(bp));
-> +	xfs_sb_from_disk(sbp, bp->b_addr);
->  
->  	/*
->  	 * If we haven't validated the superblock, do so now before we try
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index 3b208f9a865c..73c534093f09 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -450,7 +450,7 @@ xfs_trans_apply_sb_deltas(
->  	int		whole = 0;
->  
->  	bp = xfs_trans_getsb(tp, tp->t_mountp);
-> -	sbp = XFS_BUF_TO_SBP(bp);
-> +	sbp = bp->b_addr;
->  
->  	/*
->  	 * Check that superblock mods match the mods made to AGF counters.
-> -- 
-> 2.24.1
-> 
+> 1) The invitation process.  We've tried many different things, and I think
+> we generally do a good job here, but the fact is if I don't know somebody
+> I'm not going to give them a very high rating, making it difficult to
+> actually bring in new people.
 
+My experience from the MM track involvement last few years is slightly
+different. We have always had a higher demand than seats available
+for the track. We have tried really hard to bring people who could
+contribute the most requested topic into the room. We have also tried to
+bring new contributors in. There are always compromises to be made but
+my recollection is that discussions were usually very useful and moved
+topics forward. The room size played an important role in that regard.
+
+> 2) There are so many of us.  Especially with the addition of the BPF crowd
+> we are now larger than ever.  This makes problem #1 even more apparent, even
+> if I weighted some of the new people higher who's slot should they take
+> instead?  I have 0 problems finding 20 people in the FS community who should
+> absolutely be in the room.  But now I'm trying to squeeze in 1-5 extra
+> people.  Propagate that across all the tracks and now we're at an extra
+> 20ish people.
+
+Yes, BPF track made the conference larger indeed. This might be problem
+for funding but it didn't really cause much more work for tracks
+organization (well for MM at least).
+
+> 3) Half the people I want to talk to aren't even in the room.  This may be a
+> uniquely file system track problem, but most of my work is in btrfs, and I
+> want to talk to my fellow btrfs developers.  But again, we're trying to
+> invite an entire community, so many of them simply don't request
+> invitations, or just don't get invited.
+
+I do not have the same experience on the MM track. Even though the whole
+community is hard to fit into the room, there tends to be a sufficient
+mass to move a topic forward usually. Even if we cannot conclude many
+topics there are usually many action items as an outcome.
+
+[...]
+
+> So what do I propose?  I propose we kill LSFMMBPF.
+
+This would be really unfortunate. LSFMMBPF has been the most attractive
+conference for me exactly because of the size and cost/benefit. I do
+realize we are growing and that should be somehow reflected in the
+future. I do not have good answers how to do that yet unfortunately.
+Maybe we really need to split the core agenda and topics which could be
+discussed/presented on other conferences. Or collocate with another
+conference but I have a feeling that we could cover more since LSFMMBPF
+-- 
+Michal Hocko
+SUSE Labs
