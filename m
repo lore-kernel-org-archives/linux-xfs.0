@@ -2,157 +2,185 @@ Return-Path: <SRS0=iJk4=43=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB184C10F27
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Mar 2020 14:41:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43661C10F27
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Mar 2020 15:47:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AD7F8208E4
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Mar 2020 14:41:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1AD2D22522
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Mar 2020 15:47:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="JDnp6Ib4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727273AbgCJOlY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Mar 2020 10:41:24 -0400
-Received: from sandeen.net ([63.231.237.45]:41594 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726391AbgCJOlY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Mar 2020 10:41:24 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 9E012116F4;
-        Tue, 10 Mar 2020 09:40:38 -0500 (CDT)
-Subject: Re: 5.5 XFS getdents regression?
-To:     Bhaskar Chowdhury <unixbhaskar@gmail.com>,
-        "Rantala, Tommi T. (Nokia - FI/Espoo)" <tommi.t.rantala@nokia.com>,
-        "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "hch@lst.de" <hch@lst.de>
-References: <72c5fd8e9a23dde619f70f21b8100752ec63e1d2.camel@nokia.com>
- <20200310111205.GB3151@Gentoo>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <0cf51699-fab5-406a-53a9-efb1a7309dea@sandeen.net>
-Date:   Tue, 10 Mar 2020 09:41:20 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.5.0
+        id S1726901AbgCJPrH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Mar 2020 11:47:07 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:47188 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726414AbgCJPrH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Mar 2020 11:47:07 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02AFV4EF045425;
+        Tue, 10 Mar 2020 15:47:04 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=E+uMZnIg84WF7/AIVTmOQZkwnV32Fa5W9H+EdBj6650=;
+ b=JDnp6Ib4bAs2/YTO+9cPgEPn+34hQ/oQ/Rmn9Iu1IXeDcqxch6P1wB7b3qGtzVp5sfIO
+ RHSmlPhW1Zo4nGBF20GaAaL5KLXXtJI+iyV5XXEMKcDyR6gMXu4yik9ihmIb/bGiC8q3
+ sm9Yc4OO64x6Keo4uuarWGY3YEoJIwMkn6XyqAmguzYBMCWqPzQMlFIsIPXx15Vp6nbu
+ xB5EXYbbs5/hI8fMC05J3gOfuPhFcZTXxpmcsrSQfcIbktnpNV2ASrNPkDaerwKcTLYE
+ lkbSWG59SeUIh/U/6C6GAD46N1zI7RlvwlhY4fM3yKzZs4J7vrlPwtaLhDt/MwFteemI +w== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2yp9v61fmm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 10 Mar 2020 15:47:03 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02AFXgLt104499;
+        Tue, 10 Mar 2020 15:47:03 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 2yp8rjkx1b-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 10 Mar 2020 15:47:02 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 02AFl2X7029901;
+        Tue, 10 Mar 2020 15:47:02 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 10 Mar 2020 08:47:01 -0700
+Date:   Tue, 10 Mar 2020 08:47:01 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        syzkaller-bugs@googlegroups.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] xfs: clear PF_MEMALLOC before exiting xfsaild thread
+Message-ID: <20200310154701.GI8036@magnolia>
+References: <20200309181332.GJ1752567@magnolia>
+ <20200309185714.42850-1-ebiggers@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20200310111205.GB3151@Gentoo>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="wq5y7ZD0BjdpxGsEvept4NHPdTUV6XbUD"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200309185714.42850-1-ebiggers@kernel.org>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9556 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0 mlxscore=0
+ spamscore=0 malwarescore=0 bulkscore=0 adultscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2003100100
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9556 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0 mlxscore=0
+ priorityscore=1501 lowpriorityscore=0 bulkscore=0 mlxlogscore=999
+ phishscore=0 adultscore=0 clxscore=1015 impostorscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2003100100
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---wq5y7ZD0BjdpxGsEvept4NHPdTUV6XbUD
-Content-Type: multipart/mixed; boundary="oH6uABVVrGGdnpEapH16tfofEcVSPA8Sf"
+On Mon, Mar 09, 2020 at 11:57:14AM -0700, Eric Biggers wrote:
+> From: Eric Biggers <ebiggers@google.com>
+> 
+> Leaving PF_MEMALLOC set when exiting a kthread causes it to remain set
+> during do_exit().  That can confuse things.  In particular, if BSD
+> process accounting is enabled, then do_exit() writes data to an
+> accounting file.  If that file has FS_SYNC_FL set, then this write
+> occurs synchronously and can misbehave if PF_MEMALLOC is set.
+> 
+> For example, if the accounting file is located on an XFS filesystem,
+> then a WARN_ON_ONCE() in iomap_do_writepage() is triggered and the data
+> doesn't get written when it should.  Or if the accounting file is
+> located on an ext4 filesystem without a journal, then a WARN_ON_ONCE()
+> in ext4_write_inode() is triggered and the inode doesn't get written.
+> 
+> Fix this in xfsaild() by using the helper functions to save and restore
+> PF_MEMALLOC.
+> 
+> This can be reproduced as follows in the kvm-xfstests test appliance
+> modified to add the 'acct' Debian package, and with kvm-xfstests's
+> recommended kconfig modified to add CONFIG_BSD_PROCESS_ACCT=y:
+> 
+>         mkfs.xfs -f /dev/vdb
+>         mount /vdb
+>         touch /vdb/file
+>         chattr +S /vdb/file
+>         accton /vdb/file
+>         mkfs.xfs -f /dev/vdc
+>         mount /vdc
+>         umount /vdc
+> 
+> It causes:
+> 	WARNING: CPU: 1 PID: 336 at fs/iomap/buffered-io.c:1534
+> 	CPU: 1 PID: 336 Comm: xfsaild/vdc Not tainted 5.6.0-rc5 #3
+> 	Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20191223_100556-anatol 04/01/2014
+> 	RIP: 0010:iomap_do_writepage+0x16b/0x1f0 fs/iomap/buffered-io.c:1534
+> 	[...]
+> 	Call Trace:
+> 	 write_cache_pages+0x189/0x4d0 mm/page-writeback.c:2238
+> 	 iomap_writepages+0x1c/0x33 fs/iomap/buffered-io.c:1642
+> 	 xfs_vm_writepages+0x65/0x90 fs/xfs/xfs_aops.c:578
+> 	 do_writepages+0x41/0xe0 mm/page-writeback.c:2344
+> 	 __filemap_fdatawrite_range+0xd2/0x120 mm/filemap.c:421
+> 	 file_write_and_wait_range+0x71/0xc0 mm/filemap.c:760
+> 	 xfs_file_fsync+0x7a/0x2b0 fs/xfs/xfs_file.c:114
+> 	 generic_write_sync include/linux/fs.h:2867 [inline]
+> 	 xfs_file_buffered_aio_write+0x379/0x3b0 fs/xfs/xfs_file.c:691
+> 	 call_write_iter include/linux/fs.h:1901 [inline]
+> 	 new_sync_write+0x130/0x1d0 fs/read_write.c:483
+> 	 __kernel_write+0x54/0xe0 fs/read_write.c:515
+> 	 do_acct_process+0x122/0x170 kernel/acct.c:522
+> 	 slow_acct_process kernel/acct.c:581 [inline]
+> 	 acct_process+0x1d4/0x27c kernel/acct.c:607
+> 	 do_exit+0x83d/0xbc0 kernel/exit.c:791
+> 	 kthread+0xf1/0x140 kernel/kthread.c:257
+> 	 ret_from_fork+0x27/0x50 arch/x86/entry/entry_64.S:352
+> 
+> This bug was originally reported by syzbot at
+> https://lore.kernel.org/r/0000000000000e7156059f751d7b@google.com.
+> 
+> Reported-by: syzbot+1f9dc49e8de2582d90c2@syzkaller.appspotmail.com
+> Signed-off-by: Eric Biggers <ebiggers@google.com>
 
---oH6uABVVrGGdnpEapH16tfofEcVSPA8Sf
-Content-Type: text/plain; charset=windows-1252
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+Seems reasonable to me, will give it a spin...
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-On 3/10/20 6:12 AM, Bhaskar Chowdhury wrote:
-> On 08:45 Tue 10 Mar 2020, Rantala, Tommi T. (Nokia - FI/Espoo) wrote:
->=20
-> Okay, hang on! don't you think you should query at fedora mailing list
-> instead here??
->=20
-> Because you are running fedora kernel and I believe it is patched by
-> their team. So, they might have much more concrete answer than to ask
-> the file system developer here for the outcome.
+--D
 
-The Fedora kernel isn't very heavily patched most of the time, but it wou=
-ld
-be a good idea to test an upstream kernel (easy enough to just re-use the=
-
-Fedora kernel config) to confirm that it is an upstream problem.
-
-OTOH the gitlab link in the original email seems to indicate problems on
-Windows as well, so it may require some work to determine whether this is=
-
-a test harness problem, kernel problem, etc?
-
-Tommi, if the problem is easy to reproduce perhaps you can try a bisect
-on upstream kernels between 5.4.0 and 5.5.0?
-
-Also, testing on ext4 on 5.5.7 would help determine whether the problem
-you are seeing is xfs-specific or not.
-
--Eric
-
-> Kindly, provide the bug report to them fix your owes.
-
-
---oH6uABVVrGGdnpEapH16tfofEcVSPA8Sf--
-
---wq5y7ZD0BjdpxGsEvept4NHPdTUV6XbUD
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl5npxEACgkQIK4WkuE9
-3uBQew/+NmkYMciwiOWrlhu+QhwTN0SJrEtHrwHrzfGZK+Z3zqy53Ug4KUeA/FSc
-YMAVnobcAVgCp2ephh3yziP2ZB2VFtHVWNd5zdyBVlrUCEky49oHznTcXXzXamyR
-FjpUKJsFme2ghBHMC4obSZ5Fob8hs+9aU46FklOEHJuIQUZ/JPWAy8GmNriiOsOd
-UK4e8Z9bNzz6zqJm8fiAe/zYvy90r3h+TP1B4b93jmDh7ThfM4cOX/A89D/oItf/
-dPlloLm+2/nvdn2Kkbi5vggpo4NbTUpmqJg0Ei76Oag+De7t6EsqSUCCTDj8RY0P
-JLSmR/AxgOez0rJsj8OJ4cO2yuW2FuoXYqEdPAbmsgowYKgdnItkitB6vE2Wd7Lq
-37UVhX2Z7uzbYVFLbF1fUU/+n/Nd0JOzjc9X0nn5TJZUOaWyqtb1qGDFzkVgmWJZ
-YTUBWiUlMZiu2HAyi2I/e0gQYdFr4Ftf14CsyYYmDmsTq3YKc8AVhvFvm+d08e2Z
-S2aj/xIL3oV3UZcsHBcITC0PeX63ho0ZDQR4i/AsElneTVU6MYqHP3Yb1c7U9byS
-sWwV2rkyrydxFsmYdUYw0fn7cnG9v+w9NmzPG3nQZ6waTQkyPlzVLJfoYct9usx/
-+NraIrIVbZfiQBqcVT2QzFfvIvwuKgupTDplF8hzfoEnGv5Y2lM=
-=Imiq
------END PGP SIGNATURE-----
-
---wq5y7ZD0BjdpxGsEvept4NHPdTUV6XbUD--
+> ---
+> 
+> v3: updated commit message again, this time to take into account the bug
+>     also being reproducible when the accounting file is located on XFS.
+> 
+> v2: include more details in the commit message.
+> 
+>  fs/xfs/xfs_trans_ail.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+> index 00cc5b8734be8..3bc570c90ad97 100644
+> --- a/fs/xfs/xfs_trans_ail.c
+> +++ b/fs/xfs/xfs_trans_ail.c
+> @@ -529,8 +529,9 @@ xfsaild(
+>  {
+>  	struct xfs_ail	*ailp = data;
+>  	long		tout = 0;	/* milliseconds */
+> +	unsigned int	noreclaim_flag;
+>  
+> -	current->flags |= PF_MEMALLOC;
+> +	noreclaim_flag = memalloc_noreclaim_save();
+>  	set_freezable();
+>  
+>  	while (1) {
+> @@ -601,6 +602,7 @@ xfsaild(
+>  		tout = xfsaild_push(ailp);
+>  	}
+>  
+> +	memalloc_noreclaim_restore(noreclaim_flag);
+>  	return 0;
+>  }
+>  
+> -- 
+> 2.25.1
+> 
