@@ -6,45 +6,61 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B298C10F25
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 05:59:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31A24C10F25
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 06:29:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6B625208C4
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 05:59:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 167C1208E4
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 06:29:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726472AbgCKF7e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Mar 2020 01:59:34 -0400
-Received: from verein.lst.de ([213.95.11.211]:57297 "EHLO verein.lst.de"
+        id S1728146AbgCKG34 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Mar 2020 02:29:56 -0400
+Received: from verein.lst.de ([213.95.11.211]:57474 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726160AbgCKF7d (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 11 Mar 2020 01:59:33 -0400
+        id S1726160AbgCKG34 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 11 Mar 2020 02:29:56 -0400
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id B695968C4E; Wed, 11 Mar 2020 06:59:31 +0100 (CET)
-Date:   Wed, 11 Mar 2020 06:59:31 +0100
+        id ADA7868C4E; Wed, 11 Mar 2020 07:29:52 +0100 (CET)
+Date:   Wed, 11 Mar 2020 07:29:52 +0100
 From:   Christoph Hellwig <hch@lst.de>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/7] xfs: remove the unused return value from
- xfs_log_unmount_write
-Message-ID: <20200311055931.GA10699@lst.de>
-References: <20200306143137.236478-1-hch@lst.de> <20200306143137.236478-2-hch@lst.de> <20200306160917.GD2773@bfoster> <20200309080252.GA31481@lst.de> <20200310222856.GR10776@dread.disaster.area>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Ira Weiny <ira.weiny@intel.com>, Christoph Hellwig <hch@lst.de>,
+        linux-kernel@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Chinner <david@fromorbit.com>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, akpm@linux-foundation.org,
+        torvalds@linux-foundation.org
+Subject: Re: [PATCH V5 00/12] Enable per-file/per-directory DAX operations
+ V5
+Message-ID: <20200311062952.GA11519@lst.de>
+References: <20200227052442.22524-1-ira.weiny@intel.com> <20200305155144.GA5598@lst.de> <20200309170437.GA271052@iweiny-DESK2.sc.intel.com> <20200311033614.GQ1752567@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200310222856.GR10776@dread.disaster.area>
+In-Reply-To: <20200311033614.GQ1752567@magnolia>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 11, 2020 at 09:28:56AM +1100, Dave Chinner wrote:
-> FWIW, I'm typing limited at the moment because of a finger injury.
+On Tue, Mar 10, 2020 at 08:36:14PM -0700, Darrick J. Wong wrote:
+> 1) Leave the inode flag (FS_XFLAG_DAX) as it is, and export the S_DAX
+> status via statx.  Document that changes to FS_XFLAG_DAX do not take
+> effect immediately and that one must check statx to find out the real
+> mode.  If we choose this, I would also deprecate the dax mount option;
+> send in my mkfs.xfs patch to make it so that you can set FS_XFLAG_DAX on
+> all files at mkfs time; and we can finally lay this whole thing to rest.
+> This is the closest to what we have today.
 > 
-> I was planning to rebase mine on the first 6 patches of this series
-> (i.e. all but the IOERROR removal patch) a couple of days ago, but
-> I'm really slow at getting stuff done at the moment. So if Darrick
-> is happy with this patchset, don't let my cleanup hold it up.
+> 2) Withdraw FS_XFLAG_DAX entirely, and let the kernel choose based on
+> usage patterns, hardware heuristics, or spiteful arbitrariness.
 
-Get better soon.  I'll resend just the trivial cleanups for now.
+3) Only allow changing FS_XFLAG_DAX on directories or files that do
+not have blocks allocated to them yet, and side step all the hard
+problems.
+
+Which of course still side steps the hard question of what it actually
+is supposed to mean..
