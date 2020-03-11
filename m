@@ -2,194 +2,115 @@ Return-Path: <SRS0=qEB5=44=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 825E0C0044D
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 17:06:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 737ACC2BAEE
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 17:07:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AB72C206BE
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 17:06:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C900B20736
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 17:07:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nokia.onmicrosoft.com header.i=@nokia.onmicrosoft.com header.b="MlMIupwF"
+	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="nDapp6Xl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730068AbgCKRGV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Mar 2020 13:06:21 -0400
-Received: from mail-vi1eur05on2135.outbound.protection.outlook.com ([40.107.21.135]:19105
-        "EHLO EUR05-VI1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730195AbgCKRGV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 11 Mar 2020 13:06:21 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=XKCpXqk9iPhOZzNubhSy5ccsawODPPm9U5T+0hBBHBp6eboJ8WkHHb74iIhIhc8EQne//eDLGXp0uTSXAHFpsw6YXxAzLL3EHNDEJgQ27Uf8UmdHHgKJ1G9GNeUbCRBd1ZCRcDzhzU/P1EXczrg7CY2JnX3OsxOEdhfk7jNEWcsH1sVLo+JiuvG2yQ0PKQ16+Y2CApg4t9gVHjLbikyJ2sJh1VHGtrsQh9LeryfcUJ4gs4lE9y1yQwlZTaBnnZgXAXufI46X+P18L8hxdKvWsAU8ojDdodpfiPmxh+iWJ60EXarJFDNJUQJ3BW/h+SGmmNuuE9L+yXWckk415Jt1Dg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=IVHIYHEEP1VFEiiN52h63DtTSXQmSBXeDuj5RBfou0s=;
- b=R1ce3TSwk7unDejWU1SIjarzaiXpunMh2wKgQWNwKo6rQ/GPojPOYHTs2rNpGlNNrXpIJ+aob0LeCQS7lZbAO+Rr+Sn69rsKcBYS/VSLNR6DnRA9ZWvE+HT+t5z2VXwz7IjVDIJyAvdJsMjlt9+JciBZac8EyN7SprmB5wCbTJgIVuSRp/il4DMUmpMW3XU0hyRMln+n0+ZlzQ8lIRn0giHnRA0IXM73xPmsgdAv9OVKHiSJUA/V2wOKQY6xFOMTixbEnxKxgDzTWpQxaen6+ecSclnrf+lDG6c36fhIzmzzt1vu5pZ/EbJHdmqZO7kpVrqfQ6UH2tH+YHtzDCxg+g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nokia.com; dmarc=pass action=none header.from=nokia.com;
- dkim=pass header.d=nokia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nokia.onmicrosoft.com;
- s=selector1-nokia-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=IVHIYHEEP1VFEiiN52h63DtTSXQmSBXeDuj5RBfou0s=;
- b=MlMIupwFx4zEYhtF+vIPmlLH9LZXMyViAnjTFwXQm6SkbGB+k1t7Q1nLz8Hxr8rlWycRAVUFATJ2Z6R3s4G/XFInWsfpfD8ReN1+xrg89wfOQotw4yGArbXqbM6RFtYB1jgHf+DCwSJmFegXo3D2NVODnb+08DpcMMxnP5BadwE=
-Received: from HE1PR0702MB3675.eurprd07.prod.outlook.com (10.167.127.12) by
- HE1PR0702MB3770.eurprd07.prod.outlook.com (10.167.126.145) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2814.9; Wed, 11 Mar 2020 17:06:16 +0000
-Received: from HE1PR0702MB3675.eurprd07.prod.outlook.com
- ([fe80::2806:c34c:d469:8e87]) by HE1PR0702MB3675.eurprd07.prod.outlook.com
- ([fe80::2806:c34c:d469:8e87%5]) with mapi id 15.20.2814.007; Wed, 11 Mar 2020
- 17:06:16 +0000
-From:   "Rantala, Tommi T. (Nokia - FI/Espoo)" <tommi.t.rantala@nokia.com>
-To:     "hch@lst.de" <hch@lst.de>,
-        "david@fromorbit.com" <david@fromorbit.com>
-CC:     "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: 5.5 XFS getdents regression?
-Thread-Topic: 5.5 XFS getdents regression?
-Thread-Index: AQHV9rhRbXPUS+vCVkG2reFy3jRV26hCZPwAgAE8UoA=
-Date:   Wed, 11 Mar 2020 17:06:16 +0000
-Message-ID: <862b6c718957aff7156bf04964b7242f5075e8a7.camel@nokia.com>
-References: <72c5fd8e9a23dde619f70f21b8100752ec63e1d2.camel@nokia.com>
-         <20200310221406.GO10776@dread.disaster.area>
-In-Reply-To: <20200310221406.GO10776@dread.disaster.area>
-Accept-Language: fi-FI, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=tommi.t.rantala@nokia.com; 
-x-originating-ip: [131.228.2.4]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 91210b19-268b-4ee3-1c11-08d7c5de82e1
-x-ms-traffictypediagnostic: HE1PR0702MB3770:
-x-microsoft-antispam-prvs: <HE1PR0702MB37709AEACBFD60E17F6AFD23B4FC0@HE1PR0702MB3770.eurprd07.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:7219;
-x-forefront-prvs: 0339F89554
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(396003)(376002)(39860400002)(366004)(346002)(136003)(199004)(81166006)(81156014)(4326008)(8676002)(966005)(26005)(8936002)(6506007)(5660300002)(66446008)(64756008)(66476007)(86362001)(186003)(66556008)(66946007)(54906003)(6512007)(2616005)(478600001)(6486002)(7116003)(110136005)(36756003)(76116006)(316002)(2906002)(71200400001);DIR:OUT;SFP:1102;SCL:1;SRVR:HE1PR0702MB3770;H:HE1PR0702MB3675.eurprd07.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;
-received-spf: None (protection.outlook.com: nokia.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: T3A/fDYqLVQ0gd9KHVP+wkW4wf1GKdRWUSliMnmNc44j5Du1PHuaPIsS/xvEljfibsghu0YFHN5oHrGkT2KXnW4bV2ZtcSpGzpAb5Z2ZNbax07wTPs4NWzJYsDN4rfTt+0y3bxcx8u/e2hM1TBK0vYaJTREFdMHEDGIO5lb9aqiATXen4L6CgxdcT9Q/PQcAcT074YTX8iPNuES8w8BD4rZjRS6ObafukZgSPabB4z/bOmP1MQRnvqjx3rIkhbVl7t8v/7qxEzxJZbnwummiDaf3qNglNQByMWfsyOSfPGbaZ8QVyXUxZMGvKFUNwabwtzVvVgy/i1OuSBXPkNfBrMmKrlqEWXDF21vMUQiEgoxmgVkR/0Nc3dyH3hz5elOP6jxl4byjxasQZ+nHDFYfTGYHFBu0ETTgBk/nu/GhGb73Lm9hZujGXwW81fUwj7Kl6Ij0OFlmDcpgTvYFBEuzN8xyqOso9A8u7sBwlHVbiMN/tXt2xB825whLWw5B0UqhryTDHFKUvcdDndnXCn765Q==
-x-ms-exchange-antispam-messagedata: tpeyWjVk/wTN0WtrntwfdbRUleaUxgzY0fg24c8PdLATO6AVESu5TWZYBn4kW2fKrd8ueJuFl1kyGo9o43E8AgAvmvxhdUw+2I3iad8CfWZGQt7VbOWmXnqm8TC5fjG6tJ8kMF2qopXE9XxemEI4FQ==
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <40C93D37D0BB1D41AB69874ED488E844@eurprd07.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        id S1730380AbgCKRHb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Mar 2020 13:07:31 -0400
+Received: from mail-ot1-f67.google.com ([209.85.210.67]:40844 "EHLO
+        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730426AbgCKRHa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Mar 2020 13:07:30 -0400
+Received: by mail-ot1-f67.google.com with SMTP id h17so2785991otn.7
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 10:07:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=U+t9fU13Iuz/zoBPnGG3vft0C0z8m2mKCU7Saw6lmvk=;
+        b=nDapp6XlmdQ95ZlIGVJCqMXN9WyMEgI8CkY0oLNB089wKVmR+TdQeZpYDltt7rgUbo
+         3dLmnYrnPzoOy+BA0kNlt4kZy0eo8oxD/iQNDby4ZOZLvKsJ7toAqY+og/il5nfjvoqQ
+         4nbRNzmRf1NValJ935o6Kb1TnOQckuNubNDuu5/tyTnmiaYMnvKQ02fsRkHbUXS28sG9
+         ZQjcT/UAmUuOghp9CgbxknQK/JZWV3oSAA/okTSskDW+E+LNju1VyxIjyiso5WQ940vk
+         bC1VPLSskaTKc8FU6ZuPNRE30Qt9QR7h7dAtWQdc0Tb8O1zmr8Tzn/NHVZwzBIxVOj5V
+         CtKw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=U+t9fU13Iuz/zoBPnGG3vft0C0z8m2mKCU7Saw6lmvk=;
+        b=IjUVKYOZ+aKbPmrXrPEKNfF836nODGWzTWQMLsD9TrgcixrmaGX/qSCtnbbL6Gaflw
+         FR8LRCra05jOJkiB0HrbIoH03iPbAZR1tUm2gsc1MzvRUg0wJn+/xa7JjMmBwMRMmlf3
+         U0P6lnuWTER6fiMmY/fTEplbvkZeYIVhmpn+o6o2Wi88/vT0jg7BOzHTpsSb36ywnUih
+         krsg64P7Cfo39sUpuHEy8j0G56pXiuP+XKDh2wvpWJiMOdqKkKedrNSr9/LRsI+94AQJ
+         uAcmz2ADU2lmSF7pe1PbTKi9sNUldz33aQiTdCnsmvkj+eitt5QkI6pgklGxo1+0n/xH
+         dXUw==
+X-Gm-Message-State: ANhLgQ15CEfOh7of5zFQ+/NIeFe2fuJj0/IKy7Gb0uG4cPtEjj+HPPWZ
+        kx4aBQBcLlhtCnm61ck8MRezVSTykKHNijrmmEFzSw==
+X-Google-Smtp-Source: ADFU+vv33qQ1Vs3CkoYzAvtrw3SpDVVFOXBI9ccyey4I0e0R2cgw4zlbjqPoifA6+u164sdMBKOHuMFJW3vErink/7Y=
+X-Received: by 2002:a05:6830:57b:: with SMTP id f27mr3211846otc.363.1583946449937;
+ Wed, 11 Mar 2020 10:07:29 -0700 (PDT)
 MIME-Version: 1.0
-X-OriginatorOrg: nokia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 91210b19-268b-4ee3-1c11-08d7c5de82e1
-X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Mar 2020 17:06:16.4287
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 5d471751-9675-428d-917b-70f44f9630b0
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: nxZWHFy28gJpHvzDiWQ8/ZCEcTsZ0PK1O7JMfbQpqzzomTSMYA1VEQ49kjgvOpe3u5+IEDhPc/Yalry7MuCGBS4NJHOfWV3vk3+9e0MeI8k=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: HE1PR0702MB3770
+References: <20200227052442.22524-1-ira.weiny@intel.com> <20200305155144.GA5598@lst.de>
+ <20200309170437.GA271052@iweiny-DESK2.sc.intel.com> <20200311033614.GQ1752567@magnolia>
+ <20200311062952.GA11519@lst.de>
+In-Reply-To: <20200311062952.GA11519@lst.de>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Wed, 11 Mar 2020 10:07:18 -0700
+Message-ID: <CAPcyv4h9Xg61jk=Uq17xC6AGj9yOSAJnCaTzHcfBZwOVdRF9dw@mail.gmail.com>
+Subject: Re: [PATCH V5 00/12] Enable per-file/per-directory DAX operations V5
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Dave Chinner <david@fromorbit.com>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-T24gV2VkLCAyMDIwLTAzLTExIGF0IDA5OjE0ICsxMTAwLCBEYXZlIENoaW5uZXIgd3JvdGU6DQo+
-IE9uIFR1ZSwgTWFyIDEwLCAyMDIwIGF0IDA4OjQ1OjU4QU0gKzAwMDAsIFJhbnRhbGEsIFRvbW1p
-IFQuIChOb2tpYSAtDQo+IEZJL0VzcG9vKSB3cm90ZToNCj4gPiBIZWxsbywNCj4gPiANCj4gPiBP
-bmUgb2YgbXkgR2l0TGFiIENJIGpvYnMgc3RvcHBlZCB3b3JraW5nIGFmdGVyIHVwZ3JhZGluZyBz
-ZXJ2ZXINCj4gPiA1LjQuMTgtDQo+ID4gMTAwLmZjMzAueDg2XzY0IC0+IDUuNS43LTEwMC5mYzMw
-Lng4Nl82NC4NCj4gPiAodGVzdGVkIDUuNS44LTEwMC5mYzMwLng4Nl82NCB0b28sIG5vIGNoYW5n
-ZSkNCj4gPiBUaGUgc2VydmVyIGlzIGZlZG9yYTMwIHdpdGggWEZTIHJvb3Rmcy4NCj4gPiBUaGUg
-cHJvYmxlbSByZXByb2R1Y2VzIGFsd2F5cywgYW5kIHRha2VzIG9ubHkgY291cGxlIG1pbnV0ZXMg
-dG8gcnVuLg0KPiA+IA0KPiA+IFRoZSBDSSBqb2IgZmFpbHMgaW4gdGhlIGJlZ2lubmluZyB3aGVu
-IGRvaW5nICJnaXQgY2xlYW4iIGluIGRvY2tlcg0KPiA+IGNvbnRhaW5lciwgYW5kIGZhaWxpbmcg
-dG8gcm1kaXIgc29tZSBkaXJlY3Rvcnk6DQo+ID4gIndhcm5pbmc6IGZhaWxlZCB0byByZW1vdmUg
-DQo+ID4gLnZlbmRvci9wa2cvbW9kL2dvbGFuZy5vcmcveC9uZXRAdjAuMC4wLTIwMjAwMTE0MTU1
-NDEzLTZhZmI1MTk1ZTVhYS9pbg0KPiA+IHRlcm4NCj4gPiBhbC9zb2NrZXQ6IERpcmVjdG9yeSBu
-b3QgZW1wdHkiDQo+ID4gDQo+ID4gUXVpY2sgZ29vZ2xlIHNlYXJjaCBmaW5kcyBzb21lIG90aGVy
-IHBlb3BsZSByZXBvcnRpbmcgc2ltaWxhciBwcm9ibGVtcw0KPiA+IHdpdGggNS41LjA6DQo+ID4g
-aHR0cHM6Ly9naXRsYWIuY29tL2dpdGxhYi1vcmcvZ2l0bGFiLXJ1bm5lci9pc3N1ZXMvMzE4NQ0K
-PiANCj4gV2hpY2ggYXBwZWFycyB0byBiZSBjYXVzZWQgYnkgbXVsdGlwbGUgZ2l0bGFiIHByb2Nl
-c3NlcyBtb2RpZnlpbmcNCj4gdGhlIGRpcmVjdG9yeSBhdCB0aGUgc2FtZSB0aW1lLiBpLmUuIHNv
-bWV0aGluZyBpcyBhZGRpbmcgYW4gZW50cnkgdG8NCj4gdGhlIGRpcmVjdG9yeSBhdCB0aGUgc2Ft
-ZSB0aW1lIHNvbWV0aGluZyBpcyB0cnlpbmcgdG8gcm0gLXJmIGl0Lg0KPiBUaGF0J3MgYSByYWNl
-IGNvbmRpdGlvbiwgYW5kIHdvdWxkIGxlYWQgdG8gdGhlIGV4YWN0IHN5bXB0b21zIHlvdQ0KPiBz
-ZWUgaGVyZSwgZGVwZW5kaW5nIG9uIHdoZXJlIGluIHRoZSBkaXJlY3RvcnkgdGhlIG5ldyBlbnRy
-eSBpcw0KPiBhZGRlZC4NCg0KT0sgdHJhY2VkICJleGVjdmUiIHdpdGggc3RyYWNlIHRvbywgYW5k
-IGl0IHNob3dzIHRoYXQgaXQncyAiZ2l0IGNsZWFuDQotZmZkeCIgY29tbWFuZCAoc2luZ2xlIHBy
-b2Nlc3MpIHRoYXQgaXMgYmVpbmcgZXhlY3V0ZWQgaW4gdGhlIGNvbnRhaW5lciwNCndoaWNoIGlz
-IGRvaW5nIHRoZSBjbGVhbnVwLg0KDQpUZXN0ZWQgd2l0aCA1LjYtcmM1LCBpdCdzIGZhaWxpbmcg
-dGhlIHNhbWUgd2F5Lg0KDQpTcGVudCBzb21lIHRpbWUgdG8gYmlzZWN0IHRoaXMsIGFuZCB0aGUg
-cHJvYmxlbSBpcyBpbnRyb2R1Y2VkIGJ5IHRoaXM6DQoNCmNvbW1pdCAyNjNkZGU4NjliZDA5YjFh
-NzA5ZmQ5MjExOGM3ZmZmODMyNzczNjg5DQpBdXRob3I6IENocmlzdG9waCBIZWxsd2lnIDxoY2hA
-bHN0LmRlPg0KRGF0ZTogICBGcmkgTm92IDggMTU6MDU6MzIgMjAxOSAtMDgwMA0KDQogICAgeGZz
-OiBjbGVhbnVwIHhmc19kaXIyX2Jsb2NrX2dldGRlbnRzDQogICAgDQogICAgVXNlIGFuIG9mZnNl
-dCBhcyB0aGUgbWFpbiBtZWFucyBmb3IgaXRlcmF0aW9uLCBhbmQgb25seSBkbyBwb2ludGVyDQog
-ICAgYXJpdGhtZXRpY3MgdG8gZmluZCB0aGUgZGF0YS91bnVzZWQgZW50cmllcy4NCiAgICANCiAg
-ICBTaWduZWQtb2ZmLWJ5OiBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGxzdC5kZT4NCiAgICBSZXZp
-ZXdlZC1ieTogRGFycmljayBKLiBXb25nIDxkYXJyaWNrLndvbmdAb3JhY2xlLmNvbT4NCiAgICBT
-aWduZWQtb2ZmLWJ5OiBEYXJyaWNrIEouIFdvbmcgPGRhcnJpY2sud29uZ0BvcmFjbGUuY29tPg0K
-DQoNCg0KSG1tbW1tLCBsb29raW5nIGF0IHRoYXQgY29tbWl0LCBJIHRoaW5rIGl0IHNsaWdodHkg
-Y2hhbmdlZCBob3cgdGhlDQoib2Zmc2V0IiBpcyB1c2VkIGNvbXBhcmVkIHRvIGhvdyB0aGUgcG9p
-bnRlcnMgd2VyZSB1c2VkLg0KDQpUaGlzIGN1cmVzIHRoZSBpc3N1ZSBmb3IgbWUsIHRlc3RlZCAo
-YnJpZWZseSkgb24gdG9wIG9mIDUuNi1yYzUuDQpEb2VzIGl0IG1ha2Ugc2Vuc2UuLi4/DQooRW1h
-aWwgY2xpZW50IHByb2JhYmx5IGRhbWFnZXMgd2hpdGUtc3BhY2UsIHNvcnJ5LCBJJ2xsIHNlbmQg
-dGhpcyBwcm9wZXJseQ0Kc2lnbmVkLW9mZiB3aXRoIGdpdC1zZW5kLWVtYWlsIGlmIGl0J3MgT0sp
-DQoNCg0KZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfZGlyMl9yZWFkZGlyLmMgYi9mcy94ZnMveGZz
-X2RpcjJfcmVhZGRpci5jDQppbmRleCAwZDNiNjQwY2YxY2MuLmFmOTQ1ZWM5ZGYzYiAxMDA2NDQN
-Ci0tLSBhL2ZzL3hmcy94ZnNfZGlyMl9yZWFkZGlyLmMNCisrKyBiL2ZzL3hmcy94ZnNfZGlyMl9y
-ZWFkZGlyLmMNCkBAIC0xNzksNiArMTc5LDcgQEAgeGZzX2RpcjJfYmxvY2tfZ2V0ZGVudHMoDQog
-ICAgICAgIHN0cnVjdCB4ZnNfZGlyMl9kYXRhX3VudXNlZCAgICAgKmR1cCA9IGJwLT5iX2FkZHIg
-KyBvZmZzZXQ7DQogICAgICAgIHN0cnVjdCB4ZnNfZGlyMl9kYXRhX2VudHJ5ICAgICAgKmRlcCA9
-IGJwLT5iX2FkZHIgKyBvZmZzZXQ7DQogICAgICAgIHVpbnQ4X3QgZmlsZXR5cGU7DQorICAgICAg
-IHVuc2lnbmVkIGludCBkZXBfb2Zmc2V0Ow0KIA0KICAgICAgICAvKg0KICAgICAgICAgKiBVbnVz
-ZWQsIHNraXAgaXQuDQpAQCAtMTg4LDE4ICsxODksMjEgQEAgeGZzX2RpcjJfYmxvY2tfZ2V0ZGVu
-dHMoDQogICAgICAgICAgICAgICAgY29udGludWU7DQogICAgICAgIH0NCiANCisgICAgICAgZGVw
-X29mZnNldCA9IG9mZnNldDsNCisNCiAgICAgICAgLyoNCi0gICAgICAgICogQnVtcCBwb2ludGVy
-IGZvciB0aGUgbmV4dCBpdGVyYXRpb24uDQorICAgICAgICAqIEJ1bXAgb2Zmc2V0IGZvciB0aGUg
-bmV4dCBpdGVyYXRpb24uDQogICAgICAgICAqLw0KICAgICAgICBvZmZzZXQgKz0geGZzX2RpcjJf
-ZGF0YV9lbnRzaXplKGRwLT5pX21vdW50LCBkZXAtPm5hbWVsZW4pOw0KDQogICAgICAgIC8qDQog
-ICAgICAgICAqIFRoZSBlbnRyeSBpcyBiZWZvcmUgdGhlIGRlc2lyZWQgc3RhcnRpbmcgcG9pbnQs
-IHNraXAgaXQuDQogICAgICAgICAqLw0KLSAgICAgICBpZiAob2Zmc2V0IDwgd2FudG9mZikNCisg
-ICAgICAgaWYgKGRlcF9vZmZzZXQgPCB3YW50b2ZmKQ0KICAgICAgICAgICAgICAgIGNvbnRpbnVl
-Ow0KIA0KLSAgICAgICBjb29rID0geGZzX2RpcjJfZGJfb2ZmX3RvX2RhdGFwdHIoZ2VvLCBnZW8t
-PmRhdGFibGssIG9mZnNldCk7DQorICAgICAgIGNvb2sgPSB4ZnNfZGlyMl9kYl9vZmZfdG9fZGF0
-YXB0cihnZW8sIGdlby0+ZGF0YWJsaywNCisgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgIGRlcF9vZmZzZXQpOw0KIA0KICAgICAgICBjdHgtPnBvcyA9IGNvb2sgJiAweDdm
-ZmZmZmZmOw0KICAgICAgICBmaWxldHlwZSA9IHhmc19kaXIyX2RhdGFfZ2V0X2Z0eXBlKGRwLT5p
-X21vdW50LCBkZXApOw0KDQoNCg0KPiA+IENvbGxlY3RlZCBzb21lIGRhdGEgd2l0aCBzdHJhY2Us
-IGFuZCBpdCBzZWVtcyB0aGF0IGdldGRlbnRzIGlzIG5vdA0KPiA+IHJldHVybmluZyBhbGwgZW50
-cmllczoNCj4gPiANCj4gPiA1LjQgZ2V0ZGVudHM2NCgpIHJldHVybnMgNTIrNTArMSswIGVudHJp
-ZXMgDQo+ID4gPT4gYWxsIGZpbGVzIGluIGRpcmVjdG9yeSBhcmUgZGVsZXRlZCBhbmQgcm1kaXIo
-KSBpcyBPSw0KPiA+IA0KPiA+IDUuNSBnZXRkZW50czY0KCkgcmV0dXJucyA1Mis1MCswKzAgZW50
-cmllcw0KPiA+ID0+IHJtZGlyKCkgZmFpbHMgd2l0aCBFTk9URU1QVFkNCj4gDQo+IFl1cCwgdGhh
-dCdzIGEgY2xhc3NpYyB1c2Vyc3BhY2UgVE9DVE9VIHJhY2UuDQo+IA0KPiBSZW1lbWJlciwgZ2V0
-ZGVudHMoKSBpcyBlZmZlY3RpdmVseSBhIHNlcXVlbnRpYWwgd2FsayB0aHJvdWdoIHRoZQ0KPiBk
-aXJlY3RvcnkgZGF0YSAtIHN1YnNlcXVlbnQgY2FsbHMgc3RhcnQgYXQgdGhlIG9mZnNldCAoY29v
-a2llKSB3aGVyZQ0KPiB0aGUgcHJldmlvdXMgb25lIGxlZnQgb2ZmLiBOZXcgZW50cmllcyBjYW4g
-YmUgYWRkZWQgYmV0d2Vlbg0KPiBnZXRkZW50cygpIHN5c2NhbGxzLg0KPiANCj4gSWYgdGhhdCBu
-ZXcgZW50cnkgaXMgcHV0IGF0IHRoZSB0YWlsIG9mIHRoZSBkaXJlY3RvcnksIHRoZW4gdGhlIGxh
-c3QNCj4gZ2V0ZGVudHMoKSBjYWxsIHdpbGwgcmV0dXJuIHRoYXQgZW50cnkgcmF0aGVyIHRoYW4g
-bm9uZSBiZWNhdXNlIGl0DQo+IHdhcyBwbGFjZWQgYXQgYW4gb2Zmc2V0IGluIHRoZSBkaXJlY3Rv
-cnkgdGhhdCB0aGUgZ2V0ZGVudHMoKSBzd2VlcA0KPiBoYXMgbm90IHlldCByZWFjaGVkLCBhbmQg
-aGVuY2Ugd2lsbCBiZSBmb3VuZCBieSBhIGZ1dHVyZSBnZXRkZW50cygpDQo+IGNhbGwgaW4gdGhl
-IHN3ZWVwLg0KPiANCj4gDQo+IEhvd2V2ZXIsIGlmIHRoZXJlIGlzIGEgaG9sZSBpbiB0aGUgZGly
-ZWN0b3J5IHN0cnVjdHVyZSBiZWZvcmUgdGhlDQo+IGN1cnJlbnQgZ2V0ZGVudHMgY29va2llIG9m
-ZnNldCwgYSBuZXcgZW50cnkgY2FuIGJlIGFkZGVkIGluIHRoYXQNCj4gaG9sZS4gaS5lLiBhdCBh
-biBvZmZzZXQgaW4gdGhlIGRpcmVjdG9yeSB0aGF0IGdldGRlbnRzIGhhcyBhbHJlYWR5DQo+IHBh
-c3NlZCBvdmVyLiBUaGF0IGRpcmVudCB3aWxsIG5ldmVyIGJlIHJlcG9ydGVkIGJ5IHRoZSBjdXJy
-ZW50DQo+IGdldGRlbnRzKCkgc2VxdWVuY2UgLSBhIGRpcmVjdG9yeSByZXdpbmQgYW5kIHJlLXJl
-YWQgaXMgcmVxdWlyZWQgdG8NCj4gZmluZCBpdC4gaS5lLiB0aGVyZSdzIGFuIGluaGVyZW50IHVz
-ZXJzcGFjZSBUT1VUT0MgcmFjZSBjb25kaXRpb24gaW4NCj4gJ3JtIC1yZicgb3BlcmF0aW9ucy4N
-Cj4gDQo+IElPV3MsIHRoaXMgaXMgZXhhY3RseSB3aGF0IHlvdSdkIGV4cGVjdCB0byBzZWUgd2hl
-biB0aGVyZSBhcmUNCj4gY29uY3VycmVudCB1c2Vyc3BhY2UgbW9kaWZpY2F0aW9ucyB0byBhIGRp
-cmVjdG9yeSB0aGF0IGlzIGN1cnJlbnRseQ0KPiBiZWluZyByZWFkLiBIZW5jZSB5b3UgbmVlZCB0
-byBydWxlIG91dCBhbiBhcHBsaWNhdGlvbiBhbmQgdXNlcnNwYWNlDQo+IGxldmVsIGlzc3VlcyBi
-ZWZvcmUgbG9va2luZyBmb3IgZmlsZXN5c3RlbSBsZXZlbCBwcm9ibGVtcy4NCj4gDQo+IENoZWVy
-cywNCj4gDQo+IERhdmUuDQoNCg==
+On Tue, Mar 10, 2020 at 11:30 PM Christoph Hellwig <hch@lst.de> wrote:
+>
+> On Tue, Mar 10, 2020 at 08:36:14PM -0700, Darrick J. Wong wrote:
+> > 1) Leave the inode flag (FS_XFLAG_DAX) as it is, and export the S_DAX
+> > status via statx.  Document that changes to FS_XFLAG_DAX do not take
+> > effect immediately and that one must check statx to find out the real
+> > mode.  If we choose this, I would also deprecate the dax mount option;
+> > send in my mkfs.xfs patch to make it so that you can set FS_XFLAG_DAX on
+> > all files at mkfs time; and we can finally lay this whole thing to rest.
+> > This is the closest to what we have today.
+> >
+> > 2) Withdraw FS_XFLAG_DAX entirely, and let the kernel choose based on
+> > usage patterns, hardware heuristics, or spiteful arbitrariness.
+>
+> 3) Only allow changing FS_XFLAG_DAX on directories or files that do
+> not have blocks allocated to them yet, and side step all the hard
+> problems.
+
+This sounds reasonable to me.
+
+As for deprecating the mount option, I think at a minimum it needs to
+continue be accepted as an option even if it is ignored to not break
+existing setups. We're currently going through the prolonged flag day
+of people discovering that if they update xfsprogs they need to
+specify "-m reflink=0" to mkfs.xfs. That pain seems to have only been
+a road bump not a showstopper based on the bug reports I've seen. If
+anything it has added helpful pressure towards getting reflink support
+bumped up in the priority. Hopefully the xfs position that the dax
+mount option can be ignored makes it possible to implement the same
+policy on ext4, and we can just move on...
+
+> Which of course still side steps the hard question of what it actually
+> is supposed to mean..
+
+If we have statx to indicate the effective dax-state that addresses
+the pain for applications that want to account for dax in their page
+cache pressure estimates, and lets FS_XFLAG_DAX not need to specify
+precise semantics.
