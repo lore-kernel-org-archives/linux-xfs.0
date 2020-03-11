@@ -2,217 +2,194 @@ Return-Path: <SRS0=qEB5=44=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B302C0044D
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 16:46:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 825E0C0044D
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 17:06:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 653DB206E7
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 16:46:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB72C206BE
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 17:06:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="j5S8+p28"
+	dkim=pass (1024-bit key) header.d=nokia.onmicrosoft.com header.i=@nokia.onmicrosoft.com header.b="MlMIupwF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730174AbgCKQqE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Mar 2020 12:46:04 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:54758 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729809AbgCKQqE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Mar 2020 12:46:04 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02BGgcFv176086
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 16:46:02 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
- subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=FNh3yTd3iTDVDTr6zJeB8wnIVGI+q29nxaJx+Pn97MA=;
- b=j5S8+p28GkiIzC/NEZiNGpFtE6sED85U/docfWKKfzr74NdRDg+Xw2dH3sBxsF/QetMr
- iomhPR6nnnKl1pET0CG6eA5awJYZX7Kk2Q5qyjXEHFkah9N5BbwSMrtXvd2blAs5t1AX
- JjM5i0xRaL0Km8AdVHEXcrVa43gHCvTX946/2QF+AKcdCGJFMMeY2rtfU3THFUgV37eA
- it223dork+M+H7S/ryCq6WnMOe0gStCDDPQ6yEdDPedaFM0HE6tpIlHNvsYBxC1dCU5s
- bxugg90HaIbfcmONR09aRePfSfqOWsndzdLm0+4xHm+m1IkWqarxF1qJE26e5RSU9Ltm gA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2ym31umw8v-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 16:46:02 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02BGbX7S049256
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 16:46:01 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 2yp8p42vfv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 16:46:01 +0000
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 02BGk0FR012576
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 16:46:00 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 11 Mar 2020 09:46:00 -0700
-Date:   Wed, 11 Mar 2020 09:45:59 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 3e6e8afd3abb
-Message-ID: <20200311164559.GG8045@magnolia>
+        id S1730068AbgCKRGV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Mar 2020 13:06:21 -0400
+Received: from mail-vi1eur05on2135.outbound.protection.outlook.com ([40.107.21.135]:19105
+        "EHLO EUR05-VI1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1730195AbgCKRGV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 11 Mar 2020 13:06:21 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=XKCpXqk9iPhOZzNubhSy5ccsawODPPm9U5T+0hBBHBp6eboJ8WkHHb74iIhIhc8EQne//eDLGXp0uTSXAHFpsw6YXxAzLL3EHNDEJgQ27Uf8UmdHHgKJ1G9GNeUbCRBd1ZCRcDzhzU/P1EXczrg7CY2JnX3OsxOEdhfk7jNEWcsH1sVLo+JiuvG2yQ0PKQ16+Y2CApg4t9gVHjLbikyJ2sJh1VHGtrsQh9LeryfcUJ4gs4lE9y1yQwlZTaBnnZgXAXufI46X+P18L8hxdKvWsAU8ojDdodpfiPmxh+iWJ60EXarJFDNJUQJ3BW/h+SGmmNuuE9L+yXWckk415Jt1Dg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=IVHIYHEEP1VFEiiN52h63DtTSXQmSBXeDuj5RBfou0s=;
+ b=R1ce3TSwk7unDejWU1SIjarzaiXpunMh2wKgQWNwKo6rQ/GPojPOYHTs2rNpGlNNrXpIJ+aob0LeCQS7lZbAO+Rr+Sn69rsKcBYS/VSLNR6DnRA9ZWvE+HT+t5z2VXwz7IjVDIJyAvdJsMjlt9+JciBZac8EyN7SprmB5wCbTJgIVuSRp/il4DMUmpMW3XU0hyRMln+n0+ZlzQ8lIRn0giHnRA0IXM73xPmsgdAv9OVKHiSJUA/V2wOKQY6xFOMTixbEnxKxgDzTWpQxaen6+ecSclnrf+lDG6c36fhIzmzzt1vu5pZ/EbJHdmqZO7kpVrqfQ6UH2tH+YHtzDCxg+g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nokia.com; dmarc=pass action=none header.from=nokia.com;
+ dkim=pass header.d=nokia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nokia.onmicrosoft.com;
+ s=selector1-nokia-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=IVHIYHEEP1VFEiiN52h63DtTSXQmSBXeDuj5RBfou0s=;
+ b=MlMIupwFx4zEYhtF+vIPmlLH9LZXMyViAnjTFwXQm6SkbGB+k1t7Q1nLz8Hxr8rlWycRAVUFATJ2Z6R3s4G/XFInWsfpfD8ReN1+xrg89wfOQotw4yGArbXqbM6RFtYB1jgHf+DCwSJmFegXo3D2NVODnb+08DpcMMxnP5BadwE=
+Received: from HE1PR0702MB3675.eurprd07.prod.outlook.com (10.167.127.12) by
+ HE1PR0702MB3770.eurprd07.prod.outlook.com (10.167.126.145) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2814.9; Wed, 11 Mar 2020 17:06:16 +0000
+Received: from HE1PR0702MB3675.eurprd07.prod.outlook.com
+ ([fe80::2806:c34c:d469:8e87]) by HE1PR0702MB3675.eurprd07.prod.outlook.com
+ ([fe80::2806:c34c:d469:8e87%5]) with mapi id 15.20.2814.007; Wed, 11 Mar 2020
+ 17:06:16 +0000
+From:   "Rantala, Tommi T. (Nokia - FI/Espoo)" <tommi.t.rantala@nokia.com>
+To:     "hch@lst.de" <hch@lst.de>,
+        "david@fromorbit.com" <david@fromorbit.com>
+CC:     "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: 5.5 XFS getdents regression?
+Thread-Topic: 5.5 XFS getdents regression?
+Thread-Index: AQHV9rhRbXPUS+vCVkG2reFy3jRV26hCZPwAgAE8UoA=
+Date:   Wed, 11 Mar 2020 17:06:16 +0000
+Message-ID: <862b6c718957aff7156bf04964b7242f5075e8a7.camel@nokia.com>
+References: <72c5fd8e9a23dde619f70f21b8100752ec63e1d2.camel@nokia.com>
+         <20200310221406.GO10776@dread.disaster.area>
+In-Reply-To: <20200310221406.GO10776@dread.disaster.area>
+Accept-Language: fi-FI, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=tommi.t.rantala@nokia.com; 
+x-originating-ip: [131.228.2.4]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 91210b19-268b-4ee3-1c11-08d7c5de82e1
+x-ms-traffictypediagnostic: HE1PR0702MB3770:
+x-microsoft-antispam-prvs: <HE1PR0702MB37709AEACBFD60E17F6AFD23B4FC0@HE1PR0702MB3770.eurprd07.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:7219;
+x-forefront-prvs: 0339F89554
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(396003)(376002)(39860400002)(366004)(346002)(136003)(199004)(81166006)(81156014)(4326008)(8676002)(966005)(26005)(8936002)(6506007)(5660300002)(66446008)(64756008)(66476007)(86362001)(186003)(66556008)(66946007)(54906003)(6512007)(2616005)(478600001)(6486002)(7116003)(110136005)(36756003)(76116006)(316002)(2906002)(71200400001);DIR:OUT;SFP:1102;SCL:1;SRVR:HE1PR0702MB3770;H:HE1PR0702MB3675.eurprd07.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;
+received-spf: None (protection.outlook.com: nokia.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: T3A/fDYqLVQ0gd9KHVP+wkW4wf1GKdRWUSliMnmNc44j5Du1PHuaPIsS/xvEljfibsghu0YFHN5oHrGkT2KXnW4bV2ZtcSpGzpAb5Z2ZNbax07wTPs4NWzJYsDN4rfTt+0y3bxcx8u/e2hM1TBK0vYaJTREFdMHEDGIO5lb9aqiATXen4L6CgxdcT9Q/PQcAcT074YTX8iPNuES8w8BD4rZjRS6ObafukZgSPabB4z/bOmP1MQRnvqjx3rIkhbVl7t8v/7qxEzxJZbnwummiDaf3qNglNQByMWfsyOSfPGbaZ8QVyXUxZMGvKFUNwabwtzVvVgy/i1OuSBXPkNfBrMmKrlqEWXDF21vMUQiEgoxmgVkR/0Nc3dyH3hz5elOP6jxl4byjxasQZ+nHDFYfTGYHFBu0ETTgBk/nu/GhGb73Lm9hZujGXwW81fUwj7Kl6Ij0OFlmDcpgTvYFBEuzN8xyqOso9A8u7sBwlHVbiMN/tXt2xB825whLWw5B0UqhryTDHFKUvcdDndnXCn765Q==
+x-ms-exchange-antispam-messagedata: tpeyWjVk/wTN0WtrntwfdbRUleaUxgzY0fg24c8PdLATO6AVESu5TWZYBn4kW2fKrd8ueJuFl1kyGo9o43E8AgAvmvxhdUw+2I3iad8CfWZGQt7VbOWmXnqm8TC5fjG6tJ8kMF2qopXE9XxemEI4FQ==
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <40C93D37D0BB1D41AB69874ED488E844@eurprd07.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9556 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxscore=0 phishscore=0
- spamscore=0 malwarescore=0 adultscore=0 suspectscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2003110100
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9556 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 lowpriorityscore=0
- spamscore=0 priorityscore=1501 impostorscore=0 bulkscore=0 suspectscore=0
- phishscore=0 mlxlogscore=999 mlxscore=0 malwarescore=0 clxscore=1015
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2003110100
+X-OriginatorOrg: nokia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 91210b19-268b-4ee3-1c11-08d7c5de82e1
+X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Mar 2020 17:06:16.4287
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 5d471751-9675-428d-917b-70f44f9630b0
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: nxZWHFy28gJpHvzDiWQ8/ZCEcTsZ0PK1O7JMfbQpqzzomTSMYA1VEQ49kjgvOpe3u5+IEDhPc/Yalry7MuCGBS4NJHOfWV3vk3+9e0MeI8k=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: HE1PR0702MB3770
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
-
-The for-next branch of the xfs-linux repository at:
-
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-3e6e8afd3abb xfs: remove XFS_BUF_TO_SBP
-
-New Commits:
-
-Brian Foster (4):
-      [6b789c337a59] xfs: fix iclog release error check race with shutdown
-      [b73df17e4c5b] xfs: open code insert range extent split helper
-      [dd87f87d87fa] xfs: rework insert range into an atomic operation
-      [211683b21de9] xfs: rework collapse range into an atomic operation
-
-Christoph Hellwig (42):
-      [3d8f2821502d] xfs: ensure that the inode uid/gid match values match the icdinode ones
-      [542951592c99] xfs: remove the icdinode di_uid/di_gid members
-      [ba8adad5d036] xfs: remove the kuid/kgid conversion wrappers
-      [13b1f811b14e] xfs: ratelimit xfs_buf_ioerror_alert messages
-      [4ab45e259f31] xfs: ratelimit xfs_discard_page messages
-      [4d542e4c1e28] xfs: reject invalid flags combinations in XFS_IOC_ATTRLIST_BY_HANDLE
-      [5e81357435cc] xfs: remove the ATTR_INCOMPLETE flag
-      [0eb81a5f5c34] xfs: merge xfs_attr_remove into xfs_attr_set
-      [6cc4f4fff10d] xfs: merge xfs_attrmulti_attr_remove into xfs_attrmulti_attr_set
-      [2282a9e65177] xfs: use strndup_user in XFS_IOC_ATTRMULTI_BY_HANDLE
-      [d0ce64391128] xfs: factor out a helper for a single XFS_IOC_ATTRMULTI_BY_HANDLE op
-      [79f2280b9bfd] xfs: remove the name == NULL check from xfs_attr_args_init
-      [4df28c64e438] xfs: remove the MAXNAMELEN check from xfs_attr_args_init
-      [ead189adb8ab] xfs: turn xfs_da_args.value into a void pointer
-      [a25446224353] xfs: pass an initialized xfs_da_args structure to xfs_attr_set
-      [e5171d7e9894] xfs: pass an initialized xfs_da_args to xfs_attr_get
-      [c36f533f1407] xfs: remove the xfs_inode argument to xfs_attr_get_ilocked
-      [e513e25c380a] xfs: remove ATTR_KERNOVAL
-      [d49db18b247d] xfs: remove ATTR_ALLOC and XFS_DA_OP_ALLOCVAL
-      [1d7330199400] xfs: replace ATTR_KERNOTIME with XFS_DA_OP_NOTIME
-      [377f16ac6723] xfs: factor out a xfs_attr_match helper
-      [a9c8c69b4961] xfs: cleanup struct xfs_attr_list_context
-      [fe960087121a] xfs: remove the unused ATTR_ENTRY macro
-      [2f014aad03d8] xfs: open code ATTR_ENTSIZE
-      [3e7a779937a2] xfs: move the legacy xfs_attr_list to xfs_ioctl.c
-      [17e1dd83ea21] xfs: rename xfs_attr_list_int to xfs_attr_list
-      [f60463195179] xfs: lift common checks into xfs_ioc_attr_list
-      [eb241c747463] xfs: lift buffer allocation into xfs_ioc_attr_list
-      [53ac39fdb301] xfs: lift cursor copy in/out into xfs_ioc_attr_list
-      [5a3930e27ef9] xfs: improve xfs_forget_acl
-      [f3e93d95feef] xfs: clean up the ATTR_REPLACE checks
-      [d5f0f49a9bdd] xfs: clean up the attr flag confusion
-      [254f800f8104] xfs: remove XFS_DA_OP_INCOMPLETE
-      [e3a19cdea84a] xfs: embedded the attrlist cursor into struct xfs_attr_list_context
-      [f311d771a090] xfs: clean up bufsize alignment in xfs_ioc_attr_list
-      [ed02d13f5da8] xfs: only allocate the buffer size actually needed in __xfs_set_acl
-      [5680c3907361] xfs: switch xfs_attrmulti_attr_get to lazy attr buffer allocation
-      [183606d82446] xfs: remove the agfl_bno member from struct xfs_agfl
-      [4b97510859b2] xfs: remove the xfs_agfl_t typedef
-      [370c782b9843] xfs: remove XFS_BUF_TO_AGI
-      [9798f615ad2b] xfs: remove XFS_BUF_TO_AGF
-      [3e6e8afd3abb] xfs: remove XFS_BUF_TO_SBP
-
-Darrick J. Wong (1):
-      [93baa55af1a1] xfs: improve error message when we can't allocate memory for xfs_buf
-
-Eric Biggers (1):
-      [10a98cb16d80] xfs: clear PF_MEMALLOC before exiting xfsaild thread
-
-Jules Irenge (1):
-      [daebba1b3609] xfs: Add missing annotation to xfs_ail_check()
-
-Qian Cai (1):
-      [4982bff1ace1] xfs: fix an undefined behaviour in _da3_path_shift
-
-Zheng Bin (1):
-      [d0c7feaf8767] xfs: add agf freeblocks verify in xfs_agf_verify
-
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_ag.c             |  16 +-
- fs/xfs/libxfs/xfs_alloc.c          |  79 +++++----
- fs/xfs/libxfs/xfs_alloc.h          |   9 +
- fs/xfs/libxfs/xfs_alloc_btree.c    |  10 +-
- fs/xfs/libxfs/xfs_attr.c           | 351 +++++++++++++------------------------
- fs/xfs/libxfs/xfs_attr.h           | 114 +++---------
- fs/xfs/libxfs/xfs_attr_leaf.c      | 119 +++++--------
- fs/xfs/libxfs/xfs_attr_leaf.h      |   1 -
- fs/xfs/libxfs/xfs_attr_remote.c    |   2 +-
- fs/xfs/libxfs/xfs_bmap.c           |  32 +---
- fs/xfs/libxfs/xfs_bmap.h           |   3 +-
- fs/xfs/libxfs/xfs_da_btree.c       |   3 +-
- fs/xfs/libxfs/xfs_da_btree.h       |  11 +-
- fs/xfs/libxfs/xfs_da_format.h      |  12 --
- fs/xfs/libxfs/xfs_format.h         |  15 +-
- fs/xfs/libxfs/xfs_fs.h             |  32 +++-
- fs/xfs/libxfs/xfs_ialloc.c         |  27 ++-
- fs/xfs/libxfs/xfs_ialloc_btree.c   |  10 +-
- fs/xfs/libxfs/xfs_inode_buf.c      |   8 +-
- fs/xfs/libxfs/xfs_inode_buf.h      |   2 -
- fs/xfs/libxfs/xfs_refcount_btree.c |  12 +-
- fs/xfs/libxfs/xfs_rmap_btree.c     |  12 +-
- fs/xfs/libxfs/xfs_sb.c             |  17 +-
- fs/xfs/scrub/agheader.c            |  20 +--
- fs/xfs/scrub/agheader_repair.c     |  26 +--
- fs/xfs/scrub/attr.c                |  17 +-
- fs/xfs/scrub/repair.c              |   8 +-
- fs/xfs/xfs_acl.c                   | 132 +++++++-------
- fs/xfs/xfs_acl.h                   |   6 +-
- fs/xfs/xfs_aops.c                  |   2 +-
- fs/xfs/xfs_attr_list.c             | 167 ++----------------
- fs/xfs/xfs_bmap_util.c             |  57 +++---
- fs/xfs/xfs_buf.c                   |   7 +-
- fs/xfs/xfs_discard.c               |   7 +-
- fs/xfs/xfs_dquot.c                 |   4 +-
- fs/xfs/xfs_icache.c                |   4 +
- fs/xfs/xfs_inode.c                 |  24 ++-
- fs/xfs/xfs_inode_item.c            |   4 +-
- fs/xfs/xfs_ioctl.c                 | 347 +++++++++++++++++++++++-------------
- fs/xfs/xfs_ioctl.h                 |  35 ++--
- fs/xfs/xfs_ioctl32.c               |  99 ++---------
- fs/xfs/xfs_iops.c                  |  23 ++-
- fs/xfs/xfs_itable.c                |   4 +-
- fs/xfs/xfs_linux.h                 |  27 +--
- fs/xfs/xfs_log.c                   |  13 +-
- fs/xfs/xfs_log_recover.c           |  12 +-
- fs/xfs/xfs_mount.c                 |   2 +-
- fs/xfs/xfs_qm.c                    |  35 ++--
- fs/xfs/xfs_quota.h                 |   4 +-
- fs/xfs/xfs_symlink.c               |   4 +-
- fs/xfs/xfs_trace.h                 |  63 ++++---
- fs/xfs/xfs_trans.c                 |   2 +-
- fs/xfs/xfs_trans_ail.c             |   5 +-
- fs/xfs/xfs_xattr.c                 |  92 ++++------
- 54 files changed, 901 insertions(+), 1248 deletions(-)
+T24gV2VkLCAyMDIwLTAzLTExIGF0IDA5OjE0ICsxMTAwLCBEYXZlIENoaW5uZXIgd3JvdGU6DQo+
+IE9uIFR1ZSwgTWFyIDEwLCAyMDIwIGF0IDA4OjQ1OjU4QU0gKzAwMDAsIFJhbnRhbGEsIFRvbW1p
+IFQuIChOb2tpYSAtDQo+IEZJL0VzcG9vKSB3cm90ZToNCj4gPiBIZWxsbywNCj4gPiANCj4gPiBP
+bmUgb2YgbXkgR2l0TGFiIENJIGpvYnMgc3RvcHBlZCB3b3JraW5nIGFmdGVyIHVwZ3JhZGluZyBz
+ZXJ2ZXINCj4gPiA1LjQuMTgtDQo+ID4gMTAwLmZjMzAueDg2XzY0IC0+IDUuNS43LTEwMC5mYzMw
+Lng4Nl82NC4NCj4gPiAodGVzdGVkIDUuNS44LTEwMC5mYzMwLng4Nl82NCB0b28sIG5vIGNoYW5n
+ZSkNCj4gPiBUaGUgc2VydmVyIGlzIGZlZG9yYTMwIHdpdGggWEZTIHJvb3Rmcy4NCj4gPiBUaGUg
+cHJvYmxlbSByZXByb2R1Y2VzIGFsd2F5cywgYW5kIHRha2VzIG9ubHkgY291cGxlIG1pbnV0ZXMg
+dG8gcnVuLg0KPiA+IA0KPiA+IFRoZSBDSSBqb2IgZmFpbHMgaW4gdGhlIGJlZ2lubmluZyB3aGVu
+IGRvaW5nICJnaXQgY2xlYW4iIGluIGRvY2tlcg0KPiA+IGNvbnRhaW5lciwgYW5kIGZhaWxpbmcg
+dG8gcm1kaXIgc29tZSBkaXJlY3Rvcnk6DQo+ID4gIndhcm5pbmc6IGZhaWxlZCB0byByZW1vdmUg
+DQo+ID4gLnZlbmRvci9wa2cvbW9kL2dvbGFuZy5vcmcveC9uZXRAdjAuMC4wLTIwMjAwMTE0MTU1
+NDEzLTZhZmI1MTk1ZTVhYS9pbg0KPiA+IHRlcm4NCj4gPiBhbC9zb2NrZXQ6IERpcmVjdG9yeSBu
+b3QgZW1wdHkiDQo+ID4gDQo+ID4gUXVpY2sgZ29vZ2xlIHNlYXJjaCBmaW5kcyBzb21lIG90aGVy
+IHBlb3BsZSByZXBvcnRpbmcgc2ltaWxhciBwcm9ibGVtcw0KPiA+IHdpdGggNS41LjA6DQo+ID4g
+aHR0cHM6Ly9naXRsYWIuY29tL2dpdGxhYi1vcmcvZ2l0bGFiLXJ1bm5lci9pc3N1ZXMvMzE4NQ0K
+PiANCj4gV2hpY2ggYXBwZWFycyB0byBiZSBjYXVzZWQgYnkgbXVsdGlwbGUgZ2l0bGFiIHByb2Nl
+c3NlcyBtb2RpZnlpbmcNCj4gdGhlIGRpcmVjdG9yeSBhdCB0aGUgc2FtZSB0aW1lLiBpLmUuIHNv
+bWV0aGluZyBpcyBhZGRpbmcgYW4gZW50cnkgdG8NCj4gdGhlIGRpcmVjdG9yeSBhdCB0aGUgc2Ft
+ZSB0aW1lIHNvbWV0aGluZyBpcyB0cnlpbmcgdG8gcm0gLXJmIGl0Lg0KPiBUaGF0J3MgYSByYWNl
+IGNvbmRpdGlvbiwgYW5kIHdvdWxkIGxlYWQgdG8gdGhlIGV4YWN0IHN5bXB0b21zIHlvdQ0KPiBz
+ZWUgaGVyZSwgZGVwZW5kaW5nIG9uIHdoZXJlIGluIHRoZSBkaXJlY3RvcnkgdGhlIG5ldyBlbnRy
+eSBpcw0KPiBhZGRlZC4NCg0KT0sgdHJhY2VkICJleGVjdmUiIHdpdGggc3RyYWNlIHRvbywgYW5k
+IGl0IHNob3dzIHRoYXQgaXQncyAiZ2l0IGNsZWFuDQotZmZkeCIgY29tbWFuZCAoc2luZ2xlIHBy
+b2Nlc3MpIHRoYXQgaXMgYmVpbmcgZXhlY3V0ZWQgaW4gdGhlIGNvbnRhaW5lciwNCndoaWNoIGlz
+IGRvaW5nIHRoZSBjbGVhbnVwLg0KDQpUZXN0ZWQgd2l0aCA1LjYtcmM1LCBpdCdzIGZhaWxpbmcg
+dGhlIHNhbWUgd2F5Lg0KDQpTcGVudCBzb21lIHRpbWUgdG8gYmlzZWN0IHRoaXMsIGFuZCB0aGUg
+cHJvYmxlbSBpcyBpbnRyb2R1Y2VkIGJ5IHRoaXM6DQoNCmNvbW1pdCAyNjNkZGU4NjliZDA5YjFh
+NzA5ZmQ5MjExOGM3ZmZmODMyNzczNjg5DQpBdXRob3I6IENocmlzdG9waCBIZWxsd2lnIDxoY2hA
+bHN0LmRlPg0KRGF0ZTogICBGcmkgTm92IDggMTU6MDU6MzIgMjAxOSAtMDgwMA0KDQogICAgeGZz
+OiBjbGVhbnVwIHhmc19kaXIyX2Jsb2NrX2dldGRlbnRzDQogICAgDQogICAgVXNlIGFuIG9mZnNl
+dCBhcyB0aGUgbWFpbiBtZWFucyBmb3IgaXRlcmF0aW9uLCBhbmQgb25seSBkbyBwb2ludGVyDQog
+ICAgYXJpdGhtZXRpY3MgdG8gZmluZCB0aGUgZGF0YS91bnVzZWQgZW50cmllcy4NCiAgICANCiAg
+ICBTaWduZWQtb2ZmLWJ5OiBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGxzdC5kZT4NCiAgICBSZXZp
+ZXdlZC1ieTogRGFycmljayBKLiBXb25nIDxkYXJyaWNrLndvbmdAb3JhY2xlLmNvbT4NCiAgICBT
+aWduZWQtb2ZmLWJ5OiBEYXJyaWNrIEouIFdvbmcgPGRhcnJpY2sud29uZ0BvcmFjbGUuY29tPg0K
+DQoNCg0KSG1tbW1tLCBsb29raW5nIGF0IHRoYXQgY29tbWl0LCBJIHRoaW5rIGl0IHNsaWdodHkg
+Y2hhbmdlZCBob3cgdGhlDQoib2Zmc2V0IiBpcyB1c2VkIGNvbXBhcmVkIHRvIGhvdyB0aGUgcG9p
+bnRlcnMgd2VyZSB1c2VkLg0KDQpUaGlzIGN1cmVzIHRoZSBpc3N1ZSBmb3IgbWUsIHRlc3RlZCAo
+YnJpZWZseSkgb24gdG9wIG9mIDUuNi1yYzUuDQpEb2VzIGl0IG1ha2Ugc2Vuc2UuLi4/DQooRW1h
+aWwgY2xpZW50IHByb2JhYmx5IGRhbWFnZXMgd2hpdGUtc3BhY2UsIHNvcnJ5LCBJJ2xsIHNlbmQg
+dGhpcyBwcm9wZXJseQ0Kc2lnbmVkLW9mZiB3aXRoIGdpdC1zZW5kLWVtYWlsIGlmIGl0J3MgT0sp
+DQoNCg0KZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfZGlyMl9yZWFkZGlyLmMgYi9mcy94ZnMveGZz
+X2RpcjJfcmVhZGRpci5jDQppbmRleCAwZDNiNjQwY2YxY2MuLmFmOTQ1ZWM5ZGYzYiAxMDA2NDQN
+Ci0tLSBhL2ZzL3hmcy94ZnNfZGlyMl9yZWFkZGlyLmMNCisrKyBiL2ZzL3hmcy94ZnNfZGlyMl9y
+ZWFkZGlyLmMNCkBAIC0xNzksNiArMTc5LDcgQEAgeGZzX2RpcjJfYmxvY2tfZ2V0ZGVudHMoDQog
+ICAgICAgIHN0cnVjdCB4ZnNfZGlyMl9kYXRhX3VudXNlZCAgICAgKmR1cCA9IGJwLT5iX2FkZHIg
+KyBvZmZzZXQ7DQogICAgICAgIHN0cnVjdCB4ZnNfZGlyMl9kYXRhX2VudHJ5ICAgICAgKmRlcCA9
+IGJwLT5iX2FkZHIgKyBvZmZzZXQ7DQogICAgICAgIHVpbnQ4X3QgZmlsZXR5cGU7DQorICAgICAg
+IHVuc2lnbmVkIGludCBkZXBfb2Zmc2V0Ow0KIA0KICAgICAgICAvKg0KICAgICAgICAgKiBVbnVz
+ZWQsIHNraXAgaXQuDQpAQCAtMTg4LDE4ICsxODksMjEgQEAgeGZzX2RpcjJfYmxvY2tfZ2V0ZGVu
+dHMoDQogICAgICAgICAgICAgICAgY29udGludWU7DQogICAgICAgIH0NCiANCisgICAgICAgZGVw
+X29mZnNldCA9IG9mZnNldDsNCisNCiAgICAgICAgLyoNCi0gICAgICAgICogQnVtcCBwb2ludGVy
+IGZvciB0aGUgbmV4dCBpdGVyYXRpb24uDQorICAgICAgICAqIEJ1bXAgb2Zmc2V0IGZvciB0aGUg
+bmV4dCBpdGVyYXRpb24uDQogICAgICAgICAqLw0KICAgICAgICBvZmZzZXQgKz0geGZzX2RpcjJf
+ZGF0YV9lbnRzaXplKGRwLT5pX21vdW50LCBkZXAtPm5hbWVsZW4pOw0KDQogICAgICAgIC8qDQog
+ICAgICAgICAqIFRoZSBlbnRyeSBpcyBiZWZvcmUgdGhlIGRlc2lyZWQgc3RhcnRpbmcgcG9pbnQs
+IHNraXAgaXQuDQogICAgICAgICAqLw0KLSAgICAgICBpZiAob2Zmc2V0IDwgd2FudG9mZikNCisg
+ICAgICAgaWYgKGRlcF9vZmZzZXQgPCB3YW50b2ZmKQ0KICAgICAgICAgICAgICAgIGNvbnRpbnVl
+Ow0KIA0KLSAgICAgICBjb29rID0geGZzX2RpcjJfZGJfb2ZmX3RvX2RhdGFwdHIoZ2VvLCBnZW8t
+PmRhdGFibGssIG9mZnNldCk7DQorICAgICAgIGNvb2sgPSB4ZnNfZGlyMl9kYl9vZmZfdG9fZGF0
+YXB0cihnZW8sIGdlby0+ZGF0YWJsaywNCisgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgIGRlcF9vZmZzZXQpOw0KIA0KICAgICAgICBjdHgtPnBvcyA9IGNvb2sgJiAweDdm
+ZmZmZmZmOw0KICAgICAgICBmaWxldHlwZSA9IHhmc19kaXIyX2RhdGFfZ2V0X2Z0eXBlKGRwLT5p
+X21vdW50LCBkZXApOw0KDQoNCg0KPiA+IENvbGxlY3RlZCBzb21lIGRhdGEgd2l0aCBzdHJhY2Us
+IGFuZCBpdCBzZWVtcyB0aGF0IGdldGRlbnRzIGlzIG5vdA0KPiA+IHJldHVybmluZyBhbGwgZW50
+cmllczoNCj4gPiANCj4gPiA1LjQgZ2V0ZGVudHM2NCgpIHJldHVybnMgNTIrNTArMSswIGVudHJp
+ZXMgDQo+ID4gPT4gYWxsIGZpbGVzIGluIGRpcmVjdG9yeSBhcmUgZGVsZXRlZCBhbmQgcm1kaXIo
+KSBpcyBPSw0KPiA+IA0KPiA+IDUuNSBnZXRkZW50czY0KCkgcmV0dXJucyA1Mis1MCswKzAgZW50
+cmllcw0KPiA+ID0+IHJtZGlyKCkgZmFpbHMgd2l0aCBFTk9URU1QVFkNCj4gDQo+IFl1cCwgdGhh
+dCdzIGEgY2xhc3NpYyB1c2Vyc3BhY2UgVE9DVE9VIHJhY2UuDQo+IA0KPiBSZW1lbWJlciwgZ2V0
+ZGVudHMoKSBpcyBlZmZlY3RpdmVseSBhIHNlcXVlbnRpYWwgd2FsayB0aHJvdWdoIHRoZQ0KPiBk
+aXJlY3RvcnkgZGF0YSAtIHN1YnNlcXVlbnQgY2FsbHMgc3RhcnQgYXQgdGhlIG9mZnNldCAoY29v
+a2llKSB3aGVyZQ0KPiB0aGUgcHJldmlvdXMgb25lIGxlZnQgb2ZmLiBOZXcgZW50cmllcyBjYW4g
+YmUgYWRkZWQgYmV0d2Vlbg0KPiBnZXRkZW50cygpIHN5c2NhbGxzLg0KPiANCj4gSWYgdGhhdCBu
+ZXcgZW50cnkgaXMgcHV0IGF0IHRoZSB0YWlsIG9mIHRoZSBkaXJlY3RvcnksIHRoZW4gdGhlIGxh
+c3QNCj4gZ2V0ZGVudHMoKSBjYWxsIHdpbGwgcmV0dXJuIHRoYXQgZW50cnkgcmF0aGVyIHRoYW4g
+bm9uZSBiZWNhdXNlIGl0DQo+IHdhcyBwbGFjZWQgYXQgYW4gb2Zmc2V0IGluIHRoZSBkaXJlY3Rv
+cnkgdGhhdCB0aGUgZ2V0ZGVudHMoKSBzd2VlcA0KPiBoYXMgbm90IHlldCByZWFjaGVkLCBhbmQg
+aGVuY2Ugd2lsbCBiZSBmb3VuZCBieSBhIGZ1dHVyZSBnZXRkZW50cygpDQo+IGNhbGwgaW4gdGhl
+IHN3ZWVwLg0KPiANCj4gDQo+IEhvd2V2ZXIsIGlmIHRoZXJlIGlzIGEgaG9sZSBpbiB0aGUgZGly
+ZWN0b3J5IHN0cnVjdHVyZSBiZWZvcmUgdGhlDQo+IGN1cnJlbnQgZ2V0ZGVudHMgY29va2llIG9m
+ZnNldCwgYSBuZXcgZW50cnkgY2FuIGJlIGFkZGVkIGluIHRoYXQNCj4gaG9sZS4gaS5lLiBhdCBh
+biBvZmZzZXQgaW4gdGhlIGRpcmVjdG9yeSB0aGF0IGdldGRlbnRzIGhhcyBhbHJlYWR5DQo+IHBh
+c3NlZCBvdmVyLiBUaGF0IGRpcmVudCB3aWxsIG5ldmVyIGJlIHJlcG9ydGVkIGJ5IHRoZSBjdXJy
+ZW50DQo+IGdldGRlbnRzKCkgc2VxdWVuY2UgLSBhIGRpcmVjdG9yeSByZXdpbmQgYW5kIHJlLXJl
+YWQgaXMgcmVxdWlyZWQgdG8NCj4gZmluZCBpdC4gaS5lLiB0aGVyZSdzIGFuIGluaGVyZW50IHVz
+ZXJzcGFjZSBUT1VUT0MgcmFjZSBjb25kaXRpb24gaW4NCj4gJ3JtIC1yZicgb3BlcmF0aW9ucy4N
+Cj4gDQo+IElPV3MsIHRoaXMgaXMgZXhhY3RseSB3aGF0IHlvdSdkIGV4cGVjdCB0byBzZWUgd2hl
+biB0aGVyZSBhcmUNCj4gY29uY3VycmVudCB1c2Vyc3BhY2UgbW9kaWZpY2F0aW9ucyB0byBhIGRp
+cmVjdG9yeSB0aGF0IGlzIGN1cnJlbnRseQ0KPiBiZWluZyByZWFkLiBIZW5jZSB5b3UgbmVlZCB0
+byBydWxlIG91dCBhbiBhcHBsaWNhdGlvbiBhbmQgdXNlcnNwYWNlDQo+IGxldmVsIGlzc3VlcyBi
+ZWZvcmUgbG9va2luZyBmb3IgZmlsZXN5c3RlbSBsZXZlbCBwcm9ibGVtcy4NCj4gDQo+IENoZWVy
+cywNCj4gDQo+IERhdmUuDQoNCg==
