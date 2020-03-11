@@ -6,64 +6,64 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 737ACC2BAEE
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 17:07:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D827C4CEC1
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 17:07:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C900B20736
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 17:07:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 944F5206BE
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 17:07:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="nDapp6Xl"
+	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="C9ioYl0f"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730380AbgCKRHb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Mar 2020 13:07:31 -0400
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:40844 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730426AbgCKRHa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Mar 2020 13:07:30 -0400
-Received: by mail-ot1-f67.google.com with SMTP id h17so2785991otn.7
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 10:07:30 -0700 (PDT)
+        id S1730428AbgCKRHv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Mar 2020 13:07:51 -0400
+Received: from mail-oi1-f196.google.com ([209.85.167.196]:43597 "EHLO
+        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730376AbgCKRHu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Mar 2020 13:07:50 -0400
+Received: by mail-oi1-f196.google.com with SMTP id p125so2592411oif.10
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 10:07:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=intel-com.20150623.gappssmtp.com; s=20150623;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=U+t9fU13Iuz/zoBPnGG3vft0C0z8m2mKCU7Saw6lmvk=;
-        b=nDapp6XlmdQ95ZlIGVJCqMXN9WyMEgI8CkY0oLNB089wKVmR+TdQeZpYDltt7rgUbo
-         3dLmnYrnPzoOy+BA0kNlt4kZy0eo8oxD/iQNDby4ZOZLvKsJ7toAqY+og/il5nfjvoqQ
-         4nbRNzmRf1NValJ935o6Kb1TnOQckuNubNDuu5/tyTnmiaYMnvKQ02fsRkHbUXS28sG9
-         ZQjcT/UAmUuOghp9CgbxknQK/JZWV3oSAA/okTSskDW+E+LNju1VyxIjyiso5WQ940vk
-         bC1VPLSskaTKc8FU6ZuPNRE30Qt9QR7h7dAtWQdc0Tb8O1zmr8Tzn/NHVZwzBIxVOj5V
-         CtKw==
+        bh=l2lvDdSLPhmcM0nXdmXNuB/sfxCFsfZa1DAwoATiN2U=;
+        b=C9ioYl0fzU/vmkecoyhX5BivhKG5b1jtS5V7vkjWOi0PiELjheJ1R7QdbXo9TuQysN
+         1IY2fq/TBnNmInGLeEDCh9Qg2FQPnwr45qh6swtd5Q15fbPVwPnXkCsXB+xAGAvG4adz
+         4pNukYlTfGqeQfrlNRzbfK46LmVnw+4AdBzAKJ4KQ+UvRNhB5A0lbDMBYMN58JDrQch+
+         oX7mhxiYWNyX5vHzUU02K0pFLjUB+uLzDkt4Ih+CrGHBmXGEGor3jeQlS9bS4aed6zJR
+         BNVlWCs49Q2ZXXJf0Kl9+b5Oc1HBCpMZOUmjYXZdiHusPlLa5qph+Sy0JONGt0kTD9Q4
+         qxBA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=U+t9fU13Iuz/zoBPnGG3vft0C0z8m2mKCU7Saw6lmvk=;
-        b=IjUVKYOZ+aKbPmrXrPEKNfF836nODGWzTWQMLsD9TrgcixrmaGX/qSCtnbbL6Gaflw
-         FR8LRCra05jOJkiB0HrbIoH03iPbAZR1tUm2gsc1MzvRUg0wJn+/xa7JjMmBwMRMmlf3
-         U0P6lnuWTER6fiMmY/fTEplbvkZeYIVhmpn+o6o2Wi88/vT0jg7BOzHTpsSb36ywnUih
-         krsg64P7Cfo39sUpuHEy8j0G56pXiuP+XKDh2wvpWJiMOdqKkKedrNSr9/LRsI+94AQJ
-         uAcmz2ADU2lmSF7pe1PbTKi9sNUldz33aQiTdCnsmvkj+eitt5QkI6pgklGxo1+0n/xH
-         dXUw==
-X-Gm-Message-State: ANhLgQ15CEfOh7of5zFQ+/NIeFe2fuJj0/IKy7Gb0uG4cPtEjj+HPPWZ
-        kx4aBQBcLlhtCnm61ck8MRezVSTykKHNijrmmEFzSw==
-X-Google-Smtp-Source: ADFU+vv33qQ1Vs3CkoYzAvtrw3SpDVVFOXBI9ccyey4I0e0R2cgw4zlbjqPoifA6+u164sdMBKOHuMFJW3vErink/7Y=
-X-Received: by 2002:a05:6830:57b:: with SMTP id f27mr3211846otc.363.1583946449937;
- Wed, 11 Mar 2020 10:07:29 -0700 (PDT)
+        bh=l2lvDdSLPhmcM0nXdmXNuB/sfxCFsfZa1DAwoATiN2U=;
+        b=p1tt3ewyiuPi4WpVwrzFQAKroDCau1CZxEeeNDCi+QvRyG5tpDEtt8iQQkq7UjdHk9
+         Noaw0+FFv3W9G3XssfLn1F6TTHpEWvtKAfpj92KUJv+/7eHuOfAy02IWxb3lY3g0RPJ3
+         uzKkx+rBZAzMrCzKexBF7sFfAPXui8H7H+n5jaugt0fspfxde4FMj/9ZHRhH17iPjvoU
+         SSIfb5E6dctjH1p4/NIqFLHtFc1Bz5hZjYRwA4whD9KQV1nZ2J7UXd5GfXAhmIzV/VCq
+         Jo3pESFFIBv2sSKkofEnTBBFbHXH8DbwHmZc9mEnydETF0cJnI5Qbo73C5QZW2+/B6zq
+         RYWg==
+X-Gm-Message-State: ANhLgQ1K4mEwc/+fVdnXCqaOG4n8vqWZhSpXCwQ0NLEpelRrJJYUekkM
+        rrvwew1tU0nkKYTPngt8Mga4oHW6swByUavdb/cExg==
+X-Google-Smtp-Source: ADFU+vtHWaxjCHodf/i8X2TsY67+jZq3h7w3Q9evQy7tS+y4d+px/3vFxbGvBUdESzEm1GeGh5OUonvksn5m8/27xO4=
+X-Received: by 2002:a54:4585:: with SMTP id z5mr2651107oib.149.1583946470021;
+ Wed, 11 Mar 2020 10:07:50 -0700 (PDT)
 MIME-Version: 1.0
 References: <20200227052442.22524-1-ira.weiny@intel.com> <20200305155144.GA5598@lst.de>
  <20200309170437.GA271052@iweiny-DESK2.sc.intel.com> <20200311033614.GQ1752567@magnolia>
- <20200311062952.GA11519@lst.de>
-In-Reply-To: <20200311062952.GA11519@lst.de>
+ <20200311063942.GE10776@dread.disaster.area> <20200311064412.GA11819@lst.de>
+In-Reply-To: <20200311064412.GA11819@lst.de>
 From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Wed, 11 Mar 2020 10:07:18 -0700
-Message-ID: <CAPcyv4h9Xg61jk=Uq17xC6AGj9yOSAJnCaTzHcfBZwOVdRF9dw@mail.gmail.com>
+Date:   Wed, 11 Mar 2020 10:07:38 -0700
+Message-ID: <CAPcyv4jk5i0hPpqbZNPhUH8wKPS66pd48xNoPnQpy6vt72+i=w@mail.gmail.com>
 Subject: Re: [PATCH V5 00/12] Enable per-file/per-directory DAX operations V5
 To:     Christoph Hellwig <hch@lst.de>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+Cc:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
         Ira Weiny <ira.weiny@intel.com>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         Alexander Viro <viro@zeniv.linux.org.uk>,
-        Dave Chinner <david@fromorbit.com>,
         "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
         linux-ext4 <linux-ext4@vger.kernel.org>,
         linux-xfs <linux-xfs@vger.kernel.org>,
@@ -76,41 +76,17 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 10, 2020 at 11:30 PM Christoph Hellwig <hch@lst.de> wrote:
+On Tue, Mar 10, 2020 at 11:44 PM Christoph Hellwig <hch@lst.de> wrote:
 >
-> On Tue, Mar 10, 2020 at 08:36:14PM -0700, Darrick J. Wong wrote:
-> > 1) Leave the inode flag (FS_XFLAG_DAX) as it is, and export the S_DAX
-> > status via statx.  Document that changes to FS_XFLAG_DAX do not take
-> > effect immediately and that one must check statx to find out the real
-> > mode.  If we choose this, I would also deprecate the dax mount option;
-> > send in my mkfs.xfs patch to make it so that you can set FS_XFLAG_DAX on
-> > all files at mkfs time; and we can finally lay this whole thing to rest.
-> > This is the closest to what we have today.
-> >
-> > 2) Withdraw FS_XFLAG_DAX entirely, and let the kernel choose based on
-> > usage patterns, hardware heuristics, or spiteful arbitrariness.
+> On Wed, Mar 11, 2020 at 05:39:42PM +1100, Dave Chinner wrote:
+> > IOWs, the dax_associate_page() related functionality probably needs
+> > to be a filesystem callout - part of the aops vector, I think, so
+> > that device dax can still use it. That way XFS can go it's own way,
+> > while ext4 and device dax can continue to use the existing mechanism
+> > mechanisn that is currently implemented....
 >
-> 3) Only allow changing FS_XFLAG_DAX on directories or files that do
-> not have blocks allocated to them yet, and side step all the hard
-> problems.
+> s/XFS/XFS with rmap/, as most XFS file systems currently don't have
+> that enabled we'll also need to keep the legacy path around.
 
-This sounds reasonable to me.
-
-As for deprecating the mount option, I think at a minimum it needs to
-continue be accepted as an option even if it is ignored to not break
-existing setups. We're currently going through the prolonged flag day
-of people discovering that if they update xfsprogs they need to
-specify "-m reflink=0" to mkfs.xfs. That pain seems to have only been
-a road bump not a showstopper based on the bug reports I've seen. If
-anything it has added helpful pressure towards getting reflink support
-bumped up in the priority. Hopefully the xfs position that the dax
-mount option can be ignored makes it possible to implement the same
-policy on ext4, and we can just move on...
-
-> Which of course still side steps the hard question of what it actually
-> is supposed to mean..
-
-If we have statx to indicate the effective dax-state that addresses
-the pain for applications that want to account for dax in their page
-cache pressure estimates, and lets FS_XFLAG_DAX not need to specify
-precise semantics.
+Agree, it needs to be an opt-in capability as ext4 and xfs w/o rmap
+will stay on the legacy path for the foreseeable future.
