@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D373C10DCE
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 00:47:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D68FBC10DCE
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 00:48:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 41FA6215A4
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 00:47:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 91E08215A4
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 00:48:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="lYFx0oOO"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="y19rR4T6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727659AbgCKAr4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Mar 2020 20:47:56 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:33918 "EHLO
+        id S1727693AbgCKAsD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Mar 2020 20:48:03 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:34038 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727591AbgCKAr4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Mar 2020 20:47:56 -0400
+        with ESMTP id S1727591AbgCKAsD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Mar 2020 20:48:03 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02B0fbQC112443
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:47:55 GMT
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02B0fb31112389
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:48:01 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=iMaPewhGgTeHFWeK5pug2oXQZ0+dTthizSxtljoQDRo=;
- b=lYFx0oOOuXT1G90l6NShaP/k0k2FiqL21J6sK8JsLQ4VAK0txe2I2UaFjivIRl92SGU/
- z87sJBMReo00r4fQBnJPxS+2poMIPz4/MOpYI838NPeJ+kd9ngRV0/R8i8vWAF/QuSAr
- 0xvLw7uDbjMiiUpSJWu6cf84iABiWcLThiRJygAWpvUEo8lsctiDa9TP/DckwVRnEKjk
- bt2aP6p1QrLmZ0omNacq+cI6NLDnXAkul7mrM9FHfx1XF6Q+aYtRJ/nzrG92o4af4SKI
- sVduo7gY2C1ZJJvtlVtWl3FjZ9yVRQU0oN/mEv5Yhz5Jt4e33aCaYi0+8b8g4hLXiRl2 iA== 
+ bh=kIxHzY1DLOOgJQ7KG5T15LQWC28Oa0tFUlokiuZRj6U=;
+ b=y19rR4T6GGJl9hdp7IZxUGCLBQF2a3igTGkuA6r2mEv15JbhzjqN95rk+zTWf/nMhacN
+ sKA4nfxpDDE0miV/0XUFnE10IRj01QIhShF2Og23dmDfDXBAgDAL70hq/g5sgnoDwP6J
+ TS3ChELiK/l9LBx5eSJLst6SVrnKd4LiJvMsyaL85ZstCXnA6BDyWB3OukEZkH07NtCX
+ SGejJQaZrBRdThbL5+X4WvD/izPLIFDIYS6fra0vyXS3k/RXYEiXlP7ypnwMrPaDT+iG
+ n8zK5bVwVs5T8RxxrX4R24Kc+jrAu4gIkieU9QyDESEVyS/lkQNjOqNYMEG99A/SErNM fw== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2ym31ugq5q-1
+        by userp2130.oracle.com with ESMTP id 2ym31ugq60-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:47:55 +0000
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:48:01 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02B0lp9F029446
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:47:54 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2yp8rnnc7t-1
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02B0loMR029366
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:48:01 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2yp8rnncek-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:47:54 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 02B0lsKS014582
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:47:54 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:48:01 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 02B0m0xl015027
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:48:00 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 10 Mar 2020 17:47:53 -0700
-Subject: [PATCH 6/7] xfs: check owner of dir3 data blocks
+        with ESMTP ; Tue, 10 Mar 2020 17:48:00 -0700
+Subject: [PATCH 7/7] xfs: check owner of dir3 blocks
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 10 Mar 2020 17:47:52 -0700
-Message-ID: <158388767279.939165.8430173747192985972.stgit@magnolia>
+Date:   Tue, 10 Mar 2020 17:47:59 -0700
+Message-ID: <158388767913.939165.10972843434590856236.stgit@magnolia>
 In-Reply-To: <158388763282.939165.6485358230553665775.stgit@magnolia>
 References: <158388763282.939165.6485358230553665775.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,58 +80,58 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Check the owner field of dir3 data block headers.  If it's corrupt,
-release the buffer and return EFSCORRUPTED.  All callers handle this
-properly.
+Check the owner field of dir3 block headers.  If it's corrupt, release
+the buffer and return EFSCORRUPTED.  All callers handle this properly.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_dir2_data.c |   31 ++++++++++++++++++++++++++++++-
- 1 file changed, 30 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_dir2_block.c |   32 +++++++++++++++++++++++++++++++-
+ 1 file changed, 31 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
-index b9eba8213180..8de9611387e5 100644
---- a/fs/xfs/libxfs/xfs_dir2_data.c
-+++ b/fs/xfs/libxfs/xfs_dir2_data.c
-@@ -394,6 +394,22 @@ static const struct xfs_buf_ops xfs_dir3_data_reada_buf_ops = {
- 	.verify_write = xfs_dir3_data_write_verify,
+diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+index d6ced59b9567..caa36d513bcd 100644
+--- a/fs/xfs/libxfs/xfs_dir2_block.c
++++ b/fs/xfs/libxfs/xfs_dir2_block.c
+@@ -114,6 +114,23 @@ const struct xfs_buf_ops xfs_dir3_block_buf_ops = {
+ 	.verify_struct = xfs_dir3_block_verify,
  };
  
 +static xfs_failaddr_t
-+xfs_dir3_data_header_check(
++xfs_dir3_block_header_check(
 +	struct xfs_inode	*dp,
 +	struct xfs_buf		*bp)
 +{
 +	struct xfs_mount	*mp = dp->i_mount;
 +
 +	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-+		struct xfs_dir3_data_hdr *hdr3 = bp->b_addr;
++		struct xfs_dir3_blk_hdr *hdr3 = bp->b_addr;
 +
-+		if (be64_to_cpu(hdr3->hdr.owner) != dp->i_ino)
++		if (be64_to_cpu(hdr3->owner) != dp->i_ino)
 +			return __this_address;
 +	}
 +
 +	return NULL;
 +}
- 
++
  int
- xfs_dir3_data_read(
-@@ -403,11 +419,24 @@ xfs_dir3_data_read(
- 	unsigned int		flags,
+ xfs_dir3_block_read(
+ 	struct xfs_trans	*tp,
+@@ -121,11 +138,24 @@ xfs_dir3_block_read(
  	struct xfs_buf		**bpp)
  {
+ 	struct xfs_mount	*mp = dp->i_mount;
 +	xfs_failaddr_t		fa;
  	int			err;
  
- 	err = xfs_da_read_buf(tp, dp, bno, flags, bpp, XFS_DATA_FORK,
- 			&xfs_dir3_data_buf_ops);
+ 	err = xfs_da_read_buf(tp, dp, mp->m_dir_geo->datablk, 0, bpp,
+ 				XFS_DATA_FORK, &xfs_dir3_block_buf_ops);
 -	if (!err && tp && *bpp)
 +	if (err || !*bpp)
 +		return err;
 +
 +	/* Check things that we can't do in the verifier. */
-+	fa = xfs_dir3_data_header_check(dp, *bpp);
++	fa = xfs_dir3_block_header_check(dp, *bpp);
 +	if (fa) {
 +		__xfs_buf_mark_corrupt(*bpp, fa);
 +		xfs_trans_brelse(tp, *bpp);
@@ -140,7 +140,7 @@ index b9eba8213180..8de9611387e5 100644
 +	}
 +
 +	if (tp)
- 		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_DIR_DATA_BUF);
+ 		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_DIR_BLOCK_BUF);
  	return err;
  }
 
