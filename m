@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABDCCC10DCE
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 00:47:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8211BC10DCE
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 00:47:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6EFDF215A4
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 00:47:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43B1C215A4
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 00:47:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="pHbKIK1O"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="cbl/Nrgu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727484AbgCKAri (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Mar 2020 20:47:38 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:33706 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727397AbgCKArh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Mar 2020 20:47:37 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02B0fbjc112367
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:47:36 GMT
+        id S1727648AbgCKArw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Mar 2020 20:47:52 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:47106 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727397AbgCKArw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Mar 2020 20:47:52 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02B0dw0C086320
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:47:51 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=HM8b4vz/VPTJ1phfavsAEEt/MMDBVEDF0QziwNVt0+U=;
- b=pHbKIK1O0vL39sTWk1BBp7FhPcXbWEO8Zzuxv1q/uOUO0aWemquTzC1S/6iCHe7akLC2
- vXbSf+6RRMEvXscVJ/vV9at99kuohYZRfcOt+tJoPIOVTwzT694hSEsKNwqxQO5wVb+X
- 1KfD1U1cuGy5rJ7lu+FURqPb6EdcKnxCCY6zJ5bAsWQnbsgWCZOSA+gON79Y/3g7lTPQ
- LCwDfHGcN1chrU1JcUrX/TzmTwSqYg0dJfcn0SsfJlwSieXYHIT1fnwU2mndvlWlfO0W
- MsF9jant5Vgv7zovkweZVSGhXGLzjDhnpTqnxEZ7h/uVGEl6MVUogBeqWARjNRt0GIrE /g== 
+ bh=0cZIAgTvXgcxfQVG7LtcfUwggltOtpG7aValmS0utvw=;
+ b=cbl/Nrgun6UpZp/5KBYDPCyav+eIhLctHCk3qUf6mcq360KttsJjRvI9Zmam0WLUZm/B
+ kX1XgtFwZ/yGp7NSft2K4A15A5P7ifblJ0Kdt9Uo0bLp3LGe46FnfEEKMKgOxdOWxeHS
+ fHKsVVwj0U8aDrUue15LyRENO22R//UF5qCo3s+9b1a8PXJ9Dvj9fDUTi9giR1XsUEVI
+ 2+IUqj6CcGgxYuYFQO/aETv3bLVNGEj6igu0ClX0ix2BmiR6MbUN0eqC1Dj9QLT+LNfa
+ SlPfw7artQ8m5CjCqjxjKyPrsV9zDlCmMwe0600LA8DQd42s2YU5+Sbcymbq2xTaMWUD 6A== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2ym31ugq56-1
+        by aserp2120.oracle.com with ESMTP id 2yp9v63scm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:47:36 +0000
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:47:51 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02B0bued013769
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:47:36 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2yp8rnnbnh-1
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02B0lo5p029400
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:47:50 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2yp8rnnbus-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:47:35 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 02B0lZHC019979
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:47:35 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:47:49 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 02B0lfre010010
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:47:41 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 10 Mar 2020 17:47:35 -0700
-Subject: [PATCH 3/7] xfs: fix buffer corruption reporting when
- xfs_dir3_free_header_check fails
+        with ESMTP ; Tue, 10 Mar 2020 17:47:41 -0700
+Subject: [PATCH 4/7] xfs: don't ever return a stale pointer from
+ __xfs_dir3_free_read
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 10 Mar 2020 17:47:33 -0700
-Message-ID: <158388765361.939165.18143580183240823438.stgit@magnolia>
+Date:   Tue, 10 Mar 2020 17:47:40 -0700
+Message-ID: <158388766026.939165.7051247687487788235.stgit@magnolia>
 In-Reply-To: <158388763282.939165.6485358230553665775.stgit@magnolia>
 References: <158388763282.939165.6485358230553665775.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -64,14 +64,14 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9556 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0 mlxscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=885 phishscore=0 mlxscore=0
  spamscore=0 malwarescore=0 bulkscore=0 adultscore=0 suspectscore=3
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2003110000
+ definitions=main-2003110001
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9556 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 lowpriorityscore=0
- spamscore=0 priorityscore=1501 impostorscore=0 bulkscore=0 suspectscore=3
- phishscore=0 mlxlogscore=999 mlxscore=0 malwarescore=0 clxscore=1015
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=3 spamscore=0 mlxscore=0
+ priorityscore=1501 lowpriorityscore=0 bulkscore=0 mlxlogscore=949
+ phishscore=0 adultscore=0 clxscore=1015 impostorscore=0 malwarescore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
  definitions=main-2003110000
 Sender: linux-xfs-owner@vger.kernel.org
@@ -81,42 +81,32 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-xfs_verifier_error is supposed to be called on a corrupt metadata buffer
-from within a buffer verifier function, whereas xfs_buf_corruption_error
-is the function to be called when a piece of code has read a buffer and
-catches something that a read verifier cannot.  The first function sets
-b_error anticipating that the low level buffer handling code will see
-the nonzero b_error and clear XBF_DONE on the buffer, whereas the second
-function does not.
+If we decide that a directory free block is corrupt, we must take care
+not to leak a buffer pointer to the caller.  After xfs_trans_brelse
+returns, the buffer can be freed or reused, which means that we have to
+set *bpp back to NULL.
 
-Since xfs_dir3_free_header_check examines fields in the dir free block
-header that require more context than can be provided to read verifiers,
-we must call xfs_buf_corruption_error when it finds a problem.
+Callers are supposed to notice the nonzero return value and not use the
+buffer pointer, but we should code more defensively, even if all current
+callers handle this situation correctly.
 
-Switching the calls has a secondary effect that we no longer corrupt the
-buffer state by setting b_error and leaving XBF_DONE set.  When /that/
-happens, we'll trip over various state assertions (most commonly the
-b_error check in xfs_buf_reverify) on a subsequent attempt to read the
-buffer.
-
-Fixes: bc1a09b8e334bf5f ("xfs: refactor verifier callers to print address of failing check")
+Fixes: de14c5f541e7 ("xfs: verify free block header fields")
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_dir2_node.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_dir2_node.c |    1 +
+ 1 file changed, 1 insertion(+)
 
 
 diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-index dbd1e901da92..af4f22dc3891 100644
+index af4f22dc3891..bbd478ec75c9 100644
 --- a/fs/xfs/libxfs/xfs_dir2_node.c
 +++ b/fs/xfs/libxfs/xfs_dir2_node.c
-@@ -226,7 +226,7 @@ __xfs_dir3_free_read(
- 	/* Check things that we can't do in the verifier. */
- 	fa = xfs_dir3_free_header_check(dp, fbno, *bpp);
+@@ -228,6 +228,7 @@ __xfs_dir3_free_read(
  	if (fa) {
--		xfs_verifier_error(*bpp, -EFSCORRUPTED, fa);
-+		__xfs_buf_mark_corrupt(*bpp, fa);
+ 		__xfs_buf_mark_corrupt(*bpp, fa);
  		xfs_trans_brelse(tp, *bpp);
++		*bpp = NULL;
  		return -EFSCORRUPTED;
  	}
+ 
 
