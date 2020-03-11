@@ -2,73 +2,75 @@ Return-Path: <SRS0=qEB5=44=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CCFEC10DCE
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 00:48:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DEA0C10DCE
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 00:48:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 31048215A4
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 00:48:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5093F215A4
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Mar 2020 00:48:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Xn/SBEWS"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="EWEyJQzZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727702AbgCKAsF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Mar 2020 20:48:05 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:34068 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727591AbgCKAsF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Mar 2020 20:48:05 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02B0fbgo112412
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:48:04 GMT
+        id S1727733AbgCKAsM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Mar 2020 20:48:12 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:47334 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727591AbgCKAsL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Mar 2020 20:48:11 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02B0e1j2086455
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:48:10 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : mime-version : content-type :
- content-transfer-encoding; s=corp-2020-01-29;
- bh=qqDD3Qcrp4WtETWc9GxBhLAp82w0rm3mOpLbXthadOw=;
- b=Xn/SBEWSSvDWXwL5d2WfDbbtuA5vRE/SUexvl51vqhC6M7Q51gxOI4bn6ES+TBRowor5
- 5AFYLNZHpI4FQth6uJZvdFcrXe6fsXD7y8zkDQsbTWqQqJzOhejeBYhD763eKeR6tCea
- riL4FWhpD56PJjeUe0mXhdFK0Yc5CljQYM4J40AjInNVdjNpBM5bms9VLb1euE0HvSJT
- AEpmlNr6vfPqJz9dDHrlxdhYyIlBTXKXVhf4lRuZ1KHwBX7CPCPXrUSDgFCVA5zEhP8S
- WOV6CtND5FGZ+uOyl02y8YJcLm0iQjP8HqclNYuRWaneGnO7eQTVxW5yD30LEDcEw5ij sA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2ym31ugq61-1
+ cc : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=Ejn0JqOX2YqEmv8uOMm6P7v7Uo3hEojZq+IwLL3a4Jk=;
+ b=EWEyJQzZcRrQS+czjsMK37y9X11Pg/8cUmRW0RfcZFjVDsMqCpTrjUfWFlqWLp75RQC6
+ 9o1yuXqMbm+HqPUFPDT0dcjamWsXwFq8XUxKKrVSQDhRcoMxymqVZIlQsmxtSPwqrMiN
+ qJoYRkX133NY0x4COr1ZwiCT5yeJpZ+ZNssZBJIeDzoSgkDpj+To0EUlACoQx8dzDDYS
+ vnvTAUrqso/l6Nm17xO/7u49FnkMmyYU2+dH5nyM7SPXqXoP4h7BPNmG2YuFCLndAmql
+ iKombQIGu7AFsHCjsJCTwdwssHQVhWXhbWGTp0sU9nY+PUNv3OUgj4aTcklOtakfeII+ lA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 2yp9v63sd7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:48:04 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02B0ksPi062035
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:48:03 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 2yp8nx1dkf-1
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:48:10 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02B0m9fx102872
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:48:10 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 2yp8pv5fw2-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:48:03 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 02B0m26F020189
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:48:02 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:48:10 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 02B0m8V2010182
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2020 00:48:08 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 10 Mar 2020 17:48:02 -0700
-Subject: [PATCH v2 0/3] xfs: fix errors in attr/directory scrubbers
+        with ESMTP ; Tue, 10 Mar 2020 17:48:08 -0700
+Subject: [PATCH 1/3] xfs: mark dir corrupt when lookup-by-hash fails
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 10 Mar 2020 17:48:01 -0700
-Message-ID: <158388768123.939608.12366470947594416375.stgit@magnolia>
+Date:   Tue, 10 Mar 2020 17:48:07 -0700
+Message-ID: <158388768745.939608.14435846701438875494.stgit@magnolia>
+In-Reply-To: <158388768123.939608.12366470947594416375.stgit@magnolia>
+References: <158388768123.939608.12366470947594416375.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9556 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxscore=0 phishscore=0
- spamscore=0 malwarescore=0 adultscore=0 suspectscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2003110001
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 malwarescore=0
+ mlxlogscore=793 bulkscore=0 suspectscore=1 mlxscore=0 spamscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2003110001
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9556 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 lowpriorityscore=0
- spamscore=0 priorityscore=1501 impostorscore=0 bulkscore=0 suspectscore=0
- phishscore=0 mlxlogscore=999 mlxscore=0 malwarescore=0 clxscore=1015
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 spamscore=0 mlxscore=0
+ priorityscore=1501 lowpriorityscore=0 bulkscore=0 mlxlogscore=851
+ phishscore=0 adultscore=0 clxscore=1015 impostorscore=0 malwarescore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
  definitions=main-2003110000
 Sender: linux-xfs-owner@vger.kernel.org
@@ -76,25 +78,32 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-During a code audit of the effectiveness of the online repair code,
-several deficiencies were discovered in the extended attribute and
-directory scrubbing code.  The first two patches change both scrubbers
-to note corruption when the name-based lookups (which test the hash
-tree) fail to return any information.  The final patch amends the
-directory checker to note corruption the inode target of a directory
-entry points to an unallocated inode.
+In xchk_dir_actor, we attempt to validate the directory hash structures
+by performing a directory entry lookup by (hashed) name.  If the lookup
+returns ENOENT, that means that the hash information is corrupt.  The
+_process_error functions don't catch this, so we have to add that
+explicitly.
 
-In v2 we declutter the error handling a bit.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/scrub/dir.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
 
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
+diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
+index 266da4e4bde6..ef7cc8e101ab 100644
+--- a/fs/xfs/scrub/dir.c
++++ b/fs/xfs/scrub/dir.c
+@@ -155,6 +155,9 @@ xchk_dir_actor(
+ 	xname.type = XFS_DIR3_FT_UNKNOWN;
+ 
+ 	error = xfs_dir_lookup(sdc->sc->tp, ip, &xname, &lookup_ino, NULL);
++	/* ENOENT means the hash lookup failed and the dir is corrupt */
++	if (error == -ENOENT)
++		error = -EFSCORRUPTED;
+ 	if (!xchk_fblock_process_error(sdc->sc, XFS_DATA_FORK, offset,
+ 			&error))
+ 		goto out;
 
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=scrub-fixes
