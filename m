@@ -2,183 +2,176 @@ Return-Path: <SRS0=K4IM=45=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B2B4C10DCE
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Mar 2020 22:44:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD14EC10DCE
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Mar 2020 23:44:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D81C1206FA
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Mar 2020 22:44:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9BD2C206F7
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Mar 2020 23:44:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Y4CKVwtU"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="hSnIXkda"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726623AbgCLWoT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Mar 2020 18:44:19 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:54072 "EHLO
+        id S1726836AbgCLXoZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Mar 2020 19:44:25 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:39330 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726608AbgCLWoT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Mar 2020 18:44:19 -0400
+        with ESMTP id S1726834AbgCLXoY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Mar 2020 19:44:24 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02CMdImj117919;
-        Thu, 12 Mar 2020 22:44:14 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=mime-version :
- message-id : date : from : to : cc : subject : references : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=gGh8BPZm5F59cMNDBjRUiaB7lMs57Ar/B986e+W5muY=;
- b=Y4CKVwtUTF7P2jMzFL7tPt/JECJje14oyut/MRlWtzlvciy9l+LfsLhMTd+Tlbboht8U
- tmTzRVsAIPYBQup8FURhMVI2eVR1r41PsG3Ov6XsjOkowGd5MmoQBPgyXUGb4/hDkR1f
- QidMa/KpC5Ku1utdSK79k2O5ATQqzoI+9/aiapF3VO8Mk6JIe5lGiB+idMQ3TEuIY1Mq
- cfFjbC9QyJsD5QAS5slg9aPs2t05OQsijBSZf1JQguishtmnVOk/r/qs/n5pciA+KoX8
- MnC2L4ESm+gvNqW9/rrb9wxaFUzy7sugSWPGu6i5vLs2pImgVa/mu5rRWqWKamI0H9uI DQ== 
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02CNi3uL012442;
+        Thu, 12 Mar 2020 23:44:20 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=6a99d91zPyGOIKxSAccRM4ZeimqjRPBAY9JCQDRrrUg=;
+ b=hSnIXkdaxwxh30MGOzAiNYgGE0aZm+WDNC2BWEhXcTmmg7TV7U9LUHV0qhBcifeE4IPi
+ UI7nSQfd8X5nc05V1EcctjpOCW0qDNB5IfGQ1EYpCG9vS/HWpA2Zr2wNpjuJ7KxTEjF5
+ 7krkQUJs4cRT/aRp2KxHx54E9qy+8bUn04LqordFEy0r5ThtBCh3x8vT/6+ZKZZ8wDUC
+ 4YYSlXcaejIS+aqgrb3iKTJek/Mbo5VPssuVjkQZfSjqGhHPtMJWLq+BC1BXMALPBEUe
+ eV+/3V2IAFQJkQ+FFk0QtIrl8wR4A0BaA0BaIznho3mRNtUcNy7GBR/UwvrP1h+102Kh bw== 
 Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2yqtag90sm-1
+        by userp2130.oracle.com with ESMTP id 2yqtag950t-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 12 Mar 2020 22:44:14 +0000
+        Thu, 12 Mar 2020 23:44:20 +0000
 Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02CMWFiQ039010;
-        Thu, 12 Mar 2020 22:44:14 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2yqtab7e16-1
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02CNgIgn141485;
+        Thu, 12 Mar 2020 23:44:20 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 2yqtabag58-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 12 Mar 2020 22:44:14 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 02CMiCl6017327;
-        Thu, 12 Mar 2020 22:44:12 GMT
-Received: from localhost (/10.145.179.117) by default (Oracle Beehive Gateway
- v4.0) with ESMTP ; Thu, 12 Mar 2020 15:43:42 -0700
-USER-AGENT: Mutt/1.9.4 (2018-02-28)
-MIME-Version: 1.0
-Message-ID: <20200312224342.GQ8045@magnolia>
-Date:   Thu, 12 Mar 2020 15:43:42 -0700 (PDT)
+        Thu, 12 Mar 2020 23:44:20 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 02CNiJTN029927;
+        Thu, 12 Mar 2020 23:44:19 GMT
+Received: from localhost (/10.145.179.117)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 12 Mar 2020 16:44:18 -0700
+Date:   Thu, 12 Mar 2020 16:44:18 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Takashi Iwai <tiwai@suse.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: Use scnprintf() for avoiding potential buffer
- overflow
-References: <20200311093552.25354-1-tiwai@suse.de>
- <20200311220914.GF10776@dread.disaster.area> <s5hsgie5a5r.wl-tiwai@suse.de>
- <20200312222701.GK10776@dread.disaster.area>
-In-Reply-To: <20200312222701.GK10776@dread.disaster.area>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com,
+        Dave Chinner <dchinner@redhat.com>
+Subject: Re: [PATCH 6/7] xfs: make the btree cursor union members named
+ structure
+Message-ID: <20200312234418.GR8045@magnolia>
+References: <158398468107.1307855.8287106235853942996.stgit@magnolia>
+ <158398472029.1307855.3111787514328025615.stgit@magnolia>
+ <20200312104929.GF60753@bfoster>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+In-Reply-To: <20200312104929.GF60753@bfoster>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9558 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=0
  malwarescore=0 bulkscore=0 adultscore=0 mlxscore=0 spamscore=0
  phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2003120113
+ engine=8.12.0-2003020000 definitions=main-2003120117
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9558 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0
  lowpriorityscore=0 priorityscore=1501 mlxlogscore=999 phishscore=0
  suspectscore=0 bulkscore=0 impostorscore=0 spamscore=0 adultscore=0
  clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2003120113
+ engine=8.12.0-2003020000 definitions=main-2003120117
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 12, 2020 at 03:27:01PM -0700, Dave Chinner wrote:
-> On Thu, Mar 12, 2020 at 08:01:36AM +0100, Takashi Iwai wrote:
-> > On Wed, 11 Mar 2020 23:09:14 +0100,
-> > Dave Chinner wrote:
-> > > 
-> > > On Wed, Mar 11, 2020 at 10:35:52AM +0100, Takashi Iwai wrote:
-> > > > Since snprintf() returns the would-be-output size instead of the
-> > > > actual output size, the succeeding calls may go beyond the given
-> > > > buffer limit.  Fix it by replacing with scnprintf().
-> > > > 
-> > > > Signed-off-by: Takashi Iwai <tiwai@suse.de>
-> > > > ---
-> > > >  fs/xfs/xfs_stats.c | 10 +++++-----
-> > > >  1 file changed, 5 insertions(+), 5 deletions(-)
-> > > 
-> > > what about all the other calls to snprintf() in fs/xfs/xfs_sysfs.c
-> > > and fs/xfs/xfs_error.c that return the "would be written" length to
-> > > their callers? i.e. we can return a length longer than the buffer
-> > > provided to the callers...
-> > > 
-> > > Aren't they all broken, too?
+On Thu, Mar 12, 2020 at 06:49:29AM -0400, Brian Foster wrote:
+> On Wed, Mar 11, 2020 at 08:45:20PM -0700, Darrick J. Wong wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > The one in xfs_error.c is a oneshot call for a sysfs output with
-> > PAGE_SIZE limit, so it's obviously safe.
-> 
-> Until the sysfs code changes. Then it's a landmine that explodes.
-
-It's a pity we didn't make cursor management automatic and required for
-sysfs/procfs/configfs/debugfs files...
-
-...but in the meantime, Takashi-san, would you mind fixing the other
-snprintfs in xfs, so at least the problems get fixed for the whole
-subsystem?
-
-> > OTOH, using snprintf() makes
-> > no sense as it doesn't return the right value if it really exceeds, so
-> > it should be either simplified to sprintf() or use scnprintf() to
-> > align both the truncation and the return value.
-> 
-> Right, we have technical debt here, and lots of it. scnprintf() is
-> the right thing to use here.
-> 
-> > > A quick survey of random snprintf() calls shows there's an abundance
-> > > of callers that do not check the return value of snprintf for
-> > > overflow when outputting stuff to proc/sysfs files. This seems like
-> > > a case of "snprintf() considered harmful, s/snprintf/scnprintf/
-> > > kernel wide, remove snprintf()"...
+> > we need to name the btree cursor private structures to be able
+> > to pull them out of the deeply nested structure definition they are
+> > in now.
 > > 
-> > Yeah, snprintf() is a hard-to-use function if you evaluate the return
-> > value.  I've submitted many similar patches like this matching a
-> > pattern like
-> > 	pos += snprintf(buf + pos, limit - pos, ...)
-> > which is a higher risk of breakage than a single shot call.
+> > Based on code extracted from a patchset by Darrick Wong.
 > > 
-> > We may consider flagging snprintf() to be harmful, but I guess it
-> > wasn't done at the time scnprintf() was introduced just because there
-> > are too many callers of snprintf().  And some code actually needs the
-> > size that would be output for catching the overflow explicitly (hence
-> > warning or resizing after that).
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_btree.h |   36 +++++++++++++++++++++---------------
+> >  1 file changed, 21 insertions(+), 15 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+> > index 12a2bc93371d..9884f543eb51 100644
+> > --- a/fs/xfs/libxfs/xfs_btree.h
+> > +++ b/fs/xfs/libxfs/xfs_btree.h
+> > @@ -188,6 +188,24 @@ union xfs_btree_cur_private {
+> >  	} abt;
+> >  };
+> >  
+> > +/* Per-AG btree information. */
+> > +struct xfs_btree_cur_ag {
+> > +	struct xfs_buf			*agbp;
+> > +	xfs_agnumber_t			agno;
+> > +	union xfs_btree_cur_private	priv;
+> > +};
+> > +
+> > +/* Btree-in-inode cursor information */
+> > +struct xfs_btree_cur_ino {
+> > +	struct xfs_inode	*ip;
+> > +	int			allocated;
+> > +	short			forksize;
+> > +	char			whichfork;
+> > +	char			flags;
+> > +#define	XFS_BTCUR_BMBT_WASDEL	(1 << 0)
+> > +#define	XFS_BTCUR_BMBT_INVALID_OWNER	(1 << 1)
+> > +};
+> > +
 > 
-> So, after seeing the technical debt the kernel has accumulated, it's
-> been given a "somebody else's problem to solve" label, rather than
-> putting in the effort to fix it.
-> 
-> Basically you are saying "we know our software sucks and we don't
-> care enough to fix it", yes?
-> 
-> > Practically seen, the recent kernel snprintf() already protects the
-> > negative length with WARN().
-> 
-> That's a truly awful way of handling out of bounds accesses: not
-> only are we saying we know our software sucks, we're telling the
-> user and making it their problem. It's a cop-out.
-> 
-> > But it's error-prone and would hit other
-> > issue if you access to the buffer position by other than snprintf(),
-> > so please see my patch just as a precaution.
-> 
-> Obviously, but slapping band-aids around like this not a fix for
-> all the other existing (and future) buggy snprintf code.
-> 
-> I'm annoyed that every time a fundamental failing or technical debt
-> is uncovered in the kernel, nobody takes responsibility to fix the
-> problem completely, for everyone, for ever.
-> 
-> As Thomas said recently: correctness first.
-> 
-> https://lwn.net/ml/linux-kernel/87v9nc63io.fsf@nanos.tec.linutronix.de/
-> 
-> This is not "good enough" - get rid of snprintf() altogether.
+> Are all of the per-field comments dropped intentionally? These are
+> mostly self-explanatory, so either way:
 
-$ git grep snprintf | wc -l
-8534
+I think the comments were not that valuable, and that I can perhaps
+improve them:
 
-That's somebody's 20 year project... :/
+/* We are converting a delalloc reservation */
+#define	XFS_BTCUR_BMBT_WASDEL		(1 << 0)
+
+/* For extent swap, ignore owner check in verifier */
+#define	XFS_BTCUR_BMBT_INVALID_OWNER	(1 << 1)
+
+Anyway, thanks for reviewing this series.
 
 --D
 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> 
+> >  /*
+> >   * Btree cursor structure.
+> >   * This collects all information needed by the btree code in one place.
+> > @@ -209,21 +227,9 @@ typedef struct xfs_btree_cur
+> >  	xfs_btnum_t	bc_btnum;	/* identifies which btree type */
+> >  	int		bc_statoff;	/* offset of btre stats array */
+> >  	union {
+> > -		struct {			/* needed for BNO, CNT, INO */
+> > -			struct xfs_buf	*agbp;	/* agf/agi buffer pointer */
+> > -			xfs_agnumber_t	agno;	/* ag number */
+> > -			union xfs_btree_cur_private	priv;
+> > -		} bc_ag;
+> > -		struct {			/* needed for BMAP */
+> > -			struct xfs_inode *ip;	/* pointer to our inode */
+> > -			int		allocated;	/* count of alloced */
+> > -			short		forksize;	/* fork's inode space */
+> > -			char		whichfork;	/* data or attr fork */
+> > -			char		flags;		/* flags */
+> > -#define	XFS_BTCUR_BMBT_WASDEL	(1 << 0)		/* was delayed */
+> > -#define	XFS_BTCUR_BMBT_INVALID_OWNER	(1 << 1)		/* for ext swap */
+> > -		} bc_ino;
+> > -	};				/* per-btree type data */
+> > +		struct xfs_btree_cur_ag	bc_ag;
+> > +		struct xfs_btree_cur_ino bc_ino;
+> > +	};
+> >  } xfs_btree_cur_t;
+> >  
+> >  /* cursor flags */
+> > 
+> 
