@@ -2,79 +2,140 @@ Return-Path: <SRS0=K4IM=45=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 111A0C10DCE
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Mar 2020 22:20:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62078C10DCE
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Mar 2020 22:27:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DE8D020637
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Mar 2020 22:20:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1584051653;
-	bh=AO36XPdzn8T0byP4kCHnxpBmX1FVVp3X2e6l2JfIBzQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=unG56osxAWEXQhVWN6s+6PdAAxJCY8fzrr0lfvBEhPEDAhQBlmwG5Tf6MiRP4LEUC
-	 5EKmAONCXdrHxIArq0l9kPWh6zvoGcjgWZEq9qfOQA+fEJkUzH88msqtloq6tY9N7m
-	 KGLJJn8H3cVkMB92Ys1Op+0opnzkqgZ5XD6ECk7g=
+	by mail.kernel.org (Postfix) with ESMTP id 4038720637
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Mar 2020 22:27:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726605AbgCLWUu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Mar 2020 18:20:50 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47240 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726513AbgCLWUu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Mar 2020 18:20:50 -0400
-Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6E90D20637;
-        Thu, 12 Mar 2020 22:20:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1584051649;
-        bh=AO36XPdzn8T0byP4kCHnxpBmX1FVVp3X2e6l2JfIBzQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=dHkYDUfdELnxjoFUBM64ZraMawOd1uC1bD/o1kAQ8yN2zjBTE5PlW+Vz8CskI+FTf
-         j3puzuM4kZt9fhbIbdjbKXtb5vFOBsWNHolMctmFvnuTCLoZWzS3Tmss1NJETSDdSt
-         WSheqxk4nT5HiGvmENJp3tRZbt2lWiF3fsJaHDOY=
-Date:   Thu, 12 Mar 2020 15:20:42 -0700
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        syzkaller-bugs@googlegroups.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: clear PF_MEMALLOC before exiting xfsaild thread
-Message-ID: <20200312222042.GA816@sol.localdomain>
-References: <20200309010410.GA371527@sol.localdomain>
- <20200309043430.143206-1-ebiggers@kernel.org>
- <20200309162439.GB8045@magnolia>
+        id S1726715AbgCLW1H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Mar 2020 18:27:07 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:53428 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726682AbgCLW1H (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Mar 2020 18:27:07 -0400
+Received: from dread.disaster.area (pa49-195-202-68.pa.nsw.optusnet.com.au [49.195.202.68])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 712C47E9EAC;
+        Fri, 13 Mar 2020 09:27:04 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jCWI9-0004w9-H6; Fri, 13 Mar 2020 09:27:01 +1100
+Date:   Fri, 13 Mar 2020 09:27:01 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Takashi Iwai <tiwai@suse.de>
+Cc:     "Darrick J . Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: Use scnprintf() for avoiding potential buffer
+ overflow
+Message-ID: <20200312222701.GK10776@dread.disaster.area>
+References: <20200311093552.25354-1-tiwai@suse.de>
+ <20200311220914.GF10776@dread.disaster.area>
+ <s5hsgie5a5r.wl-tiwai@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200309162439.GB8045@magnolia>
+In-Reply-To: <s5hsgie5a5r.wl-tiwai@suse.de>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+        a=mqTaRPt+QsUAtUurwE173Q==:117 a=mqTaRPt+QsUAtUurwE173Q==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=SS2py6AdgQ4A:10
+        a=07d9gI8wAAAA:8 a=7-415B0cAAAA:8 a=CPrUJtx3VifpjA6-OccA:9
+        a=HB2jc7h5lHCsdRon:21 a=Td3H3O8-iLVQkZkO:21 a=CjuIK1q_8ugA:10
+        a=e2CUPOnPG4QKp8I52DXD:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 09, 2020 at 09:24:39AM -0700, Darrick J. Wong wrote:
+On Thu, Mar 12, 2020 at 08:01:36AM +0100, Takashi Iwai wrote:
+> On Wed, 11 Mar 2020 23:09:14 +0100,
+> Dave Chinner wrote:
 > > 
-> > 	mkfs.ext2 -F /dev/vdb
-> > 	mount /vdb -t ext4
-> > 	touch /vdb/file
-> > 	chattr +S /vdb/file
+> > On Wed, Mar 11, 2020 at 10:35:52AM +0100, Takashi Iwai wrote:
+> > > Since snprintf() returns the would-be-output size instead of the
+> > > actual output size, the succeeding calls may go beyond the given
+> > > buffer limit.  Fix it by replacing with scnprintf().
+> > > 
+> > > Signed-off-by: Takashi Iwai <tiwai@suse.de>
+> > > ---
+> > >  fs/xfs/xfs_stats.c | 10 +++++-----
+> > >  1 file changed, 5 insertions(+), 5 deletions(-)
+> > 
+> > what about all the other calls to snprintf() in fs/xfs/xfs_sysfs.c
+> > and fs/xfs/xfs_error.c that return the "would be written" length to
+> > their callers? i.e. we can return a length longer than the buffer
+> > provided to the callers...
+> > 
+> > Aren't they all broken, too?
 > 
-> Does this trip if the process accounting file is also on an xfs
-> filesystem?
-> 
-> > 	accton /vdb/file
-> > 	mkfs.xfs -f /dev/vdc
-> > 	mount /vdc
-> > 	umount /vdc
-> 
-> ...and if so, can this be turned into an fstests case, please?
-> 
+> The one in xfs_error.c is a oneshot call for a sysfs output with
+> PAGE_SIZE limit, so it's obviously safe.
 
-Test sent out at
-https://lkml.kernel.org/fstests/20200312221437.141484-1-ebiggers@kernel.org/
+Until the sysfs code changes. Then it's a landmine that explodes.
 
-- Eric
+> OTOH, using snprintf() makes
+> no sense as it doesn't return the right value if it really exceeds, so
+> it should be either simplified to sprintf() or use scnprintf() to
+> align both the truncation and the return value.
+
+Right, we have technical debt here, and lots of it. scnprintf() is
+the right thing to use here.
+
+> > A quick survey of random snprintf() calls shows there's an abundance
+> > of callers that do not check the return value of snprintf for
+> > overflow when outputting stuff to proc/sysfs files. This seems like
+> > a case of "snprintf() considered harmful, s/snprintf/scnprintf/
+> > kernel wide, remove snprintf()"...
+> 
+> Yeah, snprintf() is a hard-to-use function if you evaluate the return
+> value.  I've submitted many similar patches like this matching a
+> pattern like
+> 	pos += snprintf(buf + pos, limit - pos, ...)
+> which is a higher risk of breakage than a single shot call.
+> 
+> We may consider flagging snprintf() to be harmful, but I guess it
+> wasn't done at the time scnprintf() was introduced just because there
+> are too many callers of snprintf().  And some code actually needs the
+> size that would be output for catching the overflow explicitly (hence
+> warning or resizing after that).
+
+So, after seeing the technical debt the kernel has accumulated, it's
+been given a "somebody else's problem to solve" label, rather than
+putting in the effort to fix it.
+
+Basically you are saying "we know our software sucks and we don't
+care enough to fix it", yes?
+
+> Practically seen, the recent kernel snprintf() already protects the
+> negative length with WARN().
+
+That's a truly awful way of handling out of bounds accesses: not
+only are we saying we know our software sucks, we're telling the
+user and making it their problem. It's a cop-out.
+
+> But it's error-prone and would hit other
+> issue if you access to the buffer position by other than snprintf(),
+> so please see my patch just as a precaution.
+
+Obviously, but slapping band-aids around like this not a fix for
+all the other existing (and future) buggy snprintf code.
+
+I'm annoyed that every time a fundamental failing or technical debt
+is uncovered in the kernel, nobody takes responsibility to fix the
+problem completely, for everyone, for ever.
+
+As Thomas said recently: correctness first.
+
+https://lwn.net/ml/linux-kernel/87v9nc63io.fsf@nanos.tec.linutronix.de/
+
+This is not "good enough" - get rid of snprintf() altogether.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
