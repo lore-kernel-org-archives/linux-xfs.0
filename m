@@ -2,61 +2,66 @@ Return-Path: <SRS0=K4IM=45=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D7F1C1975A
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Mar 2020 10:53:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9C92C10DCE
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Mar 2020 14:09:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 077FD20716
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Mar 2020 10:53:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6E18220663
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Mar 2020 14:09:12 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="X8vERt8C"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726487AbgCLKxs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Mar 2020 06:53:48 -0400
-Received: from verein.lst.de ([213.95.11.211]:36273 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725978AbgCLKxs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Mar 2020 06:53:48 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 476C168C4E; Thu, 12 Mar 2020 11:53:45 +0100 (CET)
-Date:   Thu, 12 Mar 2020 11:53:45 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     David Howells <dhowells@redhat.com>
-Cc:     Christoph Hellwig <hch@lst.de>, mbobrowski@mbobrowski.org,
-        darrick.wong@oracle.com, jack@suse.cz, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: Is ext4_dio_read_iter() broken? - and xfs_file_dio_aio_read()
-Message-ID: <20200312105345.GA13559@lst.de>
-References: <20200312104239.GA13235@lst.de> <969260.1584004779@warthog.procyon.org.uk> <1015227.1584007677@warthog.procyon.org.uk> <1023937.1584010180@warthog.procyon.org.uk>
+        id S1727436AbgCLOJM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Mar 2020 10:09:12 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:41518 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727392AbgCLOJL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Mar 2020 10:09:11 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=xG8k+cj0HyOKJ3dVwJjBxlPrglTQrOM4WetThaisAQo=; b=X8vERt8CcAXVTP1rsV3quKC33E
+        /VLI/TBEZrl3nj7/dsnBs5BSeET4XL5KboqVRuHSrE5ux3g9aCgZm9wFSPPAcQqsIUhP71LYj/rRm
+        8heILUhFe2xwASEW0jAzLO2zSOW7RUL8JyUMPblV5tPcm5oj7Ke3tnav+MYZx23rE8lvk8c3+hGCu
+        3X+6MlFKqmXLU9t7msERr74HUutb35M3oi4+j3xfBijP27Ng8Eszf2ulql5Eoec05lgppbTSmlkPj
+        T/jLzTHbHXN91R9lM8/Wz3lvt39Xr3kIUwnWFaZqpLAKGWFfhDCDHCe/lMOpG6/8Cn1J1KcOJAr2X
+        DKjb1leQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jCOWM-0006S0-AN; Thu, 12 Mar 2020 14:09:10 +0000
+Date:   Thu, 12 Mar 2020 07:09:10 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfsprogs: don't warn about packed members
+Message-ID: <20200312140910.GA11758@infradead.org>
+References: <20191216215245.13666-1-david@fromorbit.com>
+ <20200126110212.GA23829@infradead.org>
+ <029fa407-6bf5-c8c0-450a-25bded280fec@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1023937.1584010180@warthog.procyon.org.uk>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <029fa407-6bf5-c8c0-450a-25bded280fec@sandeen.net>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 12, 2020 at 10:49:40AM +0000, David Howells wrote:
-> Christoph Hellwig <hch@lst.de> wrote:
-> 
-> > > > at the end of the function - but surely iocb should be expected to have
-> > > > been freed when iocb->ki_complete() was called?
+On Mon, Jan 27, 2020 at 11:43:02AM -0600, Eric Sandeen wrote:
+> On 1/26/20 5:02 AM, Christoph Hellwig wrote:
+> > Eric, can you pick this one up?  The warnings are fairly annoying..
 > > 
-> > The iocb is refcounted and only completed when the refcount hits zero,
-> > and an extra reference is held until the submission has completed.
-> > Take a look at iocb_put().
 > 
-> Ah...  This is in struct aio_kiocb and not struct kiocb - that's why I missed
-> it.  Thanks.
-
-That being said we have a few other spots using ->ki_complete for
-asynchronous execution, which might not be as careful.  As someone
-having written one or two of those I have my doubts I got everthing
-right and will audit those.
-
+> Sorry, I had missed this one and/or the feedback on the original patch
+> wasn't resolved.  I tend to agree that turning off the warning globally
+> because we know /this/ one is OK seems somewhat suboptimal.
 > 
-> David
----end quoted text---
+> Let me take a look again.
+
+Can we get this queued up in xfsprogs?  These warnings are pretty
+annoying..
