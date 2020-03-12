@@ -2,123 +2,86 @@ Return-Path: <SRS0=K4IM=45=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 504D8C1975A
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Mar 2020 14:57:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CE48C1975A
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Mar 2020 15:46:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1EFF620663
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Mar 2020 14:57:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 35F682067C
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Mar 2020 15:46:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GK7/9pR6"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eBxb2/l9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726558AbgCLO47 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Mar 2020 10:56:59 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:40060 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726436AbgCLO47 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Mar 2020 10:56:59 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02CEgYBC088436;
-        Thu, 12 Mar 2020 14:56:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=BOGJuYlKcv7ByTHSpmP0jRUP0NzqdNCYGHW84pyl62c=;
- b=GK7/9pR62IYueTuuTRtfDGmK03fjy82GRfOHlOFpU6nSb0M8ccbYhLIqMS6mRPGjiYPf
- 4RsCACcU1WFTU+QUYKm/MX8IOituTkEaDUl+t8xztGlZ264S4a1YfXisbKSS5wDyUQGn
- x0tGFgM0HP20Lrf0EKoxFSV+oiumKCZ3Fe0V1iAnpIGMUzgwWSKOJKrhlvDZmdrba1bP
- 4Vx/TacSzotuZeEYfoZHWx7/bksWiRZOk5G1rj3QMyK+8J4u7yBq1Fb7ViTCwE7ZiBGu
- VGHWllDrL/2YX4LafS/cwSJ/ggJ7EbXaCPT0U0dZXe2Xj0+gnwEW0T6GjZj7K8mUSGYy UA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2ym31ut32t-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 12 Mar 2020 14:56:55 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02CEoVNw023453;
-        Thu, 12 Mar 2020 14:56:54 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 2yp8r0jhdh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 12 Mar 2020 14:56:54 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 02CEurSA016916;
-        Thu, 12 Mar 2020 14:56:53 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 12 Mar 2020 07:56:53 -0700
-Date:   Thu, 12 Mar 2020 07:56:52 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@lst.de>
+        id S1727520AbgCLPqw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Mar 2020 11:46:52 -0400
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:35525 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727493AbgCLPqw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Mar 2020 11:46:52 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1584028011;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=HSCHtX/DdIu7Nj4innDShhViiLkeLYk4qb7bkl1oWCU=;
+        b=eBxb2/l9W1W8b6hgHTulx8zFNjLH3DHmT8PYLsg1AP35tsJ1lTDYwkiZLiOS+tJzdYwWRA
+        Uwy8A5cEtvK/QemkNPO4+HNcx1q5EF9IuD8zVe9E7kxGMBMwF5fpkeXIpcFCrBd0cDUf3N
+        ukCJ3UgwUktTDFHjqCf+61vQZOk/DW8=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-327-aFM2G3yqM2-zQdP1GpzGBQ-1; Thu, 12 Mar 2020 11:46:49 -0400
+X-MC-Unique: aFM2G3yqM2-zQdP1GpzGBQ-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C44038C4321;
+        Thu, 12 Mar 2020 15:46:48 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 87B3292F8D;
+        Thu, 12 Mar 2020 15:46:48 +0000 (UTC)
+Subject: Re: xfsprogs process question
+To:     Christoph Hellwig <hch@infradead.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/4] xfs: remove XFS_BUF_SET_BDSTRAT_FUNC
-Message-ID: <20200312145652.GP8045@magnolia>
-References: <20200312141715.550387-1-hch@lst.de>
- <20200312141715.550387-4-hch@lst.de>
+References: <20200312141351.GA30388@infradead.org>
+From:   Eric Sandeen <sandeen@redhat.com>
+Message-ID: <244a8391-77c4-94a1-3bd4-b78c7a1f39ad@redhat.com>
+Date:   Thu, 12 Mar 2020 10:46:47 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.5.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200312141715.550387-4-hch@lst.de>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9557 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 malwarescore=0 mlxscore=0
- adultscore=0 suspectscore=0 bulkscore=0 spamscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2003120080
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9557 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 lowpriorityscore=0
- spamscore=0 priorityscore=1501 impostorscore=0 bulkscore=0 suspectscore=0
- phishscore=0 mlxlogscore=999 mlxscore=0 malwarescore=0 clxscore=1015
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2003120080
+In-Reply-To: <20200312141351.GA30388@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 12, 2020 at 03:17:14PM +0100, Christoph Hellwig wrote:
-> This function doesn't exist in the kernel and is purely a stub in
-> xfsprogs, so remove it.
+On 3/12/20 9:13 AM, Christoph Hellwig wrote:
+> Hi Eric and others,
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> I've recently tried to port my attr cleanups to xfsprogs, but noticed
+> that a lot of patches from others are missing before I could apply
+> my ptches.  Any chance we could try to have a real xfsprogs for-next
+> branch that everyone can submit their ports to in a timely fashion?
+> Without that I'm not sure how to handle the porting in a distributed
+> way.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+I guess the problem is that libxfs/ is behind, right.  I have indeed
+always been late with that but it's mostly only affected me so far.
 
---D
+Would it help to open a libxfs-sync-$VERSION branch as soon as the kernel
+starts on a new version?
 
-> ---
->  libxfs/libxfs_priv.h | 1 -
->  libxfs/logitem.c     | 1 -
->  2 files changed, 2 deletions(-)
-> 
-> diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-> index 723dddcd..d07d8f32 100644
-> --- a/libxfs/libxfs_priv.h
-> +++ b/libxfs/libxfs_priv.h
-> @@ -367,7 +367,6 @@ roundup_64(uint64_t x, uint32_t y)
->  #define XBF_DONE			0
->  #define xfs_buf_stale(bp)		((bp)->b_flags |= LIBXFS_B_STALE)
->  #define XFS_BUF_UNDELAYWRITE(bp)	((bp)->b_flags &= ~LIBXFS_B_DIRTY)
-> -#define XFS_BUF_SET_BDSTRAT_FUNC(a,b)	((void) 0)
->  
->  static inline struct xfs_buf *xfs_buf_incore(struct xfs_buftarg *target,
->  		xfs_daddr_t blkno, size_t numblks, xfs_buf_flags_t flags)
-> diff --git a/libxfs/logitem.c b/libxfs/logitem.c
-> index b11df4fa..d0819dcb 100644
-> --- a/libxfs/logitem.c
-> +++ b/libxfs/logitem.c
-> @@ -84,7 +84,6 @@ xfs_buf_item_init(
->  	 * the first.  If we do already have one, there is
->  	 * nothing to do here so return.
->  	 */
-> -	XFS_BUF_SET_BDSTRAT_FUNC(bp, xfs_bdstrat_cb);
->  	if (bp->b_log_item != NULL) {
->  		lip = bp->b_log_item;
->  		if (lip->li_type == XFS_LI_BUF) {
-> -- 
-> 2.24.1
-> 
+I've never quite understood what the common expectation for a "for-next"
+branch behavior is, though I recognize that my use of it right now is a bit
+unconventional.
+
+-Eric
+
