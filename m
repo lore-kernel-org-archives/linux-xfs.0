@@ -7,71 +7,71 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B82A9C10DCE
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Mar 2020 14:48:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E2ECC10DCE
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Mar 2020 14:53:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 85C282071C
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Mar 2020 14:48:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D89A206E7
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Mar 2020 14:53:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="0GHuUdb8"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Jdy/sN5t"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727467AbgCLOsv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Mar 2020 10:48:51 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:54996 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727463AbgCLOsv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Mar 2020 10:48:51 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02CEihIS166479;
-        Thu, 12 Mar 2020 14:48:45 GMT
+        id S1727505AbgCLOxQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Mar 2020 10:53:16 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:35978 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727072AbgCLOxQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Mar 2020 10:53:16 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02CEgX9q088402;
+        Thu, 12 Mar 2020 14:53:12 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=nyFkPnKxBZJ81Tdhoh386KbdqzidqMjCiGxb4Zh1lzY=;
- b=0GHuUdb8F/Z9ZToGX65Y2uyvyPkXfPHdj1G5V+hz1HQryE+v46pS6SFKsp2qP0Cmy6s3
- mYFu+UpQ+VDwAiCHL/YlcUmz7pafJH+6nGFNfBNITMy8J4UUQd2OjGNn+udY/DalMHQ1
- f7QsEFbE6DkchNA1RfJsm/p4WM0A74eQBaemy0ltHiSVhVM7kbctHaJNALZoBVaVRZJi
- zzOuzwoBA3gezeGNpyX/wXA7150P5W7Db5Uw2WIqDFXqlQGGe2gaLvtGSNLgaM4LU57j
- ZuzYPSymk3eocwsur6EvJNXMcskYuMNUzug57IV+/KSXxzHDs9PcNLHniIvt9ht4D9EQ 6w== 
+ bh=AUsJPonOi6pBd0A/9Z7JoRoKOmxUwjCo/pCFKUKFJDY=;
+ b=Jdy/sN5tfAnPhxh1YvYw1kGrg33/pGLGkd8UjBy0prs7ooeuKp/oxac/x+o9UZlrrKkf
+ 5E/vdpkcE3UQLfBIxuJwVkAFFgVtzNpvdqIEWkKfGkWJIsl+WEhwTSylydxrBbj+gF/U
+ duK3Ld6W8pf99OmvEMZGmbHuUo97/o80kdEIKA6fsYN+ZYCh2XZLg5RuLCXHmka4/ee7
+ DbG4HDJgjCf7QnP0boSdU2ytVcZz1Sjn/in2lGxl0fkKMLE6f/Hly/lqM/BQDtDG2dZY
+ /uO74VLT3gdjOvjh/xLZPVAIOKIcEpEz6naUsv4Oy8FJGQNfp0lSUkvLaVLFSJzXSAU3 YQ== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 2yp9v6d4dj-1
+        by userp2130.oracle.com with ESMTP id 2ym31ut2bm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 12 Mar 2020 14:48:45 +0000
+        Thu, 12 Mar 2020 14:53:12 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02CEgGhT089125;
-        Thu, 12 Mar 2020 14:48:44 GMT
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02CEoW9t004305;
+        Thu, 12 Mar 2020 14:53:11 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 2yqkvmt69e-1
+        by aserp3030.oracle.com with ESMTP id 2yqkvmtct8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 12 Mar 2020 14:48:44 +0000
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 02CEmhXY019044;
-        Thu, 12 Mar 2020 14:48:43 GMT
+        Thu, 12 Mar 2020 14:53:11 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 02CEr9Sf021783;
+        Thu, 12 Mar 2020 14:53:09 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 12 Mar 2020 07:48:42 -0700
-Date:   Thu, 12 Mar 2020 07:48:41 -0700
+        with ESMTP ; Thu, 12 Mar 2020 07:53:09 -0700
+Date:   Thu, 12 Mar 2020 07:53:08 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Tommi Rantala <tommi.t.rantala@nokia.com>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix regression in "cleanup xfs_dir2_block_getdents"
-Message-ID: <20200312144841.GL8045@magnolia>
-References: <20200312085728.22187-1-tommi.t.rantala@nokia.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/4] libxfs: remove xfs_buf_oneshot
+Message-ID: <20200312145308.GM8045@magnolia>
+References: <20200312141715.550387-1-hch@lst.de>
+ <20200312141715.550387-3-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200312085728.22187-1-tommi.t.rantala@nokia.com>
+In-Reply-To: <20200312141715.550387-3-hch@lst.de>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9557 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=2
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0
  mlxlogscore=999 malwarescore=0 adultscore=0 bulkscore=0 mlxscore=0
  phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2001150001 definitions=main-2003120080
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9557 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 spamscore=0 mlxscore=0
- priorityscore=1501 lowpriorityscore=0 bulkscore=0 mlxlogscore=999
- phishscore=0 adultscore=0 clxscore=1011 impostorscore=0 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 lowpriorityscore=0
+ spamscore=0 priorityscore=1501 impostorscore=0 bulkscore=0 suspectscore=0
+ phishscore=0 mlxlogscore=999 mlxscore=0 malwarescore=0 clxscore=1015
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
  definitions=main-2003120080
 Sender: linux-xfs-owner@vger.kernel.org
@@ -79,79 +79,56 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 12, 2020 at 10:57:28AM +0200, Tommi Rantala wrote:
-> Commit 263dde869bd09 ("xfs: cleanup xfs_dir2_block_getdents") introduced
-> a getdents regression, when it converted the pointer arithmetics to
-> offset calculations: offset is updated in the loop already for the next
-> iteration, but the updated offset value is used incorrectly in two
-> places, where we should have used the not-yet-updated value.
+On Thu, Mar 12, 2020 at 03:17:13PM +0100, Christoph Hellwig wrote:
+> This function doesn't exist in the kernel and is purely a stub in
+> xfsprogs, so remove it.
 > 
-> This caused for example "git clean -ffdx" failures to cleanup certain
-> directory structures when running in a container.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  libxfs/libxfs_priv.h | 2 --
+>  libxfs/xfs_sb.c      | 2 --
+>  2 files changed, 4 deletions(-)
 > 
-> Fix the regression by making sure we use proper offset in the loop body.
-> Thanks to Christoph Hellwig for suggestion how to best fix the code.
-> 
-> Cc: Christoph Hellwig <hch@lst.de>
-> Fixes: 263dde869bd09 ("xfs: cleanup xfs_dir2_block_getdents")
-> Signed-off-by: Tommi Rantala <tommi.t.rantala@nokia.com>
+> diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+> index 17a0104b..723dddcd 100644
+> --- a/libxfs/libxfs_priv.h
+> +++ b/libxfs/libxfs_priv.h
+> @@ -375,8 +375,6 @@ static inline struct xfs_buf *xfs_buf_incore(struct xfs_buftarg *target,
+>  	return NULL;
+>  }
+>  
+> -#define xfs_buf_oneshot(bp)		((void) 0)
+> -
+>  #define XBRW_READ			LIBXFS_BREAD
+>  #define XBRW_WRITE			LIBXFS_BWRITE
+>  #define xfs_buf_zero(bp,off,len)     libxfs_iomove(bp,off,len,NULL,LIBXFS_BZERO)
+> diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+> index 4f750d19..b931fee7 100644
+> --- a/libxfs/xfs_sb.c
+> +++ b/libxfs/xfs_sb.c
+> @@ -982,7 +982,6 @@ xfs_update_secondary_sbs(
+>  		}
+>  
+>  		bp->b_ops = &xfs_sb_buf_ops;
+> -		xfs_buf_oneshot(bp);
 
-Looks ok, sorry I didn't catch this either...
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-How might we package this up as a fstest so we can actually do
-regression testing?
+Removing this will cause xfsprogs' libxfs to fall further out of sync
+with the kernel's libxfs.  Eric and I have been trying to keep that to a
+minimum.
 
 --D
 
-> ---
->  fs/xfs/xfs_dir2_readdir.c | 12 +++++++-----
->  1 file changed, 7 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-> index 0d3b640cf1cc..871ec22c9aee 100644
-> --- a/fs/xfs/xfs_dir2_readdir.c
-> +++ b/fs/xfs/xfs_dir2_readdir.c
-> @@ -147,7 +147,7 @@ xfs_dir2_block_getdents(
->  	xfs_off_t		cook;
->  	struct xfs_da_geometry	*geo = args->geo;
->  	int			lock_mode;
-> -	unsigned int		offset;
-> +	unsigned int		offset, next_offset;
->  	unsigned int		end;
->  
->  	/*
-> @@ -173,9 +173,10 @@ xfs_dir2_block_getdents(
->  	 * Loop over the data portion of the block.
->  	 * Each object is a real entry (dep) or an unused one (dup).
->  	 */
-> -	offset = geo->data_entry_offset;
->  	end = xfs_dir3_data_end_offset(geo, bp->b_addr);
-> -	while (offset < end) {
-> +	for (offset = geo->data_entry_offset;
-> +	     offset < end;
-> +	     offset = next_offset) {
->  		struct xfs_dir2_data_unused	*dup = bp->b_addr + offset;
->  		struct xfs_dir2_data_entry	*dep = bp->b_addr + offset;
->  		uint8_t filetype;
-> @@ -184,14 +185,15 @@ xfs_dir2_block_getdents(
->  		 * Unused, skip it.
->  		 */
->  		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
-> -			offset += be16_to_cpu(dup->length);
-> +			next_offset = offset + be16_to_cpu(dup->length);
->  			continue;
->  		}
->  
->  		/*
->  		 * Bump pointer for the next iteration.
->  		 */
-> -		offset += xfs_dir2_data_entsize(dp->i_mount, dep->namelen);
-> +		next_offset = offset +
-> +			xfs_dir2_data_entsize(dp->i_mount, dep->namelen);
->  
->  		/*
->  		 * The entry is before the desired starting point, skip it.
+>  		xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
+>  		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb);
+>  		xfs_buf_delwri_queue(bp, &buffer_list);
+> @@ -1170,7 +1169,6 @@ xfs_sb_get_secondary(
+>  	if (!bp)
+>  		return -ENOMEM;
+>  	bp->b_ops = &xfs_sb_buf_ops;
+> -	xfs_buf_oneshot(bp);
+>  	*bpp = bp;
+>  	return 0;
+>  }
 > -- 
-> 2.21.1
+> 2.24.1
 > 
