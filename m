@@ -7,70 +7,69 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33830C1975A
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Mar 2020 03:47:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA3E7C10DCE
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Mar 2020 03:47:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1DD9D206E2
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Mar 2020 03:47:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A849C206F2
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Mar 2020 03:47:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="YzUYehCp"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="yYXeabKT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731078AbgCLDrd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Mar 2020 23:47:33 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:37536 "EHLO
+        id S2387681AbgCLDru (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Mar 2020 23:47:50 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:37732 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730913AbgCLDrd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Mar 2020 23:47:33 -0400
+        with ESMTP id S2387657AbgCLDrt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Mar 2020 23:47:49 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02C3hBPb181336;
-        Thu, 12 Mar 2020 03:47:29 GMT
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02C3hBa2181498;
+        Thu, 12 Mar 2020 03:47:46 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=aHc65jiVxGui4PHmmG19a19Y+jLI4qA3km+DxO711QM=;
- b=YzUYehCpDQLC8YiGInjKnTjyo4t0hLCsPf7dSnLXDORPAJoH9SRYCEnzY2fgEvn0kkAA
- y1i/Fvb3t+zxRZh+NNgIosuZVFl8KSG84dfJpsO7rqDta4+0dS6cjvoXjEiJuBaNBxFY
- 01AJ7nGwvMe5S1zp9gqa4umxS3x6ZfDErfpasODib3mL0yhUHKtNgqb5k28qvc4Wl+Kv
- fKQDEtwlrwfqEQLKnkK7pen6cbpds85nwYJcRRzu3X0+kPt05mk2fbpZVvjtAEHPDWp1
- 91XX6/KwmRhV2oA3CHDUEYNK8GTFimCakghvlXxex+8s8Suv2apX/jHRXtBc5ckHCe/g Bw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2ym31uq7ce-1
+ bh=hPWk5NQFHsRdqi6A86TauYhnWbczrm8g2HI86oscW80=;
+ b=yYXeabKTdKFgh6S0IpxwiccwDMdO6FrhyQ9rwJ/TKU4p/YyUgSRjhJsGfKN7gIFfCAB9
+ iqb0DSpNc/CcHtU8uYfy5VhkHjYGrJ3vKRUIiAGB5mr2jvuzjJ2mSCLNt+sidzF2EurR
+ ci4+TIZ/OsoGZxvzsI46dzxs7qzaLl7DZ8xCEkP2qtWTTOKenuke1X8pcT4l0+uFJfK+
+ Toh37pdDoPqVVAvzRqNZe3nCtqBJxyHqT9+ZU+bWItenIpk01O9pK4/Rn5Byp7w5IDUq
+ a/DvQHE7+qfuLIDrluP581mc+5d3GZvvB7Jsg2doE4hrRWuVNcH6ux6q/j2Uiy2vqMt2 IQ== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 2ym31uq7d4-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 12 Mar 2020 03:47:29 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02C3cAHo055218;
-        Thu, 12 Mar 2020 03:45:29 GMT
+        Thu, 12 Mar 2020 03:47:46 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02C3cIu6096713;
+        Thu, 12 Mar 2020 03:45:45 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 2yp8p5qypx-1
+        by userp3030.oracle.com with ESMTP id 2yp8qyavkr-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 12 Mar 2020 03:45:28 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 02C3jSEi017011;
-        Thu, 12 Mar 2020 03:45:28 GMT
+        Thu, 12 Mar 2020 03:45:45 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 02C3jiGE017086;
+        Thu, 12 Mar 2020 03:45:44 GMT
 Received: from localhost (/10.159.134.61)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 11 Mar 2020 20:45:28 -0700
-Subject: [PATCH 7/7] xfs: make the btree ag cursor private union anonymous
+        with ESMTP ; Wed, 11 Mar 2020 20:45:44 -0700
+Subject: [PATCH 2/7] xfs: introduce fake roots for inode-rooted btrees
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com,
-        Dave Chinner <dchinner@redhat.com>
-Date:   Wed, 11 Mar 2020 20:45:27 -0700
-Message-ID: <158398472694.1307855.12435739558591642821.stgit@magnolia>
-In-Reply-To: <158398468107.1307855.8287106235853942996.stgit@magnolia>
-References: <158398468107.1307855.8287106235853942996.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com
+Date:   Wed, 11 Mar 2020 20:45:43 -0700
+Message-ID: <158398474334.1308059.3288197233526483322.stgit@magnolia>
+In-Reply-To: <158398473036.1308059.18353233923283406961.stgit@magnolia>
+References: <158398473036.1308059.18353233923283406961.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9557 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxscore=0 phishscore=0
- spamscore=0 malwarescore=0 adultscore=0 suspectscore=1 mlxlogscore=999
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 malwarescore=0 mlxscore=0
+ adultscore=0 suspectscore=3 bulkscore=0 spamscore=0 mlxlogscore=999
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
  definitions=main-2003120016
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9557 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 lowpriorityscore=0
- spamscore=0 priorityscore=1501 impostorscore=0 bulkscore=0 suspectscore=1
+ spamscore=0 priorityscore=1501 impostorscore=0 bulkscore=0 suspectscore=3
  phishscore=0 mlxlogscore=999 mlxscore=0 malwarescore=0 clxscore=1015
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
  definitions=main-2003120016
@@ -79,250 +78,268 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-This is much less widely used than the bc_private union was, so this
-is done as a single patch. The named union xfs_btree_cur_private
-goes away and is embedded into the struct xfs_btree_cur_ag as an
-anonymous union, and the code is modified via this script:
+Create an in-core fake root for inode-rooted btree types so that callers
+can generate a whole new btree using the upcoming btree bulk load
+function without making the new tree accessible from the rest of the
+filesystem.  It is up to the individual btree type to provide a function
+to create a staged cursor (presumably with the appropriate callouts to
+update the fakeroot) and then commit the staged root back into the
+filesystem.
 
-$ sed -i 's/priv\.\([abt|refc]\)/\1/g' fs/xfs/*[ch] fs/xfs/*/*[ch]
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c          |   14 +++++++-------
- fs/xfs/libxfs/xfs_alloc_btree.c    |    2 +-
- fs/xfs/libxfs/xfs_btree.h          |   25 +++++++++++--------------
- fs/xfs/libxfs/xfs_refcount.c       |   24 ++++++++++++------------
- fs/xfs/libxfs/xfs_refcount_btree.c |    4 ++--
- 5 files changed, 33 insertions(+), 36 deletions(-)
+ fs/xfs/libxfs/xfs_btree.c |  111 +++++++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/libxfs/xfs_btree.h |   31 +++++++++++++
+ fs/xfs/xfs_trace.h        |   33 +++++++++++++
+ 3 files changed, 171 insertions(+), 4 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 10ed68dfef5d..337822115bbc 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -151,7 +151,7 @@ xfs_alloc_lookup_eq(
- 	cur->bc_rec.a.ar_startblock = bno;
- 	cur->bc_rec.a.ar_blockcount = len;
- 	error = xfs_btree_lookup(cur, XFS_LOOKUP_EQ, stat);
--	cur->bc_ag.priv.abt.active = (*stat == 1);
-+	cur->bc_ag.abt.active = (*stat == 1);
- 	return error;
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 085bc070e804..4e1d4f184d4b 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -644,6 +644,17 @@ xfs_btree_ptr_addr(
+ 		((char *)block + xfs_btree_ptr_offset(cur, n, level));
  }
  
-@@ -171,7 +171,7 @@ xfs_alloc_lookup_ge(
- 	cur->bc_rec.a.ar_startblock = bno;
- 	cur->bc_rec.a.ar_blockcount = len;
- 	error = xfs_btree_lookup(cur, XFS_LOOKUP_GE, stat);
--	cur->bc_ag.priv.abt.active = (*stat == 1);
-+	cur->bc_ag.abt.active = (*stat == 1);
- 	return error;
- }
- 
-@@ -190,7 +190,7 @@ xfs_alloc_lookup_le(
- 	cur->bc_rec.a.ar_startblock = bno;
- 	cur->bc_rec.a.ar_blockcount = len;
- 	error = xfs_btree_lookup(cur, XFS_LOOKUP_LE, stat);
--	cur->bc_ag.priv.abt.active = (*stat == 1);
-+	cur->bc_ag.abt.active = (*stat == 1);
- 	return error;
- }
- 
-@@ -198,7 +198,7 @@ static inline bool
- xfs_alloc_cur_active(
++struct xfs_ifork *
++xfs_btree_ifork_ptr(
++	struct xfs_btree_cur	*cur)
++{
++	ASSERT(cur->bc_flags & XFS_BTREE_ROOT_IN_INODE);
++
++	if (cur->bc_flags & XFS_BTREE_STAGING)
++		return cur->bc_ino.ifake->if_fork;
++	return XFS_IFORK_PTR(cur->bc_ino.ip, cur->bc_ino.whichfork);
++}
++
+ /*
+  * Get the root block which is stored in the inode.
+  *
+@@ -654,9 +665,8 @@ STATIC struct xfs_btree_block *
+ xfs_btree_get_iroot(
  	struct xfs_btree_cur	*cur)
  {
--	return cur && cur->bc_ag.priv.abt.active;
-+	return cur && cur->bc_ag.abt.active;
+-	struct xfs_ifork	*ifp;
++	struct xfs_ifork	*ifp = xfs_btree_ifork_ptr(cur);
+ 
+-	ifp = XFS_IFORK_PTR(cur->bc_ino.ip, cur->bc_ino.whichfork);
+ 	return (struct xfs_btree_block *)ifp->if_broot;
+ }
+ 
+@@ -4985,8 +4995,17 @@ xfs_btree_fakeroot_init_ptr_from_cur(
+ 
+ 	ASSERT(cur->bc_flags & XFS_BTREE_STAGING);
+ 
+-	afake = cur->bc_ag.afake;
+-	ptr->s = cpu_to_be32(afake->af_root);
++	if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) {
++		/*
++		 * The root block lives in the inode core, so we zero the
++		 * pointer (like the bmbt code does) to make it obvious if
++		 * anyone ever tries to use this pointer.
++		 */
++		ptr->l = cpu_to_be64(0);
++	} else {
++		afake = cur->bc_ag.afake;
++		ptr->s = cpu_to_be32(afake->af_root);
++	}
  }
  
  /*
-@@ -908,7 +908,7 @@ xfs_alloc_cur_check(
- 		deactivate = true;
- out:
- 	if (deactivate)
--		cur->bc_ag.priv.abt.active = false;
-+		cur->bc_ag.abt.active = false;
- 	trace_xfs_alloc_cur_check(args->mp, cur->bc_btnum, bno, len, diff,
- 				  *new);
- 	return 0;
-@@ -1352,7 +1352,7 @@ xfs_alloc_walk_iter(
- 		if (error)
- 			return error;
- 		if (i == 0)
--			cur->bc_ag.priv.abt.active = false;
-+			cur->bc_ag.abt.active = false;
- 
- 		if (count > 0)
- 			count--;
-@@ -1467,7 +1467,7 @@ xfs_alloc_ag_vextent_locality(
- 		if (error)
- 			return error;
- 		if (i) {
--			acur->cnt->bc_ag.priv.abt.active = true;
-+			acur->cnt->bc_ag.abt.active = true;
- 			fbcur = acur->cnt;
- 			fbinc = false;
- 		}
-diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-index 92d30c19519d..a28041fdf4c0 100644
---- a/fs/xfs/libxfs/xfs_alloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-@@ -507,7 +507,7 @@ xfs_allocbt_init_cursor(
- 
- 	cur->bc_ag.agbp = agbp;
- 	cur->bc_ag.agno = agno;
--	cur->bc_ag.priv.abt.active = false;
-+	cur->bc_ag.abt.active = false;
- 
- 	if (xfs_sb_version_hascrc(&mp->m_sb))
- 		cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
+@@ -5076,3 +5095,87 @@ xfs_btree_commit_afakeroot(
+ 	cur->bc_flags &= ~XFS_BTREE_STAGING;
+ 	cur->bc_tp = tp;
+ }
++
++/*
++ * Bulk Loading for Inode-Rooted Btrees
++ * ====================================
++ *
++ * For a btree rooted in an inode fork, pass a xbtree_ifakeroot structure to
++ * the staging cursor.  This structure should be initialized as follows:
++ *
++ * - if_fork_size field should be set to the number of bytes available to the
++ *   fork in the inode.
++ *
++ * - if_fork should point to a freshly allocated struct xfs_ifork.
++ *
++ * - if_format should be set to the appropriate fork type (e.g.
++ *   XFS_DINODE_FMT_BTREE).
++ *
++ * All other fields must be zero.
++ *
++ * The _stage_cursor() function for a specific btree type should call
++ * xfs_btree_stage_ifakeroot to set up the in-memory cursor as a staging
++ * cursor.  The corresponding _commit_staged_btree() function should log the
++ * new root and call xfs_btree_commit_ifakeroot() to transform the staging
++ * cursor into a regular btree cursor.
++ */
++
++/*
++ * Initialize an inode-rooted btree cursor with the given inode btree fake
++ * root.  The btree cursor's bc_ops will be overridden as needed to make the
++ * staging functionality work.  If new_ops is not NULL, these new ops will be
++ * passed out to the caller for further overriding.
++ */
++void
++xfs_btree_stage_ifakeroot(
++	struct xfs_btree_cur		*cur,
++	struct xbtree_ifakeroot		*ifake,
++	struct xfs_btree_ops		**new_ops)
++{
++	struct xfs_btree_ops		*nops;
++
++	ASSERT(!(cur->bc_flags & XFS_BTREE_STAGING));
++	ASSERT(cur->bc_flags & XFS_BTREE_ROOT_IN_INODE);
++	ASSERT(cur->bc_tp == NULL);
++
++	nops = kmem_alloc(sizeof(struct xfs_btree_ops), KM_NOFS);
++	memcpy(nops, cur->bc_ops, sizeof(struct xfs_btree_ops));
++	nops->alloc_block = xfs_btree_fakeroot_alloc_block;
++	nops->free_block = xfs_btree_fakeroot_free_block;
++	nops->init_ptr_from_cur = xfs_btree_fakeroot_init_ptr_from_cur;
++	nops->dup_cursor = xfs_btree_fakeroot_dup_cursor;
++
++	cur->bc_ino.ifake = ifake;
++	cur->bc_nlevels = ifake->if_levels;
++	cur->bc_ops = nops;
++	cur->bc_flags |= XFS_BTREE_STAGING;
++
++	if (new_ops)
++		*new_ops = nops;
++}
++
++/*
++ * Transform an inode-rooted staging btree cursor back into a regular cursor by
++ * substituting a real btree root for the fake one and restoring normal btree
++ * cursor ops.  The caller must log the btree root change prior to calling
++ * this.
++ */
++void
++xfs_btree_commit_ifakeroot(
++	struct xfs_btree_cur		*cur,
++	struct xfs_trans		*tp,
++	int				whichfork,
++	const struct xfs_btree_ops	*ops)
++{
++	ASSERT(cur->bc_flags & XFS_BTREE_STAGING);
++	ASSERT(cur->bc_tp == NULL);
++
++	trace_xfs_btree_commit_ifakeroot(cur);
++
++	kmem_free((void *)cur->bc_ops);
++	cur->bc_ino.ifake = NULL;
++	cur->bc_ino.whichfork = whichfork;
++	cur->bc_ops = ops;
++	cur->bc_flags &= ~XFS_BTREE_STAGING;
++	cur->bc_tp = tp;
++}
 diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index 9884f543eb51..0d10bbd5223a 100644
+index aa4a7bd40023..047067f52063 100644
 --- a/fs/xfs/libxfs/xfs_btree.h
 +++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -177,22 +177,19 @@ union xfs_btree_irec {
- 	struct xfs_refcount_irec	rc;
- };
+@@ -10,6 +10,7 @@ struct xfs_buf;
+ struct xfs_inode;
+ struct xfs_mount;
+ struct xfs_trans;
++struct xfs_ifork;
  
--/* Per-AG btree private information. */
--union xfs_btree_cur_private {
--	struct {
--		unsigned long	nr_ops;		/* # record updates */
--		int		shape_changes;	/* # of extent splits */
--	} refc;
--	struct {
--		bool		active;		/* allocation cursor state */
--	} abt;
--};
--
- /* Per-AG btree information. */
- struct xfs_btree_cur_ag {
--	struct xfs_buf			*agbp;
--	xfs_agnumber_t			agno;
--	union xfs_btree_cur_private	priv;
-+	struct xfs_buf		*agbp;
-+	xfs_agnumber_t		agno;
-+	union {
-+		struct {
-+			unsigned long nr_ops;	/* # record updates */
-+			int	shape_changes;	/* # of extent splits */
-+		} refc;
-+		struct {
-+			bool	active;		/* allocation cursor state */
-+		} abt;
-+	};
- };
+ extern kmem_zone_t	*xfs_btree_cur_zone;
  
+@@ -198,6 +199,7 @@ struct xfs_btree_cur_ag {
  /* Btree-in-inode cursor information */
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index ef3e706f1d94..2076627243b0 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -883,7 +883,7 @@ xfs_refcount_still_have_space(
- {
- 	unsigned long			overhead;
+ struct xfs_btree_cur_ino {
+ 	struct xfs_inode	*ip;
++	struct xbtree_ifakeroot	*ifake;		/* fake inode fork */
+ 	int			allocated;
+ 	short			forksize;
+ 	char			whichfork;
+@@ -506,6 +508,7 @@ union xfs_btree_key *xfs_btree_high_key_from_key(struct xfs_btree_cur *cur,
+ int xfs_btree_has_record(struct xfs_btree_cur *cur, union xfs_btree_irec *low,
+ 		union xfs_btree_irec *high, bool *exists);
+ bool xfs_btree_has_more_records(struct xfs_btree_cur *cur);
++struct xfs_ifork *xfs_btree_ifork_ptr(struct xfs_btree_cur *cur);
  
--	overhead = cur->bc_ag.priv.refc.shape_changes *
-+	overhead = cur->bc_ag.refc.shape_changes *
- 			xfs_allocfree_log_count(cur->bc_mp, 1);
- 	overhead *= cur->bc_mp->m_sb.sb_blocksize;
+ /* Does this cursor point to the last block in the given level? */
+ static inline bool
+@@ -543,4 +546,32 @@ void xfs_btree_stage_afakeroot(struct xfs_btree_cur *cur,
+ void xfs_btree_commit_afakeroot(struct xfs_btree_cur *cur, struct xfs_trans *tp,
+ 		struct xfs_buf *agbp, const struct xfs_btree_ops *ops);
  
-@@ -891,17 +891,17 @@ xfs_refcount_still_have_space(
- 	 * Only allow 2 refcount extent updates per transaction if the
- 	 * refcount continue update "error" has been injected.
- 	 */
--	if (cur->bc_ag.priv.refc.nr_ops > 2 &&
-+	if (cur->bc_ag.refc.nr_ops > 2 &&
- 	    XFS_TEST_ERROR(false, cur->bc_mp,
- 			XFS_ERRTAG_REFCOUNT_CONTINUE_UPDATE))
- 		return false;
++/* Fake root for an inode-rooted btree. */
++struct xbtree_ifakeroot {
++	/* Fake inode fork. */
++	struct xfs_ifork	*if_fork;
++
++	/* Number of blocks used by the btree. */
++	int64_t			if_blocks;
++
++	/* Height of the new btree. */
++	unsigned int		if_levels;
++
++	/* Number of bytes available for this fork in the inode. */
++	unsigned int		if_fork_size;
++
++	/* Fork format. */
++	unsigned int		if_format;
++
++	/* Number of records. */
++	unsigned int		if_extents;
++};
++
++/* Cursor interactions with with fake roots for inode-rooted btrees. */
++void xfs_btree_stage_ifakeroot(struct xfs_btree_cur *cur,
++		struct xbtree_ifakeroot *ifake,
++		struct xfs_btree_ops **new_ops);
++void xfs_btree_commit_ifakeroot(struct xfs_btree_cur *cur, struct xfs_trans *tp,
++		int whichfork, const struct xfs_btree_ops *ops);
++
+ #endif	/* __XFS_BTREE_H__ */
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index d8c229492973..05db0398f040 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3633,6 +3633,39 @@ TRACE_EVENT(xfs_btree_commit_afakeroot,
+ 		  __entry->agbno)
+ )
  
--	if (cur->bc_ag.priv.refc.nr_ops == 0)
-+	if (cur->bc_ag.refc.nr_ops == 0)
- 		return true;
- 	else if (overhead > cur->bc_tp->t_log_res)
- 		return false;
- 	return  cur->bc_tp->t_log_res - overhead >
--		cur->bc_ag.priv.refc.nr_ops * XFS_REFCOUNT_ITEM_OVERHEAD;
-+		cur->bc_ag.refc.nr_ops * XFS_REFCOUNT_ITEM_OVERHEAD;
- }
++TRACE_EVENT(xfs_btree_commit_ifakeroot,
++	TP_PROTO(struct xfs_btree_cur *cur),
++	TP_ARGS(cur),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_btnum_t, btnum)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agino_t, agino)
++		__field(unsigned int, levels)
++		__field(unsigned int, blocks)
++		__field(int, whichfork)
++	),
++	TP_fast_assign(
++		__entry->dev = cur->bc_mp->m_super->s_dev;
++		__entry->btnum = cur->bc_btnum;
++		__entry->agno = XFS_INO_TO_AGNO(cur->bc_mp,
++					cur->bc_ino.ip->i_ino);
++		__entry->agino = XFS_INO_TO_AGINO(cur->bc_mp,
++					cur->bc_ino.ip->i_ino);
++		__entry->levels = cur->bc_ino.ifake->if_levels;
++		__entry->blocks = cur->bc_ino.ifake->if_blocks;
++		__entry->whichfork = cur->bc_ino.whichfork;
++	),
++	TP_printk("dev %d:%d btree %s ag %u agino %u whichfork %s levels %u blocks %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
++		  __entry->agno,
++		  __entry->agino,
++		  __entry->whichfork == XFS_ATTR_FORK ? "attr" : "data",
++		  __entry->levels,
++		  __entry->blocks)
++)
++
+ #endif /* _TRACE_XFS_H */
  
- /*
-@@ -968,7 +968,7 @@ xfs_refcount_adjust_extents(
- 					error = -EFSCORRUPTED;
- 					goto out_error;
- 				}
--				cur->bc_ag.priv.refc.nr_ops++;
-+				cur->bc_ag.refc.nr_ops++;
- 			} else {
- 				fsbno = XFS_AGB_TO_FSB(cur->bc_mp,
- 						cur->bc_ag.agno,
-@@ -1003,7 +1003,7 @@ xfs_refcount_adjust_extents(
- 			error = xfs_refcount_update(cur, &ext);
- 			if (error)
- 				goto out_error;
--			cur->bc_ag.priv.refc.nr_ops++;
-+			cur->bc_ag.refc.nr_ops++;
- 		} else if (ext.rc_refcount == 1) {
- 			error = xfs_refcount_delete(cur, &found_rec);
- 			if (error)
-@@ -1012,7 +1012,7 @@ xfs_refcount_adjust_extents(
- 				error = -EFSCORRUPTED;
- 				goto out_error;
- 			}
--			cur->bc_ag.priv.refc.nr_ops++;
-+			cur->bc_ag.refc.nr_ops++;
- 			goto advloop;
- 		} else {
- 			fsbno = XFS_AGB_TO_FSB(cur->bc_mp,
-@@ -1088,7 +1088,7 @@ xfs_refcount_adjust(
- 	if (shape_changed)
- 		shape_changes++;
- 	if (shape_changes)
--		cur->bc_ag.priv.refc.shape_changes++;
-+		cur->bc_ag.refc.shape_changes++;
- 
- 	/* Now that we've taken care of the ends, adjust the middle extents */
- 	error = xfs_refcount_adjust_extents(cur, new_agbno, new_aglen,
-@@ -1166,8 +1166,8 @@ xfs_refcount_finish_one(
- 	 */
- 	rcur = *pcur;
- 	if (rcur != NULL && rcur->bc_ag.agno != agno) {
--		nr_ops = rcur->bc_ag.priv.refc.nr_ops;
--		shape_changes = rcur->bc_ag.priv.refc.shape_changes;
-+		nr_ops = rcur->bc_ag.refc.nr_ops;
-+		shape_changes = rcur->bc_ag.refc.shape_changes;
- 		xfs_refcount_finish_one_cleanup(tp, rcur, 0);
- 		rcur = NULL;
- 		*pcur = NULL;
-@@ -1183,8 +1183,8 @@ xfs_refcount_finish_one(
- 			error = -ENOMEM;
- 			goto out_cur;
- 		}
--		rcur->bc_ag.priv.refc.nr_ops = nr_ops;
--		rcur->bc_ag.priv.refc.shape_changes = shape_changes;
-+		rcur->bc_ag.refc.nr_ops = nr_ops;
-+		rcur->bc_ag.refc.shape_changes = shape_changes;
- 	}
- 	*pcur = rcur;
- 
-diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
-index bf1a4cb3c7ac..e07a2c45f8ec 100644
---- a/fs/xfs/libxfs/xfs_refcount_btree.c
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.c
-@@ -340,8 +340,8 @@ xfs_refcountbt_init_cursor(
- 	cur->bc_ag.agno = agno;
- 	cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
- 
--	cur->bc_ag.priv.refc.nr_ops = 0;
--	cur->bc_ag.priv.refc.shape_changes = 0;
-+	cur->bc_ag.refc.nr_ops = 0;
-+	cur->bc_ag.refc.shape_changes = 0;
- 
- 	return cur;
- }
+ #undef TRACE_INCLUDE_PATH
 
