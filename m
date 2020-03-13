@@ -2,106 +2,89 @@ Return-Path: <SRS0=BjFQ=46=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FCD3C2BB1D
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Mar 2020 14:07:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D7C2C10DCE
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Mar 2020 14:43:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 203952074A
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Mar 2020 14:07:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 66EE7206B7
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Mar 2020 14:43:27 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=davidb.org header.i=@davidb.org header.b="S24H+bFc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726856AbgCMOHm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 13 Mar 2020 10:07:42 -0400
-Received: from sandeen.net ([63.231.237.45]:60330 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726647AbgCMOHm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 13 Mar 2020 10:07:42 -0400
-Received: from Liberator.local (erlite [10.0.0.1])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 3A92F11664;
-        Fri, 13 Mar 2020 09:06:53 -0500 (CDT)
-Subject: Re: [PATCH] xfsprogs: don't warn about packed members
-To:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-References: <20191216215245.13666-1-david@fromorbit.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
- nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
- WL05ODFQ2cemDhx5uLghHEeOxuGj+1AI+kh/FCzMedHc6k87Yu2ZuaWF+Gh1W2ix6hikRJmQ
- vj5BEeAx7xKkyBhzdbNIbbjV/iGi9b26B/dNcyd5w2My2gxMtxaiP7q5b6GM2rsQklHP8FtW
- ZiYO7jsg/qIppR1C6Zr5jK1GQlMUIclYFeBbKggJ9mSwXJH7MIftilGQ8KDvNuV5AbkronGC
- sEEHj2khs7GfVv4pmUUHf1MRIvV0x3WJkpmhuZaYg8AdJlyGKgp+TQ7B+wCjNTdVqMI1vDk2
- BS6Rg851ay7AypbCPx2w4d8jIkQEgNjACHVDU89PNKAjScK1aTnW+HNUqg9BliCvuX5g4z2j
- gJBs57loTWAGe2Ve3cMy3VoQ40Wt3yKK0Eno8jfgzgb48wyycINZgnseMRhxc2c8hd51tftK
- LKhPj4c7uqjnBjrgOVaVBupGUmvLiePlnW56zJZ51BR5igWnILeOJ1ZIcf7KsaHyE6B1mG+X
- dmYtjDhjf3NAcoBWJuj8euxMB6TcQN2MrSXy5wSKaw40evooGwARAQABtCVFcmljIFIuIFNh
- bmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+iQI7BBMBAgAlAhsDBgsJCAcDAgYVCAIJCgsE
- FgIDAQIeAQIXgAUCUzMzbAIZAQAKCRAgrhaS4T3e4Fr7D/wO+fenqVvHjq21SCjDCrt8HdVj
- aJ28B1SqSU2toxyg5I160GllAxEHpLFGdbFAhQfBtnmlY9eMjwmJb0sCIrkrB6XNPSPA/B2B
- UPISh0z2odJv35/euJF71qIFgWzp2czJHkHWwVZaZpMWWNvsLIroXoR+uA9c2V1hQFVAJZyk
- EE4xzfm1+oVtjIC12B9tTCuS00pY3AUy21yzNowT6SSk7HAzmtG/PJ/uSB5wEkwldB6jVs2A
- sjOg1wMwVvh/JHilsQg4HSmDfObmZj1d0RWlMWcUE7csRnCE0ZWBMp/ttTn+oosioGa09HAS
- 9jAnauznmYg43oQ5Akd8iQRxz5I58F/+JsdKvWiyrPDfYZtFS+UIgWD7x+mHBZ53Qjazszox
- gjwO9ehZpwUQxBm4I0lPDAKw3HJA+GwwiubTSlq5PS3P7QoCjaV8llH1bNFZMz2o8wPANiDx
- 5FHgpRVgwLHakoCU1Gc+LXHXBzDXt7Cj02WYHdFzMm2hXaslRdhNGowLo1SXZFXa41KGTlNe
- 4di53y9CK5ynV0z+YUa+5LR6RdHrHtgywdKnjeWdqhoVpsWIeORtwWGX8evNOiKJ7j0RsHha
- WrePTubr5nuYTDsQqgc2r4aBIOpeSRR2brlT/UE3wGgy9LY78L4EwPR0MzzecfE1Ws60iSqw
- Pu3vhb7h3bkCDQROsffUARAA0DrUifTrXQzqxO8aiQOC5p9Tz25Np/Tfpv1rofOwL8VPBMvJ
- X4P5l1V2yd70MZRUVgjmCydEyxLJ6G2YyHO2IZTEajUY0Up+b3ErOpLpZwhvgWatjifpj6bB
- SKuDXeThqFdkphF5kAmgfVAIkan5SxWK3+S0V2F/oxstIViBhMhDwI6XsRlnVBoLLYcEilxA
- 2FlRUS7MOZGmRJkRtdGD5koVZSM6xVZQSmfEBaYQ/WJBGJQdPy94nnlAVn3lH3+N7pXvNUuC
- GV+t4YUt3tLcRuIpYBCOWlc7bpgeCps5Xa0dIZgJ8Louu6OBJ5vVXjPxTlkFdT0S0/uerCG5
- 1u8p6sGRLnUeAUGkQfIUqGUjW2rHaXgWNvzOV6i3tf9YaiXKl3avFaNW1kKBs0T5M1cnlWZU
- Utl6k04lz5OjoNY9J/bGyV3DSlkblXRMK87iLYQSrcV6cFz9PRl4vW1LGff3xRQHngeN5fPx
- ze8X5NE3hb+SSwyMSEqJxhVTXJVfQWWW0dQxP7HNwqmOWYF/6m+1gK/Y2gY3jAQnsWTru4RV
- TZGnKwEPmOCpSUvsTRXsVHgsWJ70qd0yOSjWuiv4b8vmD3+QFgyvCBxPMdP3xsxN5etheLMO
- gRwWpLn6yNFq/xtgs+ECgG+gR78yXQyA7iCs5tFs2OrMqV5juSMGmn0kxJUAEQEAAYkCHwQY
- AQIACQUCTrH31AIbDAAKCRAgrhaS4T3e4BKwD/0ZOOmUNOZCSOLAMjZx3mtYtjYgfUNKi0ki
- YPveGoRWTqbis8UitPtNrG4XxgzLOijSdOEzQwkdOIp/QnZhGNssMejCnsluK0GQd+RkFVWN
- mcQT78hBeGcnEMAXZKq7bkIKzvc06GFmkMbX/gAl6DiNGv0UNAX+5FYh+ucCJZSyAp3sA+9/
- LKjxnTedX0aygXA6rkpX0Y0FvN/9dfm47+LGq7WAqBOyYTU3E6/+Z72bZoG/cG7ANLxcPool
- LOrU43oqFnD8QwcN56y4VfFj3/jDF2MX3xu4v2OjglVjMEYHTCxP3mpxesGHuqOit/FR+mF0
- MP9JGfj6x+bj/9JMBtCW1bY/aPeMdPGTJvXjGtOVYblGZrSjXRn5++Uuy36CvkcrjuziSDG+
- JEexGxczWwN4mrOQWhMT5Jyb+18CO+CWxJfHaYXiLEW7dI1AynL4jjn4W0MSiXpWDUw+fsBO
- Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
- m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
- fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <2c3a3e1d-6882-f23c-a242-30653b617e56@sandeen.net>
-Date:   Fri, 13 Mar 2020 09:07:41 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.5.0
+        id S1726533AbgCMOn0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 13 Mar 2020 10:43:26 -0400
+Received: from mail-qt1-f174.google.com ([209.85.160.174]:41872 "EHLO
+        mail-qt1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726436AbgCMOn0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Mar 2020 10:43:26 -0400
+Received: by mail-qt1-f174.google.com with SMTP id l21so7637098qtr.8
+        for <linux-xfs@vger.kernel.org>; Fri, 13 Mar 2020 07:43:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=davidb.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=PVOdjAomzkcJYMgAthO69G0kiY/r0K9/P2d74w84F1c=;
+        b=S24H+bFcp4SBqXcHg+HHfXg5UUvKTKpMhpeNQjyyAVp60+SyfE3C0QBCTfwDruu6de
+         BTYoFATLPhH+B77k7KD4sw0JAdT8+m6ZT1keayKIklNXLPtXzA2R1ccs3+ioT1s4dyOS
+         wPLAASUCfLf1PHljLpZBUUfSYzjIuJr91z3tHP+BEndnlxjqjOTUcmX3XW4nceCLPrhH
+         7bs8A00zA2OUZgDcyLTt0zQLDtCt5Y83nQRIqyI2R7AjD5kMeiB9OE/oG1SPkWkFnyee
+         0Kc73IWlparU/nwy5aBxIBN4fiUX1amHxlOtIH9FA0QwVh3QUKrUCvw1BNm77Vx1WEAi
+         wDlg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=PVOdjAomzkcJYMgAthO69G0kiY/r0K9/P2d74w84F1c=;
+        b=Ex7l1qTSVg7zTdlj4bbBYhYFbwTOZz6AKRmepORHe6A2qFP2Z1K04FLkvjh0avSW8O
+         aMgUf797QDsf2f5Xa1863NNE+f1AuHk6/IYwZw5WcwhxNdtkJBcMXcTMuJBLWWLi5DhU
+         lXrfNcvAyZnetTDV59sh4rLHIxUI9HaSlS1bOGHvrLD14etl1owv8/CFsZuxz20YxSIF
+         RCKE48qhSJ9YZsXf359CwwDVbSLyMfzbVEqQ7t+/FRB8XA7CpGg8xhvtQXyVw4e1JMUl
+         aXQc92tzy2lJEgafELuhD0SK4zCNug7Xgr6I3YQ/HUm1RvSNKCTHrHqYl9ml32BNAv0k
+         1C/Q==
+X-Gm-Message-State: ANhLgQ3b1hb1eYupSWFfK79mIr1KpdnUWARqKoOOn+8A8mwdAbGVJrh/
+        G/QPnGuW/6hR75d4xafdrmaBtXuiSxivmw==
+X-Google-Smtp-Source: ADFU+vtOwKQjV3gBb+kOX2eWO/BBdWSwLIlbLFDcoJK94UypiIEYKul1Y33KsY5vkXUPMjWNFR4ixw==
+X-Received: by 2002:ac8:490c:: with SMTP id e12mr12690572qtq.294.1584110605178;
+        Fri, 13 Mar 2020 07:43:25 -0700 (PDT)
+Received: from davidb.org (cn-co-b07400e8c3-142422-1.tingfiber.com. [64.98.48.55])
+        by smtp.gmail.com with ESMTPSA id 69sm14811679qki.131.2020.03.13.07.43.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 13 Mar 2020 07:43:24 -0700 (PDT)
+Date:   Fri, 13 Mar 2020 08:43:21 -0600
+From:   David Brown <davidb@davidb.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: Unable to xfsdump/xfsrestore filesystem
+Message-ID: <20200313144321.GA162167@davidb.org>
+References: <20200303165000.GA33105@davidb.org>
+ <20200303221821.GU10776@dread.disaster.area>
 MIME-Version: 1.0
-In-Reply-To: <20191216215245.13666-1-david@fromorbit.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200303221821.GU10776@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 12/16/19 3:52 PM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> gcc 9.2.1 throws lots of new warnings during the build like this:
-> 
-> xfs_format.h:790:3: warning: taking address of packed member of ‘struct xfs_agfl’ may result in an unaligned pointer value [-Waddress-of-packed-member]
->   790 |   &(XFS_BUF_TO_AGFL(bp)->agfl_bno[0]) : \
->       |   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> xfs_alloc.c:3149:13: note: in expansion of macro ‘XFS_BUF_TO_AGFL_BNO’
->  3149 |  agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
->       |             ^~~~~~~~~~~~~~~~~~~
-> 
-> We know this packed structure aligned correctly, so turn off this
-> warning to shut gcc up.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+On Wed, Mar 04, 2020 at 09:18:21AM +1100, Dave Chinner wrote:
 
-I guess if it's good enough for the kernel ...
+> > In addition, I get hundreds of these.  They seem to all be related to
+> > that same directory.
+> > 
+> >     xfsrestore: restoring non-directory files
+> >     xfsrestore: WARNING: open of orphanage/422178422.2232121414/modules/atmel/cmake_install.cmake failed: No such file or directory: discarding ino 2833282
+> >     xfsrestore: WARNING: open of orphanage/422178422.2232121414/modules/atmel/asf/common/cmake_install.cmake failed: No such file or directory: discarding ino 2833283
+> 
+> Yep, this is typical of a dump taken on a live, changing filesystem.
+> i.e. This is not an xfsrestore problem but a result of changing
+> filesystem structure while xfsdump is running.
 
-I'll probably add a short note to the commit, and
+This is not the case.  I am creating lvm snapsnots and dumping those
+with XFS dump.  Nothing should be changing the filesystem during the
+xfsdump.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+David
