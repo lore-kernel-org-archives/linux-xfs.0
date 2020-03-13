@@ -2,674 +2,320 @@ Return-Path: <SRS0=BjFQ=46=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48A87C2BB1D
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Mar 2020 14:49:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 166C2C10DCE
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Mar 2020 15:25:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F1A6320746
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Mar 2020 14:49:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cyzGN4eY"
+	by mail.kernel.org (Postfix) with ESMTP id D29CB2072C
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Mar 2020 15:25:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726526AbgCMOtu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 13 Mar 2020 10:49:50 -0400
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:37550 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726436AbgCMOtu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Mar 2020 10:49:50 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1584110988;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=r61CM5Wyt3WlhMHMgde+CNzTaf9xjCLlwr/8/Dui1yM=;
-        b=cyzGN4eYKDL//sJb+dn/b5bPQGzIv8OAb4HGQwhoefzv/w8OWhIAe+UTKdc6dMpznNqYmP
-        vHM+umPMWHJadWStCMFu0P1SZvqExg3+PAdU4DqEeD++ac3+v4vzC6KC6maFydRL1Gm18a
-        dQAs/qTApJ0R+gIRyuIgHsQS/2KgeeY=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-242-PZekbHpEMrWtLOEXJINAcg-1; Fri, 13 Mar 2020 10:49:46 -0400
-X-MC-Unique: PZekbHpEMrWtLOEXJINAcg-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1726885AbgCMPZs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 13 Mar 2020 11:25:48 -0400
+Received: from sandeen.net ([63.231.237.45]:36160 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726674AbgCMPZs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 13 Mar 2020 11:25:48 -0400
+Received: from Liberator.local (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9EBE3800D48;
-        Fri, 13 Mar 2020 14:49:45 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3614A5DA2C;
-        Fri, 13 Mar 2020 14:49:45 +0000 (UTC)
-Date:   Fri, 13 Mar 2020 10:49:43 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/7] xfs: support bulk loading of staged btrees
-Message-ID: <20200313144943.GC11929@bfoster>
-References: <158398473036.1308059.18353233923283406961.stgit@magnolia>
- <158398474975.1308059.5474941693856744742.stgit@magnolia>
+        by sandeen.net (Postfix) with ESMTPSA id 65AD7544
+        for <linux-xfs@vger.kernel.org>; Fri, 13 Mar 2020 10:24:58 -0500 (CDT)
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs v5.5.0 released
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+To:     linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <c3c1a477-eadf-ae8a-8005-3b108af24e06@sandeen.net>
+Date:   Fri, 13 Mar 2020 10:25:44 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.5.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <158398474975.1308059.5474941693856744742.stgit@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="6TBfgdGVJ1Up6hpu3PRZnmWBfYywS7HAF"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 11, 2020 at 08:45:49PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Add a new btree function that enables us to bulk load a btree cursor.
-> This will be used by the upcoming online repair patches to generate new
-> btrees.  This avoids the programmatic inefficiency of calling
-> xfs_btree_insert in a loop (which generates a lot of log traffic) in
-> favor of stamping out new btree blocks with ordered buffers, and then
-> committing both the new root and scheduling the removal of the old btree
-> blocks in a single transaction commit.
-> 
-> The design of this new generic code is based off the btree rebuilding
-> code in xfs_repair's phase 5 code, with the explicit goal of enabling us
-> to share that code between scrub and repair.  It has the additional
-> feature of being able to control btree block loading factors.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--6TBfgdGVJ1Up6hpu3PRZnmWBfYywS7HAF
+Content-Type: multipart/mixed; boundary="YXK5PipnEmBLOBiwAUz99J6ZFaBq2ArDk"
 
-The code mostly looks fine to me. A few nits around comments and such
-below. With those fixed up:
+--YXK5PipnEmBLOBiwAUz99J6ZFaBq2ArDk
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Hi folks,
 
->  fs/xfs/libxfs/xfs_btree.c |  604 +++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/libxfs/xfs_btree.h |   68 +++++
->  fs/xfs/xfs_trace.c        |    1 
->  fs/xfs/xfs_trace.h        |   85 ++++++
->  4 files changed, 757 insertions(+), 1 deletion(-)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> index 4e1d4f184d4b..d579d8e99046 100644
-> --- a/fs/xfs/libxfs/xfs_btree.c
-> +++ b/fs/xfs/libxfs/xfs_btree.c
-> @@ -1324,7 +1324,7 @@ STATIC void
->  xfs_btree_copy_ptrs(
->  	struct xfs_btree_cur	*cur,
->  	union xfs_btree_ptr	*dst_ptr,
-> -	union xfs_btree_ptr	*src_ptr,
-> +	const union xfs_btree_ptr *src_ptr,
->  	int			numptrs)
->  {
->  	ASSERT(numptrs >= 0);
-> @@ -5179,3 +5179,605 @@ xfs_btree_commit_ifakeroot(
->  	cur->bc_flags &= ~XFS_BTREE_STAGING;
->  	cur->bc_tp = tp;
->  }
-> +
-...
-> +/*
-> + * Put a btree block that we're loading onto the ordered list and release it.
-> + * The btree blocks will be written to disk when bulk loading is finished.
-> + */
-> +static void
-> +xfs_btree_bload_drop_buf(
-> +	struct list_head	*buffers_list,
-> +	struct xfs_buf		**bpp)
-> +{
-> +	if (*bpp == NULL)
-> +		return;
-> +
-> +	xfs_buf_delwri_queue(*bpp, buffers_list);
+xfsprogs v5.5.0 has been released, and the xfsprogs repository at:
 
-Might want to do something like the following here, given there is no
-error path:
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-	if (!xfs_buf_delwri_queue(...))
-		ASSERT(0);
+has just been updated.
 
-> +	xfs_buf_relse(*bpp);
-> +	*bpp = NULL;
-> +}
-> +
-> +/*
-> + * Allocate and initialize one btree block for bulk loading.
-> + *
-> + * The new btree block will have its level and numrecs fields set to the values
-> + * of the level and nr_this_block parameters, respectively.  On exit, ptrp,
-> + * bpp, and blockp will all point to the new block.
-> + */
-> +STATIC int
-> +xfs_btree_bload_prep_block(
-> +	struct xfs_btree_cur		*cur,
-> +	struct xfs_btree_bload		*bbl,
-> +	unsigned int			level,
-> +	unsigned int			nr_this_block,
-> +	union xfs_btree_ptr		*ptrp,
-> +	struct xfs_buf			**bpp,
-> +	struct xfs_btree_block		**blockp,
-> +	void				*priv)
+Tarballs are available at:
 
-The header comment doesn't mention that ptrp and blockp are input values
-as well. I'd expect inline comments for the certain parameters that have
-non-obvious uses. Something like the following for example:
+https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.5.0.tar=
+=2Egz
+https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.5.0.tar=
+=2Exz
+https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.5.0.tar=
+=2Esign
 
-	union xfs_btree_ptr		*ptrp,	/* in: prev ptr, out: current */
-	...
-	struct xfs_btree_block		*blockp, /* in: prev block, out: current */
+The new head of the master branch is commit:
 
-> +{
-> +	union xfs_btree_ptr		new_ptr;
-> +	struct xfs_buf			*new_bp;
-> +	struct xfs_btree_block		*new_block;
-> +	int				ret;
-> +
-> +	ASSERT(*bpp == NULL);
-> +
-> +	if ((cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) &&
-> +	    level == cur->bc_nlevels - 1) {
-> +		struct xfs_ifork	*ifp = xfs_btree_ifork_ptr(cur);
-> +		size_t			new_size;
-> +
-> +		/* Allocate a new incore btree root block. */
-> +		new_size = bbl->iroot_size(cur, nr_this_block, priv);
-> +		ifp->if_broot = kmem_zalloc(new_size, 0);
-> +		ifp->if_broot_bytes = (int)new_size;
-> +		ifp->if_flags |= XFS_IFBROOT;
-> +
-> +		/* Initialize it and send it out. */
-> +		xfs_btree_init_block_int(cur->bc_mp, ifp->if_broot,
-> +				XFS_BUF_DADDR_NULL, cur->bc_btnum, level,
-> +				nr_this_block, cur->bc_ino.ip->i_ino,
-> +				cur->bc_flags);
-> +
-> +		*bpp = NULL;
-> +		*blockp = ifp->if_broot;
-> +		xfs_btree_set_ptr_null(cur, ptrp);
-> +		return 0;
-> +	}
-> +
-> +	/* Claim one of the caller's preallocated blocks. */
-> +	xfs_btree_set_ptr_null(cur, &new_ptr);
-> +	ret = bbl->claim_block(cur, &new_ptr, priv);
-> +	if (ret)
-> +		return ret;
-> +
-> +	ASSERT(!xfs_btree_ptr_is_null(cur, &new_ptr));
-> +
-> +	ret = xfs_btree_get_buf_block(cur, &new_ptr, &new_block, &new_bp);
-> +	if (ret)
-> +		return ret;
-> +
-> +	/* Initialize the btree block. */
-> +	xfs_btree_init_block_cur(cur, new_bp, level, nr_this_block);
-> +	if (*blockp)
-> +		xfs_btree_set_sibling(cur, *blockp, &new_ptr, XFS_BB_RIGHTSIB);
-> +	xfs_btree_set_sibling(cur, new_block, ptrp, XFS_BB_LEFTSIB);
-> +
-> +	/* Set the out parameters. */
-> +	*bpp = new_bp;
-> +	*blockp = new_block;
-> +	xfs_btree_copy_ptrs(cur, ptrp, &new_ptr, 1);
-> +	return 0;
-> +}
-...
-> +/*
-> + * Prepare a btree cursor for a bulk load operation by computing the geometry
-> + * fields in bbl.  Caller must ensure that the btree cursor is a staging
-> + * cursor.  This function can be called multiple times.
-> + */
-> +int
-> +xfs_btree_bload_compute_geometry(
-> +	struct xfs_btree_cur	*cur,
-> +	struct xfs_btree_bload	*bbl,
-> +	uint64_t		nr_records)
-> +{
-> +	uint64_t		nr_blocks = 0;
-> +	uint64_t		nr_this_level;
-> +
-> +	ASSERT(cur->bc_flags & XFS_BTREE_STAGING);
-> +
-> +	/*
-> +	 * Make sure that the slack values make sense for btree blocks that are
-> +	 * full disk blocks.  We do this by setting the btree nlevels to 3,
-> +	 * because inode-rooted btrees will return different minrecs/maxrecs
-> +	 * values for the root block.  Note that slack settings are not applied
-> +	 * to inode roots.
-> +	 */
-> +	cur->bc_nlevels = 3;
+c5f89a87 (HEAD -> master, tag: v5.5.0, origin/master, origin/for-next, or=
+igin/HEAD, korg/master, korg/for-next, for-next) xfsprogs: Release v5.5.0=
 
-I still find the wording of the comment a little confusing...
 
-"Make sure the slack values make sense for leaf and node blocks.
-Inode-rooted btrees return different geometry for the root block (when
-->bc_nlevels == level - 1). We're checking levels 0 and 1 here, so set
-->bc_nlevels such that btree code doesn't interpret either as the root
-level."
+Abbreviated changelog:
 
-BTW.. I also wonder if just setting XFS_BTREE_MAXLEVELS-1 would be more
-clear than 3?
+xfsprogs-5.5.0 (13 Mar 2020)
+        - xfsprogs: don't warn about packed members (Dave Chinner)
 
-> +	xfs_btree_bload_ensure_slack(cur, &bbl->leaf_slack, 0);
-> +	xfs_btree_bload_ensure_slack(cur, &bbl->node_slack, 1);
-> +
-> +	bbl->nr_records = nr_this_level = nr_records;
-> +	for (cur->bc_nlevels = 1; cur->bc_nlevels < XFS_BTREE_MAXLEVELS;) {
-> +		uint64_t	level_blocks;
-> +		uint64_t	dontcare64;
-> +		unsigned int	level = cur->bc_nlevels - 1;
-> +		unsigned int	avg_per_block;
-> +
-> +		xfs_btree_bload_level_geometry(cur, bbl, level, nr_this_level,
-> +				&avg_per_block, &level_blocks, &dontcare64);
-> +
-> +		if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) {
-> +			/*
-> +			 * If all the items we want to store at this level
-> +			 * would fit in the inode root block, then we have our
-> +			 * btree root and are done.
-> +			 *
-> +			 * Note that bmap btrees forbid records in the root.
-> +			 */
-> +			if (level != 0 && nr_this_level <= avg_per_block) {
-> +				nr_blocks++;
-> +				break;
-> +			}
-> +
-> +			/*
-> +			 * Otherwise, we have to store all the items for this
-> +			 * level in traditional btree blocks and therefore need
-> +			 * another level of btree to point to those blocks.
-> +			 *
-> +			 * We have to re-compute the geometry for each level of
-> +			 * an inode-rooted btree because the geometry differs
-> +			 * between a btree root in an inode fork and a
-> +			 * traditional btree block.
-> +			 *
-> +			 * This distinction is made in the btree code based on
-> +			 * whether level == bc_nlevels - 1.  Based on the
-> +			 * previous root block size check against the root
-> +			 * block geometry, we know that we aren't yet ready to
-> +			 * populate the root.  Increment bc_nevels and
-> +			 * recalculate the geometry for a traditional
-> +			 * block-based btree level.
-> +			 */
-> +			cur->bc_nlevels++;
-> +			xfs_btree_bload_level_geometry(cur, bbl, level,
-> +					nr_this_level, &avg_per_block,
-> +					&level_blocks, &dontcare64);
-> +		} else {
-> +			/*
-> +			 * If all the items we want to store at this level
-> +			 * would fit in a single root block, we're done.
-> +			 */
-> +			if (nr_this_level <= avg_per_block) {
-> +				nr_blocks++;
-> +				break;
-> +			}
-> +
-> +			/* Otherwise, we need another level of btree. */
-> +			cur->bc_nlevels++;
-> +		}
-> +
-> +		nr_blocks += level_blocks;
-> +		nr_this_level = level_blocks;
-> +	}
-> +
-> +	if (cur->bc_nlevels == XFS_BTREE_MAXLEVELS)
-> +		return -EOVERFLOW;
-> +
-> +	bbl->btree_height = cur->bc_nlevels;
-> +	if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)
-> +		bbl->nr_blocks = nr_blocks - 1;
-> +	else
-> +		bbl->nr_blocks = nr_blocks;
-> +	return 0;
-> +}
-> +
-> +/* Bulk load a btree given the parameters and geometry established in bbl. */
-> +int
-> +xfs_btree_bload(
-> +	struct xfs_btree_cur		*cur,
-> +	struct xfs_btree_bload		*bbl,
-> +	void				*priv)
-> +{
-> +	struct list_head		buffers_list;
-> +	union xfs_btree_ptr		child_ptr;
-> +	union xfs_btree_ptr		ptr;
-> +	struct xfs_buf			*bp = NULL;
-> +	struct xfs_btree_block		*block = NULL;
-> +	uint64_t			nr_this_level = bbl->nr_records;
-> +	uint64_t			blocks;
-> +	uint64_t			i;
-> +	uint64_t			blocks_with_extra;
-> +	uint64_t			total_blocks = 0;
-> +	unsigned int			avg_per_block;
-> +	unsigned int			level = 0;
-> +	int				ret;
-> +
-> +	ASSERT(cur->bc_flags & XFS_BTREE_STAGING);
-> +
-> +	INIT_LIST_HEAD(&buffers_list);
-> +	cur->bc_nlevels = bbl->btree_height;
-> +	xfs_btree_set_ptr_null(cur, &child_ptr);
-> +	xfs_btree_set_ptr_null(cur, &ptr);
-> +
-> +	xfs_btree_bload_level_geometry(cur, bbl, level, nr_this_level,
-> +			&avg_per_block, &blocks, &blocks_with_extra);
-> +
-> +	/* Load each leaf block. */
-> +	for (i = 0; i < blocks; i++) {
-> +		unsigned int		nr_this_block = avg_per_block;
-> +
-> +		if (i < blocks_with_extra)
-> +			nr_this_block++;
+xfsprogs-5.5.0-rc1 (01 Mar 2020)
+        - xfsprogs: don't redeclare globals provided by libraries (Eric S=
+andeen)
+        - xfsprogs: actually check that writes succeeded (Darrick Wong)
+        - mkfs.xfs: check root inode location (Darrick Wong)
+        - mkfs.xfs: efficient block zeroing (Eric Sandeen)
+        - xfs_repair: fix broken unit conv. in dir invalidation (Darrick =
+Wong)
+        - xfs_repair: fix bad next_unlinked field (Eric Sandeen)
+        - xfs_repair: don't corrupt attr fork clearing forw/back (Darrick=
+ Wong)
+        - xfs_repair: check root dir pointer before trashing it (Darrick =
+Wong)
+        - xfs_repair: try to fix sb_unit value from secondaries (Darrick =
+Wong)
+        - xfs_repair: join RT inodes to transaction only once (Eric Sande=
+en)
+        - xfs_io: fix over/underflow handling in timespecs (Darrick Wong)=
 
-The blocks_with_extra thing kind of confused me until I made it through
-the related functions. A brief comment would be helpful here, just to
-explain what's going on in the high level context. I.e.:
+        - xfs_io: fix pwrite/pread length trunc on 32-bit systems (Darric=
+k Wong)
+        - xfs_io: fix copy_file_range length argument overflow (Darrick W=
+ong)
+        - xfs_io: support passing a keyring key to add_enckey (Eric Bigge=
+rs)
+        - xfs_scrub: fix reporting of EINVAL for online repairs (Darrick =
+Wong)
+        - man: document some missing xfs_db commands (Darrick Wong)
+        - man: document the xfs_db btheight command  (Darrick Wong)
+        - man: list xfs_io lsattr inode flag letters  (Darrick Wong)
 
-"btree blocks will not be evenly populated in most cases.
-blocks_with_extra tells us how many blocks get an extra record to evenly
-distribute the excess across the current level."
+xfsprogs-5.5.0-rc0 (22 Jan 2020)
+        - libxfs changes merged from kernel 5.5
 
-Brian
+Thanks,
+-Eric
 
-> +
-> +		xfs_btree_bload_drop_buf(&buffers_list, &bp);
-> +
-> +		ret = xfs_btree_bload_prep_block(cur, bbl, level,
-> +				nr_this_block, &ptr, &bp, &block, priv);
-> +		if (ret)
-> +			goto out;
-> +
-> +		trace_xfs_btree_bload_block(cur, level, i, blocks, &ptr,
-> +				nr_this_block);
-> +
-> +		ret = xfs_btree_bload_leaf(cur, nr_this_block, bbl->get_record,
-> +				block, priv);
-> +		if (ret)
-> +			goto out;
-> +
-> +		/*
-> +		 * Record the leftmost leaf pointer so we know where to start
-> +		 * with the first node level.
-> +		 */
-> +		if (i == 0)
-> +			xfs_btree_copy_ptrs(cur, &child_ptr, &ptr, 1);
-> +	}
-> +	total_blocks += blocks;
-> +	xfs_btree_bload_drop_buf(&buffers_list, &bp);
-> +
-> +	/* Populate the internal btree nodes. */
-> +	for (level = 1; level < cur->bc_nlevels; level++) {
-> +		union xfs_btree_ptr	first_ptr;
-> +
-> +		nr_this_level = blocks;
-> +		block = NULL;
-> +		xfs_btree_set_ptr_null(cur, &ptr);
-> +
-> +		xfs_btree_bload_level_geometry(cur, bbl, level, nr_this_level,
-> +				&avg_per_block, &blocks, &blocks_with_extra);
-> +
-> +		/* Load each node block. */
-> +		for (i = 0; i < blocks; i++) {
-> +			unsigned int	nr_this_block = avg_per_block;
-> +
-> +			if (i < blocks_with_extra)
-> +				nr_this_block++;
-> +
-> +			xfs_btree_bload_drop_buf(&buffers_list, &bp);
-> +
-> +			ret = xfs_btree_bload_prep_block(cur, bbl, level,
-> +					nr_this_block, &ptr, &bp, &block,
-> +					priv);
-> +			if (ret)
-> +				goto out;
-> +
-> +			trace_xfs_btree_bload_block(cur, level, i, blocks,
-> +					&ptr, nr_this_block);
-> +
-> +			ret = xfs_btree_bload_node(cur, nr_this_block,
-> +					&child_ptr, block);
-> +			if (ret)
-> +				goto out;
-> +
-> +			/*
-> +			 * Record the leftmost node pointer so that we know
-> +			 * where to start the next node level above this one.
-> +			 */
-> +			if (i == 0)
-> +				xfs_btree_copy_ptrs(cur, &first_ptr, &ptr, 1);
-> +		}
-> +		total_blocks += blocks;
-> +		xfs_btree_bload_drop_buf(&buffers_list, &bp);
-> +		xfs_btree_copy_ptrs(cur, &child_ptr, &first_ptr, 1);
-> +	}
-> +
-> +	/* Initialize the new root. */
-> +	if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) {
-> +		ASSERT(xfs_btree_ptr_is_null(cur, &ptr));
-> +		cur->bc_ino.ifake->if_levels = cur->bc_nlevels;
-> +		cur->bc_ino.ifake->if_blocks = total_blocks - 1;
-> +	} else {
-> +		cur->bc_ag.afake->af_root = be32_to_cpu(ptr.s);
-> +		cur->bc_ag.afake->af_levels = cur->bc_nlevels;
-> +		cur->bc_ag.afake->af_blocks = total_blocks;
-> +	}
-> +
-> +	/*
-> +	 * Write the new blocks to disk.  If the ordered list isn't empty after
-> +	 * that, then something went wrong and we have to fail.  This should
-> +	 * never happen, but we'll check anyway.
-> +	 */
-> +	ret = xfs_buf_delwri_submit(&buffers_list);
-> +	if (ret)
-> +		goto out;
-> +	if (!list_empty(&buffers_list)) {
-> +		ASSERT(list_empty(&buffers_list));
-> +		ret = -EIO;
-> +	}
-> +
-> +out:
-> +	xfs_buf_delwri_cancel(&buffers_list);
-> +	if (bp)
-> +		xfs_buf_relse(bp);
-> +	return ret;
-> +}
-> diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-> index 047067f52063..c2de439a6f0d 100644
-> --- a/fs/xfs/libxfs/xfs_btree.h
-> +++ b/fs/xfs/libxfs/xfs_btree.h
-> @@ -574,4 +574,72 @@ void xfs_btree_stage_ifakeroot(struct xfs_btree_cur *cur,
->  void xfs_btree_commit_ifakeroot(struct xfs_btree_cur *cur, struct xfs_trans *tp,
->  		int whichfork, const struct xfs_btree_ops *ops);
->  
-> +/* Bulk loading of staged btrees. */
-> +typedef int (*xfs_btree_bload_get_record_fn)(struct xfs_btree_cur *cur, void *priv);
-> +typedef int (*xfs_btree_bload_claim_block_fn)(struct xfs_btree_cur *cur,
-> +		union xfs_btree_ptr *ptr, void *priv);
-> +typedef size_t (*xfs_btree_bload_iroot_size_fn)(struct xfs_btree_cur *cur,
-> +		unsigned int nr_this_level, void *priv);
-> +
-> +struct xfs_btree_bload {
-> +	/*
-> +	 * This function will be called nr_records times to load records into
-> +	 * the btree.  The function does this by setting the cursor's bc_rec
-> +	 * field in in-core format.  Records must be returned in sort order.
-> +	 */
-> +	xfs_btree_bload_get_record_fn	get_record;
-> +
-> +	/*
-> +	 * This function will be called nr_blocks times to obtain a pointer
-> +	 * to a new btree block on disk.  Callers must preallocate all space
-> +	 * for the new btree before calling xfs_btree_bload, and this function
-> +	 * is what claims that reservation.
-> +	 */
-> +	xfs_btree_bload_claim_block_fn	claim_block;
-> +
-> +	/*
-> +	 * This function should return the size of the in-core btree root
-> +	 * block.  It is only necessary for XFS_BTREE_ROOT_IN_INODE btree
-> +	 * types.
-> +	 */
-> +	xfs_btree_bload_iroot_size_fn	iroot_size;
-> +
-> +	/*
-> +	 * The caller should set this to the number of records that will be
-> +	 * stored in the new btree.
-> +	 */
-> +	uint64_t			nr_records;
-> +
-> +	/*
-> +	 * Number of free records to leave in each leaf block.  If the caller
-> +	 * sets this to -1, the slack value will be calculated to be be halfway
-> +	 * between maxrecs and minrecs.  This typically leaves the block 75%
-> +	 * full.  Note that slack values are not enforced on inode root blocks.
-> +	 */
-> +	int				leaf_slack;
-> +
-> +	/*
-> +	 * Number of free key/ptrs pairs to leave in each node block.  This
-> +	 * field has the same semantics as leaf_slack.
-> +	 */
-> +	int				node_slack;
-> +
-> +	/*
-> +	 * The xfs_btree_bload_compute_geometry function will set this to the
-> +	 * number of btree blocks needed to store nr_records records.
-> +	 */
-> +	uint64_t			nr_blocks;
-> +
-> +	/*
-> +	 * The xfs_btree_bload_compute_geometry function will set this to the
-> +	 * height of the new btree.
-> +	 */
-> +	unsigned int			btree_height;
-> +};
-> +
-> +int xfs_btree_bload_compute_geometry(struct xfs_btree_cur *cur,
-> +		struct xfs_btree_bload *bbl, uint64_t nr_records);
-> +int xfs_btree_bload(struct xfs_btree_cur *cur, struct xfs_btree_bload *bbl,
-> +		void *priv);
-> +
->  #endif	/* __XFS_BTREE_H__ */
-> diff --git a/fs/xfs/xfs_trace.c b/fs/xfs/xfs_trace.c
-> index bc85b89f88ca..9b5e58a92381 100644
-> --- a/fs/xfs/xfs_trace.c
-> +++ b/fs/xfs/xfs_trace.c
-> @@ -6,6 +6,7 @@
->  #include "xfs.h"
->  #include "xfs_fs.h"
->  #include "xfs_shared.h"
-> +#include "xfs_bit.h"
->  #include "xfs_format.h"
->  #include "xfs_log_format.h"
->  #include "xfs_trans_resv.h"
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 05db0398f040..efc7751550d9 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -35,6 +35,7 @@ struct xfs_icreate_log;
->  struct xfs_owner_info;
->  struct xfs_trans_res;
->  struct xfs_inobt_rec_incore;
-> +union xfs_btree_ptr;
->  
->  #define XFS_ATTR_FILTER_FLAGS \
->  	{ XFS_ATTR_ROOT,	"ROOT" }, \
-> @@ -3666,6 +3667,90 @@ TRACE_EVENT(xfs_btree_commit_ifakeroot,
->  		  __entry->blocks)
->  )
->  
-> +TRACE_EVENT(xfs_btree_bload_level_geometry,
-> +	TP_PROTO(struct xfs_btree_cur *cur, unsigned int level,
-> +		 uint64_t nr_this_level, unsigned int nr_per_block,
-> +		 unsigned int desired_npb, uint64_t blocks,
-> +		 uint64_t blocks_with_extra),
-> +	TP_ARGS(cur, level, nr_this_level, nr_per_block, desired_npb, blocks,
-> +		blocks_with_extra),
-> +	TP_STRUCT__entry(
-> +		__field(dev_t, dev)
-> +		__field(xfs_btnum_t, btnum)
-> +		__field(unsigned int, level)
-> +		__field(unsigned int, nlevels)
-> +		__field(uint64_t, nr_this_level)
-> +		__field(unsigned int, nr_per_block)
-> +		__field(unsigned int, desired_npb)
-> +		__field(unsigned long long, blocks)
-> +		__field(unsigned long long, blocks_with_extra)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->dev = cur->bc_mp->m_super->s_dev;
-> +		__entry->btnum = cur->bc_btnum;
-> +		__entry->level = level;
-> +		__entry->nlevels = cur->bc_nlevels;
-> +		__entry->nr_this_level = nr_this_level;
-> +		__entry->nr_per_block = nr_per_block;
-> +		__entry->desired_npb = desired_npb;
-> +		__entry->blocks = blocks;
-> +		__entry->blocks_with_extra = blocks_with_extra;
-> +	),
-> +	TP_printk("dev %d:%d btree %s level %u/%u nr_this_level %llu nr_per_block %u desired_npb %u blocks %llu blocks_with_extra %llu",
-> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> +		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
-> +		  __entry->level,
-> +		  __entry->nlevels,
-> +		  __entry->nr_this_level,
-> +		  __entry->nr_per_block,
-> +		  __entry->desired_npb,
-> +		  __entry->blocks,
-> +		  __entry->blocks_with_extra)
-> +)
-> +
-> +TRACE_EVENT(xfs_btree_bload_block,
-> +	TP_PROTO(struct xfs_btree_cur *cur, unsigned int level,
-> +		 uint64_t block_idx, uint64_t nr_blocks,
-> +		 union xfs_btree_ptr *ptr, unsigned int nr_records),
-> +	TP_ARGS(cur, level, block_idx, nr_blocks, ptr, nr_records),
-> +	TP_STRUCT__entry(
-> +		__field(dev_t, dev)
-> +		__field(xfs_btnum_t, btnum)
-> +		__field(unsigned int, level)
-> +		__field(unsigned long long, block_idx)
-> +		__field(unsigned long long, nr_blocks)
-> +		__field(xfs_agnumber_t, agno)
-> +		__field(xfs_agblock_t, agbno)
-> +		__field(unsigned int, nr_records)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->dev = cur->bc_mp->m_super->s_dev;
-> +		__entry->btnum = cur->bc_btnum;
-> +		__entry->level = level;
-> +		__entry->block_idx = block_idx;
-> +		__entry->nr_blocks = nr_blocks;
-> +		if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
-> +			xfs_fsblock_t	fsb = be64_to_cpu(ptr->l);
-> +
-> +			__entry->agno = XFS_FSB_TO_AGNO(cur->bc_mp, fsb);
-> +			__entry->agbno = XFS_FSB_TO_AGBNO(cur->bc_mp, fsb);
-> +		} else {
-> +			__entry->agno = cur->bc_ag.agno;
-> +			__entry->agbno = be32_to_cpu(ptr->s);
-> +		}
-> +		__entry->nr_records = nr_records;
-> +	),
-> +	TP_printk("dev %d:%d btree %s level %u block %llu/%llu fsb (%u/%u) recs %u",
-> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> +		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
-> +		  __entry->level,
-> +		  __entry->block_idx,
-> +		  __entry->nr_blocks,
-> +		  __entry->agno,
-> +		  __entry->agbno,
-> +		  __entry->nr_records)
-> +)
-> +
->  #endif /* _TRACE_XFS_H */
->  
->  #undef TRACE_INCLUDE_PATH
-> 
+Code Diffstat since 5.4.0:
 
+ VERSION                     |    2 +-
+ configure.ac                |    3 +-
+ copy/xfs_copy.c             |   21 +-
+ db/attrset.c                |    4 +-
+ db/bmap.c                   |    4 +-
+ db/btdump.c                 |   18 +-
+ db/check.c                  |   42 ++--
+ db/dir2.c                   |   18 +-
+ db/dir2sf.c                 |    8 +-
+ db/dquot.c                  |    2 +-
+ db/field.c                  |    2 +-
+ db/fsmap.c                  |    6 +-
+ db/info.c                   |  104 ++++++++
+ db/init.c                   |   20 +-
+ db/inode.c                  |    4 +-
+ db/io.c                     |   10 +-
+ db/metadump.c               |   43 ++--
+ db/sb.c                     |    2 +-
+ db/xfs_admin.sh             |   42 +---
+ debian/changelog            |   18 ++
+ doc/CHANGES                 |   26 ++
+ include/builddefs.in        |    9 +-
+ include/cache.h             |    2 +-
+ include/kmem.h              |    2 +-
+ include/libxfs.h            |   13 +-
+ include/libxlog.h           |    9 +-
+ include/linux.h             |   22 ++
+ include/platform_defs.h.in  |    1 +
+ include/xfs_inode.h         |   22 --
+ include/xfs_log_recover.h   |    4 +-
+ include/xfs_mount.h         |    3 +-
+ include/xfs_trace.h         |    8 +-
+ io/copy_file_range.c        |   15 +-
+ io/encrypt.c                |   90 +++++--
+ io/pread.c                  |    4 +-
+ io/pwrite.c                 |    6 +-
+ libfrog/fsgeom.c            |    4 +-
+ libfrog/linux.c             |   35 ++-
+ libfrog/platform.h          |    2 +-
+ libxcmd/input.c             |   23 +-
+ libxfs/Makefile             |    1 -
+ libxfs/init.c               |  181 +++++++++++---
+ libxfs/libxfs_api_defs.h    |  256 ++++++++++---------
+ libxfs/libxfs_io.h          |  131 +++++-----
+ libxfs/libxfs_priv.h        |   49 ++--
+ libxfs/rdwr.c               |  909 +++++++++++++++++++++++++++++++++++++=
+------------------------------
+ libxfs/trans.c              |   29 +--
+ libxfs/util.c               |   19 +-
+ libxfs/xfs_ag_resv.c        |    5 +
+ libxfs/xfs_alloc.c          | 1255 +++++++++++++++++++++++++++++++++++++=
++++++++++++++++++++-------------------------------------
+ libxfs/xfs_alloc.h          |   16 +-
+ libxfs/xfs_alloc_btree.c    |    3 +
+ libxfs/xfs_attr.c           |   24 +-
+ libxfs/xfs_attr_leaf.c      |  135 +++++++---
+ libxfs/xfs_attr_leaf.h      |   30 ++-
+ libxfs/xfs_attr_remote.c    |    2 +
+ libxfs/xfs_bit.c            |    1 +
+ libxfs/xfs_bmap.c           |  726 +++++++++++++++++++++++++++++++------=
+-----------------
+ libxfs/xfs_bmap.h           |    3 +-
+ libxfs/xfs_btree.c          |   99 +++++---
+ libxfs/xfs_btree.h          |   37 ++-
+ libxfs/xfs_da_btree.c       |  668 ++++++++++++++++++++++++-------------=
+------------
+ libxfs/xfs_da_btree.h       |   73 ++++--
+ libxfs/xfs_da_format.c      |  888 -------------------------------------=
+-----------------------------
+ libxfs/xfs_da_format.h      |   59 +----
+ libxfs/xfs_defer.c          |    4 +
+ libxfs/xfs_dir2.c           |   94 ++++---
+ libxfs/xfs_dir2.h           |   90 +------
+ libxfs/xfs_dir2_block.c     |  131 +++++-----
+ libxfs/xfs_dir2_data.c      |  282 +++++++++++----------
+ libxfs/xfs_dir2_leaf.c      |  307 +++++++++++++----------
+ libxfs/xfs_dir2_node.c      |  431 +++++++++++++++++---------------
+ libxfs/xfs_dir2_priv.h      |  103 +++++++-
+ libxfs/xfs_dir2_sf.c        |  424 +++++++++++++++++++-------------
+ libxfs/xfs_dquot_buf.c      |   11 +-
+ libxfs/xfs_format.h         |   14 +-
+ libxfs/xfs_fs.h             |    4 +-
+ libxfs/xfs_ialloc.c         |  182 +++++++++++---
+ libxfs/xfs_ialloc.h         |    1 +
+ libxfs/xfs_iext_tree.c      |    8 +-
+ libxfs/xfs_inode_buf.c      |   22 +-
+ libxfs/xfs_inode_buf.h      |    5 +-
+ libxfs/xfs_inode_fork.c     |   24 +-
+ libxfs/xfs_inode_fork.h     |   18 +-
+ libxfs/xfs_log_format.h     |    4 +-
+ libxfs/xfs_refcount.c       |  175 +++++++++----
+ libxfs/xfs_refcount_btree.c |    1 +
+ libxfs/xfs_rmap.c           |  378 +++++++++++++++++++++-------
+ libxfs/xfs_rtbitmap.c       |    3 +-
+ libxfs/xfs_sb.c             |    1 +
+ libxfs/xfs_trans_inode.c    |    8 +-
+ libxfs/xfs_trans_resv.c     |  103 ++++++--
+ libxfs/xfs_types.h          |    2 -
+ libxlog/xfs_log_recover.c   |   47 ++--
+ logprint/log_misc.c         |   20 +-
+ logprint/log_print_all.c    |   12 +-
+ logprint/log_print_trans.c  |    8 +-
+ logprint/logprint.c         |    4 +-
+ m4/package_libcdev.m4       |   21 ++
+ man/man8/xfs_admin.8        |    4 +-
+ man/man8/xfs_db.8           |  102 ++++++++
+ man/man8/xfs_io.8           |   99 +++++++-
+ man/man8/xfs_quota.8        |   15 +-
+ mdrestore/xfs_mdrestore.c   |    1 -
+ mkfs/proto.c                |    6 +-
+ mkfs/xfs_mkfs.c             |  142 +++++++----
+ repair/attr_repair.c        |  222 ++++++++++-------
+ repair/da_util.c            |   86 +++----
+ repair/dino_chunks.c        |   20 +-
+ repair/dinode.c             |   73 +++---
+ repair/dinode.h             |    4 -
+ repair/dir2.c               |   97 ++++----
+ repair/globals.c            |    6 -
+ repair/globals.h            |    6 -
+ repair/phase2.c             |    2 +-
+ repair/phase3.c             |   10 +-
+ repair/phase4.c             |   12 +-
+ repair/phase5.c             |   72 +++---
+ repair/phase6.c             |  142 +++++------
+ repair/prefetch.c           |   42 ++--
+ repair/rmap.c               |   13 +-
+ repair/rt.c                 |    8 +-
+ repair/scan.c               |   74 +++---
+ repair/slab.c               |    2 +-
+ repair/xfs_repair.c         |  286 +++++++++++----------
+ scrub/scrub.c               |    5 +-
+ 126 files changed, 5874 insertions(+), 4891 deletions(-)
+ delete mode 100644 libxfs/xfs_da_format.c
+
+
+
+--YXK5PipnEmBLOBiwAUz99J6ZFaBq2ArDk--
+
+--6TBfgdGVJ1Up6hpu3PRZnmWBfYywS7HAF
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl5rpfoACgkQIK4WkuE9
+3uBi7Q//dynhXU1gqjJximUVHnPIyCfpZiKvSkqVo8XWSilvuKXcBGEXHi+2qfn0
+KcBrktOZ0iEU7MBpoIMJ6fROY66ByROfnT38S0s7tzicRl32UygP9sS5+71isYrQ
+/NNGj9srMFjhYyqLRdMrqmuaIAgqcnJIzVloHtW3sboP7cvU/vtDqcD3fynHe8Dm
+0Fgs1pELxbbS9RlgGp0yfffN2B2IdYYEdC+xjscL7esZXH1uKKX7WDsnYA2uZy5Y
+e7saBRMcwN4vxnLlZBj5haRjC681ugY8H4WashlquWzigVfrQItXVl09TjsTcx4U
+xuYzEeSIAs8x+/rQh+kEMP1dU5V3HuxcKbGY7ReBUu7jwpgwmprnWk3P5jJq1xmP
+oS6kbgFYl/RYlhgoP+CttO52JJWaZIatatG/FLOUHc/e0HGZvKfDTTydm2oZAvlB
+QjAer+BYbC9hP4mjXxcvlMHM9aIydAkXfL/XFUCfPI2plzMGoU6kDRZYxULdgTuC
+zyN5LH5mb4RRWqH/IOZEsBqHijhFt4aX60x+zG6RdymALcabePTRQ54E7wmZ02/I
+dQdmKOJOdbeCM/zkJN2RSN2o1K8Mid+4+wbOh03NzYEXtM3vpBScuk5C25sisuYl
+T+NnFIqXlLXExamA4RxyhteW8noOElMPDk0WtPUk+Z42sspGGmg=
+=qfIn
+-----END PGP SIGNATURE-----
+
+--6TBfgdGVJ1Up6hpu3PRZnmWBfYywS7HAF--
