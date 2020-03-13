@@ -6,55 +6,62 @@ X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48D71C10DCE
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Mar 2020 06:52:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF24BC10DCE
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Mar 2020 06:54:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 147FA2072C
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Mar 2020 06:52:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B4EC92072C
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Mar 2020 06:54:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gq+60G3F"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="V6K5QKrD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726390AbgCMGwp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 13 Mar 2020 02:52:45 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:57574 "EHLO
+        id S1726236AbgCMGyh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 13 Mar 2020 02:54:37 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:57630 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726364AbgCMGwp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Mar 2020 02:52:45 -0400
+        with ESMTP id S1726001AbgCMGyh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Mar 2020 02:54:37 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=nZxX/aczlPoc+ppL1RrZbbUJTrNEkwq2MB57cgq8b4k=; b=gq+60G3FCjC1QxyH4xkM9HpZpr
-        ca5qsiieGbb9G29L/opOle3IhL6aSrPOXUsScbVxRNvQDwTeKqOr43Bo5yihmveKe4JZcBMFJe+pk
-        3QGp9akYVg1S8SI2NMkutQNEUkpsGQWHNHjb2h9HMLcJqLnS/ZhXESmd6UNxvjkP/Dz6+m7LOMkSH
-        Z60kk9AZx15G/pjMJ2tY7oUTvfpoDtsfb83NI8I2oOL9WnNBQVNkMZIT4qjUvVH1A4tSQLbHvQ5kP
-        oO7KvFY0vwC/2zquNK5hlzOEEOUPTv776zYWFdo4ZH9sk3UTHEmqoaRfdiufMINgtKgeunhIRTqAe
-        aw5/20Hw==;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Transfer-Encoding
+        :Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+        Sender:Reply-To:Content-ID:Content-Description;
+        bh=D/WRUBEy9og0iQFNiOIwpk+8MHdY18d9fTEkAneuK1U=; b=V6K5QKrDtzMGXqYPMFBWy0Cp3P
+        paAg8qDUNzMNnzYLs3jdC0zy8vAqhIpzwz7J9VZ5yOmWqMuq8MYOqLlTa0JiEzM8q0eE8U1WmudM7
+        eVbMD/b+424Z0x05/nKCORFybWtPFLy5UGbo3ZeBH/AV72fN6xl27/26sq/2A6/2G2XJ/TbJyY5Jr
+        iY6iqfc6brmaiuPyX0kvLIy3+NQ9FwJi/teJ1qMEMHGjlY4R0zBz/BnfKhyONj8Wy68i7xdjtpCMh
+        1Mqcpwyzus4yYWdj2jm++ZvsINKfLUKlGOUB4jOHeXZscgHTBnZkPt7UgYQpuCr516Hi+EkIXuTkD
+        ejpShLZw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jCeBX-00030y-Q8; Fri, 13 Mar 2020 06:52:43 +0000
-Date:   Thu, 12 Mar 2020 23:52:43 -0700
+        id 1jCeDM-0003Ao-Qc; Fri, 13 Mar 2020 06:54:36 +0000
+Date:   Thu, 12 Mar 2020 23:54:36 -0700
 From:   Christoph Hellwig <hch@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Takashi Iwai <tiwai@suse.de>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: Use scnprintf() for avoiding potential buffer
- overflow
-Message-ID: <20200313065243.GA5198@infradead.org>
-References: <20200311093552.25354-1-tiwai@suse.de>
- <20200311220914.GF10776@dread.disaster.area>
- <s5hsgie5a5r.wl-tiwai@suse.de>
- <20200312222701.GK10776@dread.disaster.area>
+To:     Eric Sandeen <sandeen@redhat.com>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+Subject: Re: xfsprogs process question
+Message-ID: <20200313065436.GB5198@infradead.org>
+References: <20200312141351.GA30388@infradead.org>
+ <244a8391-77c4-94a1-3bd4-b78c7a1f39ad@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20200312222701.GK10776@dread.disaster.area>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <244a8391-77c4-94a1-3bd4-b78c7a1f39ad@redhat.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-FYI, the right fix for sysfs would be to simply offer a new variant
-of ->show using the seq_file infrastructure.  That will take care
-of all the bounds checking in a maintainable and well understood way.
+On Thu, Mar 12, 2020 at 10:46:47AM -0500, Eric Sandeen wrote:
+> Would it help to open a libxfs-sync-$VERSION branch as soon as the kernel
+> starts on a new version?
+
+Yes.  I'd just call it for-next, but the name is the least of our
+problems :)
+
+> I've never quite understood what the common expectation for a "for-next"
+> branch behavior is, though I recognize that my use of it right now is a bit
+> unconventional.
+
+Іt really is just a kernel convention due to linux-next.  And I'd just
+name the xfsprogs branch to match.  But as said above, the name isn't
+really what matters.
