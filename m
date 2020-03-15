@@ -2,67 +2,149 @@ Return-Path: <SRS0=0KAm=5A=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.7 required=3.0 tests=DATE_IN_PAST_12_24,
-	DKIM_INVALID,DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CE66C5ACC0
-	for <linux-xfs@archiver.kernel.org>; Sun, 15 Mar 2020 07:15:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78C64C10DCE
+	for <linux-xfs@archiver.kernel.org>; Sun, 15 Mar 2020 08:49:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4777920739
-	for <linux-xfs@archiver.kernel.org>; Sun, 15 Mar 2020 07:15:38 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CYedIf1E"
+	by mail.kernel.org (Postfix) with ESMTP id 570E0206E9
+	for <linux-xfs@archiver.kernel.org>; Sun, 15 Mar 2020 08:49:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727800AbgCOHPh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 15 Mar 2020 03:15:37 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:49192 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727794AbgCOHPg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Mar 2020 03:15:36 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=A8fCDJahJwQa6zWia1Y+yAtZoR+hh9mfxUFKEamDfiI=; b=CYedIf1ELY2qAxAOc1LQvcAd3k
-        Ja6pniQsSVbmCDrkm4nWgF5soTdE9WmAUIVrBNzOwJix0DW2uhZxWcWiZF2BqW7QEK/dLM0w/Dclq
-        5k8o/HNe22aSROCSQnz74hIQzQ5nYaemtnskvkFfTwj9xTaweEds4R70X1k6lDDQOiTSbgsGnX2Qh
-        SXw7RBpIGonsmATRjyutkjg+STy4SyjU7h12W2H1dZsezsnwVaZZtoY0hVqs14DZj45uUJGhBl14/
-        LLuTAeygy+lUsWLfHw0ZAKo/arypllqAjxG6ilrEwCfsOGpx+Ub0Tj/Fbtdlp2Ue5XdlENZ3a7x/d
-        zDL90tbQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jDBMJ-0008UZ-Sh; Sat, 14 Mar 2020 18:18:03 +0000
-Date:   Sat, 14 Mar 2020 11:18:03 -0700
-From:   Christoph Hellwig <hch@infradead.org>
+        id S1728076AbgCOItE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 15 Mar 2020 04:49:04 -0400
+Received: from mx2.suse.de ([195.135.220.15]:48110 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727756AbgCOItE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 15 Mar 2020 04:49:04 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 8F857AFBA;
+        Sun, 15 Mar 2020 08:49:02 +0000 (UTC)
+Date:   Sun, 15 Mar 2020 09:49:01 +0100
+Message-ID: <s5hpnde0zr6.wl-tiwai@suse.de>
+From:   Takashi Iwai <tiwai@suse.de>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: xfs_dabuf_map should return ENOMEM when map
- allocation fails
-Message-ID: <20200314181803.GA32575@infradead.org>
-References: <20200314172913.GA6756@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200314172913.GA6756@magnolia>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: Use scnprintf() for avoiding potential buffer overflow
+In-Reply-To: <20200313155248.GV1752567@magnolia>
+References: <20200311093552.25354-1-tiwai@suse.de>
+        <20200311220914.GF10776@dread.disaster.area>
+        <s5hsgie5a5r.wl-tiwai@suse.de>
+        <20200312222701.GK10776@dread.disaster.area>
+        <20200312224342.GQ8045@magnolia>
+        <20200313050000.GN10776@dread.disaster.area>
+        <s5h4kus67u5.wl-tiwai@suse.de>
+        <20200313155248.GV1752567@magnolia>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI/1.14.6 (Maruoka)
+ FLIM/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL/10.8 Emacs/25.3
+ (x86_64-suse-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+MIME-Version: 1.0 (generated by SEMI 1.14.6 - "Maruoka")
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Mar 14, 2020 at 10:29:13AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, 13 Mar 2020 16:52:48 +0100,
+Darrick J. Wong wrote:
 > 
-> If the xfs_buf_map array allocation in xfs_dabuf_map fails for whatever
-> reason, we bail out with error code zero.  This will confuse callers, so
-> make sure that we return ENOMEM.  Allocation failure should never happen
-> with the small size of the array, but code defensively anyway.
+> On Fri, Mar 13, 2020 at 08:18:42AM +0100, Takashi Iwai wrote:
+> > On Fri, 13 Mar 2020 06:00:00 +0100,
+> > Dave Chinner wrote:
+> > > 
+> > > On Thu, Mar 12, 2020 at 03:43:42PM -0700, Darrick J. Wong wrote:
+> > > > On Thu, Mar 12, 2020 at 03:27:01PM -0700, Dave Chinner wrote:
+> > > > > 
+> > > > > I'm annoyed that every time a fundamental failing or technical debt
+> > > > > is uncovered in the kernel, nobody takes responsibility to fix the
+> > > > > problem completely, for everyone, for ever.
+> > > > > 
+> > > > > As Thomas said recently: correctness first.
+> > > > > 
+> > > > > https://lwn.net/ml/linux-kernel/87v9nc63io.fsf@nanos.tec.linutronix.de/
+> > > > > 
+> > > > > This is not "good enough" - get rid of snprintf() altogether.
+> > > > 
+> > > > $ git grep snprintf | wc -l
+> > > > 8534
+> > > > 
+> > > > That's somebody's 20 year project... :/
+> > > 
+> > > Or half an hour with sed.
+> > > 
+> > > Indeed, not all of them are problematic:
+> > > 
+> > > $ git grep "= snprintf" |wc -l
+> > > 1744
+> > > $ git grep "return snprintf"|wc -l
+> > > 1306
+> > > 
+> > > Less than half of them use the return value.
+> > > 
+> > > Anything that calls snprintf() without checking the return
+> > > value (just to prevent formatting overruning the buffer) can be
+> > > converted by search and replace because the behaviour is the
+> > > same for both functions in this case.
+> > > 
+> > > Further, code written properly to catch a snprintf overrun will also
+> > > correctly pick up scnprintf filling the buffer. However, code that
+> > > overruns with snprintf()s return value is much more likely to work
+> > > correctly with scnprintf as the calculated buffer length won't
+> > > overrun into memory beyond the buffer.
+> > > 
+> > > And that's likely all of the snprintf() calls dealt with in half an
+> > > hour. Now snprintf can be removed.
+> > > 
+> > > What's more scary is this:
+> > > 
+> > > $ git grep "+= sprintf"  |wc -l
+> > > 1834
+> > > 
+> > > which is indicative of string formatting iterating over buffers with
+> > > no protection against the formatting overwriting the end of the
+> > > buffer.  Those are much more dangerous (i.e. potential buffer
+> > > overflows) than the snprintf problem being fixed here, and those
+> > > will need to be checked and fixed manually to use scnprintf().
+> > > That's where the really nasty technical debt lies, not snprintf...
+> > 
+> > Right, that's how I started looking through the whole tree and
+> > submitting patches like this.  I've submitted to per-subsystem patches
+> > and many of them have been already covered; after my tons of patches:
+> > 
+> >   % git grep '+= snprintf' | wc -l
+> >   147
+> >   
+> > The remaining codes are either doing right or it's a user-space code
+> > that have no scnprintf() available.  For other snprintf() usages can
+> > be converted to scnprintf() easily as you mentioned.
+> > 
+> > An open question is what we should do for the code that uses
+> > snprintf() in a right way.  snprintf() is useful to predict the
+> > non-fitted formatted string.  Some warns if such a situation happens.
+> > Replacing with scnprintf(), this would never hit, so you'll lose the
+> > way of message truncation there.
+> > 
+> > Maybe we may keep snprintf() but put a checkpatch warning for any new
+> > usage?
+> > 
+> > In anyway, if you prefer, I'll resubmit the patch to convert all
+> > snprintf() calls in xfs.
 > 
-> Fixes: 45feef8f50b94d ("xfs: refactor xfs_dabuf_map")
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> I already put the first patch in -next, so send a second patch to
+> convert the rest, please.
 
-Looks good,
+Well, if that's so, I'd rather leave the rest to you guys :)
+There are different opinions how to handle the code like
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+	return snprintf(buf, PAGE_SIZE, ...);
+
+for a simple sysfs output.  Some prefer sprintf() as it's obviously
+safe, while others prefer replacing with scnprintf() for a
+precaution.  Which to take depends on maintainers, after all.
+
+
+thanks,
+
+Takashi
