@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	UNWANTED_LANGUAGE_BODY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D864C10F29
-	for <linux-xfs@archiver.kernel.org>; Sun, 15 Mar 2020 23:51:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F44AC10DCE
+	for <linux-xfs@archiver.kernel.org>; Sun, 15 Mar 2020 23:53:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 66F10206BE
-	for <linux-xfs@archiver.kernel.org>; Sun, 15 Mar 2020 23:51:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E356B20663
+	for <linux-xfs@archiver.kernel.org>; Sun, 15 Mar 2020 23:53:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Ih2tyBB4"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="t0JT7QOd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729193AbgCOXvc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 15 Mar 2020 19:51:32 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:37960 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729191AbgCOXvc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Mar 2020 19:51:32 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02FNd5HB015558;
-        Sun, 15 Mar 2020 23:51:29 GMT
+        id S1729191AbgCOXxS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 15 Mar 2020 19:53:18 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:36456 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729182AbgCOXxS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Mar 2020 19:53:18 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02FNrFIF009984;
+        Sun, 15 Mar 2020 23:53:15 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=y9CNJE7+C+QnnXyVaKvz7mqPvc6XLY4cIN0O8sieVyw=;
- b=Ih2tyBB4uWFQxDM8IHUeyX8Lpxjhk8IiWAHmK2XJPR262fc+BzD5E9ju9IkHrqd49YP9
- jyRGpI0gTYD0UrFdDD1QA3nCBgaoarjq9Sh25f/KXjDDIBdGL03BtCiEPmjtT1TKq+Ia
- j+T5qqsP93mVPTZ9NGnjbaRRLNwWa7f8Vy7rBQ8kUMor/WoVQwKYFac5/Fg0566ao9yC
- sBL6y7zuRT/dORHBDHEsrgq/MK1IxdJi2Lh4kLJ30FySiMZmXOUGauXxWZvJ/qZjloUZ
- RRgUq3nhUW5TLuNLeP3ISSZwTbD3QR8VTmLA4LqnlTnTEaKV5tCaXleJFXw0Bjr5PISR sw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2yrppqv539-1
+ bh=as5a9WC//AjAuN1hggUyCIGKxKqG0l1zaa3Wq6GdWQQ=;
+ b=t0JT7QOdaAxQ1igGIJQx5tEsH4L08xHmrU6fCQeNqvOg4V+FceH+/qXXaK5H1gRi6aW0
+ mfnlU5Dw2ziBruEXRkh0lSNLekr+KNSPAqD6VZ3IIlSUKDa5gwNBsLvw9wXzMwNp2/a/
+ XHePMCC5bzeaKHZN4Ng19MdccEpeQfF+a0E+hG/+kgv1UEi3G3lJKx/s1dfw6oQxIlmf
+ uWDp6wi4IYWxi7+JON2OgVaT6IUwkGJH7t3OzAcYLSt0ARFNqcQ6mHS6CLiemvcraBpd
+ Gdq+lhkIoIm140u0oB14pamJGRU1wqfMDXVag4fGWlJR6IPE0HcoUvLNYfQUvARCWNUd Qg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2yrq7km361-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 15 Mar 2020 23:51:29 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02FNoRo0121866;
-        Sun, 15 Mar 2020 23:51:28 GMT
+        Sun, 15 Mar 2020 23:53:15 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02FNo4lu048889;
+        Sun, 15 Mar 2020 23:51:14 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 2ys8yugbh9-1
+        by aserp3020.oracle.com with ESMTP id 2ys927rahq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 15 Mar 2020 23:51:28 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 02FNpR9M001635;
-        Sun, 15 Mar 2020 23:51:27 GMT
+        Sun, 15 Mar 2020 23:51:14 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 02FNpEHN001621;
+        Sun, 15 Mar 2020 23:51:14 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sun, 15 Mar 2020 16:51:27 -0700
-Subject: [PATCH 7/7] xfs: add support for rmap btree staging cursors
+        with ESMTP ; Sun, 15 Mar 2020 16:51:13 -0700
+Subject: [PATCH 5/7] xfs: add support for inode btree staging cursors
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com
-Date:   Sun, 15 Mar 2020 16:51:26 -0700
-Message-ID: <158431628657.357791.17569681185422084457.stgit@magnolia>
+Date:   Sun, 15 Mar 2020 16:51:12 -0700
+Message-ID: <158431627281.357791.17656125974474219701.stgit@magnolia>
 In-Reply-To: <158431623997.357791.9599758740528407024.stgit@magnolia>
 References: <158431623997.357791.9599758740528407024.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -63,16 +63,16 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9561 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxlogscore=999 mlxscore=0
- adultscore=0 bulkscore=0 malwarescore=0 spamscore=0 suspectscore=1
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2003150129
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
+ mlxscore=0 spamscore=0 bulkscore=0 adultscore=0 suspectscore=3
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2003150129
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9561 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0
- suspectscore=1 lowpriorityscore=0 phishscore=0 adultscore=0 clxscore=1015
- impostorscore=0 priorityscore=1501 spamscore=0 mlxlogscore=999 mlxscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 suspectscore=3
+ adultscore=0 bulkscore=0 mlxlogscore=999 priorityscore=1501 clxscore=1015
+ malwarescore=0 mlxscore=0 phishscore=0 impostorscore=0 spamscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2003150129
+ definitions=main-2003150130
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -80,141 +80,172 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Add support for btree staging cursors for the rmap btrees.  This is
-needed both for online repair and also to convert xfs_repair to use
+Add support for btree staging cursors for the inode btrees.  This
+is needed both for online repair and also to convert xfs_repair to use
 btree bulk loading.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_rmap_btree.c |   67 ++++++++++++++++++++++++++++++++++------
- fs/xfs/libxfs/xfs_rmap_btree.h |    5 +++
- 2 files changed, 62 insertions(+), 10 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc_btree.c |   82 ++++++++++++++++++++++++++++++++------
+ fs/xfs/libxfs/xfs_ialloc_btree.h |    6 +++
+ 2 files changed, 76 insertions(+), 12 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
-index af7e4966416f..b7c05314d07c 100644
---- a/fs/xfs/libxfs/xfs_rmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.c
-@@ -14,6 +14,7 @@
- #include "xfs_trans.h"
- #include "xfs_alloc.h"
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index e0e8570af023..b2c122ad8f0e 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -12,6 +12,7 @@
+ #include "xfs_bit.h"
+ #include "xfs_mount.h"
  #include "xfs_btree.h"
 +#include "xfs_btree_staging.h"
+ #include "xfs_ialloc.h"
+ #include "xfs_ialloc_btree.h"
+ #include "xfs_alloc.h"
+@@ -20,7 +21,6 @@
+ #include "xfs_trans.h"
  #include "xfs_rmap.h"
- #include "xfs_rmap_btree.h"
- #include "xfs_trace.h"
-@@ -448,17 +449,12 @@ static const struct xfs_btree_ops xfs_rmapbt_ops = {
- 	.recs_inorder		= xfs_rmapbt_recs_inorder,
+ 
+-
+ STATIC int
+ xfs_inobt_get_minrecs(
+ 	struct xfs_btree_cur	*cur,
+@@ -400,32 +400,27 @@ static const struct xfs_btree_ops xfs_finobt_ops = {
  };
  
--/*
-- * Allocate a new allocation btree cursor.
-- */
--struct xfs_btree_cur *
--xfs_rmapbt_init_cursor(
+ /*
+- * Allocate a new inode btree cursor.
++ * Initialize a new inode btree cursor.
+  */
+-struct xfs_btree_cur *				/* new inode btree cursor */
+-xfs_inobt_init_cursor(
 +static struct xfs_btree_cur *
-+xfs_rmapbt_init_common(
- 	struct xfs_mount	*mp,
- 	struct xfs_trans	*tp,
--	struct xfs_buf		*agbp,
- 	xfs_agnumber_t		agno)
++xfs_inobt_init_common(
+ 	struct xfs_mount	*mp,		/* file system mount point */
+ 	struct xfs_trans	*tp,		/* transaction pointer */
+-	struct xfs_buf		*agbp,		/* buffer for agi structure */
+ 	xfs_agnumber_t		agno,		/* allocation group number */
+ 	xfs_btnum_t		btnum)		/* ialloc or free ino btree */
  {
--	struct xfs_agf		*agf = agbp->b_addr;
+-	struct xfs_agi		*agi = agbp->b_addr;
  	struct xfs_btree_cur	*cur;
  
  	cur = kmem_zone_zalloc(xfs_btree_cur_zone, KM_NOFS);
-@@ -468,16 +464,67 @@ xfs_rmapbt_init_cursor(
- 	cur->bc_btnum = XFS_BTNUM_RMAP;
- 	cur->bc_flags = XFS_BTREE_CRC_BLOCKS | XFS_BTREE_OVERLAPPING;
- 	cur->bc_blocklog = mp->m_sb.sb_blocklog;
--	cur->bc_ops = &xfs_rmapbt_ops;
--	cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]);
- 	cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_rmap_2);
-+	cur->bc_ag.agno = agno;
-+	cur->bc_ops = &xfs_rmapbt_ops;
+-
+ 	cur->bc_tp = tp;
+ 	cur->bc_mp = mp;
+ 	cur->bc_btnum = btnum;
+ 	if (btnum == XFS_BTNUM_INO) {
+-		cur->bc_nlevels = be32_to_cpu(agi->agi_level);
+-		cur->bc_ops = &xfs_inobt_ops;
+ 		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_ibt_2);
++		cur->bc_ops = &xfs_inobt_ops;
+ 	} else {
+-		cur->bc_nlevels = be32_to_cpu(agi->agi_free_level);
+-		cur->bc_ops = &xfs_finobt_ops;
+ 		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_fibt_2);
++		cur->bc_ops = &xfs_finobt_ops;
+ 	}
  
+ 	cur->bc_blocklog = mp->m_sb.sb_blocklog;
+@@ -433,12 +428,75 @@ xfs_inobt_init_cursor(
+ 	if (xfs_sb_version_hascrc(&mp->m_sb))
+ 		cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
+ 
+-	cur->bc_ag.agbp = agbp;
+ 	cur->bc_ag.agno = agno;
 +	return cur;
 +}
 +
-+/* Create a new reverse mapping btree cursor. */
++/* Create an inode btree cursor. */
 +struct xfs_btree_cur *
-+xfs_rmapbt_init_cursor(
++xfs_inobt_init_cursor(
 +	struct xfs_mount	*mp,
 +	struct xfs_trans	*tp,
 +	struct xfs_buf		*agbp,
-+	xfs_agnumber_t		agno)
++	xfs_agnumber_t		agno,
++	xfs_btnum_t		btnum)
 +{
-+	struct xfs_agf		*agf = agbp->b_addr;
 +	struct xfs_btree_cur	*cur;
++	struct xfs_agi		*agi = agbp->b_addr;
 +
-+	cur = xfs_rmapbt_init_common(mp, tp, agno);
-+	cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]);
- 	cur->bc_ag.agbp = agbp;
--	cur->bc_ag.agno = agno;
++	cur = xfs_inobt_init_common(mp, tp, agno, btnum);
++	if (btnum == XFS_BTNUM_INO)
++		cur->bc_nlevels = be32_to_cpu(agi->agi_level);
++	else
++		cur->bc_nlevels = be32_to_cpu(agi->agi_free_level);
++	cur->bc_ag.agbp = agbp;
 +	return cur;
 +}
-+
-+/* Create a new reverse mapping btree cursor with a fake root for staging. */
+ 
++/* Create an inode btree cursor with a fake root for staging. */
 +struct xfs_btree_cur *
-+xfs_rmapbt_stage_cursor(
++xfs_inobt_stage_cursor(
 +	struct xfs_mount	*mp,
 +	struct xbtree_afakeroot	*afake,
-+	xfs_agnumber_t		agno)
++	xfs_agnumber_t		agno,
++	xfs_btnum_t		btnum)
 +{
 +	struct xfs_btree_cur	*cur;
- 
-+	cur = xfs_rmapbt_init_common(mp, NULL, agno);
++
++	cur = xfs_inobt_init_common(mp, NULL, agno, btnum);
 +	xfs_btree_stage_afakeroot(cur, afake);
  	return cur;
  }
  
 +/*
-+ * Install a new reverse mapping btree root.  Caller is responsible for
-+ * invalidating and freeing the old btree blocks.
++ * Install a new inobt btree root.  Caller is responsible for invalidating
++ * and freeing the old btree blocks.
 + */
 +void
-+xfs_rmapbt_commit_staged_btree(
++xfs_inobt_commit_staged_btree(
 +	struct xfs_btree_cur	*cur,
 +	struct xfs_trans	*tp,
 +	struct xfs_buf		*agbp)
 +{
-+	struct xfs_agf		*agf = agbp->b_addr;
++	struct xfs_agi		*agi = agbp->b_addr;
 +	struct xbtree_afakeroot	*afake = cur->bc_ag.afake;
 +
 +	ASSERT(cur->bc_flags & XFS_BTREE_STAGING);
 +
-+	agf->agf_roots[cur->bc_btnum] = cpu_to_be32(afake->af_root);
-+	agf->agf_levels[cur->bc_btnum] = cpu_to_be32(afake->af_levels);
-+	agf->agf_rmap_blocks = cpu_to_be32(afake->af_blocks);
-+	xfs_alloc_log_agf(tp, agbp, XFS_AGF_ROOTS | XFS_AGF_LEVELS |
-+				    XFS_AGF_RMAP_BLOCKS);
-+	xfs_btree_commit_afakeroot(cur, tp, agbp, &xfs_rmapbt_ops);
++	if (cur->bc_btnum == XFS_BTNUM_INO) {
++		agi->agi_root = cpu_to_be32(afake->af_root);
++		agi->agi_level = cpu_to_be32(afake->af_levels);
++		xfs_ialloc_log_agi(tp, agbp, XFS_AGI_ROOT | XFS_AGI_LEVEL);
++		xfs_btree_commit_afakeroot(cur, tp, agbp, &xfs_inobt_ops);
++	} else {
++		agi->agi_free_root = cpu_to_be32(afake->af_root);
++		agi->agi_free_level = cpu_to_be32(afake->af_levels);
++		xfs_ialloc_log_agi(tp, agbp, XFS_AGI_FREE_ROOT |
++					     XFS_AGI_FREE_LEVEL);
++		xfs_btree_commit_afakeroot(cur, tp, agbp, &xfs_finobt_ops);
++	}
 +}
 +
  /*
-  * Calculate number of records in an rmap btree block.
+  * Calculate number of records in an inobt btree block.
   */
-diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
-index 820d668b063d..115c3455a734 100644
---- a/fs/xfs/libxfs/xfs_rmap_btree.h
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.h
-@@ -9,6 +9,7 @@
- struct xfs_buf;
- struct xfs_btree_cur;
- struct xfs_mount;
-+struct xbtree_afakeroot;
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.h b/fs/xfs/libxfs/xfs_ialloc_btree.h
+index 951305ecaae1..35bbd978c272 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.h
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.h
+@@ -48,6 +48,9 @@ struct xfs_mount;
+ extern struct xfs_btree_cur *xfs_inobt_init_cursor(struct xfs_mount *,
+ 		struct xfs_trans *, struct xfs_buf *, xfs_agnumber_t,
+ 		xfs_btnum_t);
++struct xfs_btree_cur *xfs_inobt_stage_cursor(struct xfs_mount *mp,
++		struct xbtree_afakeroot *afake, xfs_agnumber_t agno,
++		xfs_btnum_t btnum);
+ extern int xfs_inobt_maxrecs(struct xfs_mount *, int, int);
  
- /* rmaps only exist on crc enabled filesystems */
- #define XFS_RMAP_BLOCK_LEN	XFS_BTREE_SBLOCK_CRC_LEN
-@@ -43,6 +44,10 @@ struct xfs_mount;
- struct xfs_btree_cur *xfs_rmapbt_init_cursor(struct xfs_mount *mp,
- 				struct xfs_trans *tp, struct xfs_buf *bp,
- 				xfs_agnumber_t agno);
-+struct xfs_btree_cur *xfs_rmapbt_stage_cursor(struct xfs_mount *mp,
-+		struct xbtree_afakeroot *afake, xfs_agnumber_t agno);
-+void xfs_rmapbt_commit_staged_btree(struct xfs_btree_cur *cur,
+ /* ir_holemask to inode allocation bitmap conversion */
+@@ -68,4 +71,7 @@ int xfs_inobt_cur(struct xfs_mount *mp, struct xfs_trans *tp,
+ 		xfs_agnumber_t agno, xfs_btnum_t btnum,
+ 		struct xfs_btree_cur **curpp, struct xfs_buf **agi_bpp);
+ 
++void xfs_inobt_commit_staged_btree(struct xfs_btree_cur *cur,
 +		struct xfs_trans *tp, struct xfs_buf *agbp);
- int xfs_rmapbt_maxrecs(int blocklen, int leaf);
- extern void xfs_rmapbt_compute_maxlevels(struct xfs_mount *mp);
- 
++
+ #endif	/* __XFS_IALLOC_BTREE_H__ */
 
