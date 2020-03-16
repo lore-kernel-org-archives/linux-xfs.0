@@ -6,96 +6,90 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 494E5C0044D
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Mar 2020 05:25:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27DBBC0044D
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Mar 2020 09:52:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2441720679
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Mar 2020 05:25:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB62620658
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Mar 2020 09:52:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729740AbgCPFZS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 Mar 2020 01:25:18 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:46772 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726821AbgCPFZS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Mar 2020 01:25:18 -0400
-Received: from dread.disaster.area (pa49-195-202-68.pa.nsw.optusnet.com.au [49.195.202.68])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id B733382042D;
-        Mon, 16 Mar 2020 16:25:12 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jDiFT-00076l-18; Mon, 16 Mar 2020 16:25:11 +1100
-Date:   Mon, 16 Mar 2020 16:25:11 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Andi Kleen <andi@firstfloor.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: Shutdown preventing umount
-Message-ID: <20200316052510.GQ10776@dread.disaster.area>
-References: <20200314133107.4rv25sp4bvhbjjsx@two.firstfloor.org>
- <20200316020342.GP10776@dread.disaster.area>
- <20200316033717.bnofrpg5yrciyhvz@two.firstfloor.org>
+        id S1730506AbgCPJwa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 Mar 2020 05:52:30 -0400
+Received: from mx2.suse.de ([195.135.220.15]:42708 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730088AbgCPJwa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 16 Mar 2020 05:52:30 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 8A7E7B117;
+        Mon, 16 Mar 2020 09:52:28 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id 555B51E10DA; Mon, 16 Mar 2020 10:52:24 +0100 (CET)
+Date:   Mon, 16 Mar 2020 10:52:24 +0100
+From:   Jan Kara <jack@suse.cz>
+To:     Dan Williams <dan.j.williams@intel.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Dave Chinner <david@fromorbit.com>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH V5 00/12] Enable per-file/per-directory DAX operations V5
+Message-ID: <20200316095224.GF12783@quack2.suse.cz>
+References: <20200227052442.22524-1-ira.weiny@intel.com>
+ <20200305155144.GA5598@lst.de>
+ <20200309170437.GA271052@iweiny-DESK2.sc.intel.com>
+ <20200311033614.GQ1752567@magnolia>
+ <20200311062952.GA11519@lst.de>
+ <CAPcyv4h9Xg61jk=Uq17xC6AGj9yOSAJnCaTzHcfBZwOVdRF9dw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200316033717.bnofrpg5yrciyhvz@two.firstfloor.org>
+In-Reply-To: <CAPcyv4h9Xg61jk=Uq17xC6AGj9yOSAJnCaTzHcfBZwOVdRF9dw@mail.gmail.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
-        a=mqTaRPt+QsUAtUurwE173Q==:117 a=mqTaRPt+QsUAtUurwE173Q==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=SS2py6AdgQ4A:10
-        a=WfulkdPnAAAA:8 a=7-415B0cAAAA:8 a=hXqpQO_lWkdwtiK-EDoA:9
-        a=CjuIK1q_8ugA:10 a=56QPVbyS4OZCpcuOg7Z9:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Mar 15, 2020 at 08:37:19PM -0700, Andi Kleen wrote:
-> On Mon, Mar 16, 2020 at 01:03:42PM +1100, Dave Chinner wrote:
-> > On Sat, Mar 14, 2020 at 06:31:10AM -0700, Andi Kleen wrote:
-> > > 
-> > > Hi,
-> > > 
-> > > I had a cable problem on a USB connected XFS file system, triggering 
-> > > some IO errors, and the result was that any access to the mount point
-> > > resulted in EIO. This prevented unmounting the file system to recover
-> > > from the problem. 
-> > 
-> > Full dmesg output, please.
+On Wed 11-03-20 10:07:18, Dan Williams wrote:
+> On Tue, Mar 10, 2020 at 11:30 PM Christoph Hellwig <hch@lst.de> wrote:
+> >
+> > On Tue, Mar 10, 2020 at 08:36:14PM -0700, Darrick J. Wong wrote:
+> > > 1) Leave the inode flag (FS_XFLAG_DAX) as it is, and export the S_DAX
+> > > status via statx.  Document that changes to FS_XFLAG_DAX do not take
+> > > effect immediately and that one must check statx to find out the real
+> > > mode.  If we choose this, I would also deprecate the dax mount option;
+> > > send in my mkfs.xfs patch to make it so that you can set FS_XFLAG_DAX on
+> > > all files at mkfs time; and we can finally lay this whole thing to rest.
+> > > This is the closest to what we have today.
+> > >
+> > > 2) Withdraw FS_XFLAG_DAX entirely, and let the kernel choose based on
+> > > usage patterns, hardware heuristics, or spiteful arbitrariness.
+> >
+> > 3) Only allow changing FS_XFLAG_DAX on directories or files that do
+> > not have blocks allocated to them yet, and side step all the hard
+> > problems.
 > 
-> http://www.firstfloor.org/~andi/dmesg-xfs-umount
-
-So /dev/sdd went away, XFS shutdown eventually. There's no
-indication that an XFS unmount has started, because the first thing
-XFS does in it's ->put_super method is emit this to the log:
-
-XFS (dm-4): Unmounting Filesystem
-
-and that is missing. Hence the VFS unmount path has not reached as
-far as XFS before it has errorred out. THis is confirmed by....
-
-> > > 
-> > > XFS (...): log I/O error -5
-> > > 
-> > > scsi 7:0:0:0: rejecting I/O to dead device
-> > 
-> > Where is unmount stuck? 'echo w > /proc/sysrq-trigger' output if it
-> > is hung, 'echo l > /proc/sysrq-trigger' if it is spinning, please?
+> This sounds reasonable to me.
 > 
-> It's not stuck. It always errored out with EIO.
+> As for deprecating the mount option, I think at a minimum it needs to
+> continue be accepted as an option even if it is ignored to not break
+> existing setups.
 
-... the fact that filesystems cannot return errors from unmount
-proceedings as generic_shutdown_super() is a void function.  Hence
-where this EIO is coming from is not obvious - it isn't from XFS
-failing to unmount the filesystem as it's not gettting that far into
-the unmount path.
+Agreed. But that's how we usually deprecate mount options. Also I'd say
+that statx() support for reporting DAX state and some education of
+programmers using DAX is required before we deprecate the mount option
+since currently applications check 'dax' mount option to determine how much
+memory they need to set aside for page cache before they consume everything
+else on the machine...
 
-You're going to need to strace umount to find what syscall is
-failing, then probably use tracepoints or some one kernel
-introspection tool to work out where the EIO is coming from...
-
-Cheers,
-
-Dave.
+								Honza
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
