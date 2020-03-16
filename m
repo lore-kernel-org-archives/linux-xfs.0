@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A162DC2BB1D
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Mar 2020 13:00:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F045C3F2CE
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Mar 2020 13:00:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 84C432051A
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Mar 2020 13:00:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5568120738
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Mar 2020 13:00:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731114AbgCPNAT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1731066AbgCPNAT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Mon, 16 Mar 2020 09:00:19 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:45316 "EHLO huawei.com"
+Received: from szxga07-in.huawei.com ([45.249.212.35]:45398 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1731066AbgCPNAQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 16 Mar 2020 09:00:16 -0400
-Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id D2D73CE9D52DCDF33171;
-        Mon, 16 Mar 2020 21:00:01 +0800 (CST)
+        id S1731062AbgCPNAT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 16 Mar 2020 09:00:19 -0400
+Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id E75A1348A51EAB71F376;
+        Mon, 16 Mar 2020 21:00:06 +0800 (CST)
 Received: from huawei.com (10.90.53.225) by DGGEMS409-HUB.china.huawei.com
  (10.3.19.209) with Microsoft SMTP Server id 14.3.487.0; Mon, 16 Mar 2020
  20:59:55 +0800
@@ -28,9 +28,9 @@ From:   Zheng Bin <zhengbin13@huawei.com>
 To:     <bfoster@redhat.com>, <dchinner@redhat.com>, <sandeen@sandeen.net>,
         <darrick.wong@oracle.com>, <linux-xfs@vger.kernel.org>
 CC:     <yi.zhang@huawei.com>, <houtao1@huawei.com>
-Subject: [PATCH 1/2] xfs: always init fdblocks in mount
-Date:   Mon, 16 Mar 2020 21:07:07 +0800
-Message-ID: <1584364028-122886-2-git-send-email-zhengbin13@huawei.com>
+Subject: [PATCH 2/2] xfs: avoid f_bfree overflow
+Date:   Mon, 16 Mar 2020 21:07:08 +0800
+Message-ID: <1584364028-122886-3-git-send-email-zhengbin13@huawei.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1584364028-122886-1-git-send-email-zhengbin13@huawei.com>
 References: <1584364028-122886-1-git-send-email-zhengbin13@huawei.com>
@@ -43,79 +43,51 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Use fuzz(hydra) to test XFS and automatically generate
-tmp.img(XFS v5 format, but some metadata is wrong)
+If fdblocks < mp->m_alloc_set_aside, statp->f_bfree will overflow.
+When we df -h /mnt(xfs mount point), will show this:
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/loop0       13M  -64Z  -32K 100% /mnt
 
-xfs_repair information(just one AG):
-agf_freeblks 0, counted 3224 in ag 0
-agf_longest 0, counted 3224 in ag 0
-sb_fdblocks 3228, counted 3224
-
-Test as follows:
-mount tmp.img tmpdir
-cp file1M tmpdir
-sync
-
-In 4.19-stable, sync will stuck, while in linux-next, sync not stuck.
-The reason is same to commit d0c7feaf8767
-("xfs: add agf freeblocks verify in xfs_agf_verify"), cause agf_longest
-is 0, we can not block this in xfs_agf_verify.
-
-Make sure fdblocks is always inited in mount(also init ifree, icount).
-
-xfs_mountfs
-  xfs_check_summary_counts
-    xfs_initialize_perag_data
+Make sure statp->f_bfree does not underflow.
+PS: add fdblocks check in mount.
 
 Signed-off-by: Zheng Bin <zhengbin13@huawei.com>
 ---
- fs/xfs/xfs_mount.c | 33 ---------------------------------
- 1 file changed, 33 deletions(-)
+ fs/xfs/xfs_mount.c | 6 ++++++
+ fs/xfs/xfs_super.c | 3 ++-
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
 diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index c5513e5..dc41801 100644
+index dc41801..a223af4 100644
 --- a/fs/xfs/xfs_mount.c
 +++ b/fs/xfs/xfs_mount.c
-@@ -594,39 +594,6 @@ xfs_check_summary_counts(
- 		return -EFSCORRUPTED;
- 	}
+@@ -816,6 +816,12 @@ xfs_mountfs(
+ 	if (error)
+ 		goto out_log_dealloc;
 
--	/*
--	 * Now the log is mounted, we know if it was an unclean shutdown or
--	 * not. If it was, with the first phase of recovery has completed, we
--	 * have consistent AG blocks on disk. We have not recovered EFIs yet,
--	 * but they are recovered transactionally in the second recovery phase
--	 * later.
--	 *
--	 * If the log was clean when we mounted, we can check the summary
--	 * counters.  If any of them are obviously incorrect, we can recompute
--	 * them from the AGF headers in the next step.
--	 */
--	if (XFS_LAST_UNMOUNT_WAS_CLEAN(mp) &&
--	    (mp->m_sb.sb_fdblocks > mp->m_sb.sb_dblocks ||
--	     !xfs_verify_icount(mp, mp->m_sb.sb_icount) ||
--	     mp->m_sb.sb_ifree > mp->m_sb.sb_icount))
--		xfs_fs_mark_sick(mp, XFS_SICK_FS_COUNTERS);
--
--	/*
--	 * We can safely re-initialise incore superblock counters from the
--	 * per-ag data. These may not be correct if the filesystem was not
--	 * cleanly unmounted, so we waited for recovery to finish before doing
--	 * this.
--	 *
--	 * If the filesystem was cleanly unmounted or the previous check did
--	 * not flag anything weird, then we can trust the values in the
--	 * superblock to be correct and we don't need to do anything here.
--	 * Otherwise, recalculate the summary counters.
--	 */
--	if ((!xfs_sb_version_haslazysbcount(&mp->m_sb) ||
--	     XFS_LAST_UNMOUNT_WAS_CLEAN(mp)) &&
--	    !xfs_fs_has_sickness(mp, XFS_SICK_FS_COUNTERS))
--		return 0;
--
- 	return xfs_initialize_perag_data(mp, mp->m_sb.sb_agcount);
- }
++	if (sbp->sb_fdblocks < mp->m_alloc_set_aside) {
++		xfs_alert(mp, "Corruption detected. Please run xfs_repair.");
++		error = -EFSCORRUPTED;
++		goto out_log_dealloc;
++	}
++
+ 	/*
+ 	 * Get and sanity-check the root inode.
+ 	 * Save the pointer to it in the mount structure.
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 2094386..9dcf772 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -755,7 +755,8 @@ xfs_fs_statfs(
+ 	statp->f_blocks = sbp->sb_dblocks - lsize;
+ 	spin_unlock(&mp->m_sb_lock);
 
+-	statp->f_bfree = fdblocks - mp->m_alloc_set_aside;
++	/* make sure statp->f_bfree does not underflow */
++	statp->f_bfree = max_t(int64_t, fdblocks - mp->m_alloc_set_aside, 0);
+ 	statp->f_bavail = statp->f_bfree;
+
+ 	fakeinos = XFS_FSB_TO_INO(mp, statp->f_bfree);
 --
 2.7.4
 
