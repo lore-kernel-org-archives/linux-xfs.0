@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23F4CC2BB1D
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Mar 2020 14:51:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87BCFC18E5B
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Mar 2020 14:51:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F065C20752
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Mar 2020 14:51:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B72620752
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Mar 2020 14:51:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Mso31FDh"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="TlmZYcml"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731608AbgCPOvl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 Mar 2020 10:51:41 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:57672 "EHLO
+        id S1731614AbgCPOvo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 Mar 2020 10:51:44 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:57680 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729643AbgCPOvl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Mar 2020 10:51:41 -0400
+        with ESMTP id S1729643AbgCPOvn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Mar 2020 10:51:43 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=wheVG5B0kOSmAUn9rE1vmn5CRhPhTt2G9LEGlfEo7C4=; b=Mso31FDhX3hiQrdKQYKwEhNuiM
-        9rqqoMMcmy2wNdhPvB1ezmguyIKXTfK5Mm02vEP0RGT40obiD/2Hs5XkZMb2oNmvWFdn/TOcAiFpZ
-        qUiHcfg7KHgDk5bhl0vSpQbQ6H26b3JhVOzaxoAWYWfYX+A6Zt1YqNW0WBUk1EBncTnSnmVrRPJoM
-        WI5WTUDuPQhZCGN3XCyPsW8B1NAninJZjLMc8+giMHomineIvMZxHgzoYPCkcpgNB0xaWyYlLDuwZ
-        sARKwe71+w0WmHNRDxDKeECi9yeeznFWUt96ZGXbZLySYhO54fZmRt6nJSb9cNfWoLk83S8gun04P
-        0RkY3UfQ==;
+        bh=HphUtX3nCPTOD4vjmlUm+urpRMO87ozpp1r6t9zqMcY=; b=TlmZYcml/E+aLjBHm+Z1AQDvZS
+        I6MbqxE1qI1APLrdbJyyXf2Vydz02DtVPlrMprcptvnEj3O5Y9f3Ytbot/yGk1sTlqwAAELMq6J8/
+        5RGHA5OJj/MR8OtduNzyI6OowonQuOT5zlybCsNOVNFkqK9MkxPkUwHLkkw7OtztIasinTVATp+Sc
+        4mcYHawQ5J3nz4Z/r4o+4jBKG7Tv1u1t1nxxEqi/nYe+py2+nYCPSJbTOJ3EGoM6R25of6dNPNcl7
+        bRjKVQGOWLiFjnhQ0sJLVJ2cjEhLAqqQfgTzeD/sOboJXpCVqEnK7v+ktF+BvN/5DvkwjWp/tV1Tx
+        1R2d7fmA==;
 Received: from [2001:4bb8:188:30cd:8026:d98c:a056:3e33] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jDr5h-00007v-0a; Mon, 16 Mar 2020 14:51:41 +0000
+        id 1jDr5j-00008D-C1; Mon, 16 Mar 2020 14:51:43 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
 Cc:     Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 09/14] xfs: move log shut down handling out of xlog_state_iodone_process_iclog
-Date:   Mon, 16 Mar 2020 15:42:28 +0100
-Message-Id: <20200316144233.900390-10-hch@lst.de>
+Subject: [PATCH 10/14] xfs: refactor xlog_state_iodone_process_iclog
+Date:   Mon, 16 Mar 2020 15:42:29 +0100
+Message-Id: <20200316144233.900390-11-hch@lst.de>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200316144233.900390-1-hch@lst.de>
 References: <20200316144233.900390-1-hch@lst.de>
@@ -51,133 +51,144 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Move handling of a shut down log out of xlog_state_iodone_process_iclog
-and into xlog_state_do_callback so that it can be moved into an entirely
-separate branch.  While doing so switch to using XLOG_FORCED_SHUTDOWN to
-check the shutdown condition global to the log instead of the per-iclog
-flag, and make sure the comments match reality.
+Move all state checks into the caller to make the loop flow more clear,
+and instead move the callback processing together with marking the iclog
+for callbacks.
+
+This also allows to easily indicate when we actually dropped the
+icloglock instead of assuming we do so for any iclog processed.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_log.c | 64 ++++++++++++++++++++----------------------------
- 1 file changed, 26 insertions(+), 38 deletions(-)
+ fs/xfs/xfs_log.c | 82 ++++++++++++++++++++++--------------------------
+ 1 file changed, 37 insertions(+), 45 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index c534d7007aa3..4efaa248a03d 100644
+index 4efaa248a03d..a38d495b6e81 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -2746,8 +2746,7 @@ xlog_state_do_iclog_callbacks(
+@@ -2738,47 +2738,28 @@ xlog_state_do_iclog_callbacks(
+ 	spin_unlock(&iclog->ic_callback_lock);
+ }
+ 
+-/*
+- * Return true if we need to stop processing, false to continue to the next
+- * iclog. The caller will need to run callbacks if the iclog is returned in the
+- * XLOG_STATE_CALLBACK state.
+- */
  static bool
  xlog_state_iodone_process_iclog(
  	struct xlog		*log,
--	struct xlog_in_core	*iclog,
--	bool			*ioerror)
-+	struct xlog_in_core	*iclog)
+ 	struct xlog_in_core	*iclog)
  {
- 	xfs_lsn_t		lowest_lsn;
- 	xfs_lsn_t		header_lsn;
-@@ -2759,15 +2758,6 @@ xlog_state_iodone_process_iclog(
- 		 * Skip all iclogs in the ACTIVE & DIRTY states:
- 		 */
- 		return false;
--	case XLOG_STATE_IOERROR:
--		/*
--		 * Between marking a filesystem SHUTDOWN and stopping the log,
--		 * we do flush all iclogs to disk (if there wasn't a log I/O
--		 * error). So, we do want things to go smoothly in case of just
--		 * a SHUTDOWN w/o a LOG_IO_ERROR.
--		 */
--		*ioerror = true;
--		return false;
- 	case XLOG_STATE_DONE_SYNC:
- 		/*
- 		 * Now that we have an iclog that is in the DONE_SYNC state, do
-@@ -2795,39 +2785,41 @@ STATIC void
- xlog_state_do_callback(
- 	struct xlog		*log)
- {
--	struct xlog_in_core	*iclog;
--	struct xlog_in_core	*first_iclog;
- 	bool			cycled_icloglock;
--	bool			ioerror;
- 	int			flushcnt = 0;
- 	int			repeats = 0;
+-	xfs_lsn_t		lowest_lsn;
+-	xfs_lsn_t		header_lsn;
++	xfs_lsn_t		header_lsn, lowest_lsn;
  
+-	switch (iclog->ic_state) {
+-	case XLOG_STATE_ACTIVE:
+-	case XLOG_STATE_DIRTY:
+-		/*
+-		 * Skip all iclogs in the ACTIVE & DIRTY states:
+-		 */
+-		return false;
+-	case XLOG_STATE_DONE_SYNC:
+-		/*
+-		 * Now that we have an iclog that is in the DONE_SYNC state, do
+-		 * one more check here to see if we have chased our tail around.
+-		 * If this is not the lowest lsn iclog, then we will leave it
+-		 * for another completion to process.
+-		 */
+-		header_lsn = be64_to_cpu(iclog->ic_header.h_lsn);
+-		lowest_lsn = xlog_get_lowest_lsn(log);
+-		if (lowest_lsn && XFS_LSN_CMP(lowest_lsn, header_lsn) < 0)
+-			return false;
+-		xlog_state_set_callback(log, iclog, header_lsn);
 +	/*
-+	 * Scan all iclogs starting with the one pointed to by the log.  Reset
-+	 * this starting point each time the log is unlocked (during callbacks).
-+	 *
-+	 * Keep looping through iclogs until one full pass is made without
-+	 * running any callbacks.
-+	 *
-+	 * If the log has been shut down, still perform the callbacks once per
-+	 * iclog to abort all log items, but don't bother to restart the loop
-+	 * after dropping the log as no new callbacks can show up.
++	 * Now that we have an iclog that is in the DONE_SYNC state, do one more
++	 * check here to see if we have chased our tail around.  If this is not
++	 * the lowest lsn iclog, then we will leave it for another completion to
++	 * process.
 +	 */
++	header_lsn = be64_to_cpu(iclog->ic_header.h_lsn);
++	lowest_lsn = xlog_get_lowest_lsn(log);
++	if (lowest_lsn && XFS_LSN_CMP(lowest_lsn, header_lsn) < 0)
+ 		return false;
+-	default:
+-		/*
+-		 * Can only perform callbacks in order.  Since this iclog is not
+-		 * in the DONE_SYNC state, we skip the rest and just try to
+-		 * clean up.
+-		 */
+-		return true;
+-	}
++
++	xlog_state_set_callback(log, iclog, header_lsn);
++	xlog_state_do_iclog_callbacks(log, iclog);
++	xlog_state_clean_iclog(log, iclog);
++	return true;
+ }
+ 
+ STATIC void
+@@ -2795,10 +2776,6 @@ xlog_state_do_callback(
+ 	 *
+ 	 * Keep looping through iclogs until one full pass is made without
+ 	 * running any callbacks.
+-	 *
+-	 * If the log has been shut down, still perform the callbacks once per
+-	 * iclog to abort all log items, but don't bother to restart the loop
+-	 * after dropping the log as no new callbacks can show up.
+ 	 */
  	spin_lock(&log->l_icloglock);
  	do {
--		/*
--		 * Scan all iclogs starting with the one pointed to by the
--		 * log.  Reset this starting point each time the log is
--		 * unlocked (during callbacks).
--		 *
--		 * Keep looping through iclogs until one full pass is made
--		 * without running any callbacks.
--		 */
--		first_iclog = log->l_iclog;
--		iclog = log->l_iclog;
-+		struct xlog_in_core	*first_iclog = log->l_iclog;
-+		struct xlog_in_core	*iclog = first_iclog;
-+
- 		cycled_icloglock = false;
--		ioerror = false;
+@@ -2809,25 +2786,40 @@ xlog_state_do_callback(
  		repeats++;
  
  		do {
--			if (xlog_state_iodone_process_iclog(log, iclog,
--							&ioerror))
-+			if (XLOG_FORCED_SHUTDOWN(log)) {
-+				xlog_state_do_iclog_callbacks(log, iclog);
-+				wake_up_all(&iclog->ic_force_wait);
-+				continue;
-+			}
-+
-+			if (xlog_state_iodone_process_iclog(log, iclog))
- 				break;
- 
--			if (iclog->ic_state != XLOG_STATE_CALLBACK &&
--			    iclog->ic_state != XLOG_STATE_IOERROR) {
--				iclog = iclog->ic_next;
-+			if (iclog->ic_state != XLOG_STATE_CALLBACK)
++			/*
++			 * If the log has been shut down, still perform the
++			 * callbacks to abort all log items to clean up any
++			 * allocate resource, but don't bother to restart the
++			 * loop after dropping the log as no new callbacks can
++			 * be attached now.
++			 */
+ 			if (XLOG_FORCED_SHUTDOWN(log)) {
+ 				xlog_state_do_iclog_callbacks(log, iclog);
+ 				wake_up_all(&iclog->ic_force_wait);
  				continue;
--			}
+ 			}
  
+-			if (xlog_state_iodone_process_iclog(log, iclog))
+-				break;
+-
+-			if (iclog->ic_state != XLOG_STATE_CALLBACK)
++			/*
++			 * Skip all iclogs in the ACTIVE & DIRTY states:
++			 */
++			if (iclog->ic_state == XLOG_STATE_ACTIVE ||
++			    iclog->ic_state == XLOG_STATE_DIRTY)
+ 				continue;
+ 
++			/*
++			 * We can only perform callbacks in order.  If this
++			 * iclog is not in the DONE_SYNC state, we skip the rest
++			 * and just try to clean up.
++			 */
++			if (iclog->ic_state != XLOG_STATE_DONE_SYNC)
++				break;
++
  			/*
  			 * Running callbacks will drop the icloglock which means
-@@ -2835,12 +2827,8 @@ xlog_state_do_callback(
+ 			 * we'll have to run at least one more complete loop.
  			 */
- 			cycled_icloglock = true;
- 			xlog_state_do_iclog_callbacks(log, iclog);
--			if (XLOG_FORCED_SHUTDOWN(log))
--				wake_up_all(&iclog->ic_force_wait);
--			else
--				xlog_state_clean_iclog(log, iclog);
--			iclog = iclog->ic_next;
--		} while (first_iclog != iclog);
-+			xlog_state_clean_iclog(log, iclog);
-+		} while ((iclog = iclog->ic_next) != first_iclog);
+-			cycled_icloglock = true;
+-			xlog_state_do_iclog_callbacks(log, iclog);
+-			xlog_state_clean_iclog(log, iclog);
++			if (xlog_state_iodone_process_iclog(log, iclog))
++				cycled_icloglock = true;
+ 		} while ((iclog = iclog->ic_next) != first_iclog);
  
  		if (repeats > 5000) {
- 			flushcnt += repeats;
-@@ -2849,7 +2837,7 @@ xlog_state_do_callback(
- 				"%s: possible infinite loop (%d iterations)",
- 				__func__, flushcnt);
- 		}
--	} while (!ioerror && cycled_icloglock);
-+	} while (cycled_icloglock);
- 
- 	if (log->l_iclog->ic_state == XLOG_STATE_ACTIVE ||
- 	    log->l_iclog->ic_state == XLOG_STATE_IOERROR)
 -- 
 2.24.1
 
