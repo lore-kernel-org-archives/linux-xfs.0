@@ -7,237 +7,170 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BFEDC2BB1D
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Mar 2020 14:51:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C398C0044D
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Mar 2020 14:58:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0AFCC20752
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Mar 2020 14:51:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD27720679
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Mar 2020 14:58:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BQuufXQy"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Otss38PF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731628AbgCPOv5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 Mar 2020 10:51:57 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:34434 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729643AbgCPOv5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Mar 2020 10:51:57 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02GEhYBW052792;
-        Mon, 16 Mar 2020 14:51:52 GMT
+        id S1731737AbgCPO6M (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 Mar 2020 10:58:12 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:48738 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731731AbgCPO6M (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Mar 2020 10:58:12 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02GEqmEH088909;
+        Mon, 16 Mar 2020 14:58:08 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=kUbVWJXojxPwWLvO5TqfpP55HcOFj8HMpAnHw4utrcI=;
- b=BQuufXQy1ahFVoEooEaglwz8lWyWsAj8Dyo1v3x4iWWfE2PlIv4+ZDEwZyeBRhBfBkY+
- rtU5ZmKkRNZgjcyb5z97iS9W5r5VZT6EIqWo6jmKDnSNudyHZH6yxU5qmIjfCVt0nMtB
- uWEc8FxjG5xme007+f/FZh245k0WWqrpoViG5fp2D7UARVhtucGFt3dY0w+TQ9MNDbLO
- CPwC+DaOmnpjGm2hgAIK0DeU/C2luVt8kM0KqtqZsbyoFOy0gHwaXox2M0jSYg38gUFX
- 7MZUubg9VJohNPG8IQxd6eWCItNs3B+4Z/JCFfB/hlU93cevgrH3RkaEdSBnGxQSWh6V 9g== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2yrqwmy8ky-1
+ bh=SUgBKDTC32A24W2n36QohwmjjMiZVziR2KpRAFqM2JA=;
+ b=Otss38PFfUB2EX6DiT55Odv71WCne/5F6nPP4oEVzvowxl2IEXYuH6EuJjwhOY+dATga
+ uD79UlYNUQHZfMbljbZqeewkpuNEIxtjLmOWtKfNdE6Y5Rhwv/jD+/H/KMw4bC9FsFGu
+ N+Otb4szrAFyIh4TXou1WKMwLkHGEFJCrZEt37vD5RptgbdDNqD+LXtfSQ2tSaudxF6y
+ cc0jf0krLW7wfibHe2M2h7RhnTyssw7ItNZzfcXWpglUYCz/m9ucEW3shmnMsKu5Pkzb
+ pntx6EZ54BP5mdVToveFnoEGg3eii4qcmkePCSgYAd8Sto+IQ0oEFAY5lUNEjrWSVEd/ Yw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2yrppqyey9-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 16 Mar 2020 14:51:52 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02GEobTr041590;
-        Mon, 16 Mar 2020 14:51:51 GMT
+        Mon, 16 Mar 2020 14:58:08 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02GEqNdZ172713;
+        Mon, 16 Mar 2020 14:58:07 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2ys8rcm5f1-1
+        by userp3020.oracle.com with ESMTP id 2ys8yvydgt-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 16 Mar 2020 14:51:51 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 02GEpnBX003959;
-        Mon, 16 Mar 2020 14:51:49 GMT
+        Mon, 16 Mar 2020 14:58:07 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 02GEw6sU007401;
+        Mon, 16 Mar 2020 14:58:06 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 16 Mar 2020 07:51:49 -0700
-Date:   Mon, 16 Mar 2020 07:51:49 -0700
+        with ESMTP ; Mon, 16 Mar 2020 07:58:06 -0700
+Date:   Mon, 16 Mar 2020 07:58:04 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Brian Foster <bfoster@redhat.com>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/5] xfs: add a new xfs_sb_version_has_large_dinode helper
-Message-ID: <20200316145149.GA256767@magnolia>
-References: <20200312142235.550766-1-hch@lst.de>
- <20200312142235.550766-2-hch@lst.de>
- <20200316131649.GE12313@bfoster>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/7] xfs: add support for free space btree staging cursors
+Message-ID: <20200316145804.GB256767@magnolia>
+References: <158431623997.357791.9599758740528407024.stgit@magnolia>
+ <158431626637.357791.7694218797816175496.stgit@magnolia>
+ <20200316122942.GA12313@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200316131649.GE12313@bfoster>
+In-Reply-To: <20200316122942.GA12313@bfoster>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9561 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 phishscore=0
- malwarescore=0 mlxscore=0 mlxlogscore=999 adultscore=0 suspectscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxlogscore=999 mlxscore=0
+ adultscore=0 bulkscore=0 malwarescore=0 spamscore=0 suspectscore=2
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2003160071
+ definitions=main-2003160072
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9561 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 mlxlogscore=999
- mlxscore=0 bulkscore=0 phishscore=0 spamscore=0 suspectscore=0
- malwarescore=0 priorityscore=1501 clxscore=1015 adultscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2003160071
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0
+ suspectscore=2 lowpriorityscore=0 phishscore=0 adultscore=0 clxscore=1015
+ impostorscore=0 priorityscore=1501 spamscore=0 mlxlogscore=999 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2003160072
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 16, 2020 at 09:16:49AM -0400, Brian Foster wrote:
-> On Thu, Mar 12, 2020 at 03:22:31PM +0100, Christoph Hellwig wrote:
-> > Add a new wrapper to check if a file system supports the newer large
-> > dinode format.  Previously we uses xfs_sb_version_hascrc for that,
-> > which is technically correct but a little confusing to read.
+On Mon, Mar 16, 2020 at 08:29:42AM -0400, Brian Foster wrote:
+> On Sun, Mar 15, 2020 at 04:51:06PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > Add support for btree staging cursors for the free space btrees.  This
+> > is needed both for online repair and also to convert xfs_repair to use
+> > btree bulk loading.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > ---
-> >  fs/xfs/libxfs/xfs_format.h     |  5 +++++
-> >  fs/xfs/libxfs/xfs_ialloc.c     |  4 ++--
-> >  fs/xfs/libxfs/xfs_inode_buf.c  | 12 ++++++++----
-> >  fs/xfs/libxfs/xfs_trans_resv.c |  2 +-
-> >  fs/xfs/xfs_buf_item.c          |  2 +-
-> >  fs/xfs/xfs_log_recover.c       |  2 +-
-> >  6 files changed, 18 insertions(+), 9 deletions(-)
+> >  fs/xfs/libxfs/xfs_alloc_btree.c |   98 +++++++++++++++++++++++++++++++--------
+> >  fs/xfs/libxfs/xfs_alloc_btree.h |    7 +++
+> >  2 files changed, 86 insertions(+), 19 deletions(-)
 > > 
-> > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> > index cd814f99da28..a28bf6a978ad 100644
-> > --- a/fs/xfs/libxfs/xfs_format.h
-> > +++ b/fs/xfs/libxfs/xfs_format.h
-> > @@ -497,6 +497,11 @@ static inline bool xfs_sb_version_hascrc(struct xfs_sb *sbp)
-> >  	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
-> >  }
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+> > index a28041fdf4c0..93792ee7924e 100644
+> > --- a/fs/xfs/libxfs/xfs_alloc_btree.c
+> > +++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+> ...
+> > @@ -485,36 +520,61 @@ xfs_allocbt_init_cursor(
+> ...
 > >  
+> > +/*
+> > + * Install a new free space btree root.  Caller is responsible for invalidating
+> > + * and freeing the old btree blocks.
+> > + */
+> > +void
+> > +xfs_allocbt_commit_staged_btree(
+> > +	struct xfs_btree_cur	*cur,
+> > +	struct xfs_trans	*tp,
+> > +	struct xfs_buf		*agbp)
+> > +{
+> > +	struct xfs_agf		*agf = agbp->b_addr;
+> > +	struct xbtree_afakeroot	*afake = cur->bc_ag.afake;
+> > +
+> > +	ASSERT(cur->bc_flags & XFS_BTREE_STAGING);
+> > +
+> > +	agf->agf_roots[cur->bc_btnum] = cpu_to_be32(afake->af_root);
+> > +	agf->agf_levels[cur->bc_btnum] = cpu_to_be32(afake->af_levels);
+> > +	xfs_alloc_log_agf(tp, agbp, XFS_AGF_ROOTS | XFS_AGF_LEVELS);
+> > +
+> > +	if (cur->bc_btnum == XFS_BTNUM_BNO) {
+> > +		xfs_btree_commit_afakeroot(cur, tp, agbp, &xfs_bnobt_ops);
+> > +	} else {
+> > +		cur->bc_flags |= XFS_BTREE_LASTREC_UPDATE;
 > 
-> A comment would be useful here to indicate what this means (i.e., we can
-> assume v3 inode format). The function name is a little vague too I
-> suppose (will the inode ever get larger than large? :P). I wonder if
-> something like _has_v3_inode() is more clear, but we can always change
-> it easily enough and either way is better than hascrc() IMO.
-> 
-> Brian
-> 
-> > +static inline bool xfs_sb_version_has_large_dinode(struct xfs_sb *sbp)
+> Any reason this is set here and not at init time for the staging cursor?
 
-/me agrees that this function ought to have a comment saying that
-"large_dinode" means v3 inodes.
-
-Not sure about larger than large inodes though -- the last di_flags2
-could be made to mean "...and now expand structure by X bytes" whenever
-we run out of space.
-
-(The rest of the series looks ok to me)
+Originally it was so that ->update_lastrec couldn't get called, but
+since you're not supposed to be calling the regular btree operations
+anyway I suppose it doesn't matter if the flag is set in staging
+cursors... will fix.
 
 --D
 
-> > +{
-> > +	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
+> Brian
+> 
+> > +		xfs_btree_commit_afakeroot(cur, tp, agbp, &xfs_cntbt_ops);
+> > +	}
 > > +}
 > > +
-> >  static inline bool xfs_sb_version_has_pquotino(struct xfs_sb *sbp)
-> >  {
-> >  	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
-> > diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> > index b4a404278935..6adffaa68fb8 100644
-> > --- a/fs/xfs/libxfs/xfs_ialloc.c
-> > +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> > @@ -304,7 +304,7 @@ xfs_ialloc_inode_init(
-> >  	 * That means for v3 inode we log the entire buffer rather than just the
-> >  	 * inode cores.
-> >  	 */
-> > -	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> > +	if (xfs_sb_version_has_large_dinode(&mp->m_sb)) {
-> >  		version = 3;
-> >  		ino = XFS_AGINO_TO_INO(mp, agno, XFS_AGB_TO_AGINO(mp, agbno));
+> >  /*
+> >   * Calculate number of records in an alloc btree block.
+> >   */
+> > diff --git a/fs/xfs/libxfs/xfs_alloc_btree.h b/fs/xfs/libxfs/xfs_alloc_btree.h
+> > index c9305ebb69f6..047f09f0be3c 100644
+> > --- a/fs/xfs/libxfs/xfs_alloc_btree.h
+> > +++ b/fs/xfs/libxfs/xfs_alloc_btree.h
+> > @@ -13,6 +13,7 @@
+> >  struct xfs_buf;
+> >  struct xfs_btree_cur;
+> >  struct xfs_mount;
+> > +struct xbtree_afakeroot;
 > >  
-> > @@ -2872,7 +2872,7 @@ xfs_ialloc_setup_geometry(
-> >  	 * cannot change the behavior.
-> >  	 */
-> >  	igeo->inode_cluster_size_raw = XFS_INODE_BIG_CLUSTER_SIZE;
-> > -	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> > +	if (xfs_sb_version_has_large_dinode(&mp->m_sb)) {
-> >  		int	new_size = igeo->inode_cluster_size_raw;
+> >  /*
+> >   * Btree block header size depends on a superblock flag.
+> > @@ -48,8 +49,14 @@ struct xfs_mount;
+> >  extern struct xfs_btree_cur *xfs_allocbt_init_cursor(struct xfs_mount *,
+> >  		struct xfs_trans *, struct xfs_buf *,
+> >  		xfs_agnumber_t, xfs_btnum_t);
+> > +struct xfs_btree_cur *xfs_allocbt_stage_cursor(struct xfs_mount *mp,
+> > +		struct xbtree_afakeroot *afake, xfs_agnumber_t agno,
+> > +		xfs_btnum_t btnum);
+> >  extern int xfs_allocbt_maxrecs(struct xfs_mount *, int, int);
+> >  extern xfs_extlen_t xfs_allocbt_calc_size(struct xfs_mount *mp,
+> >  		unsigned long long len);
 > >  
-> >  		new_size *= mp->m_sb.sb_inodesize / XFS_DINODE_MIN_SIZE;
-> > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> > index 17e88a8c8353..a5aa2f220c28 100644
-> > --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> > @@ -44,14 +44,18 @@ xfs_inobp_check(
-> >  }
-> >  #endif
-> >  
-> > +/*
-> > + * v4 and earlier file systems only support the small dinode, and must use the
-> > + * v1 or v2 inode formats.  v5 file systems support a larger dinode, and must
-> > + * use the v3 inode format.
-> > + */
-> >  bool
-> >  xfs_dinode_good_version(
-> >  	struct xfs_mount *mp,
-> >  	__u8		version)
-> >  {
-> > -	if (xfs_sb_version_hascrc(&mp->m_sb))
-> > +	if (xfs_sb_version_has_large_dinode(&mp->m_sb))
-> >  		return version == 3;
-> > -
-> >  	return version == 1 || version == 2;
-> >  }
-> >  
-> > @@ -454,7 +458,7 @@ xfs_dinode_verify(
-> >  
-> >  	/* Verify v3 integrity information first */
-> >  	if (dip->di_version >= 3) {
-> > -		if (!xfs_sb_version_hascrc(&mp->m_sb))
-> > +		if (!xfs_sb_version_has_large_dinode(&mp->m_sb))
-> >  			return __this_address;
-> >  		if (!xfs_verify_cksum((char *)dip, mp->m_sb.sb_inodesize,
-> >  				      XFS_DINODE_CRC_OFF))
-> > @@ -629,7 +633,7 @@ xfs_iread(
-> >  
-> >  	/* shortcut IO on inode allocation if possible */
-> >  	if ((iget_flags & XFS_IGET_CREATE) &&
-> > -	    xfs_sb_version_hascrc(&mp->m_sb) &&
-> > +	    xfs_sb_version_has_large_dinode(&mp->m_sb) &&
-> >  	    !(mp->m_flags & XFS_MOUNT_IKEEP)) {
-> >  		VFS_I(ip)->i_generation = prandom_u32();
-> >  		ip->i_d.di_version = 3;
-> > diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-> > index 7a9c04920505..294e23d47912 100644
-> > --- a/fs/xfs/libxfs/xfs_trans_resv.c
-> > +++ b/fs/xfs/libxfs/xfs_trans_resv.c
-> > @@ -187,7 +187,7 @@ xfs_calc_inode_chunk_res(
-> >  			       XFS_FSB_TO_B(mp, 1));
-> >  	if (alloc) {
-> >  		/* icreate tx uses ordered buffers */
-> > -		if (xfs_sb_version_hascrc(&mp->m_sb))
-> > +		if (xfs_sb_version_has_large_dinode(&mp->m_sb))
-> >  			return res;
-> >  		size = XFS_FSB_TO_B(mp, 1);
-> >  	}
-> > diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> > index 663810e6cd59..d004ae3455d7 100644
-> > --- a/fs/xfs/xfs_buf_item.c
-> > +++ b/fs/xfs/xfs_buf_item.c
-> > @@ -345,7 +345,7 @@ xfs_buf_item_format(
-> >  	 * occurs during recovery.
-> >  	 */
-> >  	if (bip->bli_flags & XFS_BLI_INODE_BUF) {
-> > -		if (xfs_sb_version_hascrc(&lip->li_mountp->m_sb) ||
-> > +		if (xfs_sb_version_has_large_dinode(&lip->li_mountp->m_sb) ||
-> >  		    !((bip->bli_flags & XFS_BLI_INODE_ALLOC_BUF) &&
-> >  		      xfs_log_item_in_current_chkpt(lip)))
-> >  			bip->__bli_format.blf_flags |= XFS_BLF_INODE_BUF;
-> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> > index 6abc0863c9c3..e5e976b5cc11 100644
-> > --- a/fs/xfs/xfs_log_recover.c
-> > +++ b/fs/xfs/xfs_log_recover.c
-> > @@ -2997,7 +2997,7 @@ xlog_recover_inode_pass2(
-> >  	 * superblock flag to determine whether we need to look at di_flushiter
-> >  	 * to skip replay when the on disk inode is newer than the log one
-> >  	 */
-> > -	if (!xfs_sb_version_hascrc(&mp->m_sb) &&
-> > +	if (!xfs_sb_version_has_large_dinode(&mp->m_sb) &&
-> >  	    ldip->di_flushiter < be16_to_cpu(dip->di_flushiter)) {
-> >  		/*
-> >  		 * Deal with the wrap case, DI_MAX_FLUSH is less
-> > -- 
-> > 2.24.1
+> > +void xfs_allocbt_commit_staged_btree(struct xfs_btree_cur *cur,
+> > +		struct xfs_trans *tp, struct xfs_buf *agbp);
+> > +
+> >  #endif	/* __XFS_ALLOC_BTREE_H__ */
 > > 
 > 
