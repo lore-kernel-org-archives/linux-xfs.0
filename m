@@ -2,116 +2,73 @@ Return-Path: <SRS0=1m5L=5B=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BEC6C10DCE
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Mar 2020 02:03:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB32DC0044D
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Mar 2020 03:37:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 27CF1206BE
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Mar 2020 02:03:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9E5F220663
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Mar 2020 03:37:23 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=firstfloor.org header.i=@firstfloor.org header.b="esZutmO0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729396AbgCPCDv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 15 Mar 2020 22:03:51 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:54451 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729387AbgCPCDv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Mar 2020 22:03:51 -0400
-Received: from dread.disaster.area (pa49-195-202-68.pa.nsw.optusnet.com.au [49.195.202.68])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id E78263A4D07;
-        Mon, 16 Mar 2020 13:03:45 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jDf6U-00061N-TM; Mon, 16 Mar 2020 13:03:42 +1100
-Date:   Mon, 16 Mar 2020 13:03:42 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Andi Kleen <andi@firstfloor.org>
-Cc:     linux-xfs@vger.kernel.org
+        id S1729666AbgCPDhX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 15 Mar 2020 23:37:23 -0400
+Received: from one.firstfloor.org ([193.170.194.197]:60350 "EHLO
+        one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729632AbgCPDhX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Mar 2020 23:37:23 -0400
+Received: by one.firstfloor.org (Postfix, from userid 503)
+        id 69C2686848; Mon, 16 Mar 2020 04:37:19 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=firstfloor.org;
+        s=mail; t=1584329839;
+        bh=FixnRze9CuGCBQt3R3GyvExcHQzpYMq+rQcsBZ46s18=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=esZutmO0TlABkZe0rlhwE00eJSKSZ2EoRkLzsNC7hd+3PlVWorKnkjneZm1cATGpt
+         vzJUHSRBMLly+A9S0P9Wtd1cW9+EA63zRijyMbAR2pztSHY8nctDiyVmT44NSlNnQ3
+         di0QJjaUWJk/VOra9ifxuh3m6VD+zZlbWHVERtIQ=
+Date:   Sun, 15 Mar 2020 20:37:19 -0700
+From:   Andi Kleen <andi@firstfloor.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Andi Kleen <andi@firstfloor.org>, linux-xfs@vger.kernel.org
 Subject: Re: Shutdown preventing umount
-Message-ID: <20200316020342.GP10776@dread.disaster.area>
+Message-ID: <20200316033717.bnofrpg5yrciyhvz@two.firstfloor.org>
 References: <20200314133107.4rv25sp4bvhbjjsx@two.firstfloor.org>
+ <20200316020342.GP10776@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200314133107.4rv25sp4bvhbjjsx@two.firstfloor.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
-        a=mqTaRPt+QsUAtUurwE173Q==:117 a=mqTaRPt+QsUAtUurwE173Q==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=SS2py6AdgQ4A:10
-        a=7-415B0cAAAA:8 a=SoHpTpO9l86dxiEN2VAA:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20200316020342.GP10776@dread.disaster.area>
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Mar 14, 2020 at 06:31:10AM -0700, Andi Kleen wrote:
+On Mon, Mar 16, 2020 at 01:03:42PM +1100, Dave Chinner wrote:
+> On Sat, Mar 14, 2020 at 06:31:10AM -0700, Andi Kleen wrote:
+> > 
+> > Hi,
+> > 
+> > I had a cable problem on a USB connected XFS file system, triggering 
+> > some IO errors, and the result was that any access to the mount point
+> > resulted in EIO. This prevented unmounting the file system to recover
+> > from the problem. 
 > 
-> Hi,
-> 
-> I had a cable problem on a USB connected XFS file system, triggering 
-> some IO errors, and the result was that any access to the mount point
-> resulted in EIO. This prevented unmounting the file system to recover
-> from the problem. 
+> Full dmesg output, please.
 
-Full dmesg output, please.
+http://www.firstfloor.org/~andi/dmesg-xfs-umount
 
-> I also tried xfs_io with shutdown -f, but it had the same problem
-> because xfs_io couldn't access anything on the file system.
+> > 
+> > XFS (...): log I/O error -5
+> > 
+> > scsi 7:0:0:0: rejecting I/O to dead device
+> 
+> Where is unmount stuck? 'echo w > /proc/sysrq-trigger' output if it
+> is hung, 'echo l > /proc/sysrq-trigger' if it is spinning, please?
 
-Because the IO errors had already shut the filesystem down, as
-per the dmesg output you quoted below.
+It's not stuck. It always errored out with EIO.
 
-> How is that supposed to work? Having to reboot just to recover
-> from IO errors doesn't seem to be very available.
-> 
-> I don't think shutdown should prevent unmounting.
-
-It doesn't. Something was leaked or not cleaned up properly,
-preventing the filesytem from being unmounted. You know, a bug...
-
-> From googling I found some old RHEL bugzilla that such a problem
-> was fixed in some RHEL release. Is that a regression? 
-
-RHEL has an upstream first policy, so whatever bug fix you find in
-a RHEL kernel is already in the upstream kernels.
-
-> This was on a 5.4.10 kernel.
-> 
-> I got lots of:
-> 
->  XFS (...): metadata I/O error in "xfs_trans_read_buf_map" at daddr
->  0x4a620288 len 8 error 5
-> 
-> Then some
-> 
-> XFS (...): writeback error on sector 7372099184
-> 
-> And finally:
-> 
-> XFS (...): log I/O error -5
->  XFS (...): xfs_do_force_shutdown(0x2)
-> called from line 1250 of file fs/xfs/xfs_log.c. Return address =
-> 00000000f7956130
-> XFS (...): Log I/O Error Detected.
-> Shutting down filesystem
-> XFS (...): Please unmount the filesystem
-> and rectify the problem(s)
-> 
-> (very funny XFS!)
-> 
-> XFS (...): log I/O error -5
-> 
-> scsi 7:0:0:0: rejecting I/O to dead device
-
-Where is unmount stuck? 'echo w > /proc/sysrq-trigger' output if it
-is hung, 'echo l > /proc/sysrq-trigger' if it is spinning, please?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-Andi
