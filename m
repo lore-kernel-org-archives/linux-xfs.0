@@ -6,95 +6,162 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D4AAC0044D
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Mar 2020 00:15:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C49CC0044D
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Mar 2020 01:39:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1E6D0206E2
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Mar 2020 00:15:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE9D62051A
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Mar 2020 01:39:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732968AbgCQAPq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 Mar 2020 20:15:46 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:47119 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1732960AbgCQAPq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Mar 2020 20:15:46 -0400
-Received: from dread.disaster.area (pa49-195-202-68.pa.nsw.optusnet.com.au [49.195.202.68])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 750513A235F;
-        Tue, 17 Mar 2020 11:15:43 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jDztW-0005NI-0Y; Tue, 17 Mar 2020 11:15:42 +1100
-Date:   Tue, 17 Mar 2020 11:15:41 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 01/14] xfs: merge xlog_cil_push into xlog_cil_push_work
-Message-ID: <20200317001541.GS10776@dread.disaster.area>
-References: <20200316144233.900390-1-hch@lst.de>
- <20200316144233.900390-2-hch@lst.de>
+        id S1726545AbgCQBjo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 Mar 2020 21:39:44 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:39606 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726187AbgCQBjo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 16 Mar 2020 21:39:44 -0400
+Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id DFA70A8D0158A699481A;
+        Tue, 17 Mar 2020 09:39:41 +0800 (CST)
+Received: from [127.0.0.1] (10.184.213.217) by DGGEMS414-HUB.china.huawei.com
+ (10.3.19.214) with Microsoft SMTP Server id 14.3.487.0; Tue, 17 Mar 2020
+ 09:39:32 +0800
+Subject: Re: [PATCH 1/2] xfs: always init fdblocks in mount
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+CC:     <bfoster@redhat.com>, <dchinner@redhat.com>, <sandeen@sandeen.net>,
+        <linux-xfs@vger.kernel.org>, <yi.zhang@huawei.com>,
+        <houtao1@huawei.com>
+References: <1584364028-122886-1-git-send-email-zhengbin13@huawei.com>
+ <1584364028-122886-2-git-send-email-zhengbin13@huawei.com>
+ <20200316151311.GD256767@magnolia>
+From:   "zhengbin (A)" <zhengbin13@huawei.com>
+Message-ID: <85de386b-2ca0-6192-e208-2c6b7bf77bd2@huawei.com>
+Date:   Tue, 17 Mar 2020 09:39:32 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.3.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200316144233.900390-2-hch@lst.de>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
-        a=mqTaRPt+QsUAtUurwE173Q==:117 a=mqTaRPt+QsUAtUurwE173Q==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=SS2py6AdgQ4A:10
-        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=TDf9XxNU75roeiFt9qAA:9
-        a=aL6r1SzTO5whl0UJ:21 a=XNDS9AlzluPwmJ97:21 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20200316151311.GD256767@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+X-Originating-IP: [10.184.213.217]
+X-CFilter-Loop: Reflected
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 16, 2020 at 03:42:20PM +0100, Christoph Hellwig wrote:
-> xlog_cil_push is only called by xlog_cil_push_work, so merge the two
-> functions.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_log_cil.c | 46 +++++++++++++++++---------------------------
->  1 file changed, 18 insertions(+), 28 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index 48435cf2aa16..6a6278b8eb2d 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -626,24 +626,26 @@ xlog_cil_process_committed(
->  }
->  
->  /*
-> - * Push the Committed Item List to the log. If @push_seq flag is zero, then it
-> - * is a background flush and so we can chose to ignore it. Otherwise, if the
-> - * current sequence is the same as @push_seq we need to do a flush. If
-> - * @push_seq is less than the current sequence, then it has already been
-> + * Push the Committed Item List to the log.
-> + *
-> + * If the current sequence is the same as xc_push_seq we need to do a flush. If
-> + * xc_push_seq is less than the current sequence, then it has already been
->   * flushed and we don't need to do anything - the caller will wait for it to
->   * complete if necessary.
->   *
-> - * @push_seq is a value rather than a flag because that allows us to do an
-> - * unlocked check of the sequence number for a match. Hence we can allows log
-> - * forces to run racily and not issue pushes for the same sequence twice. If we
-> - * get a race between multiple pushes for the same sequence they will block on
-> - * the first one and then abort, hence avoiding needless pushes.
-> + * xc_push_seq is checked unlocked against the sequence number for a match.
-> + * Hence we can allows log forces to run racily and not issue pushes for the
-                   ^^^^^^
-		   allow
 
-> + * same sequence twice.  If we get a race between multiple pushes for the same
-> + * sequence they will block on the first one and then abort, hence avoiding
-> + * needless pushes.
+On 2020/3/16 23:13, Darrick J. Wong wrote:
+> On Mon, Mar 16, 2020 at 09:07:07PM +0800, Zheng Bin wrote:
+>> Use fuzz(hydra) to test XFS and automatically generate
+>> tmp.img(XFS v5 format, but some metadata is wrong)
+>>
+>> xfs_repair information(just one AG):
+>> agf_freeblks 0, counted 3224 in ag 0
+>> agf_longest 0, counted 3224 in ag 0
+>> sb_fdblocks 3228, counted 3224
+>>
+>> Test as follows:
+>> mount tmp.img tmpdir
+>> cp file1M tmpdir
+>> sync
+>>
+>> In 4.19-stable, sync will stuck, while in linux-next, sync not stuck.
+>> The reason is same to commit d0c7feaf8767
+>> ("xfs: add agf freeblocks verify in xfs_agf_verify"), cause agf_longest
+>> is 0, we can not block this in xfs_agf_verify.
+> Uh.... what are you saying here?  That the allocator misbehaves and
+> loops forever if sb_fdblocks > sum(agf_freeblks) after mount?
+>
+> Also, uh, what do you mean by "sync not stuck"?  Writeback will fail on
+> allocation error, right...?  So I think the problem with incorrect AGF
+> contents (on upstream) is that writeback will fail due to ENOSPC, which
+> should never happen under normal circumstance?
 
-Otherwise looks ok.
+Yes, see commit d0c7feaf8767 ("xfs: add agf freeblocks verify in xfs_agf_verify")
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+4.19-stable loops forerver, while linux-next will fail due to ENOSPC, cause commit
 
--- 
-Dave Chinner
-david@fromorbit.com
+c2b3164320b5 ("xfs: use the latest extent at writeback delalloc conversion time") remove
+the above while, dmesg is as follows:
+[   55.250114] XFS (loop0): page discard on page ffffea0008bc7380, inode 0x1b0c, offset 0.
+
+
+@sandeen, we can construct an img like this:
+
+dd if=/dev/zero of=xfs.img bs=1M count=20
+mkfs.xfs -d agcount=1 xfs.img
+xfs_db -x xfs.img
+agf 0
+write freeblks 0
+write longest 0
+quit
+
+>> Make sure fdblocks is always inited in mount(also init ifree, icount).
+>>
+>> xfs_mountfs
+>>   xfs_check_summary_counts
+>>     xfs_initialize_perag_data
+>>
+>> Signed-off-by: Zheng Bin <zhengbin13@huawei.com>
+>> ---
+>>  fs/xfs/xfs_mount.c | 33 ---------------------------------
+>>  1 file changed, 33 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+>> index c5513e5..dc41801 100644
+>> --- a/fs/xfs/xfs_mount.c
+>> +++ b/fs/xfs/xfs_mount.c
+>> @@ -594,39 +594,6 @@ xfs_check_summary_counts(
+>>  		return -EFSCORRUPTED;
+>>  	}
+>>
+>> -	/*
+>> -	 * Now the log is mounted, we know if it was an unclean shutdown or
+>> -	 * not. If it was, with the first phase of recovery has completed, we
+>> -	 * have consistent AG blocks on disk. We have not recovered EFIs yet,
+>> -	 * but they are recovered transactionally in the second recovery phase
+>> -	 * later.
+>> -	 *
+>> -	 * If the log was clean when we mounted, we can check the summary
+>> -	 * counters.  If any of them are obviously incorrect, we can recompute
+>> -	 * them from the AGF headers in the next step.
+>> -	 */
+>> -	if (XFS_LAST_UNMOUNT_WAS_CLEAN(mp) &&
+>> -	    (mp->m_sb.sb_fdblocks > mp->m_sb.sb_dblocks ||
+>> -	     !xfs_verify_icount(mp, mp->m_sb.sb_icount) ||
+>> -	     mp->m_sb.sb_ifree > mp->m_sb.sb_icount))
+>> -		xfs_fs_mark_sick(mp, XFS_SICK_FS_COUNTERS);
+>> -
+>> -	/*
+>> -	 * We can safely re-initialise incore superblock counters from the
+>> -	 * per-ag data. These may not be correct if the filesystem was not
+>> -	 * cleanly unmounted, so we waited for recovery to finish before doing
+>> -	 * this.
+>> -	 *
+>> -	 * If the filesystem was cleanly unmounted or the previous check did
+>> -	 * not flag anything weird, then we can trust the values in the
+>> -	 * superblock to be correct and we don't need to do anything here.
+>> -	 * Otherwise, recalculate the summary counters.
+>> -	 */
+>> -	if ((!xfs_sb_version_haslazysbcount(&mp->m_sb) ||
+>> -	     XFS_LAST_UNMOUNT_WAS_CLEAN(mp)) &&
+>> -	    !xfs_fs_has_sickness(mp, XFS_SICK_FS_COUNTERS))
+>> -		return 0;
+>> -
+>>  	return xfs_initialize_perag_data(mp, mp->m_sb.sb_agcount);
+> The downside of this is that now we /always/ have to make two trips
+> around all of the AGs at mount time.  If you're proposing to require a
+> fresh fdblocks recomputation at mount, could you please refactor all of
+> the mount-time AG walks into a single loop?  And perhaps use xfs_pwork
+> so that we don't have to do it serially?
+>
+> --D
+>
+>>  }
+>>
+>> --
+>> 2.7.4
+>>
+> .
+>
+
