@@ -2,110 +2,242 @@ Return-Path: <SRS0=h+lF=5C=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DEB1C3F2CE
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Mar 2020 09:59:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E3D0C18E5B
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Mar 2020 11:37:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D867B205ED
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Mar 2020 09:59:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5EC802051A
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Mar 2020 11:37:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ke962Boq"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ctuOEi2r"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726250AbgCQJ7g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 Mar 2020 05:59:36 -0400
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:45831 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726157AbgCQJ7g (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Mar 2020 05:59:36 -0400
-Received: by mail-pg1-f195.google.com with SMTP id m15so11434263pgv.12
-        for <linux-xfs@vger.kernel.org>; Tue, 17 Mar 2020 02:59:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=053GDBN3hGRd7hjqdMewYMzVMg44EzkrP1AVCvFLOoM=;
-        b=Ke962BoqViUJQ9xym2PwziO4UFLy5W2U85GfqrWAdTRHnm2OdBYwJNr5ALRCPJKRxF
-         GlhC9EHLgviAm0XTfKj4c3Dt/yR43BZyz7wEX4sHo9qnEmqWUJV1bjIQwdzxmOSNCO+V
-         hi98c7r3XdquafVRXJ9JoA6ZSjp0tTc4XsxfGVTyD6+si59B1kSLYdRWDVYBcKgkreUb
-         gdO8FXlNsta9EaM8zLawi0MYoShtFAh3N+GnMrixzJgYc1VuGzDgSsuU6GE4m1ux2fIx
-         tCbnrNPEK1Smmsvm2XP1s6J5aJJtGTfxTwJXlRDtFJOxFTVAoyp1s5HZ7INWTSxR60b8
-         VueA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=053GDBN3hGRd7hjqdMewYMzVMg44EzkrP1AVCvFLOoM=;
-        b=OQj8MytLgNpxjhQ6LJLVaNuT7h3yR77w1kFmaD0yiMoxQrijwfTIQKlozME5aw44Y2
-         JSadEKEWt0dwa44czkRiH1vpvvKkaAjU5EPF0A3CmhIKEMfssW2sWWFxMGsXAQArOpvC
-         QP7c7GuqgKMUZZO5de/aRpR0nj6y2MhcLmQIYelzF8x3uyPgmA6dUyphnfeYCpq2ADCP
-         C50arOmP2Th0Ozq/BdYceBxPNp+sANZTpUtslDiMroY9c1sazPVqiwVUqHHwA5yLm9QM
-         5ifuwNwZacGEoqIIBmMB2ayyfmvJxD8ebu8u8DPwp4GEnx6WRqlsA5ERaKK8WqutgJ1B
-         mTMA==
-X-Gm-Message-State: ANhLgQ3//1eySFH61UJOs3pjwMGmA2W1Ho3hXXOCK9MC3LkQqt5iStR7
-        VUd/V+SDW/FwVRYhJgNylKfUM7Espg==
-X-Google-Smtp-Source: ADFU+vt18OX+qbtE8Qr4eim3EBFZFlkppyqlU0Ir6PS6hOnPVJ/iHG2PNR3ZbYGEr0uqsW1SIT7REA==
-X-Received: by 2002:a63:c20e:: with SMTP id b14mr4055772pgd.394.1584439175232;
-        Tue, 17 Mar 2020 02:59:35 -0700 (PDT)
-Received: from he-cluster.localdomain (67.216.221.250.16clouds.com. [67.216.221.250])
-        by smtp.gmail.com with ESMTPSA id a185sm1143085pfa.27.2020.03.17.02.59.34
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 17 Mar 2020 02:59:34 -0700 (PDT)
-From:   xiakaixu1987@gmail.com
-X-Google-Original-From: kaixuxia@tencent.com
-To:     linux-xfs@vger.kernel.org
-Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
-Subject: [PATCH] xfs: use more suitable method to get the quota limit value
-Date:   Tue, 17 Mar 2020 17:59:30 +0800
-Message-Id: <1584439170-20993-1-git-send-email-kaixuxia@tencent.com>
-X-Mailer: git-send-email 1.8.3.1
+        id S1726628AbgCQLhi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 17 Mar 2020 07:37:38 -0400
+Received: from us-smtp-delivery-74.mimecast.com ([216.205.24.74]:27991 "EHLO
+        us-smtp-delivery-74.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725794AbgCQLhi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Mar 2020 07:37:38 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1584445056;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=x1oQdEvJpe3rbu4wvvU4aq0EZ7uSZKo1a6a6Qh4T4g4=;
+        b=ctuOEi2rDU7fxmh6GYUh4LxMh8fHXh5N7wH0cug7hxnt1QczsRLVXd7KblkRclSP3aDeBC
+        zb/RhDICv/8+l40yfR/jCOxXyc2CUb5+wD1k+775SwegIy0sooFceME+DJcgTAAtfEds1c
+        rHvS0f9lZ/d795Qu0/9uqLv+VLseu78=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-237-i4PrfKbvPc21oFsFB4bcyQ-1; Tue, 17 Mar 2020 07:37:34 -0400
+X-MC-Unique: i4PrfKbvPc21oFsFB4bcyQ-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0E93A801FA7;
+        Tue, 17 Mar 2020 11:37:24 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id A58AD60BF3;
+        Tue, 17 Mar 2020 11:37:23 +0000 (UTC)
+Date:   Tue, 17 Mar 2020 07:37:21 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2 4/7] xfs: add support for free space btree staging
+ cursors
+Message-ID: <20200317113721.GA22894@bfoster>
+References: <158431623997.357791.9599758740528407024.stgit@magnolia>
+ <158431626637.357791.7694218797816175496.stgit@magnolia>
+ <20200316193541.GF256767@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200316193541.GF256767@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Kaixu Xia <kaixuxia@tencent.com>
+On Mon, Mar 16, 2020 at 12:35:41PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Add support for btree staging cursors for the free space btrees.  This
+> is needed both for online repair and also to convert xfs_repair to use
+> btree bulk loading.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v2: leave the LASTREC_UPDATE flag setting alone
+> ---
 
-It is more suitable to use min_not_zero() to get the quota limit
-value, means to choose the minimum value not the softlimit firstly.
-And the meaning is more clear even though the hardlimit value must
-be larger than softlimit value.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
----
- fs/xfs/xfs_qm_bhv.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
-
-diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
-index fc2fa41..f1711f5 100644
---- a/fs/xfs/xfs_qm_bhv.c
-+++ b/fs/xfs/xfs_qm_bhv.c
-@@ -23,9 +23,8 @@
- {
- 	uint64_t		limit;
- 
--	limit = dqp->q_core.d_blk_softlimit ?
--		be64_to_cpu(dqp->q_core.d_blk_softlimit) :
--		be64_to_cpu(dqp->q_core.d_blk_hardlimit);
-+	limit = min_not_zero(be64_to_cpu(dqp->q_core.d_blk_softlimit),
-+				be64_to_cpu(dqp->q_core.d_blk_hardlimit));
- 	if (limit && statp->f_blocks > limit) {
- 		statp->f_blocks = limit;
- 		statp->f_bfree = statp->f_bavail =
-@@ -33,9 +32,8 @@
- 			 (statp->f_blocks - dqp->q_res_bcount) : 0;
- 	}
- 
--	limit = dqp->q_core.d_ino_softlimit ?
--		be64_to_cpu(dqp->q_core.d_ino_softlimit) :
--		be64_to_cpu(dqp->q_core.d_ino_hardlimit);
-+	limit = min_not_zero(be64_to_cpu(dqp->q_core.d_ino_softlimit),
-+				be64_to_cpu(dqp->q_core.d_ino_hardlimit));
- 	if (limit && statp->f_files > limit) {
- 		statp->f_files = limit;
- 		statp->f_ffree =
--- 
-1.8.3.1
+>  fs/xfs/libxfs/xfs_alloc_btree.c |   93 ++++++++++++++++++++++++++++++++-------
+>  fs/xfs/libxfs/xfs_alloc_btree.h |    7 +++
+>  2 files changed, 84 insertions(+), 16 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+> index a28041fdf4c0..60c453cb3ee3 100644
+> --- a/fs/xfs/libxfs/xfs_alloc_btree.c
+> +++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+> @@ -12,6 +12,7 @@
+>  #include "xfs_sb.h"
+>  #include "xfs_mount.h"
+>  #include "xfs_btree.h"
+> +#include "xfs_btree_staging.h"
+>  #include "xfs_alloc_btree.h"
+>  #include "xfs_alloc.h"
+>  #include "xfs_extent_busy.h"
+> @@ -471,18 +472,14 @@ static const struct xfs_btree_ops xfs_cntbt_ops = {
+>  	.recs_inorder		= xfs_cntbt_recs_inorder,
+>  };
+>  
+> -/*
+> - * Allocate a new allocation btree cursor.
+> - */
+> -struct xfs_btree_cur *			/* new alloc btree cursor */
+> -xfs_allocbt_init_cursor(
+> -	struct xfs_mount	*mp,		/* file system mount point */
+> -	struct xfs_trans	*tp,		/* transaction pointer */
+> -	struct xfs_buf		*agbp,		/* buffer for agf structure */
+> -	xfs_agnumber_t		agno,		/* allocation group number */
+> -	xfs_btnum_t		btnum)		/* btree identifier */
+> +/* Allocate most of a new allocation btree cursor. */
+> +STATIC struct xfs_btree_cur *
+> +xfs_allocbt_init_common(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_trans	*tp,
+> +	xfs_agnumber_t		agno,
+> +	xfs_btnum_t		btnum)
+>  {
+> -	struct xfs_agf		*agf = agbp->b_addr;
+>  	struct xfs_btree_cur	*cur;
+>  
+>  	ASSERT(btnum == XFS_BTNUM_BNO || btnum == XFS_BTNUM_CNT);
+> @@ -495,17 +492,14 @@ xfs_allocbt_init_cursor(
+>  	cur->bc_blocklog = mp->m_sb.sb_blocklog;
+>  
+>  	if (btnum == XFS_BTNUM_CNT) {
+> -		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtc_2);
+>  		cur->bc_ops = &xfs_cntbt_ops;
+> -		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]);
+> +		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtc_2);
+>  		cur->bc_flags = XFS_BTREE_LASTREC_UPDATE;
+>  	} else {
+> -		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtb_2);
+>  		cur->bc_ops = &xfs_bnobt_ops;
+> -		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]);
+> +		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtb_2);
+>  	}
+>  
+> -	cur->bc_ag.agbp = agbp;
+>  	cur->bc_ag.agno = agno;
+>  	cur->bc_ag.abt.active = false;
+>  
+> @@ -515,6 +509,73 @@ xfs_allocbt_init_cursor(
+>  	return cur;
+>  }
+>  
+> +/*
+> + * Allocate a new allocation btree cursor.
+> + */
+> +struct xfs_btree_cur *			/* new alloc btree cursor */
+> +xfs_allocbt_init_cursor(
+> +	struct xfs_mount	*mp,		/* file system mount point */
+> +	struct xfs_trans	*tp,		/* transaction pointer */
+> +	struct xfs_buf		*agbp,		/* buffer for agf structure */
+> +	xfs_agnumber_t		agno,		/* allocation group number */
+> +	xfs_btnum_t		btnum)		/* btree identifier */
+> +{
+> +	struct xfs_agf		*agf = agbp->b_addr;
+> +	struct xfs_btree_cur	*cur;
+> +
+> +	cur = xfs_allocbt_init_common(mp, tp, agno, btnum);
+> +	if (btnum == XFS_BTNUM_CNT)
+> +		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]);
+> +	else
+> +		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]);
+> +
+> +	cur->bc_ag.agbp = agbp;
+> +
+> +	return cur;
+> +}
+> +
+> +/* Create a free space btree cursor with a fake root for staging. */
+> +struct xfs_btree_cur *
+> +xfs_allocbt_stage_cursor(
+> +	struct xfs_mount	*mp,
+> +	struct xbtree_afakeroot	*afake,
+> +	xfs_agnumber_t		agno,
+> +	xfs_btnum_t		btnum)
+> +{
+> +	struct xfs_btree_cur	*cur;
+> +
+> +	cur = xfs_allocbt_init_common(mp, NULL, agno, btnum);
+> +	xfs_btree_stage_afakeroot(cur, afake);
+> +	return cur;
+> +}
+> +
+> +/*
+> + * Install a new free space btree root.  Caller is responsible for invalidating
+> + * and freeing the old btree blocks.
+> + */
+> +void
+> +xfs_allocbt_commit_staged_btree(
+> +	struct xfs_btree_cur	*cur,
+> +	struct xfs_trans	*tp,
+> +	struct xfs_buf		*agbp)
+> +{
+> +	struct xfs_agf		*agf = agbp->b_addr;
+> +	struct xbtree_afakeroot	*afake = cur->bc_ag.afake;
+> +
+> +	ASSERT(cur->bc_flags & XFS_BTREE_STAGING);
+> +
+> +	agf->agf_roots[cur->bc_btnum] = cpu_to_be32(afake->af_root);
+> +	agf->agf_levels[cur->bc_btnum] = cpu_to_be32(afake->af_levels);
+> +	xfs_alloc_log_agf(tp, agbp, XFS_AGF_ROOTS | XFS_AGF_LEVELS);
+> +
+> +	if (cur->bc_btnum == XFS_BTNUM_BNO) {
+> +		xfs_btree_commit_afakeroot(cur, tp, agbp, &xfs_bnobt_ops);
+> +	} else {
+> +		cur->bc_flags |= XFS_BTREE_LASTREC_UPDATE;
+> +		xfs_btree_commit_afakeroot(cur, tp, agbp, &xfs_cntbt_ops);
+> +	}
+> +}
+> +
+>  /*
+>   * Calculate number of records in an alloc btree block.
+>   */
+> diff --git a/fs/xfs/libxfs/xfs_alloc_btree.h b/fs/xfs/libxfs/xfs_alloc_btree.h
+> index c9305ebb69f6..047f09f0be3c 100644
+> --- a/fs/xfs/libxfs/xfs_alloc_btree.h
+> +++ b/fs/xfs/libxfs/xfs_alloc_btree.h
+> @@ -13,6 +13,7 @@
+>  struct xfs_buf;
+>  struct xfs_btree_cur;
+>  struct xfs_mount;
+> +struct xbtree_afakeroot;
+>  
+>  /*
+>   * Btree block header size depends on a superblock flag.
+> @@ -48,8 +49,14 @@ struct xfs_mount;
+>  extern struct xfs_btree_cur *xfs_allocbt_init_cursor(struct xfs_mount *,
+>  		struct xfs_trans *, struct xfs_buf *,
+>  		xfs_agnumber_t, xfs_btnum_t);
+> +struct xfs_btree_cur *xfs_allocbt_stage_cursor(struct xfs_mount *mp,
+> +		struct xbtree_afakeroot *afake, xfs_agnumber_t agno,
+> +		xfs_btnum_t btnum);
+>  extern int xfs_allocbt_maxrecs(struct xfs_mount *, int, int);
+>  extern xfs_extlen_t xfs_allocbt_calc_size(struct xfs_mount *mp,
+>  		unsigned long long len);
+>  
+> +void xfs_allocbt_commit_staged_btree(struct xfs_btree_cur *cur,
+> +		struct xfs_trans *tp, struct xfs_buf *agbp);
+> +
+>  #endif	/* __XFS_ALLOC_BTREE_H__ */
+> 
 
