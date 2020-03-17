@@ -7,39 +7,40 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B252C1975A
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Mar 2020 19:02:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27D7FC1975A
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Mar 2020 19:04:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 686CF20674
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Mar 2020 19:02:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E05F820735
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Mar 2020 19:04:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="IEE11/zK"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="uzMuCQI9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726452AbgCQTCX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 Mar 2020 15:02:23 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:57232 "EHLO
+        id S1726555AbgCQTEg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 17 Mar 2020 15:04:36 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:57308 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726294AbgCQTCW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Mar 2020 15:02:22 -0400
+        with ESMTP id S1726476AbgCQTEg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Mar 2020 15:04:36 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
-        Reply-To:Cc:Content-Type:Content-ID:Content-Description;
-        bh=wRpTI237gvRmHk6IlZw01T7yx4Z/hStfKCe7awTywKE=; b=IEE11/zK9RFuoWUXkaxrfwibIc
-        TucAcU0TUOTx2LVzzt72xQTIgbUMGv8fPgtMJhpe6m3a8joDN4zSoY0/zg9GkjmO9ZsI3o79d9tz2
-        6N3eZ+oo46lEGuDVH5brIeNmatweFgyvuenoCJvRKZjzZcVJy8ZrU7AIo8ITqSF9e4dOpXdmo6o3X
-        wU8IobPUnRYROynipZXPAz62MIgXVjRJYzPkWDs4iLZOZFVUCYJh/UA3PsQja2jCCFph4S1APrpHV
-        egIEB+bCSkp/vLsNz08nwcB7p6UBE0HScLL8ptgA/2yrye1JGUIPRXtKIdrFjwKKwWZYRg1kBZ8CK
-        dcBNprTw==;
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=arhBM7ODFTcSa5+qFFe5tvRABS+f3ocF1NHE3qWZLHw=; b=uzMuCQI9oiAiJXmV2poCGyFAUd
+        Kcwe2oJL03qLrh69sk0HGCtU1LcqqVKvq9ZNgg9J4vH4vfmfmiwihiAbEMAYfmOlHi5Gd+95ssGQ0
+        2lD1mZ493v4hzOX2HcHHWI7HI1FzTGoIJ8nEKniM8DacOrfaF5SnhRc+2AaOEmnwtPqgrkxwC/rQA
+        8X4KV+l3wWc6VF7Kqfu+bkbyHaIUWn3QBuxwecfPwgP56dYAvXfO629W04zfzdDw51DBSPNf94ex5
+        +VXgcERsFPF6bu5/ca4STzoppNSxZ0s7UTvVhGE/9XbxXBZlfDlUmKM24PueZzL8Fy2Zv9PiAhOfo
+        W9+WZs7g==;
 Received: from 089144202225.atnat0011.highway.a1.net ([89.144.202.225] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jEHTq-00036U-8a
-        for linux-xfs@vger.kernel.org; Tue, 17 Mar 2020 19:02:22 +0000
+        id 1jEHVz-0003Dw-Gh; Tue, 17 Mar 2020 19:04:35 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 1/5] xfs: add a new xfs_sb_version_has_v3inode helper
-Date:   Tue, 17 Mar 2020 19:57:52 +0100
-Message-Id: <20200317185756.1063268-2-hch@lst.de>
+Cc:     Brian Foster <bfoster@redhat.com>,
+        Chandan Rajendra <chandanrlinux@gmail.com>
+Subject: [PATCH 2/5] xfs: only check the superblock version for dinode size calculation
+Date:   Tue, 17 Mar 2020 19:57:53 +0100
+Message-Id: <20200317185756.1063268-3-hch@lst.de>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200317185756.1063268-1-hch@lst.de>
 References: <20200317185756.1063268-1-hch@lst.de>
@@ -51,176 +52,238 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Add a new wrapper to check if a file system supports the v3 inode format
-with a larger dinode core.  Previously we used xfs_sb_version_hascrc for
-that, which is technically correct but a little confusing to read.
-
-Also move xfs_dinode_good_version next to xfs_sb_version_has_v3inode
-so that we have one place that documents the superblock version to
-inode version relationship.
+The size of the dinode structure is only dependent on the file system
+version, so instead of checking the individual inode version just use
+the newly added xfs_sb_version_has_large_dinode helper, and simplify
+various calling conventions.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
 ---
- fs/xfs/libxfs/xfs_format.h     | 17 +++++++++++++++++
- fs/xfs/libxfs/xfs_ialloc.c     |  4 ++--
- fs/xfs/libxfs/xfs_inode_buf.c  | 17 +++--------------
- fs/xfs/libxfs/xfs_inode_buf.h  |  2 --
- fs/xfs/libxfs/xfs_trans_resv.c |  2 +-
- fs/xfs/xfs_buf_item.c          |  2 +-
+ fs/xfs/libxfs/xfs_attr_leaf.c  |  5 ++---
+ fs/xfs/libxfs/xfs_bmap.c       | 10 ++++------
+ fs/xfs/libxfs/xfs_format.h     | 16 ++++++++--------
+ fs/xfs/libxfs/xfs_ialloc.c     |  2 +-
+ fs/xfs/libxfs/xfs_inode_buf.c  |  2 +-
+ fs/xfs/libxfs/xfs_inode_fork.c |  2 +-
+ fs/xfs/libxfs/xfs_inode_fork.h |  9 ++-------
+ fs/xfs/libxfs/xfs_log_format.h | 10 ++++------
+ fs/xfs/xfs_inode_item.c        |  4 ++--
  fs/xfs/xfs_log_recover.c       |  2 +-
- 7 files changed, 25 insertions(+), 21 deletions(-)
+ fs/xfs/xfs_symlink.c           |  2 +-
+ 11 files changed, 27 insertions(+), 37 deletions(-)
 
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 6eda1828a079..863444e2dda7 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -537,7 +537,7 @@ xfs_attr_shortform_bytesfit(
+ 	int			offset;
+ 
+ 	/* rounded down */
+-	offset = (XFS_LITINO(mp, dp->i_d.di_version) - bytes) >> 3;
++	offset = (XFS_LITINO(mp) - bytes) >> 3;
+ 
+ 	if (dp->i_d.di_format == XFS_DINODE_FMT_DEV) {
+ 		minforkoff = roundup(sizeof(xfs_dev_t), 8) >> 3;
+@@ -604,8 +604,7 @@ xfs_attr_shortform_bytesfit(
+ 	minforkoff = roundup(minforkoff, 8) >> 3;
+ 
+ 	/* attr fork btree root can have at least this many key/ptr pairs */
+-	maxforkoff = XFS_LITINO(mp, dp->i_d.di_version) -
+-			XFS_BMDR_SPACE_CALC(MINABTPTRS);
++	maxforkoff = XFS_LITINO(mp) - XFS_BMDR_SPACE_CALC(MINABTPTRS);
+ 	maxforkoff = maxforkoff >> 3;	/* rounded down */
+ 
+ 	if (offset >= maxforkoff)
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 8057486c02b5..fda13cd7add0 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -193,14 +193,12 @@ xfs_default_attroffset(
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	uint			offset;
+ 
+-	if (mp->m_sb.sb_inodesize == 256) {
+-		offset = XFS_LITINO(mp, ip->i_d.di_version) -
+-				XFS_BMDR_SPACE_CALC(MINABTPTRS);
+-	} else {
++	if (mp->m_sb.sb_inodesize == 256)
++		offset = XFS_LITINO(mp) - XFS_BMDR_SPACE_CALC(MINABTPTRS);
++	else
+ 		offset = XFS_BMDR_SPACE_CALC(6 * MINABTPTRS);
+-	}
+ 
+-	ASSERT(offset < XFS_LITINO(mp, ip->i_d.di_version));
++	ASSERT(offset < XFS_LITINO(mp));
+ 	return offset;
+ }
+ 
 diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index cd814f99da28..19899d48517c 100644
+index 19899d48517c..045556e78ee2 100644
 --- a/fs/xfs/libxfs/xfs_format.h
 +++ b/fs/xfs/libxfs/xfs_format.h
-@@ -497,6 +497,23 @@ static inline bool xfs_sb_version_hascrc(struct xfs_sb *sbp)
- 	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
- }
+@@ -954,8 +954,12 @@ enum xfs_dinode_fmt {
+ /*
+  * Inode size for given fs.
+  */
+-#define XFS_LITINO(mp, version) \
+-	((int)(((mp)->m_sb.sb_inodesize) - xfs_dinode_size(version)))
++#define XFS_DINODE_SIZE(sbp) \
++	(xfs_sb_version_has_v3inode(sbp) ? \
++		sizeof(struct xfs_dinode) : \
++		offsetof(struct xfs_dinode, di_crc))
++#define XFS_LITINO(mp) \
++	((mp)->m_sb.sb_inodesize - XFS_DINODE_SIZE(&(mp)->m_sb))
  
-+/*
-+ * v5 file systems support V3 inodes only, earlier file systems support
-+ * v2 and v1 inodes.
-+ */
-+static inline bool xfs_sb_version_has_v3inode(struct xfs_sb *sbp)
-+{
-+	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
-+}
-+
-+static inline bool xfs_dinode_good_version(struct xfs_sb *sbp,
-+		uint8_t version)
-+{
-+	if (xfs_sb_version_has_v3inode(sbp))
-+		return version == 3;
-+	return version == 1 || version == 2;
-+}
-+
- static inline bool xfs_sb_version_has_pquotino(struct xfs_sb *sbp)
- {
- 	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
+ /*
+  * Inode data & attribute fork sizes, per inode.
+@@ -964,13 +968,9 @@ enum xfs_dinode_fmt {
+ #define XFS_DFORK_BOFF(dip)		((int)((dip)->di_forkoff << 3))
+ 
+ #define XFS_DFORK_DSIZE(dip,mp) \
+-	(XFS_DFORK_Q(dip) ? \
+-		XFS_DFORK_BOFF(dip) : \
+-		XFS_LITINO(mp, (dip)->di_version))
++	(XFS_DFORK_Q(dip) ? XFS_DFORK_BOFF(dip) : XFS_LITINO(mp))
+ #define XFS_DFORK_ASIZE(dip,mp) \
+-	(XFS_DFORK_Q(dip) ? \
+-		XFS_LITINO(mp, (dip)->di_version) - XFS_DFORK_BOFF(dip) : \
+-		0)
++	(XFS_DFORK_Q(dip) ? XFS_LITINO(mp) - XFS_DFORK_BOFF(dip) : 0)
+ #define XFS_DFORK_SIZE(dip,mp,w) \
+ 	((w) == XFS_DATA_FORK ? \
+ 		XFS_DFORK_DSIZE(dip, mp) : \
 diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 21ac3fb52f4e..4de61af3b840 100644
+index 4de61af3b840..7fcf62b324b0 100644
 --- a/fs/xfs/libxfs/xfs_ialloc.c
 +++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -304,7 +304,7 @@ xfs_ialloc_inode_init(
- 	 * That means for v3 inode we log the entire buffer rather than just the
- 	 * inode cores.
- 	 */
--	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-+	if (xfs_sb_version_has_v3inode(&mp->m_sb)) {
- 		version = 3;
- 		ino = XFS_AGINO_TO_INO(mp, agno, XFS_AGB_TO_AGINO(mp, agbno));
+@@ -339,7 +339,7 @@ xfs_ialloc_inode_init(
+ 		xfs_buf_zero(fbuf, 0, BBTOB(fbuf->b_length));
+ 		for (i = 0; i < M_IGEO(mp)->inodes_per_cluster; i++) {
+ 			int	ioffset = i << mp->m_sb.sb_inodelog;
+-			uint	isize = xfs_dinode_size(version);
++			uint	isize = XFS_DINODE_SIZE(&mp->m_sb);
  
-@@ -2872,7 +2872,7 @@ xfs_ialloc_setup_geometry(
- 	 * cannot change the behavior.
- 	 */
- 	igeo->inode_cluster_size_raw = XFS_INODE_BIG_CLUSTER_SIZE;
--	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-+	if (xfs_sb_version_has_v3inode(&mp->m_sb)) {
- 		int	new_size = igeo->inode_cluster_size_raw;
- 
- 		new_size *= mp->m_sb.sb_inodesize / XFS_DINODE_MIN_SIZE;
+ 			free = xfs_make_iptr(mp, fbuf, i);
+ 			free->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
 diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 17e88a8c8353..c862c8f1aaa9 100644
+index c862c8f1aaa9..240d74840306 100644
 --- a/fs/xfs/libxfs/xfs_inode_buf.c
 +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -44,17 +44,6 @@ xfs_inobp_check(
- }
- #endif
- 
--bool
--xfs_dinode_good_version(
--	struct xfs_mount *mp,
--	__u8		version)
--{
--	if (xfs_sb_version_hascrc(&mp->m_sb))
--		return version == 3;
--
--	return version == 1 || version == 2;
--}
--
- /*
-  * If we are doing readahead on an inode buffer, we might be in log recovery
-  * reading an inode allocation buffer that hasn't yet been replayed, and hence
-@@ -93,7 +82,7 @@ xfs_inode_buf_verify(
- 		dip = xfs_buf_offset(bp, (i << mp->m_sb.sb_inodelog));
- 		unlinked_ino = be32_to_cpu(dip->di_next_unlinked);
- 		di_ok = xfs_verify_magic16(bp, dip->di_magic) &&
--			xfs_dinode_good_version(mp, dip->di_version) &&
-+			xfs_dinode_good_version(&mp->m_sb, dip->di_version) &&
- 			xfs_verify_agino_or_null(mp, agno, unlinked_ino);
- 		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
- 						XFS_ERRTAG_ITOBP_INOTOBP))) {
-@@ -454,7 +443,7 @@ xfs_dinode_verify(
- 
- 	/* Verify v3 integrity information first */
- 	if (dip->di_version >= 3) {
--		if (!xfs_sb_version_hascrc(&mp->m_sb))
-+		if (!xfs_sb_version_has_v3inode(&mp->m_sb))
+@@ -417,7 +417,7 @@ xfs_dinode_verify_forkoff(
+ 	case XFS_DINODE_FMT_LOCAL:	/* fall through ... */
+ 	case XFS_DINODE_FMT_EXTENTS:    /* fall through ... */
+ 	case XFS_DINODE_FMT_BTREE:
+-		if (dip->di_forkoff >= (XFS_LITINO(mp, dip->di_version) >> 3))
++		if (dip->di_forkoff >= (XFS_LITINO(mp) >> 3))
  			return __this_address;
- 		if (!xfs_verify_cksum((char *)dip, mp->m_sb.sb_inodesize,
- 				      XFS_DINODE_CRC_OFF))
-@@ -629,7 +618,7 @@ xfs_iread(
- 
- 	/* shortcut IO on inode allocation if possible */
- 	if ((iget_flags & XFS_IGET_CREATE) &&
--	    xfs_sb_version_hascrc(&mp->m_sb) &&
-+	    xfs_sb_version_has_v3inode(&mp->m_sb) &&
- 	    !(mp->m_flags & XFS_MOUNT_IKEEP)) {
- 		VFS_I(ip)->i_generation = prandom_u32();
- 		ip->i_d.di_version = 3;
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
-index 2683e1e2c4a6..66de5964045c 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.h
-+++ b/fs/xfs/libxfs/xfs_inode_buf.h
-@@ -59,8 +59,6 @@ void	xfs_inode_from_disk(struct xfs_inode *ip, struct xfs_dinode *from);
- void	xfs_log_dinode_to_disk(struct xfs_log_dinode *from,
- 			       struct xfs_dinode *to);
- 
--bool	xfs_dinode_good_version(struct xfs_mount *mp, __u8 version);
--
- #if defined(DEBUG)
- void	xfs_inobp_check(struct xfs_mount *, struct xfs_buf *);
- #else
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-index 7a9c04920505..d1a0848cb52e 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.c
-+++ b/fs/xfs/libxfs/xfs_trans_resv.c
-@@ -187,7 +187,7 @@ xfs_calc_inode_chunk_res(
- 			       XFS_FSB_TO_B(mp, 1));
- 	if (alloc) {
- 		/* icreate tx uses ordered buffers */
--		if (xfs_sb_version_hascrc(&mp->m_sb))
-+		if (xfs_sb_version_has_v3inode(&mp->m_sb))
- 			return res;
- 		size = XFS_FSB_TO_B(mp, 1);
- 	}
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 663810e6cd59..1545657c3ca0 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -345,7 +345,7 @@ xfs_buf_item_format(
- 	 * occurs during recovery.
+ 		break;
+ 	default:
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index ad2b9c313fd2..518c6f0ec3a6 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -183,7 +183,7 @@ xfs_iformat_local(
  	 */
- 	if (bip->bli_flags & XFS_BLI_INODE_BUF) {
--		if (xfs_sb_version_hascrc(&lip->li_mountp->m_sb) ||
-+		if (xfs_sb_version_has_v3inode(&lip->li_mountp->m_sb) ||
- 		    !((bip->bli_flags & XFS_BLI_INODE_ALLOC_BUF) &&
- 		      xfs_log_item_in_current_chkpt(lip)))
- 			bip->__bli_format.blf_flags |= XFS_BLF_INODE_BUF;
+ 	if (unlikely(size > XFS_DFORK_SIZE(dip, ip->i_mount, whichfork))) {
+ 		xfs_warn(ip->i_mount,
+-	"corrupt inode %Lu (bad size %d for local fork, size = %d).",
++	"corrupt inode %Lu (bad size %d for local fork, size = %zd).",
+ 			(unsigned long long) ip->i_ino, size,
+ 			XFS_DFORK_SIZE(dip, ip->i_mount, whichfork));
+ 		xfs_inode_verifier_error(ip, -EFSCORRUPTED,
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+index 500333d0101e..668ee942be22 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.h
++++ b/fs/xfs/libxfs/xfs_inode_fork.h
+@@ -46,14 +46,9 @@ struct xfs_ifork {
+ 			(ip)->i_afp : \
+ 			(ip)->i_cowfp))
+ #define XFS_IFORK_DSIZE(ip) \
+-	(XFS_IFORK_Q(ip) ? \
+-		XFS_IFORK_BOFF(ip) : \
+-		XFS_LITINO((ip)->i_mount, (ip)->i_d.di_version))
++	(XFS_IFORK_Q(ip) ? XFS_IFORK_BOFF(ip) : XFS_LITINO((ip)->i_mount))
+ #define XFS_IFORK_ASIZE(ip) \
+-	(XFS_IFORK_Q(ip) ? \
+-		XFS_LITINO((ip)->i_mount, (ip)->i_d.di_version) - \
+-			XFS_IFORK_BOFF(ip) : \
+-		0)
++	(XFS_IFORK_Q(ip) ? XFS_LITINO((ip)->i_mount) - XFS_IFORK_BOFF(ip) : 0)
+ #define XFS_IFORK_SIZE(ip,w) \
+ 	((w) == XFS_DATA_FORK ? \
+ 		XFS_IFORK_DSIZE(ip) : \
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index 9bac0d2e56dc..e3400c9c71cd 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -424,12 +424,10 @@ struct xfs_log_dinode {
+ 	/* structure must be padded to 64 bit alignment */
+ };
+ 
+-static inline uint xfs_log_dinode_size(int version)
+-{
+-	if (version == 3)
+-		return sizeof(struct xfs_log_dinode);
+-	return offsetof(struct xfs_log_dinode, di_next_unlinked);
+-}
++#define xfs_log_dinode_size(mp)						\
++	(xfs_sb_version_has_v3inode(&(mp)->m_sb) ?			\
++		sizeof(struct xfs_log_dinode) :				\
++		offsetof(struct xfs_log_dinode, di_next_unlinked))
+ 
+ /*
+  * Buffer Log Format definitions
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index f021b55a0301..451f9b6b2806 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -125,7 +125,7 @@ xfs_inode_item_size(
+ 
+ 	*nvecs += 2;
+ 	*nbytes += sizeof(struct xfs_inode_log_format) +
+-		   xfs_log_dinode_size(ip->i_d.di_version);
++		   xfs_log_dinode_size(ip->i_mount);
+ 
+ 	xfs_inode_item_data_fork_size(iip, nvecs, nbytes);
+ 	if (XFS_IFORK_Q(ip))
+@@ -370,7 +370,7 @@ xfs_inode_item_format_core(
+ 
+ 	dic = xlog_prepare_iovec(lv, vecp, XLOG_REG_TYPE_ICORE);
+ 	xfs_inode_to_log_dinode(ip, dic, ip->i_itemp->ili_item.li_lsn);
+-	xlog_finish_iovec(lv, *vecp, xfs_log_dinode_size(ip->i_d.di_version));
++	xlog_finish_iovec(lv, *vecp, xfs_log_dinode_size(ip->i_mount));
+ }
+ 
+ /*
 diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 6abc0863c9c3..c467488212c2 100644
+index c467488212c2..308cc5dcac14 100644
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -2997,7 +2997,7 @@ xlog_recover_inode_pass2(
- 	 * superblock flag to determine whether we need to look at di_flushiter
- 	 * to skip replay when the on disk inode is newer than the log one
+@@ -3068,7 +3068,7 @@ xlog_recover_inode_pass2(
+ 		error = -EFSCORRUPTED;
+ 		goto out_release;
+ 	}
+-	isize = xfs_log_dinode_size(ldip->di_version);
++	isize = xfs_log_dinode_size(mp);
+ 	if (unlikely(item->ri_buf[1].i_len > isize)) {
+ 		XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(7)",
+ 				     XFS_ERRLEVEL_LOW, mp, ldip,
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index ea42e25ec1bf..fa0fa3c70f1a 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -192,7 +192,7 @@ xfs_symlink(
+ 	 * The symlink will fit into the inode data fork?
+ 	 * There can't be any attributes so we get the whole variable part.
  	 */
--	if (!xfs_sb_version_hascrc(&mp->m_sb) &&
-+	if (!xfs_sb_version_has_v3inode(&mp->m_sb) &&
- 	    ldip->di_flushiter < be16_to_cpu(dip->di_flushiter)) {
- 		/*
- 		 * Deal with the wrap case, DI_MAX_FLUSH is less
+-	if (pathlen <= XFS_LITINO(mp, dp->i_d.di_version))
++	if (pathlen <= XFS_LITINO(mp))
+ 		fs_blocks = 0;
+ 	else
+ 		fs_blocks = xfs_symlink_blocks(mp, pathlen);
 -- 
 2.24.1
 
