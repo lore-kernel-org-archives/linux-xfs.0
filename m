@@ -6,24 +6,24 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C49CC0044D
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Mar 2020 01:39:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48AC0C0044D
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Mar 2020 02:25:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EE9D62051A
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Mar 2020 01:39:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 172AF20679
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Mar 2020 02:25:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726545AbgCQBjo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 Mar 2020 21:39:44 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:39606 "EHLO huawei.com"
+        id S1726474AbgCQCZc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 Mar 2020 22:25:32 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:11703 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726187AbgCQBjo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 16 Mar 2020 21:39:44 -0400
-Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id DFA70A8D0158A699481A;
-        Tue, 17 Mar 2020 09:39:41 +0800 (CST)
-Received: from [127.0.0.1] (10.184.213.217) by DGGEMS414-HUB.china.huawei.com
- (10.3.19.214) with Microsoft SMTP Server id 14.3.487.0; Tue, 17 Mar 2020
- 09:39:32 +0800
+        id S1726024AbgCQCZc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 16 Mar 2020 22:25:32 -0400
+Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id D90AC62159BFE652FCEF;
+        Tue, 17 Mar 2020 10:22:42 +0800 (CST)
+Received: from [127.0.0.1] (10.184.213.217) by DGGEMS410-HUB.china.huawei.com
+ (10.3.19.210) with Microsoft SMTP Server id 14.3.487.0; Tue, 17 Mar 2020
+ 10:22:34 +0800
 Subject: Re: [PATCH 1/2] xfs: always init fdblocks in mount
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 CC:     <bfoster@redhat.com>, <dchinner@redhat.com>, <sandeen@sandeen.net>,
@@ -33,8 +33,8 @@ References: <1584364028-122886-1-git-send-email-zhengbin13@huawei.com>
  <1584364028-122886-2-git-send-email-zhengbin13@huawei.com>
  <20200316151311.GD256767@magnolia>
 From:   "zhengbin (A)" <zhengbin13@huawei.com>
-Message-ID: <85de386b-2ca0-6192-e208-2c6b7bf77bd2@huawei.com>
-Date:   Tue, 17 Mar 2020 09:39:32 +0800
+Message-ID: <5a5c7fc4-eb67-0b0f-44d3-8ea3a7554c8e@huawei.com>
+Date:   Tue, 17 Mar 2020 10:22:33 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.3.0
 MIME-Version: 1.0
@@ -76,26 +76,7 @@ On 2020/3/16 23:13, Darrick J. Wong wrote:
 > allocation error, right...?  So I think the problem with incorrect AGF
 > contents (on upstream) is that writeback will fail due to ENOSPC, which
 > should never happen under normal circumstance?
-
-Yes, see commit d0c7feaf8767 ("xfs: add agf freeblocks verify in xfs_agf_verify")
-
-4.19-stable loops forerver, while linux-next will fail due to ENOSPC, cause commit
-
-c2b3164320b5 ("xfs: use the latest extent at writeback delalloc conversion time") remove
-the above while, dmesg is as follows:
-[   55.250114] XFS (loop0): page discard on page ffffea0008bc7380, inode 0x1b0c, offset 0.
-
-
-@sandeen, we can construct an img like this:
-
-dd if=/dev/zero of=xfs.img bs=1M count=20
-mkfs.xfs -d agcount=1 xfs.img
-xfs_db -x xfs.img
-agf 0
-write freeblks 0
-write longest 0
-quit
-
+>
 >> Make sure fdblocks is always inited in mount(also init ifree, icount).
 >>
 >> xfs_mountfs
@@ -154,6 +135,24 @@ quit
 > fresh fdblocks recomputation at mount, could you please refactor all of
 > the mount-time AG walks into a single loop?  And perhaps use xfs_pwork
 > so that we don't have to do it serially?
+xfs_mountfs
+  xfs_initialize_perag         -->just alloc memory
+  xfs_check_summary_counts
+    xfs_initialize_perag_data  -->read agf,agi from disk
+      for (index = 0; index < agcount; index++)
+        error = xfs_alloc_pagf_init(mp, NULL, index, 0)
+        error = xfs_ialloc_pagi_init(mp, NULL, index)
+  xfs_fs_reserve_ag_blocks
+    for (agno = 0; agno < mp->m_sb.sb_agcount; agno++)
+      xfs_ag_resv_init
+        #ifdef DEBUG  -->read agf
+          error = xfs_alloc_pagf_init(pag->pag_mount, tp, pag->pag_agno, 0)
+        #endif
+
+Is this? if enable XFS_DEBUG, xfs_initialize_perag_data read agf, xfs_ag_resv_init
+
+also read agf?
+
 >
 > --D
 >
