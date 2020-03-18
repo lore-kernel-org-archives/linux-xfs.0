@@ -2,78 +2,59 @@ Return-Path: <SRS0=sZmN=5D=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EE1EC10DCE
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Mar 2020 15:33:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4970EC10DCE
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Mar 2020 16:17:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EC3E320724
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Mar 2020 15:33:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15D4F2071C
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Mar 2020 16:17:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="qfWjl/v1"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="crPCbL9m"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726777AbgCRPdt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Mar 2020 11:33:49 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:40134 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726671AbgCRPdt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Mar 2020 11:33:49 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02IFO7Pt084855;
-        Wed, 18 Mar 2020 15:33:46 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=2bk/ZsRG+uxDxnIXHWuw7hiAIFmMjmoZ2PIiSa4q4D8=;
- b=qfWjl/v1gKqV8OG2OLHZS9Ce3RjbvZtvHs+vQQ/tszVAAoTtrFkw0myD13Dt2GQvX9Gu
- gERIMUYHat5Awvi7Gu+GIaqPUu9dKL655ZaYrDa/zWnMZ0y4i5PELZz9RjbefE4Sxai4
- 68iy9/40HCcPOEUBHClC3CQUruJ7yu0N7fmt6Phy4SNdcSiwIGyv2Yel3+GLuVBlWHyW
- whhRT/7F9HPVUVdQfDsirDtQ8+ikvO0Tbdq/aGNo12drZYuiUzWJ8F1l1nzJF2vkFCeY
- tYdHHFXjJApqy52tNwSyHTBlKyniP72CboVOfvmG+mxEEQgoI4fbSU4yZME3ep4DSjJU CQ== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2yub2736vx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Mar 2020 15:33:45 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02IFMfJS144432;
-        Wed, 18 Mar 2020 15:33:45 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 2ys8tu16wf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Mar 2020 15:33:44 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 02IFXiKW003429;
-        Wed, 18 Mar 2020 15:33:44 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 18 Mar 2020 08:33:44 -0700
-Date:   Wed, 18 Mar 2020 08:33:43 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+        id S1726903AbgCRQRc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Mar 2020 12:17:32 -0400
+Received: from us-smtp-delivery-74.mimecast.com ([216.205.24.74]:37816 "EHLO
+        us-smtp-delivery-74.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726473AbgCRQRc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Mar 2020 12:17:32 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1584548250;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=HT5sI7N96lC4/PITaS1UR7Bk5oKnLhLI23BYwkOZPl0=;
+        b=crPCbL9mnGGF+CAUpyQpk5u61Y535f/nrV9IfX3u2UjMvrZdSsIiN24q+880/wkze5frXa
+        75udBX6MMEkIEYkiKaDFLI1pseN1nK2dp46/M0x+PttrkbDgc2enFFsGAyViG1ZRtEv49R
+        KvuwmEUk/SwK3iLhzQr+BbPuaUkkK+A=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-467-tl5sppXKM7OzNZkPQEPqrg-1; Wed, 18 Mar 2020 12:17:28 -0400
+X-MC-Unique: tl5sppXKM7OzNZkPQEPqrg-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D8A5B18FF661;
+        Wed, 18 Mar 2020 16:17:27 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7A0DA5C1D8;
+        Wed, 18 Mar 2020 16:17:27 +0000 (UTC)
+Date:   Wed, 18 Mar 2020 12:17:25 -0400
+From:   Brian Foster <bfoster@redhat.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org
 Subject: Re: [PATCH 1/5] xfs: add a new xfs_sb_version_has_v3inode helper
-Message-ID: <20200318153343.GB256767@magnolia>
+Message-ID: <20200318161725.GF32848@bfoster>
 References: <20200317185756.1063268-1-hch@lst.de>
  <20200317185756.1063268-2-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20200317185756.1063268-2-hch@lst.de>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9564 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 mlxscore=0
- malwarescore=0 suspectscore=0 mlxlogscore=999 spamscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2003180073
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9564 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 impostorscore=0
- mlxlogscore=999 mlxscore=0 phishscore=0 adultscore=0 suspectscore=0
- clxscore=1015 priorityscore=1501 lowpriorityscore=0 bulkscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2003180073
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -89,13 +70,10 @@ On Tue, Mar 17, 2020 at 07:57:52PM +0100, Christoph Hellwig wrote:
 > inode version relationship.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Looks ok, will test...
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
 > ---
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
 >  fs/xfs/libxfs/xfs_format.h     | 17 +++++++++++++++++
 >  fs/xfs/libxfs/xfs_ialloc.c     |  4 ++--
 >  fs/xfs/libxfs/xfs_inode_buf.c  | 17 +++--------------
@@ -259,3 +237,4 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 > -- 
 > 2.24.1
 > 
+
