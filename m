@@ -2,109 +2,285 @@ Return-Path: <SRS0=sZmN=5D=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC56AC5ACD7
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Mar 2020 16:56:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA037C10DCE
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Mar 2020 17:13:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9409520724
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Mar 2020 16:56:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 77AA12071C
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Mar 2020 17:13:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="DeNbXM1E"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VMFzr/Lx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727193AbgCRQ4d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Mar 2020 12:56:33 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:55118 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726506AbgCRQ4d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Mar 2020 12:56:33 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02IGtjvq112013;
-        Wed, 18 Mar 2020 16:56:29 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=ZEUebHxpC8v3ft1+kV43vNtEG4/dMnunebyI4e5bUpA=;
- b=DeNbXM1EN7Y0fbNr/dgnrwVgZBHWDd1YRNzZsvK/PQKOtgmwCbtKJtxFa0c2P0KqMWe/
- laBhCYVmJqugbQtpby6R3xGf31gIEWhnGp3bbDMBa0nleLMy1AGFMv7Cd6YpoOFuGbL5
- OgSPvjqENf8bchSxdv+rkkyu8mO74+4vFi/I2BRWNIv+vDdBQmwZ0d2smJuOJE4tfnR+
- nJatzeDVo5WT0r0mPLA98z93rgPRZc2kdEmfWVaJME2kekKSWnRTQOm4pSuGANB4WVbG
- TjyDpl+fyq+cHFxsVPAkiERTL/OYqPEbZRgB0coe+QLtOMqIfSfEop4nCdyW1imWVSAY 7g== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2yrpprbvnj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Mar 2020 16:56:29 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02IGnmO8143227;
-        Wed, 18 Mar 2020 16:56:28 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2ys92h011s-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Mar 2020 16:56:28 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 02IGuQTq008599;
-        Wed, 18 Mar 2020 16:56:26 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 18 Mar 2020 09:56:25 -0700
-Date:   Wed, 18 Mar 2020 09:56:24 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: iomap-for-next updated to d9973ce2fe5b
-Message-ID: <20200318165624.GA256740@magnolia>
+        id S1726638AbgCRRN4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Mar 2020 13:13:56 -0400
+Received: from us-smtp-delivery-74.mimecast.com ([63.128.21.74]:33883 "EHLO
+        us-smtp-delivery-74.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726623AbgCRRNz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Mar 2020 13:13:55 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1584551633;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Bvn/BOfHlMmHUKuLR+8dugoXH64B16plXMrPQ8U4dj8=;
+        b=VMFzr/LxzU/Hz9ypxywQ+2KyNrxv5zUMWt4YmKezaPywjhrpYcZpMLGg863eSQNtbdPTEC
+        SOBpOwN0MoRWtchCCNtHHvy1BikNUxcx32RuKHRWzMsjrHgpD1bPIT8cS9H1bkThkmRyNY
+        0G+0xckff2jl022VhJD+NN2G+/AVIrk=
+Received: from mail-ua1-f71.google.com (mail-ua1-f71.google.com
+ [209.85.222.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-246-AruSBVhnO4eS3IOHCqGzww-1; Wed, 18 Mar 2020 13:13:52 -0400
+X-MC-Unique: AruSBVhnO4eS3IOHCqGzww-1
+Received: by mail-ua1-f71.google.com with SMTP id 77so4489262uaj.8
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Mar 2020 10:13:52 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=Bvn/BOfHlMmHUKuLR+8dugoXH64B16plXMrPQ8U4dj8=;
+        b=o5Dy7kWAXAIJoD8FejzPtDAuJnhWV6yrDODth9fkJhwoegR0lk/IHU0VwqaKV+WFQY
+         Myjsx3+i6UIPe5OkwXU2Qtd2rJ0JKPAK3C6MkD1gnNp6hScL11vzRCGmKFGS+Jh5Mi1P
+         rfeVbq+dd6W8kDlJz9U7W5DwRAu2ZnEf5ckFylw1cSzVKwy1LLv9+ggN7J9yAJUjMgru
+         b7+EdvJjJ+eVFu7jV+Fe4VCSDGNOc54BDROVaOgbPZVdeF3fphRPslEX1VgDdDrUcOGq
+         sYsjLdxT/AdSHJW2huYd901qBcrXPPF+ICvj/1pFhtCWWrQCkSQMkHuP6SNpwnZiKwYg
+         ZBmw==
+X-Gm-Message-State: ANhLgQ0YWOHAvIAnQFGbns39io9B7qa20Yt4x4wREQ1/ZYDSmlQ2JLwI
+        qMdPmAZz8Hc1pff67e8RQHZNEGKCyP14ATO0qn35iNktBOARb/XGWM3A9hc6Fhj8qWmBu0tyXSU
+        8CZffE37s6x1lbkyYANZA1TrDojynRGdIbPyA
+X-Received: by 2002:a67:30c4:: with SMTP id w187mr4030525vsw.77.1584551631444;
+        Wed, 18 Mar 2020 10:13:51 -0700 (PDT)
+X-Google-Smtp-Source: ADFU+vvIKnEfzoWGegZGVm+mQgOZ00ha9qMN2x0vTJEoSPKmOt9BAVc2t1/CRhr6uLLOkazWv1zjxuWRtgpltgWSJNM=
+X-Received: by 2002:a67:30c4:: with SMTP id w187mr4030500vsw.77.1584551631089;
+ Wed, 18 Mar 2020 10:13:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9564 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
- mlxscore=0 spamscore=0 bulkscore=0 adultscore=0 suspectscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2003180076
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9564 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0
- suspectscore=0 lowpriorityscore=0 phishscore=0 adultscore=0 clxscore=1015
- impostorscore=0 priorityscore=1501 spamscore=0 mlxlogscore=999 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2003180076
+References: <20200227203636.317790-1-preichl@redhat.com> <20200227203636.317790-2-preichl@redhat.com>
+ <20200228171014.GC8070@magnolia>
+In-Reply-To: <20200228171014.GC8070@magnolia>
+From:   Pavel Reichl <preichl@redhat.com>
+Date:   Wed, 18 Mar 2020 18:13:32 +0100
+Message-ID: <CAJc7PzUGViiVOuaJz8+cPoxGZZiLkNq23vamCdLktJtxpmRh_Q@mail.gmail.com>
+Subject: Re: [PATCH v6 1/4] xfs: Refactor xfs_isilocked()
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Fri, Feb 28, 2020 at 6:10 PM Darrick J. Wong <darrick.wong@oracle.com> w=
+rote:
+>
+> On Thu, Feb 27, 2020 at 09:36:33PM +0100, Pavel Reichl wrote:
+> > Refactor xfs_isilocked() to use newly introduced __xfs_rwsem_islocked()=
+.
+> > __xfs_rwsem_islocked() is a helper function which encapsulates checking
+> > state of rw_semaphores hold by inode.
+> >
+> > Signed-off-by: Pavel Reichl <preichl@redhat.com>
+> > Suggested-by: Dave Chinner <dchinner@redhat.com>
+> > Suggested-by: Eric Sandeen <sandeen@redhat.com>
+> > ---
+> > Changes from V5:
+> >       Drop shared flag from __xfs_rwsem_islocked()
+> >
+> >
+> >  fs/xfs/xfs_inode.c | 42 ++++++++++++++++++++++++++----------------
+> >  fs/xfs/xfs_inode.h |  2 +-
+> >  2 files changed, 27 insertions(+), 17 deletions(-)
+> >
+> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > index c5077e6326c7..4faf7827717b 100644
+> > --- a/fs/xfs/xfs_inode.c
+> > +++ b/fs/xfs/xfs_inode.c
+> > @@ -345,32 +345,42 @@ xfs_ilock_demote(
+> >  }
+> >
+> >  #if defined(DEBUG) || defined(XFS_WARN)
+> > -int
+> > +static inline bool
+> > +__xfs_rwsem_islocked(
+> > +     struct rw_semaphore     *rwsem,
+> > +     bool                    excl)
+> > +{
+> > +     if (!rwsem_is_locked(rwsem))
+> > +             return false;
+>
+> So, uh, I finally made the time to dig through what exactly lockdep
+> provides as far as testing functions, and came up with the following
+> truth table for the old xfs_isilocked behavior w.r.t. IOLOCK:
 
-The iomap-for-next branch of the xfs-linux repository at:
+Thank you for doing that and I'm sorry that I'm replying with such a delay.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+>
+> (nolockdep corresponds to debug_locks =3D=3D 0)
+>
+> RWSEM STATE             PARAMETERS TO XFS_ISILOCKED:
+>                         SHARED  EXCL    SHARED | EXCL
+> readlocked              y       n       y
+> writelocked             y       y       y
+> unlocked                n       n       n
+> nolockdep readlocked    y       y       y
+> nolockdep writelocked   y       y       y
+> nolockdep unlocked      n       y       n
+>
+> Note that EXCL =C3=97 nolockdep_unlocked returns an incorrect result, but
+> because we only use it with ASSERTs there haven't been any failures
+> reported.
+>
+> And here's your new version:
+>
+> readlocked              y       y       y
+> writelocked             y       n       n
+> unlocked                n       n       n
+> nolockdep readlocked    y       y       y
+> nolockdep writelocked   y       y       y
+> nolockdep unlocked      n       n       n
+>
+> Thanks for fixing the false positive that I mentioned above.
+>
+> > +
+> > +     if (debug_locks && excl)
+> > +             return lockdep_is_held_type(rwsem, 1);
+>
+> This is wrong, the second parameter of lockdep_is_held_type is 0 to test
+> if the rwsem is write-locked; 1 to test if it is read-locked; or -1 to
+> test if the rwsem is read or write-locked.
 
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the iomap-for-next branch is commit:
-
-d9973ce2fe5b iomap: fix comments in iomap_dio_rw
-
-New Commits:
-
-Matthew Wilcox (Oracle) (1):
-      [1ac994525b9d] iomap: Remove pgoff from tracepoints
-
-yangerkun (1):
-      [d9973ce2fe5b] iomap: fix comments in iomap_dio_rw
+Thank you for noticing.
 
 
-Code Diffstat:
+>
+> So, this function's call signature should change so that callers can
+> communicate both _SHARED and _EXCL; and then you can pick the correct
 
- fs/iomap/buffered-io.c |  7 ++++---
- fs/iomap/direct-io.c   |  4 ++--
- fs/iomap/trace.h       | 27 +++++++++++----------------
- 3 files changed, 17 insertions(+), 21 deletions(-)
+Thanks for the suggestion...but that's how v5 signature looked like
+before Christoph and Eric requested change...on the grounds that
+there're:
+*  confusion over a (true, true) set of args
+*  confusion of what happens if we pass (false, false).
+
+> "r" parameter value for the lockdep_is_held_type() call.  Then all of
+> this becomes:
+>
+>         if !debug_locks:
+>                 return rwsem_is_locked(rwsem)
+>
+>         if shared and excl:
+>                 r =3D -1
+>         elif shared:
+>                 r =3D 1
+>         else:
+>                 r =3D 0
+>         return lockdep_is_held_type(rwsem, r)
+
+I tried to create a table for this code as well:
+
+readlocked              y       n       y
+writelocked             *n*       y       y
+unlocked                n       n       n
+nolockdep readlocked    y       y       y
+nolockdep writelocked   y       y       y
+nolockdep unlocked      n       n       n
+
+I think that when we query writelocked lock for being shared having
+'no' for an answer may not be expected...or at least this is how I
+read the code.
+
+int __lock_is_held(const struct lockdep_map *lock, int read)
+{
+        struct task_struct *curr =3D current;
+        int i;
+
+        for (i =3D 0; i < curr->lockdep_depth; i++) {
+                struct held_lock *hlock =3D curr->held_locks + i;
+
+                if (match_held_lock(hlock, lock)) {
+                        if (read =3D=3D -1 || hlock->read =3D=3D read)
+                                return 1;
+
+                        return 0;
+                }
+        }
+
+        return 0;
+}
+
+Thanks for any comments
+
+>
+> Note also that you don't necessarily need to pass shared and excl as
+> separate parameters (as you did in v3); the XFS_*LOCK_{EXCL,SHARED}
+> definitions enable you to take care of all that with some clever bit
+> shifting and masking.
+>
+> --D
+>
+> > +
+> > +     return true;
+> > +}
+> > +
+> > +bool
+> >  xfs_isilocked(
+> > -     xfs_inode_t             *ip,
+> > +     struct xfs_inode        *ip,
+> >       uint                    lock_flags)
+> >  {
+> > -     if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) {
+> > -             if (!(lock_flags & XFS_ILOCK_SHARED))
+> > -                     return !!ip->i_lock.mr_writer;
+> > -             return rwsem_is_locked(&ip->i_lock.mr_lock);
+> > +     if (lock_flags & (XFS_ILOCK_EXCL | XFS_ILOCK_SHARED)) {
+> > +             return __xfs_rwsem_islocked(&ip->i_lock.mr_lock,
+> > +                             (lock_flags & XFS_ILOCK_EXCL));
+> >       }
+> >
+> > -     if (lock_flags & (XFS_MMAPLOCK_EXCL|XFS_MMAPLOCK_SHARED)) {
+> > -             if (!(lock_flags & XFS_MMAPLOCK_SHARED))
+> > -                     return !!ip->i_mmaplock.mr_writer;
+> > -             return rwsem_is_locked(&ip->i_mmaplock.mr_lock);
+> > +     if (lock_flags & (XFS_MMAPLOCK_EXCL | XFS_MMAPLOCK_SHARED)) {
+> > +             return __xfs_rwsem_islocked(&ip->i_mmaplock.mr_lock,
+> > +                             (lock_flags & XFS_MMAPLOCK_EXCL));
+> >       }
+> >
+> > -     if (lock_flags & (XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED)) {
+> > -             if (!(lock_flags & XFS_IOLOCK_SHARED))
+> > -                     return !debug_locks ||
+> > -                             lockdep_is_held_type(&VFS_I(ip)->i_rwsem,=
+ 0);
+> > -             return rwsem_is_locked(&VFS_I(ip)->i_rwsem);
+> > +     if (lock_flags & (XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED)) {
+> > +             return __xfs_rwsem_islocked(&VFS_I(ip)->i_rwsem,
+> > +                             (lock_flags & XFS_IOLOCK_EXCL));
+> >       }
+> >
+> >       ASSERT(0);
+> > -     return 0;
+> > +     return false;
+> >  }
+> >  #endif
+> >
+> > diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> > index 492e53992fa9..3d7ce355407d 100644
+> > --- a/fs/xfs/xfs_inode.h
+> > +++ b/fs/xfs/xfs_inode.h
+> > @@ -416,7 +416,7 @@ void              xfs_ilock(xfs_inode_t *, uint);
+> >  int          xfs_ilock_nowait(xfs_inode_t *, uint);
+> >  void         xfs_iunlock(xfs_inode_t *, uint);
+> >  void         xfs_ilock_demote(xfs_inode_t *, uint);
+> > -int          xfs_isilocked(xfs_inode_t *, uint);
+> > +bool         xfs_isilocked(xfs_inode_t *, uint);
+> >  uint         xfs_ilock_data_map_shared(struct xfs_inode *);
+> >  uint         xfs_ilock_attr_map_shared(struct xfs_inode *);
+> >
+> > --
+> > 2.24.1
+> >
+>
+
