@@ -2,32 +2,34 @@ Return-Path: <SRS0=sZmN=5D=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EF1BC10F29
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Mar 2020 17:26:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0F56C10DCE
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Mar 2020 17:46:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 831BC20757
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Mar 2020 17:26:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 78FEA20752
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Mar 2020 17:46:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726912AbgCRR03 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Mar 2020 13:26:29 -0400
-Received: from sandeen.net ([63.231.237.45]:40406 "EHLO sandeen.net"
+        id S1726619AbgCRRqj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Mar 2020 13:46:39 -0400
+Received: from sandeen.net ([63.231.237.45]:41420 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726781AbgCRR02 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 18 Mar 2020 13:26:28 -0400
+        id S1726506AbgCRRqj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 18 Mar 2020 13:46:39 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id B772F2A78;
-        Wed, 18 Mar 2020 12:25:31 -0500 (CDT)
-Subject: Re: [PATCH] xfstests: remove xfs/191-input-validation
-To:     Christoph Hellwig <hch@lst.de>, guaneryu@gmail.com
-Cc:     jtulak@redhat.com, fstests@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-References: <20200318172115.1120964-1-hch@lst.de>
+        by sandeen.net (Postfix) with ESMTPSA id 4351A2A78;
+        Wed, 18 Mar 2020 12:45:42 -0500 (CDT)
+Subject: Re: [PATCH v6 1/4] xfs: Refactor xfs_isilocked()
+To:     Pavel Reichl <preichl@redhat.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <20200227203636.317790-1-preichl@redhat.com>
+ <20200227203636.317790-2-preichl@redhat.com> <20200228171014.GC8070@magnolia>
+ <CAJc7PzUGViiVOuaJz8+cPoxGZZiLkNq23vamCdLktJtxpmRh_Q@mail.gmail.com>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -71,27 +73,80 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <48c8954c-cdf3-1dfa-a566-ab949b3b2e41@sandeen.net>
-Date:   Wed, 18 Mar 2020 12:26:27 -0500
+Message-ID: <62b07adc-eb63-0fd2-8206-38052abfe494@sandeen.net>
+Date:   Wed, 18 Mar 2020 12:46:37 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.5.0
 MIME-Version: 1.0
-In-Reply-To: <20200318172115.1120964-1-hch@lst.de>
+In-Reply-To: <CAJc7PzUGViiVOuaJz8+cPoxGZZiLkNq23vamCdLktJtxpmRh_Q@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 3/18/20 12:21 PM, Christoph Hellwig wrote:
-> This test has constantly failed since it was added, and the promised
-> input validation never materialized.
+On 3/18/20 12:13 PM, Pavel Reichl wrote:
+> On Fri, Feb 28, 2020 at 6:10 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+
+...
+
+>> So, this function's call signature should change so that callers can
+>> communicate both _SHARED and _EXCL; and then you can pick the correct
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Thanks for the suggestion...but that's how v5 signature looked like
+> before Christoph and Eric requested change...on the grounds that
+> there're:
+> *  confusion over a (true, true) set of args
+> *  confusion of what happens if we pass (false, false).
+> 
+>> "r" parameter value for the lockdep_is_held_type() call.  Then all of
+>> this becomes:
+>>
+>>         if !debug_locks:
+>>                 return rwsem_is_locked(rwsem)
+>>
+>>         if shared and excl:
+>>                 r = -1
+>>         elif shared:
+>>                 r = 1
+>>         else:
+>>                 r = 0
+>>         return lockdep_is_held_type(rwsem, r)
+> 
+> I tried to create a table for this code as well:
 
-Hah, I was just thinking about doing this today, thank you.
+<adding back the table headers>
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> (nolockdep corresponds to debug_locks == 0)
+>
+> RWSEM STATE             PARAMETERS TO XFS_ISILOCKED:
+>                         SHARED  EXCL    SHARED | EXCL
+> readlocked              y       n       y
+> writelocked             *n*     y       y
+> unlocked                n       n       n
+> nolockdep readlocked    y       y       y
+> nolockdep writelocked   y       y       y
+> nolockdep unlocked      n       n       n
+> 
+> I think that when we query writelocked lock for being shared having
+> 'no' for an answer may not be expected...or at least this is how I
+> read the code.
 
+This might be ok, because
+a) it is technically correct (is it shared? /no/ it is exclusive), and
+b) in the XFS code today we never call:
+
+	xfs_isilocked(ip, XFS_ILOCK_SHARED);
+
+it's always:
+
+	xfs_isilocked(ip, XFS_ILOCK_SHARED | XFS_ILOCK_EXCL);
+
+So I think that if we document the behavior clearly, the truth table above
+would be ok.
+
+Thoughts?
+
+-Eric
