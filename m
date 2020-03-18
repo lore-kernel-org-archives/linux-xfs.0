@@ -2,124 +2,104 @@ Return-Path: <SRS0=sZmN=5D=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9DBDC10DCE
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Mar 2020 19:10:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4E27C10DCE
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Mar 2020 19:24:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CD5C720754
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Mar 2020 19:10:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8EFF62072C
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Mar 2020 19:24:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Sw8jEp2a"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726638AbgCRTKh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Mar 2020 15:10:37 -0400
-Received: from sandeen.net ([63.231.237.45]:45712 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726663AbgCRTKh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 18 Mar 2020 15:10:37 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1726638AbgCRTYr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Mar 2020 15:24:47 -0400
+Received: from us-smtp-delivery-74.mimecast.com ([63.128.21.74]:56860 "EHLO
+        us-smtp-delivery-74.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726631AbgCRTYr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Mar 2020 15:24:47 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1584559485;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=R/Q/70qeGmxVMHa9r0iT9OL/7qOJPEwceRt7CQ/kfHw=;
+        b=Sw8jEp2aoCNLSITtwPTCFuPVJ6whFwowT0RgyaBlOrPqeZqTR4HjfHqDOmSDYrtUg/d62W
+        e5LJMBqkjb4egPIDjDJrwrrZy6D2KkEHxDNk9urZQndBeEszKzAXSTMC8Xv4sXcThpTDsE
+        5g7QRD4tMNZMMbNdBhW/OKvgyhTZCsI=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-330-ND3E3Px9MmaxmKTudXVibg-1; Wed, 18 Mar 2020 15:24:43 -0400
+X-MC-Unique: ND3E3Px9MmaxmKTudXVibg-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id D4E612A78;
-        Wed, 18 Mar 2020 14:09:39 -0500 (CDT)
-Subject: Re: [PATCH v6 1/4] xfs: Refactor xfs_isilocked()
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Pavel Reichl <preichl@redhat.com>, linux-xfs@vger.kernel.org
-References: <20200227203636.317790-1-preichl@redhat.com>
- <20200227203636.317790-2-preichl@redhat.com> <20200228171014.GC8070@magnolia>
- <CAJc7PzUGViiVOuaJz8+cPoxGZZiLkNq23vamCdLktJtxpmRh_Q@mail.gmail.com>
- <62b07adc-eb63-0fd2-8206-38052abfe494@sandeen.net>
- <20200318184927.GE256767@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <4a8ae816-58d2-ca35-0acc-0399f5a168fd@sandeen.net>
-Date:   Wed, 18 Mar 2020 14:10:34 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.5.0
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 29E8418AB2FB;
+        Wed, 18 Mar 2020 19:24:41 +0000 (UTC)
+Received: from localhost (dhcp-12-102.nay.redhat.com [10.66.12.102])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 8353A90803;
+        Wed, 18 Mar 2020 19:24:40 +0000 (UTC)
+Date:   Thu, 19 Mar 2020 03:35:59 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     fstests <fstests@vger.kernel.org>
+Cc:     Eryu Guan <guaneryu@gmail.com>, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] generic/587: fix rounding error in quota/stat block
+ comparison
+Message-ID: <20200318193559.GH14282@dhcp-12-102.nay.redhat.com>
+Mail-Followup-To: fstests <fstests@vger.kernel.org>,
+        Eryu Guan <guaneryu@gmail.com>, xfs <linux-xfs@vger.kernel.org>
+References: <20200318150142.GA256607@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20200318184927.GE256767@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200318150142.GA256607@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 3/18/20 1:49 PM, Darrick J. Wong wrote:
->>> I think that when we query writelocked lock for being shared having
->>> 'no' for an answer may not be expected...or at least this is how I
->>> read the code.
->> This might be ok, because
->> a) it is technically correct (is it shared? /no/ it is exclusive), and
->> b) in the XFS code today we never call:
->>
->> 	xfs_isilocked(ip, XFS_ILOCK_SHARED);
->>
->> it's always:
->>
->> 	xfs_isilocked(ip, XFS_ILOCK_SHARED | XFS_ILOCK_EXCL);
->>
->> So I think that if we document the behavior clearly, the truth table above
->> would be ok.
->>
->> Thoughts?
-> No, Pavel's right, I got the pseudocode wrong, because holding a write
-> lock means you also hold the read lock.
+On Wed, Mar 18, 2020 at 08:01:42AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> 	if !debug_locks:
-> 		return rwsem_is_locked(rwsem)
+> It turns out that repquota (which reports in units of 1k blocks) reports
+> rounded up numbers when the fs blocksize is 512 bytes.  However, xfs_io
+> stat always reports block counts in units of 512 bytes.  If the number
+> of (512b) file blocks is not an even number, the "$3 / 2" expression
+> will round down, causing the test to fail.  Round up to the nearest 1k
+> to match repquota's behavior.
 > 
-> 	if shared:
-> 		r = -1
-> 	else:
-> 		r = 0
-> 	return lockdep_is_held_type(rwsem, r)
+> Reported-by: zlang@redhat.com
+> Fixes: 6b04ed05456fc6c ("generic: test unwritten extent conversion extent mapping quota accounting")
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-I think it comes down to semantics, and either way is fine as long as we
-don't change the behavior of existing callers, and document exactly what
-the islocked function does now.
+I've tested this patch. It's good to me. If we can add a simple comment before
+doing "($3 + 1)", to explain why we need a "blocks + 1" at here, that would be
+better for others read this code.
 
--Eric
+Reviewed-by: Zorro Lang <zlang@redhat.com>
+
+>  tests/generic/587 |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/tests/generic/587 b/tests/generic/587
+> index 7b07d07d..2ffa367d 100755
+> --- a/tests/generic/587
+> +++ b/tests/generic/587
+> @@ -57,7 +57,8 @@ check_quota_accounting()
+>  {
+>  	$XFS_IO_PROG -c stat $testfile > $tmp.out
+>  	cat $tmp.out >> $seqres.full
+> -	local stat_blocks=$(grep 'stat.blocks' $tmp.out | awk '{print $3 / 2}')
+> +	local stat_blocks=$(grep 'stat.blocks' $tmp.out | \
+> +		awk '{printf("%d\n", ($3 + 1) / 2);}')
+>  
+>  	_report_quota_blocks $SCRATCH_MNT > $tmp.out
+>  	cat $tmp.out >> $seqres.full
+> 
+
