@@ -2,116 +2,172 @@ Return-Path: <SRS0=LwPM=5E=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56A54C4332D
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Mar 2020 13:26:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EAE6C4332D
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Mar 2020 13:37:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 28E76208D6
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Mar 2020 13:26:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0F8D208E4
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Mar 2020 13:37:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ieee.org header.i=@ieee.org header.b="ge1bTVbP"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NRfAABCY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727974AbgCSN02 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Mar 2020 09:26:28 -0400
-Received: from mail-io1-f67.google.com ([209.85.166.67]:36206 "EHLO
-        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730786AbgCSN02 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Mar 2020 09:26:28 -0400
-Received: by mail-io1-f67.google.com with SMTP id d15so2231518iog.3
-        for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2020 06:26:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ieee.org; s=google;
-        h=subject:to:references:from:message-id:date:user-agent:mime-version
-         :in-reply-to:content-language:content-transfer-encoding;
-        bh=ELzuLaETk+r2ZXzUPTvEeZ+DOphV4yXCIcFXj69MsNI=;
-        b=ge1bTVbPAUe6up49inz2h5oOtZAnsYo3qnbEXPjFiwrC94fxXjKA5N+hX5v6phl1er
-         DiET8IKSFeg9BAvbAf7DJ3UcjuClzFI/DwgvxFeNjRYMwJG+/vLRykcBfsBtbChRnIxu
-         3lx6PD7yM+uqLzFTsOrmidL512kykJnV+Uh2g=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=ELzuLaETk+r2ZXzUPTvEeZ+DOphV4yXCIcFXj69MsNI=;
-        b=IxhdKTMfJX2aXqnOE9r9WH8KieJJqoRARW0Cwali/OmPBcIG0C/iV0f7qZfROPpE/P
-         AdGVM6pKOUTaGU2gbxAK8vHcG9ZfjhFG85wr7xY6MAMVvF4ZTp3dD4H8ELClC0UgoE3O
-         N+I3NAngGRncG1J9VhEVJeZykzcURJZckWDuI8HK0ELOhHgH0YCWnBzmqSM00V66ihMG
-         0WpB6l180Yv4Audst7CQjcQ6OuZ8dn0Itgxrbn35lIUJ77nxisoOi42coWeObVtwrxr4
-         yyDCDq56ggP51RezlZB4iodI3Qr7Kkdt/AUP79Z0lFrVJ3CthFD9/OIaEie/XbbXD3hy
-         i8Nw==
-X-Gm-Message-State: ANhLgQ25xvByAPOHsdklKOa70zdhFmfHXpcRDhbixQjD/CrqDb15dv9N
-        IWWWEfiBz+yz9FZcuUuRSW+wpswQAYo=
-X-Google-Smtp-Source: ADFU+vtZ2pAF36LHorptU/g17HKI6xC4McFW0/1wVvgewt2zUPkUjvPlFwAekEnJhH3wwZwaOW7tmQ==
-X-Received: by 2002:a02:1683:: with SMTP id a125mr3039836jaa.61.1584624386564;
-        Thu, 19 Mar 2020 06:26:26 -0700 (PDT)
-Received: from [172.22.22.26] (c-73-185-129-58.hsd1.mn.comcast.net. [73.185.129.58])
-        by smtp.googlemail.com with ESMTPSA id g12sm862429ilj.14.2020.03.19.06.26.25
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 19 Mar 2020 06:26:25 -0700 (PDT)
-Subject: Re: [PATCH] xfs: remove unused SHUTDOWN_ flags
-To:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-References: <20200319130650.1141068-1-hch@lst.de>
-From:   Alex Elder <elder@ieee.org>
-Message-ID: <bccb71f0-3d16-ea5a-378f-15c525a654d3@ieee.org>
-Date:   Thu, 19 Mar 2020 08:26:21 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
+        id S1728502AbgCSNhN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Mar 2020 09:37:13 -0400
+Received: from us-smtp-delivery-74.mimecast.com ([216.205.24.74]:58694 "EHLO
+        us-smtp-delivery-74.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727417AbgCSNhM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Mar 2020 09:37:12 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1584625030;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=F2wp9QoKulzPUYg8DydrECdVgE61KZAiVu0XXoEdAdQ=;
+        b=NRfAABCYONEax+X0q25V38f/wiWOkU9ggJ81p8A/mVigDT9pl+8kc6Z745eS6txO1/6QYm
+        LWTBS8dW6pJr9C5Y9x77FsDLbdd8+eiFOWVxBXx22T0npPiesXFyoQ0QqswZYF0QDTweU3
+        NVN/QKKut8S4q4XqcsHaergbBYnTGKQ=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-439-9MuchmW0Om-ShbgrsnXLBA-1; Thu, 19 Mar 2020 09:37:08 -0400
+X-MC-Unique: 9MuchmW0Om-ShbgrsnXLBA-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 87381DB92;
+        Thu, 19 Mar 2020 13:37:07 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 0F4835C1D8;
+        Thu, 19 Mar 2020 13:37:06 +0000 (UTC)
+Date:   Thu, 19 Mar 2020 09:37:05 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 09/14] xfs: move log shut down handling out of
+ xlog_state_iodone_process_iclog
+Message-ID: <20200319133705.GA37713@bfoster>
+References: <20200316144233.900390-1-hch@lst.de>
+ <20200316144233.900390-10-hch@lst.de>
+ <20200318144825.GB32848@bfoster>
+ <20200318163429.GA14701@lst.de>
+ <20200319113603.GA37235@bfoster>
+ <20200319130536.GA10324@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20200319130650.1141068-1-hch@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200319130536.GA10324@lst.de>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 3/19/20 8:06 AM, Christoph Hellwig wrote:
-> Remove two flags to xfs_force_shutdown that aren't used anywhere.
+On Thu, Mar 19, 2020 at 02:05:36PM +0100, Christoph Hellwig wrote:
+> On Thu, Mar 19, 2020 at 07:36:03AM -0400, Brian Foster wrote:
+> > > True.  I think we just need to clear cycled_icloglock in the
+> > > shutdown branch.  I prefer that flow over falling through to the
+> > > main loop body as that clearly separates out the shutdown case.
+> > > 
+> > 
+> > Sure, but a shutdown can still happen at any point so this is just a
+> > duplicate branch to maintain.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Looks good.
-
-Reviewed-by: Alex Elder <elder@linaro.org>
-
-> ---
->  fs/xfs/xfs_fsops.c | 5 +----
->  fs/xfs/xfs_mount.h | 2 --
->  2 files changed, 1 insertion(+), 6 deletions(-)
+> I don't understand.  We are in the inner loop and under l_icloglock.
+> The next time a shutdown can come in is when
+> xlog_state_do_iclog_callbacks drops l_icloglock.  That is at the end
+> of the inner loop, which means we will always go back to the
+> force shutdown check quickly.  So how is the branch duplicate?  Yes,
+> it also calls xlog_state_do_iclog_callbacks and does the wakeup,
+> but in doing that early it avoid a whole lot of complicated logic
+> in the previous code base.
 > 
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index 3e61d0cc23f8..ef1d5bb88b93 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -504,10 +504,7 @@ xfs_do_force_shutdown(
->  	} else if (logerror) {
->  		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_LOGERROR,
->  			"Log I/O Error Detected. Shutting down filesystem");
-> -	} else if (flags & SHUTDOWN_DEVICE_REQ) {
-> -		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_IOERROR,
-> -			"All device paths lost. Shutting down filesystem");
-> -	} else if (!(flags & SHUTDOWN_REMOTE_REQ)) {
-> +	} else {
->  		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_IOERROR,
->  			"I/O Error Detected. Shutting down filesystem");
->  	}
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 88ab09ed29e7..847f6f85c4fc 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -254,8 +254,6 @@ void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
->  #define SHUTDOWN_LOG_IO_ERROR	0x0002	/* write attempt to the log failed */
->  #define SHUTDOWN_FORCE_UMOUNT	0x0004	/* shutdown from a forced unmount */
->  #define SHUTDOWN_CORRUPT_INCORE	0x0008	/* corrupt in-memory data structures */
-> -#define SHUTDOWN_REMOTE_REQ	0x0010	/* shutdown came from remote cell */
-> -#define SHUTDOWN_DEVICE_REQ	0x0020	/* failed all paths to the device */
->  
->  /*
->   * Flags for xfs_mountfs
+
+We'll get back to the shutdown check for the next iclog, but not the
+iclog we're running callbacks on. So basically we can be in CALLBACK, a
+shutdown can set IOERROR where _do_iclog_callbacks() cycles the lock,
+the callback picks up the shutdown state and aborts, and then the first
+thing we do after that function returns is:
+
+	iclog->ic_state = XLOG_STATE_DIRTY;
+	xlog_state_activate_iclogs(log, &iclogs_changed);
+
+... and thus finish the loop by reactivating the (IOERROR) iclog. So for
+any particular iclog, we might process it for shutdown normally or in
+the special shutdown branch based on timing.
+
+> > I think you're misreading me. I'm not suggesting to fake state changes.
+> > I'd argue that's actually what the special case shutdown branch does.
+> > And to the contrary, this patch already implements what I'm suggesting,
+> > it's just not consistent behavior..
 > 
+> I'm rather confused now.
+> 
+
+Sorry. What I'm saying can probably be simplified to the following
+question: if we just removed the special shutdown branch and let the
+iclogs fall through the normal completion sequence (once IOERROR is out
+of the picture) during shutdown, is that actually a problem?
+
+It seems to me it isn't (subject to testing of course). If that is true,
+then that is more simple and consistent than what we seem to be doing in
+this patch, which to my eyes seems to want to maintain some of the
+IOERROR functional cruft even though the state itself is being removed.
+Also note I think it would be reasonable to lift it out in a
+later/separate patch if that was more straightforward than reworking
+these patches.
+
+If it is a problem, I think that's a potential argument for leaving the
+IOERROR state around because then the state technically has meaning.
+
+> > First, we basically already go from whatever state we're in to "logical
+> > CALLBACK" during shutdown. This is just forcibly implemented via the
+> > IOERROR state. With IOERROR eventually removed, this highlights things
+> > like whether it's actually safe to make some of those arbitrary
+> > transitions. It's actually not, because going from WANT_SYNC -> CALLBACK
+> > is a potential use after free vector of the CIL ctx (as soon as the ctx
+> > is added to the callback list in the CIL push code). This is yet another
+> > functional problem that should be fixed before removing IOERROR, IMO
+> > (and is reproducible via kasan splat, btw). At this point I think some
+> > of these shutdown checks associated with CALLBACK are simply to ensure
+> > IOERROR remains persistent once it's set on an iclog. We don't need to
+> > carry that logic around if IOERROR is going away.
+> 
+> What shutdown check associated with CALLBACK?
+> 
+
+The one(s) that issue callbacks on an IOERROR iclog (note that I'm
+referring to the mainline code). Specifically the IOERROR check in
+_process_iclog() and the following logic in the caller:
+
+                if (iclog->ic_state != XLOG_STATE_CALLBACK &&
+                    iclog->ic_state != XLOG_STATE_IOERROR) {
+                        iclog = iclog->ic_next;
+                        continue;
+                }
+
+IOW, the current code treats an IOERROR iclog as if it were CALLBACK
+with the sole exception of updating ic_state.
+
+> > SYNCING -> CALLBACK is another hokey transition in the existing code,
+> > even if it doesn't currently manifest in a bug that I can see, because
+> > we should probably still expect (wait for) an I/O completion despite
+> > that the filesystem had shutdown in the meantime. Fixing that one might
+> > require tweaks to how the shutdown code actually works (i.e. waiting on
+> > an I/O vs. running callbacks while in-flight). It's not immediately
+> > clear to me what the best solution is for that, but I suspect it could
+> > tie in with fixing the problem noted above.
+> 
+> True, actually running callbacks on various kinds of "in-flight" iclogs
+> seems rather dangerous.  So should I interpret your above comments
+> in that we should fix that first before killing of the IOERROR state?
+> 
+
+Yes. Note that the WANT_SYNC -> CALLBACK (IOERROR) behavior is
+explicitly problematic in the current code as well because the submitter
+context still has the ctx while the callbacks could be freeing it.
+That's a reproducible use after free in the current code.
+
+Brian
 
