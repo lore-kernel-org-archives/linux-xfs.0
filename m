@@ -6,170 +6,84 @@ X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 536D3C4332B
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Mar 2020 11:36:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3EF5C4332E
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Mar 2020 11:50:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1D7132071C
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Mar 2020 11:36:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AAEC520739
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Mar 2020 11:50:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="B3GtPu+O"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="q1IDVvl5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726968AbgCSLgJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Mar 2020 07:36:09 -0400
-Received: from us-smtp-delivery-74.mimecast.com ([63.128.21.74]:22684 "EHLO
-        us-smtp-delivery-74.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725767AbgCSLgJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Mar 2020 07:36:09 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1584617768;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=IJwj1Iuiaz7Wugzh28GJw6P3r3pueMpnpODwCa2q82k=;
-        b=B3GtPu+OyJ79kFUJvSyOwtCcJWX0IPzh92d8GybU5rWP8D6qH1IFv8Nd7FTpwcAKRRxzVT
-        lL5Y7YNtmWj3vCPyzA4LK5RssogRSD7J3kwQGWuOjMkSM7wcjxDcLa4fmbphMvybTlW17y
-        ncae2UvivPrF0/A4V1nBb2ynkQA/KlE=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-150-BI9elf79NpWhzhhIUTcZTg-1; Thu, 19 Mar 2020 07:36:06 -0400
-X-MC-Unique: BI9elf79NpWhzhhIUTcZTg-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B14E68017CC;
-        Thu, 19 Mar 2020 11:36:05 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3E0425D9CD;
-        Thu, 19 Mar 2020 11:36:05 +0000 (UTC)
-Date:   Thu, 19 Mar 2020 07:36:03 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 09/14] xfs: move log shut down handling out of
- xlog_state_iodone_process_iclog
-Message-ID: <20200319113603.GA37235@bfoster>
-References: <20200316144233.900390-1-hch@lst.de>
- <20200316144233.900390-10-hch@lst.de>
- <20200318144825.GB32848@bfoster>
- <20200318163429.GA14701@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200318163429.GA14701@lst.de>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+        id S1727014AbgCSLuR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Mar 2020 07:50:17 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:42364 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726188AbgCSLuR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Mar 2020 07:50:17 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02JBgsVq127221;
+        Thu, 19 Mar 2020 11:49:44 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=content-type :
+ mime-version : subject : from : in-reply-to : date : cc :
+ content-transfer-encoding : message-id : references : to;
+ s=corp-2020-01-29; bh=v7zEP7RtOUJktHuCXePFovWTz/T8i1lu/X2pjX1Hbbo=;
+ b=q1IDVvl5ksTsjXMbCDWj+a3knqn+SAHj/kDVhAi11PV27RLxJ7D84msk3su8F04N1ajL
+ VtqrcyTWBH0XhNSdSJ+JoSXHTgADauE0jfg1mDGVKuEw3I+JKcprJZAQNJ67JazR1VfE
+ s3nm4Mf2oLZniCcfJJdP7T/ANyYbU4s+dxO14S5bHxqvtm+OOPUw9aIFsxOexf+QnfE4
+ nS1BcO0nXJUGlSbAjYbOp8Kg+MDPXQTVBjY8E/fEVMcttJpKG8oLSAmAMwFBF0da2i3V
+ rtwh4u6bTlBb4uIs0HtIYHl1MWNpOrxuuhyAWktvecikT5IAiVm05EkMOiaYi9QZ7L5m CA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 2yrpprfua2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 19 Mar 2020 11:49:43 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02JBgha2113568;
+        Thu, 19 Mar 2020 11:49:43 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by userp3030.oracle.com with ESMTP id 2ys8rkw5nk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 19 Mar 2020 11:49:43 +0000
+Received: from userp3030.oracle.com (userp3030.oracle.com [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 02JBngEO129865;
+        Thu, 19 Mar 2020 11:49:42 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 2ys8rkw5mf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 19 Mar 2020 11:49:42 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 02JBnfQm014664;
+        Thu, 19 Mar 2020 11:49:41 GMT
+Received: from [192.168.0.110] (/73.243.10.6)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 19 Mar 2020 04:49:41 -0700
+Content-Type: text/plain;
+        charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.80.23.2.2\))
+Subject: Re: [PATCH v8 00/25] Change readahead API
+From:   William Kucharski <william.kucharski@oracle.com>
+In-Reply-To: <20200225214838.30017-1-willy@infradead.org>
+Date:   Thu, 19 Mar 2020 05:49:38 -0600
+Cc:     linux-fsdevel@vger.kernel.org, linux-mm <linux-mm@kvack.org>,
+        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Message-Id: <09A89B86-9F2E-4829-9180-AA81320CE2FE@oracle.com>
+References: <20200225214838.30017-1-willy@infradead.org>
+To:     Matthew Wilcox <willy@infradead.org>
+X-Mailer: Apple Mail (2.3608.80.23.2.2)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9564 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0
+ suspectscore=0 lowpriorityscore=0 phishscore=0 adultscore=0 clxscore=1011
+ impostorscore=0 priorityscore=1501 spamscore=0 mlxlogscore=768 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2003190054
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 18, 2020 at 05:34:29PM +0100, Christoph Hellwig wrote:
-> On Wed, Mar 18, 2020 at 10:48:25AM -0400, Brian Foster wrote:
-> > >  		do {
-> > > -			if (xlog_state_iodone_process_iclog(log, iclog,
-> > > -							&ioerror))
-> > > +			if (XLOG_FORCED_SHUTDOWN(log)) {
-> > > +				xlog_state_do_iclog_callbacks(log, iclog);
-> > > +				wake_up_all(&iclog->ic_force_wait);
-> > > +				continue;
-> > > +			}
-> > > +
-> > 
-> > Why do we need to change the flow here? The current code looks like it
-> > proceeds with the _do_iclog_callbacks() call below..
-> >
-> > As it is, I also don't think this reflects the comment above because if
-> > we catch the shutdown partway through a loop, the outer loop will
-> > execute one more time through. That doesn't look like a problem at a
-> > glance, but I think we should try to retain closer to existing behavior
-> > by folding the shutdown check into the ic_state check below as well as
-> > the outer loop conditional.
-> 
-> True.  I think we just need to clear cycled_icloglock in the
-> shutdown branch.  I prefer that flow over falling through to the
-> main loop body as that clearly separates out the shutdown case.
-> 
+For the series:
 
-Sure, but a shutdown can still happen at any point so this is just a
-duplicate branch to maintain.
-
-> > This (and the next patch) also raises the issue of whether to maintain
-> > state validity once the iclog ioerror state goes away. Currently we see
-> > the IOERROR state and kind of have free reign on busting through the
-> > normal runtime logic to clear out callbacks, etc. on the iclog
-> > regardless of what the pre-error state was. It certainly makes sense to
-> > continue to do that based on XLOG_FORCED_SHUTDOWN(), but the iclog state
-> > sort of provides a platform that allows us to do that because any
-> > particular context can see it and handle an iclog with care. With
-> > IOERROR replaced with the (potentially racy) log flag check, I think we
-> > should try to maintain the coherence of other states wherever possible.
-> > IOW, XLOG_FORCED_SHUTDOWN() means we can run callbacks and abort and
-> > whatnot, but we should probably still consider and update the iclog
-> > state as we progress (as opposed to leaving it in the DONE_SYNC state,
-> > for example) because there's no guarantee some other context will
-> > (always) behave just as it did with IOERROR.
-> 
-> I actually very much disagree with that, and this series moves into
-> the other direction.  We only really changes the states when
-> writing to iclogs, syncing them to disk, and I/O completion.  And
-> all the paths just error out at a high level when the log is shut
-> down, so there is no need to move the state along.  Faking state
-> changes when they don't correspond to the actual I/O just seems like
-> a really bad idea.
-> 
-
-I think you're misreading me. I'm not suggesting to fake state changes.
-I'd argue that's actually what the special case shutdown branch does.
-And to the contrary, this patch already implements what I'm suggesting,
-it's just not consistent behavior..
-
-First, we basically already go from whatever state we're in to "logical
-CALLBACK" during shutdown. This is just forcibly implemented via the
-IOERROR state. With IOERROR eventually removed, this highlights things
-like whether it's actually safe to make some of those arbitrary
-transitions. It's actually not, because going from WANT_SYNC -> CALLBACK
-is a potential use after free vector of the CIL ctx (as soon as the ctx
-is added to the callback list in the CIL push code). This is yet another
-functional problem that should be fixed before removing IOERROR, IMO
-(and is reproducible via kasan splat, btw). At this point I think some
-of these shutdown checks associated with CALLBACK are simply to ensure
-IOERROR remains persistent once it's set on an iclog. We don't need to
-carry that logic around if IOERROR is going away.
-
-SYNCING -> CALLBACK is another hokey transition in the existing code,
-even if it doesn't currently manifest in a bug that I can see, because
-we should probably still expect (wait for) an I/O completion despite
-that the filesystem had shutdown in the meantime. Fixing that one might
-require tweaks to how the shutdown code actually works (i.e. waiting on
-an I/O vs. running callbacks while in-flight). It's not immediately
-clear to me what the best solution is for that, but I suspect it could
-tie in with fixing the problem noted above.
-
-With regard to this patch, consider that shutdown can happen at any
-point and xlog_state_do_iclog_callbacks() cycles icloglock. That means
-that as of this patch, we actually can go from IOERROR -> DIRTY and
-possibly from DIRTY -> ACTIVE depending on where the iclog lies in the
-list. Removing IOERROR will subtley change that behavior yet again to
-make the latter transition potentially more likely.
-
-Note that I think that's probably fine. What I'm suggesting is to just
-drop the duplicate shutdown branch and instead lets evaluate whether
-some of the code these checks intend to avoid is really problematic. I
-don't think it is in the completion path since we're just resetting
-in-core headers and such. That means we could probably just let the
-iclogs fall through those state transitions naturally, reduce the number
-of shutdown checks splattered throughout the code and simplify the
-overall error handling logic in the process by handling all iclogs
-consistently during shutdown.
-
-> Also if you look at what state checks are left, the are all (except
-> for the debug check in xfs_log_unmount_verify_iclog) under
-> l_icloglock and guarded by a shutdown check.
-> 
-
-That's not quite enough IMO. I think the whole IOERROR problem is not
-primarily a matter of mechanically factoring it out. It's fragile
-functionality that should be fixed/simplified first before there's any
-real value to removing IOERROR.
-
-Brian
-
+Reviewed-by: William Kucharski <william.kucharski@oracle.com>
