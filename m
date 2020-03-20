@@ -7,40 +7,39 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7625EC4332D
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 06:53:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B312C4332E
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 06:53:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3EBF920777
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 06:53:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D91A320777
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 06:53:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="eiHWRaO9"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="NBw41uxn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726657AbgCTGx1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 Mar 2020 02:53:27 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:42084 "EHLO
+        id S1726801AbgCTGxa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 Mar 2020 02:53:30 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:42098 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726232AbgCTGx1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Mar 2020 02:53:27 -0400
+        with ESMTP id S1726232AbgCTGxa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Mar 2020 02:53:30 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=mA4P1NfEwCfsY4bWr3s5fb0a9u7s3AjyJ5LU3NY5OEo=; b=eiHWRaO9Za0RVkc/TM8FdCw0gu
-        WT3UlphgoXziRvH/xXocs8C/Y7sM74XU0zeXi6ZYFIFHT5oyyDoyD1NLjDmoOBD0eVD6DlQ2v61wZ
-        0F8mEWjt84o6LF4aMXsEN7RpzrZAYq5h3SMrBuEwhth2zmETdut4MbOu6GpmjJr+8C6stAh9Kk8aU
-        InllX8oCNMbiNU7pmM+jDgyMseixbXfYuLUaoJ6Rwyoqpq+al1uGTDD1njLd6KxfBTJwV3zETzY7z
-        Jd+sGDcPPXwHq7dIdzXdNOyI0g1O3XlSAS3/Wsza8lRSGePrz6qw6cruZHlHbHj9uPaiDNP3yo9Ew
-        vdVnm3AQ==;
+        bh=HUQUnKejNfBbZBsIrWmsA8h3Ps4w7k+1G2VJRz8heII=; b=NBw41uxna4yAyALrPNtSP48y2k
+        E3Omwhp1rJHZRArPVoA1lYzrxumJ+DOgTAAnw9GtZok54qLeNfPWMVFhnaY1HMtnpOM8JH/Xp5XM5
+        uNNy/G7WJo4QqEm0lZ9JnvQQEQZYkLm7mQnQsd8e9x7s8/o1xo4gf4wCieUPJmV7bMYR2tazlvV1q
+        eG0R1mAnRAYc4pRC3LfZ+eO7zlz0exGueybd4fU0hsYIpaAQR8h6aVw25VRqpT2u+fhksTWsnm07V
+        bcBLCELLjH7k+Yd9P/mMPBBJlw9vGTvXUhDLFgC6CFcoeFQQtlzq13hfux41QJaHNwtSc6icx0FUL
+        3PU5E1qQ==;
 Received: from [2001:4bb8:188:30cd:a410:8a7:7f20:5c9c] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jFBX5-0006G0-5h; Fri, 20 Mar 2020 06:53:27 +0000
+        id 1jFBX7-0006GN-I4; Fri, 20 Mar 2020 06:53:29 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 5/8] xfs: remove the aborted parameter to xlog_state_done_syncing
-Date:   Fri, 20 Mar 2020 07:53:08 +0100
-Message-Id: <20200320065311.28134-6-hch@lst.de>
+Cc:     Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 6/8] xfs: refactor xlog_state_clean_iclog
+Date:   Fri, 20 Mar 2020 07:53:09 +0100
+Message-Id: <20200320065311.28134-7-hch@lst.de>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200320065311.28134-1-hch@lst.de>
 References: <20200320065311.28134-1-hch@lst.de>
@@ -52,219 +51,219 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-We can just check for a shut down log all the way down in
-xlog_cil_committed instead of passing the parameter.  This means a
-slight behavior change in that we now also abort log items if the
-shutdown came in halfway into the I/O completion processing, which
-actually is the right thing to do.
+Factor out a few self-contained helpers from xlog_state_clean_iclog, and
+update the documentation so it primarily documents why things happens
+instead of how.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_log.c     | 48 +++++++++++++++-----------------------------
- fs/xfs/xfs_log.h     |  2 +-
- fs/xfs/xfs_log_cil.c | 12 +++++------
- 3 files changed, 23 insertions(+), 39 deletions(-)
+ fs/xfs/xfs_log.c | 180 +++++++++++++++++++++++------------------------
+ 1 file changed, 88 insertions(+), 92 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 7af9c292540b..4f9303524efb 100644
+index 4f9303524efb..6facbb91b8a8 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -47,8 +47,7 @@ xlog_dealloc_log(
- 
- /* local state machine functions */
- STATIC void xlog_state_done_syncing(
--	struct xlog_in_core	*iclog,
--	bool			aborted);
-+	struct xlog_in_core	*iclog);
- STATIC int
- xlog_state_get_iclog_space(
- 	struct xlog		*log,
-@@ -1254,7 +1253,6 @@ xlog_ioend_work(
- 	struct xlog_in_core     *iclog =
- 		container_of(work, struct xlog_in_core, ic_end_io_work);
- 	struct xlog		*log = iclog->ic_log;
--	bool			aborted = false;
- 	int			error;
- 
- 	error = blk_status_to_errno(iclog->ic_bio.bi_status);
-@@ -1270,17 +1268,9 @@ xlog_ioend_work(
- 	if (XFS_TEST_ERROR(error, log->l_mp, XFS_ERRTAG_IODONE_IOERR)) {
- 		xfs_alert(log->l_mp, "log I/O error %d", error);
- 		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
--		/*
--		 * This flag will be propagated to the trans-committed
--		 * callback routines to let them know that the log-commit
--		 * didn't succeed.
--		 */
--		aborted = true;
--	} else if (iclog->ic_state == XLOG_STATE_IOERROR) {
--		aborted = true;
- 	}
- 
--	xlog_state_done_syncing(iclog, aborted);
-+	xlog_state_done_syncing(iclog);
- 	bio_uninit(&iclog->ic_bio);
- 
- 	/*
-@@ -1759,7 +1749,7 @@ xlog_write_iclog(
- 		 * the buffer manually, the code needs to be kept in sync
- 		 * with the I/O completion path.
- 		 */
--		xlog_state_done_syncing(iclog, true);
-+		xlog_state_done_syncing(iclog);
- 		up(&iclog->ic_sema);
- 		return;
- 	}
-@@ -2783,8 +2773,7 @@ xlog_state_iodone_process_iclog(
- static void
- xlog_state_do_iclog_callbacks(
- 	struct xlog		*log,
--	struct xlog_in_core	*iclog,
--	bool			aborted)
-+	struct xlog_in_core	*iclog)
- 		__releases(&log->l_icloglock)
- 		__acquires(&log->l_icloglock)
- {
-@@ -2796,7 +2785,7 @@ xlog_state_do_iclog_callbacks(
- 		list_splice_init(&iclog->ic_callbacks, &tmp);
- 
- 		spin_unlock(&iclog->ic_callback_lock);
--		xlog_cil_process_committed(&tmp, aborted);
-+		xlog_cil_process_committed(&tmp);
- 		spin_lock(&iclog->ic_callback_lock);
- 	}
- 
-@@ -2811,8 +2800,7 @@ xlog_state_do_iclog_callbacks(
- 
- STATIC void
- xlog_state_do_callback(
--	struct xlog		*log,
--	bool			aborted)
-+	struct xlog		*log)
- {
- 	struct xlog_in_core	*iclog;
- 	struct xlog_in_core	*first_iclog;
-@@ -2853,7 +2841,7 @@ xlog_state_do_callback(
- 			 * we'll have to run at least one more complete loop.
- 			 */
- 			cycled_icloglock = true;
--			xlog_state_do_iclog_callbacks(log, iclog, aborted);
-+			xlog_state_do_iclog_callbacks(log, iclog);
- 
- 			xlog_state_clean_iclog(log, iclog);
- 			iclog = iclog->ic_next;
-@@ -2891,25 +2879,22 @@ xlog_state_do_callback(
+@@ -2540,111 +2540,107 @@ xlog_write(
+  *****************************************************************************
   */
- STATIC void
- xlog_state_done_syncing(
--	struct xlog_in_core	*iclog,
--	bool			aborted)
-+	struct xlog_in_core	*iclog)
- {
- 	struct xlog		*log = iclog->ic_log;
  
- 	spin_lock(&log->l_icloglock);
--
- 	ASSERT(atomic_read(&iclog->ic_refcnt) == 0);
- 
- 	/*
- 	 * If we got an error, either on the first buffer, or in the case of
--	 * split log writes, on the second, we mark ALL iclogs STATE_IOERROR,
--	 * and none should ever be attempted to be written to disk
--	 * again.
-+	 * split log writes, on the second, we shut down the file system and
-+	 * no iclogs should ever be attempted to be written to disk again.
- 	 */
--	if (iclog->ic_state == XLOG_STATE_SYNCING)
-+	if (!XLOG_FORCED_SHUTDOWN(log)) {
-+		ASSERT(iclog->ic_state == XLOG_STATE_SYNCING);
- 		iclog->ic_state = XLOG_STATE_DONE_SYNC;
--	else
--		ASSERT(iclog->ic_state == XLOG_STATE_IOERROR);
++static void
++xlog_state_activate_iclog(
++	struct xlog_in_core	*iclog,
++	int			*iclogs_changed)
++{
++	ASSERT(list_empty_careful(&iclog->ic_callbacks));
++
++	/*
++	 * If the number of ops in this iclog indicate it just contains the
++	 * dummy transaction, we can change state into IDLE (the second time
++	 * around). Otherwise we should change the state into NEED a dummy.
++	 * We don't need to cover the dummy.
++	 */
++	if (*iclogs_changed == 0 &&
++	    iclog->ic_header.h_num_logops == cpu_to_be32(XLOG_COVER_OPS)) {
++		*iclogs_changed = 1;
++	} else {
++		/*
++		 * We have two dirty iclogs so start over.  This could also be
++		 * num of ops indicating this is not the dummy going out.
++		 */
++		*iclogs_changed = 2;
 +	}
- 
- 	/*
- 	 * Someone could be sleeping prior to writing out the next
-@@ -2918,9 +2903,8 @@ xlog_state_done_syncing(
- 	 */
- 	wake_up_all(&iclog->ic_write_wait);
- 	spin_unlock(&log->l_icloglock);
--	xlog_state_do_callback(log, aborted);	/* also cleans log */
--}	/* xlog_state_done_syncing */
++
++	iclog->ic_state	= XLOG_STATE_ACTIVE;
++	iclog->ic_offset = 0;
++	iclog->ic_header.h_num_logops = 0;
++	memset(iclog->ic_header.h_cycle_data, 0,
++		sizeof(iclog->ic_header.h_cycle_data));
++	iclog->ic_header.h_lsn = 0;
++}
++
+ /*
+- * An iclog has just finished IO completion processing, so we need to update
+- * the iclog state and propagate that up into the overall log state. Hence we
+- * prepare the iclog for cleaning, and then clean all the pending dirty iclogs
+- * starting from the head, and then wake up any threads that are waiting for the
+- * iclog to be marked clean.
+- *
+- * The ordering of marking iclogs ACTIVE must be maintained, so an iclog
+- * doesn't become ACTIVE beyond one that is SYNCING.  This is also required to
+- * maintain the notion that we use a ordered wait queue to hold off would be
+- * writers to the log when every iclog is trying to sync to disk.
+- *
+- * Caller must hold the icloglock before calling us.
+- *
+- * State Change: !IOERROR -> DIRTY -> ACTIVE
++ * Loop through all iclogs and mark all iclogs currently marked DIRTY as
++ * ACTIVE after iclog I/O has completed.
+  */
+-STATIC void
+-xlog_state_clean_iclog(
++static void
++xlog_state_activate_iclogs(
+ 	struct xlog		*log,
+-	struct xlog_in_core	*dirty_iclog)
++	int			*iclogs_changed)
+ {
+-	struct xlog_in_core	*iclog;
+-	int			changed = 0;
 -
-+	xlog_state_do_callback(log);	/* also cleans log */
+-	/* Prepare the completed iclog. */
+-	if (dirty_iclog->ic_state != XLOG_STATE_IOERROR)
+-		dirty_iclog->ic_state = XLOG_STATE_DIRTY;
++	struct xlog_in_core	*iclog = log->l_iclog;
+ 
+-	/* Walk all the iclogs to update the ordered active state. */
+-	iclog = log->l_iclog;
+ 	do {
+-		if (iclog->ic_state == XLOG_STATE_DIRTY) {
+-			iclog->ic_state	= XLOG_STATE_ACTIVE;
+-			iclog->ic_offset       = 0;
+-			ASSERT(list_empty_careful(&iclog->ic_callbacks));
+-			/*
+-			 * If the number of ops in this iclog indicate it just
+-			 * contains the dummy transaction, we can
+-			 * change state into IDLE (the second time around).
+-			 * Otherwise we should change the state into
+-			 * NEED a dummy.
+-			 * We don't need to cover the dummy.
+-			 */
+-			if (!changed &&
+-			   (be32_to_cpu(iclog->ic_header.h_num_logops) ==
+-			   		XLOG_COVER_OPS)) {
+-				changed = 1;
+-			} else {
+-				/*
+-				 * We have two dirty iclogs so start over
+-				 * This could also be num of ops indicates
+-				 * this is not the dummy going out.
+-				 */
+-				changed = 2;
+-			}
+-			iclog->ic_header.h_num_logops = 0;
+-			memset(iclog->ic_header.h_cycle_data, 0,
+-			      sizeof(iclog->ic_header.h_cycle_data));
+-			iclog->ic_header.h_lsn = 0;
+-		} else if (iclog->ic_state == XLOG_STATE_ACTIVE)
+-			/* do nothing */;
+-		else
+-			break;	/* stop cleaning */
+-		iclog = iclog->ic_next;
+-	} while (iclog != log->l_iclog);
+-
++		if (iclog->ic_state == XLOG_STATE_DIRTY)
++			xlog_state_activate_iclog(iclog, iclogs_changed);
++		/*
++		 * The ordering of marking iclogs ACTIVE must be maintained, so
++		 * an iclog doesn't become ACTIVE beyond one that is SYNCING.
++		 */
++		else if (iclog->ic_state != XLOG_STATE_ACTIVE)
++			break;
++	} while ((iclog = iclog->ic_next) != log->l_iclog);
 +}
  
- /*
-  * If the head of the in-core log ring is not (ACTIVE or DIRTY), then we must
-@@ -3884,7 +3868,7 @@ xfs_log_force_umount(
- 	spin_lock(&log->l_cilp->xc_push_lock);
- 	wake_up_all(&log->l_cilp->xc_commit_wait);
- 	spin_unlock(&log->l_cilp->xc_push_lock);
--	xlog_state_do_callback(log, true);
-+	xlog_state_do_callback(log);
- 
- 	/* return non-zero if log IOERROR transition had already happened */
- 	return retval;
-diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-index b38602216c5a..cc77cc36560a 100644
---- a/fs/xfs/xfs_log.h
-+++ b/fs/xfs/xfs_log.h
-@@ -137,7 +137,7 @@ void	  xfs_log_ticket_put(struct xlog_ticket *ticket);
- 
- void	xfs_log_commit_cil(struct xfs_mount *mp, struct xfs_trans *tp,
- 				xfs_lsn_t *commit_lsn, bool regrant);
--void	xlog_cil_process_committed(struct list_head *list, bool aborted);
-+void	xlog_cil_process_committed(struct list_head *list);
- bool	xfs_log_item_in_current_chkpt(struct xfs_log_item *lip);
- 
- void	xfs_log_work_queue(struct xfs_mount *mp);
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 278166811c80..64cc0bf2ab3b 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -574,10 +574,10 @@ xlog_discard_busy_extents(
-  */
- static void
- xlog_cil_committed(
--	struct xfs_cil_ctx	*ctx,
--	bool			abort)
-+	struct xfs_cil_ctx	*ctx)
- {
- 	struct xfs_mount	*mp = ctx->cil->xc_log->l_mp;
-+	bool			abort = XLOG_FORCED_SHUTDOWN(ctx->cil->xc_log);
- 
++static int
++xlog_covered_state(
++	int			prev_state,
++	int			iclogs_changed)
++{
  	/*
- 	 * If the I/O failed, we're aborting the commit and already shutdown.
-@@ -613,15 +613,14 @@ xlog_cil_committed(
+-	 * Wake up threads waiting in xfs_log_force() for the dirty iclog
+-	 * to be cleaned.
++	 * We usually go to NEED. But we go to NEED2 if the changed indicates we
++	 * are done writing the dummy record.  If we are done with the second
++	 * dummy recored (DONE2), then we go to IDLE.
+ 	 */
+-	wake_up_all(&dirty_iclog->ic_force_wait);
++	switch (prev_state) {
++	case XLOG_STATE_COVER_IDLE:
++	case XLOG_STATE_COVER_NEED:
++	case XLOG_STATE_COVER_NEED2:
++		break;
++	case XLOG_STATE_COVER_DONE:
++		if (iclogs_changed == 1)
++			return XLOG_STATE_COVER_NEED2;
++		break;
++	case XLOG_STATE_COVER_DONE2:
++		if (iclogs_changed == 1)
++			return XLOG_STATE_COVER_IDLE;
++		break;
++	default:
++		ASSERT(0);
++	}
  
- void
- xlog_cil_process_committed(
--	struct list_head	*list,
--	bool			aborted)
-+	struct list_head	*list)
- {
- 	struct xfs_cil_ctx	*ctx;
+-	/*
+-	 * Change state for the dummy log recording.
+-	 * We usually go to NEED. But we go to NEED2 if the changed indicates
+-	 * we are done writing the dummy record.
+-	 * If we are done with the second dummy recored (DONE2), then
+-	 * we go to IDLE.
+-	 */
+-	if (changed) {
+-		switch (log->l_covered_state) {
+-		case XLOG_STATE_COVER_IDLE:
+-		case XLOG_STATE_COVER_NEED:
+-		case XLOG_STATE_COVER_NEED2:
+-			log->l_covered_state = XLOG_STATE_COVER_NEED;
+-			break;
++	return XLOG_STATE_COVER_NEED;
++}
  
- 	while ((ctx = list_first_entry_or_null(list,
- 			struct xfs_cil_ctx, iclog_entry))) {
- 		list_del(&ctx->iclog_entry);
--		xlog_cil_committed(ctx, aborted);
-+		xlog_cil_committed(ctx);
+-		case XLOG_STATE_COVER_DONE:
+-			if (changed == 1)
+-				log->l_covered_state = XLOG_STATE_COVER_NEED2;
+-			else
+-				log->l_covered_state = XLOG_STATE_COVER_NEED;
+-			break;
++STATIC void
++xlog_state_clean_iclog(
++	struct xlog		*log,
++	struct xlog_in_core	*dirty_iclog)
++{
++	int			iclogs_changed = 0;
+ 
+-		case XLOG_STATE_COVER_DONE2:
+-			if (changed == 1)
+-				log->l_covered_state = XLOG_STATE_COVER_IDLE;
+-			else
+-				log->l_covered_state = XLOG_STATE_COVER_NEED;
+-			break;
++	if (dirty_iclog->ic_state != XLOG_STATE_IOERROR)
++		dirty_iclog->ic_state = XLOG_STATE_DIRTY;
+ 
+-		default:
+-			ASSERT(0);
+-		}
++	xlog_state_activate_iclogs(log, &iclogs_changed);
++	wake_up_all(&dirty_iclog->ic_force_wait);
++
++	if (iclogs_changed) {
++		log->l_covered_state = xlog_covered_state(log->l_covered_state,
++				iclogs_changed);
  	}
  }
  
-@@ -878,7 +877,8 @@ xlog_cil_push_work(
- out_abort_free_ticket:
- 	xfs_log_ticket_put(tic);
- out_abort:
--	xlog_cil_committed(ctx, true);
-+	ASSERT(XLOG_FORCED_SHUTDOWN(log));
-+	xlog_cil_committed(ctx);
- }
- 
- /*
 -- 
 2.25.1
 
