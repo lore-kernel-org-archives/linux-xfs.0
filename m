@@ -2,353 +2,235 @@ Return-Path: <SRS0=ynSb=5F=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C191AC4332B
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 21:03:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98BA3C4332B
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 21:47:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5FEAF20658
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 21:03:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 543CF20637
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 21:47:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cEdFHzQo"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="SUh950dV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727268AbgCTVDs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 Mar 2020 17:03:48 -0400
-Received: from us-smtp-delivery-74.mimecast.com ([63.128.21.74]:25471 "EHLO
-        us-smtp-delivery-74.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727192AbgCTVDr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Mar 2020 17:03:47 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1584738226;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=7OR4oCARfHcUZntC4AgiNzAySZqjPFQ6DiZjBQ8C69I=;
-        b=cEdFHzQo5hyw+UTsRt0twTcpdn58UbQLJ5ne4xJiyc/XNotpk8lhfZveFSa02bowgKD97h
-        q7M+KOic2N7cJGU0hey7uC+kFYcFRnHViGI4BiCaR65STmDNh6zVWj9kh6eS2D53fcQK8C
-        K9UL6h/9rtpGoSe79KhRUlOw596B/tg=
-Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
- [209.85.221.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-84-I9E-CL74OjOepPbpWQ6ANQ-1; Fri, 20 Mar 2020 17:03:44 -0400
-X-MC-Unique: I9E-CL74OjOepPbpWQ6ANQ-1
-Received: by mail-wr1-f72.google.com with SMTP id d1so2067340wru.15
-        for <linux-xfs@vger.kernel.org>; Fri, 20 Mar 2020 14:03:44 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=7OR4oCARfHcUZntC4AgiNzAySZqjPFQ6DiZjBQ8C69I=;
-        b=LID7jLKRsRMt3wQ5aY+hCDHB1Fr6nAMzux453eLVp0Zu0FioyOAY3tn6viBJ20JplS
-         WFf1N4riYLYc3v59/Lois+9M1HC6+lLQxBJDpxgPzZdsr5bSsTatfT0wXFODB8JNvZTU
-         WyybgixTGl7JZsaq0mY3VWorZGncq7i2kxkjX/xuucak8yh5RjFrXdiQyLAcOLORcn5J
-         1y+UAAuRNxwbwgBeO0zRCT0AYyJLxnOiEGqtPgU+OMyw7bY8C73FQi8rXGnOSFGX4RXU
-         JCg3unxpK768PmzgJoCyhdqpU9PO7anTzsQlkb1Zocgk6alvi0SUTfYsSnVp7WM2x4Lp
-         9HCw==
-X-Gm-Message-State: ANhLgQ1SORnoBofLTLy7ZD9ecLhgKOFeXXtVA5RsVH/PgqIjhj0QdBCY
-        MpO8exhbIia4SouZsC5PT1PL8ut1jqOpwBAvrfoe9VlIORmR4gSFwG/Bmsgj97vost/+tuAXh+d
-        G5ySCAOWCYWHEVKUlA95e
-X-Received: by 2002:adf:df8f:: with SMTP id z15mr13208755wrl.184.1584738222392;
-        Fri, 20 Mar 2020 14:03:42 -0700 (PDT)
-X-Google-Smtp-Source: ADFU+vsV5OoSjpvvkCJkmiO+RpqFtdcg5TrbkRrR/6fCMecdsVlnOeTKdUw+ViwIY4tN/q2BhoiHWw==
-X-Received: by 2002:adf:df8f:: with SMTP id z15mr13208739wrl.184.1584738222095;
-        Fri, 20 Mar 2020 14:03:42 -0700 (PDT)
-Received: from localhost.localdomain.com (243.206.broadband12.iol.cz. [90.179.206.243])
-        by smtp.gmail.com with ESMTPSA id w7sm10479668wrr.60.2020.03.20.14.03.40
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 20 Mar 2020 14:03:40 -0700 (PDT)
-From:   Pavel Reichl <preichl@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v7 4/4] xfs: replace mrlock_t with rw_semaphores
-Date:   Fri, 20 Mar 2020 22:03:17 +0100
-Message-Id: <20200320210317.1071747-5-preichl@redhat.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200320210317.1071747-1-preichl@redhat.com>
-References: <20200320210317.1071747-1-preichl@redhat.com>
+        id S1726855AbgCTVrS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 Mar 2020 17:47:18 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:37238 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726666AbgCTVrS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Mar 2020 17:47:18 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02KLcxNS168671;
+        Fri, 20 Mar 2020 21:46:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=qM54fWWCd+43qqChF84AavPBvF9WpmsvniM7Bgc+KYQ=;
+ b=SUh950dV5x/ldjdmAL+VwLFlGbgZTM0Y3FiRihnOga7jvI3+TXWV5cjnAY1fhanCRgOK
+ vB6bvduFVLBE69oU3UImCi9GiUZkzn37mYXbYJnPPD+aYZ5qwLfv/3PAVmorL0uic5HW
+ WzqZ7+KrdPDudlQm+hOoWyslPAfpjJoRYQFJD8iQlmJRnvjc5k3auDiOWRYt6kyRWbmp
+ r5Q7G/55En7wNlV239hEv0MJge+JdI2Zusx1HB+pfV+qnJX8m0XOcOjFT3FK/rlqb4Xe
+ IT8wpL398F1e7UZU53YbiokoguCwDKqGGGYrNZv0KyEovyyh82KhdIZdty+F02GvTOl4 iw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 2yrq7mfu61-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 20 Mar 2020 21:46:59 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02KLMoUp042338;
+        Fri, 20 Mar 2020 21:46:58 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 2ys8tyuba0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 20 Mar 2020 21:46:58 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 02KLkvvL002107;
+        Fri, 20 Mar 2020 21:46:57 GMT
+Received: from localhost (/10.159.129.235)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 20 Mar 2020 14:46:57 -0700
+Date:   Fri, 20 Mar 2020 14:46:54 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>,
+        Ritesh Harjani <riteshh@linux.ibm.com>,
+        Dave Chinner <dchinner@redhat.com>
+Subject: Re: [PATCH] iomap: Submit the BIO at the end of each extent
+Message-ID: <20200320214654.GC6812@magnolia>
+References: <20200320144014.3276-1-willy@infradead.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200320144014.3276-1-willy@infradead.org>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9566 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 mlxscore=0
+ malwarescore=0 suspectscore=0 mlxlogscore=999 spamscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2003200085
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9566 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 suspectscore=0
+ adultscore=0 bulkscore=0 mlxlogscore=999 priorityscore=1501 clxscore=1015
+ malwarescore=0 mlxscore=0 phishscore=0 impostorscore=0 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2003200085
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Remove mrlock_t as it does not provide any extra value over
-rw_semaphores. Make i_lock and i_mmaplock native rw_semaphores and
-replace mr*() functions with native rwsem calls.
+On Fri, Mar 20, 2020 at 07:40:14AM -0700, Matthew Wilcox wrote:
+> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+> 
+> By definition, an extent covers a range of consecutive blocks, so
+> it would be quite rare to be able to just add pages to the BIO from
+> a previous range.  The only case we can think of is a mapped extent
+> followed by a hole extent, followed by another mapped extent which has
+> been allocated immediately after the first extent.  We believe this to
+> be an unlikely layout for a filesystem to choose and, since the queue
+> is plugged, those two BIOs would be merged by the block layer.
+> 
+> The reason we care is that ext2/ext4 choose to lay out blocks 0-11
+> consecutively, followed by the indirect block, and we want to merge those
+> two BIOs.  If we don't submit the data BIO before asking the filesystem
+> for the next extent, then the indirect BIO will be submitted first,
+> and waited for, leading to inefficient I/O patterns.  Buffer heads solve
+> this with the BH_boundary flag, but iomap doesn't need that as long as
+> we submit the bio here.
 
-Signed-off-by: Pavel Reichl <preichl@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/mrlock.h    | 78 ----------------------------------------------
- fs/xfs/xfs_inode.c | 36 +++++++++++----------
- fs/xfs/xfs_inode.h |  4 +--
- fs/xfs/xfs_iops.c  |  4 +--
- fs/xfs/xfs_linux.h |  2 +-
- fs/xfs/xfs_super.c |  6 ++--
- 6 files changed, 27 insertions(+), 103 deletions(-)
- delete mode 100644 fs/xfs/mrlock.h
+Hmm, I just received the following stack trace while running generic/418
+on a v5 filesystem with 1k blocks:
 
-diff --git a/fs/xfs/mrlock.h b/fs/xfs/mrlock.h
-deleted file mode 100644
-index 79155eec341b..000000000000
---- a/fs/xfs/mrlock.h
-+++ /dev/null
-@@ -1,78 +0,0 @@
--// SPDX-License-Identifier: GPL-2.0
--/*
-- * Copyright (c) 2000-2006 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- */
--#ifndef __XFS_SUPPORT_MRLOCK_H__
--#define __XFS_SUPPORT_MRLOCK_H__
--
--#include <linux/rwsem.h>
--
--typedef struct {
--	struct rw_semaphore	mr_lock;
--#if defined(DEBUG) || defined(XFS_WARN)
--	int			mr_writer;
--#endif
--} mrlock_t;
--
--#if defined(DEBUG) || defined(XFS_WARN)
--#define mrinit(mrp, name)	\
--	do { (mrp)->mr_writer = 0; init_rwsem(&(mrp)->mr_lock); } while (0)
--#else
--#define mrinit(mrp, name)	\
--	do { init_rwsem(&(mrp)->mr_lock); } while (0)
--#endif
--
--#define mrlock_init(mrp, t,n,s)	mrinit(mrp, n)
--#define mrfree(mrp)		do { } while (0)
--
--static inline void mraccess_nested(mrlock_t *mrp, int subclass)
--{
--	down_read_nested(&mrp->mr_lock, subclass);
--}
--
--static inline void mrupdate_nested(mrlock_t *mrp, int subclass)
--{
--	down_write_nested(&mrp->mr_lock, subclass);
--#if defined(DEBUG) || defined(XFS_WARN)
--	mrp->mr_writer = 1;
--#endif
--}
--
--static inline int mrtryaccess(mrlock_t *mrp)
--{
--	return down_read_trylock(&mrp->mr_lock);
--}
--
--static inline int mrtryupdate(mrlock_t *mrp)
--{
--	if (!down_write_trylock(&mrp->mr_lock))
--		return 0;
--#if defined(DEBUG) || defined(XFS_WARN)
--	mrp->mr_writer = 1;
--#endif
--	return 1;
--}
--
--static inline void mrunlock_excl(mrlock_t *mrp)
--{
--#if defined(DEBUG) || defined(XFS_WARN)
--	mrp->mr_writer = 0;
--#endif
--	up_write(&mrp->mr_lock);
--}
--
--static inline void mrunlock_shared(mrlock_t *mrp)
--{
--	up_read(&mrp->mr_lock);
--}
--
--static inline void mrdemote(mrlock_t *mrp)
--{
--#if defined(DEBUG) || defined(XFS_WARN)
--	mrp->mr_writer = 0;
--#endif
--	downgrade_write(&mrp->mr_lock);
--}
--
--#endif /* __XFS_SUPPORT_MRLOCK_H__ */
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index dec66059b045..548f1b6e1a55 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -191,14 +191,15 @@ xfs_ilock(
- 	}
- 
- 	if (lock_flags & XFS_MMAPLOCK_EXCL)
--		mrupdate_nested(&ip->i_mmaplock, XFS_MMAPLOCK_DEP(lock_flags));
-+		down_write_nested(&ip->i_mmaplock,
-+				XFS_MMAPLOCK_DEP(lock_flags));
- 	else if (lock_flags & XFS_MMAPLOCK_SHARED)
--		mraccess_nested(&ip->i_mmaplock, XFS_MMAPLOCK_DEP(lock_flags));
-+		down_read_nested(&ip->i_mmaplock, XFS_MMAPLOCK_DEP(lock_flags));
- 
- 	if (lock_flags & XFS_ILOCK_EXCL)
--		mrupdate_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
-+		down_write_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
- 	else if (lock_flags & XFS_ILOCK_SHARED)
--		mraccess_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
-+		down_read_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
- }
- 
- /*
-@@ -242,27 +243,27 @@ xfs_ilock_nowait(
- 	}
- 
- 	if (lock_flags & XFS_MMAPLOCK_EXCL) {
--		if (!mrtryupdate(&ip->i_mmaplock))
-+		if (!down_write_trylock(&ip->i_mmaplock))
- 			goto out_undo_iolock;
- 	} else if (lock_flags & XFS_MMAPLOCK_SHARED) {
--		if (!mrtryaccess(&ip->i_mmaplock))
-+		if (!down_read_trylock(&ip->i_mmaplock))
- 			goto out_undo_iolock;
- 	}
- 
- 	if (lock_flags & XFS_ILOCK_EXCL) {
--		if (!mrtryupdate(&ip->i_lock))
-+		if (!down_write_trylock(&ip->i_lock))
- 			goto out_undo_mmaplock;
- 	} else if (lock_flags & XFS_ILOCK_SHARED) {
--		if (!mrtryaccess(&ip->i_lock))
-+		if (!down_read_trylock(&ip->i_lock))
- 			goto out_undo_mmaplock;
- 	}
- 	return 1;
- 
- out_undo_mmaplock:
- 	if (lock_flags & XFS_MMAPLOCK_EXCL)
--		mrunlock_excl(&ip->i_mmaplock);
-+		up_write(&ip->i_mmaplock);
- 	else if (lock_flags & XFS_MMAPLOCK_SHARED)
--		mrunlock_shared(&ip->i_mmaplock);
-+		up_read(&ip->i_mmaplock);
- out_undo_iolock:
- 	if (lock_flags & XFS_IOLOCK_EXCL)
- 		up_write(&VFS_I(ip)->i_rwsem);
-@@ -309,14 +310,14 @@ xfs_iunlock(
- 		up_read(&VFS_I(ip)->i_rwsem);
- 
- 	if (lock_flags & XFS_MMAPLOCK_EXCL)
--		mrunlock_excl(&ip->i_mmaplock);
-+		up_write(&ip->i_mmaplock);
- 	else if (lock_flags & XFS_MMAPLOCK_SHARED)
--		mrunlock_shared(&ip->i_mmaplock);
-+		up_read(&ip->i_mmaplock);
- 
- 	if (lock_flags & XFS_ILOCK_EXCL)
--		mrunlock_excl(&ip->i_lock);
-+		up_write(&ip->i_lock);
- 	else if (lock_flags & XFS_ILOCK_SHARED)
--		mrunlock_shared(&ip->i_lock);
-+		up_read(&ip->i_lock);
- 
- 	trace_xfs_iunlock(ip, lock_flags, _RET_IP_);
- }
-@@ -335,9 +336,9 @@ xfs_ilock_demote(
- 		~(XFS_IOLOCK_EXCL|XFS_MMAPLOCK_EXCL|XFS_ILOCK_EXCL)) == 0);
- 
- 	if (lock_flags & XFS_ILOCK_EXCL)
--		mrdemote(&ip->i_lock);
-+		downgrade_write(&ip->i_lock);
- 	if (lock_flags & XFS_MMAPLOCK_EXCL)
--		mrdemote(&ip->i_mmaplock);
-+		downgrade_write(&ip->i_mmaplock);
- 	if (lock_flags & XFS_IOLOCK_EXCL)
- 		downgrade_write(&VFS_I(ip)->i_rwsem);
- 
-@@ -385,11 +386,14 @@ xfs_isilocked(
- 	uint			lock_flags)
- {
- 	if (lock_flags & (XFS_ILOCK_EXCL | XFS_ILOCK_SHARED)) {
-+		ASSERT(!(lock_flags & ~(XFS_ILOCK_EXCL | XFS_ILOCK_SHARED)));
- 		return __xfs_rwsem_islocked(&ip->i_lock,
- 				(lock_flags >> XFS_ILOCK_FLAG_SHIFT));
- 	}
- 
- 	if (lock_flags & (XFS_MMAPLOCK_EXCL | XFS_MMAPLOCK_SHARED)) {
-+		ASSERT(!(lock_flags &
-+			~(XFS_MMAPLOCK_EXCL | XFS_MMAPLOCK_SHARED)));
- 		return __xfs_rwsem_islocked(&ip->i_mmaplock,
- 				(lock_flags >> XFS_MMAPLOCK_FLAG_SHIFT));
- 	}
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 8df2c9e1a34e..b3664d818948 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -39,8 +39,8 @@ typedef struct xfs_inode {
- 
- 	/* Transaction and locking information. */
- 	struct xfs_inode_log_item *i_itemp;	/* logging information */
--	mrlock_t		i_lock;		/* inode lock */
--	mrlock_t		i_mmaplock;	/* inode mmap IO lock */
-+	struct rw_semaphore	i_lock;		/* inode lock */
-+	struct rw_semaphore	i_mmaplock;	/* inode mmap IO lock */
- 	atomic_t		i_pincount;	/* inode pin count */
- 
- 	/*
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 81f2f93caec0..7c3df574cf4c 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1319,9 +1319,9 @@ xfs_setup_inode(
- 		 */
- 		lockdep_set_class(&inode->i_rwsem,
- 				  &inode->i_sb->s_type->i_mutex_dir_key);
--		lockdep_set_class(&ip->i_lock.mr_lock, &xfs_dir_ilock_class);
-+		lockdep_set_class(&ip->i_lock, &xfs_dir_ilock_class);
- 	} else {
--		lockdep_set_class(&ip->i_lock.mr_lock, &xfs_nondir_ilock_class);
-+		lockdep_set_class(&ip->i_lock, &xfs_nondir_ilock_class);
- 	}
- 
- 	/*
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index 8738bb03f253..8248744f1245 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -22,7 +22,6 @@ typedef __u32			xfs_nlink_t;
- #include "xfs_types.h"
- 
- #include "kmem.h"
--#include "mrlock.h"
- 
- #include <linux/semaphore.h>
- #include <linux/mm.h>
-@@ -60,6 +59,7 @@ typedef __u32			xfs_nlink_t;
- #include <linux/list_sort.h>
- #include <linux/ratelimit.h>
- #include <linux/rhashtable.h>
-+#include <linux/rwsem.h>
- 
- #include <asm/page.h>
- #include <asm/div64.h>
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 760901783944..1289ce1f4e9e 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -661,10 +661,8 @@ xfs_fs_inode_init_once(
- 	atomic_set(&ip->i_pincount, 0);
- 	spin_lock_init(&ip->i_flags_lock);
- 
--	mrlock_init(&ip->i_mmaplock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
--		     "xfsino", ip->i_ino);
--	mrlock_init(&ip->i_lock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
--		     "xfsino", ip->i_ino);
-+	init_rwsem(&ip->i_mmaplock);
-+	init_rwsem(&ip->i_lock);
- }
- 
- /*
--- 
-2.25.1
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/x86_64 alder-mtr01 5.6.0-rc4-djw #rc4 SMP PREEMPT Fri Mar 13 14:48:13 PDT 2020
+MKFS_OPTIONS  -- -f -m reflink=1,rmapbt=1 -i sparse=1, -b size=1024, /dev/sdd
+MOUNT_OPTIONS -- -o usrquota,grpquota,prjquota, /dev/sdd /opt
 
+(Note that it seems to do this even with MKFS_OPTIONS='-m crc=0' and
+empty MOUNT_OPTIONS.)
+
+[   32.931667] XFS (sdd): Mounting V5 Filesystem
+[   32.940193] XFS (sdd): Ending clean mount
+[   32.941350] XFS (sdd): Quotacheck needed: Please wait.
+[   32.970724] XFS (sdd): Quotacheck: Done.
+[   32.972550] xfs filesystem being mounted at /opt supports timestamps until 2038 (0x7fffffff)
+[   32.985191] XFS (sdd): Unmounting Filesystem
+[   33.162426] XFS (sde): EXPERIMENTAL online scrub feature in use. Use at your own risk!
+[   33.273185] XFS (sde): Unmounting Filesystem
+[   33.517957] XFS (sde): Mounting V5 Filesystem
+[   33.526176] XFS (sde): Ending clean mount
+[   33.527439] XFS (sde): Quotacheck needed: Please wait.
+[   33.566117] XFS (sde): Quotacheck: Done.
+[   33.569427] xfs filesystem being mounted at /mnt supports timestamps until 2038 (0x7fffffff)
+[   33.656942] run fstests generic/418 at 2020-03-20 14:42:29
+[   36.332268] BUG: kernel NULL pointer dereference, address: 0000000000000060
+[   36.334254] #PF: supervisor read access in kernel mode
+[   36.334849] #PF: error_code(0x0000) - not-present page
+[   36.335461] PGD 0 P4D 0 
+[   36.335779] Oops: 0000 [#1] PREEMPT SMP
+[   36.336246] CPU: 2 PID: 5144 Comm: dio-invalidate- Not tainted 5.6.0-rc4-djw #rc4
+[   36.337078] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.10.2-1ubuntu1 04/01/2014
+[   36.338069] RIP: 0010:iomap_readpage_actor+0x2ea/0x3c0
+[   36.338671] Code: 43 10 8b 54 24 24 48 c7 40 38 80 bc 2f 81 48 8b 7b 10 e9 00 ff ff ff 31 c0 48 85 ed 0f 85 c9 fe ff ff 49 8b 46 18 48 8b 2c 24 <8b> 48 60 48 81 c5 ff 0f 00 00 48 c1 ed 0c 81 e1 c0 0c 00 00 e9 12
+[   36.340705] RSP: 0018:ffffc90004ebb968 EFLAGS: 00010246
+[   36.341309] RAX: 0000000000000000 RBX: ffffc90004ebbb30 RCX: 000000000000000a
+[   36.342105] RDX: 0000000000000400 RSI: 0000000000000003 RDI: 0000000000000000
+[   36.342909] RBP: 0000000000000400 R08: ffffc90004ebb988 R09: ffffc90004ebb98c
+[   36.343710] R10: 0000000000001000 R11: 0000000000000400 R12: ffffc90004ebba50
+[   36.344505] R13: 0000000000000086 R14: ffffea0001cd2400 R15: 0000000000000c00
+[   36.345246] FS:  00007f892894c740(0000) GS:ffff88807e000000(0000) knlGS:0000000000000000
+[   36.346087] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   36.346696] CR2: 0000000000000060 CR3: 0000000078753005 CR4: 00000000001606a0
+[   36.347445] Call Trace:
+[   36.347734]  iomap_readpages_actor+0x1e3/0x250
+[   36.348699]  iomap_apply+0x12c/0x4e3
+[   36.349097]  ? iomap_readpage_actor+0x3c0/0x3c0
+[   36.349593]  ? prep_new_page+0x3f/0x100
+[   36.350022]  ? iomap_readpage_actor+0x3c0/0x3c0
+[   36.350519]  iomap_readpages+0xc7/0x2b0
+[   36.350938]  ? iomap_readpage_actor+0x3c0/0x3c0
+[   36.351438]  read_pages+0x6e/0x1a0
+[   36.351824]  __do_page_cache_readahead+0x1c3/0x1e0
+[   36.352343]  ondemand_readahead+0x210/0x4b0
+[   36.352797]  generic_file_read_iter+0x871/0xcd0
+[   36.353365]  ? xfs_file_buffered_aio_read+0x54/0x170 [xfs]
+[   36.353982]  xfs_file_buffered_aio_read+0x5f/0x170 [xfs]
+[   36.354591]  xfs_file_read_iter+0xea/0x2a0 [xfs]
+[   36.355139]  ? xfs_file_write_iter+0xf2/0x1d0 [xfs]
+[   36.355668]  new_sync_read+0x12d/0x1d0
+[   36.356085]  vfs_read+0xa6/0x180
+[   36.356454]  ksys_pread64+0x64/0xa0
+[   36.356841]  do_syscall_64+0x50/0x1a0
+[   36.357252]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+[   36.357792] RIP: 0033:0x7f8928524f64
+[   36.358189] Code: 15 61 80 20 00 f7 d8 64 89 02 b8 ff ff ff ff c3 66 0f 1f 44 00 00 8b 05 aa c4 20 00 49 89 ca 85 c0 75 13 b8 11 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 5c f3 c3 66 90 41 55 41 54 49 89 cd 55 53 49
+[   36.360053] RSP: 002b:00007fffc7893b18 EFLAGS: 00000246 ORIG_RAX: 0000000000000011
+[   36.360841] RAX: ffffffffffffffda RBX: 0000000000000400 RCX: 00007f8928524f64
+[   36.361594] RDX: 0000000000000400 RSI: 00005593e3c23000 RDI: 0000000000000003
+[   36.362344] RBP: 0000000000000001 R08: 0000000000000001 R09: 0000000000000001
+[   36.363075] R10: 0000000000000000 R11: 0000000000000246 R12: 00005593e3c23000
+[   36.363817] R13: 0000000000000000 R14: 00005593e3c25000 R15: 0000000000000400
+[   36.364569] Modules linked in: xfs libcrc32c ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 ip_set_hash_ip ip_set_hash_net xt_tcpudp xt_set ip_set_hash_mac ip_set nfnetlink ip6table_filter ip6_tables iptable_filter bfq sch_fq_codel ip_tables x_tables nfsv4 af_packet
+[   36.366966] Dumping ftrace buffer:
+[   36.367351]    (ftrace buffer empty)
+[   36.367742] CR2: 0000000000000060
+[   36.369050] ---[ end trace d599586d1259866c ]---
+[   36.369884] RIP: 0010:iomap_readpage_actor+0x2ea/0x3c0
+[   36.370694] Code: 43 10 8b 54 24 24 48 c7 40 38 80 bc 2f 81 48 8b 7b 10 e9 00 ff ff ff 31 c0 48 85 ed 0f 85 c9 fe ff ff 49 8b 46 18 48 8b 2c 24 <8b> 48 60 48 81 c5 ff 0f 00 00 48 c1 ed 0c 81 e1 c0 0c 00 00 e9 12
+[   36.373022] RSP: 0018:ffffc90004ebb968 EFLAGS: 00010246
+[   36.373615] RAX: 0000000000000000 RBX: ffffc90004ebbb30 RCX: 000000000000000a
+[   36.374362] RDX: 0000000000000400 RSI: 0000000000000003 RDI: 0000000000000000
+[   36.375100] RBP: 0000000000000400 R08: ffffc90004ebb988 R09: ffffc90004ebb98c
+[   36.375833] R10: 0000000000001000 R11: 0000000000000400 R12: ffffc90004ebba50
+[   36.376577] R13: 0000000000000086 R14: ffffea0001cd2400 R15: 0000000000000c00
+[   36.377322] FS:  00007f892894c740(0000) GS:ffff88807e000000(0000) knlGS:0000000000000000
+[   36.378190] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   36.378795] CR2: 0000000000000060 CR3: 0000000078753005 CR4: 00000000001606a0
+
+I'll email back if I find anything else but since this is the second
+Friday in a row of getting STOP SHIP bugs dropped in my lap at 2pm, I
+doubt I'm going to manage much.
+
+--D
+
+> 
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> ---
+>  fs/iomap/buffered-io.c | 12 ++++++++++--
+>  1 file changed, 10 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index f080f542911b..417115bfaf6b 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -420,6 +420,16 @@ iomap_readpages_actor(struct inode *inode, loff_t pos, loff_t length,
+>  				ctx, iomap, srcmap);
+>  	}
+>  
+> +	/*
+> +	 * Submitting the bio here leads to better I/O patterns for
+> +	 * filesystems which need to do metadata reads to find the
+> +	 * next extent.
+> +	 */
+> +	if (ctx->bio) {
+> +		submit_bio(ctx->bio);
+> +		ctx->bio = NULL;
+> +	}
+> +
+>  	return done;
+>  }
+>  
+> @@ -449,8 +459,6 @@ iomap_readpages(struct address_space *mapping, struct list_head *pages,
+>  	}
+>  	ret = 0;
+>  done:
+> -	if (ctx.bio)
+> -		submit_bio(ctx.bio);
+>  	if (ctx.cur_page) {
+>  		if (!ctx.cur_page_in_bio)
+>  			unlock_page(ctx.cur_page);
+> -- 
+> 2.25.1
+> 
