@@ -2,116 +2,102 @@ Return-Path: <SRS0=ynSb=5F=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 952C0C4332D
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 18:52:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4294FC4332B
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 21:03:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7241320782
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 18:52:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1584730365;
-	bh=3gbE+VlmfoN5OPIi14o+iI+EIYlVydyt9rn3Y0AvnsY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=PsTE4Hgrlx+C2rlE7jpnW4WssJ84KKfQJy3Qme0JLpVv4HVQ7AzkuQ7TIgZ9mNW08
-	 f/ahJbBOT9bYVLo550xKCN4fmzyYLeujs8fC4CywUVDh9PC0xeRDQeVQsrYJsfWi2M
-	 bHyD3Qll2Tc9XtOJ10uEhZD0Zf3reRubd4E2OyH4=
+	by mail.kernel.org (Postfix) with ESMTP id 1397E20658
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 21:03:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JF7fasQJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727345AbgCTSwl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 Mar 2020 14:52:41 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46960 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727210AbgCTSwk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 20 Mar 2020 14:52:40 -0400
-Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8A87620775;
-        Fri, 20 Mar 2020 18:52:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1584730359;
-        bh=3gbE+VlmfoN5OPIi14o+iI+EIYlVydyt9rn3Y0AvnsY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=DRP5T0p/QJ3Eo+pOi6lUoz/NYAigZgi8TtvZjTzfHQ8g8KelV4xmxmhMYNwPEnhOr
-         jaoWnNJhMTgDQ5E65odJ0yXJp9dcxGm+62eg5najbweP0lRbI54UDJTXPJXqLKn/F1
-         CPgqcXc4KjgX4h9bEPayy9PiHh2SFNg2cqPbd3s0=
-Date:   Fri, 20 Mar 2020 11:52:38 -0700
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        linux-xfs@vger.kernel.org,
-        William Kucharski <william.kucharski@oracle.com>,
-        linux-kernel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-mm@kvack.org, ocfs2-devel@oss.oracle.com,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-btrfs@vger.kernel.org
-Subject: Re: [PATCH v9 23/25] f2fs: Pass the inode to f2fs_mpage_readpages
-Message-ID: <20200320185238.GJ851@sol.localdomain>
-References: <20200320142231.2402-1-willy@infradead.org>
- <20200320142231.2402-24-willy@infradead.org>
+        id S1727266AbgCTVD2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 Mar 2020 17:03:28 -0400
+Received: from us-smtp-delivery-74.mimecast.com ([63.128.21.74]:28192 "EHLO
+        us-smtp-delivery-74.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727261AbgCTVD2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Mar 2020 17:03:28 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1584738207;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=Sq5X+GtmhPye9bt1FRMsq9QBmVGxBimrDoacyNXcUr0=;
+        b=JF7fasQJcsRy5toHPvQK7aGGNrOwVBri+up3KDDYB1VCna50mfQMBtq0opNFdIpux5/sDg
+        mlKJWs8No9/QZ483EWrYS+T+c90CNOz7XbReIsm0W3eRBXwxzMMNZWViXBfTP8Fh4fDRYO
+        jefVwBcHRBM1ABzUiplEpQCQe1kAEcM=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-282-iApL93RLPuyPREZK8dV-FA-1; Fri, 20 Mar 2020 17:03:25 -0400
+X-MC-Unique: iApL93RLPuyPREZK8dV-FA-1
+Received: by mail-wm1-f72.google.com with SMTP id w12so2820565wmc.3
+        for <linux-xfs@vger.kernel.org>; Fri, 20 Mar 2020 14:03:25 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Sq5X+GtmhPye9bt1FRMsq9QBmVGxBimrDoacyNXcUr0=;
+        b=bRQyIpNNLxA3VFqFLjY4YVcp9YeMxsgEZItdyjELW4B8HodMCONkYMhgGyv8ATc90a
+         LGbx4CYzJtQnf8tk1/a95rkni1jW5udOzJXcVhitWBcfkcCfTeKE3qcsEwy/XFqhsdSI
+         dTh5NOlD1Gcfq7KoXmw7vGhcQ03xHAZJCp8in050TRNR1Un/tkmbpLeV5rwpjei/Peb9
+         NsSKX0MogsqpTleFI3W7XgVM2qAtC4dfzm3xcRnsYoIggpH67nAuN1LwSVQg8/5Yy05z
+         Gjv9a2W2gs8TtlxAahT4HVywefUI4rSuS+8Cu/ryRcNH7Hi6qQl+mAssuLRjyGrUJXQO
+         +M3g==
+X-Gm-Message-State: ANhLgQ2Q1mSdtXY/reHqto8THwOAo18R/6rC7RplONJox8iUsP9UUIMm
+        pJm/yzFom5F6JKaz5x/WpmTivo+m6gvWYDI8u/txJe4/Z/RmJKGwJhnfQxMYcTqaBo0p21HHuzK
+        +DLNPxmP2ZXVcagrccLUh
+X-Received: by 2002:a1c:9d41:: with SMTP id g62mr12911632wme.131.1584738203570;
+        Fri, 20 Mar 2020 14:03:23 -0700 (PDT)
+X-Google-Smtp-Source: ADFU+vtT4mX+g5gFmjIOVMFxogaBWrHZiJAxnu7+L+3p3CFgtdssVPeDWzoIw+/muKmwy8o2m5pv6Q==
+X-Received: by 2002:a1c:9d41:: with SMTP id g62mr12911624wme.131.1584738203396;
+        Fri, 20 Mar 2020 14:03:23 -0700 (PDT)
+Received: from localhost.localdomain.com (243.206.broadband12.iol.cz. [90.179.206.243])
+        by smtp.gmail.com with ESMTPSA id w7sm10479668wrr.60.2020.03.20.14.03.21
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 20 Mar 2020 14:03:21 -0700 (PDT)
+From:   Pavel Reichl <preichl@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH v7 0/4] xfs: Remove wrappers for some semaphores
+Date:   Fri, 20 Mar 2020 22:03:13 +0100
+Message-Id: <20200320210317.1071747-1-preichl@redhat.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200320142231.2402-24-willy@infradead.org>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Mar 20, 2020 at 07:22:29AM -0700, Matthew Wilcox wrote:
-> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-> 
-> This function now only uses the mapping argument to look up the inode,
-> and both callers already have the inode, so just pass the inode instead
-> of the mapping.
-> 
-> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> Reviewed-by: William Kucharski <william.kucharski@oracle.com>
-> ---
->  fs/f2fs/data.c | 7 +++----
->  1 file changed, 3 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/f2fs/data.c b/fs/f2fs/data.c
-> index 237dff36fe73..c8b042979fc4 100644
-> --- a/fs/f2fs/data.c
-> +++ b/fs/f2fs/data.c
-> @@ -2159,12 +2159,11 @@ int f2fs_read_multi_pages(struct compress_ctx *cc, struct bio **bio_ret,
->   * use ->readpage() or do the necessary surgery to decouple ->readpages()
->   * from read-ahead.
->   */
-> -static int f2fs_mpage_readpages(struct address_space *mapping,
-> +static int f2fs_mpage_readpages(struct inode *inode,
->  		struct readahead_control *rac, struct page *page)
->  {
->  	struct bio *bio = NULL;
->  	sector_t last_block_in_bio = 0;
-> -	struct inode *inode = mapping->host;
->  	struct f2fs_map_blocks map;
->  #ifdef CONFIG_F2FS_FS_COMPRESSION
->  	struct compress_ctx cc = {
-> @@ -2276,7 +2275,7 @@ static int f2fs_read_data_page(struct file *file, struct page *page)
->  	if (f2fs_has_inline_data(inode))
->  		ret = f2fs_read_inline_data(inode, page);
->  	if (ret == -EAGAIN)
-> -		ret = f2fs_mpage_readpages(page_file_mapping(page), NULL, page);
-> +		ret = f2fs_mpage_readpages(inode, NULL, page);
->  	return ret;
->  }
->  
-> @@ -2293,7 +2292,7 @@ static void f2fs_readahead(struct readahead_control *rac)
->  	if (f2fs_has_inline_data(inode))
->  		return;
->  
-> -	f2fs_mpage_readpages(rac->mapping, rac, NULL);
-> +	f2fs_mpage_readpages(inode, rac, NULL);
->  }
->  
->  int f2fs_encrypt_one_page(struct f2fs_io_info *fio)
-> -- 
+Remove some wrappers that we have in XFS around the read-write semaphore
+locks.
 
-Reviewed-by: Eric Biggers <ebiggers@google.com>
+The goal of this cleanup is to remove mrlock_t structure and its mr*()
+wrapper functions and replace it with native rw_semaphore type and its
+native calls.
 
-- Eric
+Pavel Reichl (4):
+  xfs: Refactor xfs_isilocked()
+  xfs: clean up whitespace in xfs_isilocked() calls
+  xfs: xfs_isilocked() can only check a single lock type
+  xfs: replace mrlock_t with rw_semaphores
+
+ fs/xfs/libxfs/xfs_bmap.c |   8 +--
+ fs/xfs/mrlock.h          |  78 -----------------------------
+ fs/xfs/xfs_file.c        |   3 +-
+ fs/xfs/xfs_inode.c       | 104 ++++++++++++++++++++++++++-------------
+ fs/xfs/xfs_inode.h       |  25 ++++++----
+ fs/xfs/xfs_iops.c        |   4 +-
+ fs/xfs/xfs_linux.h       |   2 +-
+ fs/xfs/xfs_qm.c          |   2 +-
+ fs/xfs/xfs_super.c       |   6 +--
+ 9 files changed, 98 insertions(+), 134 deletions(-)
+ delete mode 100644 fs/xfs/mrlock.h
+
+-- 
+2.25.1
+
