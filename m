@@ -2,76 +2,85 @@ Return-Path: <SRS0=ynSb=5F=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2FC4C4332B
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 02:47:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3951BC4332D
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 02:53:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7713B2071C
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 02:47:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 12D392075E
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 02:53:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726658AbgCTCrF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Mar 2020 22:47:05 -0400
-Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:49369 "EHLO
+        id S1726596AbgCTCxQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Mar 2020 22:53:16 -0400
+Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:50031 "EHLO
         outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725884AbgCTCrE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Mar 2020 22:47:04 -0400
+        with ESMTP id S1725856AbgCTCxQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Mar 2020 22:53:16 -0400
 Received: from callcc.thunk.org (pool-72-93-95-157.bstnma.fios.verizon.net [72.93.95.157])
         (authenticated bits=0)
         (User authenticated as tytso@ATHENA.MIT.EDU)
-        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 02K2kepw014400
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 02K2r1gl016094
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 19 Mar 2020 22:46:40 -0400
+        Thu, 19 Mar 2020 22:53:02 -0400
 Received: by callcc.thunk.org (Postfix, from userid 15806)
-        id CDE30420EBA; Thu, 19 Mar 2020 22:46:39 -0400 (EDT)
-Date:   Thu, 19 Mar 2020 22:46:39 -0400
-From:   "Theodore Y. Ts'o" <tytso@mit.edu>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Eric Biggers <ebiggers@kernel.org>,
-        Linux Filesystem Development List 
-        <linux-fsdevel@vger.kernel.org>,
-        Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        id C18CD420EBB; Thu, 19 Mar 2020 22:53:01 -0400 (EDT)
+From:   "Theodore Ts'o" <tytso@mit.edu>
+To:     Ext4 Developers List <linux-ext4@vger.kernel.org>,
         linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] writeback: avoid double-writing the inode on a lazytime
- expiration
-Message-ID: <20200320024639.GH1067245@mit.edu>
-References: <20200306004555.GB225345@gmail.com>
- <20200307020043.60118-1-tytso@mit.edu>
- <20200311032009.GC46757@gmail.com>
- <20200311125749.GA7159@mit.edu>
- <20200312000716.GY10737@dread.disaster.area>
- <20200312143445.GA19160@infradead.org>
+Cc:     "Theodore Ts'o" <tytso@mit.edu>
+Subject: [PATCH 2/2] writeback, xfs: call dirty_inode() with I_DIRTY_TIME_EXPIRED when appropriate
+Date:   Thu, 19 Mar 2020 22:52:55 -0400
+Message-Id: <20200320025255.1705972-2-tytso@mit.edu>
+X-Mailer: git-send-email 2.24.1
+In-Reply-To: <20200320025255.1705972-1-tytso@mit.edu>
+References: <20200320024639.GH1067245@mit.edu>
+ <20200320025255.1705972-1-tytso@mit.edu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200312143445.GA19160@infradead.org>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 12, 2020 at 07:34:45AM -0700, Christoph Hellwig wrote:
-> I haven't seen the original mail this replies to, but if we could
-> get the lazytime expirty by some other means (e.g. an explicit
-> callback), XFS could opt out of all the VFS inode tracking again,
-> which would simplify a few things.
+Use the flag I_DIRTY_TIME_EXPIRED passed to dirty_inode() to signal to
+the file system that it is time to flush the inode's timestamps to
+stable storage.
 
-Part of my thinking of calling 
+Signed-off-by: Theodore Ts'o <tytso@mit.edu>
+---
+ fs/fs-writeback.c  | 2 +-
+ fs/xfs/xfs_super.c | 3 ++-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-       inode->i_sb->s_op->dirty_inode(inode, I_DIRTY_TIME_EXPIRED);
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index 867454997c9d..32101349ba97 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -1506,7 +1506,7 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
+ 
+ 	/* This was a lazytime expiration; we need to tell the file system */
+ 	if (dirty & I_DIRTY_TIME_EXPIRED && inode->i_sb->s_op->dirty_inode)
+-		inode->i_sb->s_op->dirty_inode(inode, I_DIRTY_SYNC);
++		inode->i_sb->s_op->dirty_inode(inode, I_DIRTY_TIME_EXPIRED);
+ 	/* Don't write the inode if only I_DIRTY_PAGES was set */
+ 	if (dirty & ~I_DIRTY_PAGES) {
+ 		int err = write_inode(inode, wbc);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 2094386af8ac..f27b9b205f81 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -622,7 +622,8 @@ xfs_fs_dirty_inode(
+ 
+ 	if (!(inode->i_sb->s_flags & SB_LAZYTIME))
+ 		return;
+-	if (flag != I_DIRTY_SYNC || !(inode->i_state & I_DIRTY_TIME))
++	if ((flag != I_DIRTY_SYNC && flag != I_DIRTY_TIME_EXPIRED) ||
++	    !(inode->i_state & I_DIRTY_TIME))
+ 		return;
+ 
+ 	if (xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp))
+-- 
+2.24.1
 
-So that it would be an explicit callback to XFS.  So why don't I break
-this as two patches --- one which uses I_DIRTY_SYNC, as before, and a
-second one which changes calls dirty_inode() with
-I_DIRTY_TIME_EXPIRED, and with a change to XFS so that it recognizes
-I_DIRTY_TIME_EXPIRED as if it were I_DIRTY_SYNC.  If this would then
-allow XFS to simplify how it handles VFS tracking, you could do that
-in a separate patch.
-
-Does that work?  I'll send out the two patches, and if you can
-review/ack the second patch, that would be great.
-
-	       	      	     	  	- Ted
