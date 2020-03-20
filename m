@@ -7,42 +7,41 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D92C1C4332E
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 06:53:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3868FC4332D
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 06:53:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AFD6C20781
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 06:53:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 045A320781
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 06:53:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UPH+85AE"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="duJ45ZGL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726767AbgCTGxS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 Mar 2020 02:53:18 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:41996 "EHLO
+        id S1726789AbgCTGxU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 Mar 2020 02:53:20 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:42008 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726232AbgCTGxS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Mar 2020 02:53:18 -0400
+        with ESMTP id S1726232AbgCTGxU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Mar 2020 02:53:20 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=EDthvB3qWaC4jyeKUPT5PSQ7K1qMfIAcUiq7GQCL6pE=; b=UPH+85AETFzVRGGj7RrrxbkuTL
-        DhthfViHsQ+0vgvxYxOHTW2T3Ns+DOK1lp/wSFr9IqpeYDqFEFPxbPrl/JFdF1uKgO1MxlN+YQDne
-        QbS/UEnOhwISHEGk8KKwrw0doDqc1X4RKlHJ9cOR4OJx57d7pDQ89wIZa+MAyFIMvXgaNA37QTyO+
-        dkKVP/g/Y1ari2mRg1jXiK+xItlNf1n6ldtYK3n1gkccfIH553YMrz0O19PY5JGoOpT5EX3WnsKBm
-        xRxzcMs4lWpuvearf35vXc907NOzblhJw1CCgPZimzrTcDQrwfEh4vMHB9MXgsLrpPNG0dWjoEQSZ
-        ptc0IPDA==;
+        bh=FHHLZJHWqf8YpLdj8gR43G9irEU17/2d4FGAckpSa3c=; b=duJ45ZGLQtIr+/BTk56BbNajQH
+        xi7rCFcKOzb0eT6Nk/DgX9+YiX6LrVo0by/rpA78fFQZ+hVqAvjifDet9t7oKhlTBf7sqIrKiwb9B
+        5yXDlEwTsUgGRiZpPHgSHDkgvHbyMxJTKA9M+qdgtBqiM3tr344wjgtxtMEVvgXLmiluAKnHUZ1bQ
+        E+Rm5knKtm55E3QJ1/QA/KowV3cGDknem6NriwrGxp+F1++Rft5I5hY4HhBpG7aqz3kikdXYPIdSO
+        iB9NALItUJkAcc0j1TN0R01g7yR9AiqpB2oJHIeBHFtFnIRc0W2CQjSJpt13W44dxonKJ1v25LFeV
+        93JAwXPw==;
 Received: from [2001:4bb8:188:30cd:a410:8a7:7f20:5c9c] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jFBWv-0006EP-HP; Fri, 20 Mar 2020 06:53:17 +0000
+        id 1jFBWx-0006EY-Va; Fri, 20 Mar 2020 06:53:20 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
 Cc:     Dave Chinner <david@fromorbit.com>,
-        Dave Chinner <dchinner@redhat.com>,
         Brian Foster <bfoster@redhat.com>,
         "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 1/8] xfs: merge xlog_cil_push into xlog_cil_push_work
-Date:   Fri, 20 Mar 2020 07:53:04 +0100
-Message-Id: <20200320065311.28134-2-hch@lst.de>
+Subject: [PATCH 2/8] xfs: factor out a xlog_wait_on_iclog helper
+Date:   Fri, 20 Mar 2020 07:53:05 +0100
+Message-Id: <20200320065311.28134-3-hch@lst.de>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200320065311.28134-1-hch@lst.de>
 References: <20200320065311.28134-1-hch@lst.de>
@@ -54,103 +53,150 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xlog_cil_push is only called by xlog_cil_push_work, so merge the two
-functions.
+Factor out the shared code to wait for a log force into a new helper.
+This helper uses the XLOG_FORCED_SHUTDOWN check previous only used
+by the unmount code over the equivalent iclog ioerror state used by
+the other two functions.
+
+There is a slight behavior change in that the force of the unmount
+record is now accounted in the log force statistics.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_log_cil.c | 46 +++++++++++++++++---------------------------
- 1 file changed, 18 insertions(+), 28 deletions(-)
+ fs/xfs/xfs_log.c | 76 ++++++++++++++++++++----------------------------
+ 1 file changed, 31 insertions(+), 45 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 48435cf2aa16..9ef0f8b555a4 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -626,24 +626,26 @@ xlog_cil_process_committed(
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 0986983ef6b5..955df2902c2c 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -859,6 +859,31 @@ xfs_log_mount_cancel(
+ 	xfs_log_unmount(mp);
  }
  
++/*
++ * Wait for the iclog to be written disk, or return an error if the log has been
++ * shut down.
++ */
++static int
++xlog_wait_on_iclog(
++	struct xlog_in_core	*iclog)
++		__releases(iclog->ic_log->l_icloglock)
++{
++	struct xlog		*log = iclog->ic_log;
++
++	if (!XLOG_FORCED_SHUTDOWN(log) &&
++	    iclog->ic_state != XLOG_STATE_ACTIVE &&
++	    iclog->ic_state != XLOG_STATE_DIRTY) {
++		XFS_STATS_INC(log->l_mp, xs_log_force_sleep);
++		xlog_wait(&iclog->ic_force_wait, &log->l_icloglock);
++	} else {
++		spin_unlock(&log->l_icloglock);
++	}
++
++	if (XLOG_FORCED_SHUTDOWN(log))
++		return -EIO;
++	return 0;
++}
++
  /*
-- * Push the Committed Item List to the log. If @push_seq flag is zero, then it
-- * is a background flush and so we can chose to ignore it. Otherwise, if the
-- * current sequence is the same as @push_seq we need to do a flush. If
-- * @push_seq is less than the current sequence, then it has already been
-+ * Push the Committed Item List to the log.
-+ *
-+ * If the current sequence is the same as xc_push_seq we need to do a flush. If
-+ * xc_push_seq is less than the current sequence, then it has already been
-  * flushed and we don't need to do anything - the caller will wait for it to
-  * complete if necessary.
+  * Final log writes as part of unmount.
   *
-- * @push_seq is a value rather than a flag because that allows us to do an
-- * unlocked check of the sequence number for a match. Hence we can allows log
-- * forces to run racily and not issue pushes for the same sequence twice. If we
-- * get a race between multiple pushes for the same sequence they will block on
-- * the first one and then abort, hence avoiding needless pushes.
-+ * xc_push_seq is checked unlocked against the sequence number for a match.
-+ * Hence we can allow log forces to run racily and not issue pushes for the
-+ * same sequence twice.  If we get a race between multiple pushes for the same
-+ * sequence they will block on the first one and then abort, hence avoiding
-+ * needless pushes.
-  */
--STATIC int
--xlog_cil_push(
--	struct xlog		*log)
-+static void
-+xlog_cil_push_work(
-+	struct work_struct	*work)
- {
--	struct xfs_cil		*cil = log->l_cilp;
-+	struct xfs_cil		*cil =
-+		container_of(work, struct xfs_cil, xc_push_work);
-+	struct xlog		*log = cil->xc_log;
- 	struct xfs_log_vec	*lv;
- 	struct xfs_cil_ctx	*ctx;
- 	struct xfs_cil_ctx	*new_ctx;
-@@ -657,9 +659,6 @@ xlog_cil_push(
- 	xfs_lsn_t		commit_lsn;
- 	xfs_lsn_t		push_seq;
+@@ -926,18 +951,7 @@ xfs_log_write_unmount_record(
+ 	atomic_inc(&iclog->ic_refcnt);
+ 	xlog_state_want_sync(log, iclog);
+ 	error = xlog_state_release_iclog(log, iclog);
+-	switch (iclog->ic_state) {
+-	default:
+-		if (!XLOG_FORCED_SHUTDOWN(log)) {
+-			xlog_wait(&iclog->ic_force_wait, &log->l_icloglock);
+-			break;
+-		}
+-		/* fall through */
+-	case XLOG_STATE_ACTIVE:
+-	case XLOG_STATE_DIRTY:
+-		spin_unlock(&log->l_icloglock);
+-		break;
+-	}
++	xlog_wait_on_iclog(iclog);
  
--	if (!cil)
--		return 0;
+ 	if (tic) {
+ 		trace_xfs_log_umount_write(log, tic);
+@@ -3230,9 +3244,6 @@ xfs_log_force(
+ 		 * previous iclog and go to sleep.
+ 		 */
+ 		iclog = iclog->ic_prev;
+-		if (iclog->ic_state == XLOG_STATE_ACTIVE ||
+-		    iclog->ic_state == XLOG_STATE_DIRTY)
+-			goto out_unlock;
+ 	} else if (iclog->ic_state == XLOG_STATE_ACTIVE) {
+ 		if (atomic_read(&iclog->ic_refcnt) == 0) {
+ 			/*
+@@ -3248,8 +3259,7 @@ xfs_log_force(
+ 			if (xlog_state_release_iclog(log, iclog))
+ 				goto out_error;
+ 
+-			if (be64_to_cpu(iclog->ic_header.h_lsn) != lsn ||
+-			    iclog->ic_state == XLOG_STATE_DIRTY)
++			if (be64_to_cpu(iclog->ic_header.h_lsn) != lsn)
+ 				goto out_unlock;
+ 		} else {
+ 			/*
+@@ -3269,17 +3279,8 @@ xfs_log_force(
+ 		;
+ 	}
+ 
+-	if (!(flags & XFS_LOG_SYNC))
+-		goto out_unlock;
 -
- 	new_ctx = kmem_zalloc(sizeof(*new_ctx), KM_NOFS);
- 	new_ctx->ticket = xlog_cil_ticket_alloc(log);
- 
-@@ -867,28 +866,19 @@ xlog_cil_push(
- 	spin_unlock(&cil->xc_push_lock);
- 
- 	/* release the hounds! */
--	return xfs_log_release_iclog(log->l_mp, commit_iclog);
-+	xfs_log_release_iclog(log->l_mp, commit_iclog);
-+	return;
- 
- out_skip:
- 	up_write(&cil->xc_ctx_lock);
- 	xfs_log_ticket_put(new_ctx->ticket);
- 	kmem_free(new_ctx);
+-	if (iclog->ic_state == XLOG_STATE_IOERROR)
+-		goto out_error;
+-	XFS_STATS_INC(mp, xs_log_force_sleep);
+-	xlog_wait(&iclog->ic_force_wait, &log->l_icloglock);
+-	if (iclog->ic_state == XLOG_STATE_IOERROR)
+-		return -EIO;
 -	return 0;
-+	return;
- 
- out_abort_free_ticket:
- 	xfs_log_ticket_put(tic);
- out_abort:
- 	xlog_cil_committed(ctx, true);
--	return -EIO;
--}
 -
--static void
--xlog_cil_push_work(
--	struct work_struct	*work)
--{
--	struct xfs_cil		*cil = container_of(work, struct xfs_cil,
--							xc_push_work);
--	xlog_cil_push(cil->xc_log);
- }
++	if (flags & XFS_LOG_SYNC)
++		return xlog_wait_on_iclog(iclog);
+ out_unlock:
+ 	spin_unlock(&log->l_icloglock);
+ 	return 0;
+@@ -3310,9 +3311,6 @@ __xfs_log_force_lsn(
+ 			goto out_unlock;
+ 	}
  
- /*
+-	if (iclog->ic_state == XLOG_STATE_DIRTY)
+-		goto out_unlock;
+-
+ 	if (iclog->ic_state == XLOG_STATE_ACTIVE) {
+ 		/*
+ 		 * We sleep here if we haven't already slept (e.g. this is the
+@@ -3346,20 +3344,8 @@ __xfs_log_force_lsn(
+ 			*log_flushed = 1;
+ 	}
+ 
+-	if (!(flags & XFS_LOG_SYNC) ||
+-	    (iclog->ic_state == XLOG_STATE_ACTIVE ||
+-	     iclog->ic_state == XLOG_STATE_DIRTY))
+-		goto out_unlock;
+-
+-	if (iclog->ic_state == XLOG_STATE_IOERROR)
+-		goto out_error;
+-
+-	XFS_STATS_INC(mp, xs_log_force_sleep);
+-	xlog_wait(&iclog->ic_force_wait, &log->l_icloglock);
+-	if (iclog->ic_state == XLOG_STATE_IOERROR)
+-		return -EIO;
+-	return 0;
+-
++	if (flags & XFS_LOG_SYNC)
++		return xlog_wait_on_iclog(iclog);
+ out_unlock:
+ 	spin_unlock(&log->l_icloglock);
+ 	return 0;
 -- 
 2.25.1
 
