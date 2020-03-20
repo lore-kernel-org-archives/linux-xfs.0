@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A7BAC54EEB
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 14:24:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58424C4332B
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 14:24:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5E0F32070A
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 14:24:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26C0F2070A
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 14:24:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jKW9GBYs"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="o94Py0hr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727389AbgCTOXm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 Mar 2020 10:23:42 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:59856 "EHLO
+        id S1727265AbgCTOWe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 Mar 2020 10:22:34 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:59744 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727257AbgCTOWe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Mar 2020 10:22:34 -0400
+        with ESMTP id S1727207AbgCTOWd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Mar 2020 10:22:33 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=uJQyNXPRyr3MEmX31UTxivj138HeoXLkpB9icmxKmck=; b=jKW9GBYsiK2hYV/J1HH/iXaFkr
-        SK+ZswpZxVS5btEbTMuI/fyBjdqUZdfW7cqNmskOOVmbKHkDzCOs1Gd0LuCHC3VyCUvgLFV0CJcri
-        9zEJxlh6wKrxh8W682yRGhKDla3j3oO/x6Tsx4sLcsz88hxbEonVteSiTykIURj4IoBAyHI2dUa+b
-        TItLnfJRrUJIuciMf2M0XULSJINan0s1HA3/k2MgFOmHvQqvwUraQxA8L9Aql/6bt441I3jnPOKBE
-        Txl7tquXQvU+Ly22dkBWDzCfn0QH/a4VRImFqk8WVxHL8PQ74cPT6SVqcVbuu1f51a+Zm0Coa1k6s
-        SJmAut2w==;
+        bh=a3v6yDLu6YVVgdwzNLLzwkeJ8vT0YawbuKhMcViKfm0=; b=o94Py0hrY2AL21Hit1xuWJSO58
+        b3uQ1Vvk04RTNAbcWTzolol1KMnng7zWbWv52EwLbpj1XBoup/RzOPmz1V4raWQ3pQCrBs21nHaNv
+        dSNdUhpaDb8IOqTtc4tFiAITtcpZcFzqXjDMxerSgduKkfq7dtKNERhluzZ501Bh1NXH4HGBOL4ef
+        d4Yai/iczKhLrrO/a8Da2lhxeCUpzll/39IQrofVoeps/R8GaqM/3g8EdQ80KvS4tJMiqhp4s1TwF
+        g8FvwkzVXA7iGAStYHVgrJYN2/YmMDewTTgjZakUAsdlUcUqIm2D6OngLFKzrNCvt3WKyGA9zzGwm
+        UoY/5d1g==;
 Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jFIXi-0000je-61; Fri, 20 Mar 2020 14:22:34 +0000
+        id 1jFIXh-0000hn-CY; Fri, 20 Mar 2020 14:22:33 +0000
 From:   Matthew Wilcox <willy@infradead.org>
 To:     Andrew Morton <akpm@linux-foundation.org>
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
@@ -41,10 +41,12 @@ Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
         linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
         ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org,
+        John Hubbard <jhubbard@nvidia.com>,
+        Dave Chinner <dchinner@redhat.com>,
         William Kucharski <william.kucharski@oracle.com>
-Subject: [PATCH v9 21/25] ext4: Pass the inode to ext4_mpage_readpages
-Date:   Fri, 20 Mar 2020 07:22:27 -0700
-Message-Id: <20200320142231.2402-22-willy@infradead.org>
+Subject: [PATCH v9 08/25] mm: rename readahead loop variable to 'i'
+Date:   Fri, 20 Mar 2020 07:22:14 -0700
+Message-Id: <20200320142231.2402-9-willy@infradead.org>
 X-Mailer: git-send-email 2.21.1
 In-Reply-To: <20200320142231.2402-1-willy@infradead.org>
 References: <20200320142231.2402-1-willy@infradead.org>
@@ -57,72 +59,56 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
-This function now only uses the mapping argument to look up the inode,
-and both callers already have the inode, so just pass the inode instead
-of the mapping.
+Change the type of page_idx to unsigned long, and rename it -- it's
+just a loop counter, not a page index.
 
+Suggested-by: John Hubbard <jhubbard@nvidia.com>
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: William Kucharski <william.kucharski@oracle.com>
 ---
- fs/ext4/ext4.h     | 2 +-
- fs/ext4/inode.c    | 4 ++--
- fs/ext4/readpage.c | 3 +--
- 3 files changed, 4 insertions(+), 5 deletions(-)
+ mm/readahead.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
-index 1570a0b51b73..bc1b34ba6eab 100644
---- a/fs/ext4/ext4.h
-+++ b/fs/ext4/ext4.h
-@@ -3278,7 +3278,7 @@ static inline void ext4_set_de_type(struct super_block *sb,
- }
+diff --git a/mm/readahead.c b/mm/readahead.c
+index 8a65d6bd97e0..7ce320854bad 100644
+--- a/mm/readahead.c
++++ b/mm/readahead.c
+@@ -163,13 +163,13 @@ void __do_page_cache_readahead(struct address_space *mapping,
+ 	struct page *page;
+ 	unsigned long end_index;	/* The last page we want to read */
+ 	LIST_HEAD(page_pool);
+-	int page_idx;
+ 	loff_t isize = i_size_read(inode);
+ 	gfp_t gfp_mask = readahead_gfp_mask(mapping);
+ 	struct readahead_control rac = {
+ 		.mapping = mapping,
+ 		.file = filp,
+ 	};
++	unsigned long i;
  
- /* readpages.c */
--extern int ext4_mpage_readpages(struct address_space *mapping,
-+extern int ext4_mpage_readpages(struct inode *inode,
- 		struct readahead_control *rac, struct page *page);
- extern int __init ext4_init_post_read_processing(void);
- extern void ext4_exit_post_read_processing(void);
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index d674c5f9066c..4f3703c1408d 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -3226,7 +3226,7 @@ static int ext4_readpage(struct file *file, struct page *page)
- 		ret = ext4_readpage_inline(inode, page);
- 
- 	if (ret == -EAGAIN)
--		return ext4_mpage_readpages(page->mapping, NULL, page);
-+		return ext4_mpage_readpages(inode, NULL, page);
- 
- 	return ret;
- }
-@@ -3239,7 +3239,7 @@ static void ext4_readahead(struct readahead_control *rac)
- 	if (ext4_has_inline_data(inode))
+ 	if (isize == 0)
  		return;
+@@ -179,8 +179,8 @@ void __do_page_cache_readahead(struct address_space *mapping,
+ 	/*
+ 	 * Preallocate as many pages as we will need.
+ 	 */
+-	for (page_idx = 0; page_idx < nr_to_read; page_idx++) {
+-		pgoff_t page_offset = index + page_idx;
++	for (i = 0; i < nr_to_read; i++) {
++		pgoff_t page_offset = index + i;
  
--	ext4_mpage_readpages(rac->mapping, rac, NULL);
-+	ext4_mpage_readpages(inode, rac, NULL);
- }
- 
- static void ext4_invalidatepage(struct page *page, unsigned int offset,
-diff --git a/fs/ext4/readpage.c b/fs/ext4/readpage.c
-index 66275f25235d..5761e9961682 100644
---- a/fs/ext4/readpage.c
-+++ b/fs/ext4/readpage.c
-@@ -221,13 +221,12 @@ static inline loff_t ext4_readpage_limit(struct inode *inode)
- 	return i_size_read(inode);
- }
- 
--int ext4_mpage_readpages(struct address_space *mapping,
-+int ext4_mpage_readpages(struct inode *inode,
- 		struct readahead_control *rac, struct page *page)
- {
- 	struct bio *bio = NULL;
- 	sector_t last_block_in_bio = 0;
- 
--	struct inode *inode = mapping->host;
- 	const unsigned blkbits = inode->i_blkbits;
- 	const unsigned blocks_per_page = PAGE_SIZE >> blkbits;
- 	const unsigned blocksize = 1 << blkbits;
+ 		if (page_offset > end_index)
+ 			break;
+@@ -201,7 +201,7 @@ void __do_page_cache_readahead(struct address_space *mapping,
+ 			break;
+ 		page->index = page_offset;
+ 		list_add(&page->lru, &page_pool);
+-		if (page_idx == nr_to_read - lookahead_size)
++		if (i == nr_to_read - lookahead_size)
+ 			SetPageReadahead(page);
+ 		rac._nr_pages++;
+ 	}
 -- 
 2.25.1
 
