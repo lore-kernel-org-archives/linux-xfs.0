@@ -2,145 +2,125 @@ Return-Path: <SRS0=ynSb=5F=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FB77C4332D
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 15:52:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D93A2C4332D
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 16:58:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EA13F2072C
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 15:52:47 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="OY2GfF07"
+	by mail.kernel.org (Postfix) with ESMTP id B096720767
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 16:58:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1584723516;
+	bh=AxLDPN4LwuxzW4xjwlSgsVf6rtc0JFVKxbo5//wmPgc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=gh1h6TZYk7RfKAaP1VX38ZPM1gzk+7g31koVgSOpFfRX1NQupQ+AbTyNzSQdjVhmV
+	 2hbfcFVHp37iccbGa0AEL/AOUUEgbWgB+nfnkPfNitgSifVSDIEo1ith542YyQAdvg
+	 KHgzdJsphyY6S0YK2SPHMwOpYIIdoBOvF/JP5xp4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727365AbgCTPwr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 Mar 2020 11:52:47 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:36726 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727120AbgCTPwr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Mar 2020 11:52:47 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02KFfR2Z059120;
-        Fri, 20 Mar 2020 15:52:25 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=9Nmn0D0otCSC8FyIPmpHy5LNVxBSd2s/E1au52CwaRs=;
- b=OY2GfF07gzpE3SmmdiyNNPwtM1T+kjxgD8ng5/en3wXHofSJhXJlc/8QUuHBdbS/0eAh
- wcq41kdth5S40QwKHIEKTYA4meCEzVM8J2G8VlVH7T+TrMQ6SppEwlc+wOpg3qe2kP3G
- LWAGQZ7s6GuuXpPrQ3YlgTXVcD8qT7EoZCJwA9YpH139q5Xsq4l0rCfvZcTvykXNh8Rc
- XIf+PhIRQyQBX5JsgPq6ij5vedE0BaoTtGxlyuyukxsi68vOCHeQOIB1VCqUbDirugEl
- duodgQi4qNMKcgRW6eexaRugSWoAwFOIWyyp3uhfITiOXtxhKLF6wZ1QGedY73dbSzwb lQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2yrpprpg9x-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 20 Mar 2020 15:52:25 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02KFnt54183006;
-        Fri, 20 Mar 2020 15:50:25 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2ys92quwge-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 20 Mar 2020 15:50:24 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 02KFoNOm024863;
-        Fri, 20 Mar 2020 15:50:23 GMT
-Received: from localhost (/10.159.129.235)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 20 Mar 2020 08:50:22 -0700
-Date:   Fri, 20 Mar 2020 08:50:20 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+        id S1727269AbgCTQ6b (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 Mar 2020 12:58:31 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38696 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727101AbgCTQ6b (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 20 Mar 2020 12:58:31 -0400
+Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6434C20753;
+        Fri, 20 Mar 2020 16:58:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1584723510;
+        bh=AxLDPN4LwuxzW4xjwlSgsVf6rtc0JFVKxbo5//wmPgc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=cRbat8REA7EmmJnmLCrWxRoNW5LgyCKm+4EsNDf5E4lY0nLcYrSE6Jyr+LkCnKmyi
+         n3W2x46nv8ZHmzqeZMc86Mj56kXxAhIEwG1PHXCTucYL5iivPYgJLLRVtDE0DPEV3X
+         iA5d4+HsRZ/BNe0ydHe/SfLeiRxRKGyEVqIcRkok=
+Date:   Fri, 20 Mar 2020 09:58:28 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
 To:     Matthew Wilcox <willy@infradead.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>,
-        Ritesh Harjani <riteshh@linux.ibm.com>,
-        Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH] iomap: Submit the BIO at the end of each extent
-Message-ID: <20200320155020.GB6812@magnolia>
-References: <20200320144014.3276-1-willy@infradead.org>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        linux-xfs@vger.kernel.org,
+        William Kucharski <william.kucharski@oracle.com>,
+        John Hubbard <jhubbard@nvidia.com>,
+        linux-kernel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-mm@kvack.org, ocfs2-devel@oss.oracle.com,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-btrfs@vger.kernel.org
+Subject: Re: [PATCH v9 12/25] mm: Move end_index check out of readahead loop
+Message-ID: <20200320165828.GB851@sol.localdomain>
+References: <20200320142231.2402-1-willy@infradead.org>
+ <20200320142231.2402-13-willy@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200320144014.3276-1-willy@infradead.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9566 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
- mlxscore=0 spamscore=0 bulkscore=0 adultscore=0 suspectscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2003200064
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9566 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0
- suspectscore=0 lowpriorityscore=0 phishscore=0 adultscore=0 clxscore=1015
- impostorscore=0 priorityscore=1501 spamscore=0 mlxlogscore=999 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2003200064
+In-Reply-To: <20200320142231.2402-13-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Mar 20, 2020 at 07:40:14AM -0700, Matthew Wilcox wrote:
+On Fri, Mar 20, 2020 at 07:22:18AM -0700, Matthew Wilcox wrote:
 > From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 > 
-> By definition, an extent covers a range of consecutive blocks, so
-> it would be quite rare to be able to just add pages to the BIO from
-> a previous range.  The only case we can think of is a mapped extent
-> followed by a hole extent, followed by another mapped extent which has
-> been allocated immediately after the first extent.  We believe this to
-> be an unlikely layout for a filesystem to choose and, since the queue
-> is plugged, those two BIOs would be merged by the block layer.
-> 
-> The reason we care is that ext2/ext4 choose to lay out blocks 0-11
-> consecutively, followed by the indirect block, and we want to merge those
-> two BIOs.  If we don't submit the data BIO before asking the filesystem
-> for the next extent, then the indirect BIO will be submitted first,
-> and waited for, leading to inefficient I/O patterns.  Buffer heads solve
-> this with the BH_boundary flag, but iomap doesn't need that as long as
-> we submit the bio here.
+> By reducing nr_to_read, we can eliminate this check from inside the loop.
 > 
 > Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
+> Reviewed-by: John Hubbard <jhubbard@nvidia.com>
+> Reviewed-by: William Kucharski <william.kucharski@oracle.com>
 > ---
->  fs/iomap/buffered-io.c | 12 ++++++++++--
->  1 file changed, 10 insertions(+), 2 deletions(-)
+>  mm/readahead.c | 17 +++++++++++------
+>  1 file changed, 11 insertions(+), 6 deletions(-)
 > 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index f080f542911b..417115bfaf6b 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -420,6 +420,16 @@ iomap_readpages_actor(struct inode *inode, loff_t pos, loff_t length,
->  				ctx, iomap, srcmap);
->  	}
+> diff --git a/mm/readahead.c b/mm/readahead.c
+> index d01531ef9f3c..a37b68f66233 100644
+> --- a/mm/readahead.c
+> +++ b/mm/readahead.c
+> @@ -167,8 +167,6 @@ void __do_page_cache_readahead(struct address_space *mapping,
+>  		unsigned long lookahead_size)
+>  {
+>  	struct inode *inode = mapping->host;
+> -	struct page *page;
+> -	unsigned long end_index;	/* The last page we want to read */
+>  	LIST_HEAD(page_pool);
+>  	loff_t isize = i_size_read(inode);
+>  	gfp_t gfp_mask = readahead_gfp_mask(mapping);
+> @@ -178,22 +176,29 @@ void __do_page_cache_readahead(struct address_space *mapping,
+>  		._index = index,
+>  	};
+>  	unsigned long i;
+> +	pgoff_t end_index;	/* The last page we want to read */
 >  
-> +	/*
-> +	 * Submitting the bio here leads to better I/O patterns for
-> +	 * filesystems which need to do metadata reads to find the
-> +	 * next extent.
-> +	 */
-> +	if (ctx->bio) {
-> +		submit_bio(ctx->bio);
-> +		ctx->bio = NULL;
-> +	}
-> +
->  	return done;
->  }
+>  	if (isize == 0)
+>  		return;
 >  
-> @@ -449,8 +459,6 @@ iomap_readpages(struct address_space *mapping, struct list_head *pages,
->  	}
->  	ret = 0;
->  done:
-> -	if (ctx.bio)
-> -		submit_bio(ctx.bio);
->  	if (ctx.cur_page) {
->  		if (!ctx.cur_page_in_bio)
->  			unlock_page(ctx.cur_page);
-> -- 
-> 2.25.1
-> 
+> -	end_index = ((isize - 1) >> PAGE_SHIFT);
+> +	end_index = (isize - 1) >> PAGE_SHIFT;
+> +	if (index > end_index)
+> +		return;
+> +	/* Avoid wrapping to the beginning of the file */
+> +	if (index + nr_to_read < index)
+> +		nr_to_read = ULONG_MAX - index + 1;
+> +	/* Don't read past the page containing the last byte of the file */
+> +	if (index + nr_to_read >= end_index)
+> +		nr_to_read = end_index - index + 1;
+
+There seem to be a couple off-by-one errors here.  Shouldn't it be:
+
+	/* Avoid wrapping to the beginning of the file */
+	if (index + nr_to_read < index)
+		nr_to_read = ULONG_MAX - index;
+	/* Don't read past the page containing the last byte of the file */
+	if (index + nr_to_read > end_index)
+		nr_to_read = end_index - index + 1;
+
+I.e., 'ULONG_MAX - index' rather than 'ULONG_MAX - index + 1', so that
+'index + nr_to_read' is then ULONG_MAX rather than overflowed to 0.
+
+Then 'index + nr_to_read > end_index' rather 'index + nr_to_read >= end_index',
+since otherwise nr_to_read can be increased by 1 rather than decreased or stay
+the same as expected.
+
+- Eric
