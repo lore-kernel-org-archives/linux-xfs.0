@@ -1,113 +1,77 @@
-Return-Path: <SRS0=ynSb=5F=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=CeSn=5G=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FEA8C3F2CD
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 23:24:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4DB3C4332D
+	for <linux-xfs@archiver.kernel.org>; Sat, 21 Mar 2020 12:34:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 293032070A
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Mar 2020 23:24:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="vN1/Ute8"
+	by mail.kernel.org (Postfix) with ESMTP id 6B67D20754
+	for <linux-xfs@archiver.kernel.org>; Sat, 21 Mar 2020 12:34:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1584794070;
+	bh=Q6XqKfK0pWystRPr1/fmOD76oUU2oT/CO/tHv4FEv+M=;
+	h=Subject:To:References:Cc:From:Date:In-Reply-To:List-ID:From;
+	b=ZjsThQb0RvWsAh4qyAzcG2BsnTK8Evb9ZevdJuj52G2O4OBFWzGmSQ38zIEZqwE5V
+	 cqLWs3c6CCIvBAaRynuF72mozijNjRb85OhwbPFpVXSZh0Q2VKQkaKLMRqTcUPdSig
+	 qqULRBoBQ8Tyr8nqNz7kdVgWe0ocksbndow+OqTs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727362AbgCTXYV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 Mar 2020 19:24:21 -0400
-Received: from mail-ot1-f65.google.com ([209.85.210.65]:42040 "EHLO
-        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726738AbgCTXYV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Mar 2020 19:24:21 -0400
-Received: by mail-ot1-f65.google.com with SMTP id f66so2246553otf.9;
-        Fri, 20 Mar 2020 16:24:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=r1RjSBup4MWDnxcSCK94McxMdoDpG8eO0JDhY4wpKR0=;
-        b=vN1/Ute8SimVqT3y3hab78UyOf4VVJ7VRiHOmD/0YEw4RVsLYf+I9I+znQgoZJ4gdB
-         ictTZbD1FHachCP/sbEN+nf5NkPQ3zRL8Ac1BelFOIse/g9g6UpeoAfXXPC7J0vE8auY
-         ePcveIYKTMSHJgWhosQIxl0CCrkGF9pmyNFPTwd0v+oVmX5riIDdzQ03F5K6zEp+Yorg
-         xUhrv1K+sA6wqpG3J43WbuJGu1I6tO2+B7xlqRuhBhDVQUlM25cT94sYTuO+2rNTPHR+
-         wUJD/jin1TicQd15MZDDptDmvyxFQ3GYs+b1BI3MQaatUfXjIV8IMG9GTl9ZI1NYxiQ/
-         JVFw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
-         :message-id:subject:to:cc;
-        bh=r1RjSBup4MWDnxcSCK94McxMdoDpG8eO0JDhY4wpKR0=;
-        b=QZL1jtNh8XPVs7unt5QmsDE91zm2o+d6HscepsjM8qz3umFWJHFut6LIFLnr/+O+26
-         ajJ0TQEeL4kOtITohA1I/2eHwsLraFrkh3u18ik3AWrKLZMGhpqgrvXNzW9rtpxAuVCc
-         v0kGmtCJ8uEDMl5p18lPn2lQi20cPNbAPHurVBCpLuBDe8lH7fkGWzpHbSAIJRqL2EEA
-         6cUraD5laSLsO5X8GoBSj/CirYRexbb4A/GnnRL20QI+vLe05lXEaUxcWT/24LU1OffJ
-         bHn9w/xyadmMpSpWtrOZE1GRBXYG0RKyU+TnHt1ftBxy/TeWL30Savdx/gCL52LAqqeN
-         LwNQ==
-X-Gm-Message-State: ANhLgQ0L4NL6VJTLyfkHNa6bBh093xQ8sQK+HFBaSBG27aQkVGUqkY2C
-        ns3S3c+jYPPpV6vE+jXVoyv1i1rwigix0DJl5LE=
-X-Google-Smtp-Source: ADFU+vvk42JpEDDDlDUp6QEGUIHSuidkoO4gJ/JVIxwHCPUSqqRu1OBVOgg9ZhRrthX3kgHdC2yuDHRY3AYH9iDgANA=
-X-Received: by 2002:a05:6830:1608:: with SMTP id g8mr9414965otr.282.1584746659261;
- Fri, 20 Mar 2020 16:24:19 -0700 (PDT)
-MIME-Version: 1.0
-Received: by 2002:a8a:8e:0:0:0:0:0 with HTTP; Fri, 20 Mar 2020 16:24:18 -0700 (PDT)
-In-Reply-To: <20200320142231.2402-17-willy@infradead.org>
-References: <20200320142231.2402-1-willy@infradead.org> <20200320142231.2402-17-willy@infradead.org>
-From:   Namjae Jeon <linkinjeon@gmail.com>
-Date:   Sat, 21 Mar 2020 08:24:18 +0900
-Message-ID: <CAKYAXd-NGQvMoYg=TV1T=8OZdQcYwcncK_Hix8OkF0GqmYr9Wg@mail.gmail.com>
-Subject: Re: [PATCH v9 16/25] fs: Convert mpage_readpages to mpage_readahead
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        id S1726652AbgCUMea (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 21 Mar 2020 08:34:30 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58630 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726192AbgCUMe3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 21 Mar 2020 08:34:29 -0400
+Received: from [192.168.0.107] (unknown [49.65.245.234])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9C38F20714;
+        Sat, 21 Mar 2020 12:34:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1584794069;
+        bh=Q6XqKfK0pWystRPr1/fmOD76oUU2oT/CO/tHv4FEv+M=;
+        h=Subject:To:References:Cc:From:Date:In-Reply-To:From;
+        b=UvmxaCjKTfMCk/EmBAq3YRIvZdf+MlpIq9JFz5KXyFe6O7vfX0lBpNj0bRdKqE4IY
+         7mp4Zavgxc+xNqzUhd2LCGkmHXXqGatoP6Uf3qNoPy/Gj8bAWI0TDu5ZIorpLQLBfj
+         JCe8QAxgl2TgQ+py6UG6Qr7uZ/m1+L4zv1mGdmvA=
+Subject: Re: [f2fs-dev] [PATCH v9 22/25] f2fs: Convert from readpages to
+ readahead
+To:     Matthew Wilcox <willy@infradead.org>,
+        Andrew Morton <akpm@linux-foundation.org>
+References: <20200320142231.2402-1-willy@infradead.org>
+ <20200320142231.2402-23-willy@infradead.org>
+Cc:     linux-xfs@vger.kernel.org,
+        William Kucharski <william.kucharski@oracle.com>,
+        linux-kernel@vger.kernel.org,
         linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org,
-        Junxiao Bi <junxiao.bi@oracle.com>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Christoph Hellwig <hch@lst.de>,
-        William Kucharski <william.kucharski@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
+        linux-mm@kvack.org, ocfs2-devel@oss.oracle.com,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-btrfs@vger.kernel.org
+From:   Chao Yu <chao@kernel.org>
+Message-ID: <557257d3-6799-df31-378a-a39c36fa3191@kernel.org>
+Date:   Sat, 21 Mar 2020 20:34:23 +0800
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.8.0
+MIME-Version: 1.0
+In-Reply-To: <20200320142231.2402-23-willy@infradead.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> diff --git a/drivers/staging/exfat/exfat_super.c
-> b/drivers/staging/exfat/exfat_super.c
-> index b81d2a87b82e..96aad9b16d31 100644
-> --- a/drivers/staging/exfat/exfat_super.c
-> +++ b/drivers/staging/exfat/exfat_super.c
-Maybe, You should change fs/exfat instead of staging/exfat that is
-gone from -next ?
+On 2020-3-20 22:22, Matthew Wilcox wrote:
+> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+>
+> Use the new readahead operation in f2fs
+>
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> Reviewed-by: William Kucharski <william.kucharski@oracle.com>
 
-> @@ -3002,10 +3002,9 @@ static int exfat_readpage(struct file *file, struct
-> page *page)
->  	return  mpage_readpage(page, exfat_get_block);
->  }
->
-> -static int exfat_readpages(struct file *file, struct address_space
-> *mapping,
-> -			   struct list_head *pages, unsigned int nr_pages)
-> +static void exfat_readahead(struct readahead_control *rac)
->  {
-> -	return  mpage_readpages(mapping, pages, nr_pages, exfat_get_block);
-> +	mpage_readahead(rac, exfat_get_block);
->  }
->
->  static int exfat_writepage(struct page *page, struct writeback_control
-> *wbc)
-> @@ -3104,7 +3103,7 @@ static sector_t _exfat_bmap(struct address_space
-> *mapping, sector_t block)
->
->  static const struct address_space_operations exfat_aops = {
->  	.readpage    = exfat_readpage,
-> -	.readpages   = exfat_readpages,
-> +	.readahead   = exfat_readahead,
->  	.writepage   = exfat_writepage,
->  	.writepages  = exfat_writepages,
->  	.write_begin = exfat_write_begin,
+Reviewed-by: Chao Yu <yuchao0@huawei.com>
+
+Thanks,
