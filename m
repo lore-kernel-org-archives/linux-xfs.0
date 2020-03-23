@@ -2,78 +2,95 @@ Return-Path: <SRS0=Podu=5I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB35DC54EEB
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 16:51:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A53AC54FCE
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 17:59:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9597720719
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 16:51:55 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="AQJe4ivE"
+	by mail.kernel.org (Postfix) with ESMTP id 52C842072D
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 17:59:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727763AbgCWQvz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 Mar 2020 12:51:55 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:41556 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727479AbgCWQvy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Mar 2020 12:51:54 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=qnJsiFUlsfG8nkEwHXI5fzoOQxcwHFVgXJE/nh17pk0=; b=AQJe4ivEzUOJlvzK5K7/6UDM6h
-        6tAkMU38DjI9eXGNTxmbPBBRViHAijPG5Z/PY02NV011PZ6vqM1nac7qQqCoT/YDZFqgIWJlvVv1z
-        XNjAuda6PPtSRKmXQFV/LyD2+uPwppZdAuTiGHjUmOXVnGRASz0GkVuFIBe5Bj0k+90wwgqz7CUmA
-        wr7gXc2ErLDPNpwXgHs0I0Xa88zUjEFYE1UfU7Y3Shz29mZ2rDSzl1uw2vkDGMnBR33ZSGlyYLIk/
-        m5GdGT8Xid80WcUJ0uf6JA8IuOdS/8T16rOgBYCVM0fV4hJoCbC7xH9AHahfZmLCDTmWMUfLaCgpG
-        FQ2w9C4A==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jGQIs-0001GS-1m; Mon, 23 Mar 2020 16:51:54 +0000
-Date:   Mon, 23 Mar 2020 09:51:54 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH] iomap: Do not use GFP_NORETRY to allocate BIOs
-Message-ID: <20200323165154.GB30433@infradead.org>
-References: <20200323131244.29435-1-willy@infradead.org>
- <20200323132052.GA7683@infradead.org>
- <20200323134032.GH4971@bombadil.infradead.org>
- <20200323135500.GA14335@infradead.org>
- <20200323151054.GI4971@bombadil.infradead.org>
+        id S1727269AbgCWR7F (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 Mar 2020 13:59:05 -0400
+Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:41286 "EHLO
+        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727011AbgCWR7F (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Mar 2020 13:59:05 -0400
+Received: from callcc.thunk.org (pool-72-93-95-157.bstnma.fios.verizon.net [72.93.95.157])
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 02NHwcMK029627
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 23 Mar 2020 13:58:39 -0400
+Received: by callcc.thunk.org (Postfix, from userid 15806)
+        id BDFC6420EBA; Mon, 23 Mar 2020 13:58:38 -0400 (EDT)
+Date:   Mon, 23 Mar 2020 13:58:38 -0400
+From:   "Theodore Y. Ts'o" <tytso@mit.edu>
+To:     Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] writeback, xfs: call dirty_inode() with
+ I_DIRTY_TIME_EXPIRED when appropriate
+Message-ID: <20200323175838.GA7133@mit.edu>
+References: <20200320024639.GH1067245@mit.edu>
+ <20200320025255.1705972-1-tytso@mit.edu>
+ <20200320025255.1705972-2-tytso@mit.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200323151054.GI4971@bombadil.infradead.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200320025255.1705972-2-tytso@mit.edu>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 23, 2020 at 08:10:54AM -0700, Matthew Wilcox wrote:
-> > That looks silly to me.  This just means we'll keep iterating over
-> > small bios for readahead..  Either we just ignore the different gfp
-> > mask, or we need to go all the way and handle errors, although that
-> > doesn't really look nice.
+Christoph, Dave --- does this give you the notification that you were
+looking such that XFS could get the notification desired that it was
+the timestamps need to be written back?
+
+    	       	       	  	  - Ted
+
+On Thu, Mar 19, 2020 at 10:52:55PM -0400, Theodore Ts'o wrote:
+> Use the flag I_DIRTY_TIME_EXPIRED passed to dirty_inode() to signal to
+> the file system that it is time to flush the inode's timestamps to
+> stable storage.
 > 
-> I'm not sure it's silly,
-
-Oh well, I'm not going to be in the way of fixing a bug I added.  So
-feel free to go ahead with this and mention it matches mpage_readpages.
-
-> although I'd love to see bio_alloc() support
-> nr_iovecs == 0 meaning "allocate me any size biovec and tell me what
-> size I got in ->bi_max_vecs".  By allocating a small biovec this time,
-> we do one allocation rather than two, and maybe by the time we come to
-> allocate the next readahead bio, kswapd will have succeeded in freeing
-> up more memory for us.
-
-Sounds easy enough - especially as callers don't need to look at
-bi_max_vecs anyway, that is the job of bio_add_page and friends.  That
-being said an upper bound still sounds useful - no need to allocate
-a a gigantic bio if we know we only need a few pages.
+> Signed-off-by: Theodore Ts'o <tytso@mit.edu>
+> ---
+>  fs/fs-writeback.c  | 2 +-
+>  fs/xfs/xfs_super.c | 3 ++-
+>  2 files changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+> index 867454997c9d..32101349ba97 100644
+> --- a/fs/fs-writeback.c
+> +++ b/fs/fs-writeback.c
+> @@ -1506,7 +1506,7 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
+>  
+>  	/* This was a lazytime expiration; we need to tell the file system */
+>  	if (dirty & I_DIRTY_TIME_EXPIRED && inode->i_sb->s_op->dirty_inode)
+> -		inode->i_sb->s_op->dirty_inode(inode, I_DIRTY_SYNC);
+> +		inode->i_sb->s_op->dirty_inode(inode, I_DIRTY_TIME_EXPIRED);
+>  	/* Don't write the inode if only I_DIRTY_PAGES was set */
+>  	if (dirty & ~I_DIRTY_PAGES) {
+>  		int err = write_inode(inode, wbc);
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 2094386af8ac..f27b9b205f81 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -622,7 +622,8 @@ xfs_fs_dirty_inode(
+>  
+>  	if (!(inode->i_sb->s_flags & SB_LAZYTIME))
+>  		return;
+> -	if (flag != I_DIRTY_SYNC || !(inode->i_state & I_DIRTY_TIME))
+> +	if ((flag != I_DIRTY_SYNC && flag != I_DIRTY_TIME_EXPIRED) ||
+> +	    !(inode->i_state & I_DIRTY_TIME))
+>  		return;
+>  
+>  	if (xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp))
+> -- 
+> 2.24.1
+> 
