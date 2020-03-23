@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F813C54FDA
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 20:23:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6ECE6C54FD2
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 20:23:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DDCC82076E
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 20:23:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 411882073E
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 20:23:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="TjrkNO3p"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KW3zwJHc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727382AbgCWUXY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 Mar 2020 16:23:24 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:37276 "EHLO
+        id S1727508AbgCWUXd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 Mar 2020 16:23:33 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:37182 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727283AbgCWUXR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Mar 2020 16:23:17 -0400
+        with ESMTP id S1727417AbgCWUXO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Mar 2020 16:23:14 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=wgHaMQ5NgsDKhTvfEwz+JAE6nlgMEKsX9P0uFTq8za0=; b=TjrkNO3pMj5q8Uy19ek7NgV0H9
-        JP3rLJG1nJhJWOA7HZToyyu3FvraAys4Mc/j1ED5STJMipb5ruo9hVQVztuBKEV+SZ3dhX08sh8TB
-        L27s+jrjCyoNge3XdELLGrLuemw067YhvgDTbqoqnPaYdXxhndIAfRId+z9Je+2jkb2/Tt/dDx/Ay
-        hJzV4vPvVCewrdy0kSnNotzE0FN3i6+sn+jBABiDcoiHZPZrvxnQBFmhr/zrw+r5y2s9JlEJM9/9h
-        XTnSe+ejTy5WS2pmrsFEALxJNmIo3Go+PiUDukEq6WQX7sTYtBigioP3RMIg0hqyDjkD0g6gNXoNt
-        hzD7ct9Q==;
+        bh=pyRJmQL4PX3Z7ghW+iu22GLUiZYywjsnI5INAzyHKKM=; b=KW3zwJHcUgGtVxfKSB5Y+6+/sc
+        tK7ee+lQPoOk5IA/tqiZMcvb7gMtLNBLuTFzQvO4kbKh2ObzC9GAwlSz1RsCLyheeDedCbRTqnJHz
+        fv0I8HbPhMbMmNzAL5ikwiWibrQKZDC6ZszJjawzqwhQqkcdcGVH7Ci71xSkPKk+mVlVvE7CvuvB7
+        gb6lWgkBrgsrMrAHKhkZlllmkbijZMDX2BxvNM4O4dLq2jcs9S7Cgobn8v2WKnOcVoY+ejcxwSuaD
+        fFWnC90a/g5NuLP5yqZMf26TATijZWhxjx8liW9PNliJ8BTLC2q8CN2Uv84ylu9H1JbCxhreRndle
+        ScSK4IRQ==;
 Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jGTbB-0003VM-RD; Mon, 23 Mar 2020 20:23:01 +0000
+        id 1jGTbC-0003W6-6P; Mon, 23 Mar 2020 20:23:02 +0000
 From:   Matthew Wilcox <willy@infradead.org>
 To:     Andrew Morton <akpm@linux-foundation.org>
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
@@ -41,11 +41,11 @@ Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
         linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
         ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>,
+        Dave Chinner <dchinner@redhat.com>,
         William Kucharski <william.kucharski@oracle.com>
-Subject: [PATCH v10 14/25] mm: Document why we don't set PageReadahead
-Date:   Mon, 23 Mar 2020 13:22:48 -0700
-Message-Id: <20200323202259.13363-15-willy@infradead.org>
+Subject: [PATCH v10 24/25] fuse: Convert from readpages to readahead
+Date:   Mon, 23 Mar 2020 13:22:58 -0700
+Message-Id: <20200323202259.13363-25-willy@infradead.org>
 X-Mailer: git-send-email 2.21.1
 In-Reply-To: <20200323202259.13363-1-willy@infradead.org>
 References: <20200323202259.13363-1-willy@infradead.org>
@@ -58,35 +58,118 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
-If the page is already in cache, we don't set PageReadahead on it.
+Use the new readahead operation in fuse.  Switching away from the
+read_cache_pages() helper gets rid of an implicit call to put_page(),
+so we can get rid of the get_page() call in fuse_readpages_fill().
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: William Kucharski <william.kucharski@oracle.com>
 ---
- mm/readahead.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ fs/fuse/file.c | 46 +++++++++++++++++++---------------------------
+ 1 file changed, 19 insertions(+), 27 deletions(-)
 
-diff --git a/mm/readahead.c b/mm/readahead.c
-index ae231a5312cb..73cb59ed5cff 100644
---- a/mm/readahead.c
-+++ b/mm/readahead.c
-@@ -195,9 +195,12 @@ void page_cache_readahead_unbounded(struct address_space *mapping,
+diff --git a/fs/fuse/file.c b/fs/fuse/file.c
+index 9d67b830fb7a..5749505bcff6 100644
+--- a/fs/fuse/file.c
++++ b/fs/fuse/file.c
+@@ -923,9 +923,8 @@ struct fuse_fill_data {
+ 	unsigned int max_pages;
+ };
  
- 		if (page && !xa_is_value(page)) {
- 			/*
--			 * Page already present?  Kick off the current batch of
--			 * contiguous pages before continuing with the next
--			 * batch.
-+			 * Page already present?  Kick off the current batch
-+			 * of contiguous pages before continuing with the
-+			 * next batch.  This page may be the one we would
-+			 * have intended to mark as Readahead, but we don't
-+			 * have a stable reference to this page, and it's
-+			 * not worth getting one just for that.
- 			 */
- 			read_pages(&rac, &page_pool, true);
- 			continue;
+-static int fuse_readpages_fill(void *_data, struct page *page)
++static int fuse_readpages_fill(struct fuse_fill_data *data, struct page *page)
+ {
+-	struct fuse_fill_data *data = _data;
+ 	struct fuse_io_args *ia = data->ia;
+ 	struct fuse_args_pages *ap = &ia->ap;
+ 	struct inode *inode = data->inode;
+@@ -941,10 +940,8 @@ static int fuse_readpages_fill(void *_data, struct page *page)
+ 					fc->max_pages);
+ 		fuse_send_readpages(ia, data->file);
+ 		data->ia = ia = fuse_io_alloc(NULL, data->max_pages);
+-		if (!ia) {
+-			unlock_page(page);
++		if (!ia)
+ 			return -ENOMEM;
+-		}
+ 		ap = &ia->ap;
+ 	}
+ 
+@@ -954,7 +951,6 @@ static int fuse_readpages_fill(void *_data, struct page *page)
+ 		return -EIO;
+ 	}
+ 
+-	get_page(page);
+ 	ap->pages[ap->num_pages] = page;
+ 	ap->descs[ap->num_pages].length = PAGE_SIZE;
+ 	ap->num_pages++;
+@@ -962,37 +958,33 @@ static int fuse_readpages_fill(void *_data, struct page *page)
+ 	return 0;
+ }
+ 
+-static int fuse_readpages(struct file *file, struct address_space *mapping,
+-			  struct list_head *pages, unsigned nr_pages)
++static void fuse_readahead(struct readahead_control *rac)
+ {
+-	struct inode *inode = mapping->host;
++	struct inode *inode = rac->mapping->host;
+ 	struct fuse_conn *fc = get_fuse_conn(inode);
+ 	struct fuse_fill_data data;
+-	int err;
++	struct page *page;
+ 
+-	err = -EIO;
+ 	if (is_bad_inode(inode))
+-		goto out;
++		return;
+ 
+-	data.file = file;
++	data.file = rac->file;
+ 	data.inode = inode;
+-	data.nr_pages = nr_pages;
+-	data.max_pages = min_t(unsigned int, nr_pages, fc->max_pages);
+-;
++	data.nr_pages = readahead_count(rac);
++	data.max_pages = min_t(unsigned int, data.nr_pages, fc->max_pages);
+ 	data.ia = fuse_io_alloc(NULL, data.max_pages);
+-	err = -ENOMEM;
+ 	if (!data.ia)
+-		goto out;
++		return;
+ 
+-	err = read_cache_pages(mapping, pages, fuse_readpages_fill, &data);
+-	if (!err) {
+-		if (data.ia->ap.num_pages)
+-			fuse_send_readpages(data.ia, file);
+-		else
+-			fuse_io_free(data.ia);
++	while ((page = readahead_page(rac))) {
++		if (fuse_readpages_fill(&data, page) != 0)
++			return;
+ 	}
+-out:
+-	return err;
++
++	if (data.ia->ap.num_pages)
++		fuse_send_readpages(data.ia, rac->file);
++	else
++		fuse_io_free(data.ia);
+ }
+ 
+ static ssize_t fuse_cache_read_iter(struct kiocb *iocb, struct iov_iter *to)
+@@ -3373,10 +3365,10 @@ static const struct file_operations fuse_file_operations = {
+ 
+ static const struct address_space_operations fuse_file_aops  = {
+ 	.readpage	= fuse_readpage,
++	.readahead	= fuse_readahead,
+ 	.writepage	= fuse_writepage,
+ 	.writepages	= fuse_writepages,
+ 	.launder_page	= fuse_launder_page,
+-	.readpages	= fuse_readpages,
+ 	.set_page_dirty	= __set_page_dirty_nobuffers,
+ 	.bmap		= fuse_bmap,
+ 	.direct_IO	= fuse_direct_IO,
 -- 
 2.25.1
 
