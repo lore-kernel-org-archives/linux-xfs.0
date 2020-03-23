@@ -2,108 +2,82 @@ Return-Path: <SRS0=Podu=5I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6583C3F2CD
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 16:46:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E27E2C3F2CD
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 16:49:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 86E8920719
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 16:46:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B585120722
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 16:49:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="iG9Z2fpT"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="aJek0piv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727361AbgCWQqj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 Mar 2020 12:46:39 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:51306 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727278AbgCWQqi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Mar 2020 12:46:38 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02NGdco9186287;
-        Mon, 23 Mar 2020 16:46:21 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=xIkVKKepSD4KNu1aqqoEYqEwnwnwCu2Wtd7BZmR8TdA=;
- b=iG9Z2fpTzkpqOgA3Pza40NnJ61/aY6kM4y61Qp/BtoXUhCg1A8XzdUG3y5ddIV6IyfgO
- Rv+FrEnEwqv1ImGStj0gjFHgk92BKL6/KsidBgzFCh2Y5H89xVkCeSNl1MPCA0uScdVu
- NK9IH9U/JAaYciUOYLxT1qf2+PDUt1fT31DXOVIvfm92J4VvgFTQXtgU2n04WCsFvyn4
- D5TKD+TlaghiGWe7BdhTqI09pJmBBlI3/B+LImOReSfnPhqb8zprp3170fE9IqtYtzcw
- EdT8LS6tD83UrR90FfZDPc4LHw/sS5xxaiXzUlguMrXuUFYWhzg50jr1XqEgapGDZVfb jA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2ywabqyrr6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 23 Mar 2020 16:46:21 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02NGS03k161670;
-        Mon, 23 Mar 2020 16:46:20 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 2yxw7fv2sw-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 23 Mar 2020 16:46:20 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 02NGkIev015749;
-        Mon, 23 Mar 2020 16:46:18 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 23 Mar 2020 09:46:18 -0700
-Date:   Mon, 23 Mar 2020 09:46:17 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-pm@vger.kernel.org, linux-mm@kvack.org
-Cc:     domenico.andreoli@linux.com, rafael@kernel.org,
-        mkleinsoft@gmail.com, hch@lst.de, akpm@linux-foundation.org,
-        len.brown@intel.com, pavel@ucw.cz
-Subject: [ANNOUNCE] xfs-linux: vfs-for-next updated to 56939e014a6c
-Message-ID: <20200323164617.GA29332@magnolia>
+        id S1727640AbgCWQto (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 Mar 2020 12:49:44 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:41460 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727618AbgCWQto (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Mar 2020 12:49:44 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=ENOB86QPPW1hZ7cXTJ91MQndQ6TVAdAYxv1/WjXtLMc=; b=aJek0pivurM+MEpL/YLkHga5zT
+        bH8tbfeKaPGMDpqSF814Rsww9r7Yq/eKBNujL/eew2VY6IhADrU1FO4fKSBMWpaTPN/ePyhQG2stl
+        LJKx779la10U4/5r7lrbHT8AugYYOah9xTk3040z0kQyUOFTkxW6q4/igFC+uMth3N0mte4SaedRk
+        qF84+80d7SOjXjJ6jVwR8EmDpURSMUvC9Yl2bkCFPaCb8Q4PAZVfetyEmw+ZuRdIilU+/x6YHXWnq
+        ci7n4R5kxpUrYFFn6IifMfaV2s2KPC4B5XJ0qp5+KLu7QV2zBhwb75YmdfgEKj8PtAOQrsq6Tzqa2
+        9vIp33sg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jGQGk-0008MH-RF; Mon, 23 Mar 2020 16:49:42 +0000
+Date:   Mon, 23 Mar 2020 09:49:42 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Pavel Reichl <preichl@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v7 0/4] xfs: Remove wrappers for some semaphores
+Message-ID: <20200323164942.GA30433@infradead.org>
+References: <20200320210317.1071747-1-preichl@redhat.com>
+ <20200323032809.GA29339@magnolia>
+ <CAJc7PzXuRHhYztic9vZsspiHiP-vL_0HANd8x76Y+OdRVw6wwg@mail.gmail.com>
+ <20200323163342.GD29339@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9569 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999 spamscore=0
- adultscore=0 phishscore=0 suspectscore=0 malwarescore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2003230089
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9569 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0
- lowpriorityscore=0 malwarescore=0 phishscore=0 priorityscore=1501
- clxscore=1015 adultscore=0 mlxscore=0 mlxlogscore=999 bulkscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2003230089
+In-Reply-To: <20200323163342.GD29339@magnolia>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Mon, Mar 23, 2020 at 09:33:42AM -0700, Darrick J. Wong wrote:
+> lockdep tracks the rwsem's lock state /and/ which process actually
+> holds the rwsem.  This ownership doesn't transfer from 28177 to 27081,
+> so when the kworker asks lockdep if it holds ILOCK_EXCL, lockdep says
+> no, because 27081 doesn't own the lock, 28177 does.  Kaboom.
 
-The vfs-for-next branch of the xfs-linux repository at:
+> The old mrlock_t had that 'int mr_writer' field which didn't care about
+> lock ownership and so isilocked would return true and so the assert was
+> happy.
+> 
+> So now comes the fun part -- the old isilocked code had a glaring hole
+> in which it would return true if *anyone* held the lock, even if the
+> owner is some other unrelated thread.  That's probably good enough for
+> most of the fstests because we generally only run one thread at a time,
+> and developers will probably notice. :)
+> 
+> However, with your series applied, the isilocked function becomes much
+> more powerful when lockdep is active because now we can test that the
+> lock is held *by the caller*, which closes that hole.
+> 
+> Unfortunately, it also trips over this bmap split case, so if there's a
+> way to solve that problem we'd better find it quickly.  Unfortunately, I
+> don't know of a way to gift a lock to another thread temporarily...
+> 
+> Thoughts?
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  Granted, I'm only doing this to clean up after my own
-bad patches. ;)
-
-The new head of the vfs-for-next branch is commit:
-
-56939e014a6c hibernate: Allow uswsusp to write to swap
-
-New Commits:
-
-Domenico Andreoli (1):
-      [56939e014a6c] hibernate: Allow uswsusp to write to swap
-
-
-Code Diffstat:
-
- fs/block_dev.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+lock_release() in the donor, lock_acquire in the worker context, and
+vice versa on return.  We already do that dance indirectly with
+xfs_setfilesize_trans_alloc and friends.
