@@ -2,126 +2,113 @@ Return-Path: <SRS0=Podu=5I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 384C2C43331
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 20:50:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FB7CC43331
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 21:59:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0FD022073C
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 20:50:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1584996602;
-	bh=uca8lceeryIzQMAk4G4iarM7sj/2pw+KF5opo+TrNGY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=DIIOGpjOpUGrVzcOJmG7LLJdWXkPtc/BF9hBfQJElEvFmykPZNtDBi60GAb7f7TFf
-	 O+IllkN4qE1r9/l9nZ/H6q5taVJlyN0bBY7N+NZ5z4ufrUTmW6XbUt9CNEKRgKAOgS
-	 wCvhK+x2ijdDHXBvoMykdfa8zSOyVbkTPMePMAmA=
+	by mail.kernel.org (Postfix) with ESMTP id 0A55B2076E
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 21:59:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727046AbgCWUt5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 Mar 2020 16:49:57 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54246 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725914AbgCWUt5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 23 Mar 2020 16:49:57 -0400
-Received: from gmail.com (unknown [104.132.1.76])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2370A20719;
-        Mon, 23 Mar 2020 20:49:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1584996596;
-        bh=uca8lceeryIzQMAk4G4iarM7sj/2pw+KF5opo+TrNGY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=coWkHNesJ3VgUDx8upr085r4HZYltqISo1yUGjJ/WXKfvNR+04jgsegcd1wxMZodR
-         fQGiy5Lk9Drq+w7ah2QA9gYBnXswZgZRIqxSJS3M98zDeMk86vooA8s3ntT5pmzqG+
-         0iFnw5waVySEm2t9URBP8tlPK7izf9Vhqov96a5c=
-Date:   Mon, 23 Mar 2020 13:49:54 -0700
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        linux-xfs@vger.kernel.org,
-        William Kucharski <william.kucharski@oracle.com>,
-        John Hubbard <jhubbard@nvidia.com>,
-        linux-kernel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-mm@kvack.org, ocfs2-devel@oss.oracle.com,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-btrfs@vger.kernel.org
-Subject: Re: [PATCH v10 12/25] mm: Move end_index check out of readahead loop
-Message-ID: <20200323204954.GB61708@gmail.com>
-References: <20200323202259.13363-1-willy@infradead.org>
- <20200323202259.13363-13-willy@infradead.org>
+        id S1727130AbgCWV7w (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 Mar 2020 17:59:52 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:40022 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725990AbgCWV7w (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Mar 2020 17:59:52 -0400
+Received: from dread.disaster.area (pa49-195-202-68.pa.nsw.optusnet.com.au [49.195.202.68])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id D9E8F3A3454;
+        Tue, 24 Mar 2020 08:59:48 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jGV6p-0004PS-4z; Tue, 24 Mar 2020 08:59:47 +1100
+Date:   Tue, 24 Mar 2020 08:59:47 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Pavel Reichl <preichl@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v7 0/4] xfs: Remove wrappers for some semaphores
+Message-ID: <20200323215947.GW10776@dread.disaster.area>
+References: <20200320210317.1071747-1-preichl@redhat.com>
+ <20200323032809.GA29339@magnolia>
+ <CAJc7PzXuRHhYztic9vZsspiHiP-vL_0HANd8x76Y+OdRVw6wwg@mail.gmail.com>
+ <20200323163342.GD29339@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200323202259.13363-13-willy@infradead.org>
-User-Agent: Mutt/1.12.2 (2019-09-21)
+In-Reply-To: <20200323163342.GD29339@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+        a=mqTaRPt+QsUAtUurwE173Q==:117 a=mqTaRPt+QsUAtUurwE173Q==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=SS2py6AdgQ4A:10
+        a=7-415B0cAAAA:8 a=FbZfGxazjVlMzVJsfMMA:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 23, 2020 at 01:22:46PM -0700, Matthew Wilcox wrote:
-> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+On Mon, Mar 23, 2020 at 09:33:42AM -0700, Darrick J. Wong wrote:
+> On Mon, Mar 23, 2020 at 10:22:02AM +0100, Pavel Reichl wrote:
+> > Oh, thanks for the heads up...I'll try to investigate.
 > 
-> By reducing nr_to_read, we can eliminate this check from inside the loop.
-> 
-> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> Reviewed-by: John Hubbard <jhubbard@nvidia.com>
-> Reviewed-by: William Kucharski <william.kucharski@oracle.com>
-> ---
->  mm/readahead.c | 14 ++++++++------
->  1 file changed, 8 insertions(+), 6 deletions(-)
-> 
-> diff --git a/mm/readahead.c b/mm/readahead.c
-> index d01531ef9f3c..998fdd23c0b1 100644
-> --- a/mm/readahead.c
-> +++ b/mm/readahead.c
-> @@ -167,8 +167,6 @@ void __do_page_cache_readahead(struct address_space *mapping,
->  		unsigned long lookahead_size)
->  {
->  	struct inode *inode = mapping->host;
-> -	struct page *page;
-> -	unsigned long end_index;	/* The last page we want to read */
->  	LIST_HEAD(page_pool);
->  	loff_t isize = i_size_read(inode);
->  	gfp_t gfp_mask = readahead_gfp_mask(mapping);
-> @@ -178,22 +176,26 @@ void __do_page_cache_readahead(struct address_space *mapping,
->  		._index = index,
->  	};
->  	unsigned long i;
-> +	pgoff_t end_index;	/* The last page we want to read */
->  
->  	if (isize == 0)
->  		return;
->  
-> -	end_index = ((isize - 1) >> PAGE_SHIFT);
-> +	end_index = (isize - 1) >> PAGE_SHIFT;
-> +	if (index > end_index)
-> +		return;
-> +	/* Don't read past the page containing the last byte of the file */
-> +	if (nr_to_read > end_index - index)
-> +		nr_to_read = end_index - index + 1;
->  
->  	/*
->  	 * Preallocate as many pages as we will need.
->  	 */
->  	for (i = 0; i < nr_to_read; i++) {
-> -		if (index + i > end_index)
-> -			break;
-> +		struct page *page = xa_load(&mapping->i_pages, index + i);
->  
->  		BUG_ON(index + i != rac._index + rac._nr_pages);
->  
-> -		page = xa_load(&mapping->i_pages, index + i);
->  		if (page && !xa_is_value(page)) {
->  			/*
->  			 * Page already present?  Kick off the current batch of
-> -- 
+> Ahah, I figured it out.  It took me a while to pin down a solid reproducer,
+> but here's a stack trace that I see most often:
+....
+> lockdep tracks the rwsem's lock state /and/ which process actually
+> holds the rwsem.  This ownership doesn't transfer from 28177 to 27081,
+> so when the kworker asks lockdep if it holds ILOCK_EXCL, lockdep says
+> no, because 27081 doesn't own the lock, 28177 does.  Kaboom.
 
-Reviewed-by: Eric Biggers <ebiggers@google.com>
+Yeah, linux has this weird idea that semaphores can only be accessed
+from a single process context, like a mutex. We've beaten our head
+against this many times, and it's the only reason struct semaphore
+still exists and everything isn't a mutex.
 
-- Eric
+rwsems now do crazy stuff like track the owner for spinning
+optimisations, despite the fact it's a semaphore and, by definition,
+can be released by non-owner contexts....
+
+> The old mrlock_t had that 'int mr_writer' field which didn't care about
+> lock ownership and so isilocked would return true and so the assert was
+> happy.
+> 
+> So now comes the fun part -- the old isilocked code had a glaring hole
+> in which it would return true if *anyone* held the lock, even if the
+> owner is some other unrelated thread.  That's probably good enough for
+> most of the fstests because we generally only run one thread at a time,
+> and developers will probably notice. :)
+
+No, that's not a bug, that's how semaphores work - semaphores
+protect the object, not the process context that took the lock.
+
+i.e. the difference between a mutex and a semaphore is that the
+mutex protects a code path from running concurrently with other
+processes, while a semaphore protects an object from other accesses,
+even when they don't have a process context associated with them
+(e.g. while they are under IO).
+
+> However, with your series applied, the isilocked function becomes much
+> more powerful when lockdep is active because now we can test that the
+> lock is held *by the caller*, which closes that hole.
+
+Not really, it's just another "lockdep behaviour is wrong" issue we
+have to work around. When we switch to a worker, we need to release
+and acquire the lockdep context so that it thinks the current
+process working on the object owns the lock.
+
+> Unfortunately, it also trips over this bmap split case, so if there's a
+> way to solve that problem we'd better find it quickly.  Unfortunately, I
+> don't know of a way to gift a lock to another thread temporarily...
+
+rwsem_release() when the work is queued, rwsem_acquire() when the
+work is run. And vice versa when the work is done.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
