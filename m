@@ -7,94 +7,72 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0E8FC4332B
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 13:07:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73044C4332B
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 13:12:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 76D732072D
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 13:07:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3645B20735
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 13:12:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="oNIcD/po"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Vi3MXw+E"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728343AbgCWNHg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 Mar 2020 09:07:36 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:33940 "EHLO
+        id S1728349AbgCWNMq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 Mar 2020 09:12:46 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:34030 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728252AbgCWNHg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Mar 2020 09:07:36 -0400
+        with ESMTP id S1728344AbgCWNMq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Mar 2020 09:12:46 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=dvGQp+5ka9Er+oh+KGpAacpQYg7Ru/FUUtN71+j+47I=; b=oNIcD/po7NvTzFq1TsGRKgW3fG
-        f97QjtlzPOp/snF16u9DyLjV1qCWfd2nG8Uxyj6EI/k0gC9EBDwOUs+nQ2FIizqIN+AfQ2qGVTtBn
-        V1Q71Tf38ooX1Bz2ByttH+w3reyW9NVtRWkdYuffIleMLZTsrFWv1mS18ZBVyks7eIT37h7jF1IZj
-        6Mip+nkcq+B0RhIoanJ4l13lM/P5ULc2bAm7objNIF95R1vDIaF+JgvTolV5u0e6AzqzMK3c1ot7L
-        wjWVySPuxijDTIJH3iyhDzspJ/gH9CDXaNdUDmBQlBNoOOyL/p9BG+KBvvDflLsTsKGdmMVvt3iSp
-        bj/SxiPw==;
-Received: from [2001:4bb8:18c:2a9e:999c:283e:b14a:9189] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jGMnn-0005kd-CH; Mon, 23 Mar 2020 13:07:35 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     linux-xfs@vger.kernel.org
-Cc:     david@fromorbit.com, Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH 9/9] xfs: kill XLOG_TIC_INITED
-Date:   Mon, 23 Mar 2020 14:07:06 +0100
-Message-Id: <20200323130706.300436-10-hch@lst.de>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200323130706.300436-1-hch@lst.de>
-References: <20200323130706.300436-1-hch@lst.de>
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=BKraV3KJY50yhZZu+Buo+JqIfHeH8iSauzsf1wxIpxw=; b=Vi3MXw+EUigXp7RP7DGECmv7C0
+        TM9Zqb8kY1AdHb3wmX6TSekwKZz9CqkVUFkIWHG6Xs8iJgrJjoAJqtR7Irm2HrD8kbX0ZeNRHZ4+w
+        86+9JNcaL5WO5ift5877cSmuzDzyuxPLvneCdCeV0I1yL9bGa7hBzLO935q8jEWeE6Fbl1gYIl8r0
+        LPq7ZWiBJowe4a5KxWWv5kuugSm5eczI9oQVUGkaTddPzzEhqeZrGq0XsmMx47k6TV/NEEqDaRqLX
+        ynaLoSEhmJNiNqhNSOj4HoSx78Y0zqzUaYpUiJbqHg/f/srSMw/CYHy/RRAP2bfU03GClyAIwuX5W
+        zFa9GfDQ==;
+Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jGMso-0007wd-Ad; Mon, 23 Mar 2020 13:12:46 +0000
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Subject: [PATCH] iomap: Do not use GFP_NORETRY to allocate BIOs
+Date:   Mon, 23 Mar 2020 06:12:44 -0700
+Message-Id: <20200323131244.29435-1-willy@infradead.org>
+X-Mailer: git-send-email 2.21.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
-It is not longer used or checked by anything, so remove the last
-traces from the log ticket code.
+If we use GFP_NORETRY, we have to be able to handle failures, and it's
+tricky to handle failure here.  Other implementations of ->readpages
+do not attempt to handle BIO allocation failures, so this is no worse.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 ---
- fs/xfs/xfs_log.c      | 1 -
- fs/xfs/xfs_log_priv.h | 6 ++----
- 2 files changed, 2 insertions(+), 5 deletions(-)
+ fs/iomap/buffered-io.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 3eff7038e3ed..f70be8151a59 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -3418,7 +3418,6 @@ xlog_ticket_alloc(
- 	tic->t_ocnt		= cnt;
- 	tic->t_tid		= prandom_u32();
- 	tic->t_clientid		= client;
--	tic->t_flags		= XLOG_TIC_INITED;
- 	if (permanent)
- 		tic->t_flags |= XLOG_TIC_PERM_RESERV;
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 417115bfaf6b..2336642d7390 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -307,8 +307,6 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 		if (ctx->bio)
+ 			submit_bio(ctx->bio);
  
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index d4f53664ae12..cfcf3f02e30a 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -51,13 +51,11 @@ enum xlog_iclog_state {
- };
- 
- /*
-- * Flags to log ticket
-+ * Log ticket flags
-  */
--#define XLOG_TIC_INITED		0x1	/* has been initialized */
--#define XLOG_TIC_PERM_RESERV	0x2	/* permanent reservation */
-+#define XLOG_TIC_PERM_RESERV	0x1	/* permanent reservation */
- 
- #define XLOG_TIC_FLAGS \
--	{ XLOG_TIC_INITED,	"XLOG_TIC_INITED" }, \
- 	{ XLOG_TIC_PERM_RESERV,	"XLOG_TIC_PERM_RESERV" }
- 
- /*
+-		if (ctx->is_readahead) /* same as readahead_gfp_mask */
+-			gfp |= __GFP_NORETRY | __GFP_NOWARN;
+ 		ctx->bio = bio_alloc(gfp, min(BIO_MAX_PAGES, nr_vecs));
+ 		ctx->bio->bi_opf = REQ_OP_READ;
+ 		if (ctx->is_readahead)
 -- 
 2.25.1
 
