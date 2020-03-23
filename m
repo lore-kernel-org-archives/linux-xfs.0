@@ -2,95 +2,115 @@ Return-Path: <SRS0=Podu=5I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A53AC54FCE
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 17:59:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E1BBC43331
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 20:23:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 52C842072D
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 17:59:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5FB7B20714
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 20:23:03 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WAduqKrv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727269AbgCWR7F (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 Mar 2020 13:59:05 -0400
-Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:41286 "EHLO
-        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727011AbgCWR7F (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Mar 2020 13:59:05 -0400
-Received: from callcc.thunk.org (pool-72-93-95-157.bstnma.fios.verizon.net [72.93.95.157])
-        (authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 02NHwcMK029627
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 23 Mar 2020 13:58:39 -0400
-Received: by callcc.thunk.org (Postfix, from userid 15806)
-        id BDFC6420EBA; Mon, 23 Mar 2020 13:58:38 -0400 (EDT)
-Date:   Mon, 23 Mar 2020 13:58:38 -0400
-From:   "Theodore Y. Ts'o" <tytso@mit.edu>
-To:     Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Ext4 Developers List <linux-ext4@vger.kernel.org>,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] writeback, xfs: call dirty_inode() with
- I_DIRTY_TIME_EXPIRED when appropriate
-Message-ID: <20200323175838.GA7133@mit.edu>
-References: <20200320024639.GH1067245@mit.edu>
- <20200320025255.1705972-1-tytso@mit.edu>
- <20200320025255.1705972-2-tytso@mit.edu>
+        id S1726987AbgCWUXC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 Mar 2020 16:23:02 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:36798 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725893AbgCWUXC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Mar 2020 16:23:02 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=WfxVIQbzH9o8gavebp1mRU1CPxrl55pCfYyCVUPCjeY=; b=WAduqKrvK3O4ABqQbm6B8cCfrr
+        BM0h1F4JEcMf9f2AYJna3nmrEpIU7Mu7MHDSEwj3okoHPFka54dUZNcgQfh2J4a/l3vqeO0bhjN+q
+        TdXYlsewLzwZv2iTWXBZwxPok23qc9V48jP5veQaBu71cgak+GaR6I05J32EsO7l757nJI1nKGshi
+        phzR59jJDZa7/jo9rXQDQlRd/KXn71jZC0IktMAGGEgyz9yz1Uuv1B1gKkmh2wQKDtn8xaA+fac+6
+        6XYmOyhZxnV8ZdsufmEy7074rJx8c2k5zCl1ghYReFDFTxRwl14iUvtbp5IOfBimf3Ce1Pwm/YRu1
+        H72TYyLA==;
+Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jGTbB-0003VD-OW; Mon, 23 Mar 2020 20:23:01 +0000
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Andrew Morton <akpm@linux-foundation.org>
+Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org,
+        John Hubbard <jhubbard@nvidia.com>,
+        William Kucharski <william.kucharski@oracle.com>
+Subject: [PATCH v10 12/25] mm: Move end_index check out of readahead loop
+Date:   Mon, 23 Mar 2020 13:22:46 -0700
+Message-Id: <20200323202259.13363-13-willy@infradead.org>
+X-Mailer: git-send-email 2.21.1
+In-Reply-To: <20200323202259.13363-1-willy@infradead.org>
+References: <20200323202259.13363-1-willy@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200320025255.1705972-2-tytso@mit.edu>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Christoph, Dave --- does this give you the notification that you were
-looking such that XFS could get the notification desired that it was
-the timestamps need to be written back?
+From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
-    	       	       	  	  - Ted
+By reducing nr_to_read, we can eliminate this check from inside the loop.
 
-On Thu, Mar 19, 2020 at 10:52:55PM -0400, Theodore Ts'o wrote:
-> Use the flag I_DIRTY_TIME_EXPIRED passed to dirty_inode() to signal to
-> the file system that it is time to flush the inode's timestamps to
-> stable storage.
-> 
-> Signed-off-by: Theodore Ts'o <tytso@mit.edu>
-> ---
->  fs/fs-writeback.c  | 2 +-
->  fs/xfs/xfs_super.c | 3 ++-
->  2 files changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-> index 867454997c9d..32101349ba97 100644
-> --- a/fs/fs-writeback.c
-> +++ b/fs/fs-writeback.c
-> @@ -1506,7 +1506,7 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
->  
->  	/* This was a lazytime expiration; we need to tell the file system */
->  	if (dirty & I_DIRTY_TIME_EXPIRED && inode->i_sb->s_op->dirty_inode)
-> -		inode->i_sb->s_op->dirty_inode(inode, I_DIRTY_SYNC);
-> +		inode->i_sb->s_op->dirty_inode(inode, I_DIRTY_TIME_EXPIRED);
->  	/* Don't write the inode if only I_DIRTY_PAGES was set */
->  	if (dirty & ~I_DIRTY_PAGES) {
->  		int err = write_inode(inode, wbc);
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 2094386af8ac..f27b9b205f81 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -622,7 +622,8 @@ xfs_fs_dirty_inode(
->  
->  	if (!(inode->i_sb->s_flags & SB_LAZYTIME))
->  		return;
-> -	if (flag != I_DIRTY_SYNC || !(inode->i_state & I_DIRTY_TIME))
-> +	if ((flag != I_DIRTY_SYNC && flag != I_DIRTY_TIME_EXPIRED) ||
-> +	    !(inode->i_state & I_DIRTY_TIME))
->  		return;
->  
->  	if (xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp))
-> -- 
-> 2.24.1
-> 
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Reviewed-by: John Hubbard <jhubbard@nvidia.com>
+Reviewed-by: William Kucharski <william.kucharski@oracle.com>
+---
+ mm/readahead.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/mm/readahead.c b/mm/readahead.c
+index d01531ef9f3c..998fdd23c0b1 100644
+--- a/mm/readahead.c
++++ b/mm/readahead.c
+@@ -167,8 +167,6 @@ void __do_page_cache_readahead(struct address_space *mapping,
+ 		unsigned long lookahead_size)
+ {
+ 	struct inode *inode = mapping->host;
+-	struct page *page;
+-	unsigned long end_index;	/* The last page we want to read */
+ 	LIST_HEAD(page_pool);
+ 	loff_t isize = i_size_read(inode);
+ 	gfp_t gfp_mask = readahead_gfp_mask(mapping);
+@@ -178,22 +176,26 @@ void __do_page_cache_readahead(struct address_space *mapping,
+ 		._index = index,
+ 	};
+ 	unsigned long i;
++	pgoff_t end_index;	/* The last page we want to read */
+ 
+ 	if (isize == 0)
+ 		return;
+ 
+-	end_index = ((isize - 1) >> PAGE_SHIFT);
++	end_index = (isize - 1) >> PAGE_SHIFT;
++	if (index > end_index)
++		return;
++	/* Don't read past the page containing the last byte of the file */
++	if (nr_to_read > end_index - index)
++		nr_to_read = end_index - index + 1;
+ 
+ 	/*
+ 	 * Preallocate as many pages as we will need.
+ 	 */
+ 	for (i = 0; i < nr_to_read; i++) {
+-		if (index + i > end_index)
+-			break;
++		struct page *page = xa_load(&mapping->i_pages, index + i);
+ 
+ 		BUG_ON(index + i != rac._index + rac._nr_pages);
+ 
+-		page = xa_load(&mapping->i_pages, index + i);
+ 		if (page && !xa_is_value(page)) {
+ 			/*
+ 			 * Page already present?  Kick off the current batch of
+-- 
+2.25.1
+
