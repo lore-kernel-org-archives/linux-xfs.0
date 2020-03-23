@@ -2,219 +2,323 @@ Return-Path: <SRS0=Podu=5I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-7.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C8ACC54EEB
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 16:33:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 532C5C3F2CD
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 16:43:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1795820719
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 16:33:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0177A20722
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 16:43:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="OEYUwXkV"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="HEVaMqy8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727601AbgCWQdt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 Mar 2020 12:33:49 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:41452 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727402AbgCWQdt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Mar 2020 12:33:49 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02NGTIiA081391;
-        Mon, 23 Mar 2020 16:33:45 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=J7DCnN+VgB7UU/gqqCP/3x5Ncst37XQiAIccKV7KOVw=;
- b=OEYUwXkVqcb04lSAsQ22zAMWQeytxuWxUWoAoWs5YgZFnY/RiPtzGjMvf0xYBLYuOFL/
- 7w5mfX8hJM+JtpViIQ87ktZJM9h14Z413lzmEGE2bGxd1ggV3AWLFRhEyE7C3dNDn2/z
- rQ3TjsF9Y/K7PX5B67BZNRZ+np/XmaohnFxjtNsZC+cMTTezPfCl63d6MlyaDx7CQlbl
- RQ13i3kW0awTuQhC3WBBWEZIzjSE6HGpyE1fUFXrp/Asuw04nQOIy2Wj/C6zlmMH7RU4
- Bd/p8uxS5UZOx6yYJrgGSYQFvNsBAh9LrrjJEviwWXN9D9s1i3t/n8ATeSf49ihK5Tgc uw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2ywabqypjy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 23 Mar 2020 16:33:45 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02NGRf59022044;
-        Mon, 23 Mar 2020 16:33:45 GMT
+        id S1727031AbgCWQnT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 Mar 2020 12:43:19 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:39552 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727005AbgCWQnT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Mar 2020 12:43:19 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02NGeMl2040655
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2020 16:43:18 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=FBhBHHU6pUzZE9dB2CeAS6xxHVN8iF8/uPgWEdfvDn0=;
+ b=HEVaMqy8PLSVfKveJfeldkMJms5PkuJbm2sYnqXso3w3BH4acvwcKAP1plBg7amNfik9
+ JQN8Iqz0/WEnUsqry4r3lyh5TCvepcQ2NGlz4Aiv+RxXbk2qtryYKCP/o5zRXYIRozVc
+ dRD/zlt7BKHJNs6Q2Y4jr4bKgExhWZjYo7EfFoMnu0+Yk5BtFFGoL7CcFcQSkik16pLu
+ saLQscFF68DjjZ+WO16ulkQ33h/LI6Jg+OeV5e415nt6pJ/u9UFVevjSdCOU87pPoMy6
+ gaixQTy235nsIoLQmZFsz82lE5+EWedAOqlL/a49t7hkvBrKjCq/59WE1rv6xexs0fo3 4A== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 2yx8abvpa9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2020 16:43:18 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02NGRwot161402
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2020 16:43:17 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 2yxw6jva7u-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 23 Mar 2020 16:33:45 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 02NGXi5b012492;
-        Mon, 23 Mar 2020 16:33:44 GMT
+        by aserp3020.oracle.com with ESMTP id 2yxw7fut3e-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2020 16:43:17 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 02NGhFqV017786
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2020 16:43:16 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 23 Mar 2020 09:33:43 -0700
-Date:   Mon, 23 Mar 2020 09:33:42 -0700
+        with ESMTP ; Mon, 23 Mar 2020 09:43:15 -0700
+Date:   Mon, 23 Mar 2020 09:43:14 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Pavel Reichl <preichl@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v7 0/4] xfs: Remove wrappers for some semaphores
-Message-ID: <20200323163342.GD29339@magnolia>
-References: <20200320210317.1071747-1-preichl@redhat.com>
- <20200323032809.GA29339@magnolia>
- <CAJc7PzXuRHhYztic9vZsspiHiP-vL_0HANd8x76Y+OdRVw6wwg@mail.gmail.com>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 693639994b13
+Message-ID: <20200323164314.GE29339@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAJc7PzXuRHhYztic9vZsspiHiP-vL_0HANd8x76Y+OdRVw6wwg@mail.gmail.com>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9569 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0
- malwarescore=0 mlxscore=0 spamscore=0 mlxlogscore=999 bulkscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2003230089
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999 spamscore=0
+ adultscore=0 phishscore=0 suspectscore=2 malwarescore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2003230089
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9569 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0
- lowpriorityscore=0 malwarescore=0 phishscore=0 priorityscore=1501
- clxscore=1015 adultscore=0 mlxscore=0 mlxlogscore=999 bulkscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 suspectscore=2 priorityscore=1501 malwarescore=0
+ mlxscore=0 adultscore=0 phishscore=0 impostorscore=0 mlxlogscore=999
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2003020000 definitions=main-2003230089
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 23, 2020 at 10:22:02AM +0100, Pavel Reichl wrote:
-> Oh, thanks for the heads up...I'll try to investigate.
+Hi folks,
 
-Ahah, I figured it out.  It took me a while to pin down a solid reproducer,
-but here's a stack trace that I see most often:
+The for-next branch of the xfs-linux repository at:
 
-[  812.102819] XFS: Assertion failed: xfs_isilocked(ip, XFS_ILOCK_EXCL), file: fs/xfs/libxfs/xfs_trans_inode.c, line: 91
-[  812.104017] ------------[ cut here ]------------
-[  812.104598] WARNING: CPU: 2 PID: 26250 at fs/xfs/xfs_message.c:112 assfail+0x30/0x50 [xfs]
-[  812.105505] Modules linked in: xfs libcrc32c ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 ip_set_hash_ip ip_set_hash_net xt_tcpudp xt_set ip_set_hash_mac ip_set nfnetlink ip6table_filter ip6_tables iptable_filter bfq sch_fq_codel ip_tables x_tables nfsv4 af_packet [last unloaded: xfs]
-[  812.108176] CPU: 2 PID: 26250 Comm: kworker/2:1 Tainted: G        W         5.6.0-rc4-djw #rc4
-[  812.110742] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.10.2-1ubuntu1 04/01/2014
-[  812.111724] Workqueue: xfsalloc xfs_btree_split_worker [xfs]
-[  812.112404] RIP: 0010:assfail+0x30/0x50 [xfs]
-[  812.112905] Code: 41 89 c8 48 89 d1 48 89 f2 48 c7 c6 10 5d 37 a0 e8 c5 f8 ff ff 0f b6 1d fa 5b 11 00 80 fb 01 0f 87 aa 1b 06 00 83 e3 01 75 04 <0f> 0b 5b c3 0f 0b 48 c7 c7 80 a6 40 a0 e8 4d b8 0d e1 0f 1f 40 00
-[  812.114912] RSP: 0018:ffffc90000c7fc48 EFLAGS: 00010246
-[  812.115508] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
-[  812.116286] RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffffa0364b4d
-[  812.117087] RBP: 0000000000000001 R08: 0000000000000000 R09: 0000000000000000
-[  812.117875] R10: 000000000000000a R11: f000000000000000 R12: ffff888078695700
-[  812.118661] R13: 0000000000000000 R14: ffff8880787c4460 R15: 0000000000000000
-[  812.119445] FS:  0000000000000000(0000) GS:ffff88807e000000(0000) knlGS:0000000000000000
-[  812.120311] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  812.120969] CR2: 00007fe67192deb8 CR3: 00000000713a1002 CR4: 00000000001606a0
-[  812.121755] Call Trace:
-[  812.122097]  xfs_trans_log_inode+0x128/0x140 [xfs]
-[  812.122685]  xfs_bmbt_alloc_block+0x133/0x230 [xfs]
-[  812.123286]  __xfs_btree_split+0x16d/0x980 [xfs]
-[  812.123876]  xfs_btree_split_worker+0x61/0x90 [xfs]
-[  812.124446]  process_one_work+0x250/0x5c0
-[  812.124910]  ? worker_thread+0xcf/0x3a0
-[  812.125380]  worker_thread+0x3d/0x3a0
-[  812.125807]  ? process_one_work+0x5c0/0x5c0
-[  812.126297]  kthread+0x121/0x140
-[  812.126684]  ? kthread_park+0x80/0x80
-[  812.127111]  ret_from_fork+0x3a/0x50
-[  812.127545] irq event stamp: 75298
-[  812.127947] hardirqs last  enabled at (75297): [<ffffffff810d7f98>] console_unlock+0x428/0x580
-[  812.128895] hardirqs last disabled at (75298): [<ffffffff81001db0>] trace_hardirqs_off_thunk+0x1a/0x1c
-[  812.129942] softirqs last  enabled at (74892): [<ffffffffa02c9f2b>] xfs_buf_find+0xa6b/0x1130 [xfs]
-[  812.130984] softirqs last disabled at (74890): [<ffffffffa02c98c0>] xfs_buf_find+0x400/0x1130 [xfs]
-[  812.131993] ---[ end trace 82fd2c9f1faba927 ]---
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-This one I could reproduce on my laptop by running generic/324 with a 1k
-blocksize, but on my test vm fleet it was xfs/057 with 4k blocks.  YMMV.
+has just been updated.
 
-Anyway -- I augmented isilocked with some extra trace_printk to see what
-was going on, and noticed this:
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
 
-161011:           <...>-28177 [000]   803.593121: xfs_ilock:            dev 8:80 ino 0x46 flags ILOCK_EXCL caller xfs_alloc_file_space
-161022:           <...>-28177 [000]   803.593126: bprint:               xfs_isilocked: ino 0x46 lockf 0x4:0x1 debug_locks 1 arg 0 locked? 1
-161038:           <...>-28177 [000]   803.593132: bprint:               xfs_isilocked: ino 0x46 lockf 0x4:0x1 debug_locks 1 arg 0 locked? 1
-161048:           <...>-28177 [000]   803.593136: bprint:               xfs_isilocked: ino 0x46 lockf 0x4:0x1 debug_locks 1 arg 0 locked? 1
-161064:           <...>-28177 [000]   803.593172: bprint:               xfs_isilocked: ino 0x46 lockf 0x4:0x1 debug_locks 1 arg 0 locked? 1
-161083:           <...>-27081 [000]   803.593559: bprint:               xfs_isilocked: ino 0x46 lockf 0x4:0x1 debug_locks 1 arg 0 locked? 0
-<assertion blows up>
-162017:           <...>-28177 [001]   803.641200: bprint:               xfs_isilocked: ino 0x46 lockf 0x4:0x1 debug_locks 1 arg 0 locked? 1
-162036:           <...>-28177 [001]   803.641215: bprint:               xfs_isilocked: ino 0x46 lockf 0x4:0x1 debug_locks 1 arg 0 locked? 1
-162057:           <...>-28177 [001]   803.641224: bprint:               xfs_isilocked: ino 0x46 lockf 0x4:0x1 debug_locks 1 arg 0 locked? 1
-162073:           <...>-28177 [001]   803.641243: bprint:               xfs_isilocked: ino 0x46 lockf 0x4:0x1 debug_locks 1 arg 0 locked? 1
-162091:           <...>-28177 [001]   803.641260: bprint:               xfs_isilocked: ino 0x46 lockf 0x4:0x1 debug_locks 1 arg 0 locked? 1
-162106:           <...>-28177 [001]   803.641288: bprint:               xfs_isilocked: ino 0x46 lockf 0x4:0x1 debug_locks 1 arg 0 locked? 1
-162127:           <...>-28177 [001]   803.641318: bprint:               xfs_isilocked: ino 0x46 lockf 0x4:0x1 debug_locks 1 arg 0 locked? 1
-162140:           <...>-28177 [001]   803.641397: bprint:               xfs_isilocked: ino 0x46 lockf 0x4:0x1 debug_locks 1 arg 0 locked? 1
-162158:           <...>-28177 [001]   803.641416: xfs_iunlock:          dev 8:80 ino 0x46 flags ILOCK_EXCL caller xfs_alloc_file_space
+The new head of the for-next branch is commit:
 
-Process 28177 takes the ilock, and tries to do a bmapi_write which
-involves a bmap btree split.  The kernel libxfs delegates the split to a
-workqueue (apparently to reduce stack usage?), which performs the bmbt
-split and logs the inode core.  The kworker is process 27081.
+693639994b13 xfs: remove xlog_state_want_sync
 
-lockdep tracks the rwsem's lock state /and/ which process actually
-holds the rwsem.  This ownership doesn't transfer from 28177 to 27081,
-so when the kworker asks lockdep if it holds ILOCK_EXCL, lockdep says
-no, because 27081 doesn't own the lock, 28177 does.  Kaboom.
+New Commits:
 
-The old mrlock_t had that 'int mr_writer' field which didn't care about
-lock ownership and so isilocked would return true and so the assert was
-happy.
+Brian Foster (6):
+      [6b789c337a59] xfs: fix iclog release error check race with shutdown
+      [b73df17e4c5b] xfs: open code insert range extent split helper
+      [dd87f87d87fa] xfs: rework insert range into an atomic operation
+      [211683b21de9] xfs: rework collapse range into an atomic operation
+      [854f82b1f603] xfs: factor out quotaoff intent AIL removal and memory free
+      [8a6271431339] xfs: fix unmount hang and memory leak on shutdown during quotaoff
 
-So now comes the fun part -- the old isilocked code had a glaring hole
-in which it would return true if *anyone* held the lock, even if the
-owner is some other unrelated thread.  That's probably good enough for
-most of the fstests because we generally only run one thread at a time,
-and developers will probably notice. :)
+Christoph Hellwig (60):
+      [3d8f2821502d] xfs: ensure that the inode uid/gid match values match the icdinode ones
+      [542951592c99] xfs: remove the icdinode di_uid/di_gid members
+      [ba8adad5d036] xfs: remove the kuid/kgid conversion wrappers
+      [13b1f811b14e] xfs: ratelimit xfs_buf_ioerror_alert messages
+      [4ab45e259f31] xfs: ratelimit xfs_discard_page messages
+      [4d542e4c1e28] xfs: reject invalid flags combinations in XFS_IOC_ATTRLIST_BY_HANDLE
+      [5e81357435cc] xfs: remove the ATTR_INCOMPLETE flag
+      [0eb81a5f5c34] xfs: merge xfs_attr_remove into xfs_attr_set
+      [6cc4f4fff10d] xfs: merge xfs_attrmulti_attr_remove into xfs_attrmulti_attr_set
+      [2282a9e65177] xfs: use strndup_user in XFS_IOC_ATTRMULTI_BY_HANDLE
+      [d0ce64391128] xfs: factor out a helper for a single XFS_IOC_ATTRMULTI_BY_HANDLE op
+      [79f2280b9bfd] xfs: remove the name == NULL check from xfs_attr_args_init
+      [4df28c64e438] xfs: remove the MAXNAMELEN check from xfs_attr_args_init
+      [ead189adb8ab] xfs: turn xfs_da_args.value into a void pointer
+      [a25446224353] xfs: pass an initialized xfs_da_args structure to xfs_attr_set
+      [e5171d7e9894] xfs: pass an initialized xfs_da_args to xfs_attr_get
+      [c36f533f1407] xfs: remove the xfs_inode argument to xfs_attr_get_ilocked
+      [e513e25c380a] xfs: remove ATTR_KERNOVAL
+      [d49db18b247d] xfs: remove ATTR_ALLOC and XFS_DA_OP_ALLOCVAL
+      [1d7330199400] xfs: replace ATTR_KERNOTIME with XFS_DA_OP_NOTIME
+      [377f16ac6723] xfs: factor out a xfs_attr_match helper
+      [a9c8c69b4961] xfs: cleanup struct xfs_attr_list_context
+      [fe960087121a] xfs: remove the unused ATTR_ENTRY macro
+      [2f014aad03d8] xfs: open code ATTR_ENTSIZE
+      [3e7a779937a2] xfs: move the legacy xfs_attr_list to xfs_ioctl.c
+      [17e1dd83ea21] xfs: rename xfs_attr_list_int to xfs_attr_list
+      [f60463195179] xfs: lift common checks into xfs_ioc_attr_list
+      [eb241c747463] xfs: lift buffer allocation into xfs_ioc_attr_list
+      [53ac39fdb301] xfs: lift cursor copy in/out into xfs_ioc_attr_list
+      [5a3930e27ef9] xfs: improve xfs_forget_acl
+      [f3e93d95feef] xfs: clean up the ATTR_REPLACE checks
+      [d5f0f49a9bdd] xfs: clean up the attr flag confusion
+      [254f800f8104] xfs: remove XFS_DA_OP_INCOMPLETE
+      [e3a19cdea84a] xfs: embedded the attrlist cursor into struct xfs_attr_list_context
+      [f311d771a090] xfs: clean up bufsize alignment in xfs_ioc_attr_list
+      [ed02d13f5da8] xfs: only allocate the buffer size actually needed in __xfs_set_acl
+      [5680c3907361] xfs: switch xfs_attrmulti_attr_get to lazy attr buffer allocation
+      [183606d82446] xfs: remove the agfl_bno member from struct xfs_agfl
+      [4b97510859b2] xfs: remove the xfs_agfl_t typedef
+      [370c782b9843] xfs: remove XFS_BUF_TO_AGI
+      [9798f615ad2b] xfs: remove XFS_BUF_TO_AGF
+      [3e6e8afd3abb] xfs: remove XFS_BUF_TO_SBP
+      [b941c71947a0] xfs: mark XLOG_FORCED_SHUTDOWN as unlikely
+      [cb3d425fa59a] xfs: remove the unused XLOG_UNMOUNT_REC_TYPE define
+      [550319e9df3a] xfs: remove the unused return value from xfs_log_unmount_write
+      [6178d104075a] xfs: remove dead code from xfs_log_unmount_write
+      [13859c984301] xfs: cleanup xfs_log_unmount_write
+      [b81b79f4eda2] xfs: add a new xfs_sb_version_has_v3inode helper
+      [e9e2eae89ddb] xfs: only check the superblock version for dinode size calculation
+      [b3d1d37544d8] xfs: simplify di_flags2 inheritance in xfs_ialloc
+      [5e28aafe708b] xfs: simplify a check in xfs_ioctl_setattr_check_cowextsize
+      [6471e9c5e7a1] xfs: remove the di_version field from struct icdinode
+      [c7cc296ddd1f] xfs: merge xlog_cil_push into xlog_cil_push_work
+      [81e5b50a8fb5] xfs: factor out a xlog_wait_on_iclog helper
+      [f97a43e43662] xfs: simplify the xfs_log_release_iclog calling convention
+      [a582f32fade2] xfs: simplify log shutdown checking in xfs_log_release_iclog
+      [12e6a0f449d5] xfs: remove the aborted parameter to xlog_state_done_syncing
+      [c814b4f24eba] xfs: refactor xlog_state_clean_iclog
+      [5781464bd1ee] xfs: move the ioerror check out of xlog_state_clean_iclog
+      [693639994b13] xfs: remove xlog_state_want_sync
 
-However, with your series applied, the isilocked function becomes much
-more powerful when lockdep is active because now we can test that the
-lock is held *by the caller*, which closes that hole.
+Darrick J. Wong (24):
+      [93baa55af1a1] xfs: improve error message when we can't allocate memory for xfs_buf
+      [496b9bcd62b0] xfs: fix use-after-free when aborting corrupt attr inactivation
+      [a71e4228e6f2] xfs: fix xfs_rmap_has_other_keys usage of ECANCELED
+      [8d57c21600a5] xfs: add a function to deal with corrupt buffers post-verifiers
+      [e83cf875d67a] xfs: xfs_buf_corruption_error should take __this_address
+      [ce99494c9699] xfs: fix buffer corruption reporting when xfs_dir3_free_header_check fails
+      [1cb5deb5bc09] xfs: don't ever return a stale pointer from __xfs_dir3_free_read
+      [6fb5aac73310] xfs: check owner of dir3 free blocks
+      [a10c21ed5d52] xfs: check owner of dir3 data blocks
+      [1b2c1a63b678] xfs: check owner of dir3 blocks
+      [2e107cf869ee] xfs: mark dir corrupt when lookup-by-hash fails
+      [806d3909a57e] xfs: mark extended attr corrupt when lookup-by-hash fails
+      [faf8ee8476c1] xfs: xfs_dabuf_map should return ENOMEM when map allocation fails
+      [77ca1eed5a7d] xfs: fix incorrect test in xfs_alloc_ag_vextent_lastblock
+      [37a6547d92af] xfs: xrep_reap_extents should not destroy the bitmap
+      [00b10d487b29] xfs: rename xfs_bitmap to xbitmap
+      [608eb3cee703] xfs: replace open-coded bitmap weight logic
+      [e06536a692e0] xfs: introduce fake roots for ag-rooted btrees
+      [349e1c0380db] xfs: introduce fake roots for inode-rooted btrees
+      [60e3d7070749] xfs: support bulk loading of staged btrees
+      [e6eb33d905c2] xfs: add support for free space btree staging cursors
+      [c29ce8f48e21] xfs: add support for inode btree staging cursors
+      [56e98164ffea] xfs: add support for refcount btree staging cursors
+      [59d677127cf1] xfs: add support for rmap btree staging cursors
 
-Unfortunately, it also trips over this bmap split case, so if there's a
-way to solve that problem we'd better find it quickly.  Unfortunately, I
-don't know of a way to gift a lock to another thread temporarily...
+Dave Chinner (7):
+      [7cace18ab576] xfs: introduce new private btree cursor names
+      [576af7322807] xfs: convert btree cursor ag-private member name
+      [92219c292af8] xfs: convert btree cursor inode-private member names
+      [8ef547976a18] xfs: rename btree cursor private btree member flags
+      [352890735e52] xfs: make btree cursor private union anonymous
+      [68422d90dad4] xfs: make the btree cursor union members named structure
+      [c4aa10d04196] xfs: make the btree ag cursor private union anonymous
 
-Thoughts?
+Eric Biggers (1):
+      [10a98cb16d80] xfs: clear PF_MEMALLOC before exiting xfsaild thread
 
---D
+Jules Irenge (1):
+      [daebba1b3609] xfs: Add missing annotation to xfs_ail_check()
 
-> On Mon, Mar 23, 2020 at 4:28 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> >
-> > On Fri, Mar 20, 2020 at 10:03:13PM +0100, Pavel Reichl wrote:
-> > > Remove some wrappers that we have in XFS around the read-write semaphore
-> > > locks.
-> > >
-> > > The goal of this cleanup is to remove mrlock_t structure and its mr*()
-> > > wrapper functions and replace it with native rw_semaphore type and its
-> > > native calls.
-> >
-> > Hmmm, there's something funny about this patchset that causes my fstests
-> > vm to explode with isilocked assertions everywhere... I'll look more
-> > tomorrow (it's still the weekend here) but figured I should tell you
-> > sooner than later.
-> >
-> > --D
-> >
-> > > Pavel Reichl (4):
-> > >   xfs: Refactor xfs_isilocked()
-> > >   xfs: clean up whitespace in xfs_isilocked() calls
-> > >   xfs: xfs_isilocked() can only check a single lock type
-> > >   xfs: replace mrlock_t with rw_semaphores
-> > >
-> > >  fs/xfs/libxfs/xfs_bmap.c |   8 +--
-> > >  fs/xfs/mrlock.h          |  78 -----------------------------
-> > >  fs/xfs/xfs_file.c        |   3 +-
-> > >  fs/xfs/xfs_inode.c       | 104 ++++++++++++++++++++++++++-------------
-> > >  fs/xfs/xfs_inode.h       |  25 ++++++----
-> > >  fs/xfs/xfs_iops.c        |   4 +-
-> > >  fs/xfs/xfs_linux.h       |   2 +-
-> > >  fs/xfs/xfs_qm.c          |   2 +-
-> > >  fs/xfs/xfs_super.c       |   6 +--
-> > >  9 files changed, 98 insertions(+), 134 deletions(-)
-> > >  delete mode 100644 fs/xfs/mrlock.h
-> > >
-> > > --
-> > > 2.25.1
-> > >
-> >
-> 
+Qian Cai (1):
+      [4982bff1ace1] xfs: fix an undefined behaviour in _da3_path_shift
+
+Takashi Iwai (1):
+      [17bb60b74124] xfs: Use scnprintf() for avoiding potential buffer overflow
+
+Tommi Rantala (1):
+      [3d28e7e27891] xfs: fix regression in "cleanup xfs_dir2_block_getdents"
+
+Zheng Bin (1):
+      [d0c7feaf8767] xfs: add agf freeblocks verify in xfs_agf_verify
+
+
+Code Diffstat:
+
+ fs/xfs/Makefile                    |   1 +
+ fs/xfs/libxfs/xfs_ag.c             |  16 +-
+ fs/xfs/libxfs/xfs_alloc.c          |  99 +++--
+ fs/xfs/libxfs/xfs_alloc.h          |   9 +
+ fs/xfs/libxfs/xfs_alloc_btree.c    | 119 +++--
+ fs/xfs/libxfs/xfs_alloc_btree.h    |   7 +
+ fs/xfs/libxfs/xfs_attr.c           | 351 +++++----------
+ fs/xfs/libxfs/xfs_attr.h           | 114 +----
+ fs/xfs/libxfs/xfs_attr_leaf.c      | 130 +++---
+ fs/xfs/libxfs/xfs_attr_leaf.h      |   1 -
+ fs/xfs/libxfs/xfs_attr_remote.c    |   2 +-
+ fs/xfs/libxfs/xfs_bmap.c           |  88 ++--
+ fs/xfs/libxfs/xfs_bmap.h           |   3 +-
+ fs/xfs/libxfs/xfs_bmap_btree.c     |  50 +--
+ fs/xfs/libxfs/xfs_btree.c          |  93 ++--
+ fs/xfs/libxfs/xfs_btree.h          |  82 +++-
+ fs/xfs/libxfs/xfs_btree_staging.c  | 879 +++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_btree_staging.h  | 123 ++++++
+ fs/xfs/libxfs/xfs_da_btree.c       |  17 +-
+ fs/xfs/libxfs/xfs_da_btree.h       |  11 +-
+ fs/xfs/libxfs/xfs_da_format.h      |  12 -
+ fs/xfs/libxfs/xfs_dir2_block.c     |  33 +-
+ fs/xfs/libxfs/xfs_dir2_data.c      |  32 +-
+ fs/xfs/libxfs/xfs_dir2_leaf.c      |   2 +-
+ fs/xfs/libxfs/xfs_dir2_node.c      |  11 +-
+ fs/xfs/libxfs/xfs_format.h         |  48 +-
+ fs/xfs/libxfs/xfs_fs.h             |  32 +-
+ fs/xfs/libxfs/xfs_ialloc.c         |  35 +-
+ fs/xfs/libxfs/xfs_ialloc_btree.c   | 104 ++++-
+ fs/xfs/libxfs/xfs_ialloc_btree.h   |   6 +
+ fs/xfs/libxfs/xfs_inode_buf.c      |  43 +-
+ fs/xfs/libxfs/xfs_inode_buf.h      |   5 -
+ fs/xfs/libxfs/xfs_inode_fork.c     |   2 +-
+ fs/xfs/libxfs/xfs_inode_fork.h     |   9 +-
+ fs/xfs/libxfs/xfs_log_format.h     |  10 +-
+ fs/xfs/libxfs/xfs_refcount.c       | 110 ++---
+ fs/xfs/libxfs/xfs_refcount_btree.c | 104 +++--
+ fs/xfs/libxfs/xfs_refcount_btree.h |   6 +
+ fs/xfs/libxfs/xfs_rmap.c           | 123 +++---
+ fs/xfs/libxfs/xfs_rmap_btree.c     |  99 +++--
+ fs/xfs/libxfs/xfs_rmap_btree.h     |   5 +
+ fs/xfs/libxfs/xfs_sb.c             |  17 +-
+ fs/xfs/libxfs/xfs_trans_resv.c     |   2 +-
+ fs/xfs/scrub/agheader.c            |  20 +-
+ fs/xfs/scrub/agheader_repair.c     |  78 ++--
+ fs/xfs/scrub/alloc.c               |   2 +-
+ fs/xfs/scrub/attr.c                |  20 +-
+ fs/xfs/scrub/bitmap.c              |  87 ++--
+ fs/xfs/scrub/bitmap.h              |  23 +-
+ fs/xfs/scrub/bmap.c                |   4 +-
+ fs/xfs/scrub/dir.c                 |   3 +
+ fs/xfs/scrub/ialloc.c              |   8 +-
+ fs/xfs/scrub/refcount.c            |   2 +-
+ fs/xfs/scrub/repair.c              |  28 +-
+ fs/xfs/scrub/repair.h              |   6 +-
+ fs/xfs/scrub/rmap.c                |   2 +-
+ fs/xfs/scrub/trace.c               |   4 +-
+ fs/xfs/scrub/trace.h               |   4 +-
+ fs/xfs/xfs_acl.c                   | 132 +++---
+ fs/xfs/xfs_acl.h                   |   6 +-
+ fs/xfs/xfs_aops.c                  |   2 +-
+ fs/xfs/xfs_attr_inactive.c         |   6 +-
+ fs/xfs/xfs_attr_list.c             | 169 +------
+ fs/xfs/xfs_bmap_util.c             |  73 +--
+ fs/xfs/xfs_buf.c                   |  29 +-
+ fs/xfs/xfs_buf.h                   |   2 +
+ fs/xfs/xfs_buf_item.c              |   2 +-
+ fs/xfs/xfs_dir2_readdir.c          |  12 +-
+ fs/xfs/xfs_discard.c               |   7 +-
+ fs/xfs/xfs_dquot.c                 |   4 +-
+ fs/xfs/xfs_dquot_item.c            |  44 +-
+ fs/xfs/xfs_dquot_item.h            |   1 +
+ fs/xfs/xfs_error.c                 |   7 +-
+ fs/xfs/xfs_error.h                 |   2 +-
+ fs/xfs/xfs_fsmap.c                 |   4 +-
+ fs/xfs/xfs_icache.c                |   4 +
+ fs/xfs/xfs_inode.c                 |  57 +--
+ fs/xfs/xfs_inode_item.c            |  16 +-
+ fs/xfs/xfs_ioctl.c                 | 355 +++++++++------
+ fs/xfs/xfs_ioctl.h                 |  35 +-
+ fs/xfs/xfs_ioctl32.c               |  99 +----
+ fs/xfs/xfs_iops.c                  |  25 +-
+ fs/xfs/xfs_itable.c                |   6 +-
+ fs/xfs/xfs_linux.h                 |  27 +-
+ fs/xfs/xfs_log.c                   | 460 ++++++++-----------
+ fs/xfs/xfs_log.h                   |   5 +-
+ fs/xfs/xfs_log_cil.c               |  58 +--
+ fs/xfs/xfs_log_priv.h              |   9 +-
+ fs/xfs/xfs_log_recover.c           |  18 +-
+ fs/xfs/xfs_mount.c                 |   2 +-
+ fs/xfs/xfs_qm.c                    |  35 +-
+ fs/xfs/xfs_qm_syscalls.c           |  13 +-
+ fs/xfs/xfs_quota.h                 |   4 +-
+ fs/xfs/xfs_stats.c                 |  10 +-
+ fs/xfs/xfs_symlink.c               |   6 +-
+ fs/xfs/xfs_trace.c                 |   2 +
+ fs/xfs/xfs_trace.h                 | 209 +++++++--
+ fs/xfs/xfs_trans.c                 |   2 +-
+ fs/xfs/xfs_trans_ail.c             |   5 +-
+ fs/xfs/xfs_xattr.c                 |  92 ++--
+ 100 files changed, 3236 insertions(+), 2156 deletions(-)
+ create mode 100644 fs/xfs/libxfs/xfs_btree_staging.c
+ create mode 100644 fs/xfs/libxfs/xfs_btree_staging.h
