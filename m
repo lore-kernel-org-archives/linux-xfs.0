@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B603C10DCE
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 20:23:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F813C54FDA
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 20:23:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 32ED220663
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 20:23:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DDCC82076E
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Mar 2020 20:23:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fWVs6nDA"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="TjrkNO3p"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727405AbgCWUXN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 Mar 2020 16:23:13 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:37088 "EHLO
+        id S1727382AbgCWUXY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 Mar 2020 16:23:24 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:37276 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727382AbgCWUXL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Mar 2020 16:23:11 -0400
+        with ESMTP id S1727283AbgCWUXR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Mar 2020 16:23:17 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=nvBUEQIRW+oJfT4A2tun4ZxFtt+tUcLBZ6qVvFZPpNk=; b=fWVs6nDAE6ysYoq1zhjyTjLsrs
-        Tmu4imwe917UBtPXi2XNwSDrUF1XNAfeXYdndvl8ORDM6i09F0pFNleYzdBqhOm67hZQ0gbXQyqVI
-        IrUtwLcIVQDGrWXt0W2R6OKzHhkKfZq/eAFo5A3BuSB5ebJKA5k5+ftR4WERhWaMB5v2z56K42bNY
-        27N91TAActF+te7qe2JGJYajty6oTaua67O58Ub1HHhDlDhxtYTFFSdBt4M2Wt41Jv12cdnYC67bg
-        s5u1zoEVIIfCQOpDdLVBNe29Xt5/Af0jBQF2+dJMhmbcg2DCk3fj6Odg6/xjaMuXf/vMyA8m7vgzk
-        YnkqMvNg==;
+        bh=wgHaMQ5NgsDKhTvfEwz+JAE6nlgMEKsX9P0uFTq8za0=; b=TjrkNO3pMj5q8Uy19ek7NgV0H9
+        JP3rLJG1nJhJWOA7HZToyyu3FvraAys4Mc/j1ED5STJMipb5ruo9hVQVztuBKEV+SZ3dhX08sh8TB
+        L27s+jrjCyoNge3XdELLGrLuemw067YhvgDTbqoqnPaYdXxhndIAfRId+z9Je+2jkb2/Tt/dDx/Ay
+        hJzV4vPvVCewrdy0kSnNotzE0FN3i6+sn+jBABiDcoiHZPZrvxnQBFmhr/zrw+r5y2s9JlEJM9/9h
+        XTnSe+ejTy5WS2pmrsFEALxJNmIo3Go+PiUDukEq6WQX7sTYtBigioP3RMIg0hqyDjkD0g6gNXoNt
+        hzD7ct9Q==;
 Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jGTbB-0003Up-IQ; Mon, 23 Mar 2020 20:23:01 +0000
+        id 1jGTbB-0003VM-RD; Mon, 23 Mar 2020 20:23:01 +0000
 From:   Matthew Wilcox <willy@infradead.org>
 To:     Andrew Morton <akpm@linux-foundation.org>
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
@@ -41,12 +41,11 @@ Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
         linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
         ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org,
-        John Hubbard <jhubbard@nvidia.com>,
         Christoph Hellwig <hch@lst.de>,
         William Kucharski <william.kucharski@oracle.com>
-Subject: [PATCH v10 06/25] mm: Use readahead_control to pass arguments
-Date:   Mon, 23 Mar 2020 13:22:40 -0700
-Message-Id: <20200323202259.13363-7-willy@infradead.org>
+Subject: [PATCH v10 14/25] mm: Document why we don't set PageReadahead
+Date:   Mon, 23 Mar 2020 13:22:48 -0700
+Message-Id: <20200323202259.13363-15-willy@infradead.org>
 X-Mailer: git-send-email 2.21.1
 In-Reply-To: <20200323202259.13363-1-willy@infradead.org>
 References: <20200323202259.13363-1-willy@infradead.org>
@@ -59,115 +58,35 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
-In this patch, only between __do_page_cache_readahead() and read_pages(),
-but it will be extended in upcoming patches.  The read_pages() function
-becomes aops centric, as this makes the most sense by the end of the
-patchset.
+If the page is already in cache, we don't set PageReadahead on it.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-Reviewed-by: John Hubbard <jhubbard@nvidia.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: William Kucharski <william.kucharski@oracle.com>
 ---
- mm/readahead.c | 33 +++++++++++++++++++--------------
- 1 file changed, 19 insertions(+), 14 deletions(-)
+ mm/readahead.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/mm/readahead.c b/mm/readahead.c
-index 9fcd4e32b62d..9d9aa4ffc7d4 100644
+index ae231a5312cb..73cb59ed5cff 100644
 --- a/mm/readahead.c
 +++ b/mm/readahead.c
-@@ -113,29 +113,32 @@ int read_cache_pages(struct address_space *mapping, struct list_head *pages,
+@@ -195,9 +195,12 @@ void page_cache_readahead_unbounded(struct address_space *mapping,
  
- EXPORT_SYMBOL(read_cache_pages);
- 
--static void read_pages(struct address_space *mapping, struct file *filp,
--		struct list_head *pages, unsigned int nr_pages, gfp_t gfp)
-+static void read_pages(struct readahead_control *rac, struct list_head *pages,
-+		gfp_t gfp)
- {
-+	const struct address_space_operations *aops = rac->mapping->a_ops;
- 	struct blk_plug plug;
- 	unsigned page_idx;
- 
--	if (!nr_pages)
-+	if (!readahead_count(rac))
- 		return;
- 
- 	blk_start_plug(&plug);
- 
--	if (mapping->a_ops->readpages) {
--		mapping->a_ops->readpages(filp, mapping, pages, nr_pages);
-+	if (aops->readpages) {
-+		aops->readpages(rac->file, rac->mapping, pages,
-+				readahead_count(rac));
- 		/* Clean up the remaining pages */
- 		put_pages_list(pages);
- 		goto out;
- 	}
- 
--	for (page_idx = 0; page_idx < nr_pages; page_idx++) {
-+	for (page_idx = 0; page_idx < readahead_count(rac); page_idx++) {
- 		struct page *page = lru_to_page(pages);
- 		list_del(&page->lru);
--		if (!add_to_page_cache_lru(page, mapping, page->index, gfp))
--			mapping->a_ops->readpage(filp, page);
-+		if (!add_to_page_cache_lru(page, rac->mapping, page->index,
-+				gfp))
-+			aops->readpage(rac->file, page);
- 		put_page(page);
- 	}
- 
-@@ -143,6 +146,7 @@ static void read_pages(struct address_space *mapping, struct file *filp,
- 	blk_finish_plug(&plug);
- 
- 	BUG_ON(!list_empty(pages));
-+	rac->_nr_pages = 0;
- }
- 
- /*
-@@ -160,9 +164,12 @@ void __do_page_cache_readahead(struct address_space *mapping,
- 	unsigned long end_index;	/* The last page we want to read */
- 	LIST_HEAD(page_pool);
- 	int page_idx;
--	unsigned int nr_pages = 0;
- 	loff_t isize = i_size_read(inode);
- 	gfp_t gfp_mask = readahead_gfp_mask(mapping);
-+	struct readahead_control rac = {
-+		.mapping = mapping,
-+		.file = filp,
-+	};
- 
- 	if (isize == 0)
- 		return;
-@@ -185,9 +192,7 @@ void __do_page_cache_readahead(struct address_space *mapping,
- 			 * contiguous pages before continuing with the next
- 			 * batch.
+ 		if (page && !xa_is_value(page)) {
+ 			/*
+-			 * Page already present?  Kick off the current batch of
+-			 * contiguous pages before continuing with the next
+-			 * batch.
++			 * Page already present?  Kick off the current batch
++			 * of contiguous pages before continuing with the
++			 * next batch.  This page may be the one we would
++			 * have intended to mark as Readahead, but we don't
++			 * have a stable reference to this page, and it's
++			 * not worth getting one just for that.
  			 */
--			read_pages(mapping, filp, &page_pool, nr_pages,
--						gfp_mask);
--			nr_pages = 0;
-+			read_pages(&rac, &page_pool, gfp_mask);
+ 			read_pages(&rac, &page_pool, true);
  			continue;
- 		}
- 
-@@ -198,7 +203,7 @@ void __do_page_cache_readahead(struct address_space *mapping,
- 		list_add(&page->lru, &page_pool);
- 		if (page_idx == nr_to_read - lookahead_size)
- 			SetPageReadahead(page);
--		nr_pages++;
-+		rac._nr_pages++;
- 	}
- 
- 	/*
-@@ -206,7 +211,7 @@ void __do_page_cache_readahead(struct address_space *mapping,
- 	 * uptodate then the caller will launch readpage again, and
- 	 * will then handle the error.
- 	 */
--	read_pages(mapping, filp, &page_pool, nr_pages, gfp_mask);
-+	read_pages(&rac, &page_pool, gfp_mask);
- }
- 
- /*
 -- 
 2.25.1
 
