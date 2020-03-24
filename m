@@ -2,92 +2,84 @@ Return-Path: <SRS0=ODsa=5J=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EF7EC54FCF
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Mar 2020 17:45:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CA77C43331
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Mar 2020 18:26:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 23ABB208CA
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Mar 2020 17:45:22 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="s0CU0o0/"
+	by mail.kernel.org (Postfix) with ESMTP id EF51C20714
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Mar 2020 18:26:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728005AbgCXRpV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Mar 2020 13:45:21 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:54008 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727716AbgCXRpB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Mar 2020 13:45:01 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-        Content-ID:Content-Description:In-Reply-To:References;
-        bh=PV5J0mGLxU4eiHQQnH1GkoT6GYPqXAjVUwics11qB3w=; b=s0CU0o0/4Jc1xNI3jPBkrfcUHX
-        B5gTwLn0cxqfZBc4BECQJd2eTtHhW7fmpkaWaVSDioDUc9P5Jn9O7VEnPyg9dORNFwotd91SCCDC4
-        1DovjJW2Ib+X8n65bh+qfeullvsEWb5pzMPZPbdKNxMJ8l2rnXXsYD55lOJxfqpQ7vwAmlYAQ33vV
-        gCAalEOL/1V07s/BzLz0+YQ/Gn2mxBhcaWiHrqezMfOem0HYZHI2hBB0GGQu0IceTDYb0NEtJwR+/
-        LCba3js1wSginA3rhwGFXDaoYBtJiUEyEldPSPeuqIGjGA8MdDot28mDesRzKyd3UkhKHUUXhsTSp
-        SR6qTGoA==;
-Received: from [2001:4bb8:18c:2a9e:999c:283e:b14a:9189] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jGnbo-00021y-Vc; Tue, 24 Mar 2020 17:45:01 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     linux-xfs@vger.kernel.org
-Cc:     david@fromorbit.com
-Subject: xfs: clean up log tickets and record writes v3
-Date:   Tue, 24 Mar 2020 18:44:51 +0100
-Message-Id: <20200324174459.770999-1-hch@lst.de>
-X-Mailer: git-send-email 2.25.1
+        id S1727999AbgCXS0H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Mar 2020 14:26:07 -0400
+Received: from mail1.g1.pair.com ([66.39.3.162]:13168 "EHLO mail1.g1.pair.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727398AbgCXS0G (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Mar 2020 14:26:06 -0400
+Received: from mail1.g1.pair.com (localhost [127.0.0.1])
+        by mail1.g1.pair.com (Postfix) with ESMTP id 298B95474CE;
+        Tue, 24 Mar 2020 14:26:06 -0400 (EDT)
+Received: from harpe.intellique.com (labo.djinux.com [82.225.196.72])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail1.g1.pair.com (Postfix) with ESMTPSA id A987B60AFA3;
+        Tue, 24 Mar 2020 14:26:05 -0400 (EDT)
+Date:   Tue, 24 Mar 2020 19:26:10 +0100
+From:   Emmanuel Florac <eflorac@intellique.com>
+To:     Pawan Prakash Sharma <pawanprakash101@gmail.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: xfs duplicate UUID
+Message-ID: <20200324192610.0f19a868@harpe.intellique.com>
+In-Reply-To: <CABS7VHB2FJdCz+F+3y86wawmBSuaVmfnC57edHVsoRugAK2Nsg@mail.gmail.com>
+References: <CABS7VHBR1TqgdKEvN8pnRH8ZxZZUeEFm6pFfaygOzv0781QrRg@mail.gmail.com>
+        <20200324183819.36aa5448@harpe.intellique.com>
+        <CABS7VHB2FJdCz+F+3y86wawmBSuaVmfnC57edHVsoRugAK2Nsg@mail.gmail.com>
+Organization: Intellique
+X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.31; x86_64-slackware-linux-gnu)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/tObYrmr10NaIaJYd1mMz8Uu"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This series follows up on conversions about relogging infrastructure
-and the way xfs_log_done() does two things but only one of several
-callers uses both of those functions. It also pointed out that
-xfs_trans_commit() never writes to the log anymore, so only
-checkpoints pass a ticket to xlog_write() with this flag set and
-no transaction makes multiple calls to xlog_write() calls on the
-same ticket. Hence there's no real need for XLOG_TIC_INITED to track
-whether a ticket has written a start record to the log anymore.
+--Sig_/tObYrmr10NaIaJYd1mMz8Uu
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-A lot of further cleanups fell out of this. Once we no longer use
-XLOG_TIC_INITED to carry state inside the write loop, the logic
-can be simplified in both xlog_write and xfs_log_done. xfs_log_done
-can be split up, and then the call chain can be flattened because
-xlog_write_done() and xlog_commit_record() are basically the same.
+Le Tue, 24 Mar 2020 23:14:03 +0530
+Pawan Prakash Sharma <pawanprakash101@gmail.com> =C3=A9crivait:
 
-This then leads to cleanups writing both commit and unmount records.
+> > Did you try to mount it with the "nouuid" option? =20
+>=20
+> yes, that is working fine. I am able to mount it. But I am not sure
+> the side effect of doing that as there will not be any uuid generated
+> and xfsdump/xfsrestore might need that. Correct me if I am wrong.
+>=20
 
-Finally, to complete what started all this, the XLOG_TIC_INITED flag
-is removed.
+Your problem is that the log is dirty. You need to mount it once to
+clean up the log, then you'll be able to change the UUID.
 
-A git tree is avaiblable here:
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
-    git://git.infradead.org/users/hch/xfs.git xlog-ticket-cleanup.3
+--Sig_/tObYrmr10NaIaJYd1mMz8Uu
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
 
-Gitweb:
+-----BEGIN PGP SIGNATURE-----
 
-    http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xlog-ticket-cleanup.3
+iEUEARECAAYFAl56UMMACgkQX3jQXNUicVaDrACdHMrhl+zNBoUk1JCxQuVkaiiH
+DOsAmNSB+plhsPMVdEMSDVCDBIKgpRs=
+=m+0Y
+-----END PGP SIGNATURE-----
 
-Changes since v2:
- - fix a commit message typo
- - move the XLOG_TIC_INITED earlier, and move another hunk to this patch
- - keep checking for XLOG_FORCED_SHUTDOWN and skip regrants
- - merge the two patches for refactoring and renaming the log unmount
-   record handling
-
-Changes since v1:
- - taking this over from Dave (for now) as he is still injured, an it
-   interacts closely with my log error handling bits
- - rebased on top of for-next + the "more log cleanups" series
- - fix an accounting error in xlog_write
- - use a bool for the ticket header in xlog_write
- - add a new patch to split xlog_ticket_done
+--Sig_/tObYrmr10NaIaJYd1mMz8Uu--
