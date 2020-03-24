@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 917DDC43331
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Mar 2020 00:19:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A136C4332B
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Mar 2020 00:19:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 72323206F9
+	by mail.kernel.org (Postfix) with ESMTP id F00C1206F9
 	for <linux-xfs@archiver.kernel.org>; Tue, 24 Mar 2020 00:19:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727530AbgCXATg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1727485AbgCXATg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Mon, 23 Mar 2020 20:19:36 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:43008 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727485AbgCXATf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Mar 2020 20:19:35 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:52379 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727478AbgCXATg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Mar 2020 20:19:36 -0400
 Received: from dread.disaster.area (pa49-195-202-68.pa.nsw.optusnet.com.au [49.195.202.68])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id D14107EB057
-        for <linux-xfs@vger.kernel.org>; Tue, 24 Mar 2020 11:19:31 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 5B3DF3A3705
+        for <linux-xfs@vger.kernel.org>; Tue, 24 Mar 2020 11:19:32 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jGXI2-00057Q-Mv
+        id 1jGXI2-00057W-PD
         for linux-xfs@vger.kernel.org; Tue, 24 Mar 2020 11:19:30 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.93)
         (envelope-from <david@fromorbit.com>)
-        id 1jGXI2-0004h5-E2
+        id 1jGXI2-0004hK-Gz
         for linux-xfs@vger.kernel.org; Tue, 24 Mar 2020 11:19:30 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 1/5] mkfs: use cvtnum from libfrog
-Date:   Tue, 24 Mar 2020 11:19:24 +1100
-Message-Id: <20200324001928.17894-2-david@fromorbit.com>
+Subject: [PATCH 4/5] xfsprogs: fix sliently borken option parsing
+Date:   Tue, 24 Mar 2020 11:19:27 +1100
+Message-Id: <20200324001928.17894-5-david@fromorbit.com>
 X-Mailer: git-send-email 2.26.0.rc2
 In-Reply-To: <20200324001928.17894-1-david@fromorbit.com>
 References: <20200324001928.17894-1-david@fromorbit.com>
@@ -44,7 +44,7 @@ X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
         a=mqTaRPt+QsUAtUurwE173Q==:117 a=mqTaRPt+QsUAtUurwE173Q==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=SS2py6AdgQ4A:10 a=20KFwNOVAAAA:8
-        a=yPCof4ZbAAAA:8 a=ihEym0ZacZWdIiCorzoA:9
+        a=xcLlE77iyJwIfimGNhQA:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -52,195 +52,180 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Move the checks for zero block/sector size to the libfrog code
-and return -1LL as an invalid value instead. Catch the invalid
-value in mkfs and error out there instead of inside cvtnum.
+When getopt() is passed an option string like "-m -n" and the
+parameter m is defined as "m:", getopt returns a special error
+to indication that the optstring started with a "-". Any getopt()
+caller that is just catching the "?" error character will not
+not catch this special error, so it silently eats the parameter
+following -m.
 
-Also rename the libfrog block/sector size variables so they don't
-shadow the mkfs global variables of the same name and mark the
-string being passed in as a const.
+Lots of getopt loops in xfsprogs have this issue. Convert them all
+to just use a "default:" to catch anything unexpected.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- include/xfs_multidisk.h |  3 --
- libfrog/convert.c       | 14 +++++---
- libfrog/convert.h       |  2 +-
- mkfs/proto.c            |  2 +-
- mkfs/xfs_mkfs.c         | 72 ++++-------------------------------------
- 5 files changed, 18 insertions(+), 75 deletions(-)
+ copy/xfs_copy.c      | 2 +-
+ db/freesp.c          | 2 +-
+ db/init.c            | 7 ++-----
+ growfs/xfs_growfs.c  | 1 -
+ io/copy_file_range.c | 2 ++
+ logprint/logprint.c  | 2 +-
+ mkfs/xfs_mkfs.c      | 2 +-
+ repair/xfs_repair.c  | 2 +-
+ scrub/xfs_scrub.c    | 2 --
+ spaceman/freesp.c    | 1 -
+ spaceman/prealloc.c  | 1 -
+ 11 files changed, 9 insertions(+), 15 deletions(-)
 
-diff --git a/include/xfs_multidisk.h b/include/xfs_multidisk.h
-index 79500ed95a38..1b9936ec768c 100644
---- a/include/xfs_multidisk.h
-+++ b/include/xfs_multidisk.h
-@@ -42,9 +42,6 @@
- #define XFS_NOMULTIDISK_AGLOG		2	/* 4 AGs */
- #define XFS_MULTIDISK_AGCOUNT		(1 << XFS_MULTIDISK_AGLOG)
+diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
+index 91c2ae01683b..c4f9f34981ca 100644
+--- a/copy/xfs_copy.c
++++ b/copy/xfs_copy.c
+@@ -584,7 +584,7 @@ main(int argc, char **argv)
+ 		case 'V':
+ 			printf(_("%s version %s\n"), progname, VERSION);
+ 			exit(0);
+-		case '?':
++		default:
+ 			usage();
+ 		}
+ 	}
+diff --git a/db/freesp.c b/db/freesp.c
+index 903c60d7380a..6f2346665847 100644
+--- a/db/freesp.c
++++ b/db/freesp.c
+@@ -177,7 +177,7 @@ init(
+ 		case 's':
+ 			summaryflag = 1;
+ 			break;
+-		case '?':
++		default:
+ 			return usage();
+ 		}
+ 	}
+diff --git a/db/init.c b/db/init.c
+index 61eea111f017..ac649fbddbb9 100644
+--- a/db/init.c
++++ b/db/init.c
+@@ -84,15 +84,12 @@ init(
+ 		case 'V':
+ 			printf(_("%s version %s\n"), progname, VERSION);
+ 			exit(0);
+-		case '?':
++		default:
+ 			usage();
+-			/*NOTREACHED*/
+ 		}
+ 	}
+-	if (optind + 1 != argc) {
++	if (optind + 1 != argc)
+ 		usage();
+-		/*NOTREACHED*/
+-	}
  
--extern long long cvtnum(unsigned int blksize, unsigned int sectsize,
--			const char *str);
--
- /* proto.c */
- extern char *setup_proto (char *fname);
- extern void parse_proto (xfs_mount_t *mp, struct fsxattr *fsx, char **pp);
-diff --git a/libfrog/convert.c b/libfrog/convert.c
-index 8d4d4077b331..6b8ff30de24a 100644
---- a/libfrog/convert.c
-+++ b/libfrog/convert.c
-@@ -182,9 +182,9 @@ cvt_u16(
+ 	fsdevice = argv[optind];
+ 	if (!x.disfile)
+diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
+index d27e3b94e0c4..a68b515de40d 100644
+--- a/growfs/xfs_growfs.c
++++ b/growfs/xfs_growfs.c
+@@ -120,7 +120,6 @@ main(int argc, char **argv)
+ 		case 'V':
+ 			printf(_("%s version %s\n"), progname, VERSION);
+ 			exit(0);
+-		case '?':
+ 		default:
+ 			usage();
+ 		}
+diff --git a/io/copy_file_range.c b/io/copy_file_range.c
+index fb5702e1faad..4c4332c6e5ec 100644
+--- a/io/copy_file_range.c
++++ b/io/copy_file_range.c
+@@ -127,6 +127,8 @@ copy_range_f(int argc, char **argv)
+ 			/* Expect no src_path arg */
+ 			src_path_arg = 0;
+ 			break;
++		default:
++			return command_usage(&copy_range_cmd);
+ 		}
+ 	}
  
- long long
- cvtnum(
--	size_t		blocksize,
--	size_t		sectorsize,
--	char		*s)
-+	size_t		blksize,
-+	size_t		sectsize,
-+	const char	*s)
- {
- 	long long	i;
- 	char		*sp;
-@@ -202,9 +202,13 @@ cvtnum(
- 	c = tolower(*sp);
- 	switch (c) {
- 	case 'b':
--		return i * blocksize;
-+		if (!blksize)
-+			return -1LL;
-+		return i * blksize;
- 	case 's':
--		return i * sectorsize;
-+		if (!sectsize)
-+			return -1LL;
-+		return i * sectsize;
- 	case 'k':
- 		return KILOBYTES(i);
- 	case 'm':
-diff --git a/libfrog/convert.h b/libfrog/convert.h
-index 321540aa630c..b307d31ce955 100644
---- a/libfrog/convert.h
-+++ b/libfrog/convert.h
-@@ -14,7 +14,7 @@ extern uint64_t	cvt_u64(char *s, int base);
- extern uint32_t	cvt_u32(char *s, int base);
- extern uint16_t	cvt_u16(char *s, int base);
- 
--extern long long cvtnum(size_t blocksize, size_t sectorsize, char *s);
-+extern long long cvtnum(size_t blocksize, size_t sectorsize, const char *s);
- extern void cvtstr(double value, char *str, size_t sz);
- extern unsigned long cvttime(char *s);
- 
-diff --git a/mkfs/proto.c b/mkfs/proto.c
-index ab01c8b0d178..01b30c5f1b15 100644
---- a/mkfs/proto.c
-+++ b/mkfs/proto.c
-@@ -6,7 +6,7 @@
- 
- #include "libxfs.h"
- #include <sys/stat.h>
--#include "xfs_multidisk.h"
-+#include "libfrog/convert.h"
- 
- /*
-  * Prototypes for internal functions.
+diff --git a/logprint/logprint.c b/logprint/logprint.c
+index 511a32aca726..e882c5d44397 100644
+--- a/logprint/logprint.c
++++ b/logprint/logprint.c
+@@ -193,7 +193,7 @@ main(int argc, char **argv)
+ 			case 'V':
+ 				printf(_("%s version %s\n"), progname, VERSION);
+ 				exit(0);
+-			case '?':
++			default:
+ 				usage();
+ 		}
+ 	}
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 19a8e6d1d344..f14ce8db5a74 100644
+index f14ce8db5a74..039b1dcc5afa 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -10,6 +10,7 @@
- #include "libxcmd.h"
- #include "libfrog/fsgeom.h"
- #include "libfrog/topology.h"
-+#include "libfrog/convert.h"
- 
- #define TERABYTES(count, blog)	((uint64_t)(count) << (40 - (blog)))
- #define GIGABYTES(count, blog)	((uint64_t)(count) << (30 - (blog)))
-@@ -942,69 +943,6 @@ unknown(
- 	usage();
- }
- 
--long long
--cvtnum(
--	unsigned int	blksize,
--	unsigned int	sectsize,
--	const char	*s)
--{
--	long long	i;
--	char		*sp;
--	int		c;
--
--	i = strtoll(s, &sp, 0);
--	if (i == 0 && sp == s)
--		return -1LL;
--	if (*sp == '\0')
--		return i;
--
--	if (sp[1] != '\0')
--		return -1LL;
--
--	if (*sp == 'b') {
--		if (!blksize) {
--			fprintf(stderr,
--_("Blocksize must be provided prior to using 'b' suffix.\n"));
--			usage();
--		} else {
--			return i * blksize;
--		}
--	}
--	if (*sp == 's') {
--		if (!sectsize) {
--			fprintf(stderr,
--_("Sectorsize must be specified prior to using 's' suffix.\n"));
--			usage();
--		} else {
--			return i * sectsize;
--		}
--	}
--
--	c = tolower(*sp);
--	switch (c) {
--	case 'e':
--		i *= 1024LL;
--		/* fall through */
--	case 'p':
--		i *= 1024LL;
--		/* fall through */
--	case 't':
--		i *= 1024LL;
--		/* fall through */
--	case 'g':
--		i *= 1024LL;
--		/* fall through */
--	case 'm':
--		i *= 1024LL;
--		/* fall through */
--	case 'k':
--		return i * 1024LL;
--	default:
--		break;
--	}
--	return -1LL;
--}
--
- static void
- check_device_type(
- 	const char	*name,
-@@ -1374,9 +1312,13 @@ getnum(
- 	 * convert it ourselves to guarantee there is no trailing garbage in the
- 	 * number.
- 	 */
--	if (sp->convert)
-+	if (sp->convert) {
- 		c = cvtnum(blocksize, sectorsize, str);
--	else {
-+		if (c == -1LL) {
-+			illegal_option(str, opts, index,
-+				_("Not a valid value or illegal suffix"));
-+		}
-+	} else {
- 		char		*str_end;
- 
- 		c = strtoll(str, &str_end, 0);
+@@ -3679,7 +3679,7 @@ main(
+ 		case 'V':
+ 			printf(_("%s version %s\n"), progname, VERSION);
+ 			exit(0);
+-		case '?':
++		default:
+ 			unknown(optopt, "");
+ 		}
+ 	}
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 4d37ddc64906..e509fdeb66fe 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -326,7 +326,7 @@ process_args(int argc, char **argv)
+ 		case 'e':
+ 			report_corrected = true;
+ 			break;
+-		case '?':
++		default:
+ 			usage();
+ 		}
+ 	}
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index 014c54dd76b2..33b876f2147a 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -671,8 +671,6 @@ main(
+ 		case 'x':
+ 			scrub_data = true;
+ 			break;
+-		case '?':
+-			/* fall through */
+ 		default:
+ 			usage();
+ 		}
+diff --git a/spaceman/freesp.c b/spaceman/freesp.c
+index 92cdb7439427..de301c195fb3 100644
+--- a/spaceman/freesp.c
++++ b/spaceman/freesp.c
+@@ -310,7 +310,6 @@ init(
+ 		case 's':
+ 			summaryflag = 1;
+ 			break;
+-		case '?':
+ 		default:
+ 			return command_usage(&freesp_cmd);
+ 		}
+diff --git a/spaceman/prealloc.c b/spaceman/prealloc.c
+index e5d857bdd334..6fcbb461125b 100644
+--- a/spaceman/prealloc.c
++++ b/spaceman/prealloc.c
+@@ -56,7 +56,6 @@ prealloc_f(
+ 			eofb.eof_min_file_size = cvtnum(fsgeom->blocksize,
+ 					fsgeom->sectsize, optarg);
+ 			break;
+-		case '?':
+ 		default:
+ 			return command_usage(&prealloc_cmd);
+ 		}
 -- 
 2.26.0.rc2
 
