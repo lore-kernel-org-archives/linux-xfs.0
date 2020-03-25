@@ -6,81 +6,160 @@ X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79FE0C43331
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 11:41:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11390C54FD6
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 12:02:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 467CE20772
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 11:41:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC96F20772
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 12:02:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="BSrTyxWl"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QvbtCWiI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727346AbgCYLlz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Mar 2020 07:41:55 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:56312 "EHLO
+        id S1727286AbgCYMC4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Mar 2020 08:02:56 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:43092 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727158AbgCYLlz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Mar 2020 07:41:55 -0400
+        with ESMTP id S1727129AbgCYMCz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Mar 2020 08:02:55 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=zvmkiI7fVjvk1S1c8Ujs4x4bw5mvh4WqXhERXoWOhjs=; b=BSrTyxWl+fsCWg286aP4j7n3YU
-        qOW8xnqFJ+yIRPfZzzyzyIUEn/+q+NN2RJ5s2yJGndXGUkZRZ9ph7LuwRlXN3O8GrZzE0Iw1jMGrt
-        PImH4zvZ/JCc8FRdwKBMTSqe617PXvYfOYshifA8ZVAt/SzCv68oh4peHS5N9caCBVlWKeDvM5RWN
-        MFj87Uun0td5Z1BAB+pgbFUz+sbekaheONO1UkbJFs+feTRDwjAalqr4ZQnztf4eyeZiJpLO/2Rsf
-        v9JZCOXr7b4kwNtnNTho2G8jRluC1Tl9eevVh4uZd5owyQKGl8gWgMiNp+vw1BsEmspsggQOBQrRr
-        3bbITd8A==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jH4Pz-00022S-FZ; Wed, 25 Mar 2020 11:41:55 +0000
-Date:   Wed, 25 Mar 2020 04:41:55 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: shutdown on failure to add page to log bio
-Message-ID: <20200325114155.GA32563@infradead.org>
-References: <20200324165700.7575-1-bfoster@redhat.com>
- <20200325071225.GA17629@infradead.org>
- <20200325112502.GB10922@bfoster>
+        bh=547A7ZAoUu2JDJ2ptSJ8vxecAwOtjI/NDzIFsvFTzXo=; b=QvbtCWiIh5Xi5+8xr7F3LHchs/
+        /enb5Ja0xjCQg6d/l+MMlIiwXqB1vmDvW34OsfyaSVHmfQx5kxyhZIn0FH5/13KsLe0hUWrGWbB2g
+        sxNran2m7QzQfFcu/qurUajS+kK4kEiY6Nojd22Yoyfhsr09GRoJw/fKvlcE/cgG6L+etNC0U3vkq
+        0DIgu/p6cickFzYi2VQqX4rMn0g6k0JEQQFCQ8RoqdCtQshCfS8K0j4G2044VrBkohrju2ToJ8dze
+        6LtjdH/dgtWCSE8hybN/l8eLj9N52oB+rKd+z7jbkSCM2Y9hSv9O3RaK4nV1mItf8R8C4rGnL9moV
+        mHDZZ7Cg==;
+Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jH4kI-0002HH-Er; Wed, 25 Mar 2020 12:02:54 +0000
+Date:   Wed, 25 Mar 2020 05:02:54 -0700
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Miklos Szeredi <miklos@szeredi.hu>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        ocfs2-devel@oss.oracle.com, linux-xfs <linux-xfs@vger.kernel.org>,
+        Dave Chinner <dchinner@redhat.com>,
+        William Kucharski <william.kucharski@oracle.com>
+Subject: Re: [PATCH v10 24/25] fuse: Convert from readpages to readahead
+Message-ID: <20200325120254.GA22483@bombadil.infradead.org>
+References: <20200323202259.13363-1-willy@infradead.org>
+ <20200323202259.13363-25-willy@infradead.org>
+ <CAJfpegu7EFcWrg3bP+-2BX_kb52RrzBCo_U3QKYzUkZfe4EjDA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200325112502.GB10922@bfoster>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <CAJfpegu7EFcWrg3bP+-2BX_kb52RrzBCo_U3QKYzUkZfe4EjDA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 25, 2020 at 07:25:02AM -0400, Brian Foster wrote:
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 2a90a483c2d6..92a58a6bc32b 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -1703,7 +1703,7 @@ xlog_bio_end_io(
->  		   &iclog->ic_end_io_work);
->  }
->  
-> -static void
-> +static int
->  xlog_map_iclog_data(
->  	struct bio		*bio,
->  	void			*data,
-> @@ -1714,11 +1714,14 @@ xlog_map_iclog_data(
->  		unsigned int	off = offset_in_page(data);
->  		size_t		len = min_t(size_t, count, PAGE_SIZE - off);
->  
-> -		WARN_ON_ONCE(bio_add_page(bio, page, len, off) != len);
-> +		if (bio_add_page(bio, page, len, off) != len)
-> +			break;
+On Wed, Mar 25, 2020 at 10:42:56AM +0100, Miklos Szeredi wrote:
+> > +       while ((page = readahead_page(rac))) {
+> > +               if (fuse_readpages_fill(&data, page) != 0)
+> 
+> Shouldn't this unlock + put page on error?
 
-I'd just return -EIO here.
+We're certainly inconsistent between the two error exits from
+fuse_readpages_fill().  But I think we can simplify the whole thing
+... how does this look to you?
 
->  
->  		data += len;
->  		count -= len;
->  	} while (count);
-> +
-> +	return count;
-
-And 0 here.  Returning the remaining count obviously works as well,
-but it feels a little unintuitive to me and would warrant a comment.
+diff --git a/fs/fuse/file.c b/fs/fuse/file.c
+index 5749505bcff6..57ea9a364e62 100644
+--- a/fs/fuse/file.c
++++ b/fs/fuse/file.c
+@@ -915,76 +915,32 @@ static void fuse_send_readpages(struct fuse_io_args *ia, struct file *file)
+ 	fuse_readpages_end(fc, &ap->args, err);
+ }
+ 
+-struct fuse_fill_data {
+-	struct fuse_io_args *ia;
+-	struct file *file;
+-	struct inode *inode;
+-	unsigned int nr_pages;
+-	unsigned int max_pages;
+-};
+-
+-static int fuse_readpages_fill(struct fuse_fill_data *data, struct page *page)
+-{
+-	struct fuse_io_args *ia = data->ia;
+-	struct fuse_args_pages *ap = &ia->ap;
+-	struct inode *inode = data->inode;
+-	struct fuse_conn *fc = get_fuse_conn(inode);
+-
+-	fuse_wait_on_page_writeback(inode, page->index);
+-
+-	if (ap->num_pages &&
+-	    (ap->num_pages == fc->max_pages ||
+-	     (ap->num_pages + 1) * PAGE_SIZE > fc->max_read ||
+-	     ap->pages[ap->num_pages - 1]->index + 1 != page->index)) {
+-		data->max_pages = min_t(unsigned int, data->nr_pages,
+-					fc->max_pages);
+-		fuse_send_readpages(ia, data->file);
+-		data->ia = ia = fuse_io_alloc(NULL, data->max_pages);
+-		if (!ia)
+-			return -ENOMEM;
+-		ap = &ia->ap;
+-	}
+-
+-	if (WARN_ON(ap->num_pages >= data->max_pages)) {
+-		unlock_page(page);
+-		fuse_io_free(ia);
+-		return -EIO;
+-	}
+-
+-	ap->pages[ap->num_pages] = page;
+-	ap->descs[ap->num_pages].length = PAGE_SIZE;
+-	ap->num_pages++;
+-	data->nr_pages--;
+-	return 0;
+-}
+-
+ static void fuse_readahead(struct readahead_control *rac)
+ {
+ 	struct inode *inode = rac->mapping->host;
+ 	struct fuse_conn *fc = get_fuse_conn(inode);
+-	struct fuse_fill_data data;
+-	struct page *page;
+ 
+ 	if (is_bad_inode(inode))
+ 		return;
+ 
+-	data.file = rac->file;
+-	data.inode = inode;
+-	data.nr_pages = readahead_count(rac);
+-	data.max_pages = min_t(unsigned int, data.nr_pages, fc->max_pages);
+-	data.ia = fuse_io_alloc(NULL, data.max_pages);
+-	if (!data.ia)
+-		return;
++	while (readahead_count(rac)) {
++		struct fuse_io_args *ia;
++		struct fuse_args_pages *ap;
++		unsigned int i, nr_pages;
+ 
+-	while ((page = readahead_page(rac))) {
+-		if (fuse_readpages_fill(&data, page) != 0)
++		nr_pages = min(readahead_count(rac), fc->max_pages);
++		ia = fuse_io_alloc(NULL, nr_pages);
++		if (!ia)
+ 			return;
++		ap = &ia->ap;
++		__readahead_batch(rac, ap->pages, nr_pages);
++		for (i = 0; i < nr_pages; i++) {
++			fuse_wait_on_page_writeback(inode, ap->pages[i]->index);
++			ap->descs[i].length = PAGE_SIZE;
++		}
++		ap->num_pages = nr_pages;
++		fuse_send_readpages(ia, rac->file);
+ 	}
+-
+-	if (data.ia->ap.num_pages)
+-		fuse_send_readpages(data.ia, rac->file);
+-	else
+-		fuse_io_free(data.ia);
+ }
+ 
+ static ssize_t fuse_cache_read_iter(struct kiocb *iocb, struct iov_iter *to)
