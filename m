@@ -2,46 +2,46 @@ Return-Path: <SRS0=vNgo=5K=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,TVD_PH_BODY_ACCOUNTS_PRE,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01ACEC2D0E6
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 18:49:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78D93C2D0E6
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 18:49:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CA4B02076F
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 18:49:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 525BB2076F
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 18:49:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HjS7ltsX"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="BUJjRSFl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727351AbgCYSty (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Mar 2020 14:49:54 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:55112 "EHLO
+        id S1727376AbgCYSt5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Mar 2020 14:49:57 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:55124 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727129AbgCYSty (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Mar 2020 14:49:54 -0400
+        with ESMTP id S1727129AbgCYSt4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Mar 2020 14:49:56 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=VJMPtaDvLFu7Jq2VT2uWp+Q381Z2nOavjTab/uTI2p4=; b=HjS7ltsXb8ctKPn7lfHEjDa2NM
-        8ruL91JEEP+vhEzbN2YwR3Vvh276dd5z0RIom864MpiwOP97eJCgokG1fsFvKHVxLNmIxZcFYbpcX
-        S9V8r9yE9gocpyxFVG/DLHKaMpGQWPM7oT0WmZgvsSlXTYTt/OQZ77BAdUzKt9wxeRxCrtehtF9MU
-        58CP8klGbK6Yzc/sciJPf7Q1RrQlFgfHESMSgtfkpjG4UzHmwLCrEr/ENRMgdCURKUrTj88xQ9mRL
-        sa80BGqBS+XdtzIw63WbAjKngPr2u/HxF3UP4CLAiSZIHagh9sMl0FEeBixEhpGSZQaX9E1FW7AL3
-        tngSXV0A==;
+        bh=Si3/WDTJvRNBgIkkMy9DmgJd//g6sw8OatDExN+N9HM=; b=BUJjRSFlDQ6FUHEHU7ZYE+emDG
+        S/V2TzsSEPNiAA5sbpdtXu0bqKXzBIJx8yxzV17Uf64Rtbzf6toa4SKwh+wp/PM1rnCaUVCdroivv
+        pYdn15VX6IWH0rx/pWWcNm7nwSUXrJiRGGrqMhbgZAVMkCxmqOyzap3L/G5AEWuJu7RDnPcTXRcOq
+        9EA4zu+8St3BCnJlvHtqlpafuACAxmJQ4HEfrEO/QVi6Pi4I1VumvJdIxezXUaDR1tnB0gRWrqbSh
+        PmD4Hptr1LcY4g6ofGU1c0nVH33Grx39LiPbnHhpwaI1mzeWcRX+TRG84SD/4KTpZwUtH6oyDTKRO
+        ZkQ91o0A==;
 Received: from [2001:4bb8:18c:2a9e:c70:4a89:bc61:2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jHB69-00036i-Oy; Wed, 25 Mar 2020 18:49:54 +0000
+        id 1jHB6C-000377-8Q; Wed, 25 Mar 2020 18:49:56 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
 Cc:     david@fromorbit.com, Dave Chinner <dchinner@redhat.com>,
         Brian Foster <bfoster@redhat.com>,
         "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 6/8] xfs: merge xlog_commit_record with xlog_write_done
-Date:   Wed, 25 Mar 2020 19:43:03 +0100
-Message-Id: <20200325184305.1361872-7-hch@lst.de>
+Subject: [PATCH 7/8] xfs: refactor unmount record writing
+Date:   Wed, 25 Mar 2020 19:43:04 +0100
+Message-Id: <20200325184305.1361872-8-hch@lst.de>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200325184305.1361872-1-hch@lst.de>
 References: <20200325184305.1361872-1-hch@lst.de>
@@ -55,130 +55,109 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-xlog_write_done() is just a thin wrapper around xlog_commit_record(), so
-they can be merged together easily.
+Separate out the unmount record writing from the rest of the
+ticket and log state futzing necessary to make it work. This is
+a no-op, just makes the code cleaner and places the unmount record
+formatting and writing alongside the commit record formatting and
+writing code.
+
+We can also get rid of the ticket flag clearing before the
+xlog_write() call because it no longer cares about the state of
+XLOG_TIC_INITED.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_log.c      | 43 ++++++++++---------------------------------
- fs/xfs/xfs_log_cil.c  |  2 +-
- fs/xfs/xfs_log_priv.h |  2 +-
- 3 files changed, 12 insertions(+), 35 deletions(-)
+ fs/xfs/xfs_log.c | 49 ++++++++++++++++++++++++++++--------------------
+ 1 file changed, 29 insertions(+), 20 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 227a8e49e540..aca470296fc5 100644
+index aca470296fc5..95e1174bf3c5 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -24,13 +24,6 @@
- kmem_zone_t	*xfs_log_ticket_zone;
+@@ -795,32 +795,44 @@ xlog_wait_on_iclog(
+ }
  
- /* Local miscellaneous function prototypes */
--STATIC int
--xlog_commit_record(
--	struct xlog		*log,
--	struct xlog_ticket	*ticket,
--	struct xlog_in_core	**iclog,
--	xfs_lsn_t		*commitlsnp);
--
- STATIC struct xlog *
- xlog_alloc_log(
- 	struct xfs_mount	*mp,
-@@ -478,22 +471,6 @@ xfs_log_reserve(
-  *		marked as with WANT_SYNC.
-  */
- 
--/*
-- * Write a commit record to the log to close off a running log write.
-- */
--int
--xlog_write_done(
--	struct xlog		*log,
--	struct xlog_ticket	*ticket,
--	struct xlog_in_core	**iclog,
--	xfs_lsn_t		*lsn)
--{
--	if (XLOG_FORCED_SHUTDOWN(log))
--		return -EIO;
--
--	return xlog_commit_record(log, ticket, iclog, lsn);
--}
--
- static bool
- __xlog_state_release_iclog(
- 	struct xlog		*log,
-@@ -1463,20 +1440,17 @@ xlog_alloc_log(
- 	return ERR_PTR(error);
- }	/* xlog_alloc_log */
- 
--
  /*
-  * Write out the commit record of a transaction associated with the given
-- * ticket.  Return the lsn of the commit record.
-+ * ticket to close off a running log write. Return the lsn of the commit record.
+- * Final log writes as part of unmount.
+- *
+- * Mark the filesystem clean as unmount happens.  Note that during relocation
+- * this routine needs to be executed as part of source-bag while the
+- * deallocation must not be done until source-end.
++ * Write out an unmount record using the ticket provided. We have to account for
++ * the data space used in the unmount ticket as this write is not done from a
++ * transaction context that has already done the accounting for us.
   */
--STATIC int
-+int
- xlog_commit_record(
- 	struct xlog		*log,
- 	struct xlog_ticket	*ticket,
- 	struct xlog_in_core	**iclog,
--	xfs_lsn_t		*commitlsnp)
-+	xfs_lsn_t		*lsn)
+-
+-/* Actually write the unmount record to disk. */
+-static void
+-xfs_log_write_unmount_record(
+-	struct xfs_mount	*mp)
++static int
++xlog_write_unmount_record(
++	struct xlog		*log,
++	struct xlog_ticket	*ticket,
++	xfs_lsn_t		*lsn,
++	uint			flags)
  {
--	struct xfs_mount *mp = log->l_mp;
--	int	error;
+-	/* the data section must be 32 bit size aligned */
+-	struct xfs_unmount_log_format magic = {
++	struct xfs_unmount_log_format ulf = {
+ 		.magic = XLOG_UNMOUNT_TYPE,
+ 	};
  	struct xfs_log_iovec reg = {
- 		.i_addr = NULL,
- 		.i_len = 0,
-@@ -1486,12 +1460,15 @@ xlog_commit_record(
+-		.i_addr = &magic,
+-		.i_len = sizeof(magic),
++		.i_addr = &ulf,
++		.i_len = sizeof(ulf),
+ 		.i_type = XLOG_REG_TYPE_UNMOUNT,
+ 	};
+ 	struct xfs_log_vec vec = {
  		.lv_niovecs = 1,
  		.lv_iovecp = &reg,
  	};
-+	int	error;
- 
--	ASSERT_ALWAYS(iclog);
--	error = xlog_write(log, &vec, ticket, commitlsnp, iclog,
--					XLOG_COMMIT_TRANS, false);
-+	if (XLOG_FORCED_SHUTDOWN(log))
-+		return -EIO;
+-	struct xlog		*log = mp->m_log;
 +
-+	error = xlog_write(log, &vec, ticket, lsn, iclog, XLOG_COMMIT_TRANS,
-+			   false);
- 	if (error)
--		xfs_force_shutdown(mp, SHUTDOWN_LOG_IO_ERROR);
-+		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
- 	return error;
++	/* account for space used by record data */
++	ticket->t_curr_res -= sizeof(ulf);
++	return xlog_write(log, &vec, ticket, lsn, NULL, flags, false);
++}
++
++/*
++ * Mark the filesystem clean by writing an unmount record to the head of the
++ * log.
++ */
++static void
++xlog_unmount_write(
++	struct xlog		*log)
++{
++	struct xfs_mount	*mp = log->l_mp;
+ 	struct xlog_in_core	*iclog;
+ 	struct xlog_ticket	*tic = NULL;
+ 	xfs_lsn_t		lsn;
+@@ -844,10 +856,7 @@ xfs_log_write_unmount_record(
+ 		flags &= ~XLOG_UNMOUNT_TRANS;
+ 	}
+ 
+-	/* remove inited flag, and account for space used */
+-	tic->t_flags = 0;
+-	tic->t_curr_res -= sizeof(magic);
+-	error = xlog_write(log, &vec, tic, &lsn, NULL, flags, false);
++	error = xlog_write_unmount_record(log, tic, &lsn, flags);
+ 	/*
+ 	 * At this point, we're umounting anyway, so there's no point in
+ 	 * transitioning log state to IOERROR. Just continue...
+@@ -913,7 +922,7 @@ xfs_log_unmount_write(
+ 	if (XLOG_FORCED_SHUTDOWN(log))
+ 		return;
+ 	xfs_log_unmount_verify_iclog(log);
+-	xfs_log_write_unmount_record(mp);
++	xlog_unmount_write(log);
  }
  
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 0ae187fa9af2..e3dd405ea767 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -839,7 +839,7 @@ xlog_cil_push_work(
- 	}
- 	spin_unlock(&cil->xc_push_lock);
- 
--	error = xlog_write_done(log, tic, &commit_iclog, &commit_lsn);
-+	error = xlog_commit_record(log, tic, &commit_iclog, &commit_lsn);
- 	if (error)
- 		goto out_abort_free_ticket;
- 
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 0941b465de9e..f4a54469d7d0 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -441,7 +441,7 @@ int	xlog_write(struct xlog *log, struct xfs_log_vec *log_vector,
- 		struct xlog_ticket *tic, xfs_lsn_t *start_lsn,
- 		struct xlog_in_core **commit_iclog, uint flags,
- 		bool need_start_rec);
--int	xlog_write_done(struct xlog *log, struct xlog_ticket *ticket,
-+int	xlog_commit_record(struct xlog *log, struct xlog_ticket *ticket,
- 		struct xlog_in_core **iclog, xfs_lsn_t *lsn);
- void	xfs_log_ticket_ungrant(struct xlog *log, struct xlog_ticket *ticket);
- void	xfs_log_ticket_regrant(struct xlog *log, struct xlog_ticket *ticket);
+ /*
 -- 
 2.25.1
 
