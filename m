@@ -2,257 +2,94 @@ Return-Path: <SRS0=vNgo=5K=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BD1EC43331
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 13:30:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B13A5C43331
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 14:24:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2588E2076A
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 13:30:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ePKF48XG"
+	by mail.kernel.org (Postfix) with ESMTP id 6A670208CA
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 14:24:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727277AbgCYNat (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Mar 2020 09:30:49 -0400
-Received: from us-smtp-delivery-74.mimecast.com ([63.128.21.74]:55766 "EHLO
-        us-smtp-delivery-74.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726967AbgCYNat (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Mar 2020 09:30:49 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1585143047;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=1TwyIO13FF/FxwIcJZ+elAHugIzthIcFcVlJtGhRCcM=;
-        b=ePKF48XGbsvDhCWKOo0sAuKRWnsopp5n7Dz0NHP7Rmr7N2gjG7RN9AHNkWmJo4+HQU8jfA
-        Y/XnTgfCu79nr1rkzbRwht94gZJUh+oCLdmA9r599g/jTALfX21B1sIlf1GMyfZft9GuvJ
-        Ds3uPol4sp1nbBAQzK610u5RwChi+tM=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-486-Y-FsyP0LNUGaoytEB21aQA-1; Wed, 25 Mar 2020 09:30:42 -0400
-X-MC-Unique: Y-FsyP0LNUGaoytEB21aQA-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1727620AbgCYOYm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Mar 2020 10:24:42 -0400
+Received: from mail1.g1.pair.com ([66.39.3.162]:30632 "EHLO mail1.g1.pair.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727538AbgCYOYl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 25 Mar 2020 10:24:41 -0400
+Received: from mail1.g1.pair.com (localhost [127.0.0.1])
+        by mail1.g1.pair.com (Postfix) with ESMTP id 007565474A3;
+        Wed, 25 Mar 2020 10:24:40 -0400 (EDT)
+Received: from harpe.intellique.com (labo.djinux.com [82.225.196.72])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7C6F8800D5B;
-        Wed, 25 Mar 2020 13:30:41 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 34B431001920;
-        Wed, 25 Mar 2020 13:30:41 +0000 (UTC)
-Date:   Wed, 25 Mar 2020 09:30:39 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 8/8] xfs: factor inode lookup from xfs_ifree_cluster
-Message-ID: <20200325133039.GC11912@bfoster>
-References: <20200325014205.11843-1-david@fromorbit.com>
- <20200325014205.11843-9-david@fromorbit.com>
+        by mail1.g1.pair.com (Postfix) with ESMTPSA id 6D28960AE3C;
+        Wed, 25 Mar 2020 10:24:40 -0400 (EDT)
+Date:   Wed, 25 Mar 2020 15:24:36 +0100
+From:   Emmanuel Florac <eflorac@intellique.com>
+To:     Pawan Prakash Sharma <pawanprakash101@gmail.com>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: Re: xfs duplicate UUID
+Message-ID: <20200325152418.04340a72@harpe.intellique.com>
+In-Reply-To: <CABS7VHDt=v1SmSggnn8288uE5Cs27RqXpPsbiGk9=wyJ-pz1pQ@mail.gmail.com>
+References: <CABS7VHBR1TqgdKEvN8pnRH8ZxZZUeEFm6pFfaygOzv0781QrRg@mail.gmail.com>
+        <20200324183819.36aa5448@harpe.intellique.com>
+        <CABS7VHB2FJdCz+F+3y86wawmBSuaVmfnC57edHVsoRugAK2Nsg@mail.gmail.com>
+        <20200324192610.0f19a868@harpe.intellique.com>
+        <CABS7VHDt=v1SmSggnn8288uE5Cs27RqXpPsbiGk9=wyJ-pz1pQ@mail.gmail.com>
+Organization: Intellique
+X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.31; x86_64-slackware-linux-gnu)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200325014205.11843-9-david@fromorbit.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/GQ6kx1M7J/UE8MrzolOlWIy"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 25, 2020 at 12:42:05PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> There's lots of indent in this code which makes it a bit hard to
-> follow. We are also going to completely rework the inode lookup code
-> as part of the inode reclaim rework, so factor out the inode lookup
-> code from the inode cluster freeing code.
-> 
-> Based on prototype code from Christoph Hellwig.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+--Sig_/GQ6kx1M7J/UE8MrzolOlWIy
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-https://lore.kernel.org/linux-xfs/20191104232000.GR4153244@magnolia/
-https://lore.kernel.org/linux-xfs/20191101120521.GE59146@bfoster/
+Le Tue, 24 Mar 2020 23:58:24 +0530
+Pawan Prakash Sharma <pawanprakash101@gmail.com> =C3=A9crivait:
 
->  fs/xfs/xfs_inode.c | 152 +++++++++++++++++++++++++--------------------
->  1 file changed, 84 insertions(+), 68 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 14b922f2a6db7..5c930863ed5b8 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -2503,6 +2503,88 @@ xfs_iunlink_remove(
->  	return error;
->  }
->  
-> +/*
-> + * Look up the inode number specified and mark it stale if it is found. If it is
-> + * dirty, return the inode so it can be attached to the cluster buffer so it can
-> + * be processed appropriately when the cluster free transaction completes.
-> + */
-> +static struct xfs_inode *
-> +xfs_ifree_get_one_inode(
-> +	struct xfs_perag	*pag,
-> +	struct xfs_inode	*free_ip,
-> +	int			inum)
-> +{
-> +	struct xfs_mount	*mp = pag->pag_mount;
-> +	struct xfs_inode	*ip;
-> +
-> +retry:
-> +	rcu_read_lock();
-> +	ip = radix_tree_lookup(&pag->pag_ici_root, XFS_INO_TO_AGINO(mp, inum));
-> +
-> +	/* Inode not in memory, nothing to do */
-> +	if (!ip)
-> +		goto out_rcu_unlock;
-> +
-> +	/*
-> +	 * because this is an RCU protected lookup, we could find a recently
-> +	 * freed or even reallocated inode during the lookup. We need to check
-> +	 * under the i_flags_lock for a valid inode here. Skip it if it is not
-> +	 * valid, the wrong inode or stale.
-> +	 */
-> +	spin_lock(&ip->i_flags_lock);
-> +	if (ip->i_ino != inum || __xfs_iflags_test(ip, XFS_ISTALE)) {
-> +		spin_unlock(&ip->i_flags_lock);
-> +		goto out_rcu_unlock;
-> +	}
-> +	spin_unlock(&ip->i_flags_lock);
-> +
-> +	/*
-> +	 * Don't try to lock/unlock the current inode, but we _cannot_ skip the
-> +	 * other inodes that we did not find in the list attached to the buffer
-> +	 * and are not already marked stale. If we can't lock it, back off and
-> +	 * retry.
-> +	 */
-> +	if (ip != free_ip) {
-> +		if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
-> +			rcu_read_unlock();
-> +			delay(1);
-> +			goto retry;
-> +		}
-> +
-> +		/*
-> +		 * Check the inode number again in case we're racing with
-> +		 * freeing in xfs_reclaim_inode().  See the comments in that
-> +		 * function for more information as to why the initial check is
-> +		 * not sufficient.
-> +		 */
-> +		if (ip->i_ino != inum) {
-> +			xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +			goto out_rcu_unlock;
-> +		}
-> +	}
-> +	rcu_read_unlock();
-> +
-> +	xfs_iflock(ip);
-> +	xfs_iflags_set(ip, XFS_ISTALE);
-> +
-> +	/*
-> +	 * We don't need to attach clean inodes or those only with unlogged
-> +	 * changes (which we throw away, anyway).
-> +	 */
-> +	if (!ip->i_itemp || xfs_inode_clean(ip)) {
-> +		ASSERT(ip != free_ip);
-> +		xfs_ifunlock(ip);
-> +		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +		goto out_no_inode;
-> +	}
-> +	return ip;
-> +
-> +out_rcu_unlock:
-> +	rcu_read_unlock();
-> +out_no_inode:
-> +	return NULL;
-> +}
-> +
->  /*
->   * A big issue when freeing the inode cluster is that we _cannot_ skip any
->   * inodes that are in memory - they all must be marked stale and attached to
-> @@ -2603,77 +2685,11 @@ xfs_ifree_cluster(
->  		 * even trying to lock them.
->  		 */
->  		for (i = 0; i < igeo->inodes_per_cluster; i++) {
-> -retry:
-> -			rcu_read_lock();
-> -			ip = radix_tree_lookup(&pag->pag_ici_root,
-> -					XFS_INO_TO_AGINO(mp, (inum + i)));
-> -
-> -			/* Inode not in memory, nothing to do */
-> -			if (!ip) {
-> -				rcu_read_unlock();
-> +			ip = xfs_ifree_get_one_inode(pag, free_ip, inum + i);
-> +			if (!ip)
->  				continue;
-> -			}
-> -
-> -			/*
-> -			 * because this is an RCU protected lookup, we could
-> -			 * find a recently freed or even reallocated inode
-> -			 * during the lookup. We need to check under the
-> -			 * i_flags_lock for a valid inode here. Skip it if it
-> -			 * is not valid, the wrong inode or stale.
-> -			 */
-> -			spin_lock(&ip->i_flags_lock);
-> -			if (ip->i_ino != inum + i ||
-> -			    __xfs_iflags_test(ip, XFS_ISTALE)) {
-> -				spin_unlock(&ip->i_flags_lock);
-> -				rcu_read_unlock();
-> -				continue;
-> -			}
-> -			spin_unlock(&ip->i_flags_lock);
-> -
-> -			/*
-> -			 * Don't try to lock/unlock the current inode, but we
-> -			 * _cannot_ skip the other inodes that we did not find
-> -			 * in the list attached to the buffer and are not
-> -			 * already marked stale. If we can't lock it, back off
-> -			 * and retry.
-> -			 */
-> -			if (ip != free_ip) {
-> -				if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
-> -					rcu_read_unlock();
-> -					delay(1);
-> -					goto retry;
-> -				}
-> -
-> -				/*
-> -				 * Check the inode number again in case we're
-> -				 * racing with freeing in xfs_reclaim_inode().
-> -				 * See the comments in that function for more
-> -				 * information as to why the initial check is
-> -				 * not sufficient.
-> -				 */
-> -				if (ip->i_ino != inum + i) {
-> -					xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> -					rcu_read_unlock();
-> -					continue;
-> -				}
-> -			}
-> -			rcu_read_unlock();
->  
-> -			xfs_iflock(ip);
-> -			xfs_iflags_set(ip, XFS_ISTALE);
-> -
-> -			/*
-> -			 * we don't need to attach clean inodes or those only
-> -			 * with unlogged changes (which we throw away, anyway).
-> -			 */
->  			iip = ip->i_itemp;
-> -			if (!iip || xfs_inode_clean(ip)) {
-> -				ASSERT(ip != free_ip);
-> -				xfs_ifunlock(ip);
-> -				xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> -				continue;
-> -			}
-> -
->  			iip->ili_last_fields = iip->ili_fields;
->  			iip->ili_fields = 0;
->  			iip->ili_fsync_fields = 0;
-> -- 
-> 2.26.0.rc2
-> 
+> >Your problem is that the log is dirty. You need to mount it once to =20
+> clean up the log, then you'll be able to change the UUID.
+>=20
+> But why xfs_freeze is not clearing that as man page says that it does
+> that?
 
+Please reply to the list so that anyone interested can learn about it.=20
+
+This is mentioned in the man page at the next line:
+
+ Note that even after freezing, the on-disk filesystem can contain
+ information on files that are still in  the process of unlinking.
+ These files will not be unlinked until the filesystem is unfrozen or a
+ clean mount of the snapshot is complete.
+
+You probably have open unlinked files (such as temporary files). It's
+very common.
+
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
+
+--Sig_/GQ6kx1M7J/UE8MrzolOlWIy
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+
+iEYEARECAAYFAl57aawACgkQX3jQXNUicVa9SgCg643RJxYqxDtgA3InXCWfqSmC
+KZcAoJR6KFaPHlxv6jPamqmM7qAsBeqr
+=ixBs
+-----END PGP SIGNATURE-----
+
+--Sig_/GQ6kx1M7J/UE8MrzolOlWIy--
