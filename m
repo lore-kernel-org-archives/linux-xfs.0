@@ -2,222 +2,122 @@ Return-Path: <SRS0=vNgo=5K=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06CAFC1975A
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 04:54:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 033F6C1975A
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 05:00:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C3975206F6
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 04:54:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Z5zZveuv"
+	by mail.kernel.org (Postfix) with ESMTP id D57AB20714
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 05:00:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725781AbgCYEyl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Mar 2020 00:54:41 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:41938 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725263AbgCYEyl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Mar 2020 00:54:41 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02P4sGct026238;
-        Wed, 25 Mar 2020 04:54:38 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=5geF+CxaqCvj988STd/cnK7pYeV0mvppj2DCmqtEAZE=;
- b=Z5zZveuvVuXtoqA1RSOqYGUDekNCegTfcRPTBs9274ueTXHQsBB0TPTbrLxbQTxMqoHc
- puSTfwhZtTNLZnLljVFaPgu/ruDEny+iSGLnWPkhA3Iamz9dZiC6RiTM5lAz6WBzW1Tc
- 3tumHVlaYCUKZAbPFAxMNtRpJVNcgzABuIT1wjmJEUP7c0OUVtfm25S8p8ylEbUC3PSQ
- cgu2/B8Slc/jORQ+ty104o+PxpgqnHzU0p8sI1UN/btcgh6KYaT3r2Td0M+iZ0ytODFk
- s09jO8dHCkiZqtVlFM0hrw31Qfoo5d83JsLhtAc1gOdMecfWyezEz5pXrbs6O/6JS6e5 Yg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2yx8ac4qxb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 25 Mar 2020 04:54:38 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02P4sbbp144820;
-        Wed, 25 Mar 2020 04:54:37 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 2yymbvf6k5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 25 Mar 2020 04:54:37 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 02P4sbV2017281;
-        Wed, 25 Mar 2020 04:54:37 GMT
-Received: from [192.168.1.223] (/67.1.1.216)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 24 Mar 2020 21:54:36 -0700
-Subject: Re: [PATCH 6/8] xfs: factor common AIL item deletion code
-To:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-References: <20200325014205.11843-1-david@fromorbit.com>
- <20200325014205.11843-7-david@fromorbit.com>
-From:   Allison Collins <allison.henderson@oracle.com>
-Message-ID: <b2e17929-b4e5-e585-feeb-5c5099e419a8@oracle.com>
-Date:   Tue, 24 Mar 2020 21:54:36 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1725781AbgCYFAb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Mar 2020 01:00:31 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:48412 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725263AbgCYFAb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Mar 2020 01:00:31 -0400
+Received: from dread.disaster.area (pa49-195-202-68.pa.nsw.optusnet.com.au [49.195.202.68])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 5CA367E9594;
+        Wed, 25 Mar 2020 16:00:29 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jGy9U-0007UC-Ej; Wed, 25 Mar 2020 16:00:28 +1100
+Date:   Wed, 25 Mar 2020 16:00:28 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/4] xfs: validate the realtime geometry in
+ xfs_validate_sb_common
+Message-ID: <20200325050028.GG10776@dread.disaster.area>
+References: <158510667039.922633.6138311243444001882.stgit@magnolia>
+ <158510668306.922633.16796248628127177511.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20200325014205.11843-7-david@fromorbit.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9570 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=0
- adultscore=0 malwarescore=0 bulkscore=0 spamscore=0 mlxlogscore=999
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2003250040
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9570 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 suspectscore=0 priorityscore=1501 malwarescore=0
- mlxscore=0 adultscore=0 phishscore=0 impostorscore=0 mlxlogscore=999
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2003250040
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <158510668306.922633.16796248628127177511.stgit@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+        a=mqTaRPt+QsUAtUurwE173Q==:117 a=mqTaRPt+QsUAtUurwE173Q==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=SS2py6AdgQ4A:10
+        a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8 a=gPFyL9hYjUHvsKqw0qQA:9
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 3/24/20 6:42 PM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Tue, Mar 24, 2020 at 08:24:43PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Factor the common AIL deletion code that does all the wakeups into a
-> helper so we only have one copy of this somewhat tricky code to
-> interface with all the wakeups necessary when the LSN of the log
-> tail changes.
+> Validate the geometry of the realtime geometry when we mount the
+> filesystem, so that we don't abruptly shut down the filesystem later on.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-Ok, the hoisted code looks equivalent
-Reviewed-by: Allison Collins <allison.henderson@oracle.com>
-
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->   fs/xfs/xfs_inode_item.c | 12 +----------
->   fs/xfs/xfs_trans_ail.c  | 48 ++++++++++++++++++++++-------------------
->   fs/xfs/xfs_trans_priv.h |  4 +++-
->   3 files changed, 30 insertions(+), 34 deletions(-)
+>  fs/xfs/libxfs/xfs_sb.c |   35 +++++++++++++++++++++++++++++++++++
+>  1 file changed, 35 insertions(+)
 > 
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index 4a3d13d4a0228..bd8c368098707 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -742,17 +742,7 @@ xfs_iflush_done(
->   				xfs_clear_li_failed(blip);
->   			}
->   		}
-> -
-> -		if (mlip_changed) {
-> -			if (!XFS_FORCED_SHUTDOWN(ailp->ail_mount))
-> -				xlog_assign_tail_lsn_locked(ailp->ail_mount);
-> -			if (list_empty(&ailp->ail_head))
-> -				wake_up_all(&ailp->ail_empty);
-> -		}
-> -		spin_unlock(&ailp->ail_lock);
-> -
-> -		if (mlip_changed)
-> -			xfs_log_space_wake(ailp->ail_mount);
-> +		xfs_ail_update_finish(ailp, mlip_changed);
->   	}
->   
->   	/*
-> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-> index 2ef0dfbfb303d..26d2e7928121c 100644
-> --- a/fs/xfs/xfs_trans_ail.c
-> +++ b/fs/xfs/xfs_trans_ail.c
-> @@ -681,6 +681,27 @@ xfs_ail_push_all_sync(
->   	finish_wait(&ailp->ail_empty, &wait);
->   }
->   
-> +void
-> +xfs_ail_update_finish(
-> +	struct xfs_ail		*ailp,
-> +	bool			do_tail_update) __releases(ailp->ail_lock)
-> +{
-> +	struct xfs_mount	*mp = ailp->ail_mount;
-> +
-> +	if (!do_tail_update) {
-> +		spin_unlock(&ailp->ail_lock);
-> +		return;
+> 
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index 2f60fc3c99a0..dee0a1a594dc 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -328,6 +328,41 @@ xfs_validate_sb_common(
+>  		return -EFSCORRUPTED;
+>  	}
+>  
+> +	/* Validate the realtime geometry; stolen from xfs_repair */
+> +	if (unlikely(
+> +	    sbp->sb_rextsize * sbp->sb_blocksize > XFS_MAX_RTEXTSIZE	||
+
+Whacky whitespace before the ||
+
+> +	    sbp->sb_rextsize * sbp->sb_blocksize < XFS_MIN_RTEXTSIZE)) {
+> +		xfs_notice(mp,
+> +			"realtime extent sanity check failed");
+> +		return -EFSCORRUPTED;
 > +	}
+
+We really don't need unlikely() in code like this. the compiler
+already considers code that returns inside an if statement as
+"unlikely" because it's the typical error handling pattern, for
+cases like this it really isn't necessary.
+
+
 > +
-> +	if (!XFS_FORCED_SHUTDOWN(mp))
-> +		xlog_assign_tail_lsn_locked(mp);
+> +	if (sbp->sb_rblocks == 0) {
+> +		if (unlikely(
+> +		    sbp->sb_rextents != 0				||
+> +		    sbp->sb_rbmblocks != 0				||
+> +		    sbp->sb_rextslog != 0				||
+> +		    sbp->sb_frextents != 0)) {
+
+Ditto on the unlikely and the whitespace. That code looks weird...
+
+		if (sbp->sb_rextents || sbp->sb_rbmblocks ||
+		    sbp->sb_rextslog || sbp->sb_frextents) {
+
+> +			xfs_notice(mp,
+> +				"realtime zeroed geometry sanity check failed");
+> +			return -EFSCORRUPTED;
+> +		}
+> +	} else {
+> +		xfs_rtblock_t	rexts;
+> +		uint32_t	temp;
 > +
-> +	if (list_empty(&ailp->ail_head))
-> +		wake_up_all(&ailp->ail_empty);
-> +	spin_unlock(&ailp->ail_lock);
-> +	xfs_log_space_wake(mp);
-> +}
-> +
->   /*
->    * xfs_trans_ail_update - bulk AIL insertion operation.
->    *
-> @@ -740,15 +761,7 @@ xfs_trans_ail_update_bulk(
->   	if (!list_empty(&tmp))
->   		xfs_ail_splice(ailp, cur, &tmp, lsn);
->   
-> -	if (mlip_changed) {
-> -		if (!XFS_FORCED_SHUTDOWN(ailp->ail_mount))
-> -			xlog_assign_tail_lsn_locked(ailp->ail_mount);
-> -		spin_unlock(&ailp->ail_lock);
-> -
-> -		xfs_log_space_wake(ailp->ail_mount);
-> -	} else {
-> -		spin_unlock(&ailp->ail_lock);
-> -	}
-> +	xfs_ail_update_finish(ailp, mlip_changed);
->   }
->   
->   bool
-> @@ -792,10 +805,10 @@ void
->   xfs_trans_ail_delete(
->   	struct xfs_ail		*ailp,
->   	struct xfs_log_item	*lip,
-> -	int			shutdown_type) __releases(ailp->ail_lock)
-> +	int			shutdown_type)
->   {
->   	struct xfs_mount	*mp = ailp->ail_mount;
-> -	bool			mlip_changed;
-> +	bool			need_update;
->   
->   	if (!test_bit(XFS_LI_IN_AIL, &lip->li_flags)) {
->   		spin_unlock(&ailp->ail_lock);
-> @@ -808,17 +821,8 @@ xfs_trans_ail_delete(
->   		return;
->   	}
->   
-> -	mlip_changed = xfs_ail_delete_one(ailp, lip);
-> -	if (mlip_changed) {
-> -		if (!XFS_FORCED_SHUTDOWN(mp))
-> -			xlog_assign_tail_lsn_locked(mp);
-> -		if (list_empty(&ailp->ail_head))
-> -			wake_up_all(&ailp->ail_empty);
-> -	}
-> -
-> -	spin_unlock(&ailp->ail_lock);
-> -	if (mlip_changed)
-> -		xfs_log_space_wake(ailp->ail_mount);
-> +	need_update = xfs_ail_delete_one(ailp, lip);
-> +	xfs_ail_update_finish(ailp, need_update);
->   }
->   
->   int
-> diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-> index 2e073c1c4614f..64ffa746730e4 100644
-> --- a/fs/xfs/xfs_trans_priv.h
-> +++ b/fs/xfs/xfs_trans_priv.h
-> @@ -92,8 +92,10 @@ xfs_trans_ail_update(
->   }
->   
->   bool xfs_ail_delete_one(struct xfs_ail *ailp, struct xfs_log_item *lip);
-> +void xfs_ail_update_finish(struct xfs_ail *ailp, bool do_tail_update)
-> +			__releases(ailp->ail_lock);
->   void xfs_trans_ail_delete(struct xfs_ail *ailp, struct xfs_log_item *lip,
-> -		int shutdown_type) __releases(ailp->ail_lock);
-> +		int shutdown_type);
->   
->   static inline void
->   xfs_trans_ail_remove(
-> 
+> +		rexts = div_u64_rem(sbp->sb_rblocks, sbp->sb_rextsize, &temp);
+> +		if (unlikely(
+> +		    rexts != sbp->sb_rextents				||
+> +		    sbp->sb_rextslog != xfs_highbit32(sbp->sb_rextents)	||
+
+And again.
+
+At least you're consistent, Darrick :)
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
