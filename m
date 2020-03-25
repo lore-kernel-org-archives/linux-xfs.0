@@ -2,38 +2,37 @@ Return-Path: <SRS0=vNgo=5K=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E7ECC43331
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 12:28:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01023C54FD0
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 12:29:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2921320775
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 12:28:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C66ED20775
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 12:29:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="kNWzkfmP"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Vv9eLgcN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727517AbgCYM2s (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Mar 2020 08:28:48 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:55496 "EHLO
+        id S1727559AbgCYM24 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Mar 2020 08:28:56 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:54074 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727319AbgCYM2q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Mar 2020 08:28:46 -0400
+        with ESMTP id S1727177AbgCYM2b (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Mar 2020 08:28:31 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=bOpFqUPJ9bS+4ZDNHjIcr3PqAyINL9efeQnE7Z928sM=; b=kNWzkfmPTk9pYHmfxP86DPRPIq
-        M/Ipv+fQiCkDkwXVpxqu3vzY7CjHK4yUGuRcjtkjXDrmI5QP67iBFuZ7wmzjWBRflzTR4Oc10Y3Tw
-        TxZGNoKsEh6OdYFpqm6hndtv7nBc0nbnSt/wF5ed6xS4syPSNC5uKBNw5gu3GTreDVpUkm2vzqIHs
-        2+NSFdsEglJWkR3iq/8Z4aBgwd4eOWC15tQTykGwIj32DdexPLlCe17ITG83vlBMg3Y7I0hu0ytef
-        96sPrnpgCWNGDBo9diiyYhgbp2R0CAcMwkft9oMIFOoTsjaSOofASaFSKdfAc4+7LfRhpUx2citl6
-        pM8QRVRA==;
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=ajDoCWrNrQy4SbrNkUXgQzxrcdJV8ZRIIVmz0mrQdAU=; b=Vv9eLgcN5cr+lGE0M1R4IcEO0i
+        e2CwpydyHZUjmPNIHQZVTBoc0v/3VuTBh9AWQc0Q2jtjmsd7VbLtyR36ojryyfs9M7/xcXXP2xSft
+        j6voVbCt9y/RHP1bIa5091ziwiT2U4pnjIl3oO3htdIDuyL/E9XkEaMAMN4XPjxrkTUk33HIB36YF
+        pesifJYGY8bihV+a1KE/A3keFRk5gVNTZsRa6gTM2staCWt+vjLzCBOZi9xnuQzxa1qlK+nt6FyKg
+        eUrNuFIsbcRN0cnZNKdWBlW0cJjigvHCr6q6iimKKazfjorKvr6FH1YDK+kbF5bXySJloPoW7KdPG
+        cD3XeF6w==;
 Received: from [2001:4bb8:18c:2a9e:999c:283e:b14a:9189] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jH59C-0003No-4o; Wed, 25 Mar 2020 12:28:38 +0000
+        id 1jH591-0003Fx-4q; Wed, 25 Mar 2020 12:28:27 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     "Theodore Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>,
         Chao Yu <chao@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>,
@@ -42,12 +41,10 @@ Cc:     Eric Biggers <ebiggers@kernel.org>, linux-ext4@vger.kernel.org,
         linux-f2fs-devel@lists.sourceforge.net,
         linux-fsdevel@vger.kernel.org, linux-mtd@lists.infradead.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 4/4] fs: clean up generic_update_time a bit
-Date:   Wed, 25 Mar 2020 13:28:25 +0100
-Message-Id: <20200325122825.1086872-5-hch@lst.de>
+Subject: lazytime fixes
+Date:   Wed, 25 Mar 2020 13:28:21 +0100
+Message-Id: <20200325122825.1086872-1-hch@lst.de>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200325122825.1086872-1-hch@lst.de>
-References: <20200325122825.1086872-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
@@ -56,39 +53,8 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-There is no need both the sync and iflag variables - just use dirty as
-the indicator for which flag to pass to __mark_inode_dirty, as there
-is no point in passing both flags - __mark_inode_dirty will immediately
-clear I_DIRTY_TIME if I_DIRTY_SYNC is set.
+Hi all,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/inode.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
-
-diff --git a/fs/inode.c b/fs/inode.c
-index 96cf26ed4c7b..a7d19b1b15ac 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -1662,7 +1662,6 @@ static int relatime_need_update(struct vfsmount *mnt, struct inode *inode,
- 
- int generic_update_time(struct inode *inode, struct timespec64 *time, int flags)
- {
--	int iflags = I_DIRTY_TIME;
- 	bool dirty = false;
- 
- 	if (flags & S_ATIME)
-@@ -1678,9 +1677,7 @@ int generic_update_time(struct inode *inode, struct timespec64 *time, int flags)
- 	     !(inode->i_sb->s_flags & SB_LAZYTIME)))
- 		dirty = true;
- 
--	if (dirty)
--		iflags |= I_DIRTY_SYNC;
--	__mark_inode_dirty(inode, iflags);
-+	__mark_inode_dirty(inode, dirty ? I_DIRTY_SYNC : I_DIRTY_TIME);
- 	return 0;
- }
- EXPORT_SYMBOL(generic_update_time);
--- 
-2.25.1
-
+this is my take on Teds take on Erics bug report about ext4 inodes
+beeing kept dirty after sync.  After looking into the area I found
+a few other loose ends, so the series has grown a bit.
