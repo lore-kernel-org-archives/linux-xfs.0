@@ -6,45 +6,45 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF6A5C54FD2
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C2CCC54FD1
 	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 01:42:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8E0032073E
+	by mail.kernel.org (Postfix) with ESMTP id 2B9282073E
 	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 01:42:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727299AbgCYBmM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1727302AbgCYBmM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Tue, 24 Mar 2020 21:42:12 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:46322 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727315AbgCYBmL (ORCPT
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:55366 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727305AbgCYBmL (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Mar 2020 21:42:11 -0400
 Received: from dread.disaster.area (pa49-195-202-68.pa.nsw.optusnet.com.au [49.195.202.68])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id A4A047EB97A
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id F1B343A3B43
         for <linux-xfs@vger.kernel.org>; Wed, 25 Mar 2020 12:42:06 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jGv3V-0006HQ-Sk
+        id 1jGv3V-0006H7-LV
         for linux-xfs@vger.kernel.org; Wed, 25 Mar 2020 12:42:05 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.93)
         (envelope-from <david@fromorbit.com>)
-        id 1jGv3V-00036M-KG
+        id 1jGv3V-00035s-Cr
         for linux-xfs@vger.kernel.org; Wed, 25 Mar 2020 12:42:05 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 8/8] xfs: factor inode lookup from xfs_ifree_cluster
-Date:   Wed, 25 Mar 2020 12:42:05 +1100
-Message-Id: <20200325014205.11843-9-david@fromorbit.com>
+Subject: [PATCH 2/8] xfs: Throttle commits on delayed background CIL push
+Date:   Wed, 25 Mar 2020 12:41:59 +1100
+Message-Id: <20200325014205.11843-3-david@fromorbit.com>
 X-Mailer: git-send-email 2.26.0.rc2
 In-Reply-To: <20200325014205.11843-1-david@fromorbit.com>
 References: <20200325014205.11843-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
         a=mqTaRPt+QsUAtUurwE173Q==:117 a=mqTaRPt+QsUAtUurwE173Q==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=SS2py6AdgQ4A:10 a=20KFwNOVAAAA:8
-        a=v6uQa3AzV7p3N87VeX4A:9 a=ZwzrRA4ZDw6rHXVS:21 a=MFCUz6Zf14C1qaC9:21
+        a=WQ0osmkouEGinBUFY8QA:9 a=275oZku0YdONWb4S:21 a=64GNnu6bCfPBHs5Z:21
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -52,191 +52,184 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-There's lots of indent in this code which makes it a bit hard to
-follow. We are also going to completely rework the inode lookup code
-as part of the inode reclaim rework, so factor out the inode lookup
-code from the inode cluster freeing code.
+In certain situations the background CIL push can be indefinitely
+delayed. While we have workarounds from the obvious cases now, it
+doesn't solve the underlying issue. This issue is that there is no
+upper limit on the CIL where we will either force or wait for
+a background push to start, hence allowing the CIL to grow without
+bound until it consumes all log space.
 
-Based on prototype code from Christoph Hellwig.
+To fix this, add a new wait queue to the CIL which allows background
+pushes to wait for the CIL context to be switched out. This happens
+when the push starts, so it will allow us to block incoming
+transaction commit completion until the push has started. This will
+only affect processes that are running modifications, and only when
+the CIL threshold has been significantly overrun.
+
+This has no apparent impact on performance, and doesn't even trigger
+until over 45 million inodes had been created in a 16-way fsmark
+test on a 2GB log. That was limiting at 64MB of log space used, so
+the active CIL size is only about 3% of the total log in that case.
+The concurrent removal of those files did not trigger the background
+sleep at all.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_inode.c | 152 +++++++++++++++++++++++++--------------------
- 1 file changed, 84 insertions(+), 68 deletions(-)
+ fs/xfs/xfs_log_cil.c  | 37 +++++++++++++++++++++++++++++++++----
+ fs/xfs/xfs_log_priv.h | 24 ++++++++++++++++++++++++
+ fs/xfs/xfs_trace.h    |  1 +
+ 3 files changed, 58 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 14b922f2a6db7..5c930863ed5b8 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2503,6 +2503,88 @@ xfs_iunlink_remove(
- 	return error;
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 27de462d2ba40..ac43301ae2f43 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -668,6 +668,11 @@ xlog_cil_push_work(
+ 	push_seq = cil->xc_push_seq;
+ 	ASSERT(push_seq <= ctx->sequence);
+ 
++	/*
++	 * Wake up any background push waiters now this context is being pushed.
++	 */
++	wake_up_all(&ctx->push_wait);
++
+ 	/*
+ 	 * Check if we've anything to push. If there is nothing, then we don't
+ 	 * move on to a new sequence number and so we have to be able to push
+@@ -744,6 +749,7 @@ xlog_cil_push_work(
+ 	 */
+ 	INIT_LIST_HEAD(&new_ctx->committing);
+ 	INIT_LIST_HEAD(&new_ctx->busy_extents);
++	init_waitqueue_head(&new_ctx->push_wait);
+ 	new_ctx->sequence = ctx->sequence + 1;
+ 	new_ctx->cil = cil;
+ 	cil->xc_ctx = new_ctx;
+@@ -891,7 +897,7 @@ xlog_cil_push_work(
+  */
+ static void
+ xlog_cil_push_background(
+-	struct xlog	*log)
++	struct xlog	*log) __releases(cil->xc_ctx_lock)
+ {
+ 	struct xfs_cil	*cil = log->l_cilp;
+ 
+@@ -905,14 +911,36 @@ xlog_cil_push_background(
+ 	 * don't do a background push if we haven't used up all the
+ 	 * space available yet.
+ 	 */
+-	if (cil->xc_ctx->space_used < XLOG_CIL_SPACE_LIMIT(log))
++	if (cil->xc_ctx->space_used < XLOG_CIL_SPACE_LIMIT(log)) {
++		up_read(&cil->xc_ctx_lock);
+ 		return;
++	}
+ 
+ 	spin_lock(&cil->xc_push_lock);
+ 	if (cil->xc_push_seq < cil->xc_current_sequence) {
+ 		cil->xc_push_seq = cil->xc_current_sequence;
+ 		queue_work(log->l_mp->m_cil_workqueue, &cil->xc_push_work);
+ 	}
++
++	/*
++	 * Drop the context lock now, we can't hold that if we need to sleep
++	 * because we are over the blocking threshold. The push_lock is still
++	 * held, so blocking threshold sleep/wakeup is still correctly
++	 * serialised here.
++	 */
++	up_read(&cil->xc_ctx_lock);
++
++	/*
++	 * If we are well over the space limit, throttle the work that is being
++	 * done until the push work on this context has begun.
++	 */
++	if (cil->xc_ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log)) {
++		trace_xfs_log_cil_wait(log, cil->xc_ctx->ticket);
++		ASSERT(cil->xc_ctx->space_used < log->l_logsize);
++		xlog_wait(&cil->xc_ctx->push_wait, &cil->xc_push_lock);
++		return;
++	}
++
+ 	spin_unlock(&cil->xc_push_lock);
+ 
+ }
+@@ -1032,9 +1060,9 @@ xfs_log_commit_cil(
+ 		if (lip->li_ops->iop_committing)
+ 			lip->li_ops->iop_committing(lip, xc_commit_lsn);
+ 	}
+-	xlog_cil_push_background(log);
+ 
+-	up_read(&cil->xc_ctx_lock);
++	/* xlog_cil_push_background() releases cil->xc_ctx_lock */
++	xlog_cil_push_background(log);
  }
  
-+/*
-+ * Look up the inode number specified and mark it stale if it is found. If it is
-+ * dirty, return the inode so it can be attached to the cluster buffer so it can
-+ * be processed appropriately when the cluster free transaction completes.
-+ */
-+static struct xfs_inode *
-+xfs_ifree_get_one_inode(
-+	struct xfs_perag	*pag,
-+	struct xfs_inode	*free_ip,
-+	int			inum)
-+{
-+	struct xfs_mount	*mp = pag->pag_mount;
-+	struct xfs_inode	*ip;
-+
-+retry:
-+	rcu_read_lock();
-+	ip = radix_tree_lookup(&pag->pag_ici_root, XFS_INO_TO_AGINO(mp, inum));
-+
-+	/* Inode not in memory, nothing to do */
-+	if (!ip)
-+		goto out_rcu_unlock;
-+
-+	/*
-+	 * because this is an RCU protected lookup, we could find a recently
-+	 * freed or even reallocated inode during the lookup. We need to check
-+	 * under the i_flags_lock for a valid inode here. Skip it if it is not
-+	 * valid, the wrong inode or stale.
-+	 */
-+	spin_lock(&ip->i_flags_lock);
-+	if (ip->i_ino != inum || __xfs_iflags_test(ip, XFS_ISTALE)) {
-+		spin_unlock(&ip->i_flags_lock);
-+		goto out_rcu_unlock;
-+	}
-+	spin_unlock(&ip->i_flags_lock);
-+
-+	/*
-+	 * Don't try to lock/unlock the current inode, but we _cannot_ skip the
-+	 * other inodes that we did not find in the list attached to the buffer
-+	 * and are not already marked stale. If we can't lock it, back off and
-+	 * retry.
-+	 */
-+	if (ip != free_ip) {
-+		if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
-+			rcu_read_unlock();
-+			delay(1);
-+			goto retry;
-+		}
-+
-+		/*
-+		 * Check the inode number again in case we're racing with
-+		 * freeing in xfs_reclaim_inode().  See the comments in that
-+		 * function for more information as to why the initial check is
-+		 * not sufficient.
-+		 */
-+		if (ip->i_ino != inum) {
-+			xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+			goto out_rcu_unlock;
-+		}
-+	}
-+	rcu_read_unlock();
-+
-+	xfs_iflock(ip);
-+	xfs_iflags_set(ip, XFS_ISTALE);
-+
-+	/*
-+	 * We don't need to attach clean inodes or those only with unlogged
-+	 * changes (which we throw away, anyway).
-+	 */
-+	if (!ip->i_itemp || xfs_inode_clean(ip)) {
-+		ASSERT(ip != free_ip);
-+		xfs_ifunlock(ip);
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+		goto out_no_inode;
-+	}
-+	return ip;
-+
-+out_rcu_unlock:
-+	rcu_read_unlock();
-+out_no_inode:
-+	return NULL;
-+}
+ /*
+@@ -1193,6 +1221,7 @@ xlog_cil_init(
+ 
+ 	INIT_LIST_HEAD(&ctx->committing);
+ 	INIT_LIST_HEAD(&ctx->busy_extents);
++	init_waitqueue_head(&ctx->push_wait);
+ 	ctx->sequence = 1;
+ 	ctx->cil = cil;
+ 	cil->xc_ctx = ctx;
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index 8c4be91f62d0d..dacab1817a1b0 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -240,6 +240,7 @@ struct xfs_cil_ctx {
+ 	struct xfs_log_vec	*lv_chain;	/* logvecs being pushed */
+ 	struct list_head	iclog_entry;
+ 	struct list_head	committing;	/* ctx committing list */
++	wait_queue_head_t	push_wait;	/* background push throttle */
+ 	struct work_struct	discard_endio_work;
+ };
+ 
+@@ -337,10 +338,33 @@ struct xfs_cil {
+  *   buffer window (32MB) as measurements have shown this to be roughly the
+  *   point of diminishing performance increases under highly concurrent
+  *   modification workloads.
++ *
++ * To prevent the CIL from overflowing upper commit size bounds, we introduce a
++ * new threshold at which we block committing transactions until the background
++ * CIL commit commences and switches to a new context. While this is not a hard
++ * limit, it forces the process committing a transaction to the CIL to block and
++ * yeild the CPU, giving the CIL push work a chance to be scheduled and start
++ * work. This prevents a process running lots of transactions from overfilling
++ * the CIL because it is not yielding the CPU. We set the blocking limit at
++ * twice the background push space threshold so we keep in line with the AIL
++ * push thresholds.
++ *
++ * Note: this is not a -hard- limit as blocking is applied after the transaction
++ * is inserted into the CIL and the push has been triggered. It is largely a
++ * throttling mechanism that allows the CIL push to be scheduled and run. A hard
++ * limit will be difficult to implement without introducing global serialisation
++ * in the CIL commit fast path, and it's not at all clear that we actually need
++ * such hard limits given the ~7 years we've run without a hard limit before
++ * finding the first situation where a checkpoint size overflow actually
++ * occurred. Hence the simple throttle, and an ASSERT check to tell us that
++ * we've overrun the max size.
+  */
+ #define XLOG_CIL_SPACE_LIMIT(log)	\
+ 	min_t(int, (log)->l_logsize >> 3, BBTOB(XLOG_TOTAL_REC_SHIFT(log)) << 4)
+ 
++#define XLOG_CIL_BLOCKING_SPACE_LIMIT(log)	\
++	(XLOG_CIL_SPACE_LIMIT(log) * 2)
 +
  /*
-  * A big issue when freeing the inode cluster is that we _cannot_ skip any
-  * inodes that are in memory - they all must be marked stale and attached to
-@@ -2603,77 +2685,11 @@ xfs_ifree_cluster(
- 		 * even trying to lock them.
- 		 */
- 		for (i = 0; i < igeo->inodes_per_cluster; i++) {
--retry:
--			rcu_read_lock();
--			ip = radix_tree_lookup(&pag->pag_ici_root,
--					XFS_INO_TO_AGINO(mp, (inum + i)));
--
--			/* Inode not in memory, nothing to do */
--			if (!ip) {
--				rcu_read_unlock();
-+			ip = xfs_ifree_get_one_inode(pag, free_ip, inum + i);
-+			if (!ip)
- 				continue;
--			}
--
--			/*
--			 * because this is an RCU protected lookup, we could
--			 * find a recently freed or even reallocated inode
--			 * during the lookup. We need to check under the
--			 * i_flags_lock for a valid inode here. Skip it if it
--			 * is not valid, the wrong inode or stale.
--			 */
--			spin_lock(&ip->i_flags_lock);
--			if (ip->i_ino != inum + i ||
--			    __xfs_iflags_test(ip, XFS_ISTALE)) {
--				spin_unlock(&ip->i_flags_lock);
--				rcu_read_unlock();
--				continue;
--			}
--			spin_unlock(&ip->i_flags_lock);
--
--			/*
--			 * Don't try to lock/unlock the current inode, but we
--			 * _cannot_ skip the other inodes that we did not find
--			 * in the list attached to the buffer and are not
--			 * already marked stale. If we can't lock it, back off
--			 * and retry.
--			 */
--			if (ip != free_ip) {
--				if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
--					rcu_read_unlock();
--					delay(1);
--					goto retry;
--				}
--
--				/*
--				 * Check the inode number again in case we're
--				 * racing with freeing in xfs_reclaim_inode().
--				 * See the comments in that function for more
--				 * information as to why the initial check is
--				 * not sufficient.
--				 */
--				if (ip->i_ino != inum + i) {
--					xfs_iunlock(ip, XFS_ILOCK_EXCL);
--					rcu_read_unlock();
--					continue;
--				}
--			}
--			rcu_read_unlock();
+  * ticket grant locks, queues and accounting have their own cachlines
+  * as these are quite hot and can be operated on concurrently.
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index fbfdd9cf160df..575ca74532f79 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -1015,6 +1015,7 @@ DEFINE_LOGGRANT_EVENT(xfs_log_ticket_regrant_sub);
+ DEFINE_LOGGRANT_EVENT(xfs_log_ticket_done);
+ DEFINE_LOGGRANT_EVENT(xfs_log_ticket_done_sub);
+ DEFINE_LOGGRANT_EVENT(xfs_log_ticket_done_exit);
++DEFINE_LOGGRANT_EVENT(xfs_log_cil_wait);
  
--			xfs_iflock(ip);
--			xfs_iflags_set(ip, XFS_ISTALE);
--
--			/*
--			 * we don't need to attach clean inodes or those only
--			 * with unlogged changes (which we throw away, anyway).
--			 */
- 			iip = ip->i_itemp;
--			if (!iip || xfs_inode_clean(ip)) {
--				ASSERT(ip != free_ip);
--				xfs_ifunlock(ip);
--				xfs_iunlock(ip, XFS_ILOCK_EXCL);
--				continue;
--			}
--
- 			iip->ili_last_fields = iip->ili_fields;
- 			iip->ili_fields = 0;
- 			iip->ili_fsync_fields = 0;
+ DECLARE_EVENT_CLASS(xfs_log_item_class,
+ 	TP_PROTO(struct xfs_log_item *lip),
 -- 
 2.26.0.rc2
 
