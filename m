@@ -2,98 +2,106 @@ Return-Path: <SRS0=vNgo=5K=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1224AC41621
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 01:42:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1233EC10DCE
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 01:42:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E3AB92074D
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 01:42:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E62522072E
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 01:42:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727297AbgCYBmI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Mar 2020 21:42:08 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:55232 "EHLO
+        id S1727301AbgCYBmJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Mar 2020 21:42:09 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:55366 "EHLO
         mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727189AbgCYBmH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Mar 2020 21:42:07 -0400
+        by vger.kernel.org with ESMTP id S1727189AbgCYBmJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Mar 2020 21:42:09 -0400
 Received: from dread.disaster.area (pa49-195-202-68.pa.nsw.optusnet.com.au [49.195.202.68])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id A47783A3A4A
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id CD20A3A3AE4
         for <linux-xfs@vger.kernel.org>; Wed, 25 Mar 2020 12:42:06 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jGv3V-0006H3-IQ
+        id 1jGv3V-0006H9-ML
         for linux-xfs@vger.kernel.org; Wed, 25 Mar 2020 12:42:05 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.93)
         (envelope-from <david@fromorbit.com>)
-        id 1jGv3V-00035k-8T
+        id 1jGv3V-00035x-EH
         for linux-xfs@vger.kernel.org; Wed, 25 Mar 2020 12:42:05 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 0/8] xfs: various fixes and cleanups
-Date:   Wed, 25 Mar 2020 12:41:57 +1100
-Message-Id: <20200325014205.11843-1-david@fromorbit.com>
+Subject: [PATCH 3/8] xfs: don't allow log IO to be throttled
+Date:   Wed, 25 Mar 2020 12:42:00 +1100
+Message-Id: <20200325014205.11843-4-david@fromorbit.com>
 X-Mailer: git-send-email 2.26.0.rc2
+In-Reply-To: <20200325014205.11843-1-david@fromorbit.com>
+References: <20200325014205.11843-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
         a=mqTaRPt+QsUAtUurwE173Q==:117 a=mqTaRPt+QsUAtUurwE173Q==:17
-        a=SS2py6AdgQ4A:10 a=sXs1YXpSkZNGG69wFtgA:9
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=SS2py6AdgQ4A:10 a=20KFwNOVAAAA:8
+        a=yPCof4ZbAAAA:8 a=5HahVxdoFHTWBnBQlCYA:9 a=DiKeHqHhRZ4A:10
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-These are the fixes and cleanups that are part of the non-blocking
-inode reclaim series I've (slowly) been working on. These fixes and
-cleanups stand alone, many have already been reviewed, and getting
-them out of the non-blocking reclaim patchset makes that a much
-smaller and easier to digest set of patches.
+Running metadata intensive workloads, I've been seeing the AIL
+pushing getting stuck on pinned buffers and triggering log forces.
+The log force is taking a long time to run because the log IO is
+getting throttled by wbt_wait() - the block layer writeback
+throttle. It's being throttled because there is a huge amount of
+metadata writeback going on which is filling the request queue.
 
-The changes in this patchset are for:
+IOWs, we have a priority inversion problem here.
 
-- limiting the size of checkpoints that the CIL builds to reduce the
-  memory it pins and the latency of commits.
-- cleaning up the AIL item removal code so we can reduce the number
-  of tail LSN updates to prevent unnecessary thundering herd wakeups
-- account for reclaimable slab caches in XFS correctly
-- account for reclaimed pages from buffers correctly
-- avoiding log IO priority inversions
-- factoring the inode cluster deletion code to make it more readable
-  and easier to modify for the non-blocking inode reclaim mods.
+Mark the log IO bios with REQ_IDLE so they don't get throttled
+by the block layer writeback throttle. When we are forcing the CIL,
+we are likely to need to to tens of log IOs, and they are issued as
+fast as they can be build and IO completed. Hence REQ_IDLE is
+appropriate - it's an indication that more IO will follow shortly.
 
-Thoughts, comments and improvemnts welcome.
+And because we also set REQ_SYNC, the writeback throttle will now
+treat log IO the same way it treats direct IO writes - it will not
+throttle them at all. Hence we solve the priority inversion problem
+caused by the writeback throttle being unable to distinguish between
+high priority log IO and background metadata writeback.
 
--Dave.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_log.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-
-Dave Chinner (8):
-  xfs: Lower CIL flush limit for large logs
-  xfs: Throttle commits on delayed background CIL push
-  xfs: don't allow log IO to be throttled
-  xfs: Improve metadata buffer reclaim accountability
-  xfs: correctly acount for reclaimable slabs
-  xfs: factor common AIL item deletion code
-  xfs: tail updates only need to occur when LSN changes
-  xfs: factor inode lookup from xfs_ifree_cluster
-
- fs/xfs/xfs_buf.c        |  11 ++-
- fs/xfs/xfs_inode.c      | 152 ++++++++++++++++++++++------------------
- fs/xfs/xfs_inode_item.c |  28 ++++----
- fs/xfs/xfs_log.c        |  10 ++-
- fs/xfs/xfs_log_cil.c    |  37 ++++++++--
- fs/xfs/xfs_log_priv.h   |  53 ++++++++++++--
- fs/xfs/xfs_super.c      |   3 +-
- fs/xfs/xfs_trace.h      |   1 +
- fs/xfs/xfs_trans_ail.c  |  88 ++++++++++++++---------
- fs/xfs/xfs_trans_priv.h |   6 +-
- 10 files changed, 257 insertions(+), 132 deletions(-)
-
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index f70be8151a59f..e16ad0b1aec84 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1687,7 +1687,15 @@ xlog_write_iclog(
+ 	iclog->ic_bio.bi_iter.bi_sector = log->l_logBBstart + bno;
+ 	iclog->ic_bio.bi_end_io = xlog_bio_end_io;
+ 	iclog->ic_bio.bi_private = iclog;
+-	iclog->ic_bio.bi_opf = REQ_OP_WRITE | REQ_META | REQ_SYNC | REQ_FUA;
++
++	/*
++	 * We use REQ_SYNC | REQ_IDLE here to tell the block layer the are more
++	 * IOs coming immediately after this one. This prevents the block layer
++	 * writeback throttle from throttling log writes behind background
++	 * metadata writeback and causing priority inversions.
++	 */
++	iclog->ic_bio.bi_opf = REQ_OP_WRITE | REQ_META | REQ_SYNC |
++				REQ_IDLE | REQ_FUA;
+ 	if (need_flush)
+ 		iclog->ic_bio.bi_opf |= REQ_PREFLUSH;
+ 
 -- 
 2.26.0.rc2
 
