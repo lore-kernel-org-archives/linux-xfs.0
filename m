@@ -2,164 +2,99 @@ Return-Path: <SRS0=vNgo=5K=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11390C54FD6
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 12:02:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2E59C54FD0
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 12:28:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DC96F20772
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 12:02:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AA9C220772
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 12:28:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QvbtCWiI"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Yau3b5kU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727286AbgCYMC4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Mar 2020 08:02:56 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:43092 "EHLO
+        id S1727540AbgCYM2f (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Mar 2020 08:28:35 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:54220 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727129AbgCYMCz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Mar 2020 08:02:55 -0400
+        with ESMTP id S1727537AbgCYM2c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Mar 2020 08:28:32 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=547A7ZAoUu2JDJ2ptSJ8vxecAwOtjI/NDzIFsvFTzXo=; b=QvbtCWiIh5Xi5+8xr7F3LHchs/
-        /enb5Ja0xjCQg6d/l+MMlIiwXqB1vmDvW34OsfyaSVHmfQx5kxyhZIn0FH5/13KsLe0hUWrGWbB2g
-        sxNran2m7QzQfFcu/qurUajS+kK4kEiY6Nojd22Yoyfhsr09GRoJw/fKvlcE/cgG6L+etNC0U3vkq
-        0DIgu/p6cickFzYi2VQqX4rMn0g6k0JEQQFCQ8RoqdCtQshCfS8K0j4G2044VrBkohrju2ToJ8dze
-        6LtjdH/dgtWCSE8hybN/l8eLj9N52oB+rKd+z7jbkSCM2Y9hSv9O3RaK4nV1mItf8R8C4rGnL9moV
-        mHDZZ7Cg==;
-Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jH4kI-0002HH-Er; Wed, 25 Mar 2020 12:02:54 +0000
-Date:   Wed, 25 Mar 2020 05:02:54 -0700
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Miklos Szeredi <miklos@szeredi.hu>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        ocfs2-devel@oss.oracle.com, linux-xfs <linux-xfs@vger.kernel.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        William Kucharski <william.kucharski@oracle.com>
-Subject: Re: [PATCH v10 24/25] fuse: Convert from readpages to readahead
-Message-ID: <20200325120254.GA22483@bombadil.infradead.org>
-References: <20200323202259.13363-1-willy@infradead.org>
- <20200323202259.13363-25-willy@infradead.org>
- <CAJfpegu7EFcWrg3bP+-2BX_kb52RrzBCo_U3QKYzUkZfe4EjDA@mail.gmail.com>
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=odzXVZYmd7lUAGEV7AWVw3TgYy4WB3IJY3Y6KA2lMSU=; b=Yau3b5kUjjBG9f4qwQn0pzufd1
+        5Zqvc3ruUYCUg8fOAmMK1lAqY2FE/xezNNbjcgBdf+Q4WK1z7s09av07BATn0HCqwWzvJ926BtomF
+        80x9nayMW2gMMEjFA5l/P3/rolns3pyvUCNhm4A0qCNkKdZNTZC442m13HrvOW+Jj+tCoSb2MMNPP
+        mGc2f7OkhQyID4UzfAqqpl1UsJ7NdSe4B3GR16ej9d9bUu/Vvy0Scl6Htq6owDnm5Qne5FaOwbuB/
+        btD5fblL0m9GlHCnv/EJWTtSUUaTMZnuhLEiFglECgdgUGHb7AqrK6b89uFK5i6p98VkKp29roHyd
+        JqoCkGog==;
+Received: from [2001:4bb8:18c:2a9e:999c:283e:b14a:9189] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jH593-0003GS-NL; Wed, 25 Mar 2020 12:28:30 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     "Theodore Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>,
+        Chao Yu <chao@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>,
+        Richard Weinberger <richard@nod.at>, linux-xfs@vger.kernel.org
+Cc:     Eric Biggers <ebiggers@kernel.org>, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-fsdevel@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 1/4] ubifs: remove broken lazytime support
+Date:   Wed, 25 Mar 2020 13:28:22 +0100
+Message-Id: <20200325122825.1086872-2-hch@lst.de>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200325122825.1086872-1-hch@lst.de>
+References: <20200325122825.1086872-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAJfpegu7EFcWrg3bP+-2BX_kb52RrzBCo_U3QKYzUkZfe4EjDA@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 25, 2020 at 10:42:56AM +0100, Miklos Szeredi wrote:
-> > +       while ((page = readahead_page(rac))) {
-> > +               if (fuse_readpages_fill(&data, page) != 0)
-> 
-> Shouldn't this unlock + put page on error?
+When "ubifs: introduce UBIFS_ATIME_SUPPORT to ubifs" introduces atime
+support to ubifs, it also lazytime support, but that support is
+terminally broken, as it causes mark_inode_dirty_sync to be called from
+__writeback_single_inode, which will then trigger the locking assert
+in ubifs_dirty_inode.  Just remove this broken support for now, it can
+be readded later, especially as some infrastructure changes should
+make that easier soon.
 
-We're certainly inconsistent between the two error exits from
-fuse_readpages_fill().  But I think we can simplify the whole thing
-... how does this look to you?
+Fixes: 8c1c5f263833 ("ubifs: introduce UBIFS_ATIME_SUPPORT to ubifs")
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/ubifs/file.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-diff --git a/fs/fuse/file.c b/fs/fuse/file.c
-index 5749505bcff6..57ea9a364e62 100644
---- a/fs/fuse/file.c
-+++ b/fs/fuse/file.c
-@@ -915,76 +915,32 @@ static void fuse_send_readpages(struct fuse_io_args *ia, struct file *file)
- 	fuse_readpages_end(fc, &ap->args, err);
- }
+diff --git a/fs/ubifs/file.c b/fs/ubifs/file.c
+index 743928efffc1..49fe062ce45e 100644
+--- a/fs/ubifs/file.c
++++ b/fs/ubifs/file.c
+@@ -1375,7 +1375,6 @@ int ubifs_update_time(struct inode *inode, struct timespec64 *time,
+ 	struct ubifs_info *c = inode->i_sb->s_fs_info;
+ 	struct ubifs_budget_req req = { .dirtied_ino = 1,
+ 			.dirtied_ino_d = ALIGN(ui->data_len, 8) };
+-	int iflags = I_DIRTY_TIME;
+ 	int err, release;
  
--struct fuse_fill_data {
--	struct fuse_io_args *ia;
--	struct file *file;
--	struct inode *inode;
--	unsigned int nr_pages;
--	unsigned int max_pages;
--};
--
--static int fuse_readpages_fill(struct fuse_fill_data *data, struct page *page)
--{
--	struct fuse_io_args *ia = data->ia;
--	struct fuse_args_pages *ap = &ia->ap;
--	struct inode *inode = data->inode;
--	struct fuse_conn *fc = get_fuse_conn(inode);
--
--	fuse_wait_on_page_writeback(inode, page->index);
--
--	if (ap->num_pages &&
--	    (ap->num_pages == fc->max_pages ||
--	     (ap->num_pages + 1) * PAGE_SIZE > fc->max_read ||
--	     ap->pages[ap->num_pages - 1]->index + 1 != page->index)) {
--		data->max_pages = min_t(unsigned int, data->nr_pages,
--					fc->max_pages);
--		fuse_send_readpages(ia, data->file);
--		data->ia = ia = fuse_io_alloc(NULL, data->max_pages);
--		if (!ia)
--			return -ENOMEM;
--		ap = &ia->ap;
--	}
--
--	if (WARN_ON(ap->num_pages >= data->max_pages)) {
--		unlock_page(page);
--		fuse_io_free(ia);
--		return -EIO;
--	}
--
--	ap->pages[ap->num_pages] = page;
--	ap->descs[ap->num_pages].length = PAGE_SIZE;
--	ap->num_pages++;
--	data->nr_pages--;
--	return 0;
--}
--
- static void fuse_readahead(struct readahead_control *rac)
- {
- 	struct inode *inode = rac->mapping->host;
- 	struct fuse_conn *fc = get_fuse_conn(inode);
--	struct fuse_fill_data data;
--	struct page *page;
+ 	if (!IS_ENABLED(CONFIG_UBIFS_ATIME_SUPPORT))
+@@ -1393,11 +1392,8 @@ int ubifs_update_time(struct inode *inode, struct timespec64 *time,
+ 	if (flags & S_MTIME)
+ 		inode->i_mtime = *time;
  
- 	if (is_bad_inode(inode))
- 		return;
- 
--	data.file = rac->file;
--	data.inode = inode;
--	data.nr_pages = readahead_count(rac);
--	data.max_pages = min_t(unsigned int, data.nr_pages, fc->max_pages);
--	data.ia = fuse_io_alloc(NULL, data.max_pages);
--	if (!data.ia)
--		return;
-+	while (readahead_count(rac)) {
-+		struct fuse_io_args *ia;
-+		struct fuse_args_pages *ap;
-+		unsigned int i, nr_pages;
- 
--	while ((page = readahead_page(rac))) {
--		if (fuse_readpages_fill(&data, page) != 0)
-+		nr_pages = min(readahead_count(rac), fc->max_pages);
-+		ia = fuse_io_alloc(NULL, nr_pages);
-+		if (!ia)
- 			return;
-+		ap = &ia->ap;
-+		__readahead_batch(rac, ap->pages, nr_pages);
-+		for (i = 0; i < nr_pages; i++) {
-+			fuse_wait_on_page_writeback(inode, ap->pages[i]->index);
-+			ap->descs[i].length = PAGE_SIZE;
-+		}
-+		ap->num_pages = nr_pages;
-+		fuse_send_readpages(ia, rac->file);
- 	}
+-	if (!(inode->i_sb->s_flags & SB_LAZYTIME))
+-		iflags |= I_DIRTY_SYNC;
 -
--	if (data.ia->ap.num_pages)
--		fuse_send_readpages(data.ia, rac->file);
--	else
--		fuse_io_free(data.ia);
- }
- 
- static ssize_t fuse_cache_read_iter(struct kiocb *iocb, struct iov_iter *to)
+ 	release = ui->dirty;
+-	__mark_inode_dirty(inode, iflags);
++	__mark_inode_dirty(inode, I_DIRTY_SYNC);
+ 	mutex_unlock(&ui->ui_mutex);
+ 	if (release)
+ 		ubifs_release_budget(c, &req);
+-- 
+2.25.1
+
