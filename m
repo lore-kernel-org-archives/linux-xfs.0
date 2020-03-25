@@ -2,72 +2,119 @@ Return-Path: <SRS0=vNgo=5K=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F922C54FD0
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 13:12:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68F95C43331
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 13:30:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F30052078D
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 13:12:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 38DD32078A
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 13:30:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="A2FGKjLq"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VGz/t5iY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727277AbgCYNMO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Mar 2020 09:12:14 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:52876 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727259AbgCYNMO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Mar 2020 09:12:14 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=IwlNyebXrHC8EcWHv/fXy0HG1aaxEBB+Q8CFiP98G+4=; b=A2FGKjLqZwX9273ZS41A4h9x4z
-        /5aXgaCnpAiVYH6Wi0uRlXOXX32JUzY6XFbplvjSrH9r2PZjUIL7eVJ00b1dnwlwK5BrchBaUWozM
-        MfzoOID2ym+KlTE7SFgC6jzaD/cwVwetVZbQEZuQ1MO7uztYGoGPMf08Y7+YwCgaqQk2ME9JsZWxs
-        jgWhT9nS3X3rQ6NJHVfH9t0qBWSQ516oWQeCOLi3DyLm5+Jms87iUvcdiwIEwWB0ZtVLWQGCjVXlK
-        qFdzK2CQIKS95+cLAWXsms0RufUwA3d3JN8s6Qs7k+S50LJKP+5iLkZylwsjAOhWLE5eSvvei3CYF
-        fFsAHnGA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jH5pN-0006UN-Ut; Wed, 25 Mar 2020 13:12:13 +0000
-Date:   Wed, 25 Mar 2020 06:12:13 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Chandan Rajendra <chandanrlinux@gmail.com>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
-        chandan@linux.ibm.com
-Subject: Re: [PATCH] common/xfs: Execute _xfs_check only for block size <= 4k
-Message-ID: <20200325131213.GA22350@infradead.org>
-References: <20200324034729.32678-1-chandanrlinux@gmail.com>
+        id S1727281AbgCYNac (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Mar 2020 09:30:32 -0400
+Received: from us-smtp-delivery-74.mimecast.com ([63.128.21.74]:59503 "EHLO
+        us-smtp-delivery-74.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726967AbgCYNac (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Mar 2020 09:30:32 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1585143031;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=1Cf1kFU0qv2jPk86YkQN1DKstUKYJmtHZSbvvdY8rZM=;
+        b=VGz/t5iYQVlbeQFpvclyC35EFmXv0IPAIfD5ngoZ0KMzJMcZ9N508yWNkVw/y+P+19G3Ew
+        Km6BkyesJRxa2/T89LrAFvRAtA8YZbcvxXD/yatbR1FjA7aY8SuQ64rSe1oRi4DfVO3TAo
+        XzWpw/mypz7RWocMFVY+Cbduabdoknw=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-178-eW9ULVnVNqGlWmrvkvr1Og-1; Wed, 25 Mar 2020 09:30:27 -0400
+X-MC-Unique: eW9ULVnVNqGlWmrvkvr1Og-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A7A3513F5;
+        Wed, 25 Mar 2020 13:30:26 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5717389E76;
+        Wed, 25 Mar 2020 13:30:26 +0000 (UTC)
+Date:   Wed, 25 Mar 2020 09:30:24 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/8] xfs: Improve metadata buffer reclaim accountability
+Message-ID: <20200325133024.GA11912@bfoster>
+References: <20200325014205.11843-1-david@fromorbit.com>
+ <20200325014205.11843-5-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200324034729.32678-1-chandanrlinux@gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200325014205.11843-5-david@fromorbit.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 24, 2020 at 09:17:29AM +0530, Chandan Rajendra wrote:
-> fsstress when executed as part of some of the tests (e.g. generic/270)
-> invokes chown() syscall many times by passing random integers as value
-> for the uid argument. For each such syscall invocation for which there
-> is no on-disk quota block, xfs invokes xfs_dquot_disk_alloc() which
-> allocates a new block and instantiates all the quota structures mapped
-> by the newly allocated block. For a single 64k block, the number of
-> on-disk quota structures thus created will be 16 times more than that
-> for a 4k block.
+On Wed, Mar 25, 2020 at 12:42:01PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> xfs_db's check command (executed after test script finishes execution)
-> will read in all of the on-disk quota structures into memory. This
-> causes the OOM event to be triggered when reading from filesystems with
-> 64k block size. For machines with sufficiently large amount of system
-> memory, this causes the test to execute for a very long time.
+> The buffer cache shrinker frees more than just the xfs_buf slab
+> objects - it also frees the pages attached to the buffers. Make sure
+> the memory reclaim code accounts for this memory being freed
+> correctly, similar to how the inode shrinker accounts for pages
+> freed from the page cache due to mapping invalidation.
 > 
-> Due to the above stated reasons, this commit disables execution of
-> xfs_db's check command when working on 64k blocksized filesystem.
+> We also need to make sure that the mm subsystem knows these are
+> reclaimable objects. We provide the memory reclaim subsystem with a
+> a shrinker to reclaim xfs_bufs, so we should really mark the slab
+> that way.
+> 
+> We also have a lot of xfs_bufs in a busy system, spread them around
+> like we do inodes.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
 
-Due to all the scalability issues in the xfs_db check command I think
-it finally is time to just not run it by default at all.
+https://lore.kernel.org/linux-xfs/20191101120513.GD59146@bfoster/
+
+>  fs/xfs/xfs_buf.c | 11 ++++++++---
+>  1 file changed, 8 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index f880141a22681..9ec3eaf1c618f 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -327,6 +327,9 @@ xfs_buf_free(
+>  
+>  			__free_page(page);
+>  		}
+> +		if (current->reclaim_state)
+> +			current->reclaim_state->reclaimed_slab +=
+> +							bp->b_page_count;
+>  	} else if (bp->b_flags & _XBF_KMEM)
+>  		kmem_free(bp->b_addr);
+>  	_xfs_buf_free_pages(bp);
+> @@ -2114,9 +2117,11 @@ xfs_buf_delwri_pushbuf(
+>  int __init
+>  xfs_buf_init(void)
+>  {
+> -	xfs_buf_zone = kmem_cache_create("xfs_buf",
+> -					 sizeof(struct xfs_buf), 0,
+> -					 SLAB_HWCACHE_ALIGN, NULL);
+> +	xfs_buf_zone = kmem_cache_create("xfs_buf", sizeof(struct xfs_buf), 0,
+> +					 SLAB_HWCACHE_ALIGN |
+> +					 SLAB_RECLAIM_ACCOUNT |
+> +					 SLAB_MEM_SPREAD,
+> +					 NULL);
+>  	if (!xfs_buf_zone)
+>  		goto out;
+>  
+> -- 
+> 2.26.0.rc2
+> 
+
