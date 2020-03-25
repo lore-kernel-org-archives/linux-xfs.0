@@ -1,107 +1,99 @@
-Return-Path: <SRS0=ODsa=5J=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=vNgo=5K=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D3F2C10DCE
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Mar 2020 23:44:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1224AC41621
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 01:42:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D822B20719
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Mar 2020 23:44:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E3AB92074D
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 01:42:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726943AbgCXXol (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Mar 2020 19:44:41 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:58863 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726212AbgCXXol (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Mar 2020 19:44:41 -0400
+        id S1727297AbgCYBmI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Mar 2020 21:42:08 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:55232 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727189AbgCYBmH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Mar 2020 21:42:07 -0400
 Received: from dread.disaster.area (pa49-195-202-68.pa.nsw.optusnet.com.au [49.195.202.68])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 368227EB12E;
-        Wed, 25 Mar 2020 10:44:39 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id A47783A3A4A
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Mar 2020 12:42:06 +1100 (AEDT)
+Received: from discord.disaster.area ([192.168.253.110])
+        by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jGtDq-0005ZU-5V; Wed, 25 Mar 2020 10:44:38 +1100
-Date:   Wed, 25 Mar 2020 10:44:38 +1100
+        id 1jGv3V-0006H3-IQ
+        for linux-xfs@vger.kernel.org; Wed, 25 Mar 2020 12:42:05 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.93)
+        (envelope-from <david@fromorbit.com>)
+        id 1jGv3V-00035k-8T
+        for linux-xfs@vger.kernel.org; Wed, 25 Mar 2020 12:42:05 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/5] xfs_io: set exitcode on failure appropriately
-Message-ID: <20200324234438.GD10776@dread.disaster.area>
-References: <20200324001928.17894-1-david@fromorbit.com>
- <20200324001928.17894-6-david@fromorbit.com>
- <ca7c97de-f3ea-2bbb-98b6-26f8da1fca0c@sandeen.net>
- <20200324231255.GZ10776@dread.disaster.area>
- <20200324232401.GT29339@magnolia>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 0/8] xfs: various fixes and cleanups
+Date:   Wed, 25 Mar 2020 12:41:57 +1100
+Message-Id: <20200325014205.11843-1-david@fromorbit.com>
+X-Mailer: git-send-email 2.26.0.rc2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200324232401.GT29339@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
         a=mqTaRPt+QsUAtUurwE173Q==:117 a=mqTaRPt+QsUAtUurwE173Q==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=SS2py6AdgQ4A:10
-        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=4e34b6Gni3NOzRK8PJQA:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=SS2py6AdgQ4A:10 a=sXs1YXpSkZNGG69wFtgA:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 24, 2020 at 04:24:01PM -0700, Darrick J. Wong wrote:
-> On Wed, Mar 25, 2020 at 10:12:55AM +1100, Dave Chinner wrote:
-> > On Tue, Mar 24, 2020 at 03:57:26PM -0500, Eric Sandeen wrote:
-> > > On 3/23/20 7:19 PM, Dave Chinner wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > 
-> > > > Many operations don't set the exitcode when they fail, resulting
-> > > > in xfs_io exiting with a zero (no failure) exit code despite the
-> > > > command failing and returning an error. The command return code is
-> > > > really a boolean to tell the libxcmd command loop whether to
-> > > > continue processing or not, while exitcode is the actual xfs_io exit
-> > > > code returned to the parent on exit.
-> > > > 
-> > > > This patchset just makes the code do the right thing. It's not the
-> > > > nicest code, but it's a start at producing correct behaviour.
-> > > > 
-> > > > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > I wonder if there somewhere we could formally document these conventions...
-> > > 
-> > > Like maybe at least near the "exitcode" global declaration?
-> > 
-> > I really think we need to rework the way we do the error handling
-> > in the command line parsing for these utilities. One of the things I
-> > found in doing this is that most of the code does return error codes
-> > to the main function, only then to drop it on the floor and turn it
-> > into "exitcode = 1; return 0;" pair.
-> > 
-> > So I'm pondering how to make this much simpler - returning error
-> > codes from the command functions would be a much better idea,
-> > then have a command flag to indicate whether we continue on error or
-> > terminate.
-> > 
-> > That moves all the exit code handling out of the commands and
-> > provides consistent error handling for all commands and
-> > infrastructure - 0 = success, failure returns negative errno - and
-> > so should enable much more reliable and consistent error handling
-> > across all the utilities....
-> 
-> It seems reasonable to me, though I wonder how fstests will react to
-> that.  Then again, a lot of xfs_io error handling seems to be done via
-> grep so maybe it wouldn't be that bad. :)
+Hi folks,
 
-Pretty much. I don't think it will have much impact at all. This
-patch hasn't caused any new failures in my fstests runs at all, so I
-don't think further work to simplify this functionality will cause
-new problems, either...
+These are the fixes and cleanups that are part of the non-blocking
+inode reclaim series I've (slowly) been working on. These fixes and
+cleanups stand alone, many have already been reviewed, and getting
+them out of the non-blocking reclaim patchset makes that a much
+smaller and easier to digest set of patches.
 
-Cheers,
+The changes in this patchset are for:
 
-Dave.
+- limiting the size of checkpoints that the CIL builds to reduce the
+  memory it pins and the latency of commits.
+- cleaning up the AIL item removal code so we can reduce the number
+  of tail LSN updates to prevent unnecessary thundering herd wakeups
+- account for reclaimable slab caches in XFS correctly
+- account for reclaimed pages from buffers correctly
+- avoiding log IO priority inversions
+- factoring the inode cluster deletion code to make it more readable
+  and easier to modify for the non-blocking inode reclaim mods.
+
+Thoughts, comments and improvemnts welcome.
+
+-Dave.
+
+
+Dave Chinner (8):
+  xfs: Lower CIL flush limit for large logs
+  xfs: Throttle commits on delayed background CIL push
+  xfs: don't allow log IO to be throttled
+  xfs: Improve metadata buffer reclaim accountability
+  xfs: correctly acount for reclaimable slabs
+  xfs: factor common AIL item deletion code
+  xfs: tail updates only need to occur when LSN changes
+  xfs: factor inode lookup from xfs_ifree_cluster
+
+ fs/xfs/xfs_buf.c        |  11 ++-
+ fs/xfs/xfs_inode.c      | 152 ++++++++++++++++++++++------------------
+ fs/xfs/xfs_inode_item.c |  28 ++++----
+ fs/xfs/xfs_log.c        |  10 ++-
+ fs/xfs/xfs_log_cil.c    |  37 ++++++++--
+ fs/xfs/xfs_log_priv.h   |  53 ++++++++++++--
+ fs/xfs/xfs_super.c      |   3 +-
+ fs/xfs/xfs_trace.h      |   1 +
+ fs/xfs/xfs_trans_ail.c  |  88 ++++++++++++++---------
+ fs/xfs/xfs_trans_priv.h |   6 +-
+ 10 files changed, 257 insertions(+), 132 deletions(-)
+
 -- 
-Dave Chinner
-david@fromorbit.com
+2.26.0.rc2
+
