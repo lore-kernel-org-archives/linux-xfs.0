@@ -2,94 +2,103 @@ Return-Path: <SRS0=vNgo=5K=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B13A5C43331
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 14:24:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86A5CC1975A
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 14:43:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6A670208CA
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 14:24:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 323E8208E0
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Mar 2020 14:43:15 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b="YUccMzib"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727620AbgCYOYm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Mar 2020 10:24:42 -0400
-Received: from mail1.g1.pair.com ([66.39.3.162]:30632 "EHLO mail1.g1.pair.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727538AbgCYOYl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 25 Mar 2020 10:24:41 -0400
-Received: from mail1.g1.pair.com (localhost [127.0.0.1])
-        by mail1.g1.pair.com (Postfix) with ESMTP id 007565474A3;
-        Wed, 25 Mar 2020 10:24:40 -0400 (EDT)
-Received: from harpe.intellique.com (labo.djinux.com [82.225.196.72])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail1.g1.pair.com (Postfix) with ESMTPSA id 6D28960AE3C;
-        Wed, 25 Mar 2020 10:24:40 -0400 (EDT)
-Date:   Wed, 25 Mar 2020 15:24:36 +0100
-From:   Emmanuel Florac <eflorac@intellique.com>
-To:     Pawan Prakash Sharma <pawanprakash101@gmail.com>,
-        xfs <linux-xfs@vger.kernel.org>
-Subject: Re: xfs duplicate UUID
-Message-ID: <20200325152418.04340a72@harpe.intellique.com>
-In-Reply-To: <CABS7VHDt=v1SmSggnn8288uE5Cs27RqXpPsbiGk9=wyJ-pz1pQ@mail.gmail.com>
-References: <CABS7VHBR1TqgdKEvN8pnRH8ZxZZUeEFm6pFfaygOzv0781QrRg@mail.gmail.com>
-        <20200324183819.36aa5448@harpe.intellique.com>
-        <CABS7VHB2FJdCz+F+3y86wawmBSuaVmfnC57edHVsoRugAK2Nsg@mail.gmail.com>
-        <20200324192610.0f19a868@harpe.intellique.com>
-        <CABS7VHDt=v1SmSggnn8288uE5Cs27RqXpPsbiGk9=wyJ-pz1pQ@mail.gmail.com>
-Organization: Intellique
-X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.31; x86_64-slackware-linux-gnu)
+        id S1727795AbgCYOnO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Mar 2020 10:43:14 -0400
+Received: from mail-io1-f67.google.com ([209.85.166.67]:38645 "EHLO
+        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727721AbgCYOnO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Mar 2020 10:43:14 -0400
+Received: by mail-io1-f67.google.com with SMTP id m15so2464602iob.5
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Mar 2020 07:43:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=szeredi.hu; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=BYoi0GgKGrZ5Iy05aE5oc1zP5UUaQTjapju/izAR4hI=;
+        b=YUccMzib2IwajwEuyLBHygiEi2x+yWevlxfsequqpaIt/Mza/TxUmFkitS3U4FkfKx
+         P1XwXxBJ8Cx5HEmhYoBLdWFHhmr6xou5YR2utppkELKcqyaDd4EOavtJNBW3boLnPkzx
+         WgZmdQ9YRsyheNZWEZrba/miSYKYdDAaziYyc=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=BYoi0GgKGrZ5Iy05aE5oc1zP5UUaQTjapju/izAR4hI=;
+        b=YYWU442jFcBJq3EECRZSJX4J13Uh3zgNb+PUlwq4OSenJrjGsV6aY0fYAjD5sCYb09
+         8GMvn1mlK8tCRfGzJN3dFxxaBopaRwQBOT2zVgKijbK9i3UgfmFqXX6FDj2Tl9yCc30t
+         1sgQ+TE7UjTI8GEjVkxLPImYsMydaYR8LO2J2oUA5LeFxnX2SCAi33tTeQ6yQPBeal9k
+         OBLgO2QWk67ysyjxrpY1ROrAQ44wZ97/hIo9MJqzwHV1RJr5W/cf6XrBsiYsxqrsP+KR
+         TsWE4zvcr1NnAm07p95HepZH83g0dA2H9mdp728YuTvsd3gmiA1Jt2cowOy+w7CU4peO
+         eV2A==
+X-Gm-Message-State: ANhLgQ3c2/RxMsk3AiUa6ngUzr9Th1EQxrqQ/e8qxj93i3kjfLOcb346
+        s3VYzLC6dCEDFSEtUwdbiQwxU+12vs6z+K6Mw9a0nQ==
+X-Google-Smtp-Source: ADFU+vsgMMqodCZqPGFNfCT+HdNRTtLLlUdy5AMnDcVBoatxWj+vZY48emoAVNd+HvHliFjTkg/kdF6pmkOGcZxuC6s=
+X-Received: by 2002:a6b:3a07:: with SMTP id h7mr3235359ioa.191.1585147393572;
+ Wed, 25 Mar 2020 07:43:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/GQ6kx1M7J/UE8MrzolOlWIy"; protocol="application/pgp-signature"
+References: <20200323202259.13363-1-willy@infradead.org> <20200323202259.13363-25-willy@infradead.org>
+ <CAJfpegu7EFcWrg3bP+-2BX_kb52RrzBCo_U3QKYzUkZfe4EjDA@mail.gmail.com> <20200325120254.GA22483@bombadil.infradead.org>
+In-Reply-To: <20200325120254.GA22483@bombadil.infradead.org>
+From:   Miklos Szeredi <miklos@szeredi.hu>
+Date:   Wed, 25 Mar 2020 15:43:02 +0100
+Message-ID: <CAJfpegshssCJiA8PBcq2XvBj3mR8dufHb0zWRFvvKKv82VQYsw@mail.gmail.com>
+Subject: Re: [PATCH v10 24/25] fuse: Convert from readpages to readahead
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        ocfs2-devel@oss.oracle.com, linux-xfs <linux-xfs@vger.kernel.org>,
+        Dave Chinner <dchinner@redhat.com>,
+        William Kucharski <william.kucharski@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
---Sig_/GQ6kx1M7J/UE8MrzolOlWIy
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Wed, Mar 25, 2020 at 1:02 PM Matthew Wilcox <willy@infradead.org> wrote:
+>
+> On Wed, Mar 25, 2020 at 10:42:56AM +0100, Miklos Szeredi wrote:
+> > > +       while ((page = readahead_page(rac))) {
+> > > +               if (fuse_readpages_fill(&data, page) != 0)
+> >
+> > Shouldn't this unlock + put page on error?
+>
+> We're certainly inconsistent between the two error exits from
+> fuse_readpages_fill().  But I think we can simplify the whole thing
+> ... how does this look to you?
 
-Le Tue, 24 Mar 2020 23:58:24 +0530
-Pawan Prakash Sharma <pawanprakash101@gmail.com> =C3=A9crivait:
+Nice, overall.
 
-> >Your problem is that the log is dirty. You need to mount it once to =20
-> clean up the log, then you'll be able to change the UUID.
->=20
-> But why xfs_freeze is not clearing that as man page says that it does
-> that?
+>
+> -       while ((page = readahead_page(rac))) {
+> -               if (fuse_readpages_fill(&data, page) != 0)
+> +               nr_pages = min(readahead_count(rac), fc->max_pages);
 
-Please reply to the list so that anyone interested can learn about it.=20
+Missing fc->max_read clamp.
 
-This is mentioned in the man page at the next line:
+> +               ia = fuse_io_alloc(NULL, nr_pages);
+> +               if (!ia)
+>                         return;
+> +               ap = &ia->ap;
+> +               __readahead_batch(rac, ap->pages, nr_pages);
 
- Note that even after freezing, the on-disk filesystem can contain
- information on files that are still in  the process of unlinking.
- These files will not be unlinked until the filesystem is unfrozen or a
- clean mount of the snapshot is complete.
+nr_pages = __readahead_batch(...)?
 
-You probably have open unlinked files (such as temporary files). It's
-very common.
+This will give consecutive pages, right?
 
---=20
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
-
---Sig_/GQ6kx1M7J/UE8MrzolOlWIy
-Content-Type: application/pgp-signature
-Content-Description: Signature digitale OpenPGP
-
------BEGIN PGP SIGNATURE-----
-
-iEYEARECAAYFAl57aawACgkQX3jQXNUicVa9SgCg643RJxYqxDtgA3InXCWfqSmC
-KZcAoJR6KFaPHlxv6jPamqmM7qAsBeqr
-=ixBs
------END PGP SIGNATURE-----
-
---Sig_/GQ6kx1M7J/UE8MrzolOlWIy--
+Thanks,
+Miklos
