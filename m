@@ -2,268 +2,334 @@ Return-Path: <SRS0=JvtZ=5L=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84F77C43331
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Mar 2020 11:34:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74897C43331
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Mar 2020 13:10:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 504652073E
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Mar 2020 11:34:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43A7D20748
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Mar 2020 13:10:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cl5TMzJg"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WjbrgOJL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727970AbgCZLeO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 Mar 2020 07:34:14 -0400
-Received: from us-smtp-delivery-74.mimecast.com ([63.128.21.74]:41177 "EHLO
+        id S1727725AbgCZNKF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 Mar 2020 09:10:05 -0400
+Received: from us-smtp-delivery-74.mimecast.com ([63.128.21.74]:30018 "EHLO
         us-smtp-delivery-74.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727953AbgCZLeO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Mar 2020 07:34:14 -0400
+        by vger.kernel.org with ESMTP id S1726260AbgCZNKF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Mar 2020 09:10:05 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1585222452;
+        s=mimecast20190719; t=1585228203;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=JN3AVebuD/n9mqrTuvHUaYoffSbAKY/v2fWXI2tdvCU=;
-        b=cl5TMzJgMvtvodInaKmbQQw2xe0u/JuzIVwgZ9jPP3Pcnsb4m1qlK4bN8YuQcuUflfW0Y2
-        U1pe2p5Eh67iiT05mFML1pK6RL0nsGiGNRtOl2vBPQlllRs+fNBVVSJWjZhA65+SuqMhMe
-        1irGILNPLMpVMQPF9GZXflQ6VLXPNrQ=
+        bh=erVsu0om+x7qzNWX2wYvDnCAvyEP7zjgpLs9w3ZpY9M=;
+        b=WjbrgOJLpq2UGHUOg3kiUtt/1WHIgLpUPFQhoTJCWUPPkLj7cdoDCkY+KvBcYfeq9Shxsv
+        80NZsYQ+TZIJC8ne3riBycUNBN5lZXYwLBb+lZmPY1TUsEXIRA4txUlEmxNKh7WA+djMuX
+        jcjCj3r7+g6dG1U31WFKUKPS+iGbmXo=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-60-1iKRgA6UN_61thrtu7QJ8Q-1; Thu, 26 Mar 2020 07:34:07 -0400
-X-MC-Unique: 1iKRgA6UN_61thrtu7QJ8Q-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+ us-mta-462-hUVdz11kOwScMKZhGPpQ4g-1; Thu, 26 Mar 2020 09:09:57 -0400
+X-MC-Unique: hUVdz11kOwScMKZhGPpQ4g-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0205A101FC90;
-        Thu, 26 Mar 2020 11:34:01 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8A78D5C241;
-        Thu, 26 Mar 2020 11:34:00 +0000 (UTC)
-Date:   Thu, 26 Mar 2020 07:33:58 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/8] xfs: Throttle commits on delayed background CIL push
-Message-ID: <20200326113358.GC19262@bfoster>
-References: <20200325014205.11843-1-david@fromorbit.com>
- <20200325014205.11843-3-david@fromorbit.com>
- <20200326052435.GK29351@magnolia>
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 26F398017CC;
+        Thu, 26 Mar 2020 13:09:56 +0000 (UTC)
+Received: from localhost (dhcp-12-102.nay.redhat.com [10.66.12.102])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 5691719C70;
+        Thu, 26 Mar 2020 13:09:55 +0000 (UTC)
+Date:   Thu, 26 Mar 2020 21:21:30 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     Yang Xu <xuyang2018.jy@cn.fujitsu.com>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v3] xfs/191: update mkfs.xfs input results
+Message-ID: <20200326132130.GO14282@dhcp-12-102.nay.redhat.com>
+Mail-Followup-To: Yang Xu <xuyang2018.jy@cn.fujitsu.com>,
+        fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+References: <20190616143956.GC15846@desktop>
+ <1560929963-2372-1-git-send-email-xuyang2018.jy@cn.fujitsu.com>
+ <20200326053900.GN14282@dhcp-12-102.nay.redhat.com>
+ <44cc5352-b9b6-e927-0146-321026bb11cd@cn.fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200326052435.GK29351@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+In-Reply-To: <44cc5352-b9b6-e927-0146-321026bb11cd@cn.fujitsu.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 25, 2020 at 10:24:35PM -0700, Darrick J. Wong wrote:
-> On Wed, Mar 25, 2020 at 12:41:59PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > In certain situations the background CIL push can be indefinitely
-> > delayed. While we have workarounds from the obvious cases now, it
-> > doesn't solve the underlying issue. This issue is that there is no
-> > upper limit on the CIL where we will either force or wait for
-> > a background push to start, hence allowing the CIL to grow without
-> > bound until it consumes all log space.
-> > 
-> > To fix this, add a new wait queue to the CIL which allows background
-> > pushes to wait for the CIL context to be switched out. This happens
-> > when the push starts, so it will allow us to block incoming
-> > transaction commit completion until the push has started. This will
-> > only affect processes that are running modifications, and only when
-> > the CIL threshold has been significantly overrun.
-> > 
-> > This has no apparent impact on performance, and doesn't even trigger
-> > until over 45 million inodes had been created in a 16-way fsmark
-> > test on a 2GB log. That was limiting at 64MB of log space used, so
-> > the active CIL size is only about 3% of the total log in that case.
-> > The concurrent removal of those files did not trigger the background
-> > sleep at all.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > Reviewed-by: Brian Foster <bfoster@redhat.com>
+On Thu, Mar 26, 2020 at 05:11:37PM +0800, Yang Xu wrote:
 > 
-> This looks reasonable to me, though considering the big long thread that
-> erupted a few versions ago I'm seriously wondering what he thinks of all
-> this?
-> 
-
-Hmmmm... this was my reply to the last post of this one:
-
-https://lore.kernel.org/linux-xfs/20191101120426.GC59146@bfoster/
-
-... so I suspect that would still be my feedback if this patch wasn't
-fixed up..? ;)
-
-Brian
-
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> --D
-> 
-> > ---
-> >  fs/xfs/xfs_log_cil.c  | 37 +++++++++++++++++++++++++++++++++----
-> >  fs/xfs/xfs_log_priv.h | 24 ++++++++++++++++++++++++
-> >  fs/xfs/xfs_trace.h    |  1 +
-> >  3 files changed, 58 insertions(+), 4 deletions(-)
+> on 2020/03/26 13:39, Zorro Lang wrote:
+> > On Wed, Jun 19, 2019 at 03:39:23PM +0800, Yang Xu wrote:
+> > > Currently, on 5.2.0-rc4+ kernel, when I run xfs/191 with upstream
+> > > xfsprogs, I get the following errors because mkfs.xfs binary has
+> > > changed a lot.
+> > > 
+> > > -------------------------
+> > > pass -n size=2b /dev/sda11
+> > > pass -d agsize=8192b /dev/sda11
+> > > pass -d agsize=65536s /dev/sda11
+> > > pass -d su=0,sw=64 /dev/sda11
+> > > pass -d su=4096s,sw=64 /dev/sda11
+> > > pass -d su=4096b,sw=64 /dev/sda11
+> > > pass -l su=10b /dev/sda11
+> > > fail -n log=15 /dev/sda11
+> > > fail -r size=65536,rtdev=$fsimg /dev/sda11
+> > > fail -r rtdev=$fsimg /dev/sda11
+> > > fail -i log=10 /dev/sda11
+> > > --------------------------
+> > > 
+> > > "pass -d su=0,sw=64 /dev/sda11", expect fail, this behavior has been
+> > > fixed by commit 16adcb88(mkfs: more sunit/swidth sanity checking).
+> > > 
+> > > "fail -n log=15 /dev/sda11" "fail -i log=10 /dev/sda11", expect pass,
+> > > this option has been removed since commit 2cf637c(mkfs: remove
+> > > logarithm based CLI option).
+> > > 
+> > > "fail -r size=65536,rtdev=$fsimg /dev/sda11" "fail -r rtdev=$fsimg
+> > > /dev/sda11" works well if we disable reflink, fail if we enable
+> > > reflink. It fails because reflink was not supported in realtime
+> > > devices since commit bfa66ec.
+> > > 
+> > > "b" or "s" suffix without specifying their size has been supported
+> > > since xfsprogs v4.15.0-rc1.
+> > > 
+> > > I change the expected result for compatibility with current xfsprogs
+> > > and add rtdev test with reflink.
+> > > 
+> > > Signed-off-by: Yang Xu <xuyang2018.jy@cn.fujitsu.com>
+> > > ---
 > > 
-> > diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> > index 27de462d2ba40..ac43301ae2f43 100644
-> > --- a/fs/xfs/xfs_log_cil.c
-> > +++ b/fs/xfs/xfs_log_cil.c
-> > @@ -668,6 +668,11 @@ xlog_cil_push_work(
-> >  	push_seq = cil->xc_push_seq;
-> >  	ASSERT(push_seq <= ctx->sequence);
-> >  
-> > +	/*
-> > +	 * Wake up any background push waiters now this context is being pushed.
-> > +	 */
-> > +	wake_up_all(&ctx->push_wait);
-> > +
-> >  	/*
-> >  	 * Check if we've anything to push. If there is nothing, then we don't
-> >  	 * move on to a new sequence number and so we have to be able to push
-> > @@ -744,6 +749,7 @@ xlog_cil_push_work(
-> >  	 */
-> >  	INIT_LIST_HEAD(&new_ctx->committing);
-> >  	INIT_LIST_HEAD(&new_ctx->busy_extents);
-> > +	init_waitqueue_head(&new_ctx->push_wait);
-> >  	new_ctx->sequence = ctx->sequence + 1;
-> >  	new_ctx->cil = cil;
-> >  	cil->xc_ctx = new_ctx;
-> > @@ -891,7 +897,7 @@ xlog_cil_push_work(
-> >   */
-> >  static void
-> >  xlog_cil_push_background(
-> > -	struct xlog	*log)
-> > +	struct xlog	*log) __releases(cil->xc_ctx_lock)
-> >  {
-> >  	struct xfs_cil	*cil = log->l_cilp;
-> >  
-> > @@ -905,14 +911,36 @@ xlog_cil_push_background(
-> >  	 * don't do a background push if we haven't used up all the
-> >  	 * space available yet.
-> >  	 */
-> > -	if (cil->xc_ctx->space_used < XLOG_CIL_SPACE_LIMIT(log))
-> > +	if (cil->xc_ctx->space_used < XLOG_CIL_SPACE_LIMIT(log)) {
-> > +		up_read(&cil->xc_ctx_lock);
-> >  		return;
-> > +	}
-> >  
-> >  	spin_lock(&cil->xc_push_lock);
-> >  	if (cil->xc_push_seq < cil->xc_current_sequence) {
-> >  		cil->xc_push_seq = cil->xc_current_sequence;
-> >  		queue_work(log->l_mp->m_cil_workqueue, &cil->xc_push_work);
-> >  	}
-> > +
-> > +	/*
-> > +	 * Drop the context lock now, we can't hold that if we need to sleep
-> > +	 * because we are over the blocking threshold. The push_lock is still
-> > +	 * held, so blocking threshold sleep/wakeup is still correctly
-> > +	 * serialised here.
-> > +	 */
-> > +	up_read(&cil->xc_ctx_lock);
-> > +
-> > +	/*
-> > +	 * If we are well over the space limit, throttle the work that is being
-> > +	 * done until the push work on this context has begun.
-> > +	 */
-> > +	if (cil->xc_ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log)) {
-> > +		trace_xfs_log_cil_wait(log, cil->xc_ctx->ticket);
-> > +		ASSERT(cil->xc_ctx->space_used < log->l_logsize);
-> > +		xlog_wait(&cil->xc_ctx->push_wait, &cil->xc_push_lock);
-> > +		return;
-> > +	}
-> > +
-> >  	spin_unlock(&cil->xc_push_lock);
-> >  
-> >  }
-> > @@ -1032,9 +1060,9 @@ xfs_log_commit_cil(
-> >  		if (lip->li_ops->iop_committing)
-> >  			lip->li_ops->iop_committing(lip, xc_commit_lsn);
-> >  	}
-> > -	xlog_cil_push_background(log);
-> >  
-> > -	up_read(&cil->xc_ctx_lock);
-> > +	/* xlog_cil_push_background() releases cil->xc_ctx_lock */
-> > +	xlog_cil_push_background(log);
-> >  }
-> >  
-> >  /*
-> > @@ -1193,6 +1221,7 @@ xlog_cil_init(
-> >  
-> >  	INIT_LIST_HEAD(&ctx->committing);
-> >  	INIT_LIST_HEAD(&ctx->busy_extents);
-> > +	init_waitqueue_head(&ctx->push_wait);
-> >  	ctx->sequence = 1;
-> >  	ctx->cil = cil;
-> >  	cil->xc_ctx = ctx;
-> > diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-> > index 8c4be91f62d0d..dacab1817a1b0 100644
-> > --- a/fs/xfs/xfs_log_priv.h
-> > +++ b/fs/xfs/xfs_log_priv.h
-> > @@ -240,6 +240,7 @@ struct xfs_cil_ctx {
-> >  	struct xfs_log_vec	*lv_chain;	/* logvecs being pushed */
-> >  	struct list_head	iclog_entry;
-> >  	struct list_head	committing;	/* ctx committing list */
-> > +	wait_queue_head_t	push_wait;	/* background push throttle */
-> >  	struct work_struct	discard_endio_work;
-> >  };
-> >  
-> > @@ -337,10 +338,33 @@ struct xfs_cil {
-> >   *   buffer window (32MB) as measurements have shown this to be roughly the
-> >   *   point of diminishing performance increases under highly concurrent
-> >   *   modification workloads.
-> > + *
-> > + * To prevent the CIL from overflowing upper commit size bounds, we introduce a
-> > + * new threshold at which we block committing transactions until the background
-> > + * CIL commit commences and switches to a new context. While this is not a hard
-> > + * limit, it forces the process committing a transaction to the CIL to block and
-> > + * yeild the CPU, giving the CIL push work a chance to be scheduled and start
-> > + * work. This prevents a process running lots of transactions from overfilling
-> > + * the CIL because it is not yielding the CPU. We set the blocking limit at
-> > + * twice the background push space threshold so we keep in line with the AIL
-> > + * push thresholds.
-> > + *
-> > + * Note: this is not a -hard- limit as blocking is applied after the transaction
-> > + * is inserted into the CIL and the push has been triggered. It is largely a
-> > + * throttling mechanism that allows the CIL push to be scheduled and run. A hard
-> > + * limit will be difficult to implement without introducing global serialisation
-> > + * in the CIL commit fast path, and it's not at all clear that we actually need
-> > + * such hard limits given the ~7 years we've run without a hard limit before
-> > + * finding the first situation where a checkpoint size overflow actually
-> > + * occurred. Hence the simple throttle, and an ASSERT check to tell us that
-> > + * we've overrun the max size.
-> >   */
-> >  #define XLOG_CIL_SPACE_LIMIT(log)	\
-> >  	min_t(int, (log)->l_logsize >> 3, BBTOB(XLOG_TOTAL_REC_SHIFT(log)) << 4)
-> >  
-> > +#define XLOG_CIL_BLOCKING_SPACE_LIMIT(log)	\
-> > +	(XLOG_CIL_SPACE_LIMIT(log) * 2)
-> > +
-> >  /*
-> >   * ticket grant locks, queues and accounting have their own cachlines
-> >   * as these are quite hot and can be operated on concurrently.
-> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > index fbfdd9cf160df..575ca74532f79 100644
-> > --- a/fs/xfs/xfs_trace.h
-> > +++ b/fs/xfs/xfs_trace.h
-> > @@ -1015,6 +1015,7 @@ DEFINE_LOGGRANT_EVENT(xfs_log_ticket_regrant_sub);
-> >  DEFINE_LOGGRANT_EVENT(xfs_log_ticket_done);
-> >  DEFINE_LOGGRANT_EVENT(xfs_log_ticket_done_sub);
-> >  DEFINE_LOGGRANT_EVENT(xfs_log_ticket_done_exit);
-> > +DEFINE_LOGGRANT_EVENT(xfs_log_cil_wait);
-> >  
-> >  DECLARE_EVENT_CLASS(xfs_log_item_class,
-> >  	TP_PROTO(struct xfs_log_item *lip),
-> > -- 
-> > 2.26.0.rc2
+> > I'd suggest to use a loop device to replace SCRATCH_DEV, to avoid some failures
+> > caused by different stripe alignment of SCRATCH_DEV (refer to xfs/513).  Or we
+> > need to think about the stripe alignment in this case.
+> I also met stripe size problem with log section in[1], but it failed on
+> mount step.  Can you give me a mkfs example and let me understand?
+
+Sure.
+
+# mkfs.xfs -f /dev/mapper/xxx-xfstest
+meta-data=/dev/mapper/xxx-xfstest isize=512    agcount=16, agsize=409600 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=1
+data     =                       bsize=4096   blocks=6553600, imaxpct=25
+         =                       sunit=64     swidth=64 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=5184, version=2
+         =                       sectsz=512   sunit=64 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+# ./check xfs/191-input-validation
+FSTYP         -- xfs (non-debug)
+PLATFORM      -- Linux/x86_64
+MKFS_OPTIONS  -- -f -bsize=4096 /dev/mapper/xxx-xfscratch
+MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/mapper/xxx-xfscratch /mnt/scratch                                                                              
+
+xfs/191-input-validation 11s ... - output mismatch (see /home/xfstests-zlang/results//xfs/191-input-validation.out.bad)                                                                       
+    --- tests/xfs/191-input-validation.out      2018-10-24 02:06:10.616609603 -0400
+    +++ /home/xfstests-zlang/results//xfs/191-input-validation.out.bad  2020-03-26 08:58:47.269671087 -0400                                                                                   
+    @@ -1,2 +1,11 @@
+     QA output created by 191-input-validation
+     silence is golden
+    +fail -d agsize=32m /dev/mapper/xxx-xfscratch
+    +fail -d agsize=32M /dev/mapper/xxx-xfscratch
+    +fail -d agsize=33554432 /dev/mapper/xxx-xfscratch
+    +fail -b size=4096 -d agsize=8192b /dev/mapper/xxx-xfscratch
+    +fail -d agsize=8192b /dev/mapper/xxx-xfscratch
+    ...
+    (Run 'diff -u /home/xfstests-zlang/tests/xfs/191-input-validation.out /home/xfstests-zlang/results//xfs/191-input-validation.out.bad'  to see the entire diff)                            
+Ran: xfs/191-input-validation
+Failures: xfs/191-input-validation
+Failed 1 of 1 tests
+
+# mkfs.xfs -f -d agsize=32m /dev/mapper/xxx-xfscratch
+Due to stripe alignment, the internal log size (8192) is too large.
+Must fit within an allocation group.
+Usage: mkfs.xfs
+...
+...
+
+All these failures gone after I turn to use /dev/loop0 to be SCRATCH_DEV.
+# ./check xfs/191-input-validation
+FSTYP         -- xfs (non-debug)
+PLATFORM      -- Linux/x86_64
+MKFS_OPTIONS  -- -f -bsize=4096 /dev/loop0
+MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/loop0 /mnt/scratch
+
+xfs/191-input-validation 11s ...  10s
+Ran: xfs/191-input-validation
+Passed all 1 tests
+
+Thanks,
+Zorro
+
+> 
+> [1]https://patchwork.kernel.org/patch/11393385/
+> 
+> Best Regards
+> Yang Xu
 > > 
+> > Thanks,
+> > Zorro
+> > 
+> > >   tests/xfs/191-input-validation | 39 ++++++++++++++++++++++------------
+> > >   1 file changed, 25 insertions(+), 14 deletions(-)
+> > > 
+> > > diff --git a/tests/xfs/191-input-validation b/tests/xfs/191-input-validation
+> > > index b6658015..9f8de500 100755
+> > > --- a/tests/xfs/191-input-validation
+> > > +++ b/tests/xfs/191-input-validation
+> > > @@ -31,11 +31,10 @@ _cleanup()
+> > >   # Modify as appropriate.
+> > >   _supported_fs xfs
+> > >   _supported_os Linux
+> > > -_require_scratch
+> > > +_require_scratch_nocheck
+> > >   _require_xfs_mkfs_validation
+> > > -
+> > >   rm -f $seqres.full
+> > >   echo silence is golden
+> > > @@ -112,10 +111,11 @@ do_mkfs_fail -b size=2b $SCRATCH_DEV
+> > >   do_mkfs_fail -b size=nfi $SCRATCH_DEV
+> > >   do_mkfs_fail -b size=4096nfi $SCRATCH_DEV
+> > >   do_mkfs_fail -n size=2s $SCRATCH_DEV
+> > > -do_mkfs_fail -n size=2b $SCRATCH_DEV
+> > >   do_mkfs_fail -n size=nfi $SCRATCH_DEV
+> > >   do_mkfs_fail -n size=4096nfi $SCRATCH_DEV
+> > > +do_mkfs_pass -n size=2b $SCRATCH_DEV
+> > > +
+> > >   # bad label length
+> > >   do_mkfs_fail -L thisiswaytoolong $SCRATCH_DEV
+> > > @@ -129,6 +129,8 @@ do_mkfs_pass -d agsize=32M $SCRATCH_DEV
+> > >   do_mkfs_pass -d agsize=1g $SCRATCH_DEV
+> > >   do_mkfs_pass -d agsize=$((32 * 1024 * 1024)) $SCRATCH_DEV
+> > >   do_mkfs_pass -b size=4096 -d agsize=8192b $SCRATCH_DEV
+> > > +do_mkfs_pass -d agsize=8192b $SCRATCH_DEV
+> > > +do_mkfs_pass -d agsize=65536s $SCRATCH_DEV
+> > >   do_mkfs_pass -d sectsize=512,agsize=65536s $SCRATCH_DEV
+> > >   do_mkfs_pass -s size=512 -d agsize=65536s $SCRATCH_DEV
+> > >   do_mkfs_pass -d noalign $SCRATCH_DEV
+> > > @@ -136,7 +138,10 @@ do_mkfs_pass -d sunit=0,swidth=0 $SCRATCH_DEV
+> > >   do_mkfs_pass -d sunit=8,swidth=8 $SCRATCH_DEV
+> > >   do_mkfs_pass -d sunit=8,swidth=64 $SCRATCH_DEV
+> > >   do_mkfs_pass -d su=0,sw=0 $SCRATCH_DEV
+> > > +do_mkfs_pass -d su=0,sw=64 $SCRATCH_DEV
+> > >   do_mkfs_pass -d su=4096,sw=1 $SCRATCH_DEV
+> > > +do_mkfs_pass -d su=4096s,sw=64 $SCRATCH_DEV
+> > > +do_mkfs_pass -d su=4096b,sw=64 $SCRATCH_DEV
+> > >   do_mkfs_pass -d su=4k,sw=1 $SCRATCH_DEV
+> > >   do_mkfs_pass -d su=4K,sw=8 $SCRATCH_DEV
+> > >   do_mkfs_pass -b size=4096 -d su=1b,sw=8 $SCRATCH_DEV
+> > > @@ -147,8 +152,6 @@ do_mkfs_pass -s size=512 -d su=8s,sw=8 $SCRATCH_DEV
+> > >   do_mkfs_fail -d size=${fssize}b $SCRATCH_DEV
+> > >   do_mkfs_fail -d size=${fssize}s $SCRATCH_DEV
+> > >   do_mkfs_fail -d size=${fssize}yerk $SCRATCH_DEV
+> > > -do_mkfs_fail -d agsize=8192b $SCRATCH_DEV
+> > > -do_mkfs_fail -d agsize=65536s $SCRATCH_DEV
+> > >   do_mkfs_fail -d agsize=32Mbsdfsdo $SCRATCH_DEV
+> > >   do_mkfs_fail -d agsize=1GB $SCRATCH_DEV
+> > >   do_mkfs_fail -d agcount=1k $SCRATCH_DEV
+> > > @@ -159,13 +162,10 @@ do_mkfs_fail -d sunit=64,swidth=0 $SCRATCH_DEV
+> > >   do_mkfs_fail -d sunit=64,swidth=64,noalign $SCRATCH_DEV
+> > >   do_mkfs_fail -d sunit=64k,swidth=64 $SCRATCH_DEV
+> > >   do_mkfs_fail -d sunit=64,swidth=64m $SCRATCH_DEV
+> > > -do_mkfs_fail -d su=0,sw=64 $SCRATCH_DEV
+> > >   do_mkfs_fail -d su=4096,sw=0 $SCRATCH_DEV
+> > >   do_mkfs_fail -d su=4097,sw=1 $SCRATCH_DEV
+> > >   do_mkfs_fail -d su=4096,sw=64,noalign $SCRATCH_DEV
+> > >   do_mkfs_fail -d su=4096,sw=64s $SCRATCH_DEV
+> > > -do_mkfs_fail -d su=4096s,sw=64 $SCRATCH_DEV
+> > > -do_mkfs_fail -d su=4096b,sw=64 $SCRATCH_DEV
+> > >   do_mkfs_fail -d su=4096garabge,sw=64 $SCRATCH_DEV
+> > >   do_mkfs_fail -d su=4096,sw=64,sunit=64,swidth=64 $SCRATCH_DEV
+> > >   do_mkfs_fail -d sectsize=10,agsize=65536s $SCRATCH_DEV
+> > > @@ -206,6 +206,7 @@ do_mkfs_pass -l sunit=64 $SCRATCH_DEV
+> > >   do_mkfs_pass -l sunit=64 -d sunit=8,swidth=8 $SCRATCH_DEV
+> > >   do_mkfs_pass -l sunit=8 $SCRATCH_DEV
+> > >   do_mkfs_pass -l su=$((4096*10)) $SCRATCH_DEV
+> > > +do_mkfs_pass -l su=10b $SCRATCH_DEV
+> > >   do_mkfs_pass -b size=4096 -l su=10b $SCRATCH_DEV
+> > >   do_mkfs_pass -l sectsize=512,su=$((4096*10)) $SCRATCH_DEV
+> > >   do_mkfs_pass -l internal $SCRATCH_DEV
+> > > @@ -228,7 +229,6 @@ do_mkfs_fail -l agnum=32 $SCRATCH_DEV
+> > >   do_mkfs_fail -l sunit=0  $SCRATCH_DEV
+> > >   do_mkfs_fail -l sunit=63 $SCRATCH_DEV
+> > >   do_mkfs_fail -l su=1 $SCRATCH_DEV
+> > > -do_mkfs_fail -l su=10b $SCRATCH_DEV
+> > >   do_mkfs_fail -l su=10s $SCRATCH_DEV
+> > >   do_mkfs_fail -l su=$((4096*10+1)) $SCRATCH_DEV
+> > >   do_mkfs_fail -l sectsize=10,agsize=65536s $SCRATCH_DEV
+> > > @@ -246,7 +246,6 @@ do_mkfs_fail -l version=0  $SCRATCH_DEV
+> > >   # naming section, should pass
+> > >   do_mkfs_pass -n size=65536 $SCRATCH_DEV
+> > > -do_mkfs_pass -n log=15 $SCRATCH_DEV
+> > >   do_mkfs_pass -n version=2 $SCRATCH_DEV
+> > >   do_mkfs_pass -n version=ci $SCRATCH_DEV
+> > >   do_mkfs_pass -n ftype=0 -m crc=0 $SCRATCH_DEV
+> > > @@ -257,6 +256,7 @@ do_mkfs_fail -n version=1 $SCRATCH_DEV
+> > >   do_mkfs_fail -n version=cid $SCRATCH_DEV
+> > >   do_mkfs_fail -n ftype=4 $SCRATCH_DEV
+> > >   do_mkfs_fail -n ftype=0 $SCRATCH_DEV
+> > > +do_mkfs_fail -n log=15 $SCRATCH_DEV
+> > >   reset_fsimg
+> > > @@ -273,14 +273,24 @@ do_mkfs_fail -m crc=0,finobt=1 $SCRATCH_DEV
+> > >   do_mkfs_fail -m crc=1 -n ftype=0 $SCRATCH_DEV
+> > > +# realtime section, results depend on reflink
+> > > +_scratch_mkfs_xfs_supported -m reflink=0 >/dev/null 2>&1
+> > > +if [ $? -eq 0 ]; then
+> > > +	do_mkfs_pass -m reflink=0 -r rtdev=$fsimg $SCRATCH_DEV
+> > > +	do_mkfs_pass -m reflink=0 -r size=65536,rtdev=$fsimg $SCRATCH_DEV
+> > > +	do_mkfs_fail -m reflink=1 -r rtdev=$fsimg $SCRATCH_DEV
+> > > +	do_mkfs_fail -m reflink=1 -r size=65536,rtdev=$fsimg $SCRATCH_DEV
+> > > +else
+> > > +	do_mkfs_pass -r rtdev=$fsimg $SCRATCH_DEV
+> > > +	do_mkfs_pass -r size=65536,rtdev=$fsimg $SCRATCH_DEV
+> > > +fi
+> > > +
+> > > +
+> > >   # realtime section, should pass
+> > > -do_mkfs_pass -r rtdev=$fsimg $SCRATCH_DEV
+> > >   do_mkfs_pass -r extsize=4k $SCRATCH_DEV
+> > >   do_mkfs_pass -r extsize=1G $SCRATCH_DEV
+> > > -do_mkfs_pass -r size=65536,rtdev=$fsimg $SCRATCH_DEV
+> > >   do_mkfs_pass -r noalign $SCRATCH_DEV
+> > > -
+> > >   # realtime section, should fail
+> > >   do_mkfs_fail -r rtdev=$SCRATCH_DEV
+> > >   do_mkfs_fail -r extsize=256 $SCRATCH_DEV
+> > > @@ -293,7 +303,6 @@ do_mkfs_fail -r size=65536 $SCRATCH_DEV
+> > >   do_mkfs_pass -i size=256 -m crc=0 $SCRATCH_DEV
+> > >   do_mkfs_pass -i size=512 $SCRATCH_DEV
+> > >   do_mkfs_pass -i size=2048 $SCRATCH_DEV
+> > > -do_mkfs_pass -i log=10 $SCRATCH_DEV
+> > >   do_mkfs_pass -i perblock=2 $SCRATCH_DEV
+> > >   do_mkfs_pass -i maxpct=10 $SCRATCH_DEV
+> > >   do_mkfs_pass -i maxpct=100 $SCRATCH_DEV
+> > > @@ -317,6 +326,8 @@ do_mkfs_fail -i align=2 $SCRATCH_DEV
+> > >   do_mkfs_fail -i sparse -m crc=0 $SCRATCH_DEV
+> > >   do_mkfs_fail -i align=0 -m crc=1 $SCRATCH_DEV
+> > >   do_mkfs_fail -i attr=1 -m crc=1 $SCRATCH_DEV
+> > > +do_mkfs_fail -i log=10 $SCRATCH_DEV
+> > > +
+> > >   status=0
+> > >   exit
+> > > -- 
+> > > 2.18.1
+> > > 
+> > > 
+> > > 
+> > 
+> > 
+> > 
+> 
 > 
 
