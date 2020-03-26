@@ -2,275 +2,177 @@ Return-Path: <SRS0=JvtZ=5L=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	TVD_PH_BODY_ACCOUNTS_PRE,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59070C2D0E7
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Mar 2020 09:11:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C29C0C43331
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Mar 2020 11:08:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 389AA207FC
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Mar 2020 09:11:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 97B322073E
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Mar 2020 11:08:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="E6MlLpde"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726292AbgCZJLs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 Mar 2020 05:11:48 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:33067 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726289AbgCZJLs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Mar 2020 05:11:48 -0400
-X-IronPort-AV: E=Sophos;i="5.72,307,1580745600"; 
-   d="scan'208";a="87373088"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 26 Mar 2020 17:11:44 +0800
-Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id 262BF49DF125;
-        Thu, 26 Mar 2020 17:01:28 +0800 (CST)
-Received: from [10.167.220.84] (10.167.220.84) by
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Thu, 26 Mar 2020 17:11:39 +0800
-Subject: Re: [PATCH v3] xfs/191: update mkfs.xfs input results
-To:     Zorro Lang <zlang@redhat.com>
-References: <20190616143956.GC15846@desktop>
- <1560929963-2372-1-git-send-email-xuyang2018.jy@cn.fujitsu.com>
- <20200326053900.GN14282@dhcp-12-102.nay.redhat.com>
-CC:     <fstests@vger.kernel.org>, <linux-xfs@vger.kernel.org>
-From:   Yang Xu <xuyang2018.jy@cn.fujitsu.com>
-Message-ID: <44cc5352-b9b6-e927-0146-321026bb11cd@cn.fujitsu.com>
-Date:   Thu, 26 Mar 2020 17:11:37 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
- Thunderbird/68.0
+        id S1727721AbgCZLIf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 Mar 2020 07:08:35 -0400
+Received: from us-smtp-delivery-74.mimecast.com ([63.128.21.74]:29408 "EHLO
+        us-smtp-delivery-74.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727688AbgCZLIf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Mar 2020 07:08:35 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1585220913;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=fTd3YBMRRnw7oz01SSnHPbSgxTYevgD/q7LKT3puFA8=;
+        b=E6MlLpdelGLwJM6ITRWotSeM4hziy3RJ1O5V21OYTWyyDMfUI6OC3f26AcIXTYMo/27iyr
+        QEi6vhxI7lDYbiv8VTrdwNIo7Lfr3TNOEVRlI2tH9Ta38waJ0v/EFtSyQkHy00rqe3Ir6P
+        EQ9lhmy322LNS8pT/sUMYGlgRftk2Qw=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-80-PBFmpLuzOgeqgkO866YCCA-1; Thu, 26 Mar 2020 07:08:31 -0400
+X-MC-Unique: PBFmpLuzOgeqgkO866YCCA-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7F2D61926DA1;
+        Thu, 26 Mar 2020 11:08:30 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 140E59CA3;
+        Thu, 26 Mar 2020 11:08:30 +0000 (UTC)
+Date:   Thu, 26 Mar 2020 07:08:28 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        Dave Chinner <dchinner@redhat.com>
+Subject: Re: [PATCH 1/8] xfs: don't try to write a start record into every
+ iclog
+Message-ID: <20200326110828.GA19262@bfoster>
+References: <20200324174459.770999-1-hch@lst.de>
+ <20200324174459.770999-2-hch@lst.de>
+ <20200325123314.GC10922@bfoster>
+ <20200325232500.GK10776@dread.disaster.area>
 MIME-Version: 1.0
-In-Reply-To: <20200326053900.GN14282@dhcp-12-102.nay.redhat.com>
-Content-Type: text/plain; charset="gbk"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.167.220.84]
-X-ClientProxiedBy: G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.200) To
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201)
-X-yoursite-MailScanner-ID: 262BF49DF125.AE683
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: xuyang2018.jy@cn.fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200325232500.GK10776@dread.disaster.area>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-on 2020/03/26 13:39, Zorro Lang wrote:
-> On Wed, Jun 19, 2019 at 03:39:23PM +0800, Yang Xu wrote:
->> Currently, on 5.2.0-rc4+ kernel, when I run xfs/191 with upstream
->> xfsprogs, I get the following errors because mkfs.xfs binary has
->> changed a lot.
->>
->> -------------------------
->> pass -n size=2b /dev/sda11
->> pass -d agsize=8192b /dev/sda11
->> pass -d agsize=65536s /dev/sda11
->> pass -d su=0,sw=64 /dev/sda11
->> pass -d su=4096s,sw=64 /dev/sda11
->> pass -d su=4096b,sw=64 /dev/sda11
->> pass -l su=10b /dev/sda11
->> fail -n log=15 /dev/sda11
->> fail -r size=65536,rtdev=$fsimg /dev/sda11
->> fail -r rtdev=$fsimg /dev/sda11
->> fail -i log=10 /dev/sda11
->> --------------------------
->>
->> "pass -d su=0,sw=64 /dev/sda11", expect fail, this behavior has been
->> fixed by commit 16adcb88(mkfs: more sunit/swidth sanity checking).
->>
->> "fail -n log=15 /dev/sda11" "fail -i log=10 /dev/sda11", expect pass,
->> this option has been removed since commit 2cf637c(mkfs: remove
->> logarithm based CLI option).
->>
->> "fail -r size=65536,rtdev=$fsimg /dev/sda11" "fail -r rtdev=$fsimg
->> /dev/sda11" works well if we disable reflink, fail if we enable
->> reflink. It fails because reflink was not supported in realtime
->> devices since commit bfa66ec.
->>
->> "b" or "s" suffix without specifying their size has been supported
->> since xfsprogs v4.15.0-rc1.
->>
->> I change the expected result for compatibility with current xfsprogs
->> and add rtdev test with reflink.
->>
->> Signed-off-by: Yang Xu <xuyang2018.jy@cn.fujitsu.com>
->> ---
+On Thu, Mar 26, 2020 at 10:25:00AM +1100, Dave Chinner wrote:
+> On Wed, Mar 25, 2020 at 08:33:14AM -0400, Brian Foster wrote:
+> > On Tue, Mar 24, 2020 at 06:44:52PM +0100, Christoph Hellwig wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > The xlog_write() function iterates over iclogs until it completes
+> > > writing all the log vectors passed in. The ticket tracks whether
+> > > a start record has been written or not, so only the first iclog gets
+> > > a start record. We only ever pass single use tickets to
+> > > xlog_write() so we only ever need to write a start record once per
+> > > xlog_write() call.
+> > > 
+> > > Hence we don't need to store whether we should write a start record
+> > > in the ticket as the callers provide all the information we need to
+> > > determine if a start record should be written. For the moment, we
+> > > have to ensure that we clear the XLOG_TIC_INITED appropriately so
+> > > the code in xfs_log_done() still works correctly for committing
+> > > transactions.
+> > > 
+> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > [hch: use an need_start_rec bool]
+> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > > ---
+> > >  fs/xfs/xfs_log.c | 63 ++++++++++++++++++++++++------------------------
+> > >  1 file changed, 32 insertions(+), 31 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> > > index 2a90a483c2d6..bf071552094a 100644
+> > > --- a/fs/xfs/xfs_log.c
+> > > +++ b/fs/xfs/xfs_log.c
+> > ...
+> > > @@ -2372,25 +2359,29 @@ xlog_write(
+> > >  	int			record_cnt = 0;
+> > >  	int			data_cnt = 0;
+> > >  	int			error = 0;
+> > > +	bool			need_start_rec = true;
+> > >  
+> > >  	*start_lsn = 0;
+> > >  
+> > > -	len = xlog_write_calc_vec_length(ticket, log_vector);
+> > >  
+> > >  	/*
+> > >  	 * Region headers and bytes are already accounted for.
+> > >  	 * We only need to take into account start records and
+> > >  	 * split regions in this function.
+> > >  	 */
+> > > -	if (ticket->t_flags & XLOG_TIC_INITED)
+> > > -		ticket->t_curr_res -= sizeof(xlog_op_header_t);
+> > > +	if (ticket->t_flags & XLOG_TIC_INITED) {
+> > > +		ticket->t_curr_res -= sizeof(struct xlog_op_header);
+> > > +		ticket->t_flags &= ~XLOG_TIC_INITED;
+> > > +	}
+> > >  
+> > >  	/*
+> > >  	 * Commit record headers need to be accounted for. These
+> > >  	 * come in as separate writes so are easy to detect.
+> > >  	 */
+> > > -	if (flags & (XLOG_COMMIT_TRANS | XLOG_UNMOUNT_TRANS))
+> > > -		ticket->t_curr_res -= sizeof(xlog_op_header_t);
+> > > +	if (flags & (XLOG_COMMIT_TRANS | XLOG_UNMOUNT_TRANS)) {
+> > > +		ticket->t_curr_res -= sizeof(struct xlog_op_header);
+> > > +		need_start_rec = false;
+> > > +	}
+> > 
+> > Hmm.. I was asking for a comment update in v1 for this logic change.
+> > Looking through it again, what happens here if
+> > xfs_log_write_unmount_record() clears the UNMOUNT_TRANS flag for that
+> > summary counter check? That looks like a potential behavior change wrt
+> > to the start record..
 > 
-> I'd suggest to use a loop device to replace SCRATCH_DEV, to avoid some failures
-> caused by different stripe alignment of SCRATCH_DEV (refer to xfs/513).  Or we
-> need to think about the stripe alignment in this case.
-I also met stripe size problem with log section in[1], but it failed on 
-mount step.  Can you give me a mkfs example and let me understand?
-
-[1]https://patchwork.kernel.org/patch/11393385/
-
-Best Regards
-Yang Xu
-> 
-> Thanks,
-> Zorro
-> 
->>   tests/xfs/191-input-validation | 39 ++++++++++++++++++++++------------
->>   1 file changed, 25 insertions(+), 14 deletions(-)
->>
->> diff --git a/tests/xfs/191-input-validation b/tests/xfs/191-input-validation
->> index b6658015..9f8de500 100755
->> --- a/tests/xfs/191-input-validation
->> +++ b/tests/xfs/191-input-validation
->> @@ -31,11 +31,10 @@ _cleanup()
->>   # Modify as appropriate.
->>   _supported_fs xfs
->>   _supported_os Linux
->> -_require_scratch
->> +_require_scratch_nocheck
->>   _require_xfs_mkfs_validation
->>   
->>   
->> -
->>   rm -f $seqres.full
->>   echo silence is golden
->>   
->> @@ -112,10 +111,11 @@ do_mkfs_fail -b size=2b $SCRATCH_DEV
->>   do_mkfs_fail -b size=nfi $SCRATCH_DEV
->>   do_mkfs_fail -b size=4096nfi $SCRATCH_DEV
->>   do_mkfs_fail -n size=2s $SCRATCH_DEV
->> -do_mkfs_fail -n size=2b $SCRATCH_DEV
->>   do_mkfs_fail -n size=nfi $SCRATCH_DEV
->>   do_mkfs_fail -n size=4096nfi $SCRATCH_DEV
->>   
->> +do_mkfs_pass -n size=2b $SCRATCH_DEV
->> +
->>   # bad label length
->>   do_mkfs_fail -L thisiswaytoolong $SCRATCH_DEV
->>   
->> @@ -129,6 +129,8 @@ do_mkfs_pass -d agsize=32M $SCRATCH_DEV
->>   do_mkfs_pass -d agsize=1g $SCRATCH_DEV
->>   do_mkfs_pass -d agsize=$((32 * 1024 * 1024)) $SCRATCH_DEV
->>   do_mkfs_pass -b size=4096 -d agsize=8192b $SCRATCH_DEV
->> +do_mkfs_pass -d agsize=8192b $SCRATCH_DEV
->> +do_mkfs_pass -d agsize=65536s $SCRATCH_DEV
->>   do_mkfs_pass -d sectsize=512,agsize=65536s $SCRATCH_DEV
->>   do_mkfs_pass -s size=512 -d agsize=65536s $SCRATCH_DEV
->>   do_mkfs_pass -d noalign $SCRATCH_DEV
->> @@ -136,7 +138,10 @@ do_mkfs_pass -d sunit=0,swidth=0 $SCRATCH_DEV
->>   do_mkfs_pass -d sunit=8,swidth=8 $SCRATCH_DEV
->>   do_mkfs_pass -d sunit=8,swidth=64 $SCRATCH_DEV
->>   do_mkfs_pass -d su=0,sw=0 $SCRATCH_DEV
->> +do_mkfs_pass -d su=0,sw=64 $SCRATCH_DEV
->>   do_mkfs_pass -d su=4096,sw=1 $SCRATCH_DEV
->> +do_mkfs_pass -d su=4096s,sw=64 $SCRATCH_DEV
->> +do_mkfs_pass -d su=4096b,sw=64 $SCRATCH_DEV
->>   do_mkfs_pass -d su=4k,sw=1 $SCRATCH_DEV
->>   do_mkfs_pass -d su=4K,sw=8 $SCRATCH_DEV
->>   do_mkfs_pass -b size=4096 -d su=1b,sw=8 $SCRATCH_DEV
->> @@ -147,8 +152,6 @@ do_mkfs_pass -s size=512 -d su=8s,sw=8 $SCRATCH_DEV
->>   do_mkfs_fail -d size=${fssize}b $SCRATCH_DEV
->>   do_mkfs_fail -d size=${fssize}s $SCRATCH_DEV
->>   do_mkfs_fail -d size=${fssize}yerk $SCRATCH_DEV
->> -do_mkfs_fail -d agsize=8192b $SCRATCH_DEV
->> -do_mkfs_fail -d agsize=65536s $SCRATCH_DEV
->>   do_mkfs_fail -d agsize=32Mbsdfsdo $SCRATCH_DEV
->>   do_mkfs_fail -d agsize=1GB $SCRATCH_DEV
->>   do_mkfs_fail -d agcount=1k $SCRATCH_DEV
->> @@ -159,13 +162,10 @@ do_mkfs_fail -d sunit=64,swidth=0 $SCRATCH_DEV
->>   do_mkfs_fail -d sunit=64,swidth=64,noalign $SCRATCH_DEV
->>   do_mkfs_fail -d sunit=64k,swidth=64 $SCRATCH_DEV
->>   do_mkfs_fail -d sunit=64,swidth=64m $SCRATCH_DEV
->> -do_mkfs_fail -d su=0,sw=64 $SCRATCH_DEV
->>   do_mkfs_fail -d su=4096,sw=0 $SCRATCH_DEV
->>   do_mkfs_fail -d su=4097,sw=1 $SCRATCH_DEV
->>   do_mkfs_fail -d su=4096,sw=64,noalign $SCRATCH_DEV
->>   do_mkfs_fail -d su=4096,sw=64s $SCRATCH_DEV
->> -do_mkfs_fail -d su=4096s,sw=64 $SCRATCH_DEV
->> -do_mkfs_fail -d su=4096b,sw=64 $SCRATCH_DEV
->>   do_mkfs_fail -d su=4096garabge,sw=64 $SCRATCH_DEV
->>   do_mkfs_fail -d su=4096,sw=64,sunit=64,swidth=64 $SCRATCH_DEV
->>   do_mkfs_fail -d sectsize=10,agsize=65536s $SCRATCH_DEV
->> @@ -206,6 +206,7 @@ do_mkfs_pass -l sunit=64 $SCRATCH_DEV
->>   do_mkfs_pass -l sunit=64 -d sunit=8,swidth=8 $SCRATCH_DEV
->>   do_mkfs_pass -l sunit=8 $SCRATCH_DEV
->>   do_mkfs_pass -l su=$((4096*10)) $SCRATCH_DEV
->> +do_mkfs_pass -l su=10b $SCRATCH_DEV
->>   do_mkfs_pass -b size=4096 -l su=10b $SCRATCH_DEV
->>   do_mkfs_pass -l sectsize=512,su=$((4096*10)) $SCRATCH_DEV
->>   do_mkfs_pass -l internal $SCRATCH_DEV
->> @@ -228,7 +229,6 @@ do_mkfs_fail -l agnum=32 $SCRATCH_DEV
->>   do_mkfs_fail -l sunit=0  $SCRATCH_DEV
->>   do_mkfs_fail -l sunit=63 $SCRATCH_DEV
->>   do_mkfs_fail -l su=1 $SCRATCH_DEV
->> -do_mkfs_fail -l su=10b $SCRATCH_DEV
->>   do_mkfs_fail -l su=10s $SCRATCH_DEV
->>   do_mkfs_fail -l su=$((4096*10+1)) $SCRATCH_DEV
->>   do_mkfs_fail -l sectsize=10,agsize=65536s $SCRATCH_DEV
->> @@ -246,7 +246,6 @@ do_mkfs_fail -l version=0  $SCRATCH_DEV
->>   
->>   # naming section, should pass
->>   do_mkfs_pass -n size=65536 $SCRATCH_DEV
->> -do_mkfs_pass -n log=15 $SCRATCH_DEV
->>   do_mkfs_pass -n version=2 $SCRATCH_DEV
->>   do_mkfs_pass -n version=ci $SCRATCH_DEV
->>   do_mkfs_pass -n ftype=0 -m crc=0 $SCRATCH_DEV
->> @@ -257,6 +256,7 @@ do_mkfs_fail -n version=1 $SCRATCH_DEV
->>   do_mkfs_fail -n version=cid $SCRATCH_DEV
->>   do_mkfs_fail -n ftype=4 $SCRATCH_DEV
->>   do_mkfs_fail -n ftype=0 $SCRATCH_DEV
->> +do_mkfs_fail -n log=15 $SCRATCH_DEV
->>   
->>   reset_fsimg
->>   
->> @@ -273,14 +273,24 @@ do_mkfs_fail -m crc=0,finobt=1 $SCRATCH_DEV
->>   do_mkfs_fail -m crc=1 -n ftype=0 $SCRATCH_DEV
->>   
->>   
->> +# realtime section, results depend on reflink
->> +_scratch_mkfs_xfs_supported -m reflink=0 >/dev/null 2>&1
->> +if [ $? -eq 0 ]; then
->> +	do_mkfs_pass -m reflink=0 -r rtdev=$fsimg $SCRATCH_DEV
->> +	do_mkfs_pass -m reflink=0 -r size=65536,rtdev=$fsimg $SCRATCH_DEV
->> +	do_mkfs_fail -m reflink=1 -r rtdev=$fsimg $SCRATCH_DEV
->> +	do_mkfs_fail -m reflink=1 -r size=65536,rtdev=$fsimg $SCRATCH_DEV
->> +else
->> +	do_mkfs_pass -r rtdev=$fsimg $SCRATCH_DEV
->> +	do_mkfs_pass -r size=65536,rtdev=$fsimg $SCRATCH_DEV
->> +fi
->> +
->> +
->>   # realtime section, should pass
->> -do_mkfs_pass -r rtdev=$fsimg $SCRATCH_DEV
->>   do_mkfs_pass -r extsize=4k $SCRATCH_DEV
->>   do_mkfs_pass -r extsize=1G $SCRATCH_DEV
->> -do_mkfs_pass -r size=65536,rtdev=$fsimg $SCRATCH_DEV
->>   do_mkfs_pass -r noalign $SCRATCH_DEV
->>   
->> -
->>   # realtime section, should fail
->>   do_mkfs_fail -r rtdev=$SCRATCH_DEV
->>   do_mkfs_fail -r extsize=256 $SCRATCH_DEV
->> @@ -293,7 +303,6 @@ do_mkfs_fail -r size=65536 $SCRATCH_DEV
->>   do_mkfs_pass -i size=256 -m crc=0 $SCRATCH_DEV
->>   do_mkfs_pass -i size=512 $SCRATCH_DEV
->>   do_mkfs_pass -i size=2048 $SCRATCH_DEV
->> -do_mkfs_pass -i log=10 $SCRATCH_DEV
->>   do_mkfs_pass -i perblock=2 $SCRATCH_DEV
->>   do_mkfs_pass -i maxpct=10 $SCRATCH_DEV
->>   do_mkfs_pass -i maxpct=100 $SCRATCH_DEV
->> @@ -317,6 +326,8 @@ do_mkfs_fail -i align=2 $SCRATCH_DEV
->>   do_mkfs_fail -i sparse -m crc=0 $SCRATCH_DEV
->>   do_mkfs_fail -i align=0 -m crc=1 $SCRATCH_DEV
->>   do_mkfs_fail -i attr=1 -m crc=1 $SCRATCH_DEV
->> +do_mkfs_fail -i log=10 $SCRATCH_DEV
->> +
->>   
->>   status=0
->>   exit
->> -- 
->> 2.18.1
->>
->>
->>
-> 
-> 
+> xfs_log_write_unmount_record() clears the XLOG_TIC_INITED
+> flag before calling xlog_write(), so the current code never writes
+> out a start record for the unmount record. i.e. the unmount
+> record is a single region with the unmount log item in it, and
+> AFAICT this code does not change the behaviour of the unmount record
+> write at all.
 > 
 
+I'm referring to the UNMOUNT_TRANS flag, not t_flags. With this patch,
+we actually would write a start record in some cases because
+need_start_rec is toggled based on the flags parameter and the summary
+counter check zeroes it.
+
+> FWIW, that error injection code looks dodgy - it turns the unmount
+> record into an XFS_LOG transaction type with an invalid log item
+> type (0). That probably should be flagged as corruption, not be
+> silently ignored by recovery. IOWs, I think the error injection code
+> was wrong to begin with - if we want to ensure the log is dirty at
+> unmount, we should just skip writing the unmount record altogether.
+> 
+
+That may be true... TBH I wasn't totally clear on what that logic was
+for (it isn't purely error injection). From the commit (f467cad95f5e3)
+log, the intent appears to be to "skip writing the unmount record," but
+that doesn't quite describe the behavior. Darrick might want to
+comment..? If we do revisit this, I'm mainly curious on whether there's
+a change in recovery behavior between having this specially crafted
+record vs. just writing nothing. For example, does recovery still set
+the head/tail based on this record even though we don't mark the log
+clean? If so, do we care..?
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
 
