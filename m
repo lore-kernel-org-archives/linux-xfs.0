@@ -2,75 +2,55 @@ Return-Path: <SRS0=eBbo=5M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D946FC43331
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 Mar 2020 09:06:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09A1FC43331
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 Mar 2020 09:08:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AD30220716
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 Mar 2020 09:06:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD69020714
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 Mar 2020 09:08:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KjgutwPz"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tfsfhAEN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726063AbgC0JGM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 Mar 2020 05:06:12 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:42530 "EHLO
+        id S1726133AbgC0JIB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 Mar 2020 05:08:01 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:42576 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725956AbgC0JGL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Mar 2020 05:06:11 -0400
+        with ESMTP id S1726027AbgC0JIB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Mar 2020 05:08:01 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=/3OpTZWCW7XGg84hd40RuOWZOGqD7kWCy24z/gV4Q60=; b=KjgutwPzhwVkyC0CaTCJpktTJM
-        3BmcYiZbMcZ1VAuYfcA3994uD4qDw8j8mbr4UbNVKRFbewUU+AkcK9hoqmPp6Q2POlUWOIG+74TTM
-        5dlPO5jR2Jj5j6R+xLBoVMtp8lSMP5H1hRcOmRALcRq2ARLc74qVzWjO2yyggeJpcYoTi6en4Bpkh
-        TUsFvXwBPKwZKDvXHMawyC6cXRJ7jzydkwsG7w1ZiAfyXavZxCmr3nchmcKbLITBTwsFx6M0DhYIP
-        klX6/TBRvIMqsZ0xCO2G32N2lJsVZ8PPkf7YvUldeyBLrpLqyrrlK2jnadKH53CFblc7yZ5Op02Mq
-        MnPz33nQ==;
+        bh=IN6FqGZOnc4PkJFZYpthnGMtnq9LVIGgFSrcbY5sP2Q=; b=tfsfhAENiC5tfp3Op3k7m2jwMJ
+        ZHpascFWW8tAxTQwJ0IW/q8r2np6weKseYwTzdLVFBS1m0lddJYyFm2/FO3DdjdN3dYb8De/8ixQd
+        bLGsCUVjZjPHUuldo60hH0aETopf8cD/9yfkQsSu3t+EMPHT+sXxdHi+CLpgPZwaeiZWUKrC+eg0z
+        D/xbzcHaxKDLYL1BhwdZuJhNEMeGPkE7kXiDx3DGrF8a2HWNVKPuIqtjbwRrJmZFLSBwLz1htEN5v
+        NmpX0PYjV/hostglwIwDh81ymkjGeETBmTQgHkBlZ5abNxf0le5pkHBu9S6ymwpk2d2EiYQg+EQTt
+        u1rl7iww==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jHkwL-0004zQ-Al; Fri, 27 Mar 2020 09:06:09 +0000
-Date:   Fri, 27 Mar 2020 02:06:09 -0700
+        id 1jHky8-0005Fg-UZ; Fri, 27 Mar 2020 09:08:00 +0000
+Date:   Fri, 27 Mar 2020 02:08:00 -0700
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Brian Foster <bfoster@redhat.com>,
-        xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: don't write a corrupt unmount record to force
- summary counter recalc
-Message-ID: <20200327090609.GB14052@infradead.org>
-References: <20200327011417.GF29339@magnolia>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: don't flush the entire filesystem when a buffered
+ write runs out of space
+Message-ID: <20200327090800.GC14052@infradead.org>
+References: <20200327014558.GG29339@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200327011417.GF29339@magnolia>
+In-Reply-To: <20200327014558.GG29339@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 26, 2020 at 06:14:17PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> In commit f467cad95f5e3, I added the ability to force a recalculation of
-> the filesystem summary counters if they seemed incorrect.  This was done
-> (not entirely correctly) by tweaking the log code to write an unmount
-> record without the UMOUNT_TRANS flag set.  At next mount, the log
-> recovery code will fail to find the unmount record and go into recovery,
-> which triggers the recalculation.
-> 
-> What actually gets written to the log is what ought to be an unmount
-> record, but without any flags set to indicate what kind of record it
-> actually is.  This worked to trigger the recalculation, but we shouldn't
-> write bogus log records when we could simply write nothing.
-> 
-> Fixes: f467cad95f5e3 ("xfs: force summary counter recalc at next mount")
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Looks good (assuming the "xfs: refactor unmount record writing" is
-applied):
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+FYI, independ of the discussion what to flush, using
+filemap_fdatawait_keep_errors is a very obvious and important bug fix.
+Can you split that out and apply it with a Fixes tag so that it gets
+backported ASAP?
