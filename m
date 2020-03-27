@@ -2,52 +2,60 @@ Return-Path: <SRS0=eBbo=5M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5364BC43331
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 Mar 2020 16:46:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8FB2C43331
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 Mar 2020 16:52:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1AF8420857
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 Mar 2020 16:46:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 81BC520A8B
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 Mar 2020 16:52:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YXTM5DuB"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="0gs3Y84A"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727322AbgC0Qqu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 Mar 2020 12:46:50 -0400
-Received: from us-smtp-delivery-74.mimecast.com ([63.128.21.74]:59695 "EHLO
-        us-smtp-delivery-74.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727287AbgC0Qqu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Mar 2020 12:46:50 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1585327609;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=/FsKA/JbkUr4S25CqfVQlbXbJACon39WTLHQ7OeI8r8=;
-        b=YXTM5DuBj42D45b/WMq3IupXokiWm0L/eTwVNdNMsRvZXHtRq/l9QMA00GAecweKF/CEG6
-        lMEsoSt5VC8YqubjGfZCwrzhRfLbzc8oAu3zPho2LLfEOT4E3qmwF6xf6pwU40v8pr0Ill
-        IlEEBXVdpWeiKiO2RTcN6e1FM0S2zOM=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-376-TzgLqo2rObK0g48IAmOLBA-1; Fri, 27 Mar 2020 12:46:47 -0400
-X-MC-Unique: TzgLqo2rObK0g48IAmOLBA-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 945E7800D4E;
-        Fri, 27 Mar 2020 16:46:46 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 4DE495DA75;
-        Fri, 27 Mar 2020 16:46:46 +0000 (UTC)
-Date:   Fri, 27 Mar 2020 12:46:44 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+        id S1727740AbgC0Qww (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 Mar 2020 12:52:52 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:55008 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726900AbgC0Qwv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Mar 2020 12:52:51 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02RGdPa7064088;
+        Fri, 27 Mar 2020 16:52:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=tCfp/7ZfnbJGbLDqUhOWMJHGS35hFH03IQ58KePQCZ0=;
+ b=0gs3Y84AIISUmi9TiJOYRz/qelf0R9eXEATHHBCeTrkH1QD2Lbe31yLZ03mDYPZSVWJk
+ Ppec+TCQXp6UYyJAYyS6UyiuxYftx2t0I19pshoy5HC+J8CKpsxPL53G43FR6j9lcr2g
+ wq1S9C/e/h98oHy1/hGfLXHotU3EbVBlvpi1q9JljztlFqs8vV7XovRj3ZoO+6YCvpoW
+ VgNqbPtjdGiULmxsC8IriyJCsMHUDu/yuBrbTyD33CpGJSL/qqJVWqpG+t0d18IygLhh
+ t2ORb3ef2He2gXthWO9GmtcdJ9OyQV8I73b8IK1zEs0JPBQl0lNpfBbmi7LSxcwtgvRF PA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 301459c7hc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 27 Mar 2020 16:52:48 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02RGoe4F135367;
+        Fri, 27 Mar 2020 16:50:47 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 3006rakwmx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 27 Mar 2020 16:50:47 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 02RGokDp022350;
+        Fri, 27 Mar 2020 16:50:46 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 27 Mar 2020 09:50:46 -0700
+Date:   Fri, 27 Mar 2020 09:50:45 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
 Subject: Re: [PATCH 1/2] xfs: trylock underlying buffer on dquot flush
-Message-ID: <20200327164644.GC29156@bfoster>
+Message-ID: <20200327165045.GQ29351@magnolia>
 References: <20200326131703.23246-1-bfoster@redhat.com>
  <20200326131703.23246-2-bfoster@redhat.com>
  <20200327154527.GJ29339@magnolia>
@@ -56,7 +64,18 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20200327164440.GB29156@bfoster>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9573 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 adultscore=0 suspectscore=0
+ phishscore=0 spamscore=0 mlxscore=0 mlxlogscore=999 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2003270145
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9573 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 phishscore=0
+ priorityscore=1501 bulkscore=0 lowpriorityscore=0 mlxlogscore=999
+ adultscore=0 suspectscore=0 impostorscore=0 mlxscore=0 spamscore=0
+ clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2003270145
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -93,13 +112,13 @@ On Fri, Mar 27, 2020 at 12:44:40PM -0400, Brian Foster wrote:
 > +			goto out_miss_busy;
 > +		} else if (error)
 >  			goto out_unlock_dirty;
-
-Then again, is it safe to skip from here once we've cycled the lru_lock?
-
-Brian
-
 >  
 >  		xfs_buf_delwri_queue(bp, &isol->buffers);
+
+Yeah, looks good to me.
+
+--D
+
 > 
 > Brian
 > 
@@ -202,4 +221,3 @@ Brian
 > > > 
 > > 
 > 
-
