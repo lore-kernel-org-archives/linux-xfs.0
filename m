@@ -2,190 +2,106 @@ Return-Path: <SRS0=eBbo=5M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD520C43331
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 Mar 2020 15:47:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 177C4C43331
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 Mar 2020 16:44:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8B76620748
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 Mar 2020 15:47:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D9BD520675
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 Mar 2020 16:44:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Gr1pXUHO"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KUxS8Hzw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726758AbgC0Prh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 Mar 2020 11:47:37 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:55072 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726540AbgC0Prh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Mar 2020 11:47:37 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02RFhURw037428;
-        Fri, 27 Mar 2020 15:47:32 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=KhkLnNIrE8GElbr5ZjY9aLkJq8d1W5WeWK1nryy/KTI=;
- b=Gr1pXUHOPdmDeCVnLWnUO1FH5r4vCbF2HGvhfw+LXfL70e1pnjPgbErunKA81zb7Nc++
- 32G1exUYAgmo7M1Mx0XJgl5oP7eWJfQzpl99b7nQkz+5r7S+g59PfyQzlkrLcX0w7qOj
- s4BebK5Nhs1SwTaZHMWluaE/otVmDFNYfGPMh5UFyhc/SoYZJN+Bn2rbsiSy+zroLnk+
- ZMDUTiKrldlGuEcoDA0tuTp7EtjpzDePoKVucTWVqrWq0T9jq7Jo5YBryOsSmvKxo9On
- QfFVz6/uNcL5sBykKCXyAayW2Qq5KkOVpxN4irrA07zNFOzuGDUq5P1xDAgVTk8IxeWm jg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 301459bvnn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 27 Mar 2020 15:47:32 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02RFfxYd175780;
-        Fri, 27 Mar 2020 15:45:31 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 3006rahf2e-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 27 Mar 2020 15:45:31 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 02RFjU7a029852;
-        Fri, 27 Mar 2020 15:45:30 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 27 Mar 2020 08:45:30 -0700
-Date:   Fri, 27 Mar 2020 08:45:28 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
+        id S1727770AbgC0QoT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 Mar 2020 12:44:19 -0400
+Received: from us-smtp-delivery-74.mimecast.com ([216.205.24.74]:51894 "EHLO
+        us-smtp-delivery-74.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727769AbgC0QoT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Mar 2020 12:44:19 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1585327457;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=8VplgkIHvoRqKTHOoYINfccKFd69hXV+8dud2H2LdgM=;
+        b=KUxS8HzwDGmSOe1/bZA8fpQ2/yRE3GboYVBjp8FwNM+LZLSbZcWwLZwb+OWYRYzCxeFG3I
+        O1c0fSfJbGAu71JdfV5W20PHMWX/1tJrlvX84joBZ6DzX/EFrJcCGpeWwOLBhxg1YxNGTw
+        zUUbO0rcZEKNdwN8vzlLu6eANHoM3ZU=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-239-VUwkZHJpNNC4akkyWbbVkQ-1; Fri, 27 Mar 2020 12:44:16 -0400
+X-MC-Unique: VUwkZHJpNNC4akkyWbbVkQ-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 11864800D4E;
+        Fri, 27 Mar 2020 16:44:15 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 946E75C1C3;
+        Fri, 27 Mar 2020 16:44:14 +0000 (UTC)
+Date:   Fri, 27 Mar 2020 12:44:12 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: trylock underlying buffer on dquot flush
-Message-ID: <20200327154527.GJ29339@magnolia>
+Subject: Re: [PATCH 0/2] xfs: a couple AIL pushing trylock fixes
+Message-ID: <20200327164412.GA29156@bfoster>
 References: <20200326131703.23246-1-bfoster@redhat.com>
- <20200326131703.23246-2-bfoster@redhat.com>
+ <20200327153205.GH29339@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200326131703.23246-2-bfoster@redhat.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9573 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 adultscore=0 suspectscore=0
- phishscore=0 spamscore=0 mlxscore=0 mlxlogscore=999 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2003270142
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9573 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 phishscore=0
- priorityscore=1501 bulkscore=0 lowpriorityscore=0 mlxlogscore=999
- adultscore=0 suspectscore=0 impostorscore=0 mlxscore=0 spamscore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2003270142
+In-Reply-To: <20200327153205.GH29339@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 26, 2020 at 09:17:02AM -0400, Brian Foster wrote:
-> A dquot flush currently blocks on the buffer lock for the underlying
-> dquot buffer. In turn, this causes xfsaild to block rather than
-> continue processing other items in the meantime. Update
-> xfs_qm_dqflush() to trylock the buffer, similar to how inode buffers
-> are handled, and return -EAGAIN if the lock fails. Fix up any
-> callers that don't currently handle the error properly.
+On Fri, Mar 27, 2020 at 08:32:05AM -0700, Darrick J. Wong wrote:
+> On Thu, Mar 26, 2020 at 09:17:01AM -0400, Brian Foster wrote:
+> > Hi all,
+> > 
+> > Here's a couple more small fixes that fell out of the auto relog work.
+> > The dquot issue is actually a deadlock vector if we randomly relog dquot
+> > buffers (which is only done for test purposes), but I figure we should
+> > handle dquot buffers similar to how inode buffers are handled. Thoughts,
+> > reviews, flames appreciated.
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-
-Is xfs_qm_dquot_isolate returning LRU_RETRY an acceptable resolution (as
-opposed to, say, LRU_SKIP) for xfs_qm_dqflush returning -EAGAIN?
-
---D
-
-> ---
->  fs/xfs/xfs_dquot.c      |  6 +++---
->  fs/xfs/xfs_dquot_item.c |  3 ++-
->  fs/xfs/xfs_qm.c         | 14 +++++++++-----
->  3 files changed, 14 insertions(+), 9 deletions(-)
+> Oops, I missed this one, will review now...
 > 
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index 711376ca269f..af2c8e5ceea0 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -1105,8 +1105,8 @@ xfs_qm_dqflush(
->  	 * Get the buffer containing the on-disk dquot
->  	 */
->  	error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp, dqp->q_blkno,
-> -				   mp->m_quotainfo->qi_dqchunklen, 0, &bp,
-> -				   &xfs_dquot_buf_ops);
-> +				   mp->m_quotainfo->qi_dqchunklen, XBF_TRYLOCK,
-> +				   &bp, &xfs_dquot_buf_ops);
->  	if (error)
->  		goto out_unlock;
->  
-> @@ -1177,7 +1177,7 @@ xfs_qm_dqflush(
->  
->  out_unlock:
->  	xfs_dqfunlock(dqp);
-> -	return -EIO;
-> +	return error;
->  }
->  
->  /*
-> diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
-> index cf65e2e43c6e..baad1748d0d1 100644
-> --- a/fs/xfs/xfs_dquot_item.c
-> +++ b/fs/xfs/xfs_dquot_item.c
-> @@ -189,7 +189,8 @@ xfs_qm_dquot_logitem_push(
->  		if (!xfs_buf_delwri_queue(bp, buffer_list))
->  			rval = XFS_ITEM_FLUSHING;
->  		xfs_buf_relse(bp);
-> -	}
-> +	} else if (error == -EAGAIN)
-> +		rval = XFS_ITEM_LOCKED;
->  
->  	spin_lock(&lip->li_ailp->ail_lock);
->  out_unlock:
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index de1d2c606c14..68c778d25c48 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -121,12 +121,11 @@ xfs_qm_dqpurge(
->  {
->  	struct xfs_mount	*mp = dqp->q_mount;
->  	struct xfs_quotainfo	*qi = mp->m_quotainfo;
-> +	int			error = -EAGAIN;
->  
->  	xfs_dqlock(dqp);
-> -	if ((dqp->dq_flags & XFS_DQ_FREEING) || dqp->q_nrefs != 0) {
-> -		xfs_dqunlock(dqp);
-> -		return -EAGAIN;
-> -	}
-> +	if ((dqp->dq_flags & XFS_DQ_FREEING) || dqp->q_nrefs != 0)
-> +		goto out_unlock;
->  
->  	dqp->dq_flags |= XFS_DQ_FREEING;
->  
-> @@ -139,7 +138,6 @@ xfs_qm_dqpurge(
->  	 */
->  	if (XFS_DQ_IS_DIRTY(dqp)) {
->  		struct xfs_buf	*bp = NULL;
-> -		int		error;
->  
->  		/*
->  		 * We don't care about getting disk errors here. We need
-> @@ -149,6 +147,8 @@ xfs_qm_dqpurge(
->  		if (!error) {
->  			error = xfs_bwrite(bp);
->  			xfs_buf_relse(bp);
-> +		} else if (error == -EAGAIN) {
-> +			goto out_unlock;
->  		}
->  		xfs_dqflock(dqp);
->  	}
-> @@ -174,6 +174,10 @@ xfs_qm_dqpurge(
->  
->  	xfs_qm_dqdestroy(dqp);
->  	return 0;
-> +
-> +out_unlock:
-> +	xfs_dqunlock(dqp);
-> +	return error;
->  }
->  
->  /*
-> -- 
-> 2.21.1
+> Do you think there needs to be an explicit testcase for this?  Or are
+> the current generic/{388,475} good enough?  I'm pretty sure I've seen
+> this exact deadlock on them every now and again, so we're probably
+> covered.
 > 
+
+I'm actually not aware of a related upstream deadlock. That doesn't mean
+there isn't one of course, but the problem I hit was related to the
+random buffer relogging stuff in the auto relog series. I split these
+out because xfsaild is intended to be mostly async, so they seemed like a
+generic fixups..
+
+Brian
+
+> --D
+> 
+> 
+> > Brian
+> > 
+> > Brian Foster (2):
+> >   xfs: trylock underlying buffer on dquot flush
+> >   xfs: return locked status of inode buffer on xfsaild push
+> > 
+> >  fs/xfs/xfs_dquot.c      |  6 +++---
+> >  fs/xfs/xfs_dquot_item.c |  3 ++-
+> >  fs/xfs/xfs_inode_item.c |  3 ++-
+> >  fs/xfs/xfs_qm.c         | 14 +++++++++-----
+> >  4 files changed, 16 insertions(+), 10 deletions(-)
+> > 
+> > -- 
+> > 2.21.1
+> > 
+> 
+
