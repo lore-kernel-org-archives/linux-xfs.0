@@ -2,132 +2,64 @@ Return-Path: <SRS0=eBbo=5M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54CD3C43331
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 Mar 2020 12:31:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B29DC43331
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 Mar 2020 12:59:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 23B062083E
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 Mar 2020 12:31:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F132E2082D
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 Mar 2020 12:59:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="RVo+rN/6"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="RpHs2d81"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727125AbgC0Mby (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 Mar 2020 08:31:54 -0400
-Received: from us-smtp-delivery-74.mimecast.com ([216.205.24.74]:47974 "EHLO
-        us-smtp-delivery-74.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726515AbgC0Mby (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Mar 2020 08:31:54 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1585312313;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=tMwY5OZG7zkXktMIEf9BFpYN8abKS+zV9GcC/UTYALI=;
-        b=RVo+rN/6P2h6oe3LFMcR9r7UWfDdzYhJRkvVoOQeRBR3/UcKB9qB0sHrrSOvGwHBLR1nrI
-        oPMz/hhVe4KFlu2s5rXU47ujEfcVmmAyv1KVWYPVwjlhyNiPffH6/HD4lm0Pf/JQAPLmEB
-        03WsqFQxb3ZBqZfReZFIoL/gp50RL+g=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-5-Yw-msq4gOA6LTN-DdRA9rA-1; Fri, 27 Mar 2020 08:31:51 -0400
-X-MC-Unique: Yw-msq4gOA6LTN-DdRA9rA-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 80EE71937FE0;
-        Fri, 27 Mar 2020 12:31:50 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 097E85DA75;
-        Fri, 27 Mar 2020 12:31:49 +0000 (UTC)
-Date:   Fri, 27 Mar 2020 08:31:48 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: don't write a corrupt unmount record to force
- summary counter recalc
-Message-ID: <20200327123148.GA27785@bfoster>
-References: <20200327011417.GF29339@magnolia>
+        id S1727336AbgC0M7x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 Mar 2020 08:59:53 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:44750 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726742AbgC0M7x (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Mar 2020 08:59:53 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=Aee7hvwktIHriEt5BjH9V4/wOYIADHhGe/p3kn49Kb0=; b=RpHs2d81ErNAk+JvsfiFFC/UcQ
+        iMiD+P5NblsTBpgPoShjCveRrrj4g072zeDygdBJFRE9GeX1MzWy+YKw6jNDruVPBQ4pmSYVQL0BO
+        zy0yyTfK0nS4vRZNm9vCmP/XluGMxNGLQbbG7EBm2C2vjbg9WEbuwdcqXgainLpB+Vob6inwcrucd
+        Memz2jElL0Zx9THZQBT6KzVhdDu0693U0NLroKUSbCjW1KfNPNp8UaiIW/pq795p/TK78+PBUtb1g
+        sq60KspFWrz+mM4cRXZr9Z6qlRIEqImZqJN5hwwSz+NEr+ahoCdA+ZZm5KD5V/TDAoZEibDHqLOrL
+        xKJl/LgQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jHoaX-0005eL-Ad; Fri, 27 Mar 2020 12:59:53 +0000
+Date:   Fri, 27 Mar 2020 05:59:53 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: trylock underlying buffer on dquot flush
+Message-ID: <20200327125953.GA20273@infradead.org>
+References: <20200326131703.23246-1-bfoster@redhat.com>
+ <20200326131703.23246-2-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200327011417.GF29339@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+In-Reply-To: <20200326131703.23246-2-bfoster@redhat.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 26, 2020 at 06:14:17PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> In commit f467cad95f5e3, I added the ability to force a recalculation of
-> the filesystem summary counters if they seemed incorrect.  This was done
-> (not entirely correctly) by tweaking the log code to write an unmount
-> record without the UMOUNT_TRANS flag set.  At next mount, the log
-> recovery code will fail to find the unmount record and go into recovery,
-> which triggers the recalculation.
-> 
-> What actually gets written to the log is what ought to be an unmount
-> record, but without any flags set to indicate what kind of record it
-> actually is.  This worked to trigger the recalculation, but we shouldn't
-> write bogus log records when we could simply write nothing.
-> 
-> Fixes: f467cad95f5e3 ("xfs: force summary counter recalc at next mount")
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+On Thu, Mar 26, 2020 at 09:17:02AM -0400, Brian Foster wrote:
+> A dquot flush currently blocks on the buffer lock for the underlying
+> dquot buffer. In turn, this causes xfsaild to block rather than
+> continue processing other items in the meantime. Update
+> xfs_qm_dqflush() to trylock the buffer, similar to how inode buffers
+> are handled, and return -EAGAIN if the lock fails. Fix up any
+> callers that don't currently handle the error properly.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Looks good, seems like the two remaining xfs_qm_dqflush have
+sensible -EAGAIN handling.
 
->  fs/xfs/xfs_log.c |   27 ++++++++++++++-------------
->  1 file changed, 14 insertions(+), 13 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 46108ca20d85..00fda2e8e738 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -835,19 +835,6 @@ xlog_unmount_write(
->  	if (error)
->  		goto out_err;
->  
-> -	/*
-> -	 * If we think the summary counters are bad, clear the unmount header
-> -	 * flag in the unmount record so that the summary counters will be
-> -	 * recalculated during log recovery at next mount.  Refer to
-> -	 * xlog_check_unmount_rec for more details.
-> -	 */
-> -	if (XFS_TEST_ERROR(xfs_fs_has_sickness(mp, XFS_SICK_FS_COUNTERS), mp,
-> -			XFS_ERRTAG_FORCE_SUMMARY_RECALC)) {
-> -		xfs_alert(mp, "%s: will fix summary counters at next mount",
-> -				__func__);
-> -		flags &= ~XLOG_UNMOUNT_TRANS;
-> -	}
-> -
->  	error = xlog_write_unmount_record(log, tic, &lsn, flags);
->  	/*
->  	 * At this point, we're umounting anyway, so there's no point in
-> @@ -913,6 +900,20 @@ xfs_log_unmount_write(
->  
->  	if (XLOG_FORCED_SHUTDOWN(log))
->  		return;
-> +
-> +	/*
-> +	 * If we think the summary counters are bad, avoid writing the unmount
-> +	 * record to force log recovery at next mount, after which the summary
-> +	 * counters will be recalculated.  Refer to xlog_check_unmount_rec for
-> +	 * more details.
-> +	 */
-> +	if (XFS_TEST_ERROR(xfs_fs_has_sickness(mp, XFS_SICK_FS_COUNTERS), mp,
-> +			XFS_ERRTAG_FORCE_SUMMARY_RECALC)) {
-> +		xfs_alert(mp, "%s: will fix summary counters at next mount",
-> +				__func__);
-> +		return;
-> +	}
-> +
->  	xfs_log_unmount_verify_iclog(log);
->  	xlog_unmount_write(log);
->  }
-> 
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
