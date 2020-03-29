@@ -2,92 +2,137 @@ Return-Path: <SRS0=WYbU=5O=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEE92C43331
-	for <linux-xfs@archiver.kernel.org>; Sun, 29 Mar 2020 11:03:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6082CC43331
+	for <linux-xfs@archiver.kernel.org>; Sun, 29 Mar 2020 16:45:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A019B20675
-	for <linux-xfs@archiver.kernel.org>; Sun, 29 Mar 2020 11:03:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2F5312073B
+	for <linux-xfs@archiver.kernel.org>; Sun, 29 Mar 2020 16:45:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oq70FMGZ"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MzbemgCb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727951AbgC2LDp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 29 Mar 2020 07:03:45 -0400
-Received: from mail-pj1-f65.google.com ([209.85.216.65]:35018 "EHLO
-        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727938AbgC2LDo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 29 Mar 2020 07:03:44 -0400
-Received: by mail-pj1-f65.google.com with SMTP id g9so6014624pjp.0
-        for <linux-xfs@vger.kernel.org>; Sun, 29 Mar 2020 04:03:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=v093eOw0Z1ABTduePqCbnnlKZVbj+DV/zfZdoot3V2c=;
-        b=oq70FMGZ92Itwm9UoJYvCEev/tXC9SFtkka69bq6lEOaXJr7/1RSTZNjxPJi+JCdcb
-         gyywsYEvG7t7Ce3QCU4r2caLQPRy7GrZT2HDBFuEm8aW761JAUGVGojpOcjtjMVmx1HM
-         km6TREDA9jFGiD1zyaw0I0yBFokZP3hyW75mYKHaPGl+571jrGZutz+hb2/uE8uV/QRx
-         0Bx3bqenjY+HxxoejeOWHp5w5qlj3v2Lj+QLlureuDJm7yk2zs5IXHasYQjPvL/7m39h
-         uz/2IVVPMCXqdAkoS7ntecJFHoQ8wvtLVI8TQPGrsudfQkKLPGXTDoXQQKznnT0wlkzu
-         S9qw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=v093eOw0Z1ABTduePqCbnnlKZVbj+DV/zfZdoot3V2c=;
-        b=Yeam0yU/DwkF9ivRcdY2al1x63rT0KMrcnj2dGTKhg04ZFUC4T//63RN88pR/B3MZM
-         WxFzh0mSsiAmLBaB+CcTyazNKOhkHZUD5Nl0a4k3UHfy5ODd0BMVfY/gyQ/fcq54BaLP
-         o8YQdMcRUly2yPHnoox7X2Khdu44nDnvqKly8xrDM9V9tR/qIkO5FjSTVOoNbWwpyTXX
-         nj2m1dbJCUIV37N1gU+ZGoy53b/mpUPERPBUj9FooWzdgAKS/pouGFtPUczjUSU686dR
-         o03+m9SXsZbBKTnrhAF+JAFU9RHZoAtBPLIWO6NZRrojW8haWu5rVA3IpNis/OhJNLX3
-         jozA==
-X-Gm-Message-State: ANhLgQ3wnbUgwr1RRK0nZvL7O24TdZlWnVKkB3Dohh3lW7Lgu+C6ThEt
-        mO/OSy1xLSyL4isYlkhnm8BxRLA=
-X-Google-Smtp-Source: ADFU+vthcYihDuLvJCKduxqtJH/ZhtVqS1WY/y0BfWMEzKqmKwTY1fGBD5yUU7Fm8mERuzYJOUklAg==
-X-Received: by 2002:a17:902:724c:: with SMTP id c12mr7918968pll.211.1585479823353;
-        Sun, 29 Mar 2020 04:03:43 -0700 (PDT)
-Received: from he-cluster.localdomain ([67.216.221.250])
-        by smtp.gmail.com with ESMTPSA id 185sm7770630pfz.119.2020.03.29.04.03.42
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 29 Mar 2020 04:03:42 -0700 (PDT)
-From:   xiakaixu1987@gmail.com
-X-Google-Original-From: kaixuxia@tencent.com
-To:     linux-xfs@vger.kernel.org
-Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
-Subject: [PATCH] xfs: remove redundant variable assignment in xfs_symlink()
-Date:   Sun, 29 Mar 2020 19:03:35 +0800
-Message-Id: <1585479815-13459-1-git-send-email-kaixuxia@tencent.com>
-X-Mailer: git-send-email 1.8.3.1
+        id S1728390AbgC2Qpr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 29 Mar 2020 12:45:47 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:47842 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727903AbgC2Qpr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 29 Mar 2020 12:45:47 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02TGhNEn190411;
+        Sun, 29 Mar 2020 16:45:44 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=eKKE1PD0K6Ky5dSQ/a3Ptrs5v/9WRhCMf42gSc7Alv4=;
+ b=MzbemgCbudS+GzH31lJhsKdpw6psd7RPHLvwet6nsrb5tMpUyRRUfNCPsNArVQ7bkF7T
+ fWGHJ1fxxHFQI24ghk5ZwSAVVN9BjnnNjZ1d5lOIO49ggktB5haogtSVs45qxVfb6bJt
+ NJ8wIf3QQ+YysIU/TM/18cA1Lsignk3u44/9wSFuUYe07iGibY6NIPc3Hi0FAETXuDVl
+ 9kVaCXbaDVKYHCeY6Fkcu7XugsBlHlM0AsxfwiBlq7+Jqqva4yFga04jSvf8JmcOG/U5
+ BvFkhF+JMtH6Tkc/POKL8CotMiWyAL5AZgevrzr0y9W5wKWlL3TINrGUZJqz8/oO85tf rg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 301x0qugte-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 29 Mar 2020 16:45:44 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02TGgoYG170736;
+        Sun, 29 Mar 2020 16:43:43 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 302g2a5f62-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 29 Mar 2020 16:43:43 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 02TGhhuh009986;
+        Sun, 29 Mar 2020 16:43:43 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sun, 29 Mar 2020 09:43:42 -0700
+Date:   Sun, 29 Mar 2020 09:43:42 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/2] xfs: a couple AIL pushing trylock fixes
+Message-ID: <20200329164342.GA56944@magnolia>
+References: <20200326131703.23246-1-bfoster@redhat.com>
+ <20200327153205.GH29339@magnolia>
+ <20200327164412.GA29156@bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200327164412.GA29156@bfoster>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9575 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0 mlxscore=0
+ adultscore=0 phishscore=0 bulkscore=0 suspectscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2003290158
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9575 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ clxscore=1015 adultscore=0 mlxscore=0 priorityscore=1501
+ lowpriorityscore=0 mlxlogscore=999 bulkscore=0 phishscore=0 spamscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2003290158
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Kaixu Xia <kaixuxia@tencent.com>
+On Fri, Mar 27, 2020 at 12:44:12PM -0400, Brian Foster wrote:
+> On Fri, Mar 27, 2020 at 08:32:05AM -0700, Darrick J. Wong wrote:
+> > On Thu, Mar 26, 2020 at 09:17:01AM -0400, Brian Foster wrote:
+> > > Hi all,
+> > > 
+> > > Here's a couple more small fixes that fell out of the auto relog work.
+> > > The dquot issue is actually a deadlock vector if we randomly relog dquot
+> > > buffers (which is only done for test purposes), but I figure we should
+> > > handle dquot buffers similar to how inode buffers are handled. Thoughts,
+> > > reviews, flames appreciated.
+> > 
+> > Oops, I missed this one, will review now...
+> > 
+> > Do you think there needs to be an explicit testcase for this?  Or are
+> > the current generic/{388,475} good enough?  I'm pretty sure I've seen
+> > this exact deadlock on them every now and again, so we're probably
+> > covered.
+> > 
+> 
+> I'm actually not aware of a related upstream deadlock. That doesn't mean
+> there isn't one of course, but the problem I hit was related to the
+> random buffer relogging stuff in the auto relog series. I split these
+> out because xfsaild is intended to be mostly async, so they seemed like a
+> generic fixups..
 
-The variables 'udqp' and 'gdqp' have been initialized, so remove
-redundant variable assignment in xfs_symlink().
+<nod> FWIW I'd traced a generic/475 shutdown hang as far as "the AIL
+seems to be stuck on a locked dquot buffer" but haven't really had a
+chance to look into what was going on at the time.
 
-Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
----
- fs/xfs/xfs_symlink.c | 1 -
- 1 file changed, 1 deletion(-)
+Whereas before it would usually hang if I let it run more than about 15
+minutes, now I've been able to get it to run all night to completion.
 
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index d762d42..3ad82c3 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -176,7 +176,6 @@
- 		return -ENAMETOOLONG;
- 	ASSERT(pathlen > 0);
- 
--	udqp = gdqp = NULL;
- 	prid = xfs_get_initial_prid(dp);
- 
- 	/*
--- 
-1.8.3.1
+--D
 
+> Brian
+> 
+> > --D
+> > 
+> > 
+> > > Brian
+> > > 
+> > > Brian Foster (2):
+> > >   xfs: trylock underlying buffer on dquot flush
+> > >   xfs: return locked status of inode buffer on xfsaild push
+> > > 
+> > >  fs/xfs/xfs_dquot.c      |  6 +++---
+> > >  fs/xfs/xfs_dquot_item.c |  3 ++-
+> > >  fs/xfs/xfs_inode_item.c |  3 ++-
+> > >  fs/xfs/xfs_qm.c         | 14 +++++++++-----
+> > >  4 files changed, 16 insertions(+), 10 deletions(-)
+> > > 
+> > > -- 
+> > > 2.21.1
+> > > 
+> > 
+> 
