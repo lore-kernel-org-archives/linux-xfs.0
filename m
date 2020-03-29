@@ -6,129 +6,106 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B13BC43331
-	for <linux-xfs@archiver.kernel.org>; Sun, 29 Mar 2020 22:08:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6BA7C43331
+	for <linux-xfs@archiver.kernel.org>; Sun, 29 Mar 2020 22:46:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D99D520748
-	for <linux-xfs@archiver.kernel.org>; Sun, 29 Mar 2020 22:08:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 929F720748
+	for <linux-xfs@archiver.kernel.org>; Sun, 29 Mar 2020 22:46:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728766AbgC2WII (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 29 Mar 2020 18:08:08 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:42432 "EHLO
+        id S1728938AbgC2WqG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 29 Mar 2020 18:46:06 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:33338 "EHLO
         mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728775AbgC2WII (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 29 Mar 2020 18:08:08 -0400
+        by vger.kernel.org with ESMTP id S1727591AbgC2WqF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 29 Mar 2020 18:46:05 -0400
 Received: from dread.disaster.area (pa49-179-23-206.pa.nsw.optusnet.com.au [49.179.23.206])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id A4E4E3A2E57;
-        Mon, 30 Mar 2020 09:08:03 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id A82013A3029;
+        Mon, 30 Mar 2020 09:46:03 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jIg66-0005CO-Pi; Mon, 30 Mar 2020 09:08:02 +1100
-Date:   Mon, 30 Mar 2020 09:08:02 +1100
+        id 1jIggs-0005Nh-5M; Mon, 30 Mar 2020 09:46:02 +1100
+Date:   Mon, 30 Mar 2020 09:46:02 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: ratelimit inode flush on buffered write ENOSPC
-Message-ID: <20200329220802.GS10776@dread.disaster.area>
-References: <20200329172209.GA80283@magnolia>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: trylock underlying buffer on dquot flush
+Message-ID: <20200329224602.GT10776@dread.disaster.area>
+References: <20200326131703.23246-1-bfoster@redhat.com>
+ <20200326131703.23246-2-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200329172209.GA80283@magnolia>
+In-Reply-To: <20200326131703.23246-2-bfoster@redhat.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
         a=n/Z79dAqQwRlp4tcgfhWYA==:117 a=n/Z79dAqQwRlp4tcgfhWYA==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=SS2py6AdgQ4A:10
-        a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8 a=IYgIukRHt2wbHxH0704A:9
+        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=xuOJAi8C3-RupNdIJdcA:9
         a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Mar 29, 2020 at 10:22:09AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Mar 26, 2020 at 09:17:02AM -0400, Brian Foster wrote:
+> A dquot flush currently blocks on the buffer lock for the underlying
+> dquot buffer. In turn, this causes xfsaild to block rather than
+> continue processing other items in the meantime. Update
+> xfs_qm_dqflush() to trylock the buffer, similar to how inode buffers
+> are handled, and return -EAGAIN if the lock fails. Fix up any
+> callers that don't currently handle the error properly.
 > 
-> A customer reported rcu stalls and softlockup warnings on a computer
-> with many CPU cores and many many more IO threads trying to write to a
-> filesystem that is totally out of space.  Subsequent analysis pointed to
-> the many many IO threads calling xfs_flush_inodes -> sync_inodes_sb,
-> which causes a lot of wb_writeback_work to be queued.  The writeback
-> worker spends so much time trying to wake the many many threads waiting
-> for writeback completion that it trips the softlockup detector, and (in
-> this case) the system automatically reboots.
-> 
-> In addition, they complain that the lengthy xfs_flush_inodes scan traps
-> all of those threads in uninterruptible sleep, which hampers their
-> ability to kill the program or do anything else to escape the situation.
-> 
-> If there's thousands of threads trying to write to files on a full
-> filesystem, each of those threads will start separate copies of the
-> inode flush scan.  This is kind of pointless since we only need one
-> scan, so rate limit the inode flush.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 > ---
->  fs/xfs/xfs_mount.h |    1 +
->  fs/xfs/xfs_super.c |   14 ++++++++++++++
->  2 files changed, 15 insertions(+)
+>  fs/xfs/xfs_dquot.c      |  6 +++---
+>  fs/xfs/xfs_dquot_item.c |  3 ++-
+>  fs/xfs/xfs_qm.c         | 14 +++++++++-----
+>  3 files changed, 14 insertions(+), 9 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 88ab09ed29e7..50c43422fa17 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -167,6 +167,7 @@ typedef struct xfs_mount {
->  	struct xfs_kobj		m_error_meta_kobj;
->  	struct xfs_error_cfg	m_error_cfg[XFS_ERR_CLASS_MAX][XFS_ERR_ERRNO_MAX];
->  	struct xstats		m_stats;	/* per-fs stats */
-> +	struct ratelimit_state	m_flush_inodes_ratelimit;
->  
->  	struct workqueue_struct *m_buf_workqueue;
->  	struct workqueue_struct	*m_unwritten_workqueue;
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 68fea439d974..abf06bf9c3f3 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -528,6 +528,9 @@ xfs_flush_inodes(
->  {
->  	struct super_block	*sb = mp->m_super;
->  
-> +	if (!__ratelimit(&mp->m_flush_inodes_ratelimit))
-> +		return;
-> +
->  	if (down_read_trylock(&sb->s_umount)) {
->  		sync_inodes_sb(sb);
->  		up_read(&sb->s_umount);
-> @@ -1366,6 +1369,17 @@ xfs_fc_fill_super(
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index 711376ca269f..af2c8e5ceea0 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -1105,8 +1105,8 @@ xfs_qm_dqflush(
+>  	 * Get the buffer containing the on-disk dquot
+>  	 */
+>  	error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp, dqp->q_blkno,
+> -				   mp->m_quotainfo->qi_dqchunklen, 0, &bp,
+> -				   &xfs_dquot_buf_ops);
+> +				   mp->m_quotainfo->qi_dqchunklen, XBF_TRYLOCK,
+> +				   &bp, &xfs_dquot_buf_ops);
 >  	if (error)
->  		goto out_free_names;
+>  		goto out_unlock;
 >  
-> +	/*
-> +	 * Cap the number of invocations of xfs_flush_inodes to 16 for every
-> +	 * quarter of a second.  The magic numbers here were determined by
-> +	 * observation neither to cause stalls in writeback when there are a
-> +	 * lot of IO threads and the fs is near ENOSPC, nor cause any fstest
-> +	 * regressions.  YMMV.
-> +	 */
-> +	ratelimit_state_init(&mp->m_flush_inodes_ratelimit, HZ / 4, 16);
-> +	ratelimit_set_flags(&mp->m_flush_inodes_ratelimit,
-> +			RATELIMIT_MSG_ON_RELEASE);
+> @@ -1177,7 +1177,7 @@ xfs_qm_dqflush(
+>  
+>  out_unlock:
+>  	xfs_dqfunlock(dqp);
+> -	return -EIO;
+> +	return error;
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+> index cf65e2e43c6e..baad1748d0d1 100644
+> --- a/fs/xfs/xfs_dquot_item.c
+> +++ b/fs/xfs/xfs_dquot_item.c
+> @@ -189,7 +189,8 @@ xfs_qm_dquot_logitem_push(
+>  		if (!xfs_buf_delwri_queue(bp, buffer_list))
+>  			rval = XFS_ITEM_FLUSHING;
+>  		xfs_buf_relse(bp);
+> -	}
+> +	} else if (error == -EAGAIN)
+> +		rval = XFS_ITEM_LOCKED;
 
-Urk.
+Doesn't xfs_inode_item_push() also have this problem in that it
+doesn't handle -EAGAIN properly?
 
-RATELIMIT_MSG_ON_RELEASE prevents "callbacks suppressed"
-messages when rate limiting was active and resets via __rate_limit().
-However, in ratelimit_state_exit(), that flag -enables- printing
-"callbacks suppressed" messages when rate limiting was active and is
-reset.
+Also, we can get -EIO, -EFSCORRUPTED, etc here. They probably
+shouldn't return XFS_ITEM_SUCCESS, either....
 
-Same flag, exact opposite behaviour...
-
-The comment says it's behaviour is supposed to match that of
-ratelimit_state_exit() (i.e. print message on ratelimit exit), so I
-really can't tell if this is correct/intended usage or just API
-abuse....
+Otherwise seems OK.
 
 Cheers,
 
