@@ -1,357 +1,276 @@
-Return-Path: <SRS0=IplL=5N=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=WYbU=5O=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD82FC43331
-	for <linux-xfs@archiver.kernel.org>; Sat, 28 Mar 2020 18:25:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64D38C2D0F0
+	for <linux-xfs@archiver.kernel.org>; Sun, 29 Mar 2020 05:18:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7409E20714
-	for <linux-xfs@archiver.kernel.org>; Sat, 28 Mar 2020 18:25:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B87C20776
+	for <linux-xfs@archiver.kernel.org>; Sun, 29 Mar 2020 05:18:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="cJMV50+C"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Y8bOORtL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727118AbgC1SZm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 28 Mar 2020 14:25:42 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:38298 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726463AbgC1SZl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 28 Mar 2020 14:25:41 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02SINb8i094179
-        for <linux-xfs@vger.kernel.org>; Sat, 28 Mar 2020 18:25:38 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
- subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=/4cCv3K54DYQdSPx2h/iJquHUwZ9Dqz1wiBwvJwdfuQ=;
- b=cJMV50+CUNNCmRXTSGOuPzbOxAZNbQjWhsqmE8yOq8DMn8pCjnIjq2UqwzmCKUHHvn1w
- 8v4NIT7l3bA/86/T93K0EvSRMG83Fg+Ph460rlXhddHZHK8aYSdAP/7sgl0seOv9GXj9
- pigXX3ygRErLGPBf9plN7qJVPvn2XRVGKq3qnTXumFcUok5R4nHHi9TeOdmCZrFGL4Ev
- 4Et588P9qQjEgBi1ymWtUDjj1rJc2SQio6a9QhEgvUIryP1TrKytCNsUk2mOqm1PEOps
- 9U4Qklbb/dxrslOl2HtcegLuUgK2nulh5w/cxyDVQlpAhV42Tmf/S58q43dEeAekQNp4 rg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 301xhkhcm1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 28 Mar 2020 18:25:38 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02SIM0Pc051554
-        for <linux-xfs@vger.kernel.org>; Sat, 28 Mar 2020 18:25:38 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 301vm8x0vn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 28 Mar 2020 18:25:38 +0000
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 02SIPb4w025398
-        for <linux-xfs@vger.kernel.org>; Sat, 28 Mar 2020 18:25:37 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sat, 28 Mar 2020 11:25:37 -0700
-Date:   Sat, 28 Mar 2020 11:25:33 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to d4bc4c5fd177
-Message-ID: <20200328182533.GM29339@magnolia>
+        id S1727302AbgC2FSO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 29 Mar 2020 01:18:14 -0400
+Received: from us-smtp-delivery-74.mimecast.com ([216.205.24.74]:44040 "EHLO
+        us-smtp-delivery-74.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725958AbgC2FSO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 29 Mar 2020 01:18:14 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1585459091;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=Kz8YPBjTlRKU/qW4zYNZuHy1gi+mQVUUrmlnJZPZXjg=;
+        b=Y8bOORtLLkoZazq4nhTwiXRWHSGXiA/UYhnvNd1+4K1mpIMoPkLWIN9FwqCIKExXZPO/2u
+        7Bz3YYcbW6d7HugKjsyrBLNJebrz4fw5GHuo7xlFTrGU5RgkjHtfjJZATqzyMXpFsjqR0g
+        iHngEgdCS1U+H1j8gKhBdM2+oosxIWc=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-361-Fob6KQChOQuwO2-ntHj7mw-1; Sun, 29 Mar 2020 01:18:07 -0400
+X-MC-Unique: Fob6KQChOQuwO2-ntHj7mw-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 42B76800D5B;
+        Sun, 29 Mar 2020 05:18:06 +0000 (UTC)
+Received: from bogon.redhat.com (ovpn-12-124.pek2.redhat.com [10.72.12.124])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 025931001B2B;
+        Sun, 29 Mar 2020 05:18:04 +0000 (UTC)
+From:   Zorro Lang <zlang@redhat.com>
+To:     fstests@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: [PATCH v3] generic: per-type quota timers set/get test
+Date:   Sun, 29 Mar 2020 13:18:01 +0800
+Message-Id: <20200329051801.8363-1-zlang@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9574 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=2
- malwarescore=0 mlxscore=0 spamscore=0 mlxlogscore=999 phishscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2003280176
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9574 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 mlxscore=0
- suspectscore=2 mlxlogscore=999 lowpriorityscore=0 malwarescore=0
- clxscore=1015 phishscore=0 adultscore=0 priorityscore=1501 bulkscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2003280176
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+Set different grace time, make sure each of quota (user, group and
+project) timers can be set (by setquota) and get (by repquota)
+correctly.
 
-The for-next branch of the xfs-linux repository at:
+Signed-off-by: Zorro Lang <zlang@redhat.com>
+---
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+V2 did below changes:
+1) Filter default quota timer (suggested by Eric Sandeen).
+2) Try to merge the case from Darrick (please review):
+https://marc.info/?l=3Dfstests&m=3D158207247224104&w=3D2
 
-has just been updated.
+V3 did below changes:
+1) _require_scratch_xfs_crc if tests on XFS (suggested by Eryu Guan)
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  Though really, we should only be adding bugfixes from
-now on. :)
+Thanks,
+Zorro
 
-The new head of the for-next branch is commit:
+ tests/generic/594     | 108 ++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/594.out |  50 +++++++++++++++++++
+ tests/generic/group   |   1 +
+ 3 files changed, 159 insertions(+)
+ create mode 100755 tests/generic/594
+ create mode 100644 tests/generic/594.out
 
-d4bc4c5fd177 xfs: return locked status of inode buffer on xfsaild push
+diff --git a/tests/generic/594 b/tests/generic/594
+new file mode 100755
+index 00000000..e501d54c
+--- /dev/null
++++ b/tests/generic/594
+@@ -0,0 +1,108 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2020 Red Hat, Inc.  All Rights Reserved.
++#
++# FS QA Test No. 594
++#
++# Test per-type(user, group and project) filesystem quota timers, make s=
+ure
++# each of grace time can be set/get properly.
++#
++seq=3D`basename $0`
++seqres=3D$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=3D`pwd`
++tmp=3D/tmp/$$
++status=3D1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/quota
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_require_scratch
++# V4 XFS doesn't support to mount project and group quota together
++if [ "$FSTYP" =3D "xfs" ];then
++	_require_scratch_xfs_crc
++fi
++_require_quota
++
++_scratch_mkfs >$seqres.full 2>&1
++_scratch_enable_pquota
++_qmount_option "usrquota,grpquota,prjquota"
++_qmount
++_require_prjquota $SCRATCH_DEV
++
++MIN=3D60
++
++# get default time at first
++def_time=3D`repquota -u $SCRATCH_MNT | \
++		sed -n -e "/^Block/s/.* time: \(.*\); .* time: \(.*\)/\1 \2/p"`
++echo "Default block and inode grace timers are: $def_time" >> $seqres.fu=
+ll
++
++filter_repquota()
++{
++	local blocktime=3D$1
++	local inodetime=3D$2
++
++	_filter_scratch | sed -e "s,$blocktime,DEF_TIME,g" \
++			      -e "s,$inodetime,DEF_TIME,g"
++}
++
++echo "1. set project quota timer"
++setquota -t -P $((10 * MIN)) $((20 * MIN)) $SCRATCH_MNT
++repquota -ugP $SCRATCH_MNT | grep "Report\|^Block" | filter_repquota $de=
+f_time
++echo
++
++echo "2. set group quota timer"
++setquota -t -g $((30 * MIN)) $((40 * MIN)) $SCRATCH_MNT
++repquota -ugP $SCRATCH_MNT | grep "Report\|^Block" | filter_repquota $de=
+f_time
++echo
++
++echo "3. set user quota timer"
++setquota -t -u $((50 * MIN)) $((60 * MIN)) $SCRATCH_MNT
++repquota -ugP $SCRATCH_MNT | grep "Report\|^Block" | filter_repquota $de=
+f_time
++echo
++
++# cycle mount, make sure the quota timers are still right
++echo "4. cycle mount test-1"
++_qmount
++repquota -ugP $SCRATCH_MNT | grep "Report\|^Block" | filter_repquota $de=
+f_time
++echo
++
++# Run repair to force quota check
++echo "5. fsck to force quota check"
++_scratch_unmount
++_repair_scratch_fs >> $seqres.full 2>&1
++echo
++
++# Remount (this time to run quotacheck) and check the limits.  There's a=
+ bug
++# in quotacheck where we would reset the ondisk default grace period to =
+zero
++# while the incore copy stays at whatever was read in prior to quotachec=
+k.
++# This will show up after the /next/ remount.
++echo "6. cycle mount test-2"
++_qmount
++repquota -ugP $SCRATCH_MNT | grep "Report\|^Block" | filter_repquota $de=
+f_time
++echo
++
++# Remount and check the limits
++echo "7. cycle mount test-3"
++_qmount
++repquota -ugP $SCRATCH_MNT | grep "Report\|^Block" | filter_repquota $de=
+f_time
++
++# success, all done
++status=3D0
++exit
+diff --git a/tests/generic/594.out b/tests/generic/594.out
+new file mode 100644
+index 00000000..f25e0fac
+--- /dev/null
++++ b/tests/generic/594.out
+@@ -0,0 +1,50 @@
++QA output created by 594
++1. set project quota timer
++*** Report for user quotas on device SCRATCH_DEV
++Block grace time: DEF_TIME; Inode grace time: DEF_TIME
++*** Report for group quotas on device SCRATCH_DEV
++Block grace time: DEF_TIME; Inode grace time: DEF_TIME
++*** Report for project quotas on device SCRATCH_DEV
++Block grace time: 00:10; Inode grace time: 00:20
++
++2. set group quota timer
++*** Report for user quotas on device SCRATCH_DEV
++Block grace time: DEF_TIME; Inode grace time: DEF_TIME
++*** Report for group quotas on device SCRATCH_DEV
++Block grace time: 00:30; Inode grace time: 00:40
++*** Report for project quotas on device SCRATCH_DEV
++Block grace time: 00:10; Inode grace time: 00:20
++
++3. set user quota timer
++*** Report for user quotas on device SCRATCH_DEV
++Block grace time: 00:50; Inode grace time: 01:00
++*** Report for group quotas on device SCRATCH_DEV
++Block grace time: 00:30; Inode grace time: 00:40
++*** Report for project quotas on device SCRATCH_DEV
++Block grace time: 00:10; Inode grace time: 00:20
++
++4. cycle mount test-1
++*** Report for user quotas on device SCRATCH_DEV
++Block grace time: 00:50; Inode grace time: 01:00
++*** Report for group quotas on device SCRATCH_DEV
++Block grace time: 00:30; Inode grace time: 00:40
++*** Report for project quotas on device SCRATCH_DEV
++Block grace time: 00:10; Inode grace time: 00:20
++
++5. fsck to force quota check
++
++6. cycle mount test-2
++*** Report for user quotas on device SCRATCH_DEV
++Block grace time: 00:50; Inode grace time: 01:00
++*** Report for group quotas on device SCRATCH_DEV
++Block grace time: 00:30; Inode grace time: 00:40
++*** Report for project quotas on device SCRATCH_DEV
++Block grace time: 00:10; Inode grace time: 00:20
++
++7. cycle mount test-3
++*** Report for user quotas on device SCRATCH_DEV
++Block grace time: 00:50; Inode grace time: 01:00
++*** Report for group quotas on device SCRATCH_DEV
++Block grace time: 00:30; Inode grace time: 00:40
++*** Report for project quotas on device SCRATCH_DEV
++Block grace time: 00:10; Inode grace time: 00:20
+diff --git a/tests/generic/group b/tests/generic/group
+index dc95b77b..a83f95cb 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -595,3 +595,4 @@
+ 591 auto quick rw pipe splice
+ 592 auto quick encrypt
+ 593 auto quick encrypt
++594 auto quick quota
+--=20
+2.20.1
 
-New Commits:
-
-Brian Foster (9):
-      [6b789c337a59] xfs: fix iclog release error check race with shutdown
-      [b73df17e4c5b] xfs: open code insert range extent split helper
-      [dd87f87d87fa] xfs: rework insert range into an atomic operation
-      [211683b21de9] xfs: rework collapse range into an atomic operation
-      [854f82b1f603] xfs: factor out quotaoff intent AIL removal and memory free
-      [8a6271431339] xfs: fix unmount hang and memory leak on shutdown during quotaoff
-      [842a42d126b4] xfs: shutdown on failure to add page to log bio
-      [8d3d7e2b35ea] xfs: trylock underlying buffer on dquot flush
-      [d4bc4c5fd177] xfs: return locked status of inode buffer on xfsaild push
-
-Christoph Hellwig (61):
-      [3d8f2821502d] xfs: ensure that the inode uid/gid match values match the icdinode ones
-      [542951592c99] xfs: remove the icdinode di_uid/di_gid members
-      [ba8adad5d036] xfs: remove the kuid/kgid conversion wrappers
-      [13b1f811b14e] xfs: ratelimit xfs_buf_ioerror_alert messages
-      [4ab45e259f31] xfs: ratelimit xfs_discard_page messages
-      [4d542e4c1e28] xfs: reject invalid flags combinations in XFS_IOC_ATTRLIST_BY_HANDLE
-      [5e81357435cc] xfs: remove the ATTR_INCOMPLETE flag
-      [0eb81a5f5c34] xfs: merge xfs_attr_remove into xfs_attr_set
-      [6cc4f4fff10d] xfs: merge xfs_attrmulti_attr_remove into xfs_attrmulti_attr_set
-      [2282a9e65177] xfs: use strndup_user in XFS_IOC_ATTRMULTI_BY_HANDLE
-      [d0ce64391128] xfs: factor out a helper for a single XFS_IOC_ATTRMULTI_BY_HANDLE op
-      [79f2280b9bfd] xfs: remove the name == NULL check from xfs_attr_args_init
-      [4df28c64e438] xfs: remove the MAXNAMELEN check from xfs_attr_args_init
-      [ead189adb8ab] xfs: turn xfs_da_args.value into a void pointer
-      [a25446224353] xfs: pass an initialized xfs_da_args structure to xfs_attr_set
-      [e5171d7e9894] xfs: pass an initialized xfs_da_args to xfs_attr_get
-      [c36f533f1407] xfs: remove the xfs_inode argument to xfs_attr_get_ilocked
-      [e513e25c380a] xfs: remove ATTR_KERNOVAL
-      [d49db18b247d] xfs: remove ATTR_ALLOC and XFS_DA_OP_ALLOCVAL
-      [1d7330199400] xfs: replace ATTR_KERNOTIME with XFS_DA_OP_NOTIME
-      [377f16ac6723] xfs: factor out a xfs_attr_match helper
-      [a9c8c69b4961] xfs: cleanup struct xfs_attr_list_context
-      [fe960087121a] xfs: remove the unused ATTR_ENTRY macro
-      [2f014aad03d8] xfs: open code ATTR_ENTSIZE
-      [3e7a779937a2] xfs: move the legacy xfs_attr_list to xfs_ioctl.c
-      [17e1dd83ea21] xfs: rename xfs_attr_list_int to xfs_attr_list
-      [f60463195179] xfs: lift common checks into xfs_ioc_attr_list
-      [eb241c747463] xfs: lift buffer allocation into xfs_ioc_attr_list
-      [53ac39fdb301] xfs: lift cursor copy in/out into xfs_ioc_attr_list
-      [5a3930e27ef9] xfs: improve xfs_forget_acl
-      [f3e93d95feef] xfs: clean up the ATTR_REPLACE checks
-      [d5f0f49a9bdd] xfs: clean up the attr flag confusion
-      [254f800f8104] xfs: remove XFS_DA_OP_INCOMPLETE
-      [e3a19cdea84a] xfs: embedded the attrlist cursor into struct xfs_attr_list_context
-      [f311d771a090] xfs: clean up bufsize alignment in xfs_ioc_attr_list
-      [ed02d13f5da8] xfs: only allocate the buffer size actually needed in __xfs_set_acl
-      [5680c3907361] xfs: switch xfs_attrmulti_attr_get to lazy attr buffer allocation
-      [183606d82446] xfs: remove the agfl_bno member from struct xfs_agfl
-      [4b97510859b2] xfs: remove the xfs_agfl_t typedef
-      [370c782b9843] xfs: remove XFS_BUF_TO_AGI
-      [9798f615ad2b] xfs: remove XFS_BUF_TO_AGF
-      [3e6e8afd3abb] xfs: remove XFS_BUF_TO_SBP
-      [b941c71947a0] xfs: mark XLOG_FORCED_SHUTDOWN as unlikely
-      [cb3d425fa59a] xfs: remove the unused XLOG_UNMOUNT_REC_TYPE define
-      [550319e9df3a] xfs: remove the unused return value from xfs_log_unmount_write
-      [6178d104075a] xfs: remove dead code from xfs_log_unmount_write
-      [13859c984301] xfs: cleanup xfs_log_unmount_write
-      [b81b79f4eda2] xfs: add a new xfs_sb_version_has_v3inode helper
-      [e9e2eae89ddb] xfs: only check the superblock version for dinode size calculation
-      [b3d1d37544d8] xfs: simplify di_flags2 inheritance in xfs_ialloc
-      [5e28aafe708b] xfs: simplify a check in xfs_ioctl_setattr_check_cowextsize
-      [6471e9c5e7a1] xfs: remove the di_version field from struct icdinode
-      [c7cc296ddd1f] xfs: merge xlog_cil_push into xlog_cil_push_work
-      [81e5b50a8fb5] xfs: factor out a xlog_wait_on_iclog helper
-      [f97a43e43662] xfs: simplify the xfs_log_release_iclog calling convention
-      [a582f32fade2] xfs: simplify log shutdown checking in xfs_log_release_iclog
-      [12e6a0f449d5] xfs: remove the aborted parameter to xlog_state_done_syncing
-      [c814b4f24eba] xfs: refactor xlog_state_clean_iclog
-      [5781464bd1ee] xfs: move the ioerror check out of xlog_state_clean_iclog
-      [693639994b13] xfs: remove xlog_state_want_sync
-      [8b41e3f98e6c] xfs: split xlog_ticket_done
-
-Darrick J. Wong (30):
-      [93baa55af1a1] xfs: improve error message when we can't allocate memory for xfs_buf
-      [496b9bcd62b0] xfs: fix use-after-free when aborting corrupt attr inactivation
-      [a71e4228e6f2] xfs: fix xfs_rmap_has_other_keys usage of ECANCELED
-      [8d57c21600a5] xfs: add a function to deal with corrupt buffers post-verifiers
-      [e83cf875d67a] xfs: xfs_buf_corruption_error should take __this_address
-      [ce99494c9699] xfs: fix buffer corruption reporting when xfs_dir3_free_header_check fails
-      [1cb5deb5bc09] xfs: don't ever return a stale pointer from __xfs_dir3_free_read
-      [6fb5aac73310] xfs: check owner of dir3 free blocks
-      [a10c21ed5d52] xfs: check owner of dir3 data blocks
-      [1b2c1a63b678] xfs: check owner of dir3 blocks
-      [2e107cf869ee] xfs: mark dir corrupt when lookup-by-hash fails
-      [806d3909a57e] xfs: mark extended attr corrupt when lookup-by-hash fails
-      [faf8ee8476c1] xfs: xfs_dabuf_map should return ENOMEM when map allocation fails
-      [77ca1eed5a7d] xfs: fix incorrect test in xfs_alloc_ag_vextent_lastblock
-      [37a6547d92af] xfs: xrep_reap_extents should not destroy the bitmap
-      [00b10d487b29] xfs: rename xfs_bitmap to xbitmap
-      [608eb3cee703] xfs: replace open-coded bitmap weight logic
-      [e06536a692e0] xfs: introduce fake roots for ag-rooted btrees
-      [349e1c0380db] xfs: introduce fake roots for inode-rooted btrees
-      [60e3d7070749] xfs: support bulk loading of staged btrees
-      [e6eb33d905c2] xfs: add support for free space btree staging cursors
-      [c29ce8f48e21] xfs: add support for inode btree staging cursors
-      [56e98164ffea] xfs: add support for refcount btree staging cursors
-      [59d677127cf1] xfs: add support for rmap btree staging cursors
-      [5885539f0af3] xfs: preserve default grace interval during quotacheck
-      [afbabf56305f] xfs: drop all altpath buffers at the end of the sibling check
-      [d59f44d3e723] xfs: directory bestfree check should release buffers
-      [27fb5a72f50a] xfs: prohibit fs freezing when using empty transactions
-      [f8e566c0f5e1] xfs: validate the realtime geometry in xfs_validate_sb_common
-      [5cc3c006eb45] xfs: don't write a corrupt unmount record to force summary counter recalc
-
-Dave Chinner (22):
-      [7cace18ab576] xfs: introduce new private btree cursor names
-      [576af7322807] xfs: convert btree cursor ag-private member name
-      [92219c292af8] xfs: convert btree cursor inode-private member names
-      [8ef547976a18] xfs: rename btree cursor private btree member flags
-      [352890735e52] xfs: make btree cursor private union anonymous
-      [68422d90dad4] xfs: make the btree cursor union members named structure
-      [c4aa10d04196] xfs: make the btree ag cursor private union anonymous
-      [7ec949212dba] xfs: don't try to write a start record into every iclog
-      [9590e9c68449] xfs: re-order initial space accounting checks in xlog_write
-      [dd401770b0ff] xfs: refactor and split xfs_log_done()
-      [70e42f2d4797] xfs: kill XLOG_TIC_INITED
-      [f10e925def9a] xfs: merge xlog_commit_record with xlog_write_done
-      [3c702f95909a] xfs: refactor unmount record writing
-      [b843299ba5f9] xfs: remove some stale comments from the log code
-      [108a42358a05] xfs: Lower CIL flush limit for large logs
-      [0e7ab7efe774] xfs: Throttle commits on delayed background CIL push
-      [2def2845cc33] xfs: don't allow log IO to be throttled
-      [12eba65b28b0] xfs: Improve metadata buffer reclaim accountability
-      [d59eadaea2b9] xfs: correctly acount for reclaimable slabs
-      [4165994ac967] xfs: factor common AIL item deletion code
-      [8eb807bd8399] xfs: tail updates only need to occur when LSN changes
-      [5806165a6663] xfs: factor inode lookup from xfs_ifree_cluster
-
-Eric Biggers (1):
-      [10a98cb16d80] xfs: clear PF_MEMALLOC before exiting xfsaild thread
-
-Jules Irenge (1):
-      [daebba1b3609] xfs: Add missing annotation to xfs_ail_check()
-
-Kaixu Xia (1):
-      [63337b63e7da] xfs: remove unnecessary ternary from xfs_create
-
-Qian Cai (1):
-      [4982bff1ace1] xfs: fix an undefined behaviour in _da3_path_shift
-
-Takashi Iwai (1):
-      [17bb60b74124] xfs: Use scnprintf() for avoiding potential buffer overflow
-
-Tommi Rantala (1):
-      [3d28e7e27891] xfs: fix regression in "cleanup xfs_dir2_block_getdents"
-
-Zheng Bin (1):
-      [d0c7feaf8767] xfs: add agf freeblocks verify in xfs_agf_verify
-
-
-Code Diffstat:
-
- fs/xfs/Makefile                    |   1 +
- fs/xfs/libxfs/xfs_ag.c             |  16 +-
- fs/xfs/libxfs/xfs_alloc.c          |  99 +++--
- fs/xfs/libxfs/xfs_alloc.h          |   9 +
- fs/xfs/libxfs/xfs_alloc_btree.c    | 119 +++--
- fs/xfs/libxfs/xfs_alloc_btree.h    |   7 +
- fs/xfs/libxfs/xfs_attr.c           | 351 +++++----------
- fs/xfs/libxfs/xfs_attr.h           | 114 +----
- fs/xfs/libxfs/xfs_attr_leaf.c      | 130 +++---
- fs/xfs/libxfs/xfs_attr_leaf.h      |   1 -
- fs/xfs/libxfs/xfs_attr_remote.c    |   2 +-
- fs/xfs/libxfs/xfs_bmap.c           |  88 ++--
- fs/xfs/libxfs/xfs_bmap.h           |   3 +-
- fs/xfs/libxfs/xfs_bmap_btree.c     |  50 +--
- fs/xfs/libxfs/xfs_btree.c          |  93 ++--
- fs/xfs/libxfs/xfs_btree.h          |  82 +++-
- fs/xfs/libxfs/xfs_btree_staging.c  | 879 +++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_btree_staging.h  | 123 ++++++
- fs/xfs/libxfs/xfs_da_btree.c       |  17 +-
- fs/xfs/libxfs/xfs_da_btree.h       |  11 +-
- fs/xfs/libxfs/xfs_da_format.h      |  12 -
- fs/xfs/libxfs/xfs_dir2_block.c     |  33 +-
- fs/xfs/libxfs/xfs_dir2_data.c      |  32 +-
- fs/xfs/libxfs/xfs_dir2_leaf.c      |   2 +-
- fs/xfs/libxfs/xfs_dir2_node.c      |  11 +-
- fs/xfs/libxfs/xfs_format.h         |  48 +-
- fs/xfs/libxfs/xfs_fs.h             |  32 +-
- fs/xfs/libxfs/xfs_ialloc.c         |  35 +-
- fs/xfs/libxfs/xfs_ialloc_btree.c   | 104 ++++-
- fs/xfs/libxfs/xfs_ialloc_btree.h   |   6 +
- fs/xfs/libxfs/xfs_inode_buf.c      |  43 +-
- fs/xfs/libxfs/xfs_inode_buf.h      |   5 -
- fs/xfs/libxfs/xfs_inode_fork.c     |   2 +-
- fs/xfs/libxfs/xfs_inode_fork.h     |   9 +-
- fs/xfs/libxfs/xfs_log_format.h     |  10 +-
- fs/xfs/libxfs/xfs_refcount.c       | 110 ++---
- fs/xfs/libxfs/xfs_refcount_btree.c | 104 +++--
- fs/xfs/libxfs/xfs_refcount_btree.h |   6 +
- fs/xfs/libxfs/xfs_rmap.c           | 123 +++---
- fs/xfs/libxfs/xfs_rmap_btree.c     |  99 +++--
- fs/xfs/libxfs/xfs_rmap_btree.h     |   5 +
- fs/xfs/libxfs/xfs_sb.c             |  49 ++-
- fs/xfs/libxfs/xfs_trans_resv.c     |   2 +-
- fs/xfs/scrub/agheader.c            |  20 +-
- fs/xfs/scrub/agheader_repair.c     |  78 ++--
- fs/xfs/scrub/alloc.c               |   2 +-
- fs/xfs/scrub/attr.c                |  20 +-
- fs/xfs/scrub/bitmap.c              |  87 ++--
- fs/xfs/scrub/bitmap.h              |  23 +-
- fs/xfs/scrub/bmap.c                |   4 +-
- fs/xfs/scrub/dabtree.c             |  42 +-
- fs/xfs/scrub/dir.c                 |  13 +-
- fs/xfs/scrub/ialloc.c              |   8 +-
- fs/xfs/scrub/refcount.c            |   2 +-
- fs/xfs/scrub/repair.c              |  28 +-
- fs/xfs/scrub/repair.h              |   6 +-
- fs/xfs/scrub/rmap.c                |   2 +-
- fs/xfs/scrub/scrub.c               |   9 +
- fs/xfs/scrub/trace.c               |   4 +-
- fs/xfs/scrub/trace.h               |   4 +-
- fs/xfs/xfs_acl.c                   | 132 +++---
- fs/xfs/xfs_acl.h                   |   6 +-
- fs/xfs/xfs_aops.c                  |   2 +-
- fs/xfs/xfs_attr_inactive.c         |   6 +-
- fs/xfs/xfs_attr_list.c             | 169 +------
- fs/xfs/xfs_bmap_util.c             |  73 +--
- fs/xfs/xfs_buf.c                   |  40 +-
- fs/xfs/xfs_buf.h                   |   2 +
- fs/xfs/xfs_buf_item.c              |   2 +-
- fs/xfs/xfs_dir2_readdir.c          |  12 +-
- fs/xfs/xfs_discard.c               |   7 +-
- fs/xfs/xfs_dquot.c                 |  10 +-
- fs/xfs/xfs_dquot_item.c            |  47 +-
- fs/xfs/xfs_dquot_item.h            |   1 +
- fs/xfs/xfs_error.c                 |   7 +-
- fs/xfs/xfs_error.h                 |   2 +-
- fs/xfs/xfs_fsmap.c                 |  13 +-
- fs/xfs/xfs_icache.c                |   4 +
- fs/xfs/xfs_inode.c                 | 212 +++++----
- fs/xfs/xfs_inode_item.c            |  47 +-
- fs/xfs/xfs_ioctl.c                 | 355 +++++++++------
- fs/xfs/xfs_ioctl.h                 |  35 +-
- fs/xfs/xfs_ioctl32.c               |  99 +----
- fs/xfs/xfs_iops.c                  |  25 +-
- fs/xfs/xfs_itable.c                |   6 +-
- fs/xfs/xfs_linux.h                 |  27 +-
- fs/xfs/xfs_log.c                   | 818 +++++++++++++---------------------
- fs/xfs/xfs_log.h                   |   9 +-
- fs/xfs/xfs_log_cil.c               | 113 +++--
- fs/xfs/xfs_log_priv.h              |  84 ++--
- fs/xfs/xfs_log_recover.c           |  18 +-
- fs/xfs/xfs_mount.c                 |   2 +-
- fs/xfs/xfs_qm.c                    |  69 +--
- fs/xfs/xfs_qm_syscalls.c           |  13 +-
- fs/xfs/xfs_quota.h                 |   4 +-
- fs/xfs/xfs_stats.c                 |  10 +-
- fs/xfs/xfs_super.c                 |   3 +-
- fs/xfs/xfs_symlink.c               |   6 +-
- fs/xfs/xfs_trace.c                 |   2 +
- fs/xfs/xfs_trace.h                 | 224 ++++++++--
- fs/xfs/xfs_trans.c                 |  34 +-
- fs/xfs/xfs_trans_ail.c             |  93 ++--
- fs/xfs/xfs_trans_priv.h            |   6 +-
- fs/xfs/xfs_xattr.c                 |  92 ++--
- 104 files changed, 3771 insertions(+), 2599 deletions(-)
- create mode 100644 fs/xfs/libxfs/xfs_btree_staging.c
- create mode 100644 fs/xfs/libxfs/xfs_btree_staging.h
