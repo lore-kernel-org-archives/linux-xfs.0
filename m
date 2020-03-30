@@ -2,147 +2,147 @@ Return-Path: <SRS0=hGtO=5P=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
-	FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA23DC43331
-	for <linux-xfs@archiver.kernel.org>; Mon, 30 Mar 2020 10:09:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40EE7C43331
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 Mar 2020 12:15:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A39CA206E6
-	for <linux-xfs@archiver.kernel.org>; Mon, 30 Mar 2020 10:09:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 08C0F20714
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 Mar 2020 12:15:51 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ne6rea0U"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728739AbgC3KJU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 30 Mar 2020 06:09:20 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:60166 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728257AbgC3KJT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Mar 2020 06:09:19 -0400
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 02UA2xT0085379;
-        Mon, 30 Mar 2020 06:09:10 -0400
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3021vte0ck-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 30 Mar 2020 06:09:10 -0400
-Received: from m0098409.ppops.net (m0098409.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 02UA3DfI086977;
-        Mon, 30 Mar 2020 06:09:09 -0400
-Received: from ppma04dal.us.ibm.com (7a.29.35a9.ip4.static.sl-reverse.com [169.53.41.122])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3021vte0c1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 30 Mar 2020 06:09:09 -0400
-Received: from pps.filterd (ppma04dal.us.ibm.com [127.0.0.1])
-        by ppma04dal.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id 02UA5N6l031184;
-        Mon, 30 Mar 2020 10:09:09 GMT
-Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
-        by ppma04dal.us.ibm.com with ESMTP id 301x763sg1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 30 Mar 2020 10:09:08 +0000
-Received: from b03ledav001.gho.boulder.ibm.com (b03ledav001.gho.boulder.ibm.com [9.17.130.232])
-        by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 02UA97Je60555604
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 30 Mar 2020 10:09:07 GMT
-Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id B5AB76E04C;
-        Mon, 30 Mar 2020 10:09:07 +0000 (GMT)
-Received: from b03ledav001.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id EA2226E050;
-        Mon, 30 Mar 2020 10:09:04 +0000 (GMT)
-Received: from localhost.localdomain.com (unknown [9.199.44.125])
-        by b03ledav001.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Mon, 30 Mar 2020 10:09:04 +0000 (GMT)
-From:   Chandan Rajendra <chandanrlinux@gmail.com>
-To:     fstests@vger.kernel.org
-Cc:     Chandan Rajendra <chandanrlinux@gmail.com>, chandan@linux.ibm.com,
-        hch@infradead.org, linux-xfs@vger.kernel.org
-Subject: [PATCH] common/xfs: Execute _xfs_check only when explicitly asked
-Date:   Mon, 30 Mar 2020 15:42:03 +0530
-Message-Id: <20200330101203.12049-1-chandanrlinux@gmail.com>
-X-Mailer: git-send-email 2.19.1
+        id S1729900AbgC3MPu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 30 Mar 2020 08:15:50 -0400
+Received: from us-smtp-delivery-74.mimecast.com ([63.128.21.74]:46399 "EHLO
+        us-smtp-delivery-74.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729867AbgC3MPu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Mar 2020 08:15:50 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1585570549;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=XIB3Kt4/Qz93A6/QQAEfG9SAR/UO9k/yyPLAYa54zXg=;
+        b=Ne6rea0U4Q3MILETW3uAHEwuOAXsj/JbiNZixEao0n20Mrj5mY0oCuZTEmsum/lGPCjsew
+        hTVlOSUz3PlbMAvb/NA6q6SL3MPsbKazERxHxBQUYDUlrK+ihpvZlH+ODj3kwH1eO6hrJW
+        +K44D3XdqFli2SVxozLWnyxyPnQ8SNo=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-286-T5CdNj-cPweEAG1-zuD2pg-1; Mon, 30 Mar 2020 08:15:47 -0400
+X-MC-Unique: T5CdNj-cPweEAG1-zuD2pg-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B73D119251A7;
+        Mon, 30 Mar 2020 12:15:46 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 565F5194BB;
+        Mon, 30 Mar 2020 12:15:46 +0000 (UTC)
+Date:   Mon, 30 Mar 2020 08:15:44 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: trylock underlying buffer on dquot flush
+Message-ID: <20200330121544.GA45961@bfoster>
+References: <20200326131703.23246-1-bfoster@redhat.com>
+ <20200326131703.23246-2-bfoster@redhat.com>
+ <20200329224602.GT10776@dread.disaster.area>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.645
- definitions=2020-03-30_01:2020-03-27,2020-03-30 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_spam_definite policy=outbound score=100 lowpriorityscore=0
- priorityscore=1501 mlxlogscore=253 mlxscore=0 suspectscore=0 spamscore=0
- malwarescore=0 adultscore=0 clxscore=1034 impostorscore=0 bulkscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2003300091
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200329224602.GT10776@dread.disaster.area>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-fsstress when executed as part of some of the tests (e.g. generic/270)
-invokes chown() syscall many times by passing random integers as value
-for the uid argument. For each such syscall invocation for which there
-is no on-disk quota block, xfs invokes xfs_dquot_disk_alloc() which
-allocates a new block and instantiates all the quota structures mapped
-by the newly allocated block. For filesystems with 64k block size, the
-number of on-disk quota structures created will be 16 times more than
-that for a filesystem with 4k block size.
+On Mon, Mar 30, 2020 at 09:46:02AM +1100, Dave Chinner wrote:
+> On Thu, Mar 26, 2020 at 09:17:02AM -0400, Brian Foster wrote:
+> > A dquot flush currently blocks on the buffer lock for the underlying
+> > dquot buffer. In turn, this causes xfsaild to block rather than
+> > continue processing other items in the meantime. Update
+> > xfs_qm_dqflush() to trylock the buffer, similar to how inode buffers
+> > are handled, and return -EAGAIN if the lock fails. Fix up any
+> > callers that don't currently handle the error properly.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> >  fs/xfs/xfs_dquot.c      |  6 +++---
+> >  fs/xfs/xfs_dquot_item.c |  3 ++-
+> >  fs/xfs/xfs_qm.c         | 14 +++++++++-----
+> >  3 files changed, 14 insertions(+), 9 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> > index 711376ca269f..af2c8e5ceea0 100644
+> > --- a/fs/xfs/xfs_dquot.c
+> > +++ b/fs/xfs/xfs_dquot.c
+> > @@ -1105,8 +1105,8 @@ xfs_qm_dqflush(
+> >  	 * Get the buffer containing the on-disk dquot
+> >  	 */
+> >  	error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp, dqp->q_blkno,
+> > -				   mp->m_quotainfo->qi_dqchunklen, 0, &bp,
+> > -				   &xfs_dquot_buf_ops);
+> > +				   mp->m_quotainfo->qi_dqchunklen, XBF_TRYLOCK,
+> > +				   &bp, &xfs_dquot_buf_ops);
+> >  	if (error)
+> >  		goto out_unlock;
+> >  
+> > @@ -1177,7 +1177,7 @@ xfs_qm_dqflush(
+> >  
+> >  out_unlock:
+> >  	xfs_dqfunlock(dqp);
+> > -	return -EIO;
+> > +	return error;
+> >  }
+> >  
+> >  /*
+> > diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+> > index cf65e2e43c6e..baad1748d0d1 100644
+> > --- a/fs/xfs/xfs_dquot_item.c
+> > +++ b/fs/xfs/xfs_dquot_item.c
+> > @@ -189,7 +189,8 @@ xfs_qm_dquot_logitem_push(
+> >  		if (!xfs_buf_delwri_queue(bp, buffer_list))
+> >  			rval = XFS_ITEM_FLUSHING;
+> >  		xfs_buf_relse(bp);
+> > -	}
+> > +	} else if (error == -EAGAIN)
+> > +		rval = XFS_ITEM_LOCKED;
+> 
+> Doesn't xfs_inode_item_push() also have this problem in that it
+> doesn't handle -EAGAIN properly?
+> 
+> Also, we can get -EIO, -EFSCORRUPTED, etc here. They probably
+> shouldn't return XFS_ITEM_SUCCESS, either....
+> 
 
-xfs_db's check command (executed after test script finishes execution)
-will try to read in all of the on-disk quota structures into
-memory. This causes the OOM event to be triggered when reading from
-filesystems with 64k block size. For filesystems with sufficiently large
-amount of system memory, this causes the test to execute for a very long
-time.
+Good point. I'm actually not sure what we should return in that case
+given the item return codes all seem to assume a valid state. We could
+define an XFS_ITEM_ERROR return, but I'm not sure it's worth it for what
+is currently stat/tracepoint logic in the caller. Perhaps a broader
+rework of error handling in this context is in order that would lift
+generic (fatal) error handling into xfsaild. E.g., I see that
+xfs_qm_dqflush() is inconsistent by itself in that the item is removed
+from the AIL if we're already shut down, but not if that function
+invokes the shutdown; we shutdown if the direct xfs_dqblk_verify() call
+fails but not if the read verifier (which also looks like it calls
+xfs_dqblk_verify() on every on-disk dquot) returns -EFSCORRUPTED, etc.
+It might make some sense to let iop_push() return negative error codes
+if that facilitates consistent error handling...
 
-Due to the above stated reasons, this commit disables execution of
-xfs_db's check command unless explictly asked by the user by setting
-$EXECUTE_XFS_DB_CHECK variable.
+Brian
 
-Signed-off-by: Chandan Rajendra <chandanrlinux@gmail.com>
----
- README     |  2 ++
- common/xfs | 17 +++++++++++++----
- 2 files changed, 15 insertions(+), 4 deletions(-)
-
-diff --git a/README b/README
-index 094a7742..c47569cd 100644
---- a/README
-+++ b/README
-@@ -88,6 +88,8 @@ Preparing system for tests:
-                run xfs_repair -n to check the filesystem; xfs_repair to rebuild
-                metadata indexes; and xfs_repair -n (a third time) to check the
-                results of the rebuilding.
-+	     - set EXECUTE_XFS_DB_CHECK=1 to have _check_xfs_filesystem
-+               run xfs_db's check command on the filesystem.
-              - xfs_scrub, if present, will always check the test and scratch
-                filesystems if they are still online at the end of the test.
-                It is no longer necessary to set TEST_XFS_SCRUB.
-diff --git a/common/xfs b/common/xfs
-index d9a9784f..93ebab75 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -455,10 +455,19 @@ _check_xfs_filesystem()
- 		ok=0
- 	fi
- 
--	# xfs_check runs out of memory on large files, so even providing the test
--	# option (-t) to avoid indexing the free space trees doesn't make it pass on
--	# large filesystems. Avoid it.
--	if [ "$LARGE_SCRATCH_DEV" != yes ]; then
-+	dbsize="$($XFS_INFO_PROG "${device}" | grep data.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-+
-+	# xfs_check runs out of memory,
-+	# 1. On large files. So even providing the test option (-t) to
-+	# avoid indexing the free space trees doesn't make it pass on
-+	# large filesystems.
-+	# 2. When checking filesystems with large number of quota
-+	# structures. This case happens consistently with 64k blocksize when
-+	# creating large number of on-disk quota structures whose quota ids
-+	# are spread across a large integer range.
-+	#
-+	# Hence avoid executing it unless explicitly asked by user.
-+	if [ -n "$EXECUTE_XFS_DB_CHECK" -a "$LARGE_SCRATCH_DEV" != yes ]; then
- 		_xfs_check $extra_log_options $device 2>&1 > $tmp.fs_check
- 	fi
- 	if [ -s $tmp.fs_check ]; then
--- 
-2.19.1
+> Otherwise seems OK.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
 
