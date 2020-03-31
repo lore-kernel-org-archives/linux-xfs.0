@@ -2,70 +2,102 @@ Return-Path: <SRS0=FhJw=5Q=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8298C2D0E8
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 Mar 2020 09:21:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E468EC43331
+	for <linux-xfs@archiver.kernel.org>; Tue, 31 Mar 2020 10:09:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 76C232166E
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 Mar 2020 09:21:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B31FA20781
+	for <linux-xfs@archiver.kernel.org>; Tue, 31 Mar 2020 10:09:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="dZM+SjPD"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Rx7ghVWF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731249AbgCaJVL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Mar 2020 05:21:11 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:60482 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731305AbgCaJVK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Mar 2020 05:21:10 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=yqNlown0MzgWJHh7vQQU8YQxRZVzreHtSlK6DAEVltU=; b=dZM+SjPDyPx2aDRbdMAcvY6BM4
-        bYgSP7hH5mr+/1aMS6aiCd5ttX76Qx8kdNvJr+dgPxck7c1oSTDQG/JHoHhCGKzwqq0bUacWI9XH+
-        YVtcF4LUB8jcxOoFoHjwP6s3ubbLWvLSJGjQo7ANjT97ZB4HELHYf9/4FiLxxLiVocluxsLNPYRno
-        AHR9TUi9rLge2FbDKrRVH240Uo5T8EjVY2l2c6v1lrmtDu0bdi+prc6D0AQEi3+d8tmS2C9W4d2Xt
-        rKu1PDCzjmbP3XkeDzRkA1KaX9YwzkXK5FukAoZed4GcVZg/c/xBKmpllatHpsoc2xRCUBgX3VV5H
-        +XPv4lqg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jJD54-0006ai-Lk; Tue, 31 Mar 2020 09:21:10 +0000
-Date:   Tue, 31 Mar 2020 02:21:10 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH] iomap: Do not use GFP_NORETRY to allocate BIOs
-Message-ID: <20200331092110.GA24694@infradead.org>
-References: <20200323131244.29435-1-willy@infradead.org>
- <20200323132052.GA7683@infradead.org>
- <20200323134032.GH4971@bombadil.infradead.org>
- <20200323135500.GA14335@infradead.org>
- <20200323151054.GI4971@bombadil.infradead.org>
- <20200323165154.GB30433@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200323165154.GB30433@infradead.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+        id S1730224AbgCaKJ7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Mar 2020 06:09:59 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:43794 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729997AbgCaKJ7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Mar 2020 06:09:59 -0400
+Received: by mail-pl1-f193.google.com with SMTP id v23so7937493ply.10
+        for <linux-xfs@vger.kernel.org>; Tue, 31 Mar 2020 03:09:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=kR6u28OGPMHcOHPlRnQKkOcI+c683D0UilS0di8j6lc=;
+        b=Rx7ghVWFebwxuAE49R4hwayoA9qMzrQjbvoJmcTAt1t21uFJiXQasj40RnEC7vfNNI
+         P4aWn5sw41PvxmkDMXBA0uewpNvLyF+09akafiL/uufH1a+MGEMeg7+E8bPTtJ4CLbw4
+         ID3JFUpyiIAVbu69CCasNtUAvhWhbh/Uc4o6++KgS98dpDoF8fDh9os0F0JxKS3nnY0t
+         KO2d7gttKVpSRRjSwDd3qPjLu9OJ3Hr8ph/Lk4MQtm92m5z+L9CL8jj/paIgEQ0GxE3W
+         AbGMkEyXmOSmHEx4h7pqQyPPVBuN/Id58airTsmsdv0x1u91M5evAl4a4nn49fTx6i0s
+         HG3Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=kR6u28OGPMHcOHPlRnQKkOcI+c683D0UilS0di8j6lc=;
+        b=RJe/FU+PmaIyy3yp/cI3nwLdvjnxh5EeBo0tLEPuOZ1MWDh40xUOdIuAEwTpqOPcFC
+         KchlgbMxv+YkvOt3of8393Oa7dCGzOBfam2asZCrbGsLEK+s4ALiH0ejM5C6QafuY2E4
+         vI6ZLDB+J90IilPyaic0CZUF7q2q3ccFfCyXis41i42+2MpjfCcXBCExz4WPAdwiRtoh
+         fZ0fWXWYYlDG4WfjvA8zOV2lmAacymLdkcxjp/dt5hZ3tamkeG5miLMXUyup30zjhwIv
+         INDLPfPIpuYZDqX+pA8/xobyIiq42FDsvy05ihYRlQdgen/jI7nZh7GvLaWrqGa4zB7E
+         5wGg==
+X-Gm-Message-State: AGi0PubFf2FtyArDbJUPtHTcY0e43VIc2qQIG/6HgILJcTVnJdzUPpRi
+        YP3+rOx4hXrUuRa5oxqFbkFQ++g=
+X-Google-Smtp-Source: APiQypIV48VfwzN1lubddmmcCjA9X47/F1Z78MeYts7V1OiXP/cl3/1tbzVVGvo2WTJraOTE94Nv3w==
+X-Received: by 2002:a17:90a:5d87:: with SMTP id t7mr3085024pji.61.1585649397754;
+        Tue, 31 Mar 2020 03:09:57 -0700 (PDT)
+Received: from he-cluster.localdomain ([67.216.221.250])
+        by smtp.gmail.com with ESMTPSA id iq14sm1546467pjb.43.2020.03.31.03.09.57
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 31 Mar 2020 03:09:57 -0700 (PDT)
+From:   xiakaixu1987@gmail.com
+X-Google-Original-From: kaixuxia@tencent.com
+To:     linux-xfs@vger.kernel.org
+Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
+Subject: [PATCH] xfs: move trace_xfs_dquot_dqalloc() to proper place
+Date:   Tue, 31 Mar 2020 18:09:47 +0800
+Message-Id: <1585649387-22890-1-git-send-email-kaixuxia@tencent.com>
+X-Mailer: git-send-email 1.8.3.1
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 23, 2020 at 09:51:54AM -0700, Christoph Hellwig wrote:
-> On Mon, Mar 23, 2020 at 08:10:54AM -0700, Matthew Wilcox wrote:
-> > > That looks silly to me.  This just means we'll keep iterating over
-> > > small bios for readahead..  Either we just ignore the different gfp
-> > > mask, or we need to go all the way and handle errors, although that
-> > > doesn't really look nice.
-> > 
-> > I'm not sure it's silly,
-> 
-> Oh well, I'm not going to be in the way of fixing a bug I added.  So
-> feel free to go ahead with this and mention it matches mpage_readpages.
+From: Kaixu Xia <kaixuxia@tencent.com>
 
-Are you going to submit this as a formal patch?
+The trace event xfs_dquot_dqalloc does not depend on the
+value uq, so move it to proper place.
+
+Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
+---
+ fs/xfs/xfs_qm.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 0b09096..5569af9 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -1631,6 +1631,8 @@ struct xfs_qm_isolate {
+ 	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
+ 		return 0;
+ 
++	trace_xfs_dquot_dqalloc(ip);
++
+ 	lockflags = XFS_ILOCK_EXCL;
+ 	xfs_ilock(ip, lockflags);
+ 
+@@ -1714,8 +1716,6 @@ struct xfs_qm_isolate {
+ 			pq = xfs_qm_dqhold(ip->i_pdquot);
+ 		}
+ 	}
+-	if (uq)
+-		trace_xfs_dquot_dqalloc(ip);
+ 
+ 	xfs_iunlock(ip, lockflags);
+ 	if (O_udqpp)
+-- 
+1.8.3.1
+
