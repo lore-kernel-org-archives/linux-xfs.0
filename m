@@ -1,101 +1,160 @@
-Return-Path: <SRS0=FhJw=5Q=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=BKGZ=5R=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A02DBC2D0EE
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 Mar 2020 22:13:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5F95C43331
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Apr 2020 01:50:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7ABCA208E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 Mar 2020 22:13:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A3C7B20CC7
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Apr 2020 01:50:46 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eyFugIoU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731259AbgCaWN1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Mar 2020 18:13:27 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:54175 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731255AbgCaWN1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Mar 2020 18:13:27 -0400
-Received: from dread.disaster.area (pa49-179-23-206.pa.nsw.optusnet.com.au [49.179.23.206])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 89CFF7EA612;
-        Wed,  1 Apr 2020 09:13:25 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jJP8O-00058z-H4; Wed, 01 Apr 2020 09:13:24 +1100
-Date:   Wed, 1 Apr 2020 09:13:24 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Qian Cai <cai@lca.pw>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: linux-next: xfs metadata corruption since 30 March
-Message-ID: <20200331221324.GZ10776@dread.disaster.area>
-References: <990EDC4E-1A4E-4AC3-84D9-078ACF5EB9CC@lca.pw>
+        id S1731548AbgDABuq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Mar 2020 21:50:46 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:38543 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731506AbgDABup (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Mar 2020 21:50:45 -0400
+Received: by mail-pf1-f195.google.com with SMTP id c21so10637992pfo.5
+        for <linux-xfs@vger.kernel.org>; Tue, 31 Mar 2020 18:50:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=4eg8apBhVcz98FQ5cTNrXQTmHz03j2+ajHEM4q1Qigc=;
+        b=eyFugIoUyUMHut5fEdoGiSRjcWnSHAGSgsQL/tft1qrPSMijgTE9UmCYqtTS8W4R5V
+         vf2EdcBiv32rXDOWASd6rPaTT1slBS+P4ma7AD+6WPBbVMwmfNhbvH9DpxmjeHDBvHu9
+         6mXlCQq3S65ybQ6ILx7cx+yrApOYn2hoobQY3CkFuPlL0aSAKc2+tl0NLd0YM3OvxdVN
+         wrWJQnGi3LhSR0sbhaStcxcLOiofs2KTCXMpdlz+z1MC1prKTc1AhLXBU1xmETYpFClw
+         dKf9vouflq7tjOPnnmhI0oXYkwJHANVUM9HSzWZXQGQbgwTQdMStgSaBsrmh9V2fMI02
+         5V3Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=4eg8apBhVcz98FQ5cTNrXQTmHz03j2+ajHEM4q1Qigc=;
+        b=hXuvruJxkhA60Pf6fzrzjQKUNDctKDm5mPmcKJyFyrc1XD4IO4qMAZcWMuNg2VStuZ
+         EAfo0FDHuYtMzORVWbyu1KVSLFMwvysCLgoi2/xr9Eh1a+eIJMSl1psAz572pGmr9fS1
+         KvZsfU9F6WFEn4IMAFRuMMtOetRpx3Oo07oVOnhEhjUOZ7+cAqQaqL1vOLBM5o6lcvt5
+         sH8k7nq9dvdlCrMDDfz7C4qGMx0YvDj7mB5FBUHO332o6gvyXNFlo6zYnaoqTJiMSbGF
+         1RtZzdrENhbT0cyG9H8s1xyIlY+b5JS+Gm9hmIEpy22xvbLIrsW/jYmztPOR3wzXyjg4
+         LhMg==
+X-Gm-Message-State: AGi0PuYVsf/oxCwmadoRlah1BcqSlLn5D0bD/62yyE4GtdYFTC3QK/yN
+        MTQUL43GAfpHT97+13Q3No/vTrVI3Q==
+X-Google-Smtp-Source: APiQypKEDDzqh5kZmebc9xt/biur7d0SJGQtLW44aJfuPweWzLGpQN93Y4g9KpzKINEAUqOiszO0qA==
+X-Received: by 2002:a63:296:: with SMTP id 144mr6882323pgc.110.1585705844603;
+        Tue, 31 Mar 2020 18:50:44 -0700 (PDT)
+Received: from [10.76.90.30] ([103.7.29.6])
+        by smtp.gmail.com with ESMTPSA id t3sm335384pfl.26.2020.03.31.18.50.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 31 Mar 2020 18:50:44 -0700 (PDT)
+Subject: Re: [PATCH] xfs: move trace_xfs_dquot_dqalloc() to proper place
+To:     Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
+References: <1585649387-22890-1-git-send-email-kaixuxia@tencent.com>
+ <6b0892fe-0f5a-76dc-cd8e-c52333751436@sandeen.net>
+From:   kaixuxia <xiakaixu1987@gmail.com>
+Message-ID: <436831f6-8f77-ed9d-4590-82b9285c1e49@gmail.com>
+Date:   Wed, 1 Apr 2020 09:50:37 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.6.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <990EDC4E-1A4E-4AC3-84D9-078ACF5EB9CC@lca.pw>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
-        a=n/Z79dAqQwRlp4tcgfhWYA==:117 a=n/Z79dAqQwRlp4tcgfhWYA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=cl8xLZFz6L8A:10
-        a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8 a=7DPh_joMaso9liLfkDcA:9
-        a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <6b0892fe-0f5a-76dc-cd8e-c52333751436@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 31, 2020 at 05:57:24PM -0400, Qian Cai wrote:
-> Ever since two days ago, linux-next starts to trigger xfs metadata corruption
-> during compilation workloads on both powerpc and arm64,
 
-Is this on an existing filesystem, or a new filesystem?
-
-> I suspect it could be one of those commits,
+On 2020/4/1 5:02, Eric Sandeen wrote:
+> On 3/31/20 5:09 AM, xiakaixu1987@gmail.com wrote:
+>> From: Kaixu Xia <kaixuxia@tencent.com>
+>>
+>> The trace event xfs_dquot_dqalloc does not depend on the
+>> value uq, so move it to proper place.
 > 
-> https://lore.kernel.org/linux-xfs/20200328182533.GM29339@magnolia/
+> Long ago, the tracing did depend on uq (see 0b1b213fcf3a):
 > 
-> Especially, those commits that would mark corruption more aggressively?
+>         if (uq)
+> -               xfs_dqtrace_entry_ino(uq, "DQALLOC", ip);
+> +               trace_xfs_dquot_dqalloc(ip);
 > 
->       [8d57c21600a5] xfs: add a function to deal with corrupt buffers post-verifiers
->       [e83cf875d67a] xfs: xfs_buf_corruption_error should take __this_address
->       [ce99494c9699] xfs: fix buffer corruption reporting when xfs_dir3_free_header_check fails
->       [1cb5deb5bc09] xfs: don't ever return a stale pointer from __xfs_dir3_free_read
->       [6fb5aac73310] xfs: check owner of dir3 free blocks
->       [a10c21ed5d52] xfs: check owner of dir3 data blocks
->       [1b2c1a63b678] xfs: check owner of dir3 blocks
->       [2e107cf869ee] xfs: mark dir corrupt when lookup-by-hash fails
->       [806d3909a57e] xfs: mark extended attr corrupt when lookup-by-hash fails
+> and I agree that only tracing the inode if user quota is set seems wrong.
+> 
+> (FWIW, the old tracepoint traced much more than just the inode, it got all
+> the information from the quota)
 
-Doubt it - they only add extra detection code and these:
+Yeah, the original tracepoint traced more data, and now it is just
+the inode event.
+> 
+> However, I'm not completely sure about moving the tracepoint higher in the function;
+> now it tells us that we entered the function but not if we successfully allocated
+> the quota?
+> 
+> So my only concern is that it changes the meaning of this tracepoint a little bit,
+> from "we completed the function" more to "we entered the function"
+> 
+> Not sure how much that matters in practice.
+> 
+> But that makes this change do 2 things in 1 patch:
+> 
+> 1) don't depend on uq, and
+> 2) change when we trace
+> 
+> I'd rather see:
+> 
+> [PATCH] xfs: trace quota allocations for all quota types
+> 
+> -	if (uq)
+> -		trace_xfs_dquot_dqalloc(ip);
+> + 	trace_xfs_dquot_dqalloc(ip);
+> 
 
-> [29331.182313][  T665] XFS (dm-2): Metadata corruption detected at xfs_inode_buf_verify+0x2b8/0x350 [xfs], xfs_inode block 0xa9b97900 xfs_inode_buf_verify
-> xfs_inode_buf_verify at fs/xfs/libxfs/xfs_inode_buf.c:101
-> [29331.182373][  T665] XFS (dm-2): Unmount and run xfs_repair
-> [29331.182386][  T665] XFS (dm-2): First 128 bytes of corrupted metadata buffer:
-> [29331.182402][  T665] 00000000: 2f 2a 20 53 50 44 58 2d 4c 69 63 65 6e 73 65 2d  /* SPDX-License-
-> [29331.182426][  T665] 00000010: 49 64 65 6e 74 69 66 69 65 72 3a 20 47 50 4c 2d  Identifier: GPL-
+Make more sense, thanks for your suggestion, will follow it in next version.
 
-Would get caught by the existing  verifiers as they aren't valid
-metadata at all.
+> and if there's a good reason to /move/ the tracepoint as well, do that separately.
+> 
+> -Eric
+> 
+>> Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>m>
+>> ---
+>>  fs/xfs/xfs_qm.c | 4 ++--
+>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+>> index 0b09096..5569af9 100644
+>> --- a/fs/xfs/xfs_qm.c
+>> +++ b/fs/xfs/xfs_qm.c
+>> @@ -1631,6 +1631,8 @@ struct xfs_qm_isolate {
+>>  	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
+>>  		return 0;
+>>  
+>> +	trace_xfs_dquot_dqalloc(ip);
+>> +
+>>  	lockflags = XFS_ILOCK_EXCL;
+>>  	xfs_ilock(ip, lockflags);
+>>  
+>> @@ -1714,8 +1716,6 @@ struct xfs_qm_isolate {
+>>  			pq = xfs_qm_dqhold(ip->i_pdquot);
+>>  		}
+>>  	}
+>> -	if (uq)
+>> -		trace_xfs_dquot_dqalloc(ip);
+>>  
+>>  	xfs_iunlock(ip, lockflags);
+>>  	if (O_udqpp)
+>>
 
-Basically, you are getting file data where there should be inode
-metadata. First thing to do is fix the existing corruptions with
-xfs_repair - please post the entire output so we can see what was
-corruption and what it fixed.
-
-Then if the problem is still reproducable, I suspect you are going
-to have to bisect it. i.e. run test, get corruption, mark bisect
-bad, run xfs_repair or mkfs to fix mess, install new kernel, run
-test again....
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+kaixuxia
