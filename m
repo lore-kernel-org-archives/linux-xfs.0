@@ -2,98 +2,148 @@ Return-Path: <SRS0=BKGZ=5R=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-2.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E988EC43331
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Apr 2020 03:33:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01EE1C43331
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Apr 2020 04:01:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9E37920772
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Apr 2020 03:33:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE13A20786
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Apr 2020 04:01:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="f5VQLT/1"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="fJTI/W2E"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731608AbgDADdS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Mar 2020 23:33:18 -0400
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:41647 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731589AbgDADdS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Mar 2020 23:33:18 -0400
-Received: by mail-pl1-f193.google.com with SMTP id d24so5214148pll.8
-        for <linux-xfs@vger.kernel.org>; Tue, 31 Mar 2020 20:33:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=GLcPTVcaDafEteTaTQQAJmVyAgfwzABN/CTa+35bGcg=;
-        b=f5VQLT/1C89XBCtUk0R6/SlPdj2I/Ti47D5rOimH8nvXZEfQ3jBcwwRcF7ipPxFxRz
-         fvxekb+P9maaENhRlFtaPrR/5LEZ36jZd/iKjZlA1u4UzUbV1PGQpA5SzJDKNUZ9sQ64
-         ru8G05A50M5ZdjwKR8+IS2SNMpch+FZ0+qtfSiK48AxmXvcGTzs0xf9O7hF5AMuwgutO
-         zCMM/WBpNAxbaqDABWj2HmXqdAwOfWHANxZkuzpsLpDyvKAOzarjfwpEmNjKJswauKXT
-         88P3gRDlUdk0N8SOwuslq2Jw4yC888qlv+fas/nxQcWC05gETMRNFXanfF7S1wtunv/6
-         hDVw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=GLcPTVcaDafEteTaTQQAJmVyAgfwzABN/CTa+35bGcg=;
-        b=UW5hxnhWgrxiS3Wz7MPLOxxUpV01t+792V6+bPDBX0PXcqubznKV0cq0dh2KJLCyiF
-         SZXUwvTeLGLa3jIZW5DK0vgZwhew/gByf1iD1sBSCSqNGmjqQS8uw6ZARlJHwwy0COKP
-         OLhlPXU0xOaIdvlh3ougMdB5WRm4cpe4H+o2I4KN2XPSu/GceHfB06vbms4L6MIByaVq
-         7RbpZMoPGK98lVe7n5S58ydLMr6jV8qxrJ/YuONzeKRuQUIvyRZVt0hapw+fd4eHFDUi
-         sGJlIUKbAheWrDmj17JSsgGB24zMUc4RYjof/VeOqcEYmq8Q0Gf7T87HyAr9SuIL+/8V
-         IEqA==
-X-Gm-Message-State: AGi0PubTIUp3lkkx6KwL5hlB5T54wpyWrpVLHSdOd72xCfjt8NkIbj9T
-        mYG3E1jtRRIOL+Kxww95svGBgkUMww==
-X-Google-Smtp-Source: APiQypKkDfN5eTNCYV8pJSNtdR3US9KA8L6kPXN+ctv4DMjnM2wzhljUxCxQN0BZTXeVVZmjCoh6gQ==
-X-Received: by 2002:a17:90a:db4a:: with SMTP id u10mr2294521pjx.101.1585711996920;
-        Tue, 31 Mar 2020 20:33:16 -0700 (PDT)
-Received: from he-cluster.localdomain (67.216.221.250.16clouds.com. [67.216.221.250])
-        by smtp.gmail.com with ESMTPSA id y7sm454352pfq.159.2020.03.31.20.33.16
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 31 Mar 2020 20:33:16 -0700 (PDT)
-From:   xiakaixu1987@gmail.com
-X-Google-Original-From: kaixuxia@tencent.com
-To:     linux-xfs@vger.kernel.org
-Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
-Subject: [PATCH v2] xfs: trace quota allocations for all quota types
-Date:   Wed,  1 Apr 2020 11:33:11 +0800
-Message-Id: <1585711991-26411-1-git-send-email-kaixuxia@tencent.com>
-X-Mailer: git-send-email 1.8.3.1
+        id S1726505AbgDAEAm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Apr 2020 00:00:42 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:41456 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725793AbgDAEAm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Apr 2020 00:00:42 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0313sjWH044988;
+        Wed, 1 Apr 2020 04:00:30 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=mime-version :
+ message-id : date : from : to : cc : subject : references : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=obROhXjAve/kpZaKiv7NWOZ2z2jo7yzeO27qepEQr7k=;
+ b=fJTI/W2EHKpH+kB3SSlDBzAj/z+tuY2wcGMI5Iyhf/pfi7/9J1WdZq2TIhdiTZV7tJeI
+ AqY6m4egj4B3EnySHxxuRh0K4yKurwkmsWIa0zJ9rADKdKtmO+3ZwU2bFy3AXPPqBuq8
+ v0JeiSR1X4H+wL8mvT6hEaZro2F7KFmeRQ+1w1U8TkdDMCCfmEvOHl7NEdDDEvI+to82
+ kaPWDXXc/aNZ6J2E2S7XBkfiV94pA+ox4IkJUdGw40/blrox6ONxW9mB7AebiybaWKkt
+ CbpUIE2jGxr+Nz7akcWjS4paSdhCaXwyhe8u1vogilr0MM+MkETQD/D722m7Fr8ifkoG SA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 303cev322q-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 01 Apr 2020 04:00:30 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0313qqwE192638;
+        Wed, 1 Apr 2020 04:00:29 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 302g2fgxjc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 01 Apr 2020 04:00:29 +0000
+Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03140Q1b001068;
+        Wed, 1 Apr 2020 04:00:26 GMT
+Received: from localhost (/67.169.218.210) by default (Oracle Beehive Gateway
+ v4.0) with ESMTP ; Tue, 31 Mar 2020 21:00:23 -0700
+USER-AGENT: Mutt/1.9.4 (2018-02-28)
+MIME-Version: 1.0
+Message-ID: <20200401040021.GC56958@magnolia>
+Date:   Wed, 1 Apr 2020 04:00:21 +0000 (UTC)
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Jan Kara <jack@suse.cz>, Ira Weiny <ira.weiny@intel.com>
+Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH V5 00/12] Enable per-file/per-directory DAX operations V5
+References: <20200227052442.22524-1-ira.weiny@intel.com>
+ <20200305155144.GA5598@lst.de>
+ <20200309170437.GA271052@iweiny-DESK2.sc.intel.com>
+ <20200311033614.GQ1752567@magnolia> <20200311062952.GA11519@lst.de>
+ <CAPcyv4h9Xg61jk=Uq17xC6AGj9yOSAJnCaTzHcfBZwOVdRF9dw@mail.gmail.com>
+ <20200316095224.GF12783@quack2.suse.cz> <20200316095509.GA13788@lst.de>
+In-Reply-To: <20200316095509.GA13788@lst.de>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9577 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0 mlxscore=0
+ adultscore=0 phishscore=0 bulkscore=0 suspectscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2004010035
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9577 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 adultscore=0
+ clxscore=1011 phishscore=0 lowpriorityscore=0 spamscore=0 malwarescore=0
+ suspectscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2004010035
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Kaixu Xia <kaixuxia@tencent.com>
+On Mon, Mar 16, 2020 at 10:55:09AM +0100, Christoph Hellwig wrote:
+> On Mon, Mar 16, 2020 at 10:52:24AM +0100, Jan Kara wrote:
+> > > This sounds reasonable to me.
+> > > 
+> > > As for deprecating the mount option, I think at a minimum it needs to
+> > > continue be accepted as an option even if it is ignored to not break
+> > > existing setups.
+> > 
+> > Agreed. But that's how we usually deprecate mount options. Also I'd say
+> > that statx() support for reporting DAX state and some education of
+> > programmers using DAX is required before we deprecate the mount option
+> > since currently applications check 'dax' mount option to determine how much
+> > memory they need to set aside for page cache before they consume everything
+> > else on the machine...
+> 
+> I don't even think we should deprecate it.  It isn't painful to maintain
+> and actually useful for testing.  Instead we should expand it into a
+> tristate:
+> 
+>   dax=off
+>   dax=flag
+>   dax=always
+> 
+> where the existing "dax" option maps to "dax=always" and nodax maps
+> to "dax=off". and dax=flag becomes the default for DAX capable devices.
 
-The trace event xfs_dquot_dqalloc does not depend on the
-value uq, so remove the condition, and trace quota allocations
-for all quota types.
+That works for me.  In summary:
 
-Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
----
-v2:
- - don't move the tracepoint higher in the function.
+ - Applications must call statx to discover the current S_DAX state.
 
- fs/xfs/xfs_qm.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ - There exists an advisory file inode flag FS_XFLAG_DAX that can be
+   changed on files that have no blocks allocated to them.  Changing
+   this flag does not necessarily change the S_DAX state immediately
+   but programs can query the S_DAX state via statx.
 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 0b09096..43df596 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1714,8 +1714,7 @@ struct xfs_qm_isolate {
- 			pq = xfs_qm_dqhold(ip->i_pdquot);
- 		}
- 	}
--	if (uq)
--		trace_xfs_dquot_dqalloc(ip);
-+	trace_xfs_dquot_dqalloc(ip);
- 
- 	xfs_iunlock(ip, lockflags);
- 	if (O_udqpp)
--- 
-1.8.3.1
+   If FS_XFLAG_DAX is set and the fs is on pmem then it will always
+   enable S_DAX at inode load time; if FS_XFLAG_DAX is not set, it will
+   never enable S_DAX.  Unless overridden...
 
+ - There exists a dax= mount option.  dax=off means "never set S_DAX,
+   ignore FS_XFLAG_DAX"; dax=always means "always set S_DAX (at least on
+   pmem), ignore FS_XFLAG_DAX"; and dax=iflag means "follow FS_XFLAG_DAX"
+   and is the default.  "dax" by itself means "dax=always".  "nodax"
+   means "dax=off".
+
+ - There exists an advisory directory inode flag FS_XFLAG_DAX that can
+   be changed at any time.  The flag state is copied into any files or
+   subdirectories created within that directory.  If programs require
+   that file access runs in S_DAX mode, they'll have to create those
+   files themselves inside a directory with FS_XFLAG_DAX set, or mount
+   the fs with dax=always.
+
+Ok?  Let's please get this part finished for 5.8, then we can get back
+to arguing about fs-rmap and reflink and dax and whatnot.
+
+--D
