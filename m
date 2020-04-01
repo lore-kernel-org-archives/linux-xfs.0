@@ -2,148 +2,89 @@ Return-Path: <SRS0=BKGZ=5R=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01EE1C43331
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Apr 2020 04:01:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F264C43331
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Apr 2020 04:11:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BE13A20786
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Apr 2020 04:01:00 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="fJTI/W2E"
+	by mail.kernel.org (Postfix) with ESMTP id 01EB02073B
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Apr 2020 04:11:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726505AbgDAEAm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Apr 2020 00:00:42 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:41456 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725793AbgDAEAm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Apr 2020 00:00:42 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0313sjWH044988;
-        Wed, 1 Apr 2020 04:00:30 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=mime-version :
- message-id : date : from : to : cc : subject : references : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=obROhXjAve/kpZaKiv7NWOZ2z2jo7yzeO27qepEQr7k=;
- b=fJTI/W2EHKpH+kB3SSlDBzAj/z+tuY2wcGMI5Iyhf/pfi7/9J1WdZq2TIhdiTZV7tJeI
- AqY6m4egj4B3EnySHxxuRh0K4yKurwkmsWIa0zJ9rADKdKtmO+3ZwU2bFy3AXPPqBuq8
- v0JeiSR1X4H+wL8mvT6hEaZro2F7KFmeRQ+1w1U8TkdDMCCfmEvOHl7NEdDDEvI+to82
- kaPWDXXc/aNZ6J2E2S7XBkfiV94pA+ox4IkJUdGw40/blrox6ONxW9mB7AebiybaWKkt
- CbpUIE2jGxr+Nz7akcWjS4paSdhCaXwyhe8u1vogilr0MM+MkETQD/D722m7Fr8ifkoG SA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 303cev322q-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 01 Apr 2020 04:00:30 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0313qqwE192638;
-        Wed, 1 Apr 2020 04:00:29 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 302g2fgxjc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 01 Apr 2020 04:00:29 +0000
-Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03140Q1b001068;
-        Wed, 1 Apr 2020 04:00:26 GMT
-Received: from localhost (/67.169.218.210) by default (Oracle Beehive Gateway
- v4.0) with ESMTP ; Tue, 31 Mar 2020 21:00:23 -0700
-USER-AGENT: Mutt/1.9.4 (2018-02-28)
+        id S1726811AbgDAELI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Apr 2020 00:11:08 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:55716 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726557AbgDAELI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Apr 2020 00:11:08 -0400
+Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 03143E6f028611
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Apr 2020 00:11:07 -0400
+Received: from e06smtp05.uk.ibm.com (e06smtp05.uk.ibm.com [195.75.94.101])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 304k3h0sbs-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Apr 2020 00:11:07 -0400
+Received: from localhost
+        by e06smtp05.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.ibm.com>;
+        Wed, 1 Apr 2020 05:10:49 +0100
+Received: from b06cxnps4076.portsmouth.uk.ibm.com (9.149.109.198)
+        by e06smtp05.uk.ibm.com (192.168.101.135) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
+        Wed, 1 Apr 2020 05:10:45 +0100
+Received: from b06wcsmtp001.portsmouth.uk.ibm.com (b06wcsmtp001.portsmouth.uk.ibm.com [9.149.105.160])
+        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0314B00G54198312
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 1 Apr 2020 04:11:00 GMT
+Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 9A285A4060;
+        Wed,  1 Apr 2020 04:11:00 +0000 (GMT)
+Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id ECB78A405B;
+        Wed,  1 Apr 2020 04:10:58 +0000 (GMT)
+Received: from localhost.localdomain (unknown [9.199.52.194])
+        by b06wcsmtp001.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Wed,  1 Apr 2020 04:10:58 +0000 (GMT)
+From:   Chandan Rajendra <chandan@linux.ibm.com>
+To:     Qian Cai <cai@lca.pw>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        LKML <linux-kernel@vger.kernel.org>
+Subject: Re: linux-next: xfs metadata corruption since 30 March
+Date:   Wed, 01 Apr 2020 09:44:01 +0530
+Organization: IBM
+In-Reply-To: <990EDC4E-1A4E-4AC3-84D9-078ACF5EB9CC@lca.pw>
+References: <990EDC4E-1A4E-4AC3-84D9-078ACF5EB9CC@lca.pw>
 MIME-Version: 1.0
-Message-ID: <20200401040021.GC56958@magnolia>
-Date:   Wed, 1 Apr 2020 04:00:21 +0000 (UTC)
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Jan Kara <jack@suse.cz>, Ira Weiny <ira.weiny@intel.com>
-Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH V5 00/12] Enable per-file/per-directory DAX operations V5
-References: <20200227052442.22524-1-ira.weiny@intel.com>
- <20200305155144.GA5598@lst.de>
- <20200309170437.GA271052@iweiny-DESK2.sc.intel.com>
- <20200311033614.GQ1752567@magnolia> <20200311062952.GA11519@lst.de>
- <CAPcyv4h9Xg61jk=Uq17xC6AGj9yOSAJnCaTzHcfBZwOVdRF9dw@mail.gmail.com>
- <20200316095224.GF12783@quack2.suse.cz> <20200316095509.GA13788@lst.de>
-In-Reply-To: <20200316095509.GA13788@lst.de>
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9577 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0 mlxscore=0
- adultscore=0 phishscore=0 bulkscore=0 suspectscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004010035
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9577 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 adultscore=0
- clxscore=1011 phishscore=0 lowpriorityscore=0 spamscore=0 malwarescore=0
- suspectscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004010035
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+X-TM-AS-GCONF: 00
+x-cbid: 20040104-0020-0000-0000-000003BF5C19
+X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
+x-cbparentid: 20040104-0021-0000-0000-00002217FFB9
+Message-Id: <11749734.KdfBBZeIvc@localhost.localdomain>
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.676
+ definitions=2020-03-31_07:2020-03-31,2020-03-31 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 spamscore=0
+ impostorscore=0 mlxlogscore=889 lowpriorityscore=0 malwarescore=0
+ mlxscore=0 bulkscore=0 clxscore=1015 suspectscore=56 adultscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004010032
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 16, 2020 at 10:55:09AM +0100, Christoph Hellwig wrote:
-> On Mon, Mar 16, 2020 at 10:52:24AM +0100, Jan Kara wrote:
-> > > This sounds reasonable to me.
-> > > 
-> > > As for deprecating the mount option, I think at a minimum it needs to
-> > > continue be accepted as an option even if it is ignored to not break
-> > > existing setups.
-> > 
-> > Agreed. But that's how we usually deprecate mount options. Also I'd say
-> > that statx() support for reporting DAX state and some education of
-> > programmers using DAX is required before we deprecate the mount option
-> > since currently applications check 'dax' mount option to determine how much
-> > memory they need to set aside for page cache before they consume everything
-> > else on the machine...
-> 
-> I don't even think we should deprecate it.  It isn't painful to maintain
-> and actually useful for testing.  Instead we should expand it into a
-> tristate:
-> 
->   dax=off
->   dax=flag
->   dax=always
-> 
-> where the existing "dax" option maps to "dax=always" and nodax maps
-> to "dax=off". and dax=flag becomes the default for DAX capable devices.
+On Wednesday, April 1, 2020 3:27 AM Qian Cai wrote: 
+> Ever since two days ago, linux-next starts to trigger xfs metadata corruption
+> during compilation workloads on both powerpc and arm64,
 
-That works for me.  In summary:
+Can you please provide the filesystem geometry information?
+You can get that by executing "xfs_info <mount-point>" command.
 
- - Applications must call statx to discover the current S_DAX state.
+-- 
+chandan
 
- - There exists an advisory file inode flag FS_XFLAG_DAX that can be
-   changed on files that have no blocks allocated to them.  Changing
-   this flag does not necessarily change the S_DAX state immediately
-   but programs can query the S_DAX state via statx.
 
-   If FS_XFLAG_DAX is set and the fs is on pmem then it will always
-   enable S_DAX at inode load time; if FS_XFLAG_DAX is not set, it will
-   never enable S_DAX.  Unless overridden...
 
- - There exists a dax= mount option.  dax=off means "never set S_DAX,
-   ignore FS_XFLAG_DAX"; dax=always means "always set S_DAX (at least on
-   pmem), ignore FS_XFLAG_DAX"; and dax=iflag means "follow FS_XFLAG_DAX"
-   and is the default.  "dax" by itself means "dax=always".  "nodax"
-   means "dax=off".
-
- - There exists an advisory directory inode flag FS_XFLAG_DAX that can
-   be changed at any time.  The flag state is copied into any files or
-   subdirectories created within that directory.  If programs require
-   that file access runs in S_DAX mode, they'll have to create those
-   files themselves inside a directory with FS_XFLAG_DAX set, or mount
-   the fs with dax=always.
-
-Ok?  Let's please get this part finished for 5.8, then we can get back
-to arguing about fs-rmap and reflink and dax and whatnot.
-
---D
