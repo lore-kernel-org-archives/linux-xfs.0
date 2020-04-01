@@ -2,141 +2,168 @@ Return-Path: <SRS0=BKGZ=5R=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDAC3C43331
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Apr 2020 04:45:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD2AEC43331
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Apr 2020 05:16:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 94B7720787
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Apr 2020 04:45:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 962532077D
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Apr 2020 05:16:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="D3f/2242"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="iEffmn4A";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="SXVfDrOy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727918AbgDAEpi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Apr 2020 00:45:38 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:51566 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727727AbgDAEph (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Apr 2020 00:45:37 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0314dh6u006195;
-        Wed, 1 Apr 2020 04:45:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=YdM67ldAhHFfeDw9nUHOdcdwI+KPiQC/GZZKaa1lFK0=;
- b=D3f/2242QKG9Hze6Cr9Y+7RFEJN9Bxy2wSUpcvnmNP+Wjpk21qmAQdlKpCXW8VoVyhGr
- 8DmSFRkv3jR/0FCpo83ElEnYVBSvHEpkpTIebUi+DI1NOaM7kgtbR7fShtbqZvBkb3DY
- 5pRifF4g19pEk9zD0LLq/tcjOH+DmkXeMe5HtfqYqr/Ggegzs1WzbLMuiHe/IVcm+XuH
- 39rta1TEzjJUpGzhcel7/Fp2ZGYe0R/WP5Uk0CsBsieaKk7jKELWDzztQ2LlcueWU+Tq
- c+6+9sQ9Y7+0jRRfYS2Qkp2QuFe07OwDX+u3D+OirN2RcBd57WA/Vr78WAgKDGBDLoiJ xg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 303yun5s11-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 01 Apr 2020 04:45:31 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0314h1kR190293;
-        Wed, 1 Apr 2020 04:45:31 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 302gcepp85-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 01 Apr 2020 04:45:31 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0314jUxN016795;
-        Wed, 1 Apr 2020 04:45:30 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 31 Mar 2020 21:45:29 -0700
-Date:   Tue, 31 Mar 2020 21:45:28 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Qian Cai <cai@lca.pw>
-Cc:     Chandan Rajendra <chandan@linux.ibm.com>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: linux-next: xfs metadata corruption since 30 March
-Message-ID: <20200401044528.GE56958@magnolia>
-References: <990EDC4E-1A4E-4AC3-84D9-078ACF5EB9CC@lca.pw>
- <11749734.KdfBBZeIvc@localhost.localdomain>
- <FDCFF269-C30C-42A8-B926-A8731E110848@lca.pw>
+        id S1731735AbgDAFQB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Apr 2020 01:16:01 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:52528 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727918AbgDAFQB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Apr 2020 01:16:01 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1585718161; x=1617254161;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=OO3c2kXB2ruE2a/fWBYZ9mfzO+qVYdH7f9jg2qOPvVM=;
+  b=iEffmn4A5t4Oe+ZSqeyAs25ebGOeKZ/2nohGI+AYUpEWHBrVrEwMZR30
+   m2e4vjJRVFEXFzsjcbbQMx/zun1SCPoMo8T1NeFREXRp4BN2QsrqOP/oH
+   KUIEFgYjz/0EOamSPNLW2LPyhhkOBXnbRYgXPhGv9epjpx9PMOvnVEbEk
+   YrJSregf4I0vHcC4t81KxPWQoyVxRoV9C/BfCg0zqoe+csoPkq7Dn+kFx
+   +Hlw2+szt7WdHqOQZs+YUwAElACuyAZtabLBXqBeIU0WanCi1cU3U5vAQ
+   LQs/p83CHyriuDz/jT0LGIOFgYHUblVbOD8MuKOfdtW5nlWAhzg5qvOxx
+   A==;
+IronPort-SDR: gqQdd/dDHFjEJORdH2V3EMf1U4jajC2BoYLgQxiHB+3qLRkVV441QCPBVOuLIX7e1B9lIizZ3d
+ Hqud666O05HT5ZK8HkzVzFd9JiqvxVDNeZl9Te7maZ1pBrwryY8a4FpALh+Ev5CGdUSicRxlJz
+ gHDiXdZL1rSblU30SzKurrTSHltzCWle7zyJCaL2Nc0uS7F8XiREapTuEpBBGZz8LvhWD9MnPv
+ BAaeUWMbaFSmjBHvabnc653fRryn6WSjumfOx0kEyMZqRCM8Smt8dU8fpCzCp6V5IFRw6mvWrW
+ NZU=
+X-IronPort-AV: E=Sophos;i="5.72,330,1580745600"; 
+   d="scan'208";a="135663927"
+Received: from mail-mw2nam10lp2104.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.104])
+  by ob1.hgst.iphmx.com with ESMTP; 01 Apr 2020 13:15:59 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=bQMT7eQu8x9D7tq6qBByAnQ2KGwntSBenJohOvuNmlLKlba8sYj8G3Tuoz8CYyfWckmyE0ehJqxdXT35EtbqXmPd9UguUFU78xzh3zFW6zHmTJRLdIxrl0PjFvih352sETi/NIJpWmo42sePa4FpncrQYic10v2kdu4Ieo67JaIOUPgf/sDQ4olJKQ7OZRwtDlYajyIWyT45ZkfuNzF0OUlGLPKQ78e6GIIQrT85wJsKeBEydviQj9A5wzNRuyDPtFKSwTWYXr6WQ0Gu4OKvu0I4kzl6RVTMqJ9S1xTB/cxmw15H0YWN+auecUvXKbLACbh9wERvF0934P8X6SCtBA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=uaAzFEcMqZxZOdoN+/YLUH6kFKwgE8hClQsLjMNmUmQ=;
+ b=loNfa9Hyzm/1dcdo3sOKCsAfo2qeV3VeSTdYFOedVntgfn3LHBviUGzvKBjT7J0GGnPKmOZBtnLCQvI45kTaUKGszxF+i88pGw8xqErIf9kBAh1OkvCvIEwxtW7tooczoGV5NeOAmlUWg4SO6C+jkZVPtNzSVq4pJjvn3fQ5rTwsbisPBGvOpkgsuE1giRrJPegvDe9R8A7T2zlNU4afaZpjitcGL1AFoOpgNURH3pjshJTRdfVQntE7aq3P7I2YgEZNyBtYYTQ/9rt3AwV9HlE18mkA8r4C10b8lnoA29DSoR5KMekZpCMLOy5OhSFCYsGdz07lqpxFFXTXpeTLeg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=uaAzFEcMqZxZOdoN+/YLUH6kFKwgE8hClQsLjMNmUmQ=;
+ b=SXVfDrOy8WCLVRKWhrvv68EkvH+wye34NHwmcUGJMhG57CrNA+rYaAnXEx6qORQmXZ3UZ3YXTujJBYVx0wqlGrpbN+ANZMVPmpc+WRzl/WijXAxzGZTMQRUlHKOVqG85PZntW8CeG8/1a5erNDppTOufqaAZaPs5NRGGtkIzcgE=
+Received: from BYAPR04MB4965.namprd04.prod.outlook.com (2603:10b6:a03:4d::25)
+ by BYAPR04MB5862.namprd04.prod.outlook.com (2603:10b6:a03:10b::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2856.20; Wed, 1 Apr
+ 2020 05:15:57 +0000
+Received: from BYAPR04MB4965.namprd04.prod.outlook.com
+ ([fe80::d826:82b2:764f:9733]) by BYAPR04MB4965.namprd04.prod.outlook.com
+ ([fe80::d826:82b2:764f:9733%7]) with mapi id 15.20.2856.019; Wed, 1 Apr 2020
+ 05:15:57 +0000
+From:   Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
+To:     "xiakaixu1987@gmail.com" <xiakaixu1987@gmail.com>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+CC:     "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
+        Kaixu Xia <kaixuxia@tencent.com>
+Subject: Re: [PATCH v2] xfs: trace quota allocations for all quota types
+Thread-Topic: [PATCH v2] xfs: trace quota allocations for all quota types
+Thread-Index: AQHWB9ZK8fwSk1sS6EK/NFlSPXNyaw==
+Date:   Wed, 1 Apr 2020 05:15:57 +0000
+Message-ID: <BYAPR04MB4965E5D045578A08EF64E5EC86C90@BYAPR04MB4965.namprd04.prod.outlook.com>
+References: <1585711991-26411-1-git-send-email-kaixuxia@tencent.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Chaitanya.Kulkarni@wdc.com; 
+x-originating-ip: [2605:e000:3e40:3000:2c9f:112f:76b7:3770]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 986f64ae-7caf-4ec7-706c-08d7d5fbc2b3
+x-ms-traffictypediagnostic: BYAPR04MB5862:
+x-microsoft-antispam-prvs: <BYAPR04MB5862FC5CBF44C0D37AA8E9DD86C90@BYAPR04MB5862.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:1332;
+x-forefront-prvs: 03607C04F0
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR04MB4965.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(10019020)(4636009)(376002)(396003)(366004)(346002)(136003)(39860400002)(186003)(81166006)(4326008)(8676002)(81156014)(86362001)(55016002)(5660300002)(110136005)(66446008)(316002)(64756008)(66476007)(76116006)(66946007)(9686003)(66556008)(6506007)(53546011)(8936002)(54906003)(7696005)(52536014)(2906002)(33656002)(478600001)(71200400001)(15650500001);DIR:OUT;SFP:1102;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: nFqkRkTPSm+rJiV3J5ZaNRlWcQADqD+JhB2g/7gEKZ3F7KaiM9CO+0Fdpm157LBIEyb0uFeYHbyqNYFEADDX74+FmSXjnK4uYjxtFKbTUK9EEpkjKQ2u3hT5+29IfddNXLahjcrCQygd7+CTrKMH3lRwvfplrBxM1Wso2FAaR4BHwYlfDNUHsUfndmidQm0flrpyrHoNy/pizXpAzOpjomEdgYUxO0GHGDzSg1WDpm8dgKz0QKqGs102eFCXOQgvq1lusvpCcHv0NjlaP1nLriX321Y56PGbyQhwWtomgZNlfeTd25D8S/py01yMp8uUnDwoYSbq4r7bwg7X6qC6msNp95HoOBfYdgwF5OmxH/lesHu1EsL92YkfJyRwIU2/8vLUTcKzWadAA3fExmu1yJvAPRHGvvuOg39j/zKx8IhuaNaTWwCzIJ1B4ZCr0L8/
+x-ms-exchange-antispam-messagedata: GOZ+cDMwiMq2JHwFt0KN4YhLA0sqoQxuJZIV9zto4IfD0BF8XV/mtZYG+2g4nWuFEfz9Kxhm+0/LJ6YF+1tslkOZtntmutJuCtrES1FCWkyb1W/kSrgK1J8XBTwHh6FFirJVADtqZhbuaROF0ki21VEHd5YXyoPw7mGFNgVK0rbeBjstMfgsMMoxhbEHFTet46eAa4O5CAfoDd6DSy72wg==
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <FDCFF269-C30C-42A8-B926-A8731E110848@lca.pw>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9577 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 malwarescore=0
- mlxlogscore=999 adultscore=0 suspectscore=27 phishscore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004010041
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9577 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 lowpriorityscore=0
- malwarescore=0 adultscore=0 priorityscore=1501 mlxlogscore=999 bulkscore=0
- suspectscore=27 mlxscore=0 spamscore=0 impostorscore=0 clxscore=1015
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004010040
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 986f64ae-7caf-4ec7-706c-08d7d5fbc2b3
+X-MS-Exchange-CrossTenant-originalarrivaltime: 01 Apr 2020 05:15:57.3983
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: AZxeatzpkMxhQj08tG3930sWpYP3WId7jzNeVVVnvReCXuN0/yYuWVMT1OODIQluRH47iZmRZV0ccTT/4KbUPirA3t9xzy4eSBT6XwD8Fg8=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB5862
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 01, 2020 at 12:15:32AM -0400, Qian Cai wrote:
-> 
-> 
-> > On Apr 1, 2020, at 12:14 AM, Chandan Rajendra <chandan@linux.ibm.com> wrote:
-> > 
-> > On Wednesday, April 1, 2020 3:27 AM Qian Cai wrote: 
-> >> Ever since two days ago, linux-next starts to trigger xfs metadata corruption
-> >> during compilation workloads on both powerpc and arm64,
-> > 
-> > Can you please provide the filesystem geometry information?
-> > You can get that by executing "xfs_info <mount-point>" command.
-> > 
-
-Hmm.   Do the arm/ppc systems have 64k pages?  kconfigs might be a good
-starting place.  Also, does the xfs for-next branch exhibit this
-problem, or is it just the big -next branch that Stephen Rothwell puts
-out?
-
---D
-
-> == arm64 ==
-> # xfs_info /home/
-> meta-data=/dev/mapper/rhel_hpe--apollo--cn99xx--11-home isize=512    agcount=4, agsize=113568256 blks
->          =                       sectsz=4096  attr=2, projid32bit=1
->          =                       crc=1        finobt=1, sparse=1, rmapbt=0
->          =                       reflink=1
-> data     =                       bsize=4096   blocks=454273024, imaxpct=5
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-> log      =internal log           bsize=4096   blocks=221813, version=2
->          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> 
-> 
-> == powerpc ==
-> # xfs_info /home/
-> meta-data=/dev/mapper/rhel_ibm--p9wr--01-home isize=512    agcount=4, agsize=118489856 blks
->          =                       sectsz=4096  attr=2, projid32bit=1
->          =                       crc=1        finobt=1, sparse=1, rmapbt=0
->          =                       reflink=1
-> data     =                       bsize=4096   blocks=473959424, imaxpct=5
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-> log      =internal log           bsize=4096   blocks=231425, version=2
->          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> 
-> == x86 (not yet reproduced)  ==
-> meta-data=/dev/mapper/rhel_hpe--dl380gen9--01-home isize=512    agcount=16, agsize=3283776 blks
->          =                       sectsz=512   attr=2, projid32bit=1
->          =                       crc=1        finobt=1, sparse=1, rmapbt=0
->          =                       reflink=1
-> data     =                       bsize=4096   blocks=52540416, imaxpct=25
->          =                       sunit=64     swidth=64 blks
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-> log      =internal log           bsize=4096   blocks=25664, version=2
->          =                       sectsz=512   sunit=0 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
+On 3/31/20 8:33 PM, xiakaixu1987@gmail.com wrote:=0A=
+> From: Kaixu Xia <kaixuxia@tencent.com>=0A=
+>=0A=
+> The trace event xfs_dquot_dqalloc does not depend on the=0A=
+> value uq, so remove the condition, and trace quota allocations=0A=
+> for all quota types.=0A=
+>=0A=
+> Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>=0A=
+> ---=0A=
+> v2:=0A=
+>  - don't move the tracepoint higher in the function.=0A=
+>=0A=
+>  fs/xfs/xfs_qm.c | 3 +--=0A=
+>  1 file changed, 1 insertion(+), 2 deletions(-)=0A=
+>=0A=
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c=0A=
+> index 0b09096..43df596 100644=0A=
+> --- a/fs/xfs/xfs_qm.c=0A=
+> +++ b/fs/xfs/xfs_qm.c=0A=
+> @@ -1714,8 +1714,7 @@ struct xfs_qm_isolate {=0A=
+>  			pq =3D xfs_qm_dqhold(ip->i_pdquot);=0A=
+>  		}=0A=
+>  	}=0A=
+> -	if (uq)=0A=
+> -		trace_xfs_dquot_dqalloc(ip);=0A=
+> +	trace_xfs_dquot_dqalloc(ip);=0A=
+>  =0A=
+>  	xfs_iunlock(ip, lockflags);=0A=
+>  	if (O_udqpp)=0A=
+=0A=
+I'm not sure, but do we need something like following description in the=0A=
+commit log ?=0A=
+=0A=
+"Prior to commit 0b1b213fcf3a8 ("xfs: event tracing support") xfs=0A=
+tracing had=0A=
+=0A=
+xfs_dqtrace_entry_ino() which was dependent on the user quota "uq" , the ne=
+w=0A=
+=0A=
+API introduced by the above mentioned commit is not dependent on the uq,=0A=
+=0A=
+hence remove the check for uq."=0A=
+=0A=
+=0A=
+Irrespective of that this looks good to me :-=0A=
+=0A=
+Reviewed-by : Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>=0A=
+=0A=
+=0A=
+=0A=
