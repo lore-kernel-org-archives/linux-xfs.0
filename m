@@ -2,79 +2,109 @@ Return-Path: <SRS0=h0IP=5S=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E747C43331
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Apr 2020 10:59:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADD19C2BA17
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Apr 2020 14:53:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3CFB1206F8
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Apr 2020 10:59:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 853082074D
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Apr 2020 14:53:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nfbIVVxm"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="EefP7sqO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729213AbgDBK7f (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 2 Apr 2020 06:59:35 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:42030 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728803AbgDBK7f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Apr 2020 06:59:35 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=Zs3jqOkqmyEutTK3/LJemzAKr6/95/4rH7ArZ16ZB/4=; b=nfbIVVxm15GSJUOaUfVTkTLHXt
-        TBVU3hNtVBOFshM6tnEdInqrOSTbBOQq3/H/DiZqt5mCceeXC535sgSGKMB7j24TnJDeI4PsFDXNJ
-        s1NYtwZkv2e2a0emDmleAj2uDGDe3FaQoIsQBPqu1FcqIl1fe0J5VSMQFRSzQIL9jdFqs6CQ1nrjJ
-        N/NzFdrHPSzZuHg7wQcWsIA2TGPfEoQNXuPNUUjpnvM6Ja2W3oKiHdPwCh9J+T43AAXh1iNuSQkWn
-        78rrQOzUaV4BHakqpOnVSeTOxKPJqVM0ZTENyK+NAehLMdM+Sim8qYfjkrsc4mjlg1PtxMNyEe96/
-        Vsj27d5w==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jJxZO-0006mj-P4; Thu, 02 Apr 2020 10:59:34 +0000
-Date:   Thu, 2 Apr 2020 03:59:34 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, Qian Cai <cai@lca.pw>,
-        Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: fix inode number overflow in ifree cluster helper
-Message-ID: <20200402105934.GA23109@infradead.org>
-References: <20200402105718.609-1-bfoster@redhat.com>
+        id S2388742AbgDBOxx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Apr 2020 10:53:53 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:41168 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388808AbgDBOxx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Apr 2020 10:53:53 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 032EdeeL124841;
+        Thu, 2 Apr 2020 14:53:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=nvBC+OsLhz55VqU897WoZhX20kTbIOpgHvaXPmom2E4=;
+ b=EefP7sqOwy/icnyrZgNE+p7kSU2Ut62nV+TA6l1rwoXL0lYUIacBDtCM+MpuBSCV/aCo
+ 5vyxEBQhPEu1hm2FQXRv4HVu5J23GIXyLLx0asmribh3FsCoFB1Qe9abQLJKQ2rbu72w
+ mdVC3AiJgKcRK0musI5h23azpDP8RZGd08Uia8glr6l/DI1czVwD8B4N0U6dfGKvwJZv
+ kIZRC/1VFChQeuSoYjr3PvmvmFbP6gHjAdkmEFQKPWTMhU17w2exVuYQ0Jkn61sjECCJ
+ QM3S4TAuwCmuX/ny83O89jTSmdtYcTVOmOG0OazSQMVs90JoIRlwRYDhesa5wbUHKSWl KQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 303cevbxff-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 02 Apr 2020 14:53:46 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 032EcHlI072406;
+        Thu, 2 Apr 2020 14:53:46 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 302ga2jsmr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 02 Apr 2020 14:53:45 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 032ErjKb013833;
+        Thu, 2 Apr 2020 14:53:45 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 02 Apr 2020 07:53:45 -0700
+Date:   Thu, 2 Apr 2020 07:53:44 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: reflink should force the log out if mounted with
+ wsync
+Message-ID: <20200402145344.GE80283@magnolia>
+References: <20200402041705.GD80283@magnolia>
+ <20200402075108.GB17191@infradead.org>
+ <20200402084930.GA26523@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200402105718.609-1-bfoster@redhat.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200402084930.GA26523@infradead.org>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9579 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ mlxlogscore=999 bulkscore=0 mlxscore=0 spamscore=0 adultscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004020131
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9579 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 adultscore=0
+ clxscore=1015 phishscore=0 lowpriorityscore=0 spamscore=0 malwarescore=0
+ suspectscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2004020131
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 02, 2020 at 06:57:18AM -0400, Brian Foster wrote:
-> Qian Cai reports seemingly random buffer read verifier errors during
-> filesystem writeback. This was isolated to a recent patch that
-> factored out some inode cluster freeing code and happened to cast an
-> unsigned inode number type to a signed value. If the inode number
-> value overflows, we can skip marking in-core inodes associated with
-> the underlying buffer stale at the time the physical inodes are
-> freed. If such an inode happens to be dirty, xfsaild will eventually
-> attempt to write it back over non-inode blocks. The invalidation of
-> the underlying inode buffer causes writeback to read the buffer from
-> disk. This fails the read verifier (preventing eventual corruption)
-> if the buffer no longer looks like an inode cluster. Analysis by
-> Dave Chinner.
+On Thu, Apr 02, 2020 at 01:49:30AM -0700, Christoph Hellwig wrote:
+> On Thu, Apr 02, 2020 at 12:51:08AM -0700, Christoph Hellwig wrote:
+> > On Wed, Apr 01, 2020 at 09:17:05PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Reflink should force the log out to disk if the filesystem was mounted
+> > > with wsync, the same as most other operations in xfs.
+> > 
+> > Looks reasonable.  That being said I really hate the way we handle
+> > this - I've been wanting to rework the wsync/dirsync code to just mark
+> > as transaction as dirsync or wsync and then let xfs_trans_commit handle
+> > checking if the file system is mounted with the option to clean this
+> > mess up.  Let me see if I could resurrect that quickly.
 > 
-> Fix up the helper to use the proper type for inode number values.
-> 
-> Fixes: 5806165a6663 ("xfs: factor inode lookup from xfs_ifree_cluster")
-> Reported-by: Qian Cai <cai@lca.pw>
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
-> 
-> Fixes the problem described here[1]. I wasn't sure if we planned on
-> fixing the original patch in for-next or wanted a separate patch. Feel
-> free to commit standalone or fold into the original...
+> Resurrected and under testing now.  While forward porting your patch
+> I noticed it could be much simpler even without the refactor by just
+> using xfs_trans_set_sync.  The downside of that is that the log force
+> is under the inode locks, but so are the log forces for all other wysnc
+> induced log forces.  So I think you should just submit this in the
+> simplified version matching the rest of the wsync users as a fix. If
+> we want to optimize it later on that should be done as a separate patch
+> and for all wsync/dirsync users.
 
-Looks good:
+Can you please send in a Reviewed-by so I can get this moving? :)
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+--D
+
