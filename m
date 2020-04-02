@@ -2,73 +2,68 @@ Return-Path: <SRS0=h0IP=5S=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0949C43331
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Apr 2020 08:49:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86C75C2BA13
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Apr 2020 08:53:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C4072208E4
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Apr 2020 08:49:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rCvhqBDm"
+	by mail.kernel.org (Postfix) with ESMTP id 5EEDC20BED
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Apr 2020 08:53:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387682AbgDBItb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 2 Apr 2020 04:49:31 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:53910 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728612AbgDBItb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Apr 2020 04:49:31 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=VuGoSIc2KI8ow1jp9y215K8Eg8NTKqBkJHMVONR52iA=; b=rCvhqBDmhoDe528jgTYUROmKf5
-        Nab2ylSZr54n0yUy+QMFZuT+Po7HxSJX1H1vrb9wvCHXX2Ar/bjTkjkWkV6sbGSL4cIlCbvZPSAOv
-        zukBg03N1ooeJxwse8zEv68HsXhLoB+8W6d02TpNj2G9BgH1i0LBeF4+D/j8EeDF29ymgMPausG/O
-        kTjcg1IRTpxuA6JBRH+Ge9Wg6+TpCX4TL896rI79LcOgRy3vkIPVi0sMQgCoej8SDZF87kiLIYq2S
-        292c08T32FhJgvtoKgAsI4sYw1kPlwBRP3dv5IdiJdOsUEhyImYzpJyKGvvpkpzbVUp0rEG5NDUqq
-        kQ6t9fgg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jJvXW-00078K-R1; Thu, 02 Apr 2020 08:49:30 +0000
-Date:   Thu, 2 Apr 2020 01:49:30 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: reflink should force the log out if mounted with
- wsync
-Message-ID: <20200402084930.GA26523@infradead.org>
-References: <20200402041705.GD80283@magnolia>
- <20200402075108.GB17191@infradead.org>
+        id S2387903AbgDBIxa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Apr 2020 04:53:30 -0400
+Received: from verein.lst.de ([213.95.11.211]:47447 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2387875AbgDBIxa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Apr 2020 04:53:30 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id EFB8368C4E; Thu,  2 Apr 2020 10:53:27 +0200 (CEST)
+Date:   Thu, 2 Apr 2020 10:53:27 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jan Kara <jack@suse.cz>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Dave Chinner <david@fromorbit.com>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH V5 00/12] Enable per-file/per-directory DAX operations
+ V5
+Message-ID: <20200402085327.GA19109@lst.de>
+References: <20200227052442.22524-1-ira.weiny@intel.com> <20200305155144.GA5598@lst.de> <20200309170437.GA271052@iweiny-DESK2.sc.intel.com> <20200311033614.GQ1752567@magnolia> <20200311062952.GA11519@lst.de> <CAPcyv4h9Xg61jk=Uq17xC6AGj9yOSAJnCaTzHcfBZwOVdRF9dw@mail.gmail.com> <20200316095224.GF12783@quack2.suse.cz> <20200316095509.GA13788@lst.de> <20200401040021.GC56958@magnolia> <20200401102511.GC19466@quack2.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200402075108.GB17191@infradead.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200401102511.GC19466@quack2.suse.cz>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 02, 2020 at 12:51:08AM -0700, Christoph Hellwig wrote:
-> On Wed, Apr 01, 2020 at 09:17:05PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Apr 01, 2020 at 12:25:11PM +0200, Jan Kara wrote:
+> >  - Applications must call statx to discover the current S_DAX state.
 > > 
-> > Reflink should force the log out to disk if the filesystem was mounted
-> > with wsync, the same as most other operations in xfs.
+> >  - There exists an advisory file inode flag FS_XFLAG_DAX that can be
+> >    changed on files that have no blocks allocated to them.  Changing
+> >    this flag does not necessarily change the S_DAX state immediately
+> >    but programs can query the S_DAX state via statx.
 > 
-> Looks reasonable.  That being said I really hate the way we handle
-> this - I've been wanting to rework the wsync/dirsync code to just mark
-> as transaction as dirsync or wsync and then let xfs_trans_commit handle
-> checking if the file system is mounted with the option to clean this
-> mess up.  Let me see if I could resurrect that quickly.
+> I generally like the proposal but I think the fact that toggling
+> FS_XFLAG_DAX will not have immediate effect on S_DAX will cause quite some
+> confusion and ultimately bug reports. I'm thinking whether we could somehow
+> improve this... For example an ioctl that would try to make set inode flags
+> effective by evicting the inode (and returning EBUSY if the eviction is
+> impossible for some reason)?
 
-Resurrected and under testing now.  While forward porting your patch
-I noticed it could be much simpler even without the refactor by just
-using xfs_trans_set_sync.  The downside of that is that the log force
-is under the inode locks, but so are the log forces for all other wysnc
-induced log forces.  So I think you should just submit this in the
-simplified version matching the rest of the wsync users as a fix. If
-we want to optimize it later on that should be done as a separate patch
-and for all wsync/dirsync users.
+I'd just return an error for that case, don't play silly games like
+evicting the inode.
