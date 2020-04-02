@@ -2,94 +2,97 @@ Return-Path: <SRS0=h0IP=5S=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15498C18E5B
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Apr 2020 00:15:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76311C43331
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Apr 2020 02:26:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D3538206D3
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Apr 2020 00:15:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 450D02072E
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Apr 2020 02:26:44 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Mu7tj0Qt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732872AbgDBAPa convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Apr 2020 20:15:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50696 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732752AbgDBAPa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Apr 2020 20:15:30 -0400
-From:   bugzilla-daemon@bugzilla.kernel.org
+        id S1733303AbgDBC0n (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Apr 2020 22:26:43 -0400
+Received: from mail-pj1-f68.google.com ([209.85.216.68]:40743 "EHLO
+        mail-pj1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1733308AbgDBC0n (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Apr 2020 22:26:43 -0400
+Received: by mail-pj1-f68.google.com with SMTP id kx8so907305pjb.5
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Apr 2020 19:26:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=Gw1plltr70hS19r9RNTPG/3Ge4f+zU6JkZ15rByJBH8=;
+        b=Mu7tj0QtQgRE4pe35r1cq7t0T8C/DpDAgsN0K1mTIkehlF+ZPn2O9xHgxAsT/RqmFS
+         xQYzMLfPG0sLC2fP0jwGGLFzZFqSYTuLn9m9zdsOX3XBmVe6/NqKzEYn6ampUTfIwW+G
+         KBcBWipBp2qE6p21QT43dPvYtq7kppYzHM9cM5zFtadvNXLypADCLof6CvhiEcSmziRW
+         ML0UjttDgAeo+htAmwXCAvH8Cxt/IHoqG70a9a0lx1y0+JYd5bV1YRbdivDy4uQyghZy
+         Y1QKKQdaF9uYXjo30/G4D3ANyMaqOmMx+nHxMshwP3yHTiCFcE40GsKk074xmlzC/uA5
+         qunA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=Gw1plltr70hS19r9RNTPG/3Ge4f+zU6JkZ15rByJBH8=;
+        b=eFqkh4ZLg6rRceNIVQPQUURk5F5eF5uKqOYQFSFzfq/7YkC2X7t/NVXwiqJp8Apt+m
+         38EFt+dTbo6YxvnLlh9kFfHQV6UmaIhsPfQYDvl8wdZiY0L9skTpDV+beegH7tu3R097
+         TlbJPvzsFrR3njb6SesdmlRM/CT9Di0NDkmlxuXckvrJVfnWgFJot8XPLOOXhG58l/mm
+         6LItAw6a1zx/LMz6xtJB8NCrXK3V1Dd3SxLqNqeU+TSB0ACcNiDTUZ1C0hx9Pktz7ibs
+         1PKm2UOj/6v5w7AQqQMjst3ITajFn9kQ7Tv7n2RnAJvM3hw9egUxIbmN8UbvMQzaEcNz
+         /LqQ==
+X-Gm-Message-State: AGi0PuaeM9FWkbLcL9XdLVKEOq+tl9jAYtCAxPSXM54kP0zboVN8tSgz
+        uLv2EFEf7dgWs48QD8rk/sCQNYM+ZQ==
+X-Google-Smtp-Source: APiQypKwVJ1VCwfebgjhLNxOvucsSFKdzSLrDBZbuanAOAUhO0TFXK0+QYZ22PPQhP9OlTVwo8A6Gw==
+X-Received: by 2002:a17:90a:d154:: with SMTP id t20mr1167389pjw.133.1585794402106;
+        Wed, 01 Apr 2020 19:26:42 -0700 (PDT)
+Received: from he-cluster.localdomain ([67.216.221.250])
+        by smtp.gmail.com with ESMTPSA id m3sm2425532pgt.27.2020.04.01.19.26.41
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 01 Apr 2020 19:26:41 -0700 (PDT)
+From:   xiakaixu1987@gmail.com
+X-Google-Original-From: kaixuxia@tencent.com
 To:     linux-xfs@vger.kernel.org
-Subject: [Bug 207053] fsfreeze deadlock on XFS (the FIFREEZE ioctl and
- subsequent FITHAW hang indefinitely)
-Date:   Thu, 02 Apr 2020 00:15:29 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: david@fromorbit.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-207053-201763-pBbHaft3ls@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-207053-201763@https.bugzilla.kernel.org/>
-References: <bug-207053-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
-MIME-Version: 1.0
+Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
+Subject: [PATCH] xfs: combine two if statements with same condition
+Date:   Thu,  2 Apr 2020 10:26:34 +0800
+Message-Id: <1585794394-31041-1-git-send-email-kaixuxia@tencent.com>
+X-Mailer: git-send-email 1.8.3.1
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=207053
+From: Kaixu Xia <kaixuxia@tencent.com>
 
---- Comment #1 from Dave Chinner (david@fromorbit.com) ---
-On Wed, Apr 01, 2020 at 07:02:57PM +0000, bugzilla-daemon@bugzilla.kernel.org
-wrote:
-> When we upgraded from kernel 4.14.146 to kernel 4.19.75, we began to
-> experience
-> frequent deadlocks from our cronjobs that freeze the filesystem for
-> snapshotting.
+The two if statements have same condition, and the mask value
+does not change in xfs_setattr_nonsize(), so combine them.
 
-Probably commit d6b636ebb1c9 ("xfs: halt auto-reclamation activities
-while rebuilding rmap") in 4.18, but that fixes a bug that allowed
-reaping functions to attempt to modify the filesystem while it was
-frozen...
+Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
+---
+ fs/xfs/xfs_iops.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-> The fsfreeze stack shows:
-> # cat /proc/33256/stack 
-> [<0>] __flush_work+0x177/0x1b0
-> [<0>] __cancel_work_timer+0x12b/0x1b0
-> [<0>] xfs_stop_block_reaping+0x15/0x30 [xfs]
-> [<0>] xfs_fs_freeze+0x15/0x40 [xfs]
-> [<0>] freeze_super+0xc8/0x190
-> [<0>] do_vfs_ioctl+0x510/0x630
-> [<0>] ksys_ioctl+0x70/0x80
-> [<0>] __x64_sys_ioctl+0x16/0x20
-> [<0>] do_syscall_64+0x4e/0x100
-> [<0>] entry_SYSCALL_64_after_hwframe+0x44/0xa9
-
-This indicates that the reaping worker is still busy doing work. It
-needs to finish before the freeze will continue to make progress.
-So either the system is still doing work, or the kworker has blocked
-somewhere.
-
-What is the dmesg output of 'echo w > /prox/sysrq-trigger'?
-
-Cheers,
-
-Dave.
-
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index f7a99b3..e348145 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -738,12 +738,7 @@
+ 			if (error)	/* out of quota */
+ 				goto out_cancel;
+ 		}
+-	}
+ 
+-	/*
+-	 * Change file ownership.  Must be the owner or privileged.
+-	 */
+-	if (mask & (ATTR_UID|ATTR_GID)) {
+ 		/*
+ 		 * CAP_FSETID overrides the following restrictions:
+ 		 *
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+1.8.3.1
+
