@@ -1,126 +1,198 @@
-Return-Path: <SRS0=h0IP=5S=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=euis=5T=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 156D9C43331
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Apr 2020 21:55:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8EBDC2BA16
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Apr 2020 03:34:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D206320737
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Apr 2020 21:55:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9308C207FF
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Apr 2020 03:34:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1585884860;
+	bh=+iJub638N4FDV5fzWnFJ0138Z1h34HJuxGJnd8LMwv8=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=IRqWY++m51tb667p89x/9+xv/2sz8Uo7Nw9b3DEgzOCA94KrhD6nm8//Zp2p3q7nC
+	 bBcGILB+O+OUQkK1T5E18MNuITrk3LdlX6XEyAuXbQtXFlPPEI/dDTu4eFFPDYRr90
+	 8UBKxPKhN0mjOmE8QomOkW/lC5wmxVlr33ZNAUEk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732995AbgDBVzy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 2 Apr 2020 17:55:54 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:34924 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726963AbgDBVzy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Apr 2020 17:55:54 -0400
-Received: from dread.disaster.area (pa49-180-164-3.pa.nsw.optusnet.com.au [49.180.164.3])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 4D50D7EA6D7;
-        Fri,  3 Apr 2020 08:55:51 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jK7oT-0005AS-LZ; Fri, 03 Apr 2020 08:55:49 +1100
-Date:   Fri, 3 Apr 2020 08:55:49 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: reflink should force the log out if mounted with
- wsync
-Message-ID: <20200402215549.GB21885@dread.disaster.area>
-References: <20200402041705.GD80283@magnolia>
+        id S2390368AbgDCDeT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Apr 2020 23:34:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56028 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388951AbgDCDeT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Apr 2020 23:34:19 -0400
+Received: from sol.hsd1.ca.comcast.net (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id BD60120675;
+        Fri,  3 Apr 2020 03:34:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1585884858;
+        bh=+iJub638N4FDV5fzWnFJ0138Z1h34HJuxGJnd8LMwv8=;
+        h=From:To:Cc:Subject:Date:From;
+        b=wayCpx2HmiJfCWjFIuUaDCLsR5SV+eaV9TaRzlBq6k+GT0nnUD4xi4ZJxBIPCA9av
+         0tUmtIA4/dfcfkMPqZ0kbhmBs6ys7aaWgbNhwoKSvfx8TRMT/w/2pFp/elvOPC+kRf
+         HFioM+m0oxewqhrK0/fYMPvpQBNGgd5c72y+FyLo=
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     fstests@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: [PATCH v2] generic: test PF_MEMALLOC interfering with accounting file write
+Date:   Thu,  2 Apr 2020 20:33:55 -0700
+Message-Id: <20200403033355.140984-1-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.26.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200402041705.GD80283@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
-        a=K0+o7W9luyMo1Ua2eXjR1w==:117 a=K0+o7W9luyMo1Ua2eXjR1w==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=cl8xLZFz6L8A:10
-        a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8 a=XESBqbC2DxrBUUkUzz0A:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 01, 2020 at 09:17:05PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Reflink should force the log out to disk if the filesystem was mounted
-> with wsync, the same as most other operations in xfs.
-> 
-> Fixes: 3fc9f5e409319 ("xfs: remove xfs_reflink_remap_range")
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_file.c    |   21 +++++++++++++++++++--
->  fs/xfs/xfs_reflink.c |   15 ++++++++++++++-
->  fs/xfs/xfs_reflink.h |    3 ++-
->  3 files changed, 35 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index b8a4a3f29b36..17bdc5bbc2ae 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1029,8 +1029,10 @@ xfs_file_remap_range(
->  	struct inode		*inode_out = file_inode(file_out);
->  	struct xfs_inode	*dest = XFS_I(inode_out);
->  	struct xfs_mount	*mp = src->i_mount;
-> +	xfs_lsn_t		sync_lsn = 0;
->  	loff_t			remapped = 0;
->  	xfs_extlen_t		cowextsize;
-> +	bool			need_sync;
->  	int			ret;
->  
->  	if (remap_flags & ~(REMAP_FILE_DEDUP | REMAP_FILE_ADVISORY))
-> @@ -1068,13 +1070,28 @@ xfs_file_remap_range(
->  		cowextsize = src->i_d.di_cowextsize;
->  
->  	ret = xfs_reflink_update_dest(dest, pos_out + len, cowextsize,
-> -			remap_flags);
-> +			remap_flags, &need_sync);
-> +	if (ret)
-> +		goto out_unlock;
-> +
-> +	/*
-> +	 * If this is a synchronous mount and xfs_reflink_update_dest didn't
-> +	 * already take care of this, make sure that the transaction goes to
-> +	 * disk before returning to the user.
-> +	 */
-> +	if (need_sync && xfs_ipincount(dest))
-> +		sync_lsn = dest->i_itemp->ili_last_lsn;
->  
->  out_unlock:
->  	xfs_reflink_remap_unlock(file_in, file_out);
->  	if (ret)
->  		trace_xfs_reflink_remap_range_error(dest, ret, _RET_IP_);
-> -	return remapped > 0 ? remapped : ret;
-> +	if (remapped > 0) {
-> +		if (sync_lsn)
-> +			xfs_log_force_lsn(mp, sync_lsn, XFS_LOG_SYNC, NULL);
-> +		return remapped;
-> +	}
-> +	return ret;
+From: Eric Biggers <ebiggers@google.com>
 
-This seems pretty fragile compared to all the other WSYNC cases
-which just set the last transaction as a sync transaction.
+Add a regression test for the bug fixed by commit 10a98cb16d80 ("xfs:
+clear PF_MEMALLOC before exiting xfsaild thread").
 
-Why can't we just set the transaction sync at the appropriate time,
-and if we have to do two sync commits for a reflink then we just
-suck it up for now?
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
 
-As it is, wsync is really only used for active/passive HA configs
-these days, which means we've already given up on performance
-because data integrity is an essential requirement in those
-configs...
+Changed since v1:
+    - Fix _require_bsd_process_accounting() to not leave process
+      accounting enabled.
+    - Removed RFC tag since the kernel fix is now in mainline.
+   
 
-Cheers,
+ common/config         |  1 +
+ common/rc             | 12 +++++++++
+ tests/generic/901     | 60 +++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/901.out |  2 ++
+ tests/generic/group   |  1 +
+ 5 files changed, 76 insertions(+)
+ create mode 100644 tests/generic/901
+ create mode 100644 tests/generic/901.out
 
-Dave.
+diff --git a/common/config b/common/config
+index 1116cb99..8023273d 100644
+--- a/common/config
++++ b/common/config
+@@ -220,6 +220,7 @@ export DUPEREMOVE_PROG="$(type -P duperemove)"
+ export CC_PROG="$(type -P cc)"
+ export FSVERITY_PROG="$(type -P fsverity)"
+ export OPENSSL_PROG="$(type -P openssl)"
++export ACCTON_PROG="$(type -P accton)"
+ 
+ # use 'udevadm settle' or 'udevsettle' to wait for lv to be settled.
+ # newer systems have udevadm command but older systems like RHEL5 don't.
+diff --git a/common/rc b/common/rc
+index 454f5ccf..7d6ea90c 100644
+--- a/common/rc
++++ b/common/rc
+@@ -4168,6 +4168,18 @@ _check_xfs_scrub_does_unicode() {
+ 	return 0
+ }
+ 
++# Require the 'accton' userspace tool and CONFIG_BSD_PROCESS_ACCT=y.
++_require_bsd_process_accounting()
++{
++	_require_command "$ACCTON_PROG" accton
++	$ACCTON_PROG on &> $tmp.test_accton
++	cat $tmp.test_accton >> $seqres.full
++	if grep 'Function not implemented' $tmp.test_accton; then
++		_notrun "BSD process accounting support unavailable"
++	fi
++	$ACCTON_PROG off >> $seqres.full
++}
++
+ init_rc
+ 
+ ################################################################################
+diff --git a/tests/generic/901 b/tests/generic/901
+new file mode 100644
+index 00000000..c59300f1
+--- /dev/null
++++ b/tests/generic/901
+@@ -0,0 +1,60 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright 2020 Google LLC
++#
++# FS QA Test No. 901
++#
++# Regression test for the bug fixed by commit 10a98cb16d80 ("xfs: clear
++# PF_MEMALLOC before exiting xfsaild thread").  If the bug exists, a kernel
++# WARNING should be triggered.  See the commit message for details.
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	$ACCTON_PROG off >> $seqres.full
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_require_bsd_process_accounting
++_require_chattr S
++_require_test
++_require_scratch
++
++# To trigger the bug we must unmount a filesystem while BSD process accounting
++# is enabled.  The accounting file must also be located on a different
++# filesystem and have the sync flag set.
++
++accounting_file=$TEST_DIR/$seq
++
++rm -f $accounting_file
++touch $accounting_file
++$CHATTR_PROG +S $accounting_file
++
++_scratch_mkfs &>> $seqres.full
++$ACCTON_PROG $accounting_file >> $seqres.full
++_scratch_mount
++_scratch_unmount
++$ACCTON_PROG off >> $seqres.full
++
++echo "Silence is golden"
++
++status=0
++exit
+diff --git a/tests/generic/901.out b/tests/generic/901.out
+new file mode 100644
+index 00000000..b206bc11
+--- /dev/null
++++ b/tests/generic/901.out
+@@ -0,0 +1,2 @@
++QA output created by 901
++Silence is golden
+diff --git a/tests/generic/group b/tests/generic/group
+index dc95b77b..61a67979 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -595,3 +595,4 @@
+ 591 auto quick rw pipe splice
+ 592 auto quick encrypt
+ 593 auto quick encrypt
++901 auto quick
 -- 
-Dave Chinner
-david@fromorbit.com
+2.26.0
+
