@@ -2,75 +2,160 @@ Return-Path: <SRS0=euis=5T=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53B60C2BA15
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Apr 2020 07:27:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B6F1C43331
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Apr 2020 12:55:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2ACE9206F8
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Apr 2020 07:27:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59F982063A
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Apr 2020 12:55:26 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qPs56qiR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388121AbgDCH1e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Apr 2020 03:27:34 -0400
-Received: from verein.lst.de ([213.95.11.211]:51430 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730889AbgDCH1e (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 3 Apr 2020 03:27:34 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 7785668BFE; Fri,  3 Apr 2020 09:27:31 +0200 (CEST)
-Date:   Fri, 3 Apr 2020 09:27:31 +0200
+        id S1727989AbgDCMz0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Apr 2020 08:55:26 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:44398 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727882AbgDCMzZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Apr 2020 08:55:25 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=uQtHPGcLK8G/i9QFhaX7eMgaanZTM+avGS/SdTNWqbw=; b=qPs56qiRIw99372wsPz5mbCvln
+        6PvK12Xiu/3DManmm5lVM6tUQlfjrqcl1wEa1KDfwwe19m1JSJGoeRmReGu0h8tHHGI+CeBYTnUq6
+        qtTM9Z37kmeGdqr5bLUs4ly4XLPTKFM+9vHdtbRnGapS3ddZVve9LW+rwaQXVIIHbta/DpF4XNSfb
+        rxGPh4PJZaBPpNsxBhlsrol+40WRTyGa3rDzJ0VyrnW1pTKGPVR0SPd4CY6Rv6ECT6r6qrEXphKdy
+        Tx19P8Xg8ZuQtBQK5VeoCnb252pTZtPW3r0qp8kExBnuNREFOh2pxMv+bJGLA4lMLVIhgFLIs1XDt
+        00rAcx8A==;
+Received: from 089144198148.atnat0007.highway.a1.net ([89.144.198.148] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jKLr3-0002rA-8T
+        for linux-xfs@vger.kernel.org; Fri, 03 Apr 2020 12:55:25 +0000
 From:   Christoph Hellwig <hch@lst.de>
-To:     Ira Weiny <ira.weiny@intel.com>
-Cc:     Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dave Chinner <david@fromorbit.com>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH V5 00/12] Enable per-file/per-directory DAX operations
- V5
-Message-ID: <20200403072731.GA24176@lst.de>
-References: <20200309170437.GA271052@iweiny-DESK2.sc.intel.com> <20200311033614.GQ1752567@magnolia> <20200311062952.GA11519@lst.de> <CAPcyv4h9Xg61jk=Uq17xC6AGj9yOSAJnCaTzHcfBZwOVdRF9dw@mail.gmail.com> <20200316095224.GF12783@quack2.suse.cz> <20200316095509.GA13788@lst.de> <20200401040021.GC56958@magnolia> <20200401102511.GC19466@quack2.suse.cz> <20200402085327.GA19109@lst.de> <20200402205518.GF3952565@iweiny-DESK2.sc.intel.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 1/2] xfs: factor out a new xfs_log_force_inode helper
+Date:   Fri,  3 Apr 2020 14:55:21 +0200
+Message-Id: <20200403125522.450299-1-hch@lst.de>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200402205518.GF3952565@iweiny-DESK2.sc.intel.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 02, 2020 at 01:55:19PM -0700, Ira Weiny wrote:
-> > I'd just return an error for that case, don't play silly games like
-> > evicting the inode.
-> 
-> I think I agree with Christoph here.  But I want to clarify.  I was heading in
-> a direction of failing the ioctl completely.  But we could have the flag change
-> with an appropriate error which could let the user know the change has been
-> delayed.
-> 
-> But I don't immediately see what error code is appropriate for such an
-> indication.  Candidates I can envision:
-> 
-> EAGAIN
-> ERESTART
-> EUSERS
-> EINPROGRESS
-> 
-> None are perfect but I'm leaning toward EINPROGRESS.
+Create a new helper to force the log up to the last LSN touching an
+inode.
 
-I really, really dislike that idea.  The whole point of not forcing
-evictions is to make it clear - no this inode is "busy" you can't
-do that.  A reasonably smart application can try to evict itself.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_export.c | 14 +-------------
+ fs/xfs/xfs_file.c   | 12 +-----------
+ fs/xfs/xfs_inode.c  | 19 +++++++++++++++++++
+ fs/xfs/xfs_inode.h  |  1 +
+ 4 files changed, 22 insertions(+), 24 deletions(-)
 
-But returning an error and doing a lazy change anyway is straight from
-the playbook for arcane and confusing API designs.
+diff --git a/fs/xfs/xfs_export.c b/fs/xfs/xfs_export.c
+index f1372f9046e3..5a4b0119143a 100644
+--- a/fs/xfs/xfs_export.c
++++ b/fs/xfs/xfs_export.c
+@@ -15,7 +15,6 @@
+ #include "xfs_trans.h"
+ #include "xfs_inode_item.h"
+ #include "xfs_icache.h"
+-#include "xfs_log.h"
+ #include "xfs_pnfs.h"
+ 
+ /*
+@@ -221,18 +220,7 @@ STATIC int
+ xfs_fs_nfs_commit_metadata(
+ 	struct inode		*inode)
+ {
+-	struct xfs_inode	*ip = XFS_I(inode);
+-	struct xfs_mount	*mp = ip->i_mount;
+-	xfs_lsn_t		lsn = 0;
+-
+-	xfs_ilock(ip, XFS_ILOCK_SHARED);
+-	if (xfs_ipincount(ip))
+-		lsn = ip->i_itemp->ili_last_lsn;
+-	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+-
+-	if (!lsn)
+-		return 0;
+-	return xfs_log_force_lsn(mp, lsn, XFS_LOG_SYNC, NULL);
++	return xfs_log_force_inode(XFS_I(inode));
+ }
+ 
+ const struct export_operations xfs_export_operations = {
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index b8a4a3f29b36..68e1cbb3cfcc 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -80,19 +80,9 @@ xfs_dir_fsync(
+ 	int			datasync)
+ {
+ 	struct xfs_inode	*ip = XFS_I(file->f_mapping->host);
+-	struct xfs_mount	*mp = ip->i_mount;
+-	xfs_lsn_t		lsn = 0;
+ 
+ 	trace_xfs_dir_fsync(ip);
+-
+-	xfs_ilock(ip, XFS_ILOCK_SHARED);
+-	if (xfs_ipincount(ip))
+-		lsn = ip->i_itemp->ili_last_lsn;
+-	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+-
+-	if (!lsn)
+-		return 0;
+-	return xfs_log_force_lsn(mp, lsn, XFS_LOG_SYNC, NULL);
++	return xfs_log_force_inode(ip);
+ }
+ 
+ STATIC int
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index c5077e6326c7..e48fc835cb85 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3951,3 +3951,22 @@ xfs_irele(
+ 	trace_xfs_irele(ip, _RET_IP_);
+ 	iput(VFS_I(ip));
+ }
++
++/*
++ * Ensure all commited transactions touching the inode are written to the log.
++ */
++int
++xfs_log_force_inode(
++	struct xfs_inode	*ip)
++{
++	xfs_lsn_t		lsn = 0;
++
++	xfs_ilock(ip, XFS_ILOCK_SHARED);
++	if (xfs_ipincount(ip))
++		lsn = ip->i_itemp->ili_last_lsn;
++	xfs_iunlock(ip, XFS_ILOCK_SHARED);
++
++	if (!lsn)
++		return 0;
++	return xfs_log_force_lsn(ip->i_mount, lsn, XFS_LOG_SYNC, NULL);
++}
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 492e53992fa9..c6a63f6764a6 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -426,6 +426,7 @@ int		xfs_itruncate_extents_flags(struct xfs_trans **,
+ 				struct xfs_inode *, int, xfs_fsize_t, int);
+ void		xfs_iext_realloc(xfs_inode_t *, int, int);
+ 
++int		xfs_log_force_inode(struct xfs_inode *ip);
+ void		xfs_iunpin_wait(xfs_inode_t *);
+ #define xfs_ipincount(ip)	((unsigned int) atomic_read(&ip->i_pincount))
+ 
+-- 
+2.25.1
+
