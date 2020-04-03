@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3CF1C2BA1A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B5ADC2BA18
 	for <linux-xfs@archiver.kernel.org>; Fri,  3 Apr 2020 22:12:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8893D2078C
+	by mail.kernel.org (Postfix) with ESMTP id 1D4A32078C
 	for <linux-xfs@archiver.kernel.org>; Fri,  3 Apr 2020 22:12:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="oCanZ8Dp"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="0EP6Mrem"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726460AbgDCWMM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Apr 2020 18:12:12 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:47038 "EHLO
+        id S1728501AbgDCWML (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Apr 2020 18:12:11 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:47032 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728288AbgDCWML (ORCPT
+        with ESMTP id S1726460AbgDCWML (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Apr 2020 18:12:11 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 033M9jCG082651
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 033MA08h082820
         for <linux-xfs@vger.kernel.org>; Fri, 3 Apr 2020 22:12:10 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
  date : message-id : in-reply-to : references; s=corp-2020-01-29;
- bh=5RjMmjJFI/zKbRhht1DkI51waVOQn4KKaQqO7hbSKaw=;
- b=oCanZ8Dp4JzFCX8MXd12MOzhmUkRIuPjSWzHbtviKo+5JvKPlVGL8kaW/YcjGQ7eY+O+
- aqYYrCxh1SFI/TAtHiMejZPV4S95M5VQFJfxT+6SZp/O76ff+jU99yLX5CzotWHzDd17
- QIbQQvcNIUmUCKbC+aVMRFjPAB0hjvq/7z2mDgt/kNZIKNXT2X3f1+rnGxYxj7uSLZsH
- ZknddedHj08Yj9lgrDX91mjd9OvRwiofSaUelP4Z2FyMBeKBXEqY6EngyoyjsGvWMseQ
- zwDfT6AkrfoQioYbIrLQrLdJF6yxERIbZ1J7tXbjJUdv3RBJ8dXPUQU++v5nE9F9Q4lo 6Q== 
+ bh=RC5EGfSFsf5ab2DM6mj9suAAliyUE8J2YH03fLi6o2E=;
+ b=0EP6Mrempexbhy/vM7M44xmzznpW5BXTyJ2ASMtSB/QiajQ8qj+panHcC1Qjp2nu2Q+W
+ m7rGKUYjH4lvCZuCo7i1EI0ydz0mowPLeq3MM4qt/6GLPzIEoah5G5BlH4v3bMWSVpq1
+ e5mnzhMDuVOS5kRtj3iy6pO4LemYv7Zr6HYjvQD1mD+03YKPn9iSjG4NRU32k7Kpdw0R
+ s1PES9sFkJyb4wIaFZuqZ4jCN+3Nt9YM0E5TGO96dpE4yBzuToPpqOGxAoR8C65fZ02B
+ opfD7tfXKFq9LElzRMSP9Tpqudrq7ESmcw4Cd//qpGPnhcTT8bNbDi2dQduJnEzpw3Y5 nQ== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 303cevkdpd-1
+        by userp2130.oracle.com with ESMTP id 303cevkdpb-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
         for <linux-xfs@vger.kernel.org>; Fri, 03 Apr 2020 22:12:10 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 033M8Np2062337
-        for <linux-xfs@vger.kernel.org>; Fri, 3 Apr 2020 22:10:10 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 302ga611w5-1
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 033M8NXW062341
+        for <linux-xfs@vger.kernel.org>; Fri, 3 Apr 2020 22:10:09 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 302ga611wg-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 03 Apr 2020 22:10:10 +0000
+        for <linux-xfs@vger.kernel.org>; Fri, 03 Apr 2020 22:10:09 +0000
 Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 033MA8aG015980
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 033MA8mV005646
         for <linux-xfs@vger.kernel.org>; Fri, 3 Apr 2020 22:10:08 GMT
 Received: from localhost.localdomain (/67.1.1.216)
         by default (Oracle Beehive Gateway v4.0)
         with ESMTP ; Fri, 03 Apr 2020 15:10:08 -0700
 From:   Allison Collins <allison.henderson@oracle.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v8 13/39] xfsprogs: cleanup struct xfs_attr_list_context
-Date:   Fri,  3 Apr 2020 15:09:32 -0700
-Message-Id: <20200403220958.4944-14-allison.henderson@oracle.com>
+Subject: [PATCH v8 14/39] xfsprogs: remove the unused ATTR_ENTRY macro
+Date:   Fri,  3 Apr 2020 15:09:33 -0700
+Message-Id: <20200403220958.4944-15-allison.henderson@oracle.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200403220958.4944-1-allison.henderson@oracle.com>
 References: <20200403220958.4944-1-allison.henderson@oracle.com>
@@ -73,71 +73,34 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Replace the alist char pointer with a void buffer given that different
-callers use it in different ways.  Use the chance to remove the typedef
-and reduce the indentation of the struct definition so that it doesn't
-overflow 80 char lines all over.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Allison Collins <allison.henderson@oracle.com>
 ---
- libxfs/xfs_attr.h | 34 +++++++++++++++++-----------------
- 1 file changed, 17 insertions(+), 17 deletions(-)
+ libxfs/xfs_attr.h | 8 --------
+ 1 file changed, 8 deletions(-)
 
 diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
-index 0f36939..0c8f7c7 100644
+index 0c8f7c7..31c0ffd 100644
 --- a/libxfs/xfs_attr.h
 +++ b/libxfs/xfs_attr.h
-@@ -99,28 +99,28 @@ typedef struct attrlist_cursor_kern {
- typedef void (*put_listent_func_t)(struct xfs_attr_list_context *, int,
- 			      unsigned char *, int, int);
+@@ -70,14 +70,6 @@ typedef struct attrlist_ent {	/* data from attr_list() */
+ } attrlist_ent_t;
  
--typedef struct xfs_attr_list_context {
--	struct xfs_trans		*tp;
--	struct xfs_inode		*dp;		/* inode */
--	struct attrlist_cursor_kern	*cursor;	/* position in list */
--	char				*alist;		/* output buffer */
-+struct xfs_attr_list_context {
-+	struct xfs_trans	*tp;
-+	struct xfs_inode	*dp;		/* inode */
-+	struct attrlist_cursor_kern *cursor;	/* position in list */
-+	void			*buffer;	/* output buffer */
- 
- 	/*
- 	 * Abort attribute list iteration if non-zero.  Can be used to pass
- 	 * error values to the xfs_attr_list caller.
- 	 */
--	int				seen_enough;
--	bool				allow_incomplete;
+ /*
+- * Given a pointer to the (char*) buffer containing the attr_list() result,
+- * and an index, return a pointer to the indicated attribute in the buffer.
+- */
+-#define	ATTR_ENTRY(buffer, index)		\
+-	((attrlist_ent_t *)			\
+-	 &((char *)buffer)[ ((attrlist_t *)(buffer))->al_offset[index] ])
 -
--	ssize_t				count;		/* num used entries */
--	int				dupcnt;		/* count dup hashvals seen */
--	int				bufsize;	/* total buffer size */
--	int				firstu;		/* first used byte in buffer */
--	int				flags;		/* from VOP call */
--	int				resynch;	/* T/F: resynch with cursor */
--	put_listent_func_t		put_listent;	/* list output fmt function */
--	int				index;		/* index into output buffer */
--} xfs_attr_list_context_t;
-+	int			seen_enough;
-+	bool			allow_incomplete;
-+
-+	ssize_t			count;		/* num used entries */
-+	int			dupcnt;		/* count dup hashvals seen */
-+	int			bufsize;	/* total buffer size */
-+	int			firstu;		/* first used byte in buffer */
-+	int			flags;		/* from VOP call */
-+	int			resynch;	/* T/F: resynch with cursor */
-+	put_listent_func_t	put_listent;	/* list output fmt function */
-+	int			index;		/* index into output buffer */
-+};
- 
- 
- /*========================================================================
+-/*
+  * Kernel-internal version of the attrlist cursor.
+  */
+ typedef struct attrlist_cursor_kern {
 -- 
 2.7.4
 
