@@ -2,243 +2,101 @@ Return-Path: <SRS0=euis=5T=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5D94C2BA17
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Apr 2020 18:40:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0167DC2BA18
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Apr 2020 22:10:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AD73C20737
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Apr 2020 18:40:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CAB5F2078C
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Apr 2020 22:10:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="xeFMnEEb"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="f1n23MVs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728188AbgDCSkF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Apr 2020 14:40:05 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:35872 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728069AbgDCSkF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Apr 2020 14:40:05 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 033IdpwV070659;
-        Fri, 3 Apr 2020 18:39:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=US8sLZnPxZ4y6UO3tSsSOv7UIGRPUmZ6f+wFCFJJeOQ=;
- b=xeFMnEEbWYLoDz5Q5V+8ejlUQ96+jvJQ6VH388yPYlgQsWMjCKX3dhXGui0EA5iDYxIL
- SeUdA9Iz1umAPmeBbGKEqvD7xq77dQHg765FxTV5LNf4FzEW28t5zAHIRUMDQN2RsxLd
- cvGmvppcaH9X75UfLaXlyHr5PrTxVV1kwHo153hFWyfzo/sU2ua2zuOtwu0DEegGZfll
- 3ym5lVJlp5dzzOtFk4YwEnMPFUDISPnW/vXZ4/6FuwEI3DgPx8KZuKRzeOvxczjSNopZ
- Lt4Vw44B6sKXAQDA8Ffyx4/m/wDeh+etYwCvW11i2yUnsUjji91jZcegnl5uy0upMfxw Mg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 303yunn8cc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 03 Apr 2020 18:39:51 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 033ISOBr169247;
-        Fri, 3 Apr 2020 18:37:51 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 302g4xyebw-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 03 Apr 2020 18:37:51 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 033Ibm72020164;
-        Fri, 3 Apr 2020 18:37:48 GMT
-Received: from localhost (/67.169.218.210)
+        id S1727829AbgDCWKI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Apr 2020 18:10:08 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:38378 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727842AbgDCWKH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Apr 2020 18:10:07 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 033M91XO019200
+        for <linux-xfs@vger.kernel.org>; Fri, 3 Apr 2020 22:10:06 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
+ date : message-id : in-reply-to : references; s=corp-2020-01-29;
+ bh=iydhf0LB5YIEF9EBBSOiFHX9VFA4DhbfPRT/qsdcfNY=;
+ b=f1n23MVsW1RESNy8vg6+O5P0V87ZHrl/0p+Qc+vlLRKDQ7iqnbR9XMpvXi1JcRnHb1Rn
+ 7RlQ8tbj3qS1ka+mfDdmMzCkXC/cUMMWaGWS79N+Dj52YZtxAAYP+6dsuoBRg8oRqcp+
+ 35Fm8eZ3FJqo/L/0Ip6AE2BzE49PimQeI/hiEXuv62eHYmhDQeYy6+YxzTmFBmCuKYcQ
+ yoXUs+F4EEy9uFSCaU93EZCtU5kp5U5bfn0YedgCfgsDkVGYqJHCiJ9WJpPelmhxDm5p
+ t7RjUdS4kwPdmQJRRaY7S1eAFP37M3PCr/ZIzF+o+KD05sKuFsCcqw1lmDYiqnkh6REH eA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 303aqj3w4b-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 03 Apr 2020 22:10:06 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 033M8Njh062283
+        for <linux-xfs@vger.kernel.org>; Fri, 3 Apr 2020 22:10:06 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 302ga611td-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 03 Apr 2020 22:10:06 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 033MA5rZ009845
+        for <linux-xfs@vger.kernel.org>; Fri, 3 Apr 2020 22:10:05 GMT
+Received: from localhost.localdomain (/67.1.1.216)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 03 Apr 2020 11:37:48 -0700
-Date:   Fri, 3 Apr 2020 11:37:46 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Ira Weiny <ira.weiny@intel.com>
-Cc:     Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>,
-        Dave Chinner <david@fromorbit.com>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH V5 00/12] Enable per-file/per-directory DAX operations V5
-Message-ID: <20200403183746.GQ80283@magnolia>
-References: <20200316095224.GF12783@quack2.suse.cz>
- <20200316095509.GA13788@lst.de>
- <20200401040021.GC56958@magnolia>
- <20200401102511.GC19466@quack2.suse.cz>
- <20200402085327.GA19109@lst.de>
- <20200402205518.GF3952565@iweiny-DESK2.sc.intel.com>
- <20200403072731.GA24176@lst.de>
- <20200403154828.GJ3952565@iweiny-DESK2.sc.intel.com>
- <20200403170338.GD29920@quack2.suse.cz>
- <20200403181843.GK3952565@iweiny-DESK2.sc.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200403181843.GK3952565@iweiny-DESK2.sc.intel.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+        with ESMTP ; Fri, 03 Apr 2020 15:10:05 -0700
+From:   Allison Collins <allison.henderson@oracle.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH v8 05/39] xfsprogs: turn xfs_da_args.value into a void pointer
+Date:   Fri,  3 Apr 2020 15:09:24 -0700
+Message-Id: <20200403220958.4944-6-allison.henderson@oracle.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200403220958.4944-1-allison.henderson@oracle.com>
+References: <20200403220958.4944-1-allison.henderson@oracle.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9580 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 suspectscore=0
- mlxscore=0 spamscore=0 malwarescore=0 mlxlogscore=999 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004030151
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
+ mlxlogscore=999 bulkscore=0 mlxscore=0 spamscore=0 adultscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004030171
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9580 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 lowpriorityscore=0
- malwarescore=0 adultscore=0 priorityscore=1501 mlxlogscore=999 bulkscore=0
- suspectscore=0 mlxscore=0 spamscore=0 impostorscore=0 clxscore=1015
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 clxscore=1015
+ malwarescore=0 impostorscore=0 mlxlogscore=999 spamscore=0 mlxscore=0
+ priorityscore=1501 lowpriorityscore=0 adultscore=0 suspectscore=1
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004030151
+ definitions=main-2004030171
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Apr 03, 2020 at 11:18:43AM -0700, Ira Weiny wrote:
-> On Fri, Apr 03, 2020 at 07:03:38PM +0200, Jan Kara wrote:
-> > On Fri 03-04-20 08:48:29, Ira Weiny wrote:
-> > > On Fri, Apr 03, 2020 at 09:27:31AM +0200, Christoph Hellwig wrote:
-> > > > On Thu, Apr 02, 2020 at 01:55:19PM -0700, Ira Weiny wrote:
-> > > > > > I'd just return an error for that case, don't play silly games like
-> > > > > > evicting the inode.
-> > > > > 
-> > > > > I think I agree with Christoph here.  But I want to clarify.  I was heading in
-> > > > > a direction of failing the ioctl completely.  But we could have the flag change
-> > > > > with an appropriate error which could let the user know the change has been
-> > > > > delayed.
-> > > > > 
-> > > > > But I don't immediately see what error code is appropriate for such an
-> > > > > indication.  Candidates I can envision:
-> > > > > 
-> > > > > EAGAIN
-> > > > > ERESTART
-> > > > > EUSERS
-> > > > > EINPROGRESS
-> > > > > 
-> > > > > None are perfect but I'm leaning toward EINPROGRESS.
-> > > > 
-> > > > I really, really dislike that idea.  The whole point of not forcing
-> > > > evictions is to make it clear - no this inode is "busy" you can't
-> > > > do that.  A reasonably smart application can try to evict itself.
-> > > 
-> > > I don't understand.  What Darrick proposed would never need any
-> > > evictions.  If the file has blocks allocated the FS_XFLAG_DAX flag can
-> > > not be changed.  So I don't see what good eviction would do at all.
-> > 
-> > I guess there's some confusion here (may well be than on my side). Darrick
-> > propose that we can switch FS_XFLAG_DAX only when file has no blocks
-> > allocated - fine by me. But that still does not mean than we can switch
-> > S_DAX immediately, does it? Because that would still mean we need to switch
-> > aops on living inode and that's ... difficult and Christoph didn't want to
-> > clutter the code with it.
-> > 
-> > So I've understood Darrick's proposal as: Just switch FS_XFLAG_DAX flag,
-> > S_DAX flag will magically switch when inode gets evicted and the inode gets
-> > reloaded from the disk again. Did I misunderstand anything?
-> > 
-> > And my thinking was that this is surprising behavior for the user and so it
-> > will likely generate lots of bug reports along the lines of "DAX inode flag
-> > does not work!". So I was pondering how to make the behavior less
-> > confusing... The ioctl I've suggested was just a poor attempt at that.
-> 
-> Ok but then I don't understand Christophs comment to "just return an error for
-> that case"?  Which case?
-> 
-> > 
-> > > > But returning an error and doing a lazy change anyway is straight from
-> > > > the playbook for arcane and confusing API designs.
-> > > 
-> > > Jan countered with a proposal that the FS_XFLAG_DAX does change with
-> > > blocks allocated.  But that S_DAX would change on eviction.  Adding that
-> > > some eviction ioctl could be added.
-> > 
-> > No, I didn't mean that we can change FS_XFLAG_DAX with blocks allocated. I
-> > was still speaking about the case without blocks allocated.
-> 
-> Ah ok good point.  But again what 'error' do we return when FS_XFLAG_DAX
-> changed but S_DAX did not?
-> 
-> > 
-> > > You then proposed just returning an error for that case.  (This lead me to
-> > > believe that you were ok with an eviction based change of S_DAX.)
-> > > 
-> > > So I agreed that changing S_DAX could be delayed until an explicit eviction.
-> > > But, to aid the 'smart application', a different error code could be used to
-> > > indicate that the FS_XFLAG_DAX had been changed but that until that explicit
-> > > eviction occurs S_DAX would remain.
-> > > 
-> > > So I don't fully follow what you mean by 'lazy change'?
-> > > 
-> > > Do you still really, really dislike an explicit eviction method for changing
-> > > the S_DAX flag?
-> > > 
-> > > If FS_XFLAG_DAX can never be changed on a file with blocks allocated and the
-> > > user wants to change the mode of operations on their 'data'; they would have to
-> > > create a new file with the proper setting and move the data there.  For example
-> > > copy the file into a directory marked FS_XFLAG_DAX==true?
-> > > 
-> > > I'm ok with either interface as I think both could be clear if documented.
-> > 
-> > I agree that what Darrick suggested is technically easily doable and can be
-> > documented. But it is not natural behavior (i.e., different than all inode
-> > flags we have) and we know how careful people are when reading
-> > documentation...
-> > 
-> 
-> Ok For 5.8 why don't we not allow FS_XFLAG_DAX to be changed on files _at_
-> _all_...
-> 
-> In summary:
-> 
->  - Applications must call statx to discover the current S_DAX state.
+The xattr values are blobs and should not be typed.
 
-Ok.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+---
+ libxfs/xfs_da_btree.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->  - There exists an advisory file inode flag FS_XFLAG_DAX that is set based on
->    the parent directory FS_XFLAG_DAX inode flag.  (There is no way to change
->    this flag after file creation.)
-> 
->    If FS_XFLAG_DAX is set and the fs is on pmem then it will enable S_DAX at
->    inode load time; if FS_XFLAG_DAX is not set, it will not enable S_DAX.
->    Unless overridden...
+diff --git a/libxfs/xfs_da_btree.h b/libxfs/xfs_da_btree.h
+index 0f4fbb0..0967d1b 100644
+--- a/libxfs/xfs_da_btree.h
++++ b/libxfs/xfs_da_btree.h
+@@ -57,7 +57,7 @@ typedef struct xfs_da_args {
+ 	const uint8_t		*name;		/* string (maybe not NULL terminated) */
+ 	int		namelen;	/* length of string (maybe no NULL) */
+ 	uint8_t		filetype;	/* filetype of inode for directories */
+-	uint8_t		*value;		/* set of bytes (maybe contain NULLs) */
++	void		*value;		/* set of bytes (maybe contain NULLs) */
+ 	int		valuelen;	/* length of value */
+ 	int		flags;		/* argument flags (eg: ATTR_NOCREATE) */
+ 	xfs_dahash_t	hashval;	/* hash value of name */
+-- 
+2.7.4
 
-Ok, fine with me. :)
-
->  - There exists a dax= mount option.
-> 
->    "-o dax=off" means "never set S_DAX, ignore FS_XFLAG_DAX"
->    	"-o nodax" means "dax=off"
-
-I surveyed the three fses that support dax and found that none of the
-filesystems actually have a 'nodax' flag.  Now would be the time not to
-add such a thing, and make people specify dax=off instead.  It would
-be handy if we could have a single fsparam_enum for figuring out the dax
-mount options.
-
->    "-o dax=always" means "always set S_DAX (at least on pmem), ignore FS_XFLAG_DAX"
->    	"-o dax" by itself means "dax=always"
->    "-o dax=iflag" means "follow FS_XFLAG_DAX" and is the default
-> 
->  - There exists an advisory directory inode flag FS_XFLAG_DAX that can be
->    changed at any time.  The flag state is copied into any files or
->    subdirectories when they are created within that directory.  If programs
->    require file access runs in S_DAX mode, they'll have to create those files
-
-"...they must create..."
-
->    inside a directory with FS_XFLAG_DAX set, or mount the fs with an
->    appropriate dax mount option.
-
-Otherwise seems ok to me.
-
---D
-
-> 
-> 
-> ???
-> 
-> Ira
-> 
