@@ -7,65 +7,65 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A67A8C2BA1A
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Apr 2020 23:24:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C51BC2BA1A
+	for <linux-xfs@archiver.kernel.org>; Mon,  6 Apr 2020 23:25:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7615520753
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Apr 2020 23:24:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4D78620753
+	for <linux-xfs@archiver.kernel.org>; Mon,  6 Apr 2020 23:25:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="OsMIIyBe"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="BSv8rDCG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726254AbgDFXYy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Apr 2020 19:24:54 -0400
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:37643 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726225AbgDFXYx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Apr 2020 19:24:53 -0400
+        id S1726307AbgDFXZG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 6 Apr 2020 19:25:06 -0400
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:45333 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726225AbgDFXZF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Apr 2020 19:25:05 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1586215494; x=1617751494;
+  t=1586215504; x=1617751504;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=JpG8RoP9sjPTQZUZuotmMtyZZCorxEdnwJjh+t5ypTA=;
-  b=OsMIIyBeiuPOAr/NbavqL9+WAElK0g7xymfnTBoDqr3xOhF0nryh1oQ9
-   ICHO/UeeJoObFvgmyIefdHkL11Hla8zvOFsiLytzreiu4udy/vAQXdpXm
-   8EgqLP6iFQhXyEbL8+F11+McRi8Gd6YpBKBF1UqK/EptWH0vMZOMtIedQ
-   mYrWPN/jwKOflDditIxf4pzA1XXo8k8YFPLQwyIVHCkDWV1/r4O16lL7K
-   0KmzBO1g0Ro9FS72RKwevPHkVaZn0SLRy05tu2qHPCUmuFlQ+ZmBTdX0F
-   UNeKvIB1vjTVSRvKwZYxJSErNGJiesHDJq3CuVxVjM6akL7WBR5bZ/zQ7
-   A==;
-IronPort-SDR: C8UYAH5PI750knnFDRV6ynEtfXzknRbasfFaSjgZhM7wpePeZLa65lB4Etm4YF5pTbZIq/ySKL
- lBP0+n1Rh84+prIvYKimrFNRHf7EcfhA6/GDuIkgaKGnqH+TWPiA6f5FROtmQWMPJnGBHwVllS
- htiWLkyB2XCcyGXOXmPefl95XgsMVM2AcwkQlQYf1u6V/lWERw2baxOVa1psWnkhldUvsfbZZ0
- caPQtQF1Q5LT5EhIPbqMg93/wE4GsGUG4Zr8a+4Fbj0gFAHAyEYCKxxdanrHI9u/CHZ1AD+vuy
- mZ4=
+  bh=yJMVJjs8Tg8tTHOw21er81hvgxe/6jLJlylymC8JZPw=;
+  b=BSv8rDCGUzkZocjARNbMV0abXtzncQoMLBWKKEtFNFTNpxNNJ3C1IUNq
+   aXsCNOxRrLT6cOExJfqCdg1lR6DS9bJjJhJlW9+Tf3HhzN92zPOkhxpQ2
+   rH9jgRUkcTCYtRUUiiu74uc5mgtTmoXhnIgCk0KqhTy9uFfy5vo/O1gj3
+   mlhDL9ic3lyK17H7NFdSvS4O0+afkI15jGFzYldE7lVUx58E/06QeCwG9
+   yfFShd7oQIwNMSBZmCZnmfhnA948p9Dtijejneybe/t6aPN50i92QjS01
+   4yzdGDG/N8DafWkjLYvXMp4J4GaDFtSZ7i2HyWBtZqh12yJT6SFut8aNX
+   g==;
+IronPort-SDR: tanPFpRBP6MWqDH0A4VjAQOzOkZ4DwJpsd2l5k3hBKIpEUNY5VW4XfHa+Y5czzHc6D7NELnG08
+ 2lGsU6WMYurWHu82mwtOK9In0jGJr2xqm6MS3uXMpzn4ElRjvuDNNf9kIWs9a91ADcdkQLVYJn
+ vQa+JvZueWMGhukUysldoDbcvtuxBM7sujd48BtXRKKz1+LaQ2yctnFg0fQjBfwhxxW6m6vjH0
+ zhUleX97g3fFR2rfNaVldV3kYwLWnjMauYPWd3VPLArWz0hOFWvXvMBd4LUCUNzOZZ5sXPD+6j
+ fj4=
 X-IronPort-AV: E=Sophos;i="5.72,352,1580745600"; 
-   d="scan'208";a="135040044"
+   d="scan'208";a="243262378"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 07 Apr 2020 07:24:53 +0800
-IronPort-SDR: uOQqPRCfVQYUyffa+Da6AL6VlMcx467wLqzleNfh5S8n2sb8dZfPkuhTYEkrExedgUFjaQfk/E
- pihQISXeNrIxSahDPyvOI2xM+fl0vSV1NaBcRBrGbQ2YGzj/61XYSgchdHfGt5xQkiQ0cJ54MO
- hPPyBppl+yrshixQoM+0DGPmOfgPAlLr22i7B6z+LpKuOuUuQsvh/C+hR2IJ6rzfAujZ5oBRWW
- /cFcNbnTnSGDwkb9y+hY8GZgzaskX2ZGIxii1gVltlfuXTT04yEhRfzyE8R5MKMMKzu1k3a8Nd
- Sl32qvPN07BW1TrFhsBWIYA9
+  by ob1.hgst.iphmx.com with ESMTP; 07 Apr 2020 07:25:04 +0800
+IronPort-SDR: mtuxDEISxvLjv3wD9YeAIW0s/NTwmyr6SkheNyEm1jw9EZiCi5IQQUIyg9EUjwU0E0puNstNLi
+ dCQB0/lA7haqAw08IzA9OSsRnRyebj9TGvroz1PachcbP0belkhSQkEyHsC+GjazmflFTX5vsD
+ 0KFu/g4jqYz53lSq5aS0h4e+F9Q0qtoa4u/iyldIvxha6FDmDsAPRGU/EpdVmaW/U0rhNp3fWB
+ 7Uuwr6R3PkdTuZKDwP5ABqwRXLaVrhgjzuoslT8XFJ/hvBQgctswGOu8UjmV1xF1pgp6TnaIro
+ MmlNfLmeexeD+SfOGxZ8TV1j
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Apr 2020 16:15:36 -0700
-IronPort-SDR: sr81OS6lHPZ4EdneRsod66M1Mt/uuvWXuOJbFcNL75UR21aCvXqasA3oRCh2hAuo5Rw7Y8w8wg
- TCcoj60shMB4C8sFKwy+KyBR9KzTgzZAi7rhL2JQ3BRbiXTjKE2R30+oi+vzzlMdsbdA438LXe
- ZjuUM2I2F1sp+pF/YaIqDDBpaDoT6Sc/+YQLB85WaGXVJ8BqgxGfVPIWNwI/BOQWP4Jb8bG0AP
- WE9lbOTxjL71lFGn5aiMp0S0LoYAdPElGfT/1j9+c+C6vcBqBVixyqGATPbeCdEDc2T5ouelv8
- j4o=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Apr 2020 16:15:48 -0700
+IronPort-SDR: UT1OC9+Myzt65Sjpee3DgDcEGTJifMJOTfJJmZfVX2KP03f75hZQl9N+1kJ4af+P91Mcr7Ue2K
+ K0MfePtROV8wE1amcpHFwzXijuGLn03nAXcqoywHjWAyzPeW8WRxPL+GcihVCrVL4BhFFany/4
+ XZ0B9hDE6TD/lAaf3vmmO7oe2kxWLasZ79G/ycRdyjlUQ8VbIOZ/EICmJcGA8TzoDRER3M/F/M
+ BoI2Q+V1BsjpQ4jad9PjGG/jzmxVYTNA++3DM3Bt3IVUT1MQzVGC+fKUq/VAIR8jUdfHoqLaG8
+ /M0=
 WDCIronportException: Internal
 Received: from iouring.labspan.wdc.com (HELO iouring.sc.wdc.com) ([10.6.138.107])
-  by uls-op-cesaip02.wdc.com with ESMTP; 06 Apr 2020 16:24:52 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 06 Apr 2020 16:25:04 -0700
 From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 To:     linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
 Cc:     hch@lst.de, danil.kipnis@cloud.ionos.com,
         jinpu.wang@cloud.ionos.com,
         Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Subject: [PATCH 1/2] block: add bio based rw helper for data buffer
-Date:   Mon,  6 Apr 2020 16:24:39 -0700
-Message-Id: <20200406232440.4027-2-chaitanya.kulkarni@wdc.com>
+Subject: [PATCH 2/2] xfs: use block layer helper for rw
+Date:   Mon,  6 Apr 2020 16:24:40 -0700
+Message-Id: <20200406232440.4027-3-chaitanya.kulkarni@wdc.com>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20200406232440.4027-1-chaitanya.kulkarni@wdc.com>
 References: <20200406232440.4027-1-chaitanya.kulkarni@wdc.com>
@@ -76,151 +76,79 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-One of the common application for the file systems and drivers to map
-the buffer to the bio and issue I/Os on the block device.
-
-This is a prep patch which adds two helper functions for block layer
-which allows file-systems and the drivers to map data buffer on to the
-bios and issue bios synchronously using blkdev_issue_rw() or
-asynchronously using __blkdev_issue_rw().
+The existing routine xfs_rw_bdev has block layer bio-based code which
+maps the data buffer allocated with kmalloc or vmalloc to the READ/WRITE
+bios. Use a block layer helper from the previous patch to avoid code
+duplication.
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- block/blk-lib.c        | 105 +++++++++++++++++++++++++++++++++++++++++
- include/linux/blkdev.h |   7 +++
- 2 files changed, 112 insertions(+)
+ fs/xfs/xfs_bio_io.c | 47 ++-------------------------------------------
+ 1 file changed, 2 insertions(+), 45 deletions(-)
 
-diff --git a/block/blk-lib.c b/block/blk-lib.c
-index 5f2c429d4378..451c367fc0d6 100644
---- a/block/blk-lib.c
-+++ b/block/blk-lib.c
-@@ -405,3 +405,108 @@ int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
- 	return ret;
- }
- EXPORT_SYMBOL(blkdev_issue_zeroout);
-+
-+/**
-+ * __blkdev_ssue_rw - issue read/write bios from buffer asynchronously
-+ * @bdev:	blockdev to read/write
-+ * @buf:	data buffer
-+ * @sector:	start sector
-+ * @nr_sects:	number of sectors
-+ * @op:	REQ_OP_READ or REQ_OP_WRITE
-+ * @opf:	flags
-+ * @gfp_mask:	memory allocation flags (for bio_alloc)
-+ * @biop:	pointer to anchor bio
-+ *
-+ * Description:
-+ *  Generic helper function to map data buffer into bios for read and write ops.
-+ *  Returns pointer to the anchored last bio for caller to submit asynchronously
-+ *  or synchronously.
-+ */
-+int __blkdev_issue_rw(struct block_device *bdev, char *buf, sector_t sector,
-+		      sector_t nr_sects, unsigned op, unsigned opf,
-+		      gfp_t gfp_mask, struct bio **biop)
-+{
-+	bool vm = is_vmalloc_addr(buf) ? true : false;
-+	struct bio *bio = *biop;
-+	unsigned int nr_pages;
-+	struct page *page;
-+	unsigned int off;
-+	unsigned int len;
-+	int bi_size;
-+
-+	if (!bdev_get_queue(bdev))
-+		return -ENXIO;
-+
-+	if (bdev_read_only(bdev))
-+		return -EPERM;
-+
-+	if (!(op == REQ_OP_READ || op == REQ_OP_WRITE))
-+		return -EINVAL;
-+
-+	while (nr_sects != 0) {
-+		nr_pages = __blkdev_sectors_to_bio_pages(nr_sects);
-+
-+		bio = blk_next_bio(bio, nr_pages, gfp_mask);
-+		bio->bi_iter.bi_sector = sector;
-+		bio_set_dev(bio, bdev);
-+		bio_set_op_attrs(bio, op, 0);
-+
-+		while (nr_sects != 0) {
-+			off = offset_in_page(buf);
-+			page = vm ? vmalloc_to_page(buf) : virt_to_page(buf);
-+			len = min((sector_t) PAGE_SIZE, nr_sects << 9);
-+
-+			bi_size = bio_add_page(bio, page, len, off);
-+
-+			nr_sects -= bi_size >> 9;
-+			sector += bi_size >> 9;
-+			buf += bi_size;
-+
-+			if (bi_size < len)
-+				break;
-+		}
-+		cond_resched();
-+	}
-+	*biop = bio;
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(__blkdev_issue_rw);
-+
-+/**
-+ * blkdev_execute_rw_sync - issue read/write bios from buffer synchronously
-+ * @bdev:	blockdev to read/write
-+ * @buf:	data buffer
-+ * @sector:	start sector
-+ * @count:	number of bytes
-+ * @op:	REQ_OP_READ or REQ_OP_WRITE
-+ * @opf:	flags
-+ * @gfp_mask:	memory allocation flags (for bio_alloc)
-+ *
-+ * Description:
-+ *  Generic helper function to map data buffer buffer into bios for read and
-+ *  write requests.
-+ */
-+int blkdev_issue_rw(struct block_device *b, char *buf, sector_t sector,
-+		     unsigned count, unsigned op, unsigned opf, gfp_t mask)
-+{
-+	unsigned int is_vmalloc = is_vmalloc_addr(buf);
-+	sector_t nr_sects = count >> 9;
-+	struct bio *bio = NULL;
-+	int error;
-+
-+	if (is_vmalloc && op == REQ_OP_WRITE)
-+		flush_kernel_vmap_range(buf, count);
-+
-+	opf |= REQ_SYNC;
-+	error = __blkdev_issue_rw(b, buf, sector, nr_sects, op, opf, mask, &bio);
-+	if (!error && bio) {
-+		error = submit_bio_wait(bio);
-+		bio_put(bio);
-+	}
-+
-+	if (is_vmalloc && op == REQ_OP_READ)
-+		invalidate_kernel_vmap_range(buf, count);
-+
-+	return error;
-+}
-+EXPORT_SYMBOL_GPL(blkdev_issue_rw);
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 32868fbedc9e..cb315b301ad9 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1248,6 +1248,13 @@ static inline int sb_issue_zeroout(struct super_block *sb, sector_t block,
- 				    gfp_mask, 0);
- }
+diff --git a/fs/xfs/xfs_bio_io.c b/fs/xfs/xfs_bio_io.c
+index e2148f2d5d6b..b04c398fb99c 100644
+--- a/fs/xfs/xfs_bio_io.c
++++ b/fs/xfs/xfs_bio_io.c
+@@ -4,11 +4,6 @@
+  */
+ #include "xfs.h"
  
-+extern int __blkdev_issue_rw(struct block_device *bdev, char *buf,
-+			     sector_t sector, sector_t nr_sects, unsigned op,
-+			     unsigned opf, gfp_t gfp_mask, struct bio **biop);
-+extern int blkdev_issue_rw(struct block_device *b, char *buf, sector_t sector,
-+			   unsigned count, unsigned op, unsigned opf,
-+			   gfp_t mask);
-+
- extern int blk_verify_command(unsigned char *cmd, fmode_t mode);
+-static inline unsigned int bio_max_vecs(unsigned int count)
+-{
+-	return min_t(unsigned, howmany(count, PAGE_SIZE), BIO_MAX_PAGES);
+-}
+-
+ int
+ xfs_rw_bdev(
+ 	struct block_device	*bdev,
+@@ -18,44 +13,6 @@ xfs_rw_bdev(
+ 	unsigned int		op)
  
- enum blk_default_limits {
+ {
+-	unsigned int		is_vmalloc = is_vmalloc_addr(data);
+-	unsigned int		left = count;
+-	int			error;
+-	struct bio		*bio;
+-
+-	if (is_vmalloc && op == REQ_OP_WRITE)
+-		flush_kernel_vmap_range(data, count);
+-
+-	bio = bio_alloc(GFP_KERNEL, bio_max_vecs(left));
+-	bio_set_dev(bio, bdev);
+-	bio->bi_iter.bi_sector = sector;
+-	bio->bi_opf = op | REQ_META | REQ_SYNC;
+-
+-	do {
+-		struct page	*page = kmem_to_page(data);
+-		unsigned int	off = offset_in_page(data);
+-		unsigned int	len = min_t(unsigned, left, PAGE_SIZE - off);
+-
+-		while (bio_add_page(bio, page, len, off) != len) {
+-			struct bio	*prev = bio;
+-
+-			bio = bio_alloc(GFP_KERNEL, bio_max_vecs(left));
+-			bio_copy_dev(bio, prev);
+-			bio->bi_iter.bi_sector = bio_end_sector(prev);
+-			bio->bi_opf = prev->bi_opf;
+-			bio_chain(prev, bio);
+-
+-			submit_bio(prev);
+-		}
+-
+-		data += len;
+-		left -= len;
+-	} while (left > 0);
+-
+-	error = submit_bio_wait(bio);
+-	bio_put(bio);
+-
+-	if (is_vmalloc && op == REQ_OP_READ)
+-		invalidate_kernel_vmap_range(data, count);
+-	return error;
++	return blkdev_issue_rw(bdev, data, sector, count, op, REQ_META,
++			       GFP_KERNEL);
+ }
 -- 
 2.22.1
 
