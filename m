@@ -2,169 +2,155 @@ Return-Path: <SRS0=ELsP=5W=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B09B1C2BA1A
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Apr 2020 23:30:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5D08C2BA1A
+	for <linux-xfs@archiver.kernel.org>; Mon,  6 Apr 2020 23:52:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6C8A7206C0
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Apr 2020 23:30:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B0B6320768
+	for <linux-xfs@archiver.kernel.org>; Mon,  6 Apr 2020 23:52:11 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="FIX1vV1Y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726287AbgDFXaH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Apr 2020 19:30:07 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:32913 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726254AbgDFXaH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Apr 2020 19:30:07 -0400
-Received: from dread.disaster.area (pa49-180-164-3.pa.nsw.optusnet.com.au [49.180.164.3])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 7CDAD7ECA78;
-        Tue,  7 Apr 2020 09:30:03 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jLbBq-0005Yq-UD; Tue, 07 Apr 2020 09:30:02 +1000
-Date:   Tue, 7 Apr 2020 09:30:02 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Chandan Rajendra <chandanrlinux@gmail.com>,
-        linux-xfs@vger.kernel.org, chandan@linux.ibm.com,
-        bfoster@redhat.com
-Subject: Re: [PATCH 2/2] xfs: Extend xattr extent counter to 32-bits
-Message-ID: <20200406233002.GD21885@dread.disaster.area>
-References: <20200404085203.1908-1-chandanrlinux@gmail.com>
- <20200404085203.1908-3-chandanrlinux@gmail.com>
- <20200406170603.GD6742@magnolia>
+        id S1726307AbgDFXwL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 6 Apr 2020 19:52:11 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:39142 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726287AbgDFXwL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Apr 2020 19:52:11 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 036NmSKX082764;
+        Mon, 6 Apr 2020 23:52:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=yHPmJRqwYPOYUKUBvtGRB6BfUK27wkW7l+XFFulXq1c=;
+ b=FIX1vV1YE2IVnY2EKNz3/yfa0ASvGApDxFBov5SE1Dt5Nhd46YXFeB6lcxnO8FL7HFOU
+ fWnvSTja0qDS4XT7V/AT5kVwtguMW92WVeHP7tYaR2CKJOv0Srjfzql5cRe1ADjaXM7I
+ DrrVrDbVyaXog95L/PvhVF2l/hMpuBXE6auM0uk+BKHA7SlrMtW/kTMzI5ZqnkQQ2bkl
+ M43Jvnid0EWGe5JOv5A8S/DoLYk0IZ+ecWTVE5eJ28OHWR6J/99FT1EXtLZ7u5DKIANc
+ snfkvDeZtmLWcsQbCOeGCQUW6NM5cHgWmZGVIOWbylGA7o1p3RnDHJARewv3NXDXtTOB wA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 306hnr1trs-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 06 Apr 2020 23:52:07 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 036NmV6S062751;
+        Mon, 6 Apr 2020 23:52:07 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 30839rgrf9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 06 Apr 2020 23:52:07 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 036Nq6Uk009919;
+        Mon, 6 Apr 2020 23:52:06 GMT
+Received: from [192.168.1.223] (/67.1.1.216)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 06 Apr 2020 16:52:06 -0700
+Subject: Re: [RFC v6 PATCH 02/10] xfs: create helper for ticket-less log res
+ ungrant
+To:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+References: <20200406123632.20873-1-bfoster@redhat.com>
+ <20200406123632.20873-3-bfoster@redhat.com>
+From:   Allison Collins <allison.henderson@oracle.com>
+Message-ID: <a617b9a3-95b4-fc9f-7383-bffab3f22c84@oracle.com>
+Date:   Mon, 6 Apr 2020 16:52:05 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200406170603.GD6742@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
-        a=K0+o7W9luyMo1Ua2eXjR1w==:117 a=K0+o7W9luyMo1Ua2eXjR1w==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=cl8xLZFz6L8A:10
-        a=pGLkceISAAAA:8 a=7-415B0cAAAA:8 a=x6S7Ns5ajxqMqKEm_cMA:9
-        a=RSPaePDTvnix1a5D:21 a=xVd2RRCI4eHxMGVa:21 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20200406123632.20873-3-bfoster@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9583 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 malwarescore=0
+ mlxscore=0 mlxlogscore=999 bulkscore=0 suspectscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2004060182
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9583 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 adultscore=0
+ priorityscore=1501 mlxscore=0 malwarescore=0 mlxlogscore=999
+ lowpriorityscore=0 spamscore=0 impostorscore=0 suspectscore=0
+ clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004060182
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 06, 2020 at 10:06:03AM -0700, Darrick J. Wong wrote:
-> On Sat, Apr 04, 2020 at 02:22:03PM +0530, Chandan Rajendra wrote:
-> > XFS has a per-inode xattr extent counter which is 16 bits wide. A workload
-> > which
-> > 1. Creates 1,000,000 255-byte sized xattrs,
-> > 2. Deletes 50% of these xattrs in an alternating manner,
-> > 3. Tries to create 400,000 new 255-byte sized xattrs
-> > causes the following message to be printed on the console,
-> > 
-> > XFS (loop0): xfs_iflush_int: detected corrupt incore inode 131, total extents = -19916, nblocks = 102937, ptr ffff9ce33b098c00
-> > XFS (loop0): xfs_do_force_shutdown(0x8) called from line 3739 of file fs/xfs/xfs_inode.c. Return address = ffffffffa4a94173
-> > 
-> > This indicates that we overflowed the 16-bits wide xattr extent counter.
-> > 
-> > I have been informed that there are instances where a single file has
-> >  > 100 million hardlinks. With parent pointers being stored in xattr,
-> > we will overflow the 16-bits wide xattr extent counter when large
-> > number of hardlinks are created.
-> > 
-> > Hence this commit extends xattr extent counter to 32-bits. It also introduces
-> > an incompat flag to prevent older kernels from mounting newer filesystems with
-> > 32-bit wide xattr extent counter.
-> > 
-> > Signed-off-by: Chandan Rajendra <chandanrlinux@gmail.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_format.h     | 28 +++++++++++++++++++++-------
-> >  fs/xfs/libxfs/xfs_inode_buf.c  | 27 +++++++++++++++++++--------
-> >  fs/xfs/libxfs/xfs_inode_fork.c |  3 ++-
-> >  fs/xfs/libxfs/xfs_log_format.h |  5 +++--
-> >  fs/xfs/libxfs/xfs_types.h      |  4 ++--
-> >  fs/xfs/scrub/inode.c           |  7 ++++---
-> >  fs/xfs/xfs_inode_item.c        |  3 ++-
-> >  fs/xfs/xfs_log_recover.c       | 13 ++++++++++---
-> >  8 files changed, 63 insertions(+), 27 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> > index 045556e78ee2c..0a4266b0d46e1 100644
-> > --- a/fs/xfs/libxfs/xfs_format.h
-> > +++ b/fs/xfs/libxfs/xfs_format.h
-> > @@ -465,10 +465,12 @@ xfs_sb_has_ro_compat_feature(
-> >  #define XFS_SB_FEAT_INCOMPAT_FTYPE	(1 << 0)	/* filetype in dirent */
-> >  #define XFS_SB_FEAT_INCOMPAT_SPINODES	(1 << 1)	/* sparse inode chunks */
-> >  #define XFS_SB_FEAT_INCOMPAT_META_UUID	(1 << 2)	/* metadata UUID */
-> > +#define XFS_SB_FEAT_INCOMPAT_32BIT_AEXT_CNTR (1 << 3)
+
+
+On 4/6/20 5:36 AM, Brian Foster wrote:
+> Log reservation is currently acquired and released via log tickets.
+> The relog mechanism introduces behavior where relog reservation is
+> transferred between transaction log tickets and an external pool of
+> relog reservation for active relog items. Certain contexts will be
+> able to release outstanding relog reservation without the need for a
+> log ticket. Factor out a helper to allow byte granularity log
+> reservation ungrant.
 > 
-> If you're going to introduce an INCOMPAT feature, please also use the
-> opportunity to convert xattrs to something resembling the dir v3 format,
-> where we index free space within each block so that we can speed up attr
-> setting with 100 million attrs.
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+Looks straight forward:
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
 
-Not necessary. Chandan has already spent a lot of time investigating
-that - I suggested doing the investigation probably a year ago when
-he was looking for stuff to do knowing that this could be a problem
-parent pointers hit. Long story short - there's no degradation in
-performance in the dabtree out to tens of millions of records with
-different fixed size or random sized attributes, nor does various
-combinations of insert/lookup/remove/replace operations seem to
-impact the tree performance at scale. IOWs, we hit the 16 bit extent
-limits of the attribute trees without finding any degradation in
-performance.
-
-Hence we concluded that the dabtree structure does not require
-significant modification or optimisation to work well with typical
-parent pointer attribute demands...
-
-As for free space indexes....
-
-The issue with the directory structure that requires external free
-space is that the directory data is not part of the dabtree itself.
-The attribute fork stores all the attributes at the leaves of the
-dabtree, while the directory structure stores the directory data in
-external blocks and the dabtree only contains the name hash index
-that points to the external data.
-
-i.e. When we add an attribute to the dabtree, we split/merge leaves
-of the tree based on where the name hash index tells us it needs to
-be inserted/removed from. i.e. we make space available or collapse
-sparse leaves of the dabtree as a side effect of inserting or
-removing objects.
-
-The directory structure is very different. The dirents cannot change
-location as their logical offset into the dir data segment is used
-as the readdir/seekdir/telldir cookie. Therefore that location is
-not allowed to change for the life of the dirent and so we can't
-store them in the leaves of a dabtree indexed in hash order because
-the offset into the tree would change as other entries are inserted
-and removed.  Hence when we remove dirents, we must leave holes in
-the data segment so the rest of the dirent data does not change
-logical offset.
-
-The directory name hash index - the dabtree bit - is in a separate
-segment (the 2nd one). Because it only stores pointers to dirents in
-the data segment, it doesn't need to leave holes - the dabtree just
-merge/splits as required as pointers to the dir data segment are
-added/removed - and has no free space tracking.
-
-Hence when we go to add a dirent, we need to find the best free
-space in the dir data segment to add that dirent. This requires a
-dir data segment free space index, and that is held in the 3rd dir
-segment.  Once we've found the best free space via lookup in the
-free space index, we go modify the dir data block it points to, then
-update the dabtree to point the name hash at that new dirent.
-
-IOWs, the requirement for a free space map in the directory
-structure results from storing the dirent data externally to the
-dabtree. Attributes are stored directly in the leaves of the
-dabtree - except for remote attributes which can be anywhere in the
-BMBT address space - and hence do no need external free space
-tracking to determine where to best insert them...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> ---
+>   fs/xfs/xfs_log.c | 20 ++++++++++++++++----
+>   fs/xfs/xfs_log.h |  1 +
+>   2 files changed, 17 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 00fda2e8e738..d6b63490a78b 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -2980,6 +2980,21 @@ xfs_log_ticket_regrant(
+>   	xfs_log_ticket_put(ticket);
+>   }
+>   
+> +/*
+> + * Restore log reservation directly to the grant heads.
+> + */
+> +void
+> +xfs_log_ungrant_bytes(
+> +	struct xfs_mount	*mp,
+> +	int			bytes)
+> +{
+> +	struct xlog		*log = mp->m_log;
+> +
+> +	xlog_grant_sub_space(log, &log->l_reserve_head.grant, bytes);
+> +	xlog_grant_sub_space(log, &log->l_write_head.grant, bytes);
+> +	xfs_log_space_wake(mp);
+> +}
+> +
+>   /*
+>    * Give back the space left from a reservation.
+>    *
+> @@ -3018,12 +3033,9 @@ xfs_log_ticket_ungrant(
+>   		bytes += ticket->t_unit_res*ticket->t_cnt;
+>   	}
+>   
+> -	xlog_grant_sub_space(log, &log->l_reserve_head.grant, bytes);
+> -	xlog_grant_sub_space(log, &log->l_write_head.grant, bytes);
+> -
+> +	xfs_log_ungrant_bytes(log->l_mp, bytes);
+>   	trace_xfs_log_ticket_ungrant_exit(log, ticket);
+>   
+> -	xfs_log_space_wake(log->l_mp);
+>   	xfs_log_ticket_put(ticket);
+>   }
+>   
+> diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+> index 1412d6993f1e..6d2f30f42245 100644
+> --- a/fs/xfs/xfs_log.h
+> +++ b/fs/xfs/xfs_log.h
+> @@ -125,6 +125,7 @@ int	  xfs_log_reserve(struct xfs_mount *mp,
+>   			  uint8_t		   clientid,
+>   			  bool		   permanent);
+>   int	  xfs_log_regrant(struct xfs_mount *mp, struct xlog_ticket *tic);
+> +void	  xfs_log_ungrant_bytes(struct xfs_mount *mp, int bytes);
+>   void      xfs_log_unmount(struct xfs_mount *mp);
+>   int	  xfs_log_force_umount(struct xfs_mount *mp, int logerror);
+>   
+> 
