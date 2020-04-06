@@ -2,142 +2,110 @@ Return-Path: <SRS0=ELsP=5W=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDA89C2BA1A
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Apr 2020 23:16:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDB48C2BA1A
+	for <linux-xfs@archiver.kernel.org>; Mon,  6 Apr 2020 23:24:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9EECE2082D
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Apr 2020 23:16:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 940CD20753
+	for <linux-xfs@archiver.kernel.org>; Mon,  6 Apr 2020 23:24:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WkBBk8Ks"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="bQ70X/zF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726550AbgDFXQk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Apr 2020 19:16:40 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:44760 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726437AbgDFXQj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Apr 2020 19:16:39 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 036NFVZK038662;
-        Mon, 6 Apr 2020 23:16:36 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=djexbyPdGipUigD7k6SF6KCq8nY/dP0xINPzd9NDUOI=;
- b=WkBBk8Kstsv8VMwNsiy11fYw2wliDqR2gM7C+UqGnTBk70Uld0i2eCw+yOVhZ+PLaxyw
- zDgcCQyRK9gAQT7tTLyzulS16kJVdoYLT8G3WgzIcYaAjwxiLDCGJcOSVeVfmqg5/wcY
- ZKcwTlCr+0TMJs/6KsrSVMobBcQgU382h7Hhhuo51jaHzE2mGbsjsTUzYArXQuYfeC0N
- e09RwVr7XvXSRonXmmShkiZmFbJgdSd0dIO+kTKgEo0IzSmkYmW/px18to/lLZ80MfZO
- hSxPbsxLwhEwl0WT0P2M9fZSJCVh0C2n4/L7yApa1NgTvYlLHXDZ+bkLQSp2PqiMINyG jA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 306hnr1rfh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 06 Apr 2020 23:16:36 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 036NCeBL167216;
-        Mon, 6 Apr 2020 23:14:35 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 3073sqtwhe-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 06 Apr 2020 23:14:35 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 036NEXDr027662;
-        Mon, 6 Apr 2020 23:14:34 GMT
-Received: from [192.168.1.223] (/67.1.1.216)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 06 Apr 2020 16:14:33 -0700
-Subject: Re: [PATCH v8 02/20] xfs: Check for -ENOATTR or -EEXIST
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <20200403221229.4995-1-allison.henderson@oracle.com>
- <20200403221229.4995-3-allison.henderson@oracle.com>
- <20200406143155.GD20708@bfoster>
-From:   Allison Collins <allison.henderson@oracle.com>
-Message-ID: <e4120453-09ad-95ae-cb77-764f4177f433@oracle.com>
-Date:   Mon, 6 Apr 2020 16:14:32 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1726287AbgDFXYq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 6 Apr 2020 19:24:46 -0400
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:39372 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726254AbgDFXYq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Apr 2020 19:24:46 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1586215485; x=1617751485;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=PWXM5Vnf7Ub24JzZyhawbUoLMkQV0ReR39UaWLNsuFk=;
+  b=bQ70X/zFpFOl6OEFXdHfJ/3TEN5h0WcMmWjBzWNGufF8hfpZSiAaeJQo
+   zj0UgMkqLJegupuHwHR4BED/lcQcoTAPS72f9YxIt0tNlEWHlQoEBFVYF
+   6st0R35HhuS4+hxCjxcFAY7GRkI3S93bdmNeezvVnn+FanIn2p6IJ46GD
+   RHURWK0PFAMpHMUASdNnZ1c0Sk0XL8ipLn4ed49QmCbLcO8zG8HnLUcAJ
+   VZAnB50cpNQfF/wNOtzqEOecyznziZOaAJSd2IkW1o/sivqrEOqqgJCeH
+   B4lPqGMQ0EnZ/aSNoyJ6G9n8HsPuTV8XVL1v+qHEYpC3e3rmqM/Dd5esP
+   g==;
+IronPort-SDR: iKXtbDPNkepo8Ic6T5lTO/03xBvN1bqiO4P8ig6t9oc5VLSSZu3hJQCCUOPQpMdprlEiVCaBgk
+ 6RlzRt2OYiAyQiSSB6q7IzMev/OZg4VHUS06nCApCyX43ZGG0qo3a3muUEf2mb2mvLanU5LJOE
+ RpoIzCIhWMaC5pzu9N4428UtqmYN24XgCPZyZHXfYYNuWtMocrpBFK4uNhT+5hTCO6oweAXxCd
+ e+LthTsAfnkpV1hLie4rbcY7Qs9sGgI9Vy5qKeBmZVZB2Uf8pmKC7xgBoogyVmCcpefls/5IA3
+ VT8=
+X-IronPort-AV: E=Sophos;i="5.72,352,1580745600"; 
+   d="scan'208";a="134723657"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 07 Apr 2020 07:24:45 +0800
+IronPort-SDR: jut2gkxciVHxFTVFST6gYIlXkCvouTJ/RzxZ0WwdeJidXSiLFcpVV4f7NXK2mcdROno0sH29Li
+ hN8Z7Hg4Duxdmvv2tQ2XU1e1vnK+c4sJ9NO97sMllFwoMvRw8ZG0WesGlQuqNbZBZxSxVnnFGh
+ hSAVpFsXU2wZg+1wm0EMLvI+EHAJZYK+NHfCsxZlT7uY0V7p5Bn/frewgFd2D3N5DmKHrDJkHL
+ +sB65cDj32tr5xZvyFh+3d73JsvTpqsecOi3o9UnhyZAVq9WgXiB21OQwq/WyIeQOLvpIuHscf
+ zgSnZEH5xEAZGEPtWAIg/KCC
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Apr 2020 16:15:29 -0700
+IronPort-SDR: vuitbyVpHpJm5Y18/far9MDEQ0NQhQCBQwSmMip/qDf8xeybiWqaK3pW1/2eNkSdV/c4GYxKX8
+ uY5EZ9QmaLQ+5L6iyt58rTiap55MK2I07TgcIrk06ClUOrQZ/NU0+jBWi8ZUEV8eoomVDNhRIP
+ AfxJ6Yjc2cCv/PltOGcHh0CrswNT6Nmv3MZoQqJKtFFApGOsK1jkRtMlaIfPKMmd4cj7x99ZuV
+ H6z50Cb7nefneizQh/QsgSYStpep05hTKKUN7uZsGL3f0DeewidZ3kaZrEbOrOC7IBEs3JnXhH
+ RPE=
+WDCIronportException: Internal
+Received: from iouring.labspan.wdc.com (HELO iouring.sc.wdc.com) ([10.6.138.107])
+  by uls-op-cesaip02.wdc.com with ESMTP; 06 Apr 2020 16:24:45 -0700
+From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+To:     linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc:     hch@lst.de, danil.kipnis@cloud.ionos.com,
+        jinpu.wang@cloud.ionos.com,
+        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Subject: [PATCH 0/2] block: add bio based read-write helper
+Date:   Mon,  6 Apr 2020 16:24:38 -0700
+Message-Id: <20200406232440.4027-1-chaitanya.kulkarni@wdc.com>
+X-Mailer: git-send-email 2.24.0
 MIME-Version: 1.0
-In-Reply-To: <20200406143155.GD20708@bfoster>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9583 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 spamscore=0
- malwarescore=0 suspectscore=0 adultscore=0 bulkscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004060177
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9583 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 adultscore=0
- priorityscore=1501 mlxscore=0 malwarescore=0 mlxlogscore=999
- lowpriorityscore=0 spamscore=0 impostorscore=0 suspectscore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004060177
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+Hi,
 
+With reference to the discussion [1] on the linux-block mailing list,
+this patch series adds a helper to map the buffer to bio and provides
+two variants for synchronous and asynchronous I/O submission.
 
-On 4/6/20 7:31 AM, Brian Foster wrote:
-> On Fri, Apr 03, 2020 at 03:12:11PM -0700, Allison Collins wrote:
->> Delayed operations cannot return error codes.  So we must check for
->> these conditions first before starting set or remove operations
->>
->> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
->> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
->> ---
->>   fs/xfs/libxfs/xfs_attr.c | 15 +++++++++++++++
->>   1 file changed, 15 insertions(+)
->>
->> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
->> index 2a0d3d3..f7e289e 100644
->> --- a/fs/xfs/libxfs/xfs_attr.c
->> +++ b/fs/xfs/libxfs/xfs_attr.c
->> @@ -404,6 +404,17 @@ xfs_attr_set(
->>   				args->total, 0, quota_flags);
->>   		if (error)
->>   			goto out_trans_cancel;
->> +
->> +		error = xfs_has_attr(args);
->> +		if (error == -EEXIST && (args->attr_flags & XATTR_CREATE))
->> +			goto out_trans_cancel;
->> +
->> +		if (error == -ENOATTR && (args->attr_flags & XATTR_REPLACE))
->> +			goto out_trans_cancel;
->> +
->> +		if (error != -ENOATTR && error != -EEXIST)
->> +			goto out_trans_cancel;
-> 
-> I'd kill off the whitespace between the above error checks. Otherwise
-> looks good to me:
-> 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-Alrighty, will do.  Thanks!
+Right now only XFS is the only user, once gets accepted block/rnbd [2]
+code can re-use this helper and we can avoid code duplication. 
 
-Allison
-> 
->> +
->>   		error = xfs_attr_set_args(args);
->>   		if (error)
->>   			goto out_trans_cancel;
->> @@ -411,6 +422,10 @@ xfs_attr_set(
->>   		if (!args->trans)
->>   			goto out_unlock;
->>   	} else {
->> +		error = xfs_has_attr(args);
->> +		if (error != -EEXIST)
->> +			goto out_trans_cancel;
->> +
->>   		error = xfs_attr_remove_args(args);
->>   		if (error)
->>   			goto out_trans_cancel;
->> -- 
->> 2.7.4
->>
-> 
+Please note that I've not tested the XFS patch yet, once I get some
+feedback, I'll add a test for the same in the xfstests. It will be
+great if XFS developers can provide some insight into testing log
+related code which used this helper.
+
+Regards,
+Chaitanya
+
+[1] Linux-Block Mailing list discussion on the same topic :-
+
+https://www.spinics.net/lists/linux-block/msg51040.html
+https://www.spinics.net/lists/linux-block/msg51462.html
+https://www.spinics.net/lists/linux-block/msg51465.html
+https://www.spinics.net/lists/linux-block/msg51480.html
+
+Chaitanya Kulkarni (2):
+  block: add bio based rw helper for data buffer
+  xfs: use block layer helper for rw
+
+ block/blk-lib.c        | 105 +++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_bio_io.c    |  47 +-----------------
+ include/linux/blkdev.h |   7 +++
+ 3 files changed, 114 insertions(+), 45 deletions(-)
+
+-- 
+2.22.1
+
