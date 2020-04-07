@@ -2,72 +2,71 @@ Return-Path: <SRS0=E2x8=5X=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 309D5C2BA1A
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 20:01:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F677C2D0EC
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 20:06:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C958E2074B
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 20:01:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D76D2074B
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 20:06:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="JqDK/rpz";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="L+H22BYu"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Fl4c+od7";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="iUHMxJuS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727185AbgDGUBr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Apr 2020 16:01:47 -0400
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:29457 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726436AbgDGUBr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Apr 2020 16:01:47 -0400
+        id S1727045AbgDGUGj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Apr 2020 16:06:39 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:5596 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726719AbgDGUGi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Apr 2020 16:06:38 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1586289706; x=1617825706;
+  t=1586289998; x=1617825998;
   h=from:to:cc:subject:date:message-id:references:
    content-transfer-encoding:mime-version;
-  bh=6M3/dZpGCcWzYp54VgsQo0rqLLmnkfLbv2mXce7SgRM=;
-  b=JqDK/rpzd8AIckSS4hdvaS/O9wEKsWQNYz7t4P3l+M8A6wIJGi1wG/qW
-   Xf1B6ZLS9u+S0Glo041glGPdKjRwwmaye66nGBjtwq6z4BAo6XJZRU3/o
-   tHYavWkn6v41RRrFbaI1sInktPv9wTXRRpYvQNQ1iCkojSGrnXEu0vn2R
-   EUjj8lAglweEPMEH6CNWyZd++r7CoZuHwu1f163AJn2L13+UvCXy4eyVw
-   5bLcI8t3sbOqnHVzeeydyuaXOrNMPRhmqusgtMeWqVKD01oj0hlR6yO/w
-   5VXHpPnW706ipsAqoGI7Dh6s1PC5MFMaaOnWrkOQNkPRtWW9rEaQfnmFw
+  bh=d+/nrgYu/E+TbyecInClXpIgzb1ndWYZ/TB+/6Pu/+Y=;
+  b=Fl4c+od77HUdHbipLUUNAcTJXTjhXL+Qexg1/cDk6mi12i40iIjx6mIM
+   FFOmkxT5oPv4MmgXUywmVJcOUBb7ataeJL4e9DJygJ99lE+tgpPUvE4VT
+   K7Mzs25ergNmwBi7OxXpPJQCX/SK4Eq5Sjzn9lW5zWreEZc4dLgU8RRv5
+   TaZKT0k3zPLULZwe+1LCiG6U+wKyZPS+ZVlN52F8WLWMzzUV2itVP3R9K
+   S2VQ7vmq5PXu8Gkhut2m5XcLyQC3f+NSSRi7IMkXSrypfJJBz/LgKNJfi
+   DrZ4IJvNGH4xvWUyYRhIDbjLZ01QcQD8mGLZmZqh2mTSnh/HBS5Ilu4xt
    A==;
-IronPort-SDR: uPBRakMhOYjnCCNuRoS5884N6e0mWhMWrcnhdEHQdP6+Y8ao/RSLZCw2QMVS6hz6pNPKQHsF6c
- 6ucy0FZYaAAqz3EOfEmtG/yyD5H7L7wwAznUG/IXzImOsU2kdkHO4CT8S0ECn4ohaf7tSxJumk
- qjDAj+3KRZEUK4LhlVaR1+EV53WY7JtgE5s0jTQ4J+nflbk5OAQuLGsf9RjqdUJfvgqWLPAHyW
- m68LrY9tPLS9NEa8vieH+KfLladfnWYuq/oA549qyycv2MUOzp6DyW6Y9dVd1yKxzFzWVe66oN
- 0bM=
+IronPort-SDR: Wz05/zSymVuCdGy6X4ESfvPUrPXAuq4Tv3SaCOplaz4sF4smFMiH/hmt8HN5POTPWBvKCiOQ5s
+ VaQCdmJ2OnqUz9kOFRjI00KV5AIy99Z3FTZqLoIKRVc2manOfIAVV8+lriGCpPYmIEnZzCkuJy
+ Qu1HTDeoNTjVziyhMSk4wTPqrHmI0Lp40k4/0PJKArnxF+/tFVfWY2syjkaChpFRbK+JP/UFLU
+ 3sNLGGes9P9WTJlumTjKMpA5sWbxVjtnO+2ALB3rWa/E4Eggw2euW0XFczDo6nfL1XnwY9ZCfk
+ GaM=
 X-IronPort-AV: E=Sophos;i="5.72,356,1580745600"; 
-   d="scan'208";a="243350664"
-Received: from mail-bn7nam10lp2103.outbound.protection.outlook.com (HELO NAM10-BN7-obe.outbound.protection.outlook.com) ([104.47.70.103])
-  by ob1.hgst.iphmx.com with ESMTP; 08 Apr 2020 04:01:44 +0800
+   d="scan'208";a="136258196"
+Received: from mail-bn8nam11lp2174.outbound.protection.outlook.com (HELO NAM11-BN8-obe.outbound.protection.outlook.com) ([104.47.58.174])
+  by ob1.hgst.iphmx.com with ESMTP; 08 Apr 2020 04:06:37 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Dvl3B/DMMTtBtYX37HKy2d3s2A13nrvTeBH+Lt3wIYw0WQ/GUjnQT4xA5tNqJOaGsY9Vqg0WRaZPlrrugyIzGHaxHLTc4gi9fiqPngCotUw0prPdGJCu0HbR57rCn7cURzk5CpJf1+65Z2CFJsauFrsrEPNf90Zk8bvICM9d5plJhmSNblGRoHdTSF7vZMCuM/wWKqaRL3m9/zM4a8j31vhVddlOLIu+HEgK16Ve0BuqKGDU5DaHEccILOiqwA1Na0UaFfhV/53MT4vxkR5gJWCEiTOELNZIvf1o2B/QU/1N87MU40mvqR9qCZWrqG2W54oazCv7nMX78vI+A0EWIQ==
+ b=GgTXU50F/XR/dK4w3GPydxupqDGZ34cK2NgjoObRmgNQFV7qaRbbh2G/1Xxov6XOAu+gvY8IjVmbiaR0p4dSZbAvKuf9mBHqU1oLo1mp5vxrWP+NaOHN10AsCBFR2e5ZhFI7EQgKGbhJS3HvtaHjpIIDj+QbTE2gnup94Jq1HB+4xqgc/zmwv9DO8BlyFRjmEnsCc4TirPrYdzjUX3J/LYlzDW2SyH9NpDrBSLJxe/FsfkEzWJjsQuFnmbEziUCq5Nqg5Hyyhed8zY8VlQ1oH3zTjbfDfgJyf9Ef7lDPc7MFLo47VYoMgfEsg4c1hhyUcnPIP0TN+r0dJWRNBjjjiQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Y2zRKmlAYqFFlkvAtLYr7gi2IfcG+1Bv10COz9WzhGs=;
- b=bmICj7n8dluqTk+OHG8wYEKWO0WtzKbGr/NCrvDX3jAJPkb5DfGS1o2Yh9bPwslklgv8xwzRWjSoDCnWSIvbrs5XQoemiy260TGaTZ1sqTeKaXIOBM7D679RzcphUNekbQ7QxtvA0H8bFL741EBJGZwdbd8dPAtga1JcqkNRkhGGMH45W8fYE3vl0qtUQbdiC/ZW7nNIt+6Y65dqx4yDbT3LUh+vXAyYeUfnZAvURayUw9FBurDlHbH4Ex1PmUQu+z4KibvDIazFxTCfTuZ/rEc7CsC7GWp3GsOsk0aQzJ+rF9ewv/a4LIaWwx4zE2MRTlJUnOaFcYfvy5ePpeOEdQ==
+ bh=63G0SnwI9I0qB9y+7fqfY6ivyLJ4i3yvY8gVHqiplmk=;
+ b=jCbJwsSgqshsSc+w7+kcDbB//wS3BhQNgtnfo+aGZ6i9yHrvy+evlaZzfEQfSzbqAVl/HoZCXQH+eK9cjTCr+WzIYwMwvAV1mSdiUVXYoIpAgL1bcVQoe9gNSktapoXA6+QbDSY1fUoyWdKR9SwW46J5BXxXlHYGFAYJRZudxevNZ4kDhMpm4XwRd6m28Lz5edKuyHJsp90VpXCtAxu+pHdyRuLQ37va7cZoIgKNAzlpMFg35YxJ8/oEWcHp+HU/KDP1OZfXqCjoFyIKz3O4qwfsySyeso8/vxwaUw036pcc1W5l7SM4VTWRlcZSfKpphklpUvW/Lu4mdtMdHhzwIw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
  header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Y2zRKmlAYqFFlkvAtLYr7gi2IfcG+1Bv10COz9WzhGs=;
- b=L+H22BYuzxDexjwlZj9Soh6kTYFo3t/JGm/ehT1L3tYzJiQu5ggKAl/kkuvEYhOqUyiY+09idcTYG2UPxE1TIaifOP7oCdYDgQnzpBCOVh7M8bkiu0UmW/5cowIV5pQ/BmD451sLqEkob6SBH1uq/aQssGDTj9noqnXvJB9CVXw=
+ bh=63G0SnwI9I0qB9y+7fqfY6ivyLJ4i3yvY8gVHqiplmk=;
+ b=iUHMxJuS2AeXK3C/UYbIB9/bfmeAbX9O3J73lKecvxG9N6+0QIPev/iiPg1h9zTzGjVpZ+xHXnoRKQxfjPK+g99AMSnHdPsvTMl1z7x6AEnOGQIwZE3euJytTHNz7l5+aZUaw+y2LjMVybYsyudHup3zFyEca0zbOz6eEtvKaWs=
 Received: from BYAPR04MB4965.namprd04.prod.outlook.com (2603:10b6:a03:4d::25)
  by BYAPR04MB5398.namprd04.prod.outlook.com (2603:10b6:a03:ce::27) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2878.20; Tue, 7 Apr
- 2020 20:01:43 +0000
+ 2020 20:06:36 +0000
 Received: from BYAPR04MB4965.namprd04.prod.outlook.com
  ([fe80::d826:82b2:764f:9733]) by BYAPR04MB4965.namprd04.prod.outlook.com
  ([fe80::d826:82b2:764f:9733%7]) with mapi id 15.20.2878.018; Tue, 7 Apr 2020
- 20:01:43 +0000
+ 20:06:36 +0000
 From:   Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
 To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
         "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
@@ -75,14 +74,14 @@ To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
 CC:     "hch@lst.de" <hch@lst.de>,
         "danil.kipnis@cloud.ionos.com" <danil.kipnis@cloud.ionos.com>,
         "jinpu.wang@cloud.ionos.com" <jinpu.wang@cloud.ionos.com>
-Subject: Re: [PATCH 1/2] block: add bio based rw helper for data buffer
-Thread-Topic: [PATCH 1/2] block: add bio based rw helper for data buffer
-Thread-Index: AQHWDGqU2VOdDv5MT0CIzYNqFKOYsg==
-Date:   Tue, 7 Apr 2020 20:01:43 +0000
-Message-ID: <BYAPR04MB4965D18A3BE7602AFBC4951D86C30@BYAPR04MB4965.namprd04.prod.outlook.com>
+Subject: Re: [PATCH 2/2] xfs: use block layer helper for rw
+Thread-Topic: [PATCH 2/2] xfs: use block layer helper for rw
+Thread-Index: AQHWDGqdc+93DLJ+GUSwv5Qr3eKT0A==
+Date:   Tue, 7 Apr 2020 20:06:35 +0000
+Message-ID: <BYAPR04MB4965A3A58D804CCE9892266686C30@BYAPR04MB4965.namprd04.prod.outlook.com>
 References: <20200406232440.4027-1-chaitanya.kulkarni@wdc.com>
- <20200406232440.4027-2-chaitanya.kulkarni@wdc.com>
- <BY5PR04MB6900AB25131618BED40BE0E0E7C30@BY5PR04MB6900.namprd04.prod.outlook.com>
+ <20200406232440.4027-3-chaitanya.kulkarni@wdc.com>
+ <BY5PR04MB690075C16A97151A6216948CE7C30@BY5PR04MB6900.namprd04.prod.outlook.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -92,334 +91,80 @@ authentication-results: spf=none (sender IP is )
 x-originating-ip: [199.255.45.62]
 x-ms-publictraffictype: Email
 x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: c28f02b1-e22e-4bba-a263-08d7db2e7eb8
+x-ms-office365-filtering-correlation-id: f16d745b-7319-48d4-6f0e-08d7db2f2cfb
 x-ms-traffictypediagnostic: BYAPR04MB5398:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BYAPR04MB5398EB10DC2E32A431252D5486C30@BYAPR04MB5398.namprd04.prod.outlook.com>
+x-microsoft-antispam-prvs: <BYAPR04MB53986CDC49531D3F6ED7754A86C30@BYAPR04MB5398.namprd04.prod.outlook.com>
 wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:10000;
+x-ms-oob-tlc-oobclassifiers: OLM:7691;
 x-forefront-prvs: 036614DD9C
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR04MB4965.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(10019020)(4636009)(39850400004)(136003)(396003)(376002)(366004)(346002)(186003)(7696005)(2906002)(9686003)(52536014)(26005)(55016002)(5660300002)(71200400001)(66946007)(66556008)(316002)(8676002)(64756008)(478600001)(66446008)(66476007)(81156014)(8936002)(6506007)(81166006)(53546011)(33656002)(4326008)(76116006)(54906003)(86362001)(110136005);DIR:OUT;SFP:1102;
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR04MB4965.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(10019020)(4636009)(376002)(346002)(366004)(396003)(39850400004)(136003)(66446008)(6506007)(81166006)(53546011)(66476007)(81156014)(8936002)(316002)(8676002)(66556008)(66946007)(71200400001)(64756008)(478600001)(54906003)(86362001)(110136005)(4326008)(33656002)(76116006)(2906002)(7696005)(186003)(5660300002)(26005)(9686003)(52536014)(55016002);DIR:OUT;SFP:1102;
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: o49+K4ihyVfK/78X8xqK4hERcu6zRqxMR9IYI7cAfAAyNllB7Un1xswtWKXcG4ZslG8aDMC9+wVc6wt3r2bThKRFSosxGuboY9KPGx+JEXlC57dPLvGGDSB3uGdvjGIBA4fXBW7c3ooM8D0P/r2r1H5+ySQQdbqHj3IfAzXnqK+i8Cu/BeqP7PIPh+SFgdSqzcAWGHqt2cAL6fVASUgimxse9s2ymQtClvDJLYH+xSEFkB6WJ3iWxvZGyUPKiPYws/BziDpWMg+9VchgzsQX4XCtLpr1bF4won89FC/h9IbKgho0qRNDFi+tnFOLmz080CkKBdjTl1BHIP0zz8ehMwg3j6xK8srMDk3d6LfrDuSIHtvSOjUWS8dt8DbCoed2R+PtG+L22Vj/BD/a4lyHxiQh1uOyf3yfZ0w9D5Hgm2TkJNiT2/1f/PHDTObp3gf0
-x-ms-exchange-antispam-messagedata: RTfUXwcQ8qtfcwHEXmtx9hLgbo6sn2bRuMaNMWGcVKO74ypZG93BJ3795PzBhYKoAGxjuoKbBPLv/cqkFxRr7aYaCtOT9m420W3iPFniqXR6Mo99MKLA6IyC2UMnY0tw72RSRrYUORh/h+ZOfjLoBA==
+x-microsoft-antispam-message-info: Awqdf07jo7MbP6Vb1ekDSe+yvCtk15esNpQLqzy3WdEyO2MERYawePyVRP7yVxNsUbaYQ8xRLGmo9JCInUECT0ulipeh85nHxlta0A45oSwc9WnknTLlx9eJTa/W3hC1bYQi/WvKfauMN5CC3L3ekuHZzC5ZCN0YENOgNyrjl9+nKXagieUiyrEk0ZVMvH8unbgQqt5UYblceT+xRcaAy5TfXywdypzQso+G9MnbZ0VW/sAURGwFq4fNr41Ch4WzPFSTMKQ6h/wnc/D38vpWEBD2E6tiKb8sIqX+BE+aF6lW5jUqykBFnbB9XmYptVAZjdCo/t+okKNTSy+k500gNILZBvff9DuYFqkcUXMHk5btgqm/tyOzJ8HoCKNOCRPYgi9tMQCrEYA6hytKkmjThFKnPh9lb/NxlCsZ99r3FcL9z18pBnKlxsdOn8Ee8ZvI
+x-ms-exchange-antispam-messagedata: LeX4ZW/wX6yla2zwgvhk1Y1RuGfXkMHWuBi/Qnaf5EttqJDnbbFZfe7DhrUYDlOAGCbTXUyv/9zyDqMRampJUqzoCh/CQtNYOBbtX53s6M8GFkkjQ9yPJ6x+cxE8KTwVlmLo6boYhy+jTPyviw1zZA==
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c28f02b1-e22e-4bba-a263-08d7db2e7eb8
-X-MS-Exchange-CrossTenant-originalarrivaltime: 07 Apr 2020 20:01:43.5543
+X-MS-Exchange-CrossTenant-Network-Message-Id: f16d745b-7319-48d4-6f0e-08d7db2f2cfb
+X-MS-Exchange-CrossTenant-originalarrivaltime: 07 Apr 2020 20:06:35.9076
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: lkJAwWIxNIc+gxCtNZdG8lbX6/lzsM97s4p0i1pAaMBG9Dtj/pClQn+sTm68lZ3tAWkU7/x9zssmC3lFxHA8sZwnev+4qdRVKi9olv3dhhg=
+X-MS-Exchange-CrossTenant-userprincipalname: wLHDCoac/RDqMOAdcrbK01WfCpv0ZaINiv5wlq+bRQ8euXLL9RxeYZMvgcvc2x47eybI/n5ZlNv3GebGTvXyuRfTP5TSc28QezwW/Fs/Gwg=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB5398
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 04/06/2020 05:28 PM, Damien Le Moal wrote:=0A=
-> On 2020/04/07 8:24, Chaitanya Kulkarni wrote:=0A=
->> One of the common application for the file systems and drivers to map=0A=
->> the buffer to the bio and issue I/Os on the block device.=0A=
->=0A=
-> Drivers generally do not do this. At least not lower ones (scsi, nvme, et=
-c). I=0A=
-> guess you are referring to DM drivers. If yes, better be clear about this=
+On 04/06/2020 05:32 PM, Damien Le Moal wrote:=0A=
+>> -=0A=
+>> >-	do {=0A=
+>> >-		struct page	*page =3D kmem_to_page(data);=0A=
+>> >-		unsigned int	off =3D offset_in_page(data);=0A=
+>> >-		unsigned int	len =3D min_t(unsigned, left, PAGE_SIZE - off);=0A=
+>> >-=0A=
+>> >-		while (bio_add_page(bio, page, len, off) !=3D len) {=0A=
+>> >-			struct bio	*prev =3D bio;=0A=
+>> >-=0A=
+>> >-			bio =3D bio_alloc(GFP_KERNEL, bio_max_vecs(left));=0A=
+>> >-			bio_copy_dev(bio, prev);=0A=
+>> >-			bio->bi_iter.bi_sector =3D bio_end_sector(prev);=0A=
+>> >-			bio->bi_opf =3D prev->bi_opf;=0A=
+>> >-			bio_chain(prev, bio);=0A=
+>> >-=0A=
+>> >-			submit_bio(prev);=0A=
+>> >-		}=0A=
+>> >-=0A=
+>> >-		data +=3D len;=0A=
+>> >-		left -=3D len;=0A=
+>> >-	} while (left > 0);=0A=
+> Your helper could use a similar loop structure. This is very easy to read=
 .=0A=
-> Also, "the buffer" is a little unclear. Better qualify that.=0A=
 >=0A=
-Agree most drivers deals with sg_list. Right now there is only one such=0A=
-an example I know which is rnbd as driver as it is mentioned in the=0A=
-cover-letter references.=0A=
-> Another thing: "to map the buffer to the bio" is a little strange. The re=
-verse=0A=
-> seems more natural: a bio maps a buffer.=0A=
->=0A=
-Make sense, will do.=0A=
->>=0A=
->> This is a prep patch which adds two helper functions for block layer=0A=
->> which allows file-systems and the drivers to map data buffer on to the=
+If I understand correctly this pattern is used since it is not a part of =
 =0A=
->> bios and issue bios synchronously using blkdev_issue_rw() or=0A=
->> asynchronously using __blkdev_issue_rw().=0A=
->=0A=
-> The function names are basically the same but do completely different thi=
-ngs.=0A=
-> Better rename that. May be blkdev_issue_rw_sync() and blkdev_issue_rw_asy=
-nc() ?=0A=
->=0A=
- >=0A=
+block layer.=0A=
 =0A=
-This is exactly I named functions to start with (see the function=0A=
-documentation which I missed to update), but the pattern in blk-lib.c=0A=
-uses no such sync and async postfix, which is used is sync and async=0A=
-context all over the kernel :-=0A=
+The helpers in blk-lib.c are not accessible so this :-=0A=
+1. Adds an extra helper bio_max_vecs().=0A=
+2. Adds a new macro howmany which is XFS specific and doesn't=0A=
+    follow usual block layer macros naming.=0A=
+3. Open codes bio chaining.=0A=
+4. Uses two bio variables for chaining.=0A=
+5. Doesn't allow to anchor bio which is needed in async I/O scenario.=0A=
 =0A=
-# grep EXPORT block/blk-lib.c=0A=
-EXPORT_SYMBOL(__blkdev_issue_discard);=0A=
-EXPORT_SYMBOL(blkdev_issue_discard);, since as it is nr_sects and sector =
+All above breaks the existing pattern and code reuse in blk-lib.c, since =
 =0A=
-calculation doesn't matter after break.=0A=
-EXPORT_SYMBOL(blkdev_issue_write_same);=0A=
-EXPORT_SYMBOL(__blkdev_issue_zeroout);=0A=
-EXPORT_SYMBOL(blkdev_issue_zeroout);=0A=
-EXPORT_SYMBOL_GPL(__blkdev_issue_rw);=0A=
-EXPORT_SYMBOL_GPL(blkdev_issue_rw);=0A=
-=0A=
-In absence of documentation for naming how about we just follow=0A=
-existing naming convention ?=0A=
-=0A=
-Which matches the pattern for new API.=0A=
-=0A=
->>=0A=
->> Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>=0A=
->> ---=0A=
->>   block/blk-lib.c        | 105 +++++++++++++++++++++++++++++++++++++++++=
-=0A=
->>   include/linux/blkdev.h |   7 +++=0A=
->>   2 files changed, 112 insertions(+)=0A=
->>=0A=
->> diff --git a/block/blk-lib.c b/block/blk-lib.c=0A=
->> index 5f2c429d4378..451c367fc0d6 100644=0A=
->> --- a/block/blk-lib.c=0A=
->> +++ b/block/blk-lib.c=0A=
->> @@ -405,3 +405,108 @@ int blkdev_issue_zeroout(struct block_device *bdev=
-, sector_t sector,=0A=
->>   	return ret;=0A=
->>   }=0A=
->>   EXPORT_SYMBOL(blkdev_issue_zeroout);=0A=
->> +=0A=
->> +/**=0A=
->> + * __blkdev_ssue_rw - issue read/write bios from buffer asynchronously=
-=0A=
->=0A=
-> s/__blkdev_ssue_rw/__blkdev_issue_rw=0A=
-Thanks, will fix.=0A=
->=0A=
->> + * @bdev:	blockdev to read/write=0A=
->> + * @buf:	data buffer=0A=
->> + * @sector:	start sector=0A=
->> + * @nr_sects:	number of sectors=0A=
->> + * @op:	REQ_OP_READ or REQ_OP_WRITE=0A=
->> + * @opf:	flags=0A=
->> + * @gfp_mask:	memory allocation flags (for bio_alloc)=0A=
->> + * @biop:	pointer to anchor bio=0A=
->> + *=0A=
->> + * Description:=0A=
->> + *  Generic helper function to map data buffer into bios for read and w=
-rite ops.=0A=
->> + *  Returns pointer to the anchored last bio for caller to submit async=
-hronously=0A=
->> + *  or synchronously.=0A=
->> + */=0A=
->> +int __blkdev_issue_rw(struct block_device *bdev, char *buf, sector_t se=
-ctor,=0A=
->> +		      sector_t nr_sects, unsigned op, unsigned opf,=0A=
->> +		      gfp_t gfp_mask, struct bio **biop)=0A=
->> +{=0A=
->> +	bool vm =3D is_vmalloc_addr(buf) ? true : false;=0A=
->=0A=
-> You do not need the clunky "? true : false" here. is_vmalloc_addr() retur=
-ns a=0A=
-> bool already.=0A=
->=0A=
-I will remove it.=0A=
->> +	struct bio *bio =3D *biop;=0A=
->> +	unsigned int nr_pages;=0A=
->> +	struct page *page;=0A=
->> +	unsigned int off;=0A=
->> +	unsigned int len;=0A=
->> +	int bi_size;=0A=
->> +=0A=
->> +	if (!bdev_get_queue(bdev))=0A=
->> +		return -ENXIO;=0A=
->> +=0A=
->> +	if (bdev_read_only(bdev))=0A=
->> +		return -EPERM;=0A=
->=0A=
-> One can read a read-only device. So the check here is not correct. You ne=
-ed a=0A=
-> "&& op =3D=3D REQ_OP_WRITE" in the condition.=0A=
->=0A=
-True, this shouldn't be here, also I'm thinking of lifting these checks =0A=
-to caller, we can add it later if needed.=0A=
->> +=0A=
->> +	if (!(op =3D=3D REQ_OP_READ || op =3D=3D REQ_OP_WRITE))=0A=
->> +		return -EINVAL;=0A=
->=0A=
-> This probably should be checked before read-only.=0A=
->=0A=
-Yes.=0A=
->> +=0A=
->> +	while (nr_sects !=3D 0) {=0A=
->> +		nr_pages =3D __blkdev_sectors_to_bio_pages(nr_sects);=0A=
->> +=0A=
->> +		bio =3D blk_next_bio(bio, nr_pages, gfp_mask);=0A=
->> +		bio->bi_iter.bi_sector =3D sector;=0A=
->> +		bio_set_dev(bio, bdev);=0A=
->> +		bio_set_op_attrs(bio, op, 0);=0A=
->> +=0A=
->> +		while (nr_sects !=3D 0) {=0A=
->> +			off =3D offset_in_page(buf);=0A=
->> +			page =3D vm ? vmalloc_to_page(buf) : virt_to_page(buf);=0A=
->> +			len =3D min((sector_t) PAGE_SIZE, nr_sects << 9);=0A=
->> +=0A=
->> +			bi_size =3D bio_add_page(bio, page, len, off);=0A=
->=0A=
-> The variable naming is super confusing. bio_add_page() returns 0 if nothi=
-ng is=0A=
-> added and len if the page was added. So bi_size as a var name is not the =
-best of=0A=
-> name in my opinion.=0A=
->=0A=
-Here bio, page, len, off variables are passed to the bio_add_page() =0A=
-function, which has the same names in the function parameter list.=0A=
-(I'll fix the off to offset)=0A=
-=0A=
-Regarding the bi_size, given that bio_add_page() returns =0A=
-bio->bi_iter.bi_size, isn't bi_size also maps to the what function is =0A=
-returning and explains what we are dealing with?=0A=
-=0A=
-Also, bi_size is used in the blk-lib.c: __blkdev_issue_zero_pages(), if =0A=
-that is confusing then we need to change that, what is your preference?=0A=
-=0A=
-I'll send a cleanup patch __blkdev_issue_zero_pages() also.=0A=
-=0A=
->> +=0A=
->> +			nr_sects -=3D bi_size >> 9;=0A=
->> +			sector +=3D bi_size >> 9;=0A=
->> +			buf +=3D bi_size;=0A=
->> +=0A=
->> +			if (bi_size < len)=0A=
->> +				break;=0A=
->=0A=
-> You will get either 0 or len from bio_add_page. So the check here is not =
-ideal.=0A=
-> I think it is better to move it up under bio_add_page() and make it:=0A=
->=0A=
-> 			len =3D bioa_add_page(bio, page, len, off);=0A=
-> 			if (!len)=0A=
-> 				break;=0A=
-I'd still like to keep bi_size, I think I had received a comment about =0A=
-using same variable for function call and updating as a return value.=0A=
-=0A=
-Regarding the check, will move it.=0A=
->=0A=
->> +		}=0A=
->> +		cond_resched();=0A=
->> +	}=0A=
->> +	*biop =3D bio;=0A=
->> +	return 0;=0A=
->> +}=0A=
->> +EXPORT_SYMBOL_GPL(__blkdev_issue_rw);=0A=
->> +=0A=
->> +/**=0A=
->> + * blkdev_execute_rw_sync - issue read/write bios from buffer synchrono=
-usly=0A=
->> + * @bdev:	blockdev to read/write=0A=
->> + * @buf:	data buffer=0A=
->> + * @sector:	start sector=0A=
->> + * @count:	number of bytes=0A=
->> + * @op:	REQ_OP_READ or REQ_OP_WRITE=0A=
->> + * @opf:	flags=0A=
->> + * @gfp_mask:	memory allocation flags (for bio_alloc)=0A=
->> + *=0A=
->> + * Description:=0A=
->> + *  Generic helper function to map data buffer buffer into bios for rea=
-d and=0A=
->> + *  write requests.=0A=
->> + */=0A=
->> +int blkdev_issue_rw(struct block_device *b, char *buf, sector_t sector,=
-=0A=
->> +		     unsigned count, unsigned op, unsigned opf, gfp_t mask)=0A=
->=0A=
-> function name differs between description and declaration.=0A=
-> blkdev_execute_rw_sync() is better than blkdev_issue_rw() in my opinion.=
-=0A=
->=0A=
-That was remained from initial version, will fix it, thanks for=0A=
-pointing it out.=0A=
->> +{=0A=
->> +	unsigned int is_vmalloc =3D is_vmalloc_addr(buf);=0A=
->> +	sector_t nr_sects =3D count >> 9;=0A=
->> +	struct bio *bio =3D NULL;=0A=
->> +	int error;=0A=
->> +=0A=
->> +	if (is_vmalloc && op =3D=3D REQ_OP_WRITE)=0A=
->> +		flush_kernel_vmap_range(buf, count);=0A=
->> +=0A=
->> +	opf |=3D REQ_SYNC;=0A=
->=0A=
-> You can add this directly in the call below.=0A=
->=0A=
-Breaks calling of __blkdev_issue_rw() to new line. This also adds a new=0A=
-line which is unavoidable but keeps the function call smooth in one=0A=
-line.=0A=
->> +	error =3D __blkdev_issue_rw(b, buf, sector, nr_sects, op, opf, mask, &=
-bio);=0A=
->> +	if (!error && bio) {=0A=
->> +		error =3D submit_bio_wait(bio);=0A=
->> +		bio_put(bio);=0A=
->> +	}=0A=
->> +=0A=
->> +	if (is_vmalloc && op =3D=3D REQ_OP_READ)=0A=
->> +		invalidate_kernel_vmap_range(buf, count);=0A=
->> +=0A=
->> +	return error;=0A=
->> +}=0A=
->> +EXPORT_SYMBOL_GPL(blkdev_issue_rw);=0A=
->> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h=0A=
->> index 32868fbedc9e..cb315b301ad9 100644=0A=
->> --- a/include/linux/blkdev.h=0A=
->> +++ b/include/linux/blkdev.h=0A=
->> @@ -1248,6 +1248,13 @@ static inline int sb_issue_zeroout(struct super_b=
-lock *sb, sector_t block,=0A=
->>   				    gfp_mask, 0);=0A=
->>   }=0A=
->>=0A=
->> +extern int __blkdev_issue_rw(struct block_device *bdev, char *buf,=0A=
->> +			     sector_t sector, sector_t nr_sects, unsigned op,=0A=
->> +			     unsigned opf, gfp_t gfp_mask, struct bio **biop);=0A=
->> +extern int blkdev_issue_rw(struct block_device *b, char *buf, sector_t =
-sector,=0A=
->> +			   unsigned count, unsigned op, unsigned opf,=0A=
->> +			   gfp_t mask);=0A=
->=0A=
-> No need for the extern I think.=0A=
->=0A=
-Again, following the exiting pattern in the file for the header:-=0A=
-=0A=
-  # grep blkdev_issue include/linux/blkdev.h=0A=
-extern int blkdev_issue_flush(struct block_device *, gfp_t, sector_t *);=0A=
-=0A=
-extern int blkdev_issue_write_same(struct block_device *bdev, sector_t=0A=
-sector,=0A=
-=0A=
-extern int blkdev_issue_discard(struct block_device *bdev, sector_t=0A=
-sector,=0A=
-=0A=
-extern int __blkdev_issue_discard(struct block_device *bdev, sector_t=0A=
-sector,=0A=
-=0A=
-extern int __blkdev_issue_zeroout(struct block_device *bdev, sector_t=0A=
-sector,=0A=
-=0A=
-extern int blkdev_issue_zeroout(struct block_device *bdev, sector_t=0A=
-sector,=0A=
-=0A=
-extern int __blkdev_issue_rw(struct block_device *bdev, char *buf,=0A=
-=0A=
-extern int blkdev_issue_rw(struct block_device *b, char *buf, sector_t=0A=
-sector,=0A=
->> +=0A=
->>   extern int blk_verify_command(unsigned char *cmd, fmode_t mode);=0A=
->>=0A=
->>   enum blk_default_limits {=0A=
->>=0A=
->=0A=
->=0A=
+blk-lib.c:-=0A=
+1. Already provides blk_next_bio() why repeat the bio allocation=0A=
+    and bio chaining code ?=0A=
+2. Instead of adding a new helper bio_max_vecs() why not use existing=0A=
+     __blkdev_sectors_to_bio_pages() ?=0A=
+3. Why use two bios when it can be done with one bio with the helpers=0A=
+    in blk-lib.c ?=0A=
+4. Allows async version.=0A=
 =0A=
