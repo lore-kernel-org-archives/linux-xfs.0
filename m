@@ -2,370 +2,117 @@ Return-Path: <SRS0=E2x8=5X=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 671D8C2BB86
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 18:31:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 990F5C2BA80
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 18:44:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 28BA12078C
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 18:31:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 64E6920768
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 18:44:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727149AbgDGSbS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Apr 2020 14:31:18 -0400
-Received: from mga12.intel.com ([192.55.52.136]:47795 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726436AbgDGSbS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 7 Apr 2020 14:31:18 -0400
-IronPort-SDR: AHb7KEouitRVp0Iu9+KB8C4Z8lauJCdDRCXGimB8F1MNmXrjmwHiNjVb4ncGIafKpovXssnPzG
- AQRnq9XPGVNw==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Apr 2020 11:31:09 -0700
-IronPort-SDR: mZWWrPhcUfWsZoVHmBmgdX9nFhfkAqYok3LKO+y4wHl7uWIAqD6Q22EhNRXwlGyz/S8vorCoYb
- /zIHD6Y3Iw1A==
-X-IronPort-AV: E=Sophos;i="5.72,356,1580803200"; 
-   d="scan'208";a="242147137"
-Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
-  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Apr 2020 11:31:07 -0700
-From:   ira.weiny@intel.com
-To:     fstests@vger.kernel.org
-Cc:     Ira Weiny <ira.weiny@intel.com>, linux-kernel@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        Jeff Moyer <jmoyer@redhat.com>, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH] xfs/XXX: Add xfs/XXX
-Date:   Tue,  7 Apr 2020 11:30:59 -0700
-Message-Id: <20200407183059.568653-1-ira.weiny@intel.com>
-X-Mailer: git-send-email 2.25.1
+        id S1726705AbgDGSob (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Apr 2020 14:44:31 -0400
+Received: from mout.kundenserver.de ([212.227.17.13]:37213 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726277AbgDGSob (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Apr 2020 14:44:31 -0400
+Received: from mail-qt1-f180.google.com ([209.85.160.180]) by
+ mrelayeu.kundenserver.de (mreue109 [212.227.15.145]) with ESMTPSA (Nemesis)
+ id 1N1feo-1jAi7Z0sbQ-011x3p; Tue, 07 Apr 2020 20:44:29 +0200
+Received: by mail-qt1-f180.google.com with SMTP id b10so3526301qtt.9;
+        Tue, 07 Apr 2020 11:44:28 -0700 (PDT)
+X-Gm-Message-State: AGi0PuZ8gFi2hvXVNh/IDfrZw+5XGrGfrdFNApJQkA7YIPOLIZvwIeKD
+        katH3iln/MTyHNH65SgN7SLdxT7ey3u+5NCGTKE=
+X-Google-Smtp-Source: APiQypKgeOSDBPfhB1u6KIP702ET7PgnervxCjGhHD+k7vVuRMCphJPctLEDVz7EFynIzXKRIHAMuiP/RJU2OhJDfVo=
+X-Received: by 2002:ac8:7292:: with SMTP id v18mr3736593qto.304.1586285067943;
+ Tue, 07 Apr 2020 11:44:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20190205133821.1a243836@gandalf.local.home> <20190206021611.2nsqomt6a7wuaket@treble>
+ <20190206121638.3d2230c1@gandalf.local.home> <CAK8P3a1hsca02=jPQmBG68RTUAt-jDR-qo=UFwf13nZ0k-nDgA@mail.gmail.com>
+ <20200406221614.ac2kl3vlagiaj5jf@treble> <CAK8P3a3QntCOJUeUfNmqogO51yh29i4NQCu=NBF4H1+h_m_Pug@mail.gmail.com>
+ <CAK8P3a2Bvebrvj7XGBtCwV969g0WhmGr_xFNfSRsZ7WX1J308g@mail.gmail.com> <20200407163253.mji2z465ixaotnkh@treble>
+In-Reply-To: <20200407163253.mji2z465ixaotnkh@treble>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Tue, 7 Apr 2020 20:44:11 +0200
+X-Gmail-Original-Message-ID: <CAK8P3a3piAV7BbgH-y_zqj4XmLcBQqKZ-NHPcqo4OTF=4H3UFA@mail.gmail.com>
+Message-ID: <CAK8P3a3piAV7BbgH-y_zqj4XmLcBQqKZ-NHPcqo4OTF=4H3UFA@mail.gmail.com>
+Subject: Re: libelf-0.175 breaks objtool
+To:     Josh Poimboeuf <jpoimboe@redhat.com>
+Cc:     Steven Rostedt <rostedt@goodmis.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Provags-ID: V03:K1:FOE0EA54SyWtQIMENFoNs85TPCpb5Kcf9NUCi9wsMX9f+URGxgJ
+ xX96trz1uEbdVhSSI8AhLDGfyoF4ZY3uQ8dqPbsMlHWW2xffg7FUuAcnpiv71c4e3wJTQ3R
+ pSKIGb11Mwqa41Oqt9i8E+IBB+3wkEHjH1IGbYdhVoah1hxfFkJIWwfF9F44Ck3AiWojZ3B
+ MDpo0qA6ddsTJnkdnV/Kg==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:5y9y3SeAyk8=:HpxMxQJf8uhJtzjNh/z4Cq
+ vR1PABdsX0rkiriS72bCc1WRErctmtdhwdTSk8N3g2/7LOJ4V3X0/9zNJRxH/ptXY/+0Cwjz8
+ DPPdNSad4bsZ/h/hv1G5jpyaG7rt98EZgaGLNdujCX+6mTw/qXG+a9LWTxRNGm/4yaYV3BvE1
+ dwWf/8AGbtgf0NhNEhxxufGKfiTdArCWKAd/Z0rXU8bP+5K9zGx0d5wmSswgj3B+FE+j67nF3
+ hYsJrwipBUym46aQD9rmL0xPwlYZKRKv0oIJlmP+d7qnHlHgab+3PCXejQYmerD2L+jZweRMA
+ edbyk+nmtOyzJzbEcibQNis7Bug6K16her2Vupo2LT2+J+cJKrk2C4bt3TTBYD8XbeZoNSZC/
+ hqcb0r5URdwjAsdUSKno5FQCo33qckSO1ScXz99MnRCRUwqQwM47iVrUEuebrWNFGG3V+bIUk
+ buTe2W/Hh12QL7cOlBdulbebyva5hVwy1BKBVDIgC9Oj3Bb2WJGnlCEv0uixVxP6K5AX60MTW
+ CJIVe4tHMuzYgIClLx0PA8H6CQdHd7zYkIaVyTqGfVaKMVSjsxSHaEv1z3FiXW5G9gv9LEONt
+ MVGnh+LT9Z0w/MDaFJ1+16hea8JkMtAFxAvPPhg0age7YJ46ttprq7eS9hRLneCYcDYXfMzrL
+ VUe3ewpyXyXwXQzaCwrpGVKyvd8vTcETUu92Ggzq2d//Cy1gUcQR6Yj6WREPy8FMkzMqONQ7B
+ GSnHAzoazGxdyfoVjHN/s43ItDOpU6wEI5blL/t+V8soiPTmhr9X+uPSfZr2k6pwscFOAhG6h
+ tqj18fNK3/+gTWkAB0Pc80W/Mbre5iOytgvaG1X/T5CEeDrcq0=
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Ira Weiny <ira.weiny@intel.com>
+On Tue, Apr 7, 2020 at 6:33 PM Josh Poimboeuf <jpoimboe@redhat.com> wrote:
+> On Tue, Apr 07, 2020 at 05:46:23PM +0200, Arnd Bergmann wrote:
+> > On Tue, Apr 7, 2020 at 12:31 AM Arnd Bergmann <arnd@arndb.de> wrote:
+> > > On Tue, Apr 7, 2020 at 12:16 AM Josh Poimboeuf <jpoimboe@redhat.com> wrote:
+> > >
+> > > It's also odd that I only see the problem in two specific files:
+> > > arch/x86/realmode/rm/trampoline_64.o (in half of the randconfig builds)
+> > > and fs/xfs/xfs_trace.o  (in only one configuration so far).
+> > >
+> > > With this patch I can avoid the first one, which is unconditionally
+> > > built with -g (why?):
+> > >
+> > > --- a/arch/x86/realmode/rm/Makefile
+> > > +++ b/arch/x86/realmode/rm/Makefile
+> > > @@ -69,7 +69,7 @@ $(obj)/realmode.relocs: $(obj)/realmode.elf FORCE
+> > >  # ---------------------------------------------------------------------------
+> > >
+> > >  KBUILD_CFLAGS  := $(REALMODE_CFLAGS) -D_SETUP -D_WAKEUP \
+> > > -                  -I$(srctree)/arch/x86/boot
+> > > +                  -I$(srctree)/arch/x86/boot -gz=none
+> > >  KBUILD_AFLAGS  := $(KBUILD_CFLAGS) -D__ASSEMBLY__
+> > >  KBUILD_CFLAGS  += -fno-asynchronous-unwind-tables
+> > >  GCOV_PROFILE := n
+> > >
+> > > I'll look at the other one tomorrow.
+> >
+> > I found where -g gets added in both cases, and adding -gz=none
+> > seems to address all randconfigs with CONFIG_DEBUG_INFO=n:
+> >
+> > --- a/fs/xfs/Makefile
+> > +++ b/fs/xfs/Makefile
+> > @@ -7,7 +7,7 @@
+> >  ccflags-y += -I $(srctree)/$(src)              # needed for trace events
+> >  ccflags-y += -I $(srctree)/$(src)/libxfs
+> >
+> > -ccflags-$(CONFIG_XFS_DEBUG) += -g
+> > +ccflags-$(CONFIG_XFS_DEBUG) += -g $(call cc-option,-gz=none)
+>
+> Maybe they shouldn't have -g in the first place?
 
-Add XXX to test per file DAX operations.
+That is very possible. The -g has been there since xfs was originally merged
+back in 2002, and I could not figure out why it was there (unlike the
+-DSTATIC=""
+and -DDEBUG flags that are set in the same line).
 
-The following is tested[*]
+On the other hand, my feeling is that setting -g should not cause problems
+with objtool, if CONFIG_DEBUG_INFO is ok.
 
- - Applications must call statx to discover the current S_DAX state.
-
- - There exists an advisory file inode flag FS_XFLAG_DAX that is set based on
-   the parent directory FS_XFLAG_DAX inode flag.  (There is no way to change
-   this flag after file creation.)
-
-   If FS_XFLAG_DAX is set and the fs is on pmem then it will enable S_DAX at
-   inode load time; if FS_XFLAG_DAX is not set, it will not enable S_DAX.
-   Unless overridden...
-
- - There exists a dax= mount option.
-
-   "-o dax=never" means "never set S_DAX, ignore FS_XFLAG_DAX"
-   "-o dax=always" means "always set S_DAX (at least on pmem), ignore FS_XFLAG_DAX"
-	"-o dax" (old option) by itself means "dax=always"
-   "-o dax=iflag" means "follow FS_XFLAG_DAX" and is the default
-
- - There exists an advisory directory inode flag FS_XFLAG_DAX that can be
-   changed at any time.  The flag state is copied into any files or
-   subdirectories when they are created within that directory.  If programs
-   require file access runs in S_DAX mode, they must create those files
-   inside a directory with FS_XFLAG_DAX set, or mount the fs with an
-   appropriate dax mount option.
-
-[*] https://lore.kernel.org/lkml/20200405061945.GA94792@iweiny-DESK2.sc.intel.com/
-
-Signed-off-by: Ira Weiny <ira.weiny@intel.com>
----
- tests/xfs/999     | 231 ++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/999.out |  21 +++++
- tests/xfs/group   |   1 +
- 3 files changed, 253 insertions(+)
- create mode 100755 tests/xfs/999
- create mode 100644 tests/xfs/999.out
-
-diff --git a/tests/xfs/999 b/tests/xfs/999
-new file mode 100755
-index 000000000000..4d3048616715
---- /dev/null
-+++ b/tests/xfs/999
-@@ -0,0 +1,231 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2019 Intel, Corp.  All Rights Reserved.
-+#
-+# FSQA Test No. 999 (temporary)
-+#
-+# Test setting of DAX flag
-+#
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+status=1	# failure is the default!
-+
-+dax_dir=$TEST_DIR/dax-dir
-+dax_sub_dir=$TEST_DIR/dax-dir/dax-sub-dir
-+dax_inh_file=$dax_dir/dax-inh-file
-+dax_non_inh_file=$dax_dir/dax-non-inh-file
-+non_dax=$TEST_DIR/non-dax
-+dax_file=$TEST_DIR/dax-dir/dax-file
-+dax_file_copy=$TEST_DIR/dax-file-copy
-+dax_file_move=$TEST_DIR/dax-file-move
-+data_file=$TEST_DIR/data-file
-+
-+_cleanup() {
-+	rm -rf $TEST_DIR/*
-+}
-+
-+trap "_cleanup ; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+
-+# real QA test starts here
-+_supported_os Linux
-+_require_xfs_io_command "lsattr"
-+_require_xfs_io_command "statx"
-+_require_test
-+
-+#
-+# mnt_opt's we expect
-+# ''
-+# '-o dax=off'
-+# '-o dax=iflag'
-+# '-o dax'
-+# '-o dax=always'
-+function remount_w_option {
-+	mnt_opt=$1
-+	export MOUNT_OPTIONS=""
-+	export TEST_FS_MOUNT_OPTS=""
-+	_test_unmount
-+	_test_mount $mnt_opt
-+}
-+
-+function check_dax_mount_option {
-+	mnt_opt=$1
-+	_fs_options $TEST_DEV | grep -qw '$mnt_opt'
-+	if [ "$?" == "0" ]; then
-+		echo "FAILED: to mount FS with option '$mnt_opt'"
-+		status=1; exit
-+	fi
-+}
-+
-+function check_xflag_dax {
-+	xfs_io -c 'lsattr' $1 | awk -e '{ print $1 }' | grep 'x' &> /dev/null
-+	if [ "$?" != "0" ]; then
-+		echo "FAILED: Did NOT find FS_XFLAG_DAX on $1"
-+		status=1; exit
-+	fi
-+}
-+
-+function check_s_dax {
-+	attr=`xfs_io -c 'statx -r' $1 | grep 'stat.attributes' | awk -e '{ print $3 }'`
-+	masked=$(( $attr & 0x2000 ))
-+	if [ "$masked" != "8192" ]; then
-+		echo "FAILED: Did NOT find S_DAX flag on $1"
-+		status=1; exit
-+	fi
-+}
-+
-+function check_no_xflag_dax {
-+	xfs_io -c 'lsattr' $1 | awk -e '{ print $1 }' | grep 'x' &> /dev/null
-+	if [ "$?" == "0" ]; then
-+		echo "FAILED: Found FS_XFLAG_DAX on $1"
-+		status=1; exit
-+	fi
-+}
-+
-+function check_no_s_dax {
-+	attr=`xfs_io -c 'statx -r' $1 | grep 'stat.attributes' | awk -e '{ print $3 }'`
-+	masked=$(( $attr & 0x2000 ))
-+	if [ "$masked" == "8192" ]; then
-+		echo "FAILED: Found S_DAX flag on $1"
-+		status=1; exit
-+	fi
-+}
-+
-+echo "running tests..."
-+
-+remount_w_option ""
-+check_dax_mount_option "dax=iflag"
-+
-+echo "   *** mark dax-dir as dax enabled"
-+mkdir $dax_dir
-+xfs_io -c 'chattr +x' $dax_dir
-+check_xflag_dax $dax_dir
-+
-+echo "   *** check file inheritance"
-+touch $dax_inh_file
-+check_xflag_dax $dax_inh_file
-+check_s_dax $dax_inh_file
-+
-+echo "   *** check directory inheritance"
-+mkdir $dax_sub_dir
-+check_xflag_dax $dax_sub_dir
-+
-+echo "   *** check changing directory"
-+xfs_io -c 'chattr -x' $dax_dir
-+check_no_xflag_dax $dax_dir
-+check_no_s_dax $dax_dir
-+
-+echo "   *** check non file inheritance"
-+touch $dax_non_inh_file
-+check_no_xflag_dax $dax_non_inh_file
-+check_no_s_dax $dax_non_inh_file
-+
-+echo "   *** check that previous file stays enabled"
-+check_xflag_dax $dax_inh_file
-+check_s_dax $dax_inh_file
-+
-+echo "   *** Reset the directory"
-+xfs_io -c 'chattr +x' $dax_dir
-+check_xflag_dax $dax_dir
-+
-+# Set up for next test
-+touch $dax_file
-+touch $non_dax
-+
-+#
-+#                      inode flag
-+# ./
-+#   + dax-dir/             X
-+#     + dax-sub-dir/       X
-+#     + dax-inh-file       X
-+#     + dax-non-inh-file
-+#     + dax-file           X
-+#   + non-dax
-+#
-+
-+# check mount overrides
-+# =====================
-+
-+echo "   *** Check '-o dax'"
-+remount_w_option "-o dax"
-+check_dax_mount_option "dax=always"
-+
-+echo "   *** non-dax inode but overrides to be effective"
-+check_no_xflag_dax $non_dax
-+check_s_dax $non_dax
-+
-+echo "   *** Check for non-dax inode to be dax with mount option"
-+check_no_xflag_dax $dax_non_inh_file
-+check_s_dax $dax_non_inh_file
-+
-+
-+echo "   *** Check '-o dax=never'"
-+remount_w_option "-o dax=never"
-+check_dax_mount_option "dax=never"
-+
-+check_xflag_dax $dax_dir
-+check_xflag_dax $dax_sub_dir
-+check_xflag_dax $dax_inh_file
-+check_no_s_dax $dax_inh_file
-+check_no_xflag_dax $dax_non_inh_file
-+check_no_s_dax $dax_non_inh_file
-+check_no_xflag_dax $non_dax
-+check_no_s_dax $non_dax
-+check_xflag_dax $dax_file
-+check_no_s_dax $dax_file
-+
-+
-+echo "   *** Check '-o dax=iflag'"
-+remount_w_option "-o dax=iflag"
-+check_dax_mount_option "dax=iflag"
-+
-+check_xflag_dax $dax_dir
-+check_xflag_dax $dax_sub_dir
-+check_xflag_dax $dax_inh_file
-+check_s_dax $dax_inh_file
-+check_no_xflag_dax $dax_non_inh_file
-+check_no_s_dax $dax_non_inh_file
-+check_no_xflag_dax $non_dax
-+check_no_s_dax $non_dax
-+check_xflag_dax $dax_file
-+check_s_dax $dax_file
-+
-+
-+# Check non-zero file operations
-+# ==============================
-+
-+echo "   *** Verify setting FS_XFLAG_DAX flag fails"
-+$XFS_IO_PROG -f -c "pwrite 0 10000" $data_file > /dev/null
-+xfs_io -c 'chattr +x' $data_file
-+check_no_xflag_dax $data_file
-+check_no_s_dax $data_file
-+
-+
-+# Check inheritance on cp, mv
-+# ===========================
-+
-+echo "   *** check making 'data' dax with cp"
-+cp $non_dax $dax_dir/conv-dax
-+check_xflag_dax $dax_dir/conv-dax
-+check_s_dax $dax_dir/conv-dax
-+
-+echo "   *** check making 'data' non-dax with cp"
-+rm -f $data_file
-+cp $dax_dir/conv-dax $data_file
-+check_no_xflag_dax $data_file
-+check_no_s_dax $data_file
-+
-+echo "   *** Moved files 'don't inherit'"
-+mv $non_dax $dax_dir/move-dax
-+check_no_xflag_dax $dax_dir/move-dax
-+check_no_s_dax $dax_dir/move-dax
-+
-+echo "   *** Check '-o dax=garbage'"
-+remount_w_option "-o dax=garbage"
-+
-+status=0 ; exit
-diff --git a/tests/xfs/999.out b/tests/xfs/999.out
-new file mode 100644
-index 000000000000..3b204d4643a5
---- /dev/null
-+++ b/tests/xfs/999.out
-@@ -0,0 +1,21 @@
-+QA output created by 999
-+running tests...
-+   *** mark dax-dir as dax enabled
-+   *** check file inheritance
-+   *** check directory inheritance
-+   *** check changing directory
-+   *** check non file inheritance
-+   *** check that previous file stays enabled
-+   *** Reset the directory
-+   *** Check '-o dax'
-+   *** non-dax inode but overrides to be effective
-+   *** Check for non-dax inode to be dax with mount option
-+   *** Check '-o dax=never'
-+   *** Check '-o dax=iflag'
-+   *** Verify setting FS_XFLAG_DAX flag fails
-+xfs_io: cannot set flags on /mnt/xfstests_test/data-file: Invalid argument
-+   *** check making 'data' dax with cp
-+   *** check making 'data' non-dax with cp
-+   *** Moved files 'don't inherit'
-+   *** Check '-o dax=garbage'
-+mount: /mnt/xfstests_test: wrong fs type, bad option, bad superblock on /dev/pmem0p1, missing codepage or helper program, or other error.
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 522d4bc44d1f..816883a268bf 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -511,3 +511,4 @@
- 511 auto quick quota
- 512 auto quick acl attr
- 513 auto mount
-+999 auto
--- 
-2.25.1
-
+       Arnd
