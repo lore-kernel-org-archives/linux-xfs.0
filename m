@@ -2,117 +2,108 @@ Return-Path: <SRS0=E2x8=5X=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 990F5C2BA80
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 18:44:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF973C2D0EC
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 19:05:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 64E6920768
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 18:44:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A666F20748
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 19:05:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726705AbgDGSob (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Apr 2020 14:44:31 -0400
-Received: from mout.kundenserver.de ([212.227.17.13]:37213 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726277AbgDGSob (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Apr 2020 14:44:31 -0400
-Received: from mail-qt1-f180.google.com ([209.85.160.180]) by
- mrelayeu.kundenserver.de (mreue109 [212.227.15.145]) with ESMTPSA (Nemesis)
- id 1N1feo-1jAi7Z0sbQ-011x3p; Tue, 07 Apr 2020 20:44:29 +0200
-Received: by mail-qt1-f180.google.com with SMTP id b10so3526301qtt.9;
-        Tue, 07 Apr 2020 11:44:28 -0700 (PDT)
-X-Gm-Message-State: AGi0PuZ8gFi2hvXVNh/IDfrZw+5XGrGfrdFNApJQkA7YIPOLIZvwIeKD
-        katH3iln/MTyHNH65SgN7SLdxT7ey3u+5NCGTKE=
-X-Google-Smtp-Source: APiQypKgeOSDBPfhB1u6KIP702ET7PgnervxCjGhHD+k7vVuRMCphJPctLEDVz7EFynIzXKRIHAMuiP/RJU2OhJDfVo=
-X-Received: by 2002:ac8:7292:: with SMTP id v18mr3736593qto.304.1586285067943;
- Tue, 07 Apr 2020 11:44:27 -0700 (PDT)
+        id S1726701AbgDGTFR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Apr 2020 15:05:17 -0400
+Received: from sandeen.net ([63.231.237.45]:38970 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726339AbgDGTFR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 7 Apr 2020 15:05:17 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id E9D3E170B41;
+        Tue,  7 Apr 2020 14:05:08 -0500 (CDT)
+Subject: Re: [PATCH 4/5] xfs_repair: fix dir_read_buf use of
+ libxfs_da_read_buf
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <158619914362.469742.7048317858423621957.stgit@magnolia>
+ <158619916916.469742.10169263890587590189.stgit@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <4bb62982-116d-7d4c-ff0e-ef084cea6885@sandeen.net>
+Date:   Tue, 7 Apr 2020 14:05:15 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.6.0
 MIME-Version: 1.0
-References: <20190205133821.1a243836@gandalf.local.home> <20190206021611.2nsqomt6a7wuaket@treble>
- <20190206121638.3d2230c1@gandalf.local.home> <CAK8P3a1hsca02=jPQmBG68RTUAt-jDR-qo=UFwf13nZ0k-nDgA@mail.gmail.com>
- <20200406221614.ac2kl3vlagiaj5jf@treble> <CAK8P3a3QntCOJUeUfNmqogO51yh29i4NQCu=NBF4H1+h_m_Pug@mail.gmail.com>
- <CAK8P3a2Bvebrvj7XGBtCwV969g0WhmGr_xFNfSRsZ7WX1J308g@mail.gmail.com> <20200407163253.mji2z465ixaotnkh@treble>
-In-Reply-To: <20200407163253.mji2z465ixaotnkh@treble>
-From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Tue, 7 Apr 2020 20:44:11 +0200
-X-Gmail-Original-Message-ID: <CAK8P3a3piAV7BbgH-y_zqj4XmLcBQqKZ-NHPcqo4OTF=4H3UFA@mail.gmail.com>
-Message-ID: <CAK8P3a3piAV7BbgH-y_zqj4XmLcBQqKZ-NHPcqo4OTF=4H3UFA@mail.gmail.com>
-Subject: Re: libelf-0.175 breaks objtool
-To:     Josh Poimboeuf <jpoimboe@redhat.com>
-Cc:     Steven Rostedt <rostedt@goodmis.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Provags-ID: V03:K1:FOE0EA54SyWtQIMENFoNs85TPCpb5Kcf9NUCi9wsMX9f+URGxgJ
- xX96trz1uEbdVhSSI8AhLDGfyoF4ZY3uQ8dqPbsMlHWW2xffg7FUuAcnpiv71c4e3wJTQ3R
- pSKIGb11Mwqa41Oqt9i8E+IBB+3wkEHjH1IGbYdhVoah1hxfFkJIWwfF9F44Ck3AiWojZ3B
- MDpo0qA6ddsTJnkdnV/Kg==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:5y9y3SeAyk8=:HpxMxQJf8uhJtzjNh/z4Cq
- vR1PABdsX0rkiriS72bCc1WRErctmtdhwdTSk8N3g2/7LOJ4V3X0/9zNJRxH/ptXY/+0Cwjz8
- DPPdNSad4bsZ/h/hv1G5jpyaG7rt98EZgaGLNdujCX+6mTw/qXG+a9LWTxRNGm/4yaYV3BvE1
- dwWf/8AGbtgf0NhNEhxxufGKfiTdArCWKAd/Z0rXU8bP+5K9zGx0d5wmSswgj3B+FE+j67nF3
- hYsJrwipBUym46aQD9rmL0xPwlYZKRKv0oIJlmP+d7qnHlHgab+3PCXejQYmerD2L+jZweRMA
- edbyk+nmtOyzJzbEcibQNis7Bug6K16her2Vupo2LT2+J+cJKrk2C4bt3TTBYD8XbeZoNSZC/
- hqcb0r5URdwjAsdUSKno5FQCo33qckSO1ScXz99MnRCRUwqQwM47iVrUEuebrWNFGG3V+bIUk
- buTe2W/Hh12QL7cOlBdulbebyva5hVwy1BKBVDIgC9Oj3Bb2WJGnlCEv0uixVxP6K5AX60MTW
- CJIVe4tHMuzYgIClLx0PA8H6CQdHd7zYkIaVyTqGfVaKMVSjsxSHaEv1z3FiXW5G9gv9LEONt
- MVGnh+LT9Z0w/MDaFJ1+16hea8JkMtAFxAvPPhg0age7YJ46ttprq7eS9hRLneCYcDYXfMzrL
- VUe3ewpyXyXwXQzaCwrpGVKyvd8vTcETUu92Ggzq2d//Cy1gUcQR6Yj6WREPy8FMkzMqONQ7B
- GSnHAzoazGxdyfoVjHN/s43ItDOpU6wEI5blL/t+V8soiPTmhr9X+uPSfZr2k6pwscFOAhG6h
- tqj18fNK3/+gTWkAB0Pc80W/Mbre5iOytgvaG1X/T5CEeDrcq0=
+In-Reply-To: <158619916916.469742.10169263890587590189.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 7, 2020 at 6:33 PM Josh Poimboeuf <jpoimboe@redhat.com> wrote:
-> On Tue, Apr 07, 2020 at 05:46:23PM +0200, Arnd Bergmann wrote:
-> > On Tue, Apr 7, 2020 at 12:31 AM Arnd Bergmann <arnd@arndb.de> wrote:
-> > > On Tue, Apr 7, 2020 at 12:16 AM Josh Poimboeuf <jpoimboe@redhat.com> wrote:
-> > >
-> > > It's also odd that I only see the problem in two specific files:
-> > > arch/x86/realmode/rm/trampoline_64.o (in half of the randconfig builds)
-> > > and fs/xfs/xfs_trace.o  (in only one configuration so far).
-> > >
-> > > With this patch I can avoid the first one, which is unconditionally
-> > > built with -g (why?):
-> > >
-> > > --- a/arch/x86/realmode/rm/Makefile
-> > > +++ b/arch/x86/realmode/rm/Makefile
-> > > @@ -69,7 +69,7 @@ $(obj)/realmode.relocs: $(obj)/realmode.elf FORCE
-> > >  # ---------------------------------------------------------------------------
-> > >
-> > >  KBUILD_CFLAGS  := $(REALMODE_CFLAGS) -D_SETUP -D_WAKEUP \
-> > > -                  -I$(srctree)/arch/x86/boot
-> > > +                  -I$(srctree)/arch/x86/boot -gz=none
-> > >  KBUILD_AFLAGS  := $(KBUILD_CFLAGS) -D__ASSEMBLY__
-> > >  KBUILD_CFLAGS  += -fno-asynchronous-unwind-tables
-> > >  GCOV_PROFILE := n
-> > >
-> > > I'll look at the other one tomorrow.
-> >
-> > I found where -g gets added in both cases, and adding -gz=none
-> > seems to address all randconfigs with CONFIG_DEBUG_INFO=n:
-> >
-> > --- a/fs/xfs/Makefile
-> > +++ b/fs/xfs/Makefile
-> > @@ -7,7 +7,7 @@
-> >  ccflags-y += -I $(srctree)/$(src)              # needed for trace events
-> >  ccflags-y += -I $(srctree)/$(src)/libxfs
-> >
-> > -ccflags-$(CONFIG_XFS_DEBUG) += -g
-> > +ccflags-$(CONFIG_XFS_DEBUG) += -g $(call cc-option,-gz=none)
->
-> Maybe they shouldn't have -g in the first place?
+On 4/6/20 1:52 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> xfs_da_read_buf dropped the 'mappedbno' argument in favor of a flags
+> argument.  Foolishly, we're passing that parameter (which is -1 in all
+> callers) to xfs_da_read_buf, which gets us the wrong behavior.
+> 
+> Since mappedbno == -1 meant "complain if we fall into a hole" (which is
+> the default behavior of xfs_da_read_buf) we can fix this by passing a
+> zero flags argument and getting rid of mappedbno entirely.
+> 
+> Coverity-id: 1457898
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-That is very possible. The -g has been there since xfs was originally merged
-back in 2002, and I could not figure out why it was there (unlike the
--DSTATIC=""
-and -DDEBUG flags that are set in the same line).
+Looks good; I think this patch
 
-On the other hand, my feeling is that setting -g should not cause problems
-with objtool, if CONFIG_DEBUG_INFO is ok.
+Fixes: 5f356ae6d ("xfs: remove the mappedbno argument to xfs_da_read_buf")
 
-       Arnd
+(i.e. the merge of that kernel commit, which I biffed on, apparently)
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
