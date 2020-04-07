@@ -7,123 +7,114 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72718C2BA2B
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 14:16:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 779E9C2BA2B
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 14:17:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 457CB2078A
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 14:16:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 47D282078A
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 14:17:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ekuHX0Fg"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YNtBjJcd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728861AbgDGOQu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Apr 2020 10:16:50 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:56421 "EHLO
+        id S1728979AbgDGORN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Apr 2020 10:17:13 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:28758 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728768AbgDGOQu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Apr 2020 10:16:50 -0400
+        with ESMTP id S1728975AbgDGORN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Apr 2020 10:17:13 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1586269009;
+        s=mimecast20190719; t=1586269032;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=dkvRdPhrHEKt4bCN7ReLfPVthJ+Hc8PjX9YNEwN1ITE=;
-        b=ekuHX0FgtgcCIbXd/CO0gg1lQFtkgyiJAZGFMLtG7p36yMoBA7S4v/eidbrZm8lJNoqbmz
-        DWDMbsiIUOFhQz4zy13xBB+fq/LIXJNpkd0Of0ez4m5hn2BTQj111Q0WZMCoCsBuXWNPXR
-        OYQODS6TQ33VWqwek+dTFdxJ+bxfMkc=
+        bh=DvlhdLcS/t0Wb8Vpr8KJYpLpZ+op1J5oWuCoLkEqyGQ=;
+        b=YNtBjJcd/Dnz9auWQKZrcmf0wG/LRKKN/gNCUjWwqkhNwEjH4HTDypzMfFideLaCdLpFaf
+        bw1i8Qz8UhPDvsFlPp6kYYQ69zfOSc7L4RnGw42aY58MSYOyfQi+RErVMHMLj36G9xvkcF
+        0wNxVcPpO4j9mKsYynuyM+AjjnCQ3yQ=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-107-jmoSN1JSPSeXYzlKoYDGEw-1; Tue, 07 Apr 2020 10:16:47 -0400
-X-MC-Unique: jmoSN1JSPSeXYzlKoYDGEw-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+ us-mta-320-stR0NoJmMeC8joIBLKa4KQ-1; Tue, 07 Apr 2020 10:17:09 -0400
+X-MC-Unique: stR0NoJmMeC8joIBLKa4KQ-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0906F800D50;
-        Tue,  7 Apr 2020 14:16:46 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 87C10107B267;
+        Tue,  7 Apr 2020 14:17:08 +0000 (UTC)
 Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id B10501001925;
-        Tue,  7 Apr 2020 14:16:45 +0000 (UTC)
-Date:   Tue, 7 Apr 2020 10:16:44 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2E4105DA60;
+        Tue,  7 Apr 2020 14:17:08 +0000 (UTC)
+Date:   Tue, 7 Apr 2020 10:17:06 -0400
 From:   Brian Foster <bfoster@redhat.com>
 To:     Allison Collins <allison.henderson@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v8 10/20] xfs: Add helper function
- __xfs_attr_rmtval_remove
-Message-ID: <20200407141644.GA28936@bfoster>
+Subject: Re: [PATCH v8 11/20] xfs: Add helper function xfs_attr_node_shrink
+Message-ID: <20200407141706.GB28936@bfoster>
 References: <20200403221229.4995-1-allison.henderson@oracle.com>
- <20200403221229.4995-11-allison.henderson@oracle.com>
+ <20200403221229.4995-12-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200403221229.4995-11-allison.henderson@oracle.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+In-Reply-To: <20200403221229.4995-12-allison.henderson@oracle.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Apr 03, 2020 at 03:12:19PM -0700, Allison Collins wrote:
-> This function is similar to xfs_attr_rmtval_remove, but adapted to
-> return EAGAIN for new transactions. We will use this later when we
-> introduce delayed attributes.  This function will eventually replace
-> xfs_attr_rmtval_remove
+On Fri, Apr 03, 2020 at 03:12:20PM -0700, Allison Collins wrote:
+> This patch adds a new helper function xfs_attr_node_shrink used to
+> shrink an attr name into an inode if it is small enough.  This helps to
+> modularize the greater calling function xfs_attr_node_removename.
 > 
 > Signed-off-by: Allison Collins <allison.henderson@oracle.com>
-> Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
 > ---
->  fs/xfs/libxfs/xfs_attr_remote.c | 25 +++++++++++++++++++++++++
->  fs/xfs/libxfs/xfs_attr_remote.h |  1 +
->  2 files changed, 26 insertions(+)
+>  fs/xfs/libxfs/xfs_attr.c | 67 ++++++++++++++++++++++++++++++------------------
+>  1 file changed, 42 insertions(+), 25 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-> index 4d51969..fd4be9d 100644
-> --- a/fs/xfs/libxfs/xfs_attr_remote.c
-> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
-> @@ -711,3 +711,28 @@ xfs_attr_rmtval_remove(
->  	}
->  	return 0;
->  }
-> +
-> +/*
-> + * Remove the value associated with an attribute by deleting the out-of-line
-> + * buffer that it is stored on. Returns EAGAIN for the caller to refresh the
-> + * transaction and recall the function
-> + */
-> +int
-> +__xfs_attr_rmtval_remove(
-> +	struct xfs_da_args	*args)
-> +{
-> +	int	error, done;
-> +
-> +	/*
-> +	 * Unmap value blocks for this attr.
-> +	 */
-> +	error = xfs_bunmapi(args->trans, args->dp, args->rmtblkno,
-> +			    args->rmtblkcnt, XFS_BMAPI_ATTRFORK, 1, &done);
-> +	if (error)
-> +		return error;
-> +
-> +	if (!done)
-> +		return -EAGAIN;
-> +
-> +	return 0;
-> +}
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index db5a99c..27a9bb5 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+...
+> @@ -1197,31 +1235,10 @@ xfs_attr_node_removename(
+>  	/*
+>  	 * If the result is small enough, push it all into the inode.
+>  	 */
+> -	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
+> -		/*
+> -		 * Have to get rid of the copy of this dabuf in the state.
+> -		 */
+> -		ASSERT(state->path.active == 1);
+> -		ASSERT(state->path.blk[0].bp);
+> -		state->path.blk[0].bp = NULL;
+> -
+> -		error = xfs_attr3_leaf_read(args->trans, args->dp, 0, &bp);
+> -		if (error)
+> -			goto out;
+> +	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
+> +		error = xfs_attr_node_shrink(args, state);
+>  
+> -		if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
+> -			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
+> -			/* bp is gone due to xfs_da_shrink_inode */
+> -			if (error)
+> -				goto out;
+> -			error = xfs_defer_finish(&args->trans);
+> -			if (error)
+> -				goto out;
+> -		} else
+> -			xfs_trans_brelse(args->trans, bp);
+> -	}
+>  	error = 0;
 
-We should let xfs_attr_rmtval_remove() call this function and do the
-roll based on -EAGAIN, then eliminate the higher level function later if
-it becomes unused.
+Looks like the error handling is busted here..? We used to goto out, now
+we always reset error to 0.
 
 Brian
 
-> diff --git a/fs/xfs/libxfs/xfs_attr_remote.h b/fs/xfs/libxfs/xfs_attr_remote.h
-> index eff5f95..ee3337b 100644
-> --- a/fs/xfs/libxfs/xfs_attr_remote.h
-> +++ b/fs/xfs/libxfs/xfs_attr_remote.h
-> @@ -14,4 +14,5 @@ int xfs_attr_rmtval_remove(struct xfs_da_args *args);
->  int xfs_attr_rmtval_stale(struct xfs_inode *ip, struct xfs_bmbt_irec *map,
->  		xfs_buf_flags_t incore_flags);
->  int xfs_attr_rmtval_invalidate(struct xfs_da_args *args);
-> +int __xfs_attr_rmtval_remove(struct xfs_da_args *args);
->  #endif /* __XFS_ATTR_REMOTE_H__ */
+> -
+>  out:
+>  	if (state)
+>  		xfs_da_state_free(state);
 > -- 
 > 2.7.4
 > 
