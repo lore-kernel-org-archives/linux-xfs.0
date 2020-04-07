@@ -2,108 +2,94 @@ Return-Path: <SRS0=E2x8=5X=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF973C2D0EC
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 19:05:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AC34C2D0EC
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 19:31:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A666F20748
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 19:05:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DFF7920768
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 19:31:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726701AbgDGTFR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Apr 2020 15:05:17 -0400
-Received: from sandeen.net ([63.231.237.45]:38970 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726339AbgDGTFR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 7 Apr 2020 15:05:17 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id E9D3E170B41;
-        Tue,  7 Apr 2020 14:05:08 -0500 (CDT)
-Subject: Re: [PATCH 4/5] xfs_repair: fix dir_read_buf use of
- libxfs_da_read_buf
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <158619914362.469742.7048317858423621957.stgit@magnolia>
- <158619916916.469742.10169263890587590189.stgit@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <4bb62982-116d-7d4c-ff0e-ef084cea6885@sandeen.net>
-Date:   Tue, 7 Apr 2020 14:05:15 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.6.0
+        id S1726773AbgDGTbO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Apr 2020 15:31:14 -0400
+Received: from mout.kundenserver.de ([212.227.126.187]:56897 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726719AbgDGTbO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Apr 2020 15:31:14 -0400
+Received: from mail-qt1-f171.google.com ([209.85.160.171]) by
+ mrelayeu.kundenserver.de (mreue009 [212.227.15.129]) with ESMTPSA (Nemesis)
+ id 1N2V8Z-1jASfn2uwJ-013y3T; Tue, 07 Apr 2020 21:31:12 +0200
+Received: by mail-qt1-f171.google.com with SMTP id y25so3668768qtv.7;
+        Tue, 07 Apr 2020 12:31:12 -0700 (PDT)
+X-Gm-Message-State: AGi0PuYLwO3Ls/7U2pBdBnZlECB+7Kk3a9KyYGDaGEWzYPWIS3zmbhpf
+        WKIvXAOHi5lr8/AGmCvAAlJNXyzF999HQHei79o=
+X-Google-Smtp-Source: APiQypLkVUjIsS07lo91M6k5Sjnc44SUP7kJ+KtiyaCXLvrc3hnt4fDvAYvccEwWHSDkd433BlhqaRihUrvpkSWHcS0=
+X-Received: by 2002:ac8:d8e:: with SMTP id s14mr3934207qti.204.1586287871440;
+ Tue, 07 Apr 2020 12:31:11 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <158619916916.469742.10169263890587590189.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+References: <20190205133821.1a243836@gandalf.local.home> <20190206021611.2nsqomt6a7wuaket@treble>
+ <20190206121638.3d2230c1@gandalf.local.home> <CAK8P3a1hsca02=jPQmBG68RTUAt-jDR-qo=UFwf13nZ0k-nDgA@mail.gmail.com>
+ <20200406221614.ac2kl3vlagiaj5jf@treble> <CAK8P3a3QntCOJUeUfNmqogO51yh29i4NQCu=NBF4H1+h_m_Pug@mail.gmail.com>
+ <CAK8P3a2Bvebrvj7XGBtCwV969g0WhmGr_xFNfSRsZ7WX1J308g@mail.gmail.com>
+ <20200407163253.mji2z465ixaotnkh@treble> <CAK8P3a3piAV7BbgH-y_zqj4XmLcBQqKZ-NHPcqo4OTF=4H3UFA@mail.gmail.com>
+In-Reply-To: <CAK8P3a3piAV7BbgH-y_zqj4XmLcBQqKZ-NHPcqo4OTF=4H3UFA@mail.gmail.com>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Tue, 7 Apr 2020 21:30:55 +0200
+X-Gmail-Original-Message-ID: <CAK8P3a38QrxsWNZ2PNuWVGqg533Fcm9fYBbq2ehkbFvzfrwQ7g@mail.gmail.com>
+Message-ID: <CAK8P3a38QrxsWNZ2PNuWVGqg533Fcm9fYBbq2ehkbFvzfrwQ7g@mail.gmail.com>
+Subject: Re: libelf-0.175 breaks objtool
+To:     Josh Poimboeuf <jpoimboe@redhat.com>
+Cc:     Steven Rostedt <rostedt@goodmis.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Provags-ID: V03:K1:4uzpzVgjqjbx5HIY4m3pFs5QUn2d57broua1FhIiNqiLSGcU2jB
+ x23dMw9J/mJ1ZzNFnQ2yyltLYcm5XS2QWrdu8kjZIDYyKP9E0dULlNNUQW5CIQcLx92bYrp
+ rixY9NasCTaNG6CxkyLPDGTBvMn5n/Kag0nBnOAE9YLTjj+DihS3dlBiIUx3UpT7qCAoZL2
+ v+l/Hvtzjt/kJDKrihV5g==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:K+ox3VD4Dew=:JdzJJPq3BOhwJs11EtF+4T
+ /3gejP88WBDQ3z98shlkTPaSsqG4tZHqLIjm98bOJqO45780TrJVOGrKWPuz4glDIKGwz/zEy
+ OPOF1JFNj63s//dqeZVHldU4lKXjzBYpHHjT8zCsGlb30gSFbVvrinKxmo3cOekbKMszwoE6B
+ M4nrREySzGeMmsgt6Z9twKuYLwOj/zLBR9J9IGI9T7bQvaFKkh52xI/2Wy6bz7qmdNV+YmIC3
+ j8x1sKf2BGxwdrZncwq4t30/9C98VpnVmXyn/IDnoArG91z4VprnOwK5m/djOePVU3Ko3MI3r
+ QoDQJ5lCLRX2ul7LY4dcrrBFZDCBSf7v7MNjlwSzqaTYE5O7gcS8o3xlt8GhEZbY/9SycSmcV
+ dkruVEXEJPkWPF6t1JeGsZvu5M8nRPuqux9MdE8McNiad681JFV1WzVlSIrYiVoMSfHzhyXVl
+ TSoCnvV2YrZQ6blm1v7PWDhXmYzGb0rBGJR/STI2ScPjl22S8QGZsrwEQCAjFuv/5IiI32MwR
+ fa1AcB0n258PnN7Se/vAoB2a12igpknTJ+fAuNML8/y7NREdx6lVKMtq+MkuHHb5RejWuu5Rs
+ cAmUc3FdXmMOOSxIBnSyIzXVhJRPzicXV2zGtXNHUkD2YYqvkbAnC5mdlNbxv5WokAE03msgp
+ OAN0rvelP80xj59R3UNALxV8uyoWb2uVU1YNYG/Pihj26XfFB2R91NPRHehlGX6jpZWg27dQD
+ 8krx05/PXy6eXolJZFFJHuvec6fTz/jqCNjhZKuy1xSxPDQetHL/3UPAmqPOYjvvJprin84WA
+ F1a30B7tOORR5jraWZuebssBX9fFl6RNx9Zb7d7JOXpuR3ii4I=
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 4/6/20 1:52 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> xfs_da_read_buf dropped the 'mappedbno' argument in favor of a flags
-> argument.  Foolishly, we're passing that parameter (which is -1 in all
-> callers) to xfs_da_read_buf, which gets us the wrong behavior.
-> 
-> Since mappedbno == -1 meant "complain if we fall into a hole" (which is
-> the default behavior of xfs_da_read_buf) we can fix this by passing a
-> zero flags argument and getting rid of mappedbno entirely.
-> 
-> Coverity-id: 1457898
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Apr 7, 2020 at 8:44 PM Arnd Bergmann <arnd@arndb.de> wrote:
+> On Tue, Apr 7, 2020 at 6:33 PM Josh Poimboeuf <jpoimboe@redhat.com> wrote:
+> > On Tue, Apr 07, 2020 at 05:46:23PM +0200, Arnd Bergmann wrote:
 
-Looks good; I think this patch
+> That is very possible. The -g has been there since xfs was originally merged
+> back in 2002, and I could not figure out why it was there (unlike the
+> -DSTATIC=""
+> and -DDEBUG flags that are set in the same line).
+>
+> On the other hand, my feeling is that setting -g should not cause problems
+> with objtool, if CONFIG_DEBUG_INFO is ok.
 
-Fixes: 5f356ae6d ("xfs: remove the mappedbno argument to xfs_da_read_buf")
+Nevermind, I now see the same problem in lots of files in a configuration
+setting these options:
 
-(i.e. the merge of that kernel commit, which I biffed on, apparently)
+CONFIG_DEBUG_INFO=y
+CONFIG_DEBUG_INFO_REDUCED=y
+# CONFIG_DEBUG_INFO_SPLIT is not set
+CONFIG_DEBUG_INFO_DWARF4=y
+CONFIG_DEBUG_INFO_BTF=y
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Not sure which of these are actually relevant, but I had other configurations
+setting DEBUG_INFO that are not affected.
+
+       Arnd
