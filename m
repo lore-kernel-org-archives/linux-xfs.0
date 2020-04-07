@@ -2,154 +2,78 @@ Return-Path: <SRS0=E2x8=5X=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 619D5C2BA2B
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 08:00:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 523C5C2BB55
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 10:09:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 427202064A
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 08:00:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F9A120731
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 10:09:36 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="ei665XDJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727815AbgDGIAQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Apr 2020 04:00:16 -0400
-Received: from mx2.suse.de ([195.135.220.15]:35104 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726635AbgDGIAQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 7 Apr 2020 04:00:16 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 5A711AC37;
-        Tue,  7 Apr 2020 08:00:12 +0000 (UTC)
-Subject: Re: [kernel-hardening] [PATCH 09/38] usercopy: Mark kmalloc caches as
- usercopy caches
-To:     Jann Horn <jannh@google.com>, Kees Cook <keescook@chromium.org>
-Cc:     Christian Borntraeger <borntraeger@de.ibm.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Christopher Lameter <cl@linux.com>,
-        Jiri Slaby <jslaby@suse.cz>,
-        Julian Wiedmann <jwi@linux.ibm.com>,
-        Ursula Braun <ubraun@linux.ibm.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        kernel list <linux-kernel@vger.kernel.org>,
-        David Windsor <dave@nullcore.net>,
-        Pekka Enberg <penberg@kernel.org>,
-        David Rientjes <rientjes@google.com>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Linux-MM <linux-mm@kvack.org>, linux-xfs@vger.kernel.org,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Andy Lutomirski <luto@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Laura Abbott <labbott@redhat.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Christoffer Dall <christoffer.dall@linaro.org>,
-        Dave Kleikamp <dave.kleikamp@oracle.com>,
-        Jan Kara <jack@suse.cz>,
-        Luis de Bethencourt <luisbg@kernel.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Rik van Riel <riel@redhat.com>,
-        Matthew Garrett <mjg59@google.com>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        Kernel Hardening <kernel-hardening@lists.openwall.com>,
-        Michal Kubecek <mkubecek@suse.cz>
-References: <201911121313.1097D6EE@keescook> <201911141327.4DE6510@keescook>
- <bfca96db-bbd0-d958-7732-76e36c667c68@suse.cz>
- <202001271519.AA6ADEACF0@keescook>
- <5861936c-1fe1-4c44-d012-26efa0c8b6e7@de.ibm.com>
- <202001281457.FA11CC313A@keescook>
- <alpine.DEB.2.21.2001291640350.1546@www.lameter.com>
- <6844ea47-8e0e-4fb7-d86f-68046995a749@de.ibm.com>
- <20200129170939.GA4277@infradead.org>
- <771c5511-c5ab-3dd1-d938-5dbc40396daa@de.ibm.com>
- <202001300945.7D465B5F5@keescook>
- <CAG48ez1a4waGk9kB0WLaSbs4muSoK0AYAVk8=XYaKj4_+6e6Hg@mail.gmail.com>
-From:   Vlastimil Babka <vbabka@suse.cz>
-Message-ID: <7d810f6d-8085-ea2f-7805-47ba3842dc50@suse.cz>
-Date:   Tue, 7 Apr 2020 10:00:10 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.6.0
+        id S1728176AbgDGKJf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Apr 2020 06:09:35 -0400
+Received: from mail-io1-f52.google.com ([209.85.166.52]:38475 "EHLO
+        mail-io1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728196AbgDGKJf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Apr 2020 06:09:35 -0400
+Received: by mail-io1-f52.google.com with SMTP id e79so2762950iof.5
+        for <linux-xfs@vger.kernel.org>; Tue, 07 Apr 2020 03:09:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cloud.ionos.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=etruzh97g0ePi5MmdfaX16wSZNVsPuUhCD3aCJkNyvU=;
+        b=ei665XDJSqRPqhUale0X+Rdo779B/wRmekCejkih2NFpIgu5Wmje8Zdbs25btA8GH4
+         BTsA6J2TZqH2J8UKZFeRXtR6mO4oW43tpck5GF1+aqTLQKg7iqzOQv3UksTcnph5gRz6
+         tXk6Ojx8Lpxhx2DFh9PvnVUAWoPDO4kbayF88LGrAgtnBJZw7kK5WuY+NoPJ5Y1MIjTQ
+         sKpLDESbpLj2IBl8+sM++ErRWHfq46F4YA8KziuKDes5D0XzE0+kzKsgdFOzPvPWJtxA
+         HCYyq/ZKqKBXtGRke94W6RUDK/kN4mP+3ETdDo44t9blugH9itPF3bBPZ8gKwaXrSbLh
+         Zjag==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=etruzh97g0ePi5MmdfaX16wSZNVsPuUhCD3aCJkNyvU=;
+        b=qa19Xijtfc+lgKX+7QuGbcOrZpgPaTQnHMdPf3EimoFt1z5hEbcecLQuNwC1thMYpr
+         0HRaIiPaG3z5eUWnJxV5wq+m+041GbT0UDp2bWLqPxmd9XL8R8mGCJaIj8Vi92KezXr6
+         s3DBtb3K4bg5S2D7cW+pCOKzFbZWHB19BFptMj6Dl96MOth9EiwkU//gTGZbjPnXjBqE
+         TYCwI98Uw1dx5mwDBiJeSRgAnQyd5EFyB3t/Y5tud0TQ9u7hMnJvbaGg3VAjjdV5g9rK
+         5240wxIzNbYF4+WjNsddav7xvTq/8T3+DiCxNZjxVcvMvc5mb8z9ZUHDfkeiYI5UJMoC
+         AuvA==
+X-Gm-Message-State: AGi0Pubhsym93gsjPVAZPQUToDPxzXCXMpzFyhZ5dezBUDZxQMnVJGQt
+        4K1hPOsNq9BC4msr5YeelSn4NQ1Tm7KfzoVw4JyJ
+X-Google-Smtp-Source: APiQypIEn5fh7xJK0NbGcbZJR9Ul083PzmnN8yrz4AopBK405wrAjxXASIKwAWouEPsisisaGVm0sMwJDYBlQLeI5Sc=
+X-Received: by 2002:a02:55c5:: with SMTP id e188mr1156940jab.57.1586254174040;
+ Tue, 07 Apr 2020 03:09:34 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAG48ez1a4waGk9kB0WLaSbs4muSoK0AYAVk8=XYaKj4_+6e6Hg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <20200406232440.4027-1-chaitanya.kulkarni@wdc.com> <20200406232440.4027-2-chaitanya.kulkarni@wdc.com>
+In-Reply-To: <20200406232440.4027-2-chaitanya.kulkarni@wdc.com>
+From:   Danil Kipnis <danil.kipnis@cloud.ionos.com>
+Date:   Tue, 7 Apr 2020 12:09:23 +0200
+Message-ID: <CAHg0Huz0sy7u0=eM40ca1ye6mBgVjDscx=9kxQKViN7dm51crA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] block: add bio based rw helper for data buffer
+To:     Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Cc:     linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, hch@lst.de,
+        Jinpu Wang <jinpu.wang@cloud.ionos.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 1/31/20 1:03 PM, Jann Horn wrote:
+In __blkdev_issue_rw():
+> +               bio = blk_next_bio(bio, nr_pages, gfp_mask);
 
-> I think dma-kmalloc slabs should be handled the same way as normal
-> kmalloc slabs. When a dma-kmalloc allocation is freshly created, it is
-> just normal kernel memory - even if it might later be used for DMA -,
-> and it should be perfectly fine to copy_from_user() into such
-> allocations at that point, and to copy_to_user() out of them at the
-> end. If you look at the places where such allocations are created, you
-> can see things like kmemdup(), memcpy() and so on - all normal
-> operations that shouldn't conceptually be different from usercopy in
-> any relevant way.
- 
-So, let's do that?
+Doesn't this already submits the bio even before the pages are added?
 
-----8<----
-From d5190e4e871689a530da3c3fd327be45a88f006a Mon Sep 17 00:00:00 2001
-From: Vlastimil Babka <vbabka@suse.cz>
-Date: Tue, 7 Apr 2020 09:58:00 +0200
-Subject: [PATCH] usercopy: Mark dma-kmalloc caches as usercopy caches
+> +       error = __blkdev_issue_rw(b, buf, sector, nr_sects, op, opf, mask, &bio);
+> +       if (!error && bio) {
+> +               error = submit_bio_wait(bio);
 
-We have seen a "usercopy: Kernel memory overwrite attempt detected to SLUB
-object 'dma-kmalloc-1 k' (offset 0, size 11)!" error on s390x, as IUCV uses
-kmalloc() with __GFP_DMA because of memory address restrictions.
-The issue has been discussed [2] and it has been noted that if all the kmalloc
-caches are marked as usercopy, there's little reason not to mark dma-kmalloc
-caches too. The 'dma' part merely means that __GFP_DMA is used to restrict
-memory address range.
+And then the bio is submitted again in blkdev_issue_rw()...
 
-As Jann Horn put it [3]:
-
-"I think dma-kmalloc slabs should be handled the same way as normal
-kmalloc slabs. When a dma-kmalloc allocation is freshly created, it is
-just normal kernel memory - even if it might later be used for DMA -,
-and it should be perfectly fine to copy_from_user() into such
-allocations at that point, and to copy_to_user() out of them at the
-end. If you look at the places where such allocations are created, you
-can see things like kmemdup(), memcpy() and so on - all normal
-operations that shouldn't conceptually be different from usercopy in
-any relevant way."
-
-Thus this patch marks the dma-kmalloc-* caches as usercopy.
-
-[1] https://bugzilla.suse.com/show_bug.cgi?id=1156053
-[2] https://lore.kernel.org/kernel-hardening/bfca96db-bbd0-d958-7732-76e36c667c68@suse.cz/
-[3] https://lore.kernel.org/kernel-hardening/CAG48ez1a4waGk9kB0WLaSbs4muSoK0AYAVk8=XYaKj4_+6e6Hg@mail.gmail.com/
-
-Signed-off-by: Vlastimil Babka <vbabka@suse.cz>
----
- mm/slab_common.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/mm/slab_common.c b/mm/slab_common.c
-index 5282f881d2f5..ae9486160594 100644
---- a/mm/slab_common.c
-+++ b/mm/slab_common.c
-@@ -1303,7 +1303,8 @@ void __init create_kmalloc_caches(slab_flags_t flags)
- 			kmalloc_caches[KMALLOC_DMA][i] = create_kmalloc_cache(
- 				kmalloc_info[i].name[KMALLOC_DMA],
- 				kmalloc_info[i].size,
--				SLAB_CACHE_DMA | flags, 0, 0);
-+				SLAB_CACHE_DMA | flags, 0,
-+				kmalloc_info[i].size);
- 		}
- 	}
- #endif
--- 
-2.26.0
-
+Or do I understand it wrong?
