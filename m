@@ -2,79 +2,75 @@ Return-Path: <SRS0=E2x8=5X=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+X-Spam-Status: No, score=-4.0 required=3.0 tests=INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E75BC2BA1A
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 16:37:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F6A5C2BB55
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 16:37:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1B36A2078C
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 16:37:53 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GD5iStWH"
+	by mail.kernel.org (Postfix) with ESMTP id 53C3A2072A
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Apr 2020 16:37:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726833AbgDGQhv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Apr 2020 12:37:51 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:51296 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728101AbgDGQhv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Apr 2020 12:37:51 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1586277469;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=cmYN7dX6sR3rhBTp3yLdGD3mNnfFj/Ps+Nsb3ianINk=;
-        b=GD5iStWHwXwI/n+9kL3m87DhXcyWJyeqJUIjDe3W80hAJ1Pj+nRiwFQqNf8o3gLN8jhoAn
-        NAeFYw/5xefbuLbLlajhTk1t+rlOLyieSMhyXG4OeF8FR23m3xq69ffVQfhvmiiAwSXOl0
-        aIOagZH3Li5bzL4Z5WDp0pa6cU5DHQs=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-206-GZFAlk67N7iniXjtoDaEfg-1; Tue, 07 Apr 2020 12:37:43 -0400
-X-MC-Unique: GZFAlk67N7iniXjtoDaEfg-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 453B41088385;
-        Tue,  7 Apr 2020 16:37:42 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id ACA085C29A;
-        Tue,  7 Apr 2020 16:37:41 +0000 (UTC)
-Date:   Tue, 7 Apr 2020 12:37:39 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     bugzilla-daemon@bugzilla.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [Bug 207053] fsfreeze deadlock on XFS (the FIFREEZE ioctl and
+        id S1728101AbgDGQhx convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Apr 2020 12:37:53 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52266 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726884AbgDGQhx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 7 Apr 2020 12:37:53 -0400
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 207053] fsfreeze deadlock on XFS (the FIFREEZE ioctl and
  subsequent FITHAW hang indefinitely)
-Message-ID: <20200407163739.GG28936@bfoster>
+Date:   Tue, 07 Apr 2020 16:37:51 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: bfoster@redhat.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-207053-201763-6M1HCzkNgM@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-207053-201763@https.bugzilla.kernel.org/>
 References: <bug-207053-201763@https.bugzilla.kernel.org/>
- <bug-207053-201763-xyUAU29Yyq@https.bugzilla.kernel.org/>
- <20200407131812.GB27866@bfoster>
- <20200407151738.GF6742@magnolia>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200407151738.GF6742@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=207053
+
+--- Comment #5 from bfoster@redhat.com ---
 On Tue, Apr 07, 2020 at 08:17:38AM -0700, Darrick J. Wong wrote:
 > On Tue, Apr 07, 2020 at 09:18:12AM -0400, Brian Foster wrote:
-> > On Tue, Apr 07, 2020 at 06:41:31AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+> > On Tue, Apr 07, 2020 at 06:41:31AM +0000,
+> bugzilla-daemon@bugzilla.kernel.org wrote:
 > > > https://bugzilla.kernel.org/show_bug.cgi?id=207053
 > > > 
 > > > --- Comment #2 from Paul Furtado (paulfurtado91@gmail.com) ---
 > > > Hi Dave,
 > > > 
-> > > Just had another case of this crop up and I was able to get the blocked tasks
-> > > output before automation killed the server. Because the log was too large to
+> > > Just had another case of this crop up and I was able to get the blocked
+> tasks
+> > > output before automation killed the server. Because the log was too large
+> to
 > > > attach, I've pasted the output into a github gist here:
-> > > https://gist.githubusercontent.com/PaulFurtado/c9bade038b8a5c7ddb53a6e10def058f/raw/ee43926c96c0d6a9ec81a648754c1af599ef0bdd/sysrq_w.log
+> > >
+> https://gist.githubusercontent.com/PaulFurtado/c9bade038b8a5c7ddb53a6e10def058f/raw/ee43926c96c0d6a9ec81a648754c1af599ef0bdd/sysrq_w.log
 > > > 
 > > 
 > > Hm, so it looks like this is stuck between freeze:
@@ -100,7 +96,8 @@ On Tue, Apr 07, 2020 at 08:17:38AM -0700, Darrick J. Wong wrote:
 > > 
 > > ... and the eofblocks scanner:
 > > 
-> > [377279.422496] Workqueue: xfs-eofblocks/nvme13n1 xfs_eofblocks_worker [xfs]
+> > [377279.422496] Workqueue: xfs-eofblocks/nvme13n1 xfs_eofblocks_worker
+> [xfs]
 > > [377279.426971] Call Trace:
 > > [377279.429662]  ? __schedule+0x292/0x6f0
 > > [377279.432839]  schedule+0x2f/0xa0
@@ -158,32 +155,32 @@ index a7be7a9e5c1a..0f14d58e5bb0 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
 @@ -1515,13 +1515,24 @@ __xfs_icache_free_eofblocks(
- 					   void *args),
- 	int			tag)
+                                           void *args),
+        int                     tag)
  {
--	int flags = SYNC_TRYLOCK;
-+	int			flags = SYNC_TRYLOCK;
-+	int			error;
- 
- 	if (eofb && (eofb->eof_flags & XFS_EOF_FLAGS_SYNC))
- 		flags = SYNC_WAIT;
- 
--	return xfs_inode_ag_iterator_tag(mp, execute, flags,
--					 eofb, tag);
-+	/*
-+	 * freeze waits on background scanner jobs to complete so we cannot
-+	 * block on write protection here. Bail if the transaction subsystem is
-+	 * already freezing, returning -EAGAIN to notify other callers.
-+	 */
-+	if (!sb_start_write_trylock(mp->m_super))
-+		return -EAGAIN;
+-       int flags = SYNC_TRYLOCK;
++       int                     flags = SYNC_TRYLOCK;
++       int                     error;
+
+        if (eofb && (eofb->eof_flags & XFS_EOF_FLAGS_SYNC))
+                flags = SYNC_WAIT;
+
+-       return xfs_inode_ag_iterator_tag(mp, execute, flags,
+-                                        eofb, tag);
++       /*
++        * freeze waits on background scanner jobs to complete so we cannot
++        * block on write protection here. Bail if the transaction subsystem is
++        * already freezing, returning -EAGAIN to notify other callers.
++        */
++       if (!sb_start_write_trylock(mp->m_super))
++               return -EAGAIN;
 +
-+	error = xfs_inode_ag_iterator_tag(mp, execute, flags, eofb, tag);
-+	sb_end_write(mp->m_super);
++       error = xfs_inode_ag_iterator_tag(mp, execute, flags, eofb, tag);
++       sb_end_write(mp->m_super);
 +
-+	return error;
++       return error;
  }
- 
+
  int
 
 > --D
@@ -199,5 +196,8 @@ index a7be7a9e5c1a..0f14d58e5bb0 100644
 > > > You are watching the assignee of the bug.
 > > > 
 > > 
-> 
+>
 
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
