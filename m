@@ -2,149 +2,141 @@ Return-Path: <SRS0=ttQi=5Y=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A7DEC2BA2B
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Apr 2020 23:27:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58440C2BB55
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Apr 2020 23:48:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5206820857
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Apr 2020 23:27:58 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="NAkYzEhN"
+	by mail.kernel.org (Postfix) with ESMTP id 3A49F2082F
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Apr 2020 23:48:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726508AbgDHX15 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Apr 2020 19:27:57 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:55400 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726469AbgDHX15 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Apr 2020 19:27:57 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 038NOI6E099032;
-        Wed, 8 Apr 2020 23:27:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=JndbcRn2mXIjnMRwJFTBNQZkyY8sttdu3bObO/TksJk=;
- b=NAkYzEhNl625WT31bRKYZFR5bY9O19EnmDcJpAWbSuiSiT7VopZn9bKOUEmCYEbRmnuW
- ckaaDX80nga4wsa2Xu+aUzd6VmR1UyQ74/Fmo02/FaVlU3EX8OJHcW7JOcEVsFRADxv+
- TarpO6/JonnWaSnotTc1QfuAqzNZs12jXJN9x63POB4Y0US0Fb/1QZi1xy4dGyv80Tww
- CqPYRESkmktL2L5ZuevEIMrm3mMd/MmoX2H8E/h0qUrZaBzI/sRDzyqxQndHC+zbcrsn
- htMK5sf7U90zxS9FKAB+H2VGii9C0Anv3hMgApBbqbvSt+6AH/YZT4+FyCqpvujbhRCj Yw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 3091m3edxw-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 08 Apr 2020 23:27:55 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 038NNODH099798;
-        Wed, 8 Apr 2020 23:27:55 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 3091m2cc3f-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 08 Apr 2020 23:27:55 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 038NRsuf028817;
-        Wed, 8 Apr 2020 23:27:54 GMT
-Received: from localhost (/10.159.145.57)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 08 Apr 2020 16:27:54 -0700
-Date:   Wed, 8 Apr 2020 16:27:53 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     xfs <linux-xfs@vger.kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfsdocs: capture some information about dirs vs. attrs and
- how they use dabtrees
-Message-ID: <20200408232753.GC6741@magnolia>
+        id S1726539AbgDHXsX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Apr 2020 19:48:23 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:39449 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726508AbgDHXsX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Apr 2020 19:48:23 -0400
+Received: from dread.disaster.area (pa49-180-167-53.pa.nsw.optusnet.com.au [49.180.167.53])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id C6BD83A367F;
+        Thu,  9 Apr 2020 09:48:18 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jMKQb-0005ii-LU; Thu, 09 Apr 2020 09:48:17 +1000
+Date:   Thu, 9 Apr 2020 09:48:17 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Ira Weiny <ira.weiny@intel.com>
+Cc:     Jan Kara <jack@suse.cz>, linux-kernel@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH V6 7/8] fs/xfs: Change xfs_ioctl_setattr_dax_invalidate()
+ to xfs_ioctl_dax_check()
+Message-ID: <20200408234817.GP24067@dread.disaster.area>
+References: <20200407182958.568475-1-ira.weiny@intel.com>
+ <20200407182958.568475-8-ira.weiny@intel.com>
+ <20200408022318.GJ24067@dread.disaster.area>
+ <20200408095803.GB30172@quack2.suse.cz>
+ <20200408210950.GL24067@dread.disaster.area>
+ <20200408222636.GC664132@iweiny-DESK2.sc.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9585 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0
- mlxlogscore=999 phishscore=0 spamscore=0 adultscore=0 suspectscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004080163
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9585 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0
- impostorscore=0 malwarescore=0 lowpriorityscore=0 mlxlogscore=999
- priorityscore=1501 clxscore=1015 bulkscore=0 phishscore=0 mlxscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004080163
+In-Reply-To: <20200408222636.GC664132@iweiny-DESK2.sc.intel.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
+        a=2xmR08VVv0jSFCMMkhec0Q==:117 a=2xmR08VVv0jSFCMMkhec0Q==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=cl8xLZFz6L8A:10
+        a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8 a=xAaa-ZnbheYG_JgLh6MA:9
+        a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Apr 08, 2020 at 03:26:36PM -0700, Ira Weiny wrote:
+> On Thu, Apr 09, 2020 at 07:09:50AM +1000, Dave Chinner wrote:
+> > On Wed, Apr 08, 2020 at 11:58:03AM +0200, Jan Kara wrote:
+> > I explained how we can safely remove the flag in the other branch of
+> > this thread...
+> > 
+> > > But it seems like more understandable API than letting user clear
+> > > the on-disk flag but the inode will still use DAX until kernel decides to
+> > > evict the inode
+> > 
+> > Certainly doesn't seem that way to me. "stop app, clear flags, drop
+> > caches, restart app" is a pretty simple, easy thing to do for an
+> > admin.
+> 
+> I want to be clear here: I think this is reasonable.  However, I don't see
+> consensus for that interface.
+> 
+> Christoph in particular said that a 'lazy change' is: "... straight from
+> the playbook for arcane and confusing API designs."
+> 
+> 	"But returning an error and doing a lazy change anyway is straight from
+> 	the playbook for arcane and confusing API designs."
+> 
+> 	-- https://lore.kernel.org/lkml/20200403072731.GA24176@lst.de/
+> 
+> Did I somehow misunderstand this?
 
-Dave and I had a short discussion about whether or not xattr trees
-needed to have the same free space tracking that directories have, and
-a comparison of how each of the two metadata types interact with
-dabtrees resulted.  I've reworked this a bit to make it flow better as a
-book chapter, so here we go.
+Yes. Clearing the on-disk flag successfully should not return an
+error.
 
-Original-mail: https://lore.kernel.org/linux-xfs/20200404085203.1908-1-chandanrlinux@gmail.com/T/#mdd12ad06cf5d635772cc38946fc5b22e349e136f
-Originally-from: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- .../extended_attributes.asciidoc                   |   49 ++++++++++++++++++++
- 1 file changed, 49 insertions(+)
+What is wrong is having it clear the flag successfully and returning
+an error because the operation doesn't take immediate effect, then
+having the change take effect later after telling the application
+there was an error.
 
-diff --git a/design/XFS_Filesystem_Structure/extended_attributes.asciidoc b/design/XFS_Filesystem_Structure/extended_attributes.asciidoc
-index 99f7b35..d61c649 100644
---- a/design/XFS_Filesystem_Structure/extended_attributes.asciidoc
-+++ b/design/XFS_Filesystem_Structure/extended_attributes.asciidoc
-@@ -910,3 +910,52 @@ Log sequence number of the last write to this block.
- 
- Filesystems formatted prior to v5 do not have this header in the remote block.
- Value data begins immediately at offset zero.
-+
-+== Key Differences Between Directories and Extended Attributes
-+
-+Though directories and extended attributes can take advantage of the same
-+variable length record btree structures (i.e. the dabtree) to map name hashes
-+to disk blocks, there are major differences in the ways that each of those
-+users embed the btree within the information that they are storing.
-+
-+Directory blocks require external free space tracking because the directory
-+blocks are not part of the dabtree itself.  The dabtree leaves for a directory
-+map name hashes to external directory data blocks.  Extended attributes, on
-+the other hand, store all of the attributes in the leaves of the dabtree.
-+
-+When we add or remove an extended attribute in the dabtree, we split or merge
-+leaves of the tree based on where the name hash index tells us a leaf needs to
-+be inserted into or removed.  In other words, we make space available or
-+collapse sparse leaves of the dabtree as a side effect of inserting or
-+removing attributes.
-+
-+The directory structure is very different.  Directory entries cannot change
-+location because each entry's logical offset into the directory data segment
-+is used as the readdir/seekdir/telldir cookie, and the cookie is required to
-+be stable for the life of the entry.  Therefore, we cannot store directory
-+entries in the leaves of a dabtree (which is indexed in hash order) because
-+the offset into the tree would change as other entries are inserted and
-+removed.  Hence when we remove directory entries, we must leave holes in the
-+data segment so the rest of the entries do not move.
-+
-+The directory name hash index (the dabtree bit) is held in the second
-+directory segment.  Because the dabtree only stores pointers to directory
-+entries in the (first) data segment, there is no need to leave holes in the
-+dabtree itself.  The dabtree merges or splits leaves as required as pointers
-+to the directory data segment are added or removed.  The dabtree itself needs
-+no free space tracking.
-+
-+When we go to add a directory entry, we need to find the best-fitting free
-+space in the directory data segment to turn into the new entry.  This requires
-+a free space index for the directory data segment.  The free space index is
-+held in the third directory segment.  Once we've used the free space index to
-+find the block with that best free space, we modify the directory data block
-+and update the dabtree to point the name hash at the new entry.
-+
-+In other words, the requirement for a free space map in the directory
-+structure results from storing the directory entry data externally to the
-+dabtree.  Extended atttributes are stored directly in the leaves of the
-+dabtree (except for remote attributes which can be anywhere in the attr fork
-+address space) and do not need external free space tracking to determine where
-+to best insert them.  As a result, extended attributes exhibit nearly perfect
-+scaling until we run out of memory.
+That's what Christoph was saying is "straight from the playbook for
+arcane and confusing API designs."
+
+There's absolutely nothing wrong with setting/clearing the on-disk
+flag and having the change take effect some time later depending on
+some external context. We've done this sort of thing for a -long
+time- and it's not XFS specific at all.
+
+e.g.  changing the on-disk APPEND flag doesn't change the write
+behaviour of currently open files - it only affects the behaviour of
+future file opens. IOWs, we can have the flag set on disk, but we
+can still write randomly to the inode as long as we have a file
+descriptor that was opened before the APPEND on disk flag was set.
+
+That's exactly the same class of behaviour as we are talking about
+here for the on-disk DAX flag.
+
+> > Especially compared to process that is effectively "stop app, backup
+> > data set, delete data set, clear flags, restore data set, restart
+> > app"
+> > 
+> > > - because that often means you need to restart the
+> > > application using the file anyway for the flag change to have any effect.
+> > 
+> > That's a trivial requirement compared to the downtime and resource
+> > cost of a data set backup/restore just to clear inode flags....
+> 
+> I agree but others do not.  This still provides a baby step forward and some
+
+It's not a baby step forward. We can't expose a behaviour to
+userspace and then decide to change it completely at some later
+date.  We have to think through the entire admin model before
+setting it in concrete.
+
+If an admin operation can set an optional persistent feature flags
+on a file, then there *must* be admin operations that can remove
+that persistent feature flag from said files. This has *nothing to
+do with DAX* - it's a fundamental principle of balanced system
+design.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
