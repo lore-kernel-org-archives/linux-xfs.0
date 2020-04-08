@@ -2,187 +2,291 @@ Return-Path: <SRS0=ttQi=5Y=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 759EEC2D0EA
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Apr 2020 14:51:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD9F6C2D0EA
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Apr 2020 15:37:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 39DEE20678
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Apr 2020 14:51:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 75E48206F7
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Apr 2020 15:37:43 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="s/Hue1yS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729109AbgDHOvg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Apr 2020 10:51:36 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:5976 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726709AbgDHOvg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Apr 2020 10:51:36 -0400
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 038EY6eM195198
-        for <linux-xfs@vger.kernel.org>; Wed, 8 Apr 2020 10:51:34 -0400
-Received: from e06smtp03.uk.ibm.com (e06smtp03.uk.ibm.com [195.75.94.99])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 30920rqbwg-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 08 Apr 2020 10:51:34 -0400
-Received: from localhost
-        by e06smtp03.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.ibm.com>;
-        Wed, 8 Apr 2020 15:51:20 +0100
-Received: from b06cxnps4075.portsmouth.uk.ibm.com (9.149.109.197)
-        by e06smtp03.uk.ibm.com (192.168.101.133) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
-        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Wed, 8 Apr 2020 15:51:17 +0100
-Received: from d06av26.portsmouth.uk.ibm.com (d06av26.portsmouth.uk.ibm.com [9.149.105.62])
-        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 038EpT0O19005566
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 8 Apr 2020 14:51:29 GMT
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 31B2AAE053;
-        Wed,  8 Apr 2020 14:51:29 +0000 (GMT)
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 88AD4AE045;
-        Wed,  8 Apr 2020 14:51:28 +0000 (GMT)
-Received: from localhost.localdomain (unknown [9.85.71.18])
-        by d06av26.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Wed,  8 Apr 2020 14:51:28 +0000 (GMT)
-From:   Chandan Rajendra <chandan@linux.ibm.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: acquire superblock freeze protection on eofblocks scans
-Date:   Wed, 08 Apr 2020 20:24:32 +0530
-Organization: IBM
-In-Reply-To: <20200408122119.33869-1-bfoster@redhat.com>
-References: <20200408122119.33869-1-bfoster@redhat.com>
+        id S1729286AbgDHPhn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Apr 2020 11:37:43 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:46396 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729174AbgDHPhm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Apr 2020 11:37:42 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 038FDlpx070604;
+        Wed, 8 Apr 2020 15:37:27 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=KeiGyQzCitBI7OpwnOdSAa98UlvLhw7jZV9PLWvum7k=;
+ b=s/Hue1ySZvDibbj2dPDDcv/XuME+YnwWLnOnFn8IVdXNYO4borKG7OD7TjPun5Hj05Pa
+ J32JBAdYj2FaTAco/nrdzBdofYGvz2fD9jEclKU64vYnnAa6na9dbqIY5hilnIBboExt
+ 1jPu4ZsN+Jn68e4ZQhELsl0fCpLHxN6CFwPRcX+SBScR37NgAveXVRtoa/67BXI8HbfC
+ OOmtfj1yVcYSb+jf0HNDdehtquDVW8sN0/820o65T1iqeM2fQMT5PoiggovxD1f0xWhz
+ N0xmR38CBQKvrqPOxmdJJvCuFCDa39pQAH8RCuEudYA7QWAL/BWJ9wELX8jQXXRVR0vH 2Q== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 3091m0vapc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 08 Apr 2020 15:37:26 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 038FCYKa173999;
+        Wed, 8 Apr 2020 15:37:26 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 309gd8wbqq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 08 Apr 2020 15:37:26 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 038FbKr3027899;
+        Wed, 8 Apr 2020 15:37:21 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 08 Apr 2020 08:37:20 -0700
+Date:   Wed, 8 Apr 2020 08:37:17 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     ira.weiny@intel.com
+Cc:     linux-kernel@vger.kernel.org,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        Jeff Moyer <jmoyer@redhat.com>, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH V6 7/8] fs/xfs: Change xfs_ioctl_setattr_dax_invalidate()
+ to xfs_ioctl_dax_check()
+Message-ID: <20200408153717.GH6742@magnolia>
+References: <20200407182958.568475-1-ira.weiny@intel.com>
+ <20200407182958.568475-8-ira.weiny@intel.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-X-TM-AS-GCONF: 00
-x-cbid: 20040814-0012-0000-0000-000003A0BE09
-X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 20040814-0013-0000-0000-000021DDE38D
-Message-Id: <1766321.ayRgbaHikr@localhost.localdomain>
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.676
- definitions=2020-04-07_10:2020-04-07,2020-04-07 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 phishscore=0
- priorityscore=1501 impostorscore=0 adultscore=0 mlxscore=0 spamscore=0
- suspectscore=0 mlxlogscore=999 lowpriorityscore=0 bulkscore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004080117
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200407182958.568475-8-ira.weiny@intel.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9584 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
+ adultscore=0 mlxscore=0 spamscore=0 bulkscore=0 phishscore=0
+ suspectscore=3 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004080123
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9584 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999 mlxscore=0
+ priorityscore=1501 phishscore=0 suspectscore=3 bulkscore=0
+ lowpriorityscore=0 impostorscore=0 malwarescore=0 clxscore=1015
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004080123
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wednesday, April 8, 2020 5:51 PM Brian Foster wrote: 
-> The filesystem freeze sequence in XFS waits on any background
-> eofblocks or cowblocks scans to complete before the filesystem is
-> quiesced. At this point, the freezer has already stopped the
-> transaction subsystem, however, which means a truncate or cowblock
-> cancellation in progress is likely blocked in transaction
-> allocation. This results in a deadlock between freeze and the
-> associated scanner.
+On Tue, Apr 07, 2020 at 11:29:57AM -0700, ira.weiny@intel.com wrote:
+> From: Ira Weiny <ira.weiny@intel.com>
 > 
-> Fix this problem by holding superblock write protection across calls
-> into the block reapers. Since protection for background scans is
-> acquired from the workqueue task context, trylock to avoid a similar
-> deadlock between freeze and blocking on the write lock.
-
-|-------------------------------------+---------------------------------|
-| fsfreeze                            | eof blocks reaper               |
-|-------------------------------------+---------------------------------|
-| Set sb frozen state to SB_FREEZE_FS |                                 |
-|                                     | Start periodic execution        |
-|                                     | xfs_trans_alloc()               |
-|                                     | - sb_start_intwrite()           |
-|                                     |   Wait for frozen state to      |
-|                                     |   return to < SB_UNFROZEN state |
-| xfs_stop_block_reaping()            |                                 |
-| - Wait for eof worker to finish     |                                 |
-|-------------------------------------+---------------------------------|
-
-If we add a blocking lock invocation at the beginning of eof blocks reaper,
-then fsfreeze would get blocked at cancel_delayed_work_sync().
-
-However using a trylock, "eof blocks reaper" would return back due to failure
-in obtaining the lock and hence it is guaranteed that fsfreeze will make progress.
-
-Hence the changes are logically correct.
-
-Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
-
+> We only support changing FS_XFLAG_DAX on directories.  Files get their
+> flag from the parent directory on creation only.  So no data
+> invalidation needs to happen.
 > 
-> Fixes: d6b636ebb1c9f ("xfs: halt auto-reclamation activities while rebuilding rmap")
-> Reported-by: Paul Furtado <paulfurtado91@gmail.com>
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Alter the xfs_ioctl_setattr_dax_invalidate() to be
+> xfs_ioctl_dax_check().
+> 
+> This also allows use to remove the join_flags logic.
+> 
+> Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+> 
 > ---
+> Changes from v5:
+> 	New patch
+> ---
+>  fs/xfs/xfs_ioctl.c | 91 +++++-----------------------------------------
+>  1 file changed, 10 insertions(+), 81 deletions(-)
 > 
-> Note that this has the opposite tradeoff as the approach I originally
-> posited [1], specifically that the eofblocks ioctl() now always blocks
-> on a frozen fs rather than return -EAGAIN. It's worth pointing out that
-> the eofb control structure has a sync flag (that is not used for
-> background scans), so yet another approach could be to tie the trylock
-> to that.
-> 
-> Brian
-> 
-> [1] https://lore.kernel.org/linux-xfs/20200407163739.GG28936@bfoster/
-> 
->  fs/xfs/xfs_icache.c | 10 ++++++++++
->  fs/xfs/xfs_ioctl.c  |  5 ++++-
->  2 files changed, 14 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index a7be7a9e5c1a..8bf1d15be3f6 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -911,7 +911,12 @@ xfs_eofblocks_worker(
->  {
->  	struct xfs_mount *mp = container_of(to_delayed_work(work),
->  				struct xfs_mount, m_eofblocks_work);
-> +
-> +	if (!sb_start_write_trylock(mp->m_super))
-> +		return;
->  	xfs_icache_free_eofblocks(mp, NULL);
-> +	sb_end_write(mp->m_super);
-> +
->  	xfs_queue_eofblocks(mp);
->  }
->  
-> @@ -938,7 +943,12 @@ xfs_cowblocks_worker(
->  {
->  	struct xfs_mount *mp = container_of(to_delayed_work(work),
->  				struct xfs_mount, m_cowblocks_work);
-> +
-> +	if (!sb_start_write_trylock(mp->m_super))
-> +		return;
->  	xfs_icache_free_cowblocks(mp, NULL);
-> +	sb_end_write(mp->m_super);
-> +
->  	xfs_queue_cowblocks(mp);
->  }
->  
 > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index cdfb3cd9a25b..309958186d33 100644
+> index c6cd92ef4a05..5472faab7c4f 100644
 > --- a/fs/xfs/xfs_ioctl.c
 > +++ b/fs/xfs/xfs_ioctl.c
-> @@ -2363,7 +2363,10 @@ xfs_file_ioctl(
->  		if (error)
->  			return error;
+> @@ -1145,63 +1145,18 @@ xfs_ioctl_setattr_xflags(
+>  }
 >  
-> -		return xfs_icache_free_eofblocks(mp, &keofb);
-> +		sb_start_write(mp->m_super);
-> +		error = xfs_icache_free_eofblocks(mp, &keofb);
-> +		sb_end_write(mp->m_super);
-> +		return error;
+>  /*
+> - * If we are changing DAX flags, we have to ensure the file is clean and any
+> - * cached objects in the address space are invalidated and removed. This
+> - * requires us to lock out other IO and page faults similar to a truncate
+> - * operation. The locks need to be held until the transaction has been committed
+> - * so that the cache invalidation is atomic with respect to the DAX flag
+> - * manipulation.
+> + * Only directories are allowed to change dax flags
+>   */
+>  static int
+>  xfs_ioctl_setattr_dax_invalidate(
+> -	struct xfs_inode	*ip,
+> -	struct fsxattr		*fa,
+> -	int			*join_flags)
+> +	struct xfs_inode	*ip)
+>  {
+>  	struct inode		*inode = VFS_I(ip);
+> -	struct super_block	*sb = inode->i_sb;
+> -	int			error;
+> -
+> -	*join_flags = 0;
+> -
+> -	/*
+> -	 * It is only valid to set the DAX flag on regular files and
+> -	 * directories on filesystems where the block size is equal to the page
+> -	 * size. On directories it serves as an inherited hint so we don't
+> -	 * have to check the device for dax support or flush pagecache.
+> -	 */
+> -	if (fa->fsx_xflags & FS_XFLAG_DAX) {
+> -		struct xfs_buftarg	*target = xfs_inode_buftarg(ip);
+> -
+> -		if (!bdev_dax_supported(target->bt_bdev, sb->s_blocksize))
+> -			return -EINVAL;
+> -	}
+> -
+> -	/* If the DAX state is not changing, we have nothing to do here. */
+> -	if ((fa->fsx_xflags & FS_XFLAG_DAX) && IS_DAX(inode))
+> -		return 0;
+> -	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_DAX(inode))
+> -		return 0;
+
+Does the !S_ISDIR check below apply unconditionally even if we weren't
+trying to change the DAX flag?
+
+> -	if (S_ISDIR(inode->i_mode))
+> -		return 0;
+>  
+> -	/* lock, flush and invalidate mapping in preparation for flag change */
+> -	xfs_ilock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
+> -	error = filemap_write_and_wait(inode->i_mapping);
+> -	if (error)
+> -		goto out_unlock;
+> -	error = invalidate_inode_pages2(inode->i_mapping);
+> -	if (error)
+> -		goto out_unlock;
+> +	if (!S_ISDIR(inode->i_mode))
+> +		return -EINVAL;
+
+If this entire function collapses to an S_ISDIR check then you might
+as well just hoist this one piece to the caller.  Also, where is
+xfs_ioctl_dax_check?
+
+<confused>
+
+--D
+
+>  
+> -	*join_flags = XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL;
+>  	return 0;
+> -
+> -out_unlock:
+> -	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
+> -	return error;
+> -
+>  }
+>  
+>  /*
+> @@ -1209,17 +1164,10 @@ xfs_ioctl_setattr_dax_invalidate(
+>   * have permission to do so. On success, return a clean transaction and the
+>   * inode locked exclusively ready for further operation specific checks. On
+>   * failure, return an error without modifying or locking the inode.
+> - *
+> - * The inode might already be IO locked on call. If this is the case, it is
+> - * indicated in @join_flags and we take full responsibility for ensuring they
+> - * are unlocked from now on. Hence if we have an error here, we still have to
+> - * unlock them. Otherwise, once they are joined to the transaction, they will
+> - * be unlocked on commit/cancel.
+>   */
+>  static struct xfs_trans *
+>  xfs_ioctl_setattr_get_trans(
+> -	struct xfs_inode	*ip,
+> -	int			join_flags)
+> +	struct xfs_inode	*ip)
+>  {
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	struct xfs_trans	*tp;
+> @@ -1236,8 +1184,7 @@ xfs_ioctl_setattr_get_trans(
+>  		goto out_unlock;
+>  
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> -	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL | join_flags);
+> -	join_flags = 0;
+> +	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+>  
+>  	/*
+>  	 * CAP_FOWNER overrides the following restrictions:
+> @@ -1258,8 +1205,6 @@ xfs_ioctl_setattr_get_trans(
+>  out_cancel:
+>  	xfs_trans_cancel(tp);
+>  out_unlock:
+> -	if (join_flags)
+> -		xfs_iunlock(ip, join_flags);
+>  	return ERR_PTR(error);
+>  }
+>  
+> @@ -1386,7 +1331,6 @@ xfs_ioctl_setattr(
+>  	struct xfs_dquot	*pdqp = NULL;
+>  	struct xfs_dquot	*olddquot = NULL;
+>  	int			code;
+> -	int			join_flags = 0;
+>  
+>  	trace_xfs_ioctl_setattr(ip);
+>  
+> @@ -1410,18 +1354,11 @@ xfs_ioctl_setattr(
+>  			return code;
 >  	}
 >  
->  	default:
+> -	/*
+> -	 * Changing DAX config may require inode locking for mapping
+> -	 * invalidation. These need to be held all the way to transaction commit
+> -	 * or cancel time, so need to be passed through to
+> -	 * xfs_ioctl_setattr_get_trans() so it can apply them to the join call
+> -	 * appropriately.
+> -	 */
+> -	code = xfs_ioctl_setattr_dax_invalidate(ip, fa, &join_flags);
+> +	code = xfs_ioctl_setattr_dax_invalidate(ip);
+>  	if (code)
+>  		goto error_free_dquots;
+>  
+> -	tp = xfs_ioctl_setattr_get_trans(ip, join_flags);
+> +	tp = xfs_ioctl_setattr_get_trans(ip);
+>  	if (IS_ERR(tp)) {
+>  		code = PTR_ERR(tp);
+>  		goto error_free_dquots;
+> @@ -1552,7 +1489,6 @@ xfs_ioc_setxflags(
+>  	struct fsxattr		fa;
+>  	struct fsxattr		old_fa;
+>  	unsigned int		flags;
+> -	int			join_flags = 0;
+>  	int			error;
+>  
+>  	if (copy_from_user(&flags, arg, sizeof(flags)))
+> @@ -1569,18 +1505,11 @@ xfs_ioc_setxflags(
+>  	if (error)
+>  		return error;
+>  
+> -	/*
+> -	 * Changing DAX config may require inode locking for mapping
+> -	 * invalidation. These need to be held all the way to transaction commit
+> -	 * or cancel time, so need to be passed through to
+> -	 * xfs_ioctl_setattr_get_trans() so it can apply them to the join call
+> -	 * appropriately.
+> -	 */
+> -	error = xfs_ioctl_setattr_dax_invalidate(ip, &fa, &join_flags);
+> +	error = xfs_ioctl_setattr_dax_invalidate(ip);
+>  	if (error)
+>  		goto out_drop_write;
+>  
+> -	tp = xfs_ioctl_setattr_get_trans(ip, join_flags);
+> +	tp = xfs_ioctl_setattr_get_trans(ip);
+>  	if (IS_ERR(tp)) {
+>  		error = PTR_ERR(tp);
+>  		goto out_drop_write;
+> -- 
+> 2.25.1
 > 
-
-
--- 
-chandan
-
-
-
