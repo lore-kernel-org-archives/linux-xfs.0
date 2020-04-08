@@ -2,30 +2,32 @@ Return-Path: <SRS0=ttQi=5Y=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFEECC2D0EA
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Apr 2020 14:01:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 285E3C2D0EA
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Apr 2020 14:12:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C3FE52072A
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Apr 2020 14:01:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 050D720753
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Apr 2020 14:12:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727481AbgDHOB1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Apr 2020 10:01:27 -0400
-Received: from sandeen.net ([63.231.237.45]:41436 "EHLO sandeen.net"
+        id S1727049AbgDHOMJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Apr 2020 10:12:09 -0400
+Received: from sandeen.net ([63.231.237.45]:42048 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726663AbgDHOB1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 8 Apr 2020 10:01:27 -0400
+        id S1726550AbgDHOMJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 8 Apr 2020 10:12:09 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 85571544
-        for <linux-xfs@vger.kernel.org>; Wed,  8 Apr 2020 09:01:17 -0500 (CDT)
+        by sandeen.net (Postfix) with ESMTPSA id EFA57B48;
+        Wed,  8 Apr 2020 09:11:59 -0500 (CDT)
+Subject: Re: [PATCH v2] xfs: check if reserved free disk blocks is needed
+To:     xiakaixu1987@gmail.com, linux-xfs@vger.kernel.org
+Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
+References: <1586225124-22430-1-git-send-email-kaixuxia@tencent.com>
 From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs-5.6.0-rc1 released
-To:     linux-xfs <linux-xfs@vger.kernel.org>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
  nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
@@ -68,169 +70,59 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <dfe829d1-bb0d-3842-7919-ae63e7f0d60f@sandeen.net>
-Date:   Wed, 8 Apr 2020 09:01:24 -0500
+Message-ID: <b07ca472-7218-4a72-7612-a26b0a2d2877@sandeen.net>
+Date:   Wed, 8 Apr 2020 09:12:07 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.6.0
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="EzAOM4nATDcv5eQbyqow8DAMzR6l4hjLP"
+In-Reply-To: <1586225124-22430-1-git-send-email-kaixuxia@tencent.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---EzAOM4nATDcv5eQbyqow8DAMzR6l4hjLP
-Content-Type: multipart/mixed; boundary="vJG7dYgWTKSXxzJWhSupZS0MsShwZslh6"
+On 4/6/20 9:05 PM, xiakaixu1987@gmail.com wrote:
+> From: Kaixu Xia <kaixuxia@tencent.com>
+> 
+> We share an inode between gquota and pquota with the older
+> superblock that doesn't have separate pquotino, and for the
+> need_alloc == false case we don't need to call xfs_dir_ialloc()
+> function, so add the check if reserved free disk blocks is
+> needed.
+> 
+> Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> ---
+> v2:
+>  - improve the commit log.
 
---vJG7dYgWTKSXxzJWhSupZS0MsShwZslh6
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+I wonder if we can improve the very generic summary, too ;)
+maybe something like:
 
-Hi folks,
+xfs: reserve quota inode transaction space only when needed
 
-The for-next branch of the xfsprogs repository at:
+but in any case,
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-has just been updated and tagged with xfsprogs-5.6.0-rc1.
-
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-The new head of the for-next branch is commit:
-
-52e6dd80 (HEAD -> guilt/for-next, tag: v5.6.0-rc1, refs/patches/for-next/=
-5.6.0-rc0.2) xfsprogs: Release v5.6.0-rc1
-
-New Commits:
-
-Christoph Hellwig (3):
-      [d11bffea] libxfs: turn the xfs_buf_incore stub into an inline func=
-tion
-      [cf8f9004] xfs: remove XFS_BUF_SET_BDSTRAT_FUNC
-      [69806fff] libxfs: remove libxfs_iomove
-
-Darrick J. Wong (5):
-      [0a82d75e] libxfs: don't barf in libxfs_bwrite on a null buffer ops=
- name
-      [023ba280] libxfs: check return value of device flush when closing =
-device
-      [f4afdcb0] xfs_db: clean up the salvage read callsites in set_cur()=
-
-      [db8e6401] xfs_repair: fix dir_read_buf use of libxfs_da_read_buf
-      [be6687e4] xfs_scrub: fix type error in render_ino_from_handle
-
-Dave Chinner (5):
-      [105041e6] mkfs: use cvtnum from libfrog
-      [825b7432] xfsprogs: Fix --disable-static option build
-      [2582ae0d] xfsprogs: LDFLAGS comes from configure, not environment
-      [78aeaffd] xfsprogs: fix silently broken option parsing
-      [9e1595e6] xfs_io: set exitcode on failure appropriately
-
-Eric Sandeen (1):
-      [52e6dd80] xfsprogs: Release v5.6.0-rc1
-
-
-Code Diffstat:
-
- VERSION                 |  2 +-
- configure.ac            |  2 +-
- copy/xfs_copy.c         |  2 +-
- db/freesp.c             |  2 +-
- db/init.c               |  7 ++--
- db/io.c                 | 16 +++++----
- debian/changelog        |  6 ++++
- doc/CHANGES             |  7 ++++
- growfs/xfs_growfs.c     |  1 -
- include/builddefs.in    |  4 +++
- include/xfs_multidisk.h |  3 --
- io/attr.c               | 24 ++++++++++---
- io/copy_file_range.c    | 18 ++++++++--
- io/cowextsize.c         |  5 +++
- io/encrypt.c            | 29 +++++++++++++---
- io/fadvise.c            |  9 ++++-
- io/fiemap.c             |  3 ++
- io/file.c               |  1 +
- io/fsmap.c              |  9 +++--
- io/fsync.c              |  2 ++
- io/getrusage.c          |  1 +
- io/imap.c               |  1 +
- io/inject.c             |  1 +
- io/link.c               |  1 +
- io/log_writes.c         | 28 ++++++++-------
- io/madvise.c            | 10 +++++-
- io/mincore.c            | 10 +++++-
- io/mmap.c               | 62 +++++++++++++++++++++++++++------
- io/open.c               | 91 ++++++++++++++++++++++++++++++++++++-------=
-------
- io/parent.c             |  1 +
- io/pread.c              | 19 +++++++++--
- io/prealloc.c           | 55 ++++++++++++++++++++++++------
- io/pwrite.c             | 31 ++++++++++++++---
- io/readdir.c            | 10 ++++--
- io/reflink.c            | 30 +++++++++++++---
- io/resblks.c            |  3 ++
- io/seek.c               | 12 +++++--
- io/sendfile.c           | 18 ++++++++--
- io/shutdown.c           |  2 ++
- io/stat.c               | 13 ++++++-
- io/sync_file_range.c    |  8 ++++-
- io/truncate.c           |  2 ++
- io/utimes.c             |  3 ++
- libfrog/Makefile        |  2 ++
- libfrog/convert.c       | 14 +++++---
- libfrog/convert.h       |  2 +-
- libxcmd/Makefile        |  2 ++
- libxfs/Makefile         |  2 ++
- libxfs/init.c           | 11 ++++--
- libxfs/libxfs_io.h      |  6 ----
- libxfs/libxfs_priv.h    | 14 ++++----
- libxfs/logitem.c        |  1 -
- libxfs/rdwr.c           | 26 +-------------
- libxlog/Makefile        |  2 ++
- logprint/logprint.c     |  2 +-
- mkfs/proto.c            |  2 +-
- mkfs/xfs_mkfs.c         | 74 +++++-----------------------------------
- repair/phase6.c         | 21 +++++-------
- repair/xfs_repair.c     |  2 +-
- scrub/phase5.c          |  2 +-
- scrub/xfs_scrub.c       |  2 --
- spaceman/freesp.c       |  1 -
- spaceman/prealloc.c     |  1 -
- 63 files changed, 501 insertions(+), 252 deletions(-)
-
-
-
-
---vJG7dYgWTKSXxzJWhSupZS0MsShwZslh6--
-
---EzAOM4nATDcv5eQbyqow8DAMzR6l4hjLP
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl6N2TUACgkQIK4WkuE9
-3uBDchAAilyyc4BWhe65GZ9EWJRSZ8+S/sMaPYIOK8+riHQTKIcxgAA10d56KOv3
-TbflmwNVhjCuBw35qI5qeckItiSEFMHMXWNEhkbCfhJGv5Q+dzHHdWIK3VZLolmw
-8OrJCEK5PUZMOubsYhMdcuZkH6L/G0Ya9vjiB2pWWa/93n89OlBXHg2g8VxBW1PJ
-Crqe+jscrbWWo0qB8eLAWGe0pC47mOWGBg5MSIloOARrj0TjXjhZNzms7Srw9PBF
-0Sx1LKjDvEwM2H4ohPHYPPIXzaYa8F+CafyOwPgccgFNXwrBk617E89amDTqUsoB
-Pl5ju+8sY+gNl1E/EvjrQIJKpfbaA+zqp3LxkqXjY8VEr1+fcdHrkjFSSUsI+knm
-Ow9o24c9aZjydb+cP4yktQ3rfmdSho9+TejhnHlJZ+LjOhaZb6jVBMe58bqks5Ef
-HkXHXX/0b3awWy98DoFt3FHwL2ZjkxGGxGUS3KWKxJO2XbKxg3FtASCVwXiLk1ou
-F0jonop7u3tArmgHZ02w7mNe43bw8NkrN4jmyWkOuGJkE05LVX/P4UJFATVggGOO
-WERdpsJs/OHhex6ijpXvTU36a+xDz2iEcDRxUzPJYrkjTBgOADBf8KgdcNgzAEwt
-2rK+QSKQA3CJQ7drGw+RScIs4AZPk0H4oWBNSjRKGi4iMHprBso=
-=n4XZ
------END PGP SIGNATURE-----
-
---EzAOM4nATDcv5eQbyqow8DAMzR6l4hjLP--
+>  fs/xfs/xfs_qm.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index 6678baa..b684b04 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -780,7 +780,8 @@ struct xfs_qm_isolate {
+>  	}
+>  
+>  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_create,
+> -			XFS_QM_QINOCREATE_SPACE_RES(mp), 0, 0, &tp);
+> +			need_alloc ? XFS_QM_QINOCREATE_SPACE_RES(mp) : 0,
+> +			0, 0, &tp);
+>  	if (error)
+>  		return error;
+>  
+> 
