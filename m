@@ -6,65 +6,66 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C028DC2BA2B
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Apr 2020 12:42:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C20D2C2D0EA
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Apr 2020 12:42:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8C4EE20753
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Apr 2020 12:42:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 82FDD20747
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Apr 2020 12:42:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727984AbgDHMm3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Apr 2020 08:42:29 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:50804 "EHLO
+        id S1728002AbgDHMme (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Apr 2020 08:42:34 -0400
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:63434 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727915AbgDHMm2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Apr 2020 08:42:28 -0400
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 038CXCsI166163
-        for <linux-xfs@vger.kernel.org>; Wed, 8 Apr 2020 08:42:27 -0400
-Received: from e06smtp04.uk.ibm.com (e06smtp04.uk.ibm.com [195.75.94.100])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 309205bhf4-1
+        by vger.kernel.org with ESMTP id S1727915AbgDHMmd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Apr 2020 08:42:33 -0400
+Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 038CYn1t118197
+        for <linux-xfs@vger.kernel.org>; Wed, 8 Apr 2020 08:42:31 -0400
+Received: from e06smtp03.uk.ibm.com (e06smtp03.uk.ibm.com [195.75.94.99])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3091ykk2gd-1
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 08 Apr 2020 08:42:27 -0400
+        for <linux-xfs@vger.kernel.org>; Wed, 08 Apr 2020 08:42:31 -0400
 Received: from localhost
-        by e06smtp04.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e06smtp03.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-xfs@vger.kernel.org> from <chandan@linux.ibm.com>;
-        Wed, 8 Apr 2020 13:41:59 +0100
-Received: from b06avi18626390.portsmouth.uk.ibm.com (9.149.26.192)
-        by e06smtp04.uk.ibm.com (192.168.101.134) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        Wed, 8 Apr 2020 13:42:16 +0100
+Received: from b06cxnps3075.portsmouth.uk.ibm.com (9.149.109.195)
+        by e06smtp03.uk.ibm.com (192.168.101.133) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
         (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Wed, 8 Apr 2020 13:41:57 +0100
+        Wed, 8 Apr 2020 13:42:13 +0100
 Received: from d06av21.portsmouth.uk.ibm.com (d06av21.portsmouth.uk.ibm.com [9.149.105.232])
-        by b06avi18626390.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 038CfH7f34931132
+        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 038CgOO044564716
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 8 Apr 2020 12:41:17 GMT
+        Wed, 8 Apr 2020 12:42:24 GMT
 Received: from d06av21.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 35AF152051;
-        Wed,  8 Apr 2020 12:42:22 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id CD24752052;
+        Wed,  8 Apr 2020 12:42:24 +0000 (GMT)
 Received: from localhost.localdomain (unknown [9.85.71.18])
-        by d06av21.portsmouth.uk.ibm.com (Postfix) with ESMTP id BD6195204E;
-        Wed,  8 Apr 2020 12:42:20 +0000 (GMT)
+        by d06av21.portsmouth.uk.ibm.com (Postfix) with ESMTP id 385F352050;
+        Wed,  8 Apr 2020 12:42:23 +0000 (GMT)
 From:   Chandan Rajendra <chandan@linux.ibm.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Brian Foster <bfoster@redhat.com>
 Cc:     Chandan Rajendra <chandanrlinux@gmail.com>,
-        linux-xfs@vger.kernel.org, david@fromorbit.com, bfoster@redhat.com
+        linux-xfs@vger.kernel.org, david@fromorbit.com,
+        darrick.wong@oracle.com
 Subject: Re: [PATCH 2/2] xfs: Extend xattr extent counter to 32-bits
-Date:   Wed, 08 Apr 2020 18:12:43 +0530
+Date:   Wed, 08 Apr 2020 18:10:10 +0530
 Organization: IBM
-In-Reply-To: <20200406170603.GD6742@magnolia>
-References: <20200404085203.1908-1-chandanrlinux@gmail.com> <20200404085203.1908-3-chandanrlinux@gmail.com> <20200406170603.GD6742@magnolia>
+In-Reply-To: <20200406164515.GG20708@bfoster>
+References: <20200404085203.1908-1-chandanrlinux@gmail.com> <20200404085203.1908-3-chandanrlinux@gmail.com> <20200406164515.GG20708@bfoster>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7Bit
 Content-Type: text/plain; charset="us-ascii"
 X-TM-AS-GCONF: 00
-x-cbid: 20040812-0016-0000-0000-00000300B868
+x-cbid: 20040812-0012-0000-0000-000003A0ACED
 X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 20040812-0017-0000-0000-0000336497F2
-Message-Id: <36057105.YdVtZjl8O2@localhost.localdomain>
+x-cbparentid: 20040812-0013-0000-0000-000021DDD207
+Message-Id: <3745092.1H1QDlOWQL@localhost.localdomain>
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.676
  definitions=2020-04-07_10:2020-04-07,2020-04-07 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 phishscore=0
- spamscore=0 suspectscore=5 mlxscore=0 adultscore=0 clxscore=1015
- priorityscore=1501 bulkscore=0 malwarescore=0 impostorscore=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 spamscore=0
+ clxscore=1015 mlxscore=0 suspectscore=5 bulkscore=0 adultscore=0
+ phishscore=0 priorityscore=1501 impostorscore=0 mlxlogscore=999
  lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2003020000 definitions=main-2004080104
 Sender: linux-xfs-owner@vger.kernel.org
@@ -72,7 +73,7 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Monday, April 6, 2020 10:36 PM Darrick J. Wong wrote: 
+On Monday, April 6, 2020 10:15 PM Brian Foster wrote: 
 > On Sat, Apr 04, 2020 at 02:22:03PM +0530, Chandan Rajendra wrote:
 > > XFS has a per-inode xattr extent counter which is 16 bits wide. A workload
 > > which
@@ -95,6 +96,42 @@ On Monday, April 6, 2020 10:36 PM Darrick J. Wong wrote:
 > > an incompat flag to prevent older kernels from mounting newer filesystems with
 > > 32-bit wide xattr extent counter.
 > > 
+> 
+> Just a couple high level comments on the first pass...
+> 
+> It looks like the feature bit is only set by mkfs. That raises a couple
+> questions. First, what about a fix for older/existing filesystems? Even
+> if we can't exceed the 16bit extent count, I would think we should be
+> able to fail more gracefully than allowing a write verifier to fail and
+> shutdown the fs. What happens when/if we run into a data fork extent
+> count limit, for example?
+
+Yes, I agree that for older filesystems I should write a separate patch to
+check for the 16-bit overflow case.
+
+This applies to the data fork extent counter as well. Dave was suggesting that
+we should change that to a 64-bit value. That would be my next work item.
+
+> 
+> Second, I also wonder if enabling an incompat feature bit by default in
+> mkfs is a bit extreme. Perhaps this should be tied to a mkfs flag for a
+> period of time? Maybe others have thoughts on that, but I'd at minimum
+> request to introduce and enable said bit by default in separate patches
+> to make it a bit easier for distro releases to identify and manage the
+> incompatibility.
+
+Dave has suggested that we should have a new 32-bit field in the inode. When
+we are about to overflow the existing 16-bit counter limit, we set a per-inode
+flag and also a RO-compat feature flag in the superblock.
+
+When flushing an inode to disk, if the RO-compat feature flag is set, then we
+set the corresponding inode flag and move over the 16-bit counter to the new
+32-bit counter. Also, the RO feature flag can be set by default by mkfs
+sometime in the future.
+
+> 
+> Brian
+> 
 > > Signed-off-by: Chandan Rajendra <chandanrlinux@gmail.com>
 > > ---
 > >  fs/xfs/libxfs/xfs_format.h     | 28 +++++++++++++++++++++-------
@@ -116,12 +153,6 @@ On Monday, April 6, 2020 10:36 PM Darrick J. Wong wrote:
 > >  #define XFS_SB_FEAT_INCOMPAT_SPINODES	(1 << 1)	/* sparse inode chunks */
 > >  #define XFS_SB_FEAT_INCOMPAT_META_UUID	(1 << 2)	/* metadata UUID */
 > > +#define XFS_SB_FEAT_INCOMPAT_32BIT_AEXT_CNTR (1 << 3)
-> 
-> If you're going to introduce an INCOMPAT feature, please also use the
-> opportunity to convert xattrs to something resembling the dir v3 format,
-> where we index free space within each block so that we can speed up attr
-> setting with 100 million attrs.
-> 
 > >  #define XFS_SB_FEAT_INCOMPAT_ALL \
 > >  		(XFS_SB_FEAT_INCOMPAT_FTYPE|	\
 > >  		 XFS_SB_FEAT_INCOMPAT_SPINODES|	\
@@ -146,14 +177,6 @@ On Monday, April 6, 2020 10:36 PM Darrick J. Wong wrote:
 > >  	__be32		di_cowextsize;	/* basic cow extent size for file */
 > > -	__u8		di_pad2[12];	/* more padding for future expansion */
 > > +	__be16		di_anextents_hi;/* higher part of xattr extent count */
-> 
-> I was expecting you to use di_pad, not di_pad2... :)
-
-Dave has suggested that a new 32-bit field be introduced. The kernel will
-switch over to using this field when we are about to overflow the existing
-16-bit counter.
-
-> 
 > > +	__u8		di_pad2[10];	/* more padding for future expansion */
 > >  
 > >  	/* fields only written to during inode creation */
@@ -170,49 +193,14 @@ switch over to using this field when we are about to overflow the existing
 > > +static inline int32_t XFS_DFORK_NEXTENTS(struct xfs_sb *sbp,
 > > +					struct xfs_dinode *dip, int whichfork)
 > > +{
-> 
-> XFS style indenting, please.
-
-Sorry about that. I will fix it up.
-
-> 
 > > +	int32_t anextents;
-> 
-> When would we have negative extent count?
-> 
-> (Yes, this is a bug in the xfs_extnum/xfs_aextnum typedefs, bah...)
-> 
 > > +
 > > +	if (whichfork == XFS_DATA_FORK)
 > > +		return be32_to_cpu((dip)->di_nextents);
 > > +
 > > +	anextents = be16_to_cpu((dip)->di_anextents_lo);
 > > +	if (xfs_sb_version_has_v3inode(sbp))
-> 
-> v3inode?  I thought this had a separate incompat flag?
-> 
 > > +		anextents |= ((u32)(be16_to_cpu((dip)->di_anextents_hi)) << 16);
->
-
-Yes, I will fix this up. With the new ro-compat feature bit and and an extra
-32-bit field to track the xattr extent counter the above logic will change.
-
-> /me would have thought you'd do the splitting and endian conversion in
-> the opposite order, e.g.:
-> 
-> 	be32 x = dip->di_anextents_lo;
-> 	if (has32bitattrcount)
-> 		x |= (be32)dip->di_anextents_hi << 16;
-> 	return be32_to_cpu(x);
-
-I actually followed what was being done w.r.t projid i.e.
-
-     to->di_projid = (prid_t)be16_to_cpu(from->di_projid_hi) << 16 |                                                                                               
-                             be16_to_cpu(from->di_projid_lo);
-
-But with the new 32-bit extent counter, we won't have to do that either.
-
-> 
 > > +
 > > +	return anextents;
 > > +}
@@ -372,13 +360,105 @@ But with the new 32-bit extent counter, we won't have to do that either.
 > >  #define	MAXEXTNUM	((xfs_extnum_t)0x7fffffff)	/* signed int */
 > > -#define	MAXAEXTNUM	((xfs_aextnum_t)0x7fff)		/* signed short */
 > > +#define	MAXAEXTNUM	((xfs_aextnum_t)0x7fffffff)	/* signed int */
+> >  
+> >  /*
+> >   * Minimum and maximum blocksize and sectorsize.
+> > diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+> > index 6d483ab29e639..3b624e24ae868 100644
+> > --- a/fs/xfs/scrub/inode.c
+> > +++ b/fs/xfs/scrub/inode.c
+> > @@ -371,10 +371,12 @@ xchk_dinode(
+> >  		break;
+> >  	}
+> >  
+> > +	nextents = XFS_DFORK_NEXTENTS(&mp->m_sb, dip, XFS_ATTR_FORK);
+> > +
+> >  	/* di_forkoff */
+> >  	if (XFS_DFORK_APTR(dip) >= (char *)dip + mp->m_sb.sb_inodesize)
+> >  		xchk_ino_set_corrupt(sc, ino);
+> > -	if (dip->di_anextents != 0 && dip->di_forkoff == 0)
+> > +	if (nextents != 0 && dip->di_forkoff == 0)
+> >  		xchk_ino_set_corrupt(sc, ino);
+> >  	if (dip->di_forkoff == 0 && dip->di_aformat != XFS_DINODE_FMT_EXTENTS)
+> >  		xchk_ino_set_corrupt(sc, ino);
+> > @@ -386,7 +388,6 @@ xchk_dinode(
+> >  		xchk_ino_set_corrupt(sc, ino);
+> >  
+> >  	/* di_anextents */
+> > -	nextents = be16_to_cpu(dip->di_anextents);
+> >  	fork_recs =  XFS_DFORK_ASIZE(dip, mp) / sizeof(struct xfs_bmbt_rec);
+> >  	switch (dip->di_aformat) {
+> >  	case XFS_DINODE_FMT_EXTENTS:
+> > @@ -484,7 +485,7 @@ xchk_inode_xref_bmap(
+> >  			&nextents, &acount);
+> >  	if (!xchk_should_check_xref(sc, &error, NULL))
+> >  		return;
+> > -	if (nextents != be16_to_cpu(dip->di_anextents))
+> > +	if (nextents != XFS_DFORK_NEXTENTS(&sc->mp->m_sb, dip, XFS_ATTR_FORK))
+> >  		xchk_ino_xref_set_corrupt(sc, sc->ip->i_ino);
+> >  
+> >  	/* Check nblocks against the inode. */
+> > diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> > index 4a3d13d4a0228..dff20f2b368ea 100644
+> > --- a/fs/xfs/xfs_inode_item.c
+> > +++ b/fs/xfs/xfs_inode_item.c
+> > @@ -327,7 +327,7 @@ xfs_inode_to_log_dinode(
+> >  	to->di_nblocks = from->di_nblocks;
+> >  	to->di_extsize = from->di_extsize;
+> >  	to->di_nextents = from->di_nextents;
+> > -	to->di_anextents = from->di_anextents;
+> > +	to->di_anextents_lo = ((u32)(from->di_anextents)) & 0xffff;
+> >  	to->di_forkoff = from->di_forkoff;
+> >  	to->di_aformat = from->di_aformat;
+> >  	to->di_dmevmask = from->di_dmevmask;
+> > @@ -344,6 +344,7 @@ xfs_inode_to_log_dinode(
+> >  		to->di_crtime.t_nsec = from->di_crtime.tv_nsec;
+> >  		to->di_flags2 = from->di_flags2;
+> >  		to->di_cowextsize = from->di_cowextsize;
+> > +		to->di_anextents_hi = ((u32)(from->di_anextents)) >> 16;
+> >  		to->di_ino = ip->i_ino;
+> >  		to->di_lsn = lsn;
+> >  		memset(to->di_pad2, 0, sizeof(to->di_pad2));
+> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> > index 11c3502b07b13..ba3fae95b2260 100644
+> > --- a/fs/xfs/xfs_log_recover.c
+> > +++ b/fs/xfs/xfs_log_recover.c
+> > @@ -2922,6 +2922,7 @@ xlog_recover_inode_pass2(
+> >  	struct xfs_log_dinode	*ldip;
+> >  	uint			isize;
+> >  	int			need_free = 0;
+> > +	uint32_t		nextents;
+> >  
+> >  	if (item->ri_buf[0].i_len == sizeof(struct xfs_inode_log_format)) {
+> >  		in_f = item->ri_buf[0].i_addr;
+> > @@ -3044,7 +3045,14 @@ xlog_recover_inode_pass2(
+> >  			goto out_release;
+> >  		}
+> >  	}
+> > -	if (unlikely(ldip->di_nextents + ldip->di_anextents > ldip->di_nblocks)){
+> > +
+> > +	nextents = ldip->di_anextents_lo;
+> > +	if (xfs_sb_version_has_v3inode(&mp->m_sb))
+> > +		nextents |= ((u32)(ldip->di_anextents_hi) << 16);
+> > +
+> > +	nextents += ldip->di_nextents;
+> > +
+> > +	if (unlikely(nextents > ldip->di_nblocks)) {
+> >  		XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(5)",
+> >  				     XFS_ERRLEVEL_LOW, mp, ldip,
+> >  				     sizeof(*ldip));
+> > @@ -3052,8 +3060,7 @@ xlog_recover_inode_pass2(
+> >  	"%s: Bad inode log record, rec ptr "PTR_FMT", dino ptr "PTR_FMT", "
+> >  	"dino bp "PTR_FMT", ino %Ld, total extents = %d, nblocks = %Ld",
+> >  			__func__, item, dip, bp, in_f->ilf_ino,
+> > -			ldip->di_nextents + ldip->di_anextents,
+> > -			ldip->di_nblocks);
+> > +			nextents, ldip->di_nblocks);
+> >  		error = -EFSCORRUPTED;
+> >  		goto out_release;
+> >  	}
 > 
-> Need to preserve both limits so that we can do the correct check for the
-> given feature set.
-
-True. I will fix that.
-
-Thank you for providing the above review comments.
+> 
 
 -- 
 chandan
