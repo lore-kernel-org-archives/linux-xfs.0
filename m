@@ -7,132 +7,134 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29EEBC2D0EA
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Apr 2020 12:10:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91798C2D0EA
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Apr 2020 12:21:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C1FB22051A
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Apr 2020 12:10:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 652482076D
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Apr 2020 12:21:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TykbZrqj"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="C+X+nkOK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728081AbgDHMKM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Apr 2020 08:10:12 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:30914 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728072AbgDHMKM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Apr 2020 08:10:12 -0400
+        id S1726876AbgDHMV1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Apr 2020 08:21:27 -0400
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:58763 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726726AbgDHMV0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Apr 2020 08:21:26 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1586347811;
+        s=mimecast20190719; t=1586348485;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=8DYRAysWrQ3x+SJcr1ON0QhpRu3rGc5apEIQ77419lQ=;
-        b=TykbZrqjt+kt42P7aWqpZTo/tpO/jSAuwQ44NcFhkt+f7+hv838rDM/dLT6O3+oIR1R3ew
-        cwrctcFu0MEAKdMCemqwpxYKpfEHftEH6SDeLmsW/A2nnuJaenToPUjNMjeSf8HQutJMIU
-        7a4tNp4FlcPqAq5PKS8C8HRqa/SvWNQ=
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=WgidWMvlnp5wYWI8flkO16ALRl9eYdPdHCKuIt09UEA=;
+        b=C+X+nkOKfpQzbSaC9cXcfmDWA3xZucF0qOz98ifQk85N4r4YfQiXm9+HIUA93baW4yz8Of
+        G3777ARpA78jM5l7oVIYtPrFZ1+YbqewBU8g/KBAu1hMUDn3fndE6TbdDyZPWuD/ltxMrq
+        gn8KuzETsP6NITnrEiMq1WEp0b6nIw4=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-126-RUEKsFC1Ni2HnHRPLkN7_w-1; Wed, 08 Apr 2020 08:10:09 -0400
-X-MC-Unique: RUEKsFC1Ni2HnHRPLkN7_w-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+ us-mta-22-DdN3WsF-M9iT-XFvmuQxPw-1; Wed, 08 Apr 2020 08:21:21 -0400
+X-MC-Unique: DdN3WsF-M9iT-XFvmuQxPw-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id AD4F41084426;
-        Wed,  8 Apr 2020 12:10:08 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 4D3F89DD6B;
-        Wed,  8 Apr 2020 12:10:08 +0000 (UTC)
-Date:   Wed, 8 Apr 2020 08:10:06 -0400
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CDBE8A2281
+        for <linux-xfs@vger.kernel.org>; Wed,  8 Apr 2020 12:21:19 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 97B6C1001281
+        for <linux-xfs@vger.kernel.org>; Wed,  8 Apr 2020 12:21:19 +0000 (UTC)
 From:   Brian Foster <bfoster@redhat.com>
-To:     Allison Collins <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v8 17/20] xfs: Add helper function
- xfs_attr_node_removename_rmt
-Message-ID: <20200408121006.GD33192@bfoster>
-References: <20200403221229.4995-1-allison.henderson@oracle.com>
- <20200403221229.4995-18-allison.henderson@oracle.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: acquire superblock freeze protection on eofblocks scans
+Date:   Wed,  8 Apr 2020 08:21:19 -0400
+Message-Id: <20200408122119.33869-1-bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200403221229.4995-18-allison.henderson@oracle.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Apr 03, 2020 at 03:12:26PM -0700, Allison Collins wrote:
-> This patch adds another new helper function
-> xfs_attr_node_removename_rmt. This will also help modularize
-> xfs_attr_node_removename when we add delay ready attributes later.
-> 
-> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_attr.c | 32 +++++++++++++++++++++++---------
->  1 file changed, 23 insertions(+), 9 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 3c33dc5..d735570 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -1221,6 +1221,28 @@ int xfs_attr_node_removename_setup(
->  	return 0;
->  }
->  
-> +STATIC int
-> +xfs_attr_node_removename_rmt (
-> +	struct xfs_da_args	*args,
-> +	struct xfs_da_state	*state)
-> +{
-> +	int			error = 0;
-> +
-> +	error = xfs_attr_rmtval_remove(args);
-> +	if (error)
-> +		return error;
-> +
-> +	/*
-> +	 * Refill the state structure with buffers, the prior calls
-> +	 * released our buffers.
-> +	 */
+The filesystem freeze sequence in XFS waits on any background
+eofblocks or cowblocks scans to complete before the filesystem is
+quiesced. At this point, the freezer has already stopped the
+transaction subsystem, however, which means a truncate or cowblock
+cancellation in progress is likely blocked in transaction
+allocation. This results in a deadlock between freeze and the
+associated scanner.
 
-The comment can be widened to 80 chars now that indentation has been
-reduced.
+Fix this problem by holding superblock write protection across calls
+into the block reapers. Since protection for background scans is
+acquired from the workqueue task context, trylock to avoid a similar
+deadlock between freeze and blocking on the write lock.
 
-> +	error = xfs_attr_refillstate(state);
-> +	if (error)
-> +		return error;
-> +
-> +	return 0;
+Fixes: d6b636ebb1c9f ("xfs: halt auto-reclamation activities while rebuil=
+ding rmap")
+Reported-by: Paul Furtado <paulfurtado91@gmail.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
 
-	return xfs_attr_refillstate(state);
+Note that this has the opposite tradeoff as the approach I originally
+posited [1], specifically that the eofblocks ioctl() now always blocks
+on a frozen fs rather than return -EAGAIN. It's worth pointing out that
+the eofb control structure has a sync flag (that is not used for
+background scans), so yet another approach could be to tie the trylock
+to that.
 
-With those nits fixed:
+Brian
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+[1] https://lore.kernel.org/linux-xfs/20200407163739.GG28936@bfoster/
 
-> +}
-> +
->  /*
->   * Remove a name from a B-tree attribute list.
->   *
-> @@ -1249,15 +1271,7 @@ xfs_attr_node_removename(
->  	 * overflow the maximum size of a transaction and/or hit a deadlock.
->  	 */
->  	if (args->rmtblkno > 0) {
-> -		error = xfs_attr_rmtval_remove(args);
-> -		if (error)
-> -			goto out;
-> -
-> -		/*
-> -		 * Refill the state structure with buffers, the prior calls
-> -		 * released our buffers.
-> -		 */
-> -		error = xfs_attr_refillstate(state);
-> +		error = xfs_attr_node_removename_rmt(args, state);
->  		if (error)
->  			goto out;
->  	}
-> -- 
-> 2.7.4
-> 
+ fs/xfs/xfs_icache.c | 10 ++++++++++
+ fs/xfs/xfs_ioctl.c  |  5 ++++-
+ 2 files changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index a7be7a9e5c1a..8bf1d15be3f6 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -911,7 +911,12 @@ xfs_eofblocks_worker(
+ {
+ 	struct xfs_mount *mp =3D container_of(to_delayed_work(work),
+ 				struct xfs_mount, m_eofblocks_work);
++
++	if (!sb_start_write_trylock(mp->m_super))
++		return;
+ 	xfs_icache_free_eofblocks(mp, NULL);
++	sb_end_write(mp->m_super);
++
+ 	xfs_queue_eofblocks(mp);
+ }
+=20
+@@ -938,7 +943,12 @@ xfs_cowblocks_worker(
+ {
+ 	struct xfs_mount *mp =3D container_of(to_delayed_work(work),
+ 				struct xfs_mount, m_cowblocks_work);
++
++	if (!sb_start_write_trylock(mp->m_super))
++		return;
+ 	xfs_icache_free_cowblocks(mp, NULL);
++	sb_end_write(mp->m_super);
++
+ 	xfs_queue_cowblocks(mp);
+ }
+=20
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index cdfb3cd9a25b..309958186d33 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -2363,7 +2363,10 @@ xfs_file_ioctl(
+ 		if (error)
+ 			return error;
+=20
+-		return xfs_icache_free_eofblocks(mp, &keofb);
++		sb_start_write(mp->m_super);
++		error =3D xfs_icache_free_eofblocks(mp, &keofb);
++		sb_end_write(mp->m_super);
++		return error;
+ 	}
+=20
+ 	default:
+--=20
+2.21.1
 
