@@ -2,232 +2,167 @@ Return-Path: <SRS0=CSRb=5Z=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C0CBC2BA2B
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Apr 2020 00:12:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75ED0C2BA2B
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Apr 2020 00:16:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F2E5D2084D
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Apr 2020 00:12:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 496622084D
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Apr 2020 00:16:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726549AbgDIAMH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Apr 2020 20:12:07 -0400
-Received: from mga07.intel.com ([134.134.136.100]:61592 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726527AbgDIAMH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 8 Apr 2020 20:12:07 -0400
-IronPort-SDR: ND5DkgcL+z7gVwp3XABxUt63eoTIeZKdnsHqh0FdJ5Vp/E6CxN0XM4YilMarkFcIggPm6Aofzk
- HmZwWPOofR7g==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Apr 2020 17:12:07 -0700
-IronPort-SDR: C0qu+JybDG0QthltkoJTdCtv80Mb6QfdGXNwCVFyt5H3gZHhGU+0LzHSeJ7Zf5tdCc/C6gKDGD
- EghjE+0adNwg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.72,360,1580803200"; 
-   d="scan'208";a="240456460"
-Received: from iweiny-desk2.sc.intel.com ([10.3.52.147])
-  by orsmga007.jf.intel.com with ESMTP; 08 Apr 2020 17:12:07 -0700
-Date:   Wed, 8 Apr 2020 17:12:06 -0700
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-kernel@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        Jeff Moyer <jmoyer@redhat.com>, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH V6 6/8] fs/xfs: Combine xfs_diflags_to_linux() and
- xfs_diflags_to_iflags()
-Message-ID: <20200409001206.GD664132@iweiny-DESK2.sc.intel.com>
-References: <20200407182958.568475-1-ira.weiny@intel.com>
- <20200407182958.568475-7-ira.weiny@intel.com>
- <20200408020827.GI24067@dread.disaster.area>
- <20200408170923.GC569068@iweiny-DESK2.sc.intel.com>
- <20200408210236.GK24067@dread.disaster.area>
- <20200408220734.GA664132@iweiny-DESK2.sc.intel.com>
- <20200408232106.GO24067@dread.disaster.area>
+        id S1726527AbgDIAQM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Apr 2020 20:16:12 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:38506 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726508AbgDIAQM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Apr 2020 20:16:12 -0400
+Received: from dread.disaster.area (pa49-180-167-53.pa.nsw.optusnet.com.au [49.180.167.53])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 29E107EBF04;
+        Thu,  9 Apr 2020 10:16:10 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jMKrY-0005tD-Mn; Thu, 09 Apr 2020 10:16:08 +1000
+Date:   Thu, 9 Apr 2020 10:16:08 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfsdocs: capture some information about dirs vs. attrs
+ and how they use dabtrees
+Message-ID: <20200409001608.GR24067@dread.disaster.area>
+References: <20200408232753.GC6741@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200408232106.GO24067@dread.disaster.area>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+In-Reply-To: <20200408232753.GC6741@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+        a=2xmR08VVv0jSFCMMkhec0Q==:117 a=2xmR08VVv0jSFCMMkhec0Q==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=cl8xLZFz6L8A:10
+        a=yPCof4ZbAAAA:8 a=VwQbUJbxAAAA:8 a=pGLkceISAAAA:8 a=7-415B0cAAAA:8
+        a=4lRNWPaeyBHxEljNZPcA:9 a=dEW4spVcui97qiKV:21 a=x9s9s_Q3rSx-y4DD:21
+        a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 09, 2020 at 09:21:06AM +1000, Dave Chinner wrote:
-> On Wed, Apr 08, 2020 at 03:07:35PM -0700, Ira Weiny wrote:
-> > On Thu, Apr 09, 2020 at 07:02:36AM +1000, Dave Chinner wrote:
-> > > On Wed, Apr 08, 2020 at 10:09:23AM -0700, Ira Weiny wrote:
-> > 
-> > [snip]
-> > 
-> > > > 
-> > > > This sounds good but I think we need a slight modification to make the function equivalent in functionality.
-> > > > 
-> > > > void
-> > > > xfs_diflags_to_iflags(
-> > > >         struct xfs_inode        *ip,
-> > > >         bool init)
-> > > > {
-> > > >         struct inode            *inode = VFS_I(ip);
-> > > >         unsigned int            xflags = xfs_ip2xflags(ip);
-> > > >         unsigned int            flags = 0;
-> > > > 
-> > > >         inode->i_flags &= ~(S_IMMUTABLE | S_APPEND | S_SYNC | S_NOATIME |
-> > > >                             S_DAX);
-> > > 
-> > > We don't want to clear the dax flag here, ever, if it is already
-> > > set. That is an externally visible change and opens us up (again) to
-> > > races where IS_DAX() changes half way through a fault path. IOWs, avoiding
-> > > clearing the DAX flag was something I did explicitly in the above
-> > > code fragment.
-> > 
-> > <sigh> yes... you are correct.
-> > 
-> > But I don't like depending on the caller to clear the S_DAX flag if
-> > xfs_inode_enable_dax() is false.  IMO this function should clear the flag in
-> > that case for consistency...
+On Wed, Apr 08, 2020 at 04:27:53PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> No. We simply cannot do that here except in the init case when the
-> inode is not yet visible to userspace. In which case, we know -for
-> certain- that the S_DAX is not set, and hence we do not need to
-> clear it. Initial conditions matter!
+> Dave and I had a short discussion about whether or not xattr trees
+> needed to have the same free space tracking that directories have, and
+> a comparison of how each of the two metadata types interact with
+> dabtrees resulted.  I've reworked this a bit to make it flow better as a
+> book chapter, so here we go.
 > 
-> If you want to make sure of this, add this:
+> Original-mail: https://lore.kernel.org/linux-xfs/20200404085203.1908-1-chandanrlinux@gmail.com/T/#mdd12ad06cf5d635772cc38946fc5b22e349e136f
+> Originally-from: Dave Chinner <david@fromorbit.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+Couple of things.
+
+We are talking about btrees and where the record data is being
+stored (internal or external). Hence I think it makes sense to refer
+to "attribute records" and "directory records" (or "dirent records")
+rather than "attributes" and "directory entries"...
+
+"leaves" -> "leaf nodes"
+
+> ---
+>  .../extended_attributes.asciidoc                   |   49 ++++++++++++++++++++
+>  1 file changed, 49 insertions(+)
 > 
-> 	ASSERT(!(IS_DAX(inode) && init));
-> 
-> And now we'll catch inodes that incorrectly have S_DAX set at init
-> time.
+> diff --git a/design/XFS_Filesystem_Structure/extended_attributes.asciidoc b/design/XFS_Filesystem_Structure/extended_attributes.asciidoc
+> index 99f7b35..d61c649 100644
+> --- a/design/XFS_Filesystem_Structure/extended_attributes.asciidoc
+> +++ b/design/XFS_Filesystem_Structure/extended_attributes.asciidoc
+> @@ -910,3 +910,52 @@ Log sequence number of the last write to this block.
+>  
+>  Filesystems formatted prior to v5 do not have this header in the remote block.
+>  Value data begins immediately at offset zero.
+> +
+> +== Key Differences Between Directories and Extended Attributes
+> +
+> +Though directories and extended attributes can take advantage of the same
+> +variable length record btree structures (i.e. the dabtree) to map name hashes
+> +to disk blocks, there are major differences in the ways that each of those
+> +users embed the btree within the information that they are storing.
+> +
+> +Directory blocks require external free space tracking because the directory
+> +blocks are not part of the dabtree itself.  The dabtree leaves for a directory
+> +map name hashes to external directory data blocks.  Extended attributes, on
 
-Ok, that will work.  Also documents that expected initial condition.
+"The dabtree leaves for ...." implies it is going somewhere, not
+that you are talking about leaf nodes. :) Perhaps:
 
-> 
-> > > memory S_DAX flag, we can actually clear the on-disk flag
-> > > safely, so that next time the inode cycles into memory it won't
-> > > be using DAX. IOWs, admins can stop the applications, clear the
-> > > DAX flag and drop caches. This should result in the inode being
-> > > recycled and when the app is restarted it will run without DAX.
-> > > No ned for deleting files, copying large data sets, etc just to
-> > > turn off an inode flag.
-> > 
-> > We already discussed evicting the inode and it was determined to
-> > be too confusing.[*]
-> 
-> That discussion did not even consider how admins are supposed to
-> clear the inode flag once it is set on disk.
+"The directory dabtree leaf nodes contain a mapping between name
+hash and the location of the dirent record in the external directory
+data blocks."
 
-I think this is a bit unfair.  I think we were all considering it...  and I
-still think this patch set is a step in the right direction.
+> +the other hand, store all of the attributes in the leaves of the dabtree.
 
-> It was entirely
-> focussed around "we can't change in memory S_DAX state"
+"... store the attribute records directly in the dabtree leaf
+nodes."
 
-Not true.  There were many ideas on how to change the FS_XFLAG_DAX with some
-sort of delayed S_DAX state to avoid changing S_DAX on an in memory inode.
+> +
+> +When we add or remove an extended attribute in the dabtree, we split or merge
+> +leaves of the tree based on where the name hash index tells us a leaf needs to
+> +be inserted into or removed.  In other words, we make space available or
+> +collapse sparse leaves of the dabtree as a side effect of inserting or
+> +removing attributes.
+> +
+> +The directory structure is very different.  Directory entries cannot change
+> +location because each entry's logical offset into the directory data segment
+> +is used as the readdir/seekdir/telldir cookie, and the cookie is required to
+> +be stable for the life of the entry.  Therefore, we cannot store directory
+> +entries in the leaves of a dabtree (which is indexed in hash order) because
 
-I made the comment:
+The userspace readdir/seekdir/telldir directory cookie API places a
+requirement on the directory structure that dirent record cookie
+cannot change for the life of the dirent record. We use the dirent
+record's logical offset into the directory data segment for that
+cookie, and hence the dirent record cannot change location.
+Therefore, we cannot store directory records in the leaf nodes of
+the dabtree....
 
-	"... I want to clarify.  ...  we could have the flag change with an
-	appropriate error which could let the user know the change has been
-	delayed."
+> +the offset into the tree would change as other entries are inserted and
+> +removed.  Hence when we remove directory entries, we must leave holes in the
+> +data segment so the rest of the entries do not move.
+> +
+> +The directory name hash index (the dabtree bit) is held in the second
+> +directory segment.  Because the dabtree only stores pointers to directory
+> +entries in the (first) data segment, there is no need to leave holes in the
+> +dabtree itself.  The dabtree merges or splits leaves as required as pointers
+> +to the directory data segment are added or removed.  The dabtree itself needs
+> +no free space tracking.
+> +
+> +When we go to add a directory entry, we need to find the best-fitting free
 
-	-- https://lore.kernel.org/lkml/20200402205518.GF3952565@iweiny-DESK2.sc.intel.com/
+s/go to//
 
-Jan made multiple comments:
+> +space in the directory data segment to turn into the new entry.  This requires
+> +a free space index for the directory data segment.  The free space index is
+> +held in the third directory segment.  Once we've used the free space index to
+> +find the block with that best free space, we modify the directory data block
+> +and update the dabtree to point the name hash at the new entry.
+> +
+> +In other words, the requirement for a free space map in the directory
+> +structure results from storing the directory entry data externally to the
+> +dabtree.  Extended atttributes are stored directly in the leaves of the
 
-	"I generally like the proposal but I think the fact that toggling
-	FS_XFLAG_DAX will not have immediate effect on S_DAX will cause quite
-	some confusion and ultimately bug reports."
+dabtree leaf nodes
 
-	-- https://lore.kernel.org/lkml/20200401102511.GC19466@quack2.suse.cz/
+> +dabtree (except for remote attributes which can be anywhere in the attr fork
+> +address space) and do not need external free space tracking to determine where
+> +to best insert them.  As a result, extended attributes exhibit nearly perfect
+> +scaling until we run out of memory.
 
+Thanks for doing this, Darrick!
 
-	"Just switch FS_XFLAG_DAX flag, S_DAX flag will magically switch when
-	inode gets evicted and the inode gets reloaded from the disk again. Did
-	I misunderstand anything?
-
-	And my thinking was that this is surprising behavior for the user and
-	so it will likely generate lots of bug reports along the lines of "DAX
-	inode flag does not work!"."
-
-	-- https://lore.kernel.org/lkml/20200403170338.GD29920@quack2.suse.cz/
-
-Darrick also had similar ideas/comments.
-
-Christoph did say:
-
-	"A reasonably smart application can try to evict itself."
-
-	-- https://lore.kernel.org/lkml/20200403072731.GA24176@lst.de/
-
-Which I was unclear about???
-
-Christoph does this mean you would be ok with changing the FS_XFLAG_DAX on disk
-and letting S_DAX change later?
-
-> and how the
-> tri-state mount option to "override" the on-disk flag could be done.
-> 
-> Nobody noticed that being unable to rmeove the on-disk flag means
-> the admin's only option to turn off dax for an application is to
-> turn it off for everything, filesystem wide, which requires:
-
-No. This is not entirely true.  While I don't like the idea of having to copy
-data (and I agree with your points) it is possible to do.
-
-> 
-> 	1. stopping the app.
-> 	2. stopping every other app using the filesystem
-> 	3. unmounting the filesystem
-> 	4. changing to dax=never mount option
-
-I don't understand why we need to unmount and mount with dax=never?
-
-> 	5. mounting the filesystem
-> 	6. restarting all apps.
-> 
-> It's a hard stop for everything using the filesystem, and it changes
-> the runtime environment for all applications, not just the one that
-> needs DAX turned off.  Not to mention that if it's the root
-> filesystem that is using DAX, then it's a full system reboot needed
-> to change the mount options.
-> 
-> IMO, this is a non-starter from a production point of view - testing
-> and qualification of all applications rather than just the affected
-> app is required to make this sort of change.  It simply does not
-> follow the "minimal change to fix the problem" rules for managing
-> issues in production environments.
-> 
-> So, pLease explain to me how this process:
-> 
-> 	1. stop the app
-> 	2. remove inode flags via xfs_io
-> 	3. run drop_caches
-> 	4. start the app
-> 
-> is worse than requiring admins to unmount the filesystem to turn off
-> DAX for an application.
-
-Jan?  Christoph?
-
-> 
-> > Furthermore, if we did want an interface like that why not allow
-> > the on-disk flag to be set as well as cleared?
-> 
-> Well, why not - it's why I implemented the flag in the first place!
-> The only problem we have here is how to safely change the in-memory
-> DAX state, and that largely has nothing to do with setting/clearing
-> the on-disk flag....
-
-With the above change to xfs_diflags_to_iflags() I think we are ok here.
-
-Ira
-
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
