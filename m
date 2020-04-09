@@ -2,129 +2,162 @@ Return-Path: <SRS0=CSRb=5Z=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87C47C2BA19
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Apr 2020 17:17:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A032DC2BA19
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Apr 2020 18:15:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 63160206F7
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Apr 2020 17:17:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 773A420757
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Apr 2020 18:15:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1586456129;
+	bh=Vh/nEZmKyunglWKfJLO8V2/jVJZeYUVc1nRZToQfYJM=;
+	h=Date:From:To:Cc:Subject:List-ID:From;
+	b=n9GzkKPjuvrn1MijD4o92kuNhvZ7+mgMphzbgLhwMUBKlqpR8RCp8278h82Af7ITb
+	 cbZV7vzxP/J6veHMvJh4j3bzyCDf3MpUN7K7h5geMGzWFlERIAUNWQ4OcRr9p8V3YL
+	 F1lxxyzT0w0JNGZE21LRbvci+0dv1wsOOThYk++Y=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727244AbgDIRRi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Apr 2020 13:17:38 -0400
-Received: from mx2.suse.de ([195.135.220.15]:45794 "EHLO mx2.suse.de"
+        id S1726470AbgDISP2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Apr 2020 14:15:28 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33684 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726787AbgDIRRi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 9 Apr 2020 13:17:38 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 6E081ABEF;
-        Thu,  9 Apr 2020 17:17:35 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 0D76D1E124D; Thu,  9 Apr 2020 19:17:35 +0200 (CEST)
-Date:   Thu, 9 Apr 2020 19:17:35 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Ira Weiny <ira.weiny@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        linux-kernel@vger.kernel.org,
-        Dan Williams <dan.j.williams@intel.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        Jeff Moyer <jmoyer@redhat.com>, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH V6 6/8] fs/xfs: Combine xfs_diflags_to_linux() and
- xfs_diflags_to_iflags()
-Message-ID: <20200409171735.GA24720@quack2.suse.cz>
-References: <20200407182958.568475-7-ira.weiny@intel.com>
- <20200408020827.GI24067@dread.disaster.area>
- <20200408170923.GC569068@iweiny-DESK2.sc.intel.com>
- <20200408210236.GK24067@dread.disaster.area>
- <20200408220734.GA664132@iweiny-DESK2.sc.intel.com>
- <20200408232106.GO24067@dread.disaster.area>
- <20200409001206.GD664132@iweiny-DESK2.sc.intel.com>
- <20200409003021.GJ6742@magnolia>
- <20200409152944.GA801705@iweiny-DESK2.sc.intel.com>
- <20200409165927.GD6741@magnolia>
+        id S1725970AbgDISP2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 Apr 2020 14:15:28 -0400
+Received: from localhost (c-67-169-218-210.hsd1.or.comcast.net [67.169.218.210])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 64F4620753;
+        Thu,  9 Apr 2020 18:15:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1586456127;
+        bh=Vh/nEZmKyunglWKfJLO8V2/jVJZeYUVc1nRZToQfYJM=;
+        h=Date:From:To:Cc:Subject:From;
+        b=JrnwGAzOOtbxisYagljxGCFpNA6x4T9l9xygwGEQbJFCtvdSPlHle0qjfrmp03opp
+         IZDF24W/orZj3Jh5oQKgaNGkwO52y5137qoj+0MdJ2/zP79zhUw2OiVbwYZVhQc81w
+         xQtozQp1PN5BTGs/B4d9iYXqHVe3Vn1ICnl7Pf60=
+Date:   Thu, 9 Apr 2020 11:15:26 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, linux-kernel@vger.kernel.org,
+        sandeen@sandeen.net, hch@lst.de
+Subject: [GIT PULL] xfs: new code for 5.7, part 2
+Message-ID: <20200409181526.GM6742@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200409165927.GD6741@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu 09-04-20 09:59:27, Darrick J. Wong wrote:
-> And today:
-> 
->  1. There exists an in-kernel access mode flag S_DAX that is set when
->     file accesses go directly to persistent memory, bypassing the page
->     cache.  Applications must call statx to discover the current S_DAX
->     state (STATX_ATTR_DAX).
-> 
->  2. There exists an advisory file inode flag FS_XFLAG_DAX that is
->     inherited from the parent directory FS_XFLAG_DAX inode flag at file
->     creation time.  This advisory flag can be set or cleared at any
->     time, but doing so does not immediately affect the S_DAX state.
-> 
->     Unless overridden by mount options (see (3)), if FS_XFLAG_DAX is set
->     and the fs is on pmem then it will enable S_DAX at inode load time;
->     if FS_XFLAG_DAX is not set, it will not enable S_DAX.
-> 
->  3. There exists a dax= mount option.
-> 
->     "-o dax=never"  means "never set S_DAX, ignore FS_XFLAG_DAX."
-> 
->     "-o dax=always" means "always set S_DAX (at least on pmem),
->                     and ignore FS_XFLAG_DAX."
-> 
->     "-o dax"        is an alias for "dax=always".
-> 
->     "-o dax=inode"  means "follow FS_XFLAG_DAX" and is the default.
-> 
->  4. There exists an advisory directory inode flag FS_XFLAG_DAX that can
->     be set or cleared at any time.  The flag state is copied into any
->     files or subdirectories when they are created within that directory.
-> 
->  5. Programs that require a specific file access mode (DAX or not DAX)
->     can do one of the following:
-> 
->     (a) Create files in directories that the FS_XFLAG_DAX flag set as
->         needed; or
-> 
->     (b) Have the administrator set an override via mount option; or
-> 
->     (c) Set or clear the file's FS_XFLAG_DAX flag as needed.  Programs
->         must then cause the kernel to evict the inode from memory.  This
->         can be done by:
-> 
->         i>  Closing the file and re-opening the file and using statx to
->             see if the fs has changed the S_DAX flag; and
-> 
->         ii> If the file still does not have the desired S_DAX access
->             mode, either unmount and remount the filesystem, or close
->             the file and use drop_caches.
-> 
->  6. It's not unreasonable that users who want to squeeze every last bit
->     of performance out of the particular rough and tumble bits of their
->     storage also be exposed to the difficulties of what happens when the
->     operating system can't totally virtualize those hardware
->     capabilities.  Your high performance sports car is not a Toyota
->     minivan, as it were.
-> 
-> Given our overnight discussions, I don't think it'll be difficult to
-> hoist XFS_IDONTCACHE to the VFS so that 5.c.i is enough to change the
-> S_DAX state if nobody else is using the file.
+Hi Linus,
 
-I still find the "S_DAX changes on inode eviction" confusing but I
-guess it's as good as it gets and with XFS_IDONTCACHE lifted to VFS, 
-it seems acceptable so OK from me.
+Please pull this second batch of new changes for 5.7.  As promised last
+week, this batch changes how xfs interacts with memory reclaim; how the
+log batches and throttles log items; how hard writes near ENOSPC will
+try to squeeze more space out of the filesystem; and hopefully fix the
+last of the umount hangs after a catastrophic failure.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+This branch merges cleanly with master as of a few minutes ago, so
+please let me know if anything strange happens.
+
+--D
+
+The following changes since commit 27fb5a72f50aa770dd38b0478c07acacef97e3e7:
+
+  xfs: prohibit fs freezing when using empty transactions (2020-03-26 08:19:24 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.7-merge-12
+
+for you to fetch changes up to 5833112df7e9a306af9af09c60127b92ed723962:
+
+  xfs: reflink should force the log out if mounted with wsync (2020-04-06 08:44:39 -0700)
+
+----------------------------------------------------------------
+(More) new code for 5.7:
+- Validate the realtime geometry in the superblock when mounting
+- Refactor a bunch of tricky flag handling in the log code
+- Flush the CIL more judiciously so that we don't wait until there are
+  millions of log items consuming a lot of memory.
+- Throttle transaction commits to prevent the xfs frontend from flooding
+  the CIL with too many log items.
+- Account metadata buffers correctly for memory reclaim.
+- Mark slabs properly for memory reclaim.  These should help reclaim run
+  more effectively when XFS is using a lot of memory.
+- Don't write a garbage log record at unmount time if we're trying to
+  trigger summary counter recalculation at next mount.
+- Don't block the AIL on locked dquot/inode buffers; instead trigger its
+  backoff mechanism to give the lock holder a chance to finish up.
+- Ratelimit writeback flushing when buffered writes encounter ENOSPC.
+- Other minor cleanups.
+- Make reflink a synchronous operation when the fs is mounted with wsync
+  or sync, which means that now we force the log to disk to record the
+  changes.
+
+----------------------------------------------------------------
+Brian Foster (3):
+      xfs: trylock underlying buffer on dquot flush
+      xfs: return locked status of inode buffer on xfsaild push
+      xfs: fix inode number overflow in ifree cluster helper
+
+Christoph Hellwig (3):
+      xfs: split xlog_ticket_done
+      xfs: factor out a new xfs_log_force_inode helper
+      xfs: reflink should force the log out if mounted with wsync
+
+Darrick J. Wong (3):
+      xfs: validate the realtime geometry in xfs_validate_sb_common
+      xfs: don't write a corrupt unmount record to force summary counter recalc
+      xfs: ratelimit inode flush on buffered write ENOSPC
+
+Dave Chinner (15):
+      xfs: don't try to write a start record into every iclog
+      xfs: re-order initial space accounting checks in xlog_write
+      xfs: refactor and split xfs_log_done()
+      xfs: kill XLOG_TIC_INITED
+      xfs: merge xlog_commit_record with xlog_write_done
+      xfs: refactor unmount record writing
+      xfs: remove some stale comments from the log code
+      xfs: Lower CIL flush limit for large logs
+      xfs: Throttle commits on delayed background CIL push
+      xfs: don't allow log IO to be throttled
+      xfs: Improve metadata buffer reclaim accountability
+      xfs: correctly acount for reclaimable slabs
+      xfs: factor common AIL item deletion code
+      xfs: tail updates only need to occur when LSN changes
+      xfs: factor inode lookup from xfs_ifree_cluster
+
+Kaixu Xia (2):
+      xfs: remove unnecessary ternary from xfs_create
+      xfs: remove redundant variable assignment in xfs_symlink()
+
+ fs/xfs/libxfs/xfs_sb.c  |  32 +++++
+ fs/xfs/xfs_buf.c        |  11 +-
+ fs/xfs/xfs_dquot.c      |   6 +-
+ fs/xfs/xfs_dquot_item.c |   3 +-
+ fs/xfs/xfs_export.c     |  14 +-
+ fs/xfs/xfs_file.c       |  16 +--
+ fs/xfs/xfs_inode.c      | 174 +++++++++++++---------
+ fs/xfs/xfs_inode.h      |   1 +
+ fs/xfs/xfs_inode_item.c |  31 ++--
+ fs/xfs/xfs_log.c        | 372 +++++++++++++++++-------------------------------
+ fs/xfs/xfs_log.h        |   4 -
+ fs/xfs/xfs_log_cil.c    |  55 +++++--
+ fs/xfs/xfs_log_priv.h   |  75 +++++++---
+ fs/xfs/xfs_mount.h      |   1 +
+ fs/xfs/xfs_qm.c         |  14 +-
+ fs/xfs/xfs_super.c      |  17 ++-
+ fs/xfs/xfs_symlink.c    |   1 -
+ fs/xfs/xfs_trace.h      |  15 +-
+ fs/xfs/xfs_trans.c      |  27 ++--
+ fs/xfs/xfs_trans_ail.c  |  88 +++++++-----
+ fs/xfs/xfs_trans_priv.h |   6 +-
+ 21 files changed, 512 insertions(+), 451 deletions(-)
