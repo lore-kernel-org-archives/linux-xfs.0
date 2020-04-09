@@ -2,229 +2,130 @@ Return-Path: <SRS0=CSRb=5Z=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A872C2BA2B
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Apr 2020 00:49:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 208FDC2D0EA
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Apr 2020 04:43:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2F50520857
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Apr 2020 00:49:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E57C220787
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Apr 2020 04:43:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FHukFndt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726539AbgDIAt3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Apr 2020 20:49:29 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:47127 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726536AbgDIAt3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Apr 2020 20:49:29 -0400
-Received: from dread.disaster.area (pa49-180-167-53.pa.nsw.optusnet.com.au [49.180.167.53])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 925BD3A3A5F;
-        Thu,  9 Apr 2020 10:49:24 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jMLNh-00064c-Uo; Thu, 09 Apr 2020 10:49:21 +1000
-Date:   Thu, 9 Apr 2020 10:49:21 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Ira Weiny <ira.weiny@intel.com>
-Cc:     linux-kernel@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        Jeff Moyer <jmoyer@redhat.com>, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH V6 6/8] fs/xfs: Combine xfs_diflags_to_linux() and
- xfs_diflags_to_iflags()
-Message-ID: <20200409004921.GS24067@dread.disaster.area>
-References: <20200407182958.568475-1-ira.weiny@intel.com>
- <20200407182958.568475-7-ira.weiny@intel.com>
- <20200408020827.GI24067@dread.disaster.area>
- <20200408170923.GC569068@iweiny-DESK2.sc.intel.com>
- <20200408210236.GK24067@dread.disaster.area>
- <20200408220734.GA664132@iweiny-DESK2.sc.intel.com>
- <20200408232106.GO24067@dread.disaster.area>
- <20200409001206.GD664132@iweiny-DESK2.sc.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200409001206.GD664132@iweiny-DESK2.sc.intel.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
-        a=2xmR08VVv0jSFCMMkhec0Q==:117 a=2xmR08VVv0jSFCMMkhec0Q==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=cl8xLZFz6L8A:10
-        a=VwQbUJbxAAAA:8 a=QyXUC8HyAAAA:8 a=7-415B0cAAAA:8 a=XzohEP87-a05f5LQuZEA:9
-        a=nMb1Ig4BaMjQqHx8:21 a=cqw_wM9ek9d8jNnC:21 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+        id S1725892AbgDIEne (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Apr 2020 00:43:34 -0400
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:36367 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725881AbgDIEne (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Apr 2020 00:43:34 -0400
+Received: by mail-pf1-f193.google.com with SMTP id n10so3562614pff.3
+        for <linux-xfs@vger.kernel.org>; Wed, 08 Apr 2020 21:43:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=LO+6bCtaEDNVoaJRR/6CaJYxukfhv/dRWIA8Km3QLNk=;
+        b=FHukFndtC1ugTxuOvSm2iyY/4TQmJM9VtCmkxqHrB9IE2qKKBc3u6JmGr1qjhO8gOg
+         fVEIKe8dNCjGKVRpbHYkZgDsHTnuPZHYYKxCAuZr5DN7M3COW9DkAMWIeGjEagFP0ZGq
+         SE+jRNxK4MLCWmuyAQcf8mxbc4ODF38zpahawfE0u4IKKXXVh0dmOXd2uTHrl2lVE6Ir
+         3qjepSLrD3scospz1iCUYTAsGt3k3i8bhM7nlq21AQOnOrUdW6htKmk476KTe2aaZb3K
+         LWChe5aLp8zPPs0xtTRi08/TMZ2fQqKiyU+ArIaaA5kvY3z9Kw/bqQz5w2CvjNsV/D9X
+         /x0g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=LO+6bCtaEDNVoaJRR/6CaJYxukfhv/dRWIA8Km3QLNk=;
+        b=lvTMv6Drxc3YfRSZBVSInmCCqE8CIiyA7GKE4oOCd9+IN6XPNAQ6/xmhOtst2w6uuY
+         XlNS7631vP1w0hK3yBD6GV6ibHwRWts7Jzk3+x9RD+se+h871fLmejTlkuSEImhkBmB5
+         6AhApidx6OjUBeXQ2AKhdpsRXqsCUeN5JOKPYJPic1U00baH4TKmuChJtaqegZPq1rgZ
+         dv5UNvxFHFFQoyBt1QPJoPZ7kuvA6cckOIS3N3noxqCsGTFHRZ/gc7KoP2UuWrK3mvSF
+         i46Qs5lKJ0b6zgDr1Br0mKPma03yWjdhk67nbM6/PMWwD1zf5XL6NZCaKK47+TNASETj
+         0W4g==
+X-Gm-Message-State: AGi0PuZjgs5gEW+bB23CJHf0rmCt9QKQx3kUt75eqt+azIw+vJbQ+fFw
+        sfbp3ub2DTq9S4UxCXp2zIKqs2g=
+X-Google-Smtp-Source: APiQypKacuI/PJ+4CJs7RwvHXYIqTzL9IwziVONoV8zbK4k4PGC9triN4g/ll7//SsgHG2mclhmAlQ==
+X-Received: by 2002:aa7:95ae:: with SMTP id a14mr10647419pfk.164.1586407412738;
+        Wed, 08 Apr 2020 21:43:32 -0700 (PDT)
+Received: from he-cluster.localdomain ([67.216.221.250])
+        by smtp.gmail.com with ESMTPSA id h16sm4496700pfk.38.2020.04.08.21.43.32
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 08 Apr 2020 21:43:32 -0700 (PDT)
+From:   xiakaixu1987@gmail.com
+X-Google-Original-From: kaixuxia@tencent.com
+To:     linux-xfs@vger.kernel.org
+Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
+Subject: [PATCH] xfs: remove unnecessary variable udqp from xfs_ioctl_setattr
+Date:   Thu,  9 Apr 2020 12:43:23 +0800
+Message-Id: <1586407403-32567-1-git-send-email-kaixuxia@tencent.com>
+X-Mailer: git-send-email 1.8.3.1
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 08, 2020 at 05:12:06PM -0700, Ira Weiny wrote:
-> On Thu, Apr 09, 2020 at 09:21:06AM +1000, Dave Chinner wrote:
-> > On Wed, Apr 08, 2020 at 03:07:35PM -0700, Ira Weiny wrote:
-> > > On Thu, Apr 09, 2020 at 07:02:36AM +1000, Dave Chinner wrote:
-> > > > On Wed, Apr 08, 2020 at 10:09:23AM -0700, Ira Weiny wrote:
-> > > 
-> > > [snip]
-> > > 
-> > > > > 
-> > > > > This sounds good but I think we need a slight modification to make the function equivalent in functionality.
-> > > > > 
-> > > > > void
-> > > > > xfs_diflags_to_iflags(
-> > > > >         struct xfs_inode        *ip,
-> > > > >         bool init)
-> > > > > {
-> > > > >         struct inode            *inode = VFS_I(ip);
-> > > > >         unsigned int            xflags = xfs_ip2xflags(ip);
-> > > > >         unsigned int            flags = 0;
-> > > > > 
-> > > > >         inode->i_flags &= ~(S_IMMUTABLE | S_APPEND | S_SYNC | S_NOATIME |
-> > > > >                             S_DAX);
-> > > > 
-> > > > We don't want to clear the dax flag here, ever, if it is already
-> > > > set. That is an externally visible change and opens us up (again) to
-> > > > races where IS_DAX() changes half way through a fault path. IOWs, avoiding
-> > > > clearing the DAX flag was something I did explicitly in the above
-> > > > code fragment.
-> > > 
-> > > <sigh> yes... you are correct.
-> > > 
-> > > But I don't like depending on the caller to clear the S_DAX flag if
-> > > xfs_inode_enable_dax() is false.  IMO this function should clear the flag in
-> > > that case for consistency...
-> > 
-> > No. We simply cannot do that here except in the init case when the
-> > inode is not yet visible to userspace. In which case, we know -for
-> > certain- that the S_DAX is not set, and hence we do not need to
-> > clear it. Initial conditions matter!
-> > 
-> > If you want to make sure of this, add this:
-> > 
-> > 	ASSERT(!(IS_DAX(inode) && init));
-> > 
-> > And now we'll catch inodes that incorrectly have S_DAX set at init
-> > time.
-> 
-> Ok, that will work.  Also documents that expected initial condition.
-> 
-> > 
-> > > > memory S_DAX flag, we can actually clear the on-disk flag
-> > > > safely, so that next time the inode cycles into memory it won't
-> > > > be using DAX. IOWs, admins can stop the applications, clear the
-> > > > DAX flag and drop caches. This should result in the inode being
-> > > > recycled and when the app is restarted it will run without DAX.
-> > > > No ned for deleting files, copying large data sets, etc just to
-> > > > turn off an inode flag.
-> > > 
-> > > We already discussed evicting the inode and it was determined to
-> > > be too confusing.[*]
-> > 
-> > That discussion did not even consider how admins are supposed to
-> > clear the inode flag once it is set on disk.
-> 
-> I think this is a bit unfair.  I think we were all considering it...  and I
-> still think this patch set is a step in the right direction.
-> 
-> > It was entirely
-> > focussed around "we can't change in memory S_DAX state"
-> 
-> Not true.  There were many ideas on how to change the FS_XFLAG_DAX with some
-> sort of delayed S_DAX state to avoid changing S_DAX on an in memory inode.
-> 
-> I made the comment:
-> 
-> 	"... I want to clarify.  ...  we could have the flag change with an
-> 	appropriate error which could let the user know the change has been
-> 	delayed."
-> 
-> 	-- https://lore.kernel.org/lkml/20200402205518.GF3952565@iweiny-DESK2.sc.intel.com/
-> 
-> Jan made multiple comments:
-> 
-> 	"I generally like the proposal but I think the fact that toggling
-> 	FS_XFLAG_DAX will not have immediate effect on S_DAX will cause quite
-> 	some confusion and ultimately bug reports."
-> 
-> 	-- https://lore.kernel.org/lkml/20200401102511.GC19466@quack2.suse.cz/
-> 
-> 
-> 	"Just switch FS_XFLAG_DAX flag, S_DAX flag will magically switch when
-> 	inode gets evicted and the inode gets reloaded from the disk again. Did
-> 	I misunderstand anything?
-> 
-> 	And my thinking was that this is surprising behavior for the user and
-> 	so it will likely generate lots of bug reports along the lines of "DAX
-> 	inode flag does not work!"."
-> 
-> 	-- https://lore.kernel.org/lkml/20200403170338.GD29920@quack2.suse.cz/
-> 
-> Darrick also had similar ideas/comments.
+From: Kaixu Xia <kaixuxia@tencent.com>
 
-None of these consider how the admin is supposed to remove
-the flag once it is set. They all talk about issues that result
-from setting/clearing the flag inside the kernel, and don't consider
-the administration impacts of having an unclearable flag on disk
-that the kernel uses for operational policy decisions.
+The initial value of variable udqp is NULL, and we only set the
+flag XFS_QMOPT_PQUOTA in xfs_qm_vop_dqalloc() function, so only
+the pdqp value is initialized and the udqp value is still NULL.
+Since the udqp value is NULL in the rest part of xfs_ioctl_setattr()
+function, it is meaningless and do nothing. So remove it from
+xfs_ioctl_setattr().
 
-Nobody said "hey, wait, if we don't allow the flag to be cleared
-once the flag is set, how do we actually remove it so the admin can
-stop overriding them globally with the mount option? If the kernel
-can't clear the flag, then what mechanism are we going to provide to
-let them clear it without interrupting production?"
+Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
+---
+ fs/xfs/xfs_ioctl.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-> Christoph did say:
-> 
-> 	"A reasonably smart application can try to evict itself."
-> 
-> 	-- https://lore.kernel.org/lkml/20200403072731.GA24176@lst.de/
-
-I'd love to know how an unprivileged application can force the
-eviction of an inode from cache. If the application cannot evict
-files it is using reliably, then it's no better solution than
-drop_caches. And given that userspace has to take references to
-files to access them, by definition a file that userspace is trying
-to evict will have active references and hence cannot be evicted.
-
-However, if userspace can reliably evict inodes that it can access,
-then we have a timing attack vector that we need to address.  i.e.
-by now everyone here should know that user controlled cache eviction
-is the basic requirement for creating most OS and CPU level timing
-attacks....
-
-> > and how the
-> > tri-state mount option to "override" the on-disk flag could be done.
-> > 
-> > Nobody noticed that being unable to rmeove the on-disk flag means
-> > the admin's only option to turn off dax for an application is to
-> > turn it off for everything, filesystem wide, which requires:
-> 
-> No. This is not entirely true.  While I don't like the idea of having to copy
-> data (and I agree with your points) it is possible to do.
-> 
-> > 
-> > 	1. stopping the app.
-> > 	2. stopping every other app using the filesystem
-> > 	3. unmounting the filesystem
-> > 	4. changing to dax=never mount option
-> 
-> I don't understand why we need to unmount and mount with dax=never?
-
-1. IIUC your patches correctly, that's exactly how you implemented
-the dax=... mount option.
-
-2. If you don't unmount the filesystem and only require a remount,
-then changing the mount option has all the same "delayed effect"
-issues that changing the on-disk flag has. i.e. We can't change the
-in-memory inode state until the inode has been evicted from cache
-and a remount doesn't guarantee that cache eviction will succeed.
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index cdfb3cd..8ff91ab2 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1513,7 +1513,6 @@ struct dentry *
+ 	struct fsxattr		old_fa;
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_trans	*tp;
+-	struct xfs_dquot	*udqp = NULL;
+ 	struct xfs_dquot	*pdqp = NULL;
+ 	struct xfs_dquot	*olddquot = NULL;
+ 	int			code;
+@@ -1536,7 +1535,7 @@ struct dentry *
+ 	if (XFS_IS_QUOTA_ON(mp)) {
+ 		code = xfs_qm_vop_dqalloc(ip, VFS_I(ip)->i_uid,
+ 				VFS_I(ip)->i_gid, fa->fsx_projid,
+-				XFS_QMOPT_PQUOTA, &udqp, NULL, &pdqp);
++				XFS_QMOPT_PQUOTA, NULL, NULL, &pdqp);
+ 		if (code)
+ 			return code;
+ 	}
+@@ -1560,7 +1559,7 @@ struct dentry *
+ 
+ 	if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_PQUOTA_ON(mp) &&
+ 	    ip->i_d.di_projid != fa->fsx_projid) {
+-		code = xfs_qm_vop_chown_reserve(tp, ip, udqp, NULL, pdqp,
++		code = xfs_qm_vop_chown_reserve(tp, ip, NULL, NULL, pdqp,
+ 				capable(CAP_FOWNER) ?  XFS_QMOPT_FORCE_RES : 0);
+ 		if (code)	/* out of quota */
+ 			goto error_trans_cancel;
+@@ -1626,7 +1625,6 @@ struct dentry *
+ 	 * Release any dquot(s) the inode had kept before chown.
+ 	 */
+ 	xfs_qm_dqrele(olddquot);
+-	xfs_qm_dqrele(udqp);
+ 	xfs_qm_dqrele(pdqp);
+ 
+ 	return code;
+@@ -1634,7 +1632,6 @@ struct dentry *
+ error_trans_cancel:
+ 	xfs_trans_cancel(tp);
+ error_free_dquots:
+-	xfs_qm_dqrele(udqp);
+ 	xfs_qm_dqrele(pdqp);
+ 	return code;
+ }
 -- 
-Dave Chinner
-david@fromorbit.com
+1.8.3.1
+
