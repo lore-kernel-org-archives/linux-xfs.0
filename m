@@ -6,66 +6,68 @@ X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 459CAC2BB54
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Apr 2020 07:41:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F848C2D0EA
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Apr 2020 07:41:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0C7A520769
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Apr 2020 07:41:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2C051206F7
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Apr 2020 07:41:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="PYIz0OYR"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jxuSASxd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726534AbgDIHlA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Apr 2020 03:41:00 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:51584 "EHLO
+        id S1725997AbgDIHli (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Apr 2020 03:41:38 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:51618 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725997AbgDIHlA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Apr 2020 03:41:00 -0400
+        with ESMTP id S1725783AbgDIHlh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Apr 2020 03:41:37 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=8EYTxCZM4fYVaCIaZqPSTP+6v/NL7nVFlepypkokg3s=; b=PYIz0OYRPF5tRGO571woedCq/9
-        G2xHxBqVdV+sMrrJJDpcqxdIuz/OIE/mbIMR7WFv2CVOQaCbIcgjhiC3NAQTqa62O+TiNzQcyj9LB
-        bLyMkOuX7ZvAbWGwMwAjreIKRSoMVB2oNCmBzK+seIkugYNK15Y7WCRRNOp8X+2+GsN0hcV6fHGqg
-        x3KkW37+hwNBu22T2+qBx55V5VqdwVR5VqxpxcdtonqIUiGkDfK+D2m/Aff9jyQqnMVvOyK6No1Kr
-        Sq9Xwpx84/49fYx194VR20/rKt/NRJoAPIqs+qJXWwSca3gyEUqdWlz5LcWiMVid3g32U8Hi9+zWE
-        M9Wmbgug==;
+        bh=HQTrm8Cg6ZyNBaNg67z3WCva6OQV2GyVWDVByZgNhec=; b=jxuSASxdQkPR0cfe+Z9m5n4bcL
+        9kDPmdxWiZbbw/cVyo6M/K86hHd20YCe9QL+A+YcVwhWS09wVP3APE+EiqsTJPeyhu7QMPSPaWc6H
+        BaxY3rUXIFeliCpcKqQtl3jBU7QBuScCZBPkbZ7laa64/fbf63jvSNn8JTQ9vnPMkHmkGZM2835NY
+        YFUPZBeVSxPdSHAhGxjveRHoB8hHHfkb3P6+C5V0328XgfYa1SMTCwGtxaAOJIGrqd2UUvgn5EAF2
+        cp6mjRuxD+QVqVDfbEYBIMJ/JwYPOl7eBNXdf556ULEzBVocWONqBy4APsrps7phSup/mXKOhwb5/
+        MLpjj50Q==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jMRnY-0008A3-QO; Thu, 09 Apr 2020 07:40:28 +0000
-Date:   Thu, 9 Apr 2020 00:40:28 -0700
+        id 1jMRoY-0008EE-2J; Thu, 09 Apr 2020 07:41:30 +0000
+Date:   Thu, 9 Apr 2020 00:41:30 -0700
 From:   Christoph Hellwig <hch@infradead.org>
-To:     Chandan Rajendra <chandan@linux.ibm.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, Eryu Guan <guaneryu@gmail.com>,
-        Chandan Rajendra <chandanrlinux@gmail.com>,
-        fstests@vger.kernel.org, hch@infradead.org
-Subject: Re: xfs_check vs. xfs_repair vs. the world^W^Wfstests
-Message-ID: <20200409074028.GB21033@infradead.org>
-References: <20200408030031.GB6740@magnolia>
- <2574725.68tNun6CyS@localhost.localdomain>
+To:     Arnd Bergmann <arnd@arndb.de>
+Cc:     Josh Poimboeuf <jpoimboe@redhat.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: libelf-0.175 breaks objtool
+Message-ID: <20200409074130.GD21033@infradead.org>
+References: <20190205133821.1a243836@gandalf.local.home>
+ <20190206021611.2nsqomt6a7wuaket@treble>
+ <20190206121638.3d2230c1@gandalf.local.home>
+ <CAK8P3a1hsca02=jPQmBG68RTUAt-jDR-qo=UFwf13nZ0k-nDgA@mail.gmail.com>
+ <20200406221614.ac2kl3vlagiaj5jf@treble>
+ <CAK8P3a3QntCOJUeUfNmqogO51yh29i4NQCu=NBF4H1+h_m_Pug@mail.gmail.com>
+ <CAK8P3a2Bvebrvj7XGBtCwV969g0WhmGr_xFNfSRsZ7WX1J308g@mail.gmail.com>
+ <20200407163253.mji2z465ixaotnkh@treble>
+ <CAK8P3a3piAV7BbgH-y_zqj4XmLcBQqKZ-NHPcqo4OTF=4H3UFA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <2574725.68tNun6CyS@localhost.localdomain>
+In-Reply-To: <CAK8P3a3piAV7BbgH-y_zqj4XmLcBQqKZ-NHPcqo4OTF=4H3UFA@mail.gmail.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 08, 2020 at 10:23:21AM +0530, Chandan Rajendra wrote:
-> > Not sure what to do about quota in repair -- we could build in the
-> > ability to do quota counts since we scan the whole inode table and
-> > directory tree anyway.  From there it's not so hard to rebuild the quota
-> > inodes too.
-> >
+On Tue, Apr 07, 2020 at 08:44:11PM +0200, Arnd Bergmann wrote:
+> That is very possible. The -g has been there since xfs was originally merged
+> back in 2002, and I could not figure out why it was there (unlike the
+> -DSTATIC=""
+> and -DDEBUG flags that are set in the same line).
 > 
-> I will take up this work and get it completed.
-> 
-> Since I have other higher priority tasks at work place, I will have this as my
-> secondary focus. Meanwhile, until it gets done, can we disable running these
-> tests on block size > 4k i.e. https://patchwork.kernel.org/patch/11454399/.
+> On the other hand, my feeling is that setting -g should not cause problems
+> with objtool, if CONFIG_DEBUG_INFO is ok.
 
-I still think even with the above outstanding issues we should not
-run check by default.  We can still opt into it, but check extends
-the run time of xfstests for not very good reasons.
+I suspect we shouldn't force -g ourselves in xfs.  Care to send a patch?
