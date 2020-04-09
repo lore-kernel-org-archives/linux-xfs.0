@@ -1,100 +1,144 @@
-Return-Path: <SRS0=ttQi=5Y=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=CSRb=5Z=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3E74C2BA2B
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Apr 2020 23:58:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A7E9C2BA2B
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Apr 2020 00:05:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D659F208E4
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Apr 2020 23:58:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 51B902084D
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Apr 2020 00:05:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="FBqFlCZU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726584AbgDHX6k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Apr 2020 19:58:40 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:59055 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726582AbgDHX6k (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Apr 2020 19:58:40 -0400
-Received: from dread.disaster.area (pa49-180-167-53.pa.nsw.optusnet.com.au [49.180.167.53])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id D79627EC8C5;
-        Thu,  9 Apr 2020 09:58:37 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jMKaa-0005sK-6b; Thu, 09 Apr 2020 09:58:36 +1000
-Date:   Thu, 9 Apr 2020 09:58:36 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     Ira Weiny <ira.weiny@intel.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        Jeff Moyer <jmoyer@redhat.com>,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: Re: [PATCH V6 6/8] fs/xfs: Combine xfs_diflags_to_linux() and
- xfs_diflags_to_iflags()
-Message-ID: <20200408235836.GQ24067@dread.disaster.area>
-References: <20200407182958.568475-1-ira.weiny@intel.com>
- <20200407182958.568475-7-ira.weiny@intel.com>
- <20200408020827.GI24067@dread.disaster.area>
- <20200408170923.GC569068@iweiny-DESK2.sc.intel.com>
- <20200408210236.GK24067@dread.disaster.area>
- <CAPcyv4gLvMSA9BypvWbYtv3xsK8o4+db3kvxBozUGAjr_sDDFQ@mail.gmail.com>
+        id S1726527AbgDIAF2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Apr 2020 20:05:28 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:42238 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726508AbgDIAF2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Apr 2020 20:05:28 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03903t06031453;
+        Thu, 9 Apr 2020 00:05:25 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=KCDI7Op2L1rW8SlRhgb0eW6WaDhGAZ9Z3LJ/olV1/y0=;
+ b=FBqFlCZUMQ5u4VgndXvpdDJfQrqKtm6A7yXpnM86sXMDfHx4uKtfKMQ76fo5amKWC2Ld
+ WhcwFUBOkNc5VLrSA29DMyj7cBZyiV16HbgcgUp3RsBXhUCk4DMygJOY8zOntUv5nhF8
+ aspBDVS6YpuoI7Fz/EpF3mLn+QtuRl+fWNhjRaqCmyvVkBFP+VFzF25Dy73lzXhQJtSj
+ ErNJxtpzh/K2Fq23gco5YVgT2wPPnsaa3ThC2mcVHBQN7tW40rQo/olYXd5lkOznNqBn
+ mJJ8DvUHKhcmcyhifp4KYTjGcsUwsOcpQdYEXtvaaTAqqq2tz/H0eLslSzmQp1kz2Ns2 5Q== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 3091m0xgs8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 09 Apr 2020 00:05:25 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03903aYJ045744;
+        Thu, 9 Apr 2020 00:05:25 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 3091m5rr55-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 09 Apr 2020 00:05:25 +0000
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03905O8F024131;
+        Thu, 9 Apr 2020 00:05:24 GMT
+Received: from [192.168.1.223] (/67.1.1.216)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 08 Apr 2020 17:05:24 -0700
+Subject: Re: [RFC v6 PATCH 07/10] xfs: prevent fs freeze with outstanding
+ relog items
+To:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+References: <20200406123632.20873-1-bfoster@redhat.com>
+ <20200406123632.20873-8-bfoster@redhat.com>
+From:   Allison Collins <allison.henderson@oracle.com>
+Message-ID: <2ba21e94-b92d-51a3-6fa6-67cc0b8d57e2@oracle.com>
+Date:   Wed, 8 Apr 2020 17:05:23 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4gLvMSA9BypvWbYtv3xsK8o4+db3kvxBozUGAjr_sDDFQ@mail.gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
-        a=2xmR08VVv0jSFCMMkhec0Q==:117 a=2xmR08VVv0jSFCMMkhec0Q==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=cl8xLZFz6L8A:10
-        a=7-415B0cAAAA:8 a=g6yMfty2fWIsApY3Z_YA:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20200406123632.20873-8-bfoster@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9585 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0 mlxscore=0
+ malwarescore=0 spamscore=0 adultscore=0 suspectscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2004080169
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9585 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999 mlxscore=0
+ priorityscore=1501 phishscore=0 suspectscore=0 bulkscore=0
+ lowpriorityscore=0 impostorscore=0 malwarescore=0 clxscore=1015
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004080169
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 08, 2020 at 02:28:30PM -0700, Dan Williams wrote:
-> On Wed, Apr 8, 2020 at 2:02 PM Dave Chinner <david@fromorbit.com> wrote:
-> > THis leads to an obvious conclusion: if we never clear the in memory
-> > S_DAX flag, we can actually clear the on-disk flag safely, so that
-> > next time the inode cycles into memory it won't be using DAX. IOWs,
-> > admins can stop the applications, clear the DAX flag and drop
-> > caches. This should result in the inode being recycled and when the
-> > app is restarted it will run without DAX. No ned for deleting files,
-> > copying large data sets, etc just to turn off an inode flag.
+
+
+On 4/6/20 5:36 AM, Brian Foster wrote:
+> The automatic relog mechanism is currently incompatible with
+> filesystem freeze in a generic sense. Freeze protection is currently
+> implemented via locks that cannot be held on return to userspace,
+> which means we can't hold a superblock write reference for the
+> duration relogging is enabled on an item. It's too late to block
+> when the freeze sequence calls into the filesystem because the
+> transaction subsystem has already begun to be frozen. Not only can
+> this block the relog transaction, but blocking any unrelated
+> transaction essentially prevents a particular operation from
+> progressing to the point where it can disable relogging on an item.
+> Therefore marking the relog transaction as "nowrite" does not solve
+> the problem.
 > 
-> Makes sense, but is that sufficient? I recall you saying there might
-> be a multitude of other reasons that the inode is not evicted, not the
-> least of which is races [1]. Does this need another flag, lets call it
-> "dax toggle" to track the "I requested the inode to clear the flag,
-> but on cache-flush + restart the inode never got evicted" case.
+> This is not a problem in practice because the two primary use cases
+> already exclude freeze via other means. quotaoff holds ->s_umount
+> read locked across the operation and scrub explicitly takes a
+> superblock write reference, both of which block freeze of the
+> transaction subsystem for the duration of relog enabled items.
+> 
+> As a fallback for future use cases and the upcoming random buffer
+> relogging test code, fail fs freeze attempts when the global relog
+> reservation counter is elevated to prevent deadlock. This is a
+> partial punt of the problem as compared to teaching freeze to wait
+> on relogged items because the only current dependency is test code.
+> In other words, this patch prevents deadlock if a user happens to
+> issue a freeze in conjunction with random buffer relog injection.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+Ok, long explanation, but makes sense :-)
 
-You mean something like XFS_IDONTCACHE?
-
-i.e. the functionality already exists in XFS to selectively evict an
-inode from cache when the last reference to it is dropped rather
-than let it go to the LRUs and hang around in memory.
-
-That flag can be set when changing the on disk DAX flag, and we can
-tweak how it works so new cache hits don't clear it (as happens
-now). Hence the only thing that can prevent eviction are active
-references.
-
-That means we'll still need to stop the application and drop_caches,
-because we need to close all the files and purge the dentries that
-hold references to the inode before it can be evicted.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+> ---
+>   fs/xfs/xfs_super.c | 4 ++++
+>   1 file changed, 4 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index abf06bf9c3f3..0efa9dc70d71 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -35,6 +35,7 @@
+>   #include "xfs_refcount_item.h"
+>   #include "xfs_bmap_item.h"
+>   #include "xfs_reflink.h"
+> +#include "xfs_trans_priv.h"
+>   
+>   #include <linux/magic.h>
+>   #include <linux/fs_context.h>
+> @@ -870,6 +871,9 @@ xfs_fs_freeze(
+>   {
+>   	struct xfs_mount	*mp = XFS_M(sb);
+>   
+> +	if (WARN_ON_ONCE(atomic64_read(&mp->m_ail->ail_relog_res)))
+> +		return -EAGAIN;
+> +
+>   	xfs_stop_block_reaping(mp);
+>   	xfs_save_resvblks(mp);
+>   	xfs_quiesce_attr(mp);
+> 
