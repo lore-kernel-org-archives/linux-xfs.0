@@ -2,162 +2,167 @@ Return-Path: <SRS0=CSRb=5Z=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A032DC2BA19
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Apr 2020 18:15:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60D8DC2BA19
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Apr 2020 18:19:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 773A420757
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Apr 2020 18:15:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586456129;
-	bh=Vh/nEZmKyunglWKfJLO8V2/jVJZeYUVc1nRZToQfYJM=;
-	h=Date:From:To:Cc:Subject:List-ID:From;
-	b=n9GzkKPjuvrn1MijD4o92kuNhvZ7+mgMphzbgLhwMUBKlqpR8RCp8278h82Af7ITb
-	 cbZV7vzxP/J6veHMvJh4j3bzyCDf3MpUN7K7h5geMGzWFlERIAUNWQ4OcRr9p8V3YL
-	 F1lxxyzT0w0JNGZE21LRbvci+0dv1wsOOThYk++Y=
+	by mail.kernel.org (Postfix) with ESMTP id 2B62A20753
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Apr 2020 18:19:32 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="TZejn6WG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726470AbgDISP2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Apr 2020 14:15:28 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33684 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725970AbgDISP2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 9 Apr 2020 14:15:28 -0400
-Received: from localhost (c-67-169-218-210.hsd1.or.comcast.net [67.169.218.210])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 64F4620753;
-        Thu,  9 Apr 2020 18:15:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586456127;
-        bh=Vh/nEZmKyunglWKfJLO8V2/jVJZeYUVc1nRZToQfYJM=;
-        h=Date:From:To:Cc:Subject:From;
-        b=JrnwGAzOOtbxisYagljxGCFpNA6x4T9l9xygwGEQbJFCtvdSPlHle0qjfrmp03opp
-         IZDF24W/orZj3Jh5oQKgaNGkwO52y5137qoj+0MdJ2/zP79zhUw2OiVbwYZVhQc81w
-         xQtozQp1PN5BTGs/B4d9iYXqHVe3Vn1ICnl7Pf60=
-Date:   Thu, 9 Apr 2020 11:15:26 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, linux-kernel@vger.kernel.org,
-        sandeen@sandeen.net, hch@lst.de
-Subject: [GIT PULL] xfs: new code for 5.7, part 2
-Message-ID: <20200409181526.GM6742@magnolia>
+        id S1725987AbgDISTa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Apr 2020 14:19:30 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:42628 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725970AbgDISTa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Apr 2020 14:19:30 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 039IJ3MY068882;
+        Thu, 9 Apr 2020 18:19:24 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=pblGzCM8OAkDx+MyQ1rOj02k2PGXWZsPfccya5kKgYY=;
+ b=TZejn6WGpusnz03icUNjud6WR5Ykn7fMCrZyo5pGZAxrGqrPyQIkyEpNtcT+WYF6DHdh
+ BxlWtAByZIRkA/X14IvU6ythGUBFUHadz/RjBhshscZMRzuNNFRWbUSjq8ycusARhMbE
+ yMSMlDSR1QfYaVgqwXcHnED0Kpq0vkUMu1Ukmg3DoRs3q2nqpMU3hPSeqGikQCzUTAWz
+ CIe3G33U+uUYo/EiQVJmffzVF8Ws5o7Tyyfsr4Mab1nBUSJHTaYhonTX4AmqUmhuT6nr
+ Q70ZMK6j0pdBO6GuWZDNTikUWi7LROERD48Uz7NZLYiEvQXpreE+1QeJQfl/Q0pCjvpa YA== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 309gw4f03p-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 09 Apr 2020 18:19:24 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 039IHdY6182221;
+        Thu, 9 Apr 2020 18:19:23 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 3091m90pm0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 09 Apr 2020 18:19:23 +0000
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 039IJMIN021251;
+        Thu, 9 Apr 2020 18:19:22 GMT
+Received: from [192.168.1.223] (/67.1.142.158)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 09 Apr 2020 11:19:22 -0700
+Subject: Re: [PATCH] xfs: acquire superblock freeze protection on eofblocks
+ scans
+To:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+References: <20200408122119.33869-1-bfoster@redhat.com>
+From:   Allison Collins <allison.henderson@oracle.com>
+Message-ID: <bf922cf4-5745-cc8d-886b-183c151424ce@oracle.com>
+Date:   Thu, 9 Apr 2020 11:19:21 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <20200408122119.33869-1-bfoster@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9586 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0 mlxscore=0
+ malwarescore=0 spamscore=0 adultscore=0 suspectscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2004090133
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9586 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 bulkscore=0
+ phishscore=0 lowpriorityscore=0 impostorscore=0 clxscore=1015
+ suspectscore=0 malwarescore=0 spamscore=0 mlxlogscore=999 mlxscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004090133
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
 
-Please pull this second batch of new changes for 5.7.  As promised last
-week, this batch changes how xfs interacts with memory reclaim; how the
-log batches and throttles log items; how hard writes near ENOSPC will
-try to squeeze more space out of the filesystem; and hopefully fix the
-last of the umount hangs after a catastrophic failure.
 
-This branch merges cleanly with master as of a few minutes ago, so
-please let me know if anything strange happens.
+On 4/8/20 5:21 AM, Brian Foster wrote:
+> The filesystem freeze sequence in XFS waits on any background
+> eofblocks or cowblocks scans to complete before the filesystem is
+> quiesced. At this point, the freezer has already stopped the
+> transaction subsystem, however, which means a truncate or cowblock
+> cancellation in progress is likely blocked in transaction
+> allocation. This results in a deadlock between freeze and the
+> associated scanner.
+> 
+> Fix this problem by holding superblock write protection across calls
+> into the block reapers. Since protection for background scans is
+> acquired from the workqueue task context, trylock to avoid a similar
+> deadlock between freeze and blocking on the write lock.
+> 
+> Fixes: d6b636ebb1c9f ("xfs: halt auto-reclamation activities while rebuilding rmap")
+> Reported-by: Paul Furtado <paulfurtado91@gmail.com>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+OK, looks good:
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
 
---D
-
-The following changes since commit 27fb5a72f50aa770dd38b0478c07acacef97e3e7:
-
-  xfs: prohibit fs freezing when using empty transactions (2020-03-26 08:19:24 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.7-merge-12
-
-for you to fetch changes up to 5833112df7e9a306af9af09c60127b92ed723962:
-
-  xfs: reflink should force the log out if mounted with wsync (2020-04-06 08:44:39 -0700)
-
-----------------------------------------------------------------
-(More) new code for 5.7:
-- Validate the realtime geometry in the superblock when mounting
-- Refactor a bunch of tricky flag handling in the log code
-- Flush the CIL more judiciously so that we don't wait until there are
-  millions of log items consuming a lot of memory.
-- Throttle transaction commits to prevent the xfs frontend from flooding
-  the CIL with too many log items.
-- Account metadata buffers correctly for memory reclaim.
-- Mark slabs properly for memory reclaim.  These should help reclaim run
-  more effectively when XFS is using a lot of memory.
-- Don't write a garbage log record at unmount time if we're trying to
-  trigger summary counter recalculation at next mount.
-- Don't block the AIL on locked dquot/inode buffers; instead trigger its
-  backoff mechanism to give the lock holder a chance to finish up.
-- Ratelimit writeback flushing when buffered writes encounter ENOSPC.
-- Other minor cleanups.
-- Make reflink a synchronous operation when the fs is mounted with wsync
-  or sync, which means that now we force the log to disk to record the
-  changes.
-
-----------------------------------------------------------------
-Brian Foster (3):
-      xfs: trylock underlying buffer on dquot flush
-      xfs: return locked status of inode buffer on xfsaild push
-      xfs: fix inode number overflow in ifree cluster helper
-
-Christoph Hellwig (3):
-      xfs: split xlog_ticket_done
-      xfs: factor out a new xfs_log_force_inode helper
-      xfs: reflink should force the log out if mounted with wsync
-
-Darrick J. Wong (3):
-      xfs: validate the realtime geometry in xfs_validate_sb_common
-      xfs: don't write a corrupt unmount record to force summary counter recalc
-      xfs: ratelimit inode flush on buffered write ENOSPC
-
-Dave Chinner (15):
-      xfs: don't try to write a start record into every iclog
-      xfs: re-order initial space accounting checks in xlog_write
-      xfs: refactor and split xfs_log_done()
-      xfs: kill XLOG_TIC_INITED
-      xfs: merge xlog_commit_record with xlog_write_done
-      xfs: refactor unmount record writing
-      xfs: remove some stale comments from the log code
-      xfs: Lower CIL flush limit for large logs
-      xfs: Throttle commits on delayed background CIL push
-      xfs: don't allow log IO to be throttled
-      xfs: Improve metadata buffer reclaim accountability
-      xfs: correctly acount for reclaimable slabs
-      xfs: factor common AIL item deletion code
-      xfs: tail updates only need to occur when LSN changes
-      xfs: factor inode lookup from xfs_ifree_cluster
-
-Kaixu Xia (2):
-      xfs: remove unnecessary ternary from xfs_create
-      xfs: remove redundant variable assignment in xfs_symlink()
-
- fs/xfs/libxfs/xfs_sb.c  |  32 +++++
- fs/xfs/xfs_buf.c        |  11 +-
- fs/xfs/xfs_dquot.c      |   6 +-
- fs/xfs/xfs_dquot_item.c |   3 +-
- fs/xfs/xfs_export.c     |  14 +-
- fs/xfs/xfs_file.c       |  16 +--
- fs/xfs/xfs_inode.c      | 174 +++++++++++++---------
- fs/xfs/xfs_inode.h      |   1 +
- fs/xfs/xfs_inode_item.c |  31 ++--
- fs/xfs/xfs_log.c        | 372 +++++++++++++++++-------------------------------
- fs/xfs/xfs_log.h        |   4 -
- fs/xfs/xfs_log_cil.c    |  55 +++++--
- fs/xfs/xfs_log_priv.h   |  75 +++++++---
- fs/xfs/xfs_mount.h      |   1 +
- fs/xfs/xfs_qm.c         |  14 +-
- fs/xfs/xfs_super.c      |  17 ++-
- fs/xfs/xfs_symlink.c    |   1 -
- fs/xfs/xfs_trace.h      |  15 +-
- fs/xfs/xfs_trans.c      |  27 ++--
- fs/xfs/xfs_trans_ail.c  |  88 +++++++-----
- fs/xfs/xfs_trans_priv.h |   6 +-
- 21 files changed, 512 insertions(+), 451 deletions(-)
+> ---
+> 
+> Note that this has the opposite tradeoff as the approach I originally
+> posited [1], specifically that the eofblocks ioctl() now always blocks
+> on a frozen fs rather than return -EAGAIN. It's worth pointing out that
+> the eofb control structure has a sync flag (that is not used for
+> background scans), so yet another approach could be to tie the trylock
+> to that.
+> 
+> Brian
+> 
+> [1] https://urldefense.com/v3/__https://lore.kernel.org/linux-xfs/20200407163739.GG28936@bfoster/__;!!GqivPVa7Brio!NNOb1nQFma-Q2kltH-cEBh_IdUSxLRairJB0HGGs9YaY9qh9sdcPm4SUCnMXoxe1mkGk$
+> 
+>   fs/xfs/xfs_icache.c | 10 ++++++++++
+>   fs/xfs/xfs_ioctl.c  |  5 ++++-
+>   2 files changed, 14 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index a7be7a9e5c1a..8bf1d15be3f6 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -911,7 +911,12 @@ xfs_eofblocks_worker(
+>   {
+>   	struct xfs_mount *mp = container_of(to_delayed_work(work),
+>   				struct xfs_mount, m_eofblocks_work);
+> +
+> +	if (!sb_start_write_trylock(mp->m_super))
+> +		return;
+>   	xfs_icache_free_eofblocks(mp, NULL);
+> +	sb_end_write(mp->m_super);
+> +
+>   	xfs_queue_eofblocks(mp);
+>   }
+>   
+> @@ -938,7 +943,12 @@ xfs_cowblocks_worker(
+>   {
+>   	struct xfs_mount *mp = container_of(to_delayed_work(work),
+>   				struct xfs_mount, m_cowblocks_work);
+> +
+> +	if (!sb_start_write_trylock(mp->m_super))
+> +		return;
+>   	xfs_icache_free_cowblocks(mp, NULL);
+> +	sb_end_write(mp->m_super);
+> +
+>   	xfs_queue_cowblocks(mp);
+>   }
+>   
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index cdfb3cd9a25b..309958186d33 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -2363,7 +2363,10 @@ xfs_file_ioctl(
+>   		if (error)
+>   			return error;
+>   
+> -		return xfs_icache_free_eofblocks(mp, &keofb);
+> +		sb_start_write(mp->m_super);
+> +		error = xfs_icache_free_eofblocks(mp, &keofb);
+> +		sb_end_write(mp->m_super);
+> +		return error;
+>   	}
+>   
+>   	default:
+> 
