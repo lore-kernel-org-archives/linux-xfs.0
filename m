@@ -1,4 +1,4 @@
-Return-Path: <SRS0=CSRb=5Z=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=tPAf=52=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
@@ -6,134 +6,85 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C6DBC2BA19
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Apr 2020 20:54:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5444AC2BA19
+	for <linux-xfs@archiver.kernel.org>; Fri, 10 Apr 2020 00:27:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F06BA20730
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Apr 2020 20:54:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33A4D20A8B
+	for <linux-xfs@archiver.kernel.org>; Fri, 10 Apr 2020 00:27:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727070AbgDIUyw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Apr 2020 16:54:52 -0400
-Received: from mga02.intel.com ([134.134.136.20]:50906 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727035AbgDIUyw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 9 Apr 2020 16:54:52 -0400
-IronPort-SDR: +yTMvB5HLnWNAuPol3OcjXZpyIgphh/Vw66LILsaOp7inwF0W4JA9Akgw8cks82Sd3tnmTftb4
- T3Obrr0e82Jw==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Apr 2020 13:54:51 -0700
-IronPort-SDR: 8iz+ZbkWeR4tFmHL9Uxkk6dATcbBtgYmZ174jmuLk6GVWnSJx13NwbSQ/tD2XZ4EWD2ZvPk2Sd
- 8uYkzMn9aDXQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.72,364,1580803200"; 
-   d="scan'208";a="425654165"
-Received: from iweiny-desk2.sc.intel.com ([10.3.52.147])
-  by orsmga005.jf.intel.com with ESMTP; 09 Apr 2020 13:54:51 -0700
-Date:   Thu, 9 Apr 2020 13:54:51 -0700
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org,
+        id S1726980AbgDJA1n (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Apr 2020 20:27:43 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:54089 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726867AbgDJA1n (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Apr 2020 20:27:43 -0400
+Received: from dread.disaster.area (pa49-180-167-53.pa.nsw.optusnet.com.au [49.180.167.53])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 4E4F63A2DB2;
+        Fri, 10 Apr 2020 10:27:39 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jMhWD-00061P-Vl; Fri, 10 Apr 2020 10:27:37 +1000
+Date:   Fri, 10 Apr 2020 10:27:37 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Ira Weiny <ira.weiny@intel.com>, linux-kernel@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
         Dan Williams <dan.j.williams@intel.com>,
-        Christoph Hellwig <hch@lst.de>,
         "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
         Jeff Moyer <jmoyer@redhat.com>, linux-ext4@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 Subject: Re: [PATCH V6 6/8] fs/xfs: Combine xfs_diflags_to_linux() and
  xfs_diflags_to_iflags()
-Message-ID: <20200409205451.GC801897@iweiny-DESK2.sc.intel.com>
-References: <20200407182958.568475-7-ira.weiny@intel.com>
+Message-ID: <20200410002737.GT24067@dread.disaster.area>
+References: <20200407182958.568475-1-ira.weiny@intel.com>
+ <20200407182958.568475-7-ira.weiny@intel.com>
  <20200408020827.GI24067@dread.disaster.area>
  <20200408170923.GC569068@iweiny-DESK2.sc.intel.com>
  <20200408210236.GK24067@dread.disaster.area>
  <20200408220734.GA664132@iweiny-DESK2.sc.intel.com>
  <20200408232106.GO24067@dread.disaster.area>
  <20200409001206.GD664132@iweiny-DESK2.sc.intel.com>
- <20200409003021.GJ6742@magnolia>
- <20200409152944.GA801705@iweiny-DESK2.sc.intel.com>
- <20200409165927.GD6741@magnolia>
+ <20200409004921.GS24067@dread.disaster.area>
+ <20200409124031.GA18171@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200409165927.GD6741@magnolia>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+In-Reply-To: <20200409124031.GA18171@lst.de>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
+        a=2xmR08VVv0jSFCMMkhec0Q==:117 a=2xmR08VVv0jSFCMMkhec0Q==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=cl8xLZFz6L8A:10
+        a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8 a=QVMKFbu1P_vDNoMgm84A:9
+        a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 09, 2020 at 09:59:27AM -0700, Darrick J. Wong wrote:
+On Thu, Apr 09, 2020 at 02:40:31PM +0200, Christoph Hellwig wrote:
+> On Thu, Apr 09, 2020 at 10:49:21AM +1000, Dave Chinner wrote:
+> > > Christoph did say:
+> > > 
+> > > 	"A reasonably smart application can try to evict itself."
+> > > 
+> > > 	-- https://lore.kernel.org/lkml/20200403072731.GA24176@lst.de/
+> > 
+> > I'd love to know how an unprivileged application can force the
+> > eviction of an inode from cache.
+> 
+> Where did the "unprivileged" suddenly come from?
 
-[snip]
- 
-> And today:
-> 
->  1. There exists an in-kernel access mode flag S_DAX that is set when
->     file accesses go directly to persistent memory, bypassing the page
->     cache.  Applications must call statx to discover the current S_DAX
->     state (STATX_ATTR_DAX).
-> 
->  2. There exists an advisory file inode flag FS_XFLAG_DAX that is
->     inherited from the parent directory FS_XFLAG_DAX inode flag at file
->     creation time.  This advisory flag can be set or cleared at any
->     time, but doing so does not immediately affect the S_DAX state.
-> 
->     Unless overridden by mount options (see (3)), if FS_XFLAG_DAX is set
->     and the fs is on pmem then it will enable S_DAX at inode load time;
->     if FS_XFLAG_DAX is not set, it will not enable S_DAX.
-> 
->  3. There exists a dax= mount option.
-> 
->     "-o dax=never"  means "never set S_DAX, ignore FS_XFLAG_DAX."
-> 
->     "-o dax=always" means "always set S_DAX (at least on pmem),
->                     and ignore FS_XFLAG_DAX."
-> 
->     "-o dax"        is an alias for "dax=always".
-> 
->     "-o dax=inode"  means "follow FS_XFLAG_DAX" and is the default.
-> 
->  4. There exists an advisory directory inode flag FS_XFLAG_DAX that can
->     be set or cleared at any time.  The flag state is copied into any
->     files or subdirectories when they are created within that directory.
-> 
->  5. Programs that require a specific file access mode (DAX or not DAX)
->     can do one of the following:
-> 
->     (a) Create files in directories that the FS_XFLAG_DAX flag set as
->         needed; or
-> 
->     (b) Have the administrator set an override via mount option; or
-> 
->     (c) Set or clear the file's FS_XFLAG_DAX flag as needed.  Programs
->         must then cause the kernel to evict the inode from memory.  This
->         can be done by:
-> 
->         i>  Closing the file and re-opening the file and using statx to
->             see if the fs has changed the S_DAX flag; and
-> 
->         ii> If the file still does not have the desired S_DAX access
->             mode, either unmount and remount the filesystem, or close
->             the file and use drop_caches.
-> 
->  6. It's not unreasonable that users who want to squeeze every last bit
->     of performance out of the particular rough and tumble bits of their
->     storage also be exposed to the difficulties of what happens when the
->     operating system can't totally virtualize those hardware
->     capabilities.  Your high performance sports car is not a Toyota
->     minivan, as it were.
-> 
-> Given our overnight discussions, I don't think it'll be difficult to
-> hoist XFS_IDONTCACHE to the VFS so that 5.c.i is enough to change the
-> S_DAX state if nobody else is using the file.
+I'm assuming that applications are being run without the root
+permissions needed to run drop_caches. i.e. the apps are
+unprivileged, and therefore can't brute force inode cache eviction.
+That's why I'm asking what mechanism these applications are using to
+evict inodes on demand without requiring elevated privileges,
+because I can't see how they'd acheive this...
 
-Agreed!
+Cheers,
 
-One note on implementation, I plan to get XFS_IDONTCACHE tested with XFS and
-leave hoisting it to VFS for the series which enables ext4 as that is when we
-would need such hoisting.
-
-Thanks everyone for another round of discussions!  :-D
-
-Ira
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
