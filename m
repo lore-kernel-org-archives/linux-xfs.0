@@ -8,59 +8,59 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18BECC2BB85
-	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 09:13:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DD48C2BA2B
+	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 09:13:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DB2F52078E
-	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 09:13:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 067882078E
+	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 09:13:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KhElO5ki"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gU/jj7Je"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726047AbgDKJNI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 11 Apr 2020 05:13:08 -0400
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:38766 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725927AbgDKJNI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 11 Apr 2020 05:13:08 -0400
-Received: by mail-pl1-f196.google.com with SMTP id w3so1481102plz.5
-        for <linux-xfs@vger.kernel.org>; Sat, 11 Apr 2020 02:13:08 -0700 (PDT)
+        id S1725927AbgDKJNJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 11 Apr 2020 05:13:09 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:45736 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725901AbgDKJNJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 11 Apr 2020 05:13:09 -0400
+Received: by mail-pf1-f195.google.com with SMTP id r14so2100266pfl.12
+        for <linux-xfs@vger.kernel.org>; Sat, 11 Apr 2020 02:13:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=YbVuazt/pfKinOclf8G2/AcnAHD/29gN8FR5Y/+Jwcw=;
-        b=KhElO5kizlJksVg3m6j2m85dmrEdGBKEUTPlQU2t3/w4l095ZUamofXZsiGWr3Fn11
-         kmpvjzsYp59Ipe66G3mdtMIEDZ7fHD4ATHOIdI0P9M6u9jSyQCHq/55urGRJbSVrL61D
-         3DtHLMrkCoGWZ+OgW895RfmVhFhkyVlgnZbA+OX1oF8eTqcNUGZNEBNb+Jo6MHsYfEY6
-         lRx7LUWSGnFOMB1Zw1a1rOJS9BlvU4NU2ATjUBiFrbjUcfyg9lSBjvw1xYhcl60F7v+V
-         Ea1lN0v7drzWqlpQOa2rmEG7rhL3SkeOB7xSF6f5bfkR+Ssls5gIHR/GbIl/JWEq4/Tc
-         wB2A==
+        bh=AhyZfqePr9qLSt0J3hH0m3c4xHZNF3izSj2jUgCn8rI=;
+        b=gU/jj7Jee2hnNpeSK2wKzZw79yJVAoXGnodUrqEJUWd1yt24peFt/T7NyQ3v0BSsT8
+         SLqcRoKQj8a8lNjMlB+UCJW0tRvYaWmDFI6S6CYIrxANh8sBJJCtebol5kzUFZsthTta
+         kOUmeB8HOW2tI0UwWT2rdpX00HRt3safBonnLx54FDnUJiKWm9CL1GojZLhcELp1QXsO
+         ctzgJkjYYxz9tEijscdoTbrLx6q53ueGwZ+kRK58vVkxgiPcI01iKYkGop5q1cQptIyB
+         bzVI1OqcG/rQbY82Jt7NK2gBO+haMGqG0Yyw8/hAgwTXLR6URqsErxEhgA+gt56vTz6n
+         tyvA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=YbVuazt/pfKinOclf8G2/AcnAHD/29gN8FR5Y/+Jwcw=;
-        b=eKUBIqrWEeILkS65W8GmqySZ5zsyEq/9d2vn26CVDCm55CmyTAzycCcLfcI6txnobx
-         zURYkT1KbOsZkYj+GjersHQw7mETH8nj0TOlcgpOcEqnwlRakwwmdKO/FaRLzffg2wKi
-         g8Yo3/S9hWvFrW2KgDxMBWm3psHKgE9WxLqXPttnRGivfGuz7u4KRciGJJuKkYIYdLW6
-         P4LVTCrS97bKmR4twV1mAvAWaOEk3RsB145aGBhh2gkwAO4Plc/ytjrqgo7f4APBRhzU
-         U6c4DHE+ShX0ft7TIKyiTuShpFecZHMGy8B2kSHfIv6rCR0C9nHM5fb8Ky/ZsAoLq436
-         5muw==
-X-Gm-Message-State: AGi0PuY/4AZ3xCA2AtxT1c2wcpXJq9FgbrRdcJF2VK8QN6CA9tX4AULp
-        pvv78x5lu0I6lgEBCqqQDfIQRsk=
-X-Google-Smtp-Source: APiQypI3rzKr1UDv3tunctWDAJs5rqFCpaiy8jCV5Gxk0LfQNZVYk1HwyZZcWOOsd7iYa7AyOiq94A==
-X-Received: by 2002:a17:902:690b:: with SMTP id j11mr8684168plk.236.1586596387875;
-        Sat, 11 Apr 2020 02:13:07 -0700 (PDT)
+        bh=AhyZfqePr9qLSt0J3hH0m3c4xHZNF3izSj2jUgCn8rI=;
+        b=fd0rAFkrALL2BbzHT4ukOVZ1pN4F/7k0Hu6d9pQUaqLdlurgRPyu6boqCsT9GR7290
+         0vp74Vi6cBG9WhCxuqoURRrgbimJTElwp7gJShL5bxNLss2mzFbZHac49WtSYVPsGIe7
+         sJi7dbyxhkaaQUkoOzFjB0uyIq1RTzLltRneVY+CWozDATthVF+6y4hoSBhSkwkZoxJA
+         BYcRM94HnEXcWS4dTBhC+XvIPBmwmKqhOZXy+gAu9TbuGVcsy7rhtIgcVH23Rr2v8ABx
+         RVAwKlCN9yYKjszcpDutmaxJlNmgh4KcGfQyq2FQANcWaKeKppCgsDan4DzBhnVwkJb6
+         pqgQ==
+X-Gm-Message-State: AGi0PuaVRLb8mMUS0hrzKFD3MERPPj1IZMFgUAkOaSLuMRP+PYHFbrai
+        VFukhRUl3+uYfSc78wJtdEzyqAI=
+X-Google-Smtp-Source: APiQypJ4ynvx5B5e08ot9vNjLbg9t/IITFODCJHl+Ip1HO2uBUq8DwzCsoeslwAN0WXY7qHtUHerqw==
+X-Received: by 2002:aa7:940f:: with SMTP id x15mr8895019pfo.312.1586596388713;
+        Sat, 11 Apr 2020 02:13:08 -0700 (PDT)
 Received: from he-cluster.localdomain ([67.216.221.250])
         by smtp.gmail.com with ESMTPSA id n7sm3280364pgm.28.2020.04.11.02.13.07
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 11 Apr 2020 02:13:07 -0700 (PDT)
+        Sat, 11 Apr 2020 02:13:08 -0700 (PDT)
 From:   xiakaixu1987@gmail.com
 X-Google-Original-From: kaixuxia@tencent.com
 To:     linux-xfs@vger.kernel.org
 Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
-Subject: [PATCH v2 1/6] xfs: trace quota allocations for all quota types
-Date:   Sat, 11 Apr 2020 17:12:53 +0800
-Message-Id: <1586596378-10754-2-git-send-email-kaixuxia@tencent.com>
+Subject: [PATCH v2 2/6] xfs: combine two if statements with same condition
+Date:   Sat, 11 Apr 2020 17:12:54 +0800
+Message-Id: <1586596378-10754-3-git-send-email-kaixuxia@tencent.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1586596378-10754-1-git-send-email-kaixuxia@tencent.com>
 References: <1586596378-10754-1-git-send-email-kaixuxia@tencent.com>
@@ -71,30 +71,33 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Kaixu Xia <kaixuxia@tencent.com>
 
-The trace event xfs_dquot_dqalloc does not depend on the
-value uq, so remove the condition, and trace quota allocations
-for all quota types.
+The two if statements have same condition, and the mask value
+does not change in xfs_setattr_nonsize(), so combine them.
 
 Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
 Reviewed-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_qm.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ fs/xfs/xfs_iops.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index c225691fad15..6678baab37de 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1730,8 +1730,7 @@ xfs_qm_vop_dqalloc(
- 			pq = xfs_qm_dqhold(ip->i_pdquot);
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index f7a99b3bbcf7..e34814590453 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -738,12 +738,7 @@ xfs_setattr_nonsize(
+ 			if (error)	/* out of quota */
+ 				goto out_cancel;
  		}
- 	}
--	if (uq)
--		trace_xfs_dquot_dqalloc(ip);
-+	trace_xfs_dquot_dqalloc(ip);
+-	}
  
- 	xfs_iunlock(ip, lockflags);
- 	if (O_udqpp)
+-	/*
+-	 * Change file ownership.  Must be the owner or privileged.
+-	 */
+-	if (mask & (ATTR_UID|ATTR_GID)) {
+ 		/*
+ 		 * CAP_FSETID overrides the following restrictions:
+ 		 *
 -- 
 2.20.0
 
