@@ -1,71 +1,170 @@
-Return-Path: <SRS0=tPAf=52=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=7tHi=53=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11384C2D0EC
-	for <linux-xfs@archiver.kernel.org>; Fri, 10 Apr 2020 17:30:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 086CEC2D0EC
+	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 01:10:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D8F312082D
-	for <linux-xfs@archiver.kernel.org>; Fri, 10 Apr 2020 17:30:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586539805;
-	bh=zO5L6bExP9Vn6H54tOeXhCYaOoSrMwNm1GL0YwwAzNM=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
-	b=h8ZMKsKUFu/pxnDXsXLa+E9Ztt1h/0OJ2ufiENZWfGN4p8Y1n0e221XZDqXad2d5z
-	 MmsdiLMtAdMXsMGgaDF0V19HsBzdfLaH1cvszvCozOPIc6S6SWCie6qZCdaNFwocp7
-	 tIDBqFEw/GADa4soPTBW7silS5ZKJve8+bUCMID8=
+	by mail.kernel.org (Postfix) with ESMTP id A2CB220753
+	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 01:10:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z38a+kZp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726676AbgDJRaE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 10 Apr 2020 13:30:04 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58110 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726582AbgDJRaE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 10 Apr 2020 13:30:04 -0400
-Subject: Re: [GIT PULL] xfs: new code for 5.7, part 2
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586539804;
-        bh=zO5L6bExP9Vn6H54tOeXhCYaOoSrMwNm1GL0YwwAzNM=;
-        h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=gFiG4RaC3ploy5R6VzEfsvQGQwgGFlZwTA3qRYZkszO6WLs98FDfbtppzrxyEBlzc
-         YV4+Mhr4S82c1YqOhADCWcRf1am6593mEh6Nh5k63NM1p1QZy+lkyWAQe9A7YrR1sn
-         0QWZ+bsz16fGyBv6uAZSUvjxC8lp/RMvw0McD7DA=
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <20200409181526.GM6742@magnolia>
-References: <20200409181526.GM6742@magnolia>
-X-PR-Tracked-List-Id: <linux-fsdevel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20200409181526.GM6742@magnolia>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
- tags/xfs-5.7-merge-12
-X-PR-Tracked-Commit-Id: 5833112df7e9a306af9af09c60127b92ed723962
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 8c3c07439e1d793d8803a404df86e487875f3340
-Message-Id: <158653980468.6431.14242531724269213337.pr-tracker-bot@kernel.org>
-Date:   Fri, 10 Apr 2020 17:30:04 +0000
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, linux-kernel@vger.kernel.org,
-        sandeen@sandeen.net, hch@lst.de
+        id S1726702AbgDKBKG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 10 Apr 2020 21:10:06 -0400
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:41199 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726687AbgDKBKG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Apr 2020 21:10:06 -0400
+Received: by mail-pl1-f194.google.com with SMTP id d24so1200167pll.8
+        for <linux-xfs@vger.kernel.org>; Fri, 10 Apr 2020 18:10:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=ThJmG/Y9ogfMT6+bDKLBufLQVQGVF72+KVl1C0BqyGc=;
+        b=Z38a+kZpUGoDnfvyJ6Av3b8XK0uffnoNXeFG2iSs/IYG1QaQLSLJSrPNXxcPDkcmQD
+         7zsDR0cLJtWONZIj3ENwJF/rsmUOmrU12w2FrZy7lmStP/HrQ2nBjoVMEqhnDrfqNahm
+         xGig4tXmwvWmMjEXDGSGek21WfetvFouRP+LDFoCnnz/3ms+zp3N2iunosc15nQ6aNUW
+         ifElYjpZSuQb3/buoO3+/+sXarqRC2s8wUCHsym6Vwn1vfYvqvzfbf7kHh+Nnvje2m73
+         lQ2Y8SUOpr7iYbulq6vpt2+/o2KhdXoBYywKZsnkRZ3et5xBc3YhpqmIg089Z6WucICN
+         Ks+Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=ThJmG/Y9ogfMT6+bDKLBufLQVQGVF72+KVl1C0BqyGc=;
+        b=QLk/jB5ai3ljaD+LjpqVXF5WIko5bnT3FF3q/wprre/2bTonxC026pOm7VVNfl0ZHj
+         3SlKeta1dH/234LAojboahRlFBQnsMsJJI520BprwISs05LCp5gF/f1bTk4fnDFQPaFJ
+         yifYYjJeq/Imu2SjfONdezewRFY8muxNsfUqLuQccGAdS2qMARaD0By5Su8gWrW4X3KY
+         A2GsQakgUIPzMVDXmdCgnvWI52olTJP+rkzzE+Jy2oppOeYwRlcBBSyhbVd1wx/buYo9
+         tze58G9r1PQNfuT9B0NcFToapnXvWLHndJxGx6RJaYY056h7s02yD3mzg3vqSOcqGSd3
+         elJw==
+X-Gm-Message-State: AGi0PuantvOvDrXjgU8I37mEc3Rb0qiddbJQaZYzRo7IxIFtbyAyjTCX
+        CXHPPf7EOuEHz3Qj5YABuHDgriS+HA==
+X-Google-Smtp-Source: APiQypKWEtRJEXth/KxWAXuc1jSOjSSg6/71Gi8EchELitWuONMwjrQ0TmzTGXrJeIQjQwINqt6cSQ==
+X-Received: by 2002:a17:90a:7f96:: with SMTP id m22mr223976pjl.56.1586567406338;
+        Fri, 10 Apr 2020 18:10:06 -0700 (PDT)
+Received: from [10.76.90.30] ([103.7.29.8])
+        by smtp.gmail.com with ESMTPSA id i124sm2805491pfg.14.2020.04.10.18.10.04
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 10 Apr 2020 18:10:05 -0700 (PDT)
+Subject: Re: [PATCH] xfs: simplify the flags setting in xfs_qm_scall_quotaon
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, Kaixu Xia <kaixuxia@tencent.com>
+References: <1586509024-5856-1-git-send-email-kaixuxia@tencent.com>
+ <20200410145138.GP6742@magnolia>
+From:   kaixuxia <xiakaixu1987@gmail.com>
+Message-ID: <06737124-3742-e956-b715-0f1f7010170d@gmail.com>
+Date:   Sat, 11 Apr 2020 09:09:57 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.6.0
+MIME-Version: 1.0
+In-Reply-To: <20200410145138.GP6742@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The pull request you sent on Thu, 9 Apr 2020 11:15:26 -0700:
 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.7-merge-12
+On 2020/4/10 22:51, Darrick J. Wong wrote:
+> On Fri, Apr 10, 2020 at 04:57:04PM +0800, xiakaixu1987@gmail.com wrote:
+>> From: Kaixu Xia <kaixuxia@tencent.com>
+>>
+>> Simplify the setting of the flags value, and only consider
+>> quota enforcement stuff here.
+>>
+>> Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
+>> ---
+>>  fs/xfs/xfs_qm_syscalls.c | 6 +++---
+>>  1 file changed, 3 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+>> index 5d5ac65..944486f 100644
+>> --- a/fs/xfs/xfs_qm_syscalls.c
+>> +++ b/fs/xfs/xfs_qm_syscalls.c
+>> @@ -357,11 +357,11 @@
+> 
+> No idea which function this is.  diff -p, please.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/8c3c07439e1d793d8803a404df86e487875f3340
+Yeah, the changed function is xfs_qm_scall_quotaon().
+Anyway, the result of diff -p as follows,
 
-Thank you!
+*** fs/xfs/xfs_qm_syscalls.c	Sat Apr 11 08:32:03 2020
+--- /tmp/xfs_qm_syscalls.c	Sat Apr 11 08:31:51 2020
+*************** xfs_qm_scall_quotaon(
+*** 357,367 ****
+  	int		error;
+  	uint		qf;
+  
+  	/*
+! 	 * Switching on quota accounting must be done at mount time,
+! 	 * only consider quota enforcement stuff here.
+  	 */
+! 	flags &= XFS_ALL_QUOTA_ENFD;
+  
+  	if (flags == 0) {
+  		xfs_debug(mp, "%s: zero flags, m_qflags=%x",
+--- 357,367 ----
+  	int		error;
+  	uint		qf;
+  
++ 	flags &= (XFS_ALL_QUOTA_ACCT | XFS_ALL_QUOTA_ENFD);
+  	/*
+! 	 * Switching on quota accounting must be done at mount time.
+  	 */
+! 	flags &= ~(XFS_ALL_QUOTA_ACCT);
+  
+  	if (flags == 0) {
+  		xfs_debug(mp, "%s: zero flags, m_qflags=%x",
+
+> 
+> Also, please consider putting all these minor cleanups into a single
+> patchset, it's a lot easier (for me) to track and land one series than
+> it is to handle a steady trickle of single patches.
+Yeah, got it. Should I resend all of the patches that have been
+reviewed or just resend the last two patches with a single patchset?
+
+The patches that have been reviewed as follows,
+xfs: trace quota allocations for all quota types
+xfs: combine two if statements with same condition
+xfs: check if reserved free disk blocks is needed
+xfs: remove unnecessary variable udqp from xfs_ioctl_setattr
+
+The last two patches that have not been reviewed as follow,
+xfs: remove unnecessary assertion from xfs_qm_vop_create_dqattach
+xfs: simplify the flags setting in xfs_qm_scall_quotaon
+
+> 
+> --D
+> 
+>>  	int		error;
+>>  	uint		qf;
+>>  
+>> -	flags &= (XFS_ALL_QUOTA_ACCT | XFS_ALL_QUOTA_ENFD);
+>>  	/*
+>> -	 * Switching on quota accounting must be done at mount time.
+>> +	 * Switching on quota accounting must be done at mount time,
+>> +	 * only consider quota enforcement stuff here.
+>>  	 */
+>> -	flags &= ~(XFS_ALL_QUOTA_ACCT);
+>> +	flags &= XFS_ALL_QUOTA_ENFD;
+>>  
+>>  	if (flags == 0) {
+>>  		xfs_debug(mp, "%s: zero flags, m_qflags=%x",
+>> -- 
+>> 1.8.3.1
+>>
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+kaixuxia
