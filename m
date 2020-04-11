@@ -2,139 +2,94 @@ Return-Path: <SRS0=7tHi=53=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=FROM_LOCAL_HEX,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCD85C2BA2B
-	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 07:39:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE800C2BBC7
+	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 09:13:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6A9A320857
-	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 07:39:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A8A022084D
+	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 09:13:09 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NCzCzn0p"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725905AbgDKHjO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 11 Apr 2020 03:39:14 -0400
-Received: from mail-il1-f199.google.com ([209.85.166.199]:35445 "EHLO
-        mail-il1-f199.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725869AbgDKHjN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 11 Apr 2020 03:39:13 -0400
-Received: by mail-il1-f199.google.com with SMTP id t7so4749813ilf.2
-        for <linux-xfs@vger.kernel.org>; Sat, 11 Apr 2020 00:39:14 -0700 (PDT)
+        id S1725934AbgDKJNI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 11 Apr 2020 05:13:08 -0400
+Received: from mail-pj1-f66.google.com ([209.85.216.66]:39849 "EHLO
+        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725901AbgDKJNI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 11 Apr 2020 05:13:08 -0400
+Received: by mail-pj1-f66.google.com with SMTP id o1so796520pjs.4
+        for <linux-xfs@vger.kernel.org>; Sat, 11 Apr 2020 02:13:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=MwQEI1DKkFiXlSV02EqzlzqkML0bDLjDHQkXIawDuCE=;
+        b=NCzCzn0p2g/EE5A9sIxQteUARt76GiFUZOBFBz1pjcr2G/JejiO74tjbu74jqbznaN
+         OxyWOQM+e147lwekaiQbOdwhUZbufnqQhqlVIMsGOIqyvxPUoa1kDXt1AKlGF2o2cbkW
+         Mz4mA6wuL5diBGYYR6TIB8OEV7jYE4fXVopMVuWsEppbnLSfdRi9lf2rP/ETGxAae63D
+         6xSp+Hqxc8bwZ5wF2+7bi6OhkbRmQuU2j++EdFhiIao+URYt62gl8QZ0WHxc4cvOX3rC
+         W41/VhoEt/T9436yDd67c2SEHf3FfXDISTG1S8mxffNdW5TUK0Zgo3ybhVECAIMibNOW
+         eLPA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:date:message-id:subject:from:to;
-        bh=SR2YA+gRBOnmPYpzAYGHcg7N4JVcFTNfL3ArWCrn61U=;
-        b=B5AiND8PqVeOmrbfYhcVZo2KVziXm+x9zE0Hie6pvLH7Y41wbAIToQkTSwLVePKTsZ
-         aYrqjEZfE07UvKiaqm8Wu9HmzNBbRNnsUV0H5DhakCsUOa/Zmd8j2l2QIxKXKF4FyP2K
-         s/4WaqeD3vjdnT7yp4tyDWbrRYRR04U1ff94uweAdzP4VKb7TG48sEI+XHPeL2xGamka
-         Qe8gcaGtW1gBzBNNbnZcfPAu3X+ISLZ+Wor/swSebhm9MPtTp6yidzLhT3/QZqTTzcSP
-         /c/CDVNNtgHpFCZazyAm/3unKzHAWMCG+TbWz3798CsGFSAifnz4wl3mKAx0HteoCwHI
-         c1ew==
-X-Gm-Message-State: AGi0PuY/CaMJEOCZgTZr9Cee90hCtITfvbQhXG/B17daK9tBGxyyRZrb
-        AAH2lRx7WIJhugW9Xihz8gMoZQHlwc8AQDzFvCbEOx9az2Wz
-X-Google-Smtp-Source: APiQypI3tcC2+zogyWgZTHezJzC93BzR1M5g+tow2+klS5qw7OmdMte71Ullm0LN6WWRwCyJ7BJ2oWjjgBvPZcBv/jVJoZ7IzUDc
-MIME-Version: 1.0
-X-Received: by 2002:a5d:9494:: with SMTP id v20mr7621253ioj.101.1586590753770;
- Sat, 11 Apr 2020 00:39:13 -0700 (PDT)
-Date:   Sat, 11 Apr 2020 00:39:13 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <00000000000048518b05a2fef23a@google.com>
-Subject: WARNING in iomap_apply
-From:   syzbot <syzbot+77fa5bdb65cc39711820@syzkaller.appspotmail.com>
-To:     darrick.wong@oracle.com, hch@infradead.org, jack@suse.cz,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, riteshh@linux.ibm.com,
-        syzkaller-bugs@googlegroups.com, tytso@mit.edu
-Content-Type: text/plain; charset="UTF-8"
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=MwQEI1DKkFiXlSV02EqzlzqkML0bDLjDHQkXIawDuCE=;
+        b=LghtxIjqnhIvBzd2ZEA7IGjM32kp+Y6cTvMsBRTKJsnH7XHQd1INC+5pBN32rvJVnR
+         wUGKZHCokEXzA15s53Qkw7maDHw+oRoz8zGxQyS4PgAAodsM3XnTEeiA9BzxowvQxByV
+         s8RW3sD4qzaf4UqyAjvQywP9AuoaK0ooZtkw+a6eMZpPFeWk/SS1xFI4S5DDn5im41KJ
+         nkdrKiF55+cT4XlXm33jNdiMIRC0iA26oD7BSPlbCaGue6WvC90mxELrNcDYFNwjRviX
+         gCFiZsL0hm31QSczqQTCWVxsp171ERK9WKT00iQZGIrDRDwULuQ54/Ap88SES2Y2hw0D
+         rrKA==
+X-Gm-Message-State: AGi0Pua7Ut/+jbcinuKFgnrufxIjIzivQJSd9yzUz7cgXMyBQm9vr0Lm
+        eysHd8dD39U2sEJuK7ebG2FovqQ=
+X-Google-Smtp-Source: APiQypJvgqlZcNQVjGykurPPWv2zRIwTyT8KwDxO48WYgg09KPQPpQNzwbAtX7wcdRLx+jMQzN8YfQ==
+X-Received: by 2002:a17:90a:6582:: with SMTP id k2mr9464272pjj.180.1586596387181;
+        Sat, 11 Apr 2020 02:13:07 -0700 (PDT)
+Received: from he-cluster.localdomain ([67.216.221.250])
+        by smtp.gmail.com with ESMTPSA id n7sm3280364pgm.28.2020.04.11.02.13.06
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 11 Apr 2020 02:13:06 -0700 (PDT)
+From:   xiakaixu1987@gmail.com
+X-Google-Original-From: kaixuxia@tencent.com
+To:     linux-xfs@vger.kernel.org
+Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
+Subject: [PATCH v2 0/6] xfs: some bugfixes and code cleanups for quota
+Date:   Sat, 11 Apr 2020 17:12:52 +0800
+Message-Id: <1586596378-10754-1-git-send-email-kaixuxia@tencent.com>
+X-Mailer: git-send-email 1.8.3.1
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello,
+From: Kaixu Xia <kaixuxia@tencent.com>
 
-syzbot found the following crash on:
+Hi all,
 
-HEAD commit:    7e634208 Merge tag 'acpi-5.7-rc1-2' of git://git.kernel.or..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=127ebeb3e00000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=12205d036cec317f
-dashboard link: https://syzkaller.appspot.com/bug?extid=77fa5bdb65cc39711820
-compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1196f257e00000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=14c336c7e00000
+This patchset include some bugfixes and code cleanups for
+qupta.
 
-The bug was bisected to:
+Changes for v2:
+ - put all the scattered patches into a single patchset.
+ - update the git version to fix the no function show problem.
 
-commit d3b6f23f71670007817a5d59f3fbafab2b794e8c
-Author: Ritesh Harjani <riteshh@linux.ibm.com>
-Date:   Fri Feb 28 09:26:58 2020 +0000
+Kaixu Xia (6):
+  xfs: trace quota allocations for all quota types
+  xfs: combine two if statements with same condition
+  xfs: reserve quota inode transaction space only when needed
+  xfs: remove unnecessary variable udqp from xfs_ioctl_setattr
+  xfs: remove unnecessary assertion from xfs_qm_vop_create_dqattach
+  xfs: simplify the flags setting in xfs_qm_scall_quotaon
 
-    ext4: move ext4_fiemap to use iomap framework
+ fs/xfs/xfs_ioctl.c       | 7 ++-----
+ fs/xfs/xfs_iops.c        | 5 -----
+ fs/xfs/xfs_qm.c          | 7 +++----
+ fs/xfs/xfs_qm_syscalls.c | 6 +++---
+ 4 files changed, 8 insertions(+), 17 deletions(-)
 
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=16c62a57e00000
-final crash:    https://syzkaller.appspot.com/x/report.txt?x=15c62a57e00000
-console output: https://syzkaller.appspot.com/x/log.txt?x=11c62a57e00000
+-- 
+2.20.0
 
-IMPORTANT: if you fix the bug, please add the following tag to the commit:
-Reported-by: syzbot+77fa5bdb65cc39711820@syzkaller.appspotmail.com
-Fixes: d3b6f23f7167 ("ext4: move ext4_fiemap to use iomap framework")
-
-------------[ cut here ]------------
-WARNING: CPU: 0 PID: 7023 at fs/iomap/apply.c:51 iomap_apply+0xa0c/0xcb0 fs/iomap/apply.c:51
-Kernel panic - not syncing: panic_on_warn set ...
-CPU: 0 PID: 7023 Comm: syz-executor296 Not tainted 5.6.0-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
-Call Trace:
- __dump_stack lib/dump_stack.c:77 [inline]
- dump_stack+0x188/0x20d lib/dump_stack.c:118
- panic+0x2e3/0x75c kernel/panic.c:221
- __warn.cold+0x2f/0x35 kernel/panic.c:582
- report_bug+0x27b/0x2f0 lib/bug.c:195
- fixup_bug arch/x86/kernel/traps.c:175 [inline]
- fixup_bug arch/x86/kernel/traps.c:170 [inline]
- do_error_trap+0x12b/0x220 arch/x86/kernel/traps.c:267
- do_invalid_op+0x32/0x40 arch/x86/kernel/traps.c:286
- invalid_op+0x23/0x30 arch/x86/entry/entry_64.S:1027
-RIP: 0010:iomap_apply+0xa0c/0xcb0 fs/iomap/apply.c:51
-Code: ff e9 0e fd ff ff e8 23 30 96 ff 0f 0b e9 07 f7 ff ff e8 17 30 96 ff 0f 0b 49 c7 c4 fb ff ff ff e9 35 f9 ff ff e8 04 30 96 ff <0f> 0b 49 c7 c4 fb ff ff ff e9 22 f9 ff ff e8 f1 2f 96 ff 0f 0b e9
-RSP: 0018:ffffc90000f87968 EFLAGS: 00010293
-RAX: ffff8880a1b00480 RBX: ffffc90000f879c8 RCX: ffffffff81dcf934
-RDX: 0000000000000000 RSI: ffffffff81dd016c RDI: 0000000000000007
-RBP: 0000000000000000 R08: ffff8880a1b00480 R09: ffffed1015cc70fc
-R10: ffff8880ae6387db R11: ffffed1015cc70fb R12: 0000000000000000
-R13: ffff888085e716b8 R14: 0000000000000000 R15: ffffc90000f87b50
- iomap_fiemap+0x184/0x2c0 fs/iomap/fiemap.c:88
- _ext4_fiemap+0x178/0x4f0 fs/ext4/extents.c:4860
- ovl_fiemap+0x13f/0x200 fs/overlayfs/inode.c:467
- ioctl_fiemap fs/ioctl.c:226 [inline]
- do_vfs_ioctl+0x8d7/0x12d0 fs/ioctl.c:715
- ksys_ioctl+0xa3/0x180 fs/ioctl.c:761
- __do_sys_ioctl fs/ioctl.c:772 [inline]
- __se_sys_ioctl fs/ioctl.c:770 [inline]
- __x64_sys_ioctl+0x6f/0xb0 fs/ioctl.c:770
- do_syscall_64+0xf6/0x7d0 arch/x86/entry/common.c:295
- entry_SYSCALL_64_after_hwframe+0x49/0xb3
-RIP: 0033:0x440309
-Code: 18 89 d0 c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 0f 83 fb 13 fc ff c3 66 2e 0f 1f 84 00 00 00 00
-RSP: 002b:00007fff2dba7508 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
-RAX: ffffffffffffffda RBX: 00000000004002c8 RCX: 0000000000440309
-RDX: 00000000200003c0 RSI: 00000000c020660b RDI: 0000000000000004
-RBP: 00000000006ca018 R08: 0000000000000000 R09: 00000000004002c8
-R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000401b90
-R13: 0000000000401c20 R14: 0000000000000000 R15: 0000000000000000
-Kernel Offset: disabled
-Rebooting in 86400 seconds..
-
-
----
-This bug is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this bug report. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
-syzbot can test patches for this bug, for details see:
-https://goo.gl/tpsmEJ#testing-patches
