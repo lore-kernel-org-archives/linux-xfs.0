@@ -7,45 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9864BC2BBC7
-	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 23:43:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE3C9C2BA19
+	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 23:45:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 731B6206E9
-	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 23:43:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C4B4620936
+	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 23:45:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586648636;
-	bh=7euqKfoRpG2MKpUTp1qj6xDKj4ind4SgjVj4CnTiWo0=;
+	s=default; t=1586648702;
+	bh=qCa1GzfdGwFKk9X9humIXd6q1+OihmcS9vny16uEqFo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=DCzqDzKfgBZW7WyRbGeg18QKG/Bz5OapDoJfe7FZyWOCxdpavBqXxeKHB5DR51ktP
-	 e9PADRHRzVxz51X7LW+38RpZetlbTJXG/QgYqJhBzQZB9SXB5+5J6ZOn+5MWFgHBda
-	 dnOTSnvWbOQ89WuCKYFmSieu8dk+cyCMxdpogYlg=
+	b=hssfrEEoP3rAB2Fa2/iGGjQHpUhBMzEy0+u/bWDvHjNZ/WHGz2GUPLwWbGEkjiiG4
+	 x3lVRKxz4L5ZRcrPL88yIy73mD2ZP5ZEymtVbh3imoXkX2HfH1l5qJDGc8go3Tg9+O
+	 UQ1wb9kWKu53ViSqixhYt4QlV4RTn/BI5hsvzQlI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728328AbgDKXGO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:06:14 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41360 "EHLO mail.kernel.org"
+        id S1728129AbgDKXFu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 11 Apr 2020 19:05:50 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40456 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728311AbgDKXGN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:06:13 -0400
+        id S1728118AbgDKXFu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:05:50 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 586BC20787;
-        Sat, 11 Apr 2020 23:06:12 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 02A8B20787;
+        Sat, 11 Apr 2020 23:05:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646373;
-        bh=7euqKfoRpG2MKpUTp1qj6xDKj4ind4SgjVj4CnTiWo0=;
+        s=default; t=1586646349;
+        bh=qCa1GzfdGwFKk9X9humIXd6q1+OihmcS9vny16uEqFo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HvQ70UGRf4W8XVHKc70ZPxDCGvp5w0QQcEIXxaA7gzSvLpHC3kDdhrtvnWSkrgzay
-         wXDIU2zkYZGflXTHo9Jq06pBqqpOxgrJa+6HXZipkMLyUv9/v7oWZnMNE26eZDroVR
-         /3UV/NrgI77eUFLiZ1Mff9NPbPs7QJs/0vNN2Ohs=
+        b=zR7ozyWO6xxVVXeaUrbzKiZSsAHSHOqh8pSId0WI4/5mBZhIoxg3DJa/QAHCMenCN
+         q0vEbj1kSZca0+0S6ZSTsyzv27rpydnnUAVwQ1clLZsQmxEQvCnQDtzAZkAQnEV2Sb
+         0nVr9pn5wU5iduK1F2w7YW7169jpFRVkezKVPKw4=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dave Chinner <dchinner@redhat.com>,
+Cc:     Eric Biggers <ebiggers@google.com>,
+        syzbot+1f9dc49e8de2582d90c2@syzkaller.appspotmail.com,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
         Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.6 115/149] xfs: prohibit fs freezing when using empty transactions
-Date:   Sat, 11 Apr 2020 19:03:12 -0400
-Message-Id: <20200411230347.22371-115-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.6 097/149] xfs: clear PF_MEMALLOC before exiting xfsaild thread
+Date:   Sat, 11 Apr 2020 19:02:54 -0400
+Message-Id: <20200411230347.22371-97-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200411230347.22371-1-sashal@kernel.org>
 References: <20200411230347.22371-1-sashal@kernel.org>
@@ -58,134 +60,100 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+From: Eric Biggers <ebiggers@google.com>
 
-[ Upstream commit 27fb5a72f50aa770dd38b0478c07acacef97e3e7 ]
+[ Upstream commit 10a98cb16d80be3595fdb165fad898bb28b8b6d2 ]
 
-I noticed that fsfreeze can take a very long time to freeze an XFS if
-there happens to be a GETFSMAP caller running in the background.  I also
-happened to notice the following in dmesg:
+Leaving PF_MEMALLOC set when exiting a kthread causes it to remain set
+during do_exit().  That can confuse things.  In particular, if BSD
+process accounting is enabled, then do_exit() writes data to an
+accounting file.  If that file has FS_SYNC_FL set, then this write
+occurs synchronously and can misbehave if PF_MEMALLOC is set.
 
-------------[ cut here ]------------
-WARNING: CPU: 2 PID: 43492 at fs/xfs/xfs_super.c:853 xfs_quiesce_attr+0x83/0x90 [xfs]
-Modules linked in: xfs libcrc32c ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 ip_set_hash_ip ip_set_hash_net xt_tcpudp xt_set ip_set_hash_mac ip_set nfnetlink ip6table_filter ip6_tables bfq iptable_filter sch_fq_codel ip_tables x_tables nfsv4 af_packet [last unloaded: xfs]
-CPU: 2 PID: 43492 Comm: xfs_io Not tainted 5.6.0-rc4-djw #rc4
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.10.2-1ubuntu1 04/01/2014
-RIP: 0010:xfs_quiesce_attr+0x83/0x90 [xfs]
-Code: 7c 07 00 00 85 c0 75 22 48 89 df 5b e9 96 c1 00 00 48 c7 c6 b0 2d 38 a0 48 89 df e8 57 64 ff ff 8b 83 7c 07 00 00 85 c0 74 de <0f> 0b 48 89 df 5b e9 72 c1 00 00 66 90 0f 1f 44 00 00 41 55 41 54
-RSP: 0018:ffffc900030f3e28 EFLAGS: 00010202
-RAX: 0000000000000001 RBX: ffff88802ac54000 RCX: 0000000000000000
-RDX: 0000000000000000 RSI: ffffffff81e4a6f0 RDI: 00000000ffffffff
-RBP: ffff88807859f070 R08: 0000000000000001 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000010 R12: 0000000000000000
-R13: ffff88807859f388 R14: ffff88807859f4b8 R15: ffff88807859f5e8
-FS:  00007fad1c6c0fc0(0000) GS:ffff88807e000000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007f0c7d237000 CR3: 0000000077f01003 CR4: 00000000001606a0
-Call Trace:
- xfs_fs_freeze+0x25/0x40 [xfs]
- freeze_super+0xc8/0x180
- do_vfs_ioctl+0x70b/0x750
- ? __fget_files+0x135/0x210
- ksys_ioctl+0x3a/0xb0
- __x64_sys_ioctl+0x16/0x20
- do_syscall_64+0x50/0x1a0
- entry_SYSCALL_64_after_hwframe+0x49/0xbe
+For example, if the accounting file is located on an XFS filesystem,
+then a WARN_ON_ONCE() in iomap_do_writepage() is triggered and the data
+doesn't get written when it should.  Or if the accounting file is
+located on an ext4 filesystem without a journal, then a WARN_ON_ONCE()
+in ext4_write_inode() is triggered and the inode doesn't get written.
 
-These two things appear to be related.  The assertion trips when another
-thread initiates a fsmap request (which uses an empty transaction) after
-the freezer waited for m_active_trans to hit zero but before the the
-freezer executes the WARN_ON just prior to calling xfs_log_quiesce.
+Fix this in xfsaild() by using the helper functions to save and restore
+PF_MEMALLOC.
 
-The lengthy delays in freezing happen because the freezer calls
-xfs_wait_buftarg to clean out the buffer lru list.  Meanwhile, the
-GETFSMAP caller is continuing to grab and release buffers, which means
-that it can take a very long time for the buffer lru list to empty out.
+This can be reproduced as follows in the kvm-xfstests test appliance
+modified to add the 'acct' Debian package, and with kvm-xfstests's
+recommended kconfig modified to add CONFIG_BSD_PROCESS_ACCT=y:
 
-We fix both of these races by calling sb_start_write to obtain freeze
-protection while using empty transactions for GETFSMAP and for metadata
-scrubbing.  The other two users occur during mount, during which time we
-cannot fs freeze.
+        mkfs.xfs -f /dev/vdb
+        mount /vdb
+        touch /vdb/file
+        chattr +S /vdb/file
+        accton /vdb/file
+        mkfs.xfs -f /dev/vdc
+        mount /vdc
+        umount /vdc
 
+It causes:
+	WARNING: CPU: 1 PID: 336 at fs/iomap/buffered-io.c:1534
+	CPU: 1 PID: 336 Comm: xfsaild/vdc Not tainted 5.6.0-rc5 #3
+	Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20191223_100556-anatol 04/01/2014
+	RIP: 0010:iomap_do_writepage+0x16b/0x1f0 fs/iomap/buffered-io.c:1534
+	[...]
+	Call Trace:
+	 write_cache_pages+0x189/0x4d0 mm/page-writeback.c:2238
+	 iomap_writepages+0x1c/0x33 fs/iomap/buffered-io.c:1642
+	 xfs_vm_writepages+0x65/0x90 fs/xfs/xfs_aops.c:578
+	 do_writepages+0x41/0xe0 mm/page-writeback.c:2344
+	 __filemap_fdatawrite_range+0xd2/0x120 mm/filemap.c:421
+	 file_write_and_wait_range+0x71/0xc0 mm/filemap.c:760
+	 xfs_file_fsync+0x7a/0x2b0 fs/xfs/xfs_file.c:114
+	 generic_write_sync include/linux/fs.h:2867 [inline]
+	 xfs_file_buffered_aio_write+0x379/0x3b0 fs/xfs/xfs_file.c:691
+	 call_write_iter include/linux/fs.h:1901 [inline]
+	 new_sync_write+0x130/0x1d0 fs/read_write.c:483
+	 __kernel_write+0x54/0xe0 fs/read_write.c:515
+	 do_acct_process+0x122/0x170 kernel/acct.c:522
+	 slow_acct_process kernel/acct.c:581 [inline]
+	 acct_process+0x1d4/0x27c kernel/acct.c:607
+	 do_exit+0x83d/0xbc0 kernel/exit.c:791
+	 kthread+0xf1/0x140 kernel/kthread.c:257
+	 ret_from_fork+0x27/0x50 arch/x86/entry/entry_64.S:352
+
+This bug was originally reported by syzbot at
+https://lore.kernel.org/r/0000000000000e7156059f751d7b@google.com.
+
+Reported-by: syzbot+1f9dc49e8de2582d90c2@syzkaller.appspotmail.com
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- fs/xfs/scrub/scrub.c | 9 +++++++++
- fs/xfs/xfs_fsmap.c   | 9 +++++++++
- fs/xfs/xfs_trans.c   | 5 +++++
- 3 files changed, 23 insertions(+)
+ fs/xfs/xfs_trans_ail.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index f1775bb193135..8ebf35b115ce2 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -168,6 +168,7 @@ xchk_teardown(
- 			xfs_irele(sc->ip);
- 		sc->ip = NULL;
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 00cc5b8734be8..3bc570c90ad97 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -529,8 +529,9 @@ xfsaild(
+ {
+ 	struct xfs_ail	*ailp = data;
+ 	long		tout = 0;	/* milliseconds */
++	unsigned int	noreclaim_flag;
+ 
+-	current->flags |= PF_MEMALLOC;
++	noreclaim_flag = memalloc_noreclaim_save();
+ 	set_freezable();
+ 
+ 	while (1) {
+@@ -601,6 +602,7 @@ xfsaild(
+ 		tout = xfsaild_push(ailp);
  	}
-+	sb_end_write(sc->mp->m_super);
- 	if (sc->flags & XCHK_REAPING_DISABLED)
- 		xchk_start_reaping(sc);
- 	if (sc->flags & XCHK_HAS_QUOTAOFFLOCK) {
-@@ -490,6 +491,14 @@ xfs_scrub_metadata(
- 	sc.ops = &meta_scrub_ops[sm->sm_type];
- 	sc.sick_mask = xchk_health_mask_for_scrub_type(sm->sm_type);
- retry_op:
-+	/*
-+	 * If freeze runs concurrently with a scrub, the freeze can be delayed
-+	 * indefinitely as we walk the filesystem and iterate over metadata
-+	 * buffers.  Freeze quiesces the log (which waits for the buffer LRU to
-+	 * be emptied) and that won't happen while checking is running.
-+	 */
-+	sb_start_write(mp->m_super);
-+
- 	/* Set up for the operation. */
- 	error = sc.ops->setup(&sc, ip);
- 	if (error)
-diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-index 918456ca29e16..442fd4311f180 100644
---- a/fs/xfs/xfs_fsmap.c
-+++ b/fs/xfs/xfs_fsmap.c
-@@ -896,6 +896,14 @@ xfs_getfsmap(
- 	info.format_arg = arg;
- 	info.head = head;
  
-+	/*
-+	 * If fsmap runs concurrently with a scrub, the freeze can be delayed
-+	 * indefinitely as we walk the rmapbt and iterate over metadata
-+	 * buffers.  Freeze quiesces the log (which waits for the buffer LRU to
-+	 * be emptied) and that won't happen while we're reading buffers.
-+	 */
-+	sb_start_write(mp->m_super);
-+
- 	/* For each device we support... */
- 	for (i = 0; i < XFS_GETFSMAP_DEVS; i++) {
- 		/* Is this device within the range the user asked for? */
-@@ -935,6 +943,7 @@ xfs_getfsmap(
- 
- 	if (tp)
- 		xfs_trans_cancel(tp);
-+	sb_end_write(mp->m_super);
- 	head->fmh_oflags = FMH_OF_DEV_T;
- 	return error;
++	memalloc_noreclaim_restore(noreclaim_flag);
+ 	return 0;
  }
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 3b208f9a865cb..a65dc227e40d0 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -306,6 +306,11 @@ xfs_trans_alloc(
-  *
-  * Note the zero-length reservation; this transaction MUST be cancelled
-  * without any dirty data.
-+ *
-+ * Callers should obtain freeze protection to avoid two conflicts with fs
-+ * freezing: (1) having active transactions trip the m_active_trans ASSERTs;
-+ * and (2) grabbing buffers at the same time that freeze is trying to drain
-+ * the buffer LRU list.
-  */
- int
- xfs_trans_alloc_empty(
+ 
 -- 
 2.20.1
 
