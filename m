@@ -2,64 +2,68 @@ Return-Path: <SRS0=7tHi=53=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE800C2BBC7
-	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 09:13:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18BECC2BB85
+	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 09:13:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A8A022084D
+	by mail.kernel.org (Postfix) with ESMTP id DB2F52078E
 	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 09:13:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NCzCzn0p"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KhElO5ki"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725934AbgDKJNI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1726047AbgDKJNI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Sat, 11 Apr 2020 05:13:08 -0400
-Received: from mail-pj1-f66.google.com ([209.85.216.66]:39849 "EHLO
-        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725901AbgDKJNI (ORCPT
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:38766 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725927AbgDKJNI (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Sat, 11 Apr 2020 05:13:08 -0400
-Received: by mail-pj1-f66.google.com with SMTP id o1so796520pjs.4
-        for <linux-xfs@vger.kernel.org>; Sat, 11 Apr 2020 02:13:07 -0700 (PDT)
+Received: by mail-pl1-f196.google.com with SMTP id w3so1481102plz.5
+        for <linux-xfs@vger.kernel.org>; Sat, 11 Apr 2020 02:13:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=MwQEI1DKkFiXlSV02EqzlzqkML0bDLjDHQkXIawDuCE=;
-        b=NCzCzn0p2g/EE5A9sIxQteUARt76GiFUZOBFBz1pjcr2G/JejiO74tjbu74jqbznaN
-         OxyWOQM+e147lwekaiQbOdwhUZbufnqQhqlVIMsGOIqyvxPUoa1kDXt1AKlGF2o2cbkW
-         Mz4mA6wuL5diBGYYR6TIB8OEV7jYE4fXVopMVuWsEppbnLSfdRi9lf2rP/ETGxAae63D
-         6xSp+Hqxc8bwZ5wF2+7bi6OhkbRmQuU2j++EdFhiIao+URYt62gl8QZ0WHxc4cvOX3rC
-         W41/VhoEt/T9436yDd67c2SEHf3FfXDISTG1S8mxffNdW5TUK0Zgo3ybhVECAIMibNOW
-         eLPA==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=YbVuazt/pfKinOclf8G2/AcnAHD/29gN8FR5Y/+Jwcw=;
+        b=KhElO5kizlJksVg3m6j2m85dmrEdGBKEUTPlQU2t3/w4l095ZUamofXZsiGWr3Fn11
+         kmpvjzsYp59Ipe66G3mdtMIEDZ7fHD4ATHOIdI0P9M6u9jSyQCHq/55urGRJbSVrL61D
+         3DtHLMrkCoGWZ+OgW895RfmVhFhkyVlgnZbA+OX1oF8eTqcNUGZNEBNb+Jo6MHsYfEY6
+         lRx7LUWSGnFOMB1Zw1a1rOJS9BlvU4NU2ATjUBiFrbjUcfyg9lSBjvw1xYhcl60F7v+V
+         Ea1lN0v7drzWqlpQOa2rmEG7rhL3SkeOB7xSF6f5bfkR+Ssls5gIHR/GbIl/JWEq4/Tc
+         wB2A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=MwQEI1DKkFiXlSV02EqzlzqkML0bDLjDHQkXIawDuCE=;
-        b=LghtxIjqnhIvBzd2ZEA7IGjM32kp+Y6cTvMsBRTKJsnH7XHQd1INC+5pBN32rvJVnR
-         wUGKZHCokEXzA15s53Qkw7maDHw+oRoz8zGxQyS4PgAAodsM3XnTEeiA9BzxowvQxByV
-         s8RW3sD4qzaf4UqyAjvQywP9AuoaK0ooZtkw+a6eMZpPFeWk/SS1xFI4S5DDn5im41KJ
-         nkdrKiF55+cT4XlXm33jNdiMIRC0iA26oD7BSPlbCaGue6WvC90mxELrNcDYFNwjRviX
-         gCFiZsL0hm31QSczqQTCWVxsp171ERK9WKT00iQZGIrDRDwULuQ54/Ap88SES2Y2hw0D
-         rrKA==
-X-Gm-Message-State: AGi0Pua7Ut/+jbcinuKFgnrufxIjIzivQJSd9yzUz7cgXMyBQm9vr0Lm
-        eysHd8dD39U2sEJuK7ebG2FovqQ=
-X-Google-Smtp-Source: APiQypJvgqlZcNQVjGykurPPWv2zRIwTyT8KwDxO48WYgg09KPQPpQNzwbAtX7wcdRLx+jMQzN8YfQ==
-X-Received: by 2002:a17:90a:6582:: with SMTP id k2mr9464272pjj.180.1586596387181;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=YbVuazt/pfKinOclf8G2/AcnAHD/29gN8FR5Y/+Jwcw=;
+        b=eKUBIqrWEeILkS65W8GmqySZ5zsyEq/9d2vn26CVDCm55CmyTAzycCcLfcI6txnobx
+         zURYkT1KbOsZkYj+GjersHQw7mETH8nj0TOlcgpOcEqnwlRakwwmdKO/FaRLzffg2wKi
+         g8Yo3/S9hWvFrW2KgDxMBWm3psHKgE9WxLqXPttnRGivfGuz7u4KRciGJJuKkYIYdLW6
+         P4LVTCrS97bKmR4twV1mAvAWaOEk3RsB145aGBhh2gkwAO4Plc/ytjrqgo7f4APBRhzU
+         U6c4DHE+ShX0ft7TIKyiTuShpFecZHMGy8B2kSHfIv6rCR0C9nHM5fb8Ky/ZsAoLq436
+         5muw==
+X-Gm-Message-State: AGi0PuY/4AZ3xCA2AtxT1c2wcpXJq9FgbrRdcJF2VK8QN6CA9tX4AULp
+        pvv78x5lu0I6lgEBCqqQDfIQRsk=
+X-Google-Smtp-Source: APiQypI3rzKr1UDv3tunctWDAJs5rqFCpaiy8jCV5Gxk0LfQNZVYk1HwyZZcWOOsd7iYa7AyOiq94A==
+X-Received: by 2002:a17:902:690b:: with SMTP id j11mr8684168plk.236.1586596387875;
         Sat, 11 Apr 2020 02:13:07 -0700 (PDT)
 Received: from he-cluster.localdomain ([67.216.221.250])
-        by smtp.gmail.com with ESMTPSA id n7sm3280364pgm.28.2020.04.11.02.13.06
+        by smtp.gmail.com with ESMTPSA id n7sm3280364pgm.28.2020.04.11.02.13.07
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 11 Apr 2020 02:13:06 -0700 (PDT)
+        Sat, 11 Apr 2020 02:13:07 -0700 (PDT)
 From:   xiakaixu1987@gmail.com
 X-Google-Original-From: kaixuxia@tencent.com
 To:     linux-xfs@vger.kernel.org
 Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
-Subject: [PATCH v2 0/6] xfs: some bugfixes and code cleanups for quota
-Date:   Sat, 11 Apr 2020 17:12:52 +0800
-Message-Id: <1586596378-10754-1-git-send-email-kaixuxia@tencent.com>
+Subject: [PATCH v2 1/6] xfs: trace quota allocations for all quota types
+Date:   Sat, 11 Apr 2020 17:12:53 +0800
+Message-Id: <1586596378-10754-2-git-send-email-kaixuxia@tencent.com>
 X-Mailer: git-send-email 1.8.3.1
+In-Reply-To: <1586596378-10754-1-git-send-email-kaixuxia@tencent.com>
+References: <1586596378-10754-1-git-send-email-kaixuxia@tencent.com>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -67,29 +71,30 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Kaixu Xia <kaixuxia@tencent.com>
 
-Hi all,
+The trace event xfs_dquot_dqalloc does not depend on the
+value uq, so remove the condition, and trace quota allocations
+for all quota types.
 
-This patchset include some bugfixes and code cleanups for
-qupta.
+Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
+Reviewed-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+---
+ fs/xfs/xfs_qm.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Changes for v2:
- - put all the scattered patches into a single patchset.
- - update the git version to fix the no function show problem.
-
-Kaixu Xia (6):
-  xfs: trace quota allocations for all quota types
-  xfs: combine two if statements with same condition
-  xfs: reserve quota inode transaction space only when needed
-  xfs: remove unnecessary variable udqp from xfs_ioctl_setattr
-  xfs: remove unnecessary assertion from xfs_qm_vop_create_dqattach
-  xfs: simplify the flags setting in xfs_qm_scall_quotaon
-
- fs/xfs/xfs_ioctl.c       | 7 ++-----
- fs/xfs/xfs_iops.c        | 5 -----
- fs/xfs/xfs_qm.c          | 7 +++----
- fs/xfs/xfs_qm_syscalls.c | 6 +++---
- 4 files changed, 8 insertions(+), 17 deletions(-)
-
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index c225691fad15..6678baab37de 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -1730,8 +1730,7 @@ xfs_qm_vop_dqalloc(
+ 			pq = xfs_qm_dqhold(ip->i_pdquot);
+ 		}
+ 	}
+-	if (uq)
+-		trace_xfs_dquot_dqalloc(ip);
++	trace_xfs_dquot_dqalloc(ip);
+ 
+ 	xfs_iunlock(ip, lockflags);
+ 	if (O_udqpp)
 -- 
 2.20.0
 
