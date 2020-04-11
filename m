@@ -2,85 +2,158 @@ Return-Path: <SRS0=7tHi=53=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51A3FC2BB55
-	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 16:14:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DBC7C2BA19
+	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 23:08:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 195942166E
-	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 16:14:47 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="E0NjrzbC"
+	by mail.kernel.org (Postfix) with ESMTP id D7FF8218AC
+	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 23:08:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1586646523;
+	bh=qCa1GzfdGwFKk9X9humIXd6q1+OihmcS9vny16uEqFo=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=G9qlnvNi3+2MvZj1Jo2IbPyhsbbQO/2AzccbjZCP4vIdNi0LiFATs3+au3E29Bps6
+	 uInmsKK1JZzP/Y2SjyKUmGLU5yg/q+7/nERNOlgz3tnx6qdP2fFkI2jnYQTh72W2C9
+	 Km3e/TQJD1f6YbIySDd3EWPwiEl5/G6rTn1zWuxM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726140AbgDKQOm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 11 Apr 2020 12:14:42 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:41618 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726069AbgDKQOm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 11 Apr 2020 12:14:42 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=4kLMPck/UQTFbc7P/dtGX9z+C5HE2yHjGcXQaPeD8UE=; b=E0NjrzbCb12cq87rjgyqkwADEW
-        WAHh8mUUwTfsCROLuFG0kbje7DyHccwxOL380SlXlKeGnNjF1bsciAybqAPEmO8A+J3X/1QtH19Xy
-        +53Ux1fcD5TfDsE20RWsl8RObPX1qW5c/K8rzmTk33ONfOLvRz5d9IxM2p2Mk2goeNMYjwze1O3GY
-        wsHu/ins6D7MCHyncSooKHUIilEp5z9YHm1zyBXzOE1V+Lb9jhS0nG2IcuDAzTWSwUQccjqgQR0Qa
-        hm8ooSvlQZJLMhV/HFq1p6r1rlkDX3/SDeHLpj5W2lvCoWJKUE7kUn1u3X1eAkHiiKTDk1FUnWZ8I
-        Q4A1BvHw==;
-Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jNImG-0002LU-1t; Sat, 11 Apr 2020 16:14:40 +0000
-Date:   Sat, 11 Apr 2020 09:14:39 -0700
-From:   Matthew Wilcox <willy@infradead.org>
-To:     syzbot <syzbot+77fa5bdb65cc39711820@syzkaller.appspotmail.com>
-Cc:     darrick.wong@oracle.com, hch@infradead.org, jack@suse.cz,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, riteshh@linux.ibm.com,
-        syzkaller-bugs@googlegroups.com, tytso@mit.edu
-Subject: Re: WARNING in iomap_apply
-Message-ID: <20200411161439.GE21484@bombadil.infradead.org>
-References: <00000000000048518b05a2fef23a@google.com>
+        id S1728976AbgDKXIm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 11 Apr 2020 19:08:42 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45900 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728972AbgDKXIl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:08:41 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7D6A620CC7;
+        Sat, 11 Apr 2020 23:08:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1586646521;
+        bh=qCa1GzfdGwFKk9X9humIXd6q1+OihmcS9vny16uEqFo=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=q+egMDenuGjJ+01DWMTy3YFbSNv1KVjM7MLnKKjr+kUDwj9uPvHiTSVHCoLW/E/Og
+         Bx95pHDXpZ3Zm28fNyAhZLyfMIiaIyaAY2GZ4PxFiGys2C5ajq5D56yubVujk11XJr
+         uHnUDvx9duuvQtX87BCSNXjls0Z49i745moZIThQ=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Eric Biggers <ebiggers@google.com>,
+        syzbot+1f9dc49e8de2582d90c2@syzkaller.appspotmail.com,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.5 077/121] xfs: clear PF_MEMALLOC before exiting xfsaild thread
+Date:   Sat, 11 Apr 2020 19:06:22 -0400
+Message-Id: <20200411230706.23855-77-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200411230706.23855-1-sashal@kernel.org>
+References: <20200411230706.23855-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <00000000000048518b05a2fef23a@google.com>
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Apr 11, 2020 at 12:39:13AM -0700, syzbot wrote:
-> The bug was bisected to:
-> 
-> commit d3b6f23f71670007817a5d59f3fbafab2b794e8c
-> Author: Ritesh Harjani <riteshh@linux.ibm.com>
-> Date:   Fri Feb 28 09:26:58 2020 +0000
-> 
->     ext4: move ext4_fiemap to use iomap framework
-> 
-> bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=16c62a57e00000
-> final crash:    https://syzkaller.appspot.com/x/report.txt?x=15c62a57e00000
-> console output: https://syzkaller.appspot.com/x/log.txt?x=11c62a57e00000
-> 
-> IMPORTANT: if you fix the bug, please add the following tag to the commit:
-> Reported-by: syzbot+77fa5bdb65cc39711820@syzkaller.appspotmail.com
-> Fixes: d3b6f23f7167 ("ext4: move ext4_fiemap to use iomap framework")
-> 
-> ------------[ cut here ]------------
-> WARNING: CPU: 0 PID: 7023 at fs/iomap/apply.c:51 iomap_apply+0xa0c/0xcb0 fs/iomap/apply.c:51
+From: Eric Biggers <ebiggers@google.com>
 
-This is:
+[ Upstream commit 10a98cb16d80be3595fdb165fad898bb28b8b6d2 ]
 
-        if (WARN_ON(iomap.length == 0))
-                return -EIO;
+Leaving PF_MEMALLOC set when exiting a kthread causes it to remain set
+during do_exit().  That can confuse things.  In particular, if BSD
+process accounting is enabled, then do_exit() writes data to an
+accounting file.  If that file has FS_SYNC_FL set, then this write
+occurs synchronously and can misbehave if PF_MEMALLOC is set.
 
-and the call trace contains ext4_fiemap() so the syzbot bisection looks
-correct.
+For example, if the accounting file is located on an XFS filesystem,
+then a WARN_ON_ONCE() in iomap_do_writepage() is triggered and the data
+doesn't get written when it should.  Or if the accounting file is
+located on an ext4 filesystem without a journal, then a WARN_ON_ONCE()
+in ext4_write_inode() is triggered and the inode doesn't get written.
 
->  iomap_fiemap+0x184/0x2c0 fs/iomap/fiemap.c:88
->  _ext4_fiemap+0x178/0x4f0 fs/ext4/extents.c:4860
->  ovl_fiemap+0x13f/0x200 fs/overlayfs/inode.c:467
->  ioctl_fiemap fs/ioctl.c:226 [inline]
->  do_vfs_ioctl+0x8d7/0x12d0 fs/ioctl.c:715
+Fix this in xfsaild() by using the helper functions to save and restore
+PF_MEMALLOC.
+
+This can be reproduced as follows in the kvm-xfstests test appliance
+modified to add the 'acct' Debian package, and with kvm-xfstests's
+recommended kconfig modified to add CONFIG_BSD_PROCESS_ACCT=y:
+
+        mkfs.xfs -f /dev/vdb
+        mount /vdb
+        touch /vdb/file
+        chattr +S /vdb/file
+        accton /vdb/file
+        mkfs.xfs -f /dev/vdc
+        mount /vdc
+        umount /vdc
+
+It causes:
+	WARNING: CPU: 1 PID: 336 at fs/iomap/buffered-io.c:1534
+	CPU: 1 PID: 336 Comm: xfsaild/vdc Not tainted 5.6.0-rc5 #3
+	Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20191223_100556-anatol 04/01/2014
+	RIP: 0010:iomap_do_writepage+0x16b/0x1f0 fs/iomap/buffered-io.c:1534
+	[...]
+	Call Trace:
+	 write_cache_pages+0x189/0x4d0 mm/page-writeback.c:2238
+	 iomap_writepages+0x1c/0x33 fs/iomap/buffered-io.c:1642
+	 xfs_vm_writepages+0x65/0x90 fs/xfs/xfs_aops.c:578
+	 do_writepages+0x41/0xe0 mm/page-writeback.c:2344
+	 __filemap_fdatawrite_range+0xd2/0x120 mm/filemap.c:421
+	 file_write_and_wait_range+0x71/0xc0 mm/filemap.c:760
+	 xfs_file_fsync+0x7a/0x2b0 fs/xfs/xfs_file.c:114
+	 generic_write_sync include/linux/fs.h:2867 [inline]
+	 xfs_file_buffered_aio_write+0x379/0x3b0 fs/xfs/xfs_file.c:691
+	 call_write_iter include/linux/fs.h:1901 [inline]
+	 new_sync_write+0x130/0x1d0 fs/read_write.c:483
+	 __kernel_write+0x54/0xe0 fs/read_write.c:515
+	 do_acct_process+0x122/0x170 kernel/acct.c:522
+	 slow_acct_process kernel/acct.c:581 [inline]
+	 acct_process+0x1d4/0x27c kernel/acct.c:607
+	 do_exit+0x83d/0xbc0 kernel/exit.c:791
+	 kthread+0xf1/0x140 kernel/kthread.c:257
+	 ret_from_fork+0x27/0x50 arch/x86/entry/entry_64.S:352
+
+This bug was originally reported by syzbot at
+https://lore.kernel.org/r/0000000000000e7156059f751d7b@google.com.
+
+Reported-by: syzbot+1f9dc49e8de2582d90c2@syzkaller.appspotmail.com
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ fs/xfs/xfs_trans_ail.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 00cc5b8734be8..3bc570c90ad97 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -529,8 +529,9 @@ xfsaild(
+ {
+ 	struct xfs_ail	*ailp = data;
+ 	long		tout = 0;	/* milliseconds */
++	unsigned int	noreclaim_flag;
+ 
+-	current->flags |= PF_MEMALLOC;
++	noreclaim_flag = memalloc_noreclaim_save();
+ 	set_freezable();
+ 
+ 	while (1) {
+@@ -601,6 +602,7 @@ xfsaild(
+ 		tout = xfsaild_push(ailp);
+ 	}
+ 
++	memalloc_noreclaim_restore(noreclaim_flag);
+ 	return 0;
+ }
+ 
+-- 
+2.20.1
+
