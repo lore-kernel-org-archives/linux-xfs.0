@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D301C2BB86
-	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 23:12:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB568C2BA19
+	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 23:29:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 458E9218AC
-	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 23:12:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B2EF420787
+	for <linux-xfs@archiver.kernel.org>; Sat, 11 Apr 2020 23:29:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586646777;
-	bh=agg1jRkFg+vwmbSWbEn9JEOCGyINNMhWS1tVFklRvgI=;
+	s=default; t=1586647756;
+	bh=Fa+sPfwU/NhlYp82gxZdts2D6EbwCQVnTSQvRIzFtA0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=U/BlfR4TB1oEtoNiPDtJTAebqokJqTdtNULbz8nr6CABolyn320KK3Apuine1uuSN
-	 mpEWHCksE15Hz8hKi/ZWx3gG8iYVsgCj+hv6x9qT2FvsFGpG5mAmXNg4CGe9UWw00I
-	 o71galAKJ77X+zp+GQIq0edMVLDJl3u5h+crUnH8=
+	b=TQsYEqKEU6RSal74TViMElKTImVJumE23X+rCNun93G+JZTTwYyA43OyAmJnKwsp7
+	 iZbBj80sbPC7k30oaO+IBmMeVsXfpaURJuPYZvTSn8ZgT1vRM3HxEJEonHiJAVZOxB
+	 3LFvxm889nLtW+UTpSfUp2weGk4o8ubZGeWT72dk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730289AbgDKXMz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:12:55 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53578 "EHLO mail.kernel.org"
+        id S1729031AbgDKX3L (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 11 Apr 2020 19:29:11 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50424 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730280AbgDKXMz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:12:55 -0400
+        id S1729783AbgDKXLI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:11:08 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8DCFA20787;
-        Sat, 11 Apr 2020 23:12:54 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2B45920708;
+        Sat, 11 Apr 2020 23:11:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646775;
-        bh=agg1jRkFg+vwmbSWbEn9JEOCGyINNMhWS1tVFklRvgI=;
+        s=default; t=1586646668;
+        bh=Fa+sPfwU/NhlYp82gxZdts2D6EbwCQVnTSQvRIzFtA0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=d+SqjaSd0v7OWzsrMah7kfd18J88e5l3MHhDg8ov6YLZwlY/CWM/cSJuaTlBK2KGS
-         Uo0yfEHQXgxlX30zjywy2++ziPKOxvbsfbiW+prPCFx1GLGAPF+iyLnCxPh9yIeMdT
-         UmeFtSeYPjsqv+IVtl7mGnqr5Ej3g6Lv7INcCmV8=
+        b=Rt1FfjSJ5mSllBO2X5lEKXmviFHgzj+qciM+Zl4/crX06ZF51Fze15M7KH0MHHYmM
+         ord4SUAtYreCi/R0fTfRODZ9cDbdkCAaer3phf6R8IKbCF7SPa39QIIg8XF6aEK+er
+         X1QxYR9yVPdBHmoNDfiJN/ERoUCxCE1D3iUM3Zao=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Eric Biggers <ebiggers@google.com>,
@@ -45,12 +45,12 @@ Cc:     Eric Biggers <ebiggers@google.com>,
         "Darrick J . Wong" <darrick.wong@oracle.com>,
         Christoph Hellwig <hch@lst.de>,
         Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 42/66] xfs: clear PF_MEMALLOC before exiting xfsaild thread
-Date:   Sat, 11 Apr 2020 19:11:39 -0400
-Message-Id: <20200411231203.25933-42-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 067/108] xfs: clear PF_MEMALLOC before exiting xfsaild thread
+Date:   Sat, 11 Apr 2020 19:09:02 -0400
+Message-Id: <20200411230943.24951-67-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200411231203.25933-1-sashal@kernel.org>
-References: <20200411231203.25933-1-sashal@kernel.org>
+In-Reply-To: <20200411230943.24951-1-sashal@kernel.org>
+References: <20200411230943.24951-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -132,10 +132,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index d3a4e89bf4a0d..66f167aefd94f 100644
+index 6ccfd75d3c24c..812108f6cc89c 100644
 --- a/fs/xfs/xfs_trans_ail.c
 +++ b/fs/xfs/xfs_trans_ail.c
-@@ -520,8 +520,9 @@ xfsaild(
+@@ -529,8 +529,9 @@ xfsaild(
  {
  	struct xfs_ail	*ailp = data;
  	long		tout = 0;	/* milliseconds */
@@ -146,7 +146,7 @@ index d3a4e89bf4a0d..66f167aefd94f 100644
  	set_freezable();
  
  	while (1) {
-@@ -592,6 +593,7 @@ xfsaild(
+@@ -601,6 +602,7 @@ xfsaild(
  		tout = xfsaild_push(ailp);
  	}
  
