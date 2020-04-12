@@ -7,124 +7,113 @@ X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB5C8C2BA2B
-	for <linux-xfs@archiver.kernel.org>; Sun, 12 Apr 2020 09:40:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2684C2BB86
+	for <linux-xfs@archiver.kernel.org>; Sun, 12 Apr 2020 11:29:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7B3EE20708
-	for <linux-xfs@archiver.kernel.org>; Sun, 12 Apr 2020 09:40:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A17D206DA
+	for <linux-xfs@archiver.kernel.org>; Sun, 12 Apr 2020 11:29:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oLMyKEkC"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LRxbCfnM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726934AbgDLJkQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 12 Apr 2020 05:40:16 -0400
-Received: from mail-io1-f66.google.com ([209.85.166.66]:44265 "EHLO
-        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726043AbgDLJkQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 12 Apr 2020 05:40:16 -0400
-Received: by mail-io1-f66.google.com with SMTP id h6so6427256iok.11;
-        Sun, 12 Apr 2020 02:40:15 -0700 (PDT)
+        id S1726818AbgDLL3r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 12 Apr 2020 07:29:47 -0400
+Received: from mail-io1-f52.google.com ([209.85.166.52]:39075 "EHLO
+        mail-io1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726139AbgDLL3q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 12 Apr 2020 07:29:46 -0400
+Received: by mail-io1-f52.google.com with SMTP id m4so6597107ioq.6;
+        Sun, 12 Apr 2020 04:29:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=DudAws+5XXDrWI0GuFKZK0uggxlFAK8zrjJOHTOzHvQ=;
-        b=oLMyKEkCm7I/W/A1JgYH0WtXqiBHsTY1omrWGoWeTSLEN3CRY+SOrCzgj+j8dXbT3R
-         3V4g+VDYJ18ht3BvE76CVfsI9aLy76I2/saDHYI7TAhDY+aCf1QXeuoQj1ierGjq6yUs
-         6NQE12G79t/FQbSZxu5L7qhGKRdBhiaUilKHwcCkeiySozNDg8lYnZjgQrtJvlDnddT6
-         5lN9bG180nss/feExrMPMJyu1Zky5KVreWqzrGRNCg/KpPYRpunMIP2rzSN7Zwd+vEEv
-         jVTerEys3qTK+pzUep1SHCOz4GFY/BEi4vIKQGIetWtTLJpJKPeSuOg2/3EmE7j1Em/i
-         Z6Kw==
+        bh=lr8Du1SNizwqButahq7qkxIKOJ2tYQem2z0WmME8mcI=;
+        b=LRxbCfnM2pAXUuR19iUj6iP0vBxBl6OyeOmOOFBnYiOUeygcQ6wd1ZJA8timIuABUC
+         qwiyPIxYWoFB0KCfgStqa+sucIENFSFvuxV8jsgBP98rW2uLQoWKjQxVJhKDGBVZ+6xe
+         R7PXQvvSTcHwhvyiqPcN/tjHlnXBVdMgSle2tEim4e0DIJkyK36IJJVTuF4NMB9PnNgy
+         B7JPZMVRJ2EQMuwlhRlQreGJoMd/A9TK4nt09k72toTtnRmCb9qFnVIIux0+PIBx24ng
+         qHmcHmpPCaKYSBeG1F+fEImHYHNyFphV79PbEwuBStrk1+bH4acZopN6z/F0OA7M8hY4
+         zEZA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=DudAws+5XXDrWI0GuFKZK0uggxlFAK8zrjJOHTOzHvQ=;
-        b=CMCm94W+N1aTYLnPG2SsdfB+cYDdO1hrAU/UGJiIGIT+u8BV5EP7RvfqOdcJEXL/N7
-         tdJXZEkpIW/B1RytV4gKqBc/2BCYRfCGni9XrhgfaW3jj1863uUiQXAAvfFp+XuQ+gXC
-         EXAI/1kUVxZheQmPhQtJzF80lXHT8+HiswyAN9g80NNxlvVdbcf0+Rg54N+rkEkBRhyT
-         vJXHK7Ia8Od/O3zAEME0anGGSXgvMRH+tTNC+KgWobPCz7vMkwj6dxyjLAfQxVOHb6TC
-         1pfr2mZjpmvyPluExs8hccdvsJdYniKrXcmDL7F7L+dRL4xDuGuHKfdb4RaLjSZNY9xu
-         nzhg==
-X-Gm-Message-State: AGi0PuayF7XyUEYYFp1oD8ReCUidUjmJVD0Kbuas6kPdKhswlwjz8z2S
-        HlV/dqQfqbCUWF+cWDObkwUBcN5L00bk3bvlFCc=
-X-Google-Smtp-Source: APiQypKgib8dZi5NZWvrgJ3IJzahp49Bg5kAH7kyRnQiEqTUnZAvY9sH5N9xMqe9W2wkw6a4Vie0NTHrFFJZfCswvCI=
-X-Received: by 2002:a6b:cd4a:: with SMTP id d71mr11597681iog.5.1586684415253;
- Sun, 12 Apr 2020 02:40:15 -0700 (PDT)
+        bh=lr8Du1SNizwqButahq7qkxIKOJ2tYQem2z0WmME8mcI=;
+        b=DNCrM6CC1K7gz75dwyseFfjfYG0aNrb6lKA6PO9gsCRpO8Eje2Tzy75VHJDRsxbSNS
+         zWqGkP18q4RFbsG+XbJa29s9KYguopuRHk8bhC8P95t9aLEit8HQG/6rE9f/qS+/qZQa
+         xAPKzTsZc3xbb7S1KGlwjn/K1R0pM1+LQZBgU5aM5tHyXnK5EpK2Aeqxr1LUU1hrMO9+
+         DSluX7McTJcMjULXVeZDcX939IP/K3aCOo1ZOfYZXP00Tnest2cPbEEHxJQ7NHss1X2M
+         dLDcCV/PJLtN6BFziFbNMh9IiVbAxSkiJ4dxdTx48geHuemYYrUek1bHr23wCsYN+iVM
+         hRyg==
+X-Gm-Message-State: AGi0Pubk4M+aVapQJc/fO1Qik9hs3qL4vXT11L/icNFxAK5lIz5SR7LZ
+        afG1agQYkDrEpnsEftJ6sJKQ/QN8kXLg++4gftE=
+X-Google-Smtp-Source: APiQypJoFFkbwvHNs7m2NtbtOkd6202kUw0Zhm4Xg4fnqOTM83ohDAaCR7uPl1lz0AyybO2GXi0EnO5JCXeTMI5sX7g=
+X-Received: by 2002:a05:6638:38e:: with SMTP id y14mr11426792jap.123.1586690986095;
+ Sun, 12 Apr 2020 04:29:46 -0700 (PDT)
 MIME-Version: 1.0
-References: <00000000000048518b05a2fef23a@google.com> <20200411161439.GE21484@bombadil.infradead.org>
- <20200412091713.B7282A404D@d06av23.portsmouth.uk.ibm.com>
-In-Reply-To: <20200412091713.B7282A404D@d06av23.portsmouth.uk.ibm.com>
+References: <CABV8kRw_jGxPqWc68Bj-uP_hSrKO0MmShOmtuzGQA2W3WHyCrg@mail.gmail.com>
+In-Reply-To: <CABV8kRw_jGxPqWc68Bj-uP_hSrKO0MmShOmtuzGQA2W3WHyCrg@mail.gmail.com>
 From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Sun, 12 Apr 2020 12:40:04 +0300
-Message-ID: <CAOQ4uxg0Fmh58bvTKFyHDhAsmCtgbxpHr+mHYY=O9Wcuo_1JZQ@mail.gmail.com>
-Subject: Re: WARNING in iomap_apply
-To:     Ritesh Harjani <riteshh@linux.ibm.com>
-Cc:     syzbot <syzbot+77fa5bdb65cc39711820@syzkaller.appspotmail.com>,
-        Ext4 Developers List <linux-ext4@vger.kernel.org>,
-        overlayfs <linux-unionfs@vger.kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
+Date:   Sun, 12 Apr 2020 14:29:35 +0300
+Message-ID: <CAOQ4uxhPKR34cXvWfF49z8mTGJm+oP2ibfohsXNdY7tXaOi4RA@mail.gmail.com>
+Subject: Re: Same mountpoint restriction in FICLONE ioctls
+To:     Keno Fischer <keno@juliacomputing.com>
+Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Miklos Szeredi <mszeredi@redhat.com>,
         linux-xfs <linux-xfs@vger.kernel.org>,
-        syzkaller-bugs <syzkaller-bugs@googlegroups.com>,
-        Theodore Tso <tytso@mit.edu>
+        CIFS <linux-cifs@vger.kernel.org>,
+        Linux NFS Mailing List <linux-nfs@vger.kernel.org>,
+        Olga Kornievskaia <kolga@netapp.com>,
+        Steve French <smfrench@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Apr 12, 2020 at 12:17 PM Ritesh Harjani <riteshh@linux.ibm.com> wrote:
++CC XFS,NFS,CIFS
+
+On Sun, Apr 12, 2020 at 1:06 PM Keno Fischer <keno@juliacomputing.com> wrote:
 >
+> Hello,
 >
+> I was curious about the reasoning behind the
+> same-mountpoint restriction in the FICLONE
+> ioctl. I saw that in commit
 >
-> On 4/11/20 9:44 PM, Matthew Wilcox wrote:
-> > On Sat, Apr 11, 2020 at 12:39:13AM -0700, syzbot wrote:
-> >> The bug was bisected to:
-> >>
-> >> commit d3b6f23f71670007817a5d59f3fbafab2b794e8c
-> >> Author: Ritesh Harjani <riteshh@linux.ibm.com>
-> >> Date:   Fri Feb 28 09:26:58 2020 +0000
-> >>
-> >>      ext4: move ext4_fiemap to use iomap framework
-> >>
-> >> bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=16c62a57e00000
-> >> final crash:    https://syzkaller.appspot.com/x/report.txt?x=15c62a57e00000
-> >> console output: https://syzkaller.appspot.com/x/log.txt?x=11c62a57e00000
-> >>
-> >> IMPORTANT: if you fix the bug, please add the following tag to the commit:
-> >> Reported-by: syzbot+77fa5bdb65cc39711820@syzkaller.appspotmail.com
-> >> Fixes: d3b6f23f7167 ("ext4: move ext4_fiemap to use iomap framework")
-> >>
-> >> ------------[ cut here ]------------
-> >> WARNING: CPU: 0 PID: 7023 at fs/iomap/apply.c:51 iomap_apply+0xa0c/0xcb0 fs/iomap/apply.c:51
-> >
-> > This is:
-> >
-> >          if (WARN_ON(iomap.length == 0))
-> >                  return -EIO;
-> >
-> > and the call trace contains ext4_fiemap() so the syzbot bisection looks
-> > correct.
+> [913b86e92] vfs: allow vfs_clone_file_range() across mount points
 >
-> I think I know what could be going wrong here.
->
-> So the problem happens when we have overlayfs mounted on top of ext4.
-> Now overlayfs might be supporting max logical filesize which is more
-> than what ext4 could support (i.e. sb->s_maxbytes for overlayfs must
-> be greater than compared to ext4). So that's why the check in func
-> ioctl_fiemap -> fiemap_check_ranges() couldn't truncate to logical
-> filesize which the actual underlying filesystem supports.
->
-> @All,
-> Do you think we should make overlayfs also check for
-> fiemap_check_ranges()? Not as part of this fix, but as a later
-> addition to overlayfs? Please let me know, I could also make that patch.
+> this check was moved from the vfs layer into
+> the ioctl itself, so it appears to be a policy restriction
+> rather than a technical limitation. I understand why
+> hardlinks are disallowed across mount point boundaries,
+> but it seems like that rationale would not apply to clones,
+> since modifying the clone would not affect the original
+> file. Is there some other reason that the ioctl enforces
+> this restriction?
 >
 
-Yes, I think that would be correct.
+I don't know. I suppose that when FICLONE was introduced
+there wasn't any use case for cross mount clone.
+
+Note that copy_file_range() also had this restriction, which was
+recently lifted, because NFSv4 and CIFS needed this functionality.
+
+As far as I can tell, CIFS and NFSv4 can also support cross mount
+clone, but nobody stepped up to request or implement that.
+
+The question is: do you *really* need cross mount clone?
+Can you use copy_file_range() instead?
+It attempts to do remap_file_range() (clone) before falling back to
+kernel copy_file_range().
+
+> Removing this restrictions would have some performance
+> advantages for us, but I figured there must be a good reason
+> why it's there that I just don't know about, so I figured I'd ask.
+>
+
+You did not specify your use case.
+Across which filesystems mounts are you trying to clone?
 
 Thanks,
 Amir.
