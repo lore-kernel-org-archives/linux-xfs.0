@@ -2,180 +2,147 @@ Return-Path: <SRS0=wgma=55=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CA09C2BA19
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Apr 2020 07:54:50 +0000 (UTC)
-Received: from vger.kernel.org (unknown [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D0B21206A1
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Apr 2020 07:54:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A2F5C2BA19
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Apr 2020 09:04:49 +0000 (UTC)
+Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
+	by mail.kernel.org (Postfix) with ESMTP id 08EA920732
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Apr 2020 09:04:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LdKv4Bhm"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D0B21206A1
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
-Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-xfs-owner@vger.kernel.org
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gtIWF+DR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729523AbgDMHyt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Apr 2020 03:54:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.18]:37460 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727480AbgDMHys (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Apr 2020 03:54:48 -0400
-Received: from mail-io1-xd43.google.com (mail-io1-xd43.google.com [IPv6:2607:f8b0:4864:20::d43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A9AEC008651;
-        Mon, 13 Apr 2020 00:54:48 -0700 (PDT)
-Received: by mail-io1-xd43.google.com with SMTP id n10so8549276iom.3;
-        Mon, 13 Apr 2020 00:54:48 -0700 (PDT)
+        id S1728116AbgDMJEq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Apr 2020 05:04:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55406 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728091AbgDMJEl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Apr 2020 05:04:41 -0400
+Received: from mail-il1-x143.google.com (mail-il1-x143.google.com [IPv6:2607:f8b0:4864:20::143])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0008AC008749;
+        Mon, 13 Apr 2020 01:57:51 -0700 (PDT)
+Received: by mail-il1-x143.google.com with SMTP id f82so4509930ilh.8;
+        Mon, 13 Apr 2020 01:57:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=Fxdds2vPGS3N/102R6ExV/SBHS+w/11kI+QRFuDnruo=;
-        b=LdKv4BhmbHJcCbUnqYd7/INd7IRPACwNoGsA+AW7nLT9uuV9rGvs/8favMyv1eZwZZ
-         Wyw02zFL0pMC6j02qV9kT8QSNqmPtZ10h7PFXbT5HN15zveOABgeIRuO25KBGTEdiAT1
-         x+fL0JFJrzeYbeZskSJBRrxUz3qFqTNh86hPJVMHDz5cFc/H0OUTRTSN1i00o0YbK5wg
-         XpCljmKRIw2wEprR1kjab0mzXG0jJFavEUlRlUG4TUbxOD+R8DiHgf30ZT34el3EHw2k
-         WezgSHoiZfzKq6GQ3QX2pLsJDeZo5ptLjwoLtpAqUVAQyp/ljQwCsFR9EJAXAOz02qpj
-         AEvQ==
+        bh=GHA9/acdYNKg6TtXigttoWf+ctJ+xZIYedEqvuMFErI=;
+        b=gtIWF+DRFw3NFjElbOmdUq+StalADZweXYUfWCkqiK8JLnF7+ewHUQMxY+05DelQSh
+         qXSsO4sJPiZJO5nQCa3P36ztKcww04jTPFhV7HkEKzuN22nplRCgZ1Zf7qRo3fGIKHQ6
+         7X+qnxY6W3J8t4tN73OF6zZKx1wsnuu+3MN8PLFa77bWZvxOID6Hap2HgyVEMWm3235m
+         wPXQZS9Mq+UFvND3v/rf6kfHfS9Dtlj7GHzLNFHzDfKI7YP88UIGKKQWyrGgKy/TRMLg
+         f8Hw9XVxkuDpz/JGArMAMJnoBgNoxJHtqr1WTtcp0Hph4bDYkRgn0hNTjOVSZevNria0
+         0x/w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=Fxdds2vPGS3N/102R6ExV/SBHS+w/11kI+QRFuDnruo=;
-        b=mbber3RmO5vEhbxW1IBgM9Jl5yljeevnkMJFINzNL2XETtYiF3Ta9oUBu70I1whvAy
-         OstmP4E7+LWiJ4Z6o2bgOqhoiCii26I+PxjLZ0o/2gDIPWSL8xesTxmZxPTFTerAt5ws
-         qUzeY9mahyXCWod6UblpXXLKQhl24oL+QYEqVlKRW58hNIonbVkFI9KQ2cn0N4B/q8um
-         mbV9lONA8PksUgPR0sB4rU2C+Ff2jzsfYyJbJGEdihSGGBoGV1w331+Klz64l3AuhvvJ
-         3kaT4JTp2FNtwv7Pno+ya1FlbntLgo2/Z/58uC5KeM77+5gZIE3yPYwYKxeq7WJGxXEc
-         qH+g==
-X-Gm-Message-State: AGi0PuaGv8VKBDV3LNBHF9VSVWIEorJu6QTCGH9stP8Oxdz+iYm1/qz4
-        H9JPPRniiWrCUb9wBLcaYuQBzbrJeEO5wk+pPt8=
-X-Google-Smtp-Source: APiQypL5Eljk4TK/mwa+XDxgwgpIUGCujDIQ8sy3Yf0VdZARHKdYNLMpnF8pB675OD/IHE0afd4q+knrLM59ckuUgB0=
-X-Received: by 2002:a05:6602:1302:: with SMTP id h2mr15261121iov.186.1586764487632;
- Mon, 13 Apr 2020 00:54:47 -0700 (PDT)
+        bh=GHA9/acdYNKg6TtXigttoWf+ctJ+xZIYedEqvuMFErI=;
+        b=NwsDSGSaKdFTZkTmiVqAnpW62xZArNmU6d5w+o9F3+bbxfOmvyEXM1NA/Tx9OASAs5
+         9sbCeOYFDS4bKI7QSV71QBVjO8wgap36rBwLifstQCNg9eEuR69n/+eLuSxaFt1pjfGW
+         ngPQ13g8ZqqbeAFU5lrAwPuA/O6SVjn89RKS3ogq/3kMc4sgXcfaHeKiOAgYZkg3Xkbs
+         wX2Thtd2M9nmPcCjwXVyEjHeEUY0kExO9sU8AlrGC7v7FCu5D3CrD2blMwUNlSW6C8iU
+         P93Ne5NimiENFEA368sKClnHegA3N+jmRyv8LI5wpckkC+fJWJcOGR8KPEf5Wdanzgmq
+         65ZQ==
+X-Gm-Message-State: AGi0PuZ9vZcE3FWUmgWohdx6HQ09ge0lVV//bZNOsX3jJqaJwNvlOKXN
+        As5tGuTTwMH4mLlSh8PJ70ThsoCQc5F6VOHZWFMU/qWI
+X-Google-Smtp-Source: APiQypJCBRNY8WDeGRUOflqvmNLp4SLE40Vw+oZCgbf0ZQM7kLQ076HrzVTr4mL4n8pgv7NuZjDw6OSN5H1RzKfZw1A=
+X-Received: by 2002:a92:cc02:: with SMTP id s2mr12907286ilp.9.1586768271374;
+ Mon, 13 Apr 2020 01:57:51 -0700 (PDT)
 MIME-Version: 1.0
-References: <20200413054419.1560503-1-ira.weiny@intel.com>
-In-Reply-To: <20200413054419.1560503-1-ira.weiny@intel.com>
+References: <CABV8kRw_jGxPqWc68Bj-uP_hSrKO0MmShOmtuzGQA2W3WHyCrg@mail.gmail.com>
+ <CAOQ4uxhPKR34cXvWfF49z8mTGJm+oP2ibfohsXNdY7tXaOi4RA@mail.gmail.com> <CABV8kRxVA0j2qLkyWx+vULh2DxK2Ef4nPk-zXCikN8XmdBOFgQ@mail.gmail.com>
+In-Reply-To: <CABV8kRxVA0j2qLkyWx+vULh2DxK2Ef4nPk-zXCikN8XmdBOFgQ@mail.gmail.com>
 From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Mon, 13 Apr 2020 10:54:36 +0300
-Message-ID: <CAOQ4uxguVRysAuVEtQmPj+x=RDtDnGCtNeGvbvXNuvppwagwDg@mail.gmail.com>
-Subject: Re: [PATCH] xfs/XXX: Add xfs/XXX
-To:     ira.weiny@intel.com
-Cc:     fstests <fstests@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        Jeff Moyer <jmoyer@redhat.com>,
-        Ext4 <linux-ext4@vger.kernel.org>,
+Date:   Mon, 13 Apr 2020 11:57:40 +0300
+Message-ID: <CAOQ4uxh2KKwORLC+gWEF=mWzBa3Kh4A4HgRoiad5N5qu06xjcg@mail.gmail.com>
+Subject: Re: Same mountpoint restriction in FICLONE ioctls
+To:     Keno Fischer <keno@juliacomputing.com>
+Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Miklos Szeredi <mszeredi@redhat.com>,
         linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+        CIFS <linux-cifs@vger.kernel.org>,
+        Linux NFS Mailing List <linux-nfs@vger.kernel.org>,
+        Olga Kornievskaia <kolga@netapp.com>,
+        Steve French <smfrench@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 13, 2020 at 9:06 AM <ira.weiny@intel.com> wrote:
+On Mon, Apr 13, 2020 at 1:28 AM Keno Fischer <keno@juliacomputing.com> wrote:
 >
-> From: Ira Weiny <ira.weiny@intel.com>
+> > You did not specify your use case.
 >
-> Add XXX to test per file DAX operations.
+> My use case is recording (https://rr-project.org/) executions
 
-Please change commit title to "xfs: Add test for per file DAX operations"
-The title Add xfs/XXX is not useful even if XXX where a number.
+Cool! I should try that ;-)
 
-But the kernel patch suggests that there is an intention to make
-this behavior also applicable to ext4??
-If that is the case I would recommend making this a generic tests
-which requires filesystem support for -o dax=XXX
+> of containers (which often make heavy use of bind mounts on
+> the same file system, thus me running into this restriction).
+> In essence, at relevant read or mmap operations,
+> rr needs to checkpoint the file that was opened,
+> in case it later gets deleted or modified.
+> It always tries to FICLONE the file first,
+> before deciding heuristically whether to
+> instead create a copy (if it decides there is a low
+> likelihood the file will get changed - e.g. because
+> it's a system file - it may decide to take the chance and
+> not copy it at the risk of creating a broken recording).
+> That's often a decent trade-off, but of course it's not
+> 100% perfect.
+>
+> > The question is: do you *really* need cross mount clone?
+> > Can you use copy_file_range() instead?
+>
+> Good question. copy_file_range doesn't quite work
+> for that initial clone, because we do want it to fail if
+> cloning doesn't work (so that we can apply the
+> heuristics). However, you make a good point that
+> the copy fallback should probably use copy_file_range.
+> At least that way, if it does decide to copy, the
+> performance will be better.
+>
+> It would still be nice for FICLONE to ease this restriction,
+> since it reduces the chance of the heuristics getting
+> it wrong and preventing the copy, even if such
+> a copy would have been cheap.
+>
 
->
-> The following is tested[*]
->
->  1. There exists an in-kernel access mode flag S_DAX that is set when
->     file accesses go directly to persistent memory, bypassing the page
->     cache.  Applications must call statx to discover the current S_DAX
->     state (STATX_ATTR_DAX).
->
->  2. There exists an advisory file inode flag FS_XFLAG_DAX that is
->     inherited from the parent directory FS_XFLAG_DAX inode flag at file
->     creation time.  This advisory flag can be set or cleared at any
->     time, but doing so does not immediately affect the S_DAX state.
->
->     Unless overridden by mount options (see (3)), if FS_XFLAG_DAX is set
->     and the fs is on pmem then it will enable S_DAX at inode load time;
->     if FS_XFLAG_DAX is not set, it will not enable S_DAX.
->
->  3. There exists a dax= mount option.
->
->     "-o dax=never"  means "never set S_DAX, ignore FS_XFLAG_DAX."
->
->     "-o dax=always" means "always set S_DAX (at least on pmem),
->                     and ignore FS_XFLAG_DAX."
->
->     "-o dax"        is an alias for "dax=always".
->
->     "-o dax=inode"  means "follow FS_XFLAG_DAX" and is the default.
->
->  4. There exists an advisory directory inode flag FS_XFLAG_DAX that can
->     be set or cleared at any time.  The flag state is copied into any
->     files or subdirectories when they are created within that directory.
->
->  5. Programs that require a specific file access mode (DAX or not DAX)
->     can do one of the following:
->
->     (a) Create files in directories that the FS_XFLAG_DAX flag set as
->         needed; or
->
->     (b) Have the administrator set an override via mount option; or
->
->     (c) Set or clear the file's FS_XFLAG_DAX flag as needed.  Programs
->         must then cause the kernel to evict the inode from memory.  This
->         can be done by:
->
->         i>  Closing the file and re-opening the file and using statx to
->             see if the fs has changed the S_DAX flag; and
->
->         ii> If the file still does not have the desired S_DAX access
->             mode, either unmount and remount the filesystem, or close
->             the file and use drop_caches.
->
->  6. It's not unreasonable that users who want to squeeze every last bit
->     of performance out of the particular rough and tumble bits of their
->     storage also be exposed to the difficulties of what happens when the
->     operating system can't totally virtualize those hardware
->     capabilities.  Your high performance sports car is not a Toyota
->     minivan, as it were.
->
-> [*] https://lore.kernel.org/lkml/20200409165927.GD6741@magnolia/
->
-> Signed-off-by: Ira Weiny <ira.weiny@intel.com>
->
-> ---
-> Changes from v6 (kernel patch set):
->         Start versions tracking the kernel patch set.
->         Update for new requirements
->
-> Changes from V1 (xfstests patch):
->         Add test to ensure moved files preserve their flag
->         Check chattr of non-dax flags (check bug found by Darrick)
-> ---
-...
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -511,3 +511,4 @@
->  511 auto quick quota
->  512 auto quick acl attr
->  513 auto mount
-> +999 auto
+You make it sound like the heuristic decision must be made
+*after* trying to clone, but it can be made before and pass
+flags to the kernel whether or to fallback to copy.
 
-The test looks also 'quick'
+copy_file_range(2) has an unused flags argument.
+Adding support for flags like:
+COPY_FILE_RANGE_BY_FS
+COPY_FILE_RANGE_BY_KERNEL
+
+or any other names elected after bike shedding can be used
+to control whether user intended to use filesystem internal
+clone/copy methods and/or to fallback to kernel copy.
+
+I think this functionality will be useful to many.
+
+> > Across which filesystems mounts are you trying to clone?
+>
+> This functionality was written with btrfs in mind, so that's
+> what I was testing with. The mounts themselves are just
+> different bindmounts into the same filesystem.
+>
+
+I can also suggest a workaround for you.
+If your only problem is bind mounts and if recorder is a privileged
+process (CAP_DAC_READ_SEARCH) then you can use a "master"
+bind mount to perform all clone operations on.
+Use name_to_handle_at(2) to get sb file handle of source file.
+Use open_by_handle_at(2) to get an open file descriptor of the source
+file under the "master" bind mount.
 
 Thanks,
 Amir.
