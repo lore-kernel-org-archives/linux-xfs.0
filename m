@@ -1,119 +1,98 @@
-Return-Path: <SRS0=xS0A=54=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=wgma=55=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4476C352BE
-	for <linux-xfs@archiver.kernel.org>; Sun, 12 Apr 2020 22:28:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2528BC2BB85
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Apr 2020 01:10:17 +0000 (UTC)
 Received: from vger.kernel.org (unknown [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7454F206C3
-	for <linux-xfs@archiver.kernel.org>; Sun, 12 Apr 2020 22:28:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D66932064A
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Apr 2020 01:10:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=juliacomputing-com.20150623.gappssmtp.com header.i=@juliacomputing-com.20150623.gappssmtp.com header.b="tAqXHlP8"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7454F206C3
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=juliacomputing.com
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="JLP7Wv3w"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D66932064A
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=oracle.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-xfs-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726188AbgDLW2x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 12 Apr 2020 18:28:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.18]:57744 "EHLO
+        id S1726913AbgDMBKP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 12 Apr 2020 21:10:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.18]:55890 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726185AbgDLW2w (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 12 Apr 2020 18:28:52 -0400
-Received: from mail-il1-x12f.google.com (mail-il1-x12f.google.com [IPv6:2607:f8b0:4864:20::12f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C591AC014A4B
-        for <linux-xfs@vger.kernel.org>; Sun, 12 Apr 2020 15:28:51 -0700 (PDT)
-Received: by mail-il1-x12f.google.com with SMTP id e4so4732995ils.4
-        for <linux-xfs@vger.kernel.org>; Sun, 12 Apr 2020 15:28:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=juliacomputing-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ANGfUKyG+6xWky2jJ2nWMKG+M8IIxgEacG/h0ycqR20=;
-        b=tAqXHlP8pnC0Fae5HqLveAPHChvu5fDrBR9aCpdJ/+VGWLe239sL5EQQWbqaz3R9zk
-         EAQUa5NP5nmgrY74n41PftFvtCCNCkmDthGZgO1ECVJSvQ4IMF53VSupjwSpg+7RuiI2
-         v8IH811tUAia95Hhy4SCvG+4vNYPYkm/oQwKOCJSYOIjRu3W/kSiUZHWJk1lZ+sCtpCN
-         sz3mK9n7qAcYjYqEBtPNGS5pNjUaJMtI1sYKypSgAKOTUQlwM5XiVkmGcy1PN8/Nb7x4
-         5Dp2zxa0TXQ+m0aDA5A0d4GXIcPgOuuLePU4s7tZZkslKAfNetsNFpjzQdzBZpgG9Dy/
-         XODw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=ANGfUKyG+6xWky2jJ2nWMKG+M8IIxgEacG/h0ycqR20=;
-        b=sdVINFnCRjurrIszENg1IueW2SQdQMpGiZokN6kKBxYSM3OZJkRDTf2b3XvWyxUnn0
-         BcvZPPMfOZo/pXrZP6PkmjSyQgVUPYPOrhF+52SRDmTXaTOF3FabaIBX0/oJUZrdaFzX
-         dBs4g00XLcOHn+t9Eenzv7VyawI2WHpswtc0g698imSc0uME2niblx9sqXE2as0tLTJJ
-         Am1FOFDEYci1mQDjRGX90KVPXgF7x3fImnx8mcToWNitru3CW/KWYfOWTXQRo9aRmmXk
-         7AlmYv5+eeD/4WHGPKO95VpwUnbHtvMAEfID6kypuSjrt13DoIe3EeFg2Mxy9K97Gwhn
-         3C8w==
-X-Gm-Message-State: AGi0PuaPtBlAU5As4ntjqx7K8b29wjNTz+W50Wi67FveDB6aKffrxNE1
-        EZUHACvD2LSlfe3C3byH7JDJQGjR+lveqvecQ0YewQ==
-X-Google-Smtp-Source: APiQypJO2Sswe5+NMVXMBxFMyLnpwoxty/zztpPW7J2prcZwXcKcdiwPWUFR1BvBQmKAE2/hAJpBzCD4M7x9p/ukihc=
-X-Received: by 2002:a92:250e:: with SMTP id l14mr14538847ill.201.1586730530779;
- Sun, 12 Apr 2020 15:28:50 -0700 (PDT)
+        with ESMTP id S1726879AbgDMBKP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 12 Apr 2020 21:10:15 -0400
+Received: from userp2120.oracle.com (userp2120.oracle.com [156.151.31.85])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F768C0A3BE0
+        for <linux-xfs@vger.kernel.org>; Sun, 12 Apr 2020 18:10:15 -0700 (PDT)
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03D19NnM022146
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Apr 2020 01:10:13 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=8J3DD3cTZtP3lhkR6EqbhMM4xzXTNHlgT4y5ow3sSB8=;
+ b=JLP7Wv3wVpQi/++LEBtSioOcAWTOy3jgZbef0v7jZ9kq/o+AXoTTk/c9s7H3DQUfENng
+ 8EBei/CrQuzuatF9zQ5a4NoIv7CqV5FQQQL2dEWQGvzFESwEB1lsO6L5qEJNZ2AjNXDN
+ Bo5XieMEaNBhcZV0B5BdLk2ewDgJFSK/ht49GaKJhzM0GRSq3WCkIMRi4WSYIqoH/xwi
+ 6MG9ap2eh3F8bD25LanYJYCFbO0IgLcB4rMTMcPwk1SllfHygfZgfczxst0d5YyqiQER
+ obRjsg5Skn0bJYcT4+qGOQHD1PVgLNrXNxhLXTQbv5w4SCToYwpoDfQS5SRSV95/eFnm TA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 30b6hpbxqw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Apr 2020 01:10:13 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03D17jpM149574
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Apr 2020 01:10:13 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 30bqccep14-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Apr 2020 01:10:13 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03D1ACEP005043
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Apr 2020 01:10:12 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sun, 12 Apr 2020 18:10:12 -0700
+Subject: [PATCH 0/2] xfs: random fixes for 5.7
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     darrick.wong@oracle.com
+Cc:     linux-xfs@vger.kernel.org
+Date:   Sun, 12 Apr 2020 18:10:11 -0700
+Message-ID: <158674021112.3253017.16592621806726469169.stgit@magnolia>
+User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
-References: <CABV8kRw_jGxPqWc68Bj-uP_hSrKO0MmShOmtuzGQA2W3WHyCrg@mail.gmail.com>
- <CAOQ4uxhPKR34cXvWfF49z8mTGJm+oP2ibfohsXNdY7tXaOi4RA@mail.gmail.com>
-In-Reply-To: <CAOQ4uxhPKR34cXvWfF49z8mTGJm+oP2ibfohsXNdY7tXaOi4RA@mail.gmail.com>
-From:   Keno Fischer <keno@juliacomputing.com>
-Date:   Sun, 12 Apr 2020 18:28:13 -0400
-Message-ID: <CABV8kRxVA0j2qLkyWx+vULh2DxK2Ef4nPk-zXCikN8XmdBOFgQ@mail.gmail.com>
-Subject: Re: Same mountpoint restriction in FICLONE ioctls
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Miklos Szeredi <mszeredi@redhat.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        CIFS <linux-cifs@vger.kernel.org>,
-        Linux NFS Mailing List <linux-nfs@vger.kernel.org>,
-        Olga Kornievskaia <kolga@netapp.com>,
-        Steve French <smfrench@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9589 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxlogscore=907
+ bulkscore=0 malwarescore=0 phishscore=0 mlxscore=0 spamscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004130008
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9589 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0
+ mlxlogscore=965 clxscore=1015 mlxscore=0 phishscore=0 suspectscore=0
+ lowpriorityscore=0 bulkscore=0 malwarescore=0 priorityscore=1501
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004130008
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> You did not specify your use case.
+Hi all,
 
-My use case is recording (https://rr-project.org/) executions
-of containers (which often make heavy use of bind mounts on
-the same file system, thus me running into this restriction).
-In essence, at relevant read or mmap operations,
-rr needs to checkpoint the file that was opened,
-in case it later gets deleted or modified.
-It always tries to FICLONE the file first,
-before deciding heuristically whether to
-instead create a copy (if it decides there is a low
-likelihood the file will get changed - e.g. because
-it's a system file - it may decide to take the chance and
-not copy it at the risk of creating a broken recording).
-That's often a decent trade-off, but of course it's not
-100% perfect.
+This is a rollup of a couple of bug fixes for 5.7.
 
-> The question is: do you *really* need cross mount clone?
-> Can you use copy_file_range() instead?
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-Good question. copy_file_range doesn't quite work
-for that initial clone, because we do want it to fail if
-cloning doesn't work (so that we can apply the
-heuristics). However, you make a good point that
-the copy fallback should probably use copy_file_range.
-At least that way, if it does decide to copy, the
-performance will be better.
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
-It would still be nice for FICLONE to ease this restriction,
-since it reduces the chance of the heuristics getting
-it wrong and preventing the copy, even if such
-a copy would have been cheap.
+--D
 
-> Across which filesystems mounts are you trying to clone?
-
-This functionality was written with btrfs in mind, so that's
-what I was testing with. The mounts themselves are just
-different bindmounts into the same filesystem.
-
-Keno
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=xfs-5.7-fixes
