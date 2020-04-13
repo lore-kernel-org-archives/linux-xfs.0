@@ -2,275 +2,159 @@ Return-Path: <SRS0=wgma=55=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30EF5C3815B
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Apr 2020 19:46:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A022C2BA2B
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Apr 2020 19:48:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1C5A920731
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Apr 2020 19:46:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1685D20731
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Apr 2020 19:48:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nN+dZkK/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388111AbgDMTqc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Apr 2020 15:46:32 -0400
-Received: from mga17.intel.com ([192.55.52.151]:2914 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387774AbgDMTqb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Apr 2020 15:46:31 -0400
-IronPort-SDR: grEFM0nhMEbvPTaie49Xn6oP9QUTNd6QpZ4rtP0JOJkG7NUIu2hp+UniACxAuIp2Vhg+lQBn00
- skocZ4GfAY9A==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Apr 2020 12:46:30 -0700
-IronPort-SDR: e4mMITxY+fkq+PARmd2XJYn1qgoh2dn84nSTYeUzXAhlMWRZa9fI+jXQDxAMfekIN3a1LzDQ1n
- 9hWem+LTO3lg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.72,380,1580803200"; 
-   d="scan'208";a="277010474"
-Received: from iweiny-desk2.sc.intel.com ([10.3.52.147])
-  by fmsmga004.fm.intel.com with ESMTP; 13 Apr 2020 12:46:30 -0700
-Date:   Mon, 13 Apr 2020 12:46:10 -0700
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-kernel@vger.kernel.org,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        Jeff Moyer <jmoyer@redhat.com>, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH V7 8/9] fs/xfs: Change xfs_ioctl_setattr_dax_invalidate()
-Message-ID: <20200413194609.GE1649878@iweiny-DESK2.sc.intel.com>
-References: <20200413054046.1560106-1-ira.weiny@intel.com>
- <20200413054046.1560106-9-ira.weiny@intel.com>
- <20200413161240.GX6742@magnolia>
+        id S2388122AbgDMTsG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Apr 2020 15:48:06 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:39228 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387774AbgDMTsF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Apr 2020 15:48:05 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03DJm3Et076644;
+        Mon, 13 Apr 2020 19:48:03 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=52DegDl1O1Ow2HdLRm5e5XrW0qfKnZ4MtTFSfbYJ1Mc=;
+ b=nN+dZkK/lIWsyaHWsp0H4r3ePDpXY6Xmst6K2NP2NrAN+k9FYiiY9Dvq7ufL5KMMlDrh
+ 4ZhCbr8J5vbN9sn5lxShV6HHInYCq2/2tOOfOcJG85wdOWLryN5y08cJPmoivNZJBaK1
+ VZRJdxTQjl5NbSyszph3MR87G+tNF7KjK1ESum/x6h/23veJ3yn2onCHdxI1V5ELj2xT
+ TUHeaSFNhbpU8+uku0qSxWCwG9x8nniR8s+Uu1bkW6ZOZbiH3oV0QrdYD9/Bq9RM2nb1
+ 7GE/pKc1zPslDD/hrmfNKtbifPiKqEmVzoFy6MeFI5La3ITtWUt/bC4MATc33nTqsquT Xw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 30b5um0jnm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 13 Apr 2020 19:48:03 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03DJb9jC078617;
+        Mon, 13 Apr 2020 19:46:03 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 30cta7w6ee-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 13 Apr 2020 19:46:03 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03DJk1SR026721;
+        Mon, 13 Apr 2020 19:46:01 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 13 Apr 2020 12:46:01 -0700
+Date:   Mon, 13 Apr 2020 12:46:00 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     xfs <linux-xfs@vger.kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>
+Subject: [PATCH v2] xfsdocs: capture some information about dirs vs. attrs
+ and how they use dabtrees
+Message-ID: <20200413194600.GC6742@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200413161240.GX6742@magnolia>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9590 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=0
+ spamscore=0 adultscore=0 mlxscore=0 phishscore=0 mlxlogscore=999
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004130146
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9590 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 bulkscore=0 mlxscore=0
+ mlxlogscore=999 lowpriorityscore=0 impostorscore=0 adultscore=0
+ phishscore=0 spamscore=0 suspectscore=0 malwarescore=0 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2004130147
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 13, 2020 at 09:12:40AM -0700, Darrick J. Wong wrote:
-> On Sun, Apr 12, 2020 at 10:40:45PM -0700, ira.weiny@intel.com wrote:
-> > From: Ira Weiny <ira.weiny@intel.com>
-> > 
-> > We only support changing FS_XFLAG_DAX on directories.  Files get their
-> > flag from the parent directory on creation only.  So no data
-> > invalidation needs to happen.
-> > 
-> > Alter the xfs_ioctl_setattr_dax_invalidate() to be
-> > xfs_ioctl_setattr_dax_validate().  xfs_ioctl_setattr_dax_validate() now
-> > validates that any FS_XFLAG_DAX change is ok.
-> > 
-> > This also allows use to remove the join_flags logic.
-> > 
-> > Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-> > 
-> > ---
-> > Changes from v6:
-> > 	Fix completely broken implementation and update commit message.
-> > 	Use the new VFS layer I_DONTCACHE to facilitate inode eviction
-> > 	and S_DAX changing on drop_caches
-> > 
-> > Changes from v5:
-> > 	New patch
-> > ---
-> >  fs/xfs/xfs_ioctl.c | 102 +++++++--------------------------------------
-> >  1 file changed, 16 insertions(+), 86 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > index c6cd92ef4a05..ba42a5fb5b05 100644
-> > --- a/fs/xfs/xfs_ioctl.c
-> > +++ b/fs/xfs/xfs_ioctl.c
-> > @@ -1145,63 +1145,23 @@ xfs_ioctl_setattr_xflags(
-> >  }
-> >  
-> >  /*
-> > - * If we are changing DAX flags, we have to ensure the file is clean and any
-> > - * cached objects in the address space are invalidated and removed. This
-> > - * requires us to lock out other IO and page faults similar to a truncate
-> > - * operation. The locks need to be held until the transaction has been committed
-> > - * so that the cache invalidation is atomic with respect to the DAX flag
-> > - * manipulation.
-> > + * Mark inodes with a changing FS_XFLAG_DAX, I_DONTCACHE
-> >   */
-> > -static int
-> > +static void
-> >  xfs_ioctl_setattr_dax_invalidate(
-> >  	struct xfs_inode	*ip,
-> > -	struct fsxattr		*fa,
-> > -	int			*join_flags)
-> > +	struct fsxattr		*fa)
-> >  {
-> > -	struct inode		*inode = VFS_I(ip);
-> > -	struct super_block	*sb = inode->i_sb;
-> > -	int			error;
-> > -
-> > -	*join_flags = 0;
-> > -
-> > -	/*
-> > -	 * It is only valid to set the DAX flag on regular files and
-> > -	 * directories on filesystems where the block size is equal to the page
-> > -	 * size. On directories it serves as an inherited hint so we don't
-> > -	 * have to check the device for dax support or flush pagecache.
-> > -	 */
-> > -	if (fa->fsx_xflags & FS_XFLAG_DAX) {
-> > -		struct xfs_buftarg	*target = xfs_inode_buftarg(ip);
-> > -
-> > -		if (!bdev_dax_supported(target->bt_bdev, sb->s_blocksize))
-> > -			return -EINVAL;
-> > -	}
-> > -
-> > -	/* If the DAX state is not changing, we have nothing to do here. */
-> > -	if ((fa->fsx_xflags & FS_XFLAG_DAX) && IS_DAX(inode))
-> > -		return 0;
-> > -	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_DAX(inode))
-> > -		return 0;
-> > +	struct inode            *inode = VFS_I(ip);
-> >  
-> >  	if (S_ISDIR(inode->i_mode))
-> > -		return 0;
-> > -
-> > -	/* lock, flush and invalidate mapping in preparation for flag change */
-> > -	xfs_ilock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
-> > -	error = filemap_write_and_wait(inode->i_mapping);
-> > -	if (error)
-> > -		goto out_unlock;
-> > -	error = invalidate_inode_pages2(inode->i_mapping);
-> > -	if (error)
-> > -		goto out_unlock;
-> > -
-> > -	*join_flags = XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL;
-> > -	return 0;
-> > -
-> > -out_unlock:
-> > -	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
-> > -	return error;
-> > +		return;
-> 
-> We also need a check up here to skip the I_DONTCACHE setting if the
-> admin has set a mount option to override the inode flag.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Yes that would be more optimal!
+Dave and I had a short discussion about whether or not xattr trees
+needed to have the same free space tracking that directories have, and
+a comparison of how each of the two metadata types interact with
+dabtrees resulted.  I've reworked this a bit to make it flow better as a
+book chapter, so here we go.
 
-Thanks,
-Ira
+Original-mail: https://lore.kernel.org/linux-xfs/20200404085203.1908-1-chandanrlinux@gmail.com/T/#mdd12ad06cf5d635772cc38946fc5b22e349e136f
+Originally-from: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: various fixes suggested by Dave; reflow the paragraphs about
+directories to describe the relations between dabtree and dirents only once;
+don't talk about an unnamed "we".
+---
+ .../extended_attributes.asciidoc                   |   55 ++++++++++++++++++++
+ 1 file changed, 55 insertions(+)
 
-> 
-> The rest looks good to me.
-> 
-> --D
-> 
-> > +	if (((fa->fsx_xflags & FS_XFLAG_DAX) &&
-> > +	    !(ip->i_d.di_flags2 & XFS_DIFLAG2_DAX)) ||
-> > +	    (!(fa->fsx_xflags & FS_XFLAG_DAX) &&
-> > +	     (ip->i_d.di_flags2 & XFS_DIFLAG2_DAX)))
-> > +		inode->i_state |= I_DONTCACHE;
-> >  }
-> >  
-> >  /*
-> > @@ -1209,17 +1169,10 @@ xfs_ioctl_setattr_dax_invalidate(
-> >   * have permission to do so. On success, return a clean transaction and the
-> >   * inode locked exclusively ready for further operation specific checks. On
-> >   * failure, return an error without modifying or locking the inode.
-> > - *
-> > - * The inode might already be IO locked on call. If this is the case, it is
-> > - * indicated in @join_flags and we take full responsibility for ensuring they
-> > - * are unlocked from now on. Hence if we have an error here, we still have to
-> > - * unlock them. Otherwise, once they are joined to the transaction, they will
-> > - * be unlocked on commit/cancel.
-> >   */
-> >  static struct xfs_trans *
-> >  xfs_ioctl_setattr_get_trans(
-> > -	struct xfs_inode	*ip,
-> > -	int			join_flags)
-> > +	struct xfs_inode	*ip)
-> >  {
-> >  	struct xfs_mount	*mp = ip->i_mount;
-> >  	struct xfs_trans	*tp;
-> > @@ -1236,8 +1189,7 @@ xfs_ioctl_setattr_get_trans(
-> >  		goto out_unlock;
-> >  
-> >  	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> > -	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL | join_flags);
-> > -	join_flags = 0;
-> > +	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-> >  
-> >  	/*
-> >  	 * CAP_FOWNER overrides the following restrictions:
-> > @@ -1258,8 +1210,6 @@ xfs_ioctl_setattr_get_trans(
-> >  out_cancel:
-> >  	xfs_trans_cancel(tp);
-> >  out_unlock:
-> > -	if (join_flags)
-> > -		xfs_iunlock(ip, join_flags);
-> >  	return ERR_PTR(error);
-> >  }
-> >  
-> > @@ -1386,7 +1336,6 @@ xfs_ioctl_setattr(
-> >  	struct xfs_dquot	*pdqp = NULL;
-> >  	struct xfs_dquot	*olddquot = NULL;
-> >  	int			code;
-> > -	int			join_flags = 0;
-> >  
-> >  	trace_xfs_ioctl_setattr(ip);
-> >  
-> > @@ -1410,18 +1359,9 @@ xfs_ioctl_setattr(
-> >  			return code;
-> >  	}
-> >  
-> > -	/*
-> > -	 * Changing DAX config may require inode locking for mapping
-> > -	 * invalidation. These need to be held all the way to transaction commit
-> > -	 * or cancel time, so need to be passed through to
-> > -	 * xfs_ioctl_setattr_get_trans() so it can apply them to the join call
-> > -	 * appropriately.
-> > -	 */
-> > -	code = xfs_ioctl_setattr_dax_invalidate(ip, fa, &join_flags);
-> > -	if (code)
-> > -		goto error_free_dquots;
-> > +	xfs_ioctl_setattr_dax_invalidate(ip, fa);
-> >  
-> > -	tp = xfs_ioctl_setattr_get_trans(ip, join_flags);
-> > +	tp = xfs_ioctl_setattr_get_trans(ip);
-> >  	if (IS_ERR(tp)) {
-> >  		code = PTR_ERR(tp);
-> >  		goto error_free_dquots;
-> > @@ -1552,7 +1492,6 @@ xfs_ioc_setxflags(
-> >  	struct fsxattr		fa;
-> >  	struct fsxattr		old_fa;
-> >  	unsigned int		flags;
-> > -	int			join_flags = 0;
-> >  	int			error;
-> >  
-> >  	if (copy_from_user(&flags, arg, sizeof(flags)))
-> > @@ -1569,18 +1508,9 @@ xfs_ioc_setxflags(
-> >  	if (error)
-> >  		return error;
-> >  
-> > -	/*
-> > -	 * Changing DAX config may require inode locking for mapping
-> > -	 * invalidation. These need to be held all the way to transaction commit
-> > -	 * or cancel time, so need to be passed through to
-> > -	 * xfs_ioctl_setattr_get_trans() so it can apply them to the join call
-> > -	 * appropriately.
-> > -	 */
-> > -	error = xfs_ioctl_setattr_dax_invalidate(ip, &fa, &join_flags);
-> > -	if (error)
-> > -		goto out_drop_write;
-> > +	xfs_ioctl_setattr_dax_invalidate(ip, &fa);
-> >  
-> > -	tp = xfs_ioctl_setattr_get_trans(ip, join_flags);
-> > +	tp = xfs_ioctl_setattr_get_trans(ip);
-> >  	if (IS_ERR(tp)) {
-> >  		error = PTR_ERR(tp);
-> >  		goto out_drop_write;
-> > -- 
-> > 2.25.1
-> > 
+diff --git a/design/XFS_Filesystem_Structure/extended_attributes.asciidoc b/design/XFS_Filesystem_Structure/extended_attributes.asciidoc
+index 99f7b35..b7a6007 100644
+--- a/design/XFS_Filesystem_Structure/extended_attributes.asciidoc
++++ b/design/XFS_Filesystem_Structure/extended_attributes.asciidoc
+@@ -910,3 +910,58 @@ Log sequence number of the last write to this block.
+ 
+ Filesystems formatted prior to v5 do not have this header in the remote block.
+ Value data begins immediately at offset zero.
++
++== Key Differences Between Directories and Extended Attributes
++
++Though directories and extended attributes can take advantage of the same
++variable length record btree structures (i.e. the dabtree) to map name hashes
++to directory entry records (dirent records) or extended attribute records,
++there are major differences in the ways that each of those users embed the
++btree within the information that they are storing.  The directory dabtree leaf
++nodes contain mappings between a name hash and the location of a dirent record
++inside the directory entry segment.  Extended attributes, on the other hand,
++store attribute records directly in the leaf nodes of the dabtree.
++
++When XFS adds or removes an attribute record in any dabtree, it splits or
++merges leaf nodes of the tree based on where the name hash index determines a
++record needs to be inserted into or removed.  In the attribute dabtree, XFS
++splits or merges sparse leaf nodes of the dabtree as a side effect of inserting
++or removing attribute records.
++
++Directories, however, are subject to stricter constraints.  The userspace
++readdir/seekdir/telldir directory cookie API places a requirement on the
++directory structure that dirent record cookie cannot change for the life of the
++dirent record.  XFS uses the dirent record's logical offset into the directory
++data segment as the cookie, and hence the dirent record cannot change location.
++Therefore, XFS cannot store dirent records in the leaf nodes of the dabtree
++because the offset into the tree would change as other entries are inserted and
++removed.
++
++Dirent records are therefore stored within directory data blocks, all of which
++are mapped in the first directory segment.  The directory dabtree is mapped
++into the second directory segment.  Therefore, directory blocks require
++external free space tracking because they are not part of the dabtree itself.
++Because the dabtree only stores pointers to dirent records in the first data
++segment, there is no need to leave holes in the dabtree itself.  The dabtree
++splits or merges leaf nodes as required as pointers to the directory data
++segment are added or removed, and needs no free space tracking.
++
++When XFS adds a dirent record, it needs to find the best-fitting free space in
++the directory data segment to turn into the new record.  This requires a free
++space index for the directory data segment.  The free space index is held in
++the third directory segment.  Once XFS has used the free space index to find
++the block with that best free space, it modifies the directory data block and
++updates the dabtree to point the name hash at the new record.  When XFS removes
++dirent records, it leaves hole in the data segment so that the rest of the
++entries do not move, and removes the corresponding dabtree name hash mapping.
++
++Note that for small directories, XFS collapses the name hash mappings and
++the free space information into the directory data blocks to save space.
++
++In summary, the requirement for a free space map in the directory structure
++results from storing the dirent records externally to the dabtree.  Attribute
++records are stored directly in the dabtree leaf nodes of the dabtree (except
++for remote attribute values which can be anywhere in the attr fork address
++space) and do not need external free space tracking to determine where to best
++insert them.  As a result, extended attributes exhibit nearly perfect scaling
++until the computer runs out of memory.
