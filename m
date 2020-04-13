@@ -2,181 +2,113 @@ Return-Path: <SRS0=wgma=55=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EACFC2BA2B
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Apr 2020 19:39:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A22DCC2BA2B
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Apr 2020 19:40:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 64ACE2064A
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Apr 2020 19:39:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8178D2064A
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Apr 2020 19:40:43 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=juliacomputing-com.20150623.gappssmtp.com header.i=@juliacomputing-com.20150623.gappssmtp.com header.b="1x8U2KZM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387961AbgDMTj3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Apr 2020 15:39:29 -0400
-Received: from mga17.intel.com ([192.55.52.151]:2346 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387935AbgDMTj2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Apr 2020 15:39:28 -0400
-IronPort-SDR: SPlWXs2KrMSQxUnM6RnTorVE2e0tU99HnckO1Aw/31ckL/pmC1D3ttqdunzBpaQoof6rnbKwNF
- NMB6Xu8U1hNA==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Apr 2020 12:39:28 -0700
-IronPort-SDR: AtZlCvspS0QhHfNaeA4JpRFkstaWsTU7TlFEOda3Xn0ws7J1kIWaG8dnZOqg7oDZGJPh9Nsewu
- chVjMzIPBUww==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.72,380,1580803200"; 
-   d="scan'208";a="245219538"
-Received: from iweiny-desk2.sc.intel.com ([10.3.52.147])
-  by fmsmga008.fm.intel.com with ESMTP; 13 Apr 2020 12:39:28 -0700
-Date:   Mon, 13 Apr 2020 12:39:28 -0700
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-kernel@vger.kernel.org,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        Jeff Moyer <jmoyer@redhat.com>, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH V7 5/9] fs/xfs: Create function xfs_inode_enable_dax()
-Message-ID: <20200413193927.GC1649878@iweiny-DESK2.sc.intel.com>
-References: <20200413054046.1560106-1-ira.weiny@intel.com>
- <20200413054046.1560106-6-ira.weiny@intel.com>
- <20200413155251.GU6742@magnolia>
+        id S2388001AbgDMTkk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Apr 2020 15:40:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59444 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S2387995AbgDMTkh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Apr 2020 15:40:37 -0400
+Received: from mail-il1-x132.google.com (mail-il1-x132.google.com [IPv6:2607:f8b0:4864:20::132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 771D7C008749
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Apr 2020 12:40:35 -0700 (PDT)
+Received: by mail-il1-x132.google.com with SMTP id b18so1119709ilf.2
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Apr 2020 12:40:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=juliacomputing-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=bdK8gEyBj47+B+b5fdWD48DFf9snz/SocRpKyG/PMKw=;
+        b=1x8U2KZMxLh/Y782kba7SyBXt1QFaYYGloH3M3XRqPHvjiH2sJChN66jW+0oFeYTho
+         U3L1FYkAiqUREN247XRMF+D9yNlFBFCwnvXrstKNfnLkFZgulF1vt3r9u3ewQnRRdlX1
+         ZM/jrhK7ZZkhAAQoeg5QtMZesveYglPTsh7Q+RqGlSxHkvA6V3plAF0jBUQbY9NtCwas
+         Y+Px8gK2IVOkpFQ3xiy5g8ywMA2Zt4DKXaeRoYg2yyG/nXnRDqNCE87GJG9j/1C10x5Z
+         MfkMxvvdM71yjDwaY0nbxX+Yd5JaG3w//3ZXeQNKiX2QRcF8Ml5y9h6WpbuMziJnx9vQ
+         bOXw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=bdK8gEyBj47+B+b5fdWD48DFf9snz/SocRpKyG/PMKw=;
+        b=mhHVkHomgXXHq9RoZyih30MEw1+zTN9/2om6yx+VzJvY4aJUX1nB6DSa88SCPTGdnH
+         bG+icsRa2LPgEfwQcHRMdR7qo4AD4ByzQG+IEPyRvj7M0azA+z8omguZRidAfXc2SCY0
+         SRI0VxZxeVK3EzeqeiTfU9gp95yqZvekxQngqlcH4QV5MUcjeK/tjXphNo8mvRXobhLc
+         g4cn0/L0JHFAgWD42rbLW+FNblbqaEY9pYnPK4OHlT6ctaIFtJlsPM/sGPBdDRDUDorB
+         4iErTJQprJwUpTMVTC0MSGGNws70ULMhHVYc61dZ7587toioxs4gZQLgTfHiindSZVop
+         K8Cw==
+X-Gm-Message-State: AGi0PuZdBGUjiiLMekUYqfOdf1zwb6CpjhrTH0odYTVbFPrOp/h9YRGP
+        fgZcGo2/IOQVhDT/Y506ulg37firaAE/4UqTzXU9Fg==
+X-Google-Smtp-Source: APiQypIknUBY7zD49Gd1oPk5pW7D4JYc6dZ50SjzIyGXfthayjGIWZ1Eh2CgEOvbLhUjF/axckqco/b7Gsb8b6IyFfM=
+X-Received: by 2002:a92:5f17:: with SMTP id t23mr4857115ilb.2.1586806834685;
+ Mon, 13 Apr 2020 12:40:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200413155251.GU6742@magnolia>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+References: <CABV8kRw_jGxPqWc68Bj-uP_hSrKO0MmShOmtuzGQA2W3WHyCrg@mail.gmail.com>
+ <CAOQ4uxhPKR34cXvWfF49z8mTGJm+oP2ibfohsXNdY7tXaOi4RA@mail.gmail.com>
+ <CABV8kRxVA0j2qLkyWx+vULh2DxK2Ef4nPk-zXCikN8XmdBOFgQ@mail.gmail.com> <CAOQ4uxh2KKwORLC+gWEF=mWzBa3Kh4A4HgRoiad5N5qu06xjcg@mail.gmail.com>
+In-Reply-To: <CAOQ4uxh2KKwORLC+gWEF=mWzBa3Kh4A4HgRoiad5N5qu06xjcg@mail.gmail.com>
+From:   Keno Fischer <keno@juliacomputing.com>
+Date:   Mon, 13 Apr 2020 15:39:58 -0400
+Message-ID: <CABV8kRxsGm2-RLsuWPQGc82=6+x8v8FtV0=a6MQS=Nt-Pv3V9A@mail.gmail.com>
+Subject: Re: Same mountpoint restriction in FICLONE ioctls
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Miklos Szeredi <mszeredi@redhat.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        CIFS <linux-cifs@vger.kernel.org>,
+        Linux NFS Mailing List <linux-nfs@vger.kernel.org>,
+        Olga Kornievskaia <kolga@netapp.com>,
+        Steve French <smfrench@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 13, 2020 at 08:52:51AM -0700, Darrick J. Wong wrote:
-> On Sun, Apr 12, 2020 at 10:40:42PM -0700, ira.weiny@intel.com wrote:
-> > From: Ira Weiny <ira.weiny@intel.com>
-> > 
-> > xfs_inode_supports_dax() should reflect if the inode can support DAX not
-> > that it is enabled for DAX.
-> > 
-> > Change the use of xfs_inode_supports_dax() to reflect only if the inode
-> > and underlying storage support dax.
-> > 
-> > Add a new function xfs_inode_enable_dax() which reflects if the inode
-> > should be enabled for DAX.
-> > 
-> > Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-> > 
-> > ---
-> > Changes from v6:
-> > 	Change enable checks to be sequential logic.
-> > 	Update for 2 bit tri-state option.
-> > 	Make 'static' consistent.
-> > 	Don't set S_DAX if !CONFIG_FS_DAX
-> > 
-> > Changes from v5:
-> > 	Update to reflect the new tri-state mount option
-> > 
-> > Changes from v3:
-> > 	Update functions and names to be more clear
-> > 	Update commit message
-> > 	Merge with
-> > 		'fs/xfs: Clean up DAX support check'
-> > 		don't allow IS_DAX() on a directory
-> > 		use STATIC macro for static
-> > 		make xfs_inode_supports_dax() static
-> > ---
-> >  fs/xfs/xfs_iops.c | 34 +++++++++++++++++++++++++++++-----
-> >  1 file changed, 29 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> > index 81f2f93caec0..37bd15b55878 100644
-> > --- a/fs/xfs/xfs_iops.c
-> > +++ b/fs/xfs/xfs_iops.c
-> > @@ -1244,12 +1244,11 @@ xfs_inode_supports_dax(
-> >  	struct xfs_mount	*mp = ip->i_mount;
-> >  
-> >  	/* Only supported on non-reflinked files. */
-> > -	if (!S_ISREG(VFS_I(ip)->i_mode) || xfs_is_reflink_inode(ip))
-> > +	if (xfs_is_reflink_inode(ip))
-> >  		return false;
-> >  
-> > -	/* DAX mount option or DAX iflag must be set. */
-> > -	if (!(mp->m_flags & XFS_MOUNT_DAX) &&
-> > -	    !(ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
-> > +	/* Only supported on regular files. */
-> > +	if (!S_ISREG(VFS_I(ip)->i_mode))
-> >  		return false;
-> 
-> Why separate the !S_ISREG and the is_reflink_inode checks?
-> 
-> The part about "Change the use of xfs_inode_supports_dax() to reflect
-> only if the inode and underlying storage support dax" would be a lot
-> more straightforward if this hunk only removed the DIFLAG2_DAX check.
+> You make it sound like the heuristic decision must be made
+> *after* trying to clone, but it can be made before and pass
+> flags to the kernel whether or to fallback to copy.
 
-Yes I could see that.  But for me the separate checks were more clear.  FWIW,
-Dave requested a similar pattern for xfs_inode_enable_dax()[*] and I think I
-agree with him.
+True, though I simplified slightly. There's other things we try
+first if the clone fails, like creating a hardlink. If cloning fails,
+we also often only want to copy a part of the file (again
+heuristically, whether more than what the program asked
+for will be useful for debugging)
 
-So I'm inclined to keep the checks like this.
+> copy_file_range(2) has an unused flags argument.
+> Adding support for flags like:
+> COPY_FILE_RANGE_BY_FS
+> COPY_FILE_RANGE_BY_KERNEL
 
-Thanks for the reviews!
-Ira
+That would solve it of course, and I'd be happy with that
+solution, but it seems like we'd end up with just another
+spelling for the cloning ioctls then that have subtly different
+semantics.
 
-[*] https://lore.kernel.org/lkml/20200408000533.GG24067@dread.disaster.area/
+> I can also suggest a workaround for you.
+> If your only problem is bind mounts and if recorder is a privileged
+> process (CAP_DAC_READ_SEARCH) then you can use a "master"
+> bind mount to perform all clone operations on.
+> Use name_to_handle_at(2) to get sb file handle of source file.
+> Use open_by_handle_at(2) to get an open file descriptor of the source
+> file under the "master" bind mount.
 
-> 
-> The rest of the patch looks ok.
-> 
-> --D
-> 
-> >  
-> >  	/* Block size must match page size */
-> > @@ -1260,6 +1259,31 @@ xfs_inode_supports_dax(
-> >  	return xfs_inode_buftarg(ip)->bt_daxdev != NULL;
-> >  }
-> >  
-> > +#ifdef CONFIG_FS_DAX
-> > +static bool
-> > +xfs_inode_enable_dax(
-> > +	struct xfs_inode *ip)
-> > +{
-> > +	if (ip->i_mount->m_flags & XFS_MOUNT_NODAX)
-> > +		return false;
-> > +	if (!xfs_inode_supports_dax(ip))
-> > +		return false;
-> > +	if (ip->i_mount->m_flags & XFS_MOUNT_DAX)
-> > +		return true;
-> > +	if (ip->i_d.di_flags2 & XFS_DIFLAG2_DAX)
-> > +		return true;
-> > +	return false;
-> > +}
-> > +#else /* !CONFIG_FS_DAX */
-> > +static bool
-> > +xfs_inode_enable_dax(
-> > +	struct xfs_inode *ip)
-> > +{
-> > +	return false;
-> > +}
-> > +#endif /* CONFIG_FS_DAX */
-> > +
-> > +
-> >  STATIC void
-> >  xfs_diflags_to_iflags(
-> >  	struct inode		*inode,
-> > @@ -1278,7 +1302,7 @@ xfs_diflags_to_iflags(
-> >  		inode->i_flags |= S_SYNC;
-> >  	if (flags & XFS_DIFLAG_NOATIME)
-> >  		inode->i_flags |= S_NOATIME;
-> > -	if (xfs_inode_supports_dax(ip))
-> > +	if (xfs_inode_enable_dax(ip))
-> >  		inode->i_flags |= S_DAX;
-> >  }
-> >  
-> > -- 
-> > 2.25.1
-> > 
+Thanks, that's a very valuable suggestion - I hadn't considered
+that. Unfortunately, I don't think the recorder does generally have
+those privileges. It doesn't help in my use case, since I'm recording
+a container that makes use of user namespaces, so nothing requires
+priviledge, but it does seem like it would be useful if the recorder does
+have appropriate capabilities (rr already has a mode where it runs
+with privilege, e.g. for recording setuid binaries).
+
+Keno
