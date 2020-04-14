@@ -2,78 +2,171 @@ Return-Path: <SRS0=w6e5=56=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E257C2BB1D
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 20:39:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C24AC2BB1D
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 20:42:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 489D720771
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 20:39:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F334120771
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 20:42:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2633274AbgDNUjQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Apr 2020 16:39:16 -0400
-Received: from mga07.intel.com ([134.134.136.100]:20214 "EHLO mga07.intel.com"
+        id S1730487AbgDNUmk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Apr 2020 16:42:40 -0400
+Received: from sandeen.net ([63.231.237.45]:43032 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2633271AbgDNUjP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 14 Apr 2020 16:39:15 -0400
-IronPort-SDR: 7mZfxL0dywrp+YRKi5y3VEr+t6jjr2eMj4AbLgFr+rszM9A6rwW04ff9IqRWpmQ8tRM+Y5U2M+
- OfZ4XOkZA/Yg==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2020 13:39:13 -0700
-IronPort-SDR: 7pqIX6PVS4iEVIXIAgFH4UOqHFplFeItWNGqkULEons+fNnJrmTkr+rMrP7/4Mq0CqJFRE7Wdn
- 2s8qCCEwkDXQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.72,384,1580803200"; 
-   d="scan'208";a="243919223"
-Received: from iweiny-desk2.sc.intel.com ([10.3.52.147])
-  by fmsmga007.fm.intel.com with ESMTP; 14 Apr 2020 13:39:12 -0700
-Date:   Tue, 14 Apr 2020 13:39:12 -0700
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-kernel@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dave Chinner <dchinner@redhat.com>, Jan Kara <jack@suse.cz>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH V7 3/9] fs/stat: Define DAX statx attribute
-Message-ID: <20200414203912.GA1982089@iweiny-DESK2.sc.intel.com>
-References: <20200413054046.1560106-1-ira.weiny@intel.com>
- <20200413054046.1560106-4-ira.weiny@intel.com>
- <20200414062306.GB23154@lst.de>
+        id S1729251AbgDNUmf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 14 Apr 2020 16:42:35 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 4E7E91F1E
+        for <linux-xfs@vger.kernel.org>; Tue, 14 Apr 2020 15:42:16 -0500 (CDT)
+Subject: [ANNOUNCE V2] xfsprogs v5.6.0 released
+From:   Eric Sandeen <sandeen@sandeen.net>
+To:     linux-xfs <linux-xfs@vger.kernel.org>
+References: <f98616f2-ac40-bca5-3ac2-8787a795421e@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <04140f2c-b7b0-270a-49f4-88d937d96cc8@sandeen.net>
+Date:   Tue, 14 Apr 2020 15:42:33 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200414062306.GB23154@lst.de>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+In-Reply-To: <f98616f2-ac40-bca5-3ac2-8787a795421e@sandeen.net>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="ETkpDEegs1U6O34IqmClzUkBfuRnA8pwZ"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 14, 2020 at 08:23:06AM +0200, Christoph Hellwig wrote:
-> On Sun, Apr 12, 2020 at 10:40:40PM -0700, ira.weiny@intel.com wrote:
-> > STATX_ATTR_DAX
-> > 
-> > 	The file is in the DAX (cpu direct access) state.  DAX state
-> > 	attempts to minimize software cache effects for both I/O and
-> > 	memory mappings of this file.  It requires a file system which
-> > 	has been configured to support DAX.
-> 
-> Can we remove the misleading DAX name?  Something like
-> STATX_ATTR_DIRECT_LOAD_STORE?
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--ETkpDEegs1U6O34IqmClzUkBfuRnA8pwZ
+Content-Type: multipart/mixed; boundary="eGm6T3Z73ctoMcDYlAfFahfTiiRTORglo"
 
-This is easy enough to change but...
+--eGm6T3Z73ctoMcDYlAfFahfTiiRTORglo
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-Honestly I feel like this ship has already sailed.  We have so much out there
-which uses the term "DAX".  Is it really better to introduce a new terminology
-for the same thing?
+Derp.  That's 5.6.0!  Well, at least I think the release has all the
+right versions.  Onward.
 
-Ira
+On 4/14/20 3:35 PM, Eric Sandeen wrote:
+> Hi folks,
+>=20
+> xfsprogs v5.6.0 has been released, and the xfsprogs repository at:
+>=20
+> 	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+>=20
+> has just been updated.  This is a relatively minor release, with most c=
+hanges
+> simply coming from libxfs updates.
+>=20
+> Tarballs are available at:
+>=20
+> https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.6.0.t=
+ar.gz
+> https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.6.0.t=
+ar.xz
+> https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.6.0.t=
+ar.sign
+>=20
+> The new head of the master branch is commit:
+>=20
+> 0618c372 (HEAD -> guilt/for-next, tag: v5.6.0, korg/master, korg/for-ne=
+xt, refs/patches/for-next/v5.6.0) xfsprogs: Release v5.6.0
+>=20
+> Abbreviated changelog:
+>=20
+> xfsprogs-5.6.0 (14 Apr 2020)
+>         - xfs_scrub: don't set WorkingDirectory in systemd job (Darrick=
+ Wong)
+>=20
+> xfsprogs-5.6.0-rc1 (08 Apr 2020)
+>         - xfsprogs: fix silently broken option parsing (Dave Chinner)
+>         - xfsprogs: various minor Coverity fixes (Darrick Wong)
+>         - xfs_repair: fix dir_read_buf use of libxfs_da_read_buf (Darri=
+ck Wong)
+>         - libxfs: check retval of device flush when closing (Darrick Wo=
+ng)
+>         - xfs_io:  set exitcode on failure appropriately (Dave Chinner)=
 
+>=20
+> xfsprogs-5.6.0-rc0 (18 Mar 2020)
+>         - libxfs changes merged from kernel 5.6
+>=20
+> Thanks,
+> -Eric
+>=20
+
+
+--eGm6T3Z73ctoMcDYlAfFahfTiiRTORglo--
+
+--ETkpDEegs1U6O34IqmClzUkBfuRnA8pwZ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl6WIDkACgkQIK4WkuE9
+3uBPHRAAju8jfQHLgR75z5hluqk4qCDdsOKuBeomNifAGyfP+CjwrwJ7ibgnCAfV
+/EcI+aK6sDlZfFDmJGyomge+TxPxs2SbtFa0jirluzGmSv0riGLkzGnTk/R+0hGT
+nn6kyqmci3TdLMKaQXPwHCnluemOZnN8mwjCRSKXx5LYmNFdw35song6FQcg37fH
+J/6Ne+FDwhk+iPG8UzGs3VkvZ8iK4dacuLpuIMZYqmBMD5pJBPJkCbhnhjHooyjn
+YGk8WRUYfLJ6BwaOzTCuEoCDLbogDFAqIRt1ZEDPY45JioIVgphg2iSsEdpgBfyB
+vfMLldYPtILc5OdPGJvghEF2dLJuQ902FGpT5/zwIwiNj4fE0izSxq+WrsRDn2Y/
+1FrA/9TxlRswSDPlmGDNIPkG5gO6ItJSehr+0ckz0dImdrOxDwF6C54zwdCPVR2n
+9c8tBCZf/rUtwBxTGUbHofilZEitUjqK49RSHHQgOVEnH08RCzv3xNBraLvuzvTd
+BMQF6mYknB6kw6H1WViqCCShELJcbG9uT/nHepxqOoYUKD1w5YCxDet9APybY7RO
+P7QDWOHdTUNjpD//AmH5iL4iaLTTliiZbJIvtL756vi8pfizcY/pvmSYTcMhavru
+p6CziLoYTKMjGTHAyHgGnReT27q6BiPgr41wVHsRCN3XQWvm/5s=
+=fMvW
+-----END PGP SIGNATURE-----
+
+--ETkpDEegs1U6O34IqmClzUkBfuRnA8pwZ--
