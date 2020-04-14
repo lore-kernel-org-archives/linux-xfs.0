@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3FECC3815B
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 15:20:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE20CC2BA19
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 15:20:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8B87E2064A
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 15:20:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9EB8C2076D
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 15:20:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FVyrjXSR"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rxsNXTI6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2439022AbgDNPUQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Apr 2020 11:20:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43540 "EHLO
+        id S2438883AbgDNPUP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Apr 2020 11:20:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2405596AbgDNPCn (ORCPT
+        with ESMTP id S2405595AbgDNPCn (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Apr 2020 11:02:43 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF21FC0610D5;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB470C03C1A6;
         Tue, 14 Apr 2020 08:02:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=rggCwT4OiYRqWUmH5GUVGZVjl72LGANCVIMhbXUkN/E=; b=FVyrjXSRuuwMYNhl+HX63BOokK
-        uHgS/rVyItfWhdLU6IpVMPovCWTD2yAoODAWmWJoD+qWHSWZjQI/gJbfliC23JFtlLtnGJawql5SZ
-        GiliInhm2C/4gQbjBIF0wzrYYg1zGRE+SMvtxZwQmujfIeYKN0wXXWACNfpsKHCXv7ZJjQIWuPeLE
-        KTp4Aiq7EDBEOXT63uMrnYSQhGw2YA+JrYyNccaol8yLwTYG7BJ4u4AdufMURuaaA5GJ3rKGeP5r+
-        tigkatdS/Vs5hDOsKCahCeoyIftIii3w8NeC4Kp4l4BrRZA18W9W4XCi+N1Jqn3P7aC2I96T6C4zc
-        ZBT5pRQg==;
+        bh=yWCBnvZVE3mmN89bJgz6VBayzBfFVIn+l+u0xcbyIA0=; b=rxsNXTI6N2R0/LpKQ7BNJg/gk2
+        0yITPvDQDE2V8Dr6ZRvEscnLB9UyPimRkq7PGGSDZFqBRRMVYBwmYQ3r+ycynfXwu/lgRI0dGhBNs
+        ymS2j79bQT9lAHH0g6CTRq1NfdxAeCeciwVyd+AuVXoR3NFXfIsLiQ5A3uwDHFFTO7n9ie4HqhDoi
+        Ijz4vD2rdHIKI4P2DRmChWKXUwX9cc7srwuVYhhuDfRZFAtxtSPdLfrSyFhOdwKx0YdBjzmW+tW/6
+        +6ZfJDgCHOkIuQww7hF+NBUYzMi2pL2NIKfESk9JbsvFstHJagzoq1clFanhIz8jF/5g4eC66mzoy
+        uDt3EiFg==;
 Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jON59-0006OC-SD; Tue, 14 Apr 2020 15:02:35 +0000
+        id 1jON5A-0006OX-0c; Tue, 14 Apr 2020 15:02:36 +0000
 From:   Matthew Wilcox <willy@infradead.org>
 To:     Andrew Morton <akpm@linux-foundation.org>
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
@@ -44,11 +44,12 @@ Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
         linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
         ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org,
+        John Hubbard <jhubbard@nvidia.com>,
         Christoph Hellwig <hch@lst.de>,
         William Kucharski <william.kucharski@oracle.com>
-Subject: [PATCH v11 05/25] mm: Add new readahead_control API
-Date:   Tue, 14 Apr 2020 08:02:13 -0700
-Message-Id: <20200414150233.24495-6-willy@infradead.org>
+Subject: [PATCH v11 09/25] mm: Remove 'page_offset' from readahead loop
+Date:   Tue, 14 Apr 2020 08:02:17 -0700
+Message-Id: <20200414150233.24495-10-willy@infradead.org>
 X-Mailer: git-send-email 2.21.1
 In-Reply-To: <20200414150233.24495-1-willy@infradead.org>
 References: <20200414150233.24495-1-willy@infradead.org>
@@ -61,169 +62,44 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
-Filesystems which implement the upcoming ->readahead method will get
-their pages by calling readahead_page() or readahead_page_batch().
-These functions support large pages, even though none of the filesystems
-to be converted do yet.
+Replace the page_offset variable with 'index + i'.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Reviewed-by: John Hubbard <jhubbard@nvidia.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: William Kucharski <william.kucharski@oracle.com>
 ---
- include/linux/pagemap.h | 140 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 140 insertions(+)
+ mm/readahead.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-index 6c61535aa7ff..a6eccfd2c80b 100644
---- a/include/linux/pagemap.h
-+++ b/include/linux/pagemap.h
-@@ -639,6 +639,146 @@ static inline int add_to_page_cache(struct page *page,
- 	return error;
- }
+diff --git a/mm/readahead.c b/mm/readahead.c
+index 7ce320854bad..ddc63d3b07b8 100644
+--- a/mm/readahead.c
++++ b/mm/readahead.c
+@@ -180,12 +180,10 @@ void __do_page_cache_readahead(struct address_space *mapping,
+ 	 * Preallocate as many pages as we will need.
+ 	 */
+ 	for (i = 0; i < nr_to_read; i++) {
+-		pgoff_t page_offset = index + i;
+-
+-		if (page_offset > end_index)
++		if (index + i > end_index)
+ 			break;
  
-+/**
-+ * struct readahead_control - Describes a readahead request.
-+ *
-+ * A readahead request is for consecutive pages.  Filesystems which
-+ * implement the ->readahead method should call readahead_page() or
-+ * readahead_page_batch() in a loop and attempt to start I/O against
-+ * each page in the request.
-+ *
-+ * Most of the fields in this struct are private and should be accessed
-+ * by the functions below.
-+ *
-+ * @file: The file, used primarily by network filesystems for authentication.
-+ *	  May be NULL if invoked internally by the filesystem.
-+ * @mapping: Readahead this filesystem object.
-+ */
-+struct readahead_control {
-+	struct file *file;
-+	struct address_space *mapping;
-+/* private: use the readahead_* accessors instead */
-+	pgoff_t _index;
-+	unsigned int _nr_pages;
-+	unsigned int _batch_count;
-+};
-+
-+/**
-+ * readahead_page - Get the next page to read.
-+ * @rac: The current readahead request.
-+ *
-+ * Context: The page is locked and has an elevated refcount.  The caller
-+ * should decreases the refcount once the page has been submitted for I/O
-+ * and unlock the page once all I/O to that page has completed.
-+ * Return: A pointer to the next page, or %NULL if we are done.
-+ */
-+static inline struct page *readahead_page(struct readahead_control *rac)
-+{
-+	struct page *page;
-+
-+	BUG_ON(rac->_batch_count > rac->_nr_pages);
-+	rac->_nr_pages -= rac->_batch_count;
-+	rac->_index += rac->_batch_count;
-+
-+	if (!rac->_nr_pages) {
-+		rac->_batch_count = 0;
-+		return NULL;
-+	}
-+
-+	page = xa_load(&rac->mapping->i_pages, rac->_index);
-+	VM_BUG_ON_PAGE(!PageLocked(page), page);
-+	rac->_batch_count = hpage_nr_pages(page);
-+
-+	return page;
-+}
-+
-+static inline unsigned int __readahead_batch(struct readahead_control *rac,
-+		struct page **array, unsigned int array_sz)
-+{
-+	unsigned int i = 0;
-+	XA_STATE(xas, &rac->mapping->i_pages, 0);
-+	struct page *page;
-+
-+	BUG_ON(rac->_batch_count > rac->_nr_pages);
-+	rac->_nr_pages -= rac->_batch_count;
-+	rac->_index += rac->_batch_count;
-+	rac->_batch_count = 0;
-+
-+	xas_set(&xas, rac->_index);
-+	rcu_read_lock();
-+	xas_for_each(&xas, page, rac->_index + rac->_nr_pages - 1) {
-+		VM_BUG_ON_PAGE(!PageLocked(page), page);
-+		VM_BUG_ON_PAGE(PageTail(page), page);
-+		array[i++] = page;
-+		rac->_batch_count += hpage_nr_pages(page);
-+
-+		/*
-+		 * The page cache isn't using multi-index entries yet,
-+		 * so the xas cursor needs to be manually moved to the
-+		 * next index.  This can be removed once the page cache
-+		 * is converted.
-+		 */
-+		if (PageHead(page))
-+			xas_set(&xas, rac->_index + rac->_batch_count);
-+
-+		if (i == array_sz)
-+			break;
-+	}
-+	rcu_read_unlock();
-+
-+	return i;
-+}
-+
-+/**
-+ * readahead_page_batch - Get a batch of pages to read.
-+ * @rac: The current readahead request.
-+ * @array: An array of pointers to struct page.
-+ *
-+ * Context: The pages are locked and have an elevated refcount.  The caller
-+ * should decreases the refcount once the page has been submitted for I/O
-+ * and unlock the page once all I/O to that page has completed.
-+ * Return: The number of pages placed in the array.  0 indicates the request
-+ * is complete.
-+ */
-+#define readahead_page_batch(rac, array)				\
-+	__readahead_batch(rac, array, ARRAY_SIZE(array))
-+
-+/**
-+ * readahead_pos - The byte offset into the file of this readahead request.
-+ * @rac: The readahead request.
-+ */
-+static inline loff_t readahead_pos(struct readahead_control *rac)
-+{
-+	return (loff_t)rac->_index * PAGE_SIZE;
-+}
-+
-+/**
-+ * readahead_length - The number of bytes in this readahead request.
-+ * @rac: The readahead request.
-+ */
-+static inline loff_t readahead_length(struct readahead_control *rac)
-+{
-+	return (loff_t)rac->_nr_pages * PAGE_SIZE;
-+}
-+
-+/**
-+ * readahead_index - The index of the first page in this readahead request.
-+ * @rac: The readahead request.
-+ */
-+static inline pgoff_t readahead_index(struct readahead_control *rac)
-+{
-+	return rac->_index;
-+}
-+
-+/**
-+ * readahead_count - The number of pages in this readahead request.
-+ * @rac: The readahead request.
-+ */
-+static inline unsigned int readahead_count(struct readahead_control *rac)
-+{
-+	return rac->_nr_pages;
-+}
-+
- static inline unsigned long dir_pages(struct inode *inode)
- {
- 	return (unsigned long)(inode->i_size + PAGE_SIZE - 1) >>
+-		page = xa_load(&mapping->i_pages, page_offset);
++		page = xa_load(&mapping->i_pages, index + i);
+ 		if (page && !xa_is_value(page)) {
+ 			/*
+ 			 * Page already present?  Kick off the current batch of
+@@ -199,7 +197,7 @@ void __do_page_cache_readahead(struct address_space *mapping,
+ 		page = __page_cache_alloc(gfp_mask);
+ 		if (!page)
+ 			break;
+-		page->index = page_offset;
++		page->index = index + i;
+ 		list_add(&page->lru, &page_pool);
+ 		if (i == nr_to_read - lookahead_size)
+ 			SetPageReadahead(page);
 -- 
 2.25.1
 
