@@ -2,315 +2,127 @@ Return-Path: <SRS0=w6e5=56=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1A4BC2BB85
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 16:15:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1418C2BA19
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 16:40:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7044220732
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 16:15:54 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="fCa+gDl6"
+	by mail.kernel.org (Postfix) with ESMTP id A558E20737
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 16:40:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390697AbgDNQPv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Apr 2020 12:15:51 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:57330 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390865AbgDNQPl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Apr 2020 12:15:41 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03EGAilf048862;
-        Tue, 14 Apr 2020 16:15:22 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=xnhLUtHJCSO9M6WlPgGue3BkO+T/09Apd4c3zo8RF9c=;
- b=fCa+gDl6a9uLHvFq06F8Doa2DHWzQ66p3m5njKCWpONybRlxWaDFRXEM9mSzjtXd9MDK
- d5VuAwgPuyVm42vrW5s/jhs4mBZ4blGofoAjNIE3JDSdIJZ4wdK3bDOYht+uXy6+X+pj
- k25annc5nEzorFAVPUTNfYzlP324eMwdrKkQhabQ9j5B3WhrnpS1ui64rA0buEkqicNE
- 4Pd9Ti1YJ8+jhwN9FtX6OkRZYWFQmMsvT1wOl+U9s/kVOE2LMOwc8NWae21kb8I0P1ip
- ori7vv6bltIiRF2FSaO7leUQZUCTZWAS6EbvO29s8ifkPQppYIzlRqC+BHmqq//ROKjH 8Q== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 30b5ar5sh8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Apr 2020 16:15:21 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03EG88HN096873;
-        Tue, 14 Apr 2020 16:15:20 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 30bqph1abq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Apr 2020 16:15:18 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03EGFBAh001482;
-        Tue, 14 Apr 2020 16:15:11 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 14 Apr 2020 09:15:11 -0700
-Date:   Tue, 14 Apr 2020 09:15:09 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     "Weiny, Ira" <ira.weiny@intel.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        Jeff Moyer <jmoyer@redhat.com>,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: Re: [PATCH V7 9/9] Documentation/dax: Update Usage section
-Message-ID: <20200414161509.GF6742@magnolia>
-References: <20200413054046.1560106-1-ira.weiny@intel.com>
- <20200413054046.1560106-10-ira.weiny@intel.com>
- <CAPcyv4g1gGWUuzVyOgOtkRTxzoSKOjVpAOmW-UDtmud9a3CUUA@mail.gmail.com>
+        id S2404764AbgDNQkd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Apr 2020 12:40:33 -0400
+Received: from sandeen.net ([63.231.237.45]:58794 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2404908AbgDNQk1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 14 Apr 2020 12:40:27 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id B28211F1E;
+        Tue, 14 Apr 2020 11:40:07 -0500 (CDT)
+Subject: Re: [PATCH] xfs_scrub: don't set WorkingDirectory= in systemd job
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Eric Sandeen <sandeen@redhat.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+References: <20200414154359.GE6742@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
+ nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
+ WL05ODFQ2cemDhx5uLghHEeOxuGj+1AI+kh/FCzMedHc6k87Yu2ZuaWF+Gh1W2ix6hikRJmQ
+ vj5BEeAx7xKkyBhzdbNIbbjV/iGi9b26B/dNcyd5w2My2gxMtxaiP7q5b6GM2rsQklHP8FtW
+ ZiYO7jsg/qIppR1C6Zr5jK1GQlMUIclYFeBbKggJ9mSwXJH7MIftilGQ8KDvNuV5AbkronGC
+ sEEHj2khs7GfVv4pmUUHf1MRIvV0x3WJkpmhuZaYg8AdJlyGKgp+TQ7B+wCjNTdVqMI1vDk2
+ BS6Rg851ay7AypbCPx2w4d8jIkQEgNjACHVDU89PNKAjScK1aTnW+HNUqg9BliCvuX5g4z2j
+ gJBs57loTWAGe2Ve3cMy3VoQ40Wt3yKK0Eno8jfgzgb48wyycINZgnseMRhxc2c8hd51tftK
+ LKhPj4c7uqjnBjrgOVaVBupGUmvLiePlnW56zJZ51BR5igWnILeOJ1ZIcf7KsaHyE6B1mG+X
+ dmYtjDhjf3NAcoBWJuj8euxMB6TcQN2MrSXy5wSKaw40evooGwARAQABtCVFcmljIFIuIFNh
+ bmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+iQI7BBMBAgAlAhsDBgsJCAcDAgYVCAIJCgsE
+ FgIDAQIeAQIXgAUCUzMzbAIZAQAKCRAgrhaS4T3e4Fr7D/wO+fenqVvHjq21SCjDCrt8HdVj
+ aJ28B1SqSU2toxyg5I160GllAxEHpLFGdbFAhQfBtnmlY9eMjwmJb0sCIrkrB6XNPSPA/B2B
+ UPISh0z2odJv35/euJF71qIFgWzp2czJHkHWwVZaZpMWWNvsLIroXoR+uA9c2V1hQFVAJZyk
+ EE4xzfm1+oVtjIC12B9tTCuS00pY3AUy21yzNowT6SSk7HAzmtG/PJ/uSB5wEkwldB6jVs2A
+ sjOg1wMwVvh/JHilsQg4HSmDfObmZj1d0RWlMWcUE7csRnCE0ZWBMp/ttTn+oosioGa09HAS
+ 9jAnauznmYg43oQ5Akd8iQRxz5I58F/+JsdKvWiyrPDfYZtFS+UIgWD7x+mHBZ53Qjazszox
+ gjwO9ehZpwUQxBm4I0lPDAKw3HJA+GwwiubTSlq5PS3P7QoCjaV8llH1bNFZMz2o8wPANiDx
+ 5FHgpRVgwLHakoCU1Gc+LXHXBzDXt7Cj02WYHdFzMm2hXaslRdhNGowLo1SXZFXa41KGTlNe
+ 4di53y9CK5ynV0z+YUa+5LR6RdHrHtgywdKnjeWdqhoVpsWIeORtwWGX8evNOiKJ7j0RsHha
+ WrePTubr5nuYTDsQqgc2r4aBIOpeSRR2brlT/UE3wGgy9LY78L4EwPR0MzzecfE1Ws60iSqw
+ Pu3vhb7h3bkCDQROsffUARAA0DrUifTrXQzqxO8aiQOC5p9Tz25Np/Tfpv1rofOwL8VPBMvJ
+ X4P5l1V2yd70MZRUVgjmCydEyxLJ6G2YyHO2IZTEajUY0Up+b3ErOpLpZwhvgWatjifpj6bB
+ SKuDXeThqFdkphF5kAmgfVAIkan5SxWK3+S0V2F/oxstIViBhMhDwI6XsRlnVBoLLYcEilxA
+ 2FlRUS7MOZGmRJkRtdGD5koVZSM6xVZQSmfEBaYQ/WJBGJQdPy94nnlAVn3lH3+N7pXvNUuC
+ GV+t4YUt3tLcRuIpYBCOWlc7bpgeCps5Xa0dIZgJ8Louu6OBJ5vVXjPxTlkFdT0S0/uerCG5
+ 1u8p6sGRLnUeAUGkQfIUqGUjW2rHaXgWNvzOV6i3tf9YaiXKl3avFaNW1kKBs0T5M1cnlWZU
+ Utl6k04lz5OjoNY9J/bGyV3DSlkblXRMK87iLYQSrcV6cFz9PRl4vW1LGff3xRQHngeN5fPx
+ ze8X5NE3hb+SSwyMSEqJxhVTXJVfQWWW0dQxP7HNwqmOWYF/6m+1gK/Y2gY3jAQnsWTru4RV
+ TZGnKwEPmOCpSUvsTRXsVHgsWJ70qd0yOSjWuiv4b8vmD3+QFgyvCBxPMdP3xsxN5etheLMO
+ gRwWpLn6yNFq/xtgs+ECgG+gR78yXQyA7iCs5tFs2OrMqV5juSMGmn0kxJUAEQEAAYkCHwQY
+ AQIACQUCTrH31AIbDAAKCRAgrhaS4T3e4BKwD/0ZOOmUNOZCSOLAMjZx3mtYtjYgfUNKi0ki
+ YPveGoRWTqbis8UitPtNrG4XxgzLOijSdOEzQwkdOIp/QnZhGNssMejCnsluK0GQd+RkFVWN
+ mcQT78hBeGcnEMAXZKq7bkIKzvc06GFmkMbX/gAl6DiNGv0UNAX+5FYh+ucCJZSyAp3sA+9/
+ LKjxnTedX0aygXA6rkpX0Y0FvN/9dfm47+LGq7WAqBOyYTU3E6/+Z72bZoG/cG7ANLxcPool
+ LOrU43oqFnD8QwcN56y4VfFj3/jDF2MX3xu4v2OjglVjMEYHTCxP3mpxesGHuqOit/FR+mF0
+ MP9JGfj6x+bj/9JMBtCW1bY/aPeMdPGTJvXjGtOVYblGZrSjXRn5++Uuy36CvkcrjuziSDG+
+ JEexGxczWwN4mrOQWhMT5Jyb+18CO+CWxJfHaYXiLEW7dI1AynL4jjn4W0MSiXpWDUw+fsBO
+ Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
+ m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
+ fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
+Message-ID: <8a6890de-97b7-990a-b35a-297937c1db10@sandeen.net>
+Date:   Tue, 14 Apr 2020 11:40:24 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4g1gGWUuzVyOgOtkRTxzoSKOjVpAOmW-UDtmud9a3CUUA@mail.gmail.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9591 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
- adultscore=0 bulkscore=0 spamscore=0 suspectscore=0 phishscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004140127
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9591 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 impostorscore=0
- clxscore=1015 priorityscore=1501 malwarescore=0 phishscore=0 spamscore=0
- mlxlogscore=999 suspectscore=0 adultscore=0 mlxscore=0 lowpriorityscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004140127
+In-Reply-To: <20200414154359.GE6742@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 13, 2020 at 10:21:26PM -0700, Dan Williams wrote:
-> On Sun, Apr 12, 2020 at 10:41 PM <ira.weiny@intel.com> wrote:
-> >
-> > From: Ira Weiny <ira.weiny@intel.com>
-> >
-> > Update the Usage section to reflect the new individual dax selection
-> > functionality.
-> >
-> > Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-> >
-> > ---
-> > Changes from V6:
-> >         Update to allow setting FS_XFLAG_DAX any time.
-> >         Update with list of behaviors from Darrick
-> >         https://lore.kernel.org/lkml/20200409165927.GD6741@magnolia/
-> >
-> > Changes from V5:
-> >         Update to reflect the agreed upon semantics
-> >         https://lore.kernel.org/lkml/20200405061945.GA94792@iweiny-DESK2.sc.intel.com/
-> > ---
-> >  Documentation/filesystems/dax.txt | 166 +++++++++++++++++++++++++++++-
-> >  1 file changed, 163 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/Documentation/filesystems/dax.txt b/Documentation/filesystems/dax.txt
-> > index 679729442fd2..af14c1b330a9 100644
-> > --- a/Documentation/filesystems/dax.txt
-> > +++ b/Documentation/filesystems/dax.txt
-> > @@ -17,11 +17,171 @@ For file mappings, the storage device is mapped directly into userspace.
-> >  Usage
-> >  -----
-> >
-> > -If you have a block device which supports DAX, you can make a filesystem
-> > +If you have a block device which supports DAX, you can make a file system
-> >  on it as usual.  The DAX code currently only supports files with a block
-> >  size equal to your kernel's PAGE_SIZE, so you may need to specify a block
-> > -size when creating the filesystem.  When mounting it, use the "-o dax"
-> > -option on the command line or add 'dax' to the options in /etc/fstab.
-> > +size when creating the file system.
-> > +
-> > +Currently 2 filesystems support DAX, ext4 and xfs.  Enabling DAX on them is
-> > +different at this time.
-> > +
-> > +Enabling DAX on ext4
-> > +--------------------
-> > +
-> > +When mounting the filesystem, use the "-o dax" option on the command line or
-> > +add 'dax' to the options in /etc/fstab.
-> > +
-> > +
-> > +Enabling DAX on xfs
-> > +-------------------
-> > +
-> > +Summary
-> > +-------
-> > +
-> > + 1. There exists an in-kernel access mode flag S_DAX that is set when
-> > +    file accesses go directly to persistent memory, bypassing the page
-> > +    cache.
+On 4/14/20 10:43 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> I had reserved some quibbling with this wording, but now that this is
-> being proposed as documentation I'll let my quibbling fly. "dax" may
-> imply, but does not require persistent memory nor does it necessarily
-> "bypass page cache". For example on configurations that support dax,
-> but turn off MAP_SYNC (like virtio-pmem), a software flush is
-> required. Instead, if we're going to define "dax" here I'd prefer it
-> be a #include of the man page definition that is careful (IIRC) to
-> only talk about semantics and not backend implementation details. In
-> other words, dax is to page-cache as direct-io is to page cache,
-> effectively not there, but dig a bit deeper and you may find it.
+> Somewhere between systemd 237 and 245, they changed the order in which a
+> job has its uid/gid set; capabilities applied; and working directory
+> set.  Whereas before they did it in an order such that you could set the
+> working directory to a path inaccessible to 'nobody' (either because
+> they did it before changing the uid or after adding capabilities), now
+> they don't and users instead get a service failure:
+> 
+> xfs_scrub@-boot.service: Changing to the requested working directory failed: Permission denied
+> xfs_scrub@-boot.service: Failed at step CHDIR spawning /usr/sbin/xfs_scrub: Permission denied
+> xfs_scrub@-boot.service: Main process exited, code=exited, status=200/CHDIR
+> 
+> Regardless, xfs_scrub works just fine with PWD set to /, so remove that
+> directive.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Uh, which manpage?  Are you talking about the MAP_SYNC documentation?
+systemd is a black box to me but given this change is self contained and
+scrub is "experimental" let's go for it? ;)  I'll pull this in.
 
-I don't rewording this to say "There exists an in-kernel access mode
-flag S_DAX that, when set, enables MAP_SYNC semantics.  Refer to mmap(2)
-for more details about what that means."
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
---D
-
-> > Applications must call statx to discover the current S_DAX
-> > +    state (STATX_ATTR_DAX).
-> > +
-> > + 2. There exists an advisory file inode flag FS_XFLAG_DAX that is
-> > +    inherited from the parent directory FS_XFLAG_DAX inode flag at file
-> > +    creation time.  This advisory flag can be set or cleared at any
-> > +    time, but doing so does not immediately affect the S_DAX state.
-> > +
-> > +    Unless overridden by mount options (see (3)), if FS_XFLAG_DAX is set
-> > +    and the fs is on pmem then it will enable S_DAX at inode load time;
-> > +    if FS_XFLAG_DAX is not set, it will not enable S_DAX.
-> > +
-> > + 3. There exists a dax= mount option.
-> > +
-> > +    "-o dax=never"  means "never set S_DAX, ignore FS_XFLAG_DAX."
-> > +
-> > +    "-o dax=always" means "always set S_DAX (at least on pmem),
-> > +                    and ignore FS_XFLAG_DAX."
-> > +
-> > +    "-o dax"        is an alias for "dax=always".
-> > +
-> > +    "-o dax=inode"  means "follow FS_XFLAG_DAX" and is the default.
-> > +
-> > + 4. There exists an advisory directory inode flag FS_XFLAG_DAX that can
-> > +    be set or cleared at any time.  The flag state is inherited by any files or
-> > +    subdirectories when they are created within that directory.
-> > +
-> > + 5. Programs that require a specific file access mode (DAX or not DAX)
-> > +    can do one of the following:
-> > +
-> > +    (a) Create files in directories that the FS_XFLAG_DAX flag set as
-> > +        needed; or
-> > +
-> > +    (b) Have the administrator set an override via mount option; or
-> > +
-> > +    (c) Set or clear the file's FS_XFLAG_DAX flag as needed.  Programs
-> > +        must then cause the kernel to evict the inode from memory.  This
-> > +        can be done by:
-> > +
-> > +        i>  Closing the file and re-opening the file and using statx to
-> > +            see if the fs has changed the S_DAX flag; and
-> > +
-> > +        ii> If the file still does not have the desired S_DAX access
-> > +            mode, either unmount and remount the filesystem, or close
-> > +            the file and use drop_caches.
-> > +
-> > + 6. It is expected that users who want to squeeze every last bit of performance
-> > +    out of the particular rough and tumble bits of their storage will also be
-> > +    exposed to the difficulties of what happens when the operating system can't
-> > +    totally virtualize those hardware capabilities.  DAX is such a feature.
-> > +    Basically, Formula-1 cars require a bit more care and feeding than your
-> > +    averaged Toyota minivan, as it were.
-> > +
-> > +
-> > +Details
-> > +-------
-> > +
-> > +There are 2 per-file dax flags.  One is a physical inode setting (FS_XFLAG_DAX)
-> > +and the other a currently enabled state (S_DAX).
-> > +
-> > +FS_XFLAG_DAX is maintained, on disk, on individual inodes.  It is preserved
-> > +within the file system.  This 'physical' config setting can be set using an
-> > +ioctl and/or an application such as "xfs_io -c 'chattr [-+]x'".  Files and
-> > +directories automatically inherit FS_XFLAG_DAX from their parent directory
-> > +_when_ _created_.  Therefore, setting FS_XFLAG_DAX at directory creation time
-> > +can be used to set a default behavior for an entire sub-tree.  (Doing so on the
-> > +root directory acts to set a default for the entire file system.)
-> > +
-> > +To clarify inheritance here are 3 examples:
-> > +
-> > +Example A:
-> > +
-> > +mkdir -p a/b/c
-> > +xfs_io 'chattr +x' a
-> > +mkdir a/b/c/d
-> > +mkdir a/e
-> > +
-> > +       dax: a,e
-> > +       no dax: b,c,d
-> > +
-> > +Example B:
-> > +
-> > +mkdir a
-> > +xfs_io 'chattr +x' a
-> > +mkdir -p a/b/c/d
-> > +
-> > +       dax: a,b,c,d
-> > +       no dax:
-> > +
-> > +Example C:
-> > +
-> > +mkdir -p a/b/c
-> > +xfs_io 'chattr +x' c
-> > +mkdir a/b/c/d
-> > +
-> > +       dax: c,d
-> > +       no dax: a,b
-> > +
-> > +
-> > +The current enabled state (S_DAX) is set when a file inode is _loaded_ based on
-> > +the underlying media support, the value of FS_XFLAG_DAX, and the file systems
-> > +dax mount option setting.  See below.
-> > +
-> > +statx can be used to query S_DAX.  NOTE that a directory will never have S_DAX
-> > +set and therefore statx will always return false on directories.
-> > +
-> > +NOTE: Setting the FS_XFLAG_DAX (specifically or through inheritance) occurs
-> > +even if the underlying media does not support dax and/or the file system is
-> > +overridden with a mount option.
-> > +
-> > +
-> > +Overriding FS_XFLAG_DAX (dax= mount option)
-> > +-------------------------------------------
-> > +
-> > +There exists a dax mount option.  Using the mount option does not change the
-> > +physical configured state of individual files but overrides the S_DAX operating
-> > +state when inodes are loaded.
-> > +
-> > +Given underlying media support, the dax mount option is a tri-state option
-> > +(never, always, inode) with the following meanings:
-> > +
-> > +   "-o dax=never" means "never set S_DAX, ignore FS_XFLAG_DAX"
-> > +   "-o dax=always" means "always set S_DAX, ignore FS_XFLAG_DAX"
-> > +        "-o dax" by itself means "dax=always" to remain compatible with older
-> > +                kernels
-> > +   "-o dax=inode" means "follow FS_XFLAG_DAX"
-> > +
-> > +The default state is 'inode'.  Given underlying media support, the following
-> > +algorithm is used to determine the effective mode of the file S_DAX on a
-> > +capable device.
-> > +
-> > +       S_DAX = FS_XFLAG_DAX;
-> > +
-> > +       if (dax_mount == "always")
-> > +               S_DAX = true;
-> > +       else if (dax_mount == "off"
-> > +               S_DAX = false;
-> > +
-> > +To reiterate: Setting, and inheritance, continues to affect FS_XFLAG_DAX even
-> > +while the file system is mounted with a dax override.  However, file enabled
-> > +state, S_DAX, will continue to be the overridden until the file system is
-> > +remounted with dax=inode.
-> >
-> >
-> >  Implementation Tips for Block Driver Writers
-> > --
-> > 2.25.1
-> >
+> ---
+>  scrub/xfs_scrub@.service.in |    1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/scrub/xfs_scrub@.service.in b/scrub/xfs_scrub@.service.in
+> index 56acea67..6fb3f6ea 100644
+> --- a/scrub/xfs_scrub@.service.in
+> +++ b/scrub/xfs_scrub@.service.in
+> @@ -5,7 +5,6 @@ Documentation=man:xfs_scrub(8)
+>  
+>  [Service]
+>  Type=oneshot
+> -WorkingDirectory=%I
+>  PrivateNetwork=true
+>  ProtectSystem=full
+>  ProtectHome=read-only
+> 
