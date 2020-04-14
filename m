@@ -1,4 +1,4 @@
-Return-Path: <SRS0=wgma=55=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=w6e5=56=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
@@ -7,154 +7,204 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A022C2BA2B
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Apr 2020 19:48:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFEC1C2BA2B
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 00:31:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1685D20731
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Apr 2020 19:48:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B366C21655
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 00:31:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nN+dZkK/"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="iS46H0cc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388122AbgDMTsG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Apr 2020 15:48:06 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:39228 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387774AbgDMTsF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Apr 2020 15:48:05 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03DJm3Et076644;
-        Mon, 13 Apr 2020 19:48:03 GMT
+        id S2390457AbgDNAb2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Apr 2020 20:31:28 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:40000 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390456AbgDNAb1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Apr 2020 20:31:27 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03E0Dc5o186903;
+        Tue, 14 Apr 2020 00:31:23 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=52DegDl1O1Ow2HdLRm5e5XrW0qfKnZ4MtTFSfbYJ1Mc=;
- b=nN+dZkK/lIWsyaHWsp0H4r3ePDpXY6Xmst6K2NP2NrAN+k9FYiiY9Dvq7ufL5KMMlDrh
- 4ZhCbr8J5vbN9sn5lxShV6HHInYCq2/2tOOfOcJG85wdOWLryN5y08cJPmoivNZJBaK1
- VZRJdxTQjl5NbSyszph3MR87G+tNF7KjK1ESum/x6h/23veJ3yn2onCHdxI1V5ELj2xT
- TUHeaSFNhbpU8+uku0qSxWCwG9x8nniR8s+Uu1bkW6ZOZbiH3oV0QrdYD9/Bq9RM2nb1
- 7GE/pKc1zPslDD/hrmfNKtbifPiKqEmVzoFy6MeFI5La3ITtWUt/bC4MATc33nTqsquT Xw== 
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=C9DyXwY0IvzHehu8kJ0b/KlUy9/IKvHFB6n+FXK9eoI=;
+ b=iS46H0ccWezYz370H53i64fFT4M9x9Rqxzdsz245FMDZagjlGe53V+40vdSqwJuBoCsd
+ n8XR5XFQDeP65+YDDSVporc6zonA2nFLzsXW6KUjjaXkJT9j5hx/LfbcwNaGMCAkVoaQ
+ eKIaOlLrZfp4uzJ+2+QoC9/QULRdSxUX/7tK3t2N5B6XGrSQaxYRczyRtKzpeXd1xyRP
+ 4lTHHRxrxK2hQ1GNpmyG5O8/qVflwDgLMYfXfx7Z4O9l3ICWd92xWLi27gCD8j2nohe3
+ rVHsBGIgKZz2tbP2WGUSJTDuMzL0re3mRBBpyebOzLWsGMefgMYqratzC8/m5xEmJz/I Fg== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 30b5um0jnm-1
+        by userp2120.oracle.com with ESMTP id 30b6hphfrv-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 13 Apr 2020 19:48:03 +0000
+        Tue, 14 Apr 2020 00:31:23 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03DJb9jC078617;
-        Mon, 13 Apr 2020 19:46:03 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 30cta7w6ee-1
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03E0D53I009634;
+        Tue, 14 Apr 2020 00:31:22 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 30cta8gej9-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 13 Apr 2020 19:46:03 +0000
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03DJk1SR026721;
-        Mon, 13 Apr 2020 19:46:01 GMT
-Received: from localhost (/67.169.218.210)
+        Tue, 14 Apr 2020 00:31:22 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03E0VMDW027544;
+        Tue, 14 Apr 2020 00:31:22 GMT
+Received: from localhost (/10.159.239.215)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 13 Apr 2020 12:46:01 -0700
-Date:   Mon, 13 Apr 2020 12:46:00 -0700
+        with ESMTP ; Mon, 13 Apr 2020 17:31:22 -0700
+Date:   Mon, 13 Apr 2020 17:31:21 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     xfs <linux-xfs@vger.kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>
-Subject: [PATCH v2] xfsdocs: capture some information about dirs vs. attrs
- and how they use dabtrees
-Message-ID: <20200413194600.GC6742@magnolia>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: move inode flush to a workqueue
+Message-ID: <20200414003121.GD6742@magnolia>
+References: <158674021112.3253017.16592621806726469169.stgit@magnolia>
+ <158674021749.3253017.16036198065081499968.stgit@magnolia>
+ <20200413123109.GB57285@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20200413123109.GB57285@bfoster>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9590 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=2
  spamscore=0 adultscore=0 mlxscore=0 phishscore=0 mlxlogscore=999
  bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004130146
+ engine=8.12.0-2003020000 definitions=main-2004140000
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9590 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 bulkscore=0 mlxscore=0
- mlxlogscore=999 lowpriorityscore=0 impostorscore=0 adultscore=0
- phishscore=0 spamscore=0 suspectscore=0 malwarescore=0 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004130147
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0
+ mlxlogscore=999 clxscore=1015 mlxscore=0 phishscore=0 suspectscore=2
+ lowpriorityscore=0 bulkscore=0 malwarescore=0 priorityscore=1501
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004140000
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Apr 13, 2020 at 08:31:09AM -0400, Brian Foster wrote:
+> On Sun, Apr 12, 2020 at 06:10:17PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Move the inode dirty data flushing to a workqueue so that multiple
+> > threads can take advantage of a single thread's flush work.  The
+> > ratelimiting technique was not successful, because threads that skipped
+> > the inode flush scan due to ratelimiting would ENOSPC early and
+> > apparently now there are complaints about that.  So make everyone wait.
+> > 
+> > Fixes: bdd4ee4f8407 ("xfs: ratelimit inode flush on buffered write ENOSPC")
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> 
+> Seems reasonable in general, but do we really want to to dump a longish
+> running filesystem sync to the system workqueue? It looks like there are
+> a lot of existing users so I can't really tell if there are major
+> restrictions or not, but it seems risk of disruption is higher than
+> necessary if we dump one or more full fs syncs to it..
 
-Dave and I had a short discussion about whether or not xattr trees
-needed to have the same free space tracking that directories have, and
-a comparison of how each of the two metadata types interact with
-dabtrees resulted.  I've reworked this a bit to make it flow better as a
-book chapter, so here we go.
+Hmm, I guess I should look at the other flush_work user (the CIL) to see
+if there's any potential for conflicts.  IIRC the system workqueue will
+spawn more threads if someone blocks too long, but maybe we ought to
+use system_long_wq for these kinds of things...
 
-Original-mail: https://lore.kernel.org/linux-xfs/20200404085203.1908-1-chandanrlinux@gmail.com/T/#mdd12ad06cf5d635772cc38946fc5b22e349e136f
-Originally-from: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: various fixes suggested by Dave; reflow the paragraphs about
-directories to describe the relations between dabtree and dirents only once;
-don't talk about an unnamed "we".
----
- .../extended_attributes.asciidoc                   |   55 ++++++++++++++++++++
- 1 file changed, 55 insertions(+)
+--D
 
-diff --git a/design/XFS_Filesystem_Structure/extended_attributes.asciidoc b/design/XFS_Filesystem_Structure/extended_attributes.asciidoc
-index 99f7b35..b7a6007 100644
---- a/design/XFS_Filesystem_Structure/extended_attributes.asciidoc
-+++ b/design/XFS_Filesystem_Structure/extended_attributes.asciidoc
-@@ -910,3 +910,58 @@ Log sequence number of the last write to this block.
- 
- Filesystems formatted prior to v5 do not have this header in the remote block.
- Value data begins immediately at offset zero.
-+
-+== Key Differences Between Directories and Extended Attributes
-+
-+Though directories and extended attributes can take advantage of the same
-+variable length record btree structures (i.e. the dabtree) to map name hashes
-+to directory entry records (dirent records) or extended attribute records,
-+there are major differences in the ways that each of those users embed the
-+btree within the information that they are storing.  The directory dabtree leaf
-+nodes contain mappings between a name hash and the location of a dirent record
-+inside the directory entry segment.  Extended attributes, on the other hand,
-+store attribute records directly in the leaf nodes of the dabtree.
-+
-+When XFS adds or removes an attribute record in any dabtree, it splits or
-+merges leaf nodes of the tree based on where the name hash index determines a
-+record needs to be inserted into or removed.  In the attribute dabtree, XFS
-+splits or merges sparse leaf nodes of the dabtree as a side effect of inserting
-+or removing attribute records.
-+
-+Directories, however, are subject to stricter constraints.  The userspace
-+readdir/seekdir/telldir directory cookie API places a requirement on the
-+directory structure that dirent record cookie cannot change for the life of the
-+dirent record.  XFS uses the dirent record's logical offset into the directory
-+data segment as the cookie, and hence the dirent record cannot change location.
-+Therefore, XFS cannot store dirent records in the leaf nodes of the dabtree
-+because the offset into the tree would change as other entries are inserted and
-+removed.
-+
-+Dirent records are therefore stored within directory data blocks, all of which
-+are mapped in the first directory segment.  The directory dabtree is mapped
-+into the second directory segment.  Therefore, directory blocks require
-+external free space tracking because they are not part of the dabtree itself.
-+Because the dabtree only stores pointers to dirent records in the first data
-+segment, there is no need to leave holes in the dabtree itself.  The dabtree
-+splits or merges leaf nodes as required as pointers to the directory data
-+segment are added or removed, and needs no free space tracking.
-+
-+When XFS adds a dirent record, it needs to find the best-fitting free space in
-+the directory data segment to turn into the new record.  This requires a free
-+space index for the directory data segment.  The free space index is held in
-+the third directory segment.  Once XFS has used the free space index to find
-+the block with that best free space, it modifies the directory data block and
-+updates the dabtree to point the name hash at the new record.  When XFS removes
-+dirent records, it leaves hole in the data segment so that the rest of the
-+entries do not move, and removes the corresponding dabtree name hash mapping.
-+
-+Note that for small directories, XFS collapses the name hash mappings and
-+the free space information into the directory data blocks to save space.
-+
-+In summary, the requirement for a free space map in the directory structure
-+results from storing the dirent records externally to the dabtree.  Attribute
-+records are stored directly in the dabtree leaf nodes of the dabtree (except
-+for remote attribute values which can be anywhere in the attr fork address
-+space) and do not need external free space tracking to determine where to best
-+insert them.  As a result, extended attributes exhibit nearly perfect scaling
-+until the computer runs out of memory.
+> Brian
+> 
+> >  fs/xfs/xfs_mount.h |    6 +++++-
+> >  fs/xfs/xfs_super.c |   40 ++++++++++++++++++++++------------------
+> >  2 files changed, 27 insertions(+), 19 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> > index 50c43422fa17..b2e4598fdf7d 100644
+> > --- a/fs/xfs/xfs_mount.h
+> > +++ b/fs/xfs/xfs_mount.h
+> > @@ -167,8 +167,12 @@ typedef struct xfs_mount {
+> >  	struct xfs_kobj		m_error_meta_kobj;
+> >  	struct xfs_error_cfg	m_error_cfg[XFS_ERR_CLASS_MAX][XFS_ERR_ERRNO_MAX];
+> >  	struct xstats		m_stats;	/* per-fs stats */
+> > -	struct ratelimit_state	m_flush_inodes_ratelimit;
+> >  
+> > +	/*
+> > +	 * Workqueue item so that we can coalesce multiple inode flush attempts
+> > +	 * into a single flush.
+> > +	 */
+> > +	struct work_struct	m_flush_inodes_work;
+> >  	struct workqueue_struct *m_buf_workqueue;
+> >  	struct workqueue_struct	*m_unwritten_workqueue;
+> >  	struct workqueue_struct	*m_cil_workqueue;
+> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > index abf06bf9c3f3..dced03a4571d 100644
+> > --- a/fs/xfs/xfs_super.c
+> > +++ b/fs/xfs/xfs_super.c
+> > @@ -516,6 +516,20 @@ xfs_destroy_mount_workqueues(
+> >  	destroy_workqueue(mp->m_buf_workqueue);
+> >  }
+> >  
+> > +static void
+> > +xfs_flush_inodes_worker(
+> > +	struct work_struct	*work)
+> > +{
+> > +	struct xfs_mount	*mp = container_of(work, struct xfs_mount,
+> > +						   m_flush_inodes_work);
+> > +	struct super_block	*sb = mp->m_super;
+> > +
+> > +	if (down_read_trylock(&sb->s_umount)) {
+> > +		sync_inodes_sb(sb);
+> > +		up_read(&sb->s_umount);
+> > +	}
+> > +}
+> > +
+> >  /*
+> >   * Flush all dirty data to disk. Must not be called while holding an XFS_ILOCK
+> >   * or a page lock. We use sync_inodes_sb() here to ensure we block while waiting
+> > @@ -526,15 +540,15 @@ void
+> >  xfs_flush_inodes(
+> >  	struct xfs_mount	*mp)
+> >  {
+> > -	struct super_block	*sb = mp->m_super;
+> > -
+> > -	if (!__ratelimit(&mp->m_flush_inodes_ratelimit))
+> > +	/*
+> > +	 * If flush_work() returns true then that means we waited for a flush
+> > +	 * which was already in progress.  Don't bother running another scan.
+> > +	 */
+> > +	if (flush_work(&mp->m_flush_inodes_work))
+> >  		return;
+> >  
+> > -	if (down_read_trylock(&sb->s_umount)) {
+> > -		sync_inodes_sb(sb);
+> > -		up_read(&sb->s_umount);
+> > -	}
+> > +	schedule_work(&mp->m_flush_inodes_work);
+> > +	flush_work(&mp->m_flush_inodes_work);
+> >  }
+> >  
+> >  /* Catch misguided souls that try to use this interface on XFS */
+> > @@ -1369,17 +1383,6 @@ xfs_fc_fill_super(
+> >  	if (error)
+> >  		goto out_free_names;
+> >  
+> > -	/*
+> > -	 * Cap the number of invocations of xfs_flush_inodes to 16 for every
+> > -	 * quarter of a second.  The magic numbers here were determined by
+> > -	 * observation neither to cause stalls in writeback when there are a
+> > -	 * lot of IO threads and the fs is near ENOSPC, nor cause any fstest
+> > -	 * regressions.  YMMV.
+> > -	 */
+> > -	ratelimit_state_init(&mp->m_flush_inodes_ratelimit, HZ / 4, 16);
+> > -	ratelimit_set_flags(&mp->m_flush_inodes_ratelimit,
+> > -			RATELIMIT_MSG_ON_RELEASE);
+> > -
+> >  	error = xfs_init_mount_workqueues(mp);
+> >  	if (error)
+> >  		goto out_close_devices;
+> > @@ -1752,6 +1755,7 @@ static int xfs_init_fs_context(
+> >  	spin_lock_init(&mp->m_perag_lock);
+> >  	mutex_init(&mp->m_growlock);
+> >  	atomic_set(&mp->m_active_trans, 0);
+> > +	INIT_WORK(&mp->m_flush_inodes_work, xfs_flush_inodes_worker);
+> >  	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
+> >  	INIT_DELAYED_WORK(&mp->m_eofblocks_work, xfs_eofblocks_worker);
+> >  	INIT_DELAYED_WORK(&mp->m_cowblocks_work, xfs_cowblocks_worker);
+> > 
+> 
