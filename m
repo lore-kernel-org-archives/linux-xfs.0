@@ -2,39 +2,58 @@ Return-Path: <SRS0=w6e5=56=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DAFAC2BB1D
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 19:58:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 770CEC2BB85
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 19:59:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 434222076B
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 19:58:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 402BF20767
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 19:59:03 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="yl/1AbAD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2505328AbgDNT6Z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Apr 2020 15:58:25 -0400
-Received: from mga06.intel.com ([134.134.136.31]:50661 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731053AbgDNT6X (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 14 Apr 2020 15:58:23 -0400
-IronPort-SDR: zG49AjFpBKZzOYozt6qw0qRxLrAwTeHJRkf5oMZ3sKXXW0zQ8laTZxP00sdnlAfm5BzLZoOgpH
- UpofhJOL1Qbg==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2020 12:58:21 -0700
-IronPort-SDR: luUCkfmnkOthQB7k3FD7/z/f2Fe1nIR7IEbxbAwxqumnSiD6m4Mt1g/3ZUThB9XL6JznlC7Edb
- HDHa/uV1OXMg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.72,384,1580803200"; 
-   d="scan'208";a="454674819"
-Received: from iweiny-desk2.sc.intel.com ([10.3.52.147])
-  by fmsmga006.fm.intel.com with ESMTP; 14 Apr 2020 12:58:21 -0700
-Date:   Tue, 14 Apr 2020 12:58:21 -0700
-From:   Ira Weiny <ira.weiny@intel.com>
+        id S2505316AbgDNT6W (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Apr 2020 15:58:22 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:53384 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2505237AbgDNT6S (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Apr 2020 15:58:18 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03EJrX81023001;
+        Tue, 14 Apr 2020 19:57:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=QClYHgr+9BhJGdZR+Dsv1ZrmLXwWc1xNA/wZJVLWvKU=;
+ b=yl/1AbADQUscbGwLHYu8U9vzcZLQ7NEWedTYV2gzcaaDjiLwUKpQztyrdeh220Mvc/xn
+ Y4bvFD0l5bxqeMdrdU/wmMkxzxYjSwgFV8ueQi5ksrtDOqpRDila4ZN0CQ3VAjOfeS+V
+ BXjeqJKbxztVSsFq/n1yGb5QKCndrqLi+T6x33qYrxBSMqYTAgoQjAk/zmj4kll1w1Tv
+ SRgfAuwO+83FDqPv3V2mYB9OBrOeuomCzaFuilNtu5hWD4NOVtEOTsb9BQogOJWZcJJ6
+ NbAKj7HaAT9YX6nvOAgJuSRQcAg5cZx3cToEwvGn1PmNdn8ekPV/tP0/O1A6zNVjEwqS QA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 30b6hpq0qy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 14 Apr 2020 19:57:59 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03EJvlKT014315;
+        Tue, 14 Apr 2020 19:57:59 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 30bqcjnyy8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 14 Apr 2020 19:57:58 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03EJvu3Q026932;
+        Tue, 14 Apr 2020 19:57:56 GMT
+Received: from localhost (/10.159.239.16)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 14 Apr 2020 12:57:55 -0700
+Date:   Tue, 14 Apr 2020 12:57:54 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+Cc:     "Weiny, Ira" <ira.weiny@intel.com>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         Dave Chinner <david@fromorbit.com>,
         Christoph Hellwig <hch@lst.de>,
@@ -44,7 +63,7 @@ Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
         linux-xfs <linux-xfs@vger.kernel.org>,
         linux-fsdevel <linux-fsdevel@vger.kernel.org>
 Subject: Re: [PATCH V7 9/9] Documentation/dax: Update Usage section
-Message-ID: <20200414195820.GE1853609@iweiny-DESK2.sc.intel.com>
+Message-ID: <20200414195754.GH6742@magnolia>
 References: <20200413054046.1560106-1-ira.weiny@intel.com>
  <20200413054046.1560106-10-ira.weiny@intel.com>
  <CAPcyv4g1gGWUuzVyOgOtkRTxzoSKOjVpAOmW-UDtmud9a3CUUA@mail.gmail.com>
@@ -54,7 +73,18 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <CAPcyv4hr+NKbpAU4UhKcmHfvDq1+GTM+y+K28XGbkDYBP=Kaag@mail.gmail.com>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9591 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxlogscore=999
+ bulkscore=0 malwarescore=0 phishscore=0 mlxscore=0 spamscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004140140
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9591 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0
+ mlxlogscore=999 clxscore=1011 mlxscore=0 phishscore=0 suspectscore=0
+ lowpriorityscore=0 bulkscore=0 malwarescore=0 priorityscore=1501
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004140139
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -139,15 +169,14 @@ On Tue, Apr 14, 2020 at 12:04:57PM -0700, Dan Williams wrote:
 > There's no reason for this description to say anything divergent from
 > that description.
 
-Ok I think the best text would be to simply refer to the STATX_ATTR_DAX man
-page here.  Something like:
+Ahh, ok.  Something like this, then:
 
-<quote>
- 1. There exists an in-kernel access mode flag S_DAX that is set when file
-    accesses is enabled for 'DAX'.  Applications must call statx to discover
-    the current S_DAX state (STATX_ATTR_DAX).  See the man page for statx for
-    more details.
-</quote>
+ 1. There exists an in-kernel access mode flag S_DAX.  When set, the
+    file is in the DAX (cpu direct access) state.  DAX state attempts to
+    minimize software cache effects for both I/O and memory mappings of
+    this file.  The S_DAX state is exposed to userspace via the
+    STATX_ATTR_DAX statx flag.
 
-Ira
+    See the STATX_ATTR_DAX in the statx(2) manpage for more information.
 
+--D
