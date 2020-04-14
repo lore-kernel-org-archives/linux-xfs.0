@@ -2,127 +2,107 @@ Return-Path: <SRS0=w6e5=56=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+X-Spam-Status: No, score=-7.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1418C2BA19
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 16:40:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C58A1C2BA19
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 17:20:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A558E20737
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 16:40:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A252B20737
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 17:20:25 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="EVIqCvHa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404764AbgDNQkd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Apr 2020 12:40:33 -0400
-Received: from sandeen.net ([63.231.237.45]:58794 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2404908AbgDNQk1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 14 Apr 2020 12:40:27 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id B28211F1E;
-        Tue, 14 Apr 2020 11:40:07 -0500 (CDT)
-Subject: Re: [PATCH] xfs_scrub: don't set WorkingDirectory= in systemd job
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Eric Sandeen <sandeen@redhat.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-References: <20200414154359.GE6742@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <8a6890de-97b7-990a-b35a-297937c1db10@sandeen.net>
-Date:   Tue, 14 Apr 2020 11:40:24 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.7.0
+        id S2407606AbgDNRUY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Apr 2020 13:20:24 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:41268 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2407532AbgDNRUX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Apr 2020 13:20:23 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03EHABUR173255
+        for <linux-xfs@vger.kernel.org>; Tue, 14 Apr 2020 17:20:21 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=oRMIToFAMZAySqacHm0Gki9s2l84yx9OQpCyWFqNuuA=;
+ b=EVIqCvHa2ZLc9ObL+6bZFk7b2A+IOTQ+uHlk8TiE5eYcIdiPfHJzGlldVDfKhwnmjalB
+ +PduYKyOp89igmTOibyrH7WDPwXveYAi1rGH5hmRzCdyV8nRGxZv8NJqRQhRTWEjHiD/
+ dCpOtG71fcjrTv+HUs6+p8iuDvw3L7GV0vEb2a59oT7d3QrF2Mz16Y8TGaeEsAQ+9fYr
+ S80q4WknRXcJDD2AWtNMJMtJb3uNaaknXDEXL+WfQ3KHvTw06udCtqJlp6SYs/Uxrabj
+ ANtjRZKik5RPsFjhENN+EMzgxEc9gaibu0qUX0KgkbMVwNZ6JknY1Ej75utWvgON35Ct qw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 30b5um6712-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 14 Apr 2020 17:20:21 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03EH7ExQ116448
+        for <linux-xfs@vger.kernel.org>; Tue, 14 Apr 2020 17:18:20 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 30ctaaqk91-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 14 Apr 2020 17:18:20 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03EHIKRi013217
+        for <linux-xfs@vger.kernel.org>; Tue, 14 Apr 2020 17:18:20 GMT
+Received: from localhost (/10.159.239.16)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 14 Apr 2020 10:18:20 -0700
+Date:   Tue, 14 Apr 2020 10:18:19 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to c142932c29e5
+Message-ID: <20200414171819.GG6742@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20200414154359.GE6742@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9591 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=0
+ spamscore=0 adultscore=0 mlxscore=0 phishscore=0 mlxlogscore=999
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004140131
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9591 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 bulkscore=0 mlxscore=0
+ mlxlogscore=999 lowpriorityscore=0 impostorscore=0 adultscore=0
+ phishscore=0 spamscore=0 suspectscore=0 malwarescore=0 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2004140131
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 4/14/20 10:43 AM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Somewhere between systemd 237 and 245, they changed the order in which a
-> job has its uid/gid set; capabilities applied; and working directory
-> set.  Whereas before they did it in an order such that you could set the
-> working directory to a path inaccessible to 'nobody' (either because
-> they did it before changing the uid or after adding capabilities), now
-> they don't and users instead get a service failure:
-> 
-> xfs_scrub@-boot.service: Changing to the requested working directory failed: Permission denied
-> xfs_scrub@-boot.service: Failed at step CHDIR spawning /usr/sbin/xfs_scrub: Permission denied
-> xfs_scrub@-boot.service: Main process exited, code=exited, status=200/CHDIR
-> 
-> Regardless, xfs_scrub works just fine with PWD set to /, so remove that
-> directive.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Hi folks,
 
-systemd is a black box to me but given this change is self contained and
-scrub is "experimental" let's go for it? ;)  I'll pull this in.
+The for-next branch of the xfs-linux repository at:
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-> ---
->  scrub/xfs_scrub@.service.in |    1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/scrub/xfs_scrub@.service.in b/scrub/xfs_scrub@.service.in
-> index 56acea67..6fb3f6ea 100644
-> --- a/scrub/xfs_scrub@.service.in
-> +++ b/scrub/xfs_scrub@.service.in
-> @@ -5,7 +5,6 @@ Documentation=man:xfs_scrub(8)
->  
->  [Service]
->  Type=oneshot
-> -WorkingDirectory=%I
->  PrivateNetwork=true
->  ProtectSystem=full
->  ProtectHome=read-only
-> 
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.  (Yes, this is bugfixes for 5.7.)
+
+The new head of the for-next branch is commit:
+
+c142932c29e5 xfs: fix partially uninitialized structure in xfs_reflink_remap_extent
+
+New Commits:
+
+Brian Foster (1):
+      [4b674b9ac852] xfs: acquire superblock freeze protection on eofblocks scans
+
+Darrick J. Wong (1):
+      [c142932c29e5] xfs: fix partially uninitialized structure in xfs_reflink_remap_extent
+
+
+Code Diffstat:
+
+ fs/xfs/xfs_icache.c  | 10 ++++++++++
+ fs/xfs/xfs_ioctl.c   |  5 ++++-
+ fs/xfs/xfs_reflink.c |  1 +
+ 3 files changed, 15 insertions(+), 1 deletion(-)
