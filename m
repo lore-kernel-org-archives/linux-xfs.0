@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3C57C38A2D
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 15:03:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82A7FC38A2E
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 15:04:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AEED420768
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 15:03:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5929E20768
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 15:04:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LzhSacnH"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="J0E8nLIt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406503AbgDNPD1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S2406490AbgDNPD1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Tue, 14 Apr 2020 11:03:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43546 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2405674AbgDNPCr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Apr 2020 11:02:47 -0400
+        with ESMTP id S2405689AbgDNPCs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Apr 2020 11:02:48 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA3D8C02C444;
-        Tue, 14 Apr 2020 08:02:41 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E4B4C025482;
+        Tue, 14 Apr 2020 08:02:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=JIWYplRscu505eUf6DjdTxinCKmvVQR8lfp+2Y6n8B0=; b=LzhSacnHbc6KghuGVfNkcOCJHp
-        5ZLNZLDSftcTn0v83NLZLVmZhen2i84VqUWP9JZ/3yOibp4JO2uYfDYUYIZU6BV1WBKmfpEqoLAs2
-        HAhqmnVqrI41UPqUhKCVWPlx+iWH9Szo+AqXBvOqff7IscKM86SP+AymrzN+6zrt9b9hcVQX7TvUy
-        49PgOLLfxNvIRheNkB/LcZtWVqO9VEzT6GBzHOL0Oai+jR1TJAUg0ay7huj5on5nt26FsCNWgKdGn
-        XWTpBarRpq2zzZjMWm3mCd1788gic8f7z9e7Q3pjE5upMv4vhJ9PGwLWx0/mvzq5/u5yOAOP8+sao
-        3RQpH5LA==;
+        bh=tVTCrH8cQ/F5ivWRNhrAQ0ihqzkrHbjiqbn9CKzaols=; b=J0E8nLItUb9kYXKT1HRLtnKT9N
+        upKZsmAfMdj07xoQs/ZUa8CgrmjtoinI+lgOEhXyY9qzISCKAi8VfIb3qXmku8XwARO1506u4IWNE
+        wsIG2Pe1ha0q5QJKhkgFd7hH1I8b8DFZdO+iwVDR7q4Vu4nWP3xccnKN0OXvBWcc67AvUYuG6TY2Z
+        bm1louea0JXeyRCxkJuAE72xuGmXjhKXDM0Tq42GgR4ksJEvB+xyfaXZgJzk1DSCejwMCDSQr05Tf
+        Suhg8VbYjKzIu2N6/2TNPPECURCFMSUDC1QTZcQgCPZPIlwGSj57IbduezGCoZpC+WHElRjwOgOol
+        8chooJhg==;
 Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jON5A-0006Pf-JL; Tue, 14 Apr 2020 15:02:36 +0000
+        id 1jON59-0006O8-R9; Tue, 14 Apr 2020 15:02:35 +0000
 From:   Matthew Wilcox <willy@infradead.org>
 To:     Andrew Morton <akpm@linux-foundation.org>
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
@@ -44,11 +44,12 @@ Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
         linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
         ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org,
-        Dave Chinner <dchinner@redhat.com>,
+        Zi Yan <ziy@nvidia.com>, John Hubbard <jhubbard@nvidia.com>,
+        Christoph Hellwig <hch@lst.de>,
         William Kucharski <william.kucharski@oracle.com>
-Subject: [PATCH v11 24/25] fuse: Convert from readpages to readahead
-Date:   Tue, 14 Apr 2020 08:02:32 -0700
-Message-Id: <20200414150233.24495-25-willy@infradead.org>
+Subject: [PATCH v11 04/25] mm: Move readahead nr_pages check into read_pages
+Date:   Tue, 14 Apr 2020 08:02:12 -0700
+Message-Id: <20200414150233.24495-5-willy@infradead.org>
 X-Mailer: git-send-email 2.21.1
 In-Reply-To: <20200414150233.24495-1-willy@infradead.org>
 References: <20200414150233.24495-1-willy@infradead.org>
@@ -61,144 +62,62 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
-Implement the new readahead operation in fuse by using __readahead_batch()
-to fill the array of pages in fuse_args_pages directly.  This lets us
-inline fuse_readpages_fill() into fuse_readahead().
+Simplify the callers by moving the check for nr_pages and the BUG_ON
+into read_pages().
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Zi Yan <ziy@nvidia.com>
+Reviewed-by: John Hubbard <jhubbard@nvidia.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: William Kucharski <william.kucharski@oracle.com>
 ---
- fs/fuse/file.c | 99 ++++++++++++++------------------------------------
- 1 file changed, 27 insertions(+), 72 deletions(-)
+ mm/readahead.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/fs/fuse/file.c b/fs/fuse/file.c
-index 9d67b830fb7a..db82fb29dd39 100644
---- a/fs/fuse/file.c
-+++ b/fs/fuse/file.c
-@@ -915,84 +915,39 @@ static void fuse_send_readpages(struct fuse_io_args *ia, struct file *file)
- 	fuse_readpages_end(fc, &ap->args, err);
- }
+diff --git a/mm/readahead.c b/mm/readahead.c
+index 61b15b6b9e72..9fcd4e32b62d 100644
+--- a/mm/readahead.c
++++ b/mm/readahead.c
+@@ -119,6 +119,9 @@ static void read_pages(struct address_space *mapping, struct file *filp,
+ 	struct blk_plug plug;
+ 	unsigned page_idx;
  
--struct fuse_fill_data {
--	struct fuse_io_args *ia;
--	struct file *file;
--	struct inode *inode;
--	unsigned int nr_pages;
--	unsigned int max_pages;
--};
--
--static int fuse_readpages_fill(void *_data, struct page *page)
-+static void fuse_readahead(struct readahead_control *rac)
- {
--	struct fuse_fill_data *data = _data;
--	struct fuse_io_args *ia = data->ia;
--	struct fuse_args_pages *ap = &ia->ap;
--	struct inode *inode = data->inode;
-+	struct inode *inode = rac->mapping->host;
- 	struct fuse_conn *fc = get_fuse_conn(inode);
-+	unsigned int i, max_pages, nr_pages = 0;
- 
--	fuse_wait_on_page_writeback(inode, page->index);
--
--	if (ap->num_pages &&
--	    (ap->num_pages == fc->max_pages ||
--	     (ap->num_pages + 1) * PAGE_SIZE > fc->max_read ||
--	     ap->pages[ap->num_pages - 1]->index + 1 != page->index)) {
--		data->max_pages = min_t(unsigned int, data->nr_pages,
--					fc->max_pages);
--		fuse_send_readpages(ia, data->file);
--		data->ia = ia = fuse_io_alloc(NULL, data->max_pages);
--		if (!ia) {
--			unlock_page(page);
--			return -ENOMEM;
--		}
--		ap = &ia->ap;
--	}
--
--	if (WARN_ON(ap->num_pages >= data->max_pages)) {
--		unlock_page(page);
--		fuse_io_free(ia);
--		return -EIO;
--	}
--
--	get_page(page);
--	ap->pages[ap->num_pages] = page;
--	ap->descs[ap->num_pages].length = PAGE_SIZE;
--	ap->num_pages++;
--	data->nr_pages--;
--	return 0;
--}
--
--static int fuse_readpages(struct file *file, struct address_space *mapping,
--			  struct list_head *pages, unsigned nr_pages)
--{
--	struct inode *inode = mapping->host;
--	struct fuse_conn *fc = get_fuse_conn(inode);
--	struct fuse_fill_data data;
--	int err;
--
--	err = -EIO;
- 	if (is_bad_inode(inode))
--		goto out;
++	if (!nr_pages)
 +		return;
- 
--	data.file = file;
--	data.inode = inode;
--	data.nr_pages = nr_pages;
--	data.max_pages = min_t(unsigned int, nr_pages, fc->max_pages);
--;
--	data.ia = fuse_io_alloc(NULL, data.max_pages);
--	err = -ENOMEM;
--	if (!data.ia)
--		goto out;
-+	max_pages = min(fc->max_pages, fc->max_read / PAGE_SIZE);
- 
--	err = read_cache_pages(mapping, pages, fuse_readpages_fill, &data);
--	if (!err) {
--		if (data.ia->ap.num_pages)
--			fuse_send_readpages(data.ia, file);
--		else
--			fuse_io_free(data.ia);
-+	for (;;) {
-+		struct fuse_io_args *ia;
-+		struct fuse_args_pages *ap;
 +
-+		nr_pages = readahead_count(rac) - nr_pages;
-+		if (nr_pages > max_pages)
-+			nr_pages = max_pages;
-+		if (nr_pages == 0)
-+			break;
-+		ia = fuse_io_alloc(NULL, nr_pages);
-+		if (!ia)
-+			return;
-+		ap = &ia->ap;
-+		nr_pages = __readahead_batch(rac, ap->pages, nr_pages);
-+		for (i = 0; i < nr_pages; i++) {
-+			fuse_wait_on_page_writeback(inode,
-+						    readahead_index(rac) + i);
-+			ap->descs[i].length = PAGE_SIZE;
-+		}
-+		ap->num_pages = nr_pages;
-+		fuse_send_readpages(ia, rac->file);
- 	}
--out:
--	return err;
+ 	blk_start_plug(&plug);
+ 
+ 	if (mapping->a_ops->readpages) {
+@@ -138,6 +141,8 @@ static void read_pages(struct address_space *mapping, struct file *filp,
+ 
+ out:
+ 	blk_finish_plug(&plug);
++
++	BUG_ON(!list_empty(pages));
  }
  
- static ssize_t fuse_cache_read_iter(struct kiocb *iocb, struct iov_iter *to)
-@@ -3373,10 +3328,10 @@ static const struct file_operations fuse_file_operations = {
+ /*
+@@ -180,8 +185,7 @@ void __do_page_cache_readahead(struct address_space *mapping,
+ 			 * contiguous pages before continuing with the next
+ 			 * batch.
+ 			 */
+-			if (nr_pages)
+-				read_pages(mapping, filp, &page_pool, nr_pages,
++			read_pages(mapping, filp, &page_pool, nr_pages,
+ 						gfp_mask);
+ 			nr_pages = 0;
+ 			continue;
+@@ -202,9 +206,7 @@ void __do_page_cache_readahead(struct address_space *mapping,
+ 	 * uptodate then the caller will launch readpage again, and
+ 	 * will then handle the error.
+ 	 */
+-	if (nr_pages)
+-		read_pages(mapping, filp, &page_pool, nr_pages, gfp_mask);
+-	BUG_ON(!list_empty(&page_pool));
++	read_pages(mapping, filp, &page_pool, nr_pages, gfp_mask);
+ }
  
- static const struct address_space_operations fuse_file_aops  = {
- 	.readpage	= fuse_readpage,
-+	.readahead	= fuse_readahead,
- 	.writepage	= fuse_writepage,
- 	.writepages	= fuse_writepages,
- 	.launder_page	= fuse_launder_page,
--	.readpages	= fuse_readpages,
- 	.set_page_dirty	= __set_page_dirty_nobuffers,
- 	.bmap		= fuse_bmap,
- 	.direct_IO	= fuse_direct_IO,
+ /*
 -- 
 2.25.1
 
