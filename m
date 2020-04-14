@@ -2,209 +2,125 @@ Return-Path: <SRS0=w6e5=56=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFEC1C2BA2B
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 00:31:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFECAC2BA2B
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 03:00:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B366C21655
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 00:31:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A4ACF2072D
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Apr 2020 03:00:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="iS46H0cc"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PFv2e/MW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390457AbgDNAb2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Apr 2020 20:31:28 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:40000 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390456AbgDNAb1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Apr 2020 20:31:27 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03E0Dc5o186903;
-        Tue, 14 Apr 2020 00:31:23 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=C9DyXwY0IvzHehu8kJ0b/KlUy9/IKvHFB6n+FXK9eoI=;
- b=iS46H0ccWezYz370H53i64fFT4M9x9Rqxzdsz245FMDZagjlGe53V+40vdSqwJuBoCsd
- n8XR5XFQDeP65+YDDSVporc6zonA2nFLzsXW6KUjjaXkJT9j5hx/LfbcwNaGMCAkVoaQ
- eKIaOlLrZfp4uzJ+2+QoC9/QULRdSxUX/7tK3t2N5B6XGrSQaxYRczyRtKzpeXd1xyRP
- 4lTHHRxrxK2hQ1GNpmyG5O8/qVflwDgLMYfXfx7Z4O9l3ICWd92xWLi27gCD8j2nohe3
- rVHsBGIgKZz2tbP2WGUSJTDuMzL0re3mRBBpyebOzLWsGMefgMYqratzC8/m5xEmJz/I Fg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 30b6hphfrv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Apr 2020 00:31:23 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03E0D53I009634;
-        Tue, 14 Apr 2020 00:31:22 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 30cta8gej9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Apr 2020 00:31:22 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03E0VMDW027544;
-        Tue, 14 Apr 2020 00:31:22 GMT
-Received: from localhost (/10.159.239.215)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 13 Apr 2020 17:31:22 -0700
-Date:   Mon, 13 Apr 2020 17:31:21 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: move inode flush to a workqueue
-Message-ID: <20200414003121.GD6742@magnolia>
-References: <158674021112.3253017.16592621806726469169.stgit@magnolia>
- <158674021749.3253017.16036198065081499968.stgit@magnolia>
- <20200413123109.GB57285@bfoster>
+        id S2404351AbgDNDAa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Apr 2020 23:00:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44664 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S2404224AbgDNDAa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Apr 2020 23:00:30 -0400
+Received: from mail-il1-x143.google.com (mail-il1-x143.google.com [IPv6:2607:f8b0:4864:20::143])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3EA0C0A3BDC;
+        Mon, 13 Apr 2020 20:00:29 -0700 (PDT)
+Received: by mail-il1-x143.google.com with SMTP id f82so7217850ilh.8;
+        Mon, 13 Apr 2020 20:00:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=NeqKXLYrWUpD8jNTcGC4+w/0QPeCB7it9q+iuJn3+6A=;
+        b=PFv2e/MWAiprnN1BhiBDycrqJD137NITfKgcM7yyJdOWGGyV+BAY02xot6sVwbHfU+
+         uEptpiXO+doA8o30kbNcrmXTY7DmbhUtqjkyGQvFPMGlRMzVxd7tnHfoBetxg4uq/0Vw
+         BmRav/H54feN1KZotQw7H6sgqxeWFmzHa/5DgwsiS05E6rcS52FCF8fGHL290i5nf5M3
+         U8imVjIi/3FUdqzyBELP7Dlg06lKzJtiiWkcFt09N+wzhCSOwLoGA5sAdqMXJAxAZ9NL
+         rOri6Y6EQ0ZBpdrucsic1PNOat0LDsc7bgp/tkYl7E9aEXu6GbyM0Im6zpwd6DJKH+dD
+         PT1A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=NeqKXLYrWUpD8jNTcGC4+w/0QPeCB7it9q+iuJn3+6A=;
+        b=eDNIZUAPHiYKE0RMfKO3Ud7dY6cgfNcquZSRJKuw843xXgRh2+cVOX4u9HXq0YvIt4
+         /5aDZpXPCoG+TG3BIAUaOqS10oXStqbWSF3UIxN6SsDXHPKtktD70+6X9AhjqqLvI0TH
+         6Nj4eKP95nsFtp5RiMkcyCd116eHf+71DWK7oIt9J4A2HRjBckZK/ZEOzFalxwpeNmBr
+         lPqG+4up+fP/613XtpAvrzyojB2fsr7QTiJ6MtDgmj+ybXcXa5vqRqtS3QDgby+y4rdP
+         dxXafcRosJRaAH/rXYtOGTnDV3Po+ULzKAz03tpNbjFda0zwQJ+xMn7EtwksGlpO/s6K
+         dRhw==
+X-Gm-Message-State: AGi0PuYJ1QG01blnApoVL1QNvC4YZalSEEvnyPrJFPH8QxZXvR+qnc3l
+        VTw6In2TKWgT5Woq5w5U/TMXG2WOm+UJiF5jhkXR45Cd
+X-Google-Smtp-Source: APiQypIcccZX6FgExHTpUgHvvHh5LMPDLG+hilm7yJjaE8lpm5gSqgSU+a+4KO0VwFPvF16dB7XLOKXGMlciYxuN/C0=
+X-Received: by 2002:a92:394d:: with SMTP id g74mr19906784ila.250.1586833229197;
+ Mon, 13 Apr 2020 20:00:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200413123109.GB57285@bfoster>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9590 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=2
- spamscore=0 adultscore=0 mlxscore=0 phishscore=0 mlxlogscore=999
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004140000
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9590 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0
- mlxlogscore=999 clxscore=1015 mlxscore=0 phishscore=0 suspectscore=2
- lowpriorityscore=0 bulkscore=0 malwarescore=0 priorityscore=1501
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004140000
+References: <CABV8kRw_jGxPqWc68Bj-uP_hSrKO0MmShOmtuzGQA2W3WHyCrg@mail.gmail.com>
+ <CAOQ4uxhPKR34cXvWfF49z8mTGJm+oP2ibfohsXNdY7tXaOi4RA@mail.gmail.com>
+ <CABV8kRxVA0j2qLkyWx+vULh2DxK2Ef4nPk-zXCikN8XmdBOFgQ@mail.gmail.com>
+ <CAOQ4uxh2KKwORLC+gWEF=mWzBa3Kh4A4HgRoiad5N5qu06xjcg@mail.gmail.com> <CABV8kRxsGm2-RLsuWPQGc82=6+x8v8FtV0=a6MQS=Nt-Pv3V9A@mail.gmail.com>
+In-Reply-To: <CABV8kRxsGm2-RLsuWPQGc82=6+x8v8FtV0=a6MQS=Nt-Pv3V9A@mail.gmail.com>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Tue, 14 Apr 2020 06:00:17 +0300
+Message-ID: <CAOQ4uxj1csY-Vn2suFZMseEZgvAZzhQ82TR+XtDRQ=cOzwvzzw@mail.gmail.com>
+Subject: Re: Same mountpoint restriction in FICLONE ioctls
+To:     Keno Fischer <keno@juliacomputing.com>
+Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Miklos Szeredi <mszeredi@redhat.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        CIFS <linux-cifs@vger.kernel.org>,
+        Linux NFS Mailing List <linux-nfs@vger.kernel.org>,
+        Olga Kornievskaia <kolga@netapp.com>,
+        Steve French <smfrench@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 13, 2020 at 08:31:09AM -0400, Brian Foster wrote:
-> On Sun, Apr 12, 2020 at 06:10:17PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Move the inode dirty data flushing to a workqueue so that multiple
-> > threads can take advantage of a single thread's flush work.  The
-> > ratelimiting technique was not successful, because threads that skipped
-> > the inode flush scan due to ratelimiting would ENOSPC early and
-> > apparently now there are complaints about that.  So make everyone wait.
-> > 
-> > Fixes: bdd4ee4f8407 ("xfs: ratelimit inode flush on buffered write ENOSPC")
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> 
-> Seems reasonable in general, but do we really want to to dump a longish
-> running filesystem sync to the system workqueue? It looks like there are
-> a lot of existing users so I can't really tell if there are major
-> restrictions or not, but it seems risk of disruption is higher than
-> necessary if we dump one or more full fs syncs to it..
+On Mon, Apr 13, 2020 at 10:40 PM Keno Fischer <keno@juliacomputing.com> wrote:
+>
+> > You make it sound like the heuristic decision must be made
+> > *after* trying to clone, but it can be made before and pass
+> > flags to the kernel whether or to fallback to copy.
+>
+> True, though I simplified slightly. There's other things we try
+> first if the clone fails, like creating a hardlink. If cloning fails,
+> we also often only want to copy a part of the file (again
+> heuristically, whether more than what the program asked
+> for will be useful for debugging)
 
-Hmm, I guess I should look at the other flush_work user (the CIL) to see
-if there's any potential for conflicts.  IIRC the system workqueue will
-spawn more threads if someone blocks too long, but maybe we ought to
-use system_long_wq for these kinds of things...
+Fair enough.
 
---D
+>
+> > copy_file_range(2) has an unused flags argument.
+> > Adding support for flags like:
+> > COPY_FILE_RANGE_BY_FS
+> > COPY_FILE_RANGE_BY_KERNEL
+>
+> That would solve it of course, and I'd be happy with that
+> solution, but it seems like we'd end up with just another
+> spelling for the cloning ioctls then that have subtly different
+> semantics.
+>
 
-> Brian
-> 
-> >  fs/xfs/xfs_mount.h |    6 +++++-
-> >  fs/xfs/xfs_super.c |   40 ++++++++++++++++++++++------------------
-> >  2 files changed, 27 insertions(+), 19 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> > index 50c43422fa17..b2e4598fdf7d 100644
-> > --- a/fs/xfs/xfs_mount.h
-> > +++ b/fs/xfs/xfs_mount.h
-> > @@ -167,8 +167,12 @@ typedef struct xfs_mount {
-> >  	struct xfs_kobj		m_error_meta_kobj;
-> >  	struct xfs_error_cfg	m_error_cfg[XFS_ERR_CLASS_MAX][XFS_ERR_ERRNO_MAX];
-> >  	struct xstats		m_stats;	/* per-fs stats */
-> > -	struct ratelimit_state	m_flush_inodes_ratelimit;
-> >  
-> > +	/*
-> > +	 * Workqueue item so that we can coalesce multiple inode flush attempts
-> > +	 * into a single flush.
-> > +	 */
-> > +	struct work_struct	m_flush_inodes_work;
-> >  	struct workqueue_struct *m_buf_workqueue;
-> >  	struct workqueue_struct	*m_unwritten_workqueue;
-> >  	struct workqueue_struct	*m_cil_workqueue;
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index abf06bf9c3f3..dced03a4571d 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> > @@ -516,6 +516,20 @@ xfs_destroy_mount_workqueues(
-> >  	destroy_workqueue(mp->m_buf_workqueue);
-> >  }
-> >  
-> > +static void
-> > +xfs_flush_inodes_worker(
-> > +	struct work_struct	*work)
-> > +{
-> > +	struct xfs_mount	*mp = container_of(work, struct xfs_mount,
-> > +						   m_flush_inodes_work);
-> > +	struct super_block	*sb = mp->m_super;
-> > +
-> > +	if (down_read_trylock(&sb->s_umount)) {
-> > +		sync_inodes_sb(sb);
-> > +		up_read(&sb->s_umount);
-> > +	}
-> > +}
-> > +
-> >  /*
-> >   * Flush all dirty data to disk. Must not be called while holding an XFS_ILOCK
-> >   * or a page lock. We use sync_inodes_sb() here to ensure we block while waiting
-> > @@ -526,15 +540,15 @@ void
-> >  xfs_flush_inodes(
-> >  	struct xfs_mount	*mp)
-> >  {
-> > -	struct super_block	*sb = mp->m_super;
-> > -
-> > -	if (!__ratelimit(&mp->m_flush_inodes_ratelimit))
-> > +	/*
-> > +	 * If flush_work() returns true then that means we waited for a flush
-> > +	 * which was already in progress.  Don't bother running another scan.
-> > +	 */
-> > +	if (flush_work(&mp->m_flush_inodes_work))
-> >  		return;
-> >  
-> > -	if (down_read_trylock(&sb->s_umount)) {
-> > -		sync_inodes_sb(sb);
-> > -		up_read(&sb->s_umount);
-> > -	}
-> > +	schedule_work(&mp->m_flush_inodes_work);
-> > +	flush_work(&mp->m_flush_inodes_work);
-> >  }
-> >  
-> >  /* Catch misguided souls that try to use this interface on XFS */
-> > @@ -1369,17 +1383,6 @@ xfs_fc_fill_super(
-> >  	if (error)
-> >  		goto out_free_names;
-> >  
-> > -	/*
-> > -	 * Cap the number of invocations of xfs_flush_inodes to 16 for every
-> > -	 * quarter of a second.  The magic numbers here were determined by
-> > -	 * observation neither to cause stalls in writeback when there are a
-> > -	 * lot of IO threads and the fs is near ENOSPC, nor cause any fstest
-> > -	 * regressions.  YMMV.
-> > -	 */
-> > -	ratelimit_state_init(&mp->m_flush_inodes_ratelimit, HZ / 4, 16);
-> > -	ratelimit_set_flags(&mp->m_flush_inodes_ratelimit,
-> > -			RATELIMIT_MSG_ON_RELEASE);
-> > -
-> >  	error = xfs_init_mount_workqueues(mp);
-> >  	if (error)
-> >  		goto out_close_devices;
-> > @@ -1752,6 +1755,7 @@ static int xfs_init_fs_context(
-> >  	spin_lock_init(&mp->m_perag_lock);
-> >  	mutex_init(&mp->m_growlock);
-> >  	atomic_set(&mp->m_active_trans, 0);
-> > +	INIT_WORK(&mp->m_flush_inodes_work, xfs_flush_inodes_worker);
-> >  	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
-> >  	INIT_DELAYED_WORK(&mp->m_eofblocks_work, xfs_eofblocks_worker);
-> >  	INIT_DELAYED_WORK(&mp->m_cowblocks_work, xfs_cowblocks_worker);
-> > 
-> 
+Yeh. Another spelling is a common way to change behavior.
+In fact, it is the only way if you want to avoid changing behavior
+of existing application.
+
+Generally speaking, syscall interface is an improvement over ioctl
+interface. Flags like:
+COPY_FILE_RANGE_REFLINK
+COPY_FILE_RANGE_NO_XDEV
+along with proper documentation, can help make the change of behavior
+explicit. The flags mentioned above would describe the existing
+FICLONERANGE semantics.
+
+But the thing is that the above is not just a fancy maneuver for relaxing the
+same mnt restriction of FICLONERANGE.
+I believe that enhancing the semantics of copy_file_range(2) has benefits
+beyond your use case.
+copy tools could make use of nfs/cifs server side copy without falling back
+to kernel copy.
+
+Thanks,
+Amir.
