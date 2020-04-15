@@ -2,136 +2,131 @@ Return-Path: <SRS0=6B5E=57=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F837C38A2E
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 04:56:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E311C2BB85
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 06:40:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3ED4C20857
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 04:56:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586926591;
-	bh=7/cyAEWqRIoOXcFZNvYgjU7w3cE8iC6Fh8sNAEooM88=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
-	b=HRiGsiCi8svF1mFRQ0wdgcoWdqTiF4g2vwCe7K4Yq+++MHcJAHJkJfY5H4fUyV6iT
-	 n7Q6+pyRtkAMhbBkzKCdw20pv4OlUBKqxCDE3V8Bjn2hj82N6kdmSqs3loyPQ8hRyr
-	 UIdsvP9gJ/g68VHAmBXQRWirGDtWHwW1nJbK/aQE=
+	by mail.kernel.org (Postfix) with ESMTP id 2850B20784
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 06:40:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2393159AbgDOE4U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Apr 2020 00:56:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49432 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2393136AbgDOE4S (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Apr 2020 00:56:18 -0400
-Received: from localhost.localdomain (c-73-231-172-41.hsd1.ca.comcast.net [73.231.172.41])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3BD0920784;
-        Wed, 15 Apr 2020 04:56:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586926577;
-        bh=7/cyAEWqRIoOXcFZNvYgjU7w3cE8iC6Fh8sNAEooM88=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=o7nTdRDWnBos1+imCHuZl8B8uuGul0yLnN9eMfYMaDqOlB+cl/NgjLOckV0vY0hpP
-         Ucm/O1A9vtop3dW0jo3wEyrWUTI/eFT4pIPVlWkKKNR0Qa5IVvC7y0T9VVsiPyVZ+6
-         YcmvoJe/CEGPjhSZX5DnQnSB/tg3reced0fueZDI=
-Date:   Tue, 14 Apr 2020 21:56:16 -0700
-From:   Andrew Morton <akpm@linux-foundation.org>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>,
-        William Kucharski <william.kucharski@oracle.com>
-Subject: Re: [PATCH v11 05/25] mm: Add new readahead_control API
-Message-Id: <20200414215616.f665d12f8549f52606784d1e@linux-foundation.org>
-In-Reply-To: <20200415021808.GA5820@bombadil.infradead.org>
-References: <20200414150233.24495-1-willy@infradead.org>
-        <20200414150233.24495-6-willy@infradead.org>
-        <20200414181705.bfc4c0087092051a9475141e@linux-foundation.org>
-        <20200415021808.GA5820@bombadil.infradead.org>
-X-Mailer: Sylpheed 3.5.1 (GTK+ 2.24.31; x86_64-pc-linux-gnu)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+        id S2634927AbgDOGkZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Apr 2020 02:40:25 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:22022 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S2634921AbgDOGkY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Apr 2020 02:40:24 -0400
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 03F6YMOm055860
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Apr 2020 02:40:23 -0400
+Received: from e06smtp01.uk.ibm.com (e06smtp01.uk.ibm.com [195.75.94.97])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 30dnmqtdyp-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Apr 2020 02:40:23 -0400
+Received: from localhost
+        by e06smtp01.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.ibm.com>;
+        Wed, 15 Apr 2020 07:39:47 +0100
+Received: from b06avi18626390.portsmouth.uk.ibm.com (9.149.26.192)
+        by e06smtp01.uk.ibm.com (192.168.101.131) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
+        Wed, 15 Apr 2020 07:39:45 +0100
+Received: from d06av26.portsmouth.uk.ibm.com (d06av26.portsmouth.uk.ibm.com [9.149.105.62])
+        by b06avi18626390.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 03F6dDV221758324
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 15 Apr 2020 06:39:13 GMT
+Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id F3ED6AE058;
+        Wed, 15 Apr 2020 06:40:18 +0000 (GMT)
+Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 38166AE04D;
+        Wed, 15 Apr 2020 06:40:18 +0000 (GMT)
+Received: from localhost.localdomain (unknown [9.79.180.162])
+        by d06av26.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Wed, 15 Apr 2020 06:40:17 +0000 (GMT)
+From:   Chandan Rajendra <chandan@linux.ibm.com>
+To:     Allison Collins <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v8 02/20] xfs: Check for -ENOATTR or -EEXIST
+Date:   Wed, 15 Apr 2020 12:13:23 +0530
+Organization: IBM
+In-Reply-To: <20200403221229.4995-3-allison.henderson@oracle.com>
+References: <20200403221229.4995-1-allison.henderson@oracle.com> <20200403221229.4995-3-allison.henderson@oracle.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+X-TM-AS-GCONF: 00
+x-cbid: 20041506-4275-0000-0000-000003C022D5
+X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
+x-cbparentid: 20041506-4276-0000-0000-000038D5987F
+Message-Id: <3808247.e9iCYBVUDu@localhost.localdomain>
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.676
+ definitions=2020-04-15_01:2020-04-14,2020-04-15 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 clxscore=1015
+ phishscore=0 adultscore=0 suspectscore=1 mlxlogscore=999 spamscore=0
+ mlxscore=0 lowpriorityscore=0 priorityscore=1501 impostorscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004150046
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, 14 Apr 2020 19:18:08 -0700 Matthew Wilcox <willy@infradead.org> wrote:
+On Saturday, April 4, 2020 3:42 AM Allison Collins wrote: 
+> Delayed operations cannot return error codes.  So we must check for
+> these conditions first before starting set or remove operations
+>
 
-> On Tue, Apr 14, 2020 at 06:17:05PM -0700, Andrew Morton wrote:
-> > On Tue, 14 Apr 2020 08:02:13 -0700 Matthew Wilcox <willy@infradead.org> wrote:
-> > > From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-> > > 
-> > > Filesystems which implement the upcoming ->readahead method will get
-> > > their pages by calling readahead_page() or readahead_page_batch().
-> > > These functions support large pages, even though none of the filesystems
-> > > to be converted do yet.
-> > > 
-> > > +static inline struct page *readahead_page(struct readahead_control *rac)
-> > > +static inline unsigned int __readahead_batch(struct readahead_control *rac,
-> > > +		struct page **array, unsigned int array_sz)
-> > 
-> > These are large functions.  Was it correct to inline them?
+The changes are logically correct.
+
+Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
+
+> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr.c | 15 +++++++++++++++
+>  1 file changed, 15 insertions(+)
 > 
-> Hmm.  They don't seem that big to me.
-
-They're really big!
-
-> readahead_page, stripped of its sanity checks:
-
-Well, the sanity checks still count for cache footprint.
-
-otoh, I think a function which is expected to be called from a single
-site per filesystem is OK to be inlined, because there's not likely to
-be much icache benefit unless different filesystem types are
-simultaneously being used heavily, which sounds unlikely.  Although
-there's still a bit of overall code size bloat.
-
-> +       rac->_index += rac->_batch_count;
-> +       if (!rac->_nr_pages) {
-> +               rac->_batch_count = 0;
-> +               return NULL;
-> +       }
-> +       page = xa_load(&rac->mapping->i_pages, rac->_index);
-> +       rac->_batch_count = hpage_nr_pages(page);
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 2a0d3d3..f7e289e 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -404,6 +404,17 @@ xfs_attr_set(
+>  				args->total, 0, quota_flags);
+>  		if (error)
+>  			goto out_trans_cancel;
+> +
+> +		error = xfs_has_attr(args);
+> +		if (error == -EEXIST && (args->attr_flags & XATTR_CREATE))
+> +			goto out_trans_cancel;
+> +
+> +		if (error == -ENOATTR && (args->attr_flags & XATTR_REPLACE))
+> +			goto out_trans_cancel;
+> +
+> +		if (error != -ENOATTR && error != -EEXIST)
+> +			goto out_trans_cancel;
+> +
+>  		error = xfs_attr_set_args(args);
+>  		if (error)
+>  			goto out_trans_cancel;
+> @@ -411,6 +422,10 @@ xfs_attr_set(
+>  		if (!args->trans)
+>  			goto out_unlock;
+>  	} else {
+> +		error = xfs_has_attr(args);
+> +		if (error != -EEXIST)
+> +			goto out_trans_cancel;
+> +
+>  		error = xfs_attr_remove_args(args);
+>  		if (error)
+>  			goto out_trans_cancel;
 > 
-> __readahead_batch is much bigger, but it's only used by btrfs and fuse,
-> and it seemed unfair to make everybody pay the cost for a function only
-> used by two filesystems.
 
-Do we expect more filesystems to use these in the future?
 
-These function are really big!
+-- 
+chandan
 
-> > The batching API only appears to be used by fuse?  If so, do we really
-> > need it?  Does it provide some functional need, or is it a performance
-> > thing?  If the latter, how significant is it?
-> 
-> I must confess to not knowing the performance impact.  If the code uses
-> xa_load() repeatedly, it costs O(log n) each time as we walk down the tree
-> (mitigated to a large extent by cache, of course).  Using xas_for_each()
-> keeps us at the bottom of the tree and each iteration is O(1).
-> I'm interested to see if filesystem maintainers start to use the batch
-> function or if they're happier sticking with the individual lookups.
-> 
-> The batch API was originally written for use with btrfs, but it was a
-> significant simplification to convert fuse to use it.
 
-hm, OK.  It's not clear that its inclusion is justified?
-
-> > The code adds quite a few (inlined!) VM_BUG_ONs.  Can we plan to remove
-> > them at some stage?  Such as, before Linus shouts at us :)
-> 
-> I'd be happy to remove them.  Various reviewers said things like "are you
-> sure this can't happen?"
-
-Yeah, these things tend to live for ever.  Please add a todo to remove
-them after the code has matured?
 
