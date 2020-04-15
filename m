@@ -2,47 +2,48 @@ Return-Path: <SRS0=6B5E=57=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B993C2BA2B
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 06:48:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F699C3815B
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 06:48:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4FAE720771
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 06:48:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 36CDF20775
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 06:48:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2634943AbgDOGph (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Apr 2020 02:45:37 -0400
-Received: from mga09.intel.com ([134.134.136.24]:45838 "EHLO mga09.intel.com"
+        id S2635064AbgDOGsH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Apr 2020 02:48:07 -0400
+Received: from mga01.intel.com ([192.55.52.88]:14277 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2393624AbgDOGpf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Apr 2020 02:45:35 -0400
-IronPort-SDR: UGb4e81i0vnVUAiaduEEkgRqv4PQUXXK6uoqsoGGtBi8p4HT5Px3Iwn7X6W5HGZO9Y/BJcZHKe
- OKgQxHY/7M7g==
+        id S2393637AbgDOGpi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Apr 2020 02:45:38 -0400
+IronPort-SDR: aBJ7x5zs02ro+yl1j3znZQeKnut/vQhVct8DXRigzisscmpUaAZB67gySislqdaA3deRPg8iJR
+ /oQ51duRNKYw==
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2020 23:45:32 -0700
-IronPort-SDR: nqVEJ0jM8WsGIa53f7GEW1WcutNEBH0y9zvfd6oQ3l4LmNVClCYmSnRTF6lk6TMyXP17ZUKVXC
- yaiU/9x11y0Q==
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2020 23:45:37 -0700
+IronPort-SDR: /mQA8trEp4JWRxm37OaMEiPgNUAOEX1tin4upa7GLcH6w5rRnSU614Qw8fGzqOuWiufLwh0k76
+ 3N6Ctu7vvXmw==
 X-IronPort-AV: E=Sophos;i="5.72,386,1580803200"; 
-   d="scan'208";a="298916014"
+   d="scan'208";a="244025774"
 Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
-  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2020 23:45:32 -0700
+  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2020 23:45:36 -0700
 From:   ira.weiny@intel.com
 To:     linux-kernel@vger.kernel.org,
         "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Ira Weiny <ira.weiny@intel.com>, Christoph Hellwig <hch@lst.de>,
-        Jan Kara <jack@suse.cz>,
+Cc:     Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>,
         Dan Williams <dan.j.williams@intel.com>,
         Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
         "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: [PATCH V8 02/11] fs: Remove unneeded IS_DAX() check in io_is_direct()
-Date:   Tue, 14 Apr 2020 23:45:14 -0700
-Message-Id: <20200415064523.2244712-3-ira.weiny@intel.com>
+Subject: [PATCH V8 05/11] fs/xfs: Make DAX mount option a tri-state
+Date:   Tue, 14 Apr 2020 23:45:17 -0700
+Message-Id: <20200415064523.2244712-6-ira.weiny@intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200415064523.2244712-1-ira.weiny@intel.com>
 References: <20200415064523.2244712-1-ira.weiny@intel.com>
@@ -55,78 +56,140 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Ira Weiny <ira.weiny@intel.com>
 
-Remove the check because DAX now has it's own read/write methods and
-file systems which support DAX check IS_DAX() prior to IOCB_DIRECT on
-their own.  Therefore, it does not matter if the file state is DAX when
-the iocb flags are created.
+As agreed upon[1].  We make the dax mount option a tri-state.  '-o dax'
+continues to operate the same.  We add 'always', 'never', and 'inode'
+(default).
 
-Also remove io_is_direct() as it is just a simple flag check.
+[1] https://lore.kernel.org/lkml/20200405061945.GA94792@iweiny-DESK2.sc.intel.com/
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 
 ---
+Changes from v7:
+	Change to XFS_MOUNT_DAX_NEVER
+
 Changes from v6:
-	remove io_is_direct() as well.
-	Remove Reviews since this is quite a bit different.
+	Use 2 flag bits rather than a field.
+	change iflag to inode
 
-Changes from v3:
-	Reword commit message.
-	Reordered to be a 'pre-cleanup' patch
+Changes from v5:
+	New Patch
 ---
- drivers/block/loop.c | 6 +++---
- include/linux/fs.h   | 7 +------
- 2 files changed, 4 insertions(+), 9 deletions(-)
+ fs/xfs/xfs_mount.h |  3 ++-
+ fs/xfs/xfs_super.c | 44 ++++++++++++++++++++++++++++++++++++++++----
+ 2 files changed, 42 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/block/loop.c b/drivers/block/loop.c
-index 739b372a5112..9a9af78974ac 100644
---- a/drivers/block/loop.c
-+++ b/drivers/block/loop.c
-@@ -631,8 +631,8 @@ static int do_req_filebacked(struct loop_device *lo, struct request *rq)
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 54bd74088936..2e88c30642e3 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -233,7 +233,8 @@ typedef struct xfs_mount {
+ 						   allocator */
+ #define XFS_MOUNT_NOATTR2	(1ULL << 25)	/* disable use of attr2 format */
  
- static inline void loop_update_dio(struct loop_device *lo)
- {
--	__loop_update_dio(lo, io_is_direct(lo->lo_backing_file) |
--			lo->use_dio);
-+	__loop_update_dio(lo, (lo->lo_backing_file->f_flags & O_DIRECT) |
-+				lo->use_dio);
+-#define XFS_MOUNT_DAX_ALWAYS	(1ULL << 62)	/* TEST ONLY! */
++#define XFS_MOUNT_DAX_ALWAYS	(1ULL << 62)
++#define XFS_MOUNT_DAX_NEVER	(1ULL << 63)
+ 
+ /*
+  * Max and min values for mount-option defined I/O
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 3863f41757d2..142e5d03566f 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -47,6 +47,32 @@ static struct kset *xfs_kset;		/* top-level xfs sysfs dir */
+ static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs attrs */
+ #endif
+ 
++enum {
++	XFS_DAX_INODE = 0,
++	XFS_DAX_ALWAYS = 1,
++	XFS_DAX_NEVER = 2,
++};
++
++static void xfs_mount_set_dax_mode(struct xfs_mount *mp, u32 val)
++{
++	if (val == XFS_DAX_INODE) {
++		mp->m_flags &= ~(XFS_MOUNT_DAX_ALWAYS | XFS_MOUNT_DAX_NEVER);
++	} else if (val == XFS_DAX_ALWAYS) {
++		mp->m_flags |= XFS_MOUNT_DAX_ALWAYS;
++		mp->m_flags &= ~XFS_MOUNT_DAX_NEVER;
++	} else if (val == XFS_DAX_NEVER) {
++		mp->m_flags |= XFS_MOUNT_DAX_NEVER;
++		mp->m_flags &= ~XFS_MOUNT_DAX_ALWAYS;
++	}
++}
++
++static const struct constant_table dax_param_enums[] = {
++	{"inode",	XFS_DAX_INODE },
++	{"always",	XFS_DAX_ALWAYS },
++	{"never",	XFS_DAX_NEVER },
++	{}
++};
++
+ /*
+  * Table driven mount option parser.
+  */
+@@ -59,7 +85,7 @@ enum {
+ 	Opt_filestreams, Opt_quota, Opt_noquota, Opt_usrquota, Opt_grpquota,
+ 	Opt_prjquota, Opt_uquota, Opt_gquota, Opt_pquota,
+ 	Opt_uqnoenforce, Opt_gqnoenforce, Opt_pqnoenforce, Opt_qnoenforce,
+-	Opt_discard, Opt_nodiscard, Opt_dax,
++	Opt_discard, Opt_nodiscard, Opt_dax, Opt_dax_enum,
+ };
+ 
+ static const struct fs_parameter_spec xfs_fs_parameters[] = {
+@@ -103,6 +129,7 @@ static const struct fs_parameter_spec xfs_fs_parameters[] = {
+ 	fsparam_flag("discard",		Opt_discard),
+ 	fsparam_flag("nodiscard",	Opt_nodiscard),
+ 	fsparam_flag("dax",		Opt_dax),
++	fsparam_enum("dax",		Opt_dax_enum, dax_param_enums),
+ 	{}
+ };
+ 
+@@ -129,7 +156,6 @@ xfs_fs_show_options(
+ 		{ XFS_MOUNT_GRPID,		",grpid" },
+ 		{ XFS_MOUNT_DISCARD,		",discard" },
+ 		{ XFS_MOUNT_LARGEIO,		",largeio" },
+-		{ XFS_MOUNT_DAX_ALWAYS,		",dax" },
+ 		{ 0, NULL }
+ 	};
+ 	struct xfs_mount	*mp = XFS_M(root->d_sb);
+@@ -185,6 +211,13 @@ xfs_fs_show_options(
+ 	if (!(mp->m_qflags & XFS_ALL_QUOTA_ACCT))
+ 		seq_puts(m, ",noquota");
+ 
++	if (mp->m_flags & XFS_MOUNT_DAX_ALWAYS)
++		seq_puts(m, ",dax=always");
++	else if (mp->m_flags & XFS_MOUNT_DAX_NEVER)
++		seq_puts(m, ",dax=never");
++	else
++		seq_puts(m, ",dax=inode");
++
+ 	return 0;
  }
  
- static void loop_reread_partitions(struct loop_device *lo,
-@@ -1006,7 +1006,7 @@ static int loop_set_fd(struct loop_device *lo, fmode_t mode,
- 	if (!(lo_flags & LO_FLAGS_READ_ONLY) && file->f_op->fsync)
- 		blk_queue_write_cache(lo->lo_queue, true, false);
- 
--	if (io_is_direct(lo->lo_backing_file) && inode->i_sb->s_bdev) {
-+	if ((lo->lo_backing_file->f_flags & O_DIRECT) && inode->i_sb->s_bdev) {
- 		/* In case of direct I/O, match underlying block size */
- 		unsigned short bsize = bdev_logical_block_size(
- 			inode->i_sb->s_bdev);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index abedbffe2c9e..a818ced22961 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -3387,11 +3387,6 @@ extern void setattr_copy(struct inode *inode, const struct iattr *attr);
- 
- extern int file_update_time(struct file *file);
- 
--static inline bool io_is_direct(struct file *filp)
--{
--	return (filp->f_flags & O_DIRECT) || IS_DAX(filp->f_mapping->host);
--}
--
- static inline bool vma_is_dax(struct vm_area_struct *vma)
- {
- 	return vma->vm_file && IS_DAX(vma->vm_file->f_mapping->host);
-@@ -3416,7 +3411,7 @@ static inline int iocb_flags(struct file *file)
- 	int res = 0;
- 	if (file->f_flags & O_APPEND)
- 		res |= IOCB_APPEND;
--	if (io_is_direct(file))
-+	if (file->f_flags & O_DIRECT)
- 		res |= IOCB_DIRECT;
- 	if ((file->f_flags & O_DSYNC) || IS_SYNC(file->f_mapping->host))
- 		res |= IOCB_DSYNC;
+@@ -1244,7 +1277,10 @@ xfs_fc_parse_param(
+ 		return 0;
+ #ifdef CONFIG_FS_DAX
+ 	case Opt_dax:
+-		mp->m_flags |= XFS_MOUNT_DAX_ALWAYS;
++		xfs_mount_set_dax_mode(mp, XFS_DAX_ALWAYS);
++		return 0;
++	case Opt_dax_enum:
++		xfs_mount_set_dax_mode(mp, result.uint_32);
+ 		return 0;
+ #endif
+ 	default:
+@@ -1451,7 +1487,7 @@ xfs_fc_fill_super(
+ 		if (!rtdev_is_dax && !datadev_is_dax) {
+ 			xfs_alert(mp,
+ 			"DAX unsupported by block device. Turning off DAX.");
+-			mp->m_flags &= ~XFS_MOUNT_DAX_ALWAYS;
++			xfs_mount_set_dax_mode(mp, XFS_DAX_NEVER);
+ 		}
+ 		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+ 			xfs_alert(mp,
 -- 
 2.25.1
 
