@@ -2,129 +2,124 @@ Return-Path: <SRS0=6B5E=57=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C32DC2BB55
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 13:22:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD40DC2BA19
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 13:58:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE5B920775
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 13:22:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586956961;
-	bh=uM8RYOThTOAePXpnhO/MjXiLuve+HcAfoAQLYud7kjg=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=d+ESv/izFK1MOpDlTBuivBOJTyrAPGcVQ+5Q6Zh3Br1L4ouZAWY6YRodfrSFING1j
-	 f0yx0ZVavf4j7FtHqGcwvo8Y4xPtWksq0WeBLt+DwByTrcHfY+51jcxs8/m9Eu0VwS
-	 IXhDuNMoONT7GoBeFd/fYPLpd1EeUlOV3ApZNAvY=
+	by mail.kernel.org (Postfix) with ESMTP id 9856C2076D
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 13:58:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2632799AbgDONWi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Apr 2020 09:22:38 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54364 "EHLO mail.kernel.org"
+        id S2636372AbgDON6k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Apr 2020 09:58:40 -0400
+Received: from mx2.suse.de ([195.135.220.15]:38180 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2408882AbgDOLfA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Apr 2020 07:35:00 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 816E82078A;
-        Wed, 15 Apr 2020 11:34:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586950500;
-        bh=uM8RYOThTOAePXpnhO/MjXiLuve+HcAfoAQLYud7kjg=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=AptoPI5UUuxPPUt6e+DVzYSG85R51t2DFmxZbd3ItlUS4pLc3pi3I8FHivBBbMROh
-         EpffLXeyMo3aCGzrHV4YoZZXCLipQxSscrMf2Ux0E82yZBPjiE6jkQu8OLUMNrUXl8
-         687GBGgfM2my/LCGtC33G75d8F/NQ+me5/vfvEcg=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Brian Foster <bfoster@redhat.com>, Zorro Lang <zlang@redhat.com>,
+        id S2633783AbgDON6h (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Apr 2020 09:58:37 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 08777AC19;
+        Wed, 15 Apr 2020 13:58:35 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id 8E38D1E1250; Wed, 15 Apr 2020 15:58:34 +0200 (CEST)
+Date:   Wed, 15 Apr 2020 15:58:34 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     ira.weiny@intel.com
+Cc:     linux-kernel@vger.kernel.org, Jan Kara <jack@suse.cz>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Chinner <david@fromorbit.com>,
         Christoph Hellwig <hch@lst.de>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.6 012/129] xfs: fix iclog release error check race with shutdown
-Date:   Wed, 15 Apr 2020 07:32:47 -0400
-Message-Id: <20200415113445.11881-12-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200415113445.11881-1-sashal@kernel.org>
-References: <20200415113445.11881-1-sashal@kernel.org>
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH RFC 6/8] fs/ext4: Update ext4_should_use_dax()
+Message-ID: <20200415135834.GI6126@quack2.suse.cz>
+References: <20200414040030.1802884-1-ira.weiny@intel.com>
+ <20200414040030.1802884-7-ira.weiny@intel.com>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200414040030.1802884-7-ira.weiny@intel.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Brian Foster <bfoster@redhat.com>
+On Mon 13-04-20 21:00:28, ira.weiny@intel.com wrote:
+> From: Ira Weiny <ira.weiny@intel.com>
+> 
+> Change the logic of ext4_should_use_dax() to support using the inode dax
+> flag OR the overriding tri-state mount option.
+> 
+> While we are at it change the function to ext4_enable_dax() as this
+> better reflects the ask.
 
-[ Upstream commit 6b789c337a5963ae57cbc7fe9e41488c40a9b014 ]
+I disagree with the renaming. ext4_enable_dax() suggests it enables
+something. It does not. I'd either leave ext4_should_use_dax() or maybe
+change it to ext4_should_enable_dax() if you really like the "enable" word
+:).
 
-Prior to commit df732b29c8 ("xfs: call xlog_state_release_iclog with
-l_icloglock held"), xlog_state_release_iclog() always performed a
-locked check of the iclog error state before proceeding into the
-sync state processing code. As of this commit, part of
-xlog_state_release_iclog() was open-coded into
-xfs_log_release_iclog() and as a result the locked error state check
-was lost.
+> 
+> Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+> ---
+>  fs/ext4/inode.c | 16 ++++++++++++----
+>  1 file changed, 12 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+> index fa0ff78dc033..e9d582e516bc 100644
+> --- a/fs/ext4/inode.c
+> +++ b/fs/ext4/inode.c
+> @@ -4383,9 +4383,11 @@ int ext4_get_inode_loc(struct inode *inode, struct ext4_iloc *iloc)
+>  		!ext4_test_inode_state(inode, EXT4_STATE_XATTR));
+>  }
+>  
+> -static bool ext4_should_use_dax(struct inode *inode)
+> +static bool ext4_enable_dax(struct inode *inode)
+>  {
+> -	if (!test_opt(inode->i_sb, DAX))
+> +	unsigned int flags = EXT4_I(inode)->i_flags;
+> +
+> +	if (test_opt2(inode->i_sb, NODAX))
+>  		return false;
+>  	if (!S_ISREG(inode->i_mode))
+>  		return false;
+> @@ -4397,7 +4399,13 @@ static bool ext4_should_use_dax(struct inode *inode)
+>  		return false;
+>  	if (ext4_test_inode_flag(inode, EXT4_INODE_VERITY))
+>  		return false;
+> -	return true;
+> +	if (!bdev_dax_supported(inode->i_sb->s_bdev,
+> +				inode->i_sb->s_blocksize))
+> +		return false;
+> +	if (test_opt(inode->i_sb, DAX))
+> +		return true;
+> +
+> +	return (flags & EXT4_DAX_FL) == EXT4_DAX_FL;
 
-The lockless check still exists, but this doesn't account for the
-possibility of a race with a shutdown being performed by another
-task causing the iclog state to change while the original task waits
-on ->l_icloglock. This has reproduced very rarely via generic/475
-and manifests as an assert failure in __xlog_state_release_iclog()
-due to an unexpected iclog state.
+flags & EXT4_DAX_FL is enough here, isn't it?
 
-Restore the locked error state check in xlog_state_release_iclog()
-to ensure that an iclog state update via shutdown doesn't race with
-the iclog release state processing code.
+								Honza
 
-Fixes: df732b29c807 ("xfs: call xlog_state_release_iclog with l_icloglock held")
-Reported-by: Zorro Lang <zlang@redhat.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- fs/xfs/xfs_log.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index f6006d94a581e..796ff37d5bb5b 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -605,18 +605,23 @@ xfs_log_release_iclog(
- 	struct xlog		*log = mp->m_log;
- 	bool			sync;
- 
--	if (iclog->ic_state == XLOG_STATE_IOERROR) {
--		xfs_force_shutdown(mp, SHUTDOWN_LOG_IO_ERROR);
--		return -EIO;
--	}
-+	if (iclog->ic_state == XLOG_STATE_IOERROR)
-+		goto error;
- 
- 	if (atomic_dec_and_lock(&iclog->ic_refcnt, &log->l_icloglock)) {
-+		if (iclog->ic_state == XLOG_STATE_IOERROR) {
-+			spin_unlock(&log->l_icloglock);
-+			goto error;
-+		}
- 		sync = __xlog_state_release_iclog(log, iclog);
- 		spin_unlock(&log->l_icloglock);
- 		if (sync)
- 			xlog_sync(log, iclog);
- 	}
- 	return 0;
-+error:
-+	xfs_force_shutdown(mp, SHUTDOWN_LOG_IO_ERROR);
-+	return -EIO;
- }
- 
- /*
+>  }
+>  
+>  void ext4_set_inode_flags(struct inode *inode)
+> @@ -4415,7 +4423,7 @@ void ext4_set_inode_flags(struct inode *inode)
+>  		new_fl |= S_NOATIME;
+>  	if (flags & EXT4_DIRSYNC_FL)
+>  		new_fl |= S_DIRSYNC;
+> -	if (ext4_should_use_dax(inode))
+> +	if (ext4_enable_dax(inode))
+>  		new_fl |= S_DAX;
+>  	if (flags & EXT4_ENCRYPT_FL)
+>  		new_fl |= S_ENCRYPTED;
+> -- 
+> 2.25.1
+> 
 -- 
-2.20.1
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
