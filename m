@@ -2,109 +2,106 @@ Return-Path: <SRS0=6B5E=57=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13D1BC2BA19
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 19:54:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0921C2BA19
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 20:34:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E63C620768
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 19:54:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB77320774
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 20:34:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2441905AbgDOTyg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Apr 2020 15:54:36 -0400
-Received: from mga12.intel.com ([192.55.52.136]:63487 "EHLO mga12.intel.com"
+        id S371286AbgDOUeg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Apr 2020 16:34:36 -0400
+Received: from mga12.intel.com ([192.55.52.136]:1286 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2441903AbgDOTyf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Apr 2020 15:54:35 -0400
-IronPort-SDR: DytPXnRqkWwAOMaiIWyKsPd9ovHzwxlojwTUIV/Is+2XGqOSVPTJy5YUOC9UeRJpc3Y+K+NyeK
- qy3ityAsM/wg==
+        id S371264AbgDOUee (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Apr 2020 16:34:34 -0400
+IronPort-SDR: 2LyDLe2EYQold9G9rW+6J/c0YZHYE+r3kbkexYNd/oXQoDUDEDLspwKae6l4T6IKBr1VbW/tGd
+ d0JoVANzj/lg==
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Apr 2020 12:54:34 -0700
-IronPort-SDR: UYnRfjVorTkLlQYMLokFH4wd30kYLHIexetLQi98g7aKH3mQdcDdbo1EAyafNUj3AJiXpN1pGb
- hKLytQ2zJ6jQ==
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Apr 2020 13:34:33 -0700
+IronPort-SDR: qMIL+PP6t6fk+wubpecDb/RRcv1HkzBy5DZA+Ijw1V370MueFdQ+a7zyHFN7vAwnwmaeEKCaNq
+ yqKS9aAUU4Cw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.72,388,1580803200"; 
-   d="scan'208";a="274255875"
+   d="scan'208";a="455027705"
 Received: from iweiny-desk2.sc.intel.com ([10.3.52.147])
-  by orsmga008.jf.intel.com with ESMTP; 15 Apr 2020 12:54:34 -0700
-Date:   Wed, 15 Apr 2020 12:54:34 -0700
+  by fmsmga006.fm.intel.com with ESMTP; 15 Apr 2020 13:34:33 -0700
+Date:   Wed, 15 Apr 2020 13:34:33 -0700
 From:   Ira Weiny <ira.weiny@intel.com>
-To:     "Theodore Y. Ts'o" <tytso@mit.edu>
-Cc:     linux-kernel@vger.kernel.org, Jan Kara <jack@suse.cz>,
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-kernel@vger.kernel.org,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
         Dan Williams <dan.j.williams@intel.com>,
         Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>, Jeff Moyer <jmoyer@redhat.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH RFC 3/8] fs/ext4: Disallow encryption if inode is DAX
-Message-ID: <20200415195433.GC2305801@iweiny-DESK2.sc.intel.com>
+Subject: Re: [PATCH RFC 2/8] fs/ext4: Disallow verity if inode is DAX
+Message-ID: <20200415203433.GB2309605@iweiny-DESK2.sc.intel.com>
 References: <20200414040030.1802884-1-ira.weiny@intel.com>
- <20200414040030.1802884-4-ira.weiny@intel.com>
- <20200415160307.GJ90651@mit.edu>
+ <20200414040030.1802884-3-ira.weiny@intel.com>
+ <20200415120002.GE6126@quack2.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200415160307.GJ90651@mit.edu>
+In-Reply-To: <20200415120002.GE6126@quack2.suse.cz>
 User-Agent: Mutt/1.11.1 (2018-12-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 15, 2020 at 12:03:07PM -0400, Theodore Y. Ts'o wrote:
-> On Mon, Apr 13, 2020 at 09:00:25PM -0700, ira.weiny@intel.com wrote:
+On Wed, Apr 15, 2020 at 02:00:02PM +0200, Jan Kara wrote:
+> On Mon 13-04-20 21:00:24, ira.weiny@intel.com wrote:
 > > From: Ira Weiny <ira.weiny@intel.com>
 > > 
-> > Encryption and DAX are incompatible.  Changing the DAX mode due to a
-> > change in Encryption mode is wrong without a corresponding
-> > address_space_operations update.
+> > Verity and DAX are incompatible.  Changing the DAX mode due to a verity
+> > flag change is wrong without a corresponding address_space_operations
+> > update.
 > > 
 > > Make the 2 options mutually exclusive by returning an error if DAX was
 > > set first.
 > > 
+> > (Setting DAX is already disabled if Verity is set first.)
+> > 
 > > Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+> > ---
+> >  fs/ext4/verity.c | 3 +++
+> >  1 file changed, 3 insertions(+)
+> > 
+> > diff --git a/fs/ext4/verity.c b/fs/ext4/verity.c
+> > index dc5ec724d889..ce3f9a198d3b 100644
+> > --- a/fs/ext4/verity.c
+> > +++ b/fs/ext4/verity.c
+> > @@ -113,6 +113,9 @@ static int ext4_begin_enable_verity(struct file *filp)
+> >  	handle_t *handle;
+> >  	int err;
+> >  
+> > +	if (WARN_ON_ONCE(IS_DAX(inode)))
+> > +		return -EINVAL;
+> > +
 > 
-> The encryption flag is inherited from the containing directory, and
-> directories can't have the DAX flag set,
+> Hum, one question, is there a reason for WARN_ON_ONCE()? If I understand
+> correctly, user could normally trigger this, couldn't he?
 
-But they can have FS_XFLAG_DAX set.
-
-> so anything we do in
-> ext4_set_context() will be safety belt / sanity checking in nature.
-> 
-> But we *do* need to figure out what we do with mount -o dax=always
-> when the file system might have encrypted files.  My previous comments
-> about the verity flag and dax flag applies here.
-
-:-( agreed.
-
-FWIW without these patches an inode which has encrypt or verity set is already
-turning off DAX...  So we already have a '-o dax' flag which is not "always".
-
-:-(
-
-Unfortunately the 'always' designation kind of breaks semantically but it is
-equal to the current mount option.
-
-> 
-> Also note that encrypted files are read/write so we must never allow
-> the combination of ENCRPYT_FL and DAX_FL.  So that may be something
-> where we should teach __ext4_iget() to check for this, and declare the
-> file system as corrupted if it sees this combination.
-
-ok...
-
-> (For VERITY_FL
-> && DAX_FL that is a combo that we might want to support in the future,
-> so that's probably a case where arguably, we should just ignore the
-> DAX_FL for now.)
-
-ok...
-
+Removed and added to the verity doc.
 Ira
 
+> 
+> 								Honza
+> 
+> >  	if (ext4_verity_in_progress(inode))
+> >  		return -EBUSY;
+> >  
+> > -- 
+> > 2.25.1
+> > 
+> -- 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
