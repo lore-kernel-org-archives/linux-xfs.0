@@ -2,194 +2,187 @@ Return-Path: <SRS0=6B5E=57=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25DB5C2BA19
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 10:14:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91331C2BA19
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 11:05:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0C8D520787
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 10:14:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6DD9C20737
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 11:05:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MgvJQXmp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2896375AbgDOKOp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Apr 2020 06:14:45 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:27186 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2896365AbgDOKNn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Apr 2020 06:13:43 -0400
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 03FA3MdL093223
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Apr 2020 06:13:38 -0400
-Received: from e06smtp01.uk.ibm.com (e06smtp01.uk.ibm.com [195.75.94.97])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 30du1b8y8g-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Apr 2020 06:13:38 -0400
-Received: from localhost
-        by e06smtp01.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.ibm.com>;
-        Wed, 15 Apr 2020 11:13:01 +0100
-Received: from b06cxnps4076.portsmouth.uk.ibm.com (9.149.109.198)
-        by e06smtp01.uk.ibm.com (192.168.101.131) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
-        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Wed, 15 Apr 2020 11:13:00 +0100
-Received: from d06av24.portsmouth.uk.ibm.com (d06av24.portsmouth.uk.ibm.com [9.149.105.60])
-        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 03FADYl255443568
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 15 Apr 2020 10:13:34 GMT
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 3B5D942042;
-        Wed, 15 Apr 2020 10:13:34 +0000 (GMT)
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 79A044204B;
-        Wed, 15 Apr 2020 10:13:33 +0000 (GMT)
-Received: from localhost.localdomain (unknown [9.79.180.162])
-        by d06av24.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Wed, 15 Apr 2020 10:13:33 +0000 (GMT)
-From:   Chandan Rajendra <chandan@linux.ibm.com>
-To:     Allison Collins <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v8 11/20] xfs: Add helper function xfs_attr_node_shrink
-Date:   Wed, 15 Apr 2020 15:46:38 +0530
-Organization: IBM
-In-Reply-To: <20200403221229.4995-12-allison.henderson@oracle.com>
-References: <20200403221229.4995-1-allison.henderson@oracle.com> <20200403221229.4995-12-allison.henderson@oracle.com>
+        id S2896713AbgDOLFm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Apr 2020 07:05:42 -0400
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:52208 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2896715AbgDOLFO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Apr 2020 07:05:14 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1586948709;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=hvFAYLafm/ryaS+FMXc167MaWsY1MvAzp7mjyFLWf8E=;
+        b=MgvJQXmpNi7UR+ddKn+zRuWhO6Ml+gvZXwS65N3Bb/yj9LJ2hmY9xsR3yKsmdfonde8Uop
+        EEFGyjBOmu7VCvSTT1WhwCsR1tyq69nlV3q713q/0/wJVtEfPAYW/4E5MIBUuASGt3n0RE
+        7S+av64rzPn+40qTDPcCUURkmOFc+BE=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-2-cd4msewYNu26LjaVY-HEnA-1; Wed, 15 Apr 2020 07:05:07 -0400
+X-MC-Unique: cd4msewYNu26LjaVY-HEnA-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C5C771005513;
+        Wed, 15 Apr 2020 11:05:06 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 642AE19C70;
+        Wed, 15 Apr 2020 11:05:06 +0000 (UTC)
+Date:   Wed, 15 Apr 2020 07:05:04 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2] xfs: move inode flush to the sync workqueue
+Message-ID: <20200415110504.GA2140@bfoster>
+References: <20200415041529.GL6742@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-X-TM-AS-GCONF: 00
-x-cbid: 20041510-4275-0000-0000-000003C03CCF
-X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 20041510-4276-0000-0000-000038D5B33B
-Message-Id: <2127078.fSUztT9pNN@localhost.localdomain>
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.676
- definitions=2020-04-15_01:2020-04-14,2020-04-15 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=7
- impostorscore=0 clxscore=1015 priorityscore=1501 mlxlogscore=999
- lowpriorityscore=0 bulkscore=0 spamscore=0 adultscore=0 phishscore=0
- mlxscore=0 malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004150073
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200415041529.GL6742@magnolia>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Saturday, April 4, 2020 3:42 AM Allison Collins wrote: 
-> This patch adds a new helper function xfs_attr_node_shrink used to
-> shrink an attr name into an inode if it is small enough.  This helps to
-> modularize the greater calling function xfs_attr_node_removename.
+On Tue, Apr 14, 2020 at 09:15:29PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+> Move the inode dirty data flushing to a workqueue so that multiple
+> threads can take advantage of a single thread's flushing work.  The
+> ratelimiting technique used in bdd4ee4 was not successful, because
+> threads that skipped the inode flush scan due to ratelimiting would
+> ENOSPC early, which caused occasional (but noticeable) changes in
+> behavior and sporadic fstest regressions.
+> 
+> Therfore, make all the writer threads wait on a single inode flush,
+
+Therefore
+
+> which eliminates both the stampeding hoards of flushers and the small
+
+					hordes ? :)
+
+> window in which a write could fail with ENOSPC because it lost the
+> ratelimit race after even another thread freed space.
+> 
+> Fixes: bdd4ee4f8407 ("xfs: ratelimit inode flush on buffered write ENOSPC")
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_attr.c | 67 ++++++++++++++++++++++++++++++------------------
->  1 file changed, 42 insertions(+), 25 deletions(-)
+> v2: run it on the sync workqueue
+> ---
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/xfs_mount.h |    6 +++++-
+>  fs/xfs/xfs_super.c |   40 ++++++++++++++++++++++------------------
+>  2 files changed, 27 insertions(+), 19 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index db5a99c..27a9bb5 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -1103,6 +1103,45 @@ xfs_attr_node_addname(
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 50c43422fa17..b2e4598fdf7d 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -167,8 +167,12 @@ typedef struct xfs_mount {
+>  	struct xfs_kobj		m_error_meta_kobj;
+>  	struct xfs_error_cfg	m_error_cfg[XFS_ERR_CLASS_MAX][XFS_ERR_ERRNO_MAX];
+>  	struct xstats		m_stats;	/* per-fs stats */
+> -	struct ratelimit_state	m_flush_inodes_ratelimit;
+>  
+> +	/*
+> +	 * Workqueue item so that we can coalesce multiple inode flush attempts
+> +	 * into a single flush.
+> +	 */
+> +	struct work_struct	m_flush_inodes_work;
+>  	struct workqueue_struct *m_buf_workqueue;
+>  	struct workqueue_struct	*m_unwritten_workqueue;
+>  	struct workqueue_struct	*m_cil_workqueue;
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index abf06bf9c3f3..424bb9a2d532 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -516,6 +516,20 @@ xfs_destroy_mount_workqueues(
+>  	destroy_workqueue(mp->m_buf_workqueue);
 >  }
 >  
->  /*
-> + * Shrink an attribute from leaf to shortform
-> + */
-> +STATIC int
-> +xfs_attr_node_shrink(
-> +	struct xfs_da_args	*args,
-> +	struct xfs_da_state     *state)
+> +static void
+> +xfs_flush_inodes_worker(
+> +	struct work_struct	*work)
 > +{
-> +	struct xfs_inode	*dp = args->dp;
-> +	int			error, forkoff;
-> +	struct xfs_buf		*bp;
+> +	struct xfs_mount	*mp = container_of(work, struct xfs_mount,
+> +						   m_flush_inodes_work);
+> +	struct super_block	*sb = mp->m_super;
 > +
-> +	/*
-> +	 * Have to get rid of the copy of this dabuf in the state.
-> +	 */
-> +	ASSERT(state->path.active == 1);
-> +	ASSERT(state->path.blk[0].bp);
-> +	state->path.blk[0].bp = NULL;
-> +
-> +	error = xfs_attr3_leaf_read(args->trans, args->dp, 0, &bp);
-> +	if (error)
-> +		return error;
-> +
-> +	forkoff = xfs_attr_shortform_allfit(bp, dp);
-> +	if (forkoff) {
-> +		error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
-> +		/* bp is gone due to xfs_da_shrink_inode */
-> +		if (error)
-> +			return error;
-> +
-> +		error = xfs_defer_finish(&args->trans);
-> +		if (error)
-> +			return error;
-> +	} else
-> +		xfs_trans_brelse(args->trans, bp);
-> +
-> +	return 0;
+> +	if (down_read_trylock(&sb->s_umount)) {
+> +		sync_inodes_sb(sb);
+> +		up_read(&sb->s_umount);
+> +	}
 > +}
 > +
-> +/*
->   * Remove a name from a B-tree attribute list.
->   *
->   * This will involve walking down the Btree, and may involve joining
-> @@ -1115,8 +1154,7 @@ xfs_attr_node_removename(
+>  /*
+>   * Flush all dirty data to disk. Must not be called while holding an XFS_ILOCK
+>   * or a page lock. We use sync_inodes_sb() here to ensure we block while waiting
+> @@ -526,15 +540,15 @@ void
+>  xfs_flush_inodes(
+>  	struct xfs_mount	*mp)
 >  {
->  	struct xfs_da_state	*state;
->  	struct xfs_da_state_blk	*blk;
-> -	struct xfs_buf		*bp;
-> -	int			retval, error, forkoff;
-> +	int			retval, error;
->  	struct xfs_inode	*dp = args->dp;
->  
->  	trace_xfs_attr_node_removename(args);
-> @@ -1197,31 +1235,10 @@ xfs_attr_node_removename(
->  	/*
->  	 * If the result is small enough, push it all into the inode.
->  	 */
-> -	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
-> -		/*
-> -		 * Have to get rid of the copy of this dabuf in the state.
-> -		 */
-> -		ASSERT(state->path.active == 1);
-> -		ASSERT(state->path.blk[0].bp);
-> -		state->path.blk[0].bp = NULL;
+> -	struct super_block	*sb = mp->m_super;
 > -
-> -		error = xfs_attr3_leaf_read(args->trans, args->dp, 0, &bp);
-> -		if (error)
-> -			goto out;
-> +	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
-> +		error = xfs_attr_node_shrink(args, state);
-
-If a non-zero error value is returned by the above statement, the following
-statement i.e. "error = 0" will overwrite it.
-Apart from that everything else looks fine.
-
-Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
-
+> -	if (!__ratelimit(&mp->m_flush_inodes_ratelimit))
+> +	/*
+> +	 * If flush_work() returns true then that means we waited for a flush
+> +	 * which was already in progress.  Don't bother running another scan.
+> +	 */
+> +	if (flush_work(&mp->m_flush_inodes_work))
+>  		return;
 >  
-> -		if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
-> -			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
-> -			/* bp is gone due to xfs_da_shrink_inode */
-> -			if (error)
-> -				goto out;
-> -			error = xfs_defer_finish(&args->trans);
-> -			if (error)
-> -				goto out;
-> -		} else
-> -			xfs_trans_brelse(args->trans, bp);
+> -	if (down_read_trylock(&sb->s_umount)) {
+> -		sync_inodes_sb(sb);
+> -		up_read(&sb->s_umount);
 > -	}
->  	error = 0;
+> +	queue_work(mp->m_sync_workqueue, &mp->m_flush_inodes_work);
+> +	flush_work(&mp->m_flush_inodes_work);
+>  }
+>  
+>  /* Catch misguided souls that try to use this interface on XFS */
+> @@ -1369,17 +1383,6 @@ xfs_fc_fill_super(
+>  	if (error)
+>  		goto out_free_names;
+>  
+> -	/*
+> -	 * Cap the number of invocations of xfs_flush_inodes to 16 for every
+> -	 * quarter of a second.  The magic numbers here were determined by
+> -	 * observation neither to cause stalls in writeback when there are a
+> -	 * lot of IO threads and the fs is near ENOSPC, nor cause any fstest
+> -	 * regressions.  YMMV.
+> -	 */
+> -	ratelimit_state_init(&mp->m_flush_inodes_ratelimit, HZ / 4, 16);
+> -	ratelimit_set_flags(&mp->m_flush_inodes_ratelimit,
+> -			RATELIMIT_MSG_ON_RELEASE);
 > -
->  out:
->  	if (state)
->  		xfs_da_state_free(state);
+>  	error = xfs_init_mount_workqueues(mp);
+>  	if (error)
+>  		goto out_close_devices;
+> @@ -1752,6 +1755,7 @@ static int xfs_init_fs_context(
+>  	spin_lock_init(&mp->m_perag_lock);
+>  	mutex_init(&mp->m_growlock);
+>  	atomic_set(&mp->m_active_trans, 0);
+> +	INIT_WORK(&mp->m_flush_inodes_work, xfs_flush_inodes_worker);
+>  	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
+>  	INIT_DELAYED_WORK(&mp->m_eofblocks_work, xfs_eofblocks_worker);
+>  	INIT_DELAYED_WORK(&mp->m_cowblocks_work, xfs_cowblocks_worker);
 > 
-
-
--- 
-chandan
-
-
 
