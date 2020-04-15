@@ -2,106 +2,93 @@ Return-Path: <SRS0=6B5E=57=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E62DDC2BB55
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 12:51:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60D83C2BA19
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 13:12:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C37FC20936
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 12:51:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3EE132137B
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 13:12:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1586956375;
+	bh=S3+DFTY9ckUnubA0TaxtyK1+73sP5tB42POVtudqCGQ=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=1nSm1s+A8HFW8HDUCenmZh8go35x9VJHStTbfIeTULXWYe00Bfhc6BMfqXvinWzQa
+	 cJrKKgoEV0+MrmHQ2t3srmYnVJoCaT0AJYmQmPT7QSsEBkclbfb+JNbGM6I7zUXk5Q
+	 sTS8iKYghHEyQAB5fDMZ8Ex2VU7zrTbpxs7WEgQI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S370500AbgDOMv4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Apr 2020 08:51:56 -0400
-Received: from mx2.suse.de ([195.135.220.15]:34220 "EHLO mx2.suse.de"
+        id S2506144AbgDONMu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Apr 2020 09:12:50 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55080 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S370492AbgDOMvv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Apr 2020 08:51:51 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 27143AC11;
-        Wed, 15 Apr 2020 12:51:49 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id DE49C1E1250; Wed, 15 Apr 2020 14:51:47 +0200 (CEST)
-Date:   Wed, 15 Apr 2020 14:51:47 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     ira.weiny@intel.com
-Cc:     linux-kernel@vger.kernel.org, Jan Kara <jack@suse.cz>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
+        id S2897054AbgDOLf3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Apr 2020 07:35:29 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id E0A6C2137B;
+        Wed, 15 Apr 2020 11:35:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1586950529;
+        bh=S3+DFTY9ckUnubA0TaxtyK1+73sP5tB42POVtudqCGQ=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=ViqxNMSGs98Kv4wdG5FquDUQYk/nbdUhiTYJ3oxngsTqcNWBrouJaXfRHwpyjXJVE
+         Fr8wYjMf0VPV20y0vPpRjkbkKzW0OI9qGQ+4K+aQHrrAkI9tEZvEu8dhXmp//9G1/V
+         1TbT5jCj82RvjRXPmaHEqI25zVo7i/5fmGfQiFj0=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Brian Foster <bfoster@redhat.com>,
         Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH RFC 5/8] fs/ext4: Make DAX mount option a tri-state
-Message-ID: <20200415125147.GH6126@quack2.suse.cz>
-References: <20200414040030.1802884-1-ira.weiny@intel.com>
- <20200414040030.1802884-6-ira.weiny@intel.com>
+        Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.6 038/129] xfs: fix incorrect test in xfs_alloc_ag_vextent_lastblock
+Date:   Wed, 15 Apr 2020 07:33:13 -0400
+Message-Id: <20200415113445.11881-38-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200415113445.11881-1-sashal@kernel.org>
+References: <20200415113445.11881-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200414040030.1802884-6-ira.weiny@intel.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon 13-04-20 21:00:27, ira.weiny@intel.com wrote:
-> From: Ira Weiny <ira.weiny@intel.com>
-> 
-> We add 'always', 'never', and 'inode' (default).  '-o dax' continue to
-> operate the same.
-> 
-> Specifically we introduce a 2nd DAX mount flag EXT4_MOUNT_NODAX and set
-> it and EXT4_MOUNT_DAX appropriately.
-> 
-> We also force EXT4_MOUNT_NODAX if !CONFIG_FS_DAX.
-> 
-> https://lore.kernel.org/lkml/20200405061945.GA94792@iweiny-DESK2.sc.intel.com/
-> 
-> Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-...
+[ Upstream commit 77ca1eed5a7d2bf0905562eb1a15aac76bc19fe4 ]
 
-> @@ -2303,6 +2325,13 @@ static int _ext4_show_options(struct seq_file *seq, struct super_block *sb,
->  	if (DUMMY_ENCRYPTION_ENABLED(sbi))
->  		SEQ_OPTS_PUTS("test_dummy_encryption");
->  
-> +	if (test_opt2(sb, NODAX))
-> +		SEQ_OPTS_PUTS("dax=never");
-> +	else if (test_opt(sb, DAX))
-> +		SEQ_OPTS_PUTS("dax=always");
-> +	else
-> +		SEQ_OPTS_PUTS("dax=inode");
-> +
+When I lifted the code in xfs_alloc_ag_vextent_lastblock out of a loop,
+I forgot to convert all the accesses to len to be pointer dereferences.
 
-We try to show only mount options that were explicitely set by the user, or
-that are different from defaults - e.g., see how 'data=' mount option
-printing is handled.
+Coverity-id: 1457918
+Fixes: 5113f8ec3753ed ("xfs: clean up weird while loop in xfs_alloc_ag_vextent_near")
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ fs/xfs/libxfs/xfs_alloc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->  	ext4_show_quota_options(seq, sb);
->  	return 0;
->  }
-> @@ -5424,6 +5453,12 @@ static int ext4_remount(struct super_block *sb, int *flags, char *data)
->  		sbi->s_mount_opt ^= EXT4_MOUNT_DAX;
->  	}
->  
-> +	if ((sbi->s_mount_opt2 ^ old_opts.s_mount_opt2) & EXT4_MOUNT2_NODAX) {
-> +		ext4_msg(sb, KERN_WARNING, "warning: refusing change of "
-> +			"non-dax flag with busy inodes while remounting");
-> +		sbi->s_mount_opt2 ^= EXT4_MOUNT2_NODAX;
-> +	}
-> +
->  	if (sbi->s_mount_flags & EXT4_MF_FS_ABORTED)
->  		ext4_abort(sb, "Abort forced by user");
-
-I'd just merge this with the check whether EXT4_MOUNT_DAX changed.
-
-								Honza
-
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index d8053bc96c4d2..5a130409f173e 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -1515,7 +1515,7 @@ xfs_alloc_ag_vextent_lastblock(
+ 	 * maxlen, go to the start of this block, and skip all those smaller
+ 	 * than minlen.
+ 	 */
+-	if (len || args->alignment > 1) {
++	if (*len || args->alignment > 1) {
+ 		acur->cnt->bc_ptrs[0] = 1;
+ 		do {
+ 			error = xfs_alloc_get_rec(acur->cnt, bno, len, &i);
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.20.1
+
