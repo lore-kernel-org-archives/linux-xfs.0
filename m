@@ -5,248 +5,155 @@ X-Spam-Level:
 X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC29CC38A29
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 15:16:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E192C2BA19
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 15:18:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A79C92078B
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 15:16:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7846120936
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 15:18:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BP5WqtaI"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="v9dKG7ow"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390499AbgDOPQb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Apr 2020 11:16:31 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:58196 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389664AbgDOPQ3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Apr 2020 11:16:29 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03FFDqV4079901;
-        Wed, 15 Apr 2020 15:16:17 GMT
+        id S2393356AbgDOPSy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Apr 2020 11:18:54 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:47442 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1414655AbgDOPSt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Apr 2020 11:18:49 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03FFIJcS106389;
+        Wed, 15 Apr 2020 15:18:36 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=azv6A8fofaaJBqvoTQzO8i+St/tE6gT3+0uEX2GLyaU=;
- b=BP5WqtaID1z19AxeGAKOwEYT9GUJBrFefGFKCMqJR0ClLr6+ywb9nmEafuC2cumWE2Ie
- rrVpo3GhQ9mQqvWIUjRIHuzkN33/8V+F8XTTuyFbLRb+JCkllwQeHvd5H3Z6d30qlYk2
- drGzT0vf/Z+8F3vtfDbyg6e8vjM9ieKtR7VZyouL7qPoWFQBJYFWbD30zvHuoaHFQgSk
- 6Okk6scfogYSdW/KpwRuPwxJZ/FOqSEKTNhAGxf2oIroqDdrQxuKwKVm9L8wlHEHuJwi
- T0/7NYVAeW736Fs+KGy3BUb3VDA8ul84AbdLW7K7EaljKGe0Vx3QE1A6/htV+lvmliJf dg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 30e0bf9h8n-1
+ bh=qS/LkJjaAYTu2JH9+UNdmlJWo6ur3h3lKhehibB0yNo=;
+ b=v9dKG7owZ4RXlV8c2Nyq1hlWdpfkmg45nTYtsBXix+l8EaetAcnemybNgy3/7rI5W9jV
+ GmNDVDJ98Fv5tMC+t3nEzmSJkgx273lWmlv+yMABCz7OoXgSH0S1MyQ3IS5mSETQEcmS
+ gEqgkUyfQBOOH6Uiw3Spq8VOr71g4I28OZ5yLmEeR2n+x3NVPYiNb57tOY5rtdFZQNSn
+ Otjj10YQ8cZeDhNPmwLt16+5ZfwR3JPMIf8j6k51vmUkfIhVSJrbQfFvB1w02PIoP3mB
+ i602f4q0tVCCxKLCMKm2Zed9MIxZagKLcxIGnpoNZcujHTALECKt3bKdkRCueinCznRr Jw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 30dn95m1jg-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 15 Apr 2020 15:16:17 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03FFDEVS043676;
-        Wed, 15 Apr 2020 15:16:16 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 30dn8wdnr7-1
+        Wed, 15 Apr 2020 15:18:36 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03FFD4g3163258;
+        Wed, 15 Apr 2020 15:18:35 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 30dyvf0578-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 15 Apr 2020 15:16:16 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03FFGFdf001887;
-        Wed, 15 Apr 2020 15:16:15 GMT
+        Wed, 15 Apr 2020 15:18:35 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03FFIYr6030940;
+        Wed, 15 Apr 2020 15:18:34 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 15 Apr 2020 08:16:15 -0700
-Date:   Wed, 15 Apr 2020 08:16:13 -0700
+        with ESMTP ; Wed, 15 Apr 2020 08:18:34 -0700
+Date:   Wed, 15 Apr 2020 08:18:32 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     ira.weiny@intel.com
-Cc:     linux-kernel@vger.kernel.org, Jan Kara <jack@suse.cz>,
+To:     Jan Kara <jack@suse.cz>
+Cc:     ira.weiny@intel.com, linux-kernel@vger.kernel.org,
         Dan Williams <dan.j.williams@intel.com>,
         Dave Chinner <david@fromorbit.com>,
         Christoph Hellwig <hch@lst.de>,
         "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH V8 05/11] fs/xfs: Make DAX mount option a tri-state
-Message-ID: <20200415151613.GO6742@magnolia>
+Subject: Re: [PATCH V8 08/11] fs: Define I_DONTCACNE in VFS layer
+Message-ID: <20200415151832.GQ6742@magnolia>
 References: <20200415064523.2244712-1-ira.weiny@intel.com>
- <20200415064523.2244712-6-ira.weiny@intel.com>
+ <20200415064523.2244712-9-ira.weiny@intel.com>
+ <20200415085216.GE501@quack2.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200415064523.2244712-6-ira.weiny@intel.com>
+In-Reply-To: <20200415085216.GE501@quack2.suse.cz>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9591 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999
- suspectscore=0 malwarescore=0 spamscore=0 phishscore=0 adultscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004150113
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9591 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 clxscore=1015
- priorityscore=1501 mlxscore=0 lowpriorityscore=0 mlxlogscore=999
- impostorscore=0 adultscore=0 suspectscore=0 phishscore=0 spamscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004150113
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 bulkscore=0
+ mlxscore=0 adultscore=0 malwarescore=0 mlxlogscore=999 suspectscore=2
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2004150113
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9592 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 clxscore=1015
+ malwarescore=0 bulkscore=0 priorityscore=1501 lowpriorityscore=0
+ mlxscore=0 phishscore=0 spamscore=0 impostorscore=0 suspectscore=2
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004150114
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 14, 2020 at 11:45:17PM -0700, ira.weiny@intel.com wrote:
-> From: Ira Weiny <ira.weiny@intel.com>
+On Wed, Apr 15, 2020 at 10:52:16AM +0200, Jan Kara wrote:
+> There's a typo in the subject - I_DONTCACNE.
 > 
-> As agreed upon[1].  We make the dax mount option a tri-state.  '-o dax'
-> continues to operate the same.  We add 'always', 'never', and 'inode'
-> (default).
+> On Tue 14-04-20 23:45:20, ira.weiny@intel.com wrote:
+> > From: Ira Weiny <ira.weiny@intel.com>
+> > 
+> > DAX effective mode changes (setting of S_DAX) require inode eviction.
+> > 
+> > Define a flag which can be set to inform the VFS layer that inodes
+> > should not be cached.  This will expedite the eviction of those nodes
+> > requiring reload.
+> > 
+> > Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+> > ---
+> >  include/linux/fs.h | 6 +++++-
+> >  1 file changed, 5 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/include/linux/fs.h b/include/linux/fs.h
+> > index a818ced22961..e2db71d150c3 100644
+> > --- a/include/linux/fs.h
+> > +++ b/include/linux/fs.h
+> > @@ -2151,6 +2151,8 @@ static inline void kiocb_clone(struct kiocb *kiocb, struct kiocb *kiocb_src,
+> >   *
+> >   * I_CREATING		New object's inode in the middle of setting up.
+> >   *
+> > + * I_DONTCACHE		Do not cache the inode
+> > + *
 > 
-> [1] https://lore.kernel.org/lkml/20200405061945.GA94792@iweiny-DESK2.sc.intel.com/
-> 
-> Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-> 
-> ---
-> Changes from v7:
-> 	Change to XFS_MOUNT_DAX_NEVER
-> 
-> Changes from v6:
-> 	Use 2 flag bits rather than a field.
-> 	change iflag to inode
-> 
-> Changes from v5:
-> 	New Patch
-> ---
->  fs/xfs/xfs_mount.h |  3 ++-
->  fs/xfs/xfs_super.c | 44 ++++++++++++++++++++++++++++++++++++++++----
->  2 files changed, 42 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 54bd74088936..2e88c30642e3 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -233,7 +233,8 @@ typedef struct xfs_mount {
->  						   allocator */
->  #define XFS_MOUNT_NOATTR2	(1ULL << 25)	/* disable use of attr2 format */
->  
-> -#define XFS_MOUNT_DAX_ALWAYS	(1ULL << 62)	/* TEST ONLY! */
-> +#define XFS_MOUNT_DAX_ALWAYS	(1ULL << 62)
-> +#define XFS_MOUNT_DAX_NEVER	(1ULL << 63)
->  
->  /*
->   * Max and min values for mount-option defined I/O
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 3863f41757d2..142e5d03566f 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -47,6 +47,32 @@ static struct kset *xfs_kset;		/* top-level xfs sysfs dir */
->  static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs attrs */
->  #endif
->  
-> +enum {
+> Maybe, I'd be more specific here and write: "Evict inode as soon as it is
+> not used anymore"?
 
-enum xfs_dax_mode {  for the reasons given below?
-
-> +	XFS_DAX_INODE = 0,
-> +	XFS_DAX_ALWAYS = 1,
-> +	XFS_DAX_NEVER = 2,
-> +};
-> +
-> +static void xfs_mount_set_dax_mode(struct xfs_mount *mp, u32 val)
-
-xfs style, please:
-
-static void
-xfs_mount_set_dax_mode(
-	struct xfs_mount	*mp,
-	u32			val)
-
-or if you give a name to the enum above, you can enforce some type
-safety too:
-
-	enum xfs_dax_mode	val)
-
-> +{
-> +	if (val == XFS_DAX_INODE) {
-
-and this probably could have been a "switch (val) {", in which case if
-the enum ever gets expanded then gcc will whine about missing switch
-cases.
-
-The rest of the patch looks good.
+I had the same two comments about the V7 version of this patch...
 
 --D
 
-> +		mp->m_flags &= ~(XFS_MOUNT_DAX_ALWAYS | XFS_MOUNT_DAX_NEVER);
-> +	} else if (val == XFS_DAX_ALWAYS) {
-> +		mp->m_flags |= XFS_MOUNT_DAX_ALWAYS;
-> +		mp->m_flags &= ~XFS_MOUNT_DAX_NEVER;
-> +	} else if (val == XFS_DAX_NEVER) {
-> +		mp->m_flags |= XFS_MOUNT_DAX_NEVER;
-> +		mp->m_flags &= ~XFS_MOUNT_DAX_ALWAYS;
-> +	}
-> +}
-> +
-> +static const struct constant_table dax_param_enums[] = {
-> +	{"inode",	XFS_DAX_INODE },
-> +	{"always",	XFS_DAX_ALWAYS },
-> +	{"never",	XFS_DAX_NEVER },
-> +	{}
-> +};
-> +
->  /*
->   * Table driven mount option parser.
->   */
-> @@ -59,7 +85,7 @@ enum {
->  	Opt_filestreams, Opt_quota, Opt_noquota, Opt_usrquota, Opt_grpquota,
->  	Opt_prjquota, Opt_uquota, Opt_gquota, Opt_pquota,
->  	Opt_uqnoenforce, Opt_gqnoenforce, Opt_pqnoenforce, Opt_qnoenforce,
-> -	Opt_discard, Opt_nodiscard, Opt_dax,
-> +	Opt_discard, Opt_nodiscard, Opt_dax, Opt_dax_enum,
->  };
->  
->  static const struct fs_parameter_spec xfs_fs_parameters[] = {
-> @@ -103,6 +129,7 @@ static const struct fs_parameter_spec xfs_fs_parameters[] = {
->  	fsparam_flag("discard",		Opt_discard),
->  	fsparam_flag("nodiscard",	Opt_nodiscard),
->  	fsparam_flag("dax",		Opt_dax),
-> +	fsparam_enum("dax",		Opt_dax_enum, dax_param_enums),
->  	{}
->  };
->  
-> @@ -129,7 +156,6 @@ xfs_fs_show_options(
->  		{ XFS_MOUNT_GRPID,		",grpid" },
->  		{ XFS_MOUNT_DISCARD,		",discard" },
->  		{ XFS_MOUNT_LARGEIO,		",largeio" },
-> -		{ XFS_MOUNT_DAX_ALWAYS,		",dax" },
->  		{ 0, NULL }
->  	};
->  	struct xfs_mount	*mp = XFS_M(root->d_sb);
-> @@ -185,6 +211,13 @@ xfs_fs_show_options(
->  	if (!(mp->m_qflags & XFS_ALL_QUOTA_ACCT))
->  		seq_puts(m, ",noquota");
->  
-> +	if (mp->m_flags & XFS_MOUNT_DAX_ALWAYS)
-> +		seq_puts(m, ",dax=always");
-> +	else if (mp->m_flags & XFS_MOUNT_DAX_NEVER)
-> +		seq_puts(m, ",dax=never");
-> +	else
-> +		seq_puts(m, ",dax=inode");
-> +
->  	return 0;
->  }
->  
-> @@ -1244,7 +1277,10 @@ xfs_fc_parse_param(
->  		return 0;
->  #ifdef CONFIG_FS_DAX
->  	case Opt_dax:
-> -		mp->m_flags |= XFS_MOUNT_DAX_ALWAYS;
-> +		xfs_mount_set_dax_mode(mp, XFS_DAX_ALWAYS);
-> +		return 0;
-> +	case Opt_dax_enum:
-> +		xfs_mount_set_dax_mode(mp, result.uint_32);
->  		return 0;
->  #endif
->  	default:
-> @@ -1451,7 +1487,7 @@ xfs_fc_fill_super(
->  		if (!rtdev_is_dax && !datadev_is_dax) {
->  			xfs_alert(mp,
->  			"DAX unsupported by block device. Turning off DAX.");
-> -			mp->m_flags &= ~XFS_MOUNT_DAX_ALWAYS;
-> +			xfs_mount_set_dax_mode(mp, XFS_DAX_NEVER);
->  		}
->  		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
->  			xfs_alert(mp,
-> -- 
-> 2.25.1
+> Otherwise the patch looks good to me so feel free to add:
 > 
+> Reviewed-by: Jan Kara <jack@suse.cz>
+> 
+> Also it would be good to CC Al Viro on this one (and the dentry flag) I
+> guess.
+> 
+> 								Honza
+> 
+> >   * Q: What is the difference between I_WILL_FREE and I_FREEING?
+> >   */
+> >  #define I_DIRTY_SYNC		(1 << 0)
+> > @@ -2173,6 +2175,7 @@ static inline void kiocb_clone(struct kiocb *kiocb, struct kiocb *kiocb_src,
+> >  #define I_WB_SWITCH		(1 << 13)
+> >  #define I_OVL_INUSE		(1 << 14)
+> >  #define I_CREATING		(1 << 15)
+> > +#define I_DONTCACHE		(1 << 16)
+> >  
+> >  #define I_DIRTY_INODE (I_DIRTY_SYNC | I_DIRTY_DATASYNC)
+> >  #define I_DIRTY (I_DIRTY_INODE | I_DIRTY_PAGES)
+> > @@ -3042,7 +3045,8 @@ extern int inode_needs_sync(struct inode *inode);
+> >  extern int generic_delete_inode(struct inode *inode);
+> >  static inline int generic_drop_inode(struct inode *inode)
+> >  {
+> > -	return !inode->i_nlink || inode_unhashed(inode);
+> > +	return !inode->i_nlink || inode_unhashed(inode) ||
+> > +		(inode->i_state & I_DONTCACHE);
+> >  }
+> >  
+> >  extern struct inode *ilookup5_nowait(struct super_block *sb,
+> > -- 
+> > 2.25.1
+> > 
+> -- 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
