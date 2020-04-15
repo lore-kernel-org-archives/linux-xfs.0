@@ -2,48 +2,48 @@ Return-Path: <SRS0=6B5E=57=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F699C3815B
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 06:48:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD048C2BB85
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 06:48:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 36CDF20775
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 06:48:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7122206D9
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 06:48:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2635064AbgDOGsH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Apr 2020 02:48:07 -0400
-Received: from mga01.intel.com ([192.55.52.88]:14277 "EHLO mga01.intel.com"
+        id S2635077AbgDOGsU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Apr 2020 02:48:20 -0400
+Received: from mga04.intel.com ([192.55.52.120]:55537 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2393637AbgDOGpi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Apr 2020 02:45:38 -0400
-IronPort-SDR: aBJ7x5zs02ro+yl1j3znZQeKnut/vQhVct8DXRigzisscmpUaAZB67gySislqdaA3deRPg8iJR
- /oQ51duRNKYw==
+        id S2393625AbgDOGpf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Apr 2020 02:45:35 -0400
+IronPort-SDR: gB42gDYrSj8OJVGIhVKJ0hGoBxbVtdXHH4Y0Jw5Oh0P4mydQ2xanJZGEiXyT65k4y1Q3WU07fp
+ Zpt8kzLMD50w==
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2020 23:45:37 -0700
-IronPort-SDR: /mQA8trEp4JWRxm37OaMEiPgNUAOEX1tin4upa7GLcH6w5rRnSU614Qw8fGzqOuWiufLwh0k76
- 3N6Ctu7vvXmw==
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2020 23:45:34 -0700
+IronPort-SDR: U7TpdcchaL7GW8teDrmI86p4ZeQEjGukh+KCCROGkWuYW5LEPkE2TESd+6J33AsQtg2rg5mAU1
+ +QT6Jo4by8yg==
 X-IronPort-AV: E=Sophos;i="5.72,386,1580803200"; 
-   d="scan'208";a="244025774"
+   d="scan'208";a="242223793"
 Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
-  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2020 23:45:36 -0700
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2020 23:45:33 -0700
 From:   ira.weiny@intel.com
 To:     linux-kernel@vger.kernel.org,
         "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>,
+Cc:     Ira Weiny <ira.weiny@intel.com>,
+        Dave Chinner <dchinner@redhat.com>, Jan Kara <jack@suse.cz>,
         Dan Williams <dan.j.williams@intel.com>,
         Dave Chinner <david@fromorbit.com>,
         Christoph Hellwig <hch@lst.de>,
         "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: [PATCH V8 05/11] fs/xfs: Make DAX mount option a tri-state
-Date:   Tue, 14 Apr 2020 23:45:17 -0700
-Message-Id: <20200415064523.2244712-6-ira.weiny@intel.com>
+Subject: [PATCH V8 03/11] fs/stat: Define DAX statx attribute
+Date:   Tue, 14 Apr 2020 23:45:15 -0700
+Message-Id: <20200415064523.2244712-4-ira.weiny@intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200415064523.2244712-1-ira.weiny@intel.com>
 References: <20200415064523.2244712-1-ira.weiny@intel.com>
@@ -56,140 +56,77 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Ira Weiny <ira.weiny@intel.com>
 
-As agreed upon[1].  We make the dax mount option a tri-state.  '-o dax'
-continues to operate the same.  We add 'always', 'never', and 'inode'
-(default).
+In order for users to determine if a file is currently operating in DAX
+state (effective DAX).  Define a statx attribute value and set that
+attribute if the effective DAX flag is set.
 
-[1] https://lore.kernel.org/lkml/20200405061945.GA94792@iweiny-DESK2.sc.intel.com/
+To go along with this we propose the following addition to the statx man
+page:
 
+STATX_ATTR_DAX
+
+	The file is in the DAX (cpu direct access) state.  DAX state
+	attempts to minimize software cache effects for both I/O and
+	memory mappings of this file.  It requires a file system which
+	has been configured to support DAX.
+
+	DAX generally assumes all accesses are via cpu load / store
+	instructions which can minimize overhead for small accesses, but
+	may adversely affect cpu utilization for large transfers.
+
+	File I/O is done directly to/from user-space buffers and memory
+	mapped I/O may be performed with direct memory mappings that
+	bypass kernel page cache.
+
+	While the DAX property tends to result in data being transferred
+	synchronously, it does not give the same guarantees of O_SYNC
+	where data and the necessary metadata are transferred together.
+
+	A DAX file may support being mapped with the MAP_SYNC flag,
+	which enables a program to use CPU cache flush instructions to
+	persist CPU store operations without an explicit fsync(2).  See
+	mmap(2) for more information.
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 
 ---
-Changes from v7:
-	Change to XFS_MOUNT_DAX_NEVER
-
-Changes from v6:
-	Use 2 flag bits rather than a field.
-	change iflag to inode
-
-Changes from v5:
-	New Patch
+Changes from V2:
+	Update man page text with comments from Darrick, Jan, Dan, and
+	Dave.
 ---
- fs/xfs/xfs_mount.h |  3 ++-
- fs/xfs/xfs_super.c | 44 ++++++++++++++++++++++++++++++++++++++++----
- 2 files changed, 42 insertions(+), 5 deletions(-)
+ fs/stat.c                 | 3 +++
+ include/uapi/linux/stat.h | 1 +
+ 2 files changed, 4 insertions(+)
 
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 54bd74088936..2e88c30642e3 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -233,7 +233,8 @@ typedef struct xfs_mount {
- 						   allocator */
- #define XFS_MOUNT_NOATTR2	(1ULL << 25)	/* disable use of attr2 format */
+diff --git a/fs/stat.c b/fs/stat.c
+index 030008796479..894699c74dde 100644
+--- a/fs/stat.c
++++ b/fs/stat.c
+@@ -79,6 +79,9 @@ int vfs_getattr_nosec(const struct path *path, struct kstat *stat,
+ 	if (IS_AUTOMOUNT(inode))
+ 		stat->attributes |= STATX_ATTR_AUTOMOUNT;
  
--#define XFS_MOUNT_DAX_ALWAYS	(1ULL << 62)	/* TEST ONLY! */
-+#define XFS_MOUNT_DAX_ALWAYS	(1ULL << 62)
-+#define XFS_MOUNT_DAX_NEVER	(1ULL << 63)
- 
- /*
-  * Max and min values for mount-option defined I/O
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 3863f41757d2..142e5d03566f 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -47,6 +47,32 @@ static struct kset *xfs_kset;		/* top-level xfs sysfs dir */
- static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs attrs */
- #endif
- 
-+enum {
-+	XFS_DAX_INODE = 0,
-+	XFS_DAX_ALWAYS = 1,
-+	XFS_DAX_NEVER = 2,
-+};
++	if (IS_DAX(inode))
++		stat->attributes |= STATX_ATTR_DAX;
 +
-+static void xfs_mount_set_dax_mode(struct xfs_mount *mp, u32 val)
-+{
-+	if (val == XFS_DAX_INODE) {
-+		mp->m_flags &= ~(XFS_MOUNT_DAX_ALWAYS | XFS_MOUNT_DAX_NEVER);
-+	} else if (val == XFS_DAX_ALWAYS) {
-+		mp->m_flags |= XFS_MOUNT_DAX_ALWAYS;
-+		mp->m_flags &= ~XFS_MOUNT_DAX_NEVER;
-+	} else if (val == XFS_DAX_NEVER) {
-+		mp->m_flags |= XFS_MOUNT_DAX_NEVER;
-+		mp->m_flags &= ~XFS_MOUNT_DAX_ALWAYS;
-+	}
-+}
-+
-+static const struct constant_table dax_param_enums[] = {
-+	{"inode",	XFS_DAX_INODE },
-+	{"always",	XFS_DAX_ALWAYS },
-+	{"never",	XFS_DAX_NEVER },
-+	{}
-+};
-+
- /*
-  * Table driven mount option parser.
-  */
-@@ -59,7 +85,7 @@ enum {
- 	Opt_filestreams, Opt_quota, Opt_noquota, Opt_usrquota, Opt_grpquota,
- 	Opt_prjquota, Opt_uquota, Opt_gquota, Opt_pquota,
- 	Opt_uqnoenforce, Opt_gqnoenforce, Opt_pqnoenforce, Opt_qnoenforce,
--	Opt_discard, Opt_nodiscard, Opt_dax,
-+	Opt_discard, Opt_nodiscard, Opt_dax, Opt_dax_enum,
- };
+ 	if (inode->i_op->getattr)
+ 		return inode->i_op->getattr(path, stat, request_mask,
+ 					    query_flags);
+diff --git a/include/uapi/linux/stat.h b/include/uapi/linux/stat.h
+index ad80a5c885d5..e5f9d5517f6b 100644
+--- a/include/uapi/linux/stat.h
++++ b/include/uapi/linux/stat.h
+@@ -169,6 +169,7 @@ struct statx {
+ #define STATX_ATTR_ENCRYPTED		0x00000800 /* [I] File requires key to decrypt in fs */
+ #define STATX_ATTR_AUTOMOUNT		0x00001000 /* Dir: Automount trigger */
+ #define STATX_ATTR_VERITY		0x00100000 /* [I] Verity protected file */
++#define STATX_ATTR_DAX			0x00002000 /* [I] File is DAX */
  
- static const struct fs_parameter_spec xfs_fs_parameters[] = {
-@@ -103,6 +129,7 @@ static const struct fs_parameter_spec xfs_fs_parameters[] = {
- 	fsparam_flag("discard",		Opt_discard),
- 	fsparam_flag("nodiscard",	Opt_nodiscard),
- 	fsparam_flag("dax",		Opt_dax),
-+	fsparam_enum("dax",		Opt_dax_enum, dax_param_enums),
- 	{}
- };
  
-@@ -129,7 +156,6 @@ xfs_fs_show_options(
- 		{ XFS_MOUNT_GRPID,		",grpid" },
- 		{ XFS_MOUNT_DISCARD,		",discard" },
- 		{ XFS_MOUNT_LARGEIO,		",largeio" },
--		{ XFS_MOUNT_DAX_ALWAYS,		",dax" },
- 		{ 0, NULL }
- 	};
- 	struct xfs_mount	*mp = XFS_M(root->d_sb);
-@@ -185,6 +211,13 @@ xfs_fs_show_options(
- 	if (!(mp->m_qflags & XFS_ALL_QUOTA_ACCT))
- 		seq_puts(m, ",noquota");
- 
-+	if (mp->m_flags & XFS_MOUNT_DAX_ALWAYS)
-+		seq_puts(m, ",dax=always");
-+	else if (mp->m_flags & XFS_MOUNT_DAX_NEVER)
-+		seq_puts(m, ",dax=never");
-+	else
-+		seq_puts(m, ",dax=inode");
-+
- 	return 0;
- }
- 
-@@ -1244,7 +1277,10 @@ xfs_fc_parse_param(
- 		return 0;
- #ifdef CONFIG_FS_DAX
- 	case Opt_dax:
--		mp->m_flags |= XFS_MOUNT_DAX_ALWAYS;
-+		xfs_mount_set_dax_mode(mp, XFS_DAX_ALWAYS);
-+		return 0;
-+	case Opt_dax_enum:
-+		xfs_mount_set_dax_mode(mp, result.uint_32);
- 		return 0;
- #endif
- 	default:
-@@ -1451,7 +1487,7 @@ xfs_fc_fill_super(
- 		if (!rtdev_is_dax && !datadev_is_dax) {
- 			xfs_alert(mp,
- 			"DAX unsupported by block device. Turning off DAX.");
--			mp->m_flags &= ~XFS_MOUNT_DAX_ALWAYS;
-+			xfs_mount_set_dax_mode(mp, XFS_DAX_NEVER);
- 		}
- 		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
- 			xfs_alert(mp,
+ #endif /* _UAPI_LINUX_STAT_H */
 -- 
 2.25.1
 
