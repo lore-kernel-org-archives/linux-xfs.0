@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 469CEC3815B
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 06:47:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B8CEC2BB85
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 06:47:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3169F206D9
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 06:47:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 51EC8206D9
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 06:47:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2635009AbgDOGqu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Apr 2020 02:46:50 -0400
-Received: from mga06.intel.com ([134.134.136.31]:21756 "EHLO mga06.intel.com"
+        id S2634954AbgDOGpk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Apr 2020 02:45:40 -0400
+Received: from mga09.intel.com ([134.134.136.24]:45838 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2634963AbgDOGpm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Apr 2020 02:45:42 -0400
-IronPort-SDR: Ti/gLW04uzxuEDdmIfUM0pDEa/Q96hu7i9tkF/KuHtYMsTP7MuyVE1ggiGSZrAKVR2iNqs0K//
- s3FNlGwuXTXg==
+        id S2634945AbgDOGpi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Apr 2020 02:45:38 -0400
+IronPort-SDR: ilsWYmYqosvwKeQEHEQTZ72Nkk/1iA18HNPB1nXUk+v4YfU9jNRuymQH5W71guqbdkZbLKveB5
+ hwIKaxp4QXVw==
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2020 23:45:41 -0700
-IronPort-SDR: meDbPnYHnawnM5CRSIMJnVXkGzjNZlVB1YKzuHRAQvu6g+oOQhno9/fZDNwEyJ9fUXgCcPNee4
- CjwOFm/qdXYg==
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2020 23:45:37 -0700
+IronPort-SDR: 8XOPkpAho13v7rH022nojgIHFncTn+Re/aDVYQRS3y/8e+KGS6OAimoqpWLlcYczqIsWmCsEBp
+ 8wzRd+TF6r0g==
 X-IronPort-AV: E=Sophos;i="5.72,386,1580803200"; 
-   d="scan'208";a="245617315"
+   d="scan'208";a="288459427"
 Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2020 23:45:41 -0700
+  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2020 23:45:37 -0700
 From:   ira.weiny@intel.com
 To:     linux-kernel@vger.kernel.org,
         "Darrick J. Wong" <darrick.wong@oracle.com>
@@ -40,9 +40,9 @@ Cc:     Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>,
         "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: [PATCH V8 09/11] fs: Introduce DCACHE_DONTCACHE
-Date:   Tue, 14 Apr 2020 23:45:21 -0700
-Message-Id: <20200415064523.2244712-10-ira.weiny@intel.com>
+Subject: [PATCH V8 06/11] fs/xfs: Create function xfs_inode_enable_dax()
+Date:   Tue, 14 Apr 2020 23:45:18 -0700
+Message-Id: <20200415064523.2244712-7-ira.weiny@intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200415064523.2244712-1-ira.weiny@intel.com>
 References: <20200415064523.2244712-1-ira.weiny@intel.com>
@@ -55,90 +55,98 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Ira Weiny <ira.weiny@intel.com>
 
-DCACHE_DONTCACHE indicates a dentry should not be cached on final
-dput().
+xfs_inode_supports_dax() should reflect if the inode can support DAX not
+that it is enabled for DAX.
 
-Also add a helper function which will flag I_DONTCACHE as well ad
-DCACHE_DONTCACHE on all dentries point to a specified inode.
+Change the use of xfs_inode_supports_dax() to reflect only if the inode
+and underlying storage support dax.
+
+Add a new function xfs_inode_enable_dax() which reflects if the inode
+should be enabled for DAX.
 
 Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 
 ---
-Changes from V7:
-	new patch
----
- fs/dcache.c            |  4 ++++
- fs/inode.c             | 15 +++++++++++++++
- include/linux/dcache.h |  2 ++
- include/linux/fs.h     |  1 +
- 4 files changed, 22 insertions(+)
+Changes from v7:
+	Move S_ISREG check first
+	use IS_ENABLED(CONFIG_FS_DAX) rather than duplicated function
 
-diff --git a/fs/dcache.c b/fs/dcache.c
-index b280e07e162b..0030fabab2c4 100644
---- a/fs/dcache.c
-+++ b/fs/dcache.c
-@@ -647,6 +647,10 @@ static inline bool retain_dentry(struct dentry *dentry)
- 		if (dentry->d_op->d_delete(dentry))
- 			return false;
- 	}
-+
-+	if (unlikely(dentry->d_flags & DCACHE_DONTCACHE))
-+		return false;
-+
- 	/* retain; LRU fodder */
- 	dentry->d_lockref.count--;
- 	if (unlikely(!(dentry->d_flags & DCACHE_LRU_LIST)))
-diff --git a/fs/inode.c b/fs/inode.c
-index 93d9252a00ab..b8b1917a324e 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -1526,6 +1526,21 @@ int generic_delete_inode(struct inode *inode)
- }
- EXPORT_SYMBOL(generic_delete_inode);
+Changes from v6:
+	Change enable checks to be sequential logic.
+	Update for 2 bit tri-state option.
+	Make 'static' consistent.
+	Don't set S_DAX if !CONFIG_FS_DAX
+
+Changes from v5:
+	Update to reflect the new tri-state mount option
+
+Changes from v3:
+	Update functions and names to be more clear
+	Update commit message
+	Merge with
+		'fs/xfs: Clean up DAX support check'
+		don't allow IS_DAX() on a directory
+		use STATIC macro for static
+		make xfs_inode_supports_dax() static
+---
+ fs/xfs/xfs_iops.c | 28 ++++++++++++++++++++++------
+ 1 file changed, 22 insertions(+), 6 deletions(-)
+
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index a6e634631da8..2ecc2b2050ab 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1243,13 +1243,12 @@ xfs_inode_supports_dax(
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
  
-+void flag_inode_dontcache(struct inode *inode)
+-	/* Only supported on non-reflinked files. */
+-	if (!S_ISREG(VFS_I(ip)->i_mode) || xfs_is_reflink_inode(ip))
++	/* Only supported on regular files. */
++	if (!S_ISREG(VFS_I(ip)->i_mode))
+ 		return false;
+ 
+-	/* DAX mount option or DAX iflag must be set. */
+-	if (!(mp->m_flags & XFS_MOUNT_DAX_ALWAYS) &&
+-	    !(ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
++	/* Only supported on non-reflinked files. */
++	if (xfs_is_reflink_inode(ip))
+ 		return false;
+ 
+ 	/* Block size must match page size */
+@@ -1260,6 +1259,23 @@ xfs_inode_supports_dax(
+ 	return xfs_inode_buftarg(ip)->bt_daxdev != NULL;
+ }
+ 
++static bool
++xfs_inode_enable_dax(
++	struct xfs_inode *ip)
 +{
-+	struct dentry *dent;
-+
-+	rcu_read_lock();
-+	hlist_for_each_entry(dent, &inode->i_dentry, d_u.d_alias) {
-+		spin_lock(&dent->d_lock);
-+		dent->d_flags |= DCACHE_DONTCACHE;
-+		spin_unlock(&dent->d_lock);
-+	}
-+	rcu_read_unlock();
-+	inode->i_state |= I_DONTCACHE;
++	if (!IS_ENABLED(CONFIG_FS_DAX))
++		return false;
++	if (ip->i_mount->m_flags & XFS_MOUNT_DAX_NEVER)
++		return false;
++	if (!xfs_inode_supports_dax(ip))
++		return false;
++	if (ip->i_mount->m_flags & XFS_MOUNT_DAX_ALWAYS)
++		return true;
++	if (ip->i_d.di_flags2 & XFS_DIFLAG2_DAX)
++		return true;
++	return false;
 +}
-+EXPORT_SYMBOL(flag_inode_dontcache);
 +
- /*
-  * Called when we're dropping the last reference
-  * to an inode.
-diff --git a/include/linux/dcache.h b/include/linux/dcache.h
-index c1488cc84fd9..56b1482d9223 100644
---- a/include/linux/dcache.h
-+++ b/include/linux/dcache.h
-@@ -177,6 +177,8 @@ struct dentry_operations {
- 
- #define DCACHE_REFERENCED		0x00000040 /* Recently used, don't discard. */
- 
-+#define DCACHE_DONTCACHE		0x00000080 /* don't cache on final dput() */
-+
- #define DCACHE_CANT_MOUNT		0x00000100
- #define DCACHE_GENOCIDE			0x00000200
- #define DCACHE_SHRINK_LIST		0x00000400
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index e2db71d150c3..f2916c99616a 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -3048,6 +3048,7 @@ static inline int generic_drop_inode(struct inode *inode)
- 	return !inode->i_nlink || inode_unhashed(inode) ||
- 		(inode->i_state & I_DONTCACHE);
+ STATIC void
+ xfs_diflags_to_iflags(
+ 	struct inode		*inode,
+@@ -1278,7 +1294,7 @@ xfs_diflags_to_iflags(
+ 		inode->i_flags |= S_SYNC;
+ 	if (flags & XFS_DIFLAG_NOATIME)
+ 		inode->i_flags |= S_NOATIME;
+-	if (xfs_inode_supports_dax(ip))
++	if (xfs_inode_enable_dax(ip))
+ 		inode->i_flags |= S_DAX;
  }
-+extern void flag_inode_dontcache(struct inode *inode);
  
- extern struct inode *ilookup5_nowait(struct super_block *sb,
- 		unsigned long hashval, int (*test)(struct inode *, void *),
 -- 
 2.25.1
 
