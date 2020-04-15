@@ -2,44 +2,42 @@ Return-Path: <SRS0=6B5E=57=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14699C352BE
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 01:17:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F032C2BB1D
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 02:18:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E782B20774
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 01:17:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586913429;
-	bh=Z8t12Kri4dLkYoQfBj9LeTBHSVbJC29k8QLFe4WYAn0=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
-	b=Qr+to8BB2KCHeEuVBaa67Cc6D53KuvS4m/lDvTF+uAbawWOPtATLzqKRcMyJVOmdm
-	 +fzXedVG+xWd57wZD4LqNkSAKik7mggTXAgn+yBur3LpVeQ4rapb2NYkwoLtOMiVt7
-	 58hrCodhUDUFatGywqtNIik9yxh8lN8C5kH1gYhc=
+	by mail.kernel.org (Postfix) with ESMTP id 1EBB820774
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 02:18:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="b6QEUePW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389058AbgDOBRJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Apr 2020 21:17:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50420 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388394AbgDOBRH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 14 Apr 2020 21:17:07 -0400
-Received: from localhost.localdomain (c-73-231-172-41.hsd1.ca.comcast.net [73.231.172.41])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5CD58206D9;
-        Wed, 15 Apr 2020 01:17:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586913426;
-        bh=Z8t12Kri4dLkYoQfBj9LeTBHSVbJC29k8QLFe4WYAn0=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=trHGKNCxzakSMiiFFW7h7ipr5l5ZPqXMRMACUtk4YKpwd8Pg1RJ2PiBsRP5nCE9+1
-         fCvzyZDvGOZsZH+JWcOhF2bmZOk4UdQ9IgBloKo9E4jlYJXAc0OSn746DXLsWt7WBJ
-         s1ct6x0rSpHRCfj/HRWtfY1TDdkeieGLLTsLzoWE=
-Date:   Tue, 14 Apr 2020 18:17:05 -0700
-From:   Andrew Morton <akpm@linux-foundation.org>
-To:     Matthew Wilcox <willy@infradead.org>
+        id S2392911AbgDOCSS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Apr 2020 22:18:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38352 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732702AbgDOCSQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Apr 2020 22:18:16 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5A68C061A0C;
+        Tue, 14 Apr 2020 19:18:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=9KHPxu7QAhV1u3S2ZqCIoyxy4Ym3v0RLTChLW2Oikv4=; b=b6QEUePWGS20adBA91jd/5eoL3
+        1qB1boh/lSdpZeSbJhBYeTpNJWWSCLq/Ywu3dBodJxi69s/hE26m1v0lWCZh7exlrHGttrDxBld0R
+        o0U22RBR4IM2REf02o5LLzkjtrvAsrb1SUhVA+XUN1jZuoZiPyNDNgaCQZNFu+XzGieExeS3WoTq2
+        HzrFZ6dcg3d7xLfboVDKIEwwlftwgdF2HBHdSLAnbd4RZD6VJwLdDQuDS9fhums2rjg8iZoJwG8r3
+        xi29XIpXU8O6p96+bY4jKHquY1oQY/ApSWHiG2HS0U86jqAf8CD/BieGTpXmH+rAb1cb1EZx8mhzT
+        VkdvlHpQ==;
+Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jOXcu-0000tf-4k; Wed, 15 Apr 2020 02:18:11 +0000
+Date:   Tue, 14 Apr 2020 19:18:08 -0700
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Andrew Morton <akpm@linux-foundation.org>
 Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
         linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
         linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
@@ -48,37 +46,68 @@ Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
         Christoph Hellwig <hch@lst.de>,
         William Kucharski <william.kucharski@oracle.com>
 Subject: Re: [PATCH v11 05/25] mm: Add new readahead_control API
-Message-Id: <20200414181705.bfc4c0087092051a9475141e@linux-foundation.org>
-In-Reply-To: <20200414150233.24495-6-willy@infradead.org>
+Message-ID: <20200415021808.GA5820@bombadil.infradead.org>
 References: <20200414150233.24495-1-willy@infradead.org>
-        <20200414150233.24495-6-willy@infradead.org>
-X-Mailer: Sylpheed 3.5.1 (GTK+ 2.24.31; x86_64-pc-linux-gnu)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+ <20200414150233.24495-6-willy@infradead.org>
+ <20200414181705.bfc4c0087092051a9475141e@linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200414181705.bfc4c0087092051a9475141e@linux-foundation.org>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, 14 Apr 2020 08:02:13 -0700 Matthew Wilcox <willy@infradead.org> wrote:
-
-> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+On Tue, Apr 14, 2020 at 06:17:05PM -0700, Andrew Morton wrote:
+> On Tue, 14 Apr 2020 08:02:13 -0700 Matthew Wilcox <willy@infradead.org> wrote:
+> > From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+> > 
+> > Filesystems which implement the upcoming ->readahead method will get
+> > their pages by calling readahead_page() or readahead_page_batch().
+> > These functions support large pages, even though none of the filesystems
+> > to be converted do yet.
+> > 
+> > +static inline struct page *readahead_page(struct readahead_control *rac)
+> > +static inline unsigned int __readahead_batch(struct readahead_control *rac,
+> > +		struct page **array, unsigned int array_sz)
 > 
-> Filesystems which implement the upcoming ->readahead method will get
-> their pages by calling readahead_page() or readahead_page_batch().
-> These functions support large pages, even though none of the filesystems
-> to be converted do yet.
-> 
-> +static inline struct page *readahead_page(struct readahead_control *rac)
-> +static inline unsigned int __readahead_batch(struct readahead_control *rac,
-> +		struct page **array, unsigned int array_sz)
+> These are large functions.  Was it correct to inline them?
 
-These are large functions.  Was it correct to inline them?
+Hmm.  They don't seem that big to me.
 
-The batching API only appears to be used by fuse?  If so, do we really
-need it?  Does it provide some functional need, or is it a performance
-thing?  If the latter, how significant is it?
+readahead_page, stripped of its sanity checks:
 
-The code adds quite a few (inlined!) VM_BUG_ONs.  Can we plan to remove
-them at some stage?  Such as, before Linus shouts at us :)
++       rac->_nr_pages -= rac->_batch_count;
++       rac->_index += rac->_batch_count;
++       if (!rac->_nr_pages) {
++               rac->_batch_count = 0;
++               return NULL;
++       }
++       page = xa_load(&rac->mapping->i_pages, rac->_index);
++       rac->_batch_count = hpage_nr_pages(page);
+
+__readahead_batch is much bigger, but it's only used by btrfs and fuse,
+and it seemed unfair to make everybody pay the cost for a function only
+used by two filesystems.
+
+> The batching API only appears to be used by fuse?  If so, do we really
+> need it?  Does it provide some functional need, or is it a performance
+> thing?  If the latter, how significant is it?
+
+I must confess to not knowing the performance impact.  If the code uses
+xa_load() repeatedly, it costs O(log n) each time as we walk down the tree
+(mitigated to a large extent by cache, of course).  Using xas_for_each()
+keeps us at the bottom of the tree and each iteration is O(1).
+I'm interested to see if filesystem maintainers start to use the batch
+function or if they're happier sticking with the individual lookups.
+
+The batch API was originally written for use with btrfs, but it was a
+significant simplification to convert fuse to use it.
+
+> The code adds quite a few (inlined!) VM_BUG_ONs.  Can we plan to remove
+> them at some stage?  Such as, before Linus shouts at us :)
+
+I'd be happy to remove them.  Various reviewers said things like "are you
+sure this can't happen?"
+
