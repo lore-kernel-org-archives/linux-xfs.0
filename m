@@ -2,92 +2,95 @@ Return-Path: <SRS0=6B5E=57=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5092BC38A29
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 11:42:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 030D1C2BB55
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 11:58:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2607A21655
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 11:42:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586950978;
-	bh=GsyKNma1DJuNZ9EnsM2L3f5UdpZOBpe52VGFy1KVTS0=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=vbRT29McwLMRFM0CR9MSoips2/H9xDJ/8o+Bq3SFWubEHFUQ9wM3AveyNGeGifajN
-	 XgHG3O06iS/s0bDg43zgWB011KzWPgD3iOonJcRDiuX3+iB2j/6o4F0xLTYyAQDM9t
-	 Z6Ds5hzQJzW9QqRZi2jfOe1eDOIRxtbdp8ysjmf8=
+	by mail.kernel.org (Postfix) with ESMTP id D40BE2078A
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 11:58:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2408931AbgDOLmy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Apr 2020 07:42:54 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34298 "EHLO mail.kernel.org"
+        id S2898009AbgDOL6N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Apr 2020 07:58:13 -0400
+Received: from mx2.suse.de ([195.135.220.15]:34412 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2408917AbgDOLmt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Apr 2020 07:42:49 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5832520768;
-        Wed, 15 Apr 2020 11:42:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586950969;
-        bh=GsyKNma1DJuNZ9EnsM2L3f5UdpZOBpe52VGFy1KVTS0=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=KhIgLj7Io77GzlwykMOYabC8uE2GcB06wCDeTRGhg9YIypTwQMTQDyCuuCne5Sq+P
-         03KJS7r0133xGWqAMcgJbtBMEVqG9w1aY3KFtT6vQKz5YnHo+Qon7xbCe9WgHAcAH8
-         NS35hRNCNeggtwllhtWTpZM/mU8vgyu+A/VTjjg8=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dave Chinner <dchinner@redhat.com>,
+        id S2897999AbgDOL6L (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Apr 2020 07:58:11 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 3A8D2AB64;
+        Wed, 15 Apr 2020 11:58:08 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id 800DE1E1250; Wed, 15 Apr 2020 13:58:07 +0200 (CEST)
+Date:   Wed, 15 Apr 2020 13:58:07 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     ira.weiny@intel.com
+Cc:     linux-kernel@vger.kernel.org, Jan Kara <jack@suse.cz>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Chinner <david@fromorbit.com>,
         Christoph Hellwig <hch@lst.de>,
-        Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.5 018/106] xfs: fix use-after-free when aborting corrupt attr inactivation
-Date:   Wed, 15 Apr 2020 07:40:58 -0400
-Message-Id: <20200415114226.13103-18-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200415114226.13103-1-sashal@kernel.org>
-References: <20200415114226.13103-1-sashal@kernel.org>
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH RFC 2/8] fs/ext4: Disallow verity if inode is DAX
+Message-ID: <20200415115807.GD6126@quack2.suse.cz>
+References: <20200414040030.1802884-1-ira.weiny@intel.com>
+ <20200414040030.1802884-3-ira.weiny@intel.com>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200414040030.1802884-3-ira.weiny@intel.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+On Mon 13-04-20 21:00:24, ira.weiny@intel.com wrote:
+> From: Ira Weiny <ira.weiny@intel.com>
+> 
+> Verity and DAX are incompatible.  Changing the DAX mode due to a verity
+> flag change is wrong without a corresponding address_space_operations
+> update.
+> 
+> Make the 2 options mutually exclusive by returning an error if DAX was
+> set first.
+> 
+> (Setting DAX is already disabled if Verity is set first.)
+> 
+> Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 
-[ Upstream commit 496b9bcd62b0b3a160be61e3265a086f97adcbd3 ]
+Looks good to me. You can add:
 
-Log the corrupt buffer before we release the buffer.
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-Fixes: a5155b870d687 ("xfs: always log corruption errors")
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- fs/xfs/xfs_attr_inactive.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+								Honza
 
-diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
-index 5ff49523d8ea1..c135bd5b2e61a 100644
---- a/fs/xfs/xfs_attr_inactive.c
-+++ b/fs/xfs/xfs_attr_inactive.c
-@@ -208,8 +208,8 @@ xfs_attr3_node_inactive(
- 	 * Since this code is recursive (gasp!) we must protect ourselves.
- 	 */
- 	if (level > XFS_DA_NODE_MAXDEPTH) {
--		xfs_trans_brelse(*trans, bp);	/* no locks for later trans */
- 		xfs_buf_corruption_error(bp);
-+		xfs_trans_brelse(*trans, bp);	/* no locks for later trans */
- 		return -EFSCORRUPTED;
- 	}
- 
+> ---
+>  fs/ext4/verity.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/fs/ext4/verity.c b/fs/ext4/verity.c
+> index dc5ec724d889..ce3f9a198d3b 100644
+> --- a/fs/ext4/verity.c
+> +++ b/fs/ext4/verity.c
+> @@ -113,6 +113,9 @@ static int ext4_begin_enable_verity(struct file *filp)
+>  	handle_t *handle;
+>  	int err;
+>  
+> +	if (WARN_ON_ONCE(IS_DAX(inode)))
+> +		return -EINVAL;
+> +
+>  	if (ext4_verity_in_progress(inode))
+>  		return -EBUSY;
+>  
+> -- 
+> 2.25.1
+> 
 -- 
-2.20.1
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
