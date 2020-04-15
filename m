@@ -2,131 +2,135 @@ Return-Path: <SRS0=6B5E=57=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E311C2BB85
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 06:40:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3348EC2BA2B
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 06:45:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2850B20784
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 06:40:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1763920771
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Apr 2020 06:45:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2634927AbgDOGkZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Apr 2020 02:40:25 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:22022 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2634921AbgDOGkY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Apr 2020 02:40:24 -0400
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 03F6YMOm055860
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Apr 2020 02:40:23 -0400
-Received: from e06smtp01.uk.ibm.com (e06smtp01.uk.ibm.com [195.75.94.97])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 30dnmqtdyp-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Apr 2020 02:40:23 -0400
-Received: from localhost
-        by e06smtp01.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.ibm.com>;
-        Wed, 15 Apr 2020 07:39:47 +0100
-Received: from b06avi18626390.portsmouth.uk.ibm.com (9.149.26.192)
-        by e06smtp01.uk.ibm.com (192.168.101.131) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
-        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Wed, 15 Apr 2020 07:39:45 +0100
-Received: from d06av26.portsmouth.uk.ibm.com (d06av26.portsmouth.uk.ibm.com [9.149.105.62])
-        by b06avi18626390.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 03F6dDV221758324
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 15 Apr 2020 06:39:13 GMT
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id F3ED6AE058;
-        Wed, 15 Apr 2020 06:40:18 +0000 (GMT)
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 38166AE04D;
-        Wed, 15 Apr 2020 06:40:18 +0000 (GMT)
-Received: from localhost.localdomain (unknown [9.79.180.162])
-        by d06av26.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Wed, 15 Apr 2020 06:40:17 +0000 (GMT)
-From:   Chandan Rajendra <chandan@linux.ibm.com>
-To:     Allison Collins <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v8 02/20] xfs: Check for -ENOATTR or -EEXIST
-Date:   Wed, 15 Apr 2020 12:13:23 +0530
-Organization: IBM
-In-Reply-To: <20200403221229.4995-3-allison.henderson@oracle.com>
-References: <20200403221229.4995-1-allison.henderson@oracle.com> <20200403221229.4995-3-allison.henderson@oracle.com>
+        id S2634949AbgDOGpj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Apr 2020 02:45:39 -0400
+Received: from mga05.intel.com ([192.55.52.43]:55433 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2393634AbgDOGpg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Apr 2020 02:45:36 -0400
+IronPort-SDR: I8bINFLGojfcA+JFjIu/RCddq5TLJpwlIO1IRQHFQ4QyQeXUvfU1jqqnk0Kh8uqdMu+SzEUyS+
+ NBEjEwfDxBSQ==
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2020 23:45:35 -0700
+IronPort-SDR: zhKkR9S4qESiJFh3t4PiQgvJgAHjAfrYNyzZ61aLyGjr+oAw06k9zc2kq5mQGaKnpjX3lRTd8k
+ YO+ZNIFbjjNg==
+X-IronPort-AV: E=Sophos;i="5.72,386,1580803200"; 
+   d="scan'208";a="271641519"
+Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2020 23:45:35 -0700
+From:   ira.weiny@intel.com
+To:     linux-kernel@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: [PATCH V8 04/11] fs/xfs: Change XFS_MOUNT_DAX to XFS_MOUNT_DAX_ALWAYS
+Date:   Tue, 14 Apr 2020 23:45:16 -0700
+Message-Id: <20200415064523.2244712-5-ira.weiny@intel.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200415064523.2244712-1-ira.weiny@intel.com>
+References: <20200415064523.2244712-1-ira.weiny@intel.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-X-TM-AS-GCONF: 00
-x-cbid: 20041506-4275-0000-0000-000003C022D5
-X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 20041506-4276-0000-0000-000038D5987F
-Message-Id: <3808247.e9iCYBVUDu@localhost.localdomain>
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.676
- definitions=2020-04-15_01:2020-04-14,2020-04-15 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 clxscore=1015
- phishscore=0 adultscore=0 suspectscore=1 mlxlogscore=999 spamscore=0
- mlxscore=0 lowpriorityscore=0 priorityscore=1501 impostorscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004150046
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Saturday, April 4, 2020 3:42 AM Allison Collins wrote: 
-> Delayed operations cannot return error codes.  So we must check for
-> these conditions first before starting set or remove operations
->
+From: Ira Weiny <ira.weiny@intel.com>
 
-The changes are logically correct.
+In prep for the new tri-state mount option which then introduces
+XFS_MOUNT_DAX_NEVER.
 
-Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+---
+ fs/xfs/xfs_iops.c  | 2 +-
+ fs/xfs/xfs_mount.h | 2 +-
+ fs/xfs/xfs_super.c | 8 ++++----
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_attr.c | 15 +++++++++++++++
->  1 file changed, 15 insertions(+)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 2a0d3d3..f7e289e 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -404,6 +404,17 @@ xfs_attr_set(
->  				args->total, 0, quota_flags);
->  		if (error)
->  			goto out_trans_cancel;
-> +
-> +		error = xfs_has_attr(args);
-> +		if (error == -EEXIST && (args->attr_flags & XATTR_CREATE))
-> +			goto out_trans_cancel;
-> +
-> +		if (error == -ENOATTR && (args->attr_flags & XATTR_REPLACE))
-> +			goto out_trans_cancel;
-> +
-> +		if (error != -ENOATTR && error != -EEXIST)
-> +			goto out_trans_cancel;
-> +
->  		error = xfs_attr_set_args(args);
->  		if (error)
->  			goto out_trans_cancel;
-> @@ -411,6 +422,10 @@ xfs_attr_set(
->  		if (!args->trans)
->  			goto out_unlock;
->  	} else {
-> +		error = xfs_has_attr(args);
-> +		if (error != -EEXIST)
-> +			goto out_trans_cancel;
-> +
->  		error = xfs_attr_remove_args(args);
->  		if (error)
->  			goto out_trans_cancel;
-> 
-
-
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 81f2f93caec0..a6e634631da8 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1248,7 +1248,7 @@ xfs_inode_supports_dax(
+ 		return false;
+ 
+ 	/* DAX mount option or DAX iflag must be set. */
+-	if (!(mp->m_flags & XFS_MOUNT_DAX) &&
++	if (!(mp->m_flags & XFS_MOUNT_DAX_ALWAYS) &&
+ 	    !(ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
+ 		return false;
+ 
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 88ab09ed29e7..54bd74088936 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -233,7 +233,7 @@ typedef struct xfs_mount {
+ 						   allocator */
+ #define XFS_MOUNT_NOATTR2	(1ULL << 25)	/* disable use of attr2 format */
+ 
+-#define XFS_MOUNT_DAX		(1ULL << 62)	/* TEST ONLY! */
++#define XFS_MOUNT_DAX_ALWAYS	(1ULL << 62)	/* TEST ONLY! */
+ 
+ /*
+  * Max and min values for mount-option defined I/O
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 2094386af8ac..3863f41757d2 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -129,7 +129,7 @@ xfs_fs_show_options(
+ 		{ XFS_MOUNT_GRPID,		",grpid" },
+ 		{ XFS_MOUNT_DISCARD,		",discard" },
+ 		{ XFS_MOUNT_LARGEIO,		",largeio" },
+-		{ XFS_MOUNT_DAX,		",dax" },
++		{ XFS_MOUNT_DAX_ALWAYS,		",dax" },
+ 		{ 0, NULL }
+ 	};
+ 	struct xfs_mount	*mp = XFS_M(root->d_sb);
+@@ -1244,7 +1244,7 @@ xfs_fc_parse_param(
+ 		return 0;
+ #ifdef CONFIG_FS_DAX
+ 	case Opt_dax:
+-		mp->m_flags |= XFS_MOUNT_DAX;
++		mp->m_flags |= XFS_MOUNT_DAX_ALWAYS;
+ 		return 0;
+ #endif
+ 	default:
+@@ -1437,7 +1437,7 @@ xfs_fc_fill_super(
+ 	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
+ 		sb->s_flags |= SB_I_VERSION;
+ 
+-	if (mp->m_flags & XFS_MOUNT_DAX) {
++	if (mp->m_flags & XFS_MOUNT_DAX_ALWAYS) {
+ 		bool rtdev_is_dax = false, datadev_is_dax;
+ 
+ 		xfs_warn(mp,
+@@ -1451,7 +1451,7 @@ xfs_fc_fill_super(
+ 		if (!rtdev_is_dax && !datadev_is_dax) {
+ 			xfs_alert(mp,
+ 			"DAX unsupported by block device. Turning off DAX.");
+-			mp->m_flags &= ~XFS_MOUNT_DAX;
++			mp->m_flags &= ~XFS_MOUNT_DAX_ALWAYS;
+ 		}
+ 		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+ 			xfs_alert(mp,
 -- 
-chandan
-
-
+2.25.1
 
