@@ -2,139 +2,142 @@ Return-Path: <SRS0=+p7O=6B=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E0C8C38A2C
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Apr 2020 15:09:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C133AC38A2E
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Apr 2020 17:17:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 21ED92223C
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Apr 2020 15:09:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Z4xRvt6f"
+	by mail.kernel.org (Postfix) with ESMTP id A069E2223D
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Apr 2020 17:17:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728373AbgDQPJM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Apr 2020 11:09:12 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:48078 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728885AbgDQPJI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Apr 2020 11:09:08 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1587136147;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=zAatR+aXNdcCh0+s5b7P+nuFcv4mgHM0z+tUrhJ5TGo=;
-        b=Z4xRvt6fb42FQ8G4K7UeS0v3vCmSd2tz1IK9gleEYxmPDFXCO1e1upzjGmuF74PfQtRbQ9
-        GsVEIRjM+dg9qqr0lqk5FvJk0w1u/JIqfGDS+D2v3SyfyAbgzw6aacl3T2cKVCk9ZXI36s
-        w/V6qsXKxTmIWZWjjGZC2xg4r3qopLc=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-104-jIsWE1mUOKaPSv2AsDRI9Q-1; Fri, 17 Apr 2020 11:09:05 -0400
-X-MC-Unique: jIsWE1mUOKaPSv2AsDRI9Q-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 03014DBA7
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Apr 2020 15:09:05 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id B185F60BE0
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Apr 2020 15:09:04 +0000 (UTC)
-From:   Brian Foster <bfoster@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 11/12] xfs: remove unused iflush stale parameter
-Date:   Fri, 17 Apr 2020 11:08:58 -0400
-Message-Id: <20200417150859.14734-12-bfoster@redhat.com>
-In-Reply-To: <20200417150859.14734-1-bfoster@redhat.com>
-References: <20200417150859.14734-1-bfoster@redhat.com>
+        id S1729726AbgDQRRB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Apr 2020 13:17:01 -0400
+Received: from mga12.intel.com ([192.55.52.136]:38157 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729089AbgDQRQ6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 Apr 2020 13:16:58 -0400
+IronPort-SDR: TDzeZbABJTbufrYz33bNk3JRvnLgOb8hGG0MzmLPruqHlHdFseZiH+Ef208fiWFPTPIkp9qAPX
+ wsAD1GZnRWMQ==
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Apr 2020 10:16:58 -0700
+IronPort-SDR: L2dwuoyin03HyOU5KrPBh9CDc81ImlQp2KPyhR47GOUbJRmLrjLvY7GZb/GojCMKECmFFaDiXv
+ S+kEdQsA6kWw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.72,395,1580803200"; 
+   d="scan'208";a="428291531"
+Received: from iweiny-desk2.sc.intel.com ([10.3.52.147])
+  by orsmga005.jf.intel.com with ESMTP; 17 Apr 2020 10:16:57 -0700
+Date:   Fri, 17 Apr 2020 10:16:57 -0700
+From:   Ira Weiny <ira.weiny@intel.com>
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-kernel@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH RFC 6/8] fs/ext4: Update ext4_should_use_dax()
+Message-ID: <20200417171656.GR2309605@iweiny-DESK2.sc.intel.com>
+References: <20200414040030.1802884-1-ira.weiny@intel.com>
+ <20200414040030.1802884-7-ira.weiny@intel.com>
+ <20200415135834.GI6126@quack2.suse.cz>
 MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200415135834.GI6126@quack2.suse.cz>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The stale parameter was used to control the now unused shutdown
-parameter of xfs_trans_ail_remove().
+On Wed, Apr 15, 2020 at 03:58:34PM +0200, Jan Kara wrote:
+> On Mon 13-04-20 21:00:28, ira.weiny@intel.com wrote:
+> > From: Ira Weiny <ira.weiny@intel.com>
+> > 
+> > Change the logic of ext4_should_use_dax() to support using the inode dax
+> > flag OR the overriding tri-state mount option.
+> > 
+> > While we are at it change the function to ext4_enable_dax() as this
+> > better reflects the ask.
+> 
+> I disagree with the renaming. ext4_enable_dax() suggests it enables
+> something. It does not. I'd either leave ext4_should_use_dax() or maybe
+> change it to ext4_should_enable_dax() if you really like the "enable" word
+> :).
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_icache.c     | 2 +-
- fs/xfs/xfs_inode.c      | 2 +-
- fs/xfs/xfs_inode_item.c | 7 +++----
- fs/xfs/xfs_inode_item.h | 2 +-
- 4 files changed, 6 insertions(+), 7 deletions(-)
+Ok that does sound better.  And I've changed it in the xfs series as well.
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index a7be7a9e5c1a..9088716465e7 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1118,7 +1118,7 @@ xfs_reclaim_inode(
- 	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
- 		xfs_iunpin_wait(ip);
- 		/* xfs_iflush_abort() drops the flush lock */
--		xfs_iflush_abort(ip, false);
-+		xfs_iflush_abort(ip);
- 		goto reclaim;
- 	}
- 	if (xfs_ipincount(ip)) {
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 98ee1b10d1b0..502ffe857b12 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3701,7 +3701,7 @@ xfs_iflush(
- 	return 0;
-=20
- abort:
--	xfs_iflush_abort(ip, false);
-+	xfs_iflush_abort(ip);
- shutdown:
- 	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
- 	return error;
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index f8dd9bb8c851..b8cbd0c61ce0 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -757,10 +757,9 @@ xfs_iflush_done(
-  */
- void
- xfs_iflush_abort(
--	xfs_inode_t		*ip,
--	bool			stale)
-+	struct xfs_inode		*ip)
- {
--	xfs_inode_log_item_t	*iip =3D ip->i_itemp;
-+	struct xfs_inode_log_item	*iip =3D ip->i_itemp;
-=20
- 	if (iip) {
- 		xfs_trans_ail_remove(&iip->ili_item);
-@@ -788,7 +787,7 @@ xfs_istale_done(
- 	struct xfs_buf		*bp,
- 	struct xfs_log_item	*lip)
- {
--	xfs_iflush_abort(INODE_ITEM(lip)->ili_inode, true);
-+	xfs_iflush_abort(INODE_ITEM(lip)->ili_inode);
- }
-=20
- /*
-diff --git a/fs/xfs/xfs_inode_item.h b/fs/xfs/xfs_inode_item.h
-index 07a60e74c39c..a68c114b79a0 100644
---- a/fs/xfs/xfs_inode_item.h
-+++ b/fs/xfs/xfs_inode_item.h
-@@ -34,7 +34,7 @@ extern void xfs_inode_item_init(struct xfs_inode *, str=
-uct xfs_mount *);
- extern void xfs_inode_item_destroy(struct xfs_inode *);
- extern void xfs_iflush_done(struct xfs_buf *, struct xfs_log_item *);
- extern void xfs_istale_done(struct xfs_buf *, struct xfs_log_item *);
--extern void xfs_iflush_abort(struct xfs_inode *, bool);
-+extern void xfs_iflush_abort(struct xfs_inode *);
- extern int xfs_inode_item_format_convert(xfs_log_iovec_t *,
- 					 struct xfs_inode_log_format *);
-=20
---=20
-2.21.1
+but I kept Darrick's review on that patch...
 
+> 
+> > 
+> > Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+> > ---
+> >  fs/ext4/inode.c | 16 ++++++++++++----
+> >  1 file changed, 12 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+> > index fa0ff78dc033..e9d582e516bc 100644
+> > --- a/fs/ext4/inode.c
+> > +++ b/fs/ext4/inode.c
+> > @@ -4383,9 +4383,11 @@ int ext4_get_inode_loc(struct inode *inode, struct ext4_iloc *iloc)
+> >  		!ext4_test_inode_state(inode, EXT4_STATE_XATTR));
+> >  }
+> >  
+> > -static bool ext4_should_use_dax(struct inode *inode)
+> > +static bool ext4_enable_dax(struct inode *inode)
+> >  {
+> > -	if (!test_opt(inode->i_sb, DAX))
+> > +	unsigned int flags = EXT4_I(inode)->i_flags;
+> > +
+> > +	if (test_opt2(inode->i_sb, NODAX))
+> >  		return false;
+> >  	if (!S_ISREG(inode->i_mode))
+> >  		return false;
+> > @@ -4397,7 +4399,13 @@ static bool ext4_should_use_dax(struct inode *inode)
+> >  		return false;
+> >  	if (ext4_test_inode_flag(inode, EXT4_INODE_VERITY))
+> >  		return false;
+> > -	return true;
+> > +	if (!bdev_dax_supported(inode->i_sb->s_bdev,
+> > +				inode->i_sb->s_blocksize))
+> > +		return false;
+> > +	if (test_opt(inode->i_sb, DAX))
+> > +		return true;
+> > +
+> > +	return (flags & EXT4_DAX_FL) == EXT4_DAX_FL;
+> 
+> flags & EXT4_DAX_FL is enough here, isn't it?
+
+Yes, changed.
+
+Ira
+
+> 
+> 								Honza
+> 
+> >  }
+> >  
+> >  void ext4_set_inode_flags(struct inode *inode)
+> > @@ -4415,7 +4423,7 @@ void ext4_set_inode_flags(struct inode *inode)
+> >  		new_fl |= S_NOATIME;
+> >  	if (flags & EXT4_DIRSYNC_FL)
+> >  		new_fl |= S_DIRSYNC;
+> > -	if (ext4_should_use_dax(inode))
+> > +	if (ext4_enable_dax(inode))
+> >  		new_fl |= S_DAX;
+> >  	if (flags & EXT4_ENCRYPT_FL)
+> >  		new_fl |= S_ENCRYPTED;
+> > -- 
+> > 2.25.1
+> > 
+> -- 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
