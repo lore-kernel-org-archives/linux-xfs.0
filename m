@@ -2,54 +2,50 @@ Return-Path: <SRS0=+p7O=6B=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4E5CC38A2C
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Apr 2020 15:09:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27848C38A2D
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Apr 2020 15:09:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7BD0E2223D
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Apr 2020 15:09:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 08D882223D
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Apr 2020 15:09:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Qwh9emrs"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HrR2u8zJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728308AbgDQPJH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1728426AbgDQPJH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Fri, 17 Apr 2020 11:09:07 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:48218 "EHLO
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:60961 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728426AbgDQPJG (ORCPT
+        with ESMTP id S1728867AbgDQPJG (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Apr 2020 11:09:06 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1587136144;
+        s=mimecast20190719; t=1587136145;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=N7w98HjFzM7VvKglY0TQAbw1sk01i17T9bbL71Toa9M=;
-        b=Qwh9emrsOxnC6eSH5aoi+t62WVfvO/BLDdQWIvALUnag482mWRer3jIG92BUdOEXvmoF7D
-        jdfS3Y7nRCMn+sZ8oBTCq8zGegKSETlGqkUUCmYTeY7ei0W8P2XwZTrgfe01LGe4cIaYfl
-        cadcAbGIsm028SzITWjXR+c5paXY9dA=
+         content-transfer-encoding:content-transfer-encoding;
+        bh=WY6/P5ee0t7nvLilAgpZp++mPCcQcBegkGBljdYjfDY=;
+        b=HrR2u8zJpo7MzTDBmva21lD94q4dTZm1vPQf7SnW9vm5Umat5KYzzmm9FkrwPEk9pZXWtr
+        XyOUi14fOfokKicpbFweTN7GHFz/lDKKvfygGJ0xIlKUZNgoA5blN9UKlcJT01dAYNIDha
+        MhisuRsnJaAJWdCapu6I5jMyejoRpv8=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-438-ejGue09oMKaibQ5uWbk3BQ-1; Fri, 17 Apr 2020 11:09:03 -0400
-X-MC-Unique: ejGue09oMKaibQ5uWbk3BQ-1
+ us-mta-260-e2hLDlYiPiyFfeGYFpYMaA-1; Fri, 17 Apr 2020 11:09:00 -0400
+X-MC-Unique: e2hLDlYiPiyFfeGYFpYMaA-1
 Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 54806DBA6
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Apr 2020 15:09:02 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 227028017F3
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Apr 2020 15:09:00 +0000 (UTC)
 Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 1035360BE0
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Apr 2020 15:09:01 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id D226860BE0
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Apr 2020 15:08:59 +0000 (UTC)
 From:   Brian Foster <bfoster@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 05/12] xfs: ratelimit unmount time per-buffer I/O error warning
-Date:   Fri, 17 Apr 2020 11:08:52 -0400
-Message-Id: <20200417150859.14734-6-bfoster@redhat.com>
-In-Reply-To: <20200417150859.14734-1-bfoster@redhat.com>
-References: <20200417150859.14734-1-bfoster@redhat.com>
+Subject: [PATCH 00/12] xfs: flush related error handling cleanups
+Date:   Fri, 17 Apr 2020 11:08:47 -0400
+Message-Id: <20200417150859.14734-1-bfoster@redhat.com>
 MIME-Version: 1.0
 X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Content-Transfer-Encoding: quoted-printable
@@ -58,40 +54,64 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-At unmount time, XFS emits a warning for every in-core buffer that
-might have undergone a write error. In practice this behavior is
-probably reasonable given that the filesystem is likely short lived
-once I/O errors begin to occur consistently. Under certain test or
-otherwise expected error conditions, this can spam the logs and slow
-down the unmount. Ratelimit the warning to prevent this problem
-while still informing the user that errors have occurred.
+Hi all,
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_buf.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+This actually started as what I intended to be a cleanup of xfsaild
+error handling and the fact that unexpected errors are kind of lost in
+the ->iop_push() handlers of flushable log items. Some discussion with
+Dave on that is available here[1]. I was thinking of genericizing the
+behavior, but I'm not so sure that is possible now given the error
+handling requirements of the associated items.
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 93942d8e35dd..5120fed06075 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1685,11 +1685,10 @@ xfs_wait_buftarg(
- 			bp =3D list_first_entry(&dispose, struct xfs_buf, b_lru);
- 			list_del_init(&bp->b_lru);
- 			if (bp->b_flags & XBF_WRITE_FAIL) {
--				xfs_alert(btp->bt_mount,
--"Corruption Alert: Buffer at daddr 0x%llx had permanent write failures!"=
-,
-+				xfs_alert_ratelimited(btp->bt_mount,
-+"Corruption Alert: Buffer at daddr 0x%llx had permanent write failures!\=
-n"
-+"Please run xfs_repair to determine the extent of the problem.",
- 					(long long)bp->b_bn);
--				xfs_alert(btp->bt_mount,
--"Please run xfs_repair to determine the extent of the problem.");
- 			}
- 			xfs_buf_rele(bp);
- 		}
+While thinking through that, I ended up incorporating various cleanups
+in the somewhat confusing and erratic error handling on the periphery of
+xfsaild, such as the flush handlers. Most of these are straightforward
+cleanups except for patch 9, which I think requires careful review and
+is of debatable value. I have used patch 12 to run an hour or so of
+highly concurrent fsstress load against it and will execute a longer run
+over the weekend now that fstests has completed.
+
+Thoughts, reviews, flames appreciated.
+
+Brian
+
+[1] https://lore.kernel.org/linux-xfs/20200331114653.GA53541@bfoster/
+
+Brian Foster (12):
+  xfs: refactor failed buffer resubmission into xfsaild
+  xfs: factor out buffer I/O failure simulation code
+  xfs: always attach iflush_done and simplify error handling
+  xfs: remove unnecessary shutdown check from xfs_iflush()
+  xfs: ratelimit unmount time per-buffer I/O error warning
+  xfs: remove duplicate verification from xfs_qm_dqflush()
+  xfs: abort consistently on dquot flush failure
+  xfs: remove unnecessary quotaoff intent item push handler
+  xfs: elide the AIL lock on log item failure tracking
+  xfs: clean up AIL log item removal functions
+  xfs: remove unused iflush stale parameter
+  xfs: random buffer write failure errortag
+
+ fs/xfs/libxfs/xfs_errortag.h  |   4 +-
+ fs/xfs/libxfs/xfs_inode_buf.c |   7 +--
+ fs/xfs/xfs_bmap_item.c        |   2 +-
+ fs/xfs/xfs_buf.c              |  36 ++++++++---
+ fs/xfs/xfs_buf.h              |   1 +
+ fs/xfs/xfs_buf_item.c         |  86 ++++----------------------
+ fs/xfs/xfs_buf_item.h         |   2 -
+ fs/xfs/xfs_dquot.c            |  84 ++++++++------------------
+ fs/xfs/xfs_dquot_item.c       |  31 +---------
+ fs/xfs/xfs_error.c            |   3 +
+ fs/xfs/xfs_extfree_item.c     |   2 +-
+ fs/xfs/xfs_icache.c           |   2 +-
+ fs/xfs/xfs_inode.c            | 110 +++++++++-------------------------
+ fs/xfs/xfs_inode_item.c       |  39 +++---------
+ fs/xfs/xfs_inode_item.h       |   2 +-
+ fs/xfs/xfs_refcount_item.c    |   2 +-
+ fs/xfs/xfs_rmap_item.c        |   2 +-
+ fs/xfs/xfs_trans_ail.c        |  52 +++++++++++++++-
+ fs/xfs/xfs_trans_priv.h       |  22 +++----
+ 19 files changed, 175 insertions(+), 314 deletions(-)
+
 --=20
 2.21.1
 
