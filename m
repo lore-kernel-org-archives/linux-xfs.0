@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64E98C2D0EF
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Apr 2020 15:09:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79F2EC38A30
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Apr 2020 15:09:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3E9DB21924
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Apr 2020 15:09:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 595E921924
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Apr 2020 15:09:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aXXV5vpU"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="F3OEs92c"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728852AbgDQPJK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Apr 2020 11:09:10 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:36719 "EHLO
+        id S1728564AbgDQPJI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Apr 2020 11:09:08 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:49411 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728867AbgDQPJI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Apr 2020 11:09:08 -0400
+        with ESMTP id S1728874AbgDQPJH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Apr 2020 11:09:07 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1587136147;
+        s=mimecast20190719; t=1587136145;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=yXO/dhQQgrEGWlnaDkvWqP+M920YOhxTGASDTDAGpqY=;
-        b=aXXV5vpUmmqRoQGZIrcd8bYJj2s4leumfPkT65+vcpi4EwYGmSzu6efAyZ/M8VVI5hIc7A
-        pOqCRi4vF+mchOmR7SqacffsgV+EsRmPG+U4SmZ4Ztlc4D8YyZhl4NMOZhRYkB0Jynq+GZ
-        i9JTLO21/FOQ/olT3F4s2WuaErtWFjA=
+        bh=J8NkgnJMXUkfNkR2+KWQu16cSSej33kNjPCb+IUTlGM=;
+        b=F3OEs92cZpviC+Oi/DC3hbyan3f4gyEp9qQiteLo+jNrIvVFsZT3fVJhTEOHHcyXKx5Yej
+        2z/qZuutUyVdQBQgf5YAVHGREBmnUsN+i9bhCVqfJzOC3feugdV+Qxd0Qk4AbS8S01APYv
+        dhd4fQclyR90n+wxSbRg1NUk+jBN1xY=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-309-RhK-20rANbOiQu4NIwN2dQ-1; Fri, 17 Apr 2020 11:09:04 -0400
-X-MC-Unique: RhK-20rANbOiQu4NIwN2dQ-1
+ us-mta-256-ZxSYfBVJO1uBHWRbesypUw-1; Fri, 17 Apr 2020 11:09:04 -0400
+X-MC-Unique: ZxSYfBVJO1uBHWRbesypUw-1
 Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1EAFE1088384
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Apr 2020 15:09:04 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id CB64860BE0
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 3ACC21088380
         for <linux-xfs@vger.kernel.org>; Fri, 17 Apr 2020 15:09:03 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id E7BDF60BE0
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Apr 2020 15:09:02 +0000 (UTC)
 From:   Brian Foster <bfoster@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 09/12] xfs: elide the AIL lock on log item failure tracking
-Date:   Fri, 17 Apr 2020 11:08:56 -0400
-Message-Id: <20200417150859.14734-10-bfoster@redhat.com>
+Subject: [PATCH 07/12] xfs: abort consistently on dquot flush failure
+Date:   Fri, 17 Apr 2020 11:08:54 -0400
+Message-Id: <20200417150859.14734-8-bfoster@redhat.com>
 In-Reply-To: <20200417150859.14734-1-bfoster@redhat.com>
 References: <20200417150859.14734-1-bfoster@redhat.com>
 MIME-Version: 1.0
@@ -58,227 +58,76 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The log item failed flag is used to indicate a log item was flushed
-but the underlying buffer was not successfully written to disk. If
-the error configuration allows for writeback retries, xfsaild uses
-the flag to resubmit the underlying buffer without acquiring the
-flush lock of the item.
-
-The flag is currently set and cleared under the AIL lock and buffer
-lock in the ->iop_error() callback, invoked via ->b_iodone() at I/O
-completion time. The flag is checked at xfsaild push time under AIL
-lock and cleared under buffer lock before resubmission. If I/O
-eventually succeeds, the flag is cleared in the _done() handler for
-the associated item type, again under AIL lock and buffer lock.
-
-As far as I can tell, the only reason for holding the AIL lock
-across sets/clears is to manage consistency between the log item
-bitop state and the temporary buffer pointer that is attached to the
-log item. The bit itself is used to manage consistency of the
-attached buffer, but is not enough to guarantee the buffer is still
-attached by the time xfsaild attempts to access it. However since
-failure state is always set or cleared under buffer lock (either via
-I/O completion or xfsaild), this particular case can be handled at
-item push time by verifying failure state once under buffer lock.
-
-Remove the AIL lock protection from the various bits of log item
-failure state management and simplify the surrounding code where
-applicable. Use the buffer lock in the xfsaild resubmit code to
-detect failure state changes and temporarily treat the item as
-locked.
+The dquot flush handler effectively aborts the dquot flush if the
+filesystem is already shut down, but doesn't actually shut down if
+the flush fails. Update xfs_qm_dqflush() to consistently abort the
+dquot flush and shutdown the fs if the flush fails with an
+unexpected error.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_buf_item.c   |  4 ----
- fs/xfs/xfs_dquot.c      | 41 +++++++++++++++--------------------------
- fs/xfs/xfs_inode_item.c | 11 +++--------
- fs/xfs/xfs_trans_ail.c  | 12 ++++++++++--
- fs/xfs/xfs_trans_priv.h |  5 -----
- 5 files changed, 28 insertions(+), 45 deletions(-)
+ fs/xfs/xfs_dquot.c | 27 ++++++++-------------------
+ 1 file changed, 8 insertions(+), 19 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 72d37a4609d8..6b000f855e13 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -1046,7 +1046,6 @@ xfs_buf_do_callbacks_fail(
- 	struct xfs_buf		*bp)
- {
- 	struct xfs_log_item	*lip;
--	struct xfs_ail		*ailp;
-=20
- 	/*
- 	 * Buffer log item errors are handled directly by xfs_buf_item_push()
-@@ -1058,13 +1057,10 @@ xfs_buf_do_callbacks_fail(
-=20
- 	lip =3D list_first_entry(&bp->b_li_list, struct xfs_log_item,
- 			li_bio_list);
--	ailp =3D lip->li_ailp;
--	spin_lock(&ailp->ail_lock);
- 	list_for_each_entry(lip, &bp->b_li_list, li_bio_list) {
- 		if (lip->li_ops->iop_error)
- 			lip->li_ops->iop_error(lip, bp);
- 	}
--	spin_unlock(&ailp->ail_lock);
- }
-=20
- static bool
 diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 41750f797861..953059235130 100644
+index 73032c18a94a..41750f797861 100644
 --- a/fs/xfs/xfs_dquot.c
 +++ b/fs/xfs/xfs_dquot.c
-@@ -1023,34 +1023,23 @@ xfs_qm_dqflush_done(
- 	struct xfs_ail		*ailp =3D lip->li_ailp;
+@@ -1068,6 +1068,7 @@ xfs_qm_dqflush(
+ 	struct xfs_buf		**bpp)
+ {
+ 	struct xfs_mount	*mp =3D dqp->q_mount;
++	struct xfs_log_item	*lip =3D &dqp->q_logitem.qli_item;
+ 	struct xfs_buf		*bp;
+ 	struct xfs_dqblk	*dqb;
+ 	struct xfs_disk_dquot	*ddqp;
+@@ -1082,32 +1083,16 @@ xfs_qm_dqflush(
 =20
- 	/*
--	 * We only want to pull the item from the AIL if its
--	 * location in the log has not changed since we started the flush.
--	 * Thus, we only bother if the dquot's lsn has
--	 * not changed. First we check the lsn outside the lock
--	 * since it's cheaper, and then we recheck while
--	 * holding the lock before removing the dquot from the AIL.
-+	 * Only pull the item from the AIL if its location in the log has not
-+	 * changed since it was flushed. Do a lockless check first to reduce
-+	 * lock traffic.
- 	 */
--	if (test_bit(XFS_LI_IN_AIL, &lip->li_flags) &&
--	    ((lip->li_lsn =3D=3D qip->qli_flush_lsn) ||
--	     test_bit(XFS_LI_FAILED, &lip->li_flags))) {
--
--		/* xfs_trans_ail_delete() drops the AIL lock. */
--		spin_lock(&ailp->ail_lock);
--		if (lip->li_lsn =3D=3D qip->qli_flush_lsn) {
--			xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
--		} else {
--			/*
--			 * Clear the failed state since we are about to drop the
--			 * flush lock
--			 */
--			xfs_clear_li_failed(lip);
--			spin_unlock(&ailp->ail_lock);
--		}
--	}
-+	if (!test_bit(XFS_LI_IN_AIL, &lip->li_flags) ||
-+	    lip->li_lsn !=3D qip->qli_flush_lsn)
-+		goto out;
+ 	xfs_qm_dqunpin_wait(dqp);
 =20
 -	/*
--	 * Release the dq's flush lock since we're done with it.
+-	 * This may have been unpinned because the filesystem is shutting
+-	 * down forcibly. If that's the case we must not write this dquot
+-	 * to disk, because the log record didn't make it to disk.
+-	 *
+-	 * We also have to remove the log item from the AIL in this case,
+-	 * as we wait for an emptry AIL as part of the unmount process.
 -	 */
-+	spin_lock(&ailp->ail_lock);
-+	if (lip->li_lsn =3D=3D qip->qli_flush_lsn)
-+		/* xfs_trans_ail_delete() drops the AIL lock */
-+		xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
-+	else
-+		spin_unlock(&ailp->ail_lock);
-+
-+out:
-+	xfs_clear_li_failed(lip);
- 	xfs_dqfunlock(dqp);
- }
-=20
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 1d4d256a2e96..0ae61844b224 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -682,9 +682,7 @@ xfs_iflush_done(
- 	 * Scan the buffer IO completions for other inodes being completed and
- 	 * attach them to the current inode log item.
+-	if (XFS_FORCED_SHUTDOWN(mp)) {
+-		struct xfs_log_item	*lip =3D &dqp->q_logitem.qli_item;
+-		dqp->dq_flags &=3D ~XFS_DQ_DIRTY;
+-
+-		xfs_trans_ail_remove(lip, SHUTDOWN_CORRUPT_INCORE);
+-
+-		error =3D -EIO;
+-		goto out_unlock;
+-	}
+-
+ 	/*
+ 	 * Get the buffer containing the on-disk dquot
  	 */
--
- 	list_add_tail(&lip->li_bio_list, &tmp);
--
- 	list_for_each_entry_safe(blip, n, &bp->b_li_list, li_bio_list) {
- 		if (lip->li_cb !=3D xfs_iflush_done)
- 			continue;
-@@ -695,15 +693,13 @@ xfs_iflush_done(
- 		 * the AIL lock.
- 		 */
- 		iip =3D INODE_ITEM(blip);
--		if ((iip->ili_logged && blip->li_lsn =3D=3D iip->ili_flush_lsn) ||
--		    test_bit(XFS_LI_FAILED, &blip->li_flags))
-+		if (iip->ili_logged && blip->li_lsn =3D=3D iip->ili_flush_lsn)
- 			need_ail++;
- 	}
-=20
- 	/* make sure we capture the state of the initial inode. */
- 	iip =3D INODE_ITEM(lip);
--	if ((iip->ili_logged && lip->li_lsn =3D=3D iip->ili_flush_lsn) ||
--	    test_bit(XFS_LI_FAILED, &lip->li_flags))
-+	if (iip->ili_logged && lip->li_lsn =3D=3D iip->ili_flush_lsn)
- 		need_ail++;
+ 	error =3D xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp, dqp->q_blkno,
+ 				   mp->m_quotainfo->qi_dqchunklen, XBF_TRYLOCK,
+ 				   &bp, &xfs_dquot_buf_ops);
+-	if (error)
++	if (error =3D=3D -EAGAIN)
+ 		goto out_unlock;
++	if (error)
++		goto out_abort;
 =20
  	/*
-@@ -732,8 +728,6 @@ xfs_iflush_done(
- 				xfs_lsn_t lsn =3D xfs_ail_delete_one(ailp, blip);
- 				if (!tail_lsn && lsn)
- 					tail_lsn =3D lsn;
--			} else {
--				xfs_clear_li_failed(blip);
- 			}
- 		}
- 		xfs_ail_update_finish(ailp, tail_lsn);
-@@ -746,6 +740,7 @@ xfs_iflush_done(
- 	 */
- 	list_for_each_entry_safe(blip, n, &tmp, li_bio_list) {
- 		list_del_init(&blip->li_bio_list);
-+		xfs_clear_li_failed(blip);
- 		iip =3D INODE_ITEM(blip);
- 		iip->ili_logged =3D 0;
- 		iip->ili_last_fields =3D 0;
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 0c709651a2c6..6af609070143 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -368,15 +368,23 @@ xfsaild_push_failed(
- {
- 	struct xfs_buf		*bp =3D lip->li_buf;
+ 	 * Calculate the location of the dquot inside the buffer.
+@@ -1161,6 +1146,10 @@ xfs_qm_dqflush(
+ 	*bpp =3D bp;
+ 	return 0;
 =20
--	if (!xfs_buf_trylock(bp))
-+	/*
-+	 * Log item state bits are racy so we cannot assume the temporary buffe=
-r
-+	 * pointer is set. Treat the item as locked if the pointer is clear or
-+	 * the failure state has changed once we've locked out I/O completion.
-+	 */
-+	if (!bp || !xfs_buf_trylock(bp))
- 		return XFS_ITEM_LOCKED;
-+	if (!test_bit(XFS_LI_FAILED, &lip->li_flags)) {
-+		xfs_buf_unlock(bp);
-+		return XFS_ITEM_LOCKED;
-+	}
-=20
- 	if (!xfs_buf_delwri_queue(bp, buffer_list)) {
- 		xfs_buf_unlock(bp);
- 		return XFS_ITEM_FLUSHING;
- 	}
-=20
--	/* protected by ail_lock */
- 	list_for_each_entry(lip, &bp->b_li_list, li_bio_list)
- 		xfs_clear_li_failed(lip);
-=20
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index 35655eac01a6..9135afdcee9d 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -158,9 +158,6 @@ xfs_clear_li_failed(
- {
- 	struct xfs_buf	*bp =3D lip->li_buf;
-=20
--	ASSERT(test_bit(XFS_LI_IN_AIL, &lip->li_flags));
--	lockdep_assert_held(&lip->li_ailp->ail_lock);
--
- 	if (test_and_clear_bit(XFS_LI_FAILED, &lip->li_flags)) {
- 		lip->li_buf =3D NULL;
- 		xfs_buf_rele(bp);
-@@ -172,8 +169,6 @@ xfs_set_li_failed(
- 	struct xfs_log_item	*lip,
- 	struct xfs_buf		*bp)
- {
--	lockdep_assert_held(&lip->li_ailp->ail_lock);
--
- 	if (!test_and_set_bit(XFS_LI_FAILED, &lip->li_flags)) {
- 		xfs_buf_hold(bp);
- 		lip->li_buf =3D bp;
++out_abort:
++	dqp->dq_flags &=3D ~XFS_DQ_DIRTY;
++	xfs_trans_ail_remove(lip, SHUTDOWN_CORRUPT_INCORE);
++	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+ out_unlock:
+ 	xfs_dqfunlock(dqp);
+ 	return error;
 --=20
 2.21.1
 
