@@ -2,70 +2,102 @@ Return-Path: <SRS0=FK3z=6C=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EED9C352BE
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Apr 2020 19:30:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDE3CC352BE
+	for <linux-xfs@archiver.kernel.org>; Sat, 18 Apr 2020 22:51:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 71D5022209
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Apr 2020 19:30:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587238204;
-	bh=FIbYbKgtPbI6kk7P+/BHFQ2nwoJxEtLzkBjX14kgq3g=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
-	b=kvdFwdPqWjPFKqYiP1d051BfnUEheJzhvn+oYGk3KMhv6VjgkGo3Rh73NRcBtVFTx
-	 X7nxnGTg2PG8+BkUg/cCCLdK4MiUBtjxstrSnw/UJvpWzjAiotrWtVtxo6a5/igAOy
-	 BFzcHXAIzm3A52xXCVE/yPq4Ib+E/kVVUEg/knLM=
+	by mail.kernel.org (Postfix) with ESMTP id CBE4921974
+	for <linux-xfs@archiver.kernel.org>; Sat, 18 Apr 2020 22:51:34 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="BydKuw3C"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727924AbgDRTaD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 18 Apr 2020 15:30:03 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44312 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727907AbgDRTaD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 18 Apr 2020 15:30:03 -0400
-Subject: Re: [GIT PULL] xfs: bug fixes for 5.7-rc1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587238203;
-        bh=FIbYbKgtPbI6kk7P+/BHFQ2nwoJxEtLzkBjX14kgq3g=;
-        h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=VFGeoFr7hNGmXXBmGnsz0FS0Pt6y4CRMI3+sNlTTQzGxzUPe639QXWrenAwtPh2nk
-         W6SZSgR4QOm4zdbX6tPoanhPc/JjnPccTaw3xpwoABVrLrcJhbLE1UI1hbJCbAd7r9
-         B39E3P/KNmxWVfFlFsyE2P5fE2qJfBD9RYhfrFd8=
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <20200418155702.GV6742@magnolia>
-References: <20200418155702.GV6742@magnolia>
-X-PR-Tracked-List-Id: <linux-fsdevel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20200418155702.GV6742@magnolia>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
- tags/xfs-5.7-fixes-3
-X-PR-Tracked-Commit-Id: f0f7a674d4df1510d8ca050a669e1420cf7d7fab
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: c0d73a868d9b411bd2d0c8e5ff9d98bfa8563cb1
-Message-Id: <158723820312.11589.16029241664602724505.pr-tracker-bot@kernel.org>
-Date:   Sat, 18 Apr 2020 19:30:03 +0000
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, linux-kernel@vger.kernel.org,
-        sandeen@sandeen.net, hch@lst.de
+        id S1728355AbgDRWve (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 18 Apr 2020 18:51:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51428 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728302AbgDRWvc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Apr 2020 18:51:32 -0400
+Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D40A9C061A0C
+        for <linux-xfs@vger.kernel.org>; Sat, 18 Apr 2020 15:51:31 -0700 (PDT)
+Received: by mail-ej1-x642.google.com with SMTP id nv1so4651389ejb.0
+        for <linux-xfs@vger.kernel.org>; Sat, 18 Apr 2020 15:51:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cloud.ionos.com; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=vI+qH6PQl8iOTuF91icuURnJsbkLpyoxA3JGpFFvgGY=;
+        b=BydKuw3C1yL1Zrxj6fxlQJkXD633PCUQ9qVzyPGmiKRT14W89wfOFNSS+Hn26SuP+5
+         Vo8HJw8MYYtBGBAka0mqnlZlMMpd0ptQhbl7X6NKiKmz4XXv30cOi6hUfbAMo1UA7lWS
+         aMU2m7g8WpHmjULDeYJfoOER9Zb+JUo/YdxUvVip7Ug9p+yE4waD/O7MAU+DT11IeVhf
+         eqz4E0nWeK0hqywttveVAT7SDsG3iT3349J/4hDoFu+IhWgBCaLPqa6KndDTuxt9G1sG
+         s72FVBDp83nZald1aA+FeIOXFjl43cVKu/bvFr+ZUIbsx5uGs5MIlycbgyxqgGR7wXjM
+         J6HQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=vI+qH6PQl8iOTuF91icuURnJsbkLpyoxA3JGpFFvgGY=;
+        b=bblz87thro1BiXFOt4xbLPY0M3FwERJzbJe5Mwpil4RbWrg77KFc2kthrwWWRip0F7
+         pt4q7MpCqnGQddYrI3T+Ra2CyvP//+WDh0Tyue1fG7AN1SVG52qw1M7bgaqlm7qyTuw3
+         ggV3X+UGOhv17JaXxdNhJ9JX9YwIcJ+Fq2j1NohBDEATEPTj46fE/C3JphFTHz/gASS0
+         FpNjhUdDktYGTScGRz2WTGe4VTThh9wcUz5wglof+viBn6LiQ8RGO6Qiju32m3/OFvwe
+         jcgt7fjRepCFqiF5DVZsU2EwFp0ErgDfwQ/U7v/O/5rJqBSbQ+PGNZIt1fZaEbbvtZee
+         WLtg==
+X-Gm-Message-State: AGi0PuZr1EfHvYzQw3nBhmsSH+yAK7zClhdhPPx9+ytVthQSWB2Guc6I
+        3m8oQ7zgw87+CCVrLUEbMxt2G8vp5O7sbQ==
+X-Google-Smtp-Source: APiQypKY3BdcqjF3Tf4l/0w0TOoBeBknIwydV9wTBcWqQDgCxj4Pnxn7JcavMI4hhcMA45D9jzledw==
+X-Received: by 2002:a17:907:72c9:: with SMTP id du9mr3995735ejc.146.1587250290578;
+        Sat, 18 Apr 2020 15:51:30 -0700 (PDT)
+Received: from ls00508.pb.local ([2001:1438:4010:2540:6c58:b8bc:cdc6:2e2d])
+        by smtp.gmail.com with ESMTPSA id g21sm2616767ejm.79.2020.04.18.15.51.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 18 Apr 2020 15:51:29 -0700 (PDT)
+From:   Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+To:     linux-fsdevel@vger.kernel.org
+Cc:     Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org
+Subject: [PATCH 3/5] iomap: call __clear_page_buffers in iomap_page_release
+Date:   Sun, 19 Apr 2020 00:51:21 +0200
+Message-Id: <20200418225123.31850-4-guoqing.jiang@cloud.ionos.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200418225123.31850-1-guoqing.jiang@cloud.ionos.com>
+References: <20200418225123.31850-1-guoqing.jiang@cloud.ionos.com>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The pull request you sent on Sat, 18 Apr 2020 08:57:02 -0700:
+After the helper is exported, we can call it to simplify code a little.
 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.7-fixes-3
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Darrick J. Wong <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
+Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+---
+ fs/iomap/buffered-io.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/c0d73a868d9b411bd2d0c8e5ff9d98bfa8563cb1
-
-Thank you!
-
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 89e21961d1ad..b06568ad9a7a 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -74,9 +74,7 @@ iomap_page_release(struct page *page)
+ 		return;
+ 	WARN_ON_ONCE(atomic_read(&iop->read_count));
+ 	WARN_ON_ONCE(atomic_read(&iop->write_count));
+-	ClearPagePrivate(page);
+-	set_page_private(page, 0);
+-	put_page(page);
++	__clear_page_buffers(page);
+ 	kfree(iop);
+ }
+ 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+2.17.1
+
