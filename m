@@ -7,128 +7,99 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E132FC3815B
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 16:20:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D6EDC3815B
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 16:22:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BE6A6206F6
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 16:20:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D889C206F6
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 16:22:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bmv1fOWI"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="E8+hk1xG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726912AbgDTQU3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Apr 2020 12:20:29 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:40829 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726878AbgDTQU3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Apr 2020 12:20:29 -0400
+        id S1726214AbgDTQW1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Apr 2020 12:22:27 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:41748 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725958AbgDTQW1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Apr 2020 12:22:27 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1587399628;
+        s=mimecast20190719; t=1587399746;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=o11cjvM9YUOfnijryPSEZzeYNsYb2ijjD/webktusQA=;
-        b=bmv1fOWIy3rCBYNk8ejcrNfsU/ILLVxlkXSeLF0SI1y0QWBgMpaje2xIcOBJKx6rxm2EwZ
-        m/eX9LUjCFaYcOXx2mdBpLJ1SxoHHupdEKB2ZQrsW6Y8Pc+UHU+JD0hPPITiBkIqJgCDia
-        XuN0aXrVKwjrM01B8yFpW76TaWhRdIM=
+        bh=81L4llmpagk3KlCOnulJ0lNXz45T3fbIC16IjYxk/58=;
+        b=E8+hk1xG+Vl1miz4Db3y0UgotVoV0QKK11wEJZC2EY+uZ8x7gNkPOdCMf7bWltkc7T3jzI
+        j4o+Iumb3lCJNxIv2yrxRg6Bo1PzvSuo/AEmM0M2+XcxCSXcRGYou477Opc6jFJwBS7QvQ
+        LWUKKuTU8Oh3vTrS08U4M/9+Cz+IeHc=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-415-UkgAzfG4PGemRKYFcTvZkw-1; Mon, 20 Apr 2020 12:20:22 -0400
-X-MC-Unique: UkgAzfG4PGemRKYFcTvZkw-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+ us-mta-14-mrTif7JQMXKemZdSMXbZKg-1; Mon, 20 Apr 2020 12:22:24 -0400
+X-MC-Unique: mrTif7JQMXKemZdSMXbZKg-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 24FDC800D53;
-        Mon, 20 Apr 2020 16:20:21 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0DAEE19057B2;
+        Mon, 20 Apr 2020 16:22:21 +0000 (UTC)
 Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id A3C3F5C1B5;
-        Mon, 20 Apr 2020 16:20:20 +0000 (UTC)
-Date:   Mon, 20 Apr 2020 12:20:18 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2CDC627BD7;
+        Mon, 20 Apr 2020 16:22:20 +0000 (UTC)
+Date:   Mon, 20 Apr 2020 12:22:18 -0400
 From:   Brian Foster <bfoster@redhat.com>
-To:     Chandan Rajendra <chandan@linux.ibm.com>
-Cc:     Allison Collins <allison.henderson@oracle.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v8 19/20] xfs: Add delay ready attr set routines
-Message-ID: <20200420162018.GB27216@bfoster>
-References: <20200403221229.4995-1-allison.henderson@oracle.com>
- <20200403221229.4995-20-allison.henderson@oracle.com>
- <3903108.UdAzE1QFjl@localhost.localdomain>
+To:     xiakaixu1987@gmail.com
+Cc:     linux-xfs@vger.kernel.org, darrick.wong@oracle.com,
+        Kaixu Xia <kaixuxia@tencent.com>
+Subject: Re: [PATCH] xfs: remove unnecessary check of the variable resblks in
+ xfs_symlink
+Message-ID: <20200420162218.GC27216@bfoster>
+References: <1587187851-11130-1-git-send-email-kaixuxia@tencent.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3903108.UdAzE1QFjl@localhost.localdomain>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+In-Reply-To: <1587187851-11130-1-git-send-email-kaixuxia@tencent.com>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 20, 2020 at 05:15:08PM +0530, Chandan Rajendra wrote:
-> On Saturday, April 4, 2020 3:42 AM Allison Collins wrote: 
-...
-> > Signed-off-by: Allison Collins <allison.henderson@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_attr.c        | 384 +++++++++++++++++++++++++++-------------
-> >  fs/xfs/libxfs/xfs_attr.h        |  16 ++
-> >  fs/xfs/libxfs/xfs_attr_leaf.c   |   1 +
-> >  fs/xfs/libxfs/xfs_attr_remote.c | 111 +++++++-----
-> >  fs/xfs/libxfs/xfs_attr_remote.h |   4 +
-> >  fs/xfs/xfs_attr_inactive.c      |   1 +
-> >  fs/xfs/xfs_trace.h              |   1 -
-> >  7 files changed, 351 insertions(+), 167 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> > index f700976..c160b7a 100644
-> > --- a/fs/xfs/libxfs/xfs_attr.c
-> > +++ b/fs/xfs/libxfs/xfs_attr.c
-...
-> > @@ -765,22 +873,25 @@ xfs_attr_leaf_addname(
-> >  		error = xfs_attr3_leaf_flipflags(args);
-> >  		if (error)
-> >  			return error;
-> > -		/*
-> > -		 * Commit the flag value change and start the next trans in
-> > -		 * series.
-> > -		 */
-> > -		error = xfs_trans_roll_inode(&args->trans, args->dp);
-> > -		if (error)
-> > -			return error;
-> > -
-> > +		dac->dela_state = XFS_DAS_FLIP_LFLAG;
-> > +		return -EAGAIN;
-> > +das_flip_flag:
-> >  		/*
-> >  		 * Dismantle the "old" attribute/value pair by removing
-> >  		 * a "remote" value (if it exists).
-> >  		 */
-> >  		xfs_attr_restore_rmt_blk(args);
-> >  
-> > +		xfs_attr_rmtval_invalidate(args);
-> > +das_rm_lblk:
-> >  		if (args->rmtblkno) {
-> > -			error = xfs_attr_rmtval_remove(args);
-> > +			error = __xfs_attr_rmtval_remove(args);
-> > +
-> > +			if (error == -EAGAIN) {
-> > +				dac->dela_state = XFS_DAS_RM_LBLK;
+On Sat, Apr 18, 2020 at 01:30:51PM +0800, xiakaixu1987@gmail.com wrote:
+> From: Kaixu Xia <kaixuxia@tencent.com>
 > 
-> Similar to what I had observed in the patch "Add delay ready attr remove
-> routines",
+> Since the "no-allocation" reservations has been removed, the resblks
+> value should be larger than zero, so remove the unnecessary check.
 > 
-> Shouldn't XFS_DAC_DEFER_FINISH be set in dac->flags?
-> __xfs_attr_rmtval_remove() calls __xfs_bunmapi() which would
-> have added items to the deferred list.
+> Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
+> ---
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/xfs_symlink.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
 > 
-
-Just note that transaction rolls don't currently finish deferred ops. So
-from the perspective of preserving current behavior it might make sense
-to set the flag here if there was an explicit xfs_defer_finish() that's
-been factored out, but not so if it was just a transaction roll.
-
-Brian
-
+> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+> index 13fb4b919648..973441992b08 100644
+> --- a/fs/xfs/xfs_symlink.c
+> +++ b/fs/xfs/xfs_symlink.c
+> @@ -243,8 +243,7 @@ xfs_symlink(
+>  	 */
+>  	xfs_qm_vop_create_dqattach(tp, ip, udqp, gdqp, pdqp);
+>  
+> -	if (resblks)
+> -		resblks -= XFS_IALLOC_SPACE_RES(mp);
+> +	resblks -= XFS_IALLOC_SPACE_RES(mp);
+>  	/*
+>  	 * If the symlink will fit into the inode, write it inline.
+>  	 */
+> @@ -265,8 +264,7 @@ xfs_symlink(
+>  		if (error)
+>  			goto out_trans_cancel;
+>  
+> -		if (resblks)
+> -			resblks -= fs_blocks;
+> +		resblks -= fs_blocks;
+>  		ip->i_d.di_size = pathlen;
+>  		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+>  
 > -- 
-> chandan
-> 
-> 
+> 2.20.0
 > 
 
