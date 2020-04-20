@@ -2,197 +2,121 @@ Return-Path: <SRS0=5D7u=6E=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E005C3815B
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 18:36:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03169C3815B
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 18:50:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7290E2080C
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 18:36:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D54E220B1F
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 18:50:31 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="fCxw852l"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727787AbgDTSgS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Apr 2020 14:36:18 -0400
-Received: from mga04.intel.com ([192.55.52.120]:64767 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726748AbgDTSgS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 20 Apr 2020 14:36:18 -0400
-IronPort-SDR: che0hdkKvtNRSdz+JVniPR8QkXdeh2y+lifisLa3jDp/25bPy/S2cNyYfAkosO+Msyr2GLeVAK
- Nm9b3S2VZLaQ==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Apr 2020 11:36:18 -0700
-IronPort-SDR: 3f5z8FtAcKQHXwtHMt9FRcNWGd8s9i+OwVY7xZiVJZwJ9J8L90DPJugA4bxt9UGJmMpQj6s8/w
- T4kUXZruE8ig==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.72,407,1580803200"; 
-   d="scan'208";a="258439869"
-Received: from iweiny-desk2.sc.intel.com ([10.3.52.147])
-  by orsmga006.jf.intel.com with ESMTP; 20 Apr 2020 11:36:17 -0700
-Date:   Mon, 20 Apr 2020 11:36:17 -0700
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-kernel@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Jan Kara <jack@suse.cz>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH V8 10/11] fs/xfs: Change
- xfs_ioctl_setattr_dax_invalidate()
-Message-ID: <20200420183617.GB2838440@iweiny-DESK2.sc.intel.com>
-References: <20200415064523.2244712-1-ira.weiny@intel.com>
- <20200415064523.2244712-11-ira.weiny@intel.com>
- <20200420023131.GC9800@dread.disaster.area>
+        id S1726050AbgDTSub (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Apr 2020 14:50:31 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:50340 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726013AbgDTSub (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Apr 2020 14:50:31 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03KImZlo145131;
+        Mon, 20 Apr 2020 18:50:27 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=KVUWhbR9NLKMNOvTeKgJSRE8p1FKtuGdElJHJJBFkvA=;
+ b=fCxw852l7/G0cXhCXTI4G472wCZPfskSE4qWK5WYwpT7VHoG+N/kCtVzWAIYZ66XXYjl
+ 8fhC/0ImYSAOi7IxqVFHp51CGyJNth0BZkLdWeOJb3OPsd3SLb8g3agp0w0FAwTWL9ed
+ R4h3TqBUqA2p5Si+9k2JOWrYxJoF5g6kp0UKT9nqyukhMaUdgpKkjF9DHSnH32pxZrNo
+ utKtitPSz9tqvoahQDgA04SmF4I8C9Za6HPv5nAVhMUaffby0jAkLGUalq0VfXnTNAPj
+ SJS1jBfYn39MghRw1a7Rg4yiy8SzGIOXVCeNZ+5PjDEt7bI0C9we8c9ZepJRxvOiilu9 Rg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 30fsgks3a8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 20 Apr 2020 18:50:27 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03KIg9Kn106850;
+        Mon, 20 Apr 2020 18:50:26 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 30gb1dw40m-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 20 Apr 2020 18:50:26 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03KIoP1a003857;
+        Mon, 20 Apr 2020 18:50:25 GMT
+Received: from [192.168.1.223] (/67.1.142.158)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 20 Apr 2020 11:50:25 -0700
+Subject: Re: [PATCH 05/12] xfs: ratelimit unmount time per-buffer I/O error
+ warning
+To:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+References: <20200417150859.14734-1-bfoster@redhat.com>
+ <20200417150859.14734-6-bfoster@redhat.com>
+From:   Allison Collins <allison.henderson@oracle.com>
+Message-ID: <a97ffbc2-911d-4bde-3d49-e35b1de77861@oracle.com>
+Date:   Mon, 20 Apr 2020 11:50:24 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200420023131.GC9800@dread.disaster.area>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+In-Reply-To: <20200417150859.14734-6-bfoster@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9597 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=0 spamscore=0
+ mlxlogscore=999 mlxscore=0 malwarescore=0 bulkscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2004200149
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9597 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 priorityscore=1501
+ lowpriorityscore=0 mlxlogscore=999 malwarescore=0 clxscore=1015
+ spamscore=0 bulkscore=0 phishscore=0 suspectscore=0 impostorscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004200149
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 20, 2020 at 12:31:31PM +1000, Dave Chinner wrote:
-> On Tue, Apr 14, 2020 at 11:45:22PM -0700, ira.weiny@intel.com wrote:
-> > From: Ira Weiny <ira.weiny@intel.com>
-> > 
-> > We only support changing FS_XFLAG_DAX on directories.  Files get their
-> > flag from the parent directory on creation only.  So no data
-> > invalidation needs to happen.
-> > 
-> > Alter the xfs_ioctl_setattr_dax_invalidate() to be
-> > xfs_ioctl_setattr_dax_validate().  xfs_ioctl_setattr_dax_validate() now
-> > validates that any FS_XFLAG_DAX change is ok.
-> > 
-> > This also allows use to remove the join_flags logic.
-> > 
-> > Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-> > 
-> > ---
-> > Changes from V7:
-> > 	Use new flag_inode_dontcache()
-> > 	Skip don't cache if mount over ride is active.
-> > 
-> > Changes from v6:
-> > 	Fix completely broken implementation and update commit message.
-> > 	Use the new VFS layer I_DONTCACHE to facilitate inode eviction
-> > 	and S_DAX changing on drop_caches
-> > 
-> > Changes from v5:
-> > 	New patch
-> > ---
-> >  fs/xfs/xfs_ioctl.c | 105 +++++++++------------------------------------
-> >  1 file changed, 20 insertions(+), 85 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > index c6cd92ef4a05..75d4a830ef38 100644
-> > --- a/fs/xfs/xfs_ioctl.c
-> > +++ b/fs/xfs/xfs_ioctl.c
-> > @@ -1145,63 +1145,28 @@ xfs_ioctl_setattr_xflags(
-> >  }
-> >  
-> >  /*
-> > - * If we are changing DAX flags, we have to ensure the file is clean and any
-> > - * cached objects in the address space are invalidated and removed. This
-> > - * requires us to lock out other IO and page faults similar to a truncate
-> > - * operation. The locks need to be held until the transaction has been committed
-> > - * so that the cache invalidation is atomic with respect to the DAX flag
-> > - * manipulation.
-> > + * Mark inodes with a changing FS_XFLAG_DAX, I_DONTCACHE
+
+
+On 4/17/20 8:08 AM, Brian Foster wrote:
+> At unmount time, XFS emits a warning for every in-core buffer that
+> might have undergone a write error. In practice this behavior is
+> probably reasonable given that the filesystem is likely short lived
+> once I/O errors begin to occur consistently. Under certain test or
+> otherwise expected error conditions, this can spam the logs and slow
+> down the unmount. Ratelimit the warning to prevent this problem
+> while still informing the user that errors have occurred.
 > 
-> That describes what the code is doing, not why.
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+Ok, other than the line return Dave pointed out, looks ok to me:
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
 
-I'll remove the comment.
-
+> ---
+>   fs/xfs/xfs_buf.c | 7 +++----
+>   1 file changed, 3 insertions(+), 4 deletions(-)
 > 
-> >   */
-> > -static int
-> > +static void
-> >  xfs_ioctl_setattr_dax_invalidate(
-> >  	struct xfs_inode	*ip,
-> > -	struct fsxattr		*fa,
-> > -	int			*join_flags)
-> > +	struct fsxattr		*fa)
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 93942d8e35dd..5120fed06075 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1685,11 +1685,10 @@ xfs_wait_buftarg(
+>   			bp = list_first_entry(&dispose, struct xfs_buf, b_lru);
+>   			list_del_init(&bp->b_lru);
+>   			if (bp->b_flags & XBF_WRITE_FAIL) {
+> -				xfs_alert(btp->bt_mount,
+> -"Corruption Alert: Buffer at daddr 0x%llx had permanent write failures!",
+> +				xfs_alert_ratelimited(btp->bt_mount,
+> +"Corruption Alert: Buffer at daddr 0x%llx had permanent write failures!\n"
+> +"Please run xfs_repair to determine the extent of the problem.",
+>   					(long long)bp->b_bn);
+> -				xfs_alert(btp->bt_mount,
+> -"Please run xfs_repair to determine the extent of the problem.");
+>   			}
+>   			xfs_buf_rele(bp);
+>   		}
 > 
-> It's not an invalidation function anymore, so needs a name change.
-
-Done.
-
-> 
-> > -	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_DAX(inode))
-> > -		return 0;
-> > +	struct xfs_mount	*mp = ip->i_mount;
-> > +	struct inode            *inode = VFS_I(ip);
-> >  
-> >  	if (S_ISDIR(inode->i_mode))
-> > -		return 0;
-> > -
-> > -	/* lock, flush and invalidate mapping in preparation for flag change */
-> > -	xfs_ilock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
-> > -	error = filemap_write_and_wait(inode->i_mapping);
-> > -	if (error)
-> > -		goto out_unlock;
-> > -	error = invalidate_inode_pages2(inode->i_mapping);
-> > -	if (error)
-> > -		goto out_unlock;
-> > +		return;
-> >  
-> > -	*join_flags = XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL;
-> > -	return 0;
-> > -
-> > -out_unlock:
-> > -	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
-> > -	return error;
-> > +	if (mp->m_flags & XFS_MOUNT_DAX_ALWAYS ||
-> > +	    mp->m_flags & XFS_MOUNT_DAX_NEVER)
-> > +		return;
-> 
-> 	if (mp->m_flags & (XFS_MOUNT_DAX_ALWAYS | XFS_MOUNT_DAX_NEVER))
-> 		return;
-> > +	if (((fa->fsx_xflags & FS_XFLAG_DAX) &&
-> > +	    !(ip->i_d.di_flags2 & XFS_DIFLAG2_DAX)) ||
-> > +	    (!(fa->fsx_xflags & FS_XFLAG_DAX) &&
-> > +	     (ip->i_d.di_flags2 & XFS_DIFLAG2_DAX)))
-> > +		flag_inode_dontcache(inode);
-> 
-> This doesn't set the XFS inode's "don't cache" flag, despite it
-> having one that serves exactly the same purpose.  IOWs, if the XFS_IDONTCACHE
-> flag is now redundant, please replace it's current usage with this new flag
-> and get rid of the XFS inode flag. i.e.  the only place we set XFS_IDONTCACHE
-> can be replaced with a call to this mark_inode_dontcache() call...
-
-I agree, and I would have removed XFS_IDONTCACHE, except I was not convinced
-that XFS_IDONTCACHE was redundant.
-
-Currently XFS_IDONTCACHE can be cleared if the inode is found in the cache and
-I was unable to convince myself that it would be ok to remove it.  I mentioned
-this to Darrick in V7.
-
-https://lore.kernel.org/lkml/20200413194432.GD1649878@iweiny-DESK2.sc.intel.com/
-
-What am I missing with this code?
-
-xfs_iget_cache_hit():
-...
-        if (!(flags & XFS_IGET_INCORE))
-		xfs_iflags_clear(ip, XFS_ISTALE | XFS_IDONTCACHE);
-...
-
-Why is XFS_IDONTCACHE not 'sticky'?  And why does xfs_iget_cache_hit() clear it
-rather than fail when XFS_IDONTCACHE is set?
-
-Ira
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
