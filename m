@@ -6,119 +6,125 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96845C3815B
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 20:33:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70D1DC54FCC
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 22:19:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7924E20782
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 20:33:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 534F920722
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 22:19:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725918AbgDTUdj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Apr 2020 16:33:39 -0400
-Received: from sandeen.net ([63.231.237.45]:38886 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725774AbgDTUdi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 20 Apr 2020 16:33:38 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 5D2E715D67;
-        Mon, 20 Apr 2020 15:33:10 -0500 (CDT)
-Subject: Re: [PATCH] xfs_db: fix crc invalidation segfault
-To:     Anthony Iliopoulos <ailiop@suse.com>
+        id S1726056AbgDTWTN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Apr 2020 18:19:13 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:58197 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725774AbgDTWTM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Apr 2020 18:19:12 -0400
+Received: from dread.disaster.area (pa49-180-0-232.pa.nsw.optusnet.com.au [49.180.0.232])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id C99353A3FE0;
+        Tue, 21 Apr 2020 08:19:09 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jQeku-0006KG-Q2; Tue, 21 Apr 2020 08:19:08 +1000
+Date:   Tue, 21 Apr 2020 08:19:08 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-References: <20200420195235.14260-1-ailiop@suse.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <0f21ae94-5901-c6d2-06a0-ba016511065d@sandeen.net>
-Date:   Mon, 20 Apr 2020 15:33:36 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.7.0
+Subject: Re: [PATCH 01/12] xfs: refactor failed buffer resubmission into
+ xfsaild
+Message-ID: <20200420221908.GO9800@dread.disaster.area>
+References: <20200417150859.14734-1-bfoster@redhat.com>
+ <20200417150859.14734-2-bfoster@redhat.com>
+ <20200420024556.GD9800@dread.disaster.area>
+ <20200420135825.GA27516@bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20200420195235.14260-1-ailiop@suse.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200420135825.GA27516@bfoster>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+        a=XYjVcjsg+1UI/cdbgX7I7g==:117 a=XYjVcjsg+1UI/cdbgX7I7g==:17
+        a=kj9zAlcOel0A:10 a=cl8xLZFz6L8A:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
+        a=MzdJU4Orhpkszo7Ei48A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 4/20/20 2:52 PM, Anthony Iliopoulos wrote:
-> The nowrite_ops var is declared within nested block scope but used
-> outside that scope, causing xfs_db to crash while trying to defererence
-> the verify_write pointer. Fix it by lifting the declaration to the outer
-> scope, where it is accessed.
+On Mon, Apr 20, 2020 at 09:58:25AM -0400, Brian Foster wrote:
+> On Mon, Apr 20, 2020 at 12:45:56PM +1000, Dave Chinner wrote:
+> > On Fri, Apr 17, 2020 at 11:08:48AM -0400, Brian Foster wrote:
+> > > Flush locked log items whose underlying buffers fail metadata
+> > > writeback are tagged with a special flag to indicate that the flush
+> > > lock is already held. This is currently implemented in the type
+> > > specific ->iop_push() callback, but the processing required for such
+> > > items is not type specific because we're only doing basic state
+> > > management on the underlying buffer.
+> > > 
+> > > Factor the failed log item handling out of the inode and dquot
+> > > ->iop_push() callbacks and open code the buffer resubmit helper into
+> > > a single helper called from xfsaild_push_item(). This provides a
+> > > generic mechanism for handling failed metadata buffer writeback with
+> > > a bit less code.
+> > > 
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > .....
+> > > diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+> > > index 564253550b75..0c709651a2c6 100644
+> > > --- a/fs/xfs/xfs_trans_ail.c
+> > > +++ b/fs/xfs/xfs_trans_ail.c
+> > > @@ -345,6 +345,45 @@ xfs_ail_delete(
+> > >  	xfs_trans_ail_cursor_clear(ailp, lip);
+> > >  }
+> > >  
+> > > +/*
+> > > + * Requeue a failed buffer for writeback.
+> > > + *
+> > > + * We clear the log item failed state here as well, but we have to be careful
+> > > + * about reference counts because the only active reference counts on the buffer
+> > > + * may be the failed log items. Hence if we clear the log item failed state
+> > > + * before queuing the buffer for IO we can release all active references to
+> > > + * the buffer and free it, leading to use after free problems in
+> > > + * xfs_buf_delwri_queue. It makes no difference to the buffer or log items which
+> > > + * order we process them in - the buffer is locked, and we own the buffer list
+> > > + * so nothing on them is going to change while we are performing this action.
+> > > + *
+> > > + * Hence we can safely queue the buffer for IO before we clear the failed log
+> > > + * item state, therefore  always having an active reference to the buffer and
+> > > + * avoiding the transient zero-reference state that leads to use-after-free.
+> > > + */
+> > > +static inline int
+> > > +xfsaild_push_failed(
+> > 
+> > Bad name IMO. Makes me think it's an action that is taken when an
+> > item push failed, not an action that resubmits a buffer that had an
+> > IO failure.
+> > 
+> > i.e. "push" doesn't imply IO, and failure to push an item doesn't
+> > mean there was an IO error - it may be locked, already flushing,
+> > pinned, etc.
+> > 
 > 
-> Signed-off-by: Anthony Iliopoulos <ailiop@suse.com>
-
-Yup, thanks for spotting & fixing this.
-
-Fixes: b64af2c "xfs_db: add crc manipulation commands"
-Reviewd-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
->  db/crc.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> Yeah..
 > 
-> diff --git a/db/crc.c b/db/crc.c
-> index 95161c6df..b23417a11 100644
-> --- a/db/crc.c
-> +++ b/db/crc.c
-> @@ -53,6 +53,7 @@ crc_f(
->  	char		**argv)
->  {
->  	const struct xfs_buf_ops *stashed_ops = NULL;
-> +	struct xfs_buf_ops nowrite_ops;
->  	extern char	*progname;
->  	const field_t	*fields;
->  	const ftattr_t	*fa;
-> @@ -127,7 +128,6 @@ crc_f(
->  	}
->  
->  	if (invalidate) {
-> -		struct xfs_buf_ops nowrite_ops;
->  		flist_t		*sfl;
->  		int		bit_length;
->  		int		parentoffset;
+> > > +	struct xfs_log_item	*lip,
+> > > +	struct list_head	*buffer_list)
+> > > +{
+> > > +	struct xfs_buf		*bp = lip->li_buf;
+> > 
+> > This also assumes that the log item has a buffer associated with it.
+> > So perhaps "xfsaild_resubmit_failed_buffer()" would be more
+> > approriate here.
+> > 
 > 
+> The buffer pointer is an implementation detail of failed items. It would
+> be nice to find a way to avoid that. How about xfsaild_resubmit_item()
+> to be consistent with the parent function (xfsaild_push_item())?
+
+That works, too. :)
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
