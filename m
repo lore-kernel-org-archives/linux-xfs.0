@@ -2,142 +2,144 @@ Return-Path: <SRS0=5D7u=6E=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62DC7C54FCB
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 11:55:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11836C3A5A0
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 13:58:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3CE9A206D4
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 11:55:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E24892070B
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 13:58:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b="eMGJ6i/T"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="N6LdTN7R"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726849AbgDTLyz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Apr 2020 07:54:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53646 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726844AbgDTLyy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Apr 2020 07:54:54 -0400
-Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EBAEC061A0F
-        for <linux-xfs@vger.kernel.org>; Mon, 20 Apr 2020 04:54:54 -0700 (PDT)
-Received: by mail-ej1-x642.google.com with SMTP id nv1so7669835ejb.0
-        for <linux-xfs@vger.kernel.org>; Mon, 20 Apr 2020 04:54:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=szeredi.hu; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Xz434+emhPfWjjKXYErvQLCog0qnyrqkr9U47Pj8EAE=;
-        b=eMGJ6i/Tp+yHljfYp7aMYd/mUsv2EnqVE+fCxu3XOH5yGdB0h61gy+ScRLFSyuRmgb
-         qURUHX6I6Ir8eepIVf+Ri2YviGMLt6DWjxys1zOQJEVUfWPlsKPJUpkbtTkdGn4w0n0B
-         1MP04jnPqpFSU10941aKvkRA4UrFsDmfSRMik=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Xz434+emhPfWjjKXYErvQLCog0qnyrqkr9U47Pj8EAE=;
-        b=mA2FEbhGBV6PJKtCCtTR22MbCG7EXHpJFckJqrdJ4MqESCu1BFv29B1IoSftTwwK8H
-         1/1v7ucwaMq4HOJlWUCkFlLQSGhCsB+oyGSP6Jv8OhQF4Z4u6ylFfxwShjS4EWUIhYBH
-         fReVU++LgHQM5SqF2MyrpFfQYTfYCTcVh7LtZVuYMXYhTFp9kGz7DdIR3F/WhPADQhMV
-         LOQZoXZ0hBw7V60dVJeMTEJM8Gmett2ab/WwL4gfKfUpuhJhJ1nvA4OWJAM+eb8kMD5P
-         acNVXZAxpNq7Dcgg9osx0zrqrzJbcwPqYMgQHNvpWdTyZ68gollzDyRHWJEsEZj8EvtH
-         3iaw==
-X-Gm-Message-State: AGi0PuZIBl9KdDod9fqo06hrxJKZiYQaYlkhWdqz0U3Dcfw4dpo2zp4A
-        2c/uEysAJWScmG8mbCITzVd1nMx/Odvv+Qwgvr+phg==
-X-Google-Smtp-Source: APiQypLbTn+lSf9tXQjoSINzOkViouA+EuTM208dkpb3K/JiwqGLK/tHyeL8eS/wVDrlTm/f0ngTgrLv3Gua9FB3DGg=
-X-Received: by 2002:a17:906:8549:: with SMTP id h9mr15204554ejy.145.1587383692787;
- Mon, 20 Apr 2020 04:54:52 -0700 (PDT)
+        id S1727941AbgDTN6d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Apr 2020 09:58:33 -0400
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:32198 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726608AbgDTN6d (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Apr 2020 09:58:33 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1587391111;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=vBX3eVNmbrPpy08k20PpSS9tNL3rbyFi8z8PQ2bJxUQ=;
+        b=N6LdTN7R7TUP2Y1Y7ncIAosUXuLmJOTHNdEUCS9EJ/rvwjG6l0iNUsCr6nknRnfTlrq37a
+        S4lC2sGj1hmoSjkLMPXTDfJ3LTJaEgnJ6ZvuIU+3xS0401OEKtZ0or4V6TQiNluQRF2HhF
+        apFVc7KJZGXGFssocioyTw9Z3iCSRs0=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-326--1a3RdZVOpuhsEfezotDGg-1; Mon, 20 Apr 2020 09:58:29 -0400
+X-MC-Unique: -1a3RdZVOpuhsEfezotDGg-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 11C848018A1;
+        Mon, 20 Apr 2020 13:58:28 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id A8E8B5C1B2;
+        Mon, 20 Apr 2020 13:58:27 +0000 (UTC)
+Date:   Mon, 20 Apr 2020 09:58:25 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 01/12] xfs: refactor failed buffer resubmission into
+ xfsaild
+Message-ID: <20200420135825.GA27516@bfoster>
+References: <20200417150859.14734-1-bfoster@redhat.com>
+ <20200417150859.14734-2-bfoster@redhat.com>
+ <20200420024556.GD9800@dread.disaster.area>
 MIME-Version: 1.0
-References: <20200414150233.24495-1-willy@infradead.org> <20200414150233.24495-25-willy@infradead.org>
- <CAJfpegsZF=TFQ67vABkE5ghiZoTZF+=_u8tM5U_P6jZeAmv23A@mail.gmail.com> <20200420114300.GB5820@bombadil.infradead.org>
-In-Reply-To: <20200420114300.GB5820@bombadil.infradead.org>
-From:   Miklos Szeredi <miklos@szeredi.hu>
-Date:   Mon, 20 Apr 2020 13:54:41 +0200
-Message-ID: <CAJfpeguKAbE+_=ctxp+_3gtbqADevMPrRQ1XV6t8AHXbKwDKvg@mail.gmail.com>
-Subject: Re: [PATCH v11 24/25] fuse: Convert from readpages to readahead
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        ocfs2-devel@oss.oracle.com, linux-xfs <linux-xfs@vger.kernel.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        William Kucharski <william.kucharski@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200420024556.GD9800@dread.disaster.area>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 20, 2020 at 1:43 PM Matthew Wilcox <willy@infradead.org> wrote:
->
-> On Mon, Apr 20, 2020 at 01:14:17PM +0200, Miklos Szeredi wrote:
-> > > +       for (;;) {
-> > > +               struct fuse_io_args *ia;
-> > > +               struct fuse_args_pages *ap;
-> > > +
-> > > +               nr_pages = readahead_count(rac) - nr_pages;
-> >
-> > Hmm.  I see what's going on here, but it's confusing.   Why is
-> > __readahead_batch() decrementing the readahead count at the start,
-> > rather than at the end?
-> >
-> > At the very least it needs a comment about why nr_pages is calculated this way.
->
-> Because usually that's what we want.  See, for example, fs/mpage.c:
->
->         while ((page = readahead_page(rac))) {
->                 prefetchw(&page->flags);
->                 args.page = page;
->                 args.nr_pages = readahead_count(rac);
->                 args.bio = do_mpage_readpage(&args);
->                 put_page(page);
->         }
->
-> fuse is different because it's trying to allocate for the next batch,
-> not for the batch we're currently on.
->
-> I'm a little annoyed because I posted almost this exact loop here:
->
-> https://lore.kernel.org/linux-fsdevel/CAJfpegtrhGamoSqD-3Svfj3-iTdAbfD8TP44H_o+HE+g+CAnCA@mail.gmail.com/
->
-> and you said "I think that's fine", modified only by your concern
-> for it not being obvious that nr_pages couldn't be decremented by
-> __readahead_batch(), so I modified the loop slightly to assign to
-> nr_pages.  The part you're now complaining about is unchanged.
+On Mon, Apr 20, 2020 at 12:45:56PM +1000, Dave Chinner wrote:
+> On Fri, Apr 17, 2020 at 11:08:48AM -0400, Brian Foster wrote:
+> > Flush locked log items whose underlying buffers fail metadata
+> > writeback are tagged with a special flag to indicate that the flush
+> > lock is already held. This is currently implemented in the type
+> > specific ->iop_push() callback, but the processing required for such
+> > items is not type specific because we're only doing basic state
+> > management on the underlying buffer.
+> > 
+> > Factor the failed log item handling out of the inode and dquot
+> > ->iop_push() callbacks and open code the buffer resubmit helper into
+> > a single helper called from xfsaild_push_item(). This provides a
+> > generic mechanism for handling failed metadata buffer writeback with
+> > a bit less code.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> .....
+> > diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+> > index 564253550b75..0c709651a2c6 100644
+> > --- a/fs/xfs/xfs_trans_ail.c
+> > +++ b/fs/xfs/xfs_trans_ail.c
+> > @@ -345,6 +345,45 @@ xfs_ail_delete(
+> >  	xfs_trans_ail_cursor_clear(ailp, lip);
+> >  }
+> >  
+> > +/*
+> > + * Requeue a failed buffer for writeback.
+> > + *
+> > + * We clear the log item failed state here as well, but we have to be careful
+> > + * about reference counts because the only active reference counts on the buffer
+> > + * may be the failed log items. Hence if we clear the log item failed state
+> > + * before queuing the buffer for IO we can release all active references to
+> > + * the buffer and free it, leading to use after free problems in
+> > + * xfs_buf_delwri_queue. It makes no difference to the buffer or log items which
+> > + * order we process them in - the buffer is locked, and we own the buffer list
+> > + * so nothing on them is going to change while we are performing this action.
+> > + *
+> > + * Hence we can safely queue the buffer for IO before we clear the failed log
+> > + * item state, therefore  always having an active reference to the buffer and
+> > + * avoiding the transient zero-reference state that leads to use-after-free.
+> > + */
+> > +static inline int
+> > +xfsaild_push_failed(
+> 
+> Bad name IMO. Makes me think it's an action that is taken when an
+> item push failed, not an action that resubmits a buffer that had an
+> IO failure.
+> 
+> i.e. "push" doesn't imply IO, and failure to push an item doesn't
+> mean there was an IO error - it may be locked, already flushing,
+> pinned, etc.
+> 
 
-Your annoyance is perfectly understandable.   This is something I
-noticed now, not back then.
+Yeah..
 
->
-> > > +               if (nr_pages > max_pages)
-> > > +                       nr_pages = max_pages;
-> > > +               if (nr_pages == 0)
-> > > +                       break;
-> > > +               ia = fuse_io_alloc(NULL, nr_pages);
-> > > +               if (!ia)
-> > > +                       return;
-> > > +               ap = &ia->ap;
-> > > +               nr_pages = __readahead_batch(rac, ap->pages, nr_pages);
-> > > +               for (i = 0; i < nr_pages; i++) {
-> > > +                       fuse_wait_on_page_writeback(inode,
-> > > +                                                   readahead_index(rac) + i);
-> >
-> > What's wrong with ap->pages[i]->index?  Are we trying to wean off using ->index?
->
-> It saves reading from a cacheline?  I wouldn't be surprised if the
-> compiler hoisted the read from rac->_index to outside the loop and just
-> iterated from rac->_index to rac->_index + nr_pages.
+> > +	struct xfs_log_item	*lip,
+> > +	struct list_head	*buffer_list)
+> > +{
+> > +	struct xfs_buf		*bp = lip->li_buf;
+> 
+> This also assumes that the log item has a buffer associated with it.
+> So perhaps "xfsaild_resubmit_failed_buffer()" would be more
+> approriate here.
+> 
 
-Hah, if such optimizations were worth anything with codepaths
-involving roundtrips to userspace...
+The buffer pointer is an implementation detail of failed items. It would
+be nice to find a way to avoid that. How about xfsaild_resubmit_item()
+to be consistent with the parent function (xfsaild_push_item())?
 
-Anyway, I'll let these be, and maybe clean them up later.
+Brian
 
-Acked-by:  Miklos Szeredi <mszeredi@redhat.com>
+> Other than that, the code is fine.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
 
-Thanks,
-Miklos
