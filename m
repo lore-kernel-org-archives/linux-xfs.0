@@ -2,190 +2,433 @@ Return-Path: <SRS0=5D7u=6E=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EA82C3A5A0
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 07:53:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D069BC3815B
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 09:03:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 80CED22251
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 07:53:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD8012145D
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 09:03:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725988AbgDTHxa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Apr 2020 03:53:30 -0400
-Received: from mx2.suse.de ([195.135.220.15]:39730 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725815AbgDTHx3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 20 Apr 2020 03:53:29 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 1FF21ACCC;
-        Mon, 20 Apr 2020 07:53:24 +0000 (UTC)
-Subject: Re: [kernel-hardening] [PATCH 09/38] usercopy: Mark kmalloc caches as
- usercopy caches
-To:     Vlastimil Babka <vbabka@suse.cz>, Jann Horn <jannh@google.com>,
-        Kees Cook <keescook@chromium.org>
-Cc:     Christian Borntraeger <borntraeger@de.ibm.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Christopher Lameter <cl@linux.com>,
-        Julian Wiedmann <jwi@linux.ibm.com>,
-        Ursula Braun <ubraun@linux.ibm.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        kernel list <linux-kernel@vger.kernel.org>,
-        David Windsor <dave@nullcore.net>,
-        Pekka Enberg <penberg@kernel.org>,
-        David Rientjes <rientjes@google.com>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Linux-MM <linux-mm@kvack.org>, linux-xfs@vger.kernel.org,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Andy Lutomirski <luto@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Laura Abbott <labbott@redhat.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Christoffer Dall <christoffer.dall@linaro.org>,
-        Dave Kleikamp <dave.kleikamp@oracle.com>,
-        Jan Kara <jack@suse.cz>,
-        Luis de Bethencourt <luisbg@kernel.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Rik van Riel <riel@redhat.com>,
-        Matthew Garrett <mjg59@google.com>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        Kernel Hardening <kernel-hardening@lists.openwall.com>,
-        Michal Kubecek <mkubecek@suse.cz>
-References: <201911121313.1097D6EE@keescook> <201911141327.4DE6510@keescook>
- <bfca96db-bbd0-d958-7732-76e36c667c68@suse.cz>
- <202001271519.AA6ADEACF0@keescook>
- <5861936c-1fe1-4c44-d012-26efa0c8b6e7@de.ibm.com>
- <202001281457.FA11CC313A@keescook>
- <alpine.DEB.2.21.2001291640350.1546@www.lameter.com>
- <6844ea47-8e0e-4fb7-d86f-68046995a749@de.ibm.com>
- <20200129170939.GA4277@infradead.org>
- <771c5511-c5ab-3dd1-d938-5dbc40396daa@de.ibm.com>
- <202001300945.7D465B5F5@keescook>
- <CAG48ez1a4waGk9kB0WLaSbs4muSoK0AYAVk8=XYaKj4_+6e6Hg@mail.gmail.com>
- <7d810f6d-8085-ea2f-7805-47ba3842dc50@suse.cz>
-From:   Jiri Slaby <jslaby@suse.cz>
-Autocrypt: addr=jslaby@suse.cz; prefer-encrypt=mutual; keydata=
- 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
-Message-ID: <548e6212-7b3c-5925-19f2-699af451fd16@suse.cz>
-Date:   Mon, 20 Apr 2020 09:53:20 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.6.0
+        id S1725896AbgDTJDS convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Apr 2020 05:03:18 -0400
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:3044 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725773AbgDTJDS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Apr 2020 05:03:18 -0400
+Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 03K924Ke018079
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Apr 2020 05:03:16 -0400
+Received: from e06smtp05.uk.ibm.com (e06smtp05.uk.ibm.com [195.75.94.101])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 30gj229tmt-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Apr 2020 05:03:16 -0400
+Received: from localhost
+        by e06smtp05.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.ibm.com>;
+        Mon, 20 Apr 2020 10:02:23 +0100
+Received: from b06cxnps4075.portsmouth.uk.ibm.com (9.149.109.197)
+        by e06smtp05.uk.ibm.com (192.168.101.135) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
+        Mon, 20 Apr 2020 10:02:20 +0100
+Received: from d06av25.portsmouth.uk.ibm.com (d06av25.portsmouth.uk.ibm.com [9.149.105.61])
+        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 03K939KT57868536
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 20 Apr 2020 09:03:09 GMT
+Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 76A6A11C052;
+        Mon, 20 Apr 2020 09:03:09 +0000 (GMT)
+Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 8876211C04C;
+        Mon, 20 Apr 2020 09:03:08 +0000 (GMT)
+Received: from localhost.localdomain (unknown [9.85.68.184])
+        by d06av25.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Mon, 20 Apr 2020 09:03:08 +0000 (GMT)
+From:   Chandan Rajendra <chandan@linux.ibm.com>
+To:     Allison Collins <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v8 18/20] xfs: Add delay ready attr remove routines
+Date:   Mon, 20 Apr 2020 14:36:13 +0530
+Organization: IBM
+In-Reply-To: <20200403221229.4995-19-allison.henderson@oracle.com>
+References: <20200403221229.4995-1-allison.henderson@oracle.com> <20200403221229.4995-19-allison.henderson@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <7d810f6d-8085-ea2f-7805-47ba3842dc50@suse.cz>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+X-TM-AS-GCONF: 00
+x-cbid: 20042009-0020-0000-0000-000003CB1CF6
+X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
+x-cbparentid: 20042009-0021-0000-0000-000022240F41
+Message-Id: <1751112.6zseaXoMQ2@localhost.localdomain>
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.676
+ definitions=2020-04-20_03:2020-04-17,2020-04-20 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 clxscore=1015
+ impostorscore=0 mlxscore=0 suspectscore=1 bulkscore=0 malwarescore=0
+ phishscore=0 adultscore=0 spamscore=0 priorityscore=1501
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004200076
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 07. 04. 20, 10:00, Vlastimil Babka wrote:
-> From d5190e4e871689a530da3c3fd327be45a88f006a Mon Sep 17 00:00:00 2001
-> From: Vlastimil Babka <vbabka@suse.cz>
-> Date: Tue, 7 Apr 2020 09:58:00 +0200
-> Subject: [PATCH] usercopy: Mark dma-kmalloc caches as usercopy caches
+On Saturday, April 4, 2020 3:42 AM Allison Collins wrote: 
+> This patch modifies the attr remove routines to be delay ready. This
+> means they no longer roll or commit transactions, but instead return
+> -EAGAIN to have the calling routine roll and refresh the transaction. In
+> this series, xfs_attr_remove_args has become xfs_attr_remove_iter, which
+> uses a sort of state machine like switch to keep track of where it was
+> when EAGAIN was returned. xfs_attr_node_removename has also been
+> modified to use the switch, and a new version of xfs_attr_remove_args
+> consists of a simple loop to refresh the transaction until the operation
+> is completed.
 > 
-> We have seen a "usercopy: Kernel memory overwrite attempt detected to SLUB
-> object 'dma-kmalloc-1 k' (offset 0, size 11)!" error on s390x, as IUCV uses
-> kmalloc() with __GFP_DMA because of memory address restrictions.
-> The issue has been discussed [2] and it has been noted that if all the kmalloc
-> caches are marked as usercopy, there's little reason not to mark dma-kmalloc
-> caches too. The 'dma' part merely means that __GFP_DMA is used to restrict
-> memory address range.
+> Calls to xfs_attr_rmtval_remove are replaced with the delay ready
+> counter parts: xfs_attr_rmtval_invalidate (appearing in the setup
+> helper) and then __xfs_attr_rmtval_remove. We will rename
+> __xfs_attr_rmtval_remove back to xfs_attr_rmtval_remove when we are
+> done.
 > 
-> As Jann Horn put it [3]:
+> This patch also adds a new struct xfs_delattr_context, which we will use
+> to keep track of the current state of an attribute operation. The new
+> xfs_delattr_state enum is used to track various operations that are in
+> progress so that we know not to repeat them, and resume where we left
+> off before EAGAIN was returned to cycle out the transaction. Other
+> members take the place of local variables that need to retain their
+> values across multiple function recalls.
 > 
-> "I think dma-kmalloc slabs should be handled the same way as normal
-> kmalloc slabs. When a dma-kmalloc allocation is freshly created, it is
-> just normal kernel memory - even if it might later be used for DMA -,
-> and it should be perfectly fine to copy_from_user() into such
-> allocations at that point, and to copy_to_user() out of them at the
-> end. If you look at the places where such allocations are created, you
-> can see things like kmemdup(), memcpy() and so on - all normal
-> operations that shouldn't conceptually be different from usercopy in
-> any relevant way."
+> Below is a state machine diagram for attr remove operations. The
+> XFS_DAS_* states indicate places where the function would return
+> -EAGAIN, and then immediately resume from after being recalled by the
+> calling function.  States marked as a "subroutine state" indicate that
+> they belong to a subroutine, and so the calling function needs to pass
+> them back to that subroutine to allow it to finish where it left off.
+> But they otherwise do not have a role in the calling function other than
+> just passing through.
 > 
-> Thus this patch marks the dma-kmalloc-* caches as usercopy.
+>  xfs_attr_remove_iter()
+>          XFS_DAS_RM_SHRINK     ─┐
+>          (subroutine state)     │
+>                                 │
+>          XFS_DAS_RMTVAL_REMOVE ─┤
+>          (subroutine state)     │
+>                                 └─>xfs_attr_node_removename()
+>                                                  │
+>                                                  v
+>                                          need to remove
+>                                    ┌─n──  rmt blocks?
+>                                    │             │
+>                                    │             y
+>                                    │             │
+>                                    │             v
+>                                    │  ┌─>XFS_DAS_RMTVAL_REMOVE
+>                                    │  │          │
+>                                    │  │          v
+>                                    │  └──y── more blks
+>                                    │         to remove?
+>                                    │             │
+>                                    │             n
+>                                    │             │
+>                                    │             v
+>                                    │         need to
+>                                    └─────> shrink tree? ─n─┐
+>                                                  │         │
+>                                                  y         │
+>                                                  │         │
+>                                                  v         │
+>                                          XFS_DAS_RM_SHRINK │
+>                                                  │         │
+>                                                  v         │
+>                                                 done <─────┘
 > 
-> [1] https://bugzilla.suse.com/show_bug.cgi?id=1156053
-> [2] https://lore.kernel.org/kernel-hardening/bfca96db-bbd0-d958-7732-76e36c667c68@suse.cz/
-> [3] https://lore.kernel.org/kernel-hardening/CAG48ez1a4waGk9kB0WLaSbs4muSoK0AYAVk8=XYaKj4_+6e6Hg@mail.gmail.com/
-> 
-> Signed-off-by: Vlastimil Babka <vbabka@suse.cz>
-
-Friendly ping.
-
-Acked-by: Jiri Slaby <jslaby@suse.cz>
-
+> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
 > ---
->  mm/slab_common.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+>  fs/xfs/libxfs/xfs_attr.c | 168 ++++++++++++++++++++++++++++++++++++-----------
+>  fs/xfs/libxfs/xfs_attr.h |  38 +++++++++++
+>  2 files changed, 168 insertions(+), 38 deletions(-)
 > 
-> diff --git a/mm/slab_common.c b/mm/slab_common.c
-> index 5282f881d2f5..ae9486160594 100644
-> --- a/mm/slab_common.c
-> +++ b/mm/slab_common.c
-> @@ -1303,7 +1303,8 @@ void __init create_kmalloc_caches(slab_flags_t flags)
->  			kmalloc_caches[KMALLOC_DMA][i] = create_kmalloc_cache(
->  				kmalloc_info[i].name[KMALLOC_DMA],
->  				kmalloc_info[i].size,
-> -				SLAB_CACHE_DMA | flags, 0, 0);
-> +				SLAB_CACHE_DMA | flags, 0,
-> +				kmalloc_info[i].size);
->  		}
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index d735570..f700976 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -45,7 +45,7 @@ STATIC int xfs_attr_shortform_addname(xfs_da_args_t *args);
+>   */
+>  STATIC int xfs_attr_leaf_get(xfs_da_args_t *args);
+>  STATIC int xfs_attr_leaf_addname(xfs_da_args_t *args);
+> -STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args);
+> +STATIC int xfs_attr_leaf_removename(struct xfs_delattr_context *dac);
+>  STATIC int xfs_attr_leaf_hasname(struct xfs_da_args *args, struct xfs_buf **bp);
+>  
+>  /*
+> @@ -53,12 +53,21 @@ STATIC int xfs_attr_leaf_hasname(struct xfs_da_args *args, struct xfs_buf **bp);
+>   */
+>  STATIC int xfs_attr_node_get(xfs_da_args_t *args);
+>  STATIC int xfs_attr_node_addname(xfs_da_args_t *args);
+> -STATIC int xfs_attr_node_removename(xfs_da_args_t *args);
+> +STATIC int xfs_attr_node_removename(struct xfs_delattr_context *dac);
+>  STATIC int xfs_attr_node_hasname(xfs_da_args_t *args,
+>  				 struct xfs_da_state **state);
+>  STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
+>  STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
+>  
+> +STATIC void
+> +xfs_delattr_context_init(
+> +	struct xfs_delattr_context	*dac,
+> +	struct xfs_da_args		*args)
+> +{
+> +	memset(dac, 0, sizeof(struct xfs_delattr_context));
+> +	dac->da_args = args;
+> +}
+> +
+>  int
+>  xfs_inode_hasattr(
+>  	struct xfs_inode	*ip)
+> @@ -356,20 +365,66 @@ xfs_has_attr(
+>   */
+>  int
+>  xfs_attr_remove_args(
+> -	struct xfs_da_args      *args)
+> +	struct xfs_da_args	*args)
+>  {
+> +	int			error = 0;
+> +	struct			xfs_delattr_context dac;
+> +
+> +	xfs_delattr_context_init(&dac, args);
+> +
+> +	do {
+> +		error = xfs_attr_remove_iter(&dac);
+> +		if (error != -EAGAIN)
+> +			break;
+> +
+> +		if (dac.flags & XFS_DAC_DEFER_FINISH) {
+> +			dac.flags &= ~XFS_DAC_DEFER_FINISH;
+> +			error = xfs_defer_finish(&args->trans);
+> +			if (error)
+> +				break;
+> +		}
+> +
+> +		error = xfs_trans_roll_inode(&args->trans, args->dp);
+> +		if (error)
+> +			break;
+> +	} while (true);
+> +
+> +	return error;
+> +}
+> +
+> +/*
+> + * Remove the attribute specified in @args.
+> + *
+> + * This function may return -EAGAIN to signal that the transaction needs to be
+> + * rolled.  Callers should continue calling this function until they receive a
+> + * return value other than -EAGAIN.
+> + */
+> +int
+> +xfs_attr_remove_iter(
+> +	struct xfs_delattr_context *dac)
+> +{
+> +	struct xfs_da_args	*args = dac->da_args;
+>  	struct xfs_inode	*dp = args->dp;
+>  	int			error;
+>  
+> +	/* State machine switch */
+> +	switch (dac->dela_state) {
+> +	case XFS_DAS_RM_SHRINK:
+> +	case XFS_DAS_RMTVAL_REMOVE:
+> +		return xfs_attr_node_removename(dac);
+> +	default:
+> +		break;
+> +	}
+> +
+>  	if (!xfs_inode_hasattr(dp)) {
+>  		error = -ENOATTR;
+>  	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
+>  		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
+>  		error = xfs_attr_shortform_remove(args);
+>  	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
+> -		error = xfs_attr_leaf_removename(args);
+> +		error = xfs_attr_leaf_removename(dac);
+>  	} else {
+> -		error = xfs_attr_node_removename(args);
+> +		error = xfs_attr_node_removename(dac);
 >  	}
->  #endif
-> 
+>  
+>  	return error;
+> @@ -794,11 +849,12 @@ xfs_attr_leaf_hasname(
+>   */
+>  STATIC int
+>  xfs_attr_leaf_removename(
+> -	struct xfs_da_args	*args)
+> +	struct xfs_delattr_context	*dac)
+>  {
+> -	struct xfs_inode	*dp;
+> -	struct xfs_buf		*bp;
+> -	int			error, forkoff;
+> +	struct xfs_da_args		*args = dac->da_args;
+> +	struct xfs_inode		*dp;
+> +	struct xfs_buf			*bp;
+> +	int				error, forkoff;
+>  
+>  	trace_xfs_attr_leaf_removename(args);
+>  
+> @@ -825,9 +881,8 @@ xfs_attr_leaf_removename(
+>  		/* bp is gone due to xfs_da_shrink_inode */
+>  		if (error)
+>  			return error;
+> -		error = xfs_defer_finish(&args->trans);
+> -		if (error)
+> -			return error;
+> +
+> +		dac->flags |= XFS_DAC_DEFER_FINISH;
+>  	}
+>  	return 0;
+>  }
+> @@ -1128,12 +1183,13 @@ xfs_attr_node_addname(
+>   */
+>  STATIC int
+>  xfs_attr_node_shrink(
+> -	struct xfs_da_args	*args,
+> -	struct xfs_da_state     *state)
+> +	struct xfs_delattr_context	*dac,
+> +	struct xfs_da_state		*state)
+>  {
+> -	struct xfs_inode	*dp = args->dp;
+> -	int			error, forkoff;
+> -	struct xfs_buf		*bp;
+> +	struct xfs_da_args		*args = dac->da_args;
+> +	struct xfs_inode		*dp = args->dp;
+> +	int				error, forkoff;
+> +	struct xfs_buf			*bp;
+>  
+>  	/*
+>  	 * Have to get rid of the copy of this dabuf in the state.
+> @@ -1153,9 +1209,7 @@ xfs_attr_node_shrink(
+>  		if (error)
+>  			return error;
+>  
+> -		error = xfs_defer_finish(&args->trans);
+> -		if (error)
+> -			return error;
+> +		dac->flags |= XFS_DAC_DEFER_FINISH;
+>  	} else
+>  		xfs_trans_brelse(args->trans, bp);
+>  
+> @@ -1194,13 +1248,15 @@ xfs_attr_leaf_mark_incomplete(
+>  
+>  /*
+>   * Initial setup for xfs_attr_node_removename.  Make sure the attr is there and
+> - * the blocks are valid.  Any remote blocks will be marked incomplete.
+> + * the blocks are valid.  Any remote blocks will be marked incomplete and
+> + * invalidated.
+>   */
+>  STATIC
+>  int xfs_attr_node_removename_setup(
+> -	struct xfs_da_args	*args,
+> -	struct xfs_da_state	**state)
+> +	struct xfs_delattr_context	*dac,
+> +	struct xfs_da_state		**state)
+>  {
+> +	struct xfs_da_args	*args = dac->da_args;
+>  	int			error;
+>  	struct xfs_da_state_blk	*blk;
+>  
+> @@ -1212,10 +1268,21 @@ int xfs_attr_node_removename_setup(
+>  	ASSERT(blk->bp != NULL);
+>  	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
+>  
+> +	/*
+> +	 * Store blk and state in the context incase we need to cycle out the
+> +	 * transaction
+> +	 */
+> +	dac->blk = blk;
+> +	dac->da_state = *state;
+> +
+>  	if (args->rmtblkno > 0) {
+>  		error = xfs_attr_leaf_mark_incomplete(args, *state);
+>  		if (error)
+>  			return error;
+> +
+> +		error = xfs_attr_rmtval_invalidate(args);
+> +		if (error)
+> +			return error;
+>  	}
+>  
+>  	return 0;
+> @@ -1228,7 +1295,10 @@ xfs_attr_node_removename_rmt (
+>  {
+>  	int			error = 0;
+>  
+> -	error = xfs_attr_rmtval_remove(args);
+> +	/*
+> +	 * May return -EAGAIN to request that the caller recall this function
+> +	 */
+> +	error = __xfs_attr_rmtval_remove(args);
+>  	if (error)
+>  		return error;
+>  
+> @@ -1249,19 +1319,37 @@ xfs_attr_node_removename_rmt (
+>   * This will involve walking down the Btree, and may involve joining
+>   * leaf nodes and even joining intermediate nodes up to and including
+>   * the root node (a special case of an intermediate node).
+> + *
+> + * This routine is meant to function as either an inline or delayed operation,
+> + * and may return -EAGAIN when the transaction needs to be rolled.  Calling
+> + * functions will need to handle this, and recall the function until a
+> + * successful error code is returned.
+>   */
+>  STATIC int
+>  xfs_attr_node_removename(
+> -	struct xfs_da_args	*args)
+> +	struct xfs_delattr_context	*dac)
+>  {
+> +	struct xfs_da_args	*args = dac->da_args;
+>  	struct xfs_da_state	*state;
+>  	struct xfs_da_state_blk	*blk;
+>  	int			retval, error;
+>  	struct xfs_inode	*dp = args->dp;
+>  
+>  	trace_xfs_attr_node_removename(args);
+> +	state = dac->da_state;
+> +	blk = dac->blk;
+> +
+> +	/* State machine switch */
+> +	switch (dac->dela_state) {
+> +	case XFS_DAS_RMTVAL_REMOVE:
+> +		goto das_rmtval_remove;
+> +	case XFS_DAS_RM_SHRINK:
+> +		goto das_rm_shrink;
+> +	default:
+> +		break;
+> +	}
+>  
+> -	error = xfs_attr_node_removename_setup(args, &state);
+> +	error = xfs_attr_node_removename_setup(dac, &state);
+>  	if (error)
+>  		goto out;
+>  
+> @@ -1270,10 +1358,16 @@ xfs_attr_node_removename(
+>  	 * This is done before we remove the attribute so that we don't
+>  	 * overflow the maximum size of a transaction and/or hit a deadlock.
+>  	 */
+> +
+> +das_rmtval_remove:
+> +
+>  	if (args->rmtblkno > 0) {
+>  		error = xfs_attr_node_removename_rmt(args, state);
+> -		if (error)
+> -			goto out;
+> +		if (error) {
+> +			if (error == -EAGAIN)
+> +				dac->dela_state = XFS_DAS_RMTVAL_REMOVE;
 
-thanks,
+Shouldn't XFS_DAC_DEFER_FINISH be set in dac->flags?
+xfs_attr_node_removename_rmt() indirectly calls __xfs_bunmapi() which would
+have added items to the deferred list.
+
 -- 
-js
-suse labs
+chandan
+
+
+
