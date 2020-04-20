@@ -2,216 +2,184 @@ Return-Path: <SRS0=5D7u=6E=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1D96C3815B
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 16:48:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BFA7C3A5A0
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 17:43:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C9D0B20B1F
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 16:48:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F017206DD
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 17:43:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="sIDU8Y/s"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="jQBTeSx5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726006AbgDTQs0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Apr 2020 12:48:26 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:58880 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725784AbgDTQs0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Apr 2020 12:48:26 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03KGiSor120176;
-        Mon, 20 Apr 2020 16:48:22 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=GsnlV/tmGAiK0X7zkEFXNdi60K6iuxGyJgXVJd3zw1U=;
- b=sIDU8Y/s2xRuRYh3ByOjNx0IeL7a+3tk3xq7vas7erTx0ol2R+kSSIS6960CAtYkUIAr
- jEhbZewAeEzLHXv9L3ojxuUicVttIKGhukn+IPODwWzOLqESEV5/4KIWFmVUfa03thdk
- uDNZJQgBwVvGobd4uUfgmiQqlpIWyPsLZUp5YUIy4BSDiYVfSkq9VOQRB8OnDCU9Bag6
- SlPGLlXNHRZ/EHREBgl4e9BvguWlWrP6Ma5YOVZrRjOziHKh3hHjyT9CqKj2lgZ2mJTW
- B3L37kcTA34P033x30z4bYS9FojN8OLqxt2/UYezkxsybDTFFgdr718FuNjLYRguMcb/ Rw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 30ft6n0cw4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 20 Apr 2020 16:48:22 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03KGlM8f136455;
-        Mon, 20 Apr 2020 16:48:21 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 30gb8wwd1u-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 20 Apr 2020 16:48:21 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03KGmK2e028713;
-        Mon, 20 Apr 2020 16:48:20 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 20 Apr 2020 09:48:20 -0700
-Date:   Mon, 20 Apr 2020 09:48:19 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfs: move inode flush to the sync workqueue
-Message-ID: <20200420164819.GC6749@magnolia>
-References: <20200415041529.GL6742@magnolia>
- <20200415110504.GA2140@bfoster>
+        id S1726752AbgDTRnv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Apr 2020 13:43:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51696 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726792AbgDTRnk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Apr 2020 13:43:40 -0400
+Received: from mail-pj1-x1041.google.com (mail-pj1-x1041.google.com [IPv6:2607:f8b0:4864:20::1041])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79D4DC0610D5
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Apr 2020 10:43:40 -0700 (PDT)
+Received: by mail-pj1-x1041.google.com with SMTP id hi11so177024pjb.3
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Apr 2020 10:43:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=UbWvOzsjdwKmCuURzqakr712Hwz970Vkw5PGIrntIJg=;
+        b=jQBTeSx5RVM7KT1U22GJEb3DH2uZPfcy8Q8n8Z4yMQbR4xX77sT7UNorH68BHXQklv
+         iqyP+lyhtbiw1Z8E6mrIAOVUfrKDbExPTw1eCNreicq7+fmKaKDC0t3L5Z68emnhhiQY
+         F68qqIHfXsfIWhK8AMTQ6lJSl/wFSmFVqe+Fs=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=UbWvOzsjdwKmCuURzqakr712Hwz970Vkw5PGIrntIJg=;
+        b=Uim+sv/gxaB28z+PKMp1gE82h2kGF1AvRi2xFwyTbtHiWdVsu1gUEDlhEXoKJZmznY
+         JSCo0WIlfnGoXUY+M2Yng3TFMSGW+FT43W8pqdSFuqifzkp/vwrvmDmbywKgNeiC7tcW
+         YJz711NV0rGgANqsUEQhYIUrDvqgFp9I7dIBHVSrunoxcFZBCYmaXXWWrF9wrTz7rdo+
+         jWVX2yiy6PEI6CeMJ/MehgD7nhB7myfJldVUJ2VwbdokSvKJrJ5bLht7vPi3axxary16
+         wkDY3TWa33CGIRQzufAYbYSCertvmM+jeegA1ihHKz8fqnTqUUGSiW/fv/OTWjB094MT
+         jggw==
+X-Gm-Message-State: AGi0PuZ/fmfLjFXDDtVI7EpaehO7Gl6GXJxRmf9PWJUwMI76tsfS0XSV
+        aW2CKNkQ3qhraKQgsITFZOQLfw==
+X-Google-Smtp-Source: APiQypLBX8wx/oUkDoqkb/2Bm8ippA2jak1OrscI29iIv8/MVYRimaZ8XN8jTccr1R5iuIwy3W5LTA==
+X-Received: by 2002:a17:902:6b01:: with SMTP id o1mr18181334plk.100.1587404619781;
+        Mon, 20 Apr 2020 10:43:39 -0700 (PDT)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id v26sm106522pff.45.2020.04.20.10.43.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 20 Apr 2020 10:43:38 -0700 (PDT)
+Date:   Mon, 20 Apr 2020 10:43:37 -0700
+From:   Kees Cook <keescook@chromium.org>
+To:     Jiri Slaby <jslaby@suse.cz>
+Cc:     Vlastimil Babka <vbabka@suse.cz>, Jann Horn <jannh@google.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Christopher Lameter <cl@linux.com>,
+        Julian Wiedmann <jwi@linux.ibm.com>,
+        Ursula Braun <ubraun@linux.ibm.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        kernel list <linux-kernel@vger.kernel.org>,
+        David Windsor <dave@nullcore.net>,
+        Pekka Enberg <penberg@kernel.org>,
+        David Rientjes <rientjes@google.com>,
+        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Linux-MM <linux-mm@kvack.org>, linux-xfs@vger.kernel.org,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Andy Lutomirski <luto@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Laura Abbott <labbott@redhat.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Christoffer Dall <christoffer.dall@linaro.org>,
+        Dave Kleikamp <dave.kleikamp@oracle.com>,
+        Jan Kara <jack@suse.cz>,
+        Luis de Bethencourt <luisbg@kernel.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Rik van Riel <riel@redhat.com>,
+        Matthew Garrett <mjg59@google.com>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        Kernel Hardening <kernel-hardening@lists.openwall.com>,
+        Michal Kubecek <mkubecek@suse.cz>
+Subject: Re: [kernel-hardening] [PATCH 09/38] usercopy: Mark kmalloc caches
+ as usercopy caches
+Message-ID: <202004201043.538A7B3F2@keescook>
+References: <5861936c-1fe1-4c44-d012-26efa0c8b6e7@de.ibm.com>
+ <202001281457.FA11CC313A@keescook>
+ <alpine.DEB.2.21.2001291640350.1546@www.lameter.com>
+ <6844ea47-8e0e-4fb7-d86f-68046995a749@de.ibm.com>
+ <20200129170939.GA4277@infradead.org>
+ <771c5511-c5ab-3dd1-d938-5dbc40396daa@de.ibm.com>
+ <202001300945.7D465B5F5@keescook>
+ <CAG48ez1a4waGk9kB0WLaSbs4muSoK0AYAVk8=XYaKj4_+6e6Hg@mail.gmail.com>
+ <7d810f6d-8085-ea2f-7805-47ba3842dc50@suse.cz>
+ <548e6212-7b3c-5925-19f2-699af451fd16@suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200415110504.GA2140@bfoster>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9597 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
- bulkscore=0 suspectscore=2 malwarescore=0 phishscore=0 spamscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004200136
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9597 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 bulkscore=0
- priorityscore=1501 impostorscore=0 adultscore=0 phishscore=0
- lowpriorityscore=0 malwarescore=0 clxscore=1015 mlxlogscore=999 mlxscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004200135
+In-Reply-To: <548e6212-7b3c-5925-19f2-699af451fd16@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 15, 2020 at 07:05:04AM -0400, Brian Foster wrote:
-> On Tue, Apr 14, 2020 at 09:15:29PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Apr 20, 2020 at 09:53:20AM +0200, Jiri Slaby wrote:
+> On 07. 04. 20, 10:00, Vlastimil Babka wrote:
+> > From d5190e4e871689a530da3c3fd327be45a88f006a Mon Sep 17 00:00:00 2001
+> > From: Vlastimil Babka <vbabka@suse.cz>
+> > Date: Tue, 7 Apr 2020 09:58:00 +0200
+> > Subject: [PATCH] usercopy: Mark dma-kmalloc caches as usercopy caches
 > > 
-> > Move the inode dirty data flushing to a workqueue so that multiple
-> > threads can take advantage of a single thread's flushing work.  The
-> > ratelimiting technique used in bdd4ee4 was not successful, because
-> > threads that skipped the inode flush scan due to ratelimiting would
-> > ENOSPC early, which caused occasional (but noticeable) changes in
-> > behavior and sporadic fstest regressions.
+> > We have seen a "usercopy: Kernel memory overwrite attempt detected to SLUB
+> > object 'dma-kmalloc-1 k' (offset 0, size 11)!" error on s390x, as IUCV uses
+> > kmalloc() with __GFP_DMA because of memory address restrictions.
+> > The issue has been discussed [2] and it has been noted that if all the kmalloc
+> > caches are marked as usercopy, there's little reason not to mark dma-kmalloc
+> > caches too. The 'dma' part merely means that __GFP_DMA is used to restrict
+> > memory address range.
 > > 
-> > Therfore, make all the writer threads wait on a single inode flush,
-> 
-> Therefore
-> 
-> > which eliminates both the stampeding hoards of flushers and the small
-> 
-> 					hordes ? :)
-
-Fixed both of these.  Thanks for the review!
-
-(Apparently I started this reply days ago and forgot to send it; the
-patch ofc is in -rc2...)
-
---D
-
-> 
-> > window in which a write could fail with ENOSPC because it lost the
-> > ratelimit race after even another thread freed space.
+> > As Jann Horn put it [3]:
 > > 
-> > Fixes: bdd4ee4f8407 ("xfs: ratelimit inode flush on buffered write ENOSPC")
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > "I think dma-kmalloc slabs should be handled the same way as normal
+> > kmalloc slabs. When a dma-kmalloc allocation is freshly created, it is
+> > just normal kernel memory - even if it might later be used for DMA -,
+> > and it should be perfectly fine to copy_from_user() into such
+> > allocations at that point, and to copy_to_user() out of them at the
+> > end. If you look at the places where such allocations are created, you
+> > can see things like kmemdup(), memcpy() and so on - all normal
+> > operations that shouldn't conceptually be different from usercopy in
+> > any relevant way."
+> > 
+> > Thus this patch marks the dma-kmalloc-* caches as usercopy.
+> > 
+> > [1] https://bugzilla.suse.com/show_bug.cgi?id=1156053
+> > [2] https://lore.kernel.org/kernel-hardening/bfca96db-bbd0-d958-7732-76e36c667c68@suse.cz/
+> > [3] https://lore.kernel.org/kernel-hardening/CAG48ez1a4waGk9kB0WLaSbs4muSoK0AYAVk8=XYaKj4_+6e6Hg@mail.gmail.com/
+> > 
+> > Signed-off-by: Vlastimil Babka <vbabka@suse.cz>
+> 
+> Friendly ping.
+> 
+> Acked-by: Jiri Slaby <jslaby@suse.cz>
+
+Should this go via -mm?
+
+-Kees
+
+> 
 > > ---
-> > v2: run it on the sync workqueue
-> > ---
-> 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> 
-> >  fs/xfs/xfs_mount.h |    6 +++++-
-> >  fs/xfs/xfs_super.c |   40 ++++++++++++++++++++++------------------
-> >  2 files changed, 27 insertions(+), 19 deletions(-)
+> >  mm/slab_common.c | 3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
 > > 
-> > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> > index 50c43422fa17..b2e4598fdf7d 100644
-> > --- a/fs/xfs/xfs_mount.h
-> > +++ b/fs/xfs/xfs_mount.h
-> > @@ -167,8 +167,12 @@ typedef struct xfs_mount {
-> >  	struct xfs_kobj		m_error_meta_kobj;
-> >  	struct xfs_error_cfg	m_error_cfg[XFS_ERR_CLASS_MAX][XFS_ERR_ERRNO_MAX];
-> >  	struct xstats		m_stats;	/* per-fs stats */
-> > -	struct ratelimit_state	m_flush_inodes_ratelimit;
-> >  
-> > +	/*
-> > +	 * Workqueue item so that we can coalesce multiple inode flush attempts
-> > +	 * into a single flush.
-> > +	 */
-> > +	struct work_struct	m_flush_inodes_work;
-> >  	struct workqueue_struct *m_buf_workqueue;
-> >  	struct workqueue_struct	*m_unwritten_workqueue;
-> >  	struct workqueue_struct	*m_cil_workqueue;
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index abf06bf9c3f3..424bb9a2d532 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> > @@ -516,6 +516,20 @@ xfs_destroy_mount_workqueues(
-> >  	destroy_workqueue(mp->m_buf_workqueue);
-> >  }
-> >  
-> > +static void
-> > +xfs_flush_inodes_worker(
-> > +	struct work_struct	*work)
-> > +{
-> > +	struct xfs_mount	*mp = container_of(work, struct xfs_mount,
-> > +						   m_flush_inodes_work);
-> > +	struct super_block	*sb = mp->m_super;
-> > +
-> > +	if (down_read_trylock(&sb->s_umount)) {
-> > +		sync_inodes_sb(sb);
-> > +		up_read(&sb->s_umount);
-> > +	}
-> > +}
-> > +
-> >  /*
-> >   * Flush all dirty data to disk. Must not be called while holding an XFS_ILOCK
-> >   * or a page lock. We use sync_inodes_sb() here to ensure we block while waiting
-> > @@ -526,15 +540,15 @@ void
-> >  xfs_flush_inodes(
-> >  	struct xfs_mount	*mp)
-> >  {
-> > -	struct super_block	*sb = mp->m_super;
-> > -
-> > -	if (!__ratelimit(&mp->m_flush_inodes_ratelimit))
-> > +	/*
-> > +	 * If flush_work() returns true then that means we waited for a flush
-> > +	 * which was already in progress.  Don't bother running another scan.
-> > +	 */
-> > +	if (flush_work(&mp->m_flush_inodes_work))
-> >  		return;
-> >  
-> > -	if (down_read_trylock(&sb->s_umount)) {
-> > -		sync_inodes_sb(sb);
-> > -		up_read(&sb->s_umount);
-> > -	}
-> > +	queue_work(mp->m_sync_workqueue, &mp->m_flush_inodes_work);
-> > +	flush_work(&mp->m_flush_inodes_work);
-> >  }
-> >  
-> >  /* Catch misguided souls that try to use this interface on XFS */
-> > @@ -1369,17 +1383,6 @@ xfs_fc_fill_super(
-> >  	if (error)
-> >  		goto out_free_names;
-> >  
-> > -	/*
-> > -	 * Cap the number of invocations of xfs_flush_inodes to 16 for every
-> > -	 * quarter of a second.  The magic numbers here were determined by
-> > -	 * observation neither to cause stalls in writeback when there are a
-> > -	 * lot of IO threads and the fs is near ENOSPC, nor cause any fstest
-> > -	 * regressions.  YMMV.
-> > -	 */
-> > -	ratelimit_state_init(&mp->m_flush_inodes_ratelimit, HZ / 4, 16);
-> > -	ratelimit_set_flags(&mp->m_flush_inodes_ratelimit,
-> > -			RATELIMIT_MSG_ON_RELEASE);
-> > -
-> >  	error = xfs_init_mount_workqueues(mp);
-> >  	if (error)
-> >  		goto out_close_devices;
-> > @@ -1752,6 +1755,7 @@ static int xfs_init_fs_context(
-> >  	spin_lock_init(&mp->m_perag_lock);
-> >  	mutex_init(&mp->m_growlock);
-> >  	atomic_set(&mp->m_active_trans, 0);
-> > +	INIT_WORK(&mp->m_flush_inodes_work, xfs_flush_inodes_worker);
-> >  	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
-> >  	INIT_DELAYED_WORK(&mp->m_eofblocks_work, xfs_eofblocks_worker);
-> >  	INIT_DELAYED_WORK(&mp->m_cowblocks_work, xfs_cowblocks_worker);
+> > diff --git a/mm/slab_common.c b/mm/slab_common.c
+> > index 5282f881d2f5..ae9486160594 100644
+> > --- a/mm/slab_common.c
+> > +++ b/mm/slab_common.c
+> > @@ -1303,7 +1303,8 @@ void __init create_kmalloc_caches(slab_flags_t flags)
+> >  			kmalloc_caches[KMALLOC_DMA][i] = create_kmalloc_cache(
+> >  				kmalloc_info[i].name[KMALLOC_DMA],
+> >  				kmalloc_info[i].size,
+> > -				SLAB_CACHE_DMA | flags, 0, 0);
+> > +				SLAB_CACHE_DMA | flags, 0,
+> > +				kmalloc_info[i].size);
+> >  		}
+> >  	}
+> >  #endif
 > > 
 > 
+> thanks,
+> -- 
+> js
+> suse labs
+
+-- 
+Kees Cook
