@@ -2,433 +2,204 @@ Return-Path: <SRS0=5D7u=6E=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D069BC3815B
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 09:03:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F864C3815B
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 11:14:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AD8012145D
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 09:03:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E57C521D94
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 11:14:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b="IDveWlOS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725896AbgDTJDS convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Apr 2020 05:03:18 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:3044 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725773AbgDTJDS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Apr 2020 05:03:18 -0400
-Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 03K924Ke018079
-        for <linux-xfs@vger.kernel.org>; Mon, 20 Apr 2020 05:03:16 -0400
-Received: from e06smtp05.uk.ibm.com (e06smtp05.uk.ibm.com [195.75.94.101])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 30gj229tmt-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Mon, 20 Apr 2020 05:03:16 -0400
-Received: from localhost
-        by e06smtp05.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.ibm.com>;
-        Mon, 20 Apr 2020 10:02:23 +0100
-Received: from b06cxnps4075.portsmouth.uk.ibm.com (9.149.109.197)
-        by e06smtp05.uk.ibm.com (192.168.101.135) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
-        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Mon, 20 Apr 2020 10:02:20 +0100
-Received: from d06av25.portsmouth.uk.ibm.com (d06av25.portsmouth.uk.ibm.com [9.149.105.61])
-        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 03K939KT57868536
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 20 Apr 2020 09:03:09 GMT
-Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 76A6A11C052;
-        Mon, 20 Apr 2020 09:03:09 +0000 (GMT)
-Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 8876211C04C;
-        Mon, 20 Apr 2020 09:03:08 +0000 (GMT)
-Received: from localhost.localdomain (unknown [9.85.68.184])
-        by d06av25.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Mon, 20 Apr 2020 09:03:08 +0000 (GMT)
-From:   Chandan Rajendra <chandan@linux.ibm.com>
-To:     Allison Collins <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v8 18/20] xfs: Add delay ready attr remove routines
-Date:   Mon, 20 Apr 2020 14:36:13 +0530
-Organization: IBM
-In-Reply-To: <20200403221229.4995-19-allison.henderson@oracle.com>
-References: <20200403221229.4995-1-allison.henderson@oracle.com> <20200403221229.4995-19-allison.henderson@oracle.com>
+        id S1726161AbgDTLOb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Apr 2020 07:14:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47428 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726121AbgDTLOa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Apr 2020 07:14:30 -0400
+Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4030FC061A41
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Apr 2020 04:14:30 -0700 (PDT)
+Received: by mail-ej1-x643.google.com with SMTP id re23so7573445ejb.4
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Apr 2020 04:14:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=szeredi.hu; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=okPBkG9vtS/wVdJh/KDIc+hdg6krV+bND5agW6vUaRM=;
+        b=IDveWlOS7Tzhrdb36+hZpTST6wjOAPrAj2jj5uib3vbWbabqwzW9IWuAtw8h4eTBNA
+         9a9lkdgEJOm6Eb3fwCtOVTxrVmphaH2PGWy9bhlS9QBo4VsFK/CUgj6vV9uyCovU0arA
+         5Kj1tMT4D5sNr37XYcPWFQo9UnIzxN1guBg1w=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=okPBkG9vtS/wVdJh/KDIc+hdg6krV+bND5agW6vUaRM=;
+        b=GLjRlCxPL0/B05iW0pIyc6WKKolZsckNLJ1vrZfn3dHAHOBYV0amFPaVkRgd1ssXCS
+         bkuPO6ewsIeeSS7qRwyZ1J2WxIAfD+4bm7D+KYbx9vqlIjXl9n93MMsPLoRiw8UMHpAe
+         3WmPotPGhA2WKJZHXmSOxemG94hOC7ERN0LpMLkqnrHdwywpXTNuRanLFAKg7Ux0GdNn
+         nvDnh7rUg9Zdi6e2VTQLyjWmGYm1HqCltQKuDOHa3iBMDnDX/1QZOwB74m8bcOwG/m7Q
+         j09TyUGQQ0Dt8z9OLVMdik39ZWbeGNY9fTLxdbonCNUiqlzjWyKvlNjirmj0cgUZ8cKV
+         48TQ==
+X-Gm-Message-State: AGi0PuYALT/PjF+CCZRm5XO4xbIvBGAZenv3fqA3mLDViimVrHedtDRj
+        1ARJEP/xdcNhl8uUK1TsvGe8TO2owT45Kq2kd1Vquw==
+X-Google-Smtp-Source: APiQypIVhtjPPYqBEymAM1SkD4SYcU1V6bmTKvyt+63wSYT0tOjvuXxym8edoJZS6GcpMs4Nq+7PF2DextVY/K9Ax1g=
+X-Received: by 2002:a17:906:841a:: with SMTP id n26mr16038100ejx.43.1587381268754;
+ Mon, 20 Apr 2020 04:14:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8BIT
+References: <20200414150233.24495-1-willy@infradead.org> <20200414150233.24495-25-willy@infradead.org>
+In-Reply-To: <20200414150233.24495-25-willy@infradead.org>
+From:   Miklos Szeredi <miklos@szeredi.hu>
+Date:   Mon, 20 Apr 2020 13:14:17 +0200
+Message-ID: <CAJfpegsZF=TFQ67vABkE5ghiZoTZF+=_u8tM5U_P6jZeAmv23A@mail.gmail.com>
+Subject: Re: [PATCH v11 24/25] fuse: Convert from readpages to readahead
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        ocfs2-devel@oss.oracle.com, linux-xfs <linux-xfs@vger.kernel.org>,
+        Dave Chinner <dchinner@redhat.com>,
+        William Kucharski <william.kucharski@oracle.com>
 Content-Type: text/plain; charset="UTF-8"
-X-TM-AS-GCONF: 00
-x-cbid: 20042009-0020-0000-0000-000003CB1CF6
-X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 20042009-0021-0000-0000-000022240F41
-Message-Id: <1751112.6zseaXoMQ2@localhost.localdomain>
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.676
- definitions=2020-04-20_03:2020-04-17,2020-04-20 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 clxscore=1015
- impostorscore=0 mlxscore=0 suspectscore=1 bulkscore=0 malwarescore=0
- phishscore=0 adultscore=0 spamscore=0 priorityscore=1501
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004200076
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Saturday, April 4, 2020 3:42 AM Allison Collins wrote: 
-> This patch modifies the attr remove routines to be delay ready. This
-> means they no longer roll or commit transactions, but instead return
-> -EAGAIN to have the calling routine roll and refresh the transaction. In
-> this series, xfs_attr_remove_args has become xfs_attr_remove_iter, which
-> uses a sort of state machine like switch to keep track of where it was
-> when EAGAIN was returned. xfs_attr_node_removename has also been
-> modified to use the switch, and a new version of xfs_attr_remove_args
-> consists of a simple loop to refresh the transaction until the operation
-> is completed.
-> 
-> Calls to xfs_attr_rmtval_remove are replaced with the delay ready
-> counter parts: xfs_attr_rmtval_invalidate (appearing in the setup
-> helper) and then __xfs_attr_rmtval_remove. We will rename
-> __xfs_attr_rmtval_remove back to xfs_attr_rmtval_remove when we are
-> done.
-> 
-> This patch also adds a new struct xfs_delattr_context, which we will use
-> to keep track of the current state of an attribute operation. The new
-> xfs_delattr_state enum is used to track various operations that are in
-> progress so that we know not to repeat them, and resume where we left
-> off before EAGAIN was returned to cycle out the transaction. Other
-> members take the place of local variables that need to retain their
-> values across multiple function recalls.
-> 
-> Below is a state machine diagram for attr remove operations. The
-> XFS_DAS_* states indicate places where the function would return
-> -EAGAIN, and then immediately resume from after being recalled by the
-> calling function.  States marked as a "subroutine state" indicate that
-> they belong to a subroutine, and so the calling function needs to pass
-> them back to that subroutine to allow it to finish where it left off.
-> But they otherwise do not have a role in the calling function other than
-> just passing through.
-> 
->  xfs_attr_remove_iter()
->          XFS_DAS_RM_SHRINK     ─┐
->          (subroutine state)     │
->                                 │
->          XFS_DAS_RMTVAL_REMOVE ─┤
->          (subroutine state)     │
->                                 └─>xfs_attr_node_removename()
->                                                  │
->                                                  v
->                                          need to remove
->                                    ┌─n──  rmt blocks?
->                                    │             │
->                                    │             y
->                                    │             │
->                                    │             v
->                                    │  ┌─>XFS_DAS_RMTVAL_REMOVE
->                                    │  │          │
->                                    │  │          v
->                                    │  └──y── more blks
->                                    │         to remove?
->                                    │             │
->                                    │             n
->                                    │             │
->                                    │             v
->                                    │         need to
->                                    └─────> shrink tree? ─n─┐
->                                                  │         │
->                                                  y         │
->                                                  │         │
->                                                  v         │
->                                          XFS_DAS_RM_SHRINK │
->                                                  │         │
->                                                  v         │
->                                                 done <─────┘
-> 
-> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+On Tue, Apr 14, 2020 at 5:08 PM Matthew Wilcox <willy@infradead.org> wrote:
+>
+> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+>
+> Implement the new readahead operation in fuse by using __readahead_batch()
+> to fill the array of pages in fuse_args_pages directly.  This lets us
+> inline fuse_readpages_fill() into fuse_readahead().
+>
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: William Kucharski <william.kucharski@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_attr.c | 168 ++++++++++++++++++++++++++++++++++++-----------
->  fs/xfs/libxfs/xfs_attr.h |  38 +++++++++++
->  2 files changed, 168 insertions(+), 38 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index d735570..f700976 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -45,7 +45,7 @@ STATIC int xfs_attr_shortform_addname(xfs_da_args_t *args);
->   */
->  STATIC int xfs_attr_leaf_get(xfs_da_args_t *args);
->  STATIC int xfs_attr_leaf_addname(xfs_da_args_t *args);
-> -STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args);
-> +STATIC int xfs_attr_leaf_removename(struct xfs_delattr_context *dac);
->  STATIC int xfs_attr_leaf_hasname(struct xfs_da_args *args, struct xfs_buf **bp);
->  
->  /*
-> @@ -53,12 +53,21 @@ STATIC int xfs_attr_leaf_hasname(struct xfs_da_args *args, struct xfs_buf **bp);
->   */
->  STATIC int xfs_attr_node_get(xfs_da_args_t *args);
->  STATIC int xfs_attr_node_addname(xfs_da_args_t *args);
-> -STATIC int xfs_attr_node_removename(xfs_da_args_t *args);
-> +STATIC int xfs_attr_node_removename(struct xfs_delattr_context *dac);
->  STATIC int xfs_attr_node_hasname(xfs_da_args_t *args,
->  				 struct xfs_da_state **state);
->  STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
->  STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
->  
-> +STATIC void
-> +xfs_delattr_context_init(
-> +	struct xfs_delattr_context	*dac,
-> +	struct xfs_da_args		*args)
-> +{
-> +	memset(dac, 0, sizeof(struct xfs_delattr_context));
-> +	dac->da_args = args;
-> +}
-> +
->  int
->  xfs_inode_hasattr(
->  	struct xfs_inode	*ip)
-> @@ -356,20 +365,66 @@ xfs_has_attr(
->   */
->  int
->  xfs_attr_remove_args(
-> -	struct xfs_da_args      *args)
-> +	struct xfs_da_args	*args)
->  {
-> +	int			error = 0;
-> +	struct			xfs_delattr_context dac;
-> +
-> +	xfs_delattr_context_init(&dac, args);
-> +
-> +	do {
-> +		error = xfs_attr_remove_iter(&dac);
-> +		if (error != -EAGAIN)
-> +			break;
-> +
-> +		if (dac.flags & XFS_DAC_DEFER_FINISH) {
-> +			dac.flags &= ~XFS_DAC_DEFER_FINISH;
-> +			error = xfs_defer_finish(&args->trans);
-> +			if (error)
-> +				break;
-> +		}
-> +
-> +		error = xfs_trans_roll_inode(&args->trans, args->dp);
-> +		if (error)
-> +			break;
-> +	} while (true);
-> +
-> +	return error;
-> +}
-> +
-> +/*
-> + * Remove the attribute specified in @args.
-> + *
-> + * This function may return -EAGAIN to signal that the transaction needs to be
-> + * rolled.  Callers should continue calling this function until they receive a
-> + * return value other than -EAGAIN.
-> + */
-> +int
-> +xfs_attr_remove_iter(
-> +	struct xfs_delattr_context *dac)
-> +{
-> +	struct xfs_da_args	*args = dac->da_args;
->  	struct xfs_inode	*dp = args->dp;
->  	int			error;
->  
-> +	/* State machine switch */
-> +	switch (dac->dela_state) {
-> +	case XFS_DAS_RM_SHRINK:
-> +	case XFS_DAS_RMTVAL_REMOVE:
-> +		return xfs_attr_node_removename(dac);
-> +	default:
-> +		break;
-> +	}
-> +
->  	if (!xfs_inode_hasattr(dp)) {
->  		error = -ENOATTR;
->  	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
->  		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
->  		error = xfs_attr_shortform_remove(args);
->  	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
-> -		error = xfs_attr_leaf_removename(args);
-> +		error = xfs_attr_leaf_removename(dac);
->  	} else {
-> -		error = xfs_attr_node_removename(args);
-> +		error = xfs_attr_node_removename(dac);
->  	}
->  
->  	return error;
-> @@ -794,11 +849,12 @@ xfs_attr_leaf_hasname(
->   */
->  STATIC int
->  xfs_attr_leaf_removename(
-> -	struct xfs_da_args	*args)
-> +	struct xfs_delattr_context	*dac)
->  {
-> -	struct xfs_inode	*dp;
-> -	struct xfs_buf		*bp;
-> -	int			error, forkoff;
-> +	struct xfs_da_args		*args = dac->da_args;
-> +	struct xfs_inode		*dp;
-> +	struct xfs_buf			*bp;
-> +	int				error, forkoff;
->  
->  	trace_xfs_attr_leaf_removename(args);
->  
-> @@ -825,9 +881,8 @@ xfs_attr_leaf_removename(
->  		/* bp is gone due to xfs_da_shrink_inode */
->  		if (error)
->  			return error;
-> -		error = xfs_defer_finish(&args->trans);
-> -		if (error)
-> -			return error;
-> +
-> +		dac->flags |= XFS_DAC_DEFER_FINISH;
->  	}
->  	return 0;
+>  fs/fuse/file.c | 99 ++++++++++++++------------------------------------
+>  1 file changed, 27 insertions(+), 72 deletions(-)
+>
+> diff --git a/fs/fuse/file.c b/fs/fuse/file.c
+> index 9d67b830fb7a..db82fb29dd39 100644
+> --- a/fs/fuse/file.c
+> +++ b/fs/fuse/file.c
+> @@ -915,84 +915,39 @@ static void fuse_send_readpages(struct fuse_io_args *ia, struct file *file)
+>         fuse_readpages_end(fc, &ap->args, err);
 >  }
-> @@ -1128,12 +1183,13 @@ xfs_attr_node_addname(
->   */
->  STATIC int
->  xfs_attr_node_shrink(
-> -	struct xfs_da_args	*args,
-> -	struct xfs_da_state     *state)
-> +	struct xfs_delattr_context	*dac,
-> +	struct xfs_da_state		*state)
+>
+> -struct fuse_fill_data {
+> -       struct fuse_io_args *ia;
+> -       struct file *file;
+> -       struct inode *inode;
+> -       unsigned int nr_pages;
+> -       unsigned int max_pages;
+> -};
+> -
+> -static int fuse_readpages_fill(void *_data, struct page *page)
+> +static void fuse_readahead(struct readahead_control *rac)
 >  {
-> -	struct xfs_inode	*dp = args->dp;
-> -	int			error, forkoff;
-> -	struct xfs_buf		*bp;
-> +	struct xfs_da_args		*args = dac->da_args;
-> +	struct xfs_inode		*dp = args->dp;
-> +	int				error, forkoff;
-> +	struct xfs_buf			*bp;
->  
->  	/*
->  	 * Have to get rid of the copy of this dabuf in the state.
-> @@ -1153,9 +1209,7 @@ xfs_attr_node_shrink(
->  		if (error)
->  			return error;
->  
-> -		error = xfs_defer_finish(&args->trans);
-> -		if (error)
-> -			return error;
-> +		dac->flags |= XFS_DAC_DEFER_FINISH;
->  	} else
->  		xfs_trans_brelse(args->trans, bp);
->  
-> @@ -1194,13 +1248,15 @@ xfs_attr_leaf_mark_incomplete(
->  
->  /*
->   * Initial setup for xfs_attr_node_removename.  Make sure the attr is there and
-> - * the blocks are valid.  Any remote blocks will be marked incomplete.
-> + * the blocks are valid.  Any remote blocks will be marked incomplete and
-> + * invalidated.
->   */
->  STATIC
->  int xfs_attr_node_removename_setup(
-> -	struct xfs_da_args	*args,
-> -	struct xfs_da_state	**state)
-> +	struct xfs_delattr_context	*dac,
-> +	struct xfs_da_state		**state)
->  {
-> +	struct xfs_da_args	*args = dac->da_args;
->  	int			error;
->  	struct xfs_da_state_blk	*blk;
->  
-> @@ -1212,10 +1268,21 @@ int xfs_attr_node_removename_setup(
->  	ASSERT(blk->bp != NULL);
->  	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
->  
-> +	/*
-> +	 * Store blk and state in the context incase we need to cycle out the
-> +	 * transaction
-> +	 */
-> +	dac->blk = blk;
-> +	dac->da_state = *state;
+> -       struct fuse_fill_data *data = _data;
+> -       struct fuse_io_args *ia = data->ia;
+> -       struct fuse_args_pages *ap = &ia->ap;
+> -       struct inode *inode = data->inode;
+> +       struct inode *inode = rac->mapping->host;
+>         struct fuse_conn *fc = get_fuse_conn(inode);
+> +       unsigned int i, max_pages, nr_pages = 0;
+>
+> -       fuse_wait_on_page_writeback(inode, page->index);
+> -
+> -       if (ap->num_pages &&
+> -           (ap->num_pages == fc->max_pages ||
+> -            (ap->num_pages + 1) * PAGE_SIZE > fc->max_read ||
+> -            ap->pages[ap->num_pages - 1]->index + 1 != page->index)) {
+> -               data->max_pages = min_t(unsigned int, data->nr_pages,
+> -                                       fc->max_pages);
+> -               fuse_send_readpages(ia, data->file);
+> -               data->ia = ia = fuse_io_alloc(NULL, data->max_pages);
+> -               if (!ia) {
+> -                       unlock_page(page);
+> -                       return -ENOMEM;
+> -               }
+> -               ap = &ia->ap;
+> -       }
+> -
+> -       if (WARN_ON(ap->num_pages >= data->max_pages)) {
+> -               unlock_page(page);
+> -               fuse_io_free(ia);
+> -               return -EIO;
+> -       }
+> -
+> -       get_page(page);
+> -       ap->pages[ap->num_pages] = page;
+> -       ap->descs[ap->num_pages].length = PAGE_SIZE;
+> -       ap->num_pages++;
+> -       data->nr_pages--;
+> -       return 0;
+> -}
+> -
+> -static int fuse_readpages(struct file *file, struct address_space *mapping,
+> -                         struct list_head *pages, unsigned nr_pages)
+> -{
+> -       struct inode *inode = mapping->host;
+> -       struct fuse_conn *fc = get_fuse_conn(inode);
+> -       struct fuse_fill_data data;
+> -       int err;
+> -
+> -       err = -EIO;
+>         if (is_bad_inode(inode))
+> -               goto out;
+> +               return;
+>
+> -       data.file = file;
+> -       data.inode = inode;
+> -       data.nr_pages = nr_pages;
+> -       data.max_pages = min_t(unsigned int, nr_pages, fc->max_pages);
+> -;
+> -       data.ia = fuse_io_alloc(NULL, data.max_pages);
+> -       err = -ENOMEM;
+> -       if (!data.ia)
+> -               goto out;
+> +       max_pages = min(fc->max_pages, fc->max_read / PAGE_SIZE);
+>
+> -       err = read_cache_pages(mapping, pages, fuse_readpages_fill, &data);
+> -       if (!err) {
+> -               if (data.ia->ap.num_pages)
+> -                       fuse_send_readpages(data.ia, file);
+> -               else
+> -                       fuse_io_free(data.ia);
+> +       for (;;) {
+> +               struct fuse_io_args *ia;
+> +               struct fuse_args_pages *ap;
 > +
->  	if (args->rmtblkno > 0) {
->  		error = xfs_attr_leaf_mark_incomplete(args, *state);
->  		if (error)
->  			return error;
-> +
-> +		error = xfs_attr_rmtval_invalidate(args);
-> +		if (error)
-> +			return error;
->  	}
->  
->  	return 0;
-> @@ -1228,7 +1295,10 @@ xfs_attr_node_removename_rmt (
->  {
->  	int			error = 0;
->  
-> -	error = xfs_attr_rmtval_remove(args);
-> +	/*
-> +	 * May return -EAGAIN to request that the caller recall this function
-> +	 */
-> +	error = __xfs_attr_rmtval_remove(args);
->  	if (error)
->  		return error;
->  
-> @@ -1249,19 +1319,37 @@ xfs_attr_node_removename_rmt (
->   * This will involve walking down the Btree, and may involve joining
->   * leaf nodes and even joining intermediate nodes up to and including
->   * the root node (a special case of an intermediate node).
-> + *
-> + * This routine is meant to function as either an inline or delayed operation,
-> + * and may return -EAGAIN when the transaction needs to be rolled.  Calling
-> + * functions will need to handle this, and recall the function until a
-> + * successful error code is returned.
->   */
->  STATIC int
->  xfs_attr_node_removename(
-> -	struct xfs_da_args	*args)
-> +	struct xfs_delattr_context	*dac)
->  {
-> +	struct xfs_da_args	*args = dac->da_args;
->  	struct xfs_da_state	*state;
->  	struct xfs_da_state_blk	*blk;
->  	int			retval, error;
->  	struct xfs_inode	*dp = args->dp;
->  
->  	trace_xfs_attr_node_removename(args);
-> +	state = dac->da_state;
-> +	blk = dac->blk;
-> +
-> +	/* State machine switch */
-> +	switch (dac->dela_state) {
-> +	case XFS_DAS_RMTVAL_REMOVE:
-> +		goto das_rmtval_remove;
-> +	case XFS_DAS_RM_SHRINK:
-> +		goto das_rm_shrink;
-> +	default:
-> +		break;
-> +	}
->  
-> -	error = xfs_attr_node_removename_setup(args, &state);
-> +	error = xfs_attr_node_removename_setup(dac, &state);
->  	if (error)
->  		goto out;
->  
-> @@ -1270,10 +1358,16 @@ xfs_attr_node_removename(
->  	 * This is done before we remove the attribute so that we don't
->  	 * overflow the maximum size of a transaction and/or hit a deadlock.
->  	 */
-> +
-> +das_rmtval_remove:
-> +
->  	if (args->rmtblkno > 0) {
->  		error = xfs_attr_node_removename_rmt(args, state);
-> -		if (error)
-> -			goto out;
-> +		if (error) {
-> +			if (error == -EAGAIN)
-> +				dac->dela_state = XFS_DAS_RMTVAL_REMOVE;
+> +               nr_pages = readahead_count(rac) - nr_pages;
 
-Shouldn't XFS_DAC_DEFER_FINISH be set in dac->flags?
-xfs_attr_node_removename_rmt() indirectly calls __xfs_bunmapi() which would
-have added items to the deferred list.
+Hmm.  I see what's going on here, but it's confusing.   Why is
+__readahead_batch() decrementing the readahead count at the start,
+rather than at the end?
 
--- 
-chandan
+At the very least it needs a comment about why nr_pages is calculated this way.
 
+> +               if (nr_pages > max_pages)
+> +                       nr_pages = max_pages;
+> +               if (nr_pages == 0)
+> +                       break;
+> +               ia = fuse_io_alloc(NULL, nr_pages);
+> +               if (!ia)
+> +                       return;
+> +               ap = &ia->ap;
+> +               nr_pages = __readahead_batch(rac, ap->pages, nr_pages);
+> +               for (i = 0; i < nr_pages; i++) {
+> +                       fuse_wait_on_page_writeback(inode,
+> +                                                   readahead_index(rac) + i);
 
+What's wrong with ap->pages[i]->index?  Are we trying to wean off using ->index?
 
+Thanks,
+Miklos
