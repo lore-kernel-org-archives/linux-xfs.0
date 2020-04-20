@@ -2,142 +2,165 @@ Return-Path: <SRS0=5D7u=6E=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA812C54FCC
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 22:31:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F2A4C54FCC
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 22:42:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B22A520724
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 22:31:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B59420672
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 22:42:15 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Lzf1UofV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726262AbgDTWbP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Apr 2020 18:31:15 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:33405 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725918AbgDTWbO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Apr 2020 18:31:14 -0400
-Received: from dread.disaster.area (pa49-180-0-232.pa.nsw.optusnet.com.au [49.180.0.232])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id DCF98584FBA;
-        Tue, 21 Apr 2020 08:31:12 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jQewa-0006V1-8t; Tue, 21 Apr 2020 08:31:12 +1000
-Date:   Tue, 21 Apr 2020 08:31:12 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 06/12] xfs: remove duplicate verification from
- xfs_qm_dqflush()
-Message-ID: <20200420223112.GQ9800@dread.disaster.area>
+        id S1726036AbgDTWmO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Apr 2020 18:42:14 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:40224 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725958AbgDTWmO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Apr 2020 18:42:14 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03KMdj9J143916;
+        Mon, 20 Apr 2020 22:42:11 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=xPg5/aLWQ3sLoV69dcyz2kxP3tv+p13n9nS37DrRfGs=;
+ b=Lzf1UofV6oQI02kWAUXxUlX5vz7X6LGnKuBkeUU5ye1T2ZUHd8+Xt09qV63hhXsbV+3E
+ uteNFsAOWGBYYlr0vSgbGb7Xf9DPPNWaeJCqvhCceI6CTNOdMaSVz2HKosW45GgaNyOB
+ Rhpb9nIdAZDFTTdkrDCjJhfUMBlWaLC+s7f50y0ZPu/cnFHHd5v+XSUjZz0B67Ascm45
+ yGRJRh7pLr806URTB7l6Ck2ymVcX2SXLo+G8+gASOO0AtCQwRjoNLGueUDQYD4XziOUt
+ 7wfz0BcbDhRNG12b/QAX3b5iz+fEJ8shYOToU1ZR10PsPlbKYza1NDHEjDT61dIw4lXE Uw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 30ft6n1wcp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 20 Apr 2020 22:42:11 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03KMbeet150360;
+        Mon, 20 Apr 2020 22:42:10 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 30gb3r7mah-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 20 Apr 2020 22:42:10 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03KMg9TJ020929;
+        Mon, 20 Apr 2020 22:42:09 GMT
+Received: from [10.65.145.61] (/10.65.145.61)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 20 Apr 2020 15:42:09 -0700
+Subject: Re: [PATCH 12/12] xfs: random buffer write failure errortag
+To:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 References: <20200417150859.14734-1-bfoster@redhat.com>
- <20200417150859.14734-7-bfoster@redhat.com>
- <20200420035322.GI9800@dread.disaster.area>
- <20200420140221.GF27516@bfoster>
+ <20200417150859.14734-13-bfoster@redhat.com>
+From:   Allison Collins <allison.henderson@oracle.com>
+Message-ID: <93e1457d-d341-5d40-4c8f-9b2cf482c0d8@oracle.com>
+Date:   Mon, 20 Apr 2020 15:42:08 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200420140221.GF27516@bfoster>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
-        a=XYjVcjsg+1UI/cdbgX7I7g==:117 a=XYjVcjsg+1UI/cdbgX7I7g==:17
-        a=kj9zAlcOel0A:10 a=cl8xLZFz6L8A:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=-ja3n3AcIAuvXTLIq7kA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20200417150859.14734-13-bfoster@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9597 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 adultscore=0
+ mlxlogscore=999 phishscore=0 suspectscore=0 bulkscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2004200176
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9597 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 bulkscore=0
+ priorityscore=1501 impostorscore=0 adultscore=0 phishscore=0
+ lowpriorityscore=0 malwarescore=0 clxscore=1015 mlxlogscore=999 mlxscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004200176
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 20, 2020 at 10:02:21AM -0400, Brian Foster wrote:
-> On Mon, Apr 20, 2020 at 01:53:22PM +1000, Dave Chinner wrote:
-> > On Fri, Apr 17, 2020 at 11:08:53AM -0400, Brian Foster wrote:
-> > > The dquot read/write verifier calls xfs_dqblk_verify() on every
-> > > dquot in the buffer. Remove the duplicate call from
-> > > xfs_qm_dqflush().
-> > 
-> > Ah, I think there's a bug here - it's not supposed to be a
-> > duplicate....
-> > 
-> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > ---
-> > >  fs/xfs/xfs_dquot.c | 14 --------------
-> > >  1 file changed, 14 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> > > index af2c8e5ceea0..73032c18a94a 100644
-> > > --- a/fs/xfs/xfs_dquot.c
-> > > +++ b/fs/xfs/xfs_dquot.c
-> > > @@ -1071,7 +1071,6 @@ xfs_qm_dqflush(
-> > >  	struct xfs_buf		*bp;
-> > >  	struct xfs_dqblk	*dqb;
-> > >  	struct xfs_disk_dquot	*ddqp;
-> > > -	xfs_failaddr_t		fa;
-> > >  	int			error;
-> > >  
-> > >  	ASSERT(XFS_DQ_IS_LOCKED(dqp));
-> > > @@ -1116,19 +1115,6 @@ xfs_qm_dqflush(
-> > >  	dqb = bp->b_addr + dqp->q_bufoffset;
-> > >  	ddqp = &dqb->dd_diskdq;
-> > >  
-> > > -	/*
-> > > -	 * A simple sanity check in case we got a corrupted dquot.
-> > > -	 */
-> > > -	fa = xfs_dqblk_verify(mp, dqb, be32_to_cpu(ddqp->d_id), 0);
-> > 
-> > So this verifies the on disk dquot ....
-> > 
-> > > -	if (fa) {
-> > > -		xfs_alert(mp, "corrupt dquot ID 0x%x in memory at %pS",
-> > 
-> > ...which issues an "in memory corruption" alert on failure...
-> > 
-> > > -				be32_to_cpu(ddqp->d_id), fa);
-> > > -		xfs_buf_relse(bp);
-> > > -		xfs_dqfunlock(dqp);
-> > > -		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> > > -		return -EFSCORRUPTED;
-> > > -	}
-> > > -
-> > >  	/* This is the only portion of data that needs to persist */
-> > >  	memcpy(ddqp, &dqp->q_core, sizeof(struct xfs_disk_dquot));
-> > 
-> > .... and on success we immediately overwrite the on-disk copy with
-> > the unchecked in-memory copy of the dquot. 
-> > 
-> > IOWs, I think that verification call here should be checking the
-> > in-memory dquot core, not the on disk buffer that is about to get
-> > trashed.  i.e. something like this:
-> > 
-> > -	fa = xfs_dqblk_verify(mp, dqb, be32_to_cpu(ddqp->d_id), 0);
-> > +	fa = xfs_dquot_verify(mp, &dqp->q_core, be32_to_cpu(ddqp->d_id), 0);
-> > 
+
+
+On 4/17/20 8:08 AM, Brian Foster wrote:
+> Introduce an error tag to randomly fail async buffer writes. This is
+> primarily to facilitate testing of the XFS error configuration
+> mechanism.
 > 
-> Isn't this still essentially duplicated by the write verifier? I don't
-> feel strongly about changing it as above vs. removing it, but it does
-> still seem unnecessary to me..
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+Ok, I think it looks ok:
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
 
-It's no different to the xfs_iflush_int() code that runs a heap of
-checks on the in-memory inode before it is flushed to the backing
-buffer. That uses a combination of open coded checks (for error
-injection) and verifier functions (e.g. fork checking), so this
-really isn't that unusual.
-
-Realistically, it's better to catch the corruption as early as
-possible - if we catch it here we know we corrupted the in-memory
-dquot. However, if the write verifier catches it we have no idea
-exactly when the corruption occurred, or whether it was a result of
-a code problem or an external memory corruption in memory we haven't
-modified at all...
-
-IOWs the two checks or intended to catch very different classes of
-in-memory corruptions, so they really aren't redundant or
-unnecessary at all...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> ---
+>   fs/xfs/libxfs/xfs_errortag.h | 4 +++-
+>   fs/xfs/xfs_buf.c             | 6 ++++++
+>   fs/xfs/xfs_error.c           | 3 +++
+>   3 files changed, 12 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
+> index 79e6c4fb1d8a..2486dab19023 100644
+> --- a/fs/xfs/libxfs/xfs_errortag.h
+> +++ b/fs/xfs/libxfs/xfs_errortag.h
+> @@ -55,7 +55,8 @@
+>   #define XFS_ERRTAG_FORCE_SCRUB_REPAIR			32
+>   #define XFS_ERRTAG_FORCE_SUMMARY_RECALC			33
+>   #define XFS_ERRTAG_IUNLINK_FALLBACK			34
+> -#define XFS_ERRTAG_MAX					35
+> +#define XFS_ERRTAG_BUF_IOERROR				35
+> +#define XFS_ERRTAG_MAX					36
+>   
+>   /*
+>    * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+> @@ -95,5 +96,6 @@
+>   #define XFS_RANDOM_FORCE_SCRUB_REPAIR			1
+>   #define XFS_RANDOM_FORCE_SUMMARY_RECALC			1
+>   #define XFS_RANDOM_IUNLINK_FALLBACK			(XFS_RANDOM_DEFAULT/10)
+> +#define XFS_RANDOM_BUF_IOERROR				XFS_RANDOM_DEFAULT
+>   
+>   #endif /* __XFS_ERRORTAG_H_ */
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 5120fed06075..a305db779156 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1289,6 +1289,12 @@ xfs_buf_bio_end_io(
+>   	struct bio		*bio)
+>   {
+>   	struct xfs_buf		*bp = (struct xfs_buf *)bio->bi_private;
+> +	struct xfs_mount	*mp = bp->b_mount;
+> +
+> +	if (!bio->bi_status &&
+> +	    (bp->b_flags & XBF_WRITE) && (bp->b_flags & XBF_ASYNC) &&
+> +	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BUF_IOERROR))
+> +		bio->bi_status = errno_to_blk_status(-EIO);
+>   
+>   	/*
+>   	 * don't overwrite existing errors - otherwise we can lose errors on
+> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+> index a21e9cc6516a..7f6e20899473 100644
+> --- a/fs/xfs/xfs_error.c
+> +++ b/fs/xfs/xfs_error.c
+> @@ -53,6 +53,7 @@ static unsigned int xfs_errortag_random_default[] = {
+>   	XFS_RANDOM_FORCE_SCRUB_REPAIR,
+>   	XFS_RANDOM_FORCE_SUMMARY_RECALC,
+>   	XFS_RANDOM_IUNLINK_FALLBACK,
+> +	XFS_RANDOM_BUF_IOERROR,
+>   };
+>   
+>   struct xfs_errortag_attr {
+> @@ -162,6 +163,7 @@ XFS_ERRORTAG_ATTR_RW(buf_lru_ref,	XFS_ERRTAG_BUF_LRU_REF);
+>   XFS_ERRORTAG_ATTR_RW(force_repair,	XFS_ERRTAG_FORCE_SCRUB_REPAIR);
+>   XFS_ERRORTAG_ATTR_RW(bad_summary,	XFS_ERRTAG_FORCE_SUMMARY_RECALC);
+>   XFS_ERRORTAG_ATTR_RW(iunlink_fallback,	XFS_ERRTAG_IUNLINK_FALLBACK);
+> +XFS_ERRORTAG_ATTR_RW(buf_ioerror,	XFS_ERRTAG_BUF_IOERROR);
+>   
+>   static struct attribute *xfs_errortag_attrs[] = {
+>   	XFS_ERRORTAG_ATTR_LIST(noerror),
+> @@ -199,6 +201,7 @@ static struct attribute *xfs_errortag_attrs[] = {
+>   	XFS_ERRORTAG_ATTR_LIST(force_repair),
+>   	XFS_ERRORTAG_ATTR_LIST(bad_summary),
+>   	XFS_ERRORTAG_ATTR_LIST(iunlink_fallback),
+> +	XFS_ERRORTAG_ATTR_LIST(buf_ioerror),
+>   	NULL,
+>   };
+>   
+> 
