@@ -7,63 +7,63 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26FC9C55181
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 22:46:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACA87C55181
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 22:46:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 05545206F4
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 22:46:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 88A0E206F9
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Apr 2020 22:46:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BpfJ9CR1"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="vyQNFjUw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725958AbgDTWqF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Apr 2020 18:46:05 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:42870 "EHLO
+        id S1726398AbgDTWqI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Apr 2020 18:46:08 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:42928 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726006AbgDTWqF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Apr 2020 18:46:05 -0400
+        with ESMTP id S1726006AbgDTWqH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Apr 2020 18:46:07 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03KMcU5j130161;
-        Mon, 20 Apr 2020 22:46:03 GMT
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03KMcURv130175;
+        Mon, 20 Apr 2020 22:46:06 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
  references : from : message-id : date : mime-version : in-reply-to :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=6LnVmaa4+u2GriDXCP1saqocy7ZmnhrWSpIIyeXr4Lo=;
- b=BpfJ9CR1SDfZ4yJiNyLcQ2IuHA8mSUFBEeOIRNk7auPTBLGwKhK8yulJoj3I31r2+fDb
- o99SFjX+7WVMuLi+u4hYg8ibEYT3Kd0jG4HH6glcXiK0KI9cAwSX5Z8OzrjTm4UCpTr2
- 5QGf12Yv0urBZ4cdUnnQ3BXUAE4jS48VxPCaYmFEsKTzKf+FJEu9t8p9W8xbUHNZzznM
- eCXE16VyvBDCFEqtiqO0Paa/l9/RuZ4Ba3dP7Nh9nFZGONQ2xnCNv9opyFQafSXOGvfK
- jIfho8vG54mik30jghUBytbrtGUDVqwrhCirNEjas3RRgfW5VEHAjVbNp7BF7+ED0tTE iQ== 
+ bh=+pVhbOiLMMINqHN2eL8P/r9MzsF1H25PRHsIchb5xns=;
+ b=vyQNFjUwHwljuxs53uh29qD4UpxVqpRCTcJEuPDBKj3tVzwdeALZkC5JgqNZOjrjyNLw
+ /mDBuPrQzkCKrNTMNqL02a/I90q5HRJstX1QwN3yn6TERVQeK1Und0mjWkyU3rTBTyr/
+ XkY2QalyZ/vTQRFl1L4sW4vTha7ghtZ4Xc5cz9EYng+tOqn+uoMEiixXq6zrfOxp9yeQ
+ Xsg+RAEdL2y50fT1f6O9j2W8KDfty74pzt03PCmEsfMOA60XGGAnIRXx8Iqq9VjIoFU1
+ 7qE5PoebzGSEEcDDBRFMFl1NBB57kOW2XitNb3Dcg4hF9illPEn43f3szfIPslc4Kbke Vg== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 30ft6n1wp9-1
+        by userp2120.oracle.com with ESMTP id 30ft6n1wpf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 20 Apr 2020 22:46:03 +0000
+        Mon, 20 Apr 2020 22:46:05 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03KMbewd150359;
-        Mon, 20 Apr 2020 22:46:02 GMT
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03KMbdCc150309;
+        Mon, 20 Apr 2020 22:46:05 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 30gb3r7sf9-1
+        by aserp3030.oracle.com with ESMTP id 30gb3r7sh1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 20 Apr 2020 22:46:02 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03KMk1hC016220;
-        Mon, 20 Apr 2020 22:46:01 GMT
+        Mon, 20 Apr 2020 22:46:05 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03KMk4Ff016227;
+        Mon, 20 Apr 2020 22:46:04 GMT
 Received: from [10.65.145.61] (/10.65.145.61)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 20 Apr 2020 15:46:01 -0700
-Subject: Re: [PATCH v8 16/20] xfs: Add helper function
- xfs_attr_node_removename_setup
+        with ESMTP ; Mon, 20 Apr 2020 15:46:04 -0700
+Subject: Re: [PATCH v8 17/20] xfs: Add helper function
+ xfs_attr_node_removename_rmt
 To:     Chandan Rajendra <chandan@linux.ibm.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <20200403221229.4995-1-allison.henderson@oracle.com>
- <20200403221229.4995-17-allison.henderson@oracle.com>
- <4316392.Z7yW20nrPr@localhost.localdomain>
+ <20200403221229.4995-18-allison.henderson@oracle.com>
+ <132283294.3z7BuaCSDq@localhost.localdomain>
 From:   Allison Collins <allison.henderson@oracle.com>
-Message-ID: <a8981569-a6f4-bfa9-7253-33b93218d66f@oracle.com>
-Date:   Mon, 20 Apr 2020 15:46:00 -0700
+Message-ID: <59bcbe46-fb00-d681-569c-47ca358f8b6d@oracle.com>
+Date:   Mon, 20 Apr 2020 15:46:03 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <4316392.Z7yW20nrPr@localhost.localdomain>
+In-Reply-To: <132283294.3z7BuaCSDq@localhost.localdomain>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -85,91 +85,75 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 
 
-On 4/19/20 11:25 PM, Chandan Rajendra wrote:
+On 4/19/20 11:38 PM, Chandan Rajendra wrote:
 > On Saturday, April 4, 2020 3:42 AM Allison Collins wrote:
->> This patch adds a new helper function xfs_attr_node_removename_setup.
->> This will help modularize xfs_attr_node_removename when we add delay
->> ready attributes later.
+>> This patch adds another new helper function
+>> xfs_attr_node_removename_rmt. This will also help modularize
+>> xfs_attr_node_removename when we add delay ready attributes later.
 >>
-> The changes look good to me,
+> 
+> The changes look logically correct.
 > 
 > Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
-Alrighty, thank you!
-
+Thank you!
 Allison
 
 > 
 >> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
 >> ---
->>   fs/xfs/libxfs/xfs_attr.c | 40 +++++++++++++++++++++++++++++++---------
->>   1 file changed, 31 insertions(+), 9 deletions(-)
+>>   fs/xfs/libxfs/xfs_attr.c | 32 +++++++++++++++++++++++---------
+>>   1 file changed, 23 insertions(+), 9 deletions(-)
 >>
 >> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
->> index f70b4f2..3c33dc5 100644
+>> index 3c33dc5..d735570 100644
 >> --- a/fs/xfs/libxfs/xfs_attr.c
 >> +++ b/fs/xfs/libxfs/xfs_attr.c
->> @@ -1193,6 +1193,35 @@ xfs_attr_leaf_mark_incomplete(
+>> @@ -1221,6 +1221,28 @@ int xfs_attr_node_removename_setup(
+>>   	return 0;
 >>   }
 >>   
->>   /*
->> + * Initial setup for xfs_attr_node_removename.  Make sure the attr is there and
->> + * the blocks are valid.  Any remote blocks will be marked incomplete.
->> + */
->> +STATIC
->> +int xfs_attr_node_removename_setup(
+>> +STATIC int
+>> +xfs_attr_node_removename_rmt (
 >> +	struct xfs_da_args	*args,
->> +	struct xfs_da_state	**state)
+>> +	struct xfs_da_state	*state)
 >> +{
->> +	int			error;
->> +	struct xfs_da_state_blk	*blk;
+>> +	int			error = 0;
 >> +
->> +	error = xfs_attr_node_hasname(args, state);
->> +	if (error != -EEXIST)
+>> +	error = xfs_attr_rmtval_remove(args);
+>> +	if (error)
 >> +		return error;
 >> +
->> +	blk = &(*state)->path.blk[(*state)->path.active - 1];
->> +	ASSERT(blk->bp != NULL);
->> +	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
->> +
->> +	if (args->rmtblkno > 0) {
->> +		error = xfs_attr_leaf_mark_incomplete(args, *state);
->> +		if (error)
->> +			return error;
->> +	}
+>> +	/*
+>> +	 * Refill the state structure with buffers, the prior calls
+>> +	 * released our buffers.
+>> +	 */
+>> +	error = xfs_attr_refillstate(state);
+>> +	if (error)
+>> +		return error;
 >> +
 >> +	return 0;
 >> +}
 >> +
->> +/*
+>>   /*
 >>    * Remove a name from a B-tree attribute list.
 >>    *
->>    * This will involve walking down the Btree, and may involve joining
->> @@ -1210,8 +1239,8 @@ xfs_attr_node_removename(
->>   
->>   	trace_xfs_attr_node_removename(args);
->>   
->> -	error = xfs_attr_node_hasname(args, &state);
->> -	if (error != -EEXIST)
->> +	error = xfs_attr_node_removename_setup(args, &state);
->> +	if (error)
->>   		goto out;
->>   
->>   	/*
->> @@ -1219,14 +1248,7 @@ xfs_attr_node_removename(
->>   	 * This is done before we remove the attribute so that we don't
+>> @@ -1249,15 +1271,7 @@ xfs_attr_node_removename(
 >>   	 * overflow the maximum size of a transaction and/or hit a deadlock.
 >>   	 */
->> -	blk = &state->path.blk[ state->path.active-1 ];
->> -	ASSERT(blk->bp != NULL);
->> -	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
 >>   	if (args->rmtblkno > 0) {
->> -		error = xfs_attr_leaf_mark_incomplete(args, state);
+>> -		error = xfs_attr_rmtval_remove(args);
 >> -		if (error)
 >> -			goto out;
 >> -
->>   		error = xfs_attr_rmtval_remove(args);
+>> -		/*
+>> -		 * Refill the state structure with buffers, the prior calls
+>> -		 * released our buffers.
+>> -		 */
+>> -		error = xfs_attr_refillstate(state);
+>> +		error = xfs_attr_node_removename_rmt(args, state);
 >>   		if (error)
 >>   			goto out;
+>>   	}
 >>
 > 
 > 
