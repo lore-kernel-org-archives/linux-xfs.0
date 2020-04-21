@@ -2,127 +2,151 @@ Return-Path: <SRS0=MzXO=6F=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09C88C54FCC
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Apr 2020 00:05:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0E08C55183
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Apr 2020 00:19:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D2C7020782
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Apr 2020 00:05:34 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="TWLUxzN8"
+	by mail.kernel.org (Postfix) with ESMTP id 9AA502082E
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Apr 2020 00:19:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726017AbgDUAFe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Apr 2020 20:05:34 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:41252 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725550AbgDUAFe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Apr 2020 20:05:34 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03KNwaU6069144;
-        Tue, 21 Apr 2020 00:05:29 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=PiGmBa8p6gDyW8Vr6ZICFDKWLiLx5qfhq+YjZfGciBk=;
- b=TWLUxzN8WGihHJCRC2tQpZg6/4rt62wygkuDzVzFWAUHNxfSOaIZKdpzqyeQGrX8CUEt
- mRmkx/YwWUEgCR8wEHBrsYo197kmUQUh3aIfa9KlppNXAPjLQiWIz5AxECo0wwKnfDzt
- bb1xafUziGTUB0CSL157OoMZoXslY4pLOxSDmemFeBpJ9I7/Fp758hBjSudEddaoIbIz
- zABpZiAXI8ClrpsA2lC+BAFZaM+u5GUYw41J1LtCguZbCvwKOZUNEuJAKsAPOSWkQUhw
- s5BdhrInRuWC0ynghRLP0VV8hyP7HxPG/haMESxVBZ/iwtvbOGLWGenpsCoGTO2VExn/ Qg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 30ft6n23s9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 21 Apr 2020 00:05:28 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03KNvWrL001820;
-        Tue, 21 Apr 2020 00:05:28 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 30gb3raxxn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 21 Apr 2020 00:05:28 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03L05PI9017640;
-        Tue, 21 Apr 2020 00:05:26 GMT
-Received: from localhost (/10.159.234.119)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 20 Apr 2020 17:05:25 -0700
-Date:   Mon, 20 Apr 2020 17:05:24 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     Anthony Iliopoulos <ailiop@suse.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs_db: fix crc invalidation segfault
-Message-ID: <20200421000524.GW6742@magnolia>
-References: <20200420195235.14260-1-ailiop@suse.com>
- <0f21ae94-5901-c6d2-06a0-ba016511065d@sandeen.net>
+        id S1725897AbgDUAT3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Apr 2020 20:19:29 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:35569 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725550AbgDUAT3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Apr 2020 20:19:29 -0400
+Received: from dread.disaster.area (pa49-180-0-232.pa.nsw.optusnet.com.au [49.180.0.232])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 2C5783A43C6;
+        Tue, 21 Apr 2020 10:19:24 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jQgdH-00074C-Bj; Tue, 21 Apr 2020 10:19:23 +1000
+Date:   Tue, 21 Apr 2020 10:19:23 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Ira Weiny <ira.weiny@intel.com>
+Cc:     linux-kernel@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Jan Kara <jack@suse.cz>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH V8 10/11] fs/xfs: Change
+ xfs_ioctl_setattr_dax_invalidate()
+Message-ID: <20200421001923.GS9800@dread.disaster.area>
+References: <20200415064523.2244712-1-ira.weiny@intel.com>
+ <20200415064523.2244712-11-ira.weiny@intel.com>
+ <20200420023131.GC9800@dread.disaster.area>
+ <20200420183617.GB2838440@iweiny-DESK2.sc.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <0f21ae94-5901-c6d2-06a0-ba016511065d@sandeen.net>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9597 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 adultscore=0
- mlxlogscore=999 phishscore=0 suspectscore=0 bulkscore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004200186
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9597 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 bulkscore=0
- priorityscore=1501 impostorscore=0 adultscore=0 phishscore=0
- lowpriorityscore=0 malwarescore=0 clxscore=1011 mlxlogscore=999 mlxscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004200186
+In-Reply-To: <20200420183617.GB2838440@iweiny-DESK2.sc.intel.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+        a=XYjVcjsg+1UI/cdbgX7I7g==:117 a=XYjVcjsg+1UI/cdbgX7I7g==:17
+        a=kj9zAlcOel0A:10 a=cl8xLZFz6L8A:10 a=QyXUC8HyAAAA:8 a=VwQbUJbxAAAA:8
+        a=7-415B0cAAAA:8 a=v_MXh98pven9RYxNG_0A:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 20, 2020 at 03:33:36PM -0500, Eric Sandeen wrote:
-> On 4/20/20 2:52 PM, Anthony Iliopoulos wrote:
-> > The nowrite_ops var is declared within nested block scope but used
-> > outside that scope, causing xfs_db to crash while trying to defererence
-> > the verify_write pointer. Fix it by lifting the declaration to the outer
-> > scope, where it is accessed.
+On Mon, Apr 20, 2020 at 11:36:17AM -0700, Ira Weiny wrote:
+> On Mon, Apr 20, 2020 at 12:31:31PM +1000, Dave Chinner wrote:
+> > On Tue, Apr 14, 2020 at 11:45:22PM -0700, ira.weiny@intel.com wrote:
+> > > From: Ira Weiny <ira.weiny@intel.com>
+> > > -out_unlock:
+> > > -	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
+> > > -	return error;
+> > > +	if (mp->m_flags & XFS_MOUNT_DAX_ALWAYS ||
+> > > +	    mp->m_flags & XFS_MOUNT_DAX_NEVER)
+> > > +		return;
 > > 
-> > Signed-off-by: Anthony Iliopoulos <ailiop@suse.com>
-> 
-> Yup, thanks for spotting & fixing this.
-> 
-> Fixes: b64af2c "xfs_db: add crc manipulation commands"
-
-<nitpick> commit ids should be 14(?) digits long these days.
-
-> Reviewd-by: Eric Sandeen <sandeen@redhat.com>
-
-"Pat, I'd like to buy a vowel..." :D
-
---D
-
-> 
-> > ---
-> >  db/crc.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 	if (mp->m_flags & (XFS_MOUNT_DAX_ALWAYS | XFS_MOUNT_DAX_NEVER))
+> > 		return;
+> > > +	if (((fa->fsx_xflags & FS_XFLAG_DAX) &&
+> > > +	    !(ip->i_d.di_flags2 & XFS_DIFLAG2_DAX)) ||
+> > > +	    (!(fa->fsx_xflags & FS_XFLAG_DAX) &&
+> > > +	     (ip->i_d.di_flags2 & XFS_DIFLAG2_DAX)))
+> > > +		flag_inode_dontcache(inode);
 > > 
-> > diff --git a/db/crc.c b/db/crc.c
-> > index 95161c6df..b23417a11 100644
-> > --- a/db/crc.c
-> > +++ b/db/crc.c
-> > @@ -53,6 +53,7 @@ crc_f(
-> >  	char		**argv)
-> >  {
-> >  	const struct xfs_buf_ops *stashed_ops = NULL;
-> > +	struct xfs_buf_ops nowrite_ops;
-> >  	extern char	*progname;
-> >  	const field_t	*fields;
-> >  	const ftattr_t	*fa;
-> > @@ -127,7 +128,6 @@ crc_f(
-> >  	}
-> >  
-> >  	if (invalidate) {
-> > -		struct xfs_buf_ops nowrite_ops;
-> >  		flist_t		*sfl;
-> >  		int		bit_length;
-> >  		int		parentoffset;
-> > 
+> > This doesn't set the XFS inode's "don't cache" flag, despite it
+> > having one that serves exactly the same purpose.  IOWs, if the XFS_IDONTCACHE
+> > flag is now redundant, please replace it's current usage with this new flag
+> > and get rid of the XFS inode flag. i.e.  the only place we set XFS_IDONTCACHE
+> > can be replaced with a call to this mark_inode_dontcache() call...
+> 
+> I agree, and I would have removed XFS_IDONTCACHE, except I was not convinced
+> that XFS_IDONTCACHE was redundant.
+> 
+> Currently XFS_IDONTCACHE can be cleared if the inode is found in the cache and
+> I was unable to convince myself that it would be ok to remove it.  I mentioned
+> this to Darrick in V7.
+> 
+> https://lore.kernel.org/lkml/20200413194432.GD1649878@iweiny-DESK2.sc.intel.com/
+> 
+> What am I missing with this code?
+> 
+> xfs_iget_cache_hit():
+> ...
+>         if (!(flags & XFS_IGET_INCORE))
+> 		xfs_iflags_clear(ip, XFS_ISTALE | XFS_IDONTCACHE);
+> ...
+> 
+> Why is XFS_IDONTCACHE not 'sticky'?
+> And why does xfs_iget_cache_hit() clear it
+
+Because it was designed to do exactly what bulkstat required, and
+nothing else.  xfs_iget() is an internal filesystem interface, not a
+VFS level interface. Hence we can make up whatever semantics we
+want. And if we get a cache hit, we have multiple references to the
+inode so we probably should cache it regardless of whether the
+original lookup said "I'm a one-shot wonder, so don't cache me".
+
+IOWs, it's a classic "don't cache unless a second reference comes
+along during the current life cycle" algorithm.
+
+This isn't actually a frequently travelled path - bulkstat is a
+pretty rare thing to be doing - so the behaviour is "be nice to the
+cache because we can do it easily", not a hard requirement.
+
+> rather than fail when XFS_IDONTCACHE is set?
+
+Because then it would be impossible to access an inode that has
+IDONTCACHE set on it. e.g. bulkstat an inode, now you can't open()
+it because it has XFS_IDONTCACHE set and VFS pathwalk lookups fail
+trying to resolve the inode number to a struct inode....
+
+Same goes for I_DONTCACHE - this does not prevent new lookups from
+taking references to the inode while it is still referenced. i.e.
+the reference count can still go up after the flag is set. The flag
+only takes effect when the reference count goes to zero.
+
+Hence the only difference between XFS_IDONTCACHE and I_DONTCACHE is
+the behaviour when cache hits on existing XFS_IDONTCACHE inodes
+occur. It's not going to make a significant difference to cache
+residency if we leave the I_DONTCACHE flag in place, because the
+vast majority of inodes with that flag (from bulkstat) are still
+one-shot wonders and hence the reclaim decision is still the
+overwhelmingly correct decision to be making...
+
+And, realistically, we have a second layer of inode caching in XFS
+(the cluster buffers) and so it's likely if we evict and reclaim an
+inode just before it gets re-used, then we'll hit the buffer cache
+anyway. i.e. we still avoid the IO to read the inode back into
+memory, we just burn a little more CPU re-instantiating it from the
+buffer....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
