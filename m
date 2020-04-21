@@ -4,33 +4,32 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64CCEC54FC9
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Apr 2020 19:18:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8ECABC55185
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Apr 2020 19:18:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5443720656
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Apr 2020 19:18:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 793A120656
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Apr 2020 19:18:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726467AbgDUTSZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Apr 2020 15:18:25 -0400
-Received: from mga12.intel.com ([192.55.52.136]:19838 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726448AbgDUTSY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1726462AbgDUTSY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Tue, 21 Apr 2020 15:18:24 -0400
-IronPort-SDR: YU+7OQEZIXKfrzygRjua9kMpZgL1zVXCHfDAvslxumuN0lpkYukO/WY2ZH+yxgIBtlhtoKzdxq
- 10vHkPRHuGCA==
+Received: from mga18.intel.com ([134.134.136.126]:2936 "EHLO mga18.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726436AbgDUTSV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 Apr 2020 15:18:21 -0400
+IronPort-SDR: ElUcwuVRkPoEG4sbkho79gW49IFGtTgLKSCKGUk2AhbKbaCO863PHz0O388yiuPkUvfpHiMitU
+ p/vAQVc54Pcg==
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Apr 2020 12:18:23 -0700
-IronPort-SDR: +OjMAxDgmar/78i1djgo8FxMwbwvsDoESINy54OQVeQ6gss80DNTaqya8f6AHh5wOurPpaQOLt
- 62XIg0Fot4UQ==
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Apr 2020 12:18:20 -0700
+IronPort-SDR: 0IWPch123jMwAwCe/LKnk+4j/Qp+9IYLJ/SDKrLDApSB0WATwYgJpjbN9BS3LSmWErRK5x16a+
+ /lIVjmgpzrtw==
 X-IronPort-AV: E=Sophos;i="5.72,411,1580803200"; 
-   d="scan'208";a="456219116"
+   d="scan'208";a="429634675"
 Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
-  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Apr 2020 12:18:23 -0700
+  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Apr 2020 12:18:20 -0700
 From:   ira.weiny@intel.com
 To:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
         "Darrick J. Wong" <darrick.wong@oracle.com>
@@ -41,9 +40,9 @@ Cc:     Ira Weiny <ira.weiny@intel.com>, Al Viro <viro@zeniv.linux.org.uk>,
         Christoph Hellwig <hch@lst.de>,
         "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
         linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH V9 09/11] fs: Introduce DCACHE_DONTCACHE
-Date:   Tue, 21 Apr 2020 12:17:51 -0700
-Message-Id: <20200421191754.3372370-10-ira.weiny@intel.com>
+Subject: [PATCH V9 07/11] fs/xfs: Combine xfs_diflags_to_linux() and xfs_diflags_to_iflags()
+Date:   Tue, 21 Apr 2020 12:17:49 -0700
+Message-Id: <20200421191754.3372370-8-ira.weiny@intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200421191754.3372370-1-ira.weiny@intel.com>
 References: <20200421191754.3372370-1-ira.weiny@intel.com>
@@ -56,111 +55,170 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Ira Weiny <ira.weiny@intel.com>
 
-DCACHE_DONTCACHE indicates a dentry should not be cached on final
-dput().
+The functionality in xfs_diflags_to_linux() and xfs_diflags_to_iflags() are
+nearly identical.  The only difference is that *_to_linux() is called after
+inode setup and disallows changing the DAX flag.
 
-Also add a helper function to mark DCACHE_DONTCACHE on all dentries
-pointing to a specific inode when that inode is being set I_DONTCACHE.
+Combining them can be done with a flag which indicates if this is the initial
+setup to allow the DAX flag to be properly set only at init time.
 
-This facilitates dropping dentry references to inodes sooner which
-require eviction to swap S_DAX mode.
+So remove xfs_diflags_to_linux() and call the modified xfs_diflags_to_iflags()
+directly.
 
-Cc: Al Viro <viro@zeniv.linux.org.uk>
+While we are here simplify xfs_diflags_to_iflags() to take struct xfs_inode and
+use xfs_ip2xflags() to ensure future diflags are included correctly.
+
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 
 ---
-Changes from V8:
-	Update commit message
-	Use mark_inode_dontcache in XFS
-	Fix locking...  can't use rcu here.
-	Change name to mark_inode_dontcache
----
- fs/dcache.c            |  4 ++++
- fs/inode.c             | 15 +++++++++++++++
- fs/xfs/xfs_icache.c    |  2 +-
- include/linux/dcache.h |  2 ++
- include/linux/fs.h     |  1 +
- 5 files changed, 23 insertions(+), 1 deletion(-)
+Changes from V7:
+	Clarify with a comment the reason for leaving S_DAX out of the
+	mask
 
-diff --git a/fs/dcache.c b/fs/dcache.c
-index b280e07e162b..0030fabab2c4 100644
---- a/fs/dcache.c
-+++ b/fs/dcache.c
-@@ -647,6 +647,10 @@ static inline bool retain_dentry(struct dentry *dentry)
- 		if (dentry->d_op->d_delete(dentry))
- 			return false;
- 	}
-+
-+	if (unlikely(dentry->d_flags & DCACHE_DONTCACHE))
-+		return false;
-+
- 	/* retain; LRU fodder */
- 	dentry->d_lockref.count--;
- 	if (unlikely(!(dentry->d_flags & DCACHE_LRU_LIST)))
-diff --git a/fs/inode.c b/fs/inode.c
-index 93d9252a00ab..da7f3c4926cd 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -1526,6 +1526,21 @@ int generic_delete_inode(struct inode *inode)
- }
- EXPORT_SYMBOL(generic_delete_inode);
+Changes from V6:
+	Move unrelated hunk to previous patch.
+	Change logic for better code generation.
+
+Changes from V5:
+	The functions are no longer identical so we can only combine
+	them rather than deleting one completely.  This is reflected in
+	the new init parameter.
+---
+ fs/xfs/xfs_inode.h |  1 +
+ fs/xfs/xfs_ioctl.c | 33 +--------------------------------
+ fs/xfs/xfs_iops.c  | 46 +++++++++++++++++++++++++++-------------------
+ 3 files changed, 29 insertions(+), 51 deletions(-)
+
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index c6a63f6764a6..83073c883fbf 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -467,6 +467,7 @@ int	xfs_break_layouts(struct inode *inode, uint *iolock,
+ /* from xfs_iops.c */
+ extern void xfs_setup_inode(struct xfs_inode *ip);
+ extern void xfs_setup_iops(struct xfs_inode *ip);
++extern void xfs_diflags_to_iflags(struct xfs_inode *ip, bool init);
  
-+void mark_inode_dontcache(struct inode *inode)
-+{
-+	struct dentry *de;
-+
-+	spin_lock(&inode->i_lock);
-+	hlist_for_each_entry(de, &inode->i_dentry, d_u.d_alias) {
-+		spin_lock(&de->d_lock);
-+		de->d_flags |= DCACHE_DONTCACHE;
-+		spin_unlock(&de->d_lock);
-+	}
-+	spin_unlock(&inode->i_lock);
-+	inode->i_state |= I_DONTCACHE;
-+}
-+EXPORT_SYMBOL(mark_inode_dontcache);
-+
  /*
-  * Called when we're dropping the last reference
-  * to an inode.
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index de76f7f60695..3c8f44477804 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -559,7 +559,7 @@ xfs_iget_cache_miss(
- 	 */
- 	iflags = XFS_INEW;
- 	if (flags & XFS_IGET_DONTCACHE)
--		VFS_I(ip)->i_state |= I_DONTCACHE;
-+		mark_inode_dontcache(VFS_I(ip));
- 	ip->i_udquot = NULL;
- 	ip->i_gdquot = NULL;
- 	ip->i_pdquot = NULL;
-diff --git a/include/linux/dcache.h b/include/linux/dcache.h
-index c1488cc84fd9..56b1482d9223 100644
---- a/include/linux/dcache.h
-+++ b/include/linux/dcache.h
-@@ -177,6 +177,8 @@ struct dentry_operations {
- 
- #define DCACHE_REFERENCED		0x00000040 /* Recently used, don't discard. */
- 
-+#define DCACHE_DONTCACHE		0x00000080 /* don't cache on final dput() */
-+
- #define DCACHE_CANT_MOUNT		0x00000100
- #define DCACHE_GENOCIDE			0x00000200
- #define DCACHE_SHRINK_LIST		0x00000400
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 44bd45af760f..064168ec2e0b 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -3055,6 +3055,7 @@ static inline int generic_drop_inode(struct inode *inode)
- 	return !inode->i_nlink || inode_unhashed(inode) ||
- 		(inode->i_state & I_DONTCACHE);
+  * When setting up a newly allocated inode, we need to call
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 309958186d33..104495ac187c 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1201,37 +1201,6 @@ xfs_flags2diflags2(
+ 	return di_flags2;
  }
-+extern void mark_inode_dontcache(struct inode *inode);
  
- extern struct inode *ilookup5_nowait(struct super_block *sb,
- 		unsigned long hashval, int (*test)(struct inode *, void *),
+-STATIC void
+-xfs_diflags_to_linux(
+-	struct xfs_inode	*ip)
+-{
+-	struct inode		*inode = VFS_I(ip);
+-	unsigned int		xflags = xfs_ip2xflags(ip);
+-
+-	if (xflags & FS_XFLAG_IMMUTABLE)
+-		inode->i_flags |= S_IMMUTABLE;
+-	else
+-		inode->i_flags &= ~S_IMMUTABLE;
+-	if (xflags & FS_XFLAG_APPEND)
+-		inode->i_flags |= S_APPEND;
+-	else
+-		inode->i_flags &= ~S_APPEND;
+-	if (xflags & FS_XFLAG_SYNC)
+-		inode->i_flags |= S_SYNC;
+-	else
+-		inode->i_flags &= ~S_SYNC;
+-	if (xflags & FS_XFLAG_NOATIME)
+-		inode->i_flags |= S_NOATIME;
+-	else
+-		inode->i_flags &= ~S_NOATIME;
+-#if 0	/* disabled until the flag switching races are sorted out */
+-	if (xflags & FS_XFLAG_DAX)
+-		inode->i_flags |= S_DAX;
+-	else
+-		inode->i_flags &= ~S_DAX;
+-#endif
+-}
+-
+ static int
+ xfs_ioctl_setattr_xflags(
+ 	struct xfs_trans	*tp,
+@@ -1269,7 +1238,7 @@ xfs_ioctl_setattr_xflags(
+ 	ip->i_d.di_flags = xfs_flags2diflags(ip, fa->fsx_xflags);
+ 	ip->i_d.di_flags2 = di_flags2;
+ 
+-	xfs_diflags_to_linux(ip);
++	xfs_diflags_to_iflags(ip, false);
+ 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 	XFS_STATS_INC(mp, xs_ig_attrchg);
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 1814f10e43d3..b70b735fe4a4 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1276,26 +1276,34 @@ xfs_inode_should_enable_dax(
+ 	return false;
+ }
+ 
+-STATIC void
++void
+ xfs_diflags_to_iflags(
+-	struct inode		*inode,
+-	struct xfs_inode	*ip)
++	struct xfs_inode	*ip,
++	bool init)
+ {
+-	uint16_t		flags = ip->i_d.di_flags;
+-
+-	inode->i_flags &= ~(S_IMMUTABLE | S_APPEND | S_SYNC |
+-			    S_NOATIME | S_DAX);
+-
+-	if (flags & XFS_DIFLAG_IMMUTABLE)
+-		inode->i_flags |= S_IMMUTABLE;
+-	if (flags & XFS_DIFLAG_APPEND)
+-		inode->i_flags |= S_APPEND;
+-	if (flags & XFS_DIFLAG_SYNC)
+-		inode->i_flags |= S_SYNC;
+-	if (flags & XFS_DIFLAG_NOATIME)
+-		inode->i_flags |= S_NOATIME;
+-	if (xfs_inode_should_enable_dax(ip))
+-		inode->i_flags |= S_DAX;
++	struct inode            *inode = VFS_I(ip);
++	unsigned int            xflags = xfs_ip2xflags(ip);
++	unsigned int            flags = 0;
++
++	ASSERT(!(IS_DAX(inode) && init));
++
++	if (xflags & FS_XFLAG_IMMUTABLE)
++		flags |= S_IMMUTABLE;
++	if (xflags & FS_XFLAG_APPEND)
++		flags |= S_APPEND;
++	if (xflags & FS_XFLAG_SYNC)
++		flags |= S_SYNC;
++	if (xflags & FS_XFLAG_NOATIME)
++		flags |= S_NOATIME;
++	if (init && xfs_inode_should_enable_dax(ip))
++		flags |= S_DAX;
++
++	/*
++	 * S_DAX can only be set during inode initialization and is never set by
++	 * the VFS, so we cannot mask off S_DAX in i_flags.
++	 */
++	inode->i_flags &= ~(S_IMMUTABLE | S_APPEND | S_SYNC | S_NOATIME);
++	inode->i_flags |= flags;
+ }
+ 
+ /*
+@@ -1321,7 +1329,7 @@ xfs_setup_inode(
+ 	inode_fake_hash(inode);
+ 
+ 	i_size_write(inode, ip->i_d.di_size);
+-	xfs_diflags_to_iflags(inode, ip);
++	xfs_diflags_to_iflags(ip, true);
+ 
+ 	if (S_ISDIR(inode->i_mode)) {
+ 		/*
 -- 
 2.25.1
 
