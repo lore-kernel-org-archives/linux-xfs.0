@@ -2,48 +2,51 @@ Return-Path: <SRS0=MzXO=6F=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF4D7C55184
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Apr 2020 19:18:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5A78C55181
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Apr 2020 19:18:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AA56C206D9
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Apr 2020 19:18:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9E20820747
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Apr 2020 19:18:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726228AbgDUTSE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Apr 2020 15:18:04 -0400
-Received: from mga05.intel.com ([192.55.52.43]:59449 "EHLO mga05.intel.com"
+        id S1726513AbgDUTSe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 21 Apr 2020 15:18:34 -0400
+Received: from mga03.intel.com ([134.134.136.65]:18934 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725902AbgDUTSD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Apr 2020 15:18:03 -0400
-IronPort-SDR: qQk1MMy4i+xKD++5AWWEj4Hob3q8u2OHl8sqwDAyALPi7HaxaUQ0c0rqWiONvboCBudwqENDm0
- 6gsROH55vEzw==
+        id S1726436AbgDUTSb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 Apr 2020 15:18:31 -0400
+IronPort-SDR: DyJlBRDADn0rABmAj852OXCQz9hZs1kY6ue+s6K4Tbcl2JbZxNFu19eRjcoQTRcMXqXVyRJpIY
+ iZh+SqlbPe+A==
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Apr 2020 12:18:02 -0700
-IronPort-SDR: Qoc1jkbLYeEpxGKSuqSrBAW0uq6IbQE3jsfRmtGfw3wjtHXytDdLItz6XWCu1rhWsH0jdP9bDe
- 9Inh2b1mqnug==
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Apr 2020 12:18:27 -0700
+IronPort-SDR: WoTUm0fw1jxep0Y0SY1vdE60rR6r4v/PinefNkNioRXWYMDUtdkCfgxARt8H3Zzg9r8qBiQuI2
+ iS3MGDgm9O1g==
 X-IronPort-AV: E=Sophos;i="5.72,411,1580803200"; 
-   d="scan'208";a="273629332"
+   d="scan'208";a="258815142"
 Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Apr 2020 12:18:01 -0700
+  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Apr 2020 12:18:26 -0700
 From:   ira.weiny@intel.com
 To:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
         "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     Ira Weiny <ira.weiny@intel.com>, Al Viro <viro@zeniv.linux.org.uk>,
+        Jan Kara <jack@suse.cz>,
         Dan Williams <dan.j.williams@intel.com>,
         Dave Chinner <david@fromorbit.com>,
         Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Jeff Moyer <jmoyer@redhat.com>
-Subject: [PATCH V9 00/11] XFS - Enable per-file/per-directory DAX operations V9
-Date:   Tue, 21 Apr 2020 12:17:42 -0700
-Message-Id: <20200421191754.3372370-1-ira.weiny@intel.com>
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: [PATCH V9 11/11] Documentation/dax: Update Usage section
+Date:   Tue, 21 Apr 2020 12:17:53 -0700
+Message-Id: <20200421191754.3372370-12-ira.weiny@intel.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200421191754.3372370-1-ira.weiny@intel.com>
+References: <20200421191754.3372370-1-ira.weiny@intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
@@ -53,177 +56,207 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Ira Weiny <ira.weiny@intel.com>
 
+Update the Usage section to reflect the new individual dax selection
+functionality.
+
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+
+---
 Changes from V8:
-	Rebase to 5.7-rc2
-	Change ALWAYS/NEVER bits to be 26/27
-	Remove XFS_IDONTCACHE -> lift to I_DONTCACHE
-		use mark_inode_dontcache() in XFS
-	create xfs_dax_mode enum
-	use xfs signature styles
-	Change xfs_inode_enabe_dax() -> xfs_inode_should_enable()
-		Based on feedback to ext4 series
-	Fix locking of DCACHE_DONTCACHE
-	Change flag_inode_dontcache() -> mark_inode_dontcache()
-	Change xfs_ioctl_setattr_dax_invalidate() -> xfs_ioctl_dax_check_set_cache()
-	Documentation cleanups
-	Clean up all commit messages
-
-
-At LSF/MM'19 [1] [2] we discussed applications that overestimate memory
-consumption due to their inability to detect whether the kernel will
-instantiate page cache for a file, and cases where a global dax enable via a
-mount option is too coarse.
-
-The following patch series enables the use of DAX on individual files and/or
-directories on xfs, and lays some groundwork to do so in ext4.  It further
-enhances the dax mount option to be a tri-state of 'always', 'never', or
-'iflag' (default).  Furthermore, it maintians '-o dax' to be equivalent to '-o
-dax=always'.
-
-The insight at LSF/MM was to separate the per-mount or per-file "physical"
-(FS_XFLAG_DAX) capability switch from an "effective" (S_DAX) attribute for the
-file.
-
-At LSF/MM we discussed the difficulties of switching the DAX state of a file
-with active mappings / page cache.  It was thought the races could be avoided
-by limiting DAX state flips to 0-length files.
-
-However, this turns out to not be true.[3][5] This is because address space
-operations (a_ops) may be in use at any time the inode is referenced.
-
-For this reason direct manipulation of the FS_XFLAG_DAX is allowed but the
-operation of the file (S_DAX) is not immediately changed.
-
-Details of when and how DAX state can be changed on a file is included in a
-documentation patch.
-
-It should be noted that FS_XFLAG_DAX inheritance is not shown in this patch set
-as it was maintained from previous work on XFS.  FS_XFLAG_DAX and it's
-inheritance will need to be added to other file systems for user control. 
-
-
-[1] https://lwn.net/Articles/787973/
-[2] https://lwn.net/Articles/787233/
-[3] https://lkml.org/lkml/2019/10/20/96
-[4] https://patchwork.kernel.org/patch/11310511/
-[5] https://lore.kernel.org/lkml/20200405061945.GA94792@iweiny-DESK2.sc.intel.com/
-
-
-To: linux-kernel@vger.kernel.org
-Cc: Al Viro <viro@zeniv.linux.org.uk>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "Theodore Y. Ts'o" <tytso@mit.edu>
-Cc: Jan Kara <jack@suse.cz>
-Cc: linux-ext4@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
+	Updates from Darrick
 
 Changes from V7:
-	Add DCACHE_DONTCACHE
-	If mount override don't worry about inode caching
-	Change mount flags to NEVER/ALWAYS
-	Clean up xfs_inode_enable_dax()
-	Clarify comments
-	Update documentation
+	Cleanups/clarifications from Darrick and Dan
 
 Changes from V6:
-	Incorporate feedback on patches
-	Add ability to change FS_XFLAG_DAX on files at any time.
-		Add a don't cache flag to the VFS layer
-		Preserve internal XFS IDONTCACHE behavior for bulkstat
-		operations
+	Update to allow setting FS_XFLAG_DAX any time.
+	Update with list of behaviors from Darrick
+	https://lore.kernel.org/lkml/20200409165927.GD6741@magnolia/
 
 Changes from V5:
-	* make dax mount option a tri-state
-	* Reject changes to FS_XFLAG_DAX for regular files
-		- Allow only on directories
-	* Update documentation
-
-Changes from V4:
-	* Open code the aops lock rather than add it to the xfs_ilock()
-	  subsystem (Darrick's comments were obsoleted by this change)
-	* Fix lkp build suggestions and bugs
-
-Changes from V3:
-	* Remove global locking...  :-D
-	* put back per inode locking and remove pre-mature optimizations
-	* Fix issues with Directories having IS_DAX() set
-	* Fix kernel crash issues reported by Jeff
-	* Add some clean up patches
-	* Consolidate diflags to iflags functions
-	* Update/add documentation
-	* Reorder/rename patches quite a bit
-
-Changes from V2:
-
-	* Move i_dax_sem to be a global percpu_rw_sem rather than per inode
-		Internal discussions with Dan determined this would be easier,
-		just as performant, and slightly less overhead that having it
-		in the SB as suggested by Jan
-	* Fix locking order in comments and throughout code
-	* Change "mode" to "state" throughout commits
-	* Add CONFIG_FS_DAX wrapper to disable inode_[un]lock_state() when not
-		configured
-	* Add static branch for which is activated by a device which supports
-		DAX in XFS
-	* Change "lock/unlock" to up/down read/write as appropriate
-		Previous names were over simplified
-	* Update comments/documentation
-
-	* Remove the xfs specific lock to the vfs (global) layer.
-	* Fix i_dax_sem locking order and comments
-
-	* Move 'i_mapped' count from struct inode to struct address_space and
-		rename it to mmap_count
-	* Add inode_has_mappings() call
-
-	* Fix build issues
-	* Clean up syntax spacing and minor issues
-	* Update man page text for STATX_ATTR_DAX
-	* Add reviewed-by's
-	* Rebase to 5.6
-
-	Rename patch:
-		from: fs/xfs: Add lock/unlock state to xfs
-		to: fs/xfs: Add write DAX lock to xfs layer
-	Add patch:
-		fs/xfs: Clarify lockdep dependency for xfs_isilocked()
-	Drop patch:
-		fs/xfs: Fix truncate up
-
-
-Ira Weiny (11):
-  fs/xfs: Remove unnecessary initialization of i_rwsem
-  fs: Remove unneeded IS_DAX() check in io_is_direct()
-  fs/stat: Define DAX statx attribute
-  fs/xfs: Change XFS_MOUNT_DAX to XFS_MOUNT_DAX_ALWAYS
-  fs/xfs: Make DAX mount option a tri-state
-  fs/xfs: Create function xfs_inode_should_enable_dax()
-  fs/xfs: Combine xfs_diflags_to_linux() and xfs_diflags_to_iflags()
-  fs: Lift XFS_IDONTCACNE to the VFS layer
-  fs: Introduce DCACHE_DONTCACHE
-  fs/xfs: Update xfs_ioctl_setattr_dax_invalidate()
-  Documentation/dax: Update Usage section
-
+	Update to reflect the agreed upon semantics
+	https://lore.kernel.org/lkml/20200405061945.GA94792@iweiny-DESK2.sc.intel.com/
+---
  Documentation/filesystems/dax.txt | 164 +++++++++++++++++++++++++++++-
- drivers/block/loop.c              |   6 +-
- fs/dcache.c                       |   4 +
- fs/inode.c                        |  15 +++
- fs/stat.c                         |   3 +
- fs/xfs/xfs_icache.c               |   8 +-
- fs/xfs/xfs_inode.h                |   3 +-
- fs/xfs/xfs_ioctl.c                | 141 ++++---------------------
- fs/xfs/xfs_iops.c                 |  72 ++++++++-----
- fs/xfs/xfs_mount.h                |   4 +-
- fs/xfs/xfs_super.c                |  55 ++++++++--
- include/linux/dcache.h            |   2 +
- include/linux/fs.h                |  14 +--
- include/uapi/linux/stat.h         |   1 +
- 14 files changed, 321 insertions(+), 171 deletions(-)
+ 1 file changed, 161 insertions(+), 3 deletions(-)
 
+diff --git a/Documentation/filesystems/dax.txt b/Documentation/filesystems/dax.txt
+index 679729442fd2..8f4ab08be715 100644
+--- a/Documentation/filesystems/dax.txt
++++ b/Documentation/filesystems/dax.txt
+@@ -17,11 +17,169 @@ For file mappings, the storage device is mapped directly into userspace.
+ Usage
+ -----
+ 
+-If you have a block device which supports DAX, you can make a filesystem
++If you have a block device which supports DAX, you can make a file system
+ on it as usual.  The DAX code currently only supports files with a block
+ size equal to your kernel's PAGE_SIZE, so you may need to specify a block
+-size when creating the filesystem.  When mounting it, use the "-o dax"
+-option on the command line or add 'dax' to the options in /etc/fstab.
++size when creating the file system.
++
++Currently 3 filesystems support DAX: ext2, ext4 and xfs.  Enabling DAX on them
++is different.
++
++Enabling DAX on ext4 and ext2
++-----------------------------
++
++When mounting the filesystem, use the "-o dax" option on the command line or
++add 'dax' to the options in /etc/fstab.  This works to enable DAX on all files
++within the filesystem.  It is equivalent to the '-o dax=always' behavior below.
++
++
++Enabling DAX on xfs
++-------------------
++
++Summary
++-------
++
++ 1. There exists an in-kernel file access mode flag S_DAX that corresponds to
++    the statx flag STATX_ATTR_DAX.  See the manpage for statx(2) for details
++    about this access mode.
++
++ 2. There exists an advisory file inode flag FS_XFLAG_DAX that is
++    inherited from the parent directory FS_XFLAG_DAX inode flag at file
++    creation time.  This advisory flag can be set or cleared at any
++    time, but doing so does not immediately affect the S_DAX state.
++
++    Unless overridden by mount options (see (3)), if FS_XFLAG_DAX is set
++    and the fs is on pmem then it will enable S_DAX at inode load time;
++    if FS_XFLAG_DAX is not set, it will not enable S_DAX.
++
++ 3. There exists a dax= mount option.
++
++    "-o dax=never"  means "never set S_DAX, ignore FS_XFLAG_DAX."
++
++    "-o dax=always" means "always set S_DAX (at least on pmem),
++                    and ignore FS_XFLAG_DAX."
++
++    "-o dax"        is an alias for "dax=always".
++
++    "-o dax=inode"  means "follow FS_XFLAG_DAX" and is the default.
++
++ 4. There exists an advisory directory inode flag FS_XFLAG_DAX that can
++    be set or cleared at any time.  The flag state is inherited by any files or
++    subdirectories when they are created within that directory.
++
++ 5. Programs that require a specific file access mode (DAX or not DAX)
++    can do one of the following:
++
++    (a) Create files in directories that the FS_XFLAG_DAX flag set as
++        needed; or
++
++    (b) Have the administrator set an override via mount option; or
++
++    (c) Set or clear the file's FS_XFLAG_DAX flag as needed.  Programs
++        must then cause the kernel to evict the inode from memory.  This
++        can be done by:
++
++        i>  Closing the file and re-opening the file and using statx to
++            see if the fs has changed the S_DAX flag; and
++
++        ii> If the file still does not have the desired S_DAX access
++            mode, either unmount and remount the filesystem, or close
++            the file and use drop_caches.
++
++ 6. It is expected that users who want to squeeze every last bit of performance
++    out of the particular rough and tumble bits of their storage will also be
++    exposed to the difficulties of what happens when the operating system can't
++    totally virtualize those hardware capabilities.  DAX is such a feature.
++
++
++Details
++-------
++
++There are 2 per-file dax flags.  One is a physical inode setting (FS_XFLAG_DAX)
++and the other a currently enabled state (S_DAX).
++
++FS_XFLAG_DAX is maintained, on disk, on individual inodes.  It is preserved
++within the file system.  This 'physical' config setting can be set using an
++ioctl and/or an application such as "xfs_io -c 'chattr [-+]x'".  Files and
++directories automatically inherit FS_XFLAG_DAX from their parent directory
++_when_ _created_.  Therefore, setting FS_XFLAG_DAX at directory creation time
++can be used to set a default behavior for an entire sub-tree.  (Doing so on the
++root directory acts to set a default for the entire file system.)
++
++To clarify inheritance here are 3 examples:
++
++Example A:
++
++mkdir -p a/b/c
++xfs_io 'chattr +x' a
++mkdir a/b/c/d
++mkdir a/e
++
++	dax: a,e
++	no dax: b,c,d
++
++Example B:
++
++mkdir a
++xfs_io 'chattr +x' a
++mkdir -p a/b/c/d
++
++	dax: a,b,c,d
++	no dax:
++
++Example C:
++
++mkdir -p a/b/c
++xfs_io 'chattr +x' c
++mkdir a/b/c/d
++
++	dax: c,d
++	no dax: a,b
++
++
++The current enabled state (S_DAX) is set when a file inode is _loaded_ based on
++the underlying media support, the value of FS_XFLAG_DAX, and the file systems
++dax mount option setting.  See below.
++
++statx can be used to query S_DAX.  NOTE that a directory will never have S_DAX
++set and therefore statx will never indicate that S_DAX is set on directories.
++
++NOTE: Setting the FS_XFLAG_DAX (specifically or through inheritance) occurs
++even if the underlying media does not support dax and/or the file system is
++overridden with a mount option.
++
++
++Overriding FS_XFLAG_DAX (dax= mount option)
++-------------------------------------------
++
++There exists a dax mount option.  Using the mount option does not change the
++physical configured state of individual files but overrides the S_DAX operating
++state when inodes are loaded.
++
++Given underlying media support, the dax mount option is a tri-state option
++(never, always, inode) with the following meanings:
++
++   "-o dax=never" means "never set S_DAX, ignore FS_XFLAG_DAX"
++   "-o dax=always" means "always set S_DAX, ignore FS_XFLAG_DAX"
++        "-o dax" by itself means "dax=always" to remain compatible with older
++	         kernels
++   "-o dax=inode" means "follow FS_XFLAG_DAX"
++
++The default state is 'inode'.  Given underlying media support, the following
++algorithm is used to determine the effective mode of the file S_DAX on a
++capable device.
++
++	S_DAX = FS_XFLAG_DAX;
++
++	if (dax_mount == "always")
++		S_DAX = true;
++	else if (dax_mount == "off"
++		S_DAX = false;
++
++To reiterate: Setting, and inheritance, continues to affect FS_XFLAG_DAX even
++while the file system is mounted with a dax override.  However, in-core inode
++state (S_DAX) will continue to be overridden until the filesystem is remounted
++with dax=inode and the inode is evicted."
+ 
+ 
+ Implementation Tips for Block Driver Writers
 -- 
 2.25.1
 
