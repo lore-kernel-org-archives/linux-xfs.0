@@ -2,137 +2,227 @@ Return-Path: <SRS0=MzXO=6F=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C8EDC54FD0
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Apr 2020 15:37:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C901C54FD0
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Apr 2020 16:54:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5DD4F2071E
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Apr 2020 15:37:28 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="tT1pBZTx"
+	by mail.kernel.org (Postfix) with ESMTP id DD7CD2173E
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Apr 2020 16:54:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1587488087;
+	bh=I+poV6aWdrEtdHBUr6m4gEt4rVr2SFuzXvvDAKP9Sho=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=R1KfgAFc1aCFsNGPOf+/YSe9hg8byg2nnFX04qhh8E2ud79hYSEz2BLRblolTYJ6Q
+	 on7mN2eAOVC5DZDzcotRKzhtpo45vRt25ZzpewrEfOLJsI30KZCHI+VGS/zCGqRcic
+	 ijBH0DWpx91UaPDzrg//uWpHjIZ1/1+o929hIGbY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726699AbgDUPh1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Apr 2020 11:37:27 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:42174 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725902AbgDUPh1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Apr 2020 11:37:27 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03LFYsaK158690;
-        Tue, 21 Apr 2020 15:37:22 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=92JRpadtmq1JsM5Zkmp+p01bMR+UFRmZ/CT+85uhmHI=;
- b=tT1pBZTxwKLL21FWdWh4aio1qZPD9dSS8uTrgy/UPuEkWiXsuU0zdGxxw4cCehAcSmQc
- It00gh5YEVerr9opIPUTFDh/T7ackxC7Pj1g3VswN7hmwtKYZnivbpRBZykpS2+A1XyW
- lZQkMFEaPP+Y7divDjKoiftsMAxWIIgiBh+AHqqGKp8gjh6obMfOZmqtwnuDJgl8q9MO
- lsHjVK3MWV1FUMRKrjUXxFQLQ0RvNWzcgyFTDMglnrTJwAgar2sRwxCzJ+R2lsOfpqRU
- BvGdOCKtUeLTx3D0TzSoh8PnjIkoz/O7enG/CpboRPMcQgew/Uu5yzuXw+kK0mKUIJVC Wg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 30grpgj64s-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 21 Apr 2020 15:37:22 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03LFWUvM031195;
-        Tue, 21 Apr 2020 15:37:22 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 30gbbe488w-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 21 Apr 2020 15:37:21 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03LFbKZ8025957;
-        Tue, 21 Apr 2020 15:37:20 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 21 Apr 2020 08:37:19 -0700
-Date:   Tue, 21 Apr 2020 08:37:17 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Anthony Iliopoulos <ailiop@suse.com>
-Cc:     Eryu Guan <guaneryu@gmail.com>, fstests@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] common/fuzzy: don't attempt online scrubbing unless
- supported
-Message-ID: <20200421153717.GY6742@magnolia>
-References: <20200421113643.24224-1-ailiop@suse.com>
+        id S1729058AbgDUQyq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 21 Apr 2020 12:54:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56958 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726018AbgDUQyp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 Apr 2020 12:54:45 -0400
+Received: from mail.kernel.org (ip5f5ad4d8.dynamic.kabel-deutschland.de [95.90.212.216])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id EF7A32072D;
+        Tue, 21 Apr 2020 16:54:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1587488084;
+        bh=I+poV6aWdrEtdHBUr6m4gEt4rVr2SFuzXvvDAKP9Sho=;
+        h=From:To:Cc:Subject:Date:From;
+        b=qB58J7CdaJxDgs3IwR1BILA82/V832qHRtvohLy/Kb2dIF+RDago1sOUyA3wcPGJm
+         THLL/xW1xsSn7snwNLctffrsALp7GFFpR5aKSAh6XUVIxbQC8PeapfYgVMPAaXblew
+         /vob6Aoa4APmTstwu4eEJlbcEEo5polgmbJysOSA=
+Received: from mchehab by mail.kernel.org with local (Exim 4.92.3)
+        (envelope-from <mchehab@kernel.org>)
+        id 1jQwAU-00CmDK-0s; Tue, 21 Apr 2020 18:54:42 +0200
+From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
+Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        linuxppc-dev@lists.ozlabs.org, Jeremy Kerr <jk@ozlabs.org>,
+        Jeff Layton <jlayton@kernel.org>, Jan Kara <jack@suse.com>,
+        linux-cachefs@redhat.com, David Howells <dhowells@redhat.com>,
+        linux-fsdevel@vger.kernel.org,
+        "J. Bruce Fields" <bfields@fieldses.org>, codalist@coda.cs.cmu.edu,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Jan Kara <jack@suse.cz>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        Joel Becker <jlbec@evilplan.org>,
+        Jan Harkes <jaharkes@cs.cmu.edu>,
+        Amir Goldstein <amir73il@gmail.com>, coda@cs.cmu.edu,
+        Alexey Dobriyan <adobriyan@gmail.com>,
+        linux-usb@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH v2 00/29] fs: convert remaining docs to ReST file format
+Date:   Tue, 21 Apr 2020 18:54:11 +0200
+Message-Id: <cover.1587487612.git.mchehab+huawei@kernel.org>
+X-Mailer: git-send-email 2.25.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200421113643.24224-1-ailiop@suse.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9598 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0
- suspectscore=0 mlxlogscore=999 adultscore=0 mlxscore=0 phishscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004210121
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9598 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 mlxscore=0
- lowpriorityscore=0 adultscore=0 suspectscore=0 bulkscore=0 clxscore=1015
- malwarescore=0 phishscore=0 spamscore=0 priorityscore=1501 impostorscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004210121
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 21, 2020 at 01:36:42PM +0200, Anthony Iliopoulos wrote:
-> Many xfs metadata fuzzing tests invoke xfs_scrub to detect online errors
-> even when _scratch_xfs_fuzz_metadata is invoked with "offline". This
-> causes those tests to fail with output mismatches on kernels that don't
-> enable CONFIG_XFS_ONLINE_SCRUB. Bypass scrubbing when not supported.
-> 
-> Signed-off-by: Anthony Iliopoulos <ailiop@suse.com>
-> ---
->  common/fuzzy | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/common/fuzzy b/common/fuzzy
-> index 988203b1..83ddc3e8 100644
-> --- a/common/fuzzy
-> +++ b/common/fuzzy
-> @@ -238,7 +238,7 @@ __scratch_xfs_fuzz_field_test() {
->  	if [ $res -eq 0 ]; then
->  		# Try an online scrub unless we're fuzzing ag 0's sb,
->  		# which scrub doesn't know how to fix.
-> -		if [ "${repair}" != "none" ]; then
-> +		if _supports_xfs_scrub "${SCRATCH_MNT}" "${SCRATCH_DEV}"; then
+This patch series convert the remaining files under Documentation/filesystems
+to the ReST file format (except for dax.txt and patch-lookup.txt). 
 
-Huh?
+It is based on linux-next (next-2020021).
 
-This changes the behavior of the repair=none fuzz tests, which mutate
-filesystems and then write to them without running any checking tools
-whatsoever to see if we can trip over the mutations with only regular
-filesystem operations.  Whereas before, we'd skip xfs_scrub, now we
-always run it if it's supported.
+PS.: I opted to add mainly ML from the output of get_maintainers.pl to the c/c
+list of patch 00/34, because  otherwise the number of c/c would be too many,
+with would very likely cause ML servers to reject it.
 
-The open-coded repair conditionals scattered through this funciton
-probably ought to be refactored into helpers, e.g.
+The results of those changes (together with other changes from my pending
+doc patches) are available at:
 
-__fuzz_want_scrub_check() {
-	local repair="$1"
-	local field="$2"
+   https://www.infradead.org/~mchehab/kernel_docs/filesystems/index.html
 
-	test "${repair}" != "none" && \
-		_supports_xfs_scrub "${SCRATCH_MNT}" "${SCRATCH_DEV}" && \
-		[ "${field}" != "sb 0" ]
-}
+And the series is also on my git tree:
 
-if [ $res -eq 0 ]; then
-	# Try an online scrub...
-	if __fuzz_want_scrub_check "${repair}" "${field}"; then
-		_scratch_scrub -n -a 1 -e continue 2>&1
-		...
+  https://git.linuxtv.org/mchehab/experimental.git/log/?h=fs_docs
 
---D
+If you prefer, feel free to merge the patches via the filesystems git tree(s).
 
->  			echo "++ Online scrub"
->  			if [ "$1" != "sb 0" ]; then
->  				_scratch_scrub -n -e continue 2>&1
-> -- 
-> 2.26.2
-> 
+- 
+
+v2:
+
+   - Removed dax.txt, in order to prevent a merge conflict with a dax patchset;
+   - Removed patch-lookup.txt conversion, due to patch-lookup.rst.
+     (I'll revisit this on some future)
+   - Removed a patch that was already merged;
+   - Added some Acked-by.
+
+
+Mauro Carvalho Chehab (29):
+  docs: filesystems: convert caching/object.txt to ReST
+  docs: filesystems: convert caching/fscache.txt to ReST format
+  docs: filesystems: caching/netfs-api.txt: convert it to ReST
+  docs: filesystems: caching/operations.txt: convert it to ReST
+  docs: filesystems: caching/cachefiles.txt: convert to ReST
+  docs: filesystems: caching/backend-api.txt: convert it to ReST
+  docs: filesystems: convert cifs/cifsroot.txt to ReST
+  docs: filesystems: convert configfs.txt to ReST
+  docs: filesystems: convert automount-support.txt to ReST
+  docs: filesystems: convert coda.txt to ReST
+  docs: filesystems: convert devpts.txt to ReST
+  docs: filesystems: convert dnotify.txt to ReST
+  docs: filesystems: convert fiemap.txt to ReST
+  docs: filesystems: convert files.txt to ReST
+  docs: filesystems: convert fuse-io.txt to ReST
+  docs: filesystems: convert locks.txt to ReST
+  docs: filesystems: convert mandatory-locking.txt to ReST
+  docs: filesystems: convert mount_api.txt to ReST
+  docs: filesystems: convert quota.txt to ReST
+  docs: filesystems: convert seq_file.txt to ReST
+  docs: filesystems: convert sharedsubtree.txt to ReST
+  docs: filesystems: split spufs.txt into 3 separate files
+  docs: filesystems: convert spufs/spu_create.txt to ReST
+  docs: filesystems: convert spufs/spufs.txt to ReST
+  docs: filesystems: convert spufs/spu_run.txt to ReST
+  docs: filesystems: convert sysfs-pci.txt to ReST
+  docs: filesystems: convert sysfs-tagging.txt to ReST
+  docs: filesystems: convert xfs-delayed-logging-design.txt to ReST
+  docs: filesystems: convert xfs-self-describing-metadata.txt to ReST
+
+ Documentation/admin-guide/sysctl/kernel.rst   |    2 +-
+ ...ount-support.txt => automount-support.rst} |   23 +-
+ .../{backend-api.txt => backend-api.rst}      |  165 +-
+ .../{cachefiles.txt => cachefiles.rst}        |  139 +-
+ Documentation/filesystems/caching/fscache.rst |  565 ++++++
+ Documentation/filesystems/caching/fscache.txt |  448 -----
+ Documentation/filesystems/caching/index.rst   |   14 +
+ .../caching/{netfs-api.txt => netfs-api.rst}  |  172 +-
+ .../caching/{object.txt => object.rst}        |   43 +-
+ .../{operations.txt => operations.rst}        |   45 +-
+ .../cifs/{cifsroot.txt => cifsroot.rst}       |   56 +-
+ Documentation/filesystems/coda.rst            | 1670 ++++++++++++++++
+ Documentation/filesystems/coda.txt            | 1676 -----------------
+ .../{configfs/configfs.txt => configfs.rst}   |  129 +-
+ Documentation/filesystems/devpts.rst          |   36 +
+ Documentation/filesystems/devpts.txt          |   26 -
+ .../filesystems/{dnotify.txt => dnotify.rst}  |   11 +-
+ .../filesystems/{fiemap.txt => fiemap.rst}    |  133 +-
+ .../filesystems/{files.txt => files.rst}      |   15 +-
+ .../filesystems/{fuse-io.txt => fuse-io.rst}  |    6 +
+ Documentation/filesystems/index.rst           |   23 +
+ .../filesystems/{locks.txt => locks.rst}      |   14 +-
+ ...tory-locking.txt => mandatory-locking.rst} |   25 +-
+ .../{mount_api.txt => mount_api.rst}          |  329 ++--
+ Documentation/filesystems/proc.rst            |    2 +-
+ .../filesystems/{quota.txt => quota.rst}      |   41 +-
+ .../{seq_file.txt => seq_file.rst}            |   61 +-
+ .../{sharedsubtree.txt => sharedsubtree.rst}  |  394 ++--
+ Documentation/filesystems/spufs/index.rst     |   13 +
+ .../filesystems/spufs/spu_create.rst          |  131 ++
+ Documentation/filesystems/spufs/spu_run.rst   |  138 ++
+ .../{spufs.txt => spufs/spufs.rst}            |  304 +--
+ .../{sysfs-pci.txt => sysfs-pci.rst}          |   23 +-
+ .../{sysfs-tagging.txt => sysfs-tagging.rst}  |   22 +-
+ ...ign.txt => xfs-delayed-logging-design.rst} |   65 +-
+ ...a.txt => xfs-self-describing-metadata.rst} |  182 +-
+ Documentation/iio/iio_configfs.rst            |    2 +-
+ Documentation/usb/gadget_configfs.rst         |    4 +-
+ MAINTAINERS                                   |   14 +-
+ fs/cachefiles/Kconfig                         |    4 +-
+ fs/coda/Kconfig                               |    2 +-
+ fs/configfs/inode.c                           |    2 +-
+ fs/configfs/item.c                            |    2 +-
+ fs/fscache/Kconfig                            |    8 +-
+ fs/fscache/cache.c                            |    8 +-
+ fs/fscache/cookie.c                           |    2 +-
+ fs/fscache/object.c                           |    4 +-
+ fs/fscache/operation.c                        |    2 +-
+ fs/locks.c                                    |    2 +-
+ include/linux/configfs.h                      |    2 +-
+ include/linux/fs_context.h                    |    2 +-
+ include/linux/fscache-cache.h                 |    4 +-
+ include/linux/fscache.h                       |   42 +-
+ include/linux/lsm_hooks.h                     |    2 +-
+ 54 files changed, 3844 insertions(+), 3405 deletions(-)
+ rename Documentation/filesystems/{automount-support.txt => automount-support.rst} (92%)
+ rename Documentation/filesystems/caching/{backend-api.txt => backend-api.rst} (87%)
+ rename Documentation/filesystems/caching/{cachefiles.txt => cachefiles.rst} (90%)
+ create mode 100644 Documentation/filesystems/caching/fscache.rst
+ delete mode 100644 Documentation/filesystems/caching/fscache.txt
+ create mode 100644 Documentation/filesystems/caching/index.rst
+ rename Documentation/filesystems/caching/{netfs-api.txt => netfs-api.rst} (91%)
+ rename Documentation/filesystems/caching/{object.txt => object.rst} (95%)
+ rename Documentation/filesystems/caching/{operations.txt => operations.rst} (90%)
+ rename Documentation/filesystems/cifs/{cifsroot.txt => cifsroot.rst} (72%)
+ create mode 100644 Documentation/filesystems/coda.rst
+ delete mode 100644 Documentation/filesystems/coda.txt
+ rename Documentation/filesystems/{configfs/configfs.txt => configfs.rst} (87%)
+ create mode 100644 Documentation/filesystems/devpts.rst
+ delete mode 100644 Documentation/filesystems/devpts.txt
+ rename Documentation/filesystems/{dnotify.txt => dnotify.rst} (90%)
+ rename Documentation/filesystems/{fiemap.txt => fiemap.rst} (70%)
+ rename Documentation/filesystems/{files.txt => files.rst} (95%)
+ rename Documentation/filesystems/{fuse-io.txt => fuse-io.rst} (95%)
+ rename Documentation/filesystems/{locks.txt => locks.rst} (91%)
+ rename Documentation/filesystems/{mandatory-locking.txt => mandatory-locking.rst} (91%)
+ rename Documentation/filesystems/{mount_api.txt => mount_api.rst} (79%)
+ rename Documentation/filesystems/{quota.txt => quota.rst} (81%)
+ rename Documentation/filesystems/{seq_file.txt => seq_file.rst} (92%)
+ rename Documentation/filesystems/{sharedsubtree.txt => sharedsubtree.rst} (72%)
+ create mode 100644 Documentation/filesystems/spufs/index.rst
+ create mode 100644 Documentation/filesystems/spufs/spu_create.rst
+ create mode 100644 Documentation/filesystems/spufs/spu_run.rst
+ rename Documentation/filesystems/{spufs.txt => spufs/spufs.rst} (57%)
+ rename Documentation/filesystems/{sysfs-pci.txt => sysfs-pci.rst} (92%)
+ rename Documentation/filesystems/{sysfs-tagging.txt => sysfs-tagging.rst} (72%)
+ rename Documentation/filesystems/{xfs-delayed-logging-design.txt => xfs-delayed-logging-design.rst} (97%)
+ rename Documentation/filesystems/{xfs-self-describing-metadata.txt => xfs-self-describing-metadata.rst} (83%)
+
+-- 
+2.25.2
+
+
