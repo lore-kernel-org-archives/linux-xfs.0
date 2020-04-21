@@ -2,68 +2,57 @@ Return-Path: <SRS0=MzXO=6F=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C901C54FD0
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Apr 2020 16:54:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95259C54FCC
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Apr 2020 16:55:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DD7CD2173E
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Apr 2020 16:54:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6BA23206B8
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Apr 2020 16:55:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587488087;
-	bh=I+poV6aWdrEtdHBUr6m4gEt4rVr2SFuzXvvDAKP9Sho=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=R1KfgAFc1aCFsNGPOf+/YSe9hg8byg2nnFX04qhh8E2ud79hYSEz2BLRblolTYJ6Q
-	 on7mN2eAOVC5DZDzcotRKzhtpo45vRt25ZzpewrEfOLJsI30KZCHI+VGS/zCGqRcic
-	 ijBH0DWpx91UaPDzrg//uWpHjIZ1/1+o929hIGbY=
+	s=default; t=1587488105;
+	bh=uIZj5tfgmhvq3cs/nTn7VA+2k47tEWnFMWu+gPZ8Uyg=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=Yt/adIRT9w4wPvPGZqjhvTicLGP5wLAORH2pdLx+T7EtpzlcSnY6hQKknQPZwCV1k
+	 ca3YQTwZLg/bjdONV0I1sHEO9oJYr3YL0FwNuL/5dXgHC1vJkO/ACck7RyEMmkjO3f
+	 I9HrLvpESeWiISoxIgKv2Fd4WKgcwkGjWOfdd8dc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729058AbgDUQyq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Apr 2020 12:54:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56958 "EHLO mail.kernel.org"
+        id S1729151AbgDUQy6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 21 Apr 2020 12:54:58 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57390 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726018AbgDUQyp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Apr 2020 12:54:45 -0400
+        id S1729182AbgDUQyv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 Apr 2020 12:54:51 -0400
 Received: from mail.kernel.org (ip5f5ad4d8.dynamic.kabel-deutschland.de [95.90.212.216])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id EF7A32072D;
-        Tue, 21 Apr 2020 16:54:43 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BD05421927;
+        Tue, 21 Apr 2020 16:54:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=default; t=1587488084;
-        bh=I+poV6aWdrEtdHBUr6m4gEt4rVr2SFuzXvvDAKP9Sho=;
-        h=From:To:Cc:Subject:Date:From;
-        b=qB58J7CdaJxDgs3IwR1BILA82/V832qHRtvohLy/Kb2dIF+RDago1sOUyA3wcPGJm
-         THLL/xW1xsSn7snwNLctffrsALp7GFFpR5aKSAh6XUVIxbQC8PeapfYgVMPAaXblew
-         /vob6Aoa4APmTstwu4eEJlbcEEo5polgmbJysOSA=
+        bh=uIZj5tfgmhvq3cs/nTn7VA+2k47tEWnFMWu+gPZ8Uyg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=UaqkuQqilJ6A5QVeKxsDbFhN4hiEanUOzY6QlBjObNm6zwr5NzPuM2gKAavswPXLP
+         1nBtNwhDNbWx1CQy7pEnbmiMZAekNmj76kge4ci9jCo8J15/XUKOvlMKTuAYhVDyjb
+         48YWpb0FsUonEsc6rzQ9aYaTcxrlJqqZXXD/OKJs=
 Received: from mchehab by mail.kernel.org with local (Exim 4.92.3)
         (envelope-from <mchehab@kernel.org>)
-        id 1jQwAU-00CmDK-0s; Tue, 21 Apr 2020 18:54:42 +0200
+        id 1jQwAU-00CmFZ-Vu; Tue, 21 Apr 2020 18:54:42 +0200
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
 Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-        linuxppc-dev@lists.ozlabs.org, Jeremy Kerr <jk@ozlabs.org>,
-        Jeff Layton <jlayton@kernel.org>, Jan Kara <jack@suse.com>,
-        linux-cachefs@redhat.com, David Howells <dhowells@redhat.com>,
-        linux-fsdevel@vger.kernel.org,
-        "J. Bruce Fields" <bfields@fieldses.org>, codalist@coda.cs.cmu.edu,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Jan Kara <jack@suse.cz>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        Joel Becker <jlbec@evilplan.org>,
-        Jan Harkes <jaharkes@cs.cmu.edu>,
-        Amir Goldstein <amir73il@gmail.com>, coda@cs.cmu.edu,
-        Alexey Dobriyan <adobriyan@gmail.com>,
-        linux-usb@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH v2 00/29] fs: convert remaining docs to ReST file format
-Date:   Tue, 21 Apr 2020 18:54:11 +0200
-Message-Id: <cover.1587487612.git.mchehab+huawei@kernel.org>
+        linux-xfs@vger.kernel.org
+Subject: [PATCH v2 28/29] docs: filesystems: convert xfs-delayed-logging-design.txt to ReST
+Date:   Tue, 21 Apr 2020 18:54:39 +0200
+Message-Id: <e665ef422eb8b96659c0393eb790140ecc004ed1.1587487612.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.25.2
+In-Reply-To: <cover.1587487612.git.mchehab+huawei@kernel.org>
+References: <cover.1587487612.git.mchehab+huawei@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
@@ -71,158 +60,237 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This patch series convert the remaining files under Documentation/filesystems
-to the ReST file format (except for dax.txt and patch-lookup.txt). 
+- Add a SPDX header;
+- Adjust document and section titles;
+- Some whitespace fixes and new line breaks;
+- Mark literal blocks as such;
+- Add it to filesystems/index.rst.
 
-It is based on linux-next (next-2020021).
-
-PS.: I opted to add mainly ML from the output of get_maintainers.pl to the c/c
-list of patch 00/34, because  otherwise the number of c/c would be too many,
-with would very likely cause ML servers to reject it.
-
-The results of those changes (together with other changes from my pending
-doc patches) are available at:
-
-   https://www.infradead.org/~mchehab/kernel_docs/filesystems/index.html
-
-And the series is also on my git tree:
-
-  https://git.linuxtv.org/mchehab/experimental.git/log/?h=fs_docs
-
-If you prefer, feel free to merge the patches via the filesystems git tree(s).
-
-- 
-
-v2:
-
-   - Removed dax.txt, in order to prevent a merge conflict with a dax patchset;
-   - Removed patch-lookup.txt conversion, due to patch-lookup.rst.
-     (I'll revisit this on some future)
-   - Removed a patch that was already merged;
-   - Added some Acked-by.
-
-
-Mauro Carvalho Chehab (29):
-  docs: filesystems: convert caching/object.txt to ReST
-  docs: filesystems: convert caching/fscache.txt to ReST format
-  docs: filesystems: caching/netfs-api.txt: convert it to ReST
-  docs: filesystems: caching/operations.txt: convert it to ReST
-  docs: filesystems: caching/cachefiles.txt: convert to ReST
-  docs: filesystems: caching/backend-api.txt: convert it to ReST
-  docs: filesystems: convert cifs/cifsroot.txt to ReST
-  docs: filesystems: convert configfs.txt to ReST
-  docs: filesystems: convert automount-support.txt to ReST
-  docs: filesystems: convert coda.txt to ReST
-  docs: filesystems: convert devpts.txt to ReST
-  docs: filesystems: convert dnotify.txt to ReST
-  docs: filesystems: convert fiemap.txt to ReST
-  docs: filesystems: convert files.txt to ReST
-  docs: filesystems: convert fuse-io.txt to ReST
-  docs: filesystems: convert locks.txt to ReST
-  docs: filesystems: convert mandatory-locking.txt to ReST
-  docs: filesystems: convert mount_api.txt to ReST
-  docs: filesystems: convert quota.txt to ReST
-  docs: filesystems: convert seq_file.txt to ReST
-  docs: filesystems: convert sharedsubtree.txt to ReST
-  docs: filesystems: split spufs.txt into 3 separate files
-  docs: filesystems: convert spufs/spu_create.txt to ReST
-  docs: filesystems: convert spufs/spufs.txt to ReST
-  docs: filesystems: convert spufs/spu_run.txt to ReST
-  docs: filesystems: convert sysfs-pci.txt to ReST
-  docs: filesystems: convert sysfs-tagging.txt to ReST
-  docs: filesystems: convert xfs-delayed-logging-design.txt to ReST
-  docs: filesystems: convert xfs-self-describing-metadata.txt to ReST
-
- Documentation/admin-guide/sysctl/kernel.rst   |    2 +-
- ...ount-support.txt => automount-support.rst} |   23 +-
- .../{backend-api.txt => backend-api.rst}      |  165 +-
- .../{cachefiles.txt => cachefiles.rst}        |  139 +-
- Documentation/filesystems/caching/fscache.rst |  565 ++++++
- Documentation/filesystems/caching/fscache.txt |  448 -----
- Documentation/filesystems/caching/index.rst   |   14 +
- .../caching/{netfs-api.txt => netfs-api.rst}  |  172 +-
- .../caching/{object.txt => object.rst}        |   43 +-
- .../{operations.txt => operations.rst}        |   45 +-
- .../cifs/{cifsroot.txt => cifsroot.rst}       |   56 +-
- Documentation/filesystems/coda.rst            | 1670 ++++++++++++++++
- Documentation/filesystems/coda.txt            | 1676 -----------------
- .../{configfs/configfs.txt => configfs.rst}   |  129 +-
- Documentation/filesystems/devpts.rst          |   36 +
- Documentation/filesystems/devpts.txt          |   26 -
- .../filesystems/{dnotify.txt => dnotify.rst}  |   11 +-
- .../filesystems/{fiemap.txt => fiemap.rst}    |  133 +-
- .../filesystems/{files.txt => files.rst}      |   15 +-
- .../filesystems/{fuse-io.txt => fuse-io.rst}  |    6 +
- Documentation/filesystems/index.rst           |   23 +
- .../filesystems/{locks.txt => locks.rst}      |   14 +-
- ...tory-locking.txt => mandatory-locking.rst} |   25 +-
- .../{mount_api.txt => mount_api.rst}          |  329 ++--
- Documentation/filesystems/proc.rst            |    2 +-
- .../filesystems/{quota.txt => quota.rst}      |   41 +-
- .../{seq_file.txt => seq_file.rst}            |   61 +-
- .../{sharedsubtree.txt => sharedsubtree.rst}  |  394 ++--
- Documentation/filesystems/spufs/index.rst     |   13 +
- .../filesystems/spufs/spu_create.rst          |  131 ++
- Documentation/filesystems/spufs/spu_run.rst   |  138 ++
- .../{spufs.txt => spufs/spufs.rst}            |  304 +--
- .../{sysfs-pci.txt => sysfs-pci.rst}          |   23 +-
- .../{sysfs-tagging.txt => sysfs-tagging.rst}  |   22 +-
- ...ign.txt => xfs-delayed-logging-design.rst} |   65 +-
- ...a.txt => xfs-self-describing-metadata.rst} |  182 +-
- Documentation/iio/iio_configfs.rst            |    2 +-
- Documentation/usb/gadget_configfs.rst         |    4 +-
- MAINTAINERS                                   |   14 +-
- fs/cachefiles/Kconfig                         |    4 +-
- fs/coda/Kconfig                               |    2 +-
- fs/configfs/inode.c                           |    2 +-
- fs/configfs/item.c                            |    2 +-
- fs/fscache/Kconfig                            |    8 +-
- fs/fscache/cache.c                            |    8 +-
- fs/fscache/cookie.c                           |    2 +-
- fs/fscache/object.c                           |    4 +-
- fs/fscache/operation.c                        |    2 +-
- fs/locks.c                                    |    2 +-
- include/linux/configfs.h                      |    2 +-
- include/linux/fs_context.h                    |    2 +-
- include/linux/fscache-cache.h                 |    4 +-
- include/linux/fscache.h                       |   42 +-
- include/linux/lsm_hooks.h                     |    2 +-
- 54 files changed, 3844 insertions(+), 3405 deletions(-)
- rename Documentation/filesystems/{automount-support.txt => automount-support.rst} (92%)
- rename Documentation/filesystems/caching/{backend-api.txt => backend-api.rst} (87%)
- rename Documentation/filesystems/caching/{cachefiles.txt => cachefiles.rst} (90%)
- create mode 100644 Documentation/filesystems/caching/fscache.rst
- delete mode 100644 Documentation/filesystems/caching/fscache.txt
- create mode 100644 Documentation/filesystems/caching/index.rst
- rename Documentation/filesystems/caching/{netfs-api.txt => netfs-api.rst} (91%)
- rename Documentation/filesystems/caching/{object.txt => object.rst} (95%)
- rename Documentation/filesystems/caching/{operations.txt => operations.rst} (90%)
- rename Documentation/filesystems/cifs/{cifsroot.txt => cifsroot.rst} (72%)
- create mode 100644 Documentation/filesystems/coda.rst
- delete mode 100644 Documentation/filesystems/coda.txt
- rename Documentation/filesystems/{configfs/configfs.txt => configfs.rst} (87%)
- create mode 100644 Documentation/filesystems/devpts.rst
- delete mode 100644 Documentation/filesystems/devpts.txt
- rename Documentation/filesystems/{dnotify.txt => dnotify.rst} (90%)
- rename Documentation/filesystems/{fiemap.txt => fiemap.rst} (70%)
- rename Documentation/filesystems/{files.txt => files.rst} (95%)
- rename Documentation/filesystems/{fuse-io.txt => fuse-io.rst} (95%)
- rename Documentation/filesystems/{locks.txt => locks.rst} (91%)
- rename Documentation/filesystems/{mandatory-locking.txt => mandatory-locking.rst} (91%)
- rename Documentation/filesystems/{mount_api.txt => mount_api.rst} (79%)
- rename Documentation/filesystems/{quota.txt => quota.rst} (81%)
- rename Documentation/filesystems/{seq_file.txt => seq_file.rst} (92%)
- rename Documentation/filesystems/{sharedsubtree.txt => sharedsubtree.rst} (72%)
- create mode 100644 Documentation/filesystems/spufs/index.rst
- create mode 100644 Documentation/filesystems/spufs/spu_create.rst
- create mode 100644 Documentation/filesystems/spufs/spu_run.rst
- rename Documentation/filesystems/{spufs.txt => spufs/spufs.rst} (57%)
- rename Documentation/filesystems/{sysfs-pci.txt => sysfs-pci.rst} (92%)
- rename Documentation/filesystems/{sysfs-tagging.txt => sysfs-tagging.rst} (72%)
+Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+---
+ Documentation/filesystems/index.rst           |  1 +
+ ...ign.txt => xfs-delayed-logging-design.rst} | 65 +++++++++++--------
+ MAINTAINERS                                   |  2 +-
+ 3 files changed, 40 insertions(+), 28 deletions(-)
  rename Documentation/filesystems/{xfs-delayed-logging-design.txt => xfs-delayed-logging-design.rst} (97%)
- rename Documentation/filesystems/{xfs-self-describing-metadata.txt => xfs-self-describing-metadata.rst} (83%)
 
+diff --git a/Documentation/filesystems/index.rst b/Documentation/filesystems/index.rst
+index 11852bf3e758..477496763473 100644
+--- a/Documentation/filesystems/index.rst
++++ b/Documentation/filesystems/index.rst
+@@ -119,4 +119,5 @@ Documentation for filesystem implementations.
+    udf
+    virtiofs
+    vfat
++   xfs-delayed-logging-design
+    zonefs
+diff --git a/Documentation/filesystems/xfs-delayed-logging-design.txt b/Documentation/filesystems/xfs-delayed-logging-design.rst
+similarity index 97%
+rename from Documentation/filesystems/xfs-delayed-logging-design.txt
+rename to Documentation/filesystems/xfs-delayed-logging-design.rst
+index 9a6dd289b17b..464405d2801e 100644
+--- a/Documentation/filesystems/xfs-delayed-logging-design.txt
++++ b/Documentation/filesystems/xfs-delayed-logging-design.rst
+@@ -1,8 +1,11 @@
++.. SPDX-License-Identifier: GPL-2.0
++
++==========================
+ XFS Delayed Logging Design
+---------------------------
++==========================
+ 
+ Introduction to Re-logging in XFS
+----------------------------------
++=================================
+ 
+ XFS logging is a combination of logical and physical logging. Some objects,
+ such as inodes and dquots, are logged in logical format where the details
+@@ -25,7 +28,7 @@ changes in the new transaction that is written to the log.
+ That is, if we have a sequence of changes A through to F, and the object was
+ written to disk after change D, we would see in the log the following series
+ of transactions, their contents and the log sequence number (LSN) of the
+-transaction:
++transaction::
+ 
+ 	Transaction		Contents	LSN
+ 	   A			   A		   X
+@@ -85,7 +88,7 @@ IO permanently. Hence the XFS journalling subsystem can be considered to be IO
+ bound.
+ 
+ Delayed Logging: Concepts
+--------------------------
++=========================
+ 
+ The key thing to note about the asynchronous logging combined with the
+ relogging technique XFS uses is that we can be relogging changed objects
+@@ -154,9 +157,10 @@ The fundamental requirements for delayed logging in XFS are simple:
+ 	6. No performance regressions for synchronous transaction workloads.
+ 
+ Delayed Logging: Design
+------------------------
++=======================
+ 
+ Storing Changes
++---------------
+ 
+ The problem with accumulating changes at a logical level (i.e. just using the
+ existing log item dirty region tracking) is that when it comes to writing the
+@@ -194,30 +198,30 @@ asynchronous transactions to the log. The differences between the existing
+ formatting method and the delayed logging formatting can be seen in the
+ diagram below.
+ 
+-Current format log vector:
++Current format log vector::
+ 
+-Object    +---------------------------------------------+
+-Vector 1      +----+
+-Vector 2                    +----+
+-Vector 3                                   +----------+
++    Object    +---------------------------------------------+
++    Vector 1      +----+
++    Vector 2                    +----+
++    Vector 3                                   +----------+
+ 
+-After formatting:
++After formatting::
+ 
+-Log Buffer    +-V1-+-V2-+----V3----+
++    Log Buffer    +-V1-+-V2-+----V3----+
+ 
+-Delayed logging vector:
++Delayed logging vector::
+ 
+-Object    +---------------------------------------------+
+-Vector 1      +----+
+-Vector 2                    +----+
+-Vector 3                                   +----------+
++    Object    +---------------------------------------------+
++    Vector 1      +----+
++    Vector 2                    +----+
++    Vector 3                                   +----------+
+ 
+-After formatting:
++After formatting::
+ 
+-Memory Buffer +-V1-+-V2-+----V3----+
+-Vector 1      +----+
+-Vector 2           +----+
+-Vector 3                +----------+
++    Memory Buffer +-V1-+-V2-+----V3----+
++    Vector 1      +----+
++    Vector 2           +----+
++    Vector 3                +----------+
+ 
+ The memory buffer and associated vector need to be passed as a single object,
+ but still need to be associated with the parent object so if the object is
+@@ -242,6 +246,7 @@ relogged in memory.
+ 
+ 
+ Tracking Changes
++----------------
+ 
+ Now that we can record transactional changes in memory in a form that allows
+ them to be used without limitations, we need to be able to track and accumulate
+@@ -278,6 +283,7 @@ done for convenience/sanity of the developers.
+ 
+ 
+ Delayed Logging: Checkpoints
++----------------------------
+ 
+ When we have a log synchronisation event, commonly known as a "log force",
+ all the items in the CIL must be written into the log via the log buffers.
+@@ -341,7 +347,7 @@ Hence log vectors need to be able to be chained together to allow them to be
+ detached from the log items. That is, when the CIL is flushed the memory
+ buffer and log vector attached to each log item needs to be attached to the
+ checkpoint context so that the log item can be released. In diagrammatic form,
+-the CIL would look like this before the flush:
++the CIL would look like this before the flush::
+ 
+ 	CIL Head
+ 	   |
+@@ -362,7 +368,7 @@ the CIL would look like this before the flush:
+ 					-> vector array
+ 
+ And after the flush the CIL head is empty, and the checkpoint context log
+-vector list would look like:
++vector list would look like::
+ 
+ 	Checkpoint Context
+ 	   |
+@@ -411,6 +417,7 @@ compare" situation that can be done after a working and reviewed implementation
+ is in the dev tree....
+ 
+ Delayed Logging: Checkpoint Sequencing
++--------------------------------------
+ 
+ One of the key aspects of the XFS transaction subsystem is that it tags
+ committed transactions with the log sequence number of the transaction commit.
+@@ -474,6 +481,7 @@ force the log at the LSN of that transaction) and so the higher level code
+ behaves the same regardless of whether delayed logging is being used or not.
+ 
+ Delayed Logging: Checkpoint Log Space Accounting
++------------------------------------------------
+ 
+ The big issue for a checkpoint transaction is the log space reservation for the
+ transaction. We don't know how big a checkpoint transaction is going to be
+@@ -491,7 +499,7 @@ the size of the transaction and the number of regions being logged (the number
+ of log vectors in the transaction).
+ 
+ An example of the differences would be logging directory changes versus logging
+-inode changes. If you modify lots of inode cores (e.g. chmod -R g+w *), then
++inode changes. If you modify lots of inode cores (e.g. ``chmod -R g+w *``), then
+ there are lots of transactions that only contain an inode core and an inode log
+ format structure. That is, two vectors totaling roughly 150 bytes. If we modify
+ 10,000 inodes, we have about 1.5MB of metadata to write in 20,000 vectors. Each
+@@ -565,6 +573,7 @@ which is once every 30s.
+ 
+ 
+ Delayed Logging: Log Item Pinning
++---------------------------------
+ 
+ Currently log items are pinned during transaction commit while the items are
+ still locked. This happens just after the items are formatted, though it could
+@@ -605,6 +614,7 @@ object, we have a race with CIL being flushed between the check and the pin
+ lock to guarantee that we pin the items correctly.
+ 
+ Delayed Logging: Concurrent Scalability
++---------------------------------------
+ 
+ A fundamental requirement for the CIL is that accesses through transaction
+ commits must scale to many concurrent commits. The current transaction commit
+@@ -683,8 +693,9 @@ woken by the wrong event.
+ 
+ 
+ Lifecycle Changes
++-----------------
+ 
+-The existing log item life cycle is as follows:
++The existing log item life cycle is as follows::
+ 
+ 	1. Transaction allocate
+ 	2. Transaction reserve
+@@ -729,7 +740,7 @@ at the same time. If the log item is in the AIL or between steps 6 and 7
+ and steps 1-6 are re-entered, then the item is relogged. Only when steps 8-9
+ are entered and completed is the object considered clean.
+ 
+-With delayed logging, there are new steps inserted into the life cycle:
++With delayed logging, there are new steps inserted into the life cycle::
+ 
+ 	1. Transaction allocate
+ 	2. Transaction reserve
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 968c97eda352..c8851e7c443a 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -18607,7 +18607,7 @@ W:	http://xfs.org/
+ T:	git git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+ F:	Documentation/ABI/testing/sysfs-fs-xfs
+ F:	Documentation/admin-guide/xfs.rst
+-F:	Documentation/filesystems/xfs-delayed-logging-design.txt
++F:	Documentation/filesystems/xfs-delayed-logging-design.rst
+ F:	Documentation/filesystems/xfs-self-describing-metadata.txt
+ F:	fs/xfs/
+ F:	include/uapi/linux/dqblk_xfs.h
 -- 
 2.25.2
-
 
