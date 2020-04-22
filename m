@@ -7,56 +7,55 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDFAFC2BA19
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 02:09:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10100C54FD0
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 02:09:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A1365206D5
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 02:09:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D4E4120724
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 02:09:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Kr5GtNxa"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ZfrlzRIy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726355AbgDVCJF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Apr 2020 22:09:05 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:45288 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726173AbgDVCJF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Apr 2020 22:09:05 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03M28St0170954
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:09:02 GMT
+        id S1726228AbgDVCJc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 21 Apr 2020 22:09:32 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:40060 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726173AbgDVCJc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Apr 2020 22:09:32 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03M28e4b084348
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:09:29 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=/MaZfaJ3MrvQ5XgbtALEqgVGQAFjOKhoni6F3kLbsFM=;
- b=Kr5GtNxaxFXkg2gYIzGq0Wg4sirUsKWKXpyffjReZp9QDRKvOqgzfvrQ4lYvpIZR8SUR
- 80agnpzkIpe6xmXY58HbTZoZLpkKGSPCYUgnvJgooCKQCr9sc2iuzFukzGO8jmVUH7/u
- vvcVQvpfne+Qq90nRT/EZjjOpCmKOYjGDrH7SUehtMh/EEIPlGWXwhFJWb0BASbDtAD1
- s35ZnoIlgo2cWvQJ4zQdJYv9Wz9XRYnfNkfIE9R0twy3Ry74jByA384/JwKJAZoMHJA8
- 4kUB6Qipm0miUQk33xr+veUP5gYd61BdPpK8vfQr41OOLGwsTs75tV4QZ03GQ7lZs7vD Cg== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 30grpgmhrk-1
+ bh=5zYGYuceEVHw658cDV+ElKodeRGjjPbGfsUktGMQgq4=;
+ b=ZfrlzRIyk659iOJDyKeASOfM/ysvf7JblCcS5Wf9x7P4tTWimh7JDxXu4kOWObxowdX4
+ rchIoneehrLcblHQh13hFrsPAUF/yJT8HkbNSr98g2K86qZKnvUZlAOcZDAmmDujcNyE
+ obbcQR5B0fi41EYAtx92psohl7vWA9IsRLF5ww5t7i6kfDGqLRqV3MEUF+Vbxrx0n4WY
+ TA55Ip6KAckQ83SfjVxUJRrh1oUxyc0REddHTIU2TmGlIx2R8S3N6x1BujckpH1uA/xX
+ EQzeLRzhs4aZBoAfoCRisrQrinB1EOIUf7SnvDj8qh6rj5j4eF6SQNv38jRZgnE8JhWh 4w== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 30ft6n81r7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:09:02 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03M23TBA179062
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:07:02 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 30gb91fpc6-1
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:09:29 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03M21cQ2065041
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:07:28 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 30gb3t4n9a-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:07:02 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03M271mT014983
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:07:01 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:07:28 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03M27Ra9014466
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:07:27 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 21 Apr 2020 19:07:01 -0700
-Subject: [PATCH 09/19] xfs: refactor log recovery icreate item dispatch for
- pass2 commit functions
+        with ESMTP ; Tue, 21 Apr 2020 19:07:26 -0700
+Subject: [PATCH 13/19] xfs: refactor CUI log item recovery dispatch
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 21 Apr 2020 19:07:00 -0700
-Message-ID: <158752122050.2140829.10077536743035207298.stgit@magnolia>
+Date:   Tue, 21 Apr 2020 19:07:26 -0700
+Message-ID: <158752124595.2140829.4459985307755446608.stgit@magnolia>
 In-Reply-To: <158752116283.2140829.12265815455525398097.stgit@magnolia>
 References: <158752116283.2140829.12265815455525398097.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -64,16 +63,16 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9598 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
- bulkscore=0 suspectscore=1 malwarescore=0 phishscore=0 spamscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004220014
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9598 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 mlxscore=0
- lowpriorityscore=0 adultscore=0 suspectscore=1 bulkscore=0 clxscore=1015
- malwarescore=0 phishscore=0 spamscore=0 priorityscore=1501 impostorscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 adultscore=0
+ mlxlogscore=999 phishscore=0 suspectscore=3 bulkscore=0 mlxscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004220015
+ definitions=main-2004220014
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9598 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=3 bulkscore=0
+ priorityscore=1501 impostorscore=0 adultscore=0 phishscore=0
+ lowpriorityscore=0 malwarescore=0 clxscore=1015 mlxlogscore=999 mlxscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004220015
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -81,316 +80,496 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Move the log icreate item pass2 commit code into the per-item source code
-files and use the dispatch function to call it.  We do these one at a
-time because there's a lot of code to move.  No functional changes.
+Move the refcount update intent and intent-done log recovery code into
+the per-item source code files and use dispatch functions to call them.
+We do these one at a time because there's a lot of code to move.  No
+functional changes.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_icreate_item.c |  132 +++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_log_recover.c  |  126 -------------------------------------------
- 2 files changed, 132 insertions(+), 126 deletions(-)
+ fs/xfs/libxfs/xfs_log_recover.h |    1 
+ fs/xfs/xfs_log_recover.c        |  176 +--------------------------------------
+ fs/xfs/xfs_refcount_item.c      |  175 ++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_refcount_item.h      |    5 -
+ 4 files changed, 178 insertions(+), 179 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_icreate_item.c b/fs/xfs/xfs_icreate_item.c
-index 0a1ed4dc1c3d..15415421ea81 100644
---- a/fs/xfs/xfs_icreate_item.c
-+++ b/fs/xfs/xfs_icreate_item.c
-@@ -6,13 +6,19 @@
- #include "xfs.h"
- #include "xfs_fs.h"
- #include "xfs_shared.h"
-+#include "xfs_format.h"
- #include "xfs_log_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_inode.h"
- #include "xfs_trans.h"
- #include "xfs_trans_priv.h"
- #include "xfs_icreate_item.h"
- #include "xfs_log.h"
- #include "xfs_log_priv.h"
- #include "xfs_log_recover.h"
-+#include "xfs_ialloc.h"
-+#include "xfs_trace.h"
+diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
+index 325f4907c563..936da98ff370 100644
+--- a/fs/xfs/libxfs/xfs_log_recover.h
++++ b/fs/xfs/libxfs/xfs_log_recover.h
+@@ -166,5 +166,6 @@ struct xlog_recover_intent_type {
  
- kmem_zone_t	*xfs_icreate_zone;		/* inode create item zone */
+ extern const struct xlog_recover_intent_type xlog_recover_extfree_type;
+ extern const struct xlog_recover_intent_type xlog_recover_rmap_type;
++extern const struct xlog_recover_intent_type xlog_recover_refcount_type;
  
-@@ -110,6 +116,132 @@ xfs_icreate_log(
- 	set_bit(XFS_LI_DIRTY, &icp->ic_item.li_flags);
- }
- 
-+/*
-+ * This routine is called when an inode create format structure is found in a
-+ * committed transaction in the log.  It's purpose is to initialise the inodes
-+ * being allocated on disk. This requires us to get inode cluster buffers that
-+ * match the range to be initialised, stamped with inode templates and written
-+ * by delayed write so that subsequent modifications will hit the cached buffer
-+ * and only need writing out at the end of recovery.
-+ */
-+STATIC int
-+xlog_recover_do_icreate_pass2(
-+	struct xlog		*log,
-+	struct list_head	*buffer_list,
-+	struct xlog_recover_item *item,
-+	xfs_lsn_t		current_lsn)
-+{
-+	struct xfs_mount	*mp = log->l_mp;
-+	struct xfs_icreate_log	*icl;
-+	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
-+	xfs_agnumber_t		agno;
-+	xfs_agblock_t		agbno;
-+	unsigned int		count;
-+	unsigned int		isize;
-+	xfs_agblock_t		length;
-+	int			bb_per_cluster;
-+	int			cancel_count;
-+	int			nbufs;
-+	int			i;
-+
-+	icl = (struct xfs_icreate_log *)item->ri_buf[0].i_addr;
-+	if (icl->icl_type != XFS_LI_ICREATE) {
-+		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad type");
-+		return -EINVAL;
-+	}
-+
-+	if (icl->icl_size != 1) {
-+		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad icl size");
-+		return -EINVAL;
-+	}
-+
-+	agno = be32_to_cpu(icl->icl_ag);
-+	if (agno >= mp->m_sb.sb_agcount) {
-+		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad agno");
-+		return -EINVAL;
-+	}
-+	agbno = be32_to_cpu(icl->icl_agbno);
-+	if (!agbno || agbno == NULLAGBLOCK || agbno >= mp->m_sb.sb_agblocks) {
-+		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad agbno");
-+		return -EINVAL;
-+	}
-+	isize = be32_to_cpu(icl->icl_isize);
-+	if (isize != mp->m_sb.sb_inodesize) {
-+		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad isize");
-+		return -EINVAL;
-+	}
-+	count = be32_to_cpu(icl->icl_count);
-+	if (!count) {
-+		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad count");
-+		return -EINVAL;
-+	}
-+	length = be32_to_cpu(icl->icl_length);
-+	if (!length || length >= mp->m_sb.sb_agblocks) {
-+		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad length");
-+		return -EINVAL;
-+	}
-+
-+	/*
-+	 * The inode chunk is either full or sparse and we only support
-+	 * m_ino_geo.ialloc_min_blks sized sparse allocations at this time.
-+	 */
-+	if (length != igeo->ialloc_blks &&
-+	    length != igeo->ialloc_min_blks) {
-+		xfs_warn(log->l_mp,
-+			 "%s: unsupported chunk length", __FUNCTION__);
-+		return -EINVAL;
-+	}
-+
-+	/* verify inode count is consistent with extent length */
-+	if ((count >> mp->m_sb.sb_inopblog) != length) {
-+		xfs_warn(log->l_mp,
-+			 "%s: inconsistent inode count and chunk length",
-+			 __FUNCTION__);
-+		return -EINVAL;
-+	}
-+
-+	/*
-+	 * The icreate transaction can cover multiple cluster buffers and these
-+	 * buffers could have been freed and reused. Check the individual
-+	 * buffers for cancellation so we don't overwrite anything written after
-+	 * a cancellation.
-+	 */
-+	bb_per_cluster = XFS_FSB_TO_BB(mp, igeo->blocks_per_cluster);
-+	nbufs = length / igeo->blocks_per_cluster;
-+	for (i = 0, cancel_count = 0; i < nbufs; i++) {
-+		xfs_daddr_t	daddr;
-+
-+		daddr = XFS_AGB_TO_DADDR(mp, agno,
-+				agbno + i * igeo->blocks_per_cluster);
-+		if (xlog_check_buffer_cancelled(log, daddr, bb_per_cluster, 0))
-+			cancel_count++;
-+	}
-+
-+	/*
-+	 * We currently only use icreate for a single allocation at a time. This
-+	 * means we should expect either all or none of the buffers to be
-+	 * cancelled. Be conservative and skip replay if at least one buffer is
-+	 * cancelled, but warn the user that something is awry if the buffers
-+	 * are not consistent.
-+	 *
-+	 * XXX: This must be refined to only skip cancelled clusters once we use
-+	 * icreate for multiple chunk allocations.
-+	 */
-+	ASSERT(!cancel_count || cancel_count == nbufs);
-+	if (cancel_count) {
-+		if (cancel_count != nbufs)
-+			xfs_warn(mp,
-+	"WARNING: partial inode chunk cancellation, skipped icreate.");
-+		trace_xfs_log_recover_icreate_cancel(log, icl);
-+		return 0;
-+	}
-+
-+	trace_xfs_log_recover_icreate_recover(log, icl);
-+	return xfs_ialloc_inode_init(mp, NULL, buffer_list, count, agno, agbno,
-+				     length, be32_to_cpu(icl->icl_gen));
-+}
-+
- const struct xlog_recover_item_type xlog_icreate_item_type = {
- 	.reorder		= XLOG_REORDER_BUFFER_LIST,
-+	.commit_pass2_fn	= xlog_recover_do_icreate_pass2,
- };
+ #endif	/* __XFS_LOG_RECOVER_H__ */
 diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 5b3c5df22e88..18b797ca4a6c 100644
+index ce63660d29f6..8a112f22583b 100644
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -2445,130 +2445,6 @@ xlog_recover_bud_pass2(
- 	return 0;
+@@ -2012,126 +2012,6 @@ xlog_check_buffer_cancelled(
+ 	return 1;
  }
  
 -/*
-- * This routine is called when an inode create format structure is found in a
-- * committed transaction in the log.  It's purpose is to initialise the inodes
-- * being allocated on disk. This requires us to get inode cluster buffers that
-- * match the range to be initialised, stamped with inode templates and written
-- * by delayed write so that subsequent modifications will hit the cached buffer
-- * and only need writing out at the end of recovery.
+- * Copy an CUI format buffer from the given buf, and into the destination
+- * CUI format structure.  The CUI/CUD items were designed not to need any
+- * special alignment handling.
 - */
--STATIC int
--xlog_recover_do_icreate_pass2(
--	struct xlog		*log,
--	struct list_head	*buffer_list,
--	xlog_recover_item_t	*item)
+-static int
+-xfs_cui_copy_format(
+-	struct xfs_log_iovec		*buf,
+-	struct xfs_cui_log_format	*dst_cui_fmt)
 -{
--	struct xfs_mount	*mp = log->l_mp;
--	struct xfs_icreate_log	*icl;
--	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
--	xfs_agnumber_t		agno;
--	xfs_agblock_t		agbno;
--	unsigned int		count;
--	unsigned int		isize;
--	xfs_agblock_t		length;
--	int			bb_per_cluster;
--	int			cancel_count;
--	int			nbufs;
--	int			i;
+-	struct xfs_cui_log_format	*src_cui_fmt;
+-	uint				len;
 -
--	icl = (struct xfs_icreate_log *)item->ri_buf[0].i_addr;
--	if (icl->icl_type != XFS_LI_ICREATE) {
--		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad type");
--		return -EINVAL;
--	}
+-	src_cui_fmt = buf->i_addr;
+-	len = xfs_cui_log_format_sizeof(src_cui_fmt->cui_nextents);
 -
--	if (icl->icl_size != 1) {
--		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad icl size");
--		return -EINVAL;
--	}
--
--	agno = be32_to_cpu(icl->icl_ag);
--	if (agno >= mp->m_sb.sb_agcount) {
--		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad agno");
--		return -EINVAL;
--	}
--	agbno = be32_to_cpu(icl->icl_agbno);
--	if (!agbno || agbno == NULLAGBLOCK || agbno >= mp->m_sb.sb_agblocks) {
--		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad agbno");
--		return -EINVAL;
--	}
--	isize = be32_to_cpu(icl->icl_isize);
--	if (isize != mp->m_sb.sb_inodesize) {
--		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad isize");
--		return -EINVAL;
--	}
--	count = be32_to_cpu(icl->icl_count);
--	if (!count) {
--		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad count");
--		return -EINVAL;
--	}
--	length = be32_to_cpu(icl->icl_length);
--	if (!length || length >= mp->m_sb.sb_agblocks) {
--		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad length");
--		return -EINVAL;
--	}
--
--	/*
--	 * The inode chunk is either full or sparse and we only support
--	 * m_ino_geo.ialloc_min_blks sized sparse allocations at this time.
--	 */
--	if (length != igeo->ialloc_blks &&
--	    length != igeo->ialloc_min_blks) {
--		xfs_warn(log->l_mp,
--			 "%s: unsupported chunk length", __FUNCTION__);
--		return -EINVAL;
--	}
--
--	/* verify inode count is consistent with extent length */
--	if ((count >> mp->m_sb.sb_inopblog) != length) {
--		xfs_warn(log->l_mp,
--			 "%s: inconsistent inode count and chunk length",
--			 __FUNCTION__);
--		return -EINVAL;
--	}
--
--	/*
--	 * The icreate transaction can cover multiple cluster buffers and these
--	 * buffers could have been freed and reused. Check the individual
--	 * buffers for cancellation so we don't overwrite anything written after
--	 * a cancellation.
--	 */
--	bb_per_cluster = XFS_FSB_TO_BB(mp, igeo->blocks_per_cluster);
--	nbufs = length / igeo->blocks_per_cluster;
--	for (i = 0, cancel_count = 0; i < nbufs; i++) {
--		xfs_daddr_t	daddr;
--
--		daddr = XFS_AGB_TO_DADDR(mp, agno,
--				agbno + i * igeo->blocks_per_cluster);
--		if (xlog_check_buffer_cancelled(log, daddr, bb_per_cluster, 0))
--			cancel_count++;
--	}
--
--	/*
--	 * We currently only use icreate for a single allocation at a time. This
--	 * means we should expect either all or none of the buffers to be
--	 * cancelled. Be conservative and skip replay if at least one buffer is
--	 * cancelled, but warn the user that something is awry if the buffers
--	 * are not consistent.
--	 *
--	 * XXX: This must be refined to only skip cancelled clusters once we use
--	 * icreate for multiple chunk allocations.
--	 */
--	ASSERT(!cancel_count || cancel_count == nbufs);
--	if (cancel_count) {
--		if (cancel_count != nbufs)
--			xfs_warn(mp,
--	"WARNING: partial inode chunk cancellation, skipped icreate.");
--		trace_xfs_log_recover_icreate_cancel(log, icl);
+-	if (buf->i_len == len) {
+-		memcpy(dst_cui_fmt, src_cui_fmt, len);
 -		return 0;
 -	}
--
--	trace_xfs_log_recover_icreate_recover(log, icl);
--	return xfs_ialloc_inode_init(mp, NULL, buffer_list, count, agno, agbno,
--				     length, be32_to_cpu(icl->icl_gen));
+-	XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, NULL);
+-	return -EFSCORRUPTED;
 -}
 -
- STATIC int
- xlog_recover_commit_pass1(
- 	struct xlog			*log,
-@@ -2631,8 +2507,6 @@ xlog_recover_commit_pass2(
- 				trans->r_lsn);
+-/*
+- * This routine is called to create an in-core extent refcount update
+- * item from the cui format structure which was logged on disk.
+- * It allocates an in-core cui, copies the extents from the format
+- * structure into it, and adds the cui to the AIL with the given
+- * LSN.
+- */
+-STATIC int
+-xlog_recover_cui_pass2(
+-	struct xlog			*log,
+-	struct xlog_recover_item	*item,
+-	xfs_lsn_t			lsn)
+-{
+-	int				error;
+-	struct xfs_mount		*mp = log->l_mp;
+-	struct xfs_cui_log_item		*cuip;
+-	struct xfs_cui_log_format	*cui_formatp;
+-
+-	cui_formatp = item->ri_buf[0].i_addr;
+-
+-	cuip = xfs_cui_init(mp, cui_formatp->cui_nextents);
+-	error = xfs_cui_copy_format(&item->ri_buf[0], &cuip->cui_format);
+-	if (error) {
+-		xfs_cui_item_free(cuip);
+-		return error;
+-	}
+-	atomic_set(&cuip->cui_next_extent, cui_formatp->cui_nextents);
+-
+-	spin_lock(&log->l_ailp->ail_lock);
+-	/*
+-	 * The CUI has two references. One for the CUD and one for CUI to ensure
+-	 * it makes it into the AIL. Insert the CUI into the AIL directly and
+-	 * drop the CUI reference. Note that xfs_trans_ail_update() drops the
+-	 * AIL lock.
+-	 */
+-	xfs_trans_ail_update(log->l_ailp, &cuip->cui_item, lsn);
+-	xfs_cui_release(cuip);
+-	return 0;
+-}
+-
+-
+-/*
+- * This routine is called when an CUD format structure is found in a committed
+- * transaction in the log. Its purpose is to cancel the corresponding CUI if it
+- * was still in the log. To do this it searches the AIL for the CUI with an id
+- * equal to that in the CUD format structure. If we find it we drop the CUD
+- * reference, which removes the CUI from the AIL and frees it.
+- */
+-STATIC int
+-xlog_recover_cud_pass2(
+-	struct xlog			*log,
+-	struct xlog_recover_item	*item)
+-{
+-	struct xfs_cud_log_format	*cud_formatp;
+-	struct xfs_cui_log_item		*cuip = NULL;
+-	struct xfs_log_item		*lip;
+-	uint64_t			cui_id;
+-	struct xfs_ail_cursor		cur;
+-	struct xfs_ail			*ailp = log->l_ailp;
+-
+-	cud_formatp = item->ri_buf[0].i_addr;
+-	if (item->ri_buf[0].i_len != sizeof(struct xfs_cud_log_format)) {
+-		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
+-		return -EFSCORRUPTED;
+-	}
+-	cui_id = cud_formatp->cud_cui_id;
+-
+-	/*
+-	 * Search for the CUI with the id in the CUD format structure in the
+-	 * AIL.
+-	 */
+-	spin_lock(&ailp->ail_lock);
+-	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
+-	while (lip != NULL) {
+-		if (lip->li_type == XFS_LI_CUI) {
+-			cuip = (struct xfs_cui_log_item *)lip;
+-			if (cuip->cui_format.cui_id == cui_id) {
+-				/*
+-				 * Drop the CUD reference to the CUI. This
+-				 * removes the CUI from the AIL and frees it.
+-				 */
+-				spin_unlock(&ailp->ail_lock);
+-				xfs_cui_release(cuip);
+-				spin_lock(&ailp->ail_lock);
+-				break;
+-			}
+-		}
+-		lip = xfs_trans_ail_cursor_next(ailp, &cur);
+-	}
+-
+-	xfs_trans_ail_cursor_done(&cur);
+-	spin_unlock(&ailp->ail_lock);
+-
+-	return 0;
+-}
+-
+ /*
+  * Copy an BUI format buffer from the given buf, and into the destination
+  * BUI format structure.  The BUI/BUD items were designed not to need any
+@@ -2286,6 +2166,9 @@ xlog_intent_for_type(
+ 	case XFS_LI_RUD:
+ 	case XFS_LI_RUI:
+ 		return &xlog_recover_rmap_type;
++	case XFS_LI_CUI:
++	case XFS_LI_CUD:
++		return &xlog_recover_refcount_type;
+ 	default:
+ 		return NULL;
+ 	}
+@@ -2298,6 +2181,7 @@ xlog_is_intent_done_item(
+ 	switch (ITEM_TYPE(item)) {
+ 	case XFS_LI_EFD:
+ 	case XFS_LI_RUD:
++	case XFS_LI_CUD:
+ 		return true;
+ 	default:
+ 		return false;
+@@ -2321,10 +2205,6 @@ xlog_recover_intent_pass2(
+ 	}
  
  	switch (ITEM_TYPE(item)) {
--	case XFS_LI_ICREATE:
--		return xlog_recover_do_icreate_pass2(log, buffer_list, item);
- 	case XFS_LI_QUOTAOFF:
- 		/* nothing to do in pass2 */
- 		return 0;
+-	case XFS_LI_CUI:
+-		return xlog_recover_cui_pass2(log, item, current_lsn);
+-	case XFS_LI_CUD:
+-		return xlog_recover_cud_pass2(log, item);
+ 	case XFS_LI_BUI:
+ 		return xlog_recover_bui_pass2(log, item, current_lsn);
+ 	case XFS_LI_BUD:
+@@ -2858,46 +2738,6 @@ xlog_recover_process_data(
+ 	return 0;
+ }
+ 
+-/* Recover the CUI if necessary. */
+-STATIC int
+-xlog_recover_process_cui(
+-	struct xfs_trans		*parent_tp,
+-	struct xfs_ail			*ailp,
+-	struct xfs_log_item		*lip)
+-{
+-	struct xfs_cui_log_item		*cuip;
+-	int				error;
+-
+-	/*
+-	 * Skip CUIs that we've already processed.
+-	 */
+-	cuip = container_of(lip, struct xfs_cui_log_item, cui_item);
+-	if (test_bit(XFS_CUI_RECOVERED, &cuip->cui_flags))
+-		return 0;
+-
+-	spin_unlock(&ailp->ail_lock);
+-	error = xfs_cui_recover(parent_tp, cuip);
+-	spin_lock(&ailp->ail_lock);
+-
+-	return error;
+-}
+-
+-/* Release the CUI since we're cancelling everything. */
+-STATIC void
+-xlog_recover_cancel_cui(
+-	struct xfs_mount		*mp,
+-	struct xfs_ail			*ailp,
+-	struct xfs_log_item		*lip)
+-{
+-	struct xfs_cui_log_item		*cuip;
+-
+-	cuip = container_of(lip, struct xfs_cui_log_item, cui_item);
+-
+-	spin_unlock(&ailp->ail_lock);
+-	xfs_cui_release(cuip);
+-	spin_lock(&ailp->ail_lock);
+-}
+-
+ /* Recover the BUI if necessary. */
+ STATIC int
+ xlog_recover_process_bui(
+@@ -3065,12 +2905,10 @@ xlog_recover_process_intents(
+ 		switch (lip->li_type) {
+ 		case XFS_LI_EFI:
+ 		case XFS_LI_RUI:
++		case XFS_LI_CUI:
+ 			type = xlog_intent_for_type(lip->li_type);
+ 			error = type->process_intent(log, parent_tp, lip);
+ 			break;
+-		case XFS_LI_CUI:
+-			error = xlog_recover_process_cui(parent_tp, ailp, lip);
+-			break;
+ 		case XFS_LI_BUI:
+ 			error = xlog_recover_process_bui(parent_tp, ailp, lip);
+ 			break;
+@@ -3122,12 +2960,10 @@ xlog_recover_cancel_intents(
+ 		switch (lip->li_type) {
+ 		case XFS_LI_EFI:
+ 		case XFS_LI_RUI:
++		case XFS_LI_CUI:
+ 			type = xlog_intent_for_type(lip->li_type);
+ 			type->cancel_intent(log, lip);
+ 			break;
+-		case XFS_LI_CUI:
+-			xlog_recover_cancel_cui(log->l_mp, ailp, lip);
+-			break;
+ 		case XFS_LI_BUI:
+ 			xlog_recover_cancel_bui(log->l_mp, ailp, lip);
+ 			break;
+diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
+index 8eeed73928cd..a1dac3d60a2a 100644
+--- a/fs/xfs/xfs_refcount_item.c
++++ b/fs/xfs/xfs_refcount_item.c
+@@ -18,6 +18,8 @@
+ #include "xfs_log.h"
+ #include "xfs_refcount.h"
+ #include "xfs_error.h"
++#include "xfs_log_priv.h"
++#include "xfs_log_recover.h"
+ 
+ kmem_zone_t	*xfs_cui_zone;
+ kmem_zone_t	*xfs_cud_zone;
+@@ -27,7 +29,7 @@ static inline struct xfs_cui_log_item *CUI_ITEM(struct xfs_log_item *lip)
+ 	return container_of(lip, struct xfs_cui_log_item, cui_item);
+ }
+ 
+-void
++STATIC void
+ xfs_cui_item_free(
+ 	struct xfs_cui_log_item	*cuip)
+ {
+@@ -44,7 +46,7 @@ xfs_cui_item_free(
+  * committed vs unpin operations in bulk insert operations. Hence the reference
+  * count to ensure only the last caller frees the CUI.
+  */
+-void
++STATIC void
+ xfs_cui_release(
+ 	struct xfs_cui_log_item	*cuip)
+ {
+@@ -133,7 +135,7 @@ static const struct xfs_item_ops xfs_cui_item_ops = {
+ /*
+  * Allocate and initialize an cui item with the given number of extents.
+  */
+-struct xfs_cui_log_item *
++STATIC struct xfs_cui_log_item *
+ xfs_cui_init(
+ 	struct xfs_mount		*mp,
+ 	uint				nextents)
+@@ -443,7 +445,7 @@ const struct xfs_defer_op_type xfs_refcount_update_defer_type = {
+  * Process a refcount update intent item that was recovered from the log.
+  * We need to update the refcountbt.
+  */
+-int
++STATIC int
+ xfs_cui_recover(
+ 	struct xfs_trans		*parent_tp,
+ 	struct xfs_cui_log_item		*cuip)
+@@ -590,3 +592,168 @@ xfs_cui_recover(
+ 	xfs_trans_cancel(tp);
+ 	return error;
+ }
++
++/*
++ * Copy an CUI format buffer from the given buf, and into the destination
++ * CUI format structure.  The CUI/CUD items were designed not to need any
++ * special alignment handling.
++ */
++static int
++xfs_cui_copy_format(
++	struct xfs_log_iovec		*buf,
++	struct xfs_cui_log_format	*dst_cui_fmt)
++{
++	struct xfs_cui_log_format	*src_cui_fmt;
++	uint				len;
++
++	src_cui_fmt = buf->i_addr;
++	len = xfs_cui_log_format_sizeof(src_cui_fmt->cui_nextents);
++
++	if (buf->i_len == len) {
++		memcpy(dst_cui_fmt, src_cui_fmt, len);
++		return 0;
++	}
++	XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, NULL);
++	return -EFSCORRUPTED;
++}
++
++/*
++ * This routine is called to create an in-core extent refcount update
++ * item from the cui format structure which was logged on disk.
++ * It allocates an in-core cui, copies the extents from the format
++ * structure into it, and adds the cui to the AIL with the given
++ * LSN.
++ */
++STATIC int
++xlog_recover_cui(
++	struct xlog			*log,
++	struct xlog_recover_item	*item,
++	xfs_lsn_t			lsn)
++{
++	int				error;
++	struct xfs_mount		*mp = log->l_mp;
++	struct xfs_cui_log_item		*cuip;
++	struct xfs_cui_log_format	*cui_formatp;
++
++	cui_formatp = item->ri_buf[0].i_addr;
++
++	cuip = xfs_cui_init(mp, cui_formatp->cui_nextents);
++	error = xfs_cui_copy_format(&item->ri_buf[0], &cuip->cui_format);
++	if (error) {
++		xfs_cui_item_free(cuip);
++		return error;
++	}
++	atomic_set(&cuip->cui_next_extent, cui_formatp->cui_nextents);
++
++	spin_lock(&log->l_ailp->ail_lock);
++	/*
++	 * The CUI has two references. One for the CUD and one for CUI to ensure
++	 * it makes it into the AIL. Insert the CUI into the AIL directly and
++	 * drop the CUI reference. Note that xfs_trans_ail_update() drops the
++	 * AIL lock.
++	 */
++	xfs_trans_ail_update(log->l_ailp, &cuip->cui_item, lsn);
++	xfs_cui_release(cuip);
++	return 0;
++}
++
++
++/*
++ * This routine is called when an CUD format structure is found in a committed
++ * transaction in the log. Its purpose is to cancel the corresponding CUI if it
++ * was still in the log. To do this it searches the AIL for the CUI with an id
++ * equal to that in the CUD format structure. If we find it we drop the CUD
++ * reference, which removes the CUI from the AIL and frees it.
++ */
++STATIC int
++xlog_recover_cud(
++	struct xlog			*log,
++	struct xlog_recover_item	*item)
++{
++	struct xfs_cud_log_format	*cud_formatp;
++	struct xfs_cui_log_item		*cuip = NULL;
++	struct xfs_log_item		*lip;
++	uint64_t			cui_id;
++	struct xfs_ail_cursor		cur;
++	struct xfs_ail			*ailp = log->l_ailp;
++
++	cud_formatp = item->ri_buf[0].i_addr;
++	if (item->ri_buf[0].i_len != sizeof(struct xfs_cud_log_format)) {
++		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
++		return -EFSCORRUPTED;
++	}
++	cui_id = cud_formatp->cud_cui_id;
++
++	/*
++	 * Search for the CUI with the id in the CUD format structure in the
++	 * AIL.
++	 */
++	spin_lock(&ailp->ail_lock);
++	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
++	while (lip != NULL) {
++		if (lip->li_type == XFS_LI_CUI) {
++			cuip = (struct xfs_cui_log_item *)lip;
++			if (cuip->cui_format.cui_id == cui_id) {
++				/*
++				 * Drop the CUD reference to the CUI. This
++				 * removes the CUI from the AIL and frees it.
++				 */
++				spin_unlock(&ailp->ail_lock);
++				xfs_cui_release(cuip);
++				spin_lock(&ailp->ail_lock);
++				break;
++			}
++		}
++		lip = xfs_trans_ail_cursor_next(ailp, &cur);
++	}
++
++	xfs_trans_ail_cursor_done(&cur);
++	spin_unlock(&ailp->ail_lock);
++
++	return 0;
++}
++
++/* Recover the CUI if necessary. */
++STATIC int
++xlog_recover_process_cui(
++	struct xlog			*log,
++	struct xfs_trans		*parent_tp,
++	struct xfs_log_item		*lip)
++{
++	struct xfs_ail			*ailp = log->l_ailp;
++	struct xfs_cui_log_item		*cuip = CUI_ITEM(lip);
++	int				error;
++
++	/*
++	 * Skip CUIs that we've already processed.
++	 */
++	if (test_bit(XFS_CUI_RECOVERED, &cuip->cui_flags))
++		return 0;
++
++	spin_unlock(&ailp->ail_lock);
++	error = xfs_cui_recover(parent_tp, cuip);
++	spin_lock(&ailp->ail_lock);
++
++	return error;
++}
++
++/* Release the CUI since we're cancelling everything. */
++STATIC void
++xlog_recover_cancel_cui(
++	struct xlog			*log,
++	struct xfs_log_item		*lip)
++{
++	struct xfs_ail			*ailp = log->l_ailp;
++	struct xfs_cui_log_item		*cuip = CUI_ITEM(lip);
++
++	spin_unlock(&ailp->ail_lock);
++	xfs_cui_release(cuip);
++	spin_lock(&ailp->ail_lock);
++}
++
++const struct xlog_recover_intent_type xlog_recover_refcount_type = {
++	.recover_intent		= xlog_recover_cui,
++	.recover_done		= xlog_recover_cud,
++	.process_intent		= xlog_recover_process_cui,
++	.cancel_intent		= xlog_recover_cancel_cui,
++};
+diff --git a/fs/xfs/xfs_refcount_item.h b/fs/xfs/xfs_refcount_item.h
+index e47530f30489..cfaa857673a6 100644
+--- a/fs/xfs/xfs_refcount_item.h
++++ b/fs/xfs/xfs_refcount_item.h
+@@ -77,9 +77,4 @@ struct xfs_cud_log_item {
+ extern struct kmem_zone	*xfs_cui_zone;
+ extern struct kmem_zone	*xfs_cud_zone;
+ 
+-struct xfs_cui_log_item *xfs_cui_init(struct xfs_mount *, uint);
+-void xfs_cui_item_free(struct xfs_cui_log_item *);
+-void xfs_cui_release(struct xfs_cui_log_item *);
+-int xfs_cui_recover(struct xfs_trans *parent_tp, struct xfs_cui_log_item *cuip);
+-
+ #endif	/* __XFS_REFCOUNT_ITEM_H__ */
 
