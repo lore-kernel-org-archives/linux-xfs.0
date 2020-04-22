@@ -2,115 +2,118 @@ Return-Path: <SRS0=4ojB=6G=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1368AC55189
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 23:14:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1F1BC55185
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 23:47:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E3F2020724
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 23:14:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C0DF20776
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 23:47:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=toxicpanda-com.20150623.gappssmtp.com header.i=@toxicpanda-com.20150623.gappssmtp.com header.b="roi6w8e5"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="tSI6g6b2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726468AbgDVXO1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Apr 2020 19:14:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42656 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726401AbgDVXO0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Apr 2020 19:14:26 -0400
-Received: from mail-qk1-x733.google.com (mail-qk1-x733.google.com [IPv6:2607:f8b0:4864:20::733])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96AC8C03C1AB
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 16:14:25 -0700 (PDT)
-Received: by mail-qk1-x733.google.com with SMTP id o19so4445531qkk.5
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 16:14:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20150623.gappssmtp.com; s=20150623;
-        h=to:cc:from:subject:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=yutIE/3Yrasa++aWOCa3PZNUoPlrlPERr3vYpXHco/M=;
-        b=roi6w8e5qBgfrEAFnX0ITcdhSDL8WSk9M0K+Pi5JsvodaNNOas+t0Q1f3de9phX1r3
-         zH9nNHarNQ5F0bPzz7BOwaRNKmtglTqtN0NM6aiRDb1o0ARGr4RLUKq2Ljipggfzmq4f
-         4lue9ey15OIgipQe2SFDgP3Zg483GPNPRk1b8P8tkH8JOTSig5IAtEHFk48/ttXK/xW3
-         HXoY6IUYmJ/pTBF9GpTUhyyw7weiMGNPNlwjMBnBqpgI6X0Q/tR6jaPPDUnk4ojUthH4
-         sJ/35wr3LbgYPfPQAvyDm9c7nFllFe/TQ0modirFmWgoD/qWXe5K3H06giTotm5Z7P3Z
-         jarQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=yutIE/3Yrasa++aWOCa3PZNUoPlrlPERr3vYpXHco/M=;
-        b=nCLLl5uLTpo4hAMHWSzV/roQ61T9KvFtAWEQHR909iJa0d4cW3S0CyvC7WFyIo/j0q
-         MCWd+TiBkxixw0T6Ayg1pUwBgMPFAT6+gAWXHwpyCVWBm9CpESB8QoiEx1Lu+ht75hFR
-         74hS/8oT68IhSc6GC/qTdKBKkChyVQZByHRL7IIVqhPMDgxdBrubfF8MT9JSSA205Tww
-         Ow+dR0s/dd9vanL2+XjswkG5+guj80BacCR0PKwIPB5Yzennjvd2xeALI58oGIgg2SAI
-         d+YEsW5TkP5yRjj3IMh62TuAjbKSnUTEfm8qHuAzqgkx0Tyca04zExj8N9ri2twnxbye
-         huBw==
-X-Gm-Message-State: AGi0PuZ9RxKLU9x/K9pFMTOfDwomJoDrSPwoqyIEM6YD5di/DpIxFylO
-        MGgtxwkYoYlgj1DHOJFmG1vPnW4QvZr4wA==
-X-Google-Smtp-Source: APiQypKpwv318za6PvBDHu/CmZW2XLyq7lRBmFefrk1Y5QT6hBrl33XFhRuafmp5OdsdRdB+WGIptg==
-X-Received: by 2002:a37:6415:: with SMTP id y21mr792941qkb.258.1587597263810;
-        Wed, 22 Apr 2020 16:14:23 -0700 (PDT)
-Received: from ?IPv6:2620:10d:c0a8:1102:ce0:3629:8daa:1271? ([2620:10d:c091:480::1:af35])
-        by smtp.gmail.com with ESMTPSA id q6sm534297qtd.61.2020.04.22.16.14.22
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 22 Apr 2020 16:14:23 -0700 (PDT)
-To:     Btrfs BTRFS <linux-btrfs@vger.kernel.org>,
-        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
-        "bpf@vger.kernel.org" <bpf@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "linux-nvme@vger.kernel.org" <linux-nvme@vger.kernel.org>
-Cc:     lsf-pc <lsf-pc@lists.linuxfoundation.org>
-From:   Josef Bacik <josef@toxicpanda.com>
-Subject: LSFMMBPF 2020 Cancellation announcement
-Message-ID: <0b6d3d6f-99de-3603-4b42-c3db5113633d@toxicpanda.com>
-Date:   Wed, 22 Apr 2020 19:14:21 -0400
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0)
- Gecko/20100101 Thunderbird/68.7.0
+        id S1725913AbgDVXrl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Apr 2020 19:47:41 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:42152 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725846AbgDVXrk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Apr 2020 19:47:40 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03MNldMg083589
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 23:47:39 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=SrBSd8+hHl4bIgf3TS8IvD9m+dyJox5JDoJjC8UNoR0=;
+ b=tSI6g6b2RfGeBSusWdIwVJolDBGa+hYl+Up0mpJlolZwYgcSRVh6CnY1UvQo6wJ8KSOB
+ PKQTzuYra3asnldwQ+2mQGs0zF4Yt2SU1mlbK8kSdT2cNnUDBqab5oUMWKUdUONnIX1b
+ H66M4Fm9fiUWjMDon5g3xubbx+sm42V6YtKY8jFZ9mwoChPXU9/cPjDVHc0xP1RN4W1s
+ PF625ydb42hPZvPNZ6gm/jTECPHHhfyR8ibKoI+p4GmFjCDdiKK1udJ3waYzymFxC6eQ
+ 501O8Nz1I+ObTv+IgJ6mtGWXW53PlB3ddTw3c+aFiX7pSpAW53x61dT4edBQjoW5jSN4 hg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 30grpgt6pb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 23:47:39 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03MNbdME193964
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 23:45:39 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 30gb93pg6b-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 23:45:39 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03MNjccJ019275
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 23:45:38 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 22 Apr 2020 16:45:38 -0700
+Date:   Wed, 22 Apr 2020 16:45:36 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [XFS SUMMIT] Atomic File Updates
+Message-ID: <20200422234536.GF6741@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9599 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
+ bulkscore=0 suspectscore=0 malwarescore=0 phishscore=0 spamscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004220180
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9599 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 mlxscore=0
+ lowpriorityscore=0 adultscore=0 suspectscore=0 bulkscore=0 clxscore=1015
+ malwarescore=0 phishscore=0 spamscore=0 priorityscore=1501 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2004220181
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Each year, we look forward to gathering at Linux Storage, Filesystem, Memory
-Management, and BPF Summit to share information, collaborate, and learn
-together. Due to continual assessments and growing concerns around COVID-19, we
-have made the decision to cancel Linux Storage, Filesystem, Memory Management,
-and BPF Summit this year. Next year the summit will be held in Palm Springs, on
-May 12-14, 2021 at the Riviera Palm Springs.  A new CFP and registration will be
-held again, along with a new round of invites.  The program committee will
-remain the same, and next year we will choose new members.
+Hi everyone,
 
-Event Registration
+During lockdown, I've been working on teaching[1] XFS how to swap a range
+of extents with a different range of extents in another file in such a
+way that we're always guaranteed that the swap operation completes, no
+matter how many extents have to be swapped.  This guarantee is durable
+evne if the filesystem goes down midway through the operation, since log
+recovery will finish the job.
 
-The Linux Foundation will take care of canceling all event registrations - you
-do not need to do anything.
+In other words, we finally have a mechanism for userspace programs to
+update files atomically without resorting (a) to a pile of fsync and
+rename spaghetti or (b) creating an O_TMPFILE and using weird procfs
+linkat tricks to wire that into the filesystem.  Better yet, other
+programs with open file descriptors will see the new contents
+immediately.
 
-We thank you for your patience and understanding while we work through this very
-fluid situation. A great deal of work and preparation has gone into the
-information and content planned to be delivered at LSFMMBPF and we look forward
-to sharing it all with our community next year.
+So the basic user story is that userspace opens a file and decides to
+write to it.  The user program then creates an O_TMPFILE.  If the
+program only wishes to update a subset of the file, it can FICLONE the
+original file's contents, or it can rewrite the file from scratch.
 
-Thank you again for your support. Our sincere sympathies are with all those
-being affected and we wish for good health and safety for all.
+When the update is finished, the program can fsync the temp file and
+then call FISWAPRANGE to commit the changes to the original file.  The
+program can supply a [cm]time to the kernel, which can use that to
+detect that the original file has changed and that the update should not
+be applied.
 
-Thank you on behalf of the program committee:
+Note that this is /not/ the hardware-assisted directio atomic writes
+that have also been suggested on fsdevel.  That interface (if the
+storage vendors ever show up with hardware) only supports atomic writes
+on a limited number of possibly discontiguous LBAs, whereas this
+software mechanism will work on any size file with any number of blocks.
 
-         Josef Bacik (Filesystems)
-         Amir Goldstein (Filesystems)
-         Martin K. Petersen (Storage)
-         Omar Sandoval (Storage)
-         Michal Hocko (MM)
-         Dan Williams (MM)
-         Alexei Starovoitov (BPF)
-         Daniel Borkmann (BPF)
+As a side benefit, this also gives XFS the ability to rebuild xattr and
+directory data in a temporary file and cleanly swap the clean contents
+over when the entire recreation step has finished.
+
+I haven't yet put this out on fsdevel because I've been a bit busy
+putting together XFS summit ideas. :/
+
+--D
+
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=atomic-file-updates
