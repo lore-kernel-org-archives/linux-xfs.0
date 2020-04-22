@@ -7,68 +7,69 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA837C2BA19
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 02:08:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF760C54FD0
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 02:08:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 81B42206D5
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 02:08:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC17A206D5
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 02:08:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="u9JzhYF7"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="r36GQT41"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726399AbgDVCIY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Apr 2020 22:08:24 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:39058 "EHLO
+        id S1726398AbgDVCI2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 21 Apr 2020 22:08:28 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:39114 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726328AbgDVCIX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Apr 2020 22:08:23 -0400
+        with ESMTP id S1726328AbgDVCI1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Apr 2020 22:08:27 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03M22r1f074469
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:08:22 GMT
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03M2366j074525
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:08:25 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=uOj+CbXWCSdps4EiyrysApajr2U/yXlpWgxR1HZkPiM=;
- b=u9JzhYF7Zzb+z+KEzfrjDj2mcIC0kzalnVjWXZBB/ZrkRLaqeub/jvvw+PWgZKfbxx3k
- Kn+xDv5IvLVf/F0B9azwXd4HX39QDxPPilh48vTmceoSfWLa9sqhc/xiVIVsQ9Dic5MU
- OFPF+p1c+j8HnnnXv2fY2+5b+/E2YC4IKYdlPHLUTOD4bthSBRmBdIYQn8jZE/TrHIYp
- +h/xlvpnxFVSm9dqGAmtBcvboXBX9xj5CNzynyzzuX8aovqDtu8r3cU4hrxYKmi2KICY
- EDGlVCl686Z9Vd/gelH2LKciG2yt9h9Ng63Iuznqz86BG6qNTLwQSQ2cUm3IM71Gzasf jg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 30ft6n81n0-1
+ bh=quTTPhC6z4rEGG6A4tcI0q+WL4F5pbERhOPZiiUFwO0=;
+ b=r36GQT41ZVYTtcekNCwuYjuFh7yYJryU+ND1yShygecP6Da3oCwWqj7zwQRBnDSjI8kj
+ XPh/p2ixj6hHJoeYJbt35d8coBQyiHa9BPJlifyuy/Sa75w8K5mKkaqsKm/R/2W/ffGS
+ FzbajI52hzC9cLmtezRF48GEaqDOeG8bZZwYIVhZtVZmsyvhppLJIWlNfWuISAzpJiHj
+ GQG0Vye7AKXDUFFB/Kxp1TLvd/bNts3hSSiw4w34CJFGM7eEn1ZhsYQV8lyyhv6RmnzR
+ VENrcXEucWOtJfmbMgcRBET7nJCNQKmJf/ld9JGdq7HooSd30suZnj+Yf1OI2ocTpptn SA== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 30ft6n81n8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:08:22 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03M28MV7086736
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:08:22 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:08:25 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03M22ZKR054077
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:06:24 GMT
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 30gb1hbhg3-1
+        by aserp3020.oracle.com with ESMTP id 30gbbfgegu-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:08:22 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03M28Lo0014722
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:08:21 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:06:24 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03M26NQK013969
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:06:23 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 21 Apr 2020 19:08:21 -0700
-Subject: [PATCH 2/3] xfs: reduce log recovery transaction block reservations
+        with ESMTP ; Tue, 21 Apr 2020 19:06:23 -0700
+Subject: [PATCH 03/19] xfs: refactor log recovery item dispatch for pass2
+ readhead functions
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 21 Apr 2020 19:08:20 -0700
-Message-ID: <158752130035.2142108.11825776210575708747.stgit@magnolia>
-In-Reply-To: <158752128766.2142108.8793264653760565688.stgit@magnolia>
-References: <158752128766.2142108.8793264653760565688.stgit@magnolia>
+Date:   Tue, 21 Apr 2020 19:06:21 -0700
+Message-ID: <158752118180.2140829.13805128567366066982.stgit@magnolia>
+In-Reply-To: <158752116283.2140829.12265815455525398097.stgit@magnolia>
+References: <158752116283.2140829.12265815455525398097.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9598 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=3 spamscore=0
- mlxlogscore=999 mlxscore=0 malwarescore=0 bulkscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004220015
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0
+ suspectscore=1 mlxlogscore=999 adultscore=0 mlxscore=0 phishscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004220014
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9598 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=3 bulkscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 bulkscore=0
  priorityscore=1501 impostorscore=0 adultscore=0 phishscore=0
  lowpriorityscore=0 malwarescore=0 clxscore=1015 mlxlogscore=999 mlxscore=0
  spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
@@ -80,106 +81,344 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-On filesystems that support them, bmap intent log items can be used to
-change mappings in inode data or attr forks.  However, if the bmbt must
-expand, the enormous block reservations that we make for finishing
-chains of deferred log items become a liability because the bmbt block
-allocator sets minleft to the transaction reservation and there probably
-aren't any AGs in the filesystem that have that much free space.
-
-Whereas previously we would reserve 93% of the free blocks in the
-filesystem, now we only want to reserve 7/8ths of the free space in the
-least full AG, and no more than half of the usable blocks in an AG.  In
-theory we shouldn't run out of space because (prior to the unclean
-shutdown) all of the in-progress transactions successfully reserved the
-worst case number of disk blocks.
+Move the pass2 readhead code into the per-item source code files and use
+the dispatch function to call them.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_log_recover.c |   55 ++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 43 insertions(+), 12 deletions(-)
+ fs/xfs/libxfs/xfs_log_recover.h |   19 ++++++
+ fs/xfs/xfs_buf_item.c           |   18 +++++
+ fs/xfs/xfs_dquot_item.c         |   39 ++++++++++++
+ fs/xfs/xfs_inode_item.c         |   28 ++++++++
+ fs/xfs/xfs_log_recover.c        |  129 +--------------------------------------
+ 5 files changed, 108 insertions(+), 125 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index e9b3e901d009..a416b028b320 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2669,6 +2669,44 @@ xlog_recover_process_data(
+diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
+index 60a6afb93049..010fc22e5fdf 100644
+--- a/fs/xfs/libxfs/xfs_log_recover.h
++++ b/fs/xfs/libxfs/xfs_log_recover.h
+@@ -23,6 +23,8 @@ enum xlog_recover_reorder {
+ 
+ typedef enum xlog_recover_reorder (*xlog_recover_reorder_fn)(
+ 		struct xlog_recover_item *item);
++typedef void (*xlog_recover_ra_pass2_fn)(struct xlog *log,
++		struct xlog_recover_item *item);
+ 
+ struct xlog_recover_item_type {
+ 	/*
+@@ -34,6 +36,9 @@ struct xlog_recover_item_type {
+ 	 */
+ 	enum xlog_recover_reorder	reorder;
+ 	xlog_recover_reorder_fn		reorder_fn;
++
++	/* Start readahead for pass2, if provided. */
++	xlog_recover_ra_pass2_fn	ra_pass2_fn;
+ };
+ 
+ extern const struct xlog_recover_item_type xlog_icreate_item_type;
+@@ -88,4 +93,18 @@ struct xlog_recover {
+ #define	XLOG_RECOVER_PASS1	1
+ #define	XLOG_RECOVER_PASS2	2
+ 
++/*
++ * This structure is used during recovery to record the buf log items which
++ * have been canceled and should not be replayed.
++ */
++struct xfs_buf_cancel {
++	xfs_daddr_t		bc_blkno;
++	uint			bc_len;
++	int			bc_refcount;
++	struct list_head	bc_list;
++};
++
++struct xfs_buf_cancel *xlog_peek_buffer_cancelled(struct xlog *log,
++		xfs_daddr_t blkno, uint len, unsigned short flags);
++
+ #endif	/* __XFS_LOG_RECOVER_H__ */
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index bf7480e18889..1ad514cc501c 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -1302,6 +1302,24 @@ xlog_buf_reorder_fn(
+ 	return XLOG_REORDER_BUFFER_LIST;
+ }
+ 
++STATIC void
++xlog_recover_buffer_ra_pass2(
++	struct xlog                     *log,
++	struct xlog_recover_item        *item)
++{
++	struct xfs_buf_log_format	*buf_f = item->ri_buf[0].i_addr;
++	struct xfs_mount		*mp = log->l_mp;
++
++	if (xlog_peek_buffer_cancelled(log, buf_f->blf_blkno,
++			buf_f->blf_len, buf_f->blf_flags)) {
++		return;
++	}
++
++	xfs_buf_readahead(mp->m_ddev_targp, buf_f->blf_blkno,
++				buf_f->blf_len, NULL);
++}
++
+ const struct xlog_recover_item_type xlog_buf_item_type = {
+ 	.reorder_fn		= xlog_buf_reorder_fn,
++	.ra_pass2_fn		= xlog_recover_buffer_ra_pass2,
+ };
+diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+index 2558586b4d45..d4c794abf900 100644
+--- a/fs/xfs/xfs_dquot_item.c
++++ b/fs/xfs/xfs_dquot_item.c
+@@ -386,8 +386,47 @@ xfs_qm_qoff_logitem_init(
+ 	return qf;
+ }
+ 
++STATIC void
++xlog_recover_dquot_ra_pass2(
++	struct xlog			*log,
++	struct xlog_recover_item	*item)
++{
++	struct xfs_mount	*mp = log->l_mp;
++	struct xfs_disk_dquot	*recddq;
++	struct xfs_dq_logformat	*dq_f;
++	uint			type;
++	int			len;
++
++
++	if (mp->m_qflags == 0)
++		return;
++
++	recddq = item->ri_buf[1].i_addr;
++	if (recddq == NULL)
++		return;
++	if (item->ri_buf[1].i_len < sizeof(struct xfs_disk_dquot))
++		return;
++
++	type = recddq->d_flags & (XFS_DQ_USER | XFS_DQ_PROJ | XFS_DQ_GROUP);
++	ASSERT(type);
++	if (log->l_quotaoffs_flag & type)
++		return;
++
++	dq_f = item->ri_buf[0].i_addr;
++	ASSERT(dq_f);
++	ASSERT(dq_f->qlf_len == 1);
++
++	len = XFS_FSB_TO_BB(mp, dq_f->qlf_len);
++	if (xlog_peek_buffer_cancelled(log, dq_f->qlf_blkno, len, 0))
++		return;
++
++	xfs_buf_readahead(mp->m_ddev_targp, dq_f->qlf_blkno, len,
++			  &xfs_dquot_buf_ra_ops);
++}
++
+ const struct xlog_recover_item_type xlog_dquot_item_type = {
+ 	.reorder		= XLOG_REORDER_INODE_LIST,
++	.ra_pass2_fn		= xlog_recover_dquot_ra_pass2,
+ };
+ 
+ const struct xlog_recover_item_type xlog_quotaoff_item_type = {
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index b04e9c5330b7..bb0fe064aa1b 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -846,6 +846,34 @@ xfs_inode_item_format_convert(
  	return 0;
  }
  
-+/*
-+ * Estimate a block reservation for a log recovery transaction.  Since we run
-+ * separate transactions for each chain of deferred ops that get created as a
-+ * result of recovering unfinished log intent items, we must be careful not to
-+ * reserve so many blocks that block allocations fail because we can't satisfy
-+ * the minleft requirements (e.g. for bmbt blocks).
-+ */
-+static int
-+xlog_estimate_recovery_resblks(
-+	struct xfs_mount	*mp,
-+	unsigned int		*resblks)
++STATIC void
++xlog_recover_inode_ra_pass2(
++	struct xlog                     *log,
++	struct xlog_recover_item        *item)
 +{
-+	struct xfs_perag	*pag;
-+	xfs_agnumber_t		agno;
-+	unsigned int		free = 0;
++	struct xfs_inode_log_format	ilf_buf;
++	struct xfs_inode_log_format	*ilfp;
++	struct xfs_mount		*mp = log->l_mp;
 +	int			error;
 +
-+	/* Don't use more than 7/8th of the free space in the least full AG. */
-+	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-+		unsigned int	ag_free;
-+
-+		error = xfs_alloc_pagf_init(mp, NULL, agno, 0);
++	if (item->ri_buf[0].i_len == sizeof(struct xfs_inode_log_format)) {
++		ilfp = item->ri_buf[0].i_addr;
++	} else {
++		ilfp = &ilf_buf;
++		memset(ilfp, 0, sizeof(*ilfp));
++		error = xfs_inode_item_format_convert(&item->ri_buf[0], ilfp);
 +		if (error)
-+			return error;
-+		pag = xfs_perag_get(mp, agno);
-+		ag_free = pag->pagf_freeblks + pag->pagf_flcount;
-+		free = max(free, (ag_free * 7) / 8);
-+		xfs_perag_put(pag);
++			return;
 +	}
 +
-+	/* Don't try to reserve more than half the usable AG blocks. */
-+	*resblks = min(free, xfs_alloc_ag_max_usable(mp) / 2);
-+	if (*resblks == 0)
-+		return -ENOSPC;
++	if (xlog_peek_buffer_cancelled(log, ilfp->ilf_blkno, ilfp->ilf_len, 0))
++		return;
 +
-+	return 0;
++	xfs_buf_readahead(mp->m_ddev_targp, ilfp->ilf_blkno,
++				ilfp->ilf_len, &xfs_inode_buf_ra_ops);
 +}
 +
- /* Take all the collected deferred ops and finish them in order. */
- static int
- xlog_finish_defer_ops(
-@@ -2677,27 +2715,20 @@ xlog_finish_defer_ops(
- {
- 	struct xfs_defer_freezer *dff, *next;
- 	struct xfs_trans	*tp;
--	int64_t			freeblks;
- 	uint			resblks;
- 	int			error = 0;
+ const struct xlog_recover_item_type xlog_inode_item_type = {
+ 	.reorder		= XLOG_REORDER_INODE_LIST,
++	.ra_pass2_fn		= xlog_recover_inode_ra_pass2,
+ };
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index e7a9f899f657..9ee8eb9b93a2 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -55,17 +55,6 @@ STATIC int
+ xlog_do_recovery_pass(
+         struct xlog *, xfs_daddr_t, xfs_daddr_t, int, xfs_daddr_t *);
  
- 	list_for_each_entry_safe(dff, next, dfops_freezers, dff_list) {
-+		error = xlog_estimate_recovery_resblks(mp, &resblks);
-+		if (error)
-+			break;
-+
- 		/*
- 		 * We're finishing the defer_ops that accumulated as a result
- 		 * of recovering unfinished intent items during log recovery.
- 		 * We reserve an itruncate transaction because it is the
--		 * largest permanent transaction type.  Since we're the only
--		 * user of the fs right now, take 93% (15/16) of the available
--		 * free blocks.  Use weird math to avoid a 64-bit division.
-+		 * largest permanent transaction type.
- 		 */
--		freeblks = percpu_counter_sum(&mp->m_fdblocks);
--		if (freeblks <= 0) {
--			error = -ENOSPC;
--			break;
--		}
+-/*
+- * This structure is used during recovery to record the buf log items which
+- * have been canceled and should not be replayed.
+- */
+-struct xfs_buf_cancel {
+-	xfs_daddr_t		bc_blkno;
+-	uint			bc_len;
+-	int			bc_refcount;
+-	struct list_head	bc_list;
+-};
 -
--		resblks = min_t(int64_t, UINT_MAX, freeblks);
--		resblks = (resblks * 15) >> 4;
- 		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, resblks,
- 				0, XFS_TRANS_RESERVE, &tp);
- 		if (error)
+ /*
+  * Sector aligned buffer routines for buffer create/read/write/access
+  */
+@@ -2009,12 +1998,12 @@ xlog_recover_buffer_pass1(
+  * entry in the buffer cancel record table. If it is, return the cancel
+  * buffer structure to the caller.
+  */
+-STATIC struct xfs_buf_cancel *
++struct xfs_buf_cancel *
+ xlog_peek_buffer_cancelled(
+ 	struct xlog		*log,
+ 	xfs_daddr_t		blkno,
+ 	uint			len,
+-	unsigned short			flags)
++	unsigned short		flags)
+ {
+ 	struct list_head	*bucket;
+ 	struct xfs_buf_cancel	*bcp;
+@@ -3900,117 +3889,6 @@ xlog_recover_do_icreate_pass2(
+ 				     length, be32_to_cpu(icl->icl_gen));
+ }
+ 
+-STATIC void
+-xlog_recover_buffer_ra_pass2(
+-	struct xlog                     *log,
+-	struct xlog_recover_item        *item)
+-{
+-	struct xfs_buf_log_format	*buf_f = item->ri_buf[0].i_addr;
+-	struct xfs_mount		*mp = log->l_mp;
+-
+-	if (xlog_peek_buffer_cancelled(log, buf_f->blf_blkno,
+-			buf_f->blf_len, buf_f->blf_flags)) {
+-		return;
+-	}
+-
+-	xfs_buf_readahead(mp->m_ddev_targp, buf_f->blf_blkno,
+-				buf_f->blf_len, NULL);
+-}
+-
+-STATIC void
+-xlog_recover_inode_ra_pass2(
+-	struct xlog                     *log,
+-	struct xlog_recover_item        *item)
+-{
+-	struct xfs_inode_log_format	ilf_buf;
+-	struct xfs_inode_log_format	*ilfp;
+-	struct xfs_mount		*mp = log->l_mp;
+-	int			error;
+-
+-	if (item->ri_buf[0].i_len == sizeof(struct xfs_inode_log_format)) {
+-		ilfp = item->ri_buf[0].i_addr;
+-	} else {
+-		ilfp = &ilf_buf;
+-		memset(ilfp, 0, sizeof(*ilfp));
+-		error = xfs_inode_item_format_convert(&item->ri_buf[0], ilfp);
+-		if (error)
+-			return;
+-	}
+-
+-	if (xlog_peek_buffer_cancelled(log, ilfp->ilf_blkno, ilfp->ilf_len, 0))
+-		return;
+-
+-	xfs_buf_readahead(mp->m_ddev_targp, ilfp->ilf_blkno,
+-				ilfp->ilf_len, &xfs_inode_buf_ra_ops);
+-}
+-
+-STATIC void
+-xlog_recover_dquot_ra_pass2(
+-	struct xlog			*log,
+-	struct xlog_recover_item	*item)
+-{
+-	struct xfs_mount	*mp = log->l_mp;
+-	struct xfs_disk_dquot	*recddq;
+-	struct xfs_dq_logformat	*dq_f;
+-	uint			type;
+-	int			len;
+-
+-
+-	if (mp->m_qflags == 0)
+-		return;
+-
+-	recddq = item->ri_buf[1].i_addr;
+-	if (recddq == NULL)
+-		return;
+-	if (item->ri_buf[1].i_len < sizeof(struct xfs_disk_dquot))
+-		return;
+-
+-	type = recddq->d_flags & (XFS_DQ_USER | XFS_DQ_PROJ | XFS_DQ_GROUP);
+-	ASSERT(type);
+-	if (log->l_quotaoffs_flag & type)
+-		return;
+-
+-	dq_f = item->ri_buf[0].i_addr;
+-	ASSERT(dq_f);
+-	ASSERT(dq_f->qlf_len == 1);
+-
+-	len = XFS_FSB_TO_BB(mp, dq_f->qlf_len);
+-	if (xlog_peek_buffer_cancelled(log, dq_f->qlf_blkno, len, 0))
+-		return;
+-
+-	xfs_buf_readahead(mp->m_ddev_targp, dq_f->qlf_blkno, len,
+-			  &xfs_dquot_buf_ra_ops);
+-}
+-
+-STATIC void
+-xlog_recover_ra_pass2(
+-	struct xlog			*log,
+-	struct xlog_recover_item	*item)
+-{
+-	switch (ITEM_TYPE(item)) {
+-	case XFS_LI_BUF:
+-		xlog_recover_buffer_ra_pass2(log, item);
+-		break;
+-	case XFS_LI_INODE:
+-		xlog_recover_inode_ra_pass2(log, item);
+-		break;
+-	case XFS_LI_DQUOT:
+-		xlog_recover_dquot_ra_pass2(log, item);
+-		break;
+-	case XFS_LI_EFI:
+-	case XFS_LI_EFD:
+-	case XFS_LI_QUOTAOFF:
+-	case XFS_LI_RUI:
+-	case XFS_LI_RUD:
+-	case XFS_LI_CUI:
+-	case XFS_LI_CUD:
+-	case XFS_LI_BUI:
+-	case XFS_LI_BUD:
+-	default:
+-		break;
+-	}
+-}
+-
+ STATIC int
+ xlog_recover_commit_pass1(
+ 	struct xlog			*log,
+@@ -4147,7 +4025,8 @@ xlog_recover_commit_trans(
+ 			error = xlog_recover_commit_pass1(log, trans, item);
+ 			break;
+ 		case XLOG_RECOVER_PASS2:
+-			xlog_recover_ra_pass2(log, item);
++			if (item->ri_type && item->ri_type->ra_pass2_fn)
++				item->ri_type->ra_pass2_fn(log, item);
+ 			list_move_tail(&item->ri_list, &ra_list);
+ 			items_queued++;
+ 			if (items_queued >= XLOG_RECOVER_COMMIT_QUEUE_MAX) {
 
