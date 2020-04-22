@@ -1,125 +1,96 @@
-Return-Path: <SRS0=MzXO=6F=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=4ojB=6G=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1A78C55186
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Apr 2020 23:25:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18663C2BA19
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 02:06:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 86F11206D5
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Apr 2020 23:25:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D6A7520724
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 02:06:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="usUS8f5M"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726039AbgDUXZA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Apr 2020 19:25:00 -0400
-Received: from mga04.intel.com ([192.55.52.120]:38670 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725850AbgDUXZA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Apr 2020 19:25:00 -0400
-IronPort-SDR: eld7CtTw7O2a7bvAIF+0BhiPeZvh57Vl4bM8ybQ8dmLe4Gq99UxsIoca9+sbEHjee2ezTWHJch
- irnYcTMRz3sQ==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Apr 2020 16:24:59 -0700
-IronPort-SDR: VXNYjUbp1WCc/LfcdAKiNjlSOSCA8YZ41iRNh2oDn5LaX5tYLMUtFRO/qjhJ2f6zWA2A4hTGQ1
- txFZzouil5cw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.72,411,1580803200"; 
-   d="scan'208";a="290639115"
-Received: from iweiny-desk2.sc.intel.com ([10.3.52.147])
-  by fmsmga002.fm.intel.com with ESMTP; 21 Apr 2020 16:24:59 -0700
-Date:   Tue, 21 Apr 2020 16:24:59 -0700
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Al Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH V9 10/11] fs/xfs: Update
- xfs_ioctl_setattr_dax_invalidate()
-Message-ID: <20200421232459.GF3372712@iweiny-DESK2.sc.intel.com>
-References: <20200421191754.3372370-1-ira.weiny@intel.com>
- <20200421191754.3372370-11-ira.weiny@intel.com>
- <20200421203140.GD6742@magnolia>
- <20200421213049.GC27860@dread.disaster.area>
- <20200421214328.GD3372712@iweiny-DESK2.sc.intel.com>
- <20200421231343.GD27860@dread.disaster.area>
+        id S1726024AbgDVCGH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 21 Apr 2020 22:06:07 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:41866 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725912AbgDVCGH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Apr 2020 22:06:07 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03M235oS104978
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:06:06 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=TSdGffBMVB8MBgUBUbTQQb8/0UnkYoC4l1YCq2U+G+g=;
+ b=usUS8f5MWlLwetao3p1eZdA5+kVyyBAziiWcU14rAK+9vswfcBjF6cCKfMSFuQHFOTyd
+ EVPfclQV2Vxgl08vaK66MA9kedGjiJoe3CJwO/yUuv1h/eJG8svfdMX0yRCw2Pwm5U43
+ Sc05vk0LHdpliS+izteRAjP7Jzbv/xe5e5Bk54gBoyjFTD7m665UgGn/I2YreonVXKH/
+ NqSgsC2g0QByHqlEPjv9aUAzk9slyW2OapN36bmITgZpgfgXza2Q5iR3+rvahQbf2bXk
+ 8EFBAOGH4gUX7+UmVJTj/yfxESOR3JYxP7q0MYLQOujeib3/CrwEZ5I43NLOVA1TcThY Zg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 30fsgm03d2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:06:05 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03M22YWd053918
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:06:05 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 30gbbfgdx2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:06:05 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03M264ft013955
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:06:04 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 21 Apr 2020 19:06:04 -0700
+Subject: [PATCH 00/19] xfs: refactor log recovery
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     darrick.wong@oracle.com
+Cc:     linux-xfs@vger.kernel.org
+Date:   Tue, 21 Apr 2020 19:06:03 -0700
+Message-ID: <158752116283.2140829.12265815455525398097.stgit@magnolia>
+User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200421231343.GD27860@dread.disaster.area>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9598 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0
+ suspectscore=0 mlxlogscore=915 adultscore=0 mlxscore=0 phishscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004220014
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9598 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 priorityscore=1501
+ lowpriorityscore=0 mlxlogscore=989 malwarescore=0 clxscore=1015
+ spamscore=0 bulkscore=0 phishscore=0 suspectscore=0 impostorscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004220014
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 22, 2020 at 09:13:43AM +1000, Dave Chinner wrote:
-> On Tue, Apr 21, 2020 at 02:43:29PM -0700, Ira Weiny wrote:
-> > On Wed, Apr 22, 2020 at 07:30:49AM +1000, Dave Chinner wrote:
-> > > On Tue, Apr 21, 2020 at 01:31:40PM -0700, Darrick J. Wong wrote:
-> > > > On Tue, Apr 21, 2020 at 12:17:52PM -0700, ira.weiny@intel.com wrote:
-> > > > > From: Ira Weiny <ira.weiny@intel.com>
+Hi all,
 
-[snip]
+This series refactors log recovery by moving recovery code for each log
+item type into the source code for the rest of that log item type and
+using dispatch function pointers to virtualize the interactions.  This
+dramatically reduces the amount of code in xfs_log_recover.c and
+increases cohesion throughout the log code.
 
-> > > > 
-> > > > That's a ... strange name.  Set cache on what?
-> > > > 
-> > > > Oh, this is the function that sets I_DONTCACHE if an FS_XFLAG_DAX change
-> > > > could have an immediate effect on S_DAX (assuming no other users).  What
-> > > > do you think of the following?
-> > > > 
-> > > > 	/*
-> > > > 	 * If a change to FS_XFLAG_DAX will result in an change to S_DAX
-> > > > 	 * the next time the incore inode is initialized, set the VFS
-> > > > 	 * I_DONTCACHE flag to try to hurry that along.
-> > > > 	 */
-> > > > 	static void
-> > > > 	xfs_ioctl_try_change_vfs_dax(...)
-> > > 
-> > > That doesn't seem any better. This is a preparation function now, in
-> > > that it can't fail and doesn't change the outcome of the operation
-> > > being performed. So, IMO, calling it something like
-> > > xfs_ioctl_setattr_prepare_dax() would be a better name for it.
-> > 
-> > But it does potentially (after a check) set I_DONTCACHE.
-> 
-> That is an implementation detail - it doesn't change the outcome of
-> the function, the current behaviour of the inode, or the result of
-> the ioctl....
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-I'm confused.  This function does potentially flag the inode to not be cached.
-How is that not changing the behavior of the inode?
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
-> 
-> > What about?
-> > 
-> > xfs_ioctl_dax_check_set_dontcache()?
-> 
-> Then we have to rename it again the moment we change it's
-> functionality. i.e. we have exactly the same problem we have now
-> where the function name describes the implementation, not the
-> operational reason the function is being called...
+--D
 
-Ok, I see what you are driving at.  You want this function to potentially do
-other things and it should 'prepare' the inode for 'dax stuff'.  Is that about
-it?
-
-I'm ok with xfs_ioctl_setattr_prepare_dax() then.
-
-Ira
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=refactor-log-recovery
