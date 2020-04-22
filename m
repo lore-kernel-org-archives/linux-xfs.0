@@ -2,118 +2,115 @@ Return-Path: <SRS0=4ojB=6G=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E27DCC54FCB
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 23:05:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1368AC55189
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 23:14:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BE17920776
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 23:05:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E3F2020724
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 23:14:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ev3vFO7O"
+	dkim=pass (2048-bit key) header.d=toxicpanda-com.20150623.gappssmtp.com header.i=@toxicpanda-com.20150623.gappssmtp.com header.b="roi6w8e5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726426AbgDVXFK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Apr 2020 19:05:10 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:45184 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726008AbgDVXFK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Apr 2020 19:05:10 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03MMwpY6182329;
-        Wed, 22 Apr 2020 23:05:07 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=8/ZMpnulr6xRwBPJhlF93AjtPrj182AM1RF1iqJk6zw=;
- b=ev3vFO7OwQrBySOBLXWOm+/CGN5jtLmY2kvjKQBv1uGAiAjgBIwAeQbYJq5WNza9n42X
- b5jYVopr4ZaZ1rhhZghmUccnYV5G1QYA7Tx+E7UAnWKS9BiWq1l1QOD3KzD90mgVqdxb
- VxhAZ4fCw5rh89Pk9DcercP5XauTBBJKFQJ5eN5L/WximZXFVvbG/8jojsIN742wdF2p
- Nk04GlpOI4RZPh8flI0pBnlPLFkKw3iqkas0QZZzEIc/hdxniZc4W4K977irc9ZkZhMP
- JfPo/xClOsYRV+/MlfrXqAINs9y/qU8dCtvoPqH2K5U50NzIvlD5u0BzTH159vXc4Iqm 4Q== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 30jhyc4f6w-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 22 Apr 2020 23:05:07 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03MMwIP7081539;
-        Wed, 22 Apr 2020 23:05:06 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 30gb1kep4g-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 22 Apr 2020 23:05:06 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03MN55Wh030202;
-        Wed, 22 Apr 2020 23:05:05 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 22 Apr 2020 16:05:05 -0700
-Date:   Wed, 22 Apr 2020 16:05:04 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     xfs <linux-xfs@vger.kernel.org>
-Cc:     Amir Goldstein <amir73il@gmail.com>,
-        Dave Chinner <david@fromorbit.com>
-Subject: [XFS SUMMIT] Deferred inode inactivation and nonblocking inode
- reclaim
-Message-ID: <20200422230504.GI6742@magnolia>
-References: <20200422225851.GG6742@magnolia>
+        id S1726468AbgDVXO1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Apr 2020 19:14:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42656 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726401AbgDVXO0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Apr 2020 19:14:26 -0400
+Received: from mail-qk1-x733.google.com (mail-qk1-x733.google.com [IPv6:2607:f8b0:4864:20::733])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96AC8C03C1AB
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 16:14:25 -0700 (PDT)
+Received: by mail-qk1-x733.google.com with SMTP id o19so4445531qkk.5
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 16:14:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=toxicpanda-com.20150623.gappssmtp.com; s=20150623;
+        h=to:cc:from:subject:message-id:date:user-agent:mime-version
+         :content-language:content-transfer-encoding;
+        bh=yutIE/3Yrasa++aWOCa3PZNUoPlrlPERr3vYpXHco/M=;
+        b=roi6w8e5qBgfrEAFnX0ITcdhSDL8WSk9M0K+Pi5JsvodaNNOas+t0Q1f3de9phX1r3
+         zH9nNHarNQ5F0bPzz7BOwaRNKmtglTqtN0NM6aiRDb1o0ARGr4RLUKq2Ljipggfzmq4f
+         4lue9ey15OIgipQe2SFDgP3Zg483GPNPRk1b8P8tkH8JOTSig5IAtEHFk48/ttXK/xW3
+         HXoY6IUYmJ/pTBF9GpTUhyyw7weiMGNPNlwjMBnBqpgI6X0Q/tR6jaPPDUnk4ojUthH4
+         sJ/35wr3LbgYPfPQAvyDm9c7nFllFe/TQ0modirFmWgoD/qWXe5K3H06giTotm5Z7P3Z
+         jarQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
+         :mime-version:content-language:content-transfer-encoding;
+        bh=yutIE/3Yrasa++aWOCa3PZNUoPlrlPERr3vYpXHco/M=;
+        b=nCLLl5uLTpo4hAMHWSzV/roQ61T9KvFtAWEQHR909iJa0d4cW3S0CyvC7WFyIo/j0q
+         MCWd+TiBkxixw0T6Ayg1pUwBgMPFAT6+gAWXHwpyCVWBm9CpESB8QoiEx1Lu+ht75hFR
+         74hS/8oT68IhSc6GC/qTdKBKkChyVQZByHRL7IIVqhPMDgxdBrubfF8MT9JSSA205Tww
+         Ow+dR0s/dd9vanL2+XjswkG5+guj80BacCR0PKwIPB5Yzennjvd2xeALI58oGIgg2SAI
+         d+YEsW5TkP5yRjj3IMh62TuAjbKSnUTEfm8qHuAzqgkx0Tyca04zExj8N9ri2twnxbye
+         huBw==
+X-Gm-Message-State: AGi0PuZ9RxKLU9x/K9pFMTOfDwomJoDrSPwoqyIEM6YD5di/DpIxFylO
+        MGgtxwkYoYlgj1DHOJFmG1vPnW4QvZr4wA==
+X-Google-Smtp-Source: APiQypKpwv318za6PvBDHu/CmZW2XLyq7lRBmFefrk1Y5QT6hBrl33XFhRuafmp5OdsdRdB+WGIptg==
+X-Received: by 2002:a37:6415:: with SMTP id y21mr792941qkb.258.1587597263810;
+        Wed, 22 Apr 2020 16:14:23 -0700 (PDT)
+Received: from ?IPv6:2620:10d:c0a8:1102:ce0:3629:8daa:1271? ([2620:10d:c091:480::1:af35])
+        by smtp.gmail.com with ESMTPSA id q6sm534297qtd.61.2020.04.22.16.14.22
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 22 Apr 2020 16:14:23 -0700 (PDT)
+To:     Btrfs BTRFS <linux-btrfs@vger.kernel.org>,
+        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
+        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
+        "bpf@vger.kernel.org" <bpf@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "linux-nvme@vger.kernel.org" <linux-nvme@vger.kernel.org>
+Cc:     lsf-pc <lsf-pc@lists.linuxfoundation.org>
+From:   Josef Bacik <josef@toxicpanda.com>
+Subject: LSFMMBPF 2020 Cancellation announcement
+Message-ID: <0b6d3d6f-99de-3603-4b42-c3db5113633d@toxicpanda.com>
+Date:   Wed, 22 Apr 2020 19:14:21 -0400
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0)
+ Gecko/20100101 Thunderbird/68.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200422225851.GG6742@magnolia>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9599 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=0 spamscore=0
- mlxlogscore=999 mlxscore=0 malwarescore=0 bulkscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004220174
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9599 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0 mlxscore=0
- clxscore=1015 suspectscore=0 phishscore=0 lowpriorityscore=0 bulkscore=0
- impostorscore=0 malwarescore=0 priorityscore=1501 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004220174
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Heh, only after I sent this did I think about tagging the subject line
-and sending links to git branches when applicable.
+Each year, we look forward to gathering at Linux Storage, Filesystem, Memory
+Management, and BPF Summit to share information, collaborate, and learn
+together. Due to continual assessments and growing concerns around COVID-19, we
+have made the decision to cancel Linux Storage, Filesystem, Memory Management,
+and BPF Summit this year. Next year the summit will be held in Palm Springs, on
+May 12-14, 2021 at the Riviera Palm Springs.  A new CFP and registration will be
+held again, along with a new round of invites.  The program committee will
+remain the same, and next year we will choose new members.
 
-On Wed, Apr 22, 2020 at 03:58:51PM -0700, Darrick J. Wong wrote:
-> Hi everyone,
-> 
-> Here's a jumping-off point for a discussion about my patchset that
-> implements deferred inode inactivation and Dave's patchset that moves
-> inode buffer flushing out of reclaim.
-> 
-> The inactivation series moves the transactional updates that happen
+Event Registration
 
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=deferred-inactivation
+The Linux Foundation will take care of canceling all event registrations - you
+do not need to do anything.
 
-> after a file loses its last reference (truncating attr/data forks,
-> freeing the inode) out of drop_inode and reclaim by moving all that work
-> to an intermediate workqueue.  This all can be done internally to XFS.
-> 
-> The reclaim series (Dave) removes inode flushing from reclaim, which
+We thank you for your patience and understanding while we work through this very
+fluid situation. A great deal of work and preparation has gone into the
+information and content planned to be delivered at LSFMMBPF and we look forward
+to sharing it all with our community next year.
 
-https://lore.kernel.org/linux-xfs/20191031234618.15403-1-david@fromorbit.com/
+Thank you again for your support. Our sincere sympathies are with all those
+being affected and we wish for good health and safety for all.
 
---D
+Thank you on behalf of the program committee:
 
-> means that xfs stop holding up memory reclaim on IO.  It also contains a
-> fair amount of surgery to the memory shrinker code, which is an added
-> impediment to getting this series reviewed and upstream.
-> 
-> Because of the extra review needed for the reclaim series, does it make
-> sense to keep the two separate?  Deferring inactivation alone won't get
-> rid of the inode flushing that goes on in reclaim, but it at least means
-> that we can handle things like "rm -rf $dir" a little more efficiently
-> in that we can do all the directory shrinking at once and then handle
-> the unlinked inodes in on-disk order.  It would also, erm, help me
-> reduce the size of my dev tree. :)
-> 
-> --D
+         Josef Bacik (Filesystems)
+         Amir Goldstein (Filesystems)
+         Martin K. Petersen (Storage)
+         Omar Sandoval (Storage)
+         Michal Hocko (MM)
+         Dan Williams (MM)
+         Alexei Starovoitov (BPF)
+         Daniel Borkmann (BPF)
