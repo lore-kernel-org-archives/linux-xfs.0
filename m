@@ -7,56 +7,55 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2472AC2BA19
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 02:07:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D5A3C54FD0
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 02:07:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EFCB1206D5
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 02:07:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C05C206D5
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 02:07:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="YjvgjkWx"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jjfNS1XP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726386AbgDVCHp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Apr 2020 22:07:45 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:38606 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726337AbgDVCHp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Apr 2020 22:07:45 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03M22r1b074469
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:07:42 GMT
+        id S1726055AbgDVCHu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 21 Apr 2020 22:07:50 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:44540 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726337AbgDVCHu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Apr 2020 22:07:50 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03M24pfC168228
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:07:48 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=aTyyoNtIp2wtC037ugm1hQS+wK4J35WQr25ZVV5gpIk=;
- b=YjvgjkWxu1+5xmdbjhw5tcKyVxZhpFW5yXJbHLndYMh2H6ikda4ksmhZoyYIe1oarTJn
- GJofsCR6hxLsN16NCRnvOQLtC+pOZxLI1rXkTasrxmGFuS/rQF9jcnTR2KvODLT2G7ow
- eEgrp2Z70m5Yi3XRLiH6hdDmC/UESe9Wm7mPOpSbOs8i6YNvMwC3eHEVNjHjb88CjnmQ
- M4TVrLqIrDAvYotXc0JyvvhOhst87Yom+g3/jdAMkqCcqAHBASNjUqghJnA8GmJRRCAX
- h59PLelnwvaY3CbsJcyapQEnzr+RtDXXKhUEeaX+TPvcY1rV0r1IDDXTeuE5nW63wRVm 3w== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 30ft6n81kg-1
+ bh=caJgGXyhUhWIK7eUIPsGQXHUKAGsyq3i5sCYajeZ29s=;
+ b=jjfNS1XPvJpgIm5ypT7F1xZ/NYZpI5VJ4AF3hTzKvditj5fYdoVeXZv0kLXFxSvpbhDA
+ KdhTkpv0otZeITIJEV8Lglxw9B03QGBSnk4a9JpyJcaodVgSoXQffIG+1K8DNDoVgCoJ
+ eTD1Gfi2QLEAACkbq90we/hEHDKvONnHkBx/xn46KNiOeMFNoVAa+zaCpkBT3+dGVV1H
+ HkX5b4ufrkuRaFD8P4Kor6TN/qOiF2a39gd0NVcIE5NX645bQ3eJBJ4xpXy5x+JjKQVS
+ LXJf4WyQb1E3jSykNmc3e34pRghdBZR20k31g+icnaER/R8ZpPkjWdTKconLfvMPS5gs Sg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 30grpgmhnp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:07:42 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03M22Xg7053843
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:07:42 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 30gbbfggqs-1
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:07:48 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03M22ETq075377
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:07:48 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 30gb1hbgv4-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:07:41 +0000
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03M27f2X017916
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:07:41 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:07:48 +0000
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03M27lKM014580
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 02:07:47 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 21 Apr 2020 19:07:41 -0700
-Subject: [PATCH 15/19] xfs: refactor releasing finished intents during log
- recovery
+        with ESMTP ; Tue, 21 Apr 2020 19:07:47 -0700
+Subject: [PATCH 16/19] xfs: refactor adding recovered intent items to the log
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 21 Apr 2020 19:07:38 -0700
-Message-ID: <158752125867.2140829.718007064092831514.stgit@magnolia>
+Date:   Tue, 21 Apr 2020 19:07:46 -0700
+Message-ID: <158752126650.2140829.12864119186355641266.stgit@magnolia>
 In-Reply-To: <158752116283.2140829.12265815455525398097.stgit@magnolia>
 References: <158752116283.2140829.12265815455525398097.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -64,16 +63,16 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9598 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0
- suspectscore=1 mlxlogscore=999 adultscore=0 mlxscore=0 phishscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004220014
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=1 spamscore=0
+ mlxlogscore=999 mlxscore=0 malwarescore=0 bulkscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2004220014
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9598 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 bulkscore=0
- priorityscore=1501 impostorscore=0 adultscore=0 phishscore=0
- lowpriorityscore=0 malwarescore=0 clxscore=1015 mlxlogscore=999 mlxscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004220014
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 mlxscore=0
+ lowpriorityscore=0 adultscore=0 suspectscore=1 bulkscore=0 clxscore=1015
+ malwarescore=0 phishscore=0 spamscore=0 priorityscore=1501 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2004220014
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -81,392 +80,142 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Replace the open-coded AIL item walking with a proper helper when we're
-trying to release an intent item that has been finished.
+During recovery, every intent that we recover from the log has to be
+added to the AIL.  Replace the open-coded addition with a helper.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_log_recover.h |    5 +++
- fs/xfs/xfs_bmap_item.c          |   56 +++++++++++++++++----------------------
- fs/xfs/xfs_extfree_item.c       |   56 +++++++++++++++++----------------------
- fs/xfs/xfs_log_recover.c        |   27 +++++++++++++++++++
- fs/xfs/xfs_refcount_item.c      |   56 +++++++++++++++++----------------------
- fs/xfs/xfs_rmap_item.c          |   56 +++++++++++++++++----------------------
- 6 files changed, 128 insertions(+), 128 deletions(-)
+ fs/xfs/libxfs/xfs_log_recover.h |    2 ++
+ fs/xfs/xfs_bmap_item.c          |   10 +---------
+ fs/xfs/xfs_extfree_item.c       |   10 +---------
+ fs/xfs/xfs_log_recover.c        |   17 +++++++++++++++++
+ fs/xfs/xfs_refcount_item.c      |   10 +---------
+ fs/xfs/xfs_rmap_item.c          |   10 +---------
+ 6 files changed, 23 insertions(+), 36 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
-index 5bdba7ee98c5..ac1adccc8451 100644
+index ac1adccc8451..8cb38d8327ce 100644
 --- a/fs/xfs/libxfs/xfs_log_recover.h
 +++ b/fs/xfs/libxfs/xfs_log_recover.h
-@@ -169,4 +169,9 @@ extern const struct xlog_recover_intent_type xlog_recover_rmap_type;
- extern const struct xlog_recover_intent_type xlog_recover_refcount_type;
- extern const struct xlog_recover_intent_type xlog_recover_bmap_type;
+@@ -173,5 +173,7 @@ typedef bool (*xlog_recover_release_intent_fn)(struct xlog *log,
+ 		struct xfs_log_item *item, uint64_t intent_id);
+ void xlog_recover_release_intent(struct xlog *log, unsigned short intent_type,
+ 		uint64_t intent_id, xlog_recover_release_intent_fn fn);
++void xlog_recover_insert_ail(struct xlog *log, struct xfs_log_item *lip,
++		xfs_lsn_t lsn);
  
-+typedef bool (*xlog_recover_release_intent_fn)(struct xlog *log,
-+		struct xfs_log_item *item, uint64_t intent_id);
-+void xlog_recover_release_intent(struct xlog *log, unsigned short intent_type,
-+		uint64_t intent_id, xlog_recover_release_intent_fn fn);
-+
  #endif	/* __XFS_LOG_RECOVER_H__ */
 diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index b4fbc58b6906..cd593b98f102 100644
+index cd593b98f102..df8155dfcc87 100644
 --- a/fs/xfs/xfs_bmap_item.c
 +++ b/fs/xfs/xfs_bmap_item.c
-@@ -634,6 +634,28 @@ xlog_recover_bui(
- 	return 0;
- }
- 
-+STATIC bool
-+xlog_release_bui(
-+	struct xlog		*log,
-+	struct xfs_log_item	*lip,
-+	uint64_t		intent_id)
-+{
-+	struct xfs_bui_log_item	*buip = BUI_ITEM(lip);
-+	struct xfs_ail		*ailp = log->l_ailp;
-+
-+	if (buip->bui_format.bui_id == intent_id) {
-+		/*
-+		 * Drop the BUD reference to the BUI. This
-+		 * removes the BUI from the AIL and frees it.
-+		 */
-+		spin_unlock(&ailp->ail_lock);
-+		xfs_bui_release(buip);
-+		spin_lock(&ailp->ail_lock);
-+		return true;
-+	}
-+
-+	return false;
-+}
- 
- /*
-  * This routine is called when an BUD format structure is found in a committed
-@@ -648,45 +670,15 @@ xlog_recover_bud(
- 	struct xlog_recover_item	*item)
- {
- 	struct xfs_bud_log_format	*bud_formatp;
--	struct xfs_bui_log_item		*buip = NULL;
--	struct xfs_log_item		*lip;
--	uint64_t			bui_id;
--	struct xfs_ail_cursor		cur;
--	struct xfs_ail			*ailp = log->l_ailp;
- 
- 	bud_formatp = item->ri_buf[0].i_addr;
- 	if (item->ri_buf[0].i_len != sizeof(struct xfs_bud_log_format)) {
- 		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
- 		return -EFSCORRUPTED;
+@@ -621,15 +621,7 @@ xlog_recover_bui(
+ 		return error;
  	}
--	bui_id = bud_formatp->bud_bui_id;
+ 	atomic_set(&buip->bui_next_extent, bui_formatp->bui_nextents);
 -
+-	spin_lock(&log->l_ailp->ail_lock);
 -	/*
--	 * Search for the BUI with the id in the BUD format structure in the
--	 * AIL.
+-	 * The RUI has two references. One for the RUD and one for RUI to ensure
+-	 * it makes it into the AIL. Insert the RUI into the AIL directly and
+-	 * drop the RUI reference. Note that xfs_trans_ail_update() drops the
+-	 * AIL lock.
 -	 */
--	spin_lock(&ailp->ail_lock);
--	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
--	while (lip != NULL) {
--		if (lip->li_type == XFS_LI_BUI) {
--			buip = (struct xfs_bui_log_item *)lip;
--			if (buip->bui_format.bui_id == bui_id) {
--				/*
--				 * Drop the BUD reference to the BUI. This
--				 * removes the BUI from the AIL and frees it.
--				 */
--				spin_unlock(&ailp->ail_lock);
--				xfs_bui_release(buip);
--				spin_lock(&ailp->ail_lock);
--				break;
--			}
--		}
--		lip = xfs_trans_ail_cursor_next(ailp, &cur);
--	}
--
--	xfs_trans_ail_cursor_done(&cur);
--	spin_unlock(&ailp->ail_lock);
- 
-+	xlog_recover_release_intent(log, XFS_LI_BUI, bud_formatp->bud_bui_id,
-+			 xlog_release_bui);
+-	xfs_trans_ail_update(log->l_ailp, &buip->bui_item, lsn);
++	xlog_recover_insert_ail(log, &buip->bui_item, lsn);
+ 	xfs_bui_release(buip);
  	return 0;
  }
- 
 diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index cd2beb581b40..6a873309f3bc 100644
+index 6a873309f3bc..3af9e37892f1 100644
 --- a/fs/xfs/xfs_extfree_item.c
 +++ b/fs/xfs/xfs_extfree_item.c
-@@ -695,6 +695,28 @@ xlog_recover_efi(
- 	return 0;
- }
- 
-+STATIC bool
-+xlog_release_efi(
-+	struct xlog		*log,
-+	struct xfs_log_item	*lip,
-+	uint64_t		intent_id)
-+{
-+	struct xfs_efi_log_item	*efip = EFI_ITEM(lip);
-+	struct xfs_ail		*ailp = log->l_ailp;
-+
-+	if (efip->efi_format.efi_id == intent_id) {
-+		/*
-+		 * Drop the EFD reference to the EFI. This
-+		 * removes the EFI from the AIL and frees it.
-+		 */
-+		spin_unlock(&ailp->ail_lock);
-+		xfs_efi_release(efip);
-+		spin_lock(&ailp->ail_lock);
-+		return true;
-+	}
-+
-+	return false;
-+}
- 
- /*
-  * This routine is called when an EFD format structure is found in a committed
-@@ -708,46 +730,16 @@ xlog_recover_efd(
- 	struct xlog			*log,
- 	struct xlog_recover_item	*item)
- {
--	struct xfs_ail_cursor		cur;
- 	struct xfs_efd_log_format	*efd_formatp;
--	struct xfs_efi_log_item		*efip = NULL;
--	struct xfs_log_item		*lip;
--	struct xfs_ail			*ailp = log->l_ailp;
--	uint64_t			efi_id;
- 
- 	efd_formatp = item->ri_buf[0].i_addr;
- 	ASSERT((item->ri_buf[0].i_len == (sizeof(xfs_efd_log_format_32_t) +
- 		((efd_formatp->efd_nextents - 1) * sizeof(xfs_extent_32_t)))) ||
- 	       (item->ri_buf[0].i_len == (sizeof(xfs_efd_log_format_64_t) +
- 		((efd_formatp->efd_nextents - 1) * sizeof(xfs_extent_64_t)))));
--	efi_id = efd_formatp->efd_efi_id;
+@@ -682,15 +682,7 @@ xlog_recover_efi(
+ 		return error;
+ 	}
+ 	atomic_set(&efip->efi_next_extent, efi_formatp->efi_nextents);
 -
+-	spin_lock(&log->l_ailp->ail_lock);
 -	/*
--	 * Search for the EFI with the id in the EFD format structure in the
--	 * AIL.
+-	 * The EFI has two references. One for the EFD and one for EFI to ensure
+-	 * it makes it into the AIL. Insert the EFI into the AIL directly and
+-	 * drop the EFI reference. Note that xfs_trans_ail_update() drops the
+-	 * AIL lock.
 -	 */
--	spin_lock(&ailp->ail_lock);
--	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
--	while (lip != NULL) {
--		if (lip->li_type == XFS_LI_EFI) {
--			efip = (xfs_efi_log_item_t *)lip;
--			if (efip->efi_format.efi_id == efi_id) {
--				/*
--				 * Drop the EFD reference to the EFI. This
--				 * removes the EFI from the AIL and frees it.
--				 */
--				spin_unlock(&ailp->ail_lock);
--				xfs_efi_release(efip);
--				spin_lock(&ailp->ail_lock);
--				break;
--			}
--		}
--		lip = xfs_trans_ail_cursor_next(ailp, &cur);
--	}
--
--	xfs_trans_ail_cursor_done(&cur);
--	spin_unlock(&ailp->ail_lock);
- 
-+	xlog_recover_release_intent(log, XFS_LI_EFI, efd_formatp->efd_efi_id,
-+			 xlog_release_efi);
+-	xfs_trans_ail_update(log->l_ailp, &efip->efi_item, lsn);
++	xlog_recover_insert_ail(log, &efip->efi_item, lsn);
+ 	xfs_efi_release(efip);
  	return 0;
  }
- 
 diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 08066fa32b80..460f836de963 100644
+index 460f836de963..913eb9101110 100644
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -1770,6 +1770,33 @@ xlog_clear_stale_blocks(
+@@ -1797,6 +1797,23 @@ xlog_recover_release_intent(
+ 	spin_unlock(&ailp->ail_lock);
+ }
  
- /* Log intent item dispatching. */
- 
-+/*
-+ * Release the recovered intent item in the AIL that matches the given intent
-+ * type and intent id.
-+ */
++/* Insert a recovered intent item into the AIL. */
 +void
-+xlog_recover_release_intent(
++xlog_recover_insert_ail(
 +	struct xlog		*log,
-+	unsigned short		intent_type,
-+	uint64_t		intent_id,
-+	xlog_recover_release_intent_fn	fn)
++	struct xfs_log_item	*lip,
++	xfs_lsn_t		lsn)
 +{
-+	struct xfs_ail_cursor	cur;
-+	struct xfs_log_item	*lip;
-+	struct xfs_ail		*ailp = log->l_ailp;
-+
-+	spin_lock(&ailp->ail_lock);
-+	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
-+	while (lip != NULL) {
-+		if (lip->li_type == intent_type && fn(log, lip, intent_id))
-+			break;
-+		lip = xfs_trans_ail_cursor_next(ailp, &cur);
-+	}
-+
-+	xfs_trans_ail_cursor_done(&cur);
-+	spin_unlock(&ailp->ail_lock);
++	/*
++	 * The intent has two references. One for the done item and one for the
++	 * intent to ensure it makes it into the AIL. Insert the intent into
++	 * the AIL directly and drop the intent reference. Note that
++	 * xfs_trans_ail_update() drops the AIL lock.
++	 */
++	spin_lock(&log->l_ailp->ail_lock);
++	xfs_trans_ail_update(log->l_ailp, lip, lsn);
 +}
 +
  STATIC int xlog_recover_intent_pass2(struct xlog *log,
  		struct list_head *buffer_list, struct xlog_recover_item *item,
  		xfs_lsn_t current_lsn);
 diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index a1dac3d60a2a..6eef1523078c 100644
+index 6eef1523078c..ab786739ff7c 100644
 --- a/fs/xfs/xfs_refcount_item.c
 +++ b/fs/xfs/xfs_refcount_item.c
-@@ -657,6 +657,28 @@ xlog_recover_cui(
- 	return 0;
- }
- 
-+STATIC bool
-+xlog_release_cui(
-+	struct xlog		*log,
-+	struct xfs_log_item	*lip,
-+	uint64_t		intent_id)
-+{
-+	struct xfs_cui_log_item	*cuip = CUI_ITEM(lip);
-+	struct xfs_ail		*ailp = log->l_ailp;
-+
-+	if (cuip->cui_format.cui_id == intent_id) {
-+		/*
-+		 * Drop the CUD reference to the CUI. This
-+		 * removes the CUI from the AIL and frees it.
-+		 */
-+		spin_unlock(&ailp->ail_lock);
-+		xfs_cui_release(cuip);
-+		spin_lock(&ailp->ail_lock);
-+		return true;
-+	}
-+
-+	return false;
-+}
- 
- /*
-  * This routine is called when an CUD format structure is found in a committed
-@@ -671,45 +693,15 @@ xlog_recover_cud(
- 	struct xlog_recover_item	*item)
- {
- 	struct xfs_cud_log_format	*cud_formatp;
--	struct xfs_cui_log_item		*cuip = NULL;
--	struct xfs_log_item		*lip;
--	uint64_t			cui_id;
--	struct xfs_ail_cursor		cur;
--	struct xfs_ail			*ailp = log->l_ailp;
- 
- 	cud_formatp = item->ri_buf[0].i_addr;
- 	if (item->ri_buf[0].i_len != sizeof(struct xfs_cud_log_format)) {
- 		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
- 		return -EFSCORRUPTED;
+@@ -644,15 +644,7 @@ xlog_recover_cui(
+ 		return error;
  	}
--	cui_id = cud_formatp->cud_cui_id;
+ 	atomic_set(&cuip->cui_next_extent, cui_formatp->cui_nextents);
 -
+-	spin_lock(&log->l_ailp->ail_lock);
 -	/*
--	 * Search for the CUI with the id in the CUD format structure in the
--	 * AIL.
+-	 * The CUI has two references. One for the CUD and one for CUI to ensure
+-	 * it makes it into the AIL. Insert the CUI into the AIL directly and
+-	 * drop the CUI reference. Note that xfs_trans_ail_update() drops the
+-	 * AIL lock.
 -	 */
--	spin_lock(&ailp->ail_lock);
--	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
--	while (lip != NULL) {
--		if (lip->li_type == XFS_LI_CUI) {
--			cuip = (struct xfs_cui_log_item *)lip;
--			if (cuip->cui_format.cui_id == cui_id) {
--				/*
--				 * Drop the CUD reference to the CUI. This
--				 * removes the CUI from the AIL and frees it.
--				 */
--				spin_unlock(&ailp->ail_lock);
--				xfs_cui_release(cuip);
--				spin_lock(&ailp->ail_lock);
--				break;
--			}
--		}
--		lip = xfs_trans_ail_cursor_next(ailp, &cur);
--	}
--
--	xfs_trans_ail_cursor_done(&cur);
--	spin_unlock(&ailp->ail_lock);
- 
-+	xlog_recover_release_intent(log, XFS_LI_CUI, cud_formatp->cud_cui_id,
-+			 xlog_release_cui);
+-	xfs_trans_ail_update(log->l_ailp, &cuip->cui_item, lsn);
++	xlog_recover_insert_ail(log, &cuip->cui_item, lsn);
+ 	xfs_cui_release(cuip);
  	return 0;
  }
- 
 diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-index 1ef752563f37..b60fb141c22e 100644
+index b60fb141c22e..a83f86915c40 100644
 --- a/fs/xfs/xfs_rmap_item.c
 +++ b/fs/xfs/xfs_rmap_item.c
-@@ -650,6 +650,28 @@ xlog_recover_rui(
- 	return 0;
- }
- 
-+STATIC bool
-+xlog_release_rui(
-+	struct xlog		*log,
-+	struct xfs_log_item	*lip,
-+	uint64_t		intent_id)
-+{
-+	struct xfs_rui_log_item	*ruip = RUI_ITEM(lip);
-+	struct xfs_ail		*ailp = log->l_ailp;
-+
-+	if (ruip->rui_format.rui_id == intent_id) {
-+		/*
-+		 * Drop the RUD reference to the RUI. This
-+		 * removes the RUI from the AIL and frees it.
-+		 */
-+		spin_unlock(&ailp->ail_lock);
-+		xfs_rui_release(ruip);
-+		spin_lock(&ailp->ail_lock);
-+		return true;
-+	}
-+
-+	return false;
-+}
- 
- /*
-  * This routine is called when an RUD format structure is found in a committed
-@@ -664,42 +686,12 @@ xlog_recover_rud(
- 	struct xlog_recover_item	*item)
- {
- 	struct xfs_rud_log_format	*rud_formatp;
--	struct xfs_rui_log_item		*ruip = NULL;
--	struct xfs_log_item		*lip;
--	uint64_t			rui_id;
--	struct xfs_ail_cursor		cur;
--	struct xfs_ail			*ailp = log->l_ailp;
- 
- 	rud_formatp = item->ri_buf[0].i_addr;
- 	ASSERT(item->ri_buf[0].i_len == sizeof(struct xfs_rud_log_format));
--	rui_id = rud_formatp->rud_rui_id;
+@@ -637,15 +637,7 @@ xlog_recover_rui(
+ 		return error;
+ 	}
+ 	atomic_set(&ruip->rui_next_extent, rui_formatp->rui_nextents);
 -
+-	spin_lock(&log->l_ailp->ail_lock);
 -	/*
--	 * Search for the RUI with the id in the RUD format structure in the
--	 * AIL.
+-	 * The RUI has two references. One for the RUD and one for RUI to ensure
+-	 * it makes it into the AIL. Insert the RUI into the AIL directly and
+-	 * drop the RUI reference. Note that xfs_trans_ail_update() drops the
+-	 * AIL lock.
 -	 */
--	spin_lock(&ailp->ail_lock);
--	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
--	while (lip != NULL) {
--		if (lip->li_type == XFS_LI_RUI) {
--			ruip = (struct xfs_rui_log_item *)lip;
--			if (ruip->rui_format.rui_id == rui_id) {
--				/*
--				 * Drop the RUD reference to the RUI. This
--				 * removes the RUI from the AIL and frees it.
--				 */
--				spin_unlock(&ailp->ail_lock);
--				xfs_rui_release(ruip);
--				spin_lock(&ailp->ail_lock);
--				break;
--			}
--		}
--		lip = xfs_trans_ail_cursor_next(ailp, &cur);
--	}
--
--	xfs_trans_ail_cursor_done(&cur);
--	spin_unlock(&ailp->ail_lock);
- 
-+	xlog_recover_release_intent(log, XFS_LI_RUI, rud_formatp->rud_rui_id,
-+			 xlog_release_rui);
+-	xfs_trans_ail_update(log->l_ailp, &ruip->rui_item, lsn);
++	xlog_recover_insert_ail(log, &ruip->rui_item, lsn);
+ 	xfs_rui_release(ruip);
  	return 0;
  }
- 
 
