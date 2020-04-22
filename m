@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DEE9C55185
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 21:21:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DF16C55185
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 21:22:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1800A20857
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 21:21:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB3CE2076E
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 21:22:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726930AbgDVVVw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Apr 2020 17:21:52 -0400
-Received: from mga07.intel.com ([134.134.136.100]:1886 "EHLO mga07.intel.com"
+        id S1726821AbgDVVVf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Apr 2020 17:21:35 -0400
+Received: from mga12.intel.com ([192.55.52.136]:52162 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726871AbgDVVVo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 22 Apr 2020 17:21:44 -0400
-IronPort-SDR: 30VjgZZgWcmhzo2gJEurIHnRH8AGW/9QuoNqUhtXOZf6De7a6+eMNlVHlQZHoRbyjufKAOehq4
- iklVC69suUVw==
+        id S1726811AbgDVVVe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 22 Apr 2020 17:21:34 -0400
+IronPort-SDR: 8HKzvYj/Xq7NB785YTOxyFGYoY1bxEYDG596AspfVve09pQAuNKugp0qA7NKTgBwi59ruayuNi
+ UowS9u0KsxEQ==
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Apr 2020 14:21:42 -0700
-IronPort-SDR: +UfSJ3vT630rslmHCLLJkrGSXxLTIxjSrEl/bNe9/lnYTE5TcVzHTLzh0ZlpCWP8BDQ314QWsI
- jvpBEHaECbzA==
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Apr 2020 14:21:32 -0700
+IronPort-SDR: 1NEDCR4Tatg9zb/CkXvcV4CDejekOhfK/MCv9gMMAibXARW1+QsgKCWm7/UdPWfZwmGRUr5YJu
+ sKLvaPI1aPsA==
 X-IronPort-AV: E=Sophos;i="5.73,304,1583222400"; 
-   d="scan'208";a="246080472"
+   d="scan'208";a="259207422"
 Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
-  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Apr 2020 14:21:42 -0700
+  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Apr 2020 14:21:31 -0700
 From:   ira.weiny@intel.com
 To:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
         "Darrick J. Wong" <darrick.wong@oracle.com>
@@ -42,9 +42,9 @@ Cc:     Ira Weiny <ira.weiny@intel.com>, Al Viro <viro@zeniv.linux.org.uk>,
         "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
         linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-api@vger.kernel.org
-Subject: [PATCH V10 11/11] fs/xfs: Update xfs_ioctl_setattr_dax_invalidate()
-Date:   Wed, 22 Apr 2020 14:21:02 -0700
-Message-Id: <20200422212102.3757660-12-ira.weiny@intel.com>
+Subject: [PATCH V10 06/11] fs/xfs: Make DAX mount option a tri-state
+Date:   Wed, 22 Apr 2020 14:20:57 -0700
+Message-Id: <20200422212102.3757660-7-ira.weiny@intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200422212102.3757660-1-ira.weiny@intel.com>
 References: <20200422212102.3757660-1-ira.weiny@intel.com>
@@ -57,222 +57,152 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Ira Weiny <ira.weiny@intel.com>
 
-Because of the separation of FS_XFLAG_DAX from S_DAX and the delayed
-setting of S_DAX, data invalidation no longer needs to happen when
-FS_XFLAG_DAX is changed.
+As agreed upon[1].  We make the dax mount option a tri-state.  '-o dax'
+continues to operate the same.  We add 'always', 'never', and 'inode'
+(default).
 
-Change xfs_ioctl_setattr_dax_invalidate() to be
-xfs_ioctl_dax_check_set_cache() and alter the code to reflect the new
-functionality.
-
-Furthermore, we no longer need the locking so we remove the join_flags
-logic.
+[1] https://lore.kernel.org/lkml/20200405061945.GA94792@iweiny-DESK2.sc.intel.com/
 
 Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 
 ---
 Changes from V9:
-	Change name of function to xfs_ioctl_setattr_prepare_dax()
+	Fix indentation in xfs_mount_set_dax_mode()
+	Do not report dax=inode
 
-Changes from V8:
-	Change name of function to xfs_ioctl_dax_check_set_cache()
-	Update commit message
-	Fix bit manipulations
+Changes from v8:
+	Move NEVER bit to 27
+	Use xfs signature style
+	use xfs_dax_mode enum
 
-Changes from V7:
-	Use new flag_inode_dontcache()
-	Skip don't cache if mount over ride is active.
+Changes from v7:
+	Change to XFS_MOUNT_DAX_NEVER
 
 Changes from v6:
-	Fix completely broken implementation and update commit message.
-	Use the new VFS layer I_DONTCACHE to facilitate inode eviction
-	and S_DAX changing on drop_caches
+	Use 2 flag bits rather than a field.
+	change iflag to inode
 
 Changes from v5:
-	New patch
+	New Patch
 ---
- fs/xfs/xfs_ioctl.c | 108 +++++++++------------------------------------
- 1 file changed, 20 insertions(+), 88 deletions(-)
+ fs/xfs/xfs_mount.h |  1 +
+ fs/xfs/xfs_super.c | 49 ++++++++++++++++++++++++++++++++++++++++++----
+ 2 files changed, 46 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 104495ac187c..aa1a8bd7d68d 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1245,64 +1245,26 @@ xfs_ioctl_setattr_xflags(
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index f6123fb0113c..37bfb50db809 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -238,6 +238,7 @@ typedef struct xfs_mount {
+ 						   allocator */
+ #define XFS_MOUNT_NOATTR2	(1ULL << 25)	/* disable use of attr2 format */
+ #define XFS_MOUNT_DAX_ALWAYS	(1ULL << 26)
++#define XFS_MOUNT_DAX_NEVER	(1ULL << 27)
+ 
+ /*
+  * Max and min values for mount-option defined I/O
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index ce169d1c7474..a4028992b789 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -47,6 +47,39 @@ static struct kset *xfs_kset;		/* top-level xfs sysfs dir */
+ static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs attrs */
+ #endif
+ 
++enum xfs_dax_mode {
++	XFS_DAX_INODE = 0,
++	XFS_DAX_ALWAYS = 1,
++	XFS_DAX_NEVER = 2,
++};
++
++static void
++xfs_mount_set_dax_mode(
++	struct xfs_mount	*mp,
++	enum xfs_dax_mode	mode)
++{
++	switch (mode) {
++	case XFS_DAX_INODE:
++		mp->m_flags &= ~(XFS_MOUNT_DAX_ALWAYS | XFS_MOUNT_DAX_NEVER);
++		break;
++	case XFS_DAX_ALWAYS:
++		mp->m_flags |= XFS_MOUNT_DAX_ALWAYS;
++		mp->m_flags &= ~XFS_MOUNT_DAX_NEVER;
++		break;
++	case XFS_DAX_NEVER:
++		mp->m_flags |= XFS_MOUNT_DAX_NEVER;
++		mp->m_flags &= ~XFS_MOUNT_DAX_ALWAYS;
++		break;
++	}
++}
++
++static const struct constant_table dax_param_enums[] = {
++	{"inode",	XFS_DAX_INODE },
++	{"always",	XFS_DAX_ALWAYS },
++	{"never",	XFS_DAX_NEVER },
++	{}
++};
++
+ /*
+  * Table driven mount option parser.
+  */
+@@ -59,7 +92,7 @@ enum {
+ 	Opt_filestreams, Opt_quota, Opt_noquota, Opt_usrquota, Opt_grpquota,
+ 	Opt_prjquota, Opt_uquota, Opt_gquota, Opt_pquota,
+ 	Opt_uqnoenforce, Opt_gqnoenforce, Opt_pqnoenforce, Opt_qnoenforce,
+-	Opt_discard, Opt_nodiscard, Opt_dax,
++	Opt_discard, Opt_nodiscard, Opt_dax, Opt_dax_enum,
+ };
+ 
+ static const struct fs_parameter_spec xfs_fs_parameters[] = {
+@@ -103,6 +136,7 @@ static const struct fs_parameter_spec xfs_fs_parameters[] = {
+ 	fsparam_flag("discard",		Opt_discard),
+ 	fsparam_flag("nodiscard",	Opt_nodiscard),
+ 	fsparam_flag("dax",		Opt_dax),
++	fsparam_enum("dax",		Opt_dax_enum, dax_param_enums),
+ 	{}
+ };
+ 
+@@ -129,7 +163,6 @@ xfs_fs_show_options(
+ 		{ XFS_MOUNT_GRPID,		",grpid" },
+ 		{ XFS_MOUNT_DISCARD,		",discard" },
+ 		{ XFS_MOUNT_LARGEIO,		",largeio" },
+-		{ XFS_MOUNT_DAX_ALWAYS,		",dax" },
+ 		{ 0, NULL }
+ 	};
+ 	struct xfs_mount	*mp = XFS_M(root->d_sb);
+@@ -185,6 +218,11 @@ xfs_fs_show_options(
+ 	if (!(mp->m_qflags & XFS_ALL_QUOTA_ACCT))
+ 		seq_puts(m, ",noquota");
+ 
++	if (mp->m_flags & XFS_MOUNT_DAX_ALWAYS)
++		seq_puts(m, ",dax=always");
++	else if (mp->m_flags & XFS_MOUNT_DAX_NEVER)
++		seq_puts(m, ",dax=never");
++
  	return 0;
  }
  
--/*
-- * If we are changing DAX flags, we have to ensure the file is clean and any
-- * cached objects in the address space are invalidated and removed. This
-- * requires us to lock out other IO and page faults similar to a truncate
-- * operation. The locks need to be held until the transaction has been committed
-- * so that the cache invalidation is atomic with respect to the DAX flag
-- * manipulation.
-- */
--static int
--xfs_ioctl_setattr_dax_invalidate(
-+static void
-+xfs_ioctl_setattr_prepare_dax(
- 	struct xfs_inode	*ip,
--	struct fsxattr		*fa,
--	int			*join_flags)
-+	struct fsxattr		*fa)
- {
--	struct inode		*inode = VFS_I(ip);
--	struct super_block	*sb = inode->i_sb;
--	int			error;
--
--	*join_flags = 0;
--
--	/*
--	 * It is only valid to set the DAX flag on regular files and
--	 * directories on filesystems where the block size is equal to the page
--	 * size. On directories it serves as an inherited hint so we don't
--	 * have to check the device for dax support or flush pagecache.
--	 */
--	if (fa->fsx_xflags & FS_XFLAG_DAX) {
--		struct xfs_buftarg	*target = xfs_inode_buftarg(ip);
--
--		if (!bdev_dax_supported(target->bt_bdev, sb->s_blocksize))
--			return -EINVAL;
--	}
--
--	/* If the DAX state is not changing, we have nothing to do here. */
--	if ((fa->fsx_xflags & FS_XFLAG_DAX) && IS_DAX(inode))
--		return 0;
--	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_DAX(inode))
--		return 0;
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct inode            *inode = VFS_I(ip);
- 
- 	if (S_ISDIR(inode->i_mode))
--		return 0;
--
--	/* lock, flush and invalidate mapping in preparation for flag change */
--	xfs_ilock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
--	error = filemap_write_and_wait(inode->i_mapping);
--	if (error)
--		goto out_unlock;
--	error = invalidate_inode_pages2(inode->i_mapping);
--	if (error)
--		goto out_unlock;
--
--	*join_flags = XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL;
--	return 0;
-+		return;
- 
--out_unlock:
--	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
--	return error;
-+	if ((mp->m_flags & XFS_MOUNT_DAX_ALWAYS) ||
-+	    (mp->m_flags & XFS_MOUNT_DAX_NEVER))
-+		return;
- 
-+	if (((fa->fsx_xflags & FS_XFLAG_DAX) &&
-+	    !(ip->i_d.di_flags2 & XFS_DIFLAG2_DAX)) ||
-+	    (!(fa->fsx_xflags & FS_XFLAG_DAX) &&
-+	     (ip->i_d.di_flags2 & XFS_DIFLAG2_DAX)))
-+		mark_inode_dontcache(inode);
- }
- 
- /*
-@@ -1310,17 +1272,10 @@ xfs_ioctl_setattr_dax_invalidate(
-  * have permission to do so. On success, return a clean transaction and the
-  * inode locked exclusively ready for further operation specific checks. On
-  * failure, return an error without modifying or locking the inode.
-- *
-- * The inode might already be IO locked on call. If this is the case, it is
-- * indicated in @join_flags and we take full responsibility for ensuring they
-- * are unlocked from now on. Hence if we have an error here, we still have to
-- * unlock them. Otherwise, once they are joined to the transaction, they will
-- * be unlocked on commit/cancel.
-  */
- static struct xfs_trans *
- xfs_ioctl_setattr_get_trans(
--	struct xfs_inode	*ip,
--	int			join_flags)
-+	struct xfs_inode	*ip)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_trans	*tp;
-@@ -1337,8 +1292,7 @@ xfs_ioctl_setattr_get_trans(
- 		goto out_unlock;
- 
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL | join_flags);
--	join_flags = 0;
-+	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
- 
- 	/*
- 	 * CAP_FOWNER overrides the following restrictions:
-@@ -1359,8 +1313,6 @@ xfs_ioctl_setattr_get_trans(
- out_cancel:
- 	xfs_trans_cancel(tp);
- out_unlock:
--	if (join_flags)
--		xfs_iunlock(ip, join_flags);
- 	return ERR_PTR(error);
- }
- 
-@@ -1486,7 +1438,6 @@ xfs_ioctl_setattr(
- 	struct xfs_dquot	*pdqp = NULL;
- 	struct xfs_dquot	*olddquot = NULL;
- 	int			code;
--	int			join_flags = 0;
- 
- 	trace_xfs_ioctl_setattr(ip);
- 
-@@ -1510,18 +1461,9 @@ xfs_ioctl_setattr(
- 			return code;
- 	}
- 
--	/*
--	 * Changing DAX config may require inode locking for mapping
--	 * invalidation. These need to be held all the way to transaction commit
--	 * or cancel time, so need to be passed through to
--	 * xfs_ioctl_setattr_get_trans() so it can apply them to the join call
--	 * appropriately.
--	 */
--	code = xfs_ioctl_setattr_dax_invalidate(ip, fa, &join_flags);
--	if (code)
--		goto error_free_dquots;
-+	xfs_ioctl_setattr_prepare_dax(ip, fa);
- 
--	tp = xfs_ioctl_setattr_get_trans(ip, join_flags);
-+	tp = xfs_ioctl_setattr_get_trans(ip);
- 	if (IS_ERR(tp)) {
- 		code = PTR_ERR(tp);
- 		goto error_free_dquots;
-@@ -1651,7 +1593,6 @@ xfs_ioc_setxflags(
- 	struct fsxattr		fa;
- 	struct fsxattr		old_fa;
- 	unsigned int		flags;
--	int			join_flags = 0;
- 	int			error;
- 
- 	if (copy_from_user(&flags, arg, sizeof(flags)))
-@@ -1668,18 +1609,9 @@ xfs_ioc_setxflags(
- 	if (error)
- 		return error;
- 
--	/*
--	 * Changing DAX config may require inode locking for mapping
--	 * invalidation. These need to be held all the way to transaction commit
--	 * or cancel time, so need to be passed through to
--	 * xfs_ioctl_setattr_get_trans() so it can apply them to the join call
--	 * appropriately.
--	 */
--	error = xfs_ioctl_setattr_dax_invalidate(ip, &fa, &join_flags);
--	if (error)
--		goto out_drop_write;
-+	xfs_ioctl_setattr_prepare_dax(ip, &fa);
- 
--	tp = xfs_ioctl_setattr_get_trans(ip, join_flags);
-+	tp = xfs_ioctl_setattr_get_trans(ip);
- 	if (IS_ERR(tp)) {
- 		error = PTR_ERR(tp);
- 		goto out_drop_write;
+@@ -1261,7 +1299,10 @@ xfs_fc_parse_param(
+ 		return 0;
+ #ifdef CONFIG_FS_DAX
+ 	case Opt_dax:
+-		mp->m_flags |= XFS_MOUNT_DAX_ALWAYS;
++		xfs_mount_set_dax_mode(mp, XFS_DAX_ALWAYS);
++		return 0;
++	case Opt_dax_enum:
++		xfs_mount_set_dax_mode(mp, result.uint_32);
+ 		return 0;
+ #endif
+ 	default:
+@@ -1468,7 +1509,7 @@ xfs_fc_fill_super(
+ 		if (!rtdev_is_dax && !datadev_is_dax) {
+ 			xfs_alert(mp,
+ 			"DAX unsupported by block device. Turning off DAX.");
+-			mp->m_flags &= ~XFS_MOUNT_DAX_ALWAYS;
++			xfs_mount_set_dax_mode(mp, XFS_DAX_NEVER);
+ 		}
+ 		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+ 			xfs_alert(mp,
 -- 
 2.25.1
 
