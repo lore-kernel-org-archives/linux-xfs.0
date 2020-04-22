@@ -2,83 +2,158 @@ Return-Path: <SRS0=4ojB=6G=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AD67C54FCB
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 15:19:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9316C55185
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 15:19:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EBB3A2074B
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 15:19:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AEF9820774
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 15:19:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726077AbgDVPTU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Apr 2020 11:19:20 -0400
-Received: from mx2.suse.de ([195.135.220.15]:38354 "EHLO mx2.suse.de"
+        id S1726224AbgDVPTW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Apr 2020 11:19:22 -0400
+Received: from mga05.intel.com ([192.55.52.43]:64492 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725779AbgDVPTU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 22 Apr 2020 11:19:20 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id C25F6AA55;
-        Wed, 22 Apr 2020 15:19:18 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id CB5B11E0E56; Wed, 22 Apr 2020 17:19:18 +0200 (CEST)
-Date:   Wed, 22 Apr 2020 17:19:18 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] iomap: Add iomap_iter API
-Message-ID: <20200422151918.GA20756@quack2.suse.cz>
-References: <20200401152522.20737-1-willy@infradead.org>
- <20200401152522.20737-2-willy@infradead.org>
- <20200401154248.GA2813@infradead.org>
- <20200401184245.GI21484@bombadil.infradead.org>
+        id S1725779AbgDVPTW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 22 Apr 2020 11:19:22 -0400
+IronPort-SDR: g+e2neNjlNXJtBW9uKW9uy8+Awxlpb8mM0A/r6lyEuRck4O/ltEvJJu4eOaXKaLiej1cWVSNPU
+ YwSqKMhBsGgA==
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Apr 2020 08:19:21 -0700
+IronPort-SDR: wMPMyCQV2sgAciecf8sXYl3SWjc2saJ4LqbMT56FLKqAmumQ/4HvXD4XYPl3wlKIgUpqX21BcU
+ IR8A9zpPLkGw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.73,414,1583222400"; 
+   d="scan'208";a="291974599"
+Received: from iweiny-desk2.sc.intel.com ([10.3.52.147])
+  by orsmga008.jf.intel.com with ESMTP; 22 Apr 2020 08:19:20 -0700
+Date:   Wed, 22 Apr 2020 08:19:20 -0700
+From:   Ira Weiny <ira.weiny@intel.com>
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH V9 09/11] fs: Introduce DCACHE_DONTCACHE
+Message-ID: <20200422151920.GI3372712@iweiny-DESK2.sc.intel.com>
+References: <20200421191754.3372370-1-ira.weiny@intel.com>
+ <20200421191754.3372370-10-ira.weiny@intel.com>
+ <20200422084647.GC8775@quack2.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200401184245.GI21484@bombadil.infradead.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20200422084647.GC8775@quack2.suse.cz>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed 01-04-20 11:42:45, Matthew Wilcox wrote:
-> On Wed, Apr 01, 2020 at 08:42:48AM -0700, Christoph Hellwig wrote:
-> > > +loff_t iomap_iter(struct iomap_iter *iter, loff_t written)
-> > > +{
-> > > +	const struct iomap_ops *ops = iter->ops;
-> > > +	struct iomap *iomap = &iter->iomap;
-> > > +	struct iomap *srcmap = &iter->srcmap;
+On Wed, Apr 22, 2020 at 10:46:47AM +0200, Jan Kara wrote:
+> On Tue 21-04-20 12:17:51, ira.weiny@intel.com wrote:
+> > From: Ira Weiny <ira.weiny@intel.com>
 > > 
-> > I think it makes sense to only have members in the iter structure
-> > that this function modifies.  That is, just pass inode, ops and flags
-> > as explicit parameters.
+> > DCACHE_DONTCACHE indicates a dentry should not be cached on final
+> > dput().
+> > 
+> > Also add a helper function to mark DCACHE_DONTCACHE on all dentries
+> > pointing to a specific inode when that inode is being set I_DONTCACHE.
+> > 
+> > This facilitates dropping dentry references to inodes sooner which
+> > require eviction to swap S_DAX mode.
+> > 
+> > Cc: Al Viro <viro@zeniv.linux.org.uk>
+> > Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+> > 
+> > ---
+> > Changes from V8:
+> > 	Update commit message
+> > 	Use mark_inode_dontcache in XFS
+> > 	Fix locking...  can't use rcu here.
+> > 	Change name to mark_inode_dontcache
+> > ---
+> >  fs/dcache.c            |  4 ++++
+> >  fs/inode.c             | 15 +++++++++++++++
+> >  fs/xfs/xfs_icache.c    |  2 +-
+> >  include/linux/dcache.h |  2 ++
+> >  include/linux/fs.h     |  1 +
+> >  5 files changed, 23 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/dcache.c b/fs/dcache.c
+> > index b280e07e162b..0030fabab2c4 100644
+> > --- a/fs/dcache.c
+> > +++ b/fs/dcache.c
+> > @@ -647,6 +647,10 @@ static inline bool retain_dentry(struct dentry *dentry)
+> >  		if (dentry->d_op->d_delete(dentry))
+> >  			return false;
+> >  	}
+> > +
+> > +	if (unlikely(dentry->d_flags & DCACHE_DONTCACHE))
+> > +		return false;
+> > +
+> >  	/* retain; LRU fodder */
+> >  	dentry->d_lockref.count--;
+> >  	if (unlikely(!(dentry->d_flags & DCACHE_LRU_LIST)))
+> > diff --git a/fs/inode.c b/fs/inode.c
+> > index 93d9252a00ab..da7f3c4926cd 100644
+> > --- a/fs/inode.c
+> > +++ b/fs/inode.c
+> > @@ -1526,6 +1526,21 @@ int generic_delete_inode(struct inode *inode)
+> >  }
+> >  EXPORT_SYMBOL(generic_delete_inode);
+> >  
+> > +void mark_inode_dontcache(struct inode *inode)
+> > +{
+> > +	struct dentry *de;
+> > +
+> > +	spin_lock(&inode->i_lock);
+> > +	hlist_for_each_entry(de, &inode->i_dentry, d_u.d_alias) {
+> > +		spin_lock(&de->d_lock);
+> > +		de->d_flags |= DCACHE_DONTCACHE;
+> > +		spin_unlock(&de->d_lock);
+> > +	}
+> > +	spin_unlock(&inode->i_lock);
+> > +	inode->i_state |= I_DONTCACHE;
 > 
-> One of the annoying things we do when looking at the disassembly is
-> spend a lot of instructions shuffling arguments around.  Passing as many
-> arguments as possible in a struct minimises that.
+> Modification of i_state should happen under i_lock.
 
-Somewhat late to the game but ... from the conversions of "explicit
-arguments to struct of arguments" I've seen (e.g. in xarray) compilers seem
-to generate somewhat slower code when arguments are passed in structs. From
-the profiling I did it just seems that when arguments are passed directly,
-they are in registers which is generally the fastest access you can get.
-When you pass arguments in structs, compilers just fetch the value from
-stack which is slower even if its cached. And when the argument is not used
-frequently or there's something else cache heavy going on, you may have to
-go to L2 or L3 which is when you feel the pain... E.g. I've observed some
-of the xarray functions which were "logically" identical to their
-radix-tree counterparts generate non-negligible amount of cache misses when
-reading their arguments from the passed struct.
+Done.
 
-I don't think iomap is as CPU sensitive as xarray (generally there's much
-heavier work that happens in the filesystem) so I'd just strive for code
-simplicity here. But I wanted to mention this so that it's clear that
-pushing arguments to structs isn't free either.
+> 
+> > +}
+> > +EXPORT_SYMBOL(mark_inode_dontcache);
+> > +
+> >  /*
+> >   * Called when we're dropping the last reference
+> >   * to an inode.
+> > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > index de76f7f60695..3c8f44477804 100644
+> > --- a/fs/xfs/xfs_icache.c
+> > +++ b/fs/xfs/xfs_icache.c
+> > @@ -559,7 +559,7 @@ xfs_iget_cache_miss(
+> >  	 */
+> >  	iflags = XFS_INEW;
+> >  	if (flags & XFS_IGET_DONTCACHE)
+> > -		VFS_I(ip)->i_state |= I_DONTCACHE;
+> > +		mark_inode_dontcache(VFS_I(ip));
+> 
+> And I know here modification of i_state didn't happen under i_lock but
+> that's a special case because we are just instantiating the inode so it was
+> not a real issue.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Thanks!
+Ira
+
+> 
+> 								Honza
+> -- 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
