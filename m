@@ -2,160 +2,195 @@ Return-Path: <SRS0=4ojB=6G=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8ED0FC5518C
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 22:25:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC9FEC54FCB
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 22:30:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 66F6220857
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 22:25:44 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="b3w+fAH3"
+	by mail.kernel.org (Postfix) with ESMTP id 8C63720776
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 22:30:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726788AbgDVWZn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Apr 2020 18:25:43 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:48302 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726898AbgDVWZm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Apr 2020 18:25:42 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03MMOaLB163294;
-        Wed, 22 Apr 2020 22:25:25 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=MA01F9i7md6cDJPnsrbe6KvCCh4h1MO98DgTZHi6cxM=;
- b=b3w+fAH30ieSYsoB0Md575EgPZLjRWennPIMhoN0ZHWNiNIMFx044h+qGJ1kZrO8Hzqu
- 1VWEWxU/NRNkTJCllwTEUU0umiGYLSUSPaBbmm/xvPRRsCYj1Yr058lexsHKJoWNhphw
- RmWXWdvcAhQ0iUOEJtt42bHLR2fGW+CF/ITh3MVushpDjKeHWKZ6bKUivHxOdNXhEkFg
- R5KePc17xdOAB06mjfy0MWxfH/tYZrDOS9xnOK7AcJ46k9CKgsPY/eXaR7sruD3n0Lve
- 55+5kgZY3qxztuGAgfDgxizSlmamI3tyuboiI3Y3GEyMAbg9mRTFImJsKxYrhhls/v4o VA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 30grpgt02e-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 22 Apr 2020 22:25:25 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03MMMO7h181632;
-        Wed, 22 Apr 2020 22:25:25 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 30gb1kdfpa-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 22 Apr 2020 22:25:25 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03MMPI2P015972;
-        Wed, 22 Apr 2020 22:25:18 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 22 Apr 2020 15:25:18 -0700
-Date:   Wed, 22 Apr 2020 15:25:16 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     xfs <linux-xfs@vger.kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Eric Sandeen <sandeen@redhat.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Brian Foster <bfoster@redhat.com>,
-        Allison Collins <allison.henderson@oracle.com>,
-        Amir Goldstein <amir73il@gmail.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Chandan Rajendra <chandan@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthew Wilcox <willy@infradead.org>, djwong@kernel.org,
-        Jan Kara <jack@suse.cz>
-Subject: Virtual XFS Developer Meetings
-Message-ID: <20200422222516.GP6749@magnolia>
+        id S1725961AbgDVWas (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Apr 2020 18:30:48 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:47394 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725839AbgDVWar (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Apr 2020 18:30:47 -0400
+Received: from dread.disaster.area (pa49-180-0-232.pa.nsw.optusnet.com.au [49.180.0.232])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 955F53A38CC;
+        Thu, 23 Apr 2020 08:30:43 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jRNtB-0006df-8P; Thu, 23 Apr 2020 08:30:41 +1000
+Date:   Thu, 23 Apr 2020 08:30:41 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Chandan Rajendra <chandan@linux.ibm.com>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Chandan Rajendra <chandanrlinux@gmail.com>,
+        linux-xfs@vger.kernel.org, bfoster@redhat.com
+Subject: Re: [PATCH 2/2] xfs: Extend xattr extent counter to 32-bits
+Message-ID: <20200422223041.GE27860@dread.disaster.area>
+References: <20200404085203.1908-1-chandanrlinux@gmail.com>
+ <20200413185547.GF6749@magnolia>
+ <3846384.T6aiutkDcA@localhost.localdomain>
+ <2468041.fvziTNUSPq@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9599 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=0 spamscore=0
- mlxlogscore=999 mlxscore=0 malwarescore=0 bulkscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004220169
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9599 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 mlxscore=0
- lowpriorityscore=0 adultscore=0 suspectscore=0 bulkscore=0 clxscore=1011
- malwarescore=0 phishscore=0 spamscore=0 priorityscore=1501 impostorscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004220169
+In-Reply-To: <2468041.fvziTNUSPq@localhost.localdomain>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+        a=XYjVcjsg+1UI/cdbgX7I7g==:117 a=XYjVcjsg+1UI/cdbgX7I7g==:17
+        a=kj9zAlcOel0A:10 a=cl8xLZFz6L8A:10 a=7-415B0cAAAA:8
+        a=DRyh8TDzYkSSwyMG1gYA:9 a=duKX2EbbUvfq8-ZM:21 a=Zmd738MsrX2beEEE:21
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi everyone,
+On Wed, Apr 22, 2020 at 03:08:00PM +0530, Chandan Rajendra wrote:
+> On Monday, April 20, 2020 10:08 AM Chandan Rajendra wrote: 
+> > On Tuesday, April 14, 2020 12:25 AM Darrick J. Wong wrote: 
+> > > That said, it was very helpful to point out that the current MAXEXTNUM /
+> > > MAXAEXTNUM symbols stop short of using all 32 (or 16) bits.
+> > > 
+> > > Can we use this new feature flag + inode flag to allow 4294967295
+> > > extents in either fork?
+> > 
+> > Sure.
+> > 
+> > I have already tested that having 4294967295 as the maximum data extent count
+> > does not cause any regressions.
+> > 
+> > Also, Dave was of the opinion that data extent counter be increased to
+> > 64-bit. I think I should include that change along with this feature flag
+> > rather than adding a new one in the near future.
+> > 
+> > 
+> 
+> Hello Dave & Darrick,
+> 
+> Can you please look into the following design decision w.r.t using 32-bit and
+> 64-bit unsigned counters for xattr and data extents.
+> 
+> Maximum extent counts.
+> |-----------------------+----------------------|
+> | Field width (in bits) |          Max extents |
+> |-----------------------+----------------------|
+> |                    32 |           4294967295 |
+> |                    48 |      281474976710655 |
+> |                    64 | 18446744073709551615 |
+> |-----------------------+----------------------|
 
-I propose that we hold our own virtual XFS developer summit.  Physical
-proximity is way too risky for the forseeable future, so let's make do
-with online discussions and conferencing.  LSFMM 2020 was officially
-cancelled a short time ago.
+These huge numbers are impossible to compare visually.  Once numbers
+go beyond 7-9 digits, you need to start condensing them in reports.
+Humans are, in general, unable to handle strings of digits longer
+than 7-9 digits at all well...
 
-Unlike in-person events, we cannot pin everyone into a single time zone
-for an extended meeting, and we can't have a hallway BOF.  On the plus
-side, we can finally invite /everyone/ to the table!  Let's use this
-email thread to make a list of topics for future discussions.  I can
-think of a few topic categories to start:
+Can you condense them by using scientific representation i.e. XEy,
+which gives:
 
- 1. Development process problems that people would like to address.
- 2. Matching patch authors with patch reviewers.
- 3. Old features that we ought to retire.
- 4. New feature development roadmap.
- 5. Anything else that people think is important.
+|-----------------------+-------------|
+| Field width (in bits) | Max extents |
+|-----------------------+-------------|
+|                    32 |      4.3E09 |
+|                    48 |      2.8E14 |
+|                    64 |      1.8E19 |
+|-----------------------+-------------|
 
-Once we have a list of specific topics matched with people who are
-interested in that topic, I think it best to start each of those
-conversations in separate threads on linux-xfs where everyone can see
-them.  If the participants feel that they'd get more out of an
-interactive session, we have plenty of options for doing that:
+It's much easier to compare differences visually because it's not
+only 4 digits, not 20. The other alternative is to use k,m,g,t,p,e
+suffixes to indicate magnitude (4.3g, 280t, 18e), but using
+exponentials make the numbers easier to do calculations on
+directly...
 
-The first option of course is the IRC channel (#xfs on freenode) from
-which it is easy to paste the irc logs into linux-xfs for archiving and
-further public comment.
+> |-------------------+-----|
+> | Minimum node recs | 125 |
+> | Minimum leaf recs | 125 |
+> |-------------------+-----|
 
-For actual video conferencing, we also have tools such as Jitsi,
-BigBlueButton, BlueJeans, and Zoom.  I'm willing to sit in on video
-meetings to take notes for linux-xfs and/or post the recordings online.
-As a side note for anyone wanting to take advantage of videochats --
-I'd prefer to keep this to one hourlong meeting per day.
+Please show your working. I'm assuming this is 50% * 4kB /
+sizeof(bmbt_rec), so you are working out limits based on 4kB block
+size? Realistically, worse case behaviour will be with the minimum
+supported block size, which in this case will be 1kB....
 
-Please remember this is not an edict passed on from high to shake up
-everything; it is merely this maintainer suggesting that we explore
-other tactics for building things together.  In the end, everything that
-goes into making decisions still must be communicated via linux-xfs, and
-patches still have to earn Reviewed-by tags.  We do, however, have
-flexibility in how we get there.
+> Data bmbt tree height (MINDBTPTRS == 3)
+> |-------+------------------------+-------------------------|
+> | Level | Number of nodes/leaves |           Total Nr recs |
+> |       |                        | (nr nodes/leaves * 125) |
+> |-------+------------------------+-------------------------|
+> |     0 |                      1 |                       3 |
+> |     1 |                      3 |                     375 |
+> |     2 |                    375 |                   46875 |
+> |     3 |                  46875 |                 5859375 |
+> |     4 |                5859375 |               732421875 |
+> |     5 |              732421875 |             91552734375 |
+> |     6 |            91552734375 |          11444091796875 |
+> |     7 |         11444091796875 |        1430511474609375 |
+> |     8 |       1430511474609375 |      178813934326171875 |
+> |     9 |     178813934326171875 |    22351741790771484375 |
+> |-------+------------------------+-------------------------|
+> 
+> For counting data extents, even though we theoretically have 64 bits at our
+> disposal, I think we should have (2 ** 48) - 1 as the maximum number of
+> extents. This gives 281474976710655 (i.e. ~281 trillion extents). With this,
+> bmbt tree's height grows by just two more levels (i.e. it grows from the
+> current maximum height of 5 to 7). Please let me know your opinion on this.
 
-Here are some topics that have been mentioned to me at least in passing
-over the last few months.  I'll start the first five topics since
-they're the ones I was going to put on the agenda for an XFS meeting at
-LSFMM until that all blew away.
+We shouldn't make up arbitrary limits when we can calculate them exactly.
+i.e. 2^63 max file size, 1kB block size (2^10), means max fragments
+is 2^53 entries. On a 64kB block size (2^16), we have a max extent
+count of 2^47....
 
- - Refactoring the Review Process (me, Eric, Dave)
+i.e. 2^48 would be an acceptible limit for 1kB block size, but it is
+not correct for 64kB block size filesystems....
 
- - Deferred inode inactivation and nonblocking inode reclaim (me, Amir)
+> Attr bmbt tree height (MINABTPTRS == 2)
+> |-------+------------------------+-------------------------|
+> | Level | Number of nodes/leaves |           Total Nr recs |
+> |       |                        | (nr nodes/leaves * 125) |
+> |-------+------------------------+-------------------------|
+> |     0 |                      1 |                       2 |
+> |     1 |                      2 |                     250 |
+> |     2 |                    250 |                   31250 |
+> |     3 |                  31250 |                 3906250 |
+> |     4 |                3906250 |               488281250 |
+> |     5 |              488281250 |             61035156250 |
+> |-------+------------------------+-------------------------|
+> 
+> For xattr extents, (2 ** 32) - 1 = 4294967295 (~ 4 billion extents). So this
+> will cause the corresponding bmbt's maximum height to go from 3 to 5.
+> This probably won't cause any regression.
 
- - 64bit timestamps (me, Amir)
+We already have the XFS_DA_NODE_MAXDEPTH set to 5, so changing the
+attr fork extent count makes no difference to the attribute fork
+bmbt reservations. i.e. the bmbt reservations are defined by the
+dabtree structure limits, not the maximum extent count the fork can
+hold.
 
- - Atomic extent swaps (me)
+The data fork to 64 bits has no impact on the directory
+reservations, either, because the number of extents in the directory
+is bound by the directory segment size of 32GB. i.e. a directory can
+hold, at most, 32GB of dirent data, which means there's a hard limit
+on the number of dabtree entries somewhere in the order of a few
+hundred million. That's where XFS_DA_NODE_MAXDEPTH comes from - it's
+large enough to index a max sized directory, and the BMBT overhead
+is derived from that...
 
- - Online fsck (me)
+> Meanwhile, I will work on finding the impact of increasing the
+> height of these two trees on log reservation.
 
- - Deprecating the v4 format (Dave)
+It should not change it substantially - 2 blocks per bmbt
+reservation per transaction is what I'd expect from the numbers
+presented...
 
- - Parent Pointers (Amir)
+Cheers,
 
- - Range Locks (Amir)
-
- - DAX bashing session (Dan)
-
- - Widening the inode fork extent counters (Chandan)
-
- - Dirty buffer region bitmap tracking (Chandan)
-
- - Add your pet item here! :)
-
-Thoughts, suggestions, and flames appreciated!
-
---D
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
