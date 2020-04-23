@@ -2,62 +2,116 @@ Return-Path: <SRS0=GxFA=6H=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F18CC55191
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Apr 2020 04:55:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B730C2BA19
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Apr 2020 05:06:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 02D95206B9
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Apr 2020 04:55:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5AD2A2087E
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Apr 2020 05:06:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726002AbgDWEzQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Apr 2020 00:55:16 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:47326 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725854AbgDWEzQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Apr 2020 00:55:16 -0400
-Received: from dread.disaster.area (pa49-180-0-232.pa.nsw.optusnet.com.au [49.180.0.232])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id E03013A40C3;
-        Thu, 23 Apr 2020 14:55:12 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jRTtI-0000Tt-Cc; Thu, 23 Apr 2020 14:55:12 +1000
-Date:   Thu, 23 Apr 2020 14:55:12 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2 10/13] xfs: combine xfs_trans_ail_[remove|delete]()
-Message-ID: <20200423045512.GL27860@dread.disaster.area>
-References: <20200422175429.38957-1-bfoster@redhat.com>
- <20200422175429.38957-11-bfoster@redhat.com>
+        id S1726032AbgDWFF7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Apr 2020 01:05:59 -0400
+Received: from mga01.intel.com ([192.55.52.88]:18180 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725854AbgDWFF6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 23 Apr 2020 01:05:58 -0400
+IronPort-SDR: Y57X/DpYbBwZsYAu72v3nflOw9HDXIo+5lw7p9S48WkK6tc/Lz/l3IHFJ5c0F0cinGZC1xd4Qt
+ I2A60v+nv74w==
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Apr 2020 22:05:58 -0700
+IronPort-SDR: R8/hwfbiquKx9lajTQNsTcvgWmgTd/VNiubmA7RVKIQGmk0QnYQGE4AemX6LmFqL0s28JKVffz
+ 70/jtdRlPJJg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.73,305,1583222400"; 
+   d="scan'208";a="255868475"
+Received: from unknown (HELO iweiny-DESK2.sc.intel.com) ([10.3.52.147])
+  by orsmga003.jf.intel.com with ESMTP; 22 Apr 2020 22:05:57 -0700
+Date:   Wed, 22 Apr 2020 22:05:57 -0700
+From:   Ira Weiny <ira.weiny@intel.com>
+To:     Yasunori Goto <y-goto@fujitsu.com>
+Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Jan Kara <jack@suse.cz>, Al Viro <viro@zeniv.linux.org.uk>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-api@vger.kernel.org
+Subject: Re: [PATCH V10 04/11] Documentation/dax: Update Usage section
+Message-ID: <20200423050557.GG3758470@iweiny-DESK2.sc.intel.com>
+References: <20200422212102.3757660-1-ira.weiny@intel.com>
+ <20200422212102.3757660-5-ira.weiny@intel.com>
+ <2282176d-60c5-0e4b-3cf9-7a7682de380d@fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200422175429.38957-11-bfoster@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
-        a=XYjVcjsg+1UI/cdbgX7I7g==:117 a=XYjVcjsg+1UI/cdbgX7I7g==:17
-        a=kj9zAlcOel0A:10 a=cl8xLZFz6L8A:10 a=7-415B0cAAAA:8 a=20KFwNOVAAAA:8
-        a=aqCgzhVM4RVg147SOz0A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <2282176d-60c5-0e4b-3cf9-7a7682de380d@fujitsu.com>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 22, 2020 at 01:54:26PM -0400, Brian Foster wrote:
-> Now that the functions and callers of
-> xfs_trans_ail_[remove|delete]() have been fixed up appropriately,
-> the only difference between the two is the shutdown behavior. There
-> are only a few callers of the _remove() variant, so make the
-> shutdown conditional on the parameter and combine the two functions.
+On Thu, Apr 23, 2020 at 11:33:26AM +0900, Yasunori Goto wrote:
+> Hello,
 > 
-> Suggested-by: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> I'm trying use your patch now, and I have a small comment in this document.
+> 
+> On 2020/04/23 6:20, ira.weiny@intel.com wrote:
+> 
+> > +To clarify inheritance here are 3 examples:
+> > +
+> > +Example A:
+> > +
+> > +mkdir -p a/b/c
+> > +xfs_io 'chattr +x' a
+> 
+> Probably, "-c" is necessary here.
+> 
+> xfs_io -c 'chattr +x' a
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+Yes! Thanks!
+> 
+> 
+> > +mkdir a/b/c/d
+> > +mkdir a/e
+> > +
+> > +	dax: a,e
+> > +	no dax: b,c,d
+> > +
+> > +Example B:
+> > +
+> > +mkdir a
+> > +xfs_io 'chattr +x' a
+> ditto
+> > +mkdir -p a/b/c/d
+> > +
+> > +	dax: a,b,c,d
+> > +	no dax:
+> > +
+> > +Example C:
+> > +
+> > +mkdir -p a/b/c
+> > +xfs_io 'chattr +x' c
+> ditto
+
+Thank you!  Updated.
+Ira
+
+> > +mkdir a/b/c/d
+> > +
+> > +	dax: c,d
+> > +	no dax: a,b
+> > +
+> > +
+> 
+> ---
+> 
+> Yasunori Goto
+> 
