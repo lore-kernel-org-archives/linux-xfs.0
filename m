@@ -2,116 +2,92 @@ Return-Path: <SRS0=GxFA=6H=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE8A8C2BA19
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Apr 2020 05:59:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 618A1C2BA19
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Apr 2020 06:24:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9CADB20781
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Apr 2020 05:59:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D82421569
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Apr 2020 06:24:05 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sCgyIRSg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725867AbgDWF7Z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Apr 2020 01:59:25 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:45744 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725854AbgDWF7Z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Apr 2020 01:59:25 -0400
-Received: from dread.disaster.area (pa49-180-0-232.pa.nsw.optusnet.com.au [49.180.0.232])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 1E9443A42D5;
-        Thu, 23 Apr 2020 15:59:19 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jRUtL-0000ux-23; Thu, 23 Apr 2020 15:59:19 +1000
-Date:   Thu, 23 Apr 2020 15:59:19 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2 08/13] xfs: elide the AIL lock on log item failure
- tracking
-Message-ID: <20200423055919.GO27860@dread.disaster.area>
-References: <20200422175429.38957-1-bfoster@redhat.com>
- <20200422175429.38957-9-bfoster@redhat.com>
+        id S1726322AbgDWGYE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Apr 2020 02:24:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52852 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725562AbgDWGYE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Apr 2020 02:24:04 -0400
+Received: from mail-io1-xd41.google.com (mail-io1-xd41.google.com [IPv6:2607:f8b0:4864:20::d41])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5CA8C03C1AB
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 23:24:03 -0700 (PDT)
+Received: by mail-io1-xd41.google.com with SMTP id w20so5219544iob.2
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 23:24:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=BIoovRNBf12RJLUeAx6kjmrpFoJhjBiurX5bEozikr8=;
+        b=sCgyIRSg52hDDzME+aw4L950oRL8HMIqSxvSa8cBua0Qo5UUefvJxRQF4gj+peYeKk
+         xYeq8FQp4OAum6YdL/aVWQja4dViSoC+V4qmsAqab/4Xso6orCcBGzOY2e4/6Gc7gUuW
+         pwMHbax0nDDHH/8lCEzIJ7lwR2hTyDM144tj6thhcamAZ4nM0rx+zreLsqkgPRz2YhF4
+         D1h80w7a2Y99xaaSq0Q9H0ffeCf0V5YTLutQ/AqmS8t2rcdI4F1m6qlEa83zry5iTqR4
+         5sx2f1BzVPOtp0HFnzJcjJ0yXw7auEUtSPci4cez+VKJVJUr8+xTQERhT50jbMGozIi7
+         nUWQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=BIoovRNBf12RJLUeAx6kjmrpFoJhjBiurX5bEozikr8=;
+        b=FuiTHO0mk/qaT8aJfP2zZ5IMuVy1BG62GpMARZLDqWnH/BHAiZF707Iur5oLbvzXw7
+         oGAauZBZLHZY8gFKqHrvB9yrQzjVNAMQrTQAmIbSYMkzSfoO5jd/zEmWxYeUJOhEGzWX
+         iqQCrm76Du71b2W365l3XbFunZk5nxORxSHnGpOdZHQlgs3jpgbg49//lX5cAZclSxeB
+         2XSMP8uq56VjsTik+KiWhxBEY35AhsKiaRO3mXBT00hGlw5EBsapDICcLvzOugI/Patl
+         zMYxYncJYL53LG95pjI0JdDs/54e8Wv7rIaHm9GBEmBvhQQnrqqiyBt7pK+1EhBO0/Ph
+         m5tQ==
+X-Gm-Message-State: AGi0Pubp78tbg5t7WBCOeUJuhe2KnyHoxPGY5udIVflFn59gVA/RolRe
+        MxdHqkMagYJ1lfeKm8ArgHgZif9SBzp2LG5Uz1E=
+X-Google-Smtp-Source: APiQypKBCGki7eWb+CsAXyHlFl6Rwcxb9c0m/obC0h3+QHcrHlroETvK5c2J2GVvj9DcS/9GwY0IX845pvS9TymHAPo=
+X-Received: by 2002:a6b:7317:: with SMTP id e23mr2279307ioh.72.1587623043045;
+ Wed, 22 Apr 2020 23:24:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200422175429.38957-9-bfoster@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
-        a=XYjVcjsg+1UI/cdbgX7I7g==:117 a=XYjVcjsg+1UI/cdbgX7I7g==:17
-        a=kj9zAlcOel0A:10 a=cl8xLZFz6L8A:10 a=7-415B0cAAAA:8
-        a=0BJheLd7CZE14YsAK2kA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+References: <20200422230307.GH6742@magnolia>
+In-Reply-To: <20200422230307.GH6742@magnolia>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Thu, 23 Apr 2020 09:23:51 +0300
+Message-ID: <CAOQ4uxgeVZ8AYB-a7fXhKgh1GfCSfJL761a=Yot0jp4M56z_KA@mail.gmail.com>
+Subject: Re: [XFS SUMMIT] 64bit timestamps
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 22, 2020 at 01:54:24PM -0400, Brian Foster wrote:
-> The log item failed flag is used to indicate a log item was flushed
-> but the underlying buffer was not successfully written to disk. If
-> the error configuration allows for writeback retries, xfsaild uses
-> the flag to resubmit the underlying buffer without acquiring the
-> flush lock of the item.
-> 
-> The flag is currently set and cleared under the AIL lock and buffer
-> lock in the ->iop_error() callback, invoked via ->b_iodone() at I/O
-> completion time. The flag is checked at xfsaild push time under AIL
-> lock and cleared under buffer lock before resubmission. If I/O
-> eventually succeeds, the flag is cleared in the _done() handler for
-> the associated item type, again under AIL lock and buffer lock.
+On Thu, Apr 23, 2020 at 2:03 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> Hi all,
+>
+> Here's a thread to talk about the remainder of 64-bit timestamp support
+> on XFS.  I have a series[1] that redefines the inode timestamps to be
+> 64-bit nanosecond counters and decreases the accuracy of the ondisk
+> quota timers to 4s so that both will last until 2446.
+>
+> --D
+>
+> [1] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=bigtime
 
-Actually, I think you've missed the relevant lock here: the item's
-flush lock. The XFS_LI_FAILED flag is item flush state, and flush
-state is protected by the flush lock. When the item has been flushed
-and attached to the buffer for completion callbacks, the flush lock
-context gets handed to the buffer.
+This looks great.
 
-i.e. the buffer owns the flush lock and so while that buffer is
-locked for IO we know that the item flush state (and hence the
-XFS_LI_FAILED flag) is exclusively owned by the holder of the buffer
-lock.
+What's the plan w.r.t. enabling bigtime on existing fs?
+In the end, it is just a administrative flag saying "point of no return".
+Everyone do realize that fixing y2038 by requiring to reformat
+existing filesystems is unacceptable for most of the deployments out there,
+right?
 
-(Note: this is how xfs_ifree_cluster() works - it grabs the buffer
-lock then walks the items on the buffer and changes the callback
-functions because those items are flush locked and hence holding the
-buffer lock gives exclusive access to the flush state of those
-items....)
-
-> As far as I can tell, the only reason for holding the AIL lock
-> across sets/clears is to manage consistency between the log item
-> bitop state and the temporary buffer pointer that is attached to the
-> log item. The bit itself is used to manage consistency of the
-> attached buffer, but is not enough to guarantee the buffer is still
-> attached by the time xfsaild attempts to access it.
-
-Correct. The guarantee that the buffer is still attached to the log
-item is what the AIL lock provides us with.
-
-> However since
-> failure state is always set or cleared under buffer lock (either via
-> I/O completion or xfsaild), this particular case can be handled at
-> item push time by verifying failure state once under buffer lock.
-
-In theory, yes, but there's a problem before you get that buffer
-lock. That is: what serialises access to lip->li_buf?
-
-The xfsaild does not hold a reference to the buffer and, without the
-AIL lock to provide synchronisation, the log item reference to the
-buffer can be dropped asynchronously by buffer IO completion. Hence
-the buffer could be freed between the xfsaild reading lip->li_buf
-and calling xfs_buf_trylock(bp). i.e. this introduces a
-use-after-free race condition on the initial buffer access.
-
-IOWs, the xfsaild cannot access lip->li_buf safely unless the
-set/clear operations are protected by the same lock the xfsaild
-holds. The xfsaild holds neither the buffer lock, a buffer reference
-or an item flush lock, hence it's the AIL lock or nothing...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Amir.
