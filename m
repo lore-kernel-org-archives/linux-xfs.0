@@ -1,107 +1,152 @@
-Return-Path: <SRS0=4ojB=6G=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=GxFA=6H=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13388C55185
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 23:56:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B78EEC55185
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Apr 2020 02:37:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DF76020704
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Apr 2020 23:56:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80C9D20747
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Apr 2020 02:37:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="fqS3lEFr"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BWfSTJ0T"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726006AbgDVX4D (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Apr 2020 19:56:03 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:47418 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726002AbgDVX4D (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Apr 2020 19:56:03 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03MNrHh7133993
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 23:56:01 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
- subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=Wm/+4S/fDCfalJNu6bDt+6VMZ948lVsRDhKlhVXjRuk=;
- b=fqS3lEFrjIaYrTge4Nh1uf4ekRwOTrTqLKB7uL5mK9rEP4O2KWp2WFJiEksO5ZwETPkh
- s/aooCPCnu7rYyNRnyWGy8xyaMUA2NYW7PJN004IMvLxYO4J/wnOo+sDeBBBUjmDZOXp
- SDbE5e8dDGeEBG0UMe+vYak5zOJSMaoT3WSs823tfwfUBIdUelLytNSNVz3PLjb42xu9
- DXkxv1u1Y9fICI+rW8cpQkaEybqzV7nfpspJWZhJvbxTCW5H11bHHLa47oO5+Q9h0eYO
- PHk7VCksXYmk4HyoWJgftfvfJ/q/dyINB1Y4vbUqsCtoPGWzi5m/Dvk8k9hSiLjkYhnu /A== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 30jvq4rqm2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 23:56:00 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03MNqZEk092901
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 23:56:00 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 30gbbj9jyr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 23:56:00 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03MNu0dJ017331
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 23:56:00 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 22 Apr 2020 16:55:59 -0700
-Date:   Wed, 22 Apr 2020 16:55:59 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [XFS SUMMIT] Online Fsck Status Update
-Message-ID: <20200422235559.GK6742@magnolia>
+        id S1726324AbgDWChm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Apr 2020 22:37:42 -0400
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:50995 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726054AbgDWChl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Apr 2020 22:37:41 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1587609460;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=LkZ/8MWeqZ5S/vYO3vYlYpPdDs7AyCkbzSxgRUvre8Q=;
+        b=BWfSTJ0Tk+Y5/7Q+5KXMv9XBod7+mpUrWit/GkjeZPZ6VYFFCVcHFegDuOv8e6cXezoEBt
+        qcwO+JJeyatuH6N5yPktbenKOuOxYourGpp8Bdlc3NLUmwY5L/YkMXZ5KvFTTCRr7XJsIW
+        ovGCTecFcySX81pcVKZzJ4rm6W0uJ2c=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-145-LKNGaf8GOV6rjnkoWzOJzw-1; Wed, 22 Apr 2020 22:36:36 -0400
+X-MC-Unique: LKNGaf8GOV6rjnkoWzOJzw-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4C5B61005510
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Apr 2020 02:36:35 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 213255DA7B
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Apr 2020 02:36:35 +0000 (UTC)
+To:     linux-xfs <linux-xfs@vger.kernel.org>
+From:   Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs: define printk_once variants for xfs messages
+Message-ID: <c3aee5bb-806a-d51d-0c0f-b0d6a10fa737@redhat.com>
+Date:   Wed, 22 Apr 2020 21:36:34 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9599 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0
- suspectscore=0 mlxlogscore=999 adultscore=0 mlxscore=0 phishscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004220182
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9599 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 malwarescore=0
- mlxscore=0 adultscore=0 mlxlogscore=999 phishscore=0 impostorscore=0
- clxscore=1015 bulkscore=0 spamscore=0 priorityscore=1501 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004220182
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi everyone,
+There are a couple places where we directly call printk_once() and one
+of them doesn't follow the standard xfs subsystem printk format as a
+result.
 
-This one is meant to be a status update about where I am with online
-repair.  The btree bulk loading code went upstream for 5.7, which will
-enable us to refactor a lot of boilerplate code out of xfs_repair.
+#define printk_once variants to go with our existing printk_ratelimited
+#defines so we can do one-shot printks in a consistent manner.
 
-At this point, I have finished fleshing out nearly all of the online
-repair functionality.  We can rebuild all per-AG btrees and the inode
-fork mapping btrees.  With the deferred inactivation series and fs
-freezing, we can also rebuild the rmapbt and run quotacheck on a frozen
-filesystem, which means that quotas can be repaired too.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-More recently, I've written repair code for the realtime bitmap and
-summary files; and preliminary versions of extended attribute and
-directory salvaging.  With the new atomic extent swap series, I can now
-commit rebuilt metadata atomically.
+diff --git a/fs/xfs/xfs_message.h b/fs/xfs/xfs_message.h
+index 0b05e10995a0..802a96190d22 100644
+--- a/fs/xfs/xfs_message.h
++++ b/fs/xfs/xfs_message.h
+@@ -31,15 +31,27 @@ void xfs_debug(const struct xfs_mount *mp, const char *fmt, ...)
+ }
+ #endif
+ 
+-#define xfs_printk_ratelimited(func, dev, fmt, ...)		\
++#define xfs_printk_ratelimited(func, dev, fmt, ...)			\
+ do {									\
+ 	static DEFINE_RATELIMIT_STATE(_rs,				\
+ 				      DEFAULT_RATELIMIT_INTERVAL,	\
+ 				      DEFAULT_RATELIMIT_BURST);		\
+ 	if (__ratelimit(&_rs))						\
+-		func(dev, fmt, ##__VA_ARGS__);			\
++		func(dev, fmt, ##__VA_ARGS__);				\
+ } while (0)
+ 
++#define xfs_printk_once(func, dev, fmt, ...)			\
++({								\
++	static bool __section(.data.once) __print_once;		\
++	bool __ret_print_once = !__print_once; 			\
++								\
++	if (!__print_once) {					\
++		__print_once = true;				\
++		func(dev, fmt, ##__VA_ARGS__);			\
++	}							\
++	unlikely(__ret_print_once);				\
++})
++
+ #define xfs_emerg_ratelimited(dev, fmt, ...)				\
+ 	xfs_printk_ratelimited(xfs_emerg, dev, fmt, ##__VA_ARGS__)
+ #define xfs_alert_ratelimited(dev, fmt, ...)				\
+@@ -57,6 +69,11 @@ do {									\
+ #define xfs_debug_ratelimited(dev, fmt, ...)				\
+ 	xfs_printk_ratelimited(xfs_debug, dev, fmt, ##__VA_ARGS__)
+ 
++#define xfs_warn_once(dev, fmt, ...)				\
++	xfs_printk_once(xfs_warn, dev, fmt, ##__VA_ARGS__)
++#define xfs_notice_once(dev, fmt, ...)				\
++	xfs_printk_once(xfs_notice, dev, fmt, ##__VA_ARGS__)
++
+ void assfail(struct xfs_mount *mp, char *expr, char *f, int l);
+ void asswarn(struct xfs_mount *mp, char *expr, char *f, int l);
+ 
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index c5513e5a226a..bb91f04266b9 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1300,10 +1300,9 @@ xfs_mod_fdblocks(
+ 		spin_unlock(&mp->m_sb_lock);
+ 		return 0;
+ 	}
+-	printk_once(KERN_WARNING
+-		"Filesystem \"%s\": reserve blocks depleted! "
+-		"Consider increasing reserve pool size.",
+-		mp->m_super->s_id);
++	xfs_warn_once(mp,
++"Reserve blocks depleted! Consider increasing reserve pool size.");
++
+ fdblocks_enospc:
+ 	spin_unlock(&mp->m_sb_lock);
+ 	return -ENOSPC;
+diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+index bb3008d390aa..b101feb2aab4 100644
+--- a/fs/xfs/xfs_pnfs.c
++++ b/fs/xfs/xfs_pnfs.c
+@@ -58,9 +58,8 @@ xfs_fs_get_uuid(
+ {
+ 	struct xfs_mount	*mp = XFS_M(sb);
+ 
+-	printk_once(KERN_NOTICE
+-"XFS (%s): using experimental pNFS feature, use at your own risk!\n",
+-		mp->m_super->s_id);
++	xfs_notice_once(mp,
++"Using experimental pNFS feature, use at your own risk!");
+ 
+ 	if (*len < sizeof(uuid_t))
+ 		return -EINVAL;
 
-However, the directory tree reconstruction part is /very/ difficult to
-achieve without parent pointers, since we cannot easily reconnect
-orphaned files without scanning the entire directory tree under fs
-freeze.  We also can't do nlink verification easily without parent
-pointer validation.
-
---D
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=scrub-rtsummary
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-ag-btrees
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-inodes
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-inode-data
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-fsfile-metadata
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-metadata-atomically
