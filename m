@@ -2,114 +2,106 @@ Return-Path: <SRS0=GxFA=6H=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E1A4C2BA19
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Apr 2020 06:46:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3BBCC2BA19
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Apr 2020 08:24:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 653B1214AF
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Apr 2020 06:46:55 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Bb/E5nXa"
+	by mail.kernel.org (Postfix) with ESMTP id B926621569
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Apr 2020 08:24:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726169AbgDWGqy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Apr 2020 02:46:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56354 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726032AbgDWGqy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Apr 2020 02:46:54 -0400
-Received: from mail-io1-xd41.google.com (mail-io1-xd41.google.com [IPv6:2607:f8b0:4864:20::d41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87DB3C03C1AB
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 23:46:54 -0700 (PDT)
-Received: by mail-io1-xd41.google.com with SMTP id z2so5237939iol.11
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2020 23:46:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=bEB8xIvgn2u7DgP/VErQEEwsLZjyBiB7wq8rLX3DthQ=;
-        b=Bb/E5nXaSGTK2x/8+r+9k/gYcziLp2NNRuyJLuz5o3rtPbukB8SZNbc+AMEDOnyKU+
-         el0Tuxo+OQSfaHKms91v575ylP98mJ3pgy5tga/MzyMlPpIxwGyew3HX0XGl6VGO8ZhU
-         FdYXCKEM9duOjHA6OlUwgH/SKF7NI1u58fHQYMsg+PCCUs7/lJ+aFRSwGm/a0p6ZTCRF
-         pYQRIhQ61yPn9TjGpHzY353aBX8WRV4Vwrd8C6tvV1qFkgp//lmjt/whLFuSSrY9w3aj
-         6cbSiuDblIxL3cNL7mJ2jWOvNiwhXo1DB+GvDp2o5MFOW6jUqvATqlVEAuK2cYzrUf9e
-         ERew==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=bEB8xIvgn2u7DgP/VErQEEwsLZjyBiB7wq8rLX3DthQ=;
-        b=gNmWARaV6zCgTo1VTgQ8CM0SHXUDtqHUxulE38pQ/5Kqh0BrL1MYGZP9FVlJa21ldr
-         Wt/9aXcZg4nL83SFefWSb9ubuqxNJ3JsrWVBNGsVcrtezjX6OjAk4NQ2ycKpzch3OQsz
-         NlL9v0etYi6EDlD5UxxzsyX7H+B1hk73XibkbihbhkNcv6T9eks/VqTt8Y0lRD8GWtJo
-         39fTCUTZKbpZw7Ap704QpaJig/8CYoWLPcxqGfat7XnkSiJ8BWyKGCFl7B2X2kjwyMVL
-         BVD47GsufKV+yq3kIAEksMHAjA/+N4wJF4WbyRwBe9YcaZVuXdmSArokMunfB4uwI5PQ
-         B3mg==
-X-Gm-Message-State: AGi0PubOjMaTw1eatK0cjTCjMIQHXt6MTYPpMlRJrVDiSJMGUsGvk4Go
-        JbdCdPc6NgS2tF54oAmROX+aXtKmE73JOF90LRXp5Dq9
-X-Google-Smtp-Source: APiQypIG7581FvDbL81ymWOscgiImuo9KiRmzBXIJOzIW2+M0T5Mf4aRJt4PpHOzoImSETdaiEGZ3wbjwlOR99aUSx0=
-X-Received: by 2002:a02:c9cb:: with SMTP id c11mr1811865jap.93.1587624413768;
- Wed, 22 Apr 2020 23:46:53 -0700 (PDT)
+        id S1726254AbgDWIY0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Apr 2020 04:24:26 -0400
+Received: from mx2.suse.de ([195.135.220.15]:60024 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725854AbgDWIYZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 23 Apr 2020 04:24:25 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 614CFAF79;
+        Thu, 23 Apr 2020 08:24:23 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id 731811E0E61; Thu, 23 Apr 2020 10:24:22 +0200 (CEST)
+Date:   Thu, 23 Apr 2020 10:24:22 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Ira Weiny <ira.weiny@intel.com>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Dave Chinner <dchinner@redhat.com>, Jan Kara <jack@suse.cz>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH V9 03/11] fs/stat: Define DAX statx attribute
+Message-ID: <20200423082422.GA3737@quack2.suse.cz>
+References: <20200421191754.3372370-1-ira.weiny@intel.com>
+ <20200421191754.3372370-4-ira.weiny@intel.com>
+ <20200422162951.GE6733@magnolia>
+ <20200422185121.GL3372712@iweiny-DESK2.sc.intel.com>
 MIME-Version: 1.0
-References: <20200422225851.GG6742@magnolia> <20200422230504.GI6742@magnolia>
-In-Reply-To: <20200422230504.GI6742@magnolia>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Thu, 23 Apr 2020 09:46:42 +0300
-Message-ID: <CAOQ4uxhL+OnmbnLPQoSGkQczCJ5jWMipT20oi3uwm9Hk7xmNvg@mail.gmail.com>
-Subject: Re: [XFS SUMMIT] Deferred inode inactivation and nonblocking inode reclaim
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        Dave Chinner <david@fromorbit.com>, Chris Mason <clm@fb.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200422185121.GL3372712@iweiny-DESK2.sc.intel.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 23, 2020 at 2:05 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
->
-> Heh, only after I sent this did I think about tagging the subject line
-> and sending links to git branches when applicable.
->
-> On Wed, Apr 22, 2020 at 03:58:51PM -0700, Darrick J. Wong wrote:
-> > Hi everyone,
-> >
-> > Here's a jumping-off point for a discussion about my patchset that
-> > implements deferred inode inactivation and Dave's patchset that moves
-> > inode buffer flushing out of reclaim.
-> >
-> > The inactivation series moves the transactional updates that happen
->
-> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=deferred-inactivation
->
-> > after a file loses its last reference (truncating attr/data forks,
-> > freeing the inode) out of drop_inode and reclaim by moving all that work
-> > to an intermediate workqueue.  This all can be done internally to XFS.
-> >
-> > The reclaim series (Dave) removes inode flushing from reclaim, which
->
-> https://lore.kernel.org/linux-xfs/20191031234618.15403-1-david@fromorbit.com/
->
-> --D
->
-> > means that xfs stop holding up memory reclaim on IO.  It also contains a
-> > fair amount of surgery to the memory shrinker code, which is an added
-> > impediment to getting this series reviewed and upstream.
-> >
+On Wed 22-04-20 11:51:21, Ira Weiny wrote:
+> On Wed, Apr 22, 2020 at 09:29:51AM -0700, Darrick J. Wong wrote:
+> > On Tue, Apr 21, 2020 at 12:17:45PM -0700, ira.weiny@intel.com wrote:
+> > > From: Ira Weiny <ira.weiny@intel.com>
+> > > 
+> > > In order for users to determine if a file is currently operating in DAX
+> > > state (effective DAX).  Define a statx attribute value and set that
+> > > attribute if the effective DAX flag is set.
+> > > 
+> > > To go along with this we propose the following addition to the statx man
+> > > page:
+> > > 
+> > > STATX_ATTR_DAX
+> > > 
+> > > 	The file is in the DAX (cpu direct access) state.  DAX state
+> > > 	attempts to minimize software cache effects for both I/O and
+> > > 	memory mappings of this file.  It requires a file system which
+> > > 	has been configured to support DAX.
+> > > 
+> > > 	DAX generally assumes all accesses are via cpu load / store
+> > > 	instructions which can minimize overhead for small accesses, but
+> > > 	may adversely affect cpu utilization for large transfers.
+> > > 
+> > > 	File I/O is done directly to/from user-space buffers and memory
+> > > 	mapped I/O may be performed with direct memory mappings that
+> > > 	bypass kernel page cache.
+> > > 
+> > > 	While the DAX property tends to result in data being transferred
+> > > 	synchronously, it does not give the same guarantees of O_SYNC
+> > > 	where data and the necessary metadata are transferred together.
+> > > 
+> > > 	A DAX file may support being mapped with the MAP_SYNC flag,
+> > > 	which enables a program to use CPU cache flush instructions to
+> > > 	persist CPU store operations without an explicit fsync(2).  See
+> > > 	mmap(2) for more information.
+> > 
+> > One thing I hadn't noticed before -- this is a change to userspace API,
+> > so please cc this series to linux-api@vger.kernel.org when you send V10.
+> 
+> Right!  Glad you caught me on this because I was just preparing to send V10.
+> 
+> Is there someone I could directly mail who needs to look at this?  I guess I
+> thought we had the important FS people involved for this type of API change.
+> :-/
 
-+CC: Chris Mason
+I believe we have all the important people here. But linux-api is a general
+fallback list where people reviewing API changes linger. So when changing
+user facing API, it is good to CC this list.
 
-And here is a link to one of the famous bug reports:
-https://lore.kernel.org/linux-xfs/06aade22-b29e-f55e-7f00-39154f220aa6@fb.com/
-which also includes a reference to Chris's simoop reproducer.
-
-How about bringing in some FB engineers to the task force to help with
-reviewing the memory shrinker changes and with testing?
-I believe it is in the best interest of the wider filesystem community to
-expedite development of this solution.
-
-Thanks,
-Amir.
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
