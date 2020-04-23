@@ -2,144 +2,160 @@ Return-Path: <SRS0=GxFA=6H=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F72EC54FD0
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Apr 2020 14:11:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5C28C54FCB
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Apr 2020 14:29:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7FD512087E
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Apr 2020 14:11:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9AE562074F
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Apr 2020 14:29:06 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QhShjdZm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727909AbgDWOLL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Apr 2020 10:11:11 -0400
-Received: from sandeen.net ([63.231.237.45]:34306 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726430AbgDWOLK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 23 Apr 2020 10:11:10 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1726068AbgDWO3G (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Apr 2020 10:29:06 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:46479 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726060AbgDWO3F (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Apr 2020 10:29:05 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1587652144;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=htAD+x/pWwf8phBAXCDCQQPG9uePeoICXJLkZiflGrA=;
+        b=QhShjdZml9kbe4rUb9akmwM8n5++/cIRdNgaHXgxlfSeKbHhJ43Cdd7/b6kRdVSGe/ps0F
+        q1xm4S2x/FlZ4KfX44GPvJuhx+wv5Nnrdt5eJouMzNSB1VST10F17GgDQuBYEvi109pWzA
+        NMyFOx/qsOrV/762obuw7GC3/+l8z6M=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-191-7LyxMoOdMde1C8L1AwVooA-1; Thu, 23 Apr 2020 10:29:02 -0400
+X-MC-Unique: 7LyxMoOdMde1C8L1AwVooA-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id B205D323C1B;
-        Thu, 23 Apr 2020 09:10:38 -0500 (CDT)
-Subject: Re: Refactoring the Review Process
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        xfs <linux-xfs@vger.kernel.org>
-References: <20200422222536.GE6741@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <1fd51acc-c003-85ff-8ca0-2d359973ad32@sandeen.net>
-Date:   Thu, 23 Apr 2020 09:11:09 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.7.0
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 3FBE9801E5D;
+        Thu, 23 Apr 2020 14:29:01 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id EC26A196AE;
+        Thu, 23 Apr 2020 14:29:00 +0000 (UTC)
+Date:   Thu, 23 Apr 2020 10:28:59 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2 03/13] xfs: fallthru to buffer attach on error and
+ simplify error handling
+Message-ID: <20200423142859.GA43557@bfoster>
+References: <20200422175429.38957-1-bfoster@redhat.com>
+ <20200422175429.38957-4-bfoster@redhat.com>
+ <20200423041823.GH27860@dread.disaster.area>
 MIME-Version: 1.0
-In-Reply-To: <20200422222536.GE6741@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200423041823.GH27860@dread.disaster.area>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 4/22/20 5:25 PM, Darrick J. Wong wrote:
-> Hi everyone,
+On Thu, Apr 23, 2020 at 02:18:23PM +1000, Dave Chinner wrote:
+> On Wed, Apr 22, 2020 at 01:54:19PM -0400, Brian Foster wrote:
+> > The inode flush code has several layers of error handling between
+> > the inode and cluster flushing code. If the inode flush fails before
+> > acquiring the backing buffer, the inode flush is aborted. If the
+> > cluster flush fails, the current inode flush is aborted and the
+> > cluster buffer is failed to handle the initial inode and any others
+> > that might have been attached before the error.
+> > 
+> > Since xfs_iflush() is the only caller of xfs_iflush_cluster(), the
+> > error handling between the two can be condensed in the top-level
+> > function. If we update xfs_iflush_int() to always fall through to
+> > the log item update and attach the item completion handler to the
+> > buffer, any errors that occur after the first call to
+> > xfs_iflush_int() can be handled with a buffer I/O failure.
+> > 
+> > Lift the error handling from xfs_iflush_cluster() into xfs_iflush()
+> > and consolidate with the existing error handling. This also replaces
+> > the need to release the buffer because failing the buffer with
+> > XBF_ASYNC drops the current reference.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > 
-> Writing and reviewing code in isolation hasn't always served me well.  I
-> really enjoyed my experiences developing the reflink code (~2015) being
-> able to chat with Dave in the evenings about the design of particular
-> algorithms, or how certain XFS structures really worked, and to learn
-> the history behind this and that subsystem.
+> Needs a better subject line, because I had no idea what it meant
+> until I got to the last hunks in the patch.  Perhaps: "Simplify
+> inode flush error handling" would be a better summary of the
+> patch....
 > 
-> Returning to first principles, I perceive that the purpose of our review
-> processes is to make sure there aren't any obvious design flaws or
-> implementation errors in the code we put back to the git repo by
-> ensuring that at least one other XFS developer actually understands
-> what's going on.
+
+Ok, fixed.
+
+> > @@ -3791,6 +3758,7 @@ xfs_iflush_int(
+> >  	struct xfs_inode_log_item *iip = ip->i_itemp;
+> >  	struct xfs_dinode	*dip;
+> >  	struct xfs_mount	*mp = ip->i_mount;
+> > +	int			error;
 > 
-> In other words, I am interested in testing the pair programming
-> paradigm.  Given that we have zero physical locality, I suspect this
-> will work better with an interactive medium and between people who are
-> in nearby time zones.  I also suspect that this might be better used for
-> more focussed activities such as code walkthroughs and reviews.  Still,
-> I'm willing to entertain the possibility of using this as a second means
-> to get a patchset to a Reviewed-by.
+> There needs to be a comment added to this function to explain why we
+> always attached the inode to the buffer and update the flush state,
+> even on error. This:
 > 
-> I also speculate that this might be a good mentoring opportunity for us
-> to trade productivity tips and disseminate 'institutional' knowledge
-> between people.  I for one am happy to help others learn more about the
-> code base in exchange for learning more about the parts of XFS with
-> which I'm less familiar.  (I bet Allison knows more about how xattrs
-> work than I do at this point...)
 
-Just to chime in, I like this idea.  I think that it's a fairly open-ended
-suggestion, as this could be anything from:
+Indeed. Updated as follows with a comment before the first corruption
+check:
 
-* True, traditional pair-programming for new work
-* Dividing up tasks for larger projects, and cross-reviewing each others work
-* High-bandwidth review of existing work by interacting directly w/ patch author
-  in real time on irc or video
-* ??? other ideas
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 6cdb9fbe2d89..6b8266eeae2d 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3766,9 +3766,14 @@ xfs_iflush_int(
+ 	       ip->i_d.di_nextents > XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK));
+ 	ASSERT(iip != NULL && iip->ili_fields != 0);
+ 
+-	/* set *dip = inode's place in the buffer */
+ 	dip = xfs_buf_offset(bp, ip->i_imap.im_boffset);
+ 
++	/*
++	 * We don't flush the inode if any of the following checks fail, but we
++	 * do still update the log item and attach to the backing buffer as if
++	 * the flush happened. This is a formality to facilitate predictable
++	 * error handling as the caller will shutdown and fail the buffer.
++	 */
+ 	error = -EFSCORRUPTED;
+ 	if (XFS_TEST_ERROR(dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC),
+ 			       mp, XFS_ERRTAG_IFLUSH_1)) {
 
-In the first couple cases, this might result on patches first appearing on the
-list with a "pre-existing" Reviewed-by that came out of that teamwork.
+Brian
 
-As a result we should probably consider a policy that patches remain on the list
-for at least $X days to allow further comment by "3rd parties" if the list is to
-remain (as it should) the ultimate forum for patch acceptance.
+> > @@ -3914,10 +3885,10 @@ xfs_iflush_int(
+> >  				&iip->ili_item.li_lsn);
+> >  
+> >  	/*
+> > -	 * Attach the function xfs_iflush_done to the inode's
+> > -	 * buffer.  This will remove the inode from the AIL
+> > -	 * and unlock the inode's flush lock when the inode is
+> > -	 * completely written to disk.
+> > +	 * Attach the inode item callback to the buffer whether the flush
+> > +	 * succeeded or not. If not, the caller will shut down and fail I/O
+> > +	 * completion on the buffer to remove the inode from the AIL and release
+> > +	 * the flush lock.
+> >  	 */
+> >  	xfs_buf_attach_iodone(bp, xfs_iflush_done, &iip->ili_item);
+> 
+> isn't obviously associated with the "flush_out" label, and so the
+> structure of the function really isn't explained until you get to
+> the end of the function. And that's still easy to miss...
+> 
+> Other than that, the code looks OK.
+> 
+> CHeers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
 
-The other thought I have is that while pairing in any of these ways will be an
-excellent growth opportunity (in general, or in a specific area of code) we should
-be somewhat mindful of "lopsided" pairing, i.e. having a guru paired with a total
-newbie for an extremely large, complex project may not be the best idea, but that's
-probably self-evident.  Such teamwork will probably somewhat naturally select into
-logical pairings depending on the task at hand.
-
-So, for myself, if anyone wants to review anything I've written in real time, or
-would like me to collaborate on their upcoming work, I'm happy to do so within
-the limits of my schedule and bandwidth.  :)
-
-Thanks,
--Eric
