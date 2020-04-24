@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0875BC54FCB
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 12:29:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 692FCC55194
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 12:30:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D8D9A20736
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 12:29:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4951820776
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 12:30:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587731365;
-	bh=RWfCogi8yjlqHKJ1QYuqiErJGN7ddKARRjGXT+Srvhc=;
+	s=default; t=1587731440;
+	bh=BCcp275qjQIXPW0o3zvH9C5ORQ7jeCgV04Kiark2N5Q=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=rVSz5g+R3LQPuG6zAVBXmhNJf/wh4TZJ2101QTRfNODPTowgfiGAL8CybgHSKX0mi
-	 I+zrvyZyjkexnqNK6umLDbE4lJqcyKAZtS2+jd2HFbXGy0BIfiNnXG7puec8t4crif
-	 X9w3itI/BRCv1ZQk27szH1doyGD2mlE317YL4VII=
+	b=VqgHV9Gjhmxcvndioh1loO4L6KH/C3Obs5xiVWF9f/9j946kptWccFVcgO68T893d
+	 1JSgJPF8S3UxBHPX33lGPXZSwX968gM0L9AP1WSBhAICxoxkqogyUmtueLSVAVGPu+
+	 k6AXdUnP3TQYRBf2fEugOmwcXk8cOdKwW5GNTTTs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727024AbgDXM3Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Apr 2020 08:29:24 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54272 "EHLO mail.kernel.org"
+        id S1728032AbgDXMXd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Apr 2020 08:23:33 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53376 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728231AbgDXMYB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 24 Apr 2020 08:24:01 -0400
+        id S1728022AbgDXMXc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 24 Apr 2020 08:23:32 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 272DF21582;
-        Fri, 24 Apr 2020 12:23:59 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5C18E2168B;
+        Fri, 24 Apr 2020 12:23:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587731040;
-        bh=RWfCogi8yjlqHKJ1QYuqiErJGN7ddKARRjGXT+Srvhc=;
+        s=default; t=1587731011;
+        bh=BCcp275qjQIXPW0o3zvH9C5ORQ7jeCgV04Kiark2N5Q=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iMlWZEQW2HKQ7vt1CRTKieuGylhW7lADe5j3q52XTiHpW/eaKqzJytI4rUHbmr+oc
-         13lLDMfw+40+HmkQLJFKfdDIeuU/BZxmJSOCb9IwKkUTVoPADjKHUFFYs69ZLI9QNG
-         DmM7fTV09U3j7kC5rOgyvVykVijRK8RJINasWo3M=
+        b=p4kojxZDdNVSXlNLBG+Zx9xEXh2q2xa2GqIWYNUlp7P60GNkWJJYYCeDdSQXx1Ugk
+         HPISZ0crKHhBUNkj0Tc3WVG2DPAqdt0XR0sZkkJcB9hVWvx3KCYAfpmAKltW17da4B
+         2s9b4ITH9p5TtebSBMwlRxwRkHZL1ezGmHpXt7DI=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Brian Foster <bfoster@redhat.com>,
@@ -47,12 +47,12 @@ Cc:     Brian Foster <bfoster@redhat.com>,
         Allison Collins <allison.henderson@oracle.com>,
         "Darrick J . Wong" <darrick.wong@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 03/18] xfs: acquire superblock freeze protection on eofblocks scans
-Date:   Fri, 24 Apr 2020 08:23:40 -0400
-Message-Id: <20200424122355.10453-3-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 06/26] xfs: acquire superblock freeze protection on eofblocks scans
+Date:   Fri, 24 Apr 2020 08:23:03 -0400
+Message-Id: <20200424122323.10194-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200424122355.10453-1-sashal@kernel.org>
-References: <20200424122355.10453-1-sashal@kernel.org>
+In-Reply-To: <20200424122323.10194-1-sashal@kernel.org>
+References: <20200424122323.10194-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -94,10 +94,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 14 insertions(+), 1 deletion(-)
 
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 245483cc282ba..901f27ac94abc 100644
+index 944add5ff8e09..d95dc9b0f0bba 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -902,7 +902,12 @@ xfs_eofblocks_worker(
+@@ -907,7 +907,12 @@ xfs_eofblocks_worker(
  {
  	struct xfs_mount *mp = container_of(to_delayed_work(work),
  				struct xfs_mount, m_eofblocks_work);
@@ -110,7 +110,7 @@ index 245483cc282ba..901f27ac94abc 100644
  	xfs_queue_eofblocks(mp);
  }
  
-@@ -929,7 +934,12 @@ xfs_cowblocks_worker(
+@@ -934,7 +939,12 @@ xfs_cowblocks_worker(
  {
  	struct xfs_mount *mp = container_of(to_delayed_work(work),
  				struct xfs_mount, m_cowblocks_work);
@@ -124,10 +124,10 @@ index 245483cc282ba..901f27ac94abc 100644
  }
  
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index bad90479ade2a..6ffb53edf1b4a 100644
+index 2a1909397cb4d..c93c4b7328ef7 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -2182,7 +2182,10 @@ xfs_file_ioctl(
+@@ -2401,7 +2401,10 @@ xfs_file_ioctl(
  		if (error)
  			return error;
  
