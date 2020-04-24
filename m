@@ -2,127 +2,177 @@ Return-Path: <SRS0=lEGq=6I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50480C2BA1A
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 11:03:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A6C0C55191
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 11:12:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2B3B820736
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 11:03:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 73DA820728
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 11:12:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dM7rOZBu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726746AbgDXLDe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Apr 2020 07:03:34 -0400
-Received: from mx2.suse.de ([195.135.220.15]:34648 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726489AbgDXLDe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 24 Apr 2020 07:03:34 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 17F2EACC4;
-        Fri, 24 Apr 2020 11:03:31 +0000 (UTC)
-Date:   Fri, 24 Apr 2020 13:03:30 +0200
-From:   Anthony Iliopoulos <ailiop@suse.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Eryu Guan <guaneryu@gmail.com>, fstests@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] common/fuzzy: don't attempt online scrubbing unless
- supported
-Message-ID: <20200424110330.GV1329@technoir>
-References: <20200421113643.24224-1-ailiop@suse.com>
- <20200421153717.GY6742@magnolia>
+        id S1726614AbgDXLMp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Apr 2020 07:12:45 -0400
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:60338 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726289AbgDXLMo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Apr 2020 07:12:44 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1587726762;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=FwgcNjW7QwERI5Oqwj9M58zeoFdJ7IQ2ei6/6fnrIBY=;
+        b=dM7rOZBudIUmkanwF/5UjZCG4X5rJwYdcne78yCDqPaml72GOESy8ZyYYB0c/+jMJLAfzl
+        Ak7lSVwpBxedWYVg8RsIeyT8gWGc3tTYOSwYtZWLBhh8fYrkSrrHQ17n9/pHjj4f1Cg5Nq
+        cdORVH1YVdEBuzcebKtj5vyr3A/m8bg=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-265-Z3LMS6XUMeKfVJJneNozhw-1; Fri, 24 Apr 2020 07:12:36 -0400
+X-MC-Unique: Z3LMS6XUMeKfVJJneNozhw-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 083851005510;
+        Fri, 24 Apr 2020 11:12:35 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8D70B5C1D2;
+        Fri, 24 Apr 2020 11:12:34 +0000 (UTC)
+Date:   Fri, 24 Apr 2020 07:12:32 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2 05/13] xfs: ratelimit unmount time per-buffer I/O
+ error message
+Message-ID: <20200424111232.GA53325@bfoster>
+References: <20200422175429.38957-1-bfoster@redhat.com>
+ <20200422175429.38957-6-bfoster@redhat.com>
+ <20200423044604.GI27860@dread.disaster.area>
+ <20200423142958.GB43557@bfoster>
+ <20200423211437.GP27860@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200421153717.GY6742@magnolia>
+In-Reply-To: <20200423211437.GP27860@dread.disaster.area>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 21, 2020 at 08:37:17AM -0700, Darrick J. Wong wrote:
-> On Tue, Apr 21, 2020 at 01:36:42PM +0200, Anthony Iliopoulos wrote:
-> > Many xfs metadata fuzzing tests invoke xfs_scrub to detect online errors
-> > even when _scratch_xfs_fuzz_metadata is invoked with "offline". This
-> > causes those tests to fail with output mismatches on kernels that don't
-> > enable CONFIG_XFS_ONLINE_SCRUB. Bypass scrubbing when not supported.
+On Fri, Apr 24, 2020 at 07:14:37AM +1000, Dave Chinner wrote:
+> On Thu, Apr 23, 2020 at 10:29:58AM -0400, Brian Foster wrote:
+> > On Thu, Apr 23, 2020 at 02:46:04PM +1000, Dave Chinner wrote:
+> > > On Wed, Apr 22, 2020 at 01:54:21PM -0400, Brian Foster wrote:
+> > > > At unmount time, XFS emits a warning for every in-core buffer that
+> > > > might have undergone a write error. In practice this behavior is
+> > > > probably reasonable given that the filesystem is likely short lived
+> > > > once I/O errors begin to occur consistently. Under certain test or
+> > > > otherwise expected error conditions, this can spam the logs and slow
+> > > > down the unmount.
+> > > > 
+> > > > We already have a ratelimit state defined for buffers failing
+> > > > writeback. Fold this state into the buftarg and reuse it for the
+> > > > unmount time errors.
+> > > > 
+> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > 
+> > > Looks fine, but I suspect we both missed something here:
+> > > xfs_buf_ioerror_alert() was made a ratelimited printk in the last
+> > > cycle:
+> > > 
+> > > void
+> > > xfs_buf_ioerror_alert(
+> > >         struct xfs_buf          *bp,
+> > >         xfs_failaddr_t          func)
+> > > {
+> > >         xfs_alert_ratelimited(bp->b_mount,
+> > > "metadata I/O error in \"%pS\" at daddr 0x%llx len %d error %d",
+> > >                         func, (uint64_t)XFS_BUF_ADDR(bp), bp->b_length,
+> > >                         -bp->b_error);
+> > > }
+> > > 
 > > 
-> > Signed-off-by: Anthony Iliopoulos <ailiop@suse.com>
-> > ---
-> >  common/fuzzy | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > Yeah, I hadn't noticed that.
 > > 
-> > diff --git a/common/fuzzy b/common/fuzzy
-> > index 988203b1..83ddc3e8 100644
-> > --- a/common/fuzzy
-> > +++ b/common/fuzzy
-> > @@ -238,7 +238,7 @@ __scratch_xfs_fuzz_field_test() {
-> >  	if [ $res -eq 0 ]; then
-> >  		# Try an online scrub unless we're fuzzing ag 0's sb,
-> >  		# which scrub doesn't know how to fix.
-> > -		if [ "${repair}" != "none" ]; then
-> > +		if _supports_xfs_scrub "${SCRATCH_MNT}" "${SCRATCH_DEV}"; then
+> > > Hence I think all these buffer error alerts can be brought under the
+> > > same rate limiting variable. Something like this in xfs_message.c:
+> > > 
+> > 
+> > One thing to note is that xfs_alert_ratelimited() ultimately uses
+> > the DEFAULT_RATELIMIT_INTERVAL of 5s. The ratelimit we're generalizing
+> > here uses 30s (both use a burst of 10). That seems reasonable enough to
+> > me for I/O errors so I'm good with the changes below.
+> > 
+> > FWIW, that also means we could just call xfs_buf_alert_ratelimited()
+> > from xfs_buf_item_push() if we're also Ok with using an "alert" instead
+> > of a "warn." I'm not immediately aware of a reason to use one over the
+> > other (xfs_wait_buftarg() already uses alert) so I'll try that unless I
+> > hear an objection.
 > 
-> Huh?
+> SOunds fine to me.
 > 
-> This changes the behavior of the repair=none fuzz tests, which mutate
-> filesystems and then write to them without running any checking tools
-> whatsoever to see if we can trip over the mutations with only regular
-> filesystem operations.  Whereas before, we'd skip xfs_scrub, now we
-> always run it if it's supported.
-
-oops...right, we want to let the verifiers catch the errors here.
-
-Speaking of which, I've been staring at the scripts but it's not clear
-to me how the repair=none fuzz tests are expected to function. Many of
-those tests corrupt AG metadata headers (e.g. the AGI lsn), which means
-mount bails out with an error. But the golden output doesn't account for
-that, so those tests will fail (e.g. xfs/456).
-
-Further, for things like inode metadata fuzzing where the fs is usually
-mountable, the tests will always succeed irrespective of the verifiers
-firing or not (e.g. xfs/465).
-
-I'd assume all those repair=none tests would need to check dmesg for
-metadata corruptions, so something like:
-
---- a/common/fuzzy
-+++ b/common/fuzzy
-@@ -254,3 +254,3 @@ __scratch_xfs_fuzz_field_test() {
- 		__scratch_xfs_fuzz_unmount
--	else
-+	elif [ "${repair}" != "none" ]; then
- 		(>&2 echo "re-mount failed ($res) with ${field} = ${fuzzverb}.")
-
---- a/tests/xfs/456
-+++ b/tests/xfs/456
-@@ -43,2 +43,5 @@ echo "Done fuzzing AGI"
-
-+_check_dmesg_for "Metadata corruption detected" || \
-+	_fail "Missing metadata corruption messages!"
-+
- # success, all done
-
-If this makes sense, I'll send a separate patch to address it, and fix
-all repair=none tests as above.
-
-> The open-coded repair conditionals scattered through this funciton
-> probably ought to be refactored into helpers, e.g.
+> > The xfs_wait_buftarg() ratelimit presumably remains
+> > open coded because it's two separate calls and we probably don't want
+> > them to individually count against the limit.
 > 
-> __fuzz_want_scrub_check() {
-> 	local repair="$1"
-> 	local field="$2"
+> That's why I suggested dropping the second "run xfs_repair" message
+> and triggering a shutdown after the wait loop. That way we don't
+> issue "run xfs_repair" for every single failed buffer (largely
+> noise!), and we get a non-rate-limited common "run xfs-repair"
+> message once we processed all the failed writes.
 > 
-> 	test "${repair}" != "none" && \
-> 		_supports_xfs_scrub "${SCRATCH_MNT}" "${SCRATCH_DEV}" && \
-> 		[ "${field}" != "sb 0" ]
-> }
-> 
-> if [ $res -eq 0 ]; then
-> 	# Try an online scrub...
-> 	if __fuzz_want_scrub_check "${repair}" "${field}"; then
-> 		_scratch_scrub -n -a 1 -e continue 2>&1
-> 		...
 
-Will do that and send a v2, thanks for the review!
+Sorry, must have missed that in the last reply. I don't think we want to
+shut down here because XBF_WRITE_FAIL only reflects that the internal
+async write retry (e.g. the one historically used to mitigate transient
+I/O errors) has occurred on the buffer, not necessarily that the
+immediately previous I/O has failed. For that reason I've kind of looked
+at this particular instance as more of a warning that I/O errors have
+occurred in the past and the user might want to verify it didn't result
+in unexpected damage. FWIW, I've observed plenty of these messages long
+after I've disabled error injection and allowed I/O to proceed and the
+fs to unmount cleanly.
+
+Looking at it again, the wording of the message is much stronger than a
+warning (i.e. "Corruption Alert", "permanent write failures"), so
+perhaps we should revisit what we're actually trying to accomplish with
+this message. Note that we do have the buffer push time alert to
+indicate that I/O errors and retries are occurring, as well as error
+handling logic to shutdown on I/O failure while the fs is unmounting
+(xfs_buf_iodone_callback_error()), so both of those cases are
+fundamentally covered already.
+
+ISTM that leaves at least a few simple options for the
+xfs_wait_buftarg() message:
+
+1.) Remove it.
+2.) Massage it into more of a "Warning: buffer I/O errors have occurred
+in the past" type of message. This could perhaps retain the existing
+XBF_WRITE_FAIL logic, but use a flag to lift it out of the loop and thus
+avoid the need to rate limit it at all.
+3.) Fix up the logic to only dump (ratelimited) specifics on buffers
+that have actually failed I/O. This means we use the existing message
+but perhaps check ->b_error instead of XBF_WRITE_FAIL. We still don't
+need to shut down (I'd probably add an assert), but we could also lift
+the second xfs_repair line of the message out of the loop to reduce the
+noise.
+
+We could also look into clearing XBF_WRITE_RETRY on successful I/O
+completion, FWIW. The existing logic kind of bugs me regardless.
+Thoughts?
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+
