@@ -2,183 +2,273 @@ Return-Path: <SRS0=lEGq=6I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73350C54FCB
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 14:04:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C639C54FD0
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 16:58:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4E35D2075A
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 14:04:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 534B020728
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 16:58:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gvg3Etrt"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="b5WVvfmo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726793AbgDXOEU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Apr 2020 10:04:20 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:52990 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726698AbgDXOET (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Apr 2020 10:04:19 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1587737057;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=xjPfE1Qsa9/vy2n3aI+cLJlaWt6qn51/aMxG9pVgBdU=;
-        b=gvg3EtrtzqH6Es3Nz7IKTOVAkdsiDP0Sn+GRNxF7LMVEDUuqD5vh7JpZdCosJpKTZNRl4D
-        gE+c8sQZ68yj7caCRvEvcoc22Sa1Rmm6+AAmtEBgXzaNFY9uz6JDhWAIdW2cJyH5IRso72
-        q1urQ01+FIdA9+jYzCy/xDobTtN5ofs=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-292-AdjdibxnPmy9YaaxQsOWVw-1; Fri, 24 Apr 2020 10:04:11 -0400
-X-MC-Unique: AdjdibxnPmy9YaaxQsOWVw-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E9D5D835B50;
-        Fri, 24 Apr 2020 14:04:10 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8B6CB100238D;
-        Fri, 24 Apr 2020 14:04:10 +0000 (UTC)
-Date:   Fri, 24 Apr 2020 10:04:08 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+        id S1727089AbgDXQ6Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Apr 2020 12:58:16 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:43520 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726753AbgDXQ6P (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Apr 2020 12:58:15 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03OGnHhS118451;
+        Fri, 24 Apr 2020 16:58:12 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=hSgsyFhOV562tsjX27UrLyaAi0A2iZtV/YNZJkc72/M=;
+ b=b5WVvfmo1rQNOh8HjeGaKYDOh9fJrmSNKXJDfKEXa0zuiRRShR4YAwxM2WOovtV8iWgQ
+ vdSSH7HotkVScZarrv86WIAEJsuV1zxWycHIoxhfCEL/YzTab4ECKWvaIMuWjHtUQpUn
+ Q/SDbsRG6sR7nDjpmzE2lJeov146ixWA7nAGry9tM/EuwyalR1nelZabFxJSrBg+sjJi
+ rb6ZhLsZE1HiWiYv4g2kCFfl5a3MqpFKp5n4bWWEwQFsO+CCZWGsaiLf67vxXRlqPHaL
+ KgsU4NyO/kbqWeClsiiphk6DGFaWHb+fYyU6YEI/WVXKlcLE7MNVotZMiOsmUSqbZb5j vw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 30k7qe7y77-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 24 Apr 2020 16:58:12 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03OGmP4T114450;
+        Fri, 24 Apr 2020 16:58:12 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 30gb1q4qsm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 24 Apr 2020 16:58:11 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03OGwAwr006515;
+        Fri, 24 Apr 2020 16:58:10 GMT
+Received: from dhcp-10-159-252-94.vpn.oracle.com (/10.159.252.94)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 24 Apr 2020 09:58:09 -0700
+Subject: Re: [PATCH] xfs: don't change to infinate lock to avoid dead lock
+To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: reduce log recovery transaction block
- reservations
-Message-ID: <20200424140408.GE53690@bfoster>
-References: <158752128766.2142108.8793264653760565688.stgit@magnolia>
- <158752130035.2142108.11825776210575708747.stgit@magnolia>
+References: <20200423172325.8595-1-wen.gang.wang@oracle.com>
+ <20200423230515.GZ27860@dread.disaster.area>
+ <ed040889-5f79-e4f5-a203-b7ad8aa701d4@oracle.com>
+ <bca65738-3deb-ef43-6dde-1c2402942032@oracle.com>
+ <20200424013948.GA2040@dread.disaster.area>
+From:   Wengang Wang <wen.gang.wang@oracle.com>
+Message-ID: <676ecd15-d8ea-0e18-6075-3cb11f8c2e15@oracle.com>
+Date:   Fri, 24 Apr 2020 09:58:09 -0700
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <158752130035.2142108.11825776210575708747.stgit@magnolia>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+In-Reply-To: <20200424013948.GA2040@dread.disaster.area>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9601 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=11
+ spamscore=0 mlxlogscore=999 mlxscore=0 malwarescore=0 bulkscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004240131
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9601 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 lowpriorityscore=0
+ priorityscore=1501 suspectscore=11 mlxlogscore=999 phishscore=0
+ impostorscore=0 mlxscore=0 clxscore=1015 malwarescore=0 adultscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004240131
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 21, 2020 at 07:08:20PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> On filesystems that support them, bmap intent log items can be used to
-> change mappings in inode data or attr forks.  However, if the bmbt must
-> expand, the enormous block reservations that we make for finishing
-> chains of deferred log items become a liability because the bmbt block
-> allocator sets minleft to the transaction reservation and there probably
-> aren't any AGs in the filesystem that have that much free space.
-> 
-> Whereas previously we would reserve 93% of the free blocks in the
-> filesystem, now we only want to reserve 7/8ths of the free space in the
-> least full AG, and no more than half of the usable blocks in an AG.  In
-> theory we shouldn't run out of space because (prior to the unclean
-> shutdown) all of the in-progress transactions successfully reserved the
-> worst case number of disk blocks.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_log_recover.c |   55 ++++++++++++++++++++++++++++++++++++----------
->  1 file changed, 43 insertions(+), 12 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index e9b3e901d009..a416b028b320 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -2669,6 +2669,44 @@ xlog_recover_process_data(
->  	return 0;
->  }
->  
-> +/*
-> + * Estimate a block reservation for a log recovery transaction.  Since we run
-> + * separate transactions for each chain of deferred ops that get created as a
-> + * result of recovering unfinished log intent items, we must be careful not to
-> + * reserve so many blocks that block allocations fail because we can't satisfy
-> + * the minleft requirements (e.g. for bmbt blocks).
-> + */
-> +static int
-> +xlog_estimate_recovery_resblks(
-> +	struct xfs_mount	*mp,
-> +	unsigned int		*resblks)
-> +{
-> +	struct xfs_perag	*pag;
-> +	xfs_agnumber_t		agno;
-> +	unsigned int		free = 0;
-> +	int			error;
-> +
-> +	/* Don't use more than 7/8th of the free space in the least full AG. */
-> +	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-> +		unsigned int	ag_free;
-> +
-> +		error = xfs_alloc_pagf_init(mp, NULL, agno, 0);
-> +		if (error)
-> +			return error;
-> +		pag = xfs_perag_get(mp, agno);
-> +		ag_free = pag->pagf_freeblks + pag->pagf_flcount;
-> +		free = max(free, (ag_free * 7) / 8);
-> +		xfs_perag_put(pag);
-> +	}
-> +
 
-Somewhat unfortunate that we have to iterate all AGs for each chain. I'm
-wondering if that has any effect on a large recovery on fs' with an
-inordinate AG count. Have you tested under those particular conditions?
-I suppose it's possible the recovery is slow enough that this won't
-matter...
+On 4/23/20 6:39 PM, Dave Chinner wrote:
+> On Thu, Apr 23, 2020 at 04:19:52PM -0700, Wengang Wang wrote:
+>> On 4/23/20 4:14 PM, Wengang Wang wrote:
+>>> On 4/23/20 4:05 PM, Dave Chinner wrote:
+>>>> On Thu, Apr 23, 2020 at 10:23:25AM -0700, Wengang Wang wrote:
+>>>>> xfs_reclaim_inodes_ag() do infinate locking on
+>>>>> pag_ici_reclaim_lock at the
+>>>>> 2nd round of walking of all AGs when SYNC_TRYLOCK is set
+>>>>> (conditionally).
+>>>>> That causes dead lock in a special situation:
+>>>>>
+>>>>> 1) In a heavy memory load environment, process A is doing direct memory
+>>>>> reclaiming waiting for xfs_inode.i_pincount to be cleared while holding
+>>>>> mutex lock pag_ici_reclaim_lock.
+>>>>>
+>>>>> 2) i_pincount is increased by adding the xfs_inode to journal
+>>>>> transection,
+>>>>> and it's expected to be decreased when the transection related
+>>>>> IO is done.
+>>>>> Step 1) happens after i_pincount is increased and before
+>>>>> truansection IO is
+>>>>> issued.
+>>>>>
+>>>>> 3) Now the transection IO is issued by process B. In the IO path
+>>>>> (IO could
+>>>>> be more complex than you think), memory allocation and memory direct
+>>>>> reclaiming happened too.
+>>>> Sure, but IO path allocations are done under GFP_NOIO context, which
+>>>> means IO path allocations can't recurse back into filesystem reclaim
+>>>> via direct reclaim. Hence there should be no way for an IO path
+>>>> allocation to block on XFS inode reclaim and hence there's no
+>>>> possible deadlock here...
+>>>>
+>>>> IOWs, I don't think this is the deadlock you are looking for. Do you
+>>>> have a lockdep report or some other set of stack traces that lead
+>>>> you to this point?
+>>> As I mentioned, the IO path can be more complex than you think.
+> I don't think the IO path is complex. I *know* the IO path is
+> complex. I also know how we manage that complexity to prevent things
+> like stacked devices and filesystems from deadlocking, but I also
+> know that there are bugs and other architectural deficiencies that
+> may be playing a part here.
+Right.
+>
+> The problem is, your description of the problem tells me nothing
+> about where the problem might lie. You are telling me what you think
+> the problem is, rather than explaining the way the problem comes
+> about, what storage stack configuration and IO behaviour triggers
+> it, etc. Hence I cannot determine what the problem you are seeing
+> actually is, and hence I cannot evaluate whether your patch is
+> correct.
 
-Also, perhaps not caused by this patch but does this
-outsized/manufactured reservation have the effect of artificially
-steering allocations to a particular AG if one happens to be notably
-larger than the rest?
+I think my description is the generic description, stating  the problem 
+in XFS.
+The problem is there as long as memory direct reclaiming happens in the 
+IO path.
 
-Brian
+More details about the IO may help to understanding the problem. But 
+that's not the main idea of this patch.
 
-> +	/* Don't try to reserve more than half the usable AG blocks. */
-> +	*resblks = min(free, xfs_alloc_ag_max_usable(mp) / 2);
-> +	if (*resblks == 0)
-> +		return -ENOSPC;
-> +
-> +	return 0;
-> +}
-> +
->  /* Take all the collected deferred ops and finish them in order. */
->  static int
->  xlog_finish_defer_ops(
-> @@ -2677,27 +2715,20 @@ xlog_finish_defer_ops(
->  {
->  	struct xfs_defer_freezer *dff, *next;
->  	struct xfs_trans	*tp;
-> -	int64_t			freeblks;
->  	uint			resblks;
->  	int			error = 0;
->  
->  	list_for_each_entry_safe(dff, next, dfops_freezers, dff_list) {
-> +		error = xlog_estimate_recovery_resblks(mp, &resblks);
-> +		if (error)
-> +			break;
-> +
->  		/*
->  		 * We're finishing the defer_ops that accumulated as a result
->  		 * of recovering unfinished intent items during log recovery.
->  		 * We reserve an itruncate transaction because it is the
-> -		 * largest permanent transaction type.  Since we're the only
-> -		 * user of the fs right now, take 93% (15/16) of the available
-> -		 * free blocks.  Use weird math to avoid a 64-bit division.
-> +		 * largest permanent transaction type.
->  		 */
-> -		freeblks = percpu_counter_sum(&mp->m_fdblocks);
-> -		if (freeblks <= 0) {
-> -			error = -ENOSPC;
-> -			break;
-> -		}
-> -
-> -		resblks = min_t(int64_t, UINT_MAX, freeblks);
-> -		resblks = (resblks * 15) >> 4;
->  		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, resblks,
->  				0, XFS_TRANS_RESERVE, &tp);
->  		if (error)
-> 
+I will provide the detail below.
+
+>
+>>> The real case I hit is that the process A is waiting for inode unpin on
+>>> XFS A which is a loop device backed mount.
+>> And actually, there is a dm-thin on top of the loop device..
+> Makes no difference, really, because it's still the loop device
+> that is doing the IO to the underlying filesystem...
+I mentioned IO path here, not the IO its self.  In this case, the IO 
+patch includes dm-thin.
+
+We have to consider it as long as we are not sure if there is GPF_KERNEL 
+(or any flags without NOFS, NOIO) allocation happens in dm-thin.
+
+If dm-thin has GPF_KERNEL allocation and goes into memory direct 
+reclaiming, the deadlock forms.
+
+>>> And the backing file is from a different (X)FS B mount. So the IO is
+>>> going through loop device, (direct) writes to (X)FS B.
+>>>
+>>> The (direct) writes to (X)FS B do memory allocations and then memory
+>>> direct reclaims...
+> THe loop device issues IO to the lower filesystem in
+> memalloc_noio_save() context, which means all memory allocations in
+> it's IO path are done with GFP_NOIO context. Hence those allocations
+> will not recurse into reclaim on -any filesystem- and hence will not
+> deadlock on filesystem reclaim. So what I said originally is correct
+> even when we take filesystems stacked via loop devices into account.
+You are right here. Seems loop device is doing NOFS|NOIO allocations.
+
+The deadlock happened with a bit lower kernel version which is without 
+loop device patch that does NOFS|NOIO allocation.
+
+Well, here you are only talking about loop device, it's not enough to 
+say it's also safe in case the memory reclaiming happens at higher layer 
+above loop device in the IO path.
+
+> Hence I'll ask again: do you have stack traces of the deadlock or a
+> lockdep report? If not, can you please describe the storage setup
+> from top to bottom and lay out exactly where in what layers trigger
+> this deadlock?
+
+Sharing the callback traces:
+
+Process 61234 is holding mutex pag_ici_reclaim_lock
+
+PID: 61234  TASK: ffff89e7bc6c1ec0  CPU: 39  COMMAND: "java"
+  #0 [ffff9be677cdb470] __schedule at ffffffff8f866a9c
+  #1 [ffff9be677cdb508] schedule at ffffffff8f8670b6
+  #2 [ffff9be677cdb520] io_schedule at ffffffff8f0c73c6
+  #3 [ffff9be677cdb538] __dta___xfs_iunpin_wait_3443 at ffffffffc0565087 
+[xfs]
+  #4 [ffff9be677cdb5b0] xfs_iunpin_wait at ffffffffc0567ca9 [xfs]
+  #5 [ffff9be677cdb5c0] __dta_xfs_reclaim_inode_3357 at ffffffffc055b4cc 
+[xfs]
+  #6 [ffff9be677cdb610] xfs_reclaim_inodes_ag at ffffffffc055b916 [xfs]
+  #7 [ffff9be677cdb7a0] xfs_reclaim_inodes_nr at ffffffffc055cb73 [xfs]
+  #8 [ffff9be677cdb7c0] xfs_fs_free_cached_objects at ffffffffc056fe79 [xfs]
+  #9 [ffff9be677cdb7d0] super_cache_scan at ffffffff8f287927
+#10 [ffff9be677cdb828] shrink_slab at ffffffff8f1efa53
+#11 [ffff9be677cdb910] shrink_node at ffffffff8f1f5628
+#12 [ffff9be677cdb998] do_try_to_free_pages at ffffffff8f1f5b62
+#13 [ffff9be677cdba00] try_to_free_pages at ffffffff8f1f5f09
+#14 [ffff9be677cdba88] __alloc_pages_slowpath at ffffffff8f1e479d
+#15 [ffff9be677cdbba8] __alloc_pages_nodemask at ffffffff8f1e2231
+#16 [ffff9be677cdbc18] alloc_pages_current at ffffffff8f243bea
+#17 [ffff9be677cdbc48] skb_page_frag_refill at ffffffff8f6f943c
+#18 [ffff9be677cdbc68] sk_page_frag_refill at ffffffff8f6f947d
+#19 [ffff9be677cdbc80] tcp_sendmsg_locked at ffffffff8f779103
+#20 [ffff9be677cdbd30] tcp_sendmsg at ffffffff8f779cec
+#21 [ffff9be677cdbd58] inet_sendmsg at ffffffff8f7a8f07
+#22 [ffff9be677cdbd80] sock_sendmsg at ffffffff8f6f30ce
+#23 [ffff9be677cdbda0] sock_write_iter at ffffffff8f6f3165
+#24 [ffff9be677cdbe18] __vfs_write at ffffffff8f28447c
+#25 [ffff9be677cdbea0] vfs_write at ffffffff8f284692
+#26 [ffff9be677cdbee0] sys_write at ffffffff8f2848f5
+#27 [ffff9be677cdbf28] do_syscall_64 at ffffffff8f003949
+
+
+And  waiter (of that pag_ici_reclaim_lock) process has the following 
+call back trace:
+
+PID: 30224  TASK: ffff89f944cd0000  CPU: 52  COMMAND: "loop0"
+  #0 [ffff9be663fcb0a8] __schedule at ffffffff8f866a9c
+  #1 [ffff9be663fcb140] schedule at ffffffff8f8670b6
+  #2 [ffff9be663fcb158] schedule_preempt_disabled at ffffffff8f86740e
+  #3 [ffff9be663fcb168] __mutex_lock at ffffffff8f868d7c
+  #4 [ffff9be663fcb228] __mutex_lock_slowpath at ffffffff8f8691c3
+  #5 [ffff9be663fcb238] mutex_lock at ffffffff8f8691ff
+  #6 [ffff9be663fcb250] xfs_reclaim_inodes_ag at ffffffffc055b9b2 [xfs]
+  #7 [ffff9be663fcb3e0] xfs_reclaim_inodes_nr at ffffffffc055cb73 [xfs]
+  #8 [ffff9be663fcb400] xfs_fs_free_cached_objects at ffffffffc056fe79 [xfs]
+  #9 [ffff9be663fcb410] super_cache_scan at ffffffff8f287927
+#10 [ffff9be663fcb468] shrink_slab at ffffffff8f1efa53
+#11 [ffff9be663fcb550] shrink_node at ffffffff8f1f5628
+#12 [ffff9be663fcb5d8] do_try_to_free_pages at ffffffff8f1f5b62
+#13 [ffff9be663fcb640] try_to_free_pages at ffffffff8f1f5f09
+#14 [ffff9be663fcb6c8] __alloc_pages_slowpath at ffffffff8f1e479d
+#15 [ffff9be663fcb7e8] __alloc_pages_nodemask at ffffffff8f1e2231
+#16 [ffff9be663fcb858] alloc_pages_current at ffffffff8f243bea
+#17 [ffff9be663fcb888] new_slab at ffffffff8f250f09
+#18 [ffff9be663fcb8f0] ___slab_alloc at ffffffff8f2517b5
+#19 [ffff9be663fcb9b8] __slab_alloc at ffffffff8f255ddd
+#20 [ffff9be663fcb9f8] kmem_cache_alloc at ffffffff8f251ab9
+#21 [ffff9be663fcba38] mempool_alloc_slab at ffffffff8f1da935
+#22 [ffff9be663fcba48] mempool_alloc at ffffffff8f1daa63
+#23 [ffff9be663fcbac0] bio_alloc_bioset at ffffffff8f39a7f2
+#24 [ffff9be663fcbb10] iomap_dio_actor at ffffffff8f2f1d2d
+#25 [ffff9be663fcbb90] iomap_apply at ffffffff8f2f2a07
+#26 [ffff9be663fcbc10] iomap_dio_rw at ffffffff8f2f3261
+#27 [ffff9be663fcbcc0] __dta_xfs_file_dio_aio_write_3305 at 
+ffffffffc0557078 [xfs]
+#28 [ffff9be663fcbd10] xfs_file_write_iter at ffffffffc0557551 [xfs]
+#29 [ffff9be663fcbd40] lo_rw_aio at ffffffffc075d2ea [loop]
+#30 [ffff9be663fcbdc0] loop_queue_work at ffffffffc075ddc2 [loop]
+#31 [ffff9be663fcbea8] kthread_worker_fn at ffffffff8f0b889a
+#32 [ffff9be663fcbef8] loop_kthread_worker_fn at ffffffffc075b90e [loop]
+#33 [ffff9be663fcbf08] kthread at ffffffff8f0b7fd5
+#34 [ffff9be663fcbf50] ret_from_fork at ffffffff8fa00344
+
+The deadlock happened in(under) loop device layer, the deadlock under 
+loop device may won't happen in newest upstream code. But it still can 
+happen at higher layers in the IO path.
+
+thanks,
+wengang
 
