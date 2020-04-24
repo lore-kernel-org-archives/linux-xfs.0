@@ -2,112 +2,130 @@ Return-Path: <SRS0=lEGq=6I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E93AC54FD0
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 17:45:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E589C54FCB
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 17:50:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F159520774
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 17:45:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CA82D20736
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 17:50:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Xl0aR5di"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Wic9Snak"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727033AbgDXRpW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Apr 2020 13:45:22 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:36800 "EHLO
+        id S1728290AbgDXRu2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Apr 2020 13:50:28 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:41486 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727059AbgDXRpW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Apr 2020 13:45:22 -0400
+        with ESMTP id S1727123AbgDXRu2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Apr 2020 13:50:28 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03OHgw78129993;
-        Fri, 24 Apr 2020 17:44:59 GMT
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03OHmomj134954;
+        Fri, 24 Apr 2020 17:50:19 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=XLzRTz9lDrH/JBqhTOj3mzZ8hHIYzXvEf5eZFCai7g8=;
- b=Xl0aR5divV35rmq7RWdwDqdHEyojYOmxfed4inywj0wB1vykHW7raiCxTpEflRTZufww
- T1JUkB2BfMDMsfGlxVnQjduZY6sIpF2yos5xOCuVKop/EotmsM+05/paKHkCbYk7LtvH
- NkCLh1nkUJKGhzCFRJK8rTNQSzrp+SR45yPsWuD+ODaxZMUWQN7cCrkww/uo0pTHXmyn
- aszjOiphBo7NB8HuPR0DF3f3tcQrZ+0NuLSgcPeZCEhot3H9aeoBgHHm7286MyRehBOR
- gaoBFLaGBb8cDzF0K2T/11+S0X4EqptC5Yj+pDPX0DMNAp/yLdh50r/Z0Pc7Rzt3XU3x nw== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 30ketdnphf-1
+ bh=DWVlIf5mYZCVzyqUXeahD+T71Oe9wN0qoPC1nsa6ZEU=;
+ b=Wic9SnakIOrdtXgbiLArQULRol0LPr4BC1E2yKdb57XexeCCHSYc75DC4qD3xg7MkLsX
+ CRrdcr2Xu4KC3F84Aptrvmkdl5sTy3oeeJ6cZU2YnCheQeDE1F2P0Dt5s47FlKoekI7A
+ q6341zQF2rQM8c+GAnKB5wYb1Y7LHYnHoY5jXqS5PCcQXN+3+AVu0scGUEfDDKy8QWY4
+ p3iwMzFr35LXPY7YCpHiFwMN+SfdCvcJ5X4VAUKjkigUdZm86iPEX0VRLhthPRmf0ldA
+ ahiv2E4yQCiGM3VdVC3YGBuZWJiEI2JInS+b2NVZQ9Pe3u4H9lisnygjhKLgVjVC1loG cA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 30ketdnq94-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 24 Apr 2020 17:44:59 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03OHflMh038422;
-        Fri, 24 Apr 2020 17:42:58 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 30gb3xs6q9-1
+        Fri, 24 Apr 2020 17:50:19 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03OHldRt078223;
+        Fri, 24 Apr 2020 17:48:19 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 30k7qxjw26-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 24 Apr 2020 17:42:58 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03OHguaK022439;
-        Fri, 24 Apr 2020 17:42:57 GMT
+        Fri, 24 Apr 2020 17:48:19 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03OHmHI4016218;
+        Fri, 24 Apr 2020 17:48:17 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 24 Apr 2020 10:42:55 -0700
-Date:   Fri, 24 Apr 2020 10:42:54 -0700
+        with ESMTP ; Fri, 24 Apr 2020 10:48:16 -0700
+Date:   Fri, 24 Apr 2020 10:48:15 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Eric Sandeen <sandeen@sandeen.net>,
-        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfsprogs: don't warn about packed members
-Message-ID: <20200424174254.GN6742@magnolia>
-References: <20191216215245.13666-1-david@fromorbit.com>
- <20200126110212.GA23829@infradead.org>
- <029fa407-6bf5-c8c0-450a-25bded280fec@sandeen.net>
- <20200312140910.GA11758@infradead.org>
- <b6c1fed7-9e98-7d35-c489-bcdd2a6f9a23@sandeen.net>
- <20200424103323.GA10781@infradead.org>
+To:     Ritesh Harjani <riteshh@linux.ibm.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Jan Kara <jack@suse.com>, tytso@mit.edu,
+        "Aneesh Kumar K . V" <aneesh.kumar@linux.ibm.com>,
+        linux-ext4@vger.kernel.org
+Subject: Re: [PATCH 2/2] iomap: bmap: Remove the WARN and return the proper
+ block address
+Message-ID: <20200424174815.GF6733@magnolia>
+References: <cover.1587670914.git.riteshh@linux.ibm.com>
+ <e2e09c5d840458b4ace6f9b31429ceefd9c1df01.1587670914.git.riteshh@linux.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200424103323.GA10781@infradead.org>
+In-Reply-To: <e2e09c5d840458b4ace6f9b31429ceefd9c1df01.1587670914.git.riteshh@linux.ibm.com>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9601 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 adultscore=0
- mlxlogscore=999 phishscore=0 suspectscore=0 bulkscore=0 mlxscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 mlxlogscore=999
+ adultscore=0 suspectscore=0 bulkscore=0 phishscore=0 malwarescore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004240135
+ definitions=main-2004240136
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9601 signatures=668686
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 spamscore=0
  impostorscore=0 bulkscore=0 mlxlogscore=999 phishscore=0 mlxscore=0
- priorityscore=1501 clxscore=1015 suspectscore=0 adultscore=0
+ priorityscore=1501 clxscore=1011 suspectscore=0 adultscore=0
  malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004240135
+ engine=8.12.0-2003020000 definitions=main-2004240136
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Apr 24, 2020 at 03:33:23AM -0700, Christoph Hellwig wrote:
-> On Fri, Mar 13, 2020 at 09:06:38AM -0500, Eric Sandeen wrote:
-> > On 3/12/20 9:09 AM, Christoph Hellwig wrote:
-> > > On Mon, Jan 27, 2020 at 11:43:02AM -0600, Eric Sandeen wrote:
-> > >> On 1/26/20 5:02 AM, Christoph Hellwig wrote:
-> > >>> Eric, can you pick this one up?  The warnings are fairly annoying..
-> > >>>
-> > >>
-> > >> Sorry, I had missed this one and/or the feedback on the original patch
-> > >> wasn't resolved.  I tend to agree that turning off the warning globally
-> > >> because we know /this/ one is OK seems somewhat suboptimal.
-> > >>
-> > >> Let me take a look again.
-> > > 
-> > > Can we get this queued up in xfsprogs?  These warnings are pretty
-> > > annoying..
-> > 
-> > 
-> > Ok.  I don't really like disabling it globally but if it's good enough
-> > for the kernel... I'll add this to 5.5.0 and push out the release.
+On Fri, Apr 24, 2020 at 12:52:18PM +0530, Ritesh Harjani wrote:
+> iomap_bmap() could be called from either of these two paths.
+> Either when a user is calling an ioctl_fibmap() interface to get
+> the block mapping address or by some filesystem via use of bmap()
+> internal kernel API.
+> bmap() kernel API is well equipped with handling of u64 addresses.
 > 
-> Seems like this still isn't in xfsprogs for-next.
+> WARN condition in iomap_bmap_actor() was mainly added to warn all
+> the fibmap users. But now that in previous patch we have directly added
+> this WARN condition for all fibmap users and also made sure to return 0
+> as block map address in case if addr > INT_MAX. 
+> So we can now remove this logic from here.
+> 
+> Signed-off-by: Ritesh Harjani <riteshh@linux.ibm.com>
+> ---
+>  fs/iomap/fiemap.c | 5 +----
+>  1 file changed, 1 insertion(+), 4 deletions(-)
+> 
+> diff --git a/fs/iomap/fiemap.c b/fs/iomap/fiemap.c
+> index bccf305ea9ce..d55e8f491a5e 100644
+> --- a/fs/iomap/fiemap.c
+> +++ b/fs/iomap/fiemap.c
+> @@ -117,10 +117,7 @@ iomap_bmap_actor(struct inode *inode, loff_t pos, loff_t length,
+>  
+>  	if (iomap->type == IOMAP_MAPPED) {
+>  		addr = (pos - iomap->offset + iomap->addr) >> inode->i_blkbits;
+> -		if (addr > INT_MAX)
+> -			WARN(1, "would truncate bmap result\n");
 
-Odd, it's in origin/master in my tree as the last commit before v5.5.0:
-845e5ef706cb7e29259d6541f43a7029e7dc7898.
+Frankly I would've combined these two patches to make it more obvious
+that we're hoisting a FIBMAP constraint check from iomap into the ioctl
+handler.
 
 --D
+
+> -		else
+> -			*bno = addr;
+> +		*bno = addr;
+>  	}
+>  	return 0;
+>  }
+> -- 
+> 2.21.0
+> 
