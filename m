@@ -2,66 +2,103 @@ Return-Path: <SRS0=lEGq=6I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 054CBC5518A
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 06:23:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90711C55186
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 07:22:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D5C6820700
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 06:23:21 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QCpuGEaM"
+	by mail.kernel.org (Postfix) with ESMTP id 7AAC920700
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 07:22:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725889AbgDXGXG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Apr 2020 02:23:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51288 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726659AbgDXGXG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Apr 2020 02:23:06 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8A15C09B045;
-        Thu, 23 Apr 2020 23:23:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=6ksNm3BBT/lrPcyj1k2Kw1jDxVjgGPPrPYeKfaTWYcc=; b=QCpuGEaMlk3ynU5M2kT76Ps2K2
-        l9Pefr+MlWiU+oiim0H6xNwWU+0k0Uo7IoZK0gJZXaXlnAmAmeD2vBKa8gsOi0cwCiqDul/WJx4Ag
-        EdGKZioaPM8nt9QDkma75xWeeon6qQ8RawRRQARhBAEptIstYvU1952+BhBwNpODkZQCBHvxffkKM
-        s7+BKPdPUhEyj85Bv0wkio7PAcb9JCxyRyYmFUYM5GS7R8rf6KFmY+qMT04LRFueP7vIr9BCZUVkz
-        XHTJW3u5GKvCVouBCkuXiNKVtD62fyxLlpyzXNVXb00ZXbWAn0ucQJkWnB0yn5LIvBosx5LI9gpYO
-        zL2r5etQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jRrjs-0003lT-9C; Fri, 24 Apr 2020 06:23:04 +0000
-Date:   Thu, 23 Apr 2020 23:23:04 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org
-Subject: Re: [PATCH 5/5] xfs/122: fix for linux 5.7 stuff
-Message-ID: <20200424062304.GB2537@infradead.org>
-References: <158768467175.3019327.8681440148230401150.stgit@magnolia>
- <158768470283.3019327.12107082366634108750.stgit@magnolia>
+        id S1726582AbgDXHWd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Apr 2020 03:22:33 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:22564 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726298AbgDXHWd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Apr 2020 03:22:33 -0400
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 03O73Oma016174
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Apr 2020 03:22:32 -0400
+Received: from e06smtp02.uk.ibm.com (e06smtp02.uk.ibm.com [195.75.94.98])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 30ghu9taca-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Apr 2020 03:22:32 -0400
+Received: from localhost
+        by e06smtp02.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <riteshh@linux.ibm.com>;
+        Fri, 24 Apr 2020 08:21:52 +0100
+Received: from b06cxnps3075.portsmouth.uk.ibm.com (9.149.109.195)
+        by e06smtp02.uk.ibm.com (192.168.101.132) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
+        Fri, 24 Apr 2020 08:21:48 +0100
+Received: from b06wcsmtp001.portsmouth.uk.ibm.com (b06wcsmtp001.portsmouth.uk.ibm.com [9.149.105.160])
+        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 03O7MPFb65536252
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 24 Apr 2020 07:22:25 GMT
+Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 0FF16A405B;
+        Fri, 24 Apr 2020 07:22:25 +0000 (GMT)
+Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 08FF0A4060;
+        Fri, 24 Apr 2020 07:22:23 +0000 (GMT)
+Received: from localhost.localdomain.com (unknown [9.79.185.245])
+        by b06wcsmtp001.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Fri, 24 Apr 2020 07:22:22 +0000 (GMT)
+From:   Ritesh Harjani <riteshh@linux.ibm.com>
+To:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Jan Kara <jack@suse.com>, tytso@mit.edu,
+        "Aneesh Kumar K . V" <aneesh.kumar@linux.ibm.com>,
+        linux-ext4@vger.kernel.org, Ritesh Harjani <riteshh@linux.ibm.com>
+Subject: [PATCH 0/2] WARN fibmap user in case of possible addr truncation
+Date:   Fri, 24 Apr 2020 12:52:16 +0530
+X-Mailer: git-send-email 2.21.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <158768470283.3019327.12107082366634108750.stgit@magnolia>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+x-cbid: 20042407-0008-0000-0000-000003766B79
+X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
+x-cbparentid: 20042407-0009-0000-0000-00004A983B1D
+Message-Id: <cover.1587670914.git.riteshh@linux.ibm.com>
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.676
+ definitions=2020-04-24_02:2020-04-23,2020-04-24 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=527
+ suspectscore=0 bulkscore=0 spamscore=0 phishscore=0 adultscore=0
+ clxscore=1015 malwarescore=0 priorityscore=1501 lowpriorityscore=0
+ mlxscore=0 impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004240048
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 23, 2020 at 04:31:42PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Fix some regressions on xfsprogs 5.7.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Currently an ioctl_fibmap() caller may get a truncated and wrong block map
+address if the actual mapped physical block address is > INT_MAX.
+If that is the case then lets:-
+1. Add a warning,
+2. Returns 0 in the block mapped address,
+3. And also return -ERANGE error.
+This is better than providing a wrong information to the user about the
+block mapping which in the worst case could cause a FS corruption
+(unknowingly by the caller since kernel didn't warn).
+Currently these checks are in place only for the filesystems who uses iomap
+based bmap interface. So let's do this right thing for all the fibmap()
+callers by adding this logic in ioctl_fibmap() directly.
 
-Looks good.  I actually had the same changes locally but forgot to send
-them out:
+Patch-1 & Patch-2 commit msg may provide additional information.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Ritesh Harjani (2):
+  fibmap: Warn and return an error in case of block > INT_MAX
+  iomap: bmap: Remove the WARN and return the proper block address
+
+ fs/ioctl.c        | 5 +++++
+ fs/iomap/fiemap.c | 5 +----
+ 2 files changed, 6 insertions(+), 4 deletions(-)
+
+-- 
+2.21.0
+
