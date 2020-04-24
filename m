@@ -2,125 +2,97 @@ Return-Path: <SRS0=lEGq=6I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E4ABC54FCB
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 17:52:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3960C55196
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 19:17:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 58C4920774
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 17:52:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C986C21655
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 19:17:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1587755862;
+	bh=VlyxgCrOLgi7dFsPEF6HpMuYuVTTibVbUYAsTqnMBZQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=Xxi8n6wzzyo5iZPhLAm4ZJ350xfUug3HbyGEjd5I8a1eX2tzW6q4iZ4qNez+FCa0y
+	 oNfWTX1pM/GD7AvvexqDHHJAeFglK0RCwxY3UPm4oxQitbw2ne1IYNpLW2cPw9gHCq
+	 raUCd1DfsnLpbrl3d2NMawIqsgvLGd6pfN44QRfY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727059AbgDXRwr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Apr 2020 13:52:47 -0400
-Received: from sandeen.net ([63.231.237.45]:33164 "EHLO sandeen.net"
+        id S1727031AbgDXTRl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Apr 2020 15:17:41 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59544 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727049AbgDXRwr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 24 Apr 2020 13:52:47 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1727022AbgDXTRl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 24 Apr 2020 15:17:41 -0400
+Received: from gmail.com (unknown [104.132.1.76])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 8D2CA15D82;
-        Fri, 24 Apr 2020 12:52:13 -0500 (CDT)
-Subject: Re: [PATCH] xfsprogs: don't warn about packed members
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-References: <20191216215245.13666-1-david@fromorbit.com>
- <20200126110212.GA23829@infradead.org>
- <029fa407-6bf5-c8c0-450a-25bded280fec@sandeen.net>
- <20200312140910.GA11758@infradead.org>
- <b6c1fed7-9e98-7d35-c489-bcdd2a6f9a23@sandeen.net>
- <20200424103323.GA10781@infradead.org> <20200424174254.GN6742@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <955e6514-a3f2-0c04-a20f-c35a32390747@sandeen.net>
-Date:   Fri, 24 Apr 2020 12:52:45 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.7.0
+        by mail.kernel.org (Postfix) with ESMTPSA id CBA7A20857;
+        Fri, 24 Apr 2020 19:17:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1587755861;
+        bh=VlyxgCrOLgi7dFsPEF6HpMuYuVTTibVbUYAsTqnMBZQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=q16C0/hczHcQoc0YoGcJ6bs6EebZRpbQ8HK4F7h4D4AZNQLn/OWJyPdhQJs6i2/fc
+         Eb06SirpvCybURyZWFZ79HsVhUmBdECxZZ6xr2A/tB500s2LPx2Vswg0mzfDN1CNe3
+         Mhb8LVTWkPmhkEN+hWJVEnqWB5leCOJ4jGD0S9Ls=
+Date:   Fri, 24 Apr 2020 12:17:39 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Ritesh Harjani <riteshh@linux.ibm.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Jan Kara <jack@suse.com>, tytso@mit.edu,
+        "Aneesh Kumar K . V" <aneesh.kumar@linux.ibm.com>,
+        linux-ext4@vger.kernel.org
+Subject: Re: [PATCH 1/2] fibmap: Warn and return an error in case of block >
+ INT_MAX
+Message-ID: <20200424191739.GA217280@gmail.com>
+References: <cover.1587670914.git.riteshh@linux.ibm.com>
+ <e34d1ac05d29aeeb982713a807345a0aaafc7fe0.1587670914.git.riteshh@linux.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <20200424174254.GN6742@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e34d1ac05d29aeeb982713a807345a0aaafc7fe0.1587670914.git.riteshh@linux.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 4/24/20 12:42 PM, Darrick J. Wong wrote:
-> On Fri, Apr 24, 2020 at 03:33:23AM -0700, Christoph Hellwig wrote:
->> On Fri, Mar 13, 2020 at 09:06:38AM -0500, Eric Sandeen wrote:
->>> On 3/12/20 9:09 AM, Christoph Hellwig wrote:
->>>> On Mon, Jan 27, 2020 at 11:43:02AM -0600, Eric Sandeen wrote:
->>>>> On 1/26/20 5:02 AM, Christoph Hellwig wrote:
->>>>>> Eric, can you pick this one up?  The warnings are fairly annoying..
->>>>>>
->>>>>
->>>>> Sorry, I had missed this one and/or the feedback on the original patch
->>>>> wasn't resolved.  I tend to agree that turning off the warning globally
->>>>> because we know /this/ one is OK seems somewhat suboptimal.
->>>>>
->>>>> Let me take a look again.
->>>>
->>>> Can we get this queued up in xfsprogs?  These warnings are pretty
->>>> annoying..
->>>
->>>
->>> Ok.  I don't really like disabling it globally but if it's good enough
->>> for the kernel... I'll add this to 5.5.0 and push out the release.
->>
->> Seems like this still isn't in xfsprogs for-next.
+On Fri, Apr 24, 2020 at 12:52:17PM +0530, Ritesh Harjani wrote:
+> We better warn the fibmap user and not return a truncated and therefore
+> an incorrect block map address if the bmap() returned block address
+> is greater than INT_MAX (since user supplied integer pointer).
 > 
-> Odd, it's in origin/master in my tree as the last commit before v5.5.0:
-> 845e5ef706cb7e29259d6541f43a7029e7dc7898.
+> It's better to WARN all user of ioctl_fibmap() and return a proper error
+> code rather than silently letting a FS corruption happen if the user tries
+> to fiddle around with the returned block map address.
+> 
+> We fix this by returning an error code of -ERANGE and returning 0 as the
+> block mapping address in case if it is > INT_MAX.
+> 
+> Signed-off-by: Ritesh Harjani <riteshh@linux.ibm.com>
+> ---
+>  fs/ioctl.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/fs/ioctl.c b/fs/ioctl.c
+> index f1d93263186c..3489f3a12c1d 100644
+> --- a/fs/ioctl.c
+> +++ b/fs/ioctl.c
+> @@ -71,6 +71,11 @@ static int ioctl_fibmap(struct file *filp, int __user *p)
+>  	block = ur_block;
+>  	error = bmap(inode, &block);
+>  
+> +	if (block > INT_MAX) {
+> +		error = -ERANGE;
+> +		WARN(1, "would truncate fibmap result\n");
+> +	}
+> +
 
-seems like it's in for-next, no?
+WARN() is only for kernel bugs.  This case would be a userspace bug, not a
+kernel bug, right?  If so, it should use pr_warn(), not WARN().
 
-https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/tree/include/builddefs.in?h=for-next#n16
-
--Eric
+- Eric
