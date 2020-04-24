@@ -4,48 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E830C54FD0
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 12:29:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0875BC54FCB
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 12:29:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 575D820736
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 12:29:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D8D9A20736
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 12:29:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587731362;
-	bh=CriRCGClvamC+iFzH8OrWMWdqSTNirz+iZj25GHP8jc=;
+	s=default; t=1587731365;
+	bh=RWfCogi8yjlqHKJ1QYuqiErJGN7ddKARRjGXT+Srvhc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=cKsQYfR12XCOkfY4tTDP8zuEU8ytmSCHa6OZxw5E32WzrOH6MU0VruHiyS/hrIHM5
-	 iqxSboX+CwRYZBiLQxTPaVG+xadW3rvZEzzV0xkChDPX0jhJ0uysikvBHu9/WYJSh4
-	 KJKh/z7pYiwZzE8YBFVz9A9g0F5mdnqM1/YEUhiY=
+	b=rVSz5g+R3LQPuG6zAVBXmhNJf/wh4TZJ2101QTRfNODPTowgfiGAL8CybgHSKX0mi
+	 I+zrvyZyjkexnqNK6umLDbE4lJqcyKAZtS2+jd2HFbXGy0BIfiNnXG7puec8t4crif
+	 X9w3itI/BRCv1ZQk27szH1doyGD2mlE317YL4VII=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728243AbgDXMYC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Apr 2020 08:24:02 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54294 "EHLO mail.kernel.org"
+        id S1727024AbgDXM3Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Apr 2020 08:29:24 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54272 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728240AbgDXMYB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1728231AbgDXMYB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Fri, 24 Apr 2020 08:24:01 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 83B942168B;
-        Fri, 24 Apr 2020 12:24:00 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 272DF21582;
+        Fri, 24 Apr 2020 12:23:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587731041;
-        bh=CriRCGClvamC+iFzH8OrWMWdqSTNirz+iZj25GHP8jc=;
+        s=default; t=1587731040;
+        bh=RWfCogi8yjlqHKJ1QYuqiErJGN7ddKARRjGXT+Srvhc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=CVLZLV67ee2Gn6DqPHhYI8cAcHw9+l3IPDVBh0hWVRz31DoLF0Odowsq5g6mFHoCy
-         TZM1ue+Dh8I4Z3rClY8NdrACd0T8G4Oa0bLBftfSa0LXT/44059bq85NcjPTwJRZK8
-         W9xUEqLF/UqhjxF8T4v9Tw3ZqRKNyCXhISJWsM6c=
+        b=iMlWZEQW2HKQ7vt1CRTKieuGylhW7lADe5j3q52XTiHpW/eaKqzJytI4rUHbmr+oc
+         13lLDMfw+40+HmkQLJFKfdDIeuU/BZxmJSOCb9IwKkUTVoPADjKHUFFYs69ZLI9QNG
+         DmM7fTV09U3j7kC5rOgyvVykVijRK8RJINasWo3M=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Brian Foster <bfoster@redhat.com>,
+Cc:     Brian Foster <bfoster@redhat.com>,
+        Paul Furtado <paulfurtado91@gmail.com>,
+        Chandan Rajendra <chandanrlinux@gmail.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Allison Collins <allison.henderson@oracle.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 04/18] xfs: fix partially uninitialized structure in xfs_reflink_remap_extent
-Date:   Fri, 24 Apr 2020 08:23:41 -0400
-Message-Id: <20200424122355.10453-4-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 03/18] xfs: acquire superblock freeze protection on eofblocks scans
+Date:   Fri, 24 Apr 2020 08:23:40 -0400
+Message-Id: <20200424122355.10453-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200424122355.10453-1-sashal@kernel.org>
 References: <20200424122355.10453-1-sashal@kernel.org>
@@ -58,36 +62,83 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+From: Brian Foster <bfoster@redhat.com>
 
-[ Upstream commit c142932c29e533ee892f87b44d8abc5719edceec ]
+[ Upstream commit 4b674b9ac852937af1f8c62f730c325fb6eadcdb ]
 
-In the reflink extent remap function, it turns out that uirec (the block
-mapping corresponding only to the part of the passed-in mapping that got
-unmapped) was not fully initialized.  Specifically, br_state was not
-being copied from the passed-in struct to the uirec.  This could lead to
-unpredictable results such as the reflinked mapping being marked
-unwritten in the destination file.
+The filesystem freeze sequence in XFS waits on any background
+eofblocks or cowblocks scans to complete before the filesystem is
+quiesced. At this point, the freezer has already stopped the
+transaction subsystem, however, which means a truncate or cowblock
+cancellation in progress is likely blocked in transaction
+allocation. This results in a deadlock between freeze and the
+associated scanner.
 
+Fix this problem by holding superblock write protection across calls
+into the block reapers. Since protection for background scans is
+acquired from the workqueue task context, trylock to avoid a similar
+deadlock between freeze and blocking on the write lock.
+
+Fixes: d6b636ebb1c9f ("xfs: halt auto-reclamation activities while rebuilding rmap")
+Reported-by: Paul Furtado <paulfurtado91@gmail.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- fs/xfs/xfs_reflink.c | 1 +
- 1 file changed, 1 insertion(+)
+ fs/xfs/xfs_icache.c | 10 ++++++++++
+ fs/xfs/xfs_ioctl.c  |  5 ++++-
+ 2 files changed, 14 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index f3c393f309e19..6622652a85a80 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1058,6 +1058,7 @@ xfs_reflink_remap_extent(
- 		uirec.br_startblock = irec->br_startblock + rlen;
- 		uirec.br_startoff = irec->br_startoff + rlen;
- 		uirec.br_blockcount = unmap_len - rlen;
-+		uirec.br_state = irec->br_state;
- 		unmap_len = rlen;
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 245483cc282ba..901f27ac94abc 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -902,7 +902,12 @@ xfs_eofblocks_worker(
+ {
+ 	struct xfs_mount *mp = container_of(to_delayed_work(work),
+ 				struct xfs_mount, m_eofblocks_work);
++
++	if (!sb_start_write_trylock(mp->m_super))
++		return;
+ 	xfs_icache_free_eofblocks(mp, NULL);
++	sb_end_write(mp->m_super);
++
+ 	xfs_queue_eofblocks(mp);
+ }
  
- 		/* If this isn't a real mapping, we're done. */
+@@ -929,7 +934,12 @@ xfs_cowblocks_worker(
+ {
+ 	struct xfs_mount *mp = container_of(to_delayed_work(work),
+ 				struct xfs_mount, m_cowblocks_work);
++
++	if (!sb_start_write_trylock(mp->m_super))
++		return;
+ 	xfs_icache_free_cowblocks(mp, NULL);
++	sb_end_write(mp->m_super);
++
+ 	xfs_queue_cowblocks(mp);
+ }
+ 
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index bad90479ade2a..6ffb53edf1b4a 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -2182,7 +2182,10 @@ xfs_file_ioctl(
+ 		if (error)
+ 			return error;
+ 
+-		return xfs_icache_free_eofblocks(mp, &keofb);
++		sb_start_write(mp->m_super);
++		error = xfs_icache_free_eofblocks(mp, &keofb);
++		sb_end_write(mp->m_super);
++		return error;
+ 	}
+ 
+ 	default:
 -- 
 2.20.1
 
