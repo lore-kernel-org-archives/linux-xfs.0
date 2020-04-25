@@ -2,120 +2,71 @@ Return-Path: <SRS0=0X6r=6J=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=FORGED_MUA_MOZILLA,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DC13C55185
-	for <linux-xfs@archiver.kernel.org>; Sat, 25 Apr 2020 07:04:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22E33C55185
+	for <linux-xfs@archiver.kernel.org>; Sat, 25 Apr 2020 07:16:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 427D020767
-	for <linux-xfs@archiver.kernel.org>; Sat, 25 Apr 2020 07:04:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E980E20728
+	for <linux-xfs@archiver.kernel.org>; Sat, 25 Apr 2020 07:16:34 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="kkLBUTgl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726110AbgDYHEY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 25 Apr 2020 03:04:24 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:42016 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726059AbgDYHEY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Apr 2020 03:04:24 -0400
-Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 03P74KD1002951
-        for <linux-xfs@vger.kernel.org>; Sat, 25 Apr 2020 03:04:24 -0400
-Received: from e06smtp04.uk.ibm.com (e06smtp04.uk.ibm.com [195.75.94.100])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 30k09ym7p5-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Sat, 25 Apr 2020 03:04:22 -0400
-Received: from localhost
-        by e06smtp04.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <riteshh@linux.ibm.com>;
-        Sat, 25 Apr 2020 08:02:51 +0100
-Received: from b06avi18626390.portsmouth.uk.ibm.com (9.149.26.192)
-        by e06smtp04.uk.ibm.com (192.168.101.134) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
-        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Sat, 25 Apr 2020 08:02:47 +0100
-Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
-        by b06avi18626390.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 03P72Uvn63373764
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 25 Apr 2020 07:02:30 GMT
-Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 5CCAA4C04A;
-        Sat, 25 Apr 2020 07:03:38 +0000 (GMT)
-Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id B43334C046;
-        Sat, 25 Apr 2020 07:03:35 +0000 (GMT)
-Received: from localhost.localdomain (unknown [9.79.185.245])
-        by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Sat, 25 Apr 2020 07:03:35 +0000 (GMT)
-Subject: Re: [PATCH 1/2] fibmap: Warn and return an error in case of block >
- INT_MAX
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Eric Biggers <ebiggers@kernel.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
+        id S1726097AbgDYHQe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 25 Apr 2020 03:16:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58654 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725837AbgDYHQe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Apr 2020 03:16:34 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05E46C09B049
+        for <linux-xfs@vger.kernel.org>; Sat, 25 Apr 2020 00:16:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=LUtrVPOpVq0qehw/4H4appjiVEutH+4bdvjFVyj+dEU=; b=kkLBUTglsuSJzEEU21m/MZVe1B
+        j/Ql1ZqTGlwKAbwdrtIYtnxTruqcCfS5yIGX4mFwg4T/dCFtJjnym+TUd8ytm0eZXsapd+u58k/Mr
+        mnMOsffpFnnv5ekmJT45xqQ0eZy5CHuNxiiYk7ZuZKhJPVqRac89El2NlQxn8FsD8f971AqT+AIx9
+        Wj9FzgxAwDv18kn8DS1/X4UVAxe8KGGbAN/C3IOvPMqqJQi36QExL+HcnseduZJZ5uDWo5i1/N7fs
+        aKM51rZDEvKxPGZk6tjmdCYDJ1bBvmQRsuKA8S+mAGmg2augsMdaRWs9+oD3jmTmJ2CchP3V0Rx2+
+        XZjsU4gw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jSF39-0002dx-NR; Sat, 25 Apr 2020 07:16:31 +0000
+Date:   Sat, 25 Apr 2020 00:16:31 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
         Christoph Hellwig <hch@infradead.org>,
-        Jan Kara <jack@suse.com>, tytso@mit.edu,
-        "Aneesh Kumar K . V" <aneesh.kumar@linux.ibm.com>,
-        linux-ext4@vger.kernel.org
-References: <cover.1587670914.git.riteshh@linux.ibm.com>
- <e34d1ac05d29aeeb982713a807345a0aaafc7fe0.1587670914.git.riteshh@linux.ibm.com>
- <20200424191739.GA217280@gmail.com>
- <20200424225425.6521D4C040@d06av22.portsmouth.uk.ibm.com>
- <20200424234058.GA29705@bombadil.infradead.org>
- <20200424234647.GX6749@magnolia>
-From:   Ritesh Harjani <riteshh@linux.ibm.com>
-Date:   Sat, 25 Apr 2020 12:33:34 +0530
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
+        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfsprogs: don't warn about packed members
+Message-ID: <20200425071631.GB30673@infradead.org>
+References: <20191216215245.13666-1-david@fromorbit.com>
+ <20200126110212.GA23829@infradead.org>
+ <029fa407-6bf5-c8c0-450a-25bded280fec@sandeen.net>
+ <20200312140910.GA11758@infradead.org>
+ <b6c1fed7-9e98-7d35-c489-bcdd2a6f9a23@sandeen.net>
+ <20200424103323.GA10781@infradead.org>
+ <20200424174254.GN6742@magnolia>
+ <955e6514-a3f2-0c04-a20f-c35a32390747@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20200424234647.GX6749@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-x-cbid: 20042507-0016-0000-0000-0000030A76BC
-X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 20042507-0017-0000-0000-0000336EA013
-Message-Id: <20200425070335.B43334C046@d06av22.portsmouth.uk.ibm.com>
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.676
- definitions=2020-04-25_02:2020-04-24,2020-04-25 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- suspectscore=0 phishscore=0 clxscore=1015 adultscore=0 mlxlogscore=999
- bulkscore=0 impostorscore=0 spamscore=0 mlxscore=0 priorityscore=1501
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004250058
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <955e6514-a3f2-0c04-a20f-c35a32390747@sandeen.net>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 4/25/20 5:16 AM, Darrick J. Wong wrote:
-> On Fri, Apr 24, 2020 at 04:40:58PM -0700, Matthew Wilcox wrote:
->> On Sat, Apr 25, 2020 at 04:24:24AM +0530, Ritesh Harjani wrote:
->>> Ok, I see.
->>> Let me replace WARN() with below pr_warn() line then. If no objections,
->>> then will send this in a v2 with both patches combined as Darrick
->>> suggested. - (with Reviewed-by tags of Jan & Christoph).
->>>
->>> pr_warn("fibmap: this would truncate fibmap result\n");
->>
->> We generally don't like userspace to be able to trigger kernel messages
->> on demand, so they can't swamp the logfiles.  printk_ratelimited()?
+On Fri, Apr 24, 2020 at 12:52:45PM -0500, Eric Sandeen wrote:
+> seems like it's in for-next, no?
 > 
-> Or WARN_ON_ONCE...
+> https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/tree/include/builddefs.in?h=for-next#n16
 
-So, Eric was mentioning WARN_** are mostly for kernel side of bugs.
-But this is mostly a API fault which affects user side and also to
-warn the user about the possible truncation in the block fibmap
-addr.
-Also WARN_ON_ONCE, will be shown only once and won't be printed for
-every other file for which block addr > INT_MAX.
+Indeed it is.  I still saw the warnings, though, but a "make realclean"
+fixed that.   Oh the joys of build systems..
 
-I think we could go with below. If ok, I could post this in v2.
-
-pr_warn_ratelimited("fibmap: would truncate fibmap result\n");
-
--ritesh
-
+Sorry for the noise.
