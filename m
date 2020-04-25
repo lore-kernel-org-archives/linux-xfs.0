@@ -6,121 +6,146 @@ X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FF32C54FCB
-	for <linux-xfs@archiver.kernel.org>; Sat, 25 Apr 2020 18:13:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEAD1C54FCB
+	for <linux-xfs@archiver.kernel.org>; Sat, 25 Apr 2020 18:19:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2F0EC2072B
-	for <linux-xfs@archiver.kernel.org>; Sat, 25 Apr 2020 18:13:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8EF2B20714
+	for <linux-xfs@archiver.kernel.org>; Sat, 25 Apr 2020 18:19:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ftFmUq+O"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FFTNH2Q4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726240AbgDYSNK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 25 Apr 2020 14:13:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47176 "EHLO
+        id S1726192AbgDYSTa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 25 Apr 2020 14:19:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48162 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726061AbgDYSNK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Apr 2020 14:13:10 -0400
+        by vger.kernel.org with ESMTP id S1726145AbgDYST3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Apr 2020 14:19:29 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78800C09B04D
-        for <linux-xfs@vger.kernel.org>; Sat, 25 Apr 2020 11:13:10 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0232C09B04D
+        for <linux-xfs@vger.kernel.org>; Sat, 25 Apr 2020 11:19:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Transfer-Encoding
-        :Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-        Sender:Reply-To:Content-ID:Content-Description;
-        bh=XlAzvKGjpP+3g724ItBGTL/PGICMIkq6feqcJEIZVfg=; b=ftFmUq+O3krhanyAj9FbRvwZeu
-        I1obqYxwyrFz+VkvMJa3MOdH7hza5QTWKArvQomfxyn7OQ5crWY3+5LuvtiAd2oTRADmDHK0i5gDV
-        UTSjxGEy5f5ZqHnCcRLTK73acxk3oqQwv2mjlQjljC4h6jHT7WbSTP7+jOY0HrxzmtonUWv7oCqc1
-        GdLjuvvSi5ZBFpocn56tHAShtUInbynGfJMEXx4FJ6cLY2e+EuX7BhSgHIrqs2LadtinJFN4WAiZZ
-        YWF2Q14NlBfN3OWXnUUiieLNcPy/hSGlOBLSPzFkhEwO2F25q+tTIKMiipKiMXRtdKKe+xYhpZxSo
-        rACs4Qeg==;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=4SmjeEW3z60SM7z9Sm9rCikgPYAHFoeQR112jOI3S0Y=; b=FFTNH2Q4UuttuiqDvWVEWYl8lM
+        zKdSECtP2MtRz0H+CnEbEzPVr9kPXAw993AhU3cxHf+wVYxFMZQsgsnbQi79xbKy5oq996kX5AFPY
+        nZn7l3UWlcdmA6zIv21ieE4OYkOxokbrnn9NkZPHBAkh0D+psa/Gc6puJE9yiXgNugMdFdKJlrRKt
+        pBy39F84bvs5P2lALZAqjWQ5VIDuopcYi2LxXO8utgcZDJ1h+7tXK/nTbv/+IAL5T0GXpXNWOc4jA
+        lTFXBuXsiVvwrmz3RWgtYUsxW+xNlPd8ZlTu/WSO17fFnn/ajVZn8aNfrELfvmXl1+Y5JqBK0ApRs
+        9gg17ZmA==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jSPIZ-0002kd-3I; Sat, 25 Apr 2020 18:13:07 +0000
-Date:   Sat, 25 Apr 2020 11:13:07 -0700
+        id 1jSPOj-0006he-KK; Sat, 25 Apr 2020 18:19:29 +0000
+Date:   Sat, 25 Apr 2020 11:19:29 -0700
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 02/19] xfs: refactor log recovery item sorting into a
- generic dispatch structure
-Message-ID: <20200425181307.GA16698@infradead.org>
+Subject: Re: [PATCH 03/19] xfs: refactor log recovery item dispatch for pass2
+ readhead functions
+Message-ID: <20200425181929.GB16698@infradead.org>
 References: <158752116283.2140829.12265815455525398097.stgit@magnolia>
- <158752117554.2140829.4901314701479350791.stgit@magnolia>
+ <158752118180.2140829.13805128567366066982.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <158752117554.2140829.4901314701479350791.stgit@magnolia>
+In-Reply-To: <158752118180.2140829.13805128567366066982.stgit@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> +
-> +/* Sorting hat for log items as they're read in. */
-> +enum xlog_recover_reorder {
-> +	XLOG_REORDER_UNKNOWN,
-> +	XLOG_REORDER_BUFFER_LIST,
-> +	XLOG_REORDER_CANCEL_LIST,
-> +	XLOG_REORDER_INODE_BUFFER_LIST,
-> +	XLOG_REORDER_INODE_LIST,
-
-XLOG_REORDER_INODE_LIST seems a bit misnamed as it really is the
-"misc" or "no reorder" list.  I guess the naming comes from the
-local inode_list variable, but maybe we need to fix that as well?
-
-> +typedef enum xlog_recover_reorder (*xlog_recover_reorder_fn)(
+On Tue, Apr 21, 2020 at 07:06:21PM -0700, Darrick J. Wong wrote:
+>  typedef enum xlog_recover_reorder (*xlog_recover_reorder_fn)(
+>  		struct xlog_recover_item *item);
+> +typedef void (*xlog_recover_ra_pass2_fn)(struct xlog *log,
 > +		struct xlog_recover_item *item);
 
-This typedef doesn't actually seem to help with anything (neither
-with just thіs patch nor the final tree).
+Same comment for this one - or the other two following.
 
+> +/*
+> + * This structure is used during recovery to record the buf log items which
+> + * have been canceled and should not be replayed.
+> + */
+> +struct xfs_buf_cancel {
+> +	xfs_daddr_t		bc_blkno;
+> +	uint			bc_len;
+> +	int			bc_refcount;
+> +	struct list_head	bc_list;
+> +};
 > +
-> +struct xlog_recover_item_type {
-> +	/*
-> +	 * These two items decide how to sort recovered log items during
-> +	 * recovery.  If reorder_fn is non-NULL it will be called; otherwise,
-> +	 * reorder will be used to decide.  See the comment above
-> +	 * xlog_recover_reorder_trans for more details about what the values
-> +	 * mean.
-> +	 */
-> +	enum xlog_recover_reorder	reorder;
-> +	xlog_recover_reorder_fn		reorder_fn;
+> +struct xfs_buf_cancel *xlog_peek_buffer_cancelled(struct xlog *log,
+> +		xfs_daddr_t blkno, uint len, unsigned short flags);
 
-I'd just use reorder_fn and skip the simple field.  Just one way to do
-things even if it adds a tiny amount of boilerplate code.
+None of the callers moved in this patch even needs the xfs_buf_cancel
+structure, it just uses the return value as a boolean.  I think they
+all should be switched to use xlog_check_buffer_cancelled instead, which
+means that struct xfs_buf_cancel and xlog_peek_buffer_cancelled can stay
+private in xfs_log_recovery.c (and later xfs_buf_item.c).
 
-> +	case XFS_LI_INODE:
-> +		return &xlog_inode_item_type;
-> +	case XFS_LI_DQUOT:
-> +		return &xlog_dquot_item_type;
-> +	case XFS_LI_QUOTAOFF:
-> +		return &xlog_quotaoff_item_type;
-> +	case XFS_LI_IUNLINK:
-> +		/* Not implemented? */
-
-Not implemented!  I think we need a prep patch to remove this first.
-
-> @@ -1851,41 +1890,34 @@ xlog_recover_reorder_trans(
->  
->  	list_splice_init(&trans->r_itemq, &sort_list);
->  	list_for_each_entry_safe(item, n, &sort_list, ri_list) {
-> -		xfs_buf_log_format_t	*buf_f = item->ri_buf[0].i_addr;
-> +		enum xlog_recover_reorder	fate = XLOG_REORDER_UNKNOWN;
+> +STATIC void
+> +xlog_recover_buffer_ra_pass2(
+> +	struct xlog                     *log,
+> +	struct xlog_recover_item        *item)
+> +{
+> +	struct xfs_buf_log_format	*buf_f = item->ri_buf[0].i_addr;
+> +	struct xfs_mount		*mp = log->l_mp;
 > +
-> +		item->ri_type = xlog_item_for_type(ITEM_TYPE(item));
+> +	if (xlog_peek_buffer_cancelled(log, buf_f->blf_blkno,
+> +			buf_f->blf_len, buf_f->blf_flags)) {
+> +		return;
+> +	}
+> +
+> +	xfs_buf_readahead(mp->m_ddev_targp, buf_f->blf_blkno,
+> +				buf_f->blf_len, NULL);
 
-I wonder if just passing the whole item to xlog_item_for_type would
-make more sense.  It would then need a different name, of course.
+Why not:
 
-> +		if (item->ri_type) {
-> +			if (item->ri_type->reorder_fn)
-> +				fate = item->ri_type->reorder_fn(item);
-> +			else
-> +				fate = item->ri_type->reorder;
-> +		}
+	if (!xlog_peek_buffer_cancelled(log, buf_f->blf_blkno,
+			buf_f->blf_len, buf_f->blf_flags)) {
+		xfs_buf_readahead(mp->m_ddev_targp, buf_f->blf_blkno,
+				buf_f->blf_len, NULL);
+	}
 
-I think for the !item->ri_type we should immediately jump to what
-currently is the XLOG_REORDER_UNKNOWN case, and thus avoid even
-adding XLOG_REORDER_UNKNOWN to the enum.  The added benefit is that
-any item without a reorder_fn could then be treated as on what
-currently is the inode_list, but needs a btter name.
+> +STATIC void
+> +xlog_recover_dquot_ra_pass2(
+> +	struct xlog			*log,
+> +	struct xlog_recover_item	*item)
+> +{
+> +	struct xfs_mount	*mp = log->l_mp;
+> +	struct xfs_disk_dquot	*recddq;
+> +	struct xfs_dq_logformat	*dq_f;
+> +	uint			type;
+> +	int			len;
+> +
+> +
+> +	if (mp->m_qflags == 0)
+
+Double empty line above.
+
+> +	if (xlog_peek_buffer_cancelled(log, dq_f->qlf_blkno, len, 0))
+> +		return;
+> +
+> +	xfs_buf_readahead(mp->m_ddev_targp, dq_f->qlf_blkno, len,
+> +			  &xfs_dquot_buf_ra_ops);
+
+Same comment as above, no real need for the early return here.
+
+> +	if (xlog_peek_buffer_cancelled(log, ilfp->ilf_blkno, ilfp->ilf_len, 0))
+> +		return;
+> +
+> +	xfs_buf_readahead(mp->m_ddev_targp, ilfp->ilf_blkno,
+> +				ilfp->ilf_len, &xfs_inode_buf_ra_ops);
+
+Here again.
+
+> -	unsigned short			flags)
+> +	unsigned short		flags)
+
+Spurious whitespace change.
+
+>  		case XLOG_RECOVER_PASS2:
+> -			xlog_recover_ra_pass2(log, item);
+> +			if (item->ri_type && item->ri_type->ra_pass2_fn)
+> +				item->ri_type->ra_pass2_fn(log, item);
+
+Shouldn't we ensure eatly on that we always have a valid ->ri_type?
