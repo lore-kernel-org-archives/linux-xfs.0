@@ -1,107 +1,153 @@
-Return-Path: <SRS0=lEGq=6I=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=0X6r=6J=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3E7EC55191
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 23:47:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DF5AC2BA1A
+	for <linux-xfs@archiver.kernel.org>; Sat, 25 Apr 2020 01:49:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D4234208E4
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Apr 2020 23:47:08 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="APhXgpEy"
+	by mail.kernel.org (Postfix) with ESMTP id 4A01E20857
+	for <linux-xfs@archiver.kernel.org>; Sat, 25 Apr 2020 01:49:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1587779382;
+	bh=bD3n9+0UGbn/RLhDn1eONjwj1qap27YZ0n/6HLf1Kec=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=nIY1rvE8p5MhF01Yt6cY4jDnyJMJv4FuuG2L7ovrbo5JydijENF0eaJQ6hAyE9V+9
+	 /tjTnfRY3WnP0YPEiJRZnfh4/c3LCgSFI3jN/q858sG7hKf1Ie43yKoW3KKRXoBajc
+	 mkOsXsr1xG5Pi0rp6AOXezF7m3z8T1vc4rk+Fflk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726112AbgDXXrH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Apr 2020 19:47:07 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:36120 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725946AbgDXXrH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Apr 2020 19:47:07 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03ONgjbO143506;
-        Fri, 24 Apr 2020 23:46:52 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=kr0ezienOi1AcR+QZub9HSBptjuxq1qJkU9+y/9DssU=;
- b=APhXgpEycfEgLDNzW9Rm6NTTYoodaYnvz+xz+S9OifUolhv69pq/1sLxVF79AfNazlyC
- Q7dCnOkSUrxI0BP1yVXQnF/SxnG+j4ZZdj2NMp+mSy7wUQOx04GSB6YIFuU2pKK4LvnL
- bFLiXk+guXTF9S2z2+VQp+JxryYZxX9cSfVd8OlUcKpeIR/LEN51IlOhxkXNpOKdqYcx
- XMulIHVYOeSZrTBAUNyDX/Qa74Ic52jjL/uRXukGJfv3QH8LqcJE+6sf5/GqWENFCk0a
- BDLi9FkkFl9J8sbmv6e+LHecnOCpL60k9xB3/vkHj9+2ovux3Zh7L1AinH0Hu3hu2dLa Fw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 30ketdpwd3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 24 Apr 2020 23:46:52 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03ONcXpA002378;
-        Fri, 24 Apr 2020 23:46:52 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 30gb1qtksb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 24 Apr 2020 23:46:52 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03ONknjm003732;
-        Fri, 24 Apr 2020 23:46:50 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 24 Apr 2020 16:46:49 -0700
-Date:   Fri, 24 Apr 2020 16:46:47 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Ritesh Harjani <riteshh@linux.ibm.com>,
-        Eric Biggers <ebiggers@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@infradead.org>,
-        Jan Kara <jack@suse.com>, tytso@mit.edu,
-        "Aneesh Kumar K . V" <aneesh.kumar@linux.ibm.com>,
-        linux-ext4@vger.kernel.org
-Subject: Re: [PATCH 1/2] fibmap: Warn and return an error in case of block >
- INT_MAX
-Message-ID: <20200424234647.GX6749@magnolia>
-References: <cover.1587670914.git.riteshh@linux.ibm.com>
- <e34d1ac05d29aeeb982713a807345a0aaafc7fe0.1587670914.git.riteshh@linux.ibm.com>
- <20200424191739.GA217280@gmail.com>
- <20200424225425.6521D4C040@d06av22.portsmouth.uk.ibm.com>
- <20200424234058.GA29705@bombadil.infradead.org>
+        id S1726174AbgDYBtl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Apr 2020 21:49:41 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46570 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726032AbgDYBtl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 24 Apr 2020 21:49:41 -0400
+Received: from localhost (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2F2A72076C;
+        Sat, 25 Apr 2020 01:49:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1587779380;
+        bh=bD3n9+0UGbn/RLhDn1eONjwj1qap27YZ0n/6HLf1Kec=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=NDIus6f4Yx0AwjdjEVhPcDrWP/ScochkaUOCVRAOMK4t1b8Sc/JcN8p2FlHZfSmea
+         Y3qrRSpEGSnlDAbO7mdLC/c9HQ4v2bEDbfIRpOBk/QD2gxxXcBKAFVQpHDHMBQxFVy
+         UrQqNTTwlCW+RGwn7+bcQkmCgKtMduPffq4/e/wg=
+Date:   Fri, 24 Apr 2020 21:49:39 -0400
+From:   Sasha Levin <sashal@kernel.org>
+To:     Suraj Jitindar Singh <surajjs@amazon.com>
+Cc:     stable@vger.kernel.org, sjitindarsingh@gmail.com,
+        linux-xfs@vger.kernel.org, kaixuxia <xiakaixu1987@gmail.com>,
+        kaixuxia <kaixuxia@tencent.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH STABLE v4.14.y 2/2] xfs: Fix deadlock between AGI and AGF
+ with RENAME_WHITEOUT
+Message-ID: <20200425014939.GE13035@sasha-vm>
+References: <20200424230532.2852-1-surajjs@amazon.com>
+ <20200424230532.2852-3-surajjs@amazon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Disposition: inline
-In-Reply-To: <20200424234058.GA29705@bombadil.infradead.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9601 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=0 spamscore=0
- mlxlogscore=999 mlxscore=0 malwarescore=0 bulkscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004240179
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9601 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 spamscore=0
- impostorscore=0 bulkscore=0 mlxlogscore=999 phishscore=0 mlxscore=0
- priorityscore=1501 clxscore=1015 suspectscore=0 adultscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004240180
+In-Reply-To: <20200424230532.2852-3-surajjs@amazon.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Apr 24, 2020 at 04:40:58PM -0700, Matthew Wilcox wrote:
-> On Sat, Apr 25, 2020 at 04:24:24AM +0530, Ritesh Harjani wrote:
-> > Ok, I see.
-> > Let me replace WARN() with below pr_warn() line then. If no objections,
-> > then will send this in a v2 with both patches combined as Darrick
-> > suggested. - (with Reviewed-by tags of Jan & Christoph).
-> > 
-> > pr_warn("fibmap: this would truncate fibmap result\n");
-> 
-> We generally don't like userspace to be able to trigger kernel messages
-> on demand, so they can't swamp the logfiles.  printk_ratelimited()?
+On Fri, Apr 24, 2020 at 04:05:32PM -0700, Suraj Jitindar Singh wrote:
+>From: kaixuxia <xiakaixu1987@gmail.com>
+>
+>commit bc56ad8c74b8588685c2875de0df8ab6974828ef upstream.
+>
+>When performing rename operation with RENAME_WHITEOUT flag, we will
+>hold AGF lock to allocate or free extents in manipulating the dirents
+>firstly, and then doing the xfs_iunlink_remove() call last to hold
+>AGI lock to modify the tmpfile info, so we the lock order AGI->AGF.
+>
+>The big problem here is that we have an ordering constraint on AGF
+>and AGI locking - inode allocation locks the AGI, then can allocate
+>a new extent for new inodes, locking the AGF after the AGI. Hence
+>the ordering that is imposed by other parts of the code is AGI before
+>AGF. So we get an ABBA deadlock between the AGI and AGF here.
+>
+>Process A:
+>Call trace:
+> ? __schedule+0x2bd/0x620
+> schedule+0x33/0x90
+> schedule_timeout+0x17d/0x290
+> __down_common+0xef/0x125
+> ? xfs_buf_find+0x215/0x6c0 [xfs]
+> down+0x3b/0x50
+> xfs_buf_lock+0x34/0xf0 [xfs]
+> xfs_buf_find+0x215/0x6c0 [xfs]
+> xfs_buf_get_map+0x37/0x230 [xfs]
+> xfs_buf_read_map+0x29/0x190 [xfs]
+> xfs_trans_read_buf_map+0x13d/0x520 [xfs]
+> xfs_read_agf+0xa6/0x180 [xfs]
+> ? schedule_timeout+0x17d/0x290
+> xfs_alloc_read_agf+0x52/0x1f0 [xfs]
+> xfs_alloc_fix_freelist+0x432/0x590 [xfs]
+> ? down+0x3b/0x50
+> ? xfs_buf_lock+0x34/0xf0 [xfs]
+> ? xfs_buf_find+0x215/0x6c0 [xfs]
+> xfs_alloc_vextent+0x301/0x6c0 [xfs]
+> xfs_ialloc_ag_alloc+0x182/0x700 [xfs]
+> ? _xfs_trans_bjoin+0x72/0xf0 [xfs]
+> xfs_dialloc+0x116/0x290 [xfs]
+> xfs_ialloc+0x6d/0x5e0 [xfs]
+> ? xfs_log_reserve+0x165/0x280 [xfs]
+> xfs_dir_ialloc+0x8c/0x240 [xfs]
+> xfs_create+0x35a/0x610 [xfs]
+> xfs_generic_create+0x1f1/0x2f0 [xfs]
+> ...
+>
+>Process B:
+>Call trace:
+> ? __schedule+0x2bd/0x620
+> ? xfs_bmapi_allocate+0x245/0x380 [xfs]
+> schedule+0x33/0x90
+> schedule_timeout+0x17d/0x290
+> ? xfs_buf_find+0x1fd/0x6c0 [xfs]
+> __down_common+0xef/0x125
+> ? xfs_buf_get_map+0x37/0x230 [xfs]
+> ? xfs_buf_find+0x215/0x6c0 [xfs]
+> down+0x3b/0x50
+> xfs_buf_lock+0x34/0xf0 [xfs]
+> xfs_buf_find+0x215/0x6c0 [xfs]
+> xfs_buf_get_map+0x37/0x230 [xfs]
+> xfs_buf_read_map+0x29/0x190 [xfs]
+> xfs_trans_read_buf_map+0x13d/0x520 [xfs]
+> xfs_read_agi+0xa8/0x160 [xfs]
+> xfs_iunlink_remove+0x6f/0x2a0 [xfs]
+> ? current_time+0x46/0x80
+> ? xfs_trans_ichgtime+0x39/0xb0 [xfs]
+> xfs_rename+0x57a/0xae0 [xfs]
+> xfs_vn_rename+0xe4/0x150 [xfs]
+> ...
+>
+>In this patch we move the xfs_iunlink_remove() call to
+>before acquiring the AGF lock to preserve correct AGI/AGF locking
+>order.
+>
+>Signed-off-by: kaixuxia <kaixuxia@tencent.com>
+>Reviewed-by: Brian Foster <bfoster@redhat.com>
+>Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+>Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+>
+>Minor massage required to backport to apply due to removal of
+>out_bmap_cancel: error path label upstream as a result of code
+>rework. Only change was to the last code block removed by the
+>patch. Functionally equivalent to upstream.
 
-Or WARN_ON_ONCE...
+This patch also needs to be backported to 4.19. I can look into that
+tomorrow unless you can send a patch sooner :)
 
---D
+-- 
+Thanks,
+Sasha
