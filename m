@@ -2,345 +2,132 @@ Return-Path: <SRS0=Ew45=6K=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28DB1C54FCB
-	for <linux-xfs@archiver.kernel.org>; Sun, 26 Apr 2020 14:51:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC8BEC54FCB
+	for <linux-xfs@archiver.kernel.org>; Sun, 26 Apr 2020 21:50:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E85E6206DD
-	for <linux-xfs@archiver.kernel.org>; Sun, 26 Apr 2020 14:51:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 95D5E2071C
+	for <linux-xfs@archiver.kernel.org>; Sun, 26 Apr 2020 21:50:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aLzezXRX"
+	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="OwNMupnS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726140AbgDZOvv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 26 Apr 2020 10:51:51 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:41513 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725876AbgDZOvv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Apr 2020 10:51:51 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1587912708;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=Zo9BiW1I6VkbXEMDxxnU6gBXGQSRMnquYpj4uTNnRJ0=;
-        b=aLzezXRXpyvpyi6jFe1Q3f9NFstluXyp/oAqWbJ94zu3Z87anAZy6WskTHnXSXthDYwyqz
-        G8XwQJdaEsdOkRcyxcFQeVtBu5nGsWXo7ZvTvs3P5UnEGLteMtk56ISSH991i2ImXfjlib
-        UV9lgaIZvI5jZY3Y2N9FQ5qWyCKwmQM=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-23-zy_ewKc2NSi0jSecu5yWlQ-1; Sun, 26 Apr 2020 10:51:46 -0400
-X-MC-Unique: zy_ewKc2NSi0jSecu5yWlQ-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6F151107ACCA;
-        Sun, 26 Apr 2020 14:51:45 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-13-119.pek2.redhat.com [10.72.13.119])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id D29CE60300;
-        Sun, 26 Apr 2020 14:51:43 +0000 (UTC)
-From:   Zorro Lang <zlang@redhat.com>
-To:     fstests@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Subject: [PATCH v2] generic: test per-type quota softlimit enforcement timeout
-Date:   Sun, 26 Apr 2020 22:51:41 +0800
-Message-Id: <20200426145141.22932-1-zlang@redhat.com>
-MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-Content-Transfer-Encoding: quoted-printable
+        id S1726430AbgDZVuR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 26 Apr 2020 17:50:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48548 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726327AbgDZVtz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Apr 2020 17:49:55 -0400
+Received: from mail-ed1-x541.google.com (mail-ed1-x541.google.com [IPv6:2a00:1450:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFD5FC09B053
+        for <linux-xfs@vger.kernel.org>; Sun, 26 Apr 2020 14:49:53 -0700 (PDT)
+Received: by mail-ed1-x541.google.com with SMTP id r7so11992010edo.11
+        for <linux-xfs@vger.kernel.org>; Sun, 26 Apr 2020 14:49:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cloud.ionos.com; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=je11VssEqcRjDcQQUY7TMs+S/p8Pe+y4zVJlfwO1AIY=;
+        b=OwNMupnSJkBuaJfMXeCgM1rYXjTmzIAla+tSBp7FYda6Z0do31Tv6/LqXGLMcBBWhG
+         nqjIhBJEalueOvj9V2LZ+TuLLeFNIXzVb6OK45n66rzci+x/eJxewCUOYOo06dTayDKj
+         B5iJ94emWcTjwQbgVlPIpz9Lz++7r/aQF//fpjSxu2/XNpEhrL+lHBErqiCynz5SbjB2
+         iW4ERClUfrgtnD0QmDonsDibcZjmNyxtpI2M/DaGWxbm7W5qNx0fPMGF44KjexJ6P8/1
+         2LGOGXLbZT3PVyAX3yAvtCf/8vJUr85wyASdWC+0wMGkNwBqVxwGJ+99/wys6z7wxDo+
+         YYVA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=je11VssEqcRjDcQQUY7TMs+S/p8Pe+y4zVJlfwO1AIY=;
+        b=qaF//biaPErohyDrA8H+GOkKf1DvrKVDWhWvWX2s36+kZtthij4vYVcdKrm88RAgNK
+         diIiENpoLBQYUqBtYlYCQJKUbWnFk+nblCovyjysZxzBEmqUlAkD+tysDx7J1uWuz4wt
+         ARrV50276ewhwvUpwn3hnO43ZRZuXjG5m2O4u1ILT85FtLjBv1UXmsKVZm68u3gugjTx
+         3xjASUvntYTGhQEyAU6UcLl7oYKtpKVU6ABSQZK/9buIOZNb4NXWPHwWCVffwHFEYcHG
+         hFWrKhQ8RLVviXkSMnKY9l/CKnqmPzBoHIN4s9h5XctKprEQApUNmfNaUNeTDXX795ju
+         NFhg==
+X-Gm-Message-State: AGi0PuaYlTWynSKeBg0RkpCoZXlJvwxs2ULZ7RXT+LhfPITwEH0hNGBT
+        ZM3emOmz6pcaQa8JkN5uV3nXVg==
+X-Google-Smtp-Source: APiQypLeC6iTKrMS3r2CPJ1hgROOG19gCAO83wMvAt7p0NE0/jtP9fk8m1Bkoh+kIZpagKS8bUmlOQ==
+X-Received: by 2002:a50:99c4:: with SMTP id n4mr16930973edb.187.1587937792458;
+        Sun, 26 Apr 2020 14:49:52 -0700 (PDT)
+Received: from ls00508.pb.local ([2001:1438:4010:2540:fab1:56ff:feab:56b1])
+        by smtp.gmail.com with ESMTPSA id ce18sm2270108ejb.61.2020.04.26.14.49.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 26 Apr 2020 14:49:51 -0700 (PDT)
+From:   Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+To:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     hch@infradead.org, david@fromorbit.com, willy@infradead.org,
+        Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org
+Subject: [RFC PATCH 6/9] iomap: use set/clear_fs_page_private
+Date:   Sun, 26 Apr 2020 23:49:22 +0200
+Message-Id: <20200426214925.10970-7-guoqing.jiang@cloud.ionos.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200426214925.10970-1-guoqing.jiang@cloud.ionos.com>
+References: <20200426214925.10970-1-guoqing.jiang@cloud.ionos.com>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Set different block & inode grace timers for user, group and project
-quotas, then test softlimit enforcement timeout, make sure different
-grace timers as expected.
+Since the new pair function is introduced, we can call them to clean the
+code in iomap.
 
-Signed-off-by: Zorro Lang <zlang@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
+Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
 ---
+ fs/iomap/buffered-io.c | 14 +++-----------
+ 1 file changed, 3 insertions(+), 11 deletions(-)
 
-Hi,
-
-After generic/594 got merge, I'd like to re-send this case again. It stil=
-l
-fails on XFS, but pass on ext4.
-
-V2 add _require_setquota_project
-
-Thanks,
-Zorro
-
- common/quota          |   4 +
- tests/generic/597     | 180 ++++++++++++++++++++++++++++++++++++++++++
- tests/generic/597.out |  41 ++++++++++
- tests/generic/group   |   1 +
- 4 files changed, 226 insertions(+)
- create mode 100755 tests/generic/597
- create mode 100644 tests/generic/597.out
-
-diff --git a/common/quota b/common/quota
-index 240e0bbc..1437d5f7 100644
---- a/common/quota
-+++ b/common/quota
-@@ -217,6 +217,10 @@ _qmount()
-     if [ "$FSTYP" !=3D "xfs" ]; then
-         quotacheck -ug $SCRATCH_MNT >>$seqres.full 2>&1
-         quotaon -ug $SCRATCH_MNT >>$seqres.full 2>&1
-+        # try to turn on project quota if it's supported
-+        if quotaon --help 2>&1 | grep -q '\-\-project'; then
-+            quotaon --project $SCRATCH_MNT >>$seqres.full 2>&1
-+        fi
-     fi
-     chmod ugo+rwx $SCRATCH_MNT
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 89e21961d1ad..cc48bf4f1193 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -59,24 +59,18 @@ iomap_page_create(struct inode *inode, struct page *page)
+ 	 * migrate_page_move_mapping() assumes that pages with private data have
+ 	 * their count elevated by 1.
+ 	 */
+-	get_page(page);
+-	set_page_private(page, (unsigned long)iop);
+-	SetPagePrivate(page);
+-	return iop;
++	return (struct iomap_page *)set_fs_page_private(page, iop);
  }
-diff --git a/tests/generic/597 b/tests/generic/597
-new file mode 100755
-index 00000000..52138b80
---- /dev/null
-+++ b/tests/generic/597
-@@ -0,0 +1,180 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2020 Red Hat, Inc.  All Rights Reserved.
-+#
-+# FS QA Test No. 597
-+#
-+# Test per-type(user, group and project) filesystem quota timers, make s=
-ure
-+# enforcement
-+#
-+seq=3D`basename $0`
-+seqres=3D$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=3D`pwd`
-+tmp=3D/tmp/$$
-+status=3D1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	restore_project
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/quota
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+require_project()
-+{
-+	rm -f $tmp.projects $tmp.projid
-+	if [ -f /etc/projects ];then
-+		cat /etc/projects > $tmp.projects
-+	fi
-+	if [ -f /etc/projid ];then
-+		cat /etc/projid > $tmp.projid
-+	fi
-+
-+	cat >/etc/projects <<EOF
-+100:$SCRATCH_MNT/t
-+EOF
-+	cat >/etc/projid <<EOF
-+$qa_user:100
-+EOF
-+	PROJECT_CHANGED=3D1
-+}
-+
-+restore_project()
-+{
-+	if [ "$PROJECT_CHANGED" =3D "1" ];then
-+		rm -f /etc/projects /etc/projid
-+		if [ -f $tmp.projects ];then
-+			cat $tmp.projects > /etc/projects
-+		fi
-+		if [ -f $tmp.projid ];then
-+			cat $tmp.projid > /etc/projid
-+		fi
-+	fi
-+}
-+
-+init_files()
-+{
-+	local dir=3D$1
-+
-+	echo "### Initialize files, and their mode and ownership"
-+	touch $dir/file{1,2} 2>/dev/null
-+	chown $qa_user $dir/file{1,2} 2>/dev/null
-+	chgrp $qa_user $dir/file{1,2} 2>/dev/null
-+	chmod 777 $dir 2>/dev/null
-+}
-+
-+cleanup_files()
-+{
-+	echo "### Remove all files"
-+	rm -f ${1}/file{1,2,3,4,5,6}
-+}
-+
-+test_grace()
-+{
-+	local type=3D$1
-+	local dir=3D$2
-+	local bgrace=3D$3
-+	local igrace=3D$4
-+
-+	init_files $dir
-+	echo "--- Test block quota ---"
-+	# Firstly fit below block soft limit
-+	echo "Write 225 blocks..."
-+	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((225 * $BLOCK_SIZE))' \
-+		-c fsync $dir/file1" 2>&1 >>$seqres.full | \
-+		_filter_xfs_io_error | tee -a $seqres.full
-+	repquota -v -$type $SCRATCH_MNT | grep -v "^root" >>$seqres.full 2>&1
-+	# Secondly overcome block soft limit
-+	echo "Rewrite 250 blocks plus 1 byte, over the block softlimit..."
-+	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((250 * $BLOCK_SIZE + 1))' \
-+		-c fsync $dir/file1" 2>&1 >>$seqres.full | \
-+		_filter_xfs_io_error | tee -a $seqres.full
-+	repquota -v -$type $SCRATCH_MNT | grep -v "^root" >>$seqres.full 2>&1
-+	# Reset grace time here, make below grace time test more accurate
-+	setquota -$type $qa_user -T $bgrace $igrace $SCRATCH_MNT 2>/dev/null
-+	# Now sleep enough grace time and check that softlimit got enforced
-+	sleep $((bgrace + 1))
-+	echo "Try to write 1 one more block after grace..."
-+	su $qa_user -c "$XFS_IO_PROG -c 'truncate 0' -c 'pwrite 0 $BLOCK_SIZE' =
-\
-+		$dir/file2" 2>&1 >>$seqres.full | _filter_xfs_io_error | \
-+		tee -a $seqres.full
-+	repquota -v -$type $SCRATCH_MNT | grep -v "^root" >>$seqres.full 2>&1
-+	echo "--- Test inode quota ---"
-+	# And now the softlimit test for inodes
-+	# First reset space limits so that we don't have problems with
-+	# space reservations on XFS
-+	setquota -$type $qa_user 0 0 3 100 $SCRATCH_MNT
-+	echo "Create 2 more files, over the inode softlimit..."
-+	su $qa_user -c "touch $dir/file3 $dir/file4" 2>&1 >>$seqres.full | \
-+		_filter_scratch | tee -a $seqres.full
-+	repquota -v -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
-+	# Reset grace time here, make below grace time test more accurate
-+	setquota -$type $qa_user -T $bgrace $igrace $SCRATCH_MNT 2>/dev/null
-+	# Wait and check grace time enforcement
-+	sleep $((igrace+1))
-+	echo "Try to create one more inode after grace..."
-+	su $qa_user -c "touch $dir/file5" 2>&1 >>$seqres.full |
-+		_filter_scratch | tee -a $seqres.full
-+	repquota -v -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
-+	cleanup_files $dir
-+}
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch
-+_require_setquota_project
-+_require_quota
-+_require_user
-+_require_group
-+
-+_scratch_mkfs >$seqres.full 2>&1
-+_scratch_enable_pquota
-+_qmount_option "usrquota,grpquota,prjquota"
-+_qmount
-+_require_prjquota $SCRATCH_DEV
-+BLOCK_SIZE=3D$(_get_file_block_size $SCRATCH_MNT)
-+rm -rf $SCRATCH_MNT/t
-+mkdir $SCRATCH_MNT/t
-+$XFS_IO_PROG -r -c "chproj 100" -c "chattr +P" $SCRATCH_MNT/t
-+require_project
-+
-+echo "### Set up different grace timers to each type of quota"
-+UBGRACE=3D12
-+UIGRACE=3D10
-+GBGRACE=3D4
-+GIGRACE=3D2
-+PBGRACE=3D8
-+PIGRACE=3D6
-+
-+setquota -u $qa_user $((250 * $BLOCK_SIZE / 1024)) \
-+	$((1000 * $BLOCK_SIZE / 1024)) 3 100 $SCRATCH_MNT
-+setquota -u -t $UBGRACE $UIGRACE $SCRATCH_MNT
-+setquota -g $qa_user $((250 * $BLOCK_SIZE / 1024)) \
-+         $((1000 * $BLOCK_SIZE / 1024)) 3 100 $SCRATCH_MNT
-+setquota -g -t $GBGRACE $GIGRACE $SCRATCH_MNT
-+setquota -P $qa_user $((250 * $BLOCK_SIZE / 1024)) \
-+         $((1000 * $BLOCK_SIZE / 1024)) 3 100 $SCRATCH_MNT
-+setquota -P -t $PBGRACE $PIGRACE $SCRATCH_MNT
-+
-+echo; echo "### Test user quota softlimit and grace time"
-+test_grace u $SCRATCH_MNT $UBGRACE $UIGRACE
-+echo; echo "### Test group quota softlimit and grace time"
-+test_grace g $SCRATCH_MNT $GBGRACE $GIGRACE
-+echo; echo "### Test project quota softlimit and grace time"
-+test_grace P $SCRATCH_MNT/t $PBGRACE $PIGRACE
-+
-+# success, all done
-+status=3D0
-+exit
-diff --git a/tests/generic/597.out b/tests/generic/597.out
-new file mode 100644
-index 00000000..57a68ee1
---- /dev/null
-+++ b/tests/generic/597.out
-@@ -0,0 +1,41 @@
-+QA output created by 597
-+### Set up different grace timers to each type of quota
-+
-+### Test user quota softlimit and grace time
-+### Initialize files, and their mode and ownership
-+--- Test block quota ---
-+Write 225 blocks...
-+Rewrite 250 blocks plus 1 byte, over the block softlimit...
-+Try to write 1 one more block after grace...
-+pwrite: Disk quota exceeded
-+--- Test inode quota ---
-+Create 2 more files, over the inode softlimit...
-+Try to create one more inode after grace...
-+touch: cannot touch 'SCRATCH_MNT/file5': Disk quota exceeded
-+### Remove all files
-+
-+### Test group quota softlimit and grace time
-+### Initialize files, and their mode and ownership
-+--- Test block quota ---
-+Write 225 blocks...
-+Rewrite 250 blocks plus 1 byte, over the block softlimit...
-+Try to write 1 one more block after grace...
-+pwrite: Disk quota exceeded
-+--- Test inode quota ---
-+Create 2 more files, over the inode softlimit...
-+Try to create one more inode after grace...
-+touch: cannot touch 'SCRATCH_MNT/file5': Disk quota exceeded
-+### Remove all files
-+
-+### Test project quota softlimit and grace time
-+### Initialize files, and their mode and ownership
-+--- Test block quota ---
-+Write 225 blocks...
-+Rewrite 250 blocks plus 1 byte, over the block softlimit...
-+Try to write 1 one more block after grace...
-+pwrite: Disk quota exceeded
-+--- Test inode quota ---
-+Create 2 more files, over the inode softlimit...
-+Try to create one more inode after grace...
-+touch: cannot touch 'SCRATCH_MNT/t/file5': Disk quota exceeded
-+### Remove all files
-diff --git a/tests/generic/group b/tests/generic/group
-index 718575ba..10af4c41 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -598,3 +598,4 @@
- 594 auto quick quota
- 595 auto quick encrypt
- 596 auto quick
-+597 auto quick quota
---=20
-2.20.1
+ 
+ static void
+ iomap_page_release(struct page *page)
+ {
+-	struct iomap_page *iop = to_iomap_page(page);
++	struct iomap_page *iop = clear_fs_page_private(page);
+ 
+ 	if (!iop)
+ 		return;
+ 	WARN_ON_ONCE(atomic_read(&iop->read_count));
+ 	WARN_ON_ONCE(atomic_read(&iop->write_count));
+-	ClearPagePrivate(page);
+-	set_page_private(page, 0);
+-	put_page(page);
+ 	kfree(iop);
+ }
+ 
+@@ -556,11 +550,9 @@ iomap_migrate_page(struct address_space *mapping, struct page *newpage,
+ 
+ 	if (page_has_private(page)) {
+ 		ClearPagePrivate(page);
+-		get_page(newpage);
+-		set_page_private(newpage, page_private(page));
++		set_fs_page_private(newpage, (void *)page_private(page));
+ 		set_page_private(page, 0);
+ 		put_page(page);
+-		SetPagePrivate(newpage);
+ 	}
+ 
+ 	if (mode != MIGRATE_SYNC_NO_COPY)
+-- 
+2.17.1
 
