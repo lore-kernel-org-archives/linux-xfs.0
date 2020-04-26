@@ -2,132 +2,176 @@ Return-Path: <SRS0=Ew45=6K=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC8BEC54FCB
-	for <linux-xfs@archiver.kernel.org>; Sun, 26 Apr 2020 21:50:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 592D2C54FCB
+	for <linux-xfs@archiver.kernel.org>; Sun, 26 Apr 2020 22:08:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 95D5E2071C
-	for <linux-xfs@archiver.kernel.org>; Sun, 26 Apr 2020 21:50:18 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="OwNMupnS"
+	by mail.kernel.org (Postfix) with ESMTP id 34E162075B
+	for <linux-xfs@archiver.kernel.org>; Sun, 26 Apr 2020 22:08:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726430AbgDZVuR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 26 Apr 2020 17:50:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48548 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726327AbgDZVtz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Apr 2020 17:49:55 -0400
-Received: from mail-ed1-x541.google.com (mail-ed1-x541.google.com [IPv6:2a00:1450:4864:20::541])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFD5FC09B053
-        for <linux-xfs@vger.kernel.org>; Sun, 26 Apr 2020 14:49:53 -0700 (PDT)
-Received: by mail-ed1-x541.google.com with SMTP id r7so11992010edo.11
-        for <linux-xfs@vger.kernel.org>; Sun, 26 Apr 2020 14:49:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloud.ionos.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=je11VssEqcRjDcQQUY7TMs+S/p8Pe+y4zVJlfwO1AIY=;
-        b=OwNMupnSJkBuaJfMXeCgM1rYXjTmzIAla+tSBp7FYda6Z0do31Tv6/LqXGLMcBBWhG
-         nqjIhBJEalueOvj9V2LZ+TuLLeFNIXzVb6OK45n66rzci+x/eJxewCUOYOo06dTayDKj
-         B5iJ94emWcTjwQbgVlPIpz9Lz++7r/aQF//fpjSxu2/XNpEhrL+lHBErqiCynz5SbjB2
-         iW4ERClUfrgtnD0QmDonsDibcZjmNyxtpI2M/DaGWxbm7W5qNx0fPMGF44KjexJ6P8/1
-         2LGOGXLbZT3PVyAX3yAvtCf/8vJUr85wyASdWC+0wMGkNwBqVxwGJ+99/wys6z7wxDo+
-         YYVA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=je11VssEqcRjDcQQUY7TMs+S/p8Pe+y4zVJlfwO1AIY=;
-        b=qaF//biaPErohyDrA8H+GOkKf1DvrKVDWhWvWX2s36+kZtthij4vYVcdKrm88RAgNK
-         diIiENpoLBQYUqBtYlYCQJKUbWnFk+nblCovyjysZxzBEmqUlAkD+tysDx7J1uWuz4wt
-         ARrV50276ewhwvUpwn3hnO43ZRZuXjG5m2O4u1ILT85FtLjBv1UXmsKVZm68u3gugjTx
-         3xjASUvntYTGhQEyAU6UcLl7oYKtpKVU6ABSQZK/9buIOZNb4NXWPHwWCVffwHFEYcHG
-         hFWrKhQ8RLVviXkSMnKY9l/CKnqmPzBoHIN4s9h5XctKprEQApUNmfNaUNeTDXX795ju
-         NFhg==
-X-Gm-Message-State: AGi0PuaYlTWynSKeBg0RkpCoZXlJvwxs2ULZ7RXT+LhfPITwEH0hNGBT
-        ZM3emOmz6pcaQa8JkN5uV3nXVg==
-X-Google-Smtp-Source: APiQypLeC6iTKrMS3r2CPJ1hgROOG19gCAO83wMvAt7p0NE0/jtP9fk8m1Bkoh+kIZpagKS8bUmlOQ==
-X-Received: by 2002:a50:99c4:: with SMTP id n4mr16930973edb.187.1587937792458;
-        Sun, 26 Apr 2020 14:49:52 -0700 (PDT)
-Received: from ls00508.pb.local ([2001:1438:4010:2540:fab1:56ff:feab:56b1])
-        by smtp.gmail.com with ESMTPSA id ce18sm2270108ejb.61.2020.04.26.14.49.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 26 Apr 2020 14:49:51 -0700 (PDT)
-From:   Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-To:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     hch@infradead.org, david@fromorbit.com, willy@infradead.org,
-        Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org
-Subject: [RFC PATCH 6/9] iomap: use set/clear_fs_page_private
-Date:   Sun, 26 Apr 2020 23:49:22 +0200
-Message-Id: <20200426214925.10970-7-guoqing.jiang@cloud.ionos.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200426214925.10970-1-guoqing.jiang@cloud.ionos.com>
-References: <20200426214925.10970-1-guoqing.jiang@cloud.ionos.com>
+        id S1726216AbgDZWIJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 26 Apr 2020 18:08:09 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:51355 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726215AbgDZWIJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Apr 2020 18:08:09 -0400
+Received: from dread.disaster.area (pa49-195-157-175.pa.nsw.optusnet.com.au [49.195.157.175])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 550E93A4FC2;
+        Mon, 27 Apr 2020 08:08:06 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jSpRV-0008Km-71; Mon, 27 Apr 2020 08:08:05 +1000
+Date:   Mon, 27 Apr 2020 08:08:05 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Chandan Rajendra <chandan@linux.ibm.com>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Chandan Rajendra <chandanrlinux@gmail.com>,
+        linux-xfs@vger.kernel.org, bfoster@redhat.com
+Subject: Re: [PATCH 2/2] xfs: Extend xattr extent counter to 32-bits
+Message-ID: <20200426220805.GE2040@dread.disaster.area>
+References: <20200404085203.1908-1-chandanrlinux@gmail.com>
+ <2468041.fvziTNUSPq@localhost.localdomain>
+ <20200422223041.GE27860@dread.disaster.area>
+ <2457302.TnqmriUJk8@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2457302.TnqmriUJk8@localhost.localdomain>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
+        a=ONQRW0k9raierNYdzxQi9Q==:117 a=ONQRW0k9raierNYdzxQi9Q==:17
+        a=kj9zAlcOel0A:10 a=cl8xLZFz6L8A:10 a=7-415B0cAAAA:8
+        a=sj2pnMTuyTJ17fFAoogA:9 a=lW7t2CFN_JvmrShR:21 a=6d80TkwGj26y1EX_:21
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Since the new pair function is introduced, we can call them to clean the
-code in iomap.
+On Sat, Apr 25, 2020 at 05:37:39PM +0530, Chandan Rajendra wrote:
+> On Thursday, April 23, 2020 4:00 AM Dave Chinner wrote: 
+> > On Wed, Apr 22, 2020 at 03:08:00PM +0530, Chandan Rajendra wrote:
+> > > Attr bmbt tree height (MINABTPTRS == 2)
+> > > |-------+------------------------+-------------------------|
+> > > | Level | Number of nodes/leaves |           Total Nr recs |
+> > > |       |                        | (nr nodes/leaves * 125) |
+> > > |-------+------------------------+-------------------------|
+> > > |     0 |                      1 |                       2 |
+> > > |     1 |                      2 |                     250 |
+> > > |     2 |                    250 |                   31250 |
+> > > |     3 |                  31250 |                 3906250 |
+> > > |     4 |                3906250 |               488281250 |
+> > > |     5 |              488281250 |             61035156250 |
+> > > |-------+------------------------+-------------------------|
+> > > 
+> > > For xattr extents, (2 ** 32) - 1 = 4294967295 (~ 4 billion extents). So this
+> > > will cause the corresponding bmbt's maximum height to go from 3 to 5.
+> > > This probably won't cause any regression.
+> > 
+> > We already have the XFS_DA_NODE_MAXDEPTH set to 5, so changing the
+> > attr fork extent count makes no difference to the attribute fork
+> > bmbt reservations. i.e. the bmbt reservations are defined by the
+> > dabtree structure limits, not the maximum extent count the fork can
+> > hold.
+> 
+> I think the dabtree structure limits is because of the following ...
+> 
+> How many levels of dabtree would be needed to hold ~100 million xattrs?
+> - name len = 16 bytes
+>          struct xfs_parent_name_rec {
+>                __be64  p_ino;
+>                __be32  p_gen;
+>                __be32  p_diroffset;
+>        };
+>   i.e. 64 + 32 + 32 = 128 bits = 16 bytes;
+> - Value len = file name length = Assume ~40 bytes
 
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
-Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
----
- fs/iomap/buffered-io.c | 14 +++-----------
- 1 file changed, 3 insertions(+), 11 deletions(-)
+That's quite long for a file name, but lets run with it...
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 89e21961d1ad..cc48bf4f1193 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -59,24 +59,18 @@ iomap_page_create(struct inode *inode, struct page *page)
- 	 * migrate_page_move_mapping() assumes that pages with private data have
- 	 * their count elevated by 1.
- 	 */
--	get_page(page);
--	set_page_private(page, (unsigned long)iop);
--	SetPagePrivate(page);
--	return iop;
-+	return (struct iomap_page *)set_fs_page_private(page, iop);
- }
- 
- static void
- iomap_page_release(struct page *page)
- {
--	struct iomap_page *iop = to_iomap_page(page);
-+	struct iomap_page *iop = clear_fs_page_private(page);
- 
- 	if (!iop)
- 		return;
- 	WARN_ON_ONCE(atomic_read(&iop->read_count));
- 	WARN_ON_ONCE(atomic_read(&iop->write_count));
--	ClearPagePrivate(page);
--	set_page_private(page, 0);
--	put_page(page);
- 	kfree(iop);
- }
- 
-@@ -556,11 +550,9 @@ iomap_migrate_page(struct address_space *mapping, struct page *newpage,
- 
- 	if (page_has_private(page)) {
- 		ClearPagePrivate(page);
--		get_page(newpage);
--		set_page_private(newpage, page_private(page));
-+		set_fs_page_private(newpage, (void *)page_private(page));
- 		set_page_private(page, 0);
- 		put_page(page);
--		SetPagePrivate(newpage);
- 	}
- 
- 	if (mode != MIGRATE_SYNC_NO_COPY)
+> - Formula for number of node entries (used in column 3 in the table given
+>   below) at any level of the dabtree,
+>   nr_blocks * ((block size - sizeof(struct xfs_da3_node_hdr)) / sizeof(struct
+>   xfs_da_node_entry))
+>   i.e. nr_blocks * ((block size - 64) / 8)
+> - Formula for number of leaf entries (used in column 4 in the table given
+>   below),
+>   (block size - sizeof(xfs_attr_leaf_hdr_t)) /
+>   (sizeof(xfs_attr_leaf_entry_t) + valuelen + namelen + nameval)
+>   i.e. nr_blocks * ((block size - 32) / (8 + 2 + 1 + 16 + 40))
+> 
+> Here I have assumed block size to be 4k.
+> 
+> |-------+------------------+--------------------------+--------------------------|
+> | Level | Number of blocks | Number of entries (node) | Number of entries (leaf) |
+> |-------+------------------+--------------------------+--------------------------|
+> |     0 |              1.0 |                      5e2 |                    6.1e1 |
+> |     1 |              5e2 |                    2.5e5 |                    3.0e4 |
+> |     2 |            2.5e5 |                    1.3e8 |                    1.5e7 |
+> |     3 |            1.3e8 |                   6.6e10 |                    7.9e9 |
+> |-------+------------------+--------------------------+--------------------------|
+
+I'm not sure what this table actually represents.
+
+> 
+> Hence we would need a tree of height 3.
+> Total number of blocks = 1 + 5e2 + 2.5e5 + 1.3e8 = ~1.3e8
+
+130 million blocks to hold 100 million xattrs? That doesn't pass the
+smell test.
+
+I think you are trying to do these calculations from the wrong
+direction. Calculate the number of leaf blocks needed to hold the
+xattr data first, then work out the height of the pointer tree from
+that. e.g:
+
+If we need 100m xattrs, we need this many 100% full 4k blocks to
+hold them all:
+
+blocks	= 100m / entries per leaf
+	= 100m / 61
+	= 1.64m
+
+and if we assume 37% for the least populated (because magic
+split/merge number), multiply by 3, so blocks ~= 5m for 100m xattrs
+in 4k blocks.
+
+That makes a lot more sense. Now the tree itself:
+
+ptrs per node ^ N = 5m
+ptrs per node ^ (N-1) = 5m / 500 = 10k
+ptrs per node ^ (N-2) = 10k / 500 = 200
+ptrs per node ^ (N-3) = 200 / 500 = 1
+
+So, N-3 = level 0, so we've got a tree of height 4 for 100m xattrs,
+and the pointer tree requires ~12000 blocks which is noise compared
+to the number of leaf blocks...
+
+As for the bmbt, we've got ~5m extents worst case, which is
+
+ptrs per node ^ N = 5m
+ptrs per node ^ (N-1) = 5m / 125 = 40k
+ptrs per node ^ (N-2) = 40k / 125 = 320
+ptrs per node ^ (N-3) = 320 / 125 = 3
+
+As 3 bmbt records should fit in the inode fork, we'd only need a 4
+level bmbt tree to hold this, too. It's at the lower limit of a 4
+level tree, but 100m xattrs is the extreme case we are talking about
+here...
+
+FWIW, repeat this with a directory data segment size of 32GB w/ 40
+byte names, and the numbers aren't much different to a worst case
+xattr tree of this shape. You'll see the reason for the dabtree
+height being limited to 5, and that neither the directory structure
+nor the xattr structure is anywhere near the 2^32 bit extent count
+limit...
+
+Cheers,
+
+Dave.
 -- 
-2.17.1
-
+Dave Chinner
+david@fromorbit.com
