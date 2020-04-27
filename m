@@ -2,312 +2,248 @@ Return-Path: <SRS0=n/sd=6L=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17451C7C864
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Apr 2020 08:49:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22FC5C54FD0
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Apr 2020 11:11:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F15392080C
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Apr 2020 08:49:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E70992063A
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Apr 2020 11:11:27 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BDqDK6E8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726860AbgD0Isn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Apr 2020 04:48:43 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:3144 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725899AbgD0Ism (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Apr 2020 04:48:42 -0400
-X-IronPort-AV: E=Sophos;i="5.73,323,1583164800"; 
-   d="scan'208";a="90547652"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 27 Apr 2020 16:48:31 +0800
-Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id D7A794BCC88C;
-        Mon, 27 Apr 2020 16:37:49 +0800 (CST)
-Received: from G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.203) by
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Mon, 27 Apr 2020 16:48:32 +0800
-Received: from localhost.localdomain (10.167.225.141) by
- G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.2 via Frontend Transport; Mon, 27 Apr 2020 16:48:31 +0800
-From:   Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <linux-nvdimm@lists.01.org>
-CC:     <linux-mm@kvack.org>, <linux-fsdevel@vger.kernel.org>,
-        <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
-        <david@fromorbit.com>, <hch@lst.de>, <rgoldwyn@suse.de>,
-        <qi.fuli@fujitsu.com>, <y-goto@fujitsu.com>
-Subject: [RFC PATCH 1/8] fs/dax: Introduce dax-rmap btree for reflink
-Date:   Mon, 27 Apr 2020 16:47:43 +0800
-Message-ID: <20200427084750.136031-2-ruansy.fnst@cn.fujitsu.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200427084750.136031-1-ruansy.fnst@cn.fujitsu.com>
-References: <20200427084750.136031-1-ruansy.fnst@cn.fujitsu.com>
+        id S1726931AbgD0LL1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Apr 2020 07:11:27 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:31350 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726907AbgD0LL1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Apr 2020 07:11:27 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1587985884;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=O5I4q1B8ads2SiGlD93fDUH6To6GL2Dsd408UydHEQ4=;
+        b=BDqDK6E8jbjU62jyX88FNvaLLB1DCo3Axr1bWpRvM8GQ21UiA3Y/RUzLdU4xPjuYyWFSKc
+        A13FeXcq6ZCaGR1gnuBEftEfKKSNt/gpcXZ7j2Hjc0/b4Taiu5hbfor5jS3u2MGDLX6/st
+        MYLoawCGPaaCz6sRgCsUE/YetBJr9yY=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-102-PJy1wZI-Ol6wo8KzWQi_5Q-1; Mon, 27 Apr 2020 07:11:23 -0400
+X-MC-Unique: PJy1wZI-Ol6wo8KzWQi_5Q-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2253E107ACCA;
+        Mon, 27 Apr 2020 11:11:22 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id A4C5719C4F;
+        Mon, 27 Apr 2020 11:11:21 +0000 (UTC)
+Date:   Mon, 27 Apr 2020 07:11:19 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2 05/13] xfs: ratelimit unmount time per-buffer I/O
+ error message
+Message-ID: <20200427111119.GA4577@bfoster>
+References: <20200422175429.38957-1-bfoster@redhat.com>
+ <20200422175429.38957-6-bfoster@redhat.com>
+ <20200423044604.GI27860@dread.disaster.area>
+ <20200423142958.GB43557@bfoster>
+ <20200423211437.GP27860@dread.disaster.area>
+ <20200424111232.GA53325@bfoster>
+ <20200424220823.GD2040@dread.disaster.area>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: D7A794BCC88C.A20EE
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200424220823.GD2040@dread.disaster.area>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Normally, when accessing a mmapped file, entering the page fault, the
-file's (->mapping, ->index) will be associated with dax entry(represents
-for one page or a couple of pages) to facilitate the reverse mapping
-search.  But in the case of reflink, a dax entry may be shared by multiple
-files or offsets.  In order to establish a reverse mapping relationship in
-this case, I introduce a rb-tree to track multiple files and offsets.
+On Sat, Apr 25, 2020 at 08:08:23AM +1000, Dave Chinner wrote:
+> On Fri, Apr 24, 2020 at 07:12:32AM -0400, Brian Foster wrote:
+> > On Fri, Apr 24, 2020 at 07:14:37AM +1000, Dave Chinner wrote:
+> > > On Thu, Apr 23, 2020 at 10:29:58AM -0400, Brian Foster wrote:
+> > > > On Thu, Apr 23, 2020 at 02:46:04PM +1000, Dave Chinner wrote:
+> > > > > On Wed, Apr 22, 2020 at 01:54:21PM -0400, Brian Foster wrote:
+> > > > > > At unmount time, XFS emits a warning for every in-core buffer that
+> > > > > > might have undergone a write error. In practice this behavior is
+> > > > > > probably reasonable given that the filesystem is likely short lived
+> > > > > > once I/O errors begin to occur consistently. Under certain test or
+> > > > > > otherwise expected error conditions, this can spam the logs and slow
+> > > > > > down the unmount.
+> > > > > > 
+> > > > > > We already have a ratelimit state defined for buffers failing
+> > > > > > writeback. Fold this state into the buftarg and reuse it for the
+> > > > > > unmount time errors.
+> > > > > > 
+> > > > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > > > 
+> > > > > Looks fine, but I suspect we both missed something here:
+> > > > > xfs_buf_ioerror_alert() was made a ratelimited printk in the last
+> > > > > cycle:
+> > > > > 
+> > > > > void
+> > > > > xfs_buf_ioerror_alert(
+> > > > >         struct xfs_buf          *bp,
+> > > > >         xfs_failaddr_t          func)
+> > > > > {
+> > > > >         xfs_alert_ratelimited(bp->b_mount,
+> > > > > "metadata I/O error in \"%pS\" at daddr 0x%llx len %d error %d",
+> > > > >                         func, (uint64_t)XFS_BUF_ADDR(bp), bp->b_length,
+> > > > >                         -bp->b_error);
+> > > > > }
+> > > > > 
+> > > > 
+> > > > Yeah, I hadn't noticed that.
+> > > > 
+> > > > > Hence I think all these buffer error alerts can be brought under the
+> > > > > same rate limiting variable. Something like this in xfs_message.c:
+> > > > > 
+> > > > 
+> > > > One thing to note is that xfs_alert_ratelimited() ultimately uses
+> > > > the DEFAULT_RATELIMIT_INTERVAL of 5s. The ratelimit we're generalizing
+> > > > here uses 30s (both use a burst of 10). That seems reasonable enough to
+> > > > me for I/O errors so I'm good with the changes below.
+> > > > 
+> > > > FWIW, that also means we could just call xfs_buf_alert_ratelimited()
+> > > > from xfs_buf_item_push() if we're also Ok with using an "alert" instead
+> > > > of a "warn." I'm not immediately aware of a reason to use one over the
+> > > > other (xfs_wait_buftarg() already uses alert) so I'll try that unless I
+> > > > hear an objection.
+> > > 
+> > > SOunds fine to me.
+> > > 
+> > > > The xfs_wait_buftarg() ratelimit presumably remains
+> > > > open coded because it's two separate calls and we probably don't want
+> > > > them to individually count against the limit.
+> > > 
+> > > That's why I suggested dropping the second "run xfs_repair" message
+> > > and triggering a shutdown after the wait loop. That way we don't
+> > > issue "run xfs_repair" for every single failed buffer (largely
+> > > noise!), and we get a non-rate-limited common "run xfs-repair"
+> > > message once we processed all the failed writes.
+> > > 
+> > 
+> > Sorry, must have missed that in the last reply. I don't think we want to
+> > shut down here because XBF_WRITE_FAIL only reflects that the internal
+> > async write retry (e.g. the one historically used to mitigate transient
+> > I/O errors) has occurred on the buffer, not necessarily that the
+> > immediately previous I/O has failed.
+> 
+> I think this is an incorrect reading of how XBF_WRITE_FAIL
+> functions. XBF_WRITE_FAIL is used to indicate that the previous
+> write failed, not that a historic write failed. The flag is cleared
+> at buffer submission time - see xfs_buf_delwri_submit_buffers() and
+> xfs_bwrite() - and so it is only set on buffers whose previous IO
+> failed and hence is still dirty and has not been flushed back to
+> disk.
+> 
 
-The root of the rb-tree is stored in page->private, since I haven't found
-it be used in fsdax.  We create the rb-tree and insert the
-(->mapping, ->index) tuple in the second time a dax entry is associated,
-which means this dax entry is shared.  And delete this tuple from the
-rb-tree when disassociating.
+Right, but the flag is only ever cleared in those particular submission
+paths (which doesn't include the resubmit path). The point being
+overlooked here is that it is never cleared on successful I/O
+completion. That means if an I/O fails, we set the flag and resubmit. If
+the resubmitted I/O succeeds, the flag remains set on the buffer until
+the next time it is written, but there's no guarantee the buffer is
+dirtied again before we unmount. Therefore, it's possible to have
+XBF_WRITE_FAIL set on clean/consistent buffers at unmount time without
+any underlying inconsistency.
 
-Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
----
- fs/dax.c            | 153 ++++++++++++++++++++++++++++++++++++++++----
- include/linux/dax.h |   6 ++
- 2 files changed, 147 insertions(+), 12 deletions(-)
+> If we hit this in xfs_buftarg_wait() after we've pushed the AIL in
+> xfs_log_quiesce() on unmount, then we've got write failures that
+> could not be resolved by repeated retries, and the filesystem is, at
+> this instant in time, inconsistent on disk.
+> 
+> That's a shutdown error condition...
+> 
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 11b16729b86f..2f996c566103 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -25,6 +25,7 @@
- #include <linux/sizes.h>
- #include <linux/mmu_notifier.h>
- #include <linux/iomap.h>
-+#include <linux/rbtree.h>
- #include <asm/pgalloc.h>
- 
- #define CREATE_TRACE_POINTS
-@@ -310,6 +311,120 @@ static unsigned long dax_entry_size(void *entry)
- 		return PAGE_SIZE;
- }
- 
-+static struct kmem_cache *dax_rmap_node_cachep;
-+static struct kmem_cache *dax_rmap_root_cachep;
-+
-+static int __init init_dax_rmap_cache(void)
-+{
-+	dax_rmap_root_cachep = KMEM_CACHE(rb_root_cached, SLAB_PANIC|SLAB_ACCOUNT);
-+	dax_rmap_node_cachep = KMEM_CACHE(shared_file, SLAB_PANIC|SLAB_ACCOUNT);
-+	return 0;
-+}
-+fs_initcall(init_dax_rmap_cache);
-+
-+struct rb_root_cached *dax_create_rbroot(void)
-+{
-+	struct rb_root_cached *root = kmem_cache_alloc(dax_rmap_root_cachep,
-+						       GFP_KERNEL);
-+
-+	memset(root, 0, sizeof(struct rb_root_cached));
-+	return root;
-+}
-+
-+static bool dax_rmap_insert(struct page *page, struct address_space *mapping,
-+			    pgoff_t index)
-+{
-+	struct rb_root_cached *root = (struct rb_root_cached *)page_private(page);
-+	struct rb_node **new, *parent = NULL;
-+	struct shared_file *p;
-+	bool leftmost = true;
-+
-+	if (!root) {
-+		root = dax_create_rbroot();
-+		set_page_private(page, (unsigned long)root);
-+		dax_rmap_insert(page, page->mapping, page->index);
-+	}
-+	new = &root->rb_root.rb_node;
-+	/* Figure out where to insert new node */
-+	while (*new) {
-+		struct shared_file *this = container_of(*new, struct shared_file, node);
-+		long result = (long)mapping - (long)this->mapping;
-+
-+		if (result == 0)
-+			result = (long)index - (long)this->index;
-+		parent = *new;
-+		if (result < 0)
-+			new = &((*new)->rb_left);
-+		else if (result > 0) {
-+			new = &((*new)->rb_right);
-+			leftmost = false;
-+		} else
-+			return false;
-+	}
-+	p = kmem_cache_alloc(dax_rmap_node_cachep, GFP_KERNEL);
-+	p->mapping = mapping;
-+	p->index = index;
-+
-+	/* Add new node and rebalance tree. */
-+	rb_link_node(&p->node, parent, new);
-+	rb_insert_color_cached(&p->node, root, leftmost);
-+
-+	return true;
-+}
-+
-+static struct shared_file *dax_rmap_search(struct page *page,
-+					   struct address_space *mapping,
-+					   pgoff_t index)
-+{
-+	struct rb_root_cached *root = (struct rb_root_cached *)page_private(page);
-+	struct rb_node *node = root->rb_root.rb_node;
-+
-+	while (node) {
-+		struct shared_file *this = container_of(node, struct shared_file, node);
-+		long result = (long)mapping - (long)this->mapping;
-+
-+		if (result == 0)
-+			result = (long)index - (long)this->index;
-+		if (result < 0)
-+			node = node->rb_left;
-+		else if (result > 0)
-+			node = node->rb_right;
-+		else
-+			return this;
-+	}
-+	return NULL;
-+}
-+
-+static void dax_rmap_delete(struct page *page, struct address_space *mapping,
-+			    pgoff_t index)
-+{
-+	struct rb_root_cached *root = (struct rb_root_cached *)page_private(page);
-+	struct shared_file *this;
-+
-+	if (!root) {
-+		page->mapping = NULL;
-+		page->index = 0;
-+		return;
-+	}
-+
-+	this = dax_rmap_search(page, mapping, index);
-+	rb_erase_cached(&this->node, root);
-+	kmem_cache_free(dax_rmap_node_cachep, this);
-+
-+	if (!RB_EMPTY_ROOT(&root->rb_root)) {
-+		if (page->mapping == mapping && page->index == index) {
-+			this = container_of(rb_first_cached(root), struct shared_file, node);
-+			page->mapping = this->mapping;
-+			page->index = this->index;
-+		}
-+	} else {
-+		kmem_cache_free(dax_rmap_root_cachep, root);
-+		set_page_private(page, 0);
-+		page->mapping = NULL;
-+		page->index = 0;
-+	}
-+}
-+
- static unsigned long dax_end_pfn(void *entry)
- {
- 	return dax_to_pfn(entry) + dax_entry_size(entry) / PAGE_SIZE;
-@@ -341,16 +456,20 @@ static void dax_associate_entry(void *entry, struct address_space *mapping,
- 	for_each_mapped_pfn(entry, pfn) {
- 		struct page *page = pfn_to_page(pfn);
- 
--		WARN_ON_ONCE(page->mapping);
--		page->mapping = mapping;
--		page->index = index + i++;
-+		if (!page->mapping) {
-+			page->mapping = mapping;
-+			page->index = index + i++;
-+		} else {
-+			dax_rmap_insert(page, mapping, index + i++);
-+		}
- 	}
- }
- 
- static void dax_disassociate_entry(void *entry, struct address_space *mapping,
--		bool trunc)
-+				   pgoff_t index, bool trunc)
- {
- 	unsigned long pfn;
-+	int i = 0;
- 
- 	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
- 		return;
-@@ -359,9 +478,19 @@ static void dax_disassociate_entry(void *entry, struct address_space *mapping,
- 		struct page *page = pfn_to_page(pfn);
- 
- 		WARN_ON_ONCE(trunc && page_ref_count(page) > 1);
--		WARN_ON_ONCE(page->mapping && page->mapping != mapping);
--		page->mapping = NULL;
--		page->index = 0;
-+		WARN_ON_ONCE(!page->mapping);
-+		dax_rmap_delete(page, mapping, index + i++);
-+	}
-+}
-+
-+static void __dax_decrease_nrexceptional(void *entry,
-+					 struct address_space *mapping)
-+{
-+	if (dax_is_empty_entry(entry) || dax_is_zero_entry(entry) ||
-+	    dax_is_pmd_entry(entry)) {
-+		mapping->nrexceptional--;
-+	} else {
-+		mapping->nrexceptional -= PHYS_PFN(dax_entry_size(entry));
- 	}
- }
- 
-@@ -522,10 +651,10 @@ static void *grab_mapping_entry(struct xa_state *xas,
- 			xas_lock_irq(xas);
- 		}
- 
--		dax_disassociate_entry(entry, mapping, false);
-+		dax_disassociate_entry(entry, mapping, index, false);
- 		xas_store(xas, NULL);	/* undo the PMD join */
- 		dax_wake_entry(xas, entry, true);
--		mapping->nrexceptional--;
-+		__dax_decrease_nrexceptional(entry, mapping);
- 		entry = NULL;
- 		xas_set(xas, index);
- 	}
-@@ -642,9 +771,9 @@ static int __dax_invalidate_entry(struct address_space *mapping,
- 	    (xas_get_mark(&xas, PAGECACHE_TAG_DIRTY) ||
- 	     xas_get_mark(&xas, PAGECACHE_TAG_TOWRITE)))
- 		goto out;
--	dax_disassociate_entry(entry, mapping, trunc);
-+	dax_disassociate_entry(entry, mapping, index, trunc);
- 	xas_store(&xas, NULL);
--	mapping->nrexceptional--;
-+	__dax_decrease_nrexceptional(entry, mapping);
- 	ret = 1;
- out:
- 	put_unlocked_entry(&xas, entry);
-@@ -737,7 +866,7 @@ static void *dax_insert_entry(struct xa_state *xas,
- 	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
- 		void *old;
- 
--		dax_disassociate_entry(entry, mapping, false);
-+		dax_disassociate_entry(entry, mapping, xas->xa_index, false);
- 		dax_associate_entry(new_entry, mapping, vmf->vma, vmf->address);
- 		/*
- 		 * Only swap our new entry into the page cache if the current
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index d7af5d243f24..1e2e81c701b6 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -39,6 +39,12 @@ struct dax_operations {
- 	int (*zero_page_range)(struct dax_device *, pgoff_t, size_t);
- };
- 
-+struct shared_file {
-+	struct address_space *mapping;
-+	pgoff_t index;
-+	struct rb_node node;
-+};
-+
- extern struct attribute_group dax_attribute_group;
- 
- #if IS_ENABLED(CONFIG_DAX)
--- 
-2.26.2
+Yes, but XBF_WRITE_FAIL does not reflect that condition with certainty.
 
+> > For that reason I've kind of looked
+> > at this particular instance as more of a warning that I/O errors have
+> > occurred in the past and the user might want to verify it didn't result
+> > in unexpected damage. FWIW, I've observed plenty of these messages long
+> > after I've disabled error injection and allowed I/O to proceed and the
+> > fs to unmount cleanly.
+> 
+> Right. THat's the whole point of the flag - the buffer has been
+> dirtied and it hasn't been able to be written back when we are
+> purging the buffer cache at the end of unmount. i.e. When
+> xfs_buftarg_wait() is called, all buffers should be clean because we
+> are about to write an unmount record to mark the log clean once all
+> the logged metadata is written back.
+> 
+> What we do right now - write an unmount record after failing metadta
+> writeback - is actually a bug, and that is one of the
+> reasons why I suggested a shutdown should be done. i.e. we should
+> not be writing an unmount record to mark the log clean if we failed
+> to write back metadata. That metadata is still valid in the journal,
+> and so it should remain valid in the journal to allow it to be
+> replayed on the next mount. i.e. retry the writes from log recovery
+> after the hardware failure has been addressed and the IO errors have
+> gone away.
+> 
+> Tossing the dirty buffers unmount and then marking the journal
+> clean is actually making the buffer write failure -worse-. Doing this
+> guarantees the filesystem is inconsistent on disk (by updating the
+> journal to indicate those writes actually succeeded) and absolutely
+> requires xfs_repair to fix as a result.
+> 
+> If we shut down on XBF_WRITE_FAIL buffers in xfs_buftarg_wait(), we
+> will not write an unmount record and so give the filesystem a chance
+> to recover on next mount (e.g. after a power cycle to clear whatever
+> raid hardware bug was being hit) and write that dirty metadata back
+> without failure.  If recovery fails with IO errors, then the user
+> really does need to run repair.  However, the situation at this
+> point is still better than if we write a clean unmount record after
+> write failures...
+> 
 
+I agree with all of this when we are actually tossing dirty buffers. ;)
+See above that I'm referring to how this state can persist after error
+injection is disabled and I/O errors have ceased. Also note that the
+error handling code already shuts down the filesystem in the completion
+handling path of any buffer undergoing retries at unmount time (see
+XFS_MOUNT_UNMOUNTING). IIRC this was introduced to prevent hanging
+unmount on fs' configured with infinite retries, but it ensures the fs
+is shut down if dirty buffers have failed to write back before we get to
+xfs_wait_buftarg(). So there isn't a functional bug from what I can see
+if XBF_WRITE_FAIL does happen to reflect a failed+dirty buffer in
+xfs_wait_buftarg().
+
+It's pretty clear that the implementation of XBF_WRITE_FAIL is
+unnecessarily fragile and confusing. Aside from not being able to
+establish the meaning of the xfs_wait_buftarg() warning message between
+the two of us (good luck, users ;P), I'm guessing it's also not obvious
+that there's an internal retry associated with each xfsaild submitted
+write, even for buffers that persistently fail. For example, xfsaild
+submits a buffer, I/O fails, we set XBF_WRITE_FAIL and resubmit, I/O
+fails again, XBF_WRITE_FAIL is already set and retries are configured so
+we unlock the buffer, xfsaild comes around again and requeues, delwri
+submit clears XBF_WRITE_FAIL and we start over from the beginning.
+
+Perhaps a better solution would be to clear XBF_WRITE_FAIL on successful
+I/O completion. That way we only issue the internal retry once since the
+last time a buffer was successfully written and xfs_wait_buftarg() can
+legitimately warn about tossing dirty buffers and shut down. I do think
+it makes sense to shut down from there in that scenario as well,
+provided the logic is correct, simply because the dependency on error
+configuration shutdown behavior is not obvious. Thoughts?
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
 
