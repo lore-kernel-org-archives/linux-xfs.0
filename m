@@ -2,102 +2,128 @@ Return-Path: <SRS0=n/sd=6L=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C68F6C55194
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Apr 2020 01:04:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20225C54FD0
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Apr 2020 03:30:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8A0F12080C
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Apr 2020 01:04:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E8616206D4
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Apr 2020 03:30:38 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="O/CAcjfz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726281AbgD0BEw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 26 Apr 2020 21:04:52 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:44681 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726227AbgD0BEw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Apr 2020 21:04:52 -0400
-Received: from dread.disaster.area (pa49-195-157-175.pa.nsw.optusnet.com.au [49.195.157.175])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 135283A48CB;
-        Mon, 27 Apr 2020 11:04:45 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jSsCS-0000xz-SL; Mon, 27 Apr 2020 11:04:44 +1000
-Date:   Mon, 27 Apr 2020 11:04:44 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Ritesh Harjani <riteshh@linux.ibm.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Eric Biggers <ebiggers@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@infradead.org>,
-        Jan Kara <jack@suse.com>, tytso@mit.edu,
-        "Aneesh Kumar K . V" <aneesh.kumar@linux.ibm.com>,
-        linux-ext4@vger.kernel.org
-Subject: Re: [PATCH 1/2] fibmap: Warn and return an error in case of block >
- INT_MAX
-Message-ID: <20200427010444.GF2040@dread.disaster.area>
-References: <cover.1587670914.git.riteshh@linux.ibm.com>
- <e34d1ac05d29aeeb982713a807345a0aaafc7fe0.1587670914.git.riteshh@linux.ibm.com>
- <20200424191739.GA217280@gmail.com>
- <20200424225425.6521D4C040@d06av22.portsmouth.uk.ibm.com>
- <20200424234058.GA29705@bombadil.infradead.org>
- <20200424234647.GX6749@magnolia>
- <20200425070335.B43334C046@d06av22.portsmouth.uk.ibm.com>
+        id S1726349AbgD0Dai (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 26 Apr 2020 23:30:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44578 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726340AbgD0Dai (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Apr 2020 23:30:38 -0400
+Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBBA6C061A0F;
+        Sun, 26 Apr 2020 20:30:36 -0700 (PDT)
+Received: by mail-pg1-x543.google.com with SMTP id o185so8061305pgo.3;
+        Sun, 26 Apr 2020 20:30:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:mail-followup-to:mime-version
+         :content-disposition;
+        bh=tqL9U//y5mnl9UT2TzE9aF40cu5r1lEwRulehFj9YQU=;
+        b=O/CAcjfzpTTmTfNtQqV6kz4m96WQBl5k7rxyj/SUvrcvLYYC7F1q7yBrdyLLJpItcA
+         EVKgnfXpdg3nl+iFuby2hAfUs+JwiVIlBV5fJXaQjFHN+NUVMr89EwfkJn5/QthCU/4o
+         KoOhI0U9GXUFVI3MALjYav7fbVakfXIyRvhA9aojC7GP2gBMVFNH8xjxzG7UBMF/D65/
+         ROpIdQZn1OQCw6A2XRTbMSIMx5V/8lcG3oUnEMc5QRISMkHKAevs+EJmn/wvLX335UBW
+         kv5fmH1pC0ngUqVJKSISTX26yC8K4St37Knp7tR4ODLwjMe+oz1pYEfTEAlKv+BuSxsC
+         kTcA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:mime-version:content-disposition;
+        bh=tqL9U//y5mnl9UT2TzE9aF40cu5r1lEwRulehFj9YQU=;
+        b=dvCWMYPgz0IsUiX2L9A6x45ZaNa9GEaQ1Fo5s2JT/UnUIMHYS6DS+mMsGJUXBfQEQg
+         CW6n8NXUT16u2aD6nrJCGSB1F33f9Z9eHG8Pk/10clocXdM3NDHPb8SiE6aXjFsD8vtA
+         b8zehE6MeD2m4LtZm9C1TuRjAGrzXL0aez3h/BvTY2YZvAvfaIjZdNhXutn1B6NC+T/y
+         Le2DY9cOmWUpgALj/bA0apGcxnsRyjRwWWkbnC+OqKaDnpEcaM2dTZ0k7CBDqQD6RRlg
+         /p4aREBfoeLw81YGnDGoP/50OZAcibpdz7NxfPUq2RuCDn3YlUWaI1DVuCRUpN/OgL0L
+         KrQQ==
+X-Gm-Message-State: AGi0PuaE9nyySFwoByEMcebbTfw0PdWKLkQdTgpT3dDLPgqY/geHIaQu
+        Ze8202aOC5vinHJ2gnSDy4Q=
+X-Google-Smtp-Source: APiQypIIxOuTBW+tqVf/rrBOZMOpIZ6AdroW2RE3Ovum9Sb5nZ8K7vDTVsg3EFVP4EGoTGCrJjIrBQ==
+X-Received: by 2002:a63:1759:: with SMTP id 25mr21617119pgx.417.1587958236278;
+        Sun, 26 Apr 2020 20:30:36 -0700 (PDT)
+Received: from Slackware ([103.231.91.68])
+        by smtp.gmail.com with ESMTPSA id d8sm11114996pfd.159.2020.04.26.20.30.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 26 Apr 2020 20:30:35 -0700 (PDT)
+Date:   Mon, 27 Apr 2020 09:00:23 +0530
+From:   Bhaskar Chowdhury <unixbhaskar@gmail.com>
+To:     david@fromorbit.com
+Cc:     LinuxKernel <linux-kernel@vger.kernel.org>,
+        linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+Subject: xfs superblock corrupt,how to find next one!
+Message-ID: <20200427033023.GA30304@Slackware>
+Mail-Followup-To: Bhaskar Chowdhury <unixbhaskar@gmail.com>,
+        david@fromorbit.com, LinuxKernel <linux-kernel@vger.kernel.org>,
+        linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="DocE+STaALJfprDB"
 Content-Disposition: inline
-In-Reply-To: <20200425070335.B43334C046@d06av22.portsmouth.uk.ibm.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
-        a=ONQRW0k9raierNYdzxQi9Q==:117 a=ONQRW0k9raierNYdzxQi9Q==:17
-        a=kj9zAlcOel0A:10 a=cl8xLZFz6L8A:10 a=7-415B0cAAAA:8
-        a=XPaiuk4yifFrNG777nsA:9 a=DN0oiWT_x0Zc_wvr:21 a=PPZh3J10_SXtonLC:21
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Apr 25, 2020 at 12:33:34PM +0530, Ritesh Harjani wrote:
-> 
-> 
-> On 4/25/20 5:16 AM, Darrick J. Wong wrote:
-> > On Fri, Apr 24, 2020 at 04:40:58PM -0700, Matthew Wilcox wrote:
-> > > On Sat, Apr 25, 2020 at 04:24:24AM +0530, Ritesh Harjani wrote:
-> > > > Ok, I see.
-> > > > Let me replace WARN() with below pr_warn() line then. If no objections,
-> > > > then will send this in a v2 with both patches combined as Darrick
-> > > > suggested. - (with Reviewed-by tags of Jan & Christoph).
-> > > > 
-> > > > pr_warn("fibmap: this would truncate fibmap result\n");
-> > > 
-> > > We generally don't like userspace to be able to trigger kernel messages
-> > > on demand, so they can't swamp the logfiles.  printk_ratelimited()?
-> > 
-> > Or WARN_ON_ONCE...
-> 
-> So, Eric was mentioning WARN_** are mostly for kernel side of bugs.
-> But this is mostly a API fault which affects user side and also to
-> warn the user about the possible truncation in the block fibmap
-> addr.
-> Also WARN_ON_ONCE, will be shown only once and won't be printed for
-> every other file for which block addr > INT_MAX.
-> 
-> I think we could go with below. If ok, I could post this in v2.
-> 
-> pr_warn_ratelimited("fibmap: would truncate fibmap result\n");
 
-Please include the process ID, the superblock ID and the task name
-that is triggering this warning. Otherwise the administrator will
-have no clue what is generating it and so won't be able to fix it...
+--DocE+STaALJfprDB
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Cheers,
+  Hey Dave/Darrick,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+  I was stumbled over this last week and ended up recreating(huh!) the
+  fs from the scratch . Internet was littered with the information which
+  I hardly could use. Oh, btw, I did stumble also in old google group
+  where you suggested few stuff to do .=20
+
+  But alas, none come to handy. I have tried xfs_db and it spit out lots
+  of info including AGS ,but..I had  a simple requirement , just to
+  replace the corrupted super block with another good one. Which,
+  everyone including you know it very well that can done in ext in a blink =
+of an
+  eye(my lack of understanding and exposure are pardonable I believe).
+
+  But I couldn't find an easy way to recover the fs.I followed the
+  repair ..get into db as I said ...
+
+  Is it lurking somewhere which I failed to discover or it has been
+  implemented in different way , which is not easily decipherable by
+  ordinary users...not sure though.
+
+  Kindly ,point out ,which route should one take , when they encounter
+  that kind of a situation. Recreating the fs is not an or probably the
+  least option to opt for.=20
+
+
+  Thanks,
+  Bhaskar
+
+--DocE+STaALJfprDB
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCAAdFiEEnwF+nWawchZUPOuwsjqdtxFLKRUFAl6mUc8ACgkQsjqdtxFL
+KRXh+gf/S4XIXZJPU3dFUyujCUJYWAWCWjf40fdrhuhtdM3Sapb8OOKW4tNsrR4r
+oo9K7TvZOwmhiUY5aRRwii6gMA+k92cnlsOwhjsA+geZTfhW1wdez9sy79W6Ben4
+H8LgeT+DqGp1tMdtajmJLOkkDqcE2xIBzspuU8BU23qC0HEpy1XN3SOV/ly0nOBi
+cMOywgnJyQ3lE9oeHkqViuq12oBXEuuHplh9b6D/0i6R1Vr/pc+PUd85XIgZ+OkI
+6Yv4uOfsBkFIHTNDYtm2fv2C2C3qardtO4v9kVWCg5J2TqrCy72CUAYfKk70ZOKw
+neDhA2O8XWfAy4gdyJ1qzFQ7lCx5aw==
+=SdUE
+-----END PGP SIGNATURE-----
+
+--DocE+STaALJfprDB--
