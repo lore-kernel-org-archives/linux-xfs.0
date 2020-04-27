@@ -2,114 +2,236 @@ Return-Path: <SRS0=n/sd=6L=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE74DC55199
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Apr 2020 08:15:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0D50C7C860
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Apr 2020 08:48:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8B6362087E
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Apr 2020 08:15:57 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="V4RZNddM"
+	by mail.kernel.org (Postfix) with ESMTP id 8126D206D4
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Apr 2020 08:48:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726339AbgD0IP5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Apr 2020 04:15:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60456 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726779AbgD0IPw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Apr 2020 04:15:52 -0400
-Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B47DC061A41
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Apr 2020 01:15:52 -0700 (PDT)
-Received: by mail-wm1-x343.google.com with SMTP id u127so19364169wmg.1
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Apr 2020 01:15:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloud.ionos.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=qlm8OKyOV/HJAu3bA65vWCOmmjrUcu0xP6huIGZIaXI=;
-        b=V4RZNddMJEAgB0Qn4YXncrFVThel5CoJI0JvjTD4yCVslyZDfoC00sJ18gxjb/7TlZ
-         zZbNFli1x2HY0TLBeb0L8vjk+QosxpivU29rt2XlFkLr8TjFWRMME6SbwkeR2v7qPyJ1
-         znrGZzoLp/gCBLk9Ec9DYumtRr8V3V8rrBReqoo3OUjwBM7yrUe/epGDpYnew7il4dqd
-         tENysIZaLdPITFGVxYLuV2QoSszSi9Ftu46BDFCiv5hDl+EURRawMmL2GnffWOcKRcV0
-         jhvFxNLuTybjUjIOON7GVLvkwfKx8aCEUqbJGPXW3Wk5xJrLGQS2CtRBVFK2nqAQkj0y
-         3qog==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=qlm8OKyOV/HJAu3bA65vWCOmmjrUcu0xP6huIGZIaXI=;
-        b=WRlM+I6dgp9gYcPde40iSPf+5kL0E4OcLjDEN/OFX2ZRmY3KEsGnneNrGxaRrfHO0B
-         +nW+297qrXTla82z+YMkYY7u19qBiH6CkpfD1l79a9IdcZdWM0YNZxQualTj0Nw7XtZz
-         H30mkJrYSS2AHa1cjZwzW9D+pvNBd3hZ41y4qRsAGFNyEyZCITDPUzDN/wbqTKylEFnK
-         LVebAIPVDjZjQY72Cp+Aj2IuRpNDi87gtyZgj2m9khrCrGgzlrf77pawuuzWCW8RKnej
-         btGw2S9pfPNonn9YdtcPOKL8rRAktDQEJXBOfoFTtQZC5LJoYhyoTibIEKAtngexciwE
-         TLag==
-X-Gm-Message-State: AGi0PuYcvjIFsHYrn/4L1QjAynYHtZzlMNKIhktydOvA6n1YYw9qKhtf
-        S07QWGLP7ptsmTtgo3oMNg9A6zAneyy6qppj
-X-Google-Smtp-Source: APiQypJLrh0UqqOlDdSsFXIUtEpbttKfTwx7y9nZKrgMufKXVJacLLtgle1CJEcyUZwYphgSbLvU5Q==
-X-Received: by 2002:a7b:c4d1:: with SMTP id g17mr8240890wmk.158.1587975351044;
-        Mon, 27 Apr 2020 01:15:51 -0700 (PDT)
-Received: from ?IPv6:2001:16b8:4886:8400:6d4b:554:cd7c:6b19? ([2001:16b8:4886:8400:6d4b:554:cd7c:6b19])
-        by smtp.gmail.com with ESMTPSA id u127sm14786776wme.8.2020.04.27.01.15.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 27 Apr 2020 01:15:50 -0700 (PDT)
-Subject: Re: [RFC PATCH 6/9] iomap: use set/clear_fs_page_private
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        hch@infradead.org, david@fromorbit.com,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org
-References: <20200426214925.10970-1-guoqing.jiang@cloud.ionos.com>
- <20200426214925.10970-7-guoqing.jiang@cloud.ionos.com>
- <20200427002631.GC29705@bombadil.infradead.org>
-From:   Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Message-ID: <9dc98fe6-f65e-55ee-5e3e-94f4bbc0e2c7@cloud.ionos.com>
-Date:   Mon, 27 Apr 2020 10:15:49 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        id S1726692AbgD0Isg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Apr 2020 04:48:36 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:3131 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725899AbgD0Isg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Apr 2020 04:48:36 -0400
+X-IronPort-AV: E=Sophos;i="5.73,323,1583164800"; 
+   d="scan'208";a="90547650"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 27 Apr 2020 16:48:31 +0800
+Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
+        by cn.fujitsu.com (Postfix) with ESMTP id 7F8A84BCC89C;
+        Mon, 27 Apr 2020 16:37:51 +0800 (CST)
+Received: from G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) by
+ G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Mon, 27 Apr 2020 16:48:34 +0800
+Received: from G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.203) by
+ G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Mon, 27 Apr 2020 16:48:33 +0800
+Received: from localhost.localdomain (10.167.225.141) by
+ G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.2 via Frontend Transport; Mon, 27 Apr 2020 16:48:32 +0800
+From:   Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <linux-nvdimm@lists.01.org>
+CC:     <linux-mm@kvack.org>, <linux-fsdevel@vger.kernel.org>,
+        <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
+        <david@fromorbit.com>, <hch@lst.de>, <rgoldwyn@suse.de>,
+        <qi.fuli@fujitsu.com>, <y-goto@fujitsu.com>
+Subject: [RFC PATCH 2/8] mm: add dax-rmap for memory-failure and rmap
+Date:   Mon, 27 Apr 2020 16:47:44 +0800
+Message-ID: <20200427084750.136031-3-ruansy.fnst@cn.fujitsu.com>
+X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20200427084750.136031-1-ruansy.fnst@cn.fujitsu.com>
+References: <20200427084750.136031-1-ruansy.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-In-Reply-To: <20200427002631.GC29705@bombadil.infradead.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-yoursite-MailScanner-ID: 7F8A84BCC89C.A1BFC
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 4/27/20 2:26 AM, Matthew Wilcox wrote:
-> On Sun, Apr 26, 2020 at 11:49:22PM +0200, Guoqing Jiang wrote:
->> @@ -59,24 +59,18 @@ iomap_page_create(struct inode *inode, struct page *page)
->>   	 * migrate_page_move_mapping() assumes that pages with private data have
->>   	 * their count elevated by 1.
->>   	 */
->> -	get_page(page);
->> -	set_page_private(page, (unsigned long)iop);
->> -	SetPagePrivate(page);
->> -	return iop;
->> +	return (struct iomap_page *)set_fs_page_private(page, iop);
->>   }
-> This cast is unnecessary.  void * will be automatically cast to the
-> appropriate pointer type.
->
->> @@ -556,11 +550,9 @@ iomap_migrate_page(struct address_space *mapping, struct page *newpage,
->>   
->>   	if (page_has_private(page)) {
->>   		ClearPagePrivate(page);
->> -		get_page(newpage);
->> -		set_page_private(newpage, page_private(page));
->> +		set_fs_page_private(newpage, (void *)page_private(page));
->>   		set_page_private(page, 0);
->>   		put_page(page);
->> -		SetPagePrivate(newpage);
->>   	}
-> Same comment here as for the btrfs migrate page that Dave reviewed.
+Memory-failure collects and kill processes who is accessing a posioned,
+file mmapped page.  Add dax-rmap iteration to support reflink case.
+Also add it for rmap iteration.
 
-Yes, thanks for the review.
+Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+---
+ mm/memory-failure.c | 63 +++++++++++++++++++++++++++++++++++----------
+ mm/rmap.c           | 54 +++++++++++++++++++++++++++-----------
+ 2 files changed, 88 insertions(+), 29 deletions(-)
 
-Thanks,
-Guoqing
+diff --git a/mm/memory-failure.c b/mm/memory-failure.c
+index a96364be8ab4..6d7da1fd55fd 100644
+--- a/mm/memory-failure.c
++++ b/mm/memory-failure.c
+@@ -463,36 +463,71 @@ static void collect_procs_anon(struct page *page, struct list_head *to_kill,
+ 	page_unlock_anon_vma_read(av);
+ }
+ 
++static void collect_each_procs_file(struct page *page,
++				    struct task_struct *task,
++				    struct list_head *to_kill)
++{
++	struct vm_area_struct *vma;
++	struct address_space *mapping = page->mapping;
++	struct rb_root_cached *root = (struct rb_root_cached *)page_private(page);
++	struct rb_node *node;
++	struct shared_file *shared;
++	pgoff_t pgoff;
++
++	if (dax_mapping(mapping) && root) {
++		struct shared_file save = {
++			.mapping = mapping,
++			.index = page->index,
++		};
++		for (node = rb_first_cached(root); node; node = rb_next(node)) {
++			shared = container_of(node, struct shared_file, node);
++			mapping = page->mapping = shared->mapping;
++			page->index = shared->index;
++			pgoff = page_to_pgoff(page);
++			vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff,
++						  pgoff) {
++				if (vma->vm_mm == task->mm) {
++					// each vma is unique, so is the vaddr.
++					add_to_kill(task, page, vma, to_kill);
++				}
++			}
++		}
++		// restore the mapping and index.
++		page->mapping = save.mapping;
++		page->index = save.index;
++	} else {
++		pgoff = page_to_pgoff(page);
++		vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff, pgoff) {
++			/*
++			 * Send early kill signal to tasks where a vma covers
++			 * the page but the corrupted page is not necessarily
++			 * mapped it in its pte.
++			 * Assume applications who requested early kill want
++			 * to be informed of all such data corruptions.
++			 */
++			if (vma->vm_mm == task->mm)
++				add_to_kill(task, page, vma, to_kill);
++		}
++	}
++}
++
+ /*
+  * Collect processes when the error hit a file mapped page.
+  */
+ static void collect_procs_file(struct page *page, struct list_head *to_kill,
+ 				int force_early)
+ {
+-	struct vm_area_struct *vma;
+ 	struct task_struct *tsk;
+ 	struct address_space *mapping = page->mapping;
+ 
+ 	i_mmap_lock_read(mapping);
+ 	read_lock(&tasklist_lock);
+ 	for_each_process(tsk) {
+-		pgoff_t pgoff = page_to_pgoff(page);
+ 		struct task_struct *t = task_early_kill(tsk, force_early);
+ 
+ 		if (!t)
+ 			continue;
+-		vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff,
+-				      pgoff) {
+-			/*
+-			 * Send early kill signal to tasks where a vma covers
+-			 * the page but the corrupted page is not necessarily
+-			 * mapped it in its pte.
+-			 * Assume applications who requested early kill want
+-			 * to be informed of all such data corruptions.
+-			 */
+-			if (vma->vm_mm == t->mm)
+-				add_to_kill(t, page, vma, to_kill);
+-		}
++		collect_each_procs_file(page, t, to_kill);
+ 	}
+ 	read_unlock(&tasklist_lock);
+ 	i_mmap_unlock_read(mapping);
+diff --git a/mm/rmap.c b/mm/rmap.c
+index f79a206b271a..69ea66f9e971 100644
+--- a/mm/rmap.c
++++ b/mm/rmap.c
+@@ -1870,21 +1870,7 @@ static void rmap_walk_anon(struct page *page, struct rmap_walk_control *rwc,
+ 		anon_vma_unlock_read(anon_vma);
+ }
+ 
+-/*
+- * rmap_walk_file - do something to file page using the object-based rmap method
+- * @page: the page to be handled
+- * @rwc: control variable according to each walk type
+- *
+- * Find all the mappings of a page using the mapping pointer and the vma chains
+- * contained in the address_space struct it points to.
+- *
+- * When called from try_to_munlock(), the mmap_sem of the mm containing the vma
+- * where the page was found will be held for write.  So, we won't recheck
+- * vm_flags for that VMA.  That should be OK, because that vma shouldn't be
+- * LOCKED.
+- */
+-static void rmap_walk_file(struct page *page, struct rmap_walk_control *rwc,
+-		bool locked)
++static void rmap_walk_file_one(struct page *page, struct rmap_walk_control *rwc, bool locked)
+ {
+ 	struct address_space *mapping = page_mapping(page);
+ 	pgoff_t pgoff_start, pgoff_end;
+@@ -1925,6 +1911,44 @@ static void rmap_walk_file(struct page *page, struct rmap_walk_control *rwc,
+ 		i_mmap_unlock_read(mapping);
+ }
+ 
++/*
++ * rmap_walk_file - do something to file page using the object-based rmap method
++ * @page: the page to be handled
++ * @rwc: control variable according to each walk type
++ *
++ * Find all the mappings of a page using the mapping pointer and the vma chains
++ * contained in the address_space struct it points to.
++ *
++ * When called from try_to_munlock(), the mmap_sem of the mm containing the vma
++ * where the page was found will be held for write.  So, we won't recheck
++ * vm_flags for that VMA.  That should be OK, because that vma shouldn't be
++ * LOCKED.
++ */
++static void rmap_walk_file(struct page *page, struct rmap_walk_control *rwc,
++		bool locked)
++{
++	struct rb_root_cached *root = (struct rb_root_cached *)page_private(page);
++	struct rb_node *node;
++	struct shared_file *shared;
++
++	if (dax_mapping(page->mapping) && root) {
++		struct shared_file save = {
++			.mapping = page->mapping,
++			.index = page->index,
++		};
++		for (node = rb_first_cached(root); node; node = rb_next(node)) {
++			shared = container_of(node, struct shared_file, node);
++			page->mapping = shared->mapping;
++			page->index = shared->index;
++			rmap_walk_file_one(page, rwc, locked);
++		}
++		// restore the mapping and index.
++		page->mapping = save.mapping;
++		page->index = save.index;
++	} else
++		rmap_walk_file_one(page, rwc, locked);
++}
++
+ void rmap_walk(struct page *page, struct rmap_walk_control *rwc)
+ {
+ 	if (unlikely(PageKsm(page)))
+-- 
+2.26.2
+
+
+
