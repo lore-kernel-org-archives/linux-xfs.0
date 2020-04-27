@@ -2,134 +2,366 @@ Return-Path: <SRS0=n/sd=6L=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B0C3C54EEB
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Apr 2020 20:46:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34705C54FD0
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Apr 2020 21:17:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2116B2070B
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Apr 2020 20:46:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15DB02082E
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Apr 2020 21:17:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1588020406;
-	bh=S0JGqMXyfhwp4pwnB+rzqtWpJTu9aRY8xFng4Qs4J64=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=eIlQU/ELERI2H0TGxx8ZMyQCJZ4BCOc+79yUvjRAFpXRfisZnzTho0ZH5/nTLSMNO
-	 qIkBZFSBczu/caSH0vJngS+WJasLgCvrecqB/JyExC1IfHy4hNZ8/Br8x2aCTTQ/1D
-	 tbVphYbSoh1Zwo9PiKAPnm0+SK43+r10CyD3oTnw=
+	s=default; t=1588022274;
+	bh=GPH6dsgPIHXze49Zrhyo4dTiwhqFaCAXRAs3Zi+NpLs=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=pwCnFswT8nyAF7TbGIvS2g03YPW6qwDwyZcGQXMszo/EZIpH9oWBC6EQj4g9S9Qug
+	 kT9a4YJSD0y8jDHCQK/AqZAgUMnzx0GYieVcVPLMT6wdKGWmsV0vSh+ipXDQGrA6SL
+	 yT1F7jpVu57BQv5V6quXn1MqNtk0wFo4mNZLk63o=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726609AbgD0Uqp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Apr 2020 16:46:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37266 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726233AbgD0Uqp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Apr 2020 16:46:45 -0400
-Received: from mail-lf1-x142.google.com (mail-lf1-x142.google.com [IPv6:2a00:1450:4864:20::142])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 292A7C03C1A7
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Apr 2020 13:46:45 -0700 (PDT)
-Received: by mail-lf1-x142.google.com with SMTP id j14so15034110lfg.9
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Apr 2020 13:46:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=dWR2+QPOvDM4Hcpn5wbulNRTutKr2RiZhAYOOOoHLGE=;
-        b=XXUouBL3HsVdD5w4SVkh5b5D8g9+OFHyEx+DyQoaqHU6zlLiC7Dv4gWIn8To8ExMgw
-         NntG+tgahRdl4PgQkAptOglp72S4qq9gaTpBKYXOGyoVBKVhhZlHK+aoAtOs0FgfdNnG
-         Q4eXzMDYFO1E9IXcsn+dcaRD4uEyvCywvcRfE=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=dWR2+QPOvDM4Hcpn5wbulNRTutKr2RiZhAYOOOoHLGE=;
-        b=PFxoJrME3eIdlWBe7uYAWrMqZ/PMLJV8SNWywBzBSqPvcstdnwwyTn+FvCA8PjQorr
-         aO6s4WyrWO7gVr//ZC3P226mLWjClw77s9fTUQB+cF+SAynsnzppHN/IrcDxTyK3hF6o
-         AHKJ+WSCPjAoxc/p8S1VC6+YReTCQiQian9QfCtF6wQqZINUTGf7XDhXZGLSx4uIVAHn
-         znj+rvvFKBDO1kjHJGLFiw9an2nYGHDGeL+FbJ75yIFCaFbCSljQm9up9diOCRZgBGm5
-         x+p/H/s45ZMO2TcTELX4khEZomhu1m2hXHSUVpIJknhrb/wViLR2RBJdNfNJR/mE1oSy
-         utjQ==
-X-Gm-Message-State: AGi0PubQHegx38e1TFm1wdpXsmBrfiC6z7nStbNIhkBTQN0M5rjiMGkW
-        CQbY4V+WQ3aE67f2JDB19FIi+66wMjg=
-X-Google-Smtp-Source: APiQypJtMu/7PH/QY6r03F7QWfQct0FQFvKDs8aRTFUsaSd/E8pYhTYmZRkr6UjySVxrGEwkgm95jQ==
-X-Received: by 2002:a19:e041:: with SMTP id g1mr16404730lfj.70.1588020402701;
-        Mon, 27 Apr 2020 13:46:42 -0700 (PDT)
-Received: from mail-lf1-f51.google.com (mail-lf1-f51.google.com. [209.85.167.51])
-        by smtp.gmail.com with ESMTPSA id i18sm12162143lfo.57.2020.04.27.13.46.41
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 27 Apr 2020 13:46:41 -0700 (PDT)
-Received: by mail-lf1-f51.google.com with SMTP id h6so15083387lfc.0
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Apr 2020 13:46:41 -0700 (PDT)
-X-Received: by 2002:a19:240a:: with SMTP id k10mr16839809lfk.30.1588020401250;
- Mon, 27 Apr 2020 13:46:41 -0700 (PDT)
-MIME-Version: 1.0
-References: <20200425133504.GA11354@nishad> <20200427155617.GY6749@magnolia>
- <20200427172959.GB3936841@kroah.com> <515362d10c06567f35f0d5b7c3f2e121769fb04b.camel@perches.com>
- <20200427174611.GA4035548@kroah.com> <791a97d5d4dfd11af533a0bbd6ae27d1a2d479ee.camel@perches.com>
- <20200427183629.GA20158@kroah.com> <16b209d0b0c8034db62f8d4d0a260a00f0aa5d5e.camel@perches.com>
- <CAHk-=wgN=Ox112_O=GQ-kwMxYduix9gZFsr1GXXJWLpDpNDm5g@mail.gmail.com> <fdcc8aa5a506ba9c6a3e6e68a7147161424985bf.camel@perches.com>
-In-Reply-To: <fdcc8aa5a506ba9c6a3e6e68a7147161424985bf.camel@perches.com>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Mon, 27 Apr 2020 13:46:25 -0700
-X-Gmail-Original-Message-ID: <CAHk-=wi2bdXuYhC9bd9FShtcf_u-6RUb3Qr_aXq3XtbCxR5NGQ@mail.gmail.com>
-Message-ID: <CAHk-=wi2bdXuYhC9bd9FShtcf_u-6RUb3Qr_aXq3XtbCxR5NGQ@mail.gmail.com>
-Subject: Re: [PATCH] xfs: Use the correct style for SPDX License Identifier
-To:     Joe Perches <joe@perches.com>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        id S1726534AbgD0VRx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Apr 2020 17:17:53 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34210 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726412AbgD0VR2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 27 Apr 2020 17:17:28 -0400
+Received: from mail.kernel.org (ip5f5ad5c5.dynamic.kabel-deutschland.de [95.90.213.197])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 258612222A;
+        Mon, 27 Apr 2020 21:17:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1588022245;
+        bh=GPH6dsgPIHXze49Zrhyo4dTiwhqFaCAXRAs3Zi+NpLs=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=yDAweM4MJ69ihTiA3yTTzV8U6j+nV/KfZwYOwt/CqhESrSBPiyKItzE4iXUjYglx4
+         kl0nV6ikGtOWjBBOAzWywdZ1niq6YRkfWg3O3+bmkkMz9BQuoFmuQmSAbOFNdf2DgE
+         Z2ztfRMEKzLc4L32InKRPPwL4z+CsdSCBM/JgTmo=
+Received: from mchehab by mail.kernel.org with local (Exim 4.92.3)
+        (envelope-from <mchehab@kernel.org>)
+        id 1jTB7z-000Hlq-DE; Mon, 27 Apr 2020 23:17:23 +0200
+From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
+Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Nishad Kamdar <nishadkamdar@gmail.com>,
-        =?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= 
-        <u.kleine-koenig@pengutronix.de>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        linux-xfs@vger.kernel.org
+Subject: [PATCH v3 28/29] docs: filesystems: convert xfs-self-describing-metadata.txt to ReST
+Date:   Mon, 27 Apr 2020 23:17:20 +0200
+Message-Id: <7c26b200e12cfc07b9bd379612452d845a8d1474.1588021877.git.mchehab+huawei@kernel.org>
+X-Mailer: git-send-email 2.25.4
+In-Reply-To: <cover.1588021877.git.mchehab+huawei@kernel.org>
+References: <cover.1588021877.git.mchehab+huawei@kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 27, 2020 at 1:39 PM Joe Perches <joe@perches.com> wrote:
->
-> > The fact is, there *is * a reason to avoid the pedantic "change to new
-> > version" - pointless churn.
->
-> Have you *looked* at this proposed change?
->
-> It just changes // SPDX comments to /* */ in .h files.
+- Add a SPDX header;
+- Adjust document and section titles;
+- Some whitespace fixes and new line breaks;
+- Mark literal blocks as such;
+- Add it to filesystems/index.rst.
 
-That's not what I was reacting to - it was you arguing with Greg about
-how we use the legacy format.
+Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+---
+ Documentation/filesystems/index.rst           |   1 +
+ ...a.txt => xfs-self-describing-metadata.rst} | 182 +++++++++---------
+ MAINTAINERS                                   |   2 +-
+ 3 files changed, 94 insertions(+), 91 deletions(-)
+ rename Documentation/filesystems/{xfs-self-describing-metadata.txt => xfs-self-describing-metadata.rst} (83%)
 
-I really don't care at all about the comment character choices
-(either), but wanted to point out that as far as the kernel is
-concerned, the "deprecated" spdx keys simply arent' deprecated, they
-are just as valid.
+diff --git a/Documentation/filesystems/index.rst b/Documentation/filesystems/index.rst
+index 24d122ab4b39..a4fefb62c931 100644
+--- a/Documentation/filesystems/index.rst
++++ b/Documentation/filesystems/index.rst
+@@ -119,4 +119,5 @@ Documentation for filesystem implementations.
+    virtiofs
+    vfat
+    xfs-delayed-logging-design
++   xfs-self-describing-metadata
+    zonefs
+diff --git a/Documentation/filesystems/xfs-self-describing-metadata.txt b/Documentation/filesystems/xfs-self-describing-metadata.rst
+similarity index 83%
+rename from Documentation/filesystems/xfs-self-describing-metadata.txt
+rename to Documentation/filesystems/xfs-self-describing-metadata.rst
+index 8db0121d0980..51cdafe01ab1 100644
+--- a/Documentation/filesystems/xfs-self-describing-metadata.txt
++++ b/Documentation/filesystems/xfs-self-describing-metadata.rst
+@@ -1,8 +1,11 @@
++.. SPDX-License-Identifier: GPL-2.0
++
++============================
+ XFS Self Describing Metadata
+-----------------------------
++============================
+ 
+ Introduction
+-------------
++============
+ 
+ The largest scalability problem facing XFS is not one of algorithmic
+ scalability, but of verification of the filesystem structure. Scalabilty of the
+@@ -34,7 +37,7 @@ required for basic forensic analysis of the filesystem structure.
+ 
+ 
+ Self Describing Metadata
+-------------------------
++========================
+ 
+ One of the problems with the current metadata format is that apart from the
+ magic number in the metadata block, we have no other way of identifying what it
+@@ -142,7 +145,7 @@ modification occurred between the corruption being written and when it was
+ detected.
+ 
+ Runtime Validation
+-------------------
++==================
+ 
+ Validation of self-describing metadata takes place at runtime in two places:
+ 
+@@ -183,18 +186,18 @@ error occurs during this process, the buffer is again marked with a EFSCORRUPTED
+ error for the higher layers to catch.
+ 
+ Structures
+-----------
++==========
+ 
+-A typical on-disk structure needs to contain the following information:
++A typical on-disk structure needs to contain the following information::
+ 
+-struct xfs_ondisk_hdr {
+-        __be32  magic;		/* magic number */
+-        __be32  crc;		/* CRC, not logged */
+-        uuid_t  uuid;		/* filesystem identifier */
+-        __be64  owner;		/* parent object */
+-        __be64  blkno;		/* location on disk */
+-        __be64  lsn;		/* last modification in log, not logged */
+-};
++    struct xfs_ondisk_hdr {
++	    __be32  magic;		/* magic number */
++	    __be32  crc;		/* CRC, not logged */
++	    uuid_t  uuid;		/* filesystem identifier */
++	    __be64  owner;		/* parent object */
++	    __be64  blkno;		/* location on disk */
++	    __be64  lsn;		/* last modification in log, not logged */
++    };
+ 
+ Depending on the metadata, this information may be part of a header structure
+ separate to the metadata contents, or may be distributed through an existing
+@@ -214,24 +217,24 @@ level of information is generally provided. For example:
+ 	  well. hence the additional metadata headers change the overall format
+ 	  of the metadata.
+ 
+-A typical buffer read verifier is structured as follows:
++A typical buffer read verifier is structured as follows::
+ 
+-#define XFS_FOO_CRC_OFF		offsetof(struct xfs_ondisk_hdr, crc)
++    #define XFS_FOO_CRC_OFF		offsetof(struct xfs_ondisk_hdr, crc)
+ 
+-static void
+-xfs_foo_read_verify(
+-	struct xfs_buf	*bp)
+-{
+-       struct xfs_mount *mp = bp->b_mount;
++    static void
++    xfs_foo_read_verify(
++	    struct xfs_buf	*bp)
++    {
++	struct xfs_mount *mp = bp->b_mount;
+ 
+-        if ((xfs_sb_version_hascrc(&mp->m_sb) &&
+-             !xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
+-					XFS_FOO_CRC_OFF)) ||
+-            !xfs_foo_verify(bp)) {
+-                XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+-                xfs_buf_ioerror(bp, EFSCORRUPTED);
+-        }
+-}
++	    if ((xfs_sb_version_hascrc(&mp->m_sb) &&
++		!xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
++					    XFS_FOO_CRC_OFF)) ||
++		!xfs_foo_verify(bp)) {
++		    XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		    xfs_buf_ioerror(bp, EFSCORRUPTED);
++	    }
++    }
+ 
+ The code ensures that the CRC is only checked if the filesystem has CRCs enabled
+ by checking the superblock of the feature bit, and then if the CRC verifies OK
+@@ -239,83 +242,83 @@ by checking the superblock of the feature bit, and then if the CRC verifies OK
+ 
+ The verifier function will take a couple of different forms, depending on
+ whether the magic number can be used to determine the format of the block. In
+-the case it can't, the code is structured as follows:
++the case it can't, the code is structured as follows::
+ 
+-static bool
+-xfs_foo_verify(
+-	struct xfs_buf		*bp)
+-{
+-        struct xfs_mount	*mp = bp->b_mount;
+-        struct xfs_ondisk_hdr	*hdr = bp->b_addr;
++    static bool
++    xfs_foo_verify(
++	    struct xfs_buf		*bp)
++    {
++	    struct xfs_mount	*mp = bp->b_mount;
++	    struct xfs_ondisk_hdr	*hdr = bp->b_addr;
+ 
+-        if (hdr->magic != cpu_to_be32(XFS_FOO_MAGIC))
+-                return false;
++	    if (hdr->magic != cpu_to_be32(XFS_FOO_MAGIC))
++		    return false;
+ 
+-        if (!xfs_sb_version_hascrc(&mp->m_sb)) {
+-		if (!uuid_equal(&hdr->uuid, &mp->m_sb.sb_uuid))
+-			return false;
+-		if (bp->b_bn != be64_to_cpu(hdr->blkno))
+-			return false;
+-		if (hdr->owner == 0)
+-			return false;
+-	}
++	    if (!xfs_sb_version_hascrc(&mp->m_sb)) {
++		    if (!uuid_equal(&hdr->uuid, &mp->m_sb.sb_uuid))
++			    return false;
++		    if (bp->b_bn != be64_to_cpu(hdr->blkno))
++			    return false;
++		    if (hdr->owner == 0)
++			    return false;
++	    }
+ 
+-	/* object specific verification checks here */
++	    /* object specific verification checks here */
+ 
+-        return true;
+-}
++	    return true;
++    }
+ 
+ If there are different magic numbers for the different formats, the verifier
+-will look like:
++will look like::
+ 
+-static bool
+-xfs_foo_verify(
+-	struct xfs_buf		*bp)
+-{
+-        struct xfs_mount	*mp = bp->b_mount;
+-        struct xfs_ondisk_hdr	*hdr = bp->b_addr;
++    static bool
++    xfs_foo_verify(
++	    struct xfs_buf		*bp)
++    {
++	    struct xfs_mount	*mp = bp->b_mount;
++	    struct xfs_ondisk_hdr	*hdr = bp->b_addr;
+ 
+-        if (hdr->magic == cpu_to_be32(XFS_FOO_CRC_MAGIC)) {
+-		if (!uuid_equal(&hdr->uuid, &mp->m_sb.sb_uuid))
+-			return false;
+-		if (bp->b_bn != be64_to_cpu(hdr->blkno))
+-			return false;
+-		if (hdr->owner == 0)
+-			return false;
+-	} else if (hdr->magic != cpu_to_be32(XFS_FOO_MAGIC))
+-		return false;
++	    if (hdr->magic == cpu_to_be32(XFS_FOO_CRC_MAGIC)) {
++		    if (!uuid_equal(&hdr->uuid, &mp->m_sb.sb_uuid))
++			    return false;
++		    if (bp->b_bn != be64_to_cpu(hdr->blkno))
++			    return false;
++		    if (hdr->owner == 0)
++			    return false;
++	    } else if (hdr->magic != cpu_to_be32(XFS_FOO_MAGIC))
++		    return false;
+ 
+-	/* object specific verification checks here */
++	    /* object specific verification checks here */
+ 
+-        return true;
+-}
++	    return true;
++    }
+ 
+ Write verifiers are very similar to the read verifiers, they just do things in
+-the opposite order to the read verifiers. A typical write verifier:
++the opposite order to the read verifiers. A typical write verifier::
+ 
+-static void
+-xfs_foo_write_verify(
+-	struct xfs_buf	*bp)
+-{
+-	struct xfs_mount	*mp = bp->b_mount;
+-	struct xfs_buf_log_item	*bip = bp->b_fspriv;
++    static void
++    xfs_foo_write_verify(
++	    struct xfs_buf	*bp)
++    {
++	    struct xfs_mount	*mp = bp->b_mount;
++	    struct xfs_buf_log_item	*bip = bp->b_fspriv;
+ 
+-	if (!xfs_foo_verify(bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+-		xfs_buf_ioerror(bp, EFSCORRUPTED);
+-		return;
+-	}
++	    if (!xfs_foo_verify(bp)) {
++		    XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		    xfs_buf_ioerror(bp, EFSCORRUPTED);
++		    return;
++	    }
+ 
+-	if (!xfs_sb_version_hascrc(&mp->m_sb))
+-		return;
++	    if (!xfs_sb_version_hascrc(&mp->m_sb))
++		    return;
+ 
+ 
+-	if (bip) {
+-		struct xfs_ondisk_hdr	*hdr = bp->b_addr;
+-		hdr->lsn = cpu_to_be64(bip->bli_item.li_lsn);
+-	}
+-	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_FOO_CRC_OFF);
+-}
++	    if (bip) {
++		    struct xfs_ondisk_hdr	*hdr = bp->b_addr;
++		    hdr->lsn = cpu_to_be64(bip->bli_item.li_lsn);
++	    }
++	    xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_FOO_CRC_OFF);
++    }
+ 
+ This will verify the internal structure of the metadata before we go any
+ further, detecting corruptions that have occurred as the metadata has been
+@@ -324,7 +327,7 @@ update the LSN field (when it was last modified) and calculate the CRC on the
+ metadata. Once this is done, we can issue the IO.
+ 
+ Inodes and Dquots
+------------------
++=================
+ 
+ Inodes and dquots are special snowflakes. They have per-object CRC and
+ self-identifiers, but they are packed so that there are multiple objects per
+@@ -347,4 +350,3 @@ XXX: inode unlinked list modification doesn't recalculate the inode CRC! None of
+ the unlinked list modifications check or update CRCs, neither during unlink nor
+ log recovery. So, it's gone unnoticed until now. This won't matter immediately -
+ repair will probably complain about it - but it needs to be fixed.
+-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 0a4d2fefe5f2..25dcb5ce2417 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -18591,7 +18591,7 @@ T:	git git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+ F:	Documentation/ABI/testing/sysfs-fs-xfs
+ F:	Documentation/admin-guide/xfs.rst
+ F:	Documentation/filesystems/xfs-delayed-logging-design.rst
+-F:	Documentation/filesystems/xfs-self-describing-metadata.txt
++F:	Documentation/filesystems/xfs-self-describing-metadata.rst
+ F:	fs/xfs/
+ F:	include/uapi/linux/dqblk_xfs.h
+ F:	include/uapi/linux/fsmap.h
+-- 
+2.25.4
 
-> Piecemeal changes aren't great.
-
-Piecemeal changes are fine, when the change doesn't have to be done AT ALL.
-
-There is simply no point in EVER changing "GPL-2.0" into
-"GPL-2.0-only" etc, unless the thing is then touched for some other
-reason (which it may never be).
-
-Scripted changes are not as useful as you think. They often cause
-unnecessary noise in other respects.
-
-I'm constantly seeing stupid pointless work due to irrelevant patches
-that then show up in "get_maintainer" output because they show up as
-changes to drivbers that nobody cares about.
-
-Or "git blame -C" things that I have to ignore and go past that
-history because the scripted change showed an (uninteresting) change.
-
-The fact is, pointless churn is BAD. It's a real expense. The whole
-"get it over with once" argument is simply completely wrong.
-
-There are real advantages to "don't touch stuff that doesn't actively
-need touching".
-
-              Linus
