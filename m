@@ -2,122 +2,133 @@ Return-Path: <SRS0=n/sd=6L=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 673DEC4CECC
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Apr 2020 18:01:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF84EC81981
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Apr 2020 18:05:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 48E6220656
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Apr 2020 18:01:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C07ED214D8
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Apr 2020 18:05:10 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kOAMZKtJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725980AbgD0SBo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Apr 2020 14:01:44 -0400
-Received: from smtprelay0236.hostedemail.com ([216.40.44.236]:45506 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725963AbgD0SBo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Apr 2020 14:01:44 -0400
-Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay07.hostedemail.com (Postfix) with ESMTP id 4976E181D302B;
-        Mon, 27 Apr 2020 18:01:43 +0000 (UTC)
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-HE-Tag: back62_48eb03e9b191b
-X-Filterd-Recvd-Size: 3982
-Received: from XPS-9350.home (unknown [47.151.136.130])
-        (Authenticated sender: joe@perches.com)
-        by omf14.hostedemail.com (Postfix) with ESMTPA;
-        Mon, 27 Apr 2020 18:01:40 +0000 (UTC)
-Message-ID: <791a97d5d4dfd11af533a0bbd6ae27d1a2d479ee.camel@perches.com>
-Subject: Re: [PATCH] xfs: Use the correct style for SPDX License Identifier
-From:   Joe Perches <joe@perches.com>
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Nishad Kamdar <nishadkamdar@gmail.com>,
-        Uwe =?ISO-8859-1?Q?Kleine-K=F6nig?= 
-        <u.kleine-koenig@pengutronix.de>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Date:   Mon, 27 Apr 2020 11:01:38 -0700
-In-Reply-To: <20200427174611.GA4035548@kroah.com>
-References: <20200425133504.GA11354@nishad> <20200427155617.GY6749@magnolia>
-         <20200427172959.GB3936841@kroah.com>
-         <515362d10c06567f35f0d5b7c3f2e121769fb04b.camel@perches.com>
-         <20200427174611.GA4035548@kroah.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.36.1-2 
+        id S1726545AbgD0SFJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Apr 2020 14:05:09 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:45414 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726283AbgD0SFI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Apr 2020 14:05:08 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03RI2hNS163334;
+        Mon, 27 Apr 2020 18:05:05 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=3LXwwXxy+AcaPk+w767jsHCo2VqTrEdRj6HQcKPRh3Q=;
+ b=kOAMZKtJKb6Kff+E7+IFMnzV34mlvPgObT58x9hJ3jr9zKBLIyyw+Wl9lEup2nefy4SF
+ na2I1eWpcPORhWxzkU/XMoJ4znUCF+HaV1eFiEFDVhLPhubNTTELOJ+iUpSTQmSO01vZ
+ N8da9VQcODt6vy7rfGu+XhT2BFJaIn/6o+H7L28A1T1OlaLqZuC6lwftJ6timvDPxJor
+ w2SMtWTmo8G5AOCcRYbBvJarxpdsFetTvqBnXeGOBEqKooJfjzLeGIe/zob2xq0IiT2z
+ PPIS3B5c1sp2/8VKjVBVJjrkXexvHsHJoYcvd38pjcnnA+hc9bDt/Q/VHu6GAh4QcBMM jQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 30nucfu6rg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 27 Apr 2020 18:05:05 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03RI2vOL062660;
+        Mon, 27 Apr 2020 18:05:05 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 30my0a5e77-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 27 Apr 2020 18:05:04 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03RI53f6007132;
+        Mon, 27 Apr 2020 18:05:03 GMT
+Received: from localhost (/10.159.145.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 27 Apr 2020 11:05:03 -0700
+Date:   Mon, 27 Apr 2020 11:05:02 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs: rename inode_list xlog_recover_reorder_trans
+Message-ID: <20200427180502.GV6742@magnolia>
+References: <20200427135229.1480993-1-hch@lst.de>
+ <20200427135229.1480993-3-hch@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200427135229.1480993-3-hch@lst.de>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9604 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0
+ suspectscore=0 adultscore=0 mlxlogscore=999 bulkscore=0 phishscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004270146
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9604 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 priorityscore=1501
+ mlxlogscore=999 impostorscore=0 suspectscore=0 malwarescore=0
+ lowpriorityscore=0 mlxscore=0 spamscore=0 adultscore=0 phishscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004270146
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, 2020-04-27 at 19:46 +0200, Greg Kroah-Hartman wrote:
-> On Mon, Apr 27, 2020 at 10:41:58AM -0700, Joe Perches wrote:
-> > On Mon, 2020-04-27 at 19:29 +0200, Greg Kroah-Hartman wrote:
-> > > On Mon, Apr 27, 2020 at 08:56:18AM -0700, Darrick J. Wong wrote:
-> > > > On Sat, Apr 25, 2020 at 07:05:09PM +0530, Nishad Kamdar wrote:
-> > > > > This patch corrects the SPDX License Identifier style in
-> > > > > header files related to XFS File System support.
-> > > > > For C header files Documentation/process/license-rules.rst
-> > > > > mandates C-like comments (opposed to C source files where
-> > > > > C++ style should be used).
-> > > > > 
-> > > > > Changes made by using a script provided by Joe Perches here:
-> > > > > https://lkml.org/lkml/2019/2/7/46.
-> > []
-> > > > > diff --git a/fs/xfs/libxfs/xfs_ag_resv.h b/fs/xfs/libxfs/xfs_ag_resv.h
-> > []
-> > > > > @@ -1,4 +1,4 @@
-> > > > > -// SPDX-License-Identifier: GPL-2.0+
-> > > > > +/* SPDX-License-Identifier: GPL-2.0+ */
-> > > > 
-> > > > I thought we were supposed to use 'GPL-2.0-or-newer' because 'GPL-2.0+'
-> > > > is deprecated in some newer version of the SPDX standard?
-> > > > 
-> > > > <shrug>
-> > > 
-> > > The kernel follows the "older" SPDX standard, but will accept either,
-> > > it's up to the author.  It is all documented in LICENSES/ if people
-> > > really want to make sure.
-> > 
-> > I think the kernel should prefer the "newer" SPDX standard
-> > for any/all changes to these lines.
-> > ---
-> >  LICENSES/preferred/GPL-2.0 | 8 ++++----
-> >  1 file changed, 4 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/LICENSES/preferred/GPL-2.0 b/LICENSES/preferred/GPL-2.0
-> > index ff0812..c50f93 100644
-> > --- a/LICENSES/preferred/GPL-2.0
-> > +++ b/LICENSES/preferred/GPL-2.0
-> > @@ -8,13 +8,13 @@ Usage-Guide:
-> >    tag/value pairs into a comment according to the placement
-> >    guidelines in the licensing rules documentation.
-> >    For 'GNU General Public License (GPL) version 2 only' use:
-> > -    SPDX-License-Identifier: GPL-2.0
-> > -  or
-> >      SPDX-License-Identifier: GPL-2.0-only
-> > +  or the deprecated alternative
-> > +    SPDX-License-Identifier: GPL-2.0
-> >    For 'GNU General Public License (GPL) version 2 or any later version' use:
-> > -    SPDX-License-Identifier: GPL-2.0+
-> > -  or
-> >      SPDX-License-Identifier: GPL-2.0-or-later
-> > +  or the deprecated alternative
-> > +    SPDX-License-Identifier: GPL-2.0+
-> >  License-Text:
+On Mon, Apr 27, 2020 at 03:52:29PM +0200, Christoph Hellwig wrote:
+> This list contains pretty much everything that is not a buffer.  The
+> comment calls it item_list, which is a much better name than inode
+> list, so switch the actual variable name to that as well.
 > 
-> At the moment, I do not, as the current ones are not "depreciated" at
-> all.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-https://spdx.org/licenses/
+LGTM, who doesn't know where the "inode_list" name came from... :)
 
-shows the GPL-2.0 and GPL-2.0+ as deprecated.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-https://spdx.org/licenses/GPL-2.0.html
-https://spdx.org/licenses/GPL-2.0+.html
+--D
 
+> ---
+>  fs/xfs/xfs_log_recover.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 750a81b941ea4..33cac61570abe 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -1847,7 +1847,7 @@ xlog_recover_reorder_trans(
+>  	LIST_HEAD(cancel_list);
+>  	LIST_HEAD(buffer_list);
+>  	LIST_HEAD(inode_buffer_list);
+> -	LIST_HEAD(inode_list);
+> +	LIST_HEAD(item_list);
+>  
+>  	list_splice_init(&trans->r_itemq, &sort_list);
+>  	list_for_each_entry_safe(item, n, &sort_list, ri_list) {
+> @@ -1883,7 +1883,7 @@ xlog_recover_reorder_trans(
+>  		case XFS_LI_BUD:
+>  			trace_xfs_log_recover_item_reorder_tail(log,
+>  							trans, item, pass);
+> -			list_move_tail(&item->ri_list, &inode_list);
+> +			list_move_tail(&item->ri_list, &item_list);
+>  			break;
+>  		default:
+>  			xfs_warn(log->l_mp,
+> @@ -1904,8 +1904,8 @@ xlog_recover_reorder_trans(
+>  	ASSERT(list_empty(&sort_list));
+>  	if (!list_empty(&buffer_list))
+>  		list_splice(&buffer_list, &trans->r_itemq);
+> -	if (!list_empty(&inode_list))
+> -		list_splice_tail(&inode_list, &trans->r_itemq);
+> +	if (!list_empty(&item_list))
+> +		list_splice_tail(&item_list, &trans->r_itemq);
+>  	if (!list_empty(&inode_buffer_list))
+>  		list_splice_tail(&inode_buffer_list, &trans->r_itemq);
+>  	if (!list_empty(&cancel_list))
+> -- 
+> 2.26.1
+> 
