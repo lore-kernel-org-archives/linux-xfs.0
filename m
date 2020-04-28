@@ -2,94 +2,186 @@ Return-Path: <SRS0=0AGZ=6M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A366C83007
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 07:47:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41AA2C83000
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 08:05:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3A2D0206A5
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 07:47:20 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rzZ7dWmY"
+	by mail.kernel.org (Postfix) with ESMTP id 25D53206B9
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 08:05:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726396AbgD1HrT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Apr 2020 03:47:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55818 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726369AbgD1HrT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Apr 2020 03:47:19 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 156CBC03C1A9;
-        Tue, 28 Apr 2020 00:47:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=XqbZray/izI+DtrCZeQqScd+zG1eR8dDs357djsfCWI=; b=rzZ7dWmYdkxfunsUxfkxv/fh5g
-        m6ldEYaWz6UCIpI8/bFvtB5yw82lrHnY1Hb6XCELINXMcsjN3oRwF8e+Xz1q1euYOOySS45KZsYfh
-        b4WGefXAB5V6TN8vGK8Y3FXiUkQkSRPOq29fEVH0yQ3+TcBoO/PaxJjiqOHVXlCcy0wOwZQce8lAC
-        ZG3B0UOXwRK542Kt9GwWMHogmveURyNb3D5r6NFGx0l0vwU2TJkQ/aanW++yi8+vD/f/xQcqed3Cm
-        O0imsixLSHCWqkYtwyFFBv7q45RxeHIkh8OaWBSd8dGQNpHd0yBXn+1KRWxDj+NSLUmEmaWZdVOj9
-        ANHmZgLQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jTKxV-0003KI-8Y; Tue, 28 Apr 2020 07:47:13 +0000
-Date:   Tue, 28 Apr 2020 00:47:13 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Ritesh Harjani <riteshh@linux.ibm.com>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Jan Kara <jack@suse.com>, tytso@mit.edu,
-        "Aneesh Kumar K . V" <aneesh.kumar@linux.ibm.com>,
-        linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCHv2] fibmap: Warn and return an error in case of block >
- INT_MAX
-Message-ID: <20200428074713.GA12180@infradead.org>
-References: <58f0c64a3f2dbd363fb93371435f6bcaeeb7abe4.1588058868.git.riteshh@linux.ibm.com>
+        id S1726396AbgD1IFw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Apr 2020 04:05:52 -0400
+Received: from verein.lst.de ([213.95.11.211]:54803 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726253AbgD1IFw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 28 Apr 2020 04:05:52 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id C5A2868CEC; Tue, 28 Apr 2020 10:05:50 +0200 (CEST)
+Date:   Tue, 28 Apr 2020 10:05:50 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 5/2] xfs: refactor xlog_recover_buffer_pass1
+Message-ID: <20200428080550.GA20138@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <58f0c64a3f2dbd363fb93371435f6bcaeeb7abe4.1588058868.git.riteshh@linux.ibm.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 28, 2020 at 01:08:31PM +0530, Ritesh Harjani wrote:
-> We better warn the fibmap user and not return a truncated and therefore
-> an incorrect block map address if the bmap() returned block address
-> is greater than INT_MAX (since user supplied integer pointer).
-> 
-> It's better to pr_warn() all user of ioctl_fibmap() and return a proper
-> error code rather than silently letting a FS corruption happen if the
-> user tries to fiddle around with the returned block map address.
-> 
-> We fix this by returning an error code of -ERANGE and returning 0 as the
-> block mapping address in case if it is > INT_MAX.
-> 
-> Now iomap_bmap() could be called from either of these two paths.
-> Either when a user is calling an ioctl_fibmap() interface to get
-> the block mapping address or by some filesystem via use of bmap()
-> internal kernel API.
-> bmap() kernel API is well equipped with handling of u64 addresses.
-> 
-> WARN condition in iomap_bmap_actor() was mainly added to warn all
-> the fibmap users. But now that we have directly added this warning
-> for all fibmap users and also made sure to return 0 as block map address
-> in case if addr > INT_MAX.
-> So we can now remove this logic from iomap_bmap_actor().
-> 
-> Reviewed-by: Jan Kara <jack@suse.cz>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+Split out a xlog_add_buffer_cancelled helper which does the low-level
+manipulation of the buffer cancelation table, and in that helper call
+xlog_find_buffer_cancelled instead of open coding it.
 
-Well, this changed quite a bit from the previous version, so I would
-have dropped the Reviewed-by tags.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_log_recover.c | 114 +++++++++++++++++++--------------------
+ 1 file changed, 55 insertions(+), 59 deletions(-)
 
-That being said this version still looks good to me:
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index fe4dad5b77a95..3bc61838266f1 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1913,65 +1913,6 @@ xlog_recover_reorder_trans(
+ 	return error;
+ }
+ 
+-/*
+- * Build up the table of buf cancel records so that we don't replay
+- * cancelled data in the second pass.  For buffer records that are
+- * not cancel records, there is nothing to do here so we just return.
+- *
+- * If we get a cancel record which is already in the table, this indicates
+- * that the buffer was cancelled multiple times.  In order to ensure
+- * that during pass 2 we keep the record in the table until we reach its
+- * last occurrence in the log, we keep a reference count in the cancel
+- * record in the table to tell us how many times we expect to see this
+- * record during the second pass.
+- */
+-STATIC int
+-xlog_recover_buffer_pass1(
+-	struct xlog			*log,
+-	struct xlog_recover_item	*item)
+-{
+-	xfs_buf_log_format_t	*buf_f = item->ri_buf[0].i_addr;
+-	struct list_head	*bucket;
+-	struct xfs_buf_cancel	*bcp;
+-
+-	if (!xfs_buf_log_check_iovec(&item->ri_buf[0])) {
+-		xfs_err(log->l_mp, "bad buffer log item size (%d)",
+-				item->ri_buf[0].i_len);
+-		return -EFSCORRUPTED;
+-	}
+-
+-	/*
+-	 * If this isn't a cancel buffer item, then just return.
+-	 */
+-	if (!(buf_f->blf_flags & XFS_BLF_CANCEL)) {
+-		trace_xfs_log_recover_buf_not_cancel(log, buf_f);
+-		return 0;
+-	}
+-
+-	/*
+-	 * Insert an xfs_buf_cancel record into the hash table of them.
+-	 * If there is already an identical record, bump its reference count.
+-	 */
+-	bucket = XLOG_BUF_CANCEL_BUCKET(log, buf_f->blf_blkno);
+-	list_for_each_entry(bcp, bucket, bc_list) {
+-		if (bcp->bc_blkno == buf_f->blf_blkno &&
+-		    bcp->bc_len == buf_f->blf_len) {
+-			bcp->bc_refcount++;
+-			trace_xfs_log_recover_buf_cancel_ref_inc(log, buf_f);
+-			return 0;
+-		}
+-	}
+-
+-	bcp = kmem_alloc(sizeof(struct xfs_buf_cancel), 0);
+-	bcp->bc_blkno = buf_f->blf_blkno;
+-	bcp->bc_len = buf_f->blf_len;
+-	bcp->bc_refcount = 1;
+-	list_add_tail(&bcp->bc_list, bucket);
+-
+-	trace_xfs_log_recover_buf_cancel_add(log, buf_f);
+-	return 0;
+-}
+-
+ static struct xfs_buf_cancel *
+ xlog_find_buffer_cancelled(
+ 	struct xlog		*log,
+@@ -1993,6 +1934,35 @@ xlog_find_buffer_cancelled(
+ 	return NULL;
+ }
+ 
++static bool
++xlog_add_buffer_cancelled(
++	struct xlog		*log,
++	xfs_daddr_t		blkno,
++	uint			len)
++{
++	struct xfs_buf_cancel	*bcp;
++
++	/*
++	 * If we find an existing cancel record, this indicates that the buffer
++	 * was cancelled multiple times.  To ensure that during pass 2 we keep
++	 * the record in the table until we reach its last occurrence in the
++	 * log, a reference count is kept to tell how many times we expect to
++	 * see this record during the second pass.
++	 */
++	bcp = xlog_find_buffer_cancelled(log, blkno, len);
++	if (bcp) {
++		bcp->bc_refcount++;
++		return false;
++	}
++
++	bcp = kmem_alloc(sizeof(struct xfs_buf_cancel), 0);
++	bcp->bc_blkno = blkno;
++	bcp->bc_len = len;
++	bcp->bc_refcount = 1;
++	list_add_tail(&bcp->bc_list, XLOG_BUF_CANCEL_BUCKET(log, blkno));
++	return true;
++}
++
+ /*
+  * Check if there is and entry for blkno, len in the buffer cancel record table.
+  */
+@@ -2045,6 +2015,32 @@ xlog_buf_readahead(
+ 		xfs_buf_readahead(log->l_mp->m_ddev_targp, blkno, len, ops);
+ }
+ 
++/*
++ * Build up the table of buf cancel records so that we don't replay cancelled
++ * data in the second pass.
++ */
++static int
++xlog_recover_buffer_pass1(
++	struct xlog			*log,
++	struct xlog_recover_item	*item)
++{
++	struct xfs_buf_log_format	*bf = item->ri_buf[0].i_addr;
++
++	if (!xfs_buf_log_check_iovec(&item->ri_buf[0])) {
++		xfs_err(log->l_mp, "bad buffer log item size (%d)",
++				item->ri_buf[0].i_len);
++		return -EFSCORRUPTED;
++	}
++
++	if (!(bf->blf_flags & XFS_BLF_CANCEL))
++		trace_xfs_log_recover_buf_not_cancel(log, bf);
++	else if (xlog_add_buffer_cancelled(log, bf->blf_blkno, bf->blf_len))
++		trace_xfs_log_recover_buf_cancel_add(log, bf);
++	else
++		trace_xfs_log_recover_buf_cancel_ref_inc(log, bf);
++	return 0;
++}
++
+ /*
+  * Perform recovery for a buffer full of inodes.  In these buffers, the only
+  * data which should be recovered is that which corresponds to the
+-- 
+2.26.1
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
