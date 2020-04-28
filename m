@@ -2,120 +2,256 @@ Return-Path: <SRS0=0AGZ=6M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38EDBC83000
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 20:46:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95D06C83008
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 20:53:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 12810206D9
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 20:46:45 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="x8AgWa/a"
+	by mail.kernel.org (Postfix) with ESMTP id 6AFBE208E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 20:53:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726309AbgD1Uqo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Apr 2020 16:46:44 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:40458 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726291AbgD1Uqo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Apr 2020 16:46:44 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03SKcooI021461;
-        Tue, 28 Apr 2020 20:46:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=CkNHKmbdpUS2pc4sNOqDYMBYEi0B0Kc8b7TdM9qmU4E=;
- b=x8AgWa/afXCQBIKxBwF5d1Vyg/A4MGIdmiRgoO5+8thW2CzkdWKSvR5hNeHSofPsfZa9
- QbxzSDmcn5Erbg7u4SNq/ULA4OMNKoTOLj2aKmX1Up21XP9/MMp4exCvJTCvN9+VPSej
- Nkeqv+8KQNlPMhVf5rQN+87deATTuw5INCcWCwRHBXgzVnrOCOZyVpqz0oJ+uUsw+JBA
- qo7s1PF/05WFIUV2ZVKDqrcAIWvc1+g4JKjKUg3D6knCh+ZtGnjgI5/6d0WB7QGzBrZ/
- zygn4lZUuOUT8bqDQ6DLkMyX2/fu+1/B92s3gRH0m6eFj+PT4U56Fxz42HK8XbsmsZv+ Xg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 30nucg2amy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 28 Apr 2020 20:46:31 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03SKbAhO147999;
-        Tue, 28 Apr 2020 20:46:30 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 30my0eb2hn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 28 Apr 2020 20:46:30 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03SKkOKB021379;
-        Tue, 28 Apr 2020 20:46:24 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 28 Apr 2020 13:46:24 -0700
-Date:   Tue, 28 Apr 2020 13:46:23 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 02/19] xfs: refactor log recovery item sorting into a
- generic dispatch structure
-Message-ID: <20200428204623.GF6742@magnolia>
-References: <158752116283.2140829.12265815455525398097.stgit@magnolia>
- <158752117554.2140829.4901314701479350791.stgit@magnolia>
- <20200425181307.GA16698@infradead.org>
- <20200427220412.GY6742@magnolia>
- <20200428051154.GA24105@infradead.org>
+        id S1726456AbgD1UxM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Apr 2020 16:53:12 -0400
+Received: from mga12.intel.com ([192.55.52.136]:57161 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726208AbgD1UxL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 28 Apr 2020 16:53:11 -0400
+IronPort-SDR: pKidk+fXUxGhY0IWObU7CJMIiY5L3bFAMWFZ/dLX+WmN6/1a4FP32D3sSdygQHO0k1q9OJtN4p
+ hqASpawyvnAA==
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Apr 2020 13:53:10 -0700
+IronPort-SDR: 3snnw8BJK4V62Ig7Jx3J/jDuG99BD4Ekja5j/Y4K5vPfqKmkjy3PpeGktQ67+UJX+VBYDayF+O
+ 9jdJZLYYskLA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.73,328,1583222400"; 
+   d="scan'208";a="367613185"
+Received: from iweiny-desk2.sc.intel.com ([10.3.52.147])
+  by fmsmga001.fm.intel.com with ESMTP; 28 Apr 2020 13:53:10 -0700
+Date:   Tue, 28 Apr 2020 13:53:10 -0700
+From:   Ira Weiny <ira.weiny@intel.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Al Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-api@vger.kernel.org
+Subject: Re: [PATCH V11 04/11] Documentation/dax: Update Usage section
+Message-ID: <20200428205309.GA406458@iweiny-DESK2.sc.intel.com>
+References: <20200428002142.404144-1-ira.weiny@intel.com>
+ <20200428002142.404144-5-ira.weiny@intel.com>
+ <20200428202738.GE6742@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200428051154.GA24105@infradead.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9605 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0
- suspectscore=0 adultscore=0 mlxlogscore=999 bulkscore=0 phishscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004280161
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9605 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 priorityscore=1501
- mlxlogscore=999 impostorscore=0 suspectscore=0 malwarescore=0
- lowpriorityscore=0 mlxscore=0 spamscore=0 adultscore=0 phishscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004280161
+In-Reply-To: <20200428202738.GE6742@magnolia>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 27, 2020 at 10:11:54PM -0700, Christoph Hellwig wrote:
-> On Mon, Apr 27, 2020 at 03:04:12PM -0700, Darrick J. Wong wrote:
-> > > > +	case XFS_LI_INODE:
-> > > > +		return &xlog_inode_item_type;
-> > > > +	case XFS_LI_DQUOT:
-> > > > +		return &xlog_dquot_item_type;
-> > > > +	case XFS_LI_QUOTAOFF:
-> > > > +		return &xlog_quotaoff_item_type;
-> > > > +	case XFS_LI_IUNLINK:
-> > > > +		/* Not implemented? */
-> > > 
-> > > Not implemented!  I think we need a prep patch to remove this first.
+On Tue, Apr 28, 2020 at 01:27:38PM -0700, Darrick J. Wong wrote:
+> On Mon, Apr 27, 2020 at 05:21:35PM -0700, ira.weiny@intel.com wrote:
+> > From: Ira Weiny <ira.weiny@intel.com>
 > > 
-> > The thing I can't tell is if XFS_LI_IUNLINK is a code point reserved
-> > from some long-ago log item that fell out, or reserved for some future
-> > project?
+
+[snip]
+
+> > +
+> > + 3. If the persistent FS_XFLAG_DAX flag is set on a directory, this flag will
+> > +    be inherited by all regular files and sub directories that are subsequently
+> 
+> Well, I'm at the level of minor edits: "...and subdirectories that..."
+
+Done.
+
+> 
+> > +    created in this directory. Files and subdirectories that exist at the time
+> > +    this flag is set or cleared on the parent directory are not modified by
+> > +    this modification of the parent directory.
+> > +
+> > + 4. There exists dax mount options which can override FS_XFLAG_DAX in the
+> > +    setting of the S_DAX flag.  Given underlying storage which supports DAX the
+> > +    following hold.
+> 
+> "hold:"
+
+Dene.
+
+> 
+> > +
+> > +    "-o dax=inode"  means "follow FS_XFLAG_DAX" and is the default.
+> > +
+> > +    "-o dax=never"  means "never set S_DAX, ignore FS_XFLAG_DAX."
+> > +
+> > +    "-o dax=always" means "always set S_DAX ignore FS_XFLAG_DAX."
+> > +
+> > +    "-o dax"        is a legacy option which is an alias for "dax=always".
+> > +		    This may be removed in the future so "-o dax=always" is
+> > +		    the preferred method for specifying this behavior.
+> > +
+> > +    NOTE: Setting and inheritance affect FS_XFLAG_DAX at all times even when
+> > +    the file system is mounted with a dax option.
+> 
+> We can also clear the flag at any time no matter the mount option state.
+> Perhaps:
+> 
+> "NOTE: Modifications to and inheritance behavior of FS_XFLAG_DAX remain
+> the same even when the filesystem is mounted with a dax option."
+
+Done.
+
+> 
+> > +    However, in-core inode state
+> > +    (S_DAX) will be overridden until the file system is remounted with
+> > +    dax=inode and the inode is evicted from kernel memory.
+> > +
+> > + 5. The DAX policy can be changed via:
+> 
+> "The S_DAX policy".  I don't want people to get confused.
+
+Done.
+
+> 
+> > +
+> > +    a) Set the parent directory FS_XFLAG_DAX as needed before files are created
+> > +
+> > +    b) Set the appropriate dax="foo" mount option
+> > +
+> > +    c) Change the FS_XFLAG_DAX on existing regular files and directories. This
+> > +       has runtime constraints and limitations that are described in 6) below.
+> 
+> "Setting", and "Changing" at the front of these three bullet points?
+> 
+> Were you to put these together as full sentences, you'd want them to
+> read "The DAX policy can be changed via setting the parent directory
+> FS_XFLAG_DAX..."
+> 
+
+Done.
+
+> > +
+> > + 6. When changing the DAX policy via toggling the persistent FS_XFLAG_DAX flag,
+> 
+> "When changing the S_DAX policy..."
+
+Done.
+
+> 
+> > +    the change in behaviour for existing regular files may not occur
+> > +    immediately.  If the change must take effect immediately, the administrator
+> > +    needs to:
+> > +
+> > +    a) stop the application so there are no active references to the data set
+> > +       the policy change will affect
+> > +
+> > +    b) evict the data set from kernel caches so it will be re-instantiated when
+> > +       the application is restarted. This can be acheived by:
+> 
+> "achieved"
+
+Done.
+
+> 
+> > +
+> > +       i. drop-caches
+> > +       ii. a filesystem unmount and mount cycle
+> > +       iii. a system reboot
+> > +
+> > +
+> > +Details
+> > +-------
+> > +
+> > +There are 2 per-file dax flags.  One is a persistent inode setting (FS_XFLAG_DAX)
+> > +and the other is a volatile flag indicating the active state of the feature
+> > +(S_DAX).
+> > +
+> > +FS_XFLAG_DAX is preserved within the file system.  This persistent config
+> > +setting can be set, cleared and/or queried using the FS_IOC_FS[GS]ETXATTR ioctl
+> > +(see ioctl_xfs_fsgetxattr(2)) or an utility such as 'xfs_io'.
+> > +
+> > +New files and directories automatically inherit FS_XFLAG_DAX from
+> > +their parent directory _when_ _created_.  Therefore, setting FS_XFLAG_DAX at
+> > +directory creation time can be used to set a default behavior for an entire
+> > +sub-tree.
+> > +
+> > +To clarify inheritance here are 3 examples:
+> 
+> "...inheritance, here are..."
+
+Done.
+
+> 
+> > +
+> > +Example A:
+> > +
+> > +mkdir -p a/b/c
+> > +xfs_io -c 'chattr +x' a
+> > +mkdir a/b/c/d
+> > +mkdir a/e
+> > +
+> > +	dax: a,e
+> > +	no dax: b,c,d
+> > +
+> > +Example B:
+> > +
+> > +mkdir a
+> > +xfs_io -c 'chattr +x' a
+> > +mkdir -p a/b/c/d
+> > +
+> > +	dax: a,b,c,d
+> > +	no dax:
+> > +
+> > +Example C:
+> > +
+> > +mkdir -p a/b/c
+> > +xfs_io -c 'chattr +x' c
+> > +mkdir a/b/c/d
+> > +
+> > +	dax: c,d
+> > +	no dax: a,b
+> > +
+> > +
+> > +The current enabled state (S_DAX) is set when a file inode is instantiated in
+> > +memory by the kernel.  It is set based on the underlying media support, the
+> > +value of FS_XFLAG_DAX and the file systems dax mount option setting.
+> 
+> "...and the file system's dax mount option string."
+
+No. I don't think string is the right word here.  It is the setting not the
+string which is controlling the behavior.  How about:
+
+"...and the file system's dax mount option."
+
+> 
+> > +
+> > +statx can be used to query S_DAX.  NOTE that a directory will never have S_DAX
+> 
+> "Note that only regular files will ever have S_DAX set..."?
+
+Done.
+
+Ira
+
+> 
+> --D
+> 
+> > +set and therefore statx will never indicate that S_DAX is set on directories.
+> > +
+> > +Setting the FS_XFLAG_DAX (specifically or through inheritance) occurs even if
+> > +the underlying media does not support dax and/or the file system is overridden
+> > +with a mount option.
+> > +
+> >  
+> >  
+> >  Implementation Tips for Block Driver Writers
+> > -- 
+> > 2.25.1
 > > 
-> > Either way, this case doesn't need to be there.
-> 
-> The addition goes back to:
-> 
-> commit 1588194c4a13b36badf2f55c022fc4487633f746
-> Author: Adam Sweeney <ajs@sgi.com>
-> Date:   Fri Feb 25 02:02:01 1994 +0000
-> 
->     Add new prototypes and log item types.
-> 
-> 
-> In the imported tree, which only added the definition, and no code
-> related to it.  I can't find any code related to it either in random
-> checkpoints.
-
-<nod> Dave told me on IRC that it was added in 1994 but never used, so
-it's safe to get rid of it entirely.
-
---D
