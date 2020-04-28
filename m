@@ -2,174 +2,139 @@ Return-Path: <SRS0=0AGZ=6M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47D98C83007
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 22:02:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4EECC83000
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 22:18:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2D45E2072A
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 22:02:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9E6E22072A
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 22:18:01 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GiHoeJ+W"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726279AbgD1WCl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Apr 2020 18:02:41 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:41588 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726343AbgD1WCl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Apr 2020 18:02:41 -0400
-Received: from dread.disaster.area (pa49-195-157-175.pa.nsw.optusnet.com.au [49.195.157.175])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 3E9873A45A1;
-        Wed, 29 Apr 2020 08:02:33 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jTYJE-0008Uv-5w; Wed, 29 Apr 2020 08:02:32 +1000
-Date:   Wed, 29 Apr 2020 08:02:32 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Matthew Wilcox <willy@infradead.org>,
-        Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "hch@lst.de" <hch@lst.de>, "rgoldwyn@suse.de" <rgoldwyn@suse.de>,
-        "Qi, Fuli" <qi.fuli@fujitsu.com>,
-        "Gotou, Yasunori" <y-goto@fujitsu.com>
-Subject: Re: =?utf-8?B?5Zue5aSNOiBSZQ==?= =?utf-8?Q?=3A?= [RFC PATCH 0/8]
- dax: Add a dax-rmap tree to support reflink
-Message-ID: <20200428220232.GI2040@dread.disaster.area>
-References: <20200427084750.136031-1-ruansy.fnst@cn.fujitsu.com>
- <20200427122836.GD29705@bombadil.infradead.org>
- <em33c55fa5-15ca-4c46-8c27-6b0300fa4e51@g08fnstd180058>
- <20200428064318.GG2040@dread.disaster.area>
- <259fe633-e1ff-b279-cd8c-1a81eaa40941@cn.fujitsu.com>
- <20200428111636.GK29705@bombadil.infradead.org>
- <20200428112441.GH2040@dread.disaster.area>
- <20200428153732.GZ6742@magnolia>
+        id S1726286AbgD1WSB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Apr 2020 18:18:01 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:50858 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725934AbgD1WSA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Apr 2020 18:18:00 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03SMHaG2057470;
+        Tue, 28 Apr 2020 22:17:50 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=wh6uc60TPeonBVO1B6GXzDgNLbRFh3bQ/M9J+SYg9Fo=;
+ b=GiHoeJ+Wa61C8pqfqnoqXWSZ4SCrrB4aq4tpCXc1ypMvF9tw7Igo6qiZBvDgO5ZB490H
+ QCc+Vm/2OSO7AovIg2BAg7B5/K4DKnt3w9UWKWNdNbtrZLUcWkKrt/YQcKUGLDNC7wDp
+ qKlswIWl7KBa+TwakAEjUgAK5XwsejAQk40oR9rIPzJAHS6iSYGkBcvywH+MRH3gu4rA
+ 8tb8AXQBot+qABn5xB5T04MTtOQOuAl3fAQfi3i0gYLG41XbuN5vBg3Y8Kj4AdbELGNP
+ gpyIpz9WJHTsGBOy4+JCyk7jY+qtoCfPH/ZJUfaXDO8Ft8RgXgzVR7pLtMDmjuzn7IVp Dw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 30p2p081rx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 28 Apr 2020 22:17:50 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03SMChNh094888;
+        Tue, 28 Apr 2020 22:17:49 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 30mxph559e-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 28 Apr 2020 22:17:49 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03SMHmD8012746;
+        Tue, 28 Apr 2020 22:17:48 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 28 Apr 2020 15:17:48 -0700
+Date:   Tue, 28 Apr 2020 15:17:47 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/3] xfs: teach deferred op freezer to freeze and thaw
+ inodes
+Message-ID: <20200428221747.GH6742@magnolia>
+References: <158752128766.2142108.8793264653760565688.stgit@magnolia>
+ <158752130655.2142108.9338576917893374360.stgit@magnolia>
+ <20200425190137.GA16009@infradead.org>
+ <20200427113752.GE4577@bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200428153732.GZ6742@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
-        a=ONQRW0k9raierNYdzxQi9Q==:117 a=ONQRW0k9raierNYdzxQi9Q==:17
-        a=IkcTkHD0fZMA:10 a=cl8xLZFz6L8A:10 a=5KLPUuaC_9wA:10 a=JfrnYn6hAAAA:8
-        a=7-415B0cAAAA:8 a=l6wd5GMc4HtCNSAcdtkA:9 a=z4jTvAT5gXS7p1mQ:21
-        a=_k9EnfUi_P5Muxk2:21 a=QEXdDO2ut3YA:10 a=1CNFftbPRP8L7MoqJWF3:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20200427113752.GE4577@bfoster>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9605 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
+ mlxscore=0 bulkscore=0 adultscore=0 phishscore=0 suspectscore=2
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004280171
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9605 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 clxscore=1015
+ bulkscore=0 adultscore=0 lowpriorityscore=0 impostorscore=0 malwarescore=0
+ mlxscore=0 suspectscore=2 mlxlogscore=999 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2004280171
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 28, 2020 at 08:37:32AM -0700, Darrick J. Wong wrote:
-> On Tue, Apr 28, 2020 at 09:24:41PM +1000, Dave Chinner wrote:
-> > On Tue, Apr 28, 2020 at 04:16:36AM -0700, Matthew Wilcox wrote:
-> > > On Tue, Apr 28, 2020 at 05:32:41PM +0800, Ruan Shiyang wrote:
-> > > > On 2020/4/28 下午2:43, Dave Chinner wrote:
-> > > > > On Tue, Apr 28, 2020 at 06:09:47AM +0000, Ruan, Shiyang wrote:
-> > > > > > 在 2020/4/27 20:28:36, "Matthew Wilcox" <willy@infradead.org> 写道:
-> > > > > > > On Mon, Apr 27, 2020 at 04:47:42PM +0800, Shiyang Ruan wrote:
-> > > > > > > >   This patchset is a try to resolve the shared 'page cache' problem for
-> > > > > > > >   fsdax.
-> > > > > > > > 
-> > > > > > > >   In order to track multiple mappings and indexes on one page, I
-> > > > > > > >   introduced a dax-rmap rb-tree to manage the relationship.  A dax entry
-> > > > > > > >   will be associated more than once if is shared.  At the second time we
-> > > > > > > >   associate this entry, we create this rb-tree and store its root in
-> > > > > > > >   page->private(not used in fsdax).  Insert (->mapping, ->index) when
-> > > > > > > >   dax_associate_entry() and delete it when dax_disassociate_entry().
-> > > > > > > 
-> > > > > > > Do we really want to track all of this on a per-page basis?  I would
-> > > > > > > have thought a per-extent basis was more useful.  Essentially, create
-> > > > > > > a new address_space for each shared extent.  Per page just seems like
-> > > > > > > a huge overhead.
-> > > > > > > 
-> > > > > > Per-extent tracking is a nice idea for me.  I haven't thought of it
-> > > > > > yet...
-> > > > > > 
-> > > > > > But the extent info is maintained by filesystem.  I think we need a way
-> > > > > > to obtain this info from FS when associating a page.  May be a bit
-> > > > > > complicated.  Let me think about it...
-> > > > > 
-> > > > > That's why I want the -user of this association- to do a filesystem
-> > > > > callout instead of keeping it's own naive tracking infrastructure.
-> > > > > The filesystem can do an efficient, on-demand reverse mapping lookup
-> > > > > from it's own extent tracking infrastructure, and there's zero
-> > > > > runtime overhead when there are no errors present.
-> > > > > 
-> > > > > At the moment, this "dax association" is used to "report" a storage
-> > > > > media error directly to userspace. I say "report" because what it
-> > > > > does is kill userspace processes dead. The storage media error
-> > > > > actually needs to be reported to the owner of the storage media,
-> > > > > which in the case of FS-DAX is the filesytem.
-> > > > 
-> > > > Understood.
-> > > > 
-> > > > BTW, this is the usage in memory-failure, so what about rmap?  I have not
-> > > > found how to use this tracking in rmap.  Do you have any ideas?
-> > > > 
-> > > > > 
-> > > > > That way the filesystem can then look up all the owners of that bad
-> > > > > media range (i.e. the filesystem block it corresponds to) and take
-> > > > > appropriate action. e.g.
-> > > > 
-> > > > I tried writing a function to look up all the owners' info of one block in
-> > > > xfs for memory-failure use.  It was dropped in this patchset because I found
-> > > > out that this lookup function needs 'rmapbt' to be enabled when mkfs.  But
-> > > > by default, rmapbt is disabled.  I am not sure if it matters...
+On Mon, Apr 27, 2020 at 07:37:52AM -0400, Brian Foster wrote:
+> On Sat, Apr 25, 2020 at 12:01:37PM -0700, Christoph Hellwig wrote:
+> > On Tue, Apr 21, 2020 at 07:08:26PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > > 
-> > > I'm pretty sure you can't have shared extents on an XFS filesystem if you
-> > > _don't_ have the rmapbt feature enabled.  I mean, that's why it exists.
+> > > Make it so that the deferred operations freezer can save inode numbers
+> > > when we freeze the dfops chain, and turn them into pointers to incore
+> > > inodes when we thaw the dfops chain to finish them.  Next, add dfops
+> > > item freeze and thaw functions to the BUI/BUD items so that they can
+> > > take advantage of this new feature.  This fixes a UAF bug in the
+> > > deferred bunmapi code because xfs_bui_recover can schedule another BUI
+> > > to continue unmapping but drops the inode pointer immediately
+> > > afterwards.
 > > 
-> > You're confusing reflink with rmap. :)
+> > I'm only looking over this the first time, but why can't we just keep
+> > inode reference around during reocvery instead of this fairly
+> > complicated scheme to save the ino and then look it up again?
 > > 
-> > rmapbt does all the reverse mapping tracking, reflink just does the
-> > shared data extent tracking.
-> > 
-> > But given that anyone who wants to use DAX with reflink is going to
-> > have to mkfs their filesystem anyway (to turn on reflink) requiring
-> > that rmapbt is also turned on is not a big deal. Especially as we
-> > can check it at mount time in the kernel...
 > 
-> Are we going to turn on rmap by default?  The last I checked, it did
-> have a 10-20% performance cost on extreme metadata-heavy workloads.
-> Or do we only enable it by default if mkfs detects a pmem device?
+> I'm also a little confused about the use after free in the first place.
+> Doesn't xfs_bui_recover() look up the inode itself, or is the issue that
+> xfs_bui_recover() is fine but we might get into
+> xfs_bmap_update_finish_item() sometime later on the same inode without
+> any reference?
 
-Just have the kernel refuse to mount a reflink enabled filesystem on
-a DAX capable device unless -o dax=never or rmapbt is enabled.
+The second.  In practice it doesn't seem to trigger on the existing
+code, but the combination of atomic extent swap + fsstress + shutdown
+testing was enough to push it over the edge once due to reclaim.
 
-That'll get the message across pretty quickly....
+> If the latter, similarly to Christoph I wonder if we
+> really could/should grab a reference on the inode for the intent itself,
+> even though that might not be necessary outside of recovery.
 
-> (Admittedly, most people do not run fsx as a productivity app; the
-> normal hit is usually 3-5% which might not be such a big deal since you
-> also get (half of) online fsck. :P)
+Outside of recovery we don't have the UAF problem because there's always
+something (usually the VFS dentry cache, but sometimes an explicit iget)
+that hold a reference to the inode for the duration of the transaction
+and dfops processing.
 
-I have not noticed the overhead at all on any of my production
-machines since I enabled it way on all of them way back when....
+One could just hang on to all incore inodes until the end of recovery
+like Christoph says, but the downside of doing it that way is that now
+we require enough memory to maintain all that incore state vs. only
+needing enough for the incore inodes involved in a particular dfops
+chain.  That isn't a huge deal now, but I was looking ahead to atomic
+extent swaps.
 
-And, really, pmem is a _very poor choice_ for metadata intensive
-applications on XFS as pmem is completely synchronous.  XFS has an
-async IO model for it's metadata that *must* be buffered (so no
-DAX!) and the synchronous nature of pmem completely defeats the
-architectural IO pipelining XFS uses to allow thousands of
-concurrent metadata IOs in flight. OTOH, pmem IO depth is limited to
-the number of CPUs that are concurrently issuing IO, so it really,
-really sucks compared to a handful of high end nvme SSDs on PCIe
-4.0....
+(And, yeah, I should put that series on the list now...)
 
-So with that in mind, I see little reason to care about the small
-additional overhead of rmapbt on FS-DAX installations that require
-reflink...
+> Either way, more details about the problem being fixed in the commit log
+> would be helpful.
 
-Cheers,
+<nod>
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--D
+
+> Brian
+> 
