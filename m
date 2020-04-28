@@ -2,139 +2,251 @@ Return-Path: <SRS0=0AGZ=6M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4EECC83000
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 22:18:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 023EDC8300A
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 22:19:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9E6E22072A
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 22:18:01 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GiHoeJ+W"
+	by mail.kernel.org (Postfix) with ESMTP id D994620730
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 22:19:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726286AbgD1WSB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Apr 2020 18:18:01 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:50858 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725934AbgD1WSA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Apr 2020 18:18:00 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03SMHaG2057470;
-        Tue, 28 Apr 2020 22:17:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=wh6uc60TPeonBVO1B6GXzDgNLbRFh3bQ/M9J+SYg9Fo=;
- b=GiHoeJ+Wa61C8pqfqnoqXWSZ4SCrrB4aq4tpCXc1ypMvF9tw7Igo6qiZBvDgO5ZB490H
- QCc+Vm/2OSO7AovIg2BAg7B5/K4DKnt3w9UWKWNdNbtrZLUcWkKrt/YQcKUGLDNC7wDp
- qKlswIWl7KBa+TwakAEjUgAK5XwsejAQk40oR9rIPzJAHS6iSYGkBcvywH+MRH3gu4rA
- 8tb8AXQBot+qABn5xB5T04MTtOQOuAl3fAQfi3i0gYLG41XbuN5vBg3Y8Kj4AdbELGNP
- gpyIpz9WJHTsGBOy4+JCyk7jY+qtoCfPH/ZJUfaXDO8Ft8RgXgzVR7pLtMDmjuzn7IVp Dw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 30p2p081rx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 28 Apr 2020 22:17:50 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03SMChNh094888;
-        Tue, 28 Apr 2020 22:17:49 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 30mxph559e-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 28 Apr 2020 22:17:49 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03SMHmD8012746;
-        Tue, 28 Apr 2020 22:17:48 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 28 Apr 2020 15:17:48 -0700
-Date:   Tue, 28 Apr 2020 15:17:47 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: teach deferred op freezer to freeze and thaw
- inodes
-Message-ID: <20200428221747.GH6742@magnolia>
-References: <158752128766.2142108.8793264653760565688.stgit@magnolia>
- <158752130655.2142108.9338576917893374360.stgit@magnolia>
- <20200425190137.GA16009@infradead.org>
- <20200427113752.GE4577@bfoster>
+        id S1726580AbgD1WTs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Apr 2020 18:19:48 -0400
+Received: from mga06.intel.com ([134.134.136.31]:32655 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726500AbgD1WTs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 28 Apr 2020 18:19:48 -0400
+IronPort-SDR: ZDQxUzUBUfQ6GM5vJm+1jsawEtjmVZUDL3FTNfwnlsMEkQkZR/yVdW2cbERcCeMCGvCOc85pYp
+ c9tvP60OW0yA==
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Apr 2020 15:19:45 -0700
+IronPort-SDR: eAU+Cj8p1QJrbdl6uNR4a/GW6kPJnSrPWsugqOqk5Z+Tp1L/GWzPUu/hvrpUeTkI0AMq5q6TXO
+ zsYEmUALHorg==
+X-IronPort-AV: E=Sophos;i="5.73,328,1583222400"; 
+   d="scan'208";a="257763108"
+Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Apr 2020 15:19:45 -0700
+From:   ira.weiny@intel.com
+To:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Ira Weiny <ira.weiny@intel.com>, Al Viro <viro@zeniv.linux.org.uk>,
+        Jan Kara <jack@suse.cz>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-api@vger.kernel.org
+Subject: [PATCH V11.1] Documentation/dax: Update Usage section
+Date:   Tue, 28 Apr 2020 15:19:42 -0700
+Message-Id: <20200428221942.409890-1-ira.weiny@intel.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <'20200428002142.404144-5-ira.weiny@intel.com'>
+References: <'20200428002142.404144-5-ira.weiny@intel.com'>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200427113752.GE4577@bfoster>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9605 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
- mlxscore=0 bulkscore=0 adultscore=0 phishscore=0 suspectscore=2
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004280171
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9605 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 clxscore=1015
- bulkscore=0 adultscore=0 lowpriorityscore=0 impostorscore=0 malwarescore=0
- mlxscore=0 suspectscore=2 mlxlogscore=999 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004280171
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 27, 2020 at 07:37:52AM -0400, Brian Foster wrote:
-> On Sat, Apr 25, 2020 at 12:01:37PM -0700, Christoph Hellwig wrote:
-> > On Tue, Apr 21, 2020 at 07:08:26PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Make it so that the deferred operations freezer can save inode numbers
-> > > when we freeze the dfops chain, and turn them into pointers to incore
-> > > inodes when we thaw the dfops chain to finish them.  Next, add dfops
-> > > item freeze and thaw functions to the BUI/BUD items so that they can
-> > > take advantage of this new feature.  This fixes a UAF bug in the
-> > > deferred bunmapi code because xfs_bui_recover can schedule another BUI
-> > > to continue unmapping but drops the inode pointer immediately
-> > > afterwards.
-> > 
-> > I'm only looking over this the first time, but why can't we just keep
-> > inode reference around during reocvery instead of this fairly
-> > complicated scheme to save the ino and then look it up again?
-> > 
-> 
-> I'm also a little confused about the use after free in the first place.
-> Doesn't xfs_bui_recover() look up the inode itself, or is the issue that
-> xfs_bui_recover() is fine but we might get into
-> xfs_bmap_update_finish_item() sometime later on the same inode without
-> any reference?
+From: Ira Weiny <ira.weiny@intel.com>
 
-The second.  In practice it doesn't seem to trigger on the existing
-code, but the combination of atomic extent swap + fsstress + shutdown
-testing was enough to push it over the edge once due to reclaim.
+Update the Usage section to reflect the new individual dax selection
+functionality.
 
-> If the latter, similarly to Christoph I wonder if we
-> really could/should grab a reference on the inode for the intent itself,
-> even though that might not be necessary outside of recovery.
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 
-Outside of recovery we don't have the UAF problem because there's always
-something (usually the VFS dentry cache, but sometimes an explicit iget)
-that hold a reference to the inode for the duration of the transaction
-and dfops processing.
+---
+Changes from V11:
+	Minor changes from Darrick
 
-One could just hang on to all incore inodes until the end of recovery
-like Christoph says, but the downside of doing it that way is that now
-we require enough memory to maintain all that incore state vs. only
-needing enough for the incore inodes involved in a particular dfops
-chain.  That isn't a huge deal now, but I was looking ahead to atomic
-extent swaps.
+Changes from V10:
+	Clarifications from Dave
+	Add '-c' to xfs_io examples
 
-(And, yeah, I should put that series on the list now...)
+Changes from V9:
+	Fix missing ')'
+	Fix trialing '"'
 
-> Either way, more details about the problem being fixed in the commit log
-> would be helpful.
+Changes from V8:
+	Updates from Darrick
 
-<nod>
+Changes from V7:
+	Cleanups/clarifications from Darrick and Dan
 
---D
+Changes from V6:
+	Update to allow setting FS_XFLAG_DAX any time.
+	Update with list of behaviors from Darrick
+	https://lore.kernel.org/lkml/20200409165927.GD6741@magnolia/
 
-> Brian
-> 
+Changes from V5:
+	Update to reflect the agreed upon semantics
+	https://lore.kernel.org/lkml/20200405061945.GA94792@iweiny-DESK2.sc.intel.com/
+---
+ Documentation/filesystems/dax.txt | 142 +++++++++++++++++++++++++++++-
+ 1 file changed, 139 insertions(+), 3 deletions(-)
+
+diff --git a/Documentation/filesystems/dax.txt b/Documentation/filesystems/dax.txt
+index 679729442fd2..dc1c1aa36cc2 100644
+--- a/Documentation/filesystems/dax.txt
++++ b/Documentation/filesystems/dax.txt
+@@ -17,11 +17,147 @@ For file mappings, the storage device is mapped directly into userspace.
+ Usage
+ -----
+ 
+-If you have a block device which supports DAX, you can make a filesystem
++If you have a block device which supports DAX, you can make a file system
+ on it as usual.  The DAX code currently only supports files with a block
+ size equal to your kernel's PAGE_SIZE, so you may need to specify a block
+-size when creating the filesystem.  When mounting it, use the "-o dax"
+-option on the command line or add 'dax' to the options in /etc/fstab.
++size when creating the file system.
++
++Currently 3 filesystems support DAX: ext2, ext4 and xfs.  Enabling DAX on them
++is different.
++
++Enabling DAX on ext4 and ext2
++-----------------------------
++
++When mounting the filesystem, use the "-o dax" option on the command line or
++add 'dax' to the options in /etc/fstab.  This works to enable DAX on all files
++within the filesystem.  It is equivalent to the '-o dax=always' behavior below.
++
++
++Enabling DAX on xfs
++-------------------
++
++Summary
++-------
++
++ 1. There exists an in-kernel file access mode flag S_DAX that corresponds to
++    the statx flag STATX_ATTR_DAX.  See the manpage for statx(2) for details
++    about this access mode.
++
++ 2. There exists a persistent flag FS_XFLAG_DAX that can be applied to regular
++    files and directories. This advisory flag can be set or cleared at any
++    time, but doing so does not immediately affect the S_DAX state.
++
++ 3. If the persistent FS_XFLAG_DAX flag is set on a directory, this flag will
++    be inherited by all regular files and subdirectories that are subsequently
++    created in this directory. Files and subdirectories that exist at the time
++    this flag is set or cleared on the parent directory are not modified by
++    this modification of the parent directory.
++
++ 4. There exists dax mount options which can override FS_XFLAG_DAX in the
++    setting of the S_DAX flag.  Given underlying storage which supports DAX the
++    following hold:
++
++    "-o dax=inode"  means "follow FS_XFLAG_DAX" and is the default.
++
++    "-o dax=never"  means "never set S_DAX, ignore FS_XFLAG_DAX."
++
++    "-o dax=always" means "always set S_DAX ignore FS_XFLAG_DAX."
++
++    "-o dax"        is a legacy option which is an alias for "dax=always".
++		    This may be removed in the future so "-o dax=always" is
++		    the preferred method for specifying this behavior.
++
++    NOTE: Modifications to and the inheritance behavior of FS_XFLAG_DAX remain
++    the same even when the file system is mounted with a dax option.  However,
++    in-core inode state (S_DAX) will be overridden until the file system is
++    remounted with dax=inode and the inode is evicted from kernel memory.
++
++ 5. The S_DAX policy can be changed via:
++
++    a) Setting the parent directory FS_XFLAG_DAX as needed before files are
++       created
++
++    b) Setting the appropriate dax="foo" mount option
++
++    c) Changing the FS_XFLAG_DAX on existing regular files and directories.
++       This has runtime constraints and limitations that are described in 6)
++       below.
++
++ 6. When changing the S_DAX policy via toggling the persistent FS_XFLAG_DAX flag,
++    the change in behaviour for existing regular files may not occur
++    immediately.  If the change must take effect immediately, the administrator
++    needs to:
++
++    a) stop the application so there are no active references to the data set
++       the policy change will affect
++
++    b) evict the data set from kernel caches so it will be re-instantiated when
++       the application is restarted. This can be achieved by:
++
++       i. drop-caches
++       ii. a filesystem unmount and mount cycle
++       iii. a system reboot
++
++
++Details
++-------
++
++There are 2 per-file dax flags.  One is a persistent inode setting (FS_XFLAG_DAX)
++and the other is a volatile flag indicating the active state of the feature
++(S_DAX).
++
++FS_XFLAG_DAX is preserved within the file system.  This persistent config
++setting can be set, cleared and/or queried using the FS_IOC_FS[GS]ETXATTR ioctl
++(see ioctl_xfs_fsgetxattr(2)) or an utility such as 'xfs_io'.
++
++New files and directories automatically inherit FS_XFLAG_DAX from
++their parent directory _when_ _created_.  Therefore, setting FS_XFLAG_DAX at
++directory creation time can be used to set a default behavior for an entire
++sub-tree.
++
++To clarify inheritance, here are 3 examples:
++
++Example A:
++
++mkdir -p a/b/c
++xfs_io -c 'chattr +x' a
++mkdir a/b/c/d
++mkdir a/e
++
++	dax: a,e
++	no dax: b,c,d
++
++Example B:
++
++mkdir a
++xfs_io -c 'chattr +x' a
++mkdir -p a/b/c/d
++
++	dax: a,b,c,d
++	no dax:
++
++Example C:
++
++mkdir -p a/b/c
++xfs_io -c 'chattr +x' c
++mkdir a/b/c/d
++
++	dax: c,d
++	no dax: a,b
++
++
++The current enabled state (S_DAX) is set when a file inode is instantiated in
++memory by the kernel.  It is set based on the underlying media support, the
++value of FS_XFLAG_DAX and the file system's dax mount option.
++
++statx can be used to query S_DAX.  NOTE that only regular files will ever have
++S_DAX set and therefore statx will never indicate that S_DAX is set on
++directories.
++
++Setting the FS_XFLAG_DAX (specifically or through inheritance) occurs even if
++the underlying media does not support dax and/or the file system is overridden
++with a mount option.
++
+ 
+ 
+ Implementation Tips for Block Driver Writers
+-- 
+2.25.1
+
