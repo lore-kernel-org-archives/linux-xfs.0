@@ -2,256 +2,192 @@ Return-Path: <SRS0=0AGZ=6M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95D06C83008
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 20:53:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67C9CC83000
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 20:54:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6AFBE208E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 20:53:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 397262085B
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 20:54:34 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IIdGr1d+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726456AbgD1UxM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Apr 2020 16:53:12 -0400
-Received: from mga12.intel.com ([192.55.52.136]:57161 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726208AbgD1UxL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 28 Apr 2020 16:53:11 -0400
-IronPort-SDR: pKidk+fXUxGhY0IWObU7CJMIiY5L3bFAMWFZ/dLX+WmN6/1a4FP32D3sSdygQHO0k1q9OJtN4p
- hqASpawyvnAA==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Apr 2020 13:53:10 -0700
-IronPort-SDR: 3snnw8BJK4V62Ig7Jx3J/jDuG99BD4Ekja5j/Y4K5vPfqKmkjy3PpeGktQ67+UJX+VBYDayF+O
- 9jdJZLYYskLA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.73,328,1583222400"; 
-   d="scan'208";a="367613185"
-Received: from iweiny-desk2.sc.intel.com ([10.3.52.147])
-  by fmsmga001.fm.intel.com with ESMTP; 28 Apr 2020 13:53:10 -0700
-Date:   Tue, 28 Apr 2020 13:53:10 -0700
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Al Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-api@vger.kernel.org
-Subject: Re: [PATCH V11 04/11] Documentation/dax: Update Usage section
-Message-ID: <20200428205309.GA406458@iweiny-DESK2.sc.intel.com>
-References: <20200428002142.404144-1-ira.weiny@intel.com>
- <20200428002142.404144-5-ira.weiny@intel.com>
- <20200428202738.GE6742@magnolia>
+        id S1726286AbgD1Uyd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Apr 2020 16:54:33 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:44652 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726208AbgD1Uyd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Apr 2020 16:54:33 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03SKrHAv127609;
+        Tue, 28 Apr 2020 20:54:29 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=neO2+02o3SnZfV8fOKY08zgAcN0Foo5QprfltUyrjzQ=;
+ b=IIdGr1d+3dnfBTru78GHS5oYCkZ51s5fZZpIEDPy37fsFH8RH7yBzLWUO94/8o+MH/sD
+ /KRzyz6kcrERDahCF3JI7f95QT0BFPZScpEGViiWhndgJEwLD7NhxyYaIRM2+MJ4YtBh
+ bfldtJgX6i0h1hqj+xuB2t6rcCCr/ijWTe13pdo6OFPatstEAM1lwMKY2Drp2tGVlqUl
+ 7KGScVgYN/Fu0/ggV9sl/t5yId9lgmhRwHCSRi5MWVs5htvLq8odx9qoK0b53mmWNy6h
+ pZY6VF256c3lxsZ5s6MeGfFxC0YgUwgpoj1qYUFa05PMP5MzsHamk0l57QMlcSdfcTKQ 7Q== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 30p01nrvfs-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 28 Apr 2020 20:54:29 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03SKpubD172007;
+        Tue, 28 Apr 2020 20:54:29 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 30mxx0rmbf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 28 Apr 2020 20:54:28 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03SKsQ6c011103;
+        Tue, 28 Apr 2020 20:54:26 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 28 Apr 2020 13:54:26 -0700
+Date:   Tue, 28 Apr 2020 13:54:24 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 03/19] xfs: refactor log recovery item dispatch for pass2
+ readhead functions
+Message-ID: <20200428205424.GG6742@magnolia>
+References: <158752116283.2140829.12265815455525398097.stgit@magnolia>
+ <158752118180.2140829.13805128567366066982.stgit@magnolia>
+ <20200425181929.GB16698@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200428202738.GE6742@magnolia>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+In-Reply-To: <20200425181929.GB16698@infradead.org>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9605 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0 bulkscore=0
+ suspectscore=0 mlxlogscore=935 phishscore=0 malwarescore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2004280163
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9605 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 clxscore=1015
+ phishscore=0 mlxlogscore=988 adultscore=0 priorityscore=1501 mlxscore=0
+ suspectscore=0 malwarescore=0 lowpriorityscore=0 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2004280163
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 28, 2020 at 01:27:38PM -0700, Darrick J. Wong wrote:
-> On Mon, Apr 27, 2020 at 05:21:35PM -0700, ira.weiny@intel.com wrote:
-> > From: Ira Weiny <ira.weiny@intel.com>
-> > 
+On Sat, Apr 25, 2020 at 11:19:29AM -0700, Christoph Hellwig wrote:
+> On Tue, Apr 21, 2020 at 07:06:21PM -0700, Darrick J. Wong wrote:
+> >  typedef enum xlog_recover_reorder (*xlog_recover_reorder_fn)(
+> >  		struct xlog_recover_item *item);
+> > +typedef void (*xlog_recover_ra_pass2_fn)(struct xlog *log,
+> > +		struct xlog_recover_item *item);
+> 
+> Same comment for this one - or the other two following.
 
-[snip]
+<nod> I'll skip the typedefs.
 
+> > +/*
+> > + * This structure is used during recovery to record the buf log items which
+> > + * have been canceled and should not be replayed.
+> > + */
+> > +struct xfs_buf_cancel {
+> > +	xfs_daddr_t		bc_blkno;
+> > +	uint			bc_len;
+> > +	int			bc_refcount;
+> > +	struct list_head	bc_list;
+> > +};
 > > +
-> > + 3. If the persistent FS_XFLAG_DAX flag is set on a directory, this flag will
-> > +    be inherited by all regular files and sub directories that are subsequently
+> > +struct xfs_buf_cancel *xlog_peek_buffer_cancelled(struct xlog *log,
+> > +		xfs_daddr_t blkno, uint len, unsigned short flags);
 > 
-> Well, I'm at the level of minor edits: "...and subdirectories that..."
+> None of the callers moved in this patch even needs the xfs_buf_cancel
+> structure, it just uses the return value as a boolean.  I think they
+> all should be switched to use xlog_check_buffer_cancelled instead, which
+> means that struct xfs_buf_cancel and xlog_peek_buffer_cancelled can stay
+> private in xfs_log_recovery.c (and later xfs_buf_item.c).
 
-Done.
+They now all use your new xlog_buf_readahead function.
 
-> 
-> > +    created in this directory. Files and subdirectories that exist at the time
-> > +    this flag is set or cleared on the parent directory are not modified by
-> > +    this modification of the parent directory.
+> > +STATIC void
+> > +xlog_recover_buffer_ra_pass2(
+> > +	struct xlog                     *log,
+> > +	struct xlog_recover_item        *item)
+> > +{
+> > +	struct xfs_buf_log_format	*buf_f = item->ri_buf[0].i_addr;
+> > +	struct xfs_mount		*mp = log->l_mp;
 > > +
-> > + 4. There exists dax mount options which can override FS_XFLAG_DAX in the
-> > +    setting of the S_DAX flag.  Given underlying storage which supports DAX the
-> > +    following hold.
+> > +	if (xlog_peek_buffer_cancelled(log, buf_f->blf_blkno,
+> > +			buf_f->blf_len, buf_f->blf_flags)) {
+> > +		return;
+> > +	}
+> > +
+> > +	xfs_buf_readahead(mp->m_ddev_targp, buf_f->blf_blkno,
+> > +				buf_f->blf_len, NULL);
 > 
-> "hold:"
+> Why not:
+> 
+> 	if (!xlog_peek_buffer_cancelled(log, buf_f->blf_blkno,
+> 			buf_f->blf_len, buf_f->blf_flags)) {
+> 		xfs_buf_readahead(mp->m_ddev_targp, buf_f->blf_blkno,
+> 				buf_f->blf_len, NULL);
+> 	}
+> 
+> > +STATIC void
+> > +xlog_recover_dquot_ra_pass2(
+> > +	struct xlog			*log,
+> > +	struct xlog_recover_item	*item)
+> > +{
+> > +	struct xfs_mount	*mp = log->l_mp;
+> > +	struct xfs_disk_dquot	*recddq;
+> > +	struct xfs_dq_logformat	*dq_f;
+> > +	uint			type;
+> > +	int			len;
+> > +
+> > +
+> > +	if (mp->m_qflags == 0)
+> 
+> Double empty line above.
+> 
+> > +	if (xlog_peek_buffer_cancelled(log, dq_f->qlf_blkno, len, 0))
+> > +		return;
+> > +
+> > +	xfs_buf_readahead(mp->m_ddev_targp, dq_f->qlf_blkno, len,
+> > +			  &xfs_dquot_buf_ra_ops);
+> 
+> Same comment as above, no real need for the early return here.
+> 
+> > +	if (xlog_peek_buffer_cancelled(log, ilfp->ilf_blkno, ilfp->ilf_len, 0))
+> > +		return;
+> > +
+> > +	xfs_buf_readahead(mp->m_ddev_targp, ilfp->ilf_blkno,
+> > +				ilfp->ilf_len, &xfs_inode_buf_ra_ops);
+> 
+> Here again.
 
-Dene.
-
-> 
-> > +
-> > +    "-o dax=inode"  means "follow FS_XFLAG_DAX" and is the default.
-> > +
-> > +    "-o dax=never"  means "never set S_DAX, ignore FS_XFLAG_DAX."
-> > +
-> > +    "-o dax=always" means "always set S_DAX ignore FS_XFLAG_DAX."
-> > +
-> > +    "-o dax"        is a legacy option which is an alias for "dax=always".
-> > +		    This may be removed in the future so "-o dax=always" is
-> > +		    the preferred method for specifying this behavior.
-> > +
-> > +    NOTE: Setting and inheritance affect FS_XFLAG_DAX at all times even when
-> > +    the file system is mounted with a dax option.
-> 
-> We can also clear the flag at any time no matter the mount option state.
-> Perhaps:
-> 
-> "NOTE: Modifications to and inheritance behavior of FS_XFLAG_DAX remain
-> the same even when the filesystem is mounted with a dax option."
-
-Done.
-
-> 
-> > +    However, in-core inode state
-> > +    (S_DAX) will be overridden until the file system is remounted with
-> > +    dax=inode and the inode is evicted from kernel memory.
-> > +
-> > + 5. The DAX policy can be changed via:
-> 
-> "The S_DAX policy".  I don't want people to get confused.
-
-Done.
-
-> 
-> > +
-> > +    a) Set the parent directory FS_XFLAG_DAX as needed before files are created
-> > +
-> > +    b) Set the appropriate dax="foo" mount option
-> > +
-> > +    c) Change the FS_XFLAG_DAX on existing regular files and directories. This
-> > +       has runtime constraints and limitations that are described in 6) below.
-> 
-> "Setting", and "Changing" at the front of these three bullet points?
-> 
-> Were you to put these together as full sentences, you'd want them to
-> read "The DAX policy can be changed via setting the parent directory
-> FS_XFLAG_DAX..."
-> 
-
-Done.
-
-> > +
-> > + 6. When changing the DAX policy via toggling the persistent FS_XFLAG_DAX flag,
-> 
-> "When changing the S_DAX policy..."
-
-Done.
-
-> 
-> > +    the change in behaviour for existing regular files may not occur
-> > +    immediately.  If the change must take effect immediately, the administrator
-> > +    needs to:
-> > +
-> > +    a) stop the application so there are no active references to the data set
-> > +       the policy change will affect
-> > +
-> > +    b) evict the data set from kernel caches so it will be re-instantiated when
-> > +       the application is restarted. This can be acheived by:
-> 
-> "achieved"
-
-Done.
+Changed to xlog_buf_readahead.
 
 > 
-> > +
-> > +       i. drop-caches
-> > +       ii. a filesystem unmount and mount cycle
-> > +       iii. a system reboot
-> > +
-> > +
-> > +Details
-> > +-------
-> > +
-> > +There are 2 per-file dax flags.  One is a persistent inode setting (FS_XFLAG_DAX)
-> > +and the other is a volatile flag indicating the active state of the feature
-> > +(S_DAX).
-> > +
-> > +FS_XFLAG_DAX is preserved within the file system.  This persistent config
-> > +setting can be set, cleared and/or queried using the FS_IOC_FS[GS]ETXATTR ioctl
-> > +(see ioctl_xfs_fsgetxattr(2)) or an utility such as 'xfs_io'.
-> > +
-> > +New files and directories automatically inherit FS_XFLAG_DAX from
-> > +their parent directory _when_ _created_.  Therefore, setting FS_XFLAG_DAX at
-> > +directory creation time can be used to set a default behavior for an entire
-> > +sub-tree.
-> > +
-> > +To clarify inheritance here are 3 examples:
+> > -	unsigned short			flags)
+> > +	unsigned short		flags)
 > 
-> "...inheritance, here are..."
-
-Done.
-
+> Spurious whitespace change.
 > 
-> > +
-> > +Example A:
-> > +
-> > +mkdir -p a/b/c
-> > +xfs_io -c 'chattr +x' a
-> > +mkdir a/b/c/d
-> > +mkdir a/e
-> > +
-> > +	dax: a,e
-> > +	no dax: b,c,d
-> > +
-> > +Example B:
-> > +
-> > +mkdir a
-> > +xfs_io -c 'chattr +x' a
-> > +mkdir -p a/b/c/d
-> > +
-> > +	dax: a,b,c,d
-> > +	no dax:
-> > +
-> > +Example C:
-> > +
-> > +mkdir -p a/b/c
-> > +xfs_io -c 'chattr +x' c
-> > +mkdir a/b/c/d
-> > +
-> > +	dax: c,d
-> > +	no dax: a,b
-> > +
-> > +
-> > +The current enabled state (S_DAX) is set when a file inode is instantiated in
-> > +memory by the kernel.  It is set based on the underlying media support, the
-> > +value of FS_XFLAG_DAX and the file systems dax mount option setting.
+> >  		case XLOG_RECOVER_PASS2:
+> > -			xlog_recover_ra_pass2(log, item);
+> > +			if (item->ri_type && item->ri_type->ra_pass2_fn)
+> > +				item->ri_type->ra_pass2_fn(log, item);
 > 
-> "...and the file system's dax mount option string."
+> Shouldn't we ensure eatly on that we always have a valid ->ri_type?
 
-No. I don't think string is the right word here.  It is the setting not the
-string which is controlling the behavior.  How about:
+Item sorting will bail out on unrecognized log item types, in which case
+we will discard the transaction (and all its items) and abort the mount,
+right?  That should suffice to ensure that we always have a valid
+ri_type long before we get to starting readahead for pass 2.
 
-"...and the file system's dax mount option."
-
-> 
-> > +
-> > +statx can be used to query S_DAX.  NOTE that a directory will never have S_DAX
-> 
-> "Note that only regular files will ever have S_DAX set..."?
-
-Done.
-
-Ira
-
-> 
-> --D
-> 
-> > +set and therefore statx will never indicate that S_DAX is set on directories.
-> > +
-> > +Setting the FS_XFLAG_DAX (specifically or through inheritance) occurs even if
-> > +the underlying media does not support dax and/or the file system is overridden
-> > +with a mount option.
-> > +
-> >  
-> >  
-> >  Implementation Tips for Block Driver Writers
-> > -- 
-> > 2.25.1
-> > 
+--D
