@@ -2,116 +2,150 @@ Return-Path: <SRS0=0AGZ=6M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D349C83000
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 09:02:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FCBFC83008
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 09:32:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2FBEB206D6
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 09:02:58 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kroah.com header.i=@kroah.com header.b="QWOHAf8q";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Edye47JG"
+	by mail.kernel.org (Postfix) with ESMTP id 32809206D6
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 09:32:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726955AbgD1JC5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Apr 2020 05:02:57 -0400
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:55073 "EHLO
-        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726271AbgD1JC5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Apr 2020 05:02:57 -0400
-Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
-        by mailout.nyi.internal (Postfix) with ESMTP id BE45E5C0195;
-        Tue, 28 Apr 2020 05:02:55 -0400 (EDT)
-Received: from mailfrontend2 ([10.202.2.163])
-  by compute1.internal (MEProxy); Tue, 28 Apr 2020 05:02:55 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kroah.com; h=
-        date:from:to:cc:subject:message-id:references:mime-version
-        :content-type:in-reply-to; s=fm3; bh=p8eNY0xnZNFtAr72xYZInG4PLoa
-        Gm0XNLJTzn92LVy0=; b=QWOHAf8q/LDOeUq71TnWybRJl0K/Jfr540x/wM5Owej
-        mgDhPzn5M8Bj+4lWqyVReHD54bx3S4mkj2GeSP+z1uHYyp9gvxvr7JWGfXu+rprC
-        wg9H2KirKQL9U0YerpIIHVgdZ9/ZGWS/L4McFc46iem+tcZgmTeGC9MGk57YtVpt
-        VV5J55HRLh//kc2rhKiKF8NsbaY7rclimQL0zE4RQXtM0hQGLocpH/xshdWrdMjv
-        lvAHcthSCeHDkkhj1wCtD13BVrVyZqBUeeWTec6uctDRpVEUwLdRDB52cg/IuByb
-        WN7Nzb6nLwwM2ja9VTwyu8Q2Ed7tSsA/S4L1wH8PkGw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-type:date:from:in-reply-to
-        :message-id:mime-version:references:subject:to:x-me-proxy
-        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; bh=p8eNY0
-        xnZNFtAr72xYZInG4PLoaGm0XNLJTzn92LVy0=; b=Edye47JG1WMcFNI10kojbg
-        xQvC2ODZR5WIPa10dLqivksIAunNMq9sO+woS9V+ofw7Y6gA7Zp3n/2gkAVWGV7H
-        iPemtjgwMcQGczaSq2P1tvK/1pTMMtCjEmUB8B0hSyw1ht0IgYJxpebWUj0d6Hrq
-        XYCzAYBOh5YVHp5HHcYoU70eDcLHfq4Zrh4lzCmepT75rnTCVCyz/PJKpmGbyj1/
-        7ygdNb6feVZitQPnjXuKr9xQSO14eS8PFx7Zxcf0srQd/Yzsi8TcsS5Mz7q5Rd//
-        gBH/TfggPwWOKno8q9zFYpC7ngUScSFsl3HIW1CGigvlbQI1PohUAgICuWqMk3LQ
-        ==
-X-ME-Sender: <xms:P_GnXtEUH6EGtRWiBf-u2kQg98o8Utht1svmekSa6lKlozupk8kn_A>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeduhedriedugdduudcutefuodetggdotefrodftvf
-    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
-    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
-    fjughrpeffhffvuffkfhggtggujgesthdtredttddtvdenucfhrhhomhepifhrvghgucfm
-    jfcuoehgrhgvgheskhhrohgrhhdrtghomheqnecukfhppeekfedrkeeirdekledruddtje
-    enucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehgrhgv
-    gheskhhrohgrhhdrtghomh
-X-ME-Proxy: <xmx:P_GnXqOtRhAcyxqWu9bmcN-LWBlNPY7f5VaZQgIVJDMdMRO5uSYBCg>
-    <xmx:P_GnXui_D44xYwhrQtpeH0Anvyu34-GW2t3KSmtPiRh6nFWhLq-XAA>
-    <xmx:P_GnXq2tUNH3gBVlRt39u1g7_lZK2BjzN0qTQTcHudYEaTUypejhMQ>
-    <xmx:P_GnXrfl0VKErdyagWS7UsQDDsqwhG7VQ2Jd7aG8LN0kHvyfKWTTfA>
-Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
-        by mail.messagingengine.com (Postfix) with ESMTPA id 38A473065EA1;
-        Tue, 28 Apr 2020 05:02:55 -0400 (EDT)
-Date:   Tue, 28 Apr 2020 11:02:52 +0200
-From:   Greg KH <greg@kroah.com>
-To:     Suraj Jitindar Singh <surajjs@amazon.com>
-Cc:     stable@vger.kernel.org, sjitindarsingh@gmail.com,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH STABLE v4.14.y 0/2] xfs: Backport two fixes
-Message-ID: <20200428090252.GA1001680@kroah.com>
-References: <20200424230532.2852-1-surajjs@amazon.com>
+        id S1726883AbgD1Jc4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Apr 2020 05:32:56 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:5562 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726477AbgD1Jc4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Apr 2020 05:32:56 -0400
+X-IronPort-AV: E=Sophos;i="5.73,326,1583164800"; 
+   d="scan'208";a="90638122"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 28 Apr 2020 17:32:51 +0800
+Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
+        by cn.fujitsu.com (Postfix) with ESMTP id 3DFFC50A9991;
+        Tue, 28 Apr 2020 17:32:49 +0800 (CST)
+Received: from [10.167.225.141] (10.167.225.141) by
+ G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Tue, 28 Apr 2020 17:32:46 +0800
+Subject: =?UTF-8?B?UmU6IOWbnuWkjTogUmU6IFtSRkMgUEFUQ0ggMC84XSBkYXg6IEFkZCBh?=
+ =?UTF-8?Q?_dax-rmap_tree_to_support_reflink?=
+To:     Dave Chinner <david@fromorbit.com>
+CC:     Matthew Wilcox <willy@infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "hch@lst.de" <hch@lst.de>, "rgoldwyn@suse.de" <rgoldwyn@suse.de>,
+        "Qi, Fuli" <qi.fuli@fujitsu.com>,
+        "Gotou, Yasunori" <y-goto@fujitsu.com>
+References: <20200427084750.136031-1-ruansy.fnst@cn.fujitsu.com>
+ <20200427122836.GD29705@bombadil.infradead.org>
+ <em33c55fa5-15ca-4c46-8c27-6b0300fa4e51@g08fnstd180058>
+ <20200428064318.GG2040@dread.disaster.area>
+From:   Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>
+Message-ID: <259fe633-e1ff-b279-cd8c-1a81eaa40941@cn.fujitsu.com>
+Date:   Tue, 28 Apr 2020 17:32:41 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200424230532.2852-1-surajjs@amazon.com>
+In-Reply-To: <20200428064318.GG2040@dread.disaster.area>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.167.225.141]
+X-ClientProxiedBy: G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.203) To
+ G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204)
+X-yoursite-MailScanner-ID: 3DFFC50A9991.AE2A1
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Apr 24, 2020 at 04:05:30PM -0700, Suraj Jitindar Singh wrote:
-> This series backports two patches which fix known bugs in the xfs
-> filesystem code to the v4.14.y stable tree.
-> 
-> They are each verified by the xfs tests xfs/439 and generic/585
-> respectively.
-> 
-> The first patch applies cleanly.
-> 
-> The second patch required slight massage due to the last code block
-> being removed having changed slightly upstream due to rework. I think
-> the backport is functionally equivalent.
-> Only thing is I request comment that it is correct to use the following
-> error path:
-> 
-> 	ASSERT(VFS_I(wip)->i_nlink == 0);
-> 	error = xfs_iunlink_remove(tp, wip);
-> 	if (error)
-> >	       goto out_trans_cancel;
-> 
-> The old error patch out_bmap_cancel still exists here. However as
-> nothing can have modified the deferred ops struct at this point I
-> believe it is sufficient to go to the "out_trans_cancel" error label.
-> 
-> Darrick J. Wong (1):
->   xfs: validate sb_logsunit is a multiple of the fs blocksize
-> 
-> kaixuxia (1):
->   xfs: Fix deadlock between AGI and AGF with RENAME_WHITEOUT
-> 
->  fs/xfs/xfs_inode.c | 85 +++++++++++++++++++++++-----------------------
->  fs/xfs/xfs_log.c   | 14 +++++++-
->  2 files changed, 55 insertions(+), 44 deletions(-)
 
-All (including the 4.19 patch), now queued up, thanks.
 
-greg k-h
+On 2020/4/28 下午2:43, Dave Chinner wrote:
+> On Tue, Apr 28, 2020 at 06:09:47AM +0000, Ruan, Shiyang wrote:
+>>
+>> 在 2020/4/27 20:28:36, "Matthew Wilcox" <willy@infradead.org> 写道:
+>>
+>>> On Mon, Apr 27, 2020 at 04:47:42PM +0800, Shiyang Ruan wrote:
+>>>>   This patchset is a try to resolve the shared 'page cache' problem for
+>>>>   fsdax.
+>>>>
+>>>>   In order to track multiple mappings and indexes on one page, I
+>>>>   introduced a dax-rmap rb-tree to manage the relationship.  A dax entry
+>>>>   will be associated more than once if is shared.  At the second time we
+>>>>   associate this entry, we create this rb-tree and store its root in
+>>>>   page->private(not used in fsdax).  Insert (->mapping, ->index) when
+>>>>   dax_associate_entry() and delete it when dax_disassociate_entry().
+>>>
+>>> Do we really want to track all of this on a per-page basis?  I would
+>>> have thought a per-extent basis was more useful.  Essentially, create
+>>> a new address_space for each shared extent.  Per page just seems like
+>>> a huge overhead.
+>>>
+>> Per-extent tracking is a nice idea for me.  I haven't thought of it
+>> yet...
+>>
+>> But the extent info is maintained by filesystem.  I think we need a way
+>> to obtain this info from FS when associating a page.  May be a bit
+>> complicated.  Let me think about it...
+> 
+> That's why I want the -user of this association- to do a filesystem
+> callout instead of keeping it's own naive tracking infrastructure.
+> The filesystem can do an efficient, on-demand reverse mapping lookup
+> from it's own extent tracking infrastructure, and there's zero
+> runtime overhead when there are no errors present.
+> 
+> At the moment, this "dax association" is used to "report" a storage
+> media error directly to userspace. I say "report" because what it
+> does is kill userspace processes dead. The storage media error
+> actually needs to be reported to the owner of the storage media,
+> which in the case of FS-DAX is the filesytem.
+
+Understood.
+
+BTW, this is the usage in memory-failure, so what about rmap?  I have 
+not found how to use this tracking in rmap.  Do you have any ideas?
+
+> 
+> That way the filesystem can then look up all the owners of that bad
+> media range (i.e. the filesystem block it corresponds to) and take
+> appropriate action. e.g.
+
+I tried writing a function to look up all the owners' info of one block 
+in xfs for memory-failure use.  It was dropped in this patchset because 
+I found out that this lookup function needs 'rmapbt' to be enabled when 
+mkfs.  But by default, rmapbt is disabled.  I am not sure if it matters...
+
+> 
+> - if it falls in filesytem metadata, shutdown the filesystem
+> - if it falls in user data, call the "kill userspace dead" routines
+>    for each mapping/index tuple the filesystem finds for the given
+>    LBA address that the media error occurred >
+> Right now if the media error is in filesystem metadata, the
+> filesystem isn't even told about it. The filesystem can't even shut
+> down - the error is just dropped on the floor and it won't be until
+> the filesystem next tries to reference that metadata that we notice
+> there is an issue.
+
+Understood.  Thanks.
+
+> 
+> Cheers,
+> 
+> Dave.
+> 
+
+
+--
+Thanks,
+Ruan Shiyang.
+
+
