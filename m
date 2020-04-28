@@ -2,176 +2,205 @@ Return-Path: <SRS0=0AGZ=6M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 960EAC83000
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 13:04:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FB8FC83000
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 15:10:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7648C206D6
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 13:04:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C5F60205C9
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 15:10:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="azj4v/1W"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726785AbgD1NEj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Apr 2020 09:04:39 -0400
-Received: from mx2.suse.de ([195.135.220.15]:56196 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726746AbgD1NEi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 28 Apr 2020 09:04:38 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 0B96AAC5F;
-        Tue, 28 Apr 2020 13:04:36 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id EB7251E1294; Tue, 28 Apr 2020 15:04:35 +0200 (CEST)
-Date:   Tue, 28 Apr 2020 15:04:35 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     ira.weiny@intel.com
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Al Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-api@vger.kernel.org
-Subject: Re: [PATCH V11 10/11] fs: Introduce DCACHE_DONTCACHE
-Message-ID: <20200428130435.GA6426@quack2.suse.cz>
-References: <20200428002142.404144-1-ira.weiny@intel.com>
- <20200428002142.404144-11-ira.weiny@intel.com>
+        id S1727879AbgD1PKu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Apr 2020 11:10:50 -0400
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:58837 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727865AbgD1PKu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Apr 2020 11:10:50 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1588086645;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=U5lJW6UxW/uRU7KKO+CqUeSF4JVxTHQ15hB1qm7ICsU=;
+        b=azj4v/1WBokAPpMvT9hWAcFa0tOdU4QYzInBrt1JL42Q78bZRotxgWiG0R3toOuSZe6KWB
+        mpAVkodJAvWUSbyBcrUJXpzlD/aa3V9tCDl0wjcLnCbIXYxU8S6z1QjiRcRrS+MoowHGzl
+        LulYdqFMJ0LcHxPRr9oxLdbcz9BlRSY=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-96-Nbk54w00MS2P6oMSIKs6pw-1; Tue, 28 Apr 2020 11:10:44 -0400
+X-MC-Unique: Nbk54w00MS2P6oMSIKs6pw-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 21D0F835B40;
+        Tue, 28 Apr 2020 15:10:43 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id A6CE11002395;
+        Tue, 28 Apr 2020 15:10:42 +0000 (UTC)
+Date:   Tue, 28 Apr 2020 11:10:40 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: refactor the buffer cancellation table helpers
+Message-ID: <20200428151040.GA27954@bfoster>
+References: <20200427135229.1480993-1-hch@lst.de>
+ <20200427135229.1480993-2-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200428002142.404144-11-ira.weiny@intel.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20200427135229.1480993-2-hch@lst.de>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon 27-04-20 17:21:41, ira.weiny@intel.com wrote:
-> From: Ira Weiny <ira.weiny@intel.com>
+On Mon, Apr 27, 2020 at 03:52:28PM +0200, Christoph Hellwig wrote:
+> Replace the somewhat convoluted use of xlog_peek_buffer_cancelled and
+> xlog_check_buffer_cancelled with two obvious helpers:
 > 
-> DCACHE_DONTCACHE indicates a dentry should not be cached on final
-> dput().
+>  xlog_is_buffer_cancelled, which returns true if there is a buffer in
+>  the cancellation table, and
+>  xlog_put_buffer_cancelled, which also decrements the reference count
+>  of the buffer cancellation table.
 > 
-> Also add a helper function to mark DCACHE_DONTCACHE on all dentries
-> pointing to a specific inode when that inode is being set I_DONTCACHE.
+> Both share a little helper to look up the entry.
 > 
-> This facilitates dropping dentry references to inodes sooner which
-> require eviction to swap S_DAX mode.
-> 
-> Cc: Al Viro <viro@zeniv.linux.org.uk>
-> Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-
-The patch looks good to me. You can add:
-
-Reviewed-by: Jan Kara <jack@suse.cz>
-
-								Honza
-
-> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
-> Changes from V10:
-> 	rename to d_mark_dontcache()
-> 	Move function to fs/dcache.c
+>  fs/xfs/xfs_log_recover.c | 109 ++++++++++++++++++---------------------
+>  1 file changed, 50 insertions(+), 59 deletions(-)
 > 
-> Changes from V9:
-> 	modify i_state under i_lock
-> 	Update comment
-> 		"Purge from memory on final dput()"
-> 
-> Changes from V8:
-> 	Update commit message
-> 	Use mark_inode_dontcache in XFS
-> 	Fix locking...  can't use rcu here.
-> 	Change name to mark_inode_dontcache
-> ---
->  fs/dcache.c            | 19 +++++++++++++++++++
->  fs/xfs/xfs_icache.c    |  2 +-
->  include/linux/dcache.h |  2 ++
->  include/linux/fs.h     |  1 +
->  4 files changed, 23 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/dcache.c b/fs/dcache.c
-> index b280e07e162b..0d07fb335b78 100644
-> --- a/fs/dcache.c
-> +++ b/fs/dcache.c
-> @@ -647,6 +647,10 @@ static inline bool retain_dentry(struct dentry *dentry)
->  		if (dentry->d_op->d_delete(dentry))
->  			return false;
->  	}
-> +
-> +	if (unlikely(dentry->d_flags & DCACHE_DONTCACHE))
-> +		return false;
-> +
->  	/* retain; LRU fodder */
->  	dentry->d_lockref.count--;
->  	if (unlikely(!(dentry->d_flags & DCACHE_LRU_LIST)))
-> @@ -656,6 +660,21 @@ static inline bool retain_dentry(struct dentry *dentry)
->  	return true;
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 11c3502b07b13..750a81b941ea4 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -1972,26 +1972,17 @@ xlog_recover_buffer_pass1(
+>  	return 0;
 >  }
 >  
-> +void d_mark_dontcache(struct inode *inode)
-> +{
-> +	struct dentry *de;
-> +
-> +	spin_lock(&inode->i_lock);
-> +	hlist_for_each_entry(de, &inode->i_dentry, d_u.d_alias) {
-> +		spin_lock(&de->d_lock);
-> +		de->d_flags |= DCACHE_DONTCACHE;
-> +		spin_unlock(&de->d_lock);
-> +	}
-> +	inode->i_state |= I_DONTCACHE;
-> +	spin_unlock(&inode->i_lock);
-> +}
-> +EXPORT_SYMBOL(d_mark_dontcache);
-> +
+...
 >  /*
->   * Finish off a dentry we've decided to kill.
->   * dentry->d_lock must be held, returns with it unlocked.
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index de76f7f60695..888646d74d7d 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -559,7 +559,7 @@ xfs_iget_cache_miss(
->  	 */
->  	iflags = XFS_INEW;
->  	if (flags & XFS_IGET_DONTCACHE)
-> -		VFS_I(ip)->i_state |= I_DONTCACHE;
-> +		d_mark_dontcache(VFS_I(ip));
->  	ip->i_udquot = NULL;
->  	ip->i_gdquot = NULL;
->  	ip->i_pdquot = NULL;
-> diff --git a/include/linux/dcache.h b/include/linux/dcache.h
-> index c1488cc84fd9..a81f0c3cf352 100644
-> --- a/include/linux/dcache.h
-> +++ b/include/linux/dcache.h
-> @@ -177,6 +177,8 @@ struct dentry_operations {
->  
->  #define DCACHE_REFERENCED		0x00000040 /* Recently used, don't discard. */
->  
-> +#define DCACHE_DONTCACHE		0x00000080 /* Purge from memory on final dput() */
+> - * If the buffer is being cancelled then return 1 so that it will be cancelled,
+> - * otherwise return 0.  If the buffer is actually a buffer cancel item
+> - * (XFS_BLF_CANCEL is set), then decrement the refcount on the entry in the
+> - * table and remove it from the table if this is the last reference.
+> + * Check if there is and entry for blkno, len in the buffer cancel record table.
+> + */
+> +static bool
+> +xlog_is_buffer_cancelled(
+> +	struct xlog		*log,
+> +	xfs_daddr_t		blkno,
+> +	uint			len)
+> +{
+> +	return xlog_find_buffer_cancelled(log, blkno, len) != NULL;
+> +}
 > +
->  #define DCACHE_CANT_MOUNT		0x00000100
->  #define DCACHE_GENOCIDE			0x00000200
->  #define DCACHE_SHRINK_LIST		0x00000400
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index 44bd45af760f..7c3e8c0306e0 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -3055,6 +3055,7 @@ static inline int generic_drop_inode(struct inode *inode)
->  	return !inode->i_nlink || inode_unhashed(inode) ||
->  		(inode->i_state & I_DONTCACHE);
->  }
-> +extern void d_mark_dontcache(struct inode *inode);
+> +/*
+> + * Check if there is and entry for blkno, len in the buffer cancel record table,
+
+Nit:			an
+
+> + * and decremented the reference count on it if there is one.
+
+Nit:	  decrement
+
+...
+> @@ -2733,10 +2722,15 @@ xlog_recover_buffer_pass2(
+>  	 * In this pass we only want to recover all the buffers which have
+>  	 * not been cancelled and are not cancellation buffers themselves.
+>  	 */
+> -	if (xlog_check_buffer_cancelled(log, buf_f->blf_blkno,
+> -			buf_f->blf_len, buf_f->blf_flags)) {
+> -		trace_xfs_log_recover_buf_cancel(log, buf_f);
+> -		return 0;
+> +	if (buf_f->blf_flags & XFS_BLF_CANCEL) {
+> +		if (xlog_put_buffer_cancelled(log, buf_f->blf_blkno,
+> +				buf_f->blf_len))
+> +			goto cancelled;
+> +	} else {
+> +
+
+Extra whitespace above. With those nits fixed:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> +		if (xlog_is_buffer_cancelled(log, buf_f->blf_blkno,
+> +				buf_f->blf_len))
+> +			goto cancelled;
+>  	}
 >  
->  extern struct inode *ilookup5_nowait(struct super_block *sb,
->  		unsigned long hashval, int (*test)(struct inode *, void *),
+>  	trace_xfs_log_recover_buf_recover(log, buf_f);
+> @@ -2820,6 +2814,9 @@ xlog_recover_buffer_pass2(
+>  out_release:
+>  	xfs_buf_relse(bp);
+>  	return error;
+> +cancelled:
+> +	trace_xfs_log_recover_buf_cancel(log, buf_f);
+> +	return 0;
+>  }
+>  
+>  /*
+> @@ -2937,8 +2934,7 @@ xlog_recover_inode_pass2(
+>  	 * Inode buffers can be freed, look out for it,
+>  	 * and do not replay the inode.
+>  	 */
+> -	if (xlog_check_buffer_cancelled(log, in_f->ilf_blkno,
+> -					in_f->ilf_len, 0)) {
+> +	if (xlog_is_buffer_cancelled(log, in_f->ilf_blkno, in_f->ilf_len)) {
+>  		error = 0;
+>  		trace_xfs_log_recover_inode_cancel(log, in_f);
+>  		goto error;
+> @@ -3840,7 +3836,7 @@ xlog_recover_do_icreate_pass2(
+>  
+>  		daddr = XFS_AGB_TO_DADDR(mp, agno,
+>  				agbno + i * igeo->blocks_per_cluster);
+> -		if (xlog_check_buffer_cancelled(log, daddr, bb_per_cluster, 0))
+> +		if (xlog_is_buffer_cancelled(log, daddr, bb_per_cluster))
+>  			cancel_count++;
+>  	}
+>  
+> @@ -3876,11 +3872,8 @@ xlog_recover_buffer_ra_pass2(
+>  	struct xfs_buf_log_format	*buf_f = item->ri_buf[0].i_addr;
+>  	struct xfs_mount		*mp = log->l_mp;
+>  
+> -	if (xlog_peek_buffer_cancelled(log, buf_f->blf_blkno,
+> -			buf_f->blf_len, buf_f->blf_flags)) {
+> +	if (xlog_is_buffer_cancelled(log, buf_f->blf_blkno, buf_f->blf_len))
+>  		return;
+> -	}
+> -
+>  	xfs_buf_readahead(mp->m_ddev_targp, buf_f->blf_blkno,
+>  				buf_f->blf_len, NULL);
+>  }
+> @@ -3905,9 +3898,8 @@ xlog_recover_inode_ra_pass2(
+>  			return;
+>  	}
+>  
+> -	if (xlog_peek_buffer_cancelled(log, ilfp->ilf_blkno, ilfp->ilf_len, 0))
+> +	if (xlog_is_buffer_cancelled(log, ilfp->ilf_blkno, ilfp->ilf_len))
+>  		return;
+> -
+>  	xfs_buf_readahead(mp->m_ddev_targp, ilfp->ilf_blkno,
+>  				ilfp->ilf_len, &xfs_inode_buf_ra_ops);
+>  }
+> @@ -3943,9 +3935,8 @@ xlog_recover_dquot_ra_pass2(
+>  	ASSERT(dq_f->qlf_len == 1);
+>  
+>  	len = XFS_FSB_TO_BB(mp, dq_f->qlf_len);
+> -	if (xlog_peek_buffer_cancelled(log, dq_f->qlf_blkno, len, 0))
+> +	if (xlog_is_buffer_cancelled(log, dq_f->qlf_blkno, len))
+>  		return;
+> -
+>  	xfs_buf_readahead(mp->m_ddev_targp, dq_f->qlf_blkno, len,
+>  			  &xfs_dquot_buf_ra_ops);
+>  }
 > -- 
-> 2.25.1
+> 2.26.1
 > 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+
