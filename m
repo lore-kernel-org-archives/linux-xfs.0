@@ -2,101 +2,120 @@ Return-Path: <SRS0=0AGZ=6M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8AE8C83007
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 06:10:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18E7CC83000
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 06:12:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CBE7B2073C
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 06:10:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E7061206D9
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 06:12:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KdUKPuK6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726256AbgD1GKG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Apr 2020 02:10:06 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:27722 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726210AbgD1GKG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Apr 2020 02:10:06 -0400
-X-IronPort-AV: E=Sophos;i="5.73,326,1583164800"; 
-   d="scan'208";a="90612535"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 28 Apr 2020 14:09:50 +0800
-Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id A9EE050A9991;
-        Tue, 28 Apr 2020 14:09:48 +0800 (CST)
-Received: from G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) by
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Tue, 28 Apr 2020 14:09:47 +0800
-Received: from G08CNEXMBPEKD05.g08.fujitsu.local ([fe80::15e2:f6f4:7314:fd88])
- by G08CNEXMBPEKD05.g08.fujitsu.local ([fe80::15e2:f6f4:7314:fd88%14]) with
- mapi id 15.00.1497.000; Tue, 28 Apr 2020 14:09:47 +0800
-From:   "Ruan, Shiyang" <ruansy.fnst@cn.fujitsu.com>
-To:     Matthew Wilcox <willy@infradead.org>
-CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "david@fromorbit.com" <david@fromorbit.com>,
-        "hch@lst.de" <hch@lst.de>, "rgoldwyn@suse.de" <rgoldwyn@suse.de>,
-        "Qi, Fuli" <qi.fuli@fujitsu.com>,
-        "Gotou, Yasunori" <y-goto@fujitsu.com>
-Subject: =?utf-8?B?5Zue5aSNOiBSZTogW1JGQyBQQVRDSCAwLzhdIGRheDogQWRkIGEgZGF4LXJt?=
- =?utf-8?Q?ap_tree_to_support_reflink?=
-Thread-Topic: Re: [RFC PATCH 0/8] dax: Add a dax-rmap tree to support reflink
-Thread-Index: AQHWHHCrvTehP1uFMkqHUwaMK6beO6iMX8EAgAEofYA=
-Date:   Tue, 28 Apr 2020 06:09:47 +0000
-Message-ID: <em33c55fa5-15ca-4c46-8c27-6b0300fa4e51@g08fnstd180058>
-References: <20200427084750.136031-1-ruansy.fnst@cn.fujitsu.com>
- <20200427122836.GD29705@bombadil.infradead.org>
-In-Reply-To: <20200427122836.GD29705@bombadil.infradead.org>
-Reply-To: "Ruan, Shiyang" <ruansy.fnst@cn.fujitsu.com>
-Accept-Language: zh-CN, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.167.225.141]
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <431D96282EC2FB4DA394D352951FF28C@fujitsu.local>
-Content-Transfer-Encoding: base64
+        id S1726285AbgD1GMN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Apr 2020 02:12:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40892 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726042AbgD1GMN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Apr 2020 02:12:13 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E132C03C1A9
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Apr 2020 23:12:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=bzkhE0b0ftGegEHiAkvEygxBKmX3I4umHOWPmel94E0=; b=KdUKPuK6brM1L1xmLNv6DzVfy8
+        NPK9Hro68CjKNyG6sMzL7B455dgnS9ZfB0yIC94eD1mdrJHwPADCgZTg6dBR2nJlBGqvDtD0YD0xd
+        RkKEpQ51xxPV54f87kCyC9q6v2tZFjP5EUPrpM+ZVM5tx3gYMVMBYGT651Uqc1spAluGUSbFQeLVc
+        7OGABrhJ7gkUcQ9UZT9cWaF+R8a2QBs8SREFtHloF8Y6aPiuebUuZ87tuQontymoFE6vx+BhHO4Z0
+        LRnmPfabrdqnVk+hGvUQ45fgY6oAvaUS1feHOGixe8SXscNvDkBiEEnIcJu8OIkK7qER9Zz+rJgGi
+        aiXpYcCg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jTJTU-0006xd-Ss; Tue, 28 Apr 2020 06:12:08 +0000
+Date:   Mon, 27 Apr 2020 23:12:08 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 00/19] xfs: refactor log recovery
+Message-ID: <20200428061208.GA18850@infradead.org>
+References: <158752116283.2140829.12265815455525398097.stgit@magnolia>
+ <20200422161854.GB37352@bfoster>
 MIME-Version: 1.0
-X-yoursite-MailScanner-ID: A9EE050A9991.AE63C
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200422161854.GB37352@bfoster>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-DQrlnKggMjAyMC80LzI3IDIwOjI4OjM2LCAiTWF0dGhldyBXaWxjb3giIDx3
-aWxseUBpbmZyYWRlYWQub3JnPiDlhpnpgZM6DQoNCj5PbiBNb24sIEFwciAy
-NywgMjAyMCBhdCAwNDo0Nzo0MlBNICswODAwLCBTaGl5YW5nIFJ1YW4gd3Jv
-dGU6DQo+PiAgVGhpcyBwYXRjaHNldCBpcyBhIHRyeSB0byByZXNvbHZlIHRo
-ZSBzaGFyZWQgJ3BhZ2UgY2FjaGUnIHByb2JsZW0gZm9yDQo+PiAgZnNkYXgu
-DQo+Pg0KPj4gIEluIG9yZGVyIHRvIHRyYWNrIG11bHRpcGxlIG1hcHBpbmdz
-IGFuZCBpbmRleGVzIG9uIG9uZSBwYWdlLCBJDQo+PiAgaW50cm9kdWNlZCBh
-IGRheC1ybWFwIHJiLXRyZWUgdG8gbWFuYWdlIHRoZSByZWxhdGlvbnNoaXAu
-ICBBIGRheCBlbnRyeQ0KPj4gIHdpbGwgYmUgYXNzb2NpYXRlZCBtb3JlIHRo
-YW4gb25jZSBpZiBpcyBzaGFyZWQuICBBdCB0aGUgc2Vjb25kIHRpbWUgd2UN
-Cj4+ICBhc3NvY2lhdGUgdGhpcyBlbnRyeSwgd2UgY3JlYXRlIHRoaXMgcmIt
-dHJlZSBhbmQgc3RvcmUgaXRzIHJvb3QgaW4NCj4+ICBwYWdlLT5wcml2YXRl
-KG5vdCB1c2VkIGluIGZzZGF4KS4gIEluc2VydCAoLT5tYXBwaW5nLCAtPmlu
-ZGV4KSB3aGVuDQo+PiAgZGF4X2Fzc29jaWF0ZV9lbnRyeSgpIGFuZCBkZWxl
-dGUgaXQgd2hlbiBkYXhfZGlzYXNzb2NpYXRlX2VudHJ5KCkuDQo+DQo+RG8g
-d2UgcmVhbGx5IHdhbnQgdG8gdHJhY2sgYWxsIG9mIHRoaXMgb24gYSBwZXIt
-cGFnZSBiYXNpcz8gIEkgd291bGQNCj5oYXZlIHRob3VnaHQgYSBwZXItZXh0
-ZW50IGJhc2lzIHdhcyBtb3JlIHVzZWZ1bC4gIEVzc2VudGlhbGx5LCBjcmVh
-dGUNCj5hIG5ldyBhZGRyZXNzX3NwYWNlIGZvciBlYWNoIHNoYXJlZCBleHRl
-bnQuICBQZXIgcGFnZSBqdXN0IHNlZW1zIGxpa2UNCj5hIGh1Z2Ugb3Zlcmhl
-YWQuDQo+DQpQZXItZXh0ZW50IHRyYWNraW5nIGlzIGEgbmljZSBpZGVhIGZv
-ciBtZS4gIEkgaGF2ZW4ndCB0aG91Z2h0IG9mIGl0IA0KeWV0Li4uDQoNCkJ1
-dCB0aGUgZXh0ZW50IGluZm8gaXMgbWFpbnRhaW5lZCBieSBmaWxlc3lzdGVt
-LiAgSSB0aGluayB3ZSBuZWVkIGEgd2F5IA0KdG8gb2J0YWluIHRoaXMgaW5m
-byBmcm9tIEZTIHdoZW4gYXNzb2NpYXRpbmcgYSBwYWdlLiAgTWF5IGJlIGEg
-Yml0IA0KY29tcGxpY2F0ZWQuICBMZXQgbWUgdGhpbmsgYWJvdXQgaXQuLi4N
-Cg0KDQotLQ0KVGhhbmtzLA0KUnVhbiBTaGl5YW5nLgoK
+On Wed, Apr 22, 2020 at 12:18:54PM -0400, Brian Foster wrote:
+> - Transaction reorder
+> 
+> Virtualizing the transaction reorder across all several files/types
+> strikes me as overkill for several reasons. From a code standpoint,
+> we've created a new type enumeration and a couple fields (enum type and
+> a function) in a generic structure to essentially abstract out the
+> buffer handling into a function. The latter checks another couple of blf
+> flags, which appears to be the only real "type specific" logic in the
+> whole sequence. From a complexity standpoint, the reorder operation is a
+> fairly low level and internal recovery operation. We have this huge
+> comment just to explain exactly what's happening and why certain items
+> have to be ordered as such, or some treated like others, etc. TBH it's
+> not terribly clear even with that documentation, so I don't know that
+> splitting the associated mapping logic off into separate files is
+> helpful.
+
+I actually very much like idea of moving any knowledge of the individual
+item types out of xfs_log_recovery.c.  In reply to the patch I've
+suggsted an idea how to kill the knowledge for all but the buffer and
+icreate items, which should make this a little more sensible.
+
+I actually think we should go further in one aspect - instead of having
+the item type to ops mapping in a single function in xfs_log_recovery.c
+we should have a table that the items can just add themselves to.
+
+> - Readahead
+> 
+> We end up with readahead callouts for only the types that translate to
+> buffers (so buffers, inode, dquots), and then those callouts do some
+> type specific mapping (that is duplicated within the specific type
+> handers) and issue a readahead (which is duplicated across each ra_pass2
+> call). I wonder if this would be better abstracted by a ->bmap() like
+> call that simply maps the item to a [block,length] and returns a
+> non-zero length if the core recovery code should invoke readahead (after
+> checking for cancellation). It looks like the underlying implementation
+> of those bmap calls could be further factored into helpers that
+> translate from the raw record data into the type specific format
+> structures, and that could reduce duplication between the readahead
+> calls and the pass2 calls in a couple cases. (The more I think about,
+> the more I think we should introduce those kind of cleanups before
+> getting into the need for function pointers.)
+
+That sounds more complicated what we have right now, and even more so
+with my little xlog_buf_readahead helper.  Yes, the methods will all
+just call xlog_buf_readahead, but they are trivial two-liners that are
+easy to understand.  Much easier than a complicated calling convention
+to pass the blkno, len and buf ops back.
+
+> - Recovery (pass1/pass2)
+> 
+> The core recovery bits seem more reasonable to factor out in general.
+> That said, we only have two pass1 callbacks (buffers and quotaoff). The
+> buffer callback does cancellation management and the quotaoff sets some
+> flags, so I wonder why those couldn't just remain as direct function
+> calls (even if we move the functions out of xfs_log_recover.c). There
+> are more callbacks for pass2 so the function pointers make a bit more
+> sense there, but at the same time it looks like the various intents are
+> further abstracted behind a single "intent type" pass2 call (which has a
+> hardcoded XLOG_REORDER_INODE_LIST reorder value and is about as clear as
+> mud in that context, getting to my earlier point).
+
+Again I actually like the callouts, mostly because they make it pretty
+clear what is going on.  I also really like the fact that the recovery
+code is close to the code actually writing the log items.
