@@ -2,259 +2,658 @@ Return-Path: <SRS0=0AGZ=6M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93D51C83008
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 22:24:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1069CC83000
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 22:28:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 77FAF2072A
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 22:24:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C866020730
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 22:28:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ilJsJtja"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726181AbgD1WX6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Apr 2020 18:23:58 -0400
-Received: from mga01.intel.com ([192.55.52.88]:49009 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725934AbgD1WX6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 28 Apr 2020 18:23:58 -0400
-IronPort-SDR: R5DyCQmAj6d57z5I6ZoA2qn5/mmYZDdeKml1jjstUraxcJZa+cY8ZW2aIuT2Axrsvw+yP/FG23
- Q319WLAuYCWw==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Apr 2020 15:23:57 -0700
-IronPort-SDR: TpJ5oDYJud6HIiiRZ5fEXYolDzhC+p/LN42X0IX1xrMH0lLbyuhArh4GVnGjRjXsmv2BtBzGlU
- M4bHXNM8ezwQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.73,328,1583222400"; 
-   d="scan'208";a="247833091"
-Received: from iweiny-desk2.sc.intel.com ([10.3.52.147])
-  by fmsmga007.fm.intel.com with ESMTP; 28 Apr 2020 15:23:56 -0700
-Date:   Tue, 28 Apr 2020 15:23:56 -0700
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Al Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-api@vger.kernel.org
-Subject: Re: [PATCH V11.1] Documentation/dax: Update Usage section
-Message-ID: <20200428222356.GD406458@iweiny-DESK2.sc.intel.com>
-References: <'20200428002142.404144-5-ira.weiny@intel.com'>
- <20200428221942.409890-1-ira.weiny@intel.com>
+        id S1726355AbgD1W2N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Apr 2020 18:28:13 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:36056 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725934AbgD1W2N (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Apr 2020 18:28:13 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03SMNNme003621;
+        Tue, 28 Apr 2020 22:28:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=1I3u6rBkbUdZ6KQtIoFuhFnmRVQyWFwp2oWv2tSSVyw=;
+ b=ilJsJtjaQs8+ZBi4n8AMj5dMFchvoF+HWdY2tRvI5kCC+y6wvle0j4xjlDBahagTJTaJ
+ eKGP7jnWHuiVawktinzzleG86DcpntEixWBlElx1l5ruJxrMXVNBee4alMnYBE6HgPCX
+ icdikrBdMBaKwYGsESIPA4jyrUz5A8sQLoS3neRJJ0WuwNsmYl3WfLxUEJEthtWyyUyz
+ 1HRNh0j5jgqTBfRN3Cvqct8d81iIj5azZ5G59xUY/1HJH8BpP9CXaqDWyO43izxgtUS7
+ Ugy4xSCcsMa+1EDtBC4W95gC/YaqObuDkpYQxszImfzZcdKoHmpN0DMTtgML85neYBg+ gw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 30nucg2pbj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 28 Apr 2020 22:28:07 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03SMQjWV146444;
+        Tue, 28 Apr 2020 22:28:06 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 30mxph5vj9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 28 Apr 2020 22:28:06 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03SMS4ns031165;
+        Tue, 28 Apr 2020 22:28:04 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 28 Apr 2020 15:28:04 -0700
+Date:   Tue, 28 Apr 2020 15:28:03 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs: proper replay of deferred ops queued during log
+ recovery
+Message-ID: <20200428222803.GJ6742@magnolia>
+References: <158752128766.2142108.8793264653760565688.stgit@magnolia>
+ <158752129392.2142108.12700892024217396471.stgit@magnolia>
+ <20200424140222.GD53690@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200428221942.409890-1-ira.weiny@intel.com>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+In-Reply-To: <20200424140222.GD53690@bfoster>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9605 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
+ mlxscore=0 bulkscore=0 adultscore=0 phishscore=0 suspectscore=2
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004280173
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9605 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 priorityscore=1501
+ mlxlogscore=999 impostorscore=0 suspectscore=2 malwarescore=0
+ lowpriorityscore=0 mlxscore=0 spamscore=0 adultscore=0 phishscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004280172
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Sorry ignore this one...
+On Fri, Apr 24, 2020 at 10:02:22AM -0400, Brian Foster wrote:
+> On Tue, Apr 21, 2020 at 07:08:14PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > When we replay unfinished intent items that have been recovered from the
+> > log, it's possible that the replay will cause the creation of more
+> > deferred work items.  As outlined in commit 509955823cc9c ("xfs: log
+> > recovery should replay deferred ops in order"), later work items have an
+> > implicit ordering dependency on earlier work items.  Therefore, recovery
+> > must replay the items (both recovered and created) in the same order
+> > that they would have been during normal operation.
+> > 
+> > For log recovery, we enforce this ordering by using an empty transaction
+> > to collect deferred ops that get created in the process of recovering a
+> > log intent item to prevent them from being committed before the rest of
+> > the recovered intent items.  After we finish committing all the
+> > recovered log items, we allocate a transaction with an enormous block
+> > reservation, splice our huge list of created deferred ops into that
+> > transaction, and commit it, thereby finishing all those ops.
+> > 
+> > This is /really/ hokey -- it's the one place in XFS where we allow
+> > nested transactions; the splicing of the defer ops list is is inelegant
+> > and has to be done twice per recovery function; and the broken way we
+> > handle inode pointers and block reservations cause subtle use-after-free
+> > and allocator problems that will be fixed by this patch and the two
+> > patches after it.
+> > 
+> > Therefore, replace the hokey empty transaction with a structure designed
+> > to capture each chain of deferred ops that are created as part of
+> > recovering a single unfinished log intent.  Finally, refactor the loop
+> > that replays those chains to do so using one transaction per chain.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> 
+> Just high level thoughts on a first look...
+> 
+> >  fs/xfs/libxfs/xfs_defer.c       |  100 ++++++++++++++++++++++++++++++++
+> >  fs/xfs/libxfs/xfs_defer.h       |   25 ++++++++
+> >  fs/xfs/libxfs/xfs_log_recover.h |    6 ++
+> >  fs/xfs/xfs_bmap_item.c          |   19 ++----
+> >  fs/xfs/xfs_extfree_item.c       |    4 +
+> >  fs/xfs/xfs_log_recover.c        |  122 +++++++++++++++++++++++++--------------
+> >  fs/xfs/xfs_refcount_item.c      |   20 ++----
+> >  fs/xfs/xfs_rmap_item.c          |   11 ++--
+> >  8 files changed, 228 insertions(+), 79 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+> > index 22557527cfdb..33e0f246e181 100644
+> > --- a/fs/xfs/libxfs/xfs_defer.c
+> > +++ b/fs/xfs/libxfs/xfs_defer.c
+> > @@ -552,3 +552,103 @@ xfs_defer_move(
+> >  
+> >  	xfs_defer_reset(stp);
+> >  }
+> > +
+> > +/*
+> > + * Freeze a chain of deferred ops that are attached to a transaction.  The
+> > + * entire deferred ops state is transferred to the freezer, and each dfops
+> > + * item will be prepared for freezing.
+> > + */
+> > +int
+> > +xfs_defer_freeze(
+> > +	struct xfs_trans		*tp,
+> > +	struct xfs_defer_freezer	**dffp)
+> > +{
+> > +	struct xfs_defer_freezer	*dff;
+> > +	struct xfs_defer_pending	*dfp;
+> > +	int				error;
+> > +
+> > +	*dffp = NULL;
+> > +	if (list_empty(&tp->t_dfops))
+> > +		return 0;
+> > +
+> > +	dff = kmem_zalloc(sizeof(*dff), KM_NOFS);
+> > +	if (!dff)
+> > +		return -ENOMEM;
+> > +
+> > +	INIT_LIST_HEAD(&dff->dff_list);
+> > +	INIT_LIST_HEAD(&dff->dff_dfops);
+> > +
+> > +	/* Freeze all of the dfops items attached to the transaction. */
+> > +	list_for_each_entry(dfp, &tp->t_dfops, dfp_list) {
+> > +		const struct xfs_defer_op_type *ops;
+> > +		struct list_head	*li;
+> > +
+> > +		ops = defer_op_types[dfp->dfp_type];
+> > +		if (!ops->freeze_item)
+> > +			continue;
+> > +
+> > +		list_for_each(li, &dfp->dfp_work) {
+> > +			error = ops->freeze_item(dff, li);
+> > +			if (error)
+> > +				break;
+> > +		}
+> > +		if (error)
+> > +			break;
+> > +	}
+> > +	if (error) {
+> > +		kmem_free(dff);
+> > +		return error;
+> > +	}
+> > +
+> > +	/* Move all the dfops items to the freezer. */
+> > +	list_splice_init(&tp->t_dfops, &dff->dff_dfops);
+> > +	dff->dff_tpflags = tp->t_flags & XFS_TRANS_LOWMODE;
+> > +	xfs_defer_reset(tp);
+> > +
+> > +	*dffp = dff;
+> > +	return 0;
+> > +}
+> > +
+> > +/* Thaw a chain of deferred ops that are attached to a transaction. */
+> > +int
+> > +xfs_defer_thaw(
+> > +	struct xfs_defer_freezer	*dff,
+> > +	struct xfs_trans		*tp)
+> > +{
+> 
+> A little confused by the freeze/thaw naming because I associate that
+> with filesystem freeze. I don't have a better suggestion atm though so
+> I'll go with it for now..
 
-I got the 'reply to' wrong...
+I don't have a better name for them either.
 
-Ira
+> Also I find switching the parameters around between freeze/thaw to be
+> annoying, but that's just me. ;P
+> 
+> > +	struct xfs_defer_pending	*dfp;
+> > +	int				error;
+> > +
+> > +	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
+> > +
+> > +	/* Thaw each of the items. */
+> > +	list_for_each_entry(dfp, &dff->dff_dfops, dfp_list) {
+> > +		const struct xfs_defer_op_type *ops;
+> > +		struct list_head	*li;
+> > +
+> > +		ops = defer_op_types[dfp->dfp_type];
+> > +		if (!ops->thaw_item)
+> > +			continue;
+> > +
+> > +		list_for_each(li, &dfp->dfp_work) {
+> > +			error = ops->thaw_item(dff, li);
+> > +			if (error)
+> > +				return error;
+> > +		}
+> 
+> Hmm.. so the purpose of the freeze_item() and thaw_item() callbacks is
+> not clear to me from this patch because they don't appear to be used
+> yet. Is this patch still intended to be functional before these
+> callbacks are implemented? If so, it might make sense to leave these
+> parts out and emphasize that this patch is laying foundation for this
+> new aggregation approach (trans per dfops chain) and otherwise plumbing
+> in this new freezer container thing. Then a subsequent patch can
+> introduce the freeze/thaw bits and emphasize what problem that actually
+> fixes..
 
-On Tue, Apr 28, 2020 at 03:19:42PM -0700, 'Ira Weiny' wrote:
-> From: Ira Weiny <ira.weiny@intel.com>
+Ehh, the thaw/freeze part could be moved to the next patch so that it
+would be clearer that the 'freeze' functions can stash a breadcrumb
+pointing to incore state to reduce memory requirements, and that the
+'thaw' functions turn those crumbs back into incore structures.
+
 > 
-> Update the Usage section to reflect the new individual dax selection
-> functionality.
+> > +	}
+> > +
+> > +	/* Add the dfops items to the transaction. */
+> > +	list_splice_init(&dff->dff_dfops, &tp->t_dfops);
+> > +	tp->t_flags |= dff->dff_tpflags;
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +/* Release a deferred op freezer and all resources associated with it. */
+> > +void
+> > +xfs_defer_freeezer_finish(
+> > +	struct xfs_mount		*mp,
+> > +	struct xfs_defer_freezer	*dff)
+> > +{
+> > +	xfs_defer_cancel_list(mp, &dff->dff_dfops);
+> > +	kmem_free(dff);
+> > +}
+> ...
+> > diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+> > index 53160172c36b..5c22a902d8ca 100644
+> > --- a/fs/xfs/xfs_bmap_item.c
+> > +++ b/fs/xfs/xfs_bmap_item.c
+> ...
+> > @@ -499,12 +499,7 @@ xfs_bui_recover(
+> >  			XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK), 0, 0, &tp);
+> >  	if (error)
+> >  		return error;
+> > -	/*
+> > -	 * Recovery stashes all deferred ops during intent processing and
+> > -	 * finishes them on completion. Transfer current dfops state to this
+> > -	 * transaction and transfer the result back before we return.
+> > -	 */
+> > -	xfs_defer_move(tp, parent_tp);
+> > +
 > 
-> Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+> Is there any particular reason current code moves the list back and
+> forth like this, or is that just an implementation detail that allows us
+> to continue to aggregate dfops in order with our little xfs_defer_move()
+> helper?
+
+I think I wrote the original code to do that because I thought that we
+could occasionally merge adjacent dfops work items from different
+recovery chains.  AFAICT that rarely happens, and worse yet it doesn't
+remain true to the sequencing that would have happened if the fs hadn't
+gone down.
+
+--D
+
+> Brian
 > 
-> ---
-> Changes from V11:
-> 	Minor changes from Darrick
-> 
-> Changes from V10:
-> 	Clarifications from Dave
-> 	Add '-c' to xfs_io examples
-> 
-> Changes from V9:
-> 	Fix missing ')'
-> 	Fix trialing '"'
-> 
-> Changes from V8:
-> 	Updates from Darrick
-> 
-> Changes from V7:
-> 	Cleanups/clarifications from Darrick and Dan
-> 
-> Changes from V6:
-> 	Update to allow setting FS_XFLAG_DAX any time.
-> 	Update with list of behaviors from Darrick
-> 	https://lore.kernel.org/lkml/20200409165927.GD6741@magnolia/
-> 
-> Changes from V5:
-> 	Update to reflect the agreed upon semantics
-> 	https://lore.kernel.org/lkml/20200405061945.GA94792@iweiny-DESK2.sc.intel.com/
-> ---
->  Documentation/filesystems/dax.txt | 142 +++++++++++++++++++++++++++++-
->  1 file changed, 139 insertions(+), 3 deletions(-)
-> 
-> diff --git a/Documentation/filesystems/dax.txt b/Documentation/filesystems/dax.txt
-> index 679729442fd2..dc1c1aa36cc2 100644
-> --- a/Documentation/filesystems/dax.txt
-> +++ b/Documentation/filesystems/dax.txt
-> @@ -17,11 +17,147 @@ For file mappings, the storage device is mapped directly into userspace.
->  Usage
->  -----
->  
-> -If you have a block device which supports DAX, you can make a filesystem
-> +If you have a block device which supports DAX, you can make a file system
->  on it as usual.  The DAX code currently only supports files with a block
->  size equal to your kernel's PAGE_SIZE, so you may need to specify a block
-> -size when creating the filesystem.  When mounting it, use the "-o dax"
-> -option on the command line or add 'dax' to the options in /etc/fstab.
-> +size when creating the file system.
-> +
-> +Currently 3 filesystems support DAX: ext2, ext4 and xfs.  Enabling DAX on them
-> +is different.
-> +
-> +Enabling DAX on ext4 and ext2
-> +-----------------------------
-> +
-> +When mounting the filesystem, use the "-o dax" option on the command line or
-> +add 'dax' to the options in /etc/fstab.  This works to enable DAX on all files
-> +within the filesystem.  It is equivalent to the '-o dax=always' behavior below.
-> +
-> +
-> +Enabling DAX on xfs
-> +-------------------
-> +
-> +Summary
-> +-------
-> +
-> + 1. There exists an in-kernel file access mode flag S_DAX that corresponds to
-> +    the statx flag STATX_ATTR_DAX.  See the manpage for statx(2) for details
-> +    about this access mode.
-> +
-> + 2. There exists a persistent flag FS_XFLAG_DAX that can be applied to regular
-> +    files and directories. This advisory flag can be set or cleared at any
-> +    time, but doing so does not immediately affect the S_DAX state.
-> +
-> + 3. If the persistent FS_XFLAG_DAX flag is set on a directory, this flag will
-> +    be inherited by all regular files and subdirectories that are subsequently
-> +    created in this directory. Files and subdirectories that exist at the time
-> +    this flag is set or cleared on the parent directory are not modified by
-> +    this modification of the parent directory.
-> +
-> + 4. There exists dax mount options which can override FS_XFLAG_DAX in the
-> +    setting of the S_DAX flag.  Given underlying storage which supports DAX the
-> +    following hold:
-> +
-> +    "-o dax=inode"  means "follow FS_XFLAG_DAX" and is the default.
-> +
-> +    "-o dax=never"  means "never set S_DAX, ignore FS_XFLAG_DAX."
-> +
-> +    "-o dax=always" means "always set S_DAX ignore FS_XFLAG_DAX."
-> +
-> +    "-o dax"        is a legacy option which is an alias for "dax=always".
-> +		    This may be removed in the future so "-o dax=always" is
-> +		    the preferred method for specifying this behavior.
-> +
-> +    NOTE: Modifications to and the inheritance behavior of FS_XFLAG_DAX remain
-> +    the same even when the file system is mounted with a dax option.  However,
-> +    in-core inode state (S_DAX) will be overridden until the file system is
-> +    remounted with dax=inode and the inode is evicted from kernel memory.
-> +
-> + 5. The S_DAX policy can be changed via:
-> +
-> +    a) Setting the parent directory FS_XFLAG_DAX as needed before files are
-> +       created
-> +
-> +    b) Setting the appropriate dax="foo" mount option
-> +
-> +    c) Changing the FS_XFLAG_DAX on existing regular files and directories.
-> +       This has runtime constraints and limitations that are described in 6)
-> +       below.
-> +
-> + 6. When changing the S_DAX policy via toggling the persistent FS_XFLAG_DAX flag,
-> +    the change in behaviour for existing regular files may not occur
-> +    immediately.  If the change must take effect immediately, the administrator
-> +    needs to:
-> +
-> +    a) stop the application so there are no active references to the data set
-> +       the policy change will affect
-> +
-> +    b) evict the data set from kernel caches so it will be re-instantiated when
-> +       the application is restarted. This can be achieved by:
-> +
-> +       i. drop-caches
-> +       ii. a filesystem unmount and mount cycle
-> +       iii. a system reboot
-> +
-> +
-> +Details
-> +-------
-> +
-> +There are 2 per-file dax flags.  One is a persistent inode setting (FS_XFLAG_DAX)
-> +and the other is a volatile flag indicating the active state of the feature
-> +(S_DAX).
-> +
-> +FS_XFLAG_DAX is preserved within the file system.  This persistent config
-> +setting can be set, cleared and/or queried using the FS_IOC_FS[GS]ETXATTR ioctl
-> +(see ioctl_xfs_fsgetxattr(2)) or an utility such as 'xfs_io'.
-> +
-> +New files and directories automatically inherit FS_XFLAG_DAX from
-> +their parent directory _when_ _created_.  Therefore, setting FS_XFLAG_DAX at
-> +directory creation time can be used to set a default behavior for an entire
-> +sub-tree.
-> +
-> +To clarify inheritance, here are 3 examples:
-> +
-> +Example A:
-> +
-> +mkdir -p a/b/c
-> +xfs_io -c 'chattr +x' a
-> +mkdir a/b/c/d
-> +mkdir a/e
-> +
-> +	dax: a,e
-> +	no dax: b,c,d
-> +
-> +Example B:
-> +
-> +mkdir a
-> +xfs_io -c 'chattr +x' a
-> +mkdir -p a/b/c/d
-> +
-> +	dax: a,b,c,d
-> +	no dax:
-> +
-> +Example C:
-> +
-> +mkdir -p a/b/c
-> +xfs_io -c 'chattr +x' c
-> +mkdir a/b/c/d
-> +
-> +	dax: c,d
-> +	no dax: a,b
-> +
-> +
-> +The current enabled state (S_DAX) is set when a file inode is instantiated in
-> +memory by the kernel.  It is set based on the underlying media support, the
-> +value of FS_XFLAG_DAX and the file system's dax mount option.
-> +
-> +statx can be used to query S_DAX.  NOTE that only regular files will ever have
-> +S_DAX set and therefore statx will never indicate that S_DAX is set on
-> +directories.
-> +
-> +Setting the FS_XFLAG_DAX (specifically or through inheritance) occurs even if
-> +the underlying media does not support dax and/or the file system is overridden
-> +with a mount option.
-> +
->  
->  
->  Implementation Tips for Block Driver Writers
-> -- 
-> 2.25.1
+> >  	budp = xfs_trans_get_bud(tp, buip);
+> >  
+> >  	/* Grab the inode. */
+> > @@ -549,15 +544,13 @@ xfs_bui_recover(
+> >  	}
+> >  
+> >  	set_bit(XFS_BUI_RECOVERED, &buip->bui_flags);
+> > -	xfs_defer_move(parent_tp, tp);
+> > -	error = xfs_trans_commit(tp);
+> > +	error = xlog_recover_trans_commit(tp, dffp);
+> >  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> >  	xfs_irele(ip);
+> >  
+> >  	return error;
+> >  
+> >  err_inode:
+> > -	xfs_defer_move(parent_tp, tp);
+> >  	xfs_trans_cancel(tp);
+> >  	if (ip) {
+> >  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > @@ -678,7 +671,7 @@ xlog_recover_bud(
+> >  STATIC int
+> >  xlog_recover_process_bui(
+> >  	struct xlog			*log,
+> > -	struct xfs_trans		*parent_tp,
+> > +	struct xfs_defer_freezer	**dffp,
+> >  	struct xfs_log_item		*lip)
+> >  {
+> >  	struct xfs_ail			*ailp = log->l_ailp;
+> > @@ -692,7 +685,7 @@ xlog_recover_process_bui(
+> >  		return 0;
+> >  
+> >  	spin_unlock(&ailp->ail_lock);
+> > -	error = xfs_bui_recover(parent_tp, buip);
+> > +	error = xfs_bui_recover(log->l_mp, dffp, buip);
+> >  	spin_lock(&ailp->ail_lock);
+> >  
+> >  	return error;
+> > diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+> > index a15ede29244a..5675062ad436 100644
+> > --- a/fs/xfs/xfs_extfree_item.c
+> > +++ b/fs/xfs/xfs_extfree_item.c
+> > @@ -739,7 +739,7 @@ xlog_recover_efd(
+> >  STATIC int
+> >  xlog_recover_process_efi(
+> >  	struct xlog			*log,
+> > -	struct xfs_trans		*tp,
+> > +	struct xfs_defer_freezer	**dffp,
+> >  	struct xfs_log_item		*lip)
+> >  {
+> >  	struct xfs_ail			*ailp = log->l_ailp;
+> > @@ -753,7 +753,7 @@ xlog_recover_process_efi(
+> >  		return 0;
+> >  
+> >  	spin_unlock(&ailp->ail_lock);
+> > -	error = xfs_efi_recover(tp->t_mountp, efip);
+> > +	error = xfs_efi_recover(log->l_mp, efip);
+> >  	spin_lock(&ailp->ail_lock);
+> >  
+> >  	return error;
+> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> > index 5a20a95c5dad..e9b3e901d009 100644
+> > --- a/fs/xfs/xfs_log_recover.c
+> > +++ b/fs/xfs/xfs_log_recover.c
+> > @@ -1814,6 +1814,26 @@ xlog_recover_insert_ail(
+> >  	xfs_trans_ail_update(log->l_ailp, lip, lsn);
+> >  }
+> >  
+> > +/*
+> > + * Freeze any deferred ops and commit the transaction.  This is the last step
+> > + * needed to finish a log intent item that we recovered from the log.
+> > + */
+> > +int
+> > +xlog_recover_trans_commit(
+> > +	struct xfs_trans		*tp,
+> > +	struct xfs_defer_freezer	**dffp)
+> > +{
+> > +	int				error;
+> > +
+> > +	error = xfs_defer_freeze(tp, dffp);
+> > +	if (error) {
+> > +		xfs_trans_cancel(tp);
+> > +		return error;
+> > +	}
+> > +
+> > +	return xfs_trans_commit(tp);
+> > +}
+> > +
+> >  static inline const struct xlog_recover_intent_type *
+> >  xlog_intent_for_type(
+> >  	unsigned short			type)
+> > @@ -2652,35 +2672,59 @@ xlog_recover_process_data(
+> >  /* Take all the collected deferred ops and finish them in order. */
+> >  static int
+> >  xlog_finish_defer_ops(
+> > -	struct xfs_trans	*parent_tp)
+> > +	struct xfs_mount	*mp,
+> > +	struct list_head	*dfops_freezers)
+> >  {
+> > -	struct xfs_mount	*mp = parent_tp->t_mountp;
+> > +	struct xfs_defer_freezer *dff, *next;
+> >  	struct xfs_trans	*tp;
+> >  	int64_t			freeblks;
+> >  	uint			resblks;
+> > -	int			error;
+> > +	int			error = 0;
+> >  
+> > -	/*
+> > -	 * We're finishing the defer_ops that accumulated as a result of
+> > -	 * recovering unfinished intent items during log recovery.  We
+> > -	 * reserve an itruncate transaction because it is the largest
+> > -	 * permanent transaction type.  Since we're the only user of the fs
+> > -	 * right now, take 93% (15/16) of the available free blocks.  Use
+> > -	 * weird math to avoid a 64-bit division.
+> > -	 */
+> > -	freeblks = percpu_counter_sum(&mp->m_fdblocks);
+> > -	if (freeblks <= 0)
+> > -		return -ENOSPC;
+> > -	resblks = min_t(int64_t, UINT_MAX, freeblks);
+> > -	resblks = (resblks * 15) >> 4;
+> > -	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, resblks,
+> > -			0, XFS_TRANS_RESERVE, &tp);
+> > -	if (error)
+> > -		return error;
+> > -	/* transfer all collected dfops to this transaction */
+> > -	xfs_defer_move(tp, parent_tp);
+> > +	list_for_each_entry_safe(dff, next, dfops_freezers, dff_list) {
+> > +		/*
+> > +		 * We're finishing the defer_ops that accumulated as a result
+> > +		 * of recovering unfinished intent items during log recovery.
+> > +		 * We reserve an itruncate transaction because it is the
+> > +		 * largest permanent transaction type.  Since we're the only
+> > +		 * user of the fs right now, take 93% (15/16) of the available
+> > +		 * free blocks.  Use weird math to avoid a 64-bit division.
+> > +		 */
+> > +		freeblks = percpu_counter_sum(&mp->m_fdblocks);
+> > +		if (freeblks <= 0) {
+> > +			error = -ENOSPC;
+> > +			break;
+> > +		}
+> >  
+> > -	return xfs_trans_commit(tp);
+> > +		resblks = min_t(int64_t, UINT_MAX, freeblks);
+> > +		resblks = (resblks * 15) >> 4;
+> > +		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, resblks,
+> > +				0, XFS_TRANS_RESERVE, &tp);
+> > +		if (error)
+> > +			break;
+> > +
+> > +		/* transfer all collected dfops to this transaction */
+> > +		list_del_init(&dff->dff_list);
+> > +		error = xfs_defer_thaw(dff, tp);
+> > +		if (error) {
+> > +			xfs_trans_cancel(tp);
+> > +			xfs_defer_freeezer_finish(mp, dff);
+> > +			break;
+> > +		}
+> > +
+> > +		error = xfs_trans_commit(tp);
+> > +		xfs_defer_freeezer_finish(mp, dff);
+> > +		if (error)
+> > +			break;
+> > +	}
+> > +
+> > +	/* Kill any remaining freezers. */
+> > +	list_for_each_entry_safe(dff, next, dfops_freezers, dff_list) {
+> > +		list_del_init(&dff->dff_list);
+> > +		xfs_defer_freeezer_finish(mp, dff);
+> > +	}
+> > +
+> > +	return error;
+> >  }
+> >  
+> >  /*
+> > @@ -2703,8 +2747,9 @@ STATIC int
+> >  xlog_recover_process_intents(
+> >  	struct xlog		*log)
+> >  {
+> > -	struct xfs_trans	*parent_tp;
+> > +	LIST_HEAD(dfops_freezers);
+> >  	struct xfs_ail_cursor	cur;
+> > +	struct xfs_defer_freezer *freezer = NULL;
+> >  	struct xfs_log_item	*lip;
+> >  	struct xfs_ail		*ailp;
+> >  	int			error;
+> > @@ -2712,19 +2757,6 @@ xlog_recover_process_intents(
+> >  	xfs_lsn_t		last_lsn;
+> >  #endif
+> >  
+> > -	/*
+> > -	 * The intent recovery handlers commit transactions to complete recovery
+> > -	 * for individual intents, but any new deferred operations that are
+> > -	 * queued during that process are held off until the very end. The
+> > -	 * purpose of this transaction is to serve as a container for deferred
+> > -	 * operations. Each intent recovery handler must transfer dfops here
+> > -	 * before its local transaction commits, and we'll finish the entire
+> > -	 * list below.
+> > -	 */
+> > -	error = xfs_trans_alloc_empty(log->l_mp, &parent_tp);
+> > -	if (error)
+> > -		return error;
+> > -
+> >  	ailp = log->l_ailp;
+> >  	spin_lock(&ailp->ail_lock);
+> >  	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
+> > @@ -2756,23 +2788,27 @@ xlog_recover_process_intents(
+> >  
+> >  		/*
+> >  		 * NOTE: If your intent processing routine can create more
+> > -		 * deferred ops, you /must/ attach them to the transaction in
+> > +		 * deferred ops, you /must/ attach them to the freezer in
+> >  		 * this routine or else those subsequent intents will get
+> >  		 * replayed in the wrong order!
+> >  		 */
+> > -		error = type->process_intent(log, parent_tp, lip);
+> > +		error = type->process_intent(log, &freezer, lip);
+> >  		if (error)
+> >  			goto out;
+> > +		if (freezer) {
+> > +			list_add_tail(&freezer->dff_list, &dfops_freezers);
+> > +			freezer = NULL;
+> > +		}
+> > +
+> >  		lip = xfs_trans_ail_cursor_next(ailp, &cur);
+> >  	}
+> >  out:
+> >  	xfs_trans_ail_cursor_done(&cur);
+> >  	spin_unlock(&ailp->ail_lock);
+> > -	if (!error)
+> > -		error = xlog_finish_defer_ops(parent_tp);
+> > -	xfs_trans_cancel(parent_tp);
+> > +	if (error)
+> > +		return error;
+> >  
+> > -	return error;
+> > +	return xlog_finish_defer_ops(log->l_mp, &dfops_freezers);
+> >  }
+> >  
+> >  /*
+> > diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
+> > index 01a393727a1e..18b1fbc276fc 100644
+> > --- a/fs/xfs/xfs_refcount_item.c
+> > +++ b/fs/xfs/xfs_refcount_item.c
+> > @@ -447,7 +447,8 @@ const struct xfs_defer_op_type xfs_refcount_update_defer_type = {
+> >   */
+> >  STATIC int
+> >  xfs_cui_recover(
+> > -	struct xfs_trans		*parent_tp,
+> > +	struct xfs_mount		*mp,
+> > +	struct xfs_defer_freezer	**dffp,
+> >  	struct xfs_cui_log_item		*cuip)
+> >  {
+> >  	int				i;
+> > @@ -464,7 +465,6 @@ xfs_cui_recover(
+> >  	xfs_extlen_t			new_len;
+> >  	struct xfs_bmbt_irec		irec;
+> >  	bool				requeue_only = false;
+> > -	struct xfs_mount		*mp = parent_tp->t_mountp;
+> >  
+> >  	ASSERT(!test_bit(XFS_CUI_RECOVERED, &cuip->cui_flags));
+> >  
+> > @@ -519,12 +519,7 @@ xfs_cui_recover(
+> >  			mp->m_refc_maxlevels * 2, 0, XFS_TRANS_RESERVE, &tp);
+> >  	if (error)
+> >  		return error;
+> > -	/*
+> > -	 * Recovery stashes all deferred ops during intent processing and
+> > -	 * finishes them on completion. Transfer current dfops state to this
+> > -	 * transaction and transfer the result back before we return.
+> > -	 */
+> > -	xfs_defer_move(tp, parent_tp);
+> > +
+> >  	cudp = xfs_trans_get_cud(tp, cuip);
+> >  
+> >  	for (i = 0; i < cuip->cui_format.cui_nextents; i++) {
+> > @@ -582,13 +577,10 @@ xfs_cui_recover(
+> >  
+> >  	xfs_refcount_finish_one_cleanup(tp, rcur, error);
+> >  	set_bit(XFS_CUI_RECOVERED, &cuip->cui_flags);
+> > -	xfs_defer_move(parent_tp, tp);
+> > -	error = xfs_trans_commit(tp);
+> > -	return error;
+> > +	return xlog_recover_trans_commit(tp, dffp);
+> >  
+> >  abort_error:
+> >  	xfs_refcount_finish_one_cleanup(tp, rcur, error);
+> > -	xfs_defer_move(parent_tp, tp);
+> >  	xfs_trans_cancel(tp);
+> >  	return error;
+> >  }
+> > @@ -701,7 +693,7 @@ xlog_recover_cud(
+> >  STATIC int
+> >  xlog_recover_process_cui(
+> >  	struct xlog			*log,
+> > -	struct xfs_trans		*parent_tp,
+> > +	struct xfs_defer_freezer	**dffp,
+> >  	struct xfs_log_item		*lip)
+> >  {
+> >  	struct xfs_ail			*ailp = log->l_ailp;
+> > @@ -715,7 +707,7 @@ xlog_recover_process_cui(
+> >  		return 0;
+> >  
+> >  	spin_unlock(&ailp->ail_lock);
+> > -	error = xfs_cui_recover(parent_tp, cuip);
+> > +	error = xfs_cui_recover(log->l_mp, dffp, cuip);
+> >  	spin_lock(&ailp->ail_lock);
+> >  
+> >  	return error;
+> > diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
+> > index 69a2d23eedda..7291fac7c6d1 100644
+> > --- a/fs/xfs/xfs_rmap_item.c
+> > +++ b/fs/xfs/xfs_rmap_item.c
+> > @@ -491,7 +491,8 @@ const struct xfs_defer_op_type xfs_rmap_update_defer_type = {
+> >   */
+> >  STATIC int
+> >  xfs_rui_recover(
+> > -	struct xfs_trans		*parent_tp,
+> > +	struct xfs_mount		*mp,
+> > +	struct xfs_defer_freezer	**dffp,
+> >  	struct xfs_rui_log_item		*ruip)
+> >  {
+> >  	int				i;
+> > @@ -505,7 +506,6 @@ xfs_rui_recover(
+> >  	xfs_exntst_t			state;
+> >  	struct xfs_trans		*tp;
+> >  	struct xfs_btree_cur		*rcur = NULL;
+> > -	struct xfs_mount		*mp = parent_tp->t_mountp;
+> >  
+> >  	ASSERT(!test_bit(XFS_RUI_RECOVERED, &ruip->rui_flags));
+> >  
+> > @@ -601,8 +601,7 @@ xfs_rui_recover(
+> >  
+> >  	xfs_rmap_finish_one_cleanup(tp, rcur, error);
+> >  	set_bit(XFS_RUI_RECOVERED, &ruip->rui_flags);
+> > -	error = xfs_trans_commit(tp);
+> > -	return error;
+> > +	return xlog_recover_trans_commit(tp, dffp);
+> >  
+> >  abort_error:
+> >  	xfs_rmap_finish_one_cleanup(tp, rcur, error);
+> > @@ -691,7 +690,7 @@ xlog_recover_rud(
+> >  STATIC int
+> >  xlog_recover_process_rui(
+> >  	struct xlog			*log,
+> > -	struct xfs_trans		*parent_tp,
+> > +	struct xfs_defer_freezer	**dffp,
+> >  	struct xfs_log_item		*lip)
+> >  {
+> >  	struct xfs_ail			*ailp = log->l_ailp;
+> > @@ -705,7 +704,7 @@ xlog_recover_process_rui(
+> >  		return 0;
+> >  
+> >  	spin_unlock(&ailp->ail_lock);
+> > -	error = xfs_rui_recover(parent_tp, ruip);
+> > +	error = xfs_rui_recover(log->l_mp, dffp, ruip);
+> >  	spin_lock(&ailp->ail_lock);
+> >  
+> >  	return error;
+> > 
 > 
