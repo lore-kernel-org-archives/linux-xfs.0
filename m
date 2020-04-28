@@ -2,82 +2,124 @@ Return-Path: <SRS0=0AGZ=6M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4EC4C83000
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 06:22:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFC83C83000
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 06:43:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 90BB6206B9
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 06:22:43 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WhYJ8dlj"
+	by mail.kernel.org (Postfix) with ESMTP id A8D4E2063A
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 06:43:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726315AbgD1GWn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Apr 2020 02:22:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42506 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726042AbgD1GWn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Apr 2020 02:22:43 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D674EC03C1A9
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Apr 2020 23:22:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=sCetOEOvMHo8g9FgK5oqXISx36OTh3ArNOUkexRXZlw=; b=WhYJ8dljUIBbyJp1BJ4DNr4Tbh
-        7ol1xTyWcc1xezaGGbXCjnGx80deMoRFLP/H7+yKiPJglhXtPgwSUQknAqW+bDK38QBCUJoRrhMhU
-        eMuZbISwjv7gTZtvxcSrGCeKOwmaaGBDLDY+FMMWKoTegOGi6zU16S/MJkKHjtK1M1112qwwG2ruG
-        KOdZ5F8ZiNdt/+YH+Mt9ruLgoYXqufb1jolOUqpzfErkM9it4QxF52GjWpXXTziK9JKm/P+kNNkNF
-        /0NJQ+Rr9Cj2BP3R8PmrGn8X8SnGDSxXaXr6Gi3K0G56nnt3jr3ez6Ip+JkT9MPjEWWWnO/DtqCmK
-        Dz5XQIvQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jTJdi-0005ro-Oe; Tue, 28 Apr 2020 06:22:42 +0000
-Date:   Mon, 27 Apr 2020 23:22:42 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 00/19] xfs: refactor log recovery
-Message-ID: <20200428062242.GB18850@infradead.org>
-References: <158752116283.2140829.12265815455525398097.stgit@magnolia>
+        id S1726256AbgD1Gn2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Apr 2020 02:43:28 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:46019 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725917AbgD1Gn2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Apr 2020 02:43:28 -0400
+Received: from dread.disaster.area (pa49-195-157-175.pa.nsw.optusnet.com.au [49.195.157.175])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id DD45E82080A;
+        Tue, 28 Apr 2020 16:43:19 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jTJxe-0002vq-9O; Tue, 28 Apr 2020 16:43:18 +1000
+Date:   Tue, 28 Apr 2020 16:43:18 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Ruan, Shiyang" <ruansy.fnst@cn.fujitsu.com>
+Cc:     Matthew Wilcox <willy@infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "hch@lst.de" <hch@lst.de>, "rgoldwyn@suse.de" <rgoldwyn@suse.de>,
+        "Qi, Fuli" <qi.fuli@fujitsu.com>,
+        "Gotou, Yasunori" <y-goto@fujitsu.com>
+Subject: Re: =?utf-8?B?5Zue5aSNOiBSZQ==?= =?utf-8?Q?=3A?= [RFC PATCH 0/8]
+ dax: Add a dax-rmap tree to support reflink
+Message-ID: <20200428064318.GG2040@dread.disaster.area>
+References: <20200427084750.136031-1-ruansy.fnst@cn.fujitsu.com>
+ <20200427122836.GD29705@bombadil.infradead.org>
+ <em33c55fa5-15ca-4c46-8c27-6b0300fa4e51@g08fnstd180058>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <158752116283.2140829.12265815455525398097.stgit@magnolia>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <em33c55fa5-15ca-4c46-8c27-6b0300fa4e51@g08fnstd180058>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+        a=ONQRW0k9raierNYdzxQi9Q==:117 a=ONQRW0k9raierNYdzxQi9Q==:17
+        a=IkcTkHD0fZMA:10 a=cl8xLZFz6L8A:10 a=5KLPUuaC_9wA:10 a=JfrnYn6hAAAA:8
+        a=7-415B0cAAAA:8 a=Kw4piam9Eq2nsQd2tG8A:9 a=93mTbiTF0b_u7Sz-:21
+        a=KFoNIqDtwUuuseL_:21 a=QEXdDO2ut3YA:10 a=1CNFftbPRP8L7MoqJWF3:22
+        a=biEYGPWJfzWAr4FL6Ov7:22 a=pHzHmUro8NiASowvMSCR:22
+        a=n87TN5wuljxrRezIQYnT:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-With all patches applied we can also drop several includes in
-xfs_log_recovery.c:
+On Tue, Apr 28, 2020 at 06:09:47AM +0000, Ruan, Shiyang wrote:
+> 
+> 在 2020/4/27 20:28:36, "Matthew Wilcox" <willy@infradead.org> 写道:
+> 
+> >On Mon, Apr 27, 2020 at 04:47:42PM +0800, Shiyang Ruan wrote:
+> >>  This patchset is a try to resolve the shared 'page cache' problem for
+> >>  fsdax.
+> >>
+> >>  In order to track multiple mappings and indexes on one page, I
+> >>  introduced a dax-rmap rb-tree to manage the relationship.  A dax entry
+> >>  will be associated more than once if is shared.  At the second time we
+> >>  associate this entry, we create this rb-tree and store its root in
+> >>  page->private(not used in fsdax).  Insert (->mapping, ->index) when
+> >>  dax_associate_entry() and delete it when dax_disassociate_entry().
+> >
+> >Do we really want to track all of this on a per-page basis?  I would
+> >have thought a per-extent basis was more useful.  Essentially, create
+> >a new address_space for each shared extent.  Per page just seems like
+> >a huge overhead.
+> >
+> Per-extent tracking is a nice idea for me.  I haven't thought of it 
+> yet...
+> 
+> But the extent info is maintained by filesystem.  I think we need a way 
+> to obtain this info from FS when associating a page.  May be a bit 
+> complicated.  Let me think about it...
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index b210457d6ba23..9250c29193a71 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -18,21 +18,13 @@
- #include "xfs_log.h"
- #include "xfs_log_priv.h"
- #include "xfs_log_recover.h"
--#include "xfs_inode_item.h"
--#include "xfs_extfree_item.h"
- #include "xfs_trans_priv.h"
- #include "xfs_alloc.h"
- #include "xfs_ialloc.h"
--#include "xfs_quota.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
--#include "xfs_bmap_btree.h"
- #include "xfs_error.h"
--#include "xfs_dir2.h"
--#include "xfs_rmap_item.h"
- #include "xfs_buf_item.h"
--#include "xfs_refcount_item.h"
--#include "xfs_bmap_item.h"
- 
- #define BLK_AVG(blk1, blk2)	((blk1+blk2) >> 1)
- 
+That's why I want the -user of this association- to do a filesystem
+callout instead of keeping it's own naive tracking infrastructure.
+The filesystem can do an efficient, on-demand reverse mapping lookup
+from it's own extent tracking infrastructure, and there's zero
+runtime overhead when there are no errors present.
+
+At the moment, this "dax association" is used to "report" a storage
+media error directly to userspace. I say "report" because what it
+does is kill userspace processes dead. The storage media error
+actually needs to be reported to the owner of the storage media,
+which in the case of FS-DAX is the filesytem.
+
+That way the filesystem can then look up all the owners of that bad
+media range (i.e. the filesystem block it corresponds to) and take
+appropriate action. e.g.
+
+- if it falls in filesytem metadata, shutdown the filesystem
+- if it falls in user data, call the "kill userspace dead" routines
+  for each mapping/index tuple the filesystem finds for the given
+  LBA address that the media error occurred.
+
+Right now if the media error is in filesystem metadata, the
+filesystem isn't even told about it. The filesystem can't even shut
+down - the error is just dropped on the floor and it won't be until
+the filesystem next tries to reference that metadata that we notice
+there is an issue.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
