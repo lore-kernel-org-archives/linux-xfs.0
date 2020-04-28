@@ -1,172 +1,245 @@
-Return-Path: <SRS0=n/sd=6L=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=0AGZ=6M=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27FF9C82A00
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Apr 2020 22:06:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2F69C83002
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 00:21:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 00B8E20575
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Apr 2020 22:06:22 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Tyec2B1Z"
+	by mail.kernel.org (Postfix) with ESMTP id BC1942076A
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Apr 2020 00:21:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726483AbgD0WGV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Apr 2020 18:06:21 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:58302 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726233AbgD0WGU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Apr 2020 18:06:20 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03RM2lFP190941;
-        Mon, 27 Apr 2020 22:06:15 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- content-transfer-encoding : in-reply-to; s=corp-2020-01-29;
- bh=izlqrJ0CK9RODZXQrmAxQtWoDporb/zUuXL476iSC4g=;
- b=Tyec2B1ZQqWZm6O0zoMctTRXkrMs29o1P7dMpVTdVEqneDBrchc8bTuzAcplABwW2Q+a
- TQlEH7GKPTvnkGhUiiLf38bgMy5RC6poLQYtSKlcOtRicqxFCG/09O0au1qH5BaW7iZH
- HwpEl6bvg1PAiI1qXbvO1Zc8vwqJ1AmWx1yEYgxfQMUbK+8VXNuG9/W+/tibBRrJfpf5
- txb/UFEdbCcaMseCf74E/pZZuxd8Ew7LIlC2SfJDkRCIrtZWO7vYO8qIn3rd+Mk0o33z
- 6EtEHScLiOoJ+icF2TK/k8pOOpu5HcAyktLODuLMlyKTAqQHxM7ISRkY/qmAIjcrU5Ng Zg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 30nucfvbn0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 27 Apr 2020 22:06:15 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03RM2tHR037859;
-        Mon, 27 Apr 2020 22:04:14 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 30my0arndx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 27 Apr 2020 22:04:14 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03RM4DbW007335;
-        Mon, 27 Apr 2020 22:04:13 GMT
-Received: from localhost (/10.159.157.85)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 27 Apr 2020 15:04:13 -0700
-Date:   Mon, 27 Apr 2020 15:04:12 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 02/19] xfs: refactor log recovery item sorting into a
- generic dispatch structure
-Message-ID: <20200427220412.GY6742@magnolia>
-References: <158752116283.2140829.12265815455525398097.stgit@magnolia>
- <158752117554.2140829.4901314701479350791.stgit@magnolia>
- <20200425181307.GA16698@infradead.org>
+        id S1726475AbgD1AVv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Apr 2020 20:21:51 -0400
+Received: from mga04.intel.com ([192.55.52.120]:41734 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726432AbgD1AVt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 27 Apr 2020 20:21:49 -0400
+IronPort-SDR: cPBqkSUpxh4JHp4Bh27IhlbLK4UHHhVFU8nwfrKCybIOtSPAFobvE209Uwd+sQpIamaGh93qAO
+ uKb4rv5mN8gw==
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Apr 2020 17:21:48 -0700
+IronPort-SDR: 4BEeceNdCu0K8eAuBW6ElquobprMPPqCzX2266MyfI0E6spEC5ajtYUwv4lxbVQj7oQ4Vdo70n
+ 0Xf2k60Tngiw==
+X-IronPort-AV: E=Sophos;i="5.73,325,1583222400"; 
+   d="scan'208";a="292681913"
+Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
+  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Apr 2020 17:21:48 -0700
+From:   ira.weiny@intel.com
+To:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Ira Weiny <ira.weiny@intel.com>, Al Viro <viro@zeniv.linux.org.uk>,
+        Jan Kara <jack@suse.cz>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-api@vger.kernel.org
+Subject: [PATCH V11 04/11] Documentation/dax: Update Usage section
+Date:   Mon, 27 Apr 2020 17:21:35 -0700
+Message-Id: <20200428002142.404144-5-ira.weiny@intel.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200428002142.404144-1-ira.weiny@intel.com>
+References: <20200428002142.404144-1-ira.weiny@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200425181307.GA16698@infradead.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9604 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0
- suspectscore=0 adultscore=0 mlxlogscore=999 bulkscore=0 phishscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004270179
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9604 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 priorityscore=1501
- mlxlogscore=999 impostorscore=0 suspectscore=0 malwarescore=0
- lowpriorityscore=0 mlxscore=0 spamscore=0 adultscore=0 phishscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004270179
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Apr 25, 2020 at 11:13:07AM -0700, Christoph Hellwig wrote:
-> > +
-> > +/* Sorting hat for log items as they're read in. */
-> > +enum xlog_recover_reorder {
-> > +	XLOG_REORDER_UNKNOWN,
-> > +	XLOG_REORDER_BUFFER_LIST,
-> > +	XLOG_REORDER_CANCEL_LIST,
-> > +	XLOG_REORDER_INODE_BUFFER_LIST,
-> > +	XLOG_REORDER_INODE_LIST,
-> 
-> XLOG_REORDER_INODE_LIST seems a bit misnamed as it really is the
-> "misc" or "no reorder" list.  I guess the naming comes from the
-> local inode_list variable, but maybe we need to fix that as well?
+From: Ira Weiny <ira.weiny@intel.com>
 
-Yes, thanks for the series fixing that.
+Update the Usage section to reflect the new individual dax selection
+functionality.
 
-> > +typedef enum xlog_recover_reorder (*xlog_recover_reorder_fn)(
-> > +		struct xlog_recover_item *item);
-> 
-> This typedef doesn't actually seem to help with anything (neither
-> with just thіs patch nor the final tree).
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 
-Fair enough.
+---
+Changes from V10:
+	Clarifications from Dave
+	Add '-c' to xfs_io examples
 
-> > +
-> > +struct xlog_recover_item_type {
-> > +	/*
-> > +	 * These two items decide how to sort recovered log items during
-> > +	 * recovery.  If reorder_fn is non-NULL it will be called; otherwise,
-> > +	 * reorder will be used to decide.  See the comment above
-> > +	 * xlog_recover_reorder_trans for more details about what the values
-> > +	 * mean.
-> > +	 */
-> > +	enum xlog_recover_reorder	reorder;
-> > +	xlog_recover_reorder_fn		reorder_fn;
-> 
-> I'd just use reorder_fn and skip the simple field.  Just one way to do
-> things even if it adds a tiny amount of boilerplate code.
+Changes from V9:
+	Fix missing ')'
+	Fix trialing '"'
 
-<nod>
+Changes from V8:
+	Updates from Darrick
 
-> > +	case XFS_LI_INODE:
-> > +		return &xlog_inode_item_type;
-> > +	case XFS_LI_DQUOT:
-> > +		return &xlog_dquot_item_type;
-> > +	case XFS_LI_QUOTAOFF:
-> > +		return &xlog_quotaoff_item_type;
-> > +	case XFS_LI_IUNLINK:
-> > +		/* Not implemented? */
-> 
-> Not implemented!  I think we need a prep patch to remove this first.
+Changes from V7:
+	Cleanups/clarifications from Darrick and Dan
 
-The thing I can't tell is if XFS_LI_IUNLINK is a code point reserved
-from some long-ago log item that fell out, or reserved for some future
-project?
+Changes from V6:
+	Update to allow setting FS_XFLAG_DAX any time.
+	Update with list of behaviors from Darrick
+	https://lore.kernel.org/lkml/20200409165927.GD6741@magnolia/
 
-Either way, this case doesn't need to be there.
+Changes from V5:
+	Update to reflect the agreed upon semantics
+	https://lore.kernel.org/lkml/20200405061945.GA94792@iweiny-DESK2.sc.intel.com/
+---
+ Documentation/filesystems/dax.txt | 139 +++++++++++++++++++++++++++++-
+ 1 file changed, 136 insertions(+), 3 deletions(-)
 
-> > @@ -1851,41 +1890,34 @@ xlog_recover_reorder_trans(
-> >  
-> >  	list_splice_init(&trans->r_itemq, &sort_list);
-> >  	list_for_each_entry_safe(item, n, &sort_list, ri_list) {
-> > -		xfs_buf_log_format_t	*buf_f = item->ri_buf[0].i_addr;
-> > +		enum xlog_recover_reorder	fate = XLOG_REORDER_UNKNOWN;
-> > +
-> > +		item->ri_type = xlog_item_for_type(ITEM_TYPE(item));
-> 
-> I wonder if just passing the whole item to xlog_item_for_type would
-> make more sense.  It would then need a different name, of course.
+diff --git a/Documentation/filesystems/dax.txt b/Documentation/filesystems/dax.txt
+index 679729442fd2..409e4e83e46a 100644
+--- a/Documentation/filesystems/dax.txt
++++ b/Documentation/filesystems/dax.txt
+@@ -17,11 +17,144 @@ For file mappings, the storage device is mapped directly into userspace.
+ Usage
+ -----
+ 
+-If you have a block device which supports DAX, you can make a filesystem
++If you have a block device which supports DAX, you can make a file system
+ on it as usual.  The DAX code currently only supports files with a block
+ size equal to your kernel's PAGE_SIZE, so you may need to specify a block
+-size when creating the filesystem.  When mounting it, use the "-o dax"
+-option on the command line or add 'dax' to the options in /etc/fstab.
++size when creating the file system.
++
++Currently 3 filesystems support DAX: ext2, ext4 and xfs.  Enabling DAX on them
++is different.
++
++Enabling DAX on ext4 and ext2
++-----------------------------
++
++When mounting the filesystem, use the "-o dax" option on the command line or
++add 'dax' to the options in /etc/fstab.  This works to enable DAX on all files
++within the filesystem.  It is equivalent to the '-o dax=always' behavior below.
++
++
++Enabling DAX on xfs
++-------------------
++
++Summary
++-------
++
++ 1. There exists an in-kernel file access mode flag S_DAX that corresponds to
++    the statx flag STATX_ATTR_DAX.  See the manpage for statx(2) for details
++    about this access mode.
++
++ 2. There exists a persistent flag FS_XFLAG_DAX that can be applied to regular
++    files and directories. This advisory flag can be set or cleared at any
++    time, but doing so does not immediately affect the S_DAX state.
++
++ 3. If the persistent FS_XFLAG_DAX flag is set on a directory, this flag will
++    be inherited by all regular files and sub directories that are subsequently
++    created in this directory. Files and subdirectories that exist at the time
++    this flag is set or cleared on the parent directory are not modified by
++    this modification of the parent directory.
++
++ 4. There exists dax mount options which can override FS_XFLAG_DAX in the
++    setting of the S_DAX flag.  Given underlying storage which supports DAX the
++    following hold.
++
++    "-o dax=inode"  means "follow FS_XFLAG_DAX" and is the default.
++
++    "-o dax=never"  means "never set S_DAX, ignore FS_XFLAG_DAX."
++
++    "-o dax=always" means "always set S_DAX ignore FS_XFLAG_DAX."
++
++    "-o dax"        is a legacy option which is an alias for "dax=always".
++		    This may be removed in the future so "-o dax=always" is
++		    the preferred method for specifying this behavior.
++
++    NOTE: Setting and inheritance affect FS_XFLAG_DAX at all times even when
++    the file system is mounted with a dax option.  However, in-core inode state
++    (S_DAX) will be overridden until the file system is remounted with
++    dax=inode and the inode is evicted from kernel memory.
++
++ 5. The DAX policy can be changed via:
++
++    a) Set the parent directory FS_XFLAG_DAX as needed before files are created
++
++    b) Set the appropriate dax="foo" mount option
++
++    c) Change the FS_XFLAG_DAX on existing regular files and directories. This
++       has runtime constraints and limitations that are described in 6) below.
++
++ 6. When changing the DAX policy via toggling the persistent FS_XFLAG_DAX flag,
++    the change in behaviour for existing regular files may not occur
++    immediately.  If the change must take effect immediately, the administrator
++    needs to:
++
++    a) stop the application so there are no active references to the data set
++       the policy change will affect
++
++    b) evict the data set from kernel caches so it will be re-instantiated when
++       the application is restarted. This can be acheived by:
++
++       i. drop-caches
++       ii. a filesystem unmount and mount cycle
++       iii. a system reboot
++
++
++Details
++-------
++
++There are 2 per-file dax flags.  One is a persistent inode setting (FS_XFLAG_DAX)
++and the other is a volatile flag indicating the active state of the feature
++(S_DAX).
++
++FS_XFLAG_DAX is preserved within the file system.  This persistent config
++setting can be set, cleared and/or queried using the FS_IOC_FS[GS]ETXATTR ioctl
++(see ioctl_xfs_fsgetxattr(2)) or an utility such as 'xfs_io'.
++
++New files and directories automatically inherit FS_XFLAG_DAX from
++their parent directory _when_ _created_.  Therefore, setting FS_XFLAG_DAX at
++directory creation time can be used to set a default behavior for an entire
++sub-tree.
++
++To clarify inheritance here are 3 examples:
++
++Example A:
++
++mkdir -p a/b/c
++xfs_io -c 'chattr +x' a
++mkdir a/b/c/d
++mkdir a/e
++
++	dax: a,e
++	no dax: b,c,d
++
++Example B:
++
++mkdir a
++xfs_io -c 'chattr +x' a
++mkdir -p a/b/c/d
++
++	dax: a,b,c,d
++	no dax:
++
++Example C:
++
++mkdir -p a/b/c
++xfs_io -c 'chattr +x' c
++mkdir a/b/c/d
++
++	dax: c,d
++	no dax: a,b
++
++
++The current enabled state (S_DAX) is set when a file inode is instantiated in
++memory by the kernel.  It is set based on the underlying media support, the
++value of FS_XFLAG_DAX and the file systems dax mount option setting.
++
++statx can be used to query S_DAX.  NOTE that a directory will never have S_DAX
++set and therefore statx will never indicate that S_DAX is set on directories.
++
++Setting the FS_XFLAG_DAX (specifically or through inheritance) occurs even if
++the underlying media does not support dax and/or the file system is overridden
++with a mount option.
++
+ 
+ 
+ Implementation Tips for Block Driver Writers
+-- 
+2.25.1
 
-xlog_set_item_type(item); yes.
-
-> > +		if (item->ri_type) {
-> > +			if (item->ri_type->reorder_fn)
-> > +				fate = item->ri_type->reorder_fn(item);
-> > +			else
-> > +				fate = item->ri_type->reorder;
-> > +		}
-> 
-> I think for the !item->ri_type we should immediately jump to what
-> currently is the XLOG_REORDER_UNKNOWN case, and thus avoid even
-> adding XLOG_REORDER_UNKNOWN to the enum.  The added benefit is that
-> any item without a reorder_fn could then be treated as on what
-> currently is the inode_list, but needs a btter name.
-
-Ok.
-
---D
