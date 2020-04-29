@@ -2,87 +2,69 @@ Return-Path: <SRS0=Q7ae=6N=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0CCBC83009
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Apr 2020 05:47:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F32ABC83003
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Apr 2020 06:07:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9C987206F0
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Apr 2020 05:47:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE9622082E
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Apr 2020 06:07:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WeAZI/g3"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="n25/qfXd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726611AbgD2Frc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Apr 2020 01:47:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36232 "EHLO
+        id S1726420AbgD2GHD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Apr 2020 02:07:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39242 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726420AbgD2Frc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Apr 2020 01:47:32 -0400
+        with ESMTP id S1726274AbgD2GHD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Apr 2020 02:07:03 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DD26C03C1AC;
-        Tue, 28 Apr 2020 22:47:32 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07DCDC03C1AD
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Apr 2020 23:07:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:
-        Subject:Sender:Reply-To:Content-ID:Content-Description;
-        bh=vUooDuL2DvVLTuh/RB/NviUBjBz48UVnSV7FdK3EOOc=; b=WeAZI/g3JBd9XahE9dt2d4+z8i
-        vNzV3YmkB2xHTNy/4FFhrb3hUL4zmfuQoXWURVT3TJ4SVgE3m/7c5GR6wMP4UhVSh2V9/e92smdWU
-        m0Pqjpu3oDXO0VmMfzwML0v7mKaMPmLjOk1UECbDRNfYL5BTRsbCZISTadQk8r3xGNkncch2omXJQ
-        m/5YYd7WnCw4L6iyX6PyrRKQfWvt7qdiJlvnrZ7Z6quiViiWgXtKqKPuLwpu/iScZqYlTfxjdsqAp
-        LI9lj9TrNMj5D2kD1aag4gV7ss0LuwN5HK7KFz7t50jxmiEzWX7HP037pSeB4C+thGmez8v9Vwkxg
-        UMwsjwSA==;
-Received: from [2601:1c0:6280:3f0::19c2]
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jTfZ8-0000L3-LS; Wed, 29 Apr 2020 05:47:26 +0000
-Subject: Re: [PATCH V11.2] Documentation/dax: Update Usage section
-To:     ira.weiny@intel.com, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Al Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-api@vger.kernel.org
-References: <20200428222145.409961-1-ira.weiny@intel.com>
- <20200429043328.411431-1-ira.weiny@intel.com>
-From:   Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <b8f97774-09a7-c8d1-51fd-c2285662c950@infradead.org>
-Date:   Tue, 28 Apr 2020 22:47:24 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=jySYj75EHSiP0h/Ih9Hy7tzey0Ldv1Ycujky8q3yseg=; b=n25/qfXdbAzPQyEHYSTkDtqoB2
+        mCs5m9Z292buoAGkC8taxwk4h0EkJGIduGFUtAENFdaFkTuykV7HfZxtn94Q44CHl0BOi7Hf/ItV3
+        b1F7RRlvoCUglATwCjQTTW6fIffybALPKjdktYqG9cCkJwvSftkvQmX9VI+aOt8560vPkjZ0dALgG
+        YFa7EBzP5SdANXWHzXAqtBGdAtZ05RJIJ0rue1AEWoYu8inwwHKzguxrTtpG5NiC5quAI+Ne1JMiG
+        jFv7X/H/SE8uy0Kx5opgdsA2vsmazcKfj3pZtK/nf/gF7I36J62Ck19oljuGC2l2LfINZu2XIer2t
+        0VGKN7SA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jTfs6-0005YD-OH; Wed, 29 Apr 2020 06:07:02 +0000
+Date:   Tue, 28 Apr 2020 23:07:02 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 03/19] xfs: refactor log recovery item dispatch for pass2
+ readhead functions
+Message-ID: <20200429060702.GA9813@infradead.org>
+References: <158752116283.2140829.12265815455525398097.stgit@magnolia>
+ <158752118180.2140829.13805128567366066982.stgit@magnolia>
+ <20200425181929.GB16698@infradead.org>
+ <20200428205424.GG6742@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20200429043328.411431-1-ira.weiny@intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200428205424.GG6742@magnolia>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 4/28/20 9:33 PM, ira.weiny@intel.com wrote:
-> From: Ira Weiny <ira.weiny@intel.com>
+On Tue, Apr 28, 2020 at 01:54:24PM -0700, Darrick J. Wong wrote:
+> > > +			if (item->ri_type && item->ri_type->ra_pass2_fn)
+> > > +				item->ri_type->ra_pass2_fn(log, item);
+> > 
+> > Shouldn't we ensure eatly on that we always have a valid ->ri_type?
 > 
-> Update the Usage section to reflect the new individual dax selection
-> functionality.
-> 
-> Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-> 
-> ---
+> Item sorting will bail out on unrecognized log item types, in which case
+> we will discard the transaction (and all its items) and abort the mount,
+> right?  That should suffice to ensure that we always have a valid
+> ri_type long before we get to starting readahead for pass 2.
 
-Acked-by: Randy Dunlap <rdunlap@infradead.org>
-
-Thanks.
-
-> ---
->  Documentation/filesystems/dax.txt | 142 +++++++++++++++++++++++++++++-
->  1 file changed, 139 insertions(+), 3 deletions(-)
-
-
--- 
-~Randy
+Yes, I think so.
