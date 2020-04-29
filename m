@@ -4,45 +4,45 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D6AFC83004
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Apr 2020 15:05:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C581DC83006
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Apr 2020 15:05:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0384621974
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Apr 2020 15:05:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A2B3221973
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Apr 2020 15:05:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="U5VVrd0o"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Omu+uzmP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726828AbgD2PFi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Apr 2020 11:05:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38858 "EHLO
+        id S1726853AbgD2PFl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Apr 2020 11:05:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38864 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726476AbgD2PFi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Apr 2020 11:05:38 -0400
+        with ESMTP id S1726476AbgD2PFl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Apr 2020 11:05:41 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71866C03C1AD
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Apr 2020 08:05:38 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0171FC03C1AD
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Apr 2020 08:05:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
         Reply-To:Cc:Content-Type:Content-ID:Content-Description;
-        bh=jiBLVFvz8Qi4EOu50Jb3Meu0YEBZv/RK6G/o8RLb//U=; b=U5VVrd0o1XWwOF9/MRTsA7aTm9
-        TTKZMIpxK7vf9vseW5Kl91bCfQt7SZn3g5OXGpWHE72+Jq0Hr1RKDHq8EIpW+GqILWcRdz+8WyKWX
-        PJzORMX+UCde8UEatpv3m83fsuNgCtARj+arJ3YrjcCZ9CnfLPiLGQ0a4zr/K4BF04hu9XpU/80Z1
-        95y9QsBqgG4fm7jpzZ0xGZsWuYRdhBhSVRlyN9+3rmlrrthjh4y9wazNtouvjqzsbXnCP0WuhlBhq
-        Q5Tu12CgELMBU5XL2AsJYXrAWnRFsVW09PtWUEaBhlRzveiJiKCrrcqNzACocBYnP58WPFgrfem/3
-        gx1mGZJQ==;
+        bh=15v85DBTs483wlflfXphOWwTiHdnMerq29r8OWdbkvk=; b=Omu+uzmPE4zLXToAHxzl/H+M1d
+        wQdKV9x4TVmd1qzPrp2cUiuwxMKZgNPpYct0HGH2uD5BALudP4bZTC57PF4pBdqlENH/IPMYYeaEE
+        0tH8dTPE4KNCLvOWvEosqQ2oOM4Lef1Np1NttRw0nxl0KucooipgV2C7LAq792PGsBP+Ghu6fae+N
+        LPi/5/vyf2hMySPFhfZFiQk+lIE0V8B2Gj49cwaCfd2Sniw8y/+RG4jUbs4ezdDcQNlyWuwpPPnzZ
+        xa+xn4Dg5FPGMDa+CGj3pP9SJU9l1wGdgN06YWlhwNad6FCFqmU+wV18baySG2ZK1Xd3LJPfNPXxx
+        1ETCY23w==;
 Received: from [2001:4bb8:184:1b25:c70:4a89:bc61:2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jToHJ-0000DC-Vf
-        for linux-xfs@vger.kernel.org; Wed, 29 Apr 2020 15:05:38 +0000
+        id 1jToHM-0000E0-HC
+        for linux-xfs@vger.kernel.org; Wed, 29 Apr 2020 15:05:40 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 09/11] xfs: turn dfp_done into a xfs_log_item
-Date:   Wed, 29 Apr 2020 17:05:09 +0200
-Message-Id: <20200429150511.2191150-10-hch@lst.de>
+Subject: [PATCH 10/11] xfs: use a xfs_btree_cur for the ->finish_cleanup state
+Date:   Wed, 29 Apr 2020 17:05:10 +0200
+Message-Id: <20200429150511.2191150-11-hch@lst.de>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200429150511.2191150-1-hch@lst.de>
 References: <20200429150511.2191150-1-hch@lst.de>
@@ -54,230 +54,202 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-All defer op instance place their own extension of the log item into
-the dfp_done field.  Replace that with a xfs_log_item to improve type
-safety and make the code easier to follow.
-
-Also use the opportunity to improve the ->finish_item calling conventions
-to place the done log item as the higher level structure before the
-list_entry used for the individual items.
+Given how XFS is all based around btrees it doesn't make much sense
+to offer a totally generic state when we can just use the btree cursor.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
  fs/xfs/libxfs/xfs_defer.c  |  2 +-
- fs/xfs/libxfs/xfs_defer.h  | 10 +++++-----
- fs/xfs/xfs_bmap_item.c     |  8 ++++----
- fs/xfs/xfs_extfree_item.c  | 12 ++++++------
- fs/xfs/xfs_refcount_item.c |  8 ++++----
- fs/xfs/xfs_rmap_item.c     |  8 ++++----
- 6 files changed, 24 insertions(+), 24 deletions(-)
+ fs/xfs/libxfs/xfs_defer.h  |  6 ++++--
+ fs/xfs/xfs_bmap_item.c     |  2 +-
+ fs/xfs/xfs_extfree_item.c  |  4 ++--
+ fs/xfs/xfs_refcount_item.c | 24 +++++-------------------
+ fs/xfs/xfs_rmap_item.c     | 27 ++++++---------------------
+ 6 files changed, 19 insertions(+), 46 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index 20950b56cdd07..5f37f42cda67b 100644
+index 5f37f42cda67b..1172fbf072d84 100644
 --- a/fs/xfs/libxfs/xfs_defer.c
 +++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -371,7 +371,7 @@ xfs_defer_finish_one(
- 	list_for_each_safe(li, n, &dfp->dfp_work) {
- 		list_del(li);
- 		dfp->dfp_count--;
--		error = ops->finish_item(tp, li, dfp->dfp_done, &state);
-+		error = ops->finish_item(tp, dfp->dfp_done, li, &state);
- 		if (error == -EAGAIN) {
- 			/*
- 			 * Caller wants a fresh transaction; put the work item
+@@ -361,7 +361,7 @@ xfs_defer_finish_one(
+ 	struct xfs_defer_pending	*dfp)
+ {
+ 	const struct xfs_defer_op_type	*ops = defer_op_types[dfp->dfp_type];
+-	void				*state = NULL;
++	struct xfs_btree_cur		*state = NULL;
+ 	struct list_head		*li, *n;
+ 	int				error;
+ 
 diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-index 7b6cc3808a91b..a86c890e63d20 100644
+index a86c890e63d20..f2b65981bace4 100644
 --- a/fs/xfs/libxfs/xfs_defer.h
 +++ b/fs/xfs/libxfs/xfs_defer.h
-@@ -29,7 +29,7 @@ struct xfs_defer_pending {
- 	struct list_head		dfp_list;	/* pending items */
- 	struct list_head		dfp_work;	/* work items */
- 	struct xfs_log_item		*dfp_intent;	/* log intent item */
--	void				*dfp_done;	/* log done item */
-+	struct xfs_log_item		*dfp_done;	/* log done item */
- 	unsigned int			dfp_count;	/* # extent items */
- 	enum xfs_defer_ops_type		dfp_type;
- };
-@@ -46,10 +46,10 @@ struct xfs_defer_op_type {
- 	struct xfs_log_item *(*create_intent)(struct xfs_trans *tp,
- 			struct list_head *items, unsigned int count, bool sort);
- 	void (*abort_intent)(struct xfs_log_item *intent);
--	void *(*create_done)(struct xfs_trans *tp, struct xfs_log_item *intent,
--			unsigned int count);
--	int (*finish_item)(struct xfs_trans *, struct list_head *, void *,
--			void **);
-+	struct xfs_log_item *(*create_done)(struct xfs_trans *tp,
-+			struct xfs_log_item *intent, unsigned int count);
-+	int (*finish_item)(struct xfs_trans *tp, struct xfs_log_item *done,
-+			struct list_head *item, void **state);
- 	void (*finish_cleanup)(struct xfs_trans *, void *, int);
+@@ -6,6 +6,7 @@
+ #ifndef __XFS_DEFER_H__
+ #define	__XFS_DEFER_H__
+ 
++struct xfs_btree_cur;
+ struct xfs_defer_op_type;
+ 
+ /*
+@@ -49,8 +50,9 @@ struct xfs_defer_op_type {
+ 	struct xfs_log_item *(*create_done)(struct xfs_trans *tp,
+ 			struct xfs_log_item *intent, unsigned int count);
+ 	int (*finish_item)(struct xfs_trans *tp, struct xfs_log_item *done,
+-			struct list_head *item, void **state);
+-	void (*finish_cleanup)(struct xfs_trans *, void *, int);
++			struct list_head *item, struct xfs_btree_cur **state);
++	void (*finish_cleanup)(struct xfs_trans *tp,
++			struct xfs_btree_cur *state, int error);
  	void (*cancel_item)(struct list_head *);
  	unsigned int		max_items;
+ };
 diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index 7b2153fca2d9e..feadd44a67e4b 100644
+index feadd44a67e4b..7768fb2b71357 100644
 --- a/fs/xfs/xfs_bmap_item.c
 +++ b/fs/xfs/xfs_bmap_item.c
-@@ -352,21 +352,21 @@ xfs_bmap_update_create_intent(
- }
- 
- /* Get an BUD so we can process all the deferred rmap updates. */
--STATIC void *
-+static struct xfs_log_item *
- xfs_bmap_update_create_done(
+@@ -367,7 +367,7 @@ xfs_bmap_update_finish_item(
  	struct xfs_trans		*tp,
- 	struct xfs_log_item		*intent,
- 	unsigned int			count)
- {
--	return xfs_trans_get_bud(tp, BUI_ITEM(intent));
-+	return &xfs_trans_get_bud(tp, BUI_ITEM(intent))->bud_item;
- }
- 
- /* Process a deferred rmap update. */
- STATIC int
- xfs_bmap_update_finish_item(
- 	struct xfs_trans		*tp,
-+	struct xfs_log_item		*done,
+ 	struct xfs_log_item		*done,
  	struct list_head		*item,
--	void				*done_item,
- 	void				**state)
+-	void				**state)
++	struct xfs_btree_cur		**state)
  {
  	struct xfs_bmap_intent		*bmap;
-@@ -375,7 +375,7 @@ xfs_bmap_update_finish_item(
- 
- 	bmap = container_of(item, struct xfs_bmap_intent, bi_list);
- 	count = bmap->bi_bmap.br_blockcount;
--	error = xfs_trans_log_finish_bmap_update(tp, done_item,
-+	error = xfs_trans_log_finish_bmap_update(tp, BUD_ITEM(done),
- 			bmap->bi_type,
- 			bmap->bi_owner, bmap->bi_whichfork,
- 			bmap->bi_bmap.br_startoff,
+ 	xfs_filblks_t			count;
 diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index 0453b6f2b1d69..633628f70e128 100644
+index 633628f70e128..c8cde4122a0fe 100644
 --- a/fs/xfs/xfs_extfree_item.c
 +++ b/fs/xfs/xfs_extfree_item.c
-@@ -459,28 +459,28 @@ xfs_extent_free_create_intent(
- }
- 
- /* Get an EFD so we can process all the free extents. */
--STATIC void *
-+static struct xfs_log_item *
- xfs_extent_free_create_done(
+@@ -474,7 +474,7 @@ xfs_extent_free_finish_item(
  	struct xfs_trans		*tp,
- 	struct xfs_log_item		*intent,
- 	unsigned int			count)
- {
--	return xfs_trans_get_efd(tp, EFI_ITEM(intent), count);
-+	return &xfs_trans_get_efd(tp, EFI_ITEM(intent), count)->efd_item;
- }
- 
- /* Process a free extent. */
- STATIC int
- xfs_extent_free_finish_item(
- 	struct xfs_trans		*tp,
-+	struct xfs_log_item		*done,
+ 	struct xfs_log_item		*done,
  	struct list_head		*item,
--	void				*done_item,
- 	void				**state)
+-	void				**state)
++	struct xfs_btree_cur		**state)
  {
  	struct xfs_extent_free_item	*free;
  	int				error;
- 
- 	free = container_of(item, struct xfs_extent_free_item, xefi_list);
--	error = xfs_trans_free_extent(tp, done_item,
-+	error = xfs_trans_free_extent(tp, EFD_ITEM(done),
- 			free->xefi_startblock,
- 			free->xefi_blockcount,
- 			&free->xefi_oinfo, free->xefi_skip_discard);
-@@ -523,12 +523,12 @@ const struct xfs_defer_op_type xfs_extent_free_defer_type = {
- STATIC int
- xfs_agfl_free_finish_item(
+@@ -525,7 +525,7 @@ xfs_agfl_free_finish_item(
  	struct xfs_trans		*tp,
-+	struct xfs_log_item		*done,
+ 	struct xfs_log_item		*done,
  	struct list_head		*item,
--	void				*done_item,
- 	void				**state)
+-	void				**state)
++	struct xfs_btree_cur		**state)
  {
  	struct xfs_mount		*mp = tp->t_mountp;
--	struct xfs_efd_log_item		*efdp = done_item;
-+	struct xfs_efd_log_item		*efdp = EFD_ITEM(done);
- 	struct xfs_extent_free_item	*free;
- 	struct xfs_extent		*extp;
- 	struct xfs_buf			*agbp;
+ 	struct xfs_efd_log_item		*efdp = EFD_ITEM(done);
 diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index e8d3278e066e3..f1c2e559a7ae7 100644
+index f1c2e559a7ae7..0316eab2fc351 100644
 --- a/fs/xfs/xfs_refcount_item.c
 +++ b/fs/xfs/xfs_refcount_item.c
-@@ -351,21 +351,21 @@ xfs_refcount_update_create_intent(
- }
- 
- /* Get an CUD so we can process all the deferred refcount updates. */
--STATIC void *
-+static struct xfs_log_item *
- xfs_refcount_update_create_done(
+@@ -366,7 +366,7 @@ xfs_refcount_update_finish_item(
  	struct xfs_trans		*tp,
- 	struct xfs_log_item		*intent,
- 	unsigned int			count)
- {
--	return xfs_trans_get_cud(tp, CUI_ITEM(intent));
-+	return &xfs_trans_get_cud(tp, CUI_ITEM(intent))->cud_item;
- }
- 
- /* Process a deferred refcount update. */
- STATIC int
- xfs_refcount_update_finish_item(
- 	struct xfs_trans		*tp,
-+	struct xfs_log_item		*done,
+ 	struct xfs_log_item		*done,
  	struct list_head		*item,
--	void				*done_item,
- 	void				**state)
+-	void				**state)
++	struct xfs_btree_cur		**state)
  {
  	struct xfs_refcount_intent	*refc;
-@@ -374,7 +374,7 @@ xfs_refcount_update_finish_item(
- 	int				error;
+ 	xfs_fsblock_t			new_fsb;
+@@ -375,11 +375,9 @@ xfs_refcount_update_finish_item(
  
  	refc = container_of(item, struct xfs_refcount_intent, ri_list);
--	error = xfs_trans_log_finish_refcount_update(tp, done_item,
-+	error = xfs_trans_log_finish_refcount_update(tp, CUD_ITEM(done),
- 			refc->ri_type,
- 			refc->ri_startblock,
- 			refc->ri_blockcount,
+ 	error = xfs_trans_log_finish_refcount_update(tp, CUD_ITEM(done),
+-			refc->ri_type,
+-			refc->ri_startblock,
+-			refc->ri_blockcount,
+-			&new_fsb, &new_aglen,
+-			(struct xfs_btree_cur **)state);
++			refc->ri_type, refc->ri_startblock, refc->ri_blockcount,
++			&new_fsb, &new_aglen, state);
++
+ 	/* Did we run out of reservation?  Requeue what we didn't finish. */
+ 	if (!error && new_aglen > 0) {
+ 		ASSERT(refc->ri_type == XFS_REFCOUNT_INCREASE ||
+@@ -392,18 +390,6 @@ xfs_refcount_update_finish_item(
+ 	return error;
+ }
+ 
+-/* Clean up after processing deferred refcounts. */
+-STATIC void
+-xfs_refcount_update_finish_cleanup(
+-	struct xfs_trans	*tp,
+-	void			*state,
+-	int			error)
+-{
+-	struct xfs_btree_cur	*rcur = state;
+-
+-	xfs_refcount_finish_one_cleanup(tp, rcur, error);
+-}
+-
+ /* Abort all pending CUIs. */
+ STATIC void
+ xfs_refcount_update_abort_intent(
+@@ -429,7 +415,7 @@ const struct xfs_defer_op_type xfs_refcount_update_defer_type = {
+ 	.abort_intent	= xfs_refcount_update_abort_intent,
+ 	.create_done	= xfs_refcount_update_create_done,
+ 	.finish_item	= xfs_refcount_update_finish_item,
+-	.finish_cleanup = xfs_refcount_update_finish_cleanup,
++	.finish_cleanup = xfs_refcount_finish_one_cleanup,
+ 	.cancel_item	= xfs_refcount_update_cancel_item,
+ };
+ 
 diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-index a417e15fd0ce4..f6a2a388e5ac9 100644
+index f6a2a388e5ac9..e3bba2aec8682 100644
 --- a/fs/xfs/xfs_rmap_item.c
 +++ b/fs/xfs/xfs_rmap_item.c
-@@ -403,28 +403,28 @@ xfs_rmap_update_create_intent(
- }
- 
- /* Get an RUD so we can process all the deferred rmap updates. */
--STATIC void *
-+static struct xfs_log_item *
- xfs_rmap_update_create_done(
+@@ -418,36 +418,21 @@ xfs_rmap_update_finish_item(
  	struct xfs_trans		*tp,
- 	struct xfs_log_item		*intent,
- 	unsigned int			count)
- {
--	return xfs_trans_get_rud(tp, RUI_ITEM(intent));
-+	return &xfs_trans_get_rud(tp, RUI_ITEM(intent))->rud_item;
- }
- 
- /* Process a deferred rmap update. */
- STATIC int
- xfs_rmap_update_finish_item(
- 	struct xfs_trans		*tp,
-+	struct xfs_log_item		*done,
+ 	struct xfs_log_item		*done,
  	struct list_head		*item,
--	void				*done_item,
- 	void				**state)
+-	void				**state)
++	struct xfs_btree_cur		**state)
  {
  	struct xfs_rmap_intent		*rmap;
  	int				error;
  
  	rmap = container_of(item, struct xfs_rmap_intent, ri_list);
--	error = xfs_trans_log_finish_rmap_update(tp, done_item,
-+	error = xfs_trans_log_finish_rmap_update(tp, RUD_ITEM(done),
- 			rmap->ri_type,
- 			rmap->ri_owner, rmap->ri_whichfork,
- 			rmap->ri_bmap.br_startoff,
+ 	error = xfs_trans_log_finish_rmap_update(tp, RUD_ITEM(done),
+-			rmap->ri_type,
+-			rmap->ri_owner, rmap->ri_whichfork,
+-			rmap->ri_bmap.br_startoff,
+-			rmap->ri_bmap.br_startblock,
+-			rmap->ri_bmap.br_blockcount,
+-			rmap->ri_bmap.br_state,
+-			(struct xfs_btree_cur **)state);
++			rmap->ri_type, rmap->ri_owner, rmap->ri_whichfork,
++			rmap->ri_bmap.br_startoff, rmap->ri_bmap.br_startblock,
++			rmap->ri_bmap.br_blockcount, rmap->ri_bmap.br_state,
++			state);
+ 	kmem_free(rmap);
+ 	return error;
+ }
+ 
+-/* Clean up after processing deferred rmaps. */
+-STATIC void
+-xfs_rmap_update_finish_cleanup(
+-	struct xfs_trans	*tp,
+-	void			*state,
+-	int			error)
+-{
+-	struct xfs_btree_cur	*rcur = state;
+-
+-	xfs_rmap_finish_one_cleanup(tp, rcur, error);
+-}
+-
+ /* Abort all pending RUIs. */
+ STATIC void
+ xfs_rmap_update_abort_intent(
+@@ -473,7 +458,7 @@ const struct xfs_defer_op_type xfs_rmap_update_defer_type = {
+ 	.abort_intent	= xfs_rmap_update_abort_intent,
+ 	.create_done	= xfs_rmap_update_create_done,
+ 	.finish_item	= xfs_rmap_update_finish_item,
+-	.finish_cleanup = xfs_rmap_update_finish_cleanup,
++	.finish_cleanup = xfs_rmap_finish_one_cleanup,
+ 	.cancel_item	= xfs_rmap_update_cancel_item,
+ };
+ 
 -- 
 2.26.2
 
