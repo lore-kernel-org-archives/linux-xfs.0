@@ -2,120 +2,137 @@ Return-Path: <SRS0=Q7ae=6N=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6843C83006
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Apr 2020 02:46:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72921C8300A
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Apr 2020 02:46:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8D2742073E
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Apr 2020 02:46:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4AB0620737
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Apr 2020 02:46:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="xc+PP61x"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="AXqykkB0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726692AbgD2CqQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Apr 2020 22:46:16 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:39362 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726422AbgD2CqP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Apr 2020 22:46:15 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03T2hjcc121531;
-        Wed, 29 Apr 2020 02:46:14 GMT
+        id S1726743AbgD2CqS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Apr 2020 22:46:18 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:49428 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726422AbgD2CqS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Apr 2020 22:46:18 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03T2j6kG074138;
+        Wed, 29 Apr 2020 02:46:17 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=gIeAZYkuVVDyweFavOri/H5uxFdFvLW4QIrNOv2+naM=;
- b=xc+PP61xi/bU+9667oXO9wieCTD0n7tfrhIMeBqPrGaZMc/SdD6nPvwqt+MXPb6LZSjw
- k5U6SEkwjpqc2+vihk2K+srxcb9AIedEL+LUDySVXfi3deNIgHClwIwFDkRMxSdwwftN
- kW2P0hO4mpyhw269M8sjBbIslT+DhYA10LM1jFXSJOSySSSRRJogJLx3TTfyXacNzJhh
- Vo39gBKykL3rhWUIfmKnJNm7tlft9qHpIPAvnQnHnXKvUIeICBOys0+Ehb+V1cCT296u
- wIDovXlyg/ycd7bWSN4crd+bBENVcdNmcl/7Dr8vUVeBiTGfvgvNUI2P8OzJeRYXmnh8 8A== 
+ cc : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=saTp9ZlztCwLxl5GJqatd7nexbzAftCe0NqyMIjna2U=;
+ b=AXqykkB0QEllnEW3qUBevZ4oIoNKkMvD8SoZfyfTV58KAEK2c9JjstlBMjp2M5urFmKj
+ 9x9tT29joiTUPeYnka0vbgqucbcSJSydtCelfbnnljNqAoSAbpJbBsIwGQO9kKVnpyA0
+ QERf23M1Won+RhA4IHjsO1OlTLfOkuwFlO5xDqp9Pt/nrVKK3IBKSAU24AkpcmXVMbqh
+ Tby27uVRd4OBjyq0rSzDylIjPPKkCYtJNALdSit2ILZ8ihM+ZnEF22z1tSNv2sDZtq7i
+ s+qWGaUgWvXhcMvOarXDC1SboIn2zShIDlx+TfYXcHCDqu+7QfkN3nRx5wrt8XnR367n Lw== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 30p2p08p49-1
+        by aserp2120.oracle.com with ESMTP id 30nucg39r2-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 29 Apr 2020 02:46:14 +0000
+        Wed, 29 Apr 2020 02:46:17 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03T2fu9K096183;
-        Wed, 29 Apr 2020 02:46:14 GMT
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03T2g1jn096298;
+        Wed, 29 Apr 2020 02:44:16 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 30pvcytegs-1
+        by userp3020.oracle.com with ESMTP id 30pvcytcgg-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 29 Apr 2020 02:46:14 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03T2kD1S004048;
-        Wed, 29 Apr 2020 02:46:13 GMT
+        Wed, 29 Apr 2020 02:44:16 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03T2iFqM003255;
+        Wed, 29 Apr 2020 02:44:15 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 28 Apr 2020 19:46:12 -0700
-Subject: [PATCH 18/18] xfs: fix quota accounting in the old fork swap code
+        with ESMTP ; Tue, 28 Apr 2020 19:44:15 -0700
+Subject: [PATCH RFC 00/18] xfs: atomic file updates
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-api@vger.kernel.org
-Date:   Tue, 28 Apr 2020 19:46:11 -0700
-Message-ID: <158812837189.168506.4738302671249782594.stgit@magnolia>
-In-Reply-To: <158812825316.168506.932540609191384366.stgit@magnolia>
-References: <158812825316.168506.932540609191384366.stgit@magnolia>
+Date:   Tue, 28 Apr 2020 19:44:14 -0700
+Message-ID: <158812825316.168506.932540609191384366.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9605 signatures=668686
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=999
- suspectscore=1 malwarescore=0 adultscore=0 bulkscore=0 phishscore=0
+ suspectscore=0 malwarescore=0 adultscore=0 bulkscore=0 phishscore=0
  mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2003020000 definitions=main-2004290020
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9605 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 clxscore=1015
- bulkscore=0 adultscore=0 lowpriorityscore=0 impostorscore=0 malwarescore=0
- mlxscore=0 suspectscore=1 mlxlogscore=999 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004290020
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 priorityscore=1501
+ mlxlogscore=999 impostorscore=0 suspectscore=0 malwarescore=0
+ lowpriorityscore=0 mlxscore=0 spamscore=0 adultscore=0 phishscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004290020
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi all,
 
-The old fork swapping code doesn't change quota counts when it swaps
-data forks.  Fix it to do that.
+This series creates a new log incompat feature and log intent items to
+track high level progress of swapping ranges of two files and finish
+interrupted work if the system goes down.  It then adds a new
+FISWAPRANGE ioctl so that userspace can access the atomic extent
+swapping feature.  With this feature, user programs will be able to
+update files atomically by opening an O_TMPFILE, reflinking the source
+file to it, making whatever updates they want to make, and then
+atomically swap the changed bits back to the source file.  It even has
+an optional ability to detect a changed source file and reject the
+update.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_bmap_util.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
+The intent behind this new userspace functionality is to enable atomic
+rewrites of arbitrary parts of individual files.  For years, application
+programmers wanting to ensure the atomicity of a file update had to
+write the changes to a new file in the same directory, fsync the new
+file, rename the new file on top of the old filename, and then fsync the
+directory.  People get it wrong all the time, and $fs hacks abound.
 
+With atomic file updates, this is no longer necessary.  Programmers
+create an O_TMPFILE, optionally FICLONE the file contents into the
+temporary file, make whatever changes they want to the tempfile, and
+FISWAPRANGE the contents from the tempfile into the regular file.  The
+interface can optionally check the original file's [cm]time to reject
+the swap operation if the file has been modified by.  There are no
+fsyncs to take care of; no directory operations at all; and the fs will
+take care of finishing the swap operation if the system goes down in the
+middle of the swap.  Sample code can be found in the corresponding
+changes to xfs_io to exercise the use case mentioned above.
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index df373107e782..de6d1747a3fa 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1386,6 +1386,7 @@ xfs_swap_extent_forks(
- 	xfs_filblks_t		aforkblks = 0;
- 	xfs_filblks_t		taforkblks = 0;
- 	xfs_extnum_t		junk;
-+	int64_t			temp_blks;
- 	uint64_t		tmp;
- 	unsigned int		state;
- 	int			src_log_flags = XFS_ILOG_CORE;
-@@ -1432,6 +1433,15 @@ xfs_swap_extent_forks(
- 	 */
- 	swap(ip->i_df, tip->i_df);
- 
-+	/* Update quota accounting. */
-+	temp_blks = tip->i_d.di_nblocks - taforkblks + aforkblks;
-+	xfs_trans_mod_dquot_byino(*tpp, ip, XFS_TRANS_DQ_BCOUNT,
-+			temp_blks - ip->i_d.di_nblocks);
-+
-+	temp_blks = ip->i_d.di_nblocks + taforkblks - aforkblks;
-+	xfs_trans_mod_dquot_byino(*tpp, tip, XFS_TRANS_DQ_BCOUNT,
-+			temp_blks - tip->i_d.di_nblocks);
-+
- 	/*
- 	 * Fix the on-disk inode values
- 	 */
+Note that this function is /not/ the O_DIRECT atomic file writes concept
+that has been floating around for years.  This is constructed entirely
+in software, which means that there are no limitations other than the
+regular filesystem limits.
 
+As a side note, there's an extra motivation behind the kernel
+functionality: online repair of file-based metadata.  The atomic file
+swap is implemented as an atomic inode fork swap, which means that we
+can implement online reconstruction of extended attributes and
+directories by building a new one in another inode and atomically
+swap the contents.
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=atomic-file-updates
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=atomic-file-updates
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=atomic-file-updates
